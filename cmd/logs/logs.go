@@ -7,32 +7,29 @@ import (
 )
 
 var (
-	cmdUse   = "saucectl logs --job <jobId>"
-	cmdShort = "A brief description of your application"
-	cmdLong  = `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	logsUse     = "logs --job <jobId>"
+	logsShort   = "stream logs from jobs"
+	logsLong    = `Some long description`
+	logsExample = "saucectl --job <jobId>"
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`
-	cmdExample = "saucectl --job <jobId>"
+	jobID string
 )
 
 // Execute runs the command
 func Execute() {
-	fmt.Println("saucectl logs: Nothing to run yet")
+	fmt.Println("saucectl logs: stream logs from %s", jobID)
 }
 
 // NewCmdLogs creates the `logs` command
 func NewCmdLogs() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     cmdUse,
-		Short:   cmdShort,
-		Long:    cmdLong,
-		Example: cmdExample,
+		Use:     logsUse,
+		Short:   logsShort,
+		Long:    logsLong,
+		Example: logsExample,
 	}
 
 	// cobra.OnInitialize(initConfig)
-	// cmd.Flags().StringVarP("jobId", "job id", "j", "", "")
+	cmd.Flags().StringVarP(&jobID, "job id", "j", "", "")
 	return cmd
 }
