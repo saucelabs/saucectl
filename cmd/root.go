@@ -25,8 +25,6 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
-	fmt.Println("saucectl: Nothing to run yet")
 }
 
 func init() {

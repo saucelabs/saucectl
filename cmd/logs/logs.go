@@ -15,11 +15,6 @@ var (
 	jobID string
 )
 
-// Execute runs the command
-func Execute() {
-	fmt.Println("saucectl logs: stream logs from %s", jobID)
-}
-
 // NewCmdLogs creates the `logs` command
 func NewCmdLogs() *cobra.Command {
 	cmd := &cobra.Command{
@@ -27,9 +22,17 @@ func NewCmdLogs() *cobra.Command {
 		Short:   logsShort,
 		Long:    logsLong,
 		Example: logsExample,
+		Run: func(cmd *cobra.Command, args []string) {
+			Run()
+		},
 	}
 
 	// cobra.OnInitialize(initConfig)
-	cmd.Flags().StringVarP(&jobID, "job id", "j", "", "")
+	// cmd.Flags().StringVarP(&jobID, "job id", "j", "", "")
 	return cmd
+}
+
+// Run should run command
+func Run() {
+	fmt.Println(("Run logs command"))
 }
