@@ -14,7 +14,8 @@ var (
 	cmdLong = `Some main description`
 
 	rootCmd = &cobra.Command{
-		Use: cmdUse,
+		Use:  cmdUse,
+		Long: cmdLong,
 	}
 )
 
