@@ -1,12 +1,16 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/saucelabs/saucectl/cmd/logs"
 	"github.com/saucelabs/saucectl/cmd/run"
 	"github.com/spf13/cobra"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 )
 
 var (
@@ -29,7 +33,7 @@ func Execute() {
 }
 
 func init() {
-	// cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(validateDockerDependency)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
@@ -46,4 +50,16 @@ func init() {
 		run.NewCmdRun(),
 		logs.NewCmdLogs(),
 	)
+}
+
+func validateDockerDependency() {
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = cli.ContainerList(context.Background(), types.ContainerListOptions{})
+	if err != nil {
+		panic(fmt.Errorf("docker is not installed or running on your system"))
+	}
 }
