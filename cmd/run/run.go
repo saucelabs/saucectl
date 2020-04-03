@@ -1,8 +1,12 @@
 package run
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
 )
 
@@ -57,6 +61,27 @@ func Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("Result: %v\n", config)
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
+
+	listFilters := filters.NewArgs(
+		filters.Arg("reference", config.Image.Base))
+	options := types.ImageListOptions{
+		All:     true,
+		Filters: listFilters,
+	}
+	images, err := cli.ImageList(context.Background(), options)
+	if err != nil {
+		panic(err)
+	}
+
+	if len(images) > 0 {
+		fmt.Println("I have the image")
+		return nil
+	}
+
+	fmt.Println("PULL IT")
 	return nil
 }
