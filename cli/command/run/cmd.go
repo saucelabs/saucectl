@@ -2,6 +2,8 @@ package run
 
 import (
 	"context"
+	"fmt"
+	"os"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/spf13/cobra"
@@ -78,5 +80,11 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return err
 	}
 
+	exitCode, err := cli.Docker.ExecuteTest(ctx, container.ID)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
+
+	os.Exit(exitCode)
 	return nil
 }

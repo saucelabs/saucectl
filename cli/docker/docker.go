@@ -147,22 +147,29 @@ func (handler Handler) CopyTestFilesToContainer(ctx context.Context, srcContaine
 	return nil
 }
 
-// // execConfig := &types.ExecConfig{
-// // 	Cmd: []string{"cd", "/home/runner", "&&", "npm", "test"},
-// // }
+// ExecuteTest runs the test in the Docker container
+func (handler Handler) ExecuteTest(ctx context.Context, srcContainerID string) (int, error) {
+	execConfig := &types.ExecConfig{
+		Cmd: []string{"cd", "/home/testrunner", "&&", "npm", "test"},
+	}
 
-// statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
-// select {
-// case err := <-errCh:
-// 	if err != nil {
-// 		return err
-// 	}
-// case <-statusCh:
-// }
+	createResp, err := handler.client.ContainerExecCreate(ctx, srcContainerID, *execConfig)
+	if err != nil {
+		return 1, err
+	}
 
-// out, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true})
-// if err != nil {
-// 	return err
-// }
+	execStartCheck := types.ExecStartCheck{}
+	attachResp, err := handler.client.ContainerExecAttach(ctx, createResp.ID, execStartCheck)
+	if err != nil {
+		return 1, err
+	}
 
-// stdcopy.StdCopy(os.Stdout, os.Stderr, out)
+	defer attachResp.Close()
+
+	inspectResp, err := handler.client.ContainerExecInspect(ctx, createResp.ID)
+	if err != nil {
+		return 1, err
+	}
+
+	return inspectResp.ExitCode, nil
+}
