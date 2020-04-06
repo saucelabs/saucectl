@@ -16,7 +16,7 @@ var (
 )
 
 func main() {
-	saucectlCli, err := command.NewSauceCtlCli()
+	cli, err := command.NewSauceCtlCli()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -29,6 +29,6 @@ func main() {
 		TraverseChildren: true,
 	}
 
-	commands.AddCommands(cmd, saucectlCli)
+	commands.AddCommands(cmd, cli)
 	cmd.Execute()
 }

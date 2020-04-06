@@ -1,14 +1,6 @@
 package run
 
 import (
-	"context"
-	"os"
-
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/spf13/cobra"
 )
@@ -30,7 +22,7 @@ func NewRunCommand(cli *command.SauceCtlCli) *cobra.Command {
 		Long:    runLong,
 		Example: runExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			checkErr(Run(cmd, args))
+			checkErr(Run(cmd, cli, args))
 		},
 	}
 
@@ -56,82 +48,23 @@ func checkErr(e error) {
 }
 
 // Run runs the command
-func Run(cmd *cobra.Command, args []string) error {
+func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	var configFile Configuration
 	config, err := configFile.readFromFilePath(cfgFilePath)
-
 	if err != nil {
 		return err
 	}
 
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	hasBaseImage, err := cli.Docker.HasBaseImage(config.Image.Base)
 	if err != nil {
 		return err
 	}
 
-	listFilters := filters.NewArgs(
-		filters.Arg("reference", config.Image.Base))
-	options := types.ImageListOptions{
-		All:     true,
-		Filters: listFilters,
-	}
-	ctx := context.Background()
-	images, err := cli.ImageList(ctx, options)
-	if err != nil {
-		return err
-	}
-
-	// pull image if not on machine
-	if len(images) == 0 {
-		options := types.ImagePullOptions{}
-		responseBody, err := cli.ImagePull(ctx, config.Image.Base, options)
-
-		if err != nil {
+	if hasBaseImage {
+		if err := cli.Docker.PullBaseImage(config.Image.Base); err != nil {
 			return err
 		}
-
-		defer responseBody.Close()
 	}
 
-	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: config.Image.Base,
-		Env:   []string{"SAUCE_USERNAME", "SAUCE_ACCESS_KEY"},
-		Tty:   true,
-	}, nil, nil, "")
-	if err != nil {
-		return err
-	}
-
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		return err
-	}
-
-	// We need to check the tty _before_ we do the ContainerExecCreate, because
-	// otherwise if we error out we will leak execIDs on the server (and
-	// there's no easy way to clean those up). But also in order to make "not
-	// exist" errors take precedence we do a dummy inspect first.
-	if _, err := cli.ContainerInspect(ctx, resp.ID); err != nil {
-		return err
-	}
-
-	// execConfig := &types.ExecConfig{
-	// 	Cmd: []string{"cd", "/home/runner", "&&", "npm", "test"},
-	// }
-
-	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
-	select {
-	case err := <-errCh:
-		if err != nil {
-			return err
-		}
-	case <-statusCh:
-	}
-
-	out, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true})
-	if err != nil {
-		return err
-	}
-
-	stdcopy.StdCopy(os.Stdout, os.Stderr, out)
 	return nil
 }

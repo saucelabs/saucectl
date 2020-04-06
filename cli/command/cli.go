@@ -4,8 +4,7 @@ import "github.com/saucelabs/saucectl/cli/docker"
 
 // SauceCtlCli is the cli context
 type SauceCtlCli struct {
-	docker *docker.Handler
-	foo    string
+	Docker *docker.Handler
 }
 
 // NewSauceCtlCli creates the context object for the cli
@@ -20,9 +19,9 @@ func NewSauceCtlCli() (*SauceCtlCli, error) {
 		return nil, err
 	}
 
-	cli := SauceCtlCli{
-		docker: dockerClient,
+	cli := &SauceCtlCli{
+		Docker: dockerClient,
 	}
 
-	return &cli, nil
+	return cli, nil
 }
