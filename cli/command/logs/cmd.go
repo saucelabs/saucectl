@@ -3,6 +3,7 @@ package logs
 import (
 	"fmt"
 
+	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/spf13/cobra"
 )
 
@@ -15,8 +16,8 @@ var (
 	jobID string
 )
 
-// NewCmdLogs creates the `logs` command
-func NewCmdLogs() *cobra.Command {
+// NewLogsCommand creates the `logs` command
+func NewLogsCommand(cli *command.SauceCtlCli) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     logsUse,
 		Short:   logsShort,

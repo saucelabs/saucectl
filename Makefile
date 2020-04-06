@@ -6,7 +6,7 @@ install:
 	go get ./...
 
 build:
-	go build
+	cd ./cmd && go build
 
 test:
 	go test ./...

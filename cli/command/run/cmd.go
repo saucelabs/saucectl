@@ -9,6 +9,7 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/spf13/cobra"
 )
 
@@ -16,13 +17,13 @@ var (
 	runUse     = "run ./.sauce/config.yaml"
 	runShort   = "Run a test on Sauce Labs"
 	runLong    = `Some long description`
-	runExample = "run ./.sauce/config.yaml"
+	runExample = "saucectl run ./.sauce/config.yaml"
 
 	cfgFilePath string
 )
 
-// NewCmdRun creates the `run` command
-func NewCmdRun() *cobra.Command {
+// NewRunCommand creates the `run` command
+func NewRunCommand(cli *command.SauceCtlCli) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     runUse,
 		Short:   runShort,

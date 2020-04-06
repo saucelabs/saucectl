@@ -15,4 +15,5 @@
 # vendor/
 
 # compiled files
-saucectl*
+/saucectl*
+/cmd/cmd
