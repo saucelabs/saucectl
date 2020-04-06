@@ -2,11 +2,13 @@ package run
 
 import (
 	"context"
-	"fmt"
+	"os"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/spf13/cobra"
 )
 
@@ -63,7 +65,7 @@ func Run(cmd *cobra.Command, args []string) error {
 
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	listFilters := filters.NewArgs(
@@ -72,16 +74,63 @@ func Run(cmd *cobra.Command, args []string) error {
 		All:     true,
 		Filters: listFilters,
 	}
-	images, err := cli.ImageList(context.Background(), options)
+	ctx := context.Background()
+	images, err := cli.ImageList(ctx, options)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	if len(images) > 0 {
-		fmt.Println("I have the image")
-		return nil
+	// pull image if not on machine
+	if len(images) == 0 {
+		options := types.ImagePullOptions{}
+		responseBody, err := cli.ImagePull(ctx, config.Image.Base, options)
+
+		if err != nil {
+			return err
+		}
+
+		defer responseBody.Close()
 	}
 
-	fmt.Println("PULL IT")
+	resp, err := cli.ContainerCreate(ctx, &container.Config{
+		Image: config.Image.Base,
+		Env:   []string{"SAUCE_USERNAME", "SAUCE_ACCESS_KEY"},
+		Tty:   true,
+	}, nil, nil, "")
+	if err != nil {
+		return err
+	}
+
+	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		return err
+	}
+
+	// We need to check the tty _before_ we do the ContainerExecCreate, because
+	// otherwise if we error out we will leak execIDs on the server (and
+	// there's no easy way to clean those up). But also in order to make "not
+	// exist" errors take precedence we do a dummy inspect first.
+	if _, err := cli.ContainerInspect(ctx, resp.ID); err != nil {
+		return err
+	}
+
+	// execConfig := &types.ExecConfig{
+	// 	Cmd: []string{"cd", "/home/runner", "&&", "npm", "test"},
+	// }
+
+	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			return err
+		}
+	case <-statusCh:
+	}
+
+	out, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true})
+	if err != nil {
+		return err
+	}
+
+	stdcopy.StdCopy(os.Stdout, os.Stderr, out)
 	return nil
 }
