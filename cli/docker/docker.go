@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 )
@@ -66,26 +67,27 @@ func (handler Handler) PullBaseImage(baseImage string) error {
 
 // StartContainer starts the Docker testrunner container
 func (handler Handler) StartContainer(baseImage string) error {
-	// resp, err := cli.ContainerCreate(ctx, &container.Config{
-	// 	Image: config.Image.Base,
-	// 	Env:   []string{"SAUCE_USERNAME", "SAUCE_ACCESS_KEY"},
-	// 	Tty:   true,
-	// }, nil, nil, "")
-	// if err != nil {
-	// 	return err
-	// }
+	ctx := context.Background()
+	resp, err := handler.client.ContainerCreate(ctx, &container.Config{
+		Image: baseImage,
+		Env:   []string{"SAUCE_USERNAME", "SAUCE_ACCESS_KEY"},
+		Tty:   true,
+	}, nil, nil, "")
+	if err != nil {
+		return err
+	}
 
-	// if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-	// 	return err
-	// }
+	if err := handler.client.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		return err
+	}
 
-	// // We need to check the tty _before_ we do the ContainerExecCreate, because
-	// // otherwise if we error out we will leak execIDs on the server (and
-	// // there's no easy way to clean those up). But also in order to make "not
-	// // exist" errors take precedence we do a dummy inspect first.
-	// if _, err := cli.ContainerInspect(ctx, resp.ID); err != nil {
-	// 	return err
-	// }
+	// We need to check the tty _before_ we do the ContainerExecCreate, because
+	// otherwise if we error out we will leak execIDs on the server (and
+	// there's no easy way to clean those up). But also in order to make "not
+	// exist" errors take precedence we do a dummy inspect first.
+	if _, err := handler.client.ContainerInspect(ctx, resp.ID); err != nil {
+		return err
+	}
 
 	// // execConfig := &types.ExecConfig{
 	// // 	Cmd: []string{"cd", "/home/runner", "&&", "npm", "test"},

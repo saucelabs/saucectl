@@ -66,5 +66,9 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		}
 	}
 
+	if err := cli.Docker.StartContainer(config.Image.Base); err != nil {
+		return err
+	}
+
 	return nil
 }
