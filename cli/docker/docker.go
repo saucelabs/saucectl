@@ -35,14 +35,14 @@ func (handler Handler) ValidateDependency() error {
 }
 
 // HasBaseImage checks if base image is installed
-func (handler Handler) HasBaseImage(baseImage string) (bool, error) {
+func (handler Handler) HasBaseImage(ctx context.Context, baseImage string) (bool, error) {
 	listFilters := filters.NewArgs(
 		filters.Arg("reference", baseImage))
 	options := types.ImageListOptions{
 		All:     true,
 		Filters: listFilters,
 	}
-	ctx := context.Background()
+
 	images, err := handler.client.ImageList(ctx, options)
 	if err != nil {
 		return false, err
@@ -52,8 +52,7 @@ func (handler Handler) HasBaseImage(baseImage string) (bool, error) {
 }
 
 // PullBaseImage pulls an image from Docker
-func (handler Handler) PullBaseImage(baseImage string) error {
-	ctx := context.Background()
+func (handler Handler) PullBaseImage(ctx context.Context, baseImage string) error {
 	options := types.ImagePullOptions{}
 	responseBody, err := handler.client.ImagePull(ctx, baseImage, options)
 
@@ -66,8 +65,7 @@ func (handler Handler) PullBaseImage(baseImage string) error {
 }
 
 // StartContainer starts the Docker testrunner container
-func (handler Handler) StartContainer(baseImage string) error {
-	ctx := context.Background()
+func (handler Handler) StartContainer(ctx context.Context, baseImage string) error {
 	resp, err := handler.client.ContainerCreate(ctx, &container.Config{
 		Image: baseImage,
 		Env:   []string{"SAUCE_USERNAME", "SAUCE_ACCESS_KEY"},

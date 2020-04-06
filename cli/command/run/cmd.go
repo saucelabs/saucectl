@@ -1,6 +1,8 @@
 package run
 
 import (
+	"context"
+
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/spf13/cobra"
 )
@@ -55,18 +57,19 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return err
 	}
 
-	hasBaseImage, err := cli.Docker.HasBaseImage(config.Image.Base)
+	ctx := context.Background()
+	hasBaseImage, err := cli.Docker.HasBaseImage(ctx, config.Image.Base)
 	if err != nil {
 		return err
 	}
 
 	if hasBaseImage {
-		if err := cli.Docker.PullBaseImage(config.Image.Base); err != nil {
+		if err := cli.Docker.PullBaseImage(ctx, config.Image.Base); err != nil {
 			return err
 		}
 	}
 
-	if err := cli.Docker.StartContainer(config.Image.Base); err != nil {
+	if err := cli.Docker.StartContainer(ctx, config.Image.Base); err != nil {
 		return err
 	}
 
