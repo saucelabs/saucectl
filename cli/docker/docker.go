@@ -1,13 +1,20 @@
 package docker
 
 import (
+	"archive/tar"
+	"bytes"
 	"context"
+	"io"
+	"os"
+	"path/filepath"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 )
+
+var targetDir = "/home/testrunner/tests"
 
 // Handler represents the client to handle Docker tasks
 type Handler struct {
@@ -65,46 +72,97 @@ func (handler Handler) PullBaseImage(ctx context.Context, baseImage string) erro
 }
 
 // StartContainer starts the Docker testrunner container
-func (handler Handler) StartContainer(ctx context.Context, baseImage string) error {
-	resp, err := handler.client.ContainerCreate(ctx, &container.Config{
+func (handler Handler) StartContainer(ctx context.Context, baseImage string) (*container.ContainerCreateCreatedBody, error) {
+	c, err := handler.client.ContainerCreate(ctx, &container.Config{
 		Image: baseImage,
 		Env:   []string{"SAUCE_USERNAME", "SAUCE_ACCESS_KEY"},
 		Tty:   true,
 	}, nil, nil, "")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if err := handler.client.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		return err
+	if err := handler.client.ContainerStart(ctx, c.ID, types.ContainerStartOptions{}); err != nil {
+		return nil, err
 	}
 
 	// We need to check the tty _before_ we do the ContainerExecCreate, because
 	// otherwise if we error out we will leak execIDs on the server (and
 	// there's no easy way to clean those up). But also in order to make "not
 	// exist" errors take precedence we do a dummy inspect first.
-	if _, err := handler.client.ContainerInspect(ctx, resp.ID); err != nil {
-		return err
+	if _, err := handler.client.ContainerInspect(ctx, c.ID); err != nil {
+		return nil, err
 	}
 
-	// // execConfig := &types.ExecConfig{
-	// // 	Cmd: []string{"cd", "/home/runner", "&&", "npm", "test"},
-	// // }
+	return &c, nil
+}
 
-	// statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
-	// select {
-	// case err := <-errCh:
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// case <-statusCh:
-	// }
+// CopyTestFilesToContainer copies files from the config into the container
+func (handler Handler) CopyTestFilesToContainer(ctx context.Context, srcContainerID string, files []string) error {
+	for _, pattern := range files {
+		matches, err := filepath.Glob(pattern)
+		if err != nil {
+			continue
+		}
 
-	// out, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true})
-	// if err != nil {
-	// 	return err
-	// }
+		for _, file := range matches {
+			pwd, err := os.Getwd()
+			if err != nil {
+				continue
+			}
 
-	// stdcopy.StdCopy(os.Stdout, os.Stderr, out)
+			srcFile := filepath.Join(pwd, file)
+			file, err := os.Stat(srcFile)
+			if err != nil {
+				continue
+			}
+
+			header, err := tar.FileInfoHeader(file, file.Name())
+			if err != nil {
+				continue
+			}
+
+			var buf bytes.Buffer
+			tw := tar.NewWriter(&buf)
+			header.Name = file.Name()
+			if err := tw.WriteHeader(header); err != nil {
+				continue
+			}
+
+			f, err := os.Open(srcFile)
+			if err != nil {
+				continue
+			}
+
+			if _, err := io.Copy(tw, f); err != nil {
+				continue
+			}
+
+			f.Close()
+
+			// use &buf as argument for content in CopyToContainer
+			handler.client.CopyToContainer(ctx, srcContainerID, targetDir, &buf, types.CopyToContainerOptions{})
+		}
+	}
 	return nil
 }
+
+// // execConfig := &types.ExecConfig{
+// // 	Cmd: []string{"cd", "/home/runner", "&&", "npm", "test"},
+// // }
+
+// statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+// select {
+// case err := <-errCh:
+// 	if err != nil {
+// 		return err
+// 	}
+// case <-statusCh:
+// }
+
+// out, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true})
+// if err != nil {
+// 	return err
+// }
+
+// stdcopy.StdCopy(os.Stdout, os.Stderr, out)
