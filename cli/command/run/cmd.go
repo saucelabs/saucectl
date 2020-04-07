@@ -86,6 +86,14 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return err
 	}
 
+	if err := cli.Docker.ContainerStop(ctx, container.ID); err != nil {
+		return err
+	}
+
+	if err := cli.Docker.ContainerRemove(ctx, container.ID); err != nil {
+		return err
+	}
+
 	fmt.Printf("Command finished with exit code %d\n", exitCode)
 	return nil
 }

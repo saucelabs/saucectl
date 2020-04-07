@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -15,7 +16,15 @@ import (
 	"github.com/docker/docker/client"
 )
 
-var targetDir = "/home/testrunner/tests"
+var (
+	targetDir              = "/home/testrunner/tests"
+	containerStopTimeout   = time.Duration(10) * time.Second
+	containerRemoveOptions = types.ContainerRemoveOptions{
+		Force:         true,
+		RemoveLinks:   false,
+		RemoveVolumes: false,
+	}
+)
 
 // Handler represents the client to handle Docker tasks
 type Handler struct {
@@ -202,4 +211,14 @@ func (handler Handler) ExecuteTest(ctx context.Context, srcContainerID string) (
 	}
 
 	return inspectResp.ExitCode, nil
+}
+
+// ContainerStop stops a running container
+func (handler Handler) ContainerStop(ctx context.Context, srcContainerID string) error {
+	return handler.client.ContainerStop(ctx, srcContainerID, &containerStopTimeout)
+}
+
+// ContainerRemove removes testrunner container
+func (handler Handler) ContainerRemove(ctx context.Context, srcContainerID string) error {
+	return handler.client.ContainerRemove(ctx, srcContainerID, containerRemoveOptions)
 }
