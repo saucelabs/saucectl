@@ -62,8 +62,6 @@ func (h *ioStreamer) beginOutputStream() <-chan error {
 		var err error
 
 		_, err = stdcopy.StdCopy(h.outputStream, h.errorStream, h.resp.Reader)
-		fmt.Println("[hijack] End of stdout")
-
 		if err != nil {
 			fmt.Printf("Error receiveStdout: %s", err)
 		}
@@ -81,8 +79,6 @@ func (h *ioStreamer) beginInputStream() (doneC <-chan struct{}, detachedC <-chan
 	go func() {
 		if h.inputStream != nil {
 			_, err := io.Copy(h.resp.Conn, h.inputStream)
-
-			fmt.Print("[hijack] End of stdin")
 
 			if _, ok := err.(term.EscapeError); ok {
 				detached <- err

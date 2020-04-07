@@ -2,8 +2,8 @@ package run
 
 import (
 	"context"
-	"fmt"
 	"os"
+	"time"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/spf13/cobra"
@@ -26,6 +26,7 @@ func NewRunCommand(cli *command.SauceCtlCli) *cobra.Command {
 		Long:    runLong,
 		Example: runExample,
 		Run: func(cmd *cobra.Command, args []string) {
+			cli.Logger.Info().Msg("Start Run Command")
 			checkErr(Run(cmd, cli, args))
 			os.Exit(0)
 		},
@@ -52,48 +53,64 @@ func checkErr(e error) {
 	}
 }
 
+func makeTimestamp() int64 {
+	return time.Now().UnixNano() / int64(time.Millisecond)
+}
+
 // Run runs the command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
+	startTime := makeTimestamp()
+	ctx := context.Background()
+
+	cli.Logger.Info().Msg("Read config file")
 	var configFile Configuration
 	config, err := configFile.readFromFilePath(cfgFilePath)
 	if err != nil {
 		return err
 	}
 
-	ctx := context.Background()
 	hasBaseImage, err := cli.Docker.HasBaseImage(ctx, config.Image.Base)
 	if err != nil {
 		return err
 	}
 
-	if hasBaseImage {
+	if !hasBaseImage {
+		cli.Logger.Info().Int64("Duration", makeTimestamp()-startTime).Msg("Pull base image")
 		if err := cli.Docker.PullBaseImage(ctx, config.Image.Base); err != nil {
 			return err
 		}
 	}
 
+	cli.Logger.Info().Int64("Duration", makeTimestamp()-startTime).Msg("Start container")
 	container, err := cli.Docker.StartContainer(ctx, config.Image.Base)
 	if err != nil {
 		return err
 	}
 
+	cli.Logger.Info().Int64("Duration", makeTimestamp()-startTime).Msg("Copy files to container")
 	if err := cli.Docker.CopyTestFilesToContainer(ctx, container.ID, config.Files); err != nil {
 		return err
 	}
 
+	cli.Logger.Info().Int64("Duration", makeTimestamp()-startTime).Msg("Run tests")
 	exitCode, err := cli.Docker.ExecuteTest(ctx, container.ID)
 	if err != nil {
 		return err
 	}
 
+	cli.Logger.Info().Int64("Duration", makeTimestamp()-startTime).Msg("Stop container")
 	if err := cli.Docker.ContainerStop(ctx, container.ID); err != nil {
 		return err
 	}
 
+	cli.Logger.Info().Int64("Duration", makeTimestamp()-startTime).Msg("Remove container")
 	if err := cli.Docker.ContainerRemove(ctx, container.ID); err != nil {
 		return err
 	}
 
-	fmt.Printf("Command finished with exit code %d\n", exitCode)
+	cli.Logger.Info().
+		Int64("Duration", makeTimestamp()-startTime).
+		Int("ExitCode", exitCode).
+		Msg("Command Finished")
 	return nil
 }
