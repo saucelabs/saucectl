@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -141,7 +142,9 @@ func (handler Handler) CopyTestFilesToContainer(ctx context.Context, srcContaine
 			f.Close()
 
 			// use &buf as argument for content in CopyToContainer
-			handler.client.CopyToContainer(ctx, srcContainerID, targetDir, &buf, types.CopyToContainerOptions{})
+			if err := handler.client.CopyToContainer(ctx, srcContainerID, targetDir, &buf, types.CopyToContainerOptions{}); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -150,7 +153,7 @@ func (handler Handler) CopyTestFilesToContainer(ctx context.Context, srcContaine
 // ExecuteTest runs the test in the Docker container
 func (handler Handler) ExecuteTest(ctx context.Context, srcContainerID string) (int, error) {
 	execConfig := &types.ExecConfig{
-		Cmd: []string{"cd", "/home/testrunner", "&&", "npm", "test"},
+		Cmd: []string{"npm", "test"},
 	}
 
 	createResp, err := handler.client.ContainerExecCreate(ctx, srcContainerID, *execConfig)
@@ -164,7 +167,34 @@ func (handler Handler) ExecuteTest(ctx context.Context, srcContainerID string) (
 		return 1, err
 	}
 
+	// Interactive exec requested.
+	var (
+		out, stderr io.Writer
+		in          io.ReadCloser
+	)
+	in = os.Stdin
+	out = os.Stdout
+	stderr = os.Stderr
 	defer attachResp.Close()
+	errCh := make(chan error, 1)
+	go func() {
+		defer close(errCh)
+		errCh <- func() error {
+			streamer := ioStreamer{
+				inputStream:  in,
+				outputStream: out,
+				errorStream:  stderr,
+				resp:         attachResp,
+			}
+
+			return streamer.stream(ctx)
+		}()
+	}()
+
+	if err := <-errCh; err != nil {
+		fmt.Printf("Error stream: %s", err)
+		return 1, err
+	}
 
 	inspectResp, err := handler.client.ContainerExecInspect(ctx, createResp.ID)
 	if err != nil {

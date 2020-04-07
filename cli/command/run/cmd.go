@@ -27,6 +27,7 @@ func NewRunCommand(cli *command.SauceCtlCli) *cobra.Command {
 		Example: runExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			checkErr(Run(cmd, cli, args))
+			os.Exit(0)
 		},
 	}
 
@@ -82,9 +83,9 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 
 	exitCode, err := cli.Docker.ExecuteTest(ctx, container.ID)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		return err
 	}
 
-	os.Exit(exitCode)
+	fmt.Printf("Command finished with exit code %d\n", exitCode)
 	return nil
 }
