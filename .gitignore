@@ -17,3 +17,4 @@
 # compiled files
 /saucectl*
 /cmd/cmd
+/logs

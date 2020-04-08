@@ -14,6 +14,10 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/archive"
+	"github.com/docker/docker/pkg/system"
+
+	"github.com/saucelabs/saucectl/cli/utils"
 )
 
 var (
@@ -157,6 +161,50 @@ func (handler Handler) CopyTestFilesToContainer(ctx context.Context, srcContaine
 		}
 	}
 	return nil
+}
+
+// CopyFromContainer downloads a file from the testrunner container
+func (handler Handler) CopyFromContainer(ctx context.Context, srcContainerID string, srcPath string, dstPath string) error {
+	if err := utils.ValidateOutputPath(dstPath); err != nil {
+		return err
+	}
+
+	// if client requests to follow symbol link, then must decide target file to be copied
+	var rebaseName string
+	srcStat, err := handler.client.ContainerStatPath(ctx, srcContainerID, srcPath)
+
+	// If the destination is a symbolic link, we should follow it.
+	if err == nil && srcStat.Mode&os.ModeSymlink != 0 {
+		linkTarget := srcStat.LinkTarget
+		if !system.IsAbs(linkTarget) {
+			// Join with the parent directory.
+			srcParent, _ := archive.SplitPathDirEntry(srcPath)
+			linkTarget = filepath.Join(srcParent, linkTarget)
+		}
+
+		linkTarget, rebaseName = archive.GetRebaseName(srcPath, linkTarget)
+		srcPath = linkTarget
+	}
+
+	content, stat, err := handler.client.CopyFromContainer(ctx, srcContainerID, srcPath)
+	if err != nil {
+		return err
+	}
+	defer content.Close()
+
+	srcInfo := archive.CopyInfo{
+		Path:       srcPath,
+		Exists:     true,
+		IsDir:      stat.Mode.IsDir(),
+		RebaseName: rebaseName,
+	}
+
+	preArchive := content
+	if len(srcInfo.RebaseName) != 0 {
+		_, srcBase := archive.SplitPathDirEntry(srcInfo.Path)
+		preArchive = archive.RebaseArchiveEntries(content, srcBase, srcInfo.RebaseName)
+	}
+	return archive.CopyTo(preArchive, srcInfo, dstPath)
 }
 
 // ExecuteTest runs the test in the Docker container

@@ -3,6 +3,7 @@ package run
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/saucelabs/saucectl/cli/command"
@@ -15,7 +16,10 @@ var (
 	runLong    = `Some long description`
 	runExample = "saucectl run ./.sauce/config.yaml"
 
+	defaultLogFir = "<cwd>/logs"
+
 	cfgFilePath string
+	cfgLogDir   string
 )
 
 // NewRunCommand creates the `run` command
@@ -32,17 +36,8 @@ func NewRunCommand(cli *command.SauceCtlCli) *cobra.Command {
 		},
 	}
 
-	// cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-	// cmd.PersistentFlags().StringVar(&cfgFilePath, "config", "", "config file (default is $HOME/.saucectl.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	// cmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	cmd.Flags().StringVarP(&cfgFilePath, "config", "c", "", "config file (e.g. ./.sauce/config.yaml")
+	cmd.Flags().StringVarP(&cfgLogDir, "logDir", "l", defaultLogFir, "log path")
 
 	return cmd
 }
@@ -61,6 +56,12 @@ func makeTimestamp() int64 {
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	startTime := makeTimestamp()
 	ctx := context.Background()
+
+	// Todo(Christian) write argument parser/validator
+	if cfgLogDir == defaultLogFir {
+		pwd, _ := os.Getwd()
+		cfgLogDir = filepath.Join(pwd, "logs")
+	}
 
 	cli.Logger.Info().Msg("Read config file")
 	var configFile Configuration
@@ -95,6 +96,11 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	cli.Logger.Info().Int64("Duration", makeTimestamp()-startTime).Msg("Run tests")
 	exitCode, err := cli.Docker.ExecuteTest(ctx, container.ID)
 	if err != nil {
+		return err
+	}
+
+	cli.Logger.Info().Int64("Duration", makeTimestamp()-startTime).Msg("Download artifatcs")
+	if err := ExportArtifacts(ctx, cli, container.ID, cfgLogDir); err != nil {
 		return err
 	}
 
