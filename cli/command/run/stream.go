@@ -1,4 +1,4 @@
-package docker
+package run
 
 import (
 	"context"
@@ -8,17 +8,24 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/docker/pkg/term"
+	"github.com/saucelabs/saucectl/cli/streams"
 )
 
 // An ioStreamer handles copying input to and output from streams to the
 // connection.
 type ioStreamer struct {
+	streams      streams.Streams
 	inputStream  io.ReadCloser
 	outputStream io.Writer
 	errorStream  io.Writer
 
-	resp types.HijackedResponse
+	resp       types.HijackedResponse
+	detachKeys string
 }
+
+// The default escape key sequence: ctrl-p, ctrl-q
+// TODO: This could be moved to `pkg/term`.
+var defaultEscapeKeys = []byte{16, 17}
 
 // stream handles setting up the IO and then begins streaming stdin/stdout
 // to/from the hijacked connection, blocking until it is either done reading
@@ -52,16 +59,17 @@ func (h *ioStreamer) stream(ctx context.Context) error {
 }
 
 func (h *ioStreamer) beginOutputStream() <-chan error {
-	if h.outputStream == nil && h.errorStream == nil {
-		// There is no need to copy output.
-		return nil
-	}
-
 	outputDone := make(chan error)
 	go func() {
 		var err error
 
+		// When TTY is ON, use regular copy
+		// if h.outputStream != nil {
+		// 	_, err = io.Copy(h.outputStream, h.resp.Reader)
+		// } else {
 		_, err = stdcopy.StdCopy(h.outputStream, h.errorStream, h.resp.Reader)
+		// }
+
 		if err != nil {
 			fmt.Printf("Error receiveStdout: %s", err)
 		}

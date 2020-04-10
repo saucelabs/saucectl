@@ -4,7 +4,6 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -89,8 +88,9 @@ func (handler Handler) PullBaseImage(ctx context.Context, baseImage string) erro
 func (handler Handler) StartContainer(ctx context.Context, baseImage string) (*container.ContainerCreateCreatedBody, error) {
 	c, err := handler.client.ContainerCreate(ctx, &container.Config{
 		Image: baseImage,
-		Env:   []string{"SAUCE_USERNAME", "SAUCE_ACCESS_KEY"},
-		Tty:   true,
+		Env: []string{
+			"SAUCE_USERNAME=" + os.Getenv("SAUCE_USERNAME"),
+			"SAUCE_ACCESS_KEY=" + os.Getenv("SAUCE_ACCESS_KEY")},
 	}, nil, nil, "")
 	if err != nil {
 		return nil, err
@@ -208,52 +208,28 @@ func (handler Handler) CopyFromContainer(ctx context.Context, srcContainerID str
 }
 
 // ExecuteTest runs the test in the Docker container
-func (handler Handler) ExecuteTest(ctx context.Context, srcContainerID string) (int, error) {
-	execConfig := &types.ExecConfig{
-		Cmd: []string{"npm", "test"},
+func (handler Handler) ExecuteTest(ctx context.Context, srcContainerID string) (*types.IDResponse, *types.HijackedResponse, error) {
+	execConfig := types.ExecConfig{
+		Cmd:          []string{"npm", "test"},
+		AttachStdout: true,
+		AttachStderr: true,
 	}
 
-	createResp, err := handler.client.ContainerExecCreate(ctx, srcContainerID, *execConfig)
+	createResp, err := handler.client.ContainerExecCreate(ctx, srcContainerID, execConfig)
 	if err != nil {
-		return 1, err
+		return nil, nil, err
 	}
 
-	execStartCheck := types.ExecStartCheck{}
-	attachResp, err := handler.client.ContainerExecAttach(ctx, createResp.ID, execStartCheck)
-	if err != nil {
-		return 1, err
+	execStartCheck := types.ExecStartCheck{
+		Tty: false,
 	}
+	resp, err := handler.client.ContainerExecAttach(ctx, createResp.ID, execStartCheck)
+	return &createResp, &resp, err
+}
 
-	// Interactive exec requested.
-	var (
-		out, stderr io.Writer
-		in          io.ReadCloser
-	)
-	in = os.Stdin
-	out = os.Stdout
-	stderr = os.Stderr
-	defer attachResp.Close()
-	errCh := make(chan error, 1)
-	go func() {
-		defer close(errCh)
-		errCh <- func() error {
-			streamer := ioStreamer{
-				inputStream:  in,
-				outputStream: out,
-				errorStream:  stderr,
-				resp:         attachResp,
-			}
-
-			return streamer.stream(ctx)
-		}()
-	}()
-
-	if err := <-errCh; err != nil {
-		fmt.Printf("Error stream: %s", err)
-		return 1, err
-	}
-
-	inspectResp, err := handler.client.ContainerExecInspect(ctx, createResp.ID)
+// ExecuteInspect checks exit code of test
+func (handler Handler) ExecuteInspect(ctx context.Context, srcContainerID string) (int, error) {
+	inspectResp, err := handler.client.ContainerExecInspect(ctx, srcContainerID)
 	if err != nil {
 		return 1, err
 	}

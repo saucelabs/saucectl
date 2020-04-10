@@ -2,6 +2,7 @@ package run
 
 import (
 	"context"
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -93,8 +94,47 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return err
 	}
 
+	var (
+		out, stderr io.Writer
+		in          io.ReadCloser
+	)
+	out = cli.Out()
+	stderr = cli.Out()
+
+	if err := cli.In().CheckTty(false, true); err != nil {
+		return err
+	}
+
 	cli.Logger.Info().Int64("Duration", makeTimestamp()-startTime).Msg("Run tests")
-	exitCode, err := cli.Docker.ExecuteTest(ctx, container.ID)
+	createResp, attachResp, err := cli.Docker.ExecuteTest(ctx, container.ID)
+	if err != nil {
+		return err
+	}
+
+	defer attachResp.Close()
+
+	errCh := make(chan error, 1)
+	go func() {
+		defer close(errCh)
+		errCh <- func() error {
+			streamer := ioStreamer{
+				streams:      cli,
+				inputStream:  in,
+				outputStream: out,
+				errorStream:  stderr,
+				resp:         *attachResp,
+				detachKeys:   "",
+			}
+
+			return streamer.stream(ctx)
+		}()
+	}()
+
+	if err := <-errCh; err != nil {
+		return err
+	}
+
+	exitCode, err := cli.Docker.ExecuteInspect(ctx, createResp.ID)
 	if err != nil {
 		return err
 	}
