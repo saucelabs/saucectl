@@ -89,6 +89,10 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return err
 	}
 
+	// wait until Xvfb started
+	// ToDo(Christian): make this dynamic
+	time.Sleep(1 * time.Second)
+
 	cli.Logger.Info().Int64("Duration", makeTimestamp()-startTime).Msg("Copy files to container")
 	if err := cli.Docker.CopyTestFilesToContainer(ctx, container.ID, config.Files); err != nil {
 		return err
