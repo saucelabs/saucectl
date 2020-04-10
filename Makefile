@@ -9,4 +9,5 @@ build:
 	go build cmd/saucectl/saucectl.go
 
 test:
-	go test ./...
+	go test -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out
