@@ -6,7 +6,7 @@ install:
 	go get ./...
 
 build:
-	cd ./cmd && go build
+	go build cmd/saucectl/saucectl.go
 
 test:
 	go test ./...

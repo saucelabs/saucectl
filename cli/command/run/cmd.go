@@ -55,9 +55,6 @@ func makeTimestamp() int64 {
 
 // Run runs the command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
-	startTime := makeTimestamp()
-	ctx := context.Background()
-
 	// Todo(Christian) write argument parser/validator
 	if cfgLogDir == defaultLogFir {
 		pwd, _ := os.Getwd()
@@ -71,6 +68,16 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return err
 	}
 
+	if true {
+		return runFromHostMachine(cli, config)
+	}
+
+	return runFromContainer(cli, config)
+}
+
+func runFromHostMachine(cli *command.SauceCtlCli, config Configuration) error {
+	ctx := context.Background()
+	startTime := makeTimestamp()
 	hasBaseImage, err := cli.Docker.HasBaseImage(ctx, config.Image.Base)
 	if err != nil {
 		return err
@@ -162,5 +169,9 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		Int64("Duration", makeTimestamp()-startTime).
 		Int("ExitCode", exitCode).
 		Msg("Command Finished")
+	return nil
+}
+
+func runFromContainer(cli *command.SauceCtlCli, config Configuration) error {
 	return nil
 }
