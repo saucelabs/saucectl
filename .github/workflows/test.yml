@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v2
         
       - name: Install dependencies
-        run: go get ./...
+        run: go install ./...
         
       - name: Build project
         run: go build cmd/saucectl/saucectl.go
