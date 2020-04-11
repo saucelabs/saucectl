@@ -29,4 +29,4 @@ jobs:
       - name: Run tests
         run: |
           go test -coverprofile=coverage.out ./...
-	        goverreport -sort=block -order=desc -threshold=0
+          goverreport -sort=block -order=desc -threshold=0
