@@ -16,7 +16,7 @@ jobs:
          
     steps:
       - name: Install Git
-        run: sudo apt-get install git
+        run: apt-get install git
 
       - name: Checkout Code
         uses: actions/checkout@v2
