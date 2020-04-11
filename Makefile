@@ -10,4 +10,4 @@ build:
 
 test:
 	go test -coverprofile=coverage.out ./...
-	go tool cover -func=coverage.out
+	goverreport -sort=block -order=desc -threshold=0
