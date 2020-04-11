@@ -1,0 +1,30 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: saucectl Pipline
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: golang:1.14-alpine
+         
+    steps:
+      # appears that checkout@v2 uses javascript which is not compatible 
+      # with the included node version in the container image.
+      - name: Checkout Code
+        uses: actions/checkout@v1
+        
+      - name: Install dependencies
+        run: make install
+        
+      - name: Build project
+        run: make build
+
+      - name: Run tests
+        run: make test
