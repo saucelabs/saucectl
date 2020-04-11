@@ -15,10 +15,11 @@ jobs:
     container: golang:1.14-alpine
          
     steps:
-      # appears that checkout@v2 uses javascript which is not compatible 
-      # with the included node version in the container image.
+      - name: Install Git
+        run: sudo apt-get install git
+
       - name: Checkout Code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
         
       - name: Install dependencies
         run: go get ./...
