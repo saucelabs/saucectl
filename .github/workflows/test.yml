@@ -16,7 +16,7 @@ jobs:
          
     steps:
       - name: Install Git
-        run: apt-get install git
+        run: apk add --no-cache git
 
       - name: Checkout Code
         uses: actions/checkout@v2
