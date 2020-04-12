@@ -36,7 +36,7 @@ type Handler struct {
 
 // Create generates a docker client
 func Create() (*Handler, error) {
-	cl, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	cl, err := client.NewEnvClient()
 	if err != nil {
 		return nil, err
 	}
@@ -56,8 +56,8 @@ func (handler Handler) ValidateDependency() error {
 
 // HasBaseImage checks if base image is installed
 func (handler Handler) HasBaseImage(ctx context.Context, baseImage string) (bool, error) {
-	listFilters := filters.NewArgs(
-		filters.Arg("reference", baseImage))
+	listFilters := filters.NewArgs()
+	listFilters.Add("reference", baseImage)
 	options := types.ImageListOptions{
 		All:     true,
 		Filters: listFilters,
@@ -220,7 +220,7 @@ func (handler Handler) ExecuteTest(ctx context.Context, srcContainerID string) (
 		return nil, nil, err
 	}
 
-	execStartCheck := types.ExecStartCheck{
+	execStartCheck := types.ExecConfig{
 		Tty: false,
 	}
 	resp, err := handler.client.ContainerExecAttach(ctx, createResp.ID, execStartCheck)

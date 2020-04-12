@@ -7,7 +7,6 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/docker/docker/pkg/term"
 	"github.com/saucelabs/saucectl/cli/streams"
 )
 
@@ -87,11 +86,6 @@ func (h *ioStreamer) beginInputStream() (doneC <-chan struct{}, detachedC <-chan
 	go func() {
 		if h.inputStream != nil {
 			_, err := io.Copy(h.resp.Conn, h.inputStream)
-
-			if _, ok := err.(term.EscapeError); ok {
-				detached <- err
-				return
-			}
 
 			if err != nil {
 				// This error will also occur on the receive
