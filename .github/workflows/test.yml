@@ -25,7 +25,12 @@ jobs:
         run: |
           go install ./...
           go get -u github.com/mcubik/goverreport
+          wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.24.0
           CGO_ENABLED=0 go build cmd/saucectl/saucectl.go
+      
+      - name: Lint project
+        run: |
+          golangci-lint run ./...
 
       - name: Run tests
         run: |

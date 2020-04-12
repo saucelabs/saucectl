@@ -13,7 +13,7 @@ var (
 	logsLong    = `Some long description`
 	logsExample = "saucectl --job <jobId>"
 
-	jobID string
+	// jobID string
 )
 
 // NewLogsCommand creates the `logs` command

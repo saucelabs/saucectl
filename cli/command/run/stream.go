@@ -22,10 +22,6 @@ type ioStreamer struct {
 	detachKeys string
 }
 
-// The default escape key sequence: ctrl-p, ctrl-q
-// TODO: This could be moved to `pkg/term`.
-var defaultEscapeKeys = []byte{16, 17}
-
 // stream handles setting up the IO and then begins streaming stdin/stdout
 // to/from the hijacked connection, blocking until it is either done reading
 // output, the user inputs the detach key sequence when in TTY mode, or when

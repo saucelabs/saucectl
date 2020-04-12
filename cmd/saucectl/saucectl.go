@@ -31,5 +31,7 @@ func main() {
 	}
 
 	commands.AddCommands(cmd, cli)
-	cmd.Execute()
+	if err := cmd.Execute(); err != nil {
+		panic(err)
+	}
 }

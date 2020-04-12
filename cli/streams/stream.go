@@ -29,15 +29,3 @@ func (s *commonStream) FD() uintptr {
 func (s *commonStream) IsTerminal() bool {
 	return s.isTerminal
 }
-
-// RestoreTerminal restores normal mode to the terminal
-func (s *commonStream) RestoreTerminal() {
-	if s.state != nil {
-		term.RestoreTerminal(s.fd, s.state)
-	}
-}
-
-// SetIsTerminal sets the boolean used for isTerminal
-func (s *commonStream) SetIsTerminal(isTerminal bool) {
-	s.isTerminal = isTerminal
-}
