@@ -16,7 +16,7 @@ jobs:
          
     steps:
       - name: Install Dependencies
-        run: apk add --no-cache git gcc g++
+        run: apk add --no-cache git gcc g++ curl
 
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -25,7 +25,7 @@ jobs:
         run: |
           go install ./...
           go get -u github.com/mcubik/goverreport
-          wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.24.0
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0
           CGO_ENABLED=0 go build cmd/saucectl/saucectl.go
       
       - name: Lint project
