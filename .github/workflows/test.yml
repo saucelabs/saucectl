@@ -15,8 +15,8 @@ jobs:
     container: golang:1.14-alpine
          
     steps:
-      - name: Install Git
-        run: apk add --no-cache git build-essential
+      - name: Install Dependencies
+        run: apk add --no-cache git gcc
 
       - name: Checkout Code
         uses: actions/checkout@v2
