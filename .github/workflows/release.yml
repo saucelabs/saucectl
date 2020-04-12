@@ -1,0 +1,18 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+name: saucectl release
+
+on:
+  create:
+    tags:
+      - v*
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    container: goreleaser/goreleaser
+    steps:
+      - name: Release
+        run: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

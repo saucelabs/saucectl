@@ -18,3 +18,4 @@
 /saucectl*
 /cmd/cmd
 /logs
+/dist
