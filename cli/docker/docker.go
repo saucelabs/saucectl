@@ -6,12 +6,14 @@ import (
 	"context"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/system"
@@ -29,9 +31,27 @@ var (
 	}
 )
 
+// ClientInterface describes the interface used to handle docker commands
+type ClientInterface interface {
+	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
+	ImageList(ctx context.Context, options types.ImageListOptions) ([]types.ImageSummary, error)
+	ImagePull(ctx context.Context, ref string, options types.ImagePullOptions) (io.ReadCloser, error)
+	ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (container.ContainerCreateCreatedBody, error)
+	ContainerStart(ctx context.Context, containerID string, options types.ContainerStartOptions) error
+	ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error)
+	CopyToContainer(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error
+	ContainerStatPath(ctx context.Context, containerID, path string) (types.ContainerPathStat, error)
+	CopyFromContainer(ctx context.Context, container, srcPath string) (io.ReadCloser, types.ContainerPathStat, error)
+	ContainerExecCreate(ctx context.Context, container string, config types.ExecConfig) (types.IDResponse, error)
+	ContainerExecAttach(ctx context.Context, execID string, config types.ExecConfig) (types.HijackedResponse, error)
+	ContainerExecInspect(ctx context.Context, execID string) (types.ContainerExecInspect, error)
+	ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error
+	ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error
+}
+
 // Handler represents the client to handle Docker tasks
 type Handler struct {
-	client *client.Client
+	client ClientInterface
 }
 
 // Create generates a docker client
@@ -41,11 +61,11 @@ func Create() (*Handler, error) {
 		return nil, err
 	}
 
-	handler := &Handler{
+	handler := Handler{
 		client: cl,
 	}
 
-	return handler, nil
+	return &handler, nil
 }
 
 // ValidateDependency checks if external dependencies are installed
@@ -125,7 +145,10 @@ func (handler Handler) CopyTestFilesToContainer(ctx context.Context, srcContaine
 				continue
 			}
 
-			srcFile := filepath.Join(pwd, file)
+			srcFile := file
+			if !path.IsAbs(srcFile) {
+				srcFile = filepath.Join(pwd, file)
+			}
 			file, err := os.Stat(srcFile)
 			if err != nil {
 				continue

@@ -67,7 +67,11 @@ func (c *Configuration) readFromFilePath(cfgFilePath string) (Configuration, err
 		return config, err
 	}
 
-	yamlFile, err := ioutil.ReadFile(path.Join(pwd, cfgFilePath))
+	filepath := cfgFilePath
+	if !path.IsAbs(filepath) {
+		filepath = path.Join(pwd, cfgFilePath)
+	}
+	yamlFile, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return config, err
 	}
