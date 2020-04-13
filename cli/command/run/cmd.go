@@ -1,13 +1,12 @@
 package run
 
 import (
-	"context"
-	"io"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/spf13/cobra"
 )
 
@@ -49,10 +48,6 @@ func checkErr(e error) {
 	}
 }
 
-func makeTimestamp() int64 {
-	return time.Now().UnixNano() / int64(time.Millisecond)
-}
-
 // Run runs the command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	// Todo(Christian) write argument parser/validator
@@ -62,116 +57,34 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	}
 
 	cli.Logger.Info().Msg("Read config file")
-	var configFile Configuration
-	config, err := configFile.readFromFilePath(cfgFilePath)
+	var configFile config.Configuration
+	configObject, err := configFile.ReadFromFilePath(cfgFilePath)
 	if err != nil {
 		return err
 	}
 
+	runnerType := runner.CI
 	if true {
-		return runFromHostMachine(cli, config)
+		runnerType = runner.Local
 	}
 
-	return runFromContainer(cli, config)
-}
+	tr := runner.New(runnerType, configObject, cli)
+	if err := tr.Setup(); err != nil {
+		return err
+	}
 
-func runFromHostMachine(cli *command.SauceCtlCli, config Configuration) error {
-	ctx := context.Background()
-	startTime := makeTimestamp()
-	hasBaseImage, err := cli.Docker.HasBaseImage(ctx, config.Image.Base)
+	exitCode, err := tr.Run()
 	if err != nil {
 		return err
 	}
 
-	if !hasBaseImage {
-		cli.Logger.Info().Int64("Duration", makeTimestamp()-startTime).Msg("Pull base image")
-		if err := cli.Docker.PullBaseImage(ctx, config.Image.Base); err != nil {
-			return err
-		}
-	}
-
-	cli.Logger.Info().Int64("Duration", makeTimestamp()-startTime).Msg("Start container")
-	container, err := cli.Docker.StartContainer(ctx, config.Image.Base)
-	if err != nil {
-		return err
-	}
-
-	// wait until Xvfb started
-	// ToDo(Christian): make this dynamic
-	time.Sleep(1 * time.Second)
-
-	cli.Logger.Info().Int64("Duration", makeTimestamp()-startTime).Msg("Copy files to container")
-	if err := cli.Docker.CopyTestFilesToContainer(ctx, container.ID, config.Files); err != nil {
-		return err
-	}
-
-	var (
-		out, stderr io.Writer
-		in          io.ReadCloser
-	)
-	out = cli.Out()
-	stderr = cli.Out()
-
-	if err := cli.In().CheckTty(false, true); err != nil {
-		return err
-	}
-
-	cli.Logger.Info().Int64("Duration", makeTimestamp()-startTime).Msg("Run tests")
-	createResp, attachResp, err := cli.Docker.ExecuteTest(ctx, container.ID)
-	if err != nil {
-		return err
-	}
-
-	defer attachResp.Close()
-
-	errCh := make(chan error, 1)
-	go func() {
-		defer close(errCh)
-		errCh <- func() error {
-			streamer := ioStreamer{
-				streams:      cli,
-				inputStream:  in,
-				outputStream: out,
-				errorStream:  stderr,
-				resp:         *attachResp,
-				detachKeys:   "",
-			}
-
-			return streamer.stream(ctx)
-		}()
-	}()
-
-	if err := <-errCh; err != nil {
-		return err
-	}
-
-	exitCode, err := cli.Docker.ExecuteInspect(ctx, createResp.ID)
-	if err != nil {
-		return err
-	}
-
-	cli.Logger.Info().Int64("Duration", makeTimestamp()-startTime).Msg("Download artifatcs")
-	if err := ExportArtifacts(ctx, cli, container.ID, cfgLogDir); err != nil {
-		return err
-	}
-
-	cli.Logger.Info().Int64("Duration", makeTimestamp()-startTime).Msg("Stop container")
-	if err := cli.Docker.ContainerStop(ctx, container.ID); err != nil {
-		return err
-	}
-
-	cli.Logger.Info().Int64("Duration", makeTimestamp()-startTime).Msg("Remove container")
-	if err := cli.Docker.ContainerRemove(ctx, container.ID); err != nil {
+	if err != tr.Teardown(cfgLogDir) {
 		return err
 	}
 
 	cli.Logger.Info().
-		Int64("Duration", makeTimestamp()-startTime).
 		Int("ExitCode", exitCode).
 		Msg("Command Finished")
-	return nil
-}
 
-func runFromContainer(cli *command.SauceCtlCli, config Configuration) error {
 	return nil
 }

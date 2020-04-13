@@ -1,4 +1,4 @@
-package run
+package config
 
 import (
 	"fmt"
@@ -54,8 +54,8 @@ type Configuration struct {
 	Image       ImageDefinition `yaml:"image"`
 }
 
-// Run runs the command
-func (c *Configuration) readFromFilePath(cfgFilePath string) (Configuration, error) {
+// ReadFromFilePath populates the config object with fields from yaml
+func (c *Configuration) ReadFromFilePath(cfgFilePath string) (Configuration, error) {
 	var config Configuration
 
 	if len(cfgFilePath) == 0 {

@@ -1,4 +1,4 @@
-package run
+package config
 
 import (
 	"testing"
@@ -26,7 +26,7 @@ func TestFailingCases(t *testing.T) {
 	var configFile Configuration
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			config, err := configFile.readFromFilePath(tc.Input)
+			config, err := configFile.ReadFromFilePath(tc.Input)
 			if !tc.ShouldPass {
 				if err == nil {
 					t.Error("No error was returned for failing test case")

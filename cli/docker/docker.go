@@ -22,7 +22,6 @@ import (
 )
 
 var (
-	targetDir              = "/home/testrunner/tests"
 	containerStopTimeout   = time.Duration(10) * time.Second
 	containerRemoveOptions = types.ContainerRemoveOptions{
 		Force:         true,
@@ -132,7 +131,7 @@ func (handler Handler) StartContainer(ctx context.Context, baseImage string) (*c
 }
 
 // CopyTestFilesToContainer copies files from the config into the container
-func (handler Handler) CopyTestFilesToContainer(ctx context.Context, srcContainerID string, files []string) error {
+func (handler Handler) CopyTestFilesToContainer(ctx context.Context, srcContainerID string, files []string, targetDir string) error {
 	for _, pattern := range files {
 		matches, err := filepath.Glob(pattern)
 		if err != nil {

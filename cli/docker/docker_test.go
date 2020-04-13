@@ -117,7 +117,7 @@ func TestCopyTestFilesToContainer(t *testing.T) {
 				dir.Path() + "/*.foo.js",
 				dir.Path() + "/*.bar.js",
 			}
-			err := handler.CopyTestFilesToContainer(ctx, "containerId", testfiles)
+			err := handler.CopyTestFilesToContainer(ctx, "containerId", testfiles, "/foo/bar")
 			assert.Equal(t, err, tc.ExpectedError)
 		})
 	}
