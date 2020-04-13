@@ -22,7 +22,9 @@ func (r ciRunner) Setup() error {
 		}
 
 		for _, file := range matches {
-			copyFile(file, targetDir)
+			if err := copyFile(file, targetDir); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -42,7 +44,7 @@ func (r ciRunner) Run() (int, error) {
 }
 
 func (r ciRunner) Teardown(logDir string) error {
-	if &logDir != nil {
+	if logDir != "" {
 		return nil
 	}
 
