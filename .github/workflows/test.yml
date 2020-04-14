@@ -26,7 +26,7 @@ jobs:
         run: |
           go install ./...
           go get -u github.com/mcubik/goverreport
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0  
           CGO_ENABLED=0 go build cmd/saucectl/saucectl.go
       
       - name: Lint project
@@ -36,4 +36,4 @@ jobs:
       - name: Run tests
         run: |
           go test -coverprofile=coverage.out ./...
-          goverreport -sort=block -order=desc -threshold=51.08
+          goverreport -sort=block -order=desc -threshold=51.06

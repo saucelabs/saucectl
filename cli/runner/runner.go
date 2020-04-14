@@ -2,13 +2,17 @@ package runner
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
 )
 
-const logDir = "/var/log/cont"
+const (
+	logDir           = "/var/log/cont"
+	runnerConfigPath = "/home/testrunner/config.yaml"
+)
 
 var logFiles = [...]string{
 	logDir + "/chrome_browser.log",
@@ -36,9 +40,10 @@ type Testrunner interface {
 }
 
 type baseRunner struct {
-	config  config.Configuration
-	context context.Context
-	cli     *command.SauceCtlCli
+	jobConfig    config.JobConfiguration
+	runnerConfig config.RunnerConfiguration
+	context      context.Context
+	cli          *command.SauceCtlCli
 
 	startTime int64
 }
@@ -51,25 +56,17 @@ func (r baseRunner) CLI() *command.SauceCtlCli {
 	return r.cli
 }
 
-const (
-	// Local test execution
-	Local = iota
-	// CI test execution
-	CI
-)
-
-// ToDo(Christian) detect target dir based on image
-const targetDir = "/home/testrunner/tests"
-
 // New creates a new testrunner object
-func New(runnerType int, config config.Configuration, cli *command.SauceCtlCli) Testrunner {
+func New(c config.JobConfiguration, cli *command.SauceCtlCli) (Testrunner, error) {
 	ctx := context.Background()
+	runnerConfig := config.RunnerConfiguration{}
 
-	if runnerType == Local {
-		return localRunner{baseRunner{config, ctx, cli, makeTimestamp()}, ""}
+	_, err := os.Stat(runnerConfigPath)
+	if os.IsNotExist(err) {
+		return localRunner{baseRunner{c, runnerConfig, ctx, cli, makeTimestamp()}, ""}, nil
 	}
 
-	return ciRunner{baseRunner{config, ctx, cli, makeTimestamp()}}
+	return ciRunner{baseRunner{c, runnerConfig, ctx, cli, makeTimestamp()}}, nil
 }
 
 func makeTimestamp() int64 {

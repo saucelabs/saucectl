@@ -57,18 +57,16 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	}
 
 	cli.Logger.Info().Msg("Read config file")
-	var configFile config.Configuration
-	configObject, err := configFile.ReadFromFilePath(cfgFilePath)
+	configObject, err := config.NewJobConfiguration(cfgFilePath)
 	if err != nil {
 		return err
 	}
 
-	runnerType := runner.CI
-	if true {
-		runnerType = runner.Local
+	tr, err := runner.New(configObject, cli)
+	if err != nil {
+		return err
 	}
 
-	tr := runner.New(runnerType, configObject, cli)
 	if err := tr.Setup(); err != nil {
 		return err
 	}

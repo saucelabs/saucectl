@@ -1,12 +1,14 @@
 package runner
 
 import (
-	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
+
+	"github.com/saucelabs/saucectl/cli/config"
 )
 
 type ciRunner struct {
@@ -14,15 +16,23 @@ type ciRunner struct {
 }
 
 func (r ciRunner) Setup() error {
+	// read runner config file
+	rc, err := config.NewRunnerConfiguration(runnerConfigPath)
+	if err != nil {
+		return err
+	}
+	r.runnerConfig = rc
+
 	// copy files from repository into target dir
-	for _, pattern := range r.config.Files {
+	for _, pattern := range r.jobConfig.Files {
 		matches, err := filepath.Glob(pattern)
 		if err != nil {
 			continue
 		}
 
 		for _, file := range matches {
-			if err := copyFile(file, targetDir); err != nil {
+			r.cli.Logger.Info().Msg("Copy file " + file + " to " + r.runnerConfig.TargetDir)
+			if err := copyFile(file, r.runnerConfig.TargetDir); err != nil {
 				return err
 			}
 		}
@@ -31,10 +41,12 @@ func (r ciRunner) Setup() error {
 }
 
 func (r ciRunner) Run() (int, error) {
-	cmd := exec.Command("npm", "test")
+	fmt.Println(r.runnerConfig)
+	cmd := exec.Command(r.runnerConfig.ExecCommand[0], r.runnerConfig.ExecCommand[1])
 
-	var out bytes.Buffer
-	cmd.Stdout = &out
+	cmd.Stdout = r.cli.Out()
+	cmd.Stderr = r.cli.Out()
+	cmd.Dir = r.runnerConfig.RootDir
 	err := cmd.Run()
 
 	if err != nil {

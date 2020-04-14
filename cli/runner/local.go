@@ -3,8 +3,12 @@ package runner
 import (
 	"errors"
 	"io"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/saucelabs/saucectl/cli/config"
 )
 
 type localRunner struct {
@@ -13,18 +17,18 @@ type localRunner struct {
 }
 
 func (r localRunner) Setup() error {
-	hasBaseImage, err := r.cli.Docker.HasBaseImage(r.context, r.config.Image.Base)
+	hasBaseImage, err := r.cli.Docker.HasBaseImage(r.context, r.jobConfig.Image.Base)
 	if err != nil {
 		return err
 	}
 
 	if !hasBaseImage {
-		if err := r.cli.Docker.PullBaseImage(r.context, r.config.Image.Base); err != nil {
+		if err := r.cli.Docker.PullBaseImage(r.context, r.jobConfig.Image.Base); err != nil {
 			return err
 		}
 	}
 
-	container, err := r.cli.Docker.StartContainer(r.context, r.config.Image.Base)
+	container, err := r.cli.Docker.StartContainer(r.context, r.jobConfig.Image.Base)
 	if err != nil {
 		return err
 	}
@@ -35,7 +39,24 @@ func (r localRunner) Setup() error {
 	// ToDo(Christian): make this dynamic
 	time.Sleep(1 * time.Second)
 
-	if err := r.cli.Docker.CopyTestFilesToContainer(r.context, container.ID, r.config.Files, targetDir); err != nil {
+	// get runner config
+	tmpDir, err := ioutil.TempDir("", "saucectl")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tmpDir)
+	hostDstPath := filepath.Join(tmpDir, filepath.Base(runnerConfigPath))
+	if err := r.cli.Docker.CopyFromContainer(r.context, r.containerID, runnerConfigPath, hostDstPath); err != nil {
+		return err
+	}
+
+	rc, err := config.NewRunnerConfiguration(runnerConfigPath)
+	if err != nil {
+		return err
+	}
+	r.runnerConfig = rc
+
+	if err := r.cli.Docker.CopyTestFilesToContainer(r.context, container.ID, r.jobConfig.Files, r.runnerConfig.TargetDir); err != nil {
 		return err
 	}
 	return nil

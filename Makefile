@@ -10,4 +10,4 @@ build:
 
 test:
 	go test -coverprofile=coverage.out ./...
-	goverreport -sort=block -order=desc -threshold=51.08
+	goverreport -sort=block -order=desc -threshold=51.06
