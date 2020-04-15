@@ -2,13 +2,11 @@ package runner
 
 import (
 	"context"
-	"errors"
 	"os"
 	"time"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
-	"github.com/saucelabs/saucectl/cli/docker"
 )
 
 const (
@@ -60,35 +58,14 @@ func (r baseRunner) CLI() *command.SauceCtlCli {
 
 // New creates a new testrunner object
 func New(c config.JobConfiguration, cli *command.SauceCtlCli) (Testrunner, error) {
-	ctx := context.Background()
-	runnerConfig := config.RunnerConfiguration{}
-
 	_, err := os.Stat(runnerConfigPath)
 	if os.IsNotExist(err) {
-		dockerClient, err := docker.Create()
-		if err != nil {
-			return nil, err
-		}
-
-		err = dockerClient.ValidateDependency()
-		if err != nil {
-			return nil, errors.New("Docker is not installed")
-		}
-
-		return localRunner{
-			baseRunner{
-				c,
-				runnerConfig,
-				ctx,
-				cli,
-				makeTimestamp(),
-			},
-			"",
-			dockerClient,
-		}, nil
+		cli.Logger.Info().Msg("Start local runner")
+		return newLocalRunner(c, cli)
 	}
 
-	return ciRunner{baseRunner{c, runnerConfig, ctx, cli, makeTimestamp()}}, nil
+	cli.Logger.Info().Msg("Start CI runner")
+	return newCIRunner(c, cli)
 }
 
 func makeTimestamp() int64 {

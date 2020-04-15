@@ -1,13 +1,14 @@
 package runner
 
 import (
-	"fmt"
+	"context"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 
+	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
 )
 
@@ -15,14 +16,24 @@ type ciRunner struct {
 	baseRunner
 }
 
-func (r ciRunner) Setup() error {
+func newCIRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (ciRunner, error) {
+	runner := ciRunner{}
+
 	// read runner config file
 	rc, err := config.NewRunnerConfiguration(runnerConfigPath)
 	if err != nil {
-		return err
+		return runner, err
 	}
-	r.runnerConfig = rc
 
+	runner.cli = cli
+	runner.context = context.Background()
+	runner.jobConfig = c
+	runner.startTime = makeTimestamp()
+	runner.runnerConfig = rc
+	return runner, nil
+}
+
+func (r ciRunner) Setup() error {
 	// copy files from repository into target dir
 	for _, pattern := range r.jobConfig.Files {
 		matches, err := filepath.Glob(pattern)
@@ -41,7 +52,6 @@ func (r ciRunner) Setup() error {
 }
 
 func (r ciRunner) Run() (int, error) {
-	fmt.Println(r.runnerConfig)
 	cmd := exec.Command(r.runnerConfig.ExecCommand[0], r.runnerConfig.ExecCommand[1])
 
 	cmd.Stdout = r.cli.Out()

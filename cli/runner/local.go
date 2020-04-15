@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"context"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/docker"
 )
@@ -18,24 +20,34 @@ type localRunner struct {
 	docker      *docker.Handler
 }
 
-func (r localRunner) Setup() error {
-	hasBaseImage, err := r.docker.HasBaseImage(r.context, r.jobConfig.Image.Base)
+func newLocalRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (localRunner, error) {
+	runner := localRunner{}
+	ctx := context.Background()
+	dockerClient, err := docker.Create()
 	if err != nil {
-		return err
+		return runner, err
+	}
+
+	err = dockerClient.ValidateDependency()
+	if err != nil {
+		return runner, errors.New("Docker is not installed")
+	}
+
+	hasBaseImage, err := dockerClient.HasBaseImage(ctx, c.Image.Base)
+	if err != nil {
+		return runner, err
 	}
 
 	if !hasBaseImage {
-		if err := r.docker.PullBaseImage(r.context, r.jobConfig.Image.Base); err != nil {
-			return err
+		if err := dockerClient.PullBaseImage(ctx, c.Image.Base); err != nil {
+			return runner, err
 		}
 	}
 
-	container, err := r.docker.StartContainer(r.context, r.jobConfig.Image.Base)
+	container, err := dockerClient.StartContainer(ctx, c.Image.Base)
 	if err != nil {
-		return err
+		return runner, err
 	}
-
-	r.containerID = container.ID
 
 	// wait until Xvfb started
 	// ToDo(Christian): make this dynamic
@@ -44,21 +56,31 @@ func (r localRunner) Setup() error {
 	// get runner config
 	tmpDir, err := ioutil.TempDir("", "saucectl")
 	if err != nil {
-		return err
+		return runner, err
 	}
 	defer os.RemoveAll(tmpDir)
 	hostDstPath := filepath.Join(tmpDir, filepath.Base(runnerConfigPath))
-	if err := r.docker.CopyFromContainer(r.context, r.containerID, runnerConfigPath, hostDstPath); err != nil {
-		return err
+	if err := dockerClient.CopyFromContainer(ctx, container.ID, runnerConfigPath, hostDstPath); err != nil {
+		return runner, err
 	}
 
-	rc, err := config.NewRunnerConfiguration(runnerConfigPath)
+	rc, err := config.NewRunnerConfiguration(hostDstPath)
 	if err != nil {
-		return err
+		return runner, err
 	}
-	r.runnerConfig = rc
 
-	if err := r.docker.CopyTestFilesToContainer(r.context, container.ID, r.jobConfig.Files, r.runnerConfig.TargetDir); err != nil {
+	runner.cli = cli
+	runner.context = ctx
+	runner.jobConfig = c
+	runner.runnerConfig = rc
+	runner.startTime = makeTimestamp()
+	runner.docker = dockerClient
+	runner.containerID = container.ID
+	return runner, nil
+}
+
+func (r localRunner) Setup() error {
+	if err := r.docker.CopyTestFilesToContainer(r.context, r.containerID, r.jobConfig.Files, r.runnerConfig.TargetDir); err != nil {
 		return err
 	}
 	return nil
