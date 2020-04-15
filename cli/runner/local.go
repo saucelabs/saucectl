@@ -9,26 +9,28 @@ import (
 	"time"
 
 	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/docker"
 )
 
 type localRunner struct {
 	baseRunner
 	containerID string
+	docker      *docker.Handler
 }
 
 func (r localRunner) Setup() error {
-	hasBaseImage, err := r.cli.Docker.HasBaseImage(r.context, r.jobConfig.Image.Base)
+	hasBaseImage, err := r.docker.HasBaseImage(r.context, r.jobConfig.Image.Base)
 	if err != nil {
 		return err
 	}
 
 	if !hasBaseImage {
-		if err := r.cli.Docker.PullBaseImage(r.context, r.jobConfig.Image.Base); err != nil {
+		if err := r.docker.PullBaseImage(r.context, r.jobConfig.Image.Base); err != nil {
 			return err
 		}
 	}
 
-	container, err := r.cli.Docker.StartContainer(r.context, r.jobConfig.Image.Base)
+	container, err := r.docker.StartContainer(r.context, r.jobConfig.Image.Base)
 	if err != nil {
 		return err
 	}
@@ -46,7 +48,7 @@ func (r localRunner) Setup() error {
 	}
 	defer os.RemoveAll(tmpDir)
 	hostDstPath := filepath.Join(tmpDir, filepath.Base(runnerConfigPath))
-	if err := r.cli.Docker.CopyFromContainer(r.context, r.containerID, runnerConfigPath, hostDstPath); err != nil {
+	if err := r.docker.CopyFromContainer(r.context, r.containerID, runnerConfigPath, hostDstPath); err != nil {
 		return err
 	}
 
@@ -56,7 +58,7 @@ func (r localRunner) Setup() error {
 	}
 	r.runnerConfig = rc
 
-	if err := r.cli.Docker.CopyTestFilesToContainer(r.context, container.ID, r.jobConfig.Files, r.runnerConfig.TargetDir); err != nil {
+	if err := r.docker.CopyTestFilesToContainer(r.context, container.ID, r.jobConfig.Files, r.runnerConfig.TargetDir); err != nil {
 		return err
 	}
 	return nil
@@ -78,7 +80,7 @@ func (r localRunner) Run() (int, error) {
 		return 1, err
 	}
 
-	createResp, attachResp, err := r.cli.Docker.ExecuteTest(r.context, r.containerID)
+	createResp, attachResp, err := r.docker.ExecuteTest(r.context, r.containerID)
 	if err != nil {
 		return 1, err
 	}
@@ -106,7 +108,7 @@ func (r localRunner) Run() (int, error) {
 		return 1, err
 	}
 
-	exitCode, err := r.cli.Docker.ExecuteInspect(r.context, createResp.ID)
+	exitCode, err := r.docker.ExecuteInspect(r.context, createResp.ID)
 	if err != nil {
 		return 1, err
 	}
@@ -118,16 +120,16 @@ func (r localRunner) Teardown(logDir string) error {
 	for _, containerSrcPath := range logFiles {
 		file := filepath.Base(containerSrcPath)
 		hostDstPath := filepath.Join(logDir, file)
-		if err := r.cli.Docker.CopyFromContainer(r.context, r.containerID, containerSrcPath, hostDstPath); err != nil {
+		if err := r.docker.CopyFromContainer(r.context, r.containerID, containerSrcPath, hostDstPath); err != nil {
 			continue
 		}
 	}
 
-	if err := r.cli.Docker.ContainerStop(r.context, r.containerID); err != nil {
+	if err := r.docker.ContainerStop(r.context, r.containerID); err != nil {
 		return err
 	}
 
-	if err := r.cli.Docker.ContainerRemove(r.context, r.containerID); err != nil {
+	if err := r.docker.ContainerRemove(r.context, r.containerID); err != nil {
 		return err
 	}
 

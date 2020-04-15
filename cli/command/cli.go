@@ -6,13 +6,11 @@ import (
 
 	"github.com/docker/docker/pkg/term"
 	"github.com/rs/zerolog"
-	"github.com/saucelabs/saucectl/cli/docker"
 	"github.com/saucelabs/saucectl/cli/streams"
 )
 
 // SauceCtlCli is the cli context
 type SauceCtlCli struct {
-	Docker *docker.Handler
 	Logger zerolog.Logger
 
 	in  *streams.In
@@ -50,19 +48,8 @@ func NewSauceCtlCli() (*SauceCtlCli, error) {
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
 	logger.Info().Msg("Start Program")
 
-	dockerClient, err := docker.Create()
-	if err != nil {
-		return nil, err
-	}
-
-	err = dockerClient.ValidateDependency()
-	if err != nil {
-		return nil, err
-	}
-
 	stdin, stdout, stderr := term.StdStreams()
 	cli := &SauceCtlCli{
-		Docker: dockerClient,
 		Logger: logger,
 		in:     streams.NewIn(stdin),
 		out:    streams.NewOut(stdout),
