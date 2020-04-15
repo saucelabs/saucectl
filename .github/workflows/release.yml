@@ -17,8 +17,7 @@ jobs:
       -
         name: Unshallow
         run: |
-          git fetch --prune --unshallow
-          git fetch --tags
+          git fetch --prune --unshallow --tags
       -
         name: Set up Go
         uses: actions/setup-go@v1
