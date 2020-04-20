@@ -68,13 +68,13 @@ func Create() (*Handler, error) {
 }
 
 // ValidateDependency checks if external dependencies are installed
-func (handler Handler) ValidateDependency() error {
+func (handler *Handler) ValidateDependency() error {
 	_, err := handler.client.ContainerList(context.Background(), types.ContainerListOptions{})
 	return err
 }
 
 // HasBaseImage checks if base image is installed
-func (handler Handler) HasBaseImage(ctx context.Context, baseImage string) (bool, error) {
+func (handler *Handler) HasBaseImage(ctx context.Context, baseImage string) (bool, error) {
 	listFilters := filters.NewArgs()
 	listFilters.Add("reference", baseImage)
 	options := types.ImageListOptions{
@@ -91,7 +91,7 @@ func (handler Handler) HasBaseImage(ctx context.Context, baseImage string) (bool
 }
 
 // PullBaseImage pulls an image from Docker
-func (handler Handler) PullBaseImage(ctx context.Context, baseImage string) error {
+func (handler *Handler) PullBaseImage(ctx context.Context, baseImage string) error {
 	options := types.ImagePullOptions{}
 	responseBody, err := handler.client.ImagePull(ctx, baseImage, options)
 
@@ -104,7 +104,7 @@ func (handler Handler) PullBaseImage(ctx context.Context, baseImage string) erro
 }
 
 // StartContainer starts the Docker testrunner container
-func (handler Handler) StartContainer(ctx context.Context, baseImage string) (*container.ContainerCreateCreatedBody, error) {
+func (handler *Handler) StartContainer(ctx context.Context, baseImage string) (*container.ContainerCreateCreatedBody, error) {
 	c, err := handler.client.ContainerCreate(ctx, &container.Config{
 		Image: baseImage,
 		Env: []string{
@@ -131,7 +131,7 @@ func (handler Handler) StartContainer(ctx context.Context, baseImage string) (*c
 }
 
 // CopyTestFilesToContainer copies files from the config into the container
-func (handler Handler) CopyTestFilesToContainer(ctx context.Context, srcContainerID string, files []string, targetDir string) error {
+func (handler *Handler) CopyTestFilesToContainer(ctx context.Context, srcContainerID string, files []string, targetDir string) error {
 	for _, pattern := range files {
 		matches, err := filepath.Glob(pattern)
 		if err != nil {
@@ -186,7 +186,7 @@ func (handler Handler) CopyTestFilesToContainer(ctx context.Context, srcContaine
 }
 
 // CopyFromContainer downloads a file from the testrunner container
-func (handler Handler) CopyFromContainer(ctx context.Context, srcContainerID string, srcPath string, dstPath string) error {
+func (handler *Handler) CopyFromContainer(ctx context.Context, srcContainerID string, srcPath string, dstPath string) error {
 	if err := utils.ValidateOutputPath(dstPath); err != nil {
 		return err
 	}
@@ -194,6 +194,9 @@ func (handler Handler) CopyFromContainer(ctx context.Context, srcContainerID str
 	// if client requests to follow symbol link, then must decide target file to be copied
 	var rebaseName string
 	srcStat, err := handler.client.ContainerStatPath(ctx, srcContainerID, srcPath)
+	if err != nil {
+		return err
+	}
 
 	// If the destination is a symbolic link, we should follow it.
 	if err == nil && srcStat.Mode&os.ModeSymlink != 0 {
@@ -230,7 +233,7 @@ func (handler Handler) CopyFromContainer(ctx context.Context, srcContainerID str
 }
 
 // ExecuteTest runs the test in the Docker container
-func (handler Handler) ExecuteTest(ctx context.Context, srcContainerID string) (*types.IDResponse, *types.HijackedResponse, error) {
+func (handler *Handler) ExecuteTest(ctx context.Context, srcContainerID string) (*types.IDResponse, *types.HijackedResponse, error) {
 	execConfig := types.ExecConfig{
 		Cmd:          []string{"npm", "test"},
 		AttachStdout: true,
@@ -250,7 +253,7 @@ func (handler Handler) ExecuteTest(ctx context.Context, srcContainerID string) (
 }
 
 // ExecuteInspect checks exit code of test
-func (handler Handler) ExecuteInspect(ctx context.Context, srcContainerID string) (int, error) {
+func (handler *Handler) ExecuteInspect(ctx context.Context, srcContainerID string) (int, error) {
 	inspectResp, err := handler.client.ContainerExecInspect(ctx, srcContainerID)
 	if err != nil {
 		return 1, err
@@ -260,11 +263,11 @@ func (handler Handler) ExecuteInspect(ctx context.Context, srcContainerID string
 }
 
 // ContainerStop stops a running container
-func (handler Handler) ContainerStop(ctx context.Context, srcContainerID string) error {
+func (handler *Handler) ContainerStop(ctx context.Context, srcContainerID string) error {
 	return handler.client.ContainerStop(ctx, srcContainerID, &containerStopTimeout)
 }
 
 // ContainerRemove removes testrunner container
-func (handler Handler) ContainerRemove(ctx context.Context, srcContainerID string) error {
+func (handler *Handler) ContainerRemove(ctx context.Context, srcContainerID string) error {
 	return handler.client.ContainerRemove(ctx, srcContainerID, containerRemoveOptions)
 }

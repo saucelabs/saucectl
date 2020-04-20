@@ -9,10 +9,9 @@ import (
 	"github.com/saucelabs/saucectl/cli/config"
 )
 
-const (
-	logDir           = "/var/log/cont"
-	runnerConfigPath = "/home/testrunner/config.yaml"
-)
+const logDir = "/var/log/cont"
+
+var runnerConfigPath = "/home/testrunner/config.yaml"
 
 var logFiles = [...]string{
 	logDir + "/chrome_browser.log",
@@ -31,9 +30,6 @@ var logFiles = [...]string{
 
 // Testrunner describes the test runner interface
 type Testrunner interface {
-	Context() context.Context
-	CLI() *command.SauceCtlCli
-
 	Setup() error
 	Run() (int, error)
 	Teardown(logDir string) error
@@ -48,24 +44,23 @@ type baseRunner struct {
 	startTime int64
 }
 
-func (r baseRunner) Context() context.Context {
-	return r.context
-}
-
-func (r baseRunner) CLI() *command.SauceCtlCli {
-	return r.cli
-}
-
 // New creates a new testrunner object
 func New(c config.JobConfiguration, cli *command.SauceCtlCli) (Testrunner, error) {
-	_, err := os.Stat(runnerConfigPath)
+	var (
+		runner Testrunner
+		err    error
+	)
+
+	_, err = os.Stat(runnerConfigPath)
 	if os.IsNotExist(err) {
 		cli.Logger.Info().Msg("Start local runner")
-		return newLocalRunner(c, cli)
+		runner, err = newLocalRunner(c, cli)
+	} else {
+		cli.Logger.Info().Msg("Start CI runner")
+		runner, err = newCIRunner(c, cli)
 	}
 
-	cli.Logger.Info().Msg("Start CI runner")
-	return newCIRunner(c, cli)
+	return runner, err
 }
 
 func makeTimestamp() int64 {

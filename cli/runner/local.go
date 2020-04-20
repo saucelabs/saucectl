@@ -18,79 +18,70 @@ type localRunner struct {
 	baseRunner
 	containerID string
 	docker      *docker.Handler
+	tmpDir      string
 }
 
-func newLocalRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (localRunner, error) {
+func newLocalRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*localRunner, error) {
 	runner := localRunner{}
-	ctx := context.Background()
-	dockerClient, err := docker.Create()
+	runner.cli = cli
+	runner.context = context.Background()
+	runner.jobConfig = c
+	runner.startTime = makeTimestamp()
+
+	var err error
+	runner.docker, err = docker.Create()
 	if err != nil {
-		return runner, err
+		return nil, err
 	}
 
-	err = dockerClient.ValidateDependency()
+	runner.tmpDir, err = ioutil.TempDir("", "saucectl")
 	if err != nil {
-		return runner, errors.New("Docker is not installed")
+		return nil, err
 	}
 
-	hasBaseImage, err := dockerClient.HasBaseImage(ctx, c.Image.Base)
+	return &runner, nil
+}
+
+func (r *localRunner) Setup() error {
+	err := r.docker.ValidateDependency()
 	if err != nil {
-		return runner, err
+		return errors.New("Docker is not installed")
 	}
 
-	if !hasBaseImage {
-		if err := dockerClient.PullBaseImage(ctx, c.Image.Base); err != nil {
-			return runner, err
-		}
+	// always pull base image to ensure we run latest version
+	if err := r.docker.PullBaseImage(r.context, r.jobConfig.Image.Base); err != nil {
+		return err
 	}
 
-	container, err := dockerClient.StartContainer(ctx, c.Image.Base)
+	container, err := r.docker.StartContainer(r.context, r.jobConfig.Image.Base)
 	if err != nil {
-		return runner, err
+		return err
 	}
+	r.containerID = container.ID
 
 	// wait until Xvfb started
 	// ToDo(Christian): make this dynamic
 	time.Sleep(1 * time.Second)
 
 	// get runner config
-	tmpDir, err := ioutil.TempDir("", "saucectl")
+	defer os.RemoveAll(r.tmpDir)
+	hostDstPath := filepath.Join(r.tmpDir, filepath.Base(runnerConfigPath))
+	if err := r.docker.CopyFromContainer(r.context, container.ID, runnerConfigPath, hostDstPath); err != nil {
+		return err
+	}
+
+	r.runnerConfig, err = config.NewRunnerConfiguration(hostDstPath)
 	if err != nil {
-		return runner, err
-	}
-	defer os.RemoveAll(tmpDir)
-	hostDstPath := filepath.Join(tmpDir, filepath.Base(runnerConfigPath))
-	if err := dockerClient.CopyFromContainer(ctx, container.ID, runnerConfigPath, hostDstPath); err != nil {
-		return runner, err
+		return err
 	}
 
-	rc, err := config.NewRunnerConfiguration(hostDstPath)
-	if err != nil {
-		return runner, err
-	}
-
-	runner.cli = cli
-	runner.context = ctx
-	runner.jobConfig = c
-	runner.runnerConfig = rc
-	runner.startTime = makeTimestamp()
-	runner.docker = dockerClient
-	runner.containerID = container.ID
-	return runner, nil
-}
-
-func (r localRunner) Setup() error {
 	if err := r.docker.CopyTestFilesToContainer(r.context, r.containerID, r.jobConfig.Files, r.runnerConfig.TargetDir); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r localRunner) Run() (int, error) {
-	if r.containerID == "" {
-		return 1, errors.New("No container id found, run testrunner setup first")
-	}
-
+func (r *localRunner) Run() (int, error) {
 	var (
 		out, stderr io.Writer
 		in          io.ReadCloser
@@ -138,7 +129,7 @@ func (r localRunner) Run() (int, error) {
 	return exitCode, nil
 }
 
-func (r localRunner) Teardown(logDir string) error {
+func (r *localRunner) Teardown(logDir string) error {
 	for _, containerSrcPath := range logFiles {
 		file := filepath.Base(containerSrcPath)
 		hostDstPath := filepath.Join(logDir, file)

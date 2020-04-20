@@ -16,13 +16,13 @@ type ciRunner struct {
 	baseRunner
 }
 
-func newCIRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (ciRunner, error) {
+func newCIRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*ciRunner, error) {
 	runner := ciRunner{}
 
 	// read runner config file
 	rc, err := config.NewRunnerConfiguration(runnerConfigPath)
 	if err != nil {
-		return runner, err
+		return &runner, err
 	}
 
 	runner.cli = cli
@@ -30,10 +30,10 @@ func newCIRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (ciRunner,
 	runner.jobConfig = c
 	runner.startTime = makeTimestamp()
 	runner.runnerConfig = rc
-	return runner, nil
+	return &runner, nil
 }
 
-func (r ciRunner) Setup() error {
+func (r *ciRunner) Setup() error {
 	// copy files from repository into target dir
 	for _, pattern := range r.jobConfig.Files {
 		matches, err := filepath.Glob(pattern)
@@ -51,7 +51,7 @@ func (r ciRunner) Setup() error {
 	return nil
 }
 
-func (r ciRunner) Run() (int, error) {
+func (r *ciRunner) Run() (int, error) {
 	cmd := exec.Command(r.runnerConfig.ExecCommand[0], r.runnerConfig.ExecCommand[1])
 
 	cmd.Stdout = r.cli.Out()
@@ -65,7 +65,7 @@ func (r ciRunner) Run() (int, error) {
 	return 0, nil
 }
 
-func (r ciRunner) Teardown(logDir string) error {
+func (r *ciRunner) Teardown(logDir string) error {
 	if logDir != "" {
 		return nil
 	}

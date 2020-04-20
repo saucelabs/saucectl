@@ -13,7 +13,7 @@ var (
 	logsLong    = `Some long description`
 	logsExample = "saucectl --job <jobId>"
 
-	// jobID string
+	jobID string
 )
 
 // NewLogsCommand creates the `logs` command
@@ -29,11 +29,12 @@ func NewLogsCommand(cli *command.SauceCtlCli) *cobra.Command {
 	}
 
 	// cobra.OnInitialize(initConfig)
-	// cmd.Flags().StringVarP(&jobID, "job id", "j", "", "")
+	cmd.Flags().StringVarP(&jobID, "job id", "j", "", "")
 	return cmd
 }
 
 // Run should run command
-func Run() {
-	fmt.Println(("Run logs command"))
+func Run() int {
+	fmt.Println("Not yet implemented!")
+	return 0
 }

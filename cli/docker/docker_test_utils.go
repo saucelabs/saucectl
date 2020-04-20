@@ -30,12 +30,8 @@ type FakeClient struct {
 }
 
 // CreateMock generates a mocked docker client
-func CreateMock() *Handler {
-	handler := Handler{
-		client: FakeClient{},
-	}
-
-	return &handler
+func CreateMock(client ClientInterface) *Handler {
+	return &Handler{client}
 }
 
 type fakeReadWriteCloser struct{}
@@ -45,7 +41,7 @@ func (rwc fakeReadWriteCloser) Close() error                      { return nil }
 func (rwc fakeReadWriteCloser) Write(p []byte) (n int, err error) { return 0, nil }
 
 // ContainerList mock function
-func (fc FakeClient) ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error) {
+func (fc *FakeClient) ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error) {
 	if fc.ContainerListSuccess {
 		return []types.Container{}, nil
 	}
@@ -53,7 +49,7 @@ func (fc FakeClient) ContainerList(ctx context.Context, options types.ContainerL
 }
 
 // ImageList mock function
-func (fc FakeClient) ImageList(ctx context.Context, options types.ImageListOptions) ([]types.ImageSummary, error) {
+func (fc *FakeClient) ImageList(ctx context.Context, options types.ImageListOptions) ([]types.ImageSummary, error) {
 	if fc.ImageListSuccess {
 		return []types.ImageSummary{
 			{}, {},
@@ -64,7 +60,7 @@ func (fc FakeClient) ImageList(ctx context.Context, options types.ImageListOptio
 }
 
 // ImagePull mock function
-func (fc FakeClient) ImagePull(ctx context.Context, ref string, options types.ImagePullOptions) (io.ReadCloser, error) {
+func (fc *FakeClient) ImagePull(ctx context.Context, ref string, options types.ImagePullOptions) (io.ReadCloser, error) {
 	if fc.ImagePullSuccess {
 		return fakeReadWriteCloser{}, nil
 	}
@@ -72,7 +68,7 @@ func (fc FakeClient) ImagePull(ctx context.Context, ref string, options types.Im
 }
 
 // ContainerCreate mock function
-func (fc FakeClient) ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (container.ContainerCreateCreatedBody, error) {
+func (fc *FakeClient) ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (container.ContainerCreateCreatedBody, error) {
 	if fc.ContainerCreateSuccess {
 		return container.ContainerCreateCreatedBody{}, nil
 	}
@@ -80,7 +76,7 @@ func (fc FakeClient) ContainerCreate(ctx context.Context, config *container.Conf
 }
 
 // ContainerStart mock function
-func (fc FakeClient) ContainerStart(ctx context.Context, containerID string, options types.ContainerStartOptions) error {
+func (fc *FakeClient) ContainerStart(ctx context.Context, containerID string, options types.ContainerStartOptions) error {
 	if fc.ContainerStartSuccess {
 		return nil
 	}
@@ -88,7 +84,7 @@ func (fc FakeClient) ContainerStart(ctx context.Context, containerID string, opt
 }
 
 // ContainerInspect mock function
-func (fc FakeClient) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
+func (fc *FakeClient) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
 	if fc.ContainerInspectSuccess {
 		return types.ContainerJSON{}, nil
 	}
@@ -96,7 +92,7 @@ func (fc FakeClient) ContainerInspect(ctx context.Context, containerID string) (
 }
 
 // CopyToContainer mock function
-func (fc FakeClient) CopyToContainer(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error {
+func (fc *FakeClient) CopyToContainer(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error {
 	if fc.CopyToContainerSuccess {
 		return nil
 	}
@@ -104,7 +100,7 @@ func (fc FakeClient) CopyToContainer(ctx context.Context, container, path string
 }
 
 // ContainerStatPath mock function
-func (fc FakeClient) ContainerStatPath(ctx context.Context, containerID, path string) (types.ContainerPathStat, error) {
+func (fc *FakeClient) ContainerStatPath(ctx context.Context, containerID, path string) (types.ContainerPathStat, error) {
 	if fc.ContainerStatPathSuccess {
 		return types.ContainerPathStat{}, nil
 	}
@@ -112,7 +108,7 @@ func (fc FakeClient) ContainerStatPath(ctx context.Context, containerID, path st
 }
 
 // CopyFromContainer mock function
-func (fc FakeClient) CopyFromContainer(ctx context.Context, container, srcPath string) (io.ReadCloser, types.ContainerPathStat, error) {
+func (fc *FakeClient) CopyFromContainer(ctx context.Context, container, srcPath string) (io.ReadCloser, types.ContainerPathStat, error) {
 	if fc.CopyFromContainerSuccess {
 		return fakeReadWriteCloser{}, types.ContainerPathStat{}, nil
 	}
@@ -120,7 +116,7 @@ func (fc FakeClient) CopyFromContainer(ctx context.Context, container, srcPath s
 }
 
 // ContainerExecCreate mock function
-func (fc FakeClient) ContainerExecCreate(ctx context.Context, container string, config types.ExecConfig) (types.IDResponse, error) {
+func (fc *FakeClient) ContainerExecCreate(ctx context.Context, container string, config types.ExecConfig) (types.IDResponse, error) {
 	if fc.ContainerExecCreateSuccess {
 		return types.IDResponse{}, nil
 	}
@@ -128,7 +124,7 @@ func (fc FakeClient) ContainerExecCreate(ctx context.Context, container string, 
 }
 
 // ContainerExecAttach mock function
-func (fc FakeClient) ContainerExecAttach(ctx context.Context, execID string, config types.ExecConfig) (types.HijackedResponse, error) {
+func (fc *FakeClient) ContainerExecAttach(ctx context.Context, execID string, config types.ExecConfig) (types.HijackedResponse, error) {
 	if fc.ContainerExecAttachSuccess {
 		return types.HijackedResponse{}, nil
 	}
@@ -136,7 +132,7 @@ func (fc FakeClient) ContainerExecAttach(ctx context.Context, execID string, con
 }
 
 // ContainerExecInspect mock function
-func (fc FakeClient) ContainerExecInspect(ctx context.Context, execID string) (types.ContainerExecInspect, error) {
+func (fc *FakeClient) ContainerExecInspect(ctx context.Context, execID string) (types.ContainerExecInspect, error) {
 	if fc.ContainerExecInspectSuccess {
 		return types.ContainerExecInspect{ExitCode: 0}, nil
 	}
@@ -144,7 +140,7 @@ func (fc FakeClient) ContainerExecInspect(ctx context.Context, execID string) (t
 }
 
 // ContainerStop mock function
-func (fc FakeClient) ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error {
+func (fc *FakeClient) ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error {
 	if fc.ContainerStopSuccess {
 		return nil
 	}
@@ -152,7 +148,7 @@ func (fc FakeClient) ContainerStop(ctx context.Context, containerID string, time
 }
 
 // ContainerRemove mock function
-func (fc FakeClient) ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error {
+func (fc *FakeClient) ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error {
 	if fc.ContainerRemoveSuccess {
 		return nil
 	}
