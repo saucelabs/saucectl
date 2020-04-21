@@ -49,7 +49,7 @@ func (r *localRunner) Setup() error {
 	}
 
 	// always pull base image to ensure we run latest version
-	if err := r.docker.PullBaseImage(r.context, r.jobConfig.Image.Base); err != nil {
+	if err := r.docker.PullBaseImage(r.context, "docker.io/"+r.jobConfig.Image.Base); err != nil {
 		return err
 	}
 
