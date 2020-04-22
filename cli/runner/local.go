@@ -48,9 +48,17 @@ func (r *localRunner) Setup() error {
 		return errors.New("Docker is not installed")
 	}
 
-	// always pull base image to ensure we run latest version
-	if err := r.docker.PullBaseImage(r.context, "docker.io/"+r.jobConfig.Image.Base); err != nil {
+	// check if image is existing
+	hasImage, err := r.docker.HasBaseImage(r.context, r.jobConfig.Image.Base)
+	if err != nil {
 		return err
+	}
+
+	// only pull base image if not already installed
+	if hasImage {
+		if err := r.docker.PullBaseImage(r.context, "docker.io/"+r.jobConfig.Image.Base); err != nil {
+			return err
+		}
 	}
 
 	container, err := r.docker.StartContainer(r.context, r.jobConfig.Image.Base)
