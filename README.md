@@ -3,6 +3,11 @@ saucectl ![saucectl pipeline](https://github.com/saucelabs/saucectl/workflows/sa
 
 A command line interface to run testrunner tests.
 
+# Development Requirements
+
+- [Go](https://golang.org/) (v1.14 or higher)
+- [Homebrew](https://brew.sh/) (v2.2.13 or higher)
+
 # Install
 
 Run the following to install all dependencies:
