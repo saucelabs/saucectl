@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"time"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
@@ -34,6 +35,16 @@ func newCIRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*ciRunner
 }
 
 func (r *ciRunner) Setup() error {
+	// run entryfile
+	cmd := exec.Command("/home/testrunner/entry.sh", "&")
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	// wait 2 seconds until everything is started
+	time.Sleep(2 * time.Second)
+
 	// copy files from repository into target dir
 	for _, pattern := range r.jobConfig.Files {
 		matches, err := filepath.Glob(pattern)
