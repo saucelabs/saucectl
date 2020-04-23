@@ -55,7 +55,7 @@ func (r *localRunner) Setup() error {
 	}
 
 	// only pull base image if not already installed
-	if hasImage {
+	if !hasImage {
 		if err := r.docker.PullBaseImage(r.context, "docker.io/"+r.jobConfig.Image.Base); err != nil {
 			return err
 		}

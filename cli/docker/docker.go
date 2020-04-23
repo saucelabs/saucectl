@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -16,8 +17,10 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
+	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/system"
 
+	"github.com/saucelabs/saucectl/cli/streams"
 	"github.com/saucelabs/saucectl/cli/utils"
 )
 
@@ -94,12 +97,17 @@ func (handler *Handler) HasBaseImage(ctx context.Context, baseImage string) (boo
 func (handler *Handler) PullBaseImage(ctx context.Context, baseImage string) error {
 	options := types.ImagePullOptions{}
 	responseBody, err := handler.client.ImagePull(ctx, baseImage, options)
-
 	if err != nil {
 		return err
 	}
 
 	defer responseBody.Close()
+
+	/**
+	 * ToDo(Christian): handle stdout
+	 */
+	out := streams.NewOut(ioutil.Discard)
+	jsonmessage.DisplayJSONMessagesToStream(responseBody, out, nil)
 	return nil
 }
 
