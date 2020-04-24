@@ -103,8 +103,8 @@ adjust_os() {
 adjust_arch() {
   # adjust archive name based on ARCH
   case ${ARCH} in
-    386) ARCH=32bit ;;
-    amd64) ARCH=64bit ;;
+    386) ARCH=32-bit ;;
+    amd64) ARCH=64-bit ;;
     darwin) ARCH=mac ;;
   esac
   true
@@ -245,8 +245,12 @@ http_download() {
     log_crit "http_download unable to find wget or curl"
     return 1
   fi
+
   if [ -z "$header" ]; then
-    $cmd $destflag "$local_file" "$source_url"
+    if [ -z "$GITHUB_TOKEN" ]; then
+        $cmd $destflag "$local_file" "$source_url"
+    fi
+    echo "$cmd $headerflag 'Authorization:token $GITHUB_TOKEN' $destflag '$local_file' '$source_url"
   else
     if [ -z "$GITHUB_TOKEN" ]; then
         $cmd $headerflag "$header" $destflag "$local_file" "$source_url"
