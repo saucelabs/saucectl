@@ -19,6 +19,7 @@ import (
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/system"
+	"github.com/docker/go-connections/nat"
 
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/streams"
@@ -116,12 +117,28 @@ func (handler *Handler) PullBaseImage(ctx context.Context, baseImage string) err
 
 // StartContainer starts the Docker testrunner container
 func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfiguration) (*container.ContainerCreateCreatedBody, error) {
-	container, err := handler.client.ContainerCreate(ctx, &container.Config{
-		Image: c.Image.Base,
+	var (
+		ports        map[nat.Port]struct{}
+		portBindings map[nat.Port][]nat.PortBinding
+	)
+
+	ports, portBindings, err := nat.ParsePortSpecs([]string{"9222:9222"})
+	if err != nil {
+		return nil, err
+	}
+
+	hostConfig := &container.HostConfig{
+		PortBindings: portBindings,
+	}
+	networkConfig := &network.NetworkingConfig{}
+	containerConfig := &container.Config{
+		Image:        c.Image.Base,
+		ExposedPorts: ports,
 		Env: []string{
 			"SAUCE_USERNAME=" + os.Getenv("SAUCE_USERNAME"),
 			"SAUCE_ACCESS_KEY=" + os.Getenv("SAUCE_ACCESS_KEY")},
-	}, nil, nil, "")
+	}
+	container, err := handler.client.ContainerCreate(ctx, containerConfig, hostConfig, networkConfig, "")
 	if err != nil {
 		return nil, err
 	}
