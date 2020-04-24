@@ -10,6 +10,14 @@ builds:
     env:
       - CGO_ENABLED=0
 brews:
+  - github:
+      owner: saucelabs
+      name: homebrew-saucectl
+    folder: Formula
+    homepage:  https://saucelabs.com
+    description: Homebrew Formulae to saucectl binaries
+    test: |
+      system "#{bin}/goreleaser -v"
   -
     name: saucectl
     commit_author:
