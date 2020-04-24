@@ -108,7 +108,9 @@ func (handler *Handler) PullBaseImage(ctx context.Context, baseImage string) err
 	 * ToDo(Christian): handle stdout
 	 */
 	out := streams.NewOut(ioutil.Discard)
-	jsonmessage.DisplayJSONMessagesToStream(responseBody, out, nil)
+	if err := jsonmessage.DisplayJSONMessagesToStream(responseBody, out, nil); err != nil {
+		return err
+	}
 	return nil
 }
 
