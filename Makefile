@@ -14,4 +14,4 @@ lint:
 
 test:
 	go test -coverprofile=coverage.out ./...
-	goverreport -sort=block -order=desc -threshold=43
+	goverreport -sort=block -order=desc -threshold=42

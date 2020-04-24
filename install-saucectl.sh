@@ -250,7 +250,7 @@ http_download() {
     if [ -z "$GITHUB_TOKEN" ]; then
         $cmd $destflag "$local_file" "$source_url"
     fi
-    echo "$cmd $headerflag 'Authorization:token $GITHUB_TOKEN' $destflag '$local_file' '$source_url"
+    $cmd $headerflag "Authorization:token $GITHUB_TOKEN" $destflag "$local_file" "$source_url"
   else
     if [ -z "$GITHUB_TOKEN" ]; then
         $cmd $headerflag "$header" $destflag "$local_file" "$source_url"
