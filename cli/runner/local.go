@@ -61,7 +61,7 @@ func (r *localRunner) Setup() error {
 		}
 	}
 
-	container, err := r.docker.StartContainer(r.context, r.jobConfig.Image.Base)
+	container, err := r.docker.StartContainer(r.context, r.jobConfig)
 	if err != nil {
 		return err
 	}

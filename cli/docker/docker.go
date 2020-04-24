@@ -20,6 +20,7 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/system"
 
+	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/streams"
 	"github.com/saucelabs/saucectl/cli/utils"
 )
@@ -112,9 +113,9 @@ func (handler *Handler) PullBaseImage(ctx context.Context, baseImage string) err
 }
 
 // StartContainer starts the Docker testrunner container
-func (handler *Handler) StartContainer(ctx context.Context, baseImage string) (*container.ContainerCreateCreatedBody, error) {
-	c, err := handler.client.ContainerCreate(ctx, &container.Config{
-		Image: baseImage,
+func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfiguration) (*container.ContainerCreateCreatedBody, error) {
+	container, err := handler.client.ContainerCreate(ctx, &container.Config{
+		Image: c.Image.Base,
 		Env: []string{
 			"SAUCE_USERNAME=" + os.Getenv("SAUCE_USERNAME"),
 			"SAUCE_ACCESS_KEY=" + os.Getenv("SAUCE_ACCESS_KEY")},
@@ -123,7 +124,7 @@ func (handler *Handler) StartContainer(ctx context.Context, baseImage string) (*
 		return nil, err
 	}
 
-	if err := handler.client.ContainerStart(ctx, c.ID, types.ContainerStartOptions{}); err != nil {
+	if err := handler.client.ContainerStart(ctx, container.ID, types.ContainerStartOptions{}); err != nil {
 		return nil, err
 	}
 
@@ -131,11 +132,11 @@ func (handler *Handler) StartContainer(ctx context.Context, baseImage string) (*
 	// otherwise if we error out we will leak execIDs on the server (and
 	// there's no easy way to clean those up). But also in order to make "not
 	// exist" errors take precedence we do a dummy inspect first.
-	if _, err := handler.client.ContainerInspect(ctx, c.ID); err != nil {
+	if _, err := handler.client.ContainerInspect(ctx, container.ID); err != nil {
 		return nil, err
 	}
 
-	return &c, nil
+	return &container, nil
 }
 
 // CopyTestFilesToContainer copies files from the config into the container

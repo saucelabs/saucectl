@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/docker/docker/api/types/container"
+	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/stretchr/testify/assert"
 	"gotest.tools/v3/fs"
 )
@@ -91,7 +92,10 @@ func TestStartContainer(t *testing.T) {
 			handler := Handler{
 				client: tc.Client,
 			}
-			_, err := handler.StartContainer(ctx, "foobar")
+			c := config.JobConfiguration{
+				Image: config.ImageDefinition{Base: "foobar"},
+			}
+			_, err := handler.StartContainer(ctx, c)
 			assert.Equal(t, err, tc.ExpectedError)
 		})
 	}
