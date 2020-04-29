@@ -162,7 +162,7 @@ func TestCopyFromContainer(t *testing.T) {
 	}
 }
 
-func TestExecuteTest(t *testing.T) {
+func TestExecute(t *testing.T) {
 	cases := []PassFailCase{
 		{"failing to create exec", &FakeClient{}, errors.New("ContainerExecCreateFailure"), nil},
 		{"failing to create attach", &FakeClient{
@@ -179,7 +179,7 @@ func TestExecuteTest(t *testing.T) {
 			handler := Handler{
 				client: tc.Client,
 			}
-			_, _, err := handler.ExecuteTest(ctx, "containerId")
+			_, _, err := handler.Execute(ctx, "containerId", []string{"npm", "test"})
 			assert.Equal(t, err, tc.ExpectedError)
 		})
 	}

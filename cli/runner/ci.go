@@ -37,8 +37,7 @@ func newCIRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*ciRunner
 func (r *ciRunner) Setup() error {
 	// run entryfile
 	cmd := exec.Command("/home/testrunner/entry.sh", "&")
-	err := cmd.Run()
-	if err != nil {
+	if err := cmd.Run(); err != nil {
 		return err
 	}
 

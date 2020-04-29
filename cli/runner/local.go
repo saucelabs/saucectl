@@ -101,7 +101,9 @@ func (r *localRunner) Run() (int, error) {
 		return 1, err
 	}
 
-	createResp, attachResp, err := r.docker.ExecuteTest(r.context, r.containerID)
+	// ToDo(Christian): move to config
+	testCmd := []string{"npm", "test"}
+	createResp, attachResp, err := r.docker.Execute(r.context, r.containerID, testCmd)
 	if err != nil {
 		return 1, err
 	}
