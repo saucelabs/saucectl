@@ -38,10 +38,10 @@ func newCIRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*ciRunner
 }
 
 func (r *ciRunner) Setup() error {
-	// run entryfile
+	r.cli.Logger.Info().Msg("Run entry.sh")
 	var out bytes.Buffer
 	cmd := exec.Command("/home/testrunner/entry.sh", "&")
-	cmd.Stdout = &out
+	cmd.Stderr = &out
 	if err := cmd.Run(); err != nil {
 		return errors.New("Couldn't start test: " + out.String())
 	}
@@ -50,6 +50,7 @@ func (r *ciRunner) Setup() error {
 	time.Sleep(2 * time.Second)
 
 	// copy files from repository into target dir
+	r.cli.Logger.Info().Msg("Copy files into assigned directories")
 	for _, pattern := range r.jobConfig.Files {
 		matches, err := filepath.Glob(pattern)
 		if err != nil {
