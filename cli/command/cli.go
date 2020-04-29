@@ -44,7 +44,7 @@ func NewSauceCtlCli() (*SauceCtlCli, error) {
 	// If you set zerolog.TimeFieldFormat to an empty string,
 	// logs will write with UNIX time
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	// zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
 	logger.Info().Msg("Start Program")

@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"bytes"
 	"context"
 	"io/ioutil"
 	"os"
@@ -8,6 +9,8 @@ import (
 	"path"
 	"path/filepath"
 	"time"
+
+	"errors"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
@@ -36,9 +39,11 @@ func newCIRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*ciRunner
 
 func (r *ciRunner) Setup() error {
 	// run entryfile
+	var out bytes.Buffer
 	cmd := exec.Command("/home/testrunner/entry.sh", "&")
+	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
-		return err
+		return errors.New("Couldn't start test: " + out.String())
 	}
 
 	// wait 2 seconds until everything is started

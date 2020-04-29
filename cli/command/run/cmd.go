@@ -67,15 +67,18 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return err
 	}
 
+	cli.Logger.Info().Msg("Setup test environment")
 	if err := tr.Setup(); err != nil {
 		return err
 	}
 
+	cli.Logger.Info().Msg("Start tests")
 	exitCode, err := tr.Run()
 	if err != nil {
 		return err
 	}
 
+	cli.Logger.Info().Msg("Teardown environment")
 	if err != tr.Teardown(cfgLogDir) {
 		return err
 	}
