@@ -40,7 +40,7 @@ func newCIRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*ciRunner
 func (r *ciRunner) Setup() error {
 	r.cli.Logger.Info().Msg("Run entry.sh")
 	var out bytes.Buffer
-	cmd := exec.Command("/home/testrunner/entry.sh", "&")
+	cmd := exec.Command("/home/seluser/entry.sh", "&")
 	cmd.Stderr = &out
 	if err := cmd.Run(); err != nil {
 		return errors.New("Couldn't start test: " + out.String())

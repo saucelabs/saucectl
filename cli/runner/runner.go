@@ -11,7 +11,7 @@ import (
 
 const logDir = "/var/log/cont"
 
-var runnerConfigPath = "/home/testrunner/config.yaml"
+var runnerConfigPath = "/home/seluser/config.yaml"
 
 var logFiles = [...]string{
 	logDir + "/chrome_browser.log",
