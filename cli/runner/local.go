@@ -86,6 +86,17 @@ func (r *localRunner) Setup() error {
 	if err := r.docker.CopyTestFilesToContainer(r.context, r.containerID, r.jobConfig.Files, r.runnerConfig.TargetDir); err != nil {
 		return err
 	}
+
+	// start port forwarding
+	sockatCmd := []string{
+		"socat",
+		"tcp-listen:9222,reuseaddr,fork",
+		"tcp:localhost:9223",
+	}
+	if _, _, err := r.docker.Execute(r.context, r.containerID, sockatCmd); err != nil {
+		return err
+	}
+
 	return nil
 }
 

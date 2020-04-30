@@ -260,7 +260,7 @@ func (handler *Handler) CopyFromContainer(ctx context.Context, srcContainerID st
 	return archive.CopyTo(preArchive, srcInfo, dstPath)
 }
 
-// Execute runs the test in the Docker container
+// Execute runs the test in the Docker container and attaches to its stdout
 func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd []string) (*types.IDResponse, *types.HijackedResponse, error) {
 	execConfig := types.ExecConfig{
 		Cmd:          cmd,
