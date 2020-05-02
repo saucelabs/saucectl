@@ -49,8 +49,10 @@ execute() {
   http_download "${TMPDIR}/${TARBALL}" "${TARBALL_URL}"
   log_debug "downloading checksum ${CHECKSUM_URL}"
   http_download "${TMPDIR}/${CHECKSUM}" "${CHECKSUM_URL}"
+  log_debug "verify tarball"
   hash_sha256_verify "${TMPDIR}/${TARBALL}" "${TMPDIR}/${CHECKSUM}"
 
+  log_debug "install saucectl"
   (cd "${TMPDIR}" && untar "${TARBALL}")
   install -d "${BINDIR}"
   install "${TMPDIR}/${BINARY}" "${BINDIR}/"
