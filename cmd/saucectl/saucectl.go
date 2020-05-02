@@ -14,8 +14,6 @@ var (
 	cmdUse   = "saucectl [OPTIONS] COMMAND [ARG...]"
 	cmdShort = "saucectl"
 	cmdLong  = "Some main description"
-
-	version bool
 )
 
 func main() {
