@@ -29,7 +29,7 @@ parse_args() {
   #BINDIR is ./bin unless set be ENV
   # over-ridden by flag below
 
-  BINDIR=${BINDIR:-./bin}
+  BINDIR=${BINDIR:-DEFAULT_INSTALL_DIR}
   while getopts "b:h?" arg; do
     case "$arg" in
       b) BINDIR="$OPTARG" ;;
@@ -46,17 +46,25 @@ parse_args() {
 execute() {
   TMPDIR=$(mktmpdir)
   log_debug "downloading tarball ${TARBALL_URL}"
-  http_download "${TMPDIR}/${TARBALL}" "${TARBALL_URL}"
+  http_download "${TMPDIR}${TARBALL}" "${TARBALL_URL}"
   log_debug "downloading checksum ${CHECKSUM_URL}"
-  http_download "${TMPDIR}/${CHECKSUM}" "${CHECKSUM_URL}"
+  http_download "${TMPDIR}${CHECKSUM}" "${CHECKSUM_URL}"
   log_debug "verify tarball"
-  hash_sha256_verify "${TMPDIR}/${TARBALL}" "${TMPDIR}/${CHECKSUM}"
+  hash_sha256_verify "${TMPDIR}${TARBALL}" "${TMPDIR}${CHECKSUM}"
 
-  log_debug "install saucectl"
+  log_debug "Preparing to install saucectl"
   (cd "${TMPDIR}" && untar "${TARBALL}")
-  install -d "${BINDIR}"
-  install "${TMPDIR}/${BINARY}" "${BINDIR}/"
-  log_info "installed as ${BINDIR}/${BINARY}"
+  # install -d "${DEFAULT_INSTALL_DIR}"
+  runAsRoot mv "${TMPDIR}${BINARY}" "${DEFAULT_INSTALL_DIR}/"
+  log_info "installed as ${DEFAULT_INSTALL_DIR}/${BINARY}"
+}
+# runs the given command as root (detects if we are root already)
+runAsRoot() {
+  local CMD="$*"
+  if [ $EUID -ne 0 -a $USE_SUDO = "true" ]; then
+    CMD="sudo $CMD"
+  fi
+  $CMD
 }
 is_supported_platform() {
   platform=$1
@@ -250,14 +258,16 @@ http_download() {
 
   if [ -z "$header" ]; then
     if [ -z "$GITHUB_TOKEN" ]; then
-        $cmd $destflag "$local_file" "$source_url"
+      $cmd $destflag "$local_file" "$source_url"
+    else
+      $cmd $headerflag "Authorization:token $GITHUB_TOKEN" $destflag "$local_file" "$source_url"
     fi
-    $cmd $headerflag "Authorization:token $GITHUB_TOKEN" $destflag "$local_file" "$source_url"
   else
     if [ -z "$GITHUB_TOKEN" ]; then
-        $cmd $headerflag "$header" $destflag "$local_file" "$source_url"
+      $cmd $headerflag "$header" $destflag "$local_file" "$source_url"
+    else
+      $cmd $headerflag "$header" $headerflag "Authorization:token $GITHUB_TOKEN" $destflag "$local_file" "$source_url"
     fi
-    $cmd $headerflag "$header" $headerflag "Authorization:token $GITHUB_TOKEN" $destflag "$local_file" "$source_url"
   fi
 }
 github_api() {
@@ -332,6 +342,12 @@ FORMAT=tar.gz
 OS=$(uname_os)
 ARCH=$(uname_arch)
 PREFIX="$OWNER/$REPO"
+USE_SUDO="true"
+
+DEFAULT_INSTALL_DIR="./bin"
+if [ "$OS" = "darwin" ] || [ "$OS" = "linux" ]; then
+  DEFAULT_INSTALL_DIR="/usr/local/bin"
+fi
 
 # use in logging routines
 log_prefix() {
