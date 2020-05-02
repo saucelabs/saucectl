@@ -113,7 +113,7 @@ func copyFile(src string, targetDir string) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(targetDir+filepath.Base(srcFile), input, 0644)
+	err = ioutil.WriteFile(targetDir+"/"+filepath.Base(srcFile), input, 0644)
 	if err != nil {
 		return err
 	}
