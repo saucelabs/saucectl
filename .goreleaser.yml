@@ -9,6 +9,9 @@ builds:
     main: ./cmd/saucectl/saucectl.go
     env:
       - CGO_ENABLED=0
+    ldflags:
+      - -X github.com/saucelabs/saucectl/cli/version.Version={{.Version}}
+      - -X github.com/saucelabs/saucectl/cli/version.GitCommit={{.Commit}}
 brews:
   - github:
       owner: saucelabs

@@ -8,6 +8,7 @@ import (
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/command/commands"
+	"github.com/saucelabs/saucectl/cli/version"
 )
 
 var (
@@ -28,7 +29,7 @@ func main() {
 		Short:            cmdShort,
 		Long:             cmdLong,
 		TraverseChildren: true,
-		Version:          "(v0.1.0)",
+		Version:          fmt.Sprintf("%s\n(build %s)", version.Version, version.GitCommit),
 	}
 
 	cmd.SetVersionTemplate("saucectl version {{.Version}}\n")
