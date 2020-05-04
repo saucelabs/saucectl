@@ -25,8 +25,8 @@ type SetupTemplate struct {
 var testTpl = map[string]SetupTemplate{
 	"puppeteer": {
 		"example.test.js",
-		`describe('Herokuapp login page is constructed correctly', () => {
-	test('Page is available', async () => {
+		`describe('saucectl demo test', () => {
+	test('should verify title of the page', async () => {
 		const page = (await browser.pages())[0]
 		await page.goto('https://www.saucedemo.com/');
 		expect(await page.title()).toBe('Swag Labs');
@@ -35,8 +35,8 @@ var testTpl = map[string]SetupTemplate{
 `},
 	"playwright": {
 		"example.test.js",
-		`describe('Herokuapp login page is constructed correctly', () => {
-	test('Page is available', async () => {
+		`describe('saucectl demo test', () => {
+	test('should verify title of the page', async () => {
 		await page.goto('https://www.saucedemo.com/');
 		expect(await page.title()).toBe('Swag Labs');
 	});
