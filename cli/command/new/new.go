@@ -21,8 +21,7 @@ var (
 
 	argsYes = false
 
-	projectName = ""
-	qs          = []*survey.Question{
+	qs = []*survey.Question{
 		{
 			Name: "framework",
 			Prompt: &survey.Select{
@@ -38,7 +37,7 @@ var (
 	}{}
 )
 
-// Command creates the `run` command
+// Command creates the `new` command
 func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     runUse,
