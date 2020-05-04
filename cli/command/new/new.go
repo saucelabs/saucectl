@@ -75,12 +75,15 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	}
 
 	answers.Framework = strings.ToLower(answers.Framework)
-	os.MkdirAll(filepath.Join(cwd, ".sauce"), 0777)
+	if err := os.MkdirAll(filepath.Join(cwd, ".sauce"), 0777); err != nil {
+		return err
+	}
+
 	fc, err := os.Create(filepath.Join(cwd, ".sauce", "config.yml"))
-	defer fc.Close()
 	if err != nil {
 		return err
 	}
+	defer fc.Close()
 
 	configTpl, err := template.New("configTpl").Parse(configTpl)
 	if err != nil {
@@ -93,12 +96,15 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	}
 	wc.Flush()
 
-	os.MkdirAll(filepath.Join(cwd, "tests"), 0777)
+	if err := os.MkdirAll(filepath.Join(cwd, "tests"), 0777); err != nil {
+		return err
+	}
+
 	ft, err := os.Create(filepath.Join(cwd, "tests", testTpl[answers.Framework].Filename))
-	defer ft.Close()
 	if err != nil {
 		return err
 	}
+	defer ft.Close()
 
 	testTpl, err := template.New("configTpl").Parse(testTpl[answers.Framework].Code)
 	if err != nil {
