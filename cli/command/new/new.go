@@ -14,10 +14,10 @@ import (
 )
 
 var (
-	runUse     = "new"
-	runShort   = "Start a new project"
-	runLong    = `Some long description`
-	runExample = "saucectl new"
+	newUse     = "new"
+	newShort   = "Start a new project"
+	newLong    = `Some long description`
+	newExample = "saucectl new"
 
 	argsYes = false
 
@@ -40,10 +40,10 @@ var (
 // Command creates the `new` command
 func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     runUse,
-		Short:   runShort,
-		Long:    runLong,
-		Example: runExample,
+		Use:     newUse,
+		Short:   newShort,
+		Long:    newLong,
+		Example: newExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			cli.Logger.Info().Msg("Start New Command")
 			checkErr(Run(cmd, cli, args))
