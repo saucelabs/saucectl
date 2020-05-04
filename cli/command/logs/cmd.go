@@ -16,8 +16,8 @@ var (
 	jobID string
 )
 
-// NewLogsCommand creates the `logs` command
-func NewLogsCommand(cli *command.SauceCtlCli) *cobra.Command {
+// Command creates the `logs` command
+func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     logsUse,
 		Short:   logsShort,
