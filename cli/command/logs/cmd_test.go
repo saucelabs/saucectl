@@ -13,6 +13,6 @@ func TestRunCmd(t *testing.T) {
 
 func TestNewLogsCommand(t *testing.T) {
 	cli := command.SauceCtlCli{}
-	cmd := NewLogsCommand(&cli)
+	cmd := Command(&cli)
 	assert.Equal(t, cmd.Use, logsUse)
 }

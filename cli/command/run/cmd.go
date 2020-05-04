@@ -22,8 +22,8 @@ var (
 	cfgLogDir   string
 )
 
-// NewRunCommand creates the `run` command
-func NewRunCommand(cli *command.SauceCtlCli) *cobra.Command {
+// Command creates the `run` command
+func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     runUse,
 		Short:   runShort,

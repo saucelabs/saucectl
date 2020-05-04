@@ -9,6 +9,6 @@ import (
 
 func TestNewRunCommand(t *testing.T) {
 	cli := command.SauceCtlCli{}
-	cmd := NewRunCommand(&cli)
+	cmd := Command(&cli)
 	assert.Equal(t, cmd.Use, runUse)
 }
