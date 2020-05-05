@@ -120,7 +120,10 @@ func checkUpdates(cli *SauceCtlCli) error {
 	qs := &survey.Confirm{
 		Message: fmt.Sprintf("A new saucectl version was found (%s), do you want to update?", latest.Version),
 	}
-	survey.AskOne(qs, &doUpdate, nil)
+	err = survey.AskOne(qs, &doUpdate, nil)
+	if err != nil {
+		return err
+	}
 
 	if !doUpdate {
 		fmt.Println()
