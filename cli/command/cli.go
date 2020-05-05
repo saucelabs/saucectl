@@ -73,7 +73,25 @@ func NewSauceCtlCli() (*SauceCtlCli, error) {
 	return cli, nil
 }
 
+func isAutoupdateEnabled() bool {
+	for _, flag := range os.Args {
+		if flag == "--skip-autoupdate" {
+			return false
+		}
+	}
+
+	return true
+}
+
 func checkUpdates(cli *SauceCtlCli) error {
+	// only auto update if:
+	//   - not explicitly prohibit by the user
+	//   - saucectl being run in CI environment
+	_, isCI := os.LookupEnv("CI")
+	if !isAutoupdateEnabled() || isCI {
+		return nil
+	}
+
 	doUpdate := false
 	m := &update.Manager{
 		Command: "saucectl-internal",

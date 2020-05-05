@@ -34,6 +34,7 @@ func main() {
 
 	cmd.SetVersionTemplate("saucectl version {{.Version}}\n")
 	cmd.Flags().BoolP("version", "v", false, "print version")
+	cmd.PersistentFlags().Bool("skip-autoupdate", false, "skip auto-update mechanism")
 
 	commands.AddCommands(cmd, cli)
 	if err := cmd.Execute(); err != nil {
