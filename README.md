@@ -8,6 +8,11 @@ A command line interface to run testrunner tests.
 - [Go](https://golang.org/) (v1.14 or higher)
 - [Homebrew](https://brew.sh/) (v2.2.13 or higher)
 
+# Setup
+
+Make sure you have your GOPATH set
+[https://github.com/golang/go/wiki/SettingGOPATH](https://github.com/golang/go/wiki/SettingGOPATH)
+
 # Install
 
 Run the following to install all dependencies:
