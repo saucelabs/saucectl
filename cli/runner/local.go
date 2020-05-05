@@ -12,7 +12,7 @@ import (
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/docker"
-	"github.com/saucelabs/saucectl/cli/utils"
+	"github.com/saucelabs/saucectl/cli/progress"
 )
 
 type localRunner struct {
@@ -23,7 +23,7 @@ type localRunner struct {
 }
 
 func newLocalRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*localRunner, error) {
-	utils.StartSpinner("Starting local runner")
+	progress.Show("Starting local runner")
 	runner := localRunner{}
 	runner.cli = cli
 	runner.context = context.Background()
@@ -41,7 +41,7 @@ func newLocalRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*local
 		return nil, err
 	}
 
-	utils.StopSpinner()
+	defer progress.Stop()
 	return &runner, nil
 }
 
@@ -58,21 +58,21 @@ func (r *localRunner) Setup() error {
 	}
 
 	// only pull base image if not already installed
-	utils.StartSpinner("Pulling test runner image %s", r.jobConfig.Image.Base)
+	progress.Show("Pulling test runner image %s", r.jobConfig.Image.Base)
 	if !hasImage {
 		if err := r.docker.PullBaseImage(r.context, "docker.io/"+r.jobConfig.Image.Base); err != nil {
 			return err
 		}
 	}
 
-	utils.StartSpinner("Starting container")
+	progress.Show("Starting container")
 	container, err := r.docker.StartContainer(r.context, r.jobConfig)
 	if err != nil {
 		return err
 	}
 	r.containerID = container.ID
 
-	utils.StartSpinner("Preparing container")
+	progress.Show("Preparing container")
 	// wait until Xvfb started
 	// ToDo(Christian): make this dynamic
 	time.Sleep(1 * time.Second)
@@ -89,7 +89,7 @@ func (r *localRunner) Setup() error {
 		return err
 	}
 
-	utils.StartSpinner("Copying test files to container")
+	progress.Show("Copying test files to container")
 	if err := r.docker.CopyTestFilesToContainer(r.context, r.containerID, r.jobConfig.Files, r.runnerConfig.TargetDir); err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func (r *localRunner) Setup() error {
 		"tcp-listen:9222,reuseaddr,fork",
 		"tcp:localhost:9223",
 	}
-	utils.StopSpinner()
+	defer progress.Stop()
 
 	if _, _, err := r.docker.Execute(r.context, r.containerID, sockatCmd); err != nil {
 		return err

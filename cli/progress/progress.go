@@ -1,4 +1,4 @@
-package utils
+package progress
 
 import (
 	"fmt"
@@ -35,7 +35,7 @@ func NewSpinner() (*SpinnerSingleton) {
 	return spinnerInstance
 }
 
-func StartSpinner(text string, args ...interface{}) *spinner.Spinner {
+func Show(text string, args ...interface{}) *spinner.Spinner {
 	message := fmt.Sprintf(text, args...)
 	spinner := NewSpinner()
 	spinner.Spinner.Suffix = message
@@ -44,7 +44,7 @@ func StartSpinner(text string, args ...interface{}) *spinner.Spinner {
 	return spinner.Spinner
 }
 
-func StopSpinner() {
+func Stop() {
 	spinner := NewSpinner()
 	spinner.Spinner.Stop()
 }
