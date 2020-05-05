@@ -7,7 +7,6 @@ import (
 	"github.com/docker/docker/pkg/term"
 	"github.com/rs/zerolog"
 	"github.com/saucelabs/saucectl/cli/streams"
-	"github.com/saucelabs/saucectl/cli/progress"
 )
 
 // SauceCtlCli is the cli context
