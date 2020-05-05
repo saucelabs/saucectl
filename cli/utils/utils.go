@@ -3,7 +3,12 @@ package utils
 import (
 	"errors"
 	"os"
+	"time"
+	"fmt"
+	"sync"
 	"path/filepath"
+
+	"github.com/briandowns/spinner"
 )
 
 // ValidateOutputPath validates the output paths of the `export` and `save` commands.
@@ -42,4 +47,38 @@ func ValidateOutputPathFileMode(fileMode os.FileMode) error {
 		return errors.New("got an irregular file")
 	}
 	return nil
+}
+
+type SpinnerSingleton struct {
+	Spinner *spinner.Spinner
+	Speed time.Duration
+	Animation []string
+}
+
+var lock = &sync.Mutex{}
+var spinnerInstance *SpinnerSingleton
+
+func NewSpinner() (*SpinnerSingleton) {
+	// Using a singleton so we can stop previous messages
+	// otherwise multiple message show in stdout
+	if spinnerInstance == nil {
+		lock.Lock()
+		defer lock.Unlock()
+		if spinnerInstance == nil {
+			spinnerInstance = &SpinnerSingleton{}
+			spinnerInstance.Speed = 300*time.Millisecond
+			spinnerInstance.Animation = []string{"⠋ ", "⠙ ", "⠹ ","⠸ ","⠼ ","⠴ ", "⠦ ", "⠧ ", "⠇ ", "⠏ "}
+			spinnerInstance.Spinner = spinner.New(spinnerInstance.Animation, spinnerInstance.Speed)
+		}
+	}
+	return spinnerInstance
+}
+
+func Spinner(text string, args ...interface{}) *spinner.Spinner {
+	message := fmt.Sprintf(text, args...)
+	spinner := NewSpinner()
+	spinner.Spinner.Suffix = message
+	spinner.Spinner.Stop()
+	spinner.Spinner.Start()
+	return spinner.Spinner
 }
