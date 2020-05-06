@@ -12,6 +12,7 @@ import (
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/docker"
+	"github.com/saucelabs/saucectl/cli/progress"
 )
 
 type localRunner struct {
@@ -22,6 +23,9 @@ type localRunner struct {
 }
 
 func newLocalRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*localRunner, error) {
+	progress.Show("Starting local runner")
+	defer progress.Stop()
+
 	runner := localRunner{}
 	runner.cli = cli
 	runner.context = context.Background()
@@ -55,18 +59,23 @@ func (r *localRunner) Setup() error {
 	}
 
 	// only pull base image if not already installed
+	progress.Show("Pulling test runner image %s", r.jobConfig.Image.Base)
+	defer progress.Stop()
+
 	if !hasImage {
 		if err := r.docker.PullBaseImage(r.context, "docker.io/"+r.jobConfig.Image.Base); err != nil {
 			return err
 		}
 	}
 
+	progress.Show("Starting container")
 	container, err := r.docker.StartContainer(r.context, r.jobConfig)
 	if err != nil {
 		return err
 	}
 	r.containerID = container.ID
 
+	progress.Show("Preparing container")
 	// wait until Xvfb started
 	// ToDo(Christian): make this dynamic
 	time.Sleep(1 * time.Second)
@@ -83,6 +92,7 @@ func (r *localRunner) Setup() error {
 		return err
 	}
 
+	progress.Show("Copying test files to container")
 	if err := r.docker.CopyTestFilesToContainer(r.context, r.containerID, r.jobConfig.Files, r.runnerConfig.TargetDir); err != nil {
 		return err
 	}
@@ -93,6 +103,7 @@ func (r *localRunner) Setup() error {
 		"tcp-listen:9222,reuseaddr,fork",
 		"tcp:localhost:9223",
 	}
+
 	if _, _, err := r.docker.Execute(r.context, r.containerID, sockatCmd); err != nil {
 		return err
 	}
