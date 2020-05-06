@@ -3,6 +3,7 @@ package runner
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -69,7 +70,10 @@ func (r *ciRunner) Setup() error {
 
 func (r *ciRunner) Run() (int, error) {
 	cmd := exec.Command(r.runnerConfig.ExecCommand[0], r.runnerConfig.ExecCommand[1])
-
+	cmd.Env = append(
+		os.Environ(),
+		fmt.Sprintf("SAUCE_BUILD_NAME=%s", r.jobConfig.Metadata.Build),
+	)
 	cmd.Stdout = r.cli.Out()
 	cmd.Stderr = r.cli.Out()
 	cmd.Dir = r.runnerConfig.RootDir

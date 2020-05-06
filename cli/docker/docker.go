@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -135,8 +136,10 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfigur
 		Image:        c.Image.Base,
 		ExposedPorts: ports,
 		Env: []string{
-			"SAUCE_USERNAME=" + os.Getenv("SAUCE_USERNAME"),
-			"SAUCE_ACCESS_KEY=" + os.Getenv("SAUCE_ACCESS_KEY")},
+			fmt.Sprintf("SAUCE_USERNAME=%s", os.Getenv("SAUCE_USERNAME")),
+			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", os.Getenv("SAUCE_ACCESS_KEY")),
+			fmt.Sprintf("SAUCE_BUILD_NAME=%s", c.Metadata.Build),
+		},
 	}
 	container, err := handler.client.ContainerCreate(ctx, containerConfig, hostConfig, networkConfig, "")
 	if err != nil {
