@@ -23,7 +23,7 @@ type Timeouts struct {
 	Implicit int `yaml:"implicit"`
 }
 
-// Capabilties describes job capabilies
+// Capabilities describes job capabilies
 type Capabilities struct {
 	BrowserName               string                 `yaml:"browserName"`
 	BrowserVersion            string                 `yaml:"browserVersion"`
