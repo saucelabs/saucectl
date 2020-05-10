@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"strings"
 	"context"
 	"errors"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"fmt"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
@@ -53,22 +55,23 @@ func (r *localRunner) Setup() error {
 	}
 
 	// check if image is existing
-	hasImage, err := r.docker.HasBaseImage(r.context, r.jobConfig.Image.Base)
+	baseImage := r.docker.GetImageFlavor(r.jobConfig)
+	hasImage, err := r.docker.HasBaseImage(r.context, baseImage)
 	if err != nil {
 		return err
 	}
 
 	// only pull base image if not already installed
-	progress.Show("Pulling test runner image %s", r.jobConfig.Image.Base)
+	progress.Show("Pulling test runner image %s", baseImage)
 	defer progress.Stop()
 
 	if !hasImage {
-		if err := r.docker.PullBaseImage(r.context, "docker.io/"+r.jobConfig.Image.Base); err != nil {
+		if err := r.docker.PullBaseImage(r.context, r.jobConfig); err != nil {
 			return err
 		}
 	}
 
-	progress.Show("Starting container")
+	progress.Show("Starting container %s", baseImage)
 	container, err := r.docker.StartContainer(r.context, r.jobConfig)
 	if err != nil {
 		return err
@@ -123,8 +126,9 @@ func (r *localRunner) Run() (int, error) {
 		return 1, err
 	}
 
-	// ToDo(Christian): move to config
-	testCmd := []string{"npm", "test"}
+	exec := r.jobConfig.Image.Exec
+	testCmd := strings.Split(exec, " ")
+	fmt.Println(fmt.Sprintf("Executing test command: %s",  exec))
 	createResp, attachResp, err := r.docker.Execute(r.context, r.containerID, testCmd)
 	if err != nil {
 		return 1, err

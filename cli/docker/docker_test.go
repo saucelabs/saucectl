@@ -63,8 +63,47 @@ func TestPullBaseImage(t *testing.T) {
 			handler := Handler{
 				client: tc.Client,
 			}
-			err := handler.PullBaseImage(ctx, "foobar")
+			c := config.JobConfiguration{
+				Image: config.ImageDefinition{Base: "foobar"},
+			}
+			err := handler.PullBaseImage(ctx, c)
 			assert.Equal(t, err, tc.ExpectedError)
+		})
+	}
+}
+
+func TestGetImageFlavorDefault(t *testing.T) {
+	cases := []PassFailCase{
+		{"get image flavor", &FakeClient{}, errors.New("Wrong flavor name"), false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			handler := Handler{
+				client: tc.Client,
+			}
+			c := config.JobConfiguration{
+				Image: config.ImageDefinition{Base: "foobar"},
+			}
+			baseImage := handler.GetImageFlavor(c)
+			assert.Equal(t, baseImage, "foobar:latest")
+		})
+	}
+}
+
+func TestGetImageFlavorVersioned(t *testing.T) {
+	cases := []PassFailCase{
+		{"get image flavor", &FakeClient{}, errors.New("Wrong flavor name"), false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			handler := Handler{
+				client: tc.Client,
+			}
+			c := config.JobConfiguration{
+				Image: config.ImageDefinition{Base: "foobar", Version: "barfoo"},
+			}
+			baseImage := handler.GetImageFlavor(c)
+			assert.Equal(t, baseImage, "foobar:barfoo")
 		})
 	}
 }

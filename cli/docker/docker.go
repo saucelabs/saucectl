@@ -96,9 +96,18 @@ func (handler *Handler) HasBaseImage(ctx context.Context, baseImage string) (boo
 	return len(images) > 0, nil
 }
 
+func (handler *Handler) GetImageFlavor(c config.JobConfiguration) string {
+	tag := "latest"
+	if c.Image.Version != "" {
+		tag = c.Image.Version
+	}
+	return fmt.Sprintf("%s:%s", c.Image.Base, tag)
+}
+
 // PullBaseImage pulls an image from Docker
-func (handler *Handler) PullBaseImage(ctx context.Context, baseImage string) error {
+func (handler *Handler) PullBaseImage(ctx context.Context, c config.JobConfiguration) error {
 	options := types.ImagePullOptions{}
+	baseImage := fmt.Sprintf("docker.io/%s", handler.GetImageFlavor(c))
 	responseBody, err := handler.client.ImagePull(ctx, baseImage, options)
 	if err != nil {
 		return err
@@ -133,7 +142,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfigur
 	}
 	networkConfig := &network.NetworkingConfig{}
 	containerConfig := &container.Config{
-		Image:        c.Image.Base,
+		Image:        handler.GetImageFlavor(c),
 		ExposedPorts: ports,
 		Env: []string{
 			fmt.Sprintf("SAUCE_USERNAME=%s", os.Getenv("SAUCE_USERNAME")),
