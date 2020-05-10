@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"strings"
 	"context"
 	"errors"
 	"io"
@@ -9,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"time"
-	"fmt"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
@@ -126,9 +124,12 @@ func (r *localRunner) Run() (int, error) {
 		return 1, err
 	}
 
+	/* 
+	Want to improve this, disabling it for a bit
 	exec := r.jobConfig.Image.Exec
 	testCmd := strings.Split(exec, " ")
-	fmt.Println(fmt.Sprintf("Executing test command: %s",  exec))
+	*/
+	testCmd := []string{"npm", "test"}
 	createResp, attachResp, err := r.docker.Execute(r.context, r.containerID, testCmd)
 	if err != nil {
 		return 1, err
