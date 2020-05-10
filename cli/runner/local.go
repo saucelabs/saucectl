@@ -124,10 +124,10 @@ func (r *localRunner) Run() (int, error) {
 		return 1, err
 	}
 
-	/* 
-	Want to improve this, disabling it for a bit
-	exec := r.jobConfig.Image.Exec
-	testCmd := strings.Split(exec, " ")
+	/*
+		Want to improve this, disabling it for a bit
+		exec := r.jobConfig.Image.Exec
+		testCmd := strings.Split(exec, " ")
 	*/
 	testCmd := []string{"npm", "test"}
 	createResp, attachResp, err := r.docker.Execute(r.context, r.containerID, testCmd)

@@ -41,18 +41,18 @@ type Capabilities struct {
 type ImageDefinition struct {
 	Base    string                 `yaml:"base"`
 	Version string                 `yaml:"version"`
-	Exec    string								 `yaml:"exec"`
+	Exec    string                 `yaml:"exec"`
 	Options map[string]interface{} `yaml:"options"`
 }
 
 // JobConfiguration describes testrunner config format
 type JobConfiguration struct {
-	APIVersion  string          `yaml:"apiVersion"`
-	Kind        string          `yaml:"kind"`
-	Metadata    Metadata        `yaml:"metadata"`
-	Capabilities []Capabilities   `yaml:"capabilities"`
-	Files       []string        `yaml:"files"`
-	Image       ImageDefinition `yaml:"image"`
+	APIVersion   string          `yaml:"apiVersion"`
+	Kind         string          `yaml:"kind"`
+	Metadata     Metadata        `yaml:"metadata"`
+	Capabilities []Capabilities  `yaml:"capabilities"`
+	Files        []string        `yaml:"files"`
+	Image        ImageDefinition `yaml:"image"`
 }
 
 // RunnerConfiguration describes configurations for the testrunner
