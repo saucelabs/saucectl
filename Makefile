@@ -12,6 +12,9 @@ build:
 lint:
 	golangci-lint run ./... --disable structcheck
 
+format:
+	gofmt -w .
+
 test:
 	go test -coverprofile=coverage.out ./...
 	goverreport -sort=block -order=desc -threshold=42
