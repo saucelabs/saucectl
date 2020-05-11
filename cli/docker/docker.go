@@ -96,6 +96,7 @@ func (handler *Handler) HasBaseImage(ctx context.Context, baseImage string) (boo
 	return len(images) > 0, nil
 }
 
+// TODO - move this to ImageDefinition
 func (handler *Handler) GetImageFlavor(c config.JobConfiguration) string {
 	tag := "latest"
 	if c.Image.Version != "" {
