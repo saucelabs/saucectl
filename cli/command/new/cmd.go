@@ -89,8 +89,21 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return err
 	}
 
+	// TODO - unhardcode this
+	version := "3.0.4"
+	if answers.Framework == "playwright" {
+		version = "1.0.0"
+	}
+	data := struct{
+		Framework string
+		Version string
+	}{
+		Framework: answers.Framework,
+		Version: version,
+	}
+
 	wc := bufio.NewWriter(fc)
-	if err := configTpl.Execute(wc, answers); err != nil {
+	if err := configTpl.Execute(wc, data); err != nil {
 		return err
 	}
 	wc.Flush()

@@ -12,8 +12,8 @@ metadata:
 files:
   - ./tests/example.test.js
 image:
-  base: saucelabs/sauce-{{ .Framework }}-runner
-  version: latest
+  base: saucelabs/sauce-{{ .Framework }}
+  version: {{ .Version }}
 `
 
 // SetupTemplate describes a template for a setup

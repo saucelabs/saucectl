@@ -24,7 +24,7 @@ type Timeouts struct {
 }
 
 // Capabilties describes job capabilies
-type Capabilties struct {
+type Capabilities struct {
 	BrowserName               string                 `yaml:"browserName"`
 	BrowserVersion            string                 `yaml:"browserVersion"`
 	PlatformName              string                 `yaml:"platformName"`
@@ -41,17 +41,18 @@ type Capabilties struct {
 type ImageDefinition struct {
 	Base    string                 `yaml:"base"`
 	Version string                 `yaml:"version"`
+	Exec    string                 `yaml:"exec"`
 	Options map[string]interface{} `yaml:"options"`
 }
 
 // JobConfiguration describes testrunner config format
 type JobConfiguration struct {
-	APIVersion  string          `yaml:"apiVersion"`
-	Kind        string          `yaml:"kind"`
-	Metadata    Metadata        `yaml:"metadata"`
-	Capabilties []Capabilties   `yaml:"capabilties"`
-	Files       []string        `yaml:"files"`
-	Image       ImageDefinition `yaml:"image"`
+	APIVersion   string          `yaml:"apiVersion"`
+	Kind         string          `yaml:"kind"`
+	Metadata     Metadata        `yaml:"metadata"`
+	Capabilities []Capabilities  `yaml:"capabilities"`
+	Files        []string        `yaml:"files"`
+	Image        ImageDefinition `yaml:"image"`
 }
 
 // RunnerConfiguration describes configurations for the testrunner
