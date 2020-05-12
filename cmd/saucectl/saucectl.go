@@ -55,4 +55,6 @@ func setupLogging(verbose bool) {
 	} else {
 		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	}
+
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 }
