@@ -51,10 +51,9 @@ func main() {
 }
 
 func setupLogging(verbose bool) {
+	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	if verbose {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	} else {
-		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	}
 
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
