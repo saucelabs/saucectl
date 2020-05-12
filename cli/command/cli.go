@@ -47,7 +47,6 @@ func NewSauceCtlCli() (*SauceCtlCli, error) {
 	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
-	logger.Info().Msg("Start Program")
 
 	stdin, stdout, stderr := term.StdStreams()
 	cli := &SauceCtlCli{
