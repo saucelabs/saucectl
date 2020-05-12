@@ -16,14 +16,15 @@ var ctx = context.Background()
 type PassFailCase struct {
 	Name           string
 	Client         ClientInterface
+	JobConfig      *config.JobConfiguration
 	ExpectedError  error
 	ExpectedResult interface{}
 }
 
 func TestValidateDependency(t *testing.T) {
 	cases := []PassFailCase{
-		{"Docker is not installed", &FakeClient{}, errors.New("ContainerListFailure"), nil},
-		{"Docker is intalled", &FakeClient{ContainerListSuccess: true}, nil, nil},
+		{"Docker is not installed", &FakeClient{}, nil, errors.New("ContainerListFailure"), nil},
+		{"Docker is intalled", &FakeClient{ContainerListSuccess: true}, nil, nil, nil},
 	}
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
@@ -36,8 +37,8 @@ func TestValidateDependency(t *testing.T) {
 
 func TestHasBaseImage(t *testing.T) {
 	cases := []PassFailCase{
-		{"failing command", &FakeClient{}, errors.New("ImageListFailure"), false},
-		{"passing command", &FakeClient{ImageListSuccess: true}, nil, true},
+		{"failing command", &FakeClient{}, nil, errors.New("ImageListFailure"), false},
+		{"passing command", &FakeClient{ImageListSuccess: true}, nil, nil, true},
 	}
 
 	for _, tc := range cases {
@@ -53,8 +54,11 @@ func TestHasBaseImage(t *testing.T) {
 }
 
 func TestPullBaseImage(t *testing.T) {
+	jobConfig := config.JobConfiguration{
+		Image: config.ImageDefinition{Base: "foobar"},
+	}
 	cases := []PassFailCase{
-		{"failing command", &FakeClient{}, errors.New("ImagePullFailure"), nil},
+		{"failing command", &FakeClient{}, &jobConfig, errors.New("ImagePullFailure"), nil},
 		// {"passing command", &FakeClient{ImagePullSuccess: true}, nil, nil},
 	}
 
@@ -63,46 +67,43 @@ func TestPullBaseImage(t *testing.T) {
 			handler := Handler{
 				client: tc.Client,
 			}
-			c := config.JobConfiguration{
-				Image: config.ImageDefinition{Base: "foobar"},
-			}
-			err := handler.PullBaseImage(ctx, c)
+			err := handler.PullBaseImage(ctx, *tc.JobConfig)
 			assert.Equal(t, err, tc.ExpectedError)
 		})
 	}
 }
 
 func TestGetImageFlavorDefault(t *testing.T) {
+	jobConfig := config.JobConfiguration{
+		Image: config.ImageDefinition{Base: "foobar"},
+	}
 	cases := []PassFailCase{
-		{"get image flavor", &FakeClient{}, errors.New("Wrong flavor name"), false},
+		{"get image flavor", &FakeClient{}, &jobConfig, errors.New("Wrong flavor name"), false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
 			handler := Handler{
 				client: tc.Client,
 			}
-			c := config.JobConfiguration{
-				Image: config.ImageDefinition{Base: "foobar"},
-			}
-			baseImage := handler.GetImageFlavor(c)
+			baseImage := handler.GetImageFlavor(*tc.JobConfig)
 			assert.Equal(t, baseImage, "foobar:latest")
 		})
 	}
 }
 
 func TestGetImageFlavorVersioned(t *testing.T) {
+	jobConfig := config.JobConfiguration{
+		Image: config.ImageDefinition{Base: "foobar", Version: "barfoo"},
+	}
 	cases := []PassFailCase{
-		{"get image flavor", &FakeClient{}, errors.New("Wrong flavor name"), false},
+		{"get image flavor", &FakeClient{}, &jobConfig, errors.New("Wrong flavor name"), false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
 			handler := Handler{
 				client: tc.Client,
 			}
-			c := config.JobConfiguration{
-				Image: config.ImageDefinition{Base: "foobar", Version: "barfoo"},
-			}
-			baseImage := handler.GetImageFlavor(c)
+			baseImage := handler.GetImageFlavor(*tc.JobConfig)
 			assert.Equal(t, baseImage, "foobar:barfoo")
 		})
 	}
@@ -110,20 +111,34 @@ func TestGetImageFlavorVersioned(t *testing.T) {
 
 func TestStartContainer(t *testing.T) {
 	failureResult := container.ContainerCreateCreatedBody{}
+	jobConfig := config.JobConfiguration{
+		Image: config.ImageDefinition{Base: "foobar"},
+		Capabilities: []config.Capabilities{
+			{BrowserName: "chrome"},
+		},
+	}
+	jobConfigWithoutCaps := config.JobConfiguration{
+		Image: config.ImageDefinition{Base: "foobar"},
+	}
 	cases := []PassFailCase{
-		{"failing to create container", &FakeClient{}, errors.New("ContainerCreateFailure"), failureResult},
+		{"failing to create container", &FakeClient{}, &jobConfig, errors.New("ContainerCreateFailure"), failureResult},
 		{"failing to start container", &FakeClient{
 			ContainerCreateSuccess: true,
-		}, errors.New("ContainerStartFailure"), failureResult},
+		}, &jobConfig, errors.New("ContainerStartFailure"), failureResult},
 		{"failing to inspect container", &FakeClient{
 			ContainerCreateSuccess: true,
 			ContainerStartSuccess:  true,
-		}, errors.New("ContainerInspectFailure"), failureResult},
+		}, &jobConfig, errors.New("ContainerInspectFailure"), failureResult},
 		{"successful execution", &FakeClient{
 			ContainerCreateSuccess:  true,
 			ContainerStartSuccess:   true,
 			ContainerInspectSuccess: true,
-		}, nil, failureResult},
+		}, &jobConfig, nil, failureResult},
+		{"successful execution without caps", &FakeClient{
+			ContainerCreateSuccess:  true,
+			ContainerStartSuccess:   true,
+			ContainerInspectSuccess: true,
+		}, &jobConfigWithoutCaps, nil, failureResult},
 	}
 
 	for _, tc := range cases {
@@ -131,10 +146,7 @@ func TestStartContainer(t *testing.T) {
 			handler := Handler{
 				client: tc.Client,
 			}
-			c := config.JobConfiguration{
-				Image: config.ImageDefinition{Base: "foobar"},
-			}
-			_, err := handler.StartContainer(ctx, c)
+			_, err := handler.StartContainer(ctx, *tc.JobConfig)
 			assert.Equal(t, err, tc.ExpectedError)
 		})
 	}
@@ -147,8 +159,8 @@ func TestCopyTestFilesToContainer(t *testing.T) {
 	defer dir.Remove()
 
 	cases := []PassFailCase{
-		{"failing attempt to copy", &FakeClient{}, errors.New("CopyToContainerFailure"), nil},
-		{"passing command", &FakeClient{CopyToContainerSuccess: true}, nil, nil},
+		{"failing attempt to copy", &FakeClient{}, nil, errors.New("CopyToContainerFailure"), nil},
+		{"passing command", &FakeClient{CopyToContainerSuccess: true}, nil, nil, nil},
 	}
 
 	for _, tc := range cases {
@@ -179,15 +191,15 @@ func TestCopyFromContainer(t *testing.T) {
 	targetFile := dir.Path() + "/some.other.foo.js"
 
 	cases := []PassFailCaseWithArgument{
-		{PassFailCase{"not existing target dir", &FakeClient{}, errors.New("invalid output path: directory /foo does not exist"), nil}, "/foo/bar"},
-		{PassFailCase{"failure when getting stat info", &FakeClient{}, errors.New("ContainerStatPathFailure"), nil}, targetFile},
+		{PassFailCase{"not existing target dir", &FakeClient{}, nil, errors.New("invalid output path: directory /foo does not exist"), nil}, "/foo/bar"},
+		{PassFailCase{"failure when getting stat info", &FakeClient{}, nil, errors.New("ContainerStatPathFailure"), nil}, targetFile},
 		{PassFailCase{"failure when copying from container", &FakeClient{
 			ContainerStatPathSuccess: true,
-		}, errors.New("CopyFromContainerFailure"), nil}, targetFile},
+		}, nil, errors.New("CopyFromContainerFailure"), nil}, targetFile},
 		{PassFailCase{"successful attempt", &FakeClient{
 			ContainerStatPathSuccess: true,
 			CopyFromContainerSuccess: true,
-		}, nil, nil}, targetFile},
+		}, nil, nil, nil}, targetFile},
 	}
 
 	for _, tc := range cases {
@@ -203,14 +215,14 @@ func TestCopyFromContainer(t *testing.T) {
 
 func TestExecute(t *testing.T) {
 	cases := []PassFailCase{
-		{"failing to create exec", &FakeClient{}, errors.New("ContainerExecCreateFailure"), nil},
+		{"failing to create exec", &FakeClient{}, nil, errors.New("ContainerExecCreateFailure"), nil},
 		{"failing to create attach", &FakeClient{
 			ContainerExecCreateSuccess: true,
-		}, errors.New("ContainerExecAttachFailure"), nil},
+		}, nil, errors.New("ContainerExecAttachFailure"), nil},
 		{"successful call", &FakeClient{
 			ContainerExecCreateSuccess: true,
 			ContainerExecAttachSuccess: true,
-		}, nil, nil},
+		}, nil, nil, nil},
 	}
 
 	for _, tc := range cases {
@@ -226,10 +238,10 @@ func TestExecute(t *testing.T) {
 
 func TestExecuteExecuteInspect(t *testing.T) {
 	cases := []PassFailCase{
-		{"failing to inspect", &FakeClient{}, errors.New("ContainerExecInspectFailure"), 1},
+		{"failing to inspect", &FakeClient{}, nil, errors.New("ContainerExecInspectFailure"), 1},
 		{"successful call", &FakeClient{
 			ContainerExecInspectSuccess: true,
-		}, nil, 0},
+		}, nil, nil, 0},
 	}
 
 	for _, tc := range cases {
@@ -246,10 +258,10 @@ func TestExecuteExecuteInspect(t *testing.T) {
 
 func TestContainerStop(t *testing.T) {
 	cases := []PassFailCase{
-		{"failing to inspect", &FakeClient{}, errors.New("ContainerStopFailure"), nil},
+		{"failing to inspect", &FakeClient{}, nil, errors.New("ContainerStopFailure"), nil},
 		{"successful call", &FakeClient{
 			ContainerStopSuccess: true,
-		}, nil, 0},
+		}, nil, nil, 0},
 	}
 
 	for _, tc := range cases {
@@ -265,10 +277,10 @@ func TestContainerStop(t *testing.T) {
 
 func TestContainerRemove(t *testing.T) {
 	cases := []PassFailCase{
-		{"failing to inspect", &FakeClient{}, errors.New("ContainerRemoveFailure"), nil},
+		{"failing to inspect", &FakeClient{}, nil, errors.New("ContainerRemoveFailure"), nil},
 		{"successful call", &FakeClient{
 			ContainerRemoveSuccess: true,
-		}, nil, 0},
+		}, nil, nil, 0},
 	}
 
 	for _, tc := range cases {
