@@ -133,6 +133,9 @@ func TestStartContainer(t *testing.T) {
 			}
 			c := config.JobConfiguration{
 				Image: config.ImageDefinition{Base: "foobar"},
+				Capabilities: []config.Capabilities{
+					{BrowserName: "chrome"},
+				},
 			}
 			_, err := handler.StartContainer(ctx, c)
 			assert.Equal(t, err, tc.ExpectedError)
