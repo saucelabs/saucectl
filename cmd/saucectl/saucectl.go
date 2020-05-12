@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -57,4 +58,6 @@ func setupLogging(verbose bool) {
 	}
 
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 }
