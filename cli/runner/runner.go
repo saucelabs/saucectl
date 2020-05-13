@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"github.com/rs/zerolog/log"
 	"os"
 	"time"
 
@@ -53,10 +54,10 @@ func New(c config.JobConfiguration, cli *command.SauceCtlCli) (Testrunner, error
 
 	_, err = os.Stat(runnerConfigPath)
 	if os.IsNotExist(err) {
-		cli.Logger.Info().Msg("Start local runner")
+		log.Info().Msg("Start local runner")
 		runner, err = newLocalRunner(c, cli)
 	} else {
-		cli.Logger.Info().Msg("Start CI runner")
+		log.Info().Msg("Start CI runner")
 		runner, err = newCIRunner(c, cli)
 	}
 

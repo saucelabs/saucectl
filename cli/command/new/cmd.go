@@ -3,6 +3,7 @@ package new
 import (
 	"bufio"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"html/template"
 	"os"
 	"path/filepath"
@@ -45,7 +46,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Long:    newLong,
 		Example: newExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			cli.Logger.Info().Msg("Start New Command")
+			log.Info().Msg("Start New Command")
 			checkErr(Run(cmd, cli, args))
 			os.Exit(0)
 		},

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -39,7 +40,7 @@ func newCIRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*ciRunner
 }
 
 func (r *ciRunner) Setup() error {
-	r.cli.Logger.Info().Msg("Run entry.sh")
+	log.Info().Msg("Run entry.sh")
 	var out bytes.Buffer
 	cmd := exec.Command("/home/seluser/entry.sh", "&")
 	cmd.Stderr = &out
@@ -51,7 +52,7 @@ func (r *ciRunner) Setup() error {
 	time.Sleep(2 * time.Second)
 
 	// copy files from repository into target dir
-	r.cli.Logger.Info().Msg("Copy files into assigned directories")
+	log.Info().Msg("Copy files into assigned directories")
 	for _, pattern := range r.jobConfig.Files {
 		matches, err := filepath.Glob(pattern)
 		if err != nil {
@@ -59,7 +60,7 @@ func (r *ciRunner) Setup() error {
 		}
 
 		for _, file := range matches {
-			r.cli.Logger.Info().Msg("Copy file " + file + " to " + r.runnerConfig.TargetDir)
+			log.Info().Msg("Copy file " + file + " to " + r.runnerConfig.TargetDir)
 			if err := copyFile(file, r.runnerConfig.TargetDir); err != nil {
 				return err
 			}

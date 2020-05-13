@@ -1,6 +1,7 @@
 package run
 
 import (
+	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
 
@@ -30,7 +31,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Long:    runLong,
 		Example: runExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			cli.Logger.Info().Msg("Start Run Command")
+			log.Info().Msg("Start Run Command")
 			checkErr(Run(cmd, cli, args))
 			os.Exit(0)
 		},
@@ -56,7 +57,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		cfgLogDir = filepath.Join(pwd, "logs")
 	}
 
-	cli.Logger.Info().Msg("Read config file")
+	log.Info().Msg("Read config file")
 	configObject, err := config.NewJobConfiguration(cfgFilePath)
 	if err != nil {
 		return err
@@ -67,23 +68,23 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return err
 	}
 
-	cli.Logger.Info().Msg("Setup test environment")
+	log.Info().Msg("Setup test environment")
 	if err := tr.Setup(); err != nil {
 		return err
 	}
 
-	cli.Logger.Info().Msg("Start tests")
+	log.Info().Msg("Start tests")
 	exitCode, err := tr.Run()
 	if err != nil {
 		return err
 	}
 
-	cli.Logger.Info().Msg("Teardown environment")
+	log.Info().Msg("Teardown environment")
 	if err != tr.Teardown(cfgLogDir) {
 		return err
 	}
 
-	cli.Logger.Info().
+	log.Info().
 		Int("ExitCode", exitCode).
 		Msg("Command Finished")
 
