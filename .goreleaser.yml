@@ -21,15 +21,9 @@ brews:
       owner: saucelabs
       name: homebrew-saucectl
     folder: Formula
-    homepage:  https://saucelabs.com
-    description: Homebrew Formulae to saucectl binaries
     test: |
       system "#{bin}/goreleaser -v"
-  -
     name: saucectl
-    commit_author:
-      name: christian-bromann
-      email: christian@saucelabs.com
     homepage: "https://saucelabs.com/"
     description: "A command line interface to run testrunner tests."
     dependencies:
@@ -53,3 +47,4 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+project_name: saucectl
