@@ -26,6 +26,9 @@ brews:
     name: saucectl
     homepage: "https://saucelabs.com/"
     description: "A command line interface to run testrunner tests."
+    commit_author:
+      name: devx-sauce-bot
+      email: devx.bot@saucelabs.com
     dependencies:
       - docker
 archives:
