@@ -4,8 +4,8 @@ Briefly describe the issue you are experiencing (or the feature you want to see 
 
 ## Environment
 
-* saucectl version (or git revision) that exhibits the issue:
-* Last saucetl version that did not exhibit the issue (if applicable):
+* saucectl version (`$ saucectl -v`) - or git revision - that exhibits the issue:
+* Last saucectl version that did not exhibit the issue (if applicable):
 * Desktop OS/version used to run saucectl:
 
 ## Details
