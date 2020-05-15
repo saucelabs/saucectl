@@ -25,7 +25,7 @@ brews:
       system "#{bin}/goreleaser -v"
     name: saucectl
     homepage: "https://saucelabs.com/"
-    description: "A command line interface to run testrunner tests."
+    description: "Saucectl is a command-line interface to run testrunner tests"
     commit_author:
       name: devx-sauce-bot
       email: devx.bot@saucelabs.com
