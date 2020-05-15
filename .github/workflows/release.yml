@@ -41,4 +41,4 @@ jobs:
           curl -X POST https://api.github.com/repos/saucelabs/node-saucectl/dispatches \
           -H 'Accept: application/vnd.github.everest-preview+json' \
           -u devx-sauce-bot:$GH_TOKEN \
-          --data "{'event_type': 'saucectl_release', 'client_payload': { 'version': '$(git describe --abbrev | cut -c2-)' }}"
+          --data "{\"event_type\": \"saucectl_release\", \"client_payload\": { \"version\": \"$(git describe --abbrev | cut -c2-)\" }}"
