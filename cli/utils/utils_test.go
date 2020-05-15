@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,4 +14,10 @@ func TestValidateOutputPath(t *testing.T) {
 
 	err = ValidateOutputPath("")
 	assert.Equal(t, err, nil)
+}
+
+func TestValidateOutputPathFileMode(t *testing.T) {
+	assert.Equal(t, ValidateOutputPathFileMode(os.FileMode(1<<(32-1-4))), nil)
+	assert.Equal(t, ValidateOutputPathFileMode(os.FileMode(1<<(32-1-5))), errors.New("got a device"))
+	assert.Equal(t, ValidateOutputPathFileMode(os.FileMode(1<<(32-1-12))), errors.New("got an irregular file"))
 }
