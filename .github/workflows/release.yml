@@ -36,7 +36,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Get the version
         id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\// | cut -c2-}
       -
         name: Trigger node-saucectl release
         run: |
