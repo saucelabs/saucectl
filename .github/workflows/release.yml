@@ -34,11 +34,14 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
       -
         name: Trigger node-saucectl release
         run: |
-          echo "Release saucectl $(git describe --abbrev | cut -c2-)"
+          echo "Release saucectl ${{ steps.get_version.outputs.VERSION }}"
           curl -X POST https://api.github.com/repos/saucelabs/node-saucectl/dispatches \
           -H 'Accept: application/vnd.github.everest-preview+json' \
           -u devx-sauce-bot:$GH_TOKEN \
-          --data "{\"event_type\": \"saucectl_release\", \"client_payload\": { \"version\": \"$(git describe --abbrev | cut -c2-)\" }}"
+          --data "{\"event_type\": \"saucectl_release\", \"client_payload\": { \"version\": \"${{ steps.get_version.outputs.VERSION }}\" }}"
