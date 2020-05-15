@@ -47,19 +47,15 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Example: newExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Info().Msg("Start New Command")
-			checkErr(Run(cmd, cli, args))
-			os.Exit(0)
+			if err := Run(cmd, cli, args); err != nil {
+				log.Err(err).Msg("failed to execute new command")
+				os.Exit(1)
+			}
 		},
 	}
 
 	cmd.Flags().BoolVarP(&argsYes, "yes", "y", false, "if set it runs with default values")
 	return cmd
-}
-
-func checkErr(e error) {
-	if e != nil {
-		panic(e)
-	}
 }
 
 // Run starts the new command

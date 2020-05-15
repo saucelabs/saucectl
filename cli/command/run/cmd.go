@@ -34,7 +34,9 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Info().Msg("Start Run Command")
 			exitCode, err := Run(cmd, cli, args)
-			checkErr(err)
+			if err != nil {
+				log.Err(err).Msg("failed to execute run command")
+			}
 			os.Exit(exitCode)
 		},
 	}
@@ -43,12 +45,6 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVarP(&cfgLogDir, "logDir", "l", defaultLogFir, "log path")
 
 	return cmd
-}
-
-func checkErr(e error) {
-	if e != nil {
-		panic(e)
-	}
 }
 
 // Run runs the command
