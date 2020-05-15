@@ -49,7 +49,7 @@ func newLocalRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*local
 func (r *localRunner) Setup() error {
 	err := r.docker.ValidateDependency()
 	if err != nil {
-		return errors.New("Docker is not installed")
+		return errors.New("docker is not installed")
 	}
 
 	// check if image is existing
