@@ -55,7 +55,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		cfgLogDir = filepath.Join(pwd, "logs")
 	}
 
-	log.Info().Msgf("Read config file: %s", cfgFilePath)
+	log.Info().Str("config", cfgFilePath).Msg("Reading config file")
 	configObject, err := config.NewJobConfiguration(cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -66,18 +66,18 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return 1, err
 	}
 
-	log.Info().Msg("Setup test environment")
+	log.Info().Msg("Setting up test environment")
 	if err := tr.Setup(); err != nil {
 		return 1, err
 	}
 
-	log.Info().Msg("Start tests")
+	log.Info().Msg("Starting tests")
 	exitCode, err := tr.Run()
 	if err != nil {
 		return 1, err
 	}
 
-	log.Info().Msg("Teardown environment")
+	log.Info().Msg("Tearing down environment")
 	if err != tr.Teardown(cfgLogDir) {
 		return 1, err
 	}

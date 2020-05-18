@@ -72,7 +72,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 
 	answers.Framework = strings.ToLower(answers.Framework)
 	if err := os.MkdirAll(filepath.Join(cwd, ".sauce"), 0777); err != nil {
-		return err
+		return fmt.Errorf("failed to create config directory: %v", err)
 	}
 
 	fc, err := os.Create(filepath.Join(cwd, ".sauce", "config.yml"))
