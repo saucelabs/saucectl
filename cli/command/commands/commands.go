@@ -12,6 +12,5 @@ func AddCommands(cmd *cobra.Command, cli *command.SauceCtlCli) {
 	cmd.AddCommand(
 		new.Command(cli),
 		run.Command(cli),
-		// logs.NewLogsCommand(cli),
 	)
 }

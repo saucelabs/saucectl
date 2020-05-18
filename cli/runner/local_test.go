@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/saucelabs/saucectl/cli/docker"
+	"github.com/saucelabs/saucectl/cli/mocks"
 	"gotest.tools/v3/fs"
 )
 
@@ -20,22 +21,22 @@ func TestLocalRunnerSetup(t *testing.T) {
 		fs.WithFile("config.yaml", "foo: bar", fs.WithMode(0755)))
 
 	cases := []PassFailCase{
-		{"Docker is not installed", docker.CreateMock(&docker.FakeClient{}), errors.New("Docker is not installed")},
-		{"Pulling fails", docker.CreateMock(&docker.FakeClient{
+		{"Docker is not installed", docker.CreateMock(&mocks.FakeClient{}), errors.New("Docker is not installed")},
+		{"Pulling fails", docker.CreateMock(&mocks.FakeClient{
 			ContainerListSuccess: true,
 		}), errors.New("ImagePullFailure")},
-		{"Creating container fails", docker.CreateMock(&docker.FakeClient{
+		{"Creating container fails", docker.CreateMock(&mocks.FakeClient{
 			ContainerListSuccess: true,
 			ImagePullSuccess:     true,
 		}), errors.New("ContainerCreateFailure")},
-		{"Copy from container fails", docker.CreateMock(&docker.FakeClient{
+		{"Copy from container fails", docker.CreateMock(&mocks.FakeClient{
 			ContainerListSuccess:    true,
 			ImagePullSuccess:        true,
 			ContainerStartSuccess:   true,
 			ContainerCreateSuccess:  true,
 			ContainerInspectSuccess: true,
 		}), errors.New("CopyFromContainerFailure")},
-		// {"Can not find container config", docker.CreateMock(&docker.FakeClient{
+		// {"Can not find container config", docker.CreateMock(&mocks.FakeClient{
 		// 	ContainerListSuccess:     true,
 		// 	ImagePullSuccess:         true,
 		// 	ContainerStartSuccess:    true,
