@@ -49,6 +49,7 @@ func (r *ciRunner) Setup() error {
 		return errors.New("couldn't start test: " + out.String())
 	}
 
+	// TODO replace sleep with actual checks & confirmation
 	// wait 2 seconds until everything is started
 	time.Sleep(2 * time.Second)
 

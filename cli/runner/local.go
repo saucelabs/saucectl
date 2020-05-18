@@ -77,8 +77,8 @@ func (r *localRunner) Setup() error {
 	r.containerID = container.ID
 
 	progress.Show("Preparing container")
+	// TODO replace sleep with actual checks & confirmation
 	// wait until Xvfb started
-	// ToDo(Christian): make this dynamic
 	time.Sleep(1 * time.Second)
 
 	// get runner config
