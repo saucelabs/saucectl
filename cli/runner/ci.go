@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"errors"
 
@@ -19,7 +20,7 @@ import (
 )
 
 type ciRunner struct {
-	baseRunner
+	BaseRunner
 }
 
 func newCIRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*ciRunner, error) {

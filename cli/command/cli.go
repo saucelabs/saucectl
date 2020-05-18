@@ -43,5 +43,5 @@ func NewSauceCtlCli() *SauceCtlCli {
 		err: stderr,
 	}
 
-	return cli, nil
+	return cli
 }

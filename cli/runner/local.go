@@ -16,7 +16,7 @@ import (
 )
 
 type localRunner struct {
-	baseRunner
+	BaseRunner
 	containerID string
 	docker      *docker.Handler
 	tmpDir      string

@@ -59,6 +59,11 @@ type Handler struct {
 	client ClientInterface
 }
 
+// CreateMock allows to get a handler with a custom interface
+func CreateMock(client ClientInterface) *Handler {
+	return &Handler{client}
+}
+
 // Create generates a docker client
 func Create() (*Handler, error) {
 	cl, err := client.NewEnvClient()

@@ -2,12 +2,14 @@ package runner
 
 import (
 	"context"
-	"github.com/rs/zerolog/log"
 	"os"
 	"time"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/mocks"
 )
 
 const logDir = "/var/log/cont"
@@ -36,7 +38,8 @@ type Testrunner interface {
 	Teardown(logDir string) error
 }
 
-type baseRunner struct {
+// BaseRunner contains common properties across all runners
+type BaseRunner struct {
 	jobConfig    config.JobConfiguration
 	runnerConfig config.RunnerConfiguration
 	context      context.Context
@@ -51,6 +54,11 @@ func New(c config.JobConfiguration, cli *command.SauceCtlCli) (Testrunner, error
 		runner Testrunner
 		err    error
 	)
+
+	// return test runner for testing
+	if c.Image.Base == "test" {
+		return mocks.NewTestRunner(c, cli)
+	}
 
 	_, err = os.Stat(runnerConfigPath)
 	if os.IsNotExist(err) {

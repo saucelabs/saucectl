@@ -1,4 +1,4 @@
-package docker
+package mocks
 
 import (
 	"context"
@@ -27,11 +27,6 @@ type FakeClient struct {
 	ContainerExecInspectSuccess bool
 	ContainerStopSuccess        bool
 	ContainerRemoveSuccess      bool
-}
-
-// CreateMock generates a mocked docker client
-func CreateMock(client ClientInterface) *Handler {
-	return &Handler{client}
 }
 
 type fakeReadWriteCloser struct{}
