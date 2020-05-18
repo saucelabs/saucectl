@@ -15,7 +15,10 @@ func TestNewRunCommand(t *testing.T) {
 	cmd := Command(&cli)
 	assert.Equal(t, cmd.Use, runUse)
 
-	cmd.Flags().Set("config", dir.Path()+"/config.yaml")
+	if err := cmd.Flags().Set("config", dir.Path()+"/config.yaml"); err != nil {
+		t.Fatal(err)
+	}
+
 	var args []string
 	exitCode, err := Run(cmd, &cli, args)
 
