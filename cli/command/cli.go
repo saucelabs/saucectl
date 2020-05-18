@@ -1,9 +1,10 @@
 package command
 
 import (
+	"io"
+
 	"github.com/docker/docker/pkg/term"
 	"github.com/saucelabs/saucectl/cli/streams"
-	"io"
 )
 
 // SauceCtlCli is the cli context
@@ -34,12 +35,12 @@ func (cli *SauceCtlCli) In() *streams.In {
 }
 
 // NewSauceCtlCli creates the context object for the cli
-func NewSauceCtlCli() (*SauceCtlCli, error) {
+func NewSauceCtlCli() *SauceCtlCli {
 	stdin, stdout, stderr := term.StdStreams()
 	cli := &SauceCtlCli{
-		in:     streams.NewIn(stdin),
-		out:    streams.NewOut(stdout),
-		err:    stderr,
+		in:  streams.NewIn(stdin),
+		out: streams.NewOut(stdout),
+		err: stderr,
 	}
 
 	return cli, nil

@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -20,12 +21,7 @@ var (
 )
 
 func main() {
-	cli, err := command.NewSauceCtlCli()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
+	cli := command.NewSauceCtlCli()
 	cmd := &cobra.Command{
 		Use:              cmdUse,
 		Short:            cmdShort,
@@ -40,7 +36,6 @@ func main() {
 	verbosity := cmd.PersistentFlags().Bool("verbose", false, "turn on verbose logging")
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		setupLogging(*verbosity)
-
 		return nil
 	}
 
