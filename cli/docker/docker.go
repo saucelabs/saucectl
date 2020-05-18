@@ -251,7 +251,7 @@ func (handler *Handler) CopyFromContainer(ctx context.Context, srcContainerID st
 	}
 
 	// If the destination is a symbolic link, we should follow it.
-	if err == nil && srcStat.Mode&os.ModeSymlink != 0 {
+	if srcStat.Mode&os.ModeSymlink != 0 {
 		linkTarget := srcStat.LinkTarget
 		if !system.IsAbs(linkTarget) {
 			// Join with the parent directory.
@@ -277,7 +277,7 @@ func (handler *Handler) CopyFromContainer(ctx context.Context, srcContainerID st
 	}
 
 	preArchive := content
-	if len(srcInfo.RebaseName) != 0 {
+	if srcInfo.RebaseName != "" {
 		_, srcBase := archive.SplitPathDirEntry(srcInfo.Path)
 		preArchive = archive.RebaseArchiveEntries(content, srcBase, srcInfo.RebaseName)
 	}

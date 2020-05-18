@@ -46,9 +46,10 @@ func (r *ciRunner) Setup() error {
 	cmd := exec.Command("/home/seluser/entry.sh", "&")
 	cmd.Stderr = &out
 	if err := cmd.Run(); err != nil {
-		return errors.New("Couldn't start test: " + out.String())
+		return errors.New("couldn't start test: " + out.String())
 	}
 
+	// TODO replace sleep with actual checks & confirmation
 	// wait 2 seconds until everything is started
 	time.Sleep(2 * time.Second)
 

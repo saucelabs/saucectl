@@ -25,7 +25,3 @@ func TestNewRunCommand(t *testing.T) {
 	assert.Equal(t, err, nil)
 	assert.Equal(t, exitCode, 123)
 }
-
-func TestCheckErr(t *testing.T) {
-	checkErr(nil)
-}

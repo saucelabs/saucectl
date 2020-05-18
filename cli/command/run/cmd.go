@@ -34,7 +34,9 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Info().Msg("Start Run Command")
 			exitCode, err := Run(cmd, cli, args)
-			checkErr(err)
+			if err != nil {
+				log.Err(err).Msg("failed to execute run command")
+			}
 			os.Exit(exitCode)
 		},
 	}
@@ -45,12 +47,6 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	return cmd
 }
 
-func checkErr(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
 // Run runs the command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, error) {
 	// Todo(Christian) write argument parser/validator
@@ -59,7 +55,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		cfgLogDir = filepath.Join(pwd, "logs")
 	}
 
-	log.Info().Msgf("Read config file: %s", cfgFilePath)
+	log.Info().Str("config", cfgFilePath).Msg("Reading config file")
 	configObject, err := config.NewJobConfiguration(cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -70,18 +66,18 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return 1, err
 	}
 
-	log.Info().Msg("Setup test environment")
+	log.Info().Msg("Setting up test environment")
 	if err := tr.Setup(); err != nil {
 		return 1, err
 	}
 
-	log.Info().Msg("Start tests")
+	log.Info().Msg("Starting tests")
 	exitCode, err := tr.Run()
 	if err != nil {
 		return 1, err
 	}
 
-	log.Info().Msg("Teardown environment")
+	log.Info().Msg("Tearing down environment")
 	if err != tr.Teardown(cfgLogDir) {
 		return 1, err
 	}

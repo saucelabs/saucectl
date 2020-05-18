@@ -21,7 +21,7 @@ func TestLocalRunnerSetup(t *testing.T) {
 		fs.WithFile("config.yaml", "foo: bar", fs.WithMode(0755)))
 
 	cases := []PassFailCase{
-		{"Docker is not installed", docker.CreateMock(&mocks.FakeClient{}), errors.New("Docker is not installed")},
+		{"docker is not installed", docker.CreateMock(&mocks.FakeClient{}), errors.New("docker is not installed")},
 		{"Pulling fails", docker.CreateMock(&mocks.FakeClient{
 			ContainerListSuccess: true,
 		}), errors.New("ImagePullFailure")},

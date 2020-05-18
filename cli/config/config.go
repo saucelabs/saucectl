@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -63,8 +64,8 @@ type RunnerConfiguration struct {
 }
 
 func readYaml(cfgFilePath string) ([]byte, error) {
-	if len(cfgFilePath) == 0 {
-		return nil, errors.New("No config file was provided")
+	if cfgFilePath == "" {
+		return nil, errors.New("no config file was provided")
 	}
 
 	pwd, err := os.Getwd()
@@ -83,21 +84,31 @@ func readYaml(cfgFilePath string) ([]byte, error) {
 // NewRunnerConfiguration reads yaml file for runner configurations
 func NewRunnerConfiguration(cfgFilePath string) (RunnerConfiguration, error) {
 	var obj RunnerConfiguration
+
 	yamlFile, err := readYaml(cfgFilePath)
 	if err != nil {
-		return RunnerConfiguration{}, err
+		return RunnerConfiguration{}, fmt.Errorf("failed to locate runner configuration: %v", err)
 	}
-	err = yaml.Unmarshal(yamlFile, &obj)
-	return obj, err
+
+	if err = yaml.Unmarshal(yamlFile, &obj); err != nil {
+		return RunnerConfiguration{}, fmt.Errorf("failed to parse runner configuration: %v", err)
+	}
+
+	return obj, nil
 }
 
 // NewJobConfiguration creates a new job configuration based on a config file
 func NewJobConfiguration(cfgFilePath string) (JobConfiguration, error) {
 	var obj JobConfiguration
+
 	yamlFile, err := readYaml(cfgFilePath)
 	if err != nil {
-		return JobConfiguration{}, err
+		return JobConfiguration{}, fmt.Errorf("failed to locate job configuration: %v", err)
 	}
-	err = yaml.Unmarshal(yamlFile, &obj)
-	return obj, err
+
+	if err = yaml.Unmarshal(yamlFile, &obj); err != nil {
+		return JobConfiguration{}, fmt.Errorf("failed to parse job configuration: %v", err)
+	}
+
+	return obj, nil
 }

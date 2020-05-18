@@ -2,7 +2,7 @@ package runner
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -49,7 +49,8 @@ func newLocalRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*local
 func (r *localRunner) Setup() error {
 	err := r.docker.ValidateDependency()
 	if err != nil {
-		return errors.New("Docker is not installed")
+		return fmt.Errorf("please verify that docker is installed and running: %v, "+
+			" follow the guide at https://docs.docker.com/get-docker/", err)
 	}
 
 	// check if image is existing
@@ -77,8 +78,8 @@ func (r *localRunner) Setup() error {
 	r.containerID = container.ID
 
 	progress.Show("Preparing container")
+	// TODO replace sleep with actual checks & confirmation
 	// wait until Xvfb started
-	// ToDo(Christian): make this dynamic
 	time.Sleep(1 * time.Second)
 
 	// get runner config
