@@ -49,7 +49,8 @@ func newLocalRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*local
 func (r *localRunner) Setup() error {
 	err := r.docker.ValidateDependency()
 	if err != nil {
-		return fmt.Errorf("please verify that docker is installed and running: %v", err)
+		return fmt.Errorf("please verify that docker is installed and running: %v, "+
+			" follow the guide at https://docs.docker.com/get-docker/", err)
 	}
 
 	// check if image is existing
