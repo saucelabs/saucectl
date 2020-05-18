@@ -2,7 +2,7 @@ package runner
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -49,7 +49,7 @@ func newLocalRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*local
 func (r *localRunner) Setup() error {
 	err := r.docker.ValidateDependency()
 	if err != nil {
-		return errors.New("docker is not installed")
+		return fmt.Errorf("please verify that docker is installed and running: %v", err)
 	}
 
 	// check if image is existing
