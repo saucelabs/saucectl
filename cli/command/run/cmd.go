@@ -41,7 +41,8 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&cfgFilePath, "config", "c", "./.sauce/config.yml", "config file (e.g. ./.sauce/config.yaml")
+	defaultCfgPath := filepath.Join(".sauce", "config.yml")
+	cmd.Flags().StringVarP(&cfgFilePath, "config", "c", defaultCfgPath, "config file (e.g. ./.sauce/config.yaml")
 	cmd.Flags().StringVarP(&cfgLogDir, "logDir", "l", defaultLogFir, "log path")
 
 	return cmd
