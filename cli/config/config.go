@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 
 	"gopkg.in/yaml.v2"
 )
@@ -73,12 +73,12 @@ func readYaml(cfgFilePath string) ([]byte, error) {
 		return nil, err
 	}
 
-	filepath := cfgFilePath
-	if !path.IsAbs(filepath) {
-		filepath = path.Join(pwd, cfgFilePath)
+	fp := cfgFilePath
+	if !filepath.IsAbs(fp) {
+		fp = filepath.Join(pwd, cfgFilePath)
 	}
 
-	return ioutil.ReadFile(filepath)
+	return ioutil.ReadFile(fp)
 }
 
 // NewRunnerConfiguration reads yaml file for runner configurations

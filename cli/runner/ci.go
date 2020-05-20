@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"time"
 
@@ -112,7 +111,7 @@ func copyFile(src string, targetDir string) error {
 	}
 
 	srcFile := src
-	if !path.IsAbs(srcFile) {
+	if !filepath.IsAbs(srcFile) {
 		srcFile = filepath.Join(pwd, src)
 	}
 
