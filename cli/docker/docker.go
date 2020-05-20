@@ -8,7 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"time"
 
@@ -197,7 +196,7 @@ func (handler *Handler) CopyTestFilesToContainer(ctx context.Context, srcContain
 			}
 
 			srcFile := file
-			if !path.IsAbs(srcFile) {
+			if !filepath.IsAbs(srcFile) {
 				srcFile = filepath.Join(pwd, file)
 			}
 			file, err := os.Stat(srcFile)
