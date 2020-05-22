@@ -1,4 +1,4 @@
-# Contributing to Docker
+# Contributing to saucectl
 
 Want to hack on saucectl? Awesome! This page contains information about reporting issues as well as some tips and guidelines useful to experienced open source contributors. Finally, make sure you read our [community guidelines](#docker-community-guidelines) before you start participating.
 
@@ -9,6 +9,7 @@ Want to hack on saucectl? Awesome! This page contains information about reportin
 * [Reporting Issues](#reporting-other-issues)
 * [Quick Contribution Tips and Guidelines](#quick-contribution-tips-and-guidelines)
 * [Community Guidelines](#docker-community-guidelines)
+* [Releasing saucectl](#releasing-saucectl)
 
 ## Reporting security issues
 
@@ -85,3 +86,13 @@ The rules:
 10. Even though we call these "rules" above, they are actually just guidelines. Since you've read all the rules, you now know that.
 
 If you are having trouble getting into the mood of idiomatic Go, we recommend reading through [Effective Go](https://golang.org/doc/effective_go.html). The [Go Blog](https://blog.golang.org) is also a great resource. Drinking the kool-aid is a lot easier than going thirsty.
+
+## Releasing saucectl
+
+`saucectl` uses [GoReleaser](https://goreleaser.com/) to create releases. Everything that is required to do is to push a new tag upstream. A GitHub Actions [pipeline](https://github.com/saucelabs/saucectl-internal/actions?query=workflow%3A%22saucectl+release%22) is then triggered that runs GoReleaser with the right parameters. Before creating a new tag, check out the [latest releases](https://github.com/saucelabs/saucectl-internal/releases) and follow [semantic versioning](https://semver.org/).
+
+A release will automatically trigger:
+- an update to the [Homebrew Formulae](https://github.com/saucelabs/homebrew-saucectl)
+- a new release of [node-saucectl](https://github.com/saucelabs/node-saucectl)
+
+Double check that these updates have happened.
