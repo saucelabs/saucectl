@@ -145,7 +145,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfigur
 	}
 
 	ports, portBindings, err = nat.ParsePortSpecs(
-		[]string{fmt.Sprintf("%s:9222", strconv.Itoa(port))},
+		[]string{fmt.Sprintf("%d:9222", port)},
 	)
 	if err != nil {
 		return nil, err
