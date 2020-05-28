@@ -167,7 +167,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfigur
 			fmt.Sprintf("SAUCE_USERNAME=%s", os.Getenv("SAUCE_USERNAME")),
 			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", os.Getenv("SAUCE_ACCESS_KEY")),
 			fmt.Sprintf("SAUCE_BUILD_NAME=%s", c.Metadata.Build),
-			fmt.Sprintf("SAUCE_DEVTOOLS_PORT=%s", strconv.Itoa(port)),
+			fmt.Sprintf("SAUCE_DEVTOOLS_PORT=%d", port),
 			fmt.Sprintf("BROWSER_NAME=%s", browserName),
 		},
 	}
