@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -20,6 +21,7 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/system"
 	"github.com/docker/go-connections/nat"
+	"github.com/phayes/freeport"
 
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/streams"
@@ -137,7 +139,14 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfigur
 		portBindings map[nat.Port][]nat.PortBinding
 	)
 
-	ports, portBindings, err := nat.ParsePortSpecs([]string{"9222:9222"})
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		return nil, err
+	}
+
+	ports, portBindings, err = nat.ParsePortSpecs(
+		[]string{fmt.Sprintf("%s:9222", strconv.Itoa(port))},
+	)
 	if err != nil {
 		return nil, err
 	}

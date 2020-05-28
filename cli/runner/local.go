@@ -7,8 +7,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
+	"github.com/phayes/freeport"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/docker"
@@ -99,10 +101,15 @@ func (r *localRunner) Setup() error {
 		return err
 	}
 
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		return err
+	}
+
 	// start port forwarding
 	sockatCmd := []string{
 		"socat",
-		"tcp-listen:9222,reuseaddr,fork",
+		fmt.Sprintf("tcp-listen:%s,reuseaddr,fork", strconv.Itoa(port)),
 		"tcp:localhost:9223",
 	}
 
