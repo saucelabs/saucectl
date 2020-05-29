@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	"github.com/phayes/freeport"
@@ -109,7 +108,7 @@ func (r *localRunner) Setup() error {
 	// start port forwarding
 	sockatCmd := []string{
 		"socat",
-		fmt.Sprintf("tcp-listen:%s,reuseaddr,fork", strconv.Itoa(port)),
+		fmt.Sprintf("tcp-listen:%d,reuseaddr,fork", port),
 		"tcp:localhost:9223",
 	}
 
