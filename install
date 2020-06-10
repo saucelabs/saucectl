@@ -55,7 +55,7 @@ execute() {
   log_debug "Preparing to install saucectl"
   (cd "${TMPDIR}" && untar "${TARBALL}")
   # install -d "${DEFAULT_INSTALL_DIR}"
-  runAsRoot mv "${TMPDIR}${BINARY}-internal" "${DEFAULT_INSTALL_DIR}/${BINARY}"
+  runAsRoot mv "${TMPDIR}${BINARY}" "${DEFAULT_INSTALL_DIR}/${BINARY}"
   log_info "installed as ${DEFAULT_INSTALL_DIR}/${BINARY}"
 }
 # runs the given command as root (detects if we are root already)
