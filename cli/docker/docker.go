@@ -143,6 +143,8 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfigur
 		return nil, err
 	}
 
+	// binding port for accessing Chrome DevTools from outside
+	// of the container
 	ports, portBindings, err = nat.ParsePortSpecs(
 		[]string{fmt.Sprintf("%d:9222", port)},
 	)
