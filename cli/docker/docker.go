@@ -20,6 +20,7 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/system"
 	"github.com/docker/go-connections/nat"
+	"github.com/phayes/freeport"
 
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/streams"
@@ -137,7 +138,16 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfigur
 		portBindings map[nat.Port][]nat.PortBinding
 	)
 
-	ports, portBindings, err := nat.ParsePortSpecs([]string{"9222:9222"})
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		return nil, err
+	}
+
+	// binding port for accessing Chrome DevTools from outside
+	// of the container
+	ports, portBindings, err = nat.ParsePortSpecs(
+		[]string{fmt.Sprintf("%d:9222", port)},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -158,6 +168,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfigur
 			fmt.Sprintf("SAUCE_USERNAME=%s", os.Getenv("SAUCE_USERNAME")),
 			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", os.Getenv("SAUCE_ACCESS_KEY")),
 			fmt.Sprintf("SAUCE_BUILD_NAME=%s", c.Metadata.Build),
+			fmt.Sprintf("SAUCE_DEVTOOLS_PORT=%d", port),
 			fmt.Sprintf("BROWSER_NAME=%s", browserName),
 		},
 	}
