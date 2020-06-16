@@ -29,7 +29,6 @@ func newCIRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*ciRunner
 	rc, err := config.NewRunnerConfiguration(runnerConfigPath)
 	if err != nil {
 		return &runner, err
-
 	}
 
 	runner.cli = cli

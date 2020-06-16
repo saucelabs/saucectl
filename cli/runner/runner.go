@@ -44,7 +44,7 @@ type BaseRunner struct {
 	runnerConfig config.RunnerConfiguration
 	context      context.Context
 	cli          *command.SauceCtlCli
-	
+
 	startTime int64
 }
 
