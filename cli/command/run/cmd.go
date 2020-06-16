@@ -18,10 +18,12 @@ var (
 	runLong    = `Some long description`
 	runExample = "saucectl run ./.sauce/config.yaml"
 
-	defaultLogFir = "<cwd>/logs"
+	defaultLogFir  = "<cwd>/logs"
+	defaultTimeout = 60
 
 	cfgFilePath string
 	cfgLogDir   string
+	testTimeout int
 )
 
 // Command creates the `run` command
@@ -44,7 +46,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	defaultCfgPath := filepath.Join(".sauce", "config.yml")
 	cmd.Flags().StringVarP(&cfgFilePath, "config", "c", defaultCfgPath, "config file (e.g. ./.sauce/config.yaml")
 	cmd.Flags().StringVarP(&cfgLogDir, "logDir", "l", defaultLogFir, "log path")
-
+	cmd.Flags().IntVarP(&testTimeout, "timeout", "t", defaultTimeout, "test timeout")
 	return cmd
 }
 
@@ -62,7 +64,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return 1, err
 	}
 
-	tr, err := runner.New(configObject, cli)
+	tr, err := runner.New(configObject, cli, testTimeout)
 	if err != nil {
 		return 1, err
 	}
