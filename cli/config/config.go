@@ -54,6 +54,7 @@ type JobConfiguration struct {
 	Capabilities []Capabilities  `yaml:"capabilities"`
 	Files        []string        `yaml:"files"`
 	Image        ImageDefinition `yaml:"image"`
+	Timeout      int             `yaml:"timeout"`
 }
 
 // RunnerConfiguration describes configurations for the testrunner

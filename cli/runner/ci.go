@@ -75,6 +75,7 @@ func (r *ciRunner) Run() (int, error) {
 	cmd.Env = append(
 		os.Environ(),
 		fmt.Sprintf("SAUCE_BUILD_NAME=%s", r.jobConfig.Metadata.Build),
+		fmt.Sprintf("TEST_TIMEOUT=%d", r.jobConfig.Timeout),
 		fmt.Sprintf("BROWSER_NAME=%s", r.jobConfig.Capabilities[0].BrowserName),
 	)
 	cmd.Stdout = r.cli.Out()
