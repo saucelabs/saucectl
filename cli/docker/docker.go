@@ -132,7 +132,7 @@ func (handler *Handler) PullBaseImage(ctx context.Context, c config.JobConfigura
 }
 
 // StartContainer starts the Docker testrunner container
-func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfiguration, timeout int) (*container.ContainerCreateCreatedBody, error) {
+func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfiguration) (*container.ContainerCreateCreatedBody, error) {
 	var (
 		ports        map[nat.Port]struct{}
 		portBindings map[nat.Port][]nat.PortBinding
@@ -169,7 +169,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfigur
 			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", os.Getenv("SAUCE_ACCESS_KEY")),
 			fmt.Sprintf("SAUCE_BUILD_NAME=%s", c.Metadata.Build),
 			fmt.Sprintf("SAUCE_DEVTOOLS_PORT=%d", port),
-			fmt.Sprintf("TEST_TIMEOUT=%d", timeout),
+			fmt.Sprintf("TEST_TIMEOUT=%d", c.Timeout),
 			fmt.Sprintf("BROWSER_NAME=%s", browserName),
 		},
 	}

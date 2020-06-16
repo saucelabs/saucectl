@@ -23,7 +23,7 @@ type localRunner struct {
 	tmpDir      string
 }
 
-func newLocalRunner(c config.JobConfiguration, cli *command.SauceCtlCli, timeout int) (*localRunner, error) {
+func newLocalRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*localRunner, error) {
 	progress.Show("Starting local runner")
 	defer progress.Stop()
 
@@ -32,7 +32,6 @@ func newLocalRunner(c config.JobConfiguration, cli *command.SauceCtlCli, timeout
 	runner.context = context.Background()
 	runner.jobConfig = c
 	runner.startTime = makeTimestamp()
-	runner.timeout = timeout
 
 	var err error
 	runner.docker, err = docker.Create()
@@ -73,7 +72,7 @@ func (r *localRunner) Setup() error {
 	}
 
 	progress.Show("Starting container %s", baseImage)
-	container, err := r.docker.StartContainer(r.context, r.jobConfig, r.timeout)
+	container, err := r.docker.StartContainer(r.context, r.jobConfig)
 	if err != nil {
 		return err
 	}

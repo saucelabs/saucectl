@@ -44,13 +44,12 @@ type BaseRunner struct {
 	runnerConfig config.RunnerConfiguration
 	context      context.Context
 	cli          *command.SauceCtlCli
-	timeout      int
-
+	
 	startTime int64
 }
 
 // New creates a new testrunner object
-func New(c config.JobConfiguration, cli *command.SauceCtlCli, timeout int) (Testrunner, error) {
+func New(c config.JobConfiguration, cli *command.SauceCtlCli) (Testrunner, error) {
 	var (
 		runner Testrunner
 		err    error
@@ -64,10 +63,10 @@ func New(c config.JobConfiguration, cli *command.SauceCtlCli, timeout int) (Test
 	_, err = os.Stat(runnerConfigPath)
 	if os.IsNotExist(err) {
 		log.Info().Msg("Start local runner")
-		runner, err = newLocalRunner(c, cli, timeout)
+		runner, err = newLocalRunner(c, cli)
 	} else {
 		log.Info().Msg("Start CI runner")
-		runner, err = newCIRunner(c, cli, timeout)
+		runner, err = newCIRunner(c, cli)
 	}
 
 	return runner, err

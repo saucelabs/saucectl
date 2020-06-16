@@ -22,13 +22,14 @@ type ciRunner struct {
 	BaseRunner
 }
 
-func newCIRunner(c config.JobConfiguration, cli *command.SauceCtlCli, timeout int) (*ciRunner, error) {
+func newCIRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*ciRunner, error) {
 	runner := ciRunner{}
 
 	// read runner config file
 	rc, err := config.NewRunnerConfiguration(runnerConfigPath)
 	if err != nil {
 		return &runner, err
+
 	}
 
 	runner.cli = cli
@@ -36,7 +37,6 @@ func newCIRunner(c config.JobConfiguration, cli *command.SauceCtlCli, timeout in
 	runner.jobConfig = c
 	runner.startTime = makeTimestamp()
 	runner.runnerConfig = rc
-	runner.timeout = timeout
 	return &runner, nil
 }
 
@@ -76,7 +76,7 @@ func (r *ciRunner) Run() (int, error) {
 	cmd.Env = append(
 		os.Environ(),
 		fmt.Sprintf("SAUCE_BUILD_NAME=%s", r.jobConfig.Metadata.Build),
-		fmt.Sprintf("TEST_TIMEOUT=%d", r.timeout),
+		fmt.Sprintf("TEST_TIMEOUT=%d", r.jobConfig.Timeout),
 		fmt.Sprintf("BROWSER_NAME=%s", r.jobConfig.Capabilities[0].BrowserName),
 	)
 	cmd.Stdout = r.cli.Out()
