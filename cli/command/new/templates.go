@@ -12,7 +12,7 @@ metadata:
 files:
   - ./tests/example.test.js
 image:
-  base: saucelabs/sauce-{{ .Framework }}
+  base: {{ .Name }}
   version: {{ .Version }}
 `
 
