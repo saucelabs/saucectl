@@ -36,6 +36,22 @@ var (
 	}
 )
 
+// Image represents docker image metadata.
+type Image struct {
+	Name    string
+	Version string
+}
+
+var DefaultPlaywright = Image{
+	Name:    "saucelabs/stt-playwright-jest-node",
+	Version: "v0.1.0",
+}
+
+var DefaultPuppeteer = Image{
+	Name:    "saucelabs/stt-puppeteer-jest-node",
+	Version: "v0.1.0",
+}
+
 // ClientInterface describes the interface used to handle docker commands
 type ClientInterface interface {
 	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)

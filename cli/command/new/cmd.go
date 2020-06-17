@@ -2,12 +2,15 @@ package new
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"html/template"
+	"github.com/saucelabs/saucectl/cli/docker"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/spf13/cobra"
@@ -34,7 +37,7 @@ var (
 	}
 
 	answers = struct {
-		Framework string `survey:"color"`
+		Framework string
 	}{}
 )
 
@@ -81,29 +84,9 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	}
 	defer fc.Close()
 
-	configTpl, err := template.New("configTpl").Parse(configTpl)
-	if err != nil {
+	if err := writeJobConfig(answers.Framework, fc); err != nil {
 		return err
 	}
-
-	// TODO - unhardcode this
-	version := "3.0.4"
-	if answers.Framework == "playwright" {
-		version = "1.0.0"
-	}
-	data := struct{
-		Framework string
-		Version string
-	}{
-		Framework: answers.Framework,
-		Version: version,
-	}
-
-	wc := bufio.NewWriter(fc)
-	if err := configTpl.Execute(wc, data); err != nil {
-		return err
-	}
-	wc.Flush()
 
 	if err := os.MkdirAll(filepath.Join(cwd, "tests"), 0777); err != nil {
 		return err
@@ -128,4 +111,20 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 
 	fmt.Println("\nNew project bootstrapped successfully! You can now run:\n$ saucectl run")
 	return nil
+}
+
+func writeJobConfig(framework string, w io.Writer) error {
+	configTpl, err := template.New("configTpl").Parse(configTpl)
+	if err != nil {
+		return err
+	}
+
+	switch framework {
+	case "playwright":
+		return configTpl.Execute(w, docker.DefaultPlaywright)
+	case "puppeteer":
+		return configTpl.Execute(w, docker.DefaultPuppeteer)
+	default:
+		return errors.New("unknown framework")
+	}
 }
