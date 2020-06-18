@@ -23,6 +23,19 @@ type SetupTemplate struct {
 }
 
 var testTpl = map[string]SetupTemplate{
+	"testcafe": {
+		"example.test.js",
+		"import { Selector } from 'testcafe';\n"+
+		"fixture `Getting Started`\n"+
+		"	.page `http://devexpress.github.io/testcafe/example`\n\n"+
+		`const testName = 'testcafe test'
+test(testName, async t => {
+	await t
+		.typeText('#developer-name', 'devx')
+		.click('#submit-button')
+		.expect(Selector('#article-header').innerText).eql('Thank you, devx!');
+});
+	`},
 	"puppeteer": {
 		"example.test.js",
 		`describe('saucectl demo test', () => {
