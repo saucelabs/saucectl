@@ -52,6 +52,11 @@ var DefaultPuppeteer = Image{
 	Version: "v0.1.0",
 }
 
+var DefaultTestcafe = Image{
+	Name:    "saucelabs/stt-testcafe-node",
+	Version: "v0.1.0",
+}
+
 // ClientInterface describes the interface used to handle docker commands
 type ClientInterface interface {
 	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
