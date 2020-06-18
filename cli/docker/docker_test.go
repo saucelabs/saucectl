@@ -93,7 +93,7 @@ func TestGetImageFlavorDefault(t *testing.T) {
 				client: tc.Client,
 			}
 			baseImage := handler.GetImageFlavor(*tc.JobConfig)
-			assert.Equal(t, baseImage, "foobar:latest")
+			assert.Equal(t, baseImage, "docker.io/foobar:latest")
 		})
 	}
 }
@@ -111,9 +111,28 @@ func TestGetImageFlavorVersioned(t *testing.T) {
 				client: tc.Client,
 			}
 			baseImage := handler.GetImageFlavor(*tc.JobConfig)
-			assert.Equal(t, baseImage, "foobar:barfoo")
+			assert.Equal(t, baseImage, "docker.io/foobar:barfoo")
 		})
 	}
+}
+
+func TestGetImageWithDifferentRegistry(t *testing.T) {
+	jobConfig := config.JobConfiguration{
+		Image: config.ImageDefinition{Base: "quay.io/org/foobar", Version: "barfoo"},
+	}
+	cases := []PassFailCase{
+		{"get image flavor", &mocks.FakeClient{}, &jobConfig, errors.New("Wrong flavor name"), false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			handler := Handler{
+				client: tc.Client,
+			}
+			baseImage := handler.GetImageFlavor(*tc.JobConfig)
+			assert.Equal(t, baseImage, "quay.io/org/foobar:barfoo")
+		})
+	}
+
 }
 
 func TestStartContainer(t *testing.T) {

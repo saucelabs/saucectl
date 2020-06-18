@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"regexp"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -60,6 +61,11 @@ var DefaultTestcafe = Image{
 var DefaultCypress = Image{
 	Name:    "saucelabs/stt-cypress-mocha-node",
 	Version: "v0.1.3",
+}
+
+var DefaultTestcafe = Image{
+	Name:    "saucelabs/stt-testcafe-node",
+	Version: "v0.1.0",
 }
 
 // ClientInterface describes the interface used to handle docker commands
@@ -133,13 +139,20 @@ func (handler *Handler) GetImageFlavor(c config.JobConfiguration) string {
 	if c.Image.Version != "" {
 		tag = c.Image.Version
 	}
-	return fmt.Sprintf("%s:%s", c.Image.Base, tag)
+	defaultRegistry := "docker.io"
+	imageName := fmt.Sprintf("%s:%s", c.Image.Base, tag)
+        match, _ := regexp.MatchString(`.+\/.*\/.*`, imageName)
+	fmt.Print(match)
+	if ! match {
+		imageName = fmt.Sprintf("%s/%s", defaultRegistry, imageName)
+	}
+	return imageName
 }
 
 // PullBaseImage pulls an image from Docker
 func (handler *Handler) PullBaseImage(ctx context.Context, c config.JobConfiguration) error {
 	options := types.ImagePullOptions{}
-	baseImage := fmt.Sprintf("docker.io/%s", handler.GetImageFlavor(c))
+	baseImage := handler.GetImageFlavor(c)
 	responseBody, err := handler.client.ImagePull(ctx, baseImage, options)
 	if err != nil {
 		return err
