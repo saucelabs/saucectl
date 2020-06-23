@@ -71,12 +71,17 @@ func (r *ciRunner) Setup() error {
 }
 
 func (r *ciRunner) Run() (int, error) {
+	browserName := ""
+	if len(r.jobConfig.Capabilities) > 0 {
+		browserName = r.jobConfig.Capabilities[0].BrowserName
+	}
+
 	cmd := exec.Command(r.runnerConfig.ExecCommand[0], r.runnerConfig.ExecCommand[1])
 	cmd.Env = append(
 		os.Environ(),
 		fmt.Sprintf("SAUCE_BUILD_NAME=%s", r.jobConfig.Metadata.Build),
 		fmt.Sprintf("TEST_TIMEOUT=%d", r.jobConfig.Timeout),
-		fmt.Sprintf("BROWSER_NAME=%s", r.jobConfig.Capabilities[0].BrowserName),
+		fmt.Sprintf("BROWSER_NAME=%s", browserName),
 	)
 	cmd.Stdout = r.cli.Out()
 	cmd.Stderr = r.cli.Out()
