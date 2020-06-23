@@ -55,6 +55,7 @@ type JobConfiguration struct {
 	Files        []string        `yaml:"files"`
 	Image        ImageDefinition `yaml:"image"`
 	Timeout      int             `yaml:"timeout"`
+	Region       string          `yaml:"region"`
 }
 
 // RunnerConfiguration describes configurations for the testrunner
