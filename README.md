@@ -34,5 +34,48 @@ To execute unit tests, run:
 $ make test
 ```
 
+# Using `saucectl`
+
+## The `new` Command
+```sh
+saucectl new
+```
+
+This command will ask you to choose one of the frameworks: 
+- [Puppeteer](https://github.com/puppeteer/puppeteer)
+- [Playwright](https://github.com/microsoft/playwright)
+- [TestCafe](https://github.com/DevExpress/testcafe) 
+
+After that, a `./sauce/config.yml` file and an example test under
+the `tests` directory will be created, where you can start working from.
+
+## The `run` Command
+```sh
+saucectl run
+```
+This command will run the test based on the `./.sauce/config.yml` file.
+
+### Flags
+
+#### `config`
+```sh
+saucectl run --config <path>
+```
+Using the `--config` will run the tests specified by that config file.
+
+#### `region`
+```sh
+saucectl run --region <region>
+```
+Using the `--region` flag will set the Sauce Labs region for the test execution.
+The region corresponds to the available regions at saucelabs.com and affects
+where your job information and assets are going to be stored.
+
+#### `timeout`
+```sh
+saucectl run --timeout <seconds>
+```
+Using the `--timeout` flag will set the test timeout for the test runner framework. 
+
 # Licensing
 `saucectl` is licensed under the Apache License, Version 2.0. See [LICENSE](https://github.com/saucelabs/saucectl/blob/master/LICENSE) for the full license text.
