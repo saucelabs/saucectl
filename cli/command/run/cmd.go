@@ -20,10 +20,12 @@ var (
 
 	defaultLogFir  = "<cwd>/logs"
 	defaultTimeout = 60
+	defaultRegion = "us-west-1"
 
 	cfgFilePath string
 	cfgLogDir   string
 	testTimeout int
+	region      string
 )
 
 // Command creates the `run` command
@@ -47,6 +49,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVarP(&cfgFilePath, "config", "c", defaultCfgPath, "config file (e.g. ./.sauce/config.yaml")
 	cmd.Flags().StringVarP(&cfgLogDir, "logDir", "l", defaultLogFir, "log path")
 	cmd.Flags().IntVarP(&testTimeout, "timeout", "t", 0, "test timeout in seconds (default: 60sec)")
+	cmd.Flags().StringVarP(&region, "region", "r", "", "The sauce labs region. (default: us-west-1)")
 	return cmd
 }
 
@@ -69,6 +72,14 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 	if configObject.Timeout == 0 {
 		configObject.Timeout = defaultTimeout
+	}
+
+	if configObject.Sauce.Region == "" {
+		configObject.Sauce.Region = defaultRegion
+	}
+
+	if region != "" {
+		configObject.Sauce.Region = region
 	}
 
 	tr, err := runner.New(configObject, cli)

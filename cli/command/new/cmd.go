@@ -34,10 +34,19 @@ var (
 				Default: "Puppeteer",
 			},
 		},
+		{
+			Name: "region",
+			Prompt: &survey.Select{
+				Message: "Choose the sauce labs region:",
+				Options: []string{"us-west-1", "eu-central-1"},
+				Default: "us-west-1",
+			},
+		},
 	}
 
 	answers = struct {
 		Framework string
+		Region    string
 	}{}
 )
 
@@ -84,7 +93,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	}
 	defer fc.Close()
 
-	if err := writeJobConfig(answers.Framework, fc); err != nil {
+	if err := writeJobConfig(answers.Framework, answers.Region, fc); err != nil {
 		return err
 	}
 
@@ -113,20 +122,36 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	return nil
 }
 
-func writeJobConfig(framework string, w io.Writer) error {
+func writeJobConfig(framework string, region string, w io.Writer) error {
 	configTpl, err := template.New("configTpl").Parse(configTpl)
 	if err != nil {
 		return err
 	}
 
+	// TODO(AlexP) Replace template rendering and instead use the JobConfiguration struct directly to render the yaml
+
+	v := struct {
+		Name    string
+		Version string
+		Region  string
+	}{
+		Region: region,
+	}
+
+	var image docker.Image
 	switch framework {
 	case "playwright":
-		return configTpl.Execute(w, docker.DefaultPlaywright)
+		image = docker.DefaultPlaywright
 	case "puppeteer":
-		return configTpl.Execute(w, docker.DefaultPuppeteer)
+		image = docker.DefaultPuppeteer
 	case "testcafe":
-		return configTpl.Execute(w, docker.DefaultTestcafe)
+		image = docker.DefaultTestcafe
 	default:
 		return errors.New("unknown framework")
 	}
+
+	v.Name = image.Name
+	v.Version = image.Version
+
+	return configTpl.Execute(w, v)
 }

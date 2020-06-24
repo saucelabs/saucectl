@@ -14,6 +14,8 @@ files:
 image:
   base: {{ .Name }}
   version: {{ .Version }}
+sauce:
+  region: {{ .Region }}
 `
 
 // SetupTemplate describes a template for a setup
