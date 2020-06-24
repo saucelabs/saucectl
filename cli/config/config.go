@@ -55,7 +55,12 @@ type JobConfiguration struct {
 	Files        []string        `yaml:"files"`
 	Image        ImageDefinition `yaml:"image"`
 	Timeout      int             `yaml:"timeout"`
-	Region       string          `yaml:"region"`
+	Sauce        SauceConfig     `yaml:"sauce"`
+}
+
+// SauceConfig represents sauce labs related settings.
+type SauceConfig struct {
+	Region string `yaml:"region"`
 }
 
 // RunnerConfiguration describes configurations for the testrunner

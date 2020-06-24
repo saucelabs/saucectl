@@ -74,12 +74,12 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		configObject.Timeout = defaultTimeout
 	}
 
-	if configObject.Region == "" {
-		configObject.Region = defaultRegion
+	if configObject.Sauce.Region == "" {
+		configObject.Sauce.Region = defaultRegion
 	}
 
 	if region != "" {
-		configObject.Region = region
+		configObject.Sauce.Region = region
 	}
 
 	tr, err := runner.New(configObject, cli)
