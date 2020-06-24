@@ -44,17 +44,17 @@ type Image struct {
 
 var DefaultPlaywright = Image{
 	Name:    "saucelabs/stt-playwright-jest-node",
-	Version: "v0.1.0",
+	Version: "v0.1.1",
 }
 
 var DefaultPuppeteer = Image{
 	Name:    "saucelabs/stt-puppeteer-jest-node",
-	Version: "v0.1.0",
+	Version: "v0.1.1",
 }
 
 var DefaultTestcafe = Image{
 	Name:    "saucelabs/stt-testcafe-node",
-	Version: "v0.1.0",
+	Version: "v0.1.1",
 }
 
 // ClientInterface describes the interface used to handle docker commands
