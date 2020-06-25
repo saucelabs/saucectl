@@ -30,7 +30,7 @@ jobs:
 
       - name: Run Sauce Pipeline Test
         run: |
-          curl -O https://storage.googleapis.com/golang/go1.12.9.linux-amd64.tar.gz && sudo tar -xvf go1.12.9.linux-amd64.tar.gz
+          sudo curl -O https://storage.googleapis.com/golang/go1.12.9.linux-amd64.tar.gz && sudo tar -xvf go1.12.9.linux-amd64.tar.gz
           ./go run cmd/saucectl/saucectl.go run -c ./.sauce/puppeteer.yml
         env:
           BUILD_ID: ${{ github.run_id }}
