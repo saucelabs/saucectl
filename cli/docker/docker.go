@@ -195,6 +195,12 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfigur
 			fmt.Sprintf("BROWSER_NAME=%s", browserName),
 		},
 	}
+
+	// Add any defined env variables from the job config / CLI args.
+	for k, v := range c.Envs {
+		containerConfig.Env = append(containerConfig.Env, fmt.Sprintf("%s=%s", k, v))
+	}
+
 	container, err := handler.client.ContainerCreate(ctx, containerConfig, hostConfig, networkConfig, "")
 	if err != nil {
 		return nil, err
