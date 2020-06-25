@@ -64,32 +64,32 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 
 	log.Info().Str("config", cfgFilePath).Msg("Reading config file")
-	configObject, err := config.NewJobConfiguration(cfgFilePath)
+	cfg, err := config.NewJobConfiguration(cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
 
 	// Merge envs from CLI args and job config. CLI args take precedence.
 	for k, v := range envs {
-		configObject.Envs[k] = v
+		cfg.Envs[k] = v
 	}
 
 	if testTimeout != 0 {
-		configObject.Timeout = testTimeout
+		cfg.Timeout = testTimeout
 	}
-	if configObject.Timeout == 0 {
-		configObject.Timeout = defaultTimeout
+	if cfg.Timeout == 0 {
+		cfg.Timeout = defaultTimeout
 	}
 
-	if configObject.Sauce.Region == "" {
-		configObject.Sauce.Region = defaultRegion
+	if cfg.Sauce.Region == "" {
+		cfg.Sauce.Region = defaultRegion
 	}
 
 	if region != "" {
-		configObject.Sauce.Region = region
+		cfg.Sauce.Region = region
 	}
 
-	tr, err := runner.New(configObject, cli)
+	tr, err := runner.New(cfg, cli)
 	if err != nil {
 		return 1, err
 	}
