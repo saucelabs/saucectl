@@ -79,6 +79,12 @@ func (r *ciRunner) Run() (int, error) {
 		fmt.Sprintf("TEST_TIMEOUT=%d", r.jobConfig.Timeout),
 		fmt.Sprintf("BROWSER_NAME=%s", r.jobConfig.Capabilities[0].BrowserName),
 	)
+
+	// Add any defined env variables from the job config / CLI args.
+	for k, v := range r.jobConfig.Envs {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
+	}
+
 	cmd.Stdout = r.cli.Out()
 	cmd.Stderr = r.cli.Out()
 	cmd.Dir = r.runnerConfig.RootDir
