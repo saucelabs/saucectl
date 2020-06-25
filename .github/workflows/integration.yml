@@ -1,0 +1,83 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Sauce Pipeline Browser Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+env:
+  SAUCE_ACCESS_KEY: ${{secrets.SAUCE_ACCESS_KEY}}
+  SAUCE_USERNAME: ${{secrets.SAUCE_USERNAME}}
+
+jobs:
+  puppeteer:
+    runs-on: ubuntu-latest
+    container:
+      image: saucelabs/stt-puppeteer-jest-node:latest
+     
+    steps:
+      # appears that checkout@v2 uses javascript which is not compatible 
+      # with the included node version in the container image.
+      - name: Checkout Code
+        uses: actions/checkout@v1
+        
+      - name: Workaround for container permissions
+        run: sudo chown -R $USER:$(id -gn $USER) /github/home
+
+      - name: Run Sauce Pipeline Test
+        run: |
+          go run cmd/saucectl/saucectl.go run -c ./.sauce/puppeteer.yml
+        env:
+          BUILD_ID: ${{ github.run_id }}
+          BUILD_ENV: GitHub Actions
+  playwright:
+    runs-on: ubuntu-latest
+    container:
+      image: saucelabs/stt-playwright-jest-node:latest
+
+    steps:
+      # appears that checkout@v2 uses javascript which is not compatible 
+      # with the included node version in the container image.
+      - name: Checkout Code
+        uses: actions/checkout@v1
+        
+      - name: Workaround for container permissions
+        run: sudo chown -R $USER:$(id -gn $USER) /github/home
+      
+      - name: Workaround for container folder
+        run: sudo ln -s /home/seluser/.cache /github/home/.cache
+
+      - name: Run Sauce Pipeline Test
+        run: |
+          go run cmd/saucectl/saucectl.go run -c ./.sauce/playwright.yml
+        env:
+          BUILD_ID: ${{ github.run_id }}
+          BUILD_ENV: GitHub Actions
+
+  testcafe:
+    runs-on: ubuntu-latest
+    container:
+      image: saucelabs/stt-testcafe-node:latest
+
+    steps:
+      # appears that checkout@v2 uses javascript which is not compatible 
+      # with the included node version in the container image.
+      - name: Checkout Code
+        uses: actions/checkout@v1
+        
+      - name: Workaround for container permissions
+        run: sudo chown -R $USER:$(id -gn $USER) /github/home
+      
+      - name: Workaround for container folder
+        run: sudo ln -s /home/seluser/.cache /github/home/.cache
+
+      - name: Run Sauce Pipeline Test
+        run: |
+          go run cmd/saucectl/saucectl.go run -c ./.sauce/testcafe.yml
+        env:
+          BUILD_ID: ${{ github.run_id }}
+          BUILD_ENV: GitHub Actions
