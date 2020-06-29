@@ -61,7 +61,14 @@ This command will run the test based on the `./.sauce/config.yml` file.
 ```sh
 saucectl run --config <path>
 ```
-Using the `--config` will run the tests specified by that config file.
+Using the `--config` flag will run the tests specified by that config file.
+
+#### `env`
+```sh
+saucectl run --env <key1>=<value1> --env <key2>=<value2> ...
+```
+Using the `--env` flag will define environment variables that are then available
+for use by the test framework.
 
 #### `region`
 ```sh

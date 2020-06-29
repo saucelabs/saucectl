@@ -48,14 +48,15 @@ type ImageDefinition struct {
 
 // JobConfiguration describes testrunner config format
 type JobConfiguration struct {
-	APIVersion   string          `yaml:"apiVersion"`
-	Kind         string          `yaml:"kind"`
-	Metadata     Metadata        `yaml:"metadata"`
-	Capabilities []Capabilities  `yaml:"capabilities"`
-	Files        []string        `yaml:"files"`
-	Image        ImageDefinition `yaml:"image"`
-	Timeout      int             `yaml:"timeout"`
-	Sauce        SauceConfig     `yaml:"sauce"`
+	APIVersion   string            `yaml:"apiVersion"`
+	Kind         string            `yaml:"kind"`
+	Metadata     Metadata          `yaml:"metadata"`
+	Capabilities []Capabilities    `yaml:"capabilities"`
+	Files        []string          `yaml:"files"`
+	Image        ImageDefinition   `yaml:"image"`
+	Timeout      int               `yaml:"timeout"`
+	Sauce        SauceConfig       `yaml:"sauce"`
+	Env          map[string]string `yaml:"env"`
 }
 
 // SauceConfig represents sauce labs related settings.
@@ -106,16 +107,21 @@ func NewRunnerConfiguration(cfgFilePath string) (RunnerConfiguration, error) {
 
 // NewJobConfiguration creates a new job configuration based on a config file
 func NewJobConfiguration(cfgFilePath string) (JobConfiguration, error) {
-	var obj JobConfiguration
+	var c JobConfiguration
 
 	yamlFile, err := readYaml(cfgFilePath)
 	if err != nil {
 		return JobConfiguration{}, fmt.Errorf("failed to locate job configuration: %v", err)
 	}
 
-	if err = yaml.Unmarshal(yamlFile, &obj); err != nil {
+	if err = yaml.Unmarshal(yamlFile, &c); err != nil {
 		return JobConfiguration{}, fmt.Errorf("failed to parse job configuration: %v", err)
 	}
 
-	return obj, nil
+	// go-yaml doesn't have the ability to define default values, so we have to do it here
+	if c.Env == nil {
+		c.Env = make(map[string]string)
+	}
+
+	return c, nil
 }
