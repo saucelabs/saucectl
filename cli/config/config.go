@@ -56,7 +56,7 @@ type JobConfiguration struct {
 	Image        ImageDefinition   `yaml:"image"`
 	Timeout      int               `yaml:"timeout"`
 	Sauce        SauceConfig       `yaml:"sauce"`
-	Envs         map[string]string `yaml:"envs"`
+	Env          map[string]string `yaml:"env"`
 }
 
 // SauceConfig represents sauce labs related settings.
@@ -119,8 +119,8 @@ func NewJobConfiguration(cfgFilePath string) (JobConfiguration, error) {
 	}
 
 	// go-yaml doesn't have the ability to define default values, so we have to do it here
-	if c.Envs == nil {
-		c.Envs = make(map[string]string)
+	if c.Env == nil {
+		c.Env = make(map[string]string)
 	}
 
 	return c, nil

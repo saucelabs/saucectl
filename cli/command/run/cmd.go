@@ -26,7 +26,7 @@ var (
 	cfgLogDir   string
 	testTimeout int
 	region      string
-	envs        map[string]string
+	env         map[string]string
 )
 
 // Command creates the `run` command
@@ -51,7 +51,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVarP(&cfgLogDir, "logDir", "l", defaultLogFir, "log path")
 	cmd.Flags().IntVarP(&testTimeout, "timeout", "t", 0, "test timeout in seconds (default: 60sec)")
 	cmd.Flags().StringVarP(&region, "region", "r", "", "The sauce labs region. (default: us-west-1)")
-	cmd.Flags().StringToStringVarP(&envs, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
+	cmd.Flags().StringToStringVarP(&env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
 	return cmd
 }
 
@@ -69,9 +69,9 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return 1, err
 	}
 
-	// Merge envs from CLI args and job config. CLI args take precedence.
-	for k, v := range envs {
-		cfg.Envs[k] = v
+	// Merge env from CLI args and job config. CLI args take precedence.
+	for k, v := range env {
+		cfg.Env[k] = v
 	}
 
 	if testTimeout != 0 {

@@ -197,7 +197,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfigur
 	}
 
 	// Add any defined env variables from the job config / CLI args.
-	for k, v := range c.Envs {
+	for k, v := range c.Env {
 		containerConfig.Env = append(containerConfig.Env, fmt.Sprintf("%s=%s", k, v))
 	}
 

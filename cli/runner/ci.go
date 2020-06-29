@@ -81,7 +81,7 @@ func (r *ciRunner) Run() (int, error) {
 	)
 
 	// Add any defined env variables from the job config / CLI args.
-	for k, v := range r.jobConfig.Envs {
+	for k, v := range r.jobConfig.Env {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
 	}
 
