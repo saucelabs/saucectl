@@ -1,8 +1,6 @@
 package config
 
 import (
-	"os"
-	"reflect"
 	"testing"
 
 	"github.com/docker/docker/pkg/testutil/assert"
@@ -57,49 +55,4 @@ func TestRunnerConfiguration(t *testing.T) {
 	}
 
 	assert.Equal(t, configObject.RootDir, "/foo/bar")
-}
-
-func TestMetadata_ExpandEnv(t *testing.T) {
-	tests := []struct {
-		name       string
-		fields     Metadata
-		beforeTest func()
-		want       Metadata
-	}{
-		{
-			name: "var replacement",
-			fields: Metadata{
-				Name:  "Test $tname",
-				Tags:  []string{"$ttag"},
-				Build: "Build $tbuild",
-			},
-			beforeTest: func() {
-				os.Setenv("tname", "Envy")
-				os.Setenv("ttag", "xp1")
-				os.Setenv("tbuild", "Bob")
-			},
-			want: Metadata{
-				Name:  "Test Envy",
-				Tags:  []string{"xp1"},
-				Build: "Build Bob",
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.beforeTest()
-
-			m := Metadata{
-				Name:  tt.fields.Name,
-				Tags:  tt.fields.Tags,
-				Build: tt.fields.Build,
-			}
-
-			m.ExpandEnv()
-
-			if !reflect.DeepEqual(m, tt.want) {
-				t.Errorf("ExpandEnv() = %v, want %v", m, tt.want)
-			}
-		})
-	}
 }
