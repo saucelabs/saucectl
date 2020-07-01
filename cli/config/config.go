@@ -125,3 +125,12 @@ func NewJobConfiguration(cfgFilePath string) (JobConfiguration, error) {
 
 	return c, nil
 }
+
+// ExpandEnv expands environment variables inside metadata fields.
+func (m *Metadata) ExpandEnv() {
+	m.Name = os.ExpandEnv(m.Name)
+	m.Build = os.ExpandEnv(m.Build)
+	for i, v := range m.Tags {
+		m.Tags[i] = os.ExpandEnv(v)
+	}
+}

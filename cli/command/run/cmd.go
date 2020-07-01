@@ -70,7 +70,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 
 	mergeArgs(&cfg)
-	expandEnvMetadata(&cfg)
+	cfg.Metadata.ExpandEnv()
 
 	tr, err := runner.New(cfg, cli)
 	if err != nil {
@@ -98,15 +98,6 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		Msg("Command Finished")
 
 	return exitCode, nil
-}
-
-// expandEnvMetadata expands environment variables inside metadata fields that are part of the job configuration.
-func expandEnvMetadata(cfg *config.JobConfiguration) {
-	cfg.Metadata.Name = os.ExpandEnv(cfg.Metadata.Name)
-	cfg.Metadata.Build = os.ExpandEnv(cfg.Metadata.Build)
-	for i, v := range cfg.Metadata.Tags {
-		cfg.Metadata.Tags[i] = os.ExpandEnv(v)
-	}
 }
 
 // mergeArgs merges settings from CLI arguments with the loaded job configuration.
