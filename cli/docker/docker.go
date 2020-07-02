@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -44,17 +45,17 @@ type Image struct {
 
 var DefaultPlaywright = Image{
 	Name:    "saucelabs/stt-playwright-jest-node",
-	Version: "v0.1.1",
+	Version: "v0.1.3",
 }
 
 var DefaultPuppeteer = Image{
 	Name:    "saucelabs/stt-puppeteer-jest-node",
-	Version: "v0.1.1",
+	Version: "v0.1.2",
 }
 
 var DefaultTestcafe = Image{
 	Name:    "saucelabs/stt-testcafe-node",
-	Version: "v0.1.1",
+	Version: "v0.1.2",
 }
 
 // ClientInterface describes the interface used to handle docker commands
@@ -189,6 +190,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfigur
 			fmt.Sprintf("SAUCE_USERNAME=%s", os.Getenv("SAUCE_USERNAME")),
 			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", os.Getenv("SAUCE_ACCESS_KEY")),
 			fmt.Sprintf("SAUCE_BUILD_NAME=%s", c.Metadata.Build),
+			fmt.Sprintf("SAUCE_TAGS=%s", strings.Join(c.Metadata.Tags, ",")),
 			fmt.Sprintf("SAUCE_DEVTOOLS_PORT=%d", port),
 			fmt.Sprintf("SAUCE_REGION=%s", c.Sauce.Region),
 			fmt.Sprintf("TEST_TIMEOUT=%d", c.Timeout),

@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -80,6 +81,7 @@ func (r *ciRunner) Run() (int, error) {
 	cmd.Env = append(
 		os.Environ(),
 		fmt.Sprintf("SAUCE_BUILD_NAME=%s", r.jobConfig.Metadata.Build),
+		fmt.Sprintf("SAUCE_TAGS=%s", strings.Join(r.jobConfig.Metadata.Tags, ",")),
 		fmt.Sprintf("SAUCE_REGION=%s", r.jobConfig.Sauce.Region),
 		fmt.Sprintf("TEST_TIMEOUT=%d", r.jobConfig.Timeout),
 		fmt.Sprintf("BROWSER_NAME=%s", browserName),
