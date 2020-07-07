@@ -231,15 +231,15 @@ func (handler *Handler) CopyTestFilesToContainer(ctx context.Context, srcContain
 			continue
 		}
 
-		for _, file := range matches {
+		for _, fpath := range matches {
 			pwd, err := os.Getwd()
 			if err != nil {
 				continue
 			}
 
-			srcFile := file
+			srcFile := fpath
 			if !filepath.IsAbs(srcFile) {
-				srcFile = filepath.Join(pwd, file)
+				srcFile = filepath.Join(pwd, fpath)
 			}
 			file, err := os.Stat(srcFile)
 			if err != nil {
