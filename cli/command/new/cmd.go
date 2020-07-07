@@ -30,7 +30,7 @@ var (
 			Name: "framework",
 			Prompt: &survey.Select{
 				Message: "Choose a framework:",
-				Options: []string{"Puppeteer", "Playwright", "Testcafe"},
+				Options: []string{"Puppeteer", "Playwright", "Testcafe", "Cypress"},
 				Default: "Puppeteer",
 			},
 		},
@@ -146,6 +146,8 @@ func writeJobConfig(framework string, region string, w io.Writer) error {
 		image = docker.DefaultPuppeteer
 	case "testcafe":
 		image = docker.DefaultTestcafe
+	case "cypress":
+		image = docker.DefaultCypress
 	default:
 		return errors.New("unknown framework")
 	}
