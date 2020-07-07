@@ -58,6 +58,11 @@ var DefaultTestcafe = Image{
 	Version: "v0.1.2",
 }
 
+var DefaultCypress = Image{
+	Name:    "saucelabs/stt-cypress-mocha-node",
+	Version: "v0.1.3",
+}
+
 // ClientInterface describes the interface used to handle docker commands
 type ClientInterface interface {
 	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
