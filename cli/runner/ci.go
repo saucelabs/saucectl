@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -71,13 +72,26 @@ func (r *ciRunner) Setup() error {
 }
 
 func (r *ciRunner) Run() (int, error) {
+	browserName := ""
+	if len(r.jobConfig.Capabilities) > 0 {
+		browserName = r.jobConfig.Capabilities[0].BrowserName
+	}
+
 	cmd := exec.Command(r.runnerConfig.ExecCommand[0], r.runnerConfig.ExecCommand[1])
 	cmd.Env = append(
 		os.Environ(),
 		fmt.Sprintf("SAUCE_BUILD_NAME=%s", r.jobConfig.Metadata.Build),
+		fmt.Sprintf("SAUCE_TAGS=%s", strings.Join(r.jobConfig.Metadata.Tags, ",")),
+		fmt.Sprintf("SAUCE_REGION=%s", r.jobConfig.Sauce.Region),
 		fmt.Sprintf("TEST_TIMEOUT=%d", r.jobConfig.Timeout),
-		fmt.Sprintf("BROWSER_NAME=%s", r.jobConfig.Capabilities[0].BrowserName),
+		fmt.Sprintf("BROWSER_NAME=%s", browserName),
 	)
+
+	// Add any defined env variables from the job config / CLI args.
+	for k, v := range r.jobConfig.Env {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
+	}
+
 	cmd.Stdout = r.cli.Out()
 	cmd.Stderr = r.cli.Out()
 	cmd.Dir = r.runnerConfig.RootDir

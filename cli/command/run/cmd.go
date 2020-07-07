@@ -20,10 +20,13 @@ var (
 
 	defaultLogFir  = "<cwd>/logs"
 	defaultTimeout = 60
+	defaultRegion  = "us-west-1"
 
 	cfgFilePath string
 	cfgLogDir   string
 	testTimeout int
+	region      string
+	env         map[string]string
 )
 
 // Command creates the `run` command
@@ -44,9 +47,11 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	}
 
 	defaultCfgPath := filepath.Join(".sauce", "config.yml")
-	cmd.Flags().StringVarP(&cfgFilePath, "config", "c", defaultCfgPath, "config file (e.g. ./.sauce/config.yaml")
+	cmd.Flags().StringVarP(&cfgFilePath, "config", "c", defaultCfgPath, "config file, e.g. -c ./.sauce/config.yaml")
 	cmd.Flags().StringVarP(&cfgLogDir, "logDir", "l", defaultLogFir, "log path")
 	cmd.Flags().IntVarP(&testTimeout, "timeout", "t", 0, "test timeout in seconds (default: 60sec)")
+	cmd.Flags().StringVarP(&region, "region", "r", "", "The sauce labs region. (default: us-west-1)")
+	cmd.Flags().StringToStringVarP(&env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
 	return cmd
 }
 
@@ -59,19 +64,15 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 
 	log.Info().Str("config", cfgFilePath).Msg("Reading config file")
-	configObject, err := config.NewJobConfiguration(cfgFilePath)
+	cfg, err := config.NewJobConfiguration(cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
 
-	if testTimeout != 0 {
-		configObject.Timeout = testTimeout
-	}
-	if configObject.Timeout == 0 {
-		configObject.Timeout = defaultTimeout
-	}
+	mergeArgs(&cfg)
+	cfg.Metadata.ExpandEnv()
 
-	tr, err := runner.New(configObject, cli)
+	tr, err := runner.New(cfg, cli)
 	if err != nil {
 		return 1, err
 	}
@@ -97,4 +98,27 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		Msg("Command Finished")
 
 	return exitCode, nil
+}
+
+// mergeArgs merges settings from CLI arguments with the loaded job configuration.
+func mergeArgs(cfg *config.JobConfiguration) {
+	// Merge env from CLI args and job config. CLI args take precedence.
+	for k, v := range env {
+		cfg.Env[k] = v
+	}
+
+	if testTimeout != 0 {
+		cfg.Timeout = testTimeout
+	}
+	if cfg.Timeout == 0 {
+		cfg.Timeout = defaultTimeout
+	}
+
+	if cfg.Sauce.Region == "" {
+		cfg.Sauce.Region = defaultRegion
+	}
+
+	if region != "" {
+		cfg.Sauce.Region = region
+	}
 }
