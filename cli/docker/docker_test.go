@@ -153,32 +153,6 @@ func TestStartContainer(t *testing.T) {
 	}
 }
 
-func TestCopyTestFilesToContainer(t *testing.T) {
-	dir := fs.NewDir(t, "fixtures",
-		fs.WithFile("some.foo.js", "foo", fs.WithMode(0755)),
-		fs.WithFile("some.other.bar.js", "bar", fs.WithMode(0755)))
-	defer dir.Remove()
-
-	cases := []PassFailCase{
-		{"failing attempt to copy", &mocks.FakeClient{}, nil, errors.New("CopyToContainerFailure"), nil},
-		{"passing command", &mocks.FakeClient{CopyToContainerSuccess: true}, nil, nil, nil},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
-				client: tc.Client,
-			}
-			testfiles := []string{
-				dir.Path() + "/*.foo.js",
-				dir.Path() + "/*.bar.js",
-			}
-			err := handler.CopyTestFilesToContainer(ctx, "containerId", testfiles, "/foo/bar")
-			assert.Equal(t, err, tc.ExpectedError)
-		})
-	}
-}
-
 func TestCopyFromContainer(t *testing.T) {
 	type PassFailCaseWithArgument struct {
 		PassFailCase
@@ -291,6 +265,52 @@ func TestContainerRemove(t *testing.T) {
 			}
 			err := handler.ContainerRemove(ctx, "containerId")
 			assert.Equal(t, err, tc.ExpectedError)
+		})
+	}
+}
+
+func TestHandler_CopyTestFilesToContainer(t *testing.T) {
+	dir := fs.NewDir(t, "fixtures",
+		fs.WithFile("some.foo.js", "foo", fs.WithMode(0755)),
+		fs.WithFile("some.other.bar.js", "bar", fs.WithMode(0755)))
+	defer dir.Remove()
+
+	type fields struct {
+		client ClientInterface
+	}
+	type args struct {
+		ctx            context.Context
+		srcContainerID string
+		files          []string
+		targetDir      string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name:    "copy fail",
+			fields:  fields{&mocks.FakeClient{}},
+			args:    args{ctx, "cid", []string{dir.Path() + "/*.foo.js", dir.Path() + "/*.bar.js"}, "/foo/bar"},
+			wantErr: true,
+		},
+		{
+			name:    "copy success",
+			fields:  fields{&mocks.FakeClient{CopyToContainerSuccess: true}},
+			args:    args{ctx, "cid", []string{dir.Path()}, "/foo/bar"},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			handler := &Handler{
+				client: tt.fields.client,
+			}
+			if err := handler.CopyTestFilesToContainer(tt.args.ctx, tt.args.srcContainerID, tt.args.files, tt.args.targetDir); (err != nil) != tt.wantErr {
+				t.Errorf("CopyTestFilesToContainer() error = %v, wantErr %v", err, tt.wantErr)
+			}
 		})
 	}
 }

@@ -1,13 +1,12 @@
 package docker
 
 import (
-	"archive/tar"
-	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -232,45 +231,29 @@ func (handler *Handler) CopyTestFilesToContainer(ctx context.Context, srcContain
 		}
 
 		for _, fpath := range matches {
-			pwd, err := os.Getwd()
+			srcInfo, err := archive.CopyInfoSourcePath(fpath, true)
 			if err != nil {
-				continue
+				return err
 			}
 
-			srcFile := fpath
-			if !filepath.IsAbs(srcFile) {
-				srcFile = filepath.Join(pwd, fpath)
-			}
-			file, err := os.Stat(srcFile)
+			srcArchive, err := archive.TarResource(srcInfo)
 			if err != nil {
-				continue
+				return err
+			}
+			defer srcArchive.Close()
+
+			dstInfo := archive.CopyInfo{Path: targetDir}
+			if !srcInfo.IsDir {
+				dstInfo.Path = path.Join(targetDir, path.Base(srcInfo.Path))
 			}
 
-			header, err := tar.FileInfoHeader(file, file.Name())
+			dstDir, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, dstInfo)
 			if err != nil {
-				continue
+				return err
 			}
+			defer preparedArchive.Close()
 
-			var buf bytes.Buffer
-			tw := tar.NewWriter(&buf)
-			header.Name = file.Name()
-			if err := tw.WriteHeader(header); err != nil {
-				continue
-			}
-
-			f, err := os.Open(srcFile)
-			if err != nil {
-				continue
-			}
-
-			if _, err := io.Copy(tw, f); err != nil {
-				continue
-			}
-
-			f.Close()
-
-			// use &buf as argument for content in CopyToContainer
-			if err := handler.client.CopyToContainer(ctx, srcContainerID, targetDir, &buf, types.CopyToContainerOptions{}); err != nil {
+			if err := handler.client.CopyToContainer(ctx, srcContainerID, dstDir, preparedArchive, types.CopyToContainerOptions{}); err != nil {
 				return err
 			}
 		}
