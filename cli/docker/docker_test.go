@@ -1,8 +1,14 @@
 package docker
 
 import (
+	"archive/tar"
 	"context"
 	"errors"
+	"fmt"
+	"github.com/docker/docker/api/types"
+	"io"
+	"log"
+	"reflect"
 	"testing"
 
 	"github.com/docker/docker/api/types/container"
@@ -269,7 +275,97 @@ func TestContainerRemove(t *testing.T) {
 	}
 }
 
-func TestHandler_CopyTestFilesToContainer(t *testing.T) {
+func TestHandler_CopyToContainer(t *testing.T) {
+	dir := fs.NewDir(t, "fixtures",
+		fs.WithFile("some.foo.js", "foo", fs.WithMode(0755)),
+		fs.WithFile("some.other.bar.js", "bar", fs.WithMode(0755)),
+		fs.WithDir("subdir", fs.WithFile("some.subdir.js", "subdir")))
+	defer dir.Remove()
+
+	type fields struct {
+		client ClientInterface
+	}
+	type args struct {
+		ctx         context.Context
+		containerID string
+		srcFile     string
+		targetDir   string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "copy one file",
+			fields: fields{&mocks.FakeClient{CopyToContainerFn: func(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error {
+				expect := []string{
+					"some.foo.js",
+				}
+
+				return expectTar(expect, content)
+			}}},
+			args:    args{ctx, "cid", dir.Join("some.foo.js"), "/foo/bar"},
+			wantErr: false,
+		},
+		{
+			name: "copy entire folder",
+			fields: fields{&mocks.FakeClient{CopyToContainerFn: func(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error {
+				expect := []string{
+					"bar/",
+					"bar/some.foo.js",
+					"bar/some.other.bar.js",
+					"bar/subdir/",
+					"bar/subdir/some.subdir.js",
+				}
+
+				return expectTar(expect, content)
+			}}},
+			args:    args{ctx, "cid", dir.Path(), "/foo/bar"},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			handler := &Handler{
+				client: tt.fields.client,
+			}
+			if err := handler.CopyToContainer(tt.args.ctx, tt.args.containerID, tt.args.srcFile, tt.args.targetDir); (err != nil) != tt.wantErr {
+				t.Errorf("CopyToContainer() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func expectTar(files []string, r io.Reader) error {
+	ex := make(map[string]bool, len(files))
+	for _, f := range files {
+		ex[f] = true
+	}
+
+	var found []string
+	// Open and iterate through the files in the archive.
+	tr := tar.NewReader(r)
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break // End of archive
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		found = append(found, hdr.Name)
+	}
+
+	if !reflect.DeepEqual(files, found) {
+		return errors.New(fmt.Sprintf("expected %v but found %v", files, found))
+	}
+
+	return nil
+}
+
+func TestHandler_FindTestFiles(t *testing.T) {
 	dir := fs.NewDir(t, "fixtures",
 		fs.WithFile("some.foo.js", "foo", fs.WithMode(0755)),
 		fs.WithFile("some.other.bar.js", "bar", fs.WithMode(0755)))
@@ -279,28 +375,25 @@ func TestHandler_CopyTestFilesToContainer(t *testing.T) {
 		client ClientInterface
 	}
 	type args struct {
-		ctx            context.Context
-		srcContainerID string
-		files          []string
-		targetDir      string
+		patterns []string
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
+		name   string
+		fields fields
+		args   args
+		want   []string
 	}{
 		{
-			name:    "copy fail",
-			fields:  fields{&mocks.FakeClient{}},
-			args:    args{ctx, "cid", []string{dir.Path() + "/*.foo.js", dir.Path() + "/*.bar.js"}, "/foo/bar"},
-			wantErr: true,
+			name:   "find one",
+			fields: fields{},
+			args:   args{[]string{dir.Path() + "/some.foo.js"}},
+			want:   []string{dir.Join("some.foo.js")},
 		},
 		{
-			name:    "copy success",
-			fields:  fields{&mocks.FakeClient{CopyToContainerSuccess: true}},
-			args:    args{ctx, "cid", []string{dir.Path()}, "/foo/bar"},
-			wantErr: false,
+			name:   "find all",
+			fields: fields{},
+			args:   args{[]string{dir.Path() + "/*.js"}},
+			want:   []string{dir.Join("some.foo.js"), dir.Join("some.other.bar.js")},
 		},
 	}
 	for _, tt := range tests {
@@ -308,8 +401,8 @@ func TestHandler_CopyTestFilesToContainer(t *testing.T) {
 			handler := &Handler{
 				client: tt.fields.client,
 			}
-			if err := handler.CopyTestFilesToContainer(tt.args.ctx, tt.args.srcContainerID, tt.args.files, tt.args.targetDir); (err != nil) != tt.wantErr {
-				t.Errorf("CopyTestFilesToContainer() error = %v, wantErr %v", err, tt.wantErr)
+			if got := handler.FindTestFiles(tt.args.patterns); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("FindTestFiles() = %v, want %v", got, tt.want)
 			}
 		})
 	}
