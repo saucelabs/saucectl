@@ -225,20 +225,28 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfigur
 
 // CopyTestFilesToContainer copies files from the config into the container
 func (handler *Handler) CopyTestFilesToContainer(ctx context.Context, srcContainerID string, files []string, targetDir string) error {
-	for _, pattern := range files {
+	tf := handler.FindTestFiles(files)
+	for _, fpath := range tf {
+		if err := handler.CopyToContainer(ctx, srcContainerID, fpath, targetDir); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (handler *Handler) FindTestFiles(patterns []string) []string {
+	var files []string
+	for _, pattern := range patterns {
 		matches, err := filepath.Glob(pattern)
 		if err != nil {
 			log.Warn().Str("p", pattern).Msg("Skipping over malformed pattern. Some of your test files will be missing.")
 			continue
 		}
 
-		for _, fpath := range matches {
-			if err := handler.CopyToContainer(ctx, srcContainerID, fpath, targetDir); err != nil {
-				return err
-			}
-		}
+		files = append(files, matches...)
 	}
-	return nil
+
+	return files
 }
 
 // CopyToContainer copies the given file to the container.
