@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"io"
 	"io/ioutil"
 	"os"
@@ -227,38 +228,44 @@ func (handler *Handler) CopyTestFilesToContainer(ctx context.Context, srcContain
 	for _, pattern := range files {
 		matches, err := filepath.Glob(pattern)
 		if err != nil {
+			log.Warn().Str("p", pattern).Msg("Skipping over malformed pattern. Some of your test files will be missing.")
 			continue
 		}
 
 		for _, fpath := range matches {
-			srcInfo, err := archive.CopyInfoSourcePath(fpath, true)
-			if err != nil {
-				return err
-			}
-
-			srcArchive, err := archive.TarResource(srcInfo)
-			if err != nil {
-				return err
-			}
-			defer srcArchive.Close()
-
-			dstInfo := archive.CopyInfo{Path: targetDir}
-			if !srcInfo.IsDir {
-				dstInfo.Path = path.Join(targetDir, path.Base(srcInfo.Path))
-			}
-
-			dstDir, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, dstInfo)
-			if err != nil {
-				return err
-			}
-			defer preparedArchive.Close()
-
-			if err := handler.client.CopyToContainer(ctx, srcContainerID, dstDir, preparedArchive, types.CopyToContainerOptions{}); err != nil {
+			if err := handler.CopyToContainer(ctx, srcContainerID, fpath, targetDir); err != nil {
 				return err
 			}
 		}
 	}
 	return nil
+}
+
+// CopyToContainer copies the given file to the container.
+func (handler *Handler) CopyToContainer(ctx context.Context, containerID string, srcFile string, targetDir string) error {
+	srcInfo, err := archive.CopyInfoSourcePath(srcFile, true)
+	if err != nil {
+		return err
+	}
+
+	srcArchive, err := archive.TarResource(srcInfo)
+	if err != nil {
+		return err
+	}
+	defer srcArchive.Close()
+
+	dstInfo := archive.CopyInfo{Path: targetDir}
+	if !srcInfo.IsDir {
+		dstInfo.Path = path.Join(targetDir, path.Base(srcInfo.Path))
+	}
+
+	dstDir, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, dstInfo)
+	if err != nil {
+		return err
+	}
+	defer preparedArchive.Close()
+
+	return handler.client.CopyToContainer(ctx, containerID, dstDir, preparedArchive, types.CopyToContainerOptions{})
 }
 
 // CopyFromContainer downloads a file from the testrunner container
