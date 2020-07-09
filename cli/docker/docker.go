@@ -251,6 +251,11 @@ func (handler *Handler) FindTestFiles(patterns []string) []string {
 
 // CopyToContainer copies the given file to the container.
 func (handler *Handler) CopyToContainer(ctx context.Context, containerID string, srcFile string, targetDir string) error {
+	srcFile, err := filepath.Abs(srcFile)
+	if err != nil {
+		return err
+	}
+
 	srcInfo, err := archive.CopyInfoSourcePath(srcFile, true)
 	if err != nil {
 		return err
@@ -264,7 +269,7 @@ func (handler *Handler) CopyToContainer(ctx context.Context, containerID string,
 
 	dstInfo := archive.CopyInfo{Path: targetDir}
 	if !srcInfo.IsDir {
-		dstInfo.Path = path.Join(targetDir, path.Base(srcInfo.Path))
+		dstInfo.Path = path.Join(targetDir, filepath.Base(srcInfo.Path))
 	}
 
 	dstDir, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, dstInfo)
