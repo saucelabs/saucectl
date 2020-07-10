@@ -359,7 +359,7 @@ func expectTar(files []string, r io.Reader) error {
 	}
 
 	if !reflect.DeepEqual(files, found) {
-		return errors.New(fmt.Sprintf("expected %v but found %v", files, found))
+		return fmt.Errorf("expected %v but found %v", files, found)
 	}
 
 	return nil
