@@ -1,10 +1,9 @@
 package docker
 
 import (
-	"archive/tar"
-	"bytes"
 	"context"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"io"
 	"io/ioutil"
 	"os"
@@ -230,57 +229,61 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfigur
 
 // CopyTestFilesToContainer copies files from the config into the container
 func (handler *Handler) CopyTestFilesToContainer(ctx context.Context, srcContainerID string, files []string, targetDir string) error {
-	for _, pattern := range files {
-		matches, err := filepath.Glob(pattern)
-		if err != nil {
-			continue
-		}
-
-		for _, file := range matches {
-			pwd, err := os.Getwd()
-			if err != nil {
-				continue
-			}
-
-			srcFile := file
-			if !filepath.IsAbs(srcFile) {
-				srcFile = filepath.Join(pwd, file)
-			}
-			file, err := os.Stat(srcFile)
-			if err != nil {
-				continue
-			}
-
-			header, err := tar.FileInfoHeader(file, file.Name())
-			if err != nil {
-				continue
-			}
-
-			var buf bytes.Buffer
-			tw := tar.NewWriter(&buf)
-			header.Name = file.Name()
-			if err := tw.WriteHeader(header); err != nil {
-				continue
-			}
-
-			f, err := os.Open(srcFile)
-			if err != nil {
-				continue
-			}
-
-			if _, err := io.Copy(tw, f); err != nil {
-				continue
-			}
-
-			f.Close()
-
-			// use &buf as argument for content in CopyToContainer
-			if err := handler.client.CopyToContainer(ctx, srcContainerID, targetDir, &buf, types.CopyToContainerOptions{}); err != nil {
-				return err
-			}
+	tf := handler.FindTestFiles(files)
+	for _, fpath := range tf {
+		if err := handler.CopyToContainer(ctx, srcContainerID, fpath, targetDir); err != nil {
+			return err
 		}
 	}
 	return nil
+}
+
+// FindTestFiles returns the names of all files matching the patterns.
+func (handler *Handler) FindTestFiles(patterns []string) []string {
+	var files []string
+	for _, pattern := range patterns {
+		matches, err := filepath.Glob(pattern)
+		if err != nil {
+			log.Warn().Str("p", pattern).Msg("Skipping over malformed pattern. Some of your test files will be missing.")
+			continue
+		}
+
+		files = append(files, matches...)
+	}
+
+	return files
+}
+
+// CopyToContainer copies the given file to the container.
+func (handler *Handler) CopyToContainer(ctx context.Context, containerID string, srcFile string, targetDir string) error {
+	srcFile, err := filepath.Abs(srcFile)
+	if err != nil {
+		return err
+	}
+
+	srcInfo, err := archive.CopyInfoSourcePath(srcFile, true)
+	if err != nil {
+		return err
+	}
+
+	srcArchive, err := archive.TarResource(srcInfo)
+	if err != nil {
+		return err
+	}
+	defer srcArchive.Close()
+
+	dstInfo := archive.CopyInfo{}
+	if !srcInfo.IsDir {
+		dstInfo.Path = filepath.Base(srcInfo.Path)
+	}
+
+	_, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, dstInfo)
+	if err != nil {
+		return err
+	}
+	defer preparedArchive.Close()
+
+	return handler.client.CopyToContainer(ctx, containerID, targetDir, preparedArchive, types.CopyToContainerOptions{})
 }
 
 // CopyFromContainer downloads a file from the testrunner container
