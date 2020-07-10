@@ -313,11 +313,11 @@ func TestHandler_CopyToContainer(t *testing.T) {
 			name: "copy entire folder",
 			fields: fields{&mocks.FakeClient{CopyToContainerFn: func(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error {
 				expect := []string{
-					"bar/",
-					"bar/some.foo.js",
-					"bar/some.other.bar.js",
-					"bar/subdir/",
-					"bar/subdir/some.subdir.js",
+					"./",
+					"./some.foo.js",
+					"./some.other.bar.js",
+					"./subdir/",
+					"./subdir/some.subdir.js",
 				}
 
 				return expectTar(expect, content)

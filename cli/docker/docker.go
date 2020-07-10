@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -234,6 +233,7 @@ func (handler *Handler) CopyTestFilesToContainer(ctx context.Context, srcContain
 	return nil
 }
 
+// FindTestFiles returns the names of all files matching the patterns.
 func (handler *Handler) FindTestFiles(patterns []string) []string {
 	var files []string
 	for _, pattern := range patterns {
@@ -267,18 +267,18 @@ func (handler *Handler) CopyToContainer(ctx context.Context, containerID string,
 	}
 	defer srcArchive.Close()
 
-	dstInfo := archive.CopyInfo{Path: targetDir}
+	dstInfo := archive.CopyInfo{}
 	if !srcInfo.IsDir {
-		dstInfo.Path = path.Join(targetDir, filepath.Base(srcInfo.Path))
+		dstInfo.Path = filepath.Base(srcInfo.Path)
 	}
 
-	dstDir, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, dstInfo)
+	_, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, dstInfo)
 	if err != nil {
 		return err
 	}
 	defer preparedArchive.Close()
 
-	return handler.client.CopyToContainer(ctx, containerID, dstDir, preparedArchive, types.CopyToContainerOptions{})
+	return handler.client.CopyToContainer(ctx, containerID, targetDir, preparedArchive, types.CopyToContainerOptions{})
 }
 
 // CopyFromContainer downloads a file from the testrunner container
