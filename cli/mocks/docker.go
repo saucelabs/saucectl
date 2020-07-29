@@ -19,7 +19,7 @@ type FakeClient struct {
 	ContainerCreateSuccess      bool
 	ContainerStartSuccess       bool
 	ContainerInspectSuccess     bool
-	CopyToContainerSuccess      bool
+	CopyToContainerFn  		    func(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error
 	ContainerStatPathSuccess    bool
 	CopyFromContainerSuccess    bool
 	ContainerExecCreateSuccess  bool
@@ -88,10 +88,7 @@ func (fc *FakeClient) ContainerInspect(ctx context.Context, containerID string) 
 
 // CopyToContainer mock function
 func (fc *FakeClient) CopyToContainer(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error {
-	if fc.CopyToContainerSuccess {
-		return nil
-	}
-	return errors.New("CopyToContainerFailure")
+	return fc.CopyToContainerFn(ctx, container, path, content, options)
 }
 
 // ContainerStatPath mock function

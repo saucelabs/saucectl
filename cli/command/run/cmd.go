@@ -76,6 +76,12 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	if err != nil {
 		return 1, err
 	}
+	defer func() {
+		log.Info().Msg("Tearing down environment")
+		if err != tr.Teardown(cfgLogDir) {
+			log.Error().Err(err).Msg("Failed to tear down environment")
+		}
+	}()
 
 	log.Info().Msg("Setting up test environment")
 	if err := tr.Setup(); err != nil {
@@ -85,11 +91,6 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	log.Info().Msg("Starting tests")
 	exitCode, err := tr.Run()
 	if err != nil {
-		return 1, err
-	}
-
-	log.Info().Msg("Tearing down environment")
-	if err != tr.Teardown(cfgLogDir) {
 		return 1, err
 	}
 
