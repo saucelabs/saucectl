@@ -63,10 +63,6 @@ var DefaultCypress = Image{
 	Version: "v0.1.3",
 }
 
-var DefaultTestcafe = Image{
-	Name:    "saucelabs/stt-testcafe-node",
-	Version: "v0.1.0",
-}
 
 // ClientInterface describes the interface used to handle docker commands
 type ClientInterface interface {
