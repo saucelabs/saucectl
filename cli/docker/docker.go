@@ -137,7 +137,7 @@ func (handler *Handler) GetImageFlavor(c config.JobConfiguration) string {
 	}
 	defaultRegistry := "docker.io"
 	imageName := fmt.Sprintf("%s:%s", c.Image.Base, tag)
-        match, _ := regexp.MatchString(`.+\/.*\/.*`, imageName)
+	match, _ := regexp.MatchString(`.+\/.*\/.*`, imageName)
 	fmt.Print(match)
 	if ! match {
 		imageName = fmt.Sprintf("%s/%s", defaultRegistry, imageName)
