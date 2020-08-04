@@ -1,4 +1,3 @@
-    itage: deploy
 package docker
 
 import (
