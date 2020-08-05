@@ -116,7 +116,7 @@ func (fc *FakeClient) ContainerExecCreate(ctx context.Context, container string,
 }
 
 // ContainerExecAttach mock function
-func (fc *FakeClient) ContainerExecAttach(ctx context.Context, execID string, config types.ExecConfig) (types.HijackedResponse, error) {
+func (fc *FakeClient) ContainerExecAttach(ctx context.Context, execID string, config types.ExecStartCheck) (types.HijackedResponse, error) {
 	if fc.ContainerExecAttachSuccess {
 		return types.HijackedResponse{}, nil
 	}

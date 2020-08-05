@@ -22,7 +22,7 @@ var ctx = context.Background()
 
 type PassFailCase struct {
 	Name           string
-	Client         ClientInterface
+	Client         CommonAPIClient
 	JobConfig      *config.JobConfiguration
 	ExpectedError  error
 	ExpectedResult interface{}
@@ -283,7 +283,7 @@ func TestHandler_CopyToContainer(t *testing.T) {
 	defer dir.Remove()
 
 	type fields struct {
-		client ClientInterface
+		client CommonAPIClient
 	}
 	type args struct {
 		ctx         context.Context
@@ -372,7 +372,7 @@ func TestHandler_FindTestFiles(t *testing.T) {
 	defer dir.Remove()
 
 	type fields struct {
-		client ClientInterface
+		client CommonAPIClient
 	}
 	type args struct {
 		patterns []string
