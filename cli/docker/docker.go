@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-	"regexp"
+	// "regexp"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -65,7 +65,7 @@ var DefaultCypress = Image{
 
 
 // ClientInterface describes the interface used to handle docker commands
-type ClientInterface interface {
+type CommonAPIClient interface {
 	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
 	ImageList(ctx context.Context, options types.ImageListOptions) ([]types.ImageSummary, error)
 	ImagePull(ctx context.Context, ref string, options types.ImagePullOptions) (io.ReadCloser, error)
@@ -76,7 +76,7 @@ type ClientInterface interface {
 	ContainerStatPath(ctx context.Context, containerID, path string) (types.ContainerPathStat, error)
 	CopyFromContainer(ctx context.Context, container, srcPath string) (io.ReadCloser, types.ContainerPathStat, error)
 	ContainerExecCreate(ctx context.Context, container string, config types.ExecConfig) (types.IDResponse, error)
-	ContainerExecAttach(ctx context.Context, execID string, config types.ExecConfig) (types.HijackedResponse, error)
+	ContainerExecAttach(ctx context.Context, execID string, config types.ExecStartCheck) (types.HijackedResponse, error)
 	ContainerExecInspect(ctx context.Context, execID string) (types.ContainerExecInspect, error)
 	ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error
 	ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error
@@ -84,11 +84,11 @@ type ClientInterface interface {
 
 // Handler represents the client to handle Docker tasks
 type Handler struct {
-	client ClientInterface
+	client CommonAPIClient
 }
 
 // CreateMock allows to get a handler with a custom interface
-func CreateMock(client ClientInterface) *Handler {
+func CreateMock(client CommonAPIClient) *Handler {
 	return &Handler{client}
 }
 
@@ -135,12 +135,7 @@ func (handler *Handler) GetImageFlavor(c config.JobConfiguration) string {
 	if c.Image.Version != "" {
 		tag = c.Image.Version
 	}
-	defaultRegistry := "docker.io"
 	imageName := fmt.Sprintf("%s:%s", c.Image.Base, tag)
-	match, _ := regexp.MatchString(`.+\/.*\/.*`, imageName)
-	if ! match {
-		imageName = fmt.Sprintf("%s/%s", defaultRegistry, imageName)
-	}
 	return imageName
 }
 
@@ -354,7 +349,7 @@ func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd 
 		return nil, nil, err
 	}
 
-	execStartCheck := types.ExecConfig{
+	execStartCheck := types.ExecStartCheck{
 		Tty: false,
 	}
 	resp, err := handler.client.ContainerExecAttach(ctx, createResp.ID, execStartCheck)
