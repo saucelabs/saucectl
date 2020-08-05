@@ -93,7 +93,7 @@ func CreateMock(client CommonAPIClient) *Handler {
 
 // Create generates a docker client
 func Create() (*Handler, error) {
-	cl, err := client.NewEnvClient()
+	cl, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err
 	}
