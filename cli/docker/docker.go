@@ -134,8 +134,7 @@ func (handler *Handler) GetImageFlavor(c config.JobConfiguration) string {
 	if c.Image.Version != "" {
 		tag = c.Image.Version
 	}
-	imageName := fmt.Sprintf("%s:%s", c.Image.Base, tag)
-	return imageName
+	return fmt.Sprintf("%s:%s", c.Image.Base, tag)
 }
 
 // PullBaseImage pulls an image from Docker
