@@ -144,11 +144,9 @@ func (handler *Handler) GetImageFlavor(c config.JobConfiguration) string {
 const REGISTRY_USERNAME_ENV_KEY = "REGISTRY_USERNAME"
 const REGISTRY_PASSWORD_ENV_KEY = "REGISTRY_PASSWORD"
 
-// PullBaseImage pulls an image from Docker
-func (handler *Handler) PullBaseImage(ctx context.Context, c config.JobConfiguration) error {
-
+// Prepare ImagePullOptions
+func (handler *Handler) GetImagePullOptions() (types.ImagePullOptions, error) {
 	options := types.ImagePullOptions{}
-
 	registryUser, hasRegistryUser := os.LookupEnv(REGISTRY_USERNAME_ENV_KEY)
 	registryPwd, hasRegistryPwd := os.LookupEnv(REGISTRY_PASSWORD_ENV_KEY)
 	if hasRegistryUser && hasRegistryPwd {
@@ -159,12 +157,21 @@ func (handler *Handler) PullBaseImage(ctx context.Context, c config.JobConfigura
 		}
 		authJSON, err := json.Marshal(authConfig)
 		if err != nil {
-			return err
+			return options, err
 		}
 		authStr := base64.URLEncoding.EncodeToString(authJSON)
 		options.RegistryAuth = authStr
 	}
+	return options, nil
+}
 
+// PullBaseImage pulls an image from Docker
+func (handler *Handler) PullBaseImage(ctx context.Context, c config.JobConfiguration) error {
+
+	options, err := handler.GetImagePullOptions()
+	if err != nil {
+		return err
+	}
 	baseImage := handler.GetImageFlavor(c)
 	responseBody, err := handler.client.ImagePull(ctx, baseImage, options)
 	if err != nil {
