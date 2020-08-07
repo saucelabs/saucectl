@@ -149,6 +149,7 @@ func (handler *Handler) GetImagePullOptions() (types.ImagePullOptions, error) {
 	options := types.ImagePullOptions{}
 	registryUser, hasRegistryUser := os.LookupEnv(REGISTRY_USERNAME_ENV_KEY)
 	registryPwd, hasRegistryPwd := os.LookupEnv(REGISTRY_PASSWORD_ENV_KEY)
+	// Setup auth https://github.com/moby/moby/blob/master/api/types/client.go#L255
 	if hasRegistryUser && hasRegistryPwd {
 		log.Debug().Msg("Using registry environment variables credentials")
 		authConfig := types.AuthConfig{
