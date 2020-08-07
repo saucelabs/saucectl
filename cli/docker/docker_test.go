@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"io"
+	"os"
 	"log"
 	"reflect"
 	"testing"
@@ -59,6 +60,33 @@ func TestHasBaseImage(t *testing.T) {
 		})
 	}
 }
+
+func TestImagePullOptionsUsesRegistryAuth(t *testing.T) {
+	os.Setenv("REGISTRY_USERNAME", "registry-user")
+	os.Setenv("REGISTRY_PASSWORD", "registry-pwd")
+	jobConfig := config.JobConfiguration{
+		Image: config.ImageDefinition{Base: "foobar"},
+	}
+	cases := []PassFailCase{
+		{"correct options", &mocks.FakeClient{}, &jobConfig, errors.New("GetImagePullOptionsFailure"), nil},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			handler := Handler{
+				client: tc.Client,
+			}
+			options, err := handler.GetImagePullOptions()
+			fmt.Print(options.RegistryAuth)
+			assert.Equal(t, err, nil)
+			assert.NotEmpty(t, options.RegistryAuth)
+		})
+	}
+	os.Unsetenv("REGISTRY_USERNAME")
+	os.Unsetenv("REGISTRY_PASSWORD")
+}
+
+
 
 func TestPullBaseImage(t *testing.T) {
 	jobConfig := config.JobConfiguration{
