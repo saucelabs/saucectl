@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"encoding/json"
+	"encoding/base64"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -20,6 +22,7 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/system"
 	"github.com/docker/go-connections/nat"
+
 	"github.com/phayes/freeport"
 
 	"github.com/saucelabs/saucectl/cli/config"
@@ -137,9 +140,31 @@ func (handler *Handler) GetImageFlavor(c config.JobConfiguration) string {
 	return fmt.Sprintf("%s:%s", c.Image.Base, tag)
 }
 
+// Environment variables for private registry auth
+const REGISTRY_USERNAME_ENV_KEY = "REGISTRY_USERNAME"
+const REGISTRY_PASSWORD_ENV_KEY = "REGISTRY_PASSWORD"
+
 // PullBaseImage pulls an image from Docker
 func (handler *Handler) PullBaseImage(ctx context.Context, c config.JobConfiguration) error {
+
 	options := types.ImagePullOptions{}
+
+	registryUser, hasRegistryUser := os.LookupEnv(REGISTRY_USERNAME_ENV_KEY)
+	registryPwd, hasRegistryPwd := os.LookupEnv(REGISTRY_PASSWORD_ENV_KEY)
+	if hasRegistryUser && hasRegistryPwd {
+		log.Debug().Msg("Using registry environment vairables credentials")
+		authConfig := types.AuthConfig{
+			Username: registryUser,
+			Password: registryPwd,
+		}
+		authJSON, err := json.Marshal(authConfig)
+		if err != nil {
+			return err
+		}
+		authStr := base64.URLEncoding.EncodeToString(authJSON)
+		options.RegistryAuth = authStr
+	}
+
 	baseImage := handler.GetImageFlavor(c)
 	responseBody, err := handler.client.ImagePull(ctx, baseImage, options)
 	if err != nil {
