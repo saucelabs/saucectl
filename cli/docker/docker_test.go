@@ -61,7 +61,8 @@ func TestHasBaseImage(t *testing.T) {
 	}
 }
 
-func TestImagePullOptionsUsesRegistryAuth(t *testing.T) {
+
+func TestGetImagePullOptionsUsesRegistryAuth(t *testing.T) {
 	os.Setenv("REGISTRY_USERNAME", "registry-user")
 	os.Setenv("REGISTRY_PASSWORD", "registry-pwd")
 	jobConfig := config.JobConfiguration{
@@ -77,7 +78,6 @@ func TestImagePullOptionsUsesRegistryAuth(t *testing.T) {
 				client: tc.Client,
 			}
 			options, err := handler.GetImagePullOptions()
-			fmt.Print(options.RegistryAuth)
 			assert.Equal(t, err, nil)
 			assert.NotEmpty(t, options.RegistryAuth)
 		})
@@ -86,6 +86,25 @@ func TestImagePullOptionsUsesRegistryAuth(t *testing.T) {
 	os.Unsetenv("REGISTRY_PASSWORD")
 }
 
+func TestGetImagePullOptionsDefault(t *testing.T) {
+	jobConfig := config.JobConfiguration{
+		Image: config.ImageDefinition{Base: "foobar"},
+	}
+	cases := []PassFailCase{
+		{"default options", &mocks.FakeClient{}, &jobConfig, errors.New("GetImagePullOptionsFailure"), nil},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			handler := Handler{
+				client: tc.Client,
+			}
+			options, err := handler.GetImagePullOptions()
+			assert.Equal(t, err, nil)
+			assert.Equal(t, options.RegistryAuth, "")
+		})
+	}
+}
 
 
 func TestPullBaseImage(t *testing.T) {
