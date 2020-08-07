@@ -152,7 +152,7 @@ func (handler *Handler) PullBaseImage(ctx context.Context, c config.JobConfigura
 	registryUser, hasRegistryUser := os.LookupEnv(REGISTRY_USERNAME_ENV_KEY)
 	registryPwd, hasRegistryPwd := os.LookupEnv(REGISTRY_PASSWORD_ENV_KEY)
 	if hasRegistryUser && hasRegistryPwd {
-		log.Debug().Msg("Using registry environment vairables credentials")
+		log.Debug().Msg("Using registry environment variables credentials")
 		authConfig := types.AuthConfig{
 			Username: registryUser,
 			Password: registryPwd,
