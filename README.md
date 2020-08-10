@@ -85,5 +85,17 @@ saucectl run --timeout <seconds>
 ```
 Using the `--timeout` flag will set the test timeout for the test runner framework. 
 
+### Private registry
+In case you need to use an image from a private registry you can use environment variables for authentification;
+```
+export REGISTRY_USERNAME=registry-user
+export REGISTRY_PASSWORD=registry-pass
+```
+and in your config.yml setup the image name to your registry like:
+```
+image:
+  base: quay.io/saucelabs/stt-cypress-mocha-node
+```
+
 # Licensing
 `saucectl` is licensed under the Apache License, Version 2.0. See [LICENSE](https://github.com/saucelabs/saucectl/blob/master/LICENSE) for the full license text.

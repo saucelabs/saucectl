@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"encoding/json"
+	"encoding/base64"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -20,6 +22,7 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/system"
 	"github.com/docker/go-connections/nat"
+
 	"github.com/phayes/freeport"
 
 	"github.com/saucelabs/saucectl/cli/config"
@@ -62,8 +65,9 @@ var DefaultCypress = Image{
 	Version: "v0.1.3",
 }
 
+
 // ClientInterface describes the interface used to handle docker commands
-type ClientInterface interface {
+type CommonAPIClient interface {
 	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
 	ImageList(ctx context.Context, options types.ImageListOptions) ([]types.ImageSummary, error)
 	ImagePull(ctx context.Context, ref string, options types.ImagePullOptions) (io.ReadCloser, error)
@@ -74,7 +78,7 @@ type ClientInterface interface {
 	ContainerStatPath(ctx context.Context, containerID, path string) (types.ContainerPathStat, error)
 	CopyFromContainer(ctx context.Context, container, srcPath string) (io.ReadCloser, types.ContainerPathStat, error)
 	ContainerExecCreate(ctx context.Context, container string, config types.ExecConfig) (types.IDResponse, error)
-	ContainerExecAttach(ctx context.Context, execID string, config types.ExecConfig) (types.HijackedResponse, error)
+	ContainerExecAttach(ctx context.Context, execID string, config types.ExecStartCheck) (types.HijackedResponse, error)
 	ContainerExecInspect(ctx context.Context, execID string) (types.ContainerExecInspect, error)
 	ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error
 	ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error
@@ -82,17 +86,17 @@ type ClientInterface interface {
 
 // Handler represents the client to handle Docker tasks
 type Handler struct {
-	client ClientInterface
+	client CommonAPIClient
 }
 
 // CreateMock allows to get a handler with a custom interface
-func CreateMock(client ClientInterface) *Handler {
+func CreateMock(client CommonAPIClient) *Handler {
 	return &Handler{client}
 }
 
 // Create generates a docker client
 func Create() (*Handler, error) {
-	cl, err := client.NewEnvClient()
+	cl, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err
 	}
@@ -136,10 +140,40 @@ func (handler *Handler) GetImageFlavor(c config.JobConfiguration) string {
 	return fmt.Sprintf("%s:%s", c.Image.Base, tag)
 }
 
+// Environment variables for private registry auth
+const REGISTRY_USERNAME_ENV_KEY = "REGISTRY_USERNAME"
+const REGISTRY_PASSWORD_ENV_KEY = "REGISTRY_PASSWORD"
+
+// Prepare ImagePullOptions
+func (handler *Handler) GetImagePullOptions() (types.ImagePullOptions, error) {
+	options := types.ImagePullOptions{}
+	registryUser, hasRegistryUser := os.LookupEnv(REGISTRY_USERNAME_ENV_KEY)
+	registryPwd, hasRegistryPwd := os.LookupEnv(REGISTRY_PASSWORD_ENV_KEY)
+	// Setup auth https://github.com/moby/moby/blob/master/api/types/client.go#L255
+	if hasRegistryUser && hasRegistryPwd {
+		log.Debug().Msg("Using registry environment variables credentials")
+		authConfig := types.AuthConfig{
+			Username: registryUser,
+			Password: registryPwd,
+		}
+		authJSON, err := json.Marshal(authConfig)
+		if err != nil {
+			return options, err
+		}
+		authStr := base64.URLEncoding.EncodeToString(authJSON)
+		options.RegistryAuth = authStr
+	}
+	return options, nil
+}
+
 // PullBaseImage pulls an image from Docker
 func (handler *Handler) PullBaseImage(ctx context.Context, c config.JobConfiguration) error {
-	options := types.ImagePullOptions{}
-	baseImage := fmt.Sprintf("docker.io/%s", handler.GetImageFlavor(c))
+
+	options, err := handler.GetImagePullOptions()
+	if err != nil {
+		return err
+	}
+	baseImage := handler.GetImageFlavor(c)
 	responseBody, err := handler.client.ImagePull(ctx, baseImage, options)
 	if err != nil {
 		return err
@@ -346,7 +380,7 @@ func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd 
 		return nil, nil, err
 	}
 
-	execStartCheck := types.ExecConfig{
+	execStartCheck := types.ExecStartCheck{
 		Tty: false,
 	}
 	resp, err := handler.client.ContainerExecAttach(ctx, createResp.ID, execStartCheck)

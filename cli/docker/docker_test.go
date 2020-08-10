@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"io"
+	"os"
 	"log"
 	"reflect"
 	"testing"
@@ -22,7 +23,7 @@ var ctx = context.Background()
 
 type PassFailCase struct {
 	Name           string
-	Client         ClientInterface
+	Client         CommonAPIClient
 	JobConfig      *config.JobConfiguration
 	ExpectedError  error
 	ExpectedResult interface{}
@@ -59,6 +60,52 @@ func TestHasBaseImage(t *testing.T) {
 		})
 	}
 }
+
+
+func TestGetImagePullOptionsUsesRegistryAuth(t *testing.T) {
+	os.Setenv("REGISTRY_USERNAME", "registry-user")
+	os.Setenv("REGISTRY_PASSWORD", "registry-pwd")
+	jobConfig := config.JobConfiguration{
+		Image: config.ImageDefinition{Base: "foobar"},
+	}
+	cases := []PassFailCase{
+		{"correct options", &mocks.FakeClient{}, &jobConfig, errors.New("GetImagePullOptionsFailure"), nil},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			handler := Handler{
+				client: tc.Client,
+			}
+			options, err := handler.GetImagePullOptions()
+			assert.Equal(t, err, nil)
+			assert.NotEmpty(t, options.RegistryAuth)
+		})
+	}
+	os.Unsetenv("REGISTRY_USERNAME")
+	os.Unsetenv("REGISTRY_PASSWORD")
+}
+
+func TestGetImagePullOptionsDefault(t *testing.T) {
+	jobConfig := config.JobConfiguration{
+		Image: config.ImageDefinition{Base: "foobar"},
+	}
+	cases := []PassFailCase{
+		{"default options", &mocks.FakeClient{}, &jobConfig, errors.New("GetImagePullOptionsFailure"), nil},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			handler := Handler{
+				client: tc.Client,
+			}
+			options, err := handler.GetImagePullOptions()
+			assert.Equal(t, err, nil)
+			assert.Equal(t, options.RegistryAuth, "")
+		})
+	}
+}
+
 
 func TestPullBaseImage(t *testing.T) {
 	jobConfig := config.JobConfiguration{
@@ -283,7 +330,7 @@ func TestHandler_CopyToContainer(t *testing.T) {
 	defer dir.Remove()
 
 	type fields struct {
-		client ClientInterface
+		client CommonAPIClient
 	}
 	type args struct {
 		ctx         context.Context
@@ -372,7 +419,7 @@ func TestHandler_FindTestFiles(t *testing.T) {
 	defer dir.Remove()
 
 	type fields struct {
-		client ClientInterface
+		client CommonAPIClient
 	}
 	type args struct {
 		patterns []string
