@@ -5,10 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"github.com/rs/zerolog/log"
 )
 
 // Client service
@@ -18,6 +18,7 @@ type Client struct {
 }
 
 // Job represents the sauce labs test job.
+
 type Job struct {
 	ID    string `json:"id"`
 	Owner string `json:"owner"`
@@ -35,7 +36,7 @@ type JobStarterPayload struct {
 	Tags        []string `json:"tags,omitEmpty"`
 }
 
-func (c *Client) StartJob (ctx context.Context, jobStarterPayload JobStarterPayload) (jobID string, err error) {
+func (c *Client) StartJob(ctx context.Context, jobStarterPayload JobStarterPayload) (jobID string, err error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/jobs/", c.URL)
 	b := new(bytes.Buffer)
 	err = json.NewEncoder(b).Encode(jobStarterPayload)

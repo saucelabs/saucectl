@@ -53,7 +53,7 @@ func TestTestComposer_StartJob(t *testing.T) {
 		respo.Play(w, r)
 	}))
 	type args struct {
-		ctx context.Context
+		ctx               context.Context
 		jobStarterPayload JobStarterPayload
 	}
 	type fields struct {
@@ -67,7 +67,7 @@ func TestTestComposer_StartJob(t *testing.T) {
 		want       string
 		wantErr    error
 		serverFunc func(w http.ResponseWriter, r *http.Request) // what shall the mock server respond with
-	} {
+	}{
 		{
 			name: "Happy path",
 			fields: fields{
@@ -75,7 +75,7 @@ func TestTestComposer_StartJob(t *testing.T) {
 				URL:        mockTestComposerServer.URL,
 			},
 			args: args{
-				ctx:               context.TODO(),
+				ctx: context.TODO(),
 				jobStarterPayload: JobStarterPayload{
 					User:        "fake-user",
 					AccessKey:   "fake-access-key",
@@ -86,7 +86,7 @@ func TestTestComposer_StartJob(t *testing.T) {
 					Tags:        nil,
 				},
 			},
-			want: "fake-job-id",
+			want:    "fake-job-id",
 			wantErr: nil,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
 				respondJSON(w, Job{
@@ -96,18 +96,17 @@ func TestTestComposer_StartJob(t *testing.T) {
 			},
 		},
 		{
-			name:       "Non 2xx status code",
+			name: "Non 2xx status code",
 			fields: fields{
 				HTTPClient: *mockTestComposerServer.Client(),
 				URL:        mockTestComposerServer.URL,
 			},
-			args:       args{
+			args: args{
 				ctx:               context.TODO(),
-				jobStarterPayload: JobStarterPayload{
-				},
+				jobStarterPayload: JobStarterPayload{},
 			},
-			want:       "",
-			wantErr:    fmt.Errorf("Failed to start job. statusCode='300'"),
+			want:    "",
+			wantErr: fmt.Errorf("Failed to start job. statusCode='300'"),
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(300)
 			},
