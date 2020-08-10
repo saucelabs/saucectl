@@ -14,7 +14,7 @@ import (
 // Client service
 type Client struct {
 	HTTPClient http.Client
-	URL        string
+	URL        string // https://api.staging.saucelabs.net
 }
 
 // Job represents the sauce labs test job.
