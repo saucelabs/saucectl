@@ -29,11 +29,11 @@ type Job struct {
 type JobStarterPayload struct {
 	User        string   `json:"username"`
 	AccessKey   string   `json:"accessKey"`
-	BrowserName string   `json:"browserName,omitEmpty"`
-	TestName    string   `json:"testName,omitEmpty"`
-	Framework   string   `json:"framework,omitEmpty"`
-	BuildName   string   `json:"buildName,omitEmpty"`
-	Tags        []string `json:"tags,omitEmpty"`
+	BrowserName string   `json:"browserName,omitempty"`
+	TestName    string   `json:"testName,omitempty"`
+	Framework   string   `json:"framework,omitempty"`
+	BuildName   string   `json:"buildName,omitempty"`
+	Tags        []string `json:"tags,omitempty"`
 }
 
 func (c *Client) StartJob(ctx context.Context, jobStarterPayload JobStarterPayload) (jobID string, err error) {
