@@ -149,19 +149,6 @@ func NewSpecConfigFile(files []string) (string, error) {
 	return NewTemporaryFile(SPEC_CONFIG_TEMP_PREFIX, SPEC_CONFIG_FILENAME, specConfigYAML, 0644)
 }
 
-func NewTemporaryFile(prefix string, filename string, raw []byte, mode int) (string, error) {
-	tempDir, err := ioutil.TempDir(os.TempDir(), prefix)
-	if err != nil {
-		return "", err
-	}
-	tempFile := filepath.Join(tempDir, filename)
-	err = ioutil.WriteFile(tempFile, raw, 0644)
-	if err != nil {
-		return "", err
-	}
-	return tempFile, nil
-}
-
 // ExpandEnv expands environment variables inside metadata fields.
 func (m *Metadata) ExpandEnv() {
 	m.Name = os.ExpandEnv(m.Name)
