@@ -127,14 +127,12 @@ func NewJobConfiguration(cfgFilePath string) (JobConfiguration, error) {
 }
 
 type SpecConfig struct {
-	Specs []string `yaml:specs,omitempty`
+	Specs []string `yaml:"specs,omitempty"`
 }
 
 func NewSpecConfig(files []string) SpecConfig {
 	specConfig := SpecConfig{}
-	for _, fpath := range files {
-		specConfig.Specs = append(specConfig.Specs, fpath)
-	}
+	specConfig.Specs = append(specConfig.Specs, files...)
 	return specConfig
 }
 
