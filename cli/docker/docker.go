@@ -12,7 +12,6 @@ import (
 	"time"
 	"encoding/json"
 	"encoding/base64"
-	"gopkg.in/yaml.v2"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -44,10 +43,6 @@ var (
 type Image struct {
 	Name    string
 	Version string
-}
-
-type SpecConfig struct {
-	Specs []string `yaml:specs,omitempty`
 }
 
 var DefaultPlaywright = Image{
@@ -267,45 +262,15 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfigur
 }
 
 
-const SPEC_CONFIG_TEMP_PREFIX = "spec-config"
-const SPEC_CONFIG_FILENAME = "specConfig.yaml"
-// Create and Copy specConfig to container
-func (handler *Handler) CopySpecConfigToContainer(ctx context.Context, srcContainerID string, specConfig SpecConfig, targetDir string) error {
-	specConfigYAML, err := yaml.Marshal(&specConfig)
-	if err != nil {
-		return err
-	}
-	tempDir, err := ioutil.TempDir(os.TempDir(), SPEC_CONFIG_TEMP_PREFIX)
-	if err != nil {
-		return err
-	}
-	tempFile := filepath.Join(tempDir, SPEC_CONFIG_FILENAME)
-	err = ioutil.WriteFile(tempFile, specConfigYAML, 0644)
-	if err != nil {
-		return err
-	}
-	if err := handler.CopyToContainer(ctx, srcContainerID, tempFile, targetDir); err != nil {
-		return  err
-	}
-	defer os.Remove(tempDir)
-	return nil
-}
-
-
 // CopyTestFilesToContainer copies files from the config into the container
-func (handler *Handler) CopyTestFilesToContainer(ctx context.Context, srcContainerID string, files []string, targetDir string) error {
+func (handler *Handler) CopyTestFilesToContainer(ctx context.Context, srcContainerID string, files []string, targetDir string) ([]string, error) {
 	tf := handler.FindTestFiles(files)
-	specConfig := SpecConfig{}
 	for _, fpath := range tf {
-		specConfig.Specs = append(specConfig.Specs, fpath)
 		if err := handler.CopyToContainer(ctx, srcContainerID, fpath, targetDir); err != nil {
-			return err
+			return tf, err
 		}
 	}
-	if err := handler.CopySpecConfigToContainer(ctx, srcContainerID, specConfig, targetDir); err != nil {
-		return err
-	}
-	return nil
+	return tf, nil
 }
 
 // FindTestFiles returns the names of all files matching the patterns.

@@ -95,7 +95,16 @@ func (r *localRunner) Setup() error {
 	}
 
 	progress.Show("Copying test files to container")
-	if err := r.docker.CopyTestFilesToContainer(r.context, r.containerID, r.jobConfig.Files, r.runnerConfig.TargetDir); err != nil {
+	testFiles, err := r.docker.CopyTestFilesToContainer(r.context, r.containerID, r.jobConfig.Files, r.runnerConfig.TargetDir)
+	if err != nil {
+		return err
+	}
+	progress.Show("Creating test configuration")
+	specConfigFile, err := config.NewSpecConfigFile(testFiles)
+	if err != nil {
+		return err
+	}
+	if err := r.docker.CopyToContainer(r.context, r.containerID, specConfigFile, r.runnerConfig.RootDir); err != nil {
 		return err
 	}
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"io/ioutil"
 )
 
 // ValidateOutputPath validates the output paths of the `export` and `save` commands.
@@ -42,4 +43,17 @@ func ValidateOutputPathFileMode(fileMode os.FileMode) error {
 		return errors.New("got an irregular file")
 	}
 	return nil
+}
+
+func NewTemporaryFile(prefix string, filename string, raw []byte, mode int) (string, error) {
+	tempDir, err := ioutil.TempDir(os.TempDir(), prefix)
+	if err != nil {
+		return "", err
+	}
+	tempFile := filepath.Join(tempDir, filename)
+	err = ioutil.WriteFile(tempFile, raw, 0644)
+	if err != nil {
+		return "", err
+	}
+	return tempFile, nil
 }

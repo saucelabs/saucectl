@@ -126,6 +126,42 @@ func NewJobConfiguration(cfgFilePath string) (JobConfiguration, error) {
 	return c, nil
 }
 
+type SpecConfig struct {
+	Specs []string `yaml:specs,omitempty`
+}
+
+func NewSpecConfig(files []string) SpecConfig {
+	specConfig := SpecConfig{}
+	for _, fpath := range files {
+		specConfig.Specs = append(specConfig.Specs, fpath)
+	}
+	return specConfig
+}
+
+const SPEC_CONFIG_TEMP_PREFIX = "spec-config"
+const SPEC_CONFIG_FILENAME = "specConfig.yaml"
+func NewSpecConfigFile(files []string) (string, error) {
+	specConfig := NewSpecConfig(files)
+	specConfigYAML, err := yaml.Marshal(&specConfig)
+	if err != nil {
+		return "", err
+	}
+	return NewTemporaryFile(SPEC_CONFIG_TEMP_PREFIX, SPEC_CONFIG_FILENAME, specConfigYAML, 0644)
+}
+
+func NewTemporaryFile(prefix string, filename string, raw []byte, mode int) (string, error) {
+	tempDir, err := ioutil.TempDir(os.TempDir(), prefix)
+	if err != nil {
+		return "", err
+	}
+	tempFile := filepath.Join(tempDir, filename)
+	err = ioutil.WriteFile(tempFile, raw, 0644)
+	if err != nil {
+		return "", err
+	}
+	return tempFile, nil
+}
+
 // ExpandEnv expands environment variables inside metadata fields.
 func (m *Metadata) ExpandEnv() {
 	m.Name = os.ExpandEnv(m.Name)
