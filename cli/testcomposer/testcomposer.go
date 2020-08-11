@@ -5,20 +5,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"net/http"
-	"os"
 )
 
 // Client service
 type Client struct {
 	HTTPClient http.Client
-	URL        string // https://api.staging.saucelabs.net
+	URL        string // e.g.) https://api.<region>.saucelabs.net
 }
 
 // Job represents the sauce labs test job.
-
 type Job struct {
 	ID    string `json:"id"`
 	Owner string `json:"owner"`
@@ -47,20 +44,17 @@ func (c *Client) StartJob(ctx context.Context, jobStarterPayload JobStarterPaylo
 	if err != nil {
 		return
 	}
-	req.SetBasicAuth(os.Getenv("SAUCE_USERNAME"), os.Getenv("SAUCE_ACCESS_KEY"))
+	req.SetBasicAuth(jobStarterPayload.User, jobStarterPayload.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return
 	}
-	msg := string(body)
 	if resp.StatusCode >= 300 {
-		log.Error().Int("statusCode", resp.StatusCode).
-			Str("message", msg).
-			Msg("Failed to start job")
 		err = fmt.Errorf("Failed to start job. statusCode='%d'", resp.StatusCode)
 		return "", err
 	}
