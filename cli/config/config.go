@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 
 	"gopkg.in/yaml.v2"
-
-	"github.com/saucelabs/saucectl/cli/utils"
 )
 
 // Metadata describes job metadata
@@ -142,14 +140,19 @@ func NewSpecConfig(files []string) SpecConfig {
 
 const SPEC_CONFIG_TEMP_PREFIX = "spec-config"
 const SPEC_CONFIG_FILENAME = "specConfig.yaml"
-func NewSpecConfigFile(files []string) (string, error) {
+
+func NewSpecConfigFile(files []string, filepath string) (error) {
 	specConfig := NewSpecConfig(files)
 	specConfigYAML, err := yaml.Marshal(&specConfig)
 	if err != nil {
-		return "", err
+		return err
 	}
-	return utils.NewTemporaryFile(SPEC_CONFIG_TEMP_PREFIX, SPEC_CONFIG_FILENAME, specConfigYAML, 0644)
+	if err = ioutil.WriteFile(filepath, specConfigYAML, 0644); err != nil {
+		return err
+	}
+	return err
 }
+
 
 // ExpandEnv expands environment variables inside metadata fields.
 func (m *Metadata) ExpandEnv() {

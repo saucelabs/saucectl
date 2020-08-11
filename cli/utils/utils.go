@@ -45,15 +45,11 @@ func ValidateOutputPathFileMode(fileMode os.FileMode) error {
 	return nil
 }
 
-func NewTemporaryFile(prefix string, filename string, raw []byte, mode int) (string, error) {
+func NewTemporaryFile(prefix string, filename string) (string, error) {
 	tempDir, err := ioutil.TempDir(os.TempDir(), prefix)
 	if err != nil {
 		return "", err
 	}
 	tempFile := filepath.Join(tempDir, filename)
-	err = ioutil.WriteFile(tempFile, raw, 0644)
-	if err != nil {
-		return "", err
-	}
 	return tempFile, nil
 }

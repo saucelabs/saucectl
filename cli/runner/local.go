@@ -13,6 +13,7 @@ import (
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/docker"
 	"github.com/saucelabs/saucectl/cli/progress"
+	"github.com/saucelabs/saucectl/cli/utils"
 )
 
 type localRunner struct {
@@ -100,11 +101,14 @@ func (r *localRunner) Setup() error {
 		return err
 	}
 	progress.Show("Creating test configuration")
-	specConfigFile, err := config.NewSpecConfigFile(testFiles)
+	tempFile, err := utils.NewTemporaryFile(config.SPEC_CONFIG_TEMP_PREFIX, config.SPEC_CONFIG_FILENAME)
 	if err != nil {
 		return err
 	}
-	if err := r.docker.CopyToContainer(r.context, r.containerID, specConfigFile, r.runnerConfig.RootDir); err != nil {
+	if err := config.NewSpecConfigFile(testFiles, tempFile); err != nil {
+		return err
+	}
+	if err := r.docker.CopyToContainer(r.context, r.containerID, tempFile, r.runnerConfig.RootDir); err != nil {
 		return err
 	}
 

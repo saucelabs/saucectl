@@ -67,6 +67,11 @@ func (r *ciRunner) Setup() error {
 				return err
 			}
 		}
+		specConfigFile := filepath.Join(r.runnerConfig.RootDir, config.SPEC_CONFIG_FILENAME)
+		if err := config.NewSpecConfigFile(matches, specConfigFile); err != nil {
+			return err
+		}
+
 	}
 	return nil
 }
