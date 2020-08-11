@@ -159,3 +159,4 @@ func (m *Metadata) ExpandEnv() {
 		m.Tags[i] = os.ExpandEnv(v)
 	}
 }
+
