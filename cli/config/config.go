@@ -137,7 +137,7 @@ func NewSpecConfig(files []string) SpecConfig {
 }
 
 const SPEC_CONFIG_TEMP_PREFIX = "spec-config"
-const SPEC_CONFIG_FILENAME = "specConfig.yaml"
+const SPEC_CONFIG_FILENAME = "specs.yaml"
 
 func NewSpecConfigFile(files []string, filepath string) (error) {
 	specConfig := NewSpecConfig(files)
