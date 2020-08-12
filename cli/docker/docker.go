@@ -2,6 +2,8 @@ package docker
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"io"
@@ -10,8 +12,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-	"encoding/json"
-	"encoding/base64"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -64,7 +64,6 @@ var DefaultCypress = Image{
 	Name:    "saucelabs/stt-cypress-mocha-node",
 	Version: "v0.1.3",
 }
-
 
 // ClientInterface describes the interface used to handle docker commands
 type CommonAPIClient interface {

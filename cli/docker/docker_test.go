@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"io"
-	"os"
 	"log"
+	"os"
 	"reflect"
 	"testing"
 
@@ -61,7 +61,6 @@ func TestHasBaseImage(t *testing.T) {
 	}
 }
 
-
 func TestGetImagePullOptionsUsesRegistryAuth(t *testing.T) {
 	os.Setenv("REGISTRY_USERNAME", "registry-user")
 	os.Setenv("REGISTRY_PASSWORD", "registry-pwd")
@@ -105,7 +104,6 @@ func TestGetImagePullOptionsDefault(t *testing.T) {
 		})
 	}
 }
-
 
 func TestPullBaseImage(t *testing.T) {
 	jobConfig := config.JobConfiguration{
