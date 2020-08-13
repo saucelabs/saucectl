@@ -131,7 +131,7 @@ func (handler *Handler) HasBaseImage(ctx context.Context, baseImage string) (boo
 }
 
 // TODO - move this to ImageDefinition
-func (handler *Handler) GetImageFlavor(c config.JobConfiguration) string {
+func (handler *Handler) GetImageFlavor(c config.Project) string {
 	tag := "latest"
 	if c.Image.Version != "" {
 		tag = c.Image.Version
@@ -166,7 +166,7 @@ func (handler *Handler) GetImagePullOptions() (types.ImagePullOptions, error) {
 }
 
 // PullBaseImage pulls an image from Docker
-func (handler *Handler) PullBaseImage(ctx context.Context, c config.JobConfiguration) error {
+func (handler *Handler) PullBaseImage(ctx context.Context, c config.Project) error {
 
 	options, err := handler.GetImagePullOptions()
 	if err != nil {
@@ -191,7 +191,7 @@ func (handler *Handler) PullBaseImage(ctx context.Context, c config.JobConfigura
 }
 
 // StartContainer starts the Docker testrunner container
-func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfiguration) (*container.ContainerCreateCreatedBody, error) {
+func (handler *Handler) StartContainer(ctx context.Context, c config.Project) (*container.ContainerCreateCreatedBody, error) {
 	var (
 		ports        map[nat.Port]struct{}
 		portBindings map[nat.Port][]nat.PortBinding

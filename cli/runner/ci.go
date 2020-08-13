@@ -23,7 +23,7 @@ type ciRunner struct {
 	BaseRunner
 }
 
-func newCIRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*ciRunner, error) {
+func newCIRunner(c config.Project, cli *command.SauceCtlCli) (*ciRunner, error) {
 	runner := ciRunner{}
 
 	// read runner config file

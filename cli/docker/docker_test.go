@@ -24,7 +24,7 @@ var ctx = context.Background()
 type PassFailCase struct {
 	Name           string
 	Client         CommonAPIClient
-	JobConfig      *config.JobConfiguration
+	JobConfig      *config.Project
 	ExpectedError  error
 	ExpectedResult interface{}
 }
@@ -64,7 +64,7 @@ func TestHasBaseImage(t *testing.T) {
 func TestGetImagePullOptionsUsesRegistryAuth(t *testing.T) {
 	os.Setenv("REGISTRY_USERNAME", "registry-user")
 	os.Setenv("REGISTRY_PASSWORD", "registry-pwd")
-	jobConfig := config.JobConfiguration{
+	jobConfig := config.Project{
 		Image: config.ImageDefinition{Base: "foobar"},
 	}
 	cases := []PassFailCase{
@@ -86,7 +86,7 @@ func TestGetImagePullOptionsUsesRegistryAuth(t *testing.T) {
 }
 
 func TestGetImagePullOptionsDefault(t *testing.T) {
-	jobConfig := config.JobConfiguration{
+	jobConfig := config.Project{
 		Image: config.ImageDefinition{Base: "foobar"},
 	}
 	cases := []PassFailCase{
@@ -106,7 +106,7 @@ func TestGetImagePullOptionsDefault(t *testing.T) {
 }
 
 func TestPullBaseImage(t *testing.T) {
-	jobConfig := config.JobConfiguration{
+	jobConfig := config.Project{
 		Image: config.ImageDefinition{Base: "foobar"},
 	}
 	cases := []PassFailCase{
@@ -126,7 +126,7 @@ func TestPullBaseImage(t *testing.T) {
 }
 
 func TestGetImageFlavorDefault(t *testing.T) {
-	jobConfig := config.JobConfiguration{
+	jobConfig := config.Project{
 		Image: config.ImageDefinition{Base: "foobar"},
 	}
 	cases := []PassFailCase{
@@ -144,7 +144,7 @@ func TestGetImageFlavorDefault(t *testing.T) {
 }
 
 func TestGetImageFlavorVersioned(t *testing.T) {
-	jobConfig := config.JobConfiguration{
+	jobConfig := config.Project{
 		Image: config.ImageDefinition{Base: "foobar", Version: "barfoo"},
 	}
 	cases := []PassFailCase{
@@ -163,13 +163,13 @@ func TestGetImageFlavorVersioned(t *testing.T) {
 
 func TestStartContainer(t *testing.T) {
 	failureResult := container.ContainerCreateCreatedBody{}
-	jobConfig := config.JobConfiguration{
+	jobConfig := config.Project{
 		Image: config.ImageDefinition{Base: "foobar"},
 		Capabilities: []config.Capabilities{
 			{BrowserName: "chrome"},
 		},
 	}
-	jobConfigWithoutCaps := config.JobConfiguration{
+	jobConfigWithoutCaps := config.Project{
 		Image: config.ImageDefinition{Base: "foobar"},
 	}
 	cases := []PassFailCase{
