@@ -73,10 +73,7 @@ func TestGetImagePullOptionsUsesRegistryAuth(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
-				client: tc.Client,
-			}
-			options, err := handler.GetImagePullOptions()
+			options, err := NewImagePullOptions()
 			assert.Equal(t, err, nil)
 			assert.NotEmpty(t, options.RegistryAuth)
 		})
@@ -95,10 +92,7 @@ func TestGetImagePullOptionsDefault(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
-				client: tc.Client,
-			}
-			options, err := handler.GetImagePullOptions()
+			options, err := NewImagePullOptions()
 			assert.Equal(t, err, nil)
 			assert.Equal(t, options.RegistryAuth, "")
 		})

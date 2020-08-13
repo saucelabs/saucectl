@@ -139,15 +139,17 @@ func (handler *Handler) GetImageFlavor(c config.Project) string {
 	return fmt.Sprintf("%s:%s", c.Image.Base, tag)
 }
 
-// Environment variables for private registry auth
-const REGISTRY_USERNAME_ENV_KEY = "REGISTRY_USERNAME"
-const REGISTRY_PASSWORD_ENV_KEY = "REGISTRY_PASSWORD"
+// RegistryUsernameEnvKey represents the username environment variable for authenticating against a docker registry.
+const RegistryUsernameEnvKey = "REGISTRY_USERNAME"
+// RegistryPasswordEnvKey represents the password environment variable for authenticating against a docker registry.
+const RegistryPasswordEnvKey = "REGISTRY_PASSWORD"
 
-// Prepare ImagePullOptions
-func (handler *Handler) GetImagePullOptions() (types.ImagePullOptions, error) {
+// NewImagePullOptions returns a new types.ImagePullOptions object. Credentials are also configured, if available
+// via environment variables (see RegistryUsernameEnvKey and RegistryPasswordEnvKey).
+func NewImagePullOptions() (types.ImagePullOptions, error) {
 	options := types.ImagePullOptions{}
-	registryUser, hasRegistryUser := os.LookupEnv(REGISTRY_USERNAME_ENV_KEY)
-	registryPwd, hasRegistryPwd := os.LookupEnv(REGISTRY_PASSWORD_ENV_KEY)
+	registryUser, hasRegistryUser := os.LookupEnv(RegistryUsernameEnvKey)
+	registryPwd, hasRegistryPwd := os.LookupEnv(RegistryPasswordEnvKey)
 	// Setup auth https://github.com/moby/moby/blob/master/api/types/client.go#L255
 	if hasRegistryUser && hasRegistryPwd {
 		log.Debug().Msg("Using registry environment variables credentials")
@@ -168,7 +170,7 @@ func (handler *Handler) GetImagePullOptions() (types.ImagePullOptions, error) {
 // PullBaseImage pulls an image from Docker
 func (handler *Handler) PullBaseImage(ctx context.Context, c config.Project) error {
 
-	options, err := handler.GetImagePullOptions()
+	options, err := NewImagePullOptions()
 	if err != nil {
 		return err
 	}
