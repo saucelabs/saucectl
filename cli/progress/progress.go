@@ -10,6 +10,7 @@ import (
 var spinnerSpeed = 300 * time.Millisecond
 var spinnerInstance *spinner.Spinner = spinner.New(spinner.CharSets[14], spinnerSpeed)
 
+// Show starts showing a progress spinner.
 func Show(text string, args ...interface{}) *spinner.Spinner {
 	message := " " + fmt.Sprintf(text, args...)
 	spinnerInstance.Suffix = message
@@ -18,6 +19,7 @@ func Show(text string, args ...interface{}) *spinner.Spinner {
 	return spinnerInstance
 }
 
+// Stop stops the progress spinner.
 func Stop() {
 	spinnerInstance.Stop()
 }

@@ -33,6 +33,7 @@ type JobStarterPayload struct {
 	Tags        []string `json:"tags,omitempty"`
 }
 
+// StartJob creates a new job in Sauce Labs.
 func (c *Client) StartJob(ctx context.Context, jobStarterPayload JobStarterPayload) (jobID string, err error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/jobs/", c.URL)
 	b := new(bytes.Buffer)

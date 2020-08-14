@@ -45,27 +45,31 @@ type Image struct {
 	Version string
 }
 
+// DefaultPlaywright represents the default image for playwright.
 var DefaultPlaywright = Image{
 	Name:    "saucelabs/stt-playwright-jest-node",
 	Version: "v0.1.3",
 }
 
+// DefaultPuppeteer represents the default image for puppeteer.
 var DefaultPuppeteer = Image{
 	Name:    "saucelabs/stt-puppeteer-jest-node",
 	Version: "v0.1.2",
 }
 
+// DefaultTestcafe represents the default image for testcafe.
 var DefaultTestcafe = Image{
 	Name:    "saucelabs/stt-testcafe-node",
 	Version: "v0.1.2",
 }
 
+// DefaultCypress represents the default image for cypress.
 var DefaultCypress = Image{
 	Name:    "saucelabs/stt-cypress-mocha-node",
 	Version: "v0.1.3",
 }
 
-// ClientInterface describes the interface used to handle docker commands
+// CommonAPIClient is the interface for interacting with containers.
 type CommonAPIClient interface {
 	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
 	ImageList(ctx context.Context, options types.ImageListOptions) ([]types.ImageSummary, error)
@@ -130,8 +134,9 @@ func (handler *Handler) HasBaseImage(ctx context.Context, baseImage string) (boo
 	return len(images) > 0, nil
 }
 
-// TODO - move this to ImageDefinition
+// GetImageFlavor returns a string that contains the image name and tag defined by the project.
 func (handler *Handler) GetImageFlavor(c config.Project) string {
+	// TODO - move this to ImageDefinition
 	tag := "latest"
 	if c.Image.Version != "" {
 		tag = c.Image.Version
