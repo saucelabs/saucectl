@@ -31,7 +31,7 @@ jobs:
 
       - name: Lint project
         run: |
-          golangci-lint run ./... --disable structcheck
+          golint -set_exit_status ./...
 
       - name: Run tests
         run: |
