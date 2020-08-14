@@ -97,11 +97,16 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return err
 	}
 
-	if err := os.MkdirAll(filepath.Join(cwd, "tests"), 0777); err != nil {
+	image, err := getImageValues(answers.Framework)
+	if err != nil {
+		return err
+	}
+	testFolder := filepath.Join(cwd, filepath.Join(image.TestsFolder...))
+	if err := os.MkdirAll(testFolder, 0777); err != nil {
 		return err
 	}
 
-	ft, err := os.Create(filepath.Join(cwd, "tests", testTpl[answers.Framework].Filename))
+	ft, err := os.Create(filepath.Join(testFolder, testTpl[answers.Framework].Filename))
 	if err != nil {
 		return err
 	}
@@ -122,6 +127,20 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	return nil
 }
 
+func getImageValues(framework string) (docker.Image, error) {
+	switch framework {
+	case "playwright":
+		return docker.DefaultPlaywright, nil
+	case "puppeteer":
+		return docker.DefaultPuppeteer, nil
+	case "testcafe":
+		return docker.DefaultTestcafe, nil
+	case "cypress":
+		return docker.DefaultCypress, nil
+	}
+	return docker.Image{}, errors.New("unknown framework")
+}
+
 func writeJobConfig(framework string, region string, w io.Writer) error {
 	configTpl, err := template.New("configTpl").Parse(configTpl)
 	if err != nil {
@@ -129,27 +148,13 @@ func writeJobConfig(framework string, region string, w io.Writer) error {
 	}
 
 	// TODO(AlexP) Replace template rendering and instead use the JobConfiguration struct directly to render the yaml
-
+	image, err := getImageValues(framework)
 	v := struct {
 		Name    string
 		Version string
 		Region  string
 	}{
 		Region: region,
-	}
-
-	var image docker.Image
-	switch framework {
-	case "playwright":
-		image = docker.DefaultPlaywright
-	case "puppeteer":
-		image = docker.DefaultPuppeteer
-	case "testcafe":
-		image = docker.DefaultTestcafe
-	case "cypress":
-		image = docker.DefaultCypress
-	default:
-		return errors.New("unknown framework")
 	}
 
 	v.Name = image.Name

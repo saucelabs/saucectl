@@ -43,25 +43,30 @@ var (
 type Image struct {
 	Name    string
 	Version string
+	TestsFolder []string
 }
 
 var DefaultPlaywright = Image{
 	Name:    "saucelabs/stt-playwright-jest-node",
+	TestsFolder: []string{"tests"},
 	Version: "v0.1.3",
 }
 
 var DefaultPuppeteer = Image{
 	Name:    "saucelabs/stt-puppeteer-jest-node",
+	TestsFolder: []string{"tests"},
 	Version: "v0.1.2",
 }
 
 var DefaultTestcafe = Image{
 	Name:    "saucelabs/stt-testcafe-node",
+	TestsFolder: []string{"tests"},
 	Version: "v0.1.2",
 }
 
 var DefaultCypress = Image{
 	Name:    "saucelabs/stt-cypress-mocha-node",
+	TestsFolder: []string{"cypress", "integration"},
 	Version: "v0.1.3",
 }
 
