@@ -40,7 +40,7 @@ type Testrunner interface {
 
 // BaseRunner contains common properties across all runners
 type BaseRunner struct {
-	jobConfig    config.Project
+	project      config.Project
 	runnerConfig config.RunnerConfiguration
 	context      context.Context
 	cli          *command.SauceCtlCli

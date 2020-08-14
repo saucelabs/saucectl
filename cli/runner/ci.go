@@ -34,7 +34,7 @@ func newCIRunner(c config.Project, cli *command.SauceCtlCli) (*ciRunner, error) 
 
 	runner.cli = cli
 	runner.context = context.Background()
-	runner.jobConfig = c
+	runner.project = c
 	runner.startTime = makeTimestamp()
 	runner.runnerConfig = rc
 	return &runner, nil
@@ -55,7 +55,7 @@ func (r *ciRunner) Setup() error {
 
 	// copy files from repository into target dir
 	log.Info().Msg("Copy files into assigned directories")
-	for _, pattern := range r.jobConfig.Files {
+	for _, pattern := range r.project.Files {
 		matches, err := filepath.Glob(pattern)
 		if err != nil {
 			continue
@@ -73,22 +73,22 @@ func (r *ciRunner) Setup() error {
 
 func (r *ciRunner) Run() (int, error) {
 	browserName := ""
-	if len(r.jobConfig.Capabilities) > 0 {
-		browserName = r.jobConfig.Capabilities[0].BrowserName
+	if len(r.project.Capabilities) > 0 {
+		browserName = r.project.Capabilities[0].BrowserName
 	}
 
 	cmd := exec.Command(r.runnerConfig.ExecCommand[0], r.runnerConfig.ExecCommand[1])
 	cmd.Env = append(
 		os.Environ(),
-		fmt.Sprintf("SAUCE_BUILD_NAME=%s", r.jobConfig.Metadata.Build),
-		fmt.Sprintf("SAUCE_TAGS=%s", strings.Join(r.jobConfig.Metadata.Tags, ",")),
-		fmt.Sprintf("SAUCE_REGION=%s", r.jobConfig.Sauce.Region),
-		fmt.Sprintf("TEST_TIMEOUT=%d", r.jobConfig.Timeout),
+		fmt.Sprintf("SAUCE_BUILD_NAME=%s", r.project.Metadata.Build),
+		fmt.Sprintf("SAUCE_TAGS=%s", strings.Join(r.project.Metadata.Tags, ",")),
+		fmt.Sprintf("SAUCE_REGION=%s", r.project.Sauce.Region),
+		fmt.Sprintf("TEST_TIMEOUT=%d", r.project.Timeout),
 		fmt.Sprintf("BROWSER_NAME=%s", browserName),
 	)
 
 	// Add any defined env variables from the job config / CLI args.
-	for k, v := range r.jobConfig.Env {
+	for k, v := range r.project.Env {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
 	}
 
