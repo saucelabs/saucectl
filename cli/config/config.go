@@ -52,11 +52,20 @@ type Project struct {
 	Kind         string            `yaml:"kind"`
 	Metadata     Metadata          `yaml:"metadata"`
 	Capabilities []Capabilities    `yaml:"capabilities"`
+	Suites       []Suite           `yaml:"suites"`
 	Files        []string          `yaml:"files"`
 	Image        ImageDefinition   `yaml:"image"`
 	Timeout      int               `yaml:"timeout"`
 	Sauce        SauceConfig       `yaml:"sauce"`
 	Env          map[string]string `yaml:"env"`
+}
+
+// Suite represents the test suite configuration.
+type Suite struct {
+	Name         string       `yaml:"name"`
+	Capabilities Capabilities `yaml:"capabilities"`
+	Root         string       `yaml:"root"`
+	Match        []string     `yaml:"match"`
 }
 
 // SauceConfig represents sauce labs related settings.
