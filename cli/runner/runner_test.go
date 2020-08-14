@@ -11,7 +11,7 @@ import (
 )
 
 func TestNewLocalRunner(t *testing.T) {
-	config := config.JobConfiguration{}
+	config := config.Project{}
 	cli := command.SauceCtlCli{}
 
 	runner, err := New(config, &cli)
@@ -29,7 +29,7 @@ func TestNewCIRunner(t *testing.T) {
 	defer dir.Remove()
 	runnerConfigPath = dir.Path() + "/config.yaml"
 
-	config := config.JobConfiguration{}
+	config := config.Project{}
 	cli := command.SauceCtlCli{}
 
 	runner, err := New(config, &cli)

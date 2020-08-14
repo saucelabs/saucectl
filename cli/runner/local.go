@@ -22,7 +22,7 @@ type localRunner struct {
 	tmpDir      string
 }
 
-func newLocalRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*localRunner, error) {
+func newLocalRunner(c config.Project, cli *command.SauceCtlCli) (*localRunner, error) {
 	progress.Show("Starting local runner")
 	defer progress.Stop()
 

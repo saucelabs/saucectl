@@ -46,8 +46,8 @@ type ImageDefinition struct {
 	Options map[string]interface{} `yaml:"options"`
 }
 
-// JobConfiguration describes testrunner config format
-type JobConfiguration struct {
+// Project represents the project configuration.
+type Project struct {
 	APIVersion   string            `yaml:"apiVersion"`
 	Kind         string            `yaml:"kind"`
 	Metadata     Metadata          `yaml:"metadata"`
@@ -106,16 +106,16 @@ func NewRunnerConfiguration(cfgFilePath string) (RunnerConfiguration, error) {
 }
 
 // NewJobConfiguration creates a new job configuration based on a config file
-func NewJobConfiguration(cfgFilePath string) (JobConfiguration, error) {
-	var c JobConfiguration
+func NewJobConfiguration(cfgFilePath string) (Project, error) {
+	var c Project
 
 	yamlFile, err := readYaml(cfgFilePath)
 	if err != nil {
-		return JobConfiguration{}, fmt.Errorf("failed to locate job configuration: %v", err)
+		return Project{}, fmt.Errorf("failed to locate job configuration: %v", err)
 	}
 
 	if err = yaml.Unmarshal(yamlFile, &c); err != nil {
-		return JobConfiguration{}, fmt.Errorf("failed to parse job configuration: %v", err)
+		return Project{}, fmt.Errorf("failed to parse job configuration: %v", err)
 	}
 
 	// go-yaml doesn't have the ability to define default values, so we have to do it here

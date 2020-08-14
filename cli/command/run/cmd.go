@@ -102,7 +102,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 }
 
 // mergeArgs merges settings from CLI arguments with the loaded job configuration.
-func mergeArgs(cfg *config.JobConfiguration) {
+func mergeArgs(cfg *config.Project) {
 	// Merge env from CLI args and job config. CLI args take precedence.
 	for k, v := range env {
 		cfg.Env[k] = v

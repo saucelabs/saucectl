@@ -40,7 +40,7 @@ type Testrunner interface {
 
 // BaseRunner contains common properties across all runners
 type BaseRunner struct {
-	jobConfig    config.JobConfiguration
+	jobConfig    config.Project
 	runnerConfig config.RunnerConfiguration
 	context      context.Context
 	cli          *command.SauceCtlCli
@@ -49,7 +49,7 @@ type BaseRunner struct {
 }
 
 // New creates a new testrunner object
-func New(c config.JobConfiguration, cli *command.SauceCtlCli) (Testrunner, error) {
+func New(c config.Project, cli *command.SauceCtlCli) (Testrunner, error) {
 	var (
 		runner Testrunner
 		err    error
