@@ -2,7 +2,7 @@ package runner
 
 import (
 	"context"
-	"os"
+	"github.com/saucelabs/saucectl/internal/ci"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -50,26 +50,18 @@ type BaseRunner struct {
 
 // New creates a new testrunner object
 func New(c config.Project, cli *command.SauceCtlCli) (Testrunner, error) {
-	var (
-		runner Testrunner
-		err    error
-	)
-
 	// return test runner for testing
 	if c.Image.Base == "test" {
 		return mocks.NewTestRunner(c, cli)
 	}
 
-	_, err = os.Stat(runnerConfigPath)
-	if os.IsNotExist(err) {
-		log.Info().Msg("Start local runner")
-		runner, err = newLocalRunner(c, cli)
-	} else {
-		log.Info().Msg("Start CI runner")
-		runner, err = newCIRunner(c, cli)
+	if ci.IsAvailable() {
+		log.Info().Msg("Starting CI runner")
+		return newCIRunner(c, cli)
 	}
 
-	return runner, err
+	log.Info().Msg("Starting local runner")
+	return newLocalRunner(c, cli)
 }
 
 func makeTimestamp() int64 {

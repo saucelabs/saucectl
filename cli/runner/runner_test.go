@@ -2,6 +2,7 @@ package runner
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/saucelabs/saucectl/cli/command"
@@ -24,6 +25,9 @@ func TestNewLocalRunner(t *testing.T) {
 }
 
 func TestNewCIRunner(t *testing.T) {
+	// Pretend we are in a CI environment.
+	os.Setenv("CI", "1")
+
 	dir := fs.NewDir(t, "fixtures",
 		fs.WithFile("config.yaml", "targetDir: /foo/bar", fs.WithMode(0755)))
 	defer dir.Remove()
