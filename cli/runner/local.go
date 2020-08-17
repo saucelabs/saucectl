@@ -29,7 +29,7 @@ func newLocalRunner(c config.Project, cli *command.SauceCtlCli) (*localRunner, e
 	runner := localRunner{}
 	runner.cli = cli
 	runner.context = context.Background()
-	runner.jobConfig = c
+	runner.project = c
 	runner.startTime = makeTimestamp()
 
 	var err error
@@ -54,7 +54,7 @@ func (r *localRunner) Setup() error {
 	}
 
 	// check if image is existing
-	baseImage := r.docker.GetImageFlavor(r.jobConfig)
+	baseImage := r.docker.GetImageFlavor(r.project)
 	hasImage, err := r.docker.HasBaseImage(r.context, baseImage)
 	if err != nil {
 		return err
@@ -65,13 +65,13 @@ func (r *localRunner) Setup() error {
 	defer progress.Stop()
 
 	if !hasImage {
-		if err := r.docker.PullBaseImage(r.context, r.jobConfig); err != nil {
+		if err := r.docker.PullBaseImage(r.context, r.project); err != nil {
 			return err
 		}
 	}
 
 	progress.Show("Starting container %s", baseImage)
-	container, err := r.docker.StartContainer(r.context, r.jobConfig)
+	container, err := r.docker.StartContainer(r.context, r.project)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (r *localRunner) Setup() error {
 	}
 
 	progress.Show("Copying test files to container")
-	if err := r.docker.CopyTestFilesToContainer(r.context, r.containerID, r.jobConfig.Files, r.runnerConfig.TargetDir); err != nil {
+	if err := r.docker.CopyTestFilesToContainer(r.context, r.containerID, r.project.Files, r.runnerConfig.TargetDir); err != nil {
 		return err
 	}
 
@@ -127,7 +127,7 @@ func (r *localRunner) Run() (int, error) {
 
 	/*
 		Want to improve this, disabling it for a bit
-		exec := r.jobConfig.Image.Exec
+		exec := r.project.Image.Exec
 		testCmd := strings.Split(exec, " ")
 	*/
 	testCmd := []string{"npm", "test"}
