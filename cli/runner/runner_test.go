@@ -12,6 +12,10 @@ import (
 )
 
 func TestNewLocalRunner(t *testing.T) {
+	// Simulate local runner, even if this test is run in CI.
+	os.Unsetenv("CI")
+	os.Unsetenv("BUILD_NUMBER")
+
 	config := config.Project{}
 	cli := command.SauceCtlCli{}
 
