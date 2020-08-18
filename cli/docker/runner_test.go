@@ -1,35 +1,34 @@
-package runner
+package docker
 
 import (
 	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/saucelabs/saucectl/cli/docker"
 	"github.com/saucelabs/saucectl/cli/mocks"
 	"gotest.tools/v3/fs"
 )
 
-type PassFailCase struct {
-	Name          string
-	Client        *docker.Handler
-	ExpectedError error
-}
-
 func TestLocalRunnerSetup(t *testing.T) {
+	type PassFailCase struct {
+		Name          string
+		Client        *Handler
+		ExpectedError error
+	}
+
 	dir := fs.NewDir(t, "fixtures",
 		fs.WithFile("config.yaml", "foo: bar", fs.WithMode(0755)))
 
 	cases := []PassFailCase{
-		{"docker is not installed", docker.CreateMock(&mocks.FakeClient{}), errors.New("docker is not installed")},
-		{"Pulling fails", docker.CreateMock(&mocks.FakeClient{
+		{"docker is not installed", CreateMock(&mocks.FakeClient{}), errors.New("docker is not installed")},
+		{"Pulling fails", CreateMock(&mocks.FakeClient{
 			ContainerListSuccess: true,
 		}), errors.New("ImagePullFailure")},
-		{"Creating container fails", docker.CreateMock(&mocks.FakeClient{
+		{"Creating container fails", CreateMock(&mocks.FakeClient{
 			ContainerListSuccess: true,
 			ImagePullSuccess:     true,
 		}), errors.New("ContainerCreateFailure")},
-		{"Copy from container fails", docker.CreateMock(&mocks.FakeClient{
+		{"Copy from container fails", CreateMock(&mocks.FakeClient{
 			ContainerListSuccess:    true,
 			ImagePullSuccess:        true,
 			ContainerStartSuccess:   true,
@@ -51,7 +50,7 @@ func TestLocalRunnerSetup(t *testing.T) {
 	// defer dir.Remove()
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			runner := DockerRunner{}
+			runner := Runner{}
 			runner.docker = tc.Client
 			runner.tmpDir = dir.Path()
 

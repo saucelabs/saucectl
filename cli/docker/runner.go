@@ -1,8 +1,9 @@
-package runner
+package docker
 
 import (
 	"context"
 	"fmt"
+	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/cli/streams"
 	"io"
 	"io/ioutil"
@@ -12,44 +13,43 @@ import (
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
-	"github.com/saucelabs/saucectl/cli/docker"
 	"github.com/saucelabs/saucectl/cli/progress"
 )
 
-// DockerRunner represents the docker implementation of a test runner.
-type DockerRunner struct {
-	BaseRunner
+// Runner represents the docker implementation of a test runner.
+type Runner struct {
+	runner.BaseRunner
 	containerID string
-	docker      *docker.Handler
+	docker      *Handler
 	tmpDir      string
 }
 
-// NewDockerRunner creates a new DockerRunner instance.
-func NewDockerRunner(c config.Project, cli *command.SauceCtlCli) (*DockerRunner, error) {
+// NewRunner creates a new Runner instance.
+func NewRunner(c config.Project, cli *command.SauceCtlCli) (*Runner, error) {
 	progress.Show("Starting test runner for docker")
 	defer progress.Stop()
 
-	runner := DockerRunner{}
-	runner.Cli = cli
-	runner.Ctx = context.Background()
-	runner.Project = c
+	r := Runner{}
+	r.Cli = cli
+	r.Ctx = context.Background()
+	r.Project = c
 
 	var err error
-	runner.docker, err = docker.Create()
+	r.docker, err = Create()
 	if err != nil {
 		return nil, err
 	}
 
-	runner.tmpDir, err = ioutil.TempDir("", "saucectl")
+	r.tmpDir, err = ioutil.TempDir("", "saucectl")
 	if err != nil {
 		return nil, err
 	}
 
-	return &runner, nil
+	return &r, nil
 }
 
 // Setup performs any necessary steps for a test runner to execute tests.
-func (r *DockerRunner) Setup() error {
+func (r *Runner) Setup() error {
 	err := r.docker.ValidateDependency()
 	if err != nil {
 		return fmt.Errorf("please verify that docker is installed and running: %v, "+
@@ -87,8 +87,8 @@ func (r *DockerRunner) Setup() error {
 
 	// get runner config
 	defer os.RemoveAll(r.tmpDir)
-	hostDstPath := filepath.Join(r.tmpDir, filepath.Base(RunnerConfigPath))
-	if err := r.docker.CopyFromContainer(r.Ctx, container.ID, RunnerConfigPath, hostDstPath); err != nil {
+	hostDstPath := filepath.Join(r.tmpDir, filepath.Base(runner.RunnerConfigPath))
+	if err := r.docker.CopyFromContainer(r.Ctx, container.ID, runner.RunnerConfigPath, hostDstPath); err != nil {
 		return err
 	}
 
@@ -117,7 +117,7 @@ func (r *DockerRunner) Setup() error {
 }
 
 // Run runs the tests defined in the config.Project.
-func (r *DockerRunner) Run() (int, error) {
+func (r *Runner) Run() (int, error) {
 	var (
 		out, stderr io.Writer
 		in          io.ReadCloser
@@ -171,8 +171,8 @@ func (r *DockerRunner) Run() (int, error) {
 }
 
 // Teardown cleans up the test environment.
-func (r *DockerRunner) Teardown(logDir string) error {
-	for _, containerSrcPath := range LogFiles {
+func (r *Runner) Teardown(logDir string) error {
+	for _, containerSrcPath := range runner.LogFiles {
 		file := filepath.Base(containerSrcPath)
 		hostDstPath := filepath.Join(logDir, file)
 		if err := r.docker.CopyFromContainer(r.Ctx, r.containerID, containerSrcPath, hostDstPath); err != nil {

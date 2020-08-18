@@ -10,19 +10,6 @@ import (
 	"gotest.tools/v3/fs"
 )
 
-func TestNewLocalRunner(t *testing.T) {
-	config := config.Project{}
-	cli := command.SauceCtlCli{}
-
-	runner, err := NewDockerRunner(config, &cli)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	runnerType := fmt.Sprintf("%T", runner)
-	assert.Equal(t, "*runner.DockerRunner", runnerType)
-}
-
 func TestNewCIRunner(t *testing.T) {
 	dir := fs.NewDir(t, "fixtures",
 		fs.WithFile("config.yaml", "targetDir: /foo/bar", fs.WithMode(0755)))
