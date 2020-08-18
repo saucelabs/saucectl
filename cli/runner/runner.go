@@ -2,12 +2,8 @@ package runner
 
 import (
 	"context"
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/ci"
-
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
-	"github.com/saucelabs/saucectl/cli/mocks"
 )
 
 const logDir = "/var/log/cont"
@@ -44,20 +40,4 @@ type BaseRunner struct {
 	RunnerConfig config.RunnerConfiguration
 	Ctx          context.Context
 	Cli          *command.SauceCtlCli
-}
-
-// New creates a new testrunner object
-func New(c config.Project, cli *command.SauceCtlCli) (Testrunner, error) {
-	// return test runner for testing
-	if c.Image.Base == "test" {
-		return mocks.NewTestRunner(c, cli)
-	}
-
-	if ci.IsAvailable() {
-		log.Info().Msg("Starting CI runner")
-		return newCIRunner(c, cli)
-	}
-
-	log.Info().Msg("Starting local runner")
-	return NewDockerRunner(c, cli)
 }

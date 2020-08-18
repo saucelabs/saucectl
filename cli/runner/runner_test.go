@@ -2,7 +2,6 @@ package runner
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/saucelabs/saucectl/cli/command"
@@ -12,14 +11,10 @@ import (
 )
 
 func TestNewLocalRunner(t *testing.T) {
-	// Simulate local runner, even if this test is run in CI.
-	os.Unsetenv("CI")
-	os.Unsetenv("BUILD_NUMBER")
-
 	config := config.Project{}
 	cli := command.SauceCtlCli{}
 
-	runner, err := New(config, &cli)
+	runner, err := NewDockerRunner(config, &cli)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,9 +24,6 @@ func TestNewLocalRunner(t *testing.T) {
 }
 
 func TestNewCIRunner(t *testing.T) {
-	// Pretend we are in a CI environment.
-	os.Setenv("CI", "1")
-
 	dir := fs.NewDir(t, "fixtures",
 		fs.WithFile("config.yaml", "targetDir: /foo/bar", fs.WithMode(0755)))
 	defer dir.Remove()
@@ -40,7 +32,7 @@ func TestNewCIRunner(t *testing.T) {
 	config := config.Project{}
 	cli := command.SauceCtlCli{}
 
-	runner, err := New(config, &cli)
+	runner, err := NewCIRunner(config, &cli)
 	if err != nil {
 		t.Fatal(err)
 	}

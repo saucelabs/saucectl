@@ -1,6 +1,8 @@
 package run
 
 import (
+	"github.com/saucelabs/saucectl/cli/mocks"
+	"github.com/saucelabs/saucectl/internal/ci"
 	"os"
 	"path/filepath"
 
@@ -72,7 +74,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	mergeArgs(&cfg)
 	cfg.Metadata.ExpandEnv()
 
-	tr, err := runner.New(cfg, cli)
+	tr, err := newRunner(cfg, cli)
 	if err != nil {
 		return 1, err
 	}
@@ -99,6 +101,21 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		Msg("Command Finished")
 
 	return exitCode, nil
+}
+
+func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, error) {
+	// return test runner for testing
+	if p.Image.Base == "test" {
+		return mocks.NewTestRunner(p, cli)
+	}
+
+	if ci.IsAvailable() {
+		log.Info().Msg("Starting CI runner")
+		return runner.NewCIRunner(p, cli)
+	}
+
+	log.Info().Msg("Starting local runner")
+	return runner.NewDockerRunner(p, cli)
 }
 
 // mergeArgs merges settings from CLI arguments with the loaded job configuration.
