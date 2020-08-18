@@ -19,12 +19,12 @@ import (
 	"github.com/saucelabs/saucectl/cli/config"
 )
 
-type ciRunner struct {
+type CIRunner struct {
 	BaseRunner
 }
 
-func NewCIRunner(c config.Project, cli *command.SauceCtlCli) (*ciRunner, error) {
-	runner := ciRunner{}
+func NewCIRunner(c config.Project, cli *command.SauceCtlCli) (*CIRunner, error) {
+	runner := CIRunner{}
 
 	// read runner config file
 	rc, err := config.NewRunnerConfiguration(RunnerConfigPath)
@@ -39,7 +39,7 @@ func NewCIRunner(c config.Project, cli *command.SauceCtlCli) (*ciRunner, error) 
 	return &runner, nil
 }
 
-func (r *ciRunner) Setup() error {
+func (r *CIRunner) Setup() error {
 	log.Info().Msg("Run entry.sh")
 	var out bytes.Buffer
 	cmd := exec.Command("/home/seluser/entry.sh", "&")
@@ -70,7 +70,7 @@ func (r *ciRunner) Setup() error {
 	return nil
 }
 
-func (r *ciRunner) Run() (int, error) {
+func (r *CIRunner) Run() (int, error) {
 	browserName := ""
 	if len(r.Project.Capabilities) > 0 {
 		browserName = r.Project.Capabilities[0].BrowserName
@@ -102,7 +102,7 @@ func (r *ciRunner) Run() (int, error) {
 	return 0, nil
 }
 
-func (r *ciRunner) Teardown(logDir string) error {
+func (r *CIRunner) Teardown(logDir string) error {
 	if logDir != "" {
 		return nil
 	}

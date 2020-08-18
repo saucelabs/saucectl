@@ -38,5 +38,5 @@ func TestNewCIRunner(t *testing.T) {
 	}
 
 	runnerType := fmt.Sprintf("%T", runner)
-	assert.Equal(t, "*runner.ciRunner", runnerType)
+	assert.Equal(t, "*runner.CIRunner", runnerType)
 }
