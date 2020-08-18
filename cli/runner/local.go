@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"fmt"
+	"github.com/saucelabs/saucectl/cli/streams"
 	"io"
 	"io/ioutil"
 	"os"
@@ -142,16 +143,15 @@ func (r *localRunner) Run() (int, error) {
 	go func() {
 		defer close(errCh)
 		errCh <- func() error {
-			streamer := ioStreamer{
-				streams:      r.cli,
-				inputStream:  in,
-				outputStream: out,
-				errorStream:  stderr,
-				resp:         *attachResp,
-				detachKeys:   "",
+			streamer := streams.IOStreamer{
+				Streams:      r.cli,
+				InputStream:  in,
+				OutputStream: out,
+				ErrorStream:  stderr,
+				Resp:         *attachResp,
 			}
 
-			return streamer.stream(r.context)
+			return streamer.Stream(r.context)
 		}()
 	}()
 
