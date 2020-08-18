@@ -31,7 +31,6 @@ func NewDockerRunner(c config.Project, cli *command.SauceCtlCli) (*DockerRunner,
 	runner.Cli = cli
 	runner.Ctx = context.Background()
 	runner.Project = c
-	runner.startTime = makeTimestamp()
 
 	var err error
 	runner.docker, err = docker.Create()

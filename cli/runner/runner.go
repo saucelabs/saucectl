@@ -2,10 +2,8 @@ package runner
 
 import (
 	"context"
-	"github.com/saucelabs/saucectl/internal/ci"
-	"time"
-
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/ci"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
@@ -46,8 +44,6 @@ type BaseRunner struct {
 	RunnerConfig config.RunnerConfiguration
 	Ctx          context.Context
 	Cli          *command.SauceCtlCli
-
-	startTime int64
 }
 
 // New creates a new testrunner object
@@ -64,8 +60,4 @@ func New(c config.Project, cli *command.SauceCtlCli) (Testrunner, error) {
 
 	log.Info().Msg("Starting local runner")
 	return NewDockerRunner(c, cli)
-}
-
-func makeTimestamp() int64 {
-	return time.Now().UnixNano() / int64(time.Millisecond)
 }

@@ -35,7 +35,6 @@ func newCIRunner(c config.Project, cli *command.SauceCtlCli) (*ciRunner, error) 
 	runner.Cli = cli
 	runner.Ctx = context.Background()
 	runner.Project = c
-	runner.startTime = makeTimestamp()
 	runner.RunnerConfig = rc
 	return &runner, nil
 }
