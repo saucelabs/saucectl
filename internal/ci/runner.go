@@ -1,9 +1,10 @@
-package runner
+package ci
 
 import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/saucelabs/saucectl/cli/runner"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -19,30 +20,30 @@ import (
 	"github.com/saucelabs/saucectl/cli/config"
 )
 
-// CIRunner represents the CI implementation of a Testrunner.
-type CIRunner struct {
-	BaseRunner
+// Runner represents the CI implementation of a runner.Testrunner.
+type Runner struct {
+	runner.BaseRunner
 }
 
-// NewCIRunner creates a new CIRunner instance.
-func NewCIRunner(c config.Project, cli *command.SauceCtlCli) (*CIRunner, error) {
-	runner := CIRunner{}
+// NewRunner creates a new Runner instance.
+func NewRunner(c config.Project, cli *command.SauceCtlCli) (*Runner, error) {
+	r := Runner{}
 
 	// read runner config file
-	rc, err := config.NewRunnerConfiguration(RunnerConfigPath)
+	rc, err := config.NewRunnerConfiguration(runner.ConfigPath)
 	if err != nil {
-		return &runner, err
+		return &r, err
 	}
 
-	runner.Cli = cli
-	runner.Ctx = context.Background()
-	runner.Project = c
-	runner.RunnerConfig = rc
-	return &runner, nil
+	r.Cli = cli
+	r.Ctx = context.Background()
+	r.Project = c
+	r.RunnerConfig = rc
+	return &r, nil
 }
 
 // Setup performs any necessary steps for a test runner to execute tests.
-func (r *CIRunner) Setup() error {
+func (r *Runner) Setup() error {
 	log.Info().Msg("Run entry.sh")
 	var out bytes.Buffer
 	cmd := exec.Command("/home/seluser/entry.sh", "&")
@@ -74,7 +75,7 @@ func (r *CIRunner) Setup() error {
 }
 
 // Run runs the tests defined in the config.Project.
-func (r *CIRunner) Run() (int, error) {
+func (r *Runner) Run() (int, error) {
 	browserName := ""
 	if len(r.Project.Capabilities) > 0 {
 		browserName = r.Project.Capabilities[0].BrowserName
@@ -107,12 +108,12 @@ func (r *CIRunner) Run() (int, error) {
 }
 
 // Teardown cleans up the test environment.
-func (r *CIRunner) Teardown(logDir string) error {
+func (r *Runner) Teardown(logDir string) error {
 	if logDir != "" {
 		return nil
 	}
 
-	for _, containerSrcPath := range LogFiles {
+	for _, containerSrcPath := range runner.LogFiles {
 		file := filepath.Base(containerSrcPath)
 		dstPath := filepath.Join(logDir, file)
 		if err := copyFile(containerSrcPath, dstPath); err != nil {

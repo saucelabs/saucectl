@@ -3,6 +3,7 @@ package run
 import (
 	"github.com/saucelabs/saucectl/cli/mocks"
 	"github.com/saucelabs/saucectl/internal/ci"
+	"github.com/saucelabs/saucectl/internal/docker"
 	"os"
 	"path/filepath"
 
@@ -111,11 +112,11 @@ func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, e
 
 	if ci.IsAvailable() {
 		log.Info().Msg("Starting CI runner")
-		return runner.NewCIRunner(p, cli)
+		return ci.NewRunner(p, cli)
 	}
 
 	log.Info().Msg("Starting local runner")
-	return runner.NewDockerRunner(p, cli)
+	return docker.NewRunner(p, cli)
 }
 
 // mergeArgs merges settings from CLI arguments with the loaded job configuration.
