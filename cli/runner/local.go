@@ -16,6 +16,7 @@ import (
 	"github.com/saucelabs/saucectl/cli/progress"
 )
 
+// DockerRunner represents the docker implementation of a test runner.
 type DockerRunner struct {
 	BaseRunner
 	containerID string
@@ -23,6 +24,7 @@ type DockerRunner struct {
 	tmpDir      string
 }
 
+// NewDockerRunner creates a new DockerRunner instance.
 func NewDockerRunner(c config.Project, cli *command.SauceCtlCli) (*DockerRunner, error) {
 	progress.Show("Starting test runner for docker")
 	defer progress.Stop()
@@ -46,6 +48,7 @@ func NewDockerRunner(c config.Project, cli *command.SauceCtlCli) (*DockerRunner,
 	return &runner, nil
 }
 
+// Setup performs any necessary steps for a test runner to execute tests.
 func (r *DockerRunner) Setup() error {
 	err := r.docker.ValidateDependency()
 	if err != nil {
@@ -113,6 +116,7 @@ func (r *DockerRunner) Setup() error {
 	return nil
 }
 
+// Run runs the tests defined in the config.Project.
 func (r *DockerRunner) Run() (int, error) {
 	var (
 		out, stderr io.Writer
@@ -166,6 +170,7 @@ func (r *DockerRunner) Run() (int, error) {
 	return exitCode, nil
 }
 
+// Teardown cleans up the test environment.
 func (r *DockerRunner) Teardown(logDir string) error {
 	for _, containerSrcPath := range LogFiles {
 		file := filepath.Base(containerSrcPath)
