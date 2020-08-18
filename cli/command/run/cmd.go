@@ -112,7 +112,7 @@ func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, e
 
 	if ci.IsAvailable() {
 		log.Info().Msg("Starting CI runner")
-		return runner.NewCIRunner(p, cli)
+		return ci.NewRunner(p, cli)
 	}
 
 	log.Info().Msg("Starting local runner")
