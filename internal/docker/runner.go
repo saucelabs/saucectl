@@ -87,8 +87,8 @@ func (r *Runner) Setup() error {
 
 	// get runner config
 	defer os.RemoveAll(r.tmpDir)
-	hostDstPath := filepath.Join(r.tmpDir, filepath.Base(runner.RunnerConfigPath))
-	if err := r.docker.CopyFromContainer(r.Ctx, container.ID, runner.RunnerConfigPath, hostDstPath); err != nil {
+	hostDstPath := filepath.Join(r.tmpDir, filepath.Base(runner.ConfigPath))
+	if err := r.docker.CopyFromContainer(r.Ctx, container.ID, runner.ConfigPath, hostDstPath); err != nil {
 		return err
 	}
 

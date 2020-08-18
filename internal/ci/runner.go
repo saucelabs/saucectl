@@ -30,7 +30,7 @@ func NewRunner(c config.Project, cli *command.SauceCtlCli) (*Runner, error) {
 	r := Runner{}
 
 	// read runner config file
-	rc, err := config.NewRunnerConfiguration(runner.RunnerConfigPath)
+	rc, err := config.NewRunnerConfiguration(runner.ConfigPath)
 	if err != nil {
 		return &r, err
 	}
