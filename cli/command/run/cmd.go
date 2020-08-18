@@ -1,9 +1,9 @@
 package run
 
 import (
-	"github.com/saucelabs/saucectl/cli/docker"
 	"github.com/saucelabs/saucectl/cli/mocks"
 	"github.com/saucelabs/saucectl/internal/ci"
+	"github.com/saucelabs/saucectl/internal/docker"
 	"os"
 	"path/filepath"
 
