@@ -64,7 +64,7 @@ type Project struct {
 type Suite struct {
 	Name         string       `yaml:"name"`
 	Capabilities Capabilities `yaml:"capabilities"`
-	Root         string       `yaml:"root"`
+	Files        []string     `yaml:"files"`
 	Match        []string     `yaml:"match"`
 }
 

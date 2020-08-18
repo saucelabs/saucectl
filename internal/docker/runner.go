@@ -25,7 +25,7 @@ type Runner struct {
 }
 
 // NewRunner creates a new Runner instance.
-func NewRunner(c config.Project, cli *command.SauceCtlCli) (*Runner, error) {
+func NewRunner(c config.Project, s config.Suite, cli *command.SauceCtlCli) (*Runner, error) {
 	progress.Show("Starting test runner for docker")
 	defer progress.Stop()
 
@@ -33,6 +33,7 @@ func NewRunner(c config.Project, cli *command.SauceCtlCli) (*Runner, error) {
 	r.Cli = cli
 	r.Ctx = context.Background()
 	r.Project = c
+	r.Suite = s
 
 	var err error
 	r.docker, err = Create()
@@ -74,7 +75,7 @@ func (r *Runner) Setup() error {
 	}
 
 	progress.Show("Starting container %s", baseImage)
-	container, err := r.docker.StartContainer(r.Ctx, r.Project)
+	container, err := r.docker.StartContainer(r.Ctx, r.Project, r.Suite)
 	if err != nil {
 		return err
 	}
@@ -98,7 +99,7 @@ func (r *Runner) Setup() error {
 	}
 
 	progress.Show("Copying test files to container")
-	if err := r.docker.CopyTestFilesToContainer(r.Ctx, r.containerID, r.Project.Files, r.RunnerConfig.TargetDir); err != nil {
+	if err := r.docker.CopyTestFilesToContainer(r.Ctx, r.containerID, r.Suite.Files, r.RunnerConfig.TargetDir); err != nil {
 		return err
 	}
 
