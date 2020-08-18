@@ -85,8 +85,8 @@ func (r *localRunner) Setup() error {
 
 	// get runner config
 	defer os.RemoveAll(r.tmpDir)
-	hostDstPath := filepath.Join(r.tmpDir, filepath.Base(runnerConfigPath))
-	if err := r.docker.CopyFromContainer(r.context, container.ID, runnerConfigPath, hostDstPath); err != nil {
+	hostDstPath := filepath.Join(r.tmpDir, filepath.Base(RunnerConfigPath))
+	if err := r.docker.CopyFromContainer(r.context, container.ID, RunnerConfigPath, hostDstPath); err != nil {
 		return err
 	}
 
@@ -168,7 +168,7 @@ func (r *localRunner) Run() (int, error) {
 }
 
 func (r *localRunner) Teardown(logDir string) error {
-	for _, containerSrcPath := range logFiles {
+	for _, containerSrcPath := range LogFiles {
 		file := filepath.Base(containerSrcPath)
 		hostDstPath := filepath.Join(logDir, file)
 		if err := r.docker.CopyFromContainer(r.context, r.containerID, containerSrcPath, hostDstPath); err != nil {

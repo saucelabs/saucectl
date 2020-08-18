@@ -14,9 +14,11 @@ import (
 
 const logDir = "/var/log/cont"
 
-var runnerConfigPath = "/home/seluser/config.yaml"
+// RunnerConfigPath represents the path for the runner config.
+var RunnerConfigPath = "/home/seluser/config.yaml"
 
-var logFiles = [...]string{
+// LogFiles contains the locations of log and resource files that are useful for reporting.
+var LogFiles = [...]string{
 	logDir + "/chrome_browser.log",
 	logDir + "/firefox_browser.log",
 	logDir + "/supervisord.log",

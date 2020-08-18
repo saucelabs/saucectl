@@ -27,7 +27,7 @@ func newCIRunner(c config.Project, cli *command.SauceCtlCli) (*ciRunner, error) 
 	runner := ciRunner{}
 
 	// read runner config file
-	rc, err := config.NewRunnerConfiguration(runnerConfigPath)
+	rc, err := config.NewRunnerConfiguration(RunnerConfigPath)
 	if err != nil {
 		return &runner, err
 	}
@@ -108,7 +108,7 @@ func (r *ciRunner) Teardown(logDir string) error {
 		return nil
 	}
 
-	for _, containerSrcPath := range logFiles {
+	for _, containerSrcPath := range LogFiles {
 		file := filepath.Base(containerSrcPath)
 		dstPath := filepath.Join(logDir, file)
 		if err := copyFile(containerSrcPath, dstPath); err != nil {
