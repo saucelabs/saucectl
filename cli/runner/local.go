@@ -28,9 +28,9 @@ func NewDockerRunner(c config.Project, cli *command.SauceCtlCli) (*DockerRunner,
 	defer progress.Stop()
 
 	runner := DockerRunner{}
-	runner.cli = cli
-	runner.context = context.Background()
-	runner.project = c
+	runner.Cli = cli
+	runner.Ctx = context.Background()
+	runner.Project = c
 	runner.startTime = makeTimestamp()
 
 	var err error
@@ -55,8 +55,8 @@ func (r *DockerRunner) Setup() error {
 	}
 
 	// check if image is existing
-	baseImage := r.docker.GetImageFlavor(r.project)
-	hasImage, err := r.docker.HasBaseImage(r.context, baseImage)
+	baseImage := r.docker.GetImageFlavor(r.Project)
+	hasImage, err := r.docker.HasBaseImage(r.Ctx, baseImage)
 	if err != nil {
 		return err
 	}
@@ -66,13 +66,13 @@ func (r *DockerRunner) Setup() error {
 	defer progress.Stop()
 
 	if !hasImage {
-		if err := r.docker.PullBaseImage(r.context, r.project); err != nil {
+		if err := r.docker.PullBaseImage(r.Ctx, r.Project); err != nil {
 			return err
 		}
 	}
 
 	progress.Show("Starting container %s", baseImage)
-	container, err := r.docker.StartContainer(r.context, r.project)
+	container, err := r.docker.StartContainer(r.Ctx, r.Project)
 	if err != nil {
 		return err
 	}
@@ -86,17 +86,17 @@ func (r *DockerRunner) Setup() error {
 	// get runner config
 	defer os.RemoveAll(r.tmpDir)
 	hostDstPath := filepath.Join(r.tmpDir, filepath.Base(RunnerConfigPath))
-	if err := r.docker.CopyFromContainer(r.context, container.ID, RunnerConfigPath, hostDstPath); err != nil {
+	if err := r.docker.CopyFromContainer(r.Ctx, container.ID, RunnerConfigPath, hostDstPath); err != nil {
 		return err
 	}
 
-	r.runnerConfig, err = config.NewRunnerConfiguration(hostDstPath)
+	r.RunnerConfig, err = config.NewRunnerConfiguration(hostDstPath)
 	if err != nil {
 		return err
 	}
 
 	progress.Show("Copying test files to container")
-	if err := r.docker.CopyTestFilesToContainer(r.context, r.containerID, r.project.Files, r.runnerConfig.TargetDir); err != nil {
+	if err := r.docker.CopyTestFilesToContainer(r.Ctx, r.containerID, r.Project.Files, r.RunnerConfig.TargetDir); err != nil {
 		return err
 	}
 
@@ -107,7 +107,7 @@ func (r *DockerRunner) Setup() error {
 		"tcp:localhost:9223",
 	}
 
-	if _, _, err := r.docker.Execute(r.context, r.containerID, sockatCmd); err != nil {
+	if _, _, err := r.docker.Execute(r.Ctx, r.containerID, sockatCmd); err != nil {
 		return err
 	}
 
@@ -119,20 +119,20 @@ func (r *DockerRunner) Run() (int, error) {
 		out, stderr io.Writer
 		in          io.ReadCloser
 	)
-	out = r.cli.Out()
-	stderr = r.cli.Out()
+	out = r.Cli.Out()
+	stderr = r.Cli.Out()
 
-	if err := r.cli.In().CheckTty(false, true); err != nil {
+	if err := r.Cli.In().CheckTty(false, true); err != nil {
 		return 1, err
 	}
 
 	/*
 		Want to improve this, disabling it for a bit
-		exec := r.project.Image.Exec
+		exec := r.Project.Image.Exec
 		testCmd := strings.Split(exec, " ")
 	*/
 	testCmd := []string{"npm", "test"}
-	createResp, attachResp, err := r.docker.Execute(r.context, r.containerID, testCmd)
+	createResp, attachResp, err := r.docker.Execute(r.Ctx, r.containerID, testCmd)
 	if err != nil {
 		return 1, err
 	}
@@ -144,14 +144,14 @@ func (r *DockerRunner) Run() (int, error) {
 		defer close(errCh)
 		errCh <- func() error {
 			streamer := streams.IOStreamer{
-				Streams:      r.cli,
+				Streams:      r.Cli,
 				InputStream:  in,
 				OutputStream: out,
 				ErrorStream:  stderr,
 				Resp:         *attachResp,
 			}
 
-			return streamer.Stream(r.context)
+			return streamer.Stream(r.Ctx)
 		}()
 	}()
 
@@ -159,7 +159,7 @@ func (r *DockerRunner) Run() (int, error) {
 		return 1, err
 	}
 
-	exitCode, err := r.docker.ExecuteInspect(r.context, createResp.ID)
+	exitCode, err := r.docker.ExecuteInspect(r.Ctx, createResp.ID)
 	if err != nil {
 		return 1, err
 	}
@@ -171,16 +171,16 @@ func (r *DockerRunner) Teardown(logDir string) error {
 	for _, containerSrcPath := range LogFiles {
 		file := filepath.Base(containerSrcPath)
 		hostDstPath := filepath.Join(logDir, file)
-		if err := r.docker.CopyFromContainer(r.context, r.containerID, containerSrcPath, hostDstPath); err != nil {
+		if err := r.docker.CopyFromContainer(r.Ctx, r.containerID, containerSrcPath, hostDstPath); err != nil {
 			continue
 		}
 	}
 
-	if err := r.docker.ContainerStop(r.context, r.containerID); err != nil {
+	if err := r.docker.ContainerStop(r.Ctx, r.containerID); err != nil {
 		return err
 	}
 
-	if err := r.docker.ContainerRemove(r.context, r.containerID); err != nil {
+	if err := r.docker.ContainerRemove(r.Ctx, r.containerID); err != nil {
 		return err
 	}
 
