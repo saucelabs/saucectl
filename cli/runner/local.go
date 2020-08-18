@@ -16,22 +16,23 @@ import (
 	"github.com/saucelabs/saucectl/cli/progress"
 )
 
-type localRunner struct {
+// DockerRunner represents the docker implementation of a test runner.
+type DockerRunner struct {
 	BaseRunner
 	containerID string
 	docker      *docker.Handler
 	tmpDir      string
 }
 
-func newLocalRunner(c config.Project, cli *command.SauceCtlCli) (*localRunner, error) {
-	progress.Show("Starting local runner")
+// NewDockerRunner creates a new DockerRunner instance.
+func NewDockerRunner(c config.Project, cli *command.SauceCtlCli) (*DockerRunner, error) {
+	progress.Show("Starting test runner for docker")
 	defer progress.Stop()
 
-	runner := localRunner{}
-	runner.cli = cli
-	runner.context = context.Background()
-	runner.project = c
-	runner.startTime = makeTimestamp()
+	runner := DockerRunner{}
+	runner.Cli = cli
+	runner.Ctx = context.Background()
+	runner.Project = c
 
 	var err error
 	runner.docker, err = docker.Create()
@@ -47,7 +48,8 @@ func newLocalRunner(c config.Project, cli *command.SauceCtlCli) (*localRunner, e
 	return &runner, nil
 }
 
-func (r *localRunner) Setup() error {
+// Setup performs any necessary steps for a test runner to execute tests.
+func (r *DockerRunner) Setup() error {
 	err := r.docker.ValidateDependency()
 	if err != nil {
 		return fmt.Errorf("please verify that docker is installed and running: %v, "+
@@ -55,8 +57,8 @@ func (r *localRunner) Setup() error {
 	}
 
 	// check if image is existing
-	baseImage := r.docker.GetImageFlavor(r.project)
-	hasImage, err := r.docker.HasBaseImage(r.context, baseImage)
+	baseImage := r.docker.GetImageFlavor(r.Project)
+	hasImage, err := r.docker.HasBaseImage(r.Ctx, baseImage)
 	if err != nil {
 		return err
 	}
@@ -66,13 +68,13 @@ func (r *localRunner) Setup() error {
 	defer progress.Stop()
 
 	if !hasImage {
-		if err := r.docker.PullBaseImage(r.context, r.project); err != nil {
+		if err := r.docker.PullBaseImage(r.Ctx, r.Project); err != nil {
 			return err
 		}
 	}
 
 	progress.Show("Starting container %s", baseImage)
-	container, err := r.docker.StartContainer(r.context, r.project)
+	container, err := r.docker.StartContainer(r.Ctx, r.Project)
 	if err != nil {
 		return err
 	}
@@ -85,18 +87,18 @@ func (r *localRunner) Setup() error {
 
 	// get runner config
 	defer os.RemoveAll(r.tmpDir)
-	hostDstPath := filepath.Join(r.tmpDir, filepath.Base(runnerConfigPath))
-	if err := r.docker.CopyFromContainer(r.context, container.ID, runnerConfigPath, hostDstPath); err != nil {
+	hostDstPath := filepath.Join(r.tmpDir, filepath.Base(RunnerConfigPath))
+	if err := r.docker.CopyFromContainer(r.Ctx, container.ID, RunnerConfigPath, hostDstPath); err != nil {
 		return err
 	}
 
-	r.runnerConfig, err = config.NewRunnerConfiguration(hostDstPath)
+	r.RunnerConfig, err = config.NewRunnerConfiguration(hostDstPath)
 	if err != nil {
 		return err
 	}
 
 	progress.Show("Copying test files to container")
-	if err := r.docker.CopyTestFilesToContainer(r.context, r.containerID, r.project.Files, r.runnerConfig.TargetDir); err != nil {
+	if err := r.docker.CopyTestFilesToContainer(r.Ctx, r.containerID, r.Project.Files, r.RunnerConfig.TargetDir); err != nil {
 		return err
 	}
 
@@ -107,32 +109,33 @@ func (r *localRunner) Setup() error {
 		"tcp:localhost:9223",
 	}
 
-	if _, _, err := r.docker.Execute(r.context, r.containerID, sockatCmd); err != nil {
+	if _, _, err := r.docker.Execute(r.Ctx, r.containerID, sockatCmd); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (r *localRunner) Run() (int, error) {
+// Run runs the tests defined in the config.Project.
+func (r *DockerRunner) Run() (int, error) {
 	var (
 		out, stderr io.Writer
 		in          io.ReadCloser
 	)
-	out = r.cli.Out()
-	stderr = r.cli.Out()
+	out = r.Cli.Out()
+	stderr = r.Cli.Out()
 
-	if err := r.cli.In().CheckTty(false, true); err != nil {
+	if err := r.Cli.In().CheckTty(false, true); err != nil {
 		return 1, err
 	}
 
 	/*
 		Want to improve this, disabling it for a bit
-		exec := r.project.Image.Exec
+		exec := r.Project.Image.Exec
 		testCmd := strings.Split(exec, " ")
 	*/
 	testCmd := []string{"npm", "test"}
-	createResp, attachResp, err := r.docker.Execute(r.context, r.containerID, testCmd)
+	createResp, attachResp, err := r.docker.Execute(r.Ctx, r.containerID, testCmd)
 	if err != nil {
 		return 1, err
 	}
@@ -144,14 +147,14 @@ func (r *localRunner) Run() (int, error) {
 		defer close(errCh)
 		errCh <- func() error {
 			streamer := streams.IOStreamer{
-				Streams:      r.cli,
+				Streams:      r.Cli,
 				InputStream:  in,
 				OutputStream: out,
 				ErrorStream:  stderr,
 				Resp:         *attachResp,
 			}
 
-			return streamer.Stream(r.context)
+			return streamer.Stream(r.Ctx)
 		}()
 	}()
 
@@ -159,7 +162,7 @@ func (r *localRunner) Run() (int, error) {
 		return 1, err
 	}
 
-	exitCode, err := r.docker.ExecuteInspect(r.context, createResp.ID)
+	exitCode, err := r.docker.ExecuteInspect(r.Ctx, createResp.ID)
 	if err != nil {
 		return 1, err
 	}
@@ -167,20 +170,21 @@ func (r *localRunner) Run() (int, error) {
 	return exitCode, nil
 }
 
-func (r *localRunner) Teardown(logDir string) error {
-	for _, containerSrcPath := range logFiles {
+// Teardown cleans up the test environment.
+func (r *DockerRunner) Teardown(logDir string) error {
+	for _, containerSrcPath := range LogFiles {
 		file := filepath.Base(containerSrcPath)
 		hostDstPath := filepath.Join(logDir, file)
-		if err := r.docker.CopyFromContainer(r.context, r.containerID, containerSrcPath, hostDstPath); err != nil {
+		if err := r.docker.CopyFromContainer(r.Ctx, r.containerID, containerSrcPath, hostDstPath); err != nil {
 			continue
 		}
 	}
 
-	if err := r.docker.ContainerStop(r.context, r.containerID); err != nil {
+	if err := r.docker.ContainerStop(r.Ctx, r.containerID); err != nil {
 		return err
 	}
 
-	if err := r.docker.ContainerRemove(r.context, r.containerID); err != nil {
+	if err := r.docker.ContainerRemove(r.Ctx, r.containerID); err != nil {
 		return err
 	}
 

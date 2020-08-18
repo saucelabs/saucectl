@@ -25,7 +25,7 @@ func TestNewLocalRunner(t *testing.T) {
 	}
 
 	runnerType := fmt.Sprintf("%T", runner)
-	assert.Equal(t, "*runner.localRunner", runnerType)
+	assert.Equal(t, "*runner.DockerRunner", runnerType)
 }
 
 func TestNewCIRunner(t *testing.T) {
@@ -35,7 +35,7 @@ func TestNewCIRunner(t *testing.T) {
 	dir := fs.NewDir(t, "fixtures",
 		fs.WithFile("config.yaml", "targetDir: /foo/bar", fs.WithMode(0755)))
 	defer dir.Remove()
-	runnerConfigPath = dir.Path() + "/config.yaml"
+	RunnerConfigPath = dir.Path() + "/config.yaml"
 
 	config := config.Project{}
 	cli := command.SauceCtlCli{}

@@ -51,7 +51,7 @@ func TestLocalRunnerSetup(t *testing.T) {
 	// defer dir.Remove()
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			runner := localRunner{}
+			runner := DockerRunner{}
 			runner.docker = tc.Client
 			runner.tmpDir = dir.Path()
 

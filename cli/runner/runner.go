@@ -2,10 +2,8 @@ package runner
 
 import (
 	"context"
-	"github.com/saucelabs/saucectl/internal/ci"
-	"time"
-
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/ci"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
@@ -14,9 +12,11 @@ import (
 
 const logDir = "/var/log/cont"
 
-var runnerConfigPath = "/home/seluser/config.yaml"
+// RunnerConfigPath represents the path for the runner config.
+var RunnerConfigPath = "/home/seluser/config.yaml"
 
-var logFiles = [...]string{
+// LogFiles contains the locations of log and resource files that are useful for reporting.
+var LogFiles = [...]string{
 	logDir + "/chrome_browser.log",
 	logDir + "/firefox_browser.log",
 	logDir + "/supervisord.log",
@@ -40,12 +40,10 @@ type Testrunner interface {
 
 // BaseRunner contains common properties across all runners
 type BaseRunner struct {
-	project      config.Project
-	runnerConfig config.RunnerConfiguration
-	context      context.Context
-	cli          *command.SauceCtlCli
-
-	startTime int64
+	Project      config.Project
+	RunnerConfig config.RunnerConfiguration
+	Ctx          context.Context
+	Cli          *command.SauceCtlCli
 }
 
 // New creates a new testrunner object
@@ -61,9 +59,5 @@ func New(c config.Project, cli *command.SauceCtlCli) (Testrunner, error) {
 	}
 
 	log.Info().Msg("Starting local runner")
-	return newLocalRunner(c, cli)
-}
-
-func makeTimestamp() int64 {
-	return time.Now().UnixNano() / int64(time.Millisecond)
+	return NewDockerRunner(c, cli)
 }
