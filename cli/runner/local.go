@@ -16,18 +16,18 @@ import (
 	"github.com/saucelabs/saucectl/cli/progress"
 )
 
-type localRunner struct {
+type DockerRunner struct {
 	BaseRunner
 	containerID string
 	docker      *docker.Handler
 	tmpDir      string
 }
 
-func newLocalRunner(c config.Project, cli *command.SauceCtlCli) (*localRunner, error) {
-	progress.Show("Starting local runner")
+func NewDockerRunner(c config.Project, cli *command.SauceCtlCli) (*DockerRunner, error) {
+	progress.Show("Starting test runner for docker")
 	defer progress.Stop()
 
-	runner := localRunner{}
+	runner := DockerRunner{}
 	runner.cli = cli
 	runner.context = context.Background()
 	runner.project = c
@@ -47,7 +47,7 @@ func newLocalRunner(c config.Project, cli *command.SauceCtlCli) (*localRunner, e
 	return &runner, nil
 }
 
-func (r *localRunner) Setup() error {
+func (r *DockerRunner) Setup() error {
 	err := r.docker.ValidateDependency()
 	if err != nil {
 		return fmt.Errorf("please verify that docker is installed and running: %v, "+
@@ -114,7 +114,7 @@ func (r *localRunner) Setup() error {
 	return nil
 }
 
-func (r *localRunner) Run() (int, error) {
+func (r *DockerRunner) Run() (int, error) {
 	var (
 		out, stderr io.Writer
 		in          io.ReadCloser
@@ -167,7 +167,7 @@ func (r *localRunner) Run() (int, error) {
 	return exitCode, nil
 }
 
-func (r *localRunner) Teardown(logDir string) error {
+func (r *DockerRunner) Teardown(logDir string) error {
 	for _, containerSrcPath := range LogFiles {
 		file := filepath.Base(containerSrcPath)
 		hostDstPath := filepath.Join(logDir, file)

@@ -25,7 +25,7 @@ func TestNewLocalRunner(t *testing.T) {
 	}
 
 	runnerType := fmt.Sprintf("%T", runner)
-	assert.Equal(t, "*runner.localRunner", runnerType)
+	assert.Equal(t, "*runner.DockerRunner", runnerType)
 }
 
 func TestNewCIRunner(t *testing.T) {

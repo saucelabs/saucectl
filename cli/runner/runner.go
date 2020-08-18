@@ -63,7 +63,7 @@ func New(c config.Project, cli *command.SauceCtlCli) (Testrunner, error) {
 	}
 
 	log.Info().Msg("Starting local runner")
-	return newLocalRunner(c, cli)
+	return NewDockerRunner(c, cli)
 }
 
 func makeTimestamp() int64 {
