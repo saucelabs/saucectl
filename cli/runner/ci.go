@@ -19,12 +19,14 @@ import (
 	"github.com/saucelabs/saucectl/cli/config"
 )
 
-type ciRunner struct {
+// CIRunner represents the CI implementation of a Testrunner.
+type CIRunner struct {
 	BaseRunner
 }
 
-func newCIRunner(c config.Project, cli *command.SauceCtlCli) (*ciRunner, error) {
-	runner := ciRunner{}
+// NewCIRunner creates a new CIRunner instance.
+func NewCIRunner(c config.Project, cli *command.SauceCtlCli) (*CIRunner, error) {
+	runner := CIRunner{}
 
 	// read runner config file
 	rc, err := config.NewRunnerConfiguration(RunnerConfigPath)
@@ -39,7 +41,8 @@ func newCIRunner(c config.Project, cli *command.SauceCtlCli) (*ciRunner, error) 
 	return &runner, nil
 }
 
-func (r *ciRunner) Setup() error {
+// Setup performs any necessary steps for a test runner to execute tests.
+func (r *CIRunner) Setup() error {
 	log.Info().Msg("Run entry.sh")
 	var out bytes.Buffer
 	cmd := exec.Command("/home/seluser/entry.sh", "&")
@@ -70,7 +73,8 @@ func (r *ciRunner) Setup() error {
 	return nil
 }
 
-func (r *ciRunner) Run() (int, error) {
+// Run runs the tests defined in the config.Project.
+func (r *CIRunner) Run() (int, error) {
 	browserName := ""
 	if len(r.Project.Capabilities) > 0 {
 		browserName = r.Project.Capabilities[0].BrowserName
@@ -102,7 +106,8 @@ func (r *ciRunner) Run() (int, error) {
 	return 0, nil
 }
 
-func (r *ciRunner) Teardown(logDir string) error {
+// Teardown cleans up the test environment.
+func (r *CIRunner) Teardown(logDir string) error {
 	if logDir != "" {
 		return nil
 	}
