@@ -10,7 +10,7 @@ on:
       - master
 
 jobs:
-  test:
+  basic:
     runs-on: ubuntu-latest
     container:
       image: golang:1.14-alpine
@@ -44,6 +44,7 @@ jobs:
           name: saucectlbin
           path: saucectl
   puppeteer:
+    needs: basic
     runs-on: ubuntu-latest
     container:
       image: saucelabs/stt-puppeteer-jest-node:v0.2.0
