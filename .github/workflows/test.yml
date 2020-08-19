@@ -58,7 +58,6 @@ jobs:
       - name: Workaround for container permissions
         run: |
           sudo chown -R $USER:$(id -gn $USER) /github/home
-          sudo chown -R $USER:$USER /__w/ /home/
 
       - name: Download saucectl binary
         uses: actions/download-artifact@v2
