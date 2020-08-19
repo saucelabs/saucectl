@@ -51,7 +51,7 @@ jobs:
 
     steps:
       - name: Fix Permissions
-        run: sudo chown -R $USER:$USER /home/github/actions-runner/_work/saucectl
+        run: sudo chown -R $USER:$USER /home/github/actions-runner/_work
       # appears that checkout@v2 uses javascript which is not compatible
       # with the included node version in the container image.
       - name: Checkout Code
