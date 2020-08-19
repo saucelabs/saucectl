@@ -50,6 +50,8 @@ jobs:
       image: saucelabs/stt-puppeteer-jest-node:v0.2.0
 
     steps:
+      - name: Fix Permissions
+        run: sudo chown -R $USER:$USER /home/github/actions-runner/_work/saucectl
       # appears that checkout@v2 uses javascript which is not compatible
       # with the included node version in the container image.
       - name: Checkout Code
