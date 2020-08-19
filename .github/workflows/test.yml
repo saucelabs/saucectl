@@ -38,3 +38,32 @@ jobs:
         run: |
           go test -coverprofile=coverage.out ./...
           goverreport -sort=block -order=desc -threshold=44
+      - name: Upload binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: saucectlbin
+          path: saucectl
+  puppeteer:
+    runs-on: ubuntu-latest
+    container:
+      image: saucelabs/stt-puppeteer-jest-node:v0.2.0
+
+    steps:
+      # appears that checkout@v2 uses javascript which is not compatible
+      # with the included node version in the container image.
+      - name: Checkout Code
+        uses: actions/checkout@v1
+
+      - name: Workaround for container permissions
+        run: sudo chown -R $USER:$(id -gn $USER) /github/home
+
+      - name: Download saucectl binary
+        uses: actions/download-artifact@v2
+        with:
+          name: saucectlbin
+
+      - name: Run Sauce Pipeline Test
+        run: |
+          saucectl run -c ./.sauce/puppeteer.yml
+        env:
+          BUILD_ID: ${{ github.run_id }}
