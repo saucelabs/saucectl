@@ -82,15 +82,14 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		cfg.Suites = []config.Suite{newDefaultSuite(cfg)}
 	}
 
-	exitCode := 0
 	for _, suite := range cfg.Suites {
-		exitCode, err = runSuite(cfg, suite, cli)
-		if err != nil {
-			return 1, err
+		exitCode, err := runSuite(cfg, suite, cli)
+		if err != nil  || exitCode != 0 {
+			return exitCode, err
 		}
 	}
 
-	return exitCode, nil
+	return 0, nil
 }
 
 func runSuite(p config.Project, s config.Suite, cli *command.SauceCtlCli) (int, error) {
