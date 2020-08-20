@@ -106,6 +106,7 @@ jobs:
           BUILD_ID: ${{ github.run_id }}
           BUILD_ENV: GitHub Actions
   testcafe:
+    if: false
     runs-on: ubuntu-latest
     container:
       image: saucelabs/stt-testcafe-node:v0.1.2
