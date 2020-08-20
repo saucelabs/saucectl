@@ -137,6 +137,7 @@ jobs:
           BUILD_ENV: GitHub Actions
   cypress:
     runs-on: ubuntu-latest
+    if: false # skip for now due to flakiness
     container:
       image: saucelabs/stt-cypress-mocha-node:v0.1.5
 
@@ -155,8 +156,8 @@ jobs:
           sudo tar -C /usr/local -xzf go1.15.linux-amd64.tar.gz
           sudo env "PATH=$PATH:/usr/local/go/bin" CGO_ENABLED=0 go build cmd/saucectl/saucectl.go
 
-#      - name: Workaround for container folder
-#        run: sudo ln -s /home/seluser/.cache /github/home/.cache
+      - name: Workaround for container folder
+        run: sudo ln -s /home/seluser/.cache /github/home/.cache
 
       - name: Run Sauce Pipeline Test
         run: |
