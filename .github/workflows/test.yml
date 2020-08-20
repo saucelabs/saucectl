@@ -90,14 +90,14 @@ jobs:
       - name: Workaround for container permissions
         run: sudo chown -R $USER:$(id -gn $USER) /github/home
 
-#      - name: Workaround for container folder
-#        run: sudo ln -s /home/seluser/.cache /github/home/.cache
-
       - name: Build project
         run: |
           sudo curl -L -O https://golang.org/dl/go1.15.linux-amd64.tar.gz
           sudo tar -C /usr/local -xzf go1.15.linux-amd64.tar.gz
           sudo env "PATH=$PATH:/usr/local/go/bin" CGO_ENABLED=0 go build cmd/saucectl/saucectl.go
+
+      - name: Workaround for container folder
+        run: sudo ln -s /home/seluser/.cache /github/home/.cache
 
       - name: Run Sauce Pipeline Test
         run: |
@@ -120,14 +120,14 @@ jobs:
       - name: Workaround for container permissions
         run: sudo chown -R $USER:$(id -gn $USER) /github/home
 
-#      - name: Workaround for container folder
-#        run: sudo ln -s /home/seluser/.cache /github/home/.cache
-
       - name: Build project
         run: |
           sudo curl -L -O https://golang.org/dl/go1.15.linux-amd64.tar.gz
           sudo tar -C /usr/local -xzf go1.15.linux-amd64.tar.gz
           sudo env "PATH=$PATH:/usr/local/go/bin" CGO_ENABLED=0 go build cmd/saucectl/saucectl.go
+
+      - name: Workaround for container folder
+        run: sudo ln -s /home/seluser/.cache /github/home/.cache
 
       - name: Run Sauce Pipeline Test
         run: |
