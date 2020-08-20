@@ -62,10 +62,10 @@ jobs:
 
       - name: Build project
         run: |
-          apt install software-properties-common
-          add-apt-repository ppa:longsleep/golang-backports
-          apt update
-          apt install golang-go
+          sudo apt install software-properties-common
+          sudo add-apt-repository ppa:longsleep/golang-backports
+          sudo apt update
+          sudo apt install golang-go
           CGO_ENABLED=0 go build cmd/saucectl/saucectl.go
 
       - name: Workaround for container permissions
