@@ -101,7 +101,36 @@ jobs:
 
       - name: Run Sauce Pipeline Test
         run: |
-          ./saucectl run -c ./.sauce/playwright.yml
+          ./saucectl run -c ./.sauce/playwright.yml --verbose
+        env:
+          BUILD_ID: ${{ github.run_id }}
+          BUILD_ENV: GitHub Actions
+  testcafe:
+    runs-on: ubuntu-latest
+    container:
+      image: saucelabs/stt-testcafe-node:v0.1.2
+
+    steps:
+      # appears that checkout@v2 uses javascript which is not compatible
+      # with the included node version in the container image.
+      - name: Checkout Code
+        uses: actions/checkout@v1
+
+      - name: Workaround for container permissions
+        run: sudo chown -R $USER:$(id -gn $USER) /github/home
+
+      - name: Workaround for container folder
+        run: sudo ln -s /home/seluser/.cache /github/home/.cache
+
+      - name: Build project
+        run: |
+          sudo curl -L -O https://golang.org/dl/go1.15.linux-amd64.tar.gz
+          sudo tar -C /usr/local -xzf go1.15.linux-amd64.tar.gz
+          sudo env "PATH=$PATH:/usr/local/go/bin" CGO_ENABLED=0 go build cmd/saucectl/saucectl.go
+
+      - name: Run Sauce Pipeline Test
+        run: |
+          ./saucectl run -c ./.sauce/testcafe.yml --verbose
         env:
           BUILD_ID: ${{ github.run_id }}
           BUILD_ENV: GitHub Actions
