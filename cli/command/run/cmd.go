@@ -141,7 +141,7 @@ func newRunner(p config.Project, s config.Suite, cli *command.SauceCtlCli) (runn
 // Its main use is for when no suites are defined in the config.
 func newDefaultSuite(p config.Project) config.Suite {
 	// TODO remove this method once saucectl fully transitions to the new config
-	s := config.Suite{Name: "default", Files: p.Files}
+	s := config.Suite{Name: "default"}
 	if len(p.Capabilities) > 0 {
 		s.Capabilities = p.Capabilities[0]
 	}

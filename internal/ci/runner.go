@@ -59,7 +59,7 @@ func (r *Runner) Setup() error {
 
 	// copy files from repository into target dir
 	log.Info().Msg("Copy files into assigned directories")
-	for _, pattern := range r.Suite.Files {
+	for _, pattern := range r.Project.Files {
 		matches, err := filepath.Glob(pattern)
 		if err != nil {
 			continue

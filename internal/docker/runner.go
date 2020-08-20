@@ -99,7 +99,7 @@ func (r *Runner) Setup() error {
 	}
 
 	progress.Show("Copying test files to container")
-	if err := r.docker.CopyTestFilesToContainer(r.Ctx, r.containerID, r.Suite.Files, r.RunnerConfig.TargetDir); err != nil {
+	if err := r.docker.CopyTestFilesToContainer(r.Ctx, r.containerID, r.Project.Files, r.RunnerConfig.TargetDir); err != nil {
 		return err
 	}
 
