@@ -76,6 +76,12 @@ jobs:
           ./saucectl run -c ./.sauce/puppeteer.yml --verbose
         env:
           BUILD_ID: ${{ github.run_id }}
+
+      - name: Test With Suites
+        run: |
+          ./saucectl run -c ./.sauce/puppeteer-suites.yml --verbose
+        env:
+          BUILD_ID: ${{ github.run_id }}
   playwright:
     if: false # skip for now due to flakiness
     runs-on: ubuntu-latest
