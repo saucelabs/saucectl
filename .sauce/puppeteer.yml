@@ -5,4 +5,4 @@ metadata:
     - e2e
   build: "$BUILD_ID"
 files:
-  - ./tests/e2e/puppeteer/
+  - ./tests/e2e/puppeteer/example.test.js
