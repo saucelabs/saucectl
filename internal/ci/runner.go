@@ -26,7 +26,7 @@ type Runner struct {
 }
 
 // NewRunner creates a new Runner instance.
-func NewRunner(c config.Project, cli *command.SauceCtlCli) (*Runner, error) {
+func NewRunner(c config.Project, s config.Suite, cli *command.SauceCtlCli) (*Runner, error) {
 	r := Runner{}
 
 	// read runner config file
@@ -38,6 +38,7 @@ func NewRunner(c config.Project, cli *command.SauceCtlCli) (*Runner, error) {
 	r.Cli = cli
 	r.Ctx = context.Background()
 	r.Project = c
+	r.Suite = s
 	r.RunnerConfig = rc
 	return &r, nil
 }
@@ -76,11 +77,6 @@ func (r *Runner) Setup() error {
 
 // Run runs the tests defined in the config.Project.
 func (r *Runner) Run() (int, error) {
-	browserName := ""
-	if len(r.Project.Capabilities) > 0 {
-		browserName = r.Project.Capabilities[0].BrowserName
-	}
-
 	cmd := exec.Command(r.RunnerConfig.ExecCommand[0], r.RunnerConfig.ExecCommand[1])
 	cmd.Env = append(
 		os.Environ(),
@@ -88,7 +84,7 @@ func (r *Runner) Run() (int, error) {
 		fmt.Sprintf("SAUCE_TAGS=%s", strings.Join(r.Project.Metadata.Tags, ",")),
 		fmt.Sprintf("SAUCE_REGION=%s", r.Project.Sauce.Region),
 		fmt.Sprintf("TEST_TIMEOUT=%d", r.Project.Timeout),
-		fmt.Sprintf("BROWSER_NAME=%s", browserName),
+		fmt.Sprintf("BROWSER_NAME=%s", r.Suite.Capabilities.BrowserName),
 	)
 
 	// Add any defined env variables from the job config / CLI args.

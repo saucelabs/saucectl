@@ -198,7 +198,7 @@ func (handler *Handler) PullBaseImage(ctx context.Context, c config.Project) err
 }
 
 // StartContainer starts the Docker testrunner container
-func (handler *Handler) StartContainer(ctx context.Context, c config.Project) (*container.ContainerCreateCreatedBody, error) {
+func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s config.Suite) (*container.ContainerCreateCreatedBody, error) {
 	var (
 		ports        map[nat.Port]struct{}
 		portBindings map[nat.Port][]nat.PortBinding
@@ -218,11 +218,6 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project) (*
 		return nil, err
 	}
 
-	browserName := ""
-	if len(c.Capabilities) > 0 {
-		browserName = c.Capabilities[0].BrowserName
-	}
-
 	hostConfig := &container.HostConfig{
 		PortBindings: portBindings,
 	}
@@ -238,7 +233,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project) (*
 			fmt.Sprintf("SAUCE_DEVTOOLS_PORT=%d", port),
 			fmt.Sprintf("SAUCE_REGION=%s", c.Sauce.Region),
 			fmt.Sprintf("TEST_TIMEOUT=%d", c.Timeout),
-			fmt.Sprintf("BROWSER_NAME=%s", browserName),
+			fmt.Sprintf("BROWSER_NAME=%s", s.Capabilities.BrowserName),
 		},
 	}
 

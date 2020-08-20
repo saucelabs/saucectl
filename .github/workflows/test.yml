@@ -10,7 +10,7 @@ on:
       - master
 
 jobs:
-  test:
+  basic:
     runs-on: ubuntu-latest
     container:
       image: golang:1.14-alpine
@@ -38,3 +38,136 @@ jobs:
         run: |
           go test -coverprofile=coverage.out ./...
           goverreport -sort=block -order=desc -threshold=44
+      - name: Upload binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: saucectlbin
+          path: saucectl
+  puppeteer:
+    needs: basic
+    runs-on: ubuntu-latest
+    container:
+      image: saucelabs/stt-puppeteer-jest-node:v0.1.2
+
+    steps:
+      # appears that checkout@v2 uses javascript which is not compatible
+      # with the included node version in the container image.
+      - name: Checkout Code
+        uses: actions/checkout@v1
+
+## This is currently not working since the container image doesn't run with root
+#      - name: Download saucectl binary
+#        uses: actions/download-artifact@v2
+#        with:
+#          name: saucectlbin
+
+      - name: Workaround for container permissions
+        run: |
+          sudo chown -R $USER:$(id -gn $USER) /github/home
+
+      - name: Build project
+        run: |
+          sudo curl -L -O https://golang.org/dl/go1.15.linux-amd64.tar.gz
+          sudo tar -C /usr/local -xzf go1.15.linux-amd64.tar.gz
+          sudo env "PATH=$PATH:/usr/local/go/bin" CGO_ENABLED=0 go build cmd/saucectl/saucectl.go
+
+      - name: Run Sauce Pipeline Test
+        run: |
+          ./saucectl run -c ./.sauce/puppeteer.yml --verbose
+        env:
+          BUILD_ID: ${{ github.run_id }}
+
+      - name: Test With Suites
+        run: |
+          ./saucectl run -c ./.sauce/puppeteer-suites.yml --verbose
+        env:
+          BUILD_ID: ${{ github.run_id }}
+  playwright:
+    if: false # skip for now due to flakiness
+    runs-on: ubuntu-latest
+    container:
+      image: saucelabs/stt-playwright-jest-node:v0.1.3
+
+    steps:
+      # appears that checkout@v2 uses javascript which is not compatible
+      # with the included node version in the container image.
+      - name: Checkout Code
+        uses: actions/checkout@v1
+
+      - name: Workaround for container permissions
+        run: sudo chown -R $USER:$(id -gn $USER) /github/home
+
+      - name: Build project
+        run: |
+          sudo curl -L -O https://golang.org/dl/go1.15.linux-amd64.tar.gz
+          sudo tar -C /usr/local -xzf go1.15.linux-amd64.tar.gz
+          sudo env "PATH=$PATH:/usr/local/go/bin" CGO_ENABLED=0 go build cmd/saucectl/saucectl.go
+
+      - name: Workaround for container folder
+        run: sudo ln -s /home/seluser/.cache /github/home/.cache
+
+      - name: Run Sauce Pipeline Test
+        run: |
+          ./saucectl run -c ./.sauce/playwright.yml --verbose
+        env:
+          BUILD_ID: ${{ github.run_id }}
+          BUILD_ENV: GitHub Actions
+  testcafe:
+    runs-on: ubuntu-latest
+    container:
+      image: saucelabs/stt-testcafe-node:v0.1.2
+
+    steps:
+      # appears that checkout@v2 uses javascript which is not compatible
+      # with the included node version in the container image.
+      - name: Checkout Code
+        uses: actions/checkout@v1
+
+      - name: Workaround for container permissions
+        run: sudo chown -R $USER:$(id -gn $USER) /github/home
+
+      - name: Build project
+        run: |
+          sudo curl -L -O https://golang.org/dl/go1.15.linux-amd64.tar.gz
+          sudo tar -C /usr/local -xzf go1.15.linux-amd64.tar.gz
+          sudo env "PATH=$PATH:/usr/local/go/bin" CGO_ENABLED=0 go build cmd/saucectl/saucectl.go
+
+      - name: Workaround for container folder
+        run: sudo ln -s /home/seluser/.cache /github/home/.cache
+
+      - name: Run Sauce Pipeline Test
+        run: |
+          ./saucectl run -c ./.sauce/testcafe.yml --verbose
+        env:
+          BUILD_ID: ${{ github.run_id }}
+          BUILD_ENV: GitHub Actions
+  cypress:
+    runs-on: ubuntu-latest
+    if: false # skip for now due to flakiness
+    container:
+      image: saucelabs/stt-cypress-mocha-node:v0.1.5
+
+    steps:
+      # appears that checkout@v2 uses javascript which is not compatible
+      # with the included node version in the container image.
+      - name: Checkout Code
+        uses: actions/checkout@v1
+
+      - name: Workaround for container permissions
+        run: sudo chown -R $USER:$(id -gn $USER) /github/home
+
+      - name: Build project
+        run: |
+          sudo curl -L -O https://golang.org/dl/go1.15.linux-amd64.tar.gz
+          sudo tar -C /usr/local -xzf go1.15.linux-amd64.tar.gz
+          sudo env "PATH=$PATH:/usr/local/go/bin" CGO_ENABLED=0 go build cmd/saucectl/saucectl.go
+
+      - name: Workaround for container folder
+        run: sudo ln -s /home/seluser/.cache /github/home/.cache
+
+      - name: Run Sauce Pipeline Test
+        run: |
+          ./saucectl run -c ./.sauce/cypress.yml
+        env:
+          BUILD_ID: ${{ github.run_id }}
+          BUILD_ENV: GitHub Actions
