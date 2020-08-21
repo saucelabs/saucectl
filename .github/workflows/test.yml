@@ -120,6 +120,7 @@ jobs:
           ls -la /github/home
           echo ~
           chmod +x ./saucectl
+          export PLAYWRIGHT_BROWSERS_PATH=/home/seluser/.cache/ms-playwright
           ./saucectl run -c ./.sauce/playwright.yml --verbose
         env:
           BUILD_ID: ${{ github.run_id }}
