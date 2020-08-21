@@ -114,10 +114,10 @@ jobs:
 
       - name: Run Sauce Pipeline Test
         run: |
+          chmod +x ./saucectl
           ./saucectl run -c ./.sauce/playwright.yml --verbose
         env:
           BUILD_ID: ${{ github.run_id }}
-          BUILD_ENV: GitHub Actions
   testcafe:
     runs-on: ubuntu-latest
     container:
