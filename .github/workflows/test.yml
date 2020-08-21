@@ -87,7 +87,7 @@ jobs:
 #    if: false # skip for now due to flakiness
     runs-on: ubuntu-latest
     container:
-      image: saucelabs/stt-playwright-jest-node:v0.1.4-aplidev.0
+      image: saucelabs/stt-playwright-jest-node:v0.1.4-aplidev.1
 
     steps:
       # appears that checkout@v2 uses javascript which is not compatible
