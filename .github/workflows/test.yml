@@ -47,7 +47,7 @@ jobs:
     needs: basic
     runs-on: ubuntu-latest
     container:
-      image: saucelabs/stt-puppeteer-jest-node:v0.1.2
+      image: saucelabs/stt-puppeteer-jest-node:v0.1.3
 
     steps:
       # appears that checkout@v2 uses javascript which is not compatible
