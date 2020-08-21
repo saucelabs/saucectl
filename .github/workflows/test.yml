@@ -64,6 +64,7 @@ jobs:
         run: |
           chmod +x ./saucectl
           ./saucectl run -c ./.sauce/puppeteer.yml --verbose
+          ./saucectl run -c ./.sauce/puppeteer.yml --verbose
         env:
           BUILD_ID: ${{ github.run_id }}
 
