@@ -114,6 +114,11 @@ jobs:
 
       - name: Run Sauce Pipeline Test
         run: |
+          pwd
+          ls -la
+          ls -la /home/seluser/.cache
+          ls -la /github/home
+          ls -la /github/home/.cache
           chmod +x ./saucectl
           ./saucectl run -c ./.sauce/playwright.yml --verbose
         env:
