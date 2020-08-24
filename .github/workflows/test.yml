@@ -77,8 +77,8 @@ jobs:
     needs: basic
     runs-on: ubuntu-latest
     container:
-      image: saucelabs/stt-playwright-jest-node:v0.1.4
-      options: --user 1001
+      image: saucelabs/stt-playwright-jest-node:v0.1.5-aplidev.0
+#      options: --user 1001
 
     steps:
       # appears that checkout@v2 uses javascript which is not compatible
