@@ -43,30 +43,35 @@ var (
 type Image struct {
 	Name    string
 	Version string
+	TestsFolder string
 }
 
 // DefaultPlaywright represents the default image for playwright.
 var DefaultPlaywright = Image{
 	Name:    "saucelabs/stt-playwright-jest-node",
 	Version: "v0.1.3",
+	TestsFolder: "tests",
 }
 
 // DefaultPuppeteer represents the default image for puppeteer.
 var DefaultPuppeteer = Image{
 	Name:    "saucelabs/stt-puppeteer-jest-node",
 	Version: "v0.1.2",
+	TestsFolder: "tests",
 }
 
 // DefaultTestcafe represents the default image for testcafe.
 var DefaultTestcafe = Image{
 	Name:    "saucelabs/stt-testcafe-node",
 	Version: "v0.1.2",
+	TestsFolder: "tests",
 }
 
 // DefaultCypress represents the default image for cypress.
 var DefaultCypress = Image{
 	Name:    "saucelabs/stt-cypress-mocha-node",
 	Version: "v0.1.3",
+	TestsFolder: "cypress/integration",
 }
 
 // CommonAPIClient is the interface for interacting with containers.
