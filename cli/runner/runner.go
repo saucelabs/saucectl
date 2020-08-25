@@ -2,21 +2,17 @@ package runner
 
 import (
 	"context"
-	"os"
-	"time"
-
-	"github.com/rs/zerolog/log"
-
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
-	"github.com/saucelabs/saucectl/cli/mocks"
 )
 
 const logDir = "/var/log/cont"
 
-var runnerConfigPath = "/home/seluser/config.yaml"
+// ConfigPath represents the path for the runner config.
+var ConfigPath = "/home/seluser/config.yaml"
 
-var logFiles = [...]string{
+// LogFiles contains the locations of log and resource files that are useful for reporting.
+var LogFiles = [...]string{
 	logDir + "/chrome_browser.log",
 	logDir + "/firefox_browser.log",
 	logDir + "/supervisord.log",
@@ -40,38 +36,9 @@ type Testrunner interface {
 
 // BaseRunner contains common properties across all runners
 type BaseRunner struct {
-	jobConfig    config.JobConfiguration
-	runnerConfig config.RunnerConfiguration
-	context      context.Context
-	cli          *command.SauceCtlCli
-
-	startTime int64
-}
-
-// New creates a new testrunner object
-func New(c config.JobConfiguration, cli *command.SauceCtlCli) (Testrunner, error) {
-	var (
-		runner Testrunner
-		err    error
-	)
-
-	// return test runner for testing
-	if c.Image.Base == "test" {
-		return mocks.NewTestRunner(c, cli)
-	}
-
-	_, err = os.Stat(runnerConfigPath)
-	if os.IsNotExist(err) {
-		log.Info().Msg("Start local runner")
-		runner, err = newLocalRunner(c, cli)
-	} else {
-		log.Info().Msg("Start CI runner")
-		runner, err = newCIRunner(c, cli)
-	}
-
-	return runner, err
-}
-
-func makeTimestamp() int64 {
-	return time.Now().UnixNano() / int64(time.Millisecond)
+	Project      config.Project
+	Suite        config.Suite
+	RunnerConfig config.RunnerConfiguration
+	Ctx          context.Context
+	Cli          *command.SauceCtlCli
 }

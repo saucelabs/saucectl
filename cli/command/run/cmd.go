@@ -1,6 +1,9 @@
 package run
 
 import (
+	"github.com/saucelabs/saucectl/cli/mocks"
+	"github.com/saucelabs/saucectl/internal/ci"
+	"github.com/saucelabs/saucectl/internal/docker"
 	"os"
 	"path/filepath"
 
@@ -72,7 +75,25 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	mergeArgs(&cfg)
 	cfg.Metadata.ExpandEnv()
 
-	tr, err := runner.New(cfg, cli)
+	if len(cfg.Suites) == 0 {
+		// As saucectl is transitioning into supporting test suites, we'll try to support this transition without
+		// a breaking change (if possible). This means that a suite may not necessarily be defined by the user.
+		// As such, we create an imaginary suite based on the project configuration.
+		cfg.Suites = []config.Suite{newDefaultSuite(cfg)}
+	}
+
+	for _, suite := range cfg.Suites {
+		exitCode, err := runSuite(cfg, suite, cli)
+		if err != nil  || exitCode != 0 {
+			return exitCode, err
+		}
+	}
+
+	return 0, nil
+}
+
+func runSuite(p config.Project, s config.Suite, cli *command.SauceCtlCli) (int, error) {
+	tr, err := newRunner(p, s, cli)
 	if err != nil {
 		return 1, err
 	}
@@ -98,11 +119,38 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		Int("ExitCode", exitCode).
 		Msg("Command Finished")
 
-	return exitCode, nil
+	return exitCode, err
+}
+
+func newRunner(p config.Project, s config.Suite, cli *command.SauceCtlCli) (runner.Testrunner, error) {
+	// return test runner for testing
+	if p.Image.Base == "test" {
+		return mocks.NewTestRunner(p, cli)
+	}
+
+	if ci.IsAvailable() {
+		log.Info().Msg("Starting CI runner")
+		return ci.NewRunner(p, s, cli)
+	}
+
+	log.Info().Msg("Starting local runner")
+	return docker.NewRunner(p, s, cli)
+}
+
+// newDefaultSuite creates a rudimentary test suite from a project configuration.
+// Its main use is for when no suites are defined in the config.
+func newDefaultSuite(p config.Project) config.Suite {
+	// TODO remove this method once saucectl fully transitions to the new config
+	s := config.Suite{Name: "default"}
+	if len(p.Capabilities) > 0 {
+		s.Capabilities = p.Capabilities[0]
+	}
+
+	return s
 }
 
 // mergeArgs merges settings from CLI arguments with the loaded job configuration.
-func mergeArgs(cfg *config.JobConfiguration) {
+func mergeArgs(cfg *config.Project) {
 	// Merge env from CLI args and job config. CLI args take precedence.
 	for k, v := range env {
 		cfg.Env[k] = v

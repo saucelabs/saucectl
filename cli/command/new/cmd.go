@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/docker"
+	"github.com/saucelabs/saucectl/internal/docker"
 	"io"
 	"os"
 	"path/filepath"

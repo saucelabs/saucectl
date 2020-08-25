@@ -1,9 +1,10 @@
-package runner
+package ci
 
 import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/saucelabs/saucectl/cli/runner"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -19,28 +20,31 @@ import (
 	"github.com/saucelabs/saucectl/cli/config"
 )
 
-type ciRunner struct {
-	BaseRunner
+// Runner represents the CI implementation of a runner.Testrunner.
+type Runner struct {
+	runner.BaseRunner
 }
 
-func newCIRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*ciRunner, error) {
-	runner := ciRunner{}
+// NewRunner creates a new Runner instance.
+func NewRunner(c config.Project, s config.Suite, cli *command.SauceCtlCli) (*Runner, error) {
+	r := Runner{}
 
 	// read runner config file
-	rc, err := config.NewRunnerConfiguration(runnerConfigPath)
+	rc, err := config.NewRunnerConfiguration(runner.ConfigPath)
 	if err != nil {
-		return &runner, err
+		return &r, err
 	}
 
-	runner.cli = cli
-	runner.context = context.Background()
-	runner.jobConfig = c
-	runner.startTime = makeTimestamp()
-	runner.runnerConfig = rc
-	return &runner, nil
+	r.Cli = cli
+	r.Ctx = context.Background()
+	r.Project = c
+	r.Suite = s
+	r.RunnerConfig = rc
+	return &r, nil
 }
 
-func (r *ciRunner) Setup() error {
+// Setup performs any necessary steps for a test runner to execute tests.
+func (r *Runner) Setup() error {
 	log.Info().Msg("Run entry.sh")
 	var out bytes.Buffer
 	cmd := exec.Command("/home/seluser/entry.sh", "&")
@@ -55,15 +59,15 @@ func (r *ciRunner) Setup() error {
 
 	// copy files from repository into target dir
 	log.Info().Msg("Copy files into assigned directories")
-	for _, pattern := range r.jobConfig.Files {
+	for _, pattern := range r.Project.Files {
 		matches, err := filepath.Glob(pattern)
 		if err != nil {
 			continue
 		}
 
 		for _, file := range matches {
-			log.Info().Msg("Copy file " + file + " to " + r.runnerConfig.TargetDir)
-			if err := copyFile(file, r.runnerConfig.TargetDir); err != nil {
+			log.Info().Msg("Copy file " + file + " to " + r.RunnerConfig.TargetDir)
+			if err := copyFile(file, r.RunnerConfig.TargetDir); err != nil {
 				return err
 			}
 		}
@@ -71,30 +75,26 @@ func (r *ciRunner) Setup() error {
 	return nil
 }
 
-func (r *ciRunner) Run() (int, error) {
-	browserName := ""
-	if len(r.jobConfig.Capabilities) > 0 {
-		browserName = r.jobConfig.Capabilities[0].BrowserName
-	}
-
-	cmd := exec.Command(r.runnerConfig.ExecCommand[0], r.runnerConfig.ExecCommand[1])
+// Run runs the tests defined in the config.Project.
+func (r *Runner) Run() (int, error) {
+	cmd := exec.Command(r.RunnerConfig.ExecCommand[0], r.RunnerConfig.ExecCommand[1])
 	cmd.Env = append(
 		os.Environ(),
-		fmt.Sprintf("SAUCE_BUILD_NAME=%s", r.jobConfig.Metadata.Build),
-		fmt.Sprintf("SAUCE_TAGS=%s", strings.Join(r.jobConfig.Metadata.Tags, ",")),
-		fmt.Sprintf("SAUCE_REGION=%s", r.jobConfig.Sauce.Region),
-		fmt.Sprintf("TEST_TIMEOUT=%d", r.jobConfig.Timeout),
-		fmt.Sprintf("BROWSER_NAME=%s", browserName),
+		fmt.Sprintf("SAUCE_BUILD_NAME=%s", r.Project.Metadata.Build),
+		fmt.Sprintf("SAUCE_TAGS=%s", strings.Join(r.Project.Metadata.Tags, ",")),
+		fmt.Sprintf("SAUCE_REGION=%s", r.Project.Sauce.Region),
+		fmt.Sprintf("TEST_TIMEOUT=%d", r.Project.Timeout),
+		fmt.Sprintf("BROWSER_NAME=%s", r.Suite.Capabilities.BrowserName),
 	)
 
 	// Add any defined env variables from the job config / CLI args.
-	for k, v := range r.jobConfig.Env {
+	for k, v := range r.Project.Env {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
 	}
 
-	cmd.Stdout = r.cli.Out()
-	cmd.Stderr = r.cli.Out()
-	cmd.Dir = r.runnerConfig.RootDir
+	cmd.Stdout = r.Cli.Out()
+	cmd.Stderr = r.Cli.Out()
+	cmd.Dir = r.RunnerConfig.RootDir
 	err := cmd.Run()
 
 	if err != nil {
@@ -103,12 +103,13 @@ func (r *ciRunner) Run() (int, error) {
 	return 0, nil
 }
 
-func (r *ciRunner) Teardown(logDir string) error {
+// Teardown cleans up the test environment.
+func (r *Runner) Teardown(logDir string) error {
 	if logDir != "" {
 		return nil
 	}
 
-	for _, containerSrcPath := range logFiles {
+	for _, containerSrcPath := range runner.LogFiles {
 		file := filepath.Base(containerSrcPath)
 		dstPath := filepath.Join(logDir, file)
 		if err := copyFile(containerSrcPath, dstPath); err != nil {

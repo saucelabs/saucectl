@@ -2,6 +2,8 @@ package docker
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"io"
@@ -10,8 +12,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-	"encoding/json"
-	"encoding/base64"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -45,28 +45,31 @@ type Image struct {
 	Version string
 }
 
+// DefaultPlaywright represents the default image for playwright.
 var DefaultPlaywright = Image{
 	Name:    "saucelabs/stt-playwright-jest-node",
 	Version: "v0.1.3",
 }
 
+// DefaultPuppeteer represents the default image for puppeteer.
 var DefaultPuppeteer = Image{
 	Name:    "saucelabs/stt-puppeteer-jest-node",
 	Version: "v0.1.2",
 }
 
+// DefaultTestcafe represents the default image for testcafe.
 var DefaultTestcafe = Image{
 	Name:    "saucelabs/stt-testcafe-node",
 	Version: "v0.1.2",
 }
 
+// DefaultCypress represents the default image for cypress.
 var DefaultCypress = Image{
 	Name:    "saucelabs/stt-cypress-mocha-node",
 	Version: "v0.1.3",
 }
 
-
-// ClientInterface describes the interface used to handle docker commands
+// CommonAPIClient is the interface for interacting with containers.
 type CommonAPIClient interface {
 	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
 	ImageList(ctx context.Context, options types.ImageListOptions) ([]types.ImageSummary, error)
@@ -131,8 +134,9 @@ func (handler *Handler) HasBaseImage(ctx context.Context, baseImage string) (boo
 	return len(images) > 0, nil
 }
 
-// TODO - move this to ImageDefinition
-func (handler *Handler) GetImageFlavor(c config.JobConfiguration) string {
+// GetImageFlavor returns a string that contains the image name and tag defined by the project.
+func (handler *Handler) GetImageFlavor(c config.Project) string {
+	// TODO - move this to ImageDefinition
 	tag := "latest"
 	if c.Image.Version != "" {
 		tag = c.Image.Version
@@ -140,15 +144,17 @@ func (handler *Handler) GetImageFlavor(c config.JobConfiguration) string {
 	return fmt.Sprintf("%s:%s", c.Image.Base, tag)
 }
 
-// Environment variables for private registry auth
-const REGISTRY_USERNAME_ENV_KEY = "REGISTRY_USERNAME"
-const REGISTRY_PASSWORD_ENV_KEY = "REGISTRY_PASSWORD"
+// RegistryUsernameEnvKey represents the username environment variable for authenticating against a docker registry.
+const RegistryUsernameEnvKey = "REGISTRY_USERNAME"
+// RegistryPasswordEnvKey represents the password environment variable for authenticating against a docker registry.
+const RegistryPasswordEnvKey = "REGISTRY_PASSWORD"
 
-// Prepare ImagePullOptions
-func (handler *Handler) GetImagePullOptions() (types.ImagePullOptions, error) {
+// NewImagePullOptions returns a new types.ImagePullOptions object. Credentials are also configured, if available
+// via environment variables (see RegistryUsernameEnvKey and RegistryPasswordEnvKey).
+func NewImagePullOptions() (types.ImagePullOptions, error) {
 	options := types.ImagePullOptions{}
-	registryUser, hasRegistryUser := os.LookupEnv(REGISTRY_USERNAME_ENV_KEY)
-	registryPwd, hasRegistryPwd := os.LookupEnv(REGISTRY_PASSWORD_ENV_KEY)
+	registryUser, hasRegistryUser := os.LookupEnv(RegistryUsernameEnvKey)
+	registryPwd, hasRegistryPwd := os.LookupEnv(RegistryPasswordEnvKey)
 	// Setup auth https://github.com/moby/moby/blob/master/api/types/client.go#L255
 	if hasRegistryUser && hasRegistryPwd {
 		log.Debug().Msg("Using registry environment variables credentials")
@@ -167,9 +173,9 @@ func (handler *Handler) GetImagePullOptions() (types.ImagePullOptions, error) {
 }
 
 // PullBaseImage pulls an image from Docker
-func (handler *Handler) PullBaseImage(ctx context.Context, c config.JobConfiguration) error {
+func (handler *Handler) PullBaseImage(ctx context.Context, c config.Project) error {
 
-	options, err := handler.GetImagePullOptions()
+	options, err := NewImagePullOptions()
 	if err != nil {
 		return err
 	}
@@ -192,7 +198,7 @@ func (handler *Handler) PullBaseImage(ctx context.Context, c config.JobConfigura
 }
 
 // StartContainer starts the Docker testrunner container
-func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfiguration) (*container.ContainerCreateCreatedBody, error) {
+func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s config.Suite) (*container.ContainerCreateCreatedBody, error) {
 	var (
 		ports        map[nat.Port]struct{}
 		portBindings map[nat.Port][]nat.PortBinding
@@ -212,11 +218,6 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfigur
 		return nil, err
 	}
 
-	browserName := ""
-	if len(c.Capabilities) > 0 {
-		browserName = c.Capabilities[0].BrowserName
-	}
-
 	hostConfig := &container.HostConfig{
 		PortBindings: portBindings,
 	}
@@ -232,7 +233,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.JobConfigur
 			fmt.Sprintf("SAUCE_DEVTOOLS_PORT=%d", port),
 			fmt.Sprintf("SAUCE_REGION=%s", c.Sauce.Region),
 			fmt.Sprintf("TEST_TIMEOUT=%d", c.Timeout),
-			fmt.Sprintf("BROWSER_NAME=%s", browserName),
+			fmt.Sprintf("BROWSER_NAME=%s", s.Capabilities.BrowserName),
 		},
 	}
 

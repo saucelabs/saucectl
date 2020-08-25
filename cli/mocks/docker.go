@@ -19,7 +19,7 @@ type FakeClient struct {
 	ContainerCreateSuccess      bool
 	ContainerStartSuccess       bool
 	ContainerInspectSuccess     bool
-	CopyToContainerFn  		    func(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error
+	CopyToContainerFn           func(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error
 	ContainerStatPathSuccess    bool
 	CopyFromContainerSuccess    bool
 	ContainerExecCreateSuccess  bool

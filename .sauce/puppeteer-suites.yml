@@ -1,0 +1,21 @@
+apiVersion: v1
+metadata:
+  name: Testing Suite Support
+  tags:
+    - e2e
+    - suites
+  build: "$BUILD_ID"
+files:
+  - ./tests/e2e/puppeteer/example.test.js
+suites:
+  - name: "firefox"
+    capabilities:
+      browserName: "firefox"
+  - name: "chromium"
+    capabilities:
+      browserName: "chromium"
+image:
+  base: saucelabs/stt-puppeteer-jest-node
+  version: v0.1.2
+sauce:
+  region: us-west-1

@@ -13,7 +13,7 @@ type TestRunner struct {
 }
 
 // NewTestRunner creates a runner for unit testing purposes
-func NewTestRunner(c config.JobConfiguration, cli *command.SauceCtlCli) (*TestRunner, error) {
+func NewTestRunner(c config.Project, cli *command.SauceCtlCli) (*TestRunner, error) {
 	runner := TestRunner{}
 	return &runner, nil
 }
