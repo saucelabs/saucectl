@@ -10,7 +10,7 @@ metadata:
     - other tag
   build: Release $CI_COMMIT_SHORT_SHA
 files:
-  - ./tests/example.test.js
+  - {{ .TestsFolder }}/example.test.js
 image:
   base: {{ .Name }}
   version: {{ .Version }}
