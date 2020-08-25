@@ -48,6 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: saucelabs/stt-puppeteer-jest-node:v0.1.4
+      options: --user 1001
 
     steps:
       # appears that checkout@v2 uses javascript which is not compatible
@@ -102,6 +103,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: saucelabs/stt-testcafe-node:v0.1.4
+      options: --user 1001
 
     steps:
       # appears that checkout@v2 uses javascript which is not compatible
@@ -126,6 +128,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: saucelabs/stt-cypress-mocha-node:v0.1.8
+      options: --user 1001
 
     steps:
       # appears that checkout@v2 uses javascript which is not compatible
