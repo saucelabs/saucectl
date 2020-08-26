@@ -4,5 +4,8 @@ metadata:
   tags:
     - e2e
   build: "$BUILD_ID"
+capabilities:
+  - browserName: "firefox"
 files:
   - ./tests/e2e/playwright/example.test.js
+

@@ -47,7 +47,8 @@ jobs:
     needs: basic
     runs-on: ubuntu-latest
     container:
-      image: saucelabs/stt-puppeteer-jest-node:v0.1.3
+      image: saucelabs/stt-puppeteer-jest-node:v0.1.4
+      options: --user 1001
 
     steps:
       # appears that checkout@v2 uses javascript which is not compatible
@@ -67,17 +68,18 @@ jobs:
         env:
           BUILD_ID: ${{ github.run_id }}
 
-#      - name: Test With Suites
-#        run: |
-#          chmod +x ./saucectl
-#          ./saucectl run -c ./.sauce/puppeteer-suites.yml --verbose
-#        env:
-#          BUILD_ID: ${{ github.run_id }}
+      - name: Test With Suites
+        run: |
+          chmod +x ./saucectl
+          ./saucectl run -c ./.sauce/puppeteer-suites.yml --verbose
+        env:
+          BUILD_ID: ${{ github.run_id }}
   playwright:
     needs: basic
     runs-on: ubuntu-latest
     container:
-      image: saucelabs/stt-playwright-jest-node:v0.1.4
+      image: saucelabs/stt-playwright-jest-node:v0.1.5
+      options: --user 1001
 
     steps:
       # appears that checkout@v2 uses javascript which is not compatible
@@ -100,7 +102,8 @@ jobs:
     needs: basic
     runs-on: ubuntu-latest
     container:
-      image: saucelabs/stt-testcafe-node:v0.1.3
+      image: saucelabs/stt-testcafe-node:v0.1.4
+      options: --user 1001
 
     steps:
       # appears that checkout@v2 uses javascript which is not compatible
@@ -124,7 +127,8 @@ jobs:
     needs: basic
     runs-on: ubuntu-latest
     container:
-      image: saucelabs/stt-cypress-mocha-node:v0.1.7
+      image: saucelabs/stt-cypress-mocha-node:v0.1.8
+      options: --user 1001
 
     steps:
       # appears that checkout@v2 uses javascript which is not compatible
