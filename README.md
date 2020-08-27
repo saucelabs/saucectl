@@ -5,6 +5,8 @@ saucectl
 
 A command line interface for the Sauce Labs Testrunner Toolkit. This repository contains the Go binary that you use to kick off tests. If you look for more documentation on it, please have a look into our [example repo](https://github.com/saucelabs/testrunner-toolkit).
 
+For information on how to contribute to `saucectl` please have a look into our [contribution guidelines](https://github.com/saucelabs/saucectl/blob/master/CONTRIBUTING.md).
+
 # Using `saucectl`
 
 ## The `new` Command
