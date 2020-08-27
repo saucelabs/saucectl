@@ -4,12 +4,45 @@ Want to hack on saucectl? Awesome! This page contains information about reportin
 
 ## Topics
 
+* [Development Requirements](#development-requirements)
+* [Install](#install)
+* [Build](#build)
+* [Test](#test)
 * [Reporting Security Issues](#reporting-security-issues)
 * [Design and Cleanup Proposals](#design-and-cleanup-proposals)
 * [Reporting Issues](#reporting-other-issues)
 * [Quick Contribution Tips and Guidelines](#quick-contribution-tips-and-guidelines)
 * [Community Guidelines](#docker-community-guidelines)
 * [Releasing saucectl](#releasing-saucectl)
+
+## Development Requirements
+
+- [Go](https://golang.org/) (v1.14 or higher)
+- [Homebrew](https://brew.sh/) (v2.2.13 or higher)
+
+## Install
+
+Run the following to install all dependencies:
+
+```sh
+$ make install
+```
+
+## Build
+
+To build the project, run:
+
+```sh
+$ make build
+```
+
+## Test
+
+To execute unit tests, run:
+
+```sh
+$ make test
+```
 
 ## Reporting security issues
 
