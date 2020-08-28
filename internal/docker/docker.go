@@ -41,36 +41,36 @@ var (
 
 // Image represents docker image metadata.
 type Image struct {
-	Name    string
-	Version string
+	Name        string
+	Version     string
 	TestsFolder string
 }
 
 // DefaultPlaywright represents the default image for playwright.
 var DefaultPlaywright = Image{
-	Name:    "saucelabs/stt-playwright-jest-node",
-	Version: "v0.1.3",
+	Name:        "saucelabs/stt-playwright-jest-node",
+	Version:     "v0.1.3",
 	TestsFolder: "tests",
 }
 
 // DefaultPuppeteer represents the default image for puppeteer.
 var DefaultPuppeteer = Image{
-	Name:    "saucelabs/stt-puppeteer-jest-node",
-	Version: "v0.1.2",
+	Name:        "saucelabs/stt-puppeteer-jest-node",
+	Version:     "v0.1.2",
 	TestsFolder: "tests",
 }
 
 // DefaultTestcafe represents the default image for testcafe.
 var DefaultTestcafe = Image{
-	Name:    "saucelabs/stt-testcafe-node",
-	Version: "v0.1.2",
+	Name:        "saucelabs/stt-testcafe-node",
+	Version:     "v0.1.2",
 	TestsFolder: "tests",
 }
 
 // DefaultCypress represents the default image for cypress.
 var DefaultCypress = Image{
-	Name:    "saucelabs/stt-cypress-mocha-node",
-	Version: "v0.1.3",
+	Name:        "saucelabs/stt-cypress-mocha-node",
+	Version:     "v0.1.3",
 	TestsFolder: "cypress/integration",
 }
 
@@ -151,6 +151,7 @@ func (handler *Handler) GetImageFlavor(c config.Project) string {
 
 // RegistryUsernameEnvKey represents the username environment variable for authenticating against a docker registry.
 const RegistryUsernameEnvKey = "REGISTRY_USERNAME"
+
 // RegistryPasswordEnvKey represents the password environment variable for authenticating against a docker registry.
 const RegistryPasswordEnvKey = "REGISTRY_PASSWORD"
 
@@ -267,31 +268,14 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 	return &container, nil
 }
 
-// CopyTestFilesToContainer copies files from the config into the container
-func (handler *Handler) CopyTestFilesToContainer(ctx context.Context, srcContainerID string, files []string, targetDir string) error {
-	tf := handler.FindTestFiles(files)
-	for _, fpath := range tf {
+// CopyFilesToContainer copies the given files into the container.
+func (handler *Handler) CopyFilesToContainer(ctx context.Context, srcContainerID string, files []string, targetDir string) error {
+	for _, fpath := range files {
 		if err := handler.CopyToContainer(ctx, srcContainerID, fpath, targetDir); err != nil {
 			return err
 		}
 	}
 	return nil
-}
-
-// FindTestFiles returns the names of all files matching the patterns.
-func (handler *Handler) FindTestFiles(patterns []string) []string {
-	var files []string
-	for _, pattern := range patterns {
-		matches, err := filepath.Glob(pattern)
-		if err != nil {
-			log.Warn().Str("p", pattern).Msg("Skipping over malformed pattern. Some of your test files will be missing.")
-			continue
-		}
-
-		files = append(files, matches...)
-	}
-
-	return files
 }
 
 // CopyToContainer copies the given file to the container.

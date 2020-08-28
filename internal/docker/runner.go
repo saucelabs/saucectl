@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/cli/streams"
+	"github.com/saucelabs/saucectl/internal/fpath"
 	"io"
 	"io/ioutil"
 	"os"
@@ -99,7 +100,8 @@ func (r *Runner) Setup() error {
 	}
 
 	progress.Show("Copying test files to container")
-	if err := r.docker.CopyTestFilesToContainer(r.Ctx, r.containerID, r.Project.Files, r.RunnerConfig.TargetDir); err != nil {
+	tf := fpath.Globs(r.Project.Files)
+	if err := r.docker.CopyFilesToContainer(r.Ctx, r.containerID, tf, r.RunnerConfig.TargetDir); err != nil {
 		return err
 	}
 
