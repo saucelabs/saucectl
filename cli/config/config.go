@@ -48,16 +48,17 @@ type ImageDefinition struct {
 
 // Project represents the project configuration.
 type Project struct {
-	APIVersion   string            `yaml:"apiVersion"`
-	Kind         string            `yaml:"kind"`
-	Metadata     Metadata          `yaml:"metadata"`
-	Capabilities []Capabilities    `yaml:"capabilities"`
-	Suites       []Suite           `yaml:"suites"`
-	Files        []string          `yaml:"files"`
-	Image        ImageDefinition   `yaml:"image"`
-	Timeout      int               `yaml:"timeout"`
-	Sauce        SauceConfig       `yaml:"sauce"`
-	Env          map[string]string `yaml:"env"`
+	ConfigFilePath string
+	APIVersion     string            `yaml:"apiVersion"`
+	Kind           string            `yaml:"kind"`
+	Metadata       Metadata          `yaml:"metadata"`
+	Capabilities   []Capabilities    `yaml:"capabilities"`
+	Suites         []Suite           `yaml:"suites"`
+	Files          []string          `yaml:"files"`
+	Image          ImageDefinition   `yaml:"image"`
+	Timeout        int               `yaml:"timeout"`
+	Sauce          SauceConfig       `yaml:"sauce"`
+	Env            map[string]string `yaml:"env"`
 }
 
 // Suite represents the test suite configuration.
@@ -132,6 +133,7 @@ func NewJobConfiguration(cfgFilePath string) (Project, error) {
 		c.Env = make(map[string]string)
 	}
 
+	c.ConfigFilePath = cfgFilePath
 	return c, nil
 }
 

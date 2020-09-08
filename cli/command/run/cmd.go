@@ -1,11 +1,12 @@
 package run
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/saucelabs/saucectl/cli/mocks"
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/docker"
-	"os"
-	"path/filepath"
 
 	"github.com/rs/zerolog/log"
 
@@ -84,7 +85,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 
 	for _, suite := range cfg.Suites {
 		exitCode, err := runSuite(cfg, suite, cli)
-		if err != nil  || exitCode != 0 {
+		if err != nil || exitCode != 0 {
 			return exitCode, err
 		}
 	}

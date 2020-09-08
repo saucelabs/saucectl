@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/runner"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -18,6 +17,7 @@ import (
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/runner"
 )
 
 // Runner represents the CI implementation of a runner.Testrunner.
@@ -85,6 +85,7 @@ func (r *Runner) Run() (int, error) {
 		fmt.Sprintf("SAUCE_REGION=%s", r.Project.Sauce.Region),
 		fmt.Sprintf("TEST_TIMEOUT=%d", r.Project.Timeout),
 		fmt.Sprintf("BROWSER_NAME=%s", r.Suite.Capabilities.BrowserName),
+		fmt.Sprintf("CONFIG_FILE_PATH=%s", r.Project.ConfigFilePath),
 	)
 
 	// Add any defined env variables from the job config / CLI args.

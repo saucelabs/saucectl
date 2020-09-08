@@ -5,13 +5,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -204,7 +206,7 @@ func (handler *Handler) PullBaseImage(ctx context.Context, c config.Project) err
 }
 
 // StartContainer starts the Docker testrunner container
-func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s config.Suite) (*container.ContainerCreateCreatedBody, error) {
+func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s config.Suite, hostDstPath string) (*container.ContainerCreateCreatedBody, error) {
 	var (
 		ports        map[nat.Port]struct{}
 		portBindings map[nat.Port][]nat.PortBinding
@@ -240,6 +242,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 			fmt.Sprintf("SAUCE_REGION=%s", c.Sauce.Region),
 			fmt.Sprintf("TEST_TIMEOUT=%d", c.Timeout),
 			fmt.Sprintf("BROWSER_NAME=%s", s.Capabilities.BrowserName),
+			fmt.Sprintf("CONFIG_FILE_PATH=%s", path.Join(hostDstPath, path.Base(c.ConfigFilePath))),
 		},
 	}
 
@@ -269,10 +272,12 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 }
 
 // CopyFilesToContainer copies the given files into the container.
-func (handler *Handler) CopyFilesToContainer(ctx context.Context, srcContainerID string, files []string, targetDir string) error {
-	for _, fpath := range files {
-		if err := handler.CopyToContainer(ctx, srcContainerID, fpath, targetDir); err != nil {
-			return err
+func (handler *Handler) CopyFilesToContainer(ctx context.Context, srcContainerID string, filesToCopy []FilesToCopy) error {
+	for _, ftc := range filesToCopy {
+		for _, files := range ftc.files {
+			if err := handler.CopyToContainer(ctx, srcContainerID, files, ftc.targetDir); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

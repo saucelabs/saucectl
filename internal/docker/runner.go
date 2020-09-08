@@ -3,14 +3,15 @@ package docker
 import (
 	"context"
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/runner"
-	"github.com/saucelabs/saucectl/cli/streams"
-	"github.com/saucelabs/saucectl/internal/fpath"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/cli/streams"
+	"github.com/saucelabs/saucectl/internal/fpath"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
@@ -23,6 +24,12 @@ type Runner struct {
 	containerID string
 	docker      *Handler
 	tmpDir      string
+}
+
+// FilesToCopy represents data structure to copy over files to target dirs in Docker container
+type FilesToCopy struct {
+	targetDir string
+	files     []string
 }
 
 // NewRunner creates a new Runner instance.
@@ -75,8 +82,11 @@ func (r *Runner) Setup() error {
 		}
 	}
 
+	defer os.RemoveAll(r.tmpDir)
+	hostDstPath := filepath.Join(r.tmpDir, filepath.Base(runner.ConfigPath))
+
 	progress.Show("Starting container %s", baseImage)
-	container, err := r.docker.StartContainer(r.Ctx, r.Project, r.Suite)
+	container, err := r.docker.StartContainer(r.Ctx, r.Project, r.Suite, hostDstPath)
 	if err != nil {
 		return err
 	}
@@ -88,8 +98,6 @@ func (r *Runner) Setup() error {
 	time.Sleep(1 * time.Second)
 
 	// get runner config
-	defer os.RemoveAll(r.tmpDir)
-	hostDstPath := filepath.Join(r.tmpDir, filepath.Base(runner.ConfigPath))
 	if err := r.docker.CopyFromContainer(r.Ctx, container.ID, runner.ConfigPath, hostDstPath); err != nil {
 		return err
 	}
@@ -100,8 +108,17 @@ func (r *Runner) Setup() error {
 	}
 
 	progress.Show("Copying test files to container")
-	tf := fpath.Globs(r.Project.Files)
-	if err := r.docker.CopyFilesToContainer(r.Ctx, r.containerID, tf, r.RunnerConfig.TargetDir); err != nil {
+	filesToCopy := []FilesToCopy{
+		{
+			targetDir: r.RunnerConfig.TargetDir,
+			files:     fpath.Globs(r.Project.Files),
+		},
+		{
+			targetDir: hostDstPath,
+			files:     []string{r.Project.ConfigFilePath},
+		},
+	}
+	if err := r.docker.CopyFilesToContainer(r.Ctx, r.containerID, filesToCopy); err != nil {
 		return err
 	}
 
