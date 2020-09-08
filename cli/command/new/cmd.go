@@ -4,13 +4,14 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/docker"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/docker"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/spf13/cobra"
@@ -30,7 +31,7 @@ var (
 			Name: "framework",
 			Prompt: &survey.Select{
 				Message: "Choose a framework:",
-				Options: []string{"Puppeteer", "Playwright", "Testcafe", "Cypress"},
+				Options: []string{"Puppeteer", "Playwright", "Testcafe", "Cypress", "WebdriverIO"},
 				Default: "Puppeteer",
 			},
 		},
@@ -127,7 +128,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	return nil
 }
 
-func getImageValues(framework string) (docker.Image, error){
+func getImageValues(framework string) (docker.Image, error) {
 	switch framework {
 	case "playwright":
 		return docker.DefaultPlaywright, nil
@@ -137,10 +138,11 @@ func getImageValues(framework string) (docker.Image, error){
 		return docker.DefaultTestcafe, nil
 	case "cypress":
 		return docker.DefaultCypress, nil
+	case "webdriverio":
+		return docker.DefaultWebdriverIO, nil
 	}
 	return docker.Image{}, errors.New("unknown framework")
 }
-
 
 func writeJobConfig(framework string, region string, w io.Writer) error {
 	configTpl, err := template.New("configTpl").Parse(configTpl)
@@ -152,9 +154,9 @@ func writeJobConfig(framework string, region string, w io.Writer) error {
 	image, err := getImageValues(framework)
 
 	v := struct {
-		Name    string
-		Version string
-		Region  string
+		Name        string
+		Version     string
+		Region      string
 		TestsFolder string
 	}{
 		Region: region,

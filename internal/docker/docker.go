@@ -76,6 +76,13 @@ var DefaultCypress = Image{
 	TestsFolder: "cypress/integration",
 }
 
+// DefaultWebdriverIO represents the default image for webdriverio.
+var DefaultWebdriverIO = Image{
+	Name:        "saucelabs/stt-webdriverio-node",
+	Version:     "v0.0.1",
+	TestsFolder: "tests",
+}
+
 // CommonAPIClient is the interface for interacting with containers.
 type CommonAPIClient interface {
 	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
