@@ -114,7 +114,7 @@ func (r *Runner) Setup() error {
 			files:     fpath.Globs(r.Project.Files),
 		},
 		{
-			targetDir: hostDstPath,
+			targetDir: "/home/seluser",
 			files:     []string{r.Project.ConfigFilePath},
 		},
 	}

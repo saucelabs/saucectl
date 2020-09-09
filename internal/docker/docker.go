@@ -281,8 +281,9 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 // CopyFilesToContainer copies the given files into the container.
 func (handler *Handler) CopyFilesToContainer(ctx context.Context, srcContainerID string, filesToCopy []FilesToCopy) error {
 	for _, ftc := range filesToCopy {
-		for _, files := range ftc.files {
-			if err := handler.CopyToContainer(ctx, srcContainerID, files, ftc.targetDir); err != nil {
+		for _, file := range ftc.files {
+			log.Info().Msg("Copy " + file + " to " + ftc.targetDir)
+			if err := handler.CopyToContainer(ctx, srcContainerID, file, ftc.targetDir); err != nil {
 				return err
 			}
 		}
