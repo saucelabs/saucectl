@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -322,6 +323,7 @@ func TestHandler_CopyToContainer(t *testing.T) {
 		fs.WithFile("some.other.bar.js", "bar", fs.WithMode(0755)),
 		fs.WithDir("subdir", fs.WithFile("some.subdir.js", "subdir")))
 	defer dir.Remove()
+	baseDir := filepath.Base(dir.Path())
 
 	type fields struct {
 		client CommonAPIClient
@@ -354,11 +356,11 @@ func TestHandler_CopyToContainer(t *testing.T) {
 			name: "copy entire folder",
 			fields: fields{&mocks.FakeClient{CopyToContainerFn: func(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error {
 				expect := []string{
-					"./",
-					"./some.foo.js",
-					"./some.other.bar.js",
-					"./subdir/",
-					"./subdir/some.subdir.js",
+					baseDir + string(filepath.Separator),
+					filepath.Join(baseDir, "some.foo.js"),
+					filepath.Join(baseDir, "some.other.bar.js"),
+					filepath.Join(baseDir, "subdir") + string(filepath.Separator),
+					filepath.Join(baseDir, "subdir/some.subdir.js"),
 				}
 
 				return expectTar(expect, content)
@@ -404,47 +406,4 @@ func expectTar(files []string, r io.Reader) error {
 	}
 
 	return nil
-}
-
-func TestHandler_FindTestFiles(t *testing.T) {
-	dir := fs.NewDir(t, "fixtures",
-		fs.WithFile("some.foo.js", "foo", fs.WithMode(0755)),
-		fs.WithFile("some.other.bar.js", "bar", fs.WithMode(0755)))
-	defer dir.Remove()
-
-	type fields struct {
-		client CommonAPIClient
-	}
-	type args struct {
-		patterns []string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   []string
-	}{
-		{
-			name:   "find one",
-			fields: fields{},
-			args:   args{[]string{dir.Path() + "/some.foo.js"}},
-			want:   []string{dir.Join("some.foo.js")},
-		},
-		{
-			name:   "find all",
-			fields: fields{},
-			args:   args{[]string{dir.Path() + "/*.js"}},
-			want:   []string{dir.Join("some.foo.js"), dir.Join("some.other.bar.js")},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			handler := &Handler{
-				client: tt.fields.client,
-			}
-			if got := handler.FindTestFiles(tt.args.patterns); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("FindTestFiles() = %v, want %v", got, tt.want)
-			}
-		})
-	}
 }
