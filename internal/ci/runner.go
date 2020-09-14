@@ -59,20 +59,15 @@ func (r *Runner) Setup() error {
 	// wait 2 seconds until everything is started
 	time.Sleep(2 * time.Second)
 
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	rc := config.Run{
-		ProjectPath: wd,
-	}
-
 	// TODO read pattern from config, and use default if not set
 	files, err := fpath.Walk(r.Project.Files, ".*.(spec|test).[jt]s$")
 	if err != nil {
 		return err
 	}
-	rc.Match = files
+	rc := config.Run{
+		ProjectPath: r.RunnerConfig.RootDir,
+		Match:       files,
+	}
 
 	rcPath := filepath.Join(r.RunnerConfig.RootDir, "run.yaml")
 	if err = yaml.WriteFile(rcPath, rc); err != nil {
@@ -80,20 +75,20 @@ func (r *Runner) Setup() error {
 	}
 
 	// copy files from repository into target dir
-	//log.Info().Msg("Copy files into assigned directories")
-	//for _, pattern := range r.Project.Files {
-	//	matches, err := filepath.Glob(pattern)
-	//	if err != nil {
-	//		continue
-	//	}
-	//
-	//	for _, file := range matches {
-	//		log.Info().Msg("Copy file " + file + " to " + r.RunnerConfig.TargetDir)
-	//		if err := copyFile(file, r.RunnerConfig.TargetDir); err != nil {
-	//			return err
-	//		}
-	//	}
-	//}
+	log.Info().Msg("Copy files into assigned directories")
+	for _, pattern := range r.Project.Files {
+		matches, err := filepath.Glob(pattern)
+		if err != nil {
+			continue
+		}
+
+		for _, file := range matches {
+			log.Info().Msg("Copy file " + file + " to " + r.RunnerConfig.RootDir)
+			if err := replicateFile(file, r.RunnerConfig.RootDir); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
@@ -143,24 +138,48 @@ func (r *Runner) Teardown(logDir string) error {
 }
 
 func copyFile(src string, targetDir string) error {
-	pwd, err := os.Getwd()
+	input, err := ioutil.ReadFile(src)
 	if err != nil {
 		return err
 	}
 
-	srcFile := src
-	if !filepath.IsAbs(srcFile) {
-		srcFile = filepath.Join(pwd, src)
-	}
-
-	input, err := ioutil.ReadFile(srcFile)
+	err = ioutil.WriteFile(filepath.Join(targetDir, filepath.Base(src)), input, 0644)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(targetDir+"/"+filepath.Base(srcFile), input, 0644)
+	return nil
+}
+
+// replicateFile copies src to targetDir. Unlike copyFile(), the path of src is replicated at targetDir.
+func replicateFile(src string, targetDir string) error {
+	targetPath := filepath.Join(targetDir, filepath.Dir(src))
+	if err := os.MkdirAll(targetPath, os.ModePerm); err != nil {
+		return err
+	}
+
+	finfo, err := os.Stat(src)
 	if err != nil {
 		return err
+	}
+
+	if !finfo.IsDir() {
+		input, err := ioutil.ReadFile(src)
+		if err != nil {
+			return err
+		}
+		return ioutil.WriteFile(filepath.Join(targetPath, filepath.Base(src)), input, 0644)
+	}
+
+	fis, err := ioutil.ReadDir(src)
+	if err != nil {
+		return err
+	}
+
+	for _, ff := range fis {
+		if err := replicateFile(filepath.Join(src, ff.Name()), targetDir); err != nil {
+			return err
+		}
 	}
 
 	return nil
