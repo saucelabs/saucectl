@@ -68,6 +68,7 @@ func (r *Runner) Setup() error {
 		ProjectPath: r.RunnerConfig.RootDir,
 		Match:       files,
 	}
+	log.Info().Strs("matched", files).Msg("Detected test files")
 
 	rcPath := filepath.Join(r.RunnerConfig.RootDir, "run.yaml")
 	if err = yaml.WriteFile(rcPath, rc); err != nil {
