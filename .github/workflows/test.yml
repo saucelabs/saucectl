@@ -94,6 +94,7 @@ jobs:
 
       - name: Run Sauce Pipeline Test
         run: |
+          pwd
           chmod +x ./saucectl
           ./saucectl run -c ./.sauce/playwright.yml --verbose
         env:
