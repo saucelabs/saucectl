@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/internal/fpath"
+	"github.com/saucelabs/saucectl/internal/yaml"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -57,21 +59,41 @@ func (r *Runner) Setup() error {
 	// wait 2 seconds until everything is started
 	time.Sleep(2 * time.Second)
 
-	// copy files from repository into target dir
-	log.Info().Msg("Copy files into assigned directories")
-	for _, pattern := range r.Project.Files {
-		matches, err := filepath.Glob(pattern)
-		if err != nil {
-			continue
-		}
-
-		for _, file := range matches {
-			log.Info().Msg("Copy file " + file + " to " + r.RunnerConfig.TargetDir)
-			if err := copyFile(file, r.RunnerConfig.TargetDir); err != nil {
-				return err
-			}
-		}
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
 	}
+	rc := config.Run{
+		ProjectPath: wd,
+	}
+
+	// TODO read pattern from config, and use default if not set
+	files, err := fpath.Walk(r.Project.Files, ".*.(spec|test).[jt]s$")
+	if err != nil {
+		return err
+	}
+	rc.Match = files
+
+	rcPath := filepath.Join(r.RunnerConfig.RootDir, "run.yaml")
+	if err = yaml.WriteFile(rcPath, rc); err != nil {
+		return err
+	}
+
+	// copy files from repository into target dir
+	//log.Info().Msg("Copy files into assigned directories")
+	//for _, pattern := range r.Project.Files {
+	//	matches, err := filepath.Glob(pattern)
+	//	if err != nil {
+	//		continue
+	//	}
+	//
+	//	for _, file := range matches {
+	//		log.Info().Msg("Copy file " + file + " to " + r.RunnerConfig.TargetDir)
+	//		if err := copyFile(file, r.RunnerConfig.TargetDir); err != nil {
+	//			return err
+	//		}
+	//	}
+	//}
 	return nil
 }
 

@@ -80,6 +80,12 @@ type RunnerConfiguration struct {
 	ExecCommand []string `yaml:"execCommand"`
 }
 
+// Run represents the configuration for a particular test run. This information is communicated to the test framework.
+type Run struct {
+	Match       []string `yaml:"match"`
+	ProjectPath string   `yaml:"projectPath"`
+}
+
 func readYaml(cfgFilePath string) ([]byte, error) {
 	if cfgFilePath == "" {
 		return nil, errors.New("no config file was provided")

@@ -24,6 +24,30 @@ func Globs(patterns []string) []string {
 	return files
 }
 
+// Walk evaluates each glob pattern of paths and walks through each directory.
+// Returns a list of files that match the given regex pattern.
+func Walk(paths []string, pattern string) ([]string, error) {
+	var files []string
+
+	paths = Globs(paths)
+	for _, f := range paths {
+		if info, err := os.Stat(f); err == nil && info.IsDir() {
+			if !info.IsDir() {
+				files = append(files, f)
+				continue
+			}
+
+			ff, err := List(f, pattern)
+			if err != nil {
+				return files, err
+			}
+			files = append(files, ff...)
+		}
+	}
+
+	return files, nil
+}
+
 // List returns a list of files matching the regexp pattern.
 // Unlike filepath.Glob, this method will inspect all subdirectories of dir.
 func List(dir string, pattern string) ([]string, error) {

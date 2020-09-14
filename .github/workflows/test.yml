@@ -78,7 +78,7 @@ jobs:
     needs: basic
     runs-on: ubuntu-latest
     container:
-      image: saucelabs/stt-playwright-jest-node:v0.1.5
+      image: saucelabs/stt-playwright-jest-node:v0.1.6-alpha.1
       options: --user 1001
 
     steps:
