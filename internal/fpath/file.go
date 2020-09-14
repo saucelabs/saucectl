@@ -31,7 +31,7 @@ func Walk(paths []string, pattern string) ([]string, error) {
 
 	paths = Globs(paths)
 	for _, f := range paths {
-		if info, err := os.Stat(f); err == nil && info.IsDir() {
+		if info, err := os.Stat(f); err == nil {
 			if !info.IsDir() {
 				files = append(files, f)
 				continue
