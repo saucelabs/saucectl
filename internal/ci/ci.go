@@ -1,9 +1,16 @@
 package ci
 
-import "os"
+import (
+	"os"
+	"runtime"
+)
 
-// IsAvailable detects whether this code is executed inside a CI environment.
+// IsAvailable detects whether this code is executed inside a CI environment that isn't Windows or MacOS
 func IsAvailable() bool {
 	// Most CI providers have this.
-	return os.Getenv("CI") != "" || os.Getenv("BUILD_NUMBER") != ""
+	isCi := os.Getenv("CI") != "" || os.Getenv("BUILD_NUMBER") != ""
+	isWin := runtime.GOOS == "windows"
+	isMacOS := runtime.GOOS == "darwin"
+	shouldSkipCi := os.Getenv("SKIP_CI") != ""
+	return isCi && !isWin && !isMacOS && !shouldSkipCi
 }
