@@ -127,7 +127,7 @@ jobs:
     needs: basic
     runs-on: ubuntu-latest
     container:
-      image: saucelabs/stt-cypress-mocha-node:v0.1.8
+      image: saucelabs/stt-cypress-mocha-node:v0.1.9-alpha.1
       options: --user 1001
 
     steps:
