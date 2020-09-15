@@ -102,7 +102,7 @@ jobs:
     needs: basic
     runs-on: ubuntu-latest
     container:
-      image: saucelabs/stt-testcafe-node:v0.1.4
+      image: saucelabs/stt-testcafe-node:v0.1.5-alpha.1
       options: --user 1001
 
     steps:
