@@ -64,8 +64,7 @@ type Project struct {
 type Suite struct {
 	Name         string       `yaml:"name"`
 	Capabilities Capabilities `yaml:"capabilities"`
-	Files        []string     `yaml:"files"`
-	Match        []string     `yaml:"match"`
+	Match        string       `yaml:"match"`
 }
 
 // SauceConfig represents sauce labs related settings.

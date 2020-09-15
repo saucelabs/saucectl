@@ -1,7 +1,6 @@
 package new
 
-var configTpl = `
-apiVersion: v1
+var configTpl = `apiVersion: v1alpha
 metadata:
   name: Feature XYZ
   tags:
@@ -11,6 +10,11 @@ metadata:
   build: Release $CI_COMMIT_SHORT_SHA
 files:
   - {{ .TestsFolder }}/example.test.js
+suites:
+  - name: "saucy test"
+    match: "{{ .Match }}"
+    capabilities:
+      browserName: "chromium"
 image:
   base: {{ .Name }}
   version: {{ .Version }}

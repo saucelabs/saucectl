@@ -59,8 +59,7 @@ func (r *Runner) Setup() error {
 	// wait 2 seconds until everything is started
 	time.Sleep(2 * time.Second)
 
-	// TODO read pattern from config, and use default if not set
-	files, err := fpath.Walk(r.Project.Files, ".*.(spec|test).[jt]s$")
+	files, err := fpath.Walk(r.Project.Files, r.Suite.Match)
 	if err != nil {
 		return err
 	}
