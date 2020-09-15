@@ -67,13 +67,6 @@ jobs:
           ./saucectl run -c ./.sauce/puppeteer.yml --verbose
         env:
           BUILD_ID: ${{ github.run_id }}
-
-      - name: Test With Suites
-        run: |
-          chmod +x ./saucectl
-          ./saucectl run -c ./.sauce/puppeteer-suites.yml --verbose
-        env:
-          BUILD_ID: ${{ github.run_id }}
   playwright:
     needs: basic
     runs-on: ubuntu-latest
