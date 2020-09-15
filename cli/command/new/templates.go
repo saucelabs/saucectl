@@ -13,8 +13,6 @@ files:
 suites:
   - name: "saucy test"
     match: "{{ .Match }}"
-    capabilities:
-      browserName: "chromium"
 image:
   base: {{ .Name }}
   version: {{ .Version }}
