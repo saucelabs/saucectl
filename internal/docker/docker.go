@@ -51,7 +51,7 @@ type Image struct {
 // DefaultPlaywright represents the default image for playwright.
 var DefaultPlaywright = Image{
 	Name:        "saucelabs/stt-playwright-jest-node",
-	Version:     "v0.1.6-alpha.2",
+	Version:     "v0.1.6",
 	TestsFolder: "tests",
 	Match:       ".*.(spec|test).js$",
 }
@@ -59,7 +59,7 @@ var DefaultPlaywright = Image{
 // DefaultPuppeteer represents the default image for puppeteer.
 var DefaultPuppeteer = Image{
 	Name:        "saucelabs/stt-puppeteer-jest-node",
-	Version:     "v0.1.5-alpha.1",
+	Version:     "v0.1.5",
 	TestsFolder: "tests",
 	Match:       ".*.(spec|test).js$",
 }
@@ -67,7 +67,7 @@ var DefaultPuppeteer = Image{
 // DefaultTestcafe represents the default image for testcafe.
 var DefaultTestcafe = Image{
 	Name:        "saucelabs/stt-testcafe-node",
-	Version:     "v0.1.5-alpha.1",
+	Version:     "v0.1.5",
 	TestsFolder: "tests",
 	Match:       ".*.(spec|test).[jt]s$",
 }
@@ -75,7 +75,7 @@ var DefaultTestcafe = Image{
 // DefaultCypress represents the default image for cypress.
 var DefaultCypress = Image{
 	Name:        "saucelabs/stt-cypress-mocha-node",
-	Version:     "v0.1.9-alpha.1",
+	Version:     "v0.1.9",
 	TestsFolder: "cypress/integration",
 	Match:       ".*.(spec|test).js$",
 }
