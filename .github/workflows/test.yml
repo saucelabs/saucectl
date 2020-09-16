@@ -47,7 +47,7 @@ jobs:
     needs: basic
     runs-on: ubuntu-latest
     container:
-      image: saucelabs/stt-puppeteer-jest-node:v0.1.4
+      image: saucelabs/stt-puppeteer-jest-node:v0.1.5
       options: --user 1001
 
     steps:
@@ -67,18 +67,11 @@ jobs:
           ./saucectl run -c ./.sauce/puppeteer.yml --verbose
         env:
           BUILD_ID: ${{ github.run_id }}
-
-      - name: Test With Suites
-        run: |
-          chmod +x ./saucectl
-          ./saucectl run -c ./.sauce/puppeteer-suites.yml --verbose
-        env:
-          BUILD_ID: ${{ github.run_id }}
   playwright:
     needs: basic
     runs-on: ubuntu-latest
     container:
-      image: saucelabs/stt-playwright-jest-node:v0.1.5
+      image: saucelabs/stt-playwright-jest-node:v0.1.6
       options: --user 1001
 
     steps:
@@ -102,7 +95,7 @@ jobs:
     needs: basic
     runs-on: ubuntu-latest
     container:
-      image: saucelabs/stt-testcafe-node:v0.1.4
+      image: saucelabs/stt-testcafe-node:v0.1.5
       options: --user 1001
 
     steps:
@@ -127,7 +120,7 @@ jobs:
     needs: basic
     runs-on: ubuntu-latest
     container:
-      image: saucelabs/stt-cypress-mocha-node:v0.1.8
+      image: saucelabs/stt-cypress-mocha-node:v0.1.9
       options: --user 1001
 
     steps:

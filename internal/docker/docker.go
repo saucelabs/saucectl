@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/rs/zerolog/log"
 	"io"
 	"io/ioutil"
@@ -44,34 +45,39 @@ type Image struct {
 	Name        string
 	Version     string
 	TestsFolder string
+	Match       string
 }
 
 // DefaultPlaywright represents the default image for playwright.
 var DefaultPlaywright = Image{
 	Name:        "saucelabs/stt-playwright-jest-node",
-	Version:     "v0.1.3",
+	Version:     "v0.1.6",
 	TestsFolder: "tests",
+	Match:       ".*.(spec|test).js$",
 }
 
 // DefaultPuppeteer represents the default image for puppeteer.
 var DefaultPuppeteer = Image{
 	Name:        "saucelabs/stt-puppeteer-jest-node",
-	Version:     "v0.1.2",
+	Version:     "v0.1.5",
 	TestsFolder: "tests",
+	Match:       ".*.(spec|test).js$",
 }
 
 // DefaultTestcafe represents the default image for testcafe.
 var DefaultTestcafe = Image{
 	Name:        "saucelabs/stt-testcafe-node",
-	Version:     "v0.1.2",
+	Version:     "v0.1.5",
 	TestsFolder: "tests",
+	Match:       ".*.(spec|test).[jt]s$",
 }
 
 // DefaultCypress represents the default image for cypress.
 var DefaultCypress = Image{
 	Name:        "saucelabs/stt-cypress-mocha-node",
-	Version:     "v0.1.3",
+	Version:     "v0.1.9",
 	TestsFolder: "cypress/integration",
+	Match:       ".*.(spec|test).js$",
 }
 
 // CommonAPIClient is the interface for interacting with containers.
@@ -224,8 +230,14 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 		return nil, err
 	}
 
+	m, err := createMounts(c.Files, DefaultProjectPath)
+	if err != nil {
+		return nil, err
+	}
+
 	hostConfig := &container.HostConfig{
 		PortBindings: portBindings,
+		Mounts:       m,
 	}
 	networkConfig := &network.NetworkingConfig{}
 	containerConfig := &container.Config{
@@ -266,6 +278,30 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 	}
 
 	return &container, nil
+}
+
+// createMounts returns a list of mount bindings, binding files to target, such that {source}:{target}/{source}.
+func createMounts(files []string, target string) ([]mount.Mount, error) {
+	mm := make([]mount.Mount, len(files))
+	for i, f := range files {
+		absF, err := filepath.Abs(f)
+		if err != nil {
+			return mm, err
+		}
+
+		mm[i] = mount.Mount{
+			Type:          mount.TypeBind,
+			Source:        absF,
+			Target:        filepath.Join(target, f),
+			ReadOnly:      false,
+			Consistency:   mount.ConsistencyDefault,
+			BindOptions:   nil,
+			VolumeOptions: nil,
+			TmpfsOptions:  nil,
+		}
+	}
+
+	return mm, nil
 }
 
 // CopyFilesToContainer copies the given files into the container.

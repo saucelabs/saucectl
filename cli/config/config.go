@@ -64,8 +64,7 @@ type Project struct {
 type Suite struct {
 	Name         string       `yaml:"name"`
 	Capabilities Capabilities `yaml:"capabilities"`
-	Files        []string     `yaml:"files"`
-	Match        []string     `yaml:"match"`
+	Match        string       `yaml:"match"`
 }
 
 // SauceConfig represents sauce labs related settings.
@@ -78,6 +77,12 @@ type RunnerConfiguration struct {
 	RootDir     string   `yaml:"rootDir"`
 	TargetDir   string   `yaml:"targetDir"`
 	ExecCommand []string `yaml:"execCommand"`
+}
+
+// Run represents the configuration for a particular test run. This information is communicated to the test framework.
+type Run struct {
+	Match       []string `yaml:"match"`
+	ProjectPath string   `yaml:"projectPath"`
 }
 
 func readYaml(cfgFilePath string) ([]byte, error) {
