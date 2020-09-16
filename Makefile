@@ -10,8 +10,8 @@ install:
 build:
 	go build cmd/saucectl/saucectl.go
 
-build-linux:
-	GOOS=linux GOARCH=amd64 make build
+build-%:
+	GOOS=$* GOARCH=amd64 make build
 
 #lint: @ Run the linter
 lint:
