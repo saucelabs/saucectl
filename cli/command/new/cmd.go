@@ -150,12 +150,16 @@ func writeJobConfig(framework string, region string, w io.Writer) error {
 
 	// TODO(AlexP) Replace template rendering and instead use the JobConfiguration struct directly to render the yaml
 	image, err := getImageValues(framework)
+	if err != nil {
+		return err
+	}
 
 	v := struct {
-		Name    string
-		Version string
-		Region  string
+		Name        string
+		Version     string
+		Region      string
 		TestsFolder string
+		Match       string
 	}{
 		Region: region,
 	}
@@ -163,6 +167,7 @@ func writeJobConfig(framework string, region string, w io.Writer) error {
 	v.Name = image.Name
 	v.Version = image.Version
 	v.TestsFolder = image.TestsFolder
+	v.Match = image.Match
 
 	return configTpl.Execute(w, v)
 }

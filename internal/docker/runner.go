@@ -6,6 +6,7 @@ import (
 	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/cli/streams"
 	"github.com/saucelabs/saucectl/internal/fpath"
+	"github.com/saucelabs/saucectl/internal/yaml"
 	"io"
 	"io/ioutil"
 	"os"
@@ -16,6 +17,9 @@ import (
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/progress"
 )
+
+// DefaultProjectPath represents the default project path. Test files will be located here.
+const DefaultProjectPath = "/home/seluser"
 
 // Runner represents the docker implementation of a test runner.
 type Runner struct {
@@ -99,9 +103,22 @@ func (r *Runner) Setup() error {
 		return err
 	}
 
-	progress.Show("Copying test files to container")
-	tf := fpath.Globs(r.Project.Files)
-	if err := r.docker.CopyFilesToContainer(r.Ctx, r.containerID, tf, r.RunnerConfig.TargetDir); err != nil {
+	progress.Show("Setting up test files for container")
+	rc := config.Run{
+		ProjectPath: DefaultProjectPath,
+	}
+
+	files, err := fpath.Walk(r.Project.Files, r.Suite.Match)
+	if err != nil {
+		return err
+	}
+	rc.Match = files
+
+	rcPath, err := yaml.TempFile("run.yaml", rc)
+	if err != nil {
+		return err
+	}
+	if err := r.docker.CopyToContainer(r.Ctx, r.containerID, rcPath, r.RunnerConfig.RootDir); err != nil {
 		return err
 	}
 
