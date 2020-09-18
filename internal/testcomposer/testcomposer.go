@@ -92,10 +92,12 @@ func (c *Client) StartJob(ctx context.Context, jobStarterPayload JobStarterPaylo
 	return job.ID, nil
 }
 
+// CreateFleet creates a fleet with the given buildID and test suites.
+// Returns a fleet ID if successful.
 func (c Client) CreateFleet(ctx context.Context, buildID string, testSuites []fleet.TestSuite) (string, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/fleets", c.URL)
 
-	req, err := c.newJsonRequest(ctx, url, http.MethodPut, CreatorRequest{
+	req, err := c.newJSONRequest(ctx, url, http.MethodPut, CreatorRequest{
 		BuildID:    buildID,
 		TestSuites: testSuites,
 	})
@@ -104,30 +106,32 @@ func (c Client) CreateFleet(ctx context.Context, buildID string, testSuites []fl
 	}
 
 	var resp CreatorResponse
-	if err := c.doJsonResponse(req, 201, &resp); err != nil {
+	if err := c.doJSONResponse(req, 201, &resp); err != nil {
 		return "", err
 	}
 
 	return resp.FleetID, nil
 }
 
+// NextAssignment fetches the next test assignment based on the suiteName and fleetID.
+// Returns an empty string if all tests have been assigned.
 func (c Client) NextAssignment(ctx context.Context, fleetID, suiteName string) (string, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/fleets/%s/assignments/_next", c.URL, fleetID)
 
-	req, err := c.newJsonRequest(ctx, url, http.MethodPut, AssignerRequest{SuiteName: suiteName})
+	req, err := c.newJSONRequest(ctx, url, http.MethodPut, AssignerRequest{SuiteName: suiteName})
 	if err != nil {
 		return "", err
 	}
 
 	var resp AssignerResponse
-	if err := c.doJsonResponse(req, 200, &resp); err != nil {
+	if err := c.doJSONResponse(req, 200, &resp); err != nil {
 		return "", err
 	}
 
 	return resp.TestFile, nil
 }
 
-func (c Client) newJsonRequest(ctx context.Context, url, method string, payload interface{}) (*http.Request, error) {
+func (c Client) newJSONRequest(ctx context.Context, url, method string, payload interface{}) (*http.Request, error) {
 	var b bytes.Buffer
 	if err := json.NewEncoder(&b).Encode(payload); err != nil {
 		return nil, err
@@ -143,7 +147,7 @@ func (c Client) newJsonRequest(ctx context.Context, url, method string, payload 
 	return req, err
 }
 
-func (c Client) doJsonResponse(req *http.Request, expectStatus int, v interface{}) error {
+func (c Client) doJSONResponse(req *http.Request, expectStatus int, v interface{}) error {
 	res, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return err
