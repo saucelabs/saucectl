@@ -65,64 +65,32 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		pwd, _ := os.Getwd()
 		cfgLogDir = filepath.Join(pwd, "logs")
 	}
+	cli.LogDir = cfgLogDir
 
 	log.Info().Str("config", cfgFilePath).Msg("Reading config file")
-	cfg, err := config.NewJobConfiguration(cfgFilePath)
+	p, err := config.NewJobConfiguration(cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
 
-	mergeArgs(&cfg)
-	cfg.Metadata.ExpandEnv()
+	mergeArgs(&p)
+	p.Metadata.ExpandEnv()
 
-	if len(cfg.Suites) == 0 {
+	if len(p.Suites) == 0 {
 		// As saucectl is transitioning into supporting test suites, we'll try to support this transition without
 		// a breaking change (if possible). This means that a suite may not necessarily be defined by the user.
 		// As such, we create an imaginary suite based on the project configuration.
-		cfg.Suites = []config.Suite{newDefaultSuite(cfg)}
+		p.Suites = []config.Suite{newDefaultSuite(p)}
 	}
 
-	for _, suite := range cfg.Suites {
-		exitCode, err := runSuite(cfg, suite, cli)
-		if err != nil  || exitCode != 0 {
-			return exitCode, err
-		}
-	}
-
-	return 0, nil
-}
-
-func runSuite(p config.Project, s config.Suite, cli *command.SauceCtlCli) (int, error) {
-	tr, err := newRunner(p, s, cli)
+	r, err := newRunner(p, cli)
 	if err != nil {
 		return 1, err
 	}
-	defer func() {
-		log.Info().Msg("Tearing down environment")
-		if err != tr.Teardown(cfgLogDir) {
-			log.Error().Err(err).Msg("Failed to tear down environment")
-		}
-	}()
-
-	log.Info().Msg("Setting up test environment")
-	if err := tr.Setup(); err != nil {
-		return 1, err
-	}
-
-	log.Info().Msg("Starting tests")
-	exitCode, err := tr.Run()
-	if err != nil {
-		return 1, err
-	}
-
-	log.Info().
-		Int("ExitCode", exitCode).
-		Msg("Command Finished")
-
-	return exitCode, err
+	return r.RunProject()
 }
 
-func newRunner(p config.Project, s config.Suite, cli *command.SauceCtlCli) (runner.Testrunner, error) {
+func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, error) {
 	// return test runner for testing
 	if p.Image.Base == "test" {
 		return mocks.NewTestRunner(p, cli)
@@ -130,11 +98,11 @@ func newRunner(p config.Project, s config.Suite, cli *command.SauceCtlCli) (runn
 
 	if ci.IsAvailable() {
 		log.Info().Msg("Starting CI runner")
-		return ci.NewRunner(p, s, cli)
+		return ci.NewRunner(p, cli)
 	}
 
 	log.Info().Msg("Starting local runner")
-	return docker.NewRunner(p, s, cli)
+	return docker.NewRunner(p, cli)
 }
 
 // newDefaultSuite creates a rudimentary test suite from a project configuration.

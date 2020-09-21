@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/cli/streams"
 	"github.com/saucelabs/saucectl/internal/fpath"
@@ -30,7 +31,7 @@ type Runner struct {
 }
 
 // NewRunner creates a new Runner instance.
-func NewRunner(c config.Project, s config.Suite, cli *command.SauceCtlCli) (*Runner, error) {
+func NewRunner(c config.Project, cli *command.SauceCtlCli) (*Runner, error) {
 	progress.Show("Starting test runner for docker")
 	defer progress.Stop()
 
@@ -38,7 +39,6 @@ func NewRunner(c config.Project, s config.Suite, cli *command.SauceCtlCli) (*Run
 	r.Cli = cli
 	r.Ctx = context.Background()
 	r.Project = c
-	r.Suite = s
 
 	var err error
 	r.docker, err = Create()
@@ -54,8 +54,19 @@ func NewRunner(c config.Project, s config.Suite, cli *command.SauceCtlCli) (*Run
 	return &r, nil
 }
 
+func (r *Runner) RunProject() (int, error) {
+	for _, suite := range r.Project.Suites {
+		exitCode, err := r.runSuite(suite)
+		if err != nil || exitCode != 0 {
+			return exitCode, err
+		}
+	}
+
+	return 0, nil
+}
+
 // Setup performs any necessary steps for a test runner to execute tests.
-func (r *Runner) Setup() error {
+func (r *Runner) Setup(suite config.Suite) error {
 	err := r.docker.ValidateDependency()
 	if err != nil {
 		return fmt.Errorf("please verify that docker is installed and running: %v, "+
@@ -80,7 +91,7 @@ func (r *Runner) Setup() error {
 	}
 
 	progress.Show("Starting container %s", baseImage)
-	container, err := r.docker.StartContainer(r.Ctx, r.Project, r.Suite)
+	container, err := r.docker.StartContainer(r.Ctx, r.Project, suite)
 	if err != nil {
 		return err
 	}
@@ -108,7 +119,7 @@ func (r *Runner) Setup() error {
 		ProjectPath: DefaultProjectPath,
 	}
 
-	files, err := fpath.Walk(r.Project.Files, r.Suite.Match)
+	files, err := fpath.Walk(r.Project.Files, suite.Match)
 	if err != nil {
 		return err
 	}
@@ -209,4 +220,30 @@ func (r *Runner) Teardown(logDir string) error {
 	}
 
 	return nil
+}
+
+func (r *Runner) runSuite(suite config.Suite) (int, error) {
+	defer func() {
+		log.Info().Msg("Tearing down environment")
+		if err := r.Teardown(r.Cli.LogDir); err != nil {
+			log.Error().Err(err).Msg("Failed to tear down environment")
+		}
+	}()
+
+	log.Info().Msg("Setting up test environment")
+	if err := r.Setup(suite); err != nil {
+		return 1, err
+	}
+
+	log.Info().Msg("Starting tests")
+	exitCode, err := r.Run()
+	if err != nil {
+		return 1, err
+	}
+
+	log.Info().
+		Int("ExitCode", exitCode).
+		Msg("Command Finished")
+
+	return exitCode, err
 }

@@ -28,7 +28,7 @@ type Runner struct {
 }
 
 // NewRunner creates a new Runner instance.
-func NewRunner(c config.Project, s config.Suite, cli *command.SauceCtlCli) (*Runner, error) {
+func NewRunner(c config.Project, cli *command.SauceCtlCli) (*Runner, error) {
 	r := Runner{}
 
 	// read runner config file
@@ -40,13 +40,23 @@ func NewRunner(c config.Project, s config.Suite, cli *command.SauceCtlCli) (*Run
 	r.Cli = cli
 	r.Ctx = context.Background()
 	r.Project = c
-	r.Suite = s
 	r.RunnerConfig = rc
 	return &r, nil
 }
 
+func (r *Runner) RunProject() (int, error) {
+	for _, suite := range r.Project.Suites {
+		exitCode, err := r.runSuite(suite)
+		if err != nil || exitCode != 0 {
+			return exitCode, err
+		}
+	}
+
+	return 0, nil
+}
+
 // Setup performs any necessary steps for a test runner to execute tests.
-func (r *Runner) Setup() error {
+func (r *Runner) Setup(suite config.Suite) error {
 	log.Info().Msg("Run entry.sh")
 	var out bytes.Buffer
 	cmd := exec.Command("/home/seluser/entry.sh", "&")
@@ -59,7 +69,7 @@ func (r *Runner) Setup() error {
 	// wait 2 seconds until everything is started
 	time.Sleep(2 * time.Second)
 
-	files, err := fpath.Walk(r.Project.Files, r.Suite.Match)
+	files, err := fpath.Walk(r.Project.Files, suite.Match)
 	if err != nil {
 		return err
 	}
@@ -93,7 +103,7 @@ func (r *Runner) Setup() error {
 }
 
 // Run runs the tests defined in the config.Project.
-func (r *Runner) Run() (int, error) {
+func (r *Runner) Run(suite config.Suite) (int, error) {
 	cmd := exec.Command(r.RunnerConfig.ExecCommand[0], r.RunnerConfig.ExecCommand[1])
 	cmd.Env = append(
 		os.Environ(),
@@ -101,7 +111,7 @@ func (r *Runner) Run() (int, error) {
 		fmt.Sprintf("SAUCE_TAGS=%s", strings.Join(r.Project.Metadata.Tags, ",")),
 		fmt.Sprintf("SAUCE_REGION=%s", r.Project.Sauce.Region),
 		fmt.Sprintf("TEST_TIMEOUT=%d", r.Project.Timeout),
-		fmt.Sprintf("BROWSER_NAME=%s", r.Suite.Capabilities.BrowserName),
+		fmt.Sprintf("BROWSER_NAME=%s", suite.Capabilities.BrowserName),
 	)
 
 	// Add any defined env variables from the job config / CLI args.
@@ -183,4 +193,30 @@ func replicateFile(src string, targetDir string) error {
 	}
 
 	return nil
+}
+
+func (r *Runner) runSuite(suite config.Suite) (int, error) {
+	defer func() {
+		log.Info().Msg("Tearing down environment")
+		if err := r.Teardown(r.Cli.LogDir); err != nil {
+			log.Error().Err(err).Msg("Failed to tear down environment")
+		}
+	}()
+
+	log.Info().Msg("Setting up test environment")
+	if err := r.Setup(suite); err != nil {
+		return 1, err
+	}
+
+	log.Info().Msg("Starting tests")
+	exitCode, err := r.Run(suite)
+	if err != nil {
+		return 1, err
+	}
+
+	log.Info().
+		Int("ExitCode", exitCode).
+		Msg("Command Finished")
+
+	return exitCode, err
 }

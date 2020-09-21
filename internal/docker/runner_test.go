@@ -3,6 +3,7 @@ package docker
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/cli/config"
 	"testing"
 
 	"github.com/saucelabs/saucectl/cli/mocks"
@@ -54,7 +55,7 @@ func TestLocalRunnerSetup(t *testing.T) {
 			runner.docker = tc.Client
 			runner.tmpDir = dir.Path()
 
-			err := runner.Setup()
+			err := runner.Setup(config.Suite{})
 			fmt.Println(err)
 		})
 	}
