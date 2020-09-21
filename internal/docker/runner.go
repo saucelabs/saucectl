@@ -239,7 +239,7 @@ func (r *Runner) runSuite(suite config.Suite) (int, error) {
 	log.Info().Msg("Starting tests")
 	exitCode, err := r.run()
 	if err != nil {
-		return 1, err
+		return exitCode, err
 	}
 
 	log.Info().
