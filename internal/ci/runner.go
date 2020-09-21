@@ -95,7 +95,7 @@ func (r *Runner) setup(suite config.Suite) error {
 
 		for _, file := range matches {
 			log.Info().Msg("Copy file " + file + " to " + r.RunnerConfig.RootDir)
-			if err := replicateFile(file, r.RunnerConfig.RootDir); err != nil {
+			if err := fpath.DeepCopy(file, filepath.Join(r.RunnerConfig.RootDir, file)); err != nil {
 				return err
 			}
 		}
@@ -157,40 +157,6 @@ func copyFile(src string, targetDir string) error {
 	err = ioutil.WriteFile(filepath.Join(targetDir, filepath.Base(src)), input, 0644)
 	if err != nil {
 		return err
-	}
-
-	return nil
-}
-
-// replicateFile copies src to targetDir. Unlike copyFile(), the path of src is replicated at targetDir.
-func replicateFile(src string, targetDir string) error {
-	targetPath := filepath.Join(targetDir, filepath.Dir(src))
-	if err := os.MkdirAll(targetPath, os.ModePerm); err != nil {
-		return err
-	}
-
-	finfo, err := os.Stat(src)
-	if err != nil {
-		return err
-	}
-
-	if !finfo.IsDir() {
-		input, err := ioutil.ReadFile(src)
-		if err != nil {
-			return err
-		}
-		return ioutil.WriteFile(filepath.Join(targetPath, filepath.Base(src)), input, 0644)
-	}
-
-	fis, err := ioutil.ReadDir(src)
-	if err != nil {
-		return err
-	}
-
-	for _, ff := range fis {
-		if err := replicateFile(filepath.Join(src, ff.Name()), targetDir); err != nil {
-			return err
-		}
 	}
 
 	return nil
