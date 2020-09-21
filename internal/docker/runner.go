@@ -65,8 +65,8 @@ func (r *Runner) RunProject() (int, error) {
 	return 0, nil
 }
 
-// Setup performs any necessary steps for a test runner to execute tests.
-func (r *Runner) Setup(suite config.Suite) error {
+// setup performs any necessary steps for a test runner to execute tests.
+func (r *Runner) setup(suite config.Suite) error {
 	err := r.docker.ValidateDependency()
 	if err != nil {
 		return fmt.Errorf("please verify that docker is installed and running: %v, "+
@@ -147,8 +147,8 @@ func (r *Runner) Setup(suite config.Suite) error {
 	return nil
 }
 
-// Run runs the tests defined in the config.Project.
-func (r *Runner) Run() (int, error) {
+// run runs the tests defined in the config.Project.
+func (r *Runner) run() (int, error) {
 	var (
 		out, stderr io.Writer
 		in          io.ReadCloser
@@ -201,8 +201,8 @@ func (r *Runner) Run() (int, error) {
 	return exitCode, nil
 }
 
-// Teardown cleans up the test environment.
-func (r *Runner) Teardown(logDir string) error {
+// teardown cleans up the test environment.
+func (r *Runner) teardown(logDir string) error {
 	for _, containerSrcPath := range runner.LogFiles {
 		file := filepath.Base(containerSrcPath)
 		hostDstPath := filepath.Join(logDir, file)
@@ -225,18 +225,18 @@ func (r *Runner) Teardown(logDir string) error {
 func (r *Runner) runSuite(suite config.Suite) (int, error) {
 	defer func() {
 		log.Info().Msg("Tearing down environment")
-		if err := r.Teardown(r.Cli.LogDir); err != nil {
+		if err := r.teardown(r.Cli.LogDir); err != nil {
 			log.Error().Err(err).Msg("Failed to tear down environment")
 		}
 	}()
 
 	log.Info().Msg("Setting up test environment")
-	if err := r.Setup(suite); err != nil {
+	if err := r.setup(suite); err != nil {
 		return 1, err
 	}
 
 	log.Info().Msg("Starting tests")
-	exitCode, err := r.Run()
+	exitCode, err := r.run()
 	if err != nil {
 		return 1, err
 	}
