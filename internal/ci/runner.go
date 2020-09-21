@@ -44,6 +44,7 @@ func NewRunner(c config.Project, cli *command.SauceCtlCli) (*Runner, error) {
 	return &r, nil
 }
 
+// RunProject runs the tests defined in config.Project.
 func (r *Runner) RunProject() (int, error) {
 	for _, suite := range r.Project.Suites {
 		exitCode, err := r.runSuite(suite)

@@ -19,6 +19,7 @@ func NewTestRunner(c config.Project, cli *command.SauceCtlCli) (*TestRunner, err
 	return &runner, nil
 }
 
+// RunProject pretends to run tests defined by config.Project.
 func (r *TestRunner) RunProject() (int, error) {
 	r.HasProject = true
 	return 123, nil
