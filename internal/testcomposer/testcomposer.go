@@ -12,7 +12,7 @@ import (
 
 // Client service
 type Client struct {
-	HTTPClient http.Client
+	HTTPClient *http.Client
 	URL        string // e.g.) https://api.<region>.saucelabs.net
 	Username   string
 	AccessKey  string
@@ -94,7 +94,7 @@ func (c *Client) StartJob(ctx context.Context, jobStarterPayload JobStarterPaylo
 
 // CreateFleet creates a fleet with the given buildID and test suites.
 // Returns a fleet ID if successful.
-func (c Client) CreateFleet(ctx context.Context, buildID string, testSuites []fleet.TestSuite) (string, error) {
+func (c *Client) CreateFleet(ctx context.Context, buildID string, testSuites []fleet.TestSuite) (string, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/fleets", c.URL)
 
 	req, err := c.newJSONRequest(ctx, url, http.MethodPut, CreatorRequest{
@@ -115,7 +115,7 @@ func (c Client) CreateFleet(ctx context.Context, buildID string, testSuites []fl
 
 // NextAssignment fetches the next test assignment based on the suiteName and fleetID.
 // Returns an empty string if all tests have been assigned.
-func (c Client) NextAssignment(ctx context.Context, fleetID, suiteName string) (string, error) {
+func (c *Client) NextAssignment(ctx context.Context, fleetID, suiteName string) (string, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/fleets/%s/assignments/_next", c.URL, fleetID)
 
 	req, err := c.newJSONRequest(ctx, url, http.MethodPut, AssignerRequest{SuiteName: suiteName})
@@ -131,7 +131,7 @@ func (c Client) NextAssignment(ctx context.Context, fleetID, suiteName string) (
 	return resp.TestFile, nil
 }
 
-func (c Client) newJSONRequest(ctx context.Context, url, method string, payload interface{}) (*http.Request, error) {
+func (c *Client) newJSONRequest(ctx context.Context, url, method string, payload interface{}) (*http.Request, error) {
 	var b bytes.Buffer
 	if err := json.NewEncoder(&b).Encode(payload); err != nil {
 		return nil, err
@@ -147,7 +147,7 @@ func (c Client) newJSONRequest(ctx context.Context, url, method string, payload 
 	return req, err
 }
 
-func (c Client) doJSONResponse(req *http.Request, expectStatus int, v interface{}) error {
+func (c *Client) doJSONResponse(req *http.Request, expectStatus int, v interface{}) error {
 	res, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return err

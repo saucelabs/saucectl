@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/fleet"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -57,7 +58,7 @@ func TestTestComposer_StartJob(t *testing.T) {
 		jobStarterPayload JobStarterPayload
 	}
 	type fields struct {
-		HTTPClient http.Client
+		HTTPClient *http.Client
 		URL        string
 	}
 	tests := []struct {
@@ -71,7 +72,7 @@ func TestTestComposer_StartJob(t *testing.T) {
 		{
 			name: "Happy path",
 			fields: fields{
-				HTTPClient: *mockTestComposerServer.Client(),
+				HTTPClient: mockTestComposerServer.Client(),
 				URL:        mockTestComposerServer.URL,
 			},
 			args: args{
@@ -98,7 +99,7 @@ func TestTestComposer_StartJob(t *testing.T) {
 		{
 			name: "Non 2xx status code",
 			fields: fields{
-				HTTPClient: *mockTestComposerServer.Client(),
+				HTTPClient: mockTestComposerServer.Client(),
 				URL:        mockTestComposerServer.URL,
 			},
 			args: args{
@@ -128,6 +129,142 @@ func TestTestComposer_StartJob(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("StartJob() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestClient_CreateFleet(t *testing.T) {
+	respo := Responder{
+		Test: t,
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		respo.Play(w, r)
+	}))
+	defer server.Close()
+
+	type fields struct {
+		HTTPClient *http.Client
+		URL        string
+		Username   string
+		AccessKey  string
+	}
+	type args struct {
+		ctx        context.Context
+		buildID    string
+		testSuites []fleet.TestSuite
+	}
+	tests := []struct {
+		name       string
+		fields     fields
+		args       args
+		want       string
+		wantErr    bool
+		serverFunc func(w http.ResponseWriter, r *http.Request)
+	}{
+		{
+			name:   "create",
+			fields: fields{HTTPClient: server.Client(), URL: server.URL},
+			args: args{
+				ctx:        context.Background(),
+				buildID:    "1",
+				testSuites: []fleet.TestSuite{{Name: "ts1", TestFiles: []string{"test.js"}}},
+			},
+			want:    "test101",
+			wantErr: false,
+			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(201)
+				json.NewEncoder(w).Encode(CreatorResponse{"test101"})
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := Client{
+				HTTPClient: tt.fields.HTTPClient,
+				URL:        tt.fields.URL,
+				Username:   tt.fields.Username,
+				AccessKey:  tt.fields.AccessKey,
+			}
+
+			respo.Record(tt.serverFunc)
+
+			got, err := c.CreateFleet(tt.args.ctx, tt.args.buildID, tt.args.testSuites)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CreateFleet() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("CreateFleet() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestClient_NextAssignment(t *testing.T) {
+	respo := Responder{
+		Test: t,
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		respo.Play(w, r)
+	}))
+	defer server.Close()
+
+	type fields struct {
+		HTTPClient *http.Client
+		URL        string
+		Username   string
+		AccessKey  string
+	}
+	type args struct {
+		ctx       context.Context
+		fleetID   string
+		suiteName string
+	}
+	tests := []struct {
+		name       string
+		fields     fields
+		args       args
+		want       string
+		wantErr    bool
+		serverFunc func(w http.ResponseWriter, r *http.Request)
+	}{
+		{
+			name:   "assign",
+			fields: fields{HTTPClient: server.Client(), URL: server.URL},
+			args: args{
+				ctx:       context.Background(),
+				fleetID:   "1",
+				suiteName: "ts1",
+			},
+			want:    "testi.js",
+			wantErr: false,
+			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(200)
+				json.NewEncoder(w).Encode(AssignerResponse{"testi.js"})
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Client{
+				HTTPClient: tt.fields.HTTPClient,
+				URL:        tt.fields.URL,
+				Username:   tt.fields.Username,
+				AccessKey:  tt.fields.AccessKey,
+			}
+
+			respo.Record(tt.serverFunc)
+
+			got, err := c.NextAssignment(tt.args.ctx, tt.args.fleetID, tt.args.suiteName)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NextAssignment() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("NextAssignment() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
