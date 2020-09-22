@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -49,7 +48,7 @@ func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer) 
 
 // RunProject runs the tests defined in config.Project.
 func (r *Runner) RunProject() (int, error) {
-	fid, err := r.registerFleet()
+	fid, err := fleet.Register(r.Ctx, r.Sequencer, r.Project.Files, r.Project.Suites)
 	if err != nil {
 		return 1, err
 	}
@@ -62,24 +61,6 @@ func (r *Runner) RunProject() (int, error) {
 	}
 
 	return 0, nil
-}
-
-func (r *Runner) registerFleet() (string, error) {
-	ts := make([]fleet.TestSuite, len(r.Project.Suites))
-
-	for i, suite := range r.Project.Suites {
-		files, err := fpath.Walk(r.Project.Files, suite.Match)
-		if err != nil {
-			return "", err
-		}
-		ts[i] = fleet.TestSuite{
-			Name:      suite.Name,
-			TestFiles: files,
-		}
-	}
-
-	// FIXME generate correct build ID
-	return r.Sequencer.Register(r.Ctx, strconv.Itoa(int(time.Now().Unix())), ts)
 }
 
 // setup performs any necessary steps for a test runner to execute tests.
