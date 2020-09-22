@@ -190,13 +190,13 @@ func TestClient_CreateFleet(t *testing.T) {
 
 			respo.Record(tt.serverFunc)
 
-			got, err := c.CreateFleet(tt.args.ctx, tt.args.buildID, tt.args.testSuites)
+			got, err := c.Register(tt.args.ctx, tt.args.buildID, tt.args.testSuites)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("CreateFleet() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Register() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("CreateFleet() got = %v, want %v", got, tt.want)
+				t.Errorf("Register() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

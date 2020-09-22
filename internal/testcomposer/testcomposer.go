@@ -92,9 +92,9 @@ func (c *Client) StartJob(ctx context.Context, jobStarterPayload JobStarterPaylo
 	return job.ID, nil
 }
 
-// CreateFleet creates a fleet with the given buildID and test suites.
+// Register registers a fleet with the given buildID and test suites.
 // Returns a fleet ID if successful.
-func (c *Client) CreateFleet(ctx context.Context, buildID string, testSuites []fleet.TestSuite) (string, error) {
+func (c *Client) Register(ctx context.Context, buildID string, testSuites []fleet.TestSuite) (string, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/fleets", c.URL)
 
 	req, err := c.newJSONRequest(ctx, url, http.MethodPut, CreatorRequest{

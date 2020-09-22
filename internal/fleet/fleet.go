@@ -8,8 +8,8 @@ type TestSuite struct {
 	TestFiles []string `json:"testFiles"`
 }
 
-// Manager is the management interface for a fleet.
-type Manager interface {
-	CreateFleet(ctx context.Context, buildID string, testSuites []TestSuite) (string, error)
+// Sequencer is the interface for test sequencing.
+type Sequencer interface {
+	Register(ctx context.Context, buildID string, testSuites []TestSuite) (string, error)
 	NextAssignment(ctx context.Context, fleetID, suiteName string) (string, error)
 }
