@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/yaml"
 	"io/ioutil"
@@ -28,7 +29,7 @@ type Runner struct {
 }
 
 // NewRunner creates a new Runner instance.
-func NewRunner(c config.Project, cli *command.SauceCtlCli) (*Runner, error) {
+func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer) (*Runner, error) {
 	r := Runner{}
 
 	// read runner config file
@@ -41,13 +42,19 @@ func NewRunner(c config.Project, cli *command.SauceCtlCli) (*Runner, error) {
 	r.Ctx = context.Background()
 	r.Project = c
 	r.RunnerConfig = rc
+	r.Sequencer = seq
 	return &r, nil
 }
 
 // RunProject runs the tests defined in config.Project.
 func (r *Runner) RunProject() (int, error) {
+	fid, err := fleet.Register(r.Ctx, r.Sequencer, r.Project.Files, r.Project.Suites)
+	if err != nil {
+		return 1, err
+	}
+
 	for _, suite := range r.Project.Suites {
-		exitCode, err := r.runSuite(suite)
+		exitCode, err := r.runSuite(suite, fid)
 		if err != nil || exitCode != 0 {
 			return exitCode, err
 		}
@@ -57,7 +64,7 @@ func (r *Runner) RunProject() (int, error) {
 }
 
 // setup performs any necessary steps for a test runner to execute tests.
-func (r *Runner) setup(suite config.Suite) error {
+func (r *Runner) setup(run config.Run) error {
 	log.Info().Msg("Run entry.sh")
 	var out bytes.Buffer
 	cmd := exec.Command("/home/seluser/entry.sh", "&")
@@ -70,18 +77,8 @@ func (r *Runner) setup(suite config.Suite) error {
 	// wait 2 seconds until everything is started
 	time.Sleep(2 * time.Second)
 
-	files, err := fpath.Walk(r.Project.Files, suite.Match)
-	if err != nil {
-		return err
-	}
-	rc := config.Run{
-		ProjectPath: r.RunnerConfig.RootDir,
-		Match:       files,
-	}
-	log.Info().Strs("matched", files).Msg("Detected test files")
-
 	rcPath := filepath.Join(r.RunnerConfig.RootDir, "run.yaml")
-	if err = yaml.WriteFile(rcPath, rc); err != nil {
+	if err := yaml.WriteFile(rcPath, run); err != nil {
 		return err
 	}
 
@@ -162,7 +159,29 @@ func copyFile(src string, targetDir string) error {
 	return nil
 }
 
-func (r *Runner) runSuite(suite config.Suite) (int, error) {
+func (r *Runner) runSuite(suite config.Suite, fleetID string) (int, error) {
+	for {
+		next, err := r.Sequencer.NextAssignment(r.Ctx, fleetID, suite.Name)
+		if err != nil {
+			return 1, err
+		}
+		if next == "" {
+			return 0, nil
+		}
+
+		run := config.Run{
+			Match:       []string{next},
+			ProjectPath: r.RunnerConfig.RootDir,
+		}
+
+		code, err := r.runTest(suite, run)
+		if err != nil || code != 0 {
+			return code, err
+		}
+	}
+}
+
+func (r *Runner) runTest(suite config.Suite, run config.Run) (int, error) {
 	defer func() {
 		log.Info().Msg("Tearing down environment")
 		if err := r.teardown(r.Cli.LogDir); err != nil {
@@ -171,7 +190,7 @@ func (r *Runner) runSuite(suite config.Suite) (int, error) {
 	}()
 
 	log.Info().Msg("Setting up test environment")
-	if err := r.setup(suite); err != nil {
+	if err := r.setup(run); err != nil {
 		return 1, err
 	}
 

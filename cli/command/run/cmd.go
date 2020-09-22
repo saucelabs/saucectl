@@ -1,13 +1,14 @@
 package run
 
 import (
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/mocks"
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/docker"
+	"github.com/saucelabs/saucectl/internal/fleet"
+	"github.com/saucelabs/saucectl/internal/memseq"
 	"os"
 	"path/filepath"
-
-	"github.com/rs/zerolog/log"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
@@ -83,14 +84,16 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		p.Suites = []config.Suite{newDefaultSuite(p)}
 	}
 
-	r, err := newRunner(p, cli)
+	seq := memseq.Sequencer{}
+
+	r, err := newRunner(p, cli, &seq)
 	if err != nil {
 		return 1, err
 	}
 	return r.RunProject()
 }
 
-func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, error) {
+func newRunner(p config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer) (runner.Testrunner, error) {
 	// return test runner for testing
 	if p.Image.Base == "test" {
 		return mocks.NewTestRunner(p, cli)
@@ -98,11 +101,11 @@ func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, e
 
 	if ci.IsAvailable() {
 		log.Info().Msg("Starting CI runner")
-		return ci.NewRunner(p, cli)
+		return ci.NewRunner(p, cli, seq)
 	}
 
 	log.Info().Msg("Starting local runner")
-	return docker.NewRunner(p, cli)
+	return docker.NewRunner(p, cli, seq)
 }
 
 // newDefaultSuite creates a rudimentary test suite from a project configuration.
