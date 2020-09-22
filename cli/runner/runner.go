@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/internal/fleet"
 )
 
 const logDir = "/var/log/cont"
@@ -38,4 +39,5 @@ type BaseRunner struct {
 	RunnerConfig config.RunnerConfiguration
 	Ctx          context.Context
 	Cli          *command.SauceCtlCli
+	Sequencer    fleet.Sequencer
 }

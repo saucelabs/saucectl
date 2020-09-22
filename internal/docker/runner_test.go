@@ -53,9 +53,8 @@ func TestLocalRunnerSetup(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			runner := Runner{}
 			runner.docker = tc.Client
-			runner.tmpDir = dir.Path()
 
-			err := runner.setup(config.Suite{})
+			err := runner.setup(config.Suite{}, config.Run{})
 			fmt.Println(err)
 		})
 	}

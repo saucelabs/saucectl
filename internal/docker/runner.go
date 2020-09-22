@@ -6,12 +6,14 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/cli/streams"
+	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/yaml"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/saucelabs/saucectl/cli/command"
@@ -27,11 +29,10 @@ type Runner struct {
 	runner.BaseRunner
 	containerID string
 	docker      *Handler
-	tmpDir      string
 }
 
 // NewRunner creates a new Runner instance.
-func NewRunner(c config.Project, cli *command.SauceCtlCli) (*Runner, error) {
+func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer) (*Runner, error) {
 	progress.Show("Starting test runner for docker")
 	defer progress.Stop()
 
@@ -39,14 +40,10 @@ func NewRunner(c config.Project, cli *command.SauceCtlCli) (*Runner, error) {
 	r.Cli = cli
 	r.Ctx = context.Background()
 	r.Project = c
+	r.Sequencer = seq
 
 	var err error
 	r.docker, err = Create()
-	if err != nil {
-		return nil, err
-	}
-
-	r.tmpDir, err = ioutil.TempDir("", "saucectl")
 	if err != nil {
 		return nil, err
 	}
@@ -56,8 +53,13 @@ func NewRunner(c config.Project, cli *command.SauceCtlCli) (*Runner, error) {
 
 // RunProject runs the tests defined in config.Project.
 func (r *Runner) RunProject() (int, error) {
+	fid, err := r.registerFleet()
+	if err != nil {
+		return 1, err
+	}
+
 	for _, suite := range r.Project.Suites {
-		exitCode, err := r.runSuite(suite)
+		exitCode, err := r.runSuite(suite, fid)
 		if err != nil || exitCode != 0 {
 			return exitCode, err
 		}
@@ -66,8 +68,26 @@ func (r *Runner) RunProject() (int, error) {
 	return 0, nil
 }
 
+func (r *Runner) registerFleet() (string, error) {
+	ts := make([]fleet.TestSuite, len(r.Project.Suites))
+
+	for i, suite := range r.Project.Suites {
+		files, err := fpath.Walk(r.Project.Files, suite.Match)
+		if err != nil {
+			return "", err
+		}
+		ts[i] = fleet.TestSuite{
+			Name:      suite.Name,
+			TestFiles: files,
+		}
+	}
+
+	// FIXME generate correct build ID
+	return r.Sequencer.Register(r.Ctx, strconv.Itoa(int(time.Now().Unix())), ts)
+}
+
 // setup performs any necessary steps for a test runner to execute tests.
-func (r *Runner) setup(suite config.Suite) error {
+func (r *Runner) setup(suite config.Suite, run config.Run) error {
 	err := r.docker.ValidateDependency()
 	if err != nil {
 		return fmt.Errorf("please verify that docker is installed and running: %v, "+
@@ -104,8 +124,13 @@ func (r *Runner) setup(suite config.Suite) error {
 	time.Sleep(1 * time.Second)
 
 	// get runner config
-	defer os.RemoveAll(r.tmpDir)
-	hostDstPath := filepath.Join(r.tmpDir, filepath.Base(runner.ConfigPath))
+	tmpDir, err := ioutil.TempDir("", "saucectl")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tmpDir)
+
+	hostDstPath := filepath.Join(tmpDir, filepath.Base(runner.ConfigPath))
 	if err := r.docker.CopyFromContainer(r.Ctx, container.ID, runner.ConfigPath, hostDstPath); err != nil {
 		return err
 	}
@@ -116,17 +141,7 @@ func (r *Runner) setup(suite config.Suite) error {
 	}
 
 	progress.Show("Setting up test files for container")
-	rc := config.Run{
-		ProjectPath: DefaultProjectPath,
-	}
-
-	files, err := fpath.Walk(r.Project.Files, suite.Match)
-	if err != nil {
-		return err
-	}
-	rc.Match = files
-
-	rcPath, err := yaml.TempFile("run.yaml", rc)
+	rcPath, err := yaml.TempFile("run.yaml", run)
 	if err != nil {
 		return err
 	}
@@ -223,7 +238,29 @@ func (r *Runner) teardown(logDir string) error {
 	return nil
 }
 
-func (r *Runner) runSuite(suite config.Suite) (int, error) {
+func (r *Runner) runSuite(suite config.Suite, fleetID string) (int, error) {
+	for {
+		next, err := r.Sequencer.NextAssignment(r.Ctx, fleetID, suite.Name)
+		if err != nil {
+			return 1, err
+		}
+		if next == "" {
+			return 0, nil
+		}
+
+		run := config.Run{
+			Match:       []string{next},
+			ProjectPath: DefaultProjectPath,
+		}
+
+		code, err := r.runTest(suite, run)
+		if err != nil || code != 0 {
+			return code, err
+		}
+	}
+}
+
+func (r *Runner) runTest(suite config.Suite, run config.Run) (int, error) {
 	defer func() {
 		log.Info().Msg("Tearing down environment")
 		if err := r.teardown(r.Cli.LogDir); err != nil {
@@ -232,7 +269,7 @@ func (r *Runner) runSuite(suite config.Suite) (int, error) {
 	}()
 
 	log.Info().Msg("Setting up test environment")
-	if err := r.setup(suite); err != nil {
+	if err := r.setup(suite, run); err != nil {
 		return 1, err
 	}
 
