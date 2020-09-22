@@ -89,3 +89,46 @@ func TestList(t *testing.T) {
 		})
 	}
 }
+
+func TestCopy(t *testing.T) {
+	dir := fs.NewDir(t, "mytestfiles",
+		fs.WithFile("foo.js", "foo", fs.WithMode(0755)),
+		fs.WithDir("mysubdir", fs.WithFile("bar.js", "bar", fs.WithMode(0755))),
+	)
+	defer dir.Remove()
+
+	dest := fs.NewDir(t, "testy")
+	defer dest.Remove()
+
+	type args struct {
+		src    string
+		target string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    int
+		wantErr bool
+	}{
+		{
+			name:    "nested",
+			args:    args{src: dir.Path(), target: dest.Join(dir.Path())},
+			want:    2,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := DeepCopy(tt.args.src, tt.args.target); (err != nil) != tt.wantErr {
+				t.Errorf("DeepCopy() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			ff, err := List(dest.Path(), ".*.js")
+			if err != nil {
+				t.Errorf("Failed to list contents of directory %v, instead got error = %v", dest.Path(), err)
+			}
+			if tt.want != len(ff) {
+				t.Errorf("Want %d files at destination, but found %d", tt.want, len(ff))
+			}
+		})
+	}
+}

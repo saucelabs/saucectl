@@ -29,15 +29,12 @@ var LogFiles = [...]string{
 
 // Testrunner describes the test runner interface
 type Testrunner interface {
-	Setup() error
-	Run() (int, error)
-	Teardown(logDir string) error
+	RunProject() (int, error)
 }
 
 // BaseRunner contains common properties across all runners
 type BaseRunner struct {
 	Project      config.Project
-	Suite        config.Suite
 	RunnerConfig config.RunnerConfiguration
 	Ctx          context.Context
 	Cli          *command.SauceCtlCli

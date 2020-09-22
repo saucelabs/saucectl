@@ -7,6 +7,7 @@ import (
 
 // TestRunner is a mock to test runner functionalities
 type TestRunner struct {
+	HasProject  bool
 	HasSetup    bool
 	HasRun      bool
 	HasFinished bool
@@ -16,6 +17,12 @@ type TestRunner struct {
 func NewTestRunner(c config.Project, cli *command.SauceCtlCli) (*TestRunner, error) {
 	runner := TestRunner{}
 	return &runner, nil
+}
+
+// RunProject pretends to run tests defined by config.Project.
+func (r *TestRunner) RunProject() (int, error) {
+	r.HasProject = true
+	return 123, nil
 }
 
 // Setup testrun
