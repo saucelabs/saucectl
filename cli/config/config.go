@@ -43,7 +43,7 @@ type ImageDefinition struct {
 	Base    string                 `yaml:"base"`
 	Version string                 `yaml:"version"`
 	Exec    string                 `yaml:"exec"`
-	PreExec []string               `yaml:"preExec"`
+	PreExec string                 `yaml:"preExec"`
 	Options map[string]interface{} `yaml:"options"`
 }
 

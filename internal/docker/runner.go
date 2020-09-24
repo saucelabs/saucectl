@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"time"
 	"strings"
+	"errors"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
@@ -124,8 +125,8 @@ func (r *Runner) Setup() error {
 	}
 
 	// running pre-exec tasks
-	exitCode, err := r.PreExec(r.Project.Image.PreExec)
-	if exitCode != 0 || err != nil {
+	err = r.PreExec(r.Project.Image.PreExec)
+	if err != nil {
 		return err
 	}
 	// start port forwarding
@@ -142,15 +143,19 @@ func (r *Runner) Setup() error {
 	return nil
 }
 
-func (r* Runner) PreExec(tasks []string) (int, error) {
+func (r* Runner) PreExec(preExec string) (error) {
+	tasks := yaml.SplitLines(preExec)
 	for _, task := range tasks {
 		progress.Show("Running preExec task: %s", task)
 		exitCode, err := r.Execute(strings.Fields(task))
-		if exitCode != 0 || err != nil {
-			return exitCode, err
+		if err != nil {
+			return err
+		}
+		if exitCode != 0 {
+			return errors.New(fmt.Sprintf("Failed to run pre-exec task: %s", task))
 		}
 	}
-	return 0, nil
+	return nil
 }
 
 func (r* Runner) Execute(cmd []string) (int, error) {
