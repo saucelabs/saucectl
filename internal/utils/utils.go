@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func SplitLines(s string) (lines []string) {
+func SplitLines(s string) ([]string) {
 	var l []string
 	sc := bufio.NewScanner(strings.NewReader(s))
 	for sc.Scan() {

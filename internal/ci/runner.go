@@ -7,6 +7,7 @@ import (
 	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/yaml"
+	"github.com/saucelabs/saucectl/internal/utils"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -87,6 +88,38 @@ func (r *Runner) Setup() error {
 			if err := replicateFile(file, r.RunnerConfig.RootDir); err != nil {
 				return err
 			}
+		}
+	}
+	// running pre-exec tasks
+	err = r.PreExec(r.Project.Image.PreExec)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r* Runner) Execute(arg string) (int, error) {
+	cmd := exec.Command(arg)
+	cmd.Stdout = r.Cli.Out()
+	cmd.Stderr = r.Cli.Out()
+	cmd.Dir = r.RunnerConfig.RootDir
+	err := cmd.Run()
+	if err != nil {
+		return 1, err
+	}
+	return 0, nil
+}
+
+func (r* Runner) PreExec(preExec string) (error) {
+	tasks := utils.SplitLines(preExec)
+	for _, task := range tasks {
+		log.Info().Msg(fmt.Sprintf("Running preExec task: %s", task))
+		exitCode, err := r.Execute(task)
+		if err != nil {
+			return err
+		}
+		if exitCode != 0 {
+			return errors.New(fmt.Sprintf("Failed to run pre-exec task: %s", task))
 		}
 	}
 	return nil
