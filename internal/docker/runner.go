@@ -7,13 +7,14 @@ import (
 	"github.com/saucelabs/saucectl/cli/streams"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/yaml"
+	"github.com/saucelabs/saucectl/internal/utils"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
-	"strings"
 	"errors"
+        "strings"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
@@ -144,7 +145,7 @@ func (r *Runner) Setup() error {
 }
 
 func (r* Runner) PreExec(preExec string) (error) {
-	tasks := yaml.SplitLines(preExec)
+	tasks := utils.SplitLines(preExec)
 	for _, task := range tasks {
 		progress.Show("Running preExec task: %s", task)
 		exitCode, err := r.Execute(strings.Fields(task))
