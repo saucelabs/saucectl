@@ -12,7 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"time"
-        "strings"
+	"strings"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
