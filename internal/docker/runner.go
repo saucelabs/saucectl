@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+        "strings"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
@@ -122,6 +123,11 @@ func (r *Runner) Setup() error {
 		return err
 	}
 
+	// running pre-exec tasks
+	exitCode, err := r.PreExec(r.Project.Image.PreExec)
+	if exitCode != 0 || err != nil {
+		return err
+	}
 	// start port forwarding
 	sockatCmd := []string{
 		"socat",
@@ -136,8 +142,18 @@ func (r *Runner) Setup() error {
 	return nil
 }
 
-// Run runs the tests defined in the config.Project.
-func (r *Runner) Run() (int, error) {
+func (r* Runner) PreExec(tasks []string) (int, error) {
+	for _, task := range tasks {
+		progress.Show("Running preExec task: %s", task)
+		exitCode, err := r.Execute(strings.Fields(task))
+		if exitCode != 0 || err != nil {
+			return exitCode, err
+		}
+	}
+	return 0, nil
+}
+
+func (r* Runner) Execute(cmd []string) (int, error) {
 	var (
 		out, stderr io.Writer
 		in          io.ReadCloser
@@ -148,20 +164,11 @@ func (r *Runner) Run() (int, error) {
 	if err := r.Cli.In().CheckTty(false, true); err != nil {
 		return 1, err
 	}
-
-	/*
-		Want to improve this, disabling it for a bit
-		exec := r.Project.Image.Exec
-		testCmd := strings.Split(exec, " ")
-	*/
-	testCmd := []string{"npm", "test"}
-	createResp, attachResp, err := r.docker.Execute(r.Ctx, r.containerID, testCmd)
+	createResp, attachResp, err := r.docker.Execute(r.Ctx, r.containerID, cmd)
 	if err != nil {
 		return 1, err
 	}
-
 	defer attachResp.Close()
-
 	errCh := make(chan error, 1)
 	go func() {
 		defer close(errCh)
@@ -186,8 +193,13 @@ func (r *Runner) Run() (int, error) {
 	if err != nil {
 		return 1, err
 	}
-
 	return exitCode, nil
+
+}
+// Run runs the tests defined in the config.Project.
+func (r *Runner) Run() (int, error) {
+	testCmd := []string{"npm", "test"}
+	return r.Execute(testCmd)
 }
 
 // Teardown cleans up the test environment.
