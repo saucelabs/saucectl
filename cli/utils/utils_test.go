@@ -8,6 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestValidateSplitLines(t *testing.T) {
+	lines := SplitLines("/foo/bar\n/bar/foo")
+	assert.Equal(t, lines, []string{"/foo/bar", "/bar/foo"})
+}
 func TestValidateOutputPath(t *testing.T) {
 	err := ValidateOutputPath("/foo/bar")
 	assert.Equal(t, err, errors.New("invalid output path: directory /foo does not exist"))
