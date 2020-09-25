@@ -105,8 +105,8 @@ func (r *Runner) setup(run config.Run) error {
 	return nil
 }
 
-func (r* Runner) execute(arg string) (int, error) {
-        args := strings.Fields(arg)
+func (r* Runner) execute(task string) (int, error) {
+	args := strings.Fields(task)
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Stdout = r.Cli.Out()
 	cmd.Stderr = r.Cli.Out()
