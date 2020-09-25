@@ -106,10 +106,12 @@ func (r *Runner) setup(run config.Run) error {
 }
 
 func (r* Runner) execute(arg string) (int, error) {
-	cmd := exec.Command(arg)
+        args := strings.Fields(arg)
+	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Stdout = r.Cli.Out()
 	cmd.Stderr = r.Cli.Out()
 	cmd.Dir = r.RunnerConfig.RootDir
+        cmd.Env = append(os.Environ())
 	err := cmd.Run()
 	if err != nil {
 		return 1, err
