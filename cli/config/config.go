@@ -43,7 +43,6 @@ type ImageDefinition struct {
 	Base    string                 `yaml:"base"`
 	Version string                 `yaml:"version"`
 	Exec    string                 `yaml:"exec"`
-	PreExec string                 `yaml:"preExec"`
 	Options map[string]interface{} `yaml:"options"`
 }
 
@@ -56,6 +55,8 @@ type Project struct {
 	Suites       []Suite           `yaml:"suites"`
 	Files        []string          `yaml:"files"`
 	Image        ImageDefinition   `yaml:"image"`
+	BeforeExec   []string          `yaml:"beforeExec"`
+	AfterExec    []string          `yaml:"afterExec"`
 	Timeout      int               `yaml:"timeout"`
 	Sauce        SauceConfig       `yaml:"sauce"`
 	Env          map[string]string `yaml:"env"`

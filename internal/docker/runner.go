@@ -6,7 +6,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/cli/streams"
-	"github.com/saucelabs/saucectl/cli/utils"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/yaml"
 	"io"
@@ -132,7 +131,7 @@ func (r *Runner) setup(suite config.Suite, run config.Run) error {
 	}
 
 	// running pre-exec tasks
-	err = r.preExec(r.Project.Image.PreExec)
+	err = r.beforeExec(r.Project.BeforeExec)
 	if err != nil {
 		return err
 	}
@@ -150,8 +149,7 @@ func (r *Runner) setup(suite config.Suite, run config.Run) error {
 	return nil
 }
 
-func (r* Runner) preExec(preExec string) (error) {
-	tasks := utils.SplitLines(preExec)
+func (r* Runner) beforeExec(tasks []string) (error) {
 	for _, task := range tasks {
 		progress.Show("Running preExec task: %s", task)
 		exitCode, err := r.execute(strings.Fields(task))

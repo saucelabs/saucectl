@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/saucelabs/saucectl/cli/runner"
-	"github.com/saucelabs/saucectl/cli/utils"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/yaml"
@@ -98,8 +97,8 @@ func (r *Runner) setup(run config.Run) error {
 			}
 		}
 	}
-	// running pre-exec tasks
-	err := r.preExec(r.Project.Image.PreExec)
+	// running before-exec tasks
+	err := r.beforeExec(r.Project.BeforeExec)
 	if err != nil {
 		return err
 	}
@@ -118,8 +117,7 @@ func (r* Runner) execute(arg string) (int, error) {
 	return 0, nil
 }
 
-func (r* Runner) preExec(preExec string) (error) {
-	tasks := utils.SplitLines(preExec)
+func (r* Runner) beforeExec(tasks []string) (error) {
 	for _, task := range tasks {
 		log.Info().Msgf("Running preExec task: %s", task)
 		exitCode, err := r.execute(task)
