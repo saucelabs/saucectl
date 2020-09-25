@@ -111,7 +111,7 @@ func (r* Runner) execute(arg string) (int, error) {
 	cmd.Stdout = r.Cli.Out()
 	cmd.Stderr = r.Cli.Out()
 	cmd.Dir = r.RunnerConfig.RootDir
-        cmd.Env = append(os.Environ())
+	cmd.Env = append(os.Environ())
 	err := cmd.Run()
 	if err != nil {
 		return 1, err
