@@ -159,7 +159,7 @@ func (r* Runner) preExec(preExec string) (error) {
 			return err
 		}
 		if exitCode != 0 {
-			return fmt.Errorf("Failed to run pre-exec task: %s", task)
+			return fmt.Errorf("failed to run pre-exec task: %s", task)
 		}
 	}
 	return nil
