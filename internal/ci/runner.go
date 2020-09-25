@@ -99,14 +99,14 @@ func (r *Runner) setup(run config.Run) error {
 		}
 	}
 	// running pre-exec tasks
-	err = r.PreExec(r.Project.Image.PreExec)
+	err := r.preExec(r.Project.Image.PreExec)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r* Runner) Execute(arg string) (int, error) {
+func (r* Runner) execute(arg string) (int, error) {
 	cmd := exec.Command(arg)
 	cmd.Stdout = r.Cli.Out()
 	cmd.Stderr = r.Cli.Out()
@@ -118,11 +118,11 @@ func (r* Runner) Execute(arg string) (int, error) {
 	return 0, nil
 }
 
-func (r* Runner) PreExec(preExec string) (error) {
+func (r* Runner) preExec(preExec string) (error) {
 	tasks := utils.SplitLines(preExec)
 	for _, task := range tasks {
 		log.Info().Msg(fmt.Sprintf("Running preExec task: %s", task))
-		exitCode, err := r.Execute(task)
+		exitCode, err := r.execute(task)
 		if err != nil {
 			return err
 		}

@@ -133,7 +133,7 @@ func (r *Runner) setup(suite config.Suite, run config.Run) error {
 	}
 
 	// running pre-exec tasks
-	err = r.PreExec(r.Project.Image.PreExec)
+	err = r.preExec(r.Project.Image.PreExec)
 	if err != nil {
 		return err
 	}
