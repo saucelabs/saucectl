@@ -121,7 +121,7 @@ func (r* Runner) execute(arg string) (int, error) {
 func (r* Runner) preExec(preExec string) (error) {
 	tasks := utils.SplitLines(preExec)
 	for _, task := range tasks {
-		log.Info().Msg(fmt.Sprintf("Running preExec task: %s", task))
+		log.Info().Msgf("Running preExec task: %s", task)
 		exitCode, err := r.execute(task)
 		if err != nil {
 			return err
