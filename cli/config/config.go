@@ -56,7 +56,6 @@ type Project struct {
 	Files        []string          `yaml:"files"`
 	Image        ImageDefinition   `yaml:"image"`
 	BeforeExec   []string          `yaml:"beforeExec"`
-	AfterExec    []string          `yaml:"afterExec"`
 	Timeout      int               `yaml:"timeout"`
 	Sauce        SauceConfig       `yaml:"sauce"`
 	Env          map[string]string `yaml:"env"`
