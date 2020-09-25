@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// Split string into Splice on line-breaks
+// SplitLines convert string into []string based on line-breaks
 func SplitLines(s string) ([]string) {
 	var l []string
 	sc := bufio.NewScanner(strings.NewReader(s))
