@@ -208,8 +208,7 @@ func (r *Runner) execute(cmd []string) (int, error) {
 }
 // run runs the tests defined in the config.Project.
 func (r *Runner) run() (int, error) {
-	testCmd := []string{"npm", "test"}
-	return r.execute(testCmd)
+	return r.execute([]string{"npm", "test"})
 }
 
 // teardown cleans up the test environment.
