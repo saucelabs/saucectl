@@ -2,18 +2,22 @@ package run
 
 import (
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/mocks"
+	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/internal/ci"
+	"github.com/saucelabs/saucectl/internal/ci/github"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/memseq"
+	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/testcomposer"
+	"github.com/spf13/cobra"
+	"net/http"
 	"os"
 	"path/filepath"
-
-	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/config"
-	"github.com/saucelabs/saucectl/cli/runner"
-	"github.com/spf13/cobra"
+	"time"
 )
 
 var (
@@ -29,8 +33,9 @@ var (
 	cfgFilePath string
 	cfgLogDir   string
 	testTimeout int
-	region      string
+	regionFlag  string
 	env         map[string]string
+	parallel    bool
 )
 
 // Command creates the `run` command
@@ -54,8 +59,10 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVarP(&cfgFilePath, "config", "c", defaultCfgPath, "config file, e.g. -c ./.sauce/config.yaml")
 	cmd.Flags().StringVarP(&cfgLogDir, "logDir", "l", defaultLogFir, "log path")
 	cmd.Flags().IntVarP(&testTimeout, "timeout", "t", 0, "test timeout in seconds (default: 60sec)")
-	cmd.Flags().StringVarP(&region, "region", "r", "", "The sauce labs region. (default: us-west-1)")
+	cmd.Flags().StringVarP(&regionFlag, "region", "r", "", "The sauce labs region. (default: us-west-1)")
 	cmd.Flags().StringToStringVarP(&env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
+	cmd.Flags().BoolVarP(&parallel, "parallel", "p", false, "Runs tests in parallel across multiple saucectl instances.")
+
 	return cmd
 }
 
@@ -67,14 +74,13 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		cfgLogDir = filepath.Join(pwd, "logs")
 	}
 	cli.LogDir = cfgLogDir
-
 	log.Info().Str("config", cfgFilePath).Msg("Reading config file")
 	p, err := config.NewJobConfiguration(cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
 
-	mergeArgs(&p)
+	mergeArgs(cmd, &p)
 	p.Metadata.ExpandEnv()
 
 	if len(p.Suites) == 0 {
@@ -84,16 +90,14 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		p.Suites = []config.Suite{newDefaultSuite(p)}
 	}
 
-	seq := memseq.Sequencer{}
-
-	r, err := newRunner(p, cli, &seq)
+	r, err := newRunner(p, cli)
 	if err != nil {
 		return 1, err
 	}
 	return r.RunProject()
 }
 
-func newRunner(p config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer) (runner.Testrunner, error) {
+func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, error) {
 	// return test runner for testing
 	if p.Image.Base == "test" {
 		return mocks.NewTestRunner(p, cli)
@@ -104,10 +108,45 @@ func newRunner(p config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer) 
 			return nil, err
 		}
 		log.Info().Msg("Starting CI runner")
-		return ci.NewRunner(p, cli, seq, rc)
+		enableCIProviders()
+		// We know we are in a CI environment, but now we try to detect which one
+		cip := ci.Detect()
+		u := os.Getenv("SAUCE_USERNAME")
+		k := os.Getenv("SAUCE_ACCESS_KEY")
+		seq := createCISequencer(p, u, k, cip)
+
+		log.Info().Msg("Starting CI runner")
+		return ci.NewRunner(p, cli, seq, rc, cip)
 	}
 	log.Info().Msg("Starting local runner")
-	return docker.NewRunner(p, cli, seq)
+	return docker.NewRunner(p, cli, &memseq.Sequencer{})
+}
+
+func createCISequencer(p config.Project, username, accessKey string, cip ci.Provider) fleet.Sequencer {
+	if !p.Parallel {
+		log.Info().Msg("Parallel execution is turned off. Running tests sequentially.")
+		return &memseq.Sequencer{}
+	}
+	if username == "" || accessKey == "" {
+		log.Info().Msg("No credentials provided. Running tests sequentially.")
+		return &memseq.Sequencer{}
+	}
+	if cip == ci.NoProvider {
+		log.Warn().Msg("Unable to detect CI provider. Running tests sequentially.")
+		return &memseq.Sequencer{}
+	}
+	r := region.FromString(p.Sauce.Region)
+	if r == region.None {
+		log.Warn().Str("region", regionFlag).Msg("Unable to determine region. Running tests sequentially.")
+		return &memseq.Sequencer{}
+	}
+
+	return &testcomposer.Client{
+		HTTPClient: &http.Client{Timeout: 3 * time.Second},
+		URL:        r.APIBaseURL(),
+		Username:   username,
+		AccessKey:  accessKey,
+	}
 }
 
 // newDefaultSuite creates a rudimentary test suite from a project configuration.
@@ -123,7 +162,7 @@ func newDefaultSuite(p config.Project) config.Suite {
 }
 
 // mergeArgs merges settings from CLI arguments with the loaded job configuration.
-func mergeArgs(cfg *config.Project) {
+func mergeArgs(cmd *cobra.Command, cfg *config.Project) {
 	// Merge env from CLI args and job config. CLI args take precedence.
 	for k, v := range env {
 		cfg.Env[k] = v
@@ -140,7 +179,15 @@ func mergeArgs(cfg *config.Project) {
 		cfg.Sauce.Region = defaultRegion
 	}
 
-	if region != "" {
-		cfg.Sauce.Region = region
+	if regionFlag != "" {
+		cfg.Sauce.Region = regionFlag
 	}
+
+	if cmd.Flags().Lookup("parallel").Changed {
+		cfg.Parallel = parallel
+	}
+}
+
+func enableCIProviders() {
+	github.Enable()
 }
