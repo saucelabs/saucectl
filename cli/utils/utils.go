@@ -4,8 +4,19 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+        "bufio"
+	"strings"
 )
 
+// SplitLines convert string into []string based on line-breaks
+func SplitLines(s string) ([]string) {
+	var l []string
+	sc := bufio.NewScanner(strings.NewReader(s))
+	for sc.Scan() {
+		l = append(l, sc.Text())
+	}
+	return l
+}
 // ValidateOutputPath validates the output paths of the `export` and `save` commands.
 func ValidateOutputPath(path string) error {
 	dir := filepath.Dir(filepath.Clean(path))
