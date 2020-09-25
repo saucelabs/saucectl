@@ -15,7 +15,7 @@ import (
 	"path/filepath"
 	"time"
 	"errors"
-        "strings"
+	"strings"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
