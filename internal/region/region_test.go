@@ -16,6 +16,21 @@ func TestFromString(t *testing.T) {
 			args: args{"us-west-1"},
 			want: USWest1,
 		},
+		{
+			name: "eu-central-1",
+			args: args{"eu-central-1"},
+			want: EUCentral1,
+		},
+		{
+			name: "staging",
+			args: args{"staging"},
+			want: Staging,
+		},
+		{
+			name: "wonderland",
+			args: args{"wonderland"},
+			want: None,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
