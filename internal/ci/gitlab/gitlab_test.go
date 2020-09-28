@@ -44,6 +44,13 @@ func TestAvailable(t *testing.T) {
 				os.Setenv("GITLAB_CI", "true")
 			},
 		},
+		{
+			name: "unavailable",
+			want: false,
+			beforeTest: func() {
+				os.Unsetenv("GITLAB_CI")
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
