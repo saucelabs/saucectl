@@ -12,7 +12,7 @@ func TestPipeline_BuildID(t *testing.T) {
 	}{
 		{
 			name: "predictable",
-			want: "4dbcbfc87a92274346776be8e48f477bbc6f15ab",
+			want: "cb40652a8cb08755eab941fa67cf006ed809b649",
 		},
 	}
 	for _, tt := range tests {
