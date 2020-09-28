@@ -30,11 +30,6 @@ func Globs(patterns []string) []string {
 func Walk(paths []string, pattern string) ([]string, error) {
 	var files []string
 
-	r, err := regexp.Compile(pattern)
-	if err != nil {
-		return files, err
-	}
-
 	paths = Globs(paths)
 	for _, f := range paths {
 		if info, err := os.Stat(f); err == nil {
