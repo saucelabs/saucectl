@@ -31,7 +31,7 @@ type Runner struct {
 }
 
 // NewRunner creates a new Runner instance.
-func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer, rc config.RunnerConfiguration) (*Runner, error) {
+func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer) (*Runner, error) {
 	progress.Show("Starting test runner for docker")
 	defer progress.Stop()
 
@@ -40,7 +40,6 @@ func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer, 
 	r.Ctx = context.Background()
 	r.Project = c
 	r.Sequencer = seq
-	r.RunnerConfig = rc
 
 	var err error
 	r.docker, err = Create()
@@ -114,6 +113,11 @@ func (r *Runner) setup(suite config.Suite, run config.Run) error {
 
 	hostDstPath := filepath.Join(tmpDir, filepath.Base(runner.ConfigPath))
 	if err := r.docker.CopyFromContainer(r.Ctx, container.ID, runner.ConfigPath, hostDstPath); err != nil {
+		return err
+	}
+
+	r.RunnerConfig, err = config.NewRunnerConfiguration(hostDstPath)
+	if err != nil {
 		return err
 	}
 
