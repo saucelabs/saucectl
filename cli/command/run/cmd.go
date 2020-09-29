@@ -145,7 +145,7 @@ func createCISequencer(p config.Project, cip ci.Provider) fleet.Sequencer {
 		log.Info().Msg("No credentials provided. Running tests sequentially.")
 		return &memseq.Sequencer{}
 	}
-	if cip == ci.NoProvider {
+	if cip == ci.NoProvider && ciBuildID == "" {
 		log.Warn().Msg("Unable to detect CI provider. Running tests sequentially.")
 		return &memseq.Sequencer{}
 	}
