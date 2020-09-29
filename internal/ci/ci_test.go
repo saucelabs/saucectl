@@ -3,14 +3,8 @@ package ci
 import (
 	"os"
 	"testing"
-
-	"github.com/saucelabs/saucectl/cli/config"
-	"github.com/saucelabs/saucectl/cli/command"
-
-	"github.com/saucelabs/saucectl/internal/fleet"
-
-	"github.com/stretchr/testify/assert"
 )
+
 
 func TestAvailable(t *testing.T) {
 	tests := []struct {
@@ -51,17 +45,6 @@ func TestAvailable(t *testing.T) {
 	}
 }
 
-type FakeSequencer struct {
-	fleet.Sequencer
-}
 
-func TestRunBeforeExec(t *testing.T) {
-	jobConfig := config.Project{}
-	cli := &command.SauceCtlCli{}
-	seq := FakeSequencer{}
-	r, err := NewRunner(jobConfig, cli, seq, config.RunnerConfiguration{})
-	assert.Equal(t, err, nil)
-	err = r.beforeExec(jobConfig.BeforeExec)
-	assert.Equal(t, err, nil)
-}
+
 

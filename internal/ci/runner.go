@@ -172,7 +172,8 @@ func (r *Runner) teardown(logDir string) error {
 	return nil
 }
 
-func copyFile(src string, targetDir string) error {
+var copyFile = copyFileFunc
+func copyFileFunc(src string, targetDir string) error {
 	input, err := ioutil.ReadFile(src)
 	if err != nil {
 		return err
