@@ -147,13 +147,13 @@ func (r *Runner) setup(suite config.Suite, run config.Run) error {
 
 func (r* Runner) beforeExec(tasks []string) error {
 	for _, task := range tasks {
-		progress.Show("Running preExec task: %s", task)
+		progress.Show("Running BeforeExec task: %s", task)
 		exitCode, err := r.execute(strings.Fields(task))
 		if err != nil {
 			return err
 		}
 		if exitCode != 0 {
-			return fmt.Errorf("failed to run pre-exec task: %s", task)
+			return fmt.Errorf("failed to run BeforeExec task: %s - exit code %d", task, exitCode)
 		}
 	}
 	return nil
