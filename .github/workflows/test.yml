@@ -88,7 +88,7 @@ jobs:
       - name: Run Sauce Pipeline Test
         run: |
           chmod +x ./saucectl
-          ./saucectl run -c ./.sauce/puppeteeri_before_exec.yml --verbose
+          ./saucectl run -c ./.sauce/puppeteer_before_exec.yml --verbose
         env:
           BUILD_ID: ${{ github.run_id }}
 
