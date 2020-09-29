@@ -13,11 +13,10 @@ func TestPipeline_BuildID(t *testing.T) {
 	}{
 		{
 			name: "predictable",
-			want: "cb40652a8cb08755eab941fa67cf006ed809b649",
+			want: "f723c422271358e86a3506c7ab08d67324d64fd0",
 			beforeTest: func() {
 				os.Setenv("GITHUB_WORKFLOW", "mytest")
 				os.Setenv("GITHUB_RUN_ID", "1")
-				os.Setenv("INVOCATION_ID", "2")
 			},
 		},
 	}

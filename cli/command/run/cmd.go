@@ -62,7 +62,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().IntVarP(&testTimeout, "timeout", "t", 0, "test timeout in seconds (default: 60sec)")
 	cmd.Flags().StringVarP(&regionFlag, "region", "r", "", "The sauce labs region. (default: us-west-1)")
 	cmd.Flags().StringToStringVarP(&env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
-	cmd.Flags().BoolVarP(&parallel, "parallel", "p", false, "Runs tests in parallel across multiple saucectl instances.")
+	cmd.Flags().BoolVarP(&parallel, "parallel", "p", false, "Run tests in parallel across multiple machines.")
 
 	return cmd
 }
@@ -142,6 +142,7 @@ func createCISequencer(p config.Project, username, accessKey string, cip ci.Prov
 		return &memseq.Sequencer{}
 	}
 
+	log.Info().Msg("Running tests in parallel.")
 	return &testcomposer.Client{
 		HTTPClient: &http.Client{Timeout: 3 * time.Second},
 		URL:        r.APIBaseURL(),

@@ -3,11 +3,14 @@ package ci
 import (
 	"bytes"
 	"context"
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/yaml"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -44,7 +47,10 @@ func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer, 
 
 // RunProject runs the tests defined in config.Project.
 func (r *Runner) RunProject() (int, error) {
-	fid, err := fleet.Register(r.Ctx, r.Sequencer, r.CIProvider.BuildID(), r.Project.Files, r.Project.Suites)
+	bid := r.buildID()
+	log.Info().Str("buildID", bid).Msg("Generated ID for build")
+	fid, err := fleet.Register(r.Ctx, r.Sequencer, bid, r.Project.Files,
+		r.Project.Suites)
 	if err != nil {
 		return 1, err
 	}
@@ -235,4 +241,31 @@ func (r *Runner) runTest(suite config.Suite, run config.Run) (int, error) {
 		Msg("Command Finished")
 
 	return exitCode, err
+}
+
+// buildID generates a build ID based on the current CI and project information.
+func (r *Runner) buildID() string {
+	p := r.Project
+	in := struct {
+		ciBuildID string
+		version   string
+		kind      string
+		meta      config.Metadata
+		files     []string
+		suites    []config.Suite
+		img       config.ImageDefinition
+	}{
+		r.CIProvider.BuildID(),
+		p.APIVersion,
+		p.Kind,
+		p.Metadata,
+		p.Files,
+		p.Suites,
+		p.Image,
+	}
+	pStr := fmt.Sprintf("%+v", in)
+	h := sha1.New()
+	io.WriteString(h, pStr)
+
+	return hex.EncodeToString(h.Sum(nil))
 }

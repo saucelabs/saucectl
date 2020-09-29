@@ -13,7 +13,6 @@ import (
 type Pipeline struct {
 	GithubWorkflow string
 	GithubRunID    string
-	InvocationID   string
 }
 
 // FromEnv creates a new Pipeline from the environment.
@@ -21,7 +20,6 @@ func FromEnv() ci.Provider {
 	return Pipeline{
 		GithubWorkflow: os.Getenv("GITHUB_WORKFLOW"),
 		GithubRunID:    os.Getenv("GITHUB_RUN_ID"),
-		InvocationID:   os.Getenv("INVOCATION_ID"),
 	}
 }
 
