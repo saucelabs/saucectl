@@ -115,13 +115,13 @@ func (r* Runner) execute(task string) (int, error) {
 
 func (r* Runner) beforeExec(tasks []string) (error) {
 	for _, task := range tasks {
-		log.Info().Msgf("Running preExec task: %s", task)
+		log.Info().Msgf("Running BeforeExec task: %s", task)
 		exitCode, err := r.execute(task)
 		if err != nil {
 			return err
 		}
 		if exitCode != 0 {
-			return fmt.Errorf("Failed to run pre-exec task: %s", task)
+			return fmt.Errorf("failed to run BeforeExec task: %s - exit code: %d", task, exitCode)
 		}
 	}
 	return nil
