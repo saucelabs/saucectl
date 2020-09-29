@@ -48,7 +48,7 @@ func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer, 
 // RunProject runs the tests defined in config.Project.
 func (r *Runner) RunProject() (int, error) {
 	bid := r.buildID()
-	log.Info().Str("buildID", bid).Msg("Generated ID for build")
+	log.Info().Str("buildID", bid).Msg("Generated build ID")
 	fid, err := fleet.Register(r.Ctx, r.Sequencer, bid, r.Project.Files,
 		r.Project.Suites)
 	if err != nil {
