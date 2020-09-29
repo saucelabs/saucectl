@@ -56,7 +56,7 @@ type FakeSequencer struct {
 }
 
 func TestRunBeforeExec(t *testing.T) {
-        jobConfig := config.Project{}
+	jobConfig := config.Project{}
 	cli := &command.SauceCtlCli{}
 	seq := FakeSequencer{}
 	oldMethod := newRunnerConfiguration
