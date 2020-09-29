@@ -11,13 +11,19 @@ import (
 
 // Pipeline represents the current pipeline information.
 type Pipeline struct {
-	GithubWorkflow string
-	GithubRunID    string
+	GithubWorkflow  string
+	GithubRunID     string
+	overrideBuildID string
+}
+
+// SetBuildID overrides the return value for BuildID().
+func (p *Pipeline) SetBuildID(id string) {
+	p.overrideBuildID = id
 }
 
 // FromEnv creates a new Pipeline from the environment.
 func FromEnv() ci.Provider {
-	return Pipeline{
+	return &Pipeline{
 		GithubWorkflow: os.Getenv("GITHUB_WORKFLOW"),
 		GithubRunID:    os.Getenv("GITHUB_RUN_ID"),
 	}
@@ -25,6 +31,10 @@ func FromEnv() ci.Provider {
 
 // BuildID returns a build ID.
 func (p Pipeline) BuildID() string {
+	if p.overrideBuildID != "" {
+		return p.overrideBuildID
+	}
+
 	h := sha1.New()
 	io.WriteString(h, fmt.Sprintf("%+v", p))
 	return hex.EncodeToString(h.Sum(nil))

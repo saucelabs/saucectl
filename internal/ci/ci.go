@@ -29,6 +29,8 @@ type holder struct {
 // Provider represents the CI provider.
 type Provider interface {
 	BuildID() string
+	// SetBuildID overrides the CI provided build ID.
+	SetBuildID(id string)
 }
 
 // RegisterProvider registers a "create" function that returns a new instance of the given Provider function.
@@ -54,15 +56,25 @@ func Detect() Provider {
 }
 
 // NoProvider represents a NO-OP provider for cases where no supported CI provider was detected.
-var NoProvider = fakePipeline{CreatedAt: time.Now()}
+var NoProvider = &fakePipeline{CreatedAt: time.Now()}
 
 // fakePipeline represents a NO-OP provider for cases where no supported CI provider was detected.
 type fakePipeline struct {
-	CreatedAt time.Time
+	CreatedAt       time.Time
+	overrideBuildID string
 }
 
-// BuildID returns an empty string.
+// SetBuildID overrides the return value for BuildID().
+func (p *fakePipeline) SetBuildID(id string) {
+	p.overrideBuildID = id
+}
+
+// BuildID returns a build ID.
 func (p fakePipeline) BuildID() string {
+	if p.overrideBuildID != "" {
+		return p.overrideBuildID
+	}
+
 	h := sha1.New()
 	io.WriteString(h, fmt.Sprintf("%+v", p))
 	return hex.EncodeToString(h.Sum(nil))

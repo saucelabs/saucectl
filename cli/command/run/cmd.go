@@ -38,6 +38,7 @@ var (
 	regionFlag  string
 	env         map[string]string
 	parallel    bool
+	ciBuildID   string
 )
 
 // Command creates the `run` command
@@ -64,6 +65,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVarP(&regionFlag, "region", "r", "", "The sauce labs region. (default: us-west-1)")
 	cmd.Flags().StringToStringVarP(&env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
 	cmd.Flags().BoolVarP(&parallel, "parallel", "p", false, "Run tests in parallel across multiple machines.")
+	cmd.Flags().StringVar(&ciBuildID, "ci-build-id", "", "Overrides the CI dependent build ID.")
 
 	return cmd
 }
@@ -109,13 +111,9 @@ func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, e
 		if err != nil {
 			return nil, err
 		}
-		log.Info().Msg("Starting CI runner")
-		enableCIProviders()
-		// We know we are in a CI environment, but now we try to detect which one
-		cip := ci.Detect()
-		u := os.Getenv("SAUCE_USERNAME")
-		k := os.Getenv("SAUCE_ACCESS_KEY")
-		seq := createCISequencer(p, u, k, cip)
+
+		cip := createCIProvider()
+		seq := createCISequencer(p, cip)
 
 		log.Info().Msg("Starting CI runner")
 		return ci.NewRunner(p, cli, seq, rc, cip)
@@ -124,12 +122,26 @@ func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, e
 	return docker.NewRunner(p, cli, &memseq.Sequencer{})
 }
 
-func createCISequencer(p config.Project, username, accessKey string, cip ci.Provider) fleet.Sequencer {
+func createCIProvider() ci.Provider {
+	enableCIProviders()
+	cip := ci.Detect()
+	// Allow users to override the CI build ID
+	if ciBuildID != "" {
+		log.Info().Str("id", ciBuildID).Msg("Using user provided build ID.")
+		cip.SetBuildID(ciBuildID)
+	}
+
+	return cip
+}
+
+func createCISequencer(p config.Project, cip ci.Provider) fleet.Sequencer {
 	if !p.Parallel {
 		log.Info().Msg("Parallel execution is turned off. Running tests sequentially.")
 		return &memseq.Sequencer{}
 	}
-	if username == "" || accessKey == "" {
+	u := os.Getenv("SAUCE_USERNAME")
+	k := os.Getenv("SAUCE_ACCESS_KEY")
+	if u == "" || k == "" {
 		log.Info().Msg("No credentials provided. Running tests sequentially.")
 		return &memseq.Sequencer{}
 	}
@@ -147,8 +159,8 @@ func createCISequencer(p config.Project, username, accessKey string, cip ci.Prov
 	return &testcomposer.Client{
 		HTTPClient: &http.Client{Timeout: 3 * time.Second},
 		URL:        r.APIBaseURL(),
-		Username:   username,
-		AccessKey:  accessKey,
+		Username:   u,
+		AccessKey:  k,
 	}
 }
 

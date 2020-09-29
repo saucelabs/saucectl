@@ -11,18 +11,28 @@ import (
 
 // Pipeline represents the current pipeline information.
 type Pipeline struct {
-	BuildNumber string
+	BuildNumber     string
+	overrideBuildID string
+}
+
+// SetBuildID overrides the return value for BuildID().
+func (p *Pipeline) SetBuildID(id string) {
+	p.overrideBuildID = id
 }
 
 // FromEnv creates a new Pipeline from the environment.
 func FromEnv() ci.Provider {
-	return Pipeline{
+	return &Pipeline{
 		BuildNumber: os.Getenv("BUILD_NUMBER"),
 	}
 }
 
 // BuildID returns a build ID.
 func (p Pipeline) BuildID() string {
+	if p.overrideBuildID != "" {
+		return p.overrideBuildID
+	}
+
 	h := sha1.New()
 	io.WriteString(h, fmt.Sprintf("%+v", p))
 	return hex.EncodeToString(h.Sum(nil))

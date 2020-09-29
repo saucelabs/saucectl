@@ -13,7 +13,7 @@ func TestPipeline_BuildID(t *testing.T) {
 	}{
 		{
 			name: "predictable",
-			want: "f723c422271358e86a3506c7ab08d67324d64fd0",
+			want: "a4c9176ecce783ffc964c3cb62248b836380ee36",
 			beforeTest: func() {
 				os.Setenv("GITHUB_WORKFLOW", "mytest")
 				os.Setenv("GITHUB_RUN_ID", "1")
@@ -57,6 +57,41 @@ func TestAvailable(t *testing.T) {
 			tt.beforeTest()
 			if got := Available(); got != tt.want {
 				t.Errorf("Available() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPipeline_SetBuildID(t *testing.T) {
+	type fields struct {
+		GithubWorkflow  string
+		GithubRunID     string
+		overrideBuildID string
+	}
+	type args struct {
+		id string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+	}{
+		{
+			name:   "override",
+			fields: fields{},
+			args:   args{"123"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &Pipeline{
+				GithubWorkflow:  tt.fields.GithubWorkflow,
+				GithubRunID:     tt.fields.GithubRunID,
+				overrideBuildID: tt.fields.overrideBuildID,
+			}
+			p.SetBuildID(tt.args.id)
+			if p.BuildID() != tt.args.id {
+				t.Errorf("BuildID() = %v, want %v", p.overrideBuildID, tt.args.id)
 			}
 		})
 	}
