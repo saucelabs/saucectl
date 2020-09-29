@@ -145,7 +145,7 @@ func (r *Runner) setup(suite config.Suite, run config.Run) error {
 	return nil
 }
 
-func (r* Runner) beforeExec(tasks []string) (error) {
+func (r* Runner) beforeExec(tasks []string) error {
 	for _, task := range tasks {
 		progress.Show("Running preExec task: %s", task)
 		exitCode, err := r.execute(strings.Fields(task))
