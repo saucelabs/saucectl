@@ -9,6 +9,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/ci/github"
 	"github.com/saucelabs/saucectl/internal/ci/gitlab"
+	"github.com/saucelabs/saucectl/internal/ci/jenkins"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/memseq"
@@ -193,4 +194,5 @@ func mergeArgs(cmd *cobra.Command, cfg *config.Project) {
 func enableCIProviders() {
 	github.Enable()
 	gitlab.Enable()
+	jenkins.Enable()
 }
