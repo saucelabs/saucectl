@@ -28,12 +28,12 @@ type Runner struct {
 	runner.BaseRunner
 }
 
+var newRunnerConfiguration = config.NewRunnerConfiguration
 // NewRunner creates a new Runner instance.
 func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer) (*Runner, error) {
 	r := Runner{}
-
 	// read runner config file
-	rc, err := config.NewRunnerConfiguration(runner.ConfigPath)
+	rc, err := newRunnerConfiguration(runner.ConfigPath)
 	if err != nil {
 		return &r, err
 	}
