@@ -98,14 +98,16 @@ func newRunner(p config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer) 
 	if p.Image.Base == "test" {
 		return mocks.NewTestRunner(p, cli)
 	}
-
+	rc, err := config.NewRunnerConfiguration(runner.ConfigPath)
+	if err != nil {
+		return nil, err
+	}
 	if ci.IsAvailable() {
 		log.Info().Msg("Starting CI runner")
-		return ci.NewRunner(p, cli, seq)
+		return ci.NewRunner(p, cli, seq, rc)
 	}
-
 	log.Info().Msg("Starting local runner")
-	return docker.NewRunner(p, cli, seq)
+	return docker.NewRunner(p, cli, seq, rc)
 }
 
 // newDefaultSuite creates a rudimentary test suite from a project configuration.

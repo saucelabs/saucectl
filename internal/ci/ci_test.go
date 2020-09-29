@@ -59,14 +59,9 @@ func TestRunBeforeExec(t *testing.T) {
 	jobConfig := config.Project{}
 	cli := &command.SauceCtlCli{}
 	seq := FakeSequencer{}
-	oldMethod := newRunnerConfiguration
-	newRunnerConfiguration = func(path string) (config.RunnerConfiguration, error){
-		return config.RunnerConfiguration{}, nil
-	}
-	r, err := NewRunner(jobConfig, cli, seq)
+	r, err := NewRunner(jobConfig, cli, seq, config.RunnerConfiguration{})
 	assert.Equal(t, err, nil)
 	err = r.beforeExec(jobConfig.BeforeExec)
 	assert.Equal(t, err, nil)
-	newRunnerConfiguration = oldMethod
 }
 
