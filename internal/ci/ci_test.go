@@ -51,10 +51,6 @@ func TestAvailable(t *testing.T) {
 	}
 }
 
-type FakeSauceCtlCli struct {
-	command.SauceCtlCli
-}
-
 type FakeSequencer struct {
 	fleet.Sequencer
 }
@@ -67,7 +63,9 @@ func TestRunBeforeExec(t *testing.T) {
 	newRunnerConfiguration = func(path string) (config.RunnerConfiguration, error){
 		return config.RunnerConfiguration{}, nil
 	}
-	_, err := NewRunner(jobConfig, cli, seq)
+	r, err := NewRunner(jobConfig, cli, seq)
+	assert.Equal(t, err, nil)
+	err = r.beforeExec(jobConfig.BeforeExec)
 	assert.Equal(t, err, nil)
 	newRunnerConfiguration = oldMethod
 }
