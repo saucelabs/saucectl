@@ -2,7 +2,6 @@ package ci
 
 import (
 	"testing"
-	"fmt"
 
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/command"
