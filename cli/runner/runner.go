@@ -13,7 +13,7 @@ const logDir = "/var/log/cont"
 var ConfigPath = "/home/seluser/config.yaml"
 
 // LogFiles contains the locations of log and resource files that are useful for reporting.
-var LogFiles = [...]string{
+var LogFiles = []string{
 	logDir + "/chrome_browser.log",
 	logDir + "/firefox_browser.log",
 	logDir + "/supervisord.log",
