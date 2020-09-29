@@ -9,14 +9,8 @@ metadata:
 files:
   - ./tests/e2e/puppeteer/example.before.exec.test.js
 suites:
-  - name: "firefox"
+  - name: "chrome"
     match: ".*.(spec|test).js$"
-    capabilities:
-      browserName: "firefox"
-  - name: "chromium"
-    match: ".*.(spec|test).js$"
-    capabilities:
-      browserName: "chromium"
 beforeExec:
   - npm install --save chai
 image:
