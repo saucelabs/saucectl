@@ -67,6 +67,31 @@ jobs:
           ./saucectl run -c ./.sauce/puppeteer.yml --verbose
         env:
           BUILD_ID: ${{ github.run_id }}
+  puppeteer_before_exec:
+    needs: basic
+    runs-on: ubuntu-latest
+    container:
+      image: saucelabs/stt-puppeteer-jest-node:v0.1.5
+      options: --user 1001
+
+    steps:
+      # appears that checkout@v2 uses javascript which is not compatible
+      # with the included node version in the container image.
+      - name: Checkout Code
+        uses: actions/checkout@v1
+
+      - name: Download saucectl binary
+        uses: actions/download-artifact@v2
+        with:
+          name: saucectlbin
+
+      - name: Run Sauce Pipeline Test
+        run: |
+          chmod +x ./saucectl
+          ./saucectl run -c ./.sauce/puppeteeri_before_exec.yml --verbose
+        env:
+          BUILD_ID: ${{ github.run_id }}
+
   playwright:
     needs: basic
     runs-on: ubuntu-latest
