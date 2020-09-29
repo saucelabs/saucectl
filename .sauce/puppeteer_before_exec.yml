@@ -7,7 +7,7 @@ metadata:
     - other tag
   build: Release $CI_COMMIT_SHORT_SHA
 files:
-  - ./tests/e2e/puppeteer/example.test.js
+  - ./tests/e2e/puppeteer/example.before.exec.test.js
 suites:
   - name: "firefox"
     match: ".*.(spec|test).js$"
