@@ -29,14 +29,8 @@ type Runner struct {
 }
 
 // NewRunner creates a new Runner instance.
-func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer) (*Runner, error) {
+func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer, rc config.RunnerConfiguration) (*Runner, error) {
 	r := Runner{}
-
-	// read runner config file
-	rc, err := config.NewRunnerConfiguration(runner.ConfigPath)
-	if err != nil {
-		return &r, err
-	}
 
 	r.Cli = cli
 	r.Ctx = context.Background()
@@ -97,6 +91,39 @@ func (r *Runner) setup(run config.Run) error {
 			}
 		}
 	}
+	// running before-exec tasks
+	err := r.beforeExec(r.Project.BeforeExec)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r* Runner) execute(task string) (int, error) {
+	args := strings.Fields(task)
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Stdout = r.Cli.Out()
+	cmd.Stderr = r.Cli.Out()
+	cmd.Dir = r.RunnerConfig.RootDir
+	cmd.Env = append(os.Environ())
+	err := cmd.Run()
+	if err != nil {
+		return 1, err
+	}
+	return 0, nil
+}
+
+func (r* Runner) beforeExec(tasks []string) (error) {
+	for _, task := range tasks {
+		log.Info().Msgf("Running BeforeExec task: %s", task)
+		exitCode, err := r.execute(task)
+		if err != nil {
+			return err
+		}
+		if exitCode != 0 {
+			return fmt.Errorf("failed to run BeforeExec task: %s - exit code: %d", task, exitCode)
+		}
+	}
 	return nil
 }
 
@@ -145,7 +172,8 @@ func (r *Runner) teardown(logDir string) error {
 	return nil
 }
 
-func copyFile(src string, targetDir string) error {
+var copyFile = copyFileFunc
+func copyFileFunc(src string, targetDir string) error {
 	input, err := ioutil.ReadFile(src)
 	if err != nil {
 		return err

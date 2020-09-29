@@ -98,12 +98,14 @@ func newRunner(p config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer) 
 	if p.Image.Base == "test" {
 		return mocks.NewTestRunner(p, cli)
 	}
-
 	if ci.IsAvailable() {
+		rc, err := config.NewRunnerConfiguration(runner.ConfigPath)
+		if err != nil {
+			return nil, err
+		}
 		log.Info().Msg("Starting CI runner")
-		return ci.NewRunner(p, cli, seq)
+		return ci.NewRunner(p, cli, seq, rc)
 	}
-
 	log.Info().Msg("Starting local runner")
 	return docker.NewRunner(p, cli, seq)
 }

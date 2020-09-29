@@ -26,7 +26,7 @@ type PassFailCase struct {
 	Name           string
 	Client         CommonAPIClient
 	JobConfig      *config.Project
-	Suite		   *config.Suite
+	Suite          *config.Suite
 	ExpectedError  error
 	ExpectedResult interface{}
 }

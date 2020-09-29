@@ -10,7 +10,7 @@ import (
 	"gotest.tools/v3/fs"
 )
 
-func TestLocalRunnerSetup(t *testing.T) {
+func TestDockerRunnerSetup(t *testing.T) {
 	type PassFailCase struct {
 		Name          string
 		Client        *Handler
