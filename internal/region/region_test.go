@@ -22,11 +22,6 @@ func TestFromString(t *testing.T) {
 			want: EUCentral1,
 		},
 		{
-			name: "staging",
-			args: args{"staging"},
-			want: Staging,
-		},
-		{
 			name: "wonderland",
 			args: args{"wonderland"},
 			want: None,
