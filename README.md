@@ -58,11 +58,14 @@ the tests.
 
 Saucectl currently uses the following CI environment variables to generate a build ID.
 
-| CI            | Environment Variables          |
-|:-------------:|:------------------------------:|
-| GitHub        | GITHUB_WORKFLOW, GITHUB_RUN_ID |
-| GitLab        | CI_PIPELINE_ID, CI_JOB_STAGE   |
-| Jenkins       | BUILD_NUMBER                   |
+| CI            | Environment Variables          | Current Limitations                                 |
+|:-------------:|:------------------------------:|:---------------------------------------------------:|
+| GitHub        | GITHUB_WORKFLOW, GITHUB_RUN_ID | Unable to re-run jobs. Must trigger a new pipeline. |
+| GitLab        | CI_PIPELINE_ID, CI_JOB_STAGE   | Unable to re-run jobs. Must trigger a new pipeline. |
+| Jenkins       | BUILD_NUMBER                   | None                                                |
+
+The current parallization feature is _highly experimental_ and may have limitations
+with certain CI providers.
 
 If your CI provider is not listed here, you'll have to specify your own `build ID`.
 Please consult the `ci-build-id` flag for this option.
