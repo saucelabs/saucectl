@@ -39,6 +39,7 @@ var (
 	env         map[string]string
 	parallel    bool
 	ciBuildID   string
+	sauceAPI    string
 )
 
 // Command creates the `run` command
@@ -66,6 +67,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringToStringVarP(&env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
 	cmd.Flags().BoolVarP(&parallel, "parallel", "p", false, "Run tests in parallel across multiple machines.")
 	cmd.Flags().StringVar(&ciBuildID, "ci-build-id", "", "Overrides the CI dependent build ID.")
+	cmd.Flags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
 
 	return cmd
 }
@@ -160,10 +162,15 @@ func createCISequencer(p config.Project, cip ci.Provider) fleet.Sequencer {
 		return &memseq.Sequencer{}
 	}
 
+	apiURL := r.APIBaseURL()
+	if sauceAPI != "" {
+		apiURL = sauceAPI
+	}
+
 	log.Info().Msg("Running tests in parallel.")
 	return &testcomposer.Client{
 		HTTPClient: &http.Client{Timeout: 3 * time.Second},
-		URL:        r.APIBaseURL(),
+		URL:        apiURL,
 		Username:   u,
 		AccessKey:  k,
 	}
