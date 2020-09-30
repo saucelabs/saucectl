@@ -44,6 +44,35 @@ saucectl run --env <key1>=<value1> --env <key2>=<value2> ...
 Using the `--env` flag will define environment variables that are then available
 for use by the test framework.
 
+#### `parallel`
+```sh
+saucectl run --parallel=<true|false>
+```
+Using the `--parallel` flag allows the parallization of tests across machines to be
+turned on/off. 
+
+Saucectl will use CI provider specific clues from the environment to generate
+a `build ID`. This `build ID` is used a grouping mechanism to synchronize the different
+machines that are running in the same pipeline to distribute the tests. 
+
+Saucectl currently uses the following CI environment variables to determine a build ID.
+
+| CI            | Environment Variables          |
+|:-------------:|:------------------------------:|
+| GitHub        | GITHUB_WORKFLOW, GITHUB_RUN_ID |
+| GitLab        | CI_PIPELINE_ID, CI_JOB_STAGE   |
+| Jenkins       | BUILD_NUMBER                   |
+
+If your CI provider is not listed here, you'll have to specify your own `build ID`.
+Please consult the `ci-build-id` flag for this option.
+
+#### `ci-build-id`
+```sh
+saucectl run --ci-build-id <value>
+```
+Using the `--ci-build-id` flag will override the build ID that is otherwise determined
+based on the CI provider. 
+
 #### `region`
 ```sh
 saucectl run --region <region>
