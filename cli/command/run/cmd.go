@@ -137,6 +137,8 @@ func createCIProvider() ci.Provider {
 func createCISequencer(p config.Project, cip ci.Provider) fleet.Sequencer {
 	if !p.Parallel {
 		log.Info().Msg("Parallel execution is turned off. Running tests sequentially.")
+		log.Info().Msg("If you'd like to speed up your tests, please visit " +
+			"https://github.com/saucelabs/saucectl on how to configure parallelization across machines.")
 		return &memseq.Sequencer{}
 	}
 	u := os.Getenv("SAUCE_USERNAME")
