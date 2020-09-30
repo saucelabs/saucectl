@@ -51,11 +51,12 @@ saucectl run --parallel=<true|false>
 Using the `--parallel` flag allows the parallization of tests across machines to be
 turned on/off. 
 
-Saucectl will use CI provider specific clues from the environment to generate
-a `build ID`. This `build ID` is used a grouping mechanism to synchronize the different
-machines that are running in the same pipeline to distribute the tests. 
+Saucectl will use CI provider specific clues from the environment and saucectl config
+file to generate a `build ID`. This `build ID` is used a grouping mechanism to
+synchronize the different machines that are running in the same pipeline to distribute
+the tests. 
 
-Saucectl currently uses the following CI environment variables to determine a build ID.
+Saucectl currently uses the following CI environment variables to generate a build ID.
 
 | CI            | Environment Variables          |
 |:-------------:|:------------------------------:|
@@ -71,7 +72,8 @@ Please consult the `ci-build-id` flag for this option.
 saucectl run --ci-build-id <value>
 ```
 Using the `--ci-build-id` flag will override the build ID that is otherwise determined
-based on the CI provider. 
+based on the CI provider. The config file hash will still be used in addition to this
+provided CI build ID.
 
 #### `region`
 ```sh
