@@ -146,6 +146,9 @@ func createCISequencer(p config.Project, cip ci.Provider) fleet.Sequencer {
 		return &memseq.Sequencer{}
 	}
 	if cip == ci.NoProvider && ciBuildID == "" {
+		// Since we don't know the CI provider, we can't reliably generate a build ID, which is a requirement for
+		// running tests in parallel. The user has to provide one in this case, and if they didn't, we have to disable
+		// parallelism.
 		log.Warn().Msg("Unable to detect CI provider. Running tests sequentially.")
 		return &memseq.Sequencer{}
 	}
