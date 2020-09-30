@@ -59,6 +59,7 @@ type Project struct {
 	Timeout      int               `yaml:"timeout"`
 	Sauce        SauceConfig       `yaml:"sauce"`
 	Env          map[string]string `yaml:"env"`
+	Parallel     bool              `yaml:"parallel"`
 }
 
 // Suite represents the test suite configuration.

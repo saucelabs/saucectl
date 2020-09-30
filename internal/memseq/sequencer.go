@@ -27,7 +27,7 @@ func (m *Sequencer) Register(ctx context.Context, buildID string, testSuites []f
 	return buildID, nil
 }
 
-// NextAssignment fetches the next test assignment. Returns an empty string if no assignments left.
+// NextAssignment fetches the next test assignment. Returns an empty string if no assignments are left.
 func (m *Sequencer) NextAssignment(ctx context.Context, fleetID, suiteName string) (string, error) {
 	select {
 	case next := <-m.sequence[fleetID + suiteName]:

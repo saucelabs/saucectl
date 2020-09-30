@@ -3,8 +3,8 @@ package ci
 import (
 	"testing"
 
-	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/runner"
 
 	"github.com/saucelabs/saucectl/internal/fleet"
@@ -16,9 +16,9 @@ type FakeSequencer struct {
 	fleet.Sequencer
 }
 
-func TestTeardownCopyFiles(t* testing.T) {
+func TestTeardownCopyFiles(t *testing.T) {
 	oldMethod := copyFile
-	files := []string{}
+	var files []string
 	copyFile = func(src string, dst string) error {
 		files = append(files, src)
 		return nil
@@ -26,7 +26,7 @@ func TestTeardownCopyFiles(t* testing.T) {
 	jobConfig := config.Project{}
 	cli := &command.SauceCtlCli{}
 	seq := FakeSequencer{}
-	r, err := NewRunner(jobConfig, cli, seq, config.RunnerConfiguration{})
+	r, err := NewRunner(jobConfig, cli, seq, config.RunnerConfiguration{}, nil)
 	assert.Equal(t, err, nil)
 	runner.LogFiles = []string{"/foo/bar/", "/bar/foo/"}
 	r.teardown("")
@@ -34,11 +34,11 @@ func TestTeardownCopyFiles(t* testing.T) {
 	copyFile = oldMethod
 }
 
-func TestTeardownSkipped(t* testing.T) {
+func TestTeardownSkipped(t *testing.T) {
 	jobConfig := config.Project{}
 	cli := &command.SauceCtlCli{}
 	seq := FakeSequencer{}
-	r, err := NewRunner(jobConfig, cli, seq, config.RunnerConfiguration{})
+	r, err := NewRunner(jobConfig, cli, seq, config.RunnerConfiguration{}, nil)
 	assert.Equal(t, err, nil)
 	runner.LogFiles = []string{"/foo/bar/", "/bar/foo/"}
 	err = r.teardown("some/path/")
@@ -49,7 +49,7 @@ func TestRunBeforeExec(t *testing.T) {
 	jobConfig := config.Project{}
 	cli := &command.SauceCtlCli{}
 	seq := FakeSequencer{}
-	r, err := NewRunner(jobConfig, cli, seq, config.RunnerConfiguration{})
+	r, err := NewRunner(jobConfig, cli, seq, config.RunnerConfiguration{}, nil)
 	assert.Equal(t, err, nil)
 	err = r.beforeExec(jobConfig.BeforeExec)
 	assert.Equal(t, err, nil)

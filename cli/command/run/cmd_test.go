@@ -1,6 +1,7 @@
 package run
 
 import (
+	"github.com/saucelabs/saucectl/internal/region"
 	"testing"
 
 	"github.com/saucelabs/saucectl/cli/command"
@@ -24,4 +25,37 @@ func TestNewRunCommand(t *testing.T) {
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, exitCode, 123)
+}
+
+func Test_apiBaseURL(t *testing.T) {
+	type args struct {
+		r region.Region
+	}
+	tests := []struct {
+		name     string
+		args     args
+		sauceAPI string
+		want     string
+	}{
+		{
+			name:     "region based",
+			args:     args{r: region.EUCentral1},
+			sauceAPI: "",
+			want:     region.EUCentral1.APIBaseURL(),
+		},
+		{
+			name:     "override",
+			args:     args{r: region.USWest1},
+			sauceAPI: "https://nowhere.saucelabs.com",
+			want:     "https://nowhere.saucelabs.com",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sauceAPI = tt.sauceAPI
+			if got := apiBaseURL(tt.args.r); got != tt.want {
+				t.Errorf("apiBaseURL() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

@@ -4,8 +4,6 @@ import (
 	"context"
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/internal/fpath"
-	"strconv"
-	"time"
 )
 
 // TestSuite represents the user's test suite.
@@ -21,7 +19,7 @@ type Sequencer interface {
 }
 
 // Register is a convenience function for Sequencer.Register().
-func Register(ctx context.Context, seq Sequencer, testFiles []string, suites []config.Suite) (string, error) {
+func Register(ctx context.Context, seq Sequencer, buildID string, testFiles []string, suites []config.Suite) (string, error) {
 	ts := make([]TestSuite, len(suites))
 
 	for i, suite := range suites {
@@ -35,6 +33,5 @@ func Register(ctx context.Context, seq Sequencer, testFiles []string, suites []c
 		}
 	}
 
-	// FIXME generate correct build ID
-	return seq.Register(ctx, strconv.Itoa(int(time.Now().Unix())), ts)
+	return seq.Register(ctx, buildID, ts)
 }

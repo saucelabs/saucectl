@@ -52,7 +52,7 @@ func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer) 
 
 // RunProject runs the tests defined in config.Project.
 func (r *Runner) RunProject() (int, error) {
-	fid, err := fleet.Register(r.Ctx, r.Sequencer, r.Project.Files, r.Project.Suites)
+	fid, err := fleet.Register(r.Ctx, r.Sequencer, "", r.Project.Files, r.Project.Suites)
 	if err != nil {
 		return 1, err
 	}

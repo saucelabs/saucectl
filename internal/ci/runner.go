@@ -3,11 +3,14 @@ package ci
 import (
 	"bytes"
 	"context"
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/yaml"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -26,10 +29,11 @@ import (
 // Runner represents the CI implementation of a runner.Testrunner.
 type Runner struct {
 	runner.BaseRunner
+	CIProvider Provider
 }
 
 // NewRunner creates a new Runner instance.
-func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer, rc config.RunnerConfiguration) (*Runner, error) {
+func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer, rc config.RunnerConfiguration, cip Provider) (*Runner, error) {
 	r := Runner{}
 
 	r.Cli = cli
@@ -37,12 +41,16 @@ func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer, 
 	r.Project = c
 	r.RunnerConfig = rc
 	r.Sequencer = seq
+	r.CIProvider = cip
 	return &r, nil
 }
 
 // RunProject runs the tests defined in config.Project.
 func (r *Runner) RunProject() (int, error) {
-	fid, err := fleet.Register(r.Ctx, r.Sequencer, r.Project.Files, r.Project.Suites)
+	bid := r.buildID()
+	log.Info().Str("buildID", bid).Msg("Generated build ID")
+	fid, err := fleet.Register(r.Ctx, r.Sequencer, bid, r.Project.Files,
+		r.Project.Suites)
 	if err != nil {
 		return 1, err
 	}
@@ -233,4 +241,31 @@ func (r *Runner) runTest(suite config.Suite, run config.Run) (int, error) {
 		Msg("Command Finished")
 
 	return exitCode, err
+}
+
+// buildID generates a build ID based on the current CI and project information.
+func (r *Runner) buildID() string {
+	p := r.Project
+	in := struct {
+		ciBuildID string
+		version   string
+		kind      string
+		meta      config.Metadata
+		files     []string
+		suites    []config.Suite
+		img       config.ImageDefinition
+	}{
+		r.CIProvider.BuildID(),
+		p.APIVersion,
+		p.Kind,
+		p.Metadata,
+		p.Files,
+		p.Suites,
+		p.Image,
+	}
+	pStr := fmt.Sprintf("%+v", in)
+	h := sha1.New()
+	io.WriteString(h, pStr)
+
+	return hex.EncodeToString(h.Sum(nil))
 }
