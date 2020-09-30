@@ -162,18 +162,22 @@ func createCISequencer(p config.Project, cip ci.Provider) fleet.Sequencer {
 		return &memseq.Sequencer{}
 	}
 
-	apiURL := r.APIBaseURL()
-	if sauceAPI != "" {
-		apiURL = sauceAPI
-	}
-
 	log.Info().Msg("Running tests in parallel.")
 	return &testcomposer.Client{
 		HTTPClient: &http.Client{Timeout: 3 * time.Second},
-		URL:        apiURL,
+		URL:        apiBaseURL(r),
 		Username:   u,
 		AccessKey:  k,
 	}
+}
+
+func apiBaseURL(r region.Region) string {
+	// Check for overrides.
+	if sauceAPI != "" {
+		return sauceAPI
+	}
+
+	return r.APIBaseURL()
 }
 
 // newDefaultSuite creates a rudimentary test suite from a project configuration.
