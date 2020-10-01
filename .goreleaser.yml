@@ -32,7 +32,8 @@ brews:
     dependencies:
       - docker
 archives:
-  - replacements:
+  - id: archive1
+    replacements:
       darwin: mac
       linux: linux
       windows: win
@@ -40,6 +41,8 @@ archives:
       386: 32-bit
     files:
       - LICENSE
+  - id: archive2
+    format: binary
 checksum:
   name_template: 'checksums.txt'
 snapshot:

@@ -7,6 +7,12 @@ on:
     tags:
       - 'v*'
 
+  # TODO: DO NOT MERGE THIS!!!
+  pull_request:
+  push:
+    branches:
+      - master
+
 env:
   GH_TOKEN: ${{secrets.GH_TOKEN}}
 
