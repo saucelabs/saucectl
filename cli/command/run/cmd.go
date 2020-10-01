@@ -1,6 +1,11 @@
 package run
 
 import (
+	"net/http"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
@@ -16,10 +21,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
-	"net/http"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 var (
@@ -185,8 +186,8 @@ func apiBaseURL(r region.Region) string {
 func newDefaultSuite(p config.Project) config.Suite {
 	// TODO remove this method once saucectl fully transitions to the new config
 	s := config.Suite{Name: "default"}
-	if len(p.Capabilities) > 0 {
-		s.Capabilities = p.Capabilities[0]
+	if len(p.Settings) > 0 {
+		s.Settings = p.Settings[0]
 	}
 
 	return s

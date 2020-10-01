@@ -5,11 +5,8 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/hex"
+	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/runner"
-	"github.com/saucelabs/saucectl/internal/fleet"
-	"github.com/saucelabs/saucectl/internal/fpath"
-	"github.com/saucelabs/saucectl/internal/yaml"
 	"io"
 	"io/ioutil"
 	"os"
@@ -18,12 +15,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog/log"
-
-	"errors"
-
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/internal/fleet"
+	"github.com/saucelabs/saucectl/internal/fpath"
+	"github.com/saucelabs/saucectl/internal/yaml"
+
+	"github.com/rs/zerolog/log"
 )
 
 // Runner represents the CI implementation of a runner.Testrunner.
@@ -107,7 +106,7 @@ func (r *Runner) setup(run config.Run) error {
 	return nil
 }
 
-func (r* Runner) execute(task string) (int, error) {
+func (r *Runner) execute(task string) (int, error) {
 	args := strings.Fields(task)
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Stdout = r.Cli.Out()
@@ -121,7 +120,7 @@ func (r* Runner) execute(task string) (int, error) {
 	return 0, nil
 }
 
-func (r* Runner) beforeExec(tasks []string) (error) {
+func (r *Runner) beforeExec(tasks []string) error {
 	for _, task := range tasks {
 		log.Info().Msgf("Running BeforeExec task: %s", task)
 		exitCode, err := r.execute(task)
@@ -138,13 +137,14 @@ func (r* Runner) beforeExec(tasks []string) (error) {
 // run runs the tests defined in the config.Project.
 func (r *Runner) run(suite config.Suite) (int, error) {
 	cmd := exec.Command(r.RunnerConfig.ExecCommand[0], r.RunnerConfig.ExecCommand[1])
+
 	cmd.Env = append(
 		os.Environ(),
 		fmt.Sprintf("SAUCE_BUILD_NAME=%s", r.Project.Metadata.Build),
 		fmt.Sprintf("SAUCE_TAGS=%s", strings.Join(r.Project.Metadata.Tags, ",")),
 		fmt.Sprintf("SAUCE_REGION=%s", r.Project.Sauce.Region),
 		fmt.Sprintf("TEST_TIMEOUT=%d", r.Project.Timeout),
-		fmt.Sprintf("BROWSER_NAME=%s", suite.Capabilities.BrowserName),
+		fmt.Sprintf("BROWSER_NAME=%s", suite.Settings.BrowserName),
 	)
 
 	// Add any defined env variables from the job config / CLI args.
@@ -181,6 +181,7 @@ func (r *Runner) teardown(logDir string) error {
 }
 
 var copyFile = copyFileFunc
+
 func copyFileFunc(src string, targetDir string) error {
 	input, err := ioutil.ReadFile(src)
 	if err != nil {

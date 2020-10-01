@@ -9,7 +9,7 @@ files:
 suites:
   - name: "saucy test"
     match: ".*.(spec|test).js$"
-    capabilities:
+    settings:
       browserName: "firefox"
 image:
   base: saucelabs/stt-playwright-jest-node
