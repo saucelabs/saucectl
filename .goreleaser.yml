@@ -42,7 +42,9 @@ archives:
     files:
       - LICENSE
   - id: archive2
-    format: binary
+    format: zip
+    files:
+      - LICENSE
 checksum:
   name_template: 'checksums.txt'
 snapshot:
