@@ -50,7 +50,6 @@ type Project struct {
 	APIVersion string            `yaml:"apiVersion"`
 	Kind       string            `yaml:"kind"`
 	Metadata   Metadata          `yaml:"metadata"`
-	Settings   []Settings        `yaml:"settings"`
 	Suites     []Suite           `yaml:"suites"`
 	Files      []string          `yaml:"files"`
 	Image      ImageDefinition   `yaml:"image"`
@@ -63,9 +62,10 @@ type Project struct {
 
 // Suite represents the test suite configuration.
 type Suite struct {
-	Name     string   `yaml:"name"`
-	Settings Settings `yaml:"settings"`
-	Match    string   `yaml:"match"`
+	Name         string   `yaml:"name"`
+	Capabilities Settings `yaml:"capabilities"`
+	Settings     Settings `yaml:"settings"`
+	Match        string   `yaml:"match"`
 }
 
 // SauceConfig represents sauce labs related settings.
@@ -138,6 +138,8 @@ func NewJobConfiguration(cfgFilePath string) (Project, error) {
 		c.Env = make(map[string]string)
 	}
 
+	c.SyncCapabilities()
+
 	return c, nil
 }
 
@@ -147,5 +149,27 @@ func (m *Metadata) ExpandEnv() {
 	m.Build = os.ExpandEnv(m.Build)
 	for i, v := range m.Tags {
 		m.Tags[i] = os.ExpandEnv(v)
+	}
+
+}
+
+// SyncCapabilities uses the project capabilities if no settings have been defined in the suites.
+func (p *Project) SyncCapabilities() {
+	empty := Settings{}
+	for i, s := range p.Suites {
+		if s.Settings == empty && s.Capabilities != empty {
+			s.Settings = Settings{
+				BrowserName:               s.Capabilities.BrowserName,
+				BrowserVersion:            s.Capabilities.BrowserVersion,
+				PlatformName:              s.Capabilities.PlatformName,
+				AcceptInsecureCerts:       s.Capabilities.AcceptInsecureCerts,
+				PageLoadStrategy:          s.Capabilities.PageLoadStrategy,
+				SetWindowRect:             s.Capabilities.SetWindowRect,
+				Timeouts:                  s.Capabilities.Timeouts,
+				StrictFileInteractability: s.Capabilities.StrictFileInteractability,
+				UnhandledPromptBehavior:   s.Capabilities.UnhandledPromptBehavior,
+			}
+		}
+		p.Suites[i] = s
 	}
 }

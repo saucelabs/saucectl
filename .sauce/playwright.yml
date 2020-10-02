@@ -9,6 +9,8 @@ files:
 suites:
   - name: "saucy test"
     match: ".*.(spec|test).js$"
+    capabilities:
+      browserName: "firefox"
     settings:
       browserName: "firefox"
 image:

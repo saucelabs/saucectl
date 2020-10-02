@@ -11,8 +11,10 @@ files:
 suites:
   - name: "saucy test"
     match: ".*.(spec|test).js$"
+    capabilities:
+      browserName: "chrome"
     settings:
-      browserName: "firefox"
+      browserName: "chrome"
 image:
   base: saucelabs/stt-cypress-mocha-node
   version: latest

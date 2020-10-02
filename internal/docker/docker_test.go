@@ -161,11 +161,8 @@ func TestStartContainer(t *testing.T) {
 	failureResult := container.ContainerCreateCreatedBody{}
 	jobConfig := config.Project{
 		Image: config.ImageDefinition{Base: "foobar"},
-		Settings: []config.Settings{
-			{BrowserName: "chrome"},
-		},
 	}
-	suite := config.Suite{Settings: jobConfig.Settings[0]}
+	suite := config.Suite{Settings: config.Settings{BrowserName: "chrome"}}
 	jobConfigWithoutCaps := config.Project{
 		Image: config.ImageDefinition{Base: "foobar"},
 	}

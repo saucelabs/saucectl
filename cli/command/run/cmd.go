@@ -186,9 +186,6 @@ func apiBaseURL(r region.Region) string {
 func newDefaultSuite(p config.Project) config.Suite {
 	// TODO remove this method once saucectl fully transitions to the new config
 	s := config.Suite{Name: "default"}
-	if len(p.Settings) > 0 {
-		s.Settings = p.Settings[0]
-	}
 
 	return s
 }
