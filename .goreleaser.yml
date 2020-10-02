@@ -38,6 +38,9 @@ archives:
       windows: win
       amd64: 64-bit
       386: 32-bit
+    format_overrides:
+      - goos: windows
+        format: zip
     files:
       - LICENSE
 checksum:
