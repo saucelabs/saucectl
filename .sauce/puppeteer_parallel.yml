@@ -13,6 +13,8 @@ suites:
     match: ".*.(spec|test).js$"
     capabilities:
       browserName: "chrome"
+    settings:
+      browserName: "chrome"
 image:
   base: saucelabs/stt-puppeteer-jest-node
   version: latest

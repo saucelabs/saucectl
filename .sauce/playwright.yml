@@ -11,6 +11,8 @@ suites:
     match: ".*.(spec|test).js$"
     capabilities:
       browserName: "firefox"
+    settings:
+      browserName: "firefox"
 image:
   base: saucelabs/stt-playwright-jest-node
   version: latest

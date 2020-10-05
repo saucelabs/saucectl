@@ -5,8 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/docker/docker/api/types/mount"
-	"github.com/rs/zerolog/log"
 	"io"
 	"io/ioutil"
 	"os"
@@ -14,21 +12,22 @@ import (
 	"strings"
 	"time"
 
+	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/streams"
+	"github.com/saucelabs/saucectl/cli/utils"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/system"
 	"github.com/docker/go-connections/nat"
-
 	"github.com/phayes/freeport"
-
-	"github.com/saucelabs/saucectl/cli/config"
-	"github.com/saucelabs/saucectl/cli/streams"
-	"github.com/saucelabs/saucectl/cli/utils"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -251,7 +250,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 			fmt.Sprintf("SAUCE_DEVTOOLS_PORT=%d", port),
 			fmt.Sprintf("SAUCE_REGION=%s", c.Sauce.Region),
 			fmt.Sprintf("TEST_TIMEOUT=%d", c.Timeout),
-			fmt.Sprintf("BROWSER_NAME=%s", s.Capabilities.BrowserName),
+			fmt.Sprintf("BROWSER_NAME=%s", s.Settings.BrowserName),
 		},
 	}
 

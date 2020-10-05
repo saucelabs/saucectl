@@ -24,18 +24,17 @@ type Timeouts struct {
 	Implicit int `yaml:"implicit"`
 }
 
-// Capabilities describes job capabilies
-type Capabilities struct {
-	BrowserName               string                 `yaml:"browserName"`
-	BrowserVersion            string                 `yaml:"browserVersion"`
-	PlatformName              string                 `yaml:"platformName"`
-	AcceptInsecureCerts       bool                   `yaml:"acceptInsecureCerts"`
-	PageLoadStrategy          bool                   `yaml:"pageLoadStrategy"`
-	Proxy                     map[string]interface{} `yaml:"proxy"`
-	SetWindowRect             bool                   `yaml:"setWindowRect"`
-	Timeouts                  Timeouts               `yaml:"timeouts"`
-	StrictFileInteractability bool                   `yaml:"strictFileInteractability"`
-	UnhandledPromptBehavior   string                 `yaml:"unhandledPromptBehavior"`
+// Settings describes job settings
+type Settings struct {
+	BrowserName               string   `yaml:"browserName"`
+	BrowserVersion            string   `yaml:"browserVersion"`
+	PlatformName              string   `yaml:"platformName"`
+	AcceptInsecureCerts       bool     `yaml:"acceptInsecureCerts"`
+	PageLoadStrategy          bool     `yaml:"pageLoadStrategy"`
+	SetWindowRect             bool     `yaml:"setWindowRect"`
+	Timeouts                  Timeouts `yaml:"timeouts"`
+	StrictFileInteractability bool     `yaml:"strictFileInteractability"`
+	UnhandledPromptBehavior   string   `yaml:"unhandledPromptBehavior"`
 }
 
 // ImageDefinition describe configuration to the testrunner image
@@ -48,25 +47,25 @@ type ImageDefinition struct {
 
 // Project represents the project configuration.
 type Project struct {
-	APIVersion   string            `yaml:"apiVersion"`
-	Kind         string            `yaml:"kind"`
-	Metadata     Metadata          `yaml:"metadata"`
-	Capabilities []Capabilities    `yaml:"capabilities"`
-	Suites       []Suite           `yaml:"suites"`
-	Files        []string          `yaml:"files"`
-	Image        ImageDefinition   `yaml:"image"`
-	BeforeExec   []string          `yaml:"beforeExec"`
-	Timeout      int               `yaml:"timeout"`
-	Sauce        SauceConfig       `yaml:"sauce"`
-	Env          map[string]string `yaml:"env"`
-	Parallel     bool              `yaml:"parallel"`
+	APIVersion string            `yaml:"apiVersion"`
+	Kind       string            `yaml:"kind"`
+	Metadata   Metadata          `yaml:"metadata"`
+	Suites     []Suite           `yaml:"suites"`
+	Files      []string          `yaml:"files"`
+	Image      ImageDefinition   `yaml:"image"`
+	BeforeExec []string          `yaml:"beforeExec"`
+	Timeout    int               `yaml:"timeout"`
+	Sauce      SauceConfig       `yaml:"sauce"`
+	Env        map[string]string `yaml:"env"`
+	Parallel   bool              `yaml:"parallel"`
 }
 
 // Suite represents the test suite configuration.
 type Suite struct {
-	Name         string       `yaml:"name"`
-	Capabilities Capabilities `yaml:"capabilities"`
-	Match        string       `yaml:"match"`
+	Name         string   `yaml:"name"`
+	Capabilities Settings `yaml:"capabilities"`
+	Settings     Settings `yaml:"settings"`
+	Match        string   `yaml:"match"`
 }
 
 // SauceConfig represents sauce labs related settings.
@@ -139,6 +138,8 @@ func NewJobConfiguration(cfgFilePath string) (Project, error) {
 		c.Env = make(map[string]string)
 	}
 
+	c.SyncCapabilities()
+
 	return c, nil
 }
 
@@ -148,5 +149,27 @@ func (m *Metadata) ExpandEnv() {
 	m.Build = os.ExpandEnv(m.Build)
 	for i, v := range m.Tags {
 		m.Tags[i] = os.ExpandEnv(v)
+	}
+
+}
+
+// SyncCapabilities uses the project capabilities if no settings have been defined in the suites.
+func (p *Project) SyncCapabilities() {
+	empty := Settings{}
+	for i, s := range p.Suites {
+		if s.Settings == empty && s.Capabilities != empty {
+			s.Settings = Settings{
+				BrowserName:               s.Capabilities.BrowserName,
+				BrowserVersion:            s.Capabilities.BrowserVersion,
+				PlatformName:              s.Capabilities.PlatformName,
+				AcceptInsecureCerts:       s.Capabilities.AcceptInsecureCerts,
+				PageLoadStrategy:          s.Capabilities.PageLoadStrategy,
+				SetWindowRect:             s.Capabilities.SetWindowRect,
+				Timeouts:                  s.Capabilities.Timeouts,
+				StrictFileInteractability: s.Capabilities.StrictFileInteractability,
+				UnhandledPromptBehavior:   s.Capabilities.UnhandledPromptBehavior,
+			}
+		}
+		p.Suites[i] = s
 	}
 }
