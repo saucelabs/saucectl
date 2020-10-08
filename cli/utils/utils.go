@@ -43,3 +43,24 @@ func ValidateOutputPathFileMode(fileMode os.FileMode) error {
 	}
 	return nil
 }
+
+// GetHomeDir gets the home directory. If we're in CI, then it's the CWD, otherwise assume it's
+// /home/seluser
+func GetHomeDir() (string, error) {
+	if (os.Getenv("CI") == "") {
+		return "/home/seluser", nil
+	}
+	workingDir, err := os.Getwd()
+	if (err != nil) {
+		return "", err
+	}
+	return workingDir, nil
+}
+
+// GetConfigFile config yaml. If we're in CI, then it's config.yaml, otherwise it's config-local.yaml
+func GetConfigFile () string {
+	if (os.Getenv("CI") == "") {
+		return "config.yaml"
+	}
+	return "config-local.yaml"
+}

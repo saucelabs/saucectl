@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/cli/utils"
 	"io"
 	"io/ioutil"
 	"os"
@@ -68,7 +69,8 @@ func (r *Runner) RunProject() (int, error) {
 func (r *Runner) setup(run config.Run) error {
 	log.Info().Msg("Run entry.sh")
 	var out bytes.Buffer
-	cmd := exec.Command("/home/seluser/entry.sh", "&")
+	var homeDir, _ = utils.GetHomeDir()
+	cmd := exec.Command(homeDir + "/entry.sh", "&")
 	cmd.Stderr = &out
 	if err := cmd.Run(); err != nil {
 		return errors.New("couldn't start test: " + out.String())

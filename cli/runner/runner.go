@@ -4,13 +4,16 @@ import (
 	"context"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/utils"
 	"github.com/saucelabs/saucectl/internal/fleet"
 )
 
 const logDir = "/var/log/cont"
 
+var homeDir, _ = utils.GetHomeDir()
+
 // ConfigPath represents the path for the runner config.
-var ConfigPath = "/home/seluser/config.yaml"
+var ConfigPath = homeDir + "/" + utils.GetConfigFile()
 
 // LogFiles contains the locations of log and resource files that are useful for reporting.
 var LogFiles = []string{
@@ -24,8 +27,8 @@ var LogFiles = []string{
 	logDir + "/wait-xvfb-stdout.log",
 	logDir + "/xvfb-tryouts-stderr.log",
 	logDir + "/xvfb-tryouts-stdout.log",
-	"/home/seluser/videos/video.mp4",
-	"/home/seluser/docker.log",
+	homeDir + "/videos/video.mp4",
+	homeDir + "/docker.log",
 }
 
 // Testrunner describes the test runner interface
