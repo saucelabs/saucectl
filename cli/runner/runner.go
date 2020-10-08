@@ -6,14 +6,22 @@ import (
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/utils"
 	"github.com/saucelabs/saucectl/internal/fleet"
+	"os"
 )
 
 const logDir = "/var/log/cont"
 
 var homeDir, _ = utils.GetHomeDir()
 
+func getConfigYamlFile() string {
+	if (os.Getenv("SAUCE_VM") == "") {
+		return "config.yaml"
+	}
+	return "config-local.yaml"
+}
+
 // ConfigPath represents the path for the runner config.
-var ConfigPath = homeDir + "/" + utils.GetConfigFile()
+var ConfigPath = homeDir + "/" + getConfigYamlFile()
 
 // LogFiles contains the locations of log and resource files that are useful for reporting.
 var LogFiles = []string{

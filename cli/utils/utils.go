@@ -57,10 +57,3 @@ func GetHomeDir() (string, error) {
 	return workingDir, nil
 }
 
-// GetConfigFile config yaml. If we're in CI, then it's config.yaml, otherwise it's config-local.yaml
-func GetConfigFile () string {
-	if (os.Getenv("CI") == "") {
-		return "config.yaml"
-	}
-	return "config-local.yaml"
-}
