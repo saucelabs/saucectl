@@ -11,8 +11,6 @@ files:
 suites:
   - name: "saucy test"
     match: ".*.(spec|test).js$"
-    capabilities:
-      browserName: "chrome"
     settings:
       browserName: "chrome"
 image:

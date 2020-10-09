@@ -11,8 +11,6 @@ files:
 suites:
   - name: "chrome"
     match: ".*.(spec|test).js$"
-    capabilities:
-      browserName: "chrome"
     settings:
       browserName: "chrome"
 image:
