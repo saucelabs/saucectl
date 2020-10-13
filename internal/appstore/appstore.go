@@ -8,8 +8,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
-	"github.com/saucelabs/saucectl/internal/storager"
+	"github.com/saucelabs/saucectl/internal/fileuploader"
 )
 
 // AppStore implements functions for AppStore interface
@@ -21,9 +22,9 @@ type AppStore struct {
 }
 
 // New returns an implementation for AppStore
-func New(url, username, accessKey string) storager.Storager {
+func New(url, username, accessKey string, timeout int) fileuploader.FileUploader {
 	return &AppStore{
-		HTTPClient: &http.Client{},
+		HTTPClient: &http.Client{Timeout: time.Duration(timeout) * time.Second},
 		URL:        url,
 		Username:   username,
 		AccessKey:  accessKey,
@@ -32,13 +33,12 @@ func New(url, username, accessKey string) storager.Storager {
 
 // Upload uploads file to remote storage
 func (s *AppStore) Upload(fileName, formType string) error {
-	body, writer, err := prepareFile(fileName, formType)
+	body, contentType, err := readFile(fileName, formType)
 	if err != nil {
 		return err
 	}
-	defer writer.Close()
 
-	request, err := createRequest(s.URL, s.Username, s.AccessKey, body, writer)
+	request, err := createRequest(s.URL, s.Username, s.AccessKey, body, contentType)
 	if err != nil {
 		return err
 	}
@@ -53,30 +53,32 @@ func (s *AppStore) Upload(fileName, formType string) error {
 	return err
 }
 
-func prepareFile(fileName, formType string) (*bytes.Buffer, *multipart.Writer, error) {
+func readFile(fileName, formType string) (*bytes.Buffer, string, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
-		return nil, nil, err
+		return nil, "", err
 	}
 	defer file.Close()
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
+	defer writer.Close()
 	part, err := writer.CreateFormFile(formType, filepath.Base(file.Name()))
 	if err != nil {
-		return nil, nil, err
+		return nil, "", err
 	}
 	io.Copy(part, file)
 
-	return body, writer, nil
+	return body, writer.FormDataContentType(), nil
 }
 
-func createRequest(url, username, accesskey string, body *bytes.Buffer, writer *multipart.Writer) (*http.Request, error) {
+func createRequest(url, username, accesskey string, body *bytes.Buffer, contentType string) (*http.Request, error) {
 	request, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
 		return nil, err
 	}
-	request.Header.Set("Content-Type", writer.FormDataContentType())
+
+	request.Header.Set("Content-Type", contentType)
 	request.SetBasicAuth(username, accesskey)
 
 	return request, nil
