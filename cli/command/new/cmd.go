@@ -1,20 +1,15 @@
 package new
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/docker"
-	"io"
-	"os"
-	"path/filepath"
-	"strings"
-	"text/template"
-
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/spf13/cobra"
 	"github.com/tj/survey"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 var (
@@ -24,6 +19,16 @@ var (
 	newExample = "saucectl new"
 
 	argsYes = false
+
+	frameworks = map[string]struct {
+		GithubOrg  string
+		GithubRepo string
+	}{
+		"Playwright": {"saucelabs", "sauce-playwright-runner"},
+		"Puppeteer":  {"saucelabs", "sauce-puppeteer-runner"},
+		"Testcafe":   {"saucelabs", "sauce-testcafe-runner"},
+		"Cypress":    {"saucelabs", "sauce-cypress-runner"},
+	}
 
 	qs = []*survey.Question{
 		{
@@ -87,87 +92,25 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return fmt.Errorf("failed to create config directory: %v", err)
 	}
 
-	fc, err := os.Create(filepath.Join(cwd, ".sauce", "config.yml"))
-	if err != nil {
-		return err
-	}
-	defer fc.Close()
-
-	if err := writeJobConfig(answers.Framework, answers.Region, fc); err != nil {
-		return err
-	}
-
-	image, err := getImageValues(answers.Framework)
-	if err != nil {
-		return err
-	}
-	testFolder := filepath.Join(cwd, image.TestsFolder)
-	if err := os.MkdirAll(testFolder, 0777); err != nil {
-		return err
-	}
-
-	ft, err := os.Create(filepath.Join(testFolder, testTpl[answers.Framework].Filename))
-	if err != nil {
-		return err
-	}
-	defer ft.Close()
-
-	testTpl, err := template.New("configTpl").Parse(testTpl[answers.Framework].Code)
+	org, repo, err := getRepositoryValues(answers.Framework)
 	if err != nil {
 		return err
 	}
 
-	wt := bufio.NewWriter(ft)
-	if err := testTpl.Execute(wt, answers); err != nil {
-		return err
+	err = FetchAndExtractTemplate(org, repo)
+	if err != nil {
+		fmt.Printf("No template available for %s\n", answers.Framework)
 	}
-	wt.Flush()
 
 	fmt.Println("\nNew project bootstrapped successfully! You can now run:\n$ saucectl run")
 	return nil
 }
 
-func getImageValues(framework string) (docker.Image, error){
-	switch framework {
-	case "playwright":
-		return docker.DefaultPlaywright, nil
-	case "puppeteer":
-		return docker.DefaultPuppeteer, nil
-	case "testcafe":
-		return docker.DefaultTestcafe, nil
-	case "cypress":
-		return docker.DefaultCypress, nil
+func getRepositoryValues(framework string) (string, string, error) {
+	for key, repo := range frameworks {
+		if strings.ToLower(key) == framework {
+			return repo.GithubOrg, repo.GithubRepo, nil
+		}
 	}
-	return docker.Image{}, errors.New("unknown framework")
-}
-
-
-func writeJobConfig(framework string, region string, w io.Writer) error {
-	configTpl, err := template.New("configTpl").Parse(configTpl)
-	if err != nil {
-		return err
-	}
-
-	// TODO(AlexP) Replace template rendering and instead use the JobConfiguration struct directly to render the yaml
-	image, err := getImageValues(framework)
-	if err != nil {
-		return err
-	}
-
-	v := struct {
-		Name        string
-		Version     string
-		Region      string
-		TestsFolder string
-		Match       string
-	}{
-		Region: region,
-	}
-
-	v.Name = image.Name
-	v.Version = image.Version
-	v.TestsFolder = image.TestsFolder
-	v.Match = image.Match
-
-	return configTpl.Execute(w, v)
+	return "", "", errors.New("unknown framework")
 }
