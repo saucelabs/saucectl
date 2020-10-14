@@ -37,7 +37,10 @@ func GetReleaseArtifactURL(org string, repo string) (string, error) {
 }
 
 func CreateFolder(name string, mode int64) error {
-	os.MkdirAll(name, os.FileMode(mode))
+	err := os.MkdirAll(name, os.FileMode(mode))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -54,7 +57,7 @@ func ConfirmOverwriting(name string) bool {
 			Name: "overwrite",
 			Prompt: &survey.Select{
 				Message: fmt.Sprintf("Overwrite %s:", name),
-				Options: []string{"All", "Yes", "No"},
+				Options: []string{"No", "Yes", "All"},
 				Default: "No",
 			},
 		},
@@ -65,8 +68,8 @@ func ConfirmOverwriting(name string) bool {
 		return false
 	}
 
-	overWriteAll = answers.Overwrite == "all"
-	return answers.Overwrite == "yes" || answers.Overwrite == "all"
+	overWriteAll = answers.Overwrite == "All"
+	return answers.Overwrite == "Yes" || answers.Overwrite == "All"
 }
 
 func ExtractFile(name string, mode int64, src io.Reader) error {

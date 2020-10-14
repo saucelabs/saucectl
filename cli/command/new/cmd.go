@@ -20,14 +20,15 @@ var (
 
 	argsYes = false
 
-	frameworks = map[string]struct {
+	frameworks = []struct {
+		Framework  string
 		GithubOrg  string
 		GithubRepo string
 	}{
-		"Playwright": {"saucelabs", "sauce-playwright-runner"},
-		"Puppeteer":  {"saucelabs", "sauce-puppeteer-runner"},
-		"Testcafe":   {"saucelabs", "sauce-testcafe-runner"},
-		"Cypress":    {"saucelabs", "sauce-cypress-runner"},
+		{ "Puppeteer","saucelabs", "sauce-puppeteer-runner"},
+		{ "Playwright", "saucelabs", "sauce-playwright-runner"},
+		{ "Testcafe", "saucelabs", "sauce-testcafe-runner"},
+		{ "Cypress", "saucelabs", "sauce-cypress-runner"},
 	}
 
 	qs = []*survey.Question{
@@ -35,7 +36,7 @@ var (
 			Name: "framework",
 			Prompt: &survey.Select{
 				Message: "Choose a framework:",
-				Options: []string{"Puppeteer", "Playwright", "Testcafe", "Cypress"},
+				Options: frameworkChoices(),
 				Default: "Puppeteer",
 			},
 		},
@@ -99,16 +100,24 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 
 	err = FetchAndExtractTemplate(org, repo)
 	if err != nil {
-		fmt.Printf("No template available for %s\n", answers.Framework)
+		return fmt.Errorf("no template available for %s (%s)", answers.Framework, err)
 	}
-
 	fmt.Println("\nNew project bootstrapped successfully! You can now run:\n$ saucectl run")
 	return nil
 }
 
+// Create choice list
+func frameworkChoices() []string {
+	var frameworkNames []string
+	for _, framework := range frameworks {
+		frameworkNames = append(frameworkNames, framework.Framework)
+	}
+	return frameworkNames
+}
+
 func getRepositoryValues(framework string) (string, string, error) {
-	for key, repo := range frameworks {
-		if strings.ToLower(key) == framework {
+	for _, repo := range frameworks {
+		if strings.ToLower(repo.Framework) == framework {
 			return repo.GithubOrg, repo.GithubRepo, nil
 		}
 	}
