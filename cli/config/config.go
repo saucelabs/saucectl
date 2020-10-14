@@ -19,58 +19,58 @@ type Metadata struct {
 
 // Timeouts describes WebDriver timeouts
 type Timeouts struct {
-	Script   int `yaml:"script"`
-	PageLoad int `yaml:"pageLoad"`
-	Implicit int `yaml:"implicit"`
+	Script   int `yaml:"script,omitempty"`
+	PageLoad int `yaml:"pageLoad,omitempty"`
+	Implicit int `yaml:"implicit,omitempty"`
 }
 
 // Settings describes job settings
 type Settings struct {
-	BrowserName               string   `yaml:"browserName"`
-	BrowserVersion            string   `yaml:"browserVersion"`
-	PlatformName              string   `yaml:"platformName"`
-	AcceptInsecureCerts       bool     `yaml:"acceptInsecureCerts"`
-	PageLoadStrategy          bool     `yaml:"pageLoadStrategy"`
-	SetWindowRect             bool     `yaml:"setWindowRect"`
-	Timeouts                  Timeouts `yaml:"timeouts"`
-	StrictFileInteractability bool     `yaml:"strictFileInteractability"`
-	UnhandledPromptBehavior   string   `yaml:"unhandledPromptBehavior"`
+	BrowserName               string   `yaml:"browserName,omitempty"`
+	BrowserVersion            string   `yaml:"browserVersion,omitempty"`
+	PlatformName              string   `yaml:"platformName,omitempty"`
+	AcceptInsecureCerts       bool     `yaml:"acceptInsecureCerts,omitempty"`
+	PageLoadStrategy          bool     `yaml:"pageLoadStrategy,omitempty"`
+	SetWindowRect             bool     `yaml:"setWindowRect,omitempty"`
+	Timeouts                  Timeouts `yaml:"timeouts,omitempty"`
+	StrictFileInteractability bool     `yaml:"strictFileInteractability,omitempty"`
+	UnhandledPromptBehavior   string   `yaml:"unhandledPromptBehavior,omitempty"`
 }
 
 // ImageDefinition describe configuration to the testrunner image
 type ImageDefinition struct {
-	Base    string                 `yaml:"base"`
-	Version string                 `yaml:"version"`
-	Exec    string                 `yaml:"exec"`
-	Options map[string]interface{} `yaml:"options"`
+	Base    string                 `yaml:"base,omitempty"`
+	Version string                 `yaml:"version,omitempty"`
+	Exec    string                 `yaml:"exec,omitempty"`
+	Options map[string]interface{} `yaml:"options,omitempty"`
 }
 
 // Project represents the project configuration.
 type Project struct {
-	APIVersion string            `yaml:"apiVersion"`
-	Kind       string            `yaml:"kind"`
-	Metadata   Metadata          `yaml:"metadata"`
-	Suites     []Suite           `yaml:"suites"`
-	Files      []string          `yaml:"files"`
-	Image      ImageDefinition   `yaml:"image"`
-	BeforeExec []string          `yaml:"beforeExec"`
-	Timeout    int               `yaml:"timeout"`
-	Sauce      SauceConfig       `yaml:"sauce"`
-	Env        map[string]string `yaml:"env"`
-	Parallel   bool              `yaml:"parallel"`
+	APIVersion string            `yaml:"apiVersion,omitempty"`
+	Kind       string            `yaml:"kind,omitempty"`
+	Metadata   Metadata          `yaml:"metadata,omitempty"`
+	Suites     []Suite           `yaml:"suites,omitempty"`
+	Files      []string          `yaml:"files,omitempty"`
+	Image      ImageDefinition   `yaml:"image,omitempty"`
+	BeforeExec []string          `yaml:"beforeExec,omitempty"`
+	Timeout    int               `yaml:"timeout,omitempty"`
+	Sauce      SauceConfig       `yaml:"sauce,omitempty"`
+	Env        map[string]string `yaml:"env,omitempty"`
+	Parallel   bool              `yaml:"parallel,omitempty"`
 }
 
 // Suite represents the test suite configuration.
 type Suite struct {
-	Name         string   `yaml:"name"`
-	Capabilities Settings `yaml:"capabilities"`
-	Settings     Settings `yaml:"settings"`
-	Match        string   `yaml:"match"`
+	Name         string   `yaml:"name,omitempty"`
+	Capabilities Settings `yaml:"capabilities,omitempty"`
+	Settings     Settings `yaml:"settings,omitempty"`
+	Match        string   `yaml:"match,omitempty"`
 }
 
 // SauceConfig represents sauce labs related settings.
 type SauceConfig struct {
-	Region string `yaml:"region"`
+	Region string `yaml:"region,omitempty"`
 }
 
 // RunnerConfiguration describes configurations for the testrunner

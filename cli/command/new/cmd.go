@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/internal/yaml"
 	"github.com/spf13/cobra"
 	"github.com/tj/survey"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -102,7 +105,31 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	if err != nil {
 		return fmt.Errorf("no template available for %s (%s)", answers.Framework, err)
 	}
+
+	err = updateRegion(answers.Region)
+	if err != nil {
+		return err
+	}
+
 	fmt.Println("\nNew project bootstrapped successfully! You can now run:\n$ saucectl run")
+	return nil
+}
+
+// Overwrite the region from the template archive
+func updateRegion(region string) error {
+	cwd, _ := os.Getwd()
+	cfgPath := path.Join(cwd, ".sauce/config.yml")
+
+	c, err := config.NewJobConfiguration(cfgPath)
+	if err != nil {
+		return err
+	}
+
+	c.Sauce.Region = region
+	err = yaml.WriteFile(cfgPath, c)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
