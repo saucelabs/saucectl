@@ -95,6 +95,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	if err := os.MkdirAll(filepath.Join(cwd, ".sauce"), 0777); err != nil {
 		return fmt.Errorf("failed to create config directory: %v", err)
 	}
+	cfgFilePath := ".sauce/config.yml"
 
 	org, repo, err := getRepositoryValues(answers.Framework)
 	if err != nil {
@@ -106,7 +107,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return fmt.Errorf("no template available for %s (%s)", answers.Framework, err)
 	}
 
-	err = updateRegion(answers.Region)
+	err = updateRegion(cfgFilePath, answers.Region)
 	if err != nil {
 		return err
 	}
@@ -116,9 +117,9 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 }
 
 // Overwrite the region from the template archive
-func updateRegion(region string) error {
+func updateRegion(cfgFile string, region string) error {
 	cwd, _ := os.Getwd()
-	cfgPath := path.Join(cwd, ".sauce/config.yml")
+	cfgPath := path.Join(cwd, cfgFile)
 
 	c, err := config.NewJobConfiguration(cfgPath)
 	if err != nil {

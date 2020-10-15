@@ -28,5 +28,6 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/tj/survey v2.0.6+incompatible
 	gopkg.in/yaml.v2 v2.2.8
+	gotest.tools v2.2.0+incompatible
 	gotest.tools/v3 v3.0.2
 )

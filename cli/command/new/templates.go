@@ -49,27 +49,20 @@ func ConfirmOverwriting(name string) bool {
 		return true
 	}
 
-	answers := struct {
-		Overwrite string
-	}{}
-	question := []*survey.Question{
-		{
-			Name: "overwrite",
-			Prompt: &survey.Select{
-				Message: fmt.Sprintf("Overwrite %s:", name),
-				Options: []string{"No", "Yes", "All"},
-				Default: "No",
-			},
-		},
+	var answer string
+	question := &survey.Select{
+		Message: fmt.Sprintf("Overwrite %s:", name),
+		Options: []string{"No", "Yes", "All"},
+		Default: "No",
 	}
-	err := survey.Ask(question, &answers)
+	err := survey.AskOne(question, &answer, nil)
 	if err != nil {
 		log.Err(err)
 		return false
 	}
 
-	overWriteAll = answers.Overwrite == "All"
-	return answers.Overwrite == "Yes" || answers.Overwrite == "All"
+	overWriteAll = answer == "All"
+	return answer == "Yes" || answer == "All"
 }
 
 func ExtractFile(name string, mode int64, src io.Reader) error {
