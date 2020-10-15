@@ -17,7 +17,7 @@ import (
 
 var (
 	overWriteAll     = false
-	templateFileName = "template.tar.gz"
+	templateFileName = "saucetpl.tar.gz"
 )
 
 // GetReleaseArtifactURL provides template artifact url for a given repo
