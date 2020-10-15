@@ -28,10 +28,10 @@ var (
 		GithubOrg  string
 		GithubRepo string
 	}{
-		{ "Puppeteer","saucelabs", "sauce-puppeteer-runner"},
-		{ "Playwright", "saucelabs", "sauce-playwright-runner"},
-		{ "Testcafe", "saucelabs", "sauce-testcafe-runner"},
-		{ "Cypress", "saucelabs", "sauce-cypress-runner"},
+		{"Puppeteer", "saucelabs", "sauce-puppeteer-runner"},
+		{"Playwright", "saucelabs", "sauce-playwright-runner"},
+		{"Testcafe", "saucelabs", "sauce-testcafe-runner"},
+		{"Cypress", "saucelabs", "sauce-cypress-runner"},
 	}
 
 	qs = []*survey.Question{

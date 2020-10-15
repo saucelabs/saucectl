@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
-	"errors"
 	"fmt"
 	"github.com/google/go-github/github"
 	"github.com/rs/zerolog/log"
@@ -15,11 +14,13 @@ import (
 	"net/http"
 	"os"
 )
+
 var (
-	overWriteAll = false
+	overWriteAll     = false
 	templateFileName = "template.tar.gz"
 )
 
+// GetReleaseArtifactURL provides template artifact url for a given repo
 func GetReleaseArtifactURL(org string, repo string) (string, error) {
 	ctx := context.Background()
 	ghClient := github.NewClient(nil)
@@ -29,14 +30,14 @@ func GetReleaseArtifactURL(org string, repo string) (string, error) {
 	}
 
 	for _, asset := range release.Assets {
-		if *asset.Name ==  templateFileName {
+		if *asset.Name == templateFileName {
 			return asset.GetBrowserDownloadURL(), nil
 		}
 	}
-	return "", errors.New(fmt.Sprintf("No %s found", templateFileName))
+	return "", fmt.Errorf("No %s found", templateFileName)
 }
 
-func CreateFolder(name string, mode int64) error {
+func createFolder(name string, mode int64) error {
 	err := os.MkdirAll(name, os.FileMode(mode))
 	if err != nil {
 		return err
@@ -44,7 +45,7 @@ func CreateFolder(name string, mode int64) error {
 	return nil
 }
 
-func ConfirmOverwriting(name string) bool {
+func confirmOverwriting(name string) bool {
 	if overWriteAll {
 		return true
 	}
@@ -65,18 +66,18 @@ func ConfirmOverwriting(name string) bool {
 	return answer == "Yes" || answer == "All"
 }
 
-func ExtractFile(name string, mode int64, src io.Reader) error {
+func extractFile(name string, mode int64, src io.Reader) error {
 	stat, err := os.Stat(name)
 	if err != nil && !os.IsNotExist(err) {
 		log.Err(err)
 		return err
 	}
 	if err == nil && stat.IsDir() {
-		return errors.New(fmt.Sprintf("%s exists and is a directory", name))
+		return fmt.Errorf("%s exists and is a directory", name)
 	}
 
 	if err == nil {
-		if ConfirmOverwriting(name) == false {
+		if confirmOverwriting(name) == false {
 			return nil
 		}
 	}
@@ -94,6 +95,7 @@ func ExtractFile(name string, mode int64, src io.Reader) error {
 	return nil
 }
 
+// FetchAndExtractTemplate gather latest version of template for the repo and extract it locally
 func FetchAndExtractTemplate(org string, repo string) error {
 	url, err := GetReleaseArtifactURL(org, repo)
 	if err != nil {
@@ -124,13 +126,13 @@ func FetchAndExtractTemplate(org string, repo string) error {
 		}
 
 		if header.Typeflag == tar.TypeDir {
-			err = CreateFolder(header.Name, header.Mode)
+			err = createFolder(header.Name, header.Mode)
 			if err != nil {
 				log.Err(err).Msg(fmt.Sprintf("Unable to create %s", header.Name))
 			}
 		}
 		if header.Typeflag == tar.TypeReg {
-			err = ExtractFile(header.Name, header.Mode, tarReader)
+			err = extractFile(header.Name, header.Mode, tarReader)
 			if err != nil {
 				log.Err(err).Msg(fmt.Sprintf("Unable to extract %s", header.Name))
 			}
