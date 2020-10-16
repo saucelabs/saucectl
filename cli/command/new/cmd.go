@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tj/survey"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 )
@@ -119,7 +118,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 // Overwrite the region from the template archive
 func updateRegion(cfgFile string, region string) error {
 	cwd, _ := os.Getwd()
-	cfgPath := path.Join(cwd, cfgFile)
+	cfgPath := filepath.Join(cwd, cfgFile)
 
 	c, err := config.NewJobConfiguration(cfgPath)
 	if err != nil {
@@ -127,11 +126,7 @@ func updateRegion(cfgFile string, region string) error {
 	}
 
 	c.Sauce.Region = region
-	err = yaml.WriteFile(cfgPath, c)
-	if err != nil {
-		return err
-	}
-	return nil
+	return yaml.WriteFile(cfgPath, c)
 }
 
 // Create choice list
