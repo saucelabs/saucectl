@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"time"
 )
 
 var (
@@ -95,7 +96,10 @@ func FetchAndExtractTemplate(org string, repo string) error {
 		return err
 	}
 
-	resp, err := http.Get(url)
+	httpClient := http.Client{
+		Timeout: 5 * time.Second,
+	}
+	resp, err := httpClient.Get(url)
 	if err != nil {
 		return err
 	}
