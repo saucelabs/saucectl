@@ -36,7 +36,7 @@ func createTemplateTar() *bytes.Buffer {
 	header := &tar.Header{
 		Name:    "./test-folder/",
 		Size:    12, // "content-file"
-		Mode:    int64(0644),
+		Mode:    int64(0755),
 		ModTime: time.Now(),
 		Typeflag: tar.TypeDir,
 	}
