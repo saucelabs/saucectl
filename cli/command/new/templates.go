@@ -70,11 +70,11 @@ func requiresOverwriting(name string) (bool, error) {
 }
 
 func extractFile(name string, mode int64, src io.Reader, overWriteAll *bool) error {
-	overwrite, err := requiresOverwriting(name)
+	requireOverwrite, err := requiresOverwriting(name)
 	if err != nil {
 		return err
 	}
-	if overwrite && confirmOverwriting(name, overWriteAll) == false {
+	if requireOverwrite && confirmOverwriting(name, overWriteAll) == false {
 		return nil
 	}
 
