@@ -170,7 +170,7 @@ func TestFetchAndExtractTemplate(t *testing.T) {
 		},
 	)
 
-	httpmock.RegisterResponder("GET", validAssetUrl,
+	httpmock.RegisterResponder("GET", validAssetURL,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewBytesResponse(200, tarFile.Bytes()), nil
 		},
