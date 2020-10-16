@@ -95,7 +95,7 @@ func extractFile(name string, mode int64, src io.Reader) error {
 	return nil
 }
 
-// FetchAndExtractTemplate gather latest version of template for the repo and extract it locally
+// FetchAndExtractTemplate gathers latest version of the template for the repo and extracts it locally.
 func FetchAndExtractTemplate(org string, repo string) error {
 	url, err := GetReleaseArtifactURL(org, repo)
 	if err != nil {
@@ -128,13 +128,13 @@ func FetchAndExtractTemplate(org string, repo string) error {
 		if header.Typeflag == tar.TypeDir {
 			err = createFolder(header.Name, header.Mode)
 			if err != nil {
-				log.Err(err).Msg(fmt.Sprintf("Unable to create %s", header.Name))
+				log.Err(err).Msgf("Unable to create %s", header.Name)
 			}
 		}
 		if header.Typeflag == tar.TypeReg {
 			err = extractFile(header.Name, header.Mode, tarReader)
 			if err != nil {
-				log.Err(err).Msg(fmt.Sprintf("Unable to extract %s", header.Name))
+				log.Err(err).Msgf("Unable to extract %s", header.Name)
 			}
 		}
 	}

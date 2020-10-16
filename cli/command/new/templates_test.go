@@ -45,26 +45,26 @@ func TestGetReleaseArtifactURL(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	validAssetName := "saucetpl.tar.gz"
-	validAssetUrl := "http://dummy-url/saucetpl.tar.gz"
+	validAssetName := templateFileName
+	validAssetURL := "http://dummy-url/saucetpl.tar.gz"
 	validRelease := &github.RepositoryRelease{
 		Assets: []github.ReleaseAsset{
 			{
 				Name: &validAssetName,
-				URL: &validAssetUrl,
-				BrowserDownloadURL: &validAssetUrl,
+				URL: &validAssetURL,
+				BrowserDownloadURL: &validAssetURL,
 			},
 		},
 	}
 
 	invalidAssetName := "no-saucetpl.tar.gz"
-	invalidAssetUrl := "http://dummy-url/saucetpl.tar.gz"
+	invalidAssetURL := "http://dummy-url/saucetpl.tar.gz"
 	invalidRelease := &github.RepositoryRelease{
 		Assets: []github.ReleaseAsset{
 			{
 				Name: &invalidAssetName,
-				URL: &invalidAssetUrl,
-				BrowserDownloadURL: &invalidAssetUrl,
+				URL: &invalidAssetURL,
+				BrowserDownloadURL: &invalidAssetURL,
 			},
 		},
 	}
@@ -91,7 +91,7 @@ func TestGetReleaseArtifactURL(t *testing.T) {
 
 	url, err := GetReleaseArtifactURL("fake-org", "fake-repo")
 	assert.NilError(t, err)
-	assert.Equal(t, url, validAssetUrl)
+	assert.Equal(t, url, validAssetURL)
 
 	_, err = GetReleaseArtifactURL("fake-org", "fake-buggy-repo")
 	assert.Error(t, err, "no " + templateFileName + " found")
@@ -150,13 +150,13 @@ func TestFetchAndExtractTemplate(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 
 	validAssetName := "saucetpl.tar.gz"
-	validAssetUrl := "http://dummy-url/saucetpl.tar.gz"
+	validAssetURL := "http://dummy-url/saucetpl.tar.gz"
 	validRelease := &github.RepositoryRelease{
 		Assets: []github.ReleaseAsset{
 			{
 				Name: &validAssetName,
-				URL: &validAssetUrl,
-				BrowserDownloadURL: &validAssetUrl,
+				URL: &validAssetURL,
+				BrowserDownloadURL: &validAssetURL,
 			},
 		},
 	}
