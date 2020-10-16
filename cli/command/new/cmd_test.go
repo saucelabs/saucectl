@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func Test_updateRegion(t *testing.T) {
+func TestUpdateRegion(t *testing.T) {
 	cfgFile := "./test-config.yml"
 	fd, err := os.Create(cfgFile)
 	assert.NilError(t, err)

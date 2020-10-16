@@ -34,7 +34,7 @@ func GetReleaseArtifactURL(org string, repo string) (string, error) {
 			return asset.GetBrowserDownloadURL(), nil
 		}
 	}
-	return "", fmt.Errorf("No %s found", templateFileName)
+	return "", fmt.Errorf("no %s found", templateFileName)
 }
 
 func createFolder(name string, mode int64) error {
@@ -122,7 +122,7 @@ func FetchAndExtractTemplate(org string, repo string) error {
 			break
 		}
 		if header == nil {
-			continue
+			break
 		}
 
 		if header.Typeflag == tar.TypeDir {
