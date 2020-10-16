@@ -16,7 +16,6 @@ import (
 )
 
 var (
-	overWriteAll     = false
 	templateFileName = "saucetpl.tar.gz"
 )
 
@@ -37,16 +36,8 @@ func GetReleaseArtifactURL(org string, repo string) (string, error) {
 	return "", fmt.Errorf("no %s found", templateFileName)
 }
 
-func createFolder(name string, mode int64) error {
-	err := os.MkdirAll(name, os.FileMode(mode))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func confirmOverwriting(name string) bool {
-	if overWriteAll {
+func confirmOverwriting(name string, overWriteAll *bool) bool {
+	if *overWriteAll {
 		return true
 	}
 
@@ -58,28 +49,33 @@ func confirmOverwriting(name string) bool {
 	}
 	err := survey.AskOne(question, &answer, nil)
 	if err != nil {
-		log.Err(err)
+		log.Err(err).Msg("unable to get survey answer")
 		return false
 	}
 
-	overWriteAll = answer == "All"
+	*overWriteAll = answer == "All"
 	return answer == "Yes" || answer == "All"
 }
 
-func extractFile(name string, mode int64, src io.Reader) error {
-	stat, err := os.Stat(name)
+func requiresOverwriting(name string) (bool, error) {
+	_, err := os.Stat(name)
 	if err != nil && !os.IsNotExist(err) {
-		log.Err(err)
+		log.Err(err).Msgf("unable to check for %s existence", name)
+		return false, err
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return true, nil
+}
+
+func extractFile(name string, mode int64, src io.Reader, overWriteAll *bool) error {
+	overwrite, err := requiresOverwriting(name)
+	if err != nil {
 		return err
 	}
-	if err == nil && stat.IsDir() {
-		return fmt.Errorf("%s exists and is a directory", name)
-	}
-
-	if err == nil {
-		if confirmOverwriting(name) == false {
-			return nil
-		}
+	if overwrite && confirmOverwriting(name, overWriteAll) == false {
+		return nil
 	}
 
 	file, err := os.OpenFile(name, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(mode))
@@ -89,10 +85,7 @@ func extractFile(name string, mode int64, src io.Reader) error {
 	defer file.Close()
 
 	_, err = io.Copy(file, src)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // FetchAndExtractTemplate gathers latest version of the template for the repo and extracts it locally.
@@ -115,6 +108,7 @@ func FetchAndExtractTemplate(org string, repo string) error {
 		return err
 	}
 
+	overWriteAll := false
 	tarReader := tar.NewReader(zipReader)
 	for {
 		header, err := tarReader.Next()
@@ -126,13 +120,13 @@ func FetchAndExtractTemplate(org string, repo string) error {
 		}
 
 		if header.Typeflag == tar.TypeDir {
-			err = createFolder(header.Name, header.Mode)
+			err := os.MkdirAll(header.Name, os.FileMode(header.Mode))
 			if err != nil {
 				log.Err(err).Msgf("Unable to create %s", header.Name)
 			}
 		}
 		if header.Typeflag == tar.TypeReg {
-			err = extractFile(header.Name, header.Mode, tarReader)
+			err = extractFile(header.Name, header.Mode, tarReader, &overWriteAll)
 			if err != nil {
 				log.Err(err).Msgf("Unable to extract %s", header.Name)
 			}

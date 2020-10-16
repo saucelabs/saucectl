@@ -28,19 +28,6 @@ func ensureDeleted(folderPath string) error {
 	return nil
 }
 
-func TestCreateFolder(t *testing.T) {
-	folderPath := "./test-folder"
-	err := ensureDeleted(folderPath)
-	assert.NilError(t, err)
-	err = createFolder(folderPath, 0755)
-	assert.NilError(t, err)
-	st, err := os.Stat(folderPath)
-	assert.NilError(t, err)
-	assert.Equal(t, st.IsDir(), true, folderPath + "is expected to be a folder")
-	err = ensureDeleted(folderPath)
-	assert.NilError(t, err)
-}
-
 func TestGetReleaseArtifactURL(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -100,8 +87,9 @@ func TestGetReleaseArtifactURL(t *testing.T) {
 func TestExtractFile(t *testing.T) {
 	fileName := "./test-content.yml"
 	bodyContent := "default-content"
+	overWriteAll := false
 
-	err := extractFile(fileName, 0644, strings.NewReader(bodyContent))
+	err := extractFile(fileName, 0644, strings.NewReader(bodyContent), &overWriteAll)
 	assert.NilError(t, err)
 
 	st, err := os.Stat(fileName)
