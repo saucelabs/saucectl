@@ -6,7 +6,7 @@ import (
 	"compress/gzip"
 	"github.com/google/go-github/github"
 	"github.com/jarcoal/httpmock"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"os"
 	"strings"
@@ -26,78 +26,6 @@ func ensureDeleted(folderPath string) error {
 		}
 	}
 	return nil
-}
-
-func TestGetReleaseArtifactURL(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-
-	validAssetName := templateFileName
-	validAssetURL := "http://dummy-url/saucetpl.tar.gz"
-	validRelease := &github.RepositoryRelease{
-		Assets: []github.ReleaseAsset{
-			{
-				Name: &validAssetName,
-				URL: &validAssetURL,
-				BrowserDownloadURL: &validAssetURL,
-			},
-		},
-	}
-
-	invalidAssetName := "no-saucetpl.tar.gz"
-	invalidAssetURL := "http://dummy-url/saucetpl.tar.gz"
-	invalidRelease := &github.RepositoryRelease{
-		Assets: []github.ReleaseAsset{
-			{
-				Name: &invalidAssetName,
-				URL: &invalidAssetURL,
-				BrowserDownloadURL: &invalidAssetURL,
-			},
-		},
-	}
-
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fake-org/fake-repo/releases/latest",
-		func(req *http.Request) (*http.Response, error) {
-			resp, err := httpmock.NewJsonResponse(200, validRelease)
-			if err != nil {
-				return httpmock.NewStringResponse(500, ""), nil
-			}
-			return resp, nil
-		},
-	)
-
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fake-org/fake-buggy-repo/releases/latest",
-		func(req *http.Request) (*http.Response, error) {
-			resp, err := httpmock.NewJsonResponse(200, invalidRelease)
-			if err != nil {
-				return httpmock.NewStringResponse(500, ""), nil
-			}
-			return resp, nil
-		},
-	)
-
-	url, err := GetReleaseArtifactURL("fake-org", "fake-repo")
-	assert.NilError(t, err)
-	assert.Equal(t, url, validAssetURL)
-
-	_, err = GetReleaseArtifactURL("fake-org", "fake-buggy-repo")
-	assert.Error(t, err, "no " + templateFileName + " found")
-}
-
-func TestExtractFile(t *testing.T) {
-	fileName := "./test-content.yml"
-	bodyContent := "default-content"
-	overWriteAll := false
-
-	err := extractFile(fileName, 0644, strings.NewReader(bodyContent), &overWriteAll)
-	assert.NilError(t, err)
-
-	st, err := os.Stat(fileName)
-	assert.NilError(t, err)
-	assert.Equal(t, st.Mode(), os.FileMode(0644))
-	assert.Equal(t, st.IsDir(), false)
-
-	os.Remove(fileName)
 }
 
 func createTemplateTar() *bytes.Buffer {
@@ -130,18 +58,106 @@ func createTemplateTar() *bytes.Buffer {
 	return buf
 }
 
-func TestFetchAndExtractTemplate(t *testing.T) {
-	tarFile := createTemplateTar()
-
-	// Add hooks
+func TestGetReleaseArtifact(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
+	validAssetID := int64(1)
+	validAssetName := templateFileName
+	validAssetURL := "http://dummy-url/saucetpl.tar.gz"
+	validRelease := &github.RepositoryRelease{
+		Assets: []github.ReleaseAsset{
+			{
+				ID: &validAssetID,
+				Name: &validAssetName,
+				URL: &validAssetURL,
+				BrowserDownloadURL: &validAssetURL,
+			},
+		},
+	}
+
+	invalidAssetID := int64(2)
+	invalidAssetName := "no-saucetpl.tar.gz"
+	invalidAssetURL := "http://dummy-url/saucetpl.tar.gz"
+	invalidRelease := &github.RepositoryRelease{
+		Assets: []github.ReleaseAsset{
+			{
+				ID: &invalidAssetID,
+				Name: &invalidAssetName,
+				URL: &invalidAssetURL,
+				BrowserDownloadURL: &invalidAssetURL,
+			},
+		},
+	}
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fake-org/fake-repo/releases/latest",
+		func(req *http.Request) (*http.Response, error) {
+			resp, err := httpmock.NewJsonResponse(200, validRelease)
+			if err != nil {
+				return httpmock.NewStringResponse(500, ""), nil
+			}
+			return resp, nil
+		},
+	)
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fake-org/fake-repo/releases/assets/1",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewBytesResponse(200, createTemplateTar().Bytes()), nil
+		},
+	)
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fake-org/fake-repo/releases/assets/2",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewBytesResponse(200, createTemplateTar().Bytes()), nil
+		},
+	)
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fake-org/fake-buggy-repo/releases/latest",
+		func(req *http.Request) (*http.Response, error) {
+			resp, err := httpmock.NewJsonResponse(200, invalidRelease)
+			if err != nil {
+				return httpmock.NewStringResponse(500, ""), nil
+			}
+			return resp, nil
+		},
+	)
+
+	rc, err := getReleaseArtifact("fake-org", "fake-repo")
+	assert.Nil(t, err)
+	rc.Close()
+
+	rc, err = getReleaseArtifact("fake-org", "fake-buggy-repo")
+	assert.Error(t, err, "no " + templateFileName + " found")
+	assert.Nil(t, rc)
+}
+
+func TestExtractFile(t *testing.T) {
+	fileName := "./test-content.yml"
+	bodyContent := "default-content"
+	overWriteAll := false
+
+	err := extractFile(fileName, 0644, strings.NewReader(bodyContent), &overWriteAll)
+	assert.Nil(t, err)
+
+	st, err := os.Stat(fileName)
+	assert.Nil(t, err)
+	assert.Equal(t, st.Mode(), os.FileMode(0644))
+	assert.Equal(t, st.IsDir(), false)
+
+	os.Remove(fileName)
+}
+
+func TestFetchAndExtractTemplate(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	validID := int64(1)
 	validAssetName := "saucetpl.tar.gz"
 	validAssetURL := "http://dummy-url/saucetpl.tar.gz"
 	validRelease := &github.RepositoryRelease{
 		Assets: []github.ReleaseAsset{
 			{
+				ID: &validID,
 				Name: &validAssetName,
 				URL: &validAssetURL,
 				BrowserDownloadURL: &validAssetURL,
@@ -158,14 +174,53 @@ func TestFetchAndExtractTemplate(t *testing.T) {
 		},
 	)
 
-	httpmock.RegisterResponder("GET", validAssetURL,
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fake-org/fake-repo/releases/assets/1",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewBytesResponse(200, tarFile.Bytes()), nil
+			return httpmock.NewBytesResponse(200, createTemplateTar().Bytes()), nil
 		},
 	)
 
 	err := FetchAndExtractTemplate("fake-org", "fake-repo")
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 	os.Remove("./test-folder/test-config.yml")
 	os.Remove("./test-folder")
+}
+
+
+func TestFetchAndExtractTemplateTimeoutingConnection(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	validID := int64(1)
+	validAssetName := "saucetpl.tar.gz"
+	validAssetURL := "http://dummy-url/saucetpl.tar.gz"
+	validRelease := &github.RepositoryRelease{
+		Assets: []github.ReleaseAsset{
+			{
+				ID: &validID,
+				Name: &validAssetName,
+				URL: &validAssetURL,
+				BrowserDownloadURL: &validAssetURL,
+			},
+		},
+	}
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fake-org/fake-repo/releases/latest",
+		func(req *http.Request) (*http.Response, error) {
+			resp, err := httpmock.NewJsonResponse(200, validRelease)
+			if err != nil {
+				return httpmock.NewStringResponse(500, ""), nil
+			}
+			return resp, nil
+		},
+	)
+
+	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fake-org/fake-repo/releases/assets/1",
+		func(req *http.Request) (*http.Response, error) {
+			time.Sleep(15 * time.Second)
+			return httpmock.NewBytesResponse(200, createTemplateTar().Bytes()), nil
+		},
+	)
+
+	err := FetchAndExtractTemplate("fake-org", "fake-repo")
+	assert.Error(t, err, "call is expected to timeout")
 }

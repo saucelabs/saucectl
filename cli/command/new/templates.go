@@ -11,7 +11,6 @@ import (
 	"github.com/tj/survey"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"time"
 )
@@ -20,21 +19,21 @@ var (
 	templateFileName = "saucetpl.tar.gz"
 )
 
-// GetReleaseArtifactURL provides template artifact url for a given repo
-func GetReleaseArtifactURL(org string, repo string) (string, error) {
-	ctx := context.Background()
+func getReleaseArtifact(org string, repo string) (io.ReadCloser, error) {
+	ctx, _ := context.WithTimeout(context.Background(), 10 * time.Second)
 	ghClient := github.NewClient(nil)
 	release, _, err := ghClient.Repositories.GetLatestRelease(ctx, org, repo)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	for _, asset := range release.Assets {
 		if *asset.Name == templateFileName {
-			return asset.GetBrowserDownloadURL(), nil
+			rc, _, err := ghClient.Repositories.DownloadReleaseAsset(ctx, org, repo, *asset.ID)
+			return rc, err
 		}
 	}
-	return "", fmt.Errorf("no %s found", templateFileName)
+	return nil, fmt.Errorf("no %s found", templateFileName)
 }
 
 func confirmOverwriting(name string, overWriteAll *bool) bool {
@@ -91,21 +90,16 @@ func extractFile(name string, mode int64, src io.Reader, overWriteAll *bool) err
 
 // FetchAndExtractTemplate gathers latest version of the template for the repo and extracts it locally.
 func FetchAndExtractTemplate(org string, repo string) error {
-	url, err := GetReleaseArtifactURL(org, repo)
+	artifactStream, err := getReleaseArtifact(org, repo)
 	if err != nil {
 		return err
 	}
 
-	httpClient := http.Client{
-		Timeout: 5 * time.Second,
-	}
-	resp, err := httpClient.Get(url)
+	body, err := ioutil.ReadAll(artifactStream)
 	if err != nil {
 		return err
 	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
+	artifactStream.Close()
 
 	zipReader, err := gzip.NewReader(bytes.NewReader(body))
 	if err != nil {
