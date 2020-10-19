@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -51,7 +52,9 @@ func setupLogging(verbose bool) {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	zerolog.TimestampFunc = func() time.Time {
+		return time.Now().In(time.Local)
+	}
 
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 }
