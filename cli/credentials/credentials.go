@@ -25,7 +25,7 @@ func GetCredentials() Credentials {
 		}
 	}
 
-	configDir := getConfigFolderPath()
+	configDir := getCredentialsFolderPath()
 	err := os.MkdirAll(configDir, 0700)
 	if err != nil {
 		log.Warn().Msgf("Unable to create configuration folder")
@@ -36,19 +36,19 @@ func GetCredentials() Credentials {
 
 // StoreCredentials stores the provided credentials into the user config.
 func StoreCredentials(credentials Credentials) error {
-	err := os.MkdirAll(getConfigFolderPath(), 0700)
+	err := os.MkdirAll(getCredentialsFolderPath(), 0700)
 	if err != nil {
 		return fmt.Errorf("unable to create configuration folder")
 	}
 	fmt.Printf("%s / %s\n", credentials.Username, credentials.AccessKey)
-	return yaml.WriteFile(getConfigFilePath(), credentials)
+	return yaml.WriteFile(getCredentialsFilePath(), credentials)
 }
 
 // GetCredentialsFromConfig reads the credentials from the user config.
 func GetCredentialsFromConfig() Credentials {
 	var c Credentials
 
-	yamlFile, err := ioutil.ReadFile(getConfigFilePath())
+	yamlFile, err := ioutil.ReadFile(getCredentialsFilePath())
 	if err != nil {
 		log.Info().Msgf("failed to locate credentials: %v", err)
 		return Credentials{}
@@ -61,7 +61,7 @@ func GetCredentialsFromConfig() Credentials {
 	return c
 }
 
-func getConfigFolderPath() string {
+func getCredentialsFolderPath() string {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		homeDir = "/"
@@ -70,7 +70,7 @@ func getConfigFolderPath() string {
 	return homeDir
 }
 
-func getConfigFilePath() string {
-	homeDir := getConfigFolderPath()
-	return filepath.Join(homeDir, ".sauce", "config.yml")
+func getCredentialsFilePath() string {
+	homeDir := getCredentialsFolderPath()
+	return filepath.Join(homeDir, ".sauce", "credentials.yml")
 }
