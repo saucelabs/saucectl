@@ -15,8 +15,9 @@ var providers = make(map[string]holder)
 func IsAvailable() bool {
 	// Most CI providers have this.
 	isCi := os.Getenv("CI") != "" || os.Getenv("BUILD_NUMBER") != ""
+	isVM := os.Getenv("SAUCE_VM") != ""
 	skip := os.Getenv("SKIP_CI") != ""
-	return isCi && !skip
+	return (isCi || isVM) && !skip
 }
 
 // holder holds CI provider initialization method references. These are used to lazily initialize the specific CI

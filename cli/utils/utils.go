@@ -47,6 +47,9 @@ func ValidateOutputPathFileMode(fileMode os.FileMode) error {
 // GetHomeDir gets the home directory. If we're in CI, then it's the CWD, otherwise assume it's
 // /home/seluser
 func GetHomeDir() (string, error) {
+	if (os.Getenv("SAUCE_ROOT_DIR") != "") {
+		return os.Getenv("SAUCE_ROOT_DIR"), nil
+	}
 	if (os.Getenv("CI") == "") {
 		return "/home/seluser", nil
 	}
