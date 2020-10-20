@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/go-github/v32/github"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/tj/survey"
 	"io"
@@ -94,6 +95,9 @@ func FetchAndExtractTemplate(org string, repo string) error {
 	artifactStream, err := getReleaseArtifact(org, repo)
 	if err != nil {
 		return err
+	}
+	if artifactStream == nil {
+		return errors.Errorf("invalid download stream for tarball")
 	}
 
 	body, err := ioutil.ReadAll(artifactStream)
