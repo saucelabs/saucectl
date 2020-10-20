@@ -25,40 +25,30 @@ func GetCredentials() Credentials {
 		}
 	}
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Warn().Msgf("Unable to locate configuration folder")
-		return Credentials{}
-	}
-
-	err = os.MkdirAll(filepath.Join(homeDir, ".sauce"), 0700)
+	configDir := getConfigFolderPath()
+	err := os.MkdirAll(configDir, 0700)
 	if err != nil {
 		log.Warn().Msgf("Unable to create configuration folder")
 		return Credentials{}
 	}
-
-	return credentialsFromFile(filepath.Join(homeDir, ".sauce", "config.yml"))
+	return GetCredentialsFromConfig()
 }
 
 // StoreCredentials stores the provided credentials into the user config.
 func StoreCredentials(credentials Credentials) error {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return fmt.Errorf("unable to locate home folder")
-	}
-
-	err = os.MkdirAll(filepath.Join(homeDir, ".sauce"), 0700)
+	err := os.MkdirAll(getConfigFolderPath(), 0700)
 	if err != nil {
 		return fmt.Errorf("unable to create configuration folder")
 	}
 	fmt.Printf("%s / %s\n", credentials.Username, credentials.AccessKey)
-	return yaml.WriteFile(filepath.Join(homeDir, ".sauce", "config.yml"), credentials)
+	return yaml.WriteFile(getConfigFilePath(), credentials)
 }
 
-func credentialsFromFile(credentialsFilePath string) Credentials {
+// GetCredentialsFromConfig reads the credentials from the user config.
+func GetCredentialsFromConfig() Credentials {
 	var c Credentials
 
-	yamlFile, err := ioutil.ReadFile(credentialsFilePath)
+	yamlFile, err := ioutil.ReadFile(getConfigFilePath())
 	if err != nil {
 		log.Info().Msgf("failed to locate credentials: %v", err)
 		return Credentials{}
@@ -69,4 +59,18 @@ func credentialsFromFile(credentialsFilePath string) Credentials {
 		return Credentials{}
 	}
 	return c
+}
+
+func getConfigFolderPath() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		homeDir = "/"
+		log.Warn().Msgf("unable to locate home folder")
+	}
+	return homeDir
+}
+
+func getConfigFilePath() string {
+	homeDir := getConfigFolderPath()
+	return filepath.Join(homeDir, ".sauce", "config.yml")
 }

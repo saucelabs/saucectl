@@ -73,7 +73,7 @@ func askNotEmpty(prompt survey.Prompt, dest *string) error {
 
 // Run starts the new command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
-	creds := credentials.GetCredentials()
+	creds := credentials.GetCredentialsFromConfig()
 	usernameQuestion := &survey.Input{
 		Message: fmt.Sprintf("SauceLabs username [%s]:", creds.Username),
 		Default: "",
