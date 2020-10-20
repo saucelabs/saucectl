@@ -4,7 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v32/github"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -66,7 +66,7 @@ func TestGetReleaseArtifact(t *testing.T) {
 	validAssetName := templateFileName
 	validAssetURL := "http://dummy-url/saucetpl.tar.gz"
 	validRelease := &github.RepositoryRelease{
-		Assets: []github.ReleaseAsset{
+		Assets: []*github.ReleaseAsset{
 			{
 				ID: &validAssetID,
 				Name: &validAssetName,
@@ -80,7 +80,7 @@ func TestGetReleaseArtifact(t *testing.T) {
 	invalidAssetName := "no-saucetpl.tar.gz"
 	invalidAssetURL := "http://dummy-url/saucetpl.tar.gz"
 	invalidRelease := &github.RepositoryRelease{
-		Assets: []github.ReleaseAsset{
+		Assets: []*github.ReleaseAsset{
 			{
 				ID: &invalidAssetID,
 				Name: &invalidAssetName,
@@ -155,7 +155,7 @@ func TestFetchAndExtractTemplate(t *testing.T) {
 	validAssetName := "saucetpl.tar.gz"
 	validAssetURL := "http://dummy-url/saucetpl.tar.gz"
 	validRelease := &github.RepositoryRelease{
-		Assets: []github.ReleaseAsset{
+		Assets: []*github.ReleaseAsset{
 			{
 				ID: &validID,
 				Name: &validAssetName,
@@ -195,7 +195,7 @@ func TestFetchAndExtractTemplateTimeoutingConnection(t *testing.T) {
 	validAssetName := "saucetpl.tar.gz"
 	validAssetURL := "http://dummy-url/saucetpl.tar.gz"
 	validRelease := &github.RepositoryRelease{
-		Assets: []github.ReleaseAsset{
+		Assets: []*github.ReleaseAsset{
 			{
 				ID: &validID,
 				Name: &validAssetName,

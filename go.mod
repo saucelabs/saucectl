@@ -13,8 +13,7 @@ require (
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200618181300-9dc6525e6118+incompatible // translates to v19.03.12
 	github.com/docker/go-connections v0.4.0
-	github.com/google/go-github v17.0.0+incompatible
-	github.com/google/go-querystring v1.0.0 // indirect
+	github.com/google/go-github/v32 v32.1.0
 	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/jarcoal/httpmock v1.0.6
 	github.com/mattn/go-colorable v0.1.6 // indirect

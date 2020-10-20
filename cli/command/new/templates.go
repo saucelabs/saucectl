@@ -6,11 +6,12 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v32/github"
 	"github.com/rs/zerolog/log"
 	"github.com/tj/survey"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"time"
 )
@@ -29,7 +30,7 @@ func getReleaseArtifact(org string, repo string) (io.ReadCloser, error) {
 
 	for _, asset := range release.Assets {
 		if *asset.Name == templateFileName {
-			rc, _, err := ghClient.Repositories.DownloadReleaseAsset(ctx, org, repo, *asset.ID)
+			rc, _, err := ghClient.Repositories.DownloadReleaseAsset(ctx, org, repo, *asset.ID, http.DefaultClient)
 			return rc, err
 		}
 	}
