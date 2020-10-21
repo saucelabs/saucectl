@@ -50,7 +50,7 @@ func GetHomeDir() (string, error) {
 	if (os.Getenv("SAUCE_ROOT_DIR") != "") {
 		return os.Getenv("SAUCE_ROOT_DIR"), nil
 	}
-	if (os.Getenv("CI") == "") {
+	if (os.Getenv("SAUCE_VM") == "") {
 		return "/home/seluser", nil
 	}
 	workingDir, err := os.Getwd()
