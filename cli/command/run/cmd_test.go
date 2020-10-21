@@ -5,7 +5,9 @@ import (
 	"testing"
 
 	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/internal/region"
+
 	"github.com/stretchr/testify/assert"
 	"gotest.tools/v3/fs"
 )
@@ -35,8 +37,8 @@ func TestNewRunCommand(t *testing.T) {
 		{
 			name:           "it doesn't filter suite when not required",
 			configFileName: `config.yaml`,
-			configFile:     "apiVersion: 1.2\nsuites:\n  - name: filtersuite\n  - name: suite2",
-			expResult:      0,
+			configFile:     "apiVersion: 1.2\nimage:\n  base: test",
+			expResult:      123,
 		},
 		{
 			name:           "it can filterout suite name",
@@ -62,6 +64,7 @@ func TestNewRunCommand(t *testing.T) {
 			cli := command.SauceCtlCli{}
 			cmd := Command(&cli)
 			assert.Equal(t, cmd.Use, runUse)
+			runner.ConfigPath = filepath.Join(dir.Path(), tc.configFileName)
 			if err := cmd.Flags().Set("config", filepath.Join(dir.Path(), tc.configFileName)); err != nil {
 				t.Fatal(err)
 			}
@@ -77,8 +80,9 @@ func TestNewRunCommand(t *testing.T) {
 				assert.False(t, tc.expErr)
 				assert.Equal(t, tc.expResult, code)
 			}
-			suiteName = ""
 			t.Cleanup(func() {
+				suiteName = ""
+				runner.ConfigPath = "/home/seluser/config.yaml"
 			})
 		})
 	}
