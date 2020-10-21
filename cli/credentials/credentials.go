@@ -81,7 +81,7 @@ func (credentials *Credentials) Store() error {
 	if err != nil {
 		return fmt.Errorf("unable to create configuration folder")
 	}
-	return yaml.WriteFile(getCredentialsFilePath(), credentials)
+	return yaml.WriteFileWithFileMode(getCredentialsFilePath(), credentials, 0600)
 }
 
 // IsEmpty ensure credentials are not set

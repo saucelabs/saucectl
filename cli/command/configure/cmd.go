@@ -66,7 +66,7 @@ func explainHowToObtainCredentials() {
 }
 
 // interactiveConfiguration expect user to manually type-in its credentials
-func interactiveConfiguration() credentials.Credentials {
+func interactiveConfiguration() (*credentials.Credentials, error) {
 	explainHowToObtainCredentials()
 	creds := getDefaultCredentials()
 
@@ -78,24 +78,34 @@ func interactiveConfiguration() credentials.Credentials {
 		Message: "SauceLabs access key",
 		Default: creds.AccessKey,
 	}
-	askNotEmpty(usernameQuestion, &creds.Username)
-	askNotEmpty(accessKeyQuestion, &creds.AccessKey)
+	err := askNotEmpty(usernameQuestion, &creds.Username)
+	if err != nil {
+		return nil, err
+	}
+	err = askNotEmpty(accessKeyQuestion, &creds.AccessKey)
+	if err != nil {
+		return nil, err
+	}
 
 	fmt.Printf("\n\n")
-	return creds
+	return creds, nil
 }
 
 // Run starts the new command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
-	var creds credentials.Credentials
+	var creds *credentials.Credentials
+	var err error = nil
 
 	if cliUsername == "" && cliAccessKey == "" {
-		creds = interactiveConfiguration()
+		creds, err = interactiveConfiguration()
 	} else {
-		creds = credentials.Credentials{
+		creds = &credentials.Credentials{
 			Username: cliUsername,
 			AccessKey: cliAccessKey,
 		}
+	}
+	if err != nil {
+		return err
 	}
 
 	if !creds.IsValid() {
@@ -110,7 +120,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 }
 
 // getDefaultCredentials returns first the file credentials, then the one founded in the env.
-func getDefaultCredentials() credentials.Credentials {
+func getDefaultCredentials() *credentials.Credentials {
 	fileCreds := credentials.GetCredentialsFromFile()
 	envCreds := credentials.GetCredentialsFromEnv()
 
@@ -122,7 +132,7 @@ func getDefaultCredentials() credentials.Credentials {
 	if defaultAccessKey == "" {
 		defaultAccessKey = envCreds.AccessKey
 	}
-	return credentials.Credentials{
+	return &credentials.Credentials{
 		AccessKey: defaultAccessKey,
 		Username:  defaultUsername,
 	}
