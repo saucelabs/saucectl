@@ -85,6 +85,6 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		Default: "",
 	}
 	askNotEmpty(accessKeyQuestion, &creds.AccessKey)
-	return credentials.StoreCredentials(creds)
+	return creds.Store()
 
 }

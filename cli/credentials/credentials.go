@@ -34,16 +34,6 @@ func GetCredentials() Credentials {
 	return GetCredentialsFromConfig()
 }
 
-// StoreCredentials stores the provided credentials into the user config.
-func StoreCredentials(credentials Credentials) error {
-	err := os.MkdirAll(getCredentialsFolderPath(), 0700)
-	if err != nil {
-		return fmt.Errorf("unable to create configuration folder")
-	}
-	fmt.Printf("%s / %s\n", credentials.Username, credentials.AccessKey)
-	return yaml.WriteFile(getCredentialsFilePath(), credentials)
-}
-
 // GetCredentialsFromConfig reads the credentials from the user config.
 func GetCredentialsFromConfig() Credentials {
 	var c Credentials
@@ -73,4 +63,18 @@ func getCredentialsFolderPath() string {
 func getCredentialsFilePath() string {
 	homeDir := getCredentialsFolderPath()
 	return filepath.Join(homeDir, ".sauce", "credentials.yml")
+}
+
+// Store stores the provided credentials into the user config.
+func (credentials *Credentials) Store() error {
+	err := os.MkdirAll(getCredentialsFolderPath(), 0700)
+	if err != nil {
+		return fmt.Errorf("unable to create configuration folder")
+	}
+	return yaml.WriteFile(getCredentialsFilePath(), credentials)
+}
+
+// LooksValid validates that the credentials looks valid.
+func (credentials *Credentials) LooksValid() bool {
+	return credentials.AccessKey != "" && credentials.Username != ""
 }

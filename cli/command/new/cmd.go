@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/internal/yaml"
 	"github.com/spf13/cobra"
 	"github.com/tj/survey"
@@ -112,6 +113,11 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	}
 
 	fmt.Println("\nNew project bootstrapped successfully! You can now run:\n$ saucectl run")
+
+	creds := credentials.GetCredentials()
+	if !creds.LooksValid() {
+		fmt.Println("\nIt looks you have not configured your SauceLab account !\nTo enjoy SauceLabs capabilities, configure your account by running:\n$ saucectl configure")
+	}
 	return nil
 }
 
