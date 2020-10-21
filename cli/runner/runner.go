@@ -10,7 +10,7 @@ import (
 
 const logDir = "/var/log/cont"
 
-var homeDir, _ = utils.GetHomeDir()
+var homeDir = utils.GetProjectDir()
 
 // ConfigPath represents the path for the runner config.
 var ConfigPath = homeDir + "/config.yaml"

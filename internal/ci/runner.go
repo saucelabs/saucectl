@@ -69,7 +69,7 @@ func (r *Runner) RunProject() (int, error) {
 func (r *Runner) setup(run config.Run) error {
 	log.Info().Msg("Run entry.sh")
 	var out bytes.Buffer
-	var homeDir, _ = utils.GetHomeDir()
+	var homeDir = utils.GetProjectDir()
 	cmd := exec.Command(homeDir + "/entry.sh", "&")
 	cmd.Stderr = &out
 	if err := cmd.Run(); err != nil {

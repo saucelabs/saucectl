@@ -37,12 +37,7 @@ func TestGetHomeDir(t *testing.T) {
 	for _, tc := range cases {
 		os.Setenv("SAUCE_ROOT_DIR", tc.SauceRootDir)
 		os.Setenv("SAUCE_VM", tc.SauceVM)
-		homeDir, error := GetHomeDir()
-		if (tc.shouldPass) {
-			assert.Equal(t, homeDir, tc.expected)
-			assert.Nil(t, error)
-		} else {
-			assert.NotNil(t, error)
-		}
+		homeDir := GetProjectDir()
+		assert.Equal(t, homeDir, tc.expected)
 	}
 }

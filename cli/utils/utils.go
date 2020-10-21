@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
 )
@@ -44,19 +45,18 @@ func ValidateOutputPathFileMode(fileMode os.FileMode) error {
 	return nil
 }
 
-// GetHomeDir gets the home directory. If we're in CI, then it's the CWD, otherwise assume it's
-// /home/seluser
-func GetHomeDir() (string, error) {
+// GetProjectDir gets the home directory.
+func GetProjectDir() string {
 	if (os.Getenv("SAUCE_ROOT_DIR") != "") {
-		return os.Getenv("SAUCE_ROOT_DIR"), nil
-	}
-	if (os.Getenv("SAUCE_VM") == "") {
-		return "/home/seluser", nil
+		return os.Getenv("SAUCE_ROOT_DIR")
+	} else if (os.Getenv("SAUCE_VM") == "") {
+		return "/home/seluser"
 	}
 	workingDir, err := os.Getwd()
 	if (err != nil) {
-		return "", err
+		log.Warn().Msg("Could not get current working directory. Defaulting to /home/seluser")
+		return "/home/seluser"
 	}
-	return workingDir, nil
+	return workingDir
 }
 
