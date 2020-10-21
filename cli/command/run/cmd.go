@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/mocks"
 	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/internal/ci"
@@ -152,12 +153,12 @@ func createCISequencer(p config.Project, cip ci.Provider) fleet.Sequencer {
 			"https://github.com/saucelabs/saucectl on how to configure parallelization across machines.")
 		return &memseq.Sequencer{}
 	}
-	u := os.Getenv("SAUCE_USERNAME")
-	k := os.Getenv("SAUCE_ACCESS_KEY")
-	if u == "" || k == "" {
-		log.Info().Msg("No credentials provided. Running tests sequentially.")
+	creds := credentials.GetCredentials()
+	if creds == nil {
+		log.Info().Msg("No valid credentials provided. Running tests sequentially.")
 		return &memseq.Sequencer{}
 	}
+	log.Info().Msgf("Using credentials from %s", creds.Source)
 	if cip == ci.NoProvider && ciBuildID == "" {
 		// Since we don't know the CI provider, we can't reliably generate a build ID, which is a requirement for
 		// running tests in parallel. The user has to provide one in this case, and if they didn't, we have to disable
@@ -173,10 +174,9 @@ func createCISequencer(p config.Project, cip ci.Provider) fleet.Sequencer {
 
 	log.Info().Msg("Running tests in parallel.")
 	return &testcomposer.Client{
-		HTTPClient: &http.Client{Timeout: 3 * time.Second},
-		URL:        apiBaseURL(r),
-		Username:   u,
-		AccessKey:  k,
+		HTTPClient:  &http.Client{Timeout: 3 * time.Second},
+		URL:         apiBaseURL(r),
+		Credentials: *creds,
 	}
 }
 

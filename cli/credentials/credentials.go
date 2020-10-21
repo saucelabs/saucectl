@@ -17,46 +17,52 @@ import (
 type Credentials struct {
 	Username  string `yaml:"username"`
 	AccessKey string `yaml:"accessKey"`
+	Source    string
 }
 
 // GetCredentials returns the currently configured credentials (env is prioritary vs. file).
-func GetCredentials() Credentials {
-	envCredentials := GetCredentialsFromEnv()
-	if !envCredentials.IsEmpty() {
+func GetCredentials() *Credentials {
+	if envCredentials := GetCredentialsFromEnv(); envCredentials != nil {
 		return envCredentials
-	}
-
-	configDir := getCredentialsFolderPath()
-	err := os.MkdirAll(configDir, 0700)
-	if err != nil {
-		log.Warn().Msgf("Unable to create configuration folder")
-		return Credentials{}
 	}
 	return GetCredentialsFromFile()
 }
 
-
 // GetCredentialsFromEnv reads the credentials from the user environment.
-func GetCredentialsFromEnv() Credentials {
-	return Credentials{
+func GetCredentialsFromEnv() *Credentials {
+	creds := Credentials{
 		Username:  os.Getenv("SAUCE_USERNAME"),
 		AccessKey: os.Getenv("SAUCE_ACCESS_KEY"),
+		Source: "Environment",
 	}
+	if creds.IsEmpty() || !creds.IsValid() {
+		return nil
+	}
+	return &creds
 }
 
 // GetCredentialsFromFile reads the credentials from the user credentials file.
-func GetCredentialsFromFile() Credentials {
-	var c Credentials
+func GetCredentialsFromFile() *Credentials {
+	var c *Credentials
+
+	if _, err := os.Stat(getCredentialsFolderPath()); err != nil {
+		log.Debug().Msgf("%s: config folder does not exists: %v", getCredentialsFolderPath(), err)
+		return nil
+	}
 
 	yamlFile, err := ioutil.ReadFile(getCredentialsFilePath())
 	if err != nil {
-		log.Info().Msgf("failed to locate credentials: %v", err)
-		return Credentials{}
+		log.Info().Msgf("failed to read credentials: %v", err)
+		return nil
 	}
 
 	if err = yamlbase.Unmarshal(yamlFile, &c); err != nil {
 		log.Info().Msgf("failed to parse credentials: %v", err)
-		return Credentials{}
+		return nil
+	}
+	c.Source = getCredentialsFilePath()
+	if c.IsEmpty() || !c.IsValid() {
+		return nil
 	}
 	return c
 }

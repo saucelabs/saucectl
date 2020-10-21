@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"io/ioutil"
 	"net/http"
@@ -12,10 +13,9 @@ import (
 
 // Client service
 type Client struct {
-	HTTPClient *http.Client
-	URL        string // e.g.) https://api.<region>.saucelabs.net
-	Username   string
-	AccessKey  string
+	HTTPClient  *http.Client
+	URL         string // e.g.) https://api.<region>.saucelabs.net
+	Credentials credentials.Credentials
 }
 
 // Job represents the sauce labs test job.
@@ -141,7 +141,7 @@ func (c *Client) newJSONRequest(ctx context.Context, url, method string, payload
 	if err != nil {
 		return nil, err
 	}
-	req.SetBasicAuth(c.Username, c.AccessKey)
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	return req, err
