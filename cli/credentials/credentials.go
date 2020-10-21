@@ -73,12 +73,12 @@ func getCredentialsFolderPath() string {
 		homeDir = "/"
 		log.Warn().Msgf("unable to locate home folder")
 	}
-	return homeDir
+	return filepath.Join(homeDir, ".sauce")
 }
 
 func getCredentialsFilePath() string {
-	homeDir := getCredentialsFolderPath()
-	return filepath.Join(homeDir, ".sauce", "credentials.yml")
+	credentialsDir := getCredentialsFolderPath()
+	return filepath.Join(credentialsDir, "credentials.yml")
 }
 
 // Store stores the provided credentials into the user config.
