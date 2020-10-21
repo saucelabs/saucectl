@@ -87,21 +87,24 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 
 	fileCreds := credentials.GetCredentialsFromFile()
 	envCreds := credentials.GetCredentialsFromEnv()
-	var creds credentials.Credentials
 
 	defaultUsername := fileCreds.Username
 	if defaultUsername == "" {
 		defaultUsername = envCreds.Username
+	}
+	defaultAccessKey := fileCreds.AccessKey
+	if defaultAccessKey == "" {
+		defaultAccessKey = envCreds.AccessKey
+	}
+	creds := credentials.Credentials{
+		AccessKey: defaultAccessKey,
+		Username: defaultUsername,
 	}
 	usernameQuestion := &survey.Input{
 		Message: "SauceLabs username",
 		Default: defaultUsername,
 	}
 
-	defaultAccessKey := fileCreds.AccessKey
-	if defaultAccessKey == "" {
-		defaultAccessKey = envCreds.AccessKey
-	}
 	accessKeyQuestion := &survey.Input{
 		Message: "SauceLabs access key",
 		Default: defaultAccessKey,

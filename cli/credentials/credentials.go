@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/yaml"
+	"golang.org/x/net/context"
 	yamlbase "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
@@ -93,10 +94,15 @@ func (credentials *Credentials) IsValid() bool {
 	if  credentials.IsEmpty() {
 		return false
 	}
-	httpClient := http.Client{
-		Timeout: 5 * time.Second,
+	httpClient := http.Client{}
+	ctx, _ := context.WithTimeout(context.Background(), 5 * time.Second)
+	req, err := http.NewRequestWithContext(ctx, "GET", "https://saucelabs.com/rest/v1/users/" + credentials.Username, nil)
+	if err != nil {
+		log.Error().Msgf("unable to check credentials")
+		return false
 	}
-	resp, err := httpClient.Head(fmt.Sprintf("https://saucelabs.com/rest/v1/users/%s", credentials.Username))
+	req.SetBasicAuth(credentials.Username, credentials.AccessKey)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		log.Error().Msgf("unable to check credentials")
 		return false

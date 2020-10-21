@@ -27,6 +27,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.4.0
 	github.com/tj/survey v2.0.6+incompatible
+	golang.org/x/net v0.0.0-20191004110552-13f9640d40b9
 	gopkg.in/yaml.v2 v2.2.8
 	gotest.tools v2.2.0+incompatible
 	gotest.tools/v3 v3.0.2
