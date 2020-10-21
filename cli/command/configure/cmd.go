@@ -71,20 +71,42 @@ func askNotEmpty(prompt survey.Prompt, dest *string) error {
 	return nil
 }
 
+// Explain why do this
+func explainHowToObtainCredentials() {
+	fmt.Printf(`
+Don't have an account ? Signup here https://saucelabs.com/sign-up !
+Already have an account ? Get your username and access key here: https://app.saucelabs.com/user-settings
+
+
+`)
+}
+
 // Run starts the new command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
-	creds := credentials.GetCredentialsFromConfig()
+	explainHowToObtainCredentials()
+
+	fileCreds := credentials.GetCredentialsFromFile()
+	envCreds := credentials.GetCredentialsFromEnv()
+
+	defaultUsername := fileCreds.Username
+	if defaultUsername == "" {
+		defaultUsername = envCreds.Username
+	}
 	usernameQuestion := &survey.Input{
-		Message: fmt.Sprintf("SauceLabs username [%s]:", creds.Username),
+		Message: fmt.Sprintf("SauceLabs username [%s]:", defaultUsername),
 		Default: "",
 	}
-	askNotEmpty(usernameQuestion, &creds.Username)
 
+	defaultAccessKey := fileCreds.AccessKey
+	if defaultAccessKey == "" {
+		defaultAccessKey = envCreds.AccessKey
+	}
 	accessKeyQuestion := &survey.Input{
-		Message: fmt.Sprintf("SauceLabs access key [%s]:", creds.AccessKey),
+		Message: fmt.Sprintf("SauceLabs access key [%s]:", defaultAccessKey),
 		Default: "",
 	}
-	askNotEmpty(accessKeyQuestion, &creds.AccessKey)
-	return creds.Store()
+	askNotEmpty(usernameQuestion, &fileCreds.Username)
+	askNotEmpty(accessKeyQuestion, &fileCreds.AccessKey)
 
+	return fileCreds.Store()
 }

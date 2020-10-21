@@ -18,11 +18,9 @@ type Credentials struct {
 
 // GetCredentials returns the currently configured credentials (env is prioritary vs. file).
 func GetCredentials() Credentials {
-	if os.Getenv("SAUCE_USERNAME") != "" && os.Getenv("SAUCE_ACCESS_KEY") != "" {
-		return Credentials{
-			Username:  os.Getenv("SAUCE_USERNAME"),
-			AccessKey: os.Getenv("SAUCE_ACCESS_KEY"),
-		}
+	envCredentials := GetCredentialsFromEnv()
+	if envCredentials.LooksValid() {
+		return envCredentials
 	}
 
 	configDir := getCredentialsFolderPath()
@@ -31,11 +29,20 @@ func GetCredentials() Credentials {
 		log.Warn().Msgf("Unable to create configuration folder")
 		return Credentials{}
 	}
-	return GetCredentialsFromConfig()
+	return GetCredentialsFromFile()
 }
 
-// GetCredentialsFromConfig reads the credentials from the user config.
-func GetCredentialsFromConfig() Credentials {
+
+// GetCredentialsFromFile reads the credentials from the user credentials file.
+func GetCredentialsFromEnv() Credentials {
+	return Credentials{
+		Username:  os.Getenv("SAUCE_USERNAME"),
+		AccessKey: os.Getenv("SAUCE_ACCESS_KEY"),
+	}
+}
+
+// GetCredentialsFromFile reads the credentials from the user credentials file.
+func GetCredentialsFromFile() Credentials {
 	var c Credentials
 
 	yamlFile, err := ioutil.ReadFile(getCredentialsFilePath())
