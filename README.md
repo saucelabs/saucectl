@@ -29,6 +29,21 @@ saucectl run
 ```
 This command will run the test based on the `./.sauce/config.yml` file.
 
+## The `configure` Command
+```sh
+saucectl configure
+```
+
+This command ask you to type-in your SauceLabs username and access key.
+
+You can also use the following command to do it in batch mode:
+
+```sh
+saucectl configure -u <MyUser> -a <MyAccessKey>
+```
+
+The credentials are store in `$HOME/.sauce/credentials.yml`
+
 ### Flags
 
 #### `config`
