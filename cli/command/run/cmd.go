@@ -232,16 +232,11 @@ func enableCIProviders() {
 }
 
 func filterSuite(c *config.Project) error {
-	found := false
 	for _, s := range c.Suites {
 		if s.Name == suiteName {
-			found = true
 			c.Suites = []config.Suite{s}
-			break
+			return nil
 		}
 	}
-	if !found {
-		return errors.New("suite name is invalid")
-	}
-	return nil
+	return errors.New("suite name is invalid")
 }
