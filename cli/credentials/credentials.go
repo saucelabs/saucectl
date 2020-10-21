@@ -6,8 +6,10 @@ import (
 	"github.com/saucelabs/saucectl/internal/yaml"
 	yamlbase "gopkg.in/yaml.v2"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 // Credentials contains a set of Username + AccessKey for SauceLabs.
@@ -19,7 +21,7 @@ type Credentials struct {
 // GetCredentials returns the currently configured credentials (env is prioritary vs. file).
 func GetCredentials() Credentials {
 	envCredentials := GetCredentialsFromEnv()
-	if envCredentials.LooksValid() {
+	if !envCredentials.IsEmpty() {
 		return envCredentials
 	}
 
@@ -81,7 +83,23 @@ func (credentials *Credentials) Store() error {
 	return yaml.WriteFile(getCredentialsFilePath(), credentials)
 }
 
-// LooksValid validates that the credentials looks valid.
-func (credentials *Credentials) LooksValid() bool {
-	return credentials.AccessKey != "" && credentials.Username != ""
+// IsEmpty ensure credentials are not set
+func (credentials *Credentials) IsEmpty() bool {
+	return credentials.AccessKey == "" || credentials.Username == ""
+}
+
+// IsValid validates that the credentials are valid.
+func (credentials *Credentials) IsValid() bool {
+	if  credentials.IsEmpty() {
+		return false
+	}
+	httpClient := http.Client{
+		Timeout: 5 * time.Second,
+	}
+	resp, err := httpClient.Head(fmt.Sprintf("https://saucelabs.com/rest/v1/users/%s", credentials.Username))
+	if err != nil {
+		log.Error().Msgf("unable to check credentials")
+		return false
+	}
+	return resp.StatusCode == 200
 }
