@@ -21,3 +21,28 @@ func TestValidateOutputPathFileMode(t *testing.T) {
 	assert.Equal(t, ValidateOutputPathFileMode(os.FileMode(1<<(32-1-5))), errors.New("got a device"))
 	assert.Equal(t, ValidateOutputPathFileMode(os.FileMode(1<<(32-1-12))), errors.New("got an irregular file"))
 }
+
+func TestGetHomeDir(t *testing.T) {
+	cwd, _ := os.Getwd()
+	cases := []struct {
+		SauceRootDir	string
+		SauceVM			string
+		expected		string
+		shouldPass		bool
+	} {
+		{"/path/to/root/dir", "", "/path/to/root/dir", true},
+		{"", "", "/home/seluser", true},
+		{"", "truthy", cwd, true},
+	}
+	for _, tc := range cases {
+		os.Setenv("SAUCE_ROOT_DIR", tc.SauceRootDir)
+		os.Setenv("SAUCE_VM", tc.SauceVM)
+		homeDir, error := GetHomeDir()
+		if (tc.shouldPass) {
+			assert.Equal(t, homeDir, tc.expected)
+			assert.Nil(t, error)
+		} else {
+			assert.NotNil(t, error)
+		}
+	}
+}
