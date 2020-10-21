@@ -62,7 +62,7 @@ func askNotEmpty(prompt survey.Prompt, dest *string) error {
 // explainHowToObtainCredentials explains how to get credentials
 func explainHowToObtainCredentials() {
 	fmt.Println("\nDon't have an account ? Signup here https://saucelabs.com/sign-up !")
-	fmt.Println("Already have an account ? Get your username and access key here: https://app.saucelabs.com/user-settings\n\n")
+	fmt.Printf("Already have an account ? Get your username and access key here: https://app.saucelabs.com/user-settings\n\n\n")
 }
 
 // interactiveConfiguration expect user to manually type-in its credentials
@@ -81,7 +81,7 @@ func interactiveConfiguration() credentials.Credentials {
 	askNotEmpty(usernameQuestion, &creds.Username)
 	askNotEmpty(accessKeyQuestion, &creds.AccessKey)
 
-	fmt.Println("\n")
+	fmt.Printf("\n\n")
 	return creds
 }
 

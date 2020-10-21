@@ -36,7 +36,7 @@ func GetCredentials() Credentials {
 }
 
 
-// GetCredentialsFromFile reads the credentials from the user credentials file.
+// GetCredentialsFromEnv reads the credentials from the user environment.
 func GetCredentialsFromEnv() Credentials {
 	return Credentials{
 		Username:  os.Getenv("SAUCE_USERNAME"),
