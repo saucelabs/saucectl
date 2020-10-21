@@ -39,6 +39,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	return cmd
 }
 
+// askNotEmpty asks the user to type in a value.
 func askNotEmpty(prompt survey.Prompt, dest *string) error {
 	prev := *dest
 	for {
@@ -58,16 +59,13 @@ func askNotEmpty(prompt survey.Prompt, dest *string) error {
 	return nil
 }
 
-// Explain why do this
+// explainHowToObtainCredentials explains how to get credentials
 func explainHowToObtainCredentials() {
-	fmt.Printf(`
-Don't have an account ? Signup here https://saucelabs.com/sign-up !
-Already have an account ? Get your username and access key here: https://app.saucelabs.com/user-settings
-
-
-`)
+	fmt.Println("\nDon't have an account ? Signup here https://saucelabs.com/sign-up !")
+	fmt.Println("Already have an account ? Get your username and access key here: https://app.saucelabs.com/user-settings\n\n")
 }
 
+// interactiveConfiguration expect user to manually type-in its credentials
 func interactiveConfiguration() credentials.Credentials {
 	explainHowToObtainCredentials()
 	creds := getDefaultCredentials()
@@ -86,6 +84,7 @@ func interactiveConfiguration() credentials.Credentials {
 	fmt.Println("\n")
 	return creds
 }
+
 // Run starts the new command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	var creds credentials.Credentials
@@ -100,8 +99,8 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	}
 
 	if !creds.IsValid() {
-		fmt.Println("Credentials provided looks invalid. They won't be saved.")
-		return fmt.Errorf("invalid credentials")
+		fmt.Println("Credentials provided looks invalid and won't be saved.")
+		return nil
 	}
 	if err := creds.Store(); err != nil {
 		return fmt.Errorf("unable to save credentials")
