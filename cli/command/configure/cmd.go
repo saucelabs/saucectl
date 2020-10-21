@@ -15,23 +15,8 @@ var (
 	configureShort   = "Configure your Sauce Labs credentials"
 	configureLong    = `Persist locally your Sauce Labs credentials`
 	configureExample = "saucectl configure"
-
-	qs = []*survey.Question{
-		{
-			Name: "username",
-			Prompt: &survey.Input{
-				Message: "SauceLabs username:",
-				Default: "",
-			},
-		},
-		{
-			Name: "accessKey",
-			Prompt: &survey.Input{
-				Message: "SauceLabs access key:",
-				Default: "",
-			},
-		},
-	}
+	cliUsername      = ""
+	cliAccessKey     = ""
 )
 
 // Command creates the `new` command
@@ -49,6 +34,8 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 			}
 		},
 	}
+	cmd.Flags().StringVarP(&cliUsername, "username", "u", "", "username,, available on your saucelabs account")
+	cmd.Flags().StringVarP(&cliAccessKey, "accessKey", "a", "", "accessKey, available on your saucelabs account")
 	return cmd
 }
 
@@ -81,10 +68,50 @@ Already have an account ? Get your username and access key here: https://app.sau
 `)
 }
 
+func interactiveConfiguration() credentials.Credentials {
+	explainHowToObtainCredentials()
+	creds := getDefaultCredentials()
+
+	usernameQuestion := &survey.Input{
+		Message: "SauceLabs username",
+		Default: creds.Username,
+	}
+	accessKeyQuestion := &survey.Input{
+		Message: "SauceLabs access key",
+		Default: creds.AccessKey,
+	}
+	askNotEmpty(usernameQuestion, &creds.Username)
+	askNotEmpty(accessKeyQuestion, &creds.AccessKey)
+
+	fmt.Println("\n")
+	return creds
+}
 // Run starts the new command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
-	explainHowToObtainCredentials()
+	var creds credentials.Credentials
 
+	if cliUsername == "" && cliAccessKey == "" {
+		creds = interactiveConfiguration()
+	} else {
+		creds = credentials.Credentials{
+			Username: cliUsername,
+			AccessKey: cliAccessKey,
+		}
+	}
+
+	if !creds.IsValid() {
+		fmt.Println("Credentials provided looks invalid. They won't be saved.")
+		return fmt.Errorf("invalid credentials")
+	}
+	if err := creds.Store(); err != nil {
+		return fmt.Errorf("unable to save credentials")
+	}
+	fmt.Println("You're all set ! ")
+	return nil
+}
+
+// getDefaultCredentials returns first the file credentials, then the one founded in the env.
+func getDefaultCredentials() credentials.Credentials {
 	fileCreds := credentials.GetCredentialsFromFile()
 	envCreds := credentials.GetCredentialsFromEnv()
 
@@ -96,30 +123,8 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	if defaultAccessKey == "" {
 		defaultAccessKey = envCreds.AccessKey
 	}
-	creds := credentials.Credentials{
+	return credentials.Credentials{
 		AccessKey: defaultAccessKey,
-		Username: defaultUsername,
+		Username:  defaultUsername,
 	}
-	usernameQuestion := &survey.Input{
-		Message: "SauceLabs username",
-		Default: defaultUsername,
-	}
-
-	accessKeyQuestion := &survey.Input{
-		Message: "SauceLabs access key",
-		Default: defaultAccessKey,
-	}
-	askNotEmpty(usernameQuestion, &creds.Username)
-	askNotEmpty(accessKeyQuestion, &creds.AccessKey)
-
-	if !creds.IsValid() {
-		fmt.Println("\nCredentials provided looks invalid. They won't be saved.")
-		return fmt.Errorf("invalid credentials")
-	}
-
-	if err := fileCreds.Store(); err != nil {
-		return fmt.Errorf("unable to save credentials")
-	}
-	fmt.Println("\n\nYou're all set ! ")
-	return nil
 }
