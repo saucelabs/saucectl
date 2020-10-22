@@ -64,7 +64,7 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 				if !ok {
 					return errors.New("invalid input")
 				}
-				re := regexp.MustCompile(`^([a-zA-Z0-9-.]{3,})$`)
+				re := regexp.MustCompile(`^[a-zA-Z0-9_\-\.\+]{2,70}$`)
 				if !re.MatchString(str) {
 					return errors.New("invalid username format")
 				}
