@@ -72,7 +72,8 @@ func getCredentialsFolderPath() string {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		if "windows" == runtime.GOOS {
-			homeDir = filepath.VolumeName(".")+"\\"
+			systemDir := os.Getenv("SystemRoot")
+			homeDir = filepath.VolumeName(systemDir)+"\\"
 		} else {
 			homeDir = "/"
 		}
