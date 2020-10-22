@@ -1,6 +1,7 @@
 package run
 
 import (
+	"errors"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -41,6 +42,7 @@ var (
 	parallel    bool
 	ciBuildID   string
 	sauceAPI    string
+	suiteName   string
 )
 
 // Command creates the `run` command
@@ -69,6 +71,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().BoolVarP(&parallel, "parallel", "p", false, "Run tests in parallel across multiple machines.")
 	cmd.Flags().StringVar(&ciBuildID, "ci-build-id", "", "Overrides the CI dependent build ID.")
 	cmd.Flags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
+	cmd.Flags().StringVar(&suiteName, "suite", "", "Run specified test suite.")
 
 	return cmd
 }
@@ -88,6 +91,11 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 
 	mergeArgs(cmd, &p)
+	if cmd.Flags().Lookup("suite").Changed {
+		if err := filterSuite(&p); err != nil {
+			return 1, err
+		}
+	}
 	p.Metadata.ExpandEnv()
 
 	if len(p.Suites) == 0 {
@@ -221,4 +229,14 @@ func enableCIProviders() {
 	github.Enable()
 	gitlab.Enable()
 	jenkins.Enable()
+}
+
+func filterSuite(c *config.Project) error {
+	for _, s := range c.Suites {
+		if s.Name == suiteName {
+			c.Suites = []config.Suite{s}
+			return nil
+		}
+	}
+	return errors.New("suite name is invalid")
 }

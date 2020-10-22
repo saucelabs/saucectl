@@ -5,16 +5,17 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"errors"
 	"fmt"
-	"github.com/google/go-github/v32/github"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
-	"github.com/tj/survey"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/google/go-github/v32/github"
+	"github.com/rs/zerolog/log"
+	"github.com/tj/survey"
 )
 
 var (
@@ -22,7 +23,7 @@ var (
 )
 
 func getReleaseArtifact(org string, repo string) (io.ReadCloser, error) {
-	ctx, _ := context.WithTimeout(context.Background(), 10 * time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	ghClient := github.NewClient(nil)
 	release, _, err := ghClient.Repositories.GetLatestRelease(ctx, org, repo)
 	if err != nil {
@@ -97,7 +98,7 @@ func FetchAndExtractTemplate(org string, repo string) error {
 		return err
 	}
 	if artifactStream == nil {
-		return errors.Errorf("invalid download stream for tarball")
+		return errors.New("invalid download stream for tarball")
 	}
 
 	body, err := ioutil.ReadAll(artifactStream)
