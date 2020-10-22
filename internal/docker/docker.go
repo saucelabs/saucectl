@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -288,16 +289,20 @@ func createMounts(files []string, target string) ([]mount.Mount, error) {
 			return mm, err
 		}
 
+		dest := path.Join(target, f)
+
 		mm[i] = mount.Mount{
 			Type:          mount.TypeBind,
 			Source:        absF,
-			Target:        filepath.Join(target, f),
+			Target:        dest,
 			ReadOnly:      false,
 			Consistency:   mount.ConsistencyDefault,
 			BindOptions:   nil,
 			VolumeOptions: nil,
 			TmpfsOptions:  nil,
 		}
+
+		log.Info().Str("from", f).Str("to", dest).Msg("File mounted")
 	}
 
 	return mm, nil
