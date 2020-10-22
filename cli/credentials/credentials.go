@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"time"
 )
 
@@ -70,7 +71,11 @@ func GetCredentialsFromFile() *Credentials {
 func getCredentialsFolderPath() string {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		homeDir = "/"
+		if "windows" == runtime.GOOS {
+			homeDir = filepath.VolumeName(".")+"\\"
+		} else {
+			homeDir = "/"
+		}
 		log.Warn().Msgf("unable to locate home folder")
 	}
 	return filepath.Join(homeDir, ".sauce")
