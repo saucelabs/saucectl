@@ -21,7 +21,7 @@ var (
 	cliAccessKey     = ""
 )
 
-// Command creates the `new` command
+// Command creates the `configure` command
 func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     configureUse,
@@ -66,7 +66,7 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 				}
 				re := regexp.MustCompile(`^[a-zA-Z0-9_\-\.\+]{2,70}$`)
 				if !re.MatchString(str) {
-					return errors.New("invalid username format")
+					return errors.New("invalid username. Check it here: https://app.saucelabs.com/user-settings")
 				}
 				return nil
 			},
@@ -84,7 +84,7 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 				}
 				re := regexp.MustCompile(`^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$`)
 				if !re.MatchString(str) {
-					return errors.New("invalid access key format")
+					return errors.New("invalid access key. Check it here: https://app.saucelabs.com/user-settings")
 				}
 				return nil
 			},
