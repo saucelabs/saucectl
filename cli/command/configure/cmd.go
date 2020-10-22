@@ -1,6 +1,7 @@
 package configure
 
 import (
+	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
@@ -8,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tj/survey"
 	"os"
+	"regexp"
 )
 
 var (
@@ -39,26 +41,6 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	return cmd
 }
 
-// askNotEmpty asks the user to type in a value.
-func askNotEmpty(prompt survey.Prompt, dest *string) error {
-	prev := *dest
-	for {
-		// Add validator for format
-		err := survey.AskOne(prompt, dest, nil)
-		if err != nil {
-			return err
-		}
-		// Keep old input
-		if *dest == "" {
-			*dest = prev
-		}
-		if *dest != "" {
-			break
-		}
-	}
-	return nil
-}
-
 // explainHowToObtainCredentials explains how to get credentials
 func explainHowToObtainCredentials() {
 	fmt.Println("\nDon't have an account ? Signup here https://saucelabs.com/sign-up !")
@@ -70,20 +52,46 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 	explainHowToObtainCredentials()
 	creds := getDefaultCredentials()
 
-	usernameQuestion := &survey.Input{
-		Message: "SauceLabs username",
-		Default: creds.Username,
+	qs := []*survey.Question{
+		{
+			Name: "username",
+			Prompt: &survey.Input{
+				Message: "SauceLabs username",
+				Default: creds.Username,
+			},
+			Validate: func(val interface{}) error {
+				str, ok := val.(string)
+				if !ok {
+					return errors.New("invalid input")
+				}
+				re := regexp.MustCompile(`^([a-zA-Z0-9-.]{3,})$`)
+				if !re.MatchString(str) {
+					return errors.New("invalid username format")
+				}
+				return nil
+			},
+		},
+		{
+			Name: "accessKey",
+			Prompt: &survey.Input{
+				Message: "SauceLabs access key",
+				Default: creds.AccessKey,
+			},
+			Validate: func(val interface{}) error {
+				str, ok := val.(string)
+				if !ok {
+					return errors.New("invalid input")
+				}
+				re := regexp.MustCompile(`^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$`)
+				if !re.MatchString(str) {
+					return errors.New("invalid access key format")
+				}
+				return nil
+			},
+		},
 	}
-	accessKeyQuestion := &survey.Input{
-		Message: "SauceLabs access key",
-		Default: creds.AccessKey,
-	}
-	err := askNotEmpty(usernameQuestion, &creds.Username)
-	if err != nil {
-		return nil, err
-	}
-	err = askNotEmpty(accessKeyQuestion, &creds.AccessKey)
-	if err != nil {
+
+	if err := survey.Ask(qs, creds); err != nil {
 		return nil, err
 	}
 
@@ -122,18 +130,13 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 // getDefaultCredentials returns first the file credentials, then the one founded in the env.
 func getDefaultCredentials() *credentials.Credentials {
 	fileCreds := credentials.GetCredentialsFromFile()
-	envCreds := credentials.GetCredentialsFromEnv()
+	if fileCreds != nil {
+		return fileCreds
+	}
 
-	defaultUsername := fileCreds.Username
-	if defaultUsername == "" {
-		defaultUsername = envCreds.Username
+	envCreds := credentials.GetCredentialsFromEnv()
+	if envCreds != nil {
+		return envCreds
 	}
-	defaultAccessKey := fileCreds.AccessKey
-	if defaultAccessKey == "" {
-		defaultAccessKey = envCreds.AccessKey
-	}
-	return &credentials.Credentials{
-		AccessKey: defaultAccessKey,
-		Username:  defaultUsername,
-	}
+	return &credentials.Credentials{}
 }
