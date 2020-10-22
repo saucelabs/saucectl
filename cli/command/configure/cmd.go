@@ -99,7 +99,7 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 	return creds, nil
 }
 
-// Run starts the new command
+// Run starts the configure command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	var creds *credentials.Credentials
 	var err error = nil
