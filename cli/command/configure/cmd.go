@@ -36,7 +36,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 			}
 		},
 	}
-	cmd.Flags().StringVarP(&cliUsername, "username", "u", "", "username,, available on your saucelabs account")
+	cmd.Flags().StringVarP(&cliUsername, "username", "u", "", "username, available on your saucelabs account")
 	cmd.Flags().StringVarP(&cliAccessKey, "accessKey", "a", "", "accessKey, available on your saucelabs account")
 	return cmd
 }
