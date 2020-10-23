@@ -114,8 +114,8 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 
 	fmt.Println("\nNew project bootstrapped successfully! You can now run:\n$ saucectl run")
 
-	creds := credentials.GetCredentials()
-	if creds.IsEmpty() {
+	creds := credentials.Get()
+	if creds == nil {
 		fmt.Println("\nIt looks you have not configured your SauceLab account !\nTo enjoy SauceLabs capabilities, configure your account by running:\n$ saucectl configure")
 	}
 	return nil

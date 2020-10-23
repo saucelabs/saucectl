@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"runtime"
 	"time"
 )
 
@@ -21,37 +20,48 @@ type Credentials struct {
 	Source    string
 }
 
-// GetCredentials returns the currently configured credentials (env is prioritary vs. file).
-func GetCredentials() *Credentials {
-	if envCredentials := GetCredentialsFromEnv(); envCredentials != nil {
+// Get returns the currently configured credentials (env is prioritary vs. file).
+func Get() *Credentials {
+	if envCredentials := FromEnv(); envCredentials != nil {
 		return envCredentials
 	}
-	return GetCredentialsFromFile()
+	return FromFile()
 }
 
-// GetCredentialsFromEnv reads the credentials from the user environment.
-func GetCredentialsFromEnv() *Credentials {
-	creds := Credentials{
-		Username:  os.Getenv("SAUCE_USERNAME"),
-		AccessKey: os.Getenv("SAUCE_ACCESS_KEY"),
-		Source: "Environment",
+// FromEnv reads the credentials from the user environment.
+func FromEnv() *Credentials {
+	username, usernamePresence := os.LookupEnv("SAUCE_USERNAME")
+	accessKey, accessKeyPresence := os.LookupEnv("SAUCE_ACCESS_KEY")
+
+	if usernamePresence && accessKeyPresence && len(username) > 0 && len(accessKey) > 0 {
+		return &Credentials{
+			Username:  username,
+			AccessKey: accessKey,
+			Source: "Environment",
+		}
 	}
-	if creds.IsEmpty() || !creds.IsValid() {
-		return nil
-	}
-	return &creds
+	return nil
 }
 
-// GetCredentialsFromFile reads the credentials from the user credentials file.
-func GetCredentialsFromFile() *Credentials {
+// FromFile reads the credentials from the user credentials file.
+func FromFile() *Credentials {
 	var c *Credentials
 
-	if _, err := os.Stat(getCredentialsFolderPath()); err != nil {
-		log.Debug().Msgf("%s: config folder does not exists: %v", getCredentialsFolderPath(), err)
+	folderPath, err := getCredentialsFolderPath()
+	if err != nil {
+		return nil
+	}
+	filePath, err := getCredentialsFilePath()
+	if err != nil {
 		return nil
 	}
 
-	yamlFile, err := ioutil.ReadFile(getCredentialsFilePath())
+	if _, err := os.Stat(folderPath); err != nil {
+		log.Debug().Msgf("%s: config folder does not exists: %v", filePath, err)
+		return nil
+	}
+
+	yamlFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		log.Info().Msgf("failed to read credentials: %v", err)
 		return nil
@@ -61,39 +71,42 @@ func GetCredentialsFromFile() *Credentials {
 		log.Info().Msgf("failed to parse credentials: %v", err)
 		return nil
 	}
-	c.Source = getCredentialsFilePath()
-	if c.IsEmpty() || !c.IsValid() {
-		return nil
-	}
+	c.Source, err = getCredentialsFilePath()
 	return c
 }
 
-func getCredentialsFolderPath() string {
+func getCredentialsFolderPath() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		if "windows" == runtime.GOOS {
-			systemDir := os.Getenv("SystemRoot")
-			homeDir = filepath.VolumeName(systemDir)+"\\"
-		} else {
-			homeDir = "/"
-		}
-		log.Warn().Msgf("unable to locate home folder")
+		return "", err
 	}
-	return filepath.Join(homeDir, ".sauce")
+	return filepath.Join(homeDir, ".sauce"), nil
 }
 
-func getCredentialsFilePath() string {
-	credentialsDir := getCredentialsFolderPath()
-	return filepath.Join(credentialsDir, "credentials.yml")
+func getCredentialsFilePath() (string, error) {
+	credentialsDir, err := getCredentialsFolderPath()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(credentialsDir, "credentials.yml"), nil
 }
 
 // Store stores the provided credentials into the user config.
 func (credentials *Credentials) Store() error {
-	err := os.MkdirAll(getCredentialsFolderPath(), 0700)
+	folderPath, err := getCredentialsFolderPath()
+	if err != nil {
+		return nil
+	}
+	filePath, err := getCredentialsFilePath()
+	if err != nil {
+		return nil
+	}
+
+	err = os.MkdirAll(folderPath, 0700)
 	if err != nil {
 		return fmt.Errorf("unable to create configuration folder")
 	}
-	return yaml.WriteFileWithFileMode(getCredentialsFilePath(), credentials, 0600)
+	return yaml.WriteFileWithFileMode(filePath, credentials, 0600)
 }
 
 // IsEmpty ensure credentials are not set

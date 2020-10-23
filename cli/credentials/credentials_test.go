@@ -11,7 +11,8 @@ func TestEnvPrioritary(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	defer func() {
-		os.Remove(getCredentialsFilePath())
+		file, _ := getCredentialsFilePath()
+		os.Remove(file)
 	}()
 
 	// Prepare to restore home var
@@ -34,9 +35,9 @@ func TestEnvPrioritary(t *testing.T) {
 	httpmock.RegisterResponder("GET", "https://saucelabs.com/rest/v1/users/fileUsername", httpmock.NewStringResponder(200, ""))
 
 	// Test No file No env
-	envCreds := GetCredentialsFromEnv()
-	fileCreds := GetCredentialsFromFile()
-	overallCreds := GetCredentials()
+	envCreds := FromEnv()
+	fileCreds := FromFile()
+	overallCreds := Get()
 	assert.Nil(t, envCreds)
 	assert.Nil(t, fileCreds)
 	assert.Nil(t, overallCreds)
@@ -44,9 +45,9 @@ func TestEnvPrioritary(t *testing.T) {
 	// Test Only env
 	os.Setenv("SAUCE_USERNAME", "envUsername")
 	os.Setenv("SAUCE_ACCESS_KEY", "envAccessKey")
-	envCreds = GetCredentialsFromEnv()
-	fileCreds = GetCredentialsFromFile()
-	overallCreds = GetCredentials()
+	envCreds = FromEnv()
+	fileCreds = FromFile()
+	overallCreds = Get()
 	assert.Nil(t, fileCreds)
 	assert.NotNil(t, envCreds)
 	assert.NotNil(t, overallCreds)
@@ -67,9 +68,9 @@ func TestEnvPrioritary(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Test File & Env
-	envCreds = GetCredentialsFromEnv()
-	fileCreds = GetCredentialsFromFile()
-	overallCreds = GetCredentials()
+	envCreds = FromEnv()
+	fileCreds = FromFile()
+	overallCreds = Get()
 	assert.NotNil(t, fileCreds)
 	assert.NotNil(t, envCreds)
 	assert.NotNil(t, overallCreds)
@@ -84,9 +85,9 @@ func TestEnvPrioritary(t *testing.T) {
 	// Test Only file
 	os.Unsetenv("SAUCE_USERNAME")
 	os.Unsetenv("SAUCE_ACCESS_KEY")
-	envCreds = GetCredentialsFromEnv()
-	fileCreds = GetCredentialsFromFile()
-	overallCreds = GetCredentials()
+	envCreds = FromEnv()
+	fileCreds = FromFile()
+	overallCreds = Get()
 	assert.NotNil(t, fileCreds)
 	assert.Nil(t, envCreds)
 	assert.NotNil(t, overallCreds)
@@ -100,31 +101,19 @@ func TestEnvPrioritary(t *testing.T) {
 func TestCredentials_IsValid(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	defer func() {
-		os.Unsetenv("SAUCE_USERNAME")
-		os.Unsetenv("SAUCE_ACCESS_KEY")
-	}()
-
-	// Prepare to restore home var
-	userprofile := os.Getenv("USERPROFILE")
-	home := os.Getenv("HOME")
-	defer func() {
-		os.Setenv("USERPROFILE", userprofile)
-		os.Setenv("HOME", home)
-	}()
-	os.Setenv("USERPROFILE", "C:\\non-existent")
-	os.Setenv("HOME", "/tmp/non-existent")
 
 	httpmock.RegisterResponder("GET", "https://saucelabs.com/rest/v1/users/validUser", httpmock.NewStringResponder(200, ""))
+	validCreds := Credentials{
+		Username: "validUser",
+		AccessKey: "validAccessKey",
+	}
+	assert.True(t, validCreds.IsValid())
+
 	httpmock.RegisterResponder("GET", "https://saucelabs.com/rest/v1/users/invalidUser", httpmock.NewStringResponder(401, ""))
+	invalidCreds := Credentials{
+		Username: "invalidUser",
+		AccessKey: "invalidAccessKey",
+	}
+	assert.False(t, invalidCreds.IsValid())
 
-	os.Setenv("SAUCE_USERNAME", "validUser")
-	os.Setenv("SAUCE_ACCESS_KEY", "validAccessKey")
-	envCreds := GetCredentials()
-	assert.NotNil(t, envCreds)
-
-	os.Setenv("SAUCE_USERNAME", "invalidUser")
-	os.Setenv("SAUCE_ACCESS_KEY", "invalidAccessKey")
-	envCreds = GetCredentials()
-	assert.Nil(t, envCreds)
 }

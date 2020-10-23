@@ -237,7 +237,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 
 	username := ""
 	accessKey := ""
-	if creds := credentials.GetCredentials(); creds != nil {
+	if creds := credentials.Get(); creds != nil {
 		username = creds.Username
 		accessKey = creds.AccessKey
 		log.Info().Msgf("Using credentials from %s", creds.Source)

@@ -153,7 +153,7 @@ func createCISequencer(p config.Project, cip ci.Provider) fleet.Sequencer {
 			"https://github.com/saucelabs/saucectl on how to configure parallelization across machines.")
 		return &memseq.Sequencer{}
 	}
-	creds := credentials.GetCredentials()
+	creds := credentials.Get()
 	if creds == nil {
 		log.Info().Msg("No valid credentials provided. Running tests sequentially.")
 		return &memseq.Sequencer{}

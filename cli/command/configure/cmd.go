@@ -131,12 +131,12 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 
 // getDefaultCredentials returns first the file credentials, then the one founded in the env.
 func getDefaultCredentials() *credentials.Credentials {
-	fileCreds := credentials.GetCredentialsFromFile()
+	fileCreds := credentials.FromFile()
 	if fileCreds != nil {
 		return fileCreds
 	}
 
-	envCreds := credentials.GetCredentialsFromEnv()
+	envCreds := credentials.FromEnv()
 	if envCreds != nil {
 		return envCreds
 	}
