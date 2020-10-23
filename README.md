@@ -92,6 +92,12 @@ saucectl run --timeout <seconds>
 ```
 Using the `--timeout` flag will set the test timeout for the test runner framework. 
 
+#### `suite`
+```sh
+saucectl run --suite <suite_name>
+```
+Using the `--suite` flag will only run specified suite by name.
+
 ### Private registry
 In case you need to use an image from a private registry you can use environment variables for authentification;
 ```
