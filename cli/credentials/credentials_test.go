@@ -3,6 +3,7 @@ package credentials
 import (
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
+	"net/http"
 	"os"
 	"testing"
 )
@@ -31,8 +32,8 @@ func TestEnvPrioritary(t *testing.T) {
 	os.Unsetenv("SAUCE_ACCESS_KEY")
 
 	// To avoid conflict with real file
-	httpmock.RegisterResponder("GET", "https://saucelabs.com/rest/v1/users/envUsername", httpmock.NewStringResponder(200, ""))
-	httpmock.RegisterResponder("GET", "https://saucelabs.com/rest/v1/users/fileUsername", httpmock.NewStringResponder(200, ""))
+	httpmock.RegisterResponder(http.MethodGet, "https://saucelabs.com/rest/v1/users/envUsername", httpmock.NewStringResponder(200, ""))
+	httpmock.RegisterResponder(http.MethodGet, "https://saucelabs.com/rest/v1/users/fileUsername", httpmock.NewStringResponder(200, ""))
 
 	// Test No file No env
 	envCreds := FromEnv()
@@ -102,14 +103,14 @@ func TestCredentials_IsValid(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	httpmock.RegisterResponder("GET", "https://saucelabs.com/rest/v1/users/validUser", httpmock.NewStringResponder(200, ""))
+	httpmock.RegisterResponder(http.MethodGet, "https://saucelabs.com/rest/v1/users/validUser", httpmock.NewStringResponder(200, ""))
 	validCreds := Credentials{
 		Username: "validUser",
 		AccessKey: "validAccessKey",
 	}
 	assert.True(t, validCreds.IsValid())
 
-	httpmock.RegisterResponder("GET", "https://saucelabs.com/rest/v1/users/invalidUser", httpmock.NewStringResponder(401, ""))
+	httpmock.RegisterResponder(http.MethodGet, "https://saucelabs.com/rest/v1/users/invalidUser", httpmock.NewStringResponder(401, ""))
 	invalidCreds := Credentials{
 		Username: "invalidUser",
 		AccessKey: "invalidAccessKey",
