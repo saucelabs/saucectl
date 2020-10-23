@@ -4,6 +4,7 @@ import (
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/command/new"
 	"github.com/saucelabs/saucectl/cli/command/run"
+	"github.com/saucelabs/saucectl/cli/command/signup"
 	"github.com/spf13/cobra"
 )
 
@@ -12,5 +13,6 @@ func AddCommands(cmd *cobra.Command, cli *command.SauceCtlCli) {
 	cmd.AddCommand(
 		new.Command(cli),
 		run.Command(cli),
+		signup.Command(cli),
 	)
 }
