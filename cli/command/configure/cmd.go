@@ -62,11 +62,11 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 			Validate: func(val interface{}) error {
 				str, ok := val.(string)
 				if !ok {
-					return errors.New("invalid username. Get it here: https://app.saucelabs.com/user-settings")
+					return errors.New("invalid username. Check it here: https://app.saucelabs.com/user-settings")
 				}
 				str = strings.TrimSpace(str)
 				if len(str) < 1 {
-					return errors.New("you need to type a username. Get it here: https://app.saucelabs.com/user-settings")
+					return errors.New("you need to type a username. Get yours here: https://app.saucelabs.com/user-settings")
 
 				}
 				return nil
@@ -85,7 +85,7 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 				}
 				str = strings.TrimSpace(str)
 				if len(str) < 1 {
-					return errors.New("you need to type an access key. Check it here: https://app.saucelabs.com/user-settings")
+					return errors.New("you need to type an access key. Get yours here: https://app.saucelabs.com/user-settings")
 
 				}
 				return nil
