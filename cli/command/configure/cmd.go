@@ -123,7 +123,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return nil
 	}
 	if err := creds.Store(); err != nil {
-		return fmt.Errorf("unable to save credentials")
+		return fmt.Errorf("unable to save credentials: %s", err)
 	}
 	fmt.Println("You're all set ! ")
 	return nil
