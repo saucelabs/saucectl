@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tj/survey"
 	"os"
-	"regexp"
+	"strings"
 )
 
 var (
@@ -62,11 +62,12 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 			Validate: func(val interface{}) error {
 				str, ok := val.(string)
 				if !ok {
-					return errors.New("invalid input")
-				}
-				re := regexp.MustCompile(`^[a-zA-Z0-9_\-\.\+]{2,70}$`)
-				if !re.MatchString(str) {
 					return errors.New("invalid username. Check it here: https://app.saucelabs.com/user-settings")
+				}
+				str = strings.TrimSpace(str)
+				if len(str) < 1 {
+					return errors.New("you need to type a username")
+
 				}
 				return nil
 			},
@@ -80,11 +81,12 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 			Validate: func(val interface{}) error {
 				str, ok := val.(string)
 				if !ok {
-					return errors.New("invalid input")
-				}
-				re := regexp.MustCompile(`^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$`)
-				if !re.MatchString(str) {
 					return errors.New("invalid access key. Check it here: https://app.saucelabs.com/user-settings")
+				}
+				str = strings.TrimSpace(str)
+				if len(str) < 1 {
+					return errors.New("you need to type an access key")
+
 				}
 				return nil
 			},
