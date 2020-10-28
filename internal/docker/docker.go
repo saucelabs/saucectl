@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/streams"
 	"github.com/saucelabs/saucectl/cli/utils"
 
@@ -235,6 +236,14 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 		return nil, err
 	}
 
+	username := ""
+	accessKey := ""
+	if creds := credentials.Get(); creds != nil {
+		username = creds.Username
+		accessKey = creds.AccessKey
+		log.Info().Msgf("Using credentials from %s", creds.Source)
+	}
+
 	hostConfig := &container.HostConfig{
 		PortBindings: portBindings,
 		Mounts:       m,
@@ -244,8 +253,8 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 		Image:        handler.GetImageFlavor(c),
 		ExposedPorts: ports,
 		Env: []string{
-			fmt.Sprintf("SAUCE_USERNAME=%s", os.Getenv("SAUCE_USERNAME")),
-			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", os.Getenv("SAUCE_ACCESS_KEY")),
+			fmt.Sprintf("SAUCE_USERNAME=%s", username),
+			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", accessKey),
 			fmt.Sprintf("SAUCE_BUILD_NAME=%s", c.Metadata.Build),
 			fmt.Sprintf("SAUCE_TAGS=%s", strings.Join(c.Metadata.Tags, ",")),
 			fmt.Sprintf("SAUCE_DEVTOOLS_PORT=%d", port),

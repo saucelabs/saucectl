@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"net/http"
 	"net/http/httptest"
@@ -145,10 +146,9 @@ func TestClient_CreateFleet(t *testing.T) {
 	defer server.Close()
 
 	type fields struct {
-		HTTPClient *http.Client
-		URL        string
-		Username   string
-		AccessKey  string
+		HTTPClient  *http.Client
+		URL         string
+		Credentials credentials.Credentials
 	}
 	type args struct {
 		ctx        context.Context
@@ -182,10 +182,9 @@ func TestClient_CreateFleet(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Client{
-				HTTPClient: tt.fields.HTTPClient,
-				URL:        tt.fields.URL,
-				Username:   tt.fields.Username,
-				AccessKey:  tt.fields.AccessKey,
+				HTTPClient:  tt.fields.HTTPClient,
+				URL:         tt.fields.URL,
+				Credentials: tt.fields.Credentials,
 			}
 
 			respo.Record(tt.serverFunc)
@@ -213,10 +212,9 @@ func TestClient_NextAssignment(t *testing.T) {
 	defer server.Close()
 
 	type fields struct {
-		HTTPClient *http.Client
-		URL        string
-		Username   string
-		AccessKey  string
+		HTTPClient  *http.Client
+		URL         string
+		Credentials credentials.Credentials
 	}
 	type args struct {
 		ctx       context.Context
@@ -250,10 +248,9 @@ func TestClient_NextAssignment(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Client{
-				HTTPClient: tt.fields.HTTPClient,
-				URL:        tt.fields.URL,
-				Username:   tt.fields.Username,
-				AccessKey:  tt.fields.AccessKey,
+				HTTPClient:  tt.fields.HTTPClient,
+				URL:         tt.fields.URL,
+				Credentials: tt.fields.Credentials,
 			}
 
 			respo.Record(tt.serverFunc)

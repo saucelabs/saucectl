@@ -90,7 +90,7 @@ func TestGetReleaseArtifact(t *testing.T) {
 		},
 	}
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fake-org/fake-repo/releases/latest",
+	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/fake-org/fake-repo/releases/latest",
 		func(req *http.Request) (*http.Response, error) {
 			resp, err := httpmock.NewJsonResponse(200, validRelease)
 			if err != nil {
@@ -100,19 +100,19 @@ func TestGetReleaseArtifact(t *testing.T) {
 		},
 	)
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fake-org/fake-repo/releases/assets/1",
+	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/fake-org/fake-repo/releases/assets/1",
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewBytesResponse(200, createTemplateTar().Bytes()), nil
 		},
 	)
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fake-org/fake-repo/releases/assets/2",
+	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/fake-org/fake-repo/releases/assets/2",
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewBytesResponse(200, createTemplateTar().Bytes()), nil
 		},
 	)
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fake-org/fake-buggy-repo/releases/latest",
+	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/fake-org/fake-buggy-repo/releases/latest",
 		func(req *http.Request) (*http.Response, error) {
 			resp, err := httpmock.NewJsonResponse(200, invalidRelease)
 			if err != nil {
@@ -164,7 +164,7 @@ func TestFetchAndExtractTemplate(t *testing.T) {
 			},
 		},
 	}
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fake-org/fake-repo/releases/latest",
+	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/fake-org/fake-repo/releases/latest",
 		func(req *http.Request) (*http.Response, error) {
 			resp, err := httpmock.NewJsonResponse(200, validRelease)
 			if err != nil {
@@ -174,7 +174,7 @@ func TestFetchAndExtractTemplate(t *testing.T) {
 		},
 	)
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fake-org/fake-repo/releases/assets/1",
+	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/fake-org/fake-repo/releases/assets/1",
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewBytesResponse(200, createTemplateTar().Bytes()), nil
 		},
@@ -204,7 +204,7 @@ func TestFetchAndExtractTemplateTimeoutingConnection(t *testing.T) {
 			},
 		},
 	}
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fake-org/fake-repo/releases/latest",
+	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/fake-org/fake-repo/releases/latest",
 		func(req *http.Request) (*http.Response, error) {
 			resp, err := httpmock.NewJsonResponse(200, validRelease)
 			if err != nil {
@@ -214,7 +214,7 @@ func TestFetchAndExtractTemplateTimeoutingConnection(t *testing.T) {
 		},
 	)
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/fake-org/fake-repo/releases/assets/1",
+	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/fake-org/fake-repo/releases/assets/1",
 		func(req *http.Request) (*http.Response, error) {
 			time.Sleep(15 * time.Second)
 			return httpmock.NewBytesResponse(200, createTemplateTar().Bytes()), nil
