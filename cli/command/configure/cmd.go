@@ -65,7 +65,7 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 					return errors.New("invalid username. Check it here: https://app.saucelabs.com/user-settings")
 				}
 				str = strings.TrimSpace(str)
-				if len(str) < 1 {
+				if str == "" {
 					return errors.New("you need to type a username. Get yours here: https://app.saucelabs.com/user-settings")
 
 				}
@@ -84,7 +84,7 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 					return errors.New("invalid access key. Check it here: https://app.saucelabs.com/user-settings")
 				}
 				str = strings.TrimSpace(str)
-				if len(str) < 1 {
+				if str == "" {
 					return errors.New("you need to type an access key. Get yours here: https://app.saucelabs.com/user-settings")
 
 				}
