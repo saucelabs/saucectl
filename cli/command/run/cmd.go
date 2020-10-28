@@ -122,7 +122,12 @@ func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, e
 		if err != nil {
 			return nil, err
 		}
-
+		if (os.Getenv("SAUCE_TARGET_DIR") != "") {
+			rc.TargetDir = os.Getenv("SAUCE_TARGET_DIR")
+		}
+		if (os.Getenv("SAUCE_ROOT_DIR") != "") {
+			rc.RootDir = os.Getenv("SAUCE_ROOT_DIR")
+		}
 		cip := createCIProvider()
 		seq := createCISequencer(p, cip)
 
