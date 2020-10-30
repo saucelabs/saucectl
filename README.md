@@ -7,6 +7,9 @@ A command line interface for the Sauce Labs Testrunner Toolkit. This repository 
 
 For information on how to contribute to `saucectl` please have a look into our [contribution guidelines](https://github.com/saucelabs/saucectl/blob/master/CONTRIBUTING.md).
 
+# FAQ
+Please consult the [FAQ](https://github.com/saucelabs/testrunner-toolkit/blob/master/docs/FAQS.md) before using saucectl.
+
 # Using `saucectl`
 
 ## The `new` Command

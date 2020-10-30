@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🤔 FAQ
+    url: https://github.com/saucelabs/testrunner-toolkit/blob/master/docs/FAQS.md
+    about: Before filing an issue, please consult the FAQ first. You just might find your answer right there!
