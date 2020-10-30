@@ -1,3 +1,4 @@
+blank_issues_enabled: false
 contact_links:
   - name: 🤔 FAQ
     url: https://github.com/saucelabs/testrunner-toolkit/blob/master/docs/FAQS.md
