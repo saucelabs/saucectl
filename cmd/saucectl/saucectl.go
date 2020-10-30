@@ -47,9 +47,9 @@ func main() {
 }
 
 func setupLogging(verbose bool) {
-	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	if verbose {
-		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
 
 	zerolog.TimestampFunc = func() time.Time {

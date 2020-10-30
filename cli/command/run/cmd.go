@@ -1,6 +1,7 @@
 package run
 
 import (
+	"errors"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/mocks"
 	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/internal/ci"
@@ -41,6 +43,7 @@ var (
 	parallel    bool
 	ciBuildID   string
 	sauceAPI    string
+	suiteName   string
 )
 
 // Command creates the `run` command
@@ -69,6 +72,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().BoolVarP(&parallel, "parallel", "p", false, "Run tests in parallel across multiple machines.")
 	cmd.Flags().StringVar(&ciBuildID, "ci-build-id", "", "Overrides the CI dependent build ID.")
 	cmd.Flags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
+	cmd.Flags().StringVar(&suiteName, "suite", "", "Run specified test suite.")
 
 	return cmd
 }
@@ -88,6 +92,11 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 
 	mergeArgs(cmd, &p)
+	if cmd.Flags().Lookup("suite").Changed {
+		if err := filterSuite(&p); err != nil {
+			return 1, err
+		}
+	}
 	p.Metadata.ExpandEnv()
 
 	if len(p.Suites) == 0 {
@@ -114,7 +123,12 @@ func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, e
 		if err != nil {
 			return nil, err
 		}
-
+		if (os.Getenv("SAUCE_TARGET_DIR") != "") {
+			rc.TargetDir = os.Getenv("SAUCE_TARGET_DIR")
+		}
+		if (os.Getenv("SAUCE_ROOT_DIR") != "") {
+			rc.RootDir = os.Getenv("SAUCE_ROOT_DIR")
+		}
 		cip := createCIProvider()
 		seq := createCISequencer(p, cip)
 
@@ -144,12 +158,12 @@ func createCISequencer(p config.Project, cip ci.Provider) fleet.Sequencer {
 			"https://github.com/saucelabs/saucectl on how to configure parallelization across machines.")
 		return &memseq.Sequencer{}
 	}
-	u := os.Getenv("SAUCE_USERNAME")
-	k := os.Getenv("SAUCE_ACCESS_KEY")
-	if u == "" || k == "" {
-		log.Info().Msg("No credentials provided. Running tests sequentially.")
+	creds := credentials.Get()
+	if creds == nil {
+		log.Info().Msg("No valid credentials provided. Running tests sequentially.")
 		return &memseq.Sequencer{}
 	}
+	log.Info().Msgf("Using credentials from %s", creds.Source)
 	if cip == ci.NoProvider && ciBuildID == "" {
 		// Since we don't know the CI provider, we can't reliably generate a build ID, which is a requirement for
 		// running tests in parallel. The user has to provide one in this case, and if they didn't, we have to disable
@@ -165,10 +179,9 @@ func createCISequencer(p config.Project, cip ci.Provider) fleet.Sequencer {
 
 	log.Info().Msg("Running tests in parallel.")
 	return &testcomposer.Client{
-		HTTPClient: &http.Client{Timeout: 3 * time.Second},
-		URL:        apiBaseURL(r),
-		Username:   u,
-		AccessKey:  k,
+		HTTPClient:  &http.Client{Timeout: 3 * time.Second},
+		URL:         apiBaseURL(r),
+		Credentials: *creds,
 	}
 }
 
@@ -221,4 +234,14 @@ func enableCIProviders() {
 	github.Enable()
 	gitlab.Enable()
 	jenkins.Enable()
+}
+
+func filterSuite(c *config.Project) error {
+	for _, s := range c.Suites {
+		if s.Name == suiteName {
+			c.Suites = []config.Suite{s}
+			return nil
+		}
+	}
+	return errors.New("suite name is invalid")
 }

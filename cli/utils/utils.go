@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
 )
@@ -43,3 +44,19 @@ func ValidateOutputPathFileMode(fileMode os.FileMode) error {
 	}
 	return nil
 }
+
+// GetProjectDir gets the home directory.
+func GetProjectDir() string {
+	if (os.Getenv("SAUCE_ROOT_DIR") != "") {
+		return os.Getenv("SAUCE_ROOT_DIR")
+	} else if (os.Getenv("SAUCE_VM") == "") {
+		return "/home/seluser"
+	}
+	workingDir, err := os.Getwd()
+	if (err != nil) {
+		log.Warn().Msg("Could not get current working directory. Defaulting to /home/seluser")
+		return "/home/seluser"
+	}
+	return workingDir
+}
+

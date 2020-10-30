@@ -8,11 +8,13 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/streams"
 	"github.com/saucelabs/saucectl/cli/utils"
 
@@ -234,6 +236,14 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 		return nil, err
 	}
 
+	username := ""
+	accessKey := ""
+	if creds := credentials.Get(); creds != nil {
+		username = creds.Username
+		accessKey = creds.AccessKey
+		log.Info().Msgf("Using credentials from %s", creds.Source)
+	}
+
 	hostConfig := &container.HostConfig{
 		PortBindings: portBindings,
 		Mounts:       m,
@@ -243,8 +253,8 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 		Image:        handler.GetImageFlavor(c),
 		ExposedPorts: ports,
 		Env: []string{
-			fmt.Sprintf("SAUCE_USERNAME=%s", os.Getenv("SAUCE_USERNAME")),
-			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", os.Getenv("SAUCE_ACCESS_KEY")),
+			fmt.Sprintf("SAUCE_USERNAME=%s", username),
+			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", accessKey),
 			fmt.Sprintf("SAUCE_BUILD_NAME=%s", c.Metadata.Build),
 			fmt.Sprintf("SAUCE_TAGS=%s", strings.Join(c.Metadata.Tags, ",")),
 			fmt.Sprintf("SAUCE_DEVTOOLS_PORT=%d", port),
@@ -288,16 +298,20 @@ func createMounts(files []string, target string) ([]mount.Mount, error) {
 			return mm, err
 		}
 
+		dest := path.Join(target, f)
+
 		mm[i] = mount.Mount{
 			Type:          mount.TypeBind,
 			Source:        absF,
-			Target:        filepath.Join(target, f),
+			Target:        dest,
 			ReadOnly:      false,
 			Consistency:   mount.ConsistencyDefault,
 			BindOptions:   nil,
 			VolumeOptions: nil,
 			TmpfsOptions:  nil,
 		}
+
+		log.Info().Str("from", f).Str("to", dest).Msg("File mounted")
 	}
 
 	return mm, nil
