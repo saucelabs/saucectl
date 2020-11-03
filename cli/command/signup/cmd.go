@@ -12,7 +12,7 @@ import (
 var (
 	runUse     = "signup"
 	runShort   = "Signup for Sauce Labs"
-	runLong    = `TODO: Some long description about signup`
+	runLong    = "Provide a web link for free trial signup"
 	runExample = "saucectl signup"
 
 	defaultLogFir = "<cwd>/logs"
