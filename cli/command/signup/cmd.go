@@ -27,18 +27,18 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Example: runExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Info().Msg("Start Signup Command")
-			exitCode, err := Run(cmd, cli, args)
+			err := Run(cmd, cli, args)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
+				os.Exit(1)
 			}
-			os.Exit(exitCode)
 		},
 	}
 	return cmd
 }
 
 // Run runs the command
-func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, error) {
+func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	saucebotSignup := `
                    (‾)
                    ||                          Puppeteer,
@@ -58,11 +58,11 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
     ##      #####     #####
             #####     #####
 
-Achieve digital confidence with Sauce Labs
+Achieve digital confidence with the Sauce Labs Testrunner Toolkit
 
-View and analyze test results online with a Sauce Labs account:
+View and analyze test results online with a free Sauce Labs account:
 https://bit.ly/saucectl-signup`
 
 	fmt.Println(saucebotSignup)
-	return 0, nil
+	return nil
 }
