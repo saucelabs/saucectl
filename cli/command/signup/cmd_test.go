@@ -1,3 +1,0 @@
-package signup
-
-// TODO: Tests!
