@@ -47,6 +47,13 @@ saucectl configure -u <MyUser> -a <MyAccessKey>
 
 The credentials are store in `$HOME/.sauce/credentials.yml`
 
+## The `signup` Command
+```sh
+saucectl signup
+```
+
+This command provides a link to sign up for a SauceLabs free trial account.
+
 ### Flags
 
 #### `config`
