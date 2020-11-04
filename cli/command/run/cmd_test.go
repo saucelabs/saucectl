@@ -41,7 +41,7 @@ func TestNewRunCommand(t *testing.T) {
 			expResult:      123,
 		},
 		{
-			name:           "it can filterout suite name",
+			name:           "it can filter out suite name",
 			filter:         "filtersuite",
 			configFileName: `config.yaml`,
 			configFile:     "apiVersion: 1.2\nsuites:\n  - name: filtersuite\n  - name: suite2",

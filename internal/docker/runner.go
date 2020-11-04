@@ -245,6 +245,11 @@ func (r *Runner) runSuite(suite config.Suite, fleetID string) (int, error) {
 		assignments = append(assignments, next)
 	}
 
+	if len(assignments) == 0 {
+		log.Info().Msg("No tests detected. Skipping suite.")
+		return 0, nil
+	}
+
 	run := config.Run{
 		Match:       assignments,
 		ProjectPath: DefaultProjectPath,
