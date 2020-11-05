@@ -92,6 +92,9 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 
 	mergeArgs(cmd, &p)
+	if err := validateFiles(p.Files); err != nil {
+		return 1, err
+	}
 	if cmd.Flags().Lookup("suite").Changed {
 		if err := filterSuite(&p); err != nil {
 			return 1, err
@@ -123,10 +126,10 @@ func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, e
 		if err != nil {
 			return nil, err
 		}
-		if (os.Getenv("SAUCE_TARGET_DIR") != "") {
+		if os.Getenv("SAUCE_TARGET_DIR") != "" {
 			rc.TargetDir = os.Getenv("SAUCE_TARGET_DIR")
 		}
-		if (os.Getenv("SAUCE_ROOT_DIR") != "") {
+		if os.Getenv("SAUCE_ROOT_DIR") != "" {
 			rc.RootDir = os.Getenv("SAUCE_ROOT_DIR")
 		}
 		cip := createCIProvider()
@@ -244,4 +247,13 @@ func filterSuite(c *config.Project) error {
 		}
 	}
 	return errors.New("suite name is invalid")
+}
+
+func validateFiles(files []string) error {
+	for _, f := range files {
+		if _, err := os.Stat(f); os.IsNotExist(err) {
+			return err
+		}
+	}
+	return nil
 }
