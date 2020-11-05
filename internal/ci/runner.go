@@ -76,6 +76,7 @@ func (r *Runner) setup(run config.Run) error {
 	cmd := exec.Command(homeDir + "/entry.sh", "&")
 	cmd.Stderr = &out
 	if err := cmd.Run(); err != nil {
+		log.Info().Err(err).Msg("Failed to setup test")
 		return errors.New("couldn't start test: " + out.String())
 	}
 
