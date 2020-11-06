@@ -62,11 +62,8 @@ func (r *Runner) RunProject() (int, error) {
 			errorCount++
 		}
 	}
-
-	if errorCount > 0 {
-		return 1, fmt.Errorf("%d suite(s) failed", errorCount)
-	}
-	return 0, nil
+	log.Info().Msgf("%d suite(s) failed", errorCount)
+	return errorCount, nil
 }
 
 // setup performs any necessary steps for a test runner to execute tests.
