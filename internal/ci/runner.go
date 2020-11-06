@@ -55,13 +55,17 @@ func (r *Runner) RunProject() (int, error) {
 		return 1, err
 	}
 
+	errorCount := 0
 	for _, suite := range r.Project.Suites {
-		exitCode, err := r.runSuite(suite, fid)
-		if err != nil || exitCode != 0 {
-			return exitCode, err
+		err = r.runSuite(suite, fid)
+		if err != nil {
+			errorCount++
 		}
 	}
 
+	if errorCount > 0 {
+		return 1, fmt.Errorf("%d suite(s) failed", errorCount)
+	}
 	return 0, nil
 }
 
@@ -198,12 +202,12 @@ func copyFileFunc(src string, targetDir string) error {
 	return nil
 }
 
-func (r *Runner) runSuite(suite config.Suite, fleetID string) (int, error) {
+func (r *Runner) runSuite(suite config.Suite, fleetID string) error {
 	var assignments []string
 	for {
 		next, err := r.Sequencer.NextAssignment(r.Ctx, fleetID, suite.Name)
 		if err != nil {
-			return 1, err
+			return err
 		}
 		if next == "" {
 			break
@@ -213,18 +217,17 @@ func (r *Runner) runSuite(suite config.Suite, fleetID string) (int, error) {
 
 	if len(assignments) == 0 {
 		log.Info().Msg("No tests detected. Skipping suite.")
-		return 0, nil
+		return nil
 	}
 
 	run := config.Run{
 		Match:       assignments,
 		ProjectPath: r.RunnerConfig.RootDir,
 	}
-
 	return r.runTest(suite, run)
 }
 
-func (r *Runner) runTest(suite config.Suite, run config.Run) (int, error) {
+func (r *Runner) runTest(suite config.Suite, run config.Run) error {
 	defer func() {
 		log.Info().Msg("Tearing down environment")
 		if err := r.teardown(r.Cli.LogDir); err != nil {
@@ -234,20 +237,20 @@ func (r *Runner) runTest(suite config.Suite, run config.Run) (int, error) {
 
 	log.Info().Msg("Setting up test environment")
 	if err := r.setup(run); err != nil {
-		return 1, err
+		return err
 	}
 
 	log.Info().Msg("Starting tests")
 	exitCode, err := r.run(suite)
 	if err != nil {
-		return 1, err
+		return err
 	}
 
 	log.Info().
 		Int("ExitCode", exitCode).
 		Msg("Command Finished")
 
-	return exitCode, err
+	return err
 }
 
 // buildID generates a build ID based on the current CI and project information.
