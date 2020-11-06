@@ -12,8 +12,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
@@ -233,25 +233,29 @@ func (r *Runner) teardown(logDir string) error {
 }
 
 func (r *Runner) runSuite(suite config.Suite, fleetID string) (int, error) {
+	var assignments []string
 	for {
 		next, err := r.Sequencer.NextAssignment(r.Ctx, fleetID, suite.Name)
 		if err != nil {
 			return 1, err
 		}
 		if next == "" {
-			return 0, nil
+			break
 		}
-
-		run := config.Run{
-			Match:       []string{next},
-			ProjectPath: DefaultProjectPath,
-		}
-
-		code, err := r.runTest(suite, run)
-		if err != nil || code != 0 {
-			return code, err
-		}
+		assignments = append(assignments, next)
 	}
+
+	if len(assignments) == 0 {
+		log.Info().Msg("No tests detected. Skipping suite.")
+		return 0, nil
+	}
+
+	run := config.Run{
+		Match:       assignments,
+		ProjectPath: DefaultProjectPath,
+	}
+
+	return r.runTest(suite, run)
 }
 
 func (r *Runner) runTest(suite config.Suite, run config.Run) (int, error) {
