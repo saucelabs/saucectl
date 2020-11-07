@@ -241,15 +241,17 @@ func (r *Runner) runTest(suite config.Suite, run config.Run) error {
 
 	log.Info().Msg("Starting tests")
 	exitCode, err := r.run(suite)
-	if err != nil {
-		return err
-	}
-
 	log.Info().
 		Int("ExitCode", exitCode).
 		Msg("Command Finished")
 
-	return err
+	if err != nil {
+		return err
+	}
+	if exitCode != 0 {
+		return fmt.Errorf("exitCode = %d", exitCode)
+	}
+	return nil
 }
 
 // buildID generates a build ID based on the current CI and project information.
