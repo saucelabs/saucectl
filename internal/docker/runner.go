@@ -64,7 +64,9 @@ func (r *Runner) RunProject() (int, error) {
 			errorCount++
 		}
 	}
-	log.Info().Msgf("%d suite(s) failed", errorCount)
+	if errorCount > 0 {
+		log.Error().Msgf("%d suite(s) failed", errorCount)
+	}
 	return errorCount, nil
 }
 
