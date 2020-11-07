@@ -151,7 +151,16 @@ func TestWalk(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "simple",
+			name: "one",
+			args: args{
+				paths:   []string{dir.Path()},
+				pattern: ".*foo.js",
+			},
+			want:    []string{dir.Join("foo.js")},
+			wantErr: false,
+		},
+		{
+			name: "both",
 			args: args{
 				paths:   []string{dir.Path()},
 				pattern: ".*.js",
