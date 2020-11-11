@@ -43,8 +43,8 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 
 // explainHowToObtainCredentials explains how to get credentials
 func explainHowToObtainCredentials() {
-	fmt.Println("\nDon't have an account ? Signup here https://saucelabs.com/sign-up !")
-	fmt.Printf("Already have an account ? Get your username and access key here: https://app.saucelabs.com/user-settings\n\n\n")
+	fmt.Println("\nDon't have an account? Signup here:\nhttps://bit.ly/saucectl-signup")
+	fmt.Printf("\nAlready have an account? Get your username and access key here:\nhttps://app.saucelabs.com/user-settings\n\n\n")
 }
 
 // interactiveConfiguration expect user to manually type-in its credentials
