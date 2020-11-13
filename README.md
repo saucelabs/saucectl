@@ -7,6 +7,11 @@ A command line interface for the Sauce Labs Testrunner Toolkit. This repository 
 
 For information on how to contribute to `saucectl` please have a look into our [contribution guidelines](https://github.com/saucelabs/saucectl/blob/master/CONTRIBUTING.md).
 
+## Requirements
+
+- [Docker](https://docs.docker.com/get-docker/) installed
+- Make sure the Docker daemon is running (e.g. `docker info` works in your terminal)
+
 # FAQ
 Please consult the [FAQ](https://github.com/saucelabs/testrunner-toolkit/blob/master/docs/FAQS.md) before using saucectl.
 
