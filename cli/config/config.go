@@ -70,7 +70,8 @@ type Suite struct {
 
 // SauceConfig represents sauce labs related settings.
 type SauceConfig struct {
-	Region string `yaml:"region,omitempty"`
+	Region   string   `yaml:"region,omitempty"`
+	Metadata Metadata `yaml:"metadata,omitempty"`
 }
 
 // RunnerConfiguration describes configurations for the testrunner
@@ -84,6 +85,11 @@ type RunnerConfiguration struct {
 type Run struct {
 	Match       []string `yaml:"match"`
 	ProjectPath string   `yaml:"projectPath"`
+}
+
+type Description struct {
+	APIVersion string `yaml:"apiVersion,omitempty"`
+	Kind       string `yaml:"kind,omitempty"`
 }
 
 func readYaml(cfgFilePath string) ([]byte, error) {
@@ -141,6 +147,21 @@ func NewJobConfiguration(cfgFilePath string) (Project, error) {
 	c.SyncCapabilities()
 
 	return c, nil
+}
+
+func Describe(cfgPath string) (Description, error) {
+	var d Description
+
+	yamlFile, err := readYaml(cfgPath)
+	if err != nil {
+		return Description{}, fmt.Errorf("failed to locate job configuration: %v", err)
+	}
+
+	if err = yaml.Unmarshal(yamlFile, &d); err != nil {
+		return Description{}, fmt.Errorf("failed to parse job configuration: %v", err)
+	}
+
+	return d, nil
 }
 
 // ExpandEnv expands environment variables inside metadata fields.

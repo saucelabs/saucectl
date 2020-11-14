@@ -2,6 +2,7 @@ package run
 
 import (
 	"errors"
+	"github.com/saucelabs/saucectl/internal/cypress"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -23,6 +24,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
+	cypressDocker "github.com/saucelabs/saucectl/internal/cypress/docker"
 )
 
 var (
@@ -86,6 +88,16 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 	cli.LogDir = cfgLogDir
 	log.Info().Str("config", cfgFilePath).Msg("Reading config file")
+
+	d, err := config.Describe(cfgFilePath)
+	if err != nil {
+		return 1, err
+	}
+
+	if d.Kind == "Cypress" && d.APIVersion == "v1alpha" {
+		return runCypressInDocker(cli)
+	}
+
 	p, err := config.NewJobConfiguration(cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -114,6 +126,22 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return 1, err
 	}
 	return r.RunProject()
+}
+
+func runCypressInDocker(cli *command.SauceCtlCli) (int, error) {
+	log.Info().Msg("Running Cypress in Docker")
+	cp, err := cypress.FromFile(cfgFilePath)
+	if err != nil {
+		return 1, err
+	}
+
+	cp.Sauce.Metadata.ExpandEnv()
+
+	cd, err := cypressDocker.New(cp, cli)
+	if err != nil {
+		return 1, err
+	}
+	return cd.RunProject()
 }
 
 func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, error) {
