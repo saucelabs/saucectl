@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/progress"
 	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/cli/streams"
 	"github.com/saucelabs/saucectl/internal/cypress"
@@ -13,11 +16,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
-
-	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/config"
-	"github.com/saucelabs/saucectl/cli/progress"
 )
 
 // Runner represents the docker implementation of a test runner.
@@ -99,28 +97,21 @@ func (r *Runner) setup(suite cypress.Suite) error {
 	progress.Show("Preparing container")
 	// TODO replace sleep with actual checks & confirmation
 	// wait until Xvfb started
-	time.Sleep(1 * time.Second)
+	//time.Sleep(1 * time.Second) // FIXME I don't think cypress needs this
 
-	// get runner config
+	progress.Show("Setting up test files for container")
+	pDir, err := r.docker.ProjectDir(r.Ctx, baseImage)
+	if err != nil {
+		return err
+	}
+
 	tmpDir, err := ioutil.TempDir("", "saucectl")
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(tmpDir)
 
-	hostDstPath := filepath.Join(tmpDir, filepath.Base(runner.ConfigPath))
-	if err := r.docker.CopyFromContainer(r.Ctx, container.ID, runner.ConfigPath, hostDstPath); err != nil {
-		return err
-	}
-
-	r.RunnerConfig, err = config.NewRunnerConfiguration(hostDstPath)
-	if err != nil {
-		return err
-	}
-
-	progress.Show("Setting up test files for container")
-	// TODO better to have a separate DTO for this, to maintain separte contracts between saucectl <-> user and saucectl <-> runner
-	rcPath := filepath.Join(tmpDir, "runner.json")
+	rcPath := filepath.Join(tmpDir, "sauce-runner.json")
 	rcFile, err := os.OpenFile(rcPath, os.O_CREATE|os.O_WRONLY, 0755)
 	if err != nil {
 		return err
@@ -129,7 +120,7 @@ func (r *Runner) setup(suite cypress.Suite) error {
 	if err = json.NewEncoder(rcFile).Encode(r.Project); err != nil {
 		return err
 	}
-	if err := r.docker.CopyToContainer(r.Ctx, r.containerID, rcPath, r.RunnerConfig.RootDir); err != nil {
+	if err := r.docker.CopyToContainer(r.Ctx, r.containerID, rcPath, pDir); err != nil {
 		return err
 	}
 
@@ -213,7 +204,7 @@ func (r *Runner) execute(cmd []string) (int, error) {
 // run runs the tests defined in the config.Project.
 func (r *Runner) run(s cypress.Suite) (int, error) {
 	// FIXME unhardcode runner.json
-	return r.execute([]string{"npm", "test", "--", "-r", "runner.json", "-s", s.Name})
+	return r.execute([]string{"npm", "test", "--", "-r", "sauce-runner.json", "-s", s.Name})
 }
 
 // teardown cleans up the test environment.

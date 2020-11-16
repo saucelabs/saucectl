@@ -247,19 +247,12 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project, s
 	}
 
 	img := handler.GetImageFlavor(c.Docker.Image)
-	ii, _, err := handler.client.ImageInspectWithRaw(ctx, img)
+	pDir, err := handler.ProjectDir(ctx, img)
 	if err != nil {
 		return nil, err
 	}
 
-	// The image can tell us via a label where saucectl should mount the project files.
-	// We default to the working dir of the container as the default mounting target.
-	mTarget := ii.Config.WorkingDir
-	if spd := ii.Config.Labels["com.saucelabs.project-dir"]; spd != "" {
-		mTarget = spd
-	}
-
-	m, err := createMounts(files, mTarget)
+	m, err := createMounts(files, pDir)
 	if err != nil {
 		return nil, err
 	}
@@ -457,4 +450,20 @@ func (handler *Handler) ContainerStop(ctx context.Context, srcContainerID string
 // ContainerRemove removes testrunner container
 func (handler *Handler) ContainerRemove(ctx context.Context, srcContainerID string) error {
 	return handler.client.ContainerRemove(ctx, srcContainerID, containerRemoveOptions)
+}
+
+func (handler *Handler) ProjectDir(ctx context.Context, imageID string) (string, error) {
+	ii, _, err := handler.client.ImageInspectWithRaw(ctx, imageID)
+	if err != nil {
+		return "", err
+	}
+
+	// The image can tell us via a label where saucectl should mount the project files.
+	// We default to the working dir of the container as the default mounting target.
+	p := ii.Config.WorkingDir
+	if v := ii.Config.Labels["com.saucelabs.project-dir"]; v != "" {
+		p = v
+	}
+
+	return p, nil
 }
