@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/progress"
 	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/cli/streams"
@@ -14,18 +13,27 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
 
+// SauceRunnerConfigFile represents the filename for the sauce runner configuration.
+const SauceRunnerConfigFile = "sauce-runner.json"
+
+type ContainerConfig struct {
+	// SauceRunnerConfigPath is the container path to sauce-runner.json.
+	SauceRunnerConfigPath string
+}
+
 // Runner represents the docker implementation of a test runner.
 type Runner struct {
-	Project      cypress.Project
-	RunnerConfig config.RunnerConfiguration
-	Ctx          context.Context
-	Cli          *command.SauceCtlCli
-	containerID  string
-	docker       *Handler
+	Project         cypress.Project
+	ContainerConfig *ContainerConfig
+	Ctx             context.Context
+	Cli             *command.SauceCtlCli
+	containerID     string
+	docker          *Handler
 }
 
 // NewRunner creates a new Runner instance.
@@ -111,7 +119,7 @@ func (r *Runner) setup(suite cypress.Suite) error {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	rcPath := filepath.Join(tmpDir, "sauce-runner.json")
+	rcPath := filepath.Join(tmpDir, SauceRunnerConfigFile)
 	rcFile, err := os.OpenFile(rcPath, os.O_CREATE|os.O_WRONLY, 0755)
 	if err != nil {
 		return err
@@ -123,6 +131,7 @@ func (r *Runner) setup(suite cypress.Suite) error {
 	if err := r.docker.CopyToContainer(r.Ctx, r.containerID, rcPath, pDir); err != nil {
 		return err
 	}
+	r.ContainerConfig.SauceRunnerConfigPath = path.Join(pDir, SauceRunnerConfigFile)
 
 	// running pre-exec tasks
 	err = r.beforeExec(r.Project.BeforeExec)
@@ -203,8 +212,7 @@ func (r *Runner) execute(cmd []string) (int, error) {
 
 // run runs the tests defined in the config.Project.
 func (r *Runner) run(s cypress.Suite) (int, error) {
-	// FIXME unhardcode runner.json
-	return r.execute([]string{"npm", "test", "--", "-r", "sauce-runner.json", "-s", s.Name})
+	return r.execute([]string{"npm", "test", "--", "-r", r.ContainerConfig.SauceRunnerConfigPath, "-s", s.Name})
 }
 
 // teardown cleans up the test environment.
