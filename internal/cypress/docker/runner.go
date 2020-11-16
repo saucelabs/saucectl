@@ -20,9 +20,6 @@ import (
 	"github.com/saucelabs/saucectl/cli/progress"
 )
 
-// DefaultProjectPath represents the default project path. Test files will be located here.
-const DefaultProjectPath = "/home/seluser"
-
 // Runner represents the docker implementation of a test runner.
 type Runner struct {
 	Project      cypress.Project

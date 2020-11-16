@@ -97,6 +97,7 @@ type CommonAPIClient interface {
 	ContainerExecInspect(ctx context.Context, execID string) (types.ContainerExecInspect, error)
 	ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error
 	ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error
+	ImageInspectWithRaw(ctx context.Context, imageID string) (types.ImageInspect, []byte, error)
 }
 
 // Handler represents the client to handle Docker tasks
@@ -245,7 +246,20 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project, s
 		files = append(files, cypressEnvFile)
 	}
 
-	m, err := createMounts(files, DefaultProjectPath)
+	img := handler.GetImageFlavor(c.Docker.Image)
+	ii, _, err := handler.client.ImageInspectWithRaw(ctx, img)
+	if err != nil {
+		return nil, err
+	}
+
+	// The image can tell us via a label where saucectl should mount the project files.
+	// We default to the working dir of the container as the default mounting target.
+	mTarget := ii.Config.WorkingDir
+	if spd := ii.Config.Labels["com.saucelabs.project-dir"]; spd != "" {
+		mTarget = spd
+	}
+
+	m, err := createMounts(files, mTarget)
 	if err != nil {
 		return nil, err
 	}
@@ -264,7 +278,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project, s
 	}
 	networkConfig := &network.NetworkingConfig{}
 	containerConfig := &container.Config{
-		Image:        handler.GetImageFlavor(c.Docker.Image),
+		Image:        img,
 		ExposedPorts: ports,
 		Env: []string{
 			fmt.Sprintf("SAUCE_USERNAME=%s", username),
