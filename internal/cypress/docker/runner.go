@@ -42,6 +42,7 @@ func New(c cypress.Project, cli *command.SauceCtlCli) (*Runner, error) {
 	defer progress.Stop()
 
 	r := Runner{}
+	r.ContainerConfig = &ContainerConfig{}
 	r.Cli = cli
 	r.Ctx = context.Background()
 	r.Project = c

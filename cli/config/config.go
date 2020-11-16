@@ -12,9 +12,9 @@ import (
 
 // Metadata describes job metadata
 type Metadata struct {
-	Name  string   `yaml:"name"`
-	Tags  []string `yaml:"tags"`
-	Build string   `yaml:"build"`
+	Name  string   `yaml:"name" json:"name"`
+	Tags  []string `yaml:"tags" json:"tags,omitempty"`
+	Build string   `yaml:"build" json:"build"`
 }
 
 // Timeouts describes WebDriver timeouts
@@ -70,8 +70,8 @@ type Suite struct {
 
 // SauceConfig represents sauce labs related settings.
 type SauceConfig struct {
-	Region   string   `yaml:"region,omitempty"`
-	Metadata Metadata `yaml:"metadata,omitempty"`
+	Region   string   `yaml:"region,omitempty" json:"region"`
+	Metadata Metadata `yaml:"metadata,omitempty" json:"metadata"`
 }
 
 // RunnerConfiguration describes configurations for the testrunner
