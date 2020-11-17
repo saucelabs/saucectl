@@ -41,46 +41,6 @@ var (
 	}
 )
 
-// Image represents docker image metadata.
-type Image struct {
-	Name        string
-	Version     string
-	TestsFolder string
-	Match       string
-}
-
-// DefaultPlaywright represents the default image for playwright.
-var DefaultPlaywright = Image{
-	Name:        "saucelabs/stt-playwright-jest-node",
-	Version:     "v0.1.6",
-	TestsFolder: "tests",
-	Match:       ".*.(spec|test).js$",
-}
-
-// DefaultPuppeteer represents the default image for puppeteer.
-var DefaultPuppeteer = Image{
-	Name:        "saucelabs/stt-puppeteer-jest-node",
-	Version:     "v0.1.5",
-	TestsFolder: "tests",
-	Match:       ".*.(spec|test).js$",
-}
-
-// DefaultTestcafe represents the default image for testcafe.
-var DefaultTestcafe = Image{
-	Name:        "saucelabs/stt-testcafe-node",
-	Version:     "v0.1.5",
-	TestsFolder: "tests",
-	Match:       ".*.(spec|test).[jt]s$",
-}
-
-// DefaultCypress represents the default image for cypress.
-var DefaultCypress = Image{
-	Name:        "saucelabs/stt-cypress-mocha-node",
-	Version:     "v0.1.9",
-	TestsFolder: "cypress/integration",
-	Match:       ".*.(spec|test).js$",
-}
-
 // CommonAPIClient is the interface for interacting with containers.
 type CommonAPIClient interface {
 	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
