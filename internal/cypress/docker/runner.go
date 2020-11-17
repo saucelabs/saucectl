@@ -97,7 +97,7 @@ func (r *Runner) setup(suite cypress.Suite) error {
 	}
 
 	progress.Show("Starting container %s", baseImage)
-	container, err := r.docker.StartContainer(r.Ctx, r.Project, suite)
+	container, err := r.docker.StartContainer(r.Ctx, r.Project)
 	if err != nil {
 		return err
 	}

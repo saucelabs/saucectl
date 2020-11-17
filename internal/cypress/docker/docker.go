@@ -212,7 +212,7 @@ func (handler *Handler) PullBaseImage(ctx context.Context, img config.Image) err
 }
 
 // StartContainer starts the Docker testrunner container
-func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project, s cypress.Suite) (*container.ContainerCreateCreatedBody, error) {
+func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (*container.ContainerCreateCreatedBody, error) {
 	var (
 		ports        map[nat.Port]struct{}
 		portBindings map[nat.Port][]nat.PortBinding
@@ -447,6 +447,7 @@ func (handler *Handler) ContainerRemove(ctx context.Context, srcContainerID stri
 	return handler.client.ContainerRemove(ctx, srcContainerID, containerRemoveOptions)
 }
 
+// ProjectDir returns the project directory as is configured for the given image.
 func (handler *Handler) ProjectDir(ctx context.Context, imageID string) (string, error) {
 	ii, _, err := handler.client.ImageInspectWithRaw(ctx, imageID)
 	if err != nil {
