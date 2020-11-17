@@ -101,6 +101,10 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return runCypressInDocker(cli)
 	}
 
+	return runLegacyMode(cmd, cli)
+}
+
+func runLegacyMode(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	p, err := config.NewJobConfiguration(cfgFilePath)
 	if err != nil {
 		return 1, err

@@ -21,7 +21,7 @@ import (
 // SauceRunnerConfigFile represents the filename for the sauce runner configuration.
 const SauceRunnerConfigFile = "sauce-runner.json"
 
-type ContainerConfig struct {
+type containerConfig struct {
 	// SauceRunnerConfigPath is the container path to sauce-runner.json.
 	SauceRunnerConfigPath string
 }
@@ -29,20 +29,20 @@ type ContainerConfig struct {
 // Runner represents the docker implementation of a test runner.
 type Runner struct {
 	Project         cypress.Project
-	ContainerConfig *ContainerConfig
 	Ctx             context.Context
 	Cli             *command.SauceCtlCli
 	containerID     string
 	docker          *Handler
+	containerConfig *containerConfig
 }
 
-// NewRunner creates a new Runner instance.
+// New creates a new Runner instance.
 func New(c cypress.Project, cli *command.SauceCtlCli) (*Runner, error) {
 	progress.Show("Starting test runner for docker")
 	defer progress.Stop()
 
 	r := Runner{}
-	r.ContainerConfig = &ContainerConfig{}
+	r.containerConfig = &containerConfig{}
 	r.Cli = cli
 	r.Ctx = context.Background()
 	r.Project = c
@@ -132,7 +132,7 @@ func (r *Runner) setup(suite cypress.Suite) error {
 	if err := r.docker.CopyToContainer(r.Ctx, r.containerID, rcPath, pDir); err != nil {
 		return err
 	}
-	r.ContainerConfig.SauceRunnerConfigPath = path.Join(pDir, SauceRunnerConfigFile)
+	r.containerConfig.SauceRunnerConfigPath = path.Join(pDir, SauceRunnerConfigFile)
 
 	// running pre-exec tasks
 	err = r.beforeExec(r.Project.BeforeExec)
@@ -213,7 +213,7 @@ func (r *Runner) execute(cmd []string) (int, error) {
 
 // run runs the tests defined in the config.Project.
 func (r *Runner) run(s cypress.Suite) (int, error) {
-	return r.execute([]string{"npm", "test", "--", "-r", r.ContainerConfig.SauceRunnerConfigPath, "-s", s.Name})
+	return r.execute([]string{"npm", "test", "--", "-r", r.containerConfig.SauceRunnerConfigPath, "-s", s.Name})
 }
 
 // teardown cleans up the test environment.

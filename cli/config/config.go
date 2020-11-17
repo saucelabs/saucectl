@@ -161,6 +161,7 @@ func NewJobConfiguration(cfgFilePath string) (Project, error) {
 	return c, nil
 }
 
+// Describe returns a description of the given config that is cfgPath.
 func Describe(cfgPath string) (TypeDef, error) {
 	var d TypeDef
 

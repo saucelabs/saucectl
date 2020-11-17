@@ -30,7 +30,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Example: configureExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Info().Msg("Start Configure Command")
-			if err := Run(cmd, cli, args); err != nil {
+			if err := Run(); err != nil {
 				log.Err(err).Msg("failed to execute configure command")
 				os.Exit(1)
 			}
@@ -102,9 +102,9 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 }
 
 // Run starts the configure command
-func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
+func Run() error {
 	var creds *credentials.Credentials
-	var err error = nil
+	var err error
 
 	if cliUsername == "" && cliAccessKey == "" {
 		creds, err = interactiveConfiguration()
