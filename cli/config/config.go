@@ -87,7 +87,8 @@ type Run struct {
 	ProjectPath string   `yaml:"projectPath"`
 }
 
-type Description struct {
+// TypeDef represents the type definition of the config.
+type TypeDef struct {
 	APIVersion string `yaml:"apiVersion,omitempty"`
 	Kind       string `yaml:"kind,omitempty"`
 }
@@ -149,16 +150,16 @@ func NewJobConfiguration(cfgFilePath string) (Project, error) {
 	return c, nil
 }
 
-func Describe(cfgPath string) (Description, error) {
-	var d Description
+func Describe(cfgPath string) (TypeDef, error) {
+	var d TypeDef
 
 	yamlFile, err := readYaml(cfgPath)
 	if err != nil {
-		return Description{}, fmt.Errorf("failed to locate job configuration: %v", err)
+		return TypeDef{}, fmt.Errorf("failed to locate project configuration: %v", err)
 	}
 
 	if err = yaml.Unmarshal(yamlFile, &d); err != nil {
-		return Description{}, fmt.Errorf("failed to parse job configuration: %v", err)
+		return TypeDef{}, fmt.Errorf("failed to parse project configuration: %v", err)
 	}
 
 	return d, nil
