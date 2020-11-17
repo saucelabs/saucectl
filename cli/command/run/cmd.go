@@ -140,6 +140,21 @@ func runCypressInDocker(cli *command.SauceCtlCli) (int, error) {
 
 	cp.Sauce.Metadata.ExpandEnv()
 
+	// Merge env from CLI args and job config. CLI args take precedence.
+	for k, v := range env {
+		for _, s := range cp.Suites {
+			s.Config.Env[k] = v
+		}
+	}
+
+	if cp.Sauce.Region == "" {
+		cp.Sauce.Region = defaultRegion
+	}
+
+	if regionFlag != "" {
+		cp.Sauce.Region = regionFlag
+	}
+
 	cd, err := cypressDocker.New(cp, cli)
 	if err != nil {
 		return 1, err
