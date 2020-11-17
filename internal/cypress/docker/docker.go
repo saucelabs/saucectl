@@ -191,18 +191,13 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 		return nil, err
 	}
 
-	// TODO this probably should be determined outside of this method
-	// Determine files to mount
-	// Determine cypress folder location by using the location of the config file
-	cypressDir := filepath.Join(filepath.Dir(c.Cypress.ConfigFile), "cypress")
 	files := []string{
 		c.Cypress.ConfigFile,
-		cypressDir,
+		c.Cypress.ProjectPath,
 	}
 
-	cypressEnvFile := filepath.Join(filepath.Dir(c.Cypress.ConfigFile))
-	if _, err := os.Stat(cypressEnvFile); err != nil {
-		files = append(files, cypressEnvFile)
+	if c.Cypress.EnvFile != "" {
+		files = append(files, c.Cypress.EnvFile)
 	}
 
 	img := handler.GetImageFlavor(c.Docker.Image)
@@ -221,7 +216,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 	if creds := credentials.Get(); creds != nil {
 		username = creds.Username
 		accessKey = creds.AccessKey
-		log.Info().Msgf("Using credentials from %s", creds.Source)
+		log.Info().Msgf("Using credentials set by %s", creds.Source)
 	}
 
 	hostConfig := &container.HostConfig{

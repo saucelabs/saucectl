@@ -5,6 +5,7 @@ import (
 	"github.com/saucelabs/saucectl/cli/config"
 	"gopkg.in/yaml.v2"
 	"os"
+	"path/filepath"
 )
 
 // Project represents the cypress project configuration.
@@ -34,6 +35,13 @@ type SuiteConfig struct {
 type Cypress struct {
 	// ConfigFile is the path to "cypress.json".
 	ConfigFile string `yaml:"configFile,omitempty" json:"configFile"`
+
+	// ProjectPath is the path to the cypress directory itself. Not set by the user, but is instead based on the
+	// location of ConfigFile.
+	ProjectPath string
+
+	// EnvFile is the path to cypress.env.json. Not set by the user, but is instead based on the location of ConfigFile.
+	EnvFile string
 }
 
 // FromFile creates a new cypress Project based on the filepath cfgPath.
@@ -47,6 +55,21 @@ func FromFile(cfgPath string) (Project, error) {
 
 	if err = yaml.NewDecoder(f).Decode(&p); err != nil {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
+	}
+
+	configDir := filepath.Dir(p.Cypress.ConfigFile)
+
+	// We must locate the cypress folder.
+	cPath := filepath.Join(configDir, "cypress")
+	if _, err := os.Stat(cPath); err != nil {
+		return p, fmt.Errorf("unable to locate the cypress folder in %s", configDir)
+	}
+	p.Cypress.ProjectPath = cPath
+
+	// Optionally include the env file if it exists.
+	envFile := filepath.Join(configDir, "cypress.env.json")
+	if _, err := os.Stat(envFile); err == nil {
+		p.Cypress.EnvFile = envFile
 	}
 
 	return p, nil

@@ -239,7 +239,6 @@ func (r *Runner) runSuite(suite cypress.Suite) error {
 		return err
 	}
 
-	log.Info().Msg("Starting tests")
 	exitCode, err := r.run(suite)
 	log.Info().
 		Int("ExitCode", exitCode).
