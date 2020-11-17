@@ -12,7 +12,7 @@ type Project struct {
 	Cypress    Cypress            `yaml:"cypress,omitempty" json:"cypress"`
 	Suites     []Suite            `yaml:"suites,omitempty" json:"suites"`
 	BeforeExec []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker     Docker             `yaml:"docker,omitempty" json:"docker"`
+	Docker     config.Docker      `yaml:"docker,omitempty" json:"docker"`
 }
 
 type Suite struct {
@@ -30,16 +30,6 @@ type SuiteConfig struct {
 type Cypress struct {
 	// ConfigFile is the path to "cypress.json".
 	ConfigFile string `yaml:"configFile,omitempty" json:"configFile"`
-}
-
-// DockerImage describes the docker configuration.
-type Docker struct {
-	Image Image `yaml:"image,omitempty" json:"image"`
-}
-
-type Image struct {
-	Name string `yaml:"name,omitempty" json:"name"`
-	Tag  string `yaml:"tag,omitempty" json:"tag"`
 }
 
 func FromFile(cfgPath string) (Project, error) {

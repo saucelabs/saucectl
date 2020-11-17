@@ -93,6 +93,17 @@ type TypeDef struct {
 	Kind       string `yaml:"kind,omitempty"`
 }
 
+// Docker represents docker settings.
+type Docker struct {
+	Image Image `yaml:"image,omitempty" json:"image"`
+}
+
+// Image represents the docker image.
+type Image struct {
+	Name string `yaml:"name,omitempty" json:"name"`
+	Tag  string `yaml:"tag,omitempty" json:"tag"`
+}
+
 func readYaml(cfgFilePath string) ([]byte, error) {
 	if cfgFilePath == "" {
 		return nil, errors.New("no config file was provided")

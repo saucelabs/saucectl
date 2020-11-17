@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"io"
 	"io/ioutil"
@@ -148,7 +149,7 @@ func (handler *Handler) HasBaseImage(ctx context.Context, baseImage string) (boo
 }
 
 // GetImageFlavor returns a string that contains the image name and tag defined by the project.
-func (handler *Handler) GetImageFlavor(img cypress.Image) string {
+func (handler *Handler) GetImageFlavor(img config.Image) string {
 	// TODO - move this to ImageDefinition
 	tag := "latest"
 	if img.Tag != "" {
@@ -187,7 +188,7 @@ func NewImagePullOptions() (types.ImagePullOptions, error) {
 }
 
 // PullBaseImage pulls an image from Docker
-func (handler *Handler) PullBaseImage(ctx context.Context, img cypress.Image) error {
+func (handler *Handler) PullBaseImage(ctx context.Context, img config.Image) error {
 
 	options, err := NewImagePullOptions()
 	if err != nil {
