@@ -148,7 +148,6 @@ func NewImagePullOptions() (types.ImagePullOptions, error) {
 
 // PullBaseImage pulls an image from Docker
 func (handler *Handler) PullBaseImage(ctx context.Context, img config.Image) error {
-
 	options, err := NewImagePullOptions()
 	if err != nil {
 		return err

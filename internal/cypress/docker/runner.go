@@ -38,9 +38,6 @@ type Runner struct {
 
 // New creates a new Runner instance.
 func New(c cypress.Project, cli *command.SauceCtlCli) (*Runner, error) {
-	progress.Show("Starting test runner for docker")
-	defer progress.Stop()
-
 	r := Runner{}
 	r.containerConfig = &containerConfig{}
 	r.Cli = cli
@@ -79,36 +76,29 @@ func (r *Runner) setup(suite cypress.Suite) error {
 			" follow the guide at https://docs.docker.com/get-docker/", err)
 	}
 
-	// Check if image exists
+	// Check if image exists.
 	baseImage := r.docker.GetImageFlavor(r.Project.Docker.Image)
 	hasImage, err := r.docker.HasBaseImage(r.Ctx, baseImage)
 	if err != nil {
 		return err
 	}
 
-	// only pull base image if not already installed
-	progress.Show("Pulling test runner image %s", baseImage)
-	defer progress.Stop()
-
+	// Only pull base image if not already installed.
 	if !hasImage {
+		progress.Show("Pulling image %s", baseImage)
+		defer progress.Stop()
 		if err := r.docker.PullBaseImage(r.Ctx, r.Project.Docker.Image); err != nil {
 			return err
 		}
 	}
 
-	progress.Show("Starting container %s", baseImage)
+	log.Info().Str("img", baseImage).Msg("Starting container")
 	container, err := r.docker.StartContainer(r.Ctx, r.Project)
 	if err != nil {
 		return err
 	}
 	r.containerID = container.ID
 
-	progress.Show("Preparing container")
-	// TODO replace sleep with actual checks & confirmation
-	// wait until Xvfb started
-	//time.Sleep(1 * time.Second) // FIXME I don't think cypress needs this
-
-	progress.Show("Setting up test files for container")
 	pDir, err := r.docker.ProjectDir(r.Ctx, baseImage)
 	if err != nil {
 		return err
