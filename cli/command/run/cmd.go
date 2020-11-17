@@ -117,13 +117,6 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 	p.Metadata.ExpandEnv()
 
-	if len(p.Suites) == 0 {
-		// As saucectl is transitioning into supporting test suites, we'll try to support this transition without
-		// a breaking change (if possible). This means that a suite may not necessarily be defined by the user.
-		// As such, we create an imaginary suite based on the project configuration.
-		p.Suites = []config.Suite{newDefaultSuite(p)}
-	}
-
 	r, err := newRunner(p, cli)
 	if err != nil {
 		return 1, err
@@ -241,15 +234,6 @@ func apiBaseURL(r region.Region) string {
 	}
 
 	return r.APIBaseURL()
-}
-
-// newDefaultSuite creates a rudimentary test suite from a project configuration.
-// Its main use is for when no suites are defined in the config.
-func newDefaultSuite(p config.Project) config.Suite {
-	// TODO remove this method once saucectl fully transitions to the new config
-	s := config.Suite{Name: "default"}
-
-	return s
 }
 
 // mergeArgs merges settings from CLI arguments with the loaded job configuration.
