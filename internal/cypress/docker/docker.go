@@ -12,7 +12,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/saucelabs/saucectl/cli/credentials"
@@ -277,11 +276,6 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project, s
 		Env: []string{
 			fmt.Sprintf("SAUCE_USERNAME=%s", username),
 			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", accessKey),
-			fmt.Sprintf("SAUCE_BUILD_NAME=%s", c.Sauce.Metadata.Build),
-			fmt.Sprintf("SAUCE_TAGS=%s", strings.Join(c.Sauce.Metadata.Tags, ",")),
-			fmt.Sprintf("SAUCE_DEVTOOLS_PORT=%d", port),
-			fmt.Sprintf("SAUCE_REGION=%s", c.Sauce.Region),
-			fmt.Sprintf("BROWSER_NAME=%s", s.Browser),
 		},
 	}
 
