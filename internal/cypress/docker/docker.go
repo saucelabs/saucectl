@@ -243,6 +243,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 		return nil, err
 	}
 
+	log.Info().Str("img", img).Str("id", container.ID[:12]).Msg("Starting container")
 	if err := handler.client.ContainerStart(ctx, container.ID, types.ContainerStartOptions{}); err != nil {
 		return nil, err
 	}

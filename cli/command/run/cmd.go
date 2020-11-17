@@ -57,7 +57,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Long:    runLong,
 		Example: runExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Info().Str("version", version.Version).Msg("Start Run Command")
+			log.Info().Msgf("Running version %s", version.Version)
 			exitCode, err := Run(cmd, cli, args)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")

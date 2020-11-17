@@ -92,7 +92,6 @@ func (r *Runner) setup(suite cypress.Suite) error {
 		}
 	}
 
-	log.Info().Str("img", baseImage).Msg("Starting container")
 	container, err := r.docker.StartContainer(r.Ctx, r.Project)
 	if err != nil {
 		return err
