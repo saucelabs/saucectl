@@ -69,7 +69,7 @@ func (r *Runner) RunProject() (int, error) {
 }
 
 // setup performs any necessary steps for a test runner to execute tests.
-func (r *Runner) setup(suite cypress.Suite) error {
+func (r *Runner) setup() error {
 	err := r.docker.ValidateDependency()
 	if err != nil {
 		return fmt.Errorf("please verify that docker is installed and running: %v, "+
@@ -81,6 +81,13 @@ func (r *Runner) setup(suite cypress.Suite) error {
 	hasImage, err := r.docker.HasBaseImage(r.Ctx, baseImage)
 	if err != nil {
 		return err
+	}
+
+	// If it's our image, warn the user to not use the latest tag.
+	if strings.Index(r.Project.Docker.Image.Name, "saucelabs") == 0 && r.Project.Docker.Image.Tag == "latest" {
+		log.Warn().Msg("The use of 'latest' as the docker image tag is discouraged. " +
+			"We recommend pinning the image to a specific version. " +
+			"Please proceed with caution.")
 	}
 
 	// Only pull base image if not already installed.
@@ -235,7 +242,7 @@ func (r *Runner) runSuite(suite cypress.Suite) error {
 	}()
 
 	log.Info().Msg("Setting up test environment")
-	if err := r.setup(suite); err != nil {
+	if err := r.setup(); err != nil {
 		return err
 	}
 
