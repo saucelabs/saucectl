@@ -2,6 +2,7 @@ package run
 
 import (
 	"errors"
+	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"net/http"
 	"os"
@@ -56,7 +57,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Long:    runLong,
 		Example: runExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Info().Msg("Start Run Command")
+			log.Info().Str("version", version.Version).Msg("Start Run Command")
 			exitCode, err := Run(cmd, cli, args)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
