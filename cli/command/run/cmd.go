@@ -2,6 +2,8 @@ package run
 
 import (
 	"errors"
+	"github.com/saucelabs/saucectl/cli/version"
+	"github.com/saucelabs/saucectl/internal/cypress"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -23,6 +25,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
+	cypressDocker "github.com/saucelabs/saucectl/internal/cypress/docker"
 )
 
 var (
@@ -54,7 +57,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Long:    runLong,
 		Example: runExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Info().Msg("Start Run Command")
+			log.Info().Msgf("Running version %s", version.Version)
 			exitCode, err := Run(cmd, cli, args)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
@@ -74,6 +77,9 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
 	cmd.Flags().StringVar(&suiteName, "suite", "", "Run specified test suite.")
 
+	// Hide undocumented flags that the user does not need to care about.
+	_ = cmd.Flags().MarkHidden("sauce-api")
+
 	return cmd
 }
 
@@ -86,6 +92,20 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 	cli.LogDir = cfgLogDir
 	log.Info().Str("config", cfgFilePath).Msg("Reading config file")
+
+	d, err := config.Describe(cfgFilePath)
+	if err != nil {
+		return 1, err
+	}
+
+	if d.Kind == "cypress" && d.APIVersion == "v1alpha" {
+		return runCypressInDocker(cli)
+	}
+
+	return runLegacyMode(cmd, cli)
+}
+
+func runLegacyMode(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	p, err := config.NewJobConfiguration(cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -102,18 +122,42 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 	p.Metadata.ExpandEnv()
 
-	if len(p.Suites) == 0 {
-		// As saucectl is transitioning into supporting test suites, we'll try to support this transition without
-		// a breaking change (if possible). This means that a suite may not necessarily be defined by the user.
-		// As such, we create an imaginary suite based on the project configuration.
-		p.Suites = []config.Suite{newDefaultSuite(p)}
-	}
-
 	r, err := newRunner(p, cli)
 	if err != nil {
 		return 1, err
 	}
 	return r.RunProject()
+}
+
+func runCypressInDocker(cli *command.SauceCtlCli) (int, error) {
+	log.Info().Msg("Running Cypress in Docker")
+	cp, err := cypress.FromFile(cfgFilePath)
+	if err != nil {
+		return 1, err
+	}
+
+	cp.Sauce.Metadata.ExpandEnv()
+
+	// Merge env from CLI args and job config. CLI args take precedence.
+	for k, v := range env {
+		for _, s := range cp.Suites {
+			s.Config.Env[k] = v
+		}
+	}
+
+	if cp.Sauce.Region == "" {
+		cp.Sauce.Region = defaultRegion
+	}
+
+	if regionFlag != "" {
+		cp.Sauce.Region = regionFlag
+	}
+
+	cd, err := cypressDocker.New(cp, cli)
+	if err != nil {
+		return 1, err
+	}
+	return cd.RunProject()
 }
 
 func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, error) {
@@ -195,15 +239,6 @@ func apiBaseURL(r region.Region) string {
 	}
 
 	return r.APIBaseURL()
-}
-
-// newDefaultSuite creates a rudimentary test suite from a project configuration.
-// Its main use is for when no suites are defined in the config.
-func newDefaultSuite(p config.Project) config.Suite {
-	// TODO remove this method once saucectl fully transitions to the new config
-	s := config.Suite{Name: "default"}
-
-	return s
 }
 
 // mergeArgs merges settings from CLI arguments with the loaded job configuration.

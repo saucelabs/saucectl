@@ -37,7 +37,7 @@ func FromEnv() *Credentials {
 		return &Credentials{
 			Username:  username,
 			AccessKey: accessKey,
-			Source: "Environment",
+			Source: "environment variables",
 		}
 	}
 	return nil

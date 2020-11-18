@@ -6,15 +6,16 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
 
 // Metadata describes job metadata
 type Metadata struct {
-	Name  string   `yaml:"name"`
-	Tags  []string `yaml:"tags"`
-	Build string   `yaml:"build"`
+	Name  string   `yaml:"name" json:"name"`
+	Tags  []string `yaml:"tags" json:"tags,omitempty"`
+	Build string   `yaml:"build" json:"build"`
 }
 
 // Timeouts describes WebDriver timeouts
@@ -70,7 +71,8 @@ type Suite struct {
 
 // SauceConfig represents sauce labs related settings.
 type SauceConfig struct {
-	Region string `yaml:"region,omitempty"`
+	Region   string   `yaml:"region,omitempty" json:"region"`
+	Metadata Metadata `yaml:"metadata,omitempty" json:"metadata"`
 }
 
 // RunnerConfiguration describes configurations for the testrunner
@@ -84,6 +86,23 @@ type RunnerConfiguration struct {
 type Run struct {
 	Match       []string `yaml:"match"`
 	ProjectPath string   `yaml:"projectPath"`
+}
+
+// TypeDef represents the type definition of the config.
+type TypeDef struct {
+	APIVersion string `yaml:"apiVersion,omitempty"`
+	Kind       string `yaml:"kind,omitempty"`
+}
+
+// Docker represents docker settings.
+type Docker struct {
+	Image Image `yaml:"image,omitempty" json:"image"`
+}
+
+// Image represents the docker image.
+type Image struct {
+	Name string `yaml:"name,omitempty" json:"name"`
+	Tag  string `yaml:"tag,omitempty" json:"tag"`
 }
 
 func readYaml(cfgFilePath string) ([]byte, error) {
@@ -141,6 +160,25 @@ func NewJobConfiguration(cfgFilePath string) (Project, error) {
 	c.SyncCapabilities()
 
 	return c, nil
+}
+
+// Describe returns a description of the given config that is cfgPath.
+func Describe(cfgPath string) (TypeDef, error) {
+	var d TypeDef
+
+	yamlFile, err := readYaml(cfgPath)
+	if err != nil {
+		return TypeDef{}, fmt.Errorf("failed to locate project configuration: %v", err)
+	}
+
+	if err = yaml.Unmarshal(yamlFile, &d); err != nil {
+		return TypeDef{}, fmt.Errorf("failed to parse project configuration: %v", err)
+	}
+
+	// Normalize certain values for ease of use.
+	d.Kind = strings.ToLower(d.Kind)
+
+	return d, nil
 }
 
 // ExpandEnv expands environment variables inside metadata fields.
