@@ -22,8 +22,8 @@ import (
 const SauceRunnerConfigFile = "sauce-runner.json"
 
 type containerConfig struct {
-	// SauceRunnerConfigPath is the container path to sauce-runner.json.
-	SauceRunnerConfigPath string
+	// sauceRunnerConfigPath is the container path to sauce-runner.json.
+	sauceRunnerConfigPath string
 }
 
 // Runner represents the docker implementation of a test runner.
@@ -128,7 +128,7 @@ func (r *Runner) setup() error {
 	if err := r.docker.CopyToContainer(r.Ctx, r.containerID, rcPath, pDir); err != nil {
 		return err
 	}
-	r.containerConfig.SauceRunnerConfigPath = path.Join(pDir, SauceRunnerConfigFile)
+	r.containerConfig.sauceRunnerConfigPath = path.Join(pDir, SauceRunnerConfigFile)
 
 	// running pre-exec tasks
 	err = r.beforeExec(r.Project.BeforeExec)
@@ -209,7 +209,7 @@ func (r *Runner) execute(cmd []string) (int, error) {
 
 // run runs the tests defined in the config.Project.
 func (r *Runner) run(s cypress.Suite) (int, error) {
-	return r.execute([]string{"npm", "test", "--", "-r", r.containerConfig.SauceRunnerConfigPath, "-s", s.Name})
+	return r.execute([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", s.Name})
 }
 
 // teardown cleans up the test environment.
