@@ -49,6 +49,7 @@ func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
 	f, err := os.Open(cfgPath)
+	defer f.Close()
 	if err != nil {
 		return Project{}, fmt.Errorf("failed to locate project config: %v", err)
 	}
