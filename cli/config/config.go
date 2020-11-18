@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
@@ -173,6 +174,9 @@ func Describe(cfgPath string) (TypeDef, error) {
 	if err = yaml.Unmarshal(yamlFile, &d); err != nil {
 		return TypeDef{}, fmt.Errorf("failed to parse project configuration: %v", err)
 	}
+
+	// Normalize certain values for ease of use.
+	d.Kind = strings.ToLower(d.Kind)
 
 	return d, nil
 }
