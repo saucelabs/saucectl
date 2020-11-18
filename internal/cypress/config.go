@@ -38,10 +38,10 @@ type Cypress struct {
 
 	// ProjectPath is the path to the cypress directory itself. Not set by the user, but is instead based on the
 	// location of ConfigFile.
-	ProjectPath string
+	ProjectPath string `json:"-"`
 
 	// EnvFile is the path to cypress.env.json. Not set by the user, but is instead based on the location of ConfigFile.
-	EnvFile string
+	EnvFile string `json:"-"`
 }
 
 // FromFile creates a new cypress Project based on the filepath cfgPath.
