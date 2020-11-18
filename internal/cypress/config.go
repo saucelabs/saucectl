@@ -57,6 +57,9 @@ func FromFile(cfgPath string) (Project, error) {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
 
+	if _, err := os.Stat(p.Cypress.ConfigFile); err != nil {
+		return p, fmt.Errorf("unable to locate %s", p.Cypress.ConfigFile)
+	}
 	configDir := filepath.Dir(p.Cypress.ConfigFile)
 
 	// We must locate the cypress folder.
