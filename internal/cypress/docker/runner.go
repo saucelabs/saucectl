@@ -151,7 +151,7 @@ func (r *Runner) setup() error {
 
 func (r *Runner) beforeExec(tasks []string) error {
 	for _, task := range tasks {
-		progress.Show("Running BeforeExec task: %s", task)
+		log.Info().Str("task", task).Msg("Running BeforeExec")
 		exitCode, err := r.execute(strings.Fields(task))
 		if err != nil {
 			return err
