@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -74,7 +75,7 @@ func (r *Runner) setup(run config.Run) error {
 	var out bytes.Buffer
 	var homeDir = utils.GetProjectDir()
 	if os.Getenv("SAUCE_VM") == "" {
-		cmd := exec.Command(homeDir+"/entry.sh", "&")
+		cmd := exec.Command(path.Join(homeDir, "entry.sh"), "&")
 		cmd.Stderr = &out
 		if err := cmd.Run(); err != nil {
 			log.Info().Err(err).Msg("Failed to setup test")
