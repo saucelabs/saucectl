@@ -11,10 +11,6 @@ import (
 func TestEnvPrioritary(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	defer func() {
-		file, _ := getCredentialsFilePath()
-		os.Remove(file)
-	}()
 
 	// Prepare to restore home var
 	userprofile := os.Getenv("USERPROFILE")
@@ -57,16 +53,21 @@ func TestEnvPrioritary(t *testing.T) {
 	assert.Equal(t, overallCreds.Username, "envUsername")
 	assert.Equal(t, overallCreds.AccessKey, "envAccessKey")
 
-
-	wd, _ := os.Getwd()
-	os.Setenv("USERPROFILE", wd)
-	os.Setenv("HOME", wd)
+	tmpDir := os.TempDir()
+	os.Setenv("USERPROFILE", tmpDir)
+	os.Setenv("HOME", tmpDir)
 	toSaveCreds := Credentials{
 		Username: "fileUsername",
 		AccessKey: "fileAccessKey",
 	}
 	err := toSaveCreds.Store()
 	assert.Nil(t, err)
+
+	// Removes .sauce folder from temp folder
+	defer func() {
+		credentialsTmpDir, _ := getCredentialsFolderPath()
+		os.RemoveAll(credentialsTmpDir)
+	}()
 
 	// Test File & Env
 	envCreds = FromEnv()
