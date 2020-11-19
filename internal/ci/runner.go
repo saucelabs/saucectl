@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -73,10 +74,13 @@ func (r *Runner) setup(run config.Run) error {
 	log.Info().Msg("Run entry.sh")
 	var out bytes.Buffer
 	var homeDir = utils.GetProjectDir()
-	cmd := exec.Command(homeDir + "/entry.sh", "&")
-	cmd.Stderr = &out
-	if err := cmd.Run(); err != nil {
-		return errors.New("couldn't start test: " + out.String())
+	if os.Getenv("SAUCE_VM") == "" {
+		cmd := exec.Command(path.Join(homeDir, "entry.sh"), "&")
+		cmd.Stderr = &out
+		if err := cmd.Run(); err != nil {
+			log.Info().Err(err).Msg("Failed to setup test")
+			return errors.New("couldn't start test: " + out.String())
+		}
 	}
 
 	// TODO replace sleep with actual checks & confirmation
@@ -84,6 +88,7 @@ func (r *Runner) setup(run config.Run) error {
 	time.Sleep(2 * time.Second)
 
 	rcPath := filepath.Join(r.RunnerConfig.RootDir, "run.yaml")
+	log.Info().Msg("Writing run.yaml to: " + rcPath)
 	if err := yaml.WriteFile(rcPath, run); err != nil {
 		return err
 	}
