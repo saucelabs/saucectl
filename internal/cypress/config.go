@@ -15,6 +15,7 @@ type Project struct {
 	Suites     []Suite            `yaml:"suites,omitempty" json:"suites"`
 	BeforeExec []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
 	Docker     config.Docker      `yaml:"docker,omitempty" json:"docker"`
+	Npm        config.Npm         `yaml:"npm,omitempty" json:"npm"`
 }
 
 // Suite represents the cypress test suite configuration.

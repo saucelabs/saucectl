@@ -59,6 +59,7 @@ type Project struct {
 	Sauce      SauceConfig       `yaml:"sauce,omitempty"`
 	Env        map[string]string `yaml:"env,omitempty"`
 	Parallel   bool              `yaml:"parallel,omitempty"`
+	Npm        Npm               `yaml:"npm,omitempty"`
 }
 
 // Suite represents the test suite configuration.
@@ -103,6 +104,11 @@ type Docker struct {
 type Image struct {
 	Name string `yaml:"name,omitempty" json:"name"`
 	Tag  string `yaml:"tag,omitempty" json:"tag"`
+}
+
+// Npm represents the npm settings
+type Npm struct {
+	Packages map[string]string `yaml:"packages,omitempty" json:"packages"`
 }
 
 func readYaml(cfgFilePath string) ([]byte, error) {
