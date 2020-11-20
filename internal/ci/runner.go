@@ -108,8 +108,15 @@ func (r *Runner) setup(run config.Run) error {
 			}
 		}
 	}
+
+	// installing dependencies
+	err := r.installPackages(r.Project)
+	if err != nil {
+		return err
+	}
+
 	// running before-exec tasks
-	err := r.beforeExec(r.Project.BeforeExec)
+	err = r.beforeExec(r.Project.BeforeExec)
 	if err != nil {
 		return err
 	}
@@ -128,6 +135,23 @@ func (r *Runner) execute(task string) (int, error) {
 		return 1, err
 	}
 	return 0, nil
+}
+
+func (r* Runner) installPackages(config config.Project) error {
+	// Install NPM dependencies
+	log.Info().Msg("Installing dependencies") //config.Npm.Packages
+	npmInstall := []string{"npm", "install"}
+	for name, version := range config.Npm.Packages {
+		npmInstall = append(npmInstall, fmt.Sprintf("%s@%s", name, version))
+	}
+	exitCode, err := r.execute(strings.Join(npmInstall, " "))
+	if exitCode != 0 {
+		return fmt.Errorf("npm install exitCode is %d", exitCode)
+	}
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *Runner) beforeExec(tasks []string) error {
