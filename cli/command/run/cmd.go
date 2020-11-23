@@ -47,6 +47,7 @@ var (
 	ciBuildID   string
 	sauceAPI    string
 	suiteName   string
+	testEnv     string
 )
 
 // Command creates the `run` command
@@ -76,9 +77,15 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVar(&ciBuildID, "ci-build-id", "", "Overrides the CI dependent build ID.")
 	cmd.Flags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
 	cmd.Flags().StringVar(&suiteName, "suite", "", "Run specified test suite.")
+	cmd.Flags().StringVar(&testEnv, "test-env", "docker", "Specifies the environment in which the tests should run.")
 
 	// Hide undocumented flags that the user does not need to care about.
 	_ = cmd.Flags().MarkHidden("sauce-api")
+
+	// Hide documented flags that aren't fully released yet or WIP.
+	_ = cmd.Flags().MarkHidden("parallel") // WIP.
+	_ = cmd.Flags().MarkHidden("ci-build-id") // Related to 'parallel'. WIP.
+	_ = cmd.Flags().MarkHidden("test-env") // WIP.
 
 	return cmd
 }
