@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/cypress/sauce"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -106,7 +107,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 
 	if d.Kind == "cypress" && d.APIVersion == "v1alpha" {
-		return runCypressInDocker(cli)
+		return runCypress(cli)
 	}
 
 	return runLegacyMode(cmd, cli)
@@ -136,35 +137,56 @@ func runLegacyMode(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	return r.RunProject()
 }
 
-func runCypressInDocker(cli *command.SauceCtlCli) (int, error) {
-	log.Info().Msg("Running Cypress in Docker")
-	cp, err := cypress.FromFile(cfgFilePath)
+func runCypress(cli *command.SauceCtlCli) (int, error) {
+	p, err := cypress.FromFile(cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
 
-	cp.Sauce.Metadata.ExpandEnv()
+	p.Sauce.Metadata.ExpandEnv()
 
 	// Merge env from CLI args and job config. CLI args take precedence.
 	for k, v := range env {
-		for _, s := range cp.Suites {
+		for _, s := range p.Suites {
 			s.Config.Env[k] = v
 		}
 	}
 
-	if cp.Sauce.Region == "" {
-		cp.Sauce.Region = defaultRegion
+	if p.Sauce.Region == "" {
+		p.Sauce.Region = defaultRegion
 	}
 
 	if regionFlag != "" {
-		cp.Sauce.Region = regionFlag
+		p.Sauce.Region = regionFlag
 	}
 
-	cd, err := cypressDocker.New(cp, cli)
+	switch testEnv {
+	case "docker":
+		return runCypressInDocker(p, cli)
+	case "sauce":
+		return runCypressInSauce(p)
+	default:
+		return 1, errors.New("unsupported test environment")
+	}
+}
+
+func runCypressInDocker(p cypress.Project, cli *command.SauceCtlCli) (int, error) {
+	log.Info().Msg("Running Cypress in Docker")
+
+	cd, err := cypressDocker.New(p, cli)
 	if err != nil {
 		return 1, err
 	}
 	return cd.RunProject()
+}
+
+func runCypressInSauce(p cypress.Project) (int, error) {
+	log.Info().Msg("Running Cypress in Sauce Labs")
+
+	r := sauce.Runner{
+		Project: p,
+	}
+	return r.RunProject()
 }
 
 func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, error) {
