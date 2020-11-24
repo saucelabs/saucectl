@@ -14,8 +14,8 @@ const (
 )
 
 var jobStatuses = map[string]struct{}{
-	completeJobStatus: struct {}{},
-	errorJobStatus:    struct {}{},
+	completeJobStatus: struct{}{},
+	errorJobStatus:    struct{}{},
 }
 
 var (
@@ -63,21 +63,18 @@ func (c *Client) GetJobStatus(id string, pollDuration time.Duration) (Details, e
 	ticker := time.NewTicker(pollDuration)
 	defer ticker.Stop()
 
-	var jobDetails Details
-
 	for range ticker.C {
-		jobDetails, err = makeRequest(c.HTTPClient, request)
+		jobDetails, err := makeRequest(c.HTTPClient, request)
 		if err != nil {
 			return Details{}, err
 		}
 
 		if _, ok := jobStatuses[jobDetails.Status]; ok {
-			jobDetails = jobDetails
-			break
+			return jobDetails, nil
 		}
 	}
 
-	return jobDetails, nil
+	return Details{}, nil
 }
 
 func makeRequest(httpClient *http.Client, request *http.Request) (Details, error) {
