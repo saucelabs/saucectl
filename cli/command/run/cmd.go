@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/cypress/sauce"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -47,6 +48,7 @@ var (
 	ciBuildID   string
 	sauceAPI    string
 	suiteName   string
+	testEnv     string
 )
 
 // Command creates the `run` command
@@ -76,9 +78,15 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVar(&ciBuildID, "ci-build-id", "", "Overrides the CI dependent build ID.")
 	cmd.Flags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
 	cmd.Flags().StringVar(&suiteName, "suite", "", "Run specified test suite.")
+	cmd.Flags().StringVar(&testEnv, "test-env", "docker", "Specifies the environment in which the tests should run. Choice: docker|sauce.")
 
 	// Hide undocumented flags that the user does not need to care about.
 	_ = cmd.Flags().MarkHidden("sauce-api")
+
+	// Hide documented flags that aren't fully released yet or WIP.
+	_ = cmd.Flags().MarkHidden("parallel") // WIP.
+	_ = cmd.Flags().MarkHidden("ci-build-id") // Related to 'parallel'. WIP.
+	_ = cmd.Flags().MarkHidden("test-env") // WIP.
 
 	return cmd
 }
@@ -99,7 +107,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 
 	if d.Kind == "cypress" && d.APIVersion == "v1alpha" {
-		return runCypressInDocker(cli)
+		return runCypress(cli)
 	}
 
 	return runLegacyMode(cmd, cli)
@@ -129,35 +137,56 @@ func runLegacyMode(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	return r.RunProject()
 }
 
-func runCypressInDocker(cli *command.SauceCtlCli) (int, error) {
-	log.Info().Msg("Running Cypress in Docker")
-	cp, err := cypress.FromFile(cfgFilePath)
+func runCypress(cli *command.SauceCtlCli) (int, error) {
+	p, err := cypress.FromFile(cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
 
-	cp.Sauce.Metadata.ExpandEnv()
+	p.Sauce.Metadata.ExpandEnv()
 
 	// Merge env from CLI args and job config. CLI args take precedence.
 	for k, v := range env {
-		for _, s := range cp.Suites {
+		for _, s := range p.Suites {
 			s.Config.Env[k] = v
 		}
 	}
 
-	if cp.Sauce.Region == "" {
-		cp.Sauce.Region = defaultRegion
+	if p.Sauce.Region == "" {
+		p.Sauce.Region = defaultRegion
 	}
 
 	if regionFlag != "" {
-		cp.Sauce.Region = regionFlag
+		p.Sauce.Region = regionFlag
 	}
 
-	cd, err := cypressDocker.New(cp, cli)
+	switch testEnv {
+	case "docker":
+		return runCypressInDocker(p, cli)
+	case "sauce":
+		return runCypressInSauce(p)
+	default:
+		return 1, errors.New("unsupported test environment")
+	}
+}
+
+func runCypressInDocker(p cypress.Project, cli *command.SauceCtlCli) (int, error) {
+	log.Info().Msg("Running Cypress in Docker")
+
+	cd, err := cypressDocker.New(p, cli)
 	if err != nil {
 		return 1, err
 	}
 	return cd.RunProject()
+}
+
+func runCypressInSauce(p cypress.Project) (int, error) {
+	log.Info().Msg("Running Cypress in Sauce Labs")
+
+	r := sauce.Runner{
+		Project: p,
+	}
+	return r.RunProject()
 }
 
 func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, error) {
