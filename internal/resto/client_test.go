@@ -20,6 +20,8 @@ func TestClient_GetJobDetails(t *testing.T) {
 		case "/rest/v1/test/jobs/2":
 			errorStatusResp := []byte(`{"browser_short_version": "85", "video_url": "https://localhost/jobs/2/video.mp4", "creation_time": 1605637528, "custom-data": null, "browser_version": "85.0.4183.83", "owner": "test", "automation_backend": "webdriver", "id": "2", "collects_automator_log": false, "record_screenshots": true, "record_video": true, "build": null, "passed": null, "public": "team", "assigned_tunnel_id": null, "status": "error", "log_url": "https://localhost/jobs/2/selenium-server.log", "start_time": 1605637528, "proxied": false, "modification_time": 1605637554, "tags": [], "name": null, "commands_not_successful": 4, "consolidated_status": "error", "selenium_version": null, "manual": false, "end_time": 1605637554, "error": null, "os": "Windows 10", "breakpointed": null, "browser": "googlechrome"}`)
 			w.Write(errorStatusResp)
+		case "/rest/v1/test/jobs/3":
+			w.WriteHeader(http.StatusNotFound)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -35,7 +37,7 @@ func TestClient_GetJobDetails(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name: "get resto details with ID 1 and status 'complete'",
+			name: "get job details with ID 1 and status 'complete'",
 			client: New(ts.URL, "test", "123", timeout),
 			jobID: "1",
 			expectedResp: Details{
@@ -74,7 +76,7 @@ func TestClient_GetJobDetails(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			name: "get resto details with ID 2 and status 'error'",
+			name: "get job details with ID 2 and status 'error'",
 			client: New(ts.URL, "test", "123", timeout),
 			jobID: "2",
 			expectedResp: Details{
@@ -113,6 +115,13 @@ func TestClient_GetJobDetails(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
+			name:         "user not found error from external API",
+			client:       New(ts.URL, "test", "123", timeout),
+			jobID:        "3",
+			expectedResp: Details{},
+			expectedErr:  ErrNotFoundUser,
+		},
+		{
 			name:         "internal server error from external API",
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "333",
@@ -124,8 +133,8 @@ func TestClient_GetJobDetails(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := tc.client.GetJobDetails(tc.jobID)
-			assert.Equal(t, tc.expectedErr, err)
-			assert.Equal(t, tc.expectedResp, got)
+			assert.Equal(t, err, tc.expectedErr)
+			assert.Equal(t, got, tc.expectedResp)
 		})
 	}
 }
@@ -210,6 +219,8 @@ func TestClient_GetJobStatus(t *testing.T) {
 
 			resp, _ := json.Marshal(details)
 			w.Write(resp)
+		case "/rest/v1/test/jobs/3":
+			w.WriteHeader(http.StatusNotFound)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -225,7 +236,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name: "get resto details with ID 1 and status 'complete'",
+			name: "get job details with ID 1 and status 'complete'",
 			client: New(ts.URL, "test", "123", timeout),
 			jobID: "1",
 			expectedResp: Details{
@@ -264,7 +275,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			name: "get resto details with ID 2 and status 'error'",
+			name: "get job details with ID 2 and status 'error'",
 			client: New(ts.URL, "test", "123", timeout),
 			jobID: "2",
 			expectedResp: Details{
@@ -303,6 +314,13 @@ func TestClient_GetJobStatus(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
+			name:         "user not found error from external API",
+			client:       New(ts.URL, "test", "123", timeout),
+			jobID:        "3",
+			expectedResp: Details{},
+			expectedErr:  ErrNotFoundUser,
+		},
+		{
 			name:         "unexpected status code from external API",
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "333",
@@ -314,8 +332,8 @@ func TestClient_GetJobStatus(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := tc.client.GetJobStatus(tc.jobID, 10 * time.Millisecond)
-			assert.Equal(t, tc.expectedErr, err)
-			assert.Equal(t, tc.expectedResp, got)
+			assert.Equal(t, err, tc.expectedErr)
+			assert.Equal(t, got, tc.expectedResp)
 		})
 	}
 }

@@ -9,19 +9,23 @@ import (
 )
 
 const (
-	competeJobStatus string = "complete"
-	errorJobStatus string = "error"
+	completeJobStatus string = "complete"
+	errorJobStatus    string = "error"
 )
 
 var jobStatuses = map[string]struct{}{
-	competeJobStatus: struct {}{},
-	errorJobStatus: struct {}{},
+	completeJobStatus: struct {}{},
+	errorJobStatus:    struct {}{},
 }
 
-// ErrServerInaccessible represents error message from server
-var ErrServerInaccessible = errors.New("couldn't reach resto server")
+var (
+	// ErrServerInaccessible represents error message when server is inaccessible
+	ErrServerInaccessible = errors.New("couldn't reach resto server")
+	// ErrNotFoundUser represents error message from server when user was not found
+	ErrNotFoundUser = errors.New("user was not found")
+)
 
-// Client http client for getting resto details
+// Client http client
 type Client struct {
 	HTTPClient *http.Client
 	Host       string
@@ -39,32 +43,17 @@ func New(host, username, accessKey string, timeout int) Client {
 	}
 }
 
-// GetJobDetails get resto details
+// GetJobDetails get job details
 func (c *Client) GetJobDetails(id string) (Details, error) {
 	request, err := createRequest(c.Host, c.Username, c.AccessKey, id)
 	if err != nil {
 		return Details{}, err
 	}
 
-	response, err := c.HTTPClient.Do(request)
-	if err != nil {
-		return Details{}, err
-	}
-	defer response.Body.Close()
-
-	if response.StatusCode >= http.StatusInternalServerError {
-		return Details{}, ErrServerInaccessible
-	}
-
-	details := Details{}
-	if err := json.NewDecoder(response.Body).Decode(&details); err != nil {
-		return Details{}, err
-	}
-
-	return details, nil
+	return makeRequest(c.HTTPClient, request)
 }
 
-// GetJobStatus gets resto status
+// GetJobStatus gets job status
 func (c *Client) GetJobStatus(id string, pollDuration time.Duration) (Details, error) {
 	request, err := createRequest(c.Host, c.Username, c.AccessKey, id)
 	if err != nil {
@@ -74,26 +63,41 @@ func (c *Client) GetJobStatus(id string, pollDuration time.Duration) (Details, e
 	ticker := time.NewTicker(pollDuration)
 	defer ticker.Stop()
 
-	jobDetails := Details{}
+	var jobDetails Details
 
 	for range ticker.C {
-		response, err := c.HTTPClient.Do(request)
+		jobDetails, err = makeRequest(c.HTTPClient, request)
 		if err != nil {
-			return Details{}, err
-		}
-		defer response.Body.Close()
-
-		if response.StatusCode >= http.StatusInternalServerError {
-			return Details{}, ErrServerInaccessible
-		}
-
-		if err := json.NewDecoder(response.Body).Decode(&jobDetails); err != nil {
 			return Details{}, err
 		}
 
 		if _, ok := jobStatuses[jobDetails.Status]; ok {
+			jobDetails = jobDetails
 			break
 		}
+	}
+
+	return jobDetails, nil
+}
+
+func makeRequest(httpClient *http.Client, request *http.Request) (Details, error) {
+	response, err := httpClient.Do(request)
+	if err != nil {
+		return Details{}, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode >= http.StatusInternalServerError {
+		return Details{}, ErrServerInaccessible
+	}
+
+	if response.StatusCode == http.StatusNotFound {
+		return Details{}, ErrNotFoundUser
+	}
+
+	jobDetails := Details{}
+	if err := json.NewDecoder(response.Body).Decode(&jobDetails); err != nil {
+		return Details{}, err
 	}
 
 	return jobDetails, nil
