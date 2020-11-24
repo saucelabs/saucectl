@@ -19,52 +19,53 @@ var jobStatuses = map[string]struct{}{
 }
 
 var (
-	// ErrServerInaccessible represents error message when server is inaccessible
+	// ErrServerInaccessible represents error message when server is inaccessible.
 	ErrServerInaccessible = errors.New("couldn't reach resto server")
-	// ErrNotFoundUser represents error message from server when user was not found
-	ErrNotFoundUser = errors.New("user was not found")
+	// ErrJobNotFound represents error message from server when a job was not found.
+	ErrJobNotFound = errors.New("job was not found")
 )
 
-// Client http client
+// Client http client.
 type Client struct {
 	HTTPClient *http.Client
-	Host       string
+	URL        string
 	Username   string
 	AccessKey  string
 }
 
-// New creates a new client
-func New(host, username, accessKey string, timeout int) Client {
+// New creates a new client.
+func New(url, username, accessKey string, timeout int) Client {
 	return Client{
 		HTTPClient: &http.Client{Timeout: time.Duration(timeout) * time.Second},
-		Host:       host,
+		URL:        url,
 		Username:   username,
 		AccessKey:  accessKey,
 	}
 }
 
-// GetJobDetails get job details
+// GetJobDetails get job details.
 func (c *Client) GetJobDetails(id string) (Details, error) {
-	request, err := createRequest(c.Host, c.Username, c.AccessKey, id)
+	request, err := createRequest(c.URL, c.Username, c.AccessKey, id)
 	if err != nil {
 		return Details{}, err
 	}
 
-	return makeRequest(c.HTTPClient, request)
+	return doRequest(c.HTTPClient, request)
 }
 
-// GetJobStatus gets job status
-func (c *Client) GetJobStatus(id string, pollDuration time.Duration) (Details, error) {
-	request, err := createRequest(c.Host, c.Username, c.AccessKey, id)
+// PollJobEnd polls a server till the end of the job.
+// Stops polling the job when the status will be complete or error.
+func (c *Client) PollJobEnd(id string, interval time.Duration) (Details, error) {
+	request, err := createRequest(c.URL, c.Username, c.AccessKey, id)
 	if err != nil {
 		return Details{}, err
 	}
 
-	ticker := time.NewTicker(pollDuration)
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
 	for range ticker.C {
-		jobDetails, err := makeRequest(c.HTTPClient, request)
+		jobDetails, err := doRequest(c.HTTPClient, request)
 		if err != nil {
 			return Details{}, err
 		}
@@ -77,7 +78,7 @@ func (c *Client) GetJobStatus(id string, pollDuration time.Duration) (Details, e
 	return Details{}, nil
 }
 
-func makeRequest(httpClient *http.Client, request *http.Request) (Details, error) {
+func doRequest(httpClient *http.Client, request *http.Request) (Details, error) {
 	response, err := httpClient.Do(request)
 	if err != nil {
 		return Details{}, err
@@ -89,7 +90,7 @@ func makeRequest(httpClient *http.Client, request *http.Request) (Details, error
 	}
 
 	if response.StatusCode == http.StatusNotFound {
-		return Details{}, ErrNotFoundUser
+		return Details{}, ErrJobNotFound
 	}
 
 	jobDetails := Details{}
