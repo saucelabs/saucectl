@@ -12,6 +12,6 @@ type Runner struct {
 
 // RunProject runs the tests defined in cypress.Project.
 func (r *Runner) RunProject() (int, error) {
-	log.Warn().Msg("Not yet implemented.")
-	return 0, nil
+	log.Error().Msg("Not yet implemented.")
+	return 1, nil
 }
