@@ -1,4 +1,4 @@
-package job
+package resto
 
 import (
 	"encoding/json"
@@ -8,12 +8,20 @@ import (
 	"time"
 )
 
-const competeJobStatus = "complete"
+const (
+	competeJobStatus string = "complete"
+	errorJobStatus string = "error"
+)
 
-// ErrServerStatusCode represents error message from server
-var ErrServerStatusCode = errors.New("server error reponse")
+var jobStatuses = map[string]struct{}{
+	competeJobStatus: struct {}{},
+	errorJobStatus: struct {}{},
+}
 
-// Client http client for getting job details
+// ErrServerInaccessible represents error message from server
+var ErrServerInaccessible = errors.New("couldn't reach resto server")
+
+// Client http client for getting resto details
 type Client struct {
 	HTTPClient *http.Client
 	Host       string
@@ -31,7 +39,7 @@ func New(host, username, accessKey string, timeout int) Client {
 	}
 }
 
-// GetJobDetails get job details
+// GetJobDetails get resto details
 func (c *Client) GetJobDetails(id string) (Details, error) {
 	request, err := createRequest(c.Host, c.Username, c.AccessKey, id)
 	if err != nil {
@@ -45,7 +53,7 @@ func (c *Client) GetJobDetails(id string) (Details, error) {
 	defer response.Body.Close()
 
 	if response.StatusCode >= http.StatusInternalServerError {
-		return Details{}, ErrServerStatusCode
+		return Details{}, ErrServerInaccessible
 	}
 
 	details := Details{}
@@ -56,7 +64,7 @@ func (c *Client) GetJobDetails(id string) (Details, error) {
 	return details, nil
 }
 
-// GetJobStatus gets job status
+// GetJobStatus gets resto status
 func (c *Client) GetJobStatus(id string, pollDuration time.Duration) (Details, error) {
 	request, err := createRequest(c.Host, c.Username, c.AccessKey, id)
 	if err != nil {
@@ -76,14 +84,14 @@ func (c *Client) GetJobStatus(id string, pollDuration time.Duration) (Details, e
 		defer response.Body.Close()
 
 		if response.StatusCode >= http.StatusInternalServerError {
-			return Details{}, ErrServerStatusCode
+			return Details{}, ErrServerInaccessible
 		}
 
 		if err := json.NewDecoder(response.Body).Decode(&jobDetails); err != nil {
 			return Details{}, err
 		}
 
-		if (jobDetails.Status == competeJobStatus) {
+		if _, ok := jobStatuses[jobDetails.Status]; ok {
 			break
 		}
 	}

@@ -1,6 +1,6 @@
-package job
+package resto
 
-// Details represent API response regarding job
+// Details represent API response regarding resto
 type Details struct {
 	BrowserShortVersion string `json:"browser_short_version"`
 	VideoURL string `json:"video_url"`
