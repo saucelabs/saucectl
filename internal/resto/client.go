@@ -11,6 +11,8 @@ import (
 const (
 	completeJobStatus string = "complete"
 	errorJobStatus    string = "error"
+
+	commonErrorMessage = "http status code is not 200 but %d"
 )
 
 var jobStatuses = map[string]struct{}{
@@ -34,16 +36,16 @@ type Client struct {
 }
 
 // New creates a new client.
-func New(url, username, accessKey string, timeout int) Client {
+func New(url, username, accessKey string, timeout time.Duration) Client {
 	return Client{
-		HTTPClient: &http.Client{Timeout: time.Duration(timeout) * time.Second},
+		HTTPClient: &http.Client{Timeout: timeout},
 		URL:        url,
 		Username:   username,
 		AccessKey:  accessKey,
 	}
 }
 
-// GetJobDetails get job details.
+// GetJobDetails returns the job details.
 func (c *Client) GetJobDetails(id string) (Details, error) {
 	request, err := createRequest(c.URL, c.Username, c.AccessKey, id)
 	if err != nil {
@@ -91,6 +93,10 @@ func doRequest(httpClient *http.Client, request *http.Request) (Details, error) 
 
 	if response.StatusCode == http.StatusNotFound {
 		return Details{}, ErrJobNotFound
+	}
+
+	if response.StatusCode != http.StatusOK {
+		return Details{}, fmt.Errorf(commonErrorMessage, response.StatusCode)
 	}
 
 	jobDetails := Details{}
