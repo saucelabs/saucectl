@@ -9,11 +9,10 @@ import (
 	"os"
 	"path/filepath"
 	"time"
-
-	"github.com/saucelabs/saucectl/internal/fileuploader"
 )
 
-// AppStore implements functions for AppStore interface
+// AppStore implements a remote file storage for storage.ProjectUploader.
+// See https://wiki.saucelabs.com/display/DOCS/Application+Storage for more details.
 type AppStore struct {
 	HTTPClient *http.Client
 	URL        string
@@ -22,9 +21,9 @@ type AppStore struct {
 }
 
 // New returns an implementation for AppStore
-func New(url, username, accessKey string, timeout int) fileuploader.FileUploader {
+func New(url, username, accessKey string, timeout time.Duration) *AppStore {
 	return &AppStore{
-		HTTPClient: &http.Client{Timeout: time.Duration(timeout) * time.Second},
+		HTTPClient: &http.Client{Timeout: timeout},
 		URL:        url,
 		Username:   username,
 		AccessKey:  accessKey,

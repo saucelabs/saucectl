@@ -2,11 +2,12 @@ package appstore
 
 import (
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/storage"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
-	"github.com/saucelabs/saucectl/internal/fileuploader"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,11 +16,11 @@ func TestUpload(t *testing.T) {
 		fmt.Fprintln(w, "hello, client")
 	}))
 	defer ts.Close()
-	timeout := 3
+	timeout := 3 * time.Second
 
 	testCases := []struct {
 		testName string
-		upload   fileuploader.FileUploader
+		upload   storage.ProjectUploader
 		fileName string
 		expErr   bool
 	}{
