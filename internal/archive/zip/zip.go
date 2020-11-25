@@ -13,7 +13,7 @@ type Writer struct {
 	W *zip.Writer
 }
 
-// NewWrite returns a new Writer that archives files to name.
+// NewWriter returns a new Writer that archives files to name.
 func NewWriter(name string) (Writer, error) {
 	f, err := os.Create(name)
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"io"
 )
 
+// Writer represents an archive writer.
 type Writer interface {
 	io.Closer
 
