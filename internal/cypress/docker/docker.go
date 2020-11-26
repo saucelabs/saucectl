@@ -12,6 +12,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/saucelabs/saucectl/cli/credentials"
@@ -206,9 +207,14 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 		return nil, err
 	}
 
-	m, err := createMounts(files, pDir)
-	if err != nil {
-		return nil, err
+	var m []mount.Mount
+	if strings.ToLower(c.Docker.FileMode) == config.Mount {
+		m, err = createMounts(files, pDir)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		m = []mount.Mount{}
 	}
 
 	username := ""
@@ -243,6 +249,12 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 		return nil, err
 	}
 
+	if strings.ToLower(c.Docker.FileMode) == config.Copy {
+		if err := copyTestFiles(ctx, handler, container.ID, files, pDir); err != nil {
+			return nil, err
+		}
+	}
+
 	// We need to check the tty _before_ we do the ContainerExecCreate, because
 	// otherwise if we error out we will leak execIDs on the server (and
 	// there's no easy way to clean those up). But also in order to make "not
@@ -252,6 +264,16 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 	}
 
 	return &container, nil
+}
+
+func copyTestFiles(ctx context.Context, handler *Handler, containerId string, files []string, pDir string) error {
+	for _, file := range files {
+		log.Info().Str("from", file).Str("to", pDir).Msg("File copied")
+		if err := handler.CopyToContainer(ctx, containerId, file, pDir); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // createMounts returns a list of mount bindings, binding files to target, such that {source}:{target}/{source}.

@@ -95,9 +95,16 @@ type TypeDef struct {
 	Kind       string `yaml:"kind,omitempty"`
 }
 
+//
+const (
+	Mount string = "mount"
+	Copy = "copy"
+)
+
 // Docker represents docker settings.
 type Docker struct {
-	Image Image `yaml:"image,omitempty" json:"image"`
+	FileMode string `yaml:"fileMode" json:"fileMode"`
+	Image    Image  `yaml:"image,omitempty" json:"image"`
 }
 
 // Image represents the docker image.
