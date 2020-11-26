@@ -404,3 +404,22 @@ func expectTar(files []string, r io.Reader) error {
 
 	return nil
 }
+
+func TestHandler_ContainerInspect(t *testing.T) {
+	cases := []PassFailCase{
+		{"failing to inspect", &mocks.FakeClient{}, nil, nil, errors.New("ContainerInspectFailure"), nil},
+		{"successful call", &mocks.FakeClient{
+			ContainerInspectSuccess: true,
+		}, nil, nil, nil, types.ContainerJSON{}},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			handler := Handler{
+				client: tc.Client,
+			}
+			_, err := handler.ContainerInspect(ctx, "containerId")
+			assert.Equal(t, err, tc.ExpectedError)
+		})
+	}
+}

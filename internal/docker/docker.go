@@ -396,3 +396,8 @@ func (handler *Handler) ContainerStop(ctx context.Context, srcContainerID string
 func (handler *Handler) ContainerRemove(ctx context.Context, srcContainerID string) error {
 	return handler.client.ContainerRemove(ctx, srcContainerID, containerRemoveOptions)
 }
+
+// ContainerInspect returns the container information.
+func (handler *Handler) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
+	return handler.client.ContainerInspect(ctx, containerID)
+}

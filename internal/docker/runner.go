@@ -3,17 +3,18 @@ package docker
 import (
 	"context"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/runner"
-	"github.com/saucelabs/saucectl/cli/streams"
-	"github.com/saucelabs/saucectl/internal/fleet"
-	"github.com/saucelabs/saucectl/internal/yaml"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/cli/streams"
+	"github.com/saucelabs/saucectl/internal/fleet"
+	"github.com/saucelabs/saucectl/internal/yaml"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
@@ -152,7 +153,7 @@ func (r *Runner) setup(suite config.Suite, run config.Run) error {
 	return nil
 }
 
-func (r* Runner) beforeExec(tasks []string) error {
+func (r *Runner) beforeExec(tasks []string) error {
 	for _, task := range tasks {
 		progress.Show("Running BeforeExec task: %s", task)
 		exitCode, err := r.execute(strings.Fields(task))
@@ -209,6 +210,7 @@ func (r *Runner) execute(cmd []string) (int, error) {
 	return exitCode, nil
 
 }
+
 // run runs the tests defined in the config.Project.
 func (r *Runner) run() (int, error) {
 	return r.execute([]string{"npm", "test"})
@@ -222,6 +224,12 @@ func (r *Runner) teardown(logDir string) error {
 		if err := r.docker.CopyFromContainer(r.Ctx, r.containerID, containerSrcPath, hostDstPath); err != nil {
 			continue
 		}
+	}
+
+	// checks that container exists before stopping and removing it
+	_, err := r.docker.ContainerInspect(r.Ctx, r.containerID)
+	if err != nil {
+		return nil
 	}
 
 	if err := r.docker.ContainerStop(r.Ctx, r.containerID); err != nil {
