@@ -2,9 +2,6 @@ package run
 
 import (
 	"errors"
-	"github.com/saucelabs/saucectl/cli/version"
-	"github.com/saucelabs/saucectl/internal/cypress"
-	"github.com/saucelabs/saucectl/internal/cypress/sauce"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -16,17 +13,20 @@ import (
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/mocks"
 	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/ci/github"
 	"github.com/saucelabs/saucectl/internal/ci/gitlab"
 	"github.com/saucelabs/saucectl/internal/ci/jenkins"
+	"github.com/saucelabs/saucectl/internal/cypress"
+	cypressDocker "github.com/saucelabs/saucectl/internal/cypress/docker"
+	"github.com/saucelabs/saucectl/internal/cypress/sauce"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/memseq"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
-	cypressDocker "github.com/saucelabs/saucectl/internal/cypress/docker"
 )
 
 var (
@@ -84,9 +84,9 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	_ = cmd.Flags().MarkHidden("sauce-api")
 
 	// Hide documented flags that aren't fully released yet or WIP.
-	_ = cmd.Flags().MarkHidden("parallel") // WIP.
+	_ = cmd.Flags().MarkHidden("parallel")    // WIP.
 	_ = cmd.Flags().MarkHidden("ci-build-id") // Related to 'parallel'. WIP.
-	_ = cmd.Flags().MarkHidden("test-env") // WIP.
+	_ = cmd.Flags().MarkHidden("test-env")    // WIP.
 
 	return cmd
 }
@@ -148,6 +148,9 @@ func runCypress(cli *command.SauceCtlCli) (int, error) {
 	// Merge env from CLI args and job config. CLI args take precedence.
 	for k, v := range env {
 		for _, s := range p.Suites {
+			if s.Config.Env == nil {
+				s.Config.Env = map[string]string{}
+			}
 			s.Config.Env[k] = v
 		}
 	}
