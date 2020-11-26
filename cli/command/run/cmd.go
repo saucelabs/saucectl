@@ -2,6 +2,10 @@ package run
 
 import (
 	"errors"
+	"github.com/saucelabs/saucectl/cli/version"
+	"github.com/saucelabs/saucectl/internal/appstore"
+	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/cypress/sauce"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,14 +17,11 @@ import (
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/mocks"
 	"github.com/saucelabs/saucectl/cli/runner"
-	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/ci/github"
 	"github.com/saucelabs/saucectl/internal/ci/gitlab"
 	"github.com/saucelabs/saucectl/internal/ci/jenkins"
-	"github.com/saucelabs/saucectl/internal/cypress"
 	cypressDocker "github.com/saucelabs/saucectl/internal/cypress/docker"
-	"github.com/saucelabs/saucectl/internal/cypress/sauce"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/memseq"
@@ -186,8 +187,23 @@ func runCypressInDocker(p cypress.Project, cli *command.SauceCtlCli) (int, error
 func runCypressInSauce(p cypress.Project) (int, error) {
 	log.Info().Msg("Running Cypress in Sauce Labs")
 
+	c := credentials.Get()
+	if c == nil {
+		return 1, errors.New("no sauce credentials set")
+	}
+
+	re := region.FromString(p.Sauce.Region)
+	if re == region.None {
+		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
+		return 1, errors.New("no sauce region set")
+	}
+
+	// TODO decide on a good timeout and perhaps make it configurable. Slow clients may take time to upload. Can't be higher than API gateway timeout though!
+	s := appstore.New(re.APIBaseURL(), c.Username, c.AccessKey, 30*time.Second)
+
 	r := sauce.Runner{
-		Project: p,
+		Project:         p,
+		ProjectUploader: s,
 	}
 	return r.RunProject()
 }
