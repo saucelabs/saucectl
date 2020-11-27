@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -23,6 +24,9 @@ import (
 
 // DefaultProjectPath represents the default project path. Test files will be located here.
 const DefaultProjectPath = "/home/seluser"
+
+// ErrEmptyImageProperty represents error regarding empty image base property in the config file.
+var ErrEmptyImageProperty = errors.New("Image base property was not specified in your config file")
 
 // Runner represents the docker implementation of a test runner.
 type Runner struct {
@@ -79,16 +83,16 @@ func (r *Runner) setup(suite config.Suite, run config.Run) error {
 			" follow the guide at https://docs.docker.com/get-docker/", err)
 	}
 
+	// check image base property from the config file
+	if r.Project.Image.Base == "" {
+		return ErrEmptyImageProperty
+	}
+
 	// check if image is existing
 	baseImage := r.docker.GetImageFlavor(r.Project)
 	hasImage, err := r.docker.HasBaseImage(r.Ctx, baseImage)
 	if err != nil {
 		return err
-	}
-
-	// Warn the user regarding empty image name property
-	if r.Project.Image.Base == "" {
-		log.Warn().Msg("Image base property was not specified in your config file")
 	}
 
 	// only pull base image if not already installed
@@ -274,15 +278,20 @@ func (r *Runner) runSuite(suite config.Suite, fleetID string) error {
 }
 
 func (r *Runner) runTest(suite config.Suite, run config.Run) error {
+	var err error
+
 	defer func() {
-		log.Info().Msg("Tearing down environment")
+		if err == nil {
+			log.Info().Msg("Tearing down environment")
+		}
 		if err := r.teardown(r.Cli.LogDir); err != nil {
 			log.Error().Err(err).Msg("Failed to tear down environment")
 		}
 	}()
 
 	log.Info().Msg("Setting up test environment")
-	if err := r.setup(suite, run); err != nil {
+	if err = r.setup(suite, run); err != nil {
+		log.Error().Err(err).Msg("Failed to setup test environment")
 		return err
 	}
 
