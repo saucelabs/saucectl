@@ -191,9 +191,14 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 		return nil, err
 	}
 
-	m, err := createMounts(c.Files, DefaultProjectPath)
-	if err != nil {
-		return nil, err
+	var m []mount.Mount
+	if c.FileTransfer == config.DockerFileMount {
+		m, err = createMounts(c.Files, DefaultProjectPath)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		m = []mount.Mount{}
 	}
 
 	username := ""
@@ -238,6 +243,12 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 		return nil, err
 	}
 
+	if c.FileTransfer == config.DockerFileCopy {
+		if err := copyTestFiles(ctx, handler, container.ID, c.Files, DefaultProjectPath); err != nil {
+			return nil, err
+		}
+	}
+
 	// We need to check the tty _before_ we do the ContainerExecCreate, because
 	// otherwise if we error out we will leak execIDs on the server (and
 	// there's no easy way to clean those up). But also in order to make "not
@@ -247,6 +258,17 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 	}
 
 	return &container, nil
+}
+
+// copyTestFiles copies the files within the container.
+func copyTestFiles(ctx context.Context, handler *Handler, containerID string, files []string, pDir string) error {
+	for _, file := range files {
+		log.Info().Str("from", file).Str("to", pDir).Msg("File copied")
+		if err := handler.CopyToContainer(ctx, containerID, file, pDir); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // createMounts returns a list of mount bindings, binding files to target, such that {source}:{target}/{source}.

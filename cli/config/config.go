@@ -48,18 +48,19 @@ type ImageDefinition struct {
 
 // Project represents the project configuration.
 type Project struct {
-	APIVersion string            `yaml:"apiVersion,omitempty"`
-	Kind       string            `yaml:"kind,omitempty"`
-	Metadata   Metadata          `yaml:"metadata,omitempty"`
-	Suites     []Suite           `yaml:"suites,omitempty"`
-	Files      []string          `yaml:"files,omitempty"`
-	Image      ImageDefinition   `yaml:"image,omitempty"`
-	BeforeExec []string          `yaml:"beforeExec,omitempty"`
-	Timeout    int               `yaml:"timeout,omitempty"`
-	Sauce      SauceConfig       `yaml:"sauce,omitempty"`
-	Env        map[string]string `yaml:"env,omitempty"`
-	Parallel   bool              `yaml:"parallel,omitempty"`
-	Npm        Npm               `yaml:"npm,omitempty"`
+	APIVersion   string            `yaml:"apiVersion,omitempty"`
+	Kind         string            `yaml:"kind,omitempty"`
+	Metadata     Metadata          `yaml:"metadata,omitempty"`
+	Suites       []Suite           `yaml:"suites,omitempty"`
+	Files        []string          `yaml:"files,omitempty"`
+	FileTransfer DockerFileMode    `yaml:"fileTransfer,omitempty"`
+	Image        ImageDefinition   `yaml:"image,omitempty"`
+	BeforeExec   []string          `yaml:"beforeExec,omitempty"`
+	Timeout      int               `yaml:"timeout,omitempty"`
+	Sauce        SauceConfig       `yaml:"sauce,omitempty"`
+	Env          map[string]string `yaml:"env,omitempty"`
+	Parallel     bool              `yaml:"parallel,omitempty"`
+	Npm          Npm               `yaml:"npm,omitempty"`
 }
 
 // Suite represents the test suite configuration.
