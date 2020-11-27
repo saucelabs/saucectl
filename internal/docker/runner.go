@@ -11,14 +11,14 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/runner"
-	"github.com/saucelabs/saucectl/cli/streams"
-	"github.com/saucelabs/saucectl/internal/fleet"
-	"github.com/saucelabs/saucectl/internal/yaml"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/progress"
+	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/cli/streams"
+	"github.com/saucelabs/saucectl/internal/fleet"
+	"github.com/saucelabs/saucectl/internal/yaml"
 )
 
 // DefaultProjectPath represents the default project path. Test files will be located here.
@@ -84,6 +84,11 @@ func (r *Runner) setup(suite config.Suite, run config.Run) error {
 	hasImage, err := r.docker.HasBaseImage(r.Ctx, baseImage)
 	if err != nil {
 		return err
+	}
+
+	// Warn the user regarding empty image name property
+	if r.Project.Image.Base == "" {
+		log.Warn().Msg("Image base property was not specified in your config file")
 	}
 
 	// only pull base image if not already installed

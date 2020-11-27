@@ -5,18 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/config"
-	"github.com/saucelabs/saucectl/internal/cypress"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"time"
-
-	"github.com/saucelabs/saucectl/cli/credentials"
-	"github.com/saucelabs/saucectl/cli/streams"
-	"github.com/saucelabs/saucectl/cli/utils"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -30,6 +24,12 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/phayes/freeport"
 	"github.com/rs/zerolog/log"
+
+	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/credentials"
+	"github.com/saucelabs/saucectl/cli/streams"
+	"github.com/saucelabs/saucectl/cli/utils"
+	"github.com/saucelabs/saucectl/internal/cypress"
 )
 
 var (
@@ -417,4 +417,9 @@ func (handler *Handler) ProjectDir(ctx context.Context, imageID string) (string,
 	}
 
 	return p, nil
+}
+
+// ContainerInspect returns the container information.
+func (handler *Handler) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
+	return handler.client.ContainerInspect(ctx, containerID)
 }

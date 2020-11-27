@@ -13,11 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/saucelabs/saucectl/cli/config"
-	"github.com/saucelabs/saucectl/cli/credentials"
-	"github.com/saucelabs/saucectl/cli/streams"
-	"github.com/saucelabs/saucectl/cli/utils"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -30,6 +25,11 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/phayes/freeport"
 	"github.com/rs/zerolog/log"
+
+	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/credentials"
+	"github.com/saucelabs/saucectl/cli/streams"
+	"github.com/saucelabs/saucectl/cli/utils"
 )
 
 var (

@@ -4,18 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/progress"
-	"github.com/saucelabs/saucectl/cli/runner"
-	"github.com/saucelabs/saucectl/cli/streams"
-	"github.com/saucelabs/saucectl/internal/cypress"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/rs/zerolog/log"
+
+	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/cli/progress"
+	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/cli/streams"
+	"github.com/saucelabs/saucectl/internal/cypress"
 )
 
 // SauceRunnerConfigFile represents the filename for the sauce runner configuration.
@@ -81,6 +83,11 @@ func (r *Runner) setup() error {
 	hasImage, err := r.docker.HasBaseImage(r.Ctx, baseImage)
 	if err != nil {
 		return err
+	}
+
+	// Warn the user regarding empty image name property
+	if r.Project.Docker.Image.Name == "" {
+		log.Warn().Msg("Docker image name property was not specified in your config file")
 	}
 
 	// If it's our image, warn the user to not use the latest tag.
@@ -220,6 +227,12 @@ func (r *Runner) teardown(logDir string) error {
 		if err := r.docker.CopyFromContainer(r.Ctx, r.containerID, containerSrcPath, hostDstPath); err != nil {
 			continue
 		}
+	}
+
+	// checks that container exists before stopping and removing it
+	_, err := r.docker.ContainerInspect(r.Ctx, r.containerID)
+	if err != nil {
+		return nil
 	}
 
 	if err := r.docker.ContainerStop(r.Ctx, r.containerID); err != nil {
