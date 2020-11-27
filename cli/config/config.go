@@ -95,10 +95,10 @@ type TypeDef struct {
 	Kind       string `yaml:"kind,omitempty"`
 }
 
-//
+// Docker* represent the file providing method
 const (
-	Mount string = "mount"
-	Copy = "copy"
+	DockerMount string = "mount"
+	DockerCopy         = "copy"
 )
 
 // Docker represents docker settings.

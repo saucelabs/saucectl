@@ -12,7 +12,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/saucelabs/saucectl/cli/credentials"
@@ -208,7 +207,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 	}
 
 	var m []mount.Mount
-	if strings.ToLower(c.Docker.FileMode) == config.Mount {
+	if c.Docker.FileMode == config.DockerMount {
 		m, err = createMounts(files, pDir)
 		if err != nil {
 			return nil, err
@@ -249,7 +248,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 		return nil, err
 	}
 
-	if strings.ToLower(c.Docker.FileMode) == config.Copy {
+	if c.Docker.FileMode == config.DockerCopy {
 		if err := copyTestFiles(ctx, handler, container.ID, files, pDir); err != nil {
 			return nil, err
 		}
@@ -266,10 +265,11 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 	return &container, nil
 }
 
-func copyTestFiles(ctx context.Context, handler *Handler, containerId string, files []string, pDir string) error {
+// copyTestFiles copies the files within the container.
+func copyTestFiles(ctx context.Context, handler *Handler, containerID string, files []string, pDir string) error {
 	for _, file := range files {
 		log.Info().Str("from", file).Str("to", pDir).Msg("File copied")
-		if err := handler.CopyToContainer(ctx, containerId, file, pDir); err != nil {
+		if err := handler.CopyToContainer(ctx, containerID, file, pDir); err != nil {
 			return err
 		}
 	}
