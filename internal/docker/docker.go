@@ -197,8 +197,6 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		m = []mount.Mount{}
 	}
 
 	username := ""
