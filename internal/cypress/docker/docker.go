@@ -206,14 +206,12 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 		return nil, err
 	}
 
-	var m []mount.Mount
+	m = []mount.Mount{}
 	if c.Docker.FileTransfer == config.DockerFileMount || c.Docker.FileTransfer == "" {
 		m, err = createMounts(files, pDir)
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		m = []mount.Mount{}
 	}
 
 	username := ""
