@@ -95,16 +95,19 @@ type TypeDef struct {
 	Kind       string `yaml:"kind,omitempty"`
 }
 
-// Docker* represent the file providing method
+// DockerFileMode represent the file providing method
+type DockerFileMode string
+
+// DockerFile* represent the different modes
 const (
-	DockerMount string = "mount"
-	DockerCopy         = "copy"
+	DockerFileMount DockerFileMode = "mount"
+	DockerFileCopy                 = "copy"
 )
 
 // Docker represents docker settings.
 type Docker struct {
-	FileMode string `yaml:"fileMode" json:"fileMode"`
-	Image    Image  `yaml:"image,omitempty" json:"image"`
+	FileMode DockerFileMode `yaml:"fileMode" json:"fileMode"`
+	Image    Image          `yaml:"image,omitempty" json:"image"`
 }
 
 // Image represents the docker image.

@@ -207,7 +207,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 	}
 
 	var m []mount.Mount
-	if c.Docker.FileMode == config.DockerMount {
+	if c.Docker.FileMode == config.DockerFileMount {
 		m, err = createMounts(files, pDir)
 		if err != nil {
 			return nil, err
@@ -248,7 +248,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 		return nil, err
 	}
 
-	if c.Docker.FileMode == config.DockerCopy {
+	if c.Docker.FileMode == config.DockerFileCopy {
 		if err := copyTestFiles(ctx, handler, container.ID, files, pDir); err != nil {
 			return nil, err
 		}
