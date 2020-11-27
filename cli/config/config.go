@@ -106,8 +106,8 @@ const (
 
 // Docker represents docker settings.
 type Docker struct {
-	FileMode DockerFileMode `yaml:"fileMode" json:"fileMode"`
-	Image    Image          `yaml:"image,omitempty" json:"image"`
+	FileTransfer DockerFileMode `yaml:"fileTransfer,omitempty" json:"fileTransfer"`
+	Image        Image          `yaml:"image,omitempty" json:"image"`
 }
 
 // Image represents the docker image.
