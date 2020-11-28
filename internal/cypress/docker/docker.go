@@ -5,14 +5,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/config"
-	"github.com/saucelabs/saucectl/internal/cypress"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"time"
+
+	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/internal/cypress"
 
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/streams"
@@ -171,7 +172,7 @@ func (handler *Handler) PullBaseImage(ctx context.Context, img config.Image) err
 }
 
 // StartContainer starts the Docker testrunner container
-func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (*container.ContainerCreateCreatedBody, error) {
+func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project, env map[string]string) (*container.ContainerCreateCreatedBody, error) {
 	var (
 		ports        map[nat.Port]struct{}
 		portBindings map[nat.Port][]nat.PortBinding
@@ -231,6 +232,10 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 			fmt.Sprintf("SAUCE_USERNAME=%s", username),
 			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", accessKey),
 		},
+	}
+
+	for k, v := range env {
+		containerConfig.Env = append(containerConfig.Env, fmt.Sprintf("%s=%s", k, v))
 	}
 
 	container, err := handler.client.ContainerCreate(ctx, containerConfig, hostConfig, networkConfig, "")

@@ -4,18 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/progress"
-	"github.com/saucelabs/saucectl/cli/runner"
-	"github.com/saucelabs/saucectl/cli/streams"
-	"github.com/saucelabs/saucectl/internal/cypress"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/cli/progress"
+	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/cli/streams"
+	"github.com/saucelabs/saucectl/internal/cypress"
 )
 
 // SauceRunnerConfigFile represents the filename for the sauce runner configuration.
@@ -69,7 +70,7 @@ func (r *Runner) RunProject() (int, error) {
 }
 
 // setup performs any necessary steps for a test runner to execute tests.
-func (r *Runner) setup() error {
+func (r *Runner) setup(env map[string]string) error {
 	err := r.docker.ValidateDependency()
 	if err != nil {
 		return fmt.Errorf("please verify that docker is installed and running: %v, "+
@@ -99,7 +100,7 @@ func (r *Runner) setup() error {
 		}
 	}
 
-	container, err := r.docker.StartContainer(r.Ctx, r.Project)
+	container, err := r.docker.StartContainer(r.Ctx, r.Project, env)
 	if err != nil {
 		return err
 	}
@@ -242,7 +243,7 @@ func (r *Runner) runSuite(suite cypress.Suite) error {
 	}()
 
 	log.Info().Msg("Setting up test environment")
-	if err := r.setup(); err != nil {
+	if err := r.setup(suite.Config.Env); err != nil {
 		return err
 	}
 

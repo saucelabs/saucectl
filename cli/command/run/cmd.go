@@ -147,11 +147,11 @@ func runCypress(cli *command.SauceCtlCli) (int, error) {
 
 	// Merge env from CLI args and job config. CLI args take precedence.
 	for k, v := range env {
-		for _, s := range p.Suites {
+		for i, s := range p.Suites {
 			if s.Config.Env == nil {
-				s.Config.Env = map[string]string{}
+				p.Suites[i].Config.Env = map[string]string{}
 			}
-			s.Config.Env[k] = v
+			p.Suites[i].Config.Env[k] = v
 		}
 	}
 
