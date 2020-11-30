@@ -46,39 +46,39 @@ func New(url, username, accessKey string, timeout time.Duration) *AppStore {
 }
 
 // Upload uploads file to remote storage
-func (s *AppStore) Upload(name string) (storage.UploadResponse, error) {
+func (s *AppStore) Upload(name string) (storage.ArtifactMeta, error) {
 	body, contentType, err := readFile(name)
 	if err != nil {
-		return storage.UploadResponse{}, err
+		return storage.ArtifactMeta{}, err
 	}
 	
 	request, err := createRequest(fmt.Sprintf("%s/v1/storage/upload", s.URL), s.Username, s.AccessKey, body, contentType)
 	if err != nil {
-		return storage.UploadResponse{}, err
+		return storage.ArtifactMeta{}, err
 	}
 
 	resp, err := s.HTTPClient.Do(request)
 	if err != nil {
-		return storage.UploadResponse{}, err
+		return storage.ArtifactMeta{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 201 {
 		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return storage.UploadResponse{}, err
+			return storage.ArtifactMeta{}, err
 		}
 		log.Error().Msgf("Failed to upload project. Invalid response %d, body: %v", resp.StatusCode, string(b))
-		return storage.UploadResponse{}, errors.New("failed to upload project")
+		return storage.ArtifactMeta{}, errors.New("failed to upload project")
 	}
 
 	var ur UploadResponse
 
 	if err := json.NewDecoder(resp.Body).Decode(&ur); err != nil {
-		return storage.UploadResponse{}, err
+		return storage.ArtifactMeta{}, err
 	}
 
-	return storage.UploadResponse{ID: ur.Item.ID}, err
+	return storage.ArtifactMeta{ID: ur.Item.ID}, err
 }
 
 func readFile(fileName string) (*bytes.Buffer, string, error) {
