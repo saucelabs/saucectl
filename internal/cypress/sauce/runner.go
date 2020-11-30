@@ -20,23 +20,28 @@ type Runner struct {
 
 // RunProject runs the tests defined in cypress.Project.
 func (r *Runner) RunProject() (int, error) {
-	r.uploadProject()
+	// Archive the project files.
+	tempDir, err := ioutil.TempDir(os.TempDir(), "saucectl-app-payload")
+	if err != nil {
+		return 1, err
+	}
+	defer os.RemoveAll(tempDir)
+
+	zipName, err := r.archiveProject(tempDir)
+	if err != nil {
+		return 1, err
+	}
+
+	r.uploadProject(zipName)
 	log.Error().Msg("Not yet implemented.") // TODO remove debug
 	return 1, nil
 }
 
-func (r *Runner) uploadProject() error {
-	// Archive the project files.
-	tempDir, err := ioutil.TempDir(os.TempDir(), "saucectl-app-payload")
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tempDir)
-
+func (r *Runner) archiveProject(tempDir string) (string, error) {
 	zipName := filepath.Join(tempDir, "app.zip")
 	z, err := zip.NewWriter(zipName)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer z.Close()
 
@@ -51,26 +56,26 @@ func (r *Runner) uploadProject() error {
 
 	rcPath := filepath.Join(tempDir, "sauce-runner.json")
 	if err := jsonio.WriteFile(rcPath, r.Project); err != nil {
-		return err
+		return "", err
 	}
 	files = append(files, rcPath)
 
 	for _, f := range files {
 		if err := z.Add(f, ""); err != nil {
-			return err
+			return "", err
 		}
 	}
-	if err := z.Close(); err != nil {
-		return err
-	}
 
-	// Upload the project files.
+	return zipName, z.Close()
+}
+
+func (r *Runner) uploadProject(filename string) error {
 	progress.Show("Uploading project")
-	resp, err := r.ProjectUploader.Upload(zipName)
+	resp, err := r.ProjectUploader.Upload(filename)
 	progress.Stop()
 	if err != nil {
 		return err
 	}
-	log.Info().Str("fileID", resp.ID).Msg("Successfully uploaded project.")
+	log.Info().Str("fileID", resp.ID).Msg("Project uploaded.")
 	return nil
 }
