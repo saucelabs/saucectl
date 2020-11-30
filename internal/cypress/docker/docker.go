@@ -423,3 +423,9 @@ func (handler *Handler) ProjectDir(ctx context.Context, imageID string) (string,
 func (handler *Handler) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
 	return handler.client.ContainerInspect(ctx, containerID)
 }
+
+// IsErrNotFound returns true if the error is a NotFound error, which is returned
+// by the API when some object is not found.
+func (handler *Handler) IsErrNotFound(err error) bool {
+	return client.IsErrNotFound(err)
+}

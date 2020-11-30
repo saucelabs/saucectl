@@ -24,9 +24,6 @@ import (
 // SauceRunnerConfigFile represents the filename for the sauce runner configuration.
 const SauceRunnerConfigFile = "sauce-runner.json"
 
-// ErrEmptyImageProperty represents error regarding empty image docker image name property in the config file.
-var ErrEmptyImageProperty = errors.New("Docker image name property was not specified in your config file")
-
 type containerConfig struct {
 	// sauceRunnerConfigPath is the container path to sauce-runner.json.
 	sauceRunnerConfigPath string
@@ -84,7 +81,7 @@ func (r *Runner) setup() error {
 
 	// Check docker image name property from the config file.
 	if r.Project.Docker.Image.Name == "" {
-		return ErrEmptyImageProperty
+		return errors.New("no docker image specified")
 	}
 
 	// Check if image exists.
@@ -234,9 +231,8 @@ func (r *Runner) teardown(logDir string) error {
 	}
 
 	// checks that container exists before stopping and removing it
-	_, err := r.docker.ContainerInspect(r.Ctx, r.containerID)
-	if err != nil {
-		return nil
+	if _, err := r.docker.ContainerInspect(r.Ctx, r.containerID); err != nil {
+		return err
 	}
 
 	if err := r.docker.ContainerStop(r.Ctx, r.containerID); err != nil {
@@ -251,20 +247,18 @@ func (r *Runner) teardown(logDir string) error {
 }
 
 func (r *Runner) runSuite(suite cypress.Suite) error {
-	var err error
-
 	defer func() {
-		if err == nil {
-			log.Info().Msg("Tearing down environment")
-		}
+		log.Info().Msg("Tearing down environment")
 		if err := r.teardown(r.Cli.LogDir); err != nil {
-			log.Error().Err(err).Msg("Failed to tear down environment")
+			if !r.docker.IsErrNotFound(err) {
+				log.Error().Err(err).Msg("Failed to tear down environment")
+			}
 		}
 	}()
 
 	log.Info().Msg("Setting up test environment")
-	if err = r.setup(); err != nil {
-		log.Error().Err(err).Msg("Failed to setup test environment")
+	if err := r.setup(); err != nil {
+		log.Err(err).Msg("Failed to setup test environment")
 		return err
 	}
 
