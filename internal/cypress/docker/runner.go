@@ -2,23 +2,21 @@ package docker
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/cli/progress"
+	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/cli/streams"
+	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/jsonio"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
-
-	"github.com/rs/zerolog/log"
-
-	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/progress"
-	"github.com/saucelabs/saucectl/cli/runner"
-	"github.com/saucelabs/saucectl/cli/streams"
-	"github.com/saucelabs/saucectl/internal/cypress"
 )
 
 // SauceRunnerConfigFile represents the filename for the sauce runner configuration.
@@ -125,16 +123,8 @@ func (r *Runner) setup() error {
 	defer os.RemoveAll(tmpDir)
 
 	rcPath := filepath.Join(tmpDir, SauceRunnerConfigFile)
-	rcFile, err := os.OpenFile(rcPath, os.O_CREATE|os.O_WRONLY, 0755)
-	if err != nil {
+	if err := jsonio.WriteFile(rcPath, r.Project); err != nil {
 		return err
-	}
-	defer rcFile.Close()
-	if err = json.NewEncoder(rcFile).Encode(r.Project); err != nil {
-		return err
-	}
-	if err := rcFile.Close(); err != nil {
-		return fmt.Errorf("failed to close file stream when writing sauce runner config: %v", err)
 	}
 
 	if err := r.docker.CopyToContainer(r.Ctx, r.containerID, rcPath, pDir); err != nil {

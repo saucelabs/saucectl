@@ -1,12 +1,11 @@
 package sauce
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/progress"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"io/ioutil"
 	"os"
@@ -50,18 +49,9 @@ func (r *Runner) uploadProject() error {
 		files = append(files, r.Project.Cypress.EnvFile)
 	}
 
-	// TODO consolidate sauce-runner logic with the docker part
 	rcPath := filepath.Join(tempDir, "sauce-runner.json")
-	rcFile, err := os.OpenFile(rcPath, os.O_CREATE|os.O_WRONLY, 0755)
-	if err != nil {
+	if err := jsonio.WriteFile(rcPath, r.Project); err != nil {
 		return err
-	}
-	defer rcFile.Close()
-	if err = json.NewEncoder(rcFile).Encode(r.Project); err != nil {
-		return err
-	}
-	if err := rcFile.Close(); err != nil {
-		return fmt.Errorf("failed to close file stream when writing sauce runner config: %v", err)
 	}
 	files = append(files, rcPath)
 
