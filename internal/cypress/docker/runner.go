@@ -133,6 +133,10 @@ func (r *Runner) setup() error {
 	if err = json.NewEncoder(rcFile).Encode(r.Project); err != nil {
 		return err
 	}
+	if err := rcFile.Close(); err != nil {
+		return fmt.Errorf("failed to close file stream when writing sauce runner config: %v", err)
+	}
+
 	if err := r.docker.CopyToContainer(r.Ctx, r.containerID, rcPath, pDir); err != nil {
 		return err
 	}
