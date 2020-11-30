@@ -176,6 +176,11 @@ func NewJobConfiguration(cfgFilePath string) (Project, error) {
 
 	c.SyncCapabilities()
 
+	// Default mode to Mount
+	if c.FileTransfer == "" {
+		c.FileTransfer = DockerFileMount
+	}
+
 	return c, nil
 }
 

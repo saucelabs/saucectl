@@ -207,7 +207,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 	}
 
 	var m []mount.Mount
-	if c.Docker.FileTransfer == config.DockerFileMount || c.Docker.FileTransfer == "" {
+	if c.Docker.FileTransfer == config.DockerFileMount {
 		m, err = createMounts(files, pDir)
 		if err != nil {
 			return nil, err

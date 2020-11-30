@@ -192,7 +192,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 	}
 
 	var m []mount.Mount
-	if c.FileTransfer == config.DockerFileMount || c.FileTransfer == "" {
+	if c.FileTransfer == config.DockerFileMount {
 		m, err = createMounts(c.Files, DefaultProjectPath)
 		if err != nil {
 			return nil, err
