@@ -2,12 +2,8 @@ package docker
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/runner"
-	"github.com/saucelabs/saucectl/cli/streams"
-	"github.com/saucelabs/saucectl/internal/fleet"
-	"github.com/saucelabs/saucectl/internal/yaml"
 	"io"
 	"io/ioutil"
 	"os"
@@ -15,9 +11,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/progress"
+	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/cli/streams"
+	"github.com/saucelabs/saucectl/internal/fleet"
+	"github.com/saucelabs/saucectl/internal/yaml"
 )
 
 // DefaultProjectPath represents the default project path. Test files will be located here.
@@ -76,6 +78,11 @@ func (r *Runner) setup(suite config.Suite, run config.Run) error {
 	if err != nil {
 		return fmt.Errorf("please verify that docker is installed and running: %v, "+
 			" follow the guide at https://docs.docker.com/get-docker/", err)
+	}
+
+	// check image base property from the config file
+	if r.Project.Image.Base == "" {
+		return errors.New("no docker image specified")
 	}
 
 	// check if image is existing
@@ -152,7 +159,7 @@ func (r *Runner) setup(suite config.Suite, run config.Run) error {
 	return nil
 }
 
-func (r* Runner) beforeExec(tasks []string) error {
+func (r *Runner) beforeExec(tasks []string) error {
 	for _, task := range tasks {
 		progress.Show("Running BeforeExec task: %s", task)
 		exitCode, err := r.execute(strings.Fields(task))
@@ -209,6 +216,7 @@ func (r *Runner) execute(cmd []string) (int, error) {
 	return exitCode, nil
 
 }
+
 // run runs the tests defined in the config.Project.
 func (r *Runner) run() (int, error) {
 	return r.execute([]string{"npm", "test"})
@@ -222,6 +230,11 @@ func (r *Runner) teardown(logDir string) error {
 		if err := r.docker.CopyFromContainer(r.Ctx, r.containerID, containerSrcPath, hostDstPath); err != nil {
 			continue
 		}
+	}
+
+	// checks that container exists before stopping and removing it
+	if _, err := r.docker.ContainerInspect(r.Ctx, r.containerID); err != nil {
+		return err
 	}
 
 	if err := r.docker.ContainerStop(r.Ctx, r.containerID); err != nil {
@@ -264,12 +277,15 @@ func (r *Runner) runTest(suite config.Suite, run config.Run) error {
 	defer func() {
 		log.Info().Msg("Tearing down environment")
 		if err := r.teardown(r.Cli.LogDir); err != nil {
-			log.Error().Err(err).Msg("Failed to tear down environment")
+			if !r.docker.IsErrNotFound(err) {
+				log.Error().Err(err).Msg("Failed to tear down environment")
+			}
 		}
 	}()
 
 	log.Info().Msg("Setting up test environment")
 	if err := r.setup(suite, run); err != nil {
+		log.Err(err).Msg("Failed to setup test environment")
 		return err
 	}
 

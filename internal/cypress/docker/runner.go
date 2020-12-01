@@ -3,19 +3,22 @@ package docker
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/progress"
-	"github.com/saucelabs/saucectl/cli/runner"
-	"github.com/saucelabs/saucectl/cli/streams"
-	"github.com/saucelabs/saucectl/internal/cypress"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/rs/zerolog/log"
+
+	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/cli/progress"
+	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/cli/streams"
+	"github.com/saucelabs/saucectl/internal/cypress"
 )
 
 // SauceRunnerConfigFile represents the filename for the sauce runner configuration.
@@ -74,6 +77,11 @@ func (r *Runner) setup() error {
 	if err != nil {
 		return fmt.Errorf("please verify that docker is installed and running: %v, "+
 			" follow the guide at https://docs.docker.com/get-docker/", err)
+	}
+
+	// Check docker image name property from the config file.
+	if r.Project.Docker.Image.Name == "" {
+		return errors.New("no docker image specified")
 	}
 
 	// Check if image exists.
@@ -222,6 +230,11 @@ func (r *Runner) teardown(logDir string) error {
 		}
 	}
 
+	// checks that container exists before stopping and removing it
+	if _, err := r.docker.ContainerInspect(r.Ctx, r.containerID); err != nil {
+		return err
+	}
+
 	if err := r.docker.ContainerStop(r.Ctx, r.containerID); err != nil {
 		return err
 	}
@@ -237,12 +250,15 @@ func (r *Runner) runSuite(suite cypress.Suite) error {
 	defer func() {
 		log.Info().Msg("Tearing down environment")
 		if err := r.teardown(r.Cli.LogDir); err != nil {
-			log.Error().Err(err).Msg("Failed to tear down environment")
+			if !r.docker.IsErrNotFound(err) {
+				log.Error().Err(err).Msg("Failed to tear down environment")
+			}
 		}
 	}()
 
 	log.Info().Msg("Setting up test environment")
 	if err := r.setup(); err != nil {
+		log.Err(err).Msg("Failed to setup test environment")
 		return err
 	}
 

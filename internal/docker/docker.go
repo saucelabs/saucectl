@@ -13,11 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/saucelabs/saucectl/cli/config"
-	"github.com/saucelabs/saucectl/cli/credentials"
-	"github.com/saucelabs/saucectl/cli/streams"
-	"github.com/saucelabs/saucectl/cli/utils"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -30,6 +25,11 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/phayes/freeport"
 	"github.com/rs/zerolog/log"
+
+	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/credentials"
+	"github.com/saucelabs/saucectl/cli/streams"
+	"github.com/saucelabs/saucectl/cli/utils"
 )
 
 var (
@@ -395,4 +395,15 @@ func (handler *Handler) ContainerStop(ctx context.Context, srcContainerID string
 // ContainerRemove removes testrunner container
 func (handler *Handler) ContainerRemove(ctx context.Context, srcContainerID string) error {
 	return handler.client.ContainerRemove(ctx, srcContainerID, containerRemoveOptions)
+}
+
+// ContainerInspect returns the container information.
+func (handler *Handler) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
+	return handler.client.ContainerInspect(ctx, containerID)
+}
+
+// IsErrNotFound returns true if the error is a NotFound error, which is returned
+// by the API when some object is not found.
+func (handler *Handler) IsErrNotFound(err error) bool {
+	return client.IsErrNotFound(err)
 }
