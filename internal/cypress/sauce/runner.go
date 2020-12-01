@@ -69,13 +69,13 @@ func (r *Runner) archiveProject(tempDir string) (string, error) {
 	return zipName, z.Close()
 }
 
-func (r *Runner) uploadProject(filename string) error {
+func (r *Runner) uploadProject(filename string) (string, error) {
 	progress.Show("Uploading project")
 	resp, err := r.ProjectUploader.Upload(filename)
 	progress.Stop()
 	if err != nil {
-		return err
+		return "", err
 	}
 	log.Info().Str("fileID", resp.ID).Msg("Project uploaded.")
-	return nil
+	return resp.ID, nil
 }
