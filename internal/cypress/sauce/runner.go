@@ -25,6 +25,8 @@ type Runner struct {
 
 // RunProject runs the tests defined in cypress.Project.
 func (r *Runner) RunProject() (int, error) {
+	log.Error().Msg("Caution: Not yet implemented.") // TODO remove debug
+
 	// Archive the project files.
 	tempDir, err := ioutil.TempDir(os.TempDir(), "saucectl-app-payload")
 	if err != nil {
@@ -48,7 +50,6 @@ func (r *Runner) RunProject() (int, error) {
 		}
 	}
 
-	log.Error().Msg("Not yet implemented.") // TODO remove debug
 	return 1, nil
 }
 
