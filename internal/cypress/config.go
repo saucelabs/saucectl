@@ -23,6 +23,7 @@ type Suite struct {
 	Name           string      `yaml:"name,omitempty" json:"name"`
 	Browser        string      `yaml:"browser,omitempty" json:"browser"`
 	BrowserVersion string      `yaml:"browserVersion,omitempty" json:"browserVersion"`
+	PlatformName   string      `yaml:"platformName,omitempty" json:"platformName"`
 	Config         SuiteConfig `yaml:"config,omitempty" json:"config"`
 }
 

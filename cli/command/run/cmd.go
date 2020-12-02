@@ -201,9 +201,17 @@ func runCypressInSauce(p cypress.Project) (int, error) {
 	// TODO decide on a good timeout and perhaps make it configurable. Slow clients may take time to upload. Can't be higher than API gateway timeout though!
 	s := appstore.New(re.APIBaseURL(), c.Username, c.AccessKey, 30*time.Second)
 
+	// TODO decide on a good timeout and perhaps make it configurable. Slow clients may take time to upload. Can't be higher than API gateway timeout though!
+	tc := testcomposer.Client{
+		HTTPClient:  &http.Client{Timeout: 30 * time.Second},
+		URL:         re.APIBaseURL(),
+		Credentials: credentials.Credentials{},
+	}
+
 	r := sauce.Runner{
 		Project:         p,
 		ProjectUploader: s,
+		JobStarter:      &tc,
 	}
 	return r.RunProject()
 }
