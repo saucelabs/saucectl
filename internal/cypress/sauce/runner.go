@@ -1,10 +1,14 @@
 package sauce
 
 import (
+	"context"
+	"fmt"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/progress"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"io/ioutil"
@@ -16,10 +20,13 @@ import (
 type Runner struct {
 	Project         cypress.Project
 	ProjectUploader storage.ProjectUploader
+	JobStarter      job.Starter
 }
 
 // RunProject runs the tests defined in cypress.Project.
 func (r *Runner) RunProject() (int, error) {
+	log.Error().Msg("Caution: Not yet implemented.") // TODO remove debug
+
 	// Archive the project files.
 	tempDir, err := ioutil.TempDir(os.TempDir(), "saucectl-app-payload")
 	if err != nil {
@@ -32,9 +39,44 @@ func (r *Runner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	r.uploadProject(zipName)
-	log.Error().Msg("Not yet implemented.") // TODO remove debug
+	fileID, err := r.uploadProject(zipName)
+	if err != nil {
+		return 1, err
+	}
+
+	for _, s := range r.Project.Suites {
+		if err := r.runSuite(s, fileID); err != nil {
+			return 1, err
+		}
+	}
+
 	return 1, nil
+}
+
+func (r *Runner) runSuite(s cypress.Suite, fileID string) error {
+	log.Info().Str("suite", s.Name).Msg("Starting job.")
+
+	opts := job.StartOptions{
+		User:           credentials.Get().Username,
+		AccessKey:      credentials.Get().AccessKey,
+		App:            fmt.Sprintf("storage:%s", fileID),
+		Suite:          s.Name,
+		Framework:      "cypress",
+		BrowserName:    s.Browser,
+		BrowserVersion: s.BrowserVersion,
+		PlatformName:   s.PlatformName,
+		Name:           r.Project.Sauce.Metadata.Name + " - " + s.Name,
+		Build:          r.Project.Sauce.Metadata.Build,
+		Tags:           r.Project.Sauce.Metadata.Tags,
+	}
+
+	id, err := r.JobStarter.StartJob(context.Background(), opts)
+	if err != nil {
+		return err
+	}
+
+	log.Info().Str("jobID", id).Msg("Job started.")
+	return nil
 }
 
 func (r *Runner) archiveProject(tempDir string) (string, error) {
