@@ -206,9 +206,12 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 		return nil, err
 	}
 
-	m, err := createMounts(files, pDir)
-	if err != nil {
-		return nil, err
+	var m []mount.Mount
+	if c.Docker.FileTransfer == config.DockerFileMount {
+		m, err = createMounts(files, pDir)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	username := ""
@@ -243,6 +246,12 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 		return nil, err
 	}
 
+	if c.Docker.FileTransfer == config.DockerFileCopy {
+		if err := copyTestFiles(ctx, handler, container.ID, files, pDir); err != nil {
+			return nil, err
+		}
+	}
+
 	// We need to check the tty _before_ we do the ContainerExecCreate, because
 	// otherwise if we error out we will leak execIDs on the server (and
 	// there's no easy way to clean those up). But also in order to make "not
@@ -252,6 +261,17 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 	}
 
 	return &container, nil
+}
+
+// copyTestFiles copies the files within the container.
+func copyTestFiles(ctx context.Context, handler *Handler, containerID string, files []string, pDir string) error {
+	for _, file := range files {
+		log.Info().Str("from", file).Str("to", pDir).Msg("File copied")
+		if err := handler.CopyToContainer(ctx, containerID, file, pDir); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // createMounts returns a list of mount bindings, binding files to target, such that {source}:{target}/{source}.

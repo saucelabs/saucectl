@@ -48,18 +48,19 @@ type ImageDefinition struct {
 
 // Project represents the project configuration.
 type Project struct {
-	APIVersion string            `yaml:"apiVersion,omitempty"`
-	Kind       string            `yaml:"kind,omitempty"`
-	Metadata   Metadata          `yaml:"metadata,omitempty"`
-	Suites     []Suite           `yaml:"suites,omitempty"`
-	Files      []string          `yaml:"files,omitempty"`
-	Image      ImageDefinition   `yaml:"image,omitempty"`
-	BeforeExec []string          `yaml:"beforeExec,omitempty"`
-	Timeout    int               `yaml:"timeout,omitempty"`
-	Sauce      SauceConfig       `yaml:"sauce,omitempty"`
-	Env        map[string]string `yaml:"env,omitempty"`
-	Parallel   bool              `yaml:"parallel,omitempty"`
-	Npm        Npm               `yaml:"npm,omitempty"`
+	APIVersion   string            `yaml:"apiVersion,omitempty"`
+	Kind         string            `yaml:"kind,omitempty"`
+	Metadata     Metadata          `yaml:"metadata,omitempty"`
+	Suites       []Suite           `yaml:"suites,omitempty"`
+	Files        []string          `yaml:"files,omitempty"`
+	FileTransfer DockerFileMode    `yaml:"fileTransfer,omitempty"`
+	Image        ImageDefinition   `yaml:"image,omitempty"`
+	BeforeExec   []string          `yaml:"beforeExec,omitempty"`
+	Timeout      int               `yaml:"timeout,omitempty"`
+	Sauce        SauceConfig       `yaml:"sauce,omitempty"`
+	Env          map[string]string `yaml:"env,omitempty"`
+	Parallel     bool              `yaml:"parallel,omitempty"`
+	Npm          Npm               `yaml:"npm,omitempty"`
 }
 
 // Suite represents the test suite configuration.
@@ -95,9 +96,19 @@ type TypeDef struct {
 	Kind       string `yaml:"kind,omitempty"`
 }
 
+// DockerFileMode represent the file providing method
+type DockerFileMode string
+
+// DockerFile* represent the different modes
+const (
+	DockerFileMount DockerFileMode = "mount"
+	DockerFileCopy                 = "copy"
+)
+
 // Docker represents docker settings.
 type Docker struct {
-	Image Image `yaml:"image,omitempty" json:"image"`
+	FileTransfer DockerFileMode `yaml:"fileTransfer,omitempty" json:"fileTransfer"`
+	Image        Image          `yaml:"image,omitempty" json:"image"`
 }
 
 // Image represents the docker image.
@@ -164,6 +175,11 @@ func NewJobConfiguration(cfgFilePath string) (Project, error) {
 	}
 
 	c.SyncCapabilities()
+
+	// Default mode to Mount
+	if c.FileTransfer == "" {
+		c.FileTransfer = DockerFileMount
+	}
 
 	return c, nil
 }

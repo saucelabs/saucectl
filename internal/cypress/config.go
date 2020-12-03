@@ -78,5 +78,10 @@ func FromFile(cfgPath string) (Project, error) {
 		p.Cypress.EnvFile = envFile
 	}
 
+	// Default mode to Mount
+	if p.Docker.FileTransfer == "" {
+		p.Docker.FileTransfer = config.DockerFileMount
+	}
+
 	return p, nil
 }

@@ -10,6 +10,7 @@ sauce:
       - other tag
     build: Release $CI_COMMIT_SHORT_SHA
 docker:
+  fileTransfer: mount
   image:
     name: saucelabs/stt-cypress-mocha-node
     tag: v0.2.0
