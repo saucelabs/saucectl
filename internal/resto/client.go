@@ -11,18 +11,6 @@ import (
 	"time"
 )
 
-const (
-	completeJobStatus string = "complete"
-	errorJobStatus    string = "error"
-)
-
-// finalJobStates represents states that a job doesn't transition out of, i.e. once the job is in one of these states,
-// it's done.
-var finalJobStates = map[string]struct{}{
-	completeJobStatus: {},
-	errorJobStatus:    {},
-}
-
 var (
 	// ErrServerError is returned when the server was not able to correctly handle our request (status code >= 500).
 	ErrServerError = errors.New("internal server error")
@@ -69,13 +57,13 @@ func (c *Client) PollJob(ctx context.Context, id string, interval time.Duration)
 	defer ticker.Stop()
 
 	for range ticker.C {
-		jobDetails, err := doRequest(c.HTTPClient, request)
+		j, err := doRequest(c.HTTPClient, request)
 		if err != nil {
 			return job.Job{}, err
 		}
 
-		if _, ok := finalJobStates[jobDetails.Status]; ok {
-			return jobDetails, nil
+		if job.Done(j.Status) {
+			return j, nil
 		}
 	}
 
