@@ -1,8 +1,10 @@
 package resto
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
+	"github.com/saucelabs/saucectl/internal/job"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -36,14 +38,14 @@ func TestClient_GetJobDetails(t *testing.T) {
 		name         string
 		client       Client
 		jobID        string
-		expectedResp Details
+		expectedResp job.Job
 		expectedErr  error
 	}{
 		{
 			name:   "get job details with ID 1 and status 'complete'",
 			client: New(ts.URL, "test", "123", timeout),
 			jobID:  "1",
-			expectedResp: Details{
+			expectedResp: job.Job{
 				ID:     "1",
 				Passed: false,
 				Status: "complete",
@@ -55,7 +57,7 @@ func TestClient_GetJobDetails(t *testing.T) {
 			name:   "get job details with ID 2 and status 'error'",
 			client: New(ts.URL, "test", "123", timeout),
 			jobID:  "2",
-			expectedResp: Details{
+			expectedResp: job.Job{
 				ID:     "2",
 				Passed: false,
 				Status: "error",
@@ -67,28 +69,28 @@ func TestClient_GetJobDetails(t *testing.T) {
 			name:         "job not found error from external API",
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "3",
-			expectedResp: Details{},
+			expectedResp: job.Job{},
 			expectedErr:  ErrJobNotFound,
 		},
 		{
 			name:         "http status is not 200, but 401 from external API",
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "4",
-			expectedResp: Details{},
-			expectedErr:  fmt.Errorf(commonErrorMessage, http.StatusUnauthorized),
+			expectedResp: job.Job{},
+			expectedErr:  errors.New("status request failed; unexpected response code:'401', msg:''"),
 		},
 		{
 			name:         "internal server error from external API",
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "333",
-			expectedResp: Details{},
+			expectedResp: job.Job{},
 			expectedErr:  ErrServerInaccessible,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := tc.client.GetJobDetails(tc.jobID)
+			got, err := tc.client.ReadJob(context.Background(), tc.jobID)
 			assert.Equal(t, err, tc.expectedErr)
 			assert.Equal(t, got, tc.expectedResp)
 		})
@@ -101,7 +103,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/rest/v1/test/jobs/1":
-			details := &Details{
+			details := &job.Job{
 				ID:     "1",
 				Passed: false,
 				Status: "new",
@@ -112,7 +114,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 			resp, _ := json.Marshal(details)
 			w.Write(resp)
 		case "/rest/v1/test/jobs/2":
-			details := &Details{
+			details := &job.Job{
 				ID:     "2",
 				Passed: false,
 				Status: "in progress",
@@ -137,14 +139,14 @@ func TestClient_GetJobStatus(t *testing.T) {
 		name         string
 		client       Client
 		jobID        string
-		expectedResp Details
+		expectedResp job.Job
 		expectedErr  error
 	}{
 		{
 			name:   "get job details with ID 1 and status 'complete'",
 			client: New(ts.URL, "test", "123", timeout),
 			jobID:  "1",
-			expectedResp: Details{
+			expectedResp: job.Job{
 				ID:     "1",
 				Passed: false,
 				Status: "complete",
@@ -156,7 +158,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 			name:   "get job details with ID 2 and status 'error'",
 			client: New(ts.URL, "test", "123", timeout),
 			jobID:  "2",
-			expectedResp: Details{
+			expectedResp: job.Job{
 				ID:     "2",
 				Passed: false,
 				Status: "error",
@@ -168,35 +170,35 @@ func TestClient_GetJobStatus(t *testing.T) {
 			name:         "user not found error from external API",
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "3",
-			expectedResp: Details{},
+			expectedResp: job.Job{},
 			expectedErr:  ErrJobNotFound,
 		},
 		{
 			name:         "http status is not 200, but 401 from external API",
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "4",
-			expectedResp: Details{},
-			expectedErr:  fmt.Errorf(commonErrorMessage, http.StatusUnauthorized),
+			expectedResp: job.Job{},
+			expectedErr:  errors.New("status request failed; unexpected response code:'401', msg:''"),
 		},
 		{
 			name:         "unexpected status code from external API",
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "333",
-			expectedResp: Details{},
+			expectedResp: job.Job{},
 			expectedErr:  ErrServerInaccessible,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := tc.client.PollJobEnd(tc.jobID, 10*time.Millisecond)
+			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond)
 			assert.Equal(t, err, tc.expectedErr)
 			assert.Equal(t, got, tc.expectedResp)
 		})
 	}
 }
 
-func randJobStatus(details *Details, isComplete bool) {
+func randJobStatus(j *job.Job, isComplete bool) {
 	min := 1
 	max := 10
 	randNum := rand.Intn(max-min+1) + min
@@ -207,6 +209,6 @@ func randJobStatus(details *Details, isComplete bool) {
 	}
 
 	if randNum >= 5 {
-		details.Status = status
+		j.Status = status
 	}
 }

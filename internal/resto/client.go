@@ -1,9 +1,12 @@
 package resto
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/job"
+	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -11,13 +14,13 @@ import (
 const (
 	completeJobStatus string = "complete"
 	errorJobStatus    string = "error"
-
-	commonErrorMessage = "http status code is not 200 but %d"
 )
 
-var jobStatuses = map[string]struct{}{
-	completeJobStatus: struct{}{},
-	errorJobStatus:    struct{}{},
+// finalJobStates represents states that a job doesn't transition out of, i.e. once the job is in one of these states,
+// it's done.
+var finalJobStates = map[string]struct{}{
+	completeJobStatus: {},
+	errorJobStatus:    {},
 }
 
 var (
@@ -45,22 +48,22 @@ func New(url, username, accessKey string, timeout time.Duration) Client {
 	}
 }
 
-// GetJobDetails returns the job details.
-func (c *Client) GetJobDetails(id string) (Details, error) {
-	request, err := createRequest(c.URL, c.Username, c.AccessKey, id)
+// ReadJob returns the job details.
+func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
+	request, err := createRequest(ctx, c.URL, c.Username, c.AccessKey, id)
 	if err != nil {
-		return Details{}, err
+		return job.Job{}, err
 	}
 
 	return doRequest(c.HTTPClient, request)
 }
 
-// PollJobEnd polls a server till the end of the job.
+// PollJob polls a server till the end of the job.
 // Stops polling the job when the status will be complete or error.
-func (c *Client) PollJobEnd(id string, interval time.Duration) (Details, error) {
-	request, err := createRequest(c.URL, c.Username, c.AccessKey, id)
+func (c *Client) PollJob(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
+	request, err := createRequest(ctx, c.URL, c.Username, c.AccessKey, id)
 	if err != nil {
-		return Details{}, err
+		return job.Job{}, err
 	}
 
 	ticker := time.NewTicker(interval)
@@ -69,47 +72,49 @@ func (c *Client) PollJobEnd(id string, interval time.Duration) (Details, error) 
 	for range ticker.C {
 		jobDetails, err := doRequest(c.HTTPClient, request)
 		if err != nil {
-			return Details{}, err
+			return job.Job{}, err
 		}
 
-		if _, ok := jobStatuses[jobDetails.Status]; ok {
+		if _, ok := finalJobStates[jobDetails.Status]; ok {
 			return jobDetails, nil
 		}
 	}
 
-	return Details{}, nil
+	return job.Job{}, nil
 }
 
-func doRequest(httpClient *http.Client, request *http.Request) (Details, error) {
-	response, err := httpClient.Do(request)
+func doRequest(httpClient *http.Client, request *http.Request) (job.Job, error) {
+	resp, err := httpClient.Do(request)
 	if err != nil {
-		return Details{}, err
+		return job.Job{}, err
 	}
-	defer response.Body.Close()
+	defer resp.Body.Close()
 
-	if response.StatusCode >= http.StatusInternalServerError {
-		return Details{}, ErrServerInaccessible
-	}
-
-	if response.StatusCode == http.StatusNotFound {
-		return Details{}, ErrJobNotFound
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return job.Job{}, ErrServerInaccessible
 	}
 
-	if response.StatusCode != http.StatusOK {
-		return Details{}, fmt.Errorf(commonErrorMessage, response.StatusCode)
+	if resp.StatusCode == http.StatusNotFound {
+		return job.Job{}, ErrJobNotFound
 	}
 
-	jobDetails := Details{}
-	if err := json.NewDecoder(response.Body).Decode(&jobDetails); err != nil {
-		return Details{}, err
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		err := fmt.Errorf("status request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		return job.Job{}, err
+	}
+
+	jobDetails := job.Job{}
+	if err := json.NewDecoder(resp.Body).Decode(&jobDetails); err != nil {
+		return job.Job{}, err
 	}
 
 	return jobDetails, nil
 }
 
-func createRequest(host, username, accessKey, jobID string) (*http.Request, error) {
-	request, err := http.NewRequest(http.MethodGet,
-		fmt.Sprintf("%s/rest/v1/%s/jobs/%s", host, username, jobID), nil)
+func createRequest(ctx context.Context, url, username, accessKey, jobID string) (*http.Request, error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet,
+		fmt.Sprintf("%s/rest/v1/%s/jobs/%s", url, username, jobID), nil)
 	if err != nil {
 		return nil, err
 	}
