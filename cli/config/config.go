@@ -48,8 +48,7 @@ type ImageDefinition struct {
 
 // Project represents the project configuration.
 type Project struct {
-	APIVersion   string            `yaml:"apiVersion,omitempty"`
-	Kind         string            `yaml:"kind,omitempty"`
+	TypeDef                        `yaml:",inline"`
 	Metadata     Metadata          `yaml:"metadata,omitempty"`
 	Suites       []Suite           `yaml:"suites,omitempty"`
 	Files        []string          `yaml:"files,omitempty"`
