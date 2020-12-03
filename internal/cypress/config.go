@@ -10,6 +10,8 @@ import (
 
 // Project represents the cypress project configuration.
 type Project struct {
+	APIVersion string             `yaml:"apiVersion,omitempty"`
+	Kind       string             `yaml:"kind,omitempty"`
 	Sauce      config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Cypress    Cypress            `yaml:"cypress,omitempty" json:"cypress"`
 	Suites     []Suite            `yaml:"suites,omitempty" json:"suites"`
