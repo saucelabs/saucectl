@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 // Runner represents the Sauce Labs cloud implementation for cypress.
@@ -21,6 +22,7 @@ type Runner struct {
 	Project         cypress.Project
 	ProjectUploader storage.ProjectUploader
 	JobStarter      job.Starter
+	JobReader       job.Reader
 }
 
 // RunProject runs the tests defined in cypress.Project.
@@ -44,13 +46,19 @@ func (r *Runner) RunProject() (int, error) {
 		return 1, err
 	}
 
+	errCount := 0
 	for _, s := range r.Project.Suites {
 		if err := r.runSuite(s, fileID); err != nil {
-			return 1, err
+			log.Err(err).Str("suite", s.Name).Msg("Suite failed.")
+			errCount++
+			continue
 		}
+		log.Info().Str("suite", s.Name).Msg("Suite passed.")
 	}
 
-	return 1, nil
+	// FIXME forcing an error, since this feature is not fully implemented yet
+	errCount = 1
+	return errCount, nil
 }
 
 func (r *Runner) runSuite(s cypress.Suite, fileID string) error {
@@ -76,6 +84,18 @@ func (r *Runner) runSuite(s cypress.Suite, fileID string) error {
 	}
 
 	log.Info().Str("jobID", id).Msg("Job started.")
+
+	// High interval poll to not oversaturate the job reader with requests.
+	j, err := r.JobReader.PollJob(context.Background(), id, 15*time.Second)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve job status for suite %s", s.Name)
+	}
+
+	if !j.Passed {
+		// TODO do we need to differentiate test passes/failure vs. job failure (failed to start, crashed)?
+		return fmt.Errorf("suite %s has test failures", s.Name)
+	}
+
 	return nil
 }
 
