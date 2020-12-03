@@ -7,6 +7,7 @@ import (
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/credentials"
+	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/yaml"
 	"github.com/spf13/cobra"
 	"github.com/tj/survey"
@@ -126,11 +127,23 @@ func updateRegion(cfgFile string, region string) error {
 	cwd, _ := os.Getwd()
 	cfgPath := filepath.Join(cwd, cfgFile)
 
-	c, err := config.NewJobConfiguration(cfgPath)
+	d, err := config.Describe(cfgFile)
 	if err != nil {
 		return err
 	}
 
+	if d.Kind == "cypress" && d.APIVersion == "v1alpha" {
+		c, err := cypress.FromFile(cfgFile)
+		if err != nil {
+			return err
+		}
+		c.Sauce.Region = region
+		return yaml.WriteFile(cfgPath, c)
+	}
+	c, err := config.NewJobConfiguration(cfgPath)
+	if err != nil {
+		return err
+	}
 	c.Sauce.Region = region
 	return yaml.WriteFile(cfgPath, c)
 }
