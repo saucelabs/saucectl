@@ -24,9 +24,9 @@ var finalJobStates = map[string]struct{}{
 }
 
 var (
-	// ErrServerInaccessible represents error message when server is inaccessible.
-	ErrServerInaccessible = errors.New("couldn't reach resto server")
-	// ErrJobNotFound represents error message from server when a job was not found.
+	// ErrServerError is returned when the server was not able to correctly handle our request (status code >= 500).
+	ErrServerError = errors.New("internal server error")
+	// ErrJobNotFound is returned when the requested job was not found.
 	ErrJobNotFound = errors.New("job was not found")
 )
 
@@ -58,8 +58,7 @@ func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
 	return doRequest(c.HTTPClient, request)
 }
 
-// PollJob polls a server till the end of the job.
-// Stops polling the job when the status will be complete or error.
+// PollJob polls job details at an interval, until the job has ended, whether successfully or due to an error.
 func (c *Client) PollJob(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
 	request, err := createRequest(ctx, c.URL, c.Username, c.AccessKey, id)
 	if err != nil {
@@ -91,7 +90,7 @@ func doRequest(httpClient *http.Client, request *http.Request) (job.Job, error) 
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= http.StatusInternalServerError {
-		return job.Job{}, ErrServerInaccessible
+		return job.Job{}, ErrServerError
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
@@ -100,7 +99,7 @@ func doRequest(httpClient *http.Client, request *http.Request) (job.Job, error) 
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(resp.Body)
-		err := fmt.Errorf("status request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		err := fmt.Errorf("job status request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 		return job.Job{}, err
 	}
 

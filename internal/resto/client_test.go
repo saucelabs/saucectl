@@ -77,14 +77,14 @@ func TestClient_GetJobDetails(t *testing.T) {
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "4",
 			expectedResp: job.Job{},
-			expectedErr:  errors.New("status request failed; unexpected response code:'401', msg:''"),
+			expectedErr:  errors.New("job status request failed; unexpected response code:'401', msg:''"),
 		},
 		{
 			name:         "internal server error from external API",
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "333",
 			expectedResp: job.Job{},
-			expectedErr:  ErrServerInaccessible,
+			expectedErr:  ErrServerError,
 		},
 	}
 
@@ -178,14 +178,14 @@ func TestClient_GetJobStatus(t *testing.T) {
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "4",
 			expectedResp: job.Job{},
-			expectedErr:  errors.New("status request failed; unexpected response code:'401', msg:''"),
+			expectedErr:  errors.New("job status request failed; unexpected response code:'401', msg:''"),
 		},
 		{
 			name:         "unexpected status code from external API",
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "333",
 			expectedResp: job.Job{},
-			expectedErr:  ErrServerInaccessible,
+			expectedErr:  ErrServerError,
 		},
 	}
 
