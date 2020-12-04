@@ -132,7 +132,7 @@ func updateRegion(cfgFile string, region string) error {
 		return err
 	}
 
-	if d.Kind == "cypress" && d.APIVersion == "v1alpha" {
+	if d.Kind == config.KindCypress && d.APIVersion == config.VersionV1Alpha {
 		c, err := cypress.FromFile(cfgFile)
 		if err != nil {
 			return err

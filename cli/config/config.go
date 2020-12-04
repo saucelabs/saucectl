@@ -121,6 +121,16 @@ type Npm struct {
 	Packages map[string]string `yaml:"packages,omitempty" json:"packages"`
 }
 
+// Version* contains referenced config version
+const (
+	VersionV1Alpha = "v1alpha"
+)
+
+// Kind* contains referenced config kinds
+const (
+	KindCypress = "cypress"
+)
+
 func readYaml(cfgFilePath string) ([]byte, error) {
 	if cfgFilePath == "" {
 		return nil, errors.New("no config file was provided")
