@@ -6,6 +6,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/cypress/sauce"
+	"github.com/saucelabs/saucectl/internal/resto"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -201,17 +202,26 @@ func runCypressInSauce(p cypress.Project) (int, error) {
 	// TODO decide on a good timeout and perhaps make it configurable. Slow clients may take time to upload. Can't be higher than API gateway timeout though!
 	s := appstore.New(re.APIBaseURL(), c.Username, c.AccessKey, 30*time.Second)
 
-	// TODO decide on a good timeout and perhaps make it configurable. Slow clients may take time to upload. Can't be higher than API gateway timeout though!
+	// TODO decide on a good timeout and perhaps make it configurable. Some job starts are slower than others. Can't be higher than API gateway timeout though!
 	tc := testcomposer.Client{
 		HTTPClient:  &http.Client{Timeout: 30 * time.Second},
 		URL:         re.APIBaseURL(),
-		Credentials: credentials.Credentials{},
+		Credentials: *c,
+	}
+
+	// TODO decide on a good timeout and perhaps make it configurable. Resto may take longer to respond sometimes. Can't be higher than API gateway timeout though!
+	rsto := resto.Client{
+		HTTPClient: &http.Client{Timeout: 7 * time.Second},
+		URL:        re.APIBaseURL(),
+		Username:   c.Username,
+		AccessKey:  c.AccessKey,
 	}
 
 	r := sauce.Runner{
 		Project:         p,
 		ProjectUploader: s,
 		JobStarter:      &tc,
+		JobReader:       &rsto,
 	}
 	return r.RunProject()
 }
