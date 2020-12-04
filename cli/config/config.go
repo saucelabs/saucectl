@@ -48,8 +48,7 @@ type ImageDefinition struct {
 
 // Project represents the project configuration.
 type Project struct {
-	APIVersion   string            `yaml:"apiVersion,omitempty"`
-	Kind         string            `yaml:"kind,omitempty"`
+	TypeDef                        `yaml:",inline"`
 	Metadata     Metadata          `yaml:"metadata,omitempty"`
 	Suites       []Suite           `yaml:"suites,omitempty"`
 	Files        []string          `yaml:"files,omitempty"`
@@ -121,6 +120,16 @@ type Image struct {
 type Npm struct {
 	Packages map[string]string `yaml:"packages,omitempty" json:"packages"`
 }
+
+// Version* contains referenced config version
+const (
+	VersionV1Alpha = "v1alpha"
+)
+
+// Kind* contains referenced config kinds
+const (
+	KindCypress = "cypress"
+)
 
 func readYaml(cfgFilePath string) ([]byte, error) {
 	if cfgFilePath == "" {

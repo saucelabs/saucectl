@@ -108,7 +108,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return 1, err
 	}
 
-	if d.Kind == "cypress" && d.APIVersion == "v1alpha" {
+	if d.Kind == config.KindCypress && d.APIVersion == config.VersionV1Alpha {
 		return runCypress(cli)
 	}
 
