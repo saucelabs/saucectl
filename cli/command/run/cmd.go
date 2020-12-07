@@ -51,6 +51,7 @@ var (
 	sauceAPI    string
 	suiteName   string
 	testEnv     string
+	concurrency int
 )
 
 // Command creates the `run` command
@@ -81,6 +82,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
 	cmd.Flags().StringVar(&suiteName, "suite", "", "Run specified test suite.")
 	cmd.Flags().StringVar(&testEnv, "test-env", "docker", "Specifies the environment in which the tests should run. Choice: docker|sauce.")
+	cmd.Flags().IntVar(&concurrency, "ccy", 1, "Concurrency specifies how many suites are run at the same time.")
 
 	// Hide undocumented flags that the user does not need to care about.
 	_ = cmd.Flags().MarkHidden("sauce-api")
@@ -89,6 +91,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	_ = cmd.Flags().MarkHidden("parallel")    // WIP.
 	_ = cmd.Flags().MarkHidden("ci-build-id") // Related to 'parallel'. WIP.
 	_ = cmd.Flags().MarkHidden("test-env")    // WIP.
+	_ = cmd.Flags().MarkHidden("ccy")         // WIP.
 
 	return cmd
 }
@@ -222,6 +225,7 @@ func runCypressInSauce(p cypress.Project) (int, error) {
 		ProjectUploader: s,
 		JobStarter:      &tc,
 		JobReader:       &rsto,
+		Concurrency:     concurrency,
 	}
 	return r.RunProject()
 }

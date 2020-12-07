@@ -23,6 +23,12 @@ type Runner struct {
 	ProjectUploader storage.ProjectUploader
 	JobStarter      job.Starter
 	JobReader       job.Reader
+	Concurrency     int
+}
+
+type result struct {
+	suiteName string
+	err       error
 }
 
 // RunProject runs the tests defined in cypress.Project.
@@ -46,19 +52,54 @@ func (r *Runner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	errCount := 0
-	for _, s := range r.Project.Suites {
-		if err := r.runSuite(s, fileID); err != nil {
-			log.Err(err).Str("suite", s.Name).Msg("Suite failed.")
-			errCount++
-			continue
-		}
-		log.Info().Str("suite", s.Name).Msg("Suite passed.")
-	}
+	errCount := r.runSuites(fileID)
 
 	// FIXME forcing an error, since this feature is not fully implemented yet
 	errCount = 1
 	return errCount, nil
+}
+
+func (r *Runner) runSuites(fileID string) int {
+	suites := make(chan cypress.Suite)
+	results := make(chan result, len(r.Project.Suites))
+	defer close(results)
+
+	// Create a pool of workers that run the suites.
+	log.Info().Int("concurrency", r.Concurrency).Msg("Launching workers.")
+	for i := 0; i < r.Concurrency; i++ {
+		go r.worker(fileID, suites, results)
+	}
+
+	// Submit suites to work on.
+	for _, s := range r.Project.Suites {
+		suites <- s
+	}
+	close(suites)
+
+	// Collect results.
+	errCount := 0
+	for i := 0; i < len(r.Project.Suites); i++ {
+		r := <-results
+		if r.err != nil {
+			log.Err(r.err).Str("suite", r.suiteName).Msg("Suite failed.")
+			errCount++
+			continue
+		}
+		log.Info().Str("suite", r.suiteName).Msg("Suite passed.")
+	}
+
+	return errCount
+}
+
+func (r *Runner) worker(fileID string, suites <-chan cypress.Suite, results chan<- result) {
+	for s := range suites {
+		err := r.runSuite(s, fileID)
+		r := result{
+			suiteName: s.Name,
+			err:       err,
+		}
+		results <- r
+	}
 }
 
 func (r *Runner) runSuite(s cypress.Suite, fileID string) error {
@@ -93,7 +134,7 @@ func (r *Runner) runSuite(s cypress.Suite, fileID string) error {
 
 	if !j.Passed {
 		// TODO do we need to differentiate test passes/failure vs. job failure (failed to start, crashed)?
-		return fmt.Errorf("suite %s has test failures", s.Name)
+		return fmt.Errorf("suite '%s' has test failures", s.Name)
 	}
 
 	return nil
