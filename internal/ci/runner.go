@@ -3,33 +3,38 @@ package ci
 import (
 	"bytes"
 	"context"
+	"crypto/sha1"
+	"encoding/hex"
+	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/runner"
-	"github.com/saucelabs/saucectl/internal/fleet"
-	"github.com/saucelabs/saucectl/internal/fpath"
-	"github.com/saucelabs/saucectl/internal/yaml"
+	"github.com/saucelabs/saucectl/cli/utils"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog/log"
-
-	"errors"
-
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/internal/fleet"
+	"github.com/saucelabs/saucectl/internal/fpath"
+	"github.com/saucelabs/saucectl/internal/yaml"
+
+	"github.com/rs/zerolog/log"
 )
 
 // Runner represents the CI implementation of a runner.Testrunner.
 type Runner struct {
 	runner.BaseRunner
+	CIProvider Provider
 }
 
 // NewRunner creates a new Runner instance.
-func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer, rc config.RunnerConfiguration) (*Runner, error) {
+func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer, rc config.RunnerConfiguration, cip Provider) (*Runner, error) {
 	r := Runner{}
 
 	r.Cli = cli
@@ -37,34 +42,45 @@ func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer, 
 	r.Project = c
 	r.RunnerConfig = rc
 	r.Sequencer = seq
+	r.CIProvider = cip
 	return &r, nil
 }
 
 // RunProject runs the tests defined in config.Project.
 func (r *Runner) RunProject() (int, error) {
-	fid, err := fleet.Register(r.Ctx, r.Sequencer, r.Project.Files, r.Project.Suites)
+	bid := r.buildID()
+	log.Info().Str("buildID", bid).Msg("Generated build ID")
+	fid, err := fleet.Register(r.Ctx, r.Sequencer, bid, r.Project.Files,
+		r.Project.Suites)
 	if err != nil {
 		return 1, err
 	}
 
+	errorCount := 0
 	for _, suite := range r.Project.Suites {
-		exitCode, err := r.runSuite(suite, fid)
-		if err != nil || exitCode != 0 {
-			return exitCode, err
+		err = r.runSuite(suite, fid)
+		if err != nil {
+			errorCount++
 		}
 	}
-
-	return 0, nil
+	if errorCount > 0 {
+		log.Error().Msgf("%d suite(s) failed", errorCount)
+	}
+	return errorCount, nil
 }
 
 // setup performs any necessary steps for a test runner to execute tests.
 func (r *Runner) setup(run config.Run) error {
 	log.Info().Msg("Run entry.sh")
 	var out bytes.Buffer
-	cmd := exec.Command("/home/seluser/entry.sh", "&")
-	cmd.Stderr = &out
-	if err := cmd.Run(); err != nil {
-		return errors.New("couldn't start test: " + out.String())
+	var homeDir = utils.GetProjectDir()
+	if os.Getenv("SAUCE_VM") == "" {
+		cmd := exec.Command(path.Join(homeDir, "entry.sh"), "&")
+		cmd.Stderr = &out
+		if err := cmd.Run(); err != nil {
+			log.Info().Err(err).Msg("Failed to setup test")
+			return errors.New("couldn't start test: " + out.String())
+		}
 	}
 
 	// TODO replace sleep with actual checks & confirmation
@@ -72,6 +88,7 @@ func (r *Runner) setup(run config.Run) error {
 	time.Sleep(2 * time.Second)
 
 	rcPath := filepath.Join(r.RunnerConfig.RootDir, "run.yaml")
+	log.Info().Msg("Writing run.yaml to: " + rcPath)
 	if err := yaml.WriteFile(rcPath, run); err != nil {
 		return err
 	}
@@ -99,7 +116,7 @@ func (r *Runner) setup(run config.Run) error {
 	return nil
 }
 
-func (r* Runner) execute(task string) (int, error) {
+func (r *Runner) execute(task string) (int, error) {
 	args := strings.Fields(task)
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Stdout = r.Cli.Out()
@@ -113,7 +130,7 @@ func (r* Runner) execute(task string) (int, error) {
 	return 0, nil
 }
 
-func (r* Runner) beforeExec(tasks []string) (error) {
+func (r *Runner) beforeExec(tasks []string) error {
 	for _, task := range tasks {
 		log.Info().Msgf("Running BeforeExec task: %s", task)
 		exitCode, err := r.execute(task)
@@ -130,13 +147,14 @@ func (r* Runner) beforeExec(tasks []string) (error) {
 // run runs the tests defined in the config.Project.
 func (r *Runner) run(suite config.Suite) (int, error) {
 	cmd := exec.Command(r.RunnerConfig.ExecCommand[0], r.RunnerConfig.ExecCommand[1])
+
 	cmd.Env = append(
 		os.Environ(),
 		fmt.Sprintf("SAUCE_BUILD_NAME=%s", r.Project.Metadata.Build),
 		fmt.Sprintf("SAUCE_TAGS=%s", strings.Join(r.Project.Metadata.Tags, ",")),
 		fmt.Sprintf("SAUCE_REGION=%s", r.Project.Sauce.Region),
 		fmt.Sprintf("TEST_TIMEOUT=%d", r.Project.Timeout),
-		fmt.Sprintf("BROWSER_NAME=%s", suite.Capabilities.BrowserName),
+		fmt.Sprintf("BROWSER_NAME=%s", suite.Settings.BrowserName),
 	)
 
 	// Add any defined env variables from the job config / CLI args.
@@ -173,6 +191,7 @@ func (r *Runner) teardown(logDir string) error {
 }
 
 var copyFile = copyFileFunc
+
 func copyFileFunc(src string, targetDir string) error {
 	input, err := ioutil.ReadFile(src)
 	if err != nil {
@@ -187,29 +206,32 @@ func copyFileFunc(src string, targetDir string) error {
 	return nil
 }
 
-func (r *Runner) runSuite(suite config.Suite, fleetID string) (int, error) {
+func (r *Runner) runSuite(suite config.Suite, fleetID string) error {
+	var assignments []string
 	for {
 		next, err := r.Sequencer.NextAssignment(r.Ctx, fleetID, suite.Name)
 		if err != nil {
-			return 1, err
+			return err
 		}
 		if next == "" {
-			return 0, nil
+			break
 		}
-
-		run := config.Run{
-			Match:       []string{next},
-			ProjectPath: r.RunnerConfig.RootDir,
-		}
-
-		code, err := r.runTest(suite, run)
-		if err != nil || code != 0 {
-			return code, err
-		}
+		assignments = append(assignments, next)
 	}
+
+	if len(assignments) == 0 {
+		log.Info().Msg("No tests detected. Skipping suite.")
+		return nil
+	}
+
+	run := config.Run{
+		Match:       assignments,
+		ProjectPath: r.RunnerConfig.RootDir,
+	}
+	return r.runTest(suite, run)
 }
 
-func (r *Runner) runTest(suite config.Suite, run config.Run) (int, error) {
+func (r *Runner) runTest(suite config.Suite, run config.Run) error {
 	defer func() {
 		log.Info().Msg("Tearing down environment")
 		if err := r.teardown(r.Cli.LogDir); err != nil {
@@ -219,18 +241,47 @@ func (r *Runner) runTest(suite config.Suite, run config.Run) (int, error) {
 
 	log.Info().Msg("Setting up test environment")
 	if err := r.setup(run); err != nil {
-		return 1, err
+		return err
 	}
 
 	log.Info().Msg("Starting tests")
 	exitCode, err := r.run(suite)
-	if err != nil {
-		return 1, err
-	}
-
 	log.Info().
 		Int("ExitCode", exitCode).
 		Msg("Command Finished")
 
-	return exitCode, err
+	if err != nil {
+		return err
+	}
+	if exitCode != 0 {
+		return fmt.Errorf("exitCode = %d", exitCode)
+	}
+	return nil
+}
+
+// buildID generates a build ID based on the current CI and project information.
+func (r *Runner) buildID() string {
+	p := r.Project
+	in := struct {
+		ciBuildID string
+		version   string
+		kind      string
+		meta      config.Metadata
+		files     []string
+		suites    []config.Suite
+		img       config.ImageDefinition
+	}{
+		r.CIProvider.BuildID(),
+		p.APIVersion,
+		p.Kind,
+		p.Metadata,
+		p.Files,
+		p.Suites,
+		p.Image,
+	}
+	pStr := fmt.Sprintf("%+v", in)
+	h := sha1.New()
+	io.WriteString(h, pStr)
+
+	return hex.EncodeToString(h.Sum(nil))
 }

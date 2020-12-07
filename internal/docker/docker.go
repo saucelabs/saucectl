@@ -5,11 +5,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/docker/docker/api/types/mount"
-	"github.com/rs/zerolog/log"
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -17,16 +16,18 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/system"
 	"github.com/docker/go-connections/nat"
-
 	"github.com/phayes/freeport"
+	"github.com/rs/zerolog/log"
 
 	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/streams"
 	"github.com/saucelabs/saucectl/cli/utils"
 )
@@ -39,46 +40,6 @@ var (
 		RemoveVolumes: false,
 	}
 )
-
-// Image represents docker image metadata.
-type Image struct {
-	Name        string
-	Version     string
-	TestsFolder string
-	Match       string
-}
-
-// DefaultPlaywright represents the default image for playwright.
-var DefaultPlaywright = Image{
-	Name:        "saucelabs/stt-playwright-jest-node",
-	Version:     "v0.1.6",
-	TestsFolder: "tests",
-	Match:       ".*.(spec|test).js$",
-}
-
-// DefaultPuppeteer represents the default image for puppeteer.
-var DefaultPuppeteer = Image{
-	Name:        "saucelabs/stt-puppeteer-jest-node",
-	Version:     "v0.1.5",
-	TestsFolder: "tests",
-	Match:       ".*.(spec|test).js$",
-}
-
-// DefaultTestcafe represents the default image for testcafe.
-var DefaultTestcafe = Image{
-	Name:        "saucelabs/stt-testcafe-node",
-	Version:     "v0.1.5",
-	TestsFolder: "tests",
-	Match:       ".*.(spec|test).[jt]s$",
-}
-
-// DefaultCypress represents the default image for cypress.
-var DefaultCypress = Image{
-	Name:        "saucelabs/stt-cypress-mocha-node",
-	Version:     "v0.1.9",
-	TestsFolder: "cypress/integration",
-	Match:       ".*.(spec|test).js$",
-}
 
 // CommonAPIClient is the interface for interacting with containers.
 type CommonAPIClient interface {
@@ -230,9 +191,20 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 		return nil, err
 	}
 
-	m, err := createMounts(c.Files, DefaultProjectPath)
-	if err != nil {
-		return nil, err
+	var m []mount.Mount
+	if c.FileTransfer == config.DockerFileMount {
+		m, err = createMounts(c.Files, DefaultProjectPath)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	username := ""
+	accessKey := ""
+	if creds := credentials.Get(); creds != nil {
+		username = creds.Username
+		accessKey = creds.AccessKey
+		log.Info().Msgf("Using credentials from %s", creds.Source)
 	}
 
 	hostConfig := &container.HostConfig{
@@ -244,14 +216,14 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 		Image:        handler.GetImageFlavor(c),
 		ExposedPorts: ports,
 		Env: []string{
-			fmt.Sprintf("SAUCE_USERNAME=%s", os.Getenv("SAUCE_USERNAME")),
-			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", os.Getenv("SAUCE_ACCESS_KEY")),
+			fmt.Sprintf("SAUCE_USERNAME=%s", username),
+			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", accessKey),
 			fmt.Sprintf("SAUCE_BUILD_NAME=%s", c.Metadata.Build),
 			fmt.Sprintf("SAUCE_TAGS=%s", strings.Join(c.Metadata.Tags, ",")),
 			fmt.Sprintf("SAUCE_DEVTOOLS_PORT=%d", port),
 			fmt.Sprintf("SAUCE_REGION=%s", c.Sauce.Region),
 			fmt.Sprintf("TEST_TIMEOUT=%d", c.Timeout),
-			fmt.Sprintf("BROWSER_NAME=%s", s.Capabilities.BrowserName),
+			fmt.Sprintf("BROWSER_NAME=%s", s.Settings.BrowserName),
 		},
 	}
 
@@ -269,6 +241,12 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 		return nil, err
 	}
 
+	if c.FileTransfer == config.DockerFileCopy {
+		if err := copyTestFiles(ctx, handler, container.ID, c.Files, DefaultProjectPath); err != nil {
+			return nil, err
+		}
+	}
+
 	// We need to check the tty _before_ we do the ContainerExecCreate, because
 	// otherwise if we error out we will leak execIDs on the server (and
 	// there's no easy way to clean those up). But also in order to make "not
@@ -280,6 +258,17 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 	return &container, nil
 }
 
+// copyTestFiles copies the files within the container.
+func copyTestFiles(ctx context.Context, handler *Handler, containerID string, files []string, pDir string) error {
+	for _, file := range files {
+		log.Info().Str("from", file).Str("to", pDir).Msg("File copied")
+		if err := handler.CopyToContainer(ctx, containerID, file, pDir); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // createMounts returns a list of mount bindings, binding files to target, such that {source}:{target}/{source}.
 func createMounts(files []string, target string) ([]mount.Mount, error) {
 	mm := make([]mount.Mount, len(files))
@@ -289,16 +278,20 @@ func createMounts(files []string, target string) ([]mount.Mount, error) {
 			return mm, err
 		}
 
+		dest := path.Join(target, f)
+
 		mm[i] = mount.Mount{
 			Type:          mount.TypeBind,
 			Source:        absF,
-			Target:        filepath.Join(target, f),
+			Target:        dest,
 			ReadOnly:      false,
 			Consistency:   mount.ConsistencyDefault,
 			BindOptions:   nil,
 			VolumeOptions: nil,
 			TmpfsOptions:  nil,
 		}
+
+		log.Info().Str("from", f).Str("to", dest).Msg("File mounted")
 	}
 
 	return mm, nil
@@ -422,4 +415,15 @@ func (handler *Handler) ContainerStop(ctx context.Context, srcContainerID string
 // ContainerRemove removes testrunner container
 func (handler *Handler) ContainerRemove(ctx context.Context, srcContainerID string) error {
 	return handler.client.ContainerRemove(ctx, srcContainerID, containerRemoveOptions)
+}
+
+// ContainerInspect returns the container information.
+func (handler *Handler) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
+	return handler.client.ContainerInspect(ctx, containerID)
+}
+
+// IsErrNotFound returns true if the error is a NotFound error, which is returned
+// by the API when some object is not found.
+func (handler *Handler) IsErrNotFound(err error) bool {
+	return client.IsErrNotFound(err)
 }

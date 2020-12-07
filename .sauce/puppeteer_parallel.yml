@@ -1,0 +1,21 @@
+apiVersion: v1alpha
+metadata:
+  name: Testing Puppeteer Parallelism Support
+  tags:
+    - e2e
+    - release team
+    - other tag
+  build: Release $CI_COMMIT_SHORT_SHA
+files:
+  - tests/e2e/puppeteer-parallel/
+suites:
+  - name: "chrome"
+    match: ".*.(spec|test).js$"
+    settings:
+      browserName: "chrome"
+image:
+  base: saucelabs/stt-puppeteer-jest-node
+  version: latest
+sauce:
+  region: us-west-1
+parallel: true

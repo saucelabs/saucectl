@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/internal/fleet"
+	"github.com/saucelabs/saucectl/internal/job"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -55,7 +57,7 @@ func TestTestComposer_StartJob(t *testing.T) {
 	}))
 	type args struct {
 		ctx               context.Context
-		jobStarterPayload JobStarterPayload
+		jobStarterPayload job.StartOptions
 	}
 	type fields struct {
 		HTTPClient *http.Client
@@ -77,13 +79,13 @@ func TestTestComposer_StartJob(t *testing.T) {
 			},
 			args: args{
 				ctx: context.TODO(),
-				jobStarterPayload: JobStarterPayload{
+				jobStarterPayload: job.StartOptions{
 					User:        "fake-user",
 					AccessKey:   "fake-access-key",
 					BrowserName: "fake-browser-name",
-					TestName:    "fake-test-name",
+					Name:        "fake-test-name",
 					Framework:   "fake-framework",
-					BuildName:   "fake-buildname",
+					Build:       "fake-buildname",
 					Tags:        nil,
 				},
 			},
@@ -104,10 +106,10 @@ func TestTestComposer_StartJob(t *testing.T) {
 			},
 			args: args{
 				ctx:               context.TODO(),
-				jobStarterPayload: JobStarterPayload{},
+				jobStarterPayload: job.StartOptions{},
 			},
 			want:    "",
-			wantErr: fmt.Errorf("Failed to start job. statusCode='300'"),
+			wantErr: fmt.Errorf("job start failed; unexpected response code:'300', msg:''"),
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(300)
 			},
@@ -145,10 +147,9 @@ func TestClient_CreateFleet(t *testing.T) {
 	defer server.Close()
 
 	type fields struct {
-		HTTPClient *http.Client
-		URL        string
-		Username   string
-		AccessKey  string
+		HTTPClient  *http.Client
+		URL         string
+		Credentials credentials.Credentials
 	}
 	type args struct {
 		ctx        context.Context
@@ -182,10 +183,9 @@ func TestClient_CreateFleet(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Client{
-				HTTPClient: tt.fields.HTTPClient,
-				URL:        tt.fields.URL,
-				Username:   tt.fields.Username,
-				AccessKey:  tt.fields.AccessKey,
+				HTTPClient:  tt.fields.HTTPClient,
+				URL:         tt.fields.URL,
+				Credentials: tt.fields.Credentials,
 			}
 
 			respo.Record(tt.serverFunc)
@@ -213,10 +213,9 @@ func TestClient_NextAssignment(t *testing.T) {
 	defer server.Close()
 
 	type fields struct {
-		HTTPClient *http.Client
-		URL        string
-		Username   string
-		AccessKey  string
+		HTTPClient  *http.Client
+		URL         string
+		Credentials credentials.Credentials
 	}
 	type args struct {
 		ctx       context.Context
@@ -250,10 +249,9 @@ func TestClient_NextAssignment(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Client{
-				HTTPClient: tt.fields.HTTPClient,
-				URL:        tt.fields.URL,
-				Username:   tt.fields.Username,
-				AccessKey:  tt.fields.AccessKey,
+				HTTPClient:  tt.fields.HTTPClient,
+				URL:         tt.fields.URL,
+				Credentials: tt.fields.Credentials,
 			}
 
 			respo.Record(tt.serverFunc)

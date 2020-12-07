@@ -13,7 +13,9 @@ require (
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200618181300-9dc6525e6118+incompatible // translates to v19.03.12
 	github.com/docker/go-connections v0.4.0
+	github.com/google/go-github/v32 v32.1.0
 	github.com/gorilla/mux v1.7.4 // indirect
+	github.com/jarcoal/httpmock v1.0.6
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
@@ -24,6 +26,8 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.4.0
 	github.com/tj/survey v2.0.6+incompatible
+	golang.org/x/net v0.0.0-20191004110552-13f9640d40b9
 	gopkg.in/yaml.v2 v2.2.8
+	gotest.tools v2.2.0+incompatible
 	gotest.tools/v3 v3.0.2
 )

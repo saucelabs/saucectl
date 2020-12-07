@@ -91,7 +91,58 @@ jobs:
           ./saucectl run -c ./.sauce/puppeteer_before_exec.yml --verbose
         env:
           BUILD_ID: ${{ github.run_id }}
+  puppeteer-parallel-1:
+    needs: basic
+    runs-on: ubuntu-latest
+    container:
+      image: saucelabs/stt-puppeteer-jest-node:v0.1.5
+      options: --user 1001
 
+    steps:
+      # appears that checkout@v2 uses javascript which is not compatible
+      # with the included node version in the container image.
+      - name: Checkout Code
+        uses: actions/checkout@v1
+
+      - name: Download saucectl binary
+        uses: actions/download-artifact@v2
+        with:
+          name: saucectlbin
+
+      - name: Run Sauce Pipeline Test
+        run: |
+          chmod +x ./saucectl
+          ./saucectl run -c ./.sauce/puppeteer_parallel.yml --verbose
+        env:
+          BUILD_ID: ${{ github.run_id }}
+          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+  puppeteer-parallel-2:
+    needs: basic
+    runs-on: ubuntu-latest
+    container:
+      image: saucelabs/stt-puppeteer-jest-node:v0.1.5
+      options: --user 1001
+
+    steps:
+      # appears that checkout@v2 uses javascript which is not compatible
+      # with the included node version in the container image.
+      - name: Checkout Code
+        uses: actions/checkout@v1
+
+      - name: Download saucectl binary
+        uses: actions/download-artifact@v2
+        with:
+          name: saucectlbin
+
+      - name: Run Sauce Pipeline Test
+        run: |
+          chmod +x ./saucectl
+          ./saucectl run -c ./.sauce/puppeteer_parallel.yml --verbose
+        env:
+          BUILD_ID: ${{ github.run_id }}
+          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
   playwright:
     needs: basic
     runs-on: ubuntu-latest
@@ -144,20 +195,18 @@ jobs:
   cypress:
     needs: basic
     runs-on: ubuntu-latest
-    container:
-      image: saucelabs/stt-cypress-mocha-node:v0.1.9
-      options: --user 1001
 
     steps:
-      # appears that checkout@v2 uses javascript which is not compatible
-      # with the included node version in the container image.
       - name: Checkout Code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
       - name: Download saucectl binary
         uses: actions/download-artifact@v2
         with:
           name: saucectlbin
+
+      - name: Workaround for container permissions
+        run: sudo chmod -R 777 tests/
 
       - name: Run Sauce Pipeline Test
         run: |

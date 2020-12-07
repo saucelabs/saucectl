@@ -2,22 +2,24 @@ package docker
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/runner"
-	"github.com/saucelabs/saucectl/cli/streams"
-	"github.com/saucelabs/saucectl/internal/fleet"
-	"github.com/saucelabs/saucectl/internal/yaml"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"time"
 	"strings"
+	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/progress"
+	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/cli/streams"
+	"github.com/saucelabs/saucectl/internal/fleet"
+	"github.com/saucelabs/saucectl/internal/yaml"
 )
 
 // DefaultProjectPath represents the default project path. Test files will be located here.
@@ -52,19 +54,22 @@ func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer) 
 
 // RunProject runs the tests defined in config.Project.
 func (r *Runner) RunProject() (int, error) {
-	fid, err := fleet.Register(r.Ctx, r.Sequencer, r.Project.Files, r.Project.Suites)
+	fid, err := fleet.Register(r.Ctx, r.Sequencer, "", r.Project.Files, r.Project.Suites)
 	if err != nil {
 		return 1, err
 	}
 
+	errorCount := 0
 	for _, suite := range r.Project.Suites {
-		exitCode, err := r.runSuite(suite, fid)
-		if err != nil || exitCode != 0 {
-			return exitCode, err
+		err = r.runSuite(suite, fid)
+		if err != nil {
+			errorCount++
 		}
 	}
-
-	return 0, nil
+	if errorCount > 0 {
+		log.Error().Msgf("%d suite(s) failed", errorCount)
+	}
+	return errorCount, nil
 }
 
 // setup performs any necessary steps for a test runner to execute tests.
@@ -73,6 +78,11 @@ func (r *Runner) setup(suite config.Suite, run config.Run) error {
 	if err != nil {
 		return fmt.Errorf("please verify that docker is installed and running: %v, "+
 			" follow the guide at https://docs.docker.com/get-docker/", err)
+	}
+
+	// check image base property from the config file
+	if r.Project.Image.Base == "" {
+		return errors.New("no docker image specified")
 	}
 
 	// check if image is existing
@@ -149,7 +159,7 @@ func (r *Runner) setup(suite config.Suite, run config.Run) error {
 	return nil
 }
 
-func (r* Runner) beforeExec(tasks []string) error {
+func (r *Runner) beforeExec(tasks []string) error {
 	for _, task := range tasks {
 		progress.Show("Running BeforeExec task: %s", task)
 		exitCode, err := r.execute(strings.Fields(task))
@@ -206,6 +216,7 @@ func (r *Runner) execute(cmd []string) (int, error) {
 	return exitCode, nil
 
 }
+
 // run runs the tests defined in the config.Project.
 func (r *Runner) run() (int, error) {
 	return r.execute([]string{"npm", "test"})
@@ -221,6 +232,11 @@ func (r *Runner) teardown(logDir string) error {
 		}
 	}
 
+	// checks that container exists before stopping and removing it
+	if _, err := r.docker.ContainerInspect(r.Ctx, r.containerID); err != nil {
+		return err
+	}
+
 	if err := r.docker.ContainerStop(r.Ctx, r.containerID); err != nil {
 		return err
 	}
@@ -232,50 +248,58 @@ func (r *Runner) teardown(logDir string) error {
 	return nil
 }
 
-func (r *Runner) runSuite(suite config.Suite, fleetID string) (int, error) {
+func (r *Runner) runSuite(suite config.Suite, fleetID string) error {
+	var assignments []string
 	for {
 		next, err := r.Sequencer.NextAssignment(r.Ctx, fleetID, suite.Name)
 		if err != nil {
-			return 1, err
+			return err
 		}
 		if next == "" {
-			return 0, nil
+			break
 		}
-
-		run := config.Run{
-			Match:       []string{next},
-			ProjectPath: DefaultProjectPath,
-		}
-
-		code, err := r.runTest(suite, run)
-		if err != nil || code != 0 {
-			return code, err
-		}
+		assignments = append(assignments, next)
 	}
+
+	if len(assignments) == 0 {
+		log.Info().Msg("No tests detected. Skipping suite.")
+		return nil
+	}
+
+	run := config.Run{
+		Match:       assignments,
+		ProjectPath: DefaultProjectPath,
+	}
+	return r.runTest(suite, run)
 }
 
-func (r *Runner) runTest(suite config.Suite, run config.Run) (int, error) {
+func (r *Runner) runTest(suite config.Suite, run config.Run) error {
 	defer func() {
 		log.Info().Msg("Tearing down environment")
 		if err := r.teardown(r.Cli.LogDir); err != nil {
-			log.Error().Err(err).Msg("Failed to tear down environment")
+			if !r.docker.IsErrNotFound(err) {
+				log.Error().Err(err).Msg("Failed to tear down environment")
+			}
 		}
 	}()
 
 	log.Info().Msg("Setting up test environment")
 	if err := r.setup(suite, run); err != nil {
-		return 1, err
+		log.Err(err).Msg("Failed to setup test environment")
+		return err
 	}
 
 	log.Info().Msg("Starting tests")
 	exitCode, err := r.run()
-	if err != nil {
-		return exitCode, err
-	}
-
 	log.Info().
 		Int("ExitCode", exitCode).
 		Msg("Command Finished")
 
-	return exitCode, err
+	if err != nil {
+		return err
+	}
+	if exitCode != 0 {
+		return fmt.Errorf("exitCode is %d", exitCode)
+	}
+	return nil
 }

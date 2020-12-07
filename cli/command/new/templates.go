@@ -1,74 +1,140 @@
 package new
 
-var configTpl = `apiVersion: v1alpha
-metadata:
-  name: Feature XYZ
-  tags:
-    - e2e
-    - release team
-    - other tag
-  build: Release $CI_COMMIT_SHORT_SHA
-files:
-  - {{ .TestsFolder }}/example.test.js
-suites:
-  - name: "saucy test"
-    match: "{{ .Match }}"
-image:
-  base: {{ .Name }}
-  version: {{ .Version }}
-sauce:
-  region: {{ .Region }}
-`
+import (
+	"archive/tar"
+	"bytes"
+	"compress/gzip"
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"time"
 
-// SetupTemplate describes a template for a setup
-type SetupTemplate struct {
-	Filename string
-	Code     string
+	"github.com/google/go-github/v32/github"
+	"github.com/rs/zerolog/log"
+	"github.com/tj/survey"
+)
+
+var (
+	templateFileName = "saucetpl.tar.gz"
+)
+
+func getReleaseArtifact(org string, repo string) (io.ReadCloser, error) {
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ghClient := github.NewClient(nil)
+	release, _, err := ghClient.Repositories.GetLatestRelease(ctx, org, repo)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, asset := range release.Assets {
+		if *asset.Name == templateFileName {
+			rc, _, err := ghClient.Repositories.DownloadReleaseAsset(ctx, org, repo, *asset.ID, http.DefaultClient)
+			return rc, err
+		}
+	}
+	return nil, fmt.Errorf("no %s found", templateFileName)
 }
 
-var testTpl = map[string]SetupTemplate{
-	"testcafe": {
-		"example.test.js",
-		"import { Selector } from 'testcafe';\n" +
-			"fixture `Getting Started`\n" +
-			"	.page `http://devexpress.github.io/testcafe/example`\n\n" +
-			`const testName = 'testcafe test'
-test(testName, async t => {
-	await t
-		.typeText('#developer-name', 'devx')
-		.click('#submit-button')
-		.expect(Selector('#article-header').innerText).eql('Thank you, devx!');
-});
-	`},
-	"puppeteer": {
-		"example.test.js",
-		`describe('saucectl demo test', () => {
-	test('should verify title of the page', async () => {
-		const page = (await browser.pages())[0]
-		await page.goto('https://www.saucedemo.com/');
-		expect(await page.title()).toBe('Swag Labs');
-	});
-});
-`},
-	"playwright": {
-		"example.test.js",
-		`describe('saucectl demo test', () => {
-	test('should verify title of the page', async () => {
-		await page.goto('https://www.saucedemo.com/');
-		expect(await page.title()).toBe('Swag Labs');
-	});
-});
-`},
-	"cypress": {
-		"example.test.js",
-		`context('Actions', () => {
-		beforeEach(() => {
-			cy.visit('https://example.cypress.io/commands/actions')
-		})
-		it('.type() - type into a DOM element', () => {
-			// https://on.cypress.io/type
-			cy.get('.action-email')
-				.type('fake@email.com').should('have.value', 'fake@email.com')
-		})
-	})`},
+func confirmOverwriting(name string, overWriteAll *bool) bool {
+	if *overWriteAll {
+		return true
+	}
+
+	var answer string
+	question := &survey.Select{
+		Message: fmt.Sprintf("Overwrite %s:", name),
+		Options: []string{"No", "Yes", "All"},
+		Default: "No",
+	}
+	err := survey.AskOne(question, &answer, nil)
+	if err != nil {
+		log.Err(err).Msg("unable to get survey answer")
+		return false
+	}
+
+	*overWriteAll = answer == "All"
+	return answer == "Yes" || answer == "All"
+}
+
+func requiresOverwriting(name string) (bool, error) {
+	_, err := os.Stat(name)
+	if err != nil && !os.IsNotExist(err) {
+		log.Err(err).Msgf("unable to check for %s existence", name)
+		return false, err
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return true, nil
+}
+
+func extractFile(name string, mode int64, src io.Reader, overWriteAll *bool) error {
+	requireOverwrite, err := requiresOverwriting(name)
+	if err != nil {
+		return err
+	}
+	if requireOverwrite && confirmOverwriting(name, overWriteAll) == false {
+		return nil
+	}
+
+	file, err := os.OpenFile(name, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(mode))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = io.Copy(file, src)
+	return err
+}
+
+// FetchAndExtractTemplate gathers latest version of the template for the repo and extracts it locally.
+func FetchAndExtractTemplate(org string, repo string) error {
+	artifactStream, err := getReleaseArtifact(org, repo)
+	if err != nil {
+		return err
+	}
+	if artifactStream == nil {
+		return errors.New("invalid download stream for tarball")
+	}
+
+	body, err := ioutil.ReadAll(artifactStream)
+	if err != nil {
+		return err
+	}
+	artifactStream.Close()
+
+	zipReader, err := gzip.NewReader(bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+
+	overWriteAll := false
+	tarReader := tar.NewReader(zipReader)
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		}
+		if header == nil {
+			break
+		}
+
+		if header.Typeflag == tar.TypeDir {
+			err := os.MkdirAll(header.Name, os.FileMode(header.Mode))
+			if err != nil {
+				log.Err(err).Msgf("Unable to create %s", header.Name)
+			}
+		}
+		if header.Typeflag == tar.TypeReg {
+			err = extractFile(header.Name, header.Mode, tarReader, &overWriteAll)
+			if err != nil {
+				log.Err(err).Msgf("Unable to extract %s", header.Name)
+			}
+		}
+	}
+	return nil
 }

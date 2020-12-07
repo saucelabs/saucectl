@@ -5,17 +5,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/internal/fleet"
+	"github.com/saucelabs/saucectl/internal/job"
 	"io/ioutil"
 	"net/http"
 )
 
 // Client service
 type Client struct {
-	HTTPClient *http.Client
-	URL        string // e.g.) https://api.<region>.saucelabs.net
-	Username   string
-	AccessKey  string
+	HTTPClient  *http.Client
+	URL         string // e.g.) https://api.<region>.saucelabs.net
+	Credentials credentials.Credentials
 }
 
 // Job represents the sauce labs test job.
@@ -24,17 +25,6 @@ type Job struct {
 	Owner string `json:"owner"`
 }
 
-// JobStarterPayload is a JSON object of parameters used to start a session
-// from saucectl
-type JobStarterPayload struct {
-	User        string   `json:"username"`
-	AccessKey   string   `json:"accessKey"`
-	BrowserName string   `json:"browserName,omitempty"`
-	TestName    string   `json:"testName,omitempty"`
-	Framework   string   `json:"framework,omitempty"`
-	BuildName   string   `json:"buildName,omitempty"`
-	Tags        []string `json:"tags,omitempty"`
-}
 
 // CreatorRequest represents the request body for creating a fleet.
 type CreatorRequest struct {
@@ -58,18 +48,19 @@ type AssignerResponse struct {
 }
 
 // StartJob creates a new job in Sauce Labs.
-func (c *Client) StartJob(ctx context.Context, jobStarterPayload JobStarterPayload) (jobID string, err error) {
-	url := fmt.Sprintf("%s/v1/testcomposer/jobs/", c.URL)
-	b := new(bytes.Buffer)
-	err = json.NewEncoder(b).Encode(jobStarterPayload)
+func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
+	url := fmt.Sprintf("%s/v1/testcomposer/jobs", c.URL)
+
+	var b bytes.Buffer
+	err = json.NewEncoder(&b).Encode(opts)
 	if err != nil {
 		return
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, b)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, &b)
 	if err != nil {
 		return
 	}
-	req.SetBasicAuth(jobStarterPayload.User, jobStarterPayload.AccessKey)
+	req.SetBasicAuth(opts.User, opts.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return
@@ -80,16 +71,17 @@ func (c *Client) StartJob(ctx context.Context, jobStarterPayload JobStarterPaylo
 		return
 	}
 	if resp.StatusCode >= 300 {
-		err = fmt.Errorf("Failed to start job. statusCode='%d'", resp.StatusCode)
+		err = fmt.Errorf("job start failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 		return "", err
 	}
-	var job *Job
-	err = json.Unmarshal(body, &job)
+
+	var j Job
+	err = json.Unmarshal(body, &j)
 	if err != nil {
 		return
 	}
 
-	return job.ID, nil
+	return j.ID, nil
 }
 
 // Register registers a fleet with the given buildID and test suites.
@@ -141,7 +133,7 @@ func (c *Client) newJSONRequest(ctx context.Context, url, method string, payload
 	if err != nil {
 		return nil, err
 	}
-	req.SetBasicAuth(c.Username, c.AccessKey)
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	return req, err
