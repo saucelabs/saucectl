@@ -23,6 +23,7 @@ type Runner struct {
 	ProjectUploader storage.ProjectUploader
 	JobStarter      job.Starter
 	JobReader       job.Reader
+	Concurrency     int
 }
 
 type result struct {
@@ -63,10 +64,9 @@ func (r *Runner) runSuites(fileID string) int {
 	results := make(chan result, len(r.Project.Suites))
 	defer close(results)
 
-	// TODO use CLI provided concurrency value
-	// Create workers that run the suites.
-	log.Info().Int("concurrency", 3).Msg("Launching workers.")
-	for i := 0; i < 3; i++ {
+	// Create a pool of workers that run the suites.
+	log.Info().Int("concurrency", r.Concurrency).Msg("Launching workers.")
+	for i := 0; i < r.Concurrency; i++ {
 		go r.worker(fileID, suites, results)
 	}
 
