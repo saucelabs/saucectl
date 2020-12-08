@@ -117,6 +117,10 @@ func (r *Runner) runSuite(s cypress.Suite, fileID string) error {
 		Name:           r.Project.Sauce.Metadata.Name + " - " + s.Name,
 		Build:          r.Project.Sauce.Metadata.Build,
 		Tags:           r.Project.Sauce.Metadata.Tags,
+		Tunnel: job.TunnelOptions{
+			ID:     r.Project.Sauce.Tunnel.ID,
+			Parent: r.Project.Sauce.Tunnel.Parent,
+		},
 	}
 
 	id, err := r.JobStarter.StartJob(context.Background(), opts)

@@ -3,12 +3,11 @@ package config
 import (
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"gopkg.in/yaml.v2"
 )
 
 // Metadata describes job metadata
@@ -48,7 +47,7 @@ type ImageDefinition struct {
 
 // Project represents the project configuration.
 type Project struct {
-	TypeDef                        `yaml:",inline"`
+	TypeDef      `yaml:",inline"`
 	Metadata     Metadata          `yaml:"metadata,omitempty"`
 	Suites       []Suite           `yaml:"suites,omitempty"`
 	Files        []string          `yaml:"files,omitempty"`
@@ -74,6 +73,13 @@ type Suite struct {
 type SauceConfig struct {
 	Region   string   `yaml:"region,omitempty" json:"region"`
 	Metadata Metadata `yaml:"metadata,omitempty" json:"metadata"`
+	Tunnel   Tunnel   `yaml:"tunnel,omitempty" json:"tunnel,omitempty"`
+}
+
+// Tunnel represents a sauce labs tunnel.
+type Tunnel struct {
+	ID     string `yaml:"id,omitempty" json:"id"`
+	Parent string `yaml:"parent,omitempty" json:"parent,omitempty"`
 }
 
 // RunnerConfiguration describes configurations for the testrunner
