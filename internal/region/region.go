@@ -10,6 +10,8 @@ const (
 	USWest1
 	// EUCentral1 is a sauce labs region in the EU, aka eu-central-1.
 	EUCentral1
+	// Staging is a sauce labs internal pre-production environment.
+	Staging
 )
 
 var meta = []struct {
@@ -30,6 +32,11 @@ var meta = []struct {
 	{
 		"eu-central-1",
 		"https://api.eu-central-1.saucelabs.com",
+	},
+	// Staging
+	{
+		"staging",
+		"https://api.staging.saucelabs.net",
 	},
 }
 
