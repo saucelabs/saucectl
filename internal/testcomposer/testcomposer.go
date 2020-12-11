@@ -13,7 +13,8 @@ import (
 	"net/http"
 )
 
-const ForbiddenPreviewError = "Forbidden: not part of preview"
+// forbiddenPreviewError contains the message send by test-composer when access is restricted
+const forbiddenPreviewError = "Forbidden: not part of preview"
 
 // Client service
 type Client struct {
@@ -75,7 +76,7 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 	}
 
 	// Check if error is related to preview
-	if resp.StatusCode == http.StatusForbidden && string(body) == ForbiddenPreviewError {
+	if resp.StatusCode == http.StatusForbidden && string(body) == forbiddenPreviewError {
 		log.Error().Msg("Looks like you are not part of the preview. To join the preview, please sign up here: https://info.saucelabs.com/scale-cypress-testing.html")
 		err = fmt.Errorf("job start failed; not part of preview")
 		return "", err

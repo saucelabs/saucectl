@@ -128,7 +128,7 @@ func TestTestComposer_StartJob(t *testing.T) {
 			wantErr: fmt.Errorf("job start failed; not part of preview"),
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(403)
-				w.Write([]byte(ForbiddenPreviewError))
+				w.Write([]byte(forbiddenPreviewError))
 			},
 		},
 		{
