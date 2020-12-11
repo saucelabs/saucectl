@@ -3,19 +3,25 @@ package sauce
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/rs/zerolog/log"
+
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/progress"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
+	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/storage"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"time"
 )
+
+// SauceLabsURL represents sauce labs app URL.
+var SauceLabsURL = "https://app.saucelabs.com"
 
 // Runner represents the Sauce Labs cloud implementation for cypress.
 type Runner struct {
@@ -28,6 +34,8 @@ type Runner struct {
 
 type result struct {
 	suiteName string
+	browser   string
+	job       job.Job
 	err       error
 }
 
@@ -78,31 +86,48 @@ func (r *Runner) runSuites(fileID string) int {
 
 	// Collect results.
 	errCount := 0
+	completed := 0
+	total := len(r.Project.Suites)
+	inprogress := total
+
+	log.Info().Msgf("Suites completed: %d in progress: %d", completed, inprogress)
 	for i := 0; i < len(r.Project.Suites); i++ {
-		r := <-results
-		if r.err != nil {
-			log.Err(r.err).Str("suite", r.suiteName).Msg("Suite failed.")
+		res := <-results
+		completed++
+		inprogress--
+		logSuite(completed, inprogress, res.suiteName, res.browser, res.job.Passed)
+
+		if res.err != nil {
+			assetContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, resto.ConsoleLogAsset)
+			if err != nil {
+				log.Err(res.err).Str("suite", res.suiteName).Msg("Failed to get job asset.")
+			} else {
+				fmt.Println(string(assetContent))
+			}
 			errCount++
-			continue
 		}
-		log.Info().Str("suite", r.suiteName).Msg("Suite passed.")
+		log.Info().Msgf("Open job details page: %s", SauceLabsURL+"/tests/"+res.job.ID)
 	}
+
+	logSuitesResult(total, errCount)
 
 	return errCount
 }
 
 func (r *Runner) worker(fileID string, suites <-chan cypress.Suite, results chan<- result) {
 	for s := range suites {
-		err := r.runSuite(s, fileID)
+		job, err := r.runSuite(s, fileID)
 		r := result{
 			suiteName: s.Name,
+			browser:   s.Browser + " " + s.BrowserVersion,
+			job:       job,
 			err:       err,
 		}
 		results <- r
 	}
 }
 
-func (r *Runner) runSuite(s cypress.Suite, fileID string) error {
+func (r *Runner) runSuite(s cypress.Suite, fileID string) (job.Job, error) {
 	log.Info().Str("suite", s.Name).Msg("Starting job.")
 
 	opts := job.StartOptions{
@@ -125,7 +150,7 @@ func (r *Runner) runSuite(s cypress.Suite, fileID string) error {
 
 	id, err := r.JobStarter.StartJob(context.Background(), opts)
 	if err != nil {
-		return err
+		return job.Job{}, err
 	}
 
 	log.Info().Str("jobID", id).Msg("Job started.")
@@ -133,15 +158,15 @@ func (r *Runner) runSuite(s cypress.Suite, fileID string) error {
 	// High interval poll to not oversaturate the job reader with requests.
 	j, err := r.JobReader.PollJob(context.Background(), id, 15*time.Second)
 	if err != nil {
-		return fmt.Errorf("failed to retrieve job status for suite %s", s.Name)
+		return job.Job{}, fmt.Errorf("failed to retrieve job status for suite %s", s.Name)
 	}
 
 	if !j.Passed {
 		// TODO do we need to differentiate test passes/failure vs. job failure (failed to start, crashed)?
-		return fmt.Errorf("suite '%s' has test failures", s.Name)
+		return job.Job{}, fmt.Errorf("suite '%s' has test failures", s.Name)
 	}
 
-	return nil
+	return j, nil
 }
 
 func (r *Runner) archiveProject(tempDir string) (string, error) {
@@ -185,4 +210,17 @@ func (r *Runner) uploadProject(filename string) (string, error) {
 	}
 	log.Info().Str("fileID", resp.ID).Msg("Project uploaded.")
 	return resp.ID, nil
+}
+
+func logSuite(completed, inprogress int, suitName, browser string, passed bool) {
+	log.Info().Msgf("Suites completed: %d in progress: %d", completed, inprogress)
+	log.Info().Msgf("Suit name: %s", suitName)
+	log.Info().Msgf("Browser: %s", browser)
+	log.Info().Msgf("Passed: %t", passed)
+}
+
+func logSuitesResult(total, errCount int) {
+	log.Info().Msgf("Suits total: %d", total)
+	log.Info().Msgf("Suits passed: %d", total-errCount)
+	log.Info().Msgf("Suits failed: %d", errCount)
 }
