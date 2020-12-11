@@ -76,7 +76,7 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 
 	// Check if error is related to preview
 	if resp.StatusCode == http.StatusForbidden && string(body) == ForbiddenPreviewError {
-		log.Error().Msg("Looks like you are not part of the preview. To join the preview, please sign up here: (link)")
+		log.Error().Msg("Looks like you are not part of the preview. To join the preview, please sign up here: https://info.saucelabs.com/scale-cypress-testing.html")
 		err = fmt.Errorf("job start failed; not part of preview")
 		return "", err
 	}
