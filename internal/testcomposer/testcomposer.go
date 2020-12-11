@@ -5,12 +5,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/job"
 	"io/ioutil"
 	"net/http"
 )
+
+const ForbiddenPreviewError = "Forbidden: not part of preview"
 
 // Client service
 type Client struct {
@@ -70,6 +73,14 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 	if err != nil {
 		return
 	}
+
+	// Check if error is related to preview
+	if resp.StatusCode == http.StatusForbidden && string(body) == ForbiddenPreviewError {
+		log.Error().Msg("Looks like you are not part of the preview. To join the preview, please sign up here: (link)")
+		err = fmt.Errorf("job start failed; not part of preview")
+		return "", err
+	}
+
 	if resp.StatusCode >= 300 {
 		err = fmt.Errorf("job start failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 		return "", err

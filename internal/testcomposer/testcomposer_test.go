@@ -114,6 +114,39 @@ func TestTestComposer_StartJob(t *testing.T) {
 				w.WriteHeader(300)
 			},
 		},
+		{
+			name: "Non preview error",
+			fields: fields{
+				HTTPClient: mockTestComposerServer.Client(),
+				URL:        mockTestComposerServer.URL,
+			},
+			args: args{
+				ctx:               context.TODO(),
+				jobStarterPayload: job.StartOptions{},
+			},
+			want:    "",
+			wantErr: fmt.Errorf("job start failed; not part of preview"),
+			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(403)
+				w.Write([]byte(ForbiddenPreviewError))
+			},
+		},
+		{
+			name: "Other forbidden error",
+			fields: fields{
+				HTTPClient: mockTestComposerServer.Client(),
+				URL:        mockTestComposerServer.URL,
+			},
+			args: args{
+				ctx:               context.TODO(),
+				jobStarterPayload: job.StartOptions{},
+			},
+			want:    "",
+			wantErr: fmt.Errorf("job start failed; unexpected response code:'403', msg:''"),
+			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(403)
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
