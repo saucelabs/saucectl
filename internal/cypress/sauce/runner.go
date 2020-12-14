@@ -60,11 +60,9 @@ func (r *Runner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	errCount := r.runSuites(fileID)
+	exitCode := r.runSuites(fileID)
 
-	// FIXME forcing an error, since this feature is not fully implemented yet
-	errCount = 1
-	return errCount, nil
+	return exitCode, nil
 }
 
 func (r *Runner) runSuites(fileID string) int {
@@ -89,10 +87,15 @@ func (r *Runner) runSuites(fileID string) int {
 	completed := 0
 	total := len(r.Project.Suites)
 	inprogress := total
+	exitCode := 0
 
 	log.Info().Msgf("Suites completed: %d in progress: %d", completed, inprogress)
 	for i := 0; i < total; i++ {
 		res := <-results
+		// in case one of test suites not passed
+		if !res.job.Passed {
+			exitCode = 1
+		}
 		completed++
 		inprogress--
 		logSuite(completed, inprogress, res.suiteName, res.browser, res.job.Passed)
@@ -111,7 +114,7 @@ func (r *Runner) runSuites(fileID string) int {
 
 	logSuitesResult(total, errCount)
 
-	return errCount
+	return exitCode
 }
 
 func (r *Runner) worker(fileID string, suites <-chan cypress.Suite, results chan<- result) {
