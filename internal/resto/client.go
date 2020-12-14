@@ -75,8 +75,8 @@ func (c *Client) PollJob(ctx context.Context, id string, interval time.Duration)
 }
 
 // GetJobAssetFileContent returns the job asset file content.
-func (c *Client) GetJobAssetFileContent(ctx context.Context, id, fileName string) ([]byte, error) {
-	request, err := createAssetRequest(ctx, c.URL, c.Username, c.AccessKey, id, fileName)
+func (c *Client) GetJobAssetFileContent(ctx context.Context, jobID, fileName string) ([]byte, error) {
+	request, err := createAssetRequest(ctx, c.URL, c.Username, c.AccessKey, jobID, fileName)
 	if err != nil {
 		return nil, err
 	}

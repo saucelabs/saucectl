@@ -14,5 +14,5 @@ type Reader interface {
 	PollJob(ctx context.Context, id string, interval time.Duration) (Job, error)
 
 	// GetJobAssetFileContent returns the job asset file content.
-	GetJobAssetFileContent(ctx context.Context, id, fileName string) ([]byte, error)
+	GetJobAssetFileContent(ctx context.Context, jobID, fileName string) ([]byte, error)
 }

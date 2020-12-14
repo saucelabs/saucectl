@@ -91,7 +91,7 @@ func (r *Runner) runSuites(fileID string) int {
 	inprogress := total
 
 	log.Info().Msgf("Suites completed: %d in progress: %d", completed, inprogress)
-	for i := 0; i < len(r.Project.Suites); i++ {
+	for i := 0; i < total; i++ {
 		res := <-results
 		completed++
 		inprogress--
@@ -100,7 +100,7 @@ func (r *Runner) runSuites(fileID string) int {
 		if res.err != nil {
 			assetContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, resto.ConsoleLogAsset)
 			if err != nil {
-				log.Err(res.err).Str("suite", res.suiteName).Msg("Failed to get job asset.")
+				log.Warn().Str("suite", res.suiteName).Msg("Failed to get job asset.")
 			} else {
 				fmt.Println(string(assetContent))
 			}
@@ -214,7 +214,7 @@ func (r *Runner) uploadProject(filename string) (string, error) {
 
 func logSuite(completed, inprogress int, suitName, browser string, passed bool) {
 	log.Info().Msgf("Suites completed: %d in progress: %d", completed, inprogress)
-	log.Info().Msgf("Suit name: %s", suitName)
+	log.Info().Msgf("Suite name: %s", suitName)
 	log.Info().Msgf("Browser: %s", browser)
 	log.Info().Msgf("Passed: %t", passed)
 }
