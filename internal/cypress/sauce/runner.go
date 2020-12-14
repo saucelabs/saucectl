@@ -102,7 +102,7 @@ func (r *Runner) runSuites(fileID string) int {
 			if err != nil {
 				log.Warn().Str("suite", res.suiteName).Msg("Failed to get job asset.")
 			} else {
-				fmt.Println(string(assetContent))
+				log.Info().Msg(string(assetContent))
 			}
 			errCount++
 		}
