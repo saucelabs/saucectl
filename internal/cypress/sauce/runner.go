@@ -40,30 +40,34 @@ type result struct {
 // RunProject runs the tests defined in cypress.Project.
 func (r *Runner) RunProject() (int, error) {
 	log.Error().Msg("Caution: Not yet implemented.") // TODO remove debug
+	exitCode := 1
 
 	// Archive the project files.
 	tempDir, err := ioutil.TempDir(os.TempDir(), "saucectl-app-payload")
 	if err != nil {
-		return 1, err
+		return exitCode, err
 	}
 	defer os.RemoveAll(tempDir)
 
 	zipName, err := r.archiveProject(tempDir)
 	if err != nil {
-		return 1, err
+		return exitCode, err
 	}
 
 	fileID, err := r.uploadProject(zipName)
 	if err != nil {
-		return 1, err
+		return exitCode, err
 	}
 
-	exitCode := r.runSuites(fileID)
+	isPassed := r.runSuites(fileID)
+	if isPassed {
+		exitCode = 0
+	}
 
 	return exitCode, nil
 }
 
-func (r *Runner) runSuites(fileID string) int {
+func (r *Runner) runSuites(fileID string) bool {
 	suites := make(chan cypress.Suite)
 	results := make(chan result, len(r.Project.Suites))
 	defer close(results)
@@ -85,14 +89,14 @@ func (r *Runner) runSuites(fileID string) int {
 	completed := 0
 	total := len(r.Project.Suites)
 	inprogress := total
-	exitCode := 0
+	passed := true
 
 	log.Info().Msgf("Suites completed: %d in progress: %d", completed, inprogress)
 	for i := 0; i < total; i++ {
 		res := <-results
 		// in case one of test suites not passed
 		if !res.job.Passed {
-			exitCode = 1
+			passed = false
 		}
 		completed++
 		inprogress--
@@ -112,7 +116,7 @@ func (r *Runner) runSuites(fileID string) int {
 
 	logSuitesResult(total, errCount)
 
-	return exitCode
+	return passed
 }
 
 func (r *Runner) worker(fileID string, suites <-chan cypress.Suite, results chan<- result) {
