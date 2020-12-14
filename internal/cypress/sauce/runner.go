@@ -20,9 +20,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/storage"
 )
 
-// SauceLabsURL represents sauce labs app URL.
-var SauceLabsURL = "https://app.saucelabs.com"
-
 // Runner represents the Sauce Labs cloud implementation for cypress.
 type Runner struct {
 	Project         cypress.Project
@@ -30,6 +27,7 @@ type Runner struct {
 	JobStarter      job.Starter
 	JobReader       job.Reader
 	Concurrency     int
+	URL             string
 }
 
 type result struct {
@@ -109,7 +107,7 @@ func (r *Runner) runSuites(fileID string) int {
 			}
 			errCount++
 		}
-		log.Info().Msgf("Open job details page: %s", SauceLabsURL+"/tests/"+res.job.ID)
+		log.Info().Msgf("Open job details page: %s", r.URL+"/tests/"+res.job.ID)
 	}
 
 	logSuitesResult(total, errCount)

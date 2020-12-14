@@ -2,15 +2,16 @@ package run
 
 import (
 	"errors"
+	"net/http"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/cypress/sauce"
 	"github.com/saucelabs/saucectl/internal/resto"
-	"net/http"
-	"os"
-	"path/filepath"
-	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
@@ -226,6 +227,7 @@ func runCypressInSauce(p cypress.Project) (int, error) {
 		JobStarter:      &tc,
 		JobReader:       &rsto,
 		Concurrency:     concurrency,
+		URL:             re.APIBaseURL(),
 	}
 	return r.RunProject()
 }
