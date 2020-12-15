@@ -59,8 +59,8 @@ func (r *Runner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	isPassed := r.runSuites(fileID)
-	if isPassed {
+	passed := r.runSuites(fileID)
+	if passed {
 		exitCode = 0
 	}
 
@@ -225,7 +225,7 @@ func logSuite(completed, inprogress int, suitName, browser string, passed bool) 
 }
 
 func logSuitesResult(total, errCount int) {
-	log.Info().Msgf("Suits total: %d", total)
-	log.Info().Msgf("Suits passed: %d", total-errCount)
-	log.Info().Msgf("Suits failed: %d", errCount)
+	log.Info().Msgf("Suites total: %d", total)
+	log.Info().Msgf("Suites passed: %d", total-errCount)
+	log.Info().Msgf("Suites failed: %d", errCount)
 }
