@@ -4,19 +4,21 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/progress"
-	"github.com/saucelabs/saucectl/cli/runner"
-	"github.com/saucelabs/saucectl/cli/streams"
-	"github.com/saucelabs/saucectl/internal/cypress"
-	"github.com/saucelabs/saucectl/internal/jsonio"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/rs/zerolog/log"
+
+	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/cli/progress"
+	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/cli/streams"
+	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/jsonio"
 )
 
 // SauceRunnerConfigFile represents the filename for the sauce runner configuration.
@@ -144,7 +146,7 @@ func (r *Runner) setup() error {
 		"tcp:localhost:9223",
 	}
 
-	if _, _, err := r.docker.Execute(r.Ctx, r.containerID, sockatCmd); err != nil {
+	if _, _, err := r.docker.Execute(r.Ctx, r.containerID, sockatCmd, nil); err != nil {
 		return err
 	}
 
@@ -154,7 +156,7 @@ func (r *Runner) setup() error {
 func (r *Runner) beforeExec(tasks []string) error {
 	for _, task := range tasks {
 		log.Info().Str("task", task).Msg("Running BeforeExec")
-		exitCode, err := r.execute(strings.Fields(task))
+		exitCode, err := r.execute(strings.Fields(task), nil)
 		if err != nil {
 			return err
 		}
@@ -165,7 +167,7 @@ func (r *Runner) beforeExec(tasks []string) error {
 	return nil
 }
 
-func (r *Runner) execute(cmd []string) (int, error) {
+func (r *Runner) execute(cmd []string, env map[string]string) (int, error) {
 	var (
 		out, stderr io.Writer
 		in          io.ReadCloser
@@ -176,7 +178,7 @@ func (r *Runner) execute(cmd []string) (int, error) {
 	if err := r.Cli.In().CheckTty(false, true); err != nil {
 		return 1, err
 	}
-	createResp, attachResp, err := r.docker.Execute(r.Ctx, r.containerID, cmd)
+	createResp, attachResp, err := r.docker.Execute(r.Ctx, r.containerID, cmd, env)
 	if err != nil {
 		return 1, err
 	}
@@ -211,7 +213,7 @@ func (r *Runner) execute(cmd []string) (int, error) {
 
 // run runs the tests defined in the config.Project.
 func (r *Runner) run(s cypress.Suite) (int, error) {
-	return r.execute([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", s.Name})
+	return r.execute([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", s.Name}, s.Config.Env)
 }
 
 // teardown cleans up the test environment.
