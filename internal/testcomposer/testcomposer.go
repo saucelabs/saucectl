@@ -80,7 +80,7 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 	}
 
 	// Check if error is related to preview
-	err = c.checkFrameworkRestrictions(*resp, string(body))
+	err = c.checkFrameworkRestrictions(opts.Framework, *resp, string(body))
 	if err != nil {
 		err = fmt.Errorf("job start failed; %s", err)
 		return "", err
@@ -190,7 +190,7 @@ func (c *Client) CheckFrameworkAvailability(ctx context.Context, frameworkName s
 	}
 
 	bodyStr := strings.TrimSpace(string(body))
-	err = c.checkFrameworkRestrictions(*resp, bodyStr)
+	err = c.checkFrameworkRestrictions(frameworkName, *resp, bodyStr)
 	if err != nil {
 		return err
 	}
@@ -202,13 +202,13 @@ func (c *Client) CheckFrameworkAvailability(ctx context.Context, frameworkName s
 }
 
 // checkFrameworkRestrictions checks specific cases related to framework availability
-func (c *Client) checkFrameworkRestrictions(resp http.Response, body string) error {
+func (c *Client) checkFrameworkRestrictions(framework string, resp http.Response, body string) error {
 	if resp.StatusCode == http.StatusForbidden && body == forbiddenPreviewError {
 		log.Error().Msg("Looks like you are not part of the preview. To join the preview, please sign up here: https://info.saucelabs.com/scale-cypress-testing.html")
 		return errors.New("not part of preview")
 	}
 	if resp.StatusCode == http.StatusBadRequest && body == unsupportedFrameworkError {
-		log.Error().Msg("The framework you've selected is invalid")
+		log.Error().Msg("The framework " + framework + " is not supported.")
 		return errors.New("framework not supported")
 	}
 	return nil
