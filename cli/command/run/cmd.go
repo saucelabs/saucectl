@@ -12,6 +12,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/cypress/sauce"
+	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/resto"
 
 	"github.com/rs/zerolog/log"
@@ -119,6 +120,9 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 
 	if d.Kind == config.KindCypress && d.APIVersion == config.VersionV1Alpha {
 		return runCypress(cmd, cli)
+	}
+	if d.Kind == config.KindPlaywright && d.APIVersion == config.VersionV1Alpha {
+		return runPlaywright(cli)
 	}
 
 	return runLegacyMode(cmd, cli)
@@ -260,6 +264,51 @@ func runCypressInSauce(p cypress.Project) (int, error) {
 		Region:          re,
 	}
 	return r.RunProject()
+}
+
+func runPlaywright(cli *command.SauceCtlCli) (int, error) {
+	p, err := playwright.FromFile(cfgFilePath)
+	if err != nil {
+		return 1, err
+	}
+
+	p.Sauce.Metadata.ExpandEnv()
+
+	// Merge env from CLI args and job config. CLI args take precedence.
+	for k, v := range env {
+		for _, s := range p.Suites {
+			if s.Config.Env == nil {
+				s.Config.Env = map[string]string{}
+			}
+			s.Config.Env[k] = v
+		}
+	}
+
+	if p.Sauce.Region == "" {
+		p.Sauce.Region = defaultRegion
+	}
+
+	if regionFlag != "" {
+		p.Sauce.Region = regionFlag
+	}
+
+	switch testEnv {
+	case "docker":
+		return runPlaywrightInDocker(p, cli)
+	default:
+		return 1, errors.New("unsupported test environment")
+	}
+}
+
+func runPlaywrightInDocker(p playwright.Project, cli *command.SauceCtlCli) (int, error) {
+	log.Info().Msg("Running Playwright in Docker")
+
+	//cd, err := cypressDocker.New(p, cli)
+	//if err != nil {
+	//	return 1, err
+	//}
+	//return cd.RunProject()
+	return 0, errors.New("not implemented")
 }
 
 func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, error) {
