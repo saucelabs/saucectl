@@ -12,6 +12,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 // forbiddenPreviewError contains the message send by test-composer when access is restricted
@@ -188,13 +189,14 @@ func (c *Client) CheckFrameworkAvailability(ctx context.Context, frameworkName s
 		return err
 	}
 
-	err = c.checkFrameworkRestrictions(*resp, string(body))
+	bodyStr := strings.TrimSpace(string(body))
+	err = c.checkFrameworkRestrictions(*resp, bodyStr)
 	if err != nil {
 		return err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected response code:'%d', msg:'%s'", resp.StatusCode, string(body))
+		return fmt.Errorf("unexpected response code:'%d', msg:'%s'", resp.StatusCode, bodyStr)
 	}
 	return nil
 }
