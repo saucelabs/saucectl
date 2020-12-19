@@ -26,6 +26,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/ci/gitlab"
 	"github.com/saucelabs/saucectl/internal/ci/jenkins"
 	cypressDocker "github.com/saucelabs/saucectl/internal/cypress/docker"
+	playwrightDocker "github.com/saucelabs/saucectl/internal/playwright/docker"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/memseq"
@@ -303,12 +304,11 @@ func runPlaywright(cli *command.SauceCtlCli) (int, error) {
 func runPlaywrightInDocker(p playwright.Project, cli *command.SauceCtlCli) (int, error) {
 	log.Info().Msg("Running Playwright in Docker")
 
-	//cd, err := cypressDocker.New(p, cli)
-	//if err != nil {
-	//	return 1, err
-	//}
-	//return cd.RunProject()
-	return 0, errors.New("not implemented")
+	cd, err := playwrightDocker.New(p, cli)
+	if err != nil {
+		return 1, err
+	}
+	return cd.RunProject()
 }
 
 func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, error) {

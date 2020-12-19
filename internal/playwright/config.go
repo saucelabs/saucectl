@@ -5,11 +5,12 @@ import (
 	"github.com/saucelabs/saucectl/cli/config"
 	"gopkg.in/yaml.v2"
 	"os"
+	"path/filepath"
 )
 
 // Project represents the cypress project configuration.
 type Project struct {
-	config.TypeDef                    `yaml:",inline"`
+	config.TypeDef `yaml:",inline"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Playwright     Playwright         `yaml:"cypress,omitempty" json:"cypress"`
 	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
@@ -35,7 +36,9 @@ type SuiteConfig struct {
 
 // Playwright represents crucial playwright configuration that is required for setting up a project.
 type Playwright struct {
-	ConfigFile string `yaml:"configFile,omitempty"`
+	ConfigFile  string `yaml:"configFile,omitempty"`
+	EnvFile     string `yaml:"envFile,omitempty"`
+	ProjectPath string `yaml:"projectPath,omitempty"`
 }
 
 // FromFile creates a new playwright Project based on the filepath cfgPath.
@@ -55,25 +58,24 @@ func FromFile(cfgPath string) (Project, error) {
 	if _, err := os.Stat(p.Playwright.ConfigFile); err != nil {
 		return p, fmt.Errorf("unable to locate %s", p.Playwright.ConfigFile)
 	}
-	//configDir := filepath.Dir(p.Playwright.ConfigFile)
-	//
-	//// We must locate the cypress folder.
-	//cPath := filepath.Join(configDir, "cypress")
-	//if _, err := os.Stat(cPath); err != nil {
-	//	return p, fmt.Errorf("unable to locate the cypress folder in %s", configDir)
-	//}
-	//p.Cypress.ProjectPath = cPath
-	//
-	//// Optionally include the env file if it exists.
-	//envFile := filepath.Join(configDir, "cypress.env.json")
-	//if _, err := os.Stat(envFile); err == nil {
-	//	p.Cypress.EnvFile = envFile
-	//}
+	configDir := filepath.Dir(p.Playwright.ConfigFile)
+
+	// We must locate the cypress folder.
+	cPath := filepath.Join(configDir, "cypress")
+	if _, err := os.Stat(cPath); err != nil {
+		return p, fmt.Errorf("unable to locate the cypress folder in %s", configDir)
+	}
+	p.Playwright.ProjectPath = cPath
+
+	// Optionally include the env file if it exists.
+	envFile := filepath.Join(configDir, "cypress.env.json")
+	if _, err := os.Stat(envFile); err == nil {
+		p.Playwright.EnvFile = envFile
+	}
 
 	// Default mode to Mount
 	if p.Docker.FileTransfer == "" {
 		p.Docker.FileTransfer = config.DockerFileMount
 	}
-
 	return p, nil
 }
