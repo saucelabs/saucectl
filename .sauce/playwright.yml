@@ -1,11 +1,13 @@
 apiVersion: v1alpha
+kind: playwright
 metadata:
   name: Testing Playwright Support
   tags:
     - e2e
   build: "$BUILD_ID"
-files:
-  - ./tests/e2e/playwright/example.test.js
+playwright:
+  configFile: "dummy.json"
+  envFile: ""
 suites:
   - name: "saucy test"
     match: ".*.(spec|test).js$"
