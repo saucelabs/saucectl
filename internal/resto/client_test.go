@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/saucelabs/saucectl/internal/job"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +11,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/saucelabs/saucectl/internal/job"
 )
 
 func TestClient_GetJobDetails(t *testing.T) {
@@ -192,6 +193,71 @@ func TestClient_GetJobStatus(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond)
+			assert.Equal(t, err, tc.expectedErr)
+			assert.Equal(t, got, tc.expectedResp)
+		})
+	}
+}
+
+func TestClient_GetJobAssetFileContent(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/rest/v1/test/jobs/1/assets/console.log":
+			fileContent := []byte(`Sauce Cypress Runner 0.2.3`)
+			w.Write(fileContent)
+		case "/rest/v1/test/jobs/2/assets/console.log":
+			w.WriteHeader(http.StatusNotFound)
+		case "/rest/v1/test/jobs/3/assets/console.log":
+			w.WriteHeader(http.StatusUnauthorized)
+			fileContent := []byte(`unauthorized`)
+			w.Write(fileContent)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}))
+	defer ts.Close()
+	timeout := 3 * time.Second
+
+	testCases := []struct {
+		name         string
+		client       Client
+		jobID        string
+		expectedResp []byte
+		expectedErr  error
+	}{
+		{
+			name:         "get job asset with ID 1",
+			client:       New(ts.URL, "test", "123", timeout),
+			jobID:        "1",
+			expectedResp: []byte(`Sauce Cypress Runner 0.2.3`),
+			expectedErr:  nil,
+		},
+		{
+			name:         "get job asset with ID 333 and Internal Server Error ",
+			client:       New(ts.URL, "test", "123", timeout),
+			jobID:        "333",
+			expectedResp: nil,
+			expectedErr:  ErrServerError,
+		},
+		{
+			name:         "get job asset with ID 2",
+			client:       New(ts.URL, "test", "123", timeout),
+			jobID:        "2",
+			expectedResp: nil,
+			expectedErr:  ErrJobNotFound,
+		},
+		{
+			name:         "get job asset with ID 3",
+			client:       New(ts.URL, "test", "123", timeout),
+			jobID:        "3",
+			expectedResp: nil,
+			expectedErr:  errors.New("job status request failed; unexpected response code:'401', msg:'unauthorized'"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := tc.client.GetJobAssetFileContent(context.Background(), tc.jobID, ConsoleLogAsset)
 			assert.Equal(t, err, tc.expectedErr)
 			assert.Equal(t, got, tc.expectedResp)
 		})

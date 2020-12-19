@@ -383,11 +383,20 @@ func (handler *Handler) CopyFromContainer(ctx context.Context, srcContainerID st
 }
 
 // Execute runs the test in the Docker container and attaches to its stdout
-func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd []string) (*types.IDResponse, *types.HijackedResponse, error) {
+func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd []string, env map[string]string) (*types.IDResponse, *types.HijackedResponse, error) {
 	execConfig := types.ExecConfig{
 		Cmd:          cmd,
 		AttachStdout: true,
 		AttachStderr: true,
+	}
+
+	// Set env vars for a particular suite
+	if len(env) > 0 {
+		envVars := []string{}
+		for k, v := range env {
+			envVars = append(envVars, k+"="+v)
+		}
+		execConfig.Env = envVars
 	}
 
 	createResp, err := handler.client.ContainerExecCreate(ctx, srcContainerID, execConfig)

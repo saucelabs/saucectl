@@ -5,11 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/job"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/job"
 )
+
+// ConsoleLogAsset represents job asset log file name.
+const ConsoleLogAsset = "console.log"
 
 var (
 	// ErrServerError is returned when the server was not able to correctly handle our request (status code >= 500).
@@ -70,6 +74,40 @@ func (c *Client) PollJob(ctx context.Context, id string, interval time.Duration)
 	return job.Job{}, nil
 }
 
+// GetJobAssetFileContent returns the job asset file content.
+func (c *Client) GetJobAssetFileContent(ctx context.Context, jobID, fileName string) ([]byte, error) {
+	request, err := createAssetRequest(ctx, c.URL, c.Username, c.AccessKey, jobID, fileName)
+	if err != nil {
+		return nil, err
+	}
+
+	return doAssetRequest(c.HTTPClient, request)
+}
+
+func doAssetRequest(httpClient *http.Client, request *http.Request) ([]byte, error) {
+	resp, err := httpClient.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return nil, ErrServerError
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, ErrJobNotFound
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		err := fmt.Errorf("job status request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		return nil, err
+	}
+
+	return ioutil.ReadAll(resp.Body)
+}
+
 func doRequest(httpClient *http.Client, request *http.Request) (job.Job, error) {
 	resp, err := httpClient.Do(request)
 	if err != nil {
@@ -107,6 +145,18 @@ func createRequest(ctx context.Context, url, username, accessKey, jobID string) 
 	}
 
 	request.Header.Set("Content-Type", "application/json")
+	request.SetBasicAuth(username, accessKey)
+
+	return request, nil
+}
+
+func createAssetRequest(ctx context.Context, url, username, accessKey, jobID, fileName string) (*http.Request, error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet,
+		fmt.Sprintf("%s/rest/v1/%s/jobs/%s/assets/%s", url, username, jobID, fileName), nil)
+	if err != nil {
+		return nil, err
+	}
+
 	request.SetBasicAuth(username, accessKey)
 
 	return request, nil

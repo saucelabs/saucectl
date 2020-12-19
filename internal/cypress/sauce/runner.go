@@ -3,18 +3,21 @@ package sauce
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/rs/zerolog/log"
+
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/progress"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
+	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/storage"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 // Runner represents the Sauce Labs cloud implementation for cypress.
@@ -23,45 +26,113 @@ type Runner struct {
 	ProjectUploader storage.ProjectUploader
 	JobStarter      job.Starter
 	JobReader       job.Reader
+	Concurrency     int
+	URL             string
+}
+
+type result struct {
+	suiteName string
+	browser   string
+	job       job.Job
+	err       error
 }
 
 // RunProject runs the tests defined in cypress.Project.
 func (r *Runner) RunProject() (int, error) {
 	log.Error().Msg("Caution: Not yet implemented.") // TODO remove debug
+	exitCode := 1
 
 	// Archive the project files.
 	tempDir, err := ioutil.TempDir(os.TempDir(), "saucectl-app-payload")
 	if err != nil {
-		return 1, err
+		return exitCode, err
 	}
 	defer os.RemoveAll(tempDir)
 
 	zipName, err := r.archiveProject(tempDir)
 	if err != nil {
-		return 1, err
+		return exitCode, err
 	}
 
 	fileID, err := r.uploadProject(zipName)
 	if err != nil {
-		return 1, err
+		return exitCode, err
 	}
 
-	errCount := 0
-	for _, s := range r.Project.Suites {
-		if err := r.runSuite(s, fileID); err != nil {
-			log.Err(err).Str("suite", s.Name).Msg("Suite failed.")
-			errCount++
-			continue
-		}
-		log.Info().Str("suite", s.Name).Msg("Suite passed.")
+	passed := r.runSuites(fileID)
+	if passed {
+		exitCode = 0
 	}
 
-	// FIXME forcing an error, since this feature is not fully implemented yet
-	errCount = 1
-	return errCount, nil
+	return exitCode, nil
 }
 
-func (r *Runner) runSuite(s cypress.Suite, fileID string) error {
+func (r *Runner) runSuites(fileID string) bool {
+	suites := make(chan cypress.Suite)
+	results := make(chan result, len(r.Project.Suites))
+	defer close(results)
+
+	// Create a pool of workers that run the suites.
+	log.Info().Int("concurrency", r.Concurrency).Msg("Launching workers.")
+	for i := 0; i < r.Concurrency; i++ {
+		go r.worker(fileID, suites, results)
+	}
+
+	// Submit suites to work on.
+	for _, s := range r.Project.Suites {
+		suites <- s
+	}
+	close(suites)
+
+	// Collect results.
+	errCount := 0
+	completed := 0
+	total := len(r.Project.Suites)
+	inprogress := total
+	passed := true
+
+	log.Info().Msgf("Suites completed: %d in progress: %d", completed, inprogress)
+	for i := 0; i < total; i++ {
+		res := <-results
+		// in case one of test suites not passed
+		if !res.job.Passed {
+			passed = false
+		}
+		completed++
+		inprogress--
+		logSuite(completed, inprogress, res.suiteName, res.browser, res.job.Passed)
+
+		if res.err != nil {
+			assetContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, resto.ConsoleLogAsset)
+			if err != nil {
+				log.Warn().Str("suite", res.suiteName).Msg("Failed to get job asset.")
+			} else {
+				log.Info().Msg(string(assetContent))
+			}
+			errCount++
+		}
+		log.Info().Msgf("Open job details page: %s", r.URL+"/tests/"+res.job.ID)
+	}
+
+	logSuitesResult(total, errCount)
+
+	return passed
+}
+
+func (r *Runner) worker(fileID string, suites <-chan cypress.Suite, results chan<- result) {
+	for s := range suites {
+		job, err := r.runSuite(s, fileID)
+		r := result{
+			suiteName: s.Name,
+			browser:   s.Browser + " " + s.BrowserVersion,
+			job:       job,
+			err:       err,
+		}
+		results <- r
+	}
+}
+
+func (r *Runner) runSuite(s cypress.Suite, fileID string) (job.Job, error) {
 	log.Info().Str("suite", s.Name).Msg("Starting job.")
 
 	opts := job.StartOptions{
@@ -76,11 +147,15 @@ func (r *Runner) runSuite(s cypress.Suite, fileID string) error {
 		Name:           r.Project.Sauce.Metadata.Name + " - " + s.Name,
 		Build:          r.Project.Sauce.Metadata.Build,
 		Tags:           r.Project.Sauce.Metadata.Tags,
+		Tunnel: job.TunnelOptions{
+			ID:     r.Project.Sauce.Tunnel.ID,
+			Parent: r.Project.Sauce.Tunnel.Parent,
+		},
 	}
 
 	id, err := r.JobStarter.StartJob(context.Background(), opts)
 	if err != nil {
-		return err
+		return job.Job{}, err
 	}
 
 	log.Info().Str("jobID", id).Msg("Job started.")
@@ -88,15 +163,15 @@ func (r *Runner) runSuite(s cypress.Suite, fileID string) error {
 	// High interval poll to not oversaturate the job reader with requests.
 	j, err := r.JobReader.PollJob(context.Background(), id, 15*time.Second)
 	if err != nil {
-		return fmt.Errorf("failed to retrieve job status for suite %s", s.Name)
+		return job.Job{}, fmt.Errorf("failed to retrieve job status for suite %s", s.Name)
 	}
 
 	if !j.Passed {
 		// TODO do we need to differentiate test passes/failure vs. job failure (failed to start, crashed)?
-		return fmt.Errorf("suite %s has test failures", s.Name)
+		return job.Job{}, fmt.Errorf("suite '%s' has test failures", s.Name)
 	}
 
-	return nil
+	return j, nil
 }
 
 func (r *Runner) archiveProject(tempDir string) (string, error) {
@@ -140,4 +215,17 @@ func (r *Runner) uploadProject(filename string) (string, error) {
 	}
 	log.Info().Str("fileID", resp.ID).Msg("Project uploaded.")
 	return resp.ID, nil
+}
+
+func logSuite(completed, inprogress int, suitName, browser string, passed bool) {
+	log.Info().Msgf("Suites completed: %d in progress: %d", completed, inprogress)
+	log.Info().Msgf("Suite name: %s", suitName)
+	log.Info().Msgf("Browser: %s", browser)
+	log.Info().Msgf("Passed: %t", passed)
+}
+
+func logSuitesResult(total, errCount int) {
+	log.Info().Msgf("Suites total: %d", total)
+	log.Info().Msgf("Suites passed: %d", total-errCount)
+	log.Info().Msgf("Suites failed: %d", errCount)
 }
