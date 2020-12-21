@@ -27,4 +27,5 @@ type TunnelOptions struct {
 // Starter is the interface for starting jobs.
 type Starter interface {
 	StartJob(ctx context.Context, opts StartOptions) (jobID string, err error)
+	CheckFrameworkAvailability(ctx context.Context, frameworkName string) error
 }
