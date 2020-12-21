@@ -97,6 +97,7 @@ func (r *Runner) runSuites(fileID string) bool {
 	inProgress := total
 	passed := true
 
+	progress.Show("Suites completed: %d/%d", completed, total)
 	for i := 0; i < total; i++ {
 		res := <-results
 		// in case one of test suites not passed
@@ -106,13 +107,14 @@ func (r *Runner) runSuites(fileID string) bool {
 		completed++
 		inProgress--
 
-		log.Info().Msgf("Suites completed: %d/%d", completed, total)
+		progress.Show("Suites completed: %d/%d", completed, total)
 		r.logSuite(res)
 
-		if res.err != nil {
+		if res.job.ID != "" || res.err != nil {
 			errCount++
 		}
 	}
+	progress.Stop()
 	logSuitesResult(total, errCount)
 
 	return passed

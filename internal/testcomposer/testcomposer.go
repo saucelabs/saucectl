@@ -87,7 +87,7 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 	}
 
 	if resp.StatusCode >= 300 {
-		err = fmt.Errorf("job start failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		err = fmt.Errorf("job start failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, strings.TrimSpace(string(body)))
 		return "", err
 	}
 
