@@ -222,21 +222,20 @@ func (r *Runner) uploadProject(filename string) (string, error) {
 // logSuite display the result of a suite
 func (r *Runner) logSuite(res result) {
 	if res.job.ID == "" {
-		log.Error().Msgf("Suite \"%s\": failed to be started", res.suiteName)
-		log.Error().Msgf("Error: %s", res.err)
+		log.Error().Str("suite", res.suiteName).Msgf("failed to be started")
+		log.Error().Str("suite", res.suiteName).Msgf("%s", res.err)
 		return
 	}
 	resultStr := "pass"
 	if !res.job.Passed {
 		resultStr = "failure"
 	}
-	log.Info().Str("suiteName", res.suiteName).
-		Msgf("Suite \"%s\": %s", res.suiteName, resultStr)
+	log.Info().Str("suite", res.suiteName).Msgf("Result %s", resultStr)
 
 	if !res.job.Passed {
 		r.logSuiteError(res)
 	}
-	log.Info().Msgf("Open job details page: %s", r.URL+"/tests/"+res.job.ID)
+	log.Info().Str("suite", res.suiteName).Msgf("Open job details page: %s", r.URL+"/tests/"+res.job.ID)
 }
 
 // logSuiteError display the console output when tests from a suite are failing
