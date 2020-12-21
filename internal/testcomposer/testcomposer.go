@@ -4,13 +4,21 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/job"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
+
+// forbiddenPreviewError contains the message send by test-composer when access is restricted
+const forbiddenPreviewError = "Forbidden: not part of preview"
+// unsupportedFrameworkError contains the message send by test-composer when framework is not supported
+const unsupportedFrameworkError = "Bad Request: unsupported framework"
 
 // Client service
 type Client struct {
@@ -70,6 +78,14 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 	if err != nil {
 		return
 	}
+
+	// Check if error is related to preview
+	err = c.checkFrameworkRestrictions(*resp, string(body), opts.Framework, opts.User)
+	if err != nil {
+		err = fmt.Errorf("job start failed; %s", err)
+		return "", err
+	}
+
 	if resp.StatusCode >= 300 {
 		err = fmt.Errorf("job start failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 		return "", err
@@ -151,4 +167,49 @@ func (c *Client) doJSONResponse(req *http.Request, expectStatus int, v interface
 	}
 
 	return json.NewDecoder(res.Body).Decode(v)
+}
+
+// CheckFrameworkAvailability checks that the requested is available on the backend
+func (c *Client) CheckFrameworkAvailability(ctx context.Context, frameworkName string) error {
+	url := fmt.Sprintf("%s/v1/testcomposer/framework/%s", c.URL, frameworkName)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	bodyStr := strings.TrimSpace(string(body))
+	err = c.checkFrameworkRestrictions(*resp, bodyStr, frameworkName, c.Credentials.Username)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected response code:'%d', msg:'%s'", resp.StatusCode, bodyStr)
+	}
+	return nil
+}
+
+// checkFrameworkRestrictions checks specific cases related to framework availability
+func (c *Client) checkFrameworkRestrictions(resp http.Response, body string, framework, username string) error {
+	if resp.StatusCode == http.StatusForbidden && body == forbiddenPreviewError {
+		log.Error().Msg("User \"" + username + "\" is not registered for the " + framework + " preview. To join the preview, please sign up here: https://info.saucelabs.com/scale-cypress-testing.html")
+		return errors.New("not part of preview")
+	}
+	if resp.StatusCode == http.StatusBadRequest && body == unsupportedFrameworkError {
+		log.Error().Msg("The framework " + framework + " is not supported.")
+		return errors.New("framework not supported")
+	}
+	return nil
 }
