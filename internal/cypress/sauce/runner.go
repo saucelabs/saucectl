@@ -226,11 +226,11 @@ func (r *Runner) logSuite(res result) {
 		log.Error().Str("suite", res.suiteName).Msgf("%s", res.err)
 		return
 	}
-	resultStr := "pass"
+	resultStr := "Passed"
 	if !res.job.Passed {
-		resultStr = "failure"
+		resultStr = "Failed"
 	}
-	log.Info().Str("suite", res.suiteName).Msgf("Result %s", resultStr)
+	log.Info().Str("suite", res.suiteName).Msgf("%s: %s", res.suiteName, resultStr)
 
 	if !res.job.Passed {
 		r.logSuiteError(res)
