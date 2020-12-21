@@ -94,10 +94,9 @@ func (r *Runner) runSuites(fileID string) bool {
 	errCount := 0
 	completed := 0
 	total := len(r.Project.Suites)
-	inprogress := total
+	inProgress := total
 	passed := true
 
-	log.Info().Msgf("Suites completed: %d in progress: %d", completed, inprogress)
 	for i := 0; i < total; i++ {
 		res := <-results
 		// in case one of test suites not passed
@@ -105,21 +104,15 @@ func (r *Runner) runSuites(fileID string) bool {
 			passed = false
 		}
 		completed++
-		inprogress--
-		logSuite(completed, inprogress, res.suiteName, res.browser, res.job.Passed)
+		inProgress--
+
+		log.Info().Msgf("Suites completed: %d/%d", completed, total)
+		r.logSuite(res)
 
 		if res.err != nil {
-			assetContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, resto.ConsoleLogAsset)
-			if err != nil {
-				log.Warn().Str("suite", res.suiteName).Msg("Failed to get job asset.")
-			} else {
-				log.Info().Msg(string(assetContent))
-			}
 			errCount++
 		}
-		log.Info().Msgf("Open job details page: %s", r.URL+"/tests/"+res.job.ID)
 	}
-
 	logSuitesResult(total, errCount)
 
 	return passed
@@ -127,11 +120,12 @@ func (r *Runner) runSuites(fileID string) bool {
 
 func (r *Runner) worker(fileID string, suites <-chan cypress.Suite, results chan<- result) {
 	for s := range suites {
-		job, err := r.runSuite(s, fileID)
+		jobData, err := r.runSuite(s, fileID)
+
 		r := result{
 			suiteName: s.Name,
 			browser:   s.Browser + " " + s.BrowserVersion,
-			job:       job,
+			job:       jobData,
 			err:       err,
 		}
 		results <- r
@@ -223,11 +217,35 @@ func (r *Runner) uploadProject(filename string) (string, error) {
 	return resp.ID, nil
 }
 
-func logSuite(completed, inprogress int, suitName, browser string, passed bool) {
-	log.Info().Msgf("Suites completed: %d in progress: %d", completed, inprogress)
-	log.Info().Msgf("Suite name: %s", suitName)
-	log.Info().Msgf("Browser: %s", browser)
-	log.Info().Msgf("Passed: %t", passed)
+// logSuite display the result of a suite
+func (r *Runner) logSuite(res result) {
+	if res.job.ID == "" {
+		log.Error().Msgf("Suite \"%s\": failed to be started", res.suiteName)
+		log.Error().Msgf("Error: %s", res.err)
+		return
+	}
+	resultStr := "pass"
+	if !res.job.Passed {
+		resultStr = "failure"
+	}
+	log.Info().Str("suiteName", res.suiteName).
+		Msgf("Suite \"%s\": %s", res.suiteName, resultStr)
+
+	if !res.job.Passed {
+		r.logSuiteError(res)
+	}
+	log.Info().Msgf("Open job details page: %s", r.URL+"/tests/"+res.job.ID)
+}
+
+// logSuiteError display the console output when tests from a suite are failing
+func (r *Runner) logSuiteError(res result) {
+	// Display log only when at least it has started
+	assetContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, resto.ConsoleLogAsset)
+	if err != nil {
+		log.Warn().Str("suite", res.suiteName).Msg("Failed to get job asset.")
+	} else {
+		log.Info().Msg(string(assetContent))
+	}
 }
 
 func logSuitesResult(total, errCount int) {
