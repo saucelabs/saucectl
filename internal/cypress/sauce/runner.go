@@ -39,7 +39,6 @@ type result struct {
 
 // RunProject runs the tests defined in cypress.Project.
 func (r *Runner) RunProject() (int, error) {
-	log.Error().Msg("Caution: Not yet implemented.") // TODO remove debug
 	exitCode := 1
 
 	// Archive the project files.
