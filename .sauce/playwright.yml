@@ -1,20 +1,23 @@
 apiVersion: v1alpha
 kind: playwright
-metadata:
-  name: Testing Playwright Support
-  tags:
-    - e2e
-  build: "$BUILD_ID"
+sauce:
+  region: us-west-1
+  metadata:
+    name: Testing Playwright Support
+    tags:
+      - e2e
+    build: "$BUILD_ID"
+docker:
+  fileTransfer: mount
+  image:
+    name: saucelabs/stt-playwright-jest-node
+    tag: latest
 playwright:
-  configFile: "dummy.json"
-  envFile: ""
+  projectPath: tests/e2e/playwright/
+  params:
+#    browserName: firefox
 suites:
   - name: "saucy test"
     match: ".*.(spec|test).js$"
     settings:
       browserName: "firefox"
-image:
-  base: saucelabs/stt-playwright-jest-node
-  version: latest
-sauce:
-  region: us-west-1
