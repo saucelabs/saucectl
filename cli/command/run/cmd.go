@@ -275,16 +275,6 @@ func runPlaywright(cli *command.SauceCtlCli) (int, error) {
 
 	p.Sauce.Metadata.ExpandEnv()
 
-	// Merge env from CLI args and job config. CLI args take precedence.
-	for k, v := range env {
-		for _, s := range p.Suites {
-			if s.Config.Env == nil {
-				s.Config.Env = map[string]string{}
-			}
-			s.Config.Env[k] = v
-		}
-	}
-
 	if p.Sauce.Region == "" {
 		p.Sauce.Region = defaultRegion
 	}

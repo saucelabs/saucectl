@@ -22,10 +22,7 @@ suites:
     browserName: "firefox" # ignored for now
     browserVersion: "84" # Ignored for now
     platformName: "Windows 10"
-
-    config:
-      env:
-        FOO: bar
+    testMatch: '**/*.js'
 
     # Playwright-test settings
     param:

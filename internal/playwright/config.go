@@ -18,12 +18,6 @@ type Project struct {
 	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
 }
 
-// SuiteConfig represents the playwright configuration for one suite.
-type SuiteConfig struct {
-	Env       map[string]string `yaml:"env,omitempty" json:"env,omitempty"`
-	TestFiles map[string]string `yaml:"testFiles,omitempty" json:"testFiles,omitempty"`
-}
-
 // Suite represents the playwright test suite configuration.
 type Suite struct {
 	Name           string                 `yaml:"name,omitempty" json:"name"`
@@ -31,7 +25,7 @@ type Suite struct {
 	BrowserVersion string                 `yaml:"browserVersion,omitempty" json:"browserVersion"`
 	PlatformName   string                 `yaml:"platformName,omitempty" json:"platformName"`
 	Param          map[string]interface{} `yaml:"param,omitempty" json:"param,omitempty"`
-	Config         SuiteConfig            `yaml:"config" json:"config"`
+	TestMatch      string                 `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
 }
 
 // Playwright represents crucial playwright configuration that is required for setting up a project.
