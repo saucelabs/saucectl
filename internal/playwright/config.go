@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-// Project represents the cypress project configuration.
+// Project represents the playwright project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
@@ -18,12 +18,13 @@ type Project struct {
 	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
 }
 
+// SuiteConfig represents the playwright configuration for one suite.
 type SuiteConfig struct {
 	Env       map[string]string `yaml:"env,omitempty" json:"env,omitempty"`
 	TestFiles map[string]string `yaml:"testFiles,omitempty" json:"testFiles,omitempty"`
 }
 
-// Suite represents the cypress test suite configuration.
+// Suite represents the playwright test suite configuration.
 type Suite struct {
 	Name           string                 `yaml:"name,omitempty" json:"name"`
 	Browser        string                 `yaml:"browserName,omitempty" json:"browserName"`
@@ -35,8 +36,8 @@ type Suite struct {
 
 // Playwright represents crucial playwright configuration that is required for setting up a project.
 type Playwright struct {
-	ProjectPath string                 `yaml:"projectPath,omitempty"`
-	Param       map[string]interface{} `yaml:"param,omitempty"`
+	ProjectPath string                 `yaml:"projectPath,omitempty" json:"projectPath"`
+	Param       map[string]interface{} `yaml:"param,omitempty" json:"param"`
 }
 
 // FromFile creates a new playwright Project based on the filepath cfgPath.
@@ -51,6 +52,11 @@ func FromFile(cfgPath string) (Project, error) {
 
 	if err = yaml.NewDecoder(f).Decode(&p); err != nil {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
+	}
+
+	// Default project path
+	if p.Playwright.ProjectPath == "" {
+		p.Playwright.ProjectPath = "./tests/"
 	}
 
 	// Default mode to Mount

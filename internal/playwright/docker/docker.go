@@ -192,7 +192,6 @@ func (handler *Handler) StartContainer(ctx context.Context, c playwright.Project
 	}
 
 	files := []string{
-		//c.Playwright.ConfigFile,
 		c.Playwright.ProjectPath,
 	}
 
