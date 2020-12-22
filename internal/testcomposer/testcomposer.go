@@ -91,13 +91,15 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 		return "", err
 	}
 
-	var j Job
+	j := struct {
+		JobID string
+	}{}
 	err = json.Unmarshal(body, &j)
 	if err != nil {
 		return
 	}
 
-	return j.ID, nil
+	return j.JobID, nil
 }
 
 // Register registers a fleet with the given buildID and test suites.
