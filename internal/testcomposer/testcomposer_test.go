@@ -34,8 +34,8 @@ func (r *Responder) Play(w http.ResponseWriter, req *http.Request) {
 	r.Index++
 }
 
-func respondJSON(w http.ResponseWriter, v interface{}) {
-	w.WriteHeader(200)
+func respondJSON(w http.ResponseWriter, v interface{}, httpStatus int) {
+	w.WriteHeader(httpStatus)
 	b, err := json.Marshal(v)
 
 	if err != nil {
@@ -93,10 +93,11 @@ func TestTestComposer_StartJob(t *testing.T) {
 			want:    "fake-job-id",
 			wantErr: nil,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				respondJSON(w, Job{
-					ID:    "fake-job-id",
-					Owner: "fake-owner",
-				})
+				respondJSON(w, struct {
+					JobID string `json:"jobID"`
+				}{
+					JobID: "fake-job-id",
+				}, 201)
 			},
 		},
 		{
@@ -349,7 +350,7 @@ func TestTestComposer_CheckFrameworkAvailability(t *testing.T) {
 				URL:        mockTestComposerServer.URL,
 			},
 			args: args{
-				ctx: context.TODO(),
+				ctx:       context.TODO(),
 				framework: "fake-framework",
 			},
 			want: nil,
@@ -364,7 +365,7 @@ func TestTestComposer_CheckFrameworkAvailability(t *testing.T) {
 				URL:        mockTestComposerServer.URL,
 			},
 			args: args{
-				ctx: context.TODO(),
+				ctx:       context.TODO(),
 				framework: "fake-framework",
 			},
 			want: errors.New("not part of preview"),
@@ -380,7 +381,7 @@ func TestTestComposer_CheckFrameworkAvailability(t *testing.T) {
 				URL:        mockTestComposerServer.URL,
 			},
 			args: args{
-				ctx: context.TODO(),
+				ctx:       context.TODO(),
 				framework: "fake-framework",
 			},
 			want: errors.New("unexpected response code:'500', msg:''"),
@@ -395,7 +396,7 @@ func TestTestComposer_CheckFrameworkAvailability(t *testing.T) {
 				URL:        mockTestComposerServer.URL,
 			},
 			args: args{
-				ctx: context.TODO(),
+				ctx:       context.TODO(),
 				framework: "fake-framework",
 			},
 			want: errors.New("framework not supported"),
