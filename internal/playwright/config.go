@@ -26,11 +26,11 @@ type SuiteConfig struct {
 // Suite represents the cypress test suite configuration.
 type Suite struct {
 	Name           string                 `yaml:"name,omitempty" json:"name"`
-	Browser        string                 `yaml:"browser,omitempty" json:"browserName"`
+	Browser        string                 `yaml:"browserName,omitempty" json:"browserName"`
 	BrowserVersion string                 `yaml:"browserVersion,omitempty" json:"browserVersion"`
 	PlatformName   string                 `yaml:"platformName,omitempty" json:"platformName"`
 	Param          map[string]interface{} `yaml:"param,omitempty" json:"param,omitempty"`
-	Config         SuiteConfig            `yaml:"config,omitempty" json:"config,omitempty"`
+	Config         SuiteConfig            `yaml:"config" json:"config"`
 }
 
 // Playwright represents crucial playwright configuration that is required for setting up a project.
