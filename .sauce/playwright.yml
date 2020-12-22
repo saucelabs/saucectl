@@ -15,9 +15,18 @@ docker:
 playwright:
   projectPath: tests/e2e/playwright/
   params:
-#    browserName: firefox
+    browserName: firefox
 suites:
   - name: "saucy test"
-    match: ".*.(spec|test).js$"
-    settings:
+    # Sauce Specific
+    browserName: "firefox" # ignored for now
+    browserVersion: "84" # Ignored for now
+    platformName: "Windows 10"
+
+    config:
+      env:
+        FOO: bar
+
+    # Playwright-test settings
+    param:
       browserName: "firefox"

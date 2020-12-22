@@ -18,33 +18,25 @@ type Project struct {
 	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
 }
 
+type SuiteConfig struct {
+	Env       map[string]string `yaml:"env,omitempty" json:"env,omitempty"`
+	TestFiles map[string]string `yaml:"testFiles,omitempty" json:"testFiles,omitempty"`
+}
+
 // Suite represents the cypress test suite configuration.
 type Suite struct {
-	Name           string      `yaml:"name,omitempty" json:"name"`
-	Browser        string      `yaml:"browser,omitempty" json:"browser"`
-	BrowserVersion string      `yaml:"browserVersion,omitempty" json:"browserVersion"`
-	PlatformName   string      `yaml:"platformName,omitempty" json:"platformName"`
-	Config         SuiteConfig `yaml:"config,omitempty" json:"config"`
-}
-
-// Params represents the playwright parameters
-type Params struct {
-	Browser string `yaml:"browserName,omitempty" json:"browserName,omitempty"`
-}
-
-// SuiteConfig represents the playwright config overrides.
-type SuiteConfig struct {
-	TestFiles []string          `yaml:"testFiles,omitempty" json:"testFiles"`
-	Env       map[string]string `yaml:"env,omitempty" json:"env"`
-	Params    Params            `yaml:"params,omitempty" json:"params"`
+	Name           string                 `yaml:"name,omitempty" json:"name"`
+	Browser        string                 `yaml:"browser,omitempty" json:"browserName"`
+	BrowserVersion string                 `yaml:"browserVersion,omitempty" json:"browserVersion"`
+	PlatformName   string                 `yaml:"platformName,omitempty" json:"platformName"`
+	Param          map[string]interface{} `yaml:"param,omitempty" json:"param,omitempty"`
+	Config         SuiteConfig            `yaml:"config,omitempty" json:"config,omitempty"`
 }
 
 // Playwright represents crucial playwright configuration that is required for setting up a project.
 type Playwright struct {
-	ConfigFile  string `yaml:"configFile,omitempty"`
-	EnvFile     string `yaml:"envFile,omitempty"`
-	ProjectPath string `yaml:"projectPath,omitempty"`
-	Params      Params `yaml:"params,omitempty"`
+	ProjectPath string                 `yaml:"projectPath,omitempty"`
+	Param       map[string]interface{} `yaml:"param,omitempty"`
 }
 
 // FromFile creates a new playwright Project based on the filepath cfgPath.
@@ -60,24 +52,6 @@ func FromFile(cfgPath string) (Project, error) {
 	if err = yaml.NewDecoder(f).Decode(&p); err != nil {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
-
-	//if _, err := os.Stat(p.Playwright.ConfigFile); err != nil {
-	//	return p, fmt.Errorf("unable to locate %s", p.Playwright.ConfigFile)
-	//}
-	//configDir := filepath.Dir(p.Playwright.ConfigFile)
-
-	//// We must locate the cypress folder.
-	//cPath := filepath.Join(configDir, "cypress")
-	//if _, err := os.Stat(cPath); err != nil {
-	//	return p, fmt.Errorf("unable to locate the cypress folder in %s", configDir)
-	//}
-	//p.Playwright.ProjectPath = cPath
-
-	// Optionally include the env file if it exists.
-	//envFile := filepath.Join(configDir, "cypress.env.json")
-	//if _, err := os.Stat(envFile); err == nil {
-	//	p.Playwright.EnvFile = envFile
-	//}
 
 	// Default mode to Mount
 	if p.Docker.FileTransfer == "" {
