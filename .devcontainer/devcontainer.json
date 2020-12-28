@@ -12,7 +12,9 @@
 			"NODE_VERSION": "lts/*"
 		},
 	},
-	"mounts": [],
+	"mounts": [
+		"type=bind,target=/var/lib/docker/vfs/dir,source=/tmp/"
+	],
 	"runArgs": ["--privileged"],
 
 	// Set *default* container specific settings.json values on container create.
