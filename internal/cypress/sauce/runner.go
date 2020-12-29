@@ -170,8 +170,8 @@ func (r *Runner) runSuite(s cypress.Suite, fileID string) (job.Job, error) {
 	}
 
 	if !j.Passed {
-		// TODO do we need to differentiate test passes/failure vs. job failure (failed to start, crashed)?
-		return job.Job{}, fmt.Errorf("suite '%s' has test failures", s.Name)
+		// We may need to differentiate when a job has crashed vs. when there is errors.
+		return j, fmt.Errorf("suite '%s' has test failures", s.Name)
 	}
 
 	return j, nil
