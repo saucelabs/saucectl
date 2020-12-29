@@ -111,7 +111,7 @@ func (r *Runner) runSuites(fileID string) bool {
 		progress.Show("Suites completed: %d/%d", completed, total)
 		r.logSuite(res)
 
-		if res.job.ID != "" || res.err != nil {
+		if res.job.ID == "" || res.err != nil {
 			errCount++
 		}
 	}

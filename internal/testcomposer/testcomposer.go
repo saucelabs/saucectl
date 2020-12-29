@@ -6,17 +6,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/job"
-	"io/ioutil"
-	"net/http"
-	"strings"
 )
 
 // forbiddenPreviewError contains the message send by test-composer when access is restricted
 const forbiddenPreviewError = "Forbidden: not part of preview"
+
 // unsupportedFrameworkError contains the message send by test-composer when framework is not supported
 const unsupportedFrameworkError = "Bad Request: unsupported framework"
 
@@ -32,7 +34,6 @@ type Job struct {
 	ID    string `json:"id"`
 	Owner string `json:"owner"`
 }
-
 
 // CreatorRequest represents the request body for creating a fleet.
 type CreatorRequest struct {
