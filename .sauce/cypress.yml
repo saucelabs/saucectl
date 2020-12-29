@@ -1,7 +1,7 @@
 apiVersion: v1alpha
 kind: cypress
 sauce:
-  region: staging
+  region: us-west-1
   metadata:
     name: Testing Cypress Support
     tags:
@@ -19,7 +19,6 @@ cypress:
 suites:
   - name: "saucy test"
     browser: "chrome"
-    platform: "Windows 10"
     config:
       env:
         hello: world
