@@ -11,6 +11,7 @@ import (
 // Project represents the cypress project configuration.
 type Project struct {
 	config.TypeDef                `yaml:",inline"`
+	ShowConsoleLog bool
 	Sauce      config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Cypress    Cypress            `yaml:"cypress,omitempty" json:"cypress"`
 	Suites     []Suite            `yaml:"suites,omitempty" json:"suites"`

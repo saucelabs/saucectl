@@ -42,17 +42,18 @@ var (
 	defaultTimeout = 60
 	defaultRegion  = "us-west-1"
 
-	cfgFilePath string
-	cfgLogDir   string
-	testTimeout int
-	regionFlag  string
-	env         map[string]string
-	parallel    bool
-	ciBuildID   string
-	sauceAPI    string
-	suiteName   string
-	testEnv     string
-	concurrency int
+	cfgFilePath    string
+	cfgLogDir      string
+	testTimeout    int
+	regionFlag     string
+	env            map[string]string
+	parallel       bool
+	ciBuildID      string
+	sauceAPI       string
+	suiteName      string
+	testEnv        string
+	showConsoleLog bool
+	concurrency    int
 )
 
 // Command creates the `run` command
@@ -83,6 +84,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
 	cmd.Flags().StringVar(&suiteName, "suite", "", "Run specified test suite.")
 	cmd.Flags().StringVar(&testEnv, "test-env", "docker", "Specifies the environment in which the tests should run. Choice: docker|sauce.")
+	cmd.Flags().BoolVarP(&showConsoleLog, "show-console-log", "", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
 	cmd.Flags().IntVar(&concurrency, "ccy", 1, "Concurrency specifies how many suites are run at the same time.")
 
 	// Hide undocumented flags that the user does not need to care about.
@@ -167,6 +169,9 @@ func runCypress(cli *command.SauceCtlCli) (int, error) {
 
 	if regionFlag != "" {
 		p.Sauce.Region = regionFlag
+	}
+	if showConsoleLog {
+		p.ShowConsoleLog = true
 	}
 
 	switch testEnv {
