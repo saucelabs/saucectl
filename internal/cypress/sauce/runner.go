@@ -16,6 +16,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
+	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/storage"
 )
@@ -27,7 +28,7 @@ type Runner struct {
 	JobStarter      job.Starter
 	JobReader       job.Reader
 	Concurrency     int
-	URL             string
+	Region          region.Region
 }
 
 type result struct {
@@ -234,7 +235,7 @@ func (r *Runner) logSuite(res result) {
 	if !res.job.Passed {
 		r.logSuiteError(res)
 	}
-	log.Info().Str("suite", res.suiteName).Msgf("Open job details page: %s", r.URL+"/tests/"+res.job.ID)
+	log.Info().Str("suite", res.suiteName).Msgf("Open job details page: %s", r.Region.AppBaseURL()+"/tests/"+res.job.ID)
 }
 
 // logSuiteError display the console output when tests from a suite are failing

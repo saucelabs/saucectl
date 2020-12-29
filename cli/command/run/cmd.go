@@ -227,7 +227,7 @@ func runCypressInSauce(p cypress.Project) (int, error) {
 		JobStarter:      &tc,
 		JobReader:       &rsto,
 		Concurrency:     concurrency,
-		URL:             re.APIBaseURL(),
+		Region:          re,
 	}
 	return r.RunProject()
 }
