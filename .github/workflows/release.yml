@@ -3,7 +3,7 @@
 name: saucectl release
 
 on:
-  create:
+  push:
     tags:
       - 'v*'
 
