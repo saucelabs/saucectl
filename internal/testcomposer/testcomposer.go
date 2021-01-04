@@ -207,7 +207,7 @@ func (c *Client) CheckFrameworkAvailability(ctx context.Context, frameworkName s
 // checkFrameworkRestrictions checks specific cases related to framework availability
 func (c *Client) checkFrameworkRestrictions(resp http.Response, body string, framework, username string) error {
 	if resp.StatusCode == http.StatusForbidden && body == forbiddenPreviewError {
-		log.Error().Msg("User \"" + username + "\" is not registered for the " + framework + " preview. To join the preview, please sign up here: https://info.saucelabs.com/scale-cypress-testing.html")
+		log.Error().Msg("User \"" + username + "\" is not registered for the " + framework + " preview. To join the preview, please sign up here: https://info.saucelabs.com/javascript-at-scale-on-sauce.html")
 		return errors.New("not part of preview")
 	}
 	if resp.StatusCode == http.StatusBadRequest && body == unsupportedFrameworkError {
