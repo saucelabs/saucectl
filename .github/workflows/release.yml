@@ -3,9 +3,9 @@
 name: saucectl release
 
 on:
-  create:
+  push:
     tags:
-      - 'v*'
+      - v*
 
 env:
   GH_TOKEN: ${{secrets.GH_TOKEN}}

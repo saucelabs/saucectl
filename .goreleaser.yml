@@ -17,7 +17,7 @@ builds:
       - -X github.com/saucelabs/saucectl/cli/version.Version={{.Version}}
       - -X github.com/saucelabs/saucectl/cli/version.GitCommit={{.Commit}}
 brews:
-  - github:
+  - tap:
       owner: saucelabs
       name: homebrew-saucectl
     folder: Formula

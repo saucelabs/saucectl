@@ -17,9 +17,11 @@ const (
 var meta = []struct {
 	Name       string
 	APIBaseURL string
+	AppBaseURL string
 }{
 	// None
 	{
+		"",
 		"",
 		"",
 	},
@@ -27,16 +29,19 @@ var meta = []struct {
 	{
 		"us-west-1",
 		"https://api.us-west-1.saucelabs.com",
+		"https://app.saucelabs.com",
 	},
 	// EUCentral1
 	{
 		"eu-central-1",
 		"https://api.eu-central-1.saucelabs.com",
+		"https://app.eu-central-1.saucelabs.com",
 	},
 	// Staging
 	{
 		"staging",
 		"https://api.staging.saucelabs.net",
+		"https://app.staging.saucelabs.net",
 	},
 }
 
@@ -59,4 +64,9 @@ func FromString(s string) Region {
 // APIBaseURL returns the API base URL for the region.
 func (r Region) APIBaseURL() string {
 	return meta[r].APIBaseURL
+}
+
+// AppBaseURL returns the Aapp base URL for the region.
+func (r Region) AppBaseURL() string {
+	return meta[r].AppBaseURL
 }

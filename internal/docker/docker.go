@@ -212,8 +212,9 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 		Mounts:       m,
 	}
 	networkConfig := &network.NetworkingConfig{}
+	img := handler.GetImageFlavor(c)
 	containerConfig := &container.Config{
-		Image:        handler.GetImageFlavor(c),
+		Image:        img,
 		ExposedPorts: ports,
 		Env: []string{
 			fmt.Sprintf("SAUCE_USERNAME=%s", username),
@@ -224,6 +225,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 			fmt.Sprintf("SAUCE_REGION=%s", c.Sauce.Region),
 			fmt.Sprintf("TEST_TIMEOUT=%d", c.Timeout),
 			fmt.Sprintf("BROWSER_NAME=%s", s.Settings.BrowserName),
+			fmt.Sprintf("SAUCE_IMAGE_NAME=%s", img),
 		},
 	}
 
