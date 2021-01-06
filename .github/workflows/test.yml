@@ -218,7 +218,7 @@ jobs:
       - name: Run Sauce Pipeline Test
         run: |
           chmod +x ./saucectl
-          ./saucectl run -c ./.sauce/cypress.yml
+          ./saucectl run -c ./.sauce/cypress.yml --suite 'saucy chrome test'
         env:
           BUILD_ID: ${{ github.run_id }}
           BUILD_ENV: GitHub Actions
