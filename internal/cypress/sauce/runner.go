@@ -135,7 +135,7 @@ func (r *Runner) worker(fileID string, suites <-chan cypress.Suite, results chan
 }
 
 func (r *Runner) runSuite(s cypress.Suite, fileID string) (job.Job, error) {
-	log.Info().Str("suite", s.Name).Msg("Starting job.")
+	log.Info().Str("suite", s.Name).Str("region", r.Project.Sauce.Region).Msg("Starting job.")
 
 	opts := job.StartOptions{
 		User:           credentials.Get().Username,
@@ -215,7 +215,7 @@ func (r *Runner) uploadProject(filename string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Info().Str("fileID", resp.ID).Msg("Project uploaded.")
+	log.Info().Str("storageId", resp.ID).Msg("Project uploaded.")
 	return resp.ID, nil
 }
 
