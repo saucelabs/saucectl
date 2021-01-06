@@ -223,10 +223,7 @@ func shouldShowConsole(r *Runner, res result) bool {
 	if !res.job.Passed {
 		return true
 	}
-	if r.Project.ShowConsoleLog {
-		return true
-	}
-	return false
+	return r.Project.ShowConsoleLog
 }
 
 // logSuite display the result of a suite
