@@ -40,7 +40,6 @@ type result struct {
 
 // RunProject runs the tests defined in cypress.Project.
 func (r *Runner) RunProject() (int, error) {
-	log.Error().Msg("Caution: Not yet implemented.") // TODO remove debug
 	exitCode := 1
 
 	err := r.JobStarter.CheckFrameworkAvailability(context.Background(), r.Project.Kind)
@@ -220,6 +219,13 @@ func (r *Runner) uploadProject(filename string) (string, error) {
 	return resp.ID, nil
 }
 
+func shouldShowConsole(r *Runner, res result) bool {
+	if !res.job.Passed {
+		return true
+	}
+	return r.Project.ShowConsoleLog
+}
+
 // logSuite display the result of a suite
 func (r *Runner) logSuite(res result) {
 	if res.job.ID == "" {
@@ -231,21 +237,21 @@ func (r *Runner) logSuite(res result) {
 	if !res.job.Passed {
 		resultStr = "Failed"
 	}
-	log.Info().Str("suite", res.suiteName).Msgf("%s: %s", res.suiteName, resultStr)
-
-	if !res.job.Passed {
-		r.logSuiteError(res)
+	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
+	log.Info().Str("suite", res.suiteName).Msgf("Status: %s - %s", resultStr, jobDetailsPage)
+	if shouldShowConsole(r, res) {
+		r.logSuiteConsole(res)
 	}
-	log.Info().Str("suite", res.suiteName).Msgf("Open job details page: %s", r.Region.AppBaseURL()+"/tests/"+res.job.ID)
 }
 
 // logSuiteError display the console output when tests from a suite are failing
-func (r *Runner) logSuiteError(res result) {
+func (r *Runner) logSuiteConsole(res result) {
 	// Display log only when at least it has started
 	assetContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, resto.ConsoleLogAsset)
 	if err != nil {
 		log.Warn().Str("suite", res.suiteName).Msg("Failed to get job asset.")
 	} else {
+		log.Info().Msg(fmt.Sprintf("Test %s %s", res.job.ID, resto.ConsoleLogAsset))
 		log.Info().Msg(string(assetContent))
 	}
 }

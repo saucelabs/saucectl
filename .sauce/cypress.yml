@@ -19,7 +19,6 @@ cypress:
 suites:
   - name: "saucy test"
     browser: "chrome"
-    browserVersion: "82" # Irrelevant when using docker.
     config:
       env:
         hello: world
