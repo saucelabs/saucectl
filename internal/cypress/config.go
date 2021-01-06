@@ -39,6 +39,9 @@ type Cypress struct {
 	// ConfigFile is the path to "cypress.json".
 	ConfigFile string `yaml:"configFile,omitempty" json:"configFile"`
 
+	// Version is the version of the framework to be used
+	Version string `json:"version"`
+
 	// ProjectPath is the path to the cypress directory itself. Not set by the user, but is instead based on the
 	// location of ConfigFile.
 	ProjectPath string `json:"-"`
