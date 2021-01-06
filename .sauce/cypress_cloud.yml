@@ -17,8 +17,15 @@ docker:
 cypress:
   configFile: "tests/e2e/cypress.json"  # We determine related files based on the location of the config file.
 suites:
-  - name: "saucy test"
-    browser: "chrome"
+  - name: "saucy chrome test"
+    browser: "googlechrome"
+    platform: "Windows 10"
+    config:
+      env:
+        hello: world
+      testFiles: [ "**/*.*" ] # Cypress native glob support.
+  - name: "saucy microsoftedge test"
+    browser: "microsoftedge"
     platform: "Windows 10"
     config:
       env:
