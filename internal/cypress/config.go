@@ -10,13 +10,14 @@ import (
 
 // Project represents the cypress project configuration.
 type Project struct {
-	config.TypeDef                `yaml:",inline"`
-	Sauce      config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
-	Cypress    Cypress            `yaml:"cypress,omitempty" json:"cypress"`
-	Suites     []Suite            `yaml:"suites,omitempty" json:"suites"`
-	BeforeExec []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker     config.Docker      `yaml:"docker,omitempty" json:"docker"`
-	Npm        config.Npm         `yaml:"npm,omitempty" json:"npm"`
+	config.TypeDef                    `yaml:",inline"`
+	ShowConsoleLog bool
+	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
+	Cypress        Cypress            `yaml:"cypress,omitempty" json:"cypress"`
+	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
+	BeforeExec     []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
+	Docker         config.Docker      `yaml:"docker,omitempty" json:"docker"`
+	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
 }
 
 // Suite represents the cypress test suite configuration.
