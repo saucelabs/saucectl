@@ -241,6 +241,7 @@ jobs:
       - name: Run Sauce Pipeline Test
         run: |
           chmod +x ./saucectl
+          printenv
           ./saucectl run -c ./.sauce/cypress_cloud.yml --test-env sauce --ccy 5
         env:
           BUILD_ID: ${{ github.run_id }}
