@@ -218,7 +218,7 @@ jobs:
       - name: Run Sauce Pipeline Test
         run: |
           chmod +x ./saucectl
-          ./saucectl run -c ./.sauce/cypress.yml --suite 'saucy chrome test'
+          ./saucectl run -c ./.sauce/cypress.yml
         env:
           BUILD_ID: ${{ github.run_id }}
           BUILD_ENV: GitHub Actions
@@ -241,7 +241,7 @@ jobs:
       - name: Run Sauce Pipeline Test
         run: |
           chmod +x ./saucectl
-          ./saucectl run -c ./.sauce/cypress.yml --test-env sauce --ccy 5
+          ./saucectl run -c ./.sauce/cypress_cloud.yml --test-env sauce --ccy 5
         env:
           BUILD_ID: ${{ github.run_id }}
           BUILD_ENV: GitHub Actions
