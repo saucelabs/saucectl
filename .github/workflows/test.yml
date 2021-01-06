@@ -9,6 +9,11 @@ on:
     branches:
       - master
 
+env:
+  SAUCE_USERNAME: ${{secrets.SAUCE_USERNAME}}
+  SAUCE_ACCESS_KEY: ${{secrets.SAUCE_USERNAME}}
+
+
 jobs:
   basic:
     runs-on: ubuntu-latest
@@ -241,7 +246,6 @@ jobs:
       - name: Run Sauce Pipeline Test
         run: |
           chmod +x ./saucectl
-          printenv
           ./saucectl run -c ./.sauce/cypress_cloud.yml --test-env sauce --ccy 5
         env:
           BUILD_ID: ${{ github.run_id }}
