@@ -115,7 +115,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 
 	if d.Kind == config.KindCypress && d.APIVersion == config.VersionV1Alpha {
-		return runCypress(cli)
+		return runCypress(cmd, cli)
 	}
 
 	return runLegacyMode(cmd, cli)
@@ -145,7 +145,7 @@ func runLegacyMode(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	return r.RunProject()
 }
 
-func runCypress(cli *command.SauceCtlCli) (int, error) {
+func runCypress(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	p, err := cypress.FromFile(cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -172,6 +172,12 @@ func runCypress(cli *command.SauceCtlCli) (int, error) {
 	}
 	if showConsoleLog {
 		p.ShowConsoleLog = true
+	}
+
+	if cmd.Flags().Lookup("suite").Changed {
+		if err := filterCypressSuite(&p); err != nil {
+			return 1, err
+		}
 	}
 
 	switch testEnv {
@@ -355,6 +361,16 @@ func filterSuite(c *config.Project) error {
 	for _, s := range c.Suites {
 		if s.Name == suiteName {
 			c.Suites = []config.Suite{s}
+			return nil
+		}
+	}
+	return errors.New("suite name is invalid")
+}
+
+func filterCypressSuite(c *cypress.Project) error {
+	for _, s := range c.Suites {
+		if s.Name == suiteName {
+			c.Suites = []cypress.Suite{s}
 			return nil
 		}
 	}
