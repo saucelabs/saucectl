@@ -2,6 +2,7 @@ package run
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -374,7 +375,7 @@ func filterCypressSuite(c *cypress.Project) error {
 			return nil
 		}
 	}
-	return errors.New("suite name is invalid")
+	return fmt.Errorf("suite name '%s' is invalid", suiteName)
 }
 
 func validateFiles(files []string) error {

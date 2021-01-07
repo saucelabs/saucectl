@@ -3,13 +3,14 @@ package configure
 import (
 	"errors"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/spf13/cobra"
 	"github.com/tj/survey"
-	"os"
-	"strings"
 )
 
 var (
@@ -110,7 +111,7 @@ func Run() error {
 		creds, err = interactiveConfiguration()
 	} else {
 		creds = &credentials.Credentials{
-			Username: cliUsername,
+			Username:  cliUsername,
 			AccessKey: cliAccessKey,
 		}
 	}
