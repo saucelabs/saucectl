@@ -111,7 +111,7 @@ func Run() error {
 		creds, err = interactiveConfiguration()
 	} else {
 		creds = &credentials.Credentials{
-			Username:  cliUsername,
+			Username: cliUsername,
 			AccessKey: cliAccessKey,
 		}
 	}
