@@ -12,6 +12,23 @@ For information on how to contribute to `saucectl` please have a look into our [
 - [Docker](https://docs.docker.com/get-docker/) installed
 - Make sure the Docker daemon is running (e.g. `docker info` works in your terminal)
 
+## Install
+
+### cURL
+```bash title="Using curl"
+curl -L https://saucelabs.github.io/saucectl/install | bash
+```
+
+### NPM
+```bash title="Using NPM"
+npm install -g saucectl
+```
+
+### Homebrew
+```bash title="Using Homebrew (macOS)"
+brew install saucectl
+```
+
 # FAQ
 Please consult the [FAQ](https://github.com/saucelabs/testrunner-toolkit/blob/master/docs/FAQS.md) before using saucectl.
 
