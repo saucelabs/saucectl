@@ -27,7 +27,6 @@ type Runner struct {
 	ProjectUploader storage.ProjectUploader
 	JobStarter      job.Starter
 	JobReader       job.Reader
-	Concurrency     int
 	Region          region.Region
 }
 
@@ -79,8 +78,8 @@ func (r *Runner) runSuites(fileID string) bool {
 	defer close(results)
 
 	// Create a pool of workers that run the suites.
-	log.Info().Int("concurrency", r.Concurrency).Msg("Launching workers.")
-	for i := 0; i < r.Concurrency; i++ {
+	log.Info().Int("concurrency", r.Project.Sauce.Concurrency).Msg("Launching workers.")
+	for i := 0; i < r.Project.Sauce.Concurrency; i++ {
 		go r.worker(fileID, suites, results)
 	}
 
