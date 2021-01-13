@@ -71,9 +71,10 @@ type Suite struct {
 
 // SauceConfig represents sauce labs related settings.
 type SauceConfig struct {
-	Region   string   `yaml:"region,omitempty" json:"region"`
-	Metadata Metadata `yaml:"metadata,omitempty" json:"metadata"`
-	Tunnel   Tunnel   `yaml:"tunnel,omitempty" json:"tunnel,omitempty"`
+	Region      string   `yaml:"region,omitempty" json:"region"`
+	Metadata    Metadata `yaml:"metadata,omitempty" json:"metadata"`
+	Tunnel      Tunnel   `yaml:"tunnel,omitempty" json:"tunnel,omitempty"`
+	Concurrency int      `yaml:"concurrency,omitempty" json:"concurrency,omitempty"`
 }
 
 // Tunnel represents a sauce labs tunnel.

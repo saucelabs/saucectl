@@ -85,5 +85,9 @@ func FromFile(cfgPath string) (Project, error) {
 		p.Docker.FileTransfer = config.DockerFileMount
 	}
 
+	if p.Sauce.Concurrency < 1 {
+		p.Sauce.Concurrency = 1
+	}
+
 	return p, nil
 }

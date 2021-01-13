@@ -181,6 +181,10 @@ func runCypress(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 		}
 	}
 
+	if cmd.Flags().Lookup("ccy").Changed {
+		p.Sauce.Concurrency = concurrency
+	}
+
 	switch testEnv {
 	case "docker":
 		return runCypressInDocker(p, cli)
@@ -238,7 +242,6 @@ func runCypressInSauce(p cypress.Project) (int, error) {
 		ProjectUploader: s,
 		JobStarter:      &tc,
 		JobReader:       &rsto,
-		Concurrency:     concurrency,
 		Region:          re,
 	}
 	return r.RunProject()
