@@ -159,7 +159,8 @@ func (r *Runner) runSuite(s cypress.Suite, fileID string) (job.Job, error) {
 		return job.Job{}, err
 	}
 
-	log.Info().Str("jobID", id).Msg("Job started.")
+	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
+	log.Info().Msg(fmt.Sprintf("Job started - %s", jobDetailsPage))
 
 	// High interval poll to not oversaturate the job reader with requests.
 	j, err := r.JobReader.PollJob(context.Background(), id, 15*time.Second)
