@@ -108,7 +108,7 @@ type DockerFileMode string
 // DockerFile* represent the different modes
 const (
 	DockerFileMount DockerFileMode = "mount"
-	DockerFileCopy                 = "copy"
+	DockerFileCopy  DockerFileMode = "copy"
 )
 
 // Docker represents docker settings.

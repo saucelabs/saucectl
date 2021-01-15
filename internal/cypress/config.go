@@ -1,16 +1,19 @@
 package cypress
 
 import (
+	"errors"
 	"fmt"
 	"github.com/saucelabs/saucectl/cli/config"
 	"gopkg.in/yaml.v2"
 	"os"
 	"path/filepath"
+	"strings"
+	"unicode"
 )
 
 // Project represents the cypress project configuration.
 type Project struct {
-	config.TypeDef                    `yaml:",inline"`
+	config.TypeDef `yaml:",inline"`
 	ShowConsoleLog bool
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Cypress        Cypress            `yaml:"cypress,omitempty" json:"cypress"`
@@ -90,4 +93,39 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 
 	return p, nil
+}
+
+// Validate validates basic configuration of the project and returns an error if any of the settings contain illegal
+// values. This is not an exhaustive operation and further validation should be performed both in the client and/or
+// server side depending on the workflow that is executed.
+func Validate(p Project) error {
+	if len(p.Suites) == 0 {
+		return errors.New("no suites defined")
+	}
+
+	// Validate docker.
+	if p.Docker.FileTransfer != config.DockerFileMount && p.Docker.FileTransfer != config.DockerFileCopy {
+		return fmt.Errorf("illegal file transfer type '%s', must be one of '%s'",
+			p.Docker.FileTransfer,
+			strings.Join([]string{string(config.DockerFileMount), string(config.DockerFileCopy)}, "|"))
+	}
+
+	// Validate suites.
+	for _, s := range p.Suites {
+		for _, c := range s.Name {
+			if unicode.IsSymbol(c) {
+				return fmt.Errorf("illegal symbol '%c' in suite name: '%s'", c, s.Name)
+			}
+		}
+
+		if s.Browser == "" {
+			return fmt.Errorf("no browser specified in suite '%s'", s.Name)
+		}
+
+		if len(s.Config.TestFiles) == 0 {
+			return fmt.Errorf("no config.testFiles specified in suite '%s", s.Name)
+		}
+	}
+
+	return nil
 }
