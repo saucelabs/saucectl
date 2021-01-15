@@ -12,7 +12,7 @@ import (
 
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/progress"
-	"github.com/saucelabs/saucectl/cli/waiter"
+	"github.com/saucelabs/saucectl/cli/dots"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -97,8 +97,8 @@ func (r *Runner) runSuites(fileID string) bool {
 	inProgress := total
 	passed := true
 
-	dots := waiter.New(1)
-	dots.Start()
+	waiter := dots.New(1)
+	waiter.Start()
 	for i := 0; i < total; i++ {
 		res := <-results
 		// in case one of test suites not passed
@@ -116,7 +116,7 @@ func (r *Runner) runSuites(fileID string) bool {
 			errCount++
 		}
 	}
-	dots.Stop()
+	waiter.Stop()
 	logSuitesResult(total, errCount)
 
 	return passed
