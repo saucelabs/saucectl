@@ -11,8 +11,8 @@ import (
 	"unicode"
 )
 
-const RUNNER_GH_ORG = "saucelabs"
-const RUNNER_GH_REPO = "sauce-cypress-runner"
+const RunnerGhOrg = "saucelabs"
+const RunnerGhRepo = "sauce-cypress-runner"
 
 // Project represents the cypress project configuration.
 type Project struct {

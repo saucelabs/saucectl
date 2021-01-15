@@ -7,7 +7,7 @@ import (
 
 // IsCypressVersionAvailable checks if the requested version is available on cloud or docker.
 func IsCypressVersionAvailable(version string) (isCloudAvailable bool, err error) {
-	releases, err := github.GetReleases(RUNNER_GH_ORG, RUNNER_GH_REPO)
+	releases, err := github.GetReleases(RunnerGhOrg, RunnerGhRepo)
 	if err != nil {
 		return false, err
 	}
