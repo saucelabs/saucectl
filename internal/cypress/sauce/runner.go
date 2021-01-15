@@ -108,6 +108,7 @@ func (r *Runner) runSuites(fileID string) bool {
 		completed++
 		inProgress--
 
+		// This new line ensure there is no dots before status is displayed
 		fmt.Println("")
 		log.Info().Msg(fmt.Sprintf("Suites completed: %d/%d", completed, total))
 		r.logSuite(res)
