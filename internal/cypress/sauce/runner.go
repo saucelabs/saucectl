@@ -12,6 +12,7 @@ import (
 
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/progress"
+	"github.com/saucelabs/saucectl/cli/dots"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -96,7 +97,8 @@ func (r *Runner) runSuites(fileID string) bool {
 	inProgress := total
 	passed := true
 
-	progress.Show("Suites completed: %d/%d", completed, total)
+	waiter := dots.New(1)
+	waiter.Start()
 	for i := 0; i < total; i++ {
 		res := <-results
 		// in case one of test suites not passed
@@ -106,14 +108,19 @@ func (r *Runner) runSuites(fileID string) bool {
 		completed++
 		inProgress--
 
-		progress.Show("Suites completed: %d/%d", completed, total)
+		// Logging is not synchronized over the different worker routines & dot routine.
+		// To avoid implementing a more complex solution centralizing output on only one
+		// routine, a new lines has simply been forced, to ensure that line starts from
+		// the beginning of the console.
+		fmt.Println("")
+		log.Info().Msg(fmt.Sprintf("Suites completed: %d/%d", completed, total))
 		r.logSuite(res)
 
 		if res.job.ID == "" || res.err != nil {
 			errCount++
 		}
 	}
-	progress.Stop()
+	waiter.Stop()
 	logSuitesResult(total, errCount)
 
 	return passed
@@ -159,7 +166,8 @@ func (r *Runner) runSuite(s cypress.Suite, fileID string) (job.Job, error) {
 		return job.Job{}, err
 	}
 
-	log.Info().Str("jobID", id).Msg("Job started.")
+	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
+	log.Info().Msg(fmt.Sprintf("Job started - %s", jobDetailsPage))
 
 	// High interval poll to not oversaturate the job reader with requests.
 	j, err := r.JobReader.PollJob(context.Background(), id, 15*time.Second)
