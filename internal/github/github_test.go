@@ -1,9 +1,9 @@
 package github
 
 import (
-	"fmt"
 	githubapi "github.com/google/go-github/v32/github"
 	"github.com/jarcoal/httpmock"
+	"gotest.tools/assert"
 	"net/http"
 	"testing"
 )
@@ -15,12 +15,17 @@ func TestGetReleases(t *testing.T) {
 	v0 := "5.6.2"
 	v1 := "5.6.0"
 	v2 := "5.5.0"
-	preRelease := true
-	release := false
+	trueValue := true
+	falseValue := false
 	releases := []githubapi.RepositoryRelease{
-		{ Name:  &v0, Prerelease: &preRelease },
-		{ Name:  &v1, Prerelease: &release },
-		{ Name:  &v2, Prerelease: &release },
+		{ Name:  &v0, Prerelease: &trueValue },
+		{ Name:  &v1, Prerelease: &falseValue },
+		{ Name:  &v2, Prerelease: &falseValue },
+	}
+	expectedReleases := []Release{
+		{ v0,  false},
+		{ v1,  true},
+		{ v2,  true},
 	}
 
 	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/fake-org/fake-repo/releases",
@@ -35,10 +40,7 @@ func TestGetReleases(t *testing.T) {
 
 	r, err := GetReleases("fake-org", "fake-repo")
 	if err != nil {
-		fmt.Printf("%s", err)
 		t.Fail()
 	}
-	for _, rr := range r {
-		fmt.Println(rr.VersionNumber)
-	}
+	assert.DeepEqual(t, r, expectedReleases)
 }

@@ -7,8 +7,8 @@ import (
 )
 
 type Release struct {
-	CloudAvailability bool
 	VersionNumber     string
+	CloudAvailability bool
 }
 
 func GetReleases(org, repo string) ([]Release, error) {
