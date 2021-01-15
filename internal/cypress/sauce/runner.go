@@ -108,7 +108,10 @@ func (r *Runner) runSuites(fileID string) bool {
 		completed++
 		inProgress--
 
-		// This new line ensure there is no dots before status is displayed
+		// Logging is not synchronized over the different worker routines & dot routine.
+		// To avoid implementing a more complex solution centralizing output on only one
+		// routine, a new lines has simply been forced, to ensure that line starts from
+		// the beginning of the console.
 		fmt.Println("")
 		log.Info().Msg(fmt.Sprintf("Suites completed: %d/%d", completed, total))
 		r.logSuite(res)
