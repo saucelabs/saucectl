@@ -11,6 +11,9 @@ import (
 	"unicode"
 )
 
+const RUNNER_GH_ORG = "saucelabs"
+const RUNNER_GH_REPO = "sauce-cypress-runner"
+
 // Project represents the cypress project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline"`
@@ -42,6 +45,9 @@ type SuiteConfig struct {
 type Cypress struct {
 	// ConfigFile is the path to "cypress.json".
 	ConfigFile string `yaml:"configFile,omitempty" json:"configFile"`
+
+	// Version is the version the user want to execute
+	Version string `yaml:"version" json:"version"`
 
 	// ProjectPath is the path to the cypress directory itself. Not set by the user, but is instead based on the
 	// location of ConfigFile.

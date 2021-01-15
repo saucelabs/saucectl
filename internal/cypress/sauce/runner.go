@@ -11,8 +11,8 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/saucelabs/saucectl/cli/credentials"
-	"github.com/saucelabs/saucectl/cli/progress"
 	"github.com/saucelabs/saucectl/cli/dots"
+	"github.com/saucelabs/saucectl/cli/progress"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
