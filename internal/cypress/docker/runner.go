@@ -58,6 +58,17 @@ func New(c cypress.Project, cli *command.SauceCtlCli) (*Runner, error) {
 
 // RunProject runs the tests defined in config.Project.
 func (r *Runner) RunProject() (int, error) {
+	cloudAvailability, err := cypress.IsCypressVersionAvailable(r.Project.Cypress.Version)
+	if err != nil {
+		msg := fmt.Sprintf("Unable to check Cypress version availability: %s", err)
+		log.Error().Str("version", r.Project.Cypress.Version).Msg(msg)
+		return 0, err
+	}
+	if !cloudAvailability {
+		msg := fmt.Sprintf("Cypress version %s is not yet available on Sauce Cloud", r.Project.Cypress.Version)
+		log.Warn().Str("version", r.Project.Cypress.Version).Msg(msg)
+	}
+
 	errorCount := 0
 	for _, suite := range r.Project.Suites {
 		err := r.runSuite(suite)
