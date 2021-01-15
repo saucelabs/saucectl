@@ -185,6 +185,10 @@ func runCypress(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 		p.Sauce.Concurrency = concurrency
 	}
 
+	if err := cypress.Validate(p); err != nil {
+		return 1, err
+	}
+
 	switch testEnv {
 	case "docker":
 		return runCypressInDocker(p, cli)
