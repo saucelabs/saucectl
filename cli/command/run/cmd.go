@@ -94,8 +94,6 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	// Hide documented flags that aren't fully released yet or WIP.
 	_ = cmd.Flags().MarkHidden("parallel")    // WIP.
 	_ = cmd.Flags().MarkHidden("ci-build-id") // Related to 'parallel'. WIP.
-	_ = cmd.Flags().MarkHidden("test-env")    // WIP.
-	_ = cmd.Flags().MarkHidden("ccy")         // WIP.
 
 	return cmd
 }
