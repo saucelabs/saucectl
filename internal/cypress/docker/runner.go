@@ -91,7 +91,7 @@ func (r *Runner) preliminarySteps() error {
 		if err != nil {
 			return err
 		}
-		log.Info().Msgf("Latest cypress version resolved to %s", version)
+		log.Info().Msgf("Using Cypress %s", version)
 		r.Project.Cypress.Version = version
 	}
 
