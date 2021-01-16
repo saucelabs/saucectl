@@ -236,7 +236,7 @@ func shouldShowConsole(r *Runner, res result) bool {
 // logSuite display the result of a suite
 func (r *Runner) logSuite(res result) {
 	if res.job.ID == "" {
-		log.Error().Str("suite", res.suiteName).Msgf("failed to be started")
+		log.Error().Str("suite", res.suiteName).Msgf("failed to start")
 		log.Error().Str("suite", res.suiteName).Msgf("%s", res.err)
 		return
 	}

@@ -111,7 +111,13 @@ func Validate(p Project) error {
 	}
 
 	// Validate suites.
+	suiteNames := make(map[string]bool)
 	for _, s := range p.Suites {
+		if _, seen := suiteNames[s.Name]; seen {
+			return fmt.Errorf("suite names must be unique, but found duplicate for '%s'", s.Name)
+		}
+		suiteNames[s.Name] = true
+
 		for _, c := range s.Name {
 			if unicode.IsSymbol(c) {
 				return fmt.Errorf("illegal symbol '%c' in suite name: '%s'", c, s.Name)
