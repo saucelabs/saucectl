@@ -86,6 +86,14 @@ func (r *Runner) preliminarySteps() error {
 	if r.Project.Cypress.Version == "" {
 		return fmt.Errorf("no cypress version provided")
 	}
+	if r.Project.Cypress.Version == "latest" {
+		version, err := cypress.GetLatestDockerVersion()
+		if err != nil {
+			return err
+		}
+		log.Info().Msgf("Latest cypress version resolved to %s", version)
+		r.Project.Cypress.Version = version
+	}
 
 	if r.Project.Docker.Image.Name == cypress.DefaultDockerImage && r.Project.Docker.Image.Tag == "" {
 		r.Project.Docker.Image.Tag = r.Project.Cypress.Version
