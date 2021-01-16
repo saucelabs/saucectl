@@ -19,6 +19,7 @@ func IsCypressVersionAvailable(version string) (DockerAvailability, CloudAvailab
 	return false, false, nil
 }
 
+// GetLatestDockerVersion get the latest version available in docker mode.
 func GetLatestDockerVersion() (string, error) {
 	releases, err := github.GetReleases(RunnerGhOrg, RunnerGhRepo)
 	if err != nil {
@@ -30,6 +31,7 @@ func GetLatestDockerVersion() (string, error) {
 	return releases[0].VersionNumber, nil
 }
 
+// GetLatestCloudVersion get the latest version available in sauce cloud.
 func GetLatestCloudVersion() (string, error) {
 	releases, err := github.GetReleases(RunnerGhOrg, RunnerGhRepo)
 	if err != nil {
