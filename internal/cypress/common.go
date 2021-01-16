@@ -6,17 +6,17 @@ import (
 )
 
 // IsCypressVersionAvailable checks if the requested version is available on cloud or docker.
-func IsCypressVersionAvailable(version string) (isCloudAvailable bool, err error) {
+func IsCypressVersionAvailable(version string) (DockerAvailability, CloudAvailability bool, err error) {
 	releases, err := github.GetReleases(RunnerGhOrg, RunnerGhRepo)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 	for _, release := range releases {
 		if release.VersionNumber == version {
-			return release.CloudAvailability, nil
+			return true, release.CloudAvailability, nil
 		}
 	}
-	return false, fmt.Errorf("cypress %s is not available", version)
+	return false, false, nil
 }
 
 func GetLatestDockerVersion() (string, error) {

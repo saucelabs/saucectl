@@ -2,6 +2,7 @@ package sauce
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -92,15 +93,16 @@ func (r *Runner) preliminarySteps() error {
 		return nil
 	}
 
-	cloudAvailability, err := cypress.IsCypressVersionAvailable(r.Project.Cypress.Version)
+	_, cloudAvailability, err := cypress.IsCypressVersionAvailable(r.Project.Cypress.Version)
 	if err != nil {
 		msg := fmt.Sprintf("Unable to check Cypress availability: %s", err)
 		log.Error().Str("version", r.Project.Cypress.Version).Msg(msg)
 		return err
 	}
 	if !cloudAvailability {
-		msg := fmt.Sprintf("Cypress %s is not yet available on Sauce Cloud", r.Project.Cypress.Version)
+		msg := fmt.Sprintf("cypress %s is not available on sauce cloud", r.Project.Cypress.Version)
 		log.Warn().Str("version", r.Project.Cypress.Version).Msg(msg)
+		return errors.New(msg)
 	}
 	return nil
 }
