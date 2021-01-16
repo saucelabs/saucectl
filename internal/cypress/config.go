@@ -11,9 +11,14 @@ import (
 	"unicode"
 )
 
-const RunnerGhOrg = "saucelabs"
-const RunnerGhRepo = "sauce-cypress-runner"
-const DefaultDockerImage = "saucelabs/stt-cypress-mocha-node"
+const (
+	// RunnerGhOrg represents the organisation of the repo on github
+	RunnerGhOrg = "saucelabs"
+	// RunnerGhRepo represents the name of the repo on Github
+	RunnerGhRepo = "sauce-cypress-runner"
+	// DefaultDockerImage represents the name of the docker image on Dockerhub
+	DefaultDockerImage = "saucelabs/stt-cypress-mocha-node"
+)
 
 // Project represents the cypress project configuration.
 type Project struct {

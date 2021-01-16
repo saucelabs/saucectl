@@ -6,11 +6,13 @@ import (
 	"time"
 )
 
+// Release represents a released version of a Github project
 type Release struct {
 	VersionNumber     string
 	CloudAvailability bool
 }
 
+// GetReleases returns the list of releases for a Github project
 func GetReleases(org, repo string) ([]Release, error) {
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 	client := githubapi.NewClient(nil)
