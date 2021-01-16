@@ -77,16 +77,22 @@ func (r *Runner) RunProject() (int, error) {
 
 // preliminarySteps do several checks before running Cypress tests.
 func (r *Runner) preliminarySteps() error {
+	// Skip availability check since custom image is being used
+	if r.Project.Docker.Image.Name != "" && r.Project.Docker.Image.Tag != "" {
+		log.Info().Msgf("Ignoring Cypress version for Docker, using %s:%s", r.Project.Docker.Image.Name, r.Project.Docker.Image.Tag)
+		return nil
+	}
+
+	if r.Project.Cypress.Version == "" {
+		return fmt.Errorf("no cypress version provided")
+	}
+
 	if r.Project.Docker.Image.Name == cypress.DefaultDockerImage && r.Project.Docker.Image.Tag == "" {
 		r.Project.Docker.Image.Tag = r.Project.Cypress.Version
 	}
 	if r.Project.Docker.Image.Name == "" {
 		r.Project.Docker.Image.Name = cypress.DefaultDockerImage
 		r.Project.Docker.Image.Tag = r.Project.Cypress.Version
-	}
-	if r.Project.Docker.Image.Name == cypress.DefaultDockerImage &&
-		r.Project.Docker.Image.Tag != r.Project.Cypress.Version {
-		log.Info().Msgf("Ignoring Cypress version for Docker, using tag %s.", r.Project.Docker.Image.Tag)
 	}
 
 	cloudAvailability, err := cypress.IsCypressVersionAvailable(r.Project.Cypress.Version)

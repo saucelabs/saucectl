@@ -16,6 +16,5 @@ func IsCypressVersionAvailable(version string) (isCloudAvailable bool, err error
 			return release.CloudAvailability, nil
 		}
 	}
-
 	return false, fmt.Errorf("cypress %s is not available", version)
 }
