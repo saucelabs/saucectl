@@ -13,6 +13,7 @@ import (
 
 const RunnerGhOrg = "saucelabs"
 const RunnerGhRepo = "sauce-cypress-runner"
+const DefaultDockerImage = "saucelabs/stt-cypress-mocha-node"
 
 // Project represents the cypress project configuration.
 type Project struct {

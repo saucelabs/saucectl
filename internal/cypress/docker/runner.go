@@ -58,15 +58,8 @@ func New(c cypress.Project, cli *command.SauceCtlCli) (*Runner, error) {
 
 // RunProject runs the tests defined in config.Project.
 func (r *Runner) RunProject() (int, error) {
-	cloudAvailability, err := cypress.IsCypressVersionAvailable(r.Project.Cypress.Version)
-	if err != nil {
-		msg := fmt.Sprintf("Unable to check Cypress version availability: %s", err)
-		log.Error().Str("version", r.Project.Cypress.Version).Msg(msg)
-		return 0, err
-	}
-	if !cloudAvailability {
-		msg := fmt.Sprintf("Cypress version %s is not yet available on Sauce Cloud", r.Project.Cypress.Version)
-		log.Warn().Str("version", r.Project.Cypress.Version).Msg(msg)
+	if err := r.preliminarySteps(); err != nil {
+		return 1, err
 	}
 
 	errorCount := 0
@@ -80,6 +73,33 @@ func (r *Runner) RunProject() (int, error) {
 		log.Error().Msgf("%d suite(s) failed", errorCount)
 	}
 	return errorCount, nil
+}
+
+// preliminarySteps do several checks before running Cypress tests.
+func (r *Runner) preliminarySteps() error {
+	if r.Project.Docker.Image.Name == cypress.DefaultDockerImage && r.Project.Docker.Image.Tag == "" {
+		r.Project.Docker.Image.Tag = r.Project.Cypress.Version
+	}
+	if r.Project.Docker.Image.Name == "" {
+		r.Project.Docker.Image.Name = cypress.DefaultDockerImage
+		r.Project.Docker.Image.Tag = r.Project.Cypress.Version
+	}
+	if r.Project.Docker.Image.Name == cypress.DefaultDockerImage &&
+		r.Project.Docker.Image.Tag != r.Project.Cypress.Version {
+		log.Info().Msgf("Ignoring Cypress version for Docker, using tag %s.", r.Project.Docker.Image.Tag)
+	}
+
+	cloudAvailability, err := cypress.IsCypressVersionAvailable(r.Project.Cypress.Version)
+	if err != nil {
+		msg := fmt.Sprintf("Unable to check Cypress availability: %s", err)
+		log.Error().Str("version", r.Project.Cypress.Version).Msg(msg)
+		return err
+	}
+	if !cloudAvailability {
+		msg := fmt.Sprintf("Cypress %s is not yet available on Sauce Cloud", r.Project.Cypress.Version)
+		log.Warn().Str("version", r.Project.Cypress.Version).Msg(msg)
+	}
+	return nil
 }
 
 // setup performs any necessary steps for a test runner to execute tests.
