@@ -101,7 +101,7 @@ func (r *Runner) preliminarySteps() error {
 	}
 	if !cloudAvailability {
 		msg := fmt.Sprintf("cypress %s is not available on sauce cloud", r.Project.Cypress.Version)
-		log.Warn().Str("version", r.Project.Cypress.Version).Msg(msg)
+		log.Error().Str("version", r.Project.Cypress.Version).Msg(msg)
 		return errors.New(msg)
 	}
 	return nil
