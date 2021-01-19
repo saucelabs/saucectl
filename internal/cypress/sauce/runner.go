@@ -246,7 +246,6 @@ func (r *Runner) archiveProject(tempDir string) (string, error) {
 			return "", err
 		}
 	}
-
 	return zipName, z.Close()
 }
 

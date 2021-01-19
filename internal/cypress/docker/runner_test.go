@@ -3,6 +3,7 @@ package docker
 import (
 	githubapi "github.com/google/go-github/v32/github"
 	"github.com/jarcoal/httpmock"
+	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/stretchr/testify/assert"
@@ -158,4 +159,12 @@ func TestPreliminarySteps_ErrorFetchingLatest(t *testing.T) {
 		Docker:  config.Docker{Image: config.Image{Name: cypress.DefaultDockerImage}},
 	}}
 	assert.NotNil(t, runner.preliminarySteps())
+}
+
+func TestNewRunner(t *testing.T) {
+	p := cypress.Project{}
+	cli := command.NewSauceCtlCli()
+	r, err := New(p, cli)
+	assert.NotNil(t, r)
+	assert.Nil(t, err)
 }

@@ -15,6 +15,7 @@ import (
 type FakeClient struct {
 	ContainerListSuccess        bool
 	ImageListSuccess            bool
+	ImageInspectWithRawSuccess  bool
 	ImagePullSuccess            bool
 	ContainerCreateSuccess      bool
 	ContainerStartSuccess       bool
@@ -146,3 +147,12 @@ func (fc *FakeClient) ContainerRemove(ctx context.Context, containerID string, o
 	}
 	return errors.New("ContainerRemoveFailure")
 }
+
+// ImageInspectWithRawSuccess mock function
+func (fc *FakeClient) ImageInspectWithRaw(ctx context.Context, imageID string) (types.ImageInspect, []byte, error) {
+	if fc.ImageInspectWithRawSuccess {
+		return types.ImageInspect{}, []byte("inspect-data"), nil
+	}
+	return types.ImageInspect{}, nil, errors.New("ImageInspectWithRaw")
+}
+
