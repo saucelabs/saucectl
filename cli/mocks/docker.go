@@ -66,7 +66,9 @@ func (fc *FakeClient) ImagePull(ctx context.Context, ref string, options types.I
 // ContainerCreate mock function
 func (fc *FakeClient) ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (container.ContainerCreateCreatedBody, error) {
 	if fc.ContainerCreateSuccess {
-		return container.ContainerCreateCreatedBody{}, nil
+		return container.ContainerCreateCreatedBody{
+			ID: "fake-container-id",
+		}, nil
 	}
 	return container.ContainerCreateCreatedBody{}, errors.New("ContainerCreateFailure")
 }
@@ -151,7 +153,9 @@ func (fc *FakeClient) ContainerRemove(ctx context.Context, containerID string, o
 // ImageInspectWithRawSuccess mock function
 func (fc *FakeClient) ImageInspectWithRaw(ctx context.Context, imageID string) (types.ImageInspect, []byte, error) {
 	if fc.ImageInspectWithRawSuccess {
-		return types.ImageInspect{}, []byte("inspect-data"), nil
+		return types.ImageInspect{
+			Config: &container.Config{WorkingDir: "/dummy/work/dir/"},
+		}, []byte("inspect-data"), nil
 	}
 	return types.ImageInspect{}, nil, errors.New("ImageInspectWithRaw")
 }

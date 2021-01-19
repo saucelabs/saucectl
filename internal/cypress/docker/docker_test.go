@@ -4,11 +4,18 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"github.com/docker/docker/api/types"
+	"io"
+	"os"
+	"path"
+	"testing"
+
+	"github.com/docker/docker/api/types/container"
+
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/mocks"
+	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/stretchr/testify/assert"
-	"os"
-	"testing"
 )
 
 func TestNewImagePullOptions(t *testing.T) {
@@ -27,17 +34,6 @@ func TestNewImagePullOptions(t *testing.T) {
 	err = json.Unmarshal(decoded, &value)
 	assert.Nil(t, err)
 	assert.Equal(t, value, want)
-}
-
-func TestStartContainer(t *testing.T) {
-	//ctx := context.Background()
-	//project := cypress.Project{}
-	//handler := Handler{
-	//
-	//}
-	//container, err := handler.StartContainer(ctx, project)
-	//assert.Nil(t, err)
-	//assert.NotNil(t, container)
 }
 
 func TestImageFlavor(t *testing.T) {
@@ -101,4 +97,65 @@ func TestPullImageBase(t *testing.T) {
 	fc.ImagePullSuccess = false
 	err := handler.PullBaseImage(context.Background(), config.Image{Name: "dummy-name", Tag: "dummy-tag"})
 	assert.NotNil(t, err)
+}
+
+func TestCreateMounts(t *testing.T) {
+	cwd, _ := os.Getwd()
+	want := []struct {
+		Idx    int
+		Source string
+		Target string
+	}{
+		{Idx: 0, Source: "file1", Target: "dest/file1"},
+		{Idx: 1, Source: "dir1/file2", Target: "dest/file2"},
+		{Idx: 2, Source: "dir1/dir2/file3", Target: "dest/file3"},
+		{Idx: 3, Source: "dir1/dir2/file3", Target: "dest/file3"},
+	}
+
+	var files []string
+	for _, f := range want {
+		files = append(files, f.Source)
+	}
+	dest := "dest/"
+	mounts, _ := createMounts(files, dest)
+	assert.Len(t, mounts, len(want))
+	for _, w := range want {
+		m := mounts[w.Idx]
+		assert.Equal(t, path.Join(cwd, w.Source), m.Source)
+		assert.Equal(t, w.Target, m.Target)
+	}
+}
+
+func TestStartContainer(t *testing.T) {
+	project := cypress.Project{
+		Cypress: cypress.Cypress{
+			ConfigFile:  "../../../tests/e2e/cypress.json",
+			ProjectPath: "../../../tests/e2e/",
+		},
+	}
+	mockDocker := mocks.FakeClient{
+		ContainerCreateSuccess:     false,
+		ContainerStartSuccess:      true,
+		ContainerInspectSuccess:    true,
+		ImageInspectWithRawSuccess: true,
+		CopyToContainerFn: func(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error {
+			return nil
+		},
+	}
+	handler := Handler{
+		client: &mockDocker,
+	}
+
+	var cont *container.ContainerCreateCreatedBody
+	var err error
+
+	// Buggy container start
+	cont, err = handler.StartContainer(context.Background(), project)
+	assert.NotNil(t, err)
+
+	// Buggy container start
+	mockDocker.ContainerCreateSuccess = true
+	cont, err = handler.StartContainer(context.Background(), project)
+	assert.Nil(t, err)
+	assert.NotNil(t, cont)
 }
