@@ -18,20 +18,29 @@ type Project struct {
 	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
 }
 
-// Suite represents the playwright test suite configuration.
-type Suite struct {
-	Name           string                 `yaml:"name,omitempty" json:"name"`
-	Browser        string                 `yaml:"browserName,omitempty" json:"browserName"`
-	BrowserVersion string                 `yaml:"browserVersion,omitempty" json:"browserVersion"`
-	PlatformName   string                 `yaml:"platformName,omitempty" json:"platformName"`
-	Param          map[string]interface{} `yaml:"param,omitempty" json:"param,omitempty"`
-	TestMatch      string                 `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
-}
-
 // Playwright represents crucial playwright configuration that is required for setting up a project.
 type Playwright struct {
-	ProjectPath string                 `yaml:"projectPath,omitempty" json:"projectPath"`
-	Param       map[string]interface{} `yaml:"param,omitempty" json:"param"`
+	ProjectPath string      `yaml:"projectPath,omitempty" json:"projectPath,omitempty"`
+	Version     string      `yaml:"version,omitempty" json:"version,omitempty"`
+	Params      SuiteConfig `yaml:"params,omitempty" json:"params,omitempty"`
+}
+
+// Suite represents the playwright test suite configuration.
+type Suite struct {
+	Name              string      `yaml:"name,omitempty" json:"name"`
+	PlaywrightVersion string      `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
+	TestMatch         string      `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
+	PlatformName      string      `yaml:"platformName,omitempty" json:"platformName"`
+	Params            SuiteConfig `yaml:"params,omitempty" json:"params,omitempty"`
+}
+
+// SuiteConfig represents the configuration specific to a suite
+type SuiteConfig struct {
+	BrowserName         string `yaml:"browserName,omitempty" json:"browserName,omitempty"`
+	HeadFull            bool   `yaml:"headful,omitempty" json:"headful,omitempty"`
+	ScreenshotOnFailure bool   `yaml:"screenshotOnFailure,omitempty" json:"screenshotOnFailure,omitempty"`
+	SlowMo              uint   `yaml:"slowMo,omitempty" json:"slowMo,omitempty"`
+	Video               bool   `yaml:"video,omitempty" json:"video,omitempty"`
 }
 
 // FromFile creates a new playwright Project based on the filepath cfgPath.
