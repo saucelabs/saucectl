@@ -42,7 +42,7 @@ type result struct {
 // RunProject runs the tests defined in cypress.Project.
 func (r *Runner) RunProject() (int, error) {
 	exitCode := 1
-	if err := r.preliminarySteps(); err != nil {
+	if err := r.checkCypressVersionAvailability(); err != nil {
 		return exitCode, err
 	}
 
@@ -77,8 +77,8 @@ func (r *Runner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-// preliminarySteps do several checks before running Cypress tests.
-func (r *Runner) preliminarySteps() error {
+// checkCypressVersionAvailability do several checks before running Cypress tests.
+func (r *Runner) checkCypressVersionAvailability() error {
 	if r.Project.Cypress.Version == "" {
 		return fmt.Errorf("no cypress version provided")
 	}
