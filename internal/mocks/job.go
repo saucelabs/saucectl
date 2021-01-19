@@ -12,10 +12,12 @@ type FakeJobStarter struct {
 	CheckFrameworkAvailabilityFn func(ctx context.Context, frameworkName string) error
 }
 
+// StartJob mock function
 func (fjs *FakeJobStarter) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
 	return fjs.StartJobFn(ctx, opts)
 }
 
+// CheckFrameworkAvailability mock function
 func (fjs *FakeJobStarter) CheckFrameworkAvailability(ctx context.Context, frameworkName string) error {
 	return fjs.CheckFrameworkAvailabilityFn(ctx, frameworkName)
 }
@@ -27,14 +29,17 @@ type FakeJobReader struct {
 	GetJobAssetFileContentFn func (ctx context.Context, jobID, fileName string) ([]byte, error)
 }
 
+// ReadJob mock function
 func (fjr *FakeJobReader) ReadJob(ctx context.Context, id string) (job.Job, error) {
 	return fjr.ReadJobFn(ctx, id)
 }
 
+// PollJob mock function
 func (fjr *FakeJobReader) PollJob(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
 	return fjr.PollJobFn(ctx, id, interval)
 }
 
+// GetJobAssetFileContent mock function
 func (fjr *FakeJobReader) GetJobAssetFileContent(ctx context.Context, jobID, fileName string) ([]byte, error) {
 	return fjr.GetJobAssetFileContentFn(ctx, jobID, fileName)
 }

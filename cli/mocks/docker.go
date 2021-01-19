@@ -152,7 +152,7 @@ func (fc *FakeClient) ContainerRemove(ctx context.Context, containerID string, o
 	return errors.New("ContainerRemoveFailure")
 }
 
-// ImageInspectWithRawSuccess mock function
+// ImageInspectWithRaw mock function
 func (fc *FakeClient) ImageInspectWithRaw(ctx context.Context, imageID string) (types.ImageInspect, []byte, error) {
 	if fc.ImageInspectWithRawSuccess {
 		return types.ImageInspect{
