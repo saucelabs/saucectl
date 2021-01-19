@@ -29,7 +29,7 @@ func TestPreliminarySteps_Basic(t *testing.T) {
 	)
 
 	runner := Runner{Project: cypress.Project{Cypress: cypress.Cypress{Version: "5.6.2"}}}
-	assert.Nil(t, runner.preliminarySteps())
+	assert.Nil(t, runner.checkCypressVersionAvailability())
 }
 
 func TestPreliminarySteps_DefinedImage(t *testing.T) {
@@ -40,13 +40,13 @@ func TestPreliminarySteps_DefinedImage(t *testing.T) {
 			},
 		},
 	}
-	assert.Nil(t, runner.preliminarySteps())
+	assert.Nil(t, runner.checkCypressVersionAvailability())
 }
 
 func TestPreliminarySteps_NoDefinedImageNoCypressVersion(t *testing.T) {
 	want := "no cypress version provided"
 	runner := Runner{}
-	err := runner.preliminarySteps()
+	err := runner.checkCypressVersionAvailability()
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), want)
 }
@@ -76,7 +76,7 @@ func TestPreliminarySteps_NoDefinedImageCypressLatest(t *testing.T) {
 	}
 
 	runner := Runner{Project: cypress.Project{Cypress: cypress.Cypress{Version: "latest"}}}
-	assert.Nil(t, runner.preliminarySteps())
+	assert.Nil(t, runner.checkCypressVersionAvailability())
 	assert.Equal(t, runner.Project.Docker.Image, wantImage)
 	assert.Equal(t, runner.Project.Cypress.Version, wantVersion)
 }
@@ -109,7 +109,7 @@ func TestPreliminarySteps_NoDefinedImageCypressNoTag(t *testing.T) {
 		Cypress: cypress.Cypress{Version: "latest"},
 		Docker:  config.Docker{Image: config.Image{Name: cypress.DefaultDockerImage}},
 	}}
-	assert.Nil(t, runner.preliminarySteps())
+	assert.Nil(t, runner.checkCypressVersionAvailability())
 	assert.Equal(t, runner.Project.Docker.Image, wantImage)
 	assert.Equal(t, runner.Project.Cypress.Version, wantVersion)
 }
@@ -136,7 +136,7 @@ func TestPreliminarySteps_CypressVersionNotAvailable(t *testing.T) {
 		Cypress: cypress.Cypress{Version: "5.6.3"},
 		Docker:  config.Docker{Image: config.Image{Name: cypress.DefaultDockerImage}},
 	}}
-	assert.NotNil(t, runner.preliminarySteps())
+	assert.NotNil(t, runner.checkCypressVersionAvailability())
 }
 
 // Add support with latest
@@ -158,7 +158,7 @@ func TestPreliminarySteps_ErrorFetchingLatest(t *testing.T) {
 		Cypress: cypress.Cypress{Version: "5.6.3"},
 		Docker:  config.Docker{Image: config.Image{Name: cypress.DefaultDockerImage}},
 	}}
-	assert.NotNil(t, runner.preliminarySteps())
+	assert.NotNil(t, runner.checkCypressVersionAvailability())
 }
 
 func TestNewRunner(t *testing.T) {
