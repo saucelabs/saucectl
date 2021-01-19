@@ -153,9 +153,46 @@ func TestStartContainer(t *testing.T) {
 	cont, err = handler.StartContainer(context.Background(), project)
 	assert.NotNil(t, err)
 
-	// Buggy container start
+	// Successfull container start
 	mockDocker.ContainerCreateSuccess = true
 	cont, err = handler.StartContainer(context.Background(), project)
 	assert.Nil(t, err)
 	assert.NotNil(t, cont)
+}
+
+func TestExecuteInContainer(t *testing.T) {
+	mockDocker := mocks.FakeClient{
+		ContainerExecCreateSuccess: true,
+		ContainerExecAttachSuccess: true,
+	}
+	handler := Handler{
+		client: &mockDocker,
+	}
+
+	IDResponse, hijackedResponse, err := handler.Execute(context.Background(), "dummy-container-id", []string{"npm", "dummy-command"}, map[string]string{})
+	assert.Nil(t, err)
+	assert.NotNil(t, hijackedResponse)
+	assert.Equal(t, IDResponse.ID, "dummy-id")
+}
+
+func TestCopyFromContainer(t *testing.T) {
+	defer func() {
+		os.Remove("internal-file")
+	}()
+	client := &mocks.FakeClient{
+		ContainerStatPathSuccess: true,
+		CopyFromContainerSuccess: true,
+	}
+	handler := Handler{
+		client: client,
+	}
+
+	// Working
+	err := handler.CopyFromContainer(context.Background(), "dummy-container-id", "/dummy/source/internal-file", "./")
+	assert.Nil(t, err)
+
+	// Errored test
+	client.CopyFromContainerSuccess = false
+	err = handler.CopyFromContainer(context.Background(), "dummy-container-id", "/dummy/source/internal-file", "./")
+	assert.NotNil(t, err)
 }

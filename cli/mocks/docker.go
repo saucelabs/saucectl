@@ -113,7 +113,9 @@ func (fc *FakeClient) CopyFromContainer(ctx context.Context, container, srcPath 
 // ContainerExecCreate mock function
 func (fc *FakeClient) ContainerExecCreate(ctx context.Context, container string, config types.ExecConfig) (types.IDResponse, error) {
 	if fc.ContainerExecCreateSuccess {
-		return types.IDResponse{}, nil
+		return types.IDResponse{
+			ID: "dummy-id",
+		}, nil
 	}
 	return types.IDResponse{}, errors.New("ContainerExecCreateFailure")
 }
