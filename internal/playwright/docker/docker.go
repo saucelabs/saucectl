@@ -192,12 +192,9 @@ func (handler *Handler) StartContainer(ctx context.Context, c playwright.Project
 	}
 
 	files := []string{
-		c.Playwright.ProjectPath,
+		c.Playwright.LocalProjectPath,
 	}
-
-	//if c.Playwright.EnvFile != "" {
-	//	files = append(files, c.Playwright.EnvFile)
-	//}
+	c.Playwright.ProjectPath = filepath.Base(c.Playwright.ProjectPath)
 
 	img := handler.GetImageFlavor(c.Docker.Image)
 	pDir, err := handler.ProjectDir(ctx, img)

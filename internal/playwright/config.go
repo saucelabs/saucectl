@@ -5,6 +5,7 @@ import (
 	"github.com/saucelabs/saucectl/cli/config"
 	"gopkg.in/yaml.v2"
 	"os"
+	"path/filepath"
 )
 
 // Project represents the playwright project configuration.
@@ -23,6 +24,9 @@ type Playwright struct {
 	ProjectPath string      `yaml:"projectPath,omitempty" json:"projectPath,omitempty"`
 	Version     string      `yaml:"version,omitempty" json:"version,omitempty"`
 	Params      SuiteConfig `yaml:"params,omitempty" json:"params,omitempty"`
+
+	// LocalProjectPath represents the project with nested folder removal (not in docker)
+	LocalProjectPath string
 }
 
 // Suite represents the playwright test suite configuration.
@@ -61,6 +65,10 @@ func FromFile(cfgPath string) (Project, error) {
 	if p.Playwright.ProjectPath == "" {
 		p.Playwright.ProjectPath = "./tests/"
 	}
+
+	// Store local path since we provide only last level folder in runner
+	p.Playwright.LocalProjectPath = p.Playwright.ProjectPath
+	p.Playwright.ProjectPath = filepath.Base(p.Playwright.ProjectPath)
 
 	// Default mode to Mount
 	if p.Docker.FileTransfer == "" {
