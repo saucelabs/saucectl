@@ -2,6 +2,8 @@ package cypress
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/saucelabs/saucectl/internal/github"
 )
 
@@ -12,11 +14,19 @@ func IsCypressVersionAvailable(version string) (DockerAvailability, CloudAvailab
 		return false, false, err
 	}
 	for _, release := range releases {
-		if release.VersionNumber == version {
+		if StandardizeVersionFormat(release.VersionNumber) == StandardizeVersionFormat(version) {
 			return true, release.CloudAvailability, nil
 		}
 	}
 	return false, false, nil
+}
+
+// StandardizeVersionFormat remove the leading v in version to ensure reliable comparisons.
+func StandardizeVersionFormat(version string) string {
+	if strings.HasPrefix(version, "v") {
+		return version[1:]
+	}
+	return version
 }
 
 // GetLatestDockerVersion get the latest version available in docker mode.
@@ -28,7 +38,7 @@ func GetLatestDockerVersion() (string, error) {
 	if len(releases) == 0 {
 		return "", fmt.Errorf("no cypress version found")
 	}
-	return releases[0].VersionNumber, nil
+	return StandardizeVersionFormat(releases[0].VersionNumber), nil
 }
 
 // GetLatestCloudVersion get the latest version available in sauce cloud.
@@ -39,7 +49,7 @@ func GetLatestCloudVersion() (string, error) {
 	}
 	for _, release := range releases {
 		if release.CloudAvailability {
-			return releases[0].VersionNumber, nil
+			return StandardizeVersionFormat(release.VersionNumber), nil
 		}
 	}
 	return "", fmt.Errorf("no cypress cloud version found")

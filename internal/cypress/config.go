@@ -104,6 +104,11 @@ func FromFile(cfgPath string) (Project, error) {
 		p.Sauce.Concurrency = 1
 	}
 
+	// Uniformize version
+	if p.Cypress.Version != "latest" {
+		p.Cypress.Version = StandardizeVersionFormat(p.Cypress.Version)
+
+	}
 	return p, nil
 }
 
