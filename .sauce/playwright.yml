@@ -26,3 +26,5 @@ suites:
     # Playwright-test settings
     param:
       browserName: "firefox"
+      headful: true
+      slowMo: 1000

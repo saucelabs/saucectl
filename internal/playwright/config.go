@@ -27,7 +27,7 @@ type Playwright struct {
 	Params      SuiteConfig `yaml:"params,omitempty" json:"params,omitempty"`
 
 	// LocalProjectPath represents the project with nested folder removal (not in docker)
-	LocalProjectPath string
+	LocalProjectPath string `yaml:"-" json:"-"`
 }
 
 // Suite represents the playwright test suite configuration.
@@ -36,7 +36,7 @@ type Suite struct {
 	PlaywrightVersion string      `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
 	TestMatch         string      `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
 	PlatformName      string      `yaml:"platformName,omitempty" json:"platformName"`
-	Params            SuiteConfig `yaml:"params,omitempty" json:"params,omitempty"`
+	Param             SuiteConfig `yaml:"param,omitempty" json:"param,omitempty"`
 }
 
 // SuiteConfig represents the configuration specific to a suite
