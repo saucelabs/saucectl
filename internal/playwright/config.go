@@ -35,7 +35,7 @@ type Suite struct {
 	Name              string      `yaml:"name,omitempty" json:"name"`
 	PlaywrightVersion string      `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
 	TestMatch         string      `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
-	PlatformName      string      `yaml:"platformName,omitempty" json:"platformName"`
+	PlatformName      string      `yaml:"platformName,omitempty" json:"platformName,omitempty"`
 	Param             SuiteConfig `yaml:"param,omitempty" json:"param,omitempty"`
 }
 
