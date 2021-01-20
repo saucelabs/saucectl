@@ -158,9 +158,6 @@ jobs:
   playwright:
     needs: basic
     runs-on: ubuntu-latest
-    container:
-      image: saucelabs/stt-playwright-jest-node:v0.1.6
-      options: --user 1001
 
     steps:
       # appears that checkout@v2 uses javascript which is not compatible
