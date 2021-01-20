@@ -14,7 +14,7 @@ func IsCypressVersionAvailable(version string) (DockerAvailability, CloudAvailab
 		return false, false, err
 	}
 	for _, release := range releases {
-		if StandardizeVersionFormat(release.VersionNumber) == StandardizeVersionFormat(version) {
+		if StandardizeVersionFormat(release.VersionNumber) == version {
 			return true, release.CloudAvailability, nil
 		}
 	}
