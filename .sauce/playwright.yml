@@ -2,6 +2,7 @@ apiVersion: v1alpha
 kind: playwright
 sauce:
   region: us-west-1
+  concurrency: 1
   metadata:
     name: Testing Playwright Support
     tags:
@@ -14,6 +15,7 @@ docker:
     tag: latest
 playwright:
   projectPath: tests/e2e/playwright/
+  version: 1.7.1
   params:
     browserName: firefox
 suites:

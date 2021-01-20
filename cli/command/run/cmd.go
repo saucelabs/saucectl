@@ -8,29 +8,29 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/saucelabs/saucectl/cli/version"
-	"github.com/saucelabs/saucectl/internal/appstore"
-	"github.com/saucelabs/saucectl/internal/cypress"
-	"github.com/saucelabs/saucectl/internal/cypress/sauce"
-	"github.com/saucelabs/saucectl/internal/playwright"
-	"github.com/saucelabs/saucectl/internal/resto"
-
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/mocks"
 	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/cli/version"
+	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/ci/github"
 	"github.com/saucelabs/saucectl/internal/ci/gitlab"
 	"github.com/saucelabs/saucectl/internal/ci/jenkins"
+	"github.com/saucelabs/saucectl/internal/cypress"
 	cypressDocker "github.com/saucelabs/saucectl/internal/cypress/docker"
-	playwrightDocker "github.com/saucelabs/saucectl/internal/playwright/docker"
+	cypressSauce "github.com/saucelabs/saucectl/internal/cypress/sauce"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/memseq"
+	"github.com/saucelabs/saucectl/internal/playwright"
+	playwrightDocker "github.com/saucelabs/saucectl/internal/playwright/docker"
+	playwrightSauce "github.com/saucelabs/saucectl/internal/playwright/sauce"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
 )
@@ -256,7 +256,7 @@ func runCypressInSauce(p cypress.Project) (int, error) {
 		AccessKey:  c.AccessKey,
 	}
 
-	r := sauce.Runner{
+	r := cypressSauce.Runner{
 		Project:         p,
 		ProjectUploader: s,
 		JobStarter:      &tc,
@@ -286,6 +286,8 @@ func runPlaywright(cli *command.SauceCtlCli) (int, error) {
 	switch testEnv {
 	case "docker":
 		return runPlaywrightInDocker(p, cli)
+	case "sauce":
+		return runPlaywrightInSauce(p)
 	default:
 		return 1, errors.New("unsupported test environment")
 	}
@@ -299,6 +301,48 @@ func runPlaywrightInDocker(p playwright.Project, cli *command.SauceCtlCli) (int,
 		return 1, err
 	}
 	return cd.RunProject()
+}
+
+func runPlaywrightInSauce(p playwright.Project) (int, error) {
+	log.Info().Msg("Running Playwright in Sauce Labs")
+
+	c := credentials.Get()
+	if c == nil {
+		return 1, errors.New("no sauce credentials set")
+	}
+
+	re := region.FromString(p.Sauce.Region)
+	if re == region.None {
+		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
+		return 1, errors.New("no sauce region set")
+	}
+
+	// TODO decide on a good timeout and perhaps make it configurable. Slow clients may take time to upload. Can't be higher than API gateway timeout though!
+	s := appstore.New(re.APIBaseURL(), c.Username, c.AccessKey, 30*time.Second)
+
+	// TODO decide on a good timeout and perhaps make it configurable. Some job starts are slower than others. Can't be higher than API gateway timeout though!
+	tc := testcomposer.Client{
+		HTTPClient:  &http.Client{Timeout: 30 * time.Second},
+		URL:         re.APIBaseURL(),
+		Credentials: *c,
+	}
+
+	// TODO decide on a good timeout and perhaps make it configurable. Resto may take longer to respond sometimes. Can't be higher than API gateway timeout though!
+	rsto := resto.Client{
+		HTTPClient: &http.Client{Timeout: 7 * time.Second},
+		URL:        re.APIBaseURL(),
+		Username:   c.Username,
+		AccessKey:  c.AccessKey,
+	}
+
+	r := playwrightSauce.Runner{
+		Project:         p,
+		ProjectUploader: s,
+		JobStarter:      &tc,
+		JobReader:       &rsto,
+		Region:          re,
+	}
+	return r.RunProject()
 }
 
 func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, error) {
