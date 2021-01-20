@@ -9,12 +9,13 @@ import (
 
 // IsCypressVersionAvailable checks if the requested version is available on cloud or docker.
 func IsCypressVersionAvailable(version string) (DockerAvailability, CloudAvailability bool, err error) {
+	standardVersion := StandardizeVersionFormat(version)
 	releases, err := github.GetReleases(RunnerGhOrg, RunnerGhRepo)
 	if err != nil {
 		return false, false, err
 	}
 	for _, release := range releases {
-		if StandardizeVersionFormat(release.VersionNumber) == version {
+		if StandardizeVersionFormat(release.VersionNumber) == standardVersion {
 			return true, release.CloudAvailability, nil
 		}
 	}
