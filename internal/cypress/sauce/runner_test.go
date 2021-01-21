@@ -197,3 +197,20 @@ func TestRunProject(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, cnt, 0)
 }
+
+func TestLogSuiteConsole(t *testing.T) {
+	reader := &mocks.FakeJobReader{
+		GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+			return []byte("dummy-content"), nil
+		},
+	}
+	runner := Runner{
+		JobReader: reader,
+	}
+	res := result{
+		job: job.Job{
+			ID: "fake-job-id",
+		},
+	}
+	runner.logSuiteConsole(res)
+}
