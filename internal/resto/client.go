@@ -37,7 +37,6 @@ type concurrencyResponse struct {
 			Allowed struct {
 				VMS    int `json:"vms"`
 				RDS    int `json:"rds"`
-				MacVMS int `json:"mac_vms"`
 			}
 		}
 	}
