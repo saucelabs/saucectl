@@ -58,7 +58,7 @@ func New(c cypress.Project, cli *command.SauceCtlCli) (*Runner, error) {
 
 // RunProject runs the tests defined in config.Project.
 func (r *Runner) RunProject() (int, error) {
-	if err := r.checkCypressVersion(); err != nil {
+	if err := r.defineDockerImage(); err != nil {
 		return 1, err
 	}
 
@@ -75,8 +75,8 @@ func (r *Runner) RunProject() (int, error) {
 	return errorCount, nil
 }
 
-// checkCypressVersion do several checks before running Cypress tests.
-func (r *Runner) checkCypressVersion() error {
+// defineDockerImage defines docker images to default value if not already set.
+func (r *Runner) defineDockerImage() error {
 	// Skip availability check since custom image is being used
 	if r.Project.Docker.Image.Name != "" && r.Project.Docker.Image.Tag != "" {
 		log.Info().Msgf("Ignoring Cypress version for Docker, using %s:%s", r.Project.Docker.Image.Name, r.Project.Docker.Image.Tag)
