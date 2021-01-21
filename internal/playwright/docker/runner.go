@@ -213,7 +213,7 @@ func (r *Runner) execute(cmd []string, env map[string]string) (int, error) {
 
 // run runs the tests defined in the config.Project.
 func (r *Runner) run(s playwright.Suite) (int, error) {
-	return r.execute([]string{"node", ".", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", s.Name}, map[string]string{})
+	return r.execute([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", s.Name}, map[string]string{})
 }
 
 // teardown cleans up the test environment.
