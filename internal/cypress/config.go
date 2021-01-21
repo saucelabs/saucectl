@@ -101,7 +101,7 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 
 	// Uniformize version
-	p.Cypress.Version = standardizeVersionFormat(p.Cypress.Version)
+	p.Cypress.Version = config.StandardizeVersionFormat(p.Cypress.Version)
 
 	return p, nil
 }
@@ -145,12 +145,4 @@ func Validate(p Project) error {
 	}
 
 	return nil
-}
-
-// standardizeVersionFormat remove the leading v in version to ensure reliable comparisons.
-func standardizeVersionFormat(version string) string {
-	if strings.HasPrefix(version, "v") {
-		return version[1:]
-	}
-	return version
 }
