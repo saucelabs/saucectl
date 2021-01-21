@@ -4,14 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
-
-	"github.com/rs/zerolog/log"
+	"time"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/progress"
@@ -112,6 +112,9 @@ func (r *Runner) setup() error {
 		return err
 	}
 	r.containerID = container.ID
+
+	// wait until Xvfb started
+	time.Sleep(1 * time.Second)
 
 	pDir, err := r.docker.ProjectDir(r.Ctx, baseImage)
 	if err != nil {
