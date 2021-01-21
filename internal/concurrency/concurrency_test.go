@@ -2,6 +2,7 @@ package concurrency
 
 import (
 	"context"
+	"errors"
 	"testing"
 )
 
@@ -54,6 +55,16 @@ func TestMin(t *testing.T) {
 				ccy: 20,
 			},
 			want: 10,
+		},
+		{
+			name: "on error",
+			args: args{
+				r: ccyReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
+					return 0, errors.New("better be expecting me")
+				}},
+				ccy: 20,
+			},
+			want: 1,
 		},
 	}
 	for _, tt := range tests {
