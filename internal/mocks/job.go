@@ -2,14 +2,15 @@ package mocks
 
 import (
 	"context"
+	"errors"
 	"github.com/saucelabs/saucectl/internal/job"
 	"time"
 )
 
 // FakeJobStarter resto mock
 type FakeJobStarter struct {
-	StartJobFn                   func(ctx context.Context, opts job.StartOptions) (jobID string, err error)
-	CheckFrameworkAvailabilityFn func(ctx context.Context, frameworkName string) error
+	StartJobFn                        func(ctx context.Context, opts job.StartOptions) (jobID string, err error)
+	CheckFrameworkAvailabilitySuccess bool
 }
 
 // StartJob mock function
@@ -19,14 +20,17 @@ func (fjs *FakeJobStarter) StartJob(ctx context.Context, opts job.StartOptions) 
 
 // CheckFrameworkAvailability mock function
 func (fjs *FakeJobStarter) CheckFrameworkAvailability(ctx context.Context, frameworkName string) error {
-	return fjs.CheckFrameworkAvailabilityFn(ctx, frameworkName)
+	if fjs.CheckFrameworkAvailabilitySuccess {
+		return nil
+	}
+	return errors.New("framework not available")
 }
 
 // FakeJobReader resto mock
 type FakeJobReader struct {
-	ReadJobFn func(ctx context.Context, id string) (job.Job, error)
-	PollJobFn func(ctx context.Context, id string, interval time.Duration) (job.Job, error)
-	GetJobAssetFileContentFn func (ctx context.Context, jobID, fileName string) ([]byte, error)
+	ReadJobFn                func(ctx context.Context, id string) (job.Job, error)
+	PollJobFn                func(ctx context.Context, id string, interval time.Duration) (job.Job, error)
+	GetJobAssetFileContentFn func(ctx context.Context, jobID, fileName string) ([]byte, error)
 }
 
 // ReadJob mock function

@@ -2,7 +2,6 @@ package sauce
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -42,7 +41,7 @@ type result struct {
 // RunProject runs the tests defined in cypress.Project.
 func (r *Runner) RunProject() (int, error) {
 	exitCode := 1
-	if err := r.checkCypressVersionAvailability(); err != nil {
+	if err := r.checkCypressVersion(); err != nil {
 		return exitCode, err
 	}
 
@@ -77,32 +76,10 @@ func (r *Runner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-// checkCypressVersionAvailability do several checks before running Cypress tests.
-func (r *Runner) checkCypressVersionAvailability() error {
+// checkCypressVersion do several checks before running Cypress tests.
+func (r *Runner) checkCypressVersion() error {
 	if r.Project.Cypress.Version == "" {
 		return fmt.Errorf("no cypress version provided")
-	}
-
-	if r.Project.Cypress.Version == "latest" {
-		version, err := cypress.GetLatestCloudVersion()
-		if err != nil {
-			return err
-		}
-		log.Info().Msgf("Using Cypress %s", version)
-		r.Project.Cypress.Version = version
-		return nil
-	}
-
-	_, cloudAvailability, err := cypress.IsCypressVersionAvailable(r.Project.Cypress.Version)
-	if err != nil {
-		msg := fmt.Sprintf("Unable to check Cypress availability: %s", err)
-		log.Error().Str("version", r.Project.Cypress.Version).Msg(msg)
-		return err
-	}
-	if !cloudAvailability {
-		msg := fmt.Sprintf("cypress %s is not available on sauce cloud", r.Project.Cypress.Version)
-		log.Error().Str("version", r.Project.Cypress.Version).Msg(msg)
-		return errors.New(msg)
 	}
 	return nil
 }

@@ -58,7 +58,7 @@ func New(c cypress.Project, cli *command.SauceCtlCli) (*Runner, error) {
 
 // RunProject runs the tests defined in config.Project.
 func (r *Runner) RunProject() (int, error) {
-	if err := r.checkCypressVersionAvailability(); err != nil {
+	if err := r.checkCypressVersion(); err != nil {
 		return 1, err
 	}
 
@@ -75,8 +75,8 @@ func (r *Runner) RunProject() (int, error) {
 	return errorCount, nil
 }
 
-// checkCypressVersionAvailability do several checks before running Cypress tests.
-func (r *Runner) checkCypressVersionAvailability() error {
+// checkCypressVersion do several checks before running Cypress tests.
+func (r *Runner) checkCypressVersion() error {
 	// Skip availability check since custom image is being used
 	if r.Project.Docker.Image.Name != "" && r.Project.Docker.Image.Tag != "" {
 		log.Info().Msgf("Ignoring Cypress version for Docker, using %s:%s", r.Project.Docker.Image.Name, r.Project.Docker.Image.Tag)
@@ -86,14 +86,6 @@ func (r *Runner) checkCypressVersionAvailability() error {
 	if r.Project.Cypress.Version == "" {
 		return fmt.Errorf("no cypress version provided")
 	}
-	if r.Project.Cypress.Version == "latest" {
-		version, err := cypress.GetLatestDockerVersion()
-		if err != nil {
-			return err
-		}
-		log.Info().Msgf("Using Cypress %s", version)
-		r.Project.Cypress.Version = version
-	}
 
 	if r.Project.Docker.Image.Name == cypress.DefaultDockerImage && r.Project.Docker.Image.Tag == "" {
 		r.Project.Docker.Image.Tag = r.Project.Cypress.Version
@@ -101,22 +93,6 @@ func (r *Runner) checkCypressVersionAvailability() error {
 	if r.Project.Docker.Image.Name == "" {
 		r.Project.Docker.Image.Name = cypress.DefaultDockerImage
 		r.Project.Docker.Image.Tag = r.Project.Cypress.Version
-	}
-
-	dockerAvailability, cloudAvailability, err := cypress.IsCypressVersionAvailable(r.Project.Cypress.Version)
-	if err != nil {
-		msg := fmt.Sprintf("Unable to check Cypress availability: %s", err)
-		log.Error().Str("version", r.Project.Cypress.Version).Msg(msg)
-		return err
-	}
-	if !dockerAvailability {
-		msg := fmt.Sprintf("cypress %s is not available", r.Project.Cypress.Version)
-		log.Error().Str("version", r.Project.Cypress.Version).Msg(msg)
-		return errors.New(msg)
-	}
-	if !cloudAvailability {
-		msg := fmt.Sprintf("Cypress %s is not yet available on Sauce Cloud", r.Project.Cypress.Version)
-		log.Warn().Str("version", r.Project.Cypress.Version).Msg(msg)
 	}
 	return nil
 }

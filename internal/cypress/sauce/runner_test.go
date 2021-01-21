@@ -3,12 +3,10 @@ package sauce
 import (
 	"archive/zip"
 	"context"
-	"net/http"
 	"os"
 	"testing"
 	"time"
 
-	githubapi "github.com/google/go-github/v32/github"
 	"github.com/jarcoal/httpmock"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
@@ -20,103 +18,16 @@ import (
 )
 
 func TestPreliminarySteps_Basic(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-
-	v0 := "5.6.2"
-	falseValue := false
-	releases := []githubapi.RepositoryRelease{{Name: &v0, Prerelease: &falseValue}}
-	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/"+cypress.RunnerGhOrg+"/"+cypress.RunnerGhRepo+"/releases",
-		func(req *http.Request) (*http.Response, error) {
-			resp, err := httpmock.NewJsonResponse(200, releases)
-			if err != nil {
-				return httpmock.NewStringResponse(500, ""), nil
-			}
-			return resp, nil
-		},
-	)
-
 	runner := Runner{Project: cypress.Project{Cypress: cypress.Cypress{Version: "5.6.2"}}}
-	assert.Nil(t, runner.checkCypressVersionAvailability())
+	assert.Nil(t, runner.checkCypressVersion())
 }
 
 func TestPreliminarySteps_NoCypressVersion(t *testing.T) {
 	want := "no cypress version provided"
 	runner := Runner{}
-	err := runner.checkCypressVersionAvailability()
+	err := runner.checkCypressVersion()
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), want)
-}
-
-// Add support with latest
-func TestPreliminarySteps_CypressLatest(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-
-	v0 := "5.6.2"
-	falseValue := false
-	releases := []githubapi.RepositoryRelease{{Name: &v0, Prerelease: &falseValue}}
-	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/"+cypress.RunnerGhOrg+"/"+cypress.RunnerGhRepo+"/releases",
-		func(req *http.Request) (*http.Response, error) {
-			resp, err := httpmock.NewJsonResponse(200, releases)
-			if err != nil {
-				return httpmock.NewStringResponse(500, ""), nil
-			}
-			return resp, nil
-		},
-	)
-
-	wantVersion := v0
-	runner := Runner{Project: cypress.Project{Cypress: cypress.Cypress{Version: "latest"}}}
-	assert.Nil(t, runner.checkCypressVersionAvailability())
-	assert.Equal(t, runner.Project.Cypress.Version, wantVersion)
-}
-
-// Add support with latest
-func TestPreliminarySteps_CypressVersionNotAvailable(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-
-	v0 := "5.6.2"
-	trueValue := true
-	releases := []githubapi.RepositoryRelease{{Name: &v0, Prerelease: &trueValue}}
-	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/"+cypress.RunnerGhOrg+"/"+cypress.RunnerGhRepo+"/releases",
-		func(req *http.Request) (*http.Response, error) {
-			resp, err := httpmock.NewJsonResponse(200, releases)
-			if err != nil {
-				return httpmock.NewStringResponse(500, ""), nil
-			}
-			return resp, nil
-		},
-	)
-
-	runner := Runner{Project: cypress.Project{
-		Cypress: cypress.Cypress{Version: "5.6.3"},
-		Docker:  config.Docker{Image: config.Image{Name: cypress.DefaultDockerImage}},
-	}}
-	assert.NotNil(t, runner.checkCypressVersionAvailability())
-}
-
-// Add support with latest
-func TestPreliminarySteps_ErrorFetchingLatest(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-
-	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/"+cypress.RunnerGhOrg+"/"+cypress.RunnerGhRepo+"/releases",
-		func(req *http.Request) (*http.Response, error) {
-			resp, err := httpmock.NewJsonResponse(400, map[string]string{})
-			if err != nil {
-				return httpmock.NewStringResponse(500, ""), nil
-			}
-			return resp, nil
-		},
-	)
-
-	runner := Runner{Project: cypress.Project{
-		Cypress: cypress.Cypress{Version: "5.6.3"},
-		Docker:  config.Docker{Image: config.Image{Name: cypress.DefaultDockerImage}},
-	}}
-	assert.NotNil(t, runner.checkCypressVersionAvailability())
 }
 
 func TestRunSuite(t *testing.T) {
@@ -236,4 +147,53 @@ func TestUploadProject(t *testing.T) {
 	assert.Equal(t, "", id)
 	assert.NotNil(t, err)
 
+}
+
+func TestRunProject(t *testing.T) {
+	os.Mkdir("./test-arch/", 0755)
+	httpmock.Activate()
+	defer func() {
+		os.RemoveAll("./test-arch/")
+		httpmock.DeactivateAndReset()
+	}()
+
+	// Fake JobStarter
+	starter := mocks.FakeJobStarter{
+		CheckFrameworkAvailabilitySuccess: true,
+		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
+			return "fake-job-id", nil
+		},
+	}
+	reader := mocks.FakeJobReader{
+		PollJobFn: func(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
+			time.Sleep(5 * time.Second)
+			return job.Job{ID: id, Passed: true}, nil
+		},
+	}
+
+	uploader := &mocks.FakeProjectUploader{
+		UploadSuccess: true,
+	}
+	runner := Runner{
+		JobStarter:      &starter,
+		JobReader:       &reader,
+		ProjectUploader: uploader,
+		Project: cypress.Project{
+			Cypress: cypress.Cypress{
+				Version:     "5.6.0",
+				ConfigFile:  "../../../tests/e2e/cypress.json",
+				ProjectPath: "../../../tests/e2e/cypress/",
+			},
+			Suites: []cypress.Suite{
+				{Name: "dummy-suite"},
+			},
+			Sauce: config.SauceConfig{
+				Concurrency: 1,
+			},
+		},
+	}
+
+	cnt, err := runner.RunProject()
+	assert.Nil(t, err)
+	assert.Equal(t, cnt, 0)
 }
