@@ -75,7 +75,7 @@ func (r *Runner) RunProject() (int, error) {
 	return errorCount, nil
 }
 
-// defineDockerImage defines docker images to default value if not already set.
+// defineDockerImage defines docker image value if not already set.
 func (r *Runner) defineDockerImage() error {
 	// Skip availability check since custom image is being used
 	if r.Project.Docker.Image.Name != "" && r.Project.Docker.Image.Tag != "" {
