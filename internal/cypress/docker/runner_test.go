@@ -11,7 +11,7 @@ import (
 
 func TestPreliminarySteps_Basic(t *testing.T) {
 	runner := Runner{Project: cypress.Project{Cypress: cypress.Cypress{Version: "5.6.2"}}}
-	assert.Nil(t, runner.checkCypressVersion())
+	assert.Nil(t, runner.defineDockerImage())
 }
 
 func TestPreliminarySteps_DefinedImage(t *testing.T) {
@@ -22,13 +22,13 @@ func TestPreliminarySteps_DefinedImage(t *testing.T) {
 			},
 		},
 	}
-	assert.Nil(t, runner.checkCypressVersion())
+	assert.Nil(t, runner.defineDockerImage())
 }
 
 func TestPreliminarySteps_NoDefinedImageNoCypressVersion(t *testing.T) {
 	want := "no cypress version provided"
 	runner := Runner{}
-	err := runner.checkCypressVersion()
+	err := runner.defineDockerImage()
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), want)
 }
