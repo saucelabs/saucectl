@@ -244,6 +244,7 @@ func runCypressInSauce(p cypress.Project) (int, error) {
 		ProjectUploader: s,
 		JobStarter:      &tc,
 		JobReader:       &rsto,
+		CCYReader:       &rsto,
 		Region:          re,
 	}
 	return r.RunProject()

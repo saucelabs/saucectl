@@ -30,6 +30,19 @@ type Client struct {
 	AccessKey  string
 }
 
+// concurrencyResponse is the response body as is returned by resto's rest/v1.2/users/{username}/concurrency
+type concurrencyResponse struct {
+	Concurrency struct {
+		Organization struct {
+			Allowed struct {
+				VMS    int `json:"vms"`
+				RDS    int `json:"rds"`
+				MacVMS int `json:"mac_vms"`
+			}
+		}
+	}
+}
+
 // New creates a new client.
 func New(url, username, accessKey string, timeout time.Duration) Client {
 	return Client{
@@ -82,6 +95,29 @@ func (c *Client) GetJobAssetFileContent(ctx context.Context, jobID, fileName str
 	}
 
 	return doAssetRequest(c.HTTPClient, request)
+}
+
+// ReadAllowedCCY returns the allowed (max) concurrency for the current account.
+func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
+		fmt.Sprintf("%s/rest/v1.2/users/%s/concurrency", c.URL, c.Username), nil)
+	if err != nil {
+		return 0, err
+	}
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	var cr concurrencyResponse
+	if err := json.NewDecoder(resp.Body).Decode(&cr); err != nil {
+		return 0, err
+	}
+
+	return cr.Concurrency.Organization.Allowed.VMS, nil
 }
 
 func doAssetRequest(httpClient *http.Client, request *http.Request) ([]byte, error) {
