@@ -73,9 +73,13 @@ func TestRunSuites(t *testing.T) {
 			return job.Job{ID: id, Passed: true}, nil
 		},
 	}
+	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
+		return 1, nil
+	}}
 	runner := Runner{
 		JobStarter: &starter,
 		JobReader:  &reader,
+		CCYReader:  ccyReader,
 		Project: cypress.Project{
 			Suites: []cypress.Suite{
 				{Name: "dummy-suite"},
@@ -170,13 +174,16 @@ func TestRunProject(t *testing.T) {
 			return job.Job{ID: id, Passed: true}, nil
 		},
 	}
-
+	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
+		return 1, nil
+	}}
 	uploader := &mocks.FakeProjectUploader{
 		UploadSuccess: true,
 	}
 	runner := Runner{
 		JobStarter:      &starter,
 		JobReader:       &reader,
+		CCYReader:       ccyReader,
 		ProjectUploader: uploader,
 		Project: cypress.Project{
 			Cypress: cypress.Cypress{
