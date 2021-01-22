@@ -1,6 +1,7 @@
 package run
 
 import (
+	"github.com/saucelabs/saucectl/cli/config"
 	"path/filepath"
 	"testing"
 
@@ -118,5 +119,22 @@ func Test_apiBaseURL(t *testing.T) {
 				t.Errorf("apiBaseURL() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestApplyDefaultValues(t *testing.T) {
+	tests := []struct {
+		beginRegion    string
+		wantRegion string
+	}{
+		{beginRegion: "", wantRegion: defaultRegion},
+		{beginRegion: "dummy-region", wantRegion: "dummy-region"},
+	}
+	for _, tt := range tests {
+		sauce := config.SauceConfig{
+			Region: tt.beginRegion,
+		}
+		applyDefaultValues(&sauce)
+		assert.Equal(t, tt.wantRegion, sauce.Region)
 	}
 }

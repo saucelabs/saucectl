@@ -123,7 +123,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return runCypress(cmd, cli)
 	}
 	if d.Kind == config.KindPlaywright && d.APIVersion == config.VersionV1Alpha {
-		return runPlaywright(cli)
+		return runPlaywright(cmd, cli)
 	}
 
 	return runLegacyMode(cmd, cli)
@@ -160,6 +160,8 @@ func runCypress(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	}
 
 	p.Sauce.Metadata.ExpandEnv()
+	applyDefaultValues(&p.Sauce)
+	overrideCliParameters(cmd, p.Sauce)
 
 	// Merge env from CLI args and job config. CLI args take precedence.
 	for k, v := range env {
@@ -171,14 +173,6 @@ func runCypress(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 		}
 	}
 
-
-	if p.Sauce.Region == "" {
-		p.Sauce.Region = defaultRegion
-	}
-
-	if regionFlag != "" {
-		p.Sauce.Region = regionFlag
-	}
 	if showConsoleLog {
 		p.ShowConsoleLog = true
 	}
@@ -187,17 +181,6 @@ func runCypress(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 		if err := filterCypressSuite(&p); err != nil {
 			return 1, err
 		}
-	}
-
-	if cmd.Flags().Lookup("ccy").Changed {
-		p.Sauce.Concurrency = concurrency
-	}
-
-	if cmd.Flags().Lookup("tunnel-id").Changed {
-		p.Sauce.Tunnel.ID = tunnelID
-	}
-	if cmd.Flags().Lookup("tunnel-parent").Changed {
-		p.Sauce.Tunnel.Parent = tunnelParent
 	}
 
 	if err := cypress.Validate(p); err != nil {
@@ -267,21 +250,20 @@ func runCypressInSauce(p cypress.Project) (int, error) {
 	return r.RunProject()
 }
 
-func runPlaywright(cli *command.SauceCtlCli) (int, error) {
+func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	p, err := playwright.FromFile(cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
 
 	p.Sauce.Metadata.ExpandEnv()
+	applyDefaultValues(&p.Sauce)
+	overrideCliParameters(cmd, p.Sauce)
 
-	if p.Sauce.Region == "" {
-		p.Sauce.Region = defaultRegion
+	if showConsoleLog {
+		p.ShowConsoleLog = true
 	}
 
-	if regionFlag != "" {
-		p.Sauce.Region = regionFlag
-	}
 
 	switch testEnv {
 	case "docker":
@@ -486,4 +468,25 @@ func validateFiles(files []string) error {
 		}
 	}
 	return nil
+}
+
+func applyDefaultValues(sauce *config.SauceConfig) {
+	if sauce.Region == "" {
+		sauce.Region = defaultRegion
+	}
+}
+
+func overrideCliParameters(cmd *cobra.Command, sauce config.SauceConfig) {
+	if cmd.Flags().Lookup("region").Changed {
+		sauce.Region = regionFlag
+	}
+	if cmd.Flags().Lookup("ccy").Changed {
+		sauce.Concurrency = concurrency
+	}
+	if cmd.Flags().Lookup("tunnel-id").Changed {
+		sauce.Tunnel.ID = tunnelID
+	}
+	if cmd.Flags().Lookup("tunnel-parent").Changed {
+		sauce.Tunnel.Parent = tunnelParent
+	}
 }
