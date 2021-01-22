@@ -2,6 +2,8 @@ package run
 
 import (
 	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/playwright"
 	"path/filepath"
 	"testing"
 
@@ -124,8 +126,8 @@ func Test_apiBaseURL(t *testing.T) {
 
 func TestApplyDefaultValues(t *testing.T) {
 	tests := []struct {
-		beginRegion    string
-		wantRegion string
+		beginRegion string
+		wantRegion  string
 	}{
 		{beginRegion: "", wantRegion: defaultRegion},
 		{beginRegion: "dummy-region", wantRegion: "dummy-region"},
@@ -136,5 +138,76 @@ func TestApplyDefaultValues(t *testing.T) {
 		}
 		applyDefaultValues(&sauce)
 		assert.Equal(t, tt.wantRegion, sauce.Region)
+	}
+}
+
+func TestFilterCypressSuite(t *testing.T) {
+	s1 := cypress.Suite{Name: "suite1"}
+	s2 := cypress.Suite{Name: "suite2"}
+	s3 := cypress.Suite{Name: "suite3"}
+	s4 := cypress.Suite{Name: "suite4"}
+
+	tests := []struct {
+		filterName    string
+		wantErr       bool
+		expectedCount int
+		expectUniq    string
+	}{
+		{filterName: "", wantErr: false, expectedCount: 4, expectUniq: ""},
+		{filterName: "impossible", wantErr: true, expectedCount: 0, expectUniq: ""},
+		{filterName: "suite1", wantErr: false, expectedCount: 1, expectUniq: "suite1"},
+		{filterName: "suite4", wantErr: false, expectedCount: 1, expectUniq: "suite4"},
+	}
+
+	for _, tt := range tests {
+		p := &cypress.Project{
+			Suites: []cypress.Suite{s1, s2, s3, s4},
+		}
+		suiteName = tt.filterName
+		err := filterCypressSuite(p)
+		if tt.wantErr {
+			assert.NotNil(t, err, "error not received")
+			continue
+		}
+		assert.Equal(t, tt.expectedCount, len(p.Suites), "suite count mismatch")
+		if tt.expectUniq != "" {
+			assert.Equal(t, tt.expectUniq, p.Suites[0].Name, "suite name mismatch")
+		}
+	}
+}
+
+
+func TestFilterPlaywrightSuite(t *testing.T) {
+	s1 := playwright.Suite{Name: "suite1"}
+	s2 := playwright.Suite{Name: "suite2"}
+	s3 := playwright.Suite{Name: "suite3"}
+	s4 := playwright.Suite{Name: "suite4"}
+
+	tests := []struct {
+		filterName    string
+		wantErr       bool
+		expectedCount int
+		expectUniq    string
+	}{
+		{filterName: "", wantErr: false, expectedCount: 4, expectUniq: ""},
+		{filterName: "impossible", wantErr: true, expectedCount: 0, expectUniq: ""},
+		{filterName: "suite1", wantErr: false, expectedCount: 1, expectUniq: "suite1"},
+		{filterName: "suite4", wantErr: false, expectedCount: 1, expectUniq: "suite4"},
+	}
+
+	for _, tt := range tests {
+		p := &playwright.Project{
+			Suites: []playwright.Suite{s1, s2, s3, s4},
+		}
+		suiteName = tt.filterName
+		err := filterPlaywrightSuite(p)
+		if tt.wantErr {
+			assert.NotNil(t, err, "error not received")
+			continue
+		}
+		assert.Equal(t, tt.expectedCount, len(p.Suites), "suite count mismatch")
+		if tt.expectUniq != "" {
+			assert.Equal(t, tt.expectUniq, p.Suites[0].Name, "suite name mismatch")
+		}
 	}
 }

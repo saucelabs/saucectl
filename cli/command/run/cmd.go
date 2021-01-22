@@ -264,6 +264,12 @@ func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 		p.ShowConsoleLog = true
 	}
 
+	if cmd.Flags().Lookup("suite").Changed {
+		if err := filterPlaywrightSuite(&p); err != nil {
+			return 1, err
+		}
+	}
+
 
 	switch testEnv {
 	case "docker":
@@ -455,6 +461,16 @@ func filterCypressSuite(c *cypress.Project) error {
 	for _, s := range c.Suites {
 		if s.Name == suiteName {
 			c.Suites = []cypress.Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf("suite name '%s' is invalid", suiteName)
+}
+
+func filterPlaywrightSuite(c *playwright.Project) error {
+	for _, s := range c.Suites {
+		if s.Name == suiteName {
+			c.Suites = []playwright.Suite{s}
 			return nil
 		}
 	}
