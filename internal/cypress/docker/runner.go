@@ -88,11 +88,11 @@ func (r *Runner) defineDockerImage() error {
 	}
 
 	if r.Project.Docker.Image.Name == cypress.DefaultDockerImage && r.Project.Docker.Image.Tag == "" {
-		r.Project.Docker.Image.Tag = r.Project.Cypress.Version
+		r.Project.Docker.Image.Tag = "v" + r.Project.Cypress.Version
 	}
 	if r.Project.Docker.Image.Name == "" {
 		r.Project.Docker.Image.Name = cypress.DefaultDockerImage
-		r.Project.Docker.Image.Tag = r.Project.Cypress.Version
+		r.Project.Docker.Image.Tag = "v" + r.Project.Cypress.Version
 	}
 	return nil
 }
