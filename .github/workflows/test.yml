@@ -207,6 +207,9 @@ jobs:
   cypress:
     needs: basic
     runs-on: ubuntu-latest
+    env:
+      BUILD_ID: ${{ github.run_id }}
+      BUILD_ENV: GitHub Actions
 
     steps:
       - name: Checkout Code
@@ -220,33 +223,11 @@ jobs:
       - name: Workaround for container permissions
         run: sudo chmod -R 777 tests/
 
-      - name: Run Sauce Pipeline Test
+      - name: Run Sauce Pipeline Test - Docker
         run: |
           chmod +x ./saucectl
           ./saucectl run -c ./.sauce/cypress.yml
-        env:
-          BUILD_ID: ${{ github.run_id }}
-          BUILD_ENV: GitHub Actions
-  cypress_cloud:
-    needs: basic
-    runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Download saucectl binary
-        uses: actions/download-artifact@v2
-        with:
-          name: saucectlbin
-
-      - name: Workaround for container permissions
-        run: sudo chmod -R 777 tests/
-
-      - name: Run Sauce Pipeline Test
+      - name: Run Sauce Pipeline Test - Sauce Cloud
         run: |
-          chmod +x ./saucectl
           ./saucectl run -c ./.sauce/cypress_cloud.yml --test-env sauce --ccy 5
-        env:
-          BUILD_ID: ${{ github.run_id }}
-          BUILD_ENV: GitHub Actions
