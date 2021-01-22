@@ -252,5 +252,4 @@ jobs:
 
       - name: Run Sauce Pipeline Test - Docker
         run: |
-          dir
-          saucectl.exe run -c .sauce/cypress.yml
+          ./saucectl.exe run -c .sauce/cypress.yml
