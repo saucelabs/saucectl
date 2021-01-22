@@ -55,7 +55,7 @@ var (
 	testEnv        string
 	showConsoleLog bool
 	concurrency    int
-	tunnelId       string
+	tunnelID       string
 	tunnelParent   string
 )
 
@@ -89,7 +89,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVar(&testEnv, "test-env", "docker", "Specifies the environment in which the tests should run. Choice: docker|sauce.")
 	cmd.Flags().BoolVarP(&showConsoleLog, "show-console-log", "", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
 	cmd.Flags().IntVar(&concurrency, "ccy", 1, "Concurrency specifies how many suites are run at the same time.")
-	cmd.Flags().StringVar(&tunnelId, "tunnel-id", "", "Overrides the sauce-connect tunnel-id to be used for the run.")
+	cmd.Flags().StringVar(&tunnelID, "tunnel-id", "", "Overrides the sauce-connect tunnel-id to be used for the run.")
 	cmd.Flags().StringVar(&tunnelParent, "tunnel-parent", "", "Overrides the sauce-connect tunnel-parent to be used for the run.")
 
 	// Hide undocumented flags that the user does not need to care about.
@@ -189,7 +189,7 @@ func runCypress(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	}
 
 	if cmd.Flags().Lookup("tunnel-id").Changed {
-		p.Sauce.Tunnel.ID = tunnelId
+		p.Sauce.Tunnel.ID = tunnelID
 	}
 	if cmd.Flags().Lookup("tunnel-parent").Changed {
 		p.Sauce.Tunnel.Parent = tunnelParent
