@@ -33,6 +33,7 @@ jobs:
           go get -u github.com/mcubik/goverreport
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0  
           CGO_ENABLED=0 go build cmd/saucectl/saucectl.go
+          GOOS=windows GOARCH=amd64 go build cmd/saucectl/saucectl.go
 
       - name: Lint project
         run: |
@@ -56,6 +57,7 @@ jobs:
           name: saucectlbin
           path: |
             saucectl
+            saucectl.exe
   puppeteer:
     needs: basic
     runs-on: ubuntu-latest
@@ -180,3 +182,22 @@ jobs:
       - name: Run Sauce Pipeline Test - Sauce Cloud
         run: |
           ./saucectl run -c ./.sauce/cypress_cloud.yml --test-env sauce --ccy 5
+  cypress-windows:
+    needs: basic
+    runs-on: windows-latest
+    env:
+      BUILD_ID: ${{ github.run_id }}
+      BUILD_ENV: GitHub Actions
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Download saucectl binary
+        uses: actions/download-artifact@v2
+        with:
+          name: saucectlbin
+
+      - name: Run Sauce Pipeline Test - Sauce Cloud
+        run: |
+          ./saucectl.exe run -c .sauce/cypress_cloud.yml --test-env sauce --ccy 5
