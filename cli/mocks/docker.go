@@ -15,6 +15,7 @@ import (
 type FakeClient struct {
 	ContainerListSuccess        bool
 	ImageListSuccess            bool
+	ImageInspectWithRawSuccess  bool
 	ImagePullSuccess            bool
 	ContainerCreateSuccess      bool
 	ContainerStartSuccess       bool
@@ -65,7 +66,9 @@ func (fc *FakeClient) ImagePull(ctx context.Context, ref string, options types.I
 // ContainerCreate mock function
 func (fc *FakeClient) ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (container.ContainerCreateCreatedBody, error) {
 	if fc.ContainerCreateSuccess {
-		return container.ContainerCreateCreatedBody{}, nil
+		return container.ContainerCreateCreatedBody{
+			ID: "fake-container-id",
+		}, nil
 	}
 	return container.ContainerCreateCreatedBody{}, errors.New("ContainerCreateFailure")
 }
@@ -110,7 +113,9 @@ func (fc *FakeClient) CopyFromContainer(ctx context.Context, container, srcPath 
 // ContainerExecCreate mock function
 func (fc *FakeClient) ContainerExecCreate(ctx context.Context, container string, config types.ExecConfig) (types.IDResponse, error) {
 	if fc.ContainerExecCreateSuccess {
-		return types.IDResponse{}, nil
+		return types.IDResponse{
+			ID: "dummy-id",
+		}, nil
 	}
 	return types.IDResponse{}, errors.New("ContainerExecCreateFailure")
 }
@@ -146,3 +151,14 @@ func (fc *FakeClient) ContainerRemove(ctx context.Context, containerID string, o
 	}
 	return errors.New("ContainerRemoveFailure")
 }
+
+// ImageInspectWithRaw mock function
+func (fc *FakeClient) ImageInspectWithRaw(ctx context.Context, imageID string) (types.ImageInspect, []byte, error) {
+	if fc.ImageInspectWithRawSuccess {
+		return types.ImageInspect{
+			Config: &container.Config{WorkingDir: "/dummy/work/dir/"},
+		}, []byte("inspect-data"), nil
+	}
+	return types.ImageInspect{}, nil, errors.New("ImageInspectWithRaw")
+}
+

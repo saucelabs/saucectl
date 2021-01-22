@@ -58,6 +58,10 @@ func New(c cypress.Project, cli *command.SauceCtlCli) (*Runner, error) {
 
 // RunProject runs the tests defined in config.Project.
 func (r *Runner) RunProject() (int, error) {
+	if err := r.defineDockerImage(); err != nil {
+		return 1, err
+	}
+
 	errorCount := 0
 	for _, suite := range r.Project.Suites {
 		err := r.runSuite(suite)
@@ -69,6 +73,28 @@ func (r *Runner) RunProject() (int, error) {
 		log.Error().Msgf("%d suite(s) failed", errorCount)
 	}
 	return errorCount, nil
+}
+
+// defineDockerImage defines docker image value if not already set.
+func (r *Runner) defineDockerImage() error {
+	// Skip availability check since custom image is being used
+	if r.Project.Docker.Image.Name != "" && r.Project.Docker.Image.Tag != "" {
+		log.Info().Msgf("Ignoring Cypress version for Docker, using %s:%s", r.Project.Docker.Image.Name, r.Project.Docker.Image.Tag)
+		return nil
+	}
+
+	if r.Project.Cypress.Version == "" {
+		return fmt.Errorf("no cypress version provided")
+	}
+
+	if r.Project.Docker.Image.Name == cypress.DefaultDockerImage && r.Project.Docker.Image.Tag == "" {
+		r.Project.Docker.Image.Tag = r.Project.Cypress.Version
+	}
+	if r.Project.Docker.Image.Name == "" {
+		r.Project.Docker.Image.Name = cypress.DefaultDockerImage
+		r.Project.Docker.Image.Tag = r.Project.Cypress.Version
+	}
+	return nil
 }
 
 // setup performs any necessary steps for a test runner to execute tests.

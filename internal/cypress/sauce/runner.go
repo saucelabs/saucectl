@@ -43,6 +43,9 @@ type result struct {
 // RunProject runs the tests defined in cypress.Project.
 func (r *Runner) RunProject() (int, error) {
 	exitCode := 1
+	if err := r.checkCypressVersion(); err != nil {
+		return exitCode, err
+	}
 
 	err := r.JobStarter.CheckFrameworkAvailability(context.Background(), r.Project.Kind)
 	if err != nil {
@@ -73,6 +76,14 @@ func (r *Runner) RunProject() (int, error) {
 	}
 
 	return exitCode, nil
+}
+
+// checkCypressVersion do several checks before running Cypress tests.
+func (r *Runner) checkCypressVersion() error {
+	if r.Project.Cypress.Version == "" {
+		return fmt.Errorf("no cypress version provided")
+	}
+	return nil
 }
 
 func (r *Runner) runSuites(fileID string) bool {
@@ -147,17 +158,18 @@ func (r *Runner) runSuite(s cypress.Suite, fileID string) (job.Job, error) {
 	log.Info().Str("suite", s.Name).Str("region", r.Project.Sauce.Region).Msg("Starting job.")
 
 	opts := job.StartOptions{
-		User:           credentials.Get().Username,
-		AccessKey:      credentials.Get().AccessKey,
-		App:            fmt.Sprintf("storage:%s", fileID),
-		Suite:          s.Name,
-		Framework:      "cypress",
-		BrowserName:    s.Browser,
-		BrowserVersion: s.BrowserVersion,
-		PlatformName:   s.PlatformName,
-		Name:           r.Project.Sauce.Metadata.Name + " - " + s.Name,
-		Build:          r.Project.Sauce.Metadata.Build,
-		Tags:           r.Project.Sauce.Metadata.Tags,
+		User:             credentials.Get().Username,
+		AccessKey:        credentials.Get().AccessKey,
+		App:              fmt.Sprintf("storage:%s", fileID),
+		Suite:            s.Name,
+		Framework:        "cypress",
+		FrameworkVersion: r.Project.Cypress.Version,
+		BrowserName:      s.Browser,
+		BrowserVersion:   s.BrowserVersion,
+		PlatformName:     s.PlatformName,
+		Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
+		Build:            r.Project.Sauce.Metadata.Build,
+		Tags:             r.Project.Sauce.Metadata.Tags,
 		Tunnel: job.TunnelOptions{
 			ID:     r.Project.Sauce.Tunnel.ID,
 			Parent: r.Project.Sauce.Tunnel.Parent,
@@ -214,7 +226,6 @@ func (r *Runner) archiveProject(tempDir string) (string, error) {
 			return "", err
 		}
 	}
-
 	return zipName, z.Close()
 }
 

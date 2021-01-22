@@ -249,3 +249,11 @@ func (p *Project) SyncCapabilities() {
 		p.Suites[i] = s
 	}
 }
+
+// StandardizeVersionFormat remove the leading v in version to ensure reliable comparisons.
+func StandardizeVersionFormat(version string) string {
+	if strings.HasPrefix(version, "v") {
+		return version[1:]
+	}
+	return version
+}

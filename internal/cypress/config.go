@@ -11,6 +11,11 @@ import (
 	"unicode"
 )
 
+const (
+	// DefaultDockerImage represents the name of the docker image on Dockerhub
+	DefaultDockerImage = "saucelabs/stt-cypress-mocha-node"
+)
+
 // Project represents the cypress project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline"`
@@ -42,6 +47,9 @@ type SuiteConfig struct {
 type Cypress struct {
 	// ConfigFile is the path to "cypress.json".
 	ConfigFile string `yaml:"configFile,omitempty" json:"configFile"`
+
+	// Version represents the cypress framework version.
+	Version string `yaml:"version" json:"version"`
 
 	// ProjectPath is the path to the cypress directory itself. Not set by the user, but is instead based on the
 	// location of ConfigFile.
@@ -91,6 +99,9 @@ func FromFile(cfgPath string) (Project, error) {
 	if p.Sauce.Concurrency < 1 {
 		p.Sauce.Concurrency = 1
 	}
+
+	// Uniformize version
+	p.Cypress.Version = config.StandardizeVersionFormat(p.Cypress.Version)
 
 	return p, nil
 }

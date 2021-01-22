@@ -4,11 +4,18 @@ import "context"
 
 // StartOptions represents the options for starting a job in the Sauce Labs cloud.
 type StartOptions struct {
-	User           string        `json:"username"`
-	AccessKey      string        `json:"accessKey"`
-	App            string        `json:"app,omitempty"`
-	Suite          string        `json:"suite,omitempty"`
-	Framework      string        `json:"framework,omitempty"`
+	User      string `json:"username"`
+	AccessKey string `json:"accessKey"`
+	App       string `json:"app,omitempty"`
+	Suite     string `json:"suite,omitempty"`
+	Framework string `json:"framework,omitempty"`
+
+	// FrameworkVersion contains the targeted version of the framework
+	// It should not be confused with automation tool (like jest/folio).
+	// This is currenty supported only for frameworks available on Sauce Cloud:
+	// Currently supported: Cypress.
+	FrameworkVersion string `json:"frameworkVersion,omitempty"`
+
 	BrowserName    string        `json:"browserName,omitempty"`
 	BrowserVersion string        `json:"browserVersion,omitempty"`
 	PlatformName   string        `json:"platformName,omitempty"`
