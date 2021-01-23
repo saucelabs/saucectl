@@ -161,7 +161,7 @@ func runCypress(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 
 	p.Sauce.Metadata.ExpandEnv()
 	applyDefaultValues(&p.Sauce)
-	overrideCliParameters(cmd, p.Sauce)
+	overrideCliParameters(cmd, &p.Sauce)
 
 	// Merge env from CLI args and job config. CLI args take precedence.
 	for k, v := range env {
@@ -258,7 +258,7 @@ func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 
 	p.Sauce.Metadata.ExpandEnv()
 	applyDefaultValues(&p.Sauce)
-	overrideCliParameters(cmd, p.Sauce)
+	overrideCliParameters(cmd, &p.Sauce)
 
 	if showConsoleLog {
 		p.ShowConsoleLog = true
@@ -492,7 +492,7 @@ func applyDefaultValues(sauce *config.SauceConfig) {
 	}
 }
 
-func overrideCliParameters(cmd *cobra.Command, sauce config.SauceConfig) {
+func overrideCliParameters(cmd *cobra.Command, sauce *config.SauceConfig) {
 	if cmd.Flags().Lookup("region").Changed {
 		sauce.Region = regionFlag
 	}
