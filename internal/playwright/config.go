@@ -31,7 +31,7 @@ type Playwright struct {
 	Version     string      `yaml:"version,omitempty" json:"version,omitempty"`
 	Params      SuiteConfig `yaml:"params,omitempty" json:"params,omitempty"`
 
-	// LocalProjectPath represents the project with nested folder removal (not in docker)
+	// LocalProjectPath represents the project before nested folder removal
 	LocalProjectPath string `yaml:"-" json:"-"`
 }
 
@@ -69,7 +69,7 @@ func FromFile(cfgPath string) (Project, error) {
 
 	// Default project path
 	if p.Playwright.ProjectPath == "" {
-		p.Playwright.ProjectPath = "./tests/"
+		return Project{}, fmt.Errorf("no project folder defined")
 	}
 
 	// Store local path since we provide only last level folder in runner
