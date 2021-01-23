@@ -211,3 +211,7 @@ func TestFilterPlaywrightSuite(t *testing.T) {
 		}
 	}
 }
+
+func TestCreateCIProvider(t *testing.T) {
+	enableCIProviders()
+}

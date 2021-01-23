@@ -3,6 +3,7 @@ package new
 import (
 	"github.com/saucelabs/saucectl/cli/config"
 	"gotest.tools/assert"
+	"gotest.tools/v3/fs"
 	"os"
 	"testing"
 )
@@ -25,5 +26,45 @@ func TestUpdateRegion(t *testing.T) {
 	assert.Equal(t, c.Sauce.Region, "us-west-1")
 
 	err = os.Remove(cfgFile)
+	assert.NilError(t, err)
+}
+
+func TestUpdateRegionCypress(t *testing.T) {
+	dir := fs.NewDir(t, "fixtures",
+		fs.WithFile("config.yml", "apiVersion: v1alpha\nkind: cypress\ncypress:\n  configFile: cypress.json", fs.WithMode(0644)),
+		fs.WithFile("cypress.json", "{}", fs.WithMode(0644)),
+		fs.WithDir("cypress", fs.WithMode(0755)))
+	path, _ := os.Getwd()
+	defer func () {
+		os.Chdir(path)
+		dir.Remove()
+	}()
+	assert.Equal(t, nil, os.Chdir(dir.Path()))
+	assert.Equal(t, nil, updateRegion("config.yml", "eu-central-1"))
+	c, err := config.NewJobConfiguration("config.yml")
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "eu-central-1", c.Sauce.Region)
+}
+
+
+func TestUpdateRegionPlaywright(t *testing.T) {
+	dir := fs.NewDir(t, "fixtures",
+		fs.WithFile("config.yml", "apiVersion: v1alpha\nkind: playwright", fs.WithMode(0644)))
+	path, _ := os.Getwd()
+	defer func () {
+		os.Chdir(path)
+		dir.Remove()
+	}()
+	assert.Equal(t, nil, os.Chdir(dir.Path()))
+	assert.Equal(t, nil, updateRegion("config.yml", "eu-central-1"))
+	c, err := config.NewJobConfiguration("config.yml")
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "eu-central-1", c.Sauce.Region)
+}
+
+func TestGetRepositoryValues(t *testing.T) {
+	org, repo, err := getRepositoryValues("playwright")
+	assert.Equal(t,"saucelabs", org)
+	assert.Equal(t, "sauce-playwright-runner", repo)
 	assert.NilError(t, err)
 }
