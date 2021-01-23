@@ -229,6 +229,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c playwright.Project
 		Env: []string{
 			fmt.Sprintf("SAUCE_USERNAME=%s", username),
 			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", accessKey),
+			fmt.Sprintf("SAUCE_IMAGE_NAME=%s", img),
 		},
 	}
 
