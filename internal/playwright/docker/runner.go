@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/cypress"
 	"io"
 	"io/ioutil"
 	"os"
@@ -89,11 +88,11 @@ func (r *Runner) defineDockerImage() error {
 		return fmt.Errorf("no cypress version provided")
 	}
 
-	if r.Project.Docker.Image.Name == cypress.DefaultDockerImage && r.Project.Docker.Image.Tag == "" {
+	if r.Project.Docker.Image.Name == playwright.DefaultDockerImage && r.Project.Docker.Image.Tag == "" {
 		r.Project.Docker.Image.Tag = "v" + r.Project.Playwright.Version
 	}
 	if r.Project.Docker.Image.Name == "" {
-		r.Project.Docker.Image.Name = cypress.DefaultDockerImage
+		r.Project.Docker.Image.Name = playwright.DefaultDockerImage
 		r.Project.Docker.Image.Tag = "v" + r.Project.Playwright.Version
 	}
 	return nil

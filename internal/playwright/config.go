@@ -8,6 +8,11 @@ import (
 	"path/filepath"
 )
 
+const (
+	// DefaultDockerImage represents the name of the docker image on Dockerhub
+	DefaultDockerImage = "saucelabs/stt-playwright-jest-node"
+)
+
 // Project represents the playwright project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline"`
