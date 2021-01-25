@@ -80,7 +80,7 @@ func (r *Runner) RunProject() (int, error) {
 func (r *Runner) defineDockerImage() error {
 	// Skip availability check since custom image is being used
 	if r.Project.Docker.Image.Name != "" && r.Project.Docker.Image.Tag != "" {
-		log.Info().Msgf("Ignoring Cypress version for Docker, using %s:%s", r.Project.Docker.Image.Name, r.Project.Docker.Image.Tag)
+		log.Info().Msgf("Ignoring Playwright version for Docker, using %s:%s", r.Project.Docker.Image.Name, r.Project.Docker.Image.Tag)
 		return nil
 	}
 
