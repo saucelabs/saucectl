@@ -41,7 +41,7 @@ type Suite struct {
 	PlaywrightVersion string      `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
 	TestMatch         string      `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
 	PlatformName      string      `yaml:"platformName,omitempty" json:"platformName,omitempty"`
-	Param             SuiteConfig `yaml:"param,omitempty" json:"param,omitempty"`
+	Params            SuiteConfig `yaml:"params,omitempty" json:"param,omitempty"`
 }
 
 // SuiteConfig represents the configuration specific to a suite

@@ -133,7 +133,7 @@ func (r *Runner) worker(fileID string, suites <-chan playwright.Suite, results c
 
 		r := result{
 			suiteName: s.Name,
-			browser:   s.Param.BrowserName,
+			browser:   s.Params.BrowserName,
 			job:       jobData,
 			err:       err,
 		}
@@ -151,7 +151,7 @@ func (r *Runner) runSuite(s playwright.Suite, fileID string) (job.Job, error) {
 		Suite:            s.Name,
 		Framework:        "playwright",
 		FrameworkVersion: s.PlaywrightVersion,
-		BrowserName:      s.Param.BrowserName,
+		BrowserName:      s.Params.BrowserName,
 		BrowserVersion:   s.PlaywrightVersion,
 		PlatformName:     s.PlatformName,
 		Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,

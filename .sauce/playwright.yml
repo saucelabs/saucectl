@@ -21,7 +21,7 @@ suites:
     testMatch: '**/*.js'
 
     # Playwright-test settings
-    param:
+    params:
       browserName: "firefox"
       headful: false
       slowMo: 1000
