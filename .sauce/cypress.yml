@@ -21,6 +21,7 @@ docker:
 #  image:
 #    name: saucelabs/stt-cypress-mocha-node
 #    tag: v0.3.3
+
 cypress:
   version: 5.6.0
   configFile: "tests/e2e/cypress.json"  # We determine related files based on the location of the config file.
@@ -32,3 +33,5 @@ suites:
       env:
         hello: world
       testFiles: [ "**/*.*" ] # Cypress native glob support.
+      viewportHeight: 466
+      viewportWidth: 233

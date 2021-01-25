@@ -3,12 +3,13 @@ package cypress
 import (
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/config"
-	"gopkg.in/yaml.v2"
 	"os"
 	"path/filepath"
 	"strings"
 	"unicode"
+
+	"github.com/saucelabs/saucectl/cli/config"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -39,8 +40,10 @@ type Suite struct {
 
 // SuiteConfig represents the cypress config overrides.
 type SuiteConfig struct {
-	TestFiles []string          `yaml:"testFiles,omitempty" json:"testFiles"`
-	Env       map[string]string `yaml:"env,omitempty" json:"env"`
+	TestFiles      []string          `yaml:"testFiles,omitempty" json:"testFiles"`
+	Env            map[string]string `yaml:"env,omitempty" json:"env"`
+	ViewportHeight int               `yaml:"viewportHeight" json:"viewportHeight"`
+	ViewportWidth  int               `yaml:"viewportWidth" json:"viewportWidth"`
 }
 
 // Cypress represents crucial cypress configuration that is required for setting up a project.
