@@ -32,7 +32,7 @@ coverage:
 
 #playwright-ci: @ Run tests against playwright in CI mode
 playwright-ci: build-linux
-	docker run --name playwright-ci -e "CI=true" -v $(shell pwd):/home/gitty/ -w "/home/gitty" --rm saucelabs/stt-playwright-jest-node:latest "/home/gitty/saucectl" run -c ./.sauce/playwright.yml --verbose
+	docker run --name playwright-ci -e "CI=true" -v $(shell pwd):/home/gitty/ -w "/home/gitty" --rm saucelabs/stt-playwright-node:latest "/home/gitty/saucectl" run -c ./.sauce/playwright.yml --verbose
 
 #puppeteer-ci: @ Run tests against puppeteer in CI mode
 puppeteer-ci: build-linux

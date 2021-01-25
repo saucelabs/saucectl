@@ -10,7 +10,7 @@ import (
 
 const (
 	// DefaultDockerImage represents the name of the docker image on Dockerhub
-	DefaultDockerImage = "saucelabs/stt-playwright-jest-node"
+	DefaultDockerImage = "saucelabs/stt-playwright-node"
 )
 
 // Project represents the playwright project configuration.
