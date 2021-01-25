@@ -14,6 +14,7 @@ import (
 	"github.com/saucelabs/saucectl/cli/dots"
 	"github.com/saucelabs/saucectl/cli/progress"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
+	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/playwright"
@@ -28,6 +29,7 @@ type Runner struct {
 	ProjectUploader storage.ProjectUploader
 	JobStarter      job.Starter
 	JobReader       job.Reader
+	CCYReader       concurrency.Reader
 	Region          region.Region
 }
 
@@ -73,6 +75,7 @@ func (r *Runner) runSuites(fileID string) bool {
 	defer close(results)
 
 	// Create a pool of workers that run the suites.
+	r.Project.Sauce.Concurrency = concurrency.Min(r.CCYReader, r.Project.Sauce.Concurrency)
 	log.Info().Int("concurrency", r.Project.Sauce.Concurrency).Msg("Launching workers.")
 	for i := 0; i < r.Project.Sauce.Concurrency; i++ {
 		go r.worker(fileID, suites, results)
