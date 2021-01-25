@@ -8,27 +8,29 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/saucelabs/saucectl/cli/version"
-	"github.com/saucelabs/saucectl/internal/appstore"
-	"github.com/saucelabs/saucectl/internal/cypress"
-	"github.com/saucelabs/saucectl/internal/cypress/sauce"
-	"github.com/saucelabs/saucectl/internal/resto"
-
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/mocks"
 	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/cli/version"
+	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/ci/github"
 	"github.com/saucelabs/saucectl/internal/ci/gitlab"
 	"github.com/saucelabs/saucectl/internal/ci/jenkins"
+	"github.com/saucelabs/saucectl/internal/cypress"
 	cypressDocker "github.com/saucelabs/saucectl/internal/cypress/docker"
+	cypressSauce "github.com/saucelabs/saucectl/internal/cypress/sauce"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/memseq"
+	"github.com/saucelabs/saucectl/internal/playwright"
+	playwrightDocker "github.com/saucelabs/saucectl/internal/playwright/docker"
+	playwrightSauce "github.com/saucelabs/saucectl/internal/playwright/sauce"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
 )
@@ -120,6 +122,9 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	if d.Kind == config.KindCypress && d.APIVersion == config.VersionV1Alpha {
 		return runCypress(cmd, cli)
 	}
+	if d.Kind == config.KindPlaywright && d.APIVersion == config.VersionV1Alpha {
+		return runPlaywright(cmd, cli)
+	}
 
 	return runLegacyMode(cmd, cli)
 }
@@ -155,6 +160,8 @@ func runCypress(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	}
 
 	p.Sauce.Metadata.ExpandEnv()
+	applyDefaultValues(&p.Sauce)
+	overrideCliParameters(cmd, &p.Sauce)
 
 	// Merge env from CLI args and job config. CLI args take precedence.
 	for k, v := range env {
@@ -166,14 +173,6 @@ func runCypress(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 		}
 	}
 
-
-	if p.Sauce.Region == "" {
-		p.Sauce.Region = defaultRegion
-	}
-
-	if regionFlag != "" {
-		p.Sauce.Region = regionFlag
-	}
 	if showConsoleLog {
 		p.ShowConsoleLog = true
 	}
@@ -182,17 +181,6 @@ func runCypress(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 		if err := filterCypressSuite(&p); err != nil {
 			return 1, err
 		}
-	}
-
-	if cmd.Flags().Lookup("ccy").Changed {
-		p.Sauce.Concurrency = concurrency
-	}
-
-	if cmd.Flags().Lookup("tunnel-id").Changed {
-		p.Sauce.Tunnel.ID = tunnelID
-	}
-	if cmd.Flags().Lookup("tunnel-parent").Changed {
-		p.Sauce.Tunnel.Parent = tunnelParent
 	}
 
 	if err := cypress.Validate(p); err != nil {
@@ -251,7 +239,91 @@ func runCypressInSauce(p cypress.Project) (int, error) {
 		AccessKey:  c.AccessKey,
 	}
 
-	r := sauce.Runner{
+	r := cypressSauce.Runner{
+		Project:         p,
+		ProjectUploader: s,
+		JobStarter:      &tc,
+		JobReader:       &rsto,
+		CCYReader:       &rsto,
+		Region:          re,
+	}
+	return r.RunProject()
+}
+
+func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
+	p, err := playwright.FromFile(cfgFilePath)
+	if err != nil {
+		return 1, err
+	}
+
+	p.Sauce.Metadata.ExpandEnv()
+	applyDefaultValues(&p.Sauce)
+	overrideCliParameters(cmd, &p.Sauce)
+
+	if showConsoleLog {
+		p.ShowConsoleLog = true
+	}
+
+	if cmd.Flags().Lookup("suite").Changed {
+		if err := filterPlaywrightSuite(&p); err != nil {
+			return 1, err
+		}
+	}
+
+
+	switch testEnv {
+	case "docker":
+		return runPlaywrightInDocker(p, cli)
+	case "sauce":
+		return runPlaywrightInSauce(p)
+	default:
+		return 1, errors.New("unsupported test environment")
+	}
+}
+
+func runPlaywrightInDocker(p playwright.Project, cli *command.SauceCtlCli) (int, error) {
+	log.Info().Msg("Running Playwright in Docker")
+
+	cd, err := playwrightDocker.New(p, cli)
+	if err != nil {
+		return 1, err
+	}
+	return cd.RunProject()
+}
+
+func runPlaywrightInSauce(p playwright.Project) (int, error) {
+	log.Info().Msg("Running Playwright in Sauce Labs")
+
+	c := credentials.Get()
+	if c == nil {
+		return 1, errors.New("no sauce credentials set")
+	}
+
+	re := region.FromString(p.Sauce.Region)
+	if re == region.None {
+		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
+		return 1, errors.New("no sauce region set")
+	}
+
+	// TODO decide on a good timeout and perhaps make it configurable. Slow clients may take time to upload. Can't be higher than API gateway timeout though!
+	s := appstore.New(re.APIBaseURL(), c.Username, c.AccessKey, 30*time.Second)
+
+	// TODO decide on a good timeout and perhaps make it configurable. Some job starts are slower than others. Can't be higher than API gateway timeout though!
+	tc := testcomposer.Client{
+		HTTPClient:  &http.Client{Timeout: 30 * time.Second},
+		URL:         re.APIBaseURL(),
+		Credentials: *c,
+	}
+
+	// TODO decide on a good timeout and perhaps make it configurable. Resto may take longer to respond sometimes. Can't be higher than API gateway timeout though!
+	rsto := resto.Client{
+		HTTPClient: &http.Client{Timeout: 7 * time.Second},
+		URL:        re.APIBaseURL(),
+		Username:   c.Username,
+		AccessKey:  c.AccessKey,
+	}
+
+	r := playwrightSauce.Runner{
 		Project:         p,
 		ProjectUploader: s,
 		JobStarter:      &tc,
@@ -396,6 +468,16 @@ func filterCypressSuite(c *cypress.Project) error {
 	return fmt.Errorf("suite name '%s' is invalid", suiteName)
 }
 
+func filterPlaywrightSuite(c *playwright.Project) error {
+	for _, s := range c.Suites {
+		if s.Name == suiteName {
+			c.Suites = []playwright.Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf("suite name '%s' is invalid", suiteName)
+}
+
 func validateFiles(files []string) error {
 	for _, f := range files {
 		if _, err := os.Stat(f); os.IsNotExist(err) {
@@ -403,4 +485,25 @@ func validateFiles(files []string) error {
 		}
 	}
 	return nil
+}
+
+func applyDefaultValues(sauce *config.SauceConfig) {
+	if sauce.Region == "" {
+		sauce.Region = defaultRegion
+	}
+}
+
+func overrideCliParameters(cmd *cobra.Command, sauce *config.SauceConfig) {
+	if cmd.Flags().Lookup("region").Changed {
+		sauce.Region = regionFlag
+	}
+	if cmd.Flags().Lookup("ccy").Changed {
+		sauce.Concurrency = concurrency
+	}
+	if cmd.Flags().Lookup("tunnel-id").Changed {
+		sauce.Tunnel.ID = tunnelID
+	}
+	if cmd.Flags().Lookup("tunnel-parent").Changed {
+		sauce.Tunnel.Parent = tunnelParent
+	}
 }

@@ -56,3 +56,22 @@ func TestRunnerConfiguration(t *testing.T) {
 
 	assert.Equal(t, configObject.RootDir, "/foo/bar")
 }
+
+func TestLegacyRunnerConfiguration(t *testing.T) {
+	dir := fs.NewDir(t, "fixtures",
+		fs.WithFile("valid_config.yaml", "rootDir: /foo/bar\nsuites:\n- name: dummy\n  capabilities:\n    browserName: firefox", fs.WithMode(0755)))
+	defer dir.Remove()
+
+	configObject, err := NewJobConfiguration(dir.Path() + "/valid_config.yaml")
+	if err != nil {
+		t.Error(err)
+	}
+
+	assert.Equal(t, "dummy", configObject.Suites[0].Name)
+	assert.Equal(t, "firefox", configObject.Suites[0].Capabilities.BrowserName)
+}
+
+func TestStandardizeVersionFormat(t *testing.T) {
+	assert.Equal(t, "5.6.0", StandardizeVersionFormat("v5.6.0"))
+	assert.Equal(t, "5.6.0", StandardizeVersionFormat("5.6.0"))
+}

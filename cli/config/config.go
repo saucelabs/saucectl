@@ -136,6 +136,7 @@ const (
 // Kind* contains referenced config kinds
 const (
 	KindCypress = "cypress"
+	KindPlaywright = "playwright"
 )
 
 func readYaml(cfgFilePath string) ([]byte, error) {
