@@ -10,9 +10,6 @@ sauce:
     build: "$BUILD_ID"
 docker:
   fileTransfer: mount
-  image:
-    name: saucelabs/stt-playwright-jest-node
-    tag: v0.3.0
 playwright:
   projectPath: tests/e2e/playwright/
   version: 1.7.1
