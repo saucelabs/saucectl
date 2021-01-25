@@ -104,6 +104,9 @@ jobs:
         with:
           name: saucectlbin
 
+      - name: Workaround for container permissions
+        run: sudo chmod -R 777 tests/
+
       - name: Run Sauce Pipeline Test
         run: |
           chmod +x ./saucectl
