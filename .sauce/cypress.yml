@@ -33,5 +33,5 @@ suites:
       env:
         hello: world
       testFiles: [ "**/*.*" ] # Cypress native glob support.
-      viewportHeight: 466
-      viewportWidth: 233
+      viewportHeight: 300
+      viewportWidth: 400 # Cypress default resolution is 1000x660
