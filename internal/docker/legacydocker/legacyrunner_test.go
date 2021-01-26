@@ -1,4 +1,4 @@
-package docker
+package legacydocker
 
 import (
 	"errors"
@@ -13,7 +13,7 @@ import (
 func TestDockerRunnerSetup(t *testing.T) {
 	type PassFailCase struct {
 		Name          string
-		Client        *Handler
+		Client        *LegacyHandler
 		ExpectedError error
 	}
 
@@ -21,22 +21,22 @@ func TestDockerRunnerSetup(t *testing.T) {
 		fs.WithFile("config.yaml", "foo: bar", fs.WithMode(0755)))
 
 	cases := []PassFailCase{
-		{"docker is not installed", CreateMock(&mocks.FakeClient{}), errors.New("docker is not installed")},
-		{"Pulling fails", CreateMock(&mocks.FakeClient{
+		{"docker is not installed", CreateLegacyMock(&mocks.FakeClient{}), errors.New("docker is not installed")},
+		{"Pulling fails", CreateLegacyMock(&mocks.FakeClient{
 			ContainerListSuccess: true,
 		}), errors.New("ImagePullFailure")},
-		{"Creating container fails", CreateMock(&mocks.FakeClient{
+		{"Creating container fails", CreateLegacyMock(&mocks.FakeClient{
 			ContainerListSuccess: true,
 			ImagePullSuccess:     true,
 		}), errors.New("ContainerCreateFailure")},
-		{"Copy from container fails", CreateMock(&mocks.FakeClient{
+		{"Copy from container fails", CreateLegacyMock(&mocks.FakeClient{
 			ContainerListSuccess:    true,
 			ImagePullSuccess:        true,
 			ContainerStartSuccess:   true,
 			ContainerCreateSuccess:  true,
 			ContainerInspectSuccess: true,
 		}), errors.New("CopyFromContainerFailure")},
-		// {"Can not find container config", docker.CreateMock(&mocks.FakeClient{
+		// {"Can not find container config", docker.CreateLegacyMock(&mocks.FakeClient{
 		// 	ContainerListSuccess:     true,
 		// 	ImagePullSuccess:         true,
 		// 	ContainerStartSuccess:    true,

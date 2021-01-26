@@ -1,4 +1,4 @@
-package docker
+package legacydocker
 
 import (
 	"context"
@@ -32,7 +32,7 @@ const DefaultProjectPath = "/home/seluser"
 type LegacyRunner struct {
 	runner.BaseRunner
 	containerID string
-	docker      *Handler
+	docker      *LegacyHandler
 }
 
 // NewRunner creates a new LegacyRunner instance.
@@ -49,7 +49,7 @@ func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer) 
 	r.Sequencer = seq
 
 	var err error
-	r.docker, err = Create()
+	r.docker, err = CreateLegacy()
 	if err != nil {
 		return nil, err
 	}

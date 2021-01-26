@@ -1,4 +1,4 @@
-package docker
+package legacydocker
 
 import (
 	"archive/tar"
@@ -38,7 +38,7 @@ func TestValidateDependency(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{client: tc.Client}
+			handler := LegacyHandler{client: tc.Client}
 			err := handler.ValidateDependency()
 			assert.Equal(t, err, tc.ExpectedError)
 		})
@@ -53,7 +53,7 @@ func TestHasBaseImage(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
+			handler := LegacyHandler{
 				client: tc.Client,
 			}
 			hasBaseImage, err := handler.HasBaseImage(ctx, "foobar")
@@ -112,7 +112,7 @@ func TestPullBaseImage(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
+			handler := LegacyHandler{
 				client: tc.Client,
 			}
 			err := handler.PullBaseImage(ctx, *tc.JobConfig)
@@ -130,7 +130,7 @@ func TestGetImageFlavorDefault(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
+			handler := LegacyHandler{
 				client: tc.Client,
 			}
 			baseImage := handler.GetImageFlavor(*tc.JobConfig)
@@ -148,7 +148,7 @@ func TestGetImageFlavorVersioned(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
+			handler := LegacyHandler{
 				client: tc.Client,
 			}
 			baseImage := handler.GetImageFlavor(*tc.JobConfig)
@@ -189,7 +189,7 @@ func TestStartContainer(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
+			handler := LegacyHandler{
 				client: tc.Client,
 			}
 			_, err := handler.StartContainer(ctx, *tc.JobConfig, *tc.Suite)
@@ -224,7 +224,7 @@ func TestCopyFromContainer(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
+			handler := LegacyHandler{
 				client: tc.Client,
 			}
 			err := handler.CopyFromContainer(ctx, "containerId", srcFile, tc.DstPath)
@@ -247,7 +247,7 @@ func TestExecute(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
+			handler := LegacyHandler{
 				client: tc.Client,
 			}
 			_, _, err := handler.Execute(ctx, "containerId", []string{"npm", "test"})
@@ -266,7 +266,7 @@ func TestExecuteExecuteInspect(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
+			handler := LegacyHandler{
 				client: tc.Client,
 			}
 			exitCode, err := handler.ExecuteInspect(ctx, "containerId")
@@ -286,7 +286,7 @@ func TestContainerStop(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
+			handler := LegacyHandler{
 				client: tc.Client,
 			}
 			err := handler.ContainerStop(ctx, "containerId")
@@ -305,7 +305,7 @@ func TestContainerRemove(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
+			handler := LegacyHandler{
 				client: tc.Client,
 			}
 			err := handler.ContainerRemove(ctx, "containerId")
@@ -368,7 +368,7 @@ func TestHandler_CopyToContainer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			handler := &Handler{
+			handler := &LegacyHandler{
 				client: tt.fields.client,
 			}
 			if err := handler.CopyToContainer(tt.args.ctx, tt.args.containerID, tt.args.srcFile, tt.args.targetDir); (err != nil) != tt.wantErr {
@@ -415,7 +415,7 @@ func TestHandler_ContainerInspect(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
+			handler := LegacyHandler{
 				client: tc.Client,
 			}
 			_, err := handler.ContainerInspect(ctx, "containerId")
