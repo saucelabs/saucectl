@@ -21,7 +21,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/ci/gitlab"
 	"github.com/saucelabs/saucectl/internal/ci/jenkins"
 	"github.com/saucelabs/saucectl/internal/cypress"
-	cypressSauce "github.com/saucelabs/saucectl/internal/cypress/sauce"
+	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/docker"
 	legacyDocker "github.com/saucelabs/saucectl/internal/docker/legacydocker"
 	"github.com/saucelabs/saucectl/internal/fleet"
@@ -239,7 +239,7 @@ func runCypressInSauce(p cypress.Project) (int, error) {
 		AccessKey:  c.AccessKey,
 	}
 
-	r := cypressSauce.Runner{
+	r := saucecloud.CypressRunner{
 		Project:         p,
 		ProjectUploader: s,
 		JobStarter:      &tc,

@@ -1,4 +1,4 @@
-package sauce
+package saucecloud
 
 import (
 	"context"
@@ -23,8 +23,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/storage"
 )
 
-// Runner represents the Sauce Labs cloud implementation for cypress.
-type Runner struct {
+// CypressRunner represents the Sauce Labs cloud implementation for cypress.
+type CypressRunner struct {
 	Project         cypress.Project
 	ProjectUploader storage.ProjectUploader
 	JobStarter      job.Starter
@@ -41,7 +41,7 @@ type result struct {
 }
 
 // RunProject runs the tests defined in cypress.Project.
-func (r *Runner) RunProject() (int, error) {
+func (r *CypressRunner) RunProject() (int, error) {
 	exitCode := 1
 	if err := r.checkCypressVersion(); err != nil {
 		return exitCode, err
@@ -79,14 +79,14 @@ func (r *Runner) RunProject() (int, error) {
 }
 
 // checkCypressVersion do several checks before running Cypress tests.
-func (r *Runner) checkCypressVersion() error {
+func (r *CypressRunner) checkCypressVersion() error {
 	if r.Project.Cypress.Version == "" {
 		return fmt.Errorf("no cypress version provided")
 	}
 	return nil
 }
 
-func (r *Runner) runSuites(fileID string) bool {
+func (r *CypressRunner) runSuites(fileID string) bool {
 	suites := make(chan cypress.Suite)
 	results := make(chan result, len(r.Project.Suites))
 	defer close(results)
@@ -140,7 +140,7 @@ func (r *Runner) runSuites(fileID string) bool {
 	return passed
 }
 
-func (r *Runner) worker(fileID string, suites <-chan cypress.Suite, results chan<- result) {
+func (r *CypressRunner) worker(fileID string, suites <-chan cypress.Suite, results chan<- result) {
 	for s := range suites {
 		jobData, err := r.runSuite(s, fileID)
 
@@ -154,7 +154,7 @@ func (r *Runner) worker(fileID string, suites <-chan cypress.Suite, results chan
 	}
 }
 
-func (r *Runner) runSuite(s cypress.Suite, fileID string) (job.Job, error) {
+func (r *CypressRunner) runSuite(s cypress.Suite, fileID string) (job.Job, error) {
 	log.Info().Str("suite", s.Name).Str("region", r.Project.Sauce.Region).Msg("Starting job.")
 
 	opts := job.StartOptions{
@@ -198,7 +198,7 @@ func (r *Runner) runSuite(s cypress.Suite, fileID string) (job.Job, error) {
 	return j, nil
 }
 
-func (r *Runner) archiveProject(tempDir string) (string, error) {
+func (r *CypressRunner) archiveProject(tempDir string) (string, error) {
 	zipName := filepath.Join(tempDir, "app.zip")
 	z, err := zip.NewWriter(zipName)
 	if err != nil {
@@ -229,7 +229,7 @@ func (r *Runner) archiveProject(tempDir string) (string, error) {
 	return zipName, z.Close()
 }
 
-func (r *Runner) uploadProject(filename string) (string, error) {
+func (r *CypressRunner) uploadProject(filename string) (string, error) {
 	progress.Show("Uploading project")
 	resp, err := r.ProjectUploader.Upload(filename)
 	progress.Stop()
@@ -240,7 +240,7 @@ func (r *Runner) uploadProject(filename string) (string, error) {
 	return resp.ID, nil
 }
 
-func shouldShowConsole(r *Runner, res result) bool {
+func shouldShowConsole(r *CypressRunner, res result) bool {
 	if !res.job.Passed {
 		return true
 	}
@@ -248,7 +248,7 @@ func shouldShowConsole(r *Runner, res result) bool {
 }
 
 // logSuite display the result of a suite
-func (r *Runner) logSuite(res result) {
+func (r *CypressRunner) logSuite(res result) {
 	if res.job.ID == "" {
 		log.Error().Str("suite", res.suiteName).Msgf("failed to start")
 		log.Error().Str("suite", res.suiteName).Msgf("%s", res.err)
@@ -266,7 +266,7 @@ func (r *Runner) logSuite(res result) {
 }
 
 // logSuiteError display the console output when tests from a suite are failing
-func (r *Runner) logSuiteConsole(res result) {
+func (r *CypressRunner) logSuiteConsole(res result) {
 	// Display log only when at least it has started
 	assetContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, resto.ConsoleLogAsset)
 	if err != nil {

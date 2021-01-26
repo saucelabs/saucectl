@@ -1,4 +1,4 @@
-package sauce
+package saucecloud
 
 import (
 	"archive/zip"
@@ -18,13 +18,13 @@ import (
 )
 
 func TestPreliminarySteps_Basic(t *testing.T) {
-	runner := Runner{Project: cypress.Project{Cypress: cypress.Cypress{Version: "5.6.2"}}}
+	runner := CypressRunner{Project: cypress.Project{Cypress: cypress.Cypress{Version: "5.6.2"}}}
 	assert.Nil(t, runner.checkCypressVersion())
 }
 
 func TestPreliminarySteps_NoCypressVersion(t *testing.T) {
 	want := "no cypress version provided"
-	runner := Runner{}
+	runner := CypressRunner{}
 	err := runner.checkCypressVersion()
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), want)
@@ -46,7 +46,7 @@ func TestRunSuite(t *testing.T) {
 			return job.Job{ID: id, Passed: true}, nil
 		},
 	}
-	runner := Runner{
+	runner := CypressRunner{
 		JobStarter: &starter,
 		JobReader:  &reader,
 	}
@@ -76,7 +76,7 @@ func TestRunSuites(t *testing.T) {
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 		return 1, nil
 	}}
-	runner := Runner{
+	runner := CypressRunner{
 		JobStarter: &starter,
 		JobReader:  &reader,
 		CCYReader:  ccyReader,
@@ -99,7 +99,7 @@ func TestArchiveProject(t *testing.T) {
 		os.RemoveAll("./test-arch/")
 	}()
 
-	runner := Runner{
+	runner := CypressRunner{
 		Project: cypress.Project{
 			Cypress: cypress.Cypress{
 				ConfigFile:  "../../../tests/e2e/cypress.json",
@@ -139,7 +139,7 @@ func TestUploadProject(t *testing.T) {
 	uploader := &mocks.FakeProjectUploader{
 		UploadSuccess: true,
 	}
-	runner := Runner{
+	runner := CypressRunner{
 		ProjectUploader: uploader,
 	}
 	id, err := runner.uploadProject("/my-dummy-project.zip")
@@ -180,7 +180,7 @@ func TestRunProject(t *testing.T) {
 	uploader := &mocks.FakeProjectUploader{
 		UploadSuccess: true,
 	}
-	runner := Runner{
+	runner := CypressRunner{
 		JobStarter:      &starter,
 		JobReader:       &reader,
 		CCYReader:       ccyReader,
@@ -211,7 +211,7 @@ func TestLogSuiteConsole(t *testing.T) {
 			return []byte("dummy-content"), nil
 		},
 	}
-	runner := Runner{
+	runner := CypressRunner{
 		JobReader: reader,
 	}
 	res := result{
