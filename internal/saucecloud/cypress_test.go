@@ -102,8 +102,8 @@ func TestArchiveProject(t *testing.T) {
 	runner := CypressRunner{
 		Project: cypress.Project{
 			Cypress: cypress.Cypress{
-				ConfigFile:  "../../../tests/e2e/cypress.json",
-				ProjectPath: "../../../tests/e2e/cypress/",
+				ConfigFile:  "../../tests/e2e/cypress.json",
+				ProjectPath: "../../tests/e2e/cypress/",
 			},
 		},
 	}
@@ -188,8 +188,8 @@ func TestRunProject(t *testing.T) {
 		Project: cypress.Project{
 			Cypress: cypress.Cypress{
 				Version:     "5.6.0",
-				ConfigFile:  "../../../tests/e2e/cypress.json",
-				ProjectPath: "../../../tests/e2e/cypress/",
+				ConfigFile:  "../../tests/e2e/cypress.json",
+				ProjectPath: "../../tests/e2e/cypress/",
 			},
 			Suites: []cypress.Suite{
 				{Name: "dummy-suite"},
