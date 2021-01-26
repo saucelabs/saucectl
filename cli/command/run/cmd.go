@@ -28,7 +28,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/memseq"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	playwrightDocker "github.com/saucelabs/saucectl/internal/playwright/docker"
-	playwrightSauce "github.com/saucelabs/saucectl/internal/playwright/sauce"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
@@ -322,7 +321,7 @@ func runPlaywrightInSauce(p playwright.Project) (int, error) {
 		AccessKey:  c.AccessKey,
 	}
 
-	r := playwrightSauce.Runner{
+	r := saucecloud.PlaywrightRunner{
 		Project:         p,
 		ProjectUploader: s,
 		JobStarter:      &tc,
