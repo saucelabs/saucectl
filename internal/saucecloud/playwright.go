@@ -1,4 +1,4 @@
-package sauce
+package saucecloud
 
 import (
 	"context"
@@ -23,8 +23,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/storage"
 )
 
-// Runner represents the Sauce Labs cloud implementation for cypress.
-type Runner struct {
+// PlaywrightRunner represents the Sauce Labs cloud implementation for cypress.
+type PlaywrightRunner struct {
 	Project         playwright.Project
 	ProjectUploader storage.ProjectUploader
 	JobStarter      job.Starter
@@ -33,15 +33,8 @@ type Runner struct {
 	Region          region.Region
 }
 
-type result struct {
-	suiteName string
-	browser   string
-	job       job.Job
-	err       error
-}
-
 // RunProject runs the tests defined in cypress.Project.
-func (r *Runner) RunProject() (int, error) {
+func (r *PlaywrightRunner) RunProject() (int, error) {
 	exitCode := 1
 
 	// Archive the project files.
@@ -69,7 +62,7 @@ func (r *Runner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-func (r *Runner) runSuites(fileID string) bool {
+func (r *PlaywrightRunner) runSuites(fileID string) bool {
 	suites := make(chan playwright.Suite)
 	results := make(chan result, len(r.Project.Suites))
 	defer close(results)
@@ -122,12 +115,15 @@ func (r *Runner) runSuites(fileID string) bool {
 		}
 	}
 	waiter.Stop()
-	logSuitesResult(total, errCount)
+
+	log.Info().Msgf("Suites total: %d", total)
+	log.Info().Msgf("Suites passed: %d", total-errCount)
+	log.Info().Msgf("Suites failed: %d", errCount)
 
 	return passed
 }
 
-func (r *Runner) worker(fileID string, suites <-chan playwright.Suite, results chan<- result) {
+func (r *PlaywrightRunner) worker(fileID string, suites <-chan playwright.Suite, results chan<- result) {
 	for s := range suites {
 		jobData, err := r.runSuite(s, fileID)
 
@@ -141,7 +137,7 @@ func (r *Runner) worker(fileID string, suites <-chan playwright.Suite, results c
 	}
 }
 
-func (r *Runner) runSuite(s playwright.Suite, fileID string) (job.Job, error) {
+func (r *PlaywrightRunner) runSuite(s playwright.Suite, fileID string) (job.Job, error) {
 	log.Info().Str("suite", s.Name).Str("region", r.Project.Sauce.Region).Msg("Starting job.")
 
 	opts := job.StartOptions{
@@ -185,7 +181,7 @@ func (r *Runner) runSuite(s playwright.Suite, fileID string) (job.Job, error) {
 	return j, nil
 }
 
-func (r *Runner) archiveProject(tempDir string) (string, error) {
+func (r *PlaywrightRunner) archiveProject(tempDir string) (string, error) {
 	zipName := filepath.Join(tempDir, "app.zip")
 	z, err := zip.NewWriter(zipName)
 	if err != nil {
@@ -212,7 +208,7 @@ func (r *Runner) archiveProject(tempDir string) (string, error) {
 	return zipName, z.Close()
 }
 
-func (r *Runner) uploadProject(filename string) (string, error) {
+func (r *PlaywrightRunner) uploadProject(filename string) (string, error) {
 	progress.Show("Uploading project")
 	resp, err := r.ProjectUploader.Upload(filename)
 	progress.Stop()
@@ -223,15 +219,8 @@ func (r *Runner) uploadProject(filename string) (string, error) {
 	return resp.ID, nil
 }
 
-func shouldShowConsole(r *Runner, res result) bool {
-	if !res.job.Passed {
-		return true
-	}
-	return r.Project.ShowConsoleLog
-}
-
 // logSuite display the result of a suite
-func (r *Runner) logSuite(res result) {
+func (r *PlaywrightRunner) logSuite(res result) {
 	if res.job.ID == "" {
 		log.Error().Str("suite", res.suiteName).Msgf("failed to start")
 		log.Error().Str("suite", res.suiteName).Msgf("%s", res.err)
@@ -243,13 +232,16 @@ func (r *Runner) logSuite(res result) {
 	}
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 	log.Info().Str("suite", res.suiteName).Msgf("Status: %s - %s", resultStr, jobDetailsPage)
-	if shouldShowConsole(r, res) {
-		r.logSuiteConsole(res)
-	}
+	r.logSuiteConsole(res)
 }
 
 // logSuiteError display the console output when tests from a suite are failing
-func (r *Runner) logSuiteConsole(res result) {
+func (r *PlaywrightRunner) logSuiteConsole(res result) {
+	// To avoid clutter, we don't show the console on job passes.
+	if res.job.Passed {
+		return
+	}
+
 	// Display log only when at least it has started
 	assetContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, resto.ConsoleLogAsset)
 	if err != nil {
@@ -258,10 +250,4 @@ func (r *Runner) logSuiteConsole(res result) {
 		log.Info().Msg(fmt.Sprintf("Test %s %s", res.job.ID, resto.ConsoleLogAsset))
 		log.Info().Msg(string(assetContent))
 	}
-}
-
-func logSuitesResult(total, errCount int) {
-	log.Info().Msgf("Suites total: %d", total)
-	log.Info().Msgf("Suites passed: %d", total-errCount)
-	log.Info().Msgf("Suites failed: %d", errCount)
 }

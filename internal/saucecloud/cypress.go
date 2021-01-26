@@ -33,13 +33,6 @@ type CypressRunner struct {
 	Region          region.Region
 }
 
-type result struct {
-	suiteName string
-	browser   string
-	job       job.Job
-	err       error
-}
-
 // RunProject runs the tests defined in cypress.Project.
 func (r *CypressRunner) RunProject() (int, error) {
 	exitCode := 1
@@ -135,7 +128,10 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 		}
 	}
 	waiter.Stop()
-	logSuitesResult(total, errCount)
+
+	log.Info().Msgf("Suites total: %d", total)
+	log.Info().Msgf("Suites passed: %d", total-errCount)
+	log.Info().Msgf("Suites failed: %d", errCount)
 
 	return passed
 }
@@ -240,13 +236,6 @@ func (r *CypressRunner) uploadProject(filename string) (string, error) {
 	return resp.ID, nil
 }
 
-func shouldShowConsole(r *CypressRunner, res result) bool {
-	if !res.job.Passed {
-		return true
-	}
-	return r.Project.ShowConsoleLog
-}
-
 // logSuite display the result of a suite
 func (r *CypressRunner) logSuite(res result) {
 	if res.job.ID == "" {
@@ -260,13 +249,16 @@ func (r *CypressRunner) logSuite(res result) {
 	}
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 	log.Info().Str("suite", res.suiteName).Msgf("Status: %s - %s", resultStr, jobDetailsPage)
-	if shouldShowConsole(r, res) {
-		r.logSuiteConsole(res)
-	}
+	r.logSuiteConsole(res)
 }
 
 // logSuiteError display the console output when tests from a suite are failing
 func (r *CypressRunner) logSuiteConsole(res result) {
+	// To avoid clutter, we don't show the console on job passes.
+	if res.job.Passed {
+		return
+	}
+
 	// Display log only when at least it has started
 	assetContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, resto.ConsoleLogAsset)
 	if err != nil {
@@ -275,10 +267,4 @@ func (r *CypressRunner) logSuiteConsole(res result) {
 		log.Info().Msg(fmt.Sprintf("Test %s %s", res.job.ID, resto.ConsoleLogAsset))
 		log.Info().Msg(string(assetContent))
 	}
-}
-
-func logSuitesResult(total, errCount int) {
-	log.Info().Msgf("Suites total: %d", total)
-	log.Info().Msgf("Suites passed: %d", total-errCount)
-	log.Info().Msgf("Suites failed: %d", errCount)
 }
