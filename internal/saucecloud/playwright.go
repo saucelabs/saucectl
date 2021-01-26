@@ -238,7 +238,7 @@ func (r *PlaywrightRunner) logSuite(res result) {
 // logSuiteError display the console output when tests from a suite are failing
 func (r *PlaywrightRunner) logSuiteConsole(res result) {
 	// To avoid clutter, we don't show the console on job passes.
-	if res.job.Passed {
+	if res.job.Passed || !r.Project.ShowConsoleLog {
 		return
 	}
 
