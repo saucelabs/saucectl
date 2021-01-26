@@ -3,7 +3,6 @@ package run
 import (
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/docker"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -23,6 +22,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/ci/jenkins"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	cypressSauce "github.com/saucelabs/saucectl/internal/cypress/sauce"
+	"github.com/saucelabs/saucectl/internal/docker"
 	legacyDocker "github.com/saucelabs/saucectl/internal/docker/legacydocker"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/memseq"
@@ -269,7 +269,6 @@ func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 			return 1, err
 		}
 	}
-
 
 	switch testEnv {
 	case "docker":
