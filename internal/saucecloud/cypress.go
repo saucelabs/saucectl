@@ -3,11 +3,12 @@ package saucecloud
 import (
 	"context"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/concurrency"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/concurrency"
 
 	"github.com/rs/zerolog/log"
 
@@ -174,6 +175,7 @@ func (r *CypressRunner) runSuite(s cypress.Suite, fileID string) (job.Job, error
 			ID:     r.Project.Sauce.Tunnel.ID,
 			Parent: r.Project.Sauce.Tunnel.Parent,
 		},
+		ScreenResolution: s.ScreenResolution,
 	}
 
 	id, err := r.JobStarter.StartJob(context.Background(), opts)
