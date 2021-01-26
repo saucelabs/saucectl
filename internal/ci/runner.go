@@ -28,12 +28,16 @@ import (
 )
 
 // Runner represents the CI implementation of a runner.Testrunner.
+//
+// Deprecated: There are no more specific runners for running in CI.
 type Runner struct {
 	runner.BaseRunner
 	CIProvider Provider
 }
 
 // NewRunner creates a new Runner instance.
+//
+// Deprecated: Use the appropriate framework specific runner instead.
 func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer, rc config.RunnerConfiguration, cip Provider) (*Runner, error) {
 	r := Runner{}
 

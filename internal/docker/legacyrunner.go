@@ -25,19 +25,24 @@ import (
 // DefaultProjectPath represents the default project path. Test files will be located here.
 const DefaultProjectPath = "/home/seluser"
 
-// Runner represents the docker implementation of a test runner.
-type Runner struct {
+// LegacyRunner represents the docker implementation of a test runner. Only meant for use with frameworks that did not
+// yet support native configs.
+//
+// Deprecated: Use the appropriate, framework specific runner instead.
+type LegacyRunner struct {
 	runner.BaseRunner
 	containerID string
 	docker      *Handler
 }
 
-// NewRunner creates a new Runner instance.
-func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer) (*Runner, error) {
+// NewRunner creates a new LegacyRunner instance.
+//
+// Deprecated: Use the appropriate, framework specific runner instead.
+func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer) (*LegacyRunner, error) {
 	progress.Show("Starting test runner for docker")
 	defer progress.Stop()
 
-	r := Runner{}
+	r := LegacyRunner{}
 	r.Cli = cli
 	r.Ctx = context.Background()
 	r.Project = c
@@ -53,7 +58,7 @@ func NewRunner(c config.Project, cli *command.SauceCtlCli, seq fleet.Sequencer) 
 }
 
 // RunProject runs the tests defined in config.Project.
-func (r *Runner) RunProject() (int, error) {
+func (r *LegacyRunner) RunProject() (int, error) {
 	fid, err := fleet.Register(r.Ctx, r.Sequencer, "", r.Project.Files, r.Project.Suites)
 	if err != nil {
 		return 1, err
@@ -73,7 +78,7 @@ func (r *Runner) RunProject() (int, error) {
 }
 
 // setup performs any necessary steps for a test runner to execute tests.
-func (r *Runner) setup(suite config.Suite, run config.Run) error {
+func (r *LegacyRunner) setup(suite config.Suite, run config.Run) error {
 	err := r.docker.ValidateDependency()
 	if err != nil {
 		return fmt.Errorf("please verify that docker is installed and running: %v, "+
@@ -159,7 +164,7 @@ func (r *Runner) setup(suite config.Suite, run config.Run) error {
 	return nil
 }
 
-func (r *Runner) beforeExec(tasks []string) error {
+func (r *LegacyRunner) beforeExec(tasks []string) error {
 	for _, task := range tasks {
 		progress.Show("Running BeforeExec task: %s", task)
 		exitCode, err := r.execute(strings.Fields(task))
@@ -173,7 +178,7 @@ func (r *Runner) beforeExec(tasks []string) error {
 	return nil
 }
 
-func (r *Runner) execute(cmd []string) (int, error) {
+func (r *LegacyRunner) execute(cmd []string) (int, error) {
 	var (
 		out, stderr io.Writer
 		in          io.ReadCloser
@@ -218,12 +223,12 @@ func (r *Runner) execute(cmd []string) (int, error) {
 }
 
 // run runs the tests defined in the config.Project.
-func (r *Runner) run() (int, error) {
+func (r *LegacyRunner) run() (int, error) {
 	return r.execute([]string{"npm", "test"})
 }
 
 // teardown cleans up the test environment.
-func (r *Runner) teardown(logDir string) error {
+func (r *LegacyRunner) teardown(logDir string) error {
 	for _, containerSrcPath := range runner.LogFiles {
 		file := filepath.Base(containerSrcPath)
 		hostDstPath := filepath.Join(logDir, file)
@@ -248,7 +253,7 @@ func (r *Runner) teardown(logDir string) error {
 	return nil
 }
 
-func (r *Runner) runSuite(suite config.Suite, fleetID string) error {
+func (r *LegacyRunner) runSuite(suite config.Suite, fleetID string) error {
 	var assignments []string
 	for {
 		next, err := r.Sequencer.NextAssignment(r.Ctx, fleetID, suite.Name)
@@ -273,7 +278,7 @@ func (r *Runner) runSuite(suite config.Suite, fleetID string) error {
 	return r.runTest(suite, run)
 }
 
-func (r *Runner) runTest(suite config.Suite, run config.Run) error {
+func (r *LegacyRunner) runTest(suite config.Suite, run config.Run) error {
 	defer func() {
 		log.Info().Msg("Tearing down environment")
 		if err := r.teardown(r.Cli.LogDir); err != nil {
