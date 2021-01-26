@@ -10,12 +10,12 @@ import (
 )
 
 func TestPreliminarySteps_Basic(t *testing.T) {
-	runner := Runner{Project: cypress.Project{Cypress: cypress.Cypress{Version: "5.6.2"}}}
+	runner := CypressRunner{Project: cypress.Project{Cypress: cypress.Cypress{Version: "5.6.2"}}}
 	assert.Nil(t, runner.defineDockerImage())
 }
 
 func TestPreliminarySteps_DefinedImage(t *testing.T) {
-	runner := Runner{
+	runner := CypressRunner{
 		Project: cypress.Project{
 			Docker: config.Docker{
 				Image: config.Image{Name: "dummy-image", Tag: "dummy-tag"},
@@ -27,7 +27,7 @@ func TestPreliminarySteps_DefinedImage(t *testing.T) {
 
 func TestPreliminarySteps_NoDefinedImageNoCypressVersion(t *testing.T) {
 	want := "no cypress version provided"
-	runner := Runner{}
+	runner := CypressRunner{}
 	err := runner.defineDockerImage()
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), want)
@@ -36,7 +36,7 @@ func TestPreliminarySteps_NoDefinedImageNoCypressVersion(t *testing.T) {
 func TestNewRunner(t *testing.T) {
 	p := cypress.Project{}
 	cli := command.NewSauceCtlCli()
-	r, err := New(p, cli)
+	r, err := NewCypress(p, cli)
 	assert.NotNil(t, r)
 	assert.Nil(t, err)
 }
@@ -47,7 +47,7 @@ func TestTearDown(t *testing.T) {
 		ContainerStopSuccess: true,
 		ContainerRemoveSuccess: true,
 	}
-	runner := Runner{
+	runner := CypressRunner{
 		docker: &Handler{
 			client: docker,
 		},
