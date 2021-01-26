@@ -24,7 +24,7 @@ var ctx = context.Background()
 
 type PassFailCase struct {
 	Name           string
-	Client         CommonAPIClient
+	Client         LegacyCommonAPIClient
 	JobConfig      *config.Project
 	Suite          *config.Suite
 	ExpectedError  error
@@ -323,7 +323,7 @@ func TestHandler_CopyToContainer(t *testing.T) {
 	baseDir := filepath.Base(dir.Path())
 
 	type fields struct {
-		client CommonAPIClient
+		client LegacyCommonAPIClient
 	}
 	type args struct {
 		ctx         context.Context

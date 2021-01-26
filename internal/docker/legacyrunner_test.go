@@ -51,7 +51,7 @@ func TestDockerRunnerSetup(t *testing.T) {
 	// defer dir.Remove()
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			runner := Runner{}
+			runner := LegacyRunner{}
 			runner.docker = tc.Client
 
 			err := runner.setup(config.Suite{}, config.Run{})

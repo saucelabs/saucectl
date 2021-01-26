@@ -41,8 +41,10 @@ var (
 	}
 )
 
-// CommonAPIClient is the interface for interacting with containers.
-type CommonAPIClient interface {
+// LegacyCommonAPIClient is the interface for interacting with containers.
+//
+// Deprecated.
+type LegacyCommonAPIClient interface {
 	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
 	ImageList(ctx context.Context, options types.ImageListOptions) ([]types.ImageSummary, error)
 	ImagePull(ctx context.Context, ref string, options types.ImagePullOptions) (io.ReadCloser, error)
@@ -61,11 +63,11 @@ type CommonAPIClient interface {
 
 // Handler represents the client to handle Docker tasks
 type Handler struct {
-	client CommonAPIClient
+	client LegacyCommonAPIClient
 }
 
 // CreateMock allows to get a handler with a custom interface
-func CreateMock(client CommonAPIClient) *Handler {
+func CreateMock(client LegacyCommonAPIClient) *Handler {
 	return &Handler{client}
 }
 
