@@ -21,8 +21,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/ci/gitlab"
 	"github.com/saucelabs/saucectl/internal/ci/jenkins"
 	"github.com/saucelabs/saucectl/internal/cypress"
-	cypressDocker "github.com/saucelabs/saucectl/internal/cypress/docker"
 	cypressSauce "github.com/saucelabs/saucectl/internal/cypress/sauce"
+	"github.com/saucelabs/saucectl/internal/docker"
 	legacyDocker "github.com/saucelabs/saucectl/internal/docker/legacydocker"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/memseq"
@@ -200,7 +200,7 @@ func runCypress(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 func runCypressInDocker(p cypress.Project, cli *command.SauceCtlCli) (int, error) {
 	log.Info().Msg("Running Cypress in Docker")
 
-	cd, err := cypressDocker.New(p, cli)
+	cd, err := docker.NewCypress(p, cli)
 	if err != nil {
 		return 1, err
 	}
@@ -269,7 +269,6 @@ func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 			return 1, err
 		}
 	}
-
 
 	switch testEnv {
 	case "docker":
