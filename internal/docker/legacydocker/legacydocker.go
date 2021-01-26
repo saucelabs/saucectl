@@ -1,4 +1,4 @@
-package docker
+package legacydocker
 
 import (
 	"context"
@@ -61,24 +61,26 @@ type LegacyCommonAPIClient interface {
 	ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error
 }
 
-// Handler represents the client to handle Docker tasks
-type Handler struct {
+// LegacyHandler represents the client to handle Docker tasks
+//
+// Deprecated.
+type LegacyHandler struct {
 	client LegacyCommonAPIClient
 }
 
-// CreateMock allows to get a handler with a custom interface
-func CreateMock(client LegacyCommonAPIClient) *Handler {
-	return &Handler{client}
+// CreateLegacyMock allows to get a handler with a custom interface
+func CreateLegacyMock(client LegacyCommonAPIClient) *LegacyHandler {
+	return &LegacyHandler{client}
 }
 
-// Create generates a docker client
-func Create() (*Handler, error) {
+// CreateLegacy generates a docker client
+func CreateLegacy() (*LegacyHandler, error) {
 	cl, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err
 	}
 
-	handler := Handler{
+	handler := LegacyHandler{
 		client: cl,
 	}
 
@@ -86,13 +88,13 @@ func Create() (*Handler, error) {
 }
 
 // ValidateDependency checks if external dependencies are installed
-func (handler *Handler) ValidateDependency() error {
+func (handler *LegacyHandler) ValidateDependency() error {
 	_, err := handler.client.ContainerList(context.Background(), types.ContainerListOptions{})
 	return err
 }
 
 // HasBaseImage checks if base image is installed
-func (handler *Handler) HasBaseImage(ctx context.Context, baseImage string) (bool, error) {
+func (handler *LegacyHandler) HasBaseImage(ctx context.Context, baseImage string) (bool, error) {
 	listFilters := filters.NewArgs()
 	listFilters.Add("reference", baseImage)
 	options := types.ImageListOptions{
@@ -109,7 +111,7 @@ func (handler *Handler) HasBaseImage(ctx context.Context, baseImage string) (boo
 }
 
 // GetImageFlavor returns a string that contains the image name and tag defined by the project.
-func (handler *Handler) GetImageFlavor(c config.Project) string {
+func (handler *LegacyHandler) GetImageFlavor(c config.Project) string {
 	// TODO - move this to ImageDefinition
 	tag := "latest"
 	if c.Image.Version != "" {
@@ -148,7 +150,7 @@ func NewImagePullOptions() (types.ImagePullOptions, error) {
 }
 
 // PullBaseImage pulls an image from Docker
-func (handler *Handler) PullBaseImage(ctx context.Context, c config.Project) error {
+func (handler *LegacyHandler) PullBaseImage(ctx context.Context, c config.Project) error {
 
 	options, err := NewImagePullOptions()
 	if err != nil {
@@ -173,7 +175,7 @@ func (handler *Handler) PullBaseImage(ctx context.Context, c config.Project) err
 }
 
 // StartContainer starts the Docker testrunner container
-func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s config.Suite) (*container.ContainerCreateCreatedBody, error) {
+func (handler *LegacyHandler) StartContainer(ctx context.Context, c config.Project, s config.Suite) (*container.ContainerCreateCreatedBody, error) {
 	var (
 		ports        map[nat.Port]struct{}
 		portBindings map[nat.Port][]nat.PortBinding
@@ -263,7 +265,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 }
 
 // copyTestFiles copies the files within the container.
-func copyTestFiles(ctx context.Context, handler *Handler, containerID string, files []string, pDir string) error {
+func copyTestFiles(ctx context.Context, handler *LegacyHandler, containerID string, files []string, pDir string) error {
 	for _, file := range files {
 		log.Info().Str("from", file).Str("to", pDir).Msg("File copied")
 		if err := handler.CopyToContainer(ctx, containerID, file, pDir); err != nil {
@@ -302,7 +304,7 @@ func createMounts(files []string, target string) ([]mount.Mount, error) {
 }
 
 // CopyFilesToContainer copies the given files into the container.
-func (handler *Handler) CopyFilesToContainer(ctx context.Context, srcContainerID string, files []string, targetDir string) error {
+func (handler *LegacyHandler) CopyFilesToContainer(ctx context.Context, srcContainerID string, files []string, targetDir string) error {
 	for _, fpath := range files {
 		if err := handler.CopyToContainer(ctx, srcContainerID, fpath, targetDir); err != nil {
 			return err
@@ -312,7 +314,7 @@ func (handler *Handler) CopyFilesToContainer(ctx context.Context, srcContainerID
 }
 
 // CopyToContainer copies the given file to the container.
-func (handler *Handler) CopyToContainer(ctx context.Context, containerID string, srcFile string, targetDir string) error {
+func (handler *LegacyHandler) CopyToContainer(ctx context.Context, containerID string, srcFile string, targetDir string) error {
 	srcInfo, err := archive.CopyInfoSourcePath(srcFile, true)
 	if err != nil {
 		return err
@@ -335,7 +337,7 @@ func (handler *Handler) CopyToContainer(ctx context.Context, containerID string,
 }
 
 // CopyFromContainer downloads a file from the testrunner container
-func (handler *Handler) CopyFromContainer(ctx context.Context, srcContainerID string, srcPath string, dstPath string) error {
+func (handler *LegacyHandler) CopyFromContainer(ctx context.Context, srcContainerID string, srcPath string, dstPath string) error {
 	if err := utils.ValidateOutputPath(dstPath); err != nil {
 		return err
 	}
@@ -382,7 +384,7 @@ func (handler *Handler) CopyFromContainer(ctx context.Context, srcContainerID st
 }
 
 // Execute runs the test in the Docker container and attaches to its stdout
-func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd []string) (*types.IDResponse, *types.HijackedResponse, error) {
+func (handler *LegacyHandler) Execute(ctx context.Context, srcContainerID string, cmd []string) (*types.IDResponse, *types.HijackedResponse, error) {
 	execConfig := types.ExecConfig{
 		Cmd:          cmd,
 		AttachStdout: true,
@@ -402,7 +404,7 @@ func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd 
 }
 
 // ExecuteInspect checks exit code of test
-func (handler *Handler) ExecuteInspect(ctx context.Context, srcContainerID string) (int, error) {
+func (handler *LegacyHandler) ExecuteInspect(ctx context.Context, srcContainerID string) (int, error) {
 	inspectResp, err := handler.client.ContainerExecInspect(ctx, srcContainerID)
 	if err != nil {
 		return 1, err
@@ -412,22 +414,22 @@ func (handler *Handler) ExecuteInspect(ctx context.Context, srcContainerID strin
 }
 
 // ContainerStop stops a running container
-func (handler *Handler) ContainerStop(ctx context.Context, srcContainerID string) error {
+func (handler *LegacyHandler) ContainerStop(ctx context.Context, srcContainerID string) error {
 	return handler.client.ContainerStop(ctx, srcContainerID, &containerStopTimeout)
 }
 
 // ContainerRemove removes testrunner container
-func (handler *Handler) ContainerRemove(ctx context.Context, srcContainerID string) error {
+func (handler *LegacyHandler) ContainerRemove(ctx context.Context, srcContainerID string) error {
 	return handler.client.ContainerRemove(ctx, srcContainerID, containerRemoveOptions)
 }
 
 // ContainerInspect returns the container information.
-func (handler *Handler) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
+func (handler *LegacyHandler) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
 	return handler.client.ContainerInspect(ctx, containerID)
 }
 
 // IsErrNotFound returns true if the error is a NotFound error, which is returned
 // by the API when some object is not found.
-func (handler *Handler) IsErrNotFound(err error) bool {
+func (handler *LegacyHandler) IsErrNotFound(err error) bool {
 	return client.IsErrNotFound(err)
 }

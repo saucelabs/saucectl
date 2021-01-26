@@ -23,7 +23,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/cypress"
 	cypressDocker "github.com/saucelabs/saucectl/internal/cypress/docker"
 	cypressSauce "github.com/saucelabs/saucectl/internal/cypress/sauce"
-	"github.com/saucelabs/saucectl/internal/docker"
+	legacyDocker "github.com/saucelabs/saucectl/internal/docker/legacydocker"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/memseq"
 	"github.com/saucelabs/saucectl/internal/playwright"
@@ -357,7 +357,7 @@ func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, e
 		return ci.NewRunner(p, cli, seq, rc, cip)
 	}
 	log.Info().Msg("Starting local runner")
-	return docker.NewRunner(p, cli, &memseq.Sequencer{})
+	return legacyDocker.NewRunner(p, cli, &memseq.Sequencer{})
 }
 
 func createCIProvider() ci.Provider {
