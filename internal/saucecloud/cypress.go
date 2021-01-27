@@ -5,17 +5,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/dots"
-	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/jsonio"
 )
 
 // CypressRunner represents the Sauce Labs cloud implementation for cypress.
@@ -44,7 +41,16 @@ func (r *CypressRunner) RunProject() (int, error) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	zipName, err := r.archiveProject(tempDir)
+	files := []string{
+		r.Project.Cypress.ConfigFile,
+		r.Project.Cypress.ProjectPath,
+	}
+
+	if r.Project.Cypress.EnvFile != "" {
+		files = append(files, r.Project.Cypress.EnvFile)
+	}
+
+	zipName, err := r.archiveProject(r.Project, tempDir, files)
 	if err != nil {
 		return exitCode, err
 	}
@@ -184,35 +190,4 @@ func (r *CypressRunner) runSuite(s cypress.Suite, fileID string) (job.Job, error
 	}
 
 	return j, nil
-}
-
-func (r *CypressRunner) archiveProject(tempDir string) (string, error) {
-	zipName := filepath.Join(tempDir, "app.zip")
-	z, err := zip.NewWriter(zipName)
-	if err != nil {
-		return "", err
-	}
-	defer z.Close()
-
-	files := []string{
-		r.Project.Cypress.ConfigFile,
-		r.Project.Cypress.ProjectPath,
-	}
-
-	if r.Project.Cypress.EnvFile != "" {
-		files = append(files, r.Project.Cypress.EnvFile)
-	}
-
-	rcPath := filepath.Join(tempDir, "sauce-runner.json")
-	if err := jsonio.WriteFile(rcPath, r.Project); err != nil {
-		return "", err
-	}
-	files = append(files, rcPath)
-
-	for _, f := range files {
-		if err := z.Add(f, ""); err != nil {
-			return "", err
-		}
-	}
-	return zipName, z.Close()
 }

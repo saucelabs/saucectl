@@ -113,7 +113,11 @@ func TestArchiveProject(t *testing.T) {
 	}
 	wd, _ := os.Getwd()
 	log.Info().Msg(wd)
-	z, err := runner.archiveProject("./test-arch/")
+	files := []string{
+		runner.Project.Cypress.ConfigFile,
+		runner.Project.Cypress.ProjectPath,
+	}
+	z, err := runner.archiveProject(runner.Project, "./test-arch/", files)
 	if err != nil {
 		t.Fail()
 	}

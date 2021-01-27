@@ -5,24 +5,21 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/rs/zerolog/log"
 
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/dots"
-	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
 
 // PlaywrightRunner represents the Sauce Labs cloud implementation for cypress.
 type PlaywrightRunner struct {
 	CloudRunner
-	Project         playwright.Project
+	Project playwright.Project
 }
 
 // RunProject runs the tests defined in cypress.Project.
@@ -36,7 +33,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	zipName, err := r.archiveProject(tempDir)
+	zipName, err := r.archiveProject(r.Project, tempDir, []string{r.Project.Playwright.LocalProjectPath})
 	if err != nil {
 		return exitCode, err
 	}
@@ -171,31 +168,4 @@ func (r *PlaywrightRunner) runSuite(s playwright.Suite, fileID string) (job.Job,
 	}
 
 	return j, nil
-}
-
-func (r *PlaywrightRunner) archiveProject(tempDir string) (string, error) {
-	zipName := filepath.Join(tempDir, "app.zip")
-	z, err := zip.NewWriter(zipName)
-	if err != nil {
-		return "", err
-	}
-	defer z.Close()
-
-	files := []string{
-		r.Project.Playwright.LocalProjectPath,
-	}
-
-	rcPath := filepath.Join(tempDir, "sauce-runner.json")
-	if err := jsonio.WriteFile(rcPath, r.Project); err != nil {
-		return "", err
-	}
-	files = append(files, rcPath)
-
-	for _, f := range files {
-		if err := z.Add(f, ""); err != nil {
-			return "", err
-		}
-	}
-
-	return zipName, z.Close()
 }
