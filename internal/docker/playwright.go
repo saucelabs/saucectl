@@ -77,7 +77,7 @@ func (r *PlaywrightRunner) defineDockerImage() error {
 	}
 
 	if r.Project.Playwright.Version == "" {
-		return fmt.Errorf("no cypress version provided")
+		return fmt.Errorf("Missing playwright version. Check out available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
 
 	if r.Project.Docker.Image.Name == playwright.DefaultDockerImage && r.Project.Docker.Image.Tag == "" {
