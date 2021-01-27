@@ -1,6 +1,9 @@
 package region
 
-import "testing"
+import (
+	"gotest.tools/assert"
+	"testing"
+)
 
 func TestFromString(t *testing.T) {
 	type args struct {
@@ -34,4 +37,10 @@ func TestFromString(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestString(t *testing.T) {
+	name := "staging"
+	r := FromString(name)
+	assert.Equal(t, name, r.String())
 }

@@ -2,16 +2,11 @@ package run
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
-
-	"github.com/saucelabs/saucectl/cli/version"
-	"github.com/saucelabs/saucectl/internal/appstore"
-	"github.com/saucelabs/saucectl/internal/cypress"
-	"github.com/saucelabs/saucectl/internal/cypress/sauce"
-	"github.com/saucelabs/saucectl/internal/resto"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
@@ -19,15 +14,21 @@ import (
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/mocks"
 	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/cli/version"
+	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/ci/github"
 	"github.com/saucelabs/saucectl/internal/ci/gitlab"
 	"github.com/saucelabs/saucectl/internal/ci/jenkins"
-	cypressDocker "github.com/saucelabs/saucectl/internal/cypress/docker"
+	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/docker"
+	legacyDocker "github.com/saucelabs/saucectl/internal/docker/legacydocker"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/memseq"
+	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
 )
@@ -42,17 +43,20 @@ var (
 	defaultTimeout = 60
 	defaultRegion  = "us-west-1"
 
-	cfgFilePath string
-	cfgLogDir   string
-	testTimeout int
-	regionFlag  string
-	env         map[string]string
-	parallel    bool
-	ciBuildID   string
-	sauceAPI    string
-	suiteName   string
-	testEnv     string
-	concurrency int
+	cfgFilePath    string
+	cfgLogDir      string
+	testTimeout    int
+	regionFlag     string
+	env            map[string]string
+	parallel       bool
+	ciBuildID      string
+	sauceAPI       string
+	suiteName      string
+	testEnv        string
+	showConsoleLog bool
+	concurrency    int
+	tunnelID       string
+	tunnelParent   string
 )
 
 // Command creates the `run` command
@@ -83,7 +87,10 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
 	cmd.Flags().StringVar(&suiteName, "suite", "", "Run specified test suite.")
 	cmd.Flags().StringVar(&testEnv, "test-env", "docker", "Specifies the environment in which the tests should run. Choice: docker|sauce.")
+	cmd.Flags().BoolVarP(&showConsoleLog, "show-console-log", "", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
 	cmd.Flags().IntVar(&concurrency, "ccy", 1, "Concurrency specifies how many suites are run at the same time.")
+	cmd.Flags().StringVar(&tunnelID, "tunnel-id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
+	cmd.Flags().StringVar(&tunnelParent, "tunnel-parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
 
 	// Hide undocumented flags that the user does not need to care about.
 	_ = cmd.Flags().MarkHidden("sauce-api")
@@ -91,8 +98,6 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	// Hide documented flags that aren't fully released yet or WIP.
 	_ = cmd.Flags().MarkHidden("parallel")    // WIP.
 	_ = cmd.Flags().MarkHidden("ci-build-id") // Related to 'parallel'. WIP.
-	_ = cmd.Flags().MarkHidden("test-env")    // WIP.
-	_ = cmd.Flags().MarkHidden("ccy")         // WIP.
 
 	return cmd
 }
@@ -113,7 +118,10 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 
 	if d.Kind == config.KindCypress && d.APIVersion == config.VersionV1Alpha {
-		return runCypress(cli)
+		return runCypress(cmd, cli)
+	}
+	if d.Kind == config.KindPlaywright && d.APIVersion == config.VersionV1Alpha {
+		return runPlaywright(cmd, cli)
 	}
 
 	return runLegacyMode(cmd, cli)
@@ -143,13 +151,15 @@ func runLegacyMode(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	return r.RunProject()
 }
 
-func runCypress(cli *command.SauceCtlCli) (int, error) {
+func runCypress(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	p, err := cypress.FromFile(cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
 
 	p.Sauce.Metadata.ExpandEnv()
+	applyDefaultValues(&p.Sauce)
+	overrideCliParameters(cmd, &p.Sauce)
 
 	// Merge env from CLI args and job config. CLI args take precedence.
 	for k, v := range env {
@@ -161,12 +171,18 @@ func runCypress(cli *command.SauceCtlCli) (int, error) {
 		}
 	}
 
-	if p.Sauce.Region == "" {
-		p.Sauce.Region = defaultRegion
+	if showConsoleLog {
+		p.ShowConsoleLog = true
 	}
 
-	if regionFlag != "" {
-		p.Sauce.Region = regionFlag
+	if cmd.Flags().Lookup("suite").Changed {
+		if err := filterCypressSuite(&p); err != nil {
+			return 1, err
+		}
+	}
+
+	if err := cypress.Validate(p); err != nil {
+		return 1, err
 	}
 
 	switch testEnv {
@@ -182,7 +198,7 @@ func runCypress(cli *command.SauceCtlCli) (int, error) {
 func runCypressInDocker(p cypress.Project, cli *command.SauceCtlCli) (int, error) {
 	log.Info().Msg("Running Cypress in Docker")
 
-	cd, err := cypressDocker.New(p, cli)
+	cd, err := docker.NewCypress(p, cli)
 	if err != nil {
 		return 1, err
 	}
@@ -221,12 +237,95 @@ func runCypressInSauce(p cypress.Project) (int, error) {
 		AccessKey:  c.AccessKey,
 	}
 
-	r := sauce.Runner{
+	r := saucecloud.CypressRunner{
 		Project:         p,
 		ProjectUploader: s,
 		JobStarter:      &tc,
 		JobReader:       &rsto,
-		Concurrency:     concurrency,
+		CCYReader:       &rsto,
+		Region:          re,
+	}
+	return r.RunProject()
+}
+
+func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
+	p, err := playwright.FromFile(cfgFilePath)
+	if err != nil {
+		return 1, err
+	}
+
+	p.Sauce.Metadata.ExpandEnv()
+	applyDefaultValues(&p.Sauce)
+	overrideCliParameters(cmd, &p.Sauce)
+
+	if showConsoleLog {
+		p.ShowConsoleLog = true
+	}
+
+	if cmd.Flags().Lookup("suite").Changed {
+		if err := filterPlaywrightSuite(&p); err != nil {
+			return 1, err
+		}
+	}
+
+	switch testEnv {
+	case "docker":
+		return runPlaywrightInDocker(p, cli)
+	case "sauce":
+		return runPlaywrightInSauce(p)
+	default:
+		return 1, errors.New("unsupported test environment")
+	}
+}
+
+func runPlaywrightInDocker(p playwright.Project, cli *command.SauceCtlCli) (int, error) {
+	log.Info().Msg("Running Playwright in Docker")
+
+	cd, err := docker.NewPlaywright(p, cli)
+	if err != nil {
+		return 1, err
+	}
+	return cd.RunProject()
+}
+
+func runPlaywrightInSauce(p playwright.Project) (int, error) {
+	log.Info().Msg("Running Playwright in Sauce Labs")
+
+	c := credentials.Get()
+	if c == nil {
+		return 1, errors.New("no sauce credentials set")
+	}
+
+	re := region.FromString(p.Sauce.Region)
+	if re == region.None {
+		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
+		return 1, errors.New("no sauce region set")
+	}
+
+	// TODO decide on a good timeout and perhaps make it configurable. Slow clients may take time to upload. Can't be higher than API gateway timeout though!
+	s := appstore.New(re.APIBaseURL(), c.Username, c.AccessKey, 30*time.Second)
+
+	// TODO decide on a good timeout and perhaps make it configurable. Some job starts are slower than others. Can't be higher than API gateway timeout though!
+	tc := testcomposer.Client{
+		HTTPClient:  &http.Client{Timeout: 30 * time.Second},
+		URL:         re.APIBaseURL(),
+		Credentials: *c,
+	}
+
+	// TODO decide on a good timeout and perhaps make it configurable. Resto may take longer to respond sometimes. Can't be higher than API gateway timeout though!
+	rsto := resto.Client{
+		HTTPClient: &http.Client{Timeout: 7 * time.Second},
+		URL:        re.APIBaseURL(),
+		Username:   c.Username,
+		AccessKey:  c.AccessKey,
+	}
+
+	r := saucecloud.PlaywrightRunner{
+		Project:         p,
+		ProjectUploader: s,
+		JobStarter:      &tc,
+		JobReader:       &rsto,
+		CCYReader:       &rsto,
 		Region:          re,
 	}
 	return r.RunProject()
@@ -255,7 +354,7 @@ func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, e
 		return ci.NewRunner(p, cli, seq, rc, cip)
 	}
 	log.Info().Msg("Starting local runner")
-	return docker.NewRunner(p, cli, &memseq.Sequencer{})
+	return legacyDocker.NewRunner(p, cli, &memseq.Sequencer{})
 }
 
 func createCIProvider() ci.Provider {
@@ -356,6 +455,26 @@ func filterSuite(c *config.Project) error {
 	return errors.New("suite name is invalid")
 }
 
+func filterCypressSuite(c *cypress.Project) error {
+	for _, s := range c.Suites {
+		if s.Name == suiteName {
+			c.Suites = []cypress.Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf("suite name '%s' is invalid", suiteName)
+}
+
+func filterPlaywrightSuite(c *playwright.Project) error {
+	for _, s := range c.Suites {
+		if s.Name == suiteName {
+			c.Suites = []playwright.Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf("suite name '%s' is invalid", suiteName)
+}
+
 func validateFiles(files []string) error {
 	for _, f := range files {
 		if _, err := os.Stat(f); os.IsNotExist(err) {
@@ -363,4 +482,25 @@ func validateFiles(files []string) error {
 		}
 	}
 	return nil
+}
+
+func applyDefaultValues(sauce *config.SauceConfig) {
+	if sauce.Region == "" {
+		sauce.Region = defaultRegion
+	}
+}
+
+func overrideCliParameters(cmd *cobra.Command, sauce *config.SauceConfig) {
+	if cmd.Flags().Lookup("region").Changed {
+		sauce.Region = regionFlag
+	}
+	if cmd.Flags().Lookup("ccy").Changed {
+		sauce.Concurrency = concurrency
+	}
+	if cmd.Flags().Lookup("tunnel-id").Changed {
+		sauce.Tunnel.ID = tunnelID
+	}
+	if cmd.Flags().Lookup("tunnel-parent").Changed {
+		sauce.Tunnel.Parent = tunnelParent
+	}
 }

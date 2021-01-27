@@ -1,425 +1,198 @@
 package docker
 
 import (
-	"archive/tar"
 	"context"
-	"errors"
-	"fmt"
+	"encoding/base64"
+	"encoding/json"
+	"github.com/docker/docker/api/types"
 	"io"
-	"log"
 	"os"
-	"path/filepath"
-	"reflect"
+	"path"
 	"testing"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/mocks"
+	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/stretchr/testify/assert"
-	"gotest.tools/v3/fs"
 )
 
-var ctx = context.Background()
+func TestNewImagePullOptions(t *testing.T) {
+	os.Setenv(RegistryUsernameEnvKey, "fake-user")
+	os.Setenv(RegistryPasswordEnvKey, "fake-password")
 
-type PassFailCase struct {
-	Name           string
-	Client         CommonAPIClient
-	JobConfig      *config.Project
-	Suite          *config.Suite
-	ExpectedError  error
-	ExpectedResult interface{}
+	opts, err := NewImagePullOptions()
+	if err != nil {
+		t.Fail()
+	}
+	want := map[string]string{"username": "fake-user", "password": "fake-password"}
+	value := map[string]string{}
+
+	decoded, err := base64.URLEncoding.DecodeString(opts.RegistryAuth)
+	assert.Nil(t, err)
+	err = json.Unmarshal(decoded, &value)
+	assert.Nil(t, err)
+	assert.Equal(t, value, want)
 }
 
-func TestValidateDependency(t *testing.T) {
-	cases := []PassFailCase{
-		{"Docker is not installed", &mocks.FakeClient{}, nil, nil, errors.New("ContainerListFailure"), nil},
-		{"Docker is intalled", &mocks.FakeClient{ContainerListSuccess: true}, nil, nil, nil, nil},
+func TestImageFlavor(t *testing.T) {
+	tests := []struct {
+		Image string
+		Tag   string
+		Want  string
+	}{
+		{"dummy-image", "latest", "dummy-image:latest"},
+		{"dummy-image", "", "dummy-image:latest"},
+		{"dummy-image", "custom-tag", "dummy-image:custom-tag"},
 	}
-	for _, tc := range cases {
-		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{client: tc.Client}
-			err := handler.ValidateDependency()
-			assert.Equal(t, err, tc.ExpectedError)
-		})
+
+	handler := Handler{}
+	for _, tt := range tests {
+		img := config.Image{Name: tt.Image, Tag: tt.Tag}
+		have := handler.GetImageFlavor(img)
+		assert.Equal(t, have, tt.Want)
 	}
 }
 
 func TestHasBaseImage(t *testing.T) {
-	cases := []PassFailCase{
-		{"failing command", &mocks.FakeClient{}, nil, nil, errors.New("ImageListFailure"), false},
-		{"passing command", &mocks.FakeClient{ImageListSuccess: true}, nil, nil, nil, true},
-	}
+	ctx := context.Background()
+	fc := mocks.FakeClient{}
+	handler := &Handler{client: &fc}
 
-	for _, tc := range cases {
-		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
-				client: tc.Client,
-			}
-			hasBaseImage, err := handler.HasBaseImage(ctx, "foobar")
-			assert.Equal(t, err, tc.ExpectedError)
-			assert.Equal(t, hasBaseImage, tc.ExpectedResult)
-		})
-	}
+	fc.ImageListSuccess = true
+	val, err := handler.HasBaseImage(ctx, "dummy-image")
+	assert.Nil(t, err)
+	assert.True(t, val)
+
+	fc.ImageListSuccess = false
+	val, err = handler.HasBaseImage(ctx, "dummy-image")
+	assert.NotNil(t, err)
+	assert.False(t, val)
 }
 
-func TestGetImagePullOptionsUsesRegistryAuth(t *testing.T) {
-	os.Setenv("REGISTRY_USERNAME", "registry-user")
-	os.Setenv("REGISTRY_PASSWORD", "registry-pwd")
-	jobConfig := config.Project{
-		Image: config.ImageDefinition{Base: "foobar"},
-	}
-	cases := []PassFailCase{
-		{"correct options", &mocks.FakeClient{}, &jobConfig, nil, errors.New("GetImagePullOptionsFailure"), nil},
-	}
+func TestValidateDependency(t *testing.T) {
+	fc := mocks.FakeClient{}
+	handler := &Handler{client: &fc}
 
-	for _, tc := range cases {
-		t.Run(tc.Name, func(t *testing.T) {
-			options, err := NewImagePullOptions()
-			assert.Equal(t, err, nil)
-			assert.NotEmpty(t, options.RegistryAuth)
-		})
-	}
-	os.Unsetenv("REGISTRY_USERNAME")
-	os.Unsetenv("REGISTRY_PASSWORD")
+	fc.ContainerListSuccess = true
+	err := handler.ValidateDependency()
+	assert.Nil(t, err)
+
+	fc.ContainerListSuccess = false
+	err = handler.ValidateDependency()
+	assert.NotNil(t, err)
 }
 
-func TestGetImagePullOptionsDefault(t *testing.T) {
-	jobConfig := config.Project{
-		Image: config.ImageDefinition{Base: "foobar"},
-	}
-	cases := []PassFailCase{
-		{"default options", &mocks.FakeClient{}, &jobConfig, nil, errors.New("GetImagePullOptionsFailure"), nil},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.Name, func(t *testing.T) {
-			options, err := NewImagePullOptions()
-			assert.Equal(t, err, nil)
-			assert.Equal(t, options.RegistryAuth, "")
-		})
-	}
+func TestClient(t *testing.T) {
+	handler, err := Create()
+	assert.Nil(t, err)
+	assert.NotNil(t, handler)
 }
 
-func TestPullBaseImage(t *testing.T) {
-	jobConfig := config.Project{
-		Image: config.ImageDefinition{Base: "foobar"},
-	}
-	cases := []PassFailCase{
-		{"failing command", &mocks.FakeClient{}, &jobConfig, nil, errors.New("ImagePullFailure"), nil},
-		// {"passing command", &mocks.FakeClient{ImagePullSuccess: true}, nil, nil},
-	}
+func TestPullImageBase(t *testing.T) {
+	fc := mocks.FakeClient{}
+	handler := &Handler{client: &fc}
 
-	for _, tc := range cases {
-		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
-				client: tc.Client,
-			}
-			err := handler.PullBaseImage(ctx, *tc.JobConfig)
-			assert.Equal(t, err, tc.ExpectedError)
-		})
-	}
+	fc.ImagePullSuccess = false
+	err := handler.PullBaseImage(context.Background(), config.Image{Name: "dummy-name", Tag: "dummy-tag"})
+	assert.NotNil(t, err)
 }
 
-func TestGetImageFlavorDefault(t *testing.T) {
-	jobConfig := config.Project{
-		Image: config.ImageDefinition{Base: "foobar"},
+func TestCreateMounts(t *testing.T) {
+	cwd, _ := os.Getwd()
+	want := []struct {
+		Idx    int
+		Source string
+		Target string
+	}{
+		{Idx: 0, Source: "file1", Target: "dest/file1"},
+		{Idx: 1, Source: "dir1/file2", Target: "dest/file2"},
+		{Idx: 2, Source: "dir1/dir2/file3", Target: "dest/file3"},
+		{Idx: 3, Source: "dir1/dir2/file3", Target: "dest/file3"},
 	}
-	cases := []PassFailCase{
-		{"get image flavor", &mocks.FakeClient{}, &jobConfig, nil, errors.New("Wrong flavor name"), false},
-	}
-	for _, tc := range cases {
-		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
-				client: tc.Client,
-			}
-			baseImage := handler.GetImageFlavor(*tc.JobConfig)
-			assert.Equal(t, baseImage, "foobar:latest")
-		})
-	}
-}
 
-func TestGetImageFlavorVersioned(t *testing.T) {
-	jobConfig := config.Project{
-		Image: config.ImageDefinition{Base: "foobar", Version: "barfoo"},
+	var files []string
+	for _, f := range want {
+		files = append(files, f.Source)
 	}
-	cases := []PassFailCase{
-		{"get image flavor", &mocks.FakeClient{}, &jobConfig, nil, errors.New("Wrong flavor name"), false},
-	}
-	for _, tc := range cases {
-		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
-				client: tc.Client,
-			}
-			baseImage := handler.GetImageFlavor(*tc.JobConfig)
-			assert.Equal(t, baseImage, "foobar:barfoo")
-		})
+	dest := "dest/"
+	mounts, _ := createMounts(files, dest)
+	assert.Len(t, mounts, len(want))
+	for _, w := range want {
+		m := mounts[w.Idx]
+		assert.Equal(t, path.Join(cwd, w.Source), m.Source)
+		assert.Equal(t, w.Target, m.Target)
 	}
 }
 
 func TestStartContainer(t *testing.T) {
-	failureResult := container.ContainerCreateCreatedBody{}
-	jobConfig := config.Project{
-		Image: config.ImageDefinition{Base: "foobar"},
+	project := cypress.Project{
+		Cypress: cypress.Cypress{
+			ConfigFile:  "../../../tests/e2e/cypress.json",
+			ProjectPath: "../../../tests/e2e/",
+		},
 	}
-	suite := config.Suite{Settings: config.Settings{BrowserName: "chrome"}}
-	jobConfigWithoutCaps := config.Project{
-		Image: config.ImageDefinition{Base: "foobar"},
+	mockDocker := mocks.FakeClient{
+		ContainerCreateSuccess:     false,
+		ContainerStartSuccess:      true,
+		ContainerInspectSuccess:    true,
+		ImageInspectWithRawSuccess: true,
+		CopyToContainerFn: func(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error {
+			return nil
+		},
 	}
-	cases := []PassFailCase{
-		{"failing to create container", &mocks.FakeClient{}, &jobConfig, &suite, errors.New("ContainerCreateFailure"), failureResult},
-		{"failing to start container", &mocks.FakeClient{
-			ContainerCreateSuccess: true,
-		}, &jobConfig, &suite, errors.New("ContainerStartFailure"), failureResult},
-		{"failing to inspect container", &mocks.FakeClient{
-			ContainerCreateSuccess: true,
-			ContainerStartSuccess:  true,
-		}, &jobConfig, &suite, errors.New("ContainerInspectFailure"), failureResult},
-		{"successful execution", &mocks.FakeClient{
-			ContainerCreateSuccess:  true,
-			ContainerStartSuccess:   true,
-			ContainerInspectSuccess: true,
-		}, &jobConfig, &suite, nil, failureResult},
-		{"successful execution without caps", &mocks.FakeClient{
-			ContainerCreateSuccess:  true,
-			ContainerStartSuccess:   true,
-			ContainerInspectSuccess: true,
-		}, &jobConfigWithoutCaps, &suite, nil, failureResult},
+	handler := Handler{
+		client: &mockDocker,
 	}
 
-	for _, tc := range cases {
-		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
-				client: tc.Client,
-			}
-			_, err := handler.StartContainer(ctx, *tc.JobConfig, *tc.Suite)
-			assert.Equal(t, err, tc.ExpectedError)
-		})
+	var cont *container.ContainerCreateCreatedBody
+	var err error
+
+	// Buggy container start
+	cont, err = handler.StartContainer(context.Background(), []string{project.Cypress.ConfigFile, project.Cypress.ProjectPath}, config.Docker{})
+	assert.NotNil(t, err)
+
+	// Successfull container start
+	mockDocker.ContainerCreateSuccess = true
+	cont, err = handler.StartContainer(context.Background(), []string{project.Cypress.ConfigFile, project.Cypress.ProjectPath}, config.Docker{})
+	assert.Nil(t, err)
+	assert.NotNil(t, cont)
+}
+
+func TestExecuteInContainer(t *testing.T) {
+	mockDocker := mocks.FakeClient{
+		ContainerExecCreateSuccess: true,
+		ContainerExecAttachSuccess: true,
 	}
+	handler := Handler{
+		client: &mockDocker,
+	}
+
+	IDResponse, hijackedResponse, err := handler.Execute(context.Background(), "dummy-container-id", []string{"npm", "dummy-command"}, map[string]string{})
+	assert.Nil(t, err)
+	assert.NotNil(t, hijackedResponse)
+	assert.Equal(t, IDResponse.ID, "dummy-id")
 }
 
 func TestCopyFromContainer(t *testing.T) {
-	type PassFailCaseWithArgument struct {
-		PassFailCase
-		DstPath string
+	defer func() {
+		os.Remove("internal-file")
+	}()
+	client := &mocks.FakeClient{
+		ContainerStatPathSuccess: true,
+		CopyFromContainerSuccess: true,
 	}
-	dir := fs.NewDir(t, "fixtures",
-		fs.WithFile("some.foo.js", "foo", fs.WithMode(0755)),
-		fs.WithFile("some.other.bar.js", "bar", fs.WithMode(0755)))
-	defer dir.Remove()
-	srcFile := dir.Path() + "/some.foo.js"
-	targetFile := dir.Path() + "/some.other.foo.js"
-
-	cases := []PassFailCaseWithArgument{
-		{PassFailCase{"not existing target dir", &mocks.FakeClient{}, nil, nil, errors.New("invalid output path: directory /foo does not exist"), nil}, "/foo/bar"},
-		{PassFailCase{"failure when getting stat info", &mocks.FakeClient{}, nil, nil, errors.New("ContainerStatPathFailure"), nil}, targetFile},
-		{PassFailCase{"failure when copying from container", &mocks.FakeClient{
-			ContainerStatPathSuccess: true,
-		}, nil, nil, errors.New("CopyFromContainerFailure"), nil}, targetFile},
-		{PassFailCase{"successful attempt", &mocks.FakeClient{
-			ContainerStatPathSuccess: true,
-			CopyFromContainerSuccess: true,
-		}, nil, nil, nil, nil}, targetFile},
+	handler := Handler{
+		client: client,
 	}
 
-	for _, tc := range cases {
-		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
-				client: tc.Client,
-			}
-			err := handler.CopyFromContainer(ctx, "containerId", srcFile, tc.DstPath)
-			assert.Equal(t, err, tc.ExpectedError)
-		})
-	}
-}
+	// Working
+	err := handler.CopyFromContainer(context.Background(), "dummy-container-id", "/dummy/source/internal-file", "./")
+	assert.Nil(t, err)
 
-func TestExecute(t *testing.T) {
-	cases := []PassFailCase{
-		{"failing to create exec", &mocks.FakeClient{}, nil, nil, errors.New("ContainerExecCreateFailure"), nil},
-		{"failing to create attach", &mocks.FakeClient{
-			ContainerExecCreateSuccess: true,
-		}, nil, nil, errors.New("ContainerExecAttachFailure"), nil},
-		{"successful call", &mocks.FakeClient{
-			ContainerExecCreateSuccess: true,
-			ContainerExecAttachSuccess: true,
-		}, nil, nil, nil, nil},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
-				client: tc.Client,
-			}
-			_, _, err := handler.Execute(ctx, "containerId", []string{"npm", "test"})
-			assert.Equal(t, err, tc.ExpectedError)
-		})
-	}
-}
-
-func TestExecuteExecuteInspect(t *testing.T) {
-	cases := []PassFailCase{
-		{"failing to inspect", &mocks.FakeClient{}, nil, nil, errors.New("ContainerExecInspectFailure"), 1},
-		{"successful call", &mocks.FakeClient{
-			ContainerExecInspectSuccess: true,
-		}, nil, nil, nil, 0},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
-				client: tc.Client,
-			}
-			exitCode, err := handler.ExecuteInspect(ctx, "containerId")
-			assert.Equal(t, err, tc.ExpectedError)
-			assert.Equal(t, exitCode, tc.ExpectedResult)
-		})
-	}
-}
-
-func TestContainerStop(t *testing.T) {
-	cases := []PassFailCase{
-		{"failing to inspect", &mocks.FakeClient{}, nil, nil, errors.New("ContainerStopFailure"), nil},
-		{"successful call", &mocks.FakeClient{
-			ContainerStopSuccess: true,
-		}, nil, nil, nil, 0},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
-				client: tc.Client,
-			}
-			err := handler.ContainerStop(ctx, "containerId")
-			assert.Equal(t, err, tc.ExpectedError)
-		})
-	}
-}
-
-func TestContainerRemove(t *testing.T) {
-	cases := []PassFailCase{
-		{"failing to inspect", &mocks.FakeClient{}, nil, nil, errors.New("ContainerRemoveFailure"), nil},
-		{"successful call", &mocks.FakeClient{
-			ContainerRemoveSuccess: true,
-		}, nil, nil, nil, 0},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
-				client: tc.Client,
-			}
-			err := handler.ContainerRemove(ctx, "containerId")
-			assert.Equal(t, err, tc.ExpectedError)
-		})
-	}
-}
-
-func TestHandler_CopyToContainer(t *testing.T) {
-	dir := fs.NewDir(t, "fixtures",
-		fs.WithFile("some.foo.js", "foo", fs.WithMode(0755)),
-		fs.WithFile("some.other.bar.js", "bar", fs.WithMode(0755)),
-		fs.WithDir("subdir", fs.WithFile("some.subdir.js", "subdir")))
-	defer dir.Remove()
-	baseDir := filepath.Base(dir.Path())
-
-	type fields struct {
-		client CommonAPIClient
-	}
-	type args struct {
-		ctx         context.Context
-		containerID string
-		srcFile     string
-		targetDir   string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "copy one file",
-			fields: fields{&mocks.FakeClient{CopyToContainerFn: func(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error {
-				expect := []string{
-					"some.foo.js",
-				}
-
-				return expectTar(expect, content)
-			}}},
-			args:    args{ctx, "cid", dir.Join("some.foo.js"), "/foo/bar"},
-			wantErr: false,
-		},
-		{
-			name: "copy entire folder",
-			fields: fields{&mocks.FakeClient{CopyToContainerFn: func(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error {
-				expect := []string{
-					baseDir + string(filepath.Separator),
-					filepath.Join(baseDir, "some.foo.js"),
-					filepath.Join(baseDir, "some.other.bar.js"),
-					filepath.Join(baseDir, "subdir") + string(filepath.Separator),
-					filepath.Join(baseDir, "subdir/some.subdir.js"),
-				}
-
-				return expectTar(expect, content)
-			}}},
-			args:    args{ctx, "cid", dir.Path(), "/foo/bar"},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			handler := &Handler{
-				client: tt.fields.client,
-			}
-			if err := handler.CopyToContainer(tt.args.ctx, tt.args.containerID, tt.args.srcFile, tt.args.targetDir); (err != nil) != tt.wantErr {
-				t.Errorf("CopyToContainer() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func expectTar(files []string, r io.Reader) error {
-	ex := make(map[string]bool, len(files))
-	for _, f := range files {
-		ex[f] = true
-	}
-
-	var found []string
-	// Open and iterate through the files in the archive.
-	tr := tar.NewReader(r)
-	for {
-		hdr, err := tr.Next()
-		if err == io.EOF {
-			break // End of archive
-		}
-		if err != nil {
-			log.Fatal(err)
-		}
-		found = append(found, hdr.Name)
-	}
-
-	if !reflect.DeepEqual(files, found) {
-		return fmt.Errorf("expected %v but found %v", files, found)
-	}
-
-	return nil
-}
-
-func TestHandler_ContainerInspect(t *testing.T) {
-	cases := []PassFailCase{
-		{"failing to inspect", &mocks.FakeClient{}, nil, nil, errors.New("ContainerInspectFailure"), nil},
-		{"successful call", &mocks.FakeClient{
-			ContainerInspectSuccess: true,
-		}, nil, nil, nil, types.ContainerJSON{}},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.Name, func(t *testing.T) {
-			handler := Handler{
-				client: tc.Client,
-			}
-			_, err := handler.ContainerInspect(ctx, "containerId")
-			assert.Equal(t, err, tc.ExpectedError)
-		})
-	}
+	// Errored test
+	client.CopyFromContainerSuccess = false
+	err = handler.CopyFromContainer(context.Background(), "dummy-container-id", "/dummy/source/internal-file", "./")
+	assert.NotNil(t, err)
 }

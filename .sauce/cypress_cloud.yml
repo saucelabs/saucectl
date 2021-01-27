@@ -25,10 +25,22 @@ cypress:
   version: 5.6.0
   configFile: "tests/e2e/cypress.json"  # We determine related files based on the location of the config file.
 suites:
-  - name: "saucy test"
-    browser: "chrome"
+  - name: "saucy chrome test"
+    browser: "googlechrome"
     platformName: "Windows 10"
     config:
       env:
         hello: world
       testFiles: [ "**/*.*" ] # Cypress native glob support.
+  - name: "saucy microsoftedge test"
+    browser: "microsoftedge"
+    platformName: "Windows 10"
+    config:
+      env:
+        hello: world
+      testFiles: [ "**/*.*" ] # Cypress native glob support.
+  - name: "saucy firefox"
+    browser: "firefox"
+    platformName: "Windows 10"
+    config:
+      testFiles: [ "**/*.*" ]

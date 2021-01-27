@@ -10,7 +10,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -41,6 +40,14 @@ var (
 	}
 )
 
+// SauceRunnerConfigFile represents the filename for the sauce runner configuration.
+const SauceRunnerConfigFile = "sauce-runner.json"
+
+type containerConfig struct {
+	// sauceRunnerConfigPath is the container path to sauce-runner.json.
+	sauceRunnerConfigPath string
+}
+
 // CommonAPIClient is the interface for interacting with containers.
 type CommonAPIClient interface {
 	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
@@ -57,6 +64,7 @@ type CommonAPIClient interface {
 	ContainerExecInspect(ctx context.Context, execID string) (types.ContainerExecInspect, error)
 	ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error
 	ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error
+	ImageInspectWithRaw(ctx context.Context, imageID string) (types.ImageInspect, []byte, error)
 }
 
 // Handler represents the client to handle Docker tasks
@@ -107,13 +115,13 @@ func (handler *Handler) HasBaseImage(ctx context.Context, baseImage string) (boo
 }
 
 // GetImageFlavor returns a string that contains the image name and tag defined by the project.
-func (handler *Handler) GetImageFlavor(c config.Project) string {
+func (handler *Handler) GetImageFlavor(img config.Image) string {
 	// TODO - move this to ImageDefinition
 	tag := "latest"
-	if c.Image.Version != "" {
-		tag = c.Image.Version
+	if img.Tag != "" {
+		tag = img.Tag
 	}
-	return fmt.Sprintf("%s:%s", c.Image.Base, tag)
+	return fmt.Sprintf("%s:%s", img.Name, tag)
 }
 
 // RegistryUsernameEnvKey represents the username environment variable for authenticating against a docker registry.
@@ -146,13 +154,12 @@ func NewImagePullOptions() (types.ImagePullOptions, error) {
 }
 
 // PullBaseImage pulls an image from Docker
-func (handler *Handler) PullBaseImage(ctx context.Context, c config.Project) error {
-
+func (handler *Handler) PullBaseImage(ctx context.Context, img config.Image) error {
 	options, err := NewImagePullOptions()
 	if err != nil {
 		return err
 	}
-	baseImage := handler.GetImageFlavor(c)
+	baseImage := handler.GetImageFlavor(img)
 	responseBody, err := handler.client.ImagePull(ctx, baseImage, options)
 	if err != nil {
 		return err
@@ -171,7 +178,7 @@ func (handler *Handler) PullBaseImage(ctx context.Context, c config.Project) err
 }
 
 // StartContainer starts the Docker testrunner container
-func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s config.Suite) (*container.ContainerCreateCreatedBody, error) {
+func (handler *Handler) StartContainer(ctx context.Context, files []string, conf config.Docker) (*container.ContainerCreateCreatedBody, error) {
 	var (
 		ports        map[nat.Port]struct{}
 		portBindings map[nat.Port][]nat.PortBinding
@@ -191,9 +198,15 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 		return nil, err
 	}
 
+	img := handler.GetImageFlavor(conf.Image)
+	pDir, err := handler.ProjectDir(ctx, img)
+	if err != nil {
+		return nil, err
+	}
+
 	var m []mount.Mount
-	if c.FileTransfer == config.DockerFileMount {
-		m, err = createMounts(c.Files, DefaultProjectPath)
+	if conf.FileTransfer == config.DockerFileMount {
+		m, err = createMounts(files, pDir)
 		if err != nil {
 			return nil, err
 		}
@@ -204,7 +217,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 	if creds := credentials.Get(); creds != nil {
 		username = creds.Username
 		accessKey = creds.AccessKey
-		log.Info().Msgf("Using credentials from %s", creds.Source)
+		log.Info().Msgf("Using credentials set by %s", creds.Source)
 	}
 
 	hostConfig := &container.HostConfig{
@@ -212,26 +225,14 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 		Mounts:       m,
 	}
 	networkConfig := &network.NetworkingConfig{}
-	img := handler.GetImageFlavor(c)
 	containerConfig := &container.Config{
 		Image:        img,
 		ExposedPorts: ports,
 		Env: []string{
 			fmt.Sprintf("SAUCE_USERNAME=%s", username),
 			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", accessKey),
-			fmt.Sprintf("SAUCE_BUILD_NAME=%s", c.Metadata.Build),
-			fmt.Sprintf("SAUCE_TAGS=%s", strings.Join(c.Metadata.Tags, ",")),
-			fmt.Sprintf("SAUCE_DEVTOOLS_PORT=%d", port),
-			fmt.Sprintf("SAUCE_REGION=%s", c.Sauce.Region),
-			fmt.Sprintf("TEST_TIMEOUT=%d", c.Timeout),
-			fmt.Sprintf("BROWSER_NAME=%s", s.Settings.BrowserName),
 			fmt.Sprintf("SAUCE_IMAGE_NAME=%s", img),
 		},
-	}
-
-	// Add any defined env variables from the job config / CLI args.
-	for k, v := range c.Env {
-		containerConfig.Env = append(containerConfig.Env, fmt.Sprintf("%s=%s", k, v))
 	}
 
 	container, err := handler.client.ContainerCreate(ctx, containerConfig, hostConfig, networkConfig, "")
@@ -239,12 +240,13 @@ func (handler *Handler) StartContainer(ctx context.Context, c config.Project, s 
 		return nil, err
 	}
 
+	log.Info().Str("img", img).Str("id", container.ID[:12]).Msg("Starting container")
 	if err := handler.client.ContainerStart(ctx, container.ID, types.ContainerStartOptions{}); err != nil {
 		return nil, err
 	}
 
-	if c.FileTransfer == config.DockerFileCopy {
-		if err := copyTestFiles(ctx, handler, container.ID, c.Files, DefaultProjectPath); err != nil {
+	if conf.FileTransfer == config.DockerFileCopy {
+		if err := copyTestFiles(ctx, handler, container.ID, files, pDir); err != nil {
 			return nil, err
 		}
 	}
@@ -280,7 +282,7 @@ func createMounts(files []string, target string) ([]mount.Mount, error) {
 			return mm, err
 		}
 
-		dest := path.Join(target, f)
+		dest := path.Join(target, filepath.Base(f))
 
 		mm[i] = mount.Mount{
 			Type:          mount.TypeBind,
@@ -380,11 +382,20 @@ func (handler *Handler) CopyFromContainer(ctx context.Context, srcContainerID st
 }
 
 // Execute runs the test in the Docker container and attaches to its stdout
-func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd []string) (*types.IDResponse, *types.HijackedResponse, error) {
+func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd []string, env map[string]string) (*types.IDResponse, *types.HijackedResponse, error) {
 	execConfig := types.ExecConfig{
 		Cmd:          cmd,
 		AttachStdout: true,
 		AttachStderr: true,
+	}
+
+	// Set env vars for a particular suite
+	if len(env) > 0 {
+		envVars := []string{}
+		for k, v := range env {
+			envVars = append(envVars, k+"="+v)
+		}
+		execConfig.Env = envVars
 	}
 
 	createResp, err := handler.client.ContainerExecCreate(ctx, srcContainerID, execConfig)
@@ -417,6 +428,23 @@ func (handler *Handler) ContainerStop(ctx context.Context, srcContainerID string
 // ContainerRemove removes testrunner container
 func (handler *Handler) ContainerRemove(ctx context.Context, srcContainerID string) error {
 	return handler.client.ContainerRemove(ctx, srcContainerID, containerRemoveOptions)
+}
+
+// ProjectDir returns the project directory as is configured for the given image.
+func (handler *Handler) ProjectDir(ctx context.Context, imageID string) (string, error) {
+	ii, _, err := handler.client.ImageInspectWithRaw(ctx, imageID)
+	if err != nil {
+		return "", err
+	}
+
+	// The image can tell us via a label where saucectl should mount the project files.
+	// We default to the working dir of the container as the default mounting target.
+	p := ii.Config.WorkingDir
+	if v := ii.Config.Labels["com.saucelabs.project-dir"]; v != "" {
+		p = v
+	}
+
+	return p, nil
 }
 
 // ContainerInspect returns the container information.

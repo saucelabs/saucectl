@@ -71,9 +71,10 @@ type Suite struct {
 
 // SauceConfig represents sauce labs related settings.
 type SauceConfig struct {
-	Region   string   `yaml:"region,omitempty" json:"region"`
-	Metadata Metadata `yaml:"metadata,omitempty" json:"metadata"`
-	Tunnel   Tunnel   `yaml:"tunnel,omitempty" json:"tunnel,omitempty"`
+	Region      string   `yaml:"region,omitempty" json:"region"`
+	Metadata    Metadata `yaml:"metadata,omitempty" json:"metadata"`
+	Tunnel      Tunnel   `yaml:"tunnel,omitempty" json:"tunnel,omitempty"`
+	Concurrency int      `yaml:"concurrency,omitempty" json:"concurrency,omitempty"`
 }
 
 // Tunnel represents a sauce labs tunnel.
@@ -107,7 +108,7 @@ type DockerFileMode string
 // DockerFile* represent the different modes
 const (
 	DockerFileMount DockerFileMode = "mount"
-	DockerFileCopy                 = "copy"
+	DockerFileCopy  DockerFileMode = "copy"
 )
 
 // Docker represents docker settings.
@@ -135,6 +136,7 @@ const (
 // Kind* contains referenced config kinds
 const (
 	KindCypress = "cypress"
+	KindPlaywright = "playwright"
 )
 
 func readYaml(cfgFilePath string) ([]byte, error) {
@@ -247,4 +249,12 @@ func (p *Project) SyncCapabilities() {
 		}
 		p.Suites[i] = s
 	}
+}
+
+// StandardizeVersionFormat remove the leading v in version to ensure reliable comparisons.
+func StandardizeVersionFormat(version string) string {
+	if strings.HasPrefix(version, "v") {
+		return version[1:]
+	}
+	return version
 }

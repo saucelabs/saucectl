@@ -1,4 +1,4 @@
-package docker
+package legacydocker
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -29,7 +30,6 @@ import (
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/streams"
 	"github.com/saucelabs/saucectl/cli/utils"
-	"github.com/saucelabs/saucectl/internal/cypress"
 )
 
 var (
@@ -41,8 +41,10 @@ var (
 	}
 )
 
-// CommonAPIClient is the interface for interacting with containers.
-type CommonAPIClient interface {
+// LegacyCommonAPIClient is the interface for interacting with containers.
+//
+// Deprecated.
+type LegacyCommonAPIClient interface {
 	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
 	ImageList(ctx context.Context, options types.ImageListOptions) ([]types.ImageSummary, error)
 	ImagePull(ctx context.Context, ref string, options types.ImagePullOptions) (io.ReadCloser, error)
@@ -57,27 +59,28 @@ type CommonAPIClient interface {
 	ContainerExecInspect(ctx context.Context, execID string) (types.ContainerExecInspect, error)
 	ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error
 	ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error
-	ImageInspectWithRaw(ctx context.Context, imageID string) (types.ImageInspect, []byte, error)
 }
 
-// Handler represents the client to handle Docker tasks
-type Handler struct {
-	client CommonAPIClient
+// LegacyHandler represents the client to handle Docker tasks
+//
+// Deprecated.
+type LegacyHandler struct {
+	client LegacyCommonAPIClient
 }
 
-// CreateMock allows to get a handler with a custom interface
-func CreateMock(client CommonAPIClient) *Handler {
-	return &Handler{client}
+// CreateLegacyMock allows to get a handler with a custom interface
+func CreateLegacyMock(client LegacyCommonAPIClient) *LegacyHandler {
+	return &LegacyHandler{client}
 }
 
-// Create generates a docker client
-func Create() (*Handler, error) {
+// CreateLegacy generates a docker client
+func CreateLegacy() (*LegacyHandler, error) {
 	cl, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err
 	}
 
-	handler := Handler{
+	handler := LegacyHandler{
 		client: cl,
 	}
 
@@ -85,13 +88,13 @@ func Create() (*Handler, error) {
 }
 
 // ValidateDependency checks if external dependencies are installed
-func (handler *Handler) ValidateDependency() error {
+func (handler *LegacyHandler) ValidateDependency() error {
 	_, err := handler.client.ContainerList(context.Background(), types.ContainerListOptions{})
 	return err
 }
 
 // HasBaseImage checks if base image is installed
-func (handler *Handler) HasBaseImage(ctx context.Context, baseImage string) (bool, error) {
+func (handler *LegacyHandler) HasBaseImage(ctx context.Context, baseImage string) (bool, error) {
 	listFilters := filters.NewArgs()
 	listFilters.Add("reference", baseImage)
 	options := types.ImageListOptions{
@@ -108,13 +111,13 @@ func (handler *Handler) HasBaseImage(ctx context.Context, baseImage string) (boo
 }
 
 // GetImageFlavor returns a string that contains the image name and tag defined by the project.
-func (handler *Handler) GetImageFlavor(img config.Image) string {
+func (handler *LegacyHandler) GetImageFlavor(c config.Project) string {
 	// TODO - move this to ImageDefinition
 	tag := "latest"
-	if img.Tag != "" {
-		tag = img.Tag
+	if c.Image.Version != "" {
+		tag = c.Image.Version
 	}
-	return fmt.Sprintf("%s:%s", img.Name, tag)
+	return fmt.Sprintf("%s:%s", c.Image.Base, tag)
 }
 
 // RegistryUsernameEnvKey represents the username environment variable for authenticating against a docker registry.
@@ -147,12 +150,13 @@ func NewImagePullOptions() (types.ImagePullOptions, error) {
 }
 
 // PullBaseImage pulls an image from Docker
-func (handler *Handler) PullBaseImage(ctx context.Context, img config.Image) error {
+func (handler *LegacyHandler) PullBaseImage(ctx context.Context, c config.Project) error {
+
 	options, err := NewImagePullOptions()
 	if err != nil {
 		return err
 	}
-	baseImage := handler.GetImageFlavor(img)
+	baseImage := handler.GetImageFlavor(c)
 	responseBody, err := handler.client.ImagePull(ctx, baseImage, options)
 	if err != nil {
 		return err
@@ -171,7 +175,7 @@ func (handler *Handler) PullBaseImage(ctx context.Context, img config.Image) err
 }
 
 // StartContainer starts the Docker testrunner container
-func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (*container.ContainerCreateCreatedBody, error) {
+func (handler *LegacyHandler) StartContainer(ctx context.Context, c config.Project, s config.Suite) (*container.ContainerCreateCreatedBody, error) {
 	var (
 		ports        map[nat.Port]struct{}
 		portBindings map[nat.Port][]nat.PortBinding
@@ -191,24 +195,9 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 		return nil, err
 	}
 
-	files := []string{
-		c.Cypress.ConfigFile,
-		c.Cypress.ProjectPath,
-	}
-
-	if c.Cypress.EnvFile != "" {
-		files = append(files, c.Cypress.EnvFile)
-	}
-
-	img := handler.GetImageFlavor(c.Docker.Image)
-	pDir, err := handler.ProjectDir(ctx, img)
-	if err != nil {
-		return nil, err
-	}
-
 	var m []mount.Mount
-	if c.Docker.FileTransfer == config.DockerFileMount {
-		m, err = createMounts(files, pDir)
+	if c.FileTransfer == config.DockerFileMount {
+		m, err = createMounts(c.Files, DefaultProjectPath)
 		if err != nil {
 			return nil, err
 		}
@@ -219,7 +208,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 	if creds := credentials.Get(); creds != nil {
 		username = creds.Username
 		accessKey = creds.AccessKey
-		log.Info().Msgf("Using credentials set by %s", creds.Source)
+		log.Info().Msgf("Using credentials from %s", creds.Source)
 	}
 
 	hostConfig := &container.HostConfig{
@@ -227,14 +216,26 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 		Mounts:       m,
 	}
 	networkConfig := &network.NetworkingConfig{}
+	img := handler.GetImageFlavor(c)
 	containerConfig := &container.Config{
 		Image:        img,
 		ExposedPorts: ports,
 		Env: []string{
 			fmt.Sprintf("SAUCE_USERNAME=%s", username),
 			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", accessKey),
+			fmt.Sprintf("SAUCE_BUILD_NAME=%s", c.Metadata.Build),
+			fmt.Sprintf("SAUCE_TAGS=%s", strings.Join(c.Metadata.Tags, ",")),
+			fmt.Sprintf("SAUCE_DEVTOOLS_PORT=%d", port),
+			fmt.Sprintf("SAUCE_REGION=%s", c.Sauce.Region),
+			fmt.Sprintf("TEST_TIMEOUT=%d", c.Timeout),
+			fmt.Sprintf("BROWSER_NAME=%s", s.Settings.BrowserName),
 			fmt.Sprintf("SAUCE_IMAGE_NAME=%s", img),
 		},
+	}
+
+	// Add any defined env variables from the job config / CLI args.
+	for k, v := range c.Env {
+		containerConfig.Env = append(containerConfig.Env, fmt.Sprintf("%s=%s", k, v))
 	}
 
 	container, err := handler.client.ContainerCreate(ctx, containerConfig, hostConfig, networkConfig, "")
@@ -242,13 +243,12 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 		return nil, err
 	}
 
-	log.Info().Str("img", img).Str("id", container.ID[:12]).Msg("Starting container")
 	if err := handler.client.ContainerStart(ctx, container.ID, types.ContainerStartOptions{}); err != nil {
 		return nil, err
 	}
 
-	if c.Docker.FileTransfer == config.DockerFileCopy {
-		if err := copyTestFiles(ctx, handler, container.ID, files, pDir); err != nil {
+	if c.FileTransfer == config.DockerFileCopy {
+		if err := copyTestFiles(ctx, handler, container.ID, c.Files, DefaultProjectPath); err != nil {
 			return nil, err
 		}
 	}
@@ -265,7 +265,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 }
 
 // copyTestFiles copies the files within the container.
-func copyTestFiles(ctx context.Context, handler *Handler, containerID string, files []string, pDir string) error {
+func copyTestFiles(ctx context.Context, handler *LegacyHandler, containerID string, files []string, pDir string) error {
 	for _, file := range files {
 		log.Info().Str("from", file).Str("to", pDir).Msg("File copied")
 		if err := handler.CopyToContainer(ctx, containerID, file, pDir); err != nil {
@@ -284,7 +284,7 @@ func createMounts(files []string, target string) ([]mount.Mount, error) {
 			return mm, err
 		}
 
-		dest := path.Join(target, filepath.Base(f))
+		dest := path.Join(target, f)
 
 		mm[i] = mount.Mount{
 			Type:          mount.TypeBind,
@@ -304,7 +304,7 @@ func createMounts(files []string, target string) ([]mount.Mount, error) {
 }
 
 // CopyFilesToContainer copies the given files into the container.
-func (handler *Handler) CopyFilesToContainer(ctx context.Context, srcContainerID string, files []string, targetDir string) error {
+func (handler *LegacyHandler) CopyFilesToContainer(ctx context.Context, srcContainerID string, files []string, targetDir string) error {
 	for _, fpath := range files {
 		if err := handler.CopyToContainer(ctx, srcContainerID, fpath, targetDir); err != nil {
 			return err
@@ -314,7 +314,7 @@ func (handler *Handler) CopyFilesToContainer(ctx context.Context, srcContainerID
 }
 
 // CopyToContainer copies the given file to the container.
-func (handler *Handler) CopyToContainer(ctx context.Context, containerID string, srcFile string, targetDir string) error {
+func (handler *LegacyHandler) CopyToContainer(ctx context.Context, containerID string, srcFile string, targetDir string) error {
 	srcInfo, err := archive.CopyInfoSourcePath(srcFile, true)
 	if err != nil {
 		return err
@@ -337,7 +337,7 @@ func (handler *Handler) CopyToContainer(ctx context.Context, containerID string,
 }
 
 // CopyFromContainer downloads a file from the testrunner container
-func (handler *Handler) CopyFromContainer(ctx context.Context, srcContainerID string, srcPath string, dstPath string) error {
+func (handler *LegacyHandler) CopyFromContainer(ctx context.Context, srcContainerID string, srcPath string, dstPath string) error {
 	if err := utils.ValidateOutputPath(dstPath); err != nil {
 		return err
 	}
@@ -384,20 +384,11 @@ func (handler *Handler) CopyFromContainer(ctx context.Context, srcContainerID st
 }
 
 // Execute runs the test in the Docker container and attaches to its stdout
-func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd []string, env map[string]string) (*types.IDResponse, *types.HijackedResponse, error) {
+func (handler *LegacyHandler) Execute(ctx context.Context, srcContainerID string, cmd []string) (*types.IDResponse, *types.HijackedResponse, error) {
 	execConfig := types.ExecConfig{
 		Cmd:          cmd,
 		AttachStdout: true,
 		AttachStderr: true,
-	}
-
-	// Set env vars for a particular suite
-	if len(env) > 0 {
-		envVars := []string{}
-		for k, v := range env {
-			envVars = append(envVars, k+"="+v)
-		}
-		execConfig.Env = envVars
 	}
 
 	createResp, err := handler.client.ContainerExecCreate(ctx, srcContainerID, execConfig)
@@ -413,7 +404,7 @@ func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd 
 }
 
 // ExecuteInspect checks exit code of test
-func (handler *Handler) ExecuteInspect(ctx context.Context, srcContainerID string) (int, error) {
+func (handler *LegacyHandler) ExecuteInspect(ctx context.Context, srcContainerID string) (int, error) {
 	inspectResp, err := handler.client.ContainerExecInspect(ctx, srcContainerID)
 	if err != nil {
 		return 1, err
@@ -423,39 +414,22 @@ func (handler *Handler) ExecuteInspect(ctx context.Context, srcContainerID strin
 }
 
 // ContainerStop stops a running container
-func (handler *Handler) ContainerStop(ctx context.Context, srcContainerID string) error {
+func (handler *LegacyHandler) ContainerStop(ctx context.Context, srcContainerID string) error {
 	return handler.client.ContainerStop(ctx, srcContainerID, &containerStopTimeout)
 }
 
 // ContainerRemove removes testrunner container
-func (handler *Handler) ContainerRemove(ctx context.Context, srcContainerID string) error {
+func (handler *LegacyHandler) ContainerRemove(ctx context.Context, srcContainerID string) error {
 	return handler.client.ContainerRemove(ctx, srcContainerID, containerRemoveOptions)
 }
 
-// ProjectDir returns the project directory as is configured for the given image.
-func (handler *Handler) ProjectDir(ctx context.Context, imageID string) (string, error) {
-	ii, _, err := handler.client.ImageInspectWithRaw(ctx, imageID)
-	if err != nil {
-		return "", err
-	}
-
-	// The image can tell us via a label where saucectl should mount the project files.
-	// We default to the working dir of the container as the default mounting target.
-	p := ii.Config.WorkingDir
-	if v := ii.Config.Labels["com.saucelabs.project-dir"]; v != "" {
-		p = v
-	}
-
-	return p, nil
-}
-
 // ContainerInspect returns the container information.
-func (handler *Handler) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
+func (handler *LegacyHandler) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
 	return handler.client.ContainerInspect(ctx, containerID)
 }
 
 // IsErrNotFound returns true if the error is a NotFound error, which is returned
 // by the API when some object is not found.
-func (handler *Handler) IsErrNotFound(err error) bool {
+func (handler *LegacyHandler) IsErrNotFound(err error) bool {
 	return client.IsErrNotFound(err)
 }
