@@ -190,8 +190,8 @@ func (handler *Handler) StartContainer(ctx context.Context, files []string, conf
 		return nil, err
 	}
 
-	imgStr := handler.GetImageFlavor(conf.Image)
-	pDir, err := handler.ProjectDir(ctx, imgStr)
+	img := handler.GetImageFlavor(conf.Image)
+	pDir, err := handler.ProjectDir(ctx, img)
 	if err != nil {
 		return nil, err
 	}
@@ -218,12 +218,12 @@ func (handler *Handler) StartContainer(ctx context.Context, files []string, conf
 	}
 	networkConfig := &network.NetworkingConfig{}
 	containerConfig := &container.Config{
-		Image:        imgStr,
+		Image:        img,
 		ExposedPorts: ports,
 		Env: []string{
 			fmt.Sprintf("SAUCE_USERNAME=%s", username),
 			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", accessKey),
-			fmt.Sprintf("SAUCE_IMAGE_NAME=%s", imgStr),
+			fmt.Sprintf("SAUCE_IMAGE_NAME=%s", img),
 		},
 	}
 
@@ -232,7 +232,7 @@ func (handler *Handler) StartContainer(ctx context.Context, files []string, conf
 		return nil, err
 	}
 
-	log.Info().Str("img", imgStr).Str("id", container.ID[:12]).Msg("Starting container")
+	log.Info().Str("img", img).Str("id", container.ID[:12]).Msg("Starting container")
 	if err := handler.client.ContainerStart(ctx, container.ID, types.ContainerStartOptions{}); err != nil {
 		return nil, err
 	}
