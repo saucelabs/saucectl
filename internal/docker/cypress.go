@@ -76,7 +76,7 @@ func (r *CypressRunner) defineDockerImage() error {
 	}
 
 	if r.Project.Cypress.Version == "" {
-		return fmt.Error("Missing cypress version. Check out available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+		return fmt.Errorf("Missing cypress version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
 
 	if r.Project.Docker.Image.Name == cypress.DefaultDockerImage && r.Project.Docker.Image.Tag == "" {

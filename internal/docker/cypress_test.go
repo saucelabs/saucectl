@@ -26,7 +26,7 @@ func TestPreliminarySteps_DefinedImage(t *testing.T) {
 }
 
 func TestPreliminarySteps_NoDefinedImageNoCypressVersion(t *testing.T) {
-	want := "Missing cypress version. Check our available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers"
+	want := "Missing cypress version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers"
 	runner := CypressRunner{}
 	err := runner.defineDockerImage()
 	assert.NotNil(t, err)
