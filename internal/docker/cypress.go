@@ -21,14 +21,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/jsonio"
 )
 
-// SauceRunnerConfigFile represents the filename for the sauce runner configuration.
-const SauceRunnerConfigFile = "sauce-runner.json"
-
-type containerConfig struct {
-	// sauceRunnerConfigPath is the container path to sauce-runner.json.
-	sauceRunnerConfigPath string
-}
-
 // CypressRunner represents the docker implementation of a test runner.
 type CypressRunner struct {
 	Project         cypress.Project

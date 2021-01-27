@@ -40,6 +40,14 @@ var (
 	}
 )
 
+// SauceRunnerConfigFile represents the filename for the sauce runner configuration.
+const SauceRunnerConfigFile = "sauce-runner.json"
+
+type containerConfig struct {
+	// sauceRunnerConfigPath is the container path to sauce-runner.json.
+	sauceRunnerConfigPath string
+}
+
 // CommonAPIClient is the interface for interacting with containers.
 type CommonAPIClient interface {
 	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)

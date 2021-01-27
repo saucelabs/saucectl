@@ -27,7 +27,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/memseq"
 	"github.com/saucelabs/saucectl/internal/playwright"
-	playwrightDocker "github.com/saucelabs/saucectl/internal/playwright/docker"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
@@ -282,7 +281,7 @@ func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 func runPlaywrightInDocker(p playwright.Project, cli *command.SauceCtlCli) (int, error) {
 	log.Info().Msg("Running Playwright in Docker")
 
-	cd, err := playwrightDocker.New(p, cli)
+	cd, err := docker.NewPlaywright(p, cli)
 	if err != nil {
 		return 1, err
 	}
