@@ -3,22 +3,20 @@ package saucecloud
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"time"
-
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/dots"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
+	"io/ioutil"
+	"os"
 )
 
 // CypressRunner represents the Sauce Labs cloud implementation for cypress.
 type CypressRunner struct {
 	CloudRunner
-	Project         cypress.Project
+	Project cypress.Project
 }
 
 // RunProject runs the tests defined in cypress.Project.
@@ -135,7 +133,27 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 
 func (r *CypressRunner) worker(fileID string, suites <-chan cypress.Suite, results chan<- result) {
 	for s := range suites {
-		jobData, err := r.runSuite(s, fileID)
+		opts := job.StartOptions{
+			User:             credentials.Get().Username,
+			AccessKey:        credentials.Get().AccessKey,
+			App:              fmt.Sprintf("storage:%s", fileID),
+			Suite:            s.Name,
+			Framework:        "cypress",
+			FrameworkVersion: r.Project.Cypress.Version,
+			BrowserName:      s.Browser,
+			BrowserVersion:   s.BrowserVersion,
+			PlatformName:     s.PlatformName,
+			Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
+			Build:            r.Project.Sauce.Metadata.Build,
+			Tags:             r.Project.Sauce.Metadata.Tags,
+			Tunnel: job.TunnelOptions{
+				ID:     r.Project.Sauce.Tunnel.ID,
+				Parent: r.Project.Sauce.Tunnel.Parent,
+			},
+			ScreenResolution: s.ScreenResolution,
+		}
+
+		jobData, err := r.runJob(opts)
 
 		r := result{
 			suiteName: s.Name,
@@ -145,49 +163,4 @@ func (r *CypressRunner) worker(fileID string, suites <-chan cypress.Suite, resul
 		}
 		results <- r
 	}
-}
-
-func (r *CypressRunner) runSuite(s cypress.Suite, fileID string) (job.Job, error) {
-	log.Info().Str("suite", s.Name).Str("region", r.Project.Sauce.Region).Msg("Starting job.")
-
-	opts := job.StartOptions{
-		User:             credentials.Get().Username,
-		AccessKey:        credentials.Get().AccessKey,
-		App:              fmt.Sprintf("storage:%s", fileID),
-		Suite:            s.Name,
-		Framework:        "cypress",
-		FrameworkVersion: r.Project.Cypress.Version,
-		BrowserName:      s.Browser,
-		BrowserVersion:   s.BrowserVersion,
-		PlatformName:     s.PlatformName,
-		Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
-		Build:            r.Project.Sauce.Metadata.Build,
-		Tags:             r.Project.Sauce.Metadata.Tags,
-		Tunnel: job.TunnelOptions{
-			ID:     r.Project.Sauce.Tunnel.ID,
-			Parent: r.Project.Sauce.Tunnel.Parent,
-		},
-		ScreenResolution: s.ScreenResolution,
-	}
-
-	id, err := r.JobStarter.StartJob(context.Background(), opts)
-	if err != nil {
-		return job.Job{}, err
-	}
-
-	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
-	log.Info().Msg(fmt.Sprintf("Job started - %s", jobDetailsPage))
-
-	// High interval poll to not oversaturate the job reader with requests.
-	j, err := r.JobReader.PollJob(context.Background(), id, 15*time.Second)
-	if err != nil {
-		return job.Job{}, fmt.Errorf("failed to retrieve job status for suite %s", s.Name)
-	}
-
-	if !j.Passed {
-		// We may need to differentiate when a job has crashed vs. when there is errors.
-		return j, fmt.Errorf("suite '%s' has test failures", s.Name)
-	}
-
-	return j, nil
 }

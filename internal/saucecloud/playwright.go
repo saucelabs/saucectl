@@ -1,13 +1,10 @@
 package saucecloud
 
 import (
-	"context"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"os"
-	"time"
-
-	"github.com/rs/zerolog/log"
 
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/dots"
@@ -114,7 +111,26 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 
 func (r *PlaywrightRunner) worker(fileID string, suites <-chan playwright.Suite, results chan<- result) {
 	for s := range suites {
-		jobData, err := r.runSuite(s, fileID)
+		opts := job.StartOptions{
+			User:             credentials.Get().Username,
+			AccessKey:        credentials.Get().AccessKey,
+			App:              fmt.Sprintf("storage:%s", fileID),
+			Suite:            s.Name,
+			Framework:        "playwright",
+			FrameworkVersion: s.PlaywrightVersion,
+			BrowserName:      s.Params.BrowserName,
+			BrowserVersion:   s.PlaywrightVersion,
+			PlatformName:     s.PlatformName,
+			Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
+			Build:            r.Project.Sauce.Metadata.Build,
+			Tags:             r.Project.Sauce.Metadata.Tags,
+			Tunnel: job.TunnelOptions{
+				ID:     r.Project.Sauce.Tunnel.ID,
+				Parent: r.Project.Sauce.Tunnel.Parent,
+			},
+		}
+
+		jobData, err := r.runJob(opts)
 
 		r := result{
 			suiteName: s.Name,
@@ -124,48 +140,4 @@ func (r *PlaywrightRunner) worker(fileID string, suites <-chan playwright.Suite,
 		}
 		results <- r
 	}
-}
-
-func (r *PlaywrightRunner) runSuite(s playwright.Suite, fileID string) (job.Job, error) {
-	log.Info().Str("suite", s.Name).Str("region", r.Project.Sauce.Region).Msg("Starting job.")
-
-	opts := job.StartOptions{
-		User:             credentials.Get().Username,
-		AccessKey:        credentials.Get().AccessKey,
-		App:              fmt.Sprintf("storage:%s", fileID),
-		Suite:            s.Name,
-		Framework:        "playwright",
-		FrameworkVersion: s.PlaywrightVersion,
-		BrowserName:      s.Params.BrowserName,
-		BrowserVersion:   s.PlaywrightVersion,
-		PlatformName:     s.PlatformName,
-		Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
-		Build:            r.Project.Sauce.Metadata.Build,
-		Tags:             r.Project.Sauce.Metadata.Tags,
-		Tunnel: job.TunnelOptions{
-			ID:     r.Project.Sauce.Tunnel.ID,
-			Parent: r.Project.Sauce.Tunnel.Parent,
-		},
-	}
-
-	id, err := r.JobStarter.StartJob(context.Background(), opts)
-	if err != nil {
-		return job.Job{}, err
-	}
-
-	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
-	log.Info().Msg(fmt.Sprintf("Job started - %s", jobDetailsPage))
-
-	// High interval poll to not oversaturate the job reader with requests.
-	j, err := r.JobReader.PollJob(context.Background(), id, 15*time.Second)
-	if err != nil {
-		return job.Job{}, fmt.Errorf("failed to retrieve job status for suite %s", s.Name)
-	}
-
-	if !j.Passed {
-		// We may need to differentiate when a job has crashed vs. when there is errors.
-		return j, fmt.Errorf("suite '%s' has test failures", s.Name)
-	}
-
-	return j, nil
 }

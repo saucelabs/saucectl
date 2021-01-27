@@ -42,7 +42,6 @@ func TestRunSuite(t *testing.T) {
 	}
 	reader := mocks.FakeJobReader{
 		PollJobFn: func(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
-			time.Sleep(5 * time.Second)
 			return job.Job{ID: id, Passed: true}, nil
 		},
 	}
@@ -52,9 +51,9 @@ func TestRunSuite(t *testing.T) {
 			JobReader:  &reader,
 		},
 	}
-	suite := cypress.Suite{}
-	fileID := "dummy-file-id"
-	j, err := runner.runSuite(suite, fileID)
+
+	opts := job.StartOptions{}
+	j, err := runner.runJob(opts)
 	assert.Nil(t, err)
 	assert.Equal(t, j.ID, "fake-job-id")
 }
@@ -71,7 +70,6 @@ func TestRunSuites(t *testing.T) {
 	}
 	reader := mocks.FakeJobReader{
 		PollJobFn: func(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
-			time.Sleep(5 * time.Second)
 			return job.Job{ID: id, Passed: true}, nil
 		},
 	}
@@ -180,7 +178,6 @@ func TestRunProject(t *testing.T) {
 	}
 	reader := mocks.FakeJobReader{
 		PollJobFn: func(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
-			time.Sleep(5 * time.Second)
 			return job.Job{ID: id, Passed: true}, nil
 		},
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"path/filepath"
+	"time"
 )
 
 // CloudRunner represents the cloud runner for the Sauce Labs cloud.
@@ -23,6 +24,31 @@ type CloudRunner struct {
 	CCYReader       concurrency.Reader
 	Region          region.Region
 	ShowConsoleLog  bool
+}
+
+func (r *CloudRunner) runJob(opts job.StartOptions) (job.Job, error) {
+	log.Info().Str("suite", opts.Suite).Str("region", r.Region.String()).Msg("Starting job.")
+
+	id, err := r.JobStarter.StartJob(context.Background(), opts)
+	if err != nil {
+		return job.Job{}, err
+	}
+
+	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
+	log.Info().Msg(fmt.Sprintf("Job started - %s", jobDetailsPage))
+
+	// High interval poll to not oversaturate the job reader with requests.
+	j, err := r.JobReader.PollJob(context.Background(), id, 15*time.Second)
+	if err != nil {
+		return job.Job{}, fmt.Errorf("failed to retrieve job status for suite %s", opts.Suite)
+	}
+
+	if !j.Passed {
+		// We may need to differentiate when a job has crashed vs. when there is errors.
+		return j, fmt.Errorf("suite '%s' has test failures", opts.Suite)
+	}
+
+	return j, nil
 }
 
 func (r *CloudRunner) archiveProject(project interface{}, tempDir string, files []string) (string, error) {
