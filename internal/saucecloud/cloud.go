@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/progress"
+	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/storage"
+	"path/filepath"
 )
 
 // CloudRunner represents the cloud runner for the Sauce Labs cloud.
@@ -20,6 +23,29 @@ type CloudRunner struct {
 	CCYReader       concurrency.Reader
 	Region          region.Region
 	ShowConsoleLog  bool
+}
+
+func (r *CloudRunner) archiveProject(project interface{}, tempDir string, files []string) (string, error) {
+	zipName := filepath.Join(tempDir, "app.zip")
+	z, err := zip.NewWriter(zipName)
+	if err != nil {
+		return "", err
+	}
+	defer z.Close()
+
+	rcPath := filepath.Join(tempDir, "sauce-runner.json")
+	if err := jsonio.WriteFile(rcPath, project); err != nil {
+		return "", err
+	}
+	files = append(files, rcPath)
+
+	for _, f := range files {
+		if err := z.Add(f, ""); err != nil {
+			return "", err
+		}
+	}
+
+	return zipName, z.Close()
 }
 
 func (r *CloudRunner) uploadProject(filename string) (string, error) {
