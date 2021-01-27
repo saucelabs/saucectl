@@ -29,7 +29,6 @@ import (
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/streams"
 	"github.com/saucelabs/saucectl/cli/utils"
-	"github.com/saucelabs/saucectl/internal/cypress"
 )
 
 var (
@@ -171,7 +170,7 @@ func (handler *Handler) PullBaseImage(ctx context.Context, img config.Image) err
 }
 
 // StartContainer starts the Docker testrunner container
-func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (*container.ContainerCreateCreatedBody, error) {
+func (handler *Handler) StartContainer(ctx context.Context, files []string, conf config.Docker) (*container.ContainerCreateCreatedBody, error) {
 	var (
 		ports        map[nat.Port]struct{}
 		portBindings map[nat.Port][]nat.PortBinding
@@ -191,23 +190,14 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 		return nil, err
 	}
 
-	files := []string{
-		c.Cypress.ConfigFile,
-		c.Cypress.ProjectPath,
-	}
-
-	if c.Cypress.EnvFile != "" {
-		files = append(files, c.Cypress.EnvFile)
-	}
-
-	img := handler.GetImageFlavor(c.Docker.Image)
+	img := handler.GetImageFlavor(conf.Image)
 	pDir, err := handler.ProjectDir(ctx, img)
 	if err != nil {
 		return nil, err
 	}
 
 	var m []mount.Mount
-	if c.Docker.FileTransfer == config.DockerFileMount {
+	if conf.FileTransfer == config.DockerFileMount {
 		m, err = createMounts(files, pDir)
 		if err != nil {
 			return nil, err
@@ -247,7 +237,7 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 		return nil, err
 	}
 
-	if c.Docker.FileTransfer == config.DockerFileCopy {
+	if conf.FileTransfer == config.DockerFileCopy {
 		if err := copyTestFiles(ctx, handler, container.ID, files, pDir); err != nil {
 			return nil, err
 		}
