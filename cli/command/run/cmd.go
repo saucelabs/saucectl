@@ -21,7 +21,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/ci/gitlab"
 	"github.com/saucelabs/saucectl/internal/ci/jenkins"
 	"github.com/saucelabs/saucectl/internal/cypress"
-	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/docker"
 	legacyDocker "github.com/saucelabs/saucectl/internal/docker/legacydocker"
 	"github.com/saucelabs/saucectl/internal/fleet"
@@ -29,6 +28,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
+	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
 )
@@ -238,12 +238,15 @@ func runCypressInSauce(p cypress.Project) (int, error) {
 	}
 
 	r := saucecloud.CypressRunner{
-		Project:         p,
-		ProjectUploader: s,
-		JobStarter:      &tc,
-		JobReader:       &rsto,
-		CCYReader:       &rsto,
-		Region:          re,
+		Project: p,
+		CloudRunner: saucecloud.CloudRunner{
+			ProjectUploader: s,
+			JobStarter:      &tc,
+			JobReader:       &rsto,
+			CCYReader:       &rsto,
+			Region:          re,
+			ShowConsoleLog:  p.ShowConsoleLog,
+		},
 	}
 	return r.RunProject()
 }
@@ -321,12 +324,15 @@ func runPlaywrightInSauce(p playwright.Project) (int, error) {
 	}
 
 	r := saucecloud.PlaywrightRunner{
-		Project:         p,
-		ProjectUploader: s,
-		JobStarter:      &tc,
-		JobReader:       &rsto,
-		CCYReader:       &rsto,
-		Region:          re,
+		Project: p,
+		CloudRunner: saucecloud.CloudRunner{
+			ProjectUploader: s,
+			JobStarter:      &tc,
+			JobReader:       &rsto,
+			CCYReader:       &rsto,
+			Region:          re,
+			ShowConsoleLog:  p.ShowConsoleLog,
+		},
 	}
 	return r.RunProject()
 }

@@ -47,8 +47,10 @@ func TestRunSuite(t *testing.T) {
 		},
 	}
 	runner := CypressRunner{
-		JobStarter: &starter,
-		JobReader:  &reader,
+		CloudRunner: CloudRunner{
+			JobStarter: &starter,
+			JobReader:  &reader,
+		},
 	}
 	suite := cypress.Suite{}
 	fileID := "dummy-file-id"
@@ -77,9 +79,11 @@ func TestRunSuites(t *testing.T) {
 		return 1, nil
 	}}
 	runner := CypressRunner{
-		JobStarter: &starter,
-		JobReader:  &reader,
-		CCYReader:  ccyReader,
+		CloudRunner: CloudRunner{
+			JobStarter: &starter,
+			JobReader:  &reader,
+			CCYReader:  ccyReader,
+		},
 		Project: cypress.Project{
 			Suites: []cypress.Suite{
 				{Name: "dummy-suite"},
@@ -140,7 +144,9 @@ func TestUploadProject(t *testing.T) {
 		UploadSuccess: true,
 	}
 	runner := CypressRunner{
-		ProjectUploader: uploader,
+		CloudRunner: CloudRunner{
+			ProjectUploader: uploader,
+		},
 	}
 	id, err := runner.uploadProject("/my-dummy-project.zip")
 	assert.Equal(t, "fake-id", id)
@@ -181,10 +187,12 @@ func TestRunProject(t *testing.T) {
 		UploadSuccess: true,
 	}
 	runner := CypressRunner{
-		JobStarter:      &starter,
-		JobReader:       &reader,
-		CCYReader:       ccyReader,
-		ProjectUploader: uploader,
+		CloudRunner: CloudRunner{
+			JobStarter:      &starter,
+			JobReader:       &reader,
+			CCYReader:       ccyReader,
+			ProjectUploader: uploader,
+		},
 		Project: cypress.Project{
 			Cypress: cypress.Cypress{
 				Version:     "5.6.0",
@@ -203,21 +211,4 @@ func TestRunProject(t *testing.T) {
 	cnt, err := runner.RunProject()
 	assert.Nil(t, err)
 	assert.Equal(t, cnt, 0)
-}
-
-func TestLogSuiteConsole(t *testing.T) {
-	reader := &mocks.FakeJobReader{
-		GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
-			return []byte("dummy-content"), nil
-		},
-	}
-	runner := CypressRunner{
-		JobReader: reader,
-	}
-	res := result{
-		job: job.Job{
-			ID: "fake-job-id",
-		},
-	}
-	runner.logSuiteConsole(res)
 }
