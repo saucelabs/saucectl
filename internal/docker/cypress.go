@@ -133,7 +133,16 @@ func (r *CypressRunner) setup() error {
 		}
 	}
 
-	container, err := r.docker.StartContainer(r.Ctx, r.Project)
+	files := []string{
+		r.Project.Cypress.ConfigFile,
+		r.Project.Cypress.ProjectPath,
+	}
+
+	if r.Project.Cypress.EnvFile != "" {
+		files = append(files, r.Project.Cypress.EnvFile)
+	}
+
+	container, err := r.docker.StartContainer(r.Ctx, files, r.Project.Docker)
 	if err != nil {
 		return err
 	}

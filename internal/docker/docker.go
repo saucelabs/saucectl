@@ -29,7 +29,6 @@ import (
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/cli/streams"
 	"github.com/saucelabs/saucectl/cli/utils"
-	"github.com/saucelabs/saucectl/internal/cypress"
 )
 
 var (
@@ -171,7 +170,7 @@ func (handler *Handler) PullBaseImage(ctx context.Context, img config.Image) err
 }
 
 // StartContainer starts the Docker testrunner container
-func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (*container.ContainerCreateCreatedBody, error) {
+func (handler *Handler) StartContainer(ctx context.Context, files []string, conf config.Docker) (*container.ContainerCreateCreatedBody, error) {
 	var (
 		ports        map[nat.Port]struct{}
 		portBindings map[nat.Port][]nat.PortBinding
@@ -191,23 +190,14 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 		return nil, err
 	}
 
-	files := []string{
-		c.Cypress.ConfigFile,
-		c.Cypress.ProjectPath,
-	}
-
-	if c.Cypress.EnvFile != "" {
-		files = append(files, c.Cypress.EnvFile)
-	}
-
-	img := handler.GetImageFlavor(c.Docker.Image)
-	pDir, err := handler.ProjectDir(ctx, img)
+	imgStr := handler.GetImageFlavor(conf.Image)
+	pDir, err := handler.ProjectDir(ctx, imgStr)
 	if err != nil {
 		return nil, err
 	}
 
 	var m []mount.Mount
-	if c.Docker.FileTransfer == config.DockerFileMount {
+	if conf.FileTransfer == config.DockerFileMount {
 		m, err = createMounts(files, pDir)
 		if err != nil {
 			return nil, err
@@ -228,12 +218,12 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 	}
 	networkConfig := &network.NetworkingConfig{}
 	containerConfig := &container.Config{
-		Image:        img,
+		Image:        imgStr,
 		ExposedPorts: ports,
 		Env: []string{
 			fmt.Sprintf("SAUCE_USERNAME=%s", username),
 			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", accessKey),
-			fmt.Sprintf("SAUCE_IMAGE_NAME=%s", img),
+			fmt.Sprintf("SAUCE_IMAGE_NAME=%s", imgStr),
 		},
 	}
 
@@ -242,12 +232,12 @@ func (handler *Handler) StartContainer(ctx context.Context, c cypress.Project) (
 		return nil, err
 	}
 
-	log.Info().Str("img", img).Str("id", container.ID[:12]).Msg("Starting container")
+	log.Info().Str("img", imgStr).Str("id", container.ID[:12]).Msg("Starting container")
 	if err := handler.client.ContainerStart(ctx, container.ID, types.ContainerStartOptions{}); err != nil {
 		return nil, err
 	}
 
-	if c.Docker.FileTransfer == config.DockerFileCopy {
+	if conf.FileTransfer == config.DockerFileCopy {
 		if err := copyTestFiles(ctx, handler, container.ID, files, pDir); err != nil {
 			return nil, err
 		}
