@@ -22,16 +22,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
 
-// SauceRunnerConfigFile represents the filename for the sauce runner configuration.
-const SauceRunnerConfigFile = "sauce-runner.json"
-
-type containerConfig struct {
-	// sauceRunnerConfigPath is the container path to sauce-runner.json.
-	sauceRunnerConfigPath string
-}
-
-// Runner represents the docker implementation of a test runner.
-type Runner struct {
+// PlaywrightRunner represents the docker implementation of a test runner.
+type PlaywrightRunner struct {
 	Project         playwright.Project
 	Ctx             context.Context
 	Cli             *command.SauceCtlCli
@@ -40,9 +32,9 @@ type Runner struct {
 	containerConfig *containerConfig
 }
 
-// New creates a new Runner instance.
-func New(c playwright.Project, cli *command.SauceCtlCli) (*Runner, error) {
-	r := Runner{}
+// NewPlaywright creates a new PlaywrightRunner instance.
+func NewPlaywright(c playwright.Project, cli *command.SauceCtlCli) (*PlaywrightRunner, error) {
+	r := PlaywrightRunner{}
 	r.containerConfig = &containerConfig{}
 	r.Cli = cli
 	r.Ctx = context.Background()
@@ -58,7 +50,7 @@ func New(c playwright.Project, cli *command.SauceCtlCli) (*Runner, error) {
 }
 
 // RunProject runs the tests defined in config.Project.
-func (r *Runner) RunProject() (int, error) {
+func (r *PlaywrightRunner) RunProject() (int, error) {
 	if err := r.defineDockerImage(); err != nil {
 		return 1, err
 	}
@@ -77,7 +69,7 @@ func (r *Runner) RunProject() (int, error) {
 }
 
 // defineDockerImage defines docker image value if not already set.
-func (r *Runner) defineDockerImage() error {
+func (r *PlaywrightRunner) defineDockerImage() error {
 	// Skip availability check since custom image is being used
 	if r.Project.Docker.Image.Name != "" && r.Project.Docker.Image.Tag != "" {
 		log.Info().Msgf("Ignoring Playwright version for Docker, using %s:%s", r.Project.Docker.Image.Name, r.Project.Docker.Image.Tag)
@@ -99,7 +91,7 @@ func (r *Runner) defineDockerImage() error {
 }
 
 // setup performs any necessary steps for a test runner to execute tests.
-func (r *Runner) setup() error {
+func (r *PlaywrightRunner) setup() error {
 	err := r.docker.ValidateDependency()
 	if err != nil {
 		return fmt.Errorf("please verify that docker is installed and running: %v, "+
@@ -134,7 +126,12 @@ func (r *Runner) setup() error {
 		}
 	}
 
-	container, err := r.docker.StartContainer(r.Ctx, r.Project)
+	files := []string{
+		r.Project.Playwright.LocalProjectPath,
+	}
+	r.Project.Playwright.ProjectPath = filepath.Base(r.Project.Playwright.ProjectPath)
+
+	container, err := r.docker.StartContainer(r.Ctx, files, r.Project.Docker)
 	if err != nil {
 		return err
 	}
@@ -183,7 +180,7 @@ func (r *Runner) setup() error {
 	return nil
 }
 
-func (r *Runner) beforeExec(tasks []string) error {
+func (r *PlaywrightRunner) beforeExec(tasks []string) error {
 	for _, task := range tasks {
 		log.Info().Str("task", task).Msg("Running BeforeExec")
 		exitCode, err := r.execute(strings.Fields(task), nil)
@@ -197,7 +194,7 @@ func (r *Runner) beforeExec(tasks []string) error {
 	return nil
 }
 
-func (r *Runner) execute(cmd []string, env map[string]string) (int, error) {
+func (r *PlaywrightRunner) execute(cmd []string, env map[string]string) (int, error) {
 	var (
 		out, stderr io.Writer
 		in          io.ReadCloser
@@ -242,12 +239,12 @@ func (r *Runner) execute(cmd []string, env map[string]string) (int, error) {
 }
 
 // run runs the tests defined in the config.Project.
-func (r *Runner) run(s playwright.Suite) (int, error) {
+func (r *PlaywrightRunner) run(s playwright.Suite) (int, error) {
 	return r.execute([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", s.Name}, map[string]string{})
 }
 
 // teardown cleans up the test environment.
-func (r *Runner) teardown(logDir string) error {
+func (r *PlaywrightRunner) teardown(logDir string) error {
 	for _, containerSrcPath := range runner.LogFiles {
 		file := filepath.Base(containerSrcPath)
 		hostDstPath := filepath.Join(logDir, file)
@@ -272,7 +269,7 @@ func (r *Runner) teardown(logDir string) error {
 	return nil
 }
 
-func (r *Runner) runSuite(suite playwright.Suite) error {
+func (r *PlaywrightRunner) runSuite(suite playwright.Suite) error {
 	defer func() {
 		log.Info().Msg("Tearing down environment")
 		if err := r.teardown(r.Cli.LogDir); err != nil {
