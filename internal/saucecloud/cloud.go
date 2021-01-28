@@ -12,6 +12,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/storage"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -125,6 +126,21 @@ func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- re
 			err:       err,
 		}
 	}
+}
+
+func (r CloudRunner) archiveAndUpload(project interface{}, files []string) (string, error) {
+	tempDir, err := ioutil.TempDir(os.TempDir(), "saucectl-app-payload")
+	if err != nil {
+		return "", err
+	}
+	defer os.RemoveAll(tempDir)
+
+	zipName, err := r.archiveProject(project, tempDir, files)
+	if err != nil {
+		return "", err
+	}
+
+	return r.uploadProject(zipName)
 }
 
 func (r *CloudRunner) archiveProject(project interface{}, tempDir string, files []string) (string, error) {
