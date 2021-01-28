@@ -2,9 +2,6 @@ package saucecloud
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/playwright"
@@ -20,19 +17,7 @@ type PlaywrightRunner struct {
 func (r *PlaywrightRunner) RunProject() (int, error) {
 	exitCode := 1
 
-	// Archive the project files.
-	tempDir, err := ioutil.TempDir(os.TempDir(), "saucectl-app-payload")
-	if err != nil {
-		return exitCode, err
-	}
-	defer os.RemoveAll(tempDir)
-
-	zipName, err := r.archiveProject(r.Project, tempDir, []string{r.Project.Playwright.LocalProjectPath})
-	if err != nil {
-		return exitCode, err
-	}
-
-	fileID, err := r.uploadProject(zipName)
+	fileID, err := r.archiveAndUpload(r.Project, []string{r.Project.Playwright.LocalProjectPath})
 	if err != nil {
 		return exitCode, err
 	}

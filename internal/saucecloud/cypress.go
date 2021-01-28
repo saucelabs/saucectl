@@ -1,13 +1,10 @@
 package saucecloud
 
 import (
-	"context"
 	"fmt"
 	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
-	"io/ioutil"
-	"os"
 )
 
 // CypressRunner represents the Sauce Labs cloud implementation for cypress.
@@ -23,19 +20,6 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	err := r.JobStarter.CheckFrameworkAvailability(context.Background(), r.Project.Kind)
-	if err != nil {
-		err = fmt.Errorf("job pre-check failed; %s", err)
-		return exitCode, err
-	}
-
-	// Archive the project files.
-	tempDir, err := ioutil.TempDir(os.TempDir(), "saucectl-app-payload")
-	if err != nil {
-		return exitCode, err
-	}
-	defer os.RemoveAll(tempDir)
-
 	files := []string{
 		r.Project.Cypress.ConfigFile,
 		r.Project.Cypress.ProjectPath,
@@ -45,12 +29,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 		files = append(files, r.Project.Cypress.EnvFile)
 	}
 
-	zipName, err := r.archiveProject(r.Project, tempDir, files)
-	if err != nil {
-		return exitCode, err
-	}
-
-	fileID, err := r.uploadProject(zipName)
+	fileID, err := r.archiveAndUpload(r.Project, files)
 	if err != nil {
 		return exitCode, err
 	}
