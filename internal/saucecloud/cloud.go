@@ -12,6 +12,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/storage"
+	"os"
 	"path/filepath"
 	"time"
 )
@@ -91,7 +92,19 @@ func (r *CloudRunner) archiveProject(project interface{}, tempDir string, files 
 		}
 	}
 
-	return zipName, z.Close()
+	err = z.Close()
+	if err != nil {
+		return "", err
+	}
+
+	f, err := os.Stat(zipName)
+	if err != nil {
+		return "", err
+	}
+
+	log.Info().Int64("bytes", f.Size()).Msg("Project archived.")
+
+	return zipName, nil
 }
 
 func (r *CloudRunner) uploadProject(filename string) (string, error) {
