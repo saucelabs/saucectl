@@ -10,7 +10,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"os"
 	"path/filepath"
@@ -33,6 +32,9 @@ type result struct {
 	job       job.Job
 	err       error
 }
+
+// ConsoleLogAsset represents job asset log file name.
+const ConsoleLogAsset = "console.log"
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (job.Job, error) {
 	log.Info().Str("suite", opts.Suite).Str("region", r.Region.String()).Msg("Starting job.")
@@ -142,11 +144,11 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	}
 
 	// Display log only when at least it has started
-	assetContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, resto.ConsoleLogAsset)
+	assetContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, ConsoleLogAsset)
 	if err != nil {
 		log.Warn().Str("suite", res.suiteName).Msg("Failed to get job asset.")
 	} else {
-		log.Info().Msg(fmt.Sprintf("Test %s %s", res.job.ID, resto.ConsoleLogAsset))
+		log.Info().Msg(fmt.Sprintf("Test %s %s", res.job.ID, ConsoleLogAsset))
 		log.Info().Msg(string(assetContent))
 	}
 }

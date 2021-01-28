@@ -257,7 +257,7 @@ func TestClient_GetJobAssetFileContent(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := tc.client.GetJobAssetFileContent(context.Background(), tc.jobID, ConsoleLogAsset)
+			got, err := tc.client.GetJobAssetFileContent(context.Background(), tc.jobID, "console.log")
 			assert.Equal(t, err, tc.expectedErr)
 			assert.Equal(t, got, tc.expectedResp)
 		})
