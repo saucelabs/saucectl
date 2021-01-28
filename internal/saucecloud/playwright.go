@@ -46,7 +46,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 }
 
 func (r *PlaywrightRunner) runSuites(fileID string) bool {
-	jobOpts, results := r.CreateWorkerPool(r.Project.Sauce.Concurrency)
+	jobOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency)
 	defer close(results)
 
 	// Submit suites to work on.
@@ -76,5 +76,5 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 	}
 	close(jobOpts)
 
-	return r.CollectResults(results, len(r.Project.Suites))
+	return r.collectResults(results, len(r.Project.Suites))
 }

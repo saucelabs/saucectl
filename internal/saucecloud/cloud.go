@@ -37,7 +37,7 @@ type result struct {
 // ConsoleLogAsset represents job asset log file name.
 const ConsoleLogAsset = "console.log"
 
-func (r *CloudRunner) CreateWorkerPool(num int) (chan job.StartOptions, chan result) {
+func (r *CloudRunner) createWorkerPool(num int) (chan job.StartOptions, chan result) {
 	jobOpts := make(chan job.StartOptions)
 	results := make(chan result, num)
 
@@ -50,7 +50,7 @@ func (r *CloudRunner) CreateWorkerPool(num int) (chan job.StartOptions, chan res
 	return jobOpts, results
 }
 
-func (r *CloudRunner) CollectResults(results chan result, expected int) bool {
+func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 	// TODO find a better way to get the expected
 	errCount := 0
 	completed := 0
