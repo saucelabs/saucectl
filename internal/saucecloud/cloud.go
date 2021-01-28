@@ -51,16 +51,16 @@ func (r *CloudRunner) CreateWorkerPool(num int) (chan job.StartOptions, chan res
 	return jobOpts, results
 }
 
-func (r *CloudRunner) CollectResults(results chan result, total int) bool {
-	// TODO find a better way to get the total
+func (r *CloudRunner) CollectResults(results chan result, expected int) bool {
+	// TODO find a better way to get the expected
 	errCount := 0
 	completed := 0
-	inProgress := total
+	inProgress := expected
 	passed := true
 
 	waiter := dots.New(1)
 	waiter.Start()
-	for i := 0; i < total; i++ {
+	for i := 0; i < expected; i++ {
 		res := <-results
 		// in case one of test suites not passed
 		if !res.job.Passed {
@@ -74,7 +74,7 @@ func (r *CloudRunner) CollectResults(results chan result, total int) bool {
 		// routine, a new lines has simply been forced, to ensure that line starts from
 		// the beginning of the console.
 		fmt.Println("")
-		log.Info().Msgf("Suites completed: %d/%d", completed, total)
+		log.Info().Msgf("Suites completed: %d/%d", completed, expected)
 		r.logSuite(res)
 
 		if res.job.ID == "" || res.err != nil {
@@ -83,8 +83,8 @@ func (r *CloudRunner) CollectResults(results chan result, total int) bool {
 	}
 	waiter.Stop()
 
-	log.Info().Msgf("Suites total: %d", total)
-	log.Info().Msgf("Suites passed: %d", total-errCount)
+	log.Info().Msgf("Suites expected: %d", expected)
+	log.Info().Msgf("Suites passed: %d", expected-errCount)
 	log.Info().Msgf("Suites failed: %d", errCount)
 
 	return passed
