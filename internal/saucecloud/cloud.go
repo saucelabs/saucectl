@@ -39,8 +39,7 @@ const ConsoleLogAsset = "console.log"
 
 func (r *CloudRunner) CreateWorkerPool(num int) (chan job.StartOptions, chan result) {
 	jobOpts := make(chan job.StartOptions)
-	results := make(chan result) // TODO buffer this one
-	defer close(results)
+	results := make(chan result, num)
 
 	ccy := concurrency.Min(r.CCYReader, num)
 	log.Info().Int("concurrency", ccy).Msg("Launching workers.")
