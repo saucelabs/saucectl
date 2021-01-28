@@ -26,6 +26,13 @@ type CloudRunner struct {
 	ShowConsoleLog  bool
 }
 
+type result struct {
+	suiteName string
+	browser   string
+	job       job.Job
+	err       error
+}
+
 func (r *CloudRunner) runJob(opts job.StartOptions) (job.Job, error) {
 	log.Info().Str("suite", opts.Suite).Str("region", r.Region.String()).Msg("Starting job.")
 
@@ -49,6 +56,19 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (job.Job, error) {
 	}
 
 	return j, nil
+}
+
+func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- result) {
+	for opts := range jobOpts {
+		jobData, err := r.runJob(opts)
+
+		results <- result{
+			suiteName: opts.Suite,
+			browser:   opts.BrowserName,
+			job:       jobData,
+			err:       err,
+		}
+	}
 }
 
 func (r *CloudRunner) archiveProject(project interface{}, tempDir string, files []string) (string, error) {
