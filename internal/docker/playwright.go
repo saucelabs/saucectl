@@ -238,11 +238,6 @@ func (r *PlaywrightRunner) execute(cmd []string, env map[string]string) (int, er
 
 }
 
-// run runs the tests defined in the config.Project.
-func (r *PlaywrightRunner) run(s playwright.Suite) (int, error) {
-	return r.execute([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", s.Name}, map[string]string{})
-}
-
 // teardown cleans up the test environment.
 func (r *PlaywrightRunner) teardown(logDir string) error {
 	for _, containerSrcPath := range runner.LogFiles {
@@ -285,7 +280,7 @@ func (r *PlaywrightRunner) runSuite(suite playwright.Suite) error {
 		return err
 	}
 
-	exitCode, err := r.run(suite)
+	exitCode, err := r.execute([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", suite.Name}, map[string]string{})
 	log.Info().
 		Int("ExitCode", exitCode).
 		Msg("Command Finished")

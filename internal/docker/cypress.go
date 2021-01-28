@@ -238,11 +238,6 @@ func (r *CypressRunner) execute(cmd []string, env map[string]string) (int, error
 
 }
 
-// run runs the tests defined in the config.Project.
-func (r *CypressRunner) run(s cypress.Suite) (int, error) {
-	return r.execute([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", s.Name}, s.Config.Env)
-}
-
 // teardown cleans up the test environment.
 func (r *CypressRunner) teardown(logDir string) error {
 	for _, containerSrcPath := range runner.LogFiles {
@@ -285,7 +280,7 @@ func (r *CypressRunner) runSuite(suite cypress.Suite) error {
 		return err
 	}
 
-	exitCode, err := r.run(suite)
+	exitCode, err := r.execute([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", suite.Name}, suite.Config.Env)
 	log.Info().
 		Int("ExitCode", exitCode).
 		Msg("Command Finished")
