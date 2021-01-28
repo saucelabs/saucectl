@@ -60,6 +60,9 @@ type AssignerResponse struct {
 func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/jobs", c.URL)
 
+	opts.User = c.Credentials.Username
+	opts.AccessKey = c.Credentials.AccessKey
+
 	var b bytes.Buffer
 	err = json.NewEncoder(&b).Encode(opts)
 	if err != nil {

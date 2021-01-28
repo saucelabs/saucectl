@@ -2,7 +2,6 @@ package saucecloud
 
 import (
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
 )
@@ -57,8 +56,6 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 	// Submit suites to work on.
 	for _, s := range r.Project.Suites {
 		jobOpts <- job.StartOptions{
-			User:             credentials.Get().Username,
-			AccessKey:        credentials.Get().AccessKey,
 			App:              fmt.Sprintf("storage:%s", fileID),
 			Suite:            s.Name,
 			Framework:        "cypress",

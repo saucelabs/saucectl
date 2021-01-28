@@ -2,7 +2,6 @@ package saucecloud
 
 import (
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/credentials"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
@@ -41,8 +40,6 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 			s.PlaywrightVersion = r.Project.Playwright.Version
 		}
 		jobOpts <- job.StartOptions{
-			User:             credentials.Get().Username,
-			AccessKey:        credentials.Get().AccessKey,
 			App:              fmt.Sprintf("storage:%s", fileID),
 			Suite:            s.Name,
 			Framework:        "playwright",
