@@ -74,7 +74,7 @@ func (r *CloudRunner) CollectResults(results chan result, total int) bool {
 		// routine, a new lines has simply been forced, to ensure that line starts from
 		// the beginning of the console.
 		fmt.Println("")
-		log.Info().Msg(fmt.Sprintf("Suites completed: %d/%d", completed, total))
+		log.Info().Msgf("Suites completed: %d/%d", completed, total)
 		r.logSuite(res)
 
 		if res.job.ID == "" || res.err != nil {
