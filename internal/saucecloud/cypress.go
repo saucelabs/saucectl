@@ -75,7 +75,7 @@ func (r *CypressRunner) checkCypressVersion() error {
 }
 
 func (r *CypressRunner) runSuites(fileID string) bool {
-	suites := make(chan cypress.Suite)
+	jobOpts := make(chan job.StartOptions)
 	results := make(chan result, len(r.Project.Suites))
 	defer close(results)
 
@@ -83,14 +83,33 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 	r.Project.Sauce.Concurrency = concurrency.Min(r.CCYReader, r.Project.Sauce.Concurrency)
 	log.Info().Int("concurrency", r.Project.Sauce.Concurrency).Msg("Launching workers.")
 	for i := 0; i < r.Project.Sauce.Concurrency; i++ {
-		go r.worker(fileID, suites, results)
+		go r.runJobs(jobOpts, results)
 	}
 
 	// Submit suites to work on.
 	for _, s := range r.Project.Suites {
-		suites <- s
+		opts := job.StartOptions{
+			User:             credentials.Get().Username,
+			AccessKey:        credentials.Get().AccessKey,
+			App:              fmt.Sprintf("storage:%s", fileID),
+			Suite:            s.Name,
+			Framework:        "cypress",
+			FrameworkVersion: r.Project.Cypress.Version,
+			BrowserName:      s.Browser,
+			BrowserVersion:   s.BrowserVersion,
+			PlatformName:     s.PlatformName,
+			Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
+			Build:            r.Project.Sauce.Metadata.Build,
+			Tags:             r.Project.Sauce.Metadata.Tags,
+			Tunnel: job.TunnelOptions{
+				ID:     r.Project.Sauce.Tunnel.ID,
+				Parent: r.Project.Sauce.Tunnel.Parent,
+			},
+			ScreenResolution: s.ScreenResolution,
+		}
+		jobOpts <- opts
 	}
-	close(suites)
+	close(jobOpts)
 
 	// Collect results.
 	errCount := 0
@@ -129,38 +148,4 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 	log.Info().Msgf("Suites failed: %d", errCount)
 
 	return passed
-}
-
-func (r *CypressRunner) worker(fileID string, suites <-chan cypress.Suite, results chan<- result) {
-	for s := range suites {
-		opts := job.StartOptions{
-			User:             credentials.Get().Username,
-			AccessKey:        credentials.Get().AccessKey,
-			App:              fmt.Sprintf("storage:%s", fileID),
-			Suite:            s.Name,
-			Framework:        "cypress",
-			FrameworkVersion: r.Project.Cypress.Version,
-			BrowserName:      s.Browser,
-			BrowserVersion:   s.BrowserVersion,
-			PlatformName:     s.PlatformName,
-			Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
-			Build:            r.Project.Sauce.Metadata.Build,
-			Tags:             r.Project.Sauce.Metadata.Tags,
-			Tunnel: job.TunnelOptions{
-				ID:     r.Project.Sauce.Tunnel.ID,
-				Parent: r.Project.Sauce.Tunnel.Parent,
-			},
-			ScreenResolution: s.ScreenResolution,
-		}
-
-		jobData, err := r.runJob(opts)
-
-		r := result{
-			suiteName: s.Name,
-			browser:   s.Browser + " " + s.BrowserVersion,
-			job:       jobData,
-			err:       err,
-		}
-		results <- r
-	}
 }

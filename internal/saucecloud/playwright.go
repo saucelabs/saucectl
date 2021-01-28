@@ -49,7 +49,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 }
 
 func (r *PlaywrightRunner) runSuites(fileID string) bool {
-	suites := make(chan playwright.Suite)
+	jobOpts := make(chan job.StartOptions)
 	results := make(chan result, len(r.Project.Suites))
 	defer close(results)
 
@@ -57,7 +57,7 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 	r.Project.Sauce.Concurrency = concurrency.Min(r.CCYReader, r.Project.Sauce.Concurrency)
 	log.Info().Int("concurrency", r.Project.Sauce.Concurrency).Msg("Launching workers.")
 	for i := 0; i < r.Project.Sauce.Concurrency; i++ {
-		go r.worker(fileID, suites, results)
+		go r.runJobs(jobOpts, results)
 	}
 
 	// Submit suites to work on.
@@ -66,9 +66,26 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 		if s.PlaywrightVersion == "" {
 			s.PlaywrightVersion = r.Project.Playwright.Version
 		}
-		suites <- s
+		jobOpts <- job.StartOptions{
+			User:             credentials.Get().Username,
+			AccessKey:        credentials.Get().AccessKey,
+			App:              fmt.Sprintf("storage:%s", fileID),
+			Suite:            s.Name,
+			Framework:        "playwright",
+			FrameworkVersion: s.PlaywrightVersion,
+			BrowserName:      s.Params.BrowserName,
+			BrowserVersion:   s.PlaywrightVersion,
+			PlatformName:     s.PlatformName,
+			Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
+			Build:            r.Project.Sauce.Metadata.Build,
+			Tags:             r.Project.Sauce.Metadata.Tags,
+			Tunnel: job.TunnelOptions{
+				ID:     r.Project.Sauce.Tunnel.ID,
+				Parent: r.Project.Sauce.Tunnel.Parent,
+			},
+		}
 	}
-	close(suites)
+	close(jobOpts)
 
 	// Collect results.
 	errCount := 0
@@ -107,37 +124,4 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 	log.Info().Msgf("Suites failed: %d", errCount)
 
 	return passed
-}
-
-func (r *PlaywrightRunner) worker(fileID string, suites <-chan playwright.Suite, results chan<- result) {
-	for s := range suites {
-		opts := job.StartOptions{
-			User:             credentials.Get().Username,
-			AccessKey:        credentials.Get().AccessKey,
-			App:              fmt.Sprintf("storage:%s", fileID),
-			Suite:            s.Name,
-			Framework:        "playwright",
-			FrameworkVersion: s.PlaywrightVersion,
-			BrowserName:      s.Params.BrowserName,
-			BrowserVersion:   s.PlaywrightVersion,
-			PlatformName:     s.PlatformName,
-			Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
-			Build:            r.Project.Sauce.Metadata.Build,
-			Tags:             r.Project.Sauce.Metadata.Tags,
-			Tunnel: job.TunnelOptions{
-				ID:     r.Project.Sauce.Tunnel.ID,
-				Parent: r.Project.Sauce.Tunnel.Parent,
-			},
-		}
-
-		jobData, err := r.runJob(opts)
-
-		r := result{
-			suiteName: s.Name,
-			browser:   s.Params.BrowserName,
-			job:       jobData,
-			err:       err,
-		}
-		results <- r
-	}
 }
