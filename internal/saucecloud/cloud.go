@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/cli/dots"
 	"github.com/saucelabs/saucectl/cli/progress"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"os"
 	"path/filepath"
@@ -32,6 +32,61 @@ type result struct {
 	browser   string
 	job       job.Job
 	err       error
+}
+
+// ConsoleLogAsset represents job asset log file name.
+const ConsoleLogAsset = "console.log"
+
+func (r *CloudRunner) createWorkerPool(num int) (chan job.StartOptions, chan result) {
+	jobOpts := make(chan job.StartOptions)
+	results := make(chan result, num)
+
+	ccy := concurrency.Min(r.CCYReader, num)
+	log.Info().Int("concurrency", ccy).Msg("Launching workers.")
+	for i := 0; i < ccy; i++ {
+		go r.runJobs(jobOpts, results)
+	}
+
+	return jobOpts, results
+}
+
+func (r *CloudRunner) collectResults(results chan result, expected int) bool {
+	// TODO find a better way to get the expected
+	errCount := 0
+	completed := 0
+	inProgress := expected
+	passed := true
+
+	waiter := dots.New(1)
+	waiter.Start()
+	for i := 0; i < expected; i++ {
+		res := <-results
+		// in case one of test suites not passed
+		if !res.job.Passed {
+			passed = false
+		}
+		completed++
+		inProgress--
+
+		// Logging is not synchronized over the different worker routines & dot routine.
+		// To avoid implementing a more complex solution centralizing output on only one
+		// routine, a new lines has simply been forced, to ensure that line starts from
+		// the beginning of the console.
+		fmt.Println("")
+		log.Info().Msgf("Suites completed: %d/%d", completed, expected)
+		r.logSuite(res)
+
+		if res.job.ID == "" || res.err != nil {
+			errCount++
+		}
+	}
+	waiter.Stop()
+
+	log.Info().Msgf("Suites expected: %d", expected)
+	log.Info().Msgf("Suites passed: %d", expected-errCount)
+	log.Info().Msgf("Suites failed: %d", errCount)
+
+	return passed
 }
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (job.Job, error) {
@@ -142,11 +197,11 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	}
 
 	// Display log only when at least it has started
-	assetContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, resto.ConsoleLogAsset)
+	assetContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, ConsoleLogAsset)
 	if err != nil {
 		log.Warn().Str("suite", res.suiteName).Msg("Failed to get job asset.")
 	} else {
-		log.Info().Msg(fmt.Sprintf("Test %s %s", res.job.ID, resto.ConsoleLogAsset))
+		log.Info().Msg(fmt.Sprintf("Test %s %s", res.job.ID, ConsoleLogAsset))
 		log.Info().Msg(string(assetContent))
 	}
 }
