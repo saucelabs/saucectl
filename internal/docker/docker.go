@@ -457,3 +457,21 @@ func (handler *Handler) ContainerInspect(ctx context.Context, containerID string
 func (handler *Handler) IsErrNotFound(err error) bool {
 	return client.IsErrNotFound(err)
 }
+
+// Teardown is a simple wrapper around ContainerStop and ContainerRemove and calls them in order.
+func (handler *Handler) Teardown(ctx context.Context, containerID string) error {
+	// checks that container exists before stopping and removing it
+	if _, err := handler.ContainerInspect(ctx, containerID); err != nil {
+		return err
+	}
+
+	if err := handler.ContainerStop(ctx, containerID); err != nil {
+		return err
+	}
+
+	if err := handler.ContainerRemove(ctx, containerID); err != nil {
+		return err
+	}
+
+	return nil
+}

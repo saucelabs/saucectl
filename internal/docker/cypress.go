@@ -237,28 +237,10 @@ func (r *CypressRunner) execute(cmd []string, env map[string]string) (int, error
 
 }
 
-// teardown cleans up the test environment.
-func (r *CypressRunner) teardown() error {
-	// checks that container exists before stopping and removing it
-	if _, err := r.docker.ContainerInspect(r.Ctx, r.containerID); err != nil {
-		return err
-	}
-
-	if err := r.docker.ContainerStop(r.Ctx, r.containerID); err != nil {
-		return err
-	}
-
-	if err := r.docker.ContainerRemove(r.Ctx, r.containerID); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (r *CypressRunner) runSuite(suite cypress.Suite) error {
 	defer func() {
 		log.Info().Msg("Tearing down environment")
-		if err := r.teardown(); err != nil {
+		if err := r.docker.Teardown(r.Ctx, r.containerID); err != nil {
 			if !r.docker.IsErrNotFound(err) {
 				log.Error().Err(err).Msg("Failed to tear down environment")
 			}
