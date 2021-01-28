@@ -2,9 +2,6 @@ package saucecloud
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
