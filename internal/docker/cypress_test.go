@@ -52,5 +52,5 @@ func TestTearDown(t *testing.T) {
 			client: docker,
 		},
 	}
-	assert.Nil(t, runner.teardown("logs"))
+	assert.Nil(t, runner.teardown())
 }

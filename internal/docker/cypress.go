@@ -15,7 +15,6 @@ import (
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/progress"
-	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/cli/streams"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/jsonio"
@@ -239,15 +238,7 @@ func (r *CypressRunner) execute(cmd []string, env map[string]string) (int, error
 }
 
 // teardown cleans up the test environment.
-func (r *CypressRunner) teardown(logDir string) error {
-	for _, containerSrcPath := range runner.LogFiles {
-		file := filepath.Base(containerSrcPath)
-		hostDstPath := filepath.Join(logDir, file)
-		if err := r.docker.CopyFromContainer(r.Ctx, r.containerID, containerSrcPath, hostDstPath); err != nil {
-			continue
-		}
-	}
-
+func (r *CypressRunner) teardown() error {
 	// checks that container exists before stopping and removing it
 	if _, err := r.docker.ContainerInspect(r.Ctx, r.containerID); err != nil {
 		return err
@@ -267,7 +258,7 @@ func (r *CypressRunner) teardown(logDir string) error {
 func (r *CypressRunner) runSuite(suite cypress.Suite) error {
 	defer func() {
 		log.Info().Msg("Tearing down environment")
-		if err := r.teardown(r.Cli.LogDir); err != nil {
+		if err := r.teardown(); err != nil {
 			if !r.docker.IsErrNotFound(err) {
 				log.Error().Err(err).Msg("Failed to tear down environment")
 			}
