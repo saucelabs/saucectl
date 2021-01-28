@@ -23,7 +23,7 @@ func TestPreliminarySteps_Basic(t *testing.T) {
 }
 
 func TestPreliminarySteps_NoCypressVersion(t *testing.T) {
-	want := "no cypress version provided"
+	want := "Missing cypress version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers"
 	runner := CypressRunner{}
 	err := runner.checkCypressVersion()
 	assert.NotNil(t, err)
