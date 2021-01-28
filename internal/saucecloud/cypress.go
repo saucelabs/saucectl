@@ -77,7 +77,7 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 
 	// Submit suites to work on.
 	for _, s := range r.Project.Suites {
-		opts := job.StartOptions{
+		jobOpts <- job.StartOptions{
 			User:             credentials.Get().Username,
 			AccessKey:        credentials.Get().AccessKey,
 			App:              fmt.Sprintf("storage:%s", fileID),
@@ -96,7 +96,6 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 			},
 			ScreenResolution: s.ScreenResolution,
 		}
-		jobOpts <- opts
 	}
 	close(jobOpts)
 
