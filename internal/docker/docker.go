@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/saucelabs/saucectl/cli/command"
 	"io"
 	"io/ioutil"
 	"os"
@@ -408,6 +409,50 @@ func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd 
 	}
 	resp, err := handler.client.ContainerExecAttach(ctx, createResp.ID, execStartCheck)
 	return &createResp, &resp, err
+}
+
+// ExecuteAttach runs the cmd test in the Docker container and attaches the given stream.
+func (handler *Handler) ExecuteAttach(ctx context.Context, containerID string, cli *command.SauceCtlCli, cmd []string, env map[string]string) (int, error) {
+	var out, stderr io.Writer
+	var in io.ReadCloser
+
+	out = cli.Out()
+	stderr = cli.Out()
+
+	if err := cli.In().CheckTty(false, true); err != nil {
+		return 1, err
+	}
+	createResp, attachResp, err := handler.Execute(ctx, containerID, cmd, env)
+	if err != nil {
+		return 1, err
+	}
+	defer attachResp.Close()
+	errCh := make(chan error, 1)
+	go func() {
+		defer close(errCh)
+		errCh <- func() error {
+			streamer := streams.IOStreamer{
+				Streams:      cli,
+				InputStream:  in,
+				OutputStream: out,
+				ErrorStream:  stderr,
+				Resp:         *attachResp,
+			}
+
+			return streamer.Stream(ctx)
+		}()
+	}()
+
+	if err := <-errCh; err != nil {
+		return 1, err
+	}
+
+	exitCode, err := handler.ExecuteInspect(ctx, createResp.ID)
+	if err != nil {
+		return 1, err
+	}
+	return exitCode, nil
+
 }
 
 // ExecuteInspect checks exit code of test

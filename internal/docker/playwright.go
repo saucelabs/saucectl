@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -16,7 +15,6 @@ import (
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/progress"
-	"github.com/saucelabs/saucectl/cli/streams"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
@@ -182,7 +180,7 @@ func (r *PlaywrightRunner) setup() error {
 func (r *PlaywrightRunner) beforeExec(tasks []string) error {
 	for _, task := range tasks {
 		log.Info().Str("task", task).Msg("Running BeforeExec")
-		exitCode, err := r.execute(strings.Fields(task), nil)
+		exitCode, err := r.docker.ExecuteAttach(r.Ctx, r.containerID, r.Cli, strings.Fields(task), nil)
 		if err != nil {
 			return err
 		}
@@ -191,50 +189,6 @@ func (r *PlaywrightRunner) beforeExec(tasks []string) error {
 		}
 	}
 	return nil
-}
-
-func (r *PlaywrightRunner) execute(cmd []string, env map[string]string) (int, error) {
-	var (
-		out, stderr io.Writer
-		in          io.ReadCloser
-	)
-	out = r.Cli.Out()
-	stderr = r.Cli.Out()
-
-	if err := r.Cli.In().CheckTty(false, true); err != nil {
-		return 1, err
-	}
-	createResp, attachResp, err := r.docker.Execute(r.Ctx, r.containerID, cmd, env)
-	if err != nil {
-		return 1, err
-	}
-	defer attachResp.Close()
-	errCh := make(chan error, 1)
-	go func() {
-		defer close(errCh)
-		errCh <- func() error {
-			streamer := streams.IOStreamer{
-				Streams:      r.Cli,
-				InputStream:  in,
-				OutputStream: out,
-				ErrorStream:  stderr,
-				Resp:         *attachResp,
-			}
-
-			return streamer.Stream(r.Ctx)
-		}()
-	}()
-
-	if err := <-errCh; err != nil {
-		return 1, err
-	}
-
-	exitCode, err := r.docker.ExecuteInspect(r.Ctx, createResp.ID)
-	if err != nil {
-		return 1, err
-	}
-	return exitCode, nil
-
 }
 
 func (r *PlaywrightRunner) runSuite(suite playwright.Suite) error {
@@ -253,7 +207,9 @@ func (r *PlaywrightRunner) runSuite(suite playwright.Suite) error {
 		return err
 	}
 
-	exitCode, err := r.execute([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", suite.Name}, map[string]string{})
+	exitCode, err := r.docker.ExecuteAttach(r.Ctx, r.containerID, r.Cli,
+		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", suite.Name},
+		map[string]string{})
 	log.Info().
 		Int("ExitCode", exitCode).
 		Msg("Command Finished")
