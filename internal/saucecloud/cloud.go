@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/cli/dots"
 	"github.com/saucelabs/saucectl/cli/progress"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/concurrency"
@@ -35,6 +36,59 @@ type result struct {
 
 // ConsoleLogAsset represents job asset log file name.
 const ConsoleLogAsset = "console.log"
+
+func (r *CloudRunner) CreateWorkerPool(num int) (chan job.StartOptions, chan result) {
+	jobOpts := make(chan job.StartOptions)
+	results := make(chan result) // TODO buffer this one
+	defer close(results)
+
+	ccy := concurrency.Min(r.CCYReader, num)
+	log.Info().Int("concurrency", ccy).Msg("Launching workers.")
+	for i := 0; i < ccy; i++ {
+		go r.runJobs(jobOpts, results)
+	}
+
+	return jobOpts, results
+}
+
+func (r *CloudRunner) CollectResults(results chan result, total int) bool {
+	// TODO find a better way to get the total
+	errCount := 0
+	completed := 0
+	inProgress := total
+	passed := true
+
+	waiter := dots.New(1)
+	waiter.Start()
+	for i := 0; i < total; i++ {
+		res := <-results
+		// in case one of test suites not passed
+		if !res.job.Passed {
+			passed = false
+		}
+		completed++
+		inProgress--
+
+		// Logging is not synchronized over the different worker routines & dot routine.
+		// To avoid implementing a more complex solution centralizing output on only one
+		// routine, a new lines has simply been forced, to ensure that line starts from
+		// the beginning of the console.
+		fmt.Println("")
+		log.Info().Msg(fmt.Sprintf("Suites completed: %d/%d", completed, total))
+		r.logSuite(res)
+
+		if res.job.ID == "" || res.err != nil {
+			errCount++
+		}
+	}
+	waiter.Stop()
+
+	log.Info().Msgf("Suites total: %d", total)
+	log.Info().Msgf("Suites passed: %d", total-errCount)
+	log.Info().Msgf("Suites failed: %d", errCount)
+
+	return passed
+}
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (job.Job, error) {
 	log.Info().Str("suite", opts.Suite).Str("region", r.Region.String()).Msg("Starting job.")

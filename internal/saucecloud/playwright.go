@@ -2,13 +2,10 @@ package saucecloud
 
 import (
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"os"
 
 	"github.com/saucelabs/saucectl/cli/credentials"
-	"github.com/saucelabs/saucectl/cli/dots"
-	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
@@ -49,16 +46,8 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 }
 
 func (r *PlaywrightRunner) runSuites(fileID string) bool {
-	jobOpts := make(chan job.StartOptions)
-	results := make(chan result, len(r.Project.Suites))
+	jobOpts, results := r.CreateWorkerPool(r.Project.Sauce.Concurrency)
 	defer close(results)
-
-	// Create a pool of workers that run the suites.
-	r.Project.Sauce.Concurrency = concurrency.Min(r.CCYReader, r.Project.Sauce.Concurrency)
-	log.Info().Int("concurrency", r.Project.Sauce.Concurrency).Msg("Launching workers.")
-	for i := 0; i < r.Project.Sauce.Concurrency; i++ {
-		go r.runJobs(jobOpts, results)
-	}
 
 	// Submit suites to work on.
 	for _, s := range r.Project.Suites {
@@ -87,41 +76,5 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 	}
 	close(jobOpts)
 
-	// Collect results.
-	errCount := 0
-	completed := 0
-	total := len(r.Project.Suites)
-	inProgress := total
-	passed := true
-
-	waiter := dots.New(1)
-	waiter.Start()
-	for i := 0; i < total; i++ {
-		res := <-results
-		// in case one of test suites not passed
-		if !res.job.Passed {
-			passed = false
-		}
-		completed++
-		inProgress--
-
-		// Logging is not synchronized over the different worker routines & dot routine.
-		// To avoid implementing a more complex solution centralizing output on only one
-		// routine, a new lines has simply been forced, to ensure that line starts from
-		// the beginning of the console.
-		fmt.Println("")
-		log.Info().Msg(fmt.Sprintf("Suites completed: %d/%d", completed, total))
-		r.logSuite(res)
-
-		if res.job.ID == "" || res.err != nil {
-			errCount++
-		}
-	}
-	waiter.Stop()
-
-	log.Info().Msgf("Suites total: %d", total)
-	log.Info().Msgf("Suites passed: %d", total-errCount)
-	log.Info().Msgf("Suites failed: %d", errCount)
-
-	return passed
+	return r.CollectResults(results, len(r.Project.Suites))
 }
