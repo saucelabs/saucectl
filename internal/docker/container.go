@@ -100,16 +100,6 @@ func (r *ContainerRunner) setupImage(confd config.Docker, beforeExec []string, p
 	if err != nil {
 		return err
 	}
-	// start port forwarding
-	sockatCmd := []string{
-		"socat",
-		"tcp-listen:9222,reuseaddr,fork",
-		"tcp:localhost:9223",
-	}
-
-	if _, _, err := r.docker.Execute(r.Ctx, r.containerID, sockatCmd, nil); err != nil {
-		return err
-	}
 
 	return nil
 }
