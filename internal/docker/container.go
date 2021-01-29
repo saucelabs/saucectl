@@ -2,9 +2,12 @@ package docker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/cli/progress"
 	"strings"
 )
 
@@ -15,6 +18,38 @@ type ContainerRunner struct {
 	containerID     string
 	docker          *Handler
 	containerConfig *containerConfig
+}
+
+func (r *ContainerRunner) pullImage(img config.Image) error {
+	// Check docker image name property from the config file.
+	if img.Name == "" {
+		return errors.New("no docker image specified")
+	}
+
+	// Check if image exists.
+	baseImage := r.docker.GetImageFlavor(img)
+	hasImage, err := r.docker.HasBaseImage(r.Ctx, baseImage)
+	if err != nil {
+		return err
+	}
+
+	// If it's our image, warn the user to not use the latest tag.
+	if strings.Index(img.Name, "saucelabs") == 0 && img.Tag == "latest" {
+		log.Warn().Msg("The use of 'latest' as the docker image tag is discouraged. " +
+			"We recommend pinning the image to a specific version. " +
+			"Please proceed with caution.")
+	}
+
+	// Only pull base image if not already installed.
+	if !hasImage {
+		progress.Show("Pulling image %s", baseImage)
+		defer progress.Stop()
+		if err := r.docker.PullBaseImage(r.Ctx, img); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (r *ContainerRunner) run(cmd []string, env map[string]string) error {

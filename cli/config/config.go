@@ -123,6 +123,11 @@ type Image struct {
 	Tag  string `yaml:"tag,omitempty" json:"tag"`
 }
 
+// String returns a string representation of Image.
+func (i Image) String() string {
+	return fmt.Sprintf("%s:%s", i.Name, i.Tag)
+}
+
 // Npm represents the npm settings
 type Npm struct {
 	Packages map[string]string `yaml:"packages,omitempty" json:"packages"`
@@ -135,7 +140,7 @@ const (
 
 // Kind* contains referenced config kinds
 const (
-	KindCypress = "cypress"
+	KindCypress    = "cypress"
 	KindPlaywright = "playwright"
 )
 
