@@ -56,5 +56,5 @@ func setupLogging(verbose bool) {
 		return time.Now().In(time.Local)
 	}
 
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: "15:04:05"})
 }
