@@ -2,19 +2,16 @@ package docker
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
 
 	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/progress"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
@@ -103,32 +100,8 @@ func (r *PlaywrightRunner) setup() error {
 			" follow the guide at https://docs.docker.com/get-docker/", err)
 	}
 
-	// Check docker image name property from the config file.
-	if r.Project.Docker.Image.Name == "" {
-		return errors.New("no docker image specified")
-	}
-
-	// Check if image exists.
-	baseImage := r.docker.GetImageFlavor(r.Project.Docker.Image)
-	hasImage, err := r.docker.HasBaseImage(r.Ctx, baseImage)
-	if err != nil {
+	if err := r.pullImage(r.Project.Docker.Image); err != nil {
 		return err
-	}
-
-	// If it's our image, warn the user to not use the latest tag.
-	if strings.Index(r.Project.Docker.Image.Name, "saucelabs") == 0 && r.Project.Docker.Image.Tag == "latest" {
-		log.Warn().Msg("The use of 'latest' as the docker image tag is discouraged. " +
-			"We recommend pinning the image to a specific version. " +
-			"Please proceed with caution.")
-	}
-
-	// Only pull base image if not already installed.
-	if !hasImage {
-		progress.Show("Pulling image %s", baseImage)
-		defer progress.Stop()
-		if err := r.docker.PullBaseImage(r.Ctx, r.Project.Docker.Image); err != nil {
-			return err
-		}
 	}
 
 	files := []string{
@@ -145,7 +118,7 @@ func (r *PlaywrightRunner) setup() error {
 	// wait until Xvfb started
 	time.Sleep(1 * time.Second)
 
-	pDir, err := r.docker.ProjectDir(r.Ctx, baseImage)
+	pDir, err := r.docker.ProjectDir(r.Ctx, r.Project.Docker.Image.String())
 	if err != nil {
 		return err
 	}
