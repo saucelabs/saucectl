@@ -31,7 +31,7 @@ func TestUpdateRegion(t *testing.T) {
 
 func TestUpdateRegionCypress(t *testing.T) {
 	dir := fs.NewDir(t, "fixtures",
-		fs.WithFile("config.yml", "apiVersion: v1alpha\nkind: cypress\ncypress:\n  configFile: cypress.json", fs.WithMode(0644)),
+		fs.WithFile("config.yml", "apiVersion: v1alpha\nkind: cypress\ncypress:\n  configFile: cypress.json\n  version: 1.2.3", fs.WithMode(0644)),
 		fs.WithFile("cypress.json", "{}", fs.WithMode(0644)),
 		fs.WithDir("cypress", fs.WithMode(0755)))
 	path, _ := os.Getwd()
@@ -49,7 +49,7 @@ func TestUpdateRegionCypress(t *testing.T) {
 
 func TestUpdateRegionPlaywright(t *testing.T) {
 	dir := fs.NewDir(t, "fixtures",
-		fs.WithFile("config.yml", "apiVersion: v1alpha\nkind: playwright\nplaywright:\n  projectPath: dummy-folder", fs.WithMode(0644)))
+		fs.WithFile("config.yml", "apiVersion: v1alpha\nkind: playwright\nplaywright:\n  projectPath: dummy-folder\n  version: 1.2.3", fs.WithMode(0644)))
 	path, _ := os.Getwd()
 	defer func () {
 		os.Chdir(path)
