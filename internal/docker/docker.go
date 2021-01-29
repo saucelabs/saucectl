@@ -51,6 +51,7 @@ type containerConfig struct {
 
 // CommonAPIClient is the interface for interacting with containers.
 type CommonAPIClient interface {
+	ServerVersion(ctx context.Context) (types.Version, error)
 	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
 	ImageList(ctx context.Context, options types.ImageListOptions) ([]types.ImageSummary, error)
 	ImagePull(ctx context.Context, ref string, options types.ImagePullOptions) (io.ReadCloser, error)
@@ -92,10 +93,11 @@ func Create() (*Handler, error) {
 	return &handler, nil
 }
 
-// ValidateDependency checks if external dependencies are installed
-func (handler *Handler) ValidateDependency() error {
-	_, err := handler.client.ContainerList(context.Background(), types.ContainerListOptions{})
-	return err
+// IsInstalled checks if docker is installed.
+func (handler *Handler) IsInstalled() bool {
+	_, err := handler.client.ServerVersion(context.Background())
+	log.Err(err).Msg("Unable to reach out to docker.")
+	return err == nil
 }
 
 // HasBaseImage checks if base image is installed
