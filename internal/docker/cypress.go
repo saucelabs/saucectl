@@ -184,17 +184,3 @@ func (r *CypressRunner) setup() error {
 
 	return nil
 }
-
-func (r *CypressRunner) beforeExec(tasks []string) error {
-	for _, task := range tasks {
-		log.Info().Str("task", task).Msg("Running BeforeExec")
-		exitCode, err := r.docker.ExecuteAttach(r.Ctx, r.containerID, r.Cli, strings.Fields(task), nil)
-		if err != nil {
-			return err
-		}
-		if exitCode != 0 {
-			return fmt.Errorf("failed to run BeforeExec task: %s - exit code %d", task, exitCode)
-		}
-	}
-	return nil
-}

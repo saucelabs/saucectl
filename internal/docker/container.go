@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
+	"strings"
 )
 
 // ContainerRunner represents the container runner for docker.
@@ -36,6 +37,20 @@ func (r *ContainerRunner) run(cmd []string, env map[string]string) error {
 	}
 	if exitCode != 0 {
 		return fmt.Errorf("exitCode is %d", exitCode)
+	}
+	return nil
+}
+
+func (r *ContainerRunner) beforeExec(tasks []string) error {
+	for _, task := range tasks {
+		log.Info().Str("task", task).Msg("Running BeforeExec")
+		exitCode, err := r.docker.ExecuteAttach(r.Ctx, r.containerID, r.Cli, strings.Fields(task), nil)
+		if err != nil {
+			return err
+		}
+		if exitCode != 0 {
+			return fmt.Errorf("failed to run BeforeExec task: %s - exit code %d", task, exitCode)
+		}
 	}
 	return nil
 }
