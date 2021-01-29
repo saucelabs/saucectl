@@ -20,20 +20,21 @@ import (
 
 // CypressRunner represents the docker implementation of a test runner.
 type CypressRunner struct {
-	Project         cypress.Project
-	Ctx             context.Context
-	Cli             *command.SauceCtlCli
-	containerID     string
-	docker          *Handler
-	containerConfig *containerConfig
+	ContainerRunner
+	Project cypress.Project
 }
 
 // NewCypress creates a new CypressRunner instance.
 func NewCypress(c cypress.Project, cli *command.SauceCtlCli) (*CypressRunner, error) {
-	r := CypressRunner{}
-	r.containerConfig = &containerConfig{}
-	r.Cli = cli
-	r.Ctx = context.Background()
+	r := CypressRunner{
+		ContainerRunner: ContainerRunner{
+			Ctx:             context.Background(),
+			Cli:             cli,
+			containerID:     "",
+			docker:          nil,
+			containerConfig: &containerConfig{},
+		},
+	}
 	r.Project = c
 
 	var err error

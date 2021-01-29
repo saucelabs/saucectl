@@ -21,20 +21,21 @@ import (
 
 // PlaywrightRunner represents the docker implementation of a test runner.
 type PlaywrightRunner struct {
-	Project         playwright.Project
-	Ctx             context.Context
-	Cli             *command.SauceCtlCli
-	containerID     string
-	docker          *Handler
-	containerConfig *containerConfig
+	ContainerRunner
+	Project playwright.Project
 }
 
 // NewPlaywright creates a new PlaywrightRunner instance.
 func NewPlaywright(c playwright.Project, cli *command.SauceCtlCli) (*PlaywrightRunner, error) {
-	r := PlaywrightRunner{}
-	r.containerConfig = &containerConfig{}
-	r.Cli = cli
-	r.Ctx = context.Background()
+	r := PlaywrightRunner{
+		ContainerRunner: ContainerRunner{
+			Ctx:             context.Background(),
+			Cli:             cli,
+			containerID:     "",
+			docker:          nil,
+			containerConfig: &containerConfig{},
+		},
+	}
 	r.Project = c
 
 	var err error
