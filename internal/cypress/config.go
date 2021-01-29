@@ -3,6 +3,7 @@ package cypress
 import (
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -75,6 +76,10 @@ func FromFile(cfgPath string) (Project, error) {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
 
+	if p.Cypress.Version == "" {
+		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+	}
+
 	if _, err := os.Stat(p.Cypress.ConfigFile); err != nil {
 		return p, fmt.Errorf("unable to locate %s", p.Cypress.ConfigFile)
 	}
@@ -96,6 +101,17 @@ func FromFile(cfgPath string) (Project, error) {
 	// Default mode to Mount
 	if p.Docker.FileTransfer == "" {
 		p.Docker.FileTransfer = config.DockerFileMount
+	}
+
+	if p.Docker.Image.Name != "" && p.Docker.Image.Tag != "" {
+		log.Info().Msgf(
+			"Ignoring framework version for Docker, using provided image %s:%s (only applicable to docker mode)",
+			p.Docker.Image.Name, p.Docker.Image.Tag)
+	}
+
+	if p.Docker.Image.Name == "" {
+		p.Docker.Image.Name = DefaultDockerImage
+		p.Docker.Image.Tag = "v" + p.Cypress.Version
 	}
 
 	if p.Sauce.Concurrency < 1 {
