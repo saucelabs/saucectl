@@ -23,7 +23,7 @@ func TestPreliminarySteps_Basic(t *testing.T) {
 }
 
 func TestPreliminarySteps_NoCypressVersion(t *testing.T) {
-	want := "no cypress version provided"
+	want := "Missing cypress version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers"
 	runner := CypressRunner{}
 	err := runner.checkCypressVersion()
 	assert.NotNil(t, err)
@@ -42,17 +42,18 @@ func TestRunSuite(t *testing.T) {
 	}
 	reader := mocks.FakeJobReader{
 		PollJobFn: func(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
-			time.Sleep(5 * time.Second)
 			return job.Job{ID: id, Passed: true}, nil
 		},
 	}
 	runner := CypressRunner{
-		JobStarter: &starter,
-		JobReader:  &reader,
+		CloudRunner: CloudRunner{
+			JobStarter: &starter,
+			JobReader:  &reader,
+		},
 	}
-	suite := cypress.Suite{}
-	fileID := "dummy-file-id"
-	j, err := runner.runSuite(suite, fileID)
+
+	opts := job.StartOptions{}
+	j, err := runner.runJob(opts)
 	assert.Nil(t, err)
 	assert.Equal(t, j.ID, "fake-job-id")
 }
@@ -69,7 +70,6 @@ func TestRunSuites(t *testing.T) {
 	}
 	reader := mocks.FakeJobReader{
 		PollJobFn: func(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
-			time.Sleep(5 * time.Second)
 			return job.Job{ID: id, Passed: true}, nil
 		},
 	}
@@ -77,9 +77,11 @@ func TestRunSuites(t *testing.T) {
 		return 1, nil
 	}}
 	runner := CypressRunner{
-		JobStarter: &starter,
-		JobReader:  &reader,
-		CCYReader:  ccyReader,
+		CloudRunner: CloudRunner{
+			JobStarter: &starter,
+			JobReader:  &reader,
+			CCYReader:  ccyReader,
+		},
 		Project: cypress.Project{
 			Suites: []cypress.Suite{
 				{Name: "dummy-suite"},
@@ -109,7 +111,11 @@ func TestArchiveProject(t *testing.T) {
 	}
 	wd, _ := os.Getwd()
 	log.Info().Msg(wd)
-	z, err := runner.archiveProject("./test-arch/")
+	files := []string{
+		runner.Project.Cypress.ConfigFile,
+		runner.Project.Cypress.ProjectPath,
+	}
+	z, err := runner.archiveProject(runner.Project, "./test-arch/", files)
 	if err != nil {
 		t.Fail()
 	}
@@ -140,7 +146,9 @@ func TestUploadProject(t *testing.T) {
 		UploadSuccess: true,
 	}
 	runner := CypressRunner{
-		ProjectUploader: uploader,
+		CloudRunner: CloudRunner{
+			ProjectUploader: uploader,
+		},
 	}
 	id, err := runner.uploadProject("/my-dummy-project.zip")
 	assert.Equal(t, "fake-id", id)
@@ -170,7 +178,6 @@ func TestRunProject(t *testing.T) {
 	}
 	reader := mocks.FakeJobReader{
 		PollJobFn: func(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
-			time.Sleep(5 * time.Second)
 			return job.Job{ID: id, Passed: true}, nil
 		},
 	}
@@ -181,10 +188,12 @@ func TestRunProject(t *testing.T) {
 		UploadSuccess: true,
 	}
 	runner := CypressRunner{
-		JobStarter:      &starter,
-		JobReader:       &reader,
-		CCYReader:       ccyReader,
-		ProjectUploader: uploader,
+		CloudRunner: CloudRunner{
+			JobStarter:      &starter,
+			JobReader:       &reader,
+			CCYReader:       ccyReader,
+			ProjectUploader: uploader,
+		},
 		Project: cypress.Project{
 			Cypress: cypress.Cypress{
 				Version:     "5.6.0",
@@ -203,21 +212,4 @@ func TestRunProject(t *testing.T) {
 	cnt, err := runner.RunProject()
 	assert.Nil(t, err)
 	assert.Equal(t, cnt, 0)
-}
-
-func TestLogSuiteConsole(t *testing.T) {
-	reader := &mocks.FakeJobReader{
-		GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
-			return []byte("dummy-content"), nil
-		},
-	}
-	runner := CypressRunner{
-		JobReader: reader,
-	}
-	res := result{
-		job: job.Job{
-			ID: "fake-job-id",
-		},
-	}
-	runner.logSuiteConsole(res)
 }

@@ -3,7 +3,6 @@ package docker
 import (
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
-	"github.com/saucelabs/saucectl/cli/mocks"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -26,7 +25,7 @@ func TestPreliminarySteps_DefinedImage(t *testing.T) {
 }
 
 func TestPreliminarySteps_NoDefinedImageNoCypressVersion(t *testing.T) {
-	want := "no cypress version provided"
+	want := "Missing cypress version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers"
 	runner := CypressRunner{}
 	err := runner.defineDockerImage()
 	assert.NotNil(t, err)
@@ -39,18 +38,4 @@ func TestNewRunner(t *testing.T) {
 	r, err := NewCypress(p, cli)
 	assert.NotNil(t, r)
 	assert.Nil(t, err)
-}
-
-func TestTearDown(t *testing.T) {
-	docker := &mocks.FakeClient{
-		ContainerInspectSuccess: true,
-		ContainerStopSuccess: true,
-		ContainerRemoveSuccess: true,
-	}
-	runner := CypressRunner{
-		docker: &Handler{
-			client: docker,
-		},
-	}
-	assert.Nil(t, runner.teardown("logs"))
 }

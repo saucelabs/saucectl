@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -16,8 +15,6 @@ import (
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/progress"
-	"github.com/saucelabs/saucectl/cli/runner"
-	"github.com/saucelabs/saucectl/cli/streams"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
@@ -77,7 +74,7 @@ func (r *PlaywrightRunner) defineDockerImage() error {
 	}
 
 	if r.Project.Playwright.Version == "" {
-		return fmt.Errorf("no cypress version provided")
+		return fmt.Errorf("Missing playwright version. Check out available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
 
 	if r.Project.Docker.Image.Name == playwright.DefaultDockerImage && r.Project.Docker.Image.Tag == "" {
@@ -183,7 +180,7 @@ func (r *PlaywrightRunner) setup() error {
 func (r *PlaywrightRunner) beforeExec(tasks []string) error {
 	for _, task := range tasks {
 		log.Info().Str("task", task).Msg("Running BeforeExec")
-		exitCode, err := r.execute(strings.Fields(task), nil)
+		exitCode, err := r.docker.ExecuteAttach(r.Ctx, r.containerID, r.Cli, strings.Fields(task), nil)
 		if err != nil {
 			return err
 		}
@@ -194,85 +191,10 @@ func (r *PlaywrightRunner) beforeExec(tasks []string) error {
 	return nil
 }
 
-func (r *PlaywrightRunner) execute(cmd []string, env map[string]string) (int, error) {
-	var (
-		out, stderr io.Writer
-		in          io.ReadCloser
-	)
-	out = r.Cli.Out()
-	stderr = r.Cli.Out()
-
-	if err := r.Cli.In().CheckTty(false, true); err != nil {
-		return 1, err
-	}
-	createResp, attachResp, err := r.docker.Execute(r.Ctx, r.containerID, cmd, env)
-	if err != nil {
-		return 1, err
-	}
-	defer attachResp.Close()
-	errCh := make(chan error, 1)
-	go func() {
-		defer close(errCh)
-		errCh <- func() error {
-			streamer := streams.IOStreamer{
-				Streams:      r.Cli,
-				InputStream:  in,
-				OutputStream: out,
-				ErrorStream:  stderr,
-				Resp:         *attachResp,
-			}
-
-			return streamer.Stream(r.Ctx)
-		}()
-	}()
-
-	if err := <-errCh; err != nil {
-		return 1, err
-	}
-
-	exitCode, err := r.docker.ExecuteInspect(r.Ctx, createResp.ID)
-	if err != nil {
-		return 1, err
-	}
-	return exitCode, nil
-
-}
-
-// run runs the tests defined in the config.Project.
-func (r *PlaywrightRunner) run(s playwright.Suite) (int, error) {
-	return r.execute([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", s.Name}, map[string]string{})
-}
-
-// teardown cleans up the test environment.
-func (r *PlaywrightRunner) teardown(logDir string) error {
-	for _, containerSrcPath := range runner.LogFiles {
-		file := filepath.Base(containerSrcPath)
-		hostDstPath := filepath.Join(logDir, file)
-		if err := r.docker.CopyFromContainer(r.Ctx, r.containerID, containerSrcPath, hostDstPath); err != nil {
-			continue
-		}
-	}
-
-	// checks that container exists before stopping and removing it
-	if _, err := r.docker.ContainerInspect(r.Ctx, r.containerID); err != nil {
-		return err
-	}
-
-	if err := r.docker.ContainerStop(r.Ctx, r.containerID); err != nil {
-		return err
-	}
-
-	if err := r.docker.ContainerRemove(r.Ctx, r.containerID); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (r *PlaywrightRunner) runSuite(suite playwright.Suite) error {
 	defer func() {
 		log.Info().Msg("Tearing down environment")
-		if err := r.teardown(r.Cli.LogDir); err != nil {
+		if err := r.docker.Teardown(r.Ctx, r.containerID); err != nil {
 			if !r.docker.IsErrNotFound(err) {
 				log.Error().Err(err).Msg("Failed to tear down environment")
 			}
@@ -285,7 +207,9 @@ func (r *PlaywrightRunner) runSuite(suite playwright.Suite) error {
 		return err
 	}
 
-	exitCode, err := r.run(suite)
+	exitCode, err := r.docker.ExecuteAttach(r.Ctx, r.containerID, r.Cli,
+		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", suite.Name},
+		map[string]string{})
 	log.Info().
 		Int("ExitCode", exitCode).
 		Msg("Command Finished")

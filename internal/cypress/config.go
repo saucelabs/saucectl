@@ -3,12 +3,13 @@ package cypress
 import (
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/config"
-	"gopkg.in/yaml.v2"
 	"os"
 	"path/filepath"
 	"strings"
 	"unicode"
+
+	"github.com/saucelabs/saucectl/cli/config"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -30,11 +31,12 @@ type Project struct {
 
 // Suite represents the cypress test suite configuration.
 type Suite struct {
-	Name           string      `yaml:"name,omitempty" json:"name"`
-	Browser        string      `yaml:"browser,omitempty" json:"browser"`
-	BrowserVersion string      `yaml:"browserVersion,omitempty" json:"browserVersion"`
-	PlatformName   string      `yaml:"platformName,omitempty" json:"platformName"`
-	Config         SuiteConfig `yaml:"config,omitempty" json:"config"`
+	Name             string      `yaml:"name,omitempty" json:"name"`
+	Browser          string      `yaml:"browser,omitempty" json:"browser"`
+	BrowserVersion   string      `yaml:"browserVersion,omitempty" json:"browserVersion"`
+	PlatformName     string      `yaml:"platformName,omitempty" json:"platformName"`
+	Config           SuiteConfig `yaml:"config,omitempty" json:"config"`
+	ScreenResolution string      `yaml:"screenResolution,omitempty" json:"screenResolution"`
 }
 
 // SuiteConfig represents the cypress config overrides.

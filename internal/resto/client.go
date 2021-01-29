@@ -12,9 +12,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 )
 
-// ConsoleLogAsset represents job asset log file name.
-const ConsoleLogAsset = "console.log"
-
 var (
 	// ErrServerError is returned when the server was not able to correctly handle our request (status code >= 500).
 	ErrServerError = errors.New("internal server error")
