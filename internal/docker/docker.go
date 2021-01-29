@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/saucelabs/saucectl/cli/command"
 	"io"
 	"io/ioutil"
 	"os"
@@ -410,6 +411,50 @@ func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd 
 	return &createResp, &resp, err
 }
 
+// ExecuteAttach runs the cmd test in the Docker container and attaches the given stream.
+func (handler *Handler) ExecuteAttach(ctx context.Context, containerID string, cli *command.SauceCtlCli, cmd []string, env map[string]string) (int, error) {
+	var out, stderr io.Writer
+	var in io.ReadCloser
+
+	out = cli.Out()
+	stderr = cli.Out()
+
+	if err := cli.In().CheckTty(false, true); err != nil {
+		return 1, err
+	}
+	createResp, attachResp, err := handler.Execute(ctx, containerID, cmd, env)
+	if err != nil {
+		return 1, err
+	}
+	defer attachResp.Close()
+	errCh := make(chan error, 1)
+	go func() {
+		defer close(errCh)
+		errCh <- func() error {
+			streamer := streams.IOStreamer{
+				Streams:      cli,
+				InputStream:  in,
+				OutputStream: out,
+				ErrorStream:  stderr,
+				Resp:         *attachResp,
+			}
+
+			return streamer.Stream(ctx)
+		}()
+	}()
+
+	if err := <-errCh; err != nil {
+		return 1, err
+	}
+
+	exitCode, err := handler.ExecuteInspect(ctx, createResp.ID)
+	if err != nil {
+		return 1, err
+	}
+	return exitCode, nil
+
+}
+
 // ExecuteInspect checks exit code of test
 func (handler *Handler) ExecuteInspect(ctx context.Context, srcContainerID string) (int, error) {
 	inspectResp, err := handler.client.ContainerExecInspect(ctx, srcContainerID)
@@ -456,4 +501,22 @@ func (handler *Handler) ContainerInspect(ctx context.Context, containerID string
 // by the API when some object is not found.
 func (handler *Handler) IsErrNotFound(err error) bool {
 	return client.IsErrNotFound(err)
+}
+
+// Teardown is a simple wrapper around ContainerStop and ContainerRemove and calls them in order.
+func (handler *Handler) Teardown(ctx context.Context, containerID string) error {
+	// checks that container exists before stopping and removing it
+	if _, err := handler.ContainerInspect(ctx, containerID); err != nil {
+		return err
+	}
+
+	if err := handler.ContainerStop(ctx, containerID); err != nil {
+		return err
+	}
+
+	if err := handler.ContainerRemove(ctx, containerID); err != nil {
+		return err
+	}
+
+	return nil
 }

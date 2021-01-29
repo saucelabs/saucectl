@@ -3,7 +3,6 @@ package docker
 import (
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
-	"github.com/saucelabs/saucectl/cli/mocks"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -39,18 +38,4 @@ func TestNewRunner(t *testing.T) {
 	r, err := NewCypress(p, cli)
 	assert.NotNil(t, r)
 	assert.Nil(t, err)
-}
-
-func TestTearDown(t *testing.T) {
-	docker := &mocks.FakeClient{
-		ContainerInspectSuccess: true,
-		ContainerStopSuccess: true,
-		ContainerRemoveSuccess: true,
-	}
-	runner := CypressRunner{
-		docker: &Handler{
-			client: docker,
-		},
-	}
-	assert.Nil(t, runner.teardown("logs"))
 }

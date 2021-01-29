@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -15,8 +14,6 @@ import (
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/progress"
-	"github.com/saucelabs/saucectl/cli/runner"
-	"github.com/saucelabs/saucectl/cli/streams"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 )
@@ -183,7 +180,7 @@ func (r *CypressRunner) setup() error {
 func (r *CypressRunner) beforeExec(tasks []string) error {
 	for _, task := range tasks {
 		log.Info().Str("task", task).Msg("Running BeforeExec")
-		exitCode, err := r.execute(strings.Fields(task), nil)
+		exitCode, err := r.docker.ExecuteAttach(r.Ctx, r.containerID, r.Cli, strings.Fields(task), nil)
 		if err != nil {
 			return err
 		}
@@ -194,85 +191,10 @@ func (r *CypressRunner) beforeExec(tasks []string) error {
 	return nil
 }
 
-func (r *CypressRunner) execute(cmd []string, env map[string]string) (int, error) {
-	var (
-		out, stderr io.Writer
-		in          io.ReadCloser
-	)
-	out = r.Cli.Out()
-	stderr = r.Cli.Out()
-
-	if err := r.Cli.In().CheckTty(false, true); err != nil {
-		return 1, err
-	}
-	createResp, attachResp, err := r.docker.Execute(r.Ctx, r.containerID, cmd, env)
-	if err != nil {
-		return 1, err
-	}
-	defer attachResp.Close()
-	errCh := make(chan error, 1)
-	go func() {
-		defer close(errCh)
-		errCh <- func() error {
-			streamer := streams.IOStreamer{
-				Streams:      r.Cli,
-				InputStream:  in,
-				OutputStream: out,
-				ErrorStream:  stderr,
-				Resp:         *attachResp,
-			}
-
-			return streamer.Stream(r.Ctx)
-		}()
-	}()
-
-	if err := <-errCh; err != nil {
-		return 1, err
-	}
-
-	exitCode, err := r.docker.ExecuteInspect(r.Ctx, createResp.ID)
-	if err != nil {
-		return 1, err
-	}
-	return exitCode, nil
-
-}
-
-// run runs the tests defined in the config.Project.
-func (r *CypressRunner) run(s cypress.Suite) (int, error) {
-	return r.execute([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", s.Name}, s.Config.Env)
-}
-
-// teardown cleans up the test environment.
-func (r *CypressRunner) teardown(logDir string) error {
-	for _, containerSrcPath := range runner.LogFiles {
-		file := filepath.Base(containerSrcPath)
-		hostDstPath := filepath.Join(logDir, file)
-		if err := r.docker.CopyFromContainer(r.Ctx, r.containerID, containerSrcPath, hostDstPath); err != nil {
-			continue
-		}
-	}
-
-	// checks that container exists before stopping and removing it
-	if _, err := r.docker.ContainerInspect(r.Ctx, r.containerID); err != nil {
-		return err
-	}
-
-	if err := r.docker.ContainerStop(r.Ctx, r.containerID); err != nil {
-		return err
-	}
-
-	if err := r.docker.ContainerRemove(r.Ctx, r.containerID); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (r *CypressRunner) runSuite(suite cypress.Suite) error {
 	defer func() {
 		log.Info().Msg("Tearing down environment")
-		if err := r.teardown(r.Cli.LogDir); err != nil {
+		if err := r.docker.Teardown(r.Ctx, r.containerID); err != nil {
 			if !r.docker.IsErrNotFound(err) {
 				log.Error().Err(err).Msg("Failed to tear down environment")
 			}
@@ -285,7 +207,9 @@ func (r *CypressRunner) runSuite(suite cypress.Suite) error {
 		return err
 	}
 
-	exitCode, err := r.run(suite)
+	exitCode, err := r.docker.ExecuteAttach(r.Ctx, r.containerID, r.Cli,
+		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", suite.Name},
+		suite.Config.Env)
 	log.Info().
 		Int("ExitCode", exitCode).
 		Msg("Command Finished")
