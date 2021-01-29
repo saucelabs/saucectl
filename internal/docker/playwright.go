@@ -3,16 +3,10 @@ package docker
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path"
-	"path/filepath"
-	"time"
-
 	"github.com/rs/zerolog/log"
+	"path/filepath"
 
 	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
 
@@ -50,10 +44,15 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
+	files := []string{
+		r.Project.Playwright.LocalProjectPath,
+	}
+	r.Project.Playwright.ProjectPath = filepath.Base(r.Project.Playwright.ProjectPath)
+
 	errorCount := 0
 	for _, suite := range r.Project.Suites {
 		log.Info().Msg("Setting up test environment")
-		if err := r.setup(); err != nil {
+		if err := r.setupImage(r.Project.Docker, r.Project.BeforeExec, r.Project, files); err != nil {
 			log.Err(err).Msg("Failed to setup test environment")
 			return 1, err
 		}
@@ -89,70 +88,5 @@ func (r *PlaywrightRunner) defineDockerImage() error {
 		r.Project.Docker.Image.Name = playwright.DefaultDockerImage
 		r.Project.Docker.Image.Tag = "v" + r.Project.Playwright.Version
 	}
-	return nil
-}
-
-// setup performs any necessary steps for a test runner to execute tests.
-func (r *PlaywrightRunner) setup() error {
-	if !r.docker.IsInstalled() {
-		return fmt.Errorf("please verify that docker is installed and running: " +
-			" follow the guide at https://docs.docker.com/get-docker/")
-	}
-
-	if err := r.pullImage(r.Project.Docker.Image); err != nil {
-		return err
-	}
-
-	files := []string{
-		r.Project.Playwright.LocalProjectPath,
-	}
-	r.Project.Playwright.ProjectPath = filepath.Base(r.Project.Playwright.ProjectPath)
-
-	container, err := r.docker.StartContainer(r.Ctx, files, r.Project.Docker)
-	if err != nil {
-		return err
-	}
-	r.containerID = container.ID
-
-	// wait until Xvfb started
-	time.Sleep(1 * time.Second)
-
-	pDir, err := r.docker.ProjectDir(r.Ctx, r.Project.Docker.Image.String())
-	if err != nil {
-		return err
-	}
-
-	tmpDir, err := ioutil.TempDir("", "saucectl")
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tmpDir)
-
-	rcPath := filepath.Join(tmpDir, SauceRunnerConfigFile)
-	if err := jsonio.WriteFile(rcPath, r.Project); err != nil {
-		return err
-	}
-
-	if err := r.docker.CopyToContainer(r.Ctx, r.containerID, rcPath, pDir); err != nil {
-		return err
-	}
-	r.containerConfig.sauceRunnerConfigPath = path.Join(pDir, SauceRunnerConfigFile)
-
-	// running pre-exec tasks
-	err = r.beforeExec(r.Project.BeforeExec)
-	if err != nil {
-		return err
-	}
-	// start port forwarding
-	sockatCmd := []string{
-		"socat",
-		"tcp-listen:9222,reuseaddr,fork",
-		"tcp:localhost:9223",
-	}
-
-	if _, _, err := r.docker.Execute(r.Ctx, r.containerID, sockatCmd, nil); err != nil {
-		return err
-	}
-
 	return nil
 }
