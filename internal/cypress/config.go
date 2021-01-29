@@ -76,6 +76,10 @@ func FromFile(cfgPath string) (Project, error) {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
 
+	if p.Cypress.Version == "" {
+		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+	}
+
 	if _, err := os.Stat(p.Cypress.ConfigFile); err != nil {
 		return p, fmt.Errorf("unable to locate %s", p.Cypress.ConfigFile)
 	}

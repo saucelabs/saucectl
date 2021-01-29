@@ -1,6 +1,7 @@
 package playwright
 
 import (
+	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/config"
@@ -66,6 +67,10 @@ func FromFile(cfgPath string) (Project, error) {
 
 	if err = yaml.NewDecoder(f).Decode(&p); err != nil {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
+	}
+
+	if p.Playwright.Version == "" {
+		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
 
 	// Default project path
