@@ -28,6 +28,7 @@ type PlaywrightRunner struct {
 // NewPlaywright creates a new PlaywrightRunner instance.
 func NewPlaywright(c playwright.Project, cli *command.SauceCtlCli) (*PlaywrightRunner, error) {
 	r := PlaywrightRunner{
+		Project: c,
 		ContainerRunner: ContainerRunner{
 			Ctx:             context.Background(),
 			Cli:             cli,
@@ -36,7 +37,6 @@ func NewPlaywright(c playwright.Project, cli *command.SauceCtlCli) (*PlaywrightR
 			containerConfig: &containerConfig{},
 		},
 	}
-	r.Project = c
 
 	var err error
 	r.docker, err = Create()

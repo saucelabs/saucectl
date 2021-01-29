@@ -27,6 +27,7 @@ type CypressRunner struct {
 // NewCypress creates a new CypressRunner instance.
 func NewCypress(c cypress.Project, cli *command.SauceCtlCli) (*CypressRunner, error) {
 	r := CypressRunner{
+		Project: c,
 		ContainerRunner: ContainerRunner{
 			Ctx:             context.Background(),
 			Cli:             cli,
@@ -35,7 +36,6 @@ func NewCypress(c cypress.Project, cli *command.SauceCtlCli) (*CypressRunner, er
 			containerConfig: &containerConfig{},
 		},
 	}
-	r.Project = c
 
 	var err error
 	r.docker, err = Create()
