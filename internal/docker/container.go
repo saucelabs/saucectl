@@ -8,6 +8,11 @@ import (
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/progress"
+	"github.com/saucelabs/saucectl/internal/jsonio"
+	"io/ioutil"
+	"os"
+	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -47,6 +52,53 @@ func (r *ContainerRunner) pullImage(img config.Image) error {
 		if err := r.docker.PullBaseImage(r.Ctx, img); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+// setup performs any necessary steps for a test runner to execute tests.
+func (r *ContainerRunner) setupImage(confd config.Docker, beforeExec []string, project interface{}, files []string) error {
+	if !r.docker.IsInstalled() {
+		return fmt.Errorf("please verify that docker is installed and running: " +
+			" follow the guide at https://docs.docker.com/get-docker/")
+	}
+
+	if err := r.pullImage(confd.Image); err != nil {
+		return err
+	}
+
+	container, err := r.docker.StartContainer(r.Ctx, files, confd)
+	if err != nil {
+		return err
+	}
+	r.containerID = container.ID
+
+	pDir, err := r.docker.ProjectDir(r.Ctx, confd.Image.String())
+	if err != nil {
+		return err
+	}
+
+	tmpDir, err := ioutil.TempDir("", "saucectl")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tmpDir)
+
+	rcPath := filepath.Join(tmpDir, SauceRunnerConfigFile)
+	if err := jsonio.WriteFile(rcPath, project); err != nil {
+		return err
+	}
+
+	if err := r.docker.CopyToContainer(r.Ctx, r.containerID, rcPath, pDir); err != nil {
+		return err
+	}
+	r.containerConfig.sauceRunnerConfigPath = path.Join(pDir, SauceRunnerConfigFile)
+
+	// running pre-exec tasks
+	err = r.beforeExec(beforeExec)
+	if err != nil {
+		return err
 	}
 
 	return nil

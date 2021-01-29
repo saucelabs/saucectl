@@ -13,6 +13,7 @@ import (
 
 // FakeClient Docker mock
 type FakeClient struct {
+	ServerVersionFn             func(ctx context.Context) (types.Version, error)
 	ContainerListSuccess        bool
 	ImageListSuccess            bool
 	ImageInspectWithRawSuccess  bool
@@ -35,6 +36,11 @@ type fakeReadWriteCloser struct{}
 func (rwc fakeReadWriteCloser) Read(p []byte) (n int, err error)  { return 1, nil }
 func (rwc fakeReadWriteCloser) Close() error                      { return nil }
 func (rwc fakeReadWriteCloser) Write(p []byte) (n int, err error) { return 0, nil }
+
+// ServerVersion mock function.
+func (fc *FakeClient) ServerVersion(ctx context.Context) (types.Version, error) {
+	return fc.ServerVersionFn(ctx)
+}
 
 // ContainerList mock function
 func (fc *FakeClient) ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error) {
@@ -161,4 +167,3 @@ func (fc *FakeClient) ImageInspectWithRaw(ctx context.Context, imageID string) (
 	}
 	return types.ImageInspect{}, nil, errors.New("ImageInspectWithRaw")
 }
-
