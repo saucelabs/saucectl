@@ -55,7 +55,14 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 
 	errorCount := 0
 	for _, suite := range r.Project.Suites {
-		err := r.runSuite(suite)
+		log.Info().Msg("Setting up test environment")
+		if err := r.setup(); err != nil {
+			log.Err(err).Msg("Failed to setup test environment")
+			return 1, err
+		}
+
+		err := r.run([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", suite.Name},
+			map[string]string{})
 		if err != nil {
 			errorCount++
 		}
@@ -90,6 +97,8 @@ func (r *PlaywrightRunner) defineDockerImage() error {
 
 // setup performs any necessary steps for a test runner to execute tests.
 func (r *PlaywrightRunner) setup() error {
+	log.Info().Msg("Setting up test environment")
+
 	err := r.docker.ValidateDependency()
 	if err != nil {
 		return fmt.Errorf("please verify that docker is installed and running: %v, "+
@@ -188,38 +197,6 @@ func (r *PlaywrightRunner) beforeExec(tasks []string) error {
 		if exitCode != 0 {
 			return fmt.Errorf("failed to run BeforeExec task: %s - exit code %d", task, exitCode)
 		}
-	}
-	return nil
-}
-
-func (r *PlaywrightRunner) runSuite(suite playwright.Suite) error {
-	defer func() {
-		log.Info().Msg("Tearing down environment")
-		if err := r.docker.Teardown(r.Ctx, r.containerID); err != nil {
-			if !r.docker.IsErrNotFound(err) {
-				log.Error().Err(err).Msg("Failed to tear down environment")
-			}
-		}
-	}()
-
-	log.Info().Msg("Setting up test environment")
-	if err := r.setup(); err != nil {
-		log.Err(err).Msg("Failed to setup test environment")
-		return err
-	}
-
-	exitCode, err := r.docker.ExecuteAttach(r.Ctx, r.containerID, r.Cli,
-		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", suite.Name},
-		map[string]string{})
-	log.Info().
-		Int("ExitCode", exitCode).
-		Msg("Command Finished")
-
-	if err != nil {
-		return err
-	}
-	if exitCode != 0 {
-		return fmt.Errorf("exitCode is %d", exitCode)
 	}
 	return nil
 }
