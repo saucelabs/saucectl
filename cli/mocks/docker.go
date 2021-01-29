@@ -37,6 +37,7 @@ func (rwc fakeReadWriteCloser) Read(p []byte) (n int, err error)  { return 1, ni
 func (rwc fakeReadWriteCloser) Close() error                      { return nil }
 func (rwc fakeReadWriteCloser) Write(p []byte) (n int, err error) { return 0, nil }
 
+// ServerVersion mock function.
 func (fc *FakeClient) ServerVersion(ctx context.Context) (types.Version, error) {
 	return fc.ServerVersionFn(ctx)
 }
