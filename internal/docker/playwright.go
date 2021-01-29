@@ -97,8 +97,6 @@ func (r *PlaywrightRunner) defineDockerImage() error {
 
 // setup performs any necessary steps for a test runner to execute tests.
 func (r *PlaywrightRunner) setup() error {
-	log.Info().Msg("Setting up test environment")
-
 	err := r.docker.ValidateDependency()
 	if err != nil {
 		return fmt.Errorf("please verify that docker is installed and running: %v, "+
