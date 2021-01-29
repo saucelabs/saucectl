@@ -48,13 +48,16 @@ func main() {
 
 func setupLogging(verbose bool) {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	timeFormat := "15:04:05"
 	if verbose {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		zerolog.TimeFieldFormat = time.RFC3339Nano
+		timeFormat = "15:04:05.000"
 	}
 
 	zerolog.TimestampFunc = func() time.Time {
 		return time.Now().In(time.Local)
 	}
 
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: "15:04:05"})
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: timeFormat})
 }
