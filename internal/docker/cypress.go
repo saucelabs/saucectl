@@ -37,12 +37,6 @@ func NewCypress(c cypress.Project, cli *command.SauceCtlCli) (*CypressRunner, er
 
 // RunProject runs the tests defined in config.Project.
 func (r *CypressRunner) RunProject() (int, error) {
-	img, err := r.determineImage(cypress.DefaultDockerImage, r.Project.Docker.Image, r.Project.Cypress.Version)
-	if err != nil {
-		return 1, err
-	}
-	r.Project.Docker.Image = img
-
 	files := []string{
 		r.Project.Cypress.ConfigFile,
 		r.Project.Cypress.ProjectPath,

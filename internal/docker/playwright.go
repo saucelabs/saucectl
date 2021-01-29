@@ -39,12 +39,6 @@ func NewPlaywright(c playwright.Project, cli *command.SauceCtlCli) (*PlaywrightR
 
 // RunProject runs the tests defined in config.Project.
 func (r *PlaywrightRunner) RunProject() (int, error) {
-	img, err := r.determineImage(playwright.DefaultDockerImage, r.Project.Docker.Image, r.Project.Playwright.Version)
-	if err != nil {
-		return 1, err
-	}
-	r.Project.Docker.Image = img
-
 	files := []string{
 		r.Project.Playwright.LocalProjectPath,
 	}
