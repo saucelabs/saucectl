@@ -20,21 +20,22 @@ import (
 
 // CypressRunner represents the docker implementation of a test runner.
 type CypressRunner struct {
-	Project         cypress.Project
-	Ctx             context.Context
-	Cli             *command.SauceCtlCli
-	containerID     string
-	docker          *Handler
-	containerConfig *containerConfig
+	ContainerRunner
+	Project cypress.Project
 }
 
 // NewCypress creates a new CypressRunner instance.
 func NewCypress(c cypress.Project, cli *command.SauceCtlCli) (*CypressRunner, error) {
-	r := CypressRunner{}
-	r.containerConfig = &containerConfig{}
-	r.Cli = cli
-	r.Ctx = context.Background()
-	r.Project = c
+	r := CypressRunner{
+		Project: c,
+		ContainerRunner: ContainerRunner{
+			Ctx:             context.Background(),
+			Cli:             cli,
+			containerID:     "",
+			docker:          nil,
+			containerConfig: &containerConfig{},
+		},
+	}
 
 	var err error
 	r.docker, err = Create()
@@ -53,7 +54,14 @@ func (r *CypressRunner) RunProject() (int, error) {
 
 	errorCount := 0
 	for _, suite := range r.Project.Suites {
-		err := r.runSuite(suite)
+		log.Info().Msg("Setting up test environment")
+		if err := r.setup(); err != nil {
+			log.Err(err).Msg("Failed to setup test environment")
+			return 1, err
+		}
+
+		err := r.run([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", suite.Name},
+			suite.Config.Env)
 		if err != nil {
 			errorCount++
 		}
@@ -174,51 +182,5 @@ func (r *CypressRunner) setup() error {
 		return err
 	}
 
-	return nil
-}
-
-func (r *CypressRunner) beforeExec(tasks []string) error {
-	for _, task := range tasks {
-		log.Info().Str("task", task).Msg("Running BeforeExec")
-		exitCode, err := r.docker.ExecuteAttach(r.Ctx, r.containerID, r.Cli, strings.Fields(task), nil)
-		if err != nil {
-			return err
-		}
-		if exitCode != 0 {
-			return fmt.Errorf("failed to run BeforeExec task: %s - exit code %d", task, exitCode)
-		}
-	}
-	return nil
-}
-
-func (r *CypressRunner) runSuite(suite cypress.Suite) error {
-	defer func() {
-		log.Info().Msg("Tearing down environment")
-		if err := r.docker.Teardown(r.Ctx, r.containerID); err != nil {
-			if !r.docker.IsErrNotFound(err) {
-				log.Error().Err(err).Msg("Failed to tear down environment")
-			}
-		}
-	}()
-
-	log.Info().Msg("Setting up test environment")
-	if err := r.setup(); err != nil {
-		log.Err(err).Msg("Failed to setup test environment")
-		return err
-	}
-
-	exitCode, err := r.docker.ExecuteAttach(r.Ctx, r.containerID, r.Cli,
-		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", suite.Name},
-		suite.Config.Env)
-	log.Info().
-		Int("ExitCode", exitCode).
-		Msg("Command Finished")
-
-	if err != nil {
-		return err
-	}
-	if exitCode != 0 {
-		return fmt.Errorf("exitCode is %d", exitCode)
-	}
 	return nil
 }

@@ -21,21 +21,22 @@ import (
 
 // PlaywrightRunner represents the docker implementation of a test runner.
 type PlaywrightRunner struct {
-	Project         playwright.Project
-	Ctx             context.Context
-	Cli             *command.SauceCtlCli
-	containerID     string
-	docker          *Handler
-	containerConfig *containerConfig
+	ContainerRunner
+	Project playwright.Project
 }
 
 // NewPlaywright creates a new PlaywrightRunner instance.
 func NewPlaywright(c playwright.Project, cli *command.SauceCtlCli) (*PlaywrightRunner, error) {
-	r := PlaywrightRunner{}
-	r.containerConfig = &containerConfig{}
-	r.Cli = cli
-	r.Ctx = context.Background()
-	r.Project = c
+	r := PlaywrightRunner{
+		Project: c,
+		ContainerRunner: ContainerRunner{
+			Ctx:             context.Background(),
+			Cli:             cli,
+			containerID:     "",
+			docker:          nil,
+			containerConfig: &containerConfig{},
+		},
+	}
 
 	var err error
 	r.docker, err = Create()
@@ -54,7 +55,14 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 
 	errorCount := 0
 	for _, suite := range r.Project.Suites {
-		err := r.runSuite(suite)
+		log.Info().Msg("Setting up test environment")
+		if err := r.setup(); err != nil {
+			log.Err(err).Msg("Failed to setup test environment")
+			return 1, err
+		}
+
+		err := r.run([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", suite.Name},
+			map[string]string{})
 		if err != nil {
 			errorCount++
 		}
@@ -174,51 +182,5 @@ func (r *PlaywrightRunner) setup() error {
 		return err
 	}
 
-	return nil
-}
-
-func (r *PlaywrightRunner) beforeExec(tasks []string) error {
-	for _, task := range tasks {
-		log.Info().Str("task", task).Msg("Running BeforeExec")
-		exitCode, err := r.docker.ExecuteAttach(r.Ctx, r.containerID, r.Cli, strings.Fields(task), nil)
-		if err != nil {
-			return err
-		}
-		if exitCode != 0 {
-			return fmt.Errorf("failed to run BeforeExec task: %s - exit code %d", task, exitCode)
-		}
-	}
-	return nil
-}
-
-func (r *PlaywrightRunner) runSuite(suite playwright.Suite) error {
-	defer func() {
-		log.Info().Msg("Tearing down environment")
-		if err := r.docker.Teardown(r.Ctx, r.containerID); err != nil {
-			if !r.docker.IsErrNotFound(err) {
-				log.Error().Err(err).Msg("Failed to tear down environment")
-			}
-		}
-	}()
-
-	log.Info().Msg("Setting up test environment")
-	if err := r.setup(); err != nil {
-		log.Err(err).Msg("Failed to setup test environment")
-		return err
-	}
-
-	exitCode, err := r.docker.ExecuteAttach(r.Ctx, r.containerID, r.Cli,
-		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", suite.Name},
-		map[string]string{})
-	log.Info().
-		Int("ExitCode", exitCode).
-		Msg("Command Finished")
-
-	if err != nil {
-		return err
-	}
-	if exitCode != 0 {
-		return fmt.Errorf("exitCode is %d", exitCode)
-	}
 	return nil
 }
