@@ -2,7 +2,6 @@ package docker
 
 import (
 	"context"
-	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/cypress"
@@ -38,9 +37,11 @@ func NewCypress(c cypress.Project, cli *command.SauceCtlCli) (*CypressRunner, er
 
 // RunProject runs the tests defined in config.Project.
 func (r *CypressRunner) RunProject() (int, error) {
-	if err := r.defineDockerImage(); err != nil {
+	img, err := r.determineImage(cypress.DefaultDockerImage, r.Project.Docker.Image, r.Project.Cypress.Version)
+	if err != nil {
 		return 1, err
 	}
+	r.Project.Docker.Image = img
 
 	files := []string{
 		r.Project.Cypress.ConfigFile,
@@ -69,26 +70,4 @@ func (r *CypressRunner) RunProject() (int, error) {
 		log.Error().Msgf("%d suite(s) failed", errorCount)
 	}
 	return errorCount, nil
-}
-
-// defineDockerImage defines docker image value if not already set.
-func (r *CypressRunner) defineDockerImage() error {
-	// Skip availability check since custom image is being used
-	if r.Project.Docker.Image.Name != "" && r.Project.Docker.Image.Tag != "" {
-		log.Info().Msgf("Ignoring Cypress version for Docker, using %s:%s", r.Project.Docker.Image.Name, r.Project.Docker.Image.Tag)
-		return nil
-	}
-
-	if r.Project.Cypress.Version == "" {
-		return fmt.Errorf("Missing cypress version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
-	}
-
-	if r.Project.Docker.Image.Name == cypress.DefaultDockerImage && r.Project.Docker.Image.Tag == "" {
-		r.Project.Docker.Image.Tag = "v" + r.Project.Cypress.Version
-	}
-	if r.Project.Docker.Image.Name == "" {
-		r.Project.Docker.Image.Name = cypress.DefaultDockerImage
-		r.Project.Docker.Image.Tag = "v" + r.Project.Cypress.Version
-	}
-	return nil
 }

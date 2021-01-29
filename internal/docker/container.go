@@ -141,3 +141,27 @@ func (r *ContainerRunner) beforeExec(tasks []string) error {
 	}
 	return nil
 }
+
+// determineImage determines what image to use, based on the configured img and frameworkVersion.
+// Returns an error if no frameworkVersion is provided.
+func (r *ContainerRunner) determineImage(defaultImg string, img config.Image, frameworkVersion string) (config.Image, error) {
+	if img.Name != "" && img.Tag != "" {
+		log.Info().Msgf("Ignoring framework version for Docker, using provided image %s:%s", img.Name, img.Tag)
+		return img, nil
+	}
+
+	if frameworkVersion == "" {
+		return img, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+	}
+
+	if img.Name == defaultImg && img.Tag == "" {
+		img.Tag = "v" + frameworkVersion
+	}
+
+	if img.Name == "" {
+		img.Name = defaultImg
+		img.Tag = "v" + frameworkVersion
+	}
+
+	return img, nil
+}

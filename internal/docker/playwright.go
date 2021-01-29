@@ -2,7 +2,6 @@ package docker
 
 import (
 	"context"
-	"fmt"
 	"github.com/rs/zerolog/log"
 	"path/filepath"
 
@@ -40,9 +39,11 @@ func NewPlaywright(c playwright.Project, cli *command.SauceCtlCli) (*PlaywrightR
 
 // RunProject runs the tests defined in config.Project.
 func (r *PlaywrightRunner) RunProject() (int, error) {
-	if err := r.defineDockerImage(); err != nil {
+	img, err := r.determineImage(playwright.DefaultDockerImage, r.Project.Docker.Image, r.Project.Playwright.Version)
+	if err != nil {
 		return 1, err
 	}
+	r.Project.Docker.Image = img
 
 	files := []string{
 		r.Project.Playwright.LocalProjectPath,
@@ -67,26 +68,4 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		log.Error().Msgf("%d suite(s) failed", errorCount)
 	}
 	return errorCount, nil
-}
-
-// defineDockerImage defines docker image value if not already set.
-func (r *PlaywrightRunner) defineDockerImage() error {
-	// Skip availability check since custom image is being used
-	if r.Project.Docker.Image.Name != "" && r.Project.Docker.Image.Tag != "" {
-		log.Info().Msgf("Ignoring Playwright version for Docker, using %s:%s", r.Project.Docker.Image.Name, r.Project.Docker.Image.Tag)
-		return nil
-	}
-
-	if r.Project.Playwright.Version == "" {
-		return fmt.Errorf("Missing playwright version. Check out available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
-	}
-
-	if r.Project.Docker.Image.Name == playwright.DefaultDockerImage && r.Project.Docker.Image.Tag == "" {
-		r.Project.Docker.Image.Tag = "v" + r.Project.Playwright.Version
-	}
-	if r.Project.Docker.Image.Name == "" {
-		r.Project.Docker.Image.Name = playwright.DefaultDockerImage
-		r.Project.Docker.Image.Tag = "v" + r.Project.Playwright.Version
-	}
-	return nil
 }
