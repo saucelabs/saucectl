@@ -1,7 +1,7 @@
 package new
 
 import (
-	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/internal/config"
 	"gotest.tools/assert"
 	"gotest.tools/v3/fs"
 	"os"
@@ -35,7 +35,7 @@ func TestUpdateRegionCypress(t *testing.T) {
 		fs.WithFile("cypress.json", "{}", fs.WithMode(0644)),
 		fs.WithDir("cypress", fs.WithMode(0755)))
 	path, _ := os.Getwd()
-	defer func () {
+	defer func() {
 		os.Chdir(path)
 		dir.Remove()
 	}()
@@ -46,12 +46,11 @@ func TestUpdateRegionCypress(t *testing.T) {
 	assert.Equal(t, "eu-central-1", c.Sauce.Region)
 }
 
-
 func TestUpdateRegionPlaywright(t *testing.T) {
 	dir := fs.NewDir(t, "fixtures",
 		fs.WithFile("config.yml", "apiVersion: v1alpha\nkind: playwright\nplaywright:\n  projectPath: dummy-folder\n  version: 1.2.3", fs.WithMode(0644)))
 	path, _ := os.Getwd()
-	defer func () {
+	defer func() {
 		os.Chdir(path)
 		dir.Remove()
 	}()
@@ -64,7 +63,7 @@ func TestUpdateRegionPlaywright(t *testing.T) {
 
 func TestGetRepositoryValues(t *testing.T) {
 	org, repo, err := getRepositoryValues("playwright")
-	assert.Equal(t,"saucelabs", org)
+	assert.Equal(t, "saucelabs", org)
 	assert.Equal(t, "sauce-playwright-runner", repo)
 	assert.NilError(t, err)
 }

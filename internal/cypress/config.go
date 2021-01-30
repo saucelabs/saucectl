@@ -9,7 +9,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/internal/config"
 	"gopkg.in/yaml.v2"
 )
 
