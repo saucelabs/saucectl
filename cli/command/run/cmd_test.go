@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/runner"
 
 	"github.com/stretchr/testify/assert"
 	"gotest.tools/v3/fs"
