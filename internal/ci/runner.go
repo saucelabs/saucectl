@@ -7,7 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/utils"
+	"github.com/saucelabs/saucectl/internal/utils"
 	"io"
 	"io/ioutil"
 	"os"
