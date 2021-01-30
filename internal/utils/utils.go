@@ -1,4 +1,4 @@
-// utils package is deprecated.
+// Package utils is deprecated.
 package utils
 
 import (

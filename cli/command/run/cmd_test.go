@@ -1,11 +1,12 @@
 package run
 
 import (
+	"path/filepath"
+	"testing"
+
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/playwright"
-	"path/filepath"
-	"testing"
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/region"
