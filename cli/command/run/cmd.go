@@ -3,6 +3,7 @@ package run
 import (
 	"errors"
 	"fmt"
+	mocks2 "github.com/saucelabs/saucectl/internal/mocks"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/mocks"
 	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/appstore"
@@ -340,7 +340,7 @@ func runPlaywrightInSauce(p playwright.Project) (int, error) {
 func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, error) {
 	// return test runner for testing
 	if p.Image.Base == "test" {
-		return mocks.NewTestRunner(p, cli)
+		return mocks2.NewTestRunner(p, cli)
 	}
 	if ci.IsAvailable() {
 		rc, err := config.NewRunnerConfiguration(runner.ConfigPath)

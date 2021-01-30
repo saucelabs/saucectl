@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/config"
+	mocks2 "github.com/saucelabs/saucectl/internal/mocks"
 	"testing"
 
-	"github.com/saucelabs/saucectl/cli/mocks"
 	"gotest.tools/v3/fs"
 )
 
@@ -21,15 +21,15 @@ func TestDockerRunnerSetup(t *testing.T) {
 		fs.WithFile("config.yaml", "foo: bar", fs.WithMode(0755)))
 
 	cases := []PassFailCase{
-		{"docker is not installed", CreateLegacyMock(&mocks.FakeClient{}), errors.New("docker is not installed")},
-		{"Pulling fails", CreateLegacyMock(&mocks.FakeClient{
+		{"docker is not installed", CreateLegacyMock(&mocks2.FakeClient{}), errors.New("docker is not installed")},
+		{"Pulling fails", CreateLegacyMock(&mocks2.FakeClient{
 			ContainerListSuccess: true,
 		}), errors.New("ImagePullFailure")},
-		{"Creating container fails", CreateLegacyMock(&mocks.FakeClient{
+		{"Creating container fails", CreateLegacyMock(&mocks2.FakeClient{
 			ContainerListSuccess: true,
 			ImagePullSuccess:     true,
 		}), errors.New("ContainerCreateFailure")},
-		{"Copy from container fails", CreateLegacyMock(&mocks.FakeClient{
+		{"Copy from container fails", CreateLegacyMock(&mocks2.FakeClient{
 			ContainerListSuccess:    true,
 			ImagePullSuccess:        true,
 			ContainerStartSuccess:   true,
