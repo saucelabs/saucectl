@@ -76,6 +76,8 @@ func FromFile(cfgPath string) (Project, error) {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
 
+	p.Cypress.Version = config.StandardizeVersionFormat(p.Cypress.Version)
+
 	if p.Cypress.Version == "" {
 		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
@@ -117,9 +119,6 @@ func FromFile(cfgPath string) (Project, error) {
 	if p.Sauce.Concurrency < 1 {
 		p.Sauce.Concurrency = 1
 	}
-
-	// Uniformize version
-	p.Cypress.Version = config.StandardizeVersionFormat(p.Cypress.Version)
 
 	return p, nil
 }
