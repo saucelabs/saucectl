@@ -5,17 +5,16 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"github.com/docker/docker/api/types"
-	mocks2 "github.com/saucelabs/saucectl/internal/mocks"
 	"io"
 	"os"
 	"path"
 	"testing"
 
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -58,7 +57,7 @@ func TestImageFlavor(t *testing.T) {
 
 func TestHasBaseImage(t *testing.T) {
 	ctx := context.Background()
-	fc := mocks2.FakeClient{}
+	fc := mocks.FakeClient{}
 	handler := &Handler{client: &fc}
 
 	fc.ImageListSuccess = true
@@ -79,7 +78,7 @@ func TestClient(t *testing.T) {
 }
 
 func TestPullImageBase(t *testing.T) {
-	fc := mocks2.FakeClient{}
+	fc := mocks.FakeClient{}
 	handler := &Handler{client: &fc}
 
 	fc.ImagePullSuccess = false
@@ -121,7 +120,7 @@ func TestStartContainer(t *testing.T) {
 			ProjectPath: "../../../tests/e2e/",
 		},
 	}
-	mockDocker := mocks2.FakeClient{
+	mockDocker := mocks.FakeClient{
 		ContainerCreateSuccess:     false,
 		ContainerStartSuccess:      true,
 		ContainerInspectSuccess:    true,
@@ -149,7 +148,7 @@ func TestStartContainer(t *testing.T) {
 }
 
 func TestExecuteInContainer(t *testing.T) {
-	mockDocker := mocks2.FakeClient{
+	mockDocker := mocks.FakeClient{
 		ContainerExecCreateSuccess: true,
 		ContainerExecAttachSuccess: true,
 	}
@@ -167,7 +166,7 @@ func TestCopyFromContainer(t *testing.T) {
 	defer func() {
 		os.Remove("internal-file")
 	}()
-	client := &mocks2.FakeClient{
+	client := &mocks.FakeClient{
 		ContainerStatPathSuccess: true,
 		CopyFromContainerSuccess: true,
 	}
@@ -204,7 +203,7 @@ func TestHandler_IsInstalled(t *testing.T) {
 	}{
 		{
 			name: "expect installed",
-			fields: fields{client: &mocks2.FakeClient{
+			fields: fields{client: &mocks.FakeClient{
 				ServerVersionFn: func(ctx context.Context) (types.Version, error) {
 					return fakeVersion, nil
 				},
@@ -213,7 +212,7 @@ func TestHandler_IsInstalled(t *testing.T) {
 		},
 		{
 			name: "expect not-installed",
-			fields: fields{client: &mocks2.FakeClient{
+			fields: fields{client: &mocks.FakeClient{
 				ServerVersionFn: func(ctx context.Context) (types.Version, error) {
 					return fakeVersion, errors.New("better expect me")
 				},

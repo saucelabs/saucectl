@@ -3,7 +3,6 @@ package run
 import (
 	"errors"
 	"fmt"
-	mocks2 "github.com/saucelabs/saucectl/internal/mocks"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -24,6 +23,7 @@ import (
 	legacyDocker "github.com/saucelabs/saucectl/internal/docker/legacydocker"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/memseq"
+	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
@@ -340,7 +340,7 @@ func runPlaywrightInSauce(p playwright.Project) (int, error) {
 func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, error) {
 	// return test runner for testing
 	if p.Image.Base == "test" {
-		return mocks2.NewTestRunner(p, cli)
+		return mocks.NewTestRunner(p, cli)
 	}
 	if ci.IsAvailable() {
 		rc, err := config.NewRunnerConfiguration(runner.ConfigPath)
