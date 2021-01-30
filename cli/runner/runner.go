@@ -3,8 +3,8 @@ package runner
 import (
 	"context"
 	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/utils"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/fleet"
 )
 

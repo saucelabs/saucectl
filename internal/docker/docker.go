@@ -26,9 +26,9 @@ import (
 	"github.com/phayes/freeport"
 	"github.com/rs/zerolog/log"
 
-	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/streams"
 	"github.com/saucelabs/saucectl/cli/utils"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 )
 

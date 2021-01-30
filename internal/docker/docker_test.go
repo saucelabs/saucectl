@@ -13,8 +13,8 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 
-	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/mocks"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/stretchr/testify/assert"
 )

@@ -3,7 +3,7 @@ package legacydocker
 import (
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/internal/config"
 	"testing"
 
 	"github.com/saucelabs/saucectl/cli/mocks"

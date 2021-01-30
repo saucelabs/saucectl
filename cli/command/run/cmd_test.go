@@ -1,7 +1,7 @@
 package run
 
 import (
-	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"path/filepath"
@@ -175,7 +175,6 @@ func TestFilterCypressSuite(t *testing.T) {
 		}
 	}
 }
-
 
 func TestFilterPlaywrightSuite(t *testing.T) {
 	s1 := playwright.Suite{Name: "suite1"}

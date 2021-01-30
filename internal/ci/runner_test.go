@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/config"
 	"github.com/saucelabs/saucectl/cli/runner"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/fleet"
 
 	"github.com/stretchr/testify/assert"
