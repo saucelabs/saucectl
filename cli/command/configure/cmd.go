@@ -8,7 +8,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/credentials"
+	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/spf13/cobra"
 	"github.com/tj/survey"
 )
@@ -111,7 +111,7 @@ func Run() error {
 		creds, err = interactiveConfiguration()
 	} else {
 		creds = &credentials.Credentials{
-			Username: cliUsername,
+			Username:  cliUsername,
 			AccessKey: cliAccessKey,
 		}
 	}
