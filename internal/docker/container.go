@@ -48,7 +48,7 @@ func (r *ContainerRunner) pullImage(img string) error {
 	if !hasImage {
 		progress.Show("Pulling image %s", img)
 		defer progress.Stop()
-		if err := r.docker.PullBaseImage(r.Ctx, img); err != nil {
+		if err := r.docker.PullImage(r.Ctx, img); err != nil {
 			return err
 		}
 	}

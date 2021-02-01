@@ -63,7 +63,7 @@ func TestPullImageBase(t *testing.T) {
 	handler := &Handler{client: &fc}
 
 	fc.ImagePullSuccess = false
-	err := handler.PullBaseImage(context.Background(), "dummy-name:dumm-tag")
+	err := handler.PullImage(context.Background(), "dummy-name:dumm-tag")
 	assert.NotNil(t, err)
 }
 
