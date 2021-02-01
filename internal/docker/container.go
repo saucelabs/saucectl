@@ -38,7 +38,7 @@ func (r *ContainerRunner) pullImage(img string) error {
 	}
 
 	// If it's our image, warn the user to not use the latest tag.
-	if strings.Index(img, "saucelabs") == 0 && strings.Contains(img, "latest") {
+	if strings.HasPrefix(img, "saucelabs") && strings.HasSuffix(img, ":latest") {
 		log.Warn().Msg("The use of 'latest' as the docker image tag is discouraged. " +
 			"We recommend pinning the image to a specific version. " +
 			"Please proceed with caution.")
