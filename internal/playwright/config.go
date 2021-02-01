@@ -1,11 +1,13 @@
 package playwright
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 
-	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/config"
 	"gopkg.in/yaml.v2"
 )
 
@@ -69,6 +71,12 @@ func FromFile(cfgPath string) (Project, error) {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
 
+	p.Playwright.Version = config.StandardizeVersionFormat(p.Playwright.Version)
+
+	if p.Playwright.Version == "" {
+		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+	}
+
 	// Default project path
 	if p.Playwright.ProjectPath == "" {
 		return Project{}, fmt.Errorf("no project folder defined")
@@ -81,6 +89,17 @@ func FromFile(cfgPath string) (Project, error) {
 	// Default mode to Mount
 	if p.Docker.FileTransfer == "" {
 		p.Docker.FileTransfer = config.DockerFileMount
+	}
+
+	if p.Docker.Image.Name != "" && p.Docker.Image.Tag != "" {
+		log.Info().Msgf(
+			"Ignoring framework version for Docker, using provided image %s:%s (only applicable to docker mode)",
+			p.Docker.Image.Name, p.Docker.Image.Tag)
+	}
+
+	if p.Docker.Image.Name == "" {
+		p.Docker.Image.Name = DefaultDockerImage
+		p.Docker.Image.Tag = "v" + p.Playwright.Version
 	}
 
 	if p.Sauce.Concurrency < 1 {

@@ -4,17 +4,17 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"github.com/docker/docker/api/types"
+	"errors"
 	"io"
 	"os"
 	"path"
 	"testing"
 
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-
-	"github.com/saucelabs/saucectl/cli/config"
-	"github.com/saucelabs/saucectl/cli/mocks"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -69,19 +69,6 @@ func TestHasBaseImage(t *testing.T) {
 	val, err = handler.HasBaseImage(ctx, "dummy-image")
 	assert.NotNil(t, err)
 	assert.False(t, val)
-}
-
-func TestValidateDependency(t *testing.T) {
-	fc := mocks.FakeClient{}
-	handler := &Handler{client: &fc}
-
-	fc.ContainerListSuccess = true
-	err := handler.ValidateDependency()
-	assert.Nil(t, err)
-
-	fc.ContainerListSuccess = false
-	err = handler.ValidateDependency()
-	assert.NotNil(t, err)
 }
 
 func TestClient(t *testing.T) {
@@ -195,4 +182,52 @@ func TestCopyFromContainer(t *testing.T) {
 	client.CopyFromContainerSuccess = false
 	err = handler.CopyFromContainer(context.Background(), "dummy-container-id", "/dummy/source/internal-file", "./")
 	assert.NotNil(t, err)
+}
+
+func TestHandler_IsInstalled(t *testing.T) {
+	fakeVersion := types.Version{
+		Platform: struct {
+			Name string
+		}{},
+		Components: nil,
+		Version:    "1.2.3",
+	}
+
+	type fields struct {
+		client CommonAPIClient
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   bool
+	}{
+		{
+			name: "expect installed",
+			fields: fields{client: &mocks.FakeClient{
+				ServerVersionFn: func(ctx context.Context) (types.Version, error) {
+					return fakeVersion, nil
+				},
+			}},
+			want: true,
+		},
+		{
+			name: "expect not-installed",
+			fields: fields{client: &mocks.FakeClient{
+				ServerVersionFn: func(ctx context.Context) (types.Version, error) {
+					return fakeVersion, errors.New("better expect me")
+				},
+			}},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			handler := &Handler{
+				client: tt.fields.client,
+			}
+			if got := handler.IsInstalled(); got != tt.want {
+				t.Errorf("IsInstalled() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

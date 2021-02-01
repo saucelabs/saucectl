@@ -1,15 +1,16 @@
 package run
 
 import (
-	"github.com/saucelabs/saucectl/cli/config"
-	"github.com/saucelabs/saucectl/internal/cypress"
-	"github.com/saucelabs/saucectl/internal/playwright"
 	"path/filepath"
 	"testing"
 
+	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/playwright"
+
 	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/runner"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/runner"
 
 	"github.com/stretchr/testify/assert"
 	"gotest.tools/v3/fs"
@@ -175,7 +176,6 @@ func TestFilterCypressSuite(t *testing.T) {
 		}
 	}
 }
-
 
 func TestFilterPlaywrightSuite(t *testing.T) {
 	s1 := playwright.Suite{Name: "suite1"}

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/docker/docker/pkg/term"
-	"github.com/saucelabs/saucectl/cli/streams"
+	"github.com/saucelabs/saucectl/internal/streams"
 	"github.com/stretchr/testify/assert"
 )
 

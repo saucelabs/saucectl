@@ -7,8 +7,8 @@ import (
 	"github.com/briandowns/spinner"
 )
 
-var spinnerSpeed = 300 * time.Millisecond
-var spinnerInstance *spinner.Spinner = spinner.New(spinner.CharSets[14], spinnerSpeed)
+var spinnerSpeed = 1 * time.Second
+var spinnerInstance = spinner.New(spinner.CharSets[14], spinnerSpeed)
 
 // Show starts showing a progress spinner.
 func Show(text string, args ...interface{}) *spinner.Spinner {

@@ -3,12 +3,13 @@ package cypress
 import (
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
 	"strings"
 	"unicode"
 
-	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/internal/config"
 	"gopkg.in/yaml.v2"
 )
 
@@ -75,6 +76,12 @@ func FromFile(cfgPath string) (Project, error) {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
 
+	p.Cypress.Version = config.StandardizeVersionFormat(p.Cypress.Version)
+
+	if p.Cypress.Version == "" {
+		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+	}
+
 	if _, err := os.Stat(p.Cypress.ConfigFile); err != nil {
 		return p, fmt.Errorf("unable to locate %s", p.Cypress.ConfigFile)
 	}
@@ -98,12 +105,20 @@ func FromFile(cfgPath string) (Project, error) {
 		p.Docker.FileTransfer = config.DockerFileMount
 	}
 
+	if p.Docker.Image.Name != "" && p.Docker.Image.Tag != "" {
+		log.Info().Msgf(
+			"Ignoring framework version for Docker, using provided image %s:%s (only applicable to docker mode)",
+			p.Docker.Image.Name, p.Docker.Image.Tag)
+	}
+
+	if p.Docker.Image.Name == "" {
+		p.Docker.Image.Name = DefaultDockerImage
+		p.Docker.Image.Tag = "v" + p.Cypress.Version
+	}
+
 	if p.Sauce.Concurrency < 1 {
 		p.Sauce.Concurrency = 1
 	}
-
-	// Uniformize version
-	p.Cypress.Version = config.StandardizeVersionFormat(p.Cypress.Version)
 
 	return p, nil
 }
