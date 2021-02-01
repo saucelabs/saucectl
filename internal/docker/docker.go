@@ -96,7 +96,9 @@ func Create() (*Handler, error) {
 // IsInstalled checks if docker is installed.
 func (handler *Handler) IsInstalled() bool {
 	_, err := handler.client.ServerVersion(context.Background())
-	log.Err(err).Msg("Unable to reach out to docker.")
+	if err != nil {
+		log.Err(err).Msg("Unable to reach out to docker.")
+	}
 	return err == nil
 }
 
