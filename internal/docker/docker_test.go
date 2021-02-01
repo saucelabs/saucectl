@@ -36,25 +36,6 @@ func TestNewImagePullOptions(t *testing.T) {
 	assert.Equal(t, value, want)
 }
 
-func TestImageFlavor(t *testing.T) {
-	tests := []struct {
-		Image string
-		Tag   string
-		Want  string
-	}{
-		{"dummy-image", "latest", "dummy-image:latest"},
-		{"dummy-image", "", "dummy-image:latest"},
-		{"dummy-image", "custom-tag", "dummy-image:custom-tag"},
-	}
-
-	handler := Handler{}
-	for _, tt := range tests {
-		img := config.Image{Name: tt.Image, Tag: tt.Tag}
-		have := handler.GetImageFlavor(img)
-		assert.Equal(t, have, tt.Want)
-	}
-}
-
 func TestHasBaseImage(t *testing.T) {
 	ctx := context.Background()
 	fc := mocks.FakeClient{}
@@ -82,7 +63,7 @@ func TestPullImageBase(t *testing.T) {
 	handler := &Handler{client: &fc}
 
 	fc.ImagePullSuccess = false
-	err := handler.PullBaseImage(context.Background(), config.Image{Name: "dummy-name", Tag: "dummy-tag"})
+	err := handler.PullImage(context.Background(), "dummy-name:dumm-tag")
 	assert.NotNil(t, err)
 }
 

@@ -25,21 +25,20 @@ type ContainerRunner struct {
 	containerConfig *containerConfig
 }
 
-func (r *ContainerRunner) pullImage(img config.Image) error {
+func (r *ContainerRunner) pullImage(img string) error {
 	// Check docker image name property from the config file.
-	if img.Name == "" {
+	if img == "" {
 		return errors.New("no docker image specified")
 	}
 
 	// Check if image exists.
-	baseImage := r.docker.GetImageFlavor(img)
-	hasImage, err := r.docker.HasBaseImage(r.Ctx, baseImage)
+	hasImage, err := r.docker.HasBaseImage(r.Ctx, img)
 	if err != nil {
 		return err
 	}
 
 	// If it's our image, warn the user to not use the latest tag.
-	if strings.Index(img.Name, "saucelabs") == 0 && img.Tag == "latest" {
+	if strings.HasPrefix(img, "saucelabs") && strings.HasSuffix(img, ":latest") {
 		log.Warn().Msg("The use of 'latest' as the docker image tag is discouraged. " +
 			"We recommend pinning the image to a specific version. " +
 			"Please proceed with caution.")
@@ -47,9 +46,9 @@ func (r *ContainerRunner) pullImage(img config.Image) error {
 
 	// Only pull base image if not already installed.
 	if !hasImage {
-		progress.Show("Pulling image %s", baseImage)
+		progress.Show("Pulling image %s", img)
 		defer progress.Stop()
-		if err := r.docker.PullBaseImage(r.Ctx, img); err != nil {
+		if err := r.docker.PullImage(r.Ctx, img); err != nil {
 			return err
 		}
 	}
@@ -74,7 +73,7 @@ func (r *ContainerRunner) setupImage(confd config.Docker, beforeExec []string, p
 	}
 	r.containerID = container.ID
 
-	pDir, err := r.docker.ProjectDir(r.Ctx, confd.Image.String())
+	pDir, err := r.docker.ProjectDir(r.Ctx, confd.Image)
 	if err != nil {
 		return err
 	}

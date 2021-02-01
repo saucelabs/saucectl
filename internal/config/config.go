@@ -114,18 +114,7 @@ const (
 // Docker represents docker settings.
 type Docker struct {
 	FileTransfer DockerFileMode `yaml:"fileTransfer,omitempty" json:"fileTransfer"`
-	Image        Image          `yaml:"image,omitempty" json:"image"`
-}
-
-// Image represents the docker image.
-type Image struct {
-	Name string `yaml:"name,omitempty" json:"name"`
-	Tag  string `yaml:"tag,omitempty" json:"tag"`
-}
-
-// String returns a string representation of Image.
-func (i Image) String() string {
-	return fmt.Sprintf("%s:%s", i.Name, i.Tag)
+	Image        string         `yaml:"image,omitempty" json:"image"`
 }
 
 // Npm represents the npm settings

@@ -89,15 +89,14 @@ func FromFile(cfgPath string) (Project, error) {
 		p.Docker.FileTransfer = config.DockerFileMount
 	}
 
-	if p.Docker.Image.Name != "" && p.Docker.Image.Tag != "" {
+	if p.Docker.Image != "" {
 		log.Info().Msgf(
-			"Ignoring framework version for Docker, using provided image %s:%s (only applicable to docker mode)",
-			p.Docker.Image.Name, p.Docker.Image.Tag)
+			"Ignoring framework version for Docker, using provided image %s (only applicable to docker mode)",
+			p.Docker.Image)
 	}
 
-	if p.Docker.Image.Name == "" {
-		p.Docker.Image.Name = DefaultDockerImage
-		p.Docker.Image.Tag = "v" + p.Playwright.Version
+	if p.Docker.Image == "" {
+		p.Docker.Image = fmt.Sprintf("%s:v%s", DefaultDockerImage, p.Playwright.Version)
 	}
 
 	if p.Sauce.Concurrency < 1 {

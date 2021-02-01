@@ -18,10 +18,7 @@ docker:
   fileTransfer: mount # Defaults to `mount`. Choose between mount|copy.
 # Docker image and tag are both determined automatically based on your configuration. However, it's possible to set your
 # own custom image or a different tag.
-#  image:
-#    name: saucelabs/stt-cypress-mocha-node
-#    tag: v0.3.3
-
+#  image: saucelabs/stt-cypress-mocha-node:v5.6.0
 cypress:
   version: 5.6.0
   configFile: "tests/e2e/cypress.json"  # We determine related files based on the location of the config file.
