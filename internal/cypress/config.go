@@ -9,9 +9,8 @@ import (
 	"unicode"
 
 	"github.com/rs/zerolog/log"
-	"gopkg.in/yaml.v2"
-
 	"github.com/saucelabs/saucectl/internal/config"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -126,6 +125,17 @@ func FromFile(cfgPath string) (Project, error) {
 
 	if p.Sauce.Concurrency < 1 {
 		p.Sauce.Concurrency = 1
+	}
+
+	// Uniformize version
+	p.Cypress.Version = config.StandardizeVersionFormat(p.Cypress.Version)
+
+	for i, s := range p.Suites {
+		env := map[string]string{}
+		for k, v := range s.Config.Env {
+			env[k] = os.ExpandEnv(v)
+		}
+		p.Suites[i].Config.Env = env
 	}
 
 	return p, nil

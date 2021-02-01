@@ -2,9 +2,9 @@ package docker
 
 import (
 	"context"
-	"github.com/rs/zerolog/log"
 	"path/filepath"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
@@ -53,7 +53,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		}
 
 		err := r.run([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", suite.Name},
-			map[string]string{})
+			suite.Env)
 		if err != nil {
 			errorCount++
 		}

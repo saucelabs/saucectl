@@ -40,12 +40,13 @@ type Playwright struct {
 
 // Suite represents the playwright test suite configuration.
 type Suite struct {
-	Name              string      `yaml:"name,omitempty" json:"name"`
-	PlaywrightVersion string      `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
-	TestMatch         string      `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
-	PlatformName      string      `yaml:"platformName,omitempty" json:"platformName,omitempty"`
-	Params            SuiteConfig `yaml:"params,omitempty" json:"param,omitempty"`
-	ScreenResolution  string      `yaml:"screenResolution,omitempty" json:"screenResolution,omitempty"`
+	Name              string            `yaml:"name,omitempty" json:"name"`
+	PlaywrightVersion string            `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
+	TestMatch         string            `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
+	PlatformName      string            `yaml:"platformName,omitempty" json:"platformName,omitempty"`
+	Params            SuiteConfig       `yaml:"params,omitempty" json:"param,omitempty"`
+	ScreenResolution  string            `yaml:"screenResolution,omitempty" json:"screenResolution,omitempty"`
+	Env               map[string]string `yaml:"env,omitempty" json:"env,omitempty"`
 }
 
 // SuiteConfig represents the configuration specific to a suite
@@ -103,6 +104,14 @@ func FromFile(cfgPath string) (Project, error) {
 
 	if p.Sauce.Concurrency < 1 {
 		p.Sauce.Concurrency = 1
+	}
+
+	for i, s := range p.Suites {
+		env := map[string]string{}
+		for k, v := range s.Env {
+			env[k] = os.ExpandEnv(v)
+		}
+		p.Suites[i].Env = env
 	}
 
 	return p, nil
