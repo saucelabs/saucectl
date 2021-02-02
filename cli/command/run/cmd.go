@@ -261,6 +261,16 @@ func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	applyDefaultValues(&p.Sauce)
 	overrideCliParameters(cmd, &p.Sauce)
 
+	// Merge env from CLI args and job config. CLI args take precedence.
+	for k, v := range env {
+		for _, s := range p.Suites {
+			if s.Env == nil {
+				s.Env = map[string]string{}
+			}
+			s.Env[k] = v
+		}
+	}
+
 	if showConsoleLog {
 		p.ShowConsoleLog = true
 	}
