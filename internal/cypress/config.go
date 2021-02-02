@@ -3,14 +3,15 @@ package cypress
 import (
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
 	"strings"
 	"unicode"
 
-	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v2"
+
+	"github.com/saucelabs/saucectl/internal/config"
 )
 
 const (
@@ -54,6 +55,12 @@ type Cypress struct {
 	// Version represents the cypress framework version.
 	Version string `yaml:"version" json:"version"`
 
+	// Record represents the cypress framework record flag.
+	Record bool `yaml:"record" json:"record"`
+
+	// Key represents the cypress framework key flag.
+	Key string `yaml:"key" json:"key"`
+
 	// ProjectPath is the path to the cypress directory itself. Not set by the user, but is instead based on the
 	// location of ConfigFile.
 	ProjectPath string `yaml:"-" json:"-"`
@@ -75,6 +82,8 @@ func FromFile(cfgPath string) (Project, error) {
 	if err = yaml.NewDecoder(f).Decode(&p); err != nil {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
+
+	p.Cypress.Key = os.ExpandEnv(p.Cypress.Key)
 
 	p.Cypress.Version = config.StandardizeVersionFormat(p.Cypress.Version)
 
