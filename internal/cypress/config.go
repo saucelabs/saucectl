@@ -3,14 +3,15 @@ package cypress
 import (
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
 	"strings"
 	"unicode"
 
-	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v2"
+
+	"github.com/saucelabs/saucectl/internal/config"
 )
 
 const (
@@ -81,6 +82,8 @@ func FromFile(cfgPath string) (Project, error) {
 	if err = yaml.NewDecoder(f).Decode(&p); err != nil {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
+
+	p.Cypress.Key = os.ExpandEnv(p.Cypress.Key)
 
 	p.Cypress.Version = config.StandardizeVersionFormat(p.Cypress.Version)
 
