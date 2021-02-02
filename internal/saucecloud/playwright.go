@@ -2,6 +2,7 @@ package saucecloud
 
 import (
 	"fmt"
+
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
@@ -54,6 +55,7 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 				ID:     r.Project.Sauce.Tunnel.ID,
 				Parent: r.Project.Sauce.Tunnel.Parent,
 			},
+			ScreenResolution: s.ScreenResolution,
 		}
 	}
 	close(jobOpts)

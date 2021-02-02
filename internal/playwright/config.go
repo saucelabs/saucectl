@@ -3,11 +3,12 @@ package playwright
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"gopkg.in/yaml.v2"
-	"os"
-	"path/filepath"
 )
 
 const (
@@ -44,6 +45,7 @@ type Suite struct {
 	TestMatch         string      `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
 	PlatformName      string      `yaml:"platformName,omitempty" json:"platformName,omitempty"`
 	Params            SuiteConfig `yaml:"params,omitempty" json:"param,omitempty"`
+	ScreenResolution  string      `yaml:"screenResolution,omitempty" json:"screenResolution,omitempty"`
 }
 
 // SuiteConfig represents the configuration specific to a suite
