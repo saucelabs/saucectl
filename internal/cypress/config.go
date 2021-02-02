@@ -127,9 +127,6 @@ func FromFile(cfgPath string) (Project, error) {
 		p.Sauce.Concurrency = 1
 	}
 
-	// Uniformize version
-	p.Cypress.Version = config.StandardizeVersionFormat(p.Cypress.Version)
-
 	for i, s := range p.Suites {
 		env := map[string]string{}
 		for k, v := range s.Config.Env {
