@@ -45,7 +45,7 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 			Suite:            s.Name,
 			Framework:        "playwright",
 			FrameworkVersion: s.PlaywrightVersion,
-			BrowserName:      s.Params.BrowserName,
+			BrowserName:      "playwright",
 			BrowserVersion:   s.PlaywrightVersion,
 			PlatformName:     s.PlatformName,
 			Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
