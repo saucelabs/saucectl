@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/fleet"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"net/http"
 	"net/http/httptest"
@@ -315,6 +316,90 @@ func TestClient_NextAssignment(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("NextAssignment() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestClient_GetImage(t *testing.T) {
+	respo := Responder{
+		Test: t,
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		respo.Play(w, r)
+	}))
+	defer server.Close()
+
+	type fields struct {
+		HTTPClient  *http.Client
+		URL         string
+		Credentials credentials.Credentials
+	}
+	type args struct {
+		ctx context.Context
+		f   framework.Framework
+	}
+	tests := []struct {
+		name       string
+		fields     fields
+		args       args
+		want       string
+		wantErr    bool
+		serverFunc func(w http.ResponseWriter, r *http.Request)
+	}{
+		{
+			name:   "framework version available",
+			fields: fields{HTTPClient: server.Client(), URL: server.URL},
+			args: args{context.Background(), framework.Framework{
+				Name:    "testycles",
+				Version: "1",
+			}},
+			want:    "sauce/testycles:v1+v0.1.0",
+			wantErr: false,
+			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(200)
+				json.NewEncoder(w).Encode(FrameworkResponse{
+					Name:    "testycles",
+					Version: "1",
+					Runner: runner{
+						Version:     "0.1.0",
+						DockerImage: "sauce/testycles:v1+v0.1.0",
+					},
+				})
+			},
+		},
+		{
+			name:   "unknown framework or version",
+			fields: fields{HTTPClient: server.Client(), URL: server.URL},
+			args: args{context.Background(), framework.Framework{
+				Name:    "notestycles",
+				Version: "1",
+			}},
+			want:    "",
+			wantErr: true,
+			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(400)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Client{
+				HTTPClient:  tt.fields.HTTPClient,
+				URL:         tt.fields.URL,
+				Credentials: tt.fields.Credentials,
+			}
+
+			respo.Record(tt.serverFunc)
+
+			got, err := c.GetImage(tt.args.ctx, tt.args.f)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetImage() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("GetImage() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
