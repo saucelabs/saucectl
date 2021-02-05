@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/progress"
 	"io/ioutil"
@@ -23,6 +24,8 @@ type ContainerRunner struct {
 	containerID     string
 	docker          *Handler
 	containerConfig *containerConfig
+	Framework       framework.Framework
+	ImageLoc        framework.ImageLocator
 }
 
 func (r *ContainerRunner) pullImage(img string) error {
@@ -61,6 +64,14 @@ func (r *ContainerRunner) setupImage(confd config.Docker, beforeExec []string, p
 	if !r.docker.IsInstalled() {
 		return fmt.Errorf("please verify that docker is installed and running: " +
 			" follow the guide at https://docs.docker.com/get-docker/")
+	}
+
+	if confd.Image == "" {
+		img, err := r.ImageLoc.GetImage(r.Ctx, r.Framework)
+		if err != nil {
+			return fmt.Errorf("unable to determine which docker image to run: %w", err)
+		}
+		confd.Image = img
 	}
 
 	if err := r.pullImage(confd.Image); err != nil {

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -54,6 +55,18 @@ type AssignerRequest struct {
 // AssignerResponse represents the response body for fleet assignments.
 type AssignerResponse struct {
 	TestFile string `json:"testFile"`
+}
+
+// FrameworkResponse represents the response body for framework information.
+type FrameworkResponse struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+	Runner  runner `json:"runner"`
+}
+
+type runner struct {
+	Version     string `json:"version"`
+	DockerImage string `json:"dockerImage"`
 }
 
 // StartJob creates a new job in Sauce Labs.
@@ -169,7 +182,8 @@ func (c *Client) doJSONResponse(req *http.Request, expectStatus int, v interface
 	defer res.Body.Close()
 
 	if res.StatusCode != expectStatus {
-		return fmt.Errorf("unexpected response from test-composer: %d", res.StatusCode)
+		body, _ := ioutil.ReadAll(res.Body)
+		return fmt.Errorf("unexpected status '%d' from test-composer: %s", res.StatusCode, body)
 	}
 
 	return json.NewDecoder(res.Body).Decode(v)
@@ -218,4 +232,26 @@ func (c *Client) checkFrameworkRestrictions(resp http.Response, body string, fra
 		return errors.New("framework not supported")
 	}
 	return nil
+}
+
+// GetImage returns a docker image for the given framework f.
+func (c *Client) GetImage(ctx context.Context, f framework.Framework) (string, error) {
+	url := fmt.Sprintf("%s/v1/testcomposer/frameworks/%s", c.URL, f.Name)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+
+	q := req.URL.Query()
+	q.Add("version", f.Version)
+	req.URL.RawQuery = q.Encode()
+
+	var resp FrameworkResponse
+	if err := c.doJSONResponse(req, 200, &resp); err != nil {
+		return "", err
+	}
+
+	return resp.Runner.DockerImage, nil
 }

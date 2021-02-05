@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"path/filepath"
 
 	"github.com/rs/zerolog/log"
@@ -16,7 +17,7 @@ type PlaywrightRunner struct {
 }
 
 // NewPlaywright creates a new PlaywrightRunner instance.
-func NewPlaywright(c playwright.Project, cli *command.SauceCtlCli) (*PlaywrightRunner, error) {
+func NewPlaywright(c playwright.Project, cli *command.SauceCtlCli, imageLoc framework.ImageLocator) (*PlaywrightRunner, error) {
 	r := PlaywrightRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -25,6 +26,11 @@ func NewPlaywright(c playwright.Project, cli *command.SauceCtlCli) (*PlaywrightR
 			containerID:     "",
 			docker:          nil,
 			containerConfig: &containerConfig{},
+			Framework: framework.Framework{
+				Name:    c.Kind,
+				Version: c.Playwright.Version,
+			},
+			ImageLoc: imageLoc,
 		},
 	}
 

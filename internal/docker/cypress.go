@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/framework"
 )
 
 // CypressRunner represents the docker implementation of a test runner.
@@ -14,7 +15,7 @@ type CypressRunner struct {
 }
 
 // NewCypress creates a new CypressRunner instance.
-func NewCypress(c cypress.Project, cli *command.SauceCtlCli) (*CypressRunner, error) {
+func NewCypress(c cypress.Project, cli *command.SauceCtlCli, imageLoc framework.ImageLocator) (*CypressRunner, error) {
 	r := CypressRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -23,6 +24,11 @@ func NewCypress(c cypress.Project, cli *command.SauceCtlCli) (*CypressRunner, er
 			containerID:     "",
 			docker:          nil,
 			containerConfig: &containerConfig{},
+			Framework: framework.Framework{
+				Name:    c.Kind,
+				Version: c.Cypress.Version,
+			},
+			ImageLoc: imageLoc,
 		},
 	}
 
