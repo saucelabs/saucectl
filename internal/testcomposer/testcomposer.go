@@ -15,12 +15,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 )
 
-// forbiddenPreviewError contains the message send by test-composer when access is restricted
-const forbiddenPreviewError = "Forbidden: not part of preview"
-
-// unsupportedFrameworkError contains the message send by test-composer when framework is not supported
-const unsupportedFrameworkError = "Bad Request: unsupported framework"
-
 // Client service
 type Client struct {
 	HTTPClient  *http.Client

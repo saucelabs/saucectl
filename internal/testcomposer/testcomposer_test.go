@@ -117,40 +117,6 @@ func TestTestComposer_StartJob(t *testing.T) {
 			},
 		},
 		{
-			name: "Non preview error",
-			fields: fields{
-				HTTPClient: mockTestComposerServer.Client(),
-				URL:        mockTestComposerServer.URL,
-			},
-			args: args{
-				ctx:               context.TODO(),
-				jobStarterPayload: job.StartOptions{},
-			},
-			want:    "",
-			wantErr: fmt.Errorf("job start failed; not part of preview"),
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(403)
-				w.Write([]byte(forbiddenPreviewError))
-			},
-		},
-		{
-			name: "Non supported framework error",
-			fields: fields{
-				HTTPClient: mockTestComposerServer.Client(),
-				URL:        mockTestComposerServer.URL,
-			},
-			args: args{
-				ctx:               context.TODO(),
-				jobStarterPayload: job.StartOptions{},
-			},
-			want:    "",
-			wantErr: fmt.Errorf("job start failed; framework not supported"),
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(400)
-				w.Write([]byte(unsupportedFrameworkError))
-			},
-		},
-		{
 			name: "Unknown error",
 			fields: fields{
 				HTTPClient: mockTestComposerServer.Client(),
