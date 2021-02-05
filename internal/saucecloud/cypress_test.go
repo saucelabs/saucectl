@@ -171,7 +171,6 @@ func TestRunProject(t *testing.T) {
 
 	// Fake JobStarter
 	starter := mocks.FakeJobStarter{
-		CheckFrameworkAvailabilitySuccess: true,
 		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
 			return "fake-job-id", nil
 		},

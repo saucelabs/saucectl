@@ -3,11 +3,11 @@ package testcomposer
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/fleet"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"net/http"
 	"net/http/httptest"
@@ -114,40 +114,6 @@ func TestTestComposer_StartJob(t *testing.T) {
 			wantErr: fmt.Errorf("job start failed; unexpected response code:'300', msg:''"),
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(300)
-			},
-		},
-		{
-			name: "Non preview error",
-			fields: fields{
-				HTTPClient: mockTestComposerServer.Client(),
-				URL:        mockTestComposerServer.URL,
-			},
-			args: args{
-				ctx:               context.TODO(),
-				jobStarterPayload: job.StartOptions{},
-			},
-			want:    "",
-			wantErr: fmt.Errorf("job start failed; not part of preview"),
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(403)
-				w.Write([]byte(forbiddenPreviewError))
-			},
-		},
-		{
-			name: "Non supported framework error",
-			fields: fields{
-				HTTPClient: mockTestComposerServer.Client(),
-				URL:        mockTestComposerServer.URL,
-			},
-			args: args{
-				ctx:               context.TODO(),
-				jobStarterPayload: job.StartOptions{},
-			},
-			want:    "",
-			wantErr: fmt.Errorf("job start failed; framework not supported"),
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(400)
-				w.Write([]byte(unsupportedFrameworkError))
 			},
 		},
 		{
@@ -321,104 +287,85 @@ func TestClient_NextAssignment(t *testing.T) {
 	}
 }
 
-func TestTestComposer_CheckFrameworkAvailability(t *testing.T) {
+func TestClient_GetImage(t *testing.T) {
 	respo := Responder{
 		Test: t,
 	}
-	mockTestComposerServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		respo.Play(w, r)
 	}))
-	type args struct {
-		ctx       context.Context
-		framework string
-	}
+	defer server.Close()
+
 	type fields struct {
-		HTTPClient *http.Client
-		URL        string
+		HTTPClient  *http.Client
+		URL         string
+		Credentials credentials.Credentials
+	}
+	type args struct {
+		ctx context.Context
+		f   framework.Framework
 	}
 	tests := []struct {
 		name       string
 		fields     fields
 		args       args
-		want       error
-		serverFunc func(w http.ResponseWriter, r *http.Request) // what shall the mock server respond with
+		want       string
+		wantErr    bool
+		serverFunc func(w http.ResponseWriter, r *http.Request)
 	}{
 		{
-			name: "Access OK",
-			fields: fields{
-				HTTPClient: mockTestComposerServer.Client(),
-				URL:        mockTestComposerServer.URL,
-			},
-			args: args{
-				ctx:       context.TODO(),
-				framework: "fake-framework",
-			},
-			want: nil,
+			name:   "framework version available",
+			fields: fields{HTTPClient: server.Client(), URL: server.URL},
+			args: args{context.Background(), framework.Framework{
+				Name:    "testycles",
+				Version: "1",
+			}},
+			want:    "sauce/testycles:v1+v0.1.0",
+			wantErr: false,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(200)
+				json.NewEncoder(w).Encode(FrameworkResponse{
+					Name:    "testycles",
+					Version: "1",
+					Runner: runner{
+						Version:     "0.1.0",
+						DockerImage: "sauce/testycles:v1+v0.1.0",
+					},
+				})
 			},
 		},
 		{
-			name: "Not part of preview",
-			fields: fields{
-				HTTPClient: mockTestComposerServer.Client(),
-				URL:        mockTestComposerServer.URL,
-			},
-			args: args{
-				ctx:       context.TODO(),
-				framework: "fake-framework",
-			},
-			want: errors.New("not part of preview"),
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(403)
-				w.Write([]byte(forbiddenPreviewError))
-			},
-		},
-		{
-			name: "Unexpected error",
-			fields: fields{
-				HTTPClient: mockTestComposerServer.Client(),
-				URL:        mockTestComposerServer.URL,
-			},
-			args: args{
-				ctx:       context.TODO(),
-				framework: "fake-framework",
-			},
-			want: errors.New("unexpected response code:'500', msg:''"),
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(500)
-			},
-		},
-		{
-			name: "Unsupported backend",
-			fields: fields{
-				HTTPClient: mockTestComposerServer.Client(),
-				URL:        mockTestComposerServer.URL,
-			},
-			args: args{
-				ctx:       context.TODO(),
-				framework: "fake-framework",
-			},
-			want: errors.New("framework not supported"),
+			name:   "unknown framework or version",
+			fields: fields{HTTPClient: server.Client(), URL: server.URL},
+			args: args{context.Background(), framework.Framework{
+				Name:    "notestycles",
+				Version: "1",
+			}},
+			want:    "",
+			wantErr: true,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(400)
-				w.Write([]byte(unsupportedFrameworkError))
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Client{
-				HTTPClient: tt.fields.HTTPClient,
-				URL:        tt.fields.URL,
+				HTTPClient:  tt.fields.HTTPClient,
+				URL:         tt.fields.URL,
+				Credentials: tt.fields.Credentials,
 			}
 
 			respo.Record(tt.serverFunc)
 
-			err := c.CheckFrameworkAvailability(tt.args.ctx, tt.args.framework)
-			if !reflect.DeepEqual(err, tt.want) {
-				t.Errorf("CheckFrameworkAvailability() got = %v, want %v", err, tt.want)
+			got, err := c.GetImage(tt.args.ctx, tt.args.f)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetImage() error = %v, wantErr %v", err, tt.wantErr)
 				return
+			}
+			if got != tt.want {
+				t.Errorf("GetImage() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -185,66 +185,65 @@ func runCypress(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 		return 1, err
 	}
 
+	creds := credentials.Get()
+	if creds == nil {
+		return 1, errors.New("no sauce credentials set")
+	}
+
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
+		return 1, errors.New("no sauce region set")
+	}
+
+	tc := testcomposer.Client{
+		HTTPClient:  &http.Client{Timeout: 30 * time.Second},
+		URL:         regio.APIBaseURL(),
+		Credentials: *creds,
+	}
+
 	switch testEnv {
 	case "docker":
-		return runCypressInDocker(p, cli)
+		return runCypressInDocker(p, tc, cli)
 	case "sauce":
-		return runCypressInSauce(p)
+		return runCypressInSauce(p, regio, creds, tc)
 	default:
 		return 1, errors.New("unsupported test environment")
 	}
 }
 
-func runCypressInDocker(p cypress.Project, cli *command.SauceCtlCli) (int, error) {
+func runCypressInDocker(p cypress.Project, testco testcomposer.Client, cli *command.SauceCtlCli) (int, error) {
 	log.Info().Msg("Running Cypress in Docker")
 
-	cd, err := docker.NewCypress(p, cli)
+	cd, err := docker.NewCypress(p, cli, &testco)
 	if err != nil {
 		return 1, err
 	}
 	return cd.RunProject()
 }
 
-func runCypressInSauce(p cypress.Project) (int, error) {
+func runCypressInSauce(p cypress.Project, regio region.Region, creds *credentials.Credentials, testco testcomposer.Client) (int, error) {
 	log.Info().Msg("Running Cypress in Sauce Labs")
 
-	c := credentials.Get()
-	if c == nil {
-		return 1, errors.New("no sauce credentials set")
-	}
-
-	re := region.FromString(p.Sauce.Region)
-	if re == region.None {
-		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
-		return 1, errors.New("no sauce region set")
-	}
-
 	// TODO decide on a good timeout and perhaps make it configurable. Slow clients may take time to upload. Can't be higher than API gateway timeout though!
-	s := appstore.New(re.APIBaseURL(), c.Username, c.AccessKey, 30*time.Second)
-
-	// TODO decide on a good timeout and perhaps make it configurable. Some job starts are slower than others. Can't be higher than API gateway timeout though!
-	tc := testcomposer.Client{
-		HTTPClient:  &http.Client{Timeout: 30 * time.Second},
-		URL:         re.APIBaseURL(),
-		Credentials: *c,
-	}
+	s := appstore.New(regio.APIBaseURL(), creds.Username, creds.AccessKey, 30*time.Second)
 
 	// TODO decide on a good timeout and perhaps make it configurable. Resto may take longer to respond sometimes. Can't be higher than API gateway timeout though!
 	rsto := resto.Client{
 		HTTPClient: &http.Client{Timeout: 7 * time.Second},
-		URL:        re.APIBaseURL(),
-		Username:   c.Username,
-		AccessKey:  c.AccessKey,
+		URL:        regio.APIBaseURL(),
+		Username:   creds.Username,
+		AccessKey:  creds.AccessKey,
 	}
 
 	r := saucecloud.CypressRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader: s,
-			JobStarter:      &tc,
+			JobStarter:      &testco,
 			JobReader:       &rsto,
 			CCYReader:       &rsto,
-			Region:          re,
+			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
 		},
 	}
@@ -281,66 +280,65 @@ func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 		}
 	}
 
+	creds := credentials.Get()
+	if creds == nil {
+		return 1, errors.New("no sauce credentials set")
+	}
+
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
+		return 1, errors.New("no sauce region set")
+	}
+
+	tc := testcomposer.Client{
+		HTTPClient:  &http.Client{Timeout: 30 * time.Second},
+		URL:         regio.APIBaseURL(),
+		Credentials: *creds,
+	}
+
 	switch testEnv {
 	case "docker":
-		return runPlaywrightInDocker(p, cli)
+		return runPlaywrightInDocker(p, cli, tc)
 	case "sauce":
-		return runPlaywrightInSauce(p)
+		return runPlaywrightInSauce(p, regio, creds, tc)
 	default:
 		return 1, errors.New("unsupported test environment")
 	}
 }
 
-func runPlaywrightInDocker(p playwright.Project, cli *command.SauceCtlCli) (int, error) {
+func runPlaywrightInDocker(p playwright.Project, cli *command.SauceCtlCli, testco testcomposer.Client) (int, error) {
 	log.Info().Msg("Running Playwright in Docker")
 
-	cd, err := docker.NewPlaywright(p, cli)
+	cd, err := docker.NewPlaywright(p, cli, &testco)
 	if err != nil {
 		return 1, err
 	}
 	return cd.RunProject()
 }
 
-func runPlaywrightInSauce(p playwright.Project) (int, error) {
+func runPlaywrightInSauce(p playwright.Project, regio region.Region, creds *credentials.Credentials, testco testcomposer.Client) (int, error) {
 	log.Info().Msg("Running Playwright in Sauce Labs")
 
-	c := credentials.Get()
-	if c == nil {
-		return 1, errors.New("no sauce credentials set")
-	}
-
-	re := region.FromString(p.Sauce.Region)
-	if re == region.None {
-		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
-		return 1, errors.New("no sauce region set")
-	}
-
 	// TODO decide on a good timeout and perhaps make it configurable. Slow clients may take time to upload. Can't be higher than API gateway timeout though!
-	s := appstore.New(re.APIBaseURL(), c.Username, c.AccessKey, 30*time.Second)
-
-	// TODO decide on a good timeout and perhaps make it configurable. Some job starts are slower than others. Can't be higher than API gateway timeout though!
-	tc := testcomposer.Client{
-		HTTPClient:  &http.Client{Timeout: 30 * time.Second},
-		URL:         re.APIBaseURL(),
-		Credentials: *c,
-	}
+	s := appstore.New(regio.APIBaseURL(), creds.Username, creds.AccessKey, 30*time.Second)
 
 	// TODO decide on a good timeout and perhaps make it configurable. Resto may take longer to respond sometimes. Can't be higher than API gateway timeout though!
 	rsto := resto.Client{
 		HTTPClient: &http.Client{Timeout: 7 * time.Second},
-		URL:        re.APIBaseURL(),
-		Username:   c.Username,
-		AccessKey:  c.AccessKey,
+		URL:        regio.APIBaseURL(),
+		Username:   creds.Username,
+		AccessKey:  creds.AccessKey,
 	}
 
 	r := saucecloud.PlaywrightRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader: s,
-			JobStarter:      &tc,
+			JobStarter:      &testco,
 			JobReader:       &rsto,
 			CCYReader:       &rsto,
-			Region:          re,
+			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
 		},
 	}

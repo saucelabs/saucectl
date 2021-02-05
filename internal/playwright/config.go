@@ -11,11 +11,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const (
-	// DefaultDockerImage represents the name of the docker image on Dockerhub
-	DefaultDockerImage = "saucelabs/stt-playwright-node"
-)
-
 // Project represents the playwright project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline"`
@@ -96,10 +91,6 @@ func FromFile(cfgPath string) (Project, error) {
 		log.Info().Msgf(
 			"Ignoring framework version for Docker, using provided image %s (only applicable to docker mode)",
 			p.Docker.Image)
-	}
-
-	if p.Docker.Image == "" {
-		p.Docker.Image = fmt.Sprintf("%s:v%s", DefaultDockerImage, p.Playwright.Version)
 	}
 
 	if p.Sauce.Concurrency < 1 {

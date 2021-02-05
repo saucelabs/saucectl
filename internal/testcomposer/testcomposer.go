@@ -4,23 +4,16 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/job"
 )
-
-// forbiddenPreviewError contains the message send by test-composer when access is restricted
-const forbiddenPreviewError = "Forbidden: not part of preview"
-
-// unsupportedFrameworkError contains the message send by test-composer when framework is not supported
-const unsupportedFrameworkError = "Bad Request: unsupported framework"
 
 // Client service
 type Client struct {
@@ -56,6 +49,18 @@ type AssignerResponse struct {
 	TestFile string `json:"testFile"`
 }
 
+// FrameworkResponse represents the response body for framework information.
+type FrameworkResponse struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+	Runner  runner `json:"runner"`
+}
+
+type runner struct {
+	Version     string `json:"version"`
+	DockerImage string `json:"dockerImage"`
+}
+
 // StartJob creates a new job in Sauce Labs.
 func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/jobs", c.URL)
@@ -81,13 +86,6 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return
-	}
-
-	// Check if error is related to preview
-	err = c.checkFrameworkRestrictions(*resp, string(body), opts.Framework, opts.User)
-	if err != nil {
-		err = fmt.Errorf("job start failed; %s", err)
-		return "", err
 	}
 
 	if resp.StatusCode >= 300 {
@@ -169,53 +167,31 @@ func (c *Client) doJSONResponse(req *http.Request, expectStatus int, v interface
 	defer res.Body.Close()
 
 	if res.StatusCode != expectStatus {
-		return fmt.Errorf("unexpected response from test-composer: %d", res.StatusCode)
+		body, _ := ioutil.ReadAll(res.Body)
+		return fmt.Errorf("unexpected status '%d' from test-composer: %s", res.StatusCode, body)
 	}
 
 	return json.NewDecoder(res.Body).Decode(v)
 }
 
-// CheckFrameworkAvailability checks that the requested is available on the backend
-func (c *Client) CheckFrameworkAvailability(ctx context.Context, frameworkName string) error {
-	url := fmt.Sprintf("%s/v1/testcomposer/framework/%s", c.URL, frameworkName)
+// GetImage returns a docker image for the given framework f.
+func (c *Client) GetImage(ctx context.Context, f framework.Framework) (string, error) {
+	url := fmt.Sprintf("%s/v1/testcomposer/frameworks/%s", c.URL, f.Name)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return err
+		return "", err
 	}
 	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return err
+
+	q := req.URL.Query()
+	q.Add("version", f.Version)
+	req.URL.RawQuery = q.Encode()
+
+	var resp FrameworkResponse
+	if err := c.doJSONResponse(req, 200, &resp); err != nil {
+		return "", err
 	}
 
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	bodyStr := strings.TrimSpace(string(body))
-	err = c.checkFrameworkRestrictions(*resp, bodyStr, frameworkName, c.Credentials.Username)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected response code:'%d', msg:'%s'", resp.StatusCode, bodyStr)
-	}
-	return nil
-}
-
-// checkFrameworkRestrictions checks specific cases related to framework availability
-func (c *Client) checkFrameworkRestrictions(resp http.Response, body string, framework, username string) error {
-	if resp.StatusCode == http.StatusForbidden && body == forbiddenPreviewError {
-		log.Error().Msg("User \"" + username + "\" is not registered for the " + framework + " preview. To join the preview, please sign up here: https://info.saucelabs.com/javascript-at-scale-on-sauce.html")
-		return errors.New("not part of preview")
-	}
-	if resp.StatusCode == http.StatusBadRequest && body == unsupportedFrameworkError {
-		log.Error().Msg("The framework " + framework + " is not supported.")
-		return errors.New("framework not supported")
-	}
-	return nil
+	return resp.Runner.DockerImage, nil
 }
