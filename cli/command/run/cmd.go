@@ -57,6 +57,11 @@ var (
 	concurrency    int
 	tunnelID       string
 	tunnelParent   string
+
+	// General Request Timeouts
+	appStoreTimeout = 300 * time.Second
+	testComposerTimeout = 300 * time.Second
+	restoTimeout = 60 * time.Second
 )
 
 // Command creates the `run` command
@@ -197,7 +202,7 @@ func runCypress(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	}
 
 	tc := testcomposer.Client{
-		HTTPClient:  &http.Client{Timeout: 30 * time.Second},
+		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         regio.APIBaseURL(),
 		Credentials: *creds,
 	}
@@ -225,12 +230,10 @@ func runCypressInDocker(p cypress.Project, testco testcomposer.Client, cli *comm
 func runCypressInSauce(p cypress.Project, regio region.Region, creds *credentials.Credentials, testco testcomposer.Client) (int, error) {
 	log.Info().Msg("Running Cypress in Sauce Labs")
 
-	// TODO decide on a good timeout and perhaps make it configurable. Slow clients may take time to upload. Can't be higher than API gateway timeout though!
-	s := appstore.New(regio.APIBaseURL(), creds.Username, creds.AccessKey, 30*time.Second)
+	s := appstore.New(regio.APIBaseURL(), creds.Username, creds.AccessKey, appStoreTimeout)
 
-	// TODO decide on a good timeout and perhaps make it configurable. Resto may take longer to respond sometimes. Can't be higher than API gateway timeout though!
 	rsto := resto.Client{
-		HTTPClient: &http.Client{Timeout: 7 * time.Second},
+		HTTPClient: &http.Client{Timeout: restoTimeout},
 		URL:        regio.APIBaseURL(),
 		Username:   creds.Username,
 		AccessKey:  creds.AccessKey,
@@ -292,7 +295,7 @@ func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	}
 
 	tc := testcomposer.Client{
-		HTTPClient:  &http.Client{Timeout: 30 * time.Second},
+		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         regio.APIBaseURL(),
 		Credentials: *creds,
 	}
@@ -320,12 +323,10 @@ func runPlaywrightInDocker(p playwright.Project, cli *command.SauceCtlCli, testc
 func runPlaywrightInSauce(p playwright.Project, regio region.Region, creds *credentials.Credentials, testco testcomposer.Client) (int, error) {
 	log.Info().Msg("Running Playwright in Sauce Labs")
 
-	// TODO decide on a good timeout and perhaps make it configurable. Slow clients may take time to upload. Can't be higher than API gateway timeout though!
-	s := appstore.New(regio.APIBaseURL(), creds.Username, creds.AccessKey, 30*time.Second)
+	s := appstore.New(regio.APIBaseURL(), creds.Username, creds.AccessKey, appStoreTimeout)
 
-	// TODO decide on a good timeout and perhaps make it configurable. Resto may take longer to respond sometimes. Can't be higher than API gateway timeout though!
 	rsto := resto.Client{
-		HTTPClient: &http.Client{Timeout: 7 * time.Second},
+		HTTPClient: &http.Client{Timeout: restoTimeout},
 		URL:        regio.APIBaseURL(),
 		Username:   creds.Username,
 		AccessKey:  creds.AccessKey,
@@ -411,7 +412,7 @@ func createCISequencer(p config.Project, cip ci.Provider) fleet.Sequencer {
 
 	log.Info().Msg("Running tests in parallel.")
 	return &testcomposer.Client{
-		HTTPClient:  &http.Client{Timeout: 3 * time.Second},
+		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         apiBaseURL(r),
 		Credentials: *creds,
 	}
