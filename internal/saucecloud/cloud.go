@@ -91,7 +91,7 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 }
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (job.Job, error) {
-	log.Info().Str("suite", opts.Suite).Str("region", r.Region.String()).Msg("Starting job.")
+	log.Info().Str("suite", opts.Suite).Str("region", r.Region.String()).Msg("Starting suite.")
 
 	id, err := r.JobStarter.StartJob(context.Background(), opts)
 	if err != nil {
@@ -99,7 +99,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (job.Job, error) {
 	}
 
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
-	log.Info().Msg(fmt.Sprintf("Job started - %s", jobDetailsPage))
+	log.Info().Str("suite", opts.Suite).Str("url", jobDetailsPage).Msg("Suite started.")
 
 	// High interval poll to not oversaturate the job reader with requests.
 	j, err := r.JobReader.PollJob(context.Background(), id, 15*time.Second)
@@ -192,16 +192,18 @@ func (r *CloudRunner) uploadProject(filename string) (string, error) {
 // logSuite display the result of a suite
 func (r *CloudRunner) logSuite(res result) {
 	if res.job.ID == "" {
-		log.Error().Str("suite", res.suiteName).Msgf("failed to start")
-		log.Error().Str("suite", res.suiteName).Msgf("%s", res.err)
+		log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Failed to start suite.")
 		return
 	}
-	resultStr := "Passed"
-	if !res.job.Passed {
-		resultStr = "Failed"
-	}
+
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
-	log.Info().Str("suite", res.suiteName).Msgf("Status: %s - %s", resultStr, jobDetailsPage)
+	if res.job.Passed {
+		log.Info().Str("suite", res.suiteName).Bool("passed", res.job.Passed).Str("url", jobDetailsPage).
+			Msg("Suite finished.")
+	} else {
+		log.Error().Str("suite", res.suiteName).Bool("passed", res.job.Passed).Str("url", jobDetailsPage).
+			Msg("Suite finished.")
+	}
 	r.logSuiteConsole(res)
 }
 
@@ -215,7 +217,7 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	// Display log only when at least it has started
 	assetContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, ConsoleLogAsset)
 	if err != nil {
-		log.Warn().Str("suite", res.suiteName).Msg("Failed to get job asset.")
+		log.Warn().Str("suite", res.suiteName).Msg("Failed to retrieve the console output.")
 	} else {
 		log.Info().Msg(fmt.Sprintf("Test %s %s", res.job.ID, ConsoleLogAsset))
 		log.Info().Msg(string(assetContent))
