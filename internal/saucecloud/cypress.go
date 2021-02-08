@@ -54,26 +54,28 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 	defer close(results)
 
 	// Submit suites to work on.
-	for _, s := range r.Project.Suites {
-		jobOpts <- job.StartOptions{
-			App:              fmt.Sprintf("storage:%s", fileID),
-			Suite:            s.Name,
-			Framework:        "cypress",
-			FrameworkVersion: r.Project.Cypress.Version,
-			BrowserName:      s.Browser,
-			BrowserVersion:   s.BrowserVersion,
-			PlatformName:     s.PlatformName,
-			Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
-			Build:            r.Project.Sauce.Metadata.Build,
-			Tags:             r.Project.Sauce.Metadata.Tags,
-			Tunnel: job.TunnelOptions{
-				ID:     r.Project.Sauce.Tunnel.ID,
-				Parent: r.Project.Sauce.Tunnel.Parent,
-			},
-			ScreenResolution: s.ScreenResolution,
+	go func() {
+		for _, s := range r.Project.Suites {
+			jobOpts <- job.StartOptions{
+				App:              fmt.Sprintf("storage:%s", fileID),
+				Suite:            s.Name,
+				Framework:        "cypress",
+				FrameworkVersion: r.Project.Cypress.Version,
+				BrowserName:      s.Browser,
+				BrowserVersion:   s.BrowserVersion,
+				PlatformName:     s.PlatformName,
+				Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
+				Build:            r.Project.Sauce.Metadata.Build,
+				Tags:             r.Project.Sauce.Metadata.Tags,
+				Tunnel: job.TunnelOptions{
+					ID:     r.Project.Sauce.Tunnel.ID,
+					Parent: r.Project.Sauce.Tunnel.Parent,
+				},
+				ScreenResolution: s.ScreenResolution,
+			}
 		}
-	}
-	close(jobOpts)
+		close(jobOpts)
+	}()
 
 	return r.collectResults(results, len(r.Project.Suites))
 }
