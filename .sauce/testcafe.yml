@@ -12,9 +12,9 @@ sauce:
     build: Release $CI_COMMIT_SHORT_SHA
 suites:
   - name: "saucy test"
-    browser: "firefox"
+    browser: "firefox" # Although Testcafe supports triggering one test in multiple browsers, it'd better here to split them into every suite to indicate each suite has its own test point.
     src:
-      - ".*.(spec|test).[jt]s$" # test files glob
+      - "*test.js" # test files glob
     screenshots:
       takeOnFails: true
     platformName: "windows 10"
