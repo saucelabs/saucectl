@@ -210,7 +210,7 @@ func (r *CloudRunner) logSuite(res result) {
 // logSuiteError display the console output when tests from a suite are failing
 func (r *CloudRunner) logSuiteConsole(res result) {
 	// To avoid clutter, we don't show the console on job passes.
-	if res.job.Passed || !r.ShowConsoleLog {
+	if res.job.Passed && !r.ShowConsoleLog {
 		return
 	}
 
@@ -219,7 +219,6 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	if err != nil {
 		log.Warn().Str("suite", res.suiteName).Msg("Failed to retrieve the console output.")
 	} else {
-		log.Info().Msg(fmt.Sprintf("Test %s %s", res.job.ID, ConsoleLogAsset))
-		log.Info().Msg(string(assetContent))
+		log.Info().Str("suite", res.suiteName).Msgf("console.log output: \n%s", assetContent)
 	}
 }
