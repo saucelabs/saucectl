@@ -1,4 +1,5 @@
 apiVersion: v1alpha
+kind: testcafe
 metadata:
   name: Testing TestCafe Support
   tags:
@@ -6,13 +7,24 @@ metadata:
     - release team
     - other tag
   build: Release $CI_COMMIT_SHORT_SHA
-files:
-  - ./tests/e2e/testcafe/example.test.js
 suites:
   - name: "saucy test"
-    match: ".*.(spec|test).[jt]s$"
-image:
-  base: saucelabs/stt-testcafe-node
-  version: latest
+    browser: "firefox"
+    src:
+      - ".*.(spec|test).[jt]s$"
+    screenshots:
+      takeOnFails: true
+    platformName: "windows 10"
+    env:
+      hello: world
+
+docker:
+  fileTransfer: copy
+  #image:
+
+testcafe:
+  projectPath: tests/e2e/testcafe
+  version: 1.8.5
+
 sauce:
   region: us-west-1
