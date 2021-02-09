@@ -25,7 +25,7 @@ type Project struct {
 // Suite represents the testcafe test suite configuration.
 type Suite struct {
 	Name             string            `yaml:"name,omitempty" json:"name"`
-	BrowserName      string            `yaml:"browser,omitempty" json:"browser"`
+	BrowserName      string            `yaml:"browserName,omitempty" json:"browserName"`
 	BrowserVersion   string            `yaml:"browserVersion,omitempty" json:"browserVersion"`
 	Src              []string          `yaml:"src,omitempty" json:"src"`
 	Screenshots      Screenshots       `yaml:"screenshots,omitempty" json:"screenshots"`

@@ -12,7 +12,7 @@ sauce:
     build: Release $CI_COMMIT_SHORT_SHA
 suites:
   - name: "saucy test"
-    browser: "firefox" # Although Testcafe supports triggering one test in multiple browsers, it'd better here to split them into every suite to indicate each suite has its own test point.
+    browserName: "firefox" # Although Testcafe supports triggering one test in multiple browsers, it'd better here to split them into every suite to indicate each suite has its own test point.
     src:
       - "*test.js" # test files glob
     screenshots:
