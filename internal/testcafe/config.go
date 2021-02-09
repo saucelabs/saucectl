@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -70,8 +69,6 @@ func FromFile(cfgPath string) (Project, error) {
 	if p.Testcafe.Version == "" {
 		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
-
-	p.Testcafe.ProjectPath = filepath.Base(p.Testcafe.ProjectPath)
 
 	// Set default docker file transfer to mount
 	if p.Docker.FileTransfer == "" {
