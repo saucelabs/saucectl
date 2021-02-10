@@ -24,14 +24,27 @@ type Project struct {
 
 // Suite represents the testcafe test suite configuration.
 type Suite struct {
-	Name             string            `yaml:"name,omitempty" json:"name"`
-	BrowserName      string            `yaml:"browserName,omitempty" json:"browserName"`
-	BrowserVersion   string            `yaml:"browserVersion,omitempty" json:"browserVersion"`
-	Src              []string          `yaml:"src,omitempty" json:"src"`
-	Screenshots      Screenshots       `yaml:"screenshots,omitempty" json:"screenshots"`
-	PlatformName     string            `yaml:"platformName,omitempty" json:"platformName"`
-	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
-	Env              map[string]string `yaml:"env,omitempty" json:"env"`
+	Name               string            `yaml:"name,omitempty" json:"name"`
+	BrowserName        string            `yaml:"browserName,omitempty" json:"browserName"`
+	BrowserVersion     string            `yaml:"browserVersion,omitempty" json:"browserVersion"`
+	Src                []string          `yaml:"src,omitempty" json:"src"`
+	Screenshots        Screenshots       `yaml:"screenshots,omitempty" json:"screenshots"`
+	PlatformName       string            `yaml:"platformName,omitempty" json:"platformName"`
+	ScreenResolution   string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
+	Env                map[string]string `yaml:"env,omitempty" json:"env"`
+	TsConfigPath       string            `yaml:"tsConfigPath,omitempty" json:"tsConfigPath"`
+	ClientScripts      []string          `yaml:"clientScripts,omitempty" json:"clientScripts"`
+	SkipJsErrors       bool              `yaml:"skipJsErrors,omitempty" json:"skipJsErrors"`
+	QuarantineMode     bool              `yaml:"quarantineMode,omitempty" json:"quarantineMode"`
+	SkipUncaughtErrors bool              `yaml:"skipUncaughtErrors,omitempty" json:"skipUncaughtErrors"`
+	SelectorTimeout    int               `yaml:"selectorTimeout,omitempty" json:"selectorTimeout"`
+	AssertionTimeout   int               `yaml:"assertionTimeout,omitempty" json:"assertionTimeout"`
+	PageLoadTimeout    int               `yaml:"pageLoadTimeout,omitempty" json:"pageLoadTimeout"`
+	Speed              int               `yaml:"speed,omitempty" json:"speed"`
+	StopOnFirstFail    bool              `yaml:"stopOnFirstFail,omitempty" json:"stopOnFirstFail"`
+	DisablePageCaching bool              `yaml:"disablePageCaching,omitempty" json:"disablePageCaching"`
+	DisableScreenshots bool              `yaml:"disableScreenshots,omitempty" json:"disableScreenshots"`
+	DisableVideo       bool              `yaml:"disableVideo,omitempty" json:"disableVideo"`
 }
 
 // Screenshots represents screenshots configuration.
