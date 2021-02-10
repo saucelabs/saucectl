@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/mocks"
@@ -171,7 +171,6 @@ func TestRunProject(t *testing.T) {
 
 	// Fake JobStarter
 	starter := mocks.FakeJobStarter{
-		CheckFrameworkAvailabilitySuccess: true,
 		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
 			return "fake-job-id", nil
 		},

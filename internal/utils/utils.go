@@ -1,3 +1,4 @@
+// Package utils is deprecated.
 package utils
 
 import (
@@ -8,6 +9,7 @@ import (
 )
 
 // ValidateOutputPath validates the output paths of the `export` and `save` commands.
+// Deprecated: This function should be moved to its appropriate package.
 func ValidateOutputPath(path string) error {
 	dir := filepath.Dir(filepath.Clean(path))
 	if dir != "" && dir != "." {
@@ -35,6 +37,7 @@ func ValidateOutputPath(path string) error {
 
 // ValidateOutputPathFileMode validates the output paths of the `cp` command and serves as a
 // helper to `ValidateOutputPath`
+// Deprecated: This function should be moved to its appropriate package.
 func ValidateOutputPathFileMode(fileMode os.FileMode) error {
 	switch {
 	case fileMode&os.ModeDevice != 0:
@@ -46,6 +49,7 @@ func ValidateOutputPathFileMode(fileMode os.FileMode) error {
 }
 
 // GetProjectDir gets the home directory.
+// Deprecated: This function should be moved to its appropriate package.
 func GetProjectDir() string {
 	if (os.Getenv("SAUCE_ROOT_DIR") != "") {
 		return os.Getenv("SAUCE_ROOT_DIR")

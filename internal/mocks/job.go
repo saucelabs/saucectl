@@ -2,7 +2,6 @@ package mocks
 
 import (
 	"context"
-	"errors"
 	"github.com/saucelabs/saucectl/internal/job"
 	"time"
 )
@@ -10,20 +9,11 @@ import (
 // FakeJobStarter resto mock
 type FakeJobStarter struct {
 	StartJobFn                        func(ctx context.Context, opts job.StartOptions) (jobID string, err error)
-	CheckFrameworkAvailabilitySuccess bool
 }
 
 // StartJob mock function
 func (fjs *FakeJobStarter) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
 	return fjs.StartJobFn(ctx, opts)
-}
-
-// CheckFrameworkAvailability mock function
-func (fjs *FakeJobStarter) CheckFrameworkAvailability(ctx context.Context, frameworkName string) error {
-	if fjs.CheckFrameworkAvailabilitySuccess {
-		return nil
-	}
-	return errors.New("framework not available")
 }
 
 // FakeJobReader resto mock

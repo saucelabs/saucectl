@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"github.com/docker/docker/pkg/term"
-	"github.com/saucelabs/saucectl/cli/streams"
+	"github.com/saucelabs/saucectl/internal/streams"
 )
 
 // SauceCtlCli is the cli context

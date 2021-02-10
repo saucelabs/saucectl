@@ -1,16 +1,14 @@
 package playwright
 
 import (
+	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/config"
-	"gopkg.in/yaml.v2"
 	"os"
 	"path/filepath"
-)
 
-const (
-	// DefaultDockerImage represents the name of the docker image on Dockerhub
-	DefaultDockerImage = "saucelabs/stt-playwright-node"
+	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/config"
+	"gopkg.in/yaml.v2"
 )
 
 // Project represents the playwright project configuration.
@@ -37,11 +35,13 @@ type Playwright struct {
 
 // Suite represents the playwright test suite configuration.
 type Suite struct {
-	Name              string      `yaml:"name,omitempty" json:"name"`
-	PlaywrightVersion string      `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
-	TestMatch         string      `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
-	PlatformName      string      `yaml:"platformName,omitempty" json:"platformName,omitempty"`
-	Params            SuiteConfig `yaml:"params,omitempty" json:"param,omitempty"`
+	Name              string            `yaml:"name,omitempty" json:"name"`
+	PlaywrightVersion string            `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
+	TestMatch         string            `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
+	PlatformName      string            `yaml:"platformName,omitempty" json:"platformName,omitempty"`
+	Params            SuiteConfig       `yaml:"params,omitempty" json:"param,omitempty"`
+	ScreenResolution  string            `yaml:"screenResolution,omitempty" json:"screenResolution,omitempty"`
+	Env               map[string]string `yaml:"env,omitempty" json:"env,omitempty"`
 }
 
 // SuiteConfig represents the configuration specific to a suite
@@ -67,6 +67,12 @@ func FromFile(cfgPath string) (Project, error) {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
 
+	p.Playwright.Version = config.StandardizeVersionFormat(p.Playwright.Version)
+
+	if p.Playwright.Version == "" {
+		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+	}
+
 	// Default project path
 	if p.Playwright.ProjectPath == "" {
 		return Project{}, fmt.Errorf("no project folder defined")
@@ -81,8 +87,22 @@ func FromFile(cfgPath string) (Project, error) {
 		p.Docker.FileTransfer = config.DockerFileMount
 	}
 
+	if p.Docker.Image != "" {
+		log.Info().Msgf(
+			"Ignoring framework version for Docker, using provided image %s (only applicable to docker mode)",
+			p.Docker.Image)
+	}
+
 	if p.Sauce.Concurrency < 1 {
 		p.Sauce.Concurrency = 1
+	}
+
+	for i, s := range p.Suites {
+		env := map[string]string{}
+		for k, v := range s.Env {
+			env[k] = os.ExpandEnv(v)
+		}
+		p.Suites[i].Env = env
 	}
 
 	return p, nil

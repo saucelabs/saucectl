@@ -2,6 +2,7 @@ package saucecloud
 
 import (
 	"fmt"
+
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
@@ -34,29 +35,32 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 	defer close(results)
 
 	// Submit suites to work on.
-	for _, s := range r.Project.Suites {
-		// Define frameworkVersion if not set at suite level
-		if s.PlaywrightVersion == "" {
-			s.PlaywrightVersion = r.Project.Playwright.Version
+	go func() {
+		for _, s := range r.Project.Suites {
+			// Define frameworkVersion if not set at suite level
+			if s.PlaywrightVersion == "" {
+				s.PlaywrightVersion = r.Project.Playwright.Version
+			}
+			jobOpts <- job.StartOptions{
+				App:              fmt.Sprintf("storage:%s", fileID),
+				Suite:            s.Name,
+				Framework:        "playwright",
+				FrameworkVersion: s.PlaywrightVersion,
+				BrowserName:      "playwright",
+				BrowserVersion:   s.PlaywrightVersion,
+				PlatformName:     s.PlatformName,
+				Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
+				Build:            r.Project.Sauce.Metadata.Build,
+				Tags:             r.Project.Sauce.Metadata.Tags,
+				Tunnel: job.TunnelOptions{
+					ID:     r.Project.Sauce.Tunnel.ID,
+					Parent: r.Project.Sauce.Tunnel.Parent,
+				},
+				ScreenResolution: s.ScreenResolution,
+			}
 		}
-		jobOpts <- job.StartOptions{
-			App:              fmt.Sprintf("storage:%s", fileID),
-			Suite:            s.Name,
-			Framework:        "playwright",
-			FrameworkVersion: s.PlaywrightVersion,
-			BrowserName:      s.Params.BrowserName,
-			BrowserVersion:   s.PlaywrightVersion,
-			PlatformName:     s.PlatformName,
-			Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
-			Build:            r.Project.Sauce.Metadata.Build,
-			Tags:             r.Project.Sauce.Metadata.Tags,
-			Tunnel: job.TunnelOptions{
-				ID:     r.Project.Sauce.Tunnel.ID,
-				Parent: r.Project.Sauce.Tunnel.Parent,
-			},
-		}
-	}
-	close(jobOpts)
+		close(jobOpts)
+	}()
 
 	return r.collectResults(results, len(r.Project.Suites))
 }

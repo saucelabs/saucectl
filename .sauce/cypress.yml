@@ -18,13 +18,7 @@ docker:
   fileTransfer: mount # Defaults to `mount`. Choose between mount|copy.
 # Docker image and tag are both determined automatically based on your configuration. However, it's possible to set your
 # own custom image or a different tag.
-  image: saucelabs/stt-cypress-mocha-node:latest
-
-npm:
-  registry: "http://artifactory.inf.las1.saucelabs.net/artifactory/api/npm/all-npm/"
-  packages:
-    lodash: "4.17.20"
-
+#  image: saucelabs/stt-cypress-mocha-node:v5.6.0
 cypress:
   version: 5.6.0
   configFile: "tests/e2e/cypress.json"  # We determine related files based on the location of the config file.
@@ -32,7 +26,10 @@ suites:
   - name: "saucy test"
     browser: "chrome"
     platformName: "Windows 10"
-    screenResolution: "2560x1600"  # Available resolutions on Windows: '800x600', '1024x768', '1152x864', '1280x768', '1280x800', '1280x960', '1280x1024', '1400x1050', '1440x900', '1600x1200', '1680x1050', '1920x1080', '1920x1200', '2560x1600'
+      # screenResolution: "1920x1080"
+      # Available resolutions on Windows: '800x600', '1024x768', '1152x864', '1280x768', '1280x800', '1280x960', '1280x1024',
+      # '1400x1050', '1440x900', '1600x1200', '1680x1050', '1920x1080', '1920x1200', '2560x1600'
+      # If no screenResolution set, it will use 1024x768 by default
     config:
       env:
         hello: world

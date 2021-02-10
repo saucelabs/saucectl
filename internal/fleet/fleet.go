@@ -2,7 +2,7 @@ package fleet
 
 import (
 	"context"
-	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/fpath"
 )
 

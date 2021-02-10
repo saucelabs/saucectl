@@ -8,13 +8,9 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/config"
 	"gopkg.in/yaml.v2"
-)
-
-const (
-	// DefaultDockerImage represents the name of the docker image on Dockerhub
-	DefaultDockerImage = "saucelabs/stt-cypress-mocha-node"
 )
 
 // Project represents the cypress project configuration.
@@ -53,6 +49,12 @@ type Cypress struct {
 	// Version represents the cypress framework version.
 	Version string `yaml:"version" json:"version"`
 
+	// Record represents the cypress framework record flag.
+	Record bool `yaml:"record" json:"record"`
+
+	// Key represents the cypress framework key flag.
+	Key string `yaml:"key" json:"key"`
+
 	// ProjectPath is the path to the cypress directory itself. Not set by the user, but is instead based on the
 	// location of ConfigFile.
 	ProjectPath string `yaml:"-" json:"-"`
@@ -73,6 +75,14 @@ func FromFile(cfgPath string) (Project, error) {
 
 	if err = yaml.NewDecoder(f).Decode(&p); err != nil {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
+	}
+
+	p.Cypress.Key = os.ExpandEnv(p.Cypress.Key)
+
+	p.Cypress.Version = config.StandardizeVersionFormat(p.Cypress.Version)
+
+	if p.Cypress.Version == "" {
+		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
 
 	if _, err := os.Stat(p.Cypress.ConfigFile); err != nil {
@@ -98,12 +108,23 @@ func FromFile(cfgPath string) (Project, error) {
 		p.Docker.FileTransfer = config.DockerFileMount
 	}
 
+	if p.Docker.Image != "" {
+		log.Info().Msgf(
+			"Ignoring framework version for Docker, using provided image %s (only applicable to docker mode)",
+			p.Docker.Image)
+	}
+
 	if p.Sauce.Concurrency < 1 {
 		p.Sauce.Concurrency = 1
 	}
 
-	// Uniformize version
-	p.Cypress.Version = config.StandardizeVersionFormat(p.Cypress.Version)
+	for i, s := range p.Suites {
+		env := map[string]string{}
+		for k, v := range s.Config.Env {
+			env[k] = os.ExpandEnv(v)
+		}
+		p.Suites[i].Config.Env = env
+	}
 
 	return p, nil
 }

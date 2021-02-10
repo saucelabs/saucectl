@@ -26,10 +26,10 @@ import (
 	"github.com/phayes/freeport"
 	"github.com/rs/zerolog/log"
 
-	"github.com/saucelabs/saucectl/cli/config"
-	"github.com/saucelabs/saucectl/cli/credentials"
-	"github.com/saucelabs/saucectl/cli/streams"
-	"github.com/saucelabs/saucectl/cli/utils"
+	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/streams"
+	"github.com/saucelabs/saucectl/internal/utils"
 )
 
 var (
@@ -96,7 +96,9 @@ func Create() (*Handler, error) {
 // IsInstalled checks if docker is installed.
 func (handler *Handler) IsInstalled() bool {
 	_, err := handler.client.ServerVersion(context.Background())
-	log.Err(err).Msg("Unable to reach out to docker.")
+	if err != nil {
+		log.Err(err).Msg("Unable to reach out to docker.")
+	}
 	return err == nil
 }
 
@@ -115,16 +117,6 @@ func (handler *Handler) HasBaseImage(ctx context.Context, baseImage string) (boo
 	}
 
 	return len(images) > 0, nil
-}
-
-// GetImageFlavor returns a string that contains the image name and tag defined by the project.
-func (handler *Handler) GetImageFlavor(img config.Image) string {
-	// TODO - move this to ImageDefinition
-	tag := "latest"
-	if img.Tag != "" {
-		tag = img.Tag
-	}
-	return fmt.Sprintf("%s:%s", img.Name, tag)
 }
 
 // RegistryUsernameEnvKey represents the username environment variable for authenticating against a docker registry.
@@ -156,14 +148,13 @@ func NewImagePullOptions() (types.ImagePullOptions, error) {
 	return options, nil
 }
 
-// PullBaseImage pulls an image from Docker
-func (handler *Handler) PullBaseImage(ctx context.Context, img config.Image) error {
+// PullImage pulls an image from Docker
+func (handler *Handler) PullImage(ctx context.Context, img string) error {
 	options, err := NewImagePullOptions()
 	if err != nil {
 		return err
 	}
-	baseImage := handler.GetImageFlavor(img)
-	responseBody, err := handler.client.ImagePull(ctx, baseImage, options)
+	responseBody, err := handler.client.ImagePull(ctx, img, options)
 	if err != nil {
 		return err
 	}
@@ -201,8 +192,7 @@ func (handler *Handler) StartContainer(ctx context.Context, files []string, conf
 		return nil, err
 	}
 
-	img := handler.GetImageFlavor(conf.Image)
-	pDir, err := handler.ProjectDir(ctx, img)
+	pDir, err := handler.ProjectDir(ctx, conf.Image)
 	if err != nil {
 		return nil, err
 	}
@@ -229,12 +219,11 @@ func (handler *Handler) StartContainer(ctx context.Context, files []string, conf
 	}
 	networkConfig := &network.NetworkingConfig{}
 	containerConfig := &container.Config{
-		Image:        img,
+		Image:        conf.Image,
 		ExposedPorts: ports,
 		Env: []string{
 			fmt.Sprintf("SAUCE_USERNAME=%s", username),
 			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", accessKey),
-			fmt.Sprintf("SAUCE_IMAGE_NAME=%s", img),
 		},
 	}
 
@@ -243,7 +232,7 @@ func (handler *Handler) StartContainer(ctx context.Context, files []string, conf
 		return nil, err
 	}
 
-	log.Info().Str("img", img).Str("id", container.ID[:12]).Msg("Starting container")
+	log.Info().Str("img", conf.Image).Str("id", container.ID[:12]).Msg("Starting container")
 	if err := handler.client.ContainerStart(ctx, container.ID, types.ContainerStartOptions{}); err != nil {
 		return nil, err
 	}

@@ -5,17 +5,16 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"github.com/docker/docker/api/types"
 	"io"
 	"os"
 	"path"
 	"testing"
 
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-
-	"github.com/saucelabs/saucectl/cli/config"
-	"github.com/saucelabs/saucectl/cli/mocks"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -35,25 +34,6 @@ func TestNewImagePullOptions(t *testing.T) {
 	err = json.Unmarshal(decoded, &value)
 	assert.Nil(t, err)
 	assert.Equal(t, value, want)
-}
-
-func TestImageFlavor(t *testing.T) {
-	tests := []struct {
-		Image string
-		Tag   string
-		Want  string
-	}{
-		{"dummy-image", "latest", "dummy-image:latest"},
-		{"dummy-image", "", "dummy-image:latest"},
-		{"dummy-image", "custom-tag", "dummy-image:custom-tag"},
-	}
-
-	handler := Handler{}
-	for _, tt := range tests {
-		img := config.Image{Name: tt.Image, Tag: tt.Tag}
-		have := handler.GetImageFlavor(img)
-		assert.Equal(t, have, tt.Want)
-	}
 }
 
 func TestHasBaseImage(t *testing.T) {
@@ -83,7 +63,7 @@ func TestPullImageBase(t *testing.T) {
 	handler := &Handler{client: &fc}
 
 	fc.ImagePullSuccess = false
-	err := handler.PullBaseImage(context.Background(), config.Image{Name: "dummy-name", Tag: "dummy-tag"})
+	err := handler.PullImage(context.Background(), "dummy-name:dumm-tag")
 	assert.NotNil(t, err)
 }
 

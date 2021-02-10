@@ -2,7 +2,7 @@ package mocks
 
 import (
 	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/config"
+	"github.com/saucelabs/saucectl/internal/config"
 )
 
 // TestRunner is a mock to test runner functionalities
