@@ -37,6 +37,7 @@ type Suite struct {
 // Screenshots represents screenshots configuration.
 type Screenshots struct {
 	TakeOnFails bool `yaml:"takeOnFails,omitempty" json:"takeOnFails"`
+	FullPage    bool `yaml:"fullPage,omitempty" json:"fullPage"`
 }
 
 // Testcafe represents the configuration for testcafe.

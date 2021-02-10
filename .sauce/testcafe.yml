@@ -17,6 +17,7 @@ suites:
       - "*test.js" # test files glob
     screenshots:
       takeOnFails: true
+      fullPage: true
     platformName: "windows 10"
     env:
       hello: world
