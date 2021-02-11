@@ -23,7 +23,6 @@ func NewPlaywright(c playwright.Project, cli *command.SauceCtlCli, imageLoc fram
 		ContainerRunner: ContainerRunner{
 			Ctx:             context.Background(),
 			Cli:             cli,
-			containerID:     "",
 			docker:          nil,
 			containerConfig: &containerConfig{},
 			Framework: framework.Framework{
@@ -52,7 +51,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 
 	errorCount := 0
 	for _, suite := range r.Project.Suites {
-		err := r.RunSuite(ContainerStartOptions{
+		err := r.runSuite(containerStartOptions{
 			Docker: r.Project.Docker,
 			BeforeExec: r.Project.BeforeExec,
 			Project: r.Project,

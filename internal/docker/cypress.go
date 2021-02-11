@@ -21,7 +21,6 @@ func NewCypress(c cypress.Project, cli *command.SauceCtlCli, imageLoc framework.
 		ContainerRunner: ContainerRunner{
 			Ctx:             context.Background(),
 			Cli:             cli,
-			containerID:     "",
 			docker:          nil,
 			containerConfig: &containerConfig{},
 			Framework: framework.Framework{
@@ -52,23 +51,27 @@ func (r *CypressRunner) RunProject() (int, error) {
 		files = append(files, r.Project.Cypress.EnvFile)
 	}
 
-	errorCount := 0
-	for _, suite := range r.Project.Suites {
-		err := r.RunSuite(ContainerStartOptions{
-			Docker:      r.Project.Docker,
-			BeforeExec:  r.Project.BeforeExec,
-			Project:     r.Project,
-			SuiteName:   suite.Name,
-			Environment: suite.Config.Env,
-			Files:       files,
-		})
+	containerOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency)
+	defer close(results)
 
-		if err != nil {
-			errorCount++
+	go func() {
+		for _, suite := range r.Project.Suites {
+			containerOpts <- containerStartOptions{
+				Docker:      r.Project.Docker,
+				BeforeExec:  r.Project.BeforeExec,
+				Project:     r.Project,
+				SuiteName:   suite.Name,
+				Environment: suite.Config.Env,
+				Files:       files,
+			}
 		}
+		close(containerOpts)
+	}()
+
+	hasErrors := r.collectResults(results, len(r.Project.Suites))
+	if hasErrors {
+		log.Error().Msgf("%d suite(s) failed", -1)
+		return 1, nil
 	}
-	if errorCount > 0 {
-		log.Error().Msgf("%d suite(s) failed", errorCount)
-	}
-	return errorCount, nil
+	return 0, nil
 }
