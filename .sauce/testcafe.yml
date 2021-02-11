@@ -21,6 +21,7 @@ suites:
     platformName: "windows 10"
     env:
       hello: world
+    speed: 1
 
 docker:
   # fileTransfer controls how test files are transferred to the docker container before tests are run (choice: mount|copy).
