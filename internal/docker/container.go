@@ -26,6 +26,7 @@ type ContainerRunner struct {
 	containerConfig *containerConfig
 	Framework       framework.Framework
 	ImageLoc        framework.ImageLocator
+	ShowConsoleLog  bool
 }
 
 // containerStartOptions represent data required to start a new container.
@@ -40,9 +41,10 @@ type containerStartOptions struct {
 
 // result represents the result of a local job
 type result struct {
-	err    error
-	passed bool
-	output string
+	err       error
+	passed    bool
+	output    string
+	suiteName string
 }
 
 func (r *ContainerRunner) pullImage(img string) error {
@@ -142,10 +144,6 @@ func (r *ContainerRunner) run(containerID string, cmd []string, env map[string]s
 	}()
 
 	exitCode, output, err := r.docker.ExecuteAttach(r.Ctx, containerID, r.Cli, cmd, env)
-	// FIXME: to restore somewhere else
-	//log.Info().
-	//	Int("ExitCode", exitCode).
-	//	Msg("Command Finished")
 
 	if err != nil {
 		return false, "", err
@@ -187,9 +185,10 @@ func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, re
 	for opts := range containerOpts {
 		passed, output, err := r.runSuite(opts)
 		results <- result{
-			passed: passed,
-			output: output,
-			err:    err,
+			suiteName: opts.SuiteName,
+			passed:    passed,
+			output:    output,
+			err:       err,
 		}
 	}
 }
@@ -231,6 +230,23 @@ func (r *ContainerRunner) collectResults(results chan result, expected int) bool
 }
 
 func (r *ContainerRunner) logSuite(res result) {
+	// FIXME: Checkit ?
+	//if res.job.ID == "" {
+	//	log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Failed to start suite.")
+	//	return
+	//}
+
+	// FIXME: Parse it
+	//jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
+	if res.passed {
+		log.Info().Str("suite", res.suiteName).Bool("passed", res.passed).Msg("Suite finished.")
+	} else {
+		log.Error().Str("suite", res.suiteName).Bool("passed", res.passed).Msg("Suite finished.")
+	}
+
+	if !res.passed || r.ShowConsoleLog {
+		log.Info().Str("suite", res.suiteName).Msgf("console.log output: \n%s", res.output)
+	}
 }
 
 func (r *ContainerRunner) runSuite(options containerStartOptions) (bool, string, error) {

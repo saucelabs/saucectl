@@ -27,6 +27,7 @@ func NewCypress(c cypress.Project, cli *command.SauceCtlCli, imageLoc framework.
 				Version: c.Cypress.Version,
 			},
 			ImageLoc: imageLoc,
+			ShowConsoleLog: c.ShowConsoleLog,
 		},
 	}
 

@@ -29,6 +29,7 @@ func NewPlaywright(c playwright.Project, cli *command.SauceCtlCli, imageLoc fram
 				Version: c.Playwright.Version,
 			},
 			ImageLoc: imageLoc,
+			ShowConsoleLog: c.ShowConsoleLog,
 		},
 	}
 
