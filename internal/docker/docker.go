@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -402,20 +403,14 @@ func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd 
 	return &createResp, &resp, err
 }
 
-// ExecuteAttach runs the cmd test in the Docker container and attaches the given stream.
-func (handler *Handler) ExecuteAttach(ctx context.Context, containerID string, cli *command.SauceCtlCli, cmd []string, env map[string]string) (int, error) {
-	var out, stderr io.Writer
+// ExecuteAttach runs the cmd test in the Docker container and catch the given stream to a string.
+func (handler *Handler) ExecuteAttach(ctx context.Context, containerID string, cli *command.SauceCtlCli, cmd []string, env map[string]string) (int, string, error) {
 	var in io.ReadCloser
+	var out bytes.Buffer
 
-	out = cli.Out()
-	stderr = cli.Out()
-
-	if err := cli.In().CheckTty(false, true); err != nil {
-		return 1, err
-	}
 	createResp, attachResp, err := handler.Execute(ctx, containerID, cmd, env)
 	if err != nil {
-		return 1, err
+		return 1, "", err
 	}
 	defer attachResp.Close()
 	errCh := make(chan error, 1)
@@ -425,25 +420,23 @@ func (handler *Handler) ExecuteAttach(ctx context.Context, containerID string, c
 			streamer := streams.IOStreamer{
 				Streams:      cli,
 				InputStream:  in,
-				OutputStream: out,
-				ErrorStream:  stderr,
+				OutputStream: &out,
+				ErrorStream:  &out,
 				Resp:         *attachResp,
 			}
-
 			return streamer.Stream(ctx)
 		}()
 	}()
 
 	if err := <-errCh; err != nil {
-		return 1, err
+		return 1, out.String(), err
 	}
 
 	exitCode, err := handler.ExecuteInspect(ctx, createResp.ID)
 	if err != nil {
-		return 1, err
+		return 1, out.String(), err
 	}
-	return exitCode, nil
-
+	return exitCode, out.String(), nil
 }
 
 // ExecuteInspect checks exit code of test

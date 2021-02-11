@@ -40,7 +40,9 @@ type containerStartOptions struct {
 
 // result represents the result of a local job
 type result struct {
-	Err error
+	err    error
+	passed bool
+	output string
 }
 
 func (r *ContainerRunner) pullImage(img string) error {
@@ -129,7 +131,7 @@ func (r *ContainerRunner) setupImage(confd config.Docker, beforeExec []string, p
 	return container.ID, nil
 }
 
-func (r *ContainerRunner) run(containerID string, cmd []string, env map[string]string) error {
+func (r *ContainerRunner) run(containerID string, cmd []string, env map[string]string) (bool, string, error) {
 	defer func() {
 		log.Info().Msg("Tearing down environment")
 		if err := r.docker.Teardown(r.Ctx, containerID); err != nil {
@@ -139,24 +141,26 @@ func (r *ContainerRunner) run(containerID string, cmd []string, env map[string]s
 		}
 	}()
 
-	exitCode, err := r.docker.ExecuteAttach(r.Ctx, containerID, r.Cli, cmd, env)
-	log.Info().
-		Int("ExitCode", exitCode).
-		Msg("Command Finished")
+	exitCode, output, err := r.docker.ExecuteAttach(r.Ctx, containerID, r.Cli, cmd, env)
+	// FIXME: to restore somewhere else
+	//log.Info().
+	//	Int("ExitCode", exitCode).
+	//	Msg("Command Finished")
 
 	if err != nil {
-		return err
+		return false, "", err
 	}
 	if exitCode != 0 {
-		return fmt.Errorf("exitCode is %d", exitCode)
+		return false, "", fmt.Errorf("exitCode is %d", exitCode)
 	}
-	return nil
+	passed := exitCode == 0
+	return passed, output, nil
 }
 
 func (r *ContainerRunner) beforeExec(containerID string, tasks []string) error {
 	for _, task := range tasks {
 		log.Info().Str("task", task).Msg("Running BeforeExec")
-		exitCode, err := r.docker.ExecuteAttach(r.Ctx, containerID, r.Cli, strings.Fields(task), nil)
+		exitCode, _, err := r.docker.ExecuteAttach(r.Ctx, containerID, r.Cli, strings.Fields(task), nil)
 		if err != nil {
 			return err
 		}
@@ -181,42 +185,60 @@ func (r *ContainerRunner) createWorkerPool(ccy int) (chan containerStartOptions,
 
 func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, results chan<- result) {
 	for opts := range containerOpts {
-		err := r.runSuite(opts)
-		rs := result{
-			Err: err,
+		passed, output, err := r.runSuite(opts)
+		results <- result{
+			passed: passed,
+			output: output,
+			err:    err,
 		}
-		results <- rs
 	}
 }
 
 func (r *ContainerRunner) collectResults(results chan result, expected int) bool {
 	// TODO find a better way to get the expected
-	//errCount := 0
+	errCount := 0
 	completed := 0
 	inProgress := expected
-	//passed := true
+	passed := true
 
 	waiter := dots.New(1)
 	waiter.Start()
 	for i := 0; i < expected; i++ {
-		<-results
+		res := <-results
 		completed++
 		inProgress--
 
+		if !res.passed {
+			errCount++
+			passed = false
+		}
+
+		// Logging is not synchronized over the different worker routines & dot routine.
+		// To avoid implementing a more complex solution centralizing output on only one
+		// routine, a new lines has simply been forced, to ensure that line starts from
+		// the beginning of the console.
 		fmt.Println("")
 		log.Info().Msgf("Suites completed: %d/%d", completed, expected)
-
+		r.logSuite(res)
 	}
 	waiter.Stop()
-	return false
+
+	log.Info().Msgf("Suites expected: %d", expected)
+	log.Info().Msgf("Suites passed: %d", expected-errCount)
+	log.Info().Msgf("Suites failed: %d", errCount)
+
+	return passed
 }
 
-func (r *ContainerRunner) runSuite(options containerStartOptions) error {
+func (r *ContainerRunner) logSuite(res result) {
+}
+
+func (r *ContainerRunner) runSuite(options containerStartOptions) (bool, string, error) {
 	log.Info().Msg("Setting up test environment")
-	containerID, err := r.setupImage(options.Docker, options.BeforeExec, options.Project, options.Files);
+	containerID, err := r.setupImage(options.Docker, options.BeforeExec, options.Project, options.Files)
 	if err != nil {
 		log.Err(err).Msg("Failed to setup test environment")
-		return err
+		return false, "", err
 	}
 
 	return r.run(containerID, []string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", options.SuiteName}, options.Environment)

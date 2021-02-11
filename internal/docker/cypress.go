@@ -2,7 +2,6 @@ package docker
 
 import (
 	"context"
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/framework"
@@ -70,7 +69,6 @@ func (r *CypressRunner) RunProject() (int, error) {
 
 	hasErrors := r.collectResults(results, len(r.Project.Suites))
 	if hasErrors {
-		log.Error().Msgf("%d suite(s) failed", -1)
 		return 1, nil
 	}
 	return 0, nil

@@ -5,7 +5,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/framework"
 	"path/filepath"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
@@ -49,23 +48,27 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 	}
 	r.Project.Playwright.ProjectPath = filepath.Base(r.Project.Playwright.ProjectPath)
 
-	errorCount := 0
-	for _, suite := range r.Project.Suites {
-		err := r.runSuite(containerStartOptions{
-			Docker: r.Project.Docker,
-			BeforeExec: r.Project.BeforeExec,
-			Project: r.Project,
-			SuiteName: suite.Name,
-			Environment: suite.Env,
-			Files: files,
-		})
 
-		if err != nil {
-			errorCount++
+	containerOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency)
+	defer close(results)
+
+	go func() {
+		for _, suite := range r.Project.Suites {
+			containerOpts <- containerStartOptions{
+				Docker:      r.Project.Docker,
+				BeforeExec:  r.Project.BeforeExec,
+				Project:     r.Project,
+				SuiteName:   suite.Name,
+				Environment: suite.Env,
+				Files:       files,
+			}
 		}
+		close(containerOpts)
+	}()
+
+	hasErrors := r.collectResults(results, len(r.Project.Suites))
+	if hasErrors {
+		return 1, nil
 	}
-	if errorCount > 0 {
-		log.Error().Msgf("%d suite(s) failed", errorCount)
-	}
-	return errorCount, nil
+	return 0, nil
 }
