@@ -52,14 +52,15 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 
 	errorCount := 0
 	for _, suite := range r.Project.Suites {
-		log.Info().Msg("Setting up test environment")
-		if err := r.setupImage(r.Project.Docker, r.Project.BeforeExec, r.Project, files); err != nil {
-			log.Err(err).Msg("Failed to setup test environment")
-			return 1, err
-		}
+		err := r.RunSuite(ContainerStartOptions{
+			Docker: r.Project.Docker,
+			BeforeExec: r.Project.BeforeExec,
+			Project: r.Project,
+			SuiteName: suite.Name,
+			Environment: suite.Env,
+			Files: files,
+		})
 
-		err := r.run([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", suite.Name},
-			suite.Env)
 		if err != nil {
 			errorCount++
 		}

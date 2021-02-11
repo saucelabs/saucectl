@@ -59,7 +59,7 @@ func (r *ContainerRunner) pullImage(img string) error {
 	return nil
 }
 
-// setup performs any necessary steps for a test runner to execute tests.
+// setupImage performs any necessary steps for a test runner to execute tests.
 func (r *ContainerRunner) setupImage(confd config.Docker, beforeExec []string, project interface{}, files []string) error {
 	if !r.docker.IsInstalled() {
 		return fmt.Errorf("please verify that docker is installed and running: " +
@@ -149,5 +149,27 @@ func (r *ContainerRunner) beforeExec(tasks []string) error {
 			return fmt.Errorf("failed to run BeforeExec task: %s - exit code %d", task, exitCode)
 		}
 	}
+	return nil
+}
+
+// WIP
+type containerStartOptions struct {
+	Docker      config.Docker
+	BeforeExec  []string
+	Project     interface{}
+	SuiteName   string
+	Environment map[string]string
+	Files       []string
+}
+
+func (r *ContainerRunner) runSuite(options containerStartOptions) error {
+	log.Info().Msg("Setting up test environment")
+	if err := r.setupImage(options.Docker, options.BeforeExec, options.Project, options.Files); err != nil {
+		log.Err(err).Msg("Failed to setup test environment")
+		return err
+	}
+
+	return r.run([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", options.SuiteName},
+		options.Environment)
 	return nil
 }
