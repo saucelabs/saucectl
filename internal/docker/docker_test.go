@@ -118,12 +118,12 @@ func TestStartContainer(t *testing.T) {
 	var err error
 
 	// Buggy container start
-	cont, err = handler.StartContainer(context.Background(), []string{project.Cypress.ConfigFile, project.Cypress.ProjectPath}, config.Docker{})
+	cont, err = handler.StartContainer(context.Background(), containerStartOptions{Files:[]string{project.Cypress.ConfigFile, project.Cypress.ProjectPath}, Docker: config.Docker{}})
 	assert.NotNil(t, err)
 
 	// Successfull container start
 	mockDocker.ContainerCreateSuccess = true
-	cont, err = handler.StartContainer(context.Background(), []string{project.Cypress.ConfigFile, project.Cypress.ProjectPath}, config.Docker{})
+	cont, err = handler.StartContainer(context.Background(), containerStartOptions{Files:[]string{project.Cypress.ConfigFile, project.Cypress.ProjectPath}, Docker: config.Docker{}})
 	assert.Nil(t, err)
 	assert.NotNil(t, cont)
 }
