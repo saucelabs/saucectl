@@ -41,11 +41,12 @@ type containerStartOptions struct {
 
 // result represents the result of a local job
 type result struct {
-	containerID string
-	err         error
-	passed      bool
-	output      string
-	suiteName   string
+	containerID   string
+	err           error
+	passed        bool
+	output        string
+	suiteName     string
+	jobDetailsURL string
 }
 
 func (r *ContainerRunner) pullImage(img string) error {
@@ -80,7 +81,7 @@ func (r *ContainerRunner) pullImage(img string) error {
 }
 
 // fetchImage ensure that container image is available for test runner to execute tests.
-func (r *ContainerRunner) fetchImage(docker *config.Docker) (error) {
+func (r *ContainerRunner) fetchImage(docker *config.Docker) error {
 	if !r.docker.IsInstalled() {
 		return fmt.Errorf("please verify that docker is installed and running: " +
 			" follow the guide at https://docs.docker.com/get-docker/")
@@ -112,6 +113,11 @@ func (r *ContainerRunner) startContainer(options containerStartOptions) (string,
 		return "", err
 	}
 
+	r.containerConfig.jobDetailsFilePath, err = r.docker.JobDetailsURLFile(r.Ctx, options.Docker.Image)
+	if err != nil {
+		return "", err
+	}
+
 	tmpDir, err := ioutil.TempDir("", "saucectl")
 	if err != nil {
 		return "", err
@@ -137,7 +143,7 @@ func (r *ContainerRunner) startContainer(options containerStartOptions) (string,
 	return container.ID, nil
 }
 
-func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string) (string, string, bool, error) {
+func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string) (string, string, string, bool, error) {
 	defer func() {
 		log.Info().Msgf("%s: Tearing down environment", suiteName)
 		if err := r.docker.Teardown(r.Ctx, containerID); err != nil {
@@ -150,13 +156,38 @@ func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env m
 	exitCode, output, err := r.docker.ExecuteAttach(r.Ctx, containerID, cmd, env)
 
 	if err != nil {
-		return "", "", false, err
+		return "", "", "", false, err
 	}
+
+	passed := true
 	if exitCode != 0 {
-		return "", "", false, fmt.Errorf("exitCode is %d", exitCode)
+		err = fmt.Errorf("exitCode is %d", exitCode)
+		passed = false
 	}
-	passed := exitCode == 0
-	return containerID, output, passed, nil
+
+	jobDetailsUrl, err := r.readTestUrl(containerID)
+	if err != nil {
+		log.Warn().Msgf("unable to retrieve test result url: %s", err)
+	}
+	return containerID, output, jobDetailsUrl, passed, nil
+}
+
+// readTestUrl reads test url from inside the test runner container.
+func (r *ContainerRunner) readTestUrl(containerID string) (string, error) {
+	dir, err := ioutil.TempDir("", "result")
+	if err != nil {
+		return "", err
+	}
+	defer os.RemoveAll(dir)
+
+	err = r.docker.CopyFromContainer(r.Ctx, containerID, r.containerConfig.jobDetailsFilePath, dir)
+	if err != nil {
+		return "", err
+	}
+	fileName := filepath.Base(r.containerConfig.jobDetailsFilePath)
+	filePath := filepath.Join(dir, fileName)
+	content, err := ioutil.ReadFile(filePath)
+	return strings.TrimSpace(string(content)), err
 }
 
 func (r *ContainerRunner) beforeExec(containerID, suiteName string, tasks []string) error {
@@ -187,13 +218,14 @@ func (r *ContainerRunner) createWorkerPool(ccy int) (chan containerStartOptions,
 
 func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, results chan<- result) {
 	for opts := range containerOpts {
-		containerID, output, passed, err := r.runSuite(opts)
+		containerID, output, jobDetailsUrl, passed, err := r.runSuite(opts)
 		results <- result{
-			suiteName: opts.SuiteName,
-			containerID: containerID,
-			passed:    passed,
-			output:    output,
-			err:       err,
+			suiteName:     opts.SuiteName,
+			containerID:   containerID,
+			jobDetailsURL: jobDetailsUrl,
+			passed:        passed,
+			output:        output,
+			err:           err,
 		}
 	}
 }
@@ -240,12 +272,10 @@ func (r *ContainerRunner) logSuite(res result) {
 		return
 	}
 
-	// FIXME: Parse it
-	//jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 	if res.passed {
-		log.Info().Bool("passed", res.passed).Msgf("%s: Suite finished.", res.suiteName)
+		log.Info().Bool("passed", res.passed).Str("url", res.jobDetailsURL).Msgf("%s: Suite finished.", res.suiteName)
 	} else {
-		log.Error().Bool("passed", res.passed).Msgf("%s: Suite finished.", res.suiteName)
+		log.Error().Bool("passed", res.passed).Str("url", res.jobDetailsURL).Msgf("%s: Suite finished.", res.suiteName)
 	}
 
 	if !res.passed || r.ShowConsoleLog {
@@ -253,12 +283,12 @@ func (r *ContainerRunner) logSuite(res result) {
 	}
 }
 
-func (r *ContainerRunner) runSuite(options containerStartOptions) (string, string, bool, error) {
+func (r *ContainerRunner) runSuite(options containerStartOptions) (string, string, string, bool, error) {
 	log.Info().Msgf("%s: Setting up test environment", options.SuiteName)
 	containerID, err := r.startContainer(options)
 	if err != nil {
 		log.Err(err).Msgf("%s: Failed to setup test environment", options.SuiteName)
-		return containerID, "", false, err
+		return containerID, "", "", false, err
 	}
 
 	return r.run(containerID, options.SuiteName,
