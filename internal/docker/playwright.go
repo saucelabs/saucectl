@@ -2,6 +2,8 @@ package docker
 
 import (
 	"context"
+	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"path/filepath"
 
@@ -49,6 +51,10 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 	}
 	r.Project.Playwright.ProjectPath = filepath.Base(r.Project.Playwright.ProjectPath)
 
+	if r.Project.Sauce.Concurrency > 1 {
+		log.Info().Msg("concurrency > 1: file transfer mode forced to copy.")
+		r.Project.Docker.FileTransfer = config.DockerFileCopy
+	}
 
 	containerOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency)
 	defer close(results)

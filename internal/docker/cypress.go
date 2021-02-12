@@ -2,7 +2,9 @@ package docker
 
 import (
 	"context"
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/framework"
 )
@@ -49,6 +51,11 @@ func (r *CypressRunner) RunProject() (int, error) {
 
 	if r.Project.Cypress.EnvFile != "" {
 		files = append(files, r.Project.Cypress.EnvFile)
+	}
+
+	if r.Project.Sauce.Concurrency > 1 {
+		log.Info().Msg("concurrency > 1: file transfer mode forced to copy.")
+		r.Project.Docker.FileTransfer = config.DockerFileCopy
 	}
 
 	containerOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency)
