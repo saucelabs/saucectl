@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/command"
 	"io"
 	"io/ioutil"
 	"os"
@@ -173,7 +172,7 @@ func (handler *Handler) PullImage(ctx context.Context, img string) error {
 }
 
 // StartContainer starts the Docker testrunner container
-func (handler *Handler) StartContainer(ctx context.Context, files []string, conf config.Docker) (*container.ContainerCreateCreatedBody, error) {
+func (handler *Handler) StartContainer(ctx context.Context, options containerStartOptions) (*container.ContainerCreateCreatedBody, error) {
 	var (
 		ports        map[nat.Port]struct{}
 		portBindings map[nat.Port][]nat.PortBinding
@@ -193,14 +192,14 @@ func (handler *Handler) StartContainer(ctx context.Context, files []string, conf
 		return nil, err
 	}
 
-	pDir, err := handler.ProjectDir(ctx, conf.Image)
+	pDir, err := handler.ProjectDir(ctx, options.Docker.Image)
 	if err != nil {
 		return nil, err
 	}
 
 	var m []mount.Mount
-	if conf.FileTransfer == config.DockerFileMount {
-		m, err = createMounts(files, pDir)
+	if options.Docker.FileTransfer == config.DockerFileMount {
+		m, err = createMounts(options.Files, pDir)
 		if err != nil {
 			return nil, err
 		}
@@ -211,7 +210,7 @@ func (handler *Handler) StartContainer(ctx context.Context, files []string, conf
 	if creds := credentials.Get(); creds != nil {
 		username = creds.Username
 		accessKey = creds.AccessKey
-		log.Info().Msgf("Using credentials set by %s", creds.Source)
+		log.Info().Str("suite", options.SuiteName).Msgf("Using credentials set by %s", creds.Source)
 	}
 
 	hostConfig := &container.HostConfig{
@@ -220,7 +219,7 @@ func (handler *Handler) StartContainer(ctx context.Context, files []string, conf
 	}
 	networkConfig := &network.NetworkingConfig{}
 	containerConfig := &container.Config{
-		Image:        conf.Image,
+		Image:        options.Docker.Image,
 		ExposedPorts: ports,
 		Env: []string{
 			fmt.Sprintf("SAUCE_USERNAME=%s", username),
@@ -233,13 +232,13 @@ func (handler *Handler) StartContainer(ctx context.Context, files []string, conf
 		return nil, err
 	}
 
-	log.Info().Str("img", conf.Image).Str("id", container.ID[:12]).Msg("Starting container")
+	log.Info().Str("suite", options.SuiteName).Str("img", options.Docker.Image).Str("id", container.ID[:12]).Msg("Starting container")
 	if err := handler.client.ContainerStart(ctx, container.ID, types.ContainerStartOptions{}); err != nil {
 		return nil, err
 	}
 
-	if conf.FileTransfer == config.DockerFileCopy {
-		if err := copyTestFiles(ctx, handler, container.ID, files, pDir); err != nil {
+	if options.Docker.FileTransfer == config.DockerFileCopy {
+		if err := copyTestFiles(ctx, handler, container.ID, options.SuiteName, options.Files, pDir); err != nil {
 			return nil, err
 		}
 	}
@@ -256,9 +255,9 @@ func (handler *Handler) StartContainer(ctx context.Context, files []string, conf
 }
 
 // copyTestFiles copies the files within the container.
-func copyTestFiles(ctx context.Context, handler *Handler, containerID string, files []string, pDir string) error {
+func copyTestFiles(ctx context.Context, handler *Handler, containerID, suiteName string, files []string, pDir string) error {
 	for _, file := range files {
-		log.Info().Str("from", file).Str("to", pDir).Msg("File copied")
+		log.Info().Str("suite", suiteName).Str("from", file).Str("to", pDir).Msg("File copied")
 		if err := handler.CopyToContainer(ctx, containerID, file, pDir); err != nil {
 			return err
 		}
@@ -404,7 +403,7 @@ func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd 
 }
 
 // ExecuteAttach runs the cmd test in the Docker container and catch the given stream to a string.
-func (handler *Handler) ExecuteAttach(ctx context.Context, containerID string, cli *command.SauceCtlCli, cmd []string, env map[string]string) (int, string, error) {
+func (handler *Handler) ExecuteAttach(ctx context.Context, containerID string, cmd []string, env map[string]string) (int, string, error) {
 	var in io.ReadCloser
 	var out bytes.Buffer
 
@@ -418,7 +417,6 @@ func (handler *Handler) ExecuteAttach(ctx context.Context, containerID string, c
 		defer close(errCh)
 		errCh <- func() error {
 			streamer := streams.IOStreamer{
-				Streams:      cli,
 				InputStream:  in,
 				OutputStream: &out,
 				ErrorStream:  &out,

@@ -41,10 +41,11 @@ type containerStartOptions struct {
 
 // result represents the result of a local job
 type result struct {
-	err       error
-	passed    bool
-	output    string
-	suiteName string
+	containerID string
+	err         error
+	passed      bool
+	output      string
+	suiteName   string
 }
 
 func (r *ContainerRunner) pullImage(img string) error {
@@ -79,31 +80,31 @@ func (r *ContainerRunner) pullImage(img string) error {
 }
 
 // setupImage performs any necessary steps for a test runner to execute tests.
-func (r *ContainerRunner) setupImage(confd config.Docker, beforeExec []string, project interface{}, files []string) (string, error) {
+func (r *ContainerRunner) setupImage(options containerStartOptions) (string, error) {
 	if !r.docker.IsInstalled() {
 		return "", fmt.Errorf("please verify that docker is installed and running: " +
 			" follow the guide at https://docs.docker.com/get-docker/")
 	}
 
-	if confd.Image == "" {
+	if options.Docker.Image == "" {
 		img, err := r.ImageLoc.GetImage(r.Ctx, r.Framework)
 		if err != nil {
 			return "", fmt.Errorf("unable to determine which docker image to run: %w", err)
 		}
-		confd.Image = img
+		options.Docker.Image = img
 	}
 
-	if err := r.pullImage(confd.Image); err != nil {
+	if err := r.pullImage(options.Docker.Image); err != nil {
 		return "", err
 	}
 
-	container, err := r.docker.StartContainer(r.Ctx, files, confd)
+	container, err := r.docker.StartContainer(r.Ctx, options)
 	if err != nil {
 		return "", err
 	}
 	containerID := container.ID
 
-	pDir, err := r.docker.ProjectDir(r.Ctx, confd.Image)
+	pDir, err := r.docker.ProjectDir(r.Ctx, options.Docker.Image)
 	if err != nil {
 		return "", err
 	}
@@ -115,7 +116,7 @@ func (r *ContainerRunner) setupImage(confd config.Docker, beforeExec []string, p
 	defer os.RemoveAll(tmpDir)
 
 	rcPath := filepath.Join(tmpDir, SauceRunnerConfigFile)
-	if err := jsonio.WriteFile(rcPath, project); err != nil {
+	if err := jsonio.WriteFile(rcPath, options.Project); err != nil {
 		return "", err
 	}
 
@@ -125,7 +126,7 @@ func (r *ContainerRunner) setupImage(confd config.Docker, beforeExec []string, p
 	r.containerConfig.sauceRunnerConfigPath = path.Join(pDir, SauceRunnerConfigFile)
 
 	// running pre-exec tasks
-	err = r.beforeExec(containerID, beforeExec)
+	err = r.beforeExec(containerID, options.SuiteName, options.BeforeExec)
 	if err != nil {
 		return "", err
 	}
@@ -133,32 +134,32 @@ func (r *ContainerRunner) setupImage(confd config.Docker, beforeExec []string, p
 	return container.ID, nil
 }
 
-func (r *ContainerRunner) run(containerID string, cmd []string, env map[string]string) (bool, string, error) {
+func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string) (string, string, bool, error) {
 	defer func() {
-		log.Info().Msg("Tearing down environment")
+		log.Info().Str("suite", suiteName).Msg("Tearing down environment")
 		if err := r.docker.Teardown(r.Ctx, containerID); err != nil {
 			if !r.docker.IsErrNotFound(err) {
-				log.Error().Err(err).Msg("Failed to tear down environment")
+				log.Error().Err(err).Str("suite", suiteName).Msg("Failed to tear down environment")
 			}
 		}
 	}()
 
-	exitCode, output, err := r.docker.ExecuteAttach(r.Ctx, containerID, r.Cli, cmd, env)
+	exitCode, output, err := r.docker.ExecuteAttach(r.Ctx, containerID, cmd, env)
 
 	if err != nil {
-		return false, "", err
+		return "", "", false, err
 	}
 	if exitCode != 0 {
-		return false, "", fmt.Errorf("exitCode is %d", exitCode)
+		return "", "", false, fmt.Errorf("exitCode is %d", exitCode)
 	}
 	passed := exitCode == 0
-	return passed, output, nil
+	return containerID, output, passed, nil
 }
 
-func (r *ContainerRunner) beforeExec(containerID string, tasks []string) error {
+func (r *ContainerRunner) beforeExec(containerID, suiteName string, tasks []string) error {
 	for _, task := range tasks {
-		log.Info().Str("task", task).Msg("Running BeforeExec")
-		exitCode, _, err := r.docker.ExecuteAttach(r.Ctx, containerID, r.Cli, strings.Fields(task), nil)
+		log.Info().Str("suite", suiteName).Str("task", task).Msg("Running BeforeExec")
+		exitCode, _, err := r.docker.ExecuteAttach(r.Ctx, containerID, strings.Fields(task), nil)
 		if err != nil {
 			return err
 		}
@@ -183,9 +184,10 @@ func (r *ContainerRunner) createWorkerPool(ccy int) (chan containerStartOptions,
 
 func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, results chan<- result) {
 	for opts := range containerOpts {
-		passed, output, err := r.runSuite(opts)
+		containerID, output, passed, err := r.runSuite(opts)
 		results <- result{
 			suiteName: opts.SuiteName,
+			containerID: containerID,
 			passed:    passed,
 			output:    output,
 			err:       err,
@@ -230,11 +232,10 @@ func (r *ContainerRunner) collectResults(results chan result, expected int) bool
 }
 
 func (r *ContainerRunner) logSuite(res result) {
-	// FIXME: Checkit ?
-	//if res.job.ID == "" {
-	//	log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Failed to start suite.")
-	//	return
-	//}
+	if res.containerID == "" {
+		log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Failed to start suite.")
+		return
+	}
 
 	// FIXME: Parse it
 	//jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
@@ -249,13 +250,15 @@ func (r *ContainerRunner) logSuite(res result) {
 	}
 }
 
-func (r *ContainerRunner) runSuite(options containerStartOptions) (bool, string, error) {
-	log.Info().Msg("Setting up test environment")
-	containerID, err := r.setupImage(options.Docker, options.BeforeExec, options.Project, options.Files)
+func (r *ContainerRunner) runSuite(options containerStartOptions) (string, string, bool, error) {
+	log.Info().Str("suite", options.SuiteName).Msg("Setting up test environment")
+	containerID, err := r.setupImage(options)
 	if err != nil {
-		log.Err(err).Msg("Failed to setup test environment")
-		return false, "", err
+		log.Err(err).Str("suite", options.SuiteName).Msg("Failed to setup test environment")
+		return containerID, "", false, err
 	}
 
-	return r.run(containerID, []string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", options.SuiteName}, options.Environment)
+	return r.run(containerID, options.SuiteName,
+		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", options.SuiteName},
+		options.Environment)
 }
