@@ -40,7 +40,7 @@ type Suite struct {
 	SelectorTimeout    int               `yaml:"selectorTimeout,omitempty" json:"selectorTimeout"`
 	AssertionTimeout   int               `yaml:"assertionTimeout,omitempty" json:"assertionTimeout"`
 	PageLoadTimeout    int               `yaml:"pageLoadTimeout,omitempty" json:"pageLoadTimeout"`
-	Speed              float32           `yaml:"speed,omitempty" json:"speed"`
+	Speed              float64           `yaml:"speed,omitempty" json:"speed"`
 	StopOnFirstFail    bool              `yaml:"stopOnFirstFail,omitempty" json:"stopOnFirstFail"`
 	DisablePageCaching bool              `yaml:"disablePageCaching,omitempty" json:"disablePageCaching"`
 	DisableScreenshots bool              `yaml:"disableScreenshots,omitempty" json:"disableScreenshots"`
