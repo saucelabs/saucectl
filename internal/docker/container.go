@@ -79,25 +79,28 @@ func (r *ContainerRunner) pullImage(img string) error {
 	return nil
 }
 
-// setupImage performs any necessary steps for a test runner to execute tests.
-func (r *ContainerRunner) setupImage(options containerStartOptions) (string, error) {
+// fetchImage ensure that container image is available for test runner to execute tests.
+func (r *ContainerRunner) fetchImage(docker *config.Docker) (error) {
 	if !r.docker.IsInstalled() {
-		return "", fmt.Errorf("please verify that docker is installed and running: " +
+		return fmt.Errorf("please verify that docker is installed and running: " +
 			" follow the guide at https://docs.docker.com/get-docker/")
 	}
 
-	if options.Docker.Image == "" {
+	if docker.Image == "" {
 		img, err := r.ImageLoc.GetImage(r.Ctx, r.Framework)
 		if err != nil {
-			return "", fmt.Errorf("unable to determine which docker image to run: %w", err)
+			return fmt.Errorf("unable to determine which docker image to run: %w", err)
 		}
-		options.Docker.Image = img
+		docker.Image = img
 	}
 
-	if err := r.pullImage(options.Docker.Image); err != nil {
-		return "", err
+	if err := r.pullImage(docker.Image); err != nil {
+		return err
 	}
+	return nil
+}
 
+func (r *ContainerRunner) startContainer(options containerStartOptions) (string, error) {
 	container, err := r.docker.StartContainer(r.Ctx, options)
 	if err != nil {
 		return "", err
@@ -252,7 +255,7 @@ func (r *ContainerRunner) logSuite(res result) {
 
 func (r *ContainerRunner) runSuite(options containerStartOptions) (string, string, bool, error) {
 	log.Info().Msgf("%s: Setting up test environment", options.SuiteName)
-	containerID, err := r.setupImage(options)
+	containerID, err := r.startContainer(options)
 	if err != nil {
 		log.Err(err).Msgf("%s: Failed to setup test environment", options.SuiteName)
 		return containerID, "", false, err

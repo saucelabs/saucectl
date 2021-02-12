@@ -56,6 +56,10 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		r.Project.Docker.FileTransfer = config.DockerFileCopy
 	}
 
+	if err := r.fetchImage(&r.Project.Docker); err != nil {
+		return 1, err
+	}
+
 	containerOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency)
 	defer close(results)
 
@@ -73,8 +77,8 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		close(containerOpts)
 	}()
 
-	hasPasssed := r.collectResults(results, len(r.Project.Suites))
-	if !hasPasssed {
+	hasPassed := r.collectResults(results, len(r.Project.Suites))
+	if !hasPassed {
 		return 1, nil
 	}
 	return 0, nil
