@@ -474,6 +474,21 @@ func (handler *Handler) ProjectDir(ctx context.Context, imageID string) (string,
 	return p, nil
 }
 
+// TestUrl returns the file containing the test url for the given image.
+func (handler *Handler) TestUrl(ctx context.Context, imageID string) (string, error) {
+	ii, _, err := handler.client.ImageInspectWithRaw(ctx, imageID)
+	if err != nil {
+		return "", err
+	}
+
+	// The image can tell us via a label where saucectl should find the url for the test details.
+	var p string
+	if v := ii.Config.Labels["com.saucelabs.test-url"]; v != "" {
+		p = v
+	}
+	return p, nil
+}
+
 // ContainerInspect returns the container information.
 func (handler *Handler) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
 	return handler.client.ContainerInspect(ctx, containerID)
