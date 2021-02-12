@@ -75,8 +75,8 @@ func (r *CypressRunner) RunProject() (int, error) {
 		close(containerOpts)
 	}()
 
-	hasErrors := r.collectResults(results, len(r.Project.Suites))
-	if hasErrors {
+	hasPassed := r.collectResults(results, len(r.Project.Suites))
+	if !hasPassed {
 		return 1, nil
 	}
 	return 0, nil

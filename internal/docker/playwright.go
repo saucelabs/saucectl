@@ -73,8 +73,8 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		close(containerOpts)
 	}()
 
-	hasErrors := r.collectResults(results, len(r.Project.Suites))
-	if hasErrors {
+	hasPasssed := r.collectResults(results, len(r.Project.Suites))
+	if !hasPasssed {
 		return 1, nil
 	}
 	return 0, nil
