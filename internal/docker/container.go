@@ -165,15 +165,15 @@ func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env m
 		passed = false
 	}
 
-	jobDetailsUrl, err := r.readTestUrl(containerID)
+	jobDetailsURL, err := r.readTestURL(containerID)
 	if err != nil {
 		log.Warn().Msgf("unable to retrieve test result url: %s", err)
 	}
-	return containerID, output, jobDetailsUrl, passed, nil
+	return containerID, output, jobDetailsURL, passed, nil
 }
 
 // readTestUrl reads test url from inside the test runner container.
-func (r *ContainerRunner) readTestUrl(containerID string) (string, error) {
+func (r *ContainerRunner) readTestURL(containerID string) (string, error) {
 	dir, err := ioutil.TempDir("", "result")
 	if err != nil {
 		return "", err
@@ -218,11 +218,11 @@ func (r *ContainerRunner) createWorkerPool(ccy int) (chan containerStartOptions,
 
 func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, results chan<- result) {
 	for opts := range containerOpts {
-		containerID, output, jobDetailsUrl, passed, err := r.runSuite(opts)
+		containerID, output, jobDetailsURL, passed, err := r.runSuite(opts)
 		results <- result{
 			suiteName:     opts.SuiteName,
 			containerID:   containerID,
-			jobDetailsURL: jobDetailsUrl,
+			jobDetailsURL: jobDetailsURL,
 			passed:        passed,
 			output:        output,
 			err:           err,
