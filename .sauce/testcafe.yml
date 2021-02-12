@@ -12,9 +12,9 @@ sauce:
     build: Release $CI_COMMIT_SHORT_SHA
 suites:
   - name: "saucy test"
-    browserName: "firefox" # Although Testcafe supports triggering one test in multiple browsers, it'd better here to split them into every suite to indicate each suite has its own test point.
+    browserName: "chrome" # Although Testcafe supports triggering one test in multiple browsers, it'd better here to split them into every suite to indicate each suite has its own test point.
     src:
-      - "*test.js" # test files glob
+      - "*/*.test.js" # test files glob
     screenshots:
       takeOnFails: true
       fullPage: true
@@ -28,10 +28,10 @@ docker:
   # `mount` will mount files and folders into the container. Changes to these files and folders will be reflected on the
   # host as well (and vice versa). However, you may run into permission issues depending on your docker or host settings.
   # In this case the usage of `copy` is advised. `copy` will simply copy files and folders into the container.
-  fileTransfer: mount # Defaults to `mount`. Choose between mount|copy.
+  fileTransfer: copy # Defaults to `mount`. Choose between mount|copy.
 # Docker image and tag are both determined automatically based on your configuration. However, it's possible to set your
 # own custom image or a different tag.
-# image: saucelabs/stt-testcafe-node:v1.8.5
+#image: saucelabs/stt-testcafe-node:v0.2.2
 
 testcafe:
   projectPath: tests/e2e/testcafe

@@ -2,11 +2,11 @@ package docker
 
 import (
 	"context"
+	"path/filepath"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/framework"
-	"path/filepath"
-
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
 
@@ -28,7 +28,7 @@ func NewPlaywright(c playwright.Project, imageLoc framework.ImageLocator) (*Play
 				Name:    c.Kind,
 				Version: c.Playwright.Version,
 			},
-			ImageLoc: imageLoc,
+			ImageLoc:       imageLoc,
 			ShowConsoleLog: c.ShowConsoleLog,
 		},
 	}
