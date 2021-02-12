@@ -136,10 +136,10 @@ func (r *ContainerRunner) setupImage(options containerStartOptions) (string, err
 
 func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string) (string, string, bool, error) {
 	defer func() {
-		log.Info().Str("suite", suiteName).Msg("Tearing down environment")
+		log.Info().Msgf("%s: Tearing down environment", suiteName)
 		if err := r.docker.Teardown(r.Ctx, containerID); err != nil {
 			if !r.docker.IsErrNotFound(err) {
-				log.Error().Err(err).Str("suite", suiteName).Msg("Failed to tear down environment")
+				log.Error().Err(err).Msgf("%s: Failed to tear down environment", suiteName)
 			}
 		}
 	}()
@@ -158,7 +158,7 @@ func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env m
 
 func (r *ContainerRunner) beforeExec(containerID, suiteName string, tasks []string) error {
 	for _, task := range tasks {
-		log.Info().Str("suite", suiteName).Str("task", task).Msg("Running BeforeExec")
+		log.Info().Str("task", task).Msgf("%s: Running BeforeExec", suiteName)
 		exitCode, _, err := r.docker.ExecuteAttach(r.Ctx, containerID, strings.Fields(task), nil)
 		if err != nil {
 			return err
@@ -233,28 +233,28 @@ func (r *ContainerRunner) collectResults(results chan result, expected int) bool
 
 func (r *ContainerRunner) logSuite(res result) {
 	if res.containerID == "" {
-		log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Failed to start suite.")
+		log.Error().Err(res.err).Msgf("%s: Failed to start suite.", res.suiteName)
 		return
 	}
 
 	// FIXME: Parse it
 	//jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 	if res.passed {
-		log.Info().Str("suite", res.suiteName).Bool("passed", res.passed).Msg("Suite finished.")
+		log.Info().Bool("passed", res.passed).Msgf("%s: Suite finished.", res.suiteName)
 	} else {
-		log.Error().Str("suite", res.suiteName).Bool("passed", res.passed).Msg("Suite finished.")
+		log.Error().Bool("passed", res.passed).Msgf("%s: Suite finished.", res.suiteName)
 	}
 
 	if !res.passed || r.ShowConsoleLog {
-		log.Info().Str("suite", res.suiteName).Msgf("console.log output: \n%s", res.output)
+		log.Info().Msgf("%s: console.log output: \n%s", res.suiteName, res.output)
 	}
 }
 
 func (r *ContainerRunner) runSuite(options containerStartOptions) (string, string, bool, error) {
-	log.Info().Str("suite", options.SuiteName).Msg("Setting up test environment")
+	log.Info().Msgf("%s: Setting up test environment", options.SuiteName)
 	containerID, err := r.setupImage(options)
 	if err != nil {
-		log.Err(err).Str("suite", options.SuiteName).Msg("Failed to setup test environment")
+		log.Err(err).Msgf("%s: Failed to setup test environment", options.SuiteName)
 		return containerID, "", false, err
 	}
 

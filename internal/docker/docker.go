@@ -199,7 +199,7 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 
 	var m []mount.Mount
 	if options.Docker.FileTransfer == config.DockerFileMount {
-		m, err = createMounts(options.Files, pDir)
+		m, err = createMounts(options.SuiteName, options.Files, pDir)
 		if err != nil {
 			return nil, err
 		}
@@ -210,7 +210,7 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 	if creds := credentials.Get(); creds != nil {
 		username = creds.Username
 		accessKey = creds.AccessKey
-		log.Info().Str("suite", options.SuiteName).Msgf("Using credentials set by %s", creds.Source)
+		log.Info().Msgf("%s: Using credentials set by %s", options.SuiteName, creds.Source)
 	}
 
 	hostConfig := &container.HostConfig{
@@ -232,7 +232,7 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 		return nil, err
 	}
 
-	log.Info().Str("suite", options.SuiteName).Str("img", options.Docker.Image).Str("id", container.ID[:12]).Msg("Starting container")
+	log.Info().Str("img", options.Docker.Image).Str("id", container.ID[:12]).Msgf("%s: Starting container", options.SuiteName)
 	if err := handler.client.ContainerStart(ctx, container.ID, types.ContainerStartOptions{}); err != nil {
 		return nil, err
 	}
@@ -257,7 +257,7 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 // copyTestFiles copies the files within the container.
 func copyTestFiles(ctx context.Context, handler *Handler, containerID, suiteName string, files []string, pDir string) error {
 	for _, file := range files {
-		log.Info().Str("suite", suiteName).Str("from", file).Str("to", pDir).Msg("File copied")
+		log.Info().Str("from", file).Str("to", pDir).Msgf("%s: File copied", suiteName)
 		if err := handler.CopyToContainer(ctx, containerID, file, pDir); err != nil {
 			return err
 		}
@@ -266,7 +266,7 @@ func copyTestFiles(ctx context.Context, handler *Handler, containerID, suiteName
 }
 
 // createMounts returns a list of mount bindings, binding files to target, such that {source}:{target}/{source}.
-func createMounts(files []string, target string) ([]mount.Mount, error) {
+func createMounts(suiteName string, files []string, target string) ([]mount.Mount, error) {
 	mm := make([]mount.Mount, len(files))
 	for i, f := range files {
 		absF, err := filepath.Abs(f)
@@ -287,7 +287,7 @@ func createMounts(files []string, target string) ([]mount.Mount, error) {
 			TmpfsOptions:  nil,
 		}
 
-		log.Info().Str("from", f).Str("to", dest).Msg("File mounted")
+		log.Info().Str("from", f).Str("to", dest).Msgf("%s: File mounted", suiteName)
 	}
 
 	return mm, nil
