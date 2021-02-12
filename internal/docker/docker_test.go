@@ -85,7 +85,7 @@ func TestCreateMounts(t *testing.T) {
 		files = append(files, f.Source)
 	}
 	dest := "dest/"
-	mounts, _ := createMounts(files, dest)
+	mounts, _ := createMounts("fakeSuite", files, dest)
 	assert.Len(t, mounts, len(want))
 	for _, w := range want {
 		m := mounts[w.Idx]
