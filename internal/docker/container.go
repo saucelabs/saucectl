@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/dots"
 	"github.com/saucelabs/saucectl/internal/framework"
@@ -21,7 +20,6 @@ import (
 // ContainerRunner represents the container runner for docker.
 type ContainerRunner struct {
 	Ctx             context.Context
-	Cli             *command.SauceCtlCli
 	docker          *Handler
 	containerConfig *containerConfig
 	Framework       framework.Framework

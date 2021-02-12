@@ -7,7 +7,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/framework"
 	"path/filepath"
 
-	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
 
@@ -18,12 +17,11 @@ type PlaywrightRunner struct {
 }
 
 // NewPlaywright creates a new PlaywrightRunner instance.
-func NewPlaywright(c playwright.Project, cli *command.SauceCtlCli, imageLoc framework.ImageLocator) (*PlaywrightRunner, error) {
+func NewPlaywright(c playwright.Project, imageLoc framework.ImageLocator) (*PlaywrightRunner, error) {
 	r := PlaywrightRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
 			Ctx:             context.Background(),
-			Cli:             cli,
 			docker:          nil,
 			containerConfig: &containerConfig{},
 			Framework: framework.Framework{
