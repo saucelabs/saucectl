@@ -172,8 +172,12 @@ func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env m
 	return containerID, output, jobDetailsURL, passed, nil
 }
 
-// readTestUrl reads test url from inside the test runner container.
+// readTestURL reads test url from inside the test runner container.
 func (r *ContainerRunner) readTestURL(containerID string) (string, error) {
+	// Set unknown when image does not support it.
+	if r.containerConfig.jobDetailsFilePath == "" {
+		return "unknown", nil
+	}
 	dir, err := ioutil.TempDir("", "result")
 	if err != nil {
 		return "", err
