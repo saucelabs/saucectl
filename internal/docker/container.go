@@ -42,7 +42,7 @@ type result struct {
 	containerID   string
 	err           error
 	passed        bool
-	output        string
+	consoleOutput string
 	suiteName     string
 	jobDetailsURL string
 }
@@ -226,7 +226,7 @@ func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, re
 			containerID:   containerID,
 			jobDetailsURL: jobDetailsURL,
 			passed:        passed,
-			output:        output,
+			consoleOutput: output,
 			err:           err,
 		}
 	}
