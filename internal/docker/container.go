@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
@@ -44,7 +45,12 @@ type result struct {
 	passed        bool
 	consoleOutput string
 	suiteName     string
-	jobDetailsURL string
+	jobInfo       jobInfo
+}
+
+// jobInfo represents the info on the job given by the container
+type jobInfo struct {
+	JobDetailsURL string `json:"jobDetailsUrl"`
 }
 
 func (r *ContainerRunner) pullImage(img string) error {
@@ -141,7 +147,7 @@ func (r *ContainerRunner) startContainer(options containerStartOptions) (string,
 	return container.ID, nil
 }
 
-func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string) (output string, jobDetailsURL string, passed bool, err error) {
+func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string) (output string, jobInfo jobInfo, passed bool, err error) {
 	defer func() {
 		log.Info().Str("suite", suiteName).Msg("Tearing down environment")
 		if err := r.docker.Teardown(r.Ctx, containerID); err != nil {
@@ -154,7 +160,7 @@ func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env m
 	exitCode, output, err := r.docker.ExecuteAttach(r.Ctx, containerID, cmd, env)
 
 	if err != nil {
-		return "", "", false, err
+		return "", jobInfo, false, err
 	}
 
 	passed = true
@@ -163,33 +169,39 @@ func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env m
 		passed = false
 	}
 
-	jobDetailsURL, err = r.readTestURL(containerID)
+	jobInfo, err = r.readJobInfo(containerID)
 	if err != nil {
 		log.Warn().Msgf("unable to retrieve test result url: %s", err)
 	}
-	return output, jobDetailsURL, passed, err
+	return output, jobInfo, passed, err
 }
 
 // readTestURL reads test url from inside the test runner container.
-func (r *ContainerRunner) readTestURL(containerID string) (string, error) {
+func (r *ContainerRunner) readJobInfo(containerID string) (jobInfo, error) {
 	// Set unknown when image does not support it.
 	if r.containerConfig.jobDetailsFilePath == "" {
-		return "unknown", nil
+		return jobInfo{JobDetailsURL: "unknown"}, nil
 	}
 	dir, err := ioutil.TempDir("", "result")
 	if err != nil {
-		return "", err
+		return jobInfo{}, err
 	}
 	defer os.RemoveAll(dir)
 
 	err = r.docker.CopyFromContainer(r.Ctx, containerID, r.containerConfig.jobDetailsFilePath, dir)
 	if err != nil {
-		return "", err
+		return jobInfo{}, err
 	}
 	fileName := filepath.Base(r.containerConfig.jobDetailsFilePath)
 	filePath := filepath.Join(dir, fileName)
 	content, err := ioutil.ReadFile(filePath)
-	return strings.TrimSpace(string(content)), err
+
+	var info jobInfo
+	err = json.Unmarshal(content, &info)
+	if err != nil {
+		return jobInfo{}, err
+	}
+	return info, err
 }
 
 func (r *ContainerRunner) beforeExec(containerID, suiteName string, tasks []string) error {
@@ -220,11 +232,11 @@ func (r *ContainerRunner) createWorkerPool(ccy int) (chan containerStartOptions,
 
 func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, results chan<- result) {
 	for opts := range containerOpts {
-		containerID, output, jobDetailsURL, passed, err := r.runSuite(opts)
+		containerID, output, jobDetails, passed, err := r.runSuite(opts)
 		results <- result{
 			suiteName:     opts.SuiteName,
 			containerID:   containerID,
-			jobDetailsURL: jobDetailsURL,
+			jobInfo:       jobDetails,
 			passed:        passed,
 			consoleOutput: output,
 			err:           err,
@@ -275,9 +287,9 @@ func (r *ContainerRunner) logSuite(res result) {
 	}
 
 	if res.passed {
-		log.Info().Bool("passed", res.passed).Str("url", res.jobDetailsURL).Msgf("%s: Suite finished.", res.suiteName)
+		log.Info().Bool("passed", res.passed).Str("url", res.jobInfo.JobDetailsURL).Msgf("%s: Suite finished.", res.suiteName)
 	} else {
-		log.Error().Bool("passed", res.passed).Str("url", res.jobDetailsURL).Msgf("%s: Suite finished.", res.suiteName)
+		log.Error().Bool("passed", res.passed).Str("url", res.jobInfo.JobDetailsURL).Msgf("%s: Suite finished.", res.suiteName)
 	}
 
 	if !res.passed || r.ShowConsoleLog {
@@ -285,7 +297,7 @@ func (r *ContainerRunner) logSuite(res result) {
 	}
 }
 
-func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobDetailsURL string, passed bool, err error) {
+func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobInfo jobInfo, passed bool, err error) {
 	log.Info().Msgf("%s: Setting up test environment", options.SuiteName)
 	containerID, err = r.startContainer(options)
 	if err != nil {
@@ -293,7 +305,7 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 		return
 	}
 
-	output, jobDetailsURL, passed, err = r.run(containerID, options.SuiteName,
+	output, jobInfo, passed, err = r.run(containerID, options.SuiteName,
 		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", options.SuiteName},
 		options.Environment)
 	return
