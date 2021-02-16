@@ -47,8 +47,8 @@ const SauceRunnerConfigFile = "sauce-runner.json"
 type containerConfig struct {
 	// sauceRunnerConfigPath is the container path to sauce-runner.json.
 	sauceRunnerConfigPath string
-	// jobDetailsFilePath is the container path to the file containing job details url on Sauce.
-	jobDetailsFilePath string
+	// jobInfoFilePath is the container path to the file containing job details url on Sauce.
+	jobInfoFilePath string
 }
 
 // CommonAPIClient is the interface for interacting with containers.
@@ -477,7 +477,7 @@ func (handler *Handler) ProjectDir(ctx context.Context, imageID string) (string,
 }
 
 // JobDetailsURLFile returns the file containing the job details url for the given image.
-func (handler *Handler) JobDetailsURLFile(ctx context.Context, imageID string) (string, error) {
+func (handler *Handler) JobInfoFile(ctx context.Context, imageID string) (string, error) {
 	ii, _, err := handler.client.ImageInspectWithRaw(ctx, imageID)
 	if err != nil {
 		return "", err
@@ -485,7 +485,7 @@ func (handler *Handler) JobDetailsURLFile(ctx context.Context, imageID string) (
 
 	// The image can tell us via a label where saucectl should find the url for the test details.
 	var p string
-	if v := ii.Config.Labels["com.saucelabs.job-details-url"]; v != "" {
+	if v := ii.Config.Labels["com.saucelabs.job-info"]; v != "" {
 		p = v
 	}
 	return p, nil

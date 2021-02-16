@@ -117,7 +117,7 @@ func (r *ContainerRunner) startContainer(options containerStartOptions) (string,
 		return "", err
 	}
 
-	r.containerConfig.jobDetailsFilePath, err = r.docker.JobDetailsURLFile(r.Ctx, options.Docker.Image)
+	r.containerConfig.jobInfoFilePath, err = r.docker.JobInfoFile(r.Ctx, options.Docker.Image)
 	if err != nil {
 		return "", err
 	}
@@ -179,7 +179,7 @@ func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env m
 // readTestURL reads test url from inside the test runner container.
 func (r *ContainerRunner) readJobInfo(containerID string) (jobInfo, error) {
 	// Set unknown when image does not support it.
-	if r.containerConfig.jobDetailsFilePath == "" {
+	if r.containerConfig.jobInfoFilePath == "" {
 		return jobInfo{JobDetailsURL: "unknown"}, nil
 	}
 	dir, err := ioutil.TempDir("", "result")
@@ -188,11 +188,11 @@ func (r *ContainerRunner) readJobInfo(containerID string) (jobInfo, error) {
 	}
 	defer os.RemoveAll(dir)
 
-	err = r.docker.CopyFromContainer(r.Ctx, containerID, r.containerConfig.jobDetailsFilePath, dir)
+	err = r.docker.CopyFromContainer(r.Ctx, containerID, r.containerConfig.jobInfoFilePath, dir)
 	if err != nil {
 		return jobInfo{}, err
 	}
-	fileName := filepath.Base(r.containerConfig.jobDetailsFilePath)
+	fileName := filepath.Base(r.containerConfig.jobInfoFilePath)
 	filePath := filepath.Join(dir, fileName)
 	content, err := ioutil.ReadFile(filePath)
 
