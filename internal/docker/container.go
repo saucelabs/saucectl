@@ -159,7 +159,7 @@ func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env m
 
 	passed = true
 	if exitCode != 0 {
-		err = fmt.Errorf("exitCode is %d", exitCode)
+		log.Warn().Str("suite", suiteName).Msgf("exitCode is %d", exitCode)
 		passed = false
 	}
 
@@ -167,7 +167,7 @@ func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env m
 	if err != nil {
 		log.Warn().Msgf("unable to retrieve test result url: %s", err)
 	}
-	return output, jobDetailsURL, passed, nil
+	return output, jobDetailsURL, passed, err
 }
 
 // readTestURL reads test url from inside the test runner container.
