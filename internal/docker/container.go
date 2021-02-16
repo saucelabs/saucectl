@@ -206,7 +206,7 @@ func (r *ContainerRunner) readJobInfo(containerID string) (jobInfo, error) {
 
 func (r *ContainerRunner) beforeExec(containerID, suiteName string, tasks []string) error {
 	for _, task := range tasks {
-		log.Info().Str("task", task).Msgf("%s: Running BeforeExec", suiteName)
+		log.Info().Str("task", task).Str("suite", suiteName).Msg("Running BeforeExec")
 		exitCode, _, err := r.docker.ExecuteAttach(r.Ctx, containerID, strings.Fields(task), nil)
 		if err != nil {
 			return err
@@ -282,26 +282,26 @@ func (r *ContainerRunner) collectResults(results chan result, expected int) bool
 
 func (r *ContainerRunner) logSuite(res result) {
 	if res.containerID == "" {
-		log.Error().Err(res.err).Msgf("%s: Failed to start suite.", res.suiteName)
+		log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Failed to start suite.")
 		return
 	}
 
 	if res.passed {
-		log.Info().Bool("passed", res.passed).Str("url", res.jobInfo.JobDetailsURL).Msgf("%s: Suite finished.", res.suiteName)
+		log.Info().Bool("passed", res.passed).Str("url", res.jobInfo.JobDetailsURL).Str("suite", res.suiteName).Msg("Suite finished.")
 	} else {
-		log.Error().Bool("passed", res.passed).Str("url", res.jobInfo.JobDetailsURL).Msgf("%s: Suite finished.", res.suiteName)
+		log.Error().Bool("passed", res.passed).Str("url", res.jobInfo.JobDetailsURL).Str("suite", res.suiteName).Msg("Suite finished.")
 	}
 
 	if !res.passed || r.ShowConsoleLog {
-		log.Info().Msgf("%s: console.log output: \n%s", res.suiteName, res.consoleOutput)
+		log.Info().Str("suite", res.suiteName).Msgf("console.log output: \n%s", res.consoleOutput)
 	}
 }
 
 func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobInfo jobInfo, passed bool, err error) {
-	log.Info().Msgf("%s: Setting up test environment", options.SuiteName)
+	log.Info().Str("suite", options.SuiteName).Msg("Setting up test environment")
 	containerID, err = r.startContainer(options)
 	if err != nil {
-		log.Err(err).Msgf("%s: Failed to setup test environment", options.SuiteName)
+		log.Err(err).Str("suite", options.SuiteName).Msg("Failed to setup test environment")
 		return
 	}
 

@@ -212,7 +212,7 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 	if creds := credentials.Get(); creds != nil {
 		username = creds.Username
 		accessKey = creds.AccessKey
-		log.Info().Msgf("%s: Using credentials set by %s", options.SuiteName, creds.Source)
+		log.Info().Str("suite", options.SuiteName).Msgf("Using credentials set by %s", creds.Source)
 	}
 
 	hostConfig := &container.HostConfig{
@@ -234,7 +234,7 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 		return nil, err
 	}
 
-	log.Info().Str("img", options.Docker.Image).Str("id", container.ID[:12]).Msgf("%s: Starting container", options.SuiteName)
+	log.Info().Str("img", options.Docker.Image).Str("id", container.ID[:12]).Str("suite", options.SuiteName).Msg("Starting container")
 	if err := handler.client.ContainerStart(ctx, container.ID, types.ContainerStartOptions{}); err != nil {
 		return nil, err
 	}
@@ -259,7 +259,7 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 // copyTestFiles copies the files within the container.
 func copyTestFiles(ctx context.Context, handler *Handler, containerID, suiteName string, files []string, pDir string) error {
 	for _, file := range files {
-		log.Info().Str("from", file).Str("to", pDir).Msgf("%s: File copied", suiteName)
+		log.Info().Str("from", file).Str("to", pDir).Str("suite", suiteName).Msg("File copied")
 		if err := handler.CopyToContainer(ctx, containerID, file, pDir); err != nil {
 			return err
 		}
@@ -289,7 +289,7 @@ func createMounts(suiteName string, files []string, target string) ([]mount.Moun
 			TmpfsOptions:  nil,
 		}
 
-		log.Info().Str("from", f).Str("to", dest).Msgf("%s: File mounted", suiteName)
+		log.Info().Str("from", f).Str("to", dest).Str("suite", suiteName).Msg("File mounted")
 	}
 
 	return mm, nil
