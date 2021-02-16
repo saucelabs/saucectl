@@ -281,7 +281,7 @@ func (r *ContainerRunner) logSuite(res result) {
 	}
 
 	if !res.passed || r.ShowConsoleLog {
-		log.Info().Msgf("%s: console.log output: \n%s", res.suiteName, res.output)
+		log.Info().Msgf("%s: console.log output: \n%s", res.suiteName, res.consoleOutput)
 	}
 }
 
