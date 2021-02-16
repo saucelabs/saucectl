@@ -50,7 +50,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 	r.Project.Playwright.ProjectPath = filepath.Base(r.Project.Playwright.ProjectPath)
 
 	if r.Project.Sauce.Concurrency > 1 {
-		log.Info().Msg("concurrency > 1: file transfer mode forced to copy.")
+		log.Info().Msg("concurrency > 1: forcing file transfer mode to use 'copy'.")
 		r.Project.Docker.FileTransfer = config.DockerFileCopy
 	}
 
