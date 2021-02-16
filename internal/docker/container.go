@@ -290,11 +290,11 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 	containerID, err = r.startContainer(options)
 	if err != nil {
 		log.Err(err).Msgf("%s: Failed to setup test environment", options.SuiteName)
-		return containerID, "", "", false, err
+		return
 	}
 
 	output, jobDetailsURL, passed, err = r.run(containerID, options.SuiteName,
 		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", options.SuiteName},
 		options.Environment)
-	return containerID, output, jobDetailsURL, passed, err
+	return
 }
