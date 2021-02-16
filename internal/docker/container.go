@@ -143,10 +143,10 @@ func (r *ContainerRunner) startContainer(options containerStartOptions) (string,
 
 func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string) (output string, jobDetailsURL string, passed bool, err error) {
 	defer func() {
-		log.Info().Msgf("%s: Tearing down environment", suiteName)
+		log.Info().Str("suite", suiteName).Msg("Tearing down environment")
 		if err := r.docker.Teardown(r.Ctx, containerID); err != nil {
 			if !r.docker.IsErrNotFound(err) {
-				log.Error().Err(err).Msgf("%s: Failed to tear down environment", suiteName)
+				log.Error().Err(err).Str("suite", suiteName).Msg("Failed to tear down environment")
 			}
 		}
 	}()
