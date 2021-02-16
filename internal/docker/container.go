@@ -141,7 +141,7 @@ func (r *ContainerRunner) startContainer(options containerStartOptions) (string,
 	return container.ID, nil
 }
 
-func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string) (string, string, string, bool, error) {
+func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string) (output string, jobDetailsURL string, passed bool, err error) {
 	defer func() {
 		log.Info().Msgf("%s: Tearing down environment", suiteName)
 		if err := r.docker.Teardown(r.Ctx, containerID); err != nil {
@@ -154,20 +154,20 @@ func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env m
 	exitCode, output, err := r.docker.ExecuteAttach(r.Ctx, containerID, cmd, env)
 
 	if err != nil {
-		return "", "", "", false, err
+		return "", "", false, err
 	}
 
-	passed := true
+	passed = true
 	if exitCode != 0 {
 		err = fmt.Errorf("exitCode is %d", exitCode)
 		passed = false
 	}
 
-	jobDetailsURL, err := r.readTestURL(containerID)
+	jobDetailsURL, err = r.readTestURL(containerID)
 	if err != nil {
 		log.Warn().Msgf("unable to retrieve test result url: %s", err)
 	}
-	return containerID, output, jobDetailsURL, passed, nil
+	return output, jobDetailsURL, passed, nil
 }
 
 // readTestURL reads test url from inside the test runner container.
@@ -285,15 +285,16 @@ func (r *ContainerRunner) logSuite(res result) {
 	}
 }
 
-func (r *ContainerRunner) runSuite(options containerStartOptions) (string, string, string, bool, error) {
+func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobDetailsURL string, passed bool, err error) {
 	log.Info().Msgf("%s: Setting up test environment", options.SuiteName)
-	containerID, err := r.startContainer(options)
+	containerID, err = r.startContainer(options)
 	if err != nil {
 		log.Err(err).Msgf("%s: Failed to setup test environment", options.SuiteName)
 		return containerID, "", "", false, err
 	}
 
-	return r.run(containerID, options.SuiteName,
+	output, jobDetailsURL, passed, err = r.run(containerID, options.SuiteName,
 		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", options.SuiteName},
 		options.Environment)
+	return containerID, output, jobDetailsURL, passed, err
 }
