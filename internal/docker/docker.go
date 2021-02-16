@@ -476,7 +476,7 @@ func (handler *Handler) ProjectDir(ctx context.Context, imageID string) (string,
 	return p, nil
 }
 
-// JobDetailsURLFile returns the file containing the job details url for the given image.
+// JobInfoFile returns the file containing the job details url for the given image.
 func (handler *Handler) JobInfoFile(ctx context.Context, imageID string) (string, error) {
 	ii, _, err := handler.client.ImageInspectWithRaw(ctx, imageID)
 	if err != nil {
