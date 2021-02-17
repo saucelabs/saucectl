@@ -29,8 +29,6 @@ brews:
     commit_author:
       name: devx-sauce-bot
       email: devx.bot@saucelabs.com
-    dependencies:
-      - docker
 archives:
   - replacements:
       darwin: mac
