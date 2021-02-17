@@ -2,11 +2,12 @@ package docker
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/dots"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/progress"
@@ -20,12 +21,36 @@ import (
 // ContainerRunner represents the container runner for docker.
 type ContainerRunner struct {
 	Ctx             context.Context
-	Cli             *command.SauceCtlCli
-	containerID     string
 	docker          *Handler
 	containerConfig *containerConfig
 	Framework       framework.Framework
 	ImageLoc        framework.ImageLocator
+	ShowConsoleLog  bool
+}
+
+// containerStartOptions represent data required to start a new container.
+type containerStartOptions struct {
+	Docker      config.Docker
+	BeforeExec  []string
+	Project     interface{}
+	SuiteName   string
+	Environment map[string]string
+	Files       []string
+}
+
+// result represents the result of a local job
+type result struct {
+	containerID   string
+	err           error
+	passed        bool
+	consoleOutput string
+	suiteName     string
+	jobInfo       jobInfo
+}
+
+// jobInfo represents the info on the job given by the container
+type jobInfo struct {
+	JobDetailsURL string `json:"jobDetailsUrl"`
 }
 
 func (r *ContainerRunner) pullImage(img string) error {
@@ -59,89 +84,130 @@ func (r *ContainerRunner) pullImage(img string) error {
 	return nil
 }
 
-// setup performs any necessary steps for a test runner to execute tests.
-func (r *ContainerRunner) setupImage(confd config.Docker, beforeExec []string, project interface{}, files []string) error {
+// fetchImage ensure that container image is available for test runner to execute tests.
+func (r *ContainerRunner) fetchImage(docker *config.Docker) error {
 	if !r.docker.IsInstalled() {
 		return fmt.Errorf("please verify that docker is installed and running: " +
 			" follow the guide at https://docs.docker.com/get-docker/")
 	}
 
-	if confd.Image == "" {
+	if docker.Image == "" {
 		img, err := r.ImageLoc.GetImage(r.Ctx, r.Framework)
 		if err != nil {
 			return fmt.Errorf("unable to determine which docker image to run: %w", err)
 		}
-		confd.Image = img
+		docker.Image = img
 	}
 
-	if err := r.pullImage(confd.Image); err != nil {
+	if err := r.pullImage(docker.Image); err != nil {
 		return err
 	}
+	return nil
+}
 
-	container, err := r.docker.StartContainer(r.Ctx, files, confd)
+func (r *ContainerRunner) startContainer(options containerStartOptions) (string, error) {
+	container, err := r.docker.StartContainer(r.Ctx, options)
 	if err != nil {
-		return err
+		return "", err
 	}
-	r.containerID = container.ID
+	containerID := container.ID
 
-	pDir, err := r.docker.ProjectDir(r.Ctx, confd.Image)
+	pDir, err := r.docker.ProjectDir(r.Ctx, options.Docker.Image)
 	if err != nil {
-		return err
+		return "", err
+	}
+
+	r.containerConfig.jobInfoFilePath, err = r.docker.JobInfoFile(r.Ctx, options.Docker.Image)
+	if err != nil {
+		return "", err
 	}
 
 	tmpDir, err := ioutil.TempDir("", "saucectl")
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer os.RemoveAll(tmpDir)
 
 	rcPath := filepath.Join(tmpDir, SauceRunnerConfigFile)
-	if err := jsonio.WriteFile(rcPath, project); err != nil {
-		return err
+	if err := jsonio.WriteFile(rcPath, options.Project); err != nil {
+		return "", err
 	}
 
-	if err := r.docker.CopyToContainer(r.Ctx, r.containerID, rcPath, pDir); err != nil {
-		return err
+	if err := r.docker.CopyToContainer(r.Ctx, containerID, rcPath, pDir); err != nil {
+		return "", err
 	}
 	r.containerConfig.sauceRunnerConfigPath = path.Join(pDir, SauceRunnerConfigFile)
 
 	// running pre-exec tasks
-	err = r.beforeExec(beforeExec)
+	err = r.beforeExec(containerID, options.SuiteName, options.BeforeExec)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return container.ID, nil
 }
 
-func (r *ContainerRunner) run(cmd []string, env map[string]string) error {
+func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string) (output string, jobInfo jobInfo, passed bool, err error) {
 	defer func() {
-		log.Info().Msg("Tearing down environment")
-		if err := r.docker.Teardown(r.Ctx, r.containerID); err != nil {
+		log.Info().Str("suite", suiteName).Msg("Tearing down environment")
+		if err := r.docker.Teardown(r.Ctx, containerID); err != nil {
 			if !r.docker.IsErrNotFound(err) {
-				log.Error().Err(err).Msg("Failed to tear down environment")
+				log.Error().Err(err).Str("suite", suiteName).Msg("Failed to tear down environment")
 			}
 		}
 	}()
 
-	exitCode, err := r.docker.ExecuteAttach(r.Ctx, r.containerID, r.Cli, cmd, env)
-	log.Info().
-		Int("ExitCode", exitCode).
-		Msg("Command Finished")
+	exitCode, output, err := r.docker.ExecuteAttach(r.Ctx, containerID, cmd, env)
 
 	if err != nil {
-		return err
+		return "", jobInfo, false, err
 	}
+
+	passed = true
 	if exitCode != 0 {
-		return fmt.Errorf("exitCode is %d", exitCode)
+		log.Warn().Str("suite", suiteName).Msgf("exitCode is %d", exitCode)
+		passed = false
 	}
-	return nil
+
+	jobInfo, err = r.readJobInfo(containerID)
+	if err != nil {
+		log.Warn().Msgf("unable to retrieve test result url: %s", err)
+	}
+	return output, jobInfo, passed, err
 }
 
-func (r *ContainerRunner) beforeExec(tasks []string) error {
+// readTestURL reads test url from inside the test runner container.
+func (r *ContainerRunner) readJobInfo(containerID string) (jobInfo, error) {
+	// Set unknown when image does not support it.
+	if r.containerConfig.jobInfoFilePath == "" {
+		return jobInfo{JobDetailsURL: "unknown"}, nil
+	}
+	dir, err := ioutil.TempDir("", "result")
+	if err != nil {
+		return jobInfo{}, err
+	}
+	defer os.RemoveAll(dir)
+
+	err = r.docker.CopyFromContainer(r.Ctx, containerID, r.containerConfig.jobInfoFilePath, dir)
+	if err != nil {
+		return jobInfo{}, err
+	}
+	fileName := filepath.Base(r.containerConfig.jobInfoFilePath)
+	filePath := filepath.Join(dir, fileName)
+	content, err := ioutil.ReadFile(filePath)
+
+	var info jobInfo
+	err = json.Unmarshal(content, &info)
+	if err != nil {
+		return jobInfo{}, err
+	}
+	return info, err
+}
+
+func (r *ContainerRunner) beforeExec(containerID, suiteName string, tasks []string) error {
 	for _, task := range tasks {
-		log.Info().Str("task", task).Msg("Running BeforeExec")
-		exitCode, err := r.docker.ExecuteAttach(r.Ctx, r.containerID, r.Cli, strings.Fields(task), nil)
+		log.Info().Str("task", task).Str("suite", suiteName).Msg("Running BeforeExec")
+		exitCode, _, err := r.docker.ExecuteAttach(r.Ctx, containerID, strings.Fields(task), nil)
 		if err != nil {
 			return err
 		}
@@ -150,4 +216,97 @@ func (r *ContainerRunner) beforeExec(tasks []string) error {
 		}
 	}
 	return nil
+}
+
+func (r *ContainerRunner) createWorkerPool(ccy int) (chan containerStartOptions, chan result) {
+	jobOpts := make(chan containerStartOptions)
+	results := make(chan result, ccy)
+
+	log.Info().Int("concurrency", ccy).Msg("Launching workers.")
+	for i := 0; i < ccy; i++ {
+		go r.runJobs(jobOpts, results)
+	}
+
+	return jobOpts, results
+}
+
+func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, results chan<- result) {
+	for opts := range containerOpts {
+		containerID, output, jobDetails, passed, err := r.runSuite(opts)
+		results <- result{
+			suiteName:     opts.SuiteName,
+			containerID:   containerID,
+			jobInfo:       jobDetails,
+			passed:        passed,
+			consoleOutput: output,
+			err:           err,
+		}
+	}
+}
+
+func (r *ContainerRunner) collectResults(results chan result, expected int) bool {
+	// TODO find a better way to get the expected
+	errCount := 0
+	completed := 0
+	inProgress := expected
+	passed := true
+
+	waiter := dots.New(1)
+	waiter.Start()
+	for i := 0; i < expected; i++ {
+		res := <-results
+		completed++
+		inProgress--
+
+		if !res.passed {
+			errCount++
+			passed = false
+		}
+
+		// Logging is not synchronized over the different worker routines & dot routine.
+		// To avoid implementing a more complex solution centralizing output on only one
+		// routine, a new lines has simply been forced, to ensure that line starts from
+		// the beginning of the console.
+		fmt.Println("")
+		log.Info().Msgf("Suites completed: %d/%d", completed, expected)
+		r.logSuite(res)
+	}
+	waiter.Stop()
+
+	log.Info().Msgf("Suites expected: %d", expected)
+	log.Info().Msgf("Suites passed: %d", expected-errCount)
+	log.Info().Msgf("Suites failed: %d", errCount)
+
+	return passed
+}
+
+func (r *ContainerRunner) logSuite(res result) {
+	if res.containerID == "" {
+		log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Failed to start suite.")
+		return
+	}
+
+	if res.passed {
+		log.Info().Bool("passed", res.passed).Str("url", res.jobInfo.JobDetailsURL).Str("suite", res.suiteName).Msg("Suite finished.")
+	} else {
+		log.Error().Bool("passed", res.passed).Str("url", res.jobInfo.JobDetailsURL).Str("suite", res.suiteName).Msg("Suite finished.")
+	}
+
+	if !res.passed || r.ShowConsoleLog {
+		log.Info().Str("suite", res.suiteName).Msgf("console.log output: \n%s", res.consoleOutput)
+	}
+}
+
+func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobInfo jobInfo, passed bool, err error) {
+	log.Info().Str("suite", options.SuiteName).Msg("Setting up test environment")
+	containerID, err = r.startContainer(options)
+	if err != nil {
+		log.Err(err).Str("suite", options.SuiteName).Msg("Failed to setup test environment")
+		return
+	}
+
+	output, jobInfo, passed, err = r.run(containerID, options.SuiteName,
+		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", options.SuiteName},
+		options.Environment)
+	return
 }

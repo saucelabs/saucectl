@@ -2,11 +2,11 @@ package docker
 
 import (
 	"context"
+	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"path/filepath"
 
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
 
@@ -17,13 +17,11 @@ type PlaywrightRunner struct {
 }
 
 // NewPlaywright creates a new PlaywrightRunner instance.
-func NewPlaywright(c playwright.Project, cli *command.SauceCtlCli, imageLoc framework.ImageLocator) (*PlaywrightRunner, error) {
+func NewPlaywright(c playwright.Project, imageLoc framework.ImageLocator) (*PlaywrightRunner, error) {
 	r := PlaywrightRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
 			Ctx:             context.Background(),
-			Cli:             cli,
-			containerID:     "",
 			docker:          nil,
 			containerConfig: &containerConfig{},
 			Framework: framework.Framework{
@@ -31,6 +29,7 @@ func NewPlaywright(c playwright.Project, cli *command.SauceCtlCli, imageLoc fram
 				Version: c.Playwright.Version,
 			},
 			ImageLoc: imageLoc,
+			ShowConsoleLog: c.ShowConsoleLog,
 		},
 	}
 
@@ -50,22 +49,35 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 	}
 	r.Project.Playwright.ProjectPath = filepath.Base(r.Project.Playwright.ProjectPath)
 
-	errorCount := 0
-	for _, suite := range r.Project.Suites {
-		log.Info().Msg("Setting up test environment")
-		if err := r.setupImage(r.Project.Docker, r.Project.BeforeExec, r.Project, files); err != nil {
-			log.Err(err).Msg("Failed to setup test environment")
-			return 1, err
-		}
+	if r.Project.Sauce.Concurrency > 1 {
+		log.Info().Msg("concurrency > 1: forcing file transfer mode to use 'copy'.")
+		r.Project.Docker.FileTransfer = config.DockerFileCopy
+	}
 
-		err := r.run([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", suite.Name},
-			suite.Env)
-		if err != nil {
-			errorCount++
+	if err := r.fetchImage(&r.Project.Docker); err != nil {
+		return 1, err
+	}
+
+	containerOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency)
+	defer close(results)
+
+	go func() {
+		for _, suite := range r.Project.Suites {
+			containerOpts <- containerStartOptions{
+				Docker:      r.Project.Docker,
+				BeforeExec:  r.Project.BeforeExec,
+				Project:     r.Project,
+				SuiteName:   suite.Name,
+				Environment: suite.Env,
+				Files:       files,
+			}
 		}
+		close(containerOpts)
+	}()
+
+	hasPassed := r.collectResults(results, len(r.Project.Suites))
+	if !hasPassed {
+		return 1, nil
 	}
-	if errorCount > 0 {
-		log.Error().Msgf("%d suite(s) failed", errorCount)
-	}
-	return errorCount, nil
+	return 0, nil
 }

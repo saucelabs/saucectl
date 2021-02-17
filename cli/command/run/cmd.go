@@ -123,7 +123,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 
 	if d.Kind == config.KindCypress && d.APIVersion == config.VersionV1Alpha {
-		return runCypress(cmd, cli)
+		return runCypress(cmd)
 	}
 	if d.Kind == config.KindPlaywright && d.APIVersion == config.VersionV1Alpha {
 		return runPlaywright(cmd, cli)
@@ -156,7 +156,7 @@ func runLegacyMode(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	return r.RunProject()
 }
 
-func runCypress(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
+func runCypress(cmd *cobra.Command) (int, error) {
 	p, err := cypress.FromFile(cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -209,7 +209,7 @@ func runCypress(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 
 	switch testEnv {
 	case "docker":
-		return runCypressInDocker(p, tc, cli)
+		return runCypressInDocker(p, tc)
 	case "sauce":
 		return runCypressInSauce(p, regio, creds, tc)
 	default:
@@ -217,10 +217,10 @@ func runCypress(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	}
 }
 
-func runCypressInDocker(p cypress.Project, testco testcomposer.Client, cli *command.SauceCtlCli) (int, error) {
+func runCypressInDocker(p cypress.Project, testco testcomposer.Client) (int, error) {
 	log.Info().Msg("Running Cypress in Docker")
 
-	cd, err := docker.NewCypress(p, cli, &testco)
+	cd, err := docker.NewCypress(p, &testco)
 	if err != nil {
 		return 1, err
 	}
@@ -313,7 +313,7 @@ func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 func runPlaywrightInDocker(p playwright.Project, cli *command.SauceCtlCli, testco testcomposer.Client) (int, error) {
 	log.Info().Msg("Running Playwright in Docker")
 
-	cd, err := docker.NewPlaywright(p, cli, &testco)
+	cd, err := docker.NewPlaywright(p, &testco)
 	if err != nil {
 		return 1, err
 	}

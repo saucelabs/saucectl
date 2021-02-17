@@ -3,7 +3,7 @@ package docker
 import (
 	"context"
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/framework"
 )
@@ -15,13 +15,11 @@ type CypressRunner struct {
 }
 
 // NewCypress creates a new CypressRunner instance.
-func NewCypress(c cypress.Project, cli *command.SauceCtlCli, imageLoc framework.ImageLocator) (*CypressRunner, error) {
+func NewCypress(c cypress.Project, imageLoc framework.ImageLocator) (*CypressRunner, error) {
 	r := CypressRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
 			Ctx:             context.Background(),
-			Cli:             cli,
-			containerID:     "",
 			docker:          nil,
 			containerConfig: &containerConfig{},
 			Framework: framework.Framework{
@@ -29,6 +27,7 @@ func NewCypress(c cypress.Project, cli *command.SauceCtlCli, imageLoc framework.
 				Version: c.Cypress.Version,
 			},
 			ImageLoc: imageLoc,
+			ShowConsoleLog: c.ShowConsoleLog,
 		},
 	}
 
@@ -52,22 +51,35 @@ func (r *CypressRunner) RunProject() (int, error) {
 		files = append(files, r.Project.Cypress.EnvFile)
 	}
 
-	errorCount := 0
-	for _, suite := range r.Project.Suites {
-		log.Info().Msg("Setting up test environment")
-		if err := r.setupImage(r.Project.Docker, r.Project.BeforeExec, r.Project, files); err != nil {
-			log.Err(err).Msg("Failed to setup test environment")
-			return 1, err
-		}
+	if r.Project.Sauce.Concurrency > 1 {
+		log.Info().Msg("concurrency > 1: forcing file transfer mode to use 'copy'.")
+		r.Project.Docker.FileTransfer = config.DockerFileCopy
+	}
 
-		err := r.run([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", suite.Name},
-			suite.Config.Env)
-		if err != nil {
-			errorCount++
+	if err := r.fetchImage(&r.Project.Docker); err != nil {
+		return 1, err
+	}
+
+	containerOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency)
+	defer close(results)
+
+	go func() {
+		for _, suite := range r.Project.Suites {
+			containerOpts <- containerStartOptions{
+				Docker:      r.Project.Docker,
+				BeforeExec:  r.Project.BeforeExec,
+				Project:     r.Project,
+				SuiteName:   suite.Name,
+				Environment: suite.Config.Env,
+				Files:       files,
+			}
 		}
+		close(containerOpts)
+	}()
+
+	hasPassed := r.collectResults(results, len(r.Project.Suites))
+	if !hasPassed {
+		return 1, nil
 	}
-	if errorCount > 0 {
-		log.Error().Msgf("%d suite(s) failed", errorCount)
-	}
-	return errorCount, nil
+	return 0, nil
 }

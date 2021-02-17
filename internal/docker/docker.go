@@ -1,11 +1,11 @@
 package docker
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/command"
 	"io"
 	"io/ioutil"
 	"os"
@@ -47,6 +47,8 @@ const SauceRunnerConfigFile = "sauce-runner.json"
 type containerConfig struct {
 	// sauceRunnerConfigPath is the container path to sauce-runner.json.
 	sauceRunnerConfigPath string
+	// jobInfoFilePath is the container path to the file containing job details url on Sauce.
+	jobInfoFilePath string
 }
 
 // CommonAPIClient is the interface for interacting with containers.
@@ -172,7 +174,7 @@ func (handler *Handler) PullImage(ctx context.Context, img string) error {
 }
 
 // StartContainer starts the Docker testrunner container
-func (handler *Handler) StartContainer(ctx context.Context, files []string, conf config.Docker) (*container.ContainerCreateCreatedBody, error) {
+func (handler *Handler) StartContainer(ctx context.Context, options containerStartOptions) (*container.ContainerCreateCreatedBody, error) {
 	var (
 		ports        map[nat.Port]struct{}
 		portBindings map[nat.Port][]nat.PortBinding
@@ -192,14 +194,14 @@ func (handler *Handler) StartContainer(ctx context.Context, files []string, conf
 		return nil, err
 	}
 
-	pDir, err := handler.ProjectDir(ctx, conf.Image)
+	pDir, err := handler.ProjectDir(ctx, options.Docker.Image)
 	if err != nil {
 		return nil, err
 	}
 
 	var m []mount.Mount
-	if conf.FileTransfer == config.DockerFileMount {
-		m, err = createMounts(files, pDir)
+	if options.Docker.FileTransfer == config.DockerFileMount {
+		m, err = createMounts(options.SuiteName, options.Files, pDir)
 		if err != nil {
 			return nil, err
 		}
@@ -210,7 +212,7 @@ func (handler *Handler) StartContainer(ctx context.Context, files []string, conf
 	if creds := credentials.Get(); creds != nil {
 		username = creds.Username
 		accessKey = creds.AccessKey
-		log.Info().Msgf("Using credentials set by %s", creds.Source)
+		log.Info().Str("suite", options.SuiteName).Msgf("Using credentials set by %s", creds.Source)
 	}
 
 	hostConfig := &container.HostConfig{
@@ -219,7 +221,7 @@ func (handler *Handler) StartContainer(ctx context.Context, files []string, conf
 	}
 	networkConfig := &network.NetworkingConfig{}
 	containerConfig := &container.Config{
-		Image:        conf.Image,
+		Image:        options.Docker.Image,
 		ExposedPorts: ports,
 		Env: []string{
 			fmt.Sprintf("SAUCE_USERNAME=%s", username),
@@ -232,13 +234,13 @@ func (handler *Handler) StartContainer(ctx context.Context, files []string, conf
 		return nil, err
 	}
 
-	log.Info().Str("img", conf.Image).Str("id", container.ID[:12]).Msg("Starting container")
+	log.Info().Str("img", options.Docker.Image).Str("id", container.ID[:12]).Str("suite", options.SuiteName).Msg("Starting container")
 	if err := handler.client.ContainerStart(ctx, container.ID, types.ContainerStartOptions{}); err != nil {
 		return nil, err
 	}
 
-	if conf.FileTransfer == config.DockerFileCopy {
-		if err := copyTestFiles(ctx, handler, container.ID, files, pDir); err != nil {
+	if options.Docker.FileTransfer == config.DockerFileCopy {
+		if err := copyTestFiles(ctx, handler, container.ID, options.SuiteName, options.Files, pDir); err != nil {
 			return nil, err
 		}
 	}
@@ -255,9 +257,9 @@ func (handler *Handler) StartContainer(ctx context.Context, files []string, conf
 }
 
 // copyTestFiles copies the files within the container.
-func copyTestFiles(ctx context.Context, handler *Handler, containerID string, files []string, pDir string) error {
+func copyTestFiles(ctx context.Context, handler *Handler, containerID, suiteName string, files []string, pDir string) error {
 	for _, file := range files {
-		log.Info().Str("from", file).Str("to", pDir).Msg("File copied")
+		log.Info().Str("from", file).Str("to", pDir).Str("suite", suiteName).Msg("File copied")
 		if err := handler.CopyToContainer(ctx, containerID, file, pDir); err != nil {
 			return err
 		}
@@ -266,7 +268,7 @@ func copyTestFiles(ctx context.Context, handler *Handler, containerID string, fi
 }
 
 // createMounts returns a list of mount bindings, binding files to target, such that {source}:{target}/{source}.
-func createMounts(files []string, target string) ([]mount.Mount, error) {
+func createMounts(suiteName string, files []string, target string) ([]mount.Mount, error) {
 	mm := make([]mount.Mount, len(files))
 	for i, f := range files {
 		absF, err := filepath.Abs(f)
@@ -287,7 +289,7 @@ func createMounts(files []string, target string) ([]mount.Mount, error) {
 			TmpfsOptions:  nil,
 		}
 
-		log.Info().Str("from", f).Str("to", dest).Msg("File mounted")
+		log.Info().Str("from", f).Str("to", dest).Str("suite", suiteName).Msg("File mounted")
 	}
 
 	return mm, nil
@@ -402,20 +404,14 @@ func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd 
 	return &createResp, &resp, err
 }
 
-// ExecuteAttach runs the cmd test in the Docker container and attaches the given stream.
-func (handler *Handler) ExecuteAttach(ctx context.Context, containerID string, cli *command.SauceCtlCli, cmd []string, env map[string]string) (int, error) {
-	var out, stderr io.Writer
+// ExecuteAttach runs the cmd test in the Docker container and catch the given stream to a string.
+func (handler *Handler) ExecuteAttach(ctx context.Context, containerID string, cmd []string, env map[string]string) (int, string, error) {
 	var in io.ReadCloser
+	var out bytes.Buffer
 
-	out = cli.Out()
-	stderr = cli.Out()
-
-	if err := cli.In().CheckTty(false, true); err != nil {
-		return 1, err
-	}
 	createResp, attachResp, err := handler.Execute(ctx, containerID, cmd, env)
 	if err != nil {
-		return 1, err
+		return 1, "", err
 	}
 	defer attachResp.Close()
 	errCh := make(chan error, 1)
@@ -423,27 +419,24 @@ func (handler *Handler) ExecuteAttach(ctx context.Context, containerID string, c
 		defer close(errCh)
 		errCh <- func() error {
 			streamer := streams.IOStreamer{
-				Streams:      cli,
 				InputStream:  in,
-				OutputStream: out,
-				ErrorStream:  stderr,
+				OutputStream: &out,
+				ErrorStream:  &out,
 				Resp:         *attachResp,
 			}
-
 			return streamer.Stream(ctx)
 		}()
 	}()
 
 	if err := <-errCh; err != nil {
-		return 1, err
+		return 1, out.String(), err
 	}
 
 	exitCode, err := handler.ExecuteInspect(ctx, createResp.ID)
 	if err != nil {
-		return 1, err
+		return 1, out.String(), err
 	}
-	return exitCode, nil
-
+	return exitCode, out.String(), nil
 }
 
 // ExecuteInspect checks exit code of test
@@ -480,6 +473,21 @@ func (handler *Handler) ProjectDir(ctx context.Context, imageID string) (string,
 		p = v
 	}
 
+	return p, nil
+}
+
+// JobInfoFile returns the file containing the job details url for the given image.
+func (handler *Handler) JobInfoFile(ctx context.Context, imageID string) (string, error) {
+	ii, _, err := handler.client.ImageInspectWithRaw(ctx, imageID)
+	if err != nil {
+		return "", err
+	}
+
+	// The image can tell us via a label where saucectl should find the url for the test details.
+	var p string
+	if v := ii.Config.Labels["com.saucelabs.job-info"]; v != "" {
+		p = v
+	}
 	return p, nil
 }
 
