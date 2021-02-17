@@ -32,6 +32,7 @@ docker:
 # Docker image and tag are both determined automatically based on your configuration. However, it's possible to set your
 # own custom image or a different tag.
 #image: saucelabs/stt-testcafe-node:v0.2.2
+  image: saucelabs/stt-testcafe-node:v0.2.3 # TODO: will remove this after enable testcafe in test-composer
 
 testcafe:
   projectPath: tests/e2e/testcafe
