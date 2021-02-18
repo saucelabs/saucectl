@@ -22,14 +22,14 @@ suites:
     platformName: "windows 10"
     env:
       hello: world
-    speed: 0.01
+    speed: 1
 
 docker:
   # fileTransfer controls how test files are transferred to the docker container before tests are run (choice: mount|copy).
   # `mount` will mount files and folders into the container. Changes to these files and folders will be reflected on the
   # host as well (and vice versa). However, you may run into permission issues depending on your docker or host settings.
   # In this case the usage of `copy` is advised. `copy` will simply copy files and folders into the container.
-  fileTransfer: copy # Defaults to `mount`. Choose between mount|copy.
+  fileTransfer: mount # Defaults to `mount`. Choose between mount|copy.
 # Docker image and tag are both determined automatically based on your configuration. However, it's possible to set your
 # own custom image or a different tag.
 #image: saucelabs/stt-testcafe-node:v0.2.2
