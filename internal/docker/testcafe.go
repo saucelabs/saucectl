@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 )
@@ -16,18 +16,18 @@ type TestcafeRunner struct {
 }
 
 // NewTestcafe creates a new TestcafeRunner instance.
-func NewTestcafe(c testcafe.Project, cli *command.SauceCtlCli, imageLoc framework.ImageLocator) (*TestcafeRunner, error) {
+func NewTestcafe(c testcafe.Project, imageLoc framework.ImageLocator) (*TestcafeRunner, error) {
 	r := TestcafeRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
 			Ctx:             context.Background(),
-			Cli:             cli,
 			containerConfig: &containerConfig{},
 			Framework: framework.Framework{
 				Name:    c.Kind,
 				Version: c.Testcafe.Version,
 			},
-			ImageLoc: imageLoc,
+			ImageLoc:       imageLoc,
+			ShowConsoleLog: c.ShowConsoleLog,
 		},
 	}
 	var err error
@@ -41,21 +41,35 @@ func NewTestcafe(c testcafe.Project, cli *command.SauceCtlCli, imageLoc framewor
 
 // RunProject runs the tests defined in config.Project.
 func (r *TestcafeRunner) RunProject() (int, error) {
-	errCnt := 0
-	for _, suite := range r.Project.Suites {
-		log.Info().Msg("Setting up test enviornment")
-		if err := r.setupImage(r.Project.Docker, r.Project.BeforeExec, r.Project, []string{r.Project.Testcafe.ProjectPath}); err != nil {
-			log.Err(err).Msg("Failed to setup test environment")
-			return 1, err
-		}
+	if r.Project.Sauce.Concurrency > 1 {
+		log.Info().Msg(("concurrency > 1: forcing file transfer mode to use 'copy'."))
+		r.Project.Docker.FileTransfer = config.DockerFileCopy
+	}
+	if err := r.fetchImage(&r.Project.Docker); err != nil {
+		return 1, err
+	}
 
-		err := r.run([]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", suite.Name}, suite.Env)
-		if err != nil {
-			errCnt++
+	containerOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency)
+	defer close(results)
+
+	go func() {
+		for _, suite := range r.Project.Suites {
+			containerOpts <- containerStartOptions{
+				Docker:      r.Project.Docker,
+				BeforeExec:  r.Project.BeforeExec,
+				Project:     r.Project,
+				SuiteName:   suite.Name,
+				Environment: suite.Env,
+				Files:       []string{r.Project.Testcafe.ProjectPath},
+			}
 		}
+		close(containerOpts)
+	}()
+
+	hasPassed := r.collectResults(results, len(r.Project.Suites))
+	if !hasPassed {
+		return 1, nil
 	}
-	if errCnt > 0 {
-		log.Error().Msgf("%d suite(s) failed", errCnt)
-	}
-	return errCnt, nil
+
+	return 0, nil
 }

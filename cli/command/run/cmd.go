@@ -405,7 +405,7 @@ func runTestcafe(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 func runTestcafeInDocker(p testcafe.Project, cli *command.SauceCtlCli, testco testcomposer.Client) (int, error) {
 	log.Info().Msg("Running Testcafe in Docker")
 
-	cd, err := docker.NewTestcafe(p, cli, &testco)
+	cd, err := docker.NewTestcafe(p, &testco)
 	if err != nil {
 		return 1, err
 	}
