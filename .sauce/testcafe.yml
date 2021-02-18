@@ -1,5 +1,6 @@
 apiVersion: v1alpha
 kind: testcafe
+showConsoleLog: true
 sauce:
   region: us-west-1
   concurrency: 1 # Controls how many suites are executed at the same time (sauce test env only).
@@ -21,7 +22,7 @@ suites:
     platformName: "windows 10"
     env:
       hello: world
-    speed: 1
+    speed: 0.01
 
 docker:
   # fileTransfer controls how test files are transferred to the docker container before tests are run (choice: mount|copy).
@@ -32,7 +33,7 @@ docker:
 # Docker image and tag are both determined automatically based on your configuration. However, it's possible to set your
 # own custom image or a different tag.
 #image: saucelabs/stt-testcafe-node:v0.2.2
-  image: saucelabs/stt-testcafe-node:v0.2.3 # TODO: will remove this after enable testcafe in test-composer
+  image: saucelabs/stt-testcafe-node:v0.2.4 # TODO: will remove this after enable testcafe in test-composer
 
 testcafe:
   projectPath: tests/e2e/testcafe
