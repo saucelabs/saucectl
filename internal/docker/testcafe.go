@@ -22,8 +22,6 @@ func NewTestcafe(c testcafe.Project, cli *command.SauceCtlCli, imageLoc framewor
 		ContainerRunner: ContainerRunner{
 			Ctx:             context.Background(),
 			Cli:             cli,
-			containerID:     "",
-			docker:          nil,
 			containerConfig: &containerConfig{},
 			Framework: framework.Framework{
 				Name:    c.Kind,

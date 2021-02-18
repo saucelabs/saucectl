@@ -397,10 +397,6 @@ func runTestcafe(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	switch testEnv {
 	case "docker":
 		return runTestcafeInDocker(p, cli, tc)
-	case "sauce":
-		// TODO: will add functions to run testcafe in cloud later
-		return 0, nil
-		//return runTestcafeInSauce(p, regio, creds, tc)
 	default:
 		return 1, errors.New("unsupported test enviornment")
 	}
