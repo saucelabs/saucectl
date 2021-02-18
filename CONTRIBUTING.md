@@ -17,7 +17,7 @@ Want to hack on saucectl? Awesome! This page contains information about reportin
 
 ## Development Requirements
 
-- [Go](https://golang.org/) (v1.14 or higher)
+- [Go](https://golang.org/) (v1.16 or higher)
 - [Homebrew](https://brew.sh/) (v2.2.13 or higher)
 
 ## Install
