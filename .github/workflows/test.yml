@@ -30,7 +30,6 @@ jobs:
       - name: Build project
         run: |
           go install ./...
-          go get -u github.com/mcubik/goverreport
           CGO_ENABLED=0 go build cmd/saucectl/saucectl.go
           GOOS=windows GOARCH=amd64 go build cmd/saucectl/saucectl.go
 
@@ -42,8 +41,9 @@ jobs:
       - name: Run tests
         run: |
           go test -coverprofile=coverage.out ./...
-          goverreport -sort=block -order=desc -threshold=40
-
+          coverage=$(go tool cover -func=coverage.out | tail -n 1 | awk '{ print $3 }' | tr -d '%')
+          threshold=40
+          if [[ $coverage < $threshold ]]; then echo 'Code coverage below threshold!' && exit 1; fi
       - name: Check GoReleaser config
         uses: goreleaser/goreleaser-action@v1
         with:
