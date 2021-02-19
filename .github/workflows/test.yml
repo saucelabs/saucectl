@@ -139,9 +139,6 @@ jobs:
   testcafe:
     needs: build
     runs-on: ubuntu-latest
-    container:
-      image: saucelabs/stt-testcafe-node:v0.1.5
-      options: --user 1001
 
     steps:
       # appears that checkout@v2 uses javascript which is not compatible
@@ -153,6 +150,9 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: saucectlbin
+
+      - name: Workaround for container permissions
+        run: sudo chmod -R 777 tests/
 
       - name: Run Sauce Pipeline Test
         run: |

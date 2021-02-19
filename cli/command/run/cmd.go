@@ -29,6 +29,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/runner"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
+	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
 )
@@ -59,9 +60,9 @@ var (
 	tunnelParent   string
 
 	// General Request Timeouts
-	appStoreTimeout = 300 * time.Second
+	appStoreTimeout     = 300 * time.Second
 	testComposerTimeout = 300 * time.Second
-	restoTimeout = 60 * time.Second
+	restoTimeout        = 60 * time.Second
 )
 
 // Command creates the `run` command
@@ -127,6 +128,9 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 	if d.Kind == config.KindPlaywright && d.APIVersion == config.VersionV1Alpha {
 		return runPlaywright(cmd, cli)
+	}
+	if d.Kind == config.KindTestcafe && d.APIVersion == config.VersionV1Alpha {
+		return runTestcafe(cmd, cli)
 	}
 
 	return runLegacyMode(cmd, cli)
@@ -346,6 +350,68 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, creds *cred
 	return r.RunProject()
 }
 
+func runTestcafe(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
+	p, err := testcafe.FromFile(cfgFilePath)
+	if err != nil {
+		return 1, err
+	}
+	p.Sauce.Metadata.ExpandEnv()
+	applyDefaultValues(&p.Sauce)
+	overrideCliParameters(cmd, &p.Sauce)
+
+	for k, v := range env {
+		for _, s := range p.Suites {
+			if s.Env == nil {
+				s.Env = map[string]string{}
+			}
+			s.Env[k] = v
+		}
+	}
+
+	if showConsoleLog {
+		p.ShowConsoleLog = true
+	}
+
+	if cmd.Flags().Lookup("suite").Changed {
+		if err := filterTestcafeSuite(&p); err != nil {
+			return 1, err
+		}
+	}
+	creds := credentials.Get()
+	if creds == nil {
+		return 1, errors.New("no sauce credentails set")
+	}
+
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
+		return 1, errors.New("no sauce region set")
+	}
+
+	tc := testcomposer.Client{
+		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
+		URL:         regio.APIBaseURL(),
+		Credentials: *creds,
+	}
+
+	switch testEnv {
+	case "docker":
+		return runTestcafeInDocker(p, cli, tc)
+	default:
+		return 1, errors.New("unsupported test enviornment")
+	}
+}
+
+func runTestcafeInDocker(p testcafe.Project, cli *command.SauceCtlCli, testco testcomposer.Client) (int, error) {
+	log.Info().Msg("Running Testcafe in Docker")
+
+	cd, err := docker.NewTestcafe(p, &testco)
+	if err != nil {
+		return 1, err
+	}
+	return cd.RunProject()
+}
+
 func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, error) {
 	// return test runner for testing
 	if p.Image.Base == "test" {
@@ -484,6 +550,16 @@ func filterPlaywrightSuite(c *playwright.Project) error {
 	for _, s := range c.Suites {
 		if s.Name == suiteName {
 			c.Suites = []playwright.Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf("suite name '%s' is invalid", suiteName)
+}
+
+func filterTestcafeSuite(c *testcafe.Project) error {
+	for _, s := range c.Suites {
+		if s.Name == suiteName {
+			c.Suites = []testcafe.Suite{s}
 			return nil
 		}
 	}

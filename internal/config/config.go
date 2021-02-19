@@ -3,11 +3,12 @@ package config
 import (
 	"errors"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 )
 
 // Metadata describes job metadata
@@ -131,6 +132,7 @@ const (
 const (
 	KindCypress    = "cypress"
 	KindPlaywright = "playwright"
+	KindTestcafe   = "testcafe"
 )
 
 func readYaml(cfgFilePath string) ([]byte, error) {
