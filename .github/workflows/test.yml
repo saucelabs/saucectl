@@ -15,10 +15,45 @@ env:
 
 
 jobs:
-  basic:
+  lint:
     runs-on: ubuntu-latest
     container:
-      image: golang:1.14-alpine
+      image: golang:1.16-alpine
+
+    steps:
+      - name: Install Dependencies
+        run: apk add --no-cache git gcc g++ curl
+
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Lint project
+        run: |
+          go get -u golang.org/x/lint/golint
+          golint -set_exit_status ./...
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: golang:1.16-alpine
+
+    steps:
+    - name: Install Dependencies
+      run: apk add --no-cache git gcc g++ curl
+
+    - name: Checkout Code
+      uses: actions/checkout@v2
+
+    - name: Run tests
+      run: |
+        go test -coverprofile=coverage.out ./...
+        coverage=$(go tool cover -func=coverage.out | tail -n 1 | awk '{ print $3 }' | tr -d '%')
+        threshold=40
+        if [[ $coverage < $threshold ]]; then echo 'Code coverage below threshold!' && exit 1; fi
+  build:
+    needs: lint
+    runs-on: ubuntu-latest
+    container:
+      image: golang:1.16-alpine
 
     steps:
       - name: Install Dependencies
@@ -30,20 +65,8 @@ jobs:
       - name: Build project
         run: |
           go install ./...
-          go get -u github.com/mcubik/goverreport
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0  
           CGO_ENABLED=0 go build cmd/saucectl/saucectl.go
           GOOS=windows GOARCH=amd64 go build cmd/saucectl/saucectl.go
-
-      - name: Lint project
-        run: |
-          go get -u golang.org/x/lint/golint
-          golint -set_exit_status ./...
-
-      - name: Run tests
-        run: |
-          go test -coverprofile=coverage.out ./...
-          goverreport -sort=block -order=desc -threshold=40
 
       - name: Check GoReleaser config
         uses: goreleaser/goreleaser-action@v1
@@ -59,7 +82,7 @@ jobs:
             saucectl
             saucectl.exe
   puppeteer:
-    needs: basic
+    needs: build
     runs-on: ubuntu-latest
     container:
       image: saucelabs/stt-puppeteer-jest-node:v0.1.5
@@ -90,7 +113,7 @@ jobs:
         env:
           BUILD_ID: ${{ github.run_id }}
   playwright:
-    needs: basic
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -114,7 +137,7 @@ jobs:
         env:
           BUILD_ID: ${{ github.run_id }}
   testcafe:
-    needs: basic
+    needs: build
     runs-on: ubuntu-latest
     container:
       image: saucelabs/stt-testcafe-node:v0.1.5
@@ -139,7 +162,7 @@ jobs:
           BUILD_ID: ${{ github.run_id }}
           BUILD_ENV: GitHub Actions
   cypress:
-    needs: basic
+    needs: build
     runs-on: ubuntu-latest
     env:
       BUILD_ID: ${{ github.run_id }}
@@ -166,7 +189,7 @@ jobs:
         run: |
           ./saucectl run -c ./.sauce/cypress_cloud.yml --test-env sauce --ccy 5
   cypress-windows:
-    needs: basic
+    needs: build
     runs-on: windows-latest
     env:
       BUILD_ID: ${{ github.run_id }}
