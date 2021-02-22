@@ -15,7 +15,7 @@ type CypressRunner struct {
 }
 
 // NewCypress creates a new CypressRunner instance.
-func NewCypress(c cypress.Project, imageLoc framework.ImageLocator) (*CypressRunner, error) {
+func NewCypress(c cypress.Project, ms framework.MetadataService) (*CypressRunner, error) {
 	r := CypressRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -26,7 +26,7 @@ func NewCypress(c cypress.Project, imageLoc framework.ImageLocator) (*CypressRun
 				Name:    c.Kind,
 				Version: c.Cypress.Version,
 			},
-			ImageLoc: imageLoc,
+			FrameworkMeta:  ms,
 			ShowConsoleLog: c.ShowConsoleLog,
 		},
 	}

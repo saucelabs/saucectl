@@ -57,8 +57,9 @@ type FrameworkResponse struct {
 }
 
 type runner struct {
-	Version     string `json:"version"`
-	DockerImage string `json:"dockerImage"`
+	CloudRunnerVersion string `json:"cloudRunnerVersion"`
+	DockerImage        string `json:"dockerImage"`
+	GitRelease         string `json:"gitRelease"`
 }
 
 // StartJob creates a new job in Sauce Labs.
@@ -175,23 +176,31 @@ func (c *Client) doJSONResponse(req *http.Request, expectStatus int, v interface
 }
 
 // GetImage returns a docker image for the given framework f.
-func (c *Client) GetImage(ctx context.Context, f framework.Framework) (string, error) {
-	url := fmt.Sprintf("%s/v1/testcomposer/frameworks/%s", c.URL, f.Name)
+func (c *Client) Search(ctx context.Context, opts framework.SearchOptions) (framework.Metadata, error) {
+	url := fmt.Sprintf("%s/v1/testcomposer/frameworks/%s", c.URL, opts.Name)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return "", err
+		return framework.Metadata{}, err
 	}
 	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
 
 	q := req.URL.Query()
-	q.Add("version", f.Version)
+	q.Add("version", opts.FrameworkVersion)
 	req.URL.RawQuery = q.Encode()
 
 	var resp FrameworkResponse
 	if err := c.doJSONResponse(req, 200, &resp); err != nil {
-		return "", err
+		return framework.Metadata{}, err
 	}
 
-	return resp.Runner.DockerImage, nil
+	m := framework.Metadata{
+		FrameworkName:      resp.Name,
+		FrameworkVersion:   resp.Version,
+		CloudRunnerVersion: resp.Runner.CloudRunnerVersion,
+		DockerImage:        resp.Runner.DockerImage,
+		GitRelease:         resp.Runner.GitRelease,
+	}
+
+	return m, nil
 }
