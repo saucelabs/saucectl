@@ -36,6 +36,7 @@ type Metadata struct {
 // Returns an error if GitRelease is malformed.
 // The expected GitRelease format is "org/repo:tag".
 func GitReleaseSegments(m *Metadata) (org, repo, tag string, err error) {
+	// :punct: is a bit more generous than what would actually appear, but was chosen for the sake for readability.
 	r := regexp.MustCompile("(?P<org>[[:punct:][:word:]]+)\\/(?P<repo>[[:punct:][:word:]]+):(?P<tag>[[:punct:][:word:]]+)")
 	matches := r.FindStringSubmatch(m.GitRelease)
 
