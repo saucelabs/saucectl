@@ -175,7 +175,7 @@ func (c *Client) doJSONResponse(req *http.Request, expectStatus int, v interface
 	return json.NewDecoder(res.Body).Decode(v)
 }
 
-// GetImage returns a docker image for the given framework f.
+// Search returns metadata for the given search options opts.
 func (c *Client) Search(ctx context.Context, opts framework.SearchOptions) (framework.Metadata, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/frameworks/%s", c.URL, opts.Name)
 
