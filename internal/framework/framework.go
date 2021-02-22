@@ -1,6 +1,10 @@
 package framework
 
-import "context"
+import (
+	"context"
+	"errors"
+	"regexp"
+)
 
 // Framework represents a test framework (e.g. cypress).
 type Framework struct {
@@ -26,4 +30,23 @@ type Metadata struct {
 	CloudRunnerVersion string
 	DockerImage        string
 	GitRelease         string
+}
+
+// GitReleaseSegments segments GitRelease into separate parts of org, repo and tag.
+// Returns an error if GitRelease is malformed.
+// The expected GitRelease format is "org/repo:tag".
+func GitReleaseSegments(m *Metadata) (org, repo, tag string, err error) {
+	r := regexp.MustCompile("(?P<org>[[:punct:][:word:]]+)\\/(?P<repo>[[:punct:][:word:]]+):(?P<tag>[[:punct:][:word:]]+)")
+	matches := r.FindStringSubmatch(m.GitRelease)
+
+	// We expect a full match, plus 3 subgroups (org, repo tag). Thus a total of 4.
+	if len(matches) != 4 {
+		return "", "", "", errors.New("malformed git release string in metadata")
+	}
+
+	orgIndex := r.SubexpIndex("org")
+	repoIndex := r.SubexpIndex("repo")
+	tagIndex := r.SubexpIndex("tag")
+
+	return matches[orgIndex], matches[repoIndex], matches[tagIndex], nil
 }
