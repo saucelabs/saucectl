@@ -16,7 +16,7 @@ type TestcafeRunner struct {
 }
 
 // NewTestcafe creates a new TestcafeRunner instance.
-func NewTestcafe(c testcafe.Project, imageLoc framework.ImageLocator) (*TestcafeRunner, error) {
+func NewTestcafe(c testcafe.Project, ms framework.MetadataService) (*TestcafeRunner, error) {
 	r := TestcafeRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -26,7 +26,7 @@ func NewTestcafe(c testcafe.Project, imageLoc framework.ImageLocator) (*Testcafe
 				Name:    c.Kind,
 				Version: c.Testcafe.Version,
 			},
-			ImageLoc:       imageLoc,
+			FrameworkMeta:  ms,
 			ShowConsoleLog: c.ShowConsoleLog,
 		},
 	}
@@ -42,7 +42,7 @@ func NewTestcafe(c testcafe.Project, imageLoc framework.ImageLocator) (*Testcafe
 // RunProject runs the tests defined in config.Project.
 func (r *TestcafeRunner) RunProject() (int, error) {
 	if r.Project.Sauce.Concurrency > 1 {
-		log.Info().Msg(("concurrency > 1: forcing file transfer mode to use 'copy'."))
+		log.Info().Msg("concurrency > 1: forcing file transfer mode to use 'copy'.")
 		r.Project.Docker.FileTransfer = config.DockerFileCopy
 	}
 	if err := r.fetchImage(&r.Project.Docker); err != nil {

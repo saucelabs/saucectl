@@ -25,7 +25,7 @@ type ContainerRunner struct {
 	docker          *Handler
 	containerConfig *containerConfig
 	Framework       framework.Framework
-	ImageLoc        framework.ImageLocator
+	FrameworkMeta   framework.MetadataService
 	ShowConsoleLog  bool
 }
 
@@ -93,11 +93,14 @@ func (r *ContainerRunner) fetchImage(docker *config.Docker) error {
 	}
 
 	if docker.Image == "" {
-		img, err := r.ImageLoc.GetImage(r.Ctx, r.Framework)
+		m, err := r.FrameworkMeta.Search(r.Ctx, framework.SearchOptions{
+			Name:             r.Framework.Name,
+			FrameworkVersion: r.Framework.Version,
+		})
 		if err != nil {
 			return fmt.Errorf("unable to determine which docker image to run: %w", err)
 		}
-		docker.Image = img
+		docker.Image = m.DockerImage
 	}
 
 	if err := r.pullImage(docker.Image); err != nil {

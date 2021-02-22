@@ -8,7 +8,22 @@ type Framework struct {
 	Version string
 }
 
-// ImageLocator represents an interface for retrieving (docker) images for a given framework.
-type ImageLocator interface {
-	GetImage(ctx context.Context, f Framework) (string, error)
+// MetadataService represents an interface for retrieving framework metadata.
+type MetadataService interface {
+	Search(ctx context.Context, opts SearchOptions) (Metadata, error)
+}
+
+// SearchOptions represents read query options for MetadataService.Search().
+type SearchOptions struct {
+	Name             string
+	FrameworkVersion string
+}
+
+// Metadata represents test runner metadata.
+type Metadata struct {
+	FrameworkName      string
+	FrameworkVersion   string
+	CloudRunnerVersion string
+	DockerImage        string
+	GitRelease         string
 }

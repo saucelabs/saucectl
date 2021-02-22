@@ -287,7 +287,7 @@ func TestClient_NextAssignment(t *testing.T) {
 	}
 }
 
-func TestClient_GetImage(t *testing.T) {
+func TestClient_Search(t *testing.T) {
 	respo := Responder{
 		Test: t,
 	}
@@ -303,25 +303,31 @@ func TestClient_GetImage(t *testing.T) {
 		Credentials credentials.Credentials
 	}
 	type args struct {
-		ctx context.Context
-		f   framework.Framework
+		ctx  context.Context
+		opts framework.SearchOptions
 	}
 	tests := []struct {
 		name       string
 		fields     fields
 		args       args
-		want       string
+		want       framework.Metadata
 		wantErr    bool
 		serverFunc func(w http.ResponseWriter, r *http.Request)
 	}{
 		{
 			name:   "framework version available",
 			fields: fields{HTTPClient: server.Client(), URL: server.URL},
-			args: args{context.Background(), framework.Framework{
-				Name:    "testycles",
-				Version: "1",
+			args: args{context.Background(), framework.SearchOptions{
+				Name:             "testycles",
+				FrameworkVersion: "1",
 			}},
-			want:    "sauce/testycles:v1+v0.1.0",
+			want:    framework.Metadata{
+				FrameworkName:      "testycles",
+				FrameworkVersion:   "1",
+				CloudRunnerVersion: "0.1.0",
+				DockerImage:        "sauce/testycles:v1+v0.1.0",
+				GitRelease:         "",
+			},
 			wantErr: false,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(200)
@@ -329,8 +335,8 @@ func TestClient_GetImage(t *testing.T) {
 					Name:    "testycles",
 					Version: "1",
 					Runner: runner{
-						Version:     "0.1.0",
-						DockerImage: "sauce/testycles:v1+v0.1.0",
+						CloudRunnerVersion: "0.1.0",
+						DockerImage:        "sauce/testycles:v1+v0.1.0",
 					},
 				})
 			},
@@ -338,11 +344,11 @@ func TestClient_GetImage(t *testing.T) {
 		{
 			name:   "unknown framework or version",
 			fields: fields{HTTPClient: server.Client(), URL: server.URL},
-			args: args{context.Background(), framework.Framework{
-				Name:    "notestycles",
-				Version: "1",
+			args: args{context.Background(), framework.SearchOptions{
+				Name:             "notestycles",
+				FrameworkVersion: "1",
 			}},
-			want:    "",
+			want:    framework.Metadata{},
 			wantErr: true,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(400)
@@ -359,7 +365,7 @@ func TestClient_GetImage(t *testing.T) {
 
 			respo.Record(tt.serverFunc)
 
-			got, err := c.GetImage(tt.args.ctx, tt.args.f)
+			got, err := c.Search(tt.args.ctx, tt.args.opts)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetImage() error = %v, wantErr %v", err, tt.wantErr)
 				return

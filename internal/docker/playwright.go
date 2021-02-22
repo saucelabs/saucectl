@@ -17,7 +17,7 @@ type PlaywrightRunner struct {
 }
 
 // NewPlaywright creates a new PlaywrightRunner instance.
-func NewPlaywright(c playwright.Project, imageLoc framework.ImageLocator) (*PlaywrightRunner, error) {
+func NewPlaywright(c playwright.Project, ms framework.MetadataService) (*PlaywrightRunner, error) {
 	r := PlaywrightRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -28,7 +28,7 @@ func NewPlaywright(c playwright.Project, imageLoc framework.ImageLocator) (*Play
 				Name:    c.Kind,
 				Version: c.Playwright.Version,
 			},
-			ImageLoc:       imageLoc,
+			FrameworkMeta:  ms,
 			ShowConsoleLog: c.ShowConsoleLog,
 		},
 	}
