@@ -60,10 +60,3 @@ func TestUpdateRegionPlaywright(t *testing.T) {
 	assert.Equal(t, nil, err)
 	assert.Equal(t, "eu-central-1", c.Sauce.Region)
 }
-
-func TestGetRepositoryValues(t *testing.T) {
-	org, repo, err := getRepositoryValues("playwright")
-	assert.Equal(t, "saucelabs", org)
-	assert.Equal(t, "sauce-playwright-runner", repo)
-	assert.NilError(t, err)
-}

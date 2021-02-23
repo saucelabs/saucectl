@@ -90,7 +90,7 @@ func TestGetReleaseArtifact(t *testing.T) {
 		},
 	}
 
-	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/fake-org/fake-repo/releases/latest",
+	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/fake-org/fake-repo/releases/tags/fake-tag",
 		func(req *http.Request) (*http.Response, error) {
 			resp, err := httpmock.NewJsonResponse(200, validRelease)
 			if err != nil {
@@ -112,7 +112,7 @@ func TestGetReleaseArtifact(t *testing.T) {
 		},
 	)
 
-	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/fake-org/fake-buggy-repo/releases/latest",
+	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/fake-org/fake-buggy-repo/releases/tags/fake-tag",
 		func(req *http.Request) (*http.Response, error) {
 			resp, err := httpmock.NewJsonResponse(200, invalidRelease)
 			if err != nil {
@@ -122,11 +122,11 @@ func TestGetReleaseArtifact(t *testing.T) {
 		},
 	)
 
-	rc, err := getReleaseArtifact("fake-org", "fake-repo")
+	rc, err := getReleaseArtifact("fake-org", "fake-repo", "fake-tag")
 	assert.Nil(t, err)
 	rc.Close()
 
-	rc, err = getReleaseArtifact("fake-org", "fake-buggy-repo")
+	rc, err = getReleaseArtifact("fake-org", "fake-buggy-repo", "fake-tag")
 	assert.Error(t, err, "no " + templateFileName + " found")
 	assert.Nil(t, rc)
 }
@@ -164,7 +164,7 @@ func TestFetchAndExtractTemplate(t *testing.T) {
 			},
 		},
 	}
-	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/fake-org/fake-repo/releases/latest",
+	httpmock.RegisterResponder(http.MethodGet, "https://api.github.com/repos/fake-org/fake-repo/releases/tags/fake-tag",
 		func(req *http.Request) (*http.Response, error) {
 			resp, err := httpmock.NewJsonResponse(200, validRelease)
 			if err != nil {
@@ -180,7 +180,7 @@ func TestFetchAndExtractTemplate(t *testing.T) {
 		},
 	)
 
-	err := FetchAndExtractTemplate("fake-org", "fake-repo")
+	err := FetchAndExtractTemplate("fake-org", "fake-repo", "fake-tag")
 	assert.Nil(t, err)
 	os.Remove("./test-folder/test-config.yml")
 	os.Remove("./test-folder")
@@ -221,6 +221,6 @@ func TestFetchAndExtractTemplateTimeoutingConnection(t *testing.T) {
 		},
 	)
 
-	err := FetchAndExtractTemplate("fake-org", "fake-repo")
+	err := FetchAndExtractTemplate("fake-org", "fake-repo", "fake-tag")
 	assert.Error(t, err, "call is expected to timeout")
 }

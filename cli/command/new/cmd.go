@@ -1,20 +1,24 @@
 package new
 
 import (
-	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/playwright"
+	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/yaml"
 	"github.com/spf13/cobra"
 	"github.com/tj/survey"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 var (
@@ -24,25 +28,14 @@ var (
 	newExample = "saucectl new"
 
 	argsYes = false
-
-	frameworks = []struct {
-		Framework  string
-		GithubOrg  string
-		GithubRepo string
-	}{
-		{"Puppeteer", "saucelabs", "sauce-puppeteer-runner"},
-		{"Playwright", "saucelabs", "sauce-playwright-runner"},
-		{"Testcafe", "saucelabs", "sauce-testcafe-runner"},
-		{"Cypress", "saucelabs", "sauce-cypress-runner"},
-	}
-
+	
 	qs = []*survey.Question{
 		{
 			Name: "framework",
 			Prompt: &survey.Select{
 				Message: "Choose a framework:",
-				Options: frameworkChoices(),
-				Default: "Puppeteer",
+				Options: []string{"Cypress", "Playwright", "Puppeteer", "Testcafe"},
+				Default: "Cypress",
 			},
 		},
 		{
@@ -69,7 +62,6 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Long:    newLong,
 		Example: newExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Info().Msg("Start New Command")
 			if err := Run(cmd, cli, args); err != nil {
 				log.Err(err).Msg("failed to execute new command")
 				os.Exit(1)
@@ -83,6 +75,12 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 
 // Run starts the new command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
+	creds := credentials.Get()
+	if creds == nil {
+		fmt.Println("\nIt looks you have not configured your SauceLab account !\nTo enjoy SauceLabs capabilities, configure your account by running:\n$ saucectl configure")
+		return nil
+	}
+
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -99,12 +97,32 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	}
 	cfgFilePath := ".sauce/config.yml"
 
-	org, repo, err := getRepositoryValues(answers.Framework)
+	r := region.FromString(answers.Region)
+
+	tc := testcomposer.Client{
+		HTTPClient: &http.Client{
+			Timeout: 10 * time.Second,
+		},
+		URL:         r.APIBaseURL(),
+		Credentials: *credentials.Get(),
+	}
+
+	m, err := tc.Search(cmd.Context(), framework.SearchOptions{
+		Name:             answers.Framework,
+		FrameworkVersion: "latest",
+	})
 	if err != nil {
 		return err
 	}
 
-	err = FetchAndExtractTemplate(org, repo)
+	org, repo, tag, err := framework.GitReleaseSegments(&m)
+	if err != nil {
+		return err
+	}
+	rinfo := fmt.Sprintf("https://github.com/%s/%s/releases/tag/%s", org, repo, tag)
+	log.Info().Str("release", rinfo).Msg("Downloading template.")
+
+	err = FetchAndExtractTemplate(org, repo, tag)
 	if err != nil {
 		return fmt.Errorf("no template available for %s (%s)", answers.Framework, err)
 	}
@@ -115,11 +133,6 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	}
 
 	fmt.Println("\nNew project bootstrapped successfully! You can now run:\n$ saucectl run")
-
-	creds := credentials.Get()
-	if creds == nil {
-		fmt.Println("\nIt looks you have not configured your SauceLab account !\nTo enjoy SauceLabs capabilities, configure your account by running:\n$ saucectl configure")
-	}
 	return nil
 }
 
@@ -155,22 +168,4 @@ func updateRegion(cfgFile string, region string) error {
 	}
 	c.Sauce.Region = region
 	return yaml.WriteFile(cfgPath, c)
-}
-
-// Create choice list
-func frameworkChoices() []string {
-	var frameworkNames []string
-	for _, framework := range frameworks {
-		frameworkNames = append(frameworkNames, framework.Framework)
-	}
-	return frameworkNames
-}
-
-func getRepositoryValues(framework string) (string, string, error) {
-	for _, repo := range frameworks {
-		if strings.ToLower(repo.Framework) == framework {
-			return repo.GithubOrg, repo.GithubRepo, nil
-		}
-	}
-	return "", "", errors.New("unknown framework")
 }

@@ -23,7 +23,7 @@ format:
 
 #test: @ Run tests
 test:
-	go test -v ./...
+	go test ./...
 
 #coverage: @ Run test and check coverage
 coverage:
