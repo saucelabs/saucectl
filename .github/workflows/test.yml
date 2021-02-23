@@ -45,6 +45,11 @@ jobs:
         with:
           fetch-depth: 10
 
+      - name: Debug Step
+        run: |
+          go env GOCACHE
+          go env GOMODCACHE
+
       - uses: actions/cache@v2
         with:
           path: ~/go/pkg/mod
