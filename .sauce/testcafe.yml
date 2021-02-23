@@ -32,10 +32,8 @@ docker:
   fileTransfer: mount # Defaults to `mount`. Choose between mount|copy.
 # Docker image and tag are both determined automatically based on your configuration. However, it's possible to set your
 # own custom image or a different tag.
-#image: saucelabs/stt-testcafe-node:v0.2.2
-  image: saucelabs/stt-testcafe-node:v0.2.4 # TODO: will remove this after enable testcafe in test-composer
+#image: saucelabs/stt-testcafe-node:v0.3.0
 
 testcafe:
   projectPath: tests/e2e/testcafe
-  version: 1.8.5
-
+  version: 1.10.1
