@@ -38,7 +38,7 @@ jobs:
 
     steps:
       - name: Install Dependencies
-        run: apk add --no-cache git gcc g++ curl
+        run: apk add --no-cache git gcc g++ curl bash
 
       - name: Checkout Code
         uses: actions/checkout@v2
