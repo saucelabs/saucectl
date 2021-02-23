@@ -105,7 +105,13 @@ func FromFile(cfgPath string) (Project, error) {
 			env[k] = os.ExpandEnv(v)
 		}
 		p.Suites[i].Env = env
+		setDefaultValues(&p.Suites[i])
 	}
-
 	return p, nil
+}
+
+func setDefaultValues(suite *Suite) {
+	if suite.Speed < .05 {
+		suite.Speed = 1
+	}
 }
