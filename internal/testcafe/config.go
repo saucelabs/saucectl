@@ -111,7 +111,9 @@ func FromFile(cfgPath string) (Project, error) {
 }
 
 func setDefaultValues(suite *Suite) {
-	if suite.Speed < .05 {
+	// If value is 0, it's assumed that the value has not been filled.
+	// So we define it to the default value: 1 (full speed).
+	if suite.Speed < .01 {
 		suite.Speed = 1
 	}
 }
