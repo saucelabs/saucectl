@@ -34,7 +34,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     container:
-      image: golang:1.16-alpine
+      image: golang:1.16
 
     steps:
       - name: Install Dependencies
@@ -57,12 +57,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-mod
 
-      - uses: actions/cache@v2
-        with:
-          path: /github/home/.cache/go-build
-          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-build
+#      - uses: actions/cache@v2
+#        with:
+#          path: /github/home/.cache/go-build
+#          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
+#          restore-keys: |
+#            ${{ runner.os }}-go-build
 
       - name: Run tests
         run: |
@@ -78,7 +78,7 @@ jobs:
     needs: lint
     runs-on: ubuntu-latest
     container:
-      image: golang:1.16-alpine
+      image: golang:1.16
 
     steps:
       - name: Install Dependencies
