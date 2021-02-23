@@ -105,7 +105,16 @@ func FromFile(cfgPath string) (Project, error) {
 			env[k] = os.ExpandEnv(v)
 		}
 		p.Suites[i].Env = env
+		setDefaultValues(&p.Suites[i])
 	}
-
 	return p, nil
+}
+
+func setDefaultValues(suite *Suite) {
+	// If value is 0, it's assumed that the value has not been filled.
+	// So we define it to the default value: 1 (full speed).
+	// Expected values for TestCafe are between .01 and 1.
+	if suite.Speed < .01 || suite.Speed > 1 {
+		suite.Speed = 1
+	}
 }
