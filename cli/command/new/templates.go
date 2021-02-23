@@ -22,10 +22,10 @@ var (
 	templateFileName = "saucetpl.tar.gz"
 )
 
-func getReleaseArtifact(org string, repo string) (io.ReadCloser, error) {
+func getReleaseArtifact(org, repo, tag string) (io.ReadCloser, error) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	ghClient := github.NewClient(nil)
-	release, _, err := ghClient.Repositories.GetLatestRelease(ctx, org, repo)
+	release, _, err := ghClient.Repositories.GetReleaseByTag(ctx, org, repo, tag)
 	if err != nil {
 		return nil, err
 	}
@@ -92,8 +92,8 @@ func extractFile(name string, mode int64, src io.Reader, overWriteAll *bool) err
 }
 
 // FetchAndExtractTemplate gathers latest version of the template for the repo and extracts it locally.
-func FetchAndExtractTemplate(org string, repo string) error {
-	artifactStream, err := getReleaseArtifact(org, repo)
+func FetchAndExtractTemplate(org, repo, tag string) error {
+	artifactStream, err := getReleaseArtifact(org, repo, tag)
 	if err != nil {
 		return err
 	}
