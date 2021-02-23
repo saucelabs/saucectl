@@ -45,24 +45,12 @@ jobs:
         with:
           fetch-depth: 10
 
-      - name: Debug Step
-        run: |
-          go env GOCACHE
-          go env GOMODCACHE
-
       - uses: actions/cache@v2
         with:
           path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-mod
-
-#      - uses: actions/cache@v2
-#        with:
-#          path: /github/home/.cache/go-build
-#          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
-#          restore-keys: |
-#            ${{ runner.os }}-go-build
+            ${{ runner.os }}-go
 
       - name: Run tests
         run: |
@@ -86,13 +74,6 @@ jobs:
 
       - name: Checkout Code
         uses: actions/checkout@v2
-
-#      - uses: actions/cache@v2
-#        with:
-#          path: ~/go/pkg/mod
-#          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-#          restore-keys: |
-#            ${{ runner.os }}-go-
 
       - name: Build project
         run: |
