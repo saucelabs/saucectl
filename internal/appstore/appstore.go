@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/requesth"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"io"
 	"io/ioutil"
@@ -51,7 +52,7 @@ func (s *AppStore) Upload(name string) (storage.ArtifactMeta, error) {
 	if err != nil {
 		return storage.ArtifactMeta{}, err
 	}
-	
+
 	request, err := createRequest(fmt.Sprintf("%s/v1/storage/upload", s.URL), s.Username, s.AccessKey, body, contentType)
 	if err != nil {
 		return storage.ArtifactMeta{}, err
@@ -101,13 +102,13 @@ func readFile(fileName string) (*bytes.Buffer, string, error) {
 }
 
 func createRequest(url, username, accesskey string, body *bytes.Buffer, contentType string) (*http.Request, error) {
-	request, err := http.NewRequest(http.MethodPost, url, body)
+	req, err := requesth.New(http.MethodPost, url, body)
 	if err != nil {
 		return nil, err
 	}
 
-	request.Header.Set("Content-Type", contentType)
-	request.SetBasicAuth(username, accesskey)
+	req.Header.Set("Content-Type", contentType)
+	req.SetBasicAuth(username, accesskey)
 
-	return request, nil
+	return req, nil
 }

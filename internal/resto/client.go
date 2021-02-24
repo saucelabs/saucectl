@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/requesth"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -95,7 +96,7 @@ func (c *Client) GetJobAssetFileContent(ctx context.Context, jobID, fileName str
 
 // ReadAllowedCCY returns the allowed (max) concurrency for the current account.
 func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
+	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/rest/v1.2/users/%s/concurrency", c.URL, c.Username), nil)
 	if err != nil {
 		return 0, err
@@ -170,26 +171,26 @@ func doRequest(httpClient *http.Client, request *http.Request) (job.Job, error) 
 }
 
 func createRequest(ctx context.Context, url, username, accessKey, jobID string) (*http.Request, error) {
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet,
+	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/rest/v1/%s/jobs/%s", url, username, jobID), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	request.Header.Set("Content-Type", "application/json")
-	request.SetBasicAuth(username, accessKey)
+	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(username, accessKey)
 
-	return request, nil
+	return req, nil
 }
 
 func createAssetRequest(ctx context.Context, url, username, accessKey, jobID, fileName string) (*http.Request, error) {
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet,
+	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/rest/v1/%s/jobs/%s/assets/%s", url, username, jobID, fileName), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	request.SetBasicAuth(username, accessKey)
+	req.SetBasicAuth(username, accessKey)
 
-	return request, nil
+	return req, nil
 }
