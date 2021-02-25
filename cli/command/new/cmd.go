@@ -2,6 +2,12 @@ package new
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -10,15 +16,11 @@ import (
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/yaml"
 	"github.com/spf13/cobra"
 	"github.com/tj/survey"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
 )
 
 var (
@@ -28,7 +30,7 @@ var (
 	newExample = "saucectl new"
 
 	argsYes = false
-	
+
 	qs = []*survey.Question{
 		{
 			Name: "framework",
@@ -162,6 +164,15 @@ func updateRegion(cfgFile string, region string) error {
 		c.Sauce.Region = region
 		return yaml.WriteFile(cfgPath, c)
 	}
+	if d.Kind == config.KindTestcafe && d.APIVersion == config.VersionV1Alpha {
+		c, err := testcafe.FromFile(cfgFile)
+		if err != nil {
+			return err
+		}
+		c.Sauce.Region = region
+		return yaml.WriteFile(cfgPath, c)
+	}
+
 	c, err := config.NewJobConfiguration(cfgPath)
 	if err != nil {
 		return err
