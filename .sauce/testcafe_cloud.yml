@@ -3,7 +3,7 @@ kind: testcafe
 showConsoleLog: true
 sauce:
   region: us-west-1
-  concurrency: 1 # Controls how many suites are executed at the same time (sauce test env only).
+  concurrency: 1
   metadata:
     name: Testing Testcafe Support
     tags:
