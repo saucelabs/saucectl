@@ -397,6 +397,8 @@ func runTestcafe(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	switch testEnv {
 	case "docker":
 		return runTestcafeInDocker(p, cli, tc)
+	case "sauce":
+		return runTestcafeInCloud(p, regio, creds, tc)
 	default:
 		return 1, errors.New("unsupported test enviornment")
 	}
@@ -410,6 +412,31 @@ func runTestcafeInDocker(p testcafe.Project, cli *command.SauceCtlCli, testco te
 		return 1, err
 	}
 	return cd.RunProject()
+}
+
+func runTestcafeInCloud(p testcafe.Project, regio region.Region, creds *credentials.Credentials, testco testcomposer.Client) (int, error) {
+	log.Info().Msg("Running Testcafe in Sauce Labs")
+
+	s := appstore.New(regio.APIBaseURL(), creds.Username, creds.AccessKey, appStoreTimeout)
+
+	rsto := resto.Client{
+		HTTPClient: &http.Client{Timeout: restoTimeout},
+		URL:        regio.APIBaseURL(),
+		Username:   creds.Username,
+		AccessKey:  creds.AccessKey,
+	}
+	r := saucecloud.TestcafeRunner{
+		Project: p,
+		CloudRunner: saucecloud.CloudRunner{
+			ProjectUploader: s,
+			JobStarter:      &testco,
+			JobReader:       &rsto,
+			CCYReader:       &rsto,
+			Region:          regio,
+			ShowConsoleLog:  p.ShowConsoleLog,
+		},
+	}
+	return r.RunProject()
 }
 
 func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, error) {

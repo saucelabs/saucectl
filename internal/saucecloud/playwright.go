@@ -7,7 +7,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
 
-// PlaywrightRunner represents the Sauce Labs cloud implementation for cypress.
+// PlaywrightRunner represents the Sauce Labs cloud implementation for playwright.
 type PlaywrightRunner struct {
 	CloudRunner
 	Project playwright.Project

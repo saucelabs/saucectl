@@ -2,16 +2,16 @@ package run
 
 import (
 	"path/filepath"
+	"reflect"
 	"testing"
 
+	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/playwright"
-
-	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/runner"
-
+	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/stretchr/testify/assert"
 	"gotest.tools/v3/fs"
 )
@@ -214,4 +214,96 @@ func TestFilterPlaywrightSuite(t *testing.T) {
 
 func TestCreateCIProvider(t *testing.T) {
 	enableCIProviders()
+}
+
+func TestFilterTestcafeSuite(t *testing.T) {
+	testCase := []struct {
+		name      string
+		config    *testcafe.Project
+		suiteName string
+		expConfig testcafe.Project
+		expErr    string
+	}{
+		{
+			name: "filter out suite according to suiteName",
+			config: &testcafe.Project{Suites: []testcafe.Suite{
+				{
+					Name: "suite1",
+				},
+				{
+					Name: "suite2",
+				},
+			}},
+			suiteName: "suite1",
+			expConfig: testcafe.Project{Suites: []testcafe.Suite{
+				{
+					Name: "suite1",
+				},
+			}},
+		},
+		{
+			name: "no required suite name in config",
+			config: &testcafe.Project{Suites: []testcafe.Suite{
+				{
+					Name: "suite1",
+				},
+				{
+					Name: "suite2",
+				},
+			}},
+			suiteName: "suite3",
+			expConfig: testcafe.Project{Suites: []testcafe.Suite{
+				{
+					Name: "suite1",
+				},
+				{
+					Name: "suite2",
+				},
+			}},
+			expErr: "suite name 'suite3' is invalid",
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			suiteName = tc.suiteName
+			err := filterTestcafeSuite(tc.config)
+			if err != nil {
+				assert.Equal(t, tc.expErr, err.Error())
+			}
+			assert.True(t, reflect.DeepEqual(*tc.config, tc.expConfig))
+		})
+	}
+}
+
+func TestValidateFiles(t *testing.T) {
+	testCase := []struct {
+		name   string
+		files  []string
+		expErr string
+	}{
+		{
+			name: "files are all existed",
+			files: []string{
+				"cmd.go", "cmd_test.go",
+			},
+			expErr: "",
+		},
+		{
+			name: "one of the files is not existed",
+			files: []string{
+				"cmd.go", "test_file_not_existed.go",
+			},
+			expErr: "stat test_file_not_existed.go: no such file or directory",
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validateFiles(tc.files)
+			if err != nil {
+				assert.Equal(t, tc.expErr, err.Error())
+			}
+		})
+	}
 }
