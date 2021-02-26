@@ -3,7 +3,13 @@ package saucecloud
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/rs/zerolog/log"
+
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/dots"
@@ -12,10 +18,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/storage"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 // CloudRunner represents the cloud runner for the Sauce Labs cloud.

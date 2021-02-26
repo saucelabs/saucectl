@@ -2,7 +2,9 @@ package docker
 
 import (
 	"context"
+
 	"github.com/rs/zerolog/log"
+
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/framework"
@@ -49,6 +51,10 @@ func (r *CypressRunner) RunProject() (int, error) {
 
 	if r.Project.Cypress.EnvFile != "" {
 		files = append(files, r.Project.Cypress.EnvFile)
+	}
+
+	if r.Project.RootDir != "" {
+		files = append(files, r.Project.RootDir)
 	}
 
 	if r.Project.Sauce.Concurrency > 1 {

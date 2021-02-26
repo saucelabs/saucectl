@@ -2,6 +2,7 @@ package saucecloud
 
 import (
 	"fmt"
+
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
 )
@@ -26,6 +27,10 @@ func (r *CypressRunner) RunProject() (int, error) {
 
 	if r.Project.Cypress.EnvFile != "" {
 		files = append(files, r.Project.Cypress.EnvFile)
+	}
+
+	if r.Project.RootDir != "" {
+		files = append(files, r.Project.RootDir)
 	}
 
 	fileID, err := r.archiveAndUpload(r.Project, files)
