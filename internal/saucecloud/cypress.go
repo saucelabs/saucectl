@@ -2,6 +2,7 @@ package saucecloud
 
 import (
 	"fmt"
+
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
 )
@@ -72,6 +73,7 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 					Parent: r.Project.Sauce.Tunnel.Parent,
 				},
 				ScreenResolution: s.ScreenResolution,
+				RunnerVersion:    r.Project.RunnerVersion,
 			}
 		}
 		close(jobOpts)

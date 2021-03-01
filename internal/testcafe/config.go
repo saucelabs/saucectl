@@ -20,6 +20,7 @@ type Project struct {
 	Docker         config.Docker      `yaml:"docker,omitempty" json:"docker"`
 	Testcafe       Testcafe           `yaml:"testcafe,omitempty" json:"testcafe"`
 	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
+	RunnerVersion  string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
 }
 
 // Suite represents the testcafe test suite configuration.

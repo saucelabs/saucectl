@@ -58,6 +58,7 @@ var (
 	concurrency    int
 	tunnelID       string
 	tunnelParent   string
+	runnerVersion  string
 
 	// General Request Timeouts
 	appStoreTimeout     = 300 * time.Second
@@ -97,6 +98,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().IntVar(&concurrency, "ccy", 1, "Concurrency specifies how many suites are run at the same time.")
 	cmd.Flags().StringVar(&tunnelID, "tunnel-id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
 	cmd.Flags().StringVar(&tunnelParent, "tunnel-parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
+	cmd.Flags().StringVar(&runnerVersion, "runner-version", "", "Sets runner_version.")
 
 	// Hide undocumented flags that the user does not need to care about.
 	_ = cmd.Flags().MarkHidden("sauce-api")
@@ -182,6 +184,9 @@ func runCypress(cmd *cobra.Command) (int, error) {
 
 	if showConsoleLog {
 		p.ShowConsoleLog = true
+	}
+	if runnerVersion != "" {
+		p.RunnerVersion = runnerVersion
 	}
 
 	if cmd.Flags().Lookup("suite").Changed {
@@ -280,6 +285,9 @@ func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	if showConsoleLog {
 		p.ShowConsoleLog = true
 	}
+	if runnerVersion != "" {
+		p.RunnerVersion = runnerVersion
+	}
 
 	if cmd.Flags().Lookup("suite").Changed {
 		if err := filterPlaywrightSuite(&p); err != nil {
@@ -371,6 +379,9 @@ func runTestcafe(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	if showConsoleLog {
 		p.ShowConsoleLog = true
 	}
+	if runnerVersion != "" {
+		p.RunnerVersion = runnerVersion
+	}
 
 	if cmd.Flags().Lookup("suite").Changed {
 		if err := filterTestcafeSuite(&p); err != nil {
@@ -425,6 +436,7 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, creds *credenti
 		Username:   creds.Username,
 		AccessKey:  creds.AccessKey,
 	}
+
 	r := saucecloud.TestcafeRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
