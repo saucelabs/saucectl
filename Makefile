@@ -1,10 +1,10 @@
 default:
 	@grep -E '[a-zA-Z]+:.*?@ .*$$' $(MAKEFILE_LIST)| tr -d '#' | awk 'BEGIN {FS = ":.*?@ "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-#install: @ Install all depencies defined in package.json
+#install: @ Install the CLI
+.PHONY: install
 install:
-	brew install golangci/tap/golangci-lint
-	go get ./...
+	GOBIN=/usr/local/bin/ go install cmd/saucectl/saucectl.go
 
 #build: @ Build the CLI
 build:
