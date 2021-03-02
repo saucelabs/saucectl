@@ -45,24 +45,20 @@ type Matcher interface {
 	Match(path []string, isDir bool) bool
 }
 
-// TODO
-// SauceMatcher ...
-type SauceMatcher struct {
-	Matcher gitignore.Matcher
+type matcher struct {
+	matcher gitignore.Matcher
 }
 
-// TODO
-// Match ...
-func (sm *SauceMatcher) Match(path []string, isDir bool) bool {
-	return sm.Matcher.Match(path, isDir)
+// Match matches patterns.
+func (m *matcher) Match(path []string, isDir bool) bool {
+	return m.matcher.Match(path, isDir)
 }
 
-// TODO
-// NewSauceMatcher ...
+// NewSauceMatcher constructs a new matcher.
 func NewSauceMatcher(ps []gitignore.Pattern) Matcher {
 	if len(ps) == 0 {
 		return nil
 	}
 
-	return &SauceMatcher{Matcher: gitignore.NewMatcher(ps)}
+	return &matcher{matcher: gitignore.NewMatcher(ps)}
 }
