@@ -174,7 +174,7 @@ func (r *CloudRunner) archiveProject(project interface{}, tempDir string, files 
 		return "", err
 	}
 
-	log.Info().Int64("bytes", f.Size()).Dur("durationMs", time.Since(start)).Msg("Project archived.")
+	log.Info().Dur("durationMs", time.Since(start)).Int64("size", f.Size()).Msg("Project archived.")
 
 	return zipName, nil
 }
@@ -187,7 +187,7 @@ func (r *CloudRunner) uploadProject(filename string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Info().Str("storageId", resp.ID).Dur("durationMs", time.Since(start)).Msg("Project uploaded.")
+	log.Info().Dur("durationMs", time.Since(start)).Str("storageId", resp.ID).Msg("Project uploaded.")
 	return resp.ID, nil
 }
 
