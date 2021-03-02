@@ -12,7 +12,7 @@ import (
 const commentPrefix = "#"
 const sauceignore = ".sauceignore"
 
-// ReadIgnoreFile reads .sauceignore file and creates ignore patters.
+// ReadIgnoreFile reads .sauceignore file and creates ignore patters if .sauceignore file is exists.
 func ReadIgnoreFile(path string) ([]gitignore.Pattern, error) {
 	// In case if .sauceignore file doesn't exists.
 	fPath := filepath.Join(path, sauceignore)
@@ -33,8 +33,6 @@ func ReadIgnoreFile(path string) ([]gitignore.Pattern, error) {
 				ps = append(ps, gitignore.ParsePattern(s, nil))
 			}
 		}
-	} else if !os.IsNotExist(err) {
-		return nil, err
 	}
 
 	return ps, nil
