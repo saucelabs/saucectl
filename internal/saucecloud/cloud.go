@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/sauceignore"
+
 	"github.com/rs/zerolog/log"
 
 	"github.com/saucelabs/saucectl/internal/archive/zip"
@@ -130,14 +132,14 @@ func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- re
 	}
 }
 
-func (r CloudRunner) archiveAndUpload(project interface{}, files []string) (string, error) {
+func (r CloudRunner) archiveAndUpload(project interface{}, files []string, configDir string) (string, error) {
 	tempDir, err := ioutil.TempDir(os.TempDir(), "saucectl-app-payload")
 	if err != nil {
 		return "", err
 	}
 	defer os.RemoveAll(tempDir)
 
-	zipName, err := r.archiveProject(project, tempDir, files)
+	zipName, err := r.archiveProject(project, tempDir, files, configDir)
 	if err != nil {
 		return "", err
 	}
@@ -145,9 +147,15 @@ func (r CloudRunner) archiveAndUpload(project interface{}, files []string) (stri
 	return r.uploadProject(zipName)
 }
 
-func (r *CloudRunner) archiveProject(project interface{}, tempDir string, files []string) (string, error) {
+func (r *CloudRunner) archiveProject(project interface{}, tempDir string, files []string, configDir string) (string, error) {
+	ps, err := sauceignore.ReadIgnoreFile(configDir)
+	if err != nil {
+		return "", err
+	}
+	matcher := sauceignore.NewSauceMatcher(ps)
+
 	zipName := filepath.Join(tempDir, "app.zip")
-	z, err := zip.NewWriter(zipName)
+	z, err := zip.NewWriter(zipName, matcher)
 	if err != nil {
 		return "", err
 	}

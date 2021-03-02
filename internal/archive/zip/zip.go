@@ -6,21 +6,27 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
+
+	"github.com/saucelabs/saucectl/internal/sauceignore"
 )
 
+// TODO add field for sauceignore functionality
 // Writer is a wrapper around zip.Writer and implements zip archiving for archive.Writer.
 type Writer struct {
 	W *zip.Writer
+	M sauceignore.Matcher
 }
 
+// TODO add field for sauceignore functionality
 // NewWriter returns a new Writer that archives files to name.
-func NewWriter(name string) (Writer, error) {
+func NewWriter(name string, matcher sauceignore.Matcher) (Writer, error) {
 	f, err := os.Create(name)
 	if err != nil {
 		return Writer{}, err
 	}
 
-	w := Writer{W: zip.NewWriter(f)}
+	w := Writer{W: zip.NewWriter(f), M: matcher}
 
 	return w, nil
 }
@@ -31,6 +37,23 @@ func (w *Writer) Add(src, dst string) error {
 	if err != nil {
 		return err
 	}
+
+	if w.M != nil {
+		if w.M.Match(strings.Split(src, string(os.PathSeparator)), finfo.IsDir()) {
+			return nil
+		}
+	}
+
+	//fmt.Println("----------")
+	//fmt.Println("src")
+	//fmt.Println(src)
+	/*
+		cypress.json
+		cypress/videos
+	*/
+	//fmt.Println("dst")
+	//fmt.Println(dst)
+	//fmt.Println("----------")
 
 	if !finfo.IsDir() {
 		w, err := w.W.Create(path.Join(dst, finfo.Name()))

@@ -10,9 +10,11 @@ require (
 	github.com/Microsoft/hcsshim v0.8.9 // indirect
 	github.com/briandowns/spinner v1.11.1
 	github.com/containerd/continuity v0.0.0-20200710164510-efbc4488d8fe // indirect
+	github.com/davecgh/go-spew v1.1.1
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200618181300-9dc6525e6118+incompatible // translates to v19.03.12
 	github.com/docker/go-connections v0.4.0
+	github.com/go-git/go-git/v5 v5.2.0
 	github.com/google/go-github/v32 v32.1.0
 	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/jarcoal/httpmock v1.0.6
@@ -26,7 +28,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.4.0
 	github.com/tj/survey v2.0.6+incompatible
-	golang.org/x/net v0.0.0-20191004110552-13f9640d40b9
+	golang.org/x/net v0.0.0-20200301022130-244492dfa37a
 	gopkg.in/yaml.v2 v2.2.8
 	gotest.tools v2.2.0+incompatible
 	gotest.tools/v3 v3.0.2

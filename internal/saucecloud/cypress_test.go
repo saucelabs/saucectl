@@ -115,7 +115,7 @@ func TestArchiveProject(t *testing.T) {
 		runner.Project.Cypress.ConfigFile,
 		runner.Project.Cypress.ProjectPath,
 	}
-	z, err := runner.archiveProject(runner.Project, "./test-arch/", files)
+	z, err := runner.archiveProject(runner.Project, "./test-arch/", files, "")
 	if err != nil {
 		t.Fail()
 	}
