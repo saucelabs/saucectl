@@ -102,6 +102,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 
 	// Hide undocumented flags that the user does not need to care about.
 	_ = cmd.Flags().MarkHidden("sauce-api")
+	_ = cmd.Flags().MarkHidden("runner-version")
 
 	// Hide documented flags that aren't fully released yet or WIP.
 	_ = cmd.Flags().MarkHidden("parallel")    // WIP.
