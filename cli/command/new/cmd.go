@@ -10,15 +10,10 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
-	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/framework"
-	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
-	"github.com/saucelabs/saucectl/internal/yaml"
 	"github.com/spf13/cobra"
 	"github.com/tj/survey"
 )
@@ -143,40 +138,11 @@ func updateRegion(cfgFile string, region string) error {
 	cwd, _ := os.Getwd()
 	cfgPath := filepath.Join(cwd, cfgFile)
 
-	d, err := config.Describe(cfgFile)
+	data, err := os.ReadFile(cfgPath)
 	if err != nil {
 		return err
 	}
-
-	if d.Kind == config.KindCypress && d.APIVersion == config.VersionV1Alpha {
-		c, err := cypress.FromFile(cfgFile)
-		if err != nil {
-			return err
-		}
-		c.Sauce.Region = region
-		return yaml.WriteFile(cfgPath, c)
-	}
-	if d.Kind == config.KindPlaywright && d.APIVersion == config.VersionV1Alpha {
-		c, err := playwright.FromFile(cfgFile)
-		if err != nil {
-			return err
-		}
-		c.Sauce.Region = region
-		return yaml.WriteFile(cfgPath, c)
-	}
-	if d.Kind == config.KindTestcafe && d.APIVersion == config.VersionV1Alpha {
-		c, err := testcafe.FromFile(cfgFile)
-		if err != nil {
-			return err
-		}
-		c.Sauce.Region = region
-		return yaml.WriteFile(cfgPath, c)
-	}
-
-	c, err := config.NewJobConfiguration(cfgPath)
-	if err != nil {
-		return err
-	}
-	c.Sauce.Region = region
-	return yaml.WriteFile(cfgPath, c)
+	// Volontary wide capture
+	replaced := strings.Replace(string(data),"\n  region: us-west-1\n", "\n  region: " + region + "\n", 1)
+	return os.WriteFile(cfgPath, []byte(replaced), 0644)
 }
