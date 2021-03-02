@@ -111,7 +111,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 
 	m, err := tc.Search(cmd.Context(), framework.SearchOptions{
 		Name:             answers.Framework,
-		FrameworkVersion: "latest",
+		FrameworkVersion: "",
 	})
 	if err != nil {
 		return err
