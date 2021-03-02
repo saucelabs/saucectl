@@ -57,6 +57,7 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 					Parent: r.Project.Sauce.Tunnel.Parent,
 				},
 				ScreenResolution: s.ScreenResolution,
+				RunnerVersion:    r.Project.RunnerVersion,
 			}
 		}
 		close(jobOpts)
