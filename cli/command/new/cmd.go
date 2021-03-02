@@ -142,7 +142,9 @@ func updateRegion(cfgFile string, region string) error {
 	if err != nil {
 		return err
 	}
-	// Volontary wide capture
-	replaced := strings.Replace(string(data),"\n  region: us-west-1\n", "\n  region: " + region + "\n", 1)
+	oldString := "\n  region: us-west-1\n"
+	replacement := "\n  region: " + region + "\n"
+
+	replaced := strings.Replace(string(data), oldString, replacement, 1)
 	return os.WriteFile(cfgPath, []byte(replaced), 0644)
 }
