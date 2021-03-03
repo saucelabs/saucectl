@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
 	"gotest.tools/v3/fs"
 
 	"github.com/saucelabs/saucectl/internal/sauceignore"
@@ -50,7 +49,7 @@ func TestZipper_Add(t *testing.T) {
 	}{
 		{
 			name:      "zip it up",
-			fields:    fields{W: zip.NewWriter(out)},
+			fields:    fields{W: zip.NewWriter(out), M: sauceignore.NewMatcher([]sauceignore.Pattern{})},
 			args:      args{dir.Path(), "", out.Name()},
 			wantErr:   false,
 			wantFiles: []string{"/screenshot1.png", "/some.foo.js", "/some.other.bar.js"},
@@ -59,9 +58,9 @@ func TestZipper_Add(t *testing.T) {
 			name: "zip some.other.bar.js and skip some.foo.js file and screenshots folder",
 			fields: fields{
 				W: zip.NewWriter(sauceignoreOut),
-				M: sauceignore.NewMatcher([]gitignore.Pattern{
-					gitignore.ParsePattern("some.foo.js", nil),
-					gitignore.ParsePattern("screenshots/", nil),
+				M: sauceignore.NewMatcher([]sauceignore.Pattern{
+					sauceignore.NewPattern("some.foo.js", nil),
+					sauceignore.NewPattern("screenshots/", nil),
 				})},
 			args:      args{dir.Path(), "", sauceignoreOut.Name()},
 			wantErr:   false,

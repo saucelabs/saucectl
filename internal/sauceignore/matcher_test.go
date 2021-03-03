@@ -1,7 +1,6 @@
 package sauceignore
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -57,16 +56,16 @@ func TestReadIgnoreFile(t *testing.T) {
 }
 
 func TestSauceMatcher(t *testing.T) {
-	patterns := []gitignore.Pattern{
-		gitignore.ParsePattern("cypress/videos/", nil),
-		gitignore.ParsePattern("node_modules/", nil),
-		gitignore.ParsePattern(".git/", nil),
-		gitignore.ParsePattern(".gitignore", nil),
-		gitignore.ParsePattern("cypress/test/**", nil),
-		gitignore.ParsePattern("test.txt", nil),
-		gitignore.ParsePattern("*.log", nil),
-		gitignore.ParsePattern("!README.md", nil),
-		gitignore.ParsePattern("videos/**/app.mp4", nil),
+	patterns := []Pattern{
+		NewPattern("cypress/videos/", nil),
+		NewPattern("node_modules/", nil),
+		NewPattern(".git/", nil),
+		NewPattern(".gitignore", nil),
+		NewPattern("cypress/test/**", nil),
+		NewPattern("test.txt", nil),
+		NewPattern("*.log", nil),
+		NewPattern("!README.md", nil),
+		NewPattern("videos/**/app.mp4", nil),
 	}
 
 	testCases := []struct {
@@ -150,12 +149,12 @@ node_modules/
 # some_folder/
 .github/
 .DS_Store`
-	tmpDir, err := ioutil.TempDir("", "sauceignore")
+	tmpDir, err := os.MkdirTemp("", "sauceignore")
 	if err != nil {
 		return nil, "", err
 	}
 
-	if err := ioutil.WriteFile(filepath.Join(tmpDir, sauceignore), []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, sauceignore), []byte(content), 0644); err != nil {
 		return nil, "", err
 	}
 

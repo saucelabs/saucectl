@@ -36,10 +36,9 @@ func (w *Writer) Add(src, dst string) error {
 		return err
 	}
 
-	if w.M != nil {
-		if w.M.Match(strings.Split(src, string(os.PathSeparator)), finfo.IsDir()) {
-			return nil
-		}
+	// Only will be applied if we have .sauceignore file and have patterns to exclude files and folders
+	if w.M.Match(strings.Split(src, string(os.PathSeparator)), finfo.IsDir()) {
+		return nil
 	}
 
 	if !finfo.IsDir() {
