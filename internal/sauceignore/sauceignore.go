@@ -18,7 +18,7 @@ func ReadIgnoreFile(path string) ([]gitignore.Pattern, error) {
 	fPath := filepath.Join(path, sauceignore)
 	_, err := os.Stat(fPath)
 	if err != nil {
-		return nil, nil
+		return []gitignore.Pattern{}, nil
 	}
 
 	f, err := os.Open(fPath)
