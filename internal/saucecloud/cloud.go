@@ -144,6 +144,7 @@ func (r CloudRunner) archiveAndUpload(project interface{}, files []string) (stri
 }
 
 func (r *CloudRunner) archiveProject(project interface{}, tempDir string, files []string) (string, error) {
+	start := time.Now()
 	zipName := filepath.Join(tempDir, "app.zip")
 	z, err := zip.NewWriter(zipName)
 	if err != nil {
@@ -173,19 +174,20 @@ func (r *CloudRunner) archiveProject(project interface{}, tempDir string, files 
 		return "", err
 	}
 
-	log.Info().Int64("bytes", f.Size()).Msg("Project archived.")
+	log.Info().Dur("durationMs", time.Since(start)).Int64("size", f.Size()).Msg("Project archived.")
 
 	return zipName, nil
 }
 
 func (r *CloudRunner) uploadProject(filename string) (string, error) {
 	progress.Show("Uploading project")
+	start := time.Now()
 	resp, err := r.ProjectUploader.Upload(filename)
 	progress.Stop()
 	if err != nil {
 		return "", err
 	}
-	log.Info().Str("storageId", resp.ID).Msg("Project uploaded.")
+	log.Info().Dur("durationMs", time.Since(start)).Str("storageId", resp.ID).Msg("Project uploaded.")
 	return resp.ID, nil
 }
 
