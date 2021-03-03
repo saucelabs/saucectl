@@ -64,6 +64,9 @@ func TestSauceMatcher(t *testing.T) {
 		gitignore.ParsePattern(".gitignore", nil),
 		gitignore.ParsePattern("cypress/test/**", nil),
 		gitignore.ParsePattern("test.txt", nil),
+		gitignore.ParsePattern("*.log", nil),
+		gitignore.ParsePattern("!README.md", nil),
+		gitignore.ParsePattern("videos/**/app.mp4", nil),
 	}
 
 	testCases := []struct {
@@ -108,6 +111,24 @@ func TestSauceMatcher(t *testing.T) {
 			path:      []string{".sauceignore"},
 			isDir:     false,
 			isMatched: false,
+		},
+		{
+			name:      "all log files will be ignored",
+			path:      []string{"logs", "cron.log"},
+			isDir:     false,
+			isMatched: true,
+		},
+		{
+			name:      "README.md files will NOT be ignored",
+			path:      []string{"README.md"},
+			isDir:     false,
+			isMatched: false,
+		},
+		{
+			name:      "subfolder folder will be ignored",
+			path:      []string{"videos", "subfolder", "app.mp4"},
+			isDir:     false,
+			isMatched: true,
 		},
 	}
 
