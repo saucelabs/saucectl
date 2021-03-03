@@ -5,14 +5,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/framework"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/fleet"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
 // Client service
@@ -74,11 +75,12 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 	if err != nil {
 		return
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, &b)
+	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, &b)
 	if err != nil {
 		return
 	}
 	req.SetBasicAuth(opts.User, opts.AccessKey)
+
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return
@@ -150,7 +152,7 @@ func (c *Client) newJSONRequest(ctx context.Context, url, method string, payload
 		return nil, err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, method, url, &b)
+	req, err := requesth.NewWithContext(ctx, method, url, &b)
 	if err != nil {
 		return nil, err
 	}
@@ -179,12 +181,11 @@ func (c *Client) doJSONResponse(req *http.Request, expectStatus int, v interface
 func (c *Client) Search(ctx context.Context, opts framework.SearchOptions) (framework.Metadata, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/frameworks/%s", c.URL, opts.Name)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return framework.Metadata{}, err
 	}
 	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
-
 	q := req.URL.Query()
 	q.Add("version", opts.FrameworkVersion)
 	req.URL.RawQuery = q.Encode()

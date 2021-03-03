@@ -9,8 +9,9 @@ import (
 	"unicode"
 
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/config"
 	"gopkg.in/yaml.v2"
+
+	"github.com/saucelabs/saucectl/internal/config"
 )
 
 // Project represents the cypress project configuration.
@@ -24,6 +25,7 @@ type Project struct {
 	Docker         config.Docker      `yaml:"docker,omitempty" json:"docker"`
 	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
 	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
+	RunnerVersion  string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
 }
 
 // Suite represents the cypress test suite configuration.

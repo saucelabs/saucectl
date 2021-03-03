@@ -7,7 +7,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
 
-// PlaywrightRunner represents the Sauce Labs cloud implementation for cypress.
+// PlaywrightRunner represents the Sauce Labs cloud implementation for playwright.
 type PlaywrightRunner struct {
 	CloudRunner
 	Project playwright.Project
@@ -57,6 +57,7 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 					Parent: r.Project.Sauce.Tunnel.Parent,
 				},
 				ScreenResolution: s.ScreenResolution,
+				RunnerVersion:    r.Project.RunnerVersion,
 			}
 		}
 		close(jobOpts)

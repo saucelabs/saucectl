@@ -48,6 +48,7 @@ func main() {
 
 func setupLogging(verbose bool) {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	zerolog.DurationFieldInteger = true
 	timeFormat := "15:04:05"
 	if verbose {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)

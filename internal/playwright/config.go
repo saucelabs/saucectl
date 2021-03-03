@@ -21,6 +21,7 @@ type Project struct {
 	BeforeExec     []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
 	Docker         config.Docker      `yaml:"docker,omitempty" json:"docker"`
 	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
+	RunnerVersion  string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
 }
 
 // Playwright represents crucial playwright configuration that is required for setting up a project.

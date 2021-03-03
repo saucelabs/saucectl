@@ -81,6 +81,7 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 					Parent: r.Project.Sauce.Tunnel.Parent,
 				},
 				ScreenResolution: s.ScreenResolution,
+				RunnerVersion:    r.Project.RunnerVersion,
 			}
 		}
 		close(jobOpts)

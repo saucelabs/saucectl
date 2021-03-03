@@ -24,6 +24,7 @@ type StartOptions struct {
 	Tags             []string      `json:"tags,omitempty"`
 	Tunnel           TunnelOptions `json:"tunnel,omitempty"`
 	ScreenResolution string        `json:"screenResolution,omitempty"`
+	RunnerVersion    string        `json:"runnerVersion,omitempty"`
 }
 
 // TunnelOptions represents the options that configure the usage of a tunnel when running tests in the Sauce Labs cloud.

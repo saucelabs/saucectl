@@ -42,6 +42,8 @@ jobs:
 
       - name: Checkout Code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 50
 
       - name: Run tests
         run: |
@@ -165,6 +167,28 @@ jobs:
         env:
           BUILD_ID: ${{ github.run_id }}
           BUILD_ENV: GitHub Actions
+  testcafe-on-cloud:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      # appears that checkout@v2 uses javascript which is not compatible
+      # with the included node version in the container image.
+      - name: Checkout Code
+        uses: actions/checkout@v1
+
+      - name: Download saucectl binary
+        uses: actions/download-artifact@v2
+        with:
+          name: saucectlbin
+      - name: Run Sauce Pipeline Test
+        run: |
+          chmod +x ./saucectl
+          ./saucectl run -c ./.sauce/testcafe_cloud.yml --test-env sauce --verbose
+        env:
+          BUILD_ID: ${{ github.run_id }}
+          BUILD_ENV: GitHub Actions
+ 
   cypress:
     needs: build
     runs-on: ubuntu-latest
