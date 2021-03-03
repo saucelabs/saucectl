@@ -111,7 +111,7 @@ func TestSauceMatcher(t *testing.T) {
 		},
 	}
 
-	matcher := NewSauceMatcher(patterns)
+	matcher := NewMatcher(patterns)
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/sauceignore"
-
 	"github.com/rs/zerolog/log"
 
 	"github.com/saucelabs/saucectl/internal/archive/zip"
@@ -19,6 +17,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/storage"
 )
 
@@ -148,11 +147,11 @@ func (r CloudRunner) archiveAndUpload(project interface{}, files []string, confi
 }
 
 func (r *CloudRunner) archiveProject(project interface{}, tempDir string, files []string, configDir string) (string, error) {
-	ps, err := sauceignore.ReadIgnoreFile(configDir)
+	patterns, err := sauceignore.ReadIgnoreFile(configDir)
 	if err != nil {
 		return "", err
 	}
-	matcher := sauceignore.NewSauceMatcher(ps)
+	matcher := sauceignore.NewMatcher(patterns)
 
 	zipName := filepath.Join(tempDir, "app.zip")
 	z, err := zip.NewWriter(zipName, matcher)

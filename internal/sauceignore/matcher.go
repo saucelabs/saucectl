@@ -14,24 +14,23 @@ const sauceignore = ".sauceignore"
 
 // ReadIgnoreFile reads .sauceignore file and creates ignore patters if .sauceignore file is exists.
 func ReadIgnoreFile(path string) ([]gitignore.Pattern, error) {
-	// In case if .sauceignore file doesn't exists.
 	fPath := filepath.Join(path, sauceignore)
-	_, err := os.Stat(fPath)
-	if err != nil {
-		return []gitignore.Pattern{}, nil
-	}
-
 	f, err := os.Open(fPath)
-	ps := []gitignore.Pattern{}
-	if err == nil {
-		defer f.Close()
+	if err != nil {
+		// In case if .sauceignore file doesn't exists.
+		if os.IsNotExist(err) {
+			return []gitignore.Pattern{}, nil
+		}
+		return []gitignore.Pattern{}, err
+	}
+	defer f.Close()
 
-		scanner := bufio.NewScanner(f)
-		for scanner.Scan() {
-			s := scanner.Text()
-			if !strings.HasPrefix(s, commentPrefix) && len(strings.TrimSpace(s)) > 0 {
-				ps = append(ps, gitignore.ParsePattern(s, nil))
-			}
+	ps := []gitignore.Pattern{}
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		s := scanner.Text()
+		if !strings.HasPrefix(s, commentPrefix) && len(strings.TrimSpace(s)) > 0 {
+			ps = append(ps, gitignore.ParsePattern(s, nil))
 		}
 	}
 
@@ -52,8 +51,8 @@ func (m *matcher) Match(path []string, isDir bool) bool {
 	return m.matcher.Match(path, isDir)
 }
 
-// NewSauceMatcher constructs a new matcher.
-func NewSauceMatcher(ps []gitignore.Pattern) Matcher {
+// NewMatcher constructs a new matcher.
+func NewMatcher(ps []gitignore.Pattern) Matcher {
 	if len(ps) == 0 {
 		return nil
 	}
