@@ -42,17 +42,6 @@ func (w *Writer) Add(src, dst string) error {
 		}
 	}
 
-	//fmt.Println("----------")
-	//fmt.Println("src")
-	//fmt.Println(src)
-	/*
-		cypress.json
-		cypress/videos
-	*/
-	//fmt.Println("dst")
-	//fmt.Println(dst)
-	//fmt.Println("----------")
-
 	if !finfo.IsDir() {
 		w, err := w.W.Create(path.Join(dst, finfo.Name()))
 		if err != nil {
