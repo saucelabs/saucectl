@@ -11,14 +11,12 @@ import (
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 )
 
-// TODO add field for sauceignore functionality
 // Writer is a wrapper around zip.Writer and implements zip archiving for archive.Writer.
 type Writer struct {
 	W *zip.Writer
 	M sauceignore.Matcher
 }
 
-// TODO add field for sauceignore functionality
 // NewWriter returns a new Writer that archives files to name.
 func NewWriter(name string, matcher sauceignore.Matcher) (Writer, error) {
 	f, err := os.Create(name)
