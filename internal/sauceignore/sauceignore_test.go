@@ -56,6 +56,70 @@ func TestReadIgnoreFile(t *testing.T) {
 	}
 }
 
+func TestSauceMatcher(t *testing.T) {
+	patterns := []gitignore.Pattern{
+		gitignore.ParsePattern("cypress/videos/", nil),
+		gitignore.ParsePattern("node_modules/", nil),
+		gitignore.ParsePattern(".git/", nil),
+		gitignore.ParsePattern(".gitignore", nil),
+		gitignore.ParsePattern("cypress/test/**", nil),
+		gitignore.ParsePattern("test.txt", nil),
+	}
+
+	testCases := []struct {
+		name      string
+		path      []string
+		isDir     bool
+		isMatched bool
+	}{
+		{
+			name:      "cypress/videos folder will be ignored",
+			path:      []string{"cypress", "videos"},
+			isDir:     true,
+			isMatched: true,
+		}, {
+			name:      "node_modules/ folder will be ignored",
+			path:      []string{"node_modules"},
+			isDir:     true,
+			isMatched: true,
+		}, {
+			name:      ".git/ folder will be ignored",
+			path:      []string{".git"},
+			isDir:     true,
+			isMatched: true,
+		}, {
+			name:      ".gitignore file will be ignored",
+			path:      []string{".gitignore"},
+			isDir:     false,
+			isMatched: true,
+		}, {
+			name:      "cypress/test/** folder will be ignored",
+			path:      []string{"cypress", "test", "test2"},
+			isDir:     true,
+			isMatched: true,
+		}, {
+			name:      "test.txt file will be ignored",
+			path:      []string{"test.txt"},
+			isDir:     false,
+			isMatched: true,
+		},
+		{
+			name:      ".sauceignore file will NOT be ignored",
+			path:      []string{".sauceignore"},
+			isDir:     false,
+			isMatched: false,
+		},
+	}
+
+	matcher := NewSauceMatcher(patterns)
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, matcher.Match(tc.path, tc.isDir), tc.isMatched)
+		})
+	}
+}
+
 func crtTempSauceignoreFile() (func(), string, error) {
 	content := `cypress/screenshots/
 cypress/videos/
