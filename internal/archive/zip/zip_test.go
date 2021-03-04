@@ -59,8 +59,8 @@ func TestZipper_Add(t *testing.T) {
 			fields: fields{
 				W: zip.NewWriter(sauceignoreOut),
 				M: sauceignore.NewMatcher([]sauceignore.Pattern{
-					sauceignore.NewPattern("some.foo.js", nil),
-					sauceignore.NewPattern("screenshots/", nil),
+					sauceignore.NewPattern("some.foo.js"),
+					sauceignore.NewPattern("screenshots/"),
 				})},
 			args:      args{dir.Path(), "", sauceignoreOut.Name()},
 			wantErr:   false,

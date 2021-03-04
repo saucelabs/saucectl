@@ -57,15 +57,15 @@ func TestReadIgnoreFile(t *testing.T) {
 
 func TestSauceMatcher(t *testing.T) {
 	patterns := []Pattern{
-		NewPattern("cypress/videos/", nil),
-		NewPattern("node_modules/", nil),
-		NewPattern(".git/", nil),
-		NewPattern(".gitignore", nil),
-		NewPattern("cypress/test/**", nil),
-		NewPattern("test.txt", nil),
-		NewPattern("*.log", nil),
-		NewPattern("!README.md", nil),
-		NewPattern("videos/**/app.mp4", nil),
+		NewPattern("cypress/videos/"),
+		NewPattern("node_modules/"),
+		NewPattern(".git/"),
+		NewPattern(".gitignore"),
+		NewPattern("cypress/test/**"),
+		NewPattern("test.txt"),
+		NewPattern("*.log"),
+		NewPattern("!README.md"),
+		NewPattern("videos/**/app.mp4"),
 	}
 
 	testCases := []struct {

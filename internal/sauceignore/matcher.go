@@ -30,7 +30,7 @@ func ReadIgnoreFile(path string) ([]Pattern, error) {
 	for scanner.Scan() {
 		s := scanner.Text()
 		if !strings.HasPrefix(s, commentPrefix) && len(strings.TrimSpace(s)) > 0 {
-			ps = append(ps, NewPattern(s, nil))
+			ps = append(ps, NewPattern(s))
 		}
 	}
 
@@ -39,19 +39,18 @@ func ReadIgnoreFile(path string) ([]Pattern, error) {
 
 // Pattern defines a single sauceignore pattern.
 type Pattern struct {
-	P      string
-	Domain []string
+	P string
 }
 
 // NewPattern create new Pattern.
-func NewPattern(p string, domain []string) Pattern {
-	return Pattern{P: p, Domain: domain}
+func NewPattern(p string) Pattern {
+	return Pattern{P: p}
 }
 
 func convPtrnsToGitignorePtrns(pp []Pattern) []gitignore.Pattern {
 	res := make([]gitignore.Pattern, len(pp))
 	for i := 0; i < len(pp); i++ {
-		res[i] = gitignore.ParsePattern(pp[i].P, pp[i].Domain)
+		res[i] = gitignore.ParsePattern(pp[i].P, nil)
 	}
 
 	return res
