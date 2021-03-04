@@ -149,11 +149,10 @@ func (r CloudRunner) archiveAndUpload(project interface{}, files []string, confi
 func (r *CloudRunner) archiveProject(project interface{}, tempDir string, files []string, configDir string) (string, error) {
 	start := time.Now()
 
-	patterns, err := sauceignore.ReadIgnoreFile(configDir)
+	matcher, err := sauceignore.NewMatcherFromFile(configDir)
 	if err != nil {
 		return "", err
 	}
-	matcher := sauceignore.NewMatcher(patterns)
 
 	zipName := filepath.Join(tempDir, "app.zip")
 	z, err := zip.NewWriter(zipName, matcher)

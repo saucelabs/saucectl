@@ -10,11 +10,10 @@ import (
 )
 
 const commentPrefix = "#"
-const sauceignore = ".sauceignore"
 
-// ReadIgnoreFile reads .sauceignore file and creates ignore patters if .sauceignore file is exists.
-func ReadIgnoreFile(path string) ([]Pattern, error) {
-	fPath := filepath.Join(path, sauceignore)
+// patternsFromFile reads .sauceignore file and creates ignore patters if .sauceignore file is exists.
+func patternsFromFile(path string) ([]Pattern, error) {
+	fPath := filepath.Join(path)
 	f, err := os.Open(fPath)
 	if err != nil {
 		// In case if .sauceignore file doesn't exists.
@@ -74,4 +73,14 @@ func (m *matcher) Match(path []string, isDir bool) bool {
 func NewMatcher(ps []Pattern) Matcher {
 	gps := convPtrnsToGitignorePtrns(ps)
 	return &matcher{matcher: gitignore.NewMatcher(gps)}
+}
+
+// NewMatcherFromFile constructs a new matcher from file.
+func NewMatcherFromFile(path string) (Matcher, error) {
+	ps, err := patternsFromFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewMatcher(ps), nil
 }

@@ -9,8 +9,8 @@ import (
 	"gotest.tools/assert"
 )
 
-func TestReadIgnoreFile(t *testing.T) {
-	fn, sauceIgnorePath, err := crtTempSauceignoreFile()
+func TestPatternsFromFile(t *testing.T) {
+	fn, file, err := crtTempSauceignoreFile()
 	if err != nil {
 		t.Fatalf("couldn't create temp .sauceignore file %s", err)
 	}
@@ -27,13 +27,13 @@ func TestReadIgnoreFile(t *testing.T) {
 	}{
 		{
 			name:            ".sauceignore file is not exists",
-			path:            "path/to/not/exists/folder",
+			path:            "path/to/not/exists/.sauceignore",
 			expectedPatters: []gitignore.Pattern{},
 			expectedErr:     nil,
 		},
 		{
 			name: ".sauceignore file is exists",
-			path: sauceIgnorePath,
+			path: file,
 			expectedPatters: []gitignore.Pattern{
 				gitignore.ParsePattern("cypress/screenshots/", nil),
 				gitignore.ParsePattern("cypress/videos/", nil),
@@ -48,7 +48,7 @@ func TestReadIgnoreFile(t *testing.T) {
 
 	for _, tc := range testsCases {
 		t.Run(tc.name, func(t *testing.T) {
-			gotPatters, err := ReadIgnoreFile(tc.path)
+			gotPatters, err := patternsFromFile(tc.path)
 			assert.Equal(t, err, tc.expectedErr)
 			assert.Equal(t, len(gotPatters), len(tc.expectedPatters))
 		})
@@ -154,11 +154,12 @@ node_modules/
 		return nil, "", err
 	}
 
-	if err := os.WriteFile(filepath.Join(tmpDir, sauceignore), []byte(content), 0644); err != nil {
+	file := filepath.Join(tmpDir, ".sauceignore")
+	if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 		return nil, "", err
 	}
 
 	return func() {
 		os.RemoveAll(tmpDir)
-	}, tmpDir, nil
+	}, file, nil
 }

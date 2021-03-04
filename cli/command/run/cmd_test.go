@@ -141,9 +141,9 @@ func TestApplyDefaultValues(t *testing.T) {
 		wantSauceignore string
 		expectErr       bool
 	}{
-		{args: args{region: "", sauceignore: ""}, wantRegion: defaultRegion, wantSauceignore: wd, expectErr: false},
-		{args: args{region: "dummy-region", sauceignore: "/path/to/sauceignore"}, wantRegion: "dummy-region",
-			wantSauceignore: "/path/to/sauceignore", expectErr: false},
+		{args: args{region: "", sauceignore: ""}, wantRegion: defaultRegion, wantSauceignore: filepath.Join(wd, defaultSauceignore), expectErr: false},
+		{args: args{region: "dummy-region", sauceignore: "/path/to/.sauceignore2"}, wantRegion: "dummy-region",
+			wantSauceignore: "/path/to/.sauceignore2", expectErr: false},
 	}
 	for _, tt := range tests {
 		sauce := config.SauceConfig{

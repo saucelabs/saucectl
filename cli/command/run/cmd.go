@@ -40,9 +40,10 @@ var (
 	runLong    = `Some long description`
 	runExample = "saucectl run ./.sauce/config.yaml"
 
-	defaultLogFir  = "<cwd>/logs"
-	defaultTimeout = 60
-	defaultRegion  = "us-west-1"
+	defaultLogFir      = "<cwd>/logs"
+	defaultTimeout     = 60
+	defaultRegion      = "us-west-1"
+	defaultSauceignore = ".sauceignore"
 
 	cfgFilePath    string
 	cfgLogDir      string
@@ -636,7 +637,7 @@ func applyDefaultValues(sauce *config.SauceConfig) error {
 		return err
 	}
 	if sauce.Sauceignore == "" {
-		sauce.Sauceignore = wd
+		sauce.Sauceignore = filepath.Join(wd, defaultSauceignore)
 	}
 
 	return nil
