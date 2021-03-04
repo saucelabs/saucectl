@@ -76,6 +76,7 @@ type SauceConfig struct {
 	Metadata    Metadata `yaml:"metadata,omitempty" json:"metadata"`
 	Tunnel      Tunnel   `yaml:"tunnel,omitempty" json:"tunnel,omitempty"`
 	Concurrency int      `yaml:"concurrency,omitempty" json:"concurrency,omitempty"`
+	Sauceignore string   `yaml:"sauceignore,omitempty" json:"sauceignore,omitempty"`
 }
 
 // Tunnel represents a sauce labs tunnel.

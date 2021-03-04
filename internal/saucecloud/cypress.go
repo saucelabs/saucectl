@@ -2,7 +2,6 @@ package saucecloud
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -34,10 +33,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 		files = append(files, r.Project.RootDir)
 	}
 
-	// path to the cypress.json and .sauceignore
-	configDir := filepath.Dir(r.Project.Cypress.ConfigFile)
-
-	fileID, err := r.archiveAndUpload(r.Project, files, configDir)
+	fileID, err := r.archiveAndUpload(r.Project, files, r.Project.Sauce.Sauceignore)
 	if err != nil {
 		return exitCode, err
 	}

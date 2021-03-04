@@ -1,6 +1,7 @@
 package run
 
 import (
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -126,19 +127,35 @@ func Test_apiBaseURL(t *testing.T) {
 }
 
 func TestApplyDefaultValues(t *testing.T) {
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Error(err)
+	}
+	type args struct {
+		region      string
+		sauceignore string
+	}
 	tests := []struct {
-		beginRegion string
-		wantRegion  string
+		args            args
+		wantRegion      string
+		wantSauceignore string
+		expectErr       bool
 	}{
-		{beginRegion: "", wantRegion: defaultRegion},
-		{beginRegion: "dummy-region", wantRegion: "dummy-region"},
+		{args: args{region: "", sauceignore: ""}, wantRegion: defaultRegion, wantSauceignore: wd, expectErr: false},
+		{args: args{region: "dummy-region", sauceignore: "/path/to/sauceignore"}, wantRegion: "dummy-region",
+			wantSauceignore: "/path/to/sauceignore", expectErr: false},
 	}
 	for _, tt := range tests {
 		sauce := config.SauceConfig{
-			Region: tt.beginRegion,
+			Region:      tt.args.region,
+			Sauceignore: tt.args.sauceignore,
 		}
-		applyDefaultValues(&sauce)
+		err := applyDefaultValues(&sauce)
+		if !tt.expectErr && err != nil {
+			t.Error(err)
+		}
 		assert.Equal(t, tt.wantRegion, sauce.Region)
+		assert.Equal(t, tt.wantSauceignore, sauce.Sauceignore)
 	}
 }
 

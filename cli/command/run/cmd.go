@@ -59,6 +59,7 @@ var (
 	tunnelID       string
 	tunnelParent   string
 	runnerVersion  string
+	sauceignore    string
 
 	// General Request Timeouts
 	appStoreTimeout     = 300 * time.Second
@@ -99,6 +100,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVar(&tunnelID, "tunnel-id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
 	cmd.Flags().StringVar(&tunnelParent, "tunnel-parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
 	cmd.Flags().StringVar(&runnerVersion, "runner-version", "", "Overrides the automatically determined runner version.")
+	cmd.Flags().StringVar(&sauceignore, "sauceignore", "", "Specifies the path to the .sauceignore file.")
 
 	// Hide undocumented flags that the user does not need to care about.
 	_ = cmd.Flags().MarkHidden("sauce-api")
@@ -170,7 +172,10 @@ func runCypress(cmd *cobra.Command) (int, error) {
 	}
 
 	p.Sauce.Metadata.ExpandEnv()
-	applyDefaultValues(&p.Sauce)
+	err = applyDefaultValues(&p.Sauce)
+	if err != nil {
+		return 1, err
+	}
 	overrideCliParameters(cmd, &p.Sauce)
 
 	// Merge env from CLI args and job config. CLI args take precedence.
@@ -270,7 +275,10 @@ func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	}
 
 	p.Sauce.Metadata.ExpandEnv()
-	applyDefaultValues(&p.Sauce)
+	err = applyDefaultValues(&p.Sauce)
+	if err != nil {
+		return 1, err
+	}
 	overrideCliParameters(cmd, &p.Sauce)
 
 	// Merge env from CLI args and job config. CLI args take precedence.
@@ -365,7 +373,10 @@ func runTestcafe(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 		return 1, err
 	}
 	p.Sauce.Metadata.ExpandEnv()
-	applyDefaultValues(&p.Sauce)
+	err = applyDefaultValues(&p.Sauce)
+	if err != nil {
+		return 1, err
+	}
 	overrideCliParameters(cmd, &p.Sauce)
 
 	for k, v := range env {
@@ -615,10 +626,20 @@ func validateFiles(files []string) error {
 	return nil
 }
 
-func applyDefaultValues(sauce *config.SauceConfig) {
+func applyDefaultValues(sauce *config.SauceConfig) error {
 	if sauce.Region == "" {
 		sauce.Region = defaultRegion
 	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	if sauce.Sauceignore == "" {
+		sauce.Sauceignore = wd
+	}
+
+	return nil
 }
 
 func overrideCliParameters(cmd *cobra.Command, sauce *config.SauceConfig) {
@@ -633,5 +654,8 @@ func overrideCliParameters(cmd *cobra.Command, sauce *config.SauceConfig) {
 	}
 	if cmd.Flags().Lookup("tunnel-parent").Changed {
 		sauce.Tunnel.Parent = tunnelParent
+	}
+	if cmd.Flags().Lookup("sauceignore").Changed {
+		sauce.Sauceignore = sauceignore
 	}
 }
