@@ -103,7 +103,7 @@ func FromFile(cfgPath string) (Project, error) {
 	// Check rootDir if it is set.
 	if p.RootDir != "" {
 		if _, err := os.Stat(p.RootDir); err != nil {
-			return p, fmt.Errorf("unable to locate the rootDir folder in %s", p.RootDir)
+			return p, fmt.Errorf("unable to locate the rootDir folder %s", p.RootDir)
 		}
 	}
 
