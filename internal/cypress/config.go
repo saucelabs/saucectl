@@ -24,7 +24,6 @@ type Project struct {
 	BeforeExec     []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
 	Docker         config.Docker      `yaml:"docker,omitempty" json:"docker"`
 	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
-	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
 	RunnerVersion  string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
 }
 
@@ -99,13 +98,6 @@ func FromFile(cfgPath string) (Project, error) {
 		return p, fmt.Errorf("unable to locate the cypress folder in %s", configDir)
 	}
 	p.Cypress.ProjectPath = cPath
-
-	// Check rootDir if it is set.
-	if p.RootDir != "" {
-		if _, err := os.Stat(p.RootDir); err != nil {
-			return p, fmt.Errorf("unable to locate the rootDir folder %s", p.RootDir)
-		}
-	}
 
 	// Optionally include the env file if it exists.
 	envFile := filepath.Join(configDir, "cypress.env.json")
