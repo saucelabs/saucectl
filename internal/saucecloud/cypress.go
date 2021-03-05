@@ -29,6 +29,10 @@ func (r *CypressRunner) RunProject() (int, error) {
 		files = append(files, r.Project.Cypress.EnvFile)
 	}
 
+	if r.Project.RootDir != "" {
+		files = append(files, r.Project.RootDir)
+	}
+
 	fileID, err := r.archiveAndUpload(r.Project, files, r.Project.Sauce.Sauceignore)
 	if err != nil {
 		return exitCode, err
