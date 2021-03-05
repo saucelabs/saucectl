@@ -9,8 +9,9 @@ import (
 	"unicode"
 
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/config"
 	"gopkg.in/yaml.v2"
+
+	"github.com/saucelabs/saucectl/internal/config"
 )
 
 // Project represents the cypress project configuration.

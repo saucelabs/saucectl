@@ -6,21 +6,25 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
+
+	"github.com/saucelabs/saucectl/internal/sauceignore"
 )
 
 // Writer is a wrapper around zip.Writer and implements zip archiving for archive.Writer.
 type Writer struct {
 	W *zip.Writer
+	M sauceignore.Matcher
 }
 
 // NewWriter returns a new Writer that archives files to name.
-func NewWriter(name string) (Writer, error) {
+func NewWriter(name string, matcher sauceignore.Matcher) (Writer, error) {
 	f, err := os.Create(name)
 	if err != nil {
 		return Writer{}, err
 	}
 
-	w := Writer{W: zip.NewWriter(f)}
+	w := Writer{W: zip.NewWriter(f), M: matcher}
 
 	return w, nil
 }
@@ -30,6 +34,11 @@ func (w *Writer) Add(src, dst string) error {
 	finfo, err := os.Stat(src)
 	if err != nil {
 		return err
+	}
+
+	// Only will be applied if we have .sauceignore file and have patterns to exclude files and folders
+	if w.M.Match(strings.Split(src, string(os.PathSeparator)), finfo.IsDir()) {
+		return nil
 	}
 
 	if !finfo.IsDir() {

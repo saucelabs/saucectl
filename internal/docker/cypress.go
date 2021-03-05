@@ -2,7 +2,9 @@ package docker
 
 import (
 	"context"
+
 	"github.com/rs/zerolog/log"
+
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/framework"

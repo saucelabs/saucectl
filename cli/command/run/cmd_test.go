@@ -126,19 +126,27 @@ func Test_apiBaseURL(t *testing.T) {
 }
 
 func TestApplyDefaultValues(t *testing.T) {
+	type args struct {
+		region      string
+		sauceignore string
+	}
 	tests := []struct {
-		beginRegion string
-		wantRegion  string
+		args            args
+		wantRegion      string
+		wantSauceignore string
 	}{
-		{beginRegion: "", wantRegion: defaultRegion},
-		{beginRegion: "dummy-region", wantRegion: "dummy-region"},
+		{args: args{region: "", sauceignore: ""}, wantRegion: defaultRegion, wantSauceignore: defaultSauceignore},
+		{args: args{region: "dummy-region", sauceignore: "/path/to/.sauceignore2"}, wantRegion: "dummy-region",
+			wantSauceignore: "/path/to/.sauceignore2"},
 	}
 	for _, tt := range tests {
 		sauce := config.SauceConfig{
-			Region: tt.beginRegion,
+			Region:      tt.args.region,
+			Sauceignore: tt.args.sauceignore,
 		}
 		applyDefaultValues(&sauce)
 		assert.Equal(t, tt.wantRegion, sauce.Region)
+		assert.Equal(t, tt.wantSauceignore, sauce.Sauceignore)
 	}
 }
 
