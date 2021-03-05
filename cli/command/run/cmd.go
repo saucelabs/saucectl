@@ -173,10 +173,7 @@ func runCypress(cmd *cobra.Command) (int, error) {
 	}
 
 	p.Sauce.Metadata.ExpandEnv()
-	err = applyDefaultValues(&p.Sauce)
-	if err != nil {
-		return 1, err
-	}
+	applyDefaultValues(&p.Sauce)
 	overrideCliParameters(cmd, &p.Sauce)
 
 	// Merge env from CLI args and job config. CLI args take precedence.
@@ -276,10 +273,7 @@ func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	}
 
 	p.Sauce.Metadata.ExpandEnv()
-	err = applyDefaultValues(&p.Sauce)
-	if err != nil {
-		return 1, err
-	}
+	applyDefaultValues(&p.Sauce)
 	overrideCliParameters(cmd, &p.Sauce)
 
 	// Merge env from CLI args and job config. CLI args take precedence.
@@ -374,10 +368,7 @@ func runTestcafe(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 		return 1, err
 	}
 	p.Sauce.Metadata.ExpandEnv()
-	err = applyDefaultValues(&p.Sauce)
-	if err != nil {
-		return 1, err
-	}
+	applyDefaultValues(&p.Sauce)
 	overrideCliParameters(cmd, &p.Sauce)
 
 	for k, v := range env {
@@ -627,20 +618,14 @@ func validateFiles(files []string) error {
 	return nil
 }
 
-func applyDefaultValues(sauce *config.SauceConfig) error {
+func applyDefaultValues(sauce *config.SauceConfig) {
 	if sauce.Region == "" {
 		sauce.Region = defaultRegion
 	}
 
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
 	if sauce.Sauceignore == "" {
-		sauce.Sauceignore = filepath.Join(wd, defaultSauceignore)
+		sauce.Sauceignore = defaultSauceignore
 	}
-
-	return nil
 }
 
 func overrideCliParameters(cmd *cobra.Command, sauce *config.SauceConfig) {
