@@ -131,14 +131,14 @@ func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- re
 	}
 }
 
-func (r CloudRunner) archiveAndUpload(project interface{}, files []string, configDir string) (string, error) {
+func (r CloudRunner) archiveAndUpload(project interface{}, files []string, sauceignoreFile string) (string, error) {
 	tempDir, err := ioutil.TempDir(os.TempDir(), "saucectl-app-payload")
 	if err != nil {
 		return "", err
 	}
 	defer os.RemoveAll(tempDir)
 
-	zipName, err := r.archiveProject(project, tempDir, files, configDir)
+	zipName, err := r.archiveProject(project, tempDir, files, sauceignoreFile)
 	if err != nil {
 		return "", err
 	}
@@ -146,10 +146,10 @@ func (r CloudRunner) archiveAndUpload(project interface{}, files []string, confi
 	return r.uploadProject(zipName)
 }
 
-func (r *CloudRunner) archiveProject(project interface{}, tempDir string, files []string, configDir string) (string, error) {
+func (r *CloudRunner) archiveProject(project interface{}, tempDir string, files []string, sauceignoreFile string) (string, error) {
 	start := time.Now()
 
-	matcher, err := sauceignore.NewMatcherFromFile(configDir)
+	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
 		return "", err
 	}
