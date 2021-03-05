@@ -51,7 +51,8 @@ type result struct {
 
 // jobInfo represents the info on the job given by the container
 type jobInfo struct {
-	JobDetailsURL string `json:"jobDetailsUrl"`
+	JobDetailsURL      string `json:"jobDetailsUrl"`
+	ReportingSucceeded bool   `json:"reportingSucceeded"`
 }
 
 func (r *ContainerRunner) pullImage(img string) error {
@@ -292,6 +293,9 @@ func (r *ContainerRunner) logSuite(res result) {
 
 	if res.passed {
 		log.Info().Bool("passed", res.passed).Str("url", res.jobInfo.JobDetailsURL).Str("suite", res.suiteName).Msg("Suite finished.")
+		if !res.jobInfo.ReportingSucceeded {
+			log.Warn().Str("suite", res.suiteName).Msg("Reporting results to Sauce Labs failed.")
+		}
 	} else {
 		log.Error().Bool("passed", res.passed).Str("url", res.jobInfo.JobDetailsURL).Str("suite", res.suiteName).Msg("Suite finished.")
 	}
