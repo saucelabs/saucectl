@@ -53,6 +53,10 @@ func (r *CypressRunner) RunProject() (int, error) {
 		files = append(files, r.Project.Cypress.EnvFile)
 	}
 
+	if r.Project.RootDir != "" {
+		files = append(files, r.Project.RootDir)
+	}
+
 	if r.Project.Sauce.Concurrency > 1 {
 		log.Info().Msg("concurrency > 1: forcing file transfer mode to use 'copy'.")
 		r.Project.Docker.FileTransfer = config.DockerFileCopy
