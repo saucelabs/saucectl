@@ -19,7 +19,7 @@ var (
 	// ErrJobNotFound is returned when the requested job was not found.
 	ErrJobNotFound = errors.New("job was not found")
 	// ErrTunnelNotFound is returned when the requested tunnel was not found.
-	ErrTunnelNotFound = errors.New("tunnle not found")
+	ErrTunnelNotFound = errors.New("tunnel not found")
 )
 
 // Client http client.
