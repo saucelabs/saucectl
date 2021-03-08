@@ -2,7 +2,6 @@ package saucecloud
 
 import (
 	"fmt"
-
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
 )
@@ -18,6 +17,10 @@ func (r *CypressRunner) RunProject() (int, error) {
 	exitCode := 1
 	if err := r.checkCypressVersion(); err != nil {
 		return exitCode, err
+	}
+
+	if err := r.validateTunnel(r.Project.Sauce.Tunnel.ID); err != nil {
+		return 1, err
 	}
 
 	files := []string{
@@ -49,7 +52,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 // checkCypressVersion do several checks before running Cypress tests.
 func (r *CypressRunner) checkCypressVersion() error {
 	if r.Project.Cypress.Version == "" {
-		return fmt.Errorf("Missing cypress version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+		return fmt.Errorf("missing cypress version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
 	return nil
 }

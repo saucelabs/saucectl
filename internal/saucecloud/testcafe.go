@@ -17,6 +17,10 @@ type TestcafeRunner struct {
 func (r *TestcafeRunner) RunProject() (int, error) {
 	exitCode := 1
 
+	if err := r.validateTunnel(r.Project.Sauce.Tunnel.ID); err != nil {
+		return 1, err
+	}
+
 	fileID, err := r.archiveAndUpload(r.Project, []string{r.Project.Testcafe.ProjectPath}, r.Project.Sauce.Sauceignore)
 	if err != nil {
 		return exitCode, err
