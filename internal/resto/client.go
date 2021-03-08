@@ -130,11 +130,11 @@ func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
 
 // IsTunnelRunning checks whether tunnelID is running. If not, it will wait for the tunnel to become available or
 // timeout. Whichever comes first.
-func (c *Client) IsTunnelRunning(ctx context.Context, tunnelID string, wait time.Duration) error {
+func (c *Client) IsTunnelRunning(ctx context.Context, id string, wait time.Duration) error {
 	deathclock := time.Now().Add(wait)
 	var err error
 	for time.Now().Before(deathclock) {
-		if err = c.isTunnelRunning(ctx, tunnelID); err == nil {
+		if err = c.isTunnelRunning(ctx, id); err == nil {
 			return nil
 		}
 		time.Sleep(1 * time.Second)
@@ -143,7 +143,7 @@ func (c *Client) IsTunnelRunning(ctx context.Context, tunnelID string, wait time
 	return err
 }
 
-func (c *Client) isTunnelRunning(ctx context.Context, tunnelID string) error {
+func (c *Client) isTunnelRunning(ctx context.Context, id string) error {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/rest/v1.1/%s/available_tunnels", c.URL, c.Username), nil)
 	if err != nil {
@@ -172,7 +172,8 @@ func (c *Client) isTunnelRunning(ctx context.Context, tunnelID string) error {
 
 	for _, tt := range resp {
 		for _, t := range tt {
-			if t.TunnelID != tunnelID {
+			// User could be using tunnel name (aka tunnel_identifier) or the tunnel ID. Make sure we check both.
+			if t.TunnelID != id && t.ID != id {
 				continue
 			}
 			if t.Status == "running" {
