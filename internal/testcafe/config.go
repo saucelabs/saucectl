@@ -77,7 +77,7 @@ func FromFile(cfgPath string) (Project, error) {
 		return p, fmt.Errorf("failed to parse project config: %v", err)
 	}
 
-	if p.Testcafe.ProjectPath == "" || p.RootDir == "" {
+	if p.Testcafe.ProjectPath == "" && p.RootDir == "" {
 		return p, fmt.Errorf("could not find 'testcafe.projectPath' or 'rootDir' in config yml. One of those two must be set to a directory containing your project.")
 	}
 
