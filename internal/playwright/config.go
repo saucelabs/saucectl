@@ -21,6 +21,7 @@ type Project struct {
 	BeforeExec     []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
 	Docker         config.Docker      `yaml:"docker,omitempty" json:"docker"`
 	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
+	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
 	RunnerVersion  string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
 }
 
@@ -75,13 +76,27 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 
 	// Default project path
-	if p.Playwright.ProjectPath == "" {
-		return Project{}, fmt.Errorf("no project folder defined")
+	if p.Playwright.ProjectPath == "" && p.RootDir == "" {
+		return Project{}, fmt.Errorf("could not find 'playwright.projectPath' or 'rootDir' in config yml. One of those two must be set to a directory containing your project.")
+	}
+
+	if p.Playwright.ProjectPath != "" && p.RootDir != "" {
+		log.Info().Msgf(
+			"Found both 'playwright.projectPath=%s' and 'rootDir=%s' in config. Defaulting to rootDir '%s'",
+			p.Playwright.ProjectPath, p.RootDir, p.RootDir,
+		)
 	}
 
 	// Store local path since we provide only last level folder in runner
 	p.Playwright.LocalProjectPath = p.Playwright.ProjectPath
 	p.Playwright.ProjectPath = filepath.Base(p.Playwright.ProjectPath)
+
+	// Check rootDir if it is set.
+	if p.RootDir != "" {
+		if _, err := os.Stat(p.RootDir); err != nil {
+			return p, fmt.Errorf("unable to locate the rootDir folder %s", p.RootDir)
+		}
+	}
 
 	// Default mode to Mount
 	if p.Docker.FileTransfer == "" {
