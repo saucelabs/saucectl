@@ -17,14 +17,11 @@ type PlaywrightRunner struct {
 func (r *PlaywrightRunner) RunProject() (int, error) {
 	exitCode := 1
 
-	files := []string{}
-
-	if r.Project.RootDir != "" {
-		files = append(files, r.Project.RootDir)
-	} else if r.Project.Playwright.LocalProjectPath != "" {
-		files = append(files, r.Project.Playwright.LocalProjectPath)
+	if err := r.validateTunnel(r.Project.Sauce.Tunnel.ID); err != nil {
+		return 1, err
 	}
-	fileID, err := r.archiveAndUpload(r.Project, files, r.Project.Sauce.Sauceignore)
+
+	fileID, err := r.archiveAndUpload(r.Project, []string{r.Project.Playwright.LocalProjectPath}, r.Project.Sauce.Sauceignore)
 	if err != nil {
 		return exitCode, err
 	}

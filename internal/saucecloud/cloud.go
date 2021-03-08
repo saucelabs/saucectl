@@ -3,6 +3,7 @@ package saucecloud
 import (
 	"context"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/tunnel"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -27,6 +28,7 @@ type CloudRunner struct {
 	JobStarter      job.Starter
 	JobReader       job.Reader
 	CCYReader       concurrency.Reader
+	TunnelService   tunnel.Service
 	Region          region.Region
 	ShowConsoleLog  bool
 }
@@ -232,4 +234,20 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	} else {
 		log.Info().Str("suite", res.suiteName).Msgf("console.log output: \n%s", assetContent)
 	}
+}
+
+func (r *CloudRunner) validateTunnel(id string) error {
+	if id == "" {
+		return nil
+	}
+
+	// This wait value is deliberately not configurable.
+	wait := 30 * time.Second
+	log.Info().Str("timeout", wait.String()).Msg("Performing tunnel readiness check...")
+	if err := r.TunnelService.IsTunnelRunning(context.Background(), id, wait); err != nil {
+		return err
+	}
+
+	log.Info().Msg("Tunnel is ready!")
+	return nil
 }

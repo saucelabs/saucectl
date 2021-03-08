@@ -18,6 +18,8 @@ var (
 	ErrServerError = errors.New("internal server error")
 	// ErrJobNotFound is returned when the requested job was not found.
 	ErrJobNotFound = errors.New("job was not found")
+	// ErrTunnelNotFound is returned when the requested tunnel was not found.
+	ErrTunnelNotFound = errors.New("tunnel not found")
 )
 
 // Client http client.
@@ -28,16 +30,25 @@ type Client struct {
 	AccessKey  string
 }
 
-// concurrencyResponse is the response body as is returned by resto's rest/v1.2/users/{username}/concurrency
+// concurrencyResponse is the response body as is returned by resto's rest/v1.2/users/{username}/concurrency endpoint.
 type concurrencyResponse struct {
 	Concurrency struct {
 		Organization struct {
 			Allowed struct {
-				VMS    int `json:"vms"`
-				RDS    int `json:"rds"`
+				VMS int `json:"vms"`
+				RDS int `json:"rds"`
 			}
 		}
 	}
+}
+
+// availableTunnelsResponse is the response body as is returned by resto's rest/v1.1/users/{username}/available_tunnels endpoint.
+type availableTunnelsResponse map[string][]tunnel
+
+type tunnel struct {
+	ID       string `json:"id"`
+	Status   string `json:"status"` // 'new', 'booting', 'deploying', 'halting', 'running', 'terminated'
+	TunnelID string `json:"tunnel_identifier"`
 }
 
 // New creates a new client.
@@ -115,6 +126,63 @@ func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
 	}
 
 	return cr.Concurrency.Organization.Allowed.VMS, nil
+}
+
+// IsTunnelRunning checks whether tunnelID is running. If not, it will wait for the tunnel to become available or
+// timeout. Whichever comes first.
+func (c *Client) IsTunnelRunning(ctx context.Context, id string, wait time.Duration) error {
+	deathclock := time.Now().Add(wait)
+	var err error
+	for time.Now().Before(deathclock) {
+		if err = c.isTunnelRunning(ctx, id); err == nil {
+			return nil
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	return err
+}
+
+func (c *Client) isTunnelRunning(ctx context.Context, id string) error {
+	req, err := requesth.NewWithContext(ctx, http.MethodGet,
+		fmt.Sprintf("%s/rest/v1.1/%s/available_tunnels", c.URL, c.Username), nil)
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	q := req.URL.Query()
+	q.Add("full", "true")
+	req.URL.RawQuery = q.Encode()
+
+	res, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return err
+	}
+	if res.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(res.Body)
+		err := fmt.Errorf("tunnel request failed; unexpected response code:'%d', msg:'%v'", res.StatusCode, string(body))
+		return err
+	}
+
+	var resp availableTunnelsResponse
+	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+		return err
+	}
+
+	for _, tt := range resp {
+		for _, t := range tt {
+			// User could be using tunnel name (aka tunnel_identifier) or the tunnel ID. Make sure we check both.
+			if t.TunnelID != id && t.ID != id {
+				continue
+			}
+			if t.Status == "running" {
+				return nil
+			}
+		}
+	}
+
+	return ErrTunnelNotFound
 }
 
 func doAssetRequest(httpClient *http.Client, request *http.Request) ([]byte, error) {

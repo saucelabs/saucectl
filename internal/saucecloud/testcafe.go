@@ -17,15 +17,11 @@ type TestcafeRunner struct {
 func (r *TestcafeRunner) RunProject() (int, error) {
 	exitCode := 1
 
-	files := []string{}
-
-	if r.Project.RootDir != "" {
-		files = append(files, r.Project.RootDir)
-	} else if r.Project.Testcafe.ProjectPath != "" {
-		files = append(files, r.Project.Testcafe.ProjectPath)
+	if err := r.validateTunnel(r.Project.Sauce.Tunnel.ID); err != nil {
+		return 1, err
 	}
 
-	fileID, err := r.archiveAndUpload(r.Project, files, r.Project.Sauce.Sauceignore)
+	fileID, err := r.archiveAndUpload(r.Project, []string{r.Project.Testcafe.ProjectPath}, r.Project.Sauce.Sauceignore)
 	if err != nil {
 		return exitCode, err
 	}
