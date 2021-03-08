@@ -91,13 +91,6 @@ func FromFile(cfgPath string) (Project, error) {
 	p.Playwright.LocalProjectPath = p.Playwright.ProjectPath
 	p.Playwright.ProjectPath = filepath.Base(p.Playwright.ProjectPath)
 
-	// Check rootDir if it is set.
-	if p.RootDir != "" {
-		if _, err := os.Stat(p.RootDir); err != nil {
-			return p, fmt.Errorf("unable to locate the rootDir folder %s", p.RootDir)
-		}
-	}
-
 	// Default mode to Mount
 	if p.Docker.FileTransfer == "" {
 		p.Docker.FileTransfer = config.DockerFileMount

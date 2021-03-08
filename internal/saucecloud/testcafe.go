@@ -17,7 +17,15 @@ type TestcafeRunner struct {
 func (r *TestcafeRunner) RunProject() (int, error) {
 	exitCode := 1
 
-	fileID, err := r.archiveAndUpload(r.Project, []string{r.Project.Testcafe.ProjectPath}, r.Project.Sauce.Sauceignore)
+	files := []string{}
+
+	if r.Project.RootDir != "" {
+		files = append(files, r.Project.RootDir)
+	} else if r.Project.Testcafe.ProjectPath != "" {
+		files = append(files, r.Project.Testcafe.ProjectPath)
+	}
+
+	fileID, err := r.archiveAndUpload(r.Project, files, r.Project.Sauce.Sauceignore)
 	if err != nil {
 		return exitCode, err
 	}
