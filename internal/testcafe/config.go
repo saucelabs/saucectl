@@ -78,7 +78,7 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 
 	if p.Testcafe.ProjectPath == "" && p.RootDir == "" {
-		return p, fmt.Errorf("could not find 'testcafe.projectPath' or 'rootDir' in config yml, one of those two must be set to a directory containing your project")
+		return p, fmt.Errorf("could not find 'rootDir' in config yml, 'rootDir' must be set to specify project files")
 	}
 
 	if p.Testcafe.ProjectPath != "" && p.RootDir != "" {

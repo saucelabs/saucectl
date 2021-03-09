@@ -77,7 +77,7 @@ func FromFile(cfgPath string) (Project, error) {
 
 	// Default project path
 	if p.Playwright.ProjectPath == "" && p.RootDir == "" {
-		return Project{}, fmt.Errorf("could not find 'playwright.projectPath' or 'rootDir' in config yml, one of those two must be set to a directory containing your project")
+		return Project{}, fmt.Errorf("could not find 'rootDir' in config yml, 'rootDir' must be set to specify project files")
 	}
 
 	if p.Playwright.ProjectPath != "" && p.RootDir != "" {
