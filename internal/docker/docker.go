@@ -1,7 +1,6 @@
 package docker
 
 import (
-	"archive/tar"
 	"bytes"
 	"context"
 	"encoding/base64"
@@ -14,7 +13,7 @@ import (
 	"path/filepath"
 	"time"
 
-	t "github.com/saucelabs/saucectl/internal/archive/tar"
+	"github.com/saucelabs/saucectl/internal/archive/tar"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -316,26 +315,32 @@ func (handler *Handler) CopyToContainer(ctx context.Context, containerID string,
 	}
 
 	// Refactor
-	tempDir, err := os.MkdirTemp("", "saucectl-docker-copy")
-	if err != nil {
-		return err
-	}
-	//defer os.RemoveAll(tempDir)
-	tarFile := filepath.Join(tempDir, "app.tar")
-	tw, err := t.NewWriter(tarFile, nil)
-	if err != nil {
-		return err
-	}
-	tw.Add(srcFile)
-	defer tw.Close()
+	//tempDir, err := os.MkdirTemp("", "saucectl-docker-copy")
+	//if err != nil {
+	//	return err
+	//}
+	////defer os.RemoveAll(tempDir)
+	//tarFile := filepath.Join(tempDir, "app.tar")
+	//tw, err := t.NewWriter("", nil)
+	//if err != nil {
+	//	return err
+	//}
+	//tw.Add(srcFile)
+	//defer tw.Close()
 
-	file, err := os.Open(tarFile)
+	//file, err := os.Open(tarFile)
+	//if err != nil {
+	//	return err
+	//}
+	//defer file.Close()
+
+	tarReader, err := tar.TarResource(srcFile)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
 
-	tarReader := tar.NewReader(file)
+	//fmt.Println("Src file")
+	//fmt.Println(srcFile)
 
 	// TODO was before
 	//srcArchive, err := archive.TarResource(srcInfo)
@@ -351,7 +356,12 @@ func (handler *Handler) CopyToContainer(ctx context.Context, containerID string,
 	}
 	defer preparedArchive.Close()
 
-	return handler.client.CopyToContainer(ctx, containerID, resolvedDstPath, tarReader, types.CopyToContainerOptions{})
+	err = handler.client.CopyToContainer(ctx, containerID, resolvedDstPath, preparedArchive, types.CopyToContainerOptions{})
+	if err != nil {
+		fmt.Println("handler.client.CopyToContainer")
+	}
+
+	return err
 }
 
 // CopyFromContainer downloads a file from the testrunner container
