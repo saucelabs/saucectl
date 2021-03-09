@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -64,14 +65,14 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 
 	done := make(chan interface{})
 	go func() {
-		t := time.NewTicker(15 * time.Second)
+		t := time.NewTicker(10 * time.Second)
 		defer t.Stop()
 		for {
 			select {
 			case <-done:
 				break
 			case <-t.C:
-				log.Info().Msgf("Suites completed: %d/%d", completed, expected)
+				log.Info().Msgf("Suites in progress: %d", inProgress)
 			}
 		}
 	}()
@@ -92,9 +93,19 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 	}
 	close(done)
 
-	log.Info().Msgf("Suites expected: %d", expected)
-	log.Info().Msgf("Suites passed: %d", expected-errCount)
-	log.Info().Msgf("Suites failed: %d", errCount)
+	if errCount != 0 {
+		relative := float64(errCount) / float64(expected) * 100
+		msg := fmt.Sprintf(" %d of %d suites have failed (%.0f%%) ", errCount, expected, relative)
+		dashes := strings.Repeat("─", len(msg)-2)
+		log.Error().Msgf("┌%s┐", dashes)
+		log.Error().Msg(msg)
+		log.Error().Msgf("└%s┘", dashes)
+		return passed
+	}
+
+	log.Info().Msg("┌───────────────────────┐")
+	log.Info().Msg(" All suites have passed! ")
+	log.Info().Msg("└───────────────────────┘")
 
 	return passed
 }
