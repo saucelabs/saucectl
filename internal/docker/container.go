@@ -285,12 +285,7 @@ func (r *ContainerRunner) collectResults(results chan result, expected int) bool
 	close(done)
 
 	if errCount != 0 {
-		relative := float64(errCount) / float64(expected) * 100
-		msg := fmt.Sprintf(" %d of %d suites have failed (%.0f%%) ", errCount, expected, relative)
-		dashes := strings.Repeat("─", len(msg)-2)
-		log.Error().Msgf("┌%s┐", dashes)
-		log.Error().Msg(msg)
-		log.Error().Msgf("└%s┘", dashes)
+		msg.LogTestFailure(errCount, expected)
 		return passed
 	}
 
