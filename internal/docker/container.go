@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"io/ioutil"
 	"os"
 	"path"
@@ -293,9 +294,7 @@ func (r *ContainerRunner) collectResults(results chan result, expected int) bool
 		return passed
 	}
 
-	log.Info().Msg("┌───────────────────────┐")
-	log.Info().Msg(" All suites have passed! ")
-	log.Info().Msg("└───────────────────────┘")
+	msg.LogTestSuccess()
 
 	return passed
 }
