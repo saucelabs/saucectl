@@ -257,6 +257,7 @@ func (r *CloudRunner) validateTunnel(id string) error {
 	}
 
 	log.Info().Msg("Tunnel is ready!")
+	return nil
 }
 
 func (r *CloudRunner) dryRun(project interface{}, files []string, sauceIgnoreFile string, suiteNames string) error {
