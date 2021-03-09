@@ -79,10 +79,12 @@ func FromFile(cfgPath string) (Project, error) {
 	if p.Playwright.ProjectPath == "" && p.RootDir == "" {
 		return Project{}, fmt.Errorf("could not find 'rootDir' in config yml, 'rootDir' must be set to specify project files")
 	}
-
+	if p.Playwright.ProjectPath != "" {
+		log.Warn().Msg("'playwright.projectPath' is deprecated. Consider using 'rootDir' instead")
+	}
 	if p.Playwright.ProjectPath != "" && p.RootDir != "" {
 		log.Info().Msgf(
-			"Found both 'playwright.projectPath=%s' and 'rootDir=%s' in config. Defaulting to rootDir '%s'",
+			"Found both 'playwright.projectPath=%s' and 'rootDir=%s' in config. 'projectPath' is deprecated, so defaulting to rootDir '%s'",
 			p.Playwright.ProjectPath, p.RootDir, p.RootDir,
 		)
 	}

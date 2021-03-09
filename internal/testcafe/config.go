@@ -80,10 +80,13 @@ func FromFile(cfgPath string) (Project, error) {
 	if p.Testcafe.ProjectPath == "" && p.RootDir == "" {
 		return p, fmt.Errorf("could not find 'rootDir' in config yml, 'rootDir' must be set to specify project files")
 	}
+	if p.Testcafe.ProjectPath != "" {
+		log.Warn().Msg("'testcafe.projectPath' is deprecated. Consider using 'rootDir' instead")
+	}
 
 	if p.Testcafe.ProjectPath != "" && p.RootDir != "" {
 		log.Info().Msgf(
-			"Found both 'testcafe.projectPath=%s' and 'rootDir=%s' in config. Defaulting to rootDir '%s'",
+			"Found both 'testcafe.projectPath=%s' and 'rootDir=%s' in config. 'projectPath' is deprecated, so defaulting to rootDir '%s'",
 			p.Testcafe.ProjectPath, p.RootDir, p.RootDir,
 		)
 	}
