@@ -20,6 +20,7 @@ type Project struct {
 	Docker         config.Docker      `yaml:"docker,omitempty" json:"docker"`
 	Testcafe       Testcafe           `yaml:"testcafe,omitempty" json:"testcafe"`
 	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
+	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
 	RunnerVersion  string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
 }
 
@@ -76,8 +77,18 @@ func FromFile(cfgPath string) (Project, error) {
 		return p, fmt.Errorf("failed to parse project config: %v", err)
 	}
 
-	if p.Testcafe.ProjectPath == "" {
-		return p, fmt.Errorf("no project folder defined")
+	if p.Testcafe.ProjectPath == "" && p.RootDir == "" {
+		return p, fmt.Errorf("could not find 'rootDir' in config yml, 'rootDir' must be set to specify project files")
+	}
+	if p.Testcafe.ProjectPath != "" && p.RootDir == "" {
+		log.Warn().Msg("'testcafe.projectPath' is deprecated. Consider using 'rootDir' instead")
+	}
+
+	if p.Testcafe.ProjectPath != "" && p.RootDir != "" {
+		log.Info().Msgf(
+			"Found both 'testcafe.projectPath=%s' and 'rootDir=%s' in config. 'projectPath' is deprecated, so defaulting to rootDir '%s'",
+			p.Testcafe.ProjectPath, p.RootDir, p.RootDir,
+		)
 	}
 
 	p.Testcafe.Version = config.StandardizeVersionFormat(p.Testcafe.Version)

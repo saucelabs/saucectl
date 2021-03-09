@@ -21,6 +21,7 @@ type Project struct {
 	BeforeExec     []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
 	Docker         config.Docker      `yaml:"docker,omitempty" json:"docker"`
 	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
+	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
 	RunnerVersion  string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
 }
 
@@ -75,8 +76,17 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 
 	// Default project path
-	if p.Playwright.ProjectPath == "" {
-		return Project{}, fmt.Errorf("no project folder defined")
+	if p.Playwright.ProjectPath == "" && p.RootDir == "" {
+		return Project{}, fmt.Errorf("could not find 'rootDir' in config yml, 'rootDir' must be set to specify project files")
+	}
+	if p.Playwright.ProjectPath != "" && p.RootDir == "" {
+		log.Warn().Msg("'playwright.projectPath' is deprecated. Consider using 'rootDir' instead")
+	}
+	if p.Playwright.ProjectPath != "" && p.RootDir != "" {
+		log.Info().Msgf(
+			"Found both 'playwright.projectPath=%s' and 'rootDir=%s' in config. 'projectPath' is deprecated, so defaulting to rootDir '%s'",
+			p.Playwright.ProjectPath, p.RootDir, p.RootDir,
+		)
 	}
 
 	// Store local path since we provide only last level folder in runner
