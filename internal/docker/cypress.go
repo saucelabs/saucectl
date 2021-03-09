@@ -78,6 +78,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 				SuiteName:   suite.Name,
 				Environment: suite.Config.Env,
 				Files:       files,
+				Sauceignore: r.Project.Sauce.Sauceignore,
 			}
 		}
 		close(containerOpts)

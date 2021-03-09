@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/saucelabs/saucectl/internal/sauceignore"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/dots"
@@ -37,6 +39,7 @@ type containerStartOptions struct {
 	SuiteName   string
 	Environment map[string]string
 	Files       []string
+	Sauceignore string
 }
 
 // result represents the result of a local job
@@ -138,7 +141,12 @@ func (r *ContainerRunner) startContainer(options containerStartOptions) (string,
 		return "", err
 	}
 
-	if err := r.docker.CopyToContainer(r.Ctx, containerID, rcPath, pDir); err != nil {
+	matcher, err := sauceignore.NewMatcherFromFile(options.Sauceignore)
+	if err != nil {
+		return "", err
+	}
+
+	if err := r.docker.CopyToContainer(r.Ctx, containerID, rcPath, pDir, matcher); err != nil {
 		return "", err
 	}
 	r.containerConfig.sauceRunnerConfigPath = path.Join(pDir, SauceRunnerConfigFile)
@@ -153,14 +161,14 @@ func (r *ContainerRunner) startContainer(options containerStartOptions) (string,
 }
 
 func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string) (output string, jobInfo jobInfo, passed bool, err error) {
-	//defer func() {
-	//	log.Info().Str("suite", suiteName).Msg("Tearing down environment")
-	//	if err := r.docker.Teardown(r.Ctx, containerID); err != nil {
-	//		if !r.docker.IsErrNotFound(err) {
-	//			log.Error().Err(err).Str("suite", suiteName).Msg("Failed to tear down environment")
-	//		}
-	//	}
-	//}()
+	defer func() {
+		log.Info().Str("suite", suiteName).Msg("Tearing down environment")
+		if err := r.docker.Teardown(r.Ctx, containerID); err != nil {
+			if !r.docker.IsErrNotFound(err) {
+				log.Error().Err(err).Str("suite", suiteName).Msg("Failed to tear down environment")
+			}
+		}
+	}()
 
 	exitCode, output, err := r.docker.ExecuteAttach(r.Ctx, containerID, cmd, env)
 

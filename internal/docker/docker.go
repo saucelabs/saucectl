@@ -13,8 +13,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/archive/tar"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -28,8 +26,10 @@ import (
 	"github.com/phayes/freeport"
 	"github.com/rs/zerolog/log"
 
+	"github.com/saucelabs/saucectl/internal/archive/tar"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/streams"
 	"github.com/saucelabs/saucectl/internal/utils"
 )
@@ -242,7 +242,11 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 	}
 
 	if options.Docker.FileTransfer == config.DockerFileCopy {
-		if err := copyTestFiles(ctx, handler, container.ID, options.SuiteName, options.Files, pDir); err != nil {
+		matcher, err := sauceignore.NewMatcherFromFile(options.Sauceignore)
+		if err != nil {
+			return nil, err
+		}
+		if err := copyTestFiles(ctx, handler, container.ID, options.SuiteName, options.Files, pDir, matcher); err != nil {
 			return nil, err
 		}
 	}
@@ -259,10 +263,11 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 }
 
 // copyTestFiles copies the files within the container.
-func copyTestFiles(ctx context.Context, handler *Handler, containerID, suiteName string, files []string, pDir string) error {
+func copyTestFiles(ctx context.Context, handler *Handler, containerID, suiteName string, files []string, pDir string,
+	matcher sauceignore.Matcher) error {
 	for _, file := range files {
 		log.Info().Str("from", file).Str("to", pDir).Str("suite", suiteName).Msg("File copied")
-		if err := handler.CopyToContainer(ctx, containerID, file, pDir); err != nil {
+		if err := handler.CopyToContainer(ctx, containerID, file, pDir, matcher); err != nil {
 			return err
 		}
 	}
@@ -298,9 +303,10 @@ func createMounts(suiteName string, files []string, target string) ([]mount.Moun
 }
 
 // CopyFilesToContainer copies the given files into the container.
-func (handler *Handler) CopyFilesToContainer(ctx context.Context, srcContainerID string, files []string, targetDir string) error {
+func (handler *Handler) CopyFilesToContainer(ctx context.Context, srcContainerID string, files []string, targetDir string,
+	matcher sauceignore.Matcher) error {
 	for _, fpath := range files {
-		if err := handler.CopyToContainer(ctx, srcContainerID, fpath, targetDir); err != nil {
+		if err := handler.CopyToContainer(ctx, srcContainerID, fpath, targetDir, matcher); err != nil {
 			return err
 		}
 	}
@@ -308,46 +314,17 @@ func (handler *Handler) CopyFilesToContainer(ctx context.Context, srcContainerID
 }
 
 // CopyToContainer copies the given file to the container.
-func (handler *Handler) CopyToContainer(ctx context.Context, containerID string, srcFile string, targetDir string) error {
+func (handler *Handler) CopyToContainer(ctx context.Context, containerID string, srcFile string, targetDir string,
+	matcher sauceignore.Matcher) error {
 	srcInfo, err := archive.CopyInfoSourcePath(srcFile, true)
 	if err != nil {
 		return err
 	}
 
-	// Refactor
-	//tempDir, err := os.MkdirTemp("", "saucectl-docker-copy")
-	//if err != nil {
-	//	return err
-	//}
-	////defer os.RemoveAll(tempDir)
-	//tarFile := filepath.Join(tempDir, "app.tar")
-	//tw, err := t.NewWriter("", nil)
-	//if err != nil {
-	//	return err
-	//}
-	//tw.Add(srcFile)
-	//defer tw.Close()
-
-	//file, err := os.Open(tarFile)
-	//if err != nil {
-	//	return err
-	//}
-	//defer file.Close()
-
-	tarReader, err := tar.TarResource(srcFile)
+	tarReader, err := tar.TarResource(srcFile, matcher)
 	if err != nil {
 		return err
 	}
-
-	//fmt.Println("Src file")
-	//fmt.Println(srcFile)
-
-	// TODO was before
-	//srcArchive, err := archive.TarResource(srcInfo)
-	//if err != nil {
-	//	return err
-	//}
-	//defer srcArchive.Close()
 
 	dstInfo := archive.CopyInfo{IsDir: srcInfo.IsDir, Path: filepath.Join(targetDir, filepath.Base(srcInfo.Path))}
 	resolvedDstPath, preparedArchive, err := archive.PrepareArchiveCopy(tarReader, srcInfo, dstInfo)
@@ -356,12 +333,7 @@ func (handler *Handler) CopyToContainer(ctx context.Context, containerID string,
 	}
 	defer preparedArchive.Close()
 
-	err = handler.client.CopyToContainer(ctx, containerID, resolvedDstPath, preparedArchive, types.CopyToContainerOptions{})
-	if err != nil {
-		fmt.Println("handler.client.CopyToContainer")
-	}
-
-	return err
+	return handler.client.CopyToContainer(ctx, containerID, resolvedDstPath, preparedArchive, types.CopyToContainerOptions{})
 }
 
 // CopyFromContainer downloads a file from the testrunner container

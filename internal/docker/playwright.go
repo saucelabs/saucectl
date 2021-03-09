@@ -70,6 +70,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 				SuiteName:   suite.Name,
 				Environment: suite.Env,
 				Files:       files,
+				Sauceignore: r.Project.Sauce.Sauceignore,
 			}
 		}
 		close(containerOpts)
