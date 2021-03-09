@@ -24,6 +24,9 @@ func TarResource(src string, matcher sauceignore.Matcher) (io.Reader, error) {
 		}
 
 		header, err := tar.FileInfoHeader(fileInfo, file)
+		if err != nil {
+			return err
+		}
 
 		relFilePath := file
 		if filepath.IsAbs(src) {
