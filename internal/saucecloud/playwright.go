@@ -2,7 +2,9 @@ package saucecloud
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
@@ -21,6 +23,14 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
+	if r.Project.DryRun {
+		log.Warn().Msg("Running Playwright test in dry run mode.")
+		if err := r.dryRun(r.Project, []string{r.Project.Playwright.LocalProjectPath}, r.Project.Sauce.Sauceignore, r.getSuiteNames()); err != nil {
+			return exitCode, err
+		}
+		return 0, nil
+	}
+
 	fileID, err := r.archiveAndUpload(r.Project, []string{r.Project.Playwright.LocalProjectPath}, r.Project.Sauce.Sauceignore)
 	if err != nil {
 		return exitCode, err
@@ -32,6 +42,15 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 	}
 
 	return exitCode, nil
+}
+
+func (r *PlaywrightRunner) getSuiteNames() string {
+	names := []string{}
+	for _, s := range r.Project.Suites {
+		names = append(names, s.Name)
+	}
+
+	return strings.Join(names, ", ")
 }
 
 func (r *PlaywrightRunner) runSuites(fileID string) bool {

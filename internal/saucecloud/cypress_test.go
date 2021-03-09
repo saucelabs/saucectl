@@ -212,3 +212,17 @@ func TestRunProject(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, cnt, 0)
 }
+
+func TestCypress_GetSuiteNames(t *testing.T) {
+	runner := &CypressRunner{
+		Project: cypress.Project{
+			Suites: []cypress.Suite{
+				{Name: "suite1"},
+				{Name: "suite2"},
+				{Name: "suite3"},
+			},
+		},
+	}
+
+	assert.Equal(t, "suite1, suite2, suite3", runner.getSuiteNames())
+}

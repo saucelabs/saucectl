@@ -2,7 +2,9 @@ package saucecloud
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 )
@@ -21,6 +23,14 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
+	if r.Project.DryRun {
+		log.Warn().Msg("Running Testcafe test in dry run mode.")
+		if err := r.dryRun(r.Project, []string{r.Project.Testcafe.ProjectPath}, r.Project.Sauce.Sauceignore, r.getSuiteNames()); err != nil {
+			return exitCode, err
+		}
+		return 0, nil
+	}
+
 	fileID, err := r.archiveAndUpload(r.Project, []string{r.Project.Testcafe.ProjectPath}, r.Project.Sauce.Sauceignore)
 	if err != nil {
 		return exitCode, err
@@ -31,6 +41,15 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 	}
 
 	return exitCode, nil
+}
+
+func (r *TestcafeRunner) getSuiteNames() string {
+	names := []string{}
+	for _, s := range r.Project.Suites {
+		names = append(names, s.Name)
+	}
+
+	return strings.Join(names, ", ")
 }
 
 func (r *TestcafeRunner) runSuites(fileID string) bool {

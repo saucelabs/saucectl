@@ -2,6 +2,9 @@ package saucecloud
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
 )
@@ -36,6 +39,13 @@ func (r *CypressRunner) RunProject() (int, error) {
 		files = append(files, r.Project.RootDir)
 	}
 
+	if r.Project.DryRun {
+		log.Warn().Msg("Running Cypress test in dry run mode.")
+		if err := r.dryRun(r.Project, files, r.Project.Sauce.Sauceignore, r.getSuiteNames()); err != nil {
+			return exitCode, err
+		}
+		return 0, nil
+	}
 	fileID, err := r.archiveAndUpload(r.Project, files, r.Project.Sauce.Sauceignore)
 	if err != nil {
 		return exitCode, err
@@ -47,6 +57,14 @@ func (r *CypressRunner) RunProject() (int, error) {
 	}
 
 	return exitCode, nil
+}
+
+func (r *CypressRunner) getSuiteNames() string {
+	names := []string{}
+	for _, s := range r.Project.Suites {
+		names = append(names, s.Name)
+	}
+	return strings.Join(names, ", ")
 }
 
 // checkCypressVersion do several checks before running Cypress tests.

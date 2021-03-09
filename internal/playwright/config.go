@@ -23,6 +23,7 @@ type Project struct {
 	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
 	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
 	RunnerVersion  string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
+	DryRun         bool
 }
 
 // Playwright represents crucial playwright configuration that is required for setting up a project.

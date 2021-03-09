@@ -3,15 +3,15 @@ package saucecloud
 import (
 	"context"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/tunnel"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/tunnel"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -257,5 +257,19 @@ func (r *CloudRunner) validateTunnel(id string) error {
 	}
 
 	log.Info().Msg("Tunnel is ready!")
+}
+
+func (r *CloudRunner) dryRun(project interface{}, files []string, sauceIgnoreFile string, suiteNames string) error {
+	tmpDir, err := ioutil.TempDir("./", "sauce-app-payload-*")
+	if err != nil {
+		return err
+	}
+	log.Info().Msgf("Detected following test suites: %s.", suiteNames)
+	zipName, err := r.archiveProject(project, tmpDir, files, sauceIgnoreFile)
+	if err != nil {
+		return err
+	}
+
+	log.Info().Msgf("Skipping project upload. Saving bundled project to %s.", zipName)
 	return nil
 }
