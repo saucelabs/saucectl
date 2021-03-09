@@ -5,17 +5,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/dots"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/progress"
@@ -264,8 +265,19 @@ func (r *ContainerRunner) collectResults(results chan result, expected int) bool
 	inProgress := expected
 	passed := true
 
-	waiter := dots.New(1)
-	waiter.Start()
+	done := make(chan interface{})
+	go func() {
+		t := time.NewTicker(10 * time.Second)
+		defer t.Stop()
+		for {
+			select {
+			case <-done:
+				break
+			case <-t.C:
+				log.Info().Msgf("Suites in progress: %d", inProgress)
+			}
+		}
+	}()
 	for i := 0; i < expected; i++ {
 		res := <-results
 		completed++
@@ -276,19 +288,16 @@ func (r *ContainerRunner) collectResults(results chan result, expected int) bool
 			passed = false
 		}
 
-		// Logging is not synchronized over the different worker routines & dot routine.
-		// To avoid implementing a more complex solution centralizing output on only one
-		// routine, a new lines has simply been forced, to ensure that line starts from
-		// the beginning of the console.
-		fmt.Println("")
-		log.Info().Msgf("Suites completed: %d/%d", completed, expected)
 		r.logSuite(res)
 	}
-	waiter.Stop()
+	close(done)
 
-	log.Info().Msgf("Suites expected: %d", expected)
-	log.Info().Msgf("Suites passed: %d", expected-errCount)
-	log.Info().Msgf("Suites failed: %d", errCount)
+	if errCount != 0 {
+		msg.LogTestFailure(errCount, expected)
+		return passed
+	}
+
+	msg.LogTestSuccess()
 
 	return passed
 }

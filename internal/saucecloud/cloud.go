@@ -3,6 +3,8 @@ package saucecloud
 import (
 	"context"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/tunnel"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -12,7 +14,6 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/concurrency"
-	"github.com/saucelabs/saucectl/internal/dots"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/progress"
@@ -27,6 +28,7 @@ type CloudRunner struct {
 	JobStarter      job.Starter
 	JobReader       job.Reader
 	CCYReader       concurrency.Reader
+	TunnelService   tunnel.Service
 	Region          region.Region
 	ShowConsoleLog  bool
 }
@@ -61,8 +63,19 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 	inProgress := expected
 	passed := true
 
-	waiter := dots.New(1)
-	waiter.Start()
+	done := make(chan interface{})
+	go func() {
+		t := time.NewTicker(10 * time.Second)
+		defer t.Stop()
+		for {
+			select {
+			case <-done:
+				break
+			case <-t.C:
+				log.Info().Msgf("Suites in progress: %d", inProgress)
+			}
+		}
+	}()
 	for i := 0; i < expected; i++ {
 		res := <-results
 		// in case one of test suites not passed
@@ -72,23 +85,20 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 		completed++
 		inProgress--
 
-		// Logging is not synchronized over the different worker routines & dot routine.
-		// To avoid implementing a more complex solution centralizing output on only one
-		// routine, a new lines has simply been forced, to ensure that line starts from
-		// the beginning of the console.
-		fmt.Println("")
-		log.Info().Msgf("Suites completed: %d/%d", completed, expected)
 		r.logSuite(res)
 
 		if res.job.ID == "" || res.err != nil {
 			errCount++
 		}
 	}
-	waiter.Stop()
+	close(done)
 
-	log.Info().Msgf("Suites expected: %d", expected)
-	log.Info().Msgf("Suites passed: %d", expected-errCount)
-	log.Info().Msgf("Suites failed: %d", errCount)
+	if errCount != 0 {
+		msg.LogTestFailure(errCount, expected)
+		return passed
+	}
+
+	msg.LogTestSuccess()
 
 	return passed
 }
@@ -232,4 +242,20 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	} else {
 		log.Info().Str("suite", res.suiteName).Msgf("console.log output: \n%s", assetContent)
 	}
+}
+
+func (r *CloudRunner) validateTunnel(id string) error {
+	if id == "" {
+		return nil
+	}
+
+	// This wait value is deliberately not configurable.
+	wait := 30 * time.Second
+	log.Info().Str("timeout", wait.String()).Msg("Performing tunnel readiness check...")
+	if err := r.TunnelService.IsTunnelRunning(context.Background(), id, wait); err != nil {
+		return err
+	}
+
+	log.Info().Msg("Tunnel is ready!")
+	return nil
 }
