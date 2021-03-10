@@ -18,6 +18,7 @@ import (
 type Project struct {
 	config.TypeDef `yaml:",inline"`
 	ShowConsoleLog bool
+	DryRun         bool               `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Cypress        Cypress            `yaml:"cypress,omitempty" json:"cypress"`
 	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
@@ -26,7 +27,6 @@ type Project struct {
 	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
 	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
 	RunnerVersion  string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
-	DryRun         bool
 }
 
 // Suite represents the cypress test suite configuration.

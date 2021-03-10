@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
 )
@@ -40,7 +39,6 @@ func (r *CypressRunner) RunProject() (int, error) {
 	}
 
 	if r.Project.DryRun {
-		log.Warn().Msg("Running Cypress test in dry run mode.")
 		if err := r.dryRun(r.Project, files, r.Project.Sauce.Sauceignore, r.getSuiteNames()); err != nil {
 			return exitCode, err
 		}

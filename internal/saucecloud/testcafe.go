@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 )
@@ -24,7 +23,6 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 	}
 
 	if r.Project.DryRun {
-		log.Warn().Msg("Running Testcafe test in dry run mode.")
 		if err := r.dryRun(r.Project, []string{r.Project.Testcafe.ProjectPath}, r.Project.Sauce.Sauceignore, r.getSuiteNames()); err != nil {
 			return exitCode, err
 		}

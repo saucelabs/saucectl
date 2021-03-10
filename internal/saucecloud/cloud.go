@@ -3,7 +3,6 @@ package saucecloud
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -142,7 +141,7 @@ func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- re
 }
 
 func (r CloudRunner) archiveAndUpload(project interface{}, files []string, sauceignoreFile string) (string, error) {
-	tempDir, err := ioutil.TempDir(os.TempDir(), "saucectl-app-payload")
+	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload")
 	if err != nil {
 		return "", err
 	}
@@ -261,16 +260,17 @@ func (r *CloudRunner) validateTunnel(id string) error {
 }
 
 func (r *CloudRunner) dryRun(project interface{}, files []string, sauceIgnoreFile string, suiteNames string) error {
-	tmpDir, err := ioutil.TempDir("./", "sauce-app-payload-*")
+	log.Warn().Msg("Running tests in dry run mode.")
+	tmpDir, err := os.MkdirTemp("./", "sauce-app-payload-*")
 	if err != nil {
 		return err
 	}
-	log.Info().Msgf("Detected following test suites: %s.", suiteNames)
+	log.Info().Msgf("The following test suites would have run: [%s].", suiteNames)
 	zipName, err := r.archiveProject(project, tmpDir, files, sauceIgnoreFile)
 	if err != nil {
 		return err
 	}
 
-	log.Info().Msgf("Skipping project upload. Saving bundled project to %s.", zipName)
+	log.Info().Msgf("Saving bundled project to %s.", zipName)
 	return nil
 }
