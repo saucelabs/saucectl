@@ -12,7 +12,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 )
 
-func TestResource(t *testing.T) {
+func TestArchive(t *testing.T) {
 	dir := fs.NewDir(t, "tests",
 		fs.WithDir("screenshots", fs.WithFile("screenshot1.png", "foo", fs.WithMode(0755))),
 		fs.WithFile("some.foo.js", "foo", fs.WithMode(0755)),
@@ -53,7 +53,7 @@ func TestResource(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			reader, err := Resource(dir.Path(), tt.matcher)
+			reader, err := Archive(dir.Path(), tt.matcher)
 			if err != nil {
 				t.Error(err)
 			}

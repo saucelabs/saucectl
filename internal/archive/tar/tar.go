@@ -11,8 +11,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 )
 
-// Resource archives the resource and exclude files and folders based on sauceignore logic.
-func Resource(src string, matcher sauceignore.Matcher) (io.Reader, error) {
+// Archive archives the resource and exclude files and folders based on sauceignore logic.
+func Archive(src string, matcher sauceignore.Matcher) (io.Reader, error) {
 	bb := new(bytes.Buffer)
 	w := tar.NewWriter(bb)
 	defer w.Close()
@@ -30,7 +30,10 @@ func Resource(src string, matcher sauceignore.Matcher) (io.Reader, error) {
 
 		relFilePath := file
 		if filepath.IsAbs(src) {
-			// copy temp files
+			/*
+				for temporary files filepath.Rel would return "." as a relative path,
+				that's why we need to make an exception for temporary files and return only the last element
+			*/
 			if strings.Contains(src, os.TempDir()) {
 				relFilePath = filepath.Base(file)
 			} else {
@@ -47,11 +50,14 @@ func Resource(src string, matcher sauceignore.Matcher) (io.Reader, error) {
 			return err
 		}
 
-		if fileInfo.Mode().IsDir() {
+		if fileInfo.IsDir() {
 			return nil
 		}
 
 		srcFile, err := os.Open(file)
+		if err != nil {
+			return err
+		}
 		defer srcFile.Close()
 
 		_, err = io.Copy(w, srcFile)
