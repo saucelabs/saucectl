@@ -26,6 +26,7 @@ npm install -g saucectl
 
 ### Homebrew
 ```bash title="Using Homebrew (macOS)"
+brew tap saucelabs/saucectl
 brew install saucectl
 ```
 
