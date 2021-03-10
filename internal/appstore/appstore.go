@@ -9,7 +9,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/requesth"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -65,7 +64,7 @@ func (s *AppStore) Upload(name string) (storage.ArtifactMeta, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 201 {
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return storage.ArtifactMeta{}, err
 		}

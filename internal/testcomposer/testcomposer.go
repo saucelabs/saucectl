@@ -10,7 +10,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/requesth"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 )
@@ -85,7 +85,7 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 		return
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return
 	}
@@ -169,7 +169,7 @@ func (c *Client) doJSONResponse(req *http.Request, expectStatus int, v interface
 	defer res.Body.Close()
 
 	if res.StatusCode != expectStatus {
-		body, _ := ioutil.ReadAll(res.Body)
+		body, _ := io.ReadAll(res.Body)
 		return fmt.Errorf("unexpected status '%d' from test-composer: %s", res.StatusCode, body)
 	}
 

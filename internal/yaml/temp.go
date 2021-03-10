@@ -2,7 +2,6 @@ package yaml
 
 import (
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -15,13 +14,13 @@ func TempFile(name string, v interface{}) (string, error) {
 		return "", err
 	}
 
-	d, err := ioutil.TempDir("", "tempy")
+	d, err := os.MkdirTemp("", "tempy")
 	if err != nil {
 		return "", err
 	}
 
 	tpath := filepath.Join(d, name)
-	if err := ioutil.WriteFile(tpath, b, os.ModePerm); err != nil {
+	if err := os.WriteFile(tpath, b, os.ModePerm); err != nil {
 		return "", err
 	}
 

@@ -2,7 +2,6 @@ package fpath
 
 import (
 	"github.com/rs/zerolog/log"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -91,14 +90,14 @@ func DeepCopy(src string, target string) error {
 	}
 
 	if !finfo.IsDir() {
-		input, err := ioutil.ReadFile(src)
+		input, err := os.ReadFile(src)
 		if err != nil {
 			return err
 		}
-		return ioutil.WriteFile(target, input, 0644)
+		return os.WriteFile(target, input, 0644)
 	}
 
-	fis, err := ioutil.ReadDir(src)
+	fis, err := os.ReadDir(src)
 	if err != nil {
 		return err
 	}

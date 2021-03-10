@@ -2,7 +2,6 @@ package yaml
 
 import (
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
 	"os"
 )
 
@@ -18,5 +17,5 @@ func WriteFileWithFileMode(name string, v interface{}, mode os.FileMode) error {
 		return err
 	}
 
-	return ioutil.WriteFile(name, b, mode)
+	return os.WriteFile(name, b, mode)
 }

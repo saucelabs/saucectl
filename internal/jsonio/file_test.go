@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"gotest.tools/v3/fs"
-	"io/ioutil"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -54,7 +54,7 @@ func TestWriteFile(t *testing.T) {
 }
 
 func fromFile(t *testing.T, filename string, v interface{}) {
-	b, err := ioutil.ReadFile(filename)
+	b, err := os.ReadFile(filename)
 	if err != nil {
 		t.Error(err)
 	}
