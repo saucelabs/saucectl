@@ -11,8 +11,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 )
 
-// TarResource archives the resource and exclude files and folders based on sauceignore logic.
-func TarResource(src string, matcher sauceignore.Matcher) (io.Reader, error) {
+// Resource archives the resource and exclude files and folders based on sauceignore logic.
+func Resource(src string, matcher sauceignore.Matcher) (io.Reader, error) {
 	bb := new(bytes.Buffer)
 	w := tar.NewWriter(bb)
 	defer w.Close()

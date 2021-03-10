@@ -321,7 +321,7 @@ func (handler *Handler) CopyToContainer(ctx context.Context, containerID string,
 		return err
 	}
 
-	tarReader, err := tar.TarResource(srcFile, matcher)
+	tarReader, err := tar.Resource(srcFile, matcher)
 	if err != nil {
 		return err
 	}
