@@ -2,7 +2,6 @@ package zip
 
 import (
 	"archive/zip"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -19,13 +18,13 @@ func TestZipper_Add(t *testing.T) {
 		fs.WithFile("some.other.bar.js", "bar", fs.WithMode(0755)))
 	defer dir.Remove()
 
-	out, err := ioutil.TempFile(os.TempDir(), "add_test.*.zip")
+	out, err := os.CreateTemp("", "add_test.*.zip")
 	if err != nil {
 		t.Errorf("failed to create temp file for storing the zip: %v", err)
 	}
 	defer os.Remove(out.Name())
 
-	sauceignoreOut, err := ioutil.TempFile(os.TempDir(), "add_test.*.zip")
+	sauceignoreOut, err := os.CreateTemp("", "add_test.*.zip")
 	if err != nil {
 		t.Errorf("failed to create temp file for storing the zip: %v", err)
 	}

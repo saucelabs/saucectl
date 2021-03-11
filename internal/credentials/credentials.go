@@ -6,7 +6,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/yaml"
 	"golang.org/x/net/context"
 	yamlbase "gopkg.in/yaml.v2"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -61,7 +60,7 @@ func FromFile() *Credentials {
 		return nil
 	}
 
-	yamlFile, err := ioutil.ReadFile(filePath)
+	yamlFile, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Info().Msgf("failed to read credentials: %v", err)
 		return nil

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -120,7 +119,7 @@ func (r *LegacyRunner) setup(suite config.Suite, run config.Run) error {
 	time.Sleep(1 * time.Second)
 
 	// get runner config
-	tmpDir, err := ioutil.TempDir("", "saucectl")
+	tmpDir, err := os.MkdirTemp("", "saucectl")
 	if err != nil {
 		return err
 	}

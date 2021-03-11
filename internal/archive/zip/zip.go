@@ -2,7 +2,6 @@ package zip
 
 import (
 	"archive/zip"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -46,7 +45,7 @@ func (w *Writer) Add(src, dst string) error {
 		if err != nil {
 			return err
 		}
-		b, err := ioutil.ReadFile(src)
+		b, err := os.ReadFile(src)
 		if err != nil {
 			return err
 		}
@@ -54,7 +53,7 @@ func (w *Writer) Add(src, dst string) error {
 		return err
 	}
 
-	files, err := ioutil.ReadDir(src)
+	files, err := os.ReadDir(src)
 	if err != nil {
 		return err
 	}

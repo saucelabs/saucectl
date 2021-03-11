@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
@@ -101,7 +100,7 @@ func FetchAndExtractTemplate(org, repo, tag string) error {
 		return errors.New("invalid download stream for tarball")
 	}
 
-	body, err := ioutil.ReadAll(artifactStream)
+	body, err := io.ReadAll(artifactStream)
 	if err != nil {
 		return err
 	}
