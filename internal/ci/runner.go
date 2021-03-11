@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/utils"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -197,12 +196,12 @@ func (r *Runner) teardown(logDir string) error {
 var copyFile = copyFileFunc
 
 func copyFileFunc(src string, targetDir string) error {
-	input, err := ioutil.ReadFile(src)
+	input, err := os.ReadFile(src)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(filepath.Join(targetDir, filepath.Base(src)), input, 0644)
+	err = os.WriteFile(filepath.Join(targetDir, filepath.Base(src)), input, 0644)
 	if err != nil {
 		return err
 	}

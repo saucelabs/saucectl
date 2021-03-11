@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -168,7 +167,7 @@ func (handler *Handler) PullImage(ctx context.Context, img string) error {
 	/**
 	 * ToDo(Christian): handle stdout
 	 */
-	out := streams.NewOut(ioutil.Discard)
+	out := streams.NewOut(io.Discard)
 	if err := jsonmessage.DisplayJSONMessagesToStream(responseBody, out, nil); err != nil {
 		return err
 	}

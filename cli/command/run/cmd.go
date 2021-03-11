@@ -61,6 +61,7 @@ var (
 	tunnelParent   string
 	runnerVersion  string
 	sauceignore    string
+	dryRun         bool
 
 	// General Request Timeouts
 	appStoreTimeout     = 300 * time.Second
@@ -102,6 +103,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVar(&tunnelParent, "tunnel-parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
 	cmd.Flags().StringVar(&runnerVersion, "runner-version", "", "Overrides the automatically determined runner version.")
 	cmd.Flags().StringVar(&sauceignore, "sauceignore", "", "Specifies the path to the .sauceignore file.")
+	cmd.Flags().BoolVarP(&dryRun, "dry-run", "", false, "Simulate a test run without actually running any tests.")
 
 	// Hide undocumented flags that the user does not need to care about.
 	_ = cmd.Flags().MarkHidden("sauce-api")
@@ -191,6 +193,9 @@ func runCypress(cmd *cobra.Command) (int, error) {
 	}
 	if runnerVersion != "" {
 		p.RunnerVersion = runnerVersion
+	}
+	if dryRun {
+		p.DryRun = true
 	}
 
 	if cmd.Flags().Lookup("suite").Changed {
@@ -293,6 +298,9 @@ func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	if runnerVersion != "" {
 		p.RunnerVersion = runnerVersion
 	}
+	if dryRun {
+		p.DryRun = true
+	}
 
 	if cmd.Flags().Lookup("suite").Changed {
 		if err := filterPlaywrightSuite(&p); err != nil {
@@ -387,6 +395,9 @@ func runTestcafe(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	}
 	if runnerVersion != "" {
 		p.RunnerVersion = runnerVersion
+	}
+	if dryRun {
+		p.DryRun = true
 	}
 
 	if cmd.Flags().Lookup("suite").Changed {

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/requesth"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -160,7 +160,7 @@ func (c *Client) isTunnelRunning(ctx context.Context, id string) error {
 		return err
 	}
 	if res.StatusCode != http.StatusOK {
-		body, _ := ioutil.ReadAll(res.Body)
+		body, _ := io.ReadAll(res.Body)
 		err := fmt.Errorf("tunnel request failed; unexpected response code:'%d', msg:'%v'", res.StatusCode, string(body))
 		return err
 	}
@@ -201,12 +201,12 @@ func doAssetRequest(httpClient *http.Client, request *http.Request) ([]byte, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		err := fmt.Errorf("job status request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 		return nil, err
 	}
 
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
 }
 
 func doRequest(httpClient *http.Client, request *http.Request) (job.Job, error) {
@@ -225,7 +225,7 @@ func doRequest(httpClient *http.Client, request *http.Request) (job.Job, error) 
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		err := fmt.Errorf("job status request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 		return job.Job{}, err
 	}

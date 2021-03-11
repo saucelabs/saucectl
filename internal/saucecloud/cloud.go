@@ -3,15 +3,14 @@ package saucecloud
 import (
 	"context"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/tunnel"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/tunnel"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -142,7 +141,7 @@ func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- re
 }
 
 func (r CloudRunner) archiveAndUpload(project interface{}, files []string, sauceignoreFile string) (string, error) {
-	tempDir, err := ioutil.TempDir(os.TempDir(), "saucectl-app-payload")
+	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload")
 	if err != nil {
 		return "", err
 	}
@@ -257,5 +256,21 @@ func (r *CloudRunner) validateTunnel(id string) error {
 	}
 
 	log.Info().Msg("Tunnel is ready!")
+	return nil
+}
+
+func (r *CloudRunner) dryRun(project interface{}, files []string, sauceIgnoreFile string, suiteNames string) error {
+	log.Warn().Msg("Running tests in dry run mode.")
+	tmpDir, err := os.MkdirTemp("./", "sauce-app-payload-*")
+	if err != nil {
+		return err
+	}
+	log.Info().Msgf("The following test suites would have run: [%s].", suiteNames)
+	zipName, err := r.archiveProject(project, tmpDir, files, sauceIgnoreFile)
+	if err != nil {
+		return err
+	}
+
+	log.Info().Msgf("Saving bundled project to %s.", zipName)
 	return nil
 }

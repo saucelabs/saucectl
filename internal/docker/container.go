@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/msg"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -131,7 +130,7 @@ func (r *ContainerRunner) startContainer(options containerStartOptions) (string,
 		return "", err
 	}
 
-	tmpDir, err := ioutil.TempDir("", "saucectl")
+	tmpDir, err := os.MkdirTemp("", "saucectl")
 	if err != nil {
 		return "", err
 	}
@@ -196,7 +195,7 @@ func (r *ContainerRunner) readJobInfo(containerID string) (jobInfo, error) {
 	if r.containerConfig.jobInfoFilePath == "" {
 		return jobInfo{JobDetailsURL: "unknown"}, nil
 	}
-	dir, err := ioutil.TempDir("", "result")
+	dir, err := os.MkdirTemp("", "result")
 	if err != nil {
 		return jobInfo{}, err
 	}
@@ -208,7 +207,7 @@ func (r *ContainerRunner) readJobInfo(containerID string) (jobInfo, error) {
 	}
 	fileName := filepath.Base(r.containerConfig.jobInfoFilePath)
 	filePath := filepath.Join(dir, fileName)
-	content, err := ioutil.ReadFile(filePath)
+	content, err := os.ReadFile(filePath)
 
 	var info jobInfo
 	err = json.Unmarshal(content, &info)

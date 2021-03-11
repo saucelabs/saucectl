@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -167,7 +166,7 @@ func (handler *LegacyHandler) PullBaseImage(ctx context.Context, c config.Projec
 	/**
 	 * ToDo(Christian): handle stdout
 	 */
-	out := streams.NewOut(ioutil.Discard)
+	out := streams.NewOut(io.Discard)
 	if err := jsonmessage.DisplayJSONMessagesToStream(responseBody, out, nil); err != nil {
 		return err
 	}

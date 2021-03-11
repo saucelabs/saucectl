@@ -3,7 +3,6 @@ package config
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -152,7 +151,7 @@ func readYaml(cfgFilePath string) ([]byte, error) {
 		fp = filepath.Join(pwd, cfgFilePath)
 	}
 
-	return ioutil.ReadFile(fp)
+	return os.ReadFile(fp)
 }
 
 // NewRunnerConfiguration reads yaml file for runner configurations
