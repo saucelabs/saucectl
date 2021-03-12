@@ -163,8 +163,8 @@ jobs:
 
       - name: Saucectl NEW
         run: |
-        pwd
-        ../saucectl new -f playwright
+          pwd
+          ../saucectl new -f playwright
 
       - name: Saucectl RUN
         run: ../saucectl run
