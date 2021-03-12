@@ -315,24 +315,12 @@ func (handler *Handler) CopyFilesToContainer(ctx context.Context, srcContainerID
 // CopyToContainer copies the given file to the container.
 func (handler *Handler) CopyToContainer(ctx context.Context, containerID string, srcFile string, targetDir string,
 	matcher sauceignore.Matcher) error {
-	srcInfo, err := archive.CopyInfoSourcePath(srcFile, true)
-	if err != nil {
-		return err
-	}
-
 	tarReader, err := tar.Archive(srcFile, matcher)
 	if err != nil {
 		return err
 	}
 
-	dstInfo := archive.CopyInfo{IsDir: srcInfo.IsDir, Path: filepath.Join(targetDir, filepath.Base(srcInfo.Path))}
-	resolvedDstPath, preparedArchive, err := archive.PrepareArchiveCopy(tarReader, srcInfo, dstInfo)
-	if err != nil {
-		return err
-	}
-	defer preparedArchive.Close()
-
-	return handler.client.CopyToContainer(ctx, containerID, resolvedDstPath, preparedArchive, types.CopyToContainerOptions{})
+	return handler.client.CopyToContainer(ctx, containerID, targetDir, tarReader, types.CopyToContainerOptions{})
 }
 
 // CopyFromContainer downloads a file from the testrunner container

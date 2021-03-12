@@ -17,6 +17,16 @@ func Archive(src string, matcher sauceignore.Matcher) (io.Reader, error) {
 	w := tar.NewWriter(bb)
 	defer w.Close()
 
+	infoSrc, err := os.Stat(src)
+	if err != nil {
+		return nil, err
+	}
+
+	baseDir := ""
+	if infoSrc.IsDir() {
+		baseDir = filepath.Base(src)
+	}
+
 	walker := func(file string, fileInfo os.FileInfo, err error) error {
 		// Only will be applied if we have .sauceignore file and have patterns to exclude files and folders
 		if matcher.Match(strings.Split(file, string(os.PathSeparator)), fileInfo.IsDir()) {
@@ -28,23 +38,10 @@ func Archive(src string, matcher sauceignore.Matcher) (io.Reader, error) {
 			return err
 		}
 
-		relFilePath := file
-		if filepath.IsAbs(src) {
-			/*
-				for temporary files filepath.Rel would return "." as a relative path,
-				that's why we need to make an exception for temporary files and return only the last element
-			*/
-			if strings.Contains(src, os.TempDir()) {
-				relFilePath = filepath.Base(file)
-			} else {
-				relFilePath, err = filepath.Rel(src, file)
-				if err != nil {
-					return err
-				}
-			}
+		if baseDir != "" {
+			// Update the name to correctly reflect the desired destination when untaring
+			header.Name = filepath.Join(baseDir, strings.TrimPrefix(file, src))
 		}
-
-		header.Name = relFilePath
 
 		if err := w.WriteHeader(header); err != nil {
 			return err
