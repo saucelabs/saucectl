@@ -158,14 +158,13 @@ jobs:
       - name: Set permissions
         run: chmod +x ./saucectl
 
-      - name: dbg
-        run: ls -lah
-
       - name: Navigate to a safe place
         run: mkdir scratch && cd scratch
 
       - name: Saucectl NEW
-        run: ../saucectl new -f playwright
+        run: |
+        pwd
+        ../saucectl new -f playwright
 
       - name: Saucectl RUN
         run: ../saucectl run
