@@ -62,7 +62,7 @@ jobs:
       image: golang:1.16-alpine
 
     steps:
-      - name: Install Dependencies
+        - name: Install Dependencies
         run: apk add --no-cache git gcc g++ curl
 
       - name: Checkout Code
@@ -140,6 +140,34 @@ jobs:
         run: |
           chmod +x ./saucectl
           ./saucectl run -c ./.sauce/playwright.yml --verbose
+        env:
+          BUILD_ID: ${{ github.run_id }}
+  playwright-from-template:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Download saucectl binary
+        uses: actions/download-artifact@v2
+        with:
+          name: saucectlbin
+          path: /usr/local/bin/
+
+      - name: Set permissions
+        run: chmod +x /usr/local/bin/saucectl
+
+      - name: Saucectl NEW
+        working-directory: scratch
+        run: |
+          saucectl new -f playwright
+
+      - name: Saucectl RUN
+        working-directory: scratch
+        run: |
+          saucectl run
         env:
           BUILD_ID: ${{ github.run_id }}
   testcafe:
