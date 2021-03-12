@@ -156,7 +156,7 @@ jobs:
           name: saucectlbin
 
       - name: Set permissions
-        run: chmod +x ../saucectl
+        run: chmod +x ./saucectl
 
       - name: Saucectl NEW
         working-directory: scratch
