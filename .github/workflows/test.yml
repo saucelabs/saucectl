@@ -62,7 +62,7 @@ jobs:
       image: golang:1.16-alpine
 
     steps:
-        - name: Install Dependencies
+      - name: Install Dependencies
         run: apk add --no-cache git gcc g++ curl
 
       - name: Checkout Code
