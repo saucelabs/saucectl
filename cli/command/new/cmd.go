@@ -2,6 +2,7 @@ package new
 
 import (
 	"fmt"
+	"github.com/spf13/pflag"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -24,14 +25,12 @@ var (
 	newLong    = `Some long description`
 	newExample = "saucectl new"
 
-	argsYes = false
-
 	qs = []*survey.Question{
 		{
 			Name: "framework",
 			Prompt: &survey.Select{
 				Message: "Choose a framework:",
-				Options: []string{"Cypress", "Playwright", "Puppeteer", "Testcafe"},
+				Options: []string{"Cypress", "Playwright", "Puppeteer", "TestCafe"},
 				Default: "Cypress",
 			},
 		},
@@ -66,7 +65,8 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVarP(&argsYes, "yes", "y", false, "if set it runs with default values")
+	cmd.Flags().StringVarP(&answers.Framework, "framework", "f", "Cypress", "Selects the frameworks. Specifying this will skip the prompt.")
+	cmd.Flags().StringVarP(&answers.Region, "region", "r", "us-west-1", "Selects the region. Specifying this will skip the prompt.")
 	return cmd
 }
 
@@ -83,9 +83,11 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return err
 	}
 
-	err = survey.Ask(qs, &answers)
-	if err != nil {
-		return err
+	if showPrompt(cmd.Flags()) {
+		err = survey.Ask(qs, &answers)
+		if err != nil {
+			return err
+		}
 	}
 
 	answers.Framework = strings.ToLower(answers.Framework)
@@ -147,4 +149,9 @@ func updateRegion(cfgFile string, region string) error {
 
 	replaced := strings.Replace(string(data), oldString, replacement, 1)
 	return os.WriteFile(cfgPath, []byte(replaced), 0644)
+}
+
+func showPrompt(flags *pflag.FlagSet) bool {
+	// Skip prompt if at least one flag is set.
+	return !(flags.Lookup("framework").Changed || flags.Lookup("region").Changed)
 }
