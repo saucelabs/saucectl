@@ -161,6 +161,8 @@ jobs:
       - name: Saucectl NEW
         working-directory: scratch
         run: |
+          ls -lah ~/
+          ls -lah ..
           ../saucectl new -f playwright
 
       - name: Saucectl RUN
