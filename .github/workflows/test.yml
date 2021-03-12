@@ -158,17 +158,14 @@ jobs:
       - name: Set permissions
         run: chmod +x ./saucectl
 
+      - name: Navigate to a safe place
+        run: mkdir scratch && cd scratch
+
       - name: Saucectl NEW
-        working-directory: scratch
-        run: |
-          ls -lah ~/
-          ls -lah ..
-          ../saucectl new -f playwright
+        run: ../saucectl new -f playwright
 
       - name: Saucectl RUN
-        working-directory: scratch
-        run: |
-          ../saucectl run
+        run: ../saucectl run
         env:
           BUILD_ID: ${{ github.run_id }}
   testcafe:
