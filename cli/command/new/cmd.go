@@ -65,8 +65,10 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&answers.Framework, "framework", "f", "Cypress", "Selects the framework. Specifying this will skip the prompt.")
-	cmd.Flags().StringVarP(&answers.Region, "region", "r", "us-west-1", "Selects the region. Specifying this will skip the prompt.")
+	cmd.Flags().StringVarP(&answers.Framework, "framework", "f", "Cypress",
+		"Selects the framework. Specifying this will skip the prompt.")
+	cmd.Flags().StringVarP(&answers.Region, "region", "r", "us-west-1",
+		"Selects the region. Specifying this will skip the prompt.")
 	return cmd
 }
 
@@ -74,7 +76,8 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	creds := credentials.Get()
 	if creds == nil {
-		fmt.Println("\nIt looks you have not configured your SauceLab account !\nTo enjoy SauceLabs capabilities, configure your account by running:\n$ saucectl configure")
+		fmt.Println("\nIt looks you have not configured your SauceLab account !" +
+			"\nTo enjoy SauceLabs capabilities, configure your account by running:\n$ saucectl configure")
 		return nil
 	}
 
