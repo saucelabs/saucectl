@@ -154,20 +154,19 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: saucectlbin
-          path: /usr/local/bin/
 
       - name: Set permissions
-        run: chmod +x /usr/local/bin/saucectl
+        run: chmod +x ../saucectl
 
       - name: Saucectl NEW
         working-directory: scratch
         run: |
-          saucectl new -f playwright
+          ../saucectl new -f playwright
 
       - name: Saucectl RUN
         working-directory: scratch
         run: |
-          saucectl run
+          ../saucectl run
         env:
           BUILD_ID: ${{ github.run_id }}
   testcafe:
