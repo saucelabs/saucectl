@@ -83,6 +83,7 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 	if p.Testcafe.ProjectPath != "" && p.RootDir == "" {
 		log.Warn().Msg("'testcafe.projectPath' is deprecated. Consider using 'rootDir' instead")
+		p.RootDir = p.Testcafe.ProjectPath
 	}
 
 	if p.Testcafe.ProjectPath != "" && p.RootDir != "" {
