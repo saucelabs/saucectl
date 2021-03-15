@@ -71,11 +71,12 @@ type Suite struct {
 
 // SauceConfig represents sauce labs related settings.
 type SauceConfig struct {
-	Region      string   `yaml:"region,omitempty" json:"region"`
-	Metadata    Metadata `yaml:"metadata,omitempty" json:"metadata"`
-	Tunnel      Tunnel   `yaml:"tunnel,omitempty" json:"tunnel,omitempty"`
-	Concurrency int      `yaml:"concurrency,omitempty" json:"concurrency,omitempty"`
-	Sauceignore string   `yaml:"sauceignore,omitempty" json:"sauceignore,omitempty"`
+	Region      string            `yaml:"region,omitempty" json:"region"`
+	Metadata    Metadata          `yaml:"metadata,omitempty" json:"metadata"`
+	Tunnel      Tunnel            `yaml:"tunnel,omitempty" json:"tunnel,omitempty"`
+	Concurrency int               `yaml:"concurrency,omitempty" json:"concurrency,omitempty"`
+	Sauceignore string            `yaml:"sauceignore,omitempty" json:"sauceignore,omitempty"`
+	Experiments map[string]string `yaml:"experiments,omitempty" json:"experiments,omitempty"`
 }
 
 // Tunnel represents a sauce labs tunnel.
@@ -120,7 +121,7 @@ type Docker struct {
 
 // Npm represents the npm settings
 type Npm struct {
-	Registry string `yaml:"registry,omitempty" json:"registry,omitempty"`
+	Registry string            `yaml:"registry,omitempty" json:"registry,omitempty"`
 	Packages map[string]string `yaml:"packages,omitempty" json:"packages"`
 }
 
