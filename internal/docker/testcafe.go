@@ -61,6 +61,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 				SuiteName:   suite.Name,
 				Environment: suite.Env,
 				Files:       []string{r.Project.RootDir},
+				Sauceignore: r.Project.Sauce.Sauceignore,
 			}
 		}
 		close(containerOpts)

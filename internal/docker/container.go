@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"os"
 	"path"
 	"path/filepath"
@@ -13,10 +12,13 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/jsonio"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/progress"
+	"github.com/saucelabs/saucectl/internal/sauceignore"
 )
 
 // ContainerRunner represents the container runner for docker.
@@ -37,6 +39,7 @@ type containerStartOptions struct {
 	SuiteName   string
 	Environment map[string]string
 	Files       []string
+	Sauceignore string
 }
 
 // result represents the result of a local job
@@ -138,7 +141,12 @@ func (r *ContainerRunner) startContainer(options containerStartOptions) (string,
 		return "", err
 	}
 
-	if err := r.docker.CopyToContainer(r.Ctx, containerID, rcPath, pDir); err != nil {
+	matcher, err := sauceignore.NewMatcherFromFile(options.Sauceignore)
+	if err != nil {
+		return "", err
+	}
+
+	if err := r.docker.CopyToContainer(r.Ctx, containerID, rcPath, pDir, matcher); err != nil {
 		return "", err
 	}
 	r.containerConfig.sauceRunnerConfigPath = path.Join(pDir, SauceRunnerConfigFile)
