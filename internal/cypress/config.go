@@ -126,7 +126,8 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 
 	if p.Sauce.Concurrency < 1 {
-		p.Sauce.Concurrency = 1
+		// Default concurrency is 2 DEVX-717
+		p.Sauce.Concurrency = 2
 	}
 
 	for i, s := range p.Suites {
