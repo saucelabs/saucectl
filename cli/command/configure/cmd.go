@@ -6,11 +6,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/spf13/cobra"
-	"github.com/tj/survey"
 )
 
 var (

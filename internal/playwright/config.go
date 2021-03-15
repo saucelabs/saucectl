@@ -82,6 +82,7 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 	if p.Playwright.ProjectPath != "" && p.RootDir == "" {
 		log.Warn().Msg("'playwright.projectPath' is deprecated. Consider using 'rootDir' instead")
+		p.RootDir = p.Playwright.ProjectPath
 	}
 	if p.Playwright.ProjectPath != "" && p.RootDir != "" {
 		log.Info().Msgf(
@@ -91,8 +92,8 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 
 	// Store local path since we provide only last level folder in runner
-	p.Playwright.LocalProjectPath = p.Playwright.ProjectPath
-	p.Playwright.ProjectPath = filepath.Base(p.Playwright.ProjectPath)
+	p.Playwright.LocalProjectPath = p.RootDir
+	p.Playwright.ProjectPath = filepath.Base(p.RootDir)
 
 	// Default mode to Mount
 	if p.Docker.FileTransfer == "" {

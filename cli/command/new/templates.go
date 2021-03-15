@@ -12,9 +12,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/google/go-github/v32/github"
 	"github.com/rs/zerolog/log"
-	"github.com/tj/survey"
 )
 
 var (
