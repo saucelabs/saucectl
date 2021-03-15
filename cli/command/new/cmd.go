@@ -2,12 +2,13 @@ package new
 
 import (
 	"fmt"
-	"github.com/spf13/pflag"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/spf13/pflag"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/rs/zerolog/log"
@@ -35,6 +36,14 @@ var (
 			},
 		},
 		{
+			Name: "platform",
+			Prompt: &survey.Select{
+				Message: "Choose a platform:",
+				Options: []string{"Win 10", "Mac 11.00"},
+				Default: "Win 10",
+			},
+		},
+		{
 			Name: "region",
 			Prompt: &survey.Select{
 				Message: "Choose the sauce labs region:",
@@ -46,6 +55,7 @@ var (
 
 	answers = struct {
 		Framework string
+		Platform  string
 		Region    string
 	}{}
 )
@@ -67,6 +77,8 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 
 	cmd.Flags().StringVarP(&answers.Framework, "framework", "f", "Cypress",
 		"Selects the framework. Specifying this will skip the prompt.")
+	cmd.Flags().StringVarP(&answers.Platform, "platform", "p", "Win 10",
+		"Selects the platform. Specifying this will skip the prompt.")
 	cmd.Flags().StringVarP(&answers.Region, "region", "r", "us-west-1",
 		"Selects the region. Specifying this will skip the prompt.")
 	return cmd
@@ -129,6 +141,11 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return fmt.Errorf("no template available for %s (%s)", answers.Framework, err)
 	}
 
+	err = updatePlatform(cfgFilePath, answers.Platform)
+	if err != nil {
+		return err
+	}
+
 	err = updateRegion(cfgFilePath, answers.Region)
 	if err != nil {
 		return err
@@ -151,6 +168,22 @@ func updateRegion(cfgFile string, region string) error {
 	replacement := "\n  region: " + region + "\n"
 
 	replaced := strings.Replace(string(data), oldString, replacement, 1)
+	return os.WriteFile(cfgPath, []byte(replaced), 0644)
+}
+
+// Overwrite the platform from users' request
+func updatePlatform(cfgFile string, platform string) error {
+	cwd, _ := os.Getwd()
+	cfgPath := filepath.Join(cwd, cfgFile)
+
+	data, err := os.ReadFile(cfgPath)
+	if err != nil {
+		return err
+	}
+	oldStr := `platformName: "Windows 10"`
+	replacement := fmt.Sprintf(`platform: "%s"`, platform)
+
+	replaced := strings.Replace(string(data), oldStr, replacement, 1)
 	return os.WriteFile(cfgPath, []byte(replaced), 0644)
 }
 
