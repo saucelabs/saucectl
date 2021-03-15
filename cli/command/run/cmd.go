@@ -61,6 +61,7 @@ var (
 	tunnelParent   string
 	runnerVersion  string
 	sauceignore    string
+	experiments    map[string]string
 	dryRun         bool
 
 	// General Request Timeouts
@@ -103,11 +104,13 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVar(&tunnelParent, "tunnel-parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
 	cmd.Flags().StringVar(&runnerVersion, "runner-version", "", "Overrides the automatically determined runner version.")
 	cmd.Flags().StringVar(&sauceignore, "sauceignore", "", "Specifies the path to the .sauceignore file.")
+	cmd.Flags().StringToStringVar(&experiments, "experiment", map[string]string{}, "Specifies a list of experimental flags and values")
 	cmd.Flags().BoolVarP(&dryRun, "dry-run", "", false, "Simulate a test run without actually running any tests.")
 
 	// Hide undocumented flags that the user does not need to care about.
 	_ = cmd.Flags().MarkHidden("sauce-api")
 	_ = cmd.Flags().MarkHidden("runner-version")
+	_ = cmd.Flags().MarkHidden("experiment")
 
 	// Hide documented flags that aren't fully released yet or WIP.
 	_ = cmd.Flags().MarkHidden("parallel")    // WIP.
@@ -657,5 +660,8 @@ func overrideCliParameters(cmd *cobra.Command, sauce *config.SauceConfig) {
 	}
 	if cmd.Flags().Lookup("sauceignore").Changed {
 		sauce.Sauceignore = sauceignore
+	}
+	if cmd.Flags().Lookup("experiment").Changed {
+		sauce.Experiments = experiments
 	}
 }

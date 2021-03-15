@@ -73,6 +73,7 @@ func (r *TestcafeRunner) runSuites(fileID string) bool {
 			},
 			ScreenResolution: s.ScreenResolution,
 			RunnerVersion:    r.Project.RunnerVersion,
+			Experiments:      r.Project.Sauce.Experiments,
 		}
 	}
 	close(jobOpts)
