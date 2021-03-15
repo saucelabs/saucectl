@@ -118,6 +118,35 @@ jobs:
           ./saucectl run -c ./.sauce/puppeteer_before_exec.yml --verbose
         env:
           BUILD_ID: ${{ github.run_id }}
+  puppeteer-from-template:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Download saucectl binary
+        uses: actions/download-artifact@v2
+        with:
+          name: saucectlbin
+
+      - name: Set permissions
+        run: chmod +x ./saucectl
+
+      - name: Create safe place
+        run: mkdir scratch
+
+      - name: Saucectl NEW
+        working-directory: scratch
+        run: |
+          ../saucectl new -f puppeteer
+
+      - name: Saucectl RUN
+        working-directory: scratch
+        run: ../saucectl run --test-env docker
+        env:
+          BUILD_ID: ${{ github.run_id }}
   playwright:
     needs: build
     runs-on: ubuntu-latest
@@ -168,7 +197,7 @@ jobs:
 
       - name: Saucectl RUN
         working-directory: scratch
-        run: ../saucectl run
+        run: ../saucectl run --test-env sauce
         env:
           BUILD_ID: ${{ github.run_id }}
   testcafe:
@@ -217,7 +246,35 @@ jobs:
         env:
           BUILD_ID: ${{ github.run_id }}
           BUILD_ENV: GitHub Actions
- 
+  testcafe-from-template:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Download saucectl binary
+        uses: actions/download-artifact@v2
+        with:
+          name: saucectlbin
+
+      - name: Set permissions
+        run: chmod +x ./saucectl
+
+      - name: Create safe place
+        run: mkdir scratch
+
+      - name: Saucectl NEW
+        working-directory: scratch
+        run: |
+          ../saucectl new -f testcafe
+
+      - name: Saucectl RUN
+        working-directory: scratch
+        run: ../saucectl run --test-env sauce
+        env:
+          BUILD_ID: ${{ github.run_id }}
   cypress:
     needs: build
     runs-on: ubuntu-latest
@@ -245,6 +302,35 @@ jobs:
       - name: Run Sauce Pipeline Test - Sauce Cloud
         run: |
           ./saucectl run -c ./.sauce/cypress_cloud.yml --test-env sauce --ccy 5
+  cypress-from-template:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Download saucectl binary
+        uses: actions/download-artifact@v2
+        with:
+          name: saucectlbin
+
+      - name: Set permissions
+        run: chmod +x ./saucectl
+
+      - name: Create safe place
+        run: mkdir scratch
+
+      - name: Saucectl NEW
+        working-directory: scratch
+        run: |
+          ../saucectl new -f cypress
+
+      - name: Saucectl RUN
+        working-directory: scratch
+        run: ../saucectl run --test-env sauce
+        env:
+          BUILD_ID: ${{ github.run_id }}
   cypress-windows:
     needs: build
     runs-on: windows-latest
