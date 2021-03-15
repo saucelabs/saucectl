@@ -135,10 +135,10 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return runCypress(cmd)
 	}
 	if d.Kind == config.KindPlaywright && d.APIVersion == config.VersionV1Alpha {
-		return runPlaywright(cmd, cli)
+		return runPlaywright(cmd)
 	}
 	if d.Kind == config.KindTestcafe && d.APIVersion == config.VersionV1Alpha {
-		return runTestcafe(cmd, cli)
+		return runTestcafe(cmd)
 	}
 
 	return runLegacyMode(cmd, cli)
@@ -272,7 +272,7 @@ func runCypressInSauce(p cypress.Project, regio region.Region, creds *credential
 	return r.RunProject()
 }
 
-func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
+func runPlaywright(cmd *cobra.Command) (int, error) {
 	p, err := playwright.FromFile(cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -327,7 +327,7 @@ func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 
 	switch testEnv {
 	case "docker":
-		return runPlaywrightInDocker(p, cli, tc)
+		return runPlaywrightInDocker(p, tc)
 	case "sauce":
 		return runPlaywrightInSauce(p, regio, creds, tc)
 	default:
@@ -335,7 +335,7 @@ func runPlaywright(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	}
 }
 
-func runPlaywrightInDocker(p playwright.Project, cli *command.SauceCtlCli, testco testcomposer.Client) (int, error) {
+func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client) (int, error) {
 	log.Info().Msg("Running Playwright in Docker")
 
 	cd, err := docker.NewPlaywright(p, &testco)
@@ -372,7 +372,7 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, creds *cred
 	return r.RunProject()
 }
 
-func runTestcafe(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
+func runTestcafe(cmd *cobra.Command) (int, error) {
 	p, err := testcafe.FromFile(cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -424,7 +424,7 @@ func runTestcafe(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 
 	switch testEnv {
 	case "docker":
-		return runTestcafeInDocker(p, cli, tc)
+		return runTestcafeInDocker(p, tc)
 	case "sauce":
 		return runTestcafeInCloud(p, regio, creds, tc)
 	default:
@@ -432,7 +432,7 @@ func runTestcafe(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
 	}
 }
 
-func runTestcafeInDocker(p testcafe.Project, cli *command.SauceCtlCli, testco testcomposer.Client) (int, error) {
+func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client) (int, error) {
 	log.Info().Msg("Running Testcafe in Docker")
 
 	cd, err := docker.NewTestcafe(p, &testco)
