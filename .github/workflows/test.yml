@@ -213,7 +213,9 @@ jobs:
 
       - name: Saucectl RUN Docker
         working-directory: scratch
-        run: ../saucectl run --test-env docker --ccy 10
+        run: |
+          mkdir -p cypress/plugins
+          ../saucectl run --test-env docker --ccy 10
         env:
           BUILD_ID: ${{ github.run_id }}
 
