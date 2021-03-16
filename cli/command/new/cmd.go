@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/pflag"
-
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
@@ -18,6 +16,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 var (
@@ -36,14 +35,6 @@ var (
 			},
 		},
 		{
-			Name: "platform",
-			Prompt: &survey.Select{
-				Message: "Choose a platform:",
-				Options: []string{"Windows 10", "Mac 11.00"},
-				Default: "Win 10",
-			},
-		},
-		{
 			Name: "region",
 			Prompt: &survey.Select{
 				Message: "Choose the sauce labs region:",
@@ -58,6 +49,10 @@ var (
 		Platform  string
 		Region    string
 	}{}
+
+	multiplePlatformMap = map[string]bool{
+		"testcafe": true,
+	}
 )
 
 // Command creates the `new` command
@@ -77,8 +72,6 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 
 	cmd.Flags().StringVarP(&answers.Framework, "framework", "f", "Cypress",
 		"Selects the framework. Specifying this will skip the prompt.")
-	cmd.Flags().StringVarP(&answers.Platform, "platform", "p", "Win 10",
-		"Selects the platform. Specifying this will skip the prompt.")
 	cmd.Flags().StringVarP(&answers.Region, "region", "r", "us-west-1",
 		"Selects the region. Specifying this will skip the prompt.")
 	return cmd
@@ -109,6 +102,14 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	if err := os.MkdirAll(filepath.Join(cwd, ".sauce"), 0777); err != nil {
 		return fmt.Errorf("failed to create config directory: %v", err)
 	}
+
+	if multiplePlatformMap[answers.Framework] {
+		answers.Platform, err = getPlatform()
+		if err != nil {
+			return err
+		}
+	}
+
 	cfgFilePath := ".sauce/config.yml"
 
 	r := region.FromString(answers.Region)
@@ -141,11 +142,12 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return fmt.Errorf("no template available for %s (%s)", answers.Framework, err)
 	}
 
-	err = updatePlatform(cfgFilePath, answers.Platform)
-	if err != nil {
-		return err
+	if multiplePlatformMap[answers.Framework] {
+		err = updatePlatform(cfgFilePath, answers.Platform)
+		if err != nil {
+			return err
+		}
 	}
-
 	err = updateRegion(cfgFilePath, answers.Region)
 	if err != nil {
 		return err
@@ -169,6 +171,17 @@ func updateRegion(cfgFile string, region string) error {
 
 	replaced := strings.Replace(string(data), oldString, replacement, 1)
 	return os.WriteFile(cfgPath, []byte(replaced), 0644)
+}
+
+func getPlatform() (string, error) {
+	var answer string
+	question := &survey.Select{
+		Message: "Choose a platform:",
+		Options: []string{"Windows 10", "Mac 11.00"},
+		Default: "Windows 10",
+	}
+	err := survey.AskOne(question, &answer, nil)
+	return answer, err
 }
 
 // Overwrite the platform from users' request
