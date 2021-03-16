@@ -126,7 +126,7 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 
 	if p.Sauce.Concurrency < 1 {
-		// Default concurrency is 2 DEVX-717
+		// Default concurrency is 2
 		p.Sauce.Concurrency = 2
 	}
 
