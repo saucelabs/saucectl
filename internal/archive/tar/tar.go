@@ -38,10 +38,10 @@ func Archive(src string, matcher sauceignore.Matcher) (io.Reader, error) {
 			return err
 		}
 
-		//header.Uid = 1000
-		//header.Gid = 1000
 		// FIXME testing elevated permissions
-		header.Mode = 0777
+		header.Uid = 1000
+		header.Gid = 1000
+		//header.Mode = 0777
 
 		if baseDir != "" {
 			// Update the name to correctly reflect the desired destination when untaring
