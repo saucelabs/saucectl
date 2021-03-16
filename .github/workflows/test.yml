@@ -163,7 +163,7 @@ jobs:
       - name: Run Sauce Pipeline Test
         run: |
           chmod +x ./saucectl
-          ./saucectl run -c ./.sauce/testcafe.yml --verbose
+          ./saucectl run  --test-env=docker -c ./.sauce/testcafe.yml --verbose
         env:
           BUILD_ID: ${{ github.run_id }}
           BUILD_ENV: GitHub Actions
