@@ -39,7 +39,7 @@ var (
 			Name: "platform",
 			Prompt: &survey.Select{
 				Message: "Choose a platform:",
-				Options: []string{"Win 10", "Mac 11.00"},
+				Options: []string{"Windows 10", "Mac 11.00"},
 				Default: "Win 10",
 			},
 		},
