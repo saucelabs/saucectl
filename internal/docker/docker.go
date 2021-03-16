@@ -40,6 +40,12 @@ var (
 		RemoveLinks:   false,
 		RemoveVolumes: false,
 	}
+
+	defaultArchivePermissions = tar.Permission{
+		Mode: 0777,
+		UID:  1000, // uid of "seluser", our default user in the container
+		GID:  1000, // gid of "seluser", our default user in the container
+	}
 )
 
 // SauceRunnerConfigFile represents the filename for the sauce runner configuration.
@@ -315,7 +321,7 @@ func (handler *Handler) CopyFilesToContainer(ctx context.Context, srcContainerID
 // CopyToContainer copies the given file to the container.
 func (handler *Handler) CopyToContainer(ctx context.Context, containerID string, srcFile string, targetDir string,
 	matcher sauceignore.Matcher) error {
-	tarReader, err := tar.Archive(srcFile, matcher)
+	tarReader, err := tar.Archive(srcFile, matcher, tar.Options{Permission: &defaultArchivePermissions})
 	if err != nil {
 		return err
 	}

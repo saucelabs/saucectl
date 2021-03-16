@@ -27,6 +27,7 @@ func TestArchive(t *testing.T) {
 	testCases := []struct {
 		name      string
 		matcher   sauceignore.Matcher
+		options   Options
 		wantFiles []wantFile
 	}{
 		{
@@ -53,7 +54,7 @@ func TestArchive(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			reader, err := Archive(dir.Path(), tt.matcher)
+			reader, err := Archive(dir.Path(), tt.matcher, tt.options)
 			if err != nil {
 				t.Error(err)
 			}

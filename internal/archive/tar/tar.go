@@ -11,8 +11,20 @@ import (
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 )
 
+// Options represents the options applied when archiving files.
+type Options struct {
+	Permission *Permission
+}
+
+// Permission represents the permissions applied when archiving files.
+type Permission struct {
+	Mode int64 // Permission and mode bits
+	UID  int   // User ID of owner
+	GID  int   // Group ID of owner
+}
+
 // Archive archives the resource and exclude files and folders based on sauceignore logic.
-func Archive(src string, matcher sauceignore.Matcher) (io.Reader, error) {
+func Archive(src string, matcher sauceignore.Matcher, opts Options) (io.Reader, error) {
 	bb := new(bytes.Buffer)
 	w := tar.NewWriter(bb)
 	defer w.Close()
@@ -36,6 +48,12 @@ func Archive(src string, matcher sauceignore.Matcher) (io.Reader, error) {
 		header, err := tar.FileInfoHeader(fileInfo, file)
 		if err != nil {
 			return err
+		}
+
+		if opts.Permission != nil {
+			header.Mode = opts.Permission.Mode
+			header.Uid = opts.Permission.UID
+			header.Gid = opts.Permission.GID
 		}
 
 		if baseDir != "" {
