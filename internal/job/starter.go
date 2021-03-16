@@ -16,15 +16,16 @@ type StartOptions struct {
 	// Currently supported: Cypress.
 	FrameworkVersion string `json:"frameworkVersion,omitempty"`
 
-	BrowserName      string        `json:"browserName,omitempty"`
-	BrowserVersion   string        `json:"browserVersion,omitempty"`
-	PlatformName     string        `json:"platformName,omitempty"`
-	Name             string        `json:"name,omitempty"`
-	Build            string        `json:"build,omitempty"`
-	Tags             []string      `json:"tags,omitempty"`
-	Tunnel           TunnelOptions `json:"tunnel,omitempty"`
-	ScreenResolution string        `json:"screenResolution,omitempty"`
-	RunnerVersion    string        `json:"runnerVersion,omitempty"`
+	BrowserName      string            `json:"browserName,omitempty"`
+	BrowserVersion   string            `json:"browserVersion,omitempty"`
+	PlatformName     string            `json:"platformName,omitempty"`
+	Name             string            `json:"name,omitempty"`
+	Build            string            `json:"build,omitempty"`
+	Tags             []string          `json:"tags,omitempty"`
+	Tunnel           TunnelOptions     `json:"tunnel,omitempty"`
+	ScreenResolution string            `json:"screenResolution,omitempty"`
+	RunnerVersion    string            `json:"runnerVersion,omitempty"`
+	Experiments      map[string]string `json:"experiments,omitempty"`
 }
 
 // TunnelOptions represents the options that configure the usage of a tunnel when running tests in the Sauce Labs cloud.
