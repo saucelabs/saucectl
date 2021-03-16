@@ -51,7 +51,7 @@ var (
 	}{}
 
 	availablePlatformMap = map[string][]string{
-		"testcafe": []string{"Windows 10", "Mac 11.00"},
+		"testcafe": {"Windows 10", "macOS 11.00"},
 	}
 )
 
