@@ -50,8 +50,8 @@ var (
 		Region    string
 	}{}
 
-	multiplePlatformMap = map[string]bool{
-		"testcafe": true,
+	availablePlatformMap = map[string][]string{
+		"testcafe": []string{"Windows 10", "Mac 11.00"},
 	}
 )
 
@@ -103,8 +103,8 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return fmt.Errorf("failed to create config directory: %v", err)
 	}
 
-	if multiplePlatformMap[answers.Framework] {
-		answers.Platform, err = getPlatform()
+	if val, ok := availablePlatformMap[answers.Framework]; ok {
+		answers.Platform, err = getPlatform(val)
 		if err != nil {
 			return err
 		}
@@ -142,7 +142,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return fmt.Errorf("no template available for %s (%s)", answers.Framework, err)
 	}
 
-	if multiplePlatformMap[answers.Framework] {
+	if _, ok := availablePlatformMap[answers.Framework]; ok {
 		err = updatePlatform(cfgFilePath, answers.Platform)
 		if err != nil {
 			return err
@@ -173,12 +173,12 @@ func updateRegion(cfgFile string, region string) error {
 	return os.WriteFile(cfgPath, []byte(replaced), 0644)
 }
 
-func getPlatform() (string, error) {
+func getPlatform(platforms []string) (string, error) {
 	var answer string
 	question := &survey.Select{
 		Message: "Choose a platform:",
-		Options: []string{"Windows 10", "Mac 11.00"},
-		Default: "Windows 10",
+		Options: platforms,
+		Default: platforms[0],
 	}
 	err := survey.AskOne(question, &answer, nil)
 	return answer, err
@@ -193,7 +193,7 @@ func updatePlatform(cfgFile string, platform string) error {
 	if err != nil {
 		return err
 	}
-	oldStr := `platformName: "Windows 10"`
+	oldStr := `platformName: "windows 10"`
 	replacement := fmt.Sprintf(`platform: "%s"`, platform)
 
 	replaced := strings.Replace(string(data), oldStr, replacement, 1)
