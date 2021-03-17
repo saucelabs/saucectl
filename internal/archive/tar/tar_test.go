@@ -3,7 +3,6 @@ package tar
 import (
 	archTar "archive/tar"
 	"io"
-	"strings"
 	"testing"
 
 	"gotest.tools/assert"
@@ -14,14 +13,16 @@ import (
 
 func TestArchive(t *testing.T) {
 	dir := fs.NewDir(t, "tests",
+		fs.WithDir(".sauce", fs.WithFile("config.yml", "yaml-content", fs.WithMode(0644))),
 		fs.WithDir("screenshots", fs.WithFile("screenshot1.png", "foo", fs.WithMode(0755))),
 		fs.WithFile("some.foo.js", "foo", fs.WithMode(0755)),
 		fs.WithFile("some.other.bar.js", "bar", fs.WithMode(0755)))
 	defer dir.Remove()
 
 	type wantFile struct {
-		isDir bool
-		name  string
+		isDir        bool
+		name         string
+		completePath string
 	}
 
 	testCases := []struct {
@@ -34,10 +35,12 @@ func TestArchive(t *testing.T) {
 			name:    "tar it out",
 			matcher: sauceignore.NewMatcher([]sauceignore.Pattern{}),
 			wantFiles: []wantFile{
-				{isDir: true, name: "screenshots"},
-				{isDir: false, name: "screenshot1.png"},
-				{isDir: false, name: "some.foo.js"},
-				{isDir: false, name: "some.other.bar.js"},
+				{isDir: true, name: "screenshots", completePath: "screenshots"},
+				{isDir: false, name: "screenshot1.png", completePath: "screenshots/screenshot1.png"},
+				{isDir: false, name: "some.foo.js", completePath: "some.foo.js"},
+				{isDir: false, name: "some.other.bar.js", completePath: "some.other.bar.js"},
+				{isDir: true, name: ".sauce", completePath: ".sauce"},
+				{isDir: false, name: "config.yml", completePath: ".sauce/config.yml"},
 			},
 		},
 		{
@@ -47,7 +50,7 @@ func TestArchive(t *testing.T) {
 				sauceignore.NewPattern("screenshots/"),
 			}),
 			wantFiles: []wantFile{
-				{isDir: false, name: "some.other.bar.js"},
+				{isDir: false, name: "some.other.bar.js", completePath: "some.other.bar.js"},
 			},
 		},
 	}
@@ -60,7 +63,7 @@ func TestArchive(t *testing.T) {
 			}
 
 			tr := archTar.NewReader(reader)
-			idx := 0
+			foundFiles := make([]bool, len(tt.wantFiles))
 			for {
 				header, err := tr.Next()
 				if err == io.EOF {
@@ -69,15 +72,21 @@ func TestArchive(t *testing.T) {
 				if err != nil {
 					t.Error(err)
 				}
-				// skip temp dir
-				if strings.Contains(header.Name, "tests-") {
-					continue
-				}
 
 				finfo := header.FileInfo()
-				assert.Equal(t, finfo.IsDir(), tt.wantFiles[idx].isDir)
-				assert.Equal(t, finfo.Name(), tt.wantFiles[idx].name)
-				idx++
+				for k, v := range tt.wantFiles {
+					if v.name == finfo.Name() {
+						assert.Equal(t, v.isDir, finfo.IsDir())
+						assert.Equal(t, v.completePath, header.Name)
+						foundFiles[k] = true
+					}
+				}
+			}
+			// check that all wantFiles are present
+			for k, v := range tt.wantFiles {
+				if !foundFiles[k] {
+					t.Errorf("%s not found in archive", v.name)
+				}
 			}
 		})
 	}
