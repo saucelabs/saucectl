@@ -25,17 +25,16 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	files := []string{
-		r.Project.Cypress.ConfigFile,
-		r.Project.Cypress.ProjectPath,
+	var files []string
+
+	if r.Project.RootDir != "" {
+		files = append(files, r.Project.RootDir)
+	} else {
+		files = append(files, r.Project.Cypress.ConfigFile, r.Project.Cypress.ProjectPath)
 	}
 
 	if r.Project.Cypress.EnvFile != "" {
 		files = append(files, r.Project.Cypress.EnvFile)
-	}
-
-	if r.Project.RootDir != "" {
-		files = append(files, r.Project.RootDir)
 	}
 
 	if r.Project.DryRun {
