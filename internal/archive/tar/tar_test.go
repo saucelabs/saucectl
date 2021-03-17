@@ -3,6 +3,7 @@ package tar
 import (
 	archTar "archive/tar"
 	"io"
+	"path/filepath"
 	"testing"
 
 	"gotest.tools/assert"
@@ -27,12 +28,14 @@ func TestArchive(t *testing.T) {
 
 	testCases := []struct {
 		name      string
+		dirName   string
 		matcher   sauceignore.Matcher
 		options   Options
 		wantFiles []wantFile
 	}{
 		{
 			name:    "tar it out",
+			dirName: dir.Path(),
 			matcher: sauceignore.NewMatcher([]sauceignore.Pattern{}),
 			wantFiles: []wantFile{
 				{isDir: true, name: "screenshots", completePath: "screenshots"},
@@ -44,7 +47,16 @@ func TestArchive(t *testing.T) {
 			},
 		},
 		{
-			name: "tar some.other.bar.js and skip some.foo.js file and screenshots folder",
+			name:    "only one file",
+			dirName: filepath.Join(dir.Path(), "some.foo.js"),
+			matcher: sauceignore.NewMatcher([]sauceignore.Pattern{}),
+			wantFiles: []wantFile{
+				{isDir: false, name: "some.foo.js", completePath: "some.foo.js"},
+			},
+		},
+		{
+			name:    "tar some.other.bar.js and skip some.foo.js file and screenshots folder",
+			dirName: dir.Path(),
 			matcher: sauceignore.NewMatcher([]sauceignore.Pattern{
 				sauceignore.NewPattern("some.foo.js"),
 				sauceignore.NewPattern("screenshots/"),
@@ -57,7 +69,7 @@ func TestArchive(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			reader, err := Archive(dir.Path(), tt.matcher, tt.options)
+			reader, err := Archive(tt.dirName, tt.matcher, tt.options)
 			if err != nil {
 				t.Error(err)
 			}
