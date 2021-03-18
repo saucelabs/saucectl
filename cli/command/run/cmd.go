@@ -410,7 +410,7 @@ func runTestcafe(cmd *cobra.Command) (int, error) {
 	}
 	creds := credentials.Get()
 	if creds == nil {
-		return 1, errors.New("no sauce credentails set")
+		return 1, errors.New("no sauce credentials set")
 	}
 
 	regio := region.FromString(p.Sauce.Region)
