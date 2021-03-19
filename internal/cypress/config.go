@@ -89,10 +89,11 @@ func FromFile(cfgPath string) (Project, error) {
 		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
 
-	if _, err := os.Stat(p.Cypress.ConfigFile); err != nil {
-		return p, fmt.Errorf("unable to locate %s", p.Cypress.ConfigFile)
+	cypressConfigFileCompletePath := filepath.Join(p.RootDir, p.Cypress.ConfigFile)
+	if _, err := os.Stat(cypressConfigFileCompletePath); err != nil {
+		return p, fmt.Errorf("unable to locate %s", cypressConfigFileCompletePath)
 	}
-	configDir := filepath.Dir(p.Cypress.ConfigFile)
+	configDir := filepath.Dir(cypressConfigFileCompletePath)
 
 	// We must locate the cypress folder.
 	cPath := filepath.Join(configDir, "cypress")

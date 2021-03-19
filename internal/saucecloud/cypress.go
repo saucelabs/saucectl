@@ -25,19 +25,13 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	files := []string{r.Project.RootDir}
-
-	if r.Project.Cypress.EnvFile != "" {
-		files = append(files, r.Project.Cypress.EnvFile)
-	}
-
 	if r.Project.DryRun {
-		if err := r.dryRun(r.Project, files, r.Project.Sauce.Sauceignore, r.getSuiteNames()); err != nil {
+		if err := r.dryRun(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.getSuiteNames()); err != nil {
 			return exitCode, err
 		}
 		return 0, nil
 	}
-	fileID, err := r.archiveAndUpload(r.Project, files, r.Project.Sauce.Sauceignore)
+	fileID, err := r.archiveAndUpload(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore)
 	if err != nil {
 		return exitCode, err
 	}

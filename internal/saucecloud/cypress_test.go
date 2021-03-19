@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"context"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -103,24 +102,18 @@ func TestArchiveProject(t *testing.T) {
 		os.RemoveAll("./test-arch/")
 	}()
 
-	cfg, _ := filepath.Abs("../../tests/e2e/cypress.json")
-	folder, _ := filepath.Abs("../../tests/e2e/cypress")
-
 	runner := CypressRunner{
 		Project: cypress.Project{
+			RootDir: "../../tests/e2e/",
 			Cypress: cypress.Cypress{
-				ConfigFile:  cfg,
-				ProjectPath: folder,
+				ConfigFile:  "cypress.json",
 			},
 		},
 	}
 	wd, _ := os.Getwd()
 	log.Info().Msg(wd)
-	files := []string{
-		runner.Project.Cypress.ConfigFile,
-		runner.Project.Cypress.ProjectPath,
-	}
-	z, err := runner.archiveProject(runner.Project, "./test-arch/", files, "")
+
+	z, err := runner.archiveProject(runner.Project, "./test-arch/", runner.Project.RootDir, "")
 	if err != nil {
 		t.Fail()
 	}
