@@ -252,8 +252,10 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 		if err != nil {
 			return nil, err
 		}
-		if err := copyTestFiles(ctx, handler, container.ID, options.SuiteName, options.Files, pDir, matcher); err != nil {
-			return nil, err
+		for _, file := range options.Files {
+			if err := copyTestFiles(ctx, handler, container.ID, options.SuiteName, file, pDir, matcher); err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -269,13 +271,11 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 }
 
 // copyTestFiles copies the files within the container.
-func copyTestFiles(ctx context.Context, handler *Handler, containerID, suiteName string, files []string, pDir string,
+func copyTestFiles(ctx context.Context, handler *Handler, containerID, suiteName string, projectFolder string, pDir string,
 	matcher sauceignore.Matcher) error {
-	for _, file := range files {
-		log.Info().Str("from", file).Str("to", pDir).Str("suite", suiteName).Msg("File copied")
-		if err := handler.CopyToContainer(ctx, containerID, file, pDir, matcher); err != nil {
-			return err
-		}
+
+	if err := handler.CopyToContainer(ctx, containerID, projectFolder, pDir, matcher); err != nil {
+		return err
 	}
 	return nil
 }
@@ -306,17 +306,6 @@ func createMounts(suiteName string, files []string, target string) ([]mount.Moun
 	}
 
 	return mm, nil
-}
-
-// CopyFilesToContainer copies the given files into the container.
-func (handler *Handler) CopyFilesToContainer(ctx context.Context, srcContainerID string, files []string, targetDir string,
-	matcher sauceignore.Matcher) error {
-	for _, fpath := range files {
-		if err := handler.CopyToContainer(ctx, srcContainerID, fpath, targetDir, matcher); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // CopyToContainer copies the given file to the container.
