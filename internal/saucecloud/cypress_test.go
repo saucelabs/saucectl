@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"context"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -102,11 +103,14 @@ func TestArchiveProject(t *testing.T) {
 		os.RemoveAll("./test-arch/")
 	}()
 
+	cfg, _ := filepath.Abs("../../tests/e2e/cypress.json")
+	folder, _ := filepath.Abs("../../tests/e2e/cypress")
+
 	runner := CypressRunner{
 		Project: cypress.Project{
 			Cypress: cypress.Cypress{
-				ConfigFile:  "../../tests/e2e/cypress.json",
-				ProjectPath: "../../tests/e2e/cypress/",
+				ConfigFile:  cfg,
+				ProjectPath: folder,
 			},
 		},
 	}
@@ -187,6 +191,7 @@ func TestRunProject(t *testing.T) {
 	uploader := &mocks.FakeProjectUploader{
 		UploadSuccess: true,
 	}
+
 	runner := CypressRunner{
 		CloudRunner: CloudRunner{
 			JobStarter:      &starter,
@@ -195,10 +200,11 @@ func TestRunProject(t *testing.T) {
 			ProjectUploader: uploader,
 		},
 		Project: cypress.Project{
+			RootDir: ".",
 			Cypress: cypress.Cypress{
 				Version:     "5.6.0",
 				ConfigFile:  "../../tests/e2e/cypress.json",
-				ProjectPath: "../../tests/e2e/cypress/",
+				ProjectPath: "../../tests/e2e/cypress",
 			},
 			Suites: []cypress.Suite{
 				{Name: "dummy-suite"},
