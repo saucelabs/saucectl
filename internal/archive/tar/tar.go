@@ -61,7 +61,7 @@ func Archive(src string, matcher sauceignore.Matcher, opts Options) (io.Reader, 
 			if err != nil {
 				return err
 			}
-			header.Name = relName
+			header.Name = filepath.Join(src, relName)
 		}
 
 		if err := w.WriteHeader(header); err != nil {
