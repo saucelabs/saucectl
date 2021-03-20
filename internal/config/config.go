@@ -212,9 +212,9 @@ func Describe(cfgPath string) (TypeDef, error) {
 		return TypeDef{}, fmt.Errorf("failed to parse project configuration: %v", err)
 	}
 
-	// check if the config is for sauce
+	// Sanity check.
 	if d.APIVersion == "" {
-		return TypeDef{}, errors.New("invalid sauce config. You can check configration setting from here https://docs.saucelabs.com/testrunner-toolkit/configuration")
+		return TypeDef{}, errors.New("invalid sauce config, which is either malformed or corrupt, please refer to https://docs.saucelabs.com/testrunner-toolkit/configuration for creating a valid config")
 	}
 
 	// Normalize certain values for ease of use.
