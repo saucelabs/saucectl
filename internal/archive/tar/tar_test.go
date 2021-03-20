@@ -3,6 +3,7 @@ package tar
 import (
 	archTar "archive/tar"
 	"io"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -69,7 +70,8 @@ func TestArchive(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			reader, err := Archive(tt.dirName, tt.matcher, tt.options)
+			os.Chdir(tt.dirName)
+			reader, err := Archive(".", tt.matcher, tt.options)
 			if err != nil {
 				t.Error(err)
 			}
