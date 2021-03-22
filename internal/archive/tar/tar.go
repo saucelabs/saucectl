@@ -36,7 +36,7 @@ func Archive(src string, matcher sauceignore.Matcher, opts Options) (io.Reader, 
 
 	baseDir := ""
 	if infoSrc.IsDir() {
-		baseDir = filepath.Base(src)
+		baseDir = src
 	}
 
 	walker := func(file string, fileInfo os.FileInfo, err error) error {
@@ -57,8 +57,11 @@ func Archive(src string, matcher sauceignore.Matcher, opts Options) (io.Reader, 
 		}
 
 		if baseDir != "" {
-			// Update the name to correctly reflect the desired destination when untaring
-			header.Name = filepath.Join(baseDir, strings.TrimPrefix(file, src))
+			relName, err := filepath.Rel(baseDir, file)
+			if err != nil {
+				return err
+			}
+			header.Name = filepath.Join(baseDir, relName)
 		}
 
 		if err := w.WriteHeader(header); err != nil {
