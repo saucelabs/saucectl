@@ -122,54 +122,45 @@ func (r *ContainerRunner) startContainer(options containerStartOptions) (string,
 
 	pDir, err := r.docker.ProjectDir(r.Ctx, options.Docker.Image)
 	if err != nil {
-		return "", err
+		return containerID, err
 	}
 
 	r.containerConfig.jobInfoFilePath, err = r.docker.JobInfoFile(r.Ctx, options.Docker.Image)
 	if err != nil {
-		return "", err
+		return containerID, err
 	}
 
 	tmpDir, err := os.MkdirTemp("", "saucectl")
 	if err != nil {
-		return "", err
+		return containerID, err
 	}
 	defer os.RemoveAll(tmpDir)
 
 	rcPath := filepath.Join(tmpDir, SauceRunnerConfigFile)
 	if err := jsonio.WriteFile(rcPath, options.Project); err != nil {
-		return "", err
+		return containerID, err
 	}
 
 	matcher, err := sauceignore.NewMatcherFromFile(options.Sauceignore)
 	if err != nil {
-		return "", err
+		return containerID, err
 	}
 
 	if err := r.docker.CopyToContainer(r.Ctx, containerID, rcPath, pDir, matcher); err != nil {
-		return "", err
+		return containerID, err
 	}
 	r.containerConfig.sauceRunnerConfigPath = path.Join(pDir, SauceRunnerConfigFile)
 
 	// running pre-exec tasks
 	err = r.beforeExec(containerID, options.SuiteName, options.BeforeExec)
 	if err != nil {
-		return "", err
+		return containerID, err
 	}
 
-	return container.ID, nil
+	return containerID, nil
 }
 
 func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string) (output string, jobInfo jobInfo, passed bool, err error) {
-	defer func() {
-		log.Info().Str("suite", suiteName).Msg("Tearing down environment")
-		if err := r.docker.Teardown(r.Ctx, containerID); err != nil {
-			if !r.docker.IsErrNotFound(err) {
-				log.Error().Err(err).Str("suite", suiteName).Msg("Failed to tear down environment")
-			}
-		}
-	}()
-
 	exitCode, output, err := r.docker.ExecuteAttach(r.Ctx, containerID, cmd, env)
 
 	if err != nil {
@@ -324,6 +315,8 @@ func (r *ContainerRunner) logSuite(res result) {
 func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobInfo jobInfo, passed bool, err error) {
 	log.Info().Str("suite", options.SuiteName).Msg("Setting up test environment")
 	containerID, err = r.startContainer(options)
+	defer r.tearDown(containerID, options.SuiteName)
+
 	if err != nil {
 		log.Err(err).Str("suite", options.SuiteName).Msg("Failed to setup test environment")
 		return
@@ -333,4 +326,16 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", options.SuiteName},
 		options.Environment)
 	return
+}
+
+func (r *ContainerRunner) tearDown(containerID, suiteName string) {
+	if containerID != "" {
+		return
+	}
+	log.Info().Str("suite", suiteName).Msg("Tearing down environment")
+	if err := r.docker.Teardown(r.Ctx, containerID); err != nil {
+		if !r.docker.IsErrNotFound(err) {
+			log.Error().Err(err).Str("suite", suiteName).Msg("Failed to tear down environment")
+		}
+	}
 }
