@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/signal"
 	"path"
 	"path/filepath"
 	"strings"
@@ -314,8 +315,12 @@ func (r *ContainerRunner) logSuite(res result) {
 
 func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobInfo jobInfo, passed bool, err error) {
 	log.Info().Str("suite", options.SuiteName).Msg("Setting up test environment")
+	cleanedUp := false
 	containerID, err = r.startContainer(options)
-	defer r.tearDown(containerID, options.SuiteName)
+	defer r.tearDown(containerID, options.SuiteName, &cleanedUp)
+
+	sigC := r.registerSignalCatch(containerID, options.SuiteName, &cleanedUp)
+	defer r.unregisterSignalCatch(sigC)
 
 	if err != nil {
 		log.Err(err).Str("suite", options.SuiteName).Msg("Failed to setup test environment")
@@ -328,10 +333,42 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 	return
 }
 
-func (r *ContainerRunner) tearDown(containerID, suiteName string) {
-	if containerID != "" {
+func (r *ContainerRunner) registerSignalCatch(containerID, suiteName string, cleanedUp *bool) chan os.Signal{
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt)
+	go r.tearDownOrExitOnSignal(c, cleanedUp, containerID, suiteName)
+	return c
+}
+
+func (r *ContainerRunner) unregisterSignalCatch(c chan os.Signal) {
+	signal.Stop(c)
+	close(c)
+}
+
+func (r *ContainerRunner) tearDownOrExitOnSignal(c <-chan os.Signal, cleanUp *bool, containerID, suiteName string) {
+	count := 0
+	for {
+		<-c
+		if count > 1 {
+			log.Info().Msg("Ctrl-C captured again. Stopping now without cleanup.")
+			os.Exit(1)
+		}
+		if count == 1 {
+			log.Info().Msg("Ctrl-C captured. Exiting gracefully and cleaning.")
+			r.tearDown(containerID, suiteName, cleanUp)
+		}
+		if count == 0 {
+			log.Info().Msg("Ctrl-C captured. Ctrl-C again to softly exit.")
+		}
+		count++
+	}
+}
+
+func (r *ContainerRunner) tearDown(containerID, suiteName string, done *bool) {
+	if containerID == "" || *done {
 		return
 	}
+	*done = true
 	log.Info().Str("suite", suiteName).Msg("Tearing down environment")
 	if err := r.docker.Teardown(r.Ctx, containerID); err != nil {
 		if !r.docker.IsErrNotFound(err) {
