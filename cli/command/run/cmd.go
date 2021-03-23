@@ -3,6 +3,7 @@ package run
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -134,6 +135,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return 1, err
 	}
 
+	// TODO switch statement with pre-constructed type definition structs?
 	if d.Kind == config.KindCypress && d.APIVersion == config.VersionV1Alpha {
 		return runCypress(cmd)
 	}
@@ -142,6 +144,9 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 	if d.Kind == config.KindTestcafe && d.APIVersion == config.VersionV1Alpha {
 		return runTestcafe(cmd)
+	}
+	if d.Kind == config.KindPuppeteer && d.APIVersion == config.VersionV1Alpha {
+		return runPuppeteer(cmd)
 	}
 
 	return runLegacyMode(cmd, cli)
@@ -472,6 +477,72 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, creds *credenti
 	return r.RunProject()
 }
 
+func runPuppeteer(cmd *cobra.Command) (int, error) {
+	p, err := puppeteer.FromFile(cfgFilePath)
+	if err != nil {
+		return 1, err
+	}
+	p.Sauce.Metadata.ExpandEnv()
+	applyDefaultValues(&p.Sauce)
+	overrideCliParameters(cmd, &p.Sauce)
+
+	for k, v := range env {
+		for _, s := range p.Suites {
+			if s.Env == nil {
+				s.Env = map[string]string{}
+			}
+			s.Env[k] = v
+		}
+	}
+
+	if showConsoleLog {
+		p.ShowConsoleLog = true
+	}
+
+	if dryRun {
+		p.DryRun = true
+	}
+
+	if cmd.Flags().Lookup("suite").Changed {
+		if err := filterPuppeteerSuite(&p); err != nil {
+			return 1, err
+		}
+	}
+	creds := credentials.Get()
+	if creds == nil {
+		return 1, errors.New("no sauce credentials set")
+	}
+
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
+		return 1, errors.New("no sauce region set")
+	}
+
+	tc := testcomposer.Client{
+		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
+		URL:         regio.APIBaseURL(),
+		Credentials: *creds,
+	}
+
+	switch testEnv {
+	case "docker":
+		return runPuppeteerInDocker(p, tc)
+	default:
+		return 1, errors.New("unsupported test enviornment")
+	}
+}
+
+func runPuppeteerInDocker(p puppeteer.Project, testco testcomposer.Client) (int, error) {
+	log.Info().Msg("Running puppeteer in Docker")
+
+	cd, err := docker.NewPuppeteer(p, &testco)
+	if err != nil {
+		return 1, err
+	}
+	return cd.RunProject()
+}
+
 func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, error) {
 	// return test runner for testing
 	if p.Image.Base == "test" {
@@ -620,6 +691,16 @@ func filterTestcafeSuite(c *testcafe.Project) error {
 	for _, s := range c.Suites {
 		if s.Name == suiteName {
 			c.Suites = []testcafe.Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf("suite name '%s' is invalid", suiteName)
+}
+
+func filterPuppeteerSuite(c *puppeteer.Project) error {
+	for _, s := range c.Suites {
+		if s.Name == suiteName {
+			c.Suites = []puppeteer.Suite{s}
 			return nil
 		}
 	}
