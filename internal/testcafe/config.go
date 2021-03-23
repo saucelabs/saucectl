@@ -47,7 +47,7 @@ type Suite struct {
 	StopOnFirstFail    bool              `yaml:"stopOnFirstFail,omitempty" json:"stopOnFirstFail"`
 	DisablePageCaching bool              `yaml:"disablePageCaching,omitempty" json:"disablePageCaching"`
 	DisableScreenshots bool              `yaml:"disableScreenshots,omitempty" json:"disableScreenshots"`
-	DisableVideo       bool              `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testconfig config.
+	DisableVideo       bool              `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testcafe config.
 }
 
 // Screenshots represents screenshots configuration.
