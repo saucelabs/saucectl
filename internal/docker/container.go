@@ -374,14 +374,13 @@ func registerSkipSuiteOnSignal(skipSuites *bool) chan os.Signal {
 		for {
 			sig := <-c
 			if sig == nil {
-				log.Info().Msg("Ending global watch")
 				return
 			}
 			if reInterrupted {
 				os.Exit(1)
 			}
 			reInterrupted = true
-			log.Info().Msg("Captured global ^C")
+			log.Info().Msg("Ctrl-C captured. Ctrl-C again to exit now.")
 			*skip = true
 		}
 	}(sigChan, skipSuites)
