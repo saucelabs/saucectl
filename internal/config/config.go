@@ -133,6 +133,7 @@ const (
 // Kind* contains referenced config kinds
 const (
 	KindCypress    = "cypress"
+	KindPuppeteer  = "puppeteer"
 	KindPlaywright = "playwright"
 	KindTestcafe   = "testcafe"
 )
