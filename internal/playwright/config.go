@@ -50,7 +50,7 @@ type Suite struct {
 // SuiteConfig represents the configuration specific to a suite
 type SuiteConfig struct {
 	BrowserName         string `yaml:"browserName,omitempty" json:"browserName,omitempty"`
-	HeadFull            bool   `yaml:"headful,omitempty" json:"headful,omitempty"`
+	HeadFul             bool   `yaml:"headful,omitempty" json:"headful,omitempty"`
 	ScreenshotOnFailure bool   `yaml:"screenshotOnFailure,omitempty" json:"screenshotOnFailure,omitempty"`
 	SlowMo              int    `yaml:"slowMo,omitempty" json:"slowMo,omitempty"`
 	Video               bool   `yaml:"video,omitempty" json:"video,omitempty"`
