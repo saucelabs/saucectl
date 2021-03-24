@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"time"
 
@@ -26,6 +27,7 @@ type CloudRunner struct {
 	ProjectUploader storage.ProjectUploader
 	JobStarter      job.Starter
 	JobReader       job.Reader
+	JobStopper      job.Stopper
 	CCYReader       concurrency.Reader
 	TunnelService   tunnel.Service
 	Region          region.Region
@@ -36,20 +38,21 @@ type result struct {
 	suiteName string
 	browser   string
 	job       job.Job
+	skipped   bool
 	err       error
 }
 
 // ConsoleLogAsset represents job asset log file name.
 const ConsoleLogAsset = "console.log"
 
-func (r *CloudRunner) createWorkerPool(num int) (chan job.StartOptions, chan result) {
+func (r *CloudRunner) createWorkerPool(num int, skip *bool) (chan job.StartOptions, chan result) {
 	jobOpts := make(chan job.StartOptions)
 	results := make(chan result, num)
 
 	ccy := concurrency.Min(r.CCYReader, num)
 	log.Info().Int("concurrency", ccy).Msg("Launching workers.")
 	for i := 0; i < ccy; i++ {
-		go r.runJobs(jobOpts, results)
+		go r.runJobs(jobOpts, results, skip)
 	}
 
 	return jobOpts, results
@@ -127,8 +130,17 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (job.Job, error) {
 	return j, nil
 }
 
-func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- result) {
+func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- result, skip *bool) {
 	for opts := range jobOpts {
+		if *skip {
+			results <- result{
+				suiteName: opts.Suite,
+				browser:   opts.BrowserName,
+				skipped:   true,
+				err:       nil,
+			}
+			continue
+		}
 		jobData, err := r.runJob(opts)
 
 		results <- result{
@@ -211,6 +223,10 @@ func (r *CloudRunner) uploadProject(filename string) (string, error) {
 
 // logSuite display the result of a suite
 func (r *CloudRunner) logSuite(res result) {
+	if res.skipped {
+		log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Suite skipped.")
+		return
+	}
 	if res.job.ID == "" {
 		log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Failed to start suite.")
 		return
@@ -273,4 +289,47 @@ func (r *CloudRunner) dryRun(project interface{}, files []string, sauceIgnoreFil
 
 	log.Info().Msgf("Saving bundled project to %s.", zipName)
 	return nil
+}
+
+// stopSuiteExecution stops the current execution on Sauce Cloud
+func (r *CloudRunner) stopSuiteExecution(jobId string, suiteName string) {
+	err := r.JobStopper.StopJob(context.Background(), jobId)
+	if err != nil {
+		log.Warn().Err(err).Str("suite", suiteName).Msg("Unable to stop suite.")
+	}
+}
+
+// registerInterruptOnSignal runs tearDown on SIGINT / Interrupt.
+func (r *CloudRunner) registerInterruptOnSignal(jobId, suiteName string, interrupted *bool) chan os.Signal {
+	sigChan := make(chan os.Signal)
+	signal.Notify(sigChan, os.Interrupt)
+
+	go func(c <-chan os.Signal, jobId, suiteName string) {
+		sig := <-c
+		if sig == nil {
+			return
+		}
+		log.Info().Str("suite", suiteName).Msg("Interrupting suite")
+		r.stopSuiteExecution(jobId, suiteName)
+	}(sigChan, jobId, suiteName)
+	return sigChan
+}
+
+func registerSkipSuitesOnSignal(skip *bool) chan os.Signal {
+	sigChan := make(chan os.Signal)
+	signal.Notify(sigChan, os.Interrupt)
+
+	go func(c <-chan os.Signal, skip *bool) {
+		sig := <-sigChan
+		if sig == nil {
+			return
+		}
+		*skip = true
+	}(sigChan, skip)
+	return sigChan
+}
+
+func unregisterSignalCapture(c chan os.Signal) {
+	signal.Stop(c)
+	close(c)
 }

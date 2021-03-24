@@ -181,8 +181,11 @@ func (c *Client) isTunnelRunning(ctx context.Context, id string) error {
 			}
 		}
 	}
-
 	return ErrTunnelNotFound
+}
+
+func (c *Client) StopJob(ctx context.Context, jobID string) error {
+	return nil
 }
 
 func doAssetRequest(httpClient *http.Client, request *http.Request) ([]byte, error) {

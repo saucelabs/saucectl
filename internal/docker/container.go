@@ -365,7 +365,7 @@ func (r *ContainerRunner) registerSignalCapture(containerID, suiteName string, c
 		if sig == nil {
 			return
 		}
-		log.Info().Str("suiteName", suiteName).Msg("Interrupting suite")
+		log.Info().Str("suite", suiteName).Msg("Interrupting suite")
 		*interrupted = true
 		r.tearDown(containerID, suiteName, cleanedUp)
 	}(sigChan, cleanedUp, interrupted, containerID, suiteName)

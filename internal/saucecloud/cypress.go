@@ -73,7 +73,11 @@ func (r *CypressRunner) checkCypressVersion() error {
 }
 
 func (r *CypressRunner) runSuites(fileID string) bool {
-	jobOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency)
+	skipSuites := false
+	sigChan := registerSkipSuitesOnSignal(&skipSuites)
+	defer unregisterSignalCapture(sigChan)
+
+	jobOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency, &skipSuites)
 	defer close(results)
 
 	// Submit suites to work on.
