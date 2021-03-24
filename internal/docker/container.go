@@ -246,7 +246,7 @@ func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, re
 			}
 			continue
 		}
-		containerID, output, jobDetails, passed, skipped, err := r.runSuite(opts)
+		containerID, output, jobDetails, passed, skipped, err := r.runSuite(opts, skip)
 		results <- result{
 			suiteName:     opts.SuiteName,
 			containerID:   containerID,
@@ -327,11 +327,19 @@ func (r *ContainerRunner) logSuite(res result) {
 	}
 }
 
-func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobInfo jobInfo, passed bool, skipped bool, err error) {
+// runSuite runs the selected suite.
+func (r *ContainerRunner) runSuite(options containerStartOptions, skip *bool) (containerID string, output string, jobInfo jobInfo, passed bool, skipped bool, err error) {
 	log.Info().Str("suite", options.SuiteName).Msg("Setting up test environment")
 	cleanedUp := false
 	containerID, err = r.startContainer(options)
 	defer r.tearDown(containerID, options.SuiteName, &cleanedUp)
+
+	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
+	// if a soft exist is requested during startContainer phase, it gently exits.
+	if *skip {
+		skipped = true
+		return
+	}
 
 	sigC := r.registerSignalCapture(containerID, options.SuiteName, &cleanedUp, &skipped)
 	defer unregisterSignalCapture(sigC)
