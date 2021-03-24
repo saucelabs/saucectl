@@ -2,7 +2,6 @@ package docker
 
 import (
 	"context"
-
 	"github.com/rs/zerolog/log"
 
 	"github.com/saucelabs/saucectl/internal/config"
@@ -65,7 +64,11 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	containerOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency)
+	skipSuites := false
+	sigChan := registerSkipSuiteOnSignal(&skipSuites)
+	defer unregisterSignalCapture(sigChan)
+
+	containerOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency, &skipSuites)
 	defer close(results)
 
 	go func() {

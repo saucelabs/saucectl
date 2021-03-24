@@ -48,6 +48,7 @@ type result struct {
 	containerID   string
 	err           error
 	passed        bool
+	skipped       bool
 	consoleOutput string
 	suiteName     string
 	jobInfo       jobInfo
@@ -181,7 +182,7 @@ func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env m
 	return output, jobInfo, passed, err
 }
 
-// readTestURL reads test url from inside the test runner container.
+// readJobInfo reads test url from inside the test runner container.
 func (r *ContainerRunner) readJobInfo(containerID string) (jobInfo, error) {
 	// Set unknown when image does not support it.
 	if r.containerConfig.jobInfoFilePath == "" {
@@ -223,26 +224,35 @@ func (r *ContainerRunner) beforeExec(containerID, suiteName string, tasks []stri
 	return nil
 }
 
-func (r *ContainerRunner) createWorkerPool(ccy int) (chan containerStartOptions, chan result) {
+func (r *ContainerRunner) createWorkerPool(ccy int, skipSuites *bool) (chan containerStartOptions, chan result) {
 	jobOpts := make(chan containerStartOptions)
 	results := make(chan result, ccy)
 
 	log.Info().Int("concurrency", ccy).Msg("Launching workers.")
+
 	for i := 0; i < ccy; i++ {
-		go r.runJobs(jobOpts, results)
+		go r.runJobs(jobOpts, results, skipSuites)
 	}
 
 	return jobOpts, results
 }
 
-func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, results chan<- result) {
+func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, results chan<- result, skip *bool) {
 	for opts := range containerOpts {
-		containerID, output, jobDetails, passed, err := r.runSuite(opts)
+		if *skip {
+			results <- result{
+				suiteName: opts.SuiteName,
+				skipped:   true,
+			}
+			continue
+		}
+		containerID, output, jobDetails, passed, skipped, err := r.runSuite(opts)
 		results <- result{
 			suiteName:     opts.SuiteName,
 			containerID:   containerID,
 			jobInfo:       jobDetails,
 			passed:        passed,
+			skipped:       skipped,
 			consoleOutput: output,
 			err:           err,
 		}
@@ -294,6 +304,10 @@ func (r *ContainerRunner) collectResults(results chan result, expected int) bool
 }
 
 func (r *ContainerRunner) logSuite(res result) {
+	if res.skipped {
+		log.Warn().Str("suite", res.suiteName).Msg("Suite skipped.")
+		return
+	}
 	if res.containerID == "" {
 		log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Failed to start suite.")
 		return
@@ -313,14 +327,14 @@ func (r *ContainerRunner) logSuite(res result) {
 	}
 }
 
-func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobInfo jobInfo, passed bool, err error) {
+func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobInfo jobInfo, passed bool, skipped bool, err error) {
 	log.Info().Str("suite", options.SuiteName).Msg("Setting up test environment")
 	cleanedUp := false
 	containerID, err = r.startContainer(options)
 	defer r.tearDown(containerID, options.SuiteName, &cleanedUp)
 
-	sigC := r.registerSignalCatch(containerID, options.SuiteName, &cleanedUp)
-	defer r.unregisterSignalCatch(sigC)
+	sigC := r.registerSignalCapture(containerID, options.SuiteName, &cleanedUp, &skipped)
+	defer unregisterSignalCapture(sigC)
 
 	if err != nil {
 		log.Err(err).Str("suite", options.SuiteName).Msg("Failed to setup test environment")
@@ -333,37 +347,54 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 	return
 }
 
-func (r *ContainerRunner) registerSignalCatch(containerID, suiteName string, cleanedUp *bool) chan os.Signal{
-	c := make(chan os.Signal)
-	signal.Notify(c, os.Interrupt)
-	go r.tearDownOrExitOnSignal(c, cleanedUp, containerID, suiteName)
-	return c
+// registerSignalCapture runs tearDown on SIGINT / Interrupt.
+func (r *ContainerRunner) registerSignalCapture(containerID, suiteName string, cleanedUp *bool, interrupted *bool) chan os.Signal {
+	sigChan := make(chan os.Signal)
+	signal.Notify(sigChan, os.Interrupt)
+
+	go func(c <-chan os.Signal, cleanedUp, interrupted *bool, containerID, suiteName string) {
+		sig := <-c
+		if sig == nil {
+			return
+		}
+		log.Info().Str("suiteName", suiteName).Msg("Interrupting suite")
+		*interrupted = true
+		r.tearDown(containerID, suiteName, cleanedUp)
+	}(sigChan, cleanedUp, interrupted, containerID, suiteName)
+	return sigChan
 }
 
-func (r *ContainerRunner) unregisterSignalCatch(c chan os.Signal) {
+// registerSkipSuiteOnSignal sets *skipSuites to true when a signal is captured.
+func registerSkipSuiteOnSignal(skipSuites *bool) chan os.Signal {
+	sigChan := make(chan os.Signal)
+	signal.Notify(sigChan, os.Interrupt)
+
+	go func(c <-chan os.Signal, skip *bool) {
+		reInterrupted := false
+		for {
+			sig := <-c
+			if sig == nil {
+				log.Info().Msg("Ending global watch")
+				return
+			}
+			if reInterrupted {
+				os.Exit(1)
+			}
+			reInterrupted = true
+			log.Info().Msg("Captured global ^C")
+			*skip = true
+		}
+	}(sigChan, skipSuites)
+	return sigChan
+}
+
+// unregisterSignalCapture remove the signal hook associated to the chan c.
+func unregisterSignalCapture(c chan os.Signal) {
 	signal.Stop(c)
 	close(c)
 }
 
-func (r *ContainerRunner) tearDownOrExitOnSignal(c <-chan os.Signal, cleanUp *bool, containerID, suiteName string) {
-	count := 0
-	for {
-		<-c
-		if count > 1 {
-			log.Info().Msg("Ctrl-C captured again. Stopping now without cleanup.")
-			os.Exit(1)
-		}
-		if count == 1 {
-			log.Info().Msg("Ctrl-C captured. Exiting gracefully and cleaning.")
-			r.tearDown(containerID, suiteName, cleanUp)
-		}
-		if count == 0 {
-			log.Info().Msg("Ctrl-C captured. Ctrl-C again to softly exit.")
-		}
-		count++
-	}
-}
-
+// tearDown stops the test environment and remove docker containers.
 func (r *ContainerRunner) tearDown(containerID, suiteName string, done *bool) {
 	if containerID == "" || *done {
 		return
