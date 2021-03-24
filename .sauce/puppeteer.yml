@@ -16,5 +16,3 @@ suites:
   - name: "chrome"
     testMatch: ["**/example.test.js"]
     browser: "chrome"
-docker:
-  image: saucelabs/stt-puppeteer-jest-node:latest
