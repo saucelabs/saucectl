@@ -184,8 +184,16 @@ func (c *Client) isTunnelRunning(ctx context.Context, id string) error {
 	return ErrTunnelNotFound
 }
 
-func (c *Client) StopJob(ctx context.Context, jobID string) error {
-	return nil
+func (c *Client) StopJob(ctx context.Context, id string) (job.Job, error) {
+	request, err := createStopRequest(ctx, c.URL, c.Username, c.AccessKey, id)
+	if err != nil {
+		return  job.Job{}, err
+	}
+	j, err := doRequest(c.HTTPClient, request)
+	if err != nil {
+		return job.Job{}, err
+	}
+	return j, nil
 }
 
 func doAssetRequest(httpClient *http.Client, request *http.Request) ([]byte, error) {
@@ -263,5 +271,17 @@ func createAssetRequest(ctx context.Context, url, username, accessKey, jobID, fi
 
 	req.SetBasicAuth(username, accessKey)
 
+	return req, nil
+}
+
+func createStopRequest(ctx context.Context, url, username, accessKey, jobID string) (*http.Request, error) {
+	req, err := requesth.NewWithContext(ctx, http.MethodPut,
+		fmt.Sprintf("%s/rest/v1/%s/jobs/%s/stop", url, username, jobID), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(username, accessKey)
 	return req, nil
 }

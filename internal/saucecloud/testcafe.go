@@ -51,11 +51,10 @@ func (r *TestcafeRunner) getSuiteNames() string {
 }
 
 func (r *TestcafeRunner) runSuites(fileID string) bool {
-	skipSuites := false
-	sigChan := registerSkipSuitesOnSignal(&skipSuites)
+	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
-	jobOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency, &skipSuites)
+	jobOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency)
 	defer close(results)
 
 	// Submit suites to work on

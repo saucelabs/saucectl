@@ -32,6 +32,8 @@ type CloudRunner struct {
 	TunnelService   tunnel.Service
 	Region          region.Region
 	ShowConsoleLog  bool
+
+	interrupted bool
 }
 
 type result struct {
@@ -45,14 +47,14 @@ type result struct {
 // ConsoleLogAsset represents job asset log file name.
 const ConsoleLogAsset = "console.log"
 
-func (r *CloudRunner) createWorkerPool(num int, skip *bool) (chan job.StartOptions, chan result) {
+func (r *CloudRunner) createWorkerPool(num int) (chan job.StartOptions, chan result) {
 	jobOpts := make(chan job.StartOptions)
 	results := make(chan result, num)
 
 	ccy := concurrency.Min(r.CCYReader, num)
 	log.Info().Int("concurrency", ccy).Msg("Launching workers.")
 	for i := 0; i < ccy; i++ {
-		go r.runJobs(jobOpts, results, skip)
+		go r.runJobs(jobOpts, results)
 	}
 
 	return jobOpts, results
@@ -105,34 +107,43 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 	return passed
 }
 
-func (r *CloudRunner) runJob(opts job.StartOptions) (job.Job, error) {
+func (r *CloudRunner) runJob(opts job.StartOptions) (job.Job, bool, error) {
 	log.Info().Str("suite", opts.Suite).Str("region", r.Region.String()).Msg("Starting suite.")
 
 	id, err := r.JobStarter.StartJob(context.Background(), opts)
 	if err != nil {
-		return job.Job{}, err
+		return job.Job{}, false, err
+	}
+
+	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
+	// if a soft exist is requested during startContainer phase, it gently exits.
+	if r.interrupted {
+		return job.Job{}, true, nil
 	}
 
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
 	log.Info().Str("suite", opts.Suite).Str("url", jobDetailsPage).Msg("Suite started.")
 
+	sigChan := r.registerInterruptOnSignal(id, opts.Suite)
+	defer unregisterSignalCapture(sigChan)
+
 	// High interval poll to not oversaturate the job reader with requests.
 	j, err := r.JobReader.PollJob(context.Background(), id, 15*time.Second)
 	if err != nil {
-		return job.Job{}, fmt.Errorf("failed to retrieve job status for suite %s", opts.Suite)
+		return job.Job{}, false, fmt.Errorf("failed to retrieve job status for suite %s", opts.Suite)
 	}
 
 	if !j.Passed {
 		// We may need to differentiate when a job has crashed vs. when there is errors.
-		return j, fmt.Errorf("suite '%s' has test failures", opts.Suite)
+		return j, false, fmt.Errorf("suite '%s' has test failures", opts.Suite)
 	}
 
-	return j, nil
+	return j, false, nil
 }
 
-func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- result, skip *bool) {
+func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- result) {
 	for opts := range jobOpts {
-		if *skip {
+		if r.interrupted {
 			results <- result{
 				suiteName: opts.Suite,
 				browser:   opts.BrowserName,
@@ -141,12 +152,13 @@ func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- re
 			}
 			continue
 		}
-		jobData, err := r.runJob(opts)
+		jobData, skipped, err := r.runJob(opts)
 
 		results <- result{
 			suiteName: opts.Suite,
 			browser:   opts.BrowserName,
 			job:       jobData,
+			skipped:   skipped,
 			err:       err,
 		}
 	}
@@ -300,7 +312,7 @@ func (r *CloudRunner) stopSuiteExecution(jobId string, suiteName string) {
 }
 
 // registerInterruptOnSignal runs tearDown on SIGINT / Interrupt.
-func (r *CloudRunner) registerInterruptOnSignal(jobId, suiteName string, interrupted *bool) chan os.Signal {
+func (r *CloudRunner) registerInterruptOnSignal(jobId, suiteName string) chan os.Signal {
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt)
 
@@ -309,23 +321,29 @@ func (r *CloudRunner) registerInterruptOnSignal(jobId, suiteName string, interru
 		if sig == nil {
 			return
 		}
-		log.Info().Str("suite", suiteName).Msg("Interrupting suite")
+		log.Info().Str("suite", suiteName).Msg("Stopping suite")
 		r.stopSuiteExecution(jobId, suiteName)
 	}(sigChan, jobId, suiteName)
 	return sigChan
 }
 
-func registerSkipSuitesOnSignal(skip *bool) chan os.Signal {
+func (r *CloudRunner) registerSkipSuitesOnSignal() chan os.Signal {
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt)
 
-	go func(c <-chan os.Signal, skip *bool) {
-		sig := <-sigChan
-		if sig == nil {
-			return
+	go func(c <-chan os.Signal) {
+		for {
+			sig := <-c
+			if sig == nil {
+				return
+			}
+			if r.interrupted {
+				os.Exit(1)
+			}
+			log.Info().Msg("Ctrl-C captured. Ctrl-C again to exit now.")
+			r.interrupted = true
 		}
-		*skip = true
-	}(sigChan, skip)
+	}(sigChan)
 	return sigChan
 }
 

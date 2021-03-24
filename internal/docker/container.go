@@ -30,6 +30,8 @@ type ContainerRunner struct {
 	Framework       framework.Framework
 	FrameworkMeta   framework.MetadataService
 	ShowConsoleLog  bool
+
+	interrupted bool
 }
 
 // containerStartOptions represent data required to start a new container.
@@ -224,29 +226,29 @@ func (r *ContainerRunner) beforeExec(containerID, suiteName string, tasks []stri
 	return nil
 }
 
-func (r *ContainerRunner) createWorkerPool(ccy int, skipSuites *bool) (chan containerStartOptions, chan result) {
+func (r *ContainerRunner) createWorkerPool(ccy int) (chan containerStartOptions, chan result) {
 	jobOpts := make(chan containerStartOptions)
 	results := make(chan result, ccy)
 
 	log.Info().Int("concurrency", ccy).Msg("Launching workers.")
 
 	for i := 0; i < ccy; i++ {
-		go r.runJobs(jobOpts, results, skipSuites)
+		go r.runJobs(jobOpts, results)
 	}
 
 	return jobOpts, results
 }
 
-func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, results chan<- result, skip *bool) {
+func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, results chan<- result) {
 	for opts := range containerOpts {
-		if *skip {
+		if r.interrupted {
 			results <- result{
 				suiteName: opts.SuiteName,
 				skipped:   true,
 			}
 			continue
 		}
-		containerID, output, jobDetails, passed, skipped, err := r.runSuite(opts, skip)
+		containerID, output, jobDetails, passed, skipped, err := r.runSuite(opts)
 		results <- result{
 			suiteName:     opts.SuiteName,
 			containerID:   containerID,
@@ -328,7 +330,7 @@ func (r *ContainerRunner) logSuite(res result) {
 }
 
 // runSuite runs the selected suite.
-func (r *ContainerRunner) runSuite(options containerStartOptions, skip *bool) (containerID string, output string, jobInfo jobInfo, passed bool, skipped bool, err error) {
+func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobInfo jobInfo, passed bool, skipped bool, err error) {
 	log.Info().Str("suite", options.SuiteName).Msg("Setting up test environment")
 	cleanedUp := false
 	containerID, err = r.startContainer(options)
@@ -336,12 +338,12 @@ func (r *ContainerRunner) runSuite(options containerStartOptions, skip *bool) (c
 
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
 	// if a soft exist is requested during startContainer phase, it gently exits.
-	if *skip {
+	if r.interrupted {
 		skipped = true
 		return
 	}
 
-	sigC := r.registerSignalCapture(containerID, options.SuiteName, &cleanedUp, &skipped)
+	sigC := r.registerInterruptOnSignal(containerID, options.SuiteName, &cleanedUp, &skipped)
 	defer unregisterSignalCapture(sigC)
 
 	if err != nil {
@@ -355,8 +357,8 @@ func (r *ContainerRunner) runSuite(options containerStartOptions, skip *bool) (c
 	return
 }
 
-// registerSignalCapture runs tearDown on SIGINT / Interrupt.
-func (r *ContainerRunner) registerSignalCapture(containerID, suiteName string, cleanedUp *bool, interrupted *bool) chan os.Signal {
+// registerInterruptOnSignal runs tearDown on SIGINT / Interrupt.
+func (r *ContainerRunner) registerInterruptOnSignal(containerID, suiteName string, cleanedUp *bool, interrupted *bool) chan os.Signal {
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt)
 
@@ -373,25 +375,23 @@ func (r *ContainerRunner) registerSignalCapture(containerID, suiteName string, c
 }
 
 // registerSkipSuiteOnSignal sets *skipSuites to true when a signal is captured.
-func registerSkipSuiteOnSignal(skipSuites *bool) chan os.Signal {
+func (r *ContainerRunner) registerSkipSuiteOnSignal() chan os.Signal {
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt)
 
-	go func(c <-chan os.Signal, skip *bool) {
-		reInterrupted := false
+	go func(c <-chan os.Signal) {
 		for {
 			sig := <-c
 			if sig == nil {
 				return
 			}
-			if reInterrupted {
+			if r.interrupted {
 				os.Exit(1)
 			}
-			reInterrupted = true
 			log.Info().Msg("Ctrl-C captured. Ctrl-C again to exit now.")
-			*skip = true
+			r.interrupted = true
 		}
-	}(sigChan, skipSuites)
+	}(sigChan)
 	return sigChan
 }
 

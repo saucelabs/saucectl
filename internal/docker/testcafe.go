@@ -49,11 +49,10 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	skipSuites := false
-	sigChan := registerSkipSuiteOnSignal(&skipSuites)
+	sigChan := r.registerSkipSuiteOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
-	containerOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency, &skipSuites)
+	containerOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency)
 	defer close(results)
 
 	go func() {
