@@ -311,7 +311,7 @@ func (r *CloudRunner) stopSuiteExecution(jobId string, suiteName string) {
 	}
 }
 
-// registerInterruptOnSignal runs tearDown on SIGINT / Interrupt.
+// registerInterruptOnSignal stops execution on Sauce Cloud when a SIGINT is captured.
 func (r *CloudRunner) registerInterruptOnSignal(jobId, suiteName string) chan os.Signal {
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt)
@@ -327,26 +327,28 @@ func (r *CloudRunner) registerInterruptOnSignal(jobId, suiteName string) chan os
 	return sigChan
 }
 
+// registerSkipSuitesOnSignal prevent new suites from being executed when a SIGINT is captured.
 func (r *CloudRunner) registerSkipSuitesOnSignal() chan os.Signal {
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt)
 
-	go func(c <-chan os.Signal) {
+	go func(c <-chan os.Signal, cr *CloudRunner) {
 		for {
 			sig := <-c
 			if sig == nil {
 				return
 			}
-			if r.interrupted {
+			if cr.interrupted {
 				os.Exit(1)
 			}
 			log.Info().Msg("Ctrl-C captured. Ctrl-C again to exit now.")
-			r.interrupted = true
+			cr.interrupted = true
 		}
-	}(sigChan)
+	}(sigChan, r)
 	return sigChan
 }
 
+// unregisterSignalCapture remove the signal hook associated to the chan c.
 func unregisterSignalCapture(c chan os.Signal) {
 	signal.Stop(c)
 	close(c)

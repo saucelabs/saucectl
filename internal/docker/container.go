@@ -374,24 +374,24 @@ func (r *ContainerRunner) registerInterruptOnSignal(containerID, suiteName strin
 	return sigChan
 }
 
-// registerSkipSuiteOnSignal sets *skipSuites to true when a signal is captured.
-func (r *ContainerRunner) registerSkipSuiteOnSignal() chan os.Signal {
+// registerSkipSuitesOnSignal prevent new suites from being executed when a SIGINT is captured.
+func (r *ContainerRunner) registerSkipSuitesOnSignal() chan os.Signal {
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt)
 
-	go func(c <-chan os.Signal) {
+	go func(c <-chan os.Signal, cr *ContainerRunner) {
 		for {
 			sig := <-c
 			if sig == nil {
 				return
 			}
-			if r.interrupted {
+			if cr.interrupted {
 				os.Exit(1)
 			}
 			log.Info().Msg("Ctrl-C captured. Ctrl-C again to exit now.")
-			r.interrupted = true
+			cr.interrupted = true
 		}
-	}(sigChan)
+	}(sigChan, r)
 	return sigChan
 }
 
