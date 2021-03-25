@@ -116,7 +116,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (job.Job, bool, error) {
 	}
 
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
-	// if a soft exist is requested during startContainer phase, it gently exits.
+	// if a soft exit is requested during startContainer phase, it gently exits.
 	if r.interrupted {
 		return job.Job{}, true, nil
 	}
