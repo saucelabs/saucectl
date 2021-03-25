@@ -53,8 +53,9 @@ func TestRunSuite(t *testing.T) {
 	}
 
 	opts := job.StartOptions{}
-	j, err := runner.runJob(opts)
+	j, skipped, err := runner.runJob(opts)
 	assert.Nil(t, err)
+	assert.False(t, skipped)
 	assert.Equal(t, j.ID, "fake-job-id")
 }
 
