@@ -107,7 +107,7 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 	return passed
 }
 
-func (r *CloudRunner) runJob(opts job.StartOptions) (job.Job, bool, error) {
+func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool, err error) {
 	log.Info().Str("suite", opts.Suite).Str("region", r.Region.String()).Msg("Starting suite.")
 
 	id, err := r.JobStarter.StartJob(context.Background(), opts)
@@ -128,7 +128,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (job.Job, bool, error) {
 	defer unregisterSignalCapture(sigChan)
 
 	// High interval poll to not oversaturate the job reader with requests.
-	j, err := r.JobReader.PollJob(context.Background(), id, 15*time.Second)
+	j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second)
 	if err != nil {
 		return job.Job{}, false, fmt.Errorf("failed to retrieve job status for suite %s", opts.Suite)
 	}
