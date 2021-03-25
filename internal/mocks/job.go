@@ -38,7 +38,7 @@ func (fjr *FakeJobReader) GetJobAssetFileContent(ctx context.Context, jobID, fil
 	return fjr.GetJobAssetFileContentFn(ctx, jobID, fileName)
 }
 
-// FakeJobStarter resto mock
+// FakeJobStopper resto mock
 type FakeJobStopper struct {
 	StopJobFn func(ctx context.Context, jobID string) (job.Job, error)
 }

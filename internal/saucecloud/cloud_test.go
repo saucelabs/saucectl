@@ -95,14 +95,14 @@ func TestSkippedRunJobs(t *testing.T) {
 		interrupted bool
 		wantErr     bool
 		wantSkipped bool
-		wantJobId   bool
+		wantJobID   bool
 	}
 	tests := []testCase{
 		{
 			interrupted: true,
 			wantSkipped: true,
 			wantErr:     false,
-			wantJobId:   false,
+			wantJobID:   false,
 		},
 	}
 	for _, tt := range tests {
@@ -128,7 +128,7 @@ func TestSkippedRunJobs(t *testing.T) {
 		j, skipped, err := r.runJob(job.StartOptions{})
 		assert.Equal(t, tt.wantSkipped, skipped)
 		assert.Equal(t, tt.wantErr, err != nil)
-		assert.Equal(t, tt.wantJobId, j.ID != "")
+		assert.Equal(t, tt.wantJobID, j.ID != "")
 	}
 }
 

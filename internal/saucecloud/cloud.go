@@ -304,26 +304,26 @@ func (r *CloudRunner) dryRun(project interface{}, files []string, sauceIgnoreFil
 }
 
 // stopSuiteExecution stops the current execution on Sauce Cloud
-func (r *CloudRunner) stopSuiteExecution(jobId string, suiteName string) {
-	_, err := r.JobStopper.StopJob(context.Background(), jobId)
+func (r *CloudRunner) stopSuiteExecution(jobID string, suiteName string) {
+	_, err := r.JobStopper.StopJob(context.Background(), jobID)
 	if err != nil {
 		log.Warn().Err(err).Str("suite", suiteName).Msg("Unable to stop suite.")
 	}
 }
 
 // registerInterruptOnSignal stops execution on Sauce Cloud when a SIGINT is captured.
-func (r *CloudRunner) registerInterruptOnSignal(jobId, suiteName string) chan os.Signal {
+func (r *CloudRunner) registerInterruptOnSignal(jobID, suiteName string) chan os.Signal {
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt)
 
-	go func(c <-chan os.Signal, jobId, suiteName string) {
+	go func(c <-chan os.Signal, jobID, suiteName string) {
 		sig := <-c
 		if sig == nil {
 			return
 		}
 		log.Info().Str("suite", suiteName).Msg("Stopping suite")
-		r.stopSuiteExecution(jobId, suiteName)
-	}(sigChan, jobId, suiteName)
+		r.stopSuiteExecution(jobID, suiteName)
+	}(sigChan, jobID, suiteName)
 	return sigChan
 }
 

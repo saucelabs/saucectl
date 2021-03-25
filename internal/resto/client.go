@@ -184,6 +184,7 @@ func (c *Client) isTunnelRunning(ctx context.Context, id string) error {
 	return ErrTunnelNotFound
 }
 
+// StopJob stop tue currently processing test on Sauce Cloud.
 func (c *Client) StopJob(ctx context.Context, id string) (job.Job, error) {
 	request, err := createStopRequest(ctx, c.URL, c.Username, c.AccessKey, id)
 	if err != nil {
