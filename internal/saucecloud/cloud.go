@@ -305,7 +305,7 @@ func (r *CloudRunner) dryRun(project interface{}, files []string, sauceIgnoreFil
 
 // stopSuiteExecution stops the current execution on Sauce Cloud
 func (r *CloudRunner) stopSuiteExecution(jobId string, suiteName string) {
-	err := r.JobStopper.StopJob(context.Background(), jobId)
+	_, err := r.JobStopper.StopJob(context.Background(), jobId)
 	if err != nil {
 		log.Warn().Err(err).Str("suite", suiteName).Msg("Unable to stop suite.")
 	}
