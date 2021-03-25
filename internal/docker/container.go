@@ -337,7 +337,7 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 	defer r.tearDown(containerID, options.SuiteName, &cleanedUp)
 
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
-	// if a soft exist is requested during startContainer phase, it gently exits.
+	// if a soft exit is requested during startContainer phase, it gently exits.
 	if r.interrupted {
 		skipped = true
 		return
