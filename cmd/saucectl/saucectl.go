@@ -42,8 +42,7 @@ func main() {
 
 	commands.AddCommands(cmd, cli)
 	if err := cmd.Execute(); err != nil {
-		log.Err(err)
-		os.Exit(1)
+		log.Fatal().Err(err).Msg("failed to execute command with passed flags")
 	}
 }
 
