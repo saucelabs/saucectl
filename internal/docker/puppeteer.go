@@ -4,8 +4,6 @@ import (
 	"context"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/framework"
 )
 
@@ -41,10 +39,8 @@ func NewPuppeteer(c puppeteer.Project, ms framework.MetadataService) (*PuppeterR
 
 // RunProject runs the tests defined in config.Project.
 func (r *PuppeterRunner) RunProject() (int, error) {
-	if r.Project.Sauce.Concurrency > 1 {
-		log.Info().Msg("concurrency > 1: forcing file transfer mode to use 'copy'.")
-		r.Project.Docker.FileTransfer = config.DockerFileCopy
-	}
+	verifyFileTransferCompatibility(r.Project.Sauce.Concurrency, &r.Project.Docker)
+
 	if err := r.fetchImage(&r.Project.Docker); err != nil {
 		return 1, err
 	}

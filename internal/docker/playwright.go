@@ -4,8 +4,6 @@ import (
 	"context"
 	"path/filepath"
 
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
@@ -49,10 +47,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 	}
 	r.Project.Playwright.ProjectPath = filepath.Base(r.Project.Playwright.ProjectPath)
 
-	if r.Project.Sauce.Concurrency > 1 {
-		log.Info().Msg("concurrency > 1: forcing file transfer mode to use 'copy'.")
-		r.Project.Docker.FileTransfer = config.DockerFileCopy
-	}
+	verifyFileTransferCompatibility(r.Project.Sauce.Concurrency, &r.Project.Docker)
 
 	if err := r.fetchImage(&r.Project.Docker); err != nil {
 		return 1, err
