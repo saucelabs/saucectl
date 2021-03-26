@@ -42,7 +42,7 @@ func main() {
 
 	commands.AddCommands(cmd, cli)
 	if err := cmd.Execute(); err != nil {
-		panic(err)
+		os.Exit(1)
 	}
 }
 
