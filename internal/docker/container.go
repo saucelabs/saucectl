@@ -409,7 +409,7 @@ func (r *ContainerRunner) tearDown(containerID, suiteName string, done *bool) {
 	*done = true
 	log.Info().Str("suite", suiteName).Msg("Tearing down environment")
 	if err := r.docker.Teardown(r.Ctx, containerID); err != nil {
-		if !r.docker.IsErrNotFound(err) {
+		if !r.docker.IsErrNotFound(err) && !r.docker.IsErrRemovalInProgress(err) {
 			log.Error().Err(err).Str("suite", suiteName).Msg("Failed to tear down environment")
 		}
 	}
