@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"time"
 
@@ -26,16 +27,20 @@ type CloudRunner struct {
 	ProjectUploader storage.ProjectUploader
 	JobStarter      job.Starter
 	JobReader       job.Reader
+	JobStopper      job.Stopper
 	CCYReader       concurrency.Reader
 	TunnelService   tunnel.Service
 	Region          region.Region
 	ShowConsoleLog  bool
+
+	interrupted bool
 }
 
 type result struct {
 	suiteName string
 	browser   string
 	job       job.Job
+	skipped   bool
 	err       error
 }
 
@@ -102,39 +107,58 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 	return passed
 }
 
-func (r *CloudRunner) runJob(opts job.StartOptions) (job.Job, error) {
+func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool, err error) {
 	log.Info().Str("suite", opts.Suite).Str("region", r.Region.String()).Msg("Starting suite.")
 
 	id, err := r.JobStarter.StartJob(context.Background(), opts)
 	if err != nil {
-		return job.Job{}, err
+		return job.Job{}, false, err
+	}
+
+	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
+	// if a soft exit is requested during startContainer phase, it gently exits.
+	if r.interrupted {
+		return job.Job{}, true, nil
 	}
 
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
 	log.Info().Str("suite", opts.Suite).Str("url", jobDetailsPage).Msg("Suite started.")
 
+	sigChan := r.registerInterruptOnSignal(id, opts.Suite)
+	defer unregisterSignalCapture(sigChan)
+
 	// High interval poll to not oversaturate the job reader with requests.
-	j, err := r.JobReader.PollJob(context.Background(), id, 15*time.Second)
+	j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second)
 	if err != nil {
-		return job.Job{}, fmt.Errorf("failed to retrieve job status for suite %s", opts.Suite)
+		return job.Job{}, false, fmt.Errorf("failed to retrieve job status for suite %s", opts.Suite)
 	}
 
 	if !j.Passed {
 		// We may need to differentiate when a job has crashed vs. when there is errors.
-		return j, fmt.Errorf("suite '%s' has test failures", opts.Suite)
+		return j, false, fmt.Errorf("suite '%s' has test failures", opts.Suite)
 	}
 
-	return j, nil
+	return j, false, nil
 }
 
 func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- result) {
 	for opts := range jobOpts {
-		jobData, err := r.runJob(opts)
+		if r.interrupted {
+			results <- result{
+				suiteName: opts.Suite,
+				browser:   opts.BrowserName,
+				skipped:   true,
+				err:       nil,
+			}
+			continue
+		}
+		jobData, skipped, err := r.runJob(opts)
 
 		results <- result{
 			suiteName: opts.Suite,
 			browser:   opts.BrowserName,
 			job:       jobData,
+			skipped:   skipped,
 			err:       err,
 		}
 	}
@@ -211,6 +235,10 @@ func (r *CloudRunner) uploadProject(filename string) (string, error) {
 
 // logSuite display the result of a suite
 func (r *CloudRunner) logSuite(res result) {
+	if res.skipped {
+		log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Suite skipped.")
+		return
+	}
 	if res.job.ID == "" {
 		log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Failed to start suite.")
 		return
@@ -273,4 +301,55 @@ func (r *CloudRunner) dryRun(project interface{}, files []string, sauceIgnoreFil
 
 	log.Info().Msgf("Saving bundled project to %s.", zipName)
 	return nil
+}
+
+// stopSuiteExecution stops the current execution on Sauce Cloud
+func (r *CloudRunner) stopSuiteExecution(jobID string, suiteName string) {
+	_, err := r.JobStopper.StopJob(context.Background(), jobID)
+	if err != nil {
+		log.Warn().Err(err).Str("suite", suiteName).Msg("Unable to stop suite.")
+	}
+}
+
+// registerInterruptOnSignal stops execution on Sauce Cloud when a SIGINT is captured.
+func (r *CloudRunner) registerInterruptOnSignal(jobID, suiteName string) chan os.Signal {
+	sigChan := make(chan os.Signal)
+	signal.Notify(sigChan, os.Interrupt)
+
+	go func(c <-chan os.Signal, jobID, suiteName string) {
+		sig := <-c
+		if sig == nil {
+			return
+		}
+		log.Info().Str("suite", suiteName).Msg("Stopping suite")
+		r.stopSuiteExecution(jobID, suiteName)
+	}(sigChan, jobID, suiteName)
+	return sigChan
+}
+
+// registerSkipSuitesOnSignal prevent new suites from being executed when a SIGINT is captured.
+func (r *CloudRunner) registerSkipSuitesOnSignal() chan os.Signal {
+	sigChan := make(chan os.Signal)
+	signal.Notify(sigChan, os.Interrupt)
+
+	go func(c <-chan os.Signal, cr *CloudRunner) {
+		for {
+			sig := <-c
+			if sig == nil {
+				return
+			}
+			if cr.interrupted {
+				os.Exit(1)
+			}
+			log.Info().Msg("Ctrl-C captured. Ctrl-C again to exit now.")
+			cr.interrupted = true
+		}
+	}(sigChan, r)
+	return sigChan
+}
+
+// unregisterSignalCapture remove the signal hook associated to the chan c.
+func unregisterSignalCapture(c chan os.Signal) {
+	signal.Stop(c)
+	close(c)
 }

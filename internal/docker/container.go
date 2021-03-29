@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/signal"
 	"path"
 	"path/filepath"
 	"strings"
@@ -29,6 +30,8 @@ type ContainerRunner struct {
 	Framework       framework.Framework
 	FrameworkMeta   framework.MetadataService
 	ShowConsoleLog  bool
+
+	interrupted bool
 }
 
 // containerStartOptions represent data required to start a new container.
@@ -47,6 +50,7 @@ type result struct {
 	containerID   string
 	err           error
 	passed        bool
+	skipped       bool
 	consoleOutput string
 	suiteName     string
 	jobInfo       jobInfo
@@ -122,54 +126,45 @@ func (r *ContainerRunner) startContainer(options containerStartOptions) (string,
 
 	pDir, err := r.docker.ProjectDir(r.Ctx, options.Docker.Image)
 	if err != nil {
-		return "", err
+		return containerID, err
 	}
 
 	r.containerConfig.jobInfoFilePath, err = r.docker.JobInfoFile(r.Ctx, options.Docker.Image)
 	if err != nil {
-		return "", err
+		return containerID, err
 	}
 
 	tmpDir, err := os.MkdirTemp("", "saucectl")
 	if err != nil {
-		return "", err
+		return containerID, err
 	}
 	defer os.RemoveAll(tmpDir)
 
 	rcPath := filepath.Join(tmpDir, SauceRunnerConfigFile)
 	if err := jsonio.WriteFile(rcPath, options.Project); err != nil {
-		return "", err
+		return containerID, err
 	}
 
 	matcher, err := sauceignore.NewMatcherFromFile(options.Sauceignore)
 	if err != nil {
-		return "", err
+		return containerID, err
 	}
 
 	if err := r.docker.CopyToContainer(r.Ctx, containerID, rcPath, pDir, matcher); err != nil {
-		return "", err
+		return containerID, err
 	}
 	r.containerConfig.sauceRunnerConfigPath = path.Join(pDir, SauceRunnerConfigFile)
 
 	// running pre-exec tasks
 	err = r.beforeExec(containerID, options.SuiteName, options.BeforeExec)
 	if err != nil {
-		return "", err
+		return containerID, err
 	}
 
-	return container.ID, nil
+	return containerID, nil
 }
 
 func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string) (output string, jobInfo jobInfo, passed bool, err error) {
-	defer func() {
-		log.Info().Str("suite", suiteName).Msg("Tearing down environment")
-		if err := r.docker.Teardown(r.Ctx, containerID); err != nil {
-			if !r.docker.IsErrNotFound(err) {
-				log.Error().Err(err).Str("suite", suiteName).Msg("Failed to tear down environment")
-			}
-		}
-	}()
-
 	exitCode, output, err := r.docker.ExecuteAttach(r.Ctx, containerID, cmd, env)
 
 	if err != nil {
@@ -189,7 +184,7 @@ func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env m
 	return output, jobInfo, passed, err
 }
 
-// readTestURL reads test url from inside the test runner container.
+// readJobInfo reads test url from inside the test runner container.
 func (r *ContainerRunner) readJobInfo(containerID string) (jobInfo, error) {
 	// Set unknown when image does not support it.
 	if r.containerConfig.jobInfoFilePath == "" {
@@ -236,6 +231,7 @@ func (r *ContainerRunner) createWorkerPool(ccy int) (chan containerStartOptions,
 	results := make(chan result, ccy)
 
 	log.Info().Int("concurrency", ccy).Msg("Launching workers.")
+
 	for i := 0; i < ccy; i++ {
 		go r.runJobs(jobOpts, results)
 	}
@@ -245,12 +241,20 @@ func (r *ContainerRunner) createWorkerPool(ccy int) (chan containerStartOptions,
 
 func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, results chan<- result) {
 	for opts := range containerOpts {
-		containerID, output, jobDetails, passed, err := r.runSuite(opts)
+		if r.interrupted {
+			results <- result{
+				suiteName: opts.SuiteName,
+				skipped:   true,
+			}
+			continue
+		}
+		containerID, output, jobDetails, passed, skipped, err := r.runSuite(opts)
 		results <- result{
 			suiteName:     opts.SuiteName,
 			containerID:   containerID,
 			jobInfo:       jobDetails,
 			passed:        passed,
+			skipped:       skipped,
 			consoleOutput: output,
 			err:           err,
 		}
@@ -302,6 +306,10 @@ func (r *ContainerRunner) collectResults(results chan result, expected int) bool
 }
 
 func (r *ContainerRunner) logSuite(res result) {
+	if res.skipped {
+		log.Warn().Str("suite", res.suiteName).Msg("Suite skipped.")
+		return
+	}
 	if res.containerID == "" {
 		log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Failed to start suite.")
 		return
@@ -321,9 +329,22 @@ func (r *ContainerRunner) logSuite(res result) {
 	}
 }
 
-func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobInfo jobInfo, passed bool, err error) {
+// runSuite runs the selected suite.
+func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobInfo jobInfo, passed bool, skipped bool, err error) {
 	log.Info().Str("suite", options.SuiteName).Msg("Setting up test environment")
 	containerID, err = r.startContainer(options)
+	defer r.tearDown(containerID, options.SuiteName)
+
+	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
+	// if a soft exit is requested during startContainer phase, it gently exits.
+	if r.interrupted {
+		skipped = true
+		return
+	}
+
+	sigC := r.registerInterruptOnSignal(containerID, options.SuiteName, &skipped)
+	defer unregisterSignalCapture(sigC)
+
 	if err != nil {
 		log.Err(err).Str("suite", options.SuiteName).Msg("Failed to setup test environment")
 		return
@@ -333,6 +354,63 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", options.SuiteName},
 		options.Environment)
 	return
+}
+
+// registerInterruptOnSignal runs tearDown on SIGINT / Interrupt.
+func (r *ContainerRunner) registerInterruptOnSignal(containerID, suiteName string, interrupted *bool) chan os.Signal {
+	sigChan := make(chan os.Signal)
+	signal.Notify(sigChan, os.Interrupt)
+
+	go func(c <-chan os.Signal, interrupted *bool, containerID, suiteName string) {
+		sig := <-c
+		if sig == nil {
+			return
+		}
+		log.Info().Str("suite", suiteName).Msg("Interrupting suite")
+		*interrupted = true
+		r.tearDown(containerID, suiteName)
+	}(sigChan, interrupted, containerID, suiteName)
+	return sigChan
+}
+
+// registerSkipSuitesOnSignal prevent new suites from being executed when a SIGINT is captured.
+func (r *ContainerRunner) registerSkipSuitesOnSignal() chan os.Signal {
+	sigChan := make(chan os.Signal)
+	signal.Notify(sigChan, os.Interrupt)
+
+	go func(c <-chan os.Signal, cr *ContainerRunner) {
+		for {
+			sig := <-c
+			if sig == nil {
+				return
+			}
+			if cr.interrupted {
+				os.Exit(1)
+			}
+			log.Info().Msg("Ctrl-C captured. Ctrl-C again to exit now.")
+			cr.interrupted = true
+		}
+	}(sigChan, r)
+	return sigChan
+}
+
+// unregisterSignalCapture remove the signal hook associated to the chan c.
+func unregisterSignalCapture(c chan os.Signal) {
+	signal.Stop(c)
+	close(c)
+}
+
+// tearDown stops the test environment and remove docker containers.
+func (r *ContainerRunner) tearDown(containerID, suiteName string) {
+	if containerID == "" {
+		return
+	}
+	log.Info().Str("suite", suiteName).Msg("Tearing down environment")
+	if err := r.docker.Teardown(r.Ctx, containerID); err != nil {
+		if !r.docker.IsErrNotFound(err) && !r.docker.IsErrRemovalInProgress(err) {
+			log.Error().Err(err).Str("suite", suiteName).Msg("Failed to tear down environment")
+		}
+	}
 }
 
 // verifyFileTransferCompatibility will verify whether the configured FileTransfer docker settings are appropriate for

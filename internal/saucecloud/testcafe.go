@@ -51,6 +51,9 @@ func (r *TestcafeRunner) getSuiteNames() string {
 }
 
 func (r *TestcafeRunner) runSuites(fileID string) bool {
+	sigChan := r.registerSkipSuitesOnSignal()
+	defer unregisterSignalCapture(sigChan)
+
 	jobOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency)
 	defer close(results)
 

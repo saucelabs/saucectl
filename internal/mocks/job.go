@@ -8,7 +8,7 @@ import (
 
 // FakeJobStarter resto mock
 type FakeJobStarter struct {
-	StartJobFn                        func(ctx context.Context, opts job.StartOptions) (jobID string, err error)
+	StartJobFn func(ctx context.Context, opts job.StartOptions) (jobID string, err error)
 }
 
 // StartJob mock function
@@ -36,4 +36,14 @@ func (fjr *FakeJobReader) PollJob(ctx context.Context, id string, interval time.
 // GetJobAssetFileContent mock function
 func (fjr *FakeJobReader) GetJobAssetFileContent(ctx context.Context, jobID, fileName string) ([]byte, error) {
 	return fjr.GetJobAssetFileContentFn(ctx, jobID, fileName)
+}
+
+// FakeJobStopper resto mock
+type FakeJobStopper struct {
+	StopJobFn func(ctx context.Context, jobID string) (job.Job, error)
+}
+
+// StopJob mock function
+func (fjs *FakeJobStopper) StopJob(ctx context.Context, jobID string) (job.Job, error) {
+	return fjs.StopJobFn(ctx, jobID)
 }

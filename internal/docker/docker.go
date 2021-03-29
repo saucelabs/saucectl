@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -501,6 +502,12 @@ func (handler *Handler) ContainerInspect(ctx context.Context, containerID string
 // by the API when some object is not found.
 func (handler *Handler) IsErrNotFound(err error) bool {
 	return client.IsErrNotFound(err)
+}
+
+// IsErrRemovalInProgress returns true if error is meaning removal is in progress.
+func (handler *Handler) IsErrRemovalInProgress(err error) bool {
+	return strings.HasPrefix(err.Error(), "Error response from daemon: removal of container ") &&
+		strings.HasSuffix(err.Error(), " is already in progress")
 }
 
 // Teardown is a simple wrapper around ContainerStop and ContainerRemove and calls them in order.

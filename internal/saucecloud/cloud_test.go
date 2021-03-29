@@ -7,7 +7,12 @@ import (
 	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/storage"
+	"github.com/stretchr/testify/assert"
+	"os"
+	"os/exec"
+	"syscall"
 	"testing"
+	"time"
 )
 
 func TestCloudRunner_logSuiteConsole(t *testing.T) {
@@ -51,4 +56,93 @@ func TestCloudRunner_logSuiteConsole(t *testing.T) {
 			r.logSuiteConsole(tt.args.res)
 		})
 	}
+}
+
+func TestSignalDetection(t *testing.T) {
+	r := CloudRunner{JobStopper: &mocks.FakeJobStopper{}}
+	assert.False(t, r.interrupted)
+	c := r.registerSkipSuitesOnSignal()
+	defer unregisterSignalCapture(c)
+
+	c <- syscall.SIGINT
+
+	time.Sleep(1 * time.Second)
+	assert.True(t, r.interrupted)
+}
+
+func TestSignalDetectionExit(t *testing.T) {
+	if os.Getenv("FORCE_EXIT_TEST") == "1" {
+		r := CloudRunner{JobStopper: &mocks.FakeJobStopper{}}
+		assert.False(t, r.interrupted)
+		c := r.registerSkipSuitesOnSignal()
+		defer unregisterSignalCapture(c)
+
+		c <- syscall.SIGINT
+		c <- syscall.SIGINT
+		return
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=TestSignalDetectionExit")
+	cmd.Env = append(os.Environ(), "FORCE_EXIT_TEST=1")
+	err := cmd.Run()
+	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
+		return
+	}
+	t.Fatalf("process ran with err %v, want exit status 1", err)
+}
+
+func TestSkippedRunJobs(t *testing.T) {
+	type testCase struct {
+		interrupted bool
+		wantErr     bool
+		wantSkipped bool
+		wantJobID   bool
+	}
+	tests := []testCase{
+		{
+			interrupted: true,
+			wantSkipped: true,
+			wantErr:     false,
+			wantJobID:   false,
+		},
+	}
+	for _, tt := range tests {
+		r := CloudRunner{
+			JobStarter: &mocks.FakeJobStarter{
+				StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
+					return "fake-id", nil
+				},
+			},
+			JobReader: &mocks.FakeJobReader{
+				PollJobFn: func(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
+					return job.Job{
+						ID:     "fake-id",
+						Passed: true,
+						Error:  "",
+						Status: job.StateComplete,
+					}, nil
+				},
+			},
+		}
+		r.interrupted = tt.interrupted
+
+		j, skipped, err := r.runJob(job.StartOptions{})
+		assert.Equal(t, tt.wantSkipped, skipped)
+		assert.Equal(t, tt.wantErr, err != nil)
+		assert.Equal(t, tt.wantJobID, j.ID != "")
+	}
+}
+
+func TestRunJobsSkipped(t *testing.T) {
+	r := CloudRunner{}
+	r.interrupted = true
+
+	opts := make(chan job.StartOptions)
+	results := make(chan result)
+
+	go r.runJobs(opts, results)
+	opts <- job.StartOptions{}
+	close(opts)
+	res := <- results
+	assert.Nil(t, res.err)
+	assert.True(t, res.skipped)
 }

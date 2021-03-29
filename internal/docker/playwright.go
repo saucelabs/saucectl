@@ -53,6 +53,9 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
+	sigChan := r.registerSkipSuitesOnSignal()
+	defer unregisterSignalCapture(sigChan)
+
 	containerOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency)
 	defer close(results)
 
