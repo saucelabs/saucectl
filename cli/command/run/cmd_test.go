@@ -1,96 +1,16 @@
 package run
 
 import (
-	"path/filepath"
 	"reflect"
 	"testing"
 
-	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/saucelabs/saucectl/internal/runner"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/stretchr/testify/assert"
-	"gotest.tools/v3/fs"
 )
-
-func TestNewRunCommand(t *testing.T) {
-	testCases := []struct {
-		name           string
-		filter         string
-		configFileName string
-		configFile     string
-		expErr         bool
-		expResult      int
-	}{
-		{
-			name:           "it can run successfully",
-			configFileName: `config.yaml`,
-			configFile:     "apiVersion: 1.2\nimage:\n  base: test",
-			expResult:      123,
-		},
-		{
-			name:           "it failed to parse config",
-			configFileName: `config.yaml`,
-			configFile:     "===",
-			expErr:         true,
-			expResult:      1,
-		},
-		{
-			name:           "it doesn't filter suite when not required",
-			configFileName: `config.yaml`,
-			configFile:     "apiVersion: 1.2\nimage:\n  base: test",
-			expResult:      123,
-		},
-		{
-			name:           "it can filter out suite name",
-			filter:         "filtersuite",
-			configFileName: `config.yaml`,
-			configFile:     "apiVersion: 1.2\nsuites:\n  - name: filtersuite\n  - name: suite2",
-			expResult:      0,
-		},
-		{
-			name:           "it failed with non-existed suite name",
-			filter:         "non_existed_name",
-			configFileName: `config.yaml`,
-			configFile:     "apiVersion: 1.2\nsuites:\n  - name: filtersuite\n  - name: suite2",
-			expErr:         true,
-			expResult:      1,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			dir := fs.NewDir(t, "fixtures",
-				fs.WithFile(tc.configFileName, tc.configFile, fs.WithMode(0755)))
-			cli := command.SauceCtlCli{}
-			cmd := Command(&cli)
-			assert.Equal(t, cmd.Use, runUse)
-			runner.ConfigPath = filepath.Join(dir.Path(), tc.configFileName)
-			if err := cmd.Flags().Set("config", filepath.Join(dir.Path(), tc.configFileName)); err != nil {
-				t.Fatal(err)
-			}
-			suiteName = tc.filter
-			if tc.filter != "" {
-				cmd.Flags().Lookup("suite").Changed = true
-			}
-			var args []string
-			code, err := Run(cmd, &cli, args)
-			if err != nil {
-				assert.True(t, tc.expErr)
-			} else {
-				assert.False(t, tc.expErr)
-				assert.Equal(t, tc.expResult, code)
-			}
-			t.Cleanup(func() {
-				suiteName = ""
-				runner.ConfigPath = "/home/seluser/config.yaml"
-			})
-		})
-	}
-}
 
 func Test_apiBaseURL(t *testing.T) {
 	type args struct {
@@ -218,10 +138,6 @@ func TestFilterPlaywrightSuite(t *testing.T) {
 			assert.Equal(t, tt.expectUniq, p.Suites[0].Name, "suite name mismatch")
 		}
 	}
-}
-
-func TestCreateCIProvider(t *testing.T) {
-	enableCIProviders()
 }
 
 func TestFilterTestcafeSuite(t *testing.T) {

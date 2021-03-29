@@ -5,6 +5,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/testcafe"
+	"gopkg.in/yaml.v2"
 	"gotest.tools/assert"
 	"gotest.tools/v3/fs"
 	"os"
@@ -22,9 +23,23 @@ func TestUpdateRegion(t *testing.T) {
 	os.Chdir(dir.Path())
 	err := updateRegion("config.yml", "eu-central-1")
 	assert.NilError(t, err, "region should be updated successfully")
-	c, err := config.NewJobConfiguration(dir.Join("config.yml"))
+
+	type MockProject struct {
+		Sauce config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
+	}
+
+	var conf MockProject
+	f, err := os.Open(dir.Join("config.yml"))
+	defer f.Close()
+	if err != nil {
+		t.Errorf("failed to open config file: %v", err)
+	}
+	if err = yaml.NewDecoder(f).Decode(&conf); err != nil {
+		t.Errorf("failed to parse project config: %v", err)
+	}
+
 	assert.NilError(t, err, "No error when reading file")
-	assert.Equal(t, "eu-central-1", c.Sauce.Region, "region is updated")
+	assert.Equal(t, "eu-central-1", conf.Sauce.Region, "region is updated")
 }
 
 func TestUpdateRegionCypress(t *testing.T) {
