@@ -13,22 +13,13 @@ import (
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/appstore"
-	"github.com/saucelabs/saucectl/internal/ci"
-	"github.com/saucelabs/saucectl/internal/ci/github"
-	"github.com/saucelabs/saucectl/internal/ci/gitlab"
-	"github.com/saucelabs/saucectl/internal/ci/jenkins"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/docker"
-	legacyDocker "github.com/saucelabs/saucectl/internal/docker/legacydocker"
-	"github.com/saucelabs/saucectl/internal/fleet"
-	"github.com/saucelabs/saucectl/internal/memseq"
-	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
-	"github.com/saucelabs/saucectl/internal/runner"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
@@ -149,31 +140,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return runPuppeteer(cmd)
 	}
 
-	return runLegacyMode(cmd, cli)
-}
-
-func runLegacyMode(cmd *cobra.Command, cli *command.SauceCtlCli) (int, error) {
-	p, err := config.NewJobConfiguration(cfgFilePath)
-	if err != nil {
-		return 1, err
-	}
-
-	mergeArgs(cmd, &p)
-	if err := validateFiles(p.Files); err != nil {
-		return 1, err
-	}
-	if cmd.Flags().Lookup("suite").Changed {
-		if err := filterSuite(&p); err != nil {
-			return 1, err
-		}
-	}
-	p.Metadata.ExpandEnv()
-
-	r, err := newRunner(p, cli)
-	if err != nil {
-		return 1, err
-	}
-	return r.RunProject()
+	return 1, errors.New("unknown framework configuration")
 }
 
 func runCypress(cmd *cobra.Command) (int, error) {
@@ -546,78 +513,6 @@ func runPuppeteerInDocker(p puppeteer.Project, testco testcomposer.Client) (int,
 	return cd.RunProject()
 }
 
-func newRunner(p config.Project, cli *command.SauceCtlCli) (runner.Testrunner, error) {
-	// return test runner for testing
-	if p.Image.Base == "test" {
-		return mocks.NewTestRunner(p, cli)
-	}
-	if ci.IsAvailable() {
-		rc, err := config.NewRunnerConfiguration(runner.ConfigPath)
-		if err != nil {
-			return nil, err
-		}
-		if os.Getenv("SAUCE_TARGET_DIR") != "" {
-			rc.TargetDir = os.Getenv("SAUCE_TARGET_DIR")
-		}
-		if os.Getenv("SAUCE_ROOT_DIR") != "" {
-			rc.RootDir = os.Getenv("SAUCE_ROOT_DIR")
-		}
-		cip := createCIProvider()
-		seq := createCISequencer(p, cip)
-
-		log.Info().Msg("Starting CI runner")
-		return ci.NewRunner(p, cli, seq, rc, cip)
-	}
-	log.Info().Msg("Starting local runner")
-	return legacyDocker.NewRunner(p, cli, &memseq.Sequencer{})
-}
-
-func createCIProvider() ci.Provider {
-	enableCIProviders()
-	cip := ci.Detect()
-	// Allow users to override the CI build ID
-	if ciBuildID != "" {
-		log.Info().Str("id", ciBuildID).Msg("Using user provided build ID.")
-		cip.SetBuildID(ciBuildID)
-	}
-
-	return cip
-}
-
-func createCISequencer(p config.Project, cip ci.Provider) fleet.Sequencer {
-	if !p.Parallel {
-		log.Info().Msg("Parallel execution is turned off. Running tests sequentially.")
-		log.Info().Msg("If you'd like to speed up your tests, please visit " +
-			"https://github.com/saucelabs/saucectl on how to configure parallelization across machines.")
-		return &memseq.Sequencer{}
-	}
-	creds := credentials.Get()
-	if creds == nil {
-		log.Info().Msg("No valid credentials provided. Running tests sequentially.")
-		return &memseq.Sequencer{}
-	}
-	log.Info().Msgf("Using credentials from %s", creds.Source)
-	if cip == ci.NoProvider && ciBuildID == "" {
-		// Since we don't know the CI provider, we can't reliably generate a build ID, which is a requirement for
-		// running tests in parallel. The user has to provide one in this case, and if they didn't, we have to disable
-		// parallelism.
-		log.Warn().Msg("Unable to detect CI provider. Running tests sequentially.")
-		return &memseq.Sequencer{}
-	}
-	r := region.FromString(p.Sauce.Region)
-	if r == region.None {
-		log.Warn().Str("region", regionFlag).Msg("Unable to determine region. Running tests sequentially.")
-		return &memseq.Sequencer{}
-	}
-
-	log.Info().Msg("Running tests in parallel.")
-	return &testcomposer.Client{
-		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
-		URL:         apiBaseURL(r),
-		Credentials: *creds,
-	}
-}
-
 func apiBaseURL(r region.Region) string {
 	// Check for overrides.
 	if sauceAPI != "" {
@@ -625,49 +520,6 @@ func apiBaseURL(r region.Region) string {
 	}
 
 	return r.APIBaseURL()
-}
-
-// mergeArgs merges settings from CLI arguments with the loaded job configuration.
-func mergeArgs(cmd *cobra.Command, cfg *config.Project) {
-	// Merge env from CLI args and job config. CLI args take precedence.
-	for k, v := range env {
-		cfg.Env[k] = v
-	}
-
-	if testTimeout != 0 {
-		cfg.Timeout = testTimeout
-	}
-	if cfg.Timeout == 0 {
-		cfg.Timeout = defaultTimeout
-	}
-
-	if cfg.Sauce.Region == "" {
-		cfg.Sauce.Region = defaultRegion
-	}
-
-	if regionFlag != "" {
-		cfg.Sauce.Region = regionFlag
-	}
-
-	if cmd.Flags().Lookup("parallel").Changed {
-		cfg.Parallel = parallel
-	}
-}
-
-func enableCIProviders() {
-	github.Enable()
-	gitlab.Enable()
-	jenkins.Enable()
-}
-
-func filterSuite(c *config.Project) error {
-	for _, s := range c.Suites {
-		if s.Name == suiteName {
-			c.Suites = []config.Suite{s}
-			return nil
-		}
-	}
-	return errors.New("suite name is invalid")
 }
 
 func filterCypressSuite(c *cypress.Project) error {

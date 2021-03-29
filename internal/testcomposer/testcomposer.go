@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/credentials"
-	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/requesth"
@@ -26,27 +25,6 @@ type Client struct {
 type Job struct {
 	ID    string `json:"id"`
 	Owner string `json:"owner"`
-}
-
-// CreatorRequest represents the request body for creating a fleet.
-type CreatorRequest struct {
-	BuildID    string            `json:"buildID"`
-	TestSuites []fleet.TestSuite `json:"testSuites"`
-}
-
-// CreatorResponse represents the response body for creating a fleet.
-type CreatorResponse struct {
-	FleetID string `json:"fleetID"`
-}
-
-// AssignerRequest represents the request body for fleet assignments.
-type AssignerRequest struct {
-	SuiteName string `json:"suiteName"`
-}
-
-// AssignerResponse represents the response body for fleet assignments.
-type AssignerResponse struct {
-	TestFile string `json:"testFile"`
 }
 
 // FrameworkResponse represents the response body for framework information.
@@ -104,45 +82,6 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 	}
 
 	return j.JobID, nil
-}
-
-// Register registers a fleet with the given buildID and test suites.
-// Returns a fleet ID if successful.
-func (c *Client) Register(ctx context.Context, buildID string, testSuites []fleet.TestSuite) (string, error) {
-	url := fmt.Sprintf("%s/v1/testcomposer/fleets", c.URL)
-
-	req, err := c.newJSONRequest(ctx, url, http.MethodPut, CreatorRequest{
-		BuildID:    buildID,
-		TestSuites: testSuites,
-	})
-	if err != nil {
-		return "", err
-	}
-
-	var resp CreatorResponse
-	if err := c.doJSONResponse(req, 201, &resp); err != nil {
-		return "", err
-	}
-
-	return resp.FleetID, nil
-}
-
-// NextAssignment fetches the next test assignment based on the suiteName and fleetID.
-// Returns an empty string if all tests have been assigned.
-func (c *Client) NextAssignment(ctx context.Context, fleetID, suiteName string) (string, error) {
-	url := fmt.Sprintf("%s/v1/testcomposer/fleets/%s/assignments/_next", c.URL, fleetID)
-
-	req, err := c.newJSONRequest(ctx, url, http.MethodPut, AssignerRequest{SuiteName: suiteName})
-	if err != nil {
-		return "", err
-	}
-
-	var resp AssignerResponse
-	if err := c.doJSONResponse(req, 200, &resp); err != nil {
-		return "", err
-	}
-
-	return resp.TestFile, nil
 }
 
 func (c *Client) newJSONRequest(ctx context.Context, url, method string, payload interface{}) (*http.Request, error) {

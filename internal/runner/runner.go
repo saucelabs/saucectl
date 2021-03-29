@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/fleet"
 	"github.com/saucelabs/saucectl/internal/utils"
 )
 
@@ -42,5 +41,4 @@ type BaseRunner struct {
 	RunnerConfig config.RunnerConfiguration
 	Ctx          context.Context
 	Cli          *command.SauceCtlCli
-	Sequencer    fleet.Sequencer
 }
