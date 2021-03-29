@@ -47,7 +47,7 @@ type Suite struct {
 	StopOnFirstFail    bool              `yaml:"stopOnFirstFail,omitempty" json:"stopOnFirstFail"`
 	DisablePageCaching bool              `yaml:"disablePageCaching,omitempty" json:"disablePageCaching"`
 	DisableScreenshots bool              `yaml:"disableScreenshots,omitempty" json:"disableScreenshots"`
-	DisableVideo       bool              `yaml:"disableVideo,omitempty" json:"disableVideo"`
+	DisableVideo       bool              `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testcafe config.
 }
 
 // Screenshots represents screenshots configuration.
@@ -131,5 +131,15 @@ func setDefaultValues(suite *Suite) {
 	// Expected values for TestCafe are between .01 and 1.
 	if suite.Speed < .01 || suite.Speed > 1 {
 		suite.Speed = 1
+	}
+	// Set default timeout. ref: https://devexpress.github.io/testcafe/documentation/reference/configuration-file.html#selectortimeout
+	if suite.SelectorTimeout == 0 {
+		suite.SelectorTimeout = 10000
+	}
+	if suite.AssertionTimeout == 0 {
+		suite.AssertionTimeout = 3000
+	}
+	if suite.PageLoadTimeout == 0 {
+		suite.PageLoadTimeout = 3000
 	}
 }

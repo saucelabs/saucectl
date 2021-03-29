@@ -412,3 +412,12 @@ func (r *ContainerRunner) tearDown(containerID, suiteName string) {
 		}
 	}
 }
+
+// verifyFileTransferCompatibility will verify whether the configured FileTransfer docker settings are appropriate for
+// the given concurrency. If not, it'll apply the config.DockerFileCopy and print out a message to notify the user.
+func verifyFileTransferCompatibility(concurrency int, dockerConf *config.Docker) {
+	if concurrency > 1 && dockerConf.FileTransfer != config.DockerFileCopy {
+		log.Info().Msg("concurrency > 1: forcing file transfer mode to use 'copy'.")
+		dockerConf.FileTransfer = config.DockerFileCopy
+	}
+}

@@ -3,8 +3,6 @@ package docker
 import (
 	"context"
 
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 )
@@ -41,10 +39,8 @@ func NewTestcafe(c testcafe.Project, ms framework.MetadataService) (*TestcafeRun
 
 // RunProject runs the tests defined in config.Project.
 func (r *TestcafeRunner) RunProject() (int, error) {
-	if r.Project.Sauce.Concurrency > 1 {
-		log.Info().Msg("concurrency > 1: forcing file transfer mode to use 'copy'.")
-		r.Project.Docker.FileTransfer = config.DockerFileCopy
-	}
+	verifyFileTransferCompatibility(r.Project.Sauce.Concurrency, &r.Project.Docker)
+
 	if err := r.fetchImage(&r.Project.Docker); err != nil {
 		return 1, err
 	}
