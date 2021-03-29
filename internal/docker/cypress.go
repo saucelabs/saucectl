@@ -3,9 +3,6 @@ package docker
 import (
 	"context"
 
-	"github.com/rs/zerolog/log"
-
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/framework"
 )
@@ -56,10 +53,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 		files = append(files, r.Project.Cypress.EnvFile)
 	}
 
-	if r.Project.Sauce.Concurrency > 1 {
-		log.Info().Msg("concurrency > 1: forcing file transfer mode to use 'copy'.")
-		r.Project.Docker.FileTransfer = config.DockerFileCopy
-	}
+	verifyFileTransferCompatibility(r.Project.Sauce.Concurrency, &r.Project.Docker)
 
 	if err := r.fetchImage(&r.Project.Docker); err != nil {
 		return 1, err
