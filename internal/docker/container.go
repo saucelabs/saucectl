@@ -332,9 +332,8 @@ func (r *ContainerRunner) logSuite(res result) {
 // runSuite runs the selected suite.
 func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobInfo jobInfo, passed bool, skipped bool, err error) {
 	log.Info().Str("suite", options.SuiteName).Msg("Setting up test environment")
-	cleanedUp := false
 	containerID, err = r.startContainer(options)
-	defer r.tearDown(containerID, options.SuiteName, &cleanedUp)
+	defer r.tearDown(containerID, options.SuiteName)
 
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
 	// if a soft exit is requested during startContainer phase, it gently exits.
@@ -343,7 +342,7 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 		return
 	}
 
-	sigC := r.registerInterruptOnSignal(containerID, options.SuiteName, &cleanedUp, &skipped)
+	sigC := r.registerInterruptOnSignal(containerID, options.SuiteName, &skipped)
 	defer unregisterSignalCapture(sigC)
 
 	if err != nil {
@@ -358,19 +357,19 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 }
 
 // registerInterruptOnSignal runs tearDown on SIGINT / Interrupt.
-func (r *ContainerRunner) registerInterruptOnSignal(containerID, suiteName string, cleanedUp *bool, interrupted *bool) chan os.Signal {
+func (r *ContainerRunner) registerInterruptOnSignal(containerID, suiteName string, interrupted *bool) chan os.Signal {
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt)
 
-	go func(c <-chan os.Signal, cleanedUp, interrupted *bool, containerID, suiteName string) {
+	go func(c <-chan os.Signal, interrupted *bool, containerID, suiteName string) {
 		sig := <-c
 		if sig == nil {
 			return
 		}
 		log.Info().Str("suite", suiteName).Msg("Interrupting suite")
 		*interrupted = true
-		r.tearDown(containerID, suiteName, cleanedUp)
-	}(sigChan, cleanedUp, interrupted, containerID, suiteName)
+		r.tearDown(containerID, suiteName)
+	}(sigChan, interrupted, containerID, suiteName)
 	return sigChan
 }
 
@@ -402,11 +401,10 @@ func unregisterSignalCapture(c chan os.Signal) {
 }
 
 // tearDown stops the test environment and remove docker containers.
-func (r *ContainerRunner) tearDown(containerID, suiteName string, done *bool) {
-	if containerID == "" || *done {
+func (r *ContainerRunner) tearDown(containerID, suiteName string) {
+	if containerID == "" {
 		return
 	}
-	*done = true
 	log.Info().Str("suite", suiteName).Msg("Tearing down environment")
 	if err := r.docker.Teardown(r.Ctx, containerID); err != nil {
 		if !r.docker.IsErrNotFound(err) && !r.docker.IsErrRemovalInProgress(err) {
