@@ -3,6 +3,8 @@ package run
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/cli/version"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"net/http"
 	"os"
@@ -11,7 +13,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -70,7 +71,6 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Long:    runLong,
 		Example: runExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Info().Msgf("Running version %s", version.Version)
 			exitCode, err := Run(cmd, cli, args)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
@@ -113,6 +113,14 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 
 // Run runs the command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, error) {
+	switch testEnv {
+	case "docker":
+		fmt.Println(msg.DockerLogo)
+	case "sauce":
+		fmt.Println(msg.SauceLogo)
+	}
+	log.Info().Msgf("Running version %s", version.Version)
+
 	// Todo(Christian) write argument parser/validator
 	if cfgLogDir == defaultLogFir {
 		pwd, _ := os.Getwd()
