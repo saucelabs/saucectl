@@ -48,6 +48,7 @@ var (
 	sauceAPI       string
 	suiteName      string
 	testEnv        string
+	testEnvDisplay bool
 	showConsoleLog bool
 	concurrency    int
 	tunnelID       string
@@ -89,6 +90,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVar(&ciBuildID, "ci-build-id", "", "Overrides the CI dependent build ID.")
 	cmd.Flags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
 	cmd.Flags().StringVar(&suiteName, "suite", "", "Run specified test suite.")
+	cmd.Flags().BoolVar(&testEnvDisplay, "test-env-display", true, "Displays the test environment announcement.")
 	cmd.Flags().StringVar(&testEnv, "test-env", "sauce", "Specifies the environment in which the tests should run. Choice: docker|sauce.")
 	cmd.Flags().BoolVarP(&showConsoleLog, "show-console-log", "", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
 	cmd.Flags().IntVar(&concurrency, "ccy", 2, "Concurrency specifies how many suites are run at the same time.")
@@ -113,12 +115,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 
 // Run runs the command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, error) {
-	switch testEnv {
-	case "docker":
-		fmt.Println(msg.DockerLogo)
-	case "sauce":
-		fmt.Println(msg.SauceLogo)
-	}
+	printTestEnv()
 	log.Info().Msgf("Running version %s", version.Version)
 
 	// Todo(Christian) write argument parser/validator
@@ -149,6 +146,19 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 
 	return 1, errors.New("unknown framework configuration")
+}
+
+func printTestEnv() {
+	if !testEnvDisplay {
+		return
+	}
+
+	switch testEnv {
+	case "docker":
+		fmt.Println(msg.DockerLogo)
+	case "sauce":
+		fmt.Println(msg.SauceLogo)
+	}
 }
 
 func runCypress(cmd *cobra.Command) (int, error) {
