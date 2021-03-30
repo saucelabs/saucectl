@@ -24,7 +24,7 @@ const DockerLogo = `
  | |__| | |__| | |____| . \| |____| | \ \  | |  | | |__| | |__| | |____ 
  |_____/ \____/ \_____|_|\_\______|_|  \_\ |_|  |_|\____/|_____/|______|`
 
-// SauceLoog is an eyecatcher message that indicates the user is running tests in the Sauce Labs cloud.
+// SauceLogo is an eyecatcher message that indicates the user is running tests in the Sauce Labs cloud.
 const SauceLogo = `
                                         (.                          
                                        #.                           
