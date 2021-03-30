@@ -48,7 +48,7 @@ var (
 	sauceAPI       string
 	suiteName      string
 	testEnv        string
-	testEnvDisplay bool
+	testEnvSilent  bool
 	showConsoleLog bool
 	concurrency    int
 	tunnelID       string
@@ -90,7 +90,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVar(&ciBuildID, "ci-build-id", "", "Overrides the CI dependent build ID.")
 	cmd.Flags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
 	cmd.Flags().StringVar(&suiteName, "suite", "", "Run specified test suite.")
-	cmd.Flags().BoolVar(&testEnvDisplay, "test-env-display", true, "Displays the test environment announcement.")
+	cmd.Flags().BoolVar(&testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
 	cmd.Flags().StringVar(&testEnv, "test-env", "sauce", "Specifies the environment in which the tests should run. Choice: docker|sauce.")
 	cmd.Flags().BoolVarP(&showConsoleLog, "show-console-log", "", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
 	cmd.Flags().IntVar(&concurrency, "ccy", 2, "Concurrency specifies how many suites are run at the same time.")
@@ -149,7 +149,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 }
 
 func printTestEnv() {
-	if !testEnvDisplay {
+	if testEnvSilent {
 		return
 	}
 
