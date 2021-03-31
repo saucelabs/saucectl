@@ -277,6 +277,8 @@ func copyTestFiles(ctx context.Context, handler *Handler, containerID, suiteName
 	if err := handler.CopyToContainer(ctx, containerID, projectFolder, pDir, matcher); err != nil {
 		return err
 	}
+	log.Info().Str("from", projectFolder).Str("to", pDir).Str("suite", suiteName).Msg("File copied")
+
 	return nil
 }
 
