@@ -3,12 +3,10 @@ package playwright
 import (
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
-
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"gopkg.in/yaml.v2"
+	"os"
 )
 
 // Project represents the playwright project configuration.
@@ -28,12 +26,10 @@ type Project struct {
 
 // Playwright represents crucial playwright configuration that is required for setting up a project.
 type Playwright struct {
+	// Deprecated. ProjectPath is succeeded by Project.RootDir.
 	ProjectPath string      `yaml:"projectPath,omitempty" json:"projectPath,omitempty"`
 	Version     string      `yaml:"version,omitempty" json:"version,omitempty"`
 	Params      SuiteConfig `yaml:"params,omitempty" json:"params,omitempty"`
-
-	// LocalProjectPath represents the project before nested folder removal
-	LocalProjectPath string `yaml:"-" json:"-"`
 }
 
 // Suite represents the playwright test suite configuration.
@@ -80,19 +76,14 @@ func FromFile(cfgPath string) (Project, error) {
 	if p.Playwright.ProjectPath == "" && p.RootDir == "" {
 		return Project{}, fmt.Errorf("could not find 'rootDir' in config yml, 'rootDir' must be set to specify project files")
 	} else if p.Playwright.ProjectPath != "" && p.RootDir == "" {
-		log.Warn().Msg("'playwright.projectPath' is deprecated. Consider using 'rootDir' instead")
-		//p.RootDir = p.Playwright.ProjectPath
-		p.RootDir = "."
+		log.Warn().Msg("'playwright.projectPath' is deprecated. Use 'rootDir' instead.")
+		p.RootDir = p.Playwright.ProjectPath
 	} else if p.Playwright.ProjectPath != "" && p.RootDir != "" {
-		log.Info().Msgf(
+		log.Warn().Msgf(
 			"Found both 'playwright.projectPath=%s' and 'rootDir=%s' in config. 'projectPath' is deprecated, so defaulting to rootDir '%s'",
 			p.Playwright.ProjectPath, p.RootDir, p.RootDir,
 		)
 	}
-
-	// Store local path since we provide only last level folder in runner
-	p.Playwright.LocalProjectPath = p.RootDir
-	p.Playwright.ProjectPath = filepath.Base(p.RootDir)
 
 	// Default mode to Mount
 	if p.Docker.FileTransfer == "" {

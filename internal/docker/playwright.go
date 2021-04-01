@@ -2,8 +2,6 @@ package docker
 
 import (
 	"context"
-	"path/filepath"
-
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
@@ -42,9 +40,6 @@ func NewPlaywright(c playwright.Project, ms framework.MetadataService) (*Playwri
 
 // RunProject runs the tests defined in config.Project.
 func (r *PlaywrightRunner) RunProject() (int, error) {
-	// FIXME address this hack
-	r.Project.Playwright.ProjectPath = filepath.Base(r.Project.Playwright.ProjectPath)
-
 	verifyFileTransferCompatibility(r.Project.Sauce.Concurrency, &r.Project.Docker)
 
 	if err := r.fetchImage(&r.Project.Docker); err != nil {
@@ -65,7 +60,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 				Project:     r.Project,
 				SuiteName:   suite.Name,
 				Environment: suite.Env,
-				RootDir:     r.Project.Playwright.LocalProjectPath,
+				RootDir:     r.Project.RootDir,
 				Sauceignore: r.Project.Sauce.Sauceignore,
 			}
 		}
