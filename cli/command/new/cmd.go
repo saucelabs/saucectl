@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -76,9 +77,10 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	creds := credentials.Get()
 	if creds == nil {
-		fmt.Println("\nIt looks you have not configured your SauceLab account !" +
-			"\nTo enjoy SauceLabs capabilities, configure your account by running:\n$ saucectl configure")
-		return nil
+		color.Red("\nsaucectl requires a valid Sauce Labs account to run.")
+		fmt.Println("\nTo configure your Sauce Labs account use:" +
+			"\n$ saucectl configure\n")
+		return fmt.Errorf("no credentials set")
 	}
 
 	cwd, err := os.Getwd()

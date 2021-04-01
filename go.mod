@@ -14,6 +14,7 @@ require (
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200618181300-9dc6525e6118+incompatible // translates to v19.03.12
 	github.com/docker/go-connections v0.4.0
+	github.com/fatih/color v1.7.0 // indirect
 	github.com/go-git/go-git/v5 v5.2.0
 	github.com/google/go-github/v32 v32.1.0
 	github.com/gorilla/mux v1.7.4 // indirect
