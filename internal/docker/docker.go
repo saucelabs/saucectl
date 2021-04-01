@@ -209,10 +209,22 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 
 	var m []mount.Mount
 	if options.Docker.FileTransfer == config.DockerFileMount {
-		m, err = createMounts(options.SuiteName, options.Files, pDir)
+		absF, err := filepath.Abs(options.RootDir) // TODO is relative path allowed?
 		if err != nil {
 			return nil, err
 		}
+		m = append(m, mount.Mount{
+			Type:          mount.TypeBind,
+			Source:        absF,
+			Target:        pDir,
+			ReadOnly:      false,
+			Consistency:   mount.ConsistencyDefault,
+			BindOptions:   nil,
+			VolumeOptions: nil,
+			TmpfsOptions:  nil,
+		})
+		log.Info().Str("from", options.RootDir).Str("to", pDir).Str("suite", options.SuiteName).
+			Msg("File mounted")
 	}
 
 	username := ""
@@ -252,10 +264,8 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 		if err != nil {
 			return nil, err
 		}
-		for _, file := range options.Files {
-			if err := copyTestFiles(ctx, handler, container.ID, options.SuiteName, file, pDir, matcher); err != nil {
-				return nil, err
-			}
+		if err := copyTestFiles(ctx, handler, container.ID, options.SuiteName, options.RootDir, pDir, matcher); err != nil {
+			return nil, err
 		}
 	}
 

@@ -42,9 +42,7 @@ func NewPlaywright(c playwright.Project, ms framework.MetadataService) (*Playwri
 
 // RunProject runs the tests defined in config.Project.
 func (r *PlaywrightRunner) RunProject() (int, error) {
-	files := []string{
-		r.Project.Playwright.LocalProjectPath,
-	}
+	// FIXME address this hack
 	r.Project.Playwright.ProjectPath = filepath.Base(r.Project.Playwright.ProjectPath)
 
 	verifyFileTransferCompatibility(r.Project.Sauce.Concurrency, &r.Project.Docker)
@@ -67,7 +65,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 				Project:     r.Project,
 				SuiteName:   suite.Name,
 				Environment: suite.Env,
-				Files:       files,
+				RootDir:     r.Project.Playwright.LocalProjectPath,
 				Sauceignore: r.Project.Sauce.Sauceignore,
 			}
 		}

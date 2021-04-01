@@ -41,7 +41,7 @@ type containerStartOptions struct {
 	Project     interface{}
 	SuiteName   string
 	Environment map[string]string
-	Files       []string
+	RootDir     string
 	Sauceignore string
 }
 

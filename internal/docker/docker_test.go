@@ -12,7 +12,6 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/stretchr/testify/assert"
@@ -118,12 +117,12 @@ func TestStartContainer(t *testing.T) {
 	var err error
 
 	// Buggy container start
-	cont, err = handler.StartContainer(context.Background(), containerStartOptions{Files:[]string{project.Cypress.ConfigFile, project.Cypress.ProjectPath}, Docker: config.Docker{}})
+	cont, err = handler.StartContainer(context.Background(), containerStartOptions{RootDir: project.RootDir})
 	assert.NotNil(t, err)
 
 	// Successfull container start
 	mockDocker.ContainerCreateSuccess = true
-	cont, err = handler.StartContainer(context.Background(), containerStartOptions{Files:[]string{project.Cypress.ConfigFile, project.Cypress.ProjectPath}, Docker: config.Docker{}})
+	cont, err = handler.StartContainer(context.Background(), containerStartOptions{RootDir: project.RootDir})
 	assert.Nil(t, err)
 	assert.NotNil(t, cont)
 }
