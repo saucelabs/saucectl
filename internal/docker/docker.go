@@ -219,9 +219,6 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 			Target:        pDir,
 			ReadOnly:      false,
 			Consistency:   mount.ConsistencyDefault,
-			BindOptions:   nil,
-			VolumeOptions: nil,
-			TmpfsOptions:  nil,
 		})
 		log.Info().Str("from", options.RootDir).Str("to", pDir).Str("suite", options.SuiteName).
 			Msg("File mounted")
