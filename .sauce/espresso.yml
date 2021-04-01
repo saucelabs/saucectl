@@ -1,0 +1,37 @@
+apiVersion: v1alpha
+kind: espresso
+sauce:
+  region: us-west-1
+  concurrency: 1 # Controls how many suites are executed at the same time (sauce test env only).
+  metadata:
+    name: Testing Espresso Support
+    tags:
+      - e2e
+      - release team
+      - other tag
+  build: Release $CI_COMMIT_SHORT_SHA
+espresso:
+  app: ./tests/apps/calc.apk
+  testApp: ./tests/apps/calc-fails.apk
+  useOrchestrator: false # Not supported yet
+suites:
+  - name: "saucy barista"
+    device:
+      name: "Android GoogleApi Emulator"
+      orientation: portrait
+    platformVersion: "11.0"
+    testOptions: # Not supported yet
+      notClass: com.my.package.MyFlakyClass
+      class:
+        - class com.my.package.MyClass
+        - com.android.foo.FooTest1
+        - com.android.foo.FooTest#testMethod
+      package: class com.my.package.MyClass
+      size: SmallTest
+      annotation: FlakyTests
+artifacts:
+  download:
+    match:
+      - *.junit.xml
+    when: always
+    directory: ./
