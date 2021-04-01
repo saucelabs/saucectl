@@ -120,7 +120,7 @@ func Run() error {
 	}
 
 	if !creds.IsValid() {
-		log.Error().Msg("Credentials provided looks invalid and won't be saved.")
+		log.Error().Msg("The provided credentials appear to be invalid and will NOT be saved.")
 		return fmt.Errorf("invalid credentials provided")
 	}
 	if err := creds.Store(); err != nil {
