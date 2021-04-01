@@ -62,7 +62,9 @@ func FromFile() *Credentials {
 
 	yamlFile, err := os.ReadFile(filePath)
 	if err != nil {
-		log.Info().Msgf("failed to read credentials: %v", err)
+		if !os.IsNotExist(err) {
+			log.Info().Msgf("failed to read credentials: %v", err)
+		}
 		return nil
 	}
 
