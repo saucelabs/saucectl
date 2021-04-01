@@ -100,6 +100,7 @@ const (
 	KindPuppeteer  = "puppeteer"
 	KindPlaywright = "playwright"
 	KindTestcafe   = "testcafe"
+	KindEspresso   = "espresso"
 )
 
 func readYaml(cfgFilePath string) ([]byte, error) {

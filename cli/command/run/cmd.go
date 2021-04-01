@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/saucelabs/saucectl/cli/version"
+	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"net/http"
@@ -143,6 +144,9 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 	if d.Kind == config.KindPuppeteer && d.APIVersion == config.VersionV1Alpha {
 		return runPuppeteer(cmd)
+	}
+	if d.Kind == config.KindEspresso && d.APIVersion == config.VersionV1Alpha {
+		return runEspresso(cmd)
 	}
 
 	return 1, errors.New("unknown framework configuration")
@@ -450,6 +454,71 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, creds *credenti
 	}
 
 	r := saucecloud.TestcafeRunner{
+		Project: p,
+		CloudRunner: saucecloud.CloudRunner{
+			ProjectUploader: s,
+			JobStarter:      &testco,
+			JobReader:       &rsto,
+			JobStopper:      &rsto,
+			CCYReader:       &rsto,
+			TunnelService:   &rsto,
+			Region:          regio,
+			ShowConsoleLog:  p.ShowConsoleLog,
+		},
+	}
+	return r.RunProject()
+}
+
+func runEspresso(cmd *cobra.Command) (int, error) {
+	p, err := espresso.FromFile(cfgFilePath)
+	if err != nil {
+		return 1, err
+	}
+	p.Sauce.Metadata.ExpandEnv()
+	applyDefaultValues(&p.Sauce)
+	overrideCliParameters(cmd, &p.Sauce)
+
+	// TODO - add dry-run mode
+	creds := credentials.Get()
+	if creds == nil {
+		return 1, errors.New("no sauce credentials set")
+	}
+
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
+		return 1, errors.New("no sauce region set")
+	}
+
+	tc := testcomposer.Client{
+		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
+		URL:         regio.APIBaseURL(),
+		Credentials: *creds,
+	}
+
+	switch testEnv {
+	case "docker":
+		return 1, errors.New("unsupported test enviornment")
+	case "sauce":
+		return runEspressoInCloud(p, regio, creds, tc)
+	default:
+		return 1, errors.New("unsupported test enviornment")
+	}
+}
+
+func runEspressoInCloud(p espresso.Project, regio region.Region, creds *credentials.Credentials, testco testcomposer.Client) (int, error) {
+	log.Info().Msg("Running Espress in Sauce Labs")
+
+	s := appstore.New(regio.APIBaseURL(), creds.Username, creds.AccessKey, appStoreTimeout)
+
+	rsto := resto.Client{
+		HTTPClient: &http.Client{Timeout: restoTimeout},
+		URL:        regio.APIBaseURL(),
+		Username:   creds.Username,
+		AccessKey:  creds.AccessKey,
+	}
+
+	r := saucecloud.EspressoRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader: s,
