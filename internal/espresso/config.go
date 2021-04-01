@@ -30,7 +30,7 @@ type TestOptions struct {
 	Class	   	[]string	`yaml:"class,omitempty" json:"class"`
 	Package		string		`yaml:"package,omitempty" json:"package"`
 	Size		string		`yaml:"size,omitempty" json:"size"`
-	Annotation	string		`yaml:"package,omitempty" json:"package"`
+	Annotation	string		`yaml:"annotation,omitempty" json:"annotation"`
 }
 
 // Suite represents the espresso test suite configuration.

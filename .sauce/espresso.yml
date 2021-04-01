@@ -21,9 +21,10 @@ suites:
       orientation: portrait
     platformVersion: "11.0"
     testOptions: # Not supported yet
-      notClass: com.my.package.MyFlakyClass
+      notClass:
+        - com.my.package.MyFlakyClass
       class:
-        - class com.my.package.MyClass
+        - com.my.package.MyClass
         - com.android.foo.FooTest1
         - com.android.foo.FooTest#testMethod
       package: class com.my.package.MyClass
@@ -32,6 +33,6 @@ suites:
 artifacts:
   download:
     match:
-      - *.junit.xml
+      - "*.junit.xml"
     when: always
     directory: ./
