@@ -109,6 +109,13 @@ func FromFile(cfgPath string) (Project, error) {
 		}
 	}
 
+	// Default rootDir to .
+	if p.RootDir == "" {
+		p.RootDir = "."
+		log.Warn().Msg("'rootDir' is not defined. Using the current working directory instead " +
+			"(equivalent to 'rootDir: .'). Please set 'rootDir' explicitly in your config!")
+	}
+
 	// Optionally include the env file if it exists.
 	envFile := filepath.Join(configDir, "cypress.env.json")
 	if _, err := os.Stat(envFile); err == nil {
