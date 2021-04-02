@@ -3,6 +3,7 @@ package espresso
 import (
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"gopkg.in/yaml.v2"
 	"os"
@@ -13,7 +14,7 @@ type Project struct {
 	config.TypeDef `yaml:",inline"`
 	ShowConsoleLog bool
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
-	Espresso       Espresso           `yaml:"cypress,omitempty" json:"cypress"`
+	Espresso       Espresso           `yaml:"espresso,omitempty" json:"espresso"`
 	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
 	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
 }
@@ -35,11 +36,9 @@ type TestOptions struct {
 
 // Suite represents the espresso test suite configuration.
 type Suite struct {
-	Name             string         `yaml:"name,omitempty" json:"name"`
-	PlatformName     string         `yaml:"platformName,omitempty" json:"platformName"`
-	PlatformVersion  string         `yaml:"platformVersion,omitempty" json:"platformVersion"`
-	Device           config.Device	`yaml:"device,omitempty" json:"device"`
-	TestOptions      TestOptions	`yaml:"testOptions,omitempty" json:"testOptions"`
+	Name             string         	`yaml:"name,omitempty" json:"name"`
+	Devices          []config.Device	`yaml:"devices,omitempty" json:"devices"`
+	TestOptions      TestOptions		`yaml:"testOptions,omitempty" json:"testOptions"`
 }
 
 const Android = "Android"
@@ -73,6 +72,7 @@ func Validate(p Project) error {
 	if p.Espresso.App == "" {
 		return errors.New("missing path to app .apk")
 	}
+	log.Info().Str("app", p.Espresso.App)
 
 	if p.Espresso.TestApp == "" {
 		return errors.New("missing path to test app .apk")
@@ -82,17 +82,20 @@ func Validate(p Project) error {
 		return errors.New("no suites defined")
 	}
 
-	for idx, suite := range p.Suites {
-		if suite.Device.Name == "" || suite.Device.Id == "" {
-			return fmt.Errorf("missing device for suite: %s", suite.Name)
+	for sidx, suite := range p.Suites {
+		if len(suite.Devices) == 0 {
+			return errors.New("Missing devices configuration")
 		}
-
-		if suite.PlatformVersion == "" {
-			return fmt.Errorf("missing platform version for suite: %s. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers", suite.Name)
-		}
-
-		if suite.PlatformName == "" || suite.PlatformName != Android {
-			p.Suites[idx].PlatformName = Android
+		for didx, device := range suite.Devices {
+			if device.Name == "" && device.Id == "" {
+				return fmt.Errorf("missing device for suite: %s. Devices index: %d", suite.Name, didx)
+			}
+			if len(device.PlatformVersions) == 0 {
+				return fmt.Errorf("missing platform versions for device. Devices index: %d", didx)
+			}
+			if device.PlatformName == "" || device.PlatformName != Android {
+				p.Suites[sidx].Devices[didx].PlatformName = Android
+			}
 		}
 	}
 
