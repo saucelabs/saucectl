@@ -222,7 +222,13 @@ func (r *CloudRunner) archiveProject(project interface{}, tempDir string, files 
 }
 
 func (r *CloudRunner) uploadProject(filename string) (string, error) {
-	progress.Show("Uploading project")
+	filename, err := filepath.Abs(filename)
+	if err != nil {
+		return "", nil
+	}
+	progress.Show("Uploading project %s", filename)
+
+	log.Info().Str("app", filename)
 	start := time.Now()
 	resp, err := r.ProjectUploader.Upload(filename)
 	progress.Stop()
