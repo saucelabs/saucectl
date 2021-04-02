@@ -19,6 +19,8 @@ type StartOptions struct {
 	BrowserName      string            `json:"browserName,omitempty"`
 	BrowserVersion   string            `json:"browserVersion,omitempty"`
 	PlatformName     string            `json:"platformName,omitempty"`
+	PlatformVersion  string            `json:"platformVersion,omitempty"`
+	DeviceName  	 string            `json:"deviceName,omitempty"`
 	Name             string            `json:"name,omitempty"`
 	Build            string            `json:"build,omitempty"`
 	Tags             []string          `json:"tags,omitempty"`
