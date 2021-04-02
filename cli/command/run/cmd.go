@@ -490,6 +490,11 @@ func runEspresso(cmd *cobra.Command) (int, error) {
 		return 1, errors.New("no sauce region set")
 	}
 
+	err = espresso.Validate(p)
+	if err != nil {
+		return 1, err
+	}
+
 	tc := testcomposer.Client{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         regio.APIBaseURL(),
@@ -507,7 +512,7 @@ func runEspresso(cmd *cobra.Command) (int, error) {
 }
 
 func runEspressoInCloud(p espresso.Project, regio region.Region, creds *credentials.Credentials, testco testcomposer.Client) (int, error) {
-	log.Info().Msg("Running Espress in Sauce Labs")
+	log.Info().Msg("Running Espresso in Sauce Labs")
 
 	s := appstore.New(regio.APIBaseURL(), creds.Username, creds.AccessKey, appStoreTimeout)
 
