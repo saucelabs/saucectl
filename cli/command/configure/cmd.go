@@ -3,6 +3,7 @@ package configure
 import (
 	"errors"
 	"fmt"
+	serrors "github.com/saucelabs/saucectl/internal/errors"
 	"os"
 	"strings"
 
@@ -33,12 +34,13 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 			log.Info().Msg("Start Configure Command")
 			if err := Run(); err != nil {
 				log.Err(err).Msg("failed to execute configure command")
+				serrors.HandleAndFlush(err)
 				os.Exit(1)
 			}
 		},
 	}
-	cmd.Flags().StringVarP(&cliUsername, "username", "u", "", "username, available on your saucelabs account")
-	cmd.Flags().StringVarP(&cliAccessKey, "accessKey", "a", "", "accessKey, available on your saucelabs account")
+	cmd.Flags().StringVarP(&cliUsername, "username", "u", "", "username, available on your sauce labs account")
+	cmd.Flags().StringVarP(&cliAccessKey, "accessKey", "a", "", "accessKey, available on your sauce labs account")
 	return cmd
 }
 
@@ -120,13 +122,13 @@ func Run() error {
 	}
 
 	if !creds.IsValid() {
-		fmt.Println("Credentials provided looks invalid and won't be saved.")
-		return nil
+		log.Error().Msg("The provided credentials appear to be invalid and will NOT be saved.")
+		return fmt.Errorf("invalid credentials provided")
 	}
 	if err := creds.Store(); err != nil {
 		return fmt.Errorf("unable to save credentials: %s", err)
 	}
-	fmt.Println("You're all set ! ")
+	log.Info().Msg("You're all set ! ")
 	return nil
 }
 

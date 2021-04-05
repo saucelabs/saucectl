@@ -41,18 +41,6 @@ func NewCypress(c cypress.Project, ms framework.MetadataService) (*CypressRunner
 
 // RunProject runs the tests defined in config.Project.
 func (r *CypressRunner) RunProject() (int, error) {
-	var files []string
-
-	if r.Project.RootDir != "" {
-		files = append(files, r.Project.RootDir)
-	} else {
-		files = append(files, r.Project.Cypress.ConfigFile, r.Project.Cypress.ProjectPath)
-	}
-
-	if r.Project.Cypress.EnvFile != "" {
-		files = append(files, r.Project.Cypress.EnvFile)
-	}
-
 	verifyFileTransferCompatibility(r.Project.Sauce.Concurrency, &r.Project.Docker)
 
 	if err := r.fetchImage(&r.Project.Docker); err != nil {
@@ -73,7 +61,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 				Project:     r.Project,
 				SuiteName:   suite.Name,
 				Environment: suite.Config.Env,
-				Files:       files,
+				RootDir:     r.Project.RootDir,
 				Sauceignore: r.Project.Sauce.Sauceignore,
 			}
 		}

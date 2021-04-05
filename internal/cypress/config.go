@@ -89,10 +89,11 @@ func FromFile(cfgPath string) (Project, error) {
 		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
 
-	if _, err := os.Stat(p.Cypress.ConfigFile); err != nil {
-		return p, fmt.Errorf("unable to locate %s", p.Cypress.ConfigFile)
+	cypressConfigFileCompletePath := filepath.Join(p.RootDir, p.Cypress.ConfigFile)
+	if _, err := os.Stat(cypressConfigFileCompletePath); err != nil {
+		return p, fmt.Errorf("unable to locate %s", cypressConfigFileCompletePath)
 	}
-	configDir := filepath.Dir(p.Cypress.ConfigFile)
+	configDir := filepath.Dir(cypressConfigFileCompletePath)
 
 	// We must locate the cypress folder.
 	cPath := filepath.Join(configDir, "cypress")
@@ -106,6 +107,13 @@ func FromFile(cfgPath string) (Project, error) {
 		if _, err := os.Stat(p.RootDir); err != nil {
 			return p, fmt.Errorf("unable to locate the rootDir folder %s", p.RootDir)
 		}
+	}
+
+	// Default rootDir to .
+	if p.RootDir == "" {
+		p.RootDir = "."
+		log.Warn().Msg("'rootDir' is not defined. Using the current working directory instead " +
+			"(equivalent to 'rootDir: .'). Please set 'rootDir' explicitly in your config!")
 	}
 
 	// Optionally include the env file if it exists.
