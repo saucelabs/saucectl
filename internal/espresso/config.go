@@ -22,7 +22,7 @@ type Project struct {
 
 // Espresso represents espresso apps configuration.
 type Espresso struct {
-	App		string	`yaml:"app,omitempty" json:"app"`
+	App	string	`yaml:"app,omitempty" json:"app"`
 	TestApp	string	`yaml:"testApp,omitempty" json:"testApp"`
 }
 
