@@ -168,5 +168,4 @@ func TestValidatePlatformNameIsSet(t *testing.T) {
 			assert.Equal(t, device.PlatformName, Android)
 		}
 	}
-
 }
