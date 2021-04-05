@@ -93,7 +93,7 @@ func Validate(p Project) error {
 				return fmt.Errorf("missing device for suite: %s. Devices index: %d", suite.Name, didx)
 			}
 			if !strings.Contains(strings.ToLower(device.Name), "emulator") {
-				return fmt.Errorf("missing `emulator` in device name: %s. real device cloud is unsupported right now.", device.Name)
+				return fmt.Errorf("missing `emulator` in device name: %s, real device cloud is unsupported right now", device.Name)
 			}
 			if len(device.PlatformVersions) == 0 {
 				return fmt.Errorf("missing platform versions for device. Devices index: %d", didx)
