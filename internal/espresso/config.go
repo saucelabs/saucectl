@@ -19,7 +19,7 @@ type Project struct {
 	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
 }
 
-// Project represents the espresso apps configuration.
+// Espresso represents espresso apps configuration.
 type Espresso struct {
 	App		string	`yaml:"app,omitempty" json:"app"`
 	TestApp	string	`yaml:"testApp,omitempty" json:"testApp"`
@@ -41,6 +41,7 @@ type Suite struct {
 	TestOptions      TestOptions		`yaml:"testOptions,omitempty" json:"testOptions"`
 }
 
+// Android constant
 const Android = "Android"
 
 // FromFile creates a new cypress Project based on the filepath cfgPath.
@@ -87,7 +88,7 @@ func Validate(p Project) error {
 			return errors.New("Missing devices configuration")
 		}
 		for didx, device := range suite.Devices {
-			if device.Name == "" && device.Id == "" {
+			if device.Name == "" && device.ID == "" {
 				return fmt.Errorf("missing device for suite: %s. Devices index: %d", suite.Name, didx)
 			}
 			if len(device.PlatformVersions) == 0 {

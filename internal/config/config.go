@@ -29,7 +29,7 @@ type SauceConfig struct {
 
 // Device represents the Android device configuration.
 type Device struct {
-	Id 					string		`yaml:"id,omitempty" json:"id"`
+	ID 					string		`yaml:"id,omitempty" json:"id"`
 	Name 				string		`yaml:"name,omitempty" json:"name"`
 	Orientation 		string		`yaml:"orientation,omitempty" json:"orientation"`
 	PlatformVersions	[]string	`yaml:"platformVersions,omitempty" json:"platformVersions"`
@@ -39,13 +39,13 @@ type Device struct {
 type when string
 
 const (
-	Fail when = "fail"
-	Pass when = "pass"
-	Never when = "never"
-	Always when = "always"
+	whenFail when = "fail"
+	whenPass when = "pass"
+	whenNever when = "never"
+	whenAlways when = "always"
 )
 
-// Artifacts represents the test artifacts configuration.
+// ArtifactDownload represents the test artifacts configuration.
 type ArtifactDownload struct {
 	Match []string `yaml:"match,omitempty" json:"match"`
 	When when `yaml:"when,omitempty" json:"when"`

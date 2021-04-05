@@ -39,7 +39,7 @@ func (r *EspressoRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-func (r *EspressoRunner) runSuites(appFileId string, testAppFileId string) bool {
+func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
@@ -52,11 +52,11 @@ func (r *EspressoRunner) runSuites(appFileId string, testAppFileId string) bool 
 		for _, s := range r.Project.Suites {
 			for _, d := range s.Devices {
 				for _, p := range d.PlatformVersions {
-					log.Info().Str("suite", s.Name).Str("device", d.Name).Str("platform", p).Msg("Starting job")
+					log.Debug().Str("suite", s.Name).Str("device", d.Name).Str("platform", p).Msg("Starting job")
 					jobsCount++
 					jobOpts <- job.StartOptions{
-						App:              	fmt.Sprintf("storage:%s", appFileId),
-						Suite:            	fmt.Sprintf("storage:%s", testAppFileId),
+						App:              	fmt.Sprintf("storage:%s", appFileID),
+						Suite:            	fmt.Sprintf("storage:%s", testAppFileID),
 						Framework:        	"espresso",
 						FrameworkVersion:   "1.0.0-stable",
 						PlatformName:     	d.PlatformName,
@@ -84,7 +84,7 @@ func (r *EspressoRunner) calculateJobsCount(suites []espresso.Suite) int {
 	jobsCount := 0
 	for _, s := range suites {
 		for _, d := range s.Devices {
-			for _, _ = range d.PlatformVersions {
+			for range d.PlatformVersions {
 				jobsCount++
 			}
 		}
