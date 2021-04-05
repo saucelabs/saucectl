@@ -96,7 +96,8 @@ func Validate(p Project) error {
 				return fmt.Errorf("missing `emulator` in device name: %s, real device cloud is unsupported right now", device.Name)
 			}
 			if len(device.PlatformVersions) == 0 {
-				return fmt.Errorf("missing platform versions for device. Devices index: %d", didx)
+				// TODO - update message when handling device.Id
+				return fmt.Errorf("missing platform versions for device: %s", device.Name)
 			}
 			if device.PlatformName == "" || device.PlatformName != Android {
 				p.Suites[sidx].Devices[didx].PlatformName = Android
