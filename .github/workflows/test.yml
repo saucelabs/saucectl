@@ -241,3 +241,25 @@ jobs:
       - name: Run Sauce Pipeline Test - Sauce Cloud
         run: |
           ./saucectl.exe run -c .sauce/cypress_cloud.yml --test-env sauce --ccy 5
+  espresso:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      BUILD_ID: ${{ github.run_id }}
+      BUILD_ENV: GitHub Actions
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Download saucectl binary
+        uses: actions/download-artifact@v2
+        with:
+          name: saucectlbin
+
+      - name: Set permissions
+        run: chmod +x ./saucectl
+
+      - name: Run Sauce Pipeline Test - Sauce Cloud
+        run: |
+          ./saucectl -c .sauce/espresso.yml --test-env sauce --ccy 10
