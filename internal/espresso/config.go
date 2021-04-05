@@ -22,24 +22,24 @@ type Project struct {
 
 // Espresso represents espresso apps configuration.
 type Espresso struct {
-	App	string	`yaml:"app,omitempty" json:"app"`
-	TestApp	string	`yaml:"testApp,omitempty" json:"testApp"`
+	App     string `yaml:"app,omitempty" json:"app"`
+	TestApp string `yaml:"testApp,omitempty" json:"testApp"`
 }
 
 // TestOptions represents the espresso test filter options configuration.
 type TestOptions struct {
-	NotClass	[]string	`yaml:"notClass,omitempty" json:"notClass"`
-	Class	   	[]string	`yaml:"class,omitempty" json:"class"`
-	Package		string		`yaml:"package,omitempty" json:"package"`
-	Size		string		`yaml:"size,omitempty" json:"size"`
-	Annotation	string		`yaml:"annotation,omitempty" json:"annotation"`
+	NotClass   []string `yaml:"notClass,omitempty" json:"notClass"`
+	Class      []string `yaml:"class,omitempty" json:"class"`
+	Package    string   `yaml:"package,omitempty" json:"package"`
+	Size       string   `yaml:"size,omitempty" json:"size"`
+	Annotation string   `yaml:"annotation,omitempty" json:"annotation"`
 }
 
 // Suite represents the espresso test suite configuration.
 type Suite struct {
-	Name             string         	`yaml:"name,omitempty" json:"name"`
-	Devices          []config.Device	`yaml:"devices,omitempty" json:"devices"`
-	TestOptions      TestOptions		`yaml:"testOptions,omitempty" json:"testOptions"`
+	Name        string          `yaml:"name,omitempty" json:"name"`
+	Devices     []config.Device `yaml:"devices,omitempty" json:"devices"`
+	TestOptions TestOptions     `yaml:"testOptions,omitempty" json:"testOptions"`
 }
 
 // Android constant
@@ -89,7 +89,7 @@ func Validate(p Project) error {
 			return errors.New("Missing devices configuration")
 		}
 		for didx, device := range suite.Devices {
-			if device.Name == ""{
+			if device.Name == "" {
 				return fmt.Errorf("missing device for suite: %s. Devices index: %d", suite.Name, didx)
 			}
 			if !strings.Contains(strings.ToLower(device.Name), "emulator") {
