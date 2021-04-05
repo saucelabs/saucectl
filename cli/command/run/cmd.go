@@ -504,12 +504,10 @@ func runEspresso(cmd *cobra.Command) (int, error) {
 	}
 
 	switch testEnv {
-	case "docker":
-		return 1, errors.New("unsupported test enviornment")
 	case "sauce":
 		return runEspressoInCloud(p, regio, creds, tc)
 	default:
-		return 1, errors.New("unsupported test enviornment")
+		return 1, fmt.Errorf("unsupported test enviornment for espresso: %s", testEnv)
 	}
 }
 
