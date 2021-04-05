@@ -29,11 +29,11 @@ type SauceConfig struct {
 
 // Device represents the Android device configuration.
 type Device struct {
-	ID 					string		`yaml:"id,omitempty" json:"id"`
-	Name 				string		`yaml:"name,omitempty" json:"name"`
-	Orientation 		string		`yaml:"orientation,omitempty" json:"orientation"`
+	ID					string		`yaml:"id,omitempty" json:"id"`
+	Name				string		`yaml:"name,omitempty" json:"name"`
+	Orientation			string		`yaml:"orientation,omitempty" json:"orientation"`
 	PlatformVersions	[]string	`yaml:"platformVersions,omitempty" json:"platformVersions"`
-	PlatformName     	string		`yaml:"platformName,omitempty" json:"platformName"`
+	PlatformName		string		`yaml:"platformName,omitempty" json:"platformName"`
 }
 
 type when string
