@@ -2,6 +2,7 @@ package new
 
 import (
 	"fmt"
+	serrors "github.com/saucelabs/saucectl/internal/errors"
 	"github.com/spf13/pflag"
 	"net/http"
 	"os"
@@ -61,6 +62,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := Run(cmd, cli, args); err != nil {
 				log.Err(err).Msg("failed to execute new command")
+				serrors.HandleAndFlush(err)
 				os.Exit(1)
 			}
 		},

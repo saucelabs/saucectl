@@ -75,8 +75,8 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			exitCode, err := Run(cmd, cli, args)
 			if err != nil {
-				serrors.HandleAndFlush(err)
 				log.Err(err).Msg("failed to execute run command")
+				serrors.HandleAndFlush(err)
 			}
 			os.Exit(exitCode)
 		},
