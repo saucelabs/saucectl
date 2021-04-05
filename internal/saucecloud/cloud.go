@@ -164,14 +164,14 @@ func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- re
 	}
 }
 
-func (r CloudRunner) archiveAndUpload(project interface{}, files []string, sauceignoreFile string) (string, error) {
+func (r CloudRunner) archiveAndUpload(project interface{}, folder string, sauceignoreFile string) (string, error) {
 	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload")
 	if err != nil {
 		return "", err
 	}
 	defer os.RemoveAll(tempDir)
 
-	zipName, err := r.archiveProject(project, tempDir, files, sauceignoreFile)
+	zipName, err := r.archiveProject(project, tempDir, folder, sauceignoreFile)
 	if err != nil {
 		return "", err
 	}
@@ -179,7 +179,7 @@ func (r CloudRunner) archiveAndUpload(project interface{}, files []string, sauce
 	return r.uploadProject(zipName)
 }
 
-func (r *CloudRunner) archiveProject(project interface{}, tempDir string, files []string, sauceignoreFile string) (string, error) {
+func (r *CloudRunner) archiveProject(project interface{}, tempDir string, projectFolder string, sauceignoreFile string) (string, error) {
 	start := time.Now()
 
 	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
@@ -198,12 +198,21 @@ func (r *CloudRunner) archiveProject(project interface{}, tempDir string, files 
 	if err := jsonio.WriteFile(rcPath, project); err != nil {
 		return "", err
 	}
-	files = append(files, rcPath)
 
-	for _, f := range files {
-		if err := z.Add(f, ""); err != nil {
+	folderContent, err := os.ReadDir(projectFolder)
+	if err != nil {
+		return  "", err
+	}
+
+	for _, child := range folderContent {
+		log.Debug().Str("name", child.Name()).Msg("Adding to archive")
+		if err := z.Add(filepath.Join(projectFolder, child.Name()), ""); err != nil {
 			return "", err
 		}
+	}
+	log.Debug().Str("name", rcPath).Msg("Adding to archive")
+	if err := z.Add(rcPath, ""); err != nil {
+		return "", err
 	}
 
 	err = z.Close()
@@ -287,14 +296,14 @@ func (r *CloudRunner) validateTunnel(id string) error {
 	return nil
 }
 
-func (r *CloudRunner) dryRun(project interface{}, files []string, sauceIgnoreFile string, suiteNames string) error {
+func (r *CloudRunner) dryRun(project interface{}, folder string, sauceIgnoreFile string, suiteNames string) error {
 	log.Warn().Msg("Running tests in dry run mode.")
 	tmpDir, err := os.MkdirTemp("./", "sauce-app-payload-*")
 	if err != nil {
 		return err
 	}
 	log.Info().Msgf("The following test suites would have run: [%s].", suiteNames)
-	zipName, err := r.archiveProject(project, tmpDir, files, sauceIgnoreFile)
+	zipName, err := r.archiveProject(project, tmpDir, folder, sauceIgnoreFile)
 	if err != nil {
 		return err
 	}

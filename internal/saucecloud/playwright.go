@@ -23,13 +23,13 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 	}
 
 	if r.Project.DryRun {
-		if err := r.dryRun(r.Project, []string{r.Project.Playwright.LocalProjectPath}, r.Project.Sauce.Sauceignore, r.getSuiteNames()); err != nil {
+		if err := r.dryRun(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.getSuiteNames()); err != nil {
 			return exitCode, err
 		}
 		return 0, nil
 	}
 
-	fileID, err := r.archiveAndUpload(r.Project, []string{r.Project.Playwright.LocalProjectPath}, r.Project.Sauce.Sauceignore)
+	fileID, err := r.archiveAndUpload(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore)
 	if err != nil {
 		return exitCode, err
 	}
@@ -43,7 +43,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 }
 
 func (r *PlaywrightRunner) getSuiteNames() string {
-	names := []string{}
+	var names []string
 	for _, s := range r.Project.Suites {
 		names = append(names, s.Name)
 	}
