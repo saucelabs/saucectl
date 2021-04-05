@@ -54,7 +54,7 @@ type ArtifactDownload struct {
 
 // Artifacts represents the test artifacts configuration.
 type Artifacts struct {
-	Download ArtifactDownload `yaml:"when,omitempty" json:"when"`
+	Download ArtifactDownload `yaml:"download,omitempty" json:"download"`
 }
 
 // Tunnel represents a sauce labs tunnel.
