@@ -262,4 +262,4 @@ jobs:
 
       - name: Run Sauce Pipeline Test - Sauce Cloud
         run: |
-          ./saucectl -c .sauce/espresso.yml --test-env sauce --ccy 10
+          ./saucectl run -c .sauce/espresso.yml --test-env sauce --ccy 10
