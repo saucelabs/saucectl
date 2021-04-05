@@ -3,7 +3,6 @@ package espresso
 import (
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"gopkg.in/yaml.v2"
 	"os"
@@ -74,10 +73,15 @@ func Validate(p Project) error {
 	if p.Espresso.App == "" {
 		return errors.New("missing path to app .apk")
 	}
-	log.Info().Str("app", p.Espresso.App)
+	if !strings.HasSuffix(p.Espresso.App, ".apk") {
+		return fmt.Errorf("invaild application file: %s, make sure extension is .apk", p.Espresso.App)
+	}
 
 	if p.Espresso.TestApp == "" {
 		return errors.New("missing path to test app .apk")
+	}
+	if !strings.HasSuffix(p.Espresso.TestApp, ".apk") {
+		return fmt.Errorf("invaild application file: %s, make sure extension is .apk", p.Espresso.TestApp)
 	}
 
 	if len(p.Suites) == 0 {
