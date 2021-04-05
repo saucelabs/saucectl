@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/setup"
 	"os"
 	"time"
 
@@ -11,11 +10,11 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/command/commands"
+	"github.com/saucelabs/saucectl/cli/setup"
 	"github.com/saucelabs/saucectl/cli/version"
-
-	"github.com/getsentry/sentry-go"
 )
 
 var (
@@ -69,8 +68,7 @@ func setupLogging(verbose bool) {
 
 func setupSentry () {
 	err := sentry.Init(sentry.ClientOptions{
-		// Either set your DSN here or set the SENTRY_DSN environment variable.
-		Dsn: setup.DSN,
+		Dsn: setup.SentryDSN,
 		Environment: "production",
 		Release:     fmt.Sprintf("saucectl@%s", version.Version),
 		Debug: false,
