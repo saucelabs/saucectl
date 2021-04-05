@@ -74,3 +74,31 @@ func TestValidateThrowsErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestValidatePlatformNameIsSet(t *testing.T) {
+	p := Project{
+		Espresso: Espresso{
+			App: "/path/to/app.apk",
+			TestApp: "/path/to/testApp.apk",
+		},
+		Suites: []Suite{
+			Suite{
+				Name: "valid espresso project",
+				Devices: []config.Device{
+					config.Device{
+						Name: "Android GoogleApi Emulator",
+						PlatformVersions: []string{"11.0"},
+					},
+				},
+			},
+		},
+	}
+	err := Validate(p)
+	assert.Nil(t, err)
+	for _, suite := range p.Suites {
+		for _, device := range suite.Devices {
+			assert.Equal(t, device.PlatformName, Android)
+		}
+	}
+
+}
