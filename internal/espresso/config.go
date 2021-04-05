@@ -81,7 +81,7 @@ func Validate(p Project) error {
 		return errors.New("missing path to test app .apk")
 	}
 	if !strings.HasSuffix(p.Espresso.TestApp, ".apk") {
-		return fmt.Errorf("invaild application file: %s, make sure extension is .apk", p.Espresso.TestApp)
+		return fmt.Errorf("invaild test application file: %s, make sure extension is .apk", p.Espresso.TestApp)
 	}
 
 	if len(p.Suites) == 0 {
@@ -90,11 +90,11 @@ func Validate(p Project) error {
 
 	for sidx, suite := range p.Suites {
 		if len(suite.Devices) == 0 {
-			return errors.New("Missing devices configuration")
+			return fmt.Errorf("missing devices configuration for suite: %s", suite.Name)
 		}
 		for didx, device := range suite.Devices {
 			if device.Name == "" {
-				return fmt.Errorf("missing device for suite: %s. Devices index: %d", suite.Name, didx)
+				return fmt.Errorf("missing device name for suite: %s. Devices index: %d", suite.Name, didx)
 			}
 			if !strings.Contains(strings.ToLower(device.Name), "emulator") {
 				return fmt.Errorf("missing `emulator` in device name: %s, real device cloud is unsupported right now", device.Name)
