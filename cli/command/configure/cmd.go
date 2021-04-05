@@ -3,6 +3,7 @@ package configure
 import (
 	"errors"
 	"fmt"
+	serrors "github.com/saucelabs/saucectl/internal/errors"
 	"os"
 	"strings"
 
@@ -33,6 +34,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 			log.Info().Msg("Start Configure Command")
 			if err := Run(); err != nil {
 				log.Err(err).Msg("failed to execute configure command")
+				serrors.HandleAndFlush(err)
 				os.Exit(1)
 			}
 		},

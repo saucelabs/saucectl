@@ -18,6 +18,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/docker"
+	serrors "github.com/saucelabs/saucectl/internal/errors"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
@@ -75,6 +76,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 			exitCode, err := Run(cmd, cli, args)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
+				serrors.HandleAndFlush(err)
 			}
 			os.Exit(exitCode)
 		},
