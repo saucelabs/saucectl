@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -176,7 +177,7 @@ func (r CloudRunner) archiveAndUpload(project interface{}, folder string, saucei
 		return "", err
 	}
 
-	return r.uploadProject(zipName)
+	return r.uploadProject(zipName, "project")
 }
 
 func (r *CloudRunner) archiveProject(project interface{}, tempDir string, projectFolder string, sauceignoreFile string) (string, error) {
@@ -230,21 +231,21 @@ func (r *CloudRunner) archiveProject(project interface{}, tempDir string, projec
 	return zipName, nil
 }
 
-func (r *CloudRunner) uploadProject(filename string) (string, error) {
+func (r *CloudRunner) uploadProject(filename string, pType string) (string, error) {
 	filename, err := filepath.Abs(filename)
 	if err != nil {
 		return "", nil
 	}
-	progress.Show("Uploading project %s", filename)
+	log.Debug().Str(pType, filename)
+	progress.Show("Uploading %s %s", pType, filename)
 
-	log.Info().Str("app", filename)
 	start := time.Now()
 	resp, err := r.ProjectUploader.Upload(filename)
 	progress.Stop()
 	if err != nil {
 		return "", err
 	}
-	log.Info().Dur("durationMs", time.Since(start)).Str("storageId", resp.ID).Msg("Project uploaded.")
+	log.Info().Dur("durationMs", time.Since(start)).Str("storageId", resp.ID).Msgf("%s uploaded.", strings.Title(pType))
 	return resp.ID, nil
 }
 

@@ -21,12 +21,12 @@ func (r *EspressoRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	appFileID, err := r.uploadProject(r.Project.Espresso.App)
+	appFileID, err := r.uploadProject(r.Project.Espresso.App, "application")
 	if err != nil {
 		return exitCode, err
 	}
 
-	testAppFileID, err := r.uploadProject(r.Project.Espresso.TestApp)
+	testAppFileID, err := r.uploadProject(r.Project.Espresso.TestApp, "test application")
 	if err != nil {
 		return exitCode, err
 	}
