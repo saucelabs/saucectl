@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/job"
+	"strings"
 )
 
 // EspressoRunner represents the Sauce Labs cloud implementation for cypress.
@@ -90,4 +91,13 @@ func (r *EspressoRunner) calculateJobsCount(suites []espresso.Suite) int {
 		}
 	}
 	return jobsCount
+}
+
+func (r *EspressoRunner) getSuiteNames() string {
+	names := []string{}
+	for _, s := range r.Project.Suites {
+		names = append(names, s.Name)
+	}
+
+	return strings.Join(names, ", ")
 }
