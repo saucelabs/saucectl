@@ -9,6 +9,7 @@ on:
 
 env:
   GH_TOKEN: ${{secrets.GH_TOKEN}}
+  SENTRY_DSN: ${{secrets.SENTRY_DSN}}
 
 jobs:
   release:
