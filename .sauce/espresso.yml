@@ -13,7 +13,6 @@ sauce:
 espresso:
   app: ./tests/apps/calc.apk
   testApp: ./tests/apps/calc-success.apk
-  useOrchestrator: false # Not supported yet
 suites:
   - name: "saucy barista"
     devices:
@@ -25,19 +24,3 @@ suites:
       - name: "Google Pixel C GoogleAPI Emulator"
         platformVersions:
           - "8.1"
-    testOptions: # Not supported yet
-      notClass:
-        - com.my.package.MyFlakyClass
-      class:
-        - com.my.package.MyClass
-        - com.android.foo.FooTest1
-        - com.android.foo.FooTest#testMethod
-      package: class com.my.package.MyClass
-      size: SmallTest
-      annotation: FlakyTests
-artifacts:
-  download:
-    match:
-      - "*.junit.xml"
-    when: always
-    directory: ./
