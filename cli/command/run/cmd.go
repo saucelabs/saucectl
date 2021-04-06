@@ -644,6 +644,17 @@ func filterTestcafeSuite(c *testcafe.Project) error {
 	return fmt.Errorf("suite name '%s' is invalid", suiteName)
 }
 
+func filterEspressoSuite(c *espresso.Project) error {
+	for _, s := range c.Suites {
+		if s.Name == suiteName {
+			c.Suites = []espresso.Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf("suite name '%s' is invalid", suiteName)
+}
+
+
 func filterPuppeteerSuite(c *puppeteer.Project) error {
 	for _, s := range c.Suites {
 		if s.Name == suiteName {
