@@ -18,9 +18,6 @@ type EspressoRunner struct {
 func (r *EspressoRunner) RunProject() (int, error) {
 	exitCode := 1
 
-	// espresso has no console.log so setting ShowConsoleLog to false
-	r.CloudRunner.ShowConsoleLog = false
-
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.ID); err != nil {
 		return 1, err
 	}

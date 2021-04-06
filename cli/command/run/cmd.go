@@ -533,7 +533,7 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, creds *credenti
 			CCYReader:       &rsto,
 			TunnelService:   &rsto,
 			Region:          regio,
-			ShowConsoleLog:  p.ShowConsoleLog,
+			ShowConsoleLog:  false,
 		},
 	}
 	return r.RunProject()

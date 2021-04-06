@@ -12,7 +12,6 @@ import (
 // Project represents the espresso project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline"`
-	ShowConsoleLog bool
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Espresso       Espresso           `yaml:"espresso,omitempty" json:"espresso"`
 	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
