@@ -31,7 +31,6 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Long:    configureLong,
 		Example: configureExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Info().Msg("Start Configure Command")
 			if err := Run(); err != nil {
 				log.Err(err).Msg("failed to execute configure command")
 				serrors.HandleAndFlush(err)
@@ -46,8 +45,12 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 
 // explainHowToObtainCredentials explains how to get credentials
 func explainHowToObtainCredentials() {
-	fmt.Println("\nDon't have an account? Signup here:\nhttps://bit.ly/saucectl-signup")
-	fmt.Printf("\nAlready have an account? Get your username and access key here:\nhttps://app.saucelabs.com/user-settings\n\n\n")
+	fmt.Println(`
+Don't have an account? Signup here:
+https://bit.ly/saucectl-signup
+
+Already have an account? Get your username and access key here:
+https://app.saucelabs.com/user-settings`)
 }
 
 // interactiveConfiguration expect user to manually type-in its credentials
@@ -55,6 +58,7 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 	explainHowToObtainCredentials()
 	creds := getDefaultCredentials()
 
+	println("") // visual paragraph break
 	qs := []*survey.Question{
 		{
 			Name: "username",
@@ -128,7 +132,7 @@ func Run() error {
 	if err := creds.Store(); err != nil {
 		return fmt.Errorf("unable to save credentials: %s", err)
 	}
-	log.Info().Msg("You're all set ! ")
+	println("You're all set!")
 	return nil
 }
 
