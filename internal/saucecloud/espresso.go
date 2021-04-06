@@ -18,6 +18,9 @@ type EspressoRunner struct {
 func (r *EspressoRunner) RunProject() (int, error) {
 	exitCode := 1
 
+	// espresso has no console.log so setting ShowConsoleLog to false
+	r.CloudRunner.ShowConsoleLog = false
+
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.ID); err != nil {
 		return 1, err
 	}
@@ -54,23 +57,22 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 			for _, d := range s.Devices {
 				for _, p := range d.PlatformVersions {
 					log.Debug().Str("suite", s.Name).Str("device", d.Name).Str("platform", p).Msg("Starting job")
-					jobsCount++
 					jobOpts <- job.StartOptions{
-						App:              	fmt.Sprintf("storage:%s", appFileID),
-						Suite:            	fmt.Sprintf("storage:%s", testAppFileID),
-						Framework:        	"espresso",
-						FrameworkVersion:   "1.0.0-stable",
-						PlatformName:     	d.PlatformName,
-						PlatformVersion:	p,
-						DeviceName:			d.Name,
-						Name:             	r.Project.Sauce.Metadata.Name + " - " + s.Name,
-						Build:            	r.Project.Sauce.Metadata.Build,
-						Tags:             	r.Project.Sauce.Metadata.Tags,
+						App:              fmt.Sprintf("storage:%s", appFileID),
+						Suite:            fmt.Sprintf("storage:%s", testAppFileID),
+						Framework:        "espresso",
+						FrameworkVersion: "1.0.0-stable",
+						PlatformName:     d.PlatformName,
+						PlatformVersion:  p,
+						DeviceName:       d.Name,
+						Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
+						Build:            r.Project.Sauce.Metadata.Build,
+						Tags:             r.Project.Sauce.Metadata.Tags,
 						Tunnel: job.TunnelOptions{
 							ID:     r.Project.Sauce.Tunnel.ID,
 							Parent: r.Project.Sauce.Tunnel.Parent,
 						},
-						Experiments:      r.Project.Sauce.Experiments,
+						Experiments: r.Project.Sauce.Experiments,
 					}
 				}
 			}
