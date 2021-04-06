@@ -1,6 +1,7 @@
 package saucecloud
 
 import (
+	"context"
 	"github.com/jarcoal/httpmock"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
@@ -9,7 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
-	"context"
 )
 
 func TestEspresso_GetSuiteNames(t *testing.T) {
@@ -30,7 +30,7 @@ func TestEspressoRunner_CalculateJobCount(t *testing.T) {
 	runner := &EspressoRunner{
 		Project: espresso.Project{
 			Espresso: espresso.Espresso{
-				App: "/path/to/app.apk",
+				App:     "/path/to/app.apk",
 				TestApp: "/path/to/testApp.apk",
 			},
 			Suites: []espresso.Suite{
@@ -38,11 +38,11 @@ func TestEspressoRunner_CalculateJobCount(t *testing.T) {
 					Name: "valid espresso project",
 					Devices: []config.Device{
 						config.Device{
-							Name: "Android GoogleApi Emulator",
+							Name:             "Android GoogleApi Emulator",
 							PlatformVersions: []string{"11.0", "10.0"},
 						},
 						config.Device{
-							Name: "Android Emulator",
+							Name:             "Android Emulator",
 							PlatformVersions: []string{"11.0"},
 						},
 					},
@@ -85,7 +85,7 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 		},
 		Project: espresso.Project{
 			Espresso: espresso.Espresso{
-				App: "/path/to/app.apk",
+				App:     "/path/to/app.apk",
 				TestApp: "/path/to/testApp.apk",
 			},
 			Suites: []espresso.Suite{
@@ -93,7 +93,7 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 					Name: "my espresso project",
 					Devices: []config.Device{
 						config.Device{
-							Name: "Android GoogleApi Emulator",
+							Name:             "Android GoogleApi Emulator",
 							PlatformVersions: []string{"11.0"},
 						},
 					},
