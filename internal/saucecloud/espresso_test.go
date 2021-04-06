@@ -54,7 +54,6 @@ func TestEspressoRunner_CalculateJobCount(t *testing.T) {
 }
 
 func TestEspressoRunner_RunProject(t *testing.T) {
-	return
 	httpmock.Activate()
 	defer func() {
 		httpmock.DeactivateAndReset()
@@ -98,6 +97,9 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 						},
 					},
 				},
+			},
+			Sauce: config.SauceConfig{
+				Concurrency: 1,
 			},
 		},
 	}
