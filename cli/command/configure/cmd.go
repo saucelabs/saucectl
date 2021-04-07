@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	serrors "github.com/saucelabs/saucectl/internal/errors"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"os"
 	"strings"
 
@@ -43,19 +44,10 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	return cmd
 }
 
-// explainHowToObtainCredentials explains how to get credentials
-func explainHowToObtainCredentials() {
-	fmt.Println(`
-Don't have an account? Signup here:
-https://bit.ly/saucectl-signup
-
-Already have an account? Get your username and access key here:
-https://app.saucelabs.com/user-settings`)
-}
-
 // interactiveConfiguration expect user to manually type-in its credentials
 func interactiveConfiguration() (*credentials.Credentials, error) {
-	explainHowToObtainCredentials()
+	fmt.Println(msg.SignupMessage)
+
 	creds := credentials.FromFile()
 	if creds == nil {
 		creds = &credentials.Credentials{}
