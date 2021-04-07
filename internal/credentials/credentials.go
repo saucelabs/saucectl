@@ -13,10 +13,14 @@ import (
 type Credentials struct {
 	Username  string `yaml:"username"`
 	AccessKey string `yaml:"accessKey"`
-	Source    string
+	Source    string `yaml:"-"`
 }
 
-// Get returns the currently configured credentials (env is prioritary vs. file).
+// Get returns the configured credentials.
+//
+// The lookup order is:
+//  1. Environment variables
+//  2. Credentials file
 func Get() *Credentials {
 	if envCredentials := FromEnv(); envCredentials != nil {
 		return envCredentials
@@ -33,7 +37,7 @@ func FromEnv() *Credentials {
 		return &Credentials{
 			Username:  username,
 			AccessKey: accessKey,
-			Source: "environment variables",
+			Source:    "environment variables",
 		}
 	}
 	return nil
