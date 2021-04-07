@@ -49,6 +49,7 @@ func addFileToArchive(fileName string, fileInfo os.FileInfo, rootFolder string, 
 		}
 	}
 
+	relName = filepath.ToSlash(relName)
 	header.Name = relName
 
 	if fileInfo.Mode().Type() == os.ModeSymlink {
