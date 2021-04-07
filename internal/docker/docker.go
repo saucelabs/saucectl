@@ -226,7 +226,7 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 
 	username := ""
 	accessKey := ""
-	if creds := credentials.Get(); creds != nil {
+	if creds := credentials.Get(); creds.IsValid() {
 		username = creds.Username
 		accessKey = creds.AccessKey
 		log.Info().Str("suite", options.SuiteName).Msgf("Using credentials set by %s", creds.Source)

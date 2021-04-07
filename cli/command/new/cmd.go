@@ -78,7 +78,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 // Run starts the new command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	creds := credentials.Get()
-	if creds == nil {
+	if !creds.IsValid() {
 		color.Red("\nsaucectl requires a valid Sauce Labs account to run.")
 		fmt.Println("\nTo configure your Sauce Labs account use:" +
 			"\n$ saucectl configure\n")

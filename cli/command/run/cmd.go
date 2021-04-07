@@ -208,7 +208,7 @@ func runCypress(cmd *cobra.Command) (int, error) {
 	}
 
 	creds := credentials.Get()
-	if creds == nil {
+	if !creds.IsValid() {
 		return 1, errors.New("no sauce credentials set")
 	}
 
@@ -309,7 +309,7 @@ func runPlaywright(cmd *cobra.Command) (int, error) {
 	}
 
 	creds := credentials.Get()
-	if creds == nil {
+	if !creds.IsValid() {
 		return 1, errors.New("no sauce credentials set")
 	}
 
@@ -407,7 +407,7 @@ func runTestcafe(cmd *cobra.Command) (int, error) {
 		}
 	}
 	creds := credentials.Get()
-	if creds == nil {
+	if !creds.IsValid() {
 		return 1, errors.New("no sauce credentials set")
 	}
 
@@ -482,7 +482,7 @@ func runEspresso(cmd *cobra.Command) (int, error) {
 
 	// TODO - add dry-run mode
 	creds := credentials.Get()
-	if creds == nil {
+	if !creds.IsValid() {
 		return 1, errors.New("no sauce credentials set")
 	}
 
@@ -571,7 +571,7 @@ func runPuppeteer(cmd *cobra.Command) (int, error) {
 		}
 	}
 	creds := credentials.Get()
-	if creds == nil {
+	if !creds.IsValid() {
 		return 1, errors.New("no sauce credentials set")
 	}
 

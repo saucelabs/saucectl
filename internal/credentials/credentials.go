@@ -22,25 +22,19 @@ type Credentials struct {
 //  1. Environment variables
 //  2. Credentials file
 func Get() *Credentials {
-	if envCredentials := FromEnv(); envCredentials != nil {
-		return envCredentials
+	if c := FromEnv(); c.IsValid() {
+		return c
 	}
 	return FromFile()
 }
 
 // FromEnv reads the credentials from the user environment.
 func FromEnv() *Credentials {
-	username, usernamePresence := os.LookupEnv("SAUCE_USERNAME")
-	accessKey, accessKeyPresence := os.LookupEnv("SAUCE_ACCESS_KEY")
-
-	if usernamePresence && accessKeyPresence && len(username) > 0 && len(accessKey) > 0 {
-		return &Credentials{
-			Username:  username,
-			AccessKey: accessKey,
-			Source:    "environment variables",
-		}
+	return &Credentials{
+		Username:  os.Getenv("SAUCE_USERNAME"),
+		AccessKey: os.Getenv("SAUCE_ACCESS_KEY"),
+		Source:    "environment variables",
 	}
-	return nil
 }
 
 // FromFile reads the credentials from the user credentials file.
