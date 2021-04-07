@@ -17,7 +17,7 @@ type FakeClient struct {
 	ServerVersionFn             func(ctx context.Context) (types.Version, error)
 	ContainerListSuccess        bool
 	ImageListSuccess            bool
-	ImagesListEmpty				bool
+	ImagesListEmpty             bool
 	ImageInspectWithRawSuccess  bool
 	ImagePullSuccess            bool
 	ContainerCreateSuccess      bool
