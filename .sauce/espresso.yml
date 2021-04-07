@@ -1,0 +1,26 @@
+apiVersion: v1alpha
+kind: espresso
+sauce:
+  region: us-west-1
+  concurrency: 10 # Controls how many suites are executed at the same time (sauce test env only).
+  metadata:
+    name: Testing Espresso Support
+    tags:
+      - e2e
+      - release team
+      - other tag
+  build: Release $CI_COMMIT_SHORT_SHA
+espresso:
+  app: ./tests/apps/calc.apk
+  testApp: ./tests/apps/calc-success.apk
+suites:
+  - name: "saucy barista"
+    devices:
+      - name: "Android GoogleApi Emulator"
+        orientation: portrait
+        platformVersions:
+          - "11.0"
+          - "10.0"
+      - name: "Google Pixel C GoogleAPI Emulator"
+        platformVersions:
+          - "8.1"

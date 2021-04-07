@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -176,7 +177,7 @@ func (r CloudRunner) archiveAndUpload(project interface{}, folder string, saucei
 		return "", err
 	}
 
-	return r.uploadProject(zipName)
+	return r.uploadProject(zipName, projectUpload)
 }
 
 func (r *CloudRunner) archiveProject(project interface{}, tempDir string, projectFolder string, sauceignoreFile string) (string, error) {
@@ -201,7 +202,7 @@ func (r *CloudRunner) archiveProject(project interface{}, tempDir string, projec
 
 	folderContent, err := os.ReadDir(projectFolder)
 	if err != nil {
-		return  "", err
+		return "", err
 	}
 
 	for _, child := range folderContent {
@@ -230,15 +231,28 @@ func (r *CloudRunner) archiveProject(project interface{}, tempDir string, projec
 	return zipName, nil
 }
 
-func (r *CloudRunner) uploadProject(filename string) (string, error) {
-	progress.Show("Uploading project")
+type uploadType string
+
+var (
+	testAppUpload uploadType = "test application"
+	appUpload     uploadType = "application"
+	projectUpload uploadType = "project"
+)
+
+func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, error) {
+	filename, err := filepath.Abs(filename)
+	if err != nil {
+		return "", nil
+	}
+	progress.Show("Uploading %s %s", pType, filename)
+
 	start := time.Now()
 	resp, err := r.ProjectUploader.Upload(filename)
 	progress.Stop()
 	if err != nil {
 		return "", err
 	}
-	log.Info().Dur("durationMs", time.Since(start)).Str("storageId", resp.ID).Msg("Project uploaded.")
+	log.Info().Dur("durationMs", time.Since(start)).Str("storageId", resp.ID).Msgf("%s uploaded.", strings.Title(string(pType)))
 	return resp.ID, nil
 }
 

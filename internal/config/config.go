@@ -27,6 +27,36 @@ type SauceConfig struct {
 	Experiments map[string]string `yaml:"experiments,omitempty" json:"experiments,omitempty"`
 }
 
+// Device represents the Android device configuration.
+type Device struct {
+	ID               string   `yaml:"id,omitempty" json:"id"`
+	Name             string   `yaml:"name,omitempty" json:"name"`
+	Orientation      string   `yaml:"orientation,omitempty" json:"orientation"`
+	PlatformVersions []string `yaml:"platformVersions,omitempty" json:"platformVersions"`
+	PlatformName     string   `yaml:"platformName,omitempty" json:"platformName"`
+}
+
+type when string
+
+const (
+	whenFail   when = "fail"
+	whenPass   when = "pass"
+	whenNever  when = "never"
+	whenAlways when = "always"
+)
+
+// ArtifactDownload represents the test artifacts configuration.
+type ArtifactDownload struct {
+	Match     []string `yaml:"match,omitempty" json:"match"`
+	When      when     `yaml:"when,omitempty" json:"when"`
+	Directory string   `yaml:"directory,omitempty" json:"directory"`
+}
+
+// Artifacts represents the test artifacts configuration.
+type Artifacts struct {
+	Download ArtifactDownload `yaml:"download,omitempty" json:"download"`
+}
+
 // Tunnel represents a sauce labs tunnel.
 type Tunnel struct {
 	ID     string `yaml:"id,omitempty" json:"id"`
@@ -71,6 +101,7 @@ const (
 	KindPuppeteer  = "puppeteer"
 	KindPlaywright = "playwright"
 	KindTestcafe   = "testcafe"
+	KindEspresso   = "espresso"
 )
 
 func readYaml(cfgFilePath string) ([]byte, error) {

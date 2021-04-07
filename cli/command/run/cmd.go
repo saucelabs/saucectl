@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/saucelabs/saucectl/cli/version"
+	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"net/http"
@@ -145,6 +146,9 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 	if d.Kind == config.KindPuppeteer && d.APIVersion == config.VersionV1Alpha {
 		return runPuppeteer(cmd)
+	}
+	if d.Kind == config.KindEspresso && d.APIVersion == config.VersionV1Alpha {
+		return runEspresso(cmd)
 	}
 
 	return 1, errors.New("unknown framework configuration")
@@ -467,6 +471,74 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, creds *credenti
 	return r.RunProject()
 }
 
+func runEspresso(cmd *cobra.Command) (int, error) {
+	p, err := espresso.FromFile(cfgFilePath)
+	if err != nil {
+		return 1, err
+	}
+	p.Sauce.Metadata.ExpandEnv()
+	applyDefaultValues(&p.Sauce)
+	overrideCliParameters(cmd, &p.Sauce)
+
+	// TODO - add dry-run mode
+	creds := credentials.Get()
+	if creds == nil {
+		return 1, errors.New("no sauce credentials set")
+	}
+
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
+		return 1, errors.New("no sauce region set")
+	}
+
+	err = espresso.Validate(p)
+	if err != nil {
+		return 1, err
+	}
+
+	tc := testcomposer.Client{
+		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
+		URL:         regio.APIBaseURL(),
+		Credentials: *creds,
+	}
+
+	switch testEnv {
+	case "sauce":
+		return runEspressoInCloud(p, regio, creds, tc)
+	default:
+		return 1, fmt.Errorf("unsupported test environment for espresso: %s", testEnv)
+	}
+}
+
+func runEspressoInCloud(p espresso.Project, regio region.Region, creds *credentials.Credentials, testco testcomposer.Client) (int, error) {
+	log.Info().Msg("Running Espresso in Sauce Labs")
+
+	s := appstore.New(regio.APIBaseURL(), creds.Username, creds.AccessKey, appStoreTimeout)
+
+	rsto := resto.Client{
+		HTTPClient: &http.Client{Timeout: restoTimeout},
+		URL:        regio.APIBaseURL(),
+		Username:   creds.Username,
+		AccessKey:  creds.AccessKey,
+	}
+
+	r := saucecloud.EspressoRunner{
+		Project: p,
+		CloudRunner: saucecloud.CloudRunner{
+			ProjectUploader: s,
+			JobStarter:      &testco,
+			JobReader:       &rsto,
+			JobStopper:      &rsto,
+			CCYReader:       &rsto,
+			TunnelService:   &rsto,
+			Region:          regio,
+			ShowConsoleLog:  false,
+		},
+	}
+	return r.RunProject()
+}
+
 func runPuppeteer(cmd *cobra.Command) (int, error) {
 	p, err := puppeteer.FromFile(cfgFilePath)
 	if err != nil {
@@ -571,6 +643,17 @@ func filterTestcafeSuite(c *testcafe.Project) error {
 	}
 	return fmt.Errorf("suite name '%s' is invalid", suiteName)
 }
+
+func filterEspressoSuite(c *espresso.Project) error {
+	for _, s := range c.Suites {
+		if s.Name == suiteName {
+			c.Suites = []espresso.Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf("suite name '%s' is invalid", suiteName)
+}
+
 
 func filterPuppeteerSuite(c *puppeteer.Project) error {
 	for _, s := range c.Suites {

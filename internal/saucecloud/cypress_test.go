@@ -148,12 +148,12 @@ func TestUploadProject(t *testing.T) {
 			ProjectUploader: uploader,
 		},
 	}
-	id, err := runner.uploadProject("/my-dummy-project.zip")
+	id, err := runner.uploadProject("/my-dummy-project.zip", "project")
 	assert.Equal(t, "fake-id", id)
 	assert.Nil(t, err)
 
 	uploader.UploadSuccess = false
-	id, err = runner.uploadProject("/my-dummy-project.zip")
+	id, err = runner.uploadProject("/my-dummy-project.zip", "project")
 	assert.Equal(t, "", id)
 	assert.NotNil(t, err)
 

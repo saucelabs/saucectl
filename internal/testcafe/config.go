@@ -130,13 +130,13 @@ func setDefaultValues(suite *Suite) {
 		suite.Speed = 1
 	}
 	// Set default timeout. ref: https://devexpress.github.io/testcafe/documentation/reference/configuration-file.html#selectortimeout
-	if suite.SelectorTimeout == 0 {
+	if suite.SelectorTimeout <= 0 {
 		suite.SelectorTimeout = 10000
 	}
-	if suite.AssertionTimeout == 0 {
+	if suite.AssertionTimeout <= 0 {
 		suite.AssertionTimeout = 3000
 	}
-	if suite.PageLoadTimeout == 0 {
+	if suite.PageLoadTimeout <= 0 {
 		suite.PageLoadTimeout = 3000
 	}
 }

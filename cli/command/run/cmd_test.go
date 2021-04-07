@@ -1,6 +1,7 @@
 package run
 
 import (
+	"github.com/saucelabs/saucectl/internal/espresso"
 	"reflect"
 	"testing"
 
@@ -192,6 +193,66 @@ func TestFilterTestcafeSuite(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			suiteName = tc.suiteName
 			err := filterTestcafeSuite(tc.config)
+			if err != nil {
+				assert.Equal(t, tc.expErr, err.Error())
+			}
+			assert.True(t, reflect.DeepEqual(*tc.config, tc.expConfig))
+		})
+	}
+}
+
+func TestFilterEspressoSuite(t *testing.T) {
+	testCase := []struct {
+		name      string
+		config    *espresso.Project
+		suiteName string
+		expConfig espresso.Project
+		expErr    string
+	}{
+		{
+			name: "filter out suite according to suiteName",
+			config: &espresso.Project{Suites: []espresso.Suite{
+				{
+					Name: "suite1",
+				},
+				{
+					Name: "suite2",
+				},
+			}},
+			suiteName: "suite1",
+			expConfig: espresso.Project{Suites: []espresso.Suite{
+				{
+					Name: "suite1",
+				},
+			}},
+		},
+		{
+			name: "no required suite name in config",
+			config: &espresso.Project{Suites: []espresso.Suite{
+				{
+					Name: "suite1",
+				},
+				{
+					Name: "suite2",
+				},
+			}},
+			suiteName: "suite3",
+			expConfig: espresso.Project{Suites: []espresso.Suite{
+				{
+					Name: "suite1",
+				},
+				{
+					Name: "suite2",
+				},
+			}},
+			expErr: "suite name 'suite3' is invalid",
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			suiteName = tc.suiteName
+			err := filterEspressoSuite(tc.config)
 			if err != nil {
 				assert.Equal(t, tc.expErr, err.Error())
 			}
