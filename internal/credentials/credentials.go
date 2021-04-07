@@ -111,7 +111,8 @@ func (c *Credentials) Store() error {
 	return yaml.WriteFile(filePath, c, 0600)
 }
 
-// IsEmpty ensure credentials are not set
+// IsEmpty checks whether the credentials, i.e. username and access key are not empty.
+// Returns false if even one of the credentials is empty.
 func (c *Credentials) IsEmpty() bool {
 	return c.AccessKey == "" || c.Username == ""
 }
