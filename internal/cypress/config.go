@@ -183,7 +183,7 @@ func Validate(p Project) error {
 		}
 
 		if len(s.Config.TestFiles) == 0 {
-			return fmt.Errorf("no config.testFiles specified in suite '%s", s.Name)
+			return fmt.Errorf("no config.testFiles specified in suite '%s'", s.Name)
 		}
 	}
 
