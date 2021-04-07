@@ -52,6 +52,7 @@ func (fc *FakeClient) ContainerList(ctx context.Context, options types.Container
 	return nil, errors.New("ContainerListFailure")
 }
 
+// HasBaseImage mock function
 func (fc *FakeClient) HasBaseImage(ctx context.Context, img string) (bool, error) {
 	if fc.HasBaseImageSuccess {
 		return true, nil
