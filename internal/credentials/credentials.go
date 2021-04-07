@@ -4,12 +4,9 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/yaml"
-	"golang.org/x/net/context"
 	yamlbase "gopkg.in/yaml.v2"
-	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 // Credentials contains a set of Username + AccessKey for SauceLabs.
@@ -93,7 +90,7 @@ func getCredentialsFilePath() (string, error) {
 }
 
 // Store stores the provided credentials into the user config.
-func (credentials *Credentials) Store() error {
+func (c *Credentials) Store() error {
 	folderPath, err := getCredentialsFolderPath()
 	if err != nil {
 		return nil
@@ -107,31 +104,30 @@ func (credentials *Credentials) Store() error {
 	if err != nil {
 		return fmt.Errorf("unable to create configuration folder")
 	}
-	return yaml.WriteFile(filePath, credentials, 0600)
+	return yaml.WriteFile(filePath, c, 0600)
 }
 
 // IsEmpty ensure credentials are not set
-func (credentials *Credentials) IsEmpty() bool {
-	return credentials.AccessKey == "" || credentials.Username == ""
+func (c *Credentials) IsEmpty() bool {
+	return c.AccessKey == "" || c.Username == ""
 }
 
 // IsValid validates that the credentials are valid.
-func (credentials *Credentials) IsValid() bool {
-	if  credentials.IsEmpty() {
-		return false
-	}
-	httpClient := http.Client{}
-	ctx, _ := context.WithTimeout(context.Background(), 5 * time.Second)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://saucelabs.com/rest/v1/users/" + credentials.Username, nil)
-	if err != nil {
-		log.Error().Msgf("unable to check credentials")
-		return false
-	}
-	req.SetBasicAuth(credentials.Username, credentials.AccessKey)
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		log.Error().Msgf("unable to check credentials")
-		return false
-	}
-	return resp.StatusCode == 200
+func (c *Credentials) IsValid() bool {
+	return !c.IsEmpty()
+	// FIXME this is wrong, since credentials are region specific
+	//httpClient := http.Client{}
+	//ctx, _ := context.WithTimeout(context.Background(), 5 * time.Second)
+	//req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://saucelabs.com/rest/v1/users/" + c.Username, nil)
+	//if err != nil {
+	//	log.Error().Msgf("unable to check c")
+	//	return false
+	//}
+	//req.SetBasicAuth(c.Username, c.AccessKey)
+	//resp, err := httpClient.Do(req)
+	//if err != nil {
+	//	log.Error().Msgf("unable to check c")
+	//	return false
+	//}
+	//return resp.StatusCode == 200
 }

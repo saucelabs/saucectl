@@ -106,7 +106,7 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 	if err := survey.Ask(qs, creds); err != nil {
 		return nil, err
 	}
-
+	println() // visual paragraph break
 	return creds, nil
 }
 
