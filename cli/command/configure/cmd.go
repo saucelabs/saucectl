@@ -56,7 +56,10 @@ https://app.saucelabs.com/user-settings`)
 // interactiveConfiguration expect user to manually type-in its credentials
 func interactiveConfiguration() (*credentials.Credentials, error) {
 	explainHowToObtainCredentials()
-	creds := getDefaultCredentials()
+	creds := credentials.FromFile()
+	if creds == nil {
+		creds = &credentials.Credentials{}
+	}
 
 	println("") // visual paragraph break
 	qs := []*survey.Question{
@@ -69,11 +72,11 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 			Validate: func(val interface{}) error {
 				str, ok := val.(string)
 				if !ok {
-					return errors.New("invalid username. Check it here: https://app.saucelabs.com/user-settings")
+					return errors.New("invalid username")
 				}
 				str = strings.TrimSpace(str)
 				if str == "" {
-					return errors.New("you need to type a username. Get yours here: https://app.saucelabs.com/user-settings")
+					return errors.New("you need to type a username")
 
 				}
 				return nil
@@ -88,11 +91,11 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 			Validate: func(val interface{}) error {
 				str, ok := val.(string)
 				if !ok {
-					return errors.New("invalid access key. Check it here: https://app.saucelabs.com/user-settings")
+					return errors.New("invalid access key")
 				}
 				str = strings.TrimSpace(str)
 				if str == "" {
-					return errors.New("you need to type an access key. Get yours here: https://app.saucelabs.com/user-settings")
+					return errors.New("you need to type an access key")
 
 				}
 				return nil
@@ -104,7 +107,6 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 		return nil, err
 	}
 
-	fmt.Printf("\n\n")
 	return creds, nil
 }
 
@@ -134,18 +136,4 @@ func Run() error {
 	}
 	println("You're all set!")
 	return nil
-}
-
-// getDefaultCredentials returns first the file credentials, then the one founded in the env.
-func getDefaultCredentials() *credentials.Credentials {
-	fileCreds := credentials.FromFile()
-	if fileCreds != nil {
-		return fileCreds
-	}
-
-	envCreds := credentials.FromEnv()
-	if envCreds != nil {
-		return envCreds
-	}
-	return &credentials.Credentials{}
 }
