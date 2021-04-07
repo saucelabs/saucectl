@@ -13,9 +13,11 @@ import (
 
 // FakeClient Docker mock
 type FakeClient struct {
+	HasBaseImageSuccess         bool
 	ServerVersionFn             func(ctx context.Context) (types.Version, error)
 	ContainerListSuccess        bool
 	ImageListSuccess            bool
+	ImagesListEmpty				bool
 	ImageInspectWithRawSuccess  bool
 	ImagePullSuccess            bool
 	ContainerCreateSuccess      bool
@@ -50,9 +52,19 @@ func (fc *FakeClient) ContainerList(ctx context.Context, options types.Container
 	return nil, errors.New("ContainerListFailure")
 }
 
+func (fc *FakeClient) HasBaseImage(ctx context.Context, img string) (bool, error) {
+	if fc.HasBaseImageSuccess {
+		return true, nil
+	}
+	return false, nil
+}
+
 // ImageList mock function
 func (fc *FakeClient) ImageList(ctx context.Context, options types.ImageListOptions) ([]types.ImageSummary, error) {
 	if fc.ImageListSuccess {
+		if fc.ImagesListEmpty {
+			return []types.ImageSummary{}, nil
+		}
 		return []types.ImageSummary{
 			{}, {},
 		}, nil
