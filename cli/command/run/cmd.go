@@ -221,7 +221,7 @@ func runCypress(cmd *cobra.Command) (int, error) {
 	tc := testcomposer.Client{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         regio.APIBaseURL(),
-		Credentials: *creds,
+		Credentials: creds,
 	}
 
 	switch testEnv {
@@ -244,7 +244,7 @@ func runCypressInDocker(p cypress.Project, testco testcomposer.Client) (int, err
 	return cd.RunProject()
 }
 
-func runCypressInSauce(p cypress.Project, regio region.Region, creds *credentials.Credentials, testco testcomposer.Client) (int, error) {
+func runCypressInSauce(p cypress.Project, regio region.Region, creds credentials.Credentials, testco testcomposer.Client) (int, error) {
 	log.Info().Msg("Running Cypress in Sauce Labs")
 
 	s := appstore.New(regio.APIBaseURL(), creds.Username, creds.AccessKey, appStoreTimeout)
@@ -322,7 +322,7 @@ func runPlaywright(cmd *cobra.Command) (int, error) {
 	tc := testcomposer.Client{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         regio.APIBaseURL(),
-		Credentials: *creds,
+		Credentials: creds,
 	}
 
 	switch testEnv {
@@ -345,7 +345,7 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client) (in
 	return cd.RunProject()
 }
 
-func runPlaywrightInSauce(p playwright.Project, regio region.Region, creds *credentials.Credentials, testco testcomposer.Client) (int, error) {
+func runPlaywrightInSauce(p playwright.Project, regio region.Region, creds credentials.Credentials, testco testcomposer.Client) (int, error) {
 	log.Info().Msg("Running Playwright in Sauce Labs")
 
 	s := appstore.New(regio.APIBaseURL(), creds.Username, creds.AccessKey, appStoreTimeout)
@@ -420,7 +420,7 @@ func runTestcafe(cmd *cobra.Command) (int, error) {
 	tc := testcomposer.Client{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         regio.APIBaseURL(),
-		Credentials: *creds,
+		Credentials: creds,
 	}
 
 	switch testEnv {
@@ -443,7 +443,7 @@ func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client) (int, e
 	return cd.RunProject()
 }
 
-func runTestcafeInCloud(p testcafe.Project, regio region.Region, creds *credentials.Credentials, testco testcomposer.Client) (int, error) {
+func runTestcafeInCloud(p testcafe.Project, regio region.Region, creds credentials.Credentials, testco testcomposer.Client) (int, error) {
 	log.Info().Msg("Running Testcafe in Sauce Labs")
 
 	s := appstore.New(regio.APIBaseURL(), creds.Username, creds.AccessKey, appStoreTimeout)
@@ -500,7 +500,7 @@ func runEspresso(cmd *cobra.Command) (int, error) {
 	tc := testcomposer.Client{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         regio.APIBaseURL(),
-		Credentials: *creds,
+		Credentials: creds,
 	}
 
 	switch testEnv {
@@ -511,7 +511,7 @@ func runEspresso(cmd *cobra.Command) (int, error) {
 	}
 }
 
-func runEspressoInCloud(p espresso.Project, regio region.Region, creds *credentials.Credentials, testco testcomposer.Client) (int, error) {
+func runEspressoInCloud(p espresso.Project, regio region.Region, creds credentials.Credentials, testco testcomposer.Client) (int, error) {
 	log.Info().Msg("Running Espresso in Sauce Labs")
 
 	s := appstore.New(regio.APIBaseURL(), creds.Username, creds.AccessKey, appStoreTimeout)
@@ -584,7 +584,7 @@ func runPuppeteer(cmd *cobra.Command) (int, error) {
 	tc := testcomposer.Client{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         regio.APIBaseURL(),
-		Credentials: *creds,
+		Credentials: creds,
 	}
 
 	switch testEnv {

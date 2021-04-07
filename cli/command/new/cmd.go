@@ -110,7 +110,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 			Timeout: 10 * time.Second,
 		},
 		URL:         r.APIBaseURL(),
-		Credentials: *credentials.Get(),
+		Credentials: credentials.Get(),
 	}
 
 	m, err := tc.Search(cmd.Context(), framework.SearchOptions{

@@ -21,7 +21,7 @@ type Credentials struct {
 // The lookup order is:
 //  1. Environment variables
 //  2. Credentials file
-func Get() *Credentials {
+func Get() Credentials {
 	if c := FromEnv(); c.IsValid() {
 		return c
 	}
@@ -29,8 +29,8 @@ func Get() *Credentials {
 }
 
 // FromEnv reads the credentials from the user environment.
-func FromEnv() *Credentials {
-	return &Credentials{
+func FromEnv() Credentials {
+	return Credentials{
 		Username:  os.Getenv("SAUCE_USERNAME"),
 		AccessKey: os.Getenv("SAUCE_ACCESS_KEY"),
 		Source:    "environment variables",
@@ -38,33 +38,34 @@ func FromEnv() *Credentials {
 }
 
 // FromFile reads the credentials from the user credentials file.
-func FromFile() *Credentials {
+func FromFile() Credentials {
 	folderPath, err := getCredentialsFolderPath()
 	if err != nil {
-		return nil
+		return Credentials{}
 	}
 	filePath, err := getCredentialsFilePath()
 	if err != nil {
-		return nil
+		return Credentials{}
 	}
 
 	if _, err := os.Stat(folderPath); err != nil {
 		log.Debug().Msgf("%s: config folder does not exists: %v", filePath, err)
-		return nil
+		return Credentials{}
 	}
 
 	yamlFile, err := os.ReadFile(filePath)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			log.Info().Msgf("failed to read credentials: %v", err)
+			log.Error().Msgf("failed to read credentials: %v", err)
+			return Credentials{}
 		}
-		return nil
+		return Credentials{}
 	}
 
-	var c *Credentials
+	var c Credentials
 	if err = yamlbase.Unmarshal(yamlFile, &c); err != nil {
-		log.Info().Msgf("failed to parse credentials: %v", err)
-		return nil
+		log.Error().Msgf("failed to parse credentials: %v", err)
+		return Credentials{}
 	}
 	c.Source = filePath
 

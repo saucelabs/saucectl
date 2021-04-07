@@ -45,13 +45,10 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 }
 
 // interactiveConfiguration expect user to manually type-in its credentials
-func interactiveConfiguration() (*credentials.Credentials, error) {
+func interactiveConfiguration() (credentials.Credentials, error) {
 	fmt.Println(msg.SignupMessage)
 
 	creds := credentials.FromFile()
-	if creds == nil {
-		creds = &credentials.Credentials{}
-	}
 
 	println("") // visual paragraph break
 	qs := []*survey.Question{
@@ -95,8 +92,8 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 		},
 	}
 
-	if err := survey.Ask(qs, creds); err != nil {
-		return nil, err
+	if err := survey.Ask(qs, &creds); err != nil {
+		return creds, err
 	}
 	println() // visual paragraph break
 	return creds, nil
@@ -104,13 +101,13 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 
 // Run starts the configure command
 func Run() error {
-	var creds *credentials.Credentials
+	var creds credentials.Credentials
 	var err error
 
 	if cliUsername == "" && cliAccessKey == "" {
 		creds, err = interactiveConfiguration()
 	} else {
-		creds = &credentials.Credentials{
+		creds = credentials.Credentials{
 			Username:  cliUsername,
 			AccessKey: cliAccessKey,
 		}
