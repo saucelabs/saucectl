@@ -45,8 +45,6 @@ func FromEnv() *Credentials {
 
 // FromFile reads the credentials from the user credentials file.
 func FromFile() *Credentials {
-	var c *Credentials
-
 	folderPath, err := getCredentialsFolderPath()
 	if err != nil {
 		return nil
@@ -69,11 +67,13 @@ func FromFile() *Credentials {
 		return nil
 	}
 
+	var c *Credentials
 	if err = yamlbase.Unmarshal(yamlFile, &c); err != nil {
 		log.Info().Msgf("failed to parse credentials: %v", err)
 		return nil
 	}
-	c.Source, err = getCredentialsFilePath()
+	c.Source = filePath
+
 	return c
 }
 
