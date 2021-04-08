@@ -48,7 +48,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 func interactiveConfiguration() (credentials.Credentials, error) {
 	fmt.Println(msg.SignupMessage)
 
-	creds := credentials.FromFile()
+	creds := credentials.Get()
 
 	println("") // visual paragraph break
 	qs := []*survey.Question{

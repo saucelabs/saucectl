@@ -25,7 +25,12 @@ func Get() Credentials {
 	if c := FromEnv(); c.IsValid() {
 		return c
 	}
-	return FromFile()
+
+	p, err := getFilepath()
+	if err != nil {
+		return Credentials{}
+	}
+	return FromFile(p)
 }
 
 // FromEnv reads the credentials from the user environment.
@@ -37,19 +42,9 @@ func FromEnv() Credentials {
 	}
 }
 
-// FromFile reads the credentials from the user credentials file.
-func FromFile() Credentials {
-	filePath, err := getFilepath()
-	if err != nil {
-		return Credentials{}
-	}
-
-	if _, err := os.Stat(filepath.Dir(filePath)); err != nil {
-		log.Debug().Msgf("%s: config folder does not exists: %v", filepath.Dir(filePath), err)
-		return Credentials{}
-	}
-
-	yamlFile, err := os.ReadFile(filePath)
+// FromFile reads the credentials from path.
+func FromFile(path string) Credentials {
+	yamlFile, err := os.Open(path)
 	if err != nil {
 		if !os.IsNotExist(err) {
 			log.Error().Msgf("failed to read credentials: %v", err)
@@ -59,11 +54,11 @@ func FromFile() Credentials {
 	}
 
 	var c Credentials
-	if err = yamlbase.Unmarshal(yamlFile, &c); err != nil {
+	if err = yamlbase.NewDecoder(yamlFile).Decode(&c); err != nil {
 		log.Error().Msgf("failed to parse credentials: %v", err)
 		return Credentials{}
 	}
-	c.Source = filePath
+	c.Source = path
 
 	return c
 }
@@ -79,7 +74,7 @@ func getFilepath() (string, error) {
 
 // Store stores the provided credentials into the user config.
 func (c *Credentials) Store() error {
-	filePath, err := getFilepath()
+	filePath, err := getFilepath() // FIXME can be dynamic path, don't rely on this function
 	if err != nil {
 		return nil
 	}
