@@ -3,6 +3,7 @@ package run
 import (
 	"errors"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -118,8 +119,17 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 
 // Run runs the command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, error) {
+	println("Running version", version.Version)
+	creds := credentials.Get()
+	if !creds.IsValid() {
+		color.Red("\nSauceCTL requires a valid Sauce Labs account!\n\n")
+		fmt.Println(`Set up your credentials by running:
+> saucectl configure`)
+		println()
+		return 1, fmt.Errorf("no credentials set")
+	}
+
 	printTestEnv()
-	log.Info().Msgf("Running version %s", version.Version)
 
 	// Todo(Christian) write argument parser/validator
 	if cfgLogDir == defaultLogFir {
@@ -208,9 +218,6 @@ func runCypress(cmd *cobra.Command) (int, error) {
 	}
 
 	creds := credentials.Get()
-	if !creds.IsValid() {
-		return 1, errors.New("no sauce credentials set")
-	}
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
@@ -309,9 +316,6 @@ func runPlaywright(cmd *cobra.Command) (int, error) {
 	}
 
 	creds := credentials.Get()
-	if !creds.IsValid() {
-		return 1, errors.New("no sauce credentials set")
-	}
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
@@ -407,9 +411,6 @@ func runTestcafe(cmd *cobra.Command) (int, error) {
 		}
 	}
 	creds := credentials.Get()
-	if !creds.IsValid() {
-		return 1, errors.New("no sauce credentials set")
-	}
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
@@ -482,9 +483,6 @@ func runEspresso(cmd *cobra.Command) (int, error) {
 
 	// TODO - add dry-run mode
 	creds := credentials.Get()
-	if !creds.IsValid() {
-		return 1, errors.New("no sauce credentials set")
-	}
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
@@ -570,10 +568,6 @@ func runPuppeteer(cmd *cobra.Command) (int, error) {
 			return 1, err
 		}
 	}
-	creds := credentials.Get()
-	if !creds.IsValid() {
-		return 1, errors.New("no sauce credentials set")
-	}
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
@@ -584,7 +578,7 @@ func runPuppeteer(cmd *cobra.Command) (int, error) {
 	tc := testcomposer.Client{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         regio.APIBaseURL(),
-		Credentials: creds,
+		Credentials: credentials.Get(),
 	}
 
 	switch testEnv {
@@ -653,7 +647,6 @@ func filterEspressoSuite(c *espresso.Project) error {
 	}
 	return fmt.Errorf("suite name '%s' is invalid", suiteName)
 }
-
 
 func filterPuppeteerSuite(c *puppeteer.Project) error {
 	for _, s := range c.Suites {
