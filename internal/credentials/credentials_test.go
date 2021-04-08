@@ -1,121 +1,183 @@
 package credentials
 
 import (
-	"github.com/jarcoal/httpmock"
-	"github.com/stretchr/testify/assert"
-	"net/http"
 	"os"
+	"path/filepath"
+	"reflect"
 	"testing"
 )
 
-func TestEnvPrioritary(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-
-	// Prepare to restore home var
-	userprofile := os.Getenv("USERPROFILE")
-	home := os.Getenv("HOME")
-	defer func() {
-		os.Setenv("USERPROFILE", userprofile)
-		os.Setenv("HOME", home)
-	}()
-
-	// Override Home
-	os.Setenv("USERPROFILE", "C:\\non-existent")
-	os.Setenv("HOME", "/tmp/non-existent")
-
-	os.Unsetenv("SAUCE_USERNAME")
-	os.Unsetenv("SAUCE_ACCESS_KEY")
-
-	// To avoid conflict with real file
-	httpmock.RegisterResponder(http.MethodGet, "https://saucelabs.com/rest/v1/users/envUsername", httpmock.NewStringResponder(200, ""))
-	httpmock.RegisterResponder(http.MethodGet, "https://saucelabs.com/rest/v1/users/fileUsername", httpmock.NewStringResponder(200, ""))
-
-	// Test No file No env
-	envCreds := FromEnv()
-	fileCreds := FromFile()
-	overallCreds := Get()
-	assert.Nil(t, envCreds)
-	assert.Nil(t, fileCreds)
-	assert.Nil(t, overallCreds)
-
-	// Test Only env
-	os.Setenv("SAUCE_USERNAME", "envUsername")
-	os.Setenv("SAUCE_ACCESS_KEY", "envAccessKey")
-	envCreds = FromEnv()
-	fileCreds = FromFile()
-	overallCreds = Get()
-	assert.Nil(t, fileCreds)
-	assert.NotNil(t, envCreds)
-	assert.NotNil(t, overallCreds)
-	assert.Equal(t, envCreds.Username, "envUsername")
-	assert.Equal(t, envCreds.AccessKey, "envAccessKey")
-	assert.Equal(t, overallCreds.Username, "envUsername")
-	assert.Equal(t, overallCreds.AccessKey, "envAccessKey")
-
-	tmpDir := os.TempDir()
-	os.Setenv("USERPROFILE", tmpDir)
-	os.Setenv("HOME", tmpDir)
-	toSaveCreds := Credentials{
-		Username: "fileUsername",
-		AccessKey: "fileAccessKey",
+func TestFromEnv(t *testing.T) {
+	tests := []struct {
+		name       string
+		beforeTest func()
+		want       Credentials
+	}{
+		{
+			name: "env vars exist",
+			beforeTest: func() {
+				_ = os.Setenv("SAUCE_USERNAME", "saucebot")
+				_ = os.Setenv("SAUCE_ACCESS_KEY", "123")
+			},
+			want: Credentials{
+				Username:  "saucebot",
+				AccessKey: "123",
+				Source:    "environment variables",
+			},
+		},
+		{
+			name: "env vars don't exist",
+			beforeTest: func() {
+				_ = os.Unsetenv("SAUCE_USERNAME")
+				_ = os.Unsetenv("SAUCE_ACCESS_KEY")
+			},
+			want: Credentials{
+				Source: "environment variables",
+			},
+		},
 	}
-	err := toSaveCreds.Store()
-	assert.Nil(t, err)
-
-	// Removes .sauce folder from temp folder
-	defer func() {
-		credentialsTmpDir, _ := getCredentialsFolderPath()
-		os.RemoveAll(credentialsTmpDir)
-	}()
-
-	// Test File & Env
-	envCreds = FromEnv()
-	fileCreds = FromFile()
-	overallCreds = Get()
-	assert.NotNil(t, fileCreds)
-	assert.NotNil(t, envCreds)
-	assert.NotNil(t, overallCreds)
-
-	assert.Equal(t, envCreds.Username, "envUsername")
-	assert.Equal(t, envCreds.AccessKey, "envAccessKey")
-	assert.Equal(t, fileCreds.Username, "fileUsername")
-	assert.Equal(t, fileCreds.AccessKey, "fileAccessKey")
-	assert.Equal(t, overallCreds.Username, "envUsername")
-	assert.Equal(t, overallCreds.AccessKey, "envAccessKey")
-
-	// Test Only file
-	os.Unsetenv("SAUCE_USERNAME")
-	os.Unsetenv("SAUCE_ACCESS_KEY")
-	envCreds = FromEnv()
-	fileCreds = FromFile()
-	overallCreds = Get()
-	assert.NotNil(t, fileCreds)
-	assert.Nil(t, envCreds)
-	assert.NotNil(t, overallCreds)
-
-	assert.Equal(t, fileCreds.Username, "fileUsername")
-	assert.Equal(t, fileCreds.AccessKey, "fileAccessKey")
-	assert.Equal(t, overallCreds.Username, "fileUsername")
-	assert.Equal(t, overallCreds.AccessKey, "fileAccessKey")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.beforeTest()
+			if got := FromEnv(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("FromEnv() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
 
 func TestCredentials_IsValid(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-
-	httpmock.RegisterResponder(http.MethodGet, "https://saucelabs.com/rest/v1/users/validUser", httpmock.NewStringResponder(200, ""))
-	validCreds := Credentials{
-		Username: "validUser",
-		AccessKey: "validAccessKey",
+	type fields struct {
+		Username  string
+		AccessKey string
+		Source    string
 	}
-	assert.True(t, validCreds.IsValid())
-
-	httpmock.RegisterResponder(http.MethodGet, "https://saucelabs.com/rest/v1/users/invalidUser", httpmock.NewStringResponder(401, ""))
-	invalidCreds := Credentials{
-		Username: "invalidUser",
-		AccessKey: "invalidAccessKey",
+	tests := []struct {
+		name   string
+		fields fields
+		want   bool
+	}{
+		{
+			name: "all set",
+			fields: fields{
+				Username:  "saucebot",
+				AccessKey: "123",
+			},
+			want: true,
+		},
+		{
+			name: "username is missing",
+			fields: fields{
+				Username:  "",
+				AccessKey: "123",
+			},
+			want: false,
+		},
+		{
+			name: "access key is missing",
+			fields: fields{
+				Username:  "saucebot",
+				AccessKey: "",
+			},
+			want: false,
+		},
+		{
+			name:   "everything is missing",
+			fields: fields{},
+			want:   false,
+		},
 	}
-	assert.False(t, invalidCreds.IsValid())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Credentials{
+				Username:  tt.fields.Username,
+				AccessKey: tt.fields.AccessKey,
+				Source:    tt.fields.Source,
+			}
+			if got := c.IsValid(); got != tt.want {
+				t.Errorf("IsValid() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
+func TestFromFile(t *testing.T) {
+	// put everything in safe location we can clean up later
+	tempDir, err := os.MkdirTemp("", "saucectl-creds-test")
+	if err != nil {
+		t.Errorf("Failed to create temp dir: %v", err)
+	}
+	defer func() {
+		_ = os.RemoveAll(tempDir)
+	}()
+
+	type args struct {
+		path string
+	}
+	tests := []struct {
+		name       string
+		args       args
+		beforeTest func()
+		want       Credentials
+	}{
+		{
+			name: "creds exist",
+			args: args{
+				path: filepath.Join(tempDir, "credilicious.yml"),
+			},
+			beforeTest: func() {
+				c := Credentials{
+					Username:  "saucebot",
+					AccessKey: "123",
+				}
+				if err := toFile(c, filepath.Join(tempDir, "credilicious.yml")); err != nil {
+					t.Errorf("Failed to create credentials file: %v", err)
+				}
+			},
+			want: Credentials{
+				Username:  "saucebot",
+				AccessKey: "123",
+			},
+		},
+		{
+			name: "creds don't exist",
+			args: args{
+				path: filepath.Join(tempDir, "you-shall-not-find-me.yml"),
+			},
+			beforeTest: func() {},
+			want:       Credentials{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.beforeTest()
+			if got := fromFile(tt.args.path); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("FromFile() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_defaultFilepath(t *testing.T) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		t.Errorf("Unable to determine home directory: %v", err)
+	}
+
+	tests := []struct {
+		name string
+		want string
+	}{
+		{
+			name: "a file at home",
+			want: filepath.Join(home, ".sauce", "credentials.yml"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := defaultFilepath(); got != tt.want {
+				t.Errorf("defaultFilepath() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

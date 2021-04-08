@@ -224,13 +224,9 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 			Msg("File mounted")
 	}
 
-	username := ""
-	accessKey := ""
-	if creds := credentials.Get(); creds != nil {
-		username = creds.Username
-		accessKey = creds.AccessKey
-		log.Info().Str("suite", options.SuiteName).Msgf("Using credentials set by %s", creds.Source)
-	}
+	creds := credentials.Get()
+	username := creds.Username
+	accessKey := creds.AccessKey
 
 	hostConfig := &container.HostConfig{
 		PortBindings: portBindings,

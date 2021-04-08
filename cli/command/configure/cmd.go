@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	serrors "github.com/saucelabs/saucectl/internal/errors"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"os"
 	"strings"
 
@@ -43,20 +44,11 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	return cmd
 }
 
-// explainHowToObtainCredentials explains how to get credentials
-func explainHowToObtainCredentials() {
-	fmt.Println(`
-Don't have an account? Signup here:
-https://bit.ly/saucectl-signup
-
-Already have an account? Get your username and access key here:
-https://app.saucelabs.com/user-settings`)
-}
-
 // interactiveConfiguration expect user to manually type-in its credentials
-func interactiveConfiguration() (*credentials.Credentials, error) {
-	explainHowToObtainCredentials()
-	creds := getDefaultCredentials()
+func interactiveConfiguration() (credentials.Credentials, error) {
+	fmt.Println(msg.SignupMessage)
+
+	creds := credentials.Get()
 
 	println("") // visual paragraph break
 	qs := []*survey.Question{
@@ -69,11 +61,11 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 			Validate: func(val interface{}) error {
 				str, ok := val.(string)
 				if !ok {
-					return errors.New("invalid username. Check it here: https://app.saucelabs.com/user-settings")
+					return errors.New("invalid username")
 				}
 				str = strings.TrimSpace(str)
 				if str == "" {
-					return errors.New("you need to type a username. Get yours here: https://app.saucelabs.com/user-settings")
+					return errors.New("you need to type a username")
 
 				}
 				return nil
@@ -88,11 +80,11 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 			Validate: func(val interface{}) error {
 				str, ok := val.(string)
 				if !ok {
-					return errors.New("invalid access key. Check it here: https://app.saucelabs.com/user-settings")
+					return errors.New("invalid access key")
 				}
 				str = strings.TrimSpace(str)
 				if str == "" {
-					return errors.New("you need to type an access key. Get yours here: https://app.saucelabs.com/user-settings")
+					return errors.New("you need to type an access key")
 
 				}
 				return nil
@@ -100,23 +92,22 @@ func interactiveConfiguration() (*credentials.Credentials, error) {
 		},
 	}
 
-	if err := survey.Ask(qs, creds); err != nil {
-		return nil, err
+	if err := survey.Ask(qs, &creds); err != nil {
+		return creds, err
 	}
-
-	fmt.Printf("\n\n")
+	println() // visual paragraph break
 	return creds, nil
 }
 
 // Run starts the configure command
 func Run() error {
-	var creds *credentials.Credentials
+	var creds credentials.Credentials
 	var err error
 
 	if cliUsername == "" && cliAccessKey == "" {
 		creds, err = interactiveConfiguration()
 	} else {
-		creds = &credentials.Credentials{
+		creds = credentials.Credentials{
 			Username:  cliUsername,
 			AccessKey: cliAccessKey,
 		}
@@ -129,23 +120,9 @@ func Run() error {
 		log.Error().Msg("The provided credentials appear to be invalid and will NOT be saved.")
 		return fmt.Errorf("invalid credentials provided")
 	}
-	if err := creds.Store(); err != nil {
+	if err := credentials.ToFile(creds); err != nil {
 		return fmt.Errorf("unable to save credentials: %s", err)
 	}
 	println("You're all set!")
 	return nil
-}
-
-// getDefaultCredentials returns first the file credentials, then the one founded in the env.
-func getDefaultCredentials() *credentials.Credentials {
-	fileCreds := credentials.FromFile()
-	if fileCreds != nil {
-		return fileCreds
-	}
-
-	envCreds := credentials.FromEnv()
-	if envCreds != nil {
-		return envCreds
-	}
-	return &credentials.Credentials{}
 }

@@ -4,134 +4,112 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/yaml"
-	"golang.org/x/net/context"
 	yamlbase "gopkg.in/yaml.v2"
-	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 // Credentials contains a set of Username + AccessKey for SauceLabs.
 type Credentials struct {
 	Username  string `yaml:"username"`
 	AccessKey string `yaml:"accessKey"`
-	Source    string
+	Source    string `yaml:"-"`
 }
 
-// Get returns the currently configured credentials (env is prioritary vs. file).
-func Get() *Credentials {
-	if envCredentials := FromEnv(); envCredentials != nil {
-		return envCredentials
+// Get returns the configured credentials.
+// Effectively a covenience wrapper around FromEnv, followed by a call to FromFile.
+//
+// The lookup order is:
+//  1. Environment variables (see FromEnv)
+//  2. Credentials file (see FromFile)
+func Get() Credentials {
+	if c := FromEnv(); c.IsValid() {
+		return c
 	}
+
 	return FromFile()
 }
 
 // FromEnv reads the credentials from the user environment.
-func FromEnv() *Credentials {
-	username, usernamePresence := os.LookupEnv("SAUCE_USERNAME")
-	accessKey, accessKeyPresence := os.LookupEnv("SAUCE_ACCESS_KEY")
-
-	if usernamePresence && accessKeyPresence && len(username) > 0 && len(accessKey) > 0 {
-		return &Credentials{
-			Username:  username,
-			AccessKey: accessKey,
-			Source: "environment variables",
-		}
+func FromEnv() Credentials {
+	return Credentials{
+		Username:  os.Getenv("SAUCE_USERNAME"),
+		AccessKey: os.Getenv("SAUCE_ACCESS_KEY"),
+		Source:    "environment variables",
 	}
-	return nil
 }
 
-// FromFile reads the credentials from the user credentials file.
-func FromFile() *Credentials {
-	var c *Credentials
+// FromFile reads the credentials that stored in the default file location.
+func FromFile() Credentials {
+	return fromFile(defaultFilepath())
+}
 
-	folderPath, err := getCredentialsFolderPath()
+// fromFile reads the credentials from path.
+func fromFile(path string) Credentials {
+	yamlFile, err := os.Open(path)
 	if err != nil {
-		return nil
-	}
-	filePath, err := getCredentialsFilePath()
-	if err != nil {
-		return nil
-	}
-
-	if _, err := os.Stat(folderPath); err != nil {
-		log.Debug().Msgf("%s: config folder does not exists: %v", filePath, err)
-		return nil
-	}
-
-	yamlFile, err := os.ReadFile(filePath)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			log.Info().Msgf("failed to read credentials: %v", err)
+		if os.IsNotExist(err) {
+			// not a real error but a valid usecase when credentials have not been persisted yet
+			return Credentials{}
 		}
-		return nil
+
+		log.Error().Msgf("failed to read credentials: %v", err)
+		return Credentials{}
+	}
+	defer yamlFile.Close()
+
+	var c Credentials
+	if err = yamlbase.NewDecoder(yamlFile).Decode(&c); err != nil {
+		log.Error().Msgf("failed to parse credentials: %v", err)
+		return Credentials{}
 	}
 
-	if err = yamlbase.Unmarshal(yamlFile, &c); err != nil {
-		log.Info().Msgf("failed to parse credentials: %v", err)
-		return nil
-	}
-	c.Source, err = getCredentialsFilePath()
 	return c
 }
 
-func getCredentialsFolderPath() (string, error) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(homeDir, ".sauce"), nil
+// ToFile stores the provided credentials in the default file location.
+func ToFile(c Credentials) error {
+	return toFile(c, defaultFilepath())
 }
 
-func getCredentialsFilePath() (string, error) {
-	credentialsDir, err := getCredentialsFolderPath()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(credentialsDir, "credentials.yml"), nil
-}
-
-// Store stores the provided credentials into the user config.
-func (credentials *Credentials) Store() error {
-	folderPath, err := getCredentialsFolderPath()
-	if err != nil {
-		return nil
-	}
-	filePath, err := getCredentialsFilePath()
-	if err != nil {
-		return nil
-	}
-
-	err = os.MkdirAll(folderPath, 0700)
-	if err != nil {
+// toFile stores the provided credentials into the file at path.
+func toFile(c Credentials, path string) error {
+	if os.MkdirAll(filepath.Dir(path), 0700) != nil {
 		return fmt.Errorf("unable to create configuration folder")
 	}
-	return yaml.WriteFile(filePath, credentials, 0600)
+	return yaml.WriteFile(path, c, 0600)
 }
 
-// IsEmpty ensure credentials are not set
-func (credentials *Credentials) IsEmpty() bool {
-	return credentials.AccessKey == "" || credentials.Username == ""
+// defaultFilepath returns the default location of the credentials file.
+// It will be based on the user home directory, if defined, or under the current working directory otherwise.
+func defaultFilepath() string {
+	homeDir, _ := os.UserHomeDir()
+	return filepath.Join(homeDir, ".sauce", "credentials.yml")
+}
+
+// IsEmpty checks whether the credentials, i.e. username and access key are not empty.
+// Returns false if even one of the credentials is empty.
+func (c *Credentials) IsEmpty() bool {
+	return c.AccessKey == "" || c.Username == ""
 }
 
 // IsValid validates that the credentials are valid.
-func (credentials *Credentials) IsValid() bool {
-	if  credentials.IsEmpty() {
-		return false
-	}
-	httpClient := http.Client{}
-	ctx, _ := context.WithTimeout(context.Background(), 5 * time.Second)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://saucelabs.com/rest/v1/users/" + credentials.Username, nil)
-	if err != nil {
-		log.Error().Msgf("unable to check credentials")
-		return false
-	}
-	req.SetBasicAuth(credentials.Username, credentials.AccessKey)
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		log.Error().Msgf("unable to check credentials")
-		return false
-	}
-	return resp.StatusCode == 200
+func (c *Credentials) IsValid() bool {
+	return !c.IsEmpty()
+	// FIXME this is wrong, since credentials can be region (or cluster) specific, e.g. staging
+	// FIXME nor should a simple struct be calling out to a webservice
+	//httpClient := http.Client{}
+	//ctx, _ := context.WithTimeout(context.Background(), 5 * time.Second)
+	//req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://saucelabs.com/rest/v1/users/" + c.Username, nil)
+	//if err != nil {
+	//	log.Error().Msgf("unable to check c")
+	//	return false
+	//}
+	//req.SetBasicAuth(c.Username, c.AccessKey)
+	//resp, err := httpClient.Do(req)
+	//if err != nil {
+	//	log.Error().Msgf("unable to check c")
+	//	return false
+	//}
+	//return resp.StatusCode == 200
 }

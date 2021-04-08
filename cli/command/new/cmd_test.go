@@ -30,10 +30,10 @@ func TestUpdateRegion(t *testing.T) {
 
 	var conf MockProject
 	f, err := os.Open(dir.Join("config.yml"))
-	defer f.Close()
 	if err != nil {
 		t.Errorf("failed to open config file: %v", err)
 	}
+	defer f.Close()
 	if err = yaml.NewDecoder(f).Decode(&conf); err != nil {
 		t.Errorf("failed to parse project config: %v", err)
 	}

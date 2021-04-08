@@ -56,6 +56,12 @@ const SauceLogo = `
   ____) / ____ \ |__| | |____| |____  | |____| |___| |__| | |__| | |__| |
  |_____/_/    \_\____/ \_____|______|  \_____|______\____/ \____/|_____/`
 
+// SignupMessage explains how to obtain a Sauce Labs account and where to find the access key.
+const SignupMessage = `Don't have an account? Signup here:
+https://bit.ly/saucectl-signup
+
+Already have an account? Get your username and access key here:
+https://app.saucelabs.com/user-settings`
 
 // LogTestSuccess prints out a test success summary statement.
 func LogTestSuccess() {

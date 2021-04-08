@@ -78,10 +78,11 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 // Run starts the new command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	creds := credentials.Get()
-	if creds == nil {
-		color.Red("\nsaucectl requires a valid Sauce Labs account to run.")
-		fmt.Println("\nTo configure your Sauce Labs account use:" +
-			"\n$ saucectl configure\n")
+	if !creds.IsValid() {
+		color.Red("\nSauceCTL requires a valid Sauce Labs account!\n\n")
+		fmt.Println(`Set up your credentials by running:
+> saucectl configure`)
+		println()
 		return fmt.Errorf("no credentials set")
 	}
 
@@ -110,7 +111,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 			Timeout: 10 * time.Second,
 		},
 		URL:         r.APIBaseURL(),
-		Credentials: *credentials.Get(),
+		Credentials: credentials.Get(),
 	}
 
 	m, err := tc.Search(cmd.Context(), framework.SearchOptions{

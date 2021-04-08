@@ -70,10 +70,10 @@ func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
 	f, err := os.Open(cfgPath)
-	defer f.Close()
 	if err != nil {
 		return p, fmt.Errorf("failed to locate project config: %v", err)
 	}
+	defer f.Close()
 	if err = yaml.NewDecoder(f).Decode(&p); err != nil {
 		return p, fmt.Errorf("failed to parse project config: %v", err)
 	}
