@@ -2,6 +2,7 @@ package credentials
 
 import (
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 )
@@ -95,6 +96,87 @@ func TestCredentials_IsValid(t *testing.T) {
 			}
 			if got := c.IsValid(); got != tt.want {
 				t.Errorf("IsValid() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFromFile(t *testing.T) {
+	// put everything in safe location we can clean up later
+	tempDir, err := os.MkdirTemp("", "saucectl-creds-test")
+	if err != nil {
+		t.Errorf("Failed to create temp dir: %v", err)
+	}
+	defer func() {
+		_ = os.RemoveAll(tempDir)
+	}()
+
+	type args struct {
+		path string
+	}
+	tests := []struct {
+		name       string
+		args       args
+		beforeTest func()
+		want       Credentials
+	}{
+		{
+			name: "creds exist",
+			args: args{
+				path: filepath.Join(tempDir, "credilicious.yml"),
+			},
+			beforeTest: func() {
+				c := Credentials{
+					Username:  "saucebot",
+					AccessKey: "123",
+				}
+				if err := toFile(c, filepath.Join(tempDir, "credilicious.yml")); err != nil {
+					t.Errorf("Failed to create credentials file: %v", err)
+				}
+			},
+			want: Credentials{
+				Username:  "saucebot",
+				AccessKey: "123",
+			},
+		},
+		{
+			name: "creds don't exist",
+			args: args{
+				path: filepath.Join(tempDir, "you-shall-not-find-me.yml"),
+			},
+			beforeTest: func() {},
+			want:       Credentials{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.beforeTest()
+			if got := fromFile(tt.args.path); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("FromFile() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_defaultFilepath(t *testing.T) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		t.Errorf("Unable to determine home directory: %v", err)
+	}
+
+	tests := []struct {
+		name string
+		want string
+	}{
+		{
+			name: "a file at home",
+			want: filepath.Join(home, ".sauce", "credentials.yml"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := defaultFilepath(); got != tt.want {
+				t.Errorf("defaultFilepath() = %v, want %v", got, tt.want)
 			}
 		})
 	}

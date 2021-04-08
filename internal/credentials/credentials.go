@@ -17,20 +17,17 @@ type Credentials struct {
 }
 
 // Get returns the configured credentials.
+// Effectively a covenience wrapper around FromEnv, followed by a call to FromFile.
 //
 // The lookup order is:
-//  1. Environment variables
-//  2. Credentials file
+//  1. Environment variables (see FromEnv)
+//  2. Credentials file (see FromFile)
 func Get() Credentials {
 	if c := FromEnv(); c.IsValid() {
 		return c
 	}
 
-	p, err := getFilepath()
-	if err != nil {
-		return Credentials{}
-	}
-	return FromFile(p)
+	return FromFile()
 }
 
 // FromEnv reads the credentials from the user environment.
@@ -42,14 +39,21 @@ func FromEnv() Credentials {
 	}
 }
 
-// FromFile reads the credentials from path.
-func FromFile(path string) Credentials {
+// FromFile reads the credentials that stored in the default file location.
+func FromFile() Credentials {
+	return fromFile(defaultFilepath())
+}
+
+// fromFile reads the credentials from path.
+func fromFile(path string) Credentials {
 	yamlFile, err := os.Open(path)
 	if err != nil {
-		if !os.IsNotExist(err) {
-			log.Error().Msgf("failed to read credentials: %v", err)
+		if os.IsNotExist(err) {
+			// not a real error but a valid usecase when credentials have not been persisted yet
 			return Credentials{}
 		}
+
+		log.Error().Msgf("failed to read credentials: %v", err)
 		return Credentials{}
 	}
 
@@ -58,32 +62,28 @@ func FromFile(path string) Credentials {
 		log.Error().Msgf("failed to parse credentials: %v", err)
 		return Credentials{}
 	}
-	c.Source = path
 
 	return c
 }
 
-func getFilepath() (string, error) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-
-	return filepath.Join(homeDir, ".sauce", "credentials.yml"), nil
+// ToFile stores the provided credentials in the default file location.
+func ToFile(c Credentials) error {
+	return toFile(c, defaultFilepath())
 }
 
-// Store stores the provided credentials into the user config.
-func (c *Credentials) Store() error {
-	filePath, err := getFilepath() // FIXME can be dynamic path, don't rely on this function
-	if err != nil {
-		return nil
-	}
-
-	err = os.MkdirAll(filepath.Dir(filePath), 0700)
-	if err != nil {
+// toFile stores the provided credentials into the file at path.
+func toFile(c Credentials, path string) error {
+	if os.MkdirAll(filepath.Dir(path), 0700) != nil {
 		return fmt.Errorf("unable to create configuration folder")
 	}
-	return yaml.WriteFile(filePath, c, 0600)
+	return yaml.WriteFile(path, c, 0600)
+}
+
+// defaultFilepath returns the default location of the credentials file.
+// It will be based on the user home directory, if defined, or under the current working directory otherwise.
+func defaultFilepath() string {
+	homeDir, _ := os.UserHomeDir()
+	return filepath.Join(homeDir, ".sauce", "credentials.yml")
 }
 
 // IsEmpty checks whether the credentials, i.e. username and access key are not empty.
@@ -96,6 +96,7 @@ func (c *Credentials) IsEmpty() bool {
 func (c *Credentials) IsValid() bool {
 	return !c.IsEmpty()
 	// FIXME this is wrong, since credentials are region specific
+	// FIXME nor should a simple struct be calling out to a webservice
 	//httpClient := http.Client{}
 	//ctx, _ := context.WithTimeout(context.Background(), 5 * time.Second)
 	//req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://saucelabs.com/rest/v1/users/" + c.Username, nil)
