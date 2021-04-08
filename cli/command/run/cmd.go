@@ -46,8 +46,6 @@ var (
 	testTimeout    int
 	regionFlag     string
 	env            map[string]string
-	parallel       bool
-	ciBuildID      string
 	sauceAPI       string
 	suiteName      string
 	testEnv        string
@@ -90,8 +88,6 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().IntVarP(&testTimeout, "timeout", "t", 0, "test timeout in seconds (default: 60sec)")
 	cmd.Flags().StringVarP(&regionFlag, "region", "r", "", "The sauce labs region. (default: us-west-1)")
 	cmd.Flags().StringToStringVarP(&env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
-	cmd.Flags().BoolVarP(&parallel, "parallel", "p", false, "Run tests in parallel across multiple machines.")
-	cmd.Flags().StringVar(&ciBuildID, "ci-build-id", "", "Overrides the CI dependent build ID.")
 	cmd.Flags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
 	cmd.Flags().StringVar(&suiteName, "suite", "", "Run specified test suite.")
 	cmd.Flags().BoolVar(&testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
@@ -109,10 +105,6 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	_ = cmd.Flags().MarkHidden("sauce-api")
 	_ = cmd.Flags().MarkHidden("runner-version")
 	_ = cmd.Flags().MarkHidden("experiment")
-
-	// Hide documented flags that aren't fully released yet or WIP.
-	_ = cmd.Flags().MarkHidden("parallel")    // WIP.
-	_ = cmd.Flags().MarkHidden("ci-build-id") // Related to 'parallel'. WIP.
 
 	return cmd
 }
