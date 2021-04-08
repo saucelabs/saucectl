@@ -96,7 +96,7 @@ func (c *Credentials) IsEmpty() bool {
 // IsValid validates that the credentials are valid.
 func (c *Credentials) IsValid() bool {
 	return !c.IsEmpty()
-	// FIXME this is wrong, since credentials are region specific
+	// FIXME this is wrong, since credentials can be region (or cluster) specific, e.g. staging
 	// FIXME nor should a simple struct be calling out to a webservice
 	//httpClient := http.Client{}
 	//ctx, _ := context.WithTimeout(context.Background(), 5 * time.Second)
