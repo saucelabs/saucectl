@@ -31,7 +31,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/streams"
-	"github.com/saucelabs/saucectl/internal/utils"
 )
 
 var (
@@ -326,10 +325,6 @@ func (handler *Handler) CopyToContainer(ctx context.Context, containerID string,
 
 // CopyFromContainer downloads a file from the testrunner container
 func (handler *Handler) CopyFromContainer(ctx context.Context, srcContainerID string, srcPath string, dstPath string) error {
-	if err := utils.ValidateOutputPath(dstPath); err != nil {
-		return err
-	}
-
 	// if client requests to follow symbol link, then must decide target file to be copied
 	var rebaseName string
 	srcStat, err := handler.client.ContainerStatPath(ctx, srcContainerID, srcPath)
