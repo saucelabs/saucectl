@@ -39,17 +39,13 @@ func FromEnv() Credentials {
 
 // FromFile reads the credentials from the user credentials file.
 func FromFile() Credentials {
-	folderPath, err := getCredentialsFolderPath()
-	if err != nil {
-		return Credentials{}
-	}
-	filePath, err := getCredentialsFilePath()
+	filePath, err := getFilepath()
 	if err != nil {
 		return Credentials{}
 	}
 
-	if _, err := os.Stat(folderPath); err != nil {
-		log.Debug().Msgf("%s: config folder does not exists: %v", filePath, err)
+	if _, err := os.Stat(filepath.Dir(filePath)); err != nil {
+		log.Debug().Msgf("%s: config folder does not exists: %v", filepath.Dir(filePath), err)
 		return Credentials{}
 	}
 
@@ -72,34 +68,23 @@ func FromFile() Credentials {
 	return c
 }
 
-func getCredentialsFolderPath() (string, error) {
+func getFilepath() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(homeDir, ".sauce"), nil
-}
 
-func getCredentialsFilePath() (string, error) {
-	credentialsDir, err := getCredentialsFolderPath()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(credentialsDir, "credentials.yml"), nil
+	return filepath.Join(homeDir, ".sauce", "credentials.yml"), nil
 }
 
 // Store stores the provided credentials into the user config.
 func (c *Credentials) Store() error {
-	folderPath, err := getCredentialsFolderPath()
-	if err != nil {
-		return nil
-	}
-	filePath, err := getCredentialsFilePath()
+	filePath, err := getFilepath()
 	if err != nil {
 		return nil
 	}
 
-	err = os.MkdirAll(folderPath, 0700)
+	err = os.MkdirAll(filepath.Dir(filePath), 0700)
 	if err != nil {
 		return fmt.Errorf("unable to create configuration folder")
 	}
