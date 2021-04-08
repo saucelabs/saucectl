@@ -56,6 +56,7 @@ func fromFile(path string) Credentials {
 		log.Error().Msgf("failed to read credentials: %v", err)
 		return Credentials{}
 	}
+	defer yamlFile.Close()
 
 	var c Credentials
 	if err = yamlbase.NewDecoder(yamlFile).Decode(&c); err != nil {
