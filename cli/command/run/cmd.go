@@ -46,8 +46,6 @@ var (
 	testTimeout    int
 	regionFlag     string
 	env            map[string]string
-	parallel       bool
-	ciBuildID      string
 	sauceAPI       string
 	suiteName      string
 	testEnv        string
@@ -90,8 +88,6 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().IntVarP(&testTimeout, "timeout", "t", 0, "test timeout in seconds (default: 60sec)")
 	cmd.Flags().StringVarP(&regionFlag, "region", "r", "", "The sauce labs region. (default: us-west-1)")
 	cmd.Flags().StringToStringVarP(&env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
-	cmd.Flags().BoolVarP(&parallel, "parallel", "p", false, "Run tests in parallel across multiple machines.")
-	cmd.Flags().StringVar(&ciBuildID, "ci-build-id", "", "Overrides the CI dependent build ID.")
 	cmd.Flags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
 	cmd.Flags().StringVar(&suiteName, "suite", "", "Run specified test suite.")
 	cmd.Flags().BoolVar(&testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
@@ -109,10 +105,6 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	_ = cmd.Flags().MarkHidden("sauce-api")
 	_ = cmd.Flags().MarkHidden("runner-version")
 	_ = cmd.Flags().MarkHidden("experiment")
-
-	// Hide documented flags that aren't fully released yet or WIP.
-	_ = cmd.Flags().MarkHidden("parallel")    // WIP.
-	_ = cmd.Flags().MarkHidden("ci-build-id") // Related to 'parallel'. WIP.
 
 	return cmd
 }
@@ -144,21 +136,36 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return 1, err
 	}
 
+	tc := testcomposer.Client{
+		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
+		URL:         "", // updated later once region is determined
+		Credentials: creds,
+	}
+
+	rs := resto.Client{
+		HTTPClient: &http.Client{Timeout: restoTimeout},
+		URL:        "", // updated later once region is determined
+		Username:   creds.Username,
+		AccessKey:  creds.AccessKey,
+	}
+
+	as := appstore.New("", creds.Username, creds.AccessKey, appStoreTimeout)
+
 	// TODO switch statement with pre-constructed type definition structs?
 	if d.Kind == config.KindCypress && d.APIVersion == config.VersionV1Alpha {
-		return runCypress(cmd)
+		return runCypress(cmd, tc, rs, as)
 	}
 	if d.Kind == config.KindPlaywright && d.APIVersion == config.VersionV1Alpha {
-		return runPlaywright(cmd)
+		return runPlaywright(cmd, tc, rs, as)
 	}
 	if d.Kind == config.KindTestcafe && d.APIVersion == config.VersionV1Alpha {
-		return runTestcafe(cmd)
+		return runTestcafe(cmd, tc, rs, as)
 	}
 	if d.Kind == config.KindPuppeteer && d.APIVersion == config.VersionV1Alpha {
-		return runPuppeteer(cmd)
+		return runPuppeteer(cmd, tc)
 	}
 	if d.Kind == config.KindEspresso && d.APIVersion == config.VersionV1Alpha {
-		return runEspresso(cmd)
+		return runEspresso(cmd, tc, rs, as)
 	}
 
 	return 1, errors.New("unknown framework configuration")
@@ -177,7 +184,7 @@ func printTestEnv() {
 	}
 }
 
-func runCypress(cmd *cobra.Command) (int, error) {
+func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
 	p, err := cypress.FromFile(cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -217,25 +224,21 @@ func runCypress(cmd *cobra.Command) (int, error) {
 		return 1, err
 	}
 
-	creds := credentials.Get()
-
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
 		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
 		return 1, errors.New("no sauce region set")
 	}
 
-	tc := testcomposer.Client{
-		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
-		URL:         regio.APIBaseURL(),
-		Credentials: creds,
-	}
+	tc.URL = regio.APIBaseURL()
+	rs.URL = regio.APIBaseURL()
+	as.URL = regio.APIBaseURL()
 
 	switch testEnv {
 	case "docker":
 		return runCypressInDocker(p, tc)
 	case "sauce":
-		return runCypressInSauce(p, regio, creds, tc)
+		return runCypressInSauce(p, regio, tc, rs, as)
 	default:
 		return 1, errors.New("unsupported test environment")
 	}
@@ -251,27 +254,18 @@ func runCypressInDocker(p cypress.Project, testco testcomposer.Client) (int, err
 	return cd.RunProject()
 }
 
-func runCypressInSauce(p cypress.Project, regio region.Region, creds credentials.Credentials, testco testcomposer.Client) (int, error) {
+func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
 	log.Info().Msg("Running Cypress in Sauce Labs")
-
-	s := appstore.New(regio.APIBaseURL(), creds.Username, creds.AccessKey, appStoreTimeout)
-
-	rsto := resto.Client{
-		HTTPClient: &http.Client{Timeout: restoTimeout},
-		URL:        regio.APIBaseURL(),
-		Username:   creds.Username,
-		AccessKey:  creds.AccessKey,
-	}
 
 	r := saucecloud.CypressRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader: s,
-			JobStarter:      &testco,
-			JobReader:       &rsto,
-			JobStopper:      &rsto,
-			CCYReader:       &rsto,
-			TunnelService:   &rsto,
+			ProjectUploader: as,
+			JobStarter:      &tc,
+			JobReader:       &rs,
+			JobStopper:      &rs,
+			CCYReader:       &rs,
+			TunnelService:   &rs,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
 		},
@@ -279,7 +273,7 @@ func runCypressInSauce(p cypress.Project, regio region.Region, creds credentials
 	return r.RunProject()
 }
 
-func runPlaywright(cmd *cobra.Command) (int, error) {
+func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
 	p, err := playwright.FromFile(cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -315,25 +309,21 @@ func runPlaywright(cmd *cobra.Command) (int, error) {
 		}
 	}
 
-	creds := credentials.Get()
-
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
 		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
 		return 1, errors.New("no sauce region set")
 	}
 
-	tc := testcomposer.Client{
-		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
-		URL:         regio.APIBaseURL(),
-		Credentials: creds,
-	}
+	tc.URL = regio.APIBaseURL()
+	rs.URL = regio.APIBaseURL()
+	as.URL = regio.APIBaseURL()
 
 	switch testEnv {
 	case "docker":
 		return runPlaywrightInDocker(p, tc)
 	case "sauce":
-		return runPlaywrightInSauce(p, regio, creds, tc)
+		return runPlaywrightInSauce(p, regio, tc, rs, as)
 	default:
 		return 1, errors.New("unsupported test environment")
 	}
@@ -349,27 +339,18 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client) (in
 	return cd.RunProject()
 }
 
-func runPlaywrightInSauce(p playwright.Project, regio region.Region, creds credentials.Credentials, testco testcomposer.Client) (int, error) {
+func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
 	log.Info().Msg("Running Playwright in Sauce Labs")
-
-	s := appstore.New(regio.APIBaseURL(), creds.Username, creds.AccessKey, appStoreTimeout)
-
-	rsto := resto.Client{
-		HTTPClient: &http.Client{Timeout: restoTimeout},
-		URL:        regio.APIBaseURL(),
-		Username:   creds.Username,
-		AccessKey:  creds.AccessKey,
-	}
 
 	r := saucecloud.PlaywrightRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader: s,
-			JobStarter:      &testco,
-			JobReader:       &rsto,
-			JobStopper:      &rsto,
-			CCYReader:       &rsto,
-			TunnelService:   &rsto,
+			ProjectUploader: as,
+			JobStarter:      &tc,
+			JobReader:       &rs,
+			JobStopper:      &rs,
+			CCYReader:       &rs,
+			TunnelService:   &rs,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
 		},
@@ -377,7 +358,7 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, creds crede
 	return r.RunProject()
 }
 
-func runTestcafe(cmd *cobra.Command) (int, error) {
+func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
 	p, err := testcafe.FromFile(cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -410,7 +391,6 @@ func runTestcafe(cmd *cobra.Command) (int, error) {
 			return 1, err
 		}
 	}
-	creds := credentials.Get()
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
@@ -418,17 +398,15 @@ func runTestcafe(cmd *cobra.Command) (int, error) {
 		return 1, errors.New("no sauce region set")
 	}
 
-	tc := testcomposer.Client{
-		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
-		URL:         regio.APIBaseURL(),
-		Credentials: creds,
-	}
+	tc.URL = regio.APIBaseURL()
+	rs.URL = regio.APIBaseURL()
+	as.URL = regio.APIBaseURL()
 
 	switch testEnv {
 	case "docker":
 		return runTestcafeInDocker(p, tc)
 	case "sauce":
-		return runTestcafeInCloud(p, regio, creds, tc)
+		return runTestcafeInCloud(p, regio, tc, rs, as)
 	default:
 		return 1, errors.New("unsupported test enviornment")
 	}
@@ -444,27 +422,18 @@ func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client) (int, e
 	return cd.RunProject()
 }
 
-func runTestcafeInCloud(p testcafe.Project, regio region.Region, creds credentials.Credentials, testco testcomposer.Client) (int, error) {
+func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
 	log.Info().Msg("Running Testcafe in Sauce Labs")
-
-	s := appstore.New(regio.APIBaseURL(), creds.Username, creds.AccessKey, appStoreTimeout)
-
-	rsto := resto.Client{
-		HTTPClient: &http.Client{Timeout: restoTimeout},
-		URL:        regio.APIBaseURL(),
-		Username:   creds.Username,
-		AccessKey:  creds.AccessKey,
-	}
 
 	r := saucecloud.TestcafeRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader: s,
-			JobStarter:      &testco,
-			JobReader:       &rsto,
-			JobStopper:      &rsto,
-			CCYReader:       &rsto,
-			TunnelService:   &rsto,
+			ProjectUploader: as,
+			JobStarter:      &tc,
+			JobReader:       &rs,
+			JobStopper:      &rs,
+			CCYReader:       &rs,
+			TunnelService:   &rs,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
 		},
@@ -472,7 +441,7 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, creds credentia
 	return r.RunProject()
 }
 
-func runEspresso(cmd *cobra.Command) (int, error) {
+func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
 	p, err := espresso.FromFile(cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -482,8 +451,6 @@ func runEspresso(cmd *cobra.Command) (int, error) {
 	overrideCliParameters(cmd, &p.Sauce)
 
 	// TODO - add dry-run mode
-	creds := credentials.Get()
-
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
 		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
@@ -495,41 +462,30 @@ func runEspresso(cmd *cobra.Command) (int, error) {
 		return 1, err
 	}
 
-	tc := testcomposer.Client{
-		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
-		URL:         regio.APIBaseURL(),
-		Credentials: creds,
-	}
+	tc.URL = regio.APIBaseURL()
+	rs.URL = regio.APIBaseURL()
+	as.URL = regio.APIBaseURL()
 
 	switch testEnv {
 	case "sauce":
-		return runEspressoInCloud(p, regio, creds, tc)
+		return runEspressoInCloud(p, regio, tc, rs, as)
 	default:
 		return 1, fmt.Errorf("unsupported test environment for espresso: %s", testEnv)
 	}
 }
 
-func runEspressoInCloud(p espresso.Project, regio region.Region, creds credentials.Credentials, testco testcomposer.Client) (int, error) {
+func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
 	log.Info().Msg("Running Espresso in Sauce Labs")
-
-	s := appstore.New(regio.APIBaseURL(), creds.Username, creds.AccessKey, appStoreTimeout)
-
-	rsto := resto.Client{
-		HTTPClient: &http.Client{Timeout: restoTimeout},
-		URL:        regio.APIBaseURL(),
-		Username:   creds.Username,
-		AccessKey:  creds.AccessKey,
-	}
 
 	r := saucecloud.EspressoRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader: s,
-			JobStarter:      &testco,
-			JobReader:       &rsto,
-			JobStopper:      &rsto,
-			CCYReader:       &rsto,
-			TunnelService:   &rsto,
+			ProjectUploader: as,
+			JobStarter:      &tc,
+			JobReader:       &rs,
+			JobStopper:      &rs,
+			CCYReader:       &rs,
+			TunnelService:   &rs,
 			Region:          regio,
 			ShowConsoleLog:  false,
 		},
@@ -537,7 +493,7 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, creds credentia
 	return r.RunProject()
 }
 
-func runPuppeteer(cmd *cobra.Command) (int, error) {
+func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client) (int, error) {
 	p, err := puppeteer.FromFile(cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -575,11 +531,7 @@ func runPuppeteer(cmd *cobra.Command) (int, error) {
 		return 1, errors.New("no sauce region set")
 	}
 
-	tc := testcomposer.Client{
-		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
-		URL:         regio.APIBaseURL(),
-		Credentials: credentials.Get(),
-	}
+	tc.URL = regio.APIBaseURL()
 
 	switch testEnv {
 	case "docker":
