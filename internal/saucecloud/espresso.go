@@ -84,7 +84,7 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 		close(jobOpts)
 	}()
 
-	return r.collectResults(results, jobsCount)
+	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
 }
 
 func (r *EspressoRunner) calculateJobsCount(suites []espresso.Suite) int {

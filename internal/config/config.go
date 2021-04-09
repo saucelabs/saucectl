@@ -39,10 +39,10 @@ type Device struct {
 type when string
 
 const (
-	whenFail   when = "fail"
-	whenPass   when = "pass"
-	whenNever  when = "never"
-	whenAlways when = "always"
+	WhenFail   when = "fail"
+	WhenPass   when = "pass"
+	WhenNever  when = "never"
+	WhenAlways when = "always"
 )
 
 // ArtifactDownload represents the test artifacts configuration.

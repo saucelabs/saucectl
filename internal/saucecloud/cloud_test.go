@@ -3,6 +3,7 @@ package saucecloud
 import (
 	"context"
 	"github.com/saucelabs/saucectl/internal/concurrency"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -142,7 +143,74 @@ func TestRunJobsSkipped(t *testing.T) {
 	go r.runJobs(opts, results)
 	opts <- job.StartOptions{}
 	close(opts)
-	res := <- results
+	res := <-results
 	assert.Nil(t, res.err)
 	assert.True(t, res.skipped)
+}
+
+func TestShouldDownloadArtifacts(t *testing.T) {
+	type testCase struct {
+		config config.ArtifactDownload
+		job    job.Job
+		want   bool
+	}
+	testCases := []testCase{
+		{
+			config: config.ArtifactDownload{When: config.WhenAlways},
+			job:    job.Job{ID: ""},
+			want:   false,
+		},
+		{
+			config: config.ArtifactDownload{When: config.WhenNever},
+			job:    job.Job{ID: ""},
+			want:   false,
+		},
+		{
+			config: config.ArtifactDownload{When: config.WhenAlways},
+			job:    job.Job{ID: "fake-id", Status: job.StateComplete},
+			want:   true,
+		},
+		{
+			config: config.ArtifactDownload{When: config.WhenAlways},
+			job:    job.Job{ID: "fake-id", Status: job.StateError},
+			want:   true,
+		},
+		{
+			config: config.ArtifactDownload{When: config.WhenNever},
+			job:    job.Job{ID: "fake-id", Status: job.StateComplete},
+			want:   false,
+		},
+		{
+			config: config.ArtifactDownload{When: config.WhenNever},
+			job:    job.Job{ID: "fake-id", Status: job.StateError},
+			want:   false,
+		},
+		{
+			config: config.ArtifactDownload{When: config.WhenPass},
+			job:    job.Job{ID: "fake-id", Status: job.StateComplete},
+			want:   true,
+		},
+		{
+			config: config.ArtifactDownload{When: config.WhenPass},
+			job:    job.Job{ID: "fake-id", Status: job.StateError},
+			want:   false,
+		},
+		{
+			config: config.ArtifactDownload{When: config.WhenFail},
+			job:    job.Job{ID: "fake-id", Status: job.StateComplete},
+			want:   false,
+		},
+		{
+			config: config.ArtifactDownload{When: config.WhenFail},
+			job:    job.Job{ID: "fake-id", Status: job.StateError},
+			want:   true,
+		},
+	}
+	r := CloudRunner{}
+	for _, tt := range testCases {
+		got := r.shouldDownloadArtifacts(tt.config, tt.job)
+		if tt.want != got {
+			t.Errorf("shouldDownloadArtifacts fails. Want '%v', got '%v'", tt.want, got)
+		}
+	}
 }

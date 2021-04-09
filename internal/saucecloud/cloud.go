@@ -9,18 +9,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/tunnel"
-
 	"github.com/rs/zerolog/log"
+	"github.com/ryanuber/go-glob"
+
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/concurrency"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/storage"
+	"github.com/saucelabs/saucectl/internal/tunnel"
 )
 
 // CloudRunner represents the cloud runner for the Sauce Labs cloud.
@@ -61,7 +63,7 @@ func (r *CloudRunner) createWorkerPool(num int) (chan job.StartOptions, chan res
 	return jobOpts, results
 }
 
-func (r *CloudRunner) collectResults(results chan result, expected int) bool {
+func (r *CloudRunner) collectResults(artifactsCfg config.ArtifactDownload, results chan result, expected int) bool {
 	// TODO find a better way to get the expected
 	errCount := 0
 	completed := 0
@@ -90,6 +92,7 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 		completed++
 		inProgress--
 
+		r.downloadArtifacts(artifactsCfg, res)
 		r.logSuite(res)
 
 		if res.job.ID == "" || res.err != nil {
@@ -375,4 +378,57 @@ func (r *CloudRunner) registerSkipSuitesOnSignal() chan os.Signal {
 func unregisterSignalCapture(c chan os.Signal) {
 	signal.Stop(c)
 	close(c)
+}
+
+// downloadArtifacts downloads artifact for job.
+func (r *CloudRunner) downloadArtifacts(artifactsCfg config.ArtifactDownload, res result) error {
+	if !r.shouldDownloadArtifacts(artifactsCfg, res.job) {
+		return nil
+	}
+
+	targetDir := filepath.Join(artifactsCfg.Directory, res.job.ID)
+	if err := os.MkdirAll(targetDir, 0755); err != nil {
+		return err // TODO: Add ERROR log
+	}
+
+	files, err := r.JobReader.GetJobAssetFileNames(context.Background(), res.job.ID)
+	if err != nil {
+		return err // TODO: Add ERROR log
+	}
+	for _, fileName := range files {
+		for _, pattern := range artifactsCfg.Match {
+			if glob.Glob(pattern, fileName) {
+				if err := r.doDownloadArtifact(targetDir, res.job.ID, fileName); err != nil {
+					log.Error().Err(err).Msgf("Failed to download file: %s", fileName)
+				}
+				break
+			}
+		}
+	}
+	return nil
+}
+
+func (r *CloudRunner) doDownloadArtifact(targetDir, jobID, fileName string) error {
+	fileContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), jobID, fileName)
+	if err != nil {
+		return err // TODO: Add ERROR log
+	}
+	targetFile := filepath.Join(targetDir, fileName)
+	return os.WriteFile(targetFile, fileContent, 0644)
+}
+
+func (r *CloudRunner) shouldDownloadArtifacts(artifactsCfg config.ArtifactDownload, jb job.Job) bool {
+	if jb.ID == "" {
+		return false
+	}
+	if artifactsCfg.When == config.WhenAlways {
+		return true
+	}
+	if artifactsCfg.When == config.WhenFail && jb.Status == job.StateError {
+		return true
+	}
+	if artifactsCfg.When == config.WhenPass && jb.Status == job.StateComplete {
+		return true
+	}
+	return false
 }
