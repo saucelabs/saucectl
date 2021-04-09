@@ -38,6 +38,7 @@ type Device struct {
 
 type when string
 
+// The different condition possible to download assets.
 const (
 	WhenFail   when = "fail"
 	WhenPass   when = "pass"
