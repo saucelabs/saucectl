@@ -92,7 +92,7 @@ func (r *CloudRunner) collectResults(artifactsCfg config.ArtifactDownload, resul
 		completed++
 		inProgress--
 
-		r.downloadArtifacts(artifactsCfg, res)
+		r.downloadArtifacts(artifactsCfg, res.job)
 		r.logSuite(res)
 
 		if res.job.ID == "" || res.err != nil {
@@ -381,24 +381,24 @@ func unregisterSignalCapture(c chan os.Signal) {
 }
 
 // downloadArtifacts downloads artifact for job.
-func (r *CloudRunner) downloadArtifacts(artifactsCfg config.ArtifactDownload, res result) error {
-	if !r.shouldDownloadArtifacts(artifactsCfg, res.job) {
+func (r *CloudRunner) downloadArtifacts(artifactsCfg config.ArtifactDownload, jb job.Job) error {
+	if !r.shouldDownloadArtifacts(artifactsCfg, jb) {
 		return nil
 	}
 
-	targetDir := filepath.Join(artifactsCfg.Directory, res.job.ID)
+	targetDir := filepath.Join(artifactsCfg.Directory, jb.ID)
 	if err := os.MkdirAll(targetDir, 0755); err != nil {
 		return err // TODO: Add ERROR log
 	}
 
-	files, err := r.JobReader.GetJobAssetFileNames(context.Background(), res.job.ID)
+	files, err := r.JobReader.GetJobAssetFileNames(context.Background(), jb.ID)
 	if err != nil {
 		return err // TODO: Add ERROR log
 	}
 	for _, fileName := range files {
 		for _, pattern := range artifactsCfg.Match {
 			if glob.Glob(pattern, fileName) {
-				if err := r.doDownloadArtifact(targetDir, res.job.ID, fileName); err != nil {
+				if err := r.doDownloadArtifact(targetDir, jb.ID, fileName); err != nil {
 					log.Error().Err(err).Msgf("Failed to download file: %s", fileName)
 				}
 				break

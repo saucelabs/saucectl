@@ -2,6 +2,7 @@ package saucecloud
 
 import (
 	"context"
+	"errors"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -9,8 +10,11 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/fs"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"reflect"
 	"syscall"
 	"testing"
 	"time"
@@ -212,5 +216,72 @@ func TestShouldDownloadArtifacts(t *testing.T) {
 		if tt.want != got {
 			t.Errorf("shouldDownloadArtifacts fails. Want '%v', got '%v'", tt.want, got)
 		}
+	}
+}
+
+func TestDownloadArtifacts(t *testing.T) {
+	dir := fs.NewDir(t, "download-artifacts")
+	defer dir.Remove()
+
+	r := CloudRunner{
+		JobReader: &mocks.FakeJobReader{
+			GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
+				return []string{"console.log", "dummy-file.log"}, nil
+			},
+			GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+				if fileName == "console.log" {
+					return []byte("console-log-content"), nil
+				}
+				if fileName == "dummy-file.log" {
+					return []byte("dummy-file-log-content"), nil
+				}
+				return nil, errors.New("invalid-file")
+			},
+		},
+	}
+	cfg := config.ArtifactDownload{
+		When: config.WhenAlways,
+		Directory: filepath.Join(dir.Path(), "results"),
+		Match: []string{"console.log"},
+	}
+	j := job.Job{
+		ID: "fake-job-id",
+		Status: job.StateComplete,
+	}
+	expectedFiles := []struct {
+		filename string
+		content []byte
+	}{
+		{filename: "console.log", content: []byte("console-log-content")},
+	}
+	got := r.downloadArtifacts(cfg, j)
+	if got != nil {
+		t.Errorf("failed to download artifacts. Want: '%v', got: '%v'", nil, got)
+	}
+	for _, expectedFile := range expectedFiles {
+		content, err := os.ReadFile(filepath.Join(cfg.Directory, j.ID, expectedFile.filename))
+		if err != nil {
+			t.Errorf("unable to read expected file: %v (%v)", expectedFile.filename, err)
+		}
+		if !reflect.DeepEqual(content, expectedFile.content) {
+			t.Errorf("file content differs: %v", expectedFile.filename)
+		}
+	}
+}
+
+func TestDownloadArtifactsDenied(t *testing.T) {
+	r := CloudRunner{}
+	cfg := config.ArtifactDownload{
+		When: config.WhenAlways,
+		Directory: filepath.Join("/root/results"),
+		Match: []string{"console.log"},
+	}
+	j := job.Job{
+		ID: "fake-job-id",
+		Status: job.StateComplete,
+	}
+	got := r.downloadArtifacts(cfg, j)
+	if got == nil {
+		t.Errorf("failed to download artifacts. Want: '%v', got: '%v'", nil, got)
 	}
 }
