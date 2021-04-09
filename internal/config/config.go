@@ -91,6 +91,7 @@ type Npm struct {
 	Packages map[string]string `yaml:"packages,omitempty" json:"packages"`
 }
 
+// Defaults represents default settings for running test
 type Defaults struct {
 	Mode string `yaml:"mode,omitempty" json:"mode"`
 }
