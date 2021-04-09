@@ -28,3 +28,9 @@ suites:
           class:
             - com.example.android.testing.androidjunitrunnersample.CalculatorAddParameterizedTest
             - com.example.android.testing.androidjunitrunnersample.CalculatorInstrumentationTest
+artifacts:
+  download:
+    when: always
+    match:
+      - console.log
+    directory: ./artifacts/

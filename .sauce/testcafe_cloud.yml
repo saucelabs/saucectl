@@ -37,3 +37,10 @@ docker:
 testcafe:
   projectPath: tests/e2e/testcafe
   version: 1.10.1
+
+artifacts:
+  download:
+    when: always
+    match:
+      - junit.xml
+    directory: ./artifacts/
