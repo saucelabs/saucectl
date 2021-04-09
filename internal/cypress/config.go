@@ -17,6 +17,7 @@ import (
 // Project represents the cypress project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline"`
+	Defaults       config.Defaults `yaml:"defaults" json:"defaults"`
 	ShowConsoleLog bool
 	DryRun         bool               `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
@@ -38,6 +39,7 @@ type Suite struct {
 	PlatformName     string      `yaml:"platformName,omitempty" json:"platformName"`
 	Config           SuiteConfig `yaml:"config,omitempty" json:"config"`
 	ScreenResolution string      `yaml:"screenResolution,omitempty" json:"screenResolution"`
+	Mode             string      `yaml:"mode,omitempty" json:"mode"`
 }
 
 // SuiteConfig represents the cypress config overrides.

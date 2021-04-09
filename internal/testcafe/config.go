@@ -24,6 +24,7 @@ type Project struct {
 	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
 	RunnerVersion  string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
 	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
+	Defaults       config.Defaults    `yaml:"defaults,omitempty" json:"defaults"`
 }
 
 // Suite represents the testcafe test suite configuration.
@@ -49,6 +50,7 @@ type Suite struct {
 	DisablePageCaching bool              `yaml:"disablePageCaching,omitempty" json:"disablePageCaching"`
 	DisableScreenshots bool              `yaml:"disableScreenshots,omitempty" json:"disableScreenshots"`
 	DisableVideo       bool              `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testcafe config.
+	Mode               string            `yaml:"mode,omitempty" json:"mode"`
 }
 
 // Screenshots represents screenshots configuration.
