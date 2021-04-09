@@ -38,13 +38,13 @@ type Playwright struct {
 // Suite represents the playwright test suite configuration.
 type Suite struct {
 	Name              string            `yaml:"name,omitempty" json:"name"`
+	Mode              string            `yaml:"mode,omitempty" json:"-"`
 	PlaywrightVersion string            `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
 	TestMatch         string            `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
 	PlatformName      string            `yaml:"platformName,omitempty" json:"platformName,omitempty"`
 	Params            SuiteConfig       `yaml:"params,omitempty" json:"param,omitempty"`
 	ScreenResolution  string            `yaml:"screenResolution,omitempty" json:"screenResolution,omitempty"`
 	Env               map[string]string `yaml:"env,omitempty" json:"env,omitempty"`
-	Mode              string            `yaml:"mode,omitempty" json:"mode"`
 }
 
 // SuiteConfig represents the configuration specific to a suite
