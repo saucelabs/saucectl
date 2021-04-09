@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"testing"
 	"time"
 
@@ -195,6 +196,70 @@ func TestClient_GetJobStatus(t *testing.T) {
 			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond)
 			assert.Equal(t, err, tc.expectedErr)
 			assert.Equal(t, got, tc.expectedResp)
+		})
+	}
+}
+
+func TestClient_GetJobAssetFileNames(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/rest/v1/test/jobs/1/assets":
+			completeStatusResp := []byte(`{"console.log": "console.log", "examples__actions.spec.js.mp4": "examples__actions.spec.js.mp4", "examples__actions.spec.js.json": "examples__actions.spec.js.json", "video.mp4": "video.mp4", "selenium-log": null, "sauce-log": null, "examples__actions.spec.js.xml": "examples__actions.spec.js.xml", "video": "video.mp4", "screenshots": []}`)
+			w.Write(completeStatusResp)
+		case "/rest/v1/test/jobs/2/assets":
+			w.WriteHeader(http.StatusNotFound)
+		case "/rest/v1/test/jobs/3/assets":
+			w.WriteHeader(http.StatusUnauthorized)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}))
+	defer ts.Close()
+	timeout := 3 * time.Second
+
+	testCases := []struct {
+		name         string
+		client       Client
+		jobID        string
+		expectedResp []string
+		expectedErr  error
+	}{
+		{
+			name:         "get job asset with ID 1",
+			client:       New(ts.URL, "test", "123", timeout),
+			jobID:        "1",
+			expectedResp: []string{"console.log", "examples__actions.spec.js.mp4", "examples__actions.spec.js.json", "video.mp4", "examples__actions.spec.js.xml"},
+			expectedErr:  nil,
+		},
+		{
+			name:         "get job asset with ID 2",
+			client:       New(ts.URL, "test", "123", timeout),
+			jobID:        "2",
+			expectedResp: nil,
+			expectedErr:  ErrJobNotFound,
+		},
+		{
+			name:         "get job asset with ID 3",
+			client:       New(ts.URL, "test", "123", timeout),
+			jobID:        "3",
+			expectedResp: nil,
+			expectedErr:  errors.New("job assets list request failed; unexpected response code:'401', msg:''"),
+		},
+		{
+			name:         "get job asset with ID 4",
+			client:       New(ts.URL, "test", "123", timeout),
+			jobID:        "4",
+			expectedResp: nil,
+			expectedErr:  ErrServerError,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := tc.client.GetJobAssetFileNames(context.Background(), tc.jobID)
+			sort.Strings(tc.expectedResp)
+			sort.Strings(got)
+			assert.Equal(t, tc.expectedErr, err)
+			assert.Equal(t, tc.expectedResp, got)
 		})
 	}
 }
