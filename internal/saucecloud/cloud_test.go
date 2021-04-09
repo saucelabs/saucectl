@@ -254,10 +254,7 @@ func TestDownloadArtifacts(t *testing.T) {
 	}{
 		{filename: "console.log", content: []byte("console-log-content")},
 	}
-	got := r.downloadArtifacts(cfg, j)
-	if got != nil {
-		t.Errorf("failed to download artifacts. Want: '%v', got: '%v'", nil, got)
-	}
+	r.downloadArtifacts(cfg, j)
 	for _, expectedFile := range expectedFiles {
 		content, err := os.ReadFile(filepath.Join(cfg.Directory, j.ID, expectedFile.filename))
 		if err != nil {
@@ -266,22 +263,5 @@ func TestDownloadArtifacts(t *testing.T) {
 		if !reflect.DeepEqual(content, expectedFile.content) {
 			t.Errorf("file content differs: %v", expectedFile.filename)
 		}
-	}
-}
-
-func TestDownloadArtifactsDenied(t *testing.T) {
-	r := CloudRunner{}
-	cfg := config.ArtifactDownload{
-		When: config.WhenAlways,
-		Directory: filepath.Join("/root/results"),
-		Match: []string{"console.log"},
-	}
-	j := job.Job{
-		ID: "fake-job-id",
-		Status: job.StateComplete,
-	}
-	got := r.downloadArtifacts(cfg, j)
-	if got == nil {
-		t.Errorf("failed to download artifacts. Want: '%v', got: '%v'", nil, got)
 	}
 }

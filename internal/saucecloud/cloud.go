@@ -381,19 +381,21 @@ func unregisterSignalCapture(c chan os.Signal) {
 }
 
 // downloadArtifacts downloads artifact for job.
-func (r *CloudRunner) downloadArtifacts(artifactsCfg config.ArtifactDownload, jb job.Job) error {
+func (r *CloudRunner) downloadArtifacts(artifactsCfg config.ArtifactDownload, jb job.Job) {
 	if !r.shouldDownloadArtifacts(artifactsCfg, jb) {
-		return nil
+		return
 	}
 
 	targetDir := filepath.Join(artifactsCfg.Directory, jb.ID)
 	if err := os.MkdirAll(targetDir, 0755); err != nil {
-		return err // TODO: Add ERROR log
+		log.Error().Msgf("Unable to create %s to fetch artifacts (%v)", targetDir, err)
+		return
 	}
 
 	files, err := r.JobReader.GetJobAssetFileNames(context.Background(), jb.ID)
 	if err != nil {
-		return err // TODO: Add ERROR log
+		log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
+		return
 	}
 	for _, fileName := range files {
 		for _, pattern := range artifactsCfg.Match {
@@ -405,7 +407,6 @@ func (r *CloudRunner) downloadArtifacts(artifactsCfg config.ArtifactDownload, jb
 			}
 		}
 	}
-	return nil
 }
 
 func (r *CloudRunner) doDownloadArtifact(targetDir, jobID, fileName string) error {
