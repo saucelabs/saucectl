@@ -412,7 +412,7 @@ func (r *CloudRunner) downloadArtifacts(artifactsCfg config.ArtifactDownload, jb
 func (r *CloudRunner) doDownloadArtifact(targetDir, jobID, fileName string) error {
 	fileContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), jobID, fileName)
 	if err != nil {
-		return err // TODO: Add ERROR log
+		return err
 	}
 	targetFile := filepath.Join(targetDir, fileName)
 	return os.WriteFile(targetFile, fileContent, 0644)
