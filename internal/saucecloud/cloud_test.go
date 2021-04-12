@@ -2,14 +2,19 @@ package saucecloud
 
 import (
 	"context"
+	"errors"
 	"github.com/saucelabs/saucectl/internal/concurrency"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/fs"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"reflect"
 	"syscall"
 	"testing"
 	"time"
@@ -142,7 +147,121 @@ func TestRunJobsSkipped(t *testing.T) {
 	go r.runJobs(opts, results)
 	opts <- job.StartOptions{}
 	close(opts)
-	res := <- results
+	res := <-results
 	assert.Nil(t, res.err)
 	assert.True(t, res.skipped)
+}
+
+func TestShouldDownloadArtifacts(t *testing.T) {
+	type testCase struct {
+		config config.ArtifactDownload
+		job    job.Job
+		want   bool
+	}
+	testCases := []testCase{
+		{
+			config: config.ArtifactDownload{When: config.WhenAlways},
+			job:    job.Job{ID: ""},
+			want:   false,
+		},
+		{
+			config: config.ArtifactDownload{When: config.WhenNever},
+			job:    job.Job{ID: ""},
+			want:   false,
+		},
+		{
+			config: config.ArtifactDownload{When: config.WhenAlways},
+			job:    job.Job{ID: "fake-id", Status: job.StateComplete},
+			want:   true,
+		},
+		{
+			config: config.ArtifactDownload{When: config.WhenAlways},
+			job:    job.Job{ID: "fake-id", Status: job.StateError},
+			want:   true,
+		},
+		{
+			config: config.ArtifactDownload{When: config.WhenNever},
+			job:    job.Job{ID: "fake-id", Status: job.StateComplete},
+			want:   false,
+		},
+		{
+			config: config.ArtifactDownload{When: config.WhenNever},
+			job:    job.Job{ID: "fake-id", Status: job.StateError},
+			want:   false,
+		},
+		{
+			config: config.ArtifactDownload{When: config.WhenPass},
+			job:    job.Job{ID: "fake-id", Status: job.StateComplete},
+			want:   true,
+		},
+		{
+			config: config.ArtifactDownload{When: config.WhenPass},
+			job:    job.Job{ID: "fake-id", Status: job.StateError},
+			want:   false,
+		},
+		{
+			config: config.ArtifactDownload{When: config.WhenFail},
+			job:    job.Job{ID: "fake-id", Status: job.StateComplete},
+			want:   false,
+		},
+		{
+			config: config.ArtifactDownload{When: config.WhenFail},
+			job:    job.Job{ID: "fake-id", Status: job.StateError},
+			want:   true,
+		},
+	}
+	r := CloudRunner{}
+	for _, tt := range testCases {
+		got := r.shouldDownloadArtifacts(tt.config, tt.job)
+		if tt.want != got {
+			t.Errorf("shouldDownloadArtifacts fails. Want '%v', got '%v'", tt.want, got)
+		}
+	}
+}
+
+func TestDownloadArtifacts(t *testing.T) {
+	dir := fs.NewDir(t, "download-artifacts")
+	defer dir.Remove()
+
+	r := CloudRunner{
+		JobReader: &mocks.FakeJobReader{
+			GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
+				return []string{"console.log", "dummy-file.log"}, nil
+			},
+			GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+				if fileName == "console.log" {
+					return []byte("console-log-content"), nil
+				}
+				if fileName == "dummy-file.log" {
+					return []byte("dummy-file-log-content"), nil
+				}
+				return nil, errors.New("invalid-file")
+			},
+		},
+	}
+	cfg := config.ArtifactDownload{
+		When: config.WhenAlways,
+		Directory: filepath.Join(dir.Path(), "results"),
+		Match: []string{"console.log"},
+	}
+	j := job.Job{
+		ID: "fake-job-id",
+		Status: job.StateComplete,
+	}
+	expectedFiles := []struct {
+		filename string
+		content []byte
+	}{
+		{filename: "console.log", content: []byte("console-log-content")},
+	}
+	r.downloadArtifacts(cfg, j)
+	for _, expectedFile := range expectedFiles {
+		content, err := os.ReadFile(filepath.Join(cfg.Directory, j.ID, expectedFile.filename))
+		if err != nil {
+			t.Errorf("unable to read expected file: %v (%v)", expectedFile.filename, err)
+		}
+		if !reflect.DeepEqual(content, expectedFile.content) {
+			t.Errorf("file content differs: %v", expectedFile.filename)
+		}
+	}
 }

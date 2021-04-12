@@ -8,6 +8,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/requesth"
 	"io"
 	"net/http"
+	"reflect"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/job"
@@ -93,6 +94,15 @@ func (c *Client) PollJob(ctx context.Context, id string, interval time.Duration)
 	}
 
 	return job.Job{}, nil
+}
+
+// GetJobAssetFileNames return the job assets list.
+func (c *Client) GetJobAssetFileNames(ctx context.Context, jobID string) ([]string, error) {
+	request, err := createListAssetsRequest(ctx, c.URL, c.Username, c.AccessKey, jobID)
+	if err != nil {
+		return nil, err
+	}
+	return doListAssetsRequest(c.HTTPClient, request)
 }
 
 // GetJobAssetFileContent returns the job asset file content.
@@ -188,13 +198,56 @@ func (c *Client) isTunnelRunning(ctx context.Context, id string) error {
 func (c *Client) StopJob(ctx context.Context, id string) (job.Job, error) {
 	request, err := createStopRequest(ctx, c.URL, c.Username, c.AccessKey, id)
 	if err != nil {
-		return  job.Job{}, err
+		return job.Job{}, err
 	}
 	j, err := doRequest(c.HTTPClient, request)
 	if err != nil {
 		return job.Job{}, err
 	}
 	return j, nil
+}
+
+func doListAssetsRequest(httpClient *http.Client, request *http.Request) ([]string, error) {
+	resp, err := httpClient.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return nil, ErrServerError
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, ErrJobNotFound
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		err := fmt.Errorf("job assets list request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		return nil, err
+	}
+
+	var filesMap map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&filesMap); err != nil {
+		return []string{}, err
+	}
+
+	var filesList []string
+	for k, v := range filesMap {
+		if v != nil && !isSpecialFile(k) && reflect.TypeOf(v).Name() == "string" {
+			filesList = append(filesList, v.(string))
+		}
+	}
+	return filesList, nil
+}
+
+// isSpecialFile tells if a file is a specific case or not.
+func isSpecialFile(fileName string) bool {
+	if fileName == "video" || fileName == "screenshots" {
+		return true
+	}
+	return false
 }
 
 func doAssetRequest(httpClient *http.Client, request *http.Request) ([]byte, error) {
@@ -258,6 +311,18 @@ func createRequest(ctx context.Context, url, username, accessKey, jobID string) 
 	}
 
 	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(username, accessKey)
+
+	return req, nil
+}
+
+func createListAssetsRequest(ctx context.Context, url, username, accessKey, jobID string) (*http.Request, error) {
+	req, err := requesth.NewWithContext(ctx, http.MethodGet,
+		fmt.Sprintf("%s/rest/v1/%s/jobs/%s/assets", url, username, jobID), nil)
+	if err != nil {
+		return nil, err
+	}
+
 	req.SetBasicAuth(username, accessKey)
 
 	return req, nil

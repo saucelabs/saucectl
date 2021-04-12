@@ -43,3 +43,9 @@ suites:
     platformName: "Windows 10"
     config:
       testFiles: [ "**/*.*" ]
+artifacts:
+  download:
+    when: always
+    match:
+      - console.log
+    directory: ./artifacts/
