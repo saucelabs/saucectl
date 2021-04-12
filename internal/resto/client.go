@@ -8,6 +8,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/requesth"
 	"io"
 	"net/http"
+	"reflect"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/job"
@@ -234,8 +235,8 @@ func doListAssetsRequest(httpClient *http.Client, request *http.Request) ([]stri
 
 	var filesList []string
 	for k, v := range filesMap {
-		if v != nil && !isSpecialFile(k) {
-			filesList = append(filesList, k)
+		if v != nil && !isSpecialFile(k) && reflect.TypeOf(v).Name() == "string" {
+			filesList = append(filesList, v.(string))
 		}
 	}
 	return filesList, nil
