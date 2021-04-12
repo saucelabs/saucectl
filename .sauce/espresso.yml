@@ -25,6 +25,6 @@ suites:
         platformVersions:
           - "8.1"
         testOptions:
-          notClass:
+          class:
             - com.example.android.testing.androidjunitrunnersample.CalculatorAddParameterizedTest
             - com.example.android.testing.androidjunitrunnersample.CalculatorInstrumentationTest
