@@ -50,7 +50,7 @@ type Suite struct {
 	DisablePageCaching bool              `yaml:"disablePageCaching,omitempty" json:"disablePageCaching"`
 	DisableScreenshots bool              `yaml:"disableScreenshots,omitempty" json:"disableScreenshots"`
 	DisableVideo       bool              `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testcafe config.
-	Mode               string            `yaml:"mode,omitempty" json:"mode"`
+	Mode               string            `yaml:"mode,omitempty" json:"-"`
 }
 
 // Screenshots represents screenshots configuration.

@@ -39,7 +39,7 @@ type Suite struct {
 	PlatformName     string      `yaml:"platformName,omitempty" json:"platformName"`
 	Config           SuiteConfig `yaml:"config,omitempty" json:"config"`
 	ScreenResolution string      `yaml:"screenResolution,omitempty" json:"screenResolution"`
-	Mode             string      `yaml:"mode,omitempty" json:"mode"`
+	Mode             string      `yaml:"mode,omitempty" json:"-"`
 }
 
 // SuiteConfig represents the cypress config overrides.
