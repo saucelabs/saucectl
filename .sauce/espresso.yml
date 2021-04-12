@@ -24,3 +24,7 @@ suites:
       - name: "Google Pixel C GoogleAPI Emulator"
         platformVersions:
           - "8.1"
+        testOptions:
+          class:
+            - com.example.android.testing.androidjunitrunnersample.CalculatorAddParameterizedTest
+            - com.example.android.testing.androidjunitrunnersample.CalculatorInstrumentationTest

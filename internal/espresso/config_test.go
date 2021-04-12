@@ -4,6 +4,9 @@ import (
 	"errors"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/fs"
+	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -168,4 +171,52 @@ func TestValidatePlatformNameIsSet(t *testing.T) {
 			assert.Equal(t, device.PlatformName, Android)
 		}
 	}
+}
+
+func TestFromFile(t *testing.T) {
+	dir := fs.NewDir(t, "espresso-cfg",
+		fs.WithFile("config.yml", `apiVersion: v1alpha
+kind: espresso
+espresso:
+  app: ./tests/apps/calc.apk
+  testApp: ./tests/apps/calc-success.apk
+suites:
+  - name: "saucy barista"
+    devices:
+      - name: "Google Pixel C GoogleAPI Emulator"
+        platformVersions:
+          - "8.1"
+`, fs.WithMode(0655)))
+	defer dir.Remove()
+
+	cfg, err := FromFile(filepath.Join(dir.Path(), "config.yml"))
+	if err != nil {
+		t.Errorf("expected error: %v, got: %v", nil, err)
+	}
+	expected := Project{
+		Espresso: Espresso{
+			App: "./tests/apps/calc.apk",
+			TestApp: "./tests/apps/calc-success.apk",
+		},
+		Suites: []Suite{
+			{
+				Name: "saucy barista",
+				Devices: []config.Device{
+					{
+						Name: "Google Pixel C GoogleAPI Emulator",
+						PlatformVersions: []string{
+							"8.1",
+						},
+					},
+				}},
+		},
+	}
+	if !reflect.DeepEqual(cfg.Espresso, expected.Espresso) {
+		t.Errorf("expected: %v, got: %v", expected, cfg)
+	}
+	if !reflect.DeepEqual(cfg.Suites, expected.Suites) {
+		t.Errorf("expected: %v, got: %v", expected, cfg)
+	}
+
+
 }

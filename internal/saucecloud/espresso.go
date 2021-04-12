@@ -70,6 +70,13 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 							Parent: r.Project.Sauce.Tunnel.Parent,
 						},
 						Experiments: r.Project.Sauce.Experiments,
+						TestOptions: job.TestOptions{
+							NotClass:   s.TestOptions.NotClass,
+							Class:      s.TestOptions.Class,
+							Annotation: s.TestOptions.Annotation,
+							Size:       s.TestOptions.Size,
+							Package:    s.TestOptions.Package,
+						},
 					}
 				}
 			}
