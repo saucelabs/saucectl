@@ -207,6 +207,11 @@ func (c *Client) StopJob(ctx context.Context, id string) (job.Job, error) {
 	return j, nil
 }
 
+// UploadAsset uploads an asset to the specified jobID.
+func (c *Client) UploadAsset(jobID string, fileName string, content []byte) error {
+	return nil
+}
+
 func doListAssetsRequest(httpClient *http.Client, request *http.Request) ([]string, error) {
 	resp, err := httpClient.Do(request)
 	if err != nil {

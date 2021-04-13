@@ -53,3 +53,13 @@ type FakeJobStopper struct {
 func (fjs *FakeJobStopper) StopJob(ctx context.Context, jobID string) (job.Job, error) {
 	return fjs.StopJobFn(ctx, jobID)
 }
+
+// FakeJobWriter resto mock
+type FakeJobWriter struct {
+	UploadAssetFn func (jobID string, fileName string, content []byte) error
+}
+
+// UploadAsset mock function
+func (fjw *FakeJobWriter) UploadAsset(jobID string, fileName string, content []byte) error {
+	return fjw.UploadAssetFn(jobID, fileName, content)
+}

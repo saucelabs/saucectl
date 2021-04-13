@@ -69,6 +69,11 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 			return job.Job{ID: id, Passed: true}, nil
 		},
 	}
+	writer := mocks.FakeJobWriter{
+		UploadAssetFn: func(jobID string, fileName string, content []byte) error {
+			return nil
+		},
+	}
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 		return 1, nil
 	}}
@@ -79,6 +84,7 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 		CloudRunner: CloudRunner{
 			JobStarter:      &starter,
 			JobReader:       &reader,
+			JobWriter:       &writer,
 			CCYReader:       ccyReader,
 			ProjectUploader: uploader,
 		},

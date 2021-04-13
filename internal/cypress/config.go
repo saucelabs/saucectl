@@ -3,6 +3,7 @@ package cypress
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,6 +20,7 @@ type Project struct {
 	config.TypeDef `yaml:",inline"`
 	Defaults       config.Defaults `yaml:"defaults" json:"defaults"`
 	ShowConsoleLog bool
+	RawConfig      string             `yaml:"-" json:"-"`
 	DryRun         bool               `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Cypress        Cypress            `yaml:"cypress,omitempty" json:"cypress"`
@@ -80,9 +82,15 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 	defer f.Close()
 
-	if err = yaml.NewDecoder(f).Decode(&p); err != nil {
+	content, err := io.ReadAll(f)
+	if err != nil {
+		return Project{}, fmt.Errorf("failed to read configuration file: %v", err)
+	}
+
+	if err = yaml.Unmarshal(content, &p); err != nil {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
+	p.RawConfig = string(content)
 
 	p.Cypress.Key = os.ExpandEnv(p.Cypress.Key)
 
