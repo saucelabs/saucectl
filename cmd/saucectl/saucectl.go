@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/saucelabs/saucectl/cli/setup"
 	"os"
 	"time"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/command/commands"
-	"github.com/saucelabs/saucectl/cli/setup"
 	"github.com/saucelabs/saucectl/cli/version"
 )
 
@@ -74,7 +74,7 @@ func setupSentry () {
 		Debug: false,
 	})
 	if err != nil {
-		log.Debug().Err(err).Msg("failed to setup sentry")
+		log.Err(err).Msg("failed to setup sentry")
 		return
 	}
 }

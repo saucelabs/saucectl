@@ -2,12 +2,11 @@ package signup
 
 import (
 	"fmt"
-	serrors "github.com/saucelabs/saucectl/internal/errors"
-	"os"
-
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var (
@@ -31,7 +30,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 			err := Run(cmd, cli, args)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
-				serrors.HandleAndFlush(err)
+				sentry.CaptureError(err, sentry.Scope{})
 				os.Exit(1)
 			}
 		},
