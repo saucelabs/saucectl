@@ -66,12 +66,12 @@ func setupLogging(verbose bool) {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: timeFormat})
 }
 
-func setupSentry () {
+func setupSentry() {
 	err := sentry.Init(sentry.ClientOptions{
-		Dsn: setup.SentryDSN,
+		Dsn:         setup.SentryDSN,
 		Environment: "production",
 		Release:     fmt.Sprintf("saucectl@%s", version.Version),
-		Debug: false,
+		Debug:       false,
 	})
 	if err != nil {
 		log.Err(err).Msg("failed to setup sentry")
