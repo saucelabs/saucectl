@@ -55,6 +55,7 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 				for _, p := range d.PlatformVersions {
 					log.Debug().Str("suite", s.Name).Str("device", d.Name).Str("platform", p).Msg("Starting job")
 					jobOpts <- job.StartOptions{
+						RawConfig:        r.Project.RawConfig,
 						App:              fmt.Sprintf("storage:%s", appFileID),
 						Suite:            fmt.Sprintf("storage:%s", testAppFileID),
 						Framework:        "espresso",

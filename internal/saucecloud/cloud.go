@@ -121,9 +121,9 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	}
 
 	// Upload configuration
-	err = r.JobWriter.UploadAsset(id, "sauce_config.txt", []byte(opts.RawConfig))
+	err = r.JobWriter.UploadAsset(id, "sauce_config.yml", "text/plain", []byte(opts.RawConfig))
 	if err != nil {
-		log.Warn().Err(err).Msgf("Unable to attach configuration")
+		log.Warn().Msgf("failed to attach configuration: %v", err)
 	}
 
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,

@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/requesth"
 	"io"
 	"net/http"
+	"net/textproto"
 	"reflect"
 	"time"
 
@@ -208,8 +210,13 @@ func (c *Client) StopJob(ctx context.Context, id string) (job.Job, error) {
 }
 
 // UploadAsset uploads an asset to the specified jobID.
-func (c *Client) UploadAsset(jobID string, fileName string, content []byte) error {
-	return nil
+func (c *Client) UploadAsset(jobID string, fileName string, contentType string, content []byte) error {
+	request, err := createUploadAssetRequest(context.Background(), c.URL, c.Username, c.AccessKey, jobID, fileName, contentType, content)
+	if err != nil {
+		return err
+	}
+	err = doRequestAsset(c.HTTPClient, request)
+	return err
 }
 
 func doListAssetsRequest(httpClient *http.Client, request *http.Request) ([]string, error) {
@@ -355,4 +362,57 @@ func createStopRequest(ctx context.Context, url, username, accessKey, jobID stri
 	req.Header.Set("Content-Type", "application/json")
 	req.SetBasicAuth(username, accessKey)
 	return req, nil
+}
+
+func createUploadAssetRequest(ctx context.Context, url, username, accessKey, jobID string, fileName string, contentType string, content []byte) (*http.Request, error) {
+	var b bytes.Buffer
+	w := multipart.NewWriter(&b)
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", fileName))
+	h.Set("Content-Type", contentType)
+	wr, err := w.CreatePart(h)
+	if err != nil {
+		return nil, err
+	}
+	if _, err = wr.Write(content); err != nil {
+		return nil, err
+	}
+	if err = w.Close(); err != nil {
+		return nil, err
+	}
+
+	req, err := requesth.NewWithContext(ctx, http.MethodPut,
+		fmt.Sprintf("%s/v1/testrunner/jobs/%s/assets", url, jobID), &b)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(username, accessKey)
+	req.Header.Set("Content-Type", w.FormDataContentType())
+	return req, nil
+}
+
+func doRequestAsset(httpClient *http.Client, request *http.Request) error {
+	resp, err := httpClient.Do(request)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return ErrServerError
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		return ErrJobNotFound
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		err := fmt.Errorf("job status request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		return err
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	log.Info().Msg(string(body))
+	return err
 }
