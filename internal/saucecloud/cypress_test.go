@@ -46,7 +46,7 @@ func TestRunSuite(t *testing.T) {
 		},
 	}
 	writer := mocks.FakeJobWriter{
-		UploadAssetFn: func(jobID string, fileName string, content []byte) error {
+		UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
 			return nil
 		},
 	}
@@ -81,7 +81,7 @@ func TestRunSuites(t *testing.T) {
 		},
 	}
 	writer := mocks.FakeJobWriter{
-		UploadAssetFn: func(jobID string, fileName string, content []byte) error {
+		UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
 			return nil
 		},
 	}
@@ -191,7 +191,7 @@ func TestRunProject(t *testing.T) {
 		},
 	}
 	writer := mocks.FakeJobWriter{
-		UploadAssetFn: func(jobID string, fileName string, content []byte) error {
+		UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
 			return nil
 		},
 	}

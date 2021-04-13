@@ -70,7 +70,7 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 		},
 	}
 	writer := mocks.FakeJobWriter{
-		UploadAssetFn: func(jobID string, fileName string, content []byte) error {
+		UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
 			return nil
 		},
 	}

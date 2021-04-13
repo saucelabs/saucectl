@@ -56,10 +56,10 @@ func (fjs *FakeJobStopper) StopJob(ctx context.Context, jobID string) (job.Job, 
 
 // FakeJobWriter resto mock
 type FakeJobWriter struct {
-	UploadAssetFn func (jobID string, fileName string, content []byte) error
+	UploadAssetFn func (jobID string, fileName string, contentType string, content []byte) error
 }
 
 // UploadAsset mock function
-func (fjw *FakeJobWriter) UploadAsset(jobID string, fileName string, content []byte) error {
-	return fjw.UploadAssetFn(jobID, fileName, content)
+func (fjw *FakeJobWriter) UploadAsset(jobID string, fileName string, contentType string, content []byte) error {
+	return fjw.UploadAssetFn(jobID, fileName, contentType, content)
 }

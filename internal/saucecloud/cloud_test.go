@@ -47,7 +47,7 @@ func TestCloudRunner_logSuiteConsole(t *testing.T) {
 					},
 				},
 				JobWriter: &mocks.FakeJobWriter{
-					UploadAssetFn: func(jobID string, fileName string, content []byte) error {
+					UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
 						return nil
 					},
 				},
@@ -137,7 +137,7 @@ func TestSkippedRunJobs(t *testing.T) {
 				},
 			},
 			JobWriter: &mocks.FakeJobWriter{
-				UploadAssetFn: func(jobID string, fileName string, content []byte) error {
+				UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
 					return nil
 				},
 			},
