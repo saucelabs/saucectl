@@ -5,6 +5,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/job"
 )
 
 // CypressRunner represents the docker implementation of a test runner.
@@ -14,7 +15,7 @@ type CypressRunner struct {
 }
 
 // NewCypress creates a new CypressRunner instance.
-func NewCypress(c cypress.Project, ms framework.MetadataService) (*CypressRunner, error) {
+func NewCypress(c cypress.Project, ms framework.MetadataService, wr job.Writer) (*CypressRunner, error) {
 	r := CypressRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -27,6 +28,7 @@ func NewCypress(c cypress.Project, ms framework.MetadataService) (*CypressRunner
 			},
 			FrameworkMeta:  ms,
 			ShowConsoleLog: c.ShowConsoleLog,
+			JobWriter:      wr,
 		},
 	}
 
@@ -63,6 +65,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 				Environment: suite.Config.Env,
 				RootDir:     r.Project.RootDir,
 				Sauceignore: r.Project.Sauce.Sauceignore,
+				RawConfig:   r.Project.RawConfig,
 			}
 		}
 		close(containerOpts)

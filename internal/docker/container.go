@@ -16,6 +16,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/progress"
@@ -29,6 +30,7 @@ type ContainerRunner struct {
 	containerConfig *containerConfig
 	Framework       framework.Framework
 	FrameworkMeta   framework.MetadataService
+	JobWriter       job.Writer
 	ShowConsoleLog  bool
 
 	interrupted bool
@@ -43,6 +45,7 @@ type containerStartOptions struct {
 	Environment map[string]string
 	RootDir     string
 	Sauceignore string
+	RawConfig   string
 }
 
 // result represents the result of a local job
