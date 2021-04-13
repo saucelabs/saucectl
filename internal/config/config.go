@@ -91,6 +91,11 @@ type Npm struct {
 	Packages map[string]string `yaml:"packages,omitempty" json:"packages"`
 }
 
+// Defaults represents default suite settings.
+type Defaults struct {
+	Mode string `yaml:"mode,omitempty" json:"mode"`
+}
+
 // Version* contains referenced config version
 const (
 	VersionV1Alpha = "v1alpha"

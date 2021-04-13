@@ -3,10 +3,11 @@ package playwright
 import (
 	"errors"
 	"fmt"
+	"os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"gopkg.in/yaml.v2"
-	"os"
 )
 
 // Project represents the playwright project configuration.
@@ -23,6 +24,7 @@ type Project struct {
 	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
 	RunnerVersion  string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
 	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
+	Defaults       config.Defaults    `yaml:"defaults,omitempty" json:"defaults"`
 }
 
 // Playwright represents crucial playwright configuration that is required for setting up a project.
@@ -36,6 +38,7 @@ type Playwright struct {
 // Suite represents the playwright test suite configuration.
 type Suite struct {
 	Name              string            `yaml:"name,omitempty" json:"name"`
+	Mode              string            `yaml:"mode,omitempty" json:"-"`
 	PlaywrightVersion string            `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
 	TestMatch         string            `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
 	PlatformName      string            `yaml:"platformName,omitempty" json:"platformName,omitempty"`
