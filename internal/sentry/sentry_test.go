@@ -83,6 +83,10 @@ func Test_attach(t *testing.T) {
 			t.Errorf("Failed to create MultipartReader. Request is likely missing multipart data: %v", err)
 		}
 
+		if req.URL.Path != "/api/1234567/events/123/attachments/" {
+			t.Errorf("Received call on an unexpected path: %s", req.URL.Path)
+		}
+
 		p, err := mr.NextPart()
 		if err != nil {
 			t.Errorf("Failed to retrieve part in multipart: %v", err)
