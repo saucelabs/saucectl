@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/requesth"
 	"io"
 	"net/http"
@@ -412,7 +411,6 @@ func doRequestAsset(httpClient *http.Client, request *http.Request) error {
 		return err
 	}
 
-	body, err := io.ReadAll(resp.Body)
-	log.Info().Msg(string(body))
+	_, err = io.ReadAll(resp.Body)
 	return err
 }

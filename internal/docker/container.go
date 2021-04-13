@@ -356,7 +356,24 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 	output, jobInfo, passed, err = r.run(containerID, options.SuiteName,
 		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", options.SuiteName},
 		options.Environment)
+
+	jobID := jobIDFromURL(jobIDFromURL(jobInfo.JobDetailsURL))
+	if jobID != "" {
+		if err = r.JobWriter.UploadAsset(jobID, "sauce_config.yml", "text/plain", []byte(options.RawConfig)); err != nil {
+			log.Warn().Msgf("failed to attach configuration: %v", err)
+		}
+	}
 	return
+}
+
+// jobIDFromURL returns the jobID from the URL return by containers.
+func jobIDFromURL(URL string) string {
+	items := strings.Split(URL, "/")
+	if len(items) < 1 {
+		return ""
+	}
+	ID := items[len(items) - 1]
+	return ID
 }
 
 // registerInterruptOnSignal runs tearDown on SIGINT / Interrupt.
