@@ -75,14 +75,15 @@ func attach(client http.Client, eventID, filename string) {
 	// Submit the request
 	res, err := client.Do(req)
 	if err != nil {
+		log.Debug().Err(err).Msg("Failed to send sentry attachment")
 		return
 	}
 
 	// Check the response
 	if res.StatusCode != http.StatusOK {
-		err = fmt.Errorf("bad status: %s", res.Status)
-		bodyBytes, _ := io.ReadAll(res.Body)
-		log.Debug().Msgf("sentry response: %s", bodyBytes)
+		b, _ := io.ReadAll(res.Body)
+		log.Debug().Int("status", res.StatusCode).
+			Msgf("Failed to send sentry attachment. Sentry responded with: %s", b)
 	}
 }
 
