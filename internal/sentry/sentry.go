@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/cli/setup"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -59,7 +60,7 @@ func attach(client http.Client, eventID, filename string) {
 	_, _ = io.Copy(fw, r)
 	_ = w.Close()
 
-	sentryURL, err := attachmentURLFromDSN(sentry.CurrentHub().Client().Options().Dsn, eventID)
+	sentryURL, err := attachmentURLFromDSN(setup.SentryDSN, eventID)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to assemble the sentry attachment URL")
 		return
