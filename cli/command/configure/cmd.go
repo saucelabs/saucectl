@@ -3,16 +3,15 @@ package configure
 import (
 	"errors"
 	"fmt"
-	serrors "github.com/saucelabs/saucectl/internal/errors"
-	"github.com/saucelabs/saucectl/internal/msg"
-	"os"
-	"strings"
-
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/spf13/cobra"
+	"os"
+	"strings"
 )
 
 var (
@@ -34,7 +33,9 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := Run(); err != nil {
 				log.Err(err).Msg("failed to execute configure command")
-				serrors.HandleAndFlush(err)
+				sentry.CaptureError(err, sentry.Scope{
+					Username: cliUsername,
+				})
 				os.Exit(1)
 			}
 		},

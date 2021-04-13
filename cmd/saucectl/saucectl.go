@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/saucelabs/saucectl/cli/setup"
 	"os"
 	"time"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/command/commands"
-	"github.com/saucelabs/saucectl/cli/setup"
 	"github.com/saucelabs/saucectl/cli/version"
 )
 
@@ -66,15 +66,15 @@ func setupLogging(verbose bool) {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: timeFormat})
 }
 
-func setupSentry () {
+func setupSentry() {
 	err := sentry.Init(sentry.ClientOptions{
-		Dsn: setup.SentryDSN,
+		Dsn:         setup.SentryDSN,
 		Environment: "production",
 		Release:     fmt.Sprintf("saucectl@%s", version.Version),
-		Debug: false,
+		Debug:       false,
 	})
 	if err != nil {
-		log.Debug().Err(err).Msg("failed to setup sentry")
+		log.Err(err).Msg("failed to setup sentry")
 		return
 	}
 }

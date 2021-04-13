@@ -8,6 +8,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
+	"github.com/saucelabs/saucectl/internal/sentry"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,7 +21,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/docker"
-	serrors "github.com/saucelabs/saucectl/internal/errors"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
@@ -76,7 +76,10 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 			exitCode, err := Run(cmd, cli, args)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
-				serrors.HandleAndFlush(err)
+				sentry.CaptureError(err, sentry.Scope{
+					Username:   credentials.Get().Username,
+					ConfigFile: cfgFilePath,
+				})
 			}
 			os.Exit(exitCode)
 		},
