@@ -1,12 +1,14 @@
 package resto
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/requesth"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/textproto"
 	"reflect"
