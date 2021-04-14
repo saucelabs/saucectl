@@ -1,8 +1,10 @@
 apiVersion: v1alpha
 kind: cypress
+defaults:
+  mode: sauce
 sauce:
   region: us-west-1
-  concurrency: 1 # Controls how many suites are executed at the same time (sauce test env only).
+  concurrency: 2 # Controls how many suites are executed at the same time (sauce test env only).
   metadata:
     name: Testing Cypress Support
     tags:
@@ -21,16 +23,19 @@ docker:
 # own custom image or a different tag.
 #  image: saucelabs/stt-cypress-mocha-node:v5.6.0
 cypress:
-  version: 5.6.0
+  version: 6.6.0
   configFile: "cypress.json"  # We determine related files based on the location of the config file.
 suites:
-  - name: "saucy test"
+  - name: "saucy test in docker"
+    mode: docker
     browser: "chrome"
-    platformName: "Windows 10"
-      # screenResolution: "1920x1080"
-      # Available resolutions on Windows: '800x600', '1024x768', '1152x864', '1280x768', '1280x800', '1280x960', '1280x1024',
-      # '1400x1050', '1440x900', '1600x1200', '1680x1050', '1920x1080', '1920x1200', '2560x1600'
-      # If no screenResolution set, it will use 1024x768 by default
+    config:
+      env:
+        hello: world
+      testFiles: [ "**/*.*" ] # Cypress native glob support.
+  - name: "saucy test in sauce"
+    mode: sauce
+    browser: "chrome"
     config:
       env:
         hello: world

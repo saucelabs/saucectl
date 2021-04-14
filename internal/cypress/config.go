@@ -200,3 +200,23 @@ func Validate(p Project) error {
 
 	return nil
 }
+
+// SplitSuites divided Suites to dockerSuites and sauceSuites
+func SplitSuites(p Project) (Project, Project) {
+	dockerSuites := []Suite{}
+	sauceSuites := []Suite{}
+	for _, s := range p.Suites {
+		if s.Mode == "docker" {
+			dockerSuites = append(dockerSuites, s)
+		} else {
+			sauceSuites = append(sauceSuites, s)
+		}
+	}
+
+	dockerProject := p
+	dockerProject.Suites = dockerSuites
+	sauceProject := p
+	sauceProject.Suites = sauceSuites
+
+	return dockerProject, sauceProject
+}
