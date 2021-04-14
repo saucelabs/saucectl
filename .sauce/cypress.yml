@@ -36,6 +36,7 @@ suites:
   - name: "saucy test in sauce"
     mode: sauce
     browser: "chrome"
+    platformName: "Windows 10"
     config:
       env:
         hello: world
