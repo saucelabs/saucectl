@@ -107,3 +107,40 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, cnt, 0)
 }
+
+func TestRunSuites_Espresso_NoConcurrency(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	// Fake JobStarter
+	starter := mocks.FakeJobStarter{
+		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
+			return "fake-job-id", nil
+		},
+	}
+	reader := mocks.FakeJobReader{
+		PollJobFn: func(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
+			return job.Job{ID: id, Passed: true}, nil
+		},
+	}
+	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
+		return 0, nil
+	}}
+	runner := EspressoRunner{
+		CloudRunner: CloudRunner{
+			JobStarter: &starter,
+			JobReader:  &reader,
+			CCYReader:  ccyReader,
+		},
+		Project: espresso.Project{
+			Suites: []espresso.Suite{
+				{Name: "dummy-suite"},
+			},
+			Sauce: config.SauceConfig{
+				Concurrency: 1,
+			},
+		},
+	}
+	ret := runner.runSuites("dummy-file-id", "dummy-file-id")
+	assert.False(t, ret)
+}
