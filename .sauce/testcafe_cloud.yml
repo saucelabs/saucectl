@@ -12,6 +12,19 @@ sauce:
       - other tag
     build: Release $CI_COMMIT_SHORT_SHA
 suites:
+  - name: iOS Test
+    browserName: "safari"
+    src:
+      - "*/*.test.js" # test files glob
+    devices:
+      - name: iPhone 12 Simulator
+        platformName: iOS
+        platformVersions:
+          - "14.3"
+      - name: iPad Pro (9.7-inch) Simulator
+        platformName: iOS
+        platformVersions:
+          - "14.3"
   - name: "saucy test"
     browserName: "googlechrome" # Although Testcafe supports triggering one test in multiple browsers, it'd better here to split them into every suite to indicate each suite has its own test point.
     src:
@@ -36,7 +49,7 @@ docker:
 
 testcafe:
   projectPath: tests/e2e/testcafe
-  version: 1.10.1
+  version: 1.11.0
 
 artifacts:
   download:

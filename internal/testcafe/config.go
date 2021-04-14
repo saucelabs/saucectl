@@ -53,7 +53,7 @@ type Suite struct {
 	DisableScreenshots bool              `yaml:"disableScreenshots,omitempty" json:"disableScreenshots"`
 	DisableVideo       bool              `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testcafe config.
 	Mode               string            `yaml:"mode,omitempty" json:"-"`
-	Devices            []string          `yaml:"devices,omitempty" json:"devices"`
+	Devices            []config.Device   `yaml:"devices,omitempty" json:"devices"`
 }
 
 // Screenshots represents screenshots configuration.

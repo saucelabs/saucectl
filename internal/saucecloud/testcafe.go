@@ -64,26 +64,28 @@ func (r *TestcafeRunner) runSuites(fileID string) bool {
 	for _, s := range r.Project.Suites {
 		if len(s.Devices) > 0 {
 			for _, d := range s.Devices {
-				jobOpts <- job.StartOptions{
-					RawConfig:        r.Project.RawConfig,
-					App:              fmt.Sprintf("storage:%s", fileID),
-					Suite:            s.Name,
-					Framework:        "testcafe",
-					FrameworkVersion: r.Project.Testcafe.Version,
-					BrowserName:      s.BrowserName,
-					BrowserVersion:   s.BrowserVersion,
-					PlatformName:     s.PlatformName,
-					DeviceName:       d,
-					Name:             fmt.Sprintf("%s - %s", r.Project.Sauce.Metadata.Name, s.Name),
-					Build:            r.Project.Sauce.Metadata.Build,
-					Tags:             r.Project.Sauce.Metadata.Tags,
-					Tunnel: job.TunnelOptions{
-						ID:     r.Project.Sauce.Tunnel.ID,
-						Parent: r.Project.Sauce.Tunnel.Parent,
-					},
-					ScreenResolution: s.ScreenResolution,
-					RunnerVersion:    r.Project.RunnerVersion,
-					Experiments:      r.Project.Sauce.Experiments,
+				for _, pv := range d.PlatformVersions {
+					jobOpts <- job.StartOptions{
+						RawConfig:        r.Project.RawConfig,
+						App:              fmt.Sprintf("storage:%s", fileID),
+						Suite:            s.Name,
+						Framework:        "testcafe",
+						FrameworkVersion: r.Project.Testcafe.Version,
+						BrowserName:      s.BrowserName,
+						BrowserVersion:   s.BrowserVersion,
+						PlatformName:     fmt.Sprintf("%s %s", s.PlatformName, pv),
+						DeviceName:       d.Name,
+						Name:             fmt.Sprintf("%s - %s", r.Project.Sauce.Metadata.Name, s.Name),
+						Build:            r.Project.Sauce.Metadata.Build,
+						Tags:             r.Project.Sauce.Metadata.Tags,
+						Tunnel: job.TunnelOptions{
+							ID:     r.Project.Sauce.Tunnel.ID,
+							Parent: r.Project.Sauce.Tunnel.Parent,
+						},
+						ScreenResolution: s.ScreenResolution,
+						RunnerVersion:    r.Project.RunnerVersion,
+						Experiments:      r.Project.Sauce.Experiments,
+					}
 				}
 			}
 		} else {
