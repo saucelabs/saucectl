@@ -12,7 +12,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/ryanuber/go-glob"
-
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -140,7 +139,14 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	}
 
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
-	log.Info().Str("suite", opts.Suite).Str("url", jobDetailsPage).Msg("Suite started.")
+	l := log.Info().Str("url", jobDetailsPage).Str("suite", opts.Suite).Str("platform", opts.PlatformName)
+	if opts.Framework == config.KindEspresso {
+		l.Str("device", opts.DeviceName).Str("name", opts.Name).Str("platformVersion", opts.PlatformVersion)
+
+	} else {
+		l.Str("browser", opts.BrowserName)
+	}
+	l.Msg("Suite started.")
 
 	sigChan := r.registerInterruptOnSignal(id, opts.Suite)
 	defer unregisterSignalCapture(sigChan)
