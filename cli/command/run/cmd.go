@@ -165,7 +165,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return runTestcafe(cmd, tc, rs, as)
 	}
 	if d.Kind == config.KindPuppeteer && d.APIVersion == config.VersionV1Alpha {
-		return runPuppeteer(cmd, tc)
+		return runPuppeteer(cmd, tc, rs)
 	}
 	if d.Kind == config.KindEspresso && d.APIVersion == config.VersionV1Alpha {
 		return runEspresso(cmd, tc, rs, as)
@@ -239,7 +239,7 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 
 	switch testEnv {
 	case "docker":
-		return runCypressInDocker(p, tc)
+		return runCypressInDocker(p, tc, rs)
 	case "sauce":
 		return runCypressInSauce(p, regio, tc, rs, as)
 	default:
@@ -247,10 +247,10 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 	}
 }
 
-func runCypressInDocker(p cypress.Project, testco testcomposer.Client) (int, error) {
+func runCypressInDocker(p cypress.Project, testco testcomposer.Client, rs resto.Client) (int, error) {
 	log.Info().Msg("Running Cypress in Docker")
 
-	cd, err := docker.NewCypress(p, &testco)
+	cd, err := docker.NewCypress(p, &testco, &rs)
 	if err != nil {
 		return 1, err
 	}
@@ -267,6 +267,7 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			JobStarter:      &tc,
 			JobReader:       &rs,
 			JobStopper:      &rs,
+			JobWriter:       &rs,
 			CCYReader:       &rs,
 			TunnelService:   &rs,
 			Region:          regio,
@@ -324,7 +325,7 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 
 	switch testEnv {
 	case "docker":
-		return runPlaywrightInDocker(p, tc)
+		return runPlaywrightInDocker(p, tc, rs)
 	case "sauce":
 		return runPlaywrightInSauce(p, regio, tc, rs, as)
 	default:
@@ -332,10 +333,10 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 	}
 }
 
-func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client) (int, error) {
+func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs resto.Client) (int, error) {
 	log.Info().Msg("Running Playwright in Docker")
 
-	cd, err := docker.NewPlaywright(p, &testco)
+	cd, err := docker.NewPlaywright(p, &testco, &rs)
 	if err != nil {
 		return 1, err
 	}
@@ -352,6 +353,7 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 			JobStarter:      &tc,
 			JobReader:       &rs,
 			JobStopper:      &rs,
+			JobWriter:       &rs,
 			CCYReader:       &rs,
 			TunnelService:   &rs,
 			Region:          regio,
@@ -407,7 +409,7 @@ func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 
 	switch testEnv {
 	case "docker":
-		return runTestcafeInDocker(p, tc)
+		return runTestcafeInDocker(p, tc, rs)
 	case "sauce":
 		return runTestcafeInCloud(p, regio, tc, rs, as)
 	default:
@@ -415,10 +417,10 @@ func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 	}
 }
 
-func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client) (int, error) {
+func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client, rs resto.Client) (int, error) {
 	log.Info().Msg("Running Testcafe in Docker")
 
-	cd, err := docker.NewTestcafe(p, &testco)
+	cd, err := docker.NewTestcafe(p, &testco, &rs)
 	if err != nil {
 		return 1, err
 	}
@@ -435,6 +437,7 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 			JobStarter:      &tc,
 			JobReader:       &rs,
 			JobStopper:      &rs,
+			JobWriter:       &rs,
 			CCYReader:       &rs,
 			TunnelService:   &rs,
 			Region:          regio,
@@ -487,6 +490,7 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 			JobStarter:      &tc,
 			JobReader:       &rs,
 			JobStopper:      &rs,
+			JobWriter:       &rs,
 			CCYReader:       &rs,
 			TunnelService:   &rs,
 			Region:          regio,
@@ -496,7 +500,7 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 	return r.RunProject()
 }
 
-func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client) (int, error) {
+func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (int, error) {
 	p, err := puppeteer.FromFile(cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -538,16 +542,16 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client) (int, error) {
 
 	switch testEnv {
 	case "docker":
-		return runPuppeteerInDocker(p, tc)
+		return runPuppeteerInDocker(p, tc, rs)
 	default:
 		return 1, errors.New("unsupported test enviornment")
 	}
 }
 
-func runPuppeteerInDocker(p puppeteer.Project, testco testcomposer.Client) (int, error) {
+func runPuppeteerInDocker(p puppeteer.Project, testco testcomposer.Client, rs resto.Client) (int, error) {
 	log.Info().Msg("Running puppeteer in Docker")
 
-	cd, err := docker.NewPuppeteer(p, &testco)
+	cd, err := docker.NewPuppeteer(p, &testco, &rs)
 	if err != nil {
 		return 1, err
 	}

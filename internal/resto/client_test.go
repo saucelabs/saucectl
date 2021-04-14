@@ -414,3 +414,76 @@ func TestClient_TestStop(t *testing.T) {
 		})
 	}
 }
+
+func TestClient_UploadAsset(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/testrunner/jobs/1/assets":
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("{\"uploaded\":null}"))
+		case "/v1/testrunner/jobs/2/assets":
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("{\"uploaded\":null,\"errors\":[\"failed to upload config.yml: content-type not allowed\"]}"))
+		case "/v1/testrunner/jobs/3/assets":
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}))
+	defer ts.Close()
+	timeout := 3 * time.Second
+
+	type args struct {
+		jobID       string
+		fileName    string
+		contentType string
+		content     []byte
+	}
+	tests := []struct {
+		client  Client
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name:   "Valid case",
+			client: New(ts.URL, "test", "123", timeout),
+			args: args{
+				jobID:       "1",
+				fileName:    "config.yml",
+				contentType: "text/plain",
+				content:     []byte("dummy-content"),
+			},
+			wantErr: false,
+		},
+		{
+			name:   "invalid case - 400",
+			client: New(ts.URL, "test", "123", timeout),
+			args: args{
+				jobID:       "2",
+				fileName:    "config.yml",
+				contentType: "text/plain",
+				content:     []byte("dummy-content"),
+			},
+			wantErr: true,
+		},
+		{
+			name:   "invalid 404",
+			client: New(ts.URL, "test", "123", timeout),
+			args: args{
+				jobID:       "3",
+				fileName:    "config.yml",
+				contentType: "text/plain",
+				content:     []byte("dummy-content"),
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.client.UploadAsset(tt.args.jobID, tt.args.fileName, tt.args.contentType, tt.args.content); (err != nil) != tt.wantErr {
+				t.Errorf("UploadAsset() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

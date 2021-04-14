@@ -2,9 +2,10 @@ package docker
 
 import (
 	"context"
-	"github.com/saucelabs/saucectl/internal/puppeteer"
 
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/puppeteer"
 )
 
 // PuppeterRunner represents the docker implementation of a test runner.
@@ -14,7 +15,7 @@ type PuppeterRunner struct {
 }
 
 // NewPuppeteer creates a new PuppeterRunner instance.
-func NewPuppeteer(c puppeteer.Project, ms framework.MetadataService) (*PuppeterRunner, error) {
+func NewPuppeteer(c puppeteer.Project, ms framework.MetadataService, wr job.Writer) (*PuppeterRunner, error) {
 	r := PuppeterRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -26,6 +27,7 @@ func NewPuppeteer(c puppeteer.Project, ms framework.MetadataService) (*PuppeterR
 			},
 			FrameworkMeta:  ms,
 			ShowConsoleLog: c.ShowConsoleLog,
+			JobWriter:      wr,
 		},
 	}
 	var err error
@@ -61,6 +63,7 @@ func (r *PuppeterRunner) RunProject() (int, error) {
 				Environment: suite.Env,
 				RootDir:     r.Project.RootDir,
 				Sauceignore: r.Project.Sauce.Sauceignore,
+				RawConfig:   r.Project.RawConfig,
 			}
 		}
 		close(containerOpts)

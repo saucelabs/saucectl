@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 )
 
@@ -14,7 +15,7 @@ type TestcafeRunner struct {
 }
 
 // NewTestcafe creates a new TestcafeRunner instance.
-func NewTestcafe(c testcafe.Project, ms framework.MetadataService) (*TestcafeRunner, error) {
+func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer) (*TestcafeRunner, error) {
 	r := TestcafeRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -26,6 +27,7 @@ func NewTestcafe(c testcafe.Project, ms framework.MetadataService) (*TestcafeRun
 			},
 			FrameworkMeta:  ms,
 			ShowConsoleLog: c.ShowConsoleLog,
+			JobWriter:      wr,
 		},
 	}
 	var err error
@@ -61,6 +63,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 				Environment: suite.Env,
 				RootDir:     r.Project.RootDir,
 				Sauceignore: r.Project.Sauce.Sauceignore,
+				RawConfig:   r.Project.RawConfig,
 			}
 		}
 		close(containerOpts)

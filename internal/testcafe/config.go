@@ -3,6 +3,7 @@ package testcafe
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/rs/zerolog/log"
@@ -14,6 +15,7 @@ import (
 type Project struct {
 	config.TypeDef `yaml:",inline"`
 	ShowConsoleLog bool
+	RawConfig      string             `yaml:"-" json:"-"`
 	DryRun         bool               `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
@@ -77,9 +79,17 @@ func FromFile(cfgPath string) (Project, error) {
 		return p, fmt.Errorf("failed to locate project config: %v", err)
 	}
 	defer f.Close()
-	if err = yaml.NewDecoder(f).Decode(&p); err != nil {
-		return p, fmt.Errorf("failed to parse project config: %v", err)
+
+	content, err := io.ReadAll(f)
+	if err != nil {
+		return Project{}, fmt.Errorf("failed to read configuration file: %v", err)
 	}
+
+	if err = yaml.Unmarshal(content, &p); err != nil {
+		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
+	}
+
+	p.RawConfig = string(content)
 
 	if p.Testcafe.ProjectPath == "" && p.RootDir == "" {
 		return p, fmt.Errorf("could not find 'rootDir' in config yml, 'rootDir' must be set to specify project files")

@@ -25,6 +25,7 @@ func TestCloudRunner_logSuiteConsole(t *testing.T) {
 		ProjectUploader storage.ProjectUploader
 		JobStarter      job.Starter
 		JobReader       job.Reader
+		JobWriter       job.Writer
 		CCYReader       concurrency.Reader
 		Region          region.Region
 		ShowConsoleLog  bool
@@ -39,11 +40,18 @@ func TestCloudRunner_logSuiteConsole(t *testing.T) {
 	}{
 		{
 			name: "simple test",
-			fields: fields{JobReader: &mocks.FakeJobReader{
-				GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
-					return []byte("dummy-content"), nil
+			fields: fields{
+				JobReader: &mocks.FakeJobReader{
+					GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+						return []byte("dummy-content"), nil
+					},
 				},
-			}},
+				JobWriter: &mocks.FakeJobWriter{
+					UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+						return nil
+					},
+				},
+			},
 			args: args{
 				res: result{
 					job: job.Job{
@@ -57,6 +65,7 @@ func TestCloudRunner_logSuiteConsole(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &CloudRunner{
 				JobReader: tt.fields.JobReader,
+				JobWriter: tt.fields.JobWriter,
 			}
 			r.logSuiteConsole(tt.args.res)
 		})
@@ -125,6 +134,11 @@ func TestSkippedRunJobs(t *testing.T) {
 						Error:  "",
 						Status: job.StateComplete,
 					}, nil
+				},
+			},
+			JobWriter: &mocks.FakeJobWriter{
+				UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+					return nil
 				},
 			},
 		}
@@ -240,17 +254,17 @@ func TestDownloadArtifacts(t *testing.T) {
 		},
 	}
 	cfg := config.ArtifactDownload{
-		When: config.WhenAlways,
+		When:      config.WhenAlways,
 		Directory: filepath.Join(dir.Path(), "results"),
-		Match: []string{"console.log"},
+		Match:     []string{"console.log"},
 	}
 	j := job.Job{
-		ID: "fake-job-id",
+		ID:     "fake-job-id",
 		Status: job.StateComplete,
 	}
 	expectedFiles := []struct {
 		filename string
-		content []byte
+		content  []byte
 	}{
 		{filename: "console.log", content: []byte("console-log-content")},
 	}

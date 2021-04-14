@@ -20,6 +20,7 @@ type StartOptions struct {
 	App       string `json:"app,omitempty"`
 	Suite     string `json:"suite,omitempty"`
 	Framework string `json:"framework,omitempty"`
+	RawConfig string `json:"-"`
 
 	// FrameworkVersion contains the targeted version of the framework
 	// It should not be confused with automation tool (like jest/folio).

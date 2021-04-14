@@ -31,6 +31,7 @@ type CloudRunner struct {
 	ProjectUploader storage.ProjectUploader
 	JobStarter      job.Starter
 	JobReader       job.Reader
+	JobWriter       job.Writer
 	JobStopper      job.Stopper
 	CCYReader       concurrency.Reader
 	TunnelService   tunnel.Service
@@ -124,6 +125,12 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	id, err := r.JobStarter.StartJob(context.Background(), opts)
 	if err != nil {
 		return job.Job{}, false, err
+	}
+
+	// Upload configuration
+	err = r.JobWriter.UploadAsset(id, "sauce_config.yml", "text/plain", []byte(opts.RawConfig))
+	if err != nil {
+		log.Warn().Msgf("failed to attach configuration: %v", err)
 	}
 
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,

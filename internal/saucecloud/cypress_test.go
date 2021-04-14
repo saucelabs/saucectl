@@ -45,10 +45,16 @@ func TestRunSuite(t *testing.T) {
 			return job.Job{ID: id, Passed: true}, nil
 		},
 	}
+	writer := mocks.FakeJobWriter{
+		UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+			return nil
+		},
+	}
 	runner := CypressRunner{
 		CloudRunner: CloudRunner{
 			JobStarter: &starter,
 			JobReader:  &reader,
+			JobWriter:  &writer,
 		},
 	}
 
@@ -74,6 +80,11 @@ func TestRunSuites(t *testing.T) {
 			return job.Job{ID: id, Passed: true}, nil
 		},
 	}
+	writer := mocks.FakeJobWriter{
+		UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+			return nil
+		},
+	}
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 		return 1, nil
 	}}
@@ -81,6 +92,7 @@ func TestRunSuites(t *testing.T) {
 		CloudRunner: CloudRunner{
 			JobStarter: &starter,
 			JobReader:  &reader,
+			JobWriter:  &writer,
 			CCYReader:  ccyReader,
 		},
 		Project: cypress.Project{
@@ -215,6 +227,11 @@ func TestRunProject(t *testing.T) {
 			return job.Job{ID: id, Passed: true}, nil
 		},
 	}
+	writer := mocks.FakeJobWriter{
+		UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+			return nil
+		},
+	}
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 		return 1, nil
 	}}
@@ -226,6 +243,7 @@ func TestRunProject(t *testing.T) {
 		CloudRunner: CloudRunner{
 			JobStarter:      &starter,
 			JobReader:       &reader,
+			JobWriter:       &writer,
 			CCYReader:       ccyReader,
 			ProjectUploader: uploader,
 		},
