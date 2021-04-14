@@ -141,7 +141,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
 	l := log.Info().Str("url", jobDetailsPage).Str("suite", opts.Suite).Str("platform", opts.PlatformName)
 	if opts.Framework == config.KindEspresso {
-		l.Str("device", opts.DeviceName).Str("name", opts.Name)
+		l.Str("device", opts.DeviceName).Str("name", opts.Name).Str("platformVersion", opts.PlatformVersion)
 
 	} else {
 		l.Str("browser", opts.BrowserName)
