@@ -2,6 +2,7 @@ package saucecloud
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -50,17 +51,23 @@ type result struct {
 // ConsoleLogAsset represents job asset log file name.
 const ConsoleLogAsset = "console.log"
 
-func (r *CloudRunner) createWorkerPool(num int) (chan job.StartOptions, chan result) {
+func (r *CloudRunner) createWorkerPool(num int) (chan job.StartOptions, chan result, error) {
+	ccy := concurrency.Min(r.CCYReader, num)
+	if ccy == 0 {
+		log.Error().Msgf("No concurrency available")
+		err := errors.New("no concurrency available")
+		return nil, nil, err
+	}
+
 	jobOpts := make(chan job.StartOptions)
 	results := make(chan result, num)
 
-	ccy := concurrency.Min(r.CCYReader, num)
 	log.Info().Int("concurrency", ccy).Msg("Launching workers.")
 	for i := 0; i < ccy; i++ {
 		go r.runJobs(jobOpts, results)
 	}
 
-	return jobOpts, results
+	return jobOpts, results, nil
 }
 
 func (r *CloudRunner) collectResults(artifactsCfg config.ArtifactDownload, results chan result, expected int) bool {

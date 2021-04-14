@@ -64,7 +64,10 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
-	jobOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency)
+	jobOpts, results, err := r.createWorkerPool(r.Project.Sauce.Concurrency)
+	if err != nil {
+		return false
+	}
 	defer close(results)
 
 	// Submit suites to work on.
