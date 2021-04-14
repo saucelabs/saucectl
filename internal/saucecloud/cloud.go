@@ -142,7 +142,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
 	log.Info().Str("suite", opts.Suite).Str("url", jobDetailsPage).
 		Str("device", opts.DeviceName).Str("platform", opts.PlatformName).
-		Msg("Suite started.")
+		Str("name", opts.Name).Msg("Suite started.")
 
 	sigChan := r.registerInterruptOnSignal(id, opts.Suite)
 	defer unregisterSignalCapture(sigChan)
