@@ -366,7 +366,7 @@ func createStopRequest(ctx context.Context, url, username, accessKey, jobID stri
 	return req, nil
 }
 
-func createUploadAssetRequest(ctx context.Context, url, username, accessKey, jobID string, fileName string, contentType string, content []byte) (*http.Request, error) {
+func createUploadAssetRequest(ctx context.Context, url, username, accessKey, jobID, fileName, contentType string, content []byte) (*http.Request, error) {
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
 	h := make(textproto.MIMEHeader)
