@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/textproto"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/job"
@@ -392,6 +393,11 @@ func createUploadAssetRequest(ctx context.Context, url, username, accessKey, job
 	return req, nil
 }
 
+type assetsUploadResponse struct {
+	Uploaded []string `json:"uploaded"`
+	Errors   []string `json:"errors,omitempty"`
+}
+
 func doRequestAsset(httpClient *http.Client, request *http.Request) error {
 	resp, err := httpClient.Do(request)
 	if err != nil {
@@ -409,10 +415,16 @@ func doRequestAsset(httpClient *http.Client, request *http.Request) error {
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		err := fmt.Errorf("job status request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		err := fmt.Errorf("assets upload request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 		return err
 	}
 
-	_, err = io.ReadAll(resp.Body)
-	return err
+	assetsResponse := assetsUploadResponse{}
+	if err = json.NewDecoder(resp.Body).Decode(&assetsResponse); err != nil {
+		return err
+	}
+	if len(assetsResponse.Errors) > 0 {
+		return fmt.Errorf("upload failed: %v", strings.Join(assetsResponse.Errors, ","))
+	}
+	return nil
 }
