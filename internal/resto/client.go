@@ -419,7 +419,7 @@ func doRequestAsset(httpClient *http.Client, request *http.Request) error {
 		return err
 	}
 
-	assetsResponse := assetsUploadResponse{}
+	var assetsResponse assetsUploadResponse
 	if err = json.NewDecoder(resp.Body).Decode(&assetsResponse); err != nil {
 		return err
 	}
