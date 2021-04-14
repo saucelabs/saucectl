@@ -420,8 +420,9 @@ func TestClient_UploadAsset(t *testing.T) {
 		switch r.URL.Path {
 		case "/v1/testrunner/jobs/1/assets":
 			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("{\"uploaded\":null}"))
 		case "/v1/testrunner/jobs/2/assets":
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("{\"uploaded\":null,\"errors\":[\"failed to upload config.yml: content-type not allowed\"]}"))
 		case "/v1/testrunner/jobs/3/assets":
 			w.WriteHeader(http.StatusNotFound)
