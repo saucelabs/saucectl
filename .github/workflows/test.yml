@@ -111,9 +111,9 @@ jobs:
         run: |
           ../saucectl new -f puppeteer
 
-      - name: Saucectl RUN Docker
+      - name: Saucectl RUN
         working-directory: scratch
-        run: ../saucectl run --test-env docker --ccy 10
+        run: ../saucectl run --ccy 10
         env:
           BUILD_ID: ${{ github.run_id }}
   playwright-from-template:
@@ -142,7 +142,7 @@ jobs:
 
       - name: Saucectl RUN Docker
         working-directory: scratch
-        run: ../saucectl run --test-env docker --ccy 10
+        run: ../saucectl run --ccy 10
         env:
           BUILD_ID: ${{ github.run_id }}
 
@@ -177,7 +177,7 @@ jobs:
 
       - name: Saucectl RUN Docker
         working-directory: scratch
-        run: ../saucectl run --test-env docker --ccy 10
+        run: ../saucectl run --ccy 10
         env:
           BUILD_ID: ${{ github.run_id }}
 
@@ -213,7 +213,7 @@ jobs:
       - name: Saucectl RUN Docker
         working-directory: scratch
         run: |
-          ../saucectl run --test-env docker --ccy 10
+          ../saucectl run --ccy 10
         env:
           BUILD_ID: ${{ github.run_id }}
 
