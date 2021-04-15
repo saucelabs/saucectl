@@ -58,7 +58,6 @@ var (
 	sauceignore    string
 	experiments    map[string]string
 	dryRun         bool
-	mode           string
 
 	// General Request Timeouts
 	appStoreTimeout     = 300 * time.Second
@@ -104,9 +103,6 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVar(&sauceignore, "sauceignore", "", "Specifies the path to the .sauceignore file.")
 	cmd.Flags().StringToStringVar(&experiments, "experiment", map[string]string{}, "Specifies a list of experimental flags and values")
 	cmd.Flags().BoolVarP(&dryRun, "dry-run", "", false, "Simulate a test run without actually running any tests.")
-	cmd.Flags().StringVar(&mode, "mode", "", "Specifies the environment in which the tests should run. Choice: docker|sauce.")
-
-	cmd.Flags().MarkDeprecated("test-env", "use --mode instead")
 
 	// Hide undocumented flags that the user does not need to care about.
 	_ = cmd.Flags().MarkHidden("sauce-api")
@@ -234,12 +230,9 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 		}
 		p.Suites[i] = s
 	}
-	if testEnv != "" && mode == "" {
-		mode = testEnv
-	}
-	if mode != "" {
+	if testEnv != "" {
 		for i, s := range p.Suites {
-			s.Mode = mode
+			s.Mode = testEnv
 			p.Suites[i] = s
 		}
 	}
@@ -346,12 +339,9 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 		}
 		p.Suites[i] = s
 	}
-	if testEnv != "" && mode == "" {
-		mode = testEnv
-	}
-	if mode != "" {
+	if testEnv != "" {
 		for i, s := range p.Suites {
-			s.Mode = mode
+			s.Mode = testEnv
 			p.Suites[i] = s
 		}
 	}
@@ -452,12 +442,9 @@ func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 		}
 		p.Suites[i] = s
 	}
-	if testEnv != "" && mode == "" {
-		mode = testEnv
-	}
-	if mode != "" {
+	if testEnv != "" {
 		for i, s := range p.Suites {
-			s.Mode = mode
+			s.Mode = testEnv
 			p.Suites[i] = s
 		}
 	}
@@ -542,15 +529,12 @@ func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
 
-	if testEnv != "" {
-		mode = testEnv
-	}
 	// set default value for mode
-	if mode == "" {
-		mode = "sauce"
+	if testEnv == "" {
+		testEnv = "sauce"
 	}
 
-	switch mode {
+	switch testEnv {
 	case "sauce":
 		return runEspressoInCloud(p, regio, tc, rs, as)
 	default:
@@ -618,14 +602,11 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 	}
 
 	tc.URL = regio.APIBaseURL()
-	if testEnv != "" {
-		mode = testEnv
-	}
-	if mode == "" {
-		mode = "docker"
+	if testEnv == "" {
+		testEnv = "docker"
 	}
 
-	switch mode {
+	switch testEnv {
 	case "docker":
 		return runPuppeteerInDocker(p, tc, rs)
 	default:
