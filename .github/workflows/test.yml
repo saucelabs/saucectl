@@ -140,17 +140,12 @@ jobs:
         run: |
           ../saucectl new -f playwright
 
-      - name: Saucectl RUN Docker
+      - name: Saucectl RUN Docker and Sauce Cloud
         working-directory: scratch
         run: ../saucectl run --ccy 10
         env:
           BUILD_ID: ${{ github.run_id }}
 
-      - name: Saucectl RUN Sauce Cloud
-        working-directory: scratch
-        run: ../saucectl run --test-env sauce --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
   testcafe-from-template:
     needs: build
     runs-on: ubuntu-latest
@@ -175,17 +170,12 @@ jobs:
         run: |
           ../saucectl new -f testcafe
 
-      - name: Saucectl RUN Docker
+      - name: Saucectl RUN Docker and Sauce Cloud
         working-directory: scratch
         run: ../saucectl run --ccy 10
         env:
           BUILD_ID: ${{ github.run_id }}
 
-      - name: Saucectl RUN Sauce Cloud
-        working-directory: scratch
-        run: ../saucectl run --test-env sauce --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
   cypress-from-template:
     needs: build
     runs-on: ubuntu-latest
@@ -210,16 +200,10 @@ jobs:
         run: |
           ../saucectl new -f cypress
 
-      - name: Saucectl RUN Docker
+      - name: Saucectl RUN Docker and Sauce Cloud
         working-directory: scratch
         run: |
           ../saucectl run --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
-
-      - name: Saucectl RUN Sauce Cloud
-        working-directory: scratch
-        run: ../saucectl run --test-env sauce --ccy 10
         env:
           BUILD_ID: ${{ github.run_id }}
   cypress-windows:
@@ -240,7 +224,7 @@ jobs:
 
       - name: Run Sauce Pipeline Test - Sauce Cloud
         run: |
-          ./saucectl.exe run -c .sauce/cypress_cloud.yml --test-env sauce --ccy 5
+          ./saucectl.exe run -c .sauce/cypress_cloud.yml --ccy 5
   espresso:
     needs: build
     runs-on: ubuntu-latest
@@ -262,6 +246,6 @@ jobs:
 
       - name: Run Sauce Pipeline Test - Sauce Cloud
         run: |
-          ./saucectl run -c .sauce/espresso.yml --test-env sauce --ccy 10
+          ./saucectl run -c .sauce/espresso.yml --ccy 10
         env:
           BUILD_ID: ${{ github.run_id }}
