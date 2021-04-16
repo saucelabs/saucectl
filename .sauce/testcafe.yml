@@ -37,8 +37,6 @@ suites:
       hello: world
     speed: 1
 
-
-
 docker:
   # fileTransfer controls how test files are transferred to the docker container before tests are run (choice: mount|copy).
   # `mount` will mount files and folders into the container. Changes to these files and folders will be reflected on the
