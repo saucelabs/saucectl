@@ -111,9 +111,9 @@ jobs:
         run: |
           ../saucectl new -f puppeteer
 
-      - name: Saucectl RUN
+      - name: Saucectl RUN Docker
         working-directory: scratch
-        run: ../saucectl run --ccy 10
+        run: ../saucectl run --test-env docker --ccy 10
         env:
           BUILD_ID: ${{ github.run_id }}
   playwright-from-template:
@@ -140,11 +140,24 @@ jobs:
         run: |
           ../saucectl new -f playwright
 
+      - name: Saucectl RUN Docker
+        working-directory: scratch
+        run: ../saucectl run --test-env docker --ccy 10
+        env:
+          BUILD_ID: ${{ github.run_id }}
+
+      - name: Saucectl RUN Sauce Cloud
+        working-directory: scratch
+        run: ../saucectl run --test-env sauce --ccy 10
+        env:
+          BUILD_ID: ${{ github.run_id }}
+
       - name: Saucectl RUN Docker and Sauce Cloud
         working-directory: scratch
         run: ../saucectl run --ccy 10
         env:
           BUILD_ID: ${{ github.run_id }}
+
 
   testcafe-from-template:
     needs: build
@@ -169,6 +182,18 @@ jobs:
         working-directory: scratch
         run: |
           ../saucectl new -f testcafe
+
+      - name: Saucectl RUN Docker
+        working-directory: scratch
+        run: ../saucectl run --test-env docker --ccy 10
+        env:
+          BUILD_ID: ${{ github.run_id }}
+
+      - name: Saucectl RUN Sauce Cloud
+        working-directory: scratch
+        run: ../saucectl run --test-env sauce --ccy 10
+        env:
+          BUILD_ID: ${{ github.run_id }}
 
       - name: Saucectl RUN Docker and Sauce Cloud
         working-directory: scratch
@@ -200,6 +225,20 @@ jobs:
         run: |
           ../saucectl new -f cypress
 
+      - name: Saucectl RUN Docker
+        working-directory: scratch
+        run: |
+          ../saucectl run --test-env docker --ccy 10
+        env:
+          BUILD_ID: ${{ github.run_id }}
+
+      - name: Saucectl RUN Sauce Cloud
+        working-directory: scratch
+        run: |
+          ../saucectl run --test-env sauce --ccy 10
+        env:
+          BUILD_ID: ${{ github.run_id }}
+ 
       - name: Saucectl RUN Docker and Sauce Cloud
         working-directory: scratch
         run: |
