@@ -13,7 +13,7 @@ import (
 // Project represents the espresso project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline"`
-	RawConfigFile  string             `yaml:"-" json:"-"`
+	ConfigFilePath string             `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Espresso       Espresso           `yaml:"espresso,omitempty" json:"espresso"`
 	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
@@ -58,7 +58,7 @@ func FromFile(cfgPath string) (Project, error) {
 	if err := yaml.NewDecoder(f).Decode(&p); err != nil {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
-	p.RawConfigFile = cfgPath
+	p.ConfigFilePath = cfgPath
 
 	if p.Sauce.Concurrency < 1 {
 		// Default concurrency is 2

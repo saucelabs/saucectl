@@ -74,7 +74,7 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 	go func() {
 		for _, s := range r.Project.Suites {
 			jobOpts <- job.StartOptions{
-				RawConfigFile:    r.Project.RawConfigFile,
+				ConfigFilePath:   r.Project.ConfigFilePath,
 				App:              fmt.Sprintf("storage:%s", fileID),
 				Suite:            s.Name,
 				Framework:        "cypress",

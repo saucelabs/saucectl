@@ -14,7 +14,7 @@ import (
 type Project struct {
 	config.TypeDef `yaml:",inline"`
 	ShowConsoleLog bool
-	RawConfigFile  string             `yaml:"-" json:"-"`
+	ConfigFilePath string             `yaml:"-" json:"-"`
 	DryRun         bool               `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
@@ -52,7 +52,7 @@ func FromFile(cfgPath string) (Project, error) {
 	if err := yaml.NewDecoder(f).Decode(&p); err != nil {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
-	p.RawConfigFile = cfgPath
+	p.ConfigFilePath = cfgPath
 
 	if p.RootDir == "" {
 		return p, fmt.Errorf("could not find 'rootDir' in config yml, 'rootDir' must be set to specify project files")

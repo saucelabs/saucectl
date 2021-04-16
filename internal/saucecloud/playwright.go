@@ -69,7 +69,7 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 				s.PlaywrightVersion = r.Project.Playwright.Version
 			}
 			jobOpts <- job.StartOptions{
-				RawConfigFile:    r.Project.RawConfigFile,
+				ConfigFilePath:   r.Project.ConfigFilePath,
 				App:              fmt.Sprintf("storage:%s", fileID),
 				Suite:            s.Name,
 				Framework:        "playwright",

@@ -127,7 +127,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 		return job.Job{}, false, err
 	}
 
-	r.uploadSauceConfig(id, opts.RawConfigFile)
+	r.uploadSauceConfig(id, opts.ConfigFilePath)
 
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
 	// if a soft exit is requested during startContainer phase, it gently exits.

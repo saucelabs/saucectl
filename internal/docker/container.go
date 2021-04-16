@@ -39,14 +39,14 @@ type ContainerRunner struct {
 
 // containerStartOptions represent data required to start a new container.
 type containerStartOptions struct {
-	Docker        config.Docker
-	BeforeExec    []string
-	Project       interface{}
-	SuiteName     string
-	Environment   map[string]string
-	RootDir       string
-	Sauceignore   string
-	RawConfigFile string
+	Docker         config.Docker
+	BeforeExec     []string
+	Project        interface{}
+	SuiteName      string
+	Environment    map[string]string
+	RootDir        string
+	Sauceignore    string
+	ConfigFilePath string
 }
 
 // result represents the result of a local job
@@ -360,7 +360,7 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 
 	jobID := jobIDFromURL(jobIDFromURL(jobInfo.JobDetailsURL))
 	if jobID != "" {
-		r.uploadSauceConfig(jobID, options.RawConfigFile)
+		r.uploadSauceConfig(jobID, options.ConfigFilePath)
 	}
 	return
 }

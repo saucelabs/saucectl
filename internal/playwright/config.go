@@ -14,7 +14,7 @@ import (
 type Project struct {
 	config.TypeDef `yaml:",inline"`
 	ShowConsoleLog bool
-	RawConfigFile  string             `yaml:"-" json:"-"`
+	ConfigFilePath string             `yaml:"-" json:"-"`
 	DryRun         bool               `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Playwright     Playwright         `yaml:"playwright,omitempty" json:"playwright"`
@@ -70,7 +70,7 @@ func FromFile(cfgPath string) (Project, error) {
 	if err := yaml.NewDecoder(f).Decode(&p); err != nil {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
-	p.RawConfigFile = cfgPath
+	p.ConfigFilePath = cfgPath
 
 	p.Playwright.Version = config.StandardizeVersionFormat(p.Playwright.Version)
 

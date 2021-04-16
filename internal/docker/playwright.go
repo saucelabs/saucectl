@@ -58,14 +58,14 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 	go func() {
 		for _, suite := range r.Project.Suites {
 			containerOpts <- containerStartOptions{
-				Docker:        r.Project.Docker,
-				BeforeExec:    r.Project.BeforeExec,
-				Project:       r.Project,
-				SuiteName:     suite.Name,
-				Environment:   suite.Env,
-				RootDir:       r.Project.RootDir,
-				Sauceignore:   r.Project.Sauce.Sauceignore,
-				RawConfigFile: r.Project.RawConfigFile,
+				Docker:         r.Project.Docker,
+				BeforeExec:     r.Project.BeforeExec,
+				Project:        r.Project,
+				SuiteName:      suite.Name,
+				Environment:    suite.Env,
+				RootDir:        r.Project.RootDir,
+				Sauceignore:    r.Project.Sauce.Sauceignore,
+				ConfigFilePath: r.Project.ConfigFilePath,
 			}
 		}
 		close(containerOpts)
