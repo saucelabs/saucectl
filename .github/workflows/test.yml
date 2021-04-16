@@ -158,7 +158,6 @@ jobs:
         env:
           BUILD_ID: ${{ github.run_id }}
 
-
   testcafe-from-template:
     needs: build
     runs-on: ubuntu-latest
