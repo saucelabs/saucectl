@@ -49,6 +49,7 @@ var (
 	sauceAPI       string
 	suiteName      string
 	testEnvSilent  bool
+	testEnv        string
 	showConsoleLog bool
 	concurrency    int
 	tunnelID       string
@@ -93,6 +94,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
 	cmd.Flags().StringVar(&suiteName, "suite", "", "Run specified test suite.")
 	cmd.Flags().BoolVar(&testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
+	cmd.Flags().StringVar(&testEnv, "test-env", "sauce", "Specifies the environment in which the tests should run. Choice: docker|sauce.")
 	cmd.Flags().BoolVarP(&showConsoleLog, "show-console-log", "", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
 	cmd.Flags().IntVar(&concurrency, "ccy", 2, "Concurrency specifies how many suites are run at the same time.")
 	cmd.Flags().StringVar(&tunnelID, "tunnel-id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
@@ -101,6 +103,8 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVar(&sauceignore, "sauceignore", "", "Specifies the path to the .sauceignore file.")
 	cmd.Flags().StringToStringVar(&experiments, "experiment", map[string]string{}, "Specifies a list of experimental flags and values")
 	cmd.Flags().BoolVarP(&dryRun, "dry-run", "", false, "Simulate a test run without actually running any tests.")
+
+	cmd.Flags().MarkDeprecated("test-env", "please set mode in config file")
 
 	// Hide undocumented flags that the user does not need to care about.
 	_ = cmd.Flags().MarkHidden("sauce-api")
@@ -228,6 +232,12 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 		}
 		p.Suites[i] = s
 	}
+	if testEnv != "" {
+		for i, s := range p.Suites {
+			s.Mode = testEnv
+			p.Suites[i] = s
+		}
+	}
 
 	if err := cypress.Validate(p); err != nil {
 		return 1, err
@@ -331,6 +341,12 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 		}
 		p.Suites[i] = s
 	}
+	if testEnv != "" {
+		for i, s := range p.Suites {
+			s.Mode = testEnv
+			p.Suites[i] = s
+		}
+	}
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
@@ -427,6 +443,12 @@ func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 			s.Mode = p.Defaults.Mode
 		}
 		p.Suites[i] = s
+	}
+	if testEnv != "" {
+		for i, s := range p.Suites {
+			s.Mode = testEnv
+			p.Suites[i] = s
+		}
 	}
 
 	regio := region.FromString(p.Sauce.Region)
