@@ -61,6 +61,7 @@ func (r *TestcafeRunner) runSuites(fileID string) bool {
 	defer close(results)
 
 	// Submit suites to work on
+	jobsCount := r.calcTestcafeJobsCount(r.Project.Suites)
 	for _, s := range r.Project.Suites {
 		if len(s.Devices) > 0 {
 			for _, d := range s.Devices {
@@ -114,5 +115,19 @@ func (r *TestcafeRunner) runSuites(fileID string) bool {
 	}
 	close(jobOpts)
 
-	return r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites))
+	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
+}
+
+func (r *TestcafeRunner) calcTestcafeJobsCount(suites []testcafe.Suite) int {
+	jobsCount := 0
+	for _, s := range suites {
+		if len(s.Devices) > 0 {
+			for _, d := range s.Devices {
+				jobsCount += len(d.PlatformVersions)
+			}
+		} else {
+			jobsCount++
+		}
+	}
+	return jobsCount
 }
