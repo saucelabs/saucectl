@@ -67,7 +67,6 @@ func (r *TestcafeRunner) runSuites(fileID string) bool {
 			for _, d := range s.Devices {
 				for _, pv := range d.PlatformVersions {
 					jobOpts <- job.StartOptions{
-						RawConfig:        r.Project.RawConfig,
 						App:              fmt.Sprintf("storage:%s", fileID),
 						Suite:            s.Name,
 						Framework:        "testcafe",
@@ -92,7 +91,6 @@ func (r *TestcafeRunner) runSuites(fileID string) bool {
 			}
 		} else {
 			jobOpts <- job.StartOptions{
-				RawConfig:        r.Project.RawConfig,
 				App:              fmt.Sprintf("storage:%s", fileID),
 				Suite:            s.Name,
 				Framework:        "testcafe",

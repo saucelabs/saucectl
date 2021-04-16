@@ -3,7 +3,6 @@ package cypress
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,7 +19,7 @@ type Project struct {
 	config.TypeDef `yaml:",inline"`
 	Defaults       config.Defaults `yaml:"defaults" json:"defaults"`
 	ShowConsoleLog bool
-	RawConfig      string             `yaml:"-" json:"-"`
+	ConfigFilePath string             `yaml:"-" json:"-"`
 	DryRun         bool               `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Cypress        Cypress            `yaml:"cypress,omitempty" json:"cypress"`
@@ -82,15 +81,10 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 	defer f.Close()
 
-	content, err := io.ReadAll(f)
-	if err != nil {
-		return Project{}, fmt.Errorf("failed to read configuration file: %v", err)
-	}
-
-	if err = yaml.Unmarshal(content, &p); err != nil {
+	if err := yaml.NewDecoder(f).Decode(&p); err != nil {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
-	p.RawConfig = string(content)
+	p.ConfigFilePath = cfgPath
 
 	p.Cypress.Key = os.ExpandEnv(p.Cypress.Key)
 
@@ -199,4 +193,24 @@ func Validate(p Project) error {
 	}
 
 	return nil
+}
+
+// SplitSuites divided Suites to dockerSuites and sauceSuites
+func SplitSuites(p Project) (Project, Project) {
+	var dockerSuites []Suite
+	var sauceSuites []Suite
+	for _, s := range p.Suites {
+		if s.Mode == "docker" {
+			dockerSuites = append(dockerSuites, s)
+		} else {
+			sauceSuites = append(sauceSuites, s)
+		}
+	}
+
+	dockerProject := p
+	dockerProject.Suites = dockerSuites
+	sauceProject := p
+	sauceProject.Suites = sauceSuites
+
+	return dockerProject, sauceProject
 }

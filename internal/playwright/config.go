@@ -3,7 +3,6 @@ package playwright
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/rs/zerolog/log"
@@ -15,7 +14,7 @@ import (
 type Project struct {
 	config.TypeDef `yaml:",inline"`
 	ShowConsoleLog bool
-	RawConfig      string             `yaml:"-" json:"-"`
+	ConfigFilePath string             `yaml:"-" json:"-"`
 	DryRun         bool               `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Playwright     Playwright         `yaml:"playwright,omitempty" json:"playwright"`
@@ -68,16 +67,11 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 	defer f.Close()
 
-	content, err := io.ReadAll(f)
-	if err != nil {
-		return Project{}, fmt.Errorf("failed to read configuration file: %v", err)
-	}
-
-	if err = yaml.Unmarshal(content, &p); err != nil {
+	if err := yaml.NewDecoder(f).Decode(&p); err != nil {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
+	p.ConfigFilePath = cfgPath
 
-	p.RawConfig = string(content)
 	p.Playwright.Version = config.StandardizeVersionFormat(p.Playwright.Version)
 
 	if p.Playwright.Version == "" {
@@ -122,4 +116,24 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 
 	return p, nil
+}
+
+// SplitSuites divided Suites to dockerSuites and sauceSuites
+func SplitSuites(p Project) (Project, Project) {
+	var dockerSuites []Suite
+	var sauceSuites []Suite
+	for _, s := range p.Suites {
+		if s.Mode == "docker" {
+			dockerSuites = append(dockerSuites, s)
+		} else {
+			sauceSuites = append(sauceSuites, s)
+		}
+	}
+
+	dockerProject := p
+	dockerProject.Suites = dockerSuites
+	sauceProject := p
+	sauceProject.Suites = sauceSuites
+
+	return dockerProject, sauceProject
 }

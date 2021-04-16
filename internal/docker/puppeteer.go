@@ -56,14 +56,14 @@ func (r *PuppeterRunner) RunProject() (int, error) {
 	go func() {
 		for _, suite := range r.Project.Suites {
 			containerOpts <- containerStartOptions{
-				Docker:      r.Project.Docker,
-				BeforeExec:  r.Project.BeforeExec,
-				Project:     r.Project,
-				SuiteName:   suite.Name,
-				Environment: suite.Env,
-				RootDir:     r.Project.RootDir,
-				Sauceignore: r.Project.Sauce.Sauceignore,
-				RawConfig:   r.Project.RawConfig,
+				Docker:         r.Project.Docker,
+				BeforeExec:     r.Project.BeforeExec,
+				Project:        r.Project,
+				SuiteName:      suite.Name,
+				Environment:    suite.Env,
+				RootDir:        r.Project.RootDir,
+				Sauceignore:    r.Project.Sauce.Sauceignore,
+				ConfigFilePath: r.Project.ConfigFilePath,
 			}
 		}
 		close(containerOpts)

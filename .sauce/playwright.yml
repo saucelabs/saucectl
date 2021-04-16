@@ -1,5 +1,7 @@
 apiVersion: v1alpha
 kind: playwright
+defaults:
+  mode: sauce
 sauce:
   region: us-west-1
   concurrency: 1
@@ -16,7 +18,19 @@ playwright:
   params:
     browserName: firefox
 suites:
-  - name: "saucy test"
+  - name: "saucy test in docker"
+    mode: docker
+    testMatch: '**/*.js'
+    env:
+      hello: world
+
+    # Playwright-test settings
+    params:
+      browserName: "firefox"
+      headful: false
+      slowMo: 1000
+  - name: "saucy test in sauce"
+    mode: sauce
     platformName: "Windows 10"
     testMatch: '**/*.js'
       # screenResolution: "1920x1080"

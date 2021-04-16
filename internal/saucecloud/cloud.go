@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/ryanuber/go-glob"
-
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -85,7 +85,7 @@ func (r *CloudRunner) collectResults(artifactsCfg config.ArtifactDownload, resul
 		for {
 			select {
 			case <-done:
-				break
+				return
 			case <-t.C:
 				log.Info().Msgf("Suites in progress: %d", inProgress)
 			}
@@ -127,11 +127,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 		return job.Job{}, false, err
 	}
 
-	// Upload configuration
-	err = r.JobWriter.UploadAsset(id, "sauce_config.yml", "text/plain", []byte(opts.RawConfig))
-	if err != nil {
-		log.Warn().Msgf("failed to attach configuration: %v", err)
-	}
+	r.uploadSauceConfig(id, opts.ConfigFilePath)
 
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
 	// if a soft exit is requested during startContainer phase, it gently exits.
@@ -140,7 +136,14 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	}
 
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
-	log.Info().Str("suite", opts.Suite).Str("url", jobDetailsPage).Msg("Suite started.")
+	l := log.Info().Str("url", jobDetailsPage).Str("suite", opts.Suite).Str("platform", opts.PlatformName)
+	if opts.Framework == config.KindEspresso {
+		l.Str("device", opts.DeviceName).Str("name", opts.Name).Str("platformVersion", opts.PlatformVersion)
+
+	} else {
+		l.Str("browser", opts.BrowserName)
+	}
+	l.Msg("Suite started.")
 
 	sigChan := r.registerInterruptOnSignal(id, opts.Suite)
 	defer unregisterSignalCapture(sigChan)
@@ -446,4 +449,21 @@ func (r *CloudRunner) shouldDownloadArtifacts(artifactsCfg config.ArtifactDownlo
 		return true
 	}
 	return false
+}
+
+// uploadSauceConfig adds job configuration as an asset.
+func (r *CloudRunner) uploadSauceConfig(jobID string, cfgFile string) {
+	f, err := os.Open(cfgFile)
+	if err != nil {
+		log.Warn().Msgf("failed to open configuration: %v", err)
+		return
+	}
+	content, err := io.ReadAll(f)
+	if err != nil {
+		log.Warn().Msgf("failed to read configuration: %v", err)
+		return
+	}
+	if err := r.JobWriter.UploadAsset(jobID, filepath.Base(cfgFile), "text/plain", content); err != nil {
+		log.Warn().Msgf("failed to attach configuration: %v", err)
+	}
 }
