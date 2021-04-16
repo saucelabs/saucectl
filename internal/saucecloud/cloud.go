@@ -84,7 +84,7 @@ func (r *CloudRunner) collectResults(artifactsCfg config.ArtifactDownload, resul
 		for {
 			select {
 			case <-done:
-				break
+				return
 			case <-t.C:
 				log.Info().Msgf("Suites in progress: %d", inProgress)
 			}

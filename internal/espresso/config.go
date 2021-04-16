@@ -3,11 +3,12 @@ package espresso
 import (
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/config"
-	"gopkg.in/yaml.v2"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/saucelabs/saucectl/internal/config"
+	"gopkg.in/yaml.v2"
 )
 
 // Project represents the espresso project configuration.

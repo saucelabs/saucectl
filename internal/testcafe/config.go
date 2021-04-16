@@ -153,3 +153,23 @@ func setDefaultValues(suite *Suite) {
 		suite.PageLoadTimeout = 3000
 	}
 }
+
+// SplitSuites divided Suites to dockerSuites and sauceSuites
+func SplitSuites(p Project) (Project, Project) {
+	var dockerSuites []Suite
+	var sauceSuites []Suite
+	for _, s := range p.Suites {
+		if s.Mode == "docker" {
+			dockerSuites = append(dockerSuites, s)
+		} else {
+			sauceSuites = append(sauceSuites, s)
+		}
+	}
+
+	dockerProject := p
+	dockerProject.Suites = dockerSuites
+	sauceProject := p
+	sauceProject.Suites = sauceSuites
+
+	return dockerProject, sauceProject
+}

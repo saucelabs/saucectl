@@ -3,28 +3,28 @@ package run
 import (
 	"errors"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/saucelabs/saucectl/cli/version"
-	"github.com/saucelabs/saucectl/internal/espresso"
-	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/puppeteer"
-	"github.com/saucelabs/saucectl/internal/sentry"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/docker"
+	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
+	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
+	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
@@ -48,8 +48,8 @@ var (
 	env            map[string]string
 	sauceAPI       string
 	suiteName      string
-	testEnv        string
 	testEnvSilent  bool
+	testEnv        string
 	showConsoleLog bool
 	concurrency    int
 	tunnelID       string
@@ -104,6 +104,8 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringToStringVar(&experiments, "experiment", map[string]string{}, "Specifies a list of experimental flags and values")
 	cmd.Flags().BoolVarP(&dryRun, "dry-run", "", false, "Simulate a test run without actually running any tests.")
 
+	cmd.Flags().MarkDeprecated("test-env", "please set mode in config file")
+
 	// Hide undocumented flags that the user does not need to care about.
 	_ = cmd.Flags().MarkHidden("sauce-api")
 	_ = cmd.Flags().MarkHidden("runner-version")
@@ -123,8 +125,6 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		println()
 		return 1, fmt.Errorf("no credentials set")
 	}
-
-	printTestEnv()
 
 	// Todo(Christian) write argument parser/validator
 	if cfgLogDir == defaultLogFir {
@@ -174,7 +174,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	return 1, errors.New("unknown framework configuration")
 }
 
-func printTestEnv() {
+func printTestEnv(testEnv string) {
 	if testEnvSilent {
 		return
 	}
@@ -223,6 +223,22 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 		}
 	}
 
+	if p.Defaults.Mode == "" {
+		p.Defaults.Mode = "sauce"
+	}
+	for i, s := range p.Suites {
+		if s.Mode == "" {
+			s.Mode = p.Defaults.Mode
+		}
+		p.Suites[i] = s
+	}
+	if testEnv != "" {
+		for i, s := range p.Suites {
+			s.Mode = testEnv
+			p.Suites[i] = s
+		}
+	}
+
 	if err := cypress.Validate(p); err != nil {
 		return 1, err
 	}
@@ -237,18 +253,22 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
 
-	switch testEnv {
-	case "docker":
-		return runCypressInDocker(p, tc, rs)
-	case "sauce":
-		return runCypressInSauce(p, regio, tc, rs, as)
-	default:
-		return 1, errors.New("unsupported test environment")
+	dockerProject, sauceProject := cypress.SplitSuites(p)
+	if len(dockerProject.Suites) != 0 {
+		if exitCode, err := runCypressInDocker(dockerProject, tc, rs); err != nil {
+			return exitCode, err
+		}
 	}
+	if len(sauceProject.Suites) != 0 {
+		return runCypressInSauce(sauceProject, regio, tc, rs, as)
+	}
+
+	return 0, nil
 }
 
 func runCypressInDocker(p cypress.Project, testco testcomposer.Client, rs resto.Client) (int, error) {
 	log.Info().Msg("Running Cypress in Docker")
+	printTestEnv("docker")
 
 	cd, err := docker.NewCypress(p, &testco, &rs)
 	if err != nil {
@@ -259,6 +279,7 @@ func runCypressInDocker(p cypress.Project, testco testcomposer.Client, rs resto.
 
 func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
 	log.Info().Msg("Running Cypress in Sauce Labs")
+	printTestEnv("sauce")
 
 	r := saucecloud.CypressRunner{
 		Project: p,
@@ -306,10 +327,24 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 	if dryRun {
 		p.DryRun = true
 	}
-
 	if cmd.Flags().Lookup("suite").Changed {
 		if err := filterPlaywrightSuite(&p); err != nil {
 			return 1, err
+		}
+	}
+	if p.Defaults.Mode == "" {
+		p.Defaults.Mode = "sauce"
+	}
+	for i, s := range p.Suites {
+		if s.Mode == "" {
+			s.Mode = p.Defaults.Mode
+		}
+		p.Suites[i] = s
+	}
+	if testEnv != "" {
+		for i, s := range p.Suites {
+			s.Mode = testEnv
+			p.Suites[i] = s
 		}
 	}
 
@@ -323,18 +358,22 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
 
-	switch testEnv {
-	case "docker":
-		return runPlaywrightInDocker(p, tc, rs)
-	case "sauce":
-		return runPlaywrightInSauce(p, regio, tc, rs, as)
-	default:
-		return 1, errors.New("unsupported test environment")
+	dockerProject, sauceProject := playwright.SplitSuites(p)
+	if len(dockerProject.Suites) != 0 {
+		if exitCode, err := runPlaywrightInDocker(dockerProject, tc, rs); err != nil {
+			return exitCode, err
+		}
 	}
+	if len(sauceProject.Suites) != 0 {
+		return runPlaywrightInSauce(sauceProject, regio, tc, rs, as)
+	}
+
+	return 0, nil
 }
 
 func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs resto.Client) (int, error) {
 	log.Info().Msg("Running Playwright in Docker")
+	printTestEnv("docker")
 
 	cd, err := docker.NewPlaywright(p, &testco, &rs)
 	if err != nil {
@@ -345,6 +384,7 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs 
 
 func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
 	log.Info().Msg("Running Playwright in Sauce Labs")
+	printTestEnv("sauce")
 
 	r := saucecloud.PlaywrightRunner{
 		Project: p,
@@ -390,10 +430,24 @@ func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 	if dryRun {
 		p.DryRun = true
 	}
-
 	if cmd.Flags().Lookup("suite").Changed {
 		if err := filterTestcafeSuite(&p); err != nil {
 			return 1, err
+		}
+	}
+	if p.Defaults.Mode == "" {
+		p.Defaults.Mode = "sauce"
+	}
+	for i, s := range p.Suites {
+		if s.Mode == "" {
+			s.Mode = p.Defaults.Mode
+		}
+		p.Suites[i] = s
+	}
+	if testEnv != "" {
+		for i, s := range p.Suites {
+			s.Mode = testEnv
+			p.Suites[i] = s
 		}
 	}
 
@@ -407,18 +461,22 @@ func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
 
-	switch testEnv {
-	case "docker":
-		return runTestcafeInDocker(p, tc, rs)
-	case "sauce":
-		return runTestcafeInCloud(p, regio, tc, rs, as)
-	default:
-		return 1, errors.New("unsupported test enviornment")
+	dockerProject, sauceProject := testcafe.SplitSuites(p)
+	if len(dockerProject.Suites) != 0 {
+		if exitCode, err := runTestcafeInDocker(dockerProject, tc, rs); err != nil {
+			return exitCode, err
+		}
 	}
+	if len(sauceProject.Suites) != 0 {
+		return runTestcafeInCloud(sauceProject, regio, tc, rs, as)
+	}
+
+	return 0, nil
 }
 
 func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client, rs resto.Client) (int, error) {
 	log.Info().Msg("Running Testcafe in Docker")
+	printTestEnv("docker")
 
 	cd, err := docker.NewTestcafe(p, &testco, &rs)
 	if err != nil {
@@ -429,6 +487,7 @@ func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client, rs rest
 
 func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
 	log.Info().Msg("Running Testcafe in Sauce Labs")
+	printTestEnv("sauce")
 
 	r := saucecloud.TestcafeRunner{
 		Project: p,
@@ -472,16 +531,12 @@ func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
 
-	switch testEnv {
-	case "sauce":
-		return runEspressoInCloud(p, regio, tc, rs, as)
-	default:
-		return 1, fmt.Errorf("unsupported test environment for espresso: %s", testEnv)
-	}
+	return runEspressoInCloud(p, regio, tc, rs, as)
 }
 
 func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
 	log.Info().Msg("Running Espresso in Sauce Labs")
+	printTestEnv("sauce")
 
 	r := saucecloud.EspressoRunner{
 		Project: p,
@@ -539,17 +594,12 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 	}
 
 	tc.URL = regio.APIBaseURL()
-
-	switch testEnv {
-	case "docker":
-		return runPuppeteerInDocker(p, tc, rs)
-	default:
-		return 1, errors.New("unsupported test enviornment")
-	}
+	return runPuppeteerInDocker(p, tc, rs)
 }
 
 func runPuppeteerInDocker(p puppeteer.Project, testco testcomposer.Client, rs resto.Client) (int, error) {
 	log.Info().Msg("Running puppeteer in Docker")
+	printTestEnv("docker")
 
 	cd, err := docker.NewPuppeteer(p, &testco, &rs)
 	if err != nil {
