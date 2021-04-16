@@ -126,8 +126,8 @@ func FromFile(cfgPath string) (Project, error) {
 
 // SplitSuites divided Suites to dockerSuites and sauceSuites
 func SplitSuites(p Project) (Project, Project) {
-	dockerSuites := []Suite{}
-	sauceSuites := []Suite{}
+	var dockerSuites []Suite
+	var sauceSuites []Suite
 	for _, s := range p.Suites {
 		if s.Mode == "docker" {
 			dockerSuites = append(dockerSuites, s)
