@@ -15,12 +15,12 @@ type TestOptions struct {
 
 // StartOptions represents the options for starting a job in the Sauce Labs cloud.
 type StartOptions struct {
-	User      string `json:"username"`
-	AccessKey string `json:"accessKey"`
-	App       string `json:"app,omitempty"`
-	Suite     string `json:"suite,omitempty"`
-	Framework string `json:"framework,omitempty"`
-	RawConfig string `json:"-"`
+	User          string `json:"username"`
+	AccessKey     string `json:"accessKey"`
+	App           string `json:"app,omitempty"`
+	Suite         string `json:"suite,omitempty"`
+	Framework     string `json:"framework,omitempty"`
+	RawConfigFile string `json:"-"`
 
 	// FrameworkVersion contains the targeted version of the framework
 	// It should not be confused with automation tool (like jest/folio).

@@ -3,7 +3,6 @@ package puppeteer
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/rs/zerolog/log"
@@ -15,7 +14,7 @@ import (
 type Project struct {
 	config.TypeDef `yaml:",inline"`
 	ShowConsoleLog bool
-	RawConfig      string             `yaml:"-" json:"-"`
+	RawConfigFile  string             `yaml:"-" json:"-"`
 	DryRun         bool               `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
@@ -50,16 +49,10 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 	defer f.Close()
 
-	content, err := io.ReadAll(f)
-	if err != nil {
-		return Project{}, fmt.Errorf("failed to read configuration file: %v", err)
-	}
-
-	if err = yaml.Unmarshal(content, &p); err != nil {
+	if err := yaml.NewDecoder(f).Decode(&p); err != nil {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
-
-	p.RawConfig = string(content)
+	p.RawConfigFile = cfgPath
 
 	if p.RootDir == "" {
 		return p, fmt.Errorf("could not find 'rootDir' in config yml, 'rootDir' must be set to specify project files")

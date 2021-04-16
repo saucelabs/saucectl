@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"path"
@@ -38,14 +39,14 @@ type ContainerRunner struct {
 
 // containerStartOptions represent data required to start a new container.
 type containerStartOptions struct {
-	Docker      config.Docker
-	BeforeExec  []string
-	Project     interface{}
-	SuiteName   string
-	Environment map[string]string
-	RootDir     string
-	Sauceignore string
-	RawConfig   string
+	Docker        config.Docker
+	BeforeExec    []string
+	Project       interface{}
+	SuiteName     string
+	Environment   map[string]string
+	RootDir       string
+	Sauceignore   string
+	RawConfigFile string
 }
 
 // result represents the result of a local job
@@ -359,11 +360,26 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 
 	jobID := jobIDFromURL(jobIDFromURL(jobInfo.JobDetailsURL))
 	if jobID != "" {
-		if err = r.JobWriter.UploadAsset(jobID, "sauce_config.yml", "text/plain", []byte(options.RawConfig)); err != nil {
-			log.Warn().Msgf("failed to attach configuration: %v", err)
-		}
+		r.uploadSauceConfig(jobID, options.RawConfigFile)
 	}
 	return
+}
+
+// uploadSauceConfig adds job configuration as an asset.
+func (r *ContainerRunner) uploadSauceConfig(jobID string, cfgFile string) {
+	f, err := os.Open(cfgFile)
+	if err != nil {
+		log.Warn().Msgf("failed to open configuration: %v", err)
+		return
+	}
+	content, err := io.ReadAll(f)
+	if err != nil {
+		log.Warn().Msgf("failed to read configuration: %v", err)
+		return
+	}
+	if err := r.JobWriter.UploadAsset(jobID, filepath.Base(cfgFile), "text/plain", content); err != nil {
+		log.Warn().Msgf("failed to attach configuration: %v", err)
+	}
 }
 
 // jobIDFromURL returns the jobID from the URL return by containers.
@@ -372,7 +388,7 @@ func jobIDFromURL(URL string) string {
 	if len(items) < 1 {
 		return ""
 	}
-	ID := items[len(items) - 1]
+	ID := items[len(items)-1]
 	return ID
 }
 

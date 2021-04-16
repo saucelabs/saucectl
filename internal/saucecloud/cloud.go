@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -126,11 +127,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 		return job.Job{}, false, err
 	}
 
-	// Upload configuration
-	err = r.JobWriter.UploadAsset(id, "sauce_config.yml", "text/plain", []byte(opts.RawConfig))
-	if err != nil {
-		log.Warn().Msgf("failed to attach configuration: %v", err)
-	}
+	r.uploadSauceConfig(id, opts.RawConfigFile)
 
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
 	// if a soft exit is requested during startContainer phase, it gently exits.
@@ -452,4 +449,21 @@ func (r *CloudRunner) shouldDownloadArtifacts(artifactsCfg config.ArtifactDownlo
 		return true
 	}
 	return false
+}
+
+// uploadSauceConfig adds job configuration as an asset.
+func (r *CloudRunner) uploadSauceConfig(jobID string, cfgFile string) {
+	f, err := os.Open(cfgFile)
+	if err != nil {
+		log.Warn().Msgf("failed to open configuration: %v", err)
+		return
+	}
+	content, err := io.ReadAll(f)
+	if err != nil {
+		log.Warn().Msgf("failed to read configuration: %v", err)
+		return
+	}
+	if err := r.JobWriter.UploadAsset(jobID, filepath.Base(cfgFile), "text/plain", content); err != nil {
+		log.Warn().Msgf("failed to attach configuration: %v", err)
+	}
 }
