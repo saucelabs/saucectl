@@ -593,6 +593,7 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 		return 1, errors.New("no sauce region set")
 	}
 
+	rs.URL = regio.APIBaseURL()
 	tc.URL = regio.APIBaseURL()
 	return runPuppeteerInDocker(p, tc, rs)
 }
