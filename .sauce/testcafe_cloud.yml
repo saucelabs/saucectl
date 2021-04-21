@@ -3,7 +3,7 @@ kind: testcafe
 showConsoleLog: true
 sauce:
   region: us-west-1
-  concurrency: 1
+  concurrency: 2
   metadata:
     name: Testing Testcafe Support
     tags:
@@ -15,20 +15,20 @@ suites:
   - name: iOS Test
     browserName: "safari"
     src:
-      - "*/*.test.js" # test files glob
+      - "**/*.test.js" # test files glob
     devices:
       - name: iPhone 12 Simulator
         platformName: iOS
         platformVersions:
           - "14.3"
-      - name: iPad Pro (9.7-inch) Simulator
+      - name: "iPad mini (5th generation) Simulator"
         platformName: iOS
         platformVersions:
           - "14.3"
   - name: "saucy test"
     browserName: "googlechrome" # Although Testcafe supports triggering one test in multiple browsers, it'd better here to split them into every suite to indicate each suite has its own test point.
     src:
-      - "*/*.test.js" # test files glob
+      - "**/*.test.js" # test files glob
     screenshots:
       takeOnFails: true
       fullPage: true

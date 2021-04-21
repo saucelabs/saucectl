@@ -74,7 +74,7 @@ func (r *TestcafeRunner) runSuites(fileID string) bool {
 							FrameworkVersion: r.Project.Testcafe.Version,
 							BrowserName:      s.BrowserName,
 							BrowserVersion:   s.BrowserVersion,
-							PlatformName:     s.PlatformName,
+							PlatformName:     d.PlatformName,
 							PlatformVersion:  pv,
 							DeviceName:       d.Name,
 							Name:             fmt.Sprintf("%s - %s", r.Project.Sauce.Metadata.Name, s.Name),
