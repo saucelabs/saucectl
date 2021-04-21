@@ -61,29 +61,73 @@ func (r *TestcafeRunner) runSuites(fileID string) bool {
 	defer close(results)
 
 	// Submit suites to work on
-	for _, s := range r.Project.Suites {
-		jobOpts <- job.StartOptions{
-			ConfigFilePath:   r.Project.ConfigFilePath,
-			App:              fmt.Sprintf("storage:%s", fileID),
-			Suite:            s.Name,
-			Framework:        "testcafe",
-			FrameworkVersion: r.Project.Testcafe.Version,
-			BrowserName:      s.BrowserName,
-			BrowserVersion:   s.BrowserVersion,
-			PlatformName:     s.PlatformName,
-			Name:             fmt.Sprintf("%s - %s", r.Project.Sauce.Metadata.Name, s.Name),
-			Build:            r.Project.Sauce.Metadata.Build,
-			Tags:             r.Project.Sauce.Metadata.Tags,
-			Tunnel: job.TunnelOptions{
-				ID:     r.Project.Sauce.Tunnel.ID,
-				Parent: r.Project.Sauce.Tunnel.Parent,
-			},
-			ScreenResolution: s.ScreenResolution,
-			RunnerVersion:    r.Project.RunnerVersion,
-			Experiments:      r.Project.Sauce.Experiments,
+	jobsCount := r.calcTestcafeJobsCount(r.Project.Suites)
+	go func() {
+		for _, s := range r.Project.Suites {
+			if len(s.Devices) > 0 {
+				for _, d := range s.Devices {
+					for _, pv := range d.PlatformVersions {
+						jobOpts <- job.StartOptions{
+							App:              fmt.Sprintf("storage:%s", fileID),
+							Suite:            s.Name,
+							Framework:        "testcafe",
+							FrameworkVersion: r.Project.Testcafe.Version,
+							BrowserName:      s.BrowserName,
+							BrowserVersion:   s.BrowserVersion,
+							PlatformName:     d.PlatformName,
+							PlatformVersion:  pv,
+							DeviceName:       d.Name,
+							Name:             fmt.Sprintf("%s - %s", r.Project.Sauce.Metadata.Name, s.Name),
+							Build:            r.Project.Sauce.Metadata.Build,
+							Tags:             r.Project.Sauce.Metadata.Tags,
+							Tunnel: job.TunnelOptions{
+								ID:     r.Project.Sauce.Tunnel.ID,
+								Parent: r.Project.Sauce.Tunnel.Parent,
+							},
+							ScreenResolution: s.ScreenResolution,
+							RunnerVersion:    r.Project.RunnerVersion,
+							Experiments:      r.Project.Sauce.Experiments,
+						}
+					}
+				}
+			} else {
+				jobOpts <- job.StartOptions{
+					App:              fmt.Sprintf("storage:%s", fileID),
+					Suite:            s.Name,
+					Framework:        "testcafe",
+					FrameworkVersion: r.Project.Testcafe.Version,
+					BrowserName:      s.BrowserName,
+					BrowserVersion:   s.BrowserVersion,
+					PlatformName:     s.PlatformName,
+					Name:             fmt.Sprintf("%s - %s", r.Project.Sauce.Metadata.Name, s.Name),
+					Build:            r.Project.Sauce.Metadata.Build,
+					Tags:             r.Project.Sauce.Metadata.Tags,
+					Tunnel: job.TunnelOptions{
+						ID:     r.Project.Sauce.Tunnel.ID,
+						Parent: r.Project.Sauce.Tunnel.Parent,
+					},
+					ScreenResolution: s.ScreenResolution,
+					RunnerVersion:    r.Project.RunnerVersion,
+					Experiments:      r.Project.Sauce.Experiments,
+				}
+			}
+		}
+		close(jobOpts)
+	}()
+
+	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
+}
+
+func (r *TestcafeRunner) calcTestcafeJobsCount(suites []testcafe.Suite) int {
+	jobsCount := 0
+	for _, s := range suites {
+		if len(s.Devices) > 0 {
+			for _, d := range s.Devices {
+				jobsCount += len(d.PlatformVersions)
+			}
+		} else {
+			jobsCount++
 		}
 	}
-	close(jobOpts)
-
-	return r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites))
+	return jobsCount
 }
