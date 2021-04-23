@@ -65,6 +65,13 @@ func FromFile(cfgPath string) (Project, error) {
 		p.Sauce.Concurrency = 2
 	}
 
+	for sidx, suite := range p.Suites {
+		for didx := range suite.Devices {
+			// Adnroid is the only choice.
+			p.Suites[sidx].Devices[didx].PlatformName = Android
+		}
+	}
+
 	return p, nil
 }
 
@@ -90,7 +97,7 @@ func Validate(p Project) error {
 		return errors.New("no suites defined")
 	}
 
-	for sidx, suite := range p.Suites {
+	for _, suite := range p.Suites {
 		if len(suite.Devices) == 0 {
 			return fmt.Errorf("missing devices configuration for suite: %s", suite.Name)
 		}
@@ -104,9 +111,6 @@ func Validate(p Project) error {
 			if len(device.PlatformVersions) == 0 {
 				// TODO - update message when handling device.Id
 				return fmt.Errorf("missing platform versions for device: %s", device.Name)
-			}
-			if device.PlatformName == "" || device.PlatformName != Android {
-				p.Suites[sidx].Devices[didx].PlatformName = Android
 			}
 		}
 	}
