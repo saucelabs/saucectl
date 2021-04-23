@@ -66,7 +66,7 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 
 	for sidx, suite := range p.Suites {
-		for didx, _ := range suite.Devices {
+		for didx := range suite.Devices {
 			// Adnroid is the only choice.
 			p.Suites[sidx].Devices[didx].PlatformName = Android
 		}
