@@ -4,11 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"gopkg.in/yaml.v2"
 )
+
+// appleDeviceRegex is a device name matching regex for apple devices (mainly ipad/iphone).
+var appleDeviceRegex = regexp.MustCompile(`(?i)(iP)(hone|ad)[\w\s\d]*(Simulator)?`)
 
 // Project represents the testcafe project configuration.
 type Project struct {
@@ -145,6 +150,22 @@ func setDefaultValues(suite *Suite) {
 	}
 	if suite.PageLoadTimeout <= 0 {
 		suite.PageLoadTimeout = 3000
+	}
+
+	// If this suite is targeting devices, then the platformName on the device takes precedence and we can skip the
+	// defaults on the suite level.
+	if suite.PlatformName == "" && len(suite.Devices) == 0 {
+		suite.PlatformName = "Windows 10"
+
+		if strings.ToLower(suite.BrowserName) == "safari" {
+			suite.PlatformName = "macOS 11.00"
+		}
+	}
+
+	for _, d := range suite.Devices {
+		if d.PlatformName == "" && appleDeviceRegex.MatchString(d.Name) {
+			d.PlatformName = "iOS"
+		}
 	}
 }
 

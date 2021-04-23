@@ -149,6 +149,10 @@ func FromFile(cfgPath string) (Project, error) {
 			env[k] = os.ExpandEnv(v)
 		}
 		p.Suites[i].Config.Env = env
+
+		if s.PlatformName == "" {
+			s.PlatformName = "Windows 10"
+		}
 	}
 
 	return p, nil
