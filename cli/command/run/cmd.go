@@ -255,7 +255,7 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 
 	dockerProject, sauceProject := cypress.SplitSuites(p)
 	if len(dockerProject.Suites) != 0 {
-		if exitCode, err := runCypressInDocker(dockerProject, tc, rs); err != nil {
+		if exitCode, err := runCypressInDocker(dockerProject, tc, rs); err != nil || exitCode != 0 {
 			return exitCode, err
 		}
 	}
@@ -360,7 +360,7 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 
 	dockerProject, sauceProject := playwright.SplitSuites(p)
 	if len(dockerProject.Suites) != 0 {
-		if exitCode, err := runPlaywrightInDocker(dockerProject, tc, rs); err != nil {
+		if exitCode, err := runPlaywrightInDocker(dockerProject, tc, rs); err != nil || exitCode != 0 {
 			return exitCode, err
 		}
 	}
@@ -462,8 +462,9 @@ func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 	as.URL = regio.APIBaseURL()
 
 	dockerProject, sauceProject := testcafe.SplitSuites(p)
+	exitCode := 0
 	if len(dockerProject.Suites) != 0 {
-		if exitCode, err := runTestcafeInDocker(dockerProject, tc, rs); err != nil {
+		if exitCode, err = runTestcafeInDocker(dockerProject, tc, rs); err != nil || exitCode != 0 {
 			return exitCode, err
 		}
 	}
