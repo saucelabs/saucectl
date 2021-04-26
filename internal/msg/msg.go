@@ -2,6 +2,7 @@ package msg
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"strings"
 )
@@ -74,6 +75,11 @@ or peruse some of our example repositories:
   - https://github.com/saucelabs/saucectl-playwright-example
   - https://github.com/saucelabs/saucectl-puppeteer-example
   - https://github.com/saucelabs/saucectl-testcafe-example`
+
+func LogSauceIgnoreNotExist() {
+	red := color.New(color.FgRed).SprintFunc()
+	fmt.Printf("\n%s: %s\n\n", red("WARNING"), SauceIgnoreNotExist)
+}
 
 // LogTestSuccess prints out a test success summary statement.
 func LogTestSuccess() {

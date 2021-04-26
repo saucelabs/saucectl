@@ -2,7 +2,6 @@ package sauceignore
 
 import (
 	"bufio"
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"os"
 	"path/filepath"
@@ -20,7 +19,7 @@ func patternsFromFile(path string) ([]Pattern, error) {
 	if err != nil {
 		// In case .sauceignore file doesn't exists.
 		if os.IsNotExist(err) {
-			log.Warn().Msg(msg.SauceIgnoreNotExist)
+			msg.LogSauceIgnoreNotExist()
 			return []Pattern{}, nil
 		}
 		return []Pattern{}, err
