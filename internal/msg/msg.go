@@ -76,6 +76,7 @@ or peruse some of our example repositories:
   - https://github.com/saucelabs/saucectl-puppeteer-example
   - https://github.com/saucelabs/saucectl-testcafe-example`
 
+// LogSauceIgnoreNotExist prints out a formatted and color coded version of SauceIgnoreNotExist.
 func LogSauceIgnoreNotExist() {
 	red := color.New(color.FgRed).SprintFunc()
 	fmt.Printf("\n%s: %s\n\n", red("WARNING"), SauceIgnoreNotExist)
