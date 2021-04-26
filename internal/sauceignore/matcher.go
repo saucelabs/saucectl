@@ -2,6 +2,7 @@ package sauceignore
 
 import (
 	"bufio"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,15 +17,16 @@ func patternsFromFile(path string) ([]Pattern, error) {
 	fPath := filepath.Join(path)
 	f, err := os.Open(fPath)
 	if err != nil {
-		// In case if .sauceignore file doesn't exists.
+		// In case .sauceignore file doesn't exists.
 		if os.IsNotExist(err) {
+			msg.LogSauceIgnoreNotExist()
 			return []Pattern{}, nil
 		}
 		return []Pattern{}, err
 	}
 	defer f.Close()
 
-	ps := []Pattern{}
+	var ps []Pattern
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		s := scanner.Text()
