@@ -63,6 +63,18 @@ https://bit.ly/saucectl-signup
 Already have an account? Get your username and access key here:
 https://app.saucelabs.com/user-settings`
 
+// SauceIgnoreNotExist is a recommendation to create a .sauceignore file in the case that it is missing.
+const SauceIgnoreNotExist = `The .sauceignore file does not exist. We *highly* recommend creating one so that saucectl does not
+create archives with unnecessary files. You are very likely to experience longer startup times.
+
+For more information, visit https://docs.saucelabs.com/testrunner-toolkit/configuration/bundling/index.html#exclude-files-from-the-bundle
+
+or peruse some of our example repositories:
+  - https://github.com/saucelabs/saucectl-cypress-example
+  - https://github.com/saucelabs/saucectl-playwright-example
+  - https://github.com/saucelabs/saucectl-puppeteer-example
+  - https://github.com/saucelabs/saucectl-testcafe-example`
+
 // LogTestSuccess prints out a test success summary statement.
 func LogTestSuccess() {
 	log.Info().Msg("┌───────────────────────┐")
