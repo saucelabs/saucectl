@@ -74,7 +74,7 @@ func setupSentry() {
 		Debug:       false,
 	})
 	if err != nil {
-		log.Err(err).Msg("failed to setup sentry")
+		log.Debug().Err(err).Msg("Failed to setup sentry")
 		return
 	}
 }
