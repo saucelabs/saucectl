@@ -530,6 +530,12 @@ func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 		return 1, err
 	}
 
+	if cmd.Flags().Lookup("suite").Changed {
+		if err := filterEspressoSuite(&p); err != nil {
+			return 1, err
+		}
+	}
+
 	tc.URL = regio.APIBaseURL()
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
