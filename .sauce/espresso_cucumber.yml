@@ -1,0 +1,29 @@
+apiVersion: v1alpha
+kind: espresso
+sauce:
+  region: us-west-1
+  concurrency: 10 # Controls how many suites are executed at the same time (sauce test env only).
+  metadata:
+    name: Testing Cucumber and Espresso Support
+    tags:
+      - e2e
+      - release team
+      - other tag
+  build: Release $CI_COMMIT_SHORT_SHA
+espresso:
+  app: ./tests/apps/espresso-cucumber.apk
+  testApp: ./tests/apps/espresso-cucumber-success.apk
+suites:
+  - name: "saucy barista"
+    devices:
+      - name: "Android GoogleApi Emulator"
+        orientation: portrait
+        platformVersions:
+          - "11.0"
+          - "10.0"
+artifacts:
+  download:
+    when: always
+    match:
+      - console.log
+    directory: ./artifacts/
