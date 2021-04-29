@@ -418,13 +418,13 @@ func TestClient_TestStop(t *testing.T) {
 func TestClient_UploadAsset(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case "/v1/testrunner/jobs/1/assets":
+		case "/v1/testcomposer/jobs/1/assets":
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("{\"uploaded\":null}"))
-		case "/v1/testrunner/jobs/2/assets":
+		case "/v1/testcomposer/jobs/2/assets":
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("{\"uploaded\":null,\"errors\":[\"failed to upload config.yml: content-type not allowed\"]}"))
-		case "/v1/testrunner/jobs/3/assets":
+		case "/v1/testcomposer/jobs/3/assets":
 			w.WriteHeader(http.StatusNotFound)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
