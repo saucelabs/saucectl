@@ -192,13 +192,6 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 	if err != nil {
 		return 1, err
 	}
-	fmt.Println("=========")
-	fmt.Println("=========")
-	fmt.Println("=========")
-	fmt.Println("ssl: ", p.Suites[0].Config.Env)
-	fmt.Println("=========")
-	fmt.Println("=========")
-	fmt.Println("=========")
 
 	p.Sauce.Metadata.ExpandEnv()
 	applyDefaultValues(&p.Sauce)
