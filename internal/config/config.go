@@ -171,6 +171,7 @@ func StandardizeVersionFormat(version string) string {
 	return version
 }
 
+// Validate validates npm fields
 func (n *Npm) Validate() error {
 	if n.StrictSSL != "" && n.StrictSSL != "true" && n.StrictSSL != "false" {
 		return fmt.Errorf("invalid npm strictSSL setting: '%s'", n.StrictSSL)
