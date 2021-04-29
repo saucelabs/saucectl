@@ -148,13 +148,6 @@ func FromFile(cfgPath string) (Project, error) {
 		for k, v := range s.Config.Env {
 			env[k] = os.ExpandEnv(v)
 		}
-		if p.Npm.StrictSSL != nil {
-			if *p.Npm.StrictSSL {
-				env["SAUCE_NPM_STRICT_SSL"] = "true"
-			} else {
-				env["SAUCE_NPM_STRICT_SSL"] = "false"
-			}
-		}
 		p.Suites[i].Config.Env = env
 
 		if s.PlatformName == "" {
