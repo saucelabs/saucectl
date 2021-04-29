@@ -148,6 +148,9 @@ func FromFile(cfgPath string) (Project, error) {
 		for k, v := range s.Config.Env {
 			env[k] = os.ExpandEnv(v)
 		}
+		if p.Npm.StrictSSL != "" {
+			env["SAUCE_NPM_STRICT_SSL"] = p.Npm.StrictSSL
+		}
 		p.Suites[i].Config.Env = env
 
 		if s.PlatformName == "" {
@@ -196,7 +199,11 @@ func Validate(p Project) error {
 		}
 	}
 
-	return nil
+	if p.Npm.StrictSSL != "" && p.Npm.StrictSSL != "true" && p.Npm.StrictSSL != "false" {
+		return fmt.Errorf("invalid npm strictSSL setting: '%s'", p.Npm.StrictSSL)
+	}
+
+	return p.Npm.Validate()
 }
 
 // SplitSuites divided Suites to dockerSuites and sauceSuites
