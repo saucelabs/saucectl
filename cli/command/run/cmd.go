@@ -192,6 +192,13 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 	if err != nil {
 		return 1, err
 	}
+	fmt.Println("=========")
+	fmt.Println("=========")
+	fmt.Println("=========")
+	fmt.Println("ssl: ", p.Suites[0].Config.Env)
+	fmt.Println("=========")
+	fmt.Println("=========")
+	fmt.Println("=========")
 
 	p.Sauce.Metadata.ExpandEnv()
 	applyDefaultValues(&p.Sauce)
@@ -304,9 +311,6 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 	if err != nil {
 		return 1, err
 	}
-	if err := p.Npm.Validate(); err != nil {
-		return 1, err
-	}
 
 	p.Sauce.Metadata.ExpandEnv()
 	applyDefaultValues(&p.Sauce)
@@ -411,9 +415,6 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
 	p, err := testcafe.FromFile(cfgFilePath)
 	if err != nil {
-		return 1, err
-	}
-	if err := p.Npm.Validate(); err != nil {
 		return 1, err
 	}
 

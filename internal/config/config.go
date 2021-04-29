@@ -89,7 +89,7 @@ type Docker struct {
 type Npm struct {
 	Registry  string            `yaml:"registry,omitempty" json:"registry,omitempty"`
 	Packages  map[string]string `yaml:"packages,omitempty" json:"packages"`
-	StrictSSL string            `yaml:"strictSSL,omitempty" json:"strictSSL"`
+	StrictSSL *bool             `yaml:"strictSSL,omitempty" json:"strictSSL"`
 }
 
 // Defaults represents default suite settings.
@@ -169,12 +169,4 @@ func StandardizeVersionFormat(version string) string {
 		return version[1:]
 	}
 	return version
-}
-
-// Validate validates npm fields
-func (n *Npm) Validate() error {
-	if n.StrictSSL != "" && n.StrictSSL != "true" && n.StrictSSL != "false" {
-		return fmt.Errorf("invalid npm strictSSL setting: '%s'", n.StrictSSL)
-	}
-	return nil
 }
