@@ -366,6 +366,7 @@ func createStopRequest(ctx context.Context, url, username, accessKey, jobID stri
 	return req, nil
 }
 
+// FIXME This has nothing to do with resto and belongs to the testcomposer package
 func createUploadAssetRequest(ctx context.Context, url, username, accessKey, jobID, fileName, contentType string, content []byte) (*http.Request, error) {
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
@@ -384,7 +385,7 @@ func createUploadAssetRequest(ctx context.Context, url, username, accessKey, job
 	}
 
 	req, err := requesth.NewWithContext(ctx, http.MethodPut,
-		fmt.Sprintf("%s/v1/testrunner/jobs/%s/assets", url, jobID), &b)
+		fmt.Sprintf("%s/v1/testcomposer/jobs/%s/assets", url, jobID), &b)
 	if err != nil {
 		return nil, err
 	}
