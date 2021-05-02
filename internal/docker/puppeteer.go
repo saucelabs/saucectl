@@ -15,7 +15,7 @@ type PuppeterRunner struct {
 }
 
 // NewPuppeteer creates a new PuppeterRunner instance.
-func NewPuppeteer(c puppeteer.Project, ms framework.MetadataService, wr job.Writer) (*PuppeterRunner, error) {
+func NewPuppeteer(c puppeteer.Project, ms framework.MetadataService, wr job.Writer, rd job.Reader) (*PuppeterRunner, error) {
 	r := PuppeterRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -28,6 +28,7 @@ func NewPuppeteer(c puppeteer.Project, ms framework.MetadataService, wr job.Writ
 			FrameworkMeta:  ms,
 			ShowConsoleLog: c.ShowConsoleLog,
 			JobWriter:      wr,
+			JobReader:      rd,
 		},
 	}
 	var err error
@@ -69,7 +70,7 @@ func (r *PuppeterRunner) RunProject() (int, error) {
 		close(containerOpts)
 	}()
 
-	hasPassed := r.collectResults(results, len(r.Project.Suites))
+	hasPassed := r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites))
 	if !hasPassed {
 		return 1, nil
 	}

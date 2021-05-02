@@ -15,7 +15,7 @@ type CypressRunner struct {
 }
 
 // NewCypress creates a new CypressRunner instance.
-func NewCypress(c cypress.Project, ms framework.MetadataService, wr job.Writer) (*CypressRunner, error) {
+func NewCypress(c cypress.Project, ms framework.MetadataService, wr job.Writer, rd job.Reader) (*CypressRunner, error) {
 	r := CypressRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -29,6 +29,7 @@ func NewCypress(c cypress.Project, ms framework.MetadataService, wr job.Writer) 
 			FrameworkMeta:  ms,
 			ShowConsoleLog: c.ShowConsoleLog,
 			JobWriter:      wr,
+			JobReader:      rd,
 		},
 	}
 
@@ -71,7 +72,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 		close(containerOpts)
 	}()
 
-	hasPassed := r.collectResults(results, len(r.Project.Suites))
+	hasPassed := r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites))
 	if !hasPassed {
 		return 1, nil
 	}

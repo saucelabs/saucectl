@@ -25,7 +25,6 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/phayes/freeport"
 	"github.com/rs/zerolog/log"
-
 	"github.com/saucelabs/saucectl/internal/archive/tar"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -213,11 +212,11 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 			return nil, err
 		}
 		m = append(m, mount.Mount{
-			Type:          mount.TypeBind,
-			Source:        absF,
-			Target:        pDir,
-			ReadOnly:      false,
-			Consistency:   mount.ConsistencyDefault,
+			Type:        mount.TypeBind,
+			Source:      absF,
+			Target:      pDir,
+			ReadOnly:    false,
+			Consistency: mount.ConsistencyDefault,
 		})
 		log.Info().Str("from", options.RootDir).Str("to", pDir).Str("suite", options.SuiteName).
 			Msg("File mounted")

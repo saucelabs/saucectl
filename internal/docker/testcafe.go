@@ -15,7 +15,7 @@ type TestcafeRunner struct {
 }
 
 // NewTestcafe creates a new TestcafeRunner instance.
-func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer) (*TestcafeRunner, error) {
+func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer, rd job.Reader) (*TestcafeRunner, error) {
 	r := TestcafeRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -28,6 +28,7 @@ func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer
 			FrameworkMeta:  ms,
 			ShowConsoleLog: c.ShowConsoleLog,
 			JobWriter:      wr,
+			JobReader:      rd,
 		},
 	}
 	var err error
@@ -69,7 +70,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		close(containerOpts)
 	}()
 
-	hasPassed := r.collectResults(results, len(r.Project.Suites))
+	hasPassed := r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites))
 	if !hasPassed {
 		return 1, nil
 	}

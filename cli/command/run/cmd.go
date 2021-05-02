@@ -271,7 +271,7 @@ func runCypressInDocker(p cypress.Project, testco testcomposer.Client, rs resto.
 	log.Info().Msg("Running Cypress in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewCypress(p, &testco, &rs)
+	cd, err := docker.NewCypress(p, &testco, &rs, &rs)
 	if err != nil {
 		return 1, err
 	}
@@ -377,7 +377,7 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs 
 	log.Info().Msg("Running Playwright in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewPlaywright(p, &testco, &rs)
+	cd, err := docker.NewPlaywright(p, &testco, &rs, &rs)
 	if err != nil {
 		return 1, err
 	}
@@ -481,7 +481,7 @@ func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client, rs rest
 	log.Info().Msg("Running Testcafe in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewTestcafe(p, &testco, &rs)
+	cd, err := docker.NewTestcafe(p, &testco, &rs, &rs)
 	if err != nil {
 		return 1, err
 	}
@@ -611,7 +611,7 @@ func runPuppeteerInDocker(p puppeteer.Project, testco testcomposer.Client, rs re
 	log.Info().Msg("Running puppeteer in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewPuppeteer(p, &testco, &rs)
+	cd, err := docker.NewPuppeteer(p, &testco, &rs, &rs)
 	if err != nil {
 		return 1, err
 	}

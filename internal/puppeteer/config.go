@@ -23,6 +23,7 @@ type Project struct {
 	Puppeteer      Puppeteer          `yaml:"puppeteer,omitempty" json:"puppeteer"`
 	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
 	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
+	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
 }
 
 // Suite represents the puppeteer test suite configuration.
