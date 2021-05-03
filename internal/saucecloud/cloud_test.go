@@ -3,6 +3,14 @@ package saucecloud
 import (
 	"context"
 	"errors"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"reflect"
+	"syscall"
+	"testing"
+	"time"
+
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -11,13 +19,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"gotest.tools/v3/fs"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"reflect"
-	"syscall"
-	"testing"
-	"time"
 )
 
 func TestCloudRunner_logSuiteConsole(t *testing.T) {
@@ -166,73 +167,6 @@ func TestRunJobsSkipped(t *testing.T) {
 	assert.True(t, res.skipped)
 }
 
-func TestShouldDownloadArtifacts(t *testing.T) {
-	type testCase struct {
-		config config.ArtifactDownload
-		job    job.Job
-		want   bool
-	}
-	testCases := []testCase{
-		{
-			config: config.ArtifactDownload{When: config.WhenAlways},
-			job:    job.Job{ID: ""},
-			want:   false,
-		},
-		{
-			config: config.ArtifactDownload{When: config.WhenNever},
-			job:    job.Job{ID: ""},
-			want:   false,
-		},
-		{
-			config: config.ArtifactDownload{When: config.WhenAlways},
-			job:    job.Job{ID: "fake-id", Status: job.StateComplete},
-			want:   true,
-		},
-		{
-			config: config.ArtifactDownload{When: config.WhenAlways},
-			job:    job.Job{ID: "fake-id", Status: job.StateError},
-			want:   true,
-		},
-		{
-			config: config.ArtifactDownload{When: config.WhenNever},
-			job:    job.Job{ID: "fake-id", Status: job.StateComplete},
-			want:   false,
-		},
-		{
-			config: config.ArtifactDownload{When: config.WhenNever},
-			job:    job.Job{ID: "fake-id", Status: job.StateError},
-			want:   false,
-		},
-		{
-			config: config.ArtifactDownload{When: config.WhenPass},
-			job:    job.Job{ID: "fake-id", Status: job.StateComplete},
-			want:   true,
-		},
-		{
-			config: config.ArtifactDownload{When: config.WhenPass},
-			job:    job.Job{ID: "fake-id", Status: job.StateError},
-			want:   false,
-		},
-		{
-			config: config.ArtifactDownload{When: config.WhenFail},
-			job:    job.Job{ID: "fake-id", Status: job.StateComplete},
-			want:   false,
-		},
-		{
-			config: config.ArtifactDownload{When: config.WhenFail},
-			job:    job.Job{ID: "fake-id", Status: job.StateError},
-			want:   true,
-		},
-	}
-	r := CloudRunner{}
-	for _, tt := range testCases {
-		got := r.shouldDownloadArtifacts(tt.config, tt.job)
-		if tt.want != got {
-			t.Errorf("shouldDownloadArtifacts fails. Want '%v', got '%v'", tt.want, got)
-		}
-	}
-}
-
 func TestDownloadArtifacts(t *testing.T) {
 	dir := fs.NewDir(t, "download-artifacts")
 	defer dir.Remove()
@@ -268,7 +202,7 @@ func TestDownloadArtifacts(t *testing.T) {
 	}{
 		{filename: "console.log", content: []byte("console-log-content")},
 	}
-	r.downloadArtifacts(cfg, j)
+	r.downloadArtifacts(cfg, j, true)
 	for _, expectedFile := range expectedFiles {
 		content, err := os.ReadFile(filepath.Join(cfg.Directory, j.ID, expectedFile.filename))
 		if err != nil {

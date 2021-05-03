@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 
+	"github.com/saucelabs/saucectl/internal/artifact"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/playwright"
@@ -26,10 +27,11 @@ func NewPlaywright(c playwright.Project, ms framework.MetadataService, wr job.Wr
 				Name:    c.Kind,
 				Version: c.Playwright.Version,
 			},
-			FrameworkMeta:  ms,
-			ShowConsoleLog: c.ShowConsoleLog,
-			JobWriter:      wr,
-			JobReader:      rd,
+			FrameworkMeta:     ms,
+			ShowConsoleLog:    c.ShowConsoleLog,
+			JobWriter:         wr,
+			JobReader:         rd,
+			ArtfactDownloader: &artifact.ArtifactDownloader{JobReader: rd},
 		},
 	}
 

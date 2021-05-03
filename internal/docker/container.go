@@ -14,9 +14,8 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"github.com/ryanuber/go-glob"
-
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
@@ -27,14 +26,15 @@ import (
 
 // ContainerRunner represents the container runner for docker.
 type ContainerRunner struct {
-	Ctx             context.Context
-	docker          *Handler
-	containerConfig *containerConfig
-	Framework       framework.Framework
-	FrameworkMeta   framework.MetadataService
-	JobWriter       job.Writer
-	ShowConsoleLog  bool
-	JobReader       job.Reader
+	Ctx               context.Context
+	docker            *Handler
+	containerConfig   *containerConfig
+	Framework         framework.Framework
+	FrameworkMeta     framework.MetadataService
+	JobWriter         job.Writer
+	ShowConsoleLog    bool
+	JobReader         job.Reader
+	ArtfactDownloader download.Downloader
 
 	interrupted bool
 }
@@ -292,7 +292,7 @@ func (r *ContainerRunner) collectResults(artifactsCfg config.ArtifactDownload, r
 		completed++
 		inProgress--
 
-		r.downloadArtifacts(artifactsCfg, res)
+		r.ArtfactDownloader.DownloadArtifacts(artifactsCfg, getJobID(res.jobInfo.JobDetailsURL), res.passed)
 
 		if !res.passed {
 			errCount++
@@ -313,59 +313,9 @@ func (r *ContainerRunner) collectResults(artifactsCfg config.ArtifactDownload, r
 	return passed
 }
 
-func (r *ContainerRunner) downloadArtifacts(artifactsCfg config.ArtifactDownload, res result) {
-	if !r.shouldDownloadArtifacts(artifactsCfg, res) {
-		return
-	}
-	jobInfo := strings.Split(res.jobInfo.JobDetailsURL, "/")
-	jobID := jobInfo[len(jobInfo)-1]
-	targetDir := filepath.Join(artifactsCfg.Directory, jobID)
-	if err := os.MkdirAll(targetDir, 0755); err != nil {
-		log.Error().Msgf("Unable to create %s to fetch artifacts (%v)", targetDir, err)
-		return
-	}
-
-	files, err := r.JobReader.GetJobAssetFileNames(context.Background(), jobID)
-	if err != nil {
-		log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
-		return
-	}
-	for _, f := range files {
-		for _, pattern := range artifactsCfg.Match {
-			if glob.Glob(pattern, f) {
-				if err := r.doDownloadArtifact(targetDir, jobID, f); err != nil {
-					log.Error().Err(err).Msgf("Failed to download file: %s", f)
-				}
-				break
-			}
-		}
-	}
-}
-
-func (r *ContainerRunner) doDownloadArtifact(targetDir, jobID, fileName string) error {
-	content, err := r.JobReader.GetJobAssetFileContent(context.Background(), jobID, fileName)
-	if err != nil {
-		return err
-	}
-	targetFile := filepath.Join(targetDir, fileName)
-	return os.WriteFile(targetFile, content, 0644)
-}
-
-func (r *ContainerRunner) shouldDownloadArtifacts(artifactsCfg config.ArtifactDownload, res result) bool {
-	if res.jobInfo.JobDetailsURL == "" {
-		return false
-	}
-	if artifactsCfg.When == config.WhenAlways {
-		return true
-	}
-	if artifactsCfg.When == config.WhenFail && !res.passed {
-		return true
-	}
-	if artifactsCfg.When == config.WhenPass && res.passed {
-		return true
-	}
-
-	return false
+func getJobID(url string) string {
+	details := strings.Split(url, "/")
+	return details[len(details)-1]
 }
 
 func (r *ContainerRunner) logSuite(res result) {

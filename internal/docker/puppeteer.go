@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 
+	"github.com/saucelabs/saucectl/internal/artifact"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
@@ -25,10 +26,11 @@ func NewPuppeteer(c puppeteer.Project, ms framework.MetadataService, wr job.Writ
 				Name:    c.Kind,
 				Version: c.Puppeteer.Version,
 			},
-			FrameworkMeta:  ms,
-			ShowConsoleLog: c.ShowConsoleLog,
-			JobWriter:      wr,
-			JobReader:      rd,
+			FrameworkMeta:     ms,
+			ShowConsoleLog:    c.ShowConsoleLog,
+			JobWriter:         wr,
+			JobReader:         rd,
+			ArtfactDownloader: &artifact.ArtifactDownloader{JobReader: rd},
 		},
 	}
 	var err error

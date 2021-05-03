@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 
+	"github.com/saucelabs/saucectl/internal/artifact"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/testcafe"
@@ -25,10 +26,11 @@ func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer
 				Name:    c.Kind,
 				Version: c.Testcafe.Version,
 			},
-			FrameworkMeta:  ms,
-			ShowConsoleLog: c.ShowConsoleLog,
-			JobWriter:      wr,
-			JobReader:      rd,
+			FrameworkMeta:     ms,
+			ShowConsoleLog:    c.ShowConsoleLog,
+			JobWriter:         wr,
+			JobReader:         rd,
+			ArtfactDownloader: &artifact.ArtifactDownloader{JobReader: rd},
 		},
 	}
 	var err error

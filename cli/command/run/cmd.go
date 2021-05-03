@@ -13,6 +13,7 @@ import (
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/appstore"
+	"github.com/saucelabs/saucectl/internal/artifact"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
@@ -285,15 +286,16 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 	r := saucecloud.CypressRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader: as,
-			JobStarter:      &tc,
-			JobReader:       &rs,
-			JobStopper:      &rs,
-			JobWriter:       &rs,
-			CCYReader:       &rs,
-			TunnelService:   &rs,
-			Region:          regio,
-			ShowConsoleLog:  p.ShowConsoleLog,
+			ProjectUploader:    as,
+			JobStarter:         &tc,
+			JobReader:          &rs,
+			JobStopper:         &rs,
+			JobWriter:          &rs,
+			CCYReader:          &rs,
+			TunnelService:      &rs,
+			Region:             regio,
+			ShowConsoleLog:     p.ShowConsoleLog,
+			ArtifactDownloader: &artifact.ArtifactDownloader{JobReader: &rs},
 		},
 	}
 	return r.RunProject()
@@ -391,15 +393,16 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 	r := saucecloud.PlaywrightRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader: as,
-			JobStarter:      &tc,
-			JobReader:       &rs,
-			JobStopper:      &rs,
-			JobWriter:       &rs,
-			CCYReader:       &rs,
-			TunnelService:   &rs,
-			Region:          regio,
-			ShowConsoleLog:  p.ShowConsoleLog,
+			ProjectUploader:    as,
+			JobStarter:         &tc,
+			JobReader:          &rs,
+			JobStopper:         &rs,
+			JobWriter:          &rs,
+			CCYReader:          &rs,
+			TunnelService:      &rs,
+			Region:             regio,
+			ShowConsoleLog:     p.ShowConsoleLog,
+			ArtifactDownloader: &artifact.ArtifactDownloader{JobReader: &rs},
 		},
 	}
 	return r.RunProject()
@@ -495,15 +498,16 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 	r := saucecloud.TestcafeRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader: as,
-			JobStarter:      &tc,
-			JobReader:       &rs,
-			JobStopper:      &rs,
-			JobWriter:       &rs,
-			CCYReader:       &rs,
-			TunnelService:   &rs,
-			Region:          regio,
-			ShowConsoleLog:  p.ShowConsoleLog,
+			ProjectUploader:    as,
+			JobStarter:         &tc,
+			JobReader:          &rs,
+			JobStopper:         &rs,
+			JobWriter:          &rs,
+			CCYReader:          &rs,
+			TunnelService:      &rs,
+			Region:             regio,
+			ShowConsoleLog:     p.ShowConsoleLog,
+			ArtifactDownloader: &artifact.ArtifactDownloader{JobReader: &rs},
 		},
 	}
 	return r.RunProject()
@@ -550,15 +554,16 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 	r := saucecloud.EspressoRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader: as,
-			JobStarter:      &tc,
-			JobReader:       &rs,
-			JobStopper:      &rs,
-			JobWriter:       &rs,
-			CCYReader:       &rs,
-			TunnelService:   &rs,
-			Region:          regio,
-			ShowConsoleLog:  false,
+			ProjectUploader:    as,
+			JobStarter:         &tc,
+			JobReader:          &rs,
+			JobStopper:         &rs,
+			JobWriter:          &rs,
+			CCYReader:          &rs,
+			TunnelService:      &rs,
+			Region:             regio,
+			ShowConsoleLog:     false,
+			ArtifactDownloader: &artifact.ArtifactDownloader{JobReader: &rs},
 		},
 	}
 	return r.RunProject()

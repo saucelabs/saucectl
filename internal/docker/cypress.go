@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 
+	"github.com/saucelabs/saucectl/internal/artifact"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -26,10 +27,11 @@ func NewCypress(c cypress.Project, ms framework.MetadataService, wr job.Writer, 
 				Name:    c.Kind,
 				Version: c.Cypress.Version,
 			},
-			FrameworkMeta:  ms,
-			ShowConsoleLog: c.ShowConsoleLog,
-			JobWriter:      wr,
-			JobReader:      rd,
+			FrameworkMeta:     ms,
+			ShowConsoleLog:    c.ShowConsoleLog,
+			JobWriter:         wr,
+			JobReader:         rd,
+			ArtfactDownloader: &artifact.ArtifactDownloader{JobReader: rd},
 		},
 	}
 
