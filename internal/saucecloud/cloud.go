@@ -311,7 +311,11 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	// Display log only when at least it has started
 	assetContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, ConsoleLogAsset)
 	if err != nil {
-		log.Warn().Str("suite", res.suiteName).Msg("Failed to retrieve the console output.")
+		// log.Warn().Str("suite", res.suiteName).Msg("Failed to retrieve the console output.")
+		assetContent, err = r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, "junit.xml")
+		if err == nil {
+			log.Info().Str("suite", res.suiteName).Msgf("junit.xml output: \n%s", assetContent)
+		}
 	} else {
 		log.Info().Str("suite", res.suiteName).Msgf("console.log output: \n%s", assetContent)
 	}
