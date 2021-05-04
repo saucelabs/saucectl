@@ -31,7 +31,7 @@ func NewCypress(c cypress.Project, ms framework.MetadataService, wr job.Writer, 
 			ShowConsoleLog:    c.ShowConsoleLog,
 			JobWriter:         wr,
 			JobReader:         rd,
-			ArtfactDownloader: &artifact.ArtifactDownloader{JobReader: rd},
+			ArtfactDownloader: artifact.Downloader{JobReader: rd},
 		},
 	}
 

@@ -2,14 +2,16 @@ package saucecloud
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/jarcoal/httpmock"
+	"github.com/saucelabs/saucectl/internal/artifact"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func TestEspresso_GetSuiteNames(t *testing.T) {
@@ -68,7 +70,14 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 		PollJobFn: func(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
 			return job.Job{ID: id, Passed: true}, nil
 		},
+		GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
+			return []string{"file1", "file2"}, nil
+		},
+		GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+			return []byte("file content"), nil
+		},
 	}
+
 	writer := mocks.FakeJobWriter{
 		UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
 			return nil
@@ -82,11 +91,12 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 	}
 	runner := &EspressoRunner{
 		CloudRunner: CloudRunner{
-			JobStarter:      &starter,
-			JobReader:       &reader,
-			JobWriter:       &writer,
-			CCYReader:       ccyReader,
-			ProjectUploader: uploader,
+			JobStarter:         &starter,
+			JobReader:          &reader,
+			JobWriter:          &writer,
+			CCYReader:          ccyReader,
+			ProjectUploader:    uploader,
+			ArtifactDownloader: artifact.Downloader{JobReader: &reader},
 		},
 		Project: espresso.Project{
 			Espresso: espresso.Espresso{

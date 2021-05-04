@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/artifact"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
@@ -34,7 +34,7 @@ type ContainerRunner struct {
 	JobWriter         job.Writer
 	ShowConsoleLog    bool
 	JobReader         job.Reader
-	ArtfactDownloader download.Downloader
+	ArtfactDownloader artifact.Downloader
 
 	interrupted bool
 }

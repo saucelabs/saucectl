@@ -295,7 +295,7 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			TunnelService:      &rs,
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
-			ArtifactDownloader: &artifact.ArtifactDownloader{JobReader: &rs},
+			ArtifactDownloader: artifact.Downloader{JobReader: &rs},
 		},
 	}
 	return r.RunProject()
@@ -402,7 +402,7 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 			TunnelService:      &rs,
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
-			ArtifactDownloader: &artifact.ArtifactDownloader{JobReader: &rs},
+			ArtifactDownloader: artifact.Downloader{JobReader: &rs},
 		},
 	}
 	return r.RunProject()
@@ -507,7 +507,7 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 			TunnelService:      &rs,
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
-			ArtifactDownloader: &artifact.ArtifactDownloader{JobReader: &rs},
+			ArtifactDownloader: artifact.Downloader{JobReader: &rs},
 		},
 	}
 	return r.RunProject()
@@ -563,7 +563,7 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 			TunnelService:      &rs,
 			Region:             regio,
 			ShowConsoleLog:     false,
-			ArtifactDownloader: &artifact.ArtifactDownloader{JobReader: &rs},
+			ArtifactDownloader: artifact.Downloader{JobReader: &rs},
 		},
 	}
 	return r.RunProject()

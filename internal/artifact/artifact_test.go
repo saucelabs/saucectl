@@ -1,10 +1,16 @@
 package artifact
 
 import (
+	"context"
+	"errors"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/saucelabs/saucectl/internal/config"
-	"gotest.tools/assert"
+	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/mocks"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestShouldDownloadArtifacts(t *testing.T) {
@@ -88,6 +94,86 @@ func TestShouldDownloadArtifacts(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := shouldDownloadArtifacts(tt.config, tt.jobID, tt.passed)
 			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestDownloadArtifacts(t *testing.T) {
+	var testCase = []struct {
+		name          string
+		cfg           config.ArtifactDownload
+		jobReader     job.Reader
+		expContent    string
+		isFileExisted bool
+	}{
+		{
+			name: "should download artifacts successfully",
+			cfg: config.ArtifactDownload{
+				Directory: "artifacts",
+				Match:     []string{"console.log"},
+				When:      config.WhenAlways,
+			},
+			jobReader: &mocks.FakeJobReader{
+				GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
+					return []string{"console.log", "dummy.file"}, nil
+				},
+				GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+					return []byte("file-content"), nil
+				},
+			},
+			expContent:    "file-content",
+			isFileExisted: true,
+		},
+		{
+			name: "should not download artifacts when set to never",
+			cfg: config.ArtifactDownload{
+				Directory: "artifacts",
+				Match:     []string{"console.log"},
+				When:      config.WhenNever,
+			},
+			jobReader: &mocks.FakeJobReader{
+				GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
+					return []string{"console.log", "dummy.file"}, nil
+				},
+				GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+					return []byte("file-content"), nil
+				},
+			},
+			expContent:    "file-content",
+			isFileExisted: false,
+		},
+		{
+			name: "should not download artifacts when failed to get file name ",
+			cfg: config.ArtifactDownload{
+				Directory: "artifacts",
+				Match:     []string{"console.log"},
+				When:      config.WhenNever,
+			},
+			jobReader: &mocks.FakeJobReader{
+				GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
+					return []string{"console.log", "dummy.file"}, errors.New("500")
+				},
+				GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+					return []byte("file-content"), nil
+				},
+			},
+			expContent:    "file-content",
+			isFileExisted: false,
+		},
+	}
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			downloader := &Downloader{JobReader: tc.jobReader}
+			downloader.DownloadArtifacts(tc.cfg, "fake-id", true)
+			content, err := os.ReadFile(filepath.Join(tc.cfg.Directory, "fake-id", tc.cfg.Match[0]))
+			if err != nil {
+				assert.False(t, tc.isFileExisted)
+			} else {
+				assert.Equal(t, tc.expContent, string(content))
+			}
+			t.Cleanup(func() {
+				os.RemoveAll(tc.cfg.Directory)
+			})
 		})
 	}
 }

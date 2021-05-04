@@ -13,9 +13,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
+	"github.com/saucelabs/saucectl/internal/artifact"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -37,7 +37,7 @@ type CloudRunner struct {
 	TunnelService      tunnel.Service
 	Region             region.Region
 	ShowConsoleLog     bool
-	ArtifactDownloader download.Downloader
+	ArtifactDownloader artifact.Downloader
 
 	interrupted bool
 }

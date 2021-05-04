@@ -30,7 +30,7 @@ func NewPuppeteer(c puppeteer.Project, ms framework.MetadataService, wr job.Writ
 			ShowConsoleLog:    c.ShowConsoleLog,
 			JobWriter:         wr,
 			JobReader:         rd,
-			ArtfactDownloader: &artifact.ArtifactDownloader{JobReader: rd},
+			ArtfactDownloader: artifact.Downloader{JobReader: rd},
 		},
 	}
 	var err error
