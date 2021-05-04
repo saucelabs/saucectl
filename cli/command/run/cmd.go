@@ -410,6 +410,7 @@ func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 	if err != nil {
 		return 1, err
 	}
+
 	p.Sauce.Metadata.ExpandEnv()
 	applyDefaultValues(&p.Sauce)
 	overrideCliParameters(cmd, &p.Sauce)
