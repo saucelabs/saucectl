@@ -19,7 +19,7 @@ type Downloader struct {
 
 // Download downloads artifacts according to config
 func (d *Downloader) Download(jobID string, passed bool) {
-	if !shouldDownload(d.Config, jobID, passed) {
+	if !d.shouldDownload(jobID, passed) {
 		return
 	}
 	targetDir := filepath.Join(d.Config.Directory, jobID)
@@ -54,17 +54,17 @@ func (d *Downloader) downloadArtifact(targetDir, jobID, fileName string) error {
 	return os.WriteFile(targetFile, content, 0644)
 }
 
-func shouldDownload(Config config.ArtifactDownload, jobID string, passed bool) bool {
+func (d *Downloader) shouldDownload(jobID string, passed bool) bool {
 	if jobID == "" {
 		return false
 	}
-	if Config.When == config.WhenAlways {
+	if d.Config.When == config.WhenAlways {
 		return true
 	}
-	if Config.When == config.WhenFail && !passed {
+	if d.Config.When == config.WhenFail && !passed {
 		return true
 	}
-	if Config.When == config.WhenPass && passed {
+	if d.Config.When == config.WhenPass && passed {
 		return true
 	}
 

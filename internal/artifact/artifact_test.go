@@ -92,7 +92,8 @@ func TestShouldDownload(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			got := shouldDownload(tt.config, tt.jobID, tt.passed)
+			downloader := &Downloader{Config: tt.config}
+			got := downloader.shouldDownload(tt.jobID, tt.passed)
 			assert.Equal(t, tt.want, got)
 		})
 	}
