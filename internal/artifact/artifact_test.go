@@ -163,8 +163,8 @@ func TestDownloadArtifacts(t *testing.T) {
 	}
 	for _, tc := range testCase {
 		t.Run(tc.name, func(t *testing.T) {
-			downloader := &Downloader{JobReader: tc.jobReader}
-			downloader.DownloadArtifacts(tc.cfg, "fake-id", true)
+			downloader := &Downloader{JobReader: tc.jobReader, Config: tc.cfg}
+			downloader.DownloadArtifacts("fake-id", true)
 			content, err := os.ReadFile(filepath.Join(tc.cfg.Directory, "fake-id", tc.cfg.Match[0]))
 			if err != nil {
 				assert.False(t, tc.isFileExisted)

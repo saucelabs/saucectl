@@ -14,14 +14,15 @@ import (
 // Downloader defines artifacts downloader
 type Downloader struct {
 	JobReader job.Reader
+	Config    config.ArtifactDownload
 }
 
 // DownloadArtifacts downloads artifacts according to config
-func (d *Downloader) DownloadArtifacts(artifactsCfg config.ArtifactDownload, jobID string, passed bool) {
-	if !shouldDownloadArtifacts(artifactsCfg, jobID, passed) {
+func (d *Downloader) DownloadArtifacts(jobID string, passed bool) {
+	if !shouldDownloadArtifacts(d.Config, jobID, passed) {
 		return
 	}
-	targetDir := filepath.Join(artifactsCfg.Directory, jobID)
+	targetDir := filepath.Join(d.Config.Directory, jobID)
 	if err := os.MkdirAll(targetDir, 0755); err != nil {
 		log.Error().Msgf("Unable to create %s to fetch artifacts (%v)", targetDir, err)
 		return
@@ -33,7 +34,7 @@ func (d *Downloader) DownloadArtifacts(artifactsCfg config.ArtifactDownload, job
 		return
 	}
 	for _, f := range files {
-		for _, pattern := range artifactsCfg.Match {
+		for _, pattern := range d.Config.Match {
 			if glob.Glob(pattern, f) {
 				if err := d.downloadArtifact(targetDir, jobID, f); err != nil {
 					log.Error().Err(err).Msgf("Failed to download file: %s", f)
@@ -53,17 +54,17 @@ func (d *Downloader) downloadArtifact(targetDir, jobID, fileName string) error {
 	return os.WriteFile(targetFile, content, 0644)
 }
 
-func shouldDownloadArtifacts(artifactsCfg config.ArtifactDownload, jobID string, passed bool) bool {
+func shouldDownloadArtifacts(Config config.ArtifactDownload, jobID string, passed bool) bool {
 	if jobID == "" {
 		return false
 	}
-	if artifactsCfg.When == config.WhenAlways {
+	if Config.When == config.WhenAlways {
 		return true
 	}
-	if artifactsCfg.When == config.WhenFail && !passed {
+	if Config.When == config.WhenFail && !passed {
 		return true
 	}
-	if artifactsCfg.When == config.WhenPass && passed {
+	if Config.When == config.WhenPass && passed {
 		return true
 	}
 

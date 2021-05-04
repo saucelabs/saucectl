@@ -292,7 +292,7 @@ func (r *ContainerRunner) collectResults(artifactsCfg config.ArtifactDownload, r
 		completed++
 		inProgress--
 
-		r.ArtfactDownloader.DownloadArtifacts(artifactsCfg, getJobID(res.jobInfo.JobDetailsURL), res.passed)
+		r.ArtfactDownloader.DownloadArtifacts(getJobID(res.jobInfo.JobDetailsURL), res.passed)
 
 		if !res.passed {
 			errCount++

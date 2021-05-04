@@ -101,7 +101,7 @@ func (r *CloudRunner) collectResults(artifactsCfg config.ArtifactDownload, resul
 		completed++
 		inProgress--
 
-		r.ArtifactDownloader.DownloadArtifacts(artifactsCfg, res.job.ID, res.job.Passed)
+		r.ArtifactDownloader.DownloadArtifacts(res.job.ID, res.job.Passed)
 		r.logSuite(res)
 
 		if res.job.ID == "" || res.err != nil {
