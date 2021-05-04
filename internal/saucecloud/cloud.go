@@ -72,7 +72,7 @@ func (r *CloudRunner) createWorkerPool(num int) (chan job.StartOptions, chan res
 	return jobOpts, results, nil
 }
 
-func (r *CloudRunner) collectResults(artifactsCfg config.ArtifactDownload, results chan result, expected int) bool {
+func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 	// TODO find a better way to get the expected
 	errCount := 0
 	completed := 0
@@ -101,7 +101,7 @@ func (r *CloudRunner) collectResults(artifactsCfg config.ArtifactDownload, resul
 		completed++
 		inProgress--
 
-		r.ArtifactDownloader.DownloadArtifacts(res.job.ID, res.job.Passed)
+		r.ArtifactDownloader.Download(res.job.ID, res.job.Passed)
 		r.logSuite(res)
 
 		if res.job.ID == "" || res.err != nil {

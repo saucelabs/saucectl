@@ -74,7 +74,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		close(containerOpts)
 	}()
 
-	hasPassed := r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites))
+	hasPassed := r.collectResults(results, len(r.Project.Suites))
 	if !hasPassed {
 		return 1, nil
 	}

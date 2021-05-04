@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestShouldDownloadArtifacts(t *testing.T) {
+func TestShouldDownload(t *testing.T) {
 	type testCase struct {
 		name   string
 		config config.ArtifactDownload
@@ -92,13 +92,13 @@ func TestShouldDownloadArtifacts(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			got := shouldDownloadArtifacts(tt.config, tt.jobID, tt.passed)
+			got := shouldDownload(tt.config, tt.jobID, tt.passed)
 			assert.Equal(t, tt.want, got)
 		})
 	}
 }
 
-func TestDownloadArtifacts(t *testing.T) {
+func TestDownload(t *testing.T) {
 	var testCase = []struct {
 		name          string
 		cfg           config.ArtifactDownload
@@ -164,7 +164,7 @@ func TestDownloadArtifacts(t *testing.T) {
 	for _, tc := range testCase {
 		t.Run(tc.name, func(t *testing.T) {
 			downloader := &Downloader{JobReader: tc.jobReader, Config: tc.cfg}
-			downloader.DownloadArtifacts("fake-id", true)
+			downloader.Download("fake-id", true)
 			content, err := os.ReadFile(filepath.Join(tc.cfg.Directory, "fake-id", tc.cfg.Match[0]))
 			if err != nil {
 				assert.False(t, tc.isFileExisted)

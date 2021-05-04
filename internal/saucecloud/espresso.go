@@ -2,10 +2,11 @@ package saucecloud
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/job"
-	"strings"
 )
 
 // EspressoRunner represents the Sauce Labs cloud implementation for cypress.
@@ -88,7 +89,7 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 		close(jobOpts)
 	}()
 
-	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
+	return r.collectResults(results, jobsCount)
 }
 
 func (r *EspressoRunner) calculateJobsCount(suites []espresso.Suite) int {

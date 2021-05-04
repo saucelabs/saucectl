@@ -267,7 +267,7 @@ func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, re
 	}
 }
 
-func (r *ContainerRunner) collectResults(artifactsCfg config.ArtifactDownload, results chan result, expected int) bool {
+func (r *ContainerRunner) collectResults(results chan result, expected int) bool {
 	// TODO find a better way to get the expected
 	errCount := 0
 	completed := 0
@@ -292,7 +292,7 @@ func (r *ContainerRunner) collectResults(artifactsCfg config.ArtifactDownload, r
 		completed++
 		inProgress--
 
-		r.ArtfactDownloader.DownloadArtifacts(getJobID(res.jobInfo.JobDetailsURL), res.passed)
+		r.ArtfactDownloader.Download(getJobID(res.jobInfo.JobDetailsURL), res.passed)
 
 		if !res.passed {
 			errCount++
