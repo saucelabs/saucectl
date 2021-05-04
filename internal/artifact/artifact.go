@@ -11,10 +11,12 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 )
 
+// Downloader defines artifacts downloader
 type Downloader struct {
 	JobReader job.Reader
 }
 
+// DownloadArtifacts downloads artifacts according to config
 func (d *Downloader) DownloadArtifacts(artifactsCfg config.ArtifactDownload, jobID string, passed bool) {
 	if !shouldDownloadArtifacts(artifactsCfg, jobID, passed) {
 		return
