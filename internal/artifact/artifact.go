@@ -17,11 +17,8 @@ type Download struct {
 	Config    config.ArtifactDownload
 }
 
-// DownloadArtifacts downloads artifacts according to config
-func (d *Download) DownloadArtifacts(jobID string, passed bool) {
-	if !d.shouldDownload(jobID, passed) {
-		return
-	}
+// Download downloads artifacts according to config
+func (d *Download) Download(jobID string) {
 	targetDir := filepath.Join(d.Config.Directory, jobID)
 	if err := os.MkdirAll(targetDir, 0755); err != nil {
 		log.Error().Msgf("Unable to create %s to fetch artifacts (%v)", targetDir, err)
@@ -54,17 +51,18 @@ func (d *Download) downloadArtifact(targetDir, jobID, fileName string) error {
 	return os.WriteFile(targetFile, content, 0644)
 }
 
-func (d *Download) shouldDownload(jobID string, passed bool) bool {
+// ShouldDownload returns true if it should download artifacts, otherwise false
+func ShouldDownload(jobID string, passed bool, cfg config.ArtifactDownload) bool {
 	if jobID == "" {
 		return false
 	}
-	if d.Config.When == config.WhenAlways {
+	if cfg.When == config.WhenAlways {
 		return true
 	}
-	if d.Config.When == config.WhenFail && !passed {
+	if cfg.When == config.WhenFail && !passed {
 		return true
 	}
-	if d.Config.When == config.WhenPass && passed {
+	if cfg.When == config.WhenPass && passed {
 		return true
 	}
 

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/artifact"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
@@ -267,7 +268,7 @@ func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, re
 	}
 }
 
-func (r *ContainerRunner) collectResults(results chan result, expected int) bool {
+func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int) bool {
 	// TODO find a better way to get the expected
 	errCount := 0
 	completed := 0
@@ -292,7 +293,10 @@ func (r *ContainerRunner) collectResults(results chan result, expected int) bool
 		completed++
 		inProgress--
 
-		r.ArtfactDownloader.DownloadArtifacts(getJobID(res.jobInfo.JobDetailsURL), res.passed)
+		jobID := getJobID(res.jobInfo.JobDetailsURL)
+		if artifact.ShouldDownload(jobID, res.passed, artifactCfg) {
+			r.ArtfactDownloader.Download(jobID)
+		}
 
 		if !res.passed {
 			errCount++

@@ -13,6 +13,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
+	"github.com/saucelabs/saucectl/internal/artifact"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/download"
@@ -72,7 +73,7 @@ func (r *CloudRunner) createWorkerPool(num int) (chan job.StartOptions, chan res
 	return jobOpts, results, nil
 }
 
-func (r *CloudRunner) collectResults(results chan result, expected int) bool {
+func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int) bool {
 	// TODO find a better way to get the expected
 	errCount := 0
 	completed := 0
@@ -101,7 +102,9 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 		completed++
 		inProgress--
 
-		r.ArtifactDownloader.DownloadArtifacts(res.job.ID, res.job.Passed)
+		if artifact.ShouldDownload(res.job.ID, res.job.Passed, artifactCfg) {
+			r.ArtifactDownloader.Download(res.job.ID)
+		}
 		r.logSuite(res)
 
 		if res.job.ID == "" || res.err != nil {

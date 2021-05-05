@@ -89,7 +89,7 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 		UploadSuccess: true,
 	}
 	downloader := mocks.FakeDownloader{
-		DownloadArtifactsFn: func(jobID string, passed bool) {},
+		DownloadFn: func(jobID string) {},
 	}
 
 	runner := &EspressoRunner{
