@@ -101,7 +101,7 @@ func TestRunSuites(t *testing.T) {
 			JobReader:          &reader,
 			JobWriter:          &writer,
 			CCYReader:          ccyReader,
-			ArtifactDownloader: &artifact.Artifact{JobReader: &reader},
+			ArtifactDownloader: &artifact.Download{JobReader: &reader},
 		},
 		Project: cypress.Project{
 			Suites: []cypress.Suite{
@@ -145,7 +145,7 @@ func TestRunSuites_Cypress_NoConcurrency(t *testing.T) {
 			JobStarter:         &starter,
 			JobReader:          &reader,
 			CCYReader:          ccyReader,
-			ArtifactDownloader: &artifact.Artifact{JobReader: &reader},
+			ArtifactDownloader: &artifact.Download{JobReader: &reader},
 		},
 		Project: cypress.Project{
 			Suites: []cypress.Suite{
@@ -267,7 +267,7 @@ func TestRunProject(t *testing.T) {
 			JobWriter:          &writer,
 			CCYReader:          ccyReader,
 			ProjectUploader:    uploader,
-			ArtifactDownloader: &artifact.Artifact{JobReader: &reader},
+			ArtifactDownloader: &artifact.Download{JobReader: &reader},
 		},
 		Project: cypress.Project{
 			RootDir: ".",

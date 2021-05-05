@@ -11,14 +11,14 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 )
 
-// Artifact defines artifacts downloader
-type Artifact struct {
+// Download defines artifacts downloading options
+type Download struct {
 	JobReader job.Reader
 	Config    config.ArtifactDownload
 }
 
 // DownloadArtifacts downloads artifacts according to config
-func (d *Artifact) DownloadArtifacts(jobID string, passed bool) {
+func (d *Download) DownloadArtifacts(jobID string, passed bool) {
 	if !d.shouldDownload(jobID, passed) {
 		return
 	}
@@ -45,7 +45,7 @@ func (d *Artifact) DownloadArtifacts(jobID string, passed bool) {
 	}
 }
 
-func (d *Artifact) downloadArtifact(targetDir, jobID, fileName string) error {
+func (d *Download) downloadArtifact(targetDir, jobID, fileName string) error {
 	content, err := d.JobReader.GetJobAssetFileContent(context.Background(), jobID, fileName)
 	if err != nil {
 		return err
@@ -54,7 +54,7 @@ func (d *Artifact) downloadArtifact(targetDir, jobID, fileName string) error {
 	return os.WriteFile(targetFile, content, 0644)
 }
 
-func (d *Artifact) shouldDownload(jobID string, passed bool) bool {
+func (d *Download) shouldDownload(jobID string, passed bool) bool {
 	if jobID == "" {
 		return false
 	}

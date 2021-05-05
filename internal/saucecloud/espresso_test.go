@@ -96,7 +96,7 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 			JobWriter:          &writer,
 			CCYReader:          ccyReader,
 			ProjectUploader:    uploader,
-			ArtifactDownloader: &artifact.Artifact{JobReader: &reader},
+			ArtifactDownloader: &artifact.Download{JobReader: &reader},
 		},
 		Project: espresso.Project{
 			Espresso: espresso.Espresso{

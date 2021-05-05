@@ -92,7 +92,7 @@ func TestShouldDownload(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			downloader := &Artifact{Config: tt.config}
+			downloader := &Download{Config: tt.config}
 			got := downloader.shouldDownload(tt.jobID, tt.passed)
 			assert.Equal(t, tt.want, got)
 		})
@@ -164,7 +164,7 @@ func TestDownloadArtifacts(t *testing.T) {
 	}
 	for _, tc := range testCase {
 		t.Run(tc.name, func(t *testing.T) {
-			artifact := &Artifact{JobReader: tc.jobReader, Config: tc.cfg}
+			artifact := &Download{JobReader: tc.jobReader, Config: tc.cfg}
 			artifact.DownloadArtifacts("fake-id", true)
 			content, err := os.ReadFile(filepath.Join(tc.cfg.Directory, "fake-id", tc.cfg.Match[0]))
 			if err != nil {

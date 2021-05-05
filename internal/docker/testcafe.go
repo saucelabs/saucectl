@@ -30,7 +30,7 @@ func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer
 			ShowConsoleLog:    c.ShowConsoleLog,
 			JobWriter:         wr,
 			JobReader:         rd,
-			ArtfactDownloader: &artifact.Artifact{JobReader: rd, Config: c.Artifacts.Download},
+			ArtfactDownloader: &artifact.Download{JobReader: rd, Config: c.Artifacts.Download},
 		},
 	}
 	var err error
