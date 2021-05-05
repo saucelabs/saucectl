@@ -31,7 +31,7 @@ func NewPlaywright(c playwright.Project, ms framework.MetadataService, wr job.Wr
 			ShowConsoleLog:    c.ShowConsoleLog,
 			JobWriter:         wr,
 			JobReader:         rd,
-			ArtfactDownloader: artifact.Downloader{JobReader: rd, Config: c.Artifacts.Download},
+			ArtfactDownloader: &artifact.Artifact{JobReader: rd, Config: c.Artifacts.Download},
 		},
 	}
 

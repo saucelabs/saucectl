@@ -13,9 +13,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
-	"github.com/saucelabs/saucectl/internal/artifact"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -37,7 +37,7 @@ type CloudRunner struct {
 	TunnelService      tunnel.Service
 	Region             region.Region
 	ShowConsoleLog     bool
-	ArtifactDownloader artifact.Downloader
+	ArtifactDownloader download.Downloader
 
 	interrupted bool
 }
@@ -101,7 +101,7 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 		completed++
 		inProgress--
 
-		r.ArtifactDownloader.Download(res.job.ID, res.job.Passed)
+		r.ArtifactDownloader.DownloadArtifacts(res.job.ID, res.job.Passed)
 		r.logSuite(res)
 
 		if res.job.ID == "" || res.err != nil {

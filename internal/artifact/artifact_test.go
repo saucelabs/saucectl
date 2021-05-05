@@ -92,14 +92,14 @@ func TestShouldDownload(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			downloader := &Downloader{Config: tt.config}
+			downloader := &Artifact{Config: tt.config}
 			got := downloader.shouldDownload(tt.jobID, tt.passed)
 			assert.Equal(t, tt.want, got)
 		})
 	}
 }
 
-func TestDownload(t *testing.T) {
+func TestDownloadArtifacts(t *testing.T) {
 	var testCase = []struct {
 		name          string
 		cfg           config.ArtifactDownload
@@ -164,8 +164,8 @@ func TestDownload(t *testing.T) {
 	}
 	for _, tc := range testCase {
 		t.Run(tc.name, func(t *testing.T) {
-			downloader := &Downloader{JobReader: tc.jobReader, Config: tc.cfg}
-			downloader.Download("fake-id", true)
+			artifact := &Artifact{JobReader: tc.jobReader, Config: tc.cfg}
+			artifact.DownloadArtifacts("fake-id", true)
 			content, err := os.ReadFile(filepath.Join(tc.cfg.Directory, "fake-id", tc.cfg.Match[0]))
 			if err != nil {
 				assert.False(t, tc.isFileExisted)
