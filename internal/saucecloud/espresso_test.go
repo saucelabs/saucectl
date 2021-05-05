@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/jarcoal/httpmock"
-	"github.com/saucelabs/saucectl/internal/artifact"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -89,6 +88,10 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 	uploader := &mocks.FakeProjectUploader{
 		UploadSuccess: true,
 	}
+	downloader := mocks.FakeDownloader{
+		DownloadArtifactsFn: func(jobID string, passed bool) {},
+	}
+
 	runner := &EspressoRunner{
 		CloudRunner: CloudRunner{
 			JobStarter:         &starter,
@@ -96,7 +99,7 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 			JobWriter:          &writer,
 			CCYReader:          ccyReader,
 			ProjectUploader:    uploader,
-			ArtifactDownloader: &artifact.Download{JobReader: &reader},
+			ArtifactDownloader: &downloader,
 		},
 		Project: espresso.Project{
 			Espresso: espresso.Espresso{

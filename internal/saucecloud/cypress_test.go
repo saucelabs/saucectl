@@ -11,7 +11,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/saucelabs/saucectl/internal/artifact"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -92,6 +91,10 @@ func TestRunSuites(t *testing.T) {
 			return nil
 		},
 	}
+	downloader := &mocks.FakeDownloader{
+		DownloadArtifactsFn: func(jobID string, passed bool) {
+		},
+	}
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 		return 1, nil
 	}}
@@ -101,7 +104,7 @@ func TestRunSuites(t *testing.T) {
 			JobReader:          &reader,
 			JobWriter:          &writer,
 			CCYReader:          ccyReader,
-			ArtifactDownloader: &artifact.Download{JobReader: &reader},
+			ArtifactDownloader: downloader,
 		},
 		Project: cypress.Project{
 			Suites: []cypress.Suite{
@@ -140,12 +143,15 @@ func TestRunSuites_Cypress_NoConcurrency(t *testing.T) {
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 		return 0, nil
 	}}
+	downloader := mocks.FakeDownloader{
+		DownloadArtifactsFn: func(jobID string, passed bool) {},
+	}
 	runner := CypressRunner{
 		CloudRunner: CloudRunner{
 			JobStarter:         &starter,
 			JobReader:          &reader,
 			CCYReader:          ccyReader,
-			ArtifactDownloader: &artifact.Download{JobReader: &reader},
+			ArtifactDownloader: &downloader,
 		},
 		Project: cypress.Project{
 			Suites: []cypress.Suite{
@@ -253,6 +259,9 @@ func TestRunProject(t *testing.T) {
 			return nil
 		},
 	}
+	downloader := mocks.FakeDownloader{
+		DownloadArtifactsFn: func(jobID string, passed bool) {},
+	}
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 		return 1, nil
 	}}
@@ -267,7 +276,7 @@ func TestRunProject(t *testing.T) {
 			JobWriter:          &writer,
 			CCYReader:          ccyReader,
 			ProjectUploader:    uploader,
-			ArtifactDownloader: &artifact.Download{JobReader: &reader},
+			ArtifactDownloader: &downloader,
 		},
 		Project: cypress.Project{
 			RootDir: ".",
