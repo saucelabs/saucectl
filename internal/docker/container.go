@@ -21,7 +21,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/progress"
-	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 )
 
@@ -294,7 +293,7 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 		inProgress--
 
 		jobID := getJobID(res.jobInfo.JobDetailsURL)
-		if resto.ShouldDownload(jobID, res.passed, artifactCfg) {
+		if download.ShouldDownloadArtifact(jobID, res.passed, artifactCfg) {
 			r.ArtfactDownloader.DownloadArtifact(jobID)
 		}
 

@@ -21,7 +21,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/saucelabs/saucectl/internal/tunnel"
@@ -102,7 +101,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 		completed++
 		inProgress--
 
-		if resto.ShouldDownload(res.job.ID, res.job.Passed, artifactCfg) {
+		if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, artifactCfg) {
 			r.ArtifactDownloader.DownloadArtifact(res.job.ID)
 		}
 		r.logSuite(res)

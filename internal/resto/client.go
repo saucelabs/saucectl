@@ -470,21 +470,3 @@ func (c *Client) downloadArtifact(targetDir, jobID, fileName string) error {
 	targetFile := filepath.Join(targetDir, fileName)
 	return os.WriteFile(targetFile, content, 0644)
 }
-
-// ShouldDownload returns true if it should download artifacts, otherwise false
-func ShouldDownload(jobID string, passed bool, cfg config.ArtifactDownload) bool {
-	if jobID == "" {
-		return false
-	}
-	if cfg.When == config.WhenAlways {
-		return true
-	}
-	if cfg.When == config.WhenFail && !passed {
-		return true
-	}
-	if cfg.When == config.WhenPass && passed {
-		return true
-	}
-
-	return false
-}
