@@ -6,14 +6,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/requesth"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
+	"github.com/ryanuber/go-glob"
+	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/requesth"
 
 	"github.com/saucelabs/saucectl/internal/job"
 )
@@ -29,10 +35,11 @@ var (
 
 // Client http client.
 type Client struct {
-	HTTPClient *http.Client
-	URL        string
-	Username   string
-	AccessKey  string
+	HTTPClient     *http.Client
+	URL            string
+	Username       string
+	AccessKey      string
+	ArtifactConfig config.ArtifactDownload
 }
 
 // concurrencyResponse is the response body as is returned by resto's rest/v1.2/users/{username}/concurrency endpoint.
@@ -428,4 +435,56 @@ func doRequestAsset(httpClient *http.Client, request *http.Request) error {
 		return fmt.Errorf("upload failed: %v", strings.Join(assetsResponse.Errors, ","))
 	}
 	return nil
+}
+
+// DownloadArtifact does downloading artifacts
+func (c *Client) DownloadArtifact(jobID string) {
+	targetDir := filepath.Join(c.ArtifactConfig.Directory, jobID)
+	if err := os.MkdirAll(targetDir, 0755); err != nil {
+		log.Error().Msgf("Unable to create %s to fetch artifacts (%v)", targetDir, err)
+		return
+	}
+
+	files, err := c.GetJobAssetFileNames(context.Background(), jobID)
+	if err != nil {
+		log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
+		return
+	}
+	for _, f := range files {
+		for _, pattern := range c.ArtifactConfig.Match {
+			if glob.Glob(pattern, f) {
+				if err := c.downloadArtifact(targetDir, jobID, f); err != nil {
+					log.Error().Err(err).Msgf("Failed to download file: %s", f)
+				}
+				break
+			}
+		}
+	}
+}
+
+func (c *Client) downloadArtifact(targetDir, jobID, fileName string) error {
+	content, err := c.GetJobAssetFileContent(context.Background(), jobID, fileName)
+	if err != nil {
+		return err
+	}
+	targetFile := filepath.Join(targetDir, fileName)
+	return os.WriteFile(targetFile, content, 0644)
+}
+
+// ShouldDownload returns true if it should download artifacts, otherwise false
+func ShouldDownload(jobID string, passed bool, cfg config.ArtifactDownload) bool {
+	if jobID == "" {
+		return false
+	}
+	if cfg.When == config.WhenAlways {
+		return true
+	}
+	if cfg.When == config.WhenFail && !passed {
+		return true
+	}
+	if cfg.When == config.WhenPass && passed {
+		return true
+	}
+
+	return false
 }

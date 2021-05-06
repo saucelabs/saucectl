@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/artifact"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
@@ -22,6 +21,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/progress"
+	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 )
 
@@ -35,7 +35,7 @@ type ContainerRunner struct {
 	JobWriter         job.Writer
 	ShowConsoleLog    bool
 	JobReader         job.Reader
-	ArtfactDownloader download.Downloader
+	ArtfactDownloader download.ArtifactDownloader
 
 	interrupted bool
 }
@@ -294,8 +294,8 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 		inProgress--
 
 		jobID := getJobID(res.jobInfo.JobDetailsURL)
-		if artifact.ShouldDownload(jobID, res.passed, artifactCfg) {
-			r.ArtfactDownloader.Download(jobID)
+		if resto.ShouldDownload(jobID, res.passed, artifactCfg) {
+			r.ArtfactDownloader.DownloadArtifact(jobID)
 		}
 
 		if !res.passed {

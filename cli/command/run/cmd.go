@@ -13,7 +13,6 @@ import (
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/appstore"
-	"github.com/saucelabs/saucectl/internal/artifact"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
@@ -254,6 +253,8 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
 
+	rs.ArtifactConfig = p.Artifacts.Download
+
 	dockerProject, sauceProject := cypress.SplitSuites(p)
 	if len(dockerProject.Suites) != 0 {
 		exitCode, err := runCypressInDocker(dockerProject, tc, rs)
@@ -295,7 +296,7 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			TunnelService:      &rs,
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
-			ArtifactDownloader: &artifact.Download{JobReader: &rs, Config: p.Artifacts.Download},
+			ArtifactDownloader: &rs,
 		},
 	}
 	return r.RunProject()
@@ -361,6 +362,8 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
 
+	rs.ArtifactConfig = p.Artifacts.Download
+
 	dockerProject, sauceProject := playwright.SplitSuites(p)
 	if len(dockerProject.Suites) != 0 {
 		exitCode, err := runPlaywrightInDocker(dockerProject, tc, rs)
@@ -402,7 +405,7 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 			TunnelService:      &rs,
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
-			ArtifactDownloader: &artifact.Download{JobReader: &rs, Config: p.Artifacts.Download},
+			ArtifactDownloader: &rs,
 		},
 	}
 	return r.RunProject()
@@ -466,6 +469,8 @@ func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
 
+	rs.ArtifactConfig = p.Artifacts.Download
+
 	dockerProject, sauceProject := testcafe.SplitSuites(p)
 	if len(dockerProject.Suites) != 0 {
 		exitCode, err := runTestcafeInDocker(dockerProject, tc, rs)
@@ -507,7 +512,7 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 			TunnelService:      &rs,
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
-			ArtifactDownloader: &artifact.Download{JobReader: &rs, Config: p.Artifacts.Download},
+			ArtifactDownloader: &rs,
 		},
 	}
 	return r.RunProject()
@@ -544,6 +549,8 @@ func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
 
+	rs.ArtifactConfig = p.Artifacts.Download
+
 	return runEspressoInCloud(p, regio, tc, rs, as)
 }
 
@@ -563,7 +570,7 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 			TunnelService:      &rs,
 			Region:             regio,
 			ShowConsoleLog:     false,
-			ArtifactDownloader: &artifact.Download{JobReader: &rs, Config: p.Artifacts.Download},
+			ArtifactDownloader: &rs,
 		},
 	}
 	return r.RunProject()

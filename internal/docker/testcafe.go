@@ -3,7 +3,7 @@ package docker
 import (
 	"context"
 
-	"github.com/saucelabs/saucectl/internal/artifact"
+	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/testcafe"
@@ -16,7 +16,7 @@ type TestcafeRunner struct {
 }
 
 // NewTestcafe creates a new TestcafeRunner instance.
-func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer, rd job.Reader) (*TestcafeRunner, error) {
+func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer, dl download.ArtifactDownloader) (*TestcafeRunner, error) {
 	r := TestcafeRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -29,8 +29,7 @@ func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer
 			FrameworkMeta:     ms,
 			ShowConsoleLog:    c.ShowConsoleLog,
 			JobWriter:         wr,
-			JobReader:         rd,
-			ArtfactDownloader: &artifact.Download{JobReader: rd, Config: c.Artifacts.Download},
+			ArtfactDownloader: dl,
 		},
 	}
 	var err error

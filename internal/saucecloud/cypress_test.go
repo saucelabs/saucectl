@@ -91,8 +91,8 @@ func TestRunSuites(t *testing.T) {
 			return nil
 		},
 	}
-	downloader := &mocks.FakeDownloader{
-		DownloadFn: func(jobID string) {
+	downloader := &mocks.FakeArifactDownloader{
+		DownloadArtifactFn: func(jobID string) {
 		},
 	}
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
@@ -143,8 +143,8 @@ func TestRunSuites_Cypress_NoConcurrency(t *testing.T) {
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 		return 0, nil
 	}}
-	downloader := mocks.FakeDownloader{
-		DownloadFn: func(jobID string) {},
+	downloader := mocks.FakeArifactDownloader{
+		DownloadArtifactFn: func(jobID string) {},
 	}
 	runner := CypressRunner{
 		CloudRunner: CloudRunner{
@@ -259,8 +259,8 @@ func TestRunProject(t *testing.T) {
 			return nil
 		},
 	}
-	downloader := mocks.FakeDownloader{
-		DownloadFn: func(jobID string) {},
+	downloader := mocks.FakeArifactDownloader{
+		DownloadArtifactFn: func(jobID string) {},
 	}
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 		return 1, nil

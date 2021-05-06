@@ -1,6 +1,6 @@
 package download
 
-// Downloader defines download functions
-type Downloader interface {
-	Download(jobID string)
+// ArtifactDownloader defines download functions
+type ArtifactDownloader interface {
+	DownloadArtifact(jobID string)
 }

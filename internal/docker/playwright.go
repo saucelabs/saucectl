@@ -3,7 +3,7 @@ package docker
 import (
 	"context"
 
-	"github.com/saucelabs/saucectl/internal/artifact"
+	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/playwright"
@@ -16,7 +16,7 @@ type PlaywrightRunner struct {
 }
 
 // NewPlaywright creates a new PlaywrightRunner instance.
-func NewPlaywright(c playwright.Project, ms framework.MetadataService, wr job.Writer, rd job.Reader) (*PlaywrightRunner, error) {
+func NewPlaywright(c playwright.Project, ms framework.MetadataService, wr job.Writer, dl download.ArtifactDownloader) (*PlaywrightRunner, error) {
 	r := PlaywrightRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -30,8 +30,7 @@ func NewPlaywright(c playwright.Project, ms framework.MetadataService, wr job.Wr
 			FrameworkMeta:     ms,
 			ShowConsoleLog:    c.ShowConsoleLog,
 			JobWriter:         wr,
-			JobReader:         rd,
-			ArtfactDownloader: &artifact.Download{JobReader: rd, Config: c.Artifacts.Download},
+			ArtfactDownloader: dl,
 		},
 	}
 
