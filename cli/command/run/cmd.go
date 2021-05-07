@@ -253,6 +253,8 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
 
+	rs.ArtifactConfig = p.Artifacts.Download
+
 	dockerProject, sauceProject := cypress.SplitSuites(p)
 	if len(dockerProject.Suites) != 0 {
 		exitCode, err := runCypressInDocker(dockerProject, tc, rs)
@@ -271,7 +273,7 @@ func runCypressInDocker(p cypress.Project, testco testcomposer.Client, rs resto.
 	log.Info().Msg("Running Cypress in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewCypress(p, &testco, &rs)
+	cd, err := docker.NewCypress(p, &testco, &rs, &rs)
 	if err != nil {
 		return 1, err
 	}
@@ -285,15 +287,16 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 	r := saucecloud.CypressRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader: as,
-			JobStarter:      &tc,
-			JobReader:       &rs,
-			JobStopper:      &rs,
-			JobWriter:       &rs,
-			CCYReader:       &rs,
-			TunnelService:   &rs,
-			Region:          regio,
-			ShowConsoleLog:  p.ShowConsoleLog,
+			ProjectUploader:    as,
+			JobStarter:         &tc,
+			JobReader:          &rs,
+			JobStopper:         &rs,
+			JobWriter:          &rs,
+			CCYReader:          &rs,
+			TunnelService:      &rs,
+			Region:             regio,
+			ShowConsoleLog:     p.ShowConsoleLog,
+			ArtifactDownloader: &rs,
 		},
 	}
 	return r.RunProject()
@@ -359,6 +362,8 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
 
+	rs.ArtifactConfig = p.Artifacts.Download
+
 	dockerProject, sauceProject := playwright.SplitSuites(p)
 	if len(dockerProject.Suites) != 0 {
 		exitCode, err := runPlaywrightInDocker(dockerProject, tc, rs)
@@ -377,7 +382,7 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs 
 	log.Info().Msg("Running Playwright in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewPlaywright(p, &testco, &rs)
+	cd, err := docker.NewPlaywright(p, &testco, &rs, &rs)
 	if err != nil {
 		return 1, err
 	}
@@ -391,15 +396,16 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 	r := saucecloud.PlaywrightRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader: as,
-			JobStarter:      &tc,
-			JobReader:       &rs,
-			JobStopper:      &rs,
-			JobWriter:       &rs,
-			CCYReader:       &rs,
-			TunnelService:   &rs,
-			Region:          regio,
-			ShowConsoleLog:  p.ShowConsoleLog,
+			ProjectUploader:    as,
+			JobStarter:         &tc,
+			JobReader:          &rs,
+			JobStopper:         &rs,
+			JobWriter:          &rs,
+			CCYReader:          &rs,
+			TunnelService:      &rs,
+			Region:             regio,
+			ShowConsoleLog:     p.ShowConsoleLog,
+			ArtifactDownloader: &rs,
 		},
 	}
 	return r.RunProject()
@@ -464,6 +470,8 @@ func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
 
+	rs.ArtifactConfig = p.Artifacts.Download
+
 	dockerProject, sauceProject := testcafe.SplitSuites(p)
 	if len(dockerProject.Suites) != 0 {
 		exitCode, err := runTestcafeInDocker(dockerProject, tc, rs)
@@ -482,7 +490,7 @@ func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client, rs rest
 	log.Info().Msg("Running Testcafe in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewTestcafe(p, &testco, &rs)
+	cd, err := docker.NewTestcafe(p, &testco, &rs, &rs)
 	if err != nil {
 		return 1, err
 	}
@@ -496,15 +504,16 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 	r := saucecloud.TestcafeRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader: as,
-			JobStarter:      &tc,
-			JobReader:       &rs,
-			JobStopper:      &rs,
-			JobWriter:       &rs,
-			CCYReader:       &rs,
-			TunnelService:   &rs,
-			Region:          regio,
-			ShowConsoleLog:  p.ShowConsoleLog,
+			ProjectUploader:    as,
+			JobStarter:         &tc,
+			JobReader:          &rs,
+			JobStopper:         &rs,
+			JobWriter:          &rs,
+			CCYReader:          &rs,
+			TunnelService:      &rs,
+			Region:             regio,
+			ShowConsoleLog:     p.ShowConsoleLog,
+			ArtifactDownloader: &rs,
 		},
 	}
 	return r.RunProject()
@@ -541,6 +550,8 @@ func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
 
+	rs.ArtifactConfig = p.Artifacts.Download
+
 	return runEspressoInCloud(p, regio, tc, rs, as)
 }
 
@@ -551,15 +562,16 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 	r := saucecloud.EspressoRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader: as,
-			JobStarter:      &tc,
-			JobReader:       &rs,
-			JobStopper:      &rs,
-			JobWriter:       &rs,
-			CCYReader:       &rs,
-			TunnelService:   &rs,
-			Region:          regio,
-			ShowConsoleLog:  false,
+			ProjectUploader:    as,
+			JobStarter:         &tc,
+			JobReader:          &rs,
+			JobStopper:         &rs,
+			JobWriter:          &rs,
+			CCYReader:          &rs,
+			TunnelService:      &rs,
+			Region:             regio,
+			ShowConsoleLog:     false,
+			ArtifactDownloader: &rs,
 		},
 	}
 	return r.RunProject()
@@ -612,7 +624,7 @@ func runPuppeteerInDocker(p puppeteer.Project, testco testcomposer.Client, rs re
 	log.Info().Msg("Running puppeteer in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewPuppeteer(p, &testco, &rs)
+	cd, err := docker.NewPuppeteer(p, &testco, &rs, &rs)
 	if err != nil {
 		return 1, err
 	}

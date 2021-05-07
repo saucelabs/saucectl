@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 
+	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/testcafe"
@@ -15,7 +16,7 @@ type TestcafeRunner struct {
 }
 
 // NewTestcafe creates a new TestcafeRunner instance.
-func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer) (*TestcafeRunner, error) {
+func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer, dl download.ArtifactDownloader) (*TestcafeRunner, error) {
 	r := TestcafeRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -25,9 +26,10 @@ func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer
 				Name:    c.Kind,
 				Version: c.Testcafe.Version,
 			},
-			FrameworkMeta:  ms,
-			ShowConsoleLog: c.ShowConsoleLog,
-			JobWriter:      wr,
+			FrameworkMeta:     ms,
+			ShowConsoleLog:    c.ShowConsoleLog,
+			JobWriter:         wr,
+			ArtfactDownloader: dl,
 		},
 	}
 	var err error
@@ -69,7 +71,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		close(containerOpts)
 	}()
 
-	hasPassed := r.collectResults(results, len(r.Project.Suites))
+	hasPassed := r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites))
 	if !hasPassed {
 		return 1, nil
 	}

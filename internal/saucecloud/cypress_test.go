@@ -79,10 +79,20 @@ func TestRunSuites(t *testing.T) {
 		PollJobFn: func(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
 			return job.Job{ID: id, Passed: true}, nil
 		},
+		GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
+			return []string{"file1", "file2"}, nil
+		},
+		GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+			return []byte("file content"), nil
+		},
 	}
 	writer := mocks.FakeJobWriter{
 		UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
 			return nil
+		},
+	}
+	downloader := &mocks.FakeArifactDownloader{
+		DownloadArtifactFn: func(jobID string) {
 		},
 	}
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
@@ -90,10 +100,11 @@ func TestRunSuites(t *testing.T) {
 	}}
 	runner := CypressRunner{
 		CloudRunner: CloudRunner{
-			JobStarter: &starter,
-			JobReader:  &reader,
-			JobWriter:  &writer,
-			CCYReader:  ccyReader,
+			JobStarter:         &starter,
+			JobReader:          &reader,
+			JobWriter:          &writer,
+			CCYReader:          ccyReader,
+			ArtifactDownloader: downloader,
 		},
 		Project: cypress.Project{
 			Suites: []cypress.Suite{
@@ -122,15 +133,25 @@ func TestRunSuites_Cypress_NoConcurrency(t *testing.T) {
 		PollJobFn: func(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
 			return job.Job{ID: id, Passed: true}, nil
 		},
+		GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
+			return []string{"file1", "file2"}, nil
+		},
+		GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+			return []byte("file content"), nil
+		},
 	}
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 		return 0, nil
 	}}
+	downloader := mocks.FakeArifactDownloader{
+		DownloadArtifactFn: func(jobID string) {},
+	}
 	runner := CypressRunner{
 		CloudRunner: CloudRunner{
-			JobStarter: &starter,
-			JobReader:  &reader,
-			CCYReader:  ccyReader,
+			JobStarter:         &starter,
+			JobReader:          &reader,
+			CCYReader:          ccyReader,
+			ArtifactDownloader: &downloader,
 		},
 		Project: cypress.Project{
 			Suites: []cypress.Suite{
@@ -155,7 +176,7 @@ func TestArchiveProject(t *testing.T) {
 		Project: cypress.Project{
 			RootDir: "../../tests/e2e/",
 			Cypress: cypress.Cypress{
-				ConfigFile:  "cypress.json",
+				ConfigFile: "cypress.json",
 			},
 		},
 	}
@@ -226,11 +247,20 @@ func TestRunProject(t *testing.T) {
 		PollJobFn: func(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
 			return job.Job{ID: id, Passed: true}, nil
 		},
+		GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
+			return []string{"file1", "file2"}, nil
+		},
+		GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+			return []byte("file content"), nil
+		},
 	}
 	writer := mocks.FakeJobWriter{
 		UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
 			return nil
 		},
+	}
+	downloader := mocks.FakeArifactDownloader{
+		DownloadArtifactFn: func(jobID string) {},
 	}
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 		return 1, nil
@@ -241,11 +271,12 @@ func TestRunProject(t *testing.T) {
 
 	runner := CypressRunner{
 		CloudRunner: CloudRunner{
-			JobStarter:      &starter,
-			JobReader:       &reader,
-			JobWriter:       &writer,
-			CCYReader:       ccyReader,
-			ProjectUploader: uploader,
+			JobStarter:         &starter,
+			JobReader:          &reader,
+			JobWriter:          &writer,
+			CCYReader:          ccyReader,
+			ProjectUploader:    uploader,
+			ArtifactDownloader: &downloader,
 		},
 		Project: cypress.Project{
 			RootDir: ".",

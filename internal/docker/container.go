@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
@@ -26,13 +26,15 @@ import (
 
 // ContainerRunner represents the container runner for docker.
 type ContainerRunner struct {
-	Ctx             context.Context
-	docker          *Handler
-	containerConfig *containerConfig
-	Framework       framework.Framework
-	FrameworkMeta   framework.MetadataService
-	JobWriter       job.Writer
-	ShowConsoleLog  bool
+	Ctx               context.Context
+	docker            *Handler
+	containerConfig   *containerConfig
+	Framework         framework.Framework
+	FrameworkMeta     framework.MetadataService
+	JobWriter         job.Writer
+	ShowConsoleLog    bool
+	JobReader         job.Reader
+	ArtfactDownloader download.ArtifactDownloader
 
 	interrupted bool
 }
@@ -265,7 +267,7 @@ func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, re
 	}
 }
 
-func (r *ContainerRunner) collectResults(results chan result, expected int) bool {
+func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int) bool {
 	// TODO find a better way to get the expected
 	errCount := 0
 	completed := 0
@@ -290,6 +292,11 @@ func (r *ContainerRunner) collectResults(results chan result, expected int) bool
 		completed++
 		inProgress--
 
+		jobID := getJobID(res.jobInfo.JobDetailsURL)
+		if download.ShouldDownloadArtifact(jobID, res.passed, artifactCfg) {
+			r.ArtfactDownloader.DownloadArtifact(jobID)
+		}
+
 		if !res.passed {
 			errCount++
 			passed = false
@@ -307,6 +314,11 @@ func (r *ContainerRunner) collectResults(results chan result, expected int) bool
 	msg.LogTestSuccess()
 
 	return passed
+}
+
+func getJobID(jobURL string) string {
+	details := strings.Split(jobURL, "/")
+	return details[len(details)-1]
 }
 
 func (r *ContainerRunner) logSuite(res result) {

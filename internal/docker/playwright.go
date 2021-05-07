@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 
+	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/playwright"
@@ -15,7 +16,7 @@ type PlaywrightRunner struct {
 }
 
 // NewPlaywright creates a new PlaywrightRunner instance.
-func NewPlaywright(c playwright.Project, ms framework.MetadataService, wr job.Writer) (*PlaywrightRunner, error) {
+func NewPlaywright(c playwright.Project, ms framework.MetadataService, wr job.Writer, dl download.ArtifactDownloader) (*PlaywrightRunner, error) {
 	r := PlaywrightRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -26,9 +27,10 @@ func NewPlaywright(c playwright.Project, ms framework.MetadataService, wr job.Wr
 				Name:    c.Kind,
 				Version: c.Playwright.Version,
 			},
-			FrameworkMeta:  ms,
-			ShowConsoleLog: c.ShowConsoleLog,
-			JobWriter:      wr,
+			FrameworkMeta:     ms,
+			ShowConsoleLog:    c.ShowConsoleLog,
+			JobWriter:         wr,
+			ArtfactDownloader: dl,
 		},
 	}
 
@@ -71,7 +73,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		close(containerOpts)
 	}()
 
-	hasPassed := r.collectResults(results, len(r.Project.Suites))
+	hasPassed := r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites))
 	if !hasPassed {
 		return 1, nil
 	}

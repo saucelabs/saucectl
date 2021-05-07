@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"github.com/ryanuber/go-glob"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -28,15 +28,16 @@ import (
 
 // CloudRunner represents the cloud runner for the Sauce Labs cloud.
 type CloudRunner struct {
-	ProjectUploader storage.ProjectUploader
-	JobStarter      job.Starter
-	JobReader       job.Reader
-	JobWriter       job.Writer
-	JobStopper      job.Stopper
-	CCYReader       concurrency.Reader
-	TunnelService   tunnel.Service
-	Region          region.Region
-	ShowConsoleLog  bool
+	ProjectUploader    storage.ProjectUploader
+	JobStarter         job.Starter
+	JobReader          job.Reader
+	JobWriter          job.Writer
+	JobStopper         job.Stopper
+	CCYReader          concurrency.Reader
+	TunnelService      tunnel.Service
+	Region             region.Region
+	ShowConsoleLog     bool
+	ArtifactDownloader download.ArtifactDownloader
 
 	interrupted bool
 }
@@ -71,7 +72,7 @@ func (r *CloudRunner) createWorkerPool(num int) (chan job.StartOptions, chan res
 	return jobOpts, results, nil
 }
 
-func (r *CloudRunner) collectResults(artifactsCfg config.ArtifactDownload, results chan result, expected int) bool {
+func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int) bool {
 	// TODO find a better way to get the expected
 	errCount := 0
 	completed := 0
@@ -100,7 +101,9 @@ func (r *CloudRunner) collectResults(artifactsCfg config.ArtifactDownload, resul
 		completed++
 		inProgress--
 
-		r.downloadArtifacts(artifactsCfg, res.job)
+		if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, artifactCfg) {
+			r.ArtifactDownloader.DownloadArtifact(res.job.ID)
+		}
 		r.logSuite(res)
 
 		if res.job.ID == "" || res.err != nil {
@@ -395,60 +398,6 @@ func (r *CloudRunner) registerSkipSuitesOnSignal() chan os.Signal {
 func unregisterSignalCapture(c chan os.Signal) {
 	signal.Stop(c)
 	close(c)
-}
-
-// downloadArtifacts downloads artifact for job.
-func (r *CloudRunner) downloadArtifacts(artifactsCfg config.ArtifactDownload, jb job.Job) {
-	if !r.shouldDownloadArtifacts(artifactsCfg, jb) {
-		return
-	}
-
-	targetDir := filepath.Join(artifactsCfg.Directory, jb.ID)
-	if err := os.MkdirAll(targetDir, 0755); err != nil {
-		log.Error().Msgf("Unable to create %s to fetch artifacts (%v)", targetDir, err)
-		return
-	}
-
-	files, err := r.JobReader.GetJobAssetFileNames(context.Background(), jb.ID)
-	if err != nil {
-		log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
-		return
-	}
-	for _, fileName := range files {
-		for _, pattern := range artifactsCfg.Match {
-			if glob.Glob(pattern, fileName) {
-				if err := r.doDownloadArtifact(targetDir, jb.ID, fileName); err != nil {
-					log.Error().Err(err).Msgf("Failed to download file: %s", fileName)
-				}
-				break
-			}
-		}
-	}
-}
-
-func (r *CloudRunner) doDownloadArtifact(targetDir, jobID, fileName string) error {
-	fileContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), jobID, fileName)
-	if err != nil {
-		return err
-	}
-	targetFile := filepath.Join(targetDir, fileName)
-	return os.WriteFile(targetFile, fileContent, 0644)
-}
-
-func (r *CloudRunner) shouldDownloadArtifacts(artifactsCfg config.ArtifactDownload, jb job.Job) bool {
-	if jb.ID == "" {
-		return false
-	}
-	if artifactsCfg.When == config.WhenAlways {
-		return true
-	}
-	if artifactsCfg.When == config.WhenFail && jb.Status == job.StateError {
-		return true
-	}
-	if artifactsCfg.When == config.WhenPass && jb.Status == job.StateComplete {
-		return true
-	}
-	return false
 }
 
 // uploadSauceConfig adds job configuration as an asset.

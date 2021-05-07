@@ -2,19 +2,19 @@ package docker
 
 import (
 	"context"
+	"fmt"
+	"testing"
+
 	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
-
-
 
 func TestPullImage(t *testing.T) {
 	ctx := context.Background()
 	fc := mocks.FakeClient{}
 	handler := &Handler{client: &fc}
 	c := &ContainerRunner{
-		Ctx: ctx,
+		Ctx:    ctx,
 		docker: handler,
 	}
 	err := c.pullImage("")
@@ -36,4 +36,7 @@ func TestPullImage(t *testing.T) {
 	assert.Equal(t, err.Error(), "ImagePullFailure")
 }
 
-
+func ExampleGetJobID() {
+	fmt.Println(getJobID("https://app.saucelabs.com/tests/cb6741a1a119448a9760531024657967"))
+	// Output: cb6741a1a119448a9760531024657967
+}

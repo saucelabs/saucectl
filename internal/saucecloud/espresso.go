@@ -2,10 +2,11 @@ package saucecloud
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/job"
-	"strings"
 )
 
 // EspressoRunner represents the Sauce Labs cloud implementation for cypress.
