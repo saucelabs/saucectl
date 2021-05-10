@@ -44,18 +44,20 @@ type TestSuites struct {
 // Parse parses an xml-encoded byte string and returns a `TestSuites` struct
 // The root <testsuites> element is optional so if its missing, Parse will parse a <testsuite> and wrap it in a `TestSuites` struct
 func Parse(data []byte) (TestSuites, error) {
-	tss := TestSuites{}
+	var tss TestSuites
 	err := xml.Unmarshal(data, &tss)
 	if err != nil {
 		// root <testsuites> is optional
 		// parse a <testsuite> element instead
-		ts := TestSuite{}
-		err = xml.Unmarshal(data, &ts)
-		if err == nil {
-			tss.TestSuite = []TestSuite{
-				ts,
-			}
+		var ts TestSuite
+		if err = xml.Unmarshal(data, &ts); err != nil {
+			return tss, err
+		}
+
+		tss.TestSuite = []TestSuite{
+			ts,
 		}
 	}
+
 	return tss, err
 }
