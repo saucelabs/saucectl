@@ -2,8 +2,9 @@ package rdc
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
-	"fmt"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -162,9 +163,124 @@ func TestClient_StartJob(t *testing.T) {
 
 	for _, tt := range testCases {
 		jb, err := client.StartJob(tt.options)
-		fmt.Printf("%v", jb)
-		fmt.Printf("%v", tt.want)
 		assert.Equal(t, tt.wantErr, err)
 		assert.Equal(t, jb, tt.want)
+	}
+}
+
+
+func randJobStatus(j *job.Job, isComplete bool) {
+	min := 1
+	max := 10
+	randNum := rand.Intn(max-min+1) + min
+
+	status := "error"
+	if isComplete {
+		status = "complete"
+	}
+
+	if randNum >= 5 {
+		j.Status = status
+	}
+}
+
+func TestClient_GetJobStatus(t *testing.T) {
+	rand.Seed(time.Now().UnixNano())
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/rdc/jobs/1":
+			details := &job.Job{
+				ID:     "1",
+				Passed: false,
+				Status: "new",
+				Error:  "",
+			}
+			randJobStatus(details, true)
+
+			resp, _ := json.Marshal(details)
+			w.Write(resp)
+		case "/v1/rdc/jobs/2":
+			details := &job.Job{
+				ID:     "2",
+				Passed: false,
+				Status: "in progress",
+				Error:  "User Abandoned Test -- User terminated",
+			}
+			randJobStatus(details, false)
+
+			resp, _ := json.Marshal(details)
+			w.Write(resp)
+		case "/v1/rdc/jobs/3":
+			w.WriteHeader(http.StatusNotFound)
+		case "/v1/rdc/jobs/4":
+			w.WriteHeader(http.StatusUnauthorized)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}))
+	defer ts.Close()
+	timeout := 3 * time.Second
+
+	testCases := []struct {
+		name         string
+		client       Client
+		jobID        string
+		expectedResp job.Job
+		expectedErr  error
+	}{
+		{
+			name:   "get job details with ID 1 and status 'complete'",
+			client: New(ts.URL, "test", "123", timeout),
+			jobID:  "1",
+			expectedResp: job.Job{
+				ID:     "1",
+				Passed: false,
+				Status: "complete",
+				Error:  "",
+			},
+			expectedErr: nil,
+		},
+		{
+			name:   "get job details with ID 2 and status 'error'",
+			client: New(ts.URL, "test", "123", timeout),
+			jobID:  "2",
+			expectedResp: job.Job{
+				ID:     "2",
+				Passed: false,
+				Status: "error",
+				Error:  "User Abandoned Test -- User terminated",
+			},
+			expectedErr: nil,
+		},
+		{
+			name:         "user not found error from external API",
+			client:       New(ts.URL, "test", "123", timeout),
+			jobID:        "3",
+			expectedResp: job.Job{},
+			expectedErr:  ErrJobNotFound,
+		},
+		{
+			name:         "http status is not 200, but 401 from external API",
+			client:       New(ts.URL, "test", "123", timeout),
+			jobID:        "4",
+			expectedResp: job.Job{},
+			expectedErr:  errors.New("job status request failed; unexpected response code:'401', msg:''"),
+		},
+		{
+			name:         "unexpected status code from external API",
+			client:       New(ts.URL, "test", "123", timeout),
+			jobID:        "333",
+			expectedResp: job.Job{},
+			expectedErr:  ErrServerError,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond)
+			assert.Equal(t, tc.expectedErr, err)
+			assert.Equal(t, tc.expectedResp, got)
+		})
 	}
 }

@@ -4,12 +4,23 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/requesth"
+)
+
+var (
+	// ErrServerError is returned when the server was not able to correctly handle our request (status code >= 500).
+	ErrServerError = errors.New("internal server error")
+	// ErrJobNotFound is returned when the requested job was not found.
+	ErrJobNotFound = errors.New("job was not found")
+	// ErrTunnelNotFound is returned when the requested tunnel was not found.
+	ErrTunnelNotFound = errors.New("tunnel not found")
 )
 
 // Client http client.
@@ -136,4 +147,59 @@ func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
 		Status: jr.Status,
 		Passed: jr.Status == job.StatePassed,
 	}, nil
+}
+
+// PollJob polls job details at an interval, until the job has ended, whether successfully or due to an error.
+func (c *Client) PollJob(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
+	req, err := requesth.NewWithContext(ctx, http.MethodGet,
+		fmt.Sprintf("%s/v1/rdc/jobs/%s", c.URL, id), nil)
+	if err != nil {
+		return job.Job{}, err
+	}
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		j, err := doRequestStatus(c.HTTPClient, req)
+		if err != nil {
+			return job.Job{}, err
+		}
+
+		if job.Done(j.Status) {
+			return j, nil
+		}
+	}
+
+	return job.Job{}, nil
+}
+
+func doRequestStatus(httpClient *http.Client, request *http.Request) (job.Job, error) {
+	resp, err := httpClient.Do(request)
+	if err != nil {
+		return job.Job{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return job.Job{}, ErrServerError
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		return job.Job{}, ErrJobNotFound
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		err := fmt.Errorf("job status request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		return job.Job{}, err
+	}
+
+	jobDetails := job.Job{}
+	if err := json.NewDecoder(resp.Body).Decode(&jobDetails); err != nil {
+		return job.Job{}, err
+	}
+
+	return jobDetails, nil
 }
