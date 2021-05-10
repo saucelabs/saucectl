@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -70,6 +71,11 @@ func FromFile(cfgPath string) (Project, error) {
 	if err := yaml.NewDecoder(f).Decode(&p); err != nil {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
+
+	if err := checkSupportedBrowsers(&p); err != nil {
+		return Project{}, err
+	}
+
 	p.ConfigFilePath = cfgPath
 
 	p.Playwright.Version = config.StandardizeVersionFormat(p.Playwright.Version)
@@ -140,4 +146,30 @@ func SplitSuites(p Project) (Project, Project) {
 	sauceProject.Suites = sauceSuites
 
 	return dockerProject, sauceProject
+}
+
+func checkSupportedBrowsers(p *Project) error {
+	supportedBrowsers := map[string]struct{}{
+		"chromium": struct{}{},
+		"firefox":  struct{}{},
+		"webkit":   struct{}{},
+	}
+	supportedBrwsList := []string{"chromium", "firefox", "webkit"}
+	errMsg := "browserName: %s is not supported. List of supported browsers: %s"
+
+	if p.Playwright.Params.BrowserName != "" {
+		if _, ok := supportedBrowsers[p.Playwright.Params.BrowserName]; !ok {
+			return fmt.Errorf(errMsg, p.Playwright.Params.BrowserName, strings.Join(supportedBrwsList, ", "))
+		}
+	}
+
+	for _, suite := range p.Suites {
+		if suite.Params.BrowserName != "" {
+			if _, ok := supportedBrowsers[suite.Params.BrowserName]; !ok {
+				return fmt.Errorf(errMsg, suite.Params.BrowserName, strings.Join(supportedBrwsList, ", "))
+			}
+		}
+	}
+
+	return nil
 }
