@@ -2,6 +2,7 @@ package junit
 
 import "encoding/xml"
 
+// TestCase maps to <testcase> element
 type TestCase struct {
 	Name       string `xml:"name,attr"`
 	Assertions string `xml:"assertions,attr"`
@@ -13,6 +14,7 @@ type TestCase struct {
 	Failure    string `xml:"failure"`
 }
 
+// TestSuite maps to <testsuite> element
 type TestSuite struct {
 	Name      string     `xml:"name,attr"`
 	Tests     int        `xml:"tests,attr"`
@@ -27,6 +29,7 @@ type TestSuite struct {
 	SystemOut string     `xml:"system-out"`
 }
 
+// TestSuites maps to root junit <testsuites> element
 type TestSuites struct {
 	XMLName   xml.Name    `xml:"testsuites"`
 	TestSuite []TestSuite `xml:"testsuite"`
@@ -38,6 +41,8 @@ type TestSuites struct {
 	Errors    int         `xml:"errors,attr,omitempty"`
 }
 
+// Parse parses an xml-encoded byte string and returns a `TestSuites` struct
+// The root <testsuites> element is optional so if its missing, Parse will parse a <testsuite> and wrap it in a `TestSuites` struct
 func Parse(data []byte) (TestSuites, error) {
 	tss := TestSuites{}
 	err := xml.Unmarshal(data, &tss)
