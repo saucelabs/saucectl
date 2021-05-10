@@ -1,12 +1,15 @@
 package rdc
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/requesth"
 	"net/http"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
 // Client http client.
@@ -23,6 +26,20 @@ type organizationResponse struct {
 
 type concurrencyResponse struct {
 	Organization organizationResponse `json:"organization,omitempty"`
+}
+
+type testReportResponse struct {
+	ID string `json:"id,omitempty"`
+}
+
+type startJobResponse struct {
+	TestReport testReportResponse `json:"test_report,omitempty"`
+}
+
+type readJobResponse struct {
+	Status             string `json:"status,omitempty"`
+	ConsolidatedStatus string `json:"consolidated_status,omitempty"`
+	Error              string `json:"error,omitempty"`
 }
 
 // New creates a new client.
@@ -58,6 +75,65 @@ func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&cr); err != nil {
 		return 0, err
 	}
-
 	return cr.Organization.Maximum, nil
+}
+
+// StartJob starts a job on RDC cloud.
+func (c *Client) StartJob(ctx context.Context, options job.RDCStarterOptions) (job.Job, error) {
+	var b bytes.Buffer
+	err := json.NewEncoder(&b).Encode(options)
+
+	req, err := requesth.NewWithContext(ctx, http.MethodPost,
+		fmt.Sprintf("%s/v1/rdc/native-composer/tests", c.URL), &b)
+	if err != nil {
+		return job.Job{}, err
+	}
+	req.SetBasicAuth(c.Username, c.AccessKey)
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return job.Job{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return job.Job{}, fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
+	}
+
+	var sr startJobResponse
+	if err := json.NewDecoder(resp.Body).Decode(&sr); err != nil {
+		return job.Job{}, err
+	}
+
+	return job.Job{ID: sr.TestReport.ID}, nil
+}
+
+// ReadJob returns the job details.
+func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
+	req, err := requesth.NewWithContext(ctx, http.MethodGet,
+		fmt.Sprintf("%s/v1/rdc/jobs/%s", c.URL, id), nil)
+	if err != nil {
+		return job.Job{}, err
+	}
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return job.Job{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return job.Job{}, fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
+	}
+
+	var jr readJobResponse
+	if err := json.NewDecoder(resp.Body).Decode(&jr); err != nil {
+		return job.Job{}, err
+	}
+	return job.Job{
+		ID:     id,
+		Error:  jr.Error,
+		Status: jr.Status,
+		Passed: jr.Status == job.StatePassed,
+	}, nil
 }
