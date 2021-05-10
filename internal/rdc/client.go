@@ -79,32 +79,32 @@ func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
 }
 
 // StartJob starts a job on RDC cloud.
-func (c *Client) StartJob(ctx context.Context, options job.RDCStarterOptions) (job.Job, error) {
+func (c *Client) StartJob(options job.RDCStarterOptions) (string, error) {
 	var b bytes.Buffer
 	err := json.NewEncoder(&b).Encode(options)
 
-	req, err := requesth.NewWithContext(ctx, http.MethodPost,
+	req, err := requesth.NewWithContext(context.Background(), http.MethodPost,
 		fmt.Sprintf("%s/v1/rdc/native-composer/tests", c.URL), &b)
 	if err != nil {
-		return job.Job{}, err
+		return "", err
 	}
 	req.SetBasicAuth(c.Username, c.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return job.Job{}, err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return job.Job{}, fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
+		return "", fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
 	}
 
 	var sr startJobResponse
 	if err := json.NewDecoder(resp.Body).Decode(&sr); err != nil {
-		return job.Job{}, err
+		return "", err
 	}
 
-	return job.Job{ID: sr.TestReport.ID}, nil
+	return sr.TestReport.ID, nil
 }
 
 // ReadJob returns the job details.

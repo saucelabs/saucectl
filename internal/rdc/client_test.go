@@ -141,7 +141,7 @@ func TestClient_StartJob(t *testing.T) {
 	testCases := []struct {
 		name    string
 		options job.RDCStarterOptions
-		want    job.Job
+		want    string
 		wantErr error
 	}{
 		{
@@ -156,17 +156,15 @@ func TestClient_StartJob(t *testing.T) {
 				},
 				TestOptions: map[string]string{},
 			},
-			want: job.Job{ID: "test1"},
+			want: "test1",
 		},
 	}
 
 	for _, tt := range testCases {
-		jb, err := client.StartJob(context.Background(), tt.options)
+		jb, err := client.StartJob(tt.options)
 		fmt.Printf("%v", jb)
 		fmt.Printf("%v", tt.want)
 		assert.Equal(t, tt.wantErr, err)
-		if err == nil {
-			assert.True(t, reflect.DeepEqual(jb, tt.want))
-		}
+		assert.Equal(t, jb, tt.want)
 	}
 }

@@ -80,3 +80,8 @@ type RDCStarterOptions struct {
 	TestOptions   map[string]string `json:"test_options,omitempty"`
 	TestName      string            `json:"test_name,omitempty"`
 }
+
+// RDCStarter is the interface for starting jobs on RDC
+type RDCStarter interface {
+	StartJob(opts RDCStarterOptions) (string, error)
+}
