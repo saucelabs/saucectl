@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// Client http client.
 type Client struct {
 	HTTPClient *http.Client
 	URL        string

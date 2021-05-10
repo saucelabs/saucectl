@@ -57,3 +57,20 @@ type TunnelOptions struct {
 type Starter interface {
 	StartJob(ctx context.Context, opts StartOptions) (jobID string, err error)
 }
+
+// RDCDeviceQuery represents the device query for RDC tests.
+type RDCDeviceQuery struct {
+	Type               string `json:"type,omitempty"`
+	DeviceDescriptorId string `json:"device_descriptor_id,omitempty"`
+	RequestDeviceType  string `json:"requested_device_type,omitempty"`
+}
+
+// RDCStarterOptions represents the options for starting a job on RDC Cloud.
+type RDCStarterOptions struct {
+	TestFramework string            `json:"test_framework"`
+	AppId         string            `json:"app_id"`
+	TestAppId     string            `json:"test_app_id"`
+	DeviceQuery   RDCDeviceQuery    `json:"device_query,omitempty"`
+	TestOptions   map[string]string `json:"test_options,omitempty"`
+	TestName      string            `json:"test_name,omitempty"`
+}
