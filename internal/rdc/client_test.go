@@ -95,27 +95,27 @@ func TestClient_ReadJob(t *testing.T) {
 		wantErr error
 	}{
 		{
-			name: "passed job",
-			jobID: "test1",
-			want: job.Job{ID: "test1", Error: "", Status: "passed", Passed: true},
+			name:    "passed job",
+			jobID:   "test1",
+			want:    job.Job{ID: "test1", Error: "", Status: "passed", Passed: true},
 			wantErr: nil,
 		},
 		{
-			name: "failed job",
-			jobID: "test2",
-			want: job.Job{ID: "test2", Error: "no-device-found", Status: "failed", Passed: false},
+			name:    "failed job",
+			jobID:   "test2",
+			want:    job.Job{ID: "test2", Error: "no-device-found", Status: "failed", Passed: false},
 			wantErr: nil,
 		},
 		{
-			name: "in progress job",
-			jobID: "test3",
-			want: job.Job{ID: "test3", Error: "", Status: "in progress", Passed: false},
+			name:    "in progress job",
+			jobID:   "test3",
+			want:    job.Job{ID: "test3", Error: "", Status: "in progress", Passed: false},
 			wantErr: nil,
 		},
 		{
-			name: "non-existant job",
-			jobID: "test4",
-			want: job.Job{ID: "test4", Error: "", Status: "", Passed: false},
+			name:    "non-existant job",
+			jobID:   "test4",
+			want:    job.Job{ID: "test4", Error: "", Status: "", Passed: false},
 			wantErr: errors.New("unexpected statusCode: 404"),
 		},
 	}
@@ -136,7 +136,6 @@ func TestClient_StartJob(t *testing.T) {
 	}))
 	defer ts.Close()
 	timeout := 3 * time.Second
-
 
 	client := New(ts.URL, "test-user", "test-access-key", timeout)
 	testCases := []struct {
@@ -167,7 +166,6 @@ func TestClient_StartJob(t *testing.T) {
 		assert.Equal(t, jb, tt.want)
 	}
 }
-
 
 func randJobStatus(j *job.Job, isComplete bool) {
 	min := 1
@@ -282,5 +280,64 @@ func TestClient_GetJobStatus(t *testing.T) {
 			assert.Equal(t, tc.expectedErr, err)
 			assert.Equal(t, tc.expectedResp, got)
 		})
+	}
+}
+
+func TestClient_GetJobAssetFileNames(t *testing.T) {
+	client := New("", "test-user", "test-password", 1*time.Second)
+	files, _ := client.GetJobAssetFileNames(context.Background(), "dummy-job")
+	assert.True(t, reflect.DeepEqual(files, jobAssetsList))
+}
+
+func TestClient_GetJobAssetFileContent(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/rdc/jobs/jobID/deviceLogs":
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`[{"id": 1,"time": "15:10:16","level": "INFO","message": "Icing : Usage reports ok 0, Failed Usage reports 0, indexed 0, rejected 0"},{"id": 2,"time": "15:10:16","level": "INFO","message": "GmsCoreXrpcWrapper : Returning a channel provider with trafficStatsTag=12803"},{"id": 3,"time": "15:10:16","level": "INFO","message": "Icing : Usage reports ok 0, Failed Usage reports 0, indexed 0, rejected 0"}]`))
+		case "/v1/rdc/jobs/jobID/junit.xml":
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("<xml>junit.xml</xml>"))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer ts.Close()
+	client := New(ts.URL, "test-user", "test-password", 1*time.Second)
+
+	testCases := []struct {
+		name     string
+		jobID    string
+		fileName string
+		want     []byte
+		wantErr  error
+	}{
+		{
+			name:     "Download deviceLogs asset",
+			jobID:    "jobID",
+			fileName: "deviceLogs",
+			want:     []byte("INFO 15:10:16 1 Icing : Usage reports ok 0, Failed Usage reports 0, indexed 0, rejected 0\nINFO 15:10:16 2 GmsCoreXrpcWrapper : Returning a channel provider with trafficStatsTag=12803\nINFO 15:10:16 3 Icing : Usage reports ok 0, Failed Usage reports 0, indexed 0, rejected 0\n"),
+			wantErr:  nil,
+		},
+		{
+			name:     "Download junit.xml asset",
+			jobID:    "jobID",
+			fileName: "junit.xml",
+			want:     []byte("<xml>junit.xml</xml>"),
+			wantErr:  nil,
+		},
+		{
+			name:     "Download invalid filename",
+			jobID:    "jobID",
+			fileName: "buggy-file.txt",
+			wantErr:  errors.New("asset 'buggy-file.txt' not available"),
+		},
+	}
+	for _, tt := range testCases {
+		data, err := client.GetJobAssetFileContent(context.Background(), tt.jobID, tt.fileName)
+		assert.Equal(t, err, tt.wantErr)
+		if err == nil {
+			assert.Equal(t, tt.want, data)
+		}
 	}
 }

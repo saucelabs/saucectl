@@ -19,8 +19,8 @@ var (
 	ErrServerError = errors.New("internal server error")
 	// ErrJobNotFound is returned when the requested job was not found.
 	ErrJobNotFound = errors.New("job was not found")
-	// ErrTunnelNotFound is returned when the requested tunnel was not found.
-	ErrTunnelNotFound = errors.New("tunnel not found")
+	// ErrAssetNotFound is returned when the requested asset is not found.
+	ErrAssetNotFound = errors.New("asset not found")
 )
 
 // Client http client.
@@ -202,4 +202,104 @@ func doRequestStatus(httpClient *http.Client, request *http.Request) (job.Job, e
 	}
 
 	return jobDetails, nil
+}
+
+// As file list is fixed from API perspective, the list must be hardcoded.
+var jobAssetsList = []string{"junit.xml", "video.mp4", "deviceLogs", "screenshots.zip"}
+
+// GetJobAssetFileNames returns all assets files available.
+func (c *Client) GetJobAssetFileNames(ctx context.Context, jobID string) ([]string, error) {
+	return jobAssetsList, nil
+}
+
+// GetJobAssetFileContent returns the job asset file content.
+func (c *Client) GetJobAssetFileContent(ctx context.Context, jobID, fileName string) ([]byte, error) {
+	if !jobAssetsAvailable(fileName) {
+		return []byte{}, fmt.Errorf("asset '%s' not available", fileName)
+	}
+	request, err := createAssetRequest(ctx, c.URL, c.Username, c.AccessKey, jobID, fileName)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := doAssetRequest(c.HTTPClient, request)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	if fileName == "deviceLogs" {
+		return convertDeviceLogs(data)
+	}
+	return data, err
+}
+
+func createAssetRequest(ctx context.Context, url, username, accessKey, jobID, fileName string) (*http.Request, error) {
+	req, err := requesth.NewWithContext(ctx, http.MethodGet,
+		fmt.Sprintf("%s/v1/rdc/jobs/%s/%s", url, jobID, fileName), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.SetBasicAuth(username, accessKey)
+
+	return req, nil
+}
+
+func doAssetRequest(httpClient *http.Client, request *http.Request) ([]byte, error) {
+	resp, err := httpClient.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return nil, ErrServerError
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, ErrAssetNotFound
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		err := fmt.Errorf("job status request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		return nil, err
+	}
+
+	return io.ReadAll(resp.Body)
+}
+
+func jobAssetsAvailable(asset string) bool {
+	for _, a := range jobAssetsList {
+		if a == asset {
+			return true
+		}
+	}
+	return false
+}
+
+// deviceLogLine represent a line from device console.
+type deviceLogLine struct {
+	ID      int    `json:"id,omitempty"`
+	Time    string `json:"time,omitempty"`
+	Level   string `json:"level,omitempty"`
+	Message string `json:"message,omitempty"`
+}
+
+type deviceLogLines []deviceLogLine
+
+// As device logs are represented as an JSON list, we convert them to
+// raw text as it would be when looking device logs.
+func convertDeviceLogs(data []byte) ([]byte, error) {
+	var lines deviceLogLines
+	err := json.NewDecoder(bytes.NewReader(data)).Decode(&lines)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	var b bytes.Buffer
+	for _, line := range lines {
+		b.Write([]byte(fmt.Sprintf("%s %s %d %s\n", line.Level, line.Time, line.ID, line.Message)))
+	}
+	return b.Bytes(), nil
 }
