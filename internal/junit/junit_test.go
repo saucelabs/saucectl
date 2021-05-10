@@ -23,9 +23,9 @@ func TestParse(t *testing.T) {
 			want: TestSuites{
 				TestSuite: []TestSuite{
 					{
-						Errors:  "3",
+						Errors:  3,
 						Package: "com.example.android.testing.androidjunitrunnersample",
-						Tests:   "66",
+						Tests:   66,
 						Time:    "42.962",
 					},
 				},
@@ -43,9 +43,9 @@ func TestParse(t *testing.T) {
 				XMLName: xml.Name{Space: "", Local: "testsuites"},
 				TestSuite: []TestSuite{
 					{
-						Errors:  "3",
+						Errors:  3,
 						Package: "com.example.android.testing.androidjunitrunnersample",
-						Tests:   "66",
+						Tests:   66,
 						Time:    "42.962",
 					},
 				},
@@ -54,7 +54,8 @@ func TestParse(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		got := Parse(tt.data)
+		got, _ := Parse(tt.data)
 		assert.Equal(t, tt.want, got)
+		assert.Equal(t, 0, got.Failures)
 	}
 }

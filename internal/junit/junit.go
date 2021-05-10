@@ -15,12 +15,12 @@ type TestCase struct {
 
 type TestSuite struct {
 	Name      string     `xml:"name,attr"`
-	Tests     string     `xml:"tests,attr"`
-	Errors    string     `xml:"errors,attr,omitempty"`
-	Failures  string     `xml:"failures,attr,omitempty"`
+	Tests     int        `xml:"tests,attr"`
+	Errors    int        `xml:"errors,attr,omitempty"`
+	Failures  int        `xml:"failures,attr,omitempty"`
+	Disabled  int        `xml:"disabled,attr,omitempty"`
+	Skipped   int        `xml:"skipped,attr,omitempty"`
 	Time      string     `xml:"time,attr,omitempty"`
-	Disabled  string     `xml:"disabled,attr,omitempty"`
-	Skipped   string     `xml:"skipped,attr,omitempty"`
 	Timestamp string     `xml:"timestamp,attr,omitempty"`
 	Package   string     `xml:"package,attr,omitempty"`
 	TestCase  []TestCase `xml:"testcase"`
@@ -32,24 +32,25 @@ type TestSuites struct {
 	TestSuite []TestSuite `xml:"testsuite"`
 	Name      string      `xml:"name,attr,omitempty"`
 	Time      string      `xml:"time,attr,omitempty"`
-	Tests     string      `xml:"tests,attr,omitempty"`
-	Failures  string      `xml:"failures,attr,omitempty"`
-	Disabled  string      `xml:"disabled,attr,omitempty"`
-	Errors    string      `xml:"errors,attr,omitempty"`
+	Tests     int         `xml:"tests,attr,omitempty"`
+	Failures  int         `xml:"failures,attr,omitempty"`
+	Disabled  int         `xml:"disabled,attr,omitempty"`
+	Errors    int         `xml:"errors,attr,omitempty"`
 }
 
-func Parse(data []byte) TestSuites {
+func Parse(data []byte) (TestSuites, error) {
 	tss := TestSuites{}
 	err := xml.Unmarshal(data, &tss)
-	// root <testsuites> is optional
 	if err != nil {
+		// root <testsuites> is optional
+		// parse a <testsuite> element instead
 		ts := TestSuite{}
 		err = xml.Unmarshal(data, &ts)
 		if err == nil {
-			return TestSuites{
-				TestSuite: []TestSuite{ts},
+			tss.TestSuite = []TestSuite{
+				ts,
 			}
 		}
 	}
-	return tss
+	return tss, err
 }

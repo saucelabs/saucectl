@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/concurrency"
@@ -18,6 +20,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
+	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -311,10 +314,40 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	// Display log only when at least it has started
 	assetContent, err := r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, ConsoleLogAsset)
 	if err != nil {
-		// log.Warn().Str("suite", res.suiteName).Msg("Failed to retrieve the console output.")
 		assetContent, err = r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, "junit.xml")
 		if err == nil {
-			log.Info().Str("suite", res.suiteName).Msgf("junit.xml output: \n%s", assetContent)
+			testsuites, err := junit.Parse(assetContent)
+			if err == nil {
+				headerColor := color.New(color.FgRed).Add(color.Bold).Add(color.Underline)
+				headerColor.Print("\nErrors:\n\n")
+				bodyColor := color.New(color.FgHiRed)
+				errCount := 1
+				for _, ts := range testsuites.TestSuite {
+					for _, tc := range ts.TestCase {
+						if tc.Error != "" {
+							fmt.Printf("\t%d) %s.%s\n\n", errCount, tc.ClassName, tc.Name)
+							headerColor.Println("\tError was:")
+							bodyColor.Printf("\t%s\n", tc.Error)
+						}
+					}
+				}
+
+				// Print summary table
+				fmt.Println()
+				t := table.NewWriter()
+				t.SetOutputMirror(os.Stdout)
+				t.AppendHeader(table.Row{"espresso testsuite", "tests", "pass", "fail", "error"})
+				for _, ts := range testsuites.TestSuite {
+					passed := ts.Tests - ts.Errors - ts.Failures
+					t.AppendRow(table.Row{ts.Package, ts.Tests, passed, ts.Failures, ts.Errors})
+				}
+				t.Render()
+				fmt.Println()
+			} else {
+				log.Warn().Str("suite", res.suiteName).Msg("Failed to parse junit")
+			}
+		} else {
+			log.Warn().Str("suite", res.suiteName).Msg("Failed to retrieve the console output.")
 		}
 	} else {
 		log.Info().Str("suite", res.suiteName).Msgf("console.log output: \n%s", assetContent)
