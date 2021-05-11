@@ -343,6 +343,7 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 				fmt.Printf("\t%d) %s.%s\n\n", errCount, tc.ClassName, tc.Name)
 				headerColor.Println("\tError was:")
 				bodyColor.Printf("\t%s\n", tc.Error)
+				errCount += 1
 			}
 		}
 	}
