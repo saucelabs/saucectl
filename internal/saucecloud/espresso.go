@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/job"
 )
@@ -56,34 +57,13 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 	go func() {
 		for _, s := range r.Project.Suites {
 			for _, d := range s.Devices {
-				for _, p := range d.PlatformVersions {
-					log.Debug().Str("suite", s.Name).Str("device", d.Name).Str("platform", p).Msg("Starting job")
-					jobOpts <- job.StartOptions{
-						ConfigFilePath:    r.Project.ConfigFilePath,
-						DisplayName:       s.Name,
-						App:               fmt.Sprintf("storage:%s", appFileID),
-						Suite:             fmt.Sprintf("storage:%s", testAppFileID),
-						Framework:         "espresso",
-						FrameworkVersion:  "1.0.0-stable",
-						PlatformName:      d.PlatformName,
-						PlatformVersion:   p,
-						DeviceName:        d.Name,
-						DeviceOrientation: d.Orientation,
-						Name:              r.Project.Sauce.Metadata.Name + " - " + s.Name,
-						Build:             r.Project.Sauce.Metadata.Build,
-						Tags:              r.Project.Sauce.Metadata.Tags,
-						Tunnel: job.TunnelOptions{
-							ID:     r.Project.Sauce.Tunnel.ID,
-							Parent: r.Project.Sauce.Tunnel.Parent,
-						},
-						Experiments: r.Project.Sauce.Experiments,
-						TestOptions: job.TestOptions{
-							NotClass:   s.TestOptions.NotClass,
-							Class:      s.TestOptions.Class,
-							Annotation: s.TestOptions.Annotation,
-							Size:       s.TestOptions.Size,
-							Package:    s.TestOptions.Package,
-						},
+				if d.ID != "" {
+					log.Debug().Str("suite", s.Name).Str("id", d.ID).Msg("Starting job")
+					r.startJob(jobOpts, s, appFileID, testAppFileID, d, "")
+				} else {
+					for _, p := range d.PlatformVersions {
+						log.Debug().Str("suite", s.Name).Str("device", d.Name).Str("platform", p).Msg("Starting job")
+						r.startJob(jobOpts, s, appFileID, testAppFileID, d, p)
 					}
 				}
 			}
@@ -94,11 +74,45 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
 }
 
+func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Suite, appFileID, testAppFileID string, d config.Device, platform string) {
+	jobOpts <- job.StartOptions{
+		DisplayName:       d.Name,
+		ConfigFilePath:    r.Project.ConfigFilePath,
+		App:               fmt.Sprintf("storage:%s", appFileID),
+		Suite:             fmt.Sprintf("storage:%s", testAppFileID),
+		Framework:         "espresso",
+		FrameworkVersion:  "1.0.0-stable",
+		PlatformName:      d.PlatformName,
+		PlatformVersion:   platform,
+		DeviceID:          d.ID,
+		DeviceName:        d.Name,
+		DeviceOrientation: d.Orientation,
+		Name:              r.Project.Sauce.Metadata.Name + " - " + s.Name,
+		Build:             r.Project.Sauce.Metadata.Build,
+		Tags:              r.Project.Sauce.Metadata.Tags,
+		Tunnel: job.TunnelOptions{
+			ID:     r.Project.Sauce.Tunnel.ID,
+			Parent: r.Project.Sauce.Tunnel.Parent,
+		},
+		Experiments: r.Project.Sauce.Experiments,
+		TestOptions: job.TestOptions{
+			NotClass:   s.TestOptions.NotClass,
+			Class:      s.TestOptions.Class,
+			Annotation: s.TestOptions.Annotation,
+			Size:       s.TestOptions.Size,
+			Package:    s.TestOptions.Package,
+		},
+	}
+}
+
 func (r *EspressoRunner) calculateJobsCount(suites []espresso.Suite) int {
 	jobsCount := 0
 	for _, s := range suites {
 		for _, d := range s.Devices {
 			for range d.PlatformVersions {
+				jobsCount++
+			}
+			if d.ID != "" {
 				jobsCount++
 			}
 		}

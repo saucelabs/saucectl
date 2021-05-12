@@ -35,6 +35,7 @@ type StartOptions struct {
 	BrowserVersion    string            `json:"browserVersion,omitempty"`
 	PlatformName      string            `json:"platformName,omitempty"`
 	PlatformVersion   string            `json:"platformVersion,omitempty"`
+	DeviceID          string            `json:"deviceId,omitempty"`
 	DeviceName        string            `json:"deviceName,omitempty"`
 	DeviceOrientation string            `json:"deviceOrientation"`
 	Name              string            `json:"name,omitempty"`
@@ -60,7 +61,7 @@ type Starter interface {
 
 // The different device selectors possible for a RDC Job.
 const (
-	RDCTypeDynamicDeviceQuery = "DynamicDeviceQuery"
+	RDCTypeDynamicDeviceQuery   = "DynamicDeviceQuery"
 	RDCTypeHardcodedDeviceQuery = "HardcodedDeviceQuery"
 )
 

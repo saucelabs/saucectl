@@ -89,35 +89,6 @@ func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
 	return cr.Organization.Maximum, nil
 }
 
-// StartJob starts a job on RDC cloud.
-func (c *Client) StartJob(options job.RDCStarterOptions) (string, error) {
-	var b bytes.Buffer
-	err := json.NewEncoder(&b).Encode(options)
-
-	req, err := requesth.NewWithContext(context.Background(), http.MethodPost,
-		fmt.Sprintf("%s/v1/rdc/native-composer/tests", c.URL), &b)
-	if err != nil {
-		return "", err
-	}
-	req.SetBasicAuth(c.Username, c.AccessKey)
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
-	}
-
-	var sr startJobResponse
-	if err := json.NewDecoder(resp.Body).Decode(&sr); err != nil {
-		return "", err
-	}
-
-	return sr.TestReport.ID, nil
-}
-
 // ReadJob returns the job details.
 func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
@@ -204,7 +175,7 @@ func doRequestStatus(httpClient *http.Client, request *http.Request) (job.Job, e
 	return jobDetails, nil
 }
 
-// As file list is fixed from API perspective, the list must be hardcoded.
+// jobAssetsList represents known assets. As file list is fixed from API perspective, the list must be hardcoded.
 var jobAssetsList = []string{"junit.xml", "video.mp4", "deviceLogs", "screenshots.zip"}
 
 // GetJobAssetFileNames returns all assets files available.
