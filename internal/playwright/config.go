@@ -149,23 +149,34 @@ func SplitSuites(p Project) (Project, Project) {
 }
 
 func checkSupportedBrowsers(p *Project) error {
-	supportedBrowsers := map[string]struct{}{
-		"chromium": struct{}{},
-		"firefox":  struct{}{},
-		"webkit":   struct{}{},
-	}
 	supportedBrwsList := []string{"chromium", "firefox", "webkit"}
 	errMsg := "browserName: %s is not supported. List of supported browsers: %s"
 
 	if p.Playwright.Params.BrowserName != "" {
-		if _, ok := supportedBrowsers[p.Playwright.Params.BrowserName]; !ok {
+		found := false
+		for _, browser := range supportedBrwsList {
+			if p.Playwright.Params.BrowserName == browser {
+				found = true
+				break
+			}
+		}
+
+		if !found {
 			return fmt.Errorf(errMsg, p.Playwright.Params.BrowserName, strings.Join(supportedBrwsList, ", "))
 		}
 	}
 
 	for _, suite := range p.Suites {
 		if suite.Params.BrowserName != "" {
-			if _, ok := supportedBrowsers[suite.Params.BrowserName]; !ok {
+			found := false
+			for _, browser := range supportedBrwsList {
+				if suite.Params.BrowserName == browser {
+					found = true
+					break
+				}
+			}
+
+			if !found {
 				return fmt.Errorf(errMsg, suite.Params.BrowserName, strings.Join(supportedBrwsList, ", "))
 			}
 		}
