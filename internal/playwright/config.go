@@ -11,6 +11,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var supportedBrwsList = []string{"chromium", "firefox", "webkit"}
+
 // Project represents the playwright project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline"`
@@ -149,38 +151,27 @@ func SplitSuites(p Project) (Project, Project) {
 }
 
 func checkSupportedBrowsers(p *Project) error {
-	supportedBrwsList := []string{"chromium", "firefox", "webkit"}
 	errMsg := "browserName: %s is not supported. List of supported browsers: %s"
 
-	if p.Playwright.Params.BrowserName != "" {
-		found := false
-		for _, browser := range supportedBrwsList {
-			if p.Playwright.Params.BrowserName == browser {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			return fmt.Errorf(errMsg, p.Playwright.Params.BrowserName, strings.Join(supportedBrwsList, ", "))
-		}
+	if p.Playwright.Params.BrowserName != "" && !isSupportedBrowser(p.Playwright.Params.BrowserName) {
+		return fmt.Errorf(errMsg, p.Playwright.Params.BrowserName, strings.Join(supportedBrwsList, ", "))
 	}
 
 	for _, suite := range p.Suites {
-		if suite.Params.BrowserName != "" {
-			found := false
-			for _, browser := range supportedBrwsList {
-				if suite.Params.BrowserName == browser {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				return fmt.Errorf(errMsg, suite.Params.BrowserName, strings.Join(supportedBrwsList, ", "))
-			}
+		if suite.Params.BrowserName != "" && !isSupportedBrowser(suite.Params.BrowserName) {
+			return fmt.Errorf(errMsg, suite.Params.BrowserName, strings.Join(supportedBrwsList, ", "))
 		}
 	}
 
 	return nil
+}
+
+func isSupportedBrowser(browser string) bool {
+	for _, supportedBr := range supportedBrwsList {
+		if supportedBr == browser {
+			return true
+		}
+	}
+
+	return false
 }
