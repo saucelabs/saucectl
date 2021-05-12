@@ -10,6 +10,18 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 )
 
+// deviceConfig represent the configuration for a specific device.
+type deviceConfig struct {
+	ID              string
+	name            string
+	platformName    string
+	platformVersion string
+	orientation     string
+	hasCarrier      bool
+	deviceType      string
+	privateOnly     bool
+}
+
 // EspressoRunner represents the Sauce Labs cloud implementation for cypress.
 type EspressoRunner struct {
 	CloudRunner
@@ -57,14 +69,9 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 	go func() {
 		for _, s := range r.Project.Suites {
 			for _, d := range s.Devices {
-				if d.ID != "" {
-					log.Debug().Str("suite", s.Name).Str("id", d.ID).Msg("Starting job")
-					r.startJob(jobOpts, s, appFileID, testAppFileID, d, "")
-				} else {
-					for _, p := range d.PlatformVersions {
-						log.Debug().Str("suite", s.Name).Str("device", d.Name).Str("platform", p).Msg("Starting job")
-						r.startJob(jobOpts, s, appFileID, testAppFileID, d, p)
-					}
+				for _, c := range enumerateDevices(d) {
+					log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
+					r.startJob(jobOpts, s, appFileID, testAppFileID, c)
 				}
 			}
 		}
@@ -74,19 +81,38 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
 }
 
-func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Suite, appFileID, testAppFileID string, d config.Device, platform string) {
+// enumerateDevices returns a list of device targeted by the current suite.
+func enumerateDevices(d config.Device) []deviceConfig {
+	if d.ID != "" {
+		return []deviceConfig{{ID: d.ID, platformName: d.PlatformName}}
+	}
+	// FIXME: Implement RDC dynamic
+	var configs []deviceConfig
+	for _, p := range d.PlatformVersions {
+		configs = append(configs, deviceConfig{
+			name:            d.Name,
+			platformName:    d.PlatformName,
+			platformVersion: p,
+			orientation:     d.Orientation,
+		})
+	}
+	return configs
+}
+
+// startJob add the job to the list for the workers.
+func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Suite, appFileID, testAppFileID string, d deviceConfig) {
 	jobOpts <- job.StartOptions{
-		DisplayName:       d.Name,
+		DisplayName:       s.Name,
 		ConfigFilePath:    r.Project.ConfigFilePath,
 		App:               fmt.Sprintf("storage:%s", appFileID),
 		Suite:             fmt.Sprintf("storage:%s", testAppFileID),
 		Framework:         "espresso",
 		FrameworkVersion:  "1.0.0-stable",
-		PlatformName:      d.PlatformName,
-		PlatformVersion:   platform,
+		PlatformName:      d.platformName,
+		PlatformVersion:   d.platformVersion,
 		DeviceID:          d.ID,
-		DeviceName:        d.Name,
-		DeviceOrientation: d.Orientation,
+		DeviceName:        d.name,
+		DeviceOrientation: d.orientation,
 		Name:              r.Project.Sauce.Metadata.Name + " - " + s.Name,
 		Build:             r.Project.Sauce.Metadata.Build,
 		Tags:              r.Project.Sauce.Metadata.Tags,
@@ -102,6 +128,11 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 			Size:       s.TestOptions.Size,
 			Package:    s.TestOptions.Package,
 		},
+
+		// RDC Specific flags
+		DeviceHasCarrier:  d.hasCarrier,
+		DeviceType:        d.deviceType,
+		DevicePrivateOnly: d.privateOnly,
 	}
 }
 

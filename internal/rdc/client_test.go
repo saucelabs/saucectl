@@ -129,44 +129,6 @@ func TestClient_ReadJob(t *testing.T) {
 	}
 }
 
-func TestClient_StartJob(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"test_report": {"id": "test1","url": "https://app.staging.saucelabs.net/tests/test1"}}`))
-	}))
-	defer ts.Close()
-	timeout := 3 * time.Second
-
-	client := New(ts.URL, "test-user", "test-access-key", timeout)
-	testCases := []struct {
-		name    string
-		options job.RDCStarterOptions
-		want    string
-		wantErr error
-	}{
-		{
-			name: "Working Case",
-			options: job.RDCStarterOptions{
-				AppID:         "dummy-id.apk",
-				TestAppID:     "dummy-test.apk",
-				TestFramework: "ANDROID_INSTRUMENTATION",
-				TestName:      "Working Case",
-				DeviceQuery: job.RDCDeviceQuery{
-					Type: job.RDCTypeDynamicDeviceQuery,
-				},
-				TestOptions: map[string]string{},
-			},
-			want: "test1",
-		},
-	}
-
-	for _, tt := range testCases {
-		jb, err := client.StartJob(tt.options)
-		assert.Equal(t, tt.wantErr, err)
-		assert.Equal(t, jb, tt.want)
-	}
-}
-
 func randJobStatus(j *job.Job, isComplete bool) {
 	min := 1
 	max := 10

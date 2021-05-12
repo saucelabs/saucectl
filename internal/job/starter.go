@@ -38,6 +38,9 @@ type StartOptions struct {
 	DeviceID          string            `json:"deviceId,omitempty"`
 	DeviceName        string            `json:"deviceName,omitempty"`
 	DeviceOrientation string            `json:"deviceOrientation"`
+	DevicePrivateOnly bool              `json:"devicePrivateOnly,omitempty"`
+	DeviceType        string            `json:"deviceType,omitempty"`
+	DeviceHasCarrier  bool              `json:"deviceHasCarrier,omitempty"`
 	Name              string            `json:"name,omitempty"`
 	Build             string            `json:"build,omitempty"`
 	Tags              []string          `json:"tags,omitempty"`

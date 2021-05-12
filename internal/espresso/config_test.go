@@ -93,7 +93,7 @@ func TestValidateThrowsErrors(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: errors.New("missing device name for suite: empty device name. Devices index: 0"),
+			expectedErr: errors.New("missing device name or ID for suite: empty device name. Devices index: 0"),
 		},
 		{
 			name:        "validating throws error on missing Emulator suffix on device name",
@@ -141,7 +141,7 @@ func TestValidateThrowsErrors(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := Validate(*tc.p)
 			assert.NotNil(t, err)
-			assert.Equal(t, err.Error(), tc.expectedErr.Error())
+			assert.Equal(t, tc.expectedErr.Error(), err.Error())
 		})
 	}
 }
