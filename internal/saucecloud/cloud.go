@@ -35,6 +35,7 @@ type CloudRunner struct {
 	ProjectUploader    storage.ProjectUploader
 	JobStarter         job.Starter
 	JobReader          job.Reader
+	RDCJobReader       job.Reader
 	JobWriter          job.Writer
 	JobStopper         job.Stopper
 	CCYReader          concurrency.Reader
@@ -141,12 +142,14 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool, err error) {
 	log.Info().Str("suite", opts.DisplayName).Str("region", r.Region.String()).Msg("Starting suite.")
 
-	id, err := r.JobStarter.StartJob(context.Background(), opts)
+	id, isRDC, err := r.JobStarter.StartJob(context.Background(), opts)
 	if err != nil {
 		return job.Job{}, false, err
 	}
 
-	r.uploadSauceConfig(id, opts.ConfigFilePath)
+	if !isRDC {
+		r.uploadSauceConfig(id, opts.ConfigFilePath)
+	}
 
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
 	// if a soft exit is requested during startContainer phase, it gently exits.
@@ -167,8 +170,13 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	sigChan := r.registerInterruptOnSignal(id, opts.Suite)
 	defer unregisterSignalCapture(sigChan)
 
-	// High interval poll to not oversaturate the job reader with requests.
-	j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second)
+	// High interval poll to not oversaturate the job reader with requests
+	if isRDC {
+		j, err = r.RDCJobReader.PollJob(context.Background(), id, 15*time.Second)
+	} else {
+		j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second)
+	}
+
 	if err != nil {
 		return job.Job{}, false, fmt.Errorf("failed to retrieve job status for suite %s", opts.DisplayName)
 	}

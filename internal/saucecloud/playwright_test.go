@@ -33,8 +33,8 @@ func TestRunSuites_Playwright_NoConcurrency(t *testing.T) {
 
 	// Fake JobStarter
 	starter := mocks.FakeJobStarter{
-		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
-			return "fake-job-id", nil
+		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+			return "fake-job-id", false, nil
 		},
 	}
 	reader := mocks.FakeJobReader{

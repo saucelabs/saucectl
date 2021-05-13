@@ -62,9 +62,9 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 	// Fake JobStarter
 	var startOpts job.StartOptions
 	starter := mocks.FakeJobStarter{
-		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
+		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
 			startOpts = opts
-			return "fake-job-id", nil
+			return "fake-job-id", false, nil
 		},
 	}
 	reader := mocks.FakeJobReader{
@@ -137,8 +137,8 @@ func TestRunSuites_Espresso_NoConcurrency(t *testing.T) {
 
 	// Fake JobStarter
 	starter := mocks.FakeJobStarter{
-		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
-			return "fake-job-id", nil
+		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+			return "fake-job-id", false, nil
 		},
 	}
 	reader := mocks.FakeJobReader{
