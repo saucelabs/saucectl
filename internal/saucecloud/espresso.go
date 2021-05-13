@@ -140,12 +140,7 @@ func (r *EspressoRunner) calculateJobsCount(suites []espresso.Suite) int {
 	jobsCount := 0
 	for _, s := range suites {
 		for _, d := range s.Devices {
-			for range d.PlatformVersions {
-				jobsCount++
-			}
-			if d.ID != "" {
-				jobsCount++
-			}
+			jobsCount += len(enumerateDevices(d))
 		}
 	}
 	return jobsCount
