@@ -172,14 +172,14 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	}
 	l.Msg("Suite started.")
 
-	sigChan := r.registerInterruptOnSignal(id, opts.Suite)
-	defer unregisterSignalCapture(sigChan)
-
 	// High interval poll to not oversaturate the job reader with requests
-	if isRDC {
-		j, err = r.RDCJobReader.PollJob(context.Background(), id, 15*time.Second)
-	} else {
+	if !isRDC {
+		sigChan := r.registerInterruptOnSignal(id, opts.Suite)
+		defer unregisterSignalCapture(sigChan)
+
 		j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second)
+	} else {
+		j, err = r.RDCJobReader.PollJob(context.Background(), id, 15*time.Second)
 	}
 
 	if err != nil {
