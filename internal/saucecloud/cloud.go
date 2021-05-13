@@ -32,17 +32,18 @@ import (
 
 // CloudRunner represents the cloud runner for the Sauce Labs cloud.
 type CloudRunner struct {
-	ProjectUploader    storage.ProjectUploader
-	JobStarter         job.Starter
-	JobReader          job.Reader
-	RDCJobReader       job.Reader
-	JobWriter          job.Writer
-	JobStopper         job.Stopper
-	CCYReader          concurrency.Reader
-	TunnelService      tunnel.Service
-	Region             region.Region
-	ShowConsoleLog     bool
-	ArtifactDownloader download.ArtifactDownloader
+	ProjectUploader       storage.ProjectUploader
+	JobStarter            job.Starter
+	JobReader             job.Reader
+	RDCJobReader          job.Reader
+	JobWriter             job.Writer
+	JobStopper            job.Stopper
+	CCYReader             concurrency.Reader
+	TunnelService         tunnel.Service
+	Region                region.Region
+	ShowConsoleLog        bool
+	ArtifactDownloader    download.ArtifactDownloader
+	RDCArtifactDownloader download.ArtifactDownloader
 
 	interrupted bool
 }
@@ -128,7 +129,11 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 		}
 
 		if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, artifactCfg) {
-			r.ArtifactDownloader.DownloadArtifact(res.job.ID)
+			if res.job.IsRDC {
+				r.RDCArtifactDownloader.DownloadArtifact(res.job.ID)
+			} else {
+				r.ArtifactDownloader.DownloadArtifact(res.job.ID)
+			}
 		}
 		r.logSuite(res)
 	}

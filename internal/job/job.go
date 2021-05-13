@@ -8,8 +8,8 @@ const (
 	StateComplete   = "complete"
 	StateError      = "error"
 
-	StatePassed     = "passed"
-	StateFailed     = "failed"
+	StatePassed = "passed"
+	StateFailed = "failed"
 )
 
 // DoneStates represents states that a job doesn't transition out of, i.e. once the job is in one of these states,
@@ -28,6 +28,9 @@ type Job struct {
 		PlatformVersion string `json:"platformVersion"`
 		DeviceName      string `json:"deviceName"`
 	} `json:"base_config"`
+
+	// IsRDC flags a job started as a RDC run.
+	IsRDC bool `json:"-"`
 }
 
 // Done returns true if the job status is one of DoneStates. False otherwise.

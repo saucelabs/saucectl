@@ -7,10 +7,13 @@ import (
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/stretchr/testify/assert"
 )
@@ -58,7 +61,7 @@ func TestClient_ReadAllowedCCY(t *testing.T) {
 			w.Write(tt.responseBody)
 		}))
 
-		client := New(ts.URL, "test", "123", timeout)
+		client := New(ts.URL, "test", "123", timeout, config.ArtifactDownload{})
 		ccy, err := client.ReadAllowedCCY(context.Background())
 		assert.Equal(t, err, tt.wantErr)
 		assert.Equal(t, ccy, tt.want)
@@ -86,7 +89,7 @@ func TestClient_ReadJob(t *testing.T) {
 	}))
 	defer ts.Close()
 	timeout := 3 * time.Second
-	client := New(ts.URL, "test-user", "test-key", timeout)
+	client := New(ts.URL, "test-user", "test-key", timeout, config.ArtifactDownload{})
 
 	testCases := []struct {
 		name    string
@@ -191,45 +194,47 @@ func TestClient_GetJobStatus(t *testing.T) {
 	}{
 		{
 			name:   "get job details with ID 1 and status 'complete'",
-			client: New(ts.URL, "test", "123", timeout),
+			client: New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:  "1",
 			expectedResp: job.Job{
 				ID:     "1",
 				Passed: false,
 				Status: "complete",
 				Error:  "",
+				IsRDC:  true,
 			},
 			expectedErr: nil,
 		},
 		{
 			name:   "get job details with ID 2 and status 'error'",
-			client: New(ts.URL, "test", "123", timeout),
+			client: New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:  "2",
 			expectedResp: job.Job{
 				ID:     "2",
 				Passed: false,
 				Status: "error",
 				Error:  "User Abandoned Test -- User terminated",
+				IsRDC:  true,
 			},
 			expectedErr: nil,
 		},
 		{
 			name:         "user not found error from external API",
-			client:       New(ts.URL, "test", "123", timeout),
+			client:       New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:        "3",
 			expectedResp: job.Job{},
 			expectedErr:  ErrJobNotFound,
 		},
 		{
 			name:         "http status is not 200, but 401 from external API",
-			client:       New(ts.URL, "test", "123", timeout),
+			client:       New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:        "4",
 			expectedResp: job.Job{},
 			expectedErr:  errors.New("job status request failed; unexpected response code:'401', msg:''"),
 		},
 		{
 			name:         "unexpected status code from external API",
-			client:       New(ts.URL, "test", "123", timeout),
+			client:       New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:        "333",
 			expectedResp: job.Job{},
 			expectedErr:  ErrServerError,
@@ -246,7 +251,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 }
 
 func TestClient_GetJobAssetFileNames(t *testing.T) {
-	client := New("", "test-user", "test-password", 1*time.Second)
+	client := New("", "test-user", "test-password", 1*time.Second, config.ArtifactDownload{})
 	files, _ := client.GetJobAssetFileNames(context.Background(), "dummy-job")
 	assert.True(t, reflect.DeepEqual(files, jobAssetsList))
 }
@@ -265,7 +270,7 @@ func TestClient_GetJobAssetFileContent(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
-	client := New(ts.URL, "test-user", "test-password", 1*time.Second)
+	client := New(ts.URL, "test-user", "test-password", 1*time.Second, config.ArtifactDownload{})
 
 	testCases := []struct {
 		name     string
@@ -301,5 +306,42 @@ func TestClient_GetJobAssetFileContent(t *testing.T) {
 		if err == nil {
 			assert.Equal(t, tt.want, data)
 		}
+	}
+}
+
+func TestClient_DownloadArtifact(t *testing.T) {
+	fileContent := "<xml>junit.xml</xml>"
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/rdc/jobs/test-123/junit.xml":
+			w.Write([]byte(fileContent))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer ts.Close()
+
+	tempDir, err := os.MkdirTemp("", "saucectl-download-artifact")
+	if err != nil {
+		t.Errorf("Failed to create temp dir: %v", err)
+	}
+	defer func() {
+		_ = os.RemoveAll(tempDir)
+	}()
+
+	rc := New(ts.URL, "dummy-user", "dummy-key", 10*time.Second, config.ArtifactDownload{
+		Directory: tempDir,
+		Match: []string{"junit.xml"},
+	})
+	rc.DownloadArtifact("test-123")
+
+	fileName := filepath.Join(tempDir, "test-123", "junit.xml")
+	d, err := os.ReadFile(fileName)
+	if err != nil {
+		t.Errorf("file '%s' not found: %v", fileName, err)
+	}
+
+	if string(d) != fileContent {
+		t.Errorf("file content mismatch: got '%v', expects: '%v'", d, fileContent)
 	}
 }

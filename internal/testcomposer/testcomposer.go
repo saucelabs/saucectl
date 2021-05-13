@@ -75,14 +75,14 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 
 	j := struct {
 		JobID string
-		isRDC bool
+		IsRDC bool
 	}{}
 	err = json.Unmarshal(body, &j)
 	if err != nil {
 		return
 	}
 
-	return j.JobID, j.isRDC, nil
+	return j.JobID, j.IsRDC, nil
 }
 
 func (c *Client) newJSONRequest(ctx context.Context, url, method string, payload interface{}) (*http.Request, error) {

@@ -8,8 +8,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
+	"github.com/rs/zerolog/log"
+	"github.com/ryanuber/go-glob"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
@@ -25,10 +30,11 @@ var (
 
 // Client http client.
 type Client struct {
-	HTTPClient *http.Client
-	URL        string
-	Username   string
-	AccessKey  string
+	HTTPClient     *http.Client
+	URL            string
+	Username       string
+	AccessKey      string
+	ArtifactConfig config.ArtifactDownload
 }
 
 type organizationResponse struct {
@@ -39,14 +45,6 @@ type concurrencyResponse struct {
 	Organization organizationResponse `json:"organization,omitempty"`
 }
 
-type testReportResponse struct {
-	ID string `json:"id,omitempty"`
-}
-
-type startJobResponse struct {
-	TestReport testReportResponse `json:"test_report,omitempty"`
-}
-
 type readJobResponse struct {
 	Status             string `json:"status,omitempty"`
 	ConsolidatedStatus string `json:"consolidated_status,omitempty"`
@@ -54,12 +52,13 @@ type readJobResponse struct {
 }
 
 // New creates a new client.
-func New(url, username, accessKey string, timeout time.Duration) Client {
+func New(url, username, accessKey string, timeout time.Duration, artifactConfig config.ArtifactDownload) Client {
 	return Client{
-		HTTPClient: &http.Client{Timeout: timeout},
-		URL:        url,
-		Username:   username,
-		AccessKey:  accessKey,
+		HTTPClient:     &http.Client{Timeout: timeout},
+		URL:            url,
+		Username:       username,
+		AccessKey:      accessKey,
+		ArtifactConfig: artifactConfig,
 	}
 }
 
@@ -139,6 +138,7 @@ func (c *Client) PollJob(ctx context.Context, id string, interval time.Duration)
 		}
 
 		if job.Done(j.Status) {
+			j.IsRDC = true
 			return j, nil
 		}
 	}
@@ -273,4 +273,38 @@ func convertDeviceLogs(data []byte) ([]byte, error) {
 		b.Write([]byte(fmt.Sprintf("%s %s %d %s\n", line.Level, line.Time, line.ID, line.Message)))
 	}
 	return b.Bytes(), nil
+}
+
+// DownloadArtifact does downloading artifacts
+func (c *Client) DownloadArtifact(jobID string) {
+	targetDir := filepath.Join(c.ArtifactConfig.Directory, jobID)
+	if err := os.MkdirAll(targetDir, 0755); err != nil {
+		log.Error().Msgf("Unable to create %s to fetch artifacts (%v)", targetDir, err)
+		return
+	}
+
+	files, err := c.GetJobAssetFileNames(context.Background(), jobID)
+	if err != nil {
+		log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
+		return
+	}
+	for _, f := range files {
+		for _, pattern := range c.ArtifactConfig.Match {
+			if glob.Glob(pattern, f) {
+				if err := c.downloadArtifact(targetDir, jobID, f); err != nil {
+					log.Error().Err(err).Msgf("Failed to download file: %s", f)
+				}
+				break
+			}
+		}
+	}
+}
+
+func (c *Client) downloadArtifact(targetDir, jobID, fileName string) error {
+	content, err := c.GetJobAssetFileContent(context.Background(), jobID, fileName)
+	if err != nil {
+		return err
+	}
+	targetFile := filepath.Join(targetDir, fileName)
+	return os.WriteFile(targetFile, content, 0644)
 }
