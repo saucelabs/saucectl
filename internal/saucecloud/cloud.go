@@ -165,8 +165,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
 	l := log.Info().Str("url", jobDetailsPage).Str("suite", opts.DisplayName).Str("platform", opts.PlatformName)
 	if opts.Framework == config.KindEspresso {
-		l.Str("device", opts.DeviceName).Str("platformVersion", opts.PlatformVersion)
-
+		l.Str("deviceName", opts.DeviceName).Str("platformVersion", opts.PlatformVersion).Str("deviceId", opts.DeviceID)
 	} else {
 		l.Str("browser", opts.BrowserName)
 	}
@@ -174,7 +173,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 
 	// High interval poll to not oversaturate the job reader with requests
 	if !isRDC {
-		sigChan := r.registerInterruptOnSignal(id, opts.Suite)
+		sigChan := r.registerInterruptOnSignal(id, opts.SuiteDisplayName)
 		defer unregisterSignalCapture(sigChan)
 
 		j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second)
@@ -188,7 +187,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 
 	if !j.Passed {
 		// We may need to differentiate when a job has crashed vs. when there is errors.
-		return j, false, fmt.Errorf("suite '%s' has test failures", opts.Suite)
+		return j, false, fmt.Errorf("suite '%s' has test failures", opts.SuiteDisplayName)
 	}
 
 	return j, false, nil
