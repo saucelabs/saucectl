@@ -34,9 +34,8 @@ type Project struct {
 // Playwright represents crucial playwright configuration that is required for setting up a project.
 type Playwright struct {
 	// Deprecated. ProjectPath is succeeded by Project.RootDir.
-	ProjectPath string      `yaml:"projectPath,omitempty" json:"projectPath,omitempty"`
-	Version     string      `yaml:"version,omitempty" json:"version,omitempty"`
-	Params      SuiteConfig `yaml:"params,omitempty" json:"params,omitempty"`
+	ProjectPath string `yaml:"projectPath,omitempty" json:"projectPath,omitempty"`
+	Version     string `yaml:"version,omitempty" json:"version,omitempty"`
 }
 
 // Suite represents the playwright test suite configuration.
@@ -152,10 +151,6 @@ func SplitSuites(p Project) (Project, Project) {
 
 func checkSupportedBrowsers(p *Project) error {
 	errMsg := "browserName: %s is not supported. List of supported browsers: %s"
-
-	if p.Playwright.Params.BrowserName != "" && !isSupportedBrowser(p.Playwright.Params.BrowserName) {
-		return fmt.Errorf(errMsg, p.Playwright.Params.BrowserName, strings.Join(supportedBrwsList, ", "))
-	}
 
 	for _, suite := range p.Suites {
 		if suite.Params.BrowserName != "" && !isSupportedBrowser(suite.Params.BrowserName) {
