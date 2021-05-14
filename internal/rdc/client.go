@@ -167,7 +167,7 @@ func doRequestStatus(httpClient *http.Client, request *http.Request) (job.Job, e
 		return job.Job{}, err
 	}
 
-	jobDetails := job.Job{}
+	var jobDetails job.Job
 	if err := json.NewDecoder(resp.Body).Decode(&jobDetails); err != nil {
 		return job.Job{}, err
 	}
