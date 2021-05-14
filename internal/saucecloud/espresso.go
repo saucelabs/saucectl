@@ -86,7 +86,6 @@ func enumerateDevices(d config.Device) []deviceConfig {
 	if d.ID != "" {
 		return []deviceConfig{{ID: d.ID, platformName: d.PlatformName}}
 	}
-	// FIXME: Implement RDC dynamic
 	var configs []deviceConfig
 	for _, p := range d.PlatformVersions {
 		configs = append(configs, deviceConfig{
