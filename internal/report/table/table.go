@@ -57,7 +57,7 @@ type Reporter struct {
 	lock        sync.Mutex
 }
 
-// Add adds the rest result to the summary table.
+// Add adds the test result to the summary table.
 func (r *Reporter) Add(t report.TestResult) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
