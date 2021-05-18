@@ -19,15 +19,15 @@ import (
 func TestClient_GetJobDetails(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case "/rest/v1/test/jobs/1":
+		case "/rest/v1.1/test/jobs/1":
 			completeStatusResp := []byte(`{"browser_short_version": "85", "video_url": "https://localhost/jobs/1/video.mp4", "creation_time": 1605637528, "custom-data": null, "browser_version": "85.0.4183.83", "owner": "test", "automation_backend": "webdriver", "id": "1", "collects_automator_log": false, "record_screenshots": true, "record_video": true, "build": null, "passed": null, "public": "team", "assigned_tunnel_id": null, "status": "complete", "log_url": "https://localhost/jobs/1/selenium-server.log", "start_time": 1605637528, "proxied": false, "modification_time": 1605637554, "tags": [], "name": null, "commands_not_successful": 4, "consolidated_status": "complete", "selenium_version": null, "manual": false, "end_time": 1605637554, "error": null, "os": "Windows 10", "breakpointed": null, "browser": "googlechrome"}`)
 			w.Write(completeStatusResp)
-		case "/rest/v1/test/jobs/2":
+		case "/rest/v1.1/test/jobs/2":
 			errorStatusResp := []byte(`{"browser_short_version": "85", "video_url": "https://localhost/jobs/2/video.mp4", "creation_time": 1605637528, "custom-data": null, "browser_version": "85.0.4183.83", "owner": "test", "automation_backend": "webdriver", "id": "2", "collects_automator_log": false, "record_screenshots": true, "record_video": true, "build": null, "passed": null, "public": "team", "assigned_tunnel_id": null, "status": "error", "log_url": "https://localhost/jobs/2/selenium-server.log", "start_time": 1605637528, "proxied": false, "modification_time": 1605637554, "tags": [], "name": null, "commands_not_successful": 4, "consolidated_status": "error", "selenium_version": null, "manual": false, "end_time": 1605637554, "error": "User Abandoned Test -- User terminated", "os": "Windows 10", "breakpointed": null, "browser": "googlechrome"}`)
 			w.Write(errorStatusResp)
-		case "/rest/v1/test/jobs/3":
+		case "/rest/v1.1/test/jobs/3":
 			w.WriteHeader(http.StatusNotFound)
-		case "/rest/v1/test/jobs/4":
+		case "/rest/v1.1/test/jobs/4":
 			w.WriteHeader(http.StatusUnauthorized)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
@@ -104,7 +104,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case "/rest/v1/test/jobs/1":
+		case "/rest/v1.1/test/jobs/1":
 			details := &job.Job{
 				ID:     "1",
 				Passed: false,
@@ -115,7 +115,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 
 			resp, _ := json.Marshal(details)
 			w.Write(resp)
-		case "/rest/v1/test/jobs/2":
+		case "/rest/v1.1/test/jobs/2":
 			details := &job.Job{
 				ID:     "2",
 				Passed: false,
@@ -126,9 +126,9 @@ func TestClient_GetJobStatus(t *testing.T) {
 
 			resp, _ := json.Marshal(details)
 			w.Write(resp)
-		case "/rest/v1/test/jobs/3":
+		case "/rest/v1.1/test/jobs/3":
 			w.WriteHeader(http.StatusNotFound)
-		case "/rest/v1/test/jobs/4":
+		case "/rest/v1.1/test/jobs/4":
 			w.WriteHeader(http.StatusUnauthorized)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
