@@ -64,6 +64,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 				BeforeExec:     r.Project.BeforeExec,
 				Project:        r.Project,
 				Browser:        suite.Browser,
+				DisplayName:    suite.Name,
 				SuiteName:      suite.Name,
 				Environment:    suite.Config.Env,
 				RootDir:        r.Project.RootDir,

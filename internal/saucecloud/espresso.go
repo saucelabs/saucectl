@@ -60,6 +60,7 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 					log.Debug().Str("suite", s.Name).Str("device", d.Name).Str("platform", p).Msg("Starting job")
 					jobOpts <- job.StartOptions{
 						ConfigFilePath:   r.Project.ConfigFilePath,
+						DisplayName:      s.Name,
 						App:              fmt.Sprintf("storage:%s", appFileID),
 						Suite:            fmt.Sprintf("storage:%s", testAppFileID),
 						Framework:        "espresso",

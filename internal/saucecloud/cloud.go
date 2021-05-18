@@ -47,12 +47,12 @@ type CloudRunner struct {
 }
 
 type result struct {
-	suiteName string
-	browser   string
-	job       job.Job
-	skipped   bool
-	err       error
-	duration  time.Duration
+	name     string
+	browser  string
+	job      job.Job
+	skipped  bool
+	err      error
+	duration time.Duration
 }
 
 // ConsoleLogAsset represents job asset log file name.
@@ -117,7 +117,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			}
 
 			reporter.Add(report.TestResult{
-				Name:       res.suiteName,
+				Name:       res.name,
 				Duration:   res.duration,
 				Passed:     res.job.Passed,
 				Browser:    res.browser,
@@ -139,7 +139,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 }
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool, err error) {
-	log.Info().Str("suite", opts.Suite).Str("region", r.Region.String()).Msg("Starting suite.")
+	log.Info().Str("suite", opts.DisplayName).Str("region", r.Region.String()).Msg("Starting suite.")
 
 	id, err := r.JobStarter.StartJob(context.Background(), opts)
 	if err != nil {
@@ -155,9 +155,9 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	}
 
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
-	l := log.Info().Str("url", jobDetailsPage).Str("suite", opts.Suite).Str("platform", opts.PlatformName)
+	l := log.Info().Str("url", jobDetailsPage).Str("suite", opts.DisplayName).Str("platform", opts.PlatformName)
 	if opts.Framework == config.KindEspresso {
-		l.Str("device", opts.DeviceName).Str("name", opts.Name).Str("platformVersion", opts.PlatformVersion)
+		l.Str("device", opts.DeviceName).Str("platformVersion", opts.PlatformVersion)
 
 	} else {
 		l.Str("browser", opts.BrowserName)
@@ -170,7 +170,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	// High interval poll to not oversaturate the job reader with requests.
 	j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second)
 	if err != nil {
-		return job.Job{}, false, fmt.Errorf("failed to retrieve job status for suite %s", opts.Suite)
+		return job.Job{}, false, fmt.Errorf("failed to retrieve job status for suite %s", opts.DisplayName)
 	}
 
 	if !j.Passed {
@@ -187,10 +187,10 @@ func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- re
 
 		if r.interrupted {
 			results <- result{
-				suiteName: opts.Suite,
-				browser:   opts.BrowserName,
-				skipped:   true,
-				err:       nil,
+				name:    opts.DisplayName,
+				browser: opts.BrowserName,
+				skipped: true,
+				err:     nil,
 			}
 			continue
 		}
@@ -198,12 +198,12 @@ func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- re
 		jobData, skipped, err := r.runJob(opts)
 
 		results <- result{
-			suiteName: opts.Suite,
-			browser:   opts.BrowserName,
-			job:       jobData,
-			skipped:   skipped,
-			err:       err,
-			duration:  time.Since(start),
+			name:     opts.DisplayName,
+			browser:  opts.BrowserName,
+			job:      jobData,
+			skipped:  skipped,
+			err:      err,
+			duration: time.Since(start),
 		}
 	}
 }
@@ -302,20 +302,20 @@ func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, 
 // logSuite display the result of a suite
 func (r *CloudRunner) logSuite(res result) {
 	if res.skipped {
-		log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Suite skipped.")
+		log.Error().Err(res.err).Str("suite", res.name).Msg("Suite skipped.")
 		return
 	}
 	if res.job.ID == "" {
-		log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Failed to start suite.")
+		log.Error().Err(res.err).Str("suite", res.name).Msg("Failed to start suite.")
 		return
 	}
 
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 	if res.job.Passed {
-		log.Info().Str("suite", res.suiteName).Bool("passed", res.job.Passed).Str("url", jobDetailsPage).
+		log.Info().Str("suite", res.name).Bool("passed", res.job.Passed).Str("url", jobDetailsPage).
 			Msg("Suite finished.")
 	} else {
-		log.Error().Str("suite", res.suiteName).Bool("passed", res.job.Passed).Str("url", jobDetailsPage).
+		log.Error().Str("suite", res.name).Bool("passed", res.job.Passed).Str("url", jobDetailsPage).
 			Msg("Suite finished.")
 	}
 	r.logSuiteConsole(res)
@@ -332,20 +332,20 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	var assetContent []byte
 	var err error
 	if assetContent, err = r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, ConsoleLogAsset); err == nil {
-		log.Info().Str("suite", res.suiteName).Msgf("console.log output: \n%s", assetContent)
+		log.Info().Str("suite", res.name).Msgf("console.log output: \n%s", assetContent)
 		return
 	}
 
 	// Some frameworks produce a junit.xml instead, check for that file if there's no console.log
 	assetContent, err = r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, "junit.xml")
 	if err != nil {
-		log.Warn().Str("suite", res.suiteName).Msg("Failed to retrieve the console output.")
+		log.Warn().Str("suite", res.name).Msg("Failed to retrieve the console output.")
 		return
 	}
 
 	var testsuites junit.TestSuites
 	if testsuites, err = junit.Parse(assetContent); err != nil {
-		log.Warn().Str("suite", res.suiteName).Msg("Failed to parse junit")
+		log.Warn().Str("suite", res.name).Msg("Failed to parse junit")
 		return
 	}
 

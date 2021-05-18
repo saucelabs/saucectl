@@ -64,6 +64,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 				BeforeExec:     r.Project.BeforeExec,
 				Project:        r.Project,
 				Browser:        suite.Params.BrowserName,
+				DisplayName:    suite.Name,
 				SuiteName:      suite.Name,
 				Environment:    suite.Env,
 				RootDir:        r.Project.RootDir,

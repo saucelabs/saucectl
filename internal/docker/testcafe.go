@@ -62,6 +62,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 				BeforeExec:     r.Project.BeforeExec,
 				Project:        r.Project,
 				Browser:        suite.BrowserName,
+				DisplayName:    suite.Name,
 				SuiteName:      suite.Name,
 				Environment:    suite.Env,
 				RootDir:        r.Project.RootDir,
