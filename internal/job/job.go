@@ -16,10 +16,15 @@ var DoneStates = []string{StateComplete, StateError}
 // Job represents test details and metadata of a test run (aka Job), that is usually associated with a particular test
 // execution instance (e.g. VM).
 type Job struct {
-	ID     string `json:"id"`
-	Passed bool   `json:"passed"`
-	Status string `json:"status"`
-	Error  string `json:"error"`
+	ID         string `json:"id"`
+	Passed     bool   `json:"passed"`
+	Status     string `json:"status"`
+	Error      string `json:"error"`
+	BaseConfig struct {
+		PlatformName    string `json:"platformName"`
+		PlatformVersion string `json:"platformVersion"`
+		DeviceName      string `json:"deviceName"`
+	} `json:"base_config"`
 }
 
 // Done returns true if the job status is one of DoneStates. False otherwise.

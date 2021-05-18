@@ -61,6 +61,7 @@ func (r *PuppeterRunner) RunProject() (int, error) {
 				Docker:         r.Project.Docker,
 				BeforeExec:     r.Project.BeforeExec,
 				Project:        r.Project,
+				Browser:        suite.Browser,
 				SuiteName:      suite.Name,
 				Environment:    suite.Env,
 				RootDir:        r.Project.RootDir,

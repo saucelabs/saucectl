@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	ptable "github.com/jedib0t/go-pretty/v6/table"
+	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/saucelabs/saucectl/internal/report/table"
 	"io"
 	"os"
 	"os/signal"
@@ -12,7 +15,6 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/concurrency"
@@ -21,7 +23,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/junit"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
@@ -51,6 +52,7 @@ type result struct {
 	job       job.Job
 	skipped   bool
 	err       error
+	duration  time.Duration
 }
 
 // ConsoleLogAsset represents job asset log file name.
@@ -77,10 +79,14 @@ func (r *CloudRunner) createWorkerPool(num int) (chan job.StartOptions, chan res
 
 func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int) bool {
 	// TODO find a better way to get the expected
-	errCount := 0
 	completed := 0
 	inProgress := expected
 	passed := true
+
+	reporter := table.Reporter{
+		TestResults: make([]report.TestResult, 0, expected),
+		Dst:         os.Stdout,
+	}
 
 	done := make(chan interface{})
 	go func() {
@@ -104,23 +110,30 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 		completed++
 		inProgress--
 
+		if !res.skipped {
+			platform := res.job.BaseConfig.PlatformName
+			if res.job.BaseConfig.PlatformVersion != "" {
+				platform = fmt.Sprintf("%s %s", platform, res.job.BaseConfig.PlatformVersion)
+			}
+
+			reporter.Add(report.TestResult{
+				Name:       res.suiteName,
+				Duration:   res.duration,
+				Passed:     res.job.Passed,
+				Browser:    res.browser,
+				Platform:   platform,
+				DeviceName: res.job.BaseConfig.DeviceName,
+			})
+		}
+
 		if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, artifactCfg) {
 			r.ArtifactDownloader.DownloadArtifact(res.job.ID)
 		}
 		r.logSuite(res)
-
-		if res.job.ID == "" || res.err != nil {
-			errCount++
-		}
 	}
 	close(done)
 
-	if errCount != 0 {
-		msg.LogTestFailure(errCount, expected)
-		return passed
-	}
-
-	msg.LogTestSuccess()
+	reporter.Render()
 
 	return passed
 }
@@ -170,6 +183,8 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 
 func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- result) {
 	for opts := range jobOpts {
+		start := time.Now()
+
 		if r.interrupted {
 			results <- result{
 				suiteName: opts.Suite,
@@ -179,6 +194,7 @@ func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- re
 			}
 			continue
 		}
+
 		jobData, skipped, err := r.runJob(opts)
 
 		results <- result{
@@ -187,6 +203,7 @@ func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- re
 			job:       jobData,
 			skipped:   skipped,
 			err:       err,
+			duration:  time.Since(start),
 		}
 	}
 }
@@ -348,14 +365,13 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 		}
 	}
 
-	// Print summary table
 	fmt.Println()
-	t := table.NewWriter()
+	t := ptable.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"espresso testsuite", "tests", "pass", "fail", "error"})
+	t.AppendHeader(ptable.Row{"espresso testsuite", "tests", "pass", "fail", "error"})
 	for _, ts := range testsuites.TestSuite {
 		passed := ts.Tests - ts.Errors - ts.Failures
-		t.AppendRow(table.Row{ts.Package, ts.Tests, passed, ts.Failures, ts.Errors})
+		t.AppendRow(ptable.Row{ts.Package, ts.Tests, passed, ts.Failures, ts.Errors})
 	}
 	t.Render()
 	fmt.Println()

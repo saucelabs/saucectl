@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/saucelabs/saucectl/internal/report/table"
 	"io"
 	"os"
 	"os/signal"
@@ -19,7 +21,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 )
@@ -45,6 +46,7 @@ type containerStartOptions struct {
 	BeforeExec     []string
 	Project        interface{}
 	SuiteName      string
+	Browser        string
 	Environment    map[string]string
 	RootDir        string
 	Sauceignore    string
@@ -59,6 +61,8 @@ type result struct {
 	skipped       bool
 	consoleOutput string
 	suiteName     string
+	browser       string
+	duration      time.Duration
 	jobInfo       jobInfo
 }
 
@@ -254,14 +258,17 @@ func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, re
 			}
 			continue
 		}
+		start := time.Now()
 		containerID, output, jobDetails, passed, skipped, err := r.runSuite(opts)
 		results <- result{
 			suiteName:     opts.SuiteName,
 			containerID:   containerID,
+			browser:       opts.Browser,
 			jobInfo:       jobDetails,
 			passed:        passed,
 			skipped:       skipped,
 			consoleOutput: output,
+			duration:      time.Since(start),
 			err:           err,
 		}
 	}
@@ -269,10 +276,14 @@ func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, re
 
 func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int) bool {
 	// TODO find a better way to get the expected
-	errCount := 0
 	completed := 0
 	inProgress := expected
 	passed := true
+
+	reporter := table.Reporter{
+		TestResults: make([]report.TestResult, 0, expected),
+		Dst:         os.Stdout,
+	}
 
 	done := make(chan interface{})
 	go func() {
@@ -298,20 +309,24 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 		}
 
 		if !res.passed {
-			errCount++
 			passed = false
+		}
+
+		if !res.skipped {
+			reporter.Add(report.TestResult{
+				Name:     res.suiteName,
+				Duration: res.duration,
+				Passed:   res.passed,
+				Browser:  res.browser,
+				Platform: "Docker",
+			})
 		}
 
 		r.logSuite(res)
 	}
 	close(done)
 
-	if errCount != 0 {
-		msg.LogTestFailure(errCount, expected)
-		return passed
-	}
-
-	msg.LogTestSuccess()
+	reporter.Render()
 
 	return passed
 }
