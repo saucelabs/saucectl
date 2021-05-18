@@ -35,14 +35,14 @@ func TestEspressoRunner_CalculateJobCount(t *testing.T) {
 				TestApp: "/path/to/testApp.apk",
 			},
 			Suites: []espresso.Suite{
-				espresso.Suite{
+				{
 					Name: "valid espresso project",
 					Devices: []config.Device{
-						config.Device{
+						{
 							Name:             "Android GoogleApi Emulator",
 							PlatformVersions: []string{"11.0", "10.0"},
 						},
-						config.Device{
+						{
 							Name:             "Android Emulator",
 							PlatformVersions: []string{"11.0"},
 						},
@@ -60,8 +60,10 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 		httpmock.DeactivateAndReset()
 	}()
 	// Fake JobStarter
+	var startOpts job.StartOptions
 	starter := mocks.FakeJobStarter{
 		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
+			startOpts = opts
 			return "fake-job-id", nil
 		},
 	}
@@ -107,11 +109,12 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 				TestApp: "/path/to/testApp.apk",
 			},
 			Suites: []espresso.Suite{
-				espresso.Suite{
+				{
 					Name: "my espresso project",
 					Devices: []config.Device{
-						config.Device{
+						{
 							Name:             "Android GoogleApi Emulator",
+							Orientation:      "landscape",
 							PlatformVersions: []string{"11.0"},
 						},
 					},
@@ -125,6 +128,7 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 	cnt, err := runner.RunProject()
 	assert.Nil(t, err)
 	assert.Equal(t, cnt, 0)
+	assert.Equal(t, "landscape", startOpts.DeviceOrientation)
 }
 
 func TestRunSuites_Espresso_NoConcurrency(t *testing.T) {
