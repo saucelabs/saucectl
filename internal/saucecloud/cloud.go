@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	ptable "github.com/jedib0t/go-pretty/v6/table"
+	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/saucelabs/saucectl/internal/report/table"
 	"io"
 	"os"
 	"os/signal"
@@ -12,7 +15,6 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/concurrency"
@@ -21,7 +23,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/junit"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
@@ -46,11 +47,12 @@ type CloudRunner struct {
 }
 
 type result struct {
-	suiteName string
-	browser   string
-	job       job.Job
-	skipped   bool
-	err       error
+	name     string
+	browser  string
+	job      job.Job
+	skipped  bool
+	err      error
+	duration time.Duration
 }
 
 // ConsoleLogAsset represents job asset log file name.
@@ -77,10 +79,14 @@ func (r *CloudRunner) createWorkerPool(num int) (chan job.StartOptions, chan res
 
 func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int) bool {
 	// TODO find a better way to get the expected
-	errCount := 0
 	completed := 0
 	inProgress := expected
 	passed := true
+
+	reporter := table.Reporter{
+		TestResults: make([]report.TestResult, 0, expected),
+		Dst:         os.Stdout,
+	}
 
 	done := make(chan interface{})
 	go func() {
@@ -104,29 +110,36 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 		completed++
 		inProgress--
 
+		if !res.skipped {
+			platform := res.job.BaseConfig.PlatformName
+			if res.job.BaseConfig.PlatformVersion != "" {
+				platform = fmt.Sprintf("%s %s", platform, res.job.BaseConfig.PlatformVersion)
+			}
+
+			reporter.Add(report.TestResult{
+				Name:       res.name,
+				Duration:   res.duration,
+				Passed:     res.job.Passed,
+				Browser:    res.browser,
+				Platform:   platform,
+				DeviceName: res.job.BaseConfig.DeviceName,
+			})
+		}
+
 		if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, artifactCfg) {
 			r.ArtifactDownloader.DownloadArtifact(res.job.ID)
 		}
 		r.logSuite(res)
-
-		if res.job.ID == "" || res.err != nil {
-			errCount++
-		}
 	}
 	close(done)
 
-	if errCount != 0 {
-		msg.LogTestFailure(errCount, expected)
-		return passed
-	}
-
-	msg.LogTestSuccess()
+	reporter.Render()
 
 	return passed
 }
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool, err error) {
-	log.Info().Str("suite", opts.Suite).Str("region", r.Region.String()).Msg("Starting suite.")
+	log.Info().Str("suite", opts.DisplayName).Str("region", r.Region.String()).Msg("Starting suite.")
 
 	id, err := r.JobStarter.StartJob(context.Background(), opts)
 	if err != nil {
@@ -142,9 +155,9 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	}
 
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
-	l := log.Info().Str("url", jobDetailsPage).Str("suite", opts.Suite).Str("platform", opts.PlatformName)
+	l := log.Info().Str("url", jobDetailsPage).Str("suite", opts.DisplayName).Str("platform", opts.PlatformName)
 	if opts.Framework == config.KindEspresso {
-		l.Str("device", opts.DeviceName).Str("name", opts.Name).Str("platformVersion", opts.PlatformVersion)
+		l.Str("device", opts.DeviceName).Str("platformVersion", opts.PlatformVersion)
 
 	} else {
 		l.Str("browser", opts.BrowserName)
@@ -157,7 +170,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	// High interval poll to not oversaturate the job reader with requests.
 	j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second)
 	if err != nil {
-		return job.Job{}, false, fmt.Errorf("failed to retrieve job status for suite %s", opts.Suite)
+		return job.Job{}, false, fmt.Errorf("failed to retrieve job status for suite %s", opts.DisplayName)
 	}
 
 	if !j.Passed {
@@ -170,23 +183,27 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 
 func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- result) {
 	for opts := range jobOpts {
+		start := time.Now()
+
 		if r.interrupted {
 			results <- result{
-				suiteName: opts.Suite,
-				browser:   opts.BrowserName,
-				skipped:   true,
-				err:       nil,
+				name:    opts.DisplayName,
+				browser: opts.BrowserName,
+				skipped: true,
+				err:     nil,
 			}
 			continue
 		}
+
 		jobData, skipped, err := r.runJob(opts)
 
 		results <- result{
-			suiteName: opts.Suite,
-			browser:   opts.BrowserName,
-			job:       jobData,
-			skipped:   skipped,
-			err:       err,
+			name:     opts.DisplayName,
+			browser:  opts.BrowserName,
+			job:      jobData,
+			skipped:  skipped,
+			err:      err,
+			duration: time.Since(start),
 		}
 	}
 }
@@ -285,20 +302,20 @@ func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, 
 // logSuite display the result of a suite
 func (r *CloudRunner) logSuite(res result) {
 	if res.skipped {
-		log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Suite skipped.")
+		log.Error().Err(res.err).Str("suite", res.name).Msg("Suite skipped.")
 		return
 	}
 	if res.job.ID == "" {
-		log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Failed to start suite.")
+		log.Error().Err(res.err).Str("suite", res.name).Msg("Failed to start suite.")
 		return
 	}
 
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 	if res.job.Passed {
-		log.Info().Str("suite", res.suiteName).Bool("passed", res.job.Passed).Str("url", jobDetailsPage).
+		log.Info().Str("suite", res.name).Bool("passed", res.job.Passed).Str("url", jobDetailsPage).
 			Msg("Suite finished.")
 	} else {
-		log.Error().Str("suite", res.suiteName).Bool("passed", res.job.Passed).Str("url", jobDetailsPage).
+		log.Error().Str("suite", res.name).Bool("passed", res.job.Passed).Str("url", jobDetailsPage).
 			Msg("Suite finished.")
 	}
 	r.logSuiteConsole(res)
@@ -315,20 +332,20 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	var assetContent []byte
 	var err error
 	if assetContent, err = r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, ConsoleLogAsset); err == nil {
-		log.Info().Str("suite", res.suiteName).Msgf("console.log output: \n%s", assetContent)
+		log.Info().Str("suite", res.name).Msgf("console.log output: \n%s", assetContent)
 		return
 	}
 
 	// Some frameworks produce a junit.xml instead, check for that file if there's no console.log
 	assetContent, err = r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, "junit.xml")
 	if err != nil {
-		log.Warn().Str("suite", res.suiteName).Msg("Failed to retrieve the console output.")
+		log.Warn().Str("suite", res.name).Msg("Failed to retrieve the console output.")
 		return
 	}
 
 	var testsuites junit.TestSuites
 	if testsuites, err = junit.Parse(assetContent); err != nil {
-		log.Warn().Str("suite", res.suiteName).Msg("Failed to parse junit")
+		log.Warn().Str("suite", res.name).Msg("Failed to parse junit")
 		return
 	}
 
@@ -348,14 +365,13 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 		}
 	}
 
-	// Print summary table
 	fmt.Println()
-	t := table.NewWriter()
+	t := ptable.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"espresso testsuite", "tests", "pass", "fail", "error"})
+	t.AppendHeader(ptable.Row{"espresso testsuite", "tests", "pass", "fail", "error"})
 	for _, ts := range testsuites.TestSuite {
 		passed := ts.Tests - ts.Errors - ts.Failures
-		t.AppendRow(table.Row{ts.Package, ts.Tests, passed, ts.Failures, ts.Errors})
+		t.AppendRow(ptable.Row{ts.Package, ts.Tests, passed, ts.Failures, ts.Errors})
 	}
 	t.Render()
 	fmt.Println()

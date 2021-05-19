@@ -326,7 +326,7 @@ func doRequest(httpClient *http.Client, request *http.Request) (job.Job, error) 
 
 func createRequest(ctx context.Context, url, username, accessKey, jobID string) (*http.Request, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
-		fmt.Sprintf("%s/rest/v1/%s/jobs/%s", url, username, jobID), nil)
+		fmt.Sprintf("%s/rest/v1.1/%s/jobs/%s", url, username, jobID), nil)
 	if err != nil {
 		return nil, err
 	}

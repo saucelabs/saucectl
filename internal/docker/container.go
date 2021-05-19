@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/saucelabs/saucectl/internal/report/table"
 	"io"
 	"os"
 	"os/signal"
@@ -19,7 +21,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 )
@@ -41,10 +42,14 @@ type ContainerRunner struct {
 
 // containerStartOptions represent data required to start a new container.
 type containerStartOptions struct {
+	// DisplayName is used for local logging purposes only (e.g. console).
+	DisplayName string
+
 	Docker         config.Docker
 	BeforeExec     []string
 	Project        interface{}
 	SuiteName      string
+	Browser        string
 	Environment    map[string]string
 	RootDir        string
 	Sauceignore    string
@@ -58,7 +63,9 @@ type result struct {
 	passed        bool
 	skipped       bool
 	consoleOutput string
-	suiteName     string
+	name          string
+	browser       string
+	duration      time.Duration
 	jobInfo       jobInfo
 }
 
@@ -249,19 +256,22 @@ func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, re
 	for opts := range containerOpts {
 		if r.interrupted {
 			results <- result{
-				suiteName: opts.SuiteName,
-				skipped:   true,
+				name:    opts.DisplayName,
+				skipped: true,
 			}
 			continue
 		}
+		start := time.Now()
 		containerID, output, jobDetails, passed, skipped, err := r.runSuite(opts)
 		results <- result{
-			suiteName:     opts.SuiteName,
+			name:          opts.DisplayName,
 			containerID:   containerID,
+			browser:       opts.Browser,
 			jobInfo:       jobDetails,
 			passed:        passed,
 			skipped:       skipped,
 			consoleOutput: output,
+			duration:      time.Since(start),
 			err:           err,
 		}
 	}
@@ -269,10 +279,14 @@ func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, re
 
 func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int) bool {
 	// TODO find a better way to get the expected
-	errCount := 0
 	completed := 0
 	inProgress := expected
 	passed := true
+
+	reporter := table.Reporter{
+		TestResults: make([]report.TestResult, 0, expected),
+		Dst:         os.Stdout,
+	}
 
 	done := make(chan interface{})
 	go func() {
@@ -298,20 +312,24 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 		}
 
 		if !res.passed {
-			errCount++
 			passed = false
+		}
+
+		if !res.skipped {
+			reporter.Add(report.TestResult{
+				Name:     res.name,
+				Duration: res.duration,
+				Passed:   res.passed,
+				Browser:  res.browser,
+				Platform: "Docker",
+			})
 		}
 
 		r.logSuite(res)
 	}
 	close(done)
 
-	if errCount != 0 {
-		msg.LogTestFailure(errCount, expected)
-		return passed
-	}
-
-	msg.LogTestSuccess()
+	reporter.Render()
 
 	return passed
 }
@@ -323,31 +341,31 @@ func getJobID(jobURL string) string {
 
 func (r *ContainerRunner) logSuite(res result) {
 	if res.skipped {
-		log.Warn().Str("suite", res.suiteName).Msg("Suite skipped.")
+		log.Warn().Str("suite", res.name).Msg("Suite skipped.")
 		return
 	}
 	if res.containerID == "" {
-		log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Failed to start suite.")
+		log.Error().Err(res.err).Str("suite", res.name).Msg("Failed to start suite.")
 		return
 	}
 
 	if res.passed {
-		log.Info().Bool("passed", res.passed).Str("url", res.jobInfo.JobDetailsURL).Str("suite", res.suiteName).Msg("Suite finished.")
+		log.Info().Bool("passed", res.passed).Str("url", res.jobInfo.JobDetailsURL).Str("suite", res.name).Msg("Suite finished.")
 		if !res.jobInfo.ReportingSucceeded {
-			log.Warn().Str("suite", res.suiteName).Msg("Reporting results to Sauce Labs failed.")
+			log.Warn().Str("suite", res.name).Msg("Reporting results to Sauce Labs failed.")
 		}
 	} else {
-		log.Error().Bool("passed", res.passed).Str("url", res.jobInfo.JobDetailsURL).Str("suite", res.suiteName).Msg("Suite finished.")
+		log.Error().Bool("passed", res.passed).Str("url", res.jobInfo.JobDetailsURL).Str("suite", res.name).Msg("Suite finished.")
 	}
 
 	if !res.passed || r.ShowConsoleLog {
-		log.Info().Str("suite", res.suiteName).Msgf("console.log output: \n%s", res.consoleOutput)
+		log.Info().Str("suite", res.name).Msgf("console.log output: \n%s", res.consoleOutput)
 	}
 }
 
 // runSuite runs the selected suite.
 func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobInfo jobInfo, passed bool, skipped bool, err error) {
-	log.Info().Str("suite", options.SuiteName).Msg("Setting up test environment")
+	log.Info().Str("suite", options.DisplayName).Msg("Setting up test environment")
 	containerID, err = r.startContainer(options)
 	defer r.tearDown(containerID, options.SuiteName)
 
@@ -362,7 +380,7 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 	defer unregisterSignalCapture(sigC)
 
 	if err != nil {
-		log.Err(err).Str("suite", options.SuiteName).Msg("Failed to setup test environment")
+		log.Err(err).Str("suite", options.DisplayName).Msg("Failed to setup test environment")
 		return
 	}
 

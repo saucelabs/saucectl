@@ -15,6 +15,9 @@ type TestOptions struct {
 
 // StartOptions represents the options for starting a job in the Sauce Labs cloud.
 type StartOptions struct {
+	// DisplayName is used for local logging purposes only (e.g. console).
+	DisplayName string `json:"-"`
+
 	User           string `json:"username"`
 	AccessKey      string `json:"accessKey"`
 	App            string `json:"app,omitempty"`

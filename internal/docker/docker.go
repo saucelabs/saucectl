@@ -218,7 +218,7 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 			ReadOnly:    false,
 			Consistency: mount.ConsistencyDefault,
 		})
-		log.Info().Str("from", options.RootDir).Str("to", pDir).Str("suite", options.SuiteName).
+		log.Info().Str("from", options.RootDir).Str("to", pDir).Str("suite", options.DisplayName).
 			Msg("File mounted")
 	}
 
@@ -245,7 +245,7 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 		return nil, err
 	}
 
-	log.Info().Str("img", options.Docker.Image).Str("id", container.ID[:12]).Str("suite", options.SuiteName).Msg("Starting container")
+	log.Info().Str("img", options.Docker.Image).Str("id", container.ID[:12]).Str("suite", options.DisplayName).Msg("Starting container")
 	if err := handler.client.ContainerStart(ctx, container.ID, types.ContainerStartOptions{}); err != nil {
 		return nil, err
 	}
