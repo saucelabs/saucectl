@@ -27,13 +27,26 @@ type SauceConfig struct {
 	Experiments map[string]string `yaml:"experiments,omitempty" json:"experiments,omitempty"`
 }
 
+// DeviceOptions represents the devices capabilities required from a real device.
+type DeviceOptions struct {
+	CarrierConnectivity bool   `yaml:"carrierConnectivity,omitempty" json:"carrierConnectivity"`
+	DeviceType          string `yaml:"deviceType,omitempty" json:"deviceType,omitempty"`
+	Private             bool   `yaml:"private,omitempty" json:"private,omitempty"`
+}
+
 // Device represents the Android device configuration.
 type Device struct {
-	ID               string   `yaml:"id,omitempty" json:"id"`
-	Name             string   `yaml:"name,omitempty" json:"name"`
-	Orientation      string   `yaml:"orientation,omitempty" json:"orientation"`
-	PlatformVersions []string `yaml:"platformVersions,omitempty" json:"platformVersions"`
-	PlatformName     string   `yaml:"platformName,omitempty" json:"platformName"`
+	ID              string        `yaml:"id,omitempty" json:"id"`
+	Name            string        `yaml:"name,omitempty" json:"name"`
+	PlatformVersion string        `yaml:"platformVersion,omitempty" json:"platformVersion"`
+	Options         DeviceOptions `yaml:"options,omitempty" json:"options,omitempty"`
+}
+
+// Emulator represents the Android emulator configuration.
+type Emulator struct {
+	Name             string   `yaml:"name,omitempty" json:"name,omitempty"`
+	Orientation      string   `yaml:"orientation,omitempty" json:"orientation,omitempty"`
+	PlatformVersions []string `yaml:"platformVersions,omitempty" json:"platformVersions,omitempty"`
 }
 
 type when string
