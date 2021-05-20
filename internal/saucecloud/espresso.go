@@ -17,7 +17,7 @@ type deviceConfig struct {
 	platformName    string
 	platformVersion string
 	orientation     string
-	isRDC           bool
+	isRealDevice    bool
 	hasCarrier      bool
 	deviceType      string
 	privateOnly     bool
@@ -97,11 +97,11 @@ func enumerateDevicesAndEmulators(devices []config.Device, emulators []config.Em
 
 	for _, d := range devices {
 		configs = append(configs, deviceConfig{
-			isRDC:           true,
 			ID:              d.ID,
 			name:            d.Name,
 			platformName:    d.PlatformName,
 			platformVersion: d.PlatformVersion,
+			isRealDevice:    true,
 			hasCarrier:      d.Options.CarrierConnectivity,
 			deviceType:      d.Options.DeviceType,
 			privateOnly:     d.Options.Private,
@@ -141,6 +141,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		},
 
 		// RDC Specific flags
+		IsRealDevice:      d.isRealDevice,
 		DeviceHasCarrier:  d.hasCarrier,
 		DeviceType:        d.deviceType,
 		DevicePrivateOnly: d.privateOnly,
