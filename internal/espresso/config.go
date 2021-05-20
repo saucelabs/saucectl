@@ -105,10 +105,10 @@ func Validate(p Project) error {
 		if len(suite.Devices) == 0 && len(suite.Emulators) == 0 {
 			return fmt.Errorf("missing devices or emulators configuration for suite: %s", suite.Name)
 		}
-		if err := ValidateDevices(suite.Name, suite.Devices); err != nil {
+		if err := validateDevices(suite.Name, suite.Devices); err != nil {
 			return err
 		}
-		if err := ValidateEmulators(suite.Name, suite.Emulators); err != nil {
+		if err := validateEmulators(suite.Name, suite.Emulators); err != nil {
 			return err
 		}
 	}
@@ -116,7 +116,7 @@ func Validate(p Project) error {
 	return nil
 }
 
-func ValidateDevices(suiteName string, devices []config.Device) error {
+func validateDevices(suiteName string, devices []config.Device) error {
 	for didx, device := range devices {
 		if device.Name == "" && device.ID == "" {
 			return fmt.Errorf("missing device name or ID for suite: %s. Devices index: %d", suiteName, didx)
@@ -125,7 +125,7 @@ func ValidateDevices(suiteName string, devices []config.Device) error {
 	return nil
 }
 
-func ValidateEmulators(suiteName string, emulators []config.Emulator) error {
+func validateEmulators(suiteName string, emulators []config.Emulator) error {
 	for eidx, emulator := range emulators {
 		if !strings.Contains(strings.ToLower(emulator.Name), "emulator") {
 			return fmt.Errorf("missing `emulator` in emulator name: %s, real device cloud is unsupported right now. Suite name: %s. Emulators index: %d", emulator.Name, suiteName, eidx)
