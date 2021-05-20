@@ -24,16 +24,26 @@ suites:
         method: testNoUsernameLogin
       - class: SwagLabsMobileAppUITests.LoginTests # if no testMethod provided, it should run all tests for the class
     devices:
-      - id: <rdc_device_id>
-        name: "Samsung Galaxy.*"
-        platformVersion: "11.0"
+      #- id: <rdc_device_id>
+      - name: "iPhone XR"
+        platformVersion: "14.3"
         options:
           # To support CarrierConnectivityRequested. If set, only devices with a SIM card will be queried.
-          carrierConnectivity: [true|false]
+          #carrierConnectivity: [true|false]
           # To support RequestedDeviceType.
-          deviceType: [any|phone|tablet]
+          #deviceType: [any|phone|tablet]
           # If set, only private devices will be queried.
-          private: [true|false]
+          #private: [true|false]
+      - id: "iPhone_11_14_real"
+        #name: "iPhone XR"
+        platformVersion: "14.3"
+        options:
+          # To support CarrierConnectivityRequested. If set, only devices with a SIM card will be queried.
+          #carrierConnectivity: [true|false]
+          # To support RequestedDeviceType.
+          #deviceType: [any|phone|tablet]
+          # If set, only private devices will be queried.
+          #private: [true|false]
 
 artifacts:
   download:
@@ -41,3 +51,19 @@ artifacts:
     match:
       - "*.junit.xml"
     directory: ./artifacts/
+
+
+apiVersion: v1alpha
+kind: xcuit
+xcuit:
+  app: "./tests/apps/xcuit/SauceLabs.Mobile.Sample.XCUITest.App.ipa"
+  testApp: "./tests/apps/xcuit/SwagLabsMobileAppUITests-Runner.app"
+suites:
+  - name: "saucy barista"
+    devices:
+      - name: "iPhone XR"
+        platformVersions: "14.3"
+    testOptions:
+      - class: "SwagLabsMobileAppUITests.LoginTests"
+        method: "testSuccessfulLogin"
+      - class: "SwagLabsMobileAppUITests.LoginTests"
