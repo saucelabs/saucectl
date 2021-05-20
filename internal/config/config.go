@@ -34,17 +34,19 @@ type DeviceOptions struct {
 	Private             bool   `yaml:"private,omitempty" json:"private,omitempty"`
 }
 
-// Device represents the Android device configuration.
+// Device represents the RDC device configuration.
 type Device struct {
 	ID              string        `yaml:"id,omitempty" json:"id"`
 	Name            string        `yaml:"name,omitempty" json:"name"`
+	PlatformName    string        `yaml:"platformName,omitempty" json:"platformName"`
 	PlatformVersion string        `yaml:"platformVersion,omitempty" json:"platformVersion"`
 	Options         DeviceOptions `yaml:"options,omitempty" json:"options,omitempty"`
 }
 
-// Emulator represents the Android emulator configuration.
+// Emulator represents the emulator configuration.
 type Emulator struct {
 	Name             string   `yaml:"name,omitempty" json:"name,omitempty"`
+	PlatformName     string   `yaml:"platformName,omitempty" json:"platformName"`
 	Orientation      string   `yaml:"orientation,omitempty" json:"orientation,omitempty"`
 	PlatformVersions []string `yaml:"platformVersions,omitempty" json:"platformVersions,omitempty"`
 }
