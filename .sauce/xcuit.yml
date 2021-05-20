@@ -1,0 +1,43 @@
+apiVersion: v1alpha
+kind: xcuit
+sauce:
+  region: us-west-1
+  concurrency: 1
+  metadata:
+    name: Testing XCUIT Support
+    tags:
+      - e2e
+      - release team
+      - other tag
+  build: Release $CI_COMMIT_SHORT_SHA
+
+xcuit:
+  app: ./tests/apps/xcuit/SauceLabs.Mobile.Sample.XCUITest.App.ipa
+  testApp: ./tests/apps/xcuit/SwagLabsMobileAppUITests-Runner.app
+
+suites:
+  - name: "saucy xcuit test"
+    testOptions:
+      - class: SwagLabsMobileAppUITests.LoginTests
+        method: testSuccessfulLogin
+      - class: SwagLabsMobileAppUITests.LoginTests
+        method: testNoUsernameLogin
+      - class: SwagLabsMobileAppUITests.LoginTests # if no testMethod provided, it should run all tests for the class
+    devices:
+      - id: <rdc_device_id>
+        name: "Samsung Galaxy.*"
+        platformVersion: "11.0"
+        options:
+          # To support CarrierConnectivityRequested. If set, only devices with a SIM card will be queried.
+          carrierConnectivity: [true|false]
+          # To support RequestedDeviceType.
+          deviceType: [any|phone|tablet]
+          # If set, only private devices will be queried.
+          private: [true|false]
+
+artifacts:
+  download:
+    when: always
+    match:
+      - "*.junit.xml"
+    directory: ./artifacts/
