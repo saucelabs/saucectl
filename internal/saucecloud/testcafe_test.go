@@ -104,13 +104,13 @@ func Test_calcTestcafeJobsCount(t *testing.T) {
 				},
 				{
 					Name: "suite with one device and two platforms",
-					Devices: []config.Device{
+					Devices: []config.Emulator{
 						{PlatformVersions: []string{"12.0", "14.3"}},
 					},
 				},
 				{
 					Name: "suite with two device and two platforms",
-					Devices: []config.Device{
+					Devices: []config.Emulator{
 						{PlatformVersions: []string{"12.0", "14.3"}},
 						{PlatformVersions: []string{"12.0", "14.3"}},
 					},

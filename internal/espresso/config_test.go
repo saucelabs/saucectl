@@ -22,8 +22,8 @@ func TestValidateThrowsErrors(t *testing.T) {
 			expectedErr: errors.New("missing path to app .apk"),
 		},
 		{
-			name:        "validating throws error on app missing .apk",
-			p:           &Project{
+			name: "validating throws error on app missing .apk",
+			p: &Project{
 				Espresso: Espresso{
 					App: "/path/to/app",
 				},
@@ -31,8 +31,8 @@ func TestValidateThrowsErrors(t *testing.T) {
 			expectedErr: errors.New("invaild application file: /path/to/app, make sure extension is .apk"),
 		},
 		{
-			name:        "validating throws error on empty app",
-			p:           &Project{
+			name: "validating throws error on empty app",
+			p: &Project{
 				Espresso: Espresso{
 					App: "/path/to/app.apk",
 				},
@@ -40,101 +40,101 @@ func TestValidateThrowsErrors(t *testing.T) {
 			expectedErr: errors.New("missing path to test app .apk"),
 		},
 		{
-			name:        "validating throws error on test app missing .apk",
-			p:           &Project{
+			name: "validating throws error on test app missing .apk",
+			p: &Project{
 				Espresso: Espresso{
-					App: "/path/to/app.apk",
+					App:     "/path/to/app.apk",
 					TestApp: "/path/to/testApp",
 				},
 			},
 			expectedErr: errors.New("invaild test application file: /path/to/testApp, make sure extension is .apk"),
 		},
 		{
-			name:        "validating throws error on missing suites",
-			p:           &Project{
+			name: "validating throws error on missing suites",
+			p: &Project{
 				Espresso: Espresso{
-					App: "/path/to/app.apk",
+					App:     "/path/to/app.apk",
 					TestApp: "/path/to/testApp.apk",
 				},
 			},
 			expectedErr: errors.New("no suites defined"),
 		},
 		{
-			name:        "validating throws error on missing devices",
-			p:           &Project{
+			name: "validating throws error on missing devices",
+			p: &Project{
 				Espresso: Espresso{
-					App: "/path/to/app.apk",
+					App:     "/path/to/app.apk",
 					TestApp: "/path/to/testApp.apk",
 				},
 				Suites: []Suite{
-					Suite{
-						Name: "no devices",
+					{
+						Name:    "no devices",
 						Devices: []config.Device{},
 					},
 				},
 			},
-			expectedErr: errors.New("missing devices configuration for suite: no devices"),
+			expectedErr: errors.New("missing devices or emulators configuration for suite: no devices"),
 		},
 		{
-			name:        "validating throws error on missing device name",
-			p:           &Project{
+			name: "validating throws error on missing device name",
+			p: &Project{
 				Espresso: Espresso{
-					App: "/path/to/app.apk",
+					App:     "/path/to/app.apk",
 					TestApp: "/path/to/testApp.apk",
 				},
 				Suites: []Suite{
-					Suite{
-						Name: "empty device name",
-						Devices: []config.Device{
-							config.Device{
+					{
+						Name: "empty emulator name",
+						Emulators: []config.Emulator{
+							{
 								Name: "",
 							},
 						},
 					},
 				},
 			},
-			expectedErr: errors.New("missing device name or ID for suite: empty device name. Devices index: 0"),
+			expectedErr: errors.New("missing emulator name for suite: empty emulator name. Emulators index: 0"),
 		},
 		{
-			name:        "validating throws error on missing Emulator suffix on device name",
-			p:           &Project{
+			name: "validating throws error on missing Emulator suffix on device name",
+			p: &Project{
 				Espresso: Espresso{
-					App: "/path/to/app.apk",
+					App:     "/path/to/app.apk",
 					TestApp: "/path/to/testApp.apk",
 				},
 				Suites: []Suite{
-					Suite{
+					{
 						Name: "no emulator device name",
-						Devices: []config.Device{
-							config.Device{
+						Emulators: []config.Emulator{
+							{
 								Name: "Android GoogleApi something",
 							},
 						},
 					},
 				},
 			},
-			expectedErr: errors.New("missing `emulator` in device name: Android GoogleApi something, real device cloud is unsupported right now"),
+			expectedErr: errors.New("missing `emulator` in emulator name: Android GoogleApi something. Suite name: no emulator device name. Emulators index: 0"),
 		},
 		{
-			name:        "validating throws error on missing platform versions",
-			p:           &Project{
+			name: "validating throws error on missing platform versions",
+			p: &Project{
 				Espresso: Espresso{
-					App: "/path/to/app.apk",
+					App:     "/path/to/app.apk",
 					TestApp: "/path/to/testApp.apk",
 				},
 				Suites: []Suite{
-					Suite{
+					{
 						Name: "no emulator device name",
-						Devices: []config.Device{
-							config.Device{
-								Name: "Android GoogleApi Emulator",
+						Emulators: []config.Emulator{
+							{
+								Name:             "Android GoogleApi Emulator",
 								PlatformVersions: []string{},
 							},
 						},
 					},
 				},
 			},
-			expectedErr: errors.New("missing platform versions for device: Android GoogleApi Emulator"),
+			expectedErr: errors.New("missing platform versions for emulator: Android GoogleApi Emulator. Suite name: no emulator device name. Emulators index: 0"),
 		},
 	}
 	for _, tc := range testCases {
@@ -156,6 +156,11 @@ espresso:
 suites:
   - name: "saucy barista"
     devices:
+      - name: "Device name"
+        platformVersion: 8.1
+        options:
+          deviceType: TABLET
+    emulators:
       - name: "Google Pixel C GoogleAPI Emulator"
         platformVersions:
           - "8.1"
@@ -167,8 +172,9 @@ suites:
 		t.Errorf("expected error: %v, got: %v", nil, err)
 	}
 	expected := Project{
+		ConfigFilePath: filepath.Join(dir.Path(), "config.yml"),
 		Espresso: Espresso{
-			App: "./tests/apps/calc.apk",
+			App:     "./tests/apps/calc.apk",
 			TestApp: "./tests/apps/calc-success.apk",
 		},
 		Suites: []Suite{
@@ -176,7 +182,17 @@ suites:
 				Name: "saucy barista",
 				Devices: []config.Device{
 					{
-						Name: "Google Pixel C GoogleAPI Emulator",
+						Name:            "Device name",
+						PlatformName:    Android,
+						PlatformVersion: "8.1",
+						Options: config.DeviceOptions{
+							DeviceType: "TABLET",
+						},
+					},
+				},
+				Emulators: []config.Emulator{
+					{
+						Name:         "Google Pixel C GoogleAPI Emulator",
 						PlatformName: Android,
 						PlatformVersions: []string{
 							"8.1",
@@ -186,11 +202,10 @@ suites:
 		},
 	}
 	if !reflect.DeepEqual(cfg.Espresso, expected.Espresso) {
-		t.Errorf("expected: %v, got: %v", expected, cfg)
+		t.Errorf("expected: %v, got: %v", expected.Espresso, cfg.Espresso)
 	}
 	if !reflect.DeepEqual(cfg.Suites, expected.Suites) {
-		t.Errorf("expected: %v, got: %v", expected, cfg)
+		t.Errorf("expected: %v, got: %v", expected.Suites, cfg.Suites)
 	}
-
 
 }

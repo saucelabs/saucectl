@@ -37,7 +37,7 @@ func TestEspressoRunner_CalculateJobCount(t *testing.T) {
 			Suites: []espresso.Suite{
 				{
 					Name: "valid espresso project",
-					Devices: []config.Device{
+					Emulators: []config.Emulator{
 						{
 							Name:             "Android GoogleApi Emulator",
 							PlatformVersions: []string{"11.0", "10.0"},
@@ -111,7 +111,7 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 			Suites: []espresso.Suite{
 				{
 					Name: "my espresso project",
-					Devices: []config.Device{
+					Emulators: []config.Emulator{
 						{
 							Name:             "Android GoogleApi Emulator",
 							Orientation:      "landscape",

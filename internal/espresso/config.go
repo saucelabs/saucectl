@@ -74,6 +74,9 @@ func FromFile(cfgPath string) (Project, error) {
 			// Android is the only choice.
 			p.Suites[sidx].Devices[didx].PlatformName = Android
 		}
+		for eidx := range suite.Emulators {
+			p.Suites[sidx].Emulators[eidx].PlatformName = Android
+		}
 	}
 
 	return p, nil
@@ -127,8 +130,11 @@ func validateDevices(suiteName string, devices []config.Device) error {
 
 func validateEmulators(suiteName string, emulators []config.Emulator) error {
 	for eidx, emulator := range emulators {
+		if emulator.Name == "" {
+			return fmt.Errorf("missing emulator name for suite: %s. Emulators index: %d", suiteName, eidx)
+		}
 		if !strings.Contains(strings.ToLower(emulator.Name), "emulator") {
-			return fmt.Errorf("missing `emulator` in emulator name: %s, real device cloud is unsupported right now. Suite name: %s. Emulators index: %d", emulator.Name, suiteName, eidx)
+			return fmt.Errorf("missing `emulator` in emulator name: %s. Suite name: %s. Emulators index: %d", emulator.Name, suiteName, eidx)
 		}
 		if len(emulator.PlatformVersions) == 0 {
 			return fmt.Errorf("missing platform versions for emulator: %s. Suite name: %s. Emulators index: %d", emulator.Name, suiteName, eidx)

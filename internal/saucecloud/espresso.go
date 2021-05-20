@@ -69,7 +69,18 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 	go func() {
 		for _, s := range r.Project.Suites {
 			for _, d := range s.Devices {
-				for _, c := range enumerateDevices(d) {
+				r.startJob(jobOpts, s, appFileID, testAppFileID, deviceConfig{
+					ID:              d.ID,
+					name:            d.Name,
+					platformName:    d.PlatformName,
+					platformVersion: d.PlatformVersion,
+					hasCarrier:      d.Options.CarrierConnectivity,
+					deviceType:      d.Options.DeviceType,
+					privateOnly:     d.Options.Private,
+				})
+			}
+			for _, e := range s.Emulators {
+				for _, c := range enumerateEmulators(e) {
 					log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
 					r.startJob(jobOpts, s, appFileID, testAppFileID, c)
 				}
@@ -81,11 +92,8 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
 }
 
-// enumerateDevices returns a list of device targeted by the current suite.
-func enumerateDevices(d config.Device) []deviceConfig {
-	if d.ID != "" {
-		return []deviceConfig{{ID: d.ID, platformName: d.PlatformName}}
-	}
+// enumerateEmulators returns a list of emulators targeted by the current suite.
+func enumerateEmulators(d config.Emulator) []deviceConfig {
 	var configs []deviceConfig
 	for _, p := range d.PlatformVersions {
 		configs = append(configs, deviceConfig{
@@ -138,9 +146,10 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 func (r *EspressoRunner) calculateJobsCount(suites []espresso.Suite) int {
 	jobsCount := 0
 	for _, s := range suites {
-		for _, d := range s.Devices {
-			jobsCount += len(enumerateDevices(d))
+		for _, e := range s.Emulators {
+			jobsCount += len(enumerateEmulators(e))
 		}
+		jobsCount += len(s.Devices)
 	}
 	return jobsCount
 }
