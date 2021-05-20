@@ -17,7 +17,7 @@ type Project struct {
 	config.TypeDef `yaml:",inline"`
 	ConfigFilePath string             `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
-	Xcuit          Xcuit              `yaml:"espresso,omitempty" json:"espresso"`
+	Xcuit          Xcuit              `yaml:"xcuit,omitempty" json:"xcuit"`
 	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
 	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
 }
@@ -28,13 +28,13 @@ type Xcuit struct {
 	TestApp string `yaml:"testApp,omitempty" json:"testApp"`
 }
 
-// TestOptions represents the espresso test filter options configuration.
+// TestOptions represents the xcuit test filter options configuration.
 type TestOption struct {
 	Class  string `yaml:"class,omitempty" json:"class"`
 	Method string `yaml:"method,omitempty" json:"method"`
 }
 
-// Suite represents the espresso test suite configuration.
+// Suite represents the xcuit test suite configuration.
 type Suite struct {
 	Name        string       `yaml:"name,omitempty" json:"name"`
 	Devices     []Device     `yaml:"devices,omitempty" json:"devices"`
