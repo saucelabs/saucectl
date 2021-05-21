@@ -80,9 +80,9 @@ func LogSauceIgnoreNotExist() {
 	fmt.Printf("\n%s: %s\n\n", red("WARNING"), SauceIgnoreNotExist)
 }
 
+// LogGlobalTimeoutShutdown prints out the global timeout shutdown message.
 func LogGlobalTimeoutShutdown() {
-	color.Red(
-`┌───────────────────────────────────────────────────┐
+	color.Red(`┌───────────────────────────────────────────────────┐
 │ Global timeout reached. Shutting down saucectl... │
 └───────────────────────────────────────────────────┘`)
 }
