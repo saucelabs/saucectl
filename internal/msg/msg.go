@@ -3,8 +3,6 @@ package msg
 import (
 	"fmt"
 	"github.com/fatih/color"
-	"github.com/rs/zerolog/log"
-	"strings"
 )
 
 // DockerLogo is an eyecatcher message that indicates the user is running tests inside a docker container.
@@ -82,19 +80,9 @@ func LogSauceIgnoreNotExist() {
 	fmt.Printf("\n%s: %s\n\n", red("WARNING"), SauceIgnoreNotExist)
 }
 
-// LogTestSuccess prints out a test success summary statement.
-func LogTestSuccess() {
-	log.Info().Msg("┌───────────────────────┐")
-	log.Info().Msg(" All suites have passed! ")
-	log.Info().Msg("└───────────────────────┘")
-}
-
-// LogTestFailure prints out a test failure summary statement.
-func LogTestFailure(errors, total int) {
-	relative := float64(errors) / float64(total) * 100
-	msg := fmt.Sprintf(" %d of %d suites have failed (%.0f%%) ", errors, total, relative)
-	dashes := strings.Repeat("─", len(msg)-2)
-	log.Error().Msgf("┌%s┐", dashes)
-	log.Error().Msg(msg)
-	log.Error().Msgf("└%s┘", dashes)
+func LogGlobalTimeoutShutdown() {
+	color.Red(
+`┌───────────────────────────────────────────────────┐
+│ Global timeout reached. Shutting down saucectl... │
+└───────────────────────────────────────────────────┘`)
 }

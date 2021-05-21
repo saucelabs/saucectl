@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
+	"syscall"
 	"time"
 
 	"github.com/fatih/color"
@@ -37,13 +39,12 @@ var (
 	runExample = "saucectl run ./.sauce/config.yaml"
 
 	defaultLogFir      = "<cwd>/logs"
-	defaultTimeout     = 60
 	defaultRegion      = "us-west-1"
 	defaultSauceignore = ".sauceignore"
 
 	cfgFilePath    string
 	cfgLogDir      string
-	testTimeout    int
+	globalTimeout  time.Duration
 	regionFlag     string
 	env            map[string]string
 	sauceAPI       string
@@ -88,7 +89,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	defaultCfgPath := filepath.Join(".sauce", "config.yml")
 	cmd.Flags().StringVarP(&cfgFilePath, "config", "c", defaultCfgPath, "config file, e.g. -c ./.sauce/config.yaml")
 	cmd.Flags().StringVarP(&cfgLogDir, "logDir", "l", defaultLogFir, "log path")
-	cmd.Flags().IntVarP(&testTimeout, "timeout", "t", 0, "test timeout in seconds (default: 60sec)")
+	cmd.Flags().DurationVarP(&globalTimeout, "timeout", "t", 0, "Global timeout that limits how long saucectl can run in total. Supports duration values like '10s', '30m' etc. (default: no timeout)")
 	cmd.Flags().StringVarP(&regionFlag, "region", "r", "", "The sauce labs region. (default: us-west-1)")
 	cmd.Flags().StringToStringVarP(&env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
 	cmd.Flags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
@@ -117,6 +118,8 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 // Run runs the command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, error) {
 	println("Running version", version.Version)
+	go awaitGlobalTimeout()
+
 	creds := credentials.Get()
 	if !creds.IsValid() {
 		color.Red("\nSauceCTL requires a valid Sauce Labs account!\n\n")
@@ -126,7 +129,6 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return 1, fmt.Errorf("no credentials set")
 	}
 
-	// Todo(Christian) write argument parser/validator
 	if cfgLogDir == defaultLogFir {
 		pwd, _ := os.Getwd()
 		cfgLogDir = filepath.Join(pwd, "logs")
@@ -727,5 +729,31 @@ func overrideCliParameters(cmd *cobra.Command, sauce *config.SauceConfig) {
 	}
 	if cmd.Flags().Lookup("experiment").Changed {
 		sauce.Experiments = experiments
+	}
+}
+
+// awaitGlobalTimeout waits for the global timeout event. In case of global timeout event, it attempts to interrupt the
+// current process. Should this fail, a hard immediate exit is performed.
+func awaitGlobalTimeout() {
+	if globalTimeout == 0 {
+		return
+	}
+
+	<-time.After(globalTimeout)
+	msg.LogGlobalTimeoutShutdown()
+
+	// Can't send interrupt signals on windows. A hard exit is our only choice.
+	if runtime.GOOS != "windows" {
+		os.Exit(1)
+	}
+
+	p, err := os.FindProcess(os.Getpid())
+	if err == nil {
+		err = p.Signal(syscall.SIGINT)
+	}
+
+	if err != nil {
+		color.Red("Unable to perform soft shutdown. Exiting immediately...")
+		os.Exit(1)
 	}
 }
