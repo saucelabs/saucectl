@@ -743,7 +743,7 @@ func awaitGlobalTimeout() {
 	msg.LogGlobalTimeoutShutdown()
 
 	// Can't send interrupt signals on windows. A hard exit is our only choice.
-	if runtime.GOOS != "windows" {
+	if runtime.GOOS == "windows" {
 		os.Exit(1)
 	}
 
