@@ -78,7 +78,6 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 				DisplayName:      s.Name,
 				App:              fmt.Sprintf("storage:%s", fileID),
 				Suite:            s.Name,
-				SuiteDisplayName: s.Name,
 				Framework:        "cypress",
 				FrameworkVersion: r.Project.Cypress.Version,
 				BrowserName:      s.Browser,

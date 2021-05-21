@@ -25,9 +25,6 @@ type StartOptions struct {
 	Framework      string `json:"framework,omitempty"`
 	ConfigFilePath string `json:"-"`
 
-	// SuiteDisplayName is the human readable name of the suite.
-	SuiteDisplayName string `json:"-"`
-
 	// FrameworkVersion contains the targeted version of the framework
 	// It should not be confused with automation tool (like jest/folio).
 	// This is currently supported only for frameworks available on Sauce Cloud:

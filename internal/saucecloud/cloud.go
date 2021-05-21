@@ -173,7 +173,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 
 	// High interval poll to not oversaturate the job reader with requests
 	if !isRDC {
-		sigChan := r.registerInterruptOnSignal(id, opts.SuiteDisplayName)
+		sigChan := r.registerInterruptOnSignal(id, opts.DisplayName)
 		defer unregisterSignalCapture(sigChan)
 
 		j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second)
@@ -187,7 +187,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 
 	if !j.Passed {
 		// We may need to differentiate when a job has crashed vs. when there is errors.
-		return j, false, fmt.Errorf("suite '%s' has test failures", opts.SuiteDisplayName)
+		return j, false, fmt.Errorf("suite '%s' has test failures", opts.DisplayName)
 	}
 
 	return j, false, nil
