@@ -142,7 +142,7 @@ func TestTestComposer_StartJob(t *testing.T) {
 
 			respo.Record(tt.serverFunc)
 
-			got, err := c.StartJob(tt.args.ctx, tt.args.jobStarterPayload)
+			got, _, err := c.StartJob(tt.args.ctx, tt.args.jobStarterPayload)
 			if (err != nil) && !reflect.DeepEqual(err, tt.wantErr) {
 				t.Errorf("StartJob() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
+	"syscall"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/xcuit"
@@ -23,6 +25,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
+	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
@@ -39,13 +42,12 @@ var (
 	runExample = "saucectl run ./.sauce/config.yaml"
 
 	defaultLogFir      = "<cwd>/logs"
-	defaultTimeout     = 60
 	defaultRegion      = "us-west-1"
 	defaultSauceignore = ".sauceignore"
 
 	cfgFilePath    string
 	cfgLogDir      string
-	testTimeout    int
+	globalTimeout  time.Duration
 	regionFlag     string
 	env            map[string]string
 	sauceAPI       string
@@ -65,6 +67,7 @@ var (
 	appStoreTimeout     = 300 * time.Second
 	testComposerTimeout = 300 * time.Second
 	restoTimeout        = 60 * time.Second
+	rdcTimeout          = 15 * time.Second
 )
 
 // Command creates the `run` command
@@ -90,7 +93,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	defaultCfgPath := filepath.Join(".sauce", "config.yml")
 	cmd.Flags().StringVarP(&cfgFilePath, "config", "c", defaultCfgPath, "config file, e.g. -c ./.sauce/config.yaml")
 	cmd.Flags().StringVarP(&cfgLogDir, "logDir", "l", defaultLogFir, "log path")
-	cmd.Flags().IntVarP(&testTimeout, "timeout", "t", 0, "test timeout in seconds (default: 60sec)")
+	cmd.Flags().DurationVarP(&globalTimeout, "timeout", "t", 0, "Global timeout that limits how long saucectl can run in total. Supports duration values like '10s', '30m' etc. (default: no timeout)")
 	cmd.Flags().StringVarP(&regionFlag, "region", "r", "", "The sauce labs region. (default: us-west-1)")
 	cmd.Flags().StringToStringVarP(&env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
 	cmd.Flags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
@@ -119,6 +122,8 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 // Run runs the command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, error) {
 	println("Running version", version.Version)
+	go awaitGlobalTimeout()
+
 	creds := credentials.Get()
 	if !creds.IsValid() {
 		color.Red("\nSauceCTL requires a valid Sauce Labs account!\n\n")
@@ -128,7 +133,6 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return 1, fmt.Errorf("no credentials set")
 	}
 
-	// Todo(Christian) write argument parser/validator
 	if cfgLogDir == defaultLogFir {
 		pwd, _ := os.Getwd()
 		cfgLogDir = filepath.Join(pwd, "logs")
@@ -154,6 +158,14 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		AccessKey:  creds.AccessKey,
 	}
 
+	rc := rdc.Client{
+		HTTPClient: &http.Client{
+			Timeout: rdcTimeout,
+		},
+		Username:  creds.Username,
+		AccessKey: creds.AccessKey,
+	}
+
 	as := appstore.New("", creds.Username, creds.AccessKey, appStoreTimeout)
 
 	// TODO switch statement with pre-constructed type definition structs?
@@ -170,10 +182,10 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return runPuppeteer(cmd, tc, rs)
 	}
 	if d.Kind == config.KindEspresso && d.APIVersion == config.VersionV1Alpha {
-		return runEspresso(cmd, tc, rs, as)
+		return runEspresso(cmd, tc, rs, rc, as)
 	}
 	if d.Kind == config.KindXcuitest && d.APIVersion == config.VersionV1Alpha {
-		return runXcuit(cmd, tc, rs, as)
+		return runXcuit(cmd, tc, rs, rc, as)
 	}
 
 	return 1, errors.New("unknown framework configuration")
@@ -524,7 +536,7 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 	return r.RunProject()
 }
 
-func runXcuit(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
+func runXcuit(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as *appstore.AppStore) (int, error) {
 	p, err := xcuit.FromFile(cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -554,35 +566,39 @@ func runXcuit(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as *a
 	tc.URL = regio.APIBaseURL()
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
+	rc.URL = regio.APIBaseURL()
 
 	rs.ArtifactConfig = p.Artifacts.Download
+	rc.ArtifactConfig = p.Artifacts.Download
 
-	return runXcuitInCloud(p, regio, tc, rs, as)
+	return runXcuitInCloud(p, regio, tc, rs, rc, as)
 }
 
-func runXcuitInCloud(p xcuit.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
-	log.Info().Msg("Running Xcuit in Sauce Labs")
+func runXcuitInCloud(p xcuit.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as *appstore.AppStore) (int, error) {
+	log.Info().Msg("Running Espresso in Sauce Labs")
 	printTestEnv("sauce")
 
 	r := saucecloud.XcuitRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader:    as,
-			JobStarter:         &tc,
-			JobReader:          &rs,
-			JobStopper:         &rs,
-			JobWriter:          &rs,
-			CCYReader:          &rs,
-			TunnelService:      &rs,
-			Region:             regio,
-			ShowConsoleLog:     false,
-			ArtifactDownloader: &rs,
+			ProjectUploader:       as,
+			JobStarter:            &tc,
+			JobReader:             &rs,
+			RDCJobReader:          &rc,
+			JobStopper:            &rs,
+			JobWriter:             &rs,
+			CCYReader:             &rs,
+			TunnelService:         &rs,
+			Region:                regio,
+			ShowConsoleLog:        false,
+			ArtifactDownloader:    &rs,
+			RDCArtifactDownloader: &rc,
 		},
 	}
 	return r.RunProject()
 }
 
-func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
+func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as *appstore.AppStore) (int, error) {
 	p, err := espresso.FromFile(cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -612,29 +628,33 @@ func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 	tc.URL = regio.APIBaseURL()
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
+	rc.URL = regio.APIBaseURL()
 
 	rs.ArtifactConfig = p.Artifacts.Download
+	rc.ArtifactConfig = p.Artifacts.Download
 
-	return runEspressoInCloud(p, regio, tc, rs, as)
+	return runEspressoInCloud(p, regio, tc, rs, rc, as)
 }
 
-func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
+func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as *appstore.AppStore) (int, error) {
 	log.Info().Msg("Running Espresso in Sauce Labs")
 	printTestEnv("sauce")
 
 	r := saucecloud.EspressoRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader:    as,
-			JobStarter:         &tc,
-			JobReader:          &rs,
-			JobStopper:         &rs,
-			JobWriter:          &rs,
-			CCYReader:          &rs,
-			TunnelService:      &rs,
-			Region:             regio,
-			ShowConsoleLog:     false,
-			ArtifactDownloader: &rs,
+			ProjectUploader:       as,
+			JobStarter:            &tc,
+			JobReader:             &rs,
+			RDCJobReader:          &rc,
+			JobStopper:            &rs,
+			JobWriter:             &rs,
+			CCYReader:             &rs,
+			TunnelService:         &rs,
+			Region:                regio,
+			ShowConsoleLog:        false,
+			ArtifactDownloader:    &rs,
+			RDCArtifactDownloader: &rc,
 		},
 	}
 	return r.RunProject()
@@ -733,20 +753,20 @@ func filterTestcafeSuite(c *testcafe.Project) error {
 	return fmt.Errorf("suite name '%s' is invalid", suiteName)
 }
 
-func filterXcuitSuite(c *xcuit.Project) error {
+func filterEspressoSuite(c *espresso.Project) error {
 	for _, s := range c.Suites {
 		if s.Name == suiteName {
-			c.Suites = []xcuit.Suite{s}
+			c.Suites = []espresso.Suite{s}
 			return nil
 		}
 	}
 	return fmt.Errorf("suite name '%s' is invalid", suiteName)
 }
 
-func filterEspressoSuite(c *espresso.Project) error {
+func filterXcuitSuite(c *xcuit.Project) error {
 	for _, s := range c.Suites {
 		if s.Name == suiteName {
-			c.Suites = []espresso.Suite{s}
+			c.Suites = []xcuit.Suite{s}
 			return nil
 		}
 	}
@@ -800,5 +820,31 @@ func overrideCliParameters(cmd *cobra.Command, sauce *config.SauceConfig) {
 	}
 	if cmd.Flags().Lookup("experiment").Changed {
 		sauce.Experiments = experiments
+	}
+}
+
+// awaitGlobalTimeout waits for the global timeout event. In case of global timeout event, it attempts to interrupt the
+// current process. Should this fail, a hard immediate exit is performed.
+func awaitGlobalTimeout() {
+	if globalTimeout == 0 {
+		return
+	}
+
+	<-time.After(globalTimeout)
+	msg.LogGlobalTimeoutShutdown()
+
+	// Can't send interrupt signals on windows. A hard exit is our only choice.
+	if runtime.GOOS == "windows" {
+		os.Exit(1)
+	}
+
+	p, err := os.FindProcess(os.Getpid())
+	if err == nil {
+		err = p.Signal(syscall.SIGINT)
+	}
+
+	if err != nil {
+		color.Red("Unable to perform soft shutdown. Exiting immediately...")
+		os.Exit(1)
 	}
 }

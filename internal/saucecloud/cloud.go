@@ -32,16 +32,18 @@ import (
 
 // CloudRunner represents the cloud runner for the Sauce Labs cloud.
 type CloudRunner struct {
-	ProjectUploader    storage.ProjectUploader
-	JobStarter         job.Starter
-	JobReader          job.Reader
-	JobWriter          job.Writer
-	JobStopper         job.Stopper
-	CCYReader          concurrency.Reader
-	TunnelService      tunnel.Service
-	Region             region.Region
-	ShowConsoleLog     bool
-	ArtifactDownloader download.ArtifactDownloader
+	ProjectUploader       storage.ProjectUploader
+	JobStarter            job.Starter
+	JobReader             job.Reader
+	RDCJobReader          job.Reader
+	JobWriter             job.Writer
+	JobStopper            job.Stopper
+	CCYReader             concurrency.Reader
+	TunnelService         tunnel.Service
+	Region                region.Region
+	ShowConsoleLog        bool
+	ArtifactDownloader    download.ArtifactDownloader
+	RDCArtifactDownloader download.ArtifactDownloader
 
 	interrupted bool
 }
@@ -127,7 +129,11 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 		}
 
 		if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, artifactCfg) {
-			r.ArtifactDownloader.DownloadArtifact(res.job.ID)
+			if res.job.IsRDC {
+				r.RDCArtifactDownloader.DownloadArtifact(res.job.ID)
+			} else {
+				r.ArtifactDownloader.DownloadArtifact(res.job.ID)
+			}
 		}
 		r.logSuite(res)
 	}
@@ -141,12 +147,14 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool, err error) {
 	log.Info().Str("suite", opts.DisplayName).Str("region", r.Region.String()).Msg("Starting suite.")
 
-	id, err := r.JobStarter.StartJob(context.Background(), opts)
+	id, isRDC, err := r.JobStarter.StartJob(context.Background(), opts)
 	if err != nil {
 		return job.Job{}, false, err
 	}
 
-	r.uploadSauceConfig(id, opts.ConfigFilePath)
+	if !isRDC {
+		r.uploadSauceConfig(id, opts.ConfigFilePath)
+	}
 
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
 	// if a soft exit is requested during startContainer phase, it gently exits.
@@ -157,25 +165,29 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
 	l := log.Info().Str("url", jobDetailsPage).Str("suite", opts.DisplayName).Str("platform", opts.PlatformName)
 	if opts.Framework == config.KindEspresso {
-		l.Str("device", opts.DeviceName).Str("platformVersion", opts.PlatformVersion)
-
+		l.Str("deviceName", opts.DeviceName).Str("platformVersion", opts.PlatformVersion).Str("deviceId", opts.DeviceID)
 	} else {
 		l.Str("browser", opts.BrowserName)
 	}
 	l.Msg("Suite started.")
 
-	sigChan := r.registerInterruptOnSignal(id, opts.Suite)
-	defer unregisterSignalCapture(sigChan)
+	// High interval poll to not oversaturate the job reader with requests
+	if !isRDC {
+		sigChan := r.registerInterruptOnSignal(id, opts.DisplayName)
+		defer unregisterSignalCapture(sigChan)
 
-	// High interval poll to not oversaturate the job reader with requests.
-	j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second)
+		j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second)
+	} else {
+		j, err = r.RDCJobReader.PollJob(context.Background(), id, 15*time.Second)
+	}
+
 	if err != nil {
 		return job.Job{}, false, fmt.Errorf("failed to retrieve job status for suite %s", opts.DisplayName)
 	}
 
 	if !j.Passed {
 		// We may need to differentiate when a job has crashed vs. when there is errors.
-		return j, false, fmt.Errorf("suite '%s' has test failures", opts.Suite)
+		return j, false, fmt.Errorf("suite '%s' has test failures", opts.DisplayName)
 	}
 
 	return j, false, nil

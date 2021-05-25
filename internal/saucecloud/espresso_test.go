@@ -37,7 +37,7 @@ func TestEspressoRunner_CalculateJobCount(t *testing.T) {
 			Suites: []espresso.Suite{
 				{
 					Name: "valid espresso project",
-					Devices: []config.Device{
+					Emulators: []config.Emulator{
 						{
 							Name:             "Android GoogleApi Emulator",
 							PlatformVersions: []string{"11.0", "10.0"},
@@ -62,9 +62,9 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 	// Fake JobStarter
 	var startOpts job.StartOptions
 	starter := mocks.FakeJobStarter{
-		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
+		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
 			startOpts = opts
-			return "fake-job-id", nil
+			return "fake-job-id", false, nil
 		},
 	}
 	reader := mocks.FakeJobReader{
@@ -111,7 +111,7 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 			Suites: []espresso.Suite{
 				{
 					Name: "my espresso project",
-					Devices: []config.Device{
+					Emulators: []config.Emulator{
 						{
 							Name:             "Android GoogleApi Emulator",
 							Orientation:      "landscape",
@@ -137,8 +137,8 @@ func TestRunSuites_Espresso_NoConcurrency(t *testing.T) {
 
 	// Fake JobStarter
 	starter := mocks.FakeJobStarter{
-		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
-			return "fake-job-id", nil
+		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+			return "fake-job-id", false, nil
 		},
 	}
 	reader := mocks.FakeJobReader{

@@ -8,11 +8,11 @@ import (
 
 // FakeJobStarter resto mock
 type FakeJobStarter struct {
-	StartJobFn func(ctx context.Context, opts job.StartOptions) (jobID string, err error)
+	StartJobFn func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error)
 }
 
 // StartJob mock function
-func (fjs *FakeJobStarter) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
+func (fjs *FakeJobStarter) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
 	return fjs.StartJobFn(ctx, opts)
 }
 

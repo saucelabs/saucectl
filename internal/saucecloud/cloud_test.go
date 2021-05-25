@@ -118,8 +118,8 @@ func TestSkippedRunJobs(t *testing.T) {
 	for _, tt := range tests {
 		r := CloudRunner{
 			JobStarter: &mocks.FakeJobStarter{
-				StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
-					return "fake-id", nil
+				StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+					return "fake-id", false, nil
 				},
 			},
 			JobReader: &mocks.FakeJobReader{
