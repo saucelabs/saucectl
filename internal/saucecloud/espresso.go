@@ -141,7 +141,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		},
 
 		// RDC Specific flags
-		IsRealDevice:      d.isRealDevice,
+		RealDevice:        d.isRealDevice,
 		DeviceHasCarrier:  d.hasCarrier,
 		DeviceType:        d.deviceType,
 		DevicePrivateOnly: d.privateOnly,
