@@ -23,6 +23,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
+	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
@@ -64,6 +65,7 @@ var (
 	appStoreTimeout     = 300 * time.Second
 	testComposerTimeout = 300 * time.Second
 	restoTimeout        = 60 * time.Second
+	rdcTimeout          = 15 * time.Second
 )
 
 // Command creates the `run` command
@@ -154,6 +156,14 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		AccessKey:  creds.AccessKey,
 	}
 
+	rc := rdc.Client{
+		HTTPClient: &http.Client{
+			Timeout: rdcTimeout,
+		},
+		Username:  creds.Username,
+		AccessKey: creds.AccessKey,
+	}
+
 	as := appstore.New("", creds.Username, creds.AccessKey, appStoreTimeout)
 
 	// TODO switch statement with pre-constructed type definition structs?
@@ -170,7 +180,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return runPuppeteer(cmd, tc, rs)
 	}
 	if d.Kind == config.KindEspresso && d.APIVersion == config.VersionV1Alpha {
-		return runEspresso(cmd, tc, rs, as)
+		return runEspresso(cmd, tc, rs, rc, as)
 	}
 
 	return 1, errors.New("unknown framework configuration")
@@ -521,7 +531,7 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 	return r.RunProject()
 }
 
-func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
+func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as *appstore.AppStore) (int, error) {
 	p, err := espresso.FromFile(cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -551,29 +561,33 @@ func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 	tc.URL = regio.APIBaseURL()
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
+	rc.URL = regio.APIBaseURL()
 
 	rs.ArtifactConfig = p.Artifacts.Download
+	rc.ArtifactConfig = p.Artifacts.Download
 
-	return runEspressoInCloud(p, regio, tc, rs, as)
+	return runEspressoInCloud(p, regio, tc, rs, rc, as)
 }
 
-func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
+func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as *appstore.AppStore) (int, error) {
 	log.Info().Msg("Running Espresso in Sauce Labs")
 	printTestEnv("sauce")
 
 	r := saucecloud.EspressoRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader:    as,
-			JobStarter:         &tc,
-			JobReader:          &rs,
-			JobStopper:         &rs,
-			JobWriter:          &rs,
-			CCYReader:          &rs,
-			TunnelService:      &rs,
-			Region:             regio,
-			ShowConsoleLog:     false,
-			ArtifactDownloader: &rs,
+			ProjectUploader:       as,
+			JobStarter:            &tc,
+			JobReader:             &rs,
+			RDCJobReader:          &rc,
+			JobStopper:            &rs,
+			JobWriter:             &rs,
+			CCYReader:             &rs,
+			TunnelService:         &rs,
+			Region:                regio,
+			ShowConsoleLog:        false,
+			ArtifactDownloader:    &rs,
+			RDCArtifactDownloader: &rc,
 		},
 	}
 	return r.RunProject()

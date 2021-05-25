@@ -37,9 +37,10 @@ type TestOptions struct {
 
 // Suite represents the espresso test suite configuration.
 type Suite struct {
-	Name        string          `yaml:"name,omitempty" json:"name"`
-	Devices     []config.Device `yaml:"devices,omitempty" json:"devices"`
-	TestOptions TestOptions     `yaml:"testOptions,omitempty" json:"testOptions"`
+	Name        string            `yaml:"name,omitempty" json:"name"`
+	Devices     []config.Device   `yaml:"devices,omitempty" json:"devices"`
+	Emulators   []config.Emulator `yaml:"emulators,omitempty" json:"emulators"`
+	TestOptions TestOptions       `yaml:"testOptions,omitempty" json:"testOptions"`
 }
 
 // Android constant
@@ -70,8 +71,11 @@ func FromFile(cfgPath string) (Project, error) {
 
 	for sidx, suite := range p.Suites {
 		for didx := range suite.Devices {
-			// Adnroid is the only choice.
+			// Android is the only choice.
 			p.Suites[sidx].Devices[didx].PlatformName = Android
+		}
+		for eidx := range suite.Emulators {
+			p.Suites[sidx].Emulators[eidx].PlatformName = Android
 		}
 	}
 
@@ -101,22 +105,40 @@ func Validate(p Project) error {
 	}
 
 	for _, suite := range p.Suites {
-		if len(suite.Devices) == 0 {
-			return fmt.Errorf("missing devices configuration for suite: %s", suite.Name)
+		if len(suite.Devices) == 0 && len(suite.Emulators) == 0 {
+			return fmt.Errorf("missing devices or emulators configuration for suite: %s", suite.Name)
 		}
-		for didx, device := range suite.Devices {
-			if device.Name == "" {
-				return fmt.Errorf("missing device name for suite: %s. Devices index: %d", suite.Name, didx)
-			}
-			if !strings.Contains(strings.ToLower(device.Name), "emulator") {
-				return fmt.Errorf("missing `emulator` in device name: %s, real device cloud is unsupported right now", device.Name)
-			}
-			if len(device.PlatformVersions) == 0 {
-				// TODO - update message when handling device.Id
-				return fmt.Errorf("missing platform versions for device: %s", device.Name)
-			}
+		if err := validateDevices(suite.Name, suite.Devices); err != nil {
+			return err
+		}
+		if err := validateEmulators(suite.Name, suite.Emulators); err != nil {
+			return err
 		}
 	}
 
+	return nil
+}
+
+func validateDevices(suiteName string, devices []config.Device) error {
+	for didx, device := range devices {
+		if device.Name == "" && device.ID == "" {
+			return fmt.Errorf("missing device name or ID for suite: %s. Devices index: %d", suiteName, didx)
+		}
+	}
+	return nil
+}
+
+func validateEmulators(suiteName string, emulators []config.Emulator) error {
+	for eidx, emulator := range emulators {
+		if emulator.Name == "" {
+			return fmt.Errorf("missing emulator name for suite: %s. Emulators index: %d", suiteName, eidx)
+		}
+		if !strings.Contains(strings.ToLower(emulator.Name), "emulator") {
+			return fmt.Errorf("missing `emulator` in emulator name: %s. Suite name: %s. Emulators index: %d", emulator.Name, suiteName, eidx)
+		}
+		if len(emulator.PlatformVersions) == 0 {
+			return fmt.Errorf("missing platform versions for emulator: %s. Suite name: %s. Emulators index: %d", emulator.Name, suiteName, eidx)
+		}
+	}
 	return nil
 }

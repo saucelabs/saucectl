@@ -36,8 +36,8 @@ func TestRunSuite(t *testing.T) {
 
 	// Fake JobStarter
 	starter := mocks.FakeJobStarter{
-		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
-			return "fake-job-id", nil
+		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+			return "fake-job-id", false, nil
 		},
 	}
 	reader := mocks.FakeJobReader{
@@ -71,8 +71,8 @@ func TestRunSuites(t *testing.T) {
 
 	// Fake JobStarter
 	starter := mocks.FakeJobStarter{
-		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
-			return "fake-job-id", nil
+		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+			return "fake-job-id", false, nil
 		},
 	}
 	reader := mocks.FakeJobReader{
@@ -125,8 +125,8 @@ func TestRunSuites_Cypress_NoConcurrency(t *testing.T) {
 
 	// Fake JobStarter
 	starter := mocks.FakeJobStarter{
-		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
-			return "fake-job-id", nil
+		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+			return "fake-job-id", false, nil
 		},
 	}
 	reader := mocks.FakeJobReader{
@@ -239,8 +239,8 @@ func TestRunProject(t *testing.T) {
 
 	// Fake JobStarter
 	starter := mocks.FakeJobStarter{
-		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
-			return "fake-job-id", nil
+		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+			return "fake-job-id", false, nil
 		},
 	}
 	reader := mocks.FakeJobReader{

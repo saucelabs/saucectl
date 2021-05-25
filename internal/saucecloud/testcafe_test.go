@@ -35,8 +35,8 @@ func TestRunSuites_TestCafe_NoConcurrency(t *testing.T) {
 
 	// Fake JobStarter
 	starter := mocks.FakeJobStarter{
-		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
-			return "fake-job-id", nil
+		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+			return "fake-job-id", false, nil
 		},
 	}
 	reader := mocks.FakeJobReader{
@@ -104,13 +104,13 @@ func Test_calcTestcafeJobsCount(t *testing.T) {
 				},
 				{
 					Name: "suite with one device and two platforms",
-					Devices: []config.Device{
+					Devices: []config.Emulator{
 						{PlatformVersions: []string{"12.0", "14.3"}},
 					},
 				},
 				{
 					Name: "suite with two device and two platforms",
-					Devices: []config.Device{
+					Devices: []config.Emulator{
 						{PlatformVersions: []string{"12.0", "14.3"}},
 						{PlatformVersions: []string{"12.0", "14.3"}},
 					},

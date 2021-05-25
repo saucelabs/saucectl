@@ -41,7 +41,7 @@ type runner struct {
 }
 
 // StartJob creates a new job in Sauce Labs.
-func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
+func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/jobs", c.URL)
 
 	opts.User = c.Credentials.Username
@@ -70,18 +70,19 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 
 	if resp.StatusCode >= 300 {
 		err = fmt.Errorf("job start failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, strings.TrimSpace(string(body)))
-		return "", err
+		return "", false, err
 	}
 
 	j := struct {
 		JobID string
+		IsRDC bool
 	}{}
 	err = json.Unmarshal(body, &j)
 	if err != nil {
 		return
 	}
 
-	return j.JobID, nil
+	return j.JobID, j.IsRDC, nil
 }
 
 func (c *Client) newJSONRequest(ctx context.Context, url, method string, payload interface{}) (*http.Request, error) {

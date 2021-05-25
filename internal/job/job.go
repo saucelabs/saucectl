@@ -7,11 +7,14 @@ const (
 	StateInProgress = "in progress"
 	StateComplete   = "complete"
 	StateError      = "error"
+
+	StatePassed = "passed"
+	StateFailed = "failed"
 )
 
 // DoneStates represents states that a job doesn't transition out of, i.e. once the job is in one of these states,
 // it's done.
-var DoneStates = []string{StateComplete, StateError}
+var DoneStates = []string{StateComplete, StateError, StatePassed, StateFailed}
 
 // Job represents test details and metadata of a test run (aka Job), that is usually associated with a particular test
 // execution instance (e.g. VM).
@@ -25,6 +28,9 @@ type Job struct {
 		PlatformVersion string `json:"platformVersion"`
 		DeviceName      string `json:"deviceName"`
 	} `json:"base_config"`
+
+	// IsRDC flags a job started as a RDC run.
+	IsRDC bool `json:"-"`
 }
 
 // Done returns true if the job status is one of DoneStates. False otherwise.
