@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/xcuit"
+
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
@@ -169,6 +171,9 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 	}
 	if d.Kind == config.KindEspresso && d.APIVersion == config.VersionV1Alpha {
 		return runEspresso(cmd, tc, rs, as)
+	}
+	if d.Kind == config.KindXcuitest && d.APIVersion == config.VersionV1Alpha {
+		return runXcuit(cmd, tc, rs, as)
 	}
 
 	return 1, errors.New("unknown framework configuration")
@@ -519,6 +524,64 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 	return r.RunProject()
 }
 
+func runXcuit(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
+	p, err := xcuit.FromFile(cfgFilePath)
+	if err != nil {
+		return 1, err
+	}
+	p.Sauce.Metadata.ExpandEnv()
+	applyDefaultValues(&p.Sauce)
+	overrideCliParameters(cmd, &p.Sauce)
+
+	// TODO - add dry-run mode
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
+		return 1, errors.New("no sauce region set")
+	}
+
+	err = xcuit.Validate(p)
+	if err != nil {
+		return 1, err
+	}
+
+	if cmd.Flags().Lookup("suite").Changed {
+		if err := filterXcuitSuite(&p); err != nil {
+			return 1, err
+		}
+	}
+
+	tc.URL = regio.APIBaseURL()
+	rs.URL = regio.APIBaseURL()
+	as.URL = regio.APIBaseURL()
+
+	rs.ArtifactConfig = p.Artifacts.Download
+
+	return runXcuitInCloud(p, regio, tc, rs, as)
+}
+
+func runXcuitInCloud(p xcuit.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
+	log.Info().Msg("Running Xcuit in Sauce Labs")
+	printTestEnv("sauce")
+
+	r := saucecloud.XcuitRunner{
+		Project: p,
+		CloudRunner: saucecloud.CloudRunner{
+			ProjectUploader:    as,
+			JobStarter:         &tc,
+			JobReader:          &rs,
+			JobStopper:         &rs,
+			JobWriter:          &rs,
+			CCYReader:          &rs,
+			TunnelService:      &rs,
+			Region:             regio,
+			ShowConsoleLog:     false,
+			ArtifactDownloader: &rs,
+		},
+	}
+	return r.RunProject()
+}
+
 func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
 	p, err := espresso.FromFile(cfgFilePath)
 	if err != nil {
@@ -664,6 +727,16 @@ func filterTestcafeSuite(c *testcafe.Project) error {
 	for _, s := range c.Suites {
 		if s.Name == suiteName {
 			c.Suites = []testcafe.Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf("suite name '%s' is invalid", suiteName)
+}
+
+func filterXcuitSuite(c *xcuit.Project) error {
+	for _, s := range c.Suites {
+		if s.Name == suiteName {
+			c.Suites = []xcuit.Suite{s}
 			return nil
 		}
 	}

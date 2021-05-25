@@ -1,5 +1,5 @@
 apiVersion: v1alpha
-kind: xcuit
+kind: xcuitest
 sauce:
   region: us-west-1
   concurrency: 1
@@ -16,13 +16,9 @@ xcuit:
   testApp: ./tests/apps/xcuit/SwagLabsMobileAppUITests-Runner.app
 
 suites:
-  - name: "saucy xcuit test"
+  - name: "saucy xcuitest"
     testOptions:
-      - class: SwagLabsMobileAppUITests.LoginTests
-        method: testSuccessfulLogin
-      - class: SwagLabsMobileAppUITests.LoginTests
-        method: testNoUsernameLogin
-      - class: SwagLabsMobileAppUITests.LoginTests # if no testMethod provided, it should run all tests for the class
+      - class: ["SwagLabsMobileAppUITests.LoginTests/testSuccessfulLogin", "SwagLabsMobileAppUITests.LoginTests/testNoUsernameLogin", "SwagLabsMobileAppUITests.LoginTests"]
     devices:
       #- id: <rdc_device_id>
       - name: "iPhone XR"
@@ -51,19 +47,3 @@ artifacts:
     match:
       - "*.junit.xml"
     directory: ./artifacts/
-
-
-apiVersion: v1alpha
-kind: xcuit
-xcuit:
-  app: "./tests/apps/xcuit/SauceLabs.Mobile.Sample.XCUITest.App.ipa"
-  testApp: "./tests/apps/xcuit/SwagLabsMobileAppUITests-Runner.app"
-suites:
-  - name: "saucy barista"
-    devices:
-      - name: "iPhone XR"
-        platformVersions: "14.3"
-    testOptions:
-      - class: "SwagLabsMobileAppUITests.LoginTests"
-        method: "testSuccessfulLogin"
-      - class: "SwagLabsMobileAppUITests.LoginTests"

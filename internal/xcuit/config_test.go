@@ -115,9 +115,7 @@ suites:
       - name: "iPhone XR"
         platformVersion: "14.3"
     testOptions:
-      - class: "SwagLabsMobileAppUITests.LoginTests"
-        method: "testSuccessfulLogin"
-      - class: "SwagLabsMobileAppUITests.LoginTests"
+      class: ["SwagLabsMobileAppUITests.LoginTests/testSuccessfulLogin", "SwagLabsMobileAppUITests.LoginTests"]
 `, fs.WithMode(0655)))
 	defer dir.Remove()
 
@@ -139,13 +137,10 @@ suites:
 						PlatformVersion: "14.3",
 					},
 				},
-				TestOptions: []TestOption{
-					TestOption{
-						Class:  "SwagLabsMobileAppUITests.LoginTests",
-						Method: "testSuccessfulLogin",
-					},
-					TestOption{
-						Class: "SwagLabsMobileAppUITests.LoginTests",
+				TestOptions: TestOption{
+					Class: []string{
+						"SwagLabsMobileAppUITests.LoginTests/testSuccessfulLogin",
+						"SwagLabsMobileAppUITests.LoginTests",
 					},
 				},
 			},

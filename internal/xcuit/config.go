@@ -36,15 +36,14 @@ type Xcuit struct {
 
 // TestOptions represents the xcuit test filter options configuration.
 type TestOption struct {
-	Class  string `yaml:"class,omitempty" json:"class"`
-	Method string `yaml:"method,omitempty" json:"method"`
+	Class []string `yaml:"class,omitempty" json:"class"`
 }
 
 // Suite represents the xcuit test suite configuration.
 type Suite struct {
-	Name        string       `yaml:"name,omitempty" json:"name"`
-	Devices     []Device     `yaml:"devices,omitempty" json:"devices"`
-	TestOptions []TestOption `yaml:"testOptions,omitempty" json:"testOptions"`
+	Name        string     `yaml:"name,omitempty" json:"name"`
+	Devices     []Device   `yaml:"devices,omitempty" json:"devices"`
+	TestOptions TestOption `yaml:"testOptions,omitempty" json:"testOptions"`
 }
 
 // Device represents device configuration.
