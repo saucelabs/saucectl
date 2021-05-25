@@ -66,8 +66,11 @@ jobs:
 
       - name: Build project
         run: |
+          SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-8)
+          LDFLAG_VERSION="github.com/saucelabs/saucectl/cli/version.Version=v0.0.0+$SHORT_SHA"
+          LDFLAG_SHA="github.com/saucelabs/saucectl/cli/version.GitCommit=$GITHUB_SHA"
           go install ./...
-          CGO_ENABLED=0 go build cmd/saucectl/saucectl.go
+          CGO_ENABLED=0 go build -ldflags="-X $LDFLAG_VERSION -X $LDFLAG_SHA" cmd/saucectl/saucectl.go
           GOOS=windows GOARCH=amd64 go build cmd/saucectl/saucectl.go
 
       - name: Check GoReleaser config
