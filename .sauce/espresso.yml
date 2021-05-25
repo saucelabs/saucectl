@@ -15,7 +15,7 @@ espresso:
   testApp: ./tests/apps/calc-success.apk
 suites:
   - name: "saucy barista"
-    devices:
+    emulators:
       - name: "Android GoogleApi Emulator"
         orientation: portrait
         platformVersions:
