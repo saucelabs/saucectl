@@ -51,6 +51,7 @@ type Device struct {
 	ID              string  `yaml:"id,omitempty" json:"id"`
 	Name            string  `yaml:"name,omitempty" json:"name"`
 	PlatformVersion string  `yaml:"platformVersion,omitempty" json:"platformVersion"`
+	PlatformName    string  `yaml:"platformName,omitempty" json:"platformName"`
 	Options         Options `yaml:"options,omitempty" json:"options"`
 }
 
@@ -99,13 +100,13 @@ func Validate(p Project) error {
 		return fmt.Errorf("application file: %s does not exists", p.Xcuit.App)
 	}
 
-	if p.Xcuit.TestApp == "" {
-		return errors.New("missing path to the bundle with tests")
-	}
-	_, err = os.Stat(p.Xcuit.TestApp)
-	if os.IsNotExist(err) {
-		return fmt.Errorf("bundle with tests: %s does not exists", p.Xcuit.TestApp)
-	}
+	//if p.Xcuit.TestApp == "" {
+	//	return errors.New("missing path to the bundle with tests")
+	//}
+	//_, err = os.Stat(p.Xcuit.TestApp)
+	//if os.IsNotExist(err) {
+	//	return fmt.Errorf("bundle with tests: %s does not exists", p.Xcuit.TestApp)
+	//}
 
 	if len(p.Suites) == 0 {
 		return errors.New("no suites defined")

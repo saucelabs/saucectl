@@ -46,26 +46,26 @@ func TestValidate(t *testing.T) {
 			},
 			expectedErr: errors.New("application file: /path/to/app/test.ipa does not exists"),
 		},
-		{
-			name: "validating throws error on empty testApp",
-			p: &Project{
-				Xcuit: Xcuit{
-					App:     appF,
-					TestApp: "",
-				},
-			},
-			expectedErr: errors.New("missing path to the bundle with tests"),
-		},
-		{
-			name: "validating throws error on not exists bundle with tests",
-			p: &Project{
-				Xcuit: Xcuit{
-					App:     appF,
-					TestApp: "/path/to/bundle/tests",
-				},
-			},
-			expectedErr: errors.New("bundle with tests: /path/to/bundle/tests does not exists"),
-		},
+		//{
+		//	name: "validating throws error on empty testApp",
+		//	p: &Project{
+		//		Xcuit: Xcuit{
+		//			App:     appF,
+		//			TestApp: "",
+		//		},
+		//	},
+		//	expectedErr: errors.New("missing path to the bundle with tests"),
+		//},
+		//{
+		//	name: "validating throws error on not exists bundle with tests",
+		//	p: &Project{
+		//		Xcuit: Xcuit{
+		//			App:     appF,
+		//			TestApp: "/path/to/bundle/tests",
+		//		},
+		//	},
+		//	expectedErr: errors.New("bundle with tests: /path/to/bundle/tests does not exists"),
+		//},
 		{
 			name: "validating throws error on missing suites",
 			p: &Project{

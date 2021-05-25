@@ -29,12 +29,12 @@ func (r *XcuitRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	testAppFileID, err := r.uploadProject(r.Project.Xcuit.TestApp, testAppUpload)
-	if err != nil {
-		return exitCode, err
-	}
+	//testAppFileID, err := r.uploadProject(r.Project.Xcuit.TestApp, testAppUpload)
+	//if err != nil {
+	//	return exitCode, err
+	//}
 
-	passed := r.runSuites(appFileID, testAppFileID)
+	passed := r.runSuites(appFileID, "")
 	if passed {
 		exitCode = 0
 	}
@@ -62,12 +62,14 @@ func (r *XcuitRunner) runSuites(appFileID string, testAppFileID string) bool {
 					ConfigFilePath: r.Project.ConfigFilePath,
 					DisplayName:    s.Name,
 					App:            fmt.Sprintf("storage:%s", appFileID),
-					Suite:          fmt.Sprintf("storage:%s", testAppFileID),
-					Framework:      "xcuit",
-					DeviceName:     d.Name,
-					Name:           r.Project.Sauce.Metadata.Name + " - " + s.Name,
-					Build:          r.Project.Sauce.Metadata.Build,
-					Tags:           r.Project.Sauce.Metadata.Tags,
+					//Suite:            fmt.Sprintf("storage:%s", testAppFileID),
+					Framework:        "xcuitest",
+					FrameworkVersion: "1.0.0-stable",
+					PlatformName:     d.PlatformName,
+					DeviceName:       d.Name,
+					Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
+					Build:            r.Project.Sauce.Metadata.Build,
+					Tags:             r.Project.Sauce.Metadata.Tags,
 					Tunnel: job.TunnelOptions{
 						ID:     r.Project.Sauce.Tunnel.ID,
 						Parent: r.Project.Sauce.Tunnel.Parent,

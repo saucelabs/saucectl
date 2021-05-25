@@ -12,28 +12,30 @@ sauce:
   build: Release $CI_COMMIT_SHORT_SHA
 
 xcuit:
-  app: ./tests/apps/xcuit/SauceLabs.Mobile.Sample.XCUITest.App.ipa
-  testApp: ./tests/apps/xcuit/SwagLabsMobileAppUITests-Runner.app
+  app: ./tests/apps/xcuit/SwagLabsMobileAppUITests-Runner.ipa
+  #testApp: ./tests/apps/xcuit/SwagLabsMobileAppUITests-Runner.app
 
 suites:
   - name: "saucy xcuitest"
     testOptions:
-      - class: ["SwagLabsMobileAppUITests.LoginTests/testSuccessfulLogin", "SwagLabsMobileAppUITests.LoginTests/testNoUsernameLogin", "SwagLabsMobileAppUITests.LoginTests"]
+      class: ["SwagLabsMobileAppUITests.LoginTests/testSuccessfulLogin", "SwagLabsMobileAppUITests.LoginTests/testNoUsernameLogin", "SwagLabsMobileAppUITests.LoginTests"]
     devices:
       #- id: <rdc_device_id>
-      - name: "iPhone XR"
-        platformVersion: "14.3"
-        options:
+      - name: "iPhone 11"
+        platformName: iOS
+        # platformVersion: "14.3"
+#        options:
           # To support CarrierConnectivityRequested. If set, only devices with a SIM card will be queried.
           #carrierConnectivity: [true|false]
           # To support RequestedDeviceType.
           #deviceType: [any|phone|tablet]
           # If set, only private devices will be queried.
           #private: [true|false]
-      - id: "iPhone_11_14_real"
-        #name: "iPhone XR"
-        platformVersion: "14.3"
-        options:
+#      - id: "iPhone_11_14_real"
+#        platformName: iOS
+#        #name: "iPhone XR"
+#        platformVersion: "14.3"
+#        options:
           # To support CarrierConnectivityRequested. If set, only devices with a SIM card will be queried.
           #carrierConnectivity: [true|false]
           # To support RequestedDeviceType.
