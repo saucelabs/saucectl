@@ -2,12 +2,11 @@ package saucecloud
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/saucelabs/saucectl/internal/xcuit"
 
 	"github.com/rs/zerolog/log"
+
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/xcuit"
 )
 
 // XcuitRunner represents the Sauce Labs cloud implementation for xcuit.
@@ -42,7 +41,7 @@ func (r *XcuitRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-func (r *XcuitRunner) runSuites(appFileID string, testAppFileID string) bool {
+func (r *XcuitRunner) runSuites(appFileID, testAppFileID string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
@@ -58,35 +57,7 @@ func (r *XcuitRunner) runSuites(appFileID string, testAppFileID string) bool {
 		for _, s := range r.Project.Suites {
 			for _, d := range s.Devices {
 				log.Debug().Str("suite", s.Name).Str("device", d.Name).Str("platformVersion", d.PlatformVersion).Msg("Starting job")
-				jobOpts <- job.StartOptions{
-					ConfigFilePath:   r.Project.ConfigFilePath,
-					DisplayName:      s.Name,
-					App:              fmt.Sprintf("storage:%s", appFileID),
-					Suite:            fmt.Sprintf("storage:%s", testAppFileID),
-					Framework:        "xcuitest",
-					FrameworkVersion: "1.0.0-stable",
-					PlatformName:     d.PlatformName,
-					PlatformVersion:  d.PlatformVersion,
-					DeviceName:       d.Name,
-					DeviceID:         d.ID,
-					Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
-					Build:            r.Project.Sauce.Metadata.Build,
-					Tags:             r.Project.Sauce.Metadata.Tags,
-					Tunnel: job.TunnelOptions{
-						ID:     r.Project.Sauce.Tunnel.ID,
-						Parent: r.Project.Sauce.Tunnel.Parent,
-					},
-					Experiments: r.Project.Sauce.Experiments,
-					TestOptions: job.TestOptions{
-						Class: s.TestOptions.Class,
-					},
-
-					// RDC Specific flags
-					RealDevice:        true,
-					DeviceHasCarrier:  d.Options.CarrierConnectivity,
-					DeviceType:        d.Options.DeviceType,
-					DevicePrivateOnly: d.Options.Private,
-				}
+				r.startJob(jobOpts, appFileID, testAppFileID, s, d)
 			}
 		}
 		close(jobOpts)
@@ -95,19 +66,42 @@ func (r *XcuitRunner) runSuites(appFileID string, testAppFileID string) bool {
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
 }
 
+func (r *XcuitRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, testAppFileID string, s xcuit.Suite, d xcuit.Device) {
+	jobOpts <- job.StartOptions{
+		ConfigFilePath:   r.Project.ConfigFilePath,
+		DisplayName:      s.Name,
+		App:              fmt.Sprintf("storage:%s", appFileID),
+		Suite:            fmt.Sprintf("storage:%s", testAppFileID),
+		Framework:        "xcuitest",
+		FrameworkVersion: "1.0.0-stable",
+		PlatformName:     d.PlatformName,
+		PlatformVersion:  d.PlatformVersion,
+		DeviceName:       d.Name,
+		DeviceID:         d.ID,
+		Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
+		Build:            r.Project.Sauce.Metadata.Build,
+		Tags:             r.Project.Sauce.Metadata.Tags,
+		Tunnel: job.TunnelOptions{
+			ID:     r.Project.Sauce.Tunnel.ID,
+			Parent: r.Project.Sauce.Tunnel.Parent,
+		},
+		Experiments: r.Project.Sauce.Experiments,
+		TestOptions: job.TestOptions{
+			Class: s.TestOptions.Class,
+		},
+
+		// RDC Specific flags
+		RealDevice:        true,
+		DeviceHasCarrier:  d.Options.CarrierConnectivity,
+		DeviceType:        d.Options.DeviceType,
+		DevicePrivateOnly: d.Options.Private,
+	}
+}
+
 func (r *XcuitRunner) calculateJobsCount(suites []xcuit.Suite) int {
 	jobsCount := 0
 	for _, s := range suites {
 		jobsCount += len(s.Devices)
 	}
 	return jobsCount
-}
-
-func (r *XcuitRunner) getSuiteNames() string {
-	names := []string{}
-	for _, s := range r.Project.Suites {
-		names = append(names, s.Name)
-	}
-
-	return strings.Join(names, ", ")
 }
