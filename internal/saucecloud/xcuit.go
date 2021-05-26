@@ -29,12 +29,12 @@ func (r *XcuitRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	//testAppFileID, err := r.uploadProject(r.Project.Xcuit.TestApp, testAppUpload)
-	//if err != nil {
-	//	return exitCode, err
-	//}
+	testAppFileID, err := r.uploadProject(r.Project.Xcuit.TestApp, testAppUpload)
+	if err != nil {
+		return exitCode, err
+	}
 
-	passed := r.runSuites(appFileID, "")
+	passed := r.runSuites(appFileID, testAppFileID)
 	if passed {
 		exitCode = 0
 	}
@@ -59,14 +59,16 @@ func (r *XcuitRunner) runSuites(appFileID string, testAppFileID string) bool {
 			for _, d := range s.Devices {
 				log.Debug().Str("suite", s.Name).Str("device", d.Name).Str("platformVersion", d.PlatformVersion).Msg("Starting job")
 				jobOpts <- job.StartOptions{
-					ConfigFilePath: r.Project.ConfigFilePath,
-					DisplayName:    s.Name,
-					App:            fmt.Sprintf("storage:%s", appFileID),
-					//Suite:            fmt.Sprintf("storage:%s", testAppFileID),
+					ConfigFilePath:   r.Project.ConfigFilePath,
+					DisplayName:      s.Name,
+					App:              fmt.Sprintf("storage:%s", appFileID),
+					Suite:            fmt.Sprintf("storage:%s", testAppFileID),
 					Framework:        "xcuitest",
 					FrameworkVersion: "1.0.0-stable",
 					PlatformName:     d.PlatformName,
+					PlatformVersion:  d.PlatformVersion,
 					DeviceName:       d.Name,
+					DeviceID:         d.ID,
 					Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
 					Build:            r.Project.Sauce.Metadata.Build,
 					Tags:             r.Project.Sauce.Metadata.Tags,
@@ -78,6 +80,12 @@ func (r *XcuitRunner) runSuites(appFileID string, testAppFileID string) bool {
 					TestOptions: job.TestOptions{
 						Class: s.TestOptions.Class,
 					},
+
+					// RDC Specific flags
+					RealDevice:        true,
+					DeviceHasCarrier:  d.Options.CarrierConnectivity,
+					DeviceType:        d.Options.DeviceType,
+					DevicePrivateOnly: d.Options.Private,
 				}
 			}
 		}

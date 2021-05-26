@@ -12,11 +12,11 @@ import (
 
 type deviceType string
 
-const (
-	ANY    deviceType = "any"
-	PHONE  deviceType = "phone"
-	TABLET deviceType = "tablet"
-)
+//const (
+//	ANY    deviceType = "any"
+//	PHONE  deviceType = "phone"
+//	TABLET deviceType = "tablet"
+//)
 
 // Project represents the xcuit project configuration.
 type Project struct {
@@ -57,9 +57,9 @@ type Device struct {
 
 // Options represents device options configuration.
 type Options struct {
-	CarrierConnectivity *bool      `yaml:"carrierConnectivity,omitempty" json:"carrierConnectivity"`
-	DeviceType          deviceType `yaml:"deviceType,omitempty" json:"deviceType"`
-	Private             *bool      `yaml:"private,omitempty" json:"private"`
+	CarrierConnectivity bool   `yaml:"carrierConnectivity,omitempty" json:"carrierConnectivity"`
+	DeviceType          string `yaml:"deviceType,omitempty" json:"deviceType"`
+	Private             bool   `yaml:"private,omitempty" json:"private"`
 }
 
 // FromFile creates a new xcuit Project based on the filepath cfgPath.

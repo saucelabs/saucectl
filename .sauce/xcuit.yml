@@ -12,25 +12,25 @@ sauce:
   build: Release $CI_COMMIT_SHORT_SHA
 
 xcuit:
-  app: ./tests/apps/xcuit/SwagLabsMobileAppUITests-Runner.ipa
-  #testApp: ./tests/apps/xcuit/SwagLabsMobileAppUITests-Runner.app
+  app: ./tests/apps/xcuit/SauceLabs.Mobile.Sample.XCUITest.App.ipa
+  testApp: ./tests/apps/xcuit/SwagLabsMobileAppUITests-Runner.ipa
 
 suites:
   - name: "saucy xcuitest"
     testOptions:
-      class: ["SwagLabsMobileAppUITests.LoginTests/testSuccessfulLogin", "SwagLabsMobileAppUITests.LoginTests/testNoUsernameLogin", "SwagLabsMobileAppUITests.LoginTests"]
+      class: ["SwagLabsMobileAppUITests.LoginTests/testSuccessfulLogin"]
     devices:
       #- id: <rdc_device_id>
       - name: "iPhone 11"
         platformName: iOS
-        # platformVersion: "14.3"
-#        options:
+        platformVersion: "14.3"
+        options:
           # To support CarrierConnectivityRequested. If set, only devices with a SIM card will be queried.
-          #carrierConnectivity: [true|false]
+          carrierConnectivity: false
           # To support RequestedDeviceType.
-          #deviceType: [any|phone|tablet]
+          deviceType: PHONE
           # If set, only private devices will be queried.
-          #private: [true|false]
+          private: false
 #      - id: "iPhone_11_14_real"
 #        platformName: iOS
 #        #name: "iPhone XR"
