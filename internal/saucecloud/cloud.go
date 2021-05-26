@@ -188,12 +188,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 
 	// Enrich RDC data
 	if isRDC {
-		if opts.DeviceID != "" {
-			j.BaseConfig.DeviceName = opts.DeviceID
-		} else {
-			j.BaseConfig.DeviceName = opts.DeviceName
-			j.BaseConfig.PlatformVersion = opts.PlatformVersion
-		}
+		enrichRDCReport(&j, opts)
 	}
 
 	if !j.Passed {
@@ -202,6 +197,21 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	}
 
 	return j, false, nil
+}
+
+// enrichRDCReport added the fields from the opts as the API does not provides it.
+func enrichRDCReport(j *job.Job, opts job.StartOptions) {
+	switch opts.Framework {
+	case "espresso":
+		j.BaseConfig.PlatformName = espresso.Android
+	}
+
+	if opts.DeviceID != "" {
+		j.BaseConfig.DeviceName = opts.DeviceID
+	} else {
+		j.BaseConfig.DeviceName = opts.DeviceName
+		j.BaseConfig.PlatformVersion = opts.PlatformVersion
+	}
 }
 
 func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- result) {
