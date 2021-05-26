@@ -83,6 +83,71 @@ func TestValidate(t *testing.T) {
 			},
 			expectedErr: errors.New("missing devices configuration for suite: no devices"),
 		},
+		{
+			name: "validating throws error on missing device name",
+			p: &Project{
+				Xcuit: Xcuit{
+					App:     appF,
+					TestApp: testAppF,
+				},
+				Suites: []Suite{
+					Suite{
+						Name: "no device name",
+						Devices: []Device{
+							{
+								Name: "",
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("missing device name or id for suite: no device name. Devices index: 0"),
+		},
+		{
+			name: "validating throws error on incorrect device platformName",
+			p: &Project{
+				Xcuit: Xcuit{
+					App:     appF,
+					TestApp: testAppF,
+				},
+				Suites: []Suite{
+					Suite{
+						Name: "incorrect device platfromName",
+						Devices: []Device{
+							{
+								Name:         "iPhone 11",
+								PlatformName: "Android",
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("device platformName is incorrect for suite: incorrect device platfromName. Devices index: 0. Supported device platform: iOS"),
+		},
+		{
+			name: "validating throws error on unsupported device type",
+			p: &Project{
+				Xcuit: Xcuit{
+					App:     appF,
+					TestApp: testAppF,
+				},
+				Suites: []Suite{
+					Suite{
+						Name: "unsupported device type",
+						Devices: []Device{
+							{
+								Name:         "iPhone 11",
+								PlatformName: "iOS",
+								Options: Options{
+									DeviceType: "some",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("deviceType: some is unsupported for suited: unsupported device type. Devices index: 0. Supported device types: ANY,PHONE,TABLET"),
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

@@ -10,8 +10,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type deviceType string
-
 var supportedDeviceTypes = []string{"ANY", "PHONE", "TABLET"}
 
 // Project represents the xcuit project configuration.
@@ -30,7 +28,7 @@ type Xcuit struct {
 	TestApp string `yaml:"testApp,omitempty" json:"testApp"`
 }
 
-// TestOptions represents the xcuit test filter options configuration.
+// TestOption represents the xcuit test filter options configuration.
 type TestOption struct {
 	Class []string `yaml:"class,omitempty" json:"class"`
 }
@@ -113,12 +111,12 @@ func Validate(p Project) error {
 			}
 
 			if strings.ToLower(device.PlatformName) != "ios" {
-				return fmt.Errorf("device platformName is incorrect for suite: %s. Devices index: %d. Supported device platform: iOS.",
+				return fmt.Errorf("device platformName is incorrect for suite: %s. Devices index: %d. Supported device platform: iOS",
 					suite.Name, didx)
 			}
 
 			if device.Options.DeviceType != "" && !isSupportedDeviceType(device.Options.DeviceType) {
-				fmt.Errorf("deviceType %s is unsupported for suited: %s. Devices index: %d. Supported device types: %s",
+				return fmt.Errorf("deviceType: %s is unsupported for suited: %s. Devices index: %d. Supported device types: %s",
 					device.Options.DeviceType, suite.Name, didx, strings.Join(supportedDeviceTypes, ","))
 			}
 		}

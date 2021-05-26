@@ -4,7 +4,7 @@ sauce:
   region: us-west-1
   concurrency: 1
   metadata:
-    name: Testing XCUIT Support
+    name: Testing XCUITEST Support
     tags:
       - e2e
       - release team
@@ -20,28 +20,18 @@ suites:
     testOptions:
       class: ["SwagLabsMobileAppUITests.LoginTests/testSuccessfulLogin"]
     devices:
+      # If set, only device by ID will be queried.
       #- id: <rdc_device_id>
       - name: "iPhone 11"
         platformName: iOS
         platformVersion: "14.3"
         options:
-          # To support CarrierConnectivityRequested. If set, only devices with a SIM card will be queried.
+          # If set, only devices with a SIM card will be queried.
           carrierConnectivity: false
-          # To support RequestedDeviceType.
+          # Possible values [ANY,PHONE,TABLET]
           deviceType: PHONE
           # If set, only private devices will be queried.
           private: false
-#      - id: "iPhone_11_14_real"
-#        platformName: iOS
-#        #name: "iPhone XR"
-#        platformVersion: "14.3"
-#        options:
-          # To support CarrierConnectivityRequested. If set, only devices with a SIM card will be queried.
-          #carrierConnectivity: [true|false]
-          # To support RequestedDeviceType.
-          #deviceType: [any|phone|tablet]
-          # If set, only private devices will be queried.
-          #private: [true|false]
 
 artifacts:
   download:

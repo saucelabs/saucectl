@@ -20,7 +20,7 @@ func (r *XcuitRunner) RunProject() (int, error) {
 	exitCode := 1
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.ID); err != nil {
-		return 1, err
+		return exitCode, err
 	}
 
 	appFileID, err := r.uploadProject(r.Project.Xcuit.App, appUpload)

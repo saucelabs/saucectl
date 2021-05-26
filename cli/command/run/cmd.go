@@ -10,10 +10,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/xcuit"
-
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
+
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/appstore"
@@ -32,7 +32,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
-	"github.com/spf13/cobra"
+	"github.com/saucelabs/saucectl/internal/xcuit"
 )
 
 var (
@@ -575,7 +575,7 @@ func runXcuit(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc rd
 }
 
 func runXcuitInCloud(p xcuit.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as *appstore.AppStore) (int, error) {
-	log.Info().Msg("Running Espresso in Sauce Labs")
+	log.Info().Msg("Running Xcuitest in Sauce Labs")
 	printTestEnv("sauce")
 
 	r := saucecloud.XcuitRunner{
