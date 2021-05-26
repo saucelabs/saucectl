@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	ptable "github.com/jedib0t/go-pretty/v6/table"
+	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/table"
 	"io"
@@ -183,6 +184,16 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 
 	if err != nil {
 		return job.Job{}, false, fmt.Errorf("failed to retrieve job status for suite %s", opts.DisplayName)
+	}
+
+	// Enrich RDC data
+	if isRDC {
+		if opts.DeviceID != "" {
+			j.BaseConfig.DeviceName = opts.DeviceID
+		} else {
+			j.BaseConfig.DeviceName = opts.DeviceName
+			j.BaseConfig.PlatformVersion = opts.PlatformVersion
+		}
 	}
 
 	if !j.Passed {
