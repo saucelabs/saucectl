@@ -12,11 +12,7 @@ import (
 
 type deviceType string
 
-//const (
-//	ANY    deviceType = "any"
-//	PHONE  deviceType = "phone"
-//	TABLET deviceType = "tablet"
-//)
+var supportedDeviceTypes = []string{"ANY", "PHONE", "TABLET"}
 
 // Project represents the xcuit project configuration.
 type Project struct {
@@ -95,18 +91,13 @@ func Validate(p Project) error {
 	if !strings.HasSuffix(p.Xcuit.App, ".ipa") {
 		return fmt.Errorf("invaild application file: %s, make sure extension is .ipa", p.Xcuit.App)
 	}
-	_, err := os.Stat(p.Xcuit.App)
-	if os.IsNotExist(err) {
-		return fmt.Errorf("application file: %s does not exists", p.Xcuit.App)
-	}
 
-	//if p.Xcuit.TestApp == "" {
-	//	return errors.New("missing path to the bundle with tests")
-	//}
-	//_, err = os.Stat(p.Xcuit.TestApp)
-	//if os.IsNotExist(err) {
-	//	return fmt.Errorf("bundle with tests: %s does not exists", p.Xcuit.TestApp)
-	//}
+	if p.Xcuit.TestApp == "" {
+		return errors.New("missing path to test app .ipa")
+	}
+	if !strings.HasSuffix(p.Xcuit.TestApp, ".ipa") {
+		return fmt.Errorf("invaild application test file: %s, make sure extension is .ipa", p.Xcuit.TestApp)
+	}
 
 	if len(p.Suites) == 0 {
 		return errors.New("no suites defined")
@@ -116,19 +107,32 @@ func Validate(p Project) error {
 		if len(suite.Devices) == 0 {
 			return fmt.Errorf("missing devices configuration for suite: %s", suite.Name)
 		}
-		//for didx, device := range suite.Devices {
-		//	if device.Name == "" {
-		//		return fmt.Errorf("missing device name for suite: %s. Devices index: %d", suite.Name, didx)
-		//	}
-		//	if !strings.Contains(strings.ToLower(device.Name), "emulator") {
-		//		return fmt.Errorf("missing `emulator` in device name: %s, real device cloud is unsupported right now", device.Name)
-		//	}
-		//	if len(device.PlatformVersions) == 0 {
-		//		// TODO - update message when handling device.Id
-		//		return fmt.Errorf("missing platform versions for device: %s", device.Name)
-		//	}
-		//}
+		for didx, device := range suite.Devices {
+			if device.ID == "" && device.Name == "" {
+				return fmt.Errorf("missing device name or id for suite: %s. Devices index: %d", suite.Name, didx)
+			}
+
+			if strings.ToLower(device.PlatformName) != "ios" {
+				return fmt.Errorf("device platformName is incorrect for suite: %s. Devices index: %d. Supported device platform: iOS.",
+					suite.Name, didx)
+			}
+
+			if device.Options.DeviceType != "" && !isSupportedDeviceType(device.Options.DeviceType) {
+				fmt.Errorf("deviceType %s is unsupported for suited: %s. Devices index: %d. Supported device types: %s",
+					device.Options.DeviceType, suite.Name, didx, strings.Join(supportedDeviceTypes, ","))
+			}
+		}
 	}
 
 	return nil
+}
+
+func isSupportedDeviceType(deviceType string) bool {
+	for _, dt := range supportedDeviceTypes {
+		if dt == deviceType {
+			return true
+		}
+	}
+
+	return false
 }

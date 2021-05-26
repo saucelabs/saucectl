@@ -16,7 +16,7 @@ func TestValidate(t *testing.T) {
 		fs.WithDir("test.app", fs.WithMode(0655)))
 	defer dir.Remove()
 	appF := filepath.Join(dir.Path(), "test.ipa")
-	appBundle := filepath.Join(dir.Path(), "test.app")
+	testAppF := filepath.Join(dir.Path(), "testApp.ipa")
 
 	testCases := []struct {
 		name        string
@@ -38,40 +38,31 @@ func TestValidate(t *testing.T) {
 			expectedErr: errors.New("invaild application file: /path/to/app, make sure extension is .ipa"),
 		},
 		{
-			name: "validating throws error on not exists .ipa file",
+			name: "validating throws error on empty testApp",
 			p: &Project{
 				Xcuit: Xcuit{
-					App: "/path/to/app/test.ipa",
+					App:     appF,
+					TestApp: "",
 				},
 			},
-			expectedErr: errors.New("application file: /path/to/app/test.ipa does not exists"),
+			expectedErr: errors.New("missing path to test app .ipa"),
 		},
-		//{
-		//	name: "validating throws error on empty testApp",
-		//	p: &Project{
-		//		Xcuit: Xcuit{
-		//			App:     appF,
-		//			TestApp: "",
-		//		},
-		//	},
-		//	expectedErr: errors.New("missing path to the bundle with tests"),
-		//},
-		//{
-		//	name: "validating throws error on not exists bundle with tests",
-		//	p: &Project{
-		//		Xcuit: Xcuit{
-		//			App:     appF,
-		//			TestApp: "/path/to/bundle/tests",
-		//		},
-		//	},
-		//	expectedErr: errors.New("bundle with tests: /path/to/bundle/tests does not exists"),
-		//},
+		{
+			name: "validating throws error on not test app .ipa",
+			p: &Project{
+				Xcuit: Xcuit{
+					App:     appF,
+					TestApp: "/path/to/bundle/tests",
+				},
+			},
+			expectedErr: errors.New("invaild application test file: /path/to/bundle/tests, make sure extension is .ipa"),
+		},
 		{
 			name: "validating throws error on missing suites",
 			p: &Project{
 				Xcuit: Xcuit{
 					App:     appF,
-					TestApp: appBundle,
+					TestApp: testAppF,
 				},
 			},
 			expectedErr: errors.New("no suites defined"),
@@ -81,7 +72,7 @@ func TestValidate(t *testing.T) {
 			p: &Project{
 				Xcuit: Xcuit{
 					App:     appF,
-					TestApp: appBundle,
+					TestApp: testAppF,
 				},
 				Suites: []Suite{
 					Suite{
@@ -108,7 +99,7 @@ func TestFromFile(t *testing.T) {
 kind: xcuit
 xcuit:
   app: "./tests/apps/xcuit/SauceLabs.Mobile.Sample.XCUITest.App.ipa"
-  testApp: "./tests/apps/xcuit/SwagLabsMobileAppUITests-Runner.app"
+  testApp: "./tests/apps/xcuit/SwagLabsMobileAppUITests-Runner.ipa"
 suites:
   - name: "saucy barista"
     devices:
@@ -126,7 +117,7 @@ suites:
 	expected := Project{
 		Xcuit: Xcuit{
 			App:     "./tests/apps/xcuit/SauceLabs.Mobile.Sample.XCUITest.App.ipa",
-			TestApp: "./tests/apps/xcuit/SwagLabsMobileAppUITests-Runner.app",
+			TestApp: "./tests/apps/xcuit/SwagLabsMobileAppUITests-Runner.ipa",
 		},
 		Suites: []Suite{
 			{
