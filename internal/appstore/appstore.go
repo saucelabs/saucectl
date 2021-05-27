@@ -5,15 +5,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/requesth"
-	"github.com/saucelabs/saucectl/internal/storage"
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/requesth"
+	"github.com/saucelabs/saucectl/internal/storage"
 )
 
 // UploadResponse represents the response as is returned by the app store.
@@ -59,6 +62,10 @@ func (s *AppStore) Upload(name string) (storage.ArtifactMeta, error) {
 
 	resp, err := s.HTTPClient.Do(request)
 	if err != nil {
+		if err.(*url.Error).Timeout() {
+			msg.LogUploadTimeoutSuggestion()
+			return storage.ArtifactMeta{}, errors.New("failed to upload project")
+		}
 		return storage.ArtifactMeta{}, err
 	}
 	defer resp.Body.Close()

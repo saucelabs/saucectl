@@ -2,6 +2,7 @@ package msg
 
 import (
 	"fmt"
+
 	"github.com/fatih/color"
 )
 
@@ -74,6 +75,18 @@ or peruse some of our example repositories:
   - https://github.com/saucelabs/saucectl-puppeteer-example
   - https://github.com/saucelabs/saucectl-testcafe-example`
 
+// UploadingTimeoutSuggestion is a recommendation to add unnecessary files to .sauceignore in the case that the bundled file is too big.
+const UploadingTimeoutSuggestion = `Failed to upload the project due to timeout. We *highly* recommend using .sauceignore file so that saucectl does not
+create big archives with unnecessary files.
+
+For more information, visit https://docs.saucelabs.com/testrunner-toolkit/configuration/bundling/index.html#exclude-files-from-the-bundle
+
+or peruse some of our example repositories:
+  - https://github.com/saucelabs/saucectl-cypress-example
+  - https://github.com/saucelabs/saucectl-playwright-example
+  - https://github.com/saucelabs/saucectl-puppeteer-example
+  - https://github.com/saucelabs/saucectl-testcafe-example`
+
 // LogSauceIgnoreNotExist prints out a formatted and color coded version of SauceIgnoreNotExist.
 func LogSauceIgnoreNotExist() {
 	red := color.New(color.FgRed).SprintFunc()
@@ -85,4 +98,10 @@ func LogGlobalTimeoutShutdown() {
 	color.Red(`┌───────────────────────────────────────────────────┐
 │ Global timeout reached. Shutting down saucectl... │
 └───────────────────────────────────────────────────┘`)
+}
+
+// LogUploadTimeoutSuggestion prints out adding unnecessary files to .sauceignore
+func LogUploadTimeoutSuggestion() {
+	red := color.New(color.FgRed).SprintFunc()
+	fmt.Printf("\n%s: %s\n\n", red("WARNING"), UploadingTimeoutSuggestion)
 }
