@@ -174,7 +174,7 @@ suites:
 						PlatformVersion: "14.3",
 					},
 				},
-				TestOptions: TestOption{
+				TestOptions: TestOptions{
 					Class: []string{
 						"SwagLabsMobileAppUITests.LoginTests/testSuccessfulLogin",
 						"SwagLabsMobileAppUITests.LoginTests",

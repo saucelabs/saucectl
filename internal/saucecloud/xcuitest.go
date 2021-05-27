@@ -57,7 +57,7 @@ func (r *XcuitestRunner) runSuites(appFileID, testAppFileID string) bool {
 	go func() {
 		for _, s := range r.Project.Suites {
 			for _, d := range s.Devices {
-				log.Debug().Str("suite", s.Name).Str("device name", d.Name).Str("device id", d.ID).Str("platformVersion", d.PlatformVersion).Msg("Starting job")
+				log.Debug().Str("suite", s.Name).Str("deviceName", d.Name).Str("deviceID", d.ID).Str("platformVersion", d.PlatformVersion).Msg("Starting job")
 				r.startJob(jobOpts, appFileID, testAppFileID, s, d)
 			}
 		}

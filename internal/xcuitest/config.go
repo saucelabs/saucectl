@@ -28,8 +28,8 @@ type Xcuitest struct {
 	TestApp string `yaml:"testApp,omitempty" json:"testApp"`
 }
 
-// TestOption represents the xcuitest test filter options configuration.
-type TestOption struct {
+// TestOptions represents the xcuitest test filter options configuration.
+type TestOptions struct {
 	Class []string `yaml:"class,omitempty" json:"class"`
 }
 
@@ -37,7 +37,7 @@ type TestOption struct {
 type Suite struct {
 	Name        string          `yaml:"name,omitempty" json:"name"`
 	Devices     []config.Device `yaml:"devices,omitempty" json:"devices"`
-	TestOptions TestOption      `yaml:"testOptions,omitempty" json:"testOptions"`
+	TestOptions TestOptions     `yaml:"testOptions,omitempty" json:"testOptions"`
 }
 
 // FromFile creates a new xcuitest Project based on the filepath cfgPath.
@@ -104,8 +104,8 @@ func Validate(p Project) error {
 	return nil
 }
 
-// ApplyDefaultValues applies default values.
-func ApplyDefaultValues(p *Project) {
+// SetDeviceDefaultValues sets device default values.
+func SetDeviceDefaultValues(p *Project) {
 	for _, suite := range p.Suites {
 		for _, device := range suite.Devices {
 			device.PlatformName = "iOS"

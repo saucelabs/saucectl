@@ -552,7 +552,7 @@ func runXcuitest(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc
 		return 1, errors.New("no sauce region set")
 	}
 
-	xcuitest.ApplyDefaultValues(&p)
+	xcuitest.SetDeviceDefaultValues(&p)
 	err = xcuitest.Validate(p)
 	if err != nil {
 		return 1, err

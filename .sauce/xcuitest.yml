@@ -11,7 +11,7 @@ sauce:
       - other tag
   build: Release $CI_COMMIT_SHORT_SHA
 
-xcuit:
+xcuitest:
   app: ./tests/apps/xcuitest/SauceLabs.Mobile.Sample.XCUITest.App.ipa
   testApp: ./tests/apps/xcuitest/SwagLabsMobileAppUITests-Runner.ipa
 
