@@ -11,10 +11,10 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/mocks"
-	"github.com/saucelabs/saucectl/internal/xcuit"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
 
-func TestXcuitRunner_RunProject(t *testing.T) {
+func TestXcuitestRunner_RunProject(t *testing.T) {
 	httpmock.Activate()
 	defer func() {
 		httpmock.DeactivateAndReset()
@@ -54,7 +54,7 @@ func TestXcuitRunner_RunProject(t *testing.T) {
 		DownloadArtifactFn: func(jobID string) {},
 	}
 
-	runner := &XcuitRunner{
+	runner := &XcuitestRunner{
 		CloudRunner: CloudRunner{
 			JobStarter:         &starter,
 			JobReader:          &reader,
@@ -63,15 +63,15 @@ func TestXcuitRunner_RunProject(t *testing.T) {
 			ProjectUploader:    uploader,
 			ArtifactDownloader: &downloader,
 		},
-		Project: xcuit.Project{
-			Xcuit: xcuit.Xcuit{
+		Project: xcuitest.Project{
+			Xcuitest: xcuitest.Xcuitest{
 				App:     "/path/to/app.ipa",
 				TestApp: "/path/to/testApp.ipa",
 			},
-			Suites: []xcuit.Suite{
+			Suites: []xcuitest.Suite{
 				{
 					Name: "my xcuitest project",
-					Devices: []xcuit.Device{
+					Devices: []config.Device{
 						{
 							Name:            "iPhone 11",
 							PlatformName:    "iOS",
@@ -93,7 +93,7 @@ func TestXcuitRunner_RunProject(t *testing.T) {
 	assert.Equal(t, "14.3", startOpts.PlatformVersion)
 }
 
-func TestRunSuites_Xcuit_NoConcurrency(t *testing.T) {
+func TestRunSuites_Xcuitest_NoConcurrency(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -111,14 +111,14 @@ func TestRunSuites_Xcuit_NoConcurrency(t *testing.T) {
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 		return 0, nil
 	}}
-	runner := XcuitRunner{
+	runner := XcuitestRunner{
 		CloudRunner: CloudRunner{
 			JobStarter: &starter,
 			JobReader:  &reader,
 			CCYReader:  ccyReader,
 		},
-		Project: xcuit.Project{
-			Suites: []xcuit.Suite{
+		Project: xcuitest.Project{
+			Suites: []xcuitest.Suite{
 				{Name: "dummy-suite"},
 			},
 			Sauce: config.SauceConfig{
@@ -131,16 +131,16 @@ func TestRunSuites_Xcuit_NoConcurrency(t *testing.T) {
 }
 
 func TestCalculateJobsCount(t *testing.T) {
-	runner := &XcuitRunner{
-		Project: xcuit.Project{
-			Xcuit: xcuit.Xcuit{
+	runner := &XcuitestRunner{
+		Project: xcuitest.Project{
+			Xcuitest: xcuitest.Xcuitest{
 				App:     "/path/to/app.ipa",
 				TestApp: "/path/to/testApp.ipa",
 			},
-			Suites: []xcuit.Suite{
+			Suites: []xcuitest.Suite{
 				{
-					Name: "valid xcuit project",
-					Devices: []xcuit.Device{
+					Name: "valid xcuitest project",
+					Devices: []config.Device{
 						{
 							Name:            "iPhone 11",
 							PlatformName:    "iOS",

@@ -1,4 +1,4 @@
-package xcuit
+package xcuitest
 
 import (
 	"errors"
@@ -6,14 +6,16 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/saucelabs/saucectl/internal/config"
+
 	"github.com/stretchr/testify/assert"
 	"gotest.tools/v3/fs"
 )
 
 func TestValidate(t *testing.T) {
-	dir := fs.NewDir(t, "xcuit-config",
+	dir := fs.NewDir(t, "xcuitest-config",
 		fs.WithFile("test.ipa", "", fs.WithMode(0655)),
-		fs.WithDir("test.app", fs.WithMode(0655)))
+		fs.WithFile("testApp.ipa", "", fs.WithMode(0655)))
 	defer dir.Remove()
 	appF := filepath.Join(dir.Path(), "test.ipa")
 	testAppF := filepath.Join(dir.Path(), "testApp.ipa")
@@ -31,7 +33,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "validating throws error on app missing .ipa",
 			p: &Project{
-				Xcuit: Xcuit{
+				Xcuitest: Xcuitest{
 					App: "/path/to/app",
 				},
 			},
@@ -40,7 +42,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "validating throws error on empty testApp",
 			p: &Project{
-				Xcuit: Xcuit{
+				Xcuitest: Xcuitest{
 					App:     appF,
 					TestApp: "",
 				},
@@ -50,7 +52,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "validating throws error on not test app .ipa",
 			p: &Project{
-				Xcuit: Xcuit{
+				Xcuitest: Xcuitest{
 					App:     appF,
 					TestApp: "/path/to/bundle/tests",
 				},
@@ -60,7 +62,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "validating throws error on missing suites",
 			p: &Project{
-				Xcuit: Xcuit{
+				Xcuitest: Xcuitest{
 					App:     appF,
 					TestApp: testAppF,
 				},
@@ -70,14 +72,14 @@ func TestValidate(t *testing.T) {
 		{
 			name: "validating throws error on missing devices",
 			p: &Project{
-				Xcuit: Xcuit{
+				Xcuitest: Xcuitest{
 					App:     appF,
 					TestApp: testAppF,
 				},
 				Suites: []Suite{
 					Suite{
 						Name:    "no devices",
-						Devices: []Device{},
+						Devices: []config.Device{},
 					},
 				},
 			},
@@ -86,14 +88,14 @@ func TestValidate(t *testing.T) {
 		{
 			name: "validating throws error on missing device name",
 			p: &Project{
-				Xcuit: Xcuit{
+				Xcuitest: Xcuitest{
 					App:     appF,
 					TestApp: testAppF,
 				},
 				Suites: []Suite{
 					Suite{
 						Name: "no device name",
-						Devices: []Device{
+						Devices: []config.Device{
 							{
 								Name: "",
 							},
@@ -104,41 +106,20 @@ func TestValidate(t *testing.T) {
 			expectedErr: errors.New("missing device name or id for suite: no device name. Devices index: 0"),
 		},
 		{
-			name: "validating throws error on incorrect device platformName",
-			p: &Project{
-				Xcuit: Xcuit{
-					App:     appF,
-					TestApp: testAppF,
-				},
-				Suites: []Suite{
-					Suite{
-						Name: "incorrect device platfromName",
-						Devices: []Device{
-							{
-								Name:         "iPhone 11",
-								PlatformName: "Android",
-							},
-						},
-					},
-				},
-			},
-			expectedErr: errors.New("device platformName is incorrect for suite: incorrect device platfromName. Devices index: 0. Supported device platform: iOS"),
-		},
-		{
 			name: "validating throws error on unsupported device type",
 			p: &Project{
-				Xcuit: Xcuit{
+				Xcuitest: Xcuitest{
 					App:     appF,
 					TestApp: testAppF,
 				},
 				Suites: []Suite{
 					Suite{
 						Name: "unsupported device type",
-						Devices: []Device{
+						Devices: []config.Device{
 							{
 								Name:         "iPhone 11",
 								PlatformName: "iOS",
-								Options: Options{
+								Options: config.DeviceOptions{
 									DeviceType: "some",
 								},
 							},
@@ -159,12 +140,12 @@ func TestValidate(t *testing.T) {
 }
 
 func TestFromFile(t *testing.T) {
-	dir := fs.NewDir(t, "xcuit-cfg",
+	dir := fs.NewDir(t, "xcuitest-cfg",
 		fs.WithFile("config.yml", `apiVersion: v1alpha
-kind: xcuit
-xcuit:
-  app: "./tests/apps/xcuit/SauceLabs.Mobile.Sample.XCUITest.App.ipa"
-  testApp: "./tests/apps/xcuit/SwagLabsMobileAppUITests-Runner.ipa"
+kind: xcuitest
+xcuitest:
+  app: "./tests/apps/xcuitest/SauceLabs.Mobile.Sample.XCUITest.App.ipa"
+  testApp: "./tests/apps/xcuitest/SwagLabsMobileAppUITests-Runner.ipa"
 suites:
   - name: "saucy barista"
     devices:
@@ -180,14 +161,14 @@ suites:
 		t.Errorf("expected error: %v, got: %v", nil, err)
 	}
 	expected := Project{
-		Xcuit: Xcuit{
-			App:     "./tests/apps/xcuit/SauceLabs.Mobile.Sample.XCUITest.App.ipa",
-			TestApp: "./tests/apps/xcuit/SwagLabsMobileAppUITests-Runner.ipa",
+		Xcuitest: Xcuitest{
+			App:     "./tests/apps/xcuitest/SauceLabs.Mobile.Sample.XCUITest.App.ipa",
+			TestApp: "./tests/apps/xcuitest/SwagLabsMobileAppUITests-Runner.ipa",
 		},
 		Suites: []Suite{
 			{
 				Name: "saucy barista",
-				Devices: []Device{
+				Devices: []config.Device{
 					{
 						Name:            "iPhone XR",
 						PlatformVersion: "14.3",
@@ -202,7 +183,7 @@ suites:
 			},
 		},
 	}
-	if !reflect.DeepEqual(cfg.Xcuit, expected.Xcuit) {
+	if !reflect.DeepEqual(cfg.Xcuitest, expected.Xcuitest) {
 		t.Errorf("expected: %v, got: %v", expected, cfg)
 	}
 	if !reflect.DeepEqual(cfg.Suites, expected.Suites) {

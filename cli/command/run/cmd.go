@@ -32,7 +32,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
-	"github.com/saucelabs/saucectl/internal/xcuit"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
 
 var (
@@ -185,7 +185,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return runEspresso(cmd, tc, rs, rc, as)
 	}
 	if d.Kind == config.KindXcuitest && d.APIVersion == config.VersionV1Alpha {
-		return runXcuit(cmd, tc, rs, rc, as)
+		return runXcuitest(cmd, tc, rs, rc, as)
 	}
 
 	return 1, errors.New("unknown framework configuration")
@@ -536,8 +536,8 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 	return r.RunProject()
 }
 
-func runXcuit(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as *appstore.AppStore) (int, error) {
-	p, err := xcuit.FromFile(cfgFilePath)
+func runXcuitest(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as *appstore.AppStore) (int, error) {
+	p, err := xcuitest.FromFile(cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
@@ -552,13 +552,14 @@ func runXcuit(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc rd
 		return 1, errors.New("no sauce region set")
 	}
 
-	err = xcuit.Validate(p)
+	xcuitest.ApplyDefaultValues(&p)
+	err = xcuitest.Validate(p)
 	if err != nil {
 		return 1, err
 	}
 
 	if cmd.Flags().Lookup("suite").Changed {
-		if err := filterXcuitSuite(&p); err != nil {
+		if err := filterXcuitestSuite(&p); err != nil {
 			return 1, err
 		}
 	}
@@ -571,14 +572,14 @@ func runXcuit(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc rd
 	rs.ArtifactConfig = p.Artifacts.Download
 	rc.ArtifactConfig = p.Artifacts.Download
 
-	return runXcuitInCloud(p, regio, tc, rs, rc, as)
+	return runXcuitestInCloud(p, regio, tc, rs, rc, as)
 }
 
-func runXcuitInCloud(p xcuit.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as *appstore.AppStore) (int, error) {
-	log.Info().Msg("Running Xcuitest in Sauce Labs")
+func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as *appstore.AppStore) (int, error) {
+	log.Info().Msg("Running XCUITest in Sauce Labs")
 	printTestEnv("sauce")
 
-	r := saucecloud.XcuitRunner{
+	r := saucecloud.XcuitestRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader:       as,
@@ -763,10 +764,10 @@ func filterEspressoSuite(c *espresso.Project) error {
 	return fmt.Errorf("suite name '%s' is invalid", suiteName)
 }
 
-func filterXcuitSuite(c *xcuit.Project) error {
+func filterXcuitestSuite(c *xcuitest.Project) error {
 	for _, s := range c.Suites {
 		if s.Name == suiteName {
-			c.Suites = []xcuit.Suite{s}
+			c.Suites = []xcuitest.Suite{s}
 			return nil
 		}
 	}

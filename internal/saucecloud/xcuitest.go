@@ -5,30 +5,31 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/xcuit"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
 
-// XcuitRunner represents the Sauce Labs cloud implementation for xcuit.
-type XcuitRunner struct {
+// XcuitestRunner represents the Sauce Labs cloud implementation for xcuitest.
+type XcuitestRunner struct {
 	CloudRunner
-	Project xcuit.Project
+	Project xcuitest.Project
 }
 
-// RunProject runs the tests defined in xcuit.Project.
-func (r *XcuitRunner) RunProject() (int, error) {
+// RunProject runs the tests defined in xcuitest.Project.
+func (r *XcuitestRunner) RunProject() (int, error) {
 	exitCode := 1
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.ID); err != nil {
 		return exitCode, err
 	}
 
-	appFileID, err := r.uploadProject(r.Project.Xcuit.App, appUpload)
+	appFileID, err := r.uploadProject(r.Project.Xcuitest.App, appUpload)
 	if err != nil {
 		return exitCode, err
 	}
 
-	testAppFileID, err := r.uploadProject(r.Project.Xcuit.TestApp, testAppUpload)
+	testAppFileID, err := r.uploadProject(r.Project.Xcuitest.TestApp, testAppUpload)
 	if err != nil {
 		return exitCode, err
 	}
@@ -41,7 +42,7 @@ func (r *XcuitRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-func (r *XcuitRunner) runSuites(appFileID, testAppFileID string) bool {
+func (r *XcuitestRunner) runSuites(appFileID, testAppFileID string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
@@ -56,7 +57,7 @@ func (r *XcuitRunner) runSuites(appFileID, testAppFileID string) bool {
 	go func() {
 		for _, s := range r.Project.Suites {
 			for _, d := range s.Devices {
-				log.Debug().Str("suite", s.Name).Str("device", d.Name).Str("platformVersion", d.PlatformVersion).Msg("Starting job")
+				log.Debug().Str("suite", s.Name).Str("device name", d.Name).Str("device id", d.ID).Str("platformVersion", d.PlatformVersion).Msg("Starting job")
 				r.startJob(jobOpts, appFileID, testAppFileID, s, d)
 			}
 		}
@@ -66,7 +67,7 @@ func (r *XcuitRunner) runSuites(appFileID, testAppFileID string) bool {
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
 }
 
-func (r *XcuitRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, testAppFileID string, s xcuit.Suite, d xcuit.Device) {
+func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, testAppFileID string, s xcuitest.Suite, d config.Device) {
 	jobOpts <- job.StartOptions{
 		ConfigFilePath:   r.Project.ConfigFilePath,
 		DisplayName:      s.Name,
@@ -98,7 +99,7 @@ func (r *XcuitRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, testA
 	}
 }
 
-func (r *XcuitRunner) calculateJobsCount(suites []xcuit.Suite) int {
+func (r *XcuitestRunner) calculateJobsCount(suites []xcuitest.Suite) int {
 	jobsCount := 0
 	for _, s := range suites {
 		jobsCount += len(s.Devices)

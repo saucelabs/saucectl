@@ -1,4 +1,4 @@
-package xcuit
+package xcuitest
 
 import (
 	"errors"
@@ -12,51 +12,35 @@ import (
 
 var supportedDeviceTypes = []string{"ANY", "PHONE", "TABLET"}
 
-// Project represents the xcuit project configuration.
+// Project represents the xcuitest project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline"`
 	ConfigFilePath string             `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
-	Xcuit          Xcuit              `yaml:"xcuit,omitempty" json:"xcuit"`
+	Xcuitest       Xcuitest           `yaml:"xcuitest,omitempty" json:"xcuitest"`
 	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
 	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
 }
 
-// Xcuit represents xcuit apps configuration.
-type Xcuit struct {
+// Xcuitest represents xcuitest apps configuration.
+type Xcuitest struct {
 	App     string `yaml:"app,omitempty" json:"app"`
 	TestApp string `yaml:"testApp,omitempty" json:"testApp"`
 }
 
-// TestOption represents the xcuit test filter options configuration.
+// TestOption represents the xcuitest test filter options configuration.
 type TestOption struct {
 	Class []string `yaml:"class,omitempty" json:"class"`
 }
 
-// Suite represents the xcuit test suite configuration.
+// Suite represents the xcuitest test suite configuration.
 type Suite struct {
-	Name        string     `yaml:"name,omitempty" json:"name"`
-	Devices     []Device   `yaml:"devices,omitempty" json:"devices"`
-	TestOptions TestOption `yaml:"testOptions,omitempty" json:"testOptions"`
+	Name        string          `yaml:"name,omitempty" json:"name"`
+	Devices     []config.Device `yaml:"devices,omitempty" json:"devices"`
+	TestOptions TestOption      `yaml:"testOptions,omitempty" json:"testOptions"`
 }
 
-// Device represents device configuration.
-type Device struct {
-	ID              string  `yaml:"id,omitempty" json:"id"`
-	Name            string  `yaml:"name,omitempty" json:"name"`
-	PlatformVersion string  `yaml:"platformVersion,omitempty" json:"platformVersion"`
-	PlatformName    string  `yaml:"platformName,omitempty" json:"platformName"`
-	Options         Options `yaml:"options,omitempty" json:"options"`
-}
-
-// Options represents device options configuration.
-type Options struct {
-	CarrierConnectivity bool   `yaml:"carrierConnectivity,omitempty" json:"carrierConnectivity"`
-	DeviceType          string `yaml:"deviceType,omitempty" json:"deviceType"`
-	Private             bool   `yaml:"private,omitempty" json:"private"`
-}
-
-// FromFile creates a new xcuit Project based on the filepath cfgPath.
+// FromFile creates a new xcuitest Project based on the filepath cfgPath.
 func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
@@ -83,18 +67,18 @@ func FromFile(cfgPath string) (Project, error) {
 // values. This is not an exhaustive operation and further validation should be performed both in the client and/or
 // server side depending on the workflow that is executed.
 func Validate(p Project) error {
-	if p.Xcuit.App == "" {
+	if p.Xcuitest.App == "" {
 		return errors.New("missing path to app .ipa")
 	}
-	if !strings.HasSuffix(p.Xcuit.App, ".ipa") {
-		return fmt.Errorf("invaild application file: %s, make sure extension is .ipa", p.Xcuit.App)
+	if !strings.HasSuffix(p.Xcuitest.App, ".ipa") {
+		return fmt.Errorf("invaild application file: %s, make sure extension is .ipa", p.Xcuitest.App)
 	}
 
-	if p.Xcuit.TestApp == "" {
+	if p.Xcuitest.TestApp == "" {
 		return errors.New("missing path to test app .ipa")
 	}
-	if !strings.HasSuffix(p.Xcuit.TestApp, ".ipa") {
-		return fmt.Errorf("invaild application test file: %s, make sure extension is .ipa", p.Xcuit.TestApp)
+	if !strings.HasSuffix(p.Xcuitest.TestApp, ".ipa") {
+		return fmt.Errorf("invaild application test file: %s, make sure extension is .ipa", p.Xcuitest.TestApp)
 	}
 
 	if len(p.Suites) == 0 {
@@ -110,11 +94,6 @@ func Validate(p Project) error {
 				return fmt.Errorf("missing device name or id for suite: %s. Devices index: %d", suite.Name, didx)
 			}
 
-			if strings.ToLower(device.PlatformName) != "ios" {
-				return fmt.Errorf("device platformName is incorrect for suite: %s. Devices index: %d. Supported device platform: iOS",
-					suite.Name, didx)
-			}
-
 			if device.Options.DeviceType != "" && !isSupportedDeviceType(device.Options.DeviceType) {
 				return fmt.Errorf("deviceType: %s is unsupported for suited: %s. Devices index: %d. Supported device types: %s",
 					device.Options.DeviceType, suite.Name, didx, strings.Join(supportedDeviceTypes, ","))
@@ -123,6 +102,20 @@ func Validate(p Project) error {
 	}
 
 	return nil
+}
+
+// ApplyDefaultValues applies default values.
+func ApplyDefaultValues(p *Project) {
+	for _, suite := range p.Suites {
+		for _, device := range suite.Devices {
+			device.PlatformName = "iOS"
+
+			// device type only supports uppercase values
+			if device.Options.DeviceType != "" {
+				device.Options.DeviceType = strings.ToUpper(device.Options.DeviceType)
+			}
+		}
+	}
 }
 
 func isSupportedDeviceType(deviceType string) bool {
