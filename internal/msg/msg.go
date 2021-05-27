@@ -76,7 +76,7 @@ or peruse some of our example repositories:
   - https://github.com/saucelabs/saucectl-testcafe-example`
 
 // UploadingTimeoutSuggestion is a recommendation to add unnecessary files to .sauceignore in the case that the bundled file is too big.
-const UploadingTimeoutSuggestion = `Failed to upload the project due to timeout. We *highly* recommend using .sauceignore file so that saucectl does not
+const UploadingTimeoutSuggestion = `Failed to upload the project because it took too long. We *highly* recommend using .sauceignore file so that saucectl does not
 create big archives with unnecessary files.
 
 For more information, visit https://docs.saucelabs.com/testrunner-toolkit/configuration/bundling/index.html#exclude-files-from-the-bundle
@@ -103,5 +103,5 @@ func LogGlobalTimeoutShutdown() {
 // LogUploadTimeoutSuggestion prints out adding unnecessary files to .sauceignore
 func LogUploadTimeoutSuggestion() {
 	red := color.New(color.FgRed).SprintFunc()
-	fmt.Printf("\n%s: %s\n\n", red("WARNING"), UploadingTimeoutSuggestion)
+	fmt.Printf("\n%s: %s\n\n", red("TIMEOUT"), UploadingTimeoutSuggestion)
 }
