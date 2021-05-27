@@ -37,7 +37,7 @@ func TestValidate(t *testing.T) {
 					App: "/path/to/app",
 				},
 			},
-			expectedErr: errors.New("invaild application file: /path/to/app, make sure extension is .ipa"),
+			expectedErr: errors.New("invalid application file: /path/to/app, make sure extension is .ipa"),
 		},
 		{
 			name: "validating throws error on empty testApp",
@@ -57,7 +57,7 @@ func TestValidate(t *testing.T) {
 					TestApp: "/path/to/bundle/tests",
 				},
 			},
-			expectedErr: errors.New("invaild application test file: /path/to/bundle/tests, make sure extension is .ipa"),
+			expectedErr: errors.New("invalid application test file: /path/to/bundle/tests, make sure extension is .ipa"),
 		},
 		{
 			name: "validating throws error on missing suites",
@@ -127,7 +127,7 @@ func TestValidate(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: errors.New("deviceType: some is unsupported for suited: unsupported device type. Devices index: 0. Supported device types: ANY,PHONE,TABLET"),
+			expectedErr: errors.New("deviceType: some is unsupported for suite: unsupported device type. Devices index: 0. Supported device types: ANY,PHONE,TABLET"),
 		},
 	}
 	for _, tc := range testCases {

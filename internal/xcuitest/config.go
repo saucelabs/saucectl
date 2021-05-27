@@ -71,14 +71,14 @@ func Validate(p Project) error {
 		return errors.New("missing path to app .ipa")
 	}
 	if !strings.HasSuffix(p.Xcuitest.App, ".ipa") {
-		return fmt.Errorf("invaild application file: %s, make sure extension is .ipa", p.Xcuitest.App)
+		return fmt.Errorf("invalid application file: %s, make sure extension is .ipa", p.Xcuitest.App)
 	}
 
 	if p.Xcuitest.TestApp == "" {
 		return errors.New("missing path to test app .ipa")
 	}
 	if !strings.HasSuffix(p.Xcuitest.TestApp, ".ipa") {
-		return fmt.Errorf("invaild application test file: %s, make sure extension is .ipa", p.Xcuitest.TestApp)
+		return fmt.Errorf("invalid application test file: %s, make sure extension is .ipa", p.Xcuitest.TestApp)
 	}
 
 	if len(p.Suites) == 0 {
@@ -95,7 +95,7 @@ func Validate(p Project) error {
 			}
 
 			if device.Options.DeviceType != "" && !isSupportedDeviceType(device.Options.DeviceType) {
-				return fmt.Errorf("deviceType: %s is unsupported for suited: %s. Devices index: %d. Supported device types: %s",
+				return fmt.Errorf("deviceType: %s is unsupported for suite: %s. Devices index: %d. Supported device types: %s",
 					device.Options.DeviceType, suite.Name, didx, strings.Join(supportedDeviceTypes, ","))
 			}
 		}
@@ -111,9 +111,7 @@ func SetDeviceDefaultValues(p *Project) {
 			device.PlatformName = "iOS"
 
 			// device type only supports uppercase values
-			if device.Options.DeviceType != "" {
-				device.Options.DeviceType = strings.ToUpper(device.Options.DeviceType)
-			}
+			device.Options.DeviceType = strings.ToUpper(device.Options.DeviceType)
 		}
 	}
 }
