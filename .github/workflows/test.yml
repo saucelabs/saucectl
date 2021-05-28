@@ -172,9 +172,9 @@ jobs:
         with:
           name: saucectlbin
 
-      - name: Run Sauce Pipeline Test - Sauce Cloud
+      - name: Saucectl RUN
         run: |
-          ./saucectl.exe run -c .sauce/cypress_cloud.yml --test-env sauce --ccy 5
+          ./saucectl.exe run -c .sauce/cypress.yml --suite "saucy test in sauce"
   espresso:
     needs: build
     runs-on: ubuntu-latest
@@ -194,8 +194,6 @@ jobs:
       - name: Set permissions
         run: chmod +x ./saucectl
 
-      - name: Run Sauce Pipeline Test - Sauce Cloud
+      - name: Saucectl RUN
         run: |
-          ./saucectl run -c .sauce/espresso.yml --test-env sauce --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
+          ./saucectl run -c .sauce/espresso.yml
