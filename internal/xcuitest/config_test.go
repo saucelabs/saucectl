@@ -190,3 +190,57 @@ suites:
 		t.Errorf("expected: %v, got: %v", expected, cfg)
 	}
 }
+
+func TestSetDeviceDefaultValues(t *testing.T) {
+	p := Project{
+		Suites: []Suite{
+			{
+				Name: "test suite 1",
+				Devices: []config.Device{
+					{
+						Name: "iPhone 11",
+						Options: config.DeviceOptions{
+							DeviceType: "phone",
+						},
+					},
+					{
+						Name: "iPhone XR",
+						Options: config.DeviceOptions{
+							DeviceType: "tablet",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	SetDeviceDefaultValues(&p)
+
+	expected := Project{
+		Suites: []Suite{
+			{
+				Name: "test suite 1",
+				Devices: []config.Device{
+					{
+						Name:         "iPhone 11",
+						PlatformName: "iOS",
+						Options: config.DeviceOptions{
+							DeviceType: "PHONE",
+						},
+					},
+					{
+						Name:         "iPhone XR",
+						PlatformName: "iOS",
+						Options: config.DeviceOptions{
+							DeviceType: "TABLET",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if !reflect.DeepEqual(p, expected) {
+		t.Errorf("expected: %v, got: %v", expected, p)
+	}
+}

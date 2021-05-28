@@ -107,11 +107,11 @@ func Validate(p Project) error {
 // SetDeviceDefaultValues sets device default values.
 func SetDeviceDefaultValues(p *Project) {
 	for _, suite := range p.Suites {
-		for _, device := range suite.Devices {
-			device.PlatformName = "iOS"
+		for id := range suite.Devices {
+			suite.Devices[id].PlatformName = "iOS"
 
 			// device type only supports uppercase values
-			device.Options.DeviceType = strings.ToUpper(device.Options.DeviceType)
+			suite.Devices[id].Options.DeviceType = strings.ToUpper(suite.Devices[id].Options.DeviceType)
 		}
 	}
 }
