@@ -119,7 +119,7 @@ jobs:
 
       - name: Saucectl RUN
         run: ./saucectl run -c .sauce/playwright.yml
-  testcafe-from-template:
+  testcafe:
     needs: build
     runs-on: ubuntu-latest
 
@@ -135,32 +135,8 @@ jobs:
       - name: Set permissions
         run: chmod +x ./saucectl
 
-      - name: Create safe place
-        run: mkdir scratch
-
-      - name: Saucectl NEW
-        working-directory: scratch
-        run: |
-          ../saucectl new -f testcafe
-
-      - name: Saucectl RUN Docker
-        working-directory: scratch
-        run: ../saucectl run --test-env docker --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
-
-      - name: Saucectl RUN Sauce Cloud
-        working-directory: scratch
-        run: ../saucectl run --test-env sauce --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
-
-      - name: Saucectl RUN Docker and Sauce Cloud
-        working-directory: scratch
-        run: ../saucectl run --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
-
+      - name: Saucectl RUN
+        run: ./saucectl run -c .sauce/testcafe.yml
   cypress-from-template:
     needs: build
     runs-on: ubuntu-latest
