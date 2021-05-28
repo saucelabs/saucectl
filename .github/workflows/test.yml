@@ -9,7 +9,7 @@ on:
 env:
   SAUCE_USERNAME: ${{secrets.SAUCE_USERNAME}}
   SAUCE_ACCESS_KEY: ${{secrets.SAUCE_ACCESS_KEY}}
-
+  BUILD_ID: saucectl-run-${{ github.run_id }}
 
 jobs:
   lint:
@@ -101,9 +101,7 @@ jobs:
 
       - name: Saucectl RUN
         run: ./saucectl run -c .sauce/puppeteer.yml
-        env:
-          BUILD_ID: saucectl-run-${{ github.run_id }}
-  playwright-from-template:
+  playwright:
     needs: build
     runs-on: ubuntu-latest
 
@@ -119,32 +117,8 @@ jobs:
       - name: Set permissions
         run: chmod +x ./saucectl
 
-      - name: Create safe place
-        run: mkdir scratch
-
-      - name: Saucectl NEW
-        working-directory: scratch
-        run: |
-          ../saucectl new -f playwright
-
-      - name: Saucectl RUN Docker
-        working-directory: scratch
-        run: ../saucectl run --test-env docker --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
-
-      - name: Saucectl RUN Sauce Cloud
-        working-directory: scratch
-        run: ../saucectl run --test-env sauce --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
-
-      - name: Saucectl RUN Docker and Sauce Cloud
-        working-directory: scratch
-        run: ../saucectl run --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
-
+      - name: Saucectl RUN
+        run: ./saucectl run -c .sauce/playwright.yml
   testcafe-from-template:
     needs: build
     runs-on: ubuntu-latest

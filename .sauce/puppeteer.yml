@@ -2,12 +2,11 @@ apiVersion: v1alpha
 kind: puppeteer
 sauce:
   region: us-west-1
-  concurrency: 2
+  concurrency: 10
   metadata:
     name: Testing Puppeteer Support
     tags:
       - e2e
-      - saucectl repo
     build: "$BUILD_ID"
 docker:
   fileTransfer: copy

@@ -1,10 +1,8 @@
 apiVersion: v1alpha
 kind: playwright
-defaults:
-  mode: sauce
 sauce:
   region: us-west-1
-  concurrency: 1
+  concurrency: 10
   metadata:
     name: Testing Playwright Support
     tags:
@@ -12,36 +10,28 @@ sauce:
     build: "$BUILD_ID"
 docker:
   fileTransfer: mount
+rootDir: tests/e2e/playwright/
 playwright:
-  projectPath: tests/e2e/playwright/
-  version: 1.7.1
-  params:
-    browserName: firefox
+  version: 1.10.0
 suites:
-  - name: "saucy test in docker"
+  - name: "firefox test in docker"
     mode: docker
     testMatch: '**/*.js'
     env:
       hello: world
-
-    # Playwright-test settings
     params:
       browserName: "firefox"
-      headful: false
-      slowMo: 1000
-  - name: "saucy test in sauce"
-    mode: sauce
+
+  - name: "chromium test in sauce"
     platformName: "Windows 10"
     testMatch: '**/*.js'
-      # screenResolution: "1920x1080"
-      # Available resolutions on Windows: '800x600', '1024x768', '1152x864', '1280x768', '1280x800', '1280x960', '1280x1024',
-      # '1400x1050', '1440x900', '1600x1200', '1680x1050', '1920x1080', '1920x1200', '2560x1600'
-      # If no screenResolution set, it will use 1024x768 by default
     env:
       hello: world
-
-    # Playwright-test settings
     params:
-      browserName: "firefox"
-      headful: false
-      slowMo: 1000
+      browserName: "chromium"
+
+  - name: "webkit test in sauce"
+    platformName: "Windows 10"
+    testMatch: '**/*.js'
+    params:
+      browserName: "webkit"
