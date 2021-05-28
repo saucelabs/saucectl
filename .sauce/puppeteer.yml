@@ -2,17 +2,22 @@ apiVersion: v1alpha
 kind: puppeteer
 sauce:
   region: us-west-1
+  concurrency: 2
   metadata:
     name: Testing Puppeteer Support
     tags:
       - e2e
-      - release team
-      - other tag
-    build: Release $CI_COMMIT_SHORT_SHA
+      - saucectl repo
+    build: "$BUILD_ID"
+docker:
+  fileTransfer: copy
 rootDir: tests/e2e/puppeteer
 puppeteer:
-  version: 3.0.4
+  version: 9.1.1
 suites:
   - name: "chrome"
-    testMatch: ["**/example.test.js"]
+    testMatch: [ "**/*.test.js" ]
     browser: "chrome"
+  - name: "firefox"
+    testMatch: [ "**/*.test.js" ]
+    browser: "firefox"
