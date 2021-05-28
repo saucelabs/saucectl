@@ -9,8 +9,8 @@ sauce:
       - e2e
   build: "$BUILD_ID"
 espresso:
-  app: ./tests/apps/calc.apk
-  testApp: ./tests/apps/calc-success.apk
+  app: ./tests/espresso/calc.apk
+  testApp: ./tests/espresso/calc-success.apk
 suites:
   - name: "saucy barista"
     testOptions:
