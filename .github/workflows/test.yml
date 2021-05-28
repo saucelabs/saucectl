@@ -137,7 +137,7 @@ jobs:
 
       - name: Saucectl RUN
         run: ./saucectl run -c .sauce/testcafe.yml
-  cypress-from-template:
+  cypress:
     needs: build
     runs-on: ubuntu-latest
 
@@ -153,34 +153,9 @@ jobs:
       - name: Set permissions
         run: chmod +x ./saucectl
 
-      - name: Create safe place
-        run: mkdir scratch
-
-      - name: Saucectl NEW
-        working-directory: scratch
+      - name: Saucectl RUN
         run: |
-          ../saucectl new -f cypress
-
-      - name: Saucectl RUN Docker
-        working-directory: scratch
-        run: |
-          ../saucectl run --test-env docker --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
-
-      - name: Saucectl RUN Sauce Cloud
-        working-directory: scratch
-        run: |
-          ../saucectl run --test-env sauce --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
-
-      - name: Saucectl RUN Docker and Sauce Cloud
-        working-directory: scratch
-        run: |
-          ../saucectl run --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
+          ./saucectl run -c .sauce/cypress.yml
   cypress-windows:
     needs: build
     runs-on: windows-latest

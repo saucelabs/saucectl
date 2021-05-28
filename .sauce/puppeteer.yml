@@ -20,3 +20,10 @@ suites:
   - name: "firefox"
     testMatch: [ "**/*.test.js" ]
     browser: "firefox"
+
+artifacts:
+  download:
+    when: always
+    match:
+      - console.log
+    directory: ./artifacts/

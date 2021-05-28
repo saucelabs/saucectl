@@ -35,3 +35,10 @@ suites:
     testMatch: '**/*.js'
     params:
       browserName: "webkit"
+
+artifacts:
+  download:
+    when: always
+    match:
+      - console.log
+    directory: ./artifacts/
