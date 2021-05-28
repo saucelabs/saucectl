@@ -18,24 +18,24 @@ suites:
     mode: docker
     browserName: firefox
     src:
-      - "tests/*.test.js"
+      - "*.test.js"
 
   - name: Chrome in sauce
     browserName: chrome
     src:
-      - "tests/*.test.js"
+      - "*.test.js"
     platformName: "mac 11.00"
 
   - name: Firefox in sauce
     browserName: firefox
     src:
-      - "tests/*.test.js"
+      - "*.test.js"
     platformName: "Windows 10"
 
   - name: iOS Test
     browserName: safari
     src:
-      - "tests/*.test.js"
+      - "*.test.js"
     devices:
       - name: iPhone 12 Simulator
         platformName: iOS
