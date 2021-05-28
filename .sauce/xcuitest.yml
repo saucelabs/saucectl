@@ -23,7 +23,6 @@ suites:
       # If set, only device by ID will be queried.
       #- id: <rdc_device_id>
       - name: "iPhone 11"
-        platformName: iOS
         platformVersion: "14.3"
         options:
           # If set, only devices with a SIM card will be queried.
