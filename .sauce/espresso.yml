@@ -11,8 +11,8 @@ sauce:
       - other tag
   build: Release $CI_COMMIT_SHORT_SHA
 espresso:
-  app: ./tests/apps/calc.apk
-  testApp: ./tests/apps/calc-success.apk
+  app: ./tests/apps/espresso/calc.apk
+  testApp: ./tests/apps/espresso/calc-success.apk
 suites:
   - name: "saucy barista"
     testOptions:
