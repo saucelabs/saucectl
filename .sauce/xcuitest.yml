@@ -1,0 +1,40 @@
+apiVersion: v1alpha
+kind: xcuitest
+sauce:
+  region: us-west-1
+  concurrency: 1
+  metadata:
+    name: Testing XCUITEST Support
+    tags:
+      - e2e
+      - release team
+      - other tag
+  build: Release $CI_COMMIT_SHORT_SHA
+
+xcuitest:
+  app: ./tests/apps/xcuitest/SauceLabs.Mobile.Sample.XCUITest.App.ipa
+  testApp: ./tests/apps/xcuitest/SwagLabsMobileAppUITests-Runner.ipa
+
+suites:
+  - name: "saucy xcuitest"
+    testOptions:
+      class: ["SwagLabsMobileAppUITests.LoginTests/testSuccessfulLogin"]
+    devices:
+      # If set, only device by ID will be queried.
+      #- id: <rdc_device_id>
+      - name: "iPhone 11"
+        platformVersion: "14.3"
+        options:
+          # If set, only devices with a SIM card will be queried.
+          carrierConnectivity: false
+          # Possible values [ANY,PHONE,TABLET]
+          deviceType: PHONE
+          # If set, only private devices will be queried.
+          private: false
+
+artifacts:
+  download:
+    when: always
+    match:
+      - "*.junit.xml"
+    directory: ./artifacts/
