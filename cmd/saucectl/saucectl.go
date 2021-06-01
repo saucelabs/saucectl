@@ -20,7 +20,7 @@ import (
 var (
 	cmdUse   = "saucectl [OPTIONS] COMMAND [ARG...]"
 	cmdShort = "saucectl"
-	cmdLong  = `Please refer to our examples for how setup saucectl for your project:
+	cmdLong  = `Please refer to our examples for how to setup saucectl for your project:
 
 - https://github.com/saucelabs/saucectl-cypress-example
 - https://github.com/saucelabs/saucectl-espresso-example

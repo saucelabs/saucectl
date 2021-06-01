@@ -10,7 +10,7 @@ var (
 	newShort       = "*DEPRECATED*"
 	newLong        = "*DEPRECATED*"
 	newExample     = "saucectl new"
-	deprecationMsg = `please refer to our examples for how setup saucectl for your project:
+	deprecationMsg = `please refer to our examples for how to setup saucectl for your project:
 
 - https://github.com/saucelabs/saucectl-cypress-example
 - https://github.com/saucelabs/saucectl-espresso-example
