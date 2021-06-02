@@ -20,7 +20,14 @@ import (
 var (
 	cmdUse   = "saucectl [OPTIONS] COMMAND [ARG...]"
 	cmdShort = "saucectl"
-	cmdLong  = "Some main description"
+	cmdLong  = `Please refer to our examples for how to setup saucectl for your project:
+
+- https://github.com/saucelabs/saucectl-cypress-example
+- https://github.com/saucelabs/saucectl-espresso-example
+- https://github.com/saucelabs/saucectl-playwright-example
+- https://github.com/saucelabs/saucectl-puppeteer-example
+- https://github.com/saucelabs/saucectl-testcafe-example
+- https://github.com/saucelabs/saucectl-xcuitest-example`
 )
 
 func main() {

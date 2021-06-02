@@ -2,17 +2,15 @@ apiVersion: v1alpha
 kind: espresso
 sauce:
   region: us-west-1
-  concurrency: 10 # Controls how many suites are executed at the same time (sauce test env only).
+  concurrency: 10
   metadata:
     name: Testing Espresso Support
     tags:
       - e2e
-      - release team
-      - other tag
-  build: Release $CI_COMMIT_SHORT_SHA
+  build: "$BUILD_ID"
 espresso:
-  app: ./tests/apps/espresso/calc.apk
-  testApp: ./tests/apps/espresso/calc-success.apk
+  app: ./tests/e2e/espresso/calc.apk
+  testApp: ./tests/e2e/espresso/calc-success.apk
 suites:
   - name: "saucy barista"
     testOptions:
