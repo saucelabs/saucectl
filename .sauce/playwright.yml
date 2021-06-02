@@ -12,7 +12,7 @@ docker:
   fileTransfer: mount
 rootDir: tests/e2e/playwright/
 playwright:
-  version: 1.10.0
+  version: 1.11.1
 suites:
   - name: "firefox test in docker"
     mode: docker
