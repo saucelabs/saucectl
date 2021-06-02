@@ -178,6 +178,7 @@ func calculateBundleHash(filename string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer fs.close()
 	hsh := md5.New()
 	if _, err := io.Copy(hsh, fs); err != nil {
 		return "", err
