@@ -20,7 +20,7 @@ func (fpu *FakeProjectUploader) Upload(name string) (storage.ArtifactMeta, error
 	return storage.ArtifactMeta{}, errors.New("failed-upload")
 }
 
-// Locate mock function
+// Find mock function
 func (fpu *FakeProjectUploader) Find(hash string) (storage.ArtifactMeta, error) {
 	return storage.ArtifactMeta{}, nil
 }
