@@ -26,7 +26,8 @@ var (
 - https://github.com/saucelabs/saucectl-espresso-example
 - https://github.com/saucelabs/saucectl-playwright-example
 - https://github.com/saucelabs/saucectl-puppeteer-example
-- https://github.com/saucelabs/saucectl-testcafe-example`
+- https://github.com/saucelabs/saucectl-testcafe-example
+- https://github.com/saucelabs/saucectl-xcuitest-example`
 )
 
 func main() {
