@@ -2,7 +2,6 @@ package saucecloud
 
 import (
 	"context"
-	"crypto/md5"
 	"errors"
 	"fmt"
 	"io"
@@ -317,19 +316,6 @@ var (
 	projectUpload uploadType = "project"
 )
 
-func (r *CloudRunner) calculateBundleHash(filename string) (string, error) {
-	fs, err := os.Open(filename)
-	if err != nil {
-		return "", err
-	}
-	hsh := md5.New()
-	if _, err := io.Copy(hsh, fs); err != nil {
-		return "", err
-	}
-	hash := fmt.Sprintf("%x", hsh.Sum(nil))
-	return hash, nil
-}
-
 func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, error) {
 	log.Info().Msgf("Checking if %s has already been uploaded previously", filename)
 	if storageID, _ := r.checkIfFileExists(filename); storageID != "" {
@@ -354,11 +340,7 @@ func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, 
 }
 
 func (r *CloudRunner) checkIfFileExists(fileName string) (string, error) {
-	hash, err := r.calculateBundleHash(fileName)
-	if err != nil {
-		return "", err
-	}
-	resp, err := r.ProjectUploader.Locate(hash)
+	resp, err := r.ProjectUploader.Locate(fileName)
 	if err != nil {
 		return "", err
 	}

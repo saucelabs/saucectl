@@ -2,6 +2,7 @@ package appstore
 
 import (
 	"bytes"
+	"crypto/md5"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -136,11 +137,17 @@ func createRequest(url, username, accesskey string, body *bytes.Buffer, contentT
 	return req, nil
 }
 
-// Locate looks for a file having the same hash.
-func (s *AppStore) Locate(hash string) (storage.ArtifactMeta, error) {
-	if hash == "" {
+// Locate looks for a file having the same signature.
+func (s *AppStore) Locate(filename string) (storage.ArtifactMeta, error) {
+	if filename == "" {
 		return storage.ArtifactMeta{}, nil
 	}
+
+	hash, err := calculateBundleHash(filename)
+	if err != nil {
+		return storage.ArtifactMeta{}, err
+	}
+
 	queryString := ""
 	for {
 		request, err := createLocateRequest(fmt.Sprintf("%s/v1/storage/list", s.URL), s.Username, s.AccessKey, queryString)
@@ -164,6 +171,19 @@ func (s *AppStore) Locate(hash string) (storage.ArtifactMeta, error) {
 			return storage.ArtifactMeta{}, nil
 		}
 	}
+}
+
+func calculateBundleHash(filename string) (string, error) {
+	fs, err := os.Open(filename)
+	if err != nil {
+		return "", err
+	}
+	hsh := md5.New()
+	if _, err := io.Copy(hsh, fs); err != nil {
+		return "", err
+	}
+	hash := fmt.Sprintf("%x", hsh.Sum(nil))
+	return hash, nil
 }
 
 func createLocateRequest(url, username, accesskey string, queryString string) (*http.Request, error) {
