@@ -31,6 +31,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.4.0
+	golang.org/x/mod v0.4.2
 	gopkg.in/yaml.v2 v2.2.8
 	gotest.tools v2.2.0+incompatible
 	gotest.tools/v3 v3.0.2
