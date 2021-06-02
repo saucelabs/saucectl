@@ -22,6 +22,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/github"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
@@ -68,6 +69,7 @@ var (
 	testComposerTimeout = 300 * time.Second
 	restoTimeout        = 60 * time.Second
 	rdcTimeout          = 15 * time.Second
+	githubTimeout       = 2 * time.Second
 )
 
 // Command creates the `run` command
@@ -122,6 +124,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 // Run runs the command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, error) {
 	println("Running version", version.Version)
+	checkForUpdates()
 	go awaitGlobalTimeout()
 
 	creds := credentials.Get()
@@ -847,5 +850,22 @@ func awaitGlobalTimeout() {
 	if err != nil {
 		color.Red("Unable to perform soft shutdown. Exiting immediately...")
 		os.Exit(1)
+	}
+}
+
+// checkForUpdates check if there is a saucectl update available.
+func checkForUpdates() {
+	gh := github.Client{
+		HTTPClient: &http.Client{Timeout: githubTimeout},
+		URL:        "https://api.github.com",
+	}
+
+	v, err := gh.HasUpdateAvailable()
+	if err != nil {
+		log.Error().Err(err).Msg("Check for update")
+		return
+	}
+	if v != "" {
+		log.Info().Msgf("An update of saucectl is available (%s)", v)
 	}
 }

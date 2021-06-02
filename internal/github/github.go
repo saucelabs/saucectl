@@ -37,7 +37,7 @@ func (c *Client) HasUpdateAvailable() (string, error) {
 	return "", nil
 }
 
-func (c *Client) executeRequest(req *http.Request) (release, error){
+func (c *Client) executeRequest(req *http.Request) (release, error) {
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return release{}, nil
@@ -52,5 +52,5 @@ func (c *Client) executeRequest(req *http.Request) (release, error){
 }
 
 func isUpdateRequired(current, remote string) bool {
-	return semver.Compare(current, remote) > 0
+	return semver.Compare(current, remote) < 0
 }
