@@ -28,13 +28,14 @@ type Espresso struct {
 
 // TestOptions represents the espresso test filter options configuration.
 type TestOptions struct {
-	NotClass   []string `yaml:"notClass,omitempty" json:"notClass"`
-	Class      []string `yaml:"class,omitempty" json:"class"`
-	Package    string   `yaml:"package,omitempty" json:"package"`
-	Size       string   `yaml:"size,omitempty" json:"size"`
-	Annotation string   `yaml:"annotation,omitempty" json:"annotation"`
-	ShardIndex int     `yaml:"shardIndex,omitempty" json:"shardIndex"`
-	NumShards  int     `yaml:"numShards,omitempty" json:"numShards"`
+	NotClass         []string `yaml:"notClass,omitempty" json:"notClass"`
+	Class            []string `yaml:"class,omitempty" json:"class"`
+	Package          string   `yaml:"package,omitempty" json:"package"`
+	Size             string   `yaml:"size,omitempty" json:"size"`
+	Annotation       string   `yaml:"annotation,omitempty" json:"annotation"`
+	ShardIndex       int      `yaml:"shardIndex,omitempty" json:"shardIndex"`
+	NumShards        int      `yaml:"numShards,omitempty" json:"numShards"`
+	ClearPackageData bool     `yaml:"clearPackageData,omitempty" json:"clearPackageData"`
 }
 
 // Suite represents the espresso test suite configuration.
