@@ -318,7 +318,7 @@ var (
 
 func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, error) {
 	log.Info().Msgf("Checking if %s has already been uploaded previously", filename)
-	if storageID, _ := r.checkIfFileExists(filename); storageID != "" {
+	if storageID, _ := r.checkIfFileAlreadyUploaded(filename); storageID != "" {
 		log.Info().Msgf("Skipping upload, using storage:%s", storageID)
 		return storageID, nil
 	}
@@ -339,8 +339,8 @@ func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, 
 	return resp.ID, nil
 }
 
-func (r *CloudRunner) checkIfFileExists(fileName string) (string, error) {
-	resp, err := r.ProjectUploader.Locate(fileName)
+func (r *CloudRunner) checkIfFileAlreadyUploaded(fileName string) (storageID string, err error) {
+	resp, err := r.ProjectUploader.Find(fileName)
 	if err != nil {
 		return "", err
 	}

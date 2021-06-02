@@ -137,8 +137,8 @@ func createRequest(url, username, accesskey string, body *bytes.Buffer, contentT
 	return req, nil
 }
 
-// Locate looks for a file having the same signature.
-func (s *AppStore) Locate(filename string) (storage.ArtifactMeta, error) {
+// Find looks for a file having the same signature.
+func (s *AppStore) Find(filename string) (storage.ArtifactMeta, error) {
 	if filename == "" {
 		return storage.ArtifactMeta{}, nil
 	}

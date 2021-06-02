@@ -53,7 +53,7 @@ func TestAppStore_Upload(t *testing.T) {
 
 	as := New(ts.URL, "fake-username", "fake-access-key", 15*time.Second)
 	for _, tt := range testCases {
-		artifact, err := as.Locate(tt.look)
+		artifact, err := as.Find(tt.look)
 
 		if !reflect.DeepEqual(err, tt.wantErr) {
 			t.Errorf("Error: want: %v, got: %v", tt.wantErr, err)
