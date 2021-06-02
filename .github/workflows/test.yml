@@ -197,3 +197,26 @@ jobs:
       - name: Saucectl RUN
         run: |
           ./saucectl run -c .sauce/espresso.yml
+
+  xcuitest:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      BUILD_ID: ${{ github.run_id }}
+      BUILD_ENV: GitHub Actions
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Download saucectl binary
+        uses: actions/download-artifact@v2
+        with:
+          name: saucectlbin
+
+      - name: Set permissions
+        run: chmod +x ./saucectl
+
+      - name: Saucectl RUN
+        run: |
+          ./saucectl run -c .sauce/xcuitest.yml
