@@ -862,7 +862,6 @@ func checkForUpdates() {
 
 	v, err := gh.HasUpdateAvailable()
 	if err != nil {
-		log.Error().Err(err).Msg("Check for update")
 		return
 	}
 	if v != "" {
