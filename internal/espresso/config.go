@@ -33,6 +33,8 @@ type TestOptions struct {
 	Package    string   `yaml:"package,omitempty" json:"package"`
 	Size       string   `yaml:"size,omitempty" json:"size"`
 	Annotation string   `yaml:"annotation,omitempty" json:"annotation"`
+	ShardIndex *int     `yaml:"shardIndex,omitempty" json:"shardIndex"`
+	NumShards  *int     `yaml:"numShards,omitempty" json:"numShards"`
 }
 
 // Suite represents the espresso test suite configuration.
@@ -113,6 +115,9 @@ func Validate(p Project) error {
 		}
 		if err := validateEmulators(suite.Name, suite.Emulators); err != nil {
 			return err
+		}
+		if suite.TestOptions.NumShards != nil && suite.TestOptions.ShardIndex == nil {
+			return fmt.Errorf("missing shardIndex")
 		}
 	}
 
