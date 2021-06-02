@@ -866,6 +866,6 @@ func checkForUpdates() {
 		return
 	}
 	if v != "" {
-		log.Info().Msgf("An update of saucectl is available (%s)", v)
+		log.Warn().Msgf("An update of saucectl is available (%s)", v)
 	}
 }
