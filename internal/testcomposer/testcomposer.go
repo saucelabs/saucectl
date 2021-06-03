@@ -4,14 +4,25 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"mime/multipart"
+	"net/http"
+	"net/textproto"
+	"strings"
+
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/requesth"
-	"io"
-	"net/http"
-	"strings"
+)
+
+var (
+	// ErrServerError is returned when the server was not able to correctly handle our request (status code >= 500).
+	ErrServerError = errors.New("internal server error")
+	// ErrJobNotFound is returned when the requested job was not found.
+	ErrJobNotFound = errors.New("job was not found")
 )
 
 // Client service
@@ -143,4 +154,75 @@ func (c *Client) Search(ctx context.Context, opts framework.SearchOptions) (fram
 	}
 
 	return m, nil
+}
+
+func createUploadAssetRequest(ctx context.Context, url, username, accessKey, jobID, fileName, contentType string, content []byte) (*http.Request, error) {
+	var b bytes.Buffer
+	w := multipart.NewWriter(&b)
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", fileName))
+	h.Set("Content-Type", contentType)
+	wr, err := w.CreatePart(h)
+	if err != nil {
+		return nil, err
+	}
+	if _, err = wr.Write(content); err != nil {
+		return nil, err
+	}
+	if err = w.Close(); err != nil {
+		return nil, err
+	}
+
+	req, err := requesth.NewWithContext(ctx, http.MethodPut,
+		fmt.Sprintf("%s/v1/testcomposer/jobs/%s/assets", url, jobID), &b)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(username, accessKey)
+	req.Header.Set("Content-Type", w.FormDataContentType())
+	return req, nil
+}
+
+type assetsUploadResponse struct {
+	Uploaded []string `json:"uploaded"`
+	Errors   []string `json:"errors,omitempty"`
+}
+
+func doRequestAsset(httpClient *http.Client, request *http.Request) error {
+	resp, err := httpClient.Do(request)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return ErrServerError
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		return ErrJobNotFound
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("assets upload request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+	}
+
+	var assetsResponse assetsUploadResponse
+	if err = json.NewDecoder(resp.Body).Decode(&assetsResponse); err != nil {
+		return err
+	}
+	if len(assetsResponse.Errors) > 0 {
+		return fmt.Errorf("upload failed: %v", strings.Join(assetsResponse.Errors, ","))
+	}
+	return nil
+}
+
+// UploadAsset uploads an asset to the specified jobID.
+func (c *Client) UploadAsset(jobID string, fileName string, contentType string, content []byte) error {
+	request, err := createUploadAssetRequest(context.Background(), c.URL, c.Credentials.Username, c.Credentials.AccessKey, jobID, fileName, contentType, content)
+	if err != nil {
+		return err
+	}
+	return doRequestAsset(c.HTTPClient, request)
 }
