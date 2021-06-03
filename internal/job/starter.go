@@ -13,7 +13,7 @@ type TestOptions struct {
 	Annotation       string   `yaml:"annotation,omitempty" json:"annotation"`
 	ShardIndex       *int     `yaml:"shardIndex,omitempty" json:"shardIndex"`
 	NumShards        *int     `yaml:"numShards,omitempty" json:"numShards"`
-	ClearPackageData bool     `yaml:"clearPackageData,omitempty" json:"clearPackageData"`
+	ClearPackageData *bool    `yaml:"clearPackageData,omitempty" json:"clearPackageData"`
 }
 
 // StartOptions represents the options for starting a job in the Sauce Labs cloud.
