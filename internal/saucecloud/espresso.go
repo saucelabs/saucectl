@@ -136,6 +136,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 	if s.TestOptions.NumShards > 1 {
 		jto.NumShards = &s.TestOptions.NumShards
 		jto.ShardIndex = &s.TestOptions.ShardIndex
+		jto.ClearPackageData = s.TestOptions.ClearPackageData
 	}
 
 	jobOpts <- job.StartOptions{
