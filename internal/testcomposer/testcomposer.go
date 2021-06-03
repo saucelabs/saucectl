@@ -205,8 +205,7 @@ func doRequestAsset(httpClient *http.Client, request *http.Request) error {
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		err := fmt.Errorf("assets upload request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
-		return err
+		return fmt.Errorf("assets upload request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 	}
 
 	var assetsResponse assetsUploadResponse
