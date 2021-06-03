@@ -2,6 +2,7 @@ package appstore
 
 import (
 	"bytes"
+	"crypto/md5"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,9 +25,26 @@ type UploadResponse struct {
 	Item Item `json:"item"`
 }
 
+// ListResponse represents the response as is returned by the app store.
+type ListResponse struct {
+	Items      []Item `json:"items"`
+	Links      Links  `json:"links"`
+	Page       int    `json:"page"`
+	PerPage    int    `json:"per_page"`
+	TotalItems int    `json:"total_items"`
+}
+
+// Links represents the pagination information returned by the app store.
+type Links struct {
+	Self string `json:"self"`
+	Prev string `json:"prev"`
+	Next string `json:"next"`
+}
+
 // Item represents the metadata about the uploaded file.
 type Item struct {
-	ID string `json:"id"`
+	ID   string `json:"id"`
+	ETag string `json:"etag"`
 }
 
 // AppStore implements a remote file storage for storage.ProjectUploader.
@@ -117,4 +135,78 @@ func createRequest(url, username, accesskey string, body *bytes.Buffer, contentT
 	req.SetBasicAuth(username, accesskey)
 
 	return req, nil
+}
+
+// Find looks for a file having the same signature.
+func (s *AppStore) Find(filename string) (storage.ArtifactMeta, error) {
+	if filename == "" {
+		return storage.ArtifactMeta{}, nil
+	}
+
+	hash, err := calculateBundleHash(filename)
+	if err != nil {
+		return storage.ArtifactMeta{}, err
+	}
+
+	queryString := ""
+	for {
+		request, err := createLocateRequest(fmt.Sprintf("%s/v1/storage/list", s.URL), s.Username, s.AccessKey, queryString)
+		if err != nil {
+			return storage.ArtifactMeta{}, err
+		}
+
+		lr, err := s.executeLocateRequest(request)
+		if err != nil {
+			return storage.ArtifactMeta{}, err
+		}
+
+		for _, item := range lr.Items {
+			if item.ETag == hash {
+				return storage.ArtifactMeta{ID: item.ID}, nil
+			}
+		}
+
+		queryString = lr.Links.Next
+		if queryString == "" {
+			return storage.ArtifactMeta{}, nil
+		}
+	}
+}
+
+func calculateBundleHash(filename string) (string, error) {
+	fs, err := os.Open(filename)
+	if err != nil {
+		return "", err
+	}
+	defer fs.Close()
+	hsh := md5.New()
+	if _, err := io.Copy(hsh, fs); err != nil {
+		return "", err
+	}
+	hash := fmt.Sprintf("%x", hsh.Sum(nil))
+	return hash, nil
+}
+
+func createLocateRequest(url, username, accesskey string, queryString string) (*http.Request, error) {
+	req, err := requesth.New(http.MethodGet, fmt.Sprintf("%s%s", url, queryString), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(username, accesskey)
+	return req, nil
+}
+
+func (s *AppStore) executeLocateRequest(request *http.Request) (ListResponse, error) {
+	resp, err := s.HTTPClient.Do(request)
+	if err != nil {
+		return ListResponse{}, err
+
+	}
+	defer resp.Body.Close()
+
+	var lr ListResponse
+	if err := json.NewDecoder(resp.Body).Decode(&lr); err != nil {
+		return ListResponse{}, err
+	}
+	return lr, nil
 }

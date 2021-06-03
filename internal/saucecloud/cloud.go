@@ -317,6 +317,12 @@ var (
 )
 
 func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, error) {
+	log.Info().Msgf("Checking if %s has already been uploaded previously", filename)
+	if storageID, _ := r.checkIfFileAlreadyUploaded(filename); storageID != "" {
+		log.Info().Msgf("Skipping upload, using storage:%s", storageID)
+		return storageID, nil
+	}
+
 	filename, err := filepath.Abs(filename)
 	if err != nil {
 		return "", nil
@@ -330,6 +336,14 @@ func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, 
 		return "", err
 	}
 	log.Info().Dur("durationMs", time.Since(start)).Str("storageId", resp.ID).Msgf("%s uploaded.", strings.Title(string(pType)))
+	return resp.ID, nil
+}
+
+func (r *CloudRunner) checkIfFileAlreadyUploaded(fileName string) (storageID string, err error) {
+	resp, err := r.ProjectUploader.Find(fileName)
+	if err != nil {
+		return "", err
+	}
 	return resp.ID, nil
 }
 
