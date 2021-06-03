@@ -277,7 +277,6 @@ func TestClient_UploadAsset(t *testing.T) {
 	}{
 		{
 			name: "Valid case",
-			//client: New(ts.URL, "test", "123", timeout),
 			client: Client{
 				HTTPClient:  ts.Client(),
 				URL:         ts.URL,
@@ -293,7 +292,6 @@ func TestClient_UploadAsset(t *testing.T) {
 		},
 		{
 			name: "invalid case - 400",
-			//client: New(ts.URL, "test", "123", timeout),
 			client: Client{
 				HTTPClient:  ts.Client(),
 				URL:         ts.URL,
@@ -309,7 +307,6 @@ func TestClient_UploadAsset(t *testing.T) {
 		},
 		{
 			name: "invalid 404",
-			// client: New(ts.URL, "test", "123", timeout),
 			client: Client{
 				HTTPClient:  ts.Client(),
 				URL:         ts.URL,
