@@ -6,3 +6,8 @@ var (
 	Version   = "v0.0.0+unknown"
 	GitCommit = "unknown-commit-sha"
 )
+
+// Checker represents an interface for checking saucectl updates.
+type Checker interface {
+	HasUpdateAvailable() (string, error)
+}
