@@ -225,6 +225,5 @@ func (c *Client) UploadAsset(jobID string, fileName string, contentType string, 
 	if err != nil {
 		return err
 	}
-	err = doRequestAsset(c.HTTPClient, request)
-	return err
+	return doRequestAsset(c.HTTPClient, request)
 }
