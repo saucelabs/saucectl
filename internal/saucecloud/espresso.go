@@ -138,6 +138,8 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 			Annotation: s.TestOptions.Annotation,
 			Size:       s.TestOptions.Size,
 			Package:    s.TestOptions.Package,
+			NumShards:  s.TestOptions.NumShards,
+			ShardIndex: s.TestOptions.ShardIndex,
 		},
 
 		// RDC Specific flags
