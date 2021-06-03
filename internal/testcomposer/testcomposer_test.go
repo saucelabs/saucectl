@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/credentials"
-	"github.com/saucelabs/saucectl/internal/framework"
-	"github.com/saucelabs/saucectl/internal/job"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/job"
 )
 
 type Responder struct {
@@ -188,7 +189,7 @@ func TestClient_Search(t *testing.T) {
 				Name:             "testycles",
 				FrameworkVersion: "1",
 			}},
-			want:    framework.Metadata{
+			want: framework.Metadata{
 				FrameworkName:      "testycles",
 				FrameworkVersion:   "1",
 				CloudRunnerVersion: "0.1.0",
@@ -239,6 +240,94 @@ func TestClient_Search(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("GetImage() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestClient_UploadAsset(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/testcomposer/jobs/1/assets":
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("{\"uploaded\":null}"))
+		case "/v1/testcomposer/jobs/2/assets":
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("{\"uploaded\":null,\"errors\":[\"failed to upload config.yml: content-type not allowed\"]}"))
+		case "/v1/testcomposer/jobs/3/assets":
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}))
+	defer ts.Close()
+	// timeout := 3 * time.Second
+
+	type args struct {
+		jobID       string
+		fileName    string
+		contentType string
+		content     []byte
+	}
+	tests := []struct {
+		client  Client
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Valid case",
+			//client: New(ts.URL, "test", "123", timeout),
+			client: Client{
+				HTTPClient:  ts.Client(),
+				URL:         ts.URL,
+				Credentials: credentials.Credentials{Username: "test", AccessKey: "123"},
+			},
+			args: args{
+				jobID:       "1",
+				fileName:    "config.yml",
+				contentType: "text/plain",
+				content:     []byte("dummy-content"),
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid case - 400",
+			//client: New(ts.URL, "test", "123", timeout),
+			client: Client{
+				HTTPClient:  ts.Client(),
+				URL:         ts.URL,
+				Credentials: credentials.Credentials{Username: "test", AccessKey: "123"},
+			},
+			args: args{
+				jobID:       "2",
+				fileName:    "config.yml",
+				contentType: "text/plain",
+				content:     []byte("dummy-content"),
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid 404",
+			// client: New(ts.URL, "test", "123", timeout),
+			client: Client{
+				HTTPClient:  ts.Client(),
+				URL:         ts.URL,
+				Credentials: credentials.Credentials{Username: "test", AccessKey: "123"},
+			},
+			args: args{
+				jobID:       "3",
+				fileName:    "config.yml",
+				contentType: "text/plain",
+				content:     []byte("dummy-content"),
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.client.UploadAsset(tt.args.jobID, tt.args.fileName, tt.args.contentType, tt.args.content); (err != nil) != tt.wantErr {
+				t.Errorf("UploadAsset() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

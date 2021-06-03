@@ -1,19 +1,15 @@
 package resto
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
-	"net/textproto"
 	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -218,16 +214,6 @@ func (c *Client) StopJob(ctx context.Context, id string) (job.Job, error) {
 	return j, nil
 }
 
-// UploadAsset uploads an asset to the specified jobID.
-func (c *Client) UploadAsset(jobID string, fileName string, contentType string, content []byte) error {
-	request, err := createUploadAssetRequest(context.Background(), c.URL, c.Username, c.AccessKey, jobID, fileName, contentType, content)
-	if err != nil {
-		return err
-	}
-	err = doRequestAsset(c.HTTPClient, request)
-	return err
-}
-
 func doListAssetsRequest(httpClient *http.Client, request *http.Request) ([]string, error) {
 	resp, err := httpClient.Do(request)
 	if err != nil {
@@ -371,70 +357,6 @@ func createStopRequest(ctx context.Context, url, username, accessKey, jobID stri
 	req.Header.Set("Content-Type", "application/json")
 	req.SetBasicAuth(username, accessKey)
 	return req, nil
-}
-
-// FIXME This has nothing to do with resto and belongs to the testcomposer package
-func createUploadAssetRequest(ctx context.Context, url, username, accessKey, jobID, fileName, contentType string, content []byte) (*http.Request, error) {
-	var b bytes.Buffer
-	w := multipart.NewWriter(&b)
-	h := make(textproto.MIMEHeader)
-	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", fileName))
-	h.Set("Content-Type", contentType)
-	wr, err := w.CreatePart(h)
-	if err != nil {
-		return nil, err
-	}
-	if _, err = wr.Write(content); err != nil {
-		return nil, err
-	}
-	if err = w.Close(); err != nil {
-		return nil, err
-	}
-
-	req, err := requesth.NewWithContext(ctx, http.MethodPut,
-		fmt.Sprintf("%s/v1/testcomposer/jobs/%s/assets", url, jobID), &b)
-	if err != nil {
-		return nil, err
-	}
-	req.SetBasicAuth(username, accessKey)
-	req.Header.Set("Content-Type", w.FormDataContentType())
-	return req, nil
-}
-
-type assetsUploadResponse struct {
-	Uploaded []string `json:"uploaded"`
-	Errors   []string `json:"errors,omitempty"`
-}
-
-func doRequestAsset(httpClient *http.Client, request *http.Request) error {
-	resp, err := httpClient.Do(request)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= http.StatusInternalServerError {
-		return ErrServerError
-	}
-
-	if resp.StatusCode == http.StatusNotFound {
-		return ErrJobNotFound
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		err := fmt.Errorf("assets upload request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
-		return err
-	}
-
-	var assetsResponse assetsUploadResponse
-	if err = json.NewDecoder(resp.Body).Decode(&assetsResponse); err != nil {
-		return err
-	}
-	if len(assetsResponse.Errors) > 0 {
-		return fmt.Errorf("upload failed: %v", strings.Join(assetsResponse.Errors, ","))
-	}
-	return nil
 }
 
 // DownloadArtifact does downloading artifacts

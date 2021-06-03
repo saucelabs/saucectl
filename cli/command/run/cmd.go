@@ -290,7 +290,7 @@ func runCypressInDocker(p cypress.Project, testco testcomposer.Client, rs resto.
 	log.Info().Msg("Running Cypress in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewCypress(p, &testco, &rs, &rs)
+	cd, err := docker.NewCypress(p, &testco, &testco, &rs)
 	if err != nil {
 		return 1, err
 	}
@@ -308,7 +308,7 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			JobStarter:         &tc,
 			JobReader:          &rs,
 			JobStopper:         &rs,
-			JobWriter:          &rs,
+			JobWriter:          &tc,
 			CCYReader:          &rs,
 			TunnelService:      &rs,
 			Region:             regio,
@@ -399,7 +399,7 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs 
 	log.Info().Msg("Running Playwright in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewPlaywright(p, &testco, &rs, &rs)
+	cd, err := docker.NewPlaywright(p, &testco, &testco, &rs)
 	if err != nil {
 		return 1, err
 	}
@@ -417,7 +417,7 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 			JobStarter:         &tc,
 			JobReader:          &rs,
 			JobStopper:         &rs,
-			JobWriter:          &rs,
+			JobWriter:          &tc,
 			CCYReader:          &rs,
 			TunnelService:      &rs,
 			Region:             regio,
@@ -507,7 +507,7 @@ func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client, rs rest
 	log.Info().Msg("Running Testcafe in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewTestcafe(p, &testco, &rs, &rs)
+	cd, err := docker.NewTestcafe(p, &testco, &testco, &rs)
 	if err != nil {
 		return 1, err
 	}
@@ -525,7 +525,7 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 			JobStarter:         &tc,
 			JobReader:          &rs,
 			JobStopper:         &rs,
-			JobWriter:          &rs,
+			JobWriter:          &tc,
 			CCYReader:          &rs,
 			TunnelService:      &rs,
 			Region:             regio,
@@ -587,7 +587,7 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 			JobReader:             &rs,
 			RDCJobReader:          &rc,
 			JobStopper:            &rs,
-			JobWriter:             &rs,
+			JobWriter:             &tc,
 			CCYReader:             &rs,
 			TunnelService:         &rs,
 			Region:                regio,
@@ -649,7 +649,7 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 			JobReader:             &rs,
 			RDCJobReader:          &rc,
 			JobStopper:            &rs,
-			JobWriter:             &rs,
+			JobWriter:             &tc,
 			CCYReader:             &rs,
 			TunnelService:         &rs,
 			Region:                regio,
@@ -708,7 +708,7 @@ func runPuppeteerInDocker(p puppeteer.Project, testco testcomposer.Client, rs re
 	log.Info().Msg("Running puppeteer in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewPuppeteer(p, &testco, &rs, &rs)
+	cd, err := docker.NewPuppeteer(p, &testco, &testco, &rs)
 	if err != nil {
 		return 1, err
 	}
