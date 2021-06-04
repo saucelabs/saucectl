@@ -29,7 +29,7 @@ func TestNewWithContext(t *testing.T) {
 				url:    "http://localhost",
 				body:   nil,
 			},
-			wantHeaders: http.Header{"User-Agent": []string{"saucectl/v0.0.0+unknown"}},
+			wantHeaders: http.Header{"User-Agent": []string{"saucectl/0.0.0+unknown"}},
 		},
 	}
 	for _, tt := range tests {
@@ -65,7 +65,7 @@ func TestNew(t *testing.T) {
 				url:    "http://localhost",
 				body:   nil,
 			},
-			wantHeaders: http.Header{"User-Agent": []string{"saucectl/v0.0.0+unknown"}},
+			wantHeaders: http.Header{"User-Agent": []string{"saucectl/0.0.0+unknown"}},
 		},
 	}
 	for _, tt := range tests {
