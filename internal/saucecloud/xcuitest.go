@@ -2,11 +2,17 @@ package saucecloud
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
 
@@ -21,6 +27,10 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 	exitCode := 1
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.ID); err != nil {
+		return exitCode, err
+	}
+
+	if err := ensureAppsAreIpa(&r.Project.Xcuitest.App, &r.Project.Xcuitest.TestApp); err != nil {
 		return exitCode, err
 	}
 
@@ -105,4 +115,36 @@ func (r *XcuitestRunner) calculateJobsCount(suites []xcuitest.Suite) int {
 		jobsCount += len(s.Devices)
 	}
 	return jobsCount
+}
+
+// ensureAppsAreIpa checks if apps are a .ipa package. Otherwise, it generates one.
+func ensureAppsAreIpa(appPath, testAppPath *string) error {
+	if !strings.HasSuffix(*appPath, ".ipa") {
+		if err := archiveAppToIpa(appPath); err != nil {
+			log.Error().Msgf("Unable to archive %s to ipa: %v", *appPath, err)
+			return fmt.Errorf("unable to archive %s", *appPath)
+		}
+	}
+	if !strings.HasSuffix(*testAppPath, ".ipa") {
+		if err := archiveAppToIpa(testAppPath); err != nil {
+			log.Error().Msgf("Unable to archive %s to ipa: %v", *appPath, err)
+			return fmt.Errorf("unable to archive %s", *appPath)
+		}
+	}
+	return nil
+}
+
+// archiveAppToIpa generates a valid IPA file from a .app folder.
+func archiveAppToIpa(appPath *string) error {
+	log.Info().Msgf("Archiving %s to .ipa", path.Base(*appPath))
+	fileName := fmt.Sprintf("%s-*.ipa", strings.TrimSuffix(path.Base(*appPath), ".app"))
+	tmpFile, err := ioutil.TempFile(os.TempDir(), fileName)
+	if err != nil {
+		return  err
+	}
+	arch, _ := zip.New(tmpFile, sauceignore.NewMatcher([]sauceignore.Pattern{}))
+	defer arch.Close()
+	arch.Add(*appPath, "Payload/")
+	*appPath = tmpFile.Name()
+	return nil
 }

@@ -2,6 +2,7 @@ package zip
 
 import (
 	"archive/zip"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -25,6 +26,12 @@ func NewWriter(name string, matcher sauceignore.Matcher) (Writer, error) {
 
 	w := Writer{W: zip.NewWriter(f), M: matcher}
 
+	return w, nil
+}
+
+// New returns a new Writer that archives files to the specified io.Writer.
+func New(f io.Writer, matcher sauceignore.Matcher) (Writer, error) {
+	w := Writer{W: zip.NewWriter(f), M: matcher}
 	return w, nil
 }
 
