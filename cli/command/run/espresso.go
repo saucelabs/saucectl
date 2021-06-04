@@ -6,6 +6,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -47,6 +48,10 @@ func NewEspressoCmd(cli *command.SauceCtlCli) *cobra.Command {
 
 // runEspressoCmd runs the espresso 'run' command.
 func runEspressoCmd(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, error) {
+	println("Running version", version.Version)
+	checkForUpdates()
+	go awaitGlobalTimeout()
+
 	creds := credentials.Get()
 	if !creds.IsValid() {
 		color.Red("\nSauceCTL requires a valid Sauce Labs account!\n\n")
