@@ -17,8 +17,8 @@ type Writer struct {
 	M sauceignore.Matcher
 }
 
-// NewWriter returns a new Writer that archives files to name.
-func NewWriter(name string, matcher sauceignore.Matcher) (Writer, error) {
+// NewFileWriter returns a new Writer that archives files to name.
+func NewFileWriter(name string, matcher sauceignore.Matcher) (Writer, error) {
 	f, err := os.Create(name)
 	if err != nil {
 		return Writer{}, err
