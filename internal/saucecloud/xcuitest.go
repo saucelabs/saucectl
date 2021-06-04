@@ -30,16 +30,17 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	if err := ensureAppsAreIpa(&r.Project.Xcuitest.App, &r.Project.Xcuitest.TestApp); err != nil {
-		return exitCode, err
-	}
-
-	appFileID, err := r.uploadProject(r.Project.Xcuitest.App, appUpload)
+	appPath, testAppPath, err := archiveAppsToIpaIfRequired(r.Project.Xcuitest.App, r.Project.Xcuitest.TestApp)
 	if err != nil {
 		return exitCode, err
 	}
 
-	testAppFileID, err := r.uploadProject(r.Project.Xcuitest.TestApp, testAppUpload)
+	appFileID, err := r.uploadProject(appPath, appUpload)
+	if err != nil {
+		return exitCode, err
+	}
+
+	testAppFileID, err := r.uploadProject(testAppPath, testAppUpload)
 	if err != nil {
 		return exitCode, err
 	}
@@ -117,34 +118,43 @@ func (r *XcuitestRunner) calculateJobsCount(suites []xcuitest.Suite) int {
 	return jobsCount
 }
 
-// ensureAppsAreIpa checks if apps are a .ipa package. Otherwise, it generates one.
-func ensureAppsAreIpa(appPath, testAppPath *string) error {
-	if !strings.HasSuffix(*appPath, ".ipa") {
-		if err := archiveAppToIpa(appPath); err != nil {
-			log.Error().Msgf("Unable to archive %s to ipa: %v", *appPath, err)
-			return fmt.Errorf("unable to archive %s", *appPath)
+// archiveAppsToIpaIfRequired checks if apps are a .ipa package. Otherwise, it generates one.
+func archiveAppsToIpaIfRequired(appPath, testAppPath string) (archivedAppPath string, archivedTestAppPath string, archivedErr error) {
+	archivedAppPath = appPath
+	archivedTestAppPath = testAppPath
+	var err error
+	if !strings.HasSuffix(appPath, ".ipa") {
+		archivedAppPath, err = archiveAppToIpa(appPath)
+		if err != nil {
+			log.Error().Msgf("Unable to archive %s to ipa: %v", appPath, err)
+			archivedErr = fmt.Errorf("unable to archive %s", appPath)
+			return
 		}
 	}
-	if !strings.HasSuffix(*testAppPath, ".ipa") {
-		if err := archiveAppToIpa(testAppPath); err != nil {
-			log.Error().Msgf("Unable to archive %s to ipa: %v", *appPath, err)
-			return fmt.Errorf("unable to archive %s", *appPath)
+	if !strings.HasSuffix(testAppPath, ".ipa") {
+		archivedTestAppPath, err = archiveAppToIpa(testAppPath)
+		if err != nil {
+			log.Error().Msgf("Unable to archive %s to ipa: %v", testAppPath, err)
+			fmt.Errorf("unable to archive %s", testAppPath)
+			return
 		}
 	}
-	return nil
+	return archivedAppPath, archivedTestAppPath, nil
 }
 
 // archiveAppToIpa generates a valid IPA file from a .app folder.
-func archiveAppToIpa(appPath *string) error {
-	log.Info().Msgf("Archiving %s to .ipa", path.Base(*appPath))
-	fileName := fmt.Sprintf("%s-*.ipa", strings.TrimSuffix(path.Base(*appPath), ".app"))
+func archiveAppToIpa(appPath string) (string, error) {
+	log.Info().Msgf("Archiving %s to .ipa", path.Base(appPath))
+	fileName := fmt.Sprintf("%s-*.ipa", strings.TrimSuffix(path.Base(appPath), ".app"))
 	tmpFile, err := ioutil.TempFile(os.TempDir(), fileName)
 	if err != nil {
-		return  err
+		return  "", err
 	}
 	arch, _ := zip.New(tmpFile, sauceignore.NewMatcher([]sauceignore.Pattern{}))
 	defer arch.Close()
-	arch.Add(*appPath, "Payload/")
-	*appPath = tmpFile.Name()
-	return nil
+	err = arch.Add(appPath, "Payload/")
+	if err != nil {
+		return "", err
+	}
+	return tmpFile.Name(), nil
 }
