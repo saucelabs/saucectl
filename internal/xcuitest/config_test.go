@@ -8,7 +8,6 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/config"
 
-	"github.com/stretchr/testify/assert"
 	"gotest.tools/v3/fs"
 )
 
@@ -31,13 +30,60 @@ func TestValidate(t *testing.T) {
 			expectedErr: errors.New("missing path to app .ipa"),
 		},
 		{
-			name: "validating throws error on app missing .ipa",
+			name: "validating passing with .ipa",
 			p: &Project{
 				Xcuitest: Xcuitest{
-					App: "/path/to/app",
+					App:     "/path/to/app.ipa",
+					TestApp: "/path/to/app.ipa",
+				},
+				Suites: []Suite{
+					{
+						Name:    "iphone",
+						Devices: []config.Device{
+							{ Name: "iPhone.*"},
+						},
+					},
 				},
 			},
-			expectedErr: errors.New("invalid application file: /path/to/app, make sure extension is .ipa"),
+			expectedErr: nil,
+		},
+		{
+			name: "validating passing with .app",
+			p: &Project{
+				Xcuitest: Xcuitest{
+					App:     "/path/to/app.app",
+					TestApp: "/path/to/app.app",
+				},
+				Suites: []Suite{
+					{
+						Name:    "iphone",
+						Devices: []config.Device{
+							{ Name: "iPhone.*"},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "validating error with app other than .ipa / .app",
+			p: &Project{
+				Xcuitest: Xcuitest{
+					App:     "/path/to/app.zip",
+					TestApp: "/path/to/app.app",
+				},
+			},
+			expectedErr: errors.New("invalid application file: /path/to/app.zip, make sure extension is .ipa or .app"),
+		},
+		{
+			name: "validating error with test app other than .ipa / .app",
+			p: &Project{
+				Xcuitest: Xcuitest{
+					App:     "/path/to/app.ipa",
+					TestApp: "/path/to/app.zip",
+				},
+			},
+			expectedErr: errors.New("invalid application test file: /path/to/app.zip, make sure extension is .ipa or .app"),
 		},
 		{
 			name: "validating throws error on empty testApp",
@@ -57,7 +103,7 @@ func TestValidate(t *testing.T) {
 					TestApp: "/path/to/bundle/tests",
 				},
 			},
-			expectedErr: errors.New("invalid application test file: /path/to/bundle/tests, make sure extension is .ipa"),
+			expectedErr: errors.New("invalid application test file: /path/to/bundle/tests, make sure extension is .ipa or .app"),
 		},
 		{
 			name: "validating throws error on missing suites",
@@ -77,7 +123,7 @@ func TestValidate(t *testing.T) {
 					TestApp: testAppF,
 				},
 				Suites: []Suite{
-					Suite{
+					{
 						Name:    "no devices",
 						Devices: []config.Device{},
 					},
@@ -93,7 +139,7 @@ func TestValidate(t *testing.T) {
 					TestApp: testAppF,
 				},
 				Suites: []Suite{
-					Suite{
+					{
 						Name: "no device name",
 						Devices: []config.Device{
 							{
@@ -113,7 +159,7 @@ func TestValidate(t *testing.T) {
 					TestApp: testAppF,
 				},
 				Suites: []Suite{
-					Suite{
+					{
 						Name: "unsupported device type",
 						Devices: []config.Device{
 							{
@@ -133,8 +179,12 @@ func TestValidate(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := Validate(*tc.p)
-			assert.NotNil(t, err)
-			assert.Equal(t, err.Error(), tc.expectedErr.Error())
+			if tc.expectedErr == nil && err != nil {
+				t.Errorf("want: %v, got: %v", tc.expectedErr, err)
+			}
+			if tc.expectedErr != nil && tc.expectedErr.Error() != err.Error() {
+				t.Errorf("want: %v, got: %v", tc.expectedErr, err)
+			}
 		})
 	}
 }
