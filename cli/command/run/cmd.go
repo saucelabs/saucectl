@@ -21,7 +21,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/docker"
-	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/github"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
@@ -37,10 +36,8 @@ import (
 )
 
 var (
-	runUse     = "run ./.sauce/config.yaml"
-	runShort   = "Run a test on Sauce Labs"
-	runLong    = `Some long description`
-	runExample = "saucectl run ./.sauce/config.yaml"
+	runUse     = "run"
+	runShort   = "Runs tests on Sauce Labs"
 
 	defaultLogFir      = "<cwd>/logs"
 	defaultRegion      = "us-west-1"
@@ -75,10 +72,9 @@ var (
 // Command creates the `run` command
 func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     runUse,
-		Short:   runShort,
-		Long:    runLong,
-		Example: runExample,
+		Use:              runUse,
+		Short:            runShort,
+		TraverseChildren: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			exitCode, err := Run(cmd, cli, args)
 			if err != nil {
@@ -93,30 +89,32 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	}
 
 	defaultCfgPath := filepath.Join(".sauce", "config.yml")
-	cmd.Flags().StringVarP(&cfgFilePath, "config", "c", defaultCfgPath, "config file, e.g. -c ./.sauce/config.yaml")
-	cmd.Flags().StringVarP(&cfgLogDir, "logDir", "l", defaultLogFir, "log path")
-	cmd.Flags().DurationVarP(&globalTimeout, "timeout", "t", 0, "Global timeout that limits how long saucectl can run in total. Supports duration values like '10s', '30m' etc. (default: no timeout)")
-	cmd.Flags().StringVarP(&regionFlag, "region", "r", "", "The sauce labs region. (default: us-west-1)")
-	cmd.Flags().StringToStringVarP(&env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
-	cmd.Flags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
-	cmd.Flags().StringVar(&suiteName, "suite", "", "Run specified test suite.")
-	cmd.Flags().BoolVar(&testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
-	cmd.Flags().StringVar(&testEnv, "test-env", "", "Specifies the environment in which the tests should run. Choice: docker|sauce.")
-	cmd.Flags().BoolVarP(&showConsoleLog, "show-console-log", "", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
-	cmd.Flags().IntVar(&concurrency, "ccy", 2, "Concurrency specifies how many suites are run at the same time.")
-	cmd.Flags().StringVar(&tunnelID, "tunnel-id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
-	cmd.Flags().StringVar(&tunnelParent, "tunnel-parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
-	cmd.Flags().StringVar(&runnerVersion, "runner-version", "", "Overrides the automatically determined runner version.")
-	cmd.Flags().StringVar(&sauceignore, "sauceignore", "", "Specifies the path to the .sauceignore file.")
-	cmd.Flags().StringToStringVar(&experiments, "experiment", map[string]string{}, "Specifies a list of experimental flags and values")
-	cmd.Flags().BoolVarP(&dryRun, "dry-run", "", false, "Simulate a test run without actually running any tests.")
+	cmd.PersistentFlags().StringVarP(&cfgFilePath, "config", "c", defaultCfgPath, "Specifies which config file to use")
+	cmd.PersistentFlags().StringVarP(&cfgLogDir, "logDir", "l", defaultLogFir, "log path")
+	cmd.PersistentFlags().DurationVarP(&globalTimeout, "timeout", "t", 0, "Global timeout that limits how long saucectl can run in total. Supports duration values like '10s', '30m' etc. (default: no timeout)")
+	cmd.PersistentFlags().StringVarP(&regionFlag, "region", "r", "", "The sauce labs region. (default: us-west-1)")
+	cmd.PersistentFlags().StringToStringVarP(&env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
+	cmd.PersistentFlags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
+	cmd.PersistentFlags().StringVar(&suiteName, "suite", "", "Run specified test suite.")
+	cmd.PersistentFlags().BoolVar(&testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
+	cmd.PersistentFlags().StringVar(&testEnv, "test-env", "", "Specifies the environment in which the tests should run. Choice: docker|sauce.")
+	cmd.PersistentFlags().BoolVarP(&showConsoleLog, "show-console-log", "", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
+	cmd.PersistentFlags().IntVar(&concurrency, "ccy", 2, "Concurrency specifies how many suites are run at the same time.")
+	cmd.PersistentFlags().StringVar(&tunnelID, "tunnel-id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
+	cmd.PersistentFlags().StringVar(&tunnelParent, "tunnel-parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
+	cmd.PersistentFlags().StringVar(&runnerVersion, "runner-version", "", "Overrides the automatically determined runner version.")
+	cmd.PersistentFlags().StringVar(&sauceignore, "sauceignore", "", "Specifies the path to the .sauceignore file.")
+	cmd.PersistentFlags().StringToStringVar(&experiments, "experiment", map[string]string{}, "Specifies a list of experimental flags and values")
+	cmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "", false, "Simulate a test run without actually running any tests.")
 
 	cmd.Flags().MarkDeprecated("test-env", "please set mode in config file")
 
 	// Hide undocumented flags that the user does not need to care about.
-	_ = cmd.Flags().MarkHidden("sauce-api")
-	_ = cmd.Flags().MarkHidden("runner-version")
-	_ = cmd.Flags().MarkHidden("experiment")
+	_ = cmd.PersistentFlags().MarkHidden("sauce-api")
+	_ = cmd.PersistentFlags().MarkHidden("runner-version")
+	_ = cmd.PersistentFlags().MarkHidden("experiment")
+
+	cmd.AddCommand(NewEspressoCmd(cli))
 
 	return cmd
 }
@@ -602,68 +600,6 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 	return r.RunProject()
 }
 
-func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as *appstore.AppStore) (int, error) {
-	p, err := espresso.FromFile(cfgFilePath)
-	if err != nil {
-		return 1, err
-	}
-	p.Sauce.Metadata.ExpandEnv()
-	applyDefaultValues(&p.Sauce)
-	overrideCliParameters(cmd, &p.Sauce)
-
-	// TODO - add dry-run mode
-	regio := region.FromString(p.Sauce.Region)
-	if regio == region.None {
-		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
-		return 1, errors.New("no sauce region set")
-	}
-
-	err = espresso.Validate(p)
-	if err != nil {
-		return 1, err
-	}
-
-	if cmd.Flags().Lookup("suite").Changed {
-		if err := filterEspressoSuite(&p); err != nil {
-			return 1, err
-		}
-	}
-
-	tc.URL = regio.APIBaseURL()
-	rs.URL = regio.APIBaseURL()
-	as.URL = regio.APIBaseURL()
-	rc.URL = regio.APIBaseURL()
-
-	rs.ArtifactConfig = p.Artifacts.Download
-	rc.ArtifactConfig = p.Artifacts.Download
-
-	return runEspressoInCloud(p, regio, tc, rs, rc, as)
-}
-
-func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as *appstore.AppStore) (int, error) {
-	log.Info().Msg("Running Espresso in Sauce Labs")
-	printTestEnv("sauce")
-
-	r := saucecloud.EspressoRunner{
-		Project: p,
-		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader:       as,
-			JobStarter:            &tc,
-			JobReader:             &rs,
-			RDCJobReader:          &rc,
-			JobStopper:            &rs,
-			JobWriter:             &tc,
-			CCYReader:             &rs,
-			TunnelService:         &rs,
-			Region:                regio,
-			ShowConsoleLog:        false,
-			ArtifactDownloader:    &rs,
-			RDCArtifactDownloader: &rc,
-		},
-	}
-	return r.RunProject()
-}
-
 func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (int, error) {
 	p, err := puppeteer.FromFile(cfgFilePath)
 	if err != nil {
@@ -751,16 +687,6 @@ func filterTestcafeSuite(c *testcafe.Project) error {
 	for _, s := range c.Suites {
 		if s.Name == suiteName {
 			c.Suites = []testcafe.Suite{s}
-			return nil
-		}
-	}
-	return fmt.Errorf("suite name '%s' is invalid", suiteName)
-}
-
-func filterEspressoSuite(c *espresso.Project) error {
-	for _, s := range c.Suites {
-		if s.Name == suiteName {
-			c.Suites = []espresso.Suite{s}
 			return nil
 		}
 	}
