@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v2"
 
+	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/config"
 )
 
@@ -19,6 +20,7 @@ type Project struct {
 	config.TypeDef `yaml:",inline"`
 	Defaults       config.Defaults `yaml:"defaults" json:"defaults"`
 	ShowConsoleLog bool
+	SaucectlVersion string             `yaml:"-" json:"saucectlVersion"`
 	ConfigFilePath string             `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Cypress        Cypress            `yaml:"cypress,omitempty" json:"cypress"`
@@ -130,6 +132,9 @@ func FromFile(cfgPath string) (Project, error) {
 	if p.Docker.FileTransfer == "" {
 		p.Docker.FileTransfer = config.DockerFileMount
 	}
+
+	// Set SaucectlVersion for the docker mode
+	p.SaucectlVersion = version.Version
 
 	if p.Docker.Image != "" {
 		log.Info().Msgf(

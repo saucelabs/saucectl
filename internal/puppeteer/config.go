@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/config"
 	"gopkg.in/yaml.v2"
 )
@@ -14,6 +15,7 @@ import (
 type Project struct {
 	config.TypeDef `yaml:",inline"`
 	ShowConsoleLog bool
+	SaucectlVersion string             `yaml:"-" json:"saucectlVersion"`
 	ConfigFilePath string             `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
@@ -67,6 +69,9 @@ func FromFile(cfgPath string) (Project, error) {
 	if p.Docker.FileTransfer == "" {
 		p.Docker.FileTransfer = config.DockerFileMount
 	}
+
+	// Set SaucectlVersion for the docker mode
+	p.SaucectlVersion = version.Version
 
 	if p.Docker.Image != "" {
 		log.Info().Msgf(
