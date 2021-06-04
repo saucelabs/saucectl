@@ -53,14 +53,14 @@ func (c *Client) executeRequest(req *http.Request) (release, error) {
 	return r, nil
 }
 
-func isUpdateRequired(current, remote string) bool {
-	currentV := current
+func isUpdateRequired(currentVersion, githubVersion string) bool {
+	currentV := currentVersion
 	if !strings.HasPrefix(currentV, "v") {
 		currentV = fmt.Sprintf("v%s", currentV)
 	}
-	remoteV := remote
-	if !strings.HasPrefix(remoteV, "v") {
-		remoteV = fmt.Sprintf("v%s", remoteV)
+	githubV := githubVersion
+	if !strings.HasPrefix(githubV, "v") {
+		githubV = fmt.Sprintf("v%s", githubV)
 	}
-	return semver.Compare(currentV, remoteV) < 0
+	return semver.Compare(currentV, githubV) < 0
 }
