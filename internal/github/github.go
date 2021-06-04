@@ -7,6 +7,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/requesth"
 	"golang.org/x/mod/semver"
 	"net/http"
+	"strings"
 )
 
 // Client represents the Github HTTP API client.
@@ -53,5 +54,13 @@ func (c *Client) executeRequest(req *http.Request) (release, error) {
 }
 
 func isUpdateRequired(current, remote string) bool {
-	return semver.Compare(current, remote) < 0
+	currentV := current
+	if !strings.HasPrefix(currentV, "v") {
+		currentV = fmt.Sprintf("v%s", currentV)
+	}
+	remoteV := remote
+	if !strings.HasPrefix(remoteV, "v") {
+		remoteV = fmt.Sprintf("v%s", remoteV)
+	}
+	return semver.Compare(currentV, remoteV) < 0
 }
