@@ -48,6 +48,7 @@ type CloudRunner struct {
 	RDCArtifactDownloader download.ArtifactDownloader
 
 	interrupted bool
+	DryRun      bool
 }
 
 type result struct {

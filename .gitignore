@@ -22,3 +22,6 @@
 
 # macOS files
 .DS_Store
+
+# downloaded artifacts
+/artifacts

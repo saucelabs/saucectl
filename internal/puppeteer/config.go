@@ -15,7 +15,6 @@ type Project struct {
 	config.TypeDef `yaml:",inline"`
 	ShowConsoleLog bool
 	ConfigFilePath string             `yaml:"-" json:"-"`
-	DryRun         bool               `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
 	BeforeExec     []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`

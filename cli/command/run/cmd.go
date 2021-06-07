@@ -36,8 +36,8 @@ import (
 )
 
 var (
-	runUse     = "run"
-	runShort   = "Runs tests on Sauce Labs"
+	runUse   = "run"
+	runShort = "Runs tests on Sauce Labs"
 
 	defaultLogFir      = "<cwd>/logs"
 	defaultRegion      = "us-west-1"
@@ -231,9 +231,6 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 	if runnerVersion != "" {
 		p.RunnerVersion = runnerVersion
 	}
-	if dryRun {
-		p.DryRun = true
-	}
 
 	if cmd.Flags().Lookup("suite").Changed {
 		if err := filterCypressSuite(&p); err != nil {
@@ -315,6 +312,7 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
+			DryRun:             dryRun,
 		},
 	}
 	return r.RunProject()
@@ -345,9 +343,6 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 	}
 	if runnerVersion != "" {
 		p.RunnerVersion = runnerVersion
-	}
-	if dryRun {
-		p.DryRun = true
 	}
 	if cmd.Flags().Lookup("suite").Changed {
 		if err := filterPlaywrightSuite(&p); err != nil {
@@ -424,6 +419,7 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
+			DryRun:             dryRun,
 		},
 	}
 	return r.RunProject()
@@ -453,9 +449,6 @@ func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 	}
 	if runnerVersion != "" {
 		p.RunnerVersion = runnerVersion
-	}
-	if dryRun {
-		p.DryRun = true
 	}
 	if cmd.Flags().Lookup("suite").Changed {
 		if err := filterTestcafeSuite(&p); err != nil {
@@ -532,6 +525,7 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
+			DryRun:             dryRun,
 		},
 	}
 	return r.RunProject()
@@ -620,10 +614,6 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 
 	if showConsoleLog {
 		p.ShowConsoleLog = true
-	}
-
-	if dryRun {
-		p.DryRun = true
 	}
 
 	if cmd.Flags().Lookup("suite").Changed {
