@@ -1,7 +1,10 @@
 package saucecloud
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -58,6 +61,10 @@ func (r *EspressoRunner) RunProject() (int, error) {
 func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
+	if r.DryRun {
+		r.dryRun(appFileID, testAppFileID)
+		return true
+	}
 
 	jobOpts, results, err := r.createWorkerPool(r.Project.Sauce.Concurrency)
 	if err != nil {
@@ -78,6 +85,35 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 	}()
 
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
+}
+
+func (r *EspressoRunner) dryRun(appFileID, testAppFileID string) error {
+	log.Warn().Msg("Running tests in dry run mode.")
+	tmpDir, err := os.MkdirTemp("./", "sauce-app-payload-*")
+	if err != nil {
+		return err
+	}
+	for _, s := range r.Project.Suites {
+		for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
+			opts := r.createJobOpts(s, appFileID, testAppFileID, c)
+			log.Info().Msgf("The %s test would run on %s %s %s.", opts.DisplayName, c.name, c.platformName, c.platformVersion)
+			b, err := json.Marshal(opts)
+			if err != nil {
+				return err
+			}
+			fileName := filepath.Join(tmpDir, fmt.Sprintf("%s_%s_%s_%s.json", unifyStr(opts.DisplayName), unifyStr(c.name), unifyStr(c.platformName), c.platformVersion))
+			if err := os.WriteFile(fileName, b, 0666); err != nil {
+				return err
+			}
+
+		}
+	}
+
+	return nil
+}
+
+func unifyStr(str string) string {
+	return strings.Join(strings.Split(str, " "), "-")
 }
 
 // enumerateDevicesAndEmulators returns a list of emulators and devices targeted by the current suite.
@@ -112,6 +148,10 @@ func enumerateDevicesAndEmulators(devices []config.Device, emulators []config.Em
 
 // startJob add the job to the list for the workers.
 func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Suite, appFileID, testAppFileID string, d deviceConfig) {
+	jobOpts <- r.createJobOpts(s, appFileID, testAppFileID, d)
+}
+
+func (r *EspressoRunner) createJobOpts(s espresso.Suite, appFileID, testAppFileID string, d deviceConfig) job.StartOptions {
 	jto := job.TestOptions{
 		NotClass:   s.TestOptions.NotClass,
 		Class:      s.TestOptions.Class,
@@ -124,7 +164,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		jto.ShardIndex = &s.TestOptions.ShardIndex
 	}
 
-	jobOpts <- job.StartOptions{
+	return job.StartOptions{
 		DisplayName:       s.Name,
 		ConfigFilePath:    r.Project.ConfigFilePath,
 		App:               fmt.Sprintf("storage:%s", appFileID),

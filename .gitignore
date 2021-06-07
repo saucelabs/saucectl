@@ -25,3 +25,6 @@
 
 # downloaded artifacts
 /artifacts
+
+# dry-run bundles
+/sauce-app-payload-*
