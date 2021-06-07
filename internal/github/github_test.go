@@ -17,6 +17,15 @@ func TestGithub_isUpdateRequired(t *testing.T) {
 		{current: "v0.1.0", remote: "v0.1.1", want: true},
 		{current: "v0.2.0", remote: "v0.1.1", want: false},
 		{current: "v0.1.0", remote: "v0.1.0", want: false},
+		{current: "0.1.0", remote: "v0.1.1", want: true},
+		{current: "0.2.0", remote: "v0.1.1", want: false},
+		{current: "0.1.0", remote: "v0.1.0", want: false},
+		{current: "v0.1.0", remote: "0.1.1", want: true},
+		{current: "v0.2.0", remote: "0.1.1", want: false},
+		{current: "v0.1.0", remote: "0.1.0", want: false},
+		{current: "0.1.0", remote: "0.1.1", want: true},
+		{current: "0.2.0", remote: "0.1.1", want: false},
+		{current: "0.1.0", remote: "0.1.0", want: false},
 		{current: "v0.0.0+unknown", remote: "v0.1.0", want: true},
 	}
 	for _, tt := range testCases {
