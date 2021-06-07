@@ -266,7 +266,7 @@ func (r *CloudRunner) archiveProject(project interface{}, tempDir string, projec
 	}
 
 	zipName := filepath.Join(tempDir, "app.zip")
-	z, err := zip.NewWriter(zipName, matcher)
+	z, err := zip.NewFileWriter(zipName, matcher)
 	if err != nil {
 		return "", err
 	}
