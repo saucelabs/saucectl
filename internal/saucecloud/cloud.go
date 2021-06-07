@@ -2,6 +2,7 @@ package saucecloud
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -149,6 +150,13 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool, err error) {
 	log.Info().Str("suite", opts.DisplayName).Str("region", r.Region.String()).Msg("Starting suite.")
+	if r.DryRun {
+		err := r.dryRunForMobile(opts)
+		if err != nil {
+			return job.Job{}, true, err
+		}
+		return job.Job{}, true, nil
+	}
 
 	id, isRDC, err := r.JobStarter.StartJob(context.Background(), opts)
 	if err != nil {
@@ -158,7 +166,6 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	if !isRDC {
 		r.uploadSauceConfig(id, opts.ConfigFilePath)
 	}
-
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
 	// if a soft exit is requested during startContainer phase, it gently exits.
 	if r.interrupted {
@@ -199,6 +206,26 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	}
 
 	return j, false, nil
+}
+
+func (r *CloudRunner) dryRunForMobile(opts job.StartOptions) error {
+	log.Warn().Msg("Running tests in dry run mode.")
+	tmpDir, err := os.MkdirTemp("./", "sauce-app-payload-*")
+	if err != nil {
+		return err
+	}
+	log.Info().Msgf("The following test suites would have run: [%s].", opts.DisplayName)
+	b, err := json.Marshal(opts)
+	if err != nil {
+		return err
+	}
+	fileName := filepath.Join(tmpDir, fmt.Sprintf("%s.json", strings.Join(strings.Split(opts.DisplayName, " "), "-")))
+	if err := os.WriteFile(fileName, b, 0666); err != nil {
+		return err
+	}
+
+	log.Info().Msgf("Saving bundled project to %s.", fileName)
+	return nil
 }
 
 // enrichRDCReport added the fields from the opts as the API does not provides it.

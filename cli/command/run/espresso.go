@@ -3,6 +3,10 @@ package run
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
+
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
@@ -19,9 +23,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
-	"net/http"
-	"os"
-	"path/filepath"
 )
 
 // espFlags contains all espresso related flags that are set when 'run' is invoked.
@@ -144,7 +145,6 @@ func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc
 	overrideCliParameters(cmd, &p.Sauce)
 	applyEspressoFlags(&p)
 
-	// TODO - add dry-run mode
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
 		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
@@ -192,8 +192,10 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 			ShowConsoleLog:        false,
 			ArtifactDownloader:    &rs,
 			RDCArtifactDownloader: &rc,
+			DryRun:                dryRun,
 		},
 	}
+
 	return r.RunProject()
 }
 
