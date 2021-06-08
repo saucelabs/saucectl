@@ -100,7 +100,7 @@ jobs:
         run: chmod +x ./saucectl
 
       - name: Saucectl RUN
-        run: ./saucectl run -c .sauce/puppeteer.yml
+        run: ./saucectl run -c .sauce/puppeteer.yml --timeout 10m
   playwright:
     needs: build
     runs-on: ubuntu-latest
@@ -118,7 +118,7 @@ jobs:
         run: chmod +x ./saucectl
 
       - name: Saucectl RUN
-        run: ./saucectl run -c .sauce/playwright.yml
+        run: ./saucectl run -c .sauce/playwright.yml --timeout 10m
   testcafe:
     needs: build
     runs-on: ubuntu-latest
@@ -136,7 +136,7 @@ jobs:
         run: chmod +x ./saucectl
 
       - name: Saucectl RUN
-        run: ./saucectl run -c .sauce/testcafe.yml
+        run: ./saucectl run -c .sauce/testcafe.yml --timeout 10m
   cypress:
     needs: build
     runs-on: ubuntu-latest
@@ -155,7 +155,7 @@ jobs:
 
       - name: Saucectl RUN
         run: |
-          ./saucectl run -c .sauce/cypress.yml
+          ./saucectl run -c .sauce/cypress.yml --timeout 10m
   cypress-windows:
     needs: build
     runs-on: windows-latest
@@ -174,7 +174,7 @@ jobs:
 
       - name: Saucectl RUN
         run: |
-          ./saucectl.exe run -c .sauce/cypress.yml --suite "saucy test in sauce"
+          ./saucectl.exe run -c .sauce/cypress.yml --suite "saucy test in sauce" --timeout 10m
   espresso:
     needs: build
     runs-on: ubuntu-latest
@@ -219,4 +219,4 @@ jobs:
 
       - name: Saucectl RUN
         run: |
-          ./saucectl run -c .sauce/xcuitest.yml
+          ./saucectl run -c .sauce/xcuitest.yml --timeout 10m
