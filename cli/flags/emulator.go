@@ -15,7 +15,10 @@ type Emulator struct {
 
 // String returns a string represenation of the emulator.
 func (e Emulator) String() string {
-	return fmt.Sprintf("%v", e.Emulator)
+	if !e.Changed {
+		return ""
+	}
+	return fmt.Sprintf("%+v", e.Emulator)
 }
 
 // Set sets the emulator to the values present in s.

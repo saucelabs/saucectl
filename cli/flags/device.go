@@ -16,7 +16,10 @@ type Device struct {
 
 // String returns a string represenation of the device.
 func (d Device) String() string {
-	return fmt.Sprintf("%v", d.Device)
+	if !d.Changed {
+		return ""
+	}
+	return fmt.Sprintf("%+v", d.Device)
 }
 
 // Set sets the device to the values present in s.
