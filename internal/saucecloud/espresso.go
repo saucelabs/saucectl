@@ -36,6 +36,11 @@ type EspressoRunner struct {
 func (r *EspressoRunner) RunProject() (int, error) {
 	exitCode := 1
 
+	if r.DryRun {
+		r.dryRun(r.Project.Espresso.App, r.Project.Espresso.TestApp)
+		return 0, nil
+	}
+
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.ID); err != nil {
 		return 1, err
 	}
@@ -61,10 +66,6 @@ func (r *EspressoRunner) RunProject() (int, error) {
 func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
-	if r.DryRun {
-		r.dryRun(appFileID, testAppFileID)
-		return true
-	}
 
 	jobOpts, results, err := r.createWorkerPool(r.Project.Sauce.Concurrency)
 	if err != nil {
@@ -96,7 +97,7 @@ func (r *EspressoRunner) dryRun(appFileID, testAppFileID string) error {
 	for _, s := range r.Project.Suites {
 		for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
 			opts := r.createJobOpts(s, appFileID, testAppFileID, c)
-			log.Info().Msgf("The [%s] test would run on %s %s %s.", opts.DisplayName, c.name, c.platformName, c.platformVersion)
+			log.Info().Msgf("The [%s] suite would run on %s %s %s.", opts.DisplayName, c.name, c.platformName, c.platformVersion)
 			b, err := json.Marshal(opts)
 			if err != nil {
 				return err
