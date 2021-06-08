@@ -98,9 +98,7 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 			Parent: r.Project.Sauce.Tunnel.Parent,
 		},
 		Experiments: r.Project.Sauce.Experiments,
-		TestOptions: job.TestOptions{
-			Class: s.TestOptions.Class,
-		},
+		TestsToRun:  s.TestOptions.Class,
 
 		// RDC Specific flags
 		RealDevice:        true,
