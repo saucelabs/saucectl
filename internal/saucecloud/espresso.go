@@ -96,7 +96,7 @@ func (r *EspressoRunner) dryRun(appFileID, testAppFileID string) error {
 	for _, s := range r.Project.Suites {
 		for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
 			opts := r.createJobOpts(s, appFileID, testAppFileID, c)
-			log.Info().Msgf("The %s test would run on %s %s %s.", opts.DisplayName, c.name, c.platformName, c.platformVersion)
+			log.Info().Msgf("The [%s] test would run on %s %s %s.", opts.DisplayName, c.name, c.platformName, c.platformVersion)
 			b, err := json.Marshal(opts)
 			if err != nil {
 				return err
