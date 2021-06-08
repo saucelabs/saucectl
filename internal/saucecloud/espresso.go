@@ -1,10 +1,7 @@
 package saucecloud
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -88,33 +85,14 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
 }
 
-func (r *EspressoRunner) dryRun(appFileID, testAppFileID string) error {
+func (r *EspressoRunner) dryRun(appFileID, testAppFileID string) {
 	log.Warn().Msg("Running tests in dry run mode.")
-	tmpDir, err := os.MkdirTemp("./", "sauce-app-payload-*")
-	if err != nil {
-		return err
-	}
 	for _, s := range r.Project.Suites {
 		for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
 			opts := r.createJobOpts(s, appFileID, testAppFileID, c)
 			log.Info().Msgf("The [%s] suite would run on %s %s %s.", opts.DisplayName, c.name, c.platformName, c.platformVersion)
-			b, err := json.Marshal(opts)
-			if err != nil {
-				return err
-			}
-			fileName := filepath.Join(tmpDir, fmt.Sprintf("%s_%s_%s_%s.json", unifyStr(opts.DisplayName), unifyStr(c.name), unifyStr(c.platformName), c.platformVersion))
-			if err := os.WriteFile(fileName, b, 0666); err != nil {
-				return err
-			}
-
 		}
 	}
-
-	return nil
-}
-
-func unifyStr(str string) string {
-	return strings.Join(strings.Split(str, " "), "-")
 }
 
 // enumerateDevicesAndEmulators returns a list of emulators and devices targeted by the current suite.
