@@ -6,6 +6,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/cli/flags"
 	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -22,6 +23,18 @@ import (
 	"os"
 	"path/filepath"
 )
+
+// espFlags contains all espresso related flags that are set when 'run' is invoked.
+var espFlags = espressoFlags{}
+
+type espressoFlags struct {
+	Name        string
+	App         string
+	TestApp     string
+	TestOptions espresso.TestOptions
+	Emulator    flags.Emulator
+	Device      flags.Device
+}
 
 // NewEspressoCmd creates the 'run' command for espresso.
 func NewEspressoCmd(cli *command.SauceCtlCli) *cobra.Command {
@@ -42,6 +55,24 @@ func NewEspressoCmd(cli *command.SauceCtlCli) *cobra.Command {
 			os.Exit(exitCode)
 		},
 	}
+
+	f := cmd.Flags()
+	f.StringVar(&espFlags.Name, "name", "", "Sets the name of job as it will appear on Sauce Labs")
+	f.StringVar(&espFlags.App, "app", "", "Specifies the app under test")
+	f.StringVar(&espFlags.TestApp, "testApp", "", "Specifies the test app")
+
+	// Test Options
+	f.StringSliceVar(&espFlags.TestOptions.Class, "testOptions.class", []string{}, "Include classes")
+	f.StringSliceVar(&espFlags.TestOptions.NotClass, "testOptions.notClass", []string{}, "Exclude classes")
+	f.StringVar(&espFlags.TestOptions.Package, "testOptions.package", "", "Include package")
+	f.StringVar(&espFlags.TestOptions.Size, "testOptions.size", "", "Include tests based on size")
+	f.StringVar(&espFlags.TestOptions.Annotation, "testOptions.annotation", "", "Include tests based on the annotation")
+	f.IntVar(&espFlags.TestOptions.ShardIndex, "testOptions.shardIndex", 0, "The shard index for this particular run")
+	f.IntVar(&espFlags.TestOptions.NumShards, "testOptions.numShards", 0, "Total number of shards")
+
+	// Emulators and Devices
+	f.Var(&espFlags.Emulator, "emulator", "Specifies the emulator to use for testing")
+	f.Var(&espFlags.Device, "device", "Specifies the device to use for testing")
 
 	return cmd
 }
@@ -111,6 +142,7 @@ func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc
 	p.Sauce.Metadata.ExpandEnv()
 	applyDefaultValues(&p.Sauce)
 	overrideCliParameters(cmd, &p.Sauce)
+	applyEspressoFlags(&p)
 
 	// TODO - add dry-run mode
 	regio := region.FromString(p.Sauce.Region)
@@ -173,4 +205,38 @@ func filterEspressoSuite(c *espresso.Project) error {
 		}
 	}
 	return fmt.Errorf("suite name '%s' is invalid", suiteName)
+}
+
+func applyEspressoFlags(p *espresso.Project) {
+	if espFlags.App != "" {
+		p.Espresso.App = espFlags.App
+	}
+	if espFlags.TestApp != "" {
+		p.Espresso.TestApp = espFlags.TestApp
+	}
+
+	// No name, no adhoc suite.
+	if espFlags.Name != "" {
+		setAdhocSuite(p)
+	}
+}
+
+func setAdhocSuite(p *espresso.Project) {
+	var dd []config.Device
+	if espFlags.Device.Changed {
+		dd = append(dd, espFlags.Device.Device)
+	}
+
+	var ee []config.Emulator
+	if espFlags.Emulator.Changed {
+		ee = append(ee, espFlags.Emulator.Emulator)
+	}
+
+	s := espresso.Suite{
+		Name:        espFlags.Name,
+		Devices:     dd,
+		Emulators:   ee,
+		TestOptions: espFlags.TestOptions,
+	}
+	p.Suites = []espresso.Suite{s}
 }
