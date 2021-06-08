@@ -112,6 +112,18 @@ func enumerateDevicesAndEmulators(devices []config.Device, emulators []config.Em
 
 // startJob add the job to the list for the workers.
 func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Suite, appFileID, testAppFileID string, d deviceConfig) {
+	jto := job.TestOptions{
+		NotClass:   s.TestOptions.NotClass,
+		Class:      s.TestOptions.Class,
+		Annotation: s.TestOptions.Annotation,
+		Size:       s.TestOptions.Size,
+		Package:    s.TestOptions.Package,
+	}
+	if s.TestOptions.NumShards > 1 {
+		jto.NumShards = &s.TestOptions.NumShards
+		jto.ShardIndex = &s.TestOptions.ShardIndex
+	}
+
 	jobOpts <- job.StartOptions{
 		DisplayName:       s.Name,
 		ConfigFilePath:    r.Project.ConfigFilePath,
@@ -132,15 +144,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 			Parent: r.Project.Sauce.Tunnel.Parent,
 		},
 		Experiments: r.Project.Sauce.Experiments,
-		TestOptions: job.TestOptions{
-			NotClass:   s.TestOptions.NotClass,
-			Class:      s.TestOptions.Class,
-			Annotation: s.TestOptions.Annotation,
-			Size:       s.TestOptions.Size,
-			Package:    s.TestOptions.Package,
-			NumShards:  s.TestOptions.NumShards,
-			ShardIndex: s.TestOptions.ShardIndex,
-		},
+		TestOptions: jto,
 
 		// RDC Specific flags
 		RealDevice:        d.isRealDevice,
