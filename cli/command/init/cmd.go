@@ -48,6 +48,8 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	switch strings.ToLower(framework) {
 	case "espresso":
 		return configureEspresso()
+	case "xcuitest":
+		return configureXCUITest()
 	case "":
 		return fmt.Errorf("interrupting configuration")
 	default:

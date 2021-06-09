@@ -2,18 +2,18 @@ package init
 
 import (
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/espresso"
 )
 
-func isAnAPK(s interface{}) error {
+func isAnIPAOrApp(s interface{}) error {
 	val := s.(string)
-	if !strings.HasSuffix(val, ".apk") {
-		return fmt.Errorf("application must be an .apk")
+	if !strings.HasSuffix(val, ".ipa") && !strings.HasSuffix(val, ".app") {
+		return fmt.Errorf("application must be an .ipa or .apk")
 	}
 	_, err := os.Stat(val)
 	if err != nil {
@@ -22,24 +22,24 @@ func isAnAPK(s interface{}) error {
 	return nil
 }
 
-func completeAPK(toComplete string) []string {
+func completeIPA(toComplete string) []string {
 	files, _ := filepath.Glob(fmt.Sprintf("%s%s", toComplete, "*"))
 	return files
 }
 
-func configureEspresso() error {
+func configureXCUITest() error {
 	var err error
 	region, err := ask(regionSelector)
 	if err != nil {
 		return err
 	}
 
-	app, err := askString("Application to test", "", isAnAPK, completeAPK)
+	app, err := askString("Application to test", "", isAnIPAOrApp, completeIPA)
 	if err != nil {
 		return err
 	}
 
-	testApp, err := askString("Test application", "", isAnAPK, completeAPK)
+	testApp, err := askString("Test application", "", isAnIPAOrApp, completeIPA)
 	if err != nil {
 		return err
 	}
@@ -49,39 +49,33 @@ func configureEspresso() error {
 		return err
 	}
 
-	emulator, err := askEmulator()
-	if err != nil {
-		return err
-	}
 	downloadConfig, err := askDownloadConfig()
 	if err != nil {
 		return err
 	}
 
 	/* build config file */
-	cfg := espresso.Project{
+	cfg := xcuitest.Project{
 		TypeDef: config.TypeDef{
 			APIVersion: config.VersionV1Alpha,
-			Kind:       config.KindEspresso,
+			Kind:       config.KindXcuitest,
 		},
 		Sauce: config.SauceConfig{
 			Region:      region,
 			Sauceignore: ".sauceignore",
 			Concurrency: 2, //TODO: Use MIN(AccountLimit, 10)
 		},
-		Espresso: espresso.Espresso{
+		Xcuitest: xcuitest.Xcuitest{
 			App:     app,
 			TestApp: testApp,
 		},
-		Suites: []espresso.Suite{
+		Suites: []xcuitest.Suite{
 			{
-				Name:      "My First Suite", //TODO: Authorize to name you suite
+				Name:      "My First Suite",
 				Devices:   []config.Device{device},
-				Emulators: []config.Emulator{emulator},
 			},
 		},
 		Artifacts: downloadConfig,
 	}
-
 	return saveConfiguration(cfg)
 }
