@@ -540,7 +540,6 @@ func runXcuitest(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc
 	applyDefaultValues(&p.Sauce)
 	overrideCliParameters(cmd, &p.Sauce)
 
-	// TODO - add dry-run mode
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
 		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
@@ -589,6 +588,7 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 			ShowConsoleLog:        false,
 			ArtifactDownloader:    &rs,
 			RDCArtifactDownloader: &rc,
+			DryRun:                dryRun,
 		},
 	}
 	return r.RunProject()

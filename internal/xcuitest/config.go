@@ -16,6 +16,7 @@ var supportedDeviceTypes = []string{"ANY", "PHONE", "TABLET"}
 type Project struct {
 	config.TypeDef `yaml:",inline"`
 	ConfigFilePath string             `yaml:"-" json:"-"`
+	DryRun         bool               `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Xcuitest       Xcuitest           `yaml:"xcuitest,omitempty" json:"xcuitest"`
 	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
@@ -77,7 +78,7 @@ func Validate(p Project) error {
 	if p.Xcuitest.TestApp == "" {
 		return errors.New("missing path to test app .ipa")
 	}
-	if !strings.HasSuffix(p.Xcuitest.TestApp, ".ipa") && !strings.HasSuffix(p.Xcuitest.TestApp, ".app"){
+	if !strings.HasSuffix(p.Xcuitest.TestApp, ".ipa") && !strings.HasSuffix(p.Xcuitest.TestApp, ".app") {
 		return fmt.Errorf("invalid application test file: %s, make sure extension is .ipa or .app", p.Xcuitest.TestApp)
 	}
 
