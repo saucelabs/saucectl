@@ -43,6 +43,18 @@ var (
 	defaultRegion      = "us-west-1"
 	defaultSauceignore = ".sauceignore"
 
+	// General Request Timeouts
+	appStoreTimeout     = 300 * time.Second
+	testComposerTimeout = 300 * time.Second
+	restoTimeout        = 60 * time.Second
+	rdcTimeout          = 15 * time.Second
+	githubTimeout       = 2 * time.Second
+)
+
+// gFlags contains all global flags that are set when 'run' is invoked.
+var gFlags = globalFlags{}
+
+type globalFlags struct {
 	cfgFilePath    string
 	cfgLogDir      string
 	globalTimeout  time.Duration
@@ -62,14 +74,7 @@ var (
 	dryRun         bool
 	tags           []string
 	build          string
-
-	// General Request Timeouts
-	appStoreTimeout     = 300 * time.Second
-	testComposerTimeout = 300 * time.Second
-	restoTimeout        = 60 * time.Second
-	rdcTimeout          = 15 * time.Second
-	githubTimeout       = 2 * time.Second
-)
+}
 
 // Command creates the `run` command
 func Command(cli *command.SauceCtlCli) *cobra.Command {
@@ -83,7 +88,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 				log.Err(err).Msg("failed to execute run command")
 				sentry.CaptureError(err, sentry.Scope{
 					Username:   credentials.Get().Username,
-					ConfigFile: cfgFilePath,
+					ConfigFile: gFlags.cfgFilePath,
 				})
 			}
 			os.Exit(exitCode)
@@ -91,27 +96,27 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	}
 
 	defaultCfgPath := filepath.Join(".sauce", "config.yml")
-	cmd.PersistentFlags().StringVarP(&cfgFilePath, "config", "c", defaultCfgPath, "Specifies which config file to use")
-	cmd.PersistentFlags().StringVarP(&cfgLogDir, "logDir", "l", defaultLogFir, "log path")
-	cmd.PersistentFlags().DurationVarP(&globalTimeout, "timeout", "t", 0, "Global timeout that limits how long saucectl can run in total. Supports duration values like '10s', '30m' etc. (default: no timeout)")
-	cmd.PersistentFlags().StringVarP(&regionFlag, "region", "r", "", "The sauce labs region. (default: us-west-1)")
-	cmd.PersistentFlags().StringToStringVarP(&env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
-	cmd.PersistentFlags().StringVar(&sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
-	cmd.PersistentFlags().StringVar(&suiteName, "suite", "", "Run specified test suite.")
-	cmd.PersistentFlags().BoolVar(&testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
-	cmd.PersistentFlags().StringVar(&testEnv, "test-env", "", "Specifies the environment in which the tests should run. Choice: docker|sauce.")
-	cmd.PersistentFlags().BoolVarP(&showConsoleLog, "show-console-log", "", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
-	cmd.PersistentFlags().IntVar(&concurrency, "ccy", 2, "Concurrency specifies how many suites are run at the same time.")
-	cmd.PersistentFlags().StringVar(&tunnelID, "tunnel-id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
-	cmd.PersistentFlags().StringVar(&tunnelParent, "tunnel-parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
-	cmd.PersistentFlags().StringVar(&runnerVersion, "runner-version", "", "Overrides the automatically determined runner version.")
-	cmd.PersistentFlags().StringVar(&sauceignore, "sauceignore", "", "Specifies the path to the .sauceignore file.")
-	cmd.PersistentFlags().StringToStringVar(&experiments, "experiment", map[string]string{}, "Specifies a list of experimental flags and values")
-	cmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "", false, "Simulate a test run without actually running any tests.")
+	cmd.PersistentFlags().StringVarP(&gFlags.cfgFilePath, "config", "c", defaultCfgPath, "Specifies which config file to use")
+	cmd.PersistentFlags().StringVarP(&gFlags.cfgLogDir, "logDir", "l", defaultLogFir, "log path")
+	cmd.PersistentFlags().DurationVarP(&gFlags.globalTimeout, "timeout", "t", 0, "Global timeout that limits how long saucectl can run in total. Supports duration values like '10s', '30m' etc. (default: no timeout)")
+	cmd.PersistentFlags().StringVarP(&gFlags.regionFlag, "region", "r", "", "The sauce labs region. (default: us-west-1)")
+	cmd.PersistentFlags().StringToStringVarP(&gFlags.env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
+	cmd.PersistentFlags().StringVar(&gFlags.sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
+	cmd.PersistentFlags().StringVar(&gFlags.suiteName, "suite", "", "Run specified test suite.")
+	cmd.PersistentFlags().BoolVar(&gFlags.testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
+	cmd.PersistentFlags().StringVar(&gFlags.testEnv, "test-env", "", "Specifies the environment in which the tests should run. Choice: docker|sauce.")
+	cmd.PersistentFlags().BoolVarP(&gFlags.showConsoleLog, "show-console-log", "", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
+	cmd.PersistentFlags().IntVar(&gFlags.concurrency, "ccy", 2, "Concurrency specifies how many suites are run at the same time.")
+	cmd.PersistentFlags().StringVar(&gFlags.tunnelID, "tunnel-id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
+	cmd.PersistentFlags().StringVar(&gFlags.tunnelParent, "tunnel-parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
+	cmd.PersistentFlags().StringVar(&gFlags.runnerVersion, "runner-version", "", "Overrides the automatically determined runner version.")
+	cmd.PersistentFlags().StringVar(&gFlags.sauceignore, "sauceignore", "", "Specifies the path to the .sauceignore file.")
+	cmd.PersistentFlags().StringToStringVar(&gFlags.experiments, "experiment", map[string]string{}, "Specifies a list of experimental flags and values")
+	cmd.PersistentFlags().BoolVarP(&gFlags.dryRun, "dry-run", "", false, "Simulate a test run without actually running any tests.")
 
 	// Metadata
-	cmd.PersistentFlags().StringSliceVar(&tags, "tags", []string{}, "Adds tags to tests")
-	cmd.PersistentFlags().StringVar(&build, "build", "", "Associates tests with a build")
+	cmd.PersistentFlags().StringSliceVar(&gFlags.tags, "tags", []string{}, "Adds tags to tests")
+	cmd.PersistentFlags().StringVar(&gFlags.build, "build", "", "Associates tests with a build")
 
 	cmd.Flags().MarkDeprecated("test-env", "please set mode in config file")
 
@@ -140,14 +145,14 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		return 1, fmt.Errorf("no credentials set")
 	}
 
-	if cfgLogDir == defaultLogFir {
+	if gFlags.cfgLogDir == defaultLogFir {
 		pwd, _ := os.Getwd()
-		cfgLogDir = filepath.Join(pwd, "logs")
+		gFlags.cfgLogDir = filepath.Join(pwd, "logs")
 	}
-	cli.LogDir = cfgLogDir
-	log.Info().Str("config", cfgFilePath).Msg("Reading config file")
+	cli.LogDir = gFlags.cfgLogDir
+	log.Info().Str("config", gFlags.cfgFilePath).Msg("Reading config file")
 
-	d, err := config.Describe(cfgFilePath)
+	d, err := config.Describe(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
@@ -199,7 +204,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 }
 
 func printTestEnv(testEnv string) {
-	if testEnvSilent {
+	if gFlags.testEnvSilent {
 		return
 	}
 
@@ -212,7 +217,7 @@ func printTestEnv(testEnv string) {
 }
 
 func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
-	p, err := cypress.FromFile(cfgFilePath)
+	p, err := cypress.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
@@ -222,7 +227,7 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 	overrideCliParameters(cmd, &p.Sauce)
 
 	// Merge env from CLI args and job config. CLI args take precedence.
-	for k, v := range env {
+	for k, v := range gFlags.env {
 		for _, s := range p.Suites {
 			if s.Config.Env == nil {
 				s.Config.Env = map[string]string{}
@@ -231,11 +236,11 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 		}
 	}
 
-	if showConsoleLog {
+	if gFlags.showConsoleLog {
 		p.ShowConsoleLog = true
 	}
-	if runnerVersion != "" {
-		p.RunnerVersion = runnerVersion
+	if gFlags.runnerVersion != "" {
+		p.RunnerVersion = gFlags.runnerVersion
 	}
 
 	if cmd.Flags().Lookup("suite").Changed {
@@ -253,9 +258,9 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 		}
 		p.Suites[i] = s
 	}
-	if testEnv != "" {
+	if gFlags.testEnv != "" {
 		for i, s := range p.Suites {
-			s.Mode = testEnv
+			s.Mode = gFlags.testEnv
 			p.Suites[i] = s
 		}
 	}
@@ -266,7 +271,7 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
-		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
+		log.Error().Str("region", gFlags.regionFlag).Msg("Unable to determine sauce region.")
 		return 1, errors.New("no sauce region set")
 	}
 
@@ -318,14 +323,14 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
-			DryRun:             dryRun,
+			DryRun:             gFlags.dryRun,
 		},
 	}
 	return r.RunProject()
 }
 
 func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
-	p, err := playwright.FromFile(cfgFilePath)
+	p, err := playwright.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
@@ -335,7 +340,7 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 	overrideCliParameters(cmd, &p.Sauce)
 
 	// Merge env from CLI args and job config. CLI args take precedence.
-	for k, v := range env {
+	for k, v := range gFlags.env {
 		for _, s := range p.Suites {
 			if s.Env == nil {
 				s.Env = map[string]string{}
@@ -344,11 +349,11 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 		}
 	}
 
-	if showConsoleLog {
+	if gFlags.showConsoleLog {
 		p.ShowConsoleLog = true
 	}
-	if runnerVersion != "" {
-		p.RunnerVersion = runnerVersion
+	if gFlags.runnerVersion != "" {
+		p.RunnerVersion = gFlags.runnerVersion
 	}
 	if cmd.Flags().Lookup("suite").Changed {
 		if err := filterPlaywrightSuite(&p); err != nil {
@@ -364,16 +369,16 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 		}
 		p.Suites[i] = s
 	}
-	if testEnv != "" {
+	if gFlags.testEnv != "" {
 		for i, s := range p.Suites {
-			s.Mode = testEnv
+			s.Mode = gFlags.testEnv
 			p.Suites[i] = s
 		}
 	}
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
-		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
+		log.Error().Str("region", gFlags.regionFlag).Msg("Unable to determine sauce region.")
 		return 1, errors.New("no sauce region set")
 	}
 
@@ -425,14 +430,14 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
-			DryRun:             dryRun,
+			DryRun:             gFlags.dryRun,
 		},
 	}
 	return r.RunProject()
 }
 
 func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
-	p, err := testcafe.FromFile(cfgFilePath)
+	p, err := testcafe.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
@@ -441,7 +446,7 @@ func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 	applyDefaultValues(&p.Sauce)
 	overrideCliParameters(cmd, &p.Sauce)
 
-	for k, v := range env {
+	for k, v := range gFlags.env {
 		for _, s := range p.Suites {
 			if s.Env == nil {
 				s.Env = map[string]string{}
@@ -450,11 +455,11 @@ func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 		}
 	}
 
-	if showConsoleLog {
+	if gFlags.showConsoleLog {
 		p.ShowConsoleLog = true
 	}
-	if runnerVersion != "" {
-		p.RunnerVersion = runnerVersion
+	if gFlags.runnerVersion != "" {
+		p.RunnerVersion = gFlags.runnerVersion
 	}
 	if cmd.Flags().Lookup("suite").Changed {
 		if err := filterTestcafeSuite(&p); err != nil {
@@ -470,16 +475,16 @@ func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 		}
 		p.Suites[i] = s
 	}
-	if testEnv != "" {
+	if gFlags.testEnv != "" {
 		for i, s := range p.Suites {
-			s.Mode = testEnv
+			s.Mode = gFlags.testEnv
 			p.Suites[i] = s
 		}
 	}
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
-		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
+		log.Error().Str("region", gFlags.regionFlag).Msg("Unable to determine sauce region.")
 		return 1, errors.New("no sauce region set")
 	}
 
@@ -531,14 +536,14 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
-			DryRun:             dryRun,
+			DryRun:             gFlags.dryRun,
 		},
 	}
 	return r.RunProject()
 }
 
 func runXcuitest(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as *appstore.AppStore) (int, error) {
-	p, err := xcuitest.FromFile(cfgFilePath)
+	p, err := xcuitest.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
@@ -548,7 +553,7 @@ func runXcuitest(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
-		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
+		log.Error().Str("region", gFlags.regionFlag).Msg("Unable to determine sauce region.")
 		return 1, errors.New("no sauce region set")
 	}
 
@@ -594,14 +599,14 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 			ShowConsoleLog:        false,
 			ArtifactDownloader:    &rs,
 			RDCArtifactDownloader: &rc,
-			DryRun:                dryRun,
+			DryRun:                gFlags.dryRun,
 		},
 	}
 	return r.RunProject()
 }
 
 func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (int, error) {
-	p, err := puppeteer.FromFile(cfgFilePath)
+	p, err := puppeteer.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
@@ -609,7 +614,7 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 	applyDefaultValues(&p.Sauce)
 	overrideCliParameters(cmd, &p.Sauce)
 
-	for k, v := range env {
+	for k, v := range gFlags.env {
 		for _, s := range p.Suites {
 			if s.Env == nil {
 				s.Env = map[string]string{}
@@ -618,7 +623,7 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 		}
 	}
 
-	if showConsoleLog {
+	if gFlags.showConsoleLog {
 		p.ShowConsoleLog = true
 	}
 
@@ -630,7 +635,7 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
-		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
+		log.Error().Str("region", gFlags.regionFlag).Msg("Unable to determine sauce region.")
 		return 1, errors.New("no sauce region set")
 	}
 
@@ -652,8 +657,8 @@ func runPuppeteerInDocker(p puppeteer.Project, testco testcomposer.Client, rs re
 
 func apiBaseURL(r region.Region) string {
 	// Check for overrides.
-	if sauceAPI != "" {
-		return sauceAPI
+	if gFlags.sauceAPI != "" {
+		return gFlags.sauceAPI
 	}
 
 	return r.APIBaseURL()
@@ -661,52 +666,52 @@ func apiBaseURL(r region.Region) string {
 
 func filterCypressSuite(c *cypress.Project) error {
 	for _, s := range c.Suites {
-		if s.Name == suiteName {
+		if s.Name == gFlags.suiteName {
 			c.Suites = []cypress.Suite{s}
 			return nil
 		}
 	}
-	return fmt.Errorf("suite name '%s' is invalid", suiteName)
+	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
 }
 
 func filterPlaywrightSuite(c *playwright.Project) error {
 	for _, s := range c.Suites {
-		if s.Name == suiteName {
+		if s.Name == gFlags.suiteName {
 			c.Suites = []playwright.Suite{s}
 			return nil
 		}
 	}
-	return fmt.Errorf("suite name '%s' is invalid", suiteName)
+	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
 }
 
 func filterTestcafeSuite(c *testcafe.Project) error {
 	for _, s := range c.Suites {
-		if s.Name == suiteName {
+		if s.Name == gFlags.suiteName {
 			c.Suites = []testcafe.Suite{s}
 			return nil
 		}
 	}
-	return fmt.Errorf("suite name '%s' is invalid", suiteName)
+	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
 }
 
 func filterXcuitestSuite(c *xcuitest.Project) error {
 	for _, s := range c.Suites {
-		if s.Name == suiteName {
+		if s.Name == gFlags.suiteName {
 			c.Suites = []xcuitest.Suite{s}
 			return nil
 		}
 	}
-	return fmt.Errorf("suite name '%s' is invalid", suiteName)
+	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
 }
 
 func filterPuppeteerSuite(c *puppeteer.Project) error {
 	for _, s := range c.Suites {
-		if s.Name == suiteName {
+		if s.Name == gFlags.suiteName {
 			c.Suites = []puppeteer.Suite{s}
 			return nil
 		}
 	}
-	return fmt.Errorf("suite name '%s' is invalid", suiteName)
+	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
 }
 
 func validateFiles(files []string) error {
@@ -730,39 +735,39 @@ func applyDefaultValues(sauce *config.SauceConfig) {
 
 func overrideCliParameters(cmd *cobra.Command, sauce *config.SauceConfig) {
 	if cmd.Flags().Lookup("region").Changed {
-		sauce.Region = regionFlag
+		sauce.Region = gFlags.regionFlag
 	}
 	if cmd.Flags().Lookup("ccy").Changed {
-		sauce.Concurrency = concurrency
+		sauce.Concurrency = gFlags.concurrency
 	}
 	if cmd.Flags().Lookup("tunnel-id").Changed {
-		sauce.Tunnel.ID = tunnelID
+		sauce.Tunnel.ID = gFlags.tunnelID
 	}
 	if cmd.Flags().Lookup("tunnel-parent").Changed {
-		sauce.Tunnel.Parent = tunnelParent
+		sauce.Tunnel.Parent = gFlags.tunnelParent
 	}
 	if cmd.Flags().Lookup("sauceignore").Changed {
-		sauce.Sauceignore = sauceignore
+		sauce.Sauceignore = gFlags.sauceignore
 	}
 	if cmd.Flags().Lookup("experiment").Changed {
-		sauce.Experiments = experiments
+		sauce.Experiments = gFlags.experiments
 	}
-	if build != "" {
-		sauce.Metadata.Build = build
+	if gFlags.build != "" {
+		sauce.Metadata.Build = gFlags.build
 	}
-	if len(tags) != 0 {
-		sauce.Metadata.Tags = tags
+	if len(gFlags.tags) != 0 {
+		sauce.Metadata.Tags = gFlags.tags
 	}
 }
 
 // awaitGlobalTimeout waits for the global timeout event. In case of global timeout event, it attempts to interrupt the
 // current process. Should this fail, a hard immediate exit is performed.
 func awaitGlobalTimeout() {
-	if globalTimeout == 0 {
+	if gFlags.globalTimeout == 0 {
 		return
 	}
 
-	<-time.After(globalTimeout)
+	<-time.After(gFlags.globalTimeout)
 	msg.LogGlobalTimeoutShutdown()
 
 	// Can't send interrupt signals on windows. A hard exit is our only choice.
