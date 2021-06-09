@@ -38,7 +38,7 @@ func Test_apiBaseURL(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sauceAPI = tt.sauceAPI
+			gFlags.sauceAPI = tt.sauceAPI
 			if got := apiBaseURL(tt.args.r); got != tt.want {
 				t.Errorf("apiBaseURL() = %v, want %v", got, tt.want)
 			}
@@ -93,7 +93,7 @@ func TestFilterCypressSuite(t *testing.T) {
 		p := &cypress.Project{
 			Suites: []cypress.Suite{s1, s2, s3, s4},
 		}
-		suiteName = tt.filterName
+		gFlags.suiteName = tt.filterName
 		err := filterCypressSuite(p)
 		if tt.wantErr {
 			assert.NotNil(t, err, "error not received")
@@ -128,7 +128,7 @@ func TestFilterPlaywrightSuite(t *testing.T) {
 		p := &playwright.Project{
 			Suites: []playwright.Suite{s1, s2, s3, s4},
 		}
-		suiteName = tt.filterName
+		gFlags.suiteName = tt.filterName
 		err := filterPlaywrightSuite(p)
 		if tt.wantErr {
 			assert.NotNil(t, err, "error not received")
@@ -191,7 +191,7 @@ func TestFilterTestcafeSuite(t *testing.T) {
 
 	for _, tc := range testCase {
 		t.Run(tc.name, func(t *testing.T) {
-			suiteName = tc.suiteName
+			gFlags.suiteName = tc.suiteName
 			err := filterTestcafeSuite(tc.config)
 			if err != nil {
 				assert.Equal(t, tc.expErr, err.Error())
@@ -251,7 +251,7 @@ func TestFilterEspressoSuite(t *testing.T) {
 
 	for _, tc := range testCase {
 		t.Run(tc.name, func(t *testing.T) {
-			suiteName = tc.suiteName
+			gFlags.suiteName = tc.suiteName
 			err := filterEspressoSuite(tc.config)
 			if err != nil {
 				assert.Equal(t, tc.expErr, err.Error())

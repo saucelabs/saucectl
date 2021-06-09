@@ -50,7 +50,7 @@ func NewEspressoCmd(cli *command.SauceCtlCli) *cobra.Command {
 				log.Err(err).Msg("failed to execute run command")
 				sentry.CaptureError(err, sentry.Scope{
 					Username:   credentials.Get().Username,
-					ConfigFile: cfgFilePath,
+					ConfigFile: gFlags.cfgFilePath,
 				})
 			}
 			os.Exit(exitCode)
@@ -93,14 +93,14 @@ func runEspressoCmd(cmd *cobra.Command, cli *command.SauceCtlCli, args []string)
 		return 1, fmt.Errorf("no credentials set")
 	}
 
-	if cfgLogDir == defaultLogFir {
+	if gFlags.cfgLogDir == defaultLogFir {
 		pwd, _ := os.Getwd()
-		cfgLogDir = filepath.Join(pwd, "logs")
+		gFlags.cfgLogDir = filepath.Join(pwd, "logs")
 	}
-	cli.LogDir = cfgLogDir
-	log.Info().Str("config", cfgFilePath).Msg("Reading config file")
+	cli.LogDir = gFlags.cfgLogDir
+	log.Info().Str("config", gFlags.cfgFilePath).Msg("Reading config file")
 
-	d, err := config.Describe(cfgFilePath)
+	d, err := config.Describe(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
@@ -136,7 +136,7 @@ func runEspressoCmd(cmd *cobra.Command, cli *command.SauceCtlCli, args []string)
 }
 
 func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as *appstore.AppStore) (int, error) {
-	p, err := espresso.FromFile(cfgFilePath)
+	p, err := espresso.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
@@ -147,7 +147,7 @@ func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
-		log.Error().Str("region", regionFlag).Msg("Unable to determine sauce region.")
+		log.Error().Str("region", gFlags.regionFlag).Msg("Unable to determine sauce region.")
 		return 1, errors.New("no sauce region set")
 	}
 
@@ -192,7 +192,7 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 			ShowConsoleLog:        false,
 			ArtifactDownloader:    &rs,
 			RDCArtifactDownloader: &rc,
-			DryRun:                dryRun,
+			DryRun:                gFlags.dryRun,
 		},
 	}
 
@@ -201,12 +201,12 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 
 func filterEspressoSuite(c *espresso.Project) error {
 	for _, s := range c.Suites {
-		if s.Name == suiteName {
+		if s.Name == gFlags.suiteName {
 			c.Suites = []espresso.Suite{s}
 			return nil
 		}
 	}
-	return fmt.Errorf("suite name '%s' is invalid", suiteName)
+	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
 }
 
 func applyEspressoFlags(p *espresso.Project) {
