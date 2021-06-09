@@ -30,6 +30,11 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
+	if r.DryRun {
+		r.dryRun(r.Project)
+		return 0, nil
+	}
+
 	appPath, testAppPath, err := archiveAppsToIpaIfRequired(r.Project.Xcuitest.App, r.Project.Xcuitest.TestApp)
 	if err != nil {
 		return exitCode, err
@@ -51,6 +56,15 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 	}
 
 	return exitCode, nil
+}
+
+func (r *XcuitestRunner) dryRun(p xcuitest.Project) {
+	log.Warn().Msg("Running tests in dry run mode.")
+	for _, s := range p.Suites {
+		for _, d := range s.Devices {
+			log.Info().Msgf("The [%s] suite would run on %s %s %s", s.Name, d.Name, d.PlatformName, d.PlatformVersion)
+		}
+	}
 }
 
 func (r *XcuitestRunner) runSuites(appFileID, testAppFileID string) bool {
@@ -146,7 +160,7 @@ func archiveAppToIpa(appPath string) (string, error) {
 	fileName := fmt.Sprintf("%s-*.ipa", strings.TrimSuffix(path.Base(appPath), ".app"))
 	tmpFile, err := ioutil.TempFile(os.TempDir(), fileName)
 	if err != nil {
-		return  "", err
+		return "", err
 	}
 	arch, _ := zip.New(tmpFile, sauceignore.NewMatcher([]sauceignore.Pattern{}))
 	defer arch.Close()
