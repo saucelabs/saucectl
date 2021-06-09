@@ -1,31 +1,9 @@
 package init
 
 import (
-	"fmt"
-	"github.com/saucelabs/saucectl/internal/xcuitest"
-	"os"
-	"path/filepath"
-	"strings"
-
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
-
-func isAnIPAOrApp(s interface{}) error {
-	val := s.(string)
-	if !strings.HasSuffix(val, ".ipa") && !strings.HasSuffix(val, ".app") {
-		return fmt.Errorf("application must be an .ipa or .apk")
-	}
-	_, err := os.Stat(val)
-	if err != nil {
-		return fmt.Errorf("%s: %v", val, err)
-	}
-	return nil
-}
-
-func completeIPA(toComplete string) []string {
-	files, _ := filepath.Glob(fmt.Sprintf("%s%s", toComplete, "*"))
-	return files
-}
 
 func configureXCUITest(ini initiator) error {
 	err := ini.askRegion()
@@ -33,12 +11,14 @@ func configureXCUITest(ini initiator) error {
 		return err
 	}
 
-	app, err := askString("Application to test", "", isAnIPAOrApp, completeIPA)
+	var app string
+	err = ini.askFile("Application to test:", isAnIPAOrApp, completeIPA, &app)
 	if err != nil {
 		return err
 	}
 
-	testApp, err := askString("Test application", "", isAnIPAOrApp, completeIPA)
+	var testApp string
+	err = ini.askFile("Test application:", isAnIPAOrApp, completeIPA, &testApp)
 	if err != nil {
 		return err
 	}

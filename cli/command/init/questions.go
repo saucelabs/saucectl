@@ -44,24 +44,6 @@ func (ini *initiator) askFramework() error {
 
 type completor func(string) []string
 
-// DEPRECATED
-func askString(message string, def string, val survey.Validator, comp completor) (string, error) {
-	q := &survey.Input{
-		Message: fmt.Sprintf("%s:", message),
-		Default: def,
-		Suggest: comp,
-	}
-
-	var appPath string
-	if err := survey.AskOne(q, &appPath,
-		survey.WithShowCursor(true),
-		survey.WithValidator(survey.Required),
-		survey.WithValidator(val)); err != nil {
-		return "", err
-	}
-	return appPath, nil
-}
-
 /* When translation */
 var whenStrings = []string{
 	"when tests are failing",
@@ -159,7 +141,7 @@ func (ini *initiator) askVersion() error {
 		return err
 	}
 	q := &survey.Select{
-		Message: fmt.Sprintf("Select %s version", ini.frameworkName),
+		Message: fmt.Sprintf("Select %s version:", ini.frameworkName),
 		Options: versions,
 	}
 
@@ -167,6 +149,22 @@ func (ini *initiator) askVersion() error {
 		survey.WithShowCursor(true),
 		survey.WithValidator(survey.Required))
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+
+func (ini *initiator) askFile(message string, val survey.Validator, comp completor, targetValue *string) error {
+	q := &survey.Input{
+		Message: message,
+		Suggest: comp,
+	}
+
+	if err := survey.AskOne(q, targetValue,
+		survey.WithShowCursor(true),
+		survey.WithValidator(survey.Required),
+		survey.WithValidator(val)); err != nil {
 		return err
 	}
 	return nil

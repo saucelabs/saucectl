@@ -1,31 +1,10 @@
 package init
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
-
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 )
 
-func isAJSON(s interface{}) error {
-	val := s.(string)
-	if !strings.HasSuffix(val, ".json") {
-		return fmt.Errorf("configuration must be a .json")
-	}
-	_, err := os.Stat(val)
-	if err != nil {
-		return fmt.Errorf("%s: %v", val, err)
-	}
-	return nil
-}
-
-func completeJSON(toComplete string) []string {
-	files, _ := filepath.Glob(fmt.Sprintf("%s%s", toComplete, "*"))
-	return files
-}
 
 func configureCypress(ini initiator) error {
 	err := ini.askRegion()
@@ -38,14 +17,14 @@ func configureCypress(ini initiator) error {
 		return err
 	}
 
-	rootDir, err := askString("root dir", "", func(ans interface{}) error {
-		return nil
-	}, nil)
+	var rootDir string
+	err = ini.askFile("Root project directory:", isDirectory, nil, &rootDir)
 	if err != nil {
 		return err
 	}
 
-	cypressJson, err := askString("Cypress configuration file", "", isAJSON, completeJSON)
+	var cypressJson string
+	err = ini.askFile("Cypress configuration file:", isJSON, completeJSON, &cypressJson)
 	if err != nil {
 		return err
 	}

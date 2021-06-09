@@ -16,9 +16,8 @@ func configureTestcafe(ini initiator) error {
 		return err
 	}
 
-	rootDir, err := askString("root dir", "", func(ans interface{}) error {
-		return nil
-	}, nil)
+	var rootDir string
+	err = ini.askFile("Root project directory:", isDirectory, nil, &rootDir)
 	if err != nil {
 		return err
 	}

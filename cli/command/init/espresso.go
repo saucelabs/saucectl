@@ -1,31 +1,9 @@
 package init
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
-
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
 )
-
-func isAnAPK(s interface{}) error {
-	val := s.(string)
-	if !strings.HasSuffix(val, ".apk") {
-		return fmt.Errorf("application must be an .apk")
-	}
-	_, err := os.Stat(val)
-	if err != nil {
-		return fmt.Errorf("%s: %v", val, err)
-	}
-	return nil
-}
-
-func completeAPK(toComplete string) []string {
-	files, _ := filepath.Glob(fmt.Sprintf("%s%s", toComplete, "*"))
-	return files
-}
 
 func configureEspresso(ini initiator) error {
 	err := ini.askRegion()
@@ -33,12 +11,14 @@ func configureEspresso(ini initiator) error {
 		return err
 	}
 
-	app, err := askString("Application to test", "", isAnAPK, completeAPK)
+	var app string
+	err = ini.askFile("Application to test:", isAnAPK, completeAPK, &app)
 	if err != nil {
 		return err
 	}
 
-	testApp, err := askString("Test application", "", isAnAPK, completeAPK)
+	var testApp string
+	err = ini.askFile("Application to test:", isAnAPK, completeAPK, &testApp)
 	if err != nil {
 		return err
 	}
