@@ -160,5 +160,17 @@ func askPlatform() (platformName string, mode string, browserName string, err er
 }
 
 func askVersion(framework string) (string, error) {
-	return "7.2.0", nil
+	q := &survey.Select{
+		Message: fmt.Sprintf("Select %s version", framework),
+		Default: "7.1.0",
+		Options: []string{"7.1.0", "6.6.0", "5.4.0"},
+	}
+	var frameworkVersion string
+	err := survey.AskOne(q, &frameworkVersion,
+		survey.WithShowCursor(true),
+		survey.WithValidator(survey.Required))
+	if err != nil {
+		return "", err
+	}
+	return frameworkVersion, nil
 }

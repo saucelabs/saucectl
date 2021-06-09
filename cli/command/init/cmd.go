@@ -52,6 +52,12 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return configureXCUITest()
 	case "cypress":
 		return configureCypress()
+	case "testcafe":
+		return configureTestcafe()
+	case "playwright":
+		return configurePlaywright()
+	case "puppeteer":
+		return configurePuppeteer()
 	case "":
 		return fmt.Errorf("interrupting configuration")
 	default:
