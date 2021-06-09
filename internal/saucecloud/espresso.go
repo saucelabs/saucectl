@@ -33,6 +33,11 @@ type EspressoRunner struct {
 func (r *EspressoRunner) RunProject() (int, error) {
 	exitCode := 1
 
+	if r.DryRun {
+		r.dryRun()
+		return 0, nil
+	}
+
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.ID); err != nil {
 		return 1, err
 	}
@@ -78,6 +83,15 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 	}()
 
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
+}
+
+func (r *EspressoRunner) dryRun() {
+	log.Warn().Msg("Running tests in dry run mode.")
+	for _, s := range r.Project.Suites {
+		for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
+			log.Info().Msgf("The [%s] suite would run on %s %s %s.", s.Name, c.name, c.platformName, c.platformVersion)
+		}
+	}
 }
 
 // enumerateDevicesAndEmulators returns a list of emulators and devices targeted by the current suite.
