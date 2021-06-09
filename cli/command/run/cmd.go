@@ -60,6 +60,8 @@ var (
 	sauceignore    string
 	experiments    map[string]string
 	dryRun         bool
+	tags           []string
+	build          string
 
 	// General Request Timeouts
 	appStoreTimeout     = 300 * time.Second
@@ -106,6 +108,10 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.PersistentFlags().StringVar(&sauceignore, "sauceignore", "", "Specifies the path to the .sauceignore file.")
 	cmd.PersistentFlags().StringToStringVar(&experiments, "experiment", map[string]string{}, "Specifies a list of experimental flags and values")
 	cmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "", false, "Simulate a test run without actually running any tests.")
+
+	// Metadata
+	cmd.PersistentFlags().StringSliceVar(&tags, "tags", []string{}, "Adds tags to tests")
+	cmd.PersistentFlags().StringVar(&build, "build", "", "Associates tests with a build")
 
 	cmd.Flags().MarkDeprecated("test-env", "please set mode in config file")
 
@@ -740,6 +746,12 @@ func overrideCliParameters(cmd *cobra.Command, sauce *config.SauceConfig) {
 	}
 	if cmd.Flags().Lookup("experiment").Changed {
 		sauce.Experiments = experiments
+	}
+	if build != "" {
+		sauce.Metadata.Build = build
+	}
+	if len(tags) != 0 {
+		sauce.Metadata.Tags = tags
 	}
 }
 
