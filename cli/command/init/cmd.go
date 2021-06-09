@@ -50,6 +50,8 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return configureEspresso()
 	case "xcuitest":
 		return configureXCUITest()
+	case "cypress":
+		return configureCypress()
 	case "":
 		return fmt.Errorf("interrupting configuration")
 	default:

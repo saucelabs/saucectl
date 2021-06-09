@@ -123,3 +123,42 @@ func askDownloadConfig() (config.Artifacts, error) {
 		},
 	}, nil
 }
+
+func askPlatform() (platformName string, mode string, browserName string, err error) {
+	mode = "sauce"
+
+	// FIXME: Display only supported platforms
+	q := &survey.Select{
+		Message: "Choose platform",
+		Default: "Windows 10",
+		Options: []string{"Windows 10", "docker", "macOS 11.0"},
+	}
+	err = survey.AskOne(q, &platformName,
+		survey.WithShowCursor(true),
+		survey.WithValidator(survey.Required))
+	if err != nil {
+		return "", "", "", err
+	}
+	if platformName == "docker" {
+		platformName = ""
+		mode = "docker"
+	}
+
+	// FIXME: Display only supported browsers
+	q = &survey.Select{
+		Message: "Choose Browser",
+		Default: "chrome",
+		Options: []string{"chrome", "firefox", "webkit"},
+	}
+	err = survey.AskOne(q, &browserName,
+		survey.WithShowCursor(true),
+		survey.WithValidator(survey.Required))
+	if err != nil {
+		return "", "", "", err
+	}
+	return
+}
+
+func askVersion(framework string) (string, error) {
+	return "7.2.0", nil
+}
