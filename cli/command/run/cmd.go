@@ -770,6 +770,13 @@ func awaitGlobalTimeout() {
 	<-time.After(gFlags.globalTimeout)
 	msg.LogGlobalTimeoutShutdown()
 
+	// A timeout for soft shutdown.
+	go func() {
+		<-time.After(10 * time.Second)
+		color.Red("Unable to perform soft shutdown. Exiting immediately...")
+		os.Exit(1)
+	}()
+
 	// Can't send interrupt signals on windows. A hard exit is our only choice.
 	if runtime.GOOS == "windows" {
 		os.Exit(1)
@@ -777,12 +784,7 @@ func awaitGlobalTimeout() {
 
 	p, err := os.FindProcess(os.Getpid())
 	if err == nil {
-		err = p.Signal(syscall.SIGINT)
-	}
-
-	if err != nil {
-		color.Red("Unable to perform soft shutdown. Exiting immediately...")
-		os.Exit(1)
+		_ = p.Signal(syscall.SIGINT)
 	}
 }
 
