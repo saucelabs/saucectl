@@ -24,7 +24,7 @@ func configureCypress(ini initiator) error {
 	}
 
 	var cypressJson string
-	err = ini.askFile("Cypress configuration file:", isJSON, completeJSON, &cypressJson)
+	err = ini.askFile("Cypress configuration file:", hasValidExt(".json"), completeBasic, &cypressJson)
 	if err != nil {
 		return err
 	}

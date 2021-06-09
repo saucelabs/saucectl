@@ -2,6 +2,7 @@ package init
 
 import (
 	"fmt"
+	"github.com/AlecAivazis/survey/v2"
 	"gopkg.in/yaml.v2"
 	"os"
 	"path/filepath"
@@ -29,55 +30,29 @@ func saveConfiguration(p interface{}) error {
 	return nil
 }
 
-func isJSON(s interface{}) error {
-	val := s.(string)
-	if !strings.HasSuffix(val, ".json") {
-		return fmt.Errorf("configuration must be a .json")
-	}
-	_, err := os.Stat(val)
-	if err != nil {
-		return fmt.Errorf("%s: %v", val, err)
-	}
-	return nil
-}
-
-func completeJSON(toComplete string) []string {
+func completeBasic(toComplete string) []string {
 	files, _ := filepath.Glob(fmt.Sprintf("%s%s", toComplete, "*"))
 	return files
 }
 
-func isAnAPK(s interface{}) error {
-	val := s.(string)
-	if !strings.HasSuffix(val, ".apk") {
-		return fmt.Errorf("application must be an .apk")
+func hasValidExt(exts ... string) survey.Validator {
+	return func(s interface{}) error {
+		val := s.(string)
+		found := false
+		for _, ext := range exts {
+			if strings.HasSuffix(val, ext) {
+				found = true
+			}
+		}
+		if !found {
+			return fmt.Errorf("invalid extension. must be one of the following: %s", strings.Join(exts, ", "))
+		}
+		_, err := os.Stat(val)
+		if err != nil {
+			return fmt.Errorf("%s: %v", val, err)
+		}
+		return nil
 	}
-	_, err := os.Stat(val)
-	if err != nil {
-		return fmt.Errorf("%s: %v", val, err)
-	}
-	return nil
-}
-
-func completeAPK(toComplete string) []string {
-	files, _ := filepath.Glob(fmt.Sprintf("%s%s", toComplete, "*"))
-	return files
-}
-
-func isAnIPAOrApp(s interface{}) error {
-	val := s.(string)
-	if !strings.HasSuffix(val, ".ipa") && !strings.HasSuffix(val, ".app") {
-		return fmt.Errorf("application must be an .ipa or .apk")
-	}
-	_, err := os.Stat(val)
-	if err != nil {
-		return fmt.Errorf("%s: %v", val, err)
-	}
-	return nil
-}
-
-func completeIPA(toComplete string) []string {
-	files, _ := filepath.Glob(fmt.Sprintf("%s%s", toComplete, "*"))
-	return files
 }
 
 func isDirectory(s interface{}) error {

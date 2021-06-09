@@ -81,7 +81,7 @@ func (ini *initiator) askDevice() error {
 	q := &survey.Input{
 		Message: "Type device name:",
 	}
-	err := survey.AskOne(q, &ini.device.Name)
+	err := survey.AskOne(q, &ini.device.Name, survey.WithShowCursor(true))
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func (ini *initiator) askEmulator() error {
 	q := &survey.Input{
 		Message: "Type emulator name:",
 	}
-	err := survey.AskOne(q, &ini.emulator.Name)
+	err := survey.AskOne(q, &ini.emulator.Name, survey.WithShowCursor(true))
 	if err != nil {
 		return err
 	}

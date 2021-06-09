@@ -12,13 +12,13 @@ func configureXCUITest(ini initiator) error {
 	}
 
 	var app string
-	err = ini.askFile("Application to test:", isAnIPAOrApp, completeIPA, &app)
+	err = ini.askFile("Application to test:", hasValidExt(".app", ".ipa"), completeBasic, &app)
 	if err != nil {
 		return err
 	}
 
 	var testApp string
-	err = ini.askFile("Test application:", isAnIPAOrApp, completeIPA, &testApp)
+	err = ini.askFile("Test application:", hasValidExt(".app", ".ipa"), completeBasic, &testApp)
 	if err != nil {
 		return err
 	}

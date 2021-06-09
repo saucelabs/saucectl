@@ -12,13 +12,13 @@ func configureEspresso(ini initiator) error {
 	}
 
 	var app string
-	err = ini.askFile("Application to test:", isAnAPK, completeAPK, &app)
+	err = ini.askFile("Application to test:", hasValidExt(".apk"), completeBasic, &app)
 	if err != nil {
 		return err
 	}
 
 	var testApp string
-	err = ini.askFile("Application to test:", isAnAPK, completeAPK, &testApp)
+	err = ini.askFile("Application to test:", hasValidExt(".apk"), completeBasic, &testApp)
 	if err != nil {
 		return err
 	}
