@@ -12,8 +12,8 @@ import (
 
 var (
 	initUse     = "init"
-	initShort   = "init project for Sauce Labs"
-	initLong    = "Initialiaze a saucectl project"
+	initShort   = "bootstrap project"
+	initLong    = "bootstrap an existing project for Sauce Labs"
 	initExample = "saucectl init"
 
 	frameworkName = ""
