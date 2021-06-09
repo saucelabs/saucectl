@@ -34,7 +34,7 @@ func (r *EspressoRunner) RunProject() (int, error) {
 	exitCode := 1
 
 	if r.DryRun {
-		r.dryRun(r.Project.Espresso.App, r.Project.Espresso.TestApp)
+		r.dryRun()
 		return 0, nil
 	}
 
@@ -85,12 +85,11 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
 }
 
-func (r *EspressoRunner) dryRun(appFileID, testAppFileID string) {
+func (r *EspressoRunner) dryRun() {
 	log.Warn().Msg("Running tests in dry run mode.")
 	for _, s := range r.Project.Suites {
 		for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
-			opts := r.createJobOpts(s, appFileID, testAppFileID, c)
-			log.Info().Msgf("The [%s] suite would run on %s %s %s.", opts.DisplayName, c.name, c.platformName, c.platformVersion)
+			log.Info().Msgf("The [%s] suite would run on %s %s %s.", s.Name, c.name, c.platformName, c.platformVersion)
 		}
 	}
 }
@@ -127,10 +126,6 @@ func enumerateDevicesAndEmulators(devices []config.Device, emulators []config.Em
 
 // startJob add the job to the list for the workers.
 func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Suite, appFileID, testAppFileID string, d deviceConfig) {
-	jobOpts <- r.createJobOpts(s, appFileID, testAppFileID, d)
-}
-
-func (r *EspressoRunner) createJobOpts(s espresso.Suite, appFileID, testAppFileID string, d deviceConfig) job.StartOptions {
 	jto := job.TestOptions{
 		NotClass:   s.TestOptions.NotClass,
 		Class:      s.TestOptions.Class,
@@ -143,7 +138,7 @@ func (r *EspressoRunner) createJobOpts(s espresso.Suite, appFileID, testAppFileI
 		jto.ShardIndex = &s.TestOptions.ShardIndex
 	}
 
-	return job.StartOptions{
+	jobOpts <- job.StartOptions{
 		DisplayName:       s.Name,
 		ConfigFilePath:    r.Project.ConfigFilePath,
 		App:               fmt.Sprintf("storage:%s", appFileID),
