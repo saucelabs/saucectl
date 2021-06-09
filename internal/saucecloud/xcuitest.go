@@ -31,7 +31,7 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 	}
 
 	if r.DryRun {
-		r.dryRun(r.Project)
+		r.dryRun()
 		return 0, nil
 	}
 
@@ -58,9 +58,9 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-func (r *XcuitestRunner) dryRun(p xcuitest.Project) {
+func (r *XcuitestRunner) dryRun() {
 	log.Warn().Msg("Running tests in dry run mode.")
-	for _, s := range p.Suites {
+	for _, s := range r.Project.Suites {
 		for _, d := range s.Devices {
 			log.Info().Msgf("The [%s] suite would run on %s %s %s", s.Name, d.Name, d.PlatformName, d.PlatformVersion)
 		}
