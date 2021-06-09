@@ -1,27 +1,31 @@
 package init
 
 import (
+	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/spf13/cobra"
 	"os"
+	"strings"
 )
 
 var (
-	runUse     = "init"
-	runShort   = "init project for Sauce Labs"
-	runLong    = "Initialiaze a saucectl project"
-	runExample = "saucectl init"
+	initUse     = "init"
+	initShort   = "init project for Sauce Labs"
+	initLong    = "Initialiaze a saucectl project"
+	initExample = "saucectl init"
+
+	frameworkName = ""
 )
 
 // Command creates the `run` command
 func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     runUse,
-		Short:   runShort,
-		Long:    runLong,
-		Example: runExample,
+		Use:     initUse,
+		Short:   initShort,
+		Long:    initLong,
+		Example: initExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Info().Msg("Start Init Command")
 			err := Run(cmd, cli, args)
@@ -32,10 +36,21 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 			}
 		},
 	}
+	cmd.Flags().StringVarP(&frameworkName, "framework", "f", "", "framework to init")
 	return cmd
 }
 
 // Run runs the command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
-	return nil
+	// FIXME: Provision using API
+	framework, _ := ask(frameworkSelector)
+
+	switch strings.ToLower(framework) {
+	case "espresso":
+		return configureEspresso()
+	case "":
+		return fmt.Errorf("interrupting configuration")
+	default:
+		return fmt.Errorf("%s: not implemented", strings.ToLower(framework))
+	}
 }
