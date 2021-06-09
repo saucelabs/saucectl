@@ -5,14 +5,13 @@ import (
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
 
-func configurePlaywright() error {
-	var err error
-	region, err := ask(regionSelector)
+func configurePlaywright(ini initiator) error {
+	err := ini.askRegion()
 	if err != nil {
 		return err
 	}
 
-	version, err := askVersion("playwright")
+	err = ini.askVersion()
 	if err != nil {
 		return err
 	}
@@ -24,12 +23,12 @@ func configurePlaywright() error {
 		return err
 	}
 
-	platformName, mode, browserName, err := askPlatform()
+	err = ini.askPlatform()
 	if err != nil {
 		return err
 	}
 
-	downloadConfig, err := askDownloadConfig()
+	err = ini.askDownloadWhen()
 	if err != nil {
 		return err
 	}
@@ -41,25 +40,31 @@ func configurePlaywright() error {
 			Kind:       config.KindPlaywright,
 		},
 		Sauce: config.SauceConfig{
-			Region:      region,
+			Region:      ini.region,
 			Sauceignore: ".sauceignore",
 			Concurrency: 2, //TODO: Use MIN(AccountLimit, 10)
 		},
 		RootDir: rootDir,
 		Playwright: playwright.Playwright{
-			Version: version,
+			Version: ini.frameworkVersion,
 		},
 		Suites: []playwright.Suite{
 			{
 				Name:         "My First Suite", //TODO: Authorize to name you suite
-				PlatformName: platformName,
+				PlatformName: ini.platformName,
 				Params: playwright.SuiteConfig{
-					BrowserName: browserName,
+					BrowserName: ini.browserName,
 				},
-				Mode: mode,
+				Mode: ini.mode,
 			},
 		},
-		Artifacts: downloadConfig,
+		Artifacts: config.Artifacts{
+			Download: config.ArtifactDownload{
+				When: ini.artifactWhen,
+				Directory: "./artifacts",
+				Match: []string{"*"},
+			},
+		},
 	}
 
 	return saveConfiguration(cfg)

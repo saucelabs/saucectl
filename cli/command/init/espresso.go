@@ -27,9 +27,8 @@ func completeAPK(toComplete string) []string {
 	return files
 }
 
-func configureEspresso() error {
-	var err error
-	region, err := ask(regionSelector)
+func configureEspresso(ini initiator) error {
+	err := ini.askRegion()
 	if err != nil {
 		return err
 	}
@@ -44,16 +43,17 @@ func configureEspresso() error {
 		return err
 	}
 
-	device, err := askDevice()
+	err = ini.askDevice()
 	if err != nil {
 		return err
 	}
 
-	emulator, err := askEmulator()
+	err = ini.askEmulator()
 	if err != nil {
 		return err
 	}
-	downloadConfig, err := askDownloadConfig()
+
+	err = ini.askDownloadWhen()
 	if err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func configureEspresso() error {
 			Kind:       config.KindEspresso,
 		},
 		Sauce: config.SauceConfig{
-			Region:      region,
+			Region:      ini.region,
 			Sauceignore: ".sauceignore",
 			Concurrency: 2, //TODO: Use MIN(AccountLimit, 10)
 		},
@@ -75,12 +75,20 @@ func configureEspresso() error {
 		},
 		Suites: []espresso.Suite{
 			{
-				Name:      "My First Suite", //TODO: Authorize to name you suite
-				Devices:   []config.Device{device},
-				Emulators: []config.Emulator{emulator},
+				//TODO: Authorize to name you suite
+				Name:      "My First Suite",
+				// TODO: Check before adding element
+				Devices:   []config.Device{ini.device},
+				Emulators: []config.Emulator{ini.emulator},
 			},
 		},
-		Artifacts: downloadConfig,
+		Artifacts: config.Artifacts{
+			Download: config.ArtifactDownload{
+				When: ini.artifactWhen,
+				Match: []string{"*"},
+				Directory: "artifacts",
+			},
+		},
 	}
 
 	return saveConfiguration(cfg)

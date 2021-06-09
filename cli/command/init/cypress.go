@@ -27,14 +27,13 @@ func completeJSON(toComplete string) []string {
 	return files
 }
 
-func configureCypress() error {
-	var err error
-	region, err := ask(regionSelector)
+func configureCypress(ini initiator) error {
+	err := ini.askRegion()
 	if err != nil {
 		return err
 	}
 
-	version, err := askVersion("cypress")
+	err = ini.askVersion()
 	if err != nil {
 		return err
 	}
@@ -51,12 +50,12 @@ func configureCypress() error {
 		return err
 	}
 
-	platformName, mode, browserName, err := askPlatform()
+	err = ini.askPlatform()
 	if err != nil {
 		return err
 	}
 
-	downloadConfig, err := askDownloadConfig()
+	err = ini.askDownloadWhen()
 	if err != nil {
 		return err
 	}
@@ -68,24 +67,30 @@ func configureCypress() error {
 			Kind:       config.KindCypress,
 		},
 		Sauce: config.SauceConfig{
-			Region:      region,
+			Region:      ini.region,
 			Sauceignore: ".sauceignore",
 			Concurrency: 2, //TODO: Use MIN(AccountLimit, 10)
 		},
 		RootDir: rootDir,
 		Cypress: cypress.Cypress{
-			Version:    version,
+			Version:    ini.frameworkVersion,
 			ConfigFile: cypressJson,
 		},
 		Suites: []cypress.Suite{
 			{
 				Name:         "My First Suite", //TODO: Authorize to name you suite
-				PlatformName: platformName,
-				Browser:      browserName,
-				Mode:         mode,
+				PlatformName: ini.platformName,
+				Browser:      ini.browserName,
+				Mode:         ini.mode,
 			},
 		},
-		Artifacts: downloadConfig,
+		Artifacts: config.Artifacts{
+			Download: config.ArtifactDownload{
+				When: ini.artifactWhen,
+				Directory: "./artifacts",
+				Match: []string{"*"},
+			},
+		},
 	}
 
 	return saveConfiguration(cfg)

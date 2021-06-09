@@ -5,14 +5,13 @@ import (
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 )
 
-func configurePuppeteer() error {
-	var err error
-	region, err := ask(regionSelector)
+func configurePuppeteer(ini initiator) error {
+	err := ini.askRegion()
 	if err != nil {
 		return err
 	}
 
-	version, err := askVersion("puppeteer")
+	err = ini.askVersion()
 	if err != nil {
 		return err
 	}
@@ -24,12 +23,12 @@ func configurePuppeteer() error {
 		return err
 	}
 
-	_, _, browserName, err := askPlatform()
+	err = ini.askPlatform()
 	if err != nil {
 		return err
 	}
 
-	downloadConfig, err := askDownloadConfig()
+	err = ini.askDownloadWhen()
 	if err != nil {
 		return err
 	}
@@ -41,21 +40,27 @@ func configurePuppeteer() error {
 			Kind:       config.KindPuppeteer,
 		},
 		Sauce: config.SauceConfig{
-			Region:      region,
+			Region:      ini.region,
 			Sauceignore: ".sauceignore",
 			Concurrency: 2, //TODO: Use MIN(AccountLimit, 10)
 		},
 		RootDir: rootDir,
 		Puppeteer: puppeteer.Puppeteer{
-			Version: version,
+			Version: ini.frameworkVersion,
 		},
 		Suites: []puppeteer.Suite{
 			{
 				Name:    "My First Suite", //TODO: Authorize to name you suite
-				Browser: browserName,
+				Browser: ini.browserName,
 			},
 		},
-		Artifacts: downloadConfig,
+		Artifacts: config.Artifacts{
+			Download: config.ArtifactDownload{
+				When:      ini.artifactWhen,
+				Directory: "./artifacts",
+				Match:     []string{"*"},
+			},
+		},
 	}
 
 	return saveConfiguration(cfg)

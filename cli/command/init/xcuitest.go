@@ -27,9 +27,8 @@ func completeIPA(toComplete string) []string {
 	return files
 }
 
-func configureXCUITest() error {
-	var err error
-	region, err := ask(regionSelector)
+func configureXCUITest(ini initiator) error {
+	err := ini.askRegion()
 	if err != nil {
 		return err
 	}
@@ -44,12 +43,12 @@ func configureXCUITest() error {
 		return err
 	}
 
-	device, err := askDevice()
+	err = ini.askDevice()
 	if err != nil {
 		return err
 	}
 
-	downloadConfig, err := askDownloadConfig()
+	err = ini.askDownloadWhen()
 	if err != nil {
 		return err
 	}
@@ -61,7 +60,7 @@ func configureXCUITest() error {
 			Kind:       config.KindXcuitest,
 		},
 		Sauce: config.SauceConfig{
-			Region:      region,
+			Region:      ini.region,
 			Sauceignore: ".sauceignore",
 			Concurrency: 2, //TODO: Use MIN(AccountLimit, 10)
 		},
@@ -71,11 +70,17 @@ func configureXCUITest() error {
 		},
 		Suites: []xcuitest.Suite{
 			{
-				Name:      "My First Suite",
-				Devices:   []config.Device{device},
+				Name:    "My First Suite",
+				Devices: []config.Device{ini.device},
 			},
 		},
-		Artifacts: downloadConfig,
+		Artifacts: config.Artifacts{
+			Download: config.ArtifactDownload{
+				When:      ini.artifactWhen,
+				Directory: "./artifacts",
+				Match:     []string{"*"},
+			},
+		},
 	}
 	return saveConfiguration(cfg)
 }

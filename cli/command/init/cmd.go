@@ -2,12 +2,17 @@ package init
 
 import (
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/internal/sentry"
-	"github.com/spf13/cobra"
 	"os"
 	"strings"
+
+	"github.com/AlecAivazis/survey/v2/terminal"
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
+
+	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/mocks"
+	"github.com/saucelabs/saucectl/internal/sentry"
 )
 
 var (
@@ -40,27 +45,57 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	return cmd
 }
 
+type FrameworkInfoReader interface {
+	Frameworks() ([]string, error)
+	Versions(frameworkName, region string) ([]string, error)
+	Platforms(frameworkName, region, frameworkVersion string) ([]string, error)
+	Browsers(frameworkName, region, frameworkVersion, platformName string) ([]string, error)
+}
+
+type initiator struct {
+	stdio      terminal.Stdio
+	infoReader FrameworkInfoReader
+
+	frameworkName    string
+	frameworkVersion string
+	platformName     string
+	mode             string
+	browserName      string
+	region           string
+	artifactWhen     config.When
+	device           config.Device
+	emulator         config.Emulator
+}
+
 // Run runs the command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	// FIXME: Provision using API
-	framework, _ := ask(frameworkSelector)
+	ini := initiator{
+		stdio:      terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr},
+		infoReader: &mocks.FakeFrameworkInfoReader{},
+	}
 
-	switch strings.ToLower(framework) {
+	err := ini.askFramework()
+	if err != nil {
+		return err
+	}
+
+	switch strings.ToLower(ini.frameworkName) {
 	case "espresso":
-		return configureEspresso()
+		return configureEspresso(ini)
 	case "xcuitest":
-		return configureXCUITest()
+		return configureXCUITest(ini)
 	case "cypress":
-		return configureCypress()
+		return configureCypress(ini)
 	case "testcafe":
-		return configureTestcafe()
+		return configureTestcafe(ini)
 	case "playwright":
-		return configurePlaywright()
+		return configurePlaywright(ini)
 	case "puppeteer":
-		return configurePuppeteer()
+		return configurePuppeteer(ini)
 	case "":
 		return fmt.Errorf("interrupting configuration")
 	default:
-		return fmt.Errorf("%s: not implemented", strings.ToLower(framework))
+		return fmt.Errorf("%s: not implemented", strings.ToLower(ini.frameworkName))
 	}
 }

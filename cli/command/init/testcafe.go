@@ -5,14 +5,13 @@ import (
 	"github.com/saucelabs/saucectl/internal/testcafe"
 )
 
-func configureTestcafe() error {
-	var err error
-	region, err := ask(regionSelector)
+func configureTestcafe(ini initiator) error {
+	err := ini.askRegion()
 	if err != nil {
 		return err
 	}
 
-	version, err := askVersion("testcafe")
+	err = ini.askVersion()
 	if err != nil {
 		return err
 	}
@@ -24,12 +23,12 @@ func configureTestcafe() error {
 		return err
 	}
 
-	platformName, mode, browserName, err := askPlatform()
+	err = ini.askPlatform()
 	if err != nil {
 		return err
 	}
 
-	downloadConfig, err := askDownloadConfig()
+	err = ini.askDownloadWhen()
 	if err != nil {
 		return err
 	}
@@ -41,23 +40,29 @@ func configureTestcafe() error {
 			Kind:       config.KindTestcafe,
 		},
 		Sauce: config.SauceConfig{
-			Region:      region,
+			Region:      ini.region,
 			Sauceignore: ".sauceignore",
 			Concurrency: 2, //TODO: Use MIN(AccountLimit, 10)
 		},
 		RootDir: rootDir,
 		Testcafe: testcafe.Testcafe{
-			Version: version,
+			Version: ini.frameworkVersion,
 		},
 		Suites: []testcafe.Suite{
 			{
 				Name:         "My First Suite", //TODO: Authorize to name you suite
-				PlatformName: platformName,
-				BrowserName: browserName,
-				Mode: mode,
+				PlatformName: ini.platformName,
+				BrowserName:  ini.browserName,
+				Mode:         ini.mode,
 			},
 		},
-		Artifacts: downloadConfig,
+		Artifacts: config.Artifacts{
+			Download: config.ArtifactDownload{
+				When: ini.artifactWhen,
+				Directory: "./artifacts",
+				Match: []string{"*"},
+			},
+		},
 	}
 
 	return saveConfiguration(cfg)

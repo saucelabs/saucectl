@@ -3,33 +3,48 @@ package init
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/region"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/saucelabs/saucectl/internal/config"
 )
 
-var regionSelector = &survey.Select{
-	Message: "Choose the sauce labs region:",
-	Options: []string{"us-west-1", "eu-central-1"},
-	Default: "us-west-1",
-}
-
-var frameworkSelector = &survey.Select{
-	Message: "Choose your framework:",
-	Options: []string{"Cypress", "Espresso", "Playwright", "Puppeteer", "TestCafe", "XCUITest"},
-	Default: "Cypress",
-}
-
-func ask(p survey.Prompt) (string, error) {
-	var value string
-	err := survey.AskOne(p, &value)
-	if value == "" {
-		return "", errors.New("interrupting configuration")
+func (ini *initiator) askRegion() error {
+	p := &survey.Select{
+		Message: "Select region:",
+		Options: []string{region.USWest1.String(), region.EUCentral1.String()},
+		Default: region.USWest1.String(),
 	}
-	return value, err
+
+
+	err := survey.AskOne(p, &ini.region, survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ini *initiator) askFramework() error {
+	values, err := ini.infoReader.Frameworks()
+	if err != nil {
+		return err
+	}
+
+	p := &survey.Select{
+		Message: "Select framework:",
+		Options: values,
+	}
+
+	err = survey.AskOne(p, &ini.frameworkName, survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
+	if ini.frameworkName == "" {
+		return errors.New("interrupting configuration")
+	}
+	return err
 }
 
 type completor func(string) []string
 
+// DEPRECATED
 func askString(message string, def string, val survey.Validator, comp completor) (string, error) {
 	q := &survey.Input{
 		Message: fmt.Sprintf("%s:", message),
@@ -61,9 +76,9 @@ var mapWhen = map[string]config.When{
 	"always":                 config.WhenAlways,
 }
 
-func askDownloadWhen() (config.When, error) {
+func (ini *initiator) askDownloadWhen() error {
 	q := &survey.Select{
-		Message: "Download artifacts",
+		Message: "Download artifacts:",
 		Default: whenStrings[0],
 		Options: whenStrings,
 	}
@@ -72,105 +87,87 @@ func askDownloadWhen() (config.When, error) {
 		survey.WithShowCursor(true),
 		survey.WithValidator(survey.Required))
 	if err != nil {
-		return "", nil
+		return err
 	}
-	return mapWhen[when], nil
+	ini.artifactWhen = mapWhen[when]
+	return nil
 }
 
-func askYesNo(question string, def bool) (bool, error) {
-	q := &survey.Confirm{
-		Message: question,
-		Default: def,
-	}
-	var resp bool
-	err := survey.AskOne(q, &resp)
-	return resp, err
-}
 
-func askDevice() (config.Device, error) {
+func (ini *initiator) askDevice() error {
 	// TODO: Check if device exists !
-	deviceName, err := askString("Type device name", "", survey.Required, nil)
-	if err != nil {
-		return config.Device{}, err
+	q := &survey.Input{
+		Message: "Type device name:",
 	}
-	return config.Device{
-		Name: deviceName,
-	}, nil
+	err := survey.AskOne(q, &ini.device.Name)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func askEmulator() (config.Emulator, error) {
+func (ini *initiator) askEmulator() error {
 	// TODO: Propose selection of emulators !
-	emulatorName, err := askString("Type emulator name", "", survey.Required, nil)
-	if err != nil {
-		return config.Emulator{}, err
+	q := &survey.Input{
+		Message: "Type emulator name:",
 	}
-	return config.Emulator{
-		Name: emulatorName,
-	}, nil
+	err := survey.AskOne(q, &ini.emulator.Name)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func askDownloadConfig() (config.Artifacts, error) {
-	when, err := askDownloadWhen()
-	if err != nil {
-		return config.Artifacts{}, err
-	}
-
-	return config.Artifacts{
-		Download: config.ArtifactDownload{
-			Directory: "./artifacts/",
-			When:      when,
-			Match:     []string{"*"},
-		},
-	}, nil
-}
-
-func askPlatform() (platformName string, mode string, browserName string, err error) {
-	mode = "sauce"
-
-	// FIXME: Display only supported platforms
+func (ini *initiator) askPlatform() error {
+	// Select Platform
+	platforms, _ := ini.infoReader.Platforms(ini.frameworkName, ini.region, ini.frameworkVersion)
 	q := &survey.Select{
-		Message: "Choose platform",
-		Default: "Windows 10",
-		Options: []string{"Windows 10", "docker", "macOS 11.0"},
+		Message: "Select platform:",
+		Options: platforms,
 	}
-	err = survey.AskOne(q, &platformName,
+	err := survey.AskOne(q, &ini.platformName,
 		survey.WithShowCursor(true),
 		survey.WithValidator(survey.Required))
 	if err != nil {
-		return "", "", "", err
-	}
-	if platformName == "docker" {
-		platformName = ""
-		mode = "docker"
+		return err
 	}
 
-	// FIXME: Display only supported browsers
+	ini.mode = "sauce"
+	if ini.platformName == "docker" {
+		ini.platformName = ""
+		ini.mode = "docker"
+	}
+
+	// Select browser
+	browsers, _ := ini.infoReader.Browsers(ini.frameworkName, ini.region, ini.frameworkVersion, ini.platformName)
 	q = &survey.Select{
-		Message: "Choose Browser",
-		Default: "chrome",
-		Options: []string{"chrome", "firefox", "webkit"},
+		Message: "Select Browser:",
+		Options: browsers,
 	}
-	err = survey.AskOne(q, &browserName,
+	err = survey.AskOne(q, &ini.browserName,
 		survey.WithShowCursor(true),
 		survey.WithValidator(survey.Required))
 	if err != nil {
-		return "", "", "", err
+		return err
 	}
-	return
+	return nil
 }
 
-func askVersion(framework string) (string, error) {
-	q := &survey.Select{
-		Message: fmt.Sprintf("Select %s version", framework),
-		Default: "7.1.0",
-		Options: []string{"7.1.0", "6.6.0", "5.4.0"},
+func (ini *initiator) askVersion() error {
+	versions, err := ini.infoReader.Versions(ini.frameworkName, ini.region)
+	if err != nil {
+		return err
 	}
-	var frameworkVersion string
-	err := survey.AskOne(q, &frameworkVersion,
+	q := &survey.Select{
+		Message: fmt.Sprintf("Select %s version", ini.frameworkName),
+		Options: versions,
+	}
+
+	err = survey.AskOne(q, &ini.frameworkVersion,
 		survey.WithShowCursor(true),
 		survey.WithValidator(survey.Required))
 	if err != nil {
-		return "", err
+		return err
 	}
-	return frameworkVersion, nil
+	return nil
 }
