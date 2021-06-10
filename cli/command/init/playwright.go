@@ -5,35 +5,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
 
-func configurePlaywright(ini initiator) error {
-	err := ini.askRegion()
-	if err != nil {
-		return err
-	}
-
-	err = ini.askVersion()
-	if err != nil {
-		return err
-	}
-
-	var rootDir string
-	err = ini.askFile("Root project directory:", isDirectory, nil, &rootDir)
-	if err != nil {
-		return err
-	}
-
-	err = ini.askPlatform()
-	if err != nil {
-		return err
-	}
-
-	err = ini.askDownloadWhen()
-	if err != nil {
-		return err
-	}
-
-	/* build config file */
-	cfg := playwright.Project{
+func configurePlaywright(ini initiator) interface{} {
+	return playwright.Project{
 		TypeDef: config.TypeDef{
 			APIVersion: config.VersionV1Alpha,
 			Kind:       config.KindPlaywright,
@@ -43,7 +16,7 @@ func configurePlaywright(ini initiator) error {
 			Sauceignore: ".sauceignore",
 			Concurrency: 2, //TODO: Use MIN(AccountLimit, 10)
 		},
-		RootDir: rootDir,
+		RootDir: ini.rootDir,
 		Playwright: playwright.Playwright{
 			Version: ini.frameworkVersion,
 		},
@@ -65,6 +38,4 @@ func configurePlaywright(ini initiator) error {
 			},
 		},
 	}
-
-	return saveConfiguration(cfg)
 }

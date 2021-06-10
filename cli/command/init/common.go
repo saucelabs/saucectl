@@ -2,11 +2,14 @@ package init
 
 import (
 	"fmt"
-	"github.com/AlecAivazis/survey/v2"
 	"gopkg.in/yaml.v2"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/AlecAivazis/survey/v2"
+
+	"github.com/saucelabs/saucectl/internal/config"
 )
 
 func saveConfiguration(p interface{}) error {
@@ -35,7 +38,17 @@ func completeBasic(toComplete string) []string {
 	return files
 }
 
-func hasValidExt(exts ... string) survey.Validator {
+func extValidator(framework string) survey.Validator {
+	var exts []string
+	switch framework {
+	case config.KindEspresso:
+		exts = []string{".apk"}
+	case config.KindXcuitest:
+		exts = []string{".ipa", ".app"}
+	case config.KindCypress:
+		exts = []string{".json"}
+	}
+
 	return func(s interface{}) error {
 		val := s.(string)
 		found := false

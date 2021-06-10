@@ -5,35 +5,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/testcafe"
 )
 
-func configureTestcafe(ini initiator) error {
-	err := ini.askRegion()
-	if err != nil {
-		return err
-	}
-
-	err = ini.askVersion()
-	if err != nil {
-		return err
-	}
-
-	var rootDir string
-	err = ini.askFile("Root project directory:", isDirectory, nil, &rootDir)
-	if err != nil {
-		return err
-	}
-
-	err = ini.askPlatform()
-	if err != nil {
-		return err
-	}
-
-	err = ini.askDownloadWhen()
-	if err != nil {
-		return err
-	}
-
-	/* build config file */
-	cfg := testcafe.Project{
+func configureTestcafe(ini initiator) interface{} {
+	return testcafe.Project{
 		TypeDef: config.TypeDef{
 			APIVersion: config.VersionV1Alpha,
 			Kind:       config.KindTestcafe,
@@ -43,7 +16,7 @@ func configureTestcafe(ini initiator) error {
 			Sauceignore: ".sauceignore",
 			Concurrency: 2, //TODO: Use MIN(AccountLimit, 10)
 		},
-		RootDir: rootDir,
+		RootDir: ini.rootDir,
 		Testcafe: testcafe.Testcafe{
 			Version: ini.frameworkVersion,
 		},
@@ -63,6 +36,4 @@ func configureTestcafe(ini initiator) error {
 			},
 		},
 	}
-
-	return saveConfiguration(cfg)
 }

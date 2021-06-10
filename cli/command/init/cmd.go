@@ -1,7 +1,7 @@
 package init
 
 import (
-	"fmt"
+	"errors"
 	"os"
 	"strings"
 
@@ -58,6 +58,10 @@ type initiator struct {
 
 	frameworkName    string
 	frameworkVersion string
+	cypressJson      string
+	rootDir          string
+	app              string
+	testApp          string
 	platformName     string
 	mode             string
 	browserName      string
@@ -75,27 +79,28 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		infoReader: &mocks.FakeFrameworkInfoReader{},
 	}
 
-	err := ini.askFramework()
-	if err != nil {
+	if err := ini.configure(); err != nil {
 		return err
 	}
 
+	var cfg interface{}
 	switch strings.ToLower(ini.frameworkName) {
 	case "espresso":
-		return configureEspresso(ini)
+		cfg = configureEspresso(ini)
 	case "xcuitest":
-		return configureXCUITest(ini)
+		cfg =  configureXCUITest(ini)
 	case "cypress":
-		return configureCypress(ini)
+		cfg =  configureCypress(ini)
 	case "testcafe":
-		return configureTestcafe(ini)
+		cfg = configureTestcafe(ini)
 	case "playwright":
-		return configurePlaywright(ini)
+		cfg = configurePlaywright(ini)
 	case "puppeteer":
-		return configurePuppeteer(ini)
-	case "":
-		return fmt.Errorf("interrupting configuration")
+		cfg = configurePuppeteer(ini)
 	default:
-		return fmt.Errorf("%s: not implemented", strings.ToLower(ini.frameworkName))
+		log.Error().Msgf("%s: not implemented", strings.ToLower(ini.frameworkName))
+		return errors.New("unsupported framework")
 	}
+
+	return saveConfiguration(cfg)
 }

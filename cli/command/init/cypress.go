@@ -6,41 +6,8 @@ import (
 )
 
 
-func configureCypress(ini initiator) error {
-	err := ini.askRegion()
-	if err != nil {
-		return err
-	}
-
-	err = ini.askVersion()
-	if err != nil {
-		return err
-	}
-
-	var rootDir string
-	err = ini.askFile("Root project directory:", isDirectory, nil, &rootDir)
-	if err != nil {
-		return err
-	}
-
-	var cypressJson string
-	err = ini.askFile("Cypress configuration file:", hasValidExt(".json"), completeBasic, &cypressJson)
-	if err != nil {
-		return err
-	}
-
-	err = ini.askPlatform()
-	if err != nil {
-		return err
-	}
-
-	err = ini.askDownloadWhen()
-	if err != nil {
-		return err
-	}
-
-	/* build config file */
-	cfg := cypress.Project{
+func configureCypress(ini initiator) interface{} {
+	return cypress.Project{
 		TypeDef: config.TypeDef{
 			APIVersion: config.VersionV1Alpha,
 			Kind:       config.KindCypress,
@@ -50,10 +17,10 @@ func configureCypress(ini initiator) error {
 			Sauceignore: ".sauceignore",
 			Concurrency: 2, //TODO: Use MIN(AccountLimit, 10)
 		},
-		RootDir: rootDir,
+		RootDir: ini.rootDir,
 		Cypress: cypress.Cypress{
 			Version:    ini.frameworkVersion,
-			ConfigFile: cypressJson,
+			ConfigFile: ini.cypressJson,
 		},
 		Suites: []cypress.Suite{
 			{
@@ -71,6 +38,4 @@ func configureCypress(ini initiator) error {
 			},
 		},
 	}
-
-	return saveConfiguration(cfg)
 }

@@ -3,11 +3,126 @@ package init
 import (
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/region"
-
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/region"
+	"strings"
 )
+
+// Check routines
+func needsCredentials() bool {
+	return false
+}
+
+func isNativeFramework(framework string) bool {
+	return framework == config.KindEspresso || framework == config.KindXcuitest
+}
+
+func needsApps(framework string) bool {
+	return isNativeFramework(framework)
+}
+
+func needsCypressJson(framework string) bool {
+	return framework == config.KindCypress
+}
+
+func needsDevice(framework string) bool {
+	return isNativeFramework(framework)
+}
+
+func needsEmulator(framework string) bool {
+	return framework == config.KindEspresso
+}
+
+func needsPlatform(framework string) bool {
+	return !isNativeFramework(framework)
+}
+
+func needsRootDir(framework string) bool {
+	return !isNativeFramework(framework)
+}
+
+func needsVersion(framework string) bool {
+	return !isNativeFramework(framework)
+}
+
+func (ini *initiator) configure() error {
+	err := ini.askFramework()
+	if err != nil {
+		return err
+	}
+
+	err = ini.askRegion()
+	if err != nil {
+		return err
+	}
+
+	if needsCredentials() {
+		// TODO: Implement
+	}
+
+	if needsVersion(ini.frameworkName) {
+		err = ini.askVersion()
+		if err != nil {
+			return err
+		}
+	}
+
+	if needsRootDir(ini.frameworkName) {
+		err = ini.askFile("Root project directory:", isDirectory, nil, &ini.rootDir)
+		if err != nil {
+			return err
+		}
+	}
+
+	if needsCypressJson(ini.frameworkName) {
+		err = ini.askFile("Cypress configuration file:", extValidator(ini.frameworkName), completeBasic, &ini.cypressJson)
+		if err != nil {
+			return err
+		}
+	}
+
+	if needsPlatform(ini.frameworkName) {
+		err = ini.askPlatform()
+		if err != nil {
+			return err
+		}
+	}
+
+	if needsApps(ini.frameworkName) {
+		err = ini.askFile("Application to test:", extValidator(ini.frameworkName), completeBasic, &ini.app)
+		if err != nil {
+			return err
+		}
+
+		err = ini.askFile("Application to test:", extValidator(ini.frameworkName), completeBasic, &ini.testApp)
+		if err != nil {
+			return err
+		}
+	}
+
+	if needsDevice(ini.frameworkName) {
+		err = ini.askDevice()
+		if err != nil {
+			return err
+		}
+
+	}
+
+	if needsEmulator(ini.frameworkName) {
+		err = ini.askEmulator()
+		if err != nil {
+			return err
+		}
+	}
+
+	err = ini.askDownloadWhen()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 
 func (ini *initiator) askRegion() error {
 	p := &survey.Select{
@@ -39,6 +154,7 @@ func (ini *initiator) askFramework() error {
 	if ini.frameworkName == "" {
 		return errors.New("interrupting configuration")
 	}
+	ini.frameworkName = strings.ToLower(ini.frameworkName)
 	return err
 }
 
