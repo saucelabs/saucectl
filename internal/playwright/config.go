@@ -102,9 +102,15 @@ func FromFile(cfgPath string) (Project, error) {
 
 	p.ConfigFilePath = cfgPath
 
+	p.Notifications.Slack.Token = os.ExpandEnv(p.Notifications.Slack.Token)
+
 	return p, nil
 }
 
+
+
+	if p.Playwright.Version == "" {
+		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
 // SetDefaults applies config defaults in case the user has left them blank.
 func SetDefaults(p *Project) {
 	if p.Kind == "" {

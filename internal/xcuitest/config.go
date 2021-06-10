@@ -69,6 +69,8 @@ func FromFile(cfgPath string) (Project, error) {
 
 	p.ConfigFilePath = cfgPath
 
+	p.Notifications.Slack.Token = os.ExpandEnv(p.Notifications.Slack.Token)
+
 	return p, nil
 }
 
