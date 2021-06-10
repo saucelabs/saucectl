@@ -9,6 +9,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.2.12
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Microsoft/hcsshim v0.8.9 // indirect
+	github.com/Netflix/go-expect v0.0.0-20180615182759-c93bf25de8e8 // indirect
 	github.com/briandowns/spinner v1.11.1
 	github.com/containerd/continuity v0.0.0-20200710164510-efbc4488d8fe // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
@@ -19,6 +20,7 @@ require (
 	github.com/go-git/go-git/v5 v5.2.0
 	github.com/google/go-github/v32 v32.1.0
 	github.com/gorilla/mux v1.7.4 // indirect
+	github.com/hinshun/vt10x v0.0.0-20180616224451-1954e6464174 // indirect
 	github.com/jarcoal/httpmock v1.0.6
 	github.com/jedib0t/go-pretty/v6 v6.2.1
 	github.com/mattn/go-colorable v0.1.6 // indirect

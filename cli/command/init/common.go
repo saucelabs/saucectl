@@ -75,7 +75,7 @@ func isDirectory(s interface{}) error {
 		return fmt.Errorf("%s: %v", val, err)
 	}
 	if !fi.IsDir() {
-		return fmt.Errorf("%s is not a directory")
+		return fmt.Errorf("%s is not a directory", val)
 	}
 	return nil
 }
