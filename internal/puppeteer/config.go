@@ -40,6 +40,7 @@ type Project struct {
 	Artifacts  config.Artifacts  `yaml:"artifacts,omitempty" json:"artifacts"`
 	Reporters  config.Reporters  `yaml:"reporters,omitempty" json:"-"`
 	Env        map[string]string `yaml:"env,omitempty" json:"env"`
+	Notifications  config.Notifications `yaml:"notifications,omitempty" json:"notifications"`
 }
 
 // Suite represents the puppeteer test suite configuration.

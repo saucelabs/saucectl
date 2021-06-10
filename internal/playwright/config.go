@@ -11,6 +11,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/region"
 )
 
 // Config descriptors.
@@ -45,6 +47,7 @@ type Project struct {
 	Reporters     config.Reporters  `yaml:"reporters,omitempty" json:"-"`
 	Defaults      config.Defaults   `yaml:"defaults,omitempty" json:"defaults"`
 	Env           map[string]string `yaml:"env,omitempty" json:"env"`
+	Notifications  config.Notifications `yaml:"notifications,omitempty" json:"notifications"`
 }
 
 // Playwright represents crucial playwright configuration that is required for setting up a project.
