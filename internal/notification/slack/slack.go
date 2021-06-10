@@ -1,10 +1,10 @@
 package slack
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
+	"github.com/saucelabs/saucectl/internal/config"
+
 	"github.com/rs/zerolog/log"
 	"github.com/slack-go/slack"
 )
@@ -29,21 +29,15 @@ type TestResult struct {
 	JobURL     string
 }
 
-const (
-	SendNever     = "never"
-	SendAlways    = "always"
-	SendOnFailure = "failure"
-)
-
 func (s *SlackNotifier) SendMessage() {
 	api := slack.New(s.Token)
-	attachment := s.newMsg()
+	//attachment := s.newMsg()
 
 	for _, c := range s.Channels {
 		channelID, timestamp, err := api.PostMessage(
 			c,
 			slack.MsgOptionText("sauceCTL test result", false),
-			slack.MsgOptionAttachments(attachment),
+			slack.MsgOptionBlocks(s.createBlocks()...),
 			slack.MsgOptionAsUser(true),
 		)
 		if err != nil {
@@ -54,43 +48,64 @@ func (s *SlackNotifier) SendMessage() {
 	}
 }
 
-func (s *SlackNotifier) newMsg() slack.Attachment {
-	color := "F00000"
-	if s.Passed {
-		color = "#008000"
-	}
-	return slack.Attachment{
-		Color:  color,
-		Title:  s.TestName,
-		Blocks: s.createBlocks(),
-	}
-}
+func (s *SlackNotifier) createBlocks() []slack.Block {
+	headerText := slack.NewTextBlockObject("mrkdwn", "All tests passed", false, false)
+	headerSection := slack.NewSectionBlock(headerText, nil, nil)
 
-func (s *SlackNotifier) createBlocks() slack.Blocks {
-	header := slack.NewHeaderBlock(slack.NewTextBlockObject("header", "All tests passed", true, true))
 	tableHeader := []*slack.TextBlockObject{}
-	tableHeader = append(tableHeader, slack.NewTextBlockObject("mrkdwn", "*Date*", true, true))
-	tableHeader = append(tableHeader, slack.NewTextBlockObject("mrkdwn", "*Framework*", true, true))
-	tableHeader = append(tableHeader, slack.NewTextBlockObject("plain_text", time.Now().String(), true, true))
-	tableHeader = append(tableHeader, slack.NewTextBlockObject("plain_text", s.Framework, true, true))
+	tableHeader = append(tableHeader, slack.NewTextBlockObject("mrkdwn", "*Date*", false, false))
+	tableHeader = append(tableHeader, slack.NewTextBlockObject("mrkdwn", "*Framework*", false, false))
+	tableHeader = append(tableHeader, slack.NewTextBlockObject("mrkdwn", time.Now().String(), false, false))
+	tableHeader = append(tableHeader, slack.NewTextBlockObject("mrkdwn", s.Framework, false, false))
 
-	tableHeadSection := slack.NewSectionBlock(slack.NewTextBlockObject("test", "test", true, true), tableHeader, nil)
+	tableHeadSection := slack.NewSectionBlock(nil, tableHeader, nil)
 
-	blocks := []slack.Block{}
-	blocks = append(blocks, header, tableHeadSection)
-	fmt.Println("===========")
-	fmt.Println("===========")
-	fmt.Println("===========")
-	fmt.Println("===========")
-	spew.Dump(blocks)
-	fmt.Println("===========")
-	fmt.Println("===========")
-	fmt.Println("===========")
-
-	return slack.Blocks{BlockSet: blocks}
+	blocks := make([]slack.Block, 0)
+	blocks = append(blocks, headerSection)
+	blocks = append(blocks, tableHeadSection)
+	return blocks
+	//fmt.Println("===========")
+	//fmt.Println("===========")
+	//fmt.Println("===========")
+	//fmt.Println("===========")
+	//spew.Dump(blocks)
+	//fmt.Println("===========")
+	//fmt.Println("===========")
+	//fmt.Println("===========")
+	//
+	//return slack.Blocks{BlockSet: blocks}
 }
 
 func (s *SlackNotifier) genTemplate() error {
 
 	return nil
+}
+
+// ShouldSendNotification returns true if it should send notification, otherwise false
+func ShouldSendNotification(jobID string, passed bool, cfg config.Notifications) bool {
+	if jobID == "" {
+		return false
+	}
+
+	if cfg.Slack.Token == "" {
+		return false
+	}
+
+	if len(cfg.Slack.Channels) == 0 {
+		return false
+	}
+
+	if cfg.Slack.Send == config.SendNever {
+		return false
+	}
+
+	if cfg.Slack.Send == config.SendAlways {
+		return true
+	}
+
+	if cfg.Slack.Send == config.SendOnFailure && !passed {
+		return true
+	}
+
+	return false
 }

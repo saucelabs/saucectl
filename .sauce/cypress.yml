@@ -30,6 +30,6 @@ artifacts:
     directory: ./artifacts/
 notifications:
   slack:
-    token: "some-token"
+    token: "xoxb-2163408932-2182910564272-3aDOw6s7zKQGn7PoUamoytVt"
     channels: ["hack-slack"]
-    send: always # possible values [always,onFailure]
+    send: always # possible values [always,failure,never]

@@ -31,4 +31,4 @@ notifications:
   slack:
     token: "some token"
     channels: ["some channel1", "some channel2"]
-    send: always # possible values [always,onFailure]
+    send: always # possible values [always,failure,never]
