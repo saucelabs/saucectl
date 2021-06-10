@@ -182,10 +182,13 @@ func (ini *initiator) askDownloadWhen(cfg *initConfig) error {
 		Default: whenStrings[0],
 		Options: whenStrings,
 	}
+	q.WithStdio(ini.stdio)
+
 	var when string
 	err := survey.AskOne(q, &when,
 		survey.WithShowCursor(true),
-		survey.WithValidator(survey.Required))
+		survey.WithValidator(survey.Required),
+		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
 	if err != nil {
 		return err
 	}
@@ -199,7 +202,9 @@ func (ini *initiator) askDevice(cfg *initConfig) error {
 	q := &survey.Input{
 		Message: "Type device name:",
 	}
-	err := survey.AskOne(q, &cfg.device.Name, survey.WithShowCursor(true))
+	err := survey.AskOne(q, &cfg.device.Name,
+		survey.WithShowCursor(true),
+		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
 	if err != nil {
 		return err
 	}
@@ -211,7 +216,9 @@ func (ini *initiator) askEmulator(cfg *initConfig) error {
 	q := &survey.Input{
 		Message: "Type emulator name:",
 	}
-	err := survey.AskOne(q, &cfg.emulator.Name, survey.WithShowCursor(true))
+	err := survey.AskOne(q, &cfg.emulator.Name,
+		survey.WithShowCursor(true),
+		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
 	if err != nil {
 		return err
 	}
@@ -227,7 +234,8 @@ func (ini *initiator) askPlatform(cfg *initConfig) error {
 	}
 	err := survey.AskOne(q, &cfg.platformName,
 		survey.WithShowCursor(true),
-		survey.WithValidator(survey.Required))
+		survey.WithValidator(survey.Required),
+		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
 	if err != nil {
 		return err
 	}
@@ -246,7 +254,8 @@ func (ini *initiator) askPlatform(cfg *initConfig) error {
 	}
 	err = survey.AskOne(q, &cfg.browserName,
 		survey.WithShowCursor(true),
-		survey.WithValidator(survey.Required))
+		survey.WithValidator(survey.Required),
+		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
 	if err != nil {
 		return err
 	}
@@ -265,7 +274,8 @@ func (ini *initiator) askVersion(cfg *initConfig) error {
 
 	err = survey.AskOne(q, &cfg.frameworkVersion,
 		survey.WithShowCursor(true),
-		survey.WithValidator(survey.Required))
+		survey.WithValidator(survey.Required),
+		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
 	if err != nil {
 		return err
 	}
@@ -282,7 +292,8 @@ func (ini *initiator) askFile(message string, val survey.Validator, comp complet
 	if err := survey.AskOne(q, targetValue,
 		survey.WithShowCursor(true),
 		survey.WithValidator(survey.Required),
-		survey.WithValidator(val)); err != nil {
+		survey.WithValidator(val),
+		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err)); err != nil {
 		return err
 	}
 	return nil

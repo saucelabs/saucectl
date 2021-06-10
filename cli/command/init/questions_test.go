@@ -6,7 +6,9 @@ import (
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/Netflix/go-expect"
 	"github.com/hinshun/vt10x"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/mocks"
+	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/stretchr/testify/require"
 	"reflect"
 	"testing"
@@ -77,17 +79,140 @@ type questionTest struct {
 func TestAskFramework(t *testing.T) {
 	testCases := []questionTest{
 		{
-			name: "Default Test",
+			name: "Default",
+			procedure: stringToProcedure("✓🔚"),
+			ini: &initiator{
+				infoReader: &mocks.FakeFrameworkInfoReader{},
+			},
+			execution: func(i *initiator, cfg *initConfig) error {
+				return i.askFramework(cfg)
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{frameworkName: "cypress"},
+		},
+		{
+			name: "Type In",
+			procedure: stringToProcedure("esp✓🔚"),
+			ini: &initiator{
+				infoReader: &mocks.FakeFrameworkInfoReader{},
+			},
+			execution: func(i *initiator, cfg *initConfig) error {
+				return i.askFramework(cfg)
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{frameworkName: "espresso"},
+		},
+		{
+			name: "Arrow In",
 			procedure: stringToProcedure("↓✓🔚"),
 			ini: &initiator{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 			},
 			execution: func(i *initiator, cfg *initConfig) error {
-				i.askFramework(cfg)
-				return nil
+				return i.askFramework(cfg)
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{frameworkName: "espresso"},
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(lt *testing.T) {
+			executeQuestionTest(lt, tt)
+		})
+	}
+}
+
+func TestAskRegion(t *testing.T) {
+	testCases := []questionTest{
+		{
+			name: "Default",
+			procedure: stringToProcedure("✓🔚"),
+			ini: &initiator{},
+			execution: func(i *initiator, cfg *initConfig) error {
+				return i.askRegion(cfg)
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{region: region.USWest1.String()},
+		},
+		{
+			name: "Type US",
+			procedure: stringToProcedure("us-✓🔚"),
+			ini: &initiator{
+				infoReader: &mocks.FakeFrameworkInfoReader{},
+			},
+			execution: func(i *initiator, cfg *initConfig) error {
+				return i.askRegion(cfg)
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{region: region.USWest1.String()},
+		},
+		{
+			name: "Type EU",
+			procedure: stringToProcedure("eu-✓🔚"),
+			ini: &initiator{
+				infoReader: &mocks.FakeFrameworkInfoReader{},
+			},
+			execution: func(i *initiator, cfg *initConfig) error {
+				return i.askRegion(cfg)
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{region: region.EUCentral1.String()},
+		},
+		{
+			name: "Select EU",
+			procedure: stringToProcedure("↓✓🔚"),
+			ini: &initiator{
+				infoReader: &mocks.FakeFrameworkInfoReader{},
+			},
+			execution: func(i *initiator, cfg *initConfig) error {
+				return i.askRegion(cfg)
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{region: region.EUCentral1.String()},
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(lt *testing.T) {
+			executeQuestionTest(lt, tt)
+		})
+	}
+}
+
+func TestAskDownloadWhen(t *testing.T) {
+	testCases := []questionTest{
+		{
+			name: "Defaults to Fail",
+			procedure: stringToProcedure("✓🔚"),
+			ini: &initiator{},
+			execution: func(i *initiator, cfg *initConfig) error {
+				return i.askDownloadWhen(cfg)
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{artifactWhen: config.WhenFail},
+		},
+		{
+			name: "Second is pass",
+			procedure: stringToProcedure("↓✓🔚"),
+			ini: &initiator{
+				infoReader: &mocks.FakeFrameworkInfoReader{},
+			},
+			execution: func(i *initiator, cfg *initConfig) error {
+				return i.askDownloadWhen(cfg)
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{artifactWhen: config.WhenPass},
+		},
+		{
+			name: "Type always",
+			procedure: stringToProcedure("alw✓🔚"),
+			ini: &initiator{
+				infoReader: &mocks.FakeFrameworkInfoReader{},
+			},
+			execution: func(i *initiator, cfg *initConfig) error {
+				return i.askDownloadWhen(cfg)
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{artifactWhen: config.WhenAlways},
 		},
 	}
 	for _, tt := range testCases {
