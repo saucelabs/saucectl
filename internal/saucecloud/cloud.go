@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/saucelabs/saucectl/internal/notification/slack"
 	ptable "github.com/jedib0t/go-pretty/v6/table"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/apps"
@@ -45,6 +46,7 @@ type CloudRunner struct {
 	ShowConsoleLog        bool
 	ArtifactDownloader    download.ArtifactDownloader
 	RDCArtifactDownloader download.ArtifactDownloader
+	Notifier              slack.SlackNotifier
 
 	Reporters []report.Reporter
 
@@ -58,6 +60,7 @@ type result struct {
 	skipped  bool
 	err      error
 	duration time.Duration
+	url      string
 	attempts int
 	retries  int
 }
@@ -84,6 +87,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	passed := true
 
 	junitRequired := report.IsArtifactRequired(r.Reporters, report.JUnitArtifact)
+	slackTestResults := []slack.TestResult{}
 
 	done := make(chan interface{})
 	go func() {
@@ -142,6 +146,16 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				Origin:     "sauce",
 			}
 
+			slackTestResults = append(slackTestResults, slack.TestResult{
+				Name:       res.name,
+				Duration:   res.duration,
+				Passed:     res.job.Passed,
+				Browser:    res.browser,
+				Platform:   platform,
+				DeviceName: res.job.BaseConfig.DeviceName,
+				JobURL:     res.url,
+			})
+
 			for _, rep := range r.Reporters {
 				rep.Add(tr)
 			}
@@ -161,6 +175,10 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	for _, rep := range r.Reporters {
 		rep.Render()
 	}
+
+	r.Notifier.TestResults = slackTestResults
+
+	r.Notifier.SendMessage()
 
 	return passed
 }
@@ -297,6 +315,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			duration: time.Since(start),
 			attempts: opts.Attempt + 1,
 			retries:  opts.Retries,
+			url:      jobData.URL,
 		}
 	}
 }
