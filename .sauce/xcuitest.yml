@@ -41,3 +41,9 @@ artifacts:
       - junit.xml
       - xcuitest.log
     directory: ./artifacts/
+
+notifications:
+  slack:
+    token: "some token"
+    channel: "some channel"
+    send: always # possible values [always,onFailure]

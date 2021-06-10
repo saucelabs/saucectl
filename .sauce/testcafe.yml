@@ -44,3 +44,9 @@ suites:
         platformName: iOS
         platformVersions:
           - "14.3"
+
+notifications:
+  slack:
+    token: "some token"
+    channel: "some channel"
+    send: always # possible values [always,onFailure]

@@ -90,8 +90,9 @@ type Notifications struct {
 
 // Slack represents slack configuration.
 type Slack struct {
-	Token string     `yaml:"token,omitempty" json:"token"`
-	Send  sendStatus `yaml:"send,omitempty" json:"send"`
+	Token   string     `yaml:"token,omitempty" json:"token"`
+	Send    sendStatus `yaml:"send,omitempty" json:"send"`
+	Channel string     `yaml:"channel,omitempty" json:"channel"`
 }
 
 // Artifacts represents the test artifacts configuration.
