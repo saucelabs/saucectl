@@ -5,36 +5,36 @@ import (
 	"github.com/saucelabs/saucectl/internal/playwright"
 )
 
-func configurePlaywright(ini initiator) interface{} {
+func configurePlaywright(cfg *initConfig) interface{} {
 	return playwright.Project{
 		TypeDef: config.TypeDef{
 			APIVersion: config.VersionV1Alpha,
 			Kind:       config.KindPlaywright,
 		},
 		Sauce: config.SauceConfig{
-			Region:      ini.region,
+			Region:      cfg.region,
 			Sauceignore: ".sauceignore",
 			Concurrency: 2, //TODO: Use MIN(AccountLimit, 10)
 		},
-		RootDir: ini.rootDir,
+		RootDir: cfg.rootDir,
 		Playwright: playwright.Playwright{
-			Version: ini.frameworkVersion,
+			Version: cfg.frameworkVersion,
 		},
 		Suites: []playwright.Suite{
 			{
 				Name:         "My First Suite", //TODO: Authorize to name you suite
-				PlatformName: ini.platformName,
+				PlatformName: cfg.platformName,
 				Params: playwright.SuiteConfig{
-					BrowserName: ini.browserName,
+					BrowserName: cfg.browserName,
 				},
-				Mode: ini.mode,
+				Mode: cfg.mode,
 			},
 		},
 		Artifacts: config.Artifacts{
 			Download: config.ArtifactDownload{
-				When: ini.artifactWhen,
+				When:      cfg.artifactWhen,
 				Directory: "./artifacts",
-				Match: []string{"*"},
+				Match:     []string{"*"},
 			},
 		},
 	}

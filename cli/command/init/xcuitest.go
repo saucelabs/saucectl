@@ -5,30 +5,30 @@ import (
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
 
-func configureXCUITest(ini initiator) interface{} {
+func configureXCUITest(cfg *initConfig) interface{} {
 	return xcuitest.Project{
 		TypeDef: config.TypeDef{
 			APIVersion: config.VersionV1Alpha,
 			Kind:       config.KindXcuitest,
 		},
 		Sauce: config.SauceConfig{
-			Region:      ini.region,
+			Region:      cfg.region,
 			Sauceignore: ".sauceignore",
 			Concurrency: 2, //TODO: Use MIN(AccountLimit, 10)
 		},
 		Xcuitest: xcuitest.Xcuitest{
-			App:     ini.app,
-			TestApp: ini.testApp,
+			App:     cfg.app,
+			TestApp: cfg.testApp,
 		},
 		Suites: []xcuitest.Suite{
 			{
 				Name:    "My First Suite",
-				Devices: []config.Device{ini.device},
+				Devices: []config.Device{cfg.device},
 			},
 		},
 		Artifacts: config.Artifacts{
 			Download: config.ArtifactDownload{
-				When:      ini.artifactWhen,
+				When:      cfg.artifactWhen,
 				Directory: "./artifacts",
 				Match:     []string{"*"},
 			},

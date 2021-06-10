@@ -55,7 +55,9 @@ type FrameworkInfoReader interface {
 type initiator struct {
 	stdio      terminal.Stdio
 	infoReader FrameworkInfoReader
+}
 
+type initConfig struct {
 	frameworkName    string
 	frameworkVersion string
 	cypressJson      string
@@ -71,6 +73,15 @@ type initiator struct {
 	emulator         config.Emulator
 }
 
+var configurators = map[string]func(cfg *initConfig) interface{}{
+	"cypress":    configureCypress,
+	"espresso":   configureEspresso,
+	"playwright": configurePlaywright,
+	"puppeteer":  configurePuppeteer,
+	"testcafe":   configureTestcafe,
+	"xcuitest":   configureXCUITest,
+}
+
 // Run runs the command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	// FIXME: Provision using API
@@ -79,28 +90,14 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		infoReader: &mocks.FakeFrameworkInfoReader{},
 	}
 
-	if err := ini.configure(); err != nil {
+	initCfg, err := ini.configure()
+	if err != nil {
 		return err
 	}
 
-	var cfg interface{}
-	switch strings.ToLower(ini.frameworkName) {
-	case "espresso":
-		cfg = configureEspresso(ini)
-	case "xcuitest":
-		cfg =  configureXCUITest(ini)
-	case "cypress":
-		cfg =  configureCypress(ini)
-	case "testcafe":
-		cfg = configureTestcafe(ini)
-	case "playwright":
-		cfg = configurePlaywright(ini)
-	case "puppeteer":
-		cfg = configurePuppeteer(ini)
-	default:
-		log.Error().Msgf("%s: not implemented", strings.ToLower(ini.frameworkName))
-		return errors.New("unsupported framework")
+	if f, ok := configurators[initCfg.frameworkName]; ok {
+		return saveConfiguration(f(initCfg))
 	}
-
-	return saveConfiguration(cfg)
+	log.Error().Msgf("%s: not implemented", strings.ToLower(initCfg.frameworkName))
+	return errors.New("unsupported framework")
 }

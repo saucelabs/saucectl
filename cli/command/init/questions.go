@@ -46,85 +46,87 @@ func needsVersion(framework string) bool {
 	return !isNativeFramework(framework)
 }
 
-func (ini *initiator) configure() error {
-	err := ini.askFramework()
+func (ini *initiator) configure() (*initConfig, error) {
+	cfg := &initConfig{}
+
+	err := ini.askFramework(cfg)
 	if err != nil {
-		return err
+		return &initConfig{}, err
 	}
 
-	err = ini.askRegion()
+	err = ini.askRegion(cfg)
 	if err != nil {
-		return err
+		return &initConfig{}, err
 	}
 
 	if needsCredentials() {
 		// TODO: Implement
 	}
 
-	if needsVersion(ini.frameworkName) {
-		err = ini.askVersion()
+	if needsVersion(cfg.frameworkName) {
+		err = ini.askVersion(cfg)
 		if err != nil {
-			return err
+			return &initConfig{}, err
 		}
 	}
 
-	if needsRootDir(ini.frameworkName) {
-		err = ini.askFile("Root project directory:", isDirectory, nil, &ini.rootDir)
+	if needsRootDir(cfg.frameworkName) {
+		err = ini.askFile("Root project directory:", isDirectory, nil, &cfg.rootDir)
 		if err != nil {
-			return err
+			return &initConfig{}, err
 		}
 	}
 
-	if needsCypressJson(ini.frameworkName) {
-		err = ini.askFile("Cypress configuration file:", extValidator(ini.frameworkName), completeBasic, &ini.cypressJson)
+	if needsCypressJson(cfg.frameworkName) {
+		err = ini.askFile("Cypress configuration file:", extValidator(cfg.frameworkName), completeBasic, &cfg.cypressJson)
 		if err != nil {
-			return err
+			return &initConfig{}, err
 		}
 	}
 
-	if needsPlatform(ini.frameworkName) {
-		err = ini.askPlatform()
+	if needsPlatform(cfg.frameworkName) {
+		err = ini.askPlatform(cfg)
 		if err != nil {
-			return err
+			return &initConfig{}, err
 		}
 	}
 
-	if needsApps(ini.frameworkName) {
-		err = ini.askFile("Application to test:", extValidator(ini.frameworkName), completeBasic, &ini.app)
+	if needsApps(cfg.frameworkName) {
+		err = ini.askFile("Application to test:", extValidator(cfg.frameworkName), completeBasic, &cfg.app)
 		if err != nil {
-			return err
+			return &initConfig{}, err
 		}
 
-		err = ini.askFile("Application to test:", extValidator(ini.frameworkName), completeBasic, &ini.testApp)
+		err = ini.askFile("Application to test:", extValidator(cfg.frameworkName), completeBasic, &cfg.testApp)
 		if err != nil {
-			return err
-		}
-	}
-
-	if needsDevice(ini.frameworkName) {
-		err = ini.askDevice()
-		if err != nil {
-			return err
-		}
-
-	}
-
-	if needsEmulator(ini.frameworkName) {
-		err = ini.askEmulator()
-		if err != nil {
-			return err
+			return &initConfig{}, err
 		}
 	}
 
-	err = ini.askDownloadWhen()
+	if needsDevice(cfg.frameworkName) {
+		err = ini.askDevice(cfg)
+		if err != nil {
+			return &initConfig{}, err
+		}
+
+	}
+
+	if needsEmulator(cfg.frameworkName) {
+		err = ini.askEmulator(cfg)
+		if err != nil {
+			return &initConfig{}, err
+		}
+	}
+
+	err = ini.askDownloadWhen(cfg)
 	if err != nil {
-		return err
+		return &initConfig{}, err
 	}
-	return nil
+	return cfg, nil
 }
 
 
-func (ini *initiator) askRegion() error {
+func (ini *initiator) askRegion(cfg *initConfig) error {
 	p := &survey.Select{
 		Message: "Select region:",
 		Options: []string{region.USWest1.String(), region.EUCentral1.String()},
@@ -132,14 +134,14 @@ func (ini *initiator) askRegion() error {
 	}
 
 
-	err := survey.AskOne(p, &ini.region, survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
+	err := survey.AskOne(p, &cfg.region, survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (ini *initiator) askFramework() error {
+func (ini *initiator) askFramework(cfg *initConfig) error {
 	values, err := ini.infoReader.Frameworks()
 	if err != nil {
 		return err
@@ -150,11 +152,11 @@ func (ini *initiator) askFramework() error {
 		Options: values,
 	}
 
-	err = survey.AskOne(p, &ini.frameworkName, survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
-	if ini.frameworkName == "" {
+	err = survey.AskOne(p, &cfg.frameworkName, survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
+	if cfg.frameworkName == "" {
 		return errors.New("interrupting configuration")
 	}
-	ini.frameworkName = strings.ToLower(ini.frameworkName)
+	cfg.frameworkName = strings.ToLower(cfg.frameworkName)
 	return err
 }
 
@@ -174,7 +176,7 @@ var mapWhen = map[string]config.When{
 	"always":                 config.WhenAlways,
 }
 
-func (ini *initiator) askDownloadWhen() error {
+func (ini *initiator) askDownloadWhen(cfg *initConfig) error {
 	q := &survey.Select{
 		Message: "Download artifacts:",
 		Default: whenStrings[0],
@@ -187,62 +189,62 @@ func (ini *initiator) askDownloadWhen() error {
 	if err != nil {
 		return err
 	}
-	ini.artifactWhen = mapWhen[when]
+	cfg.artifactWhen = mapWhen[when]
 	return nil
 }
 
 
-func (ini *initiator) askDevice() error {
+func (ini *initiator) askDevice(cfg *initConfig) error {
 	// TODO: Check if device exists !
 	q := &survey.Input{
 		Message: "Type device name:",
 	}
-	err := survey.AskOne(q, &ini.device.Name, survey.WithShowCursor(true))
+	err := survey.AskOne(q, &cfg.device.Name, survey.WithShowCursor(true))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (ini *initiator) askEmulator() error {
+func (ini *initiator) askEmulator(cfg *initConfig) error {
 	// TODO: Propose selection of emulators !
 	q := &survey.Input{
 		Message: "Type emulator name:",
 	}
-	err := survey.AskOne(q, &ini.emulator.Name, survey.WithShowCursor(true))
+	err := survey.AskOne(q, &cfg.emulator.Name, survey.WithShowCursor(true))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (ini *initiator) askPlatform() error {
+func (ini *initiator) askPlatform(cfg *initConfig) error {
 	// Select Platform
-	platforms, _ := ini.infoReader.Platforms(ini.frameworkName, ini.region, ini.frameworkVersion)
+	platforms, _ := ini.infoReader.Platforms(cfg.frameworkName, cfg.region, cfg.frameworkVersion)
 	q := &survey.Select{
 		Message: "Select platform:",
 		Options: platforms,
 	}
-	err := survey.AskOne(q, &ini.platformName,
+	err := survey.AskOne(q, &cfg.platformName,
 		survey.WithShowCursor(true),
 		survey.WithValidator(survey.Required))
 	if err != nil {
 		return err
 	}
 
-	ini.mode = "sauce"
-	if ini.platformName == "docker" {
-		ini.platformName = ""
-		ini.mode = "docker"
+	cfg.mode = "sauce"
+	if cfg.platformName == "docker" {
+		cfg.platformName = ""
+		cfg.mode = "docker"
 	}
 
 	// Select browser
-	browsers, _ := ini.infoReader.Browsers(ini.frameworkName, ini.region, ini.frameworkVersion, ini.platformName)
+	browsers, _ := ini.infoReader.Browsers(cfg.frameworkName, cfg.region, cfg.frameworkVersion, cfg.platformName)
 	q = &survey.Select{
 		Message: "Select Browser:",
 		Options: browsers,
 	}
-	err = survey.AskOne(q, &ini.browserName,
+	err = survey.AskOne(q, &cfg.browserName,
 		survey.WithShowCursor(true),
 		survey.WithValidator(survey.Required))
 	if err != nil {
@@ -251,17 +253,17 @@ func (ini *initiator) askPlatform() error {
 	return nil
 }
 
-func (ini *initiator) askVersion() error {
-	versions, err := ini.infoReader.Versions(ini.frameworkName, ini.region)
+func (ini *initiator) askVersion(cfg *initConfig) error {
+	versions, err := ini.infoReader.Versions(cfg.frameworkName, cfg.region)
 	if err != nil {
 		return err
 	}
 	q := &survey.Select{
-		Message: fmt.Sprintf("Select %s version:", ini.frameworkName),
+		Message: fmt.Sprintf("Select %s version:", cfg.frameworkName),
 		Options: versions,
 	}
 
-	err = survey.AskOne(q, &ini.frameworkVersion,
+	err = survey.AskOne(q, &cfg.frameworkVersion,
 		survey.WithShowCursor(true),
 		survey.WithValidator(survey.Required))
 	if err != nil {
