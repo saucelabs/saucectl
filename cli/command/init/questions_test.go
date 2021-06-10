@@ -2,6 +2,7 @@ package init
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/Netflix/go-expect"
 	"github.com/hinshun/vt10x"
@@ -45,6 +46,25 @@ func executeQuestionTest(t *testing.T, test questionTest) {
 	t.Logf("\n%s", expect.StripTrailingEmptyLines(state.String()))
 }
 
+func stringToProcedure(actions string) func(*expect.Console) {
+	return func(c *expect.Console) {
+		for _, chr := range actions {
+			switch chr {
+			case '↓':
+				c.Send(string(terminal.KeyArrowDown))
+			case '↑':
+				c.Send(string(terminal.KeyArrowUp))
+			case '✓':
+				c.Send(string(terminal.KeyEnter))
+			case '🔚':
+				c.ExpectEOF()
+			default:
+				c.Send(fmt.Sprintf("%c", chr))
+			}
+		}
+	}
+}
+
 type questionTest struct {
 	name          string
 	ini           *initiator
@@ -58,12 +78,7 @@ func TestAskFramework(t *testing.T) {
 	testCases := []questionTest{
 		{
 			name: "Default Test",
-			procedure: func(c *expect.Console) {
-				c.ExpectString("Select framework")
-				c.Send(string(terminal.KeyArrowDown))
-				c.Send(string(terminal.KeyEnter))
-				c.ExpectEOF()
-			},
+			procedure: stringToProcedure("↓✓🔚"),
 			ini: &initiator{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 			},
