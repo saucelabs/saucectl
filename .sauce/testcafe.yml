@@ -48,5 +48,5 @@ suites:
 notifications:
   slack:
     token: "some token"
-    channel: "some channel"
+    channels: ["some channel1", "some channel2"]
     send: always # possible values [always,onFailure]

@@ -12,7 +12,7 @@ func ShouldSendNotification(jobID string, passed bool, cfg config.Notifications)
 		return false
 	}
 
-	if cfg.Slack.Channel == "" {
+	if len(cfg.Slack.Channels) == 0 {
 		return false
 	}
 
