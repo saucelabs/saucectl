@@ -79,8 +79,8 @@ type sendStatus string
 
 // These conditions indicate when to send slack notifications.
 const (
-	SendFailure sendStatus = "onFailure"
-	SendAlways  sendStatus = "always"
+	SendOnFailure sendStatus = "onFailure"
+	SendAlways    sendStatus = "always"
 )
 
 // Notifications represents the test notifications configuration.
