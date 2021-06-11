@@ -87,7 +87,7 @@ type questionTest struct {
 func TestAskFramework(t *testing.T) {
 	testCases := []questionTest{
 		{
-			name: "Default",
+			name:      "Default",
 			procedure: stringToProcedure("✓🔚"),
 			ini: &initiator{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
@@ -95,11 +95,11 @@ func TestAskFramework(t *testing.T) {
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askFramework(cfg)
 			},
-			startState: &initConfig{},
+			startState:    &initConfig{},
 			expectedState: &initConfig{frameworkName: "cypress"},
 		},
 		{
-			name: "Type In",
+			name:      "Type In",
 			procedure: stringToProcedure("esp✓🔚"),
 			ini: &initiator{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
@@ -107,11 +107,11 @@ func TestAskFramework(t *testing.T) {
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askFramework(cfg)
 			},
-			startState: &initConfig{},
+			startState:    &initConfig{},
 			expectedState: &initConfig{frameworkName: "espresso"},
 		},
 		{
-			name: "Arrow In",
+			name:      "Arrow In",
 			procedure: stringToProcedure("↓✓🔚"),
 			ini: &initiator{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
@@ -119,7 +119,7 @@ func TestAskFramework(t *testing.T) {
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askFramework(cfg)
 			},
-			startState: &initConfig{},
+			startState:    &initConfig{},
 			expectedState: &initConfig{frameworkName: "espresso"},
 		},
 	}
@@ -133,27 +133,27 @@ func TestAskFramework(t *testing.T) {
 func TestAskRegion(t *testing.T) {
 	testCases := []questionTest{
 		{
-			name: "Default",
+			name:      "Default",
 			procedure: stringToProcedure("✓🔚"),
-			ini: &initiator{},
+			ini:       &initiator{},
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askRegion(cfg)
 			},
-			startState: &initConfig{},
+			startState:    &initConfig{},
 			expectedState: &initConfig{region: region.USWest1.String()},
 		},
 		{
-			name: "Type US",
+			name:      "Type US",
 			procedure: stringToProcedure("us-✓🔚"),
-			ini: &initiator{},
+			ini:       &initiator{},
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askRegion(cfg)
 			},
-			startState: &initConfig{},
+			startState:    &initConfig{},
 			expectedState: &initConfig{region: region.USWest1.String()},
 		},
 		{
-			name: "Type EU",
+			name:      "Type EU",
 			procedure: stringToProcedure("eu-✓🔚"),
 			ini: &initiator{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
@@ -161,11 +161,11 @@ func TestAskRegion(t *testing.T) {
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askRegion(cfg)
 			},
-			startState: &initConfig{},
+			startState:    &initConfig{},
 			expectedState: &initConfig{region: region.EUCentral1.String()},
 		},
 		{
-			name: "Select EU",
+			name:      "Select EU",
 			procedure: stringToProcedure("↓✓🔚"),
 			ini: &initiator{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
@@ -173,7 +173,7 @@ func TestAskRegion(t *testing.T) {
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askRegion(cfg)
 			},
-			startState: &initConfig{},
+			startState:    &initConfig{},
 			expectedState: &initConfig{region: region.EUCentral1.String()},
 		},
 	}
@@ -187,17 +187,17 @@ func TestAskRegion(t *testing.T) {
 func TestAskDownloadWhen(t *testing.T) {
 	testCases := []questionTest{
 		{
-			name: "Defaults to Fail",
+			name:      "Defaults to Fail",
 			procedure: stringToProcedure("✓🔚"),
-			ini: &initiator{},
+			ini:       &initiator{},
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askDownloadWhen(cfg)
 			},
-			startState: &initConfig{},
+			startState:    &initConfig{},
 			expectedState: &initConfig{artifactWhen: config.WhenFail},
 		},
 		{
-			name: "Second is pass",
+			name:      "Second is pass",
 			procedure: stringToProcedure("↓✓🔚"),
 			ini: &initiator{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
@@ -205,11 +205,11 @@ func TestAskDownloadWhen(t *testing.T) {
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askDownloadWhen(cfg)
 			},
-			startState: &initConfig{},
+			startState:    &initConfig{},
 			expectedState: &initConfig{artifactWhen: config.WhenPass},
 		},
 		{
-			name: "Type always",
+			name:      "Type always",
 			procedure: stringToProcedure("alw✓🔚"),
 			ini: &initiator{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
@@ -217,7 +217,7 @@ func TestAskDownloadWhen(t *testing.T) {
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askDownloadWhen(cfg)
 			},
-			startState: &initConfig{},
+			startState:    &initConfig{},
 			expectedState: &initConfig{artifactWhen: config.WhenAlways},
 		},
 	}
@@ -231,17 +231,17 @@ func TestAskDownloadWhen(t *testing.T) {
 func TestAskDevice(t *testing.T) {
 	testCases := []questionTest{
 		{
-			name: "Empty is allowed",
+			name:      "Empty is allowed",
 			procedure: stringToProcedure("✓🔚"),
-			ini: &initiator{},
+			ini:       &initiator{},
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askDevice(cfg)
 			},
-			startState: &initConfig{},
+			startState:    &initConfig{},
 			expectedState: &initConfig{},
 		},
 		{
-			name: "Input is captured",
+			name:      "Input is captured",
 			procedure: stringToProcedure("Google Pixel✓🔚"),
 			ini: &initiator{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
@@ -249,7 +249,7 @@ func TestAskDevice(t *testing.T) {
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askDevice(cfg)
 			},
-			startState: &initConfig{},
+			startState:    &initConfig{},
 			expectedState: &initConfig{device: config.Device{Name: "Google Pixel"}},
 		},
 	}
@@ -264,7 +264,7 @@ func TestAskEmulator(t *testing.T) {
 	testCases := []questionTest{
 		{
 			name: "Empty is allowed",
-			procedure: func (c *expect.Console) error {
+			procedure: func(c *expect.Console) error {
 				_, err := c.ExpectString("Type emulator name:")
 				if err != nil {
 					return err
@@ -287,12 +287,12 @@ func TestAskEmulator(t *testing.T) {
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askEmulator(cfg)
 			},
-			startState: &initConfig{},
+			startState:    &initConfig{},
 			expectedState: &initConfig{},
 		},
 		{
 			name: "Input is captured",
-			procedure:  func (c *expect.Console) error {
+			procedure: func(c *expect.Console) error {
 				_, err := c.ExpectString("Type emulator name")
 				if err != nil {
 					return err
@@ -317,7 +317,7 @@ func TestAskEmulator(t *testing.T) {
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askEmulator(cfg)
 			},
-			startState: &initConfig{},
+			startState:    &initConfig{},
 			expectedState: &initConfig{emulator: config.Emulator{Name: "Google Pixel Emulator"}},
 		},
 	}
@@ -332,7 +332,7 @@ func TestAskPlatform(t *testing.T) {
 	testCases := []questionTest{
 		{
 			name: "Windows 10",
-			procedure: func (c *expect.Console) error {
+			procedure: func(c *expect.Console) error {
 				_, err := c.ExpectString("Select platform")
 				if err != nil {
 					return err
@@ -361,12 +361,12 @@ func TestAskPlatform(t *testing.T) {
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askPlatform(cfg)
 			},
-			startState: &initConfig{frameworkName: "testcafe"},
+			startState:    &initConfig{frameworkName: "testcafe"},
 			expectedState: &initConfig{frameworkName: "testcafe", browserName: "chrome", mode: "sauce", platformName: "Windows 10"},
 		},
 		{
 			name: "macOS",
-			procedure:  func (c *expect.Console) error {
+			procedure: func(c *expect.Console) error {
 				_, err := c.ExpectString("Select platform")
 				if err != nil {
 					return err
@@ -395,12 +395,12 @@ func TestAskPlatform(t *testing.T) {
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askPlatform(cfg)
 			},
-			startState: &initConfig{frameworkName: "testcafe"},
+			startState:    &initConfig{frameworkName: "testcafe"},
 			expectedState: &initConfig{frameworkName: "testcafe", platformName: "macOS 11.0", browserName: "firefox", mode: "sauce"},
 		},
 		{
 			name: "docker",
-			procedure:  func (c *expect.Console) error {
+			procedure: func(c *expect.Console) error {
 				_, err := c.ExpectString("Select platform")
 				if err != nil {
 					return err
@@ -429,7 +429,7 @@ func TestAskPlatform(t *testing.T) {
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askPlatform(cfg)
 			},
-			startState: &initConfig{frameworkName: "testcafe"},
+			startState:    &initConfig{frameworkName: "testcafe"},
 			expectedState: &initConfig{frameworkName: "testcafe", platformName: "", browserName: "chrome", mode: "docker"},
 		},
 	}
@@ -444,7 +444,7 @@ func TestAskVersion(t *testing.T) {
 	testCases := []questionTest{
 		{
 			name: "Default",
-			procedure: func (c *expect.Console) error {
+			procedure: func(c *expect.Console) error {
 				_, err := c.ExpectString("Select cypress version")
 				if err != nil {
 					return err
@@ -465,12 +465,12 @@ func TestAskVersion(t *testing.T) {
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askVersion(cfg)
 			},
-			startState: &initConfig{frameworkName: "cypress"},
+			startState:    &initConfig{frameworkName: "cypress"},
 			expectedState: &initConfig{frameworkName: "cypress", frameworkVersion: "7.6.0"},
 		},
 		{
 			name: "Second",
-			procedure:  func (c *expect.Console) error {
+			procedure: func(c *expect.Console) error {
 				_, err := c.ExpectString("Select cypress version")
 				if err != nil {
 					return err
@@ -495,7 +495,7 @@ func TestAskVersion(t *testing.T) {
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askVersion(cfg)
 			},
-			startState: &initConfig{frameworkName: "cypress"},
+			startState:    &initConfig{frameworkName: "cypress"},
 			expectedState: &initConfig{frameworkName: "cypress", frameworkVersion: "7.5.0"},
 		},
 	}
@@ -516,7 +516,7 @@ func TestAskFile(t *testing.T) {
 	testCases := []questionTest{
 		{
 			name: "Default",
-			procedure: func (c *expect.Console) error {
+			procedure: func(c *expect.Console) error {
 				_, err := c.ExpectString("Filename")
 				if err != nil {
 					return err
@@ -558,8 +558,210 @@ func TestAskFile(t *testing.T) {
 					return nil
 				}, nil, &cfg.app)
 			},
-			startState: &initConfig{},
+			startState:    &initConfig{},
 			expectedState: &initConfig{app: dir.Join("android-app.apk")},
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(lt *testing.T) {
+			executeQuestionTest(lt, tt)
+		})
+	}
+}
+
+func Test_frameworkSpecificSettings(t *testing.T) {
+	type args struct {
+		framework string
+	}
+	type want struct {
+		nativeFramework  bool
+		needsApps        bool
+		needsCypressJson bool
+		needsDevice      bool
+		needsEmulator    bool
+		needsPlatform    bool
+		needsRootDir     bool
+		needsVersion     bool
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "espresso",
+			args: args{
+				"espresso",
+			},
+			want: want{
+				nativeFramework: true,
+				needsApps:       true,
+				needsEmulator:   true,
+				needsDevice:     true,
+			},
+		},
+		{
+			name: "xcuitest",
+			args: args{
+				"xcuitest",
+			},
+			want: want{
+				nativeFramework: true,
+				needsApps:       true,
+				needsDevice:     true,
+			},
+		},
+		{
+			name: "cypress",
+			args: args{
+				"cypress",
+			},
+			want: want{
+				needsVersion:     true,
+				needsRootDir:     true,
+				needsPlatform:    true,
+				needsCypressJson: true,
+			},
+		},
+		{
+			name: "testcafe",
+			args: args{
+				"testcafe",
+			},
+			want: want{
+				needsVersion:  true,
+				needsRootDir:  true,
+				needsPlatform: true,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isNativeFramework(tt.args.framework); got != tt.want.nativeFramework {
+				t.Errorf("isNativeFramework() = %v, want %v", got, tt.want)
+			}
+			if got := needsCypressJson(tt.args.framework); got != tt.want.needsCypressJson {
+				t.Errorf("needsCypressJson() = %v, want %v", got, tt.want)
+			}
+			if got := needsVersion(tt.args.framework); got != tt.want.needsVersion {
+				t.Errorf("needsVersion() = %v, want %v", got, tt.want)
+			}
+			if got := needsPlatform(tt.args.framework); got != tt.want.needsPlatform {
+				t.Errorf("needsPlatform() = %v, want %v", got, tt.want)
+			}
+			if got := needsDevice(tt.args.framework); got != tt.want.needsDevice {
+				t.Errorf("needsDevice() = %v, want %v", got, tt.want)
+			}
+			if got := needsEmulator(tt.args.framework); got != tt.want.needsEmulator {
+				t.Errorf("needsEmulator() = %v, want %v", got, tt.want)
+			}
+			if got := needsRootDir(tt.args.framework); got != tt.want.needsRootDir {
+				t.Errorf("needsRootDir() = %v, want %v", got, tt.want)
+			}
+			if got := needsApps(tt.args.framework); got != tt.want.needsApps {
+				t.Errorf("needsApps() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestConfigure(t *testing.T) {
+	dir := fs.NewDir(t, "apps",
+		fs.WithFile("cypress.json", "{}", fs.WithMode(0644)),
+		fs.WithFile("android-app.apk", "myAppContent", fs.WithMode(0644)),
+		fs.WithFile("ios-app.ipa", "myAppContent", fs.WithMode(0644)),
+		fs.WithDir("ios-folder-app.app", fs.WithMode(0755)))
+	defer dir.Remove()
+
+	testCases := []questionTest{
+		{
+			name: "Complete Configuration (espresso)",
+			procedure: func(c *expect.Console) error {
+				c.ExpectString("Select framework")
+				c.SendLine("espresso")
+				c.ExpectString("Select region")
+				c.SendLine("us-west-1")
+				c.ExpectString("Application to test")
+				c.SendLine(dir.Join("android-app.apk"))
+				c.ExpectString("Test application")
+				c.SendLine(dir.Join("android-app.apk"))
+				c.ExpectString("Type device name:")
+				c.SendLine("Google Pixel 3")
+				c.ExpectString("Type emulator name:")
+				c.SendLine("Google Pixel Emulator")
+				c.ExpectString("Download artifacts:")
+				c.SendLine("when tests are passing")
+				c.ExpectEOF()
+				return nil
+			},
+			ini: &initiator{
+				infoReader: &mocks.FakeFrameworkInfoReader{},
+			},
+			execution: func(i *initiator, cfg *initConfig) error {
+				newCfg, err := i.configure()
+				if err != nil {
+					return err
+				}
+				*cfg = *newCfg
+				return nil
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{
+				frameworkName: "espresso",
+				app:           dir.Join("android-app.apk"),
+				testApp:       dir.Join("android-app.apk"),
+				emulator:      config.Emulator{Name: "Google Pixel Emulator"},
+				device:        config.Device{Name: "Google Pixel 3"},
+				region:        "us-west-1",
+				artifactWhen:  config.WhenPass,
+			},
+		},
+		{
+			name: "Complete Configuration (cypress)",
+			procedure: func(c *expect.Console) error {
+				c.ExpectString("Select framework")
+				c.SendLine("cypress")
+				c.ExpectString("Select region")
+				c.SendLine("us-west-1")
+				c.ExpectString("Select cypress version")
+				c.SendLine("7.5.0")
+				c.ExpectString("Root project directory")
+				c.SendLine(".")
+				c.ExpectString("Cypress configuration file:")
+				c.SendLine(dir.Join("cypress.json"))
+				c.ExpectString("Select platform:")
+				c.SendLine("Windows 10")
+				c.ExpectString("Select Browser:")
+				c.SendLine("chrome")
+				c.ExpectString("Download artifacts:")
+				c.SendLine("when tests are passing")
+				c.ExpectEOF()
+				return nil
+			},
+			ini: &initiator{
+				infoReader: &mocks.FakeFrameworkInfoReader{},
+			},
+			execution: func(i *initiator, cfg *initConfig) error {
+				newCfg, err := i.configure()
+				if err != nil {
+					return err
+				}
+				*cfg = *newCfg
+				return nil
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{
+				frameworkName:    "cypress",
+				frameworkVersion: "7.5.0",
+				rootDir:          ".",
+				cypressJson:      dir.Join("cypress.json"),
+				platformName:     "Windows 10",
+				browserName:      "chrome",
+				mode:             "sauce",
+				region:           "us-west-1",
+				artifactWhen:     config.WhenPass,
+			},
 		},
 	}
 	for _, tt := range testCases {

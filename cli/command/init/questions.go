@@ -97,7 +97,7 @@ func (ini *initiator) configure() (*initConfig, error) {
 			return &initConfig{}, err
 		}
 
-		err = ini.askFile("Application to test:", extValidator(cfg.frameworkName), completeBasic, &cfg.testApp)
+		err = ini.askFile("Test application:", extValidator(cfg.frameworkName), completeBasic, &cfg.testApp)
 		if err != nil {
 			return &initConfig{}, err
 		}
