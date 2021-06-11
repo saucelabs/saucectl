@@ -97,7 +97,7 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string, other
 		}
 	}()
 
-	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
+	return r.collectResults(r.Project.Artifacts.Download, r.Project.Notifications, results, jobsCount)
 }
 
 func (r *EspressoRunner) dryRun() {

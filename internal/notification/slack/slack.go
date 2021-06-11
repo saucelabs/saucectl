@@ -2,6 +2,7 @@ package slack
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -100,16 +101,18 @@ func (s *SlackNotifier) createBlocks() []slack.Block {
 	headerSection := slack.NewSectionBlock(headerText, nil, nil)
 
 	contextElementText := slack.NewImageBlockElement(s.getFrameworkIcon(), "Framework icon")
-	contextText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("%s %s | *Build ID*: %s", s.getTestEnvEmoji(), credentials.Get().Username, s.Metadata.Build), false, false)
+	contextText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("%s %s | *Build ID*: %s | %s", s.getTestEnvEmoji(), credentials.Get().Username, s.Metadata.Build, time.Now().Format("2006-01-02 15:04:05")), false, false)
 	frameworkIconSection := slack.NewContextBlock("", []slack.MixedElement{contextElementText, contextText}...)
 
-	tableHeader := []*slack.TextBlockObject{}
-	tableHeader = append(tableHeader, slack.NewTextBlockObject("mrkdwn", "*Date*", false, false))
-	tableHeader = append(tableHeader, slack.NewTextBlockObject("mrkdwn", "*Author*", false, false))
-	tableHeader = append(tableHeader, slack.NewTextBlockObject("mrkdwn", time.Now().Format("2006-01-02 15:04:05"), false, false))
-	tableHeader = append(tableHeader, slack.NewTextBlockObject("mrkdwn", credentials.Get().Username, false, false))
+	/*
+		tableHeader := []*slack.TextBlockObject{}
+		tableHeader = append(tableHeader, slack.NewTextBlockObject("mrkdwn", "*Date*", false, false))
+		tableHeader = append(tableHeader, slack.NewTextBlockObject("mrkdwn", "*Author*", false, false))
+		tableHeader = append(tableHeader, slack.NewTextBlockObject("mrkdwn", time.Now().Format("2006-01-02 15:04:05"), false, false))
+		tableHeader = append(tableHeader, slack.NewTextBlockObject("mrkdwn", credentials.Get().Username, false, false))
 
-	tableHeadSection := slack.NewSectionBlock(nil, tableHeader, nil)
+		tableHeadSection := slack.NewSectionBlock(nil, tableHeader, nil)
+	*/
 
 	resultText := slack.NewTextBlockObject("mrkdwn", s.RenderTable(), false, false)
 	resultSection := slack.NewSectionBlock(resultText, nil, nil)
@@ -117,7 +120,7 @@ func (s *SlackNotifier) createBlocks() []slack.Block {
 	blocks := make([]slack.Block, 0)
 	blocks = append(blocks, headerSection)
 	blocks = append(blocks, frameworkIconSection)
-	blocks = append(blocks, tableHeadSection)
+	//blocks = append(blocks, tableHeadSection)
 	blocks = append(blocks, resultSection)
 
 	return blocks
@@ -150,9 +153,11 @@ func (s *SlackNotifier) getTestEnvEmoji() string {
 }
 
 // ShouldSendNotification returns true if it should send notification, otherwise false
-func ShouldSendNotification(jobID string, passed bool, cfg config.Notifications) bool {
-	if jobID == "" {
-		return false
+func (s *SlackNotifier) ShouldSendNotification(cfg config.Notifications) bool {
+	for _, ts := range s.TestResults {
+		if ts.JobID == "" {
+			return false
+		}
 	}
 
 	if cfg.Slack.Token == "" {
@@ -171,48 +176,84 @@ func ShouldSendNotification(jobID string, passed bool, cfg config.Notifications)
 		return true
 	}
 
-	if cfg.Slack.Send == config.SendOnFailure && !passed {
+	if cfg.Slack.Send == config.SendOnFailure && !s.Passed {
 		return true
 	}
 
 	return false
 }
 
+func regenerateName(name, wholeName string, length int) string {
+	minus := length - len(name)
+	for minus > 0 {
+		wholeName = fmt.Sprintf("%s%s", wholeName, " ")
+		minus--
+	}
+	return wholeName
+}
+
 func (s *SlackNotifier) RenderTable() string {
-	t := table.NewWriter()
-	t.SetStyle(defaultTableStyle)
-	t.SuppressEmptyColumns()
-
-	t.AppendHeader(table.Row{"Passed", "Name", "Duration", "Status", "Browser", "Platform", "Device"})
-	t.SetColumnConfigs([]table.ColumnConfig{
-		{
-			Number:   0, // it's the first nameless column that contains the passed/fail icon
-			WidthMax: 1,
-		},
-		{
-			Name:        "Duration",
-			Align:       text.AlignRight,
-			AlignFooter: text.AlignRight,
-		},
-	})
-
-	errors := 0
-	var totalDur time.Duration
+	tables := [][]string{}
+	longestName := 0
 	for _, ts := range s.TestResults {
-		if !ts.Passed {
-			errors++
+		if longestName < len(ts.Name) {
+			longestName = len(ts.Name)
 		}
+	}
+	header := []string{"Passed", "Name                     ", "Duration", "Status", "Browser", "Platform", "Device"}
+	tables = append(tables, header)
 
-		totalDur += ts.Duration
-
-		// the order of values must match the order of the header
-		t.AppendRow(table.Row{statusSymbol(ts.Passed), s.getJobURL(ts.Name, ts.JobID, ts.JobURL), ts.Duration.Truncate(1 * time.Second),
+	for _, ts := range s.TestResults {
+		tables = append(tables, []string{statusSymbol(ts.Passed), regenerateName(ts.Name, s.getJobURL(ts.Name, ts.JobID, ts.JobURL), longestName), ts.Duration.Truncate(1 * time.Second).String(),
 			statusText(ts.Passed), ts.Browser, ts.Platform, ts.DeviceName})
 	}
+	var info string
+	for _, t := range tables {
+		info = fmt.Sprintf("%s\n%s", info, strings.Join(t, "\t"))
+	}
+	return info
+	/*
 
-	t.AppendFooter(footer(errors, len(s.TestResults), totalDur))
+		t := table.NewWriter()
+		t.SetStyle(defaultTableStyle)
+		t.SuppressEmptyColumns()
 
-	return "`" + "`" + "`" + "\n" + t.Render() + "\n`" + "`" + "`"
+		t.AppendHeader(table.Row{"Passed", "Name", "Duration", "Status", "Browser", "Platform", "Device"})
+		t.SetColumnConfigs([]table.ColumnConfig{
+			{
+				Number:   0, // it's the first nameless column that contains the passed/fail icon
+				WidthMax: 1,
+			},
+			{
+				Number:   1,
+				WidthMax: 20,
+			},
+			{
+				Name:        "Duration",
+				Align:       text.AlignRight,
+				AlignFooter: text.AlignRight,
+			},
+		})
+
+		errors := 0
+		var totalDur time.Duration
+		for _, ts := range s.TestResults {
+			if !ts.Passed {
+				errors++
+			}
+
+			totalDur += ts.Duration
+
+			// the order of values must match the order of the header
+			t.AppendRow(table.Row{statusSymbol(ts.Passed), s.getJobURL(ts.Name, ts.JobID, ts.JobURL), ts.Duration.Truncate(1 * time.Second),
+				statusText(ts.Passed), ts.Browser, ts.Platform, ts.DeviceName})
+		}
+
+		t.AppendFooter(footer(errors, len(s.TestResults), totalDur))
+
+		return t.Render()
+		return "`" + "`" + "`" + "\n" + t.Render() + "\n`" + "`" + "`"
+	*/
 }
 
 func (s *SlackNotifier) getJobURL(name, ID, jobURL string) string {
@@ -236,10 +277,10 @@ func (s *SlackNotifier) creatAttachment() slack.Attachment {
 
 func statusSymbol(passed bool) string {
 	if !passed {
-		return "✖"
+		return "✖      "
 	}
 
-	return "✔"
+	return "✔      "
 }
 
 func statusEmoji(passed bool) string {
