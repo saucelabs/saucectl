@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
@@ -36,6 +37,7 @@ type ContainerRunner struct {
 	ShowConsoleLog    bool
 	JobReader         job.Reader
 	ArtfactDownloader download.ArtifactDownloader
+	Notifier          slack.SlackNotifier
 
 	Reporters []report.Reporter
 
@@ -317,6 +319,7 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 	passed := true
 
 	junitRequired := report.IsArtifactRequired(r.Reporters, report.JUnitArtifact)
+	slackTestResults := []slack.TestResult{}
 
 	done := make(chan interface{})
 	go func() {
@@ -371,6 +374,13 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 			for _, rep := range r.Reporters {
 				rep.Add(tr)
 			}
+			slackTestResults = append(slackTestResults, slack.TestResult{
+				Name:     res.name,
+				Duration: res.duration,
+				Passed:   res.passed,
+				Browser:  res.browser,
+				JobURL:   res.jobInfo.JobDetailsURL,
+			})
 		}
 
 		r.logSuite(res)
@@ -380,6 +390,11 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 	for _, rep := range r.Reporters {
 		rep.Render()
 	}
+
+	r.Notifier.TestResults = slackTestResults
+	r.Notifier.Passed = passed
+
+	r.Notifier.SendMessage()
 
 	return passed
 }

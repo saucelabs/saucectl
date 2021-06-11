@@ -2,12 +2,14 @@ package docker
 
 import (
 	"context"
-	"github.com/saucelabs/saucectl/internal/report"
 
+	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/playwright"
+	"github.com/saucelabs/saucectl/internal/region"
 )
 
 // PlaywrightRunner represents the docker implementation of a test runner.
@@ -17,7 +19,7 @@ type PlaywrightRunner struct {
 }
 
 // NewPlaywright creates a new PlaywrightRunner instance.
-func NewPlaywright(c playwright.Project, ms framework.MetadataService, wr job.Writer, jr job.Reader, dl download.ArtifactDownloader, reps []report.Reporter) (*PlaywrightRunner, error) {
+func NewPlaywright(c playwright.Project, regio region.Region, ms framework.MetadataService, wr job.Writer, jr job.Reader, dl download.ArtifactDownloader, reps []report.Reporter) (*PlaywrightRunner, error) {
 	r := PlaywrightRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -34,6 +36,14 @@ func NewPlaywright(c playwright.Project, ms framework.MetadataService, wr job.Wr
 			JobReader:         jr,
 			ArtfactDownloader: dl,
 			Reporters:         reps,
+			Notifier: slack.SlackNotifier{
+				Token:     c.Notifications.Slack.Token,
+				Channels:  c.Notifications.Slack.Channels,
+				Framework: "playwright",
+				Region:    regio,
+				Metadata:  c.Sauce.Metadata,
+				TestEnv:   "docker",
+			},
 		},
 	}
 

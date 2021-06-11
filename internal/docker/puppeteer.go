@@ -2,12 +2,14 @@ package docker
 
 import (
 	"context"
-	"github.com/saucelabs/saucectl/internal/report"
 
+	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
+	"github.com/saucelabs/saucectl/internal/region"
 )
 
 // PuppeterRunner represents the docker implementation of a test runner.
@@ -17,7 +19,7 @@ type PuppeterRunner struct {
 }
 
 // NewPuppeteer creates a new PuppeterRunner instance.
-func NewPuppeteer(c puppeteer.Project, ms framework.MetadataService, wr job.Writer, jr job.Reader, dl download.ArtifactDownloader, reps []report.Reporter) (*PuppeterRunner, error) {
+func NewPuppeteer(c puppeteer.Project, regio region.Region, ms framework.MetadataService, wr job.Writer, jr job.Reader, dl download.ArtifactDownloader, reps []report.Reporter) (*PuppeterRunner, error) {
 	r := PuppeterRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -33,6 +35,14 @@ func NewPuppeteer(c puppeteer.Project, ms framework.MetadataService, wr job.Writ
 			JobReader:         jr,
 			ArtfactDownloader: dl,
 			Reporters:         reps,
+			Notifier: slack.SlackNotifier{
+				Token:     c.Notifications.Slack.Token,
+				Channels:  c.Notifications.Slack.Channels,
+				Framework: "puppeteer",
+				Region:    regio,
+				Metadata:  c.Sauce.Metadata,
+				TestEnv:   "docker",
+			},
 		},
 	}
 	var err error

@@ -2,11 +2,13 @@ package docker
 
 import (
 	"context"
-	"github.com/saucelabs/saucectl/internal/report"
 
+	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/notification/slack"
+	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 )
 
@@ -17,7 +19,7 @@ type TestcafeRunner struct {
 }
 
 // NewTestcafe creates a new TestcafeRunner instance.
-func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer, jr job.Reader, dl download.ArtifactDownloader, reps []report.Reporter) (*TestcafeRunner, error) {
+func NewTestcafe(c testcafe.Project, regio region.Region, ms framework.MetadataService, wr job.Writer, jr job.Reader, dl download.ArtifactDownloader, reps []report.Reporter) (*TestcafeRunner, error) {
 	r := TestcafeRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -33,6 +35,14 @@ func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer
 			JobReader:         jr,
 			ArtfactDownloader: dl,
 			Reporters:         reps,
+			Notifier: slack.SlackNotifier{
+				Token:     c.Notifications.Slack.Token,
+				Channels:  c.Notifications.Slack.Channels,
+				Framework: "testcafe",
+				Region:    regio,
+				Metadata:  c.Sauce.Metadata,
+				TestEnv:   "docker",
+			},
 		},
 	}
 	var err error
