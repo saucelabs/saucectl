@@ -51,20 +51,21 @@ type Emulator struct {
 	PlatformVersions []string `yaml:"platformVersions,omitempty" json:"platformVersions,omitempty"`
 }
 
-type when string
+// When represents a conditional status for when artifacts should be downloaded.
+type When string
 
 // These conditions indicate when artifacts are to be downloaded.
 const (
-	WhenFail   when = "fail"
-	WhenPass   when = "pass"
-	WhenNever  when = "never"
-	WhenAlways when = "always"
+	WhenFail   When = "fail"
+	WhenPass   When = "pass"
+	WhenNever  When = "never"
+	WhenAlways When = "always"
 )
 
 // ArtifactDownload represents the test artifacts configuration.
 type ArtifactDownload struct {
 	Match     []string `yaml:"match,omitempty" json:"match"`
-	When      when     `yaml:"when,omitempty" json:"when"`
+	When      When     `yaml:"when,omitempty" json:"when"`
 	Directory string   `yaml:"directory,omitempty" json:"directory"`
 }
 

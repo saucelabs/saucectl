@@ -142,7 +142,7 @@ func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc
 	}
 	p.Sauce.Metadata.ExpandEnv()
 	applyDefaultValues(&p.Sauce)
-	overrideCliParameters(cmd, &p.Sauce)
+	overrideCliParameters(cmd, &p.Sauce, &p.Artifacts)
 	applyEspressoFlags(&p)
 
 	regio := region.FromString(p.Sauce.Region)
