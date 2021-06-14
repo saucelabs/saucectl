@@ -8,6 +8,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/region"
 )
@@ -112,7 +113,16 @@ func (ini *initiator) configure() (*initConfig, error) {
 	}
 
 	if needsDevice(cfg.frameworkName) {
-		err = ini.askDevice(cfg)
+		osName := "ANDROID"
+		if cfg.frameworkName == config.KindXcuitest {
+			osName = "IOS"
+		}
+		devices, err := ini.deviceReader.GetDevices(context.Background(), osName)
+		if err != nil {
+			return &initConfig{}, err
+		}
+
+		err = ini.askDevice(cfg, devices)
 		if err != nil {
 			return &initConfig{}, err
 		}
@@ -202,10 +212,19 @@ func (ini *initiator) askDownloadWhen(cfg *initConfig) error {
 	return nil
 }
 
-func (ini *initiator) askDevice(cfg *initConfig) error {
+func (ini *initiator) askDevice(cfg *initConfig, devs []devices.Device) error {
 	// TODO: Check if device exists !
 	q := &survey.Input{
 		Message: "Type device name:",
+		Suggest: func(toComplete string) []string {
+			var candidates []string
+			for _, d := range devs {
+				if strings.Contains(d.Name, toComplete) {
+					candidates = append(candidates, d.Name)
+				}
+			}
+			return candidates
+		},
 	}
 	err := survey.AskOne(q, &cfg.device.Name,
 		survey.WithShowCursor(true),

@@ -14,7 +14,9 @@ import (
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
@@ -51,8 +53,9 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 }
 
 type initiator struct {
-	stdio      terminal.Stdio
-	infoReader framework.MetadataService
+	stdio        terminal.Stdio
+	infoReader   framework.MetadataService
+	deviceReader devices.Reader
 
 	frameworks        []string
 	frameworkMetadata []framework.Metadata
@@ -85,6 +88,7 @@ var configurators = map[string]func(cfg *initConfig) interface{}{
 
 var (
 	testComposerTimeout = 5 * time.Second
+	rdcTimeout          = 5 * time.Second
 )
 
 // Run runs the command
@@ -96,9 +100,17 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		Credentials: creds,
 	}
 
+	rc := rdc.Client{
+		HTTPClient: &http.Client{Timeout: rdcTimeout},
+		URL:        region.FromString("us-west-1").APIBaseURL(), // Will updated as soon
+		Username:   creds.Username,
+		AccessKey:  creds.AccessKey,
+	}
+
 	ini := initiator{
-		stdio:      terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr},
-		infoReader: &tc,
+		stdio:        terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr},
+		infoReader:   &tc,
+		deviceReader: &rc,
 	}
 
 	initCfg, err := ini.configure()
