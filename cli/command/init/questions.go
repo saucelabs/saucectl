@@ -213,18 +213,13 @@ func (ini *initiator) askDownloadWhen(cfg *initConfig) error {
 }
 
 func (ini *initiator) askDevice(cfg *initConfig, devs []devices.Device) error {
-	// TODO: Check if device exists !
-	q := &survey.Input{
-		Message: "Type device name:",
-		Suggest: func(toComplete string) []string {
-			var candidates []string
-			for _, d := range devs {
-				if strings.Contains(d.Name, toComplete) {
-					candidates = append(candidates, d.Name)
-				}
-			}
-			return candidates
-		},
+	var deviceNames []string
+	for _, d := range devs {
+		deviceNames = append(deviceNames, d.Name)
+	}
+	q := &survey.Select{
+		Message: "Select device:",
+		Options: deviceNames,
 	}
 	err := survey.AskOne(q, &cfg.device.Name,
 		survey.WithShowCursor(true),
