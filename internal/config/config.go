@@ -12,7 +12,6 @@ import (
 
 // Metadata describes job metadata
 type Metadata struct {
-	Name  string   `yaml:"name" json:"name"`
 	Tags  []string `yaml:"tags" json:"tags,omitempty"`
 	Build string   `yaml:"build" json:"build"`
 }
@@ -172,7 +171,6 @@ func Describe(cfgPath string) (TypeDef, error) {
 
 // ExpandEnv expands environment variables inside metadata fields.
 func (m *Metadata) ExpandEnv() {
-	m.Name = os.ExpandEnv(m.Name)
 	m.Build = os.ExpandEnv(m.Build)
 	for i, v := range m.Tags {
 		m.Tags[i] = os.ExpandEnv(v)

@@ -61,6 +61,8 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 	}
 	defer close(results)
 
+	// TODO fix jobnames. Don't need to hyphenate empty metadata name fields
+
 	// Submit suites to work on.
 	go func() {
 		for _, s := range r.Project.Suites {
@@ -78,7 +80,7 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 				BrowserName:      s.Params.BrowserName,
 				BrowserVersion:   "",
 				PlatformName:     s.PlatformName,
-				Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
+				Name:             s.Name,
 				Build:            r.Project.Sauce.Metadata.Build,
 				Tags:             r.Project.Sauce.Metadata.Tags,
 				Tunnel: job.TunnelOptions{

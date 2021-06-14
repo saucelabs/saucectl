@@ -150,7 +150,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		DeviceID:          d.ID,
 		DeviceName:        d.name,
 		DeviceOrientation: d.orientation,
-		Name:              r.Project.Sauce.Metadata.Name + " - " + s.Name,
+		Name:              s.Name,
 		Build:             r.Project.Sauce.Metadata.Build,
 		Tags:              r.Project.Sauce.Metadata.Tags,
 		Tunnel: job.TunnelOptions{

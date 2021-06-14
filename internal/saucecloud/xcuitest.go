@@ -104,7 +104,7 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		PlatformVersion:  d.PlatformVersion,
 		DeviceName:       d.Name,
 		DeviceID:         d.ID,
-		Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
+		Name:             s.Name,
 		Build:            r.Project.Sauce.Metadata.Build,
 		Tags:             r.Project.Sauce.Metadata.Tags,
 		Tunnel: job.TunnelOptions{

@@ -4,10 +4,9 @@ sauce:
   region: us-west-1
   concurrency: 10
   metadata:
-    name: Testing Espresso Support
     tags:
       - e2e
-  build: "$BUILD_ID"
+    build: "$BUILD_ID"
 espresso:
   app: ./tests/e2e/espresso/calc.apk
   testApp: ./tests/e2e/espresso/calc-success.apk

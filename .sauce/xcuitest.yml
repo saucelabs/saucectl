@@ -4,7 +4,6 @@ sauce:
   region: us-west-1
   concurrency: 1
   metadata:
-    name: Testing XCUITEST Support
     tags:
       - e2e
       - release team
