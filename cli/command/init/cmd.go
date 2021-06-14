@@ -53,6 +53,9 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 type initiator struct {
 	stdio      terminal.Stdio
 	infoReader framework.MetadataService
+
+	frameworks        []string
+	frameworkMetadata []framework.Metadata
 }
 
 type initConfig struct {
@@ -69,8 +72,6 @@ type initConfig struct {
 	artifactWhen     config.When
 	device           config.Device
 	emulator         config.Emulator
-
-	frameworkMetadatas []framework.Metadata
 }
 
 var configurators = map[string]func(cfg *initConfig) interface{}{

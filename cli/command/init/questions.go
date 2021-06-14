@@ -66,15 +66,13 @@ func (ini *initiator) configure() (*initConfig, error) {
 		// TODO: Implement
 	}
 
-	if needsVersion(cfg.frameworkName) || needsPlatform(cfg.frameworkName) {
-		cfg.frameworkMetadatas, err = ini.infoReader.Versions(context.Background(), cfg.frameworkName)
-		if err != nil {
-			return &initConfig{}, err
-		}
+	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), cfg.frameworkName)
+	if err != nil {
+		return &initConfig{}, err
 	}
 
 	if needsVersion(cfg.frameworkName) {
-		err = ini.askVersion(cfg)
+		err = ini.askVersion(cfg, frameworkMetadatas)
 		if err != nil {
 			return &initConfig{}, err
 		}
@@ -95,7 +93,7 @@ func (ini *initiator) configure() (*initConfig, error) {
 	}
 
 	if needsPlatform(cfg.frameworkName) {
-		err = ini.askPlatform(cfg)
+		err = ini.askPlatform(cfg, frameworkMetadatas)
 		if err != nil {
 			return &initConfig{}, err
 		}
@@ -232,21 +230,46 @@ func (ini *initiator) askEmulator(cfg *initConfig) error {
 	return nil
 }
 
-func platformsForVersion(metadatas []framework.Metadata, frameworkName, version string) ([]framework.Platform, error) {
-	var platforms []framework.Platform
+func metaToVersions(metadatas []framework.Metadata) []string {
+	var versions []string
+	for _, v := range metadatas {
+		versions = append(versions, v.FrameworkVersion)
+	}
+	return versions
+}
+
+func metaToPlatforms(metadatas []framework.Metadata, version string) []string {
+	var platforms []string
 	for _, m := range metadatas {
 		if m.FrameworkVersion == version {
-			platforms = m.Platforms
+			for _, p := range m.Platforms {
+				platforms = append(platforms, p.PlatformName)
+			}
 		}
 		if m.DockerImage != "" {
-			platforms = append(platforms, framework.Platform{
-				PlatformName: "docker",
-				BrowserNames: dockerBrowsers(frameworkName),
-			})
+			platforms = append(platforms, "docker")
 		}
 	}
-	return platforms, nil
+	return platforms
 }
+
+func metaToBrowsers(metadatas []framework.Metadata, frameworkName, frameworkVersion, platformName string) []string {
+	if platformName == "docker" {
+		return dockerBrowsers(frameworkName)
+	}
+
+	// It's not optimum to have double iteration, but since the set it pretty small this will be insignificant.
+	// It's helping for readability.
+	for _, v := range metadatas {
+		for _, p := range v.Platforms {
+			if v.FrameworkVersion == frameworkVersion && p.PlatformName == platformName {
+				return p.BrowserNames
+			}
+		}
+	}
+	return []string{}
+}
+
 
 func dockerBrowsers(framework string) []string {
 	switch framework {
@@ -257,25 +280,14 @@ func dockerBrowsers(framework string) []string {
 	}
 }
 
-func (ini *initiator) askPlatform(cfg *initConfig) error {
-	// Prepare platform / browsers
-	platforms, err := platformsForVersion(cfg.frameworkMetadatas, cfg.frameworkName, cfg.frameworkVersion)
-	if err != nil {
-		return err
-	}
-
-	var platformChoices []string
-	browserChoices := map[string][]string{}
-	for _, p := range platforms {
-		platformChoices = append(platformChoices, p.PlatformName)
-		browserChoices[p.PlatformName] = p.BrowserNames
-	}
+func (ini *initiator) askPlatform(cfg *initConfig, metadatas []framework.Metadata) error {
+	platformChoices := metaToPlatforms(metadatas, cfg.frameworkVersion)
 
 	q := &survey.Select{
 		Message: "Select platform:",
 		Options: platformChoices,
 	}
-	err = survey.AskOne(q, &cfg.platformName,
+	err := survey.AskOne(q, &cfg.platformName,
 		survey.WithShowCursor(true),
 		survey.WithValidator(survey.Required),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
@@ -284,9 +296,10 @@ func (ini *initiator) askPlatform(cfg *initConfig) error {
 	}
 
 	// Select browser
+	browserChoices := metaToBrowsers(metadatas, cfg.frameworkName, cfg.frameworkVersion, cfg.platformName)
 	q = &survey.Select{
 		Message: "Select Browser:",
-		Options: browserChoices[cfg.platformName],
+		Options: browserChoices,
 	}
 	err = survey.AskOne(q, &cfg.browserName,
 		survey.WithShowCursor(true),
@@ -304,11 +317,9 @@ func (ini *initiator) askPlatform(cfg *initConfig) error {
 	return nil
 }
 
-func (ini *initiator) askVersion(cfg *initConfig) error {
-	var versions []string
-	for _, v := range cfg.frameworkMetadatas {
-		versions = append(versions, v.FrameworkVersion)
-	}
+func (ini *initiator) askVersion(cfg *initConfig, metadatas []framework.Metadata) error {
+	versions := metaToVersions(metadatas)
+
 	q := &survey.Select{
 		Message: fmt.Sprintf("Select %s version:", cfg.frameworkName),
 		Options: versions,

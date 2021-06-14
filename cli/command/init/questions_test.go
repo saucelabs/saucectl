@@ -346,7 +346,7 @@ func TestAskEmulator(t *testing.T) {
 }
 
 func TestAskPlatform(t *testing.T) {
-	versions := []framework.Metadata{
+	metas := []framework.Metadata{
 		{
 			FrameworkName:    "testcafe",
 			FrameworkVersion: "1.5.0",
@@ -406,10 +406,10 @@ func TestAskPlatform(t *testing.T) {
 			},
 			ini: &initiator{},
 			execution: func(i *initiator, cfg *initConfig) error {
-				return i.askPlatform(cfg)
+				return i.askPlatform(cfg, metas)
 			},
-			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", frameworkMetadatas: versions},
-			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", browserName: "googlechrome", mode: "sauce", platformName: "Windows 10", frameworkMetadatas: versions},
+			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0"},
+			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", browserName: "googlechrome", mode: "sauce", platformName: "Windows 10"},
 		},
 		{
 			name: "macOS",
@@ -438,10 +438,10 @@ func TestAskPlatform(t *testing.T) {
 			},
 			ini: &initiator{},
 			execution: func(i *initiator, cfg *initConfig) error {
-				return i.askPlatform(cfg)
+				return i.askPlatform(cfg, metas)
 			},
-			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", frameworkMetadatas: versions},
-			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", platformName: "macOS 11.00", browserName: "firefox", mode: "sauce", frameworkMetadatas: versions},
+			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0"},
+			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", platformName: "macOS 11.00", browserName: "firefox", mode: "sauce"},
 		},
 		{
 			name: "docker",
@@ -470,10 +470,10 @@ func TestAskPlatform(t *testing.T) {
 			},
 			ini: &initiator{},
 			execution: func(i *initiator, cfg *initConfig) error {
-				return i.askPlatform(cfg)
+				return i.askPlatform(cfg, metas)
 			},
-			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", frameworkMetadatas: versions},
-			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", platformName: "", browserName: "chrome", mode: "docker", frameworkMetadatas: versions},
+			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0"},
+			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", platformName: "", browserName: "chrome", mode: "docker"},
 		},
 	}
 	for _, tt := range testCases {
@@ -484,7 +484,7 @@ func TestAskPlatform(t *testing.T) {
 }
 
 func TestAskVersion(t *testing.T) {
-	versions := []framework.Metadata{
+	metas := []framework.Metadata{
 		{
 			FrameworkName:    "testcafe",
 			FrameworkVersion: "1.5.0",
@@ -537,10 +537,10 @@ func TestAskVersion(t *testing.T) {
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 			},
 			execution: func(i *initiator, cfg *initConfig) error {
-				return i.askVersion(cfg)
+				return i.askVersion(cfg, metas)
 			},
-			startState:    &initConfig{frameworkName: "testcafe", frameworkMetadatas: versions},
-			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", frameworkMetadatas: versions},
+			startState:    &initConfig{frameworkName: "testcafe"},
+			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0"},
 		},
 		{
 			name: "Second",
@@ -567,10 +567,10 @@ func TestAskVersion(t *testing.T) {
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 			},
 			execution: func(i *initiator, cfg *initConfig) error {
-				return i.askVersion(cfg)
+				return i.askVersion(cfg, metas)
 			},
-			startState:    &initConfig{frameworkName: "testcafe", frameworkMetadatas: versions},
-			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.3.0", frameworkMetadatas: versions},
+			startState:    &initConfig{frameworkName: "testcafe"},
+			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.3.0"},
 		},
 	}
 	for _, tt := range testCases {
@@ -844,12 +844,11 @@ func TestConfigure(t *testing.T) {
 				frameworkVersion:   "7.5.0",
 				rootDir:            ".",
 				cypressJson:        dir.Join("cypress.json"),
-				platformName:       "Windows 10",
+				platformName:       "windows 10",
 				browserName:        "googlechrome",
 				mode:               "sauce",
 				region:             "us-west-1",
 				artifactWhen:       config.WhenPass,
-				frameworkMetadatas: frameworkVersions,
 			},
 		},
 	}
