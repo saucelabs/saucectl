@@ -5,6 +5,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -78,4 +79,17 @@ func isDirectory(s interface{}) error {
 		return fmt.Errorf("%s is not a directory", val)
 	}
 	return nil
+}
+
+func uniqSorted(ss []string) []string {
+	var out []string
+	idx := make(map[string]bool)
+	for _, s := range ss {
+		if _, ok := idx[s]; !ok {
+			idx[s] = true
+			out = append(out, s)
+		}
+	}
+	sort.Strings(out)
+	return out
 }

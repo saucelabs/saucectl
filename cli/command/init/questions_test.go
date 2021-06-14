@@ -2,22 +2,27 @@ package init
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
-	"github.com/AlecAivazis/survey/v2/terminal"
-	"github.com/Netflix/go-expect"
-	"github.com/hinshun/vt10x"
-	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/framework"
-	"github.com/saucelabs/saucectl/internal/mocks"
-	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/fs"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/AlecAivazis/survey/v2/terminal"
+	"github.com/Netflix/go-expect"
+	"github.com/hinshun/vt10x"
+	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/devices"
+	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/mocks"
+	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/vmd"
 )
 
 // Test Case setup is partially reused from:
@@ -246,28 +251,32 @@ func TestAskDownloadWhen(t *testing.T) {
 }
 
 func TestAskDevice(t *testing.T) {
+	devs := []devices.Device{
+		{Name: "Google Pixel 3"},
+		{Name: "Google Pixel 4"},
+	}
 	testCases := []questionTest{
 		{
-			name:      "Empty is allowed",
+			name:      "Default Device",
 			procedure: stringToProcedure("✓🔚"),
 			ini:       &initiator{},
 			execution: func(i *initiator, cfg *initConfig) error {
-				return i.askDevice(cfg)
+				return i.askDevice(cfg, devs)
 			},
 			startState:    &initConfig{},
-			expectedState: &initConfig{},
+			expectedState: &initConfig{device: config.Device{Name: "Google Pixel 3"}},
 		},
 		{
 			name:      "Input is captured",
-			procedure: stringToProcedure("Google Pixel✓🔚"),
+			procedure: stringToProcedure("Pixel 4✓🔚"),
 			ini: &initiator{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 			},
 			execution: func(i *initiator, cfg *initConfig) error {
-				return i.askDevice(cfg)
+				return i.askDevice(cfg, devs)
 			},
 			startState:    &initConfig{},
-			expectedState: &initConfig{device: config.Device{Name: "Google Pixel"}},
+			expectedState: &initConfig{device: config.Device{Name: "Google Pixel 4"}},
 		},
 	}
 	for _, tt := range testCases {
@@ -278,11 +287,15 @@ func TestAskDevice(t *testing.T) {
 }
 
 func TestAskEmulator(t *testing.T) {
+	vmds := []vmd.VirtualDevice{
+		{Name: "Google Pixel 3 Emulator"},
+		{Name: "Google Pixel 4 Emulator"},
+	}
 	testCases := []questionTest{
 		{
 			name: "Empty is allowed",
 			procedure: func(c *expect.Console) error {
-				_, err := c.ExpectString("Type emulator name:")
+				_, err := c.ExpectString("Select emulator:")
 				if err != nil {
 					return err
 				}
@@ -302,23 +315,19 @@ func TestAskEmulator(t *testing.T) {
 			},
 			ini: &initiator{},
 			execution: func(i *initiator, cfg *initConfig) error {
-				return i.askEmulator(cfg)
+				return i.askEmulator(cfg, vmds)
 			},
 			startState:    &initConfig{},
-			expectedState: &initConfig{},
+			expectedState: &initConfig{emulator: config.Emulator{Name: "Google Pixel 3 Emulator"}},
 		},
 		{
 			name: "Input is captured",
 			procedure: func(c *expect.Console) error {
-				_, err := c.ExpectString("Type emulator name")
+				_, err := c.ExpectString("Select emulator:")
 				if err != nil {
 					return err
 				}
-				_, err = c.Send("Google Pixel Emulator")
-				if err != nil {
-					return err
-				}
-				_, err = c.Send(string(terminal.KeyEnter))
+				_, err = c.SendLine("Pixel 4")
 				if err != nil {
 					return err
 				}
@@ -332,10 +341,10 @@ func TestAskEmulator(t *testing.T) {
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 			},
 			execution: func(i *initiator, cfg *initConfig) error {
-				return i.askEmulator(cfg)
+				return i.askEmulator(cfg, vmds)
 			},
 			startState:    &initConfig{},
-			expectedState: &initConfig{emulator: config.Emulator{Name: "Google Pixel Emulator"}},
+			expectedState: &initConfig{emulator: config.Emulator{Name: "Google Pixel 4 Emulator"}},
 		},
 	}
 	for _, tt := range testCases {
@@ -765,6 +774,22 @@ func TestConfigure(t *testing.T) {
 		VersionsResponse:  frameworkVersions,
 		FrameworkResponse: []string{"cypress", "espresso"},
 	}
+	dr := &mocks.FakeDevicesReader{
+		GetDevicesFn: func(ctx context.Context, s string) ([]devices.Device, error) {
+			return []devices.Device{
+				{Name: "Google Pixel 3"},
+				{Name: "Google Pixel 4"},
+			}, nil
+		},
+	}
+	er := &mocks.FakeEmulatorsReader{
+		GetVirtualDevicesFn: func(ctx context.Context, s string) ([]vmd.VirtualDevice, error) {
+			return []vmd.VirtualDevice{
+				{Name: "Google Pixel Emulator"},
+				{Name: "Samsung Galaxy Emulator"},
+			}, nil
+		},
+	}
 
 	testCases := []questionTest{
 		{
@@ -778,16 +803,16 @@ func TestConfigure(t *testing.T) {
 				c.SendLine(dir.Join("android-app.apk"))
 				c.ExpectString("Test application")
 				c.SendLine(dir.Join("android-app.apk"))
-				c.ExpectString("Type device name:")
+				c.ExpectString("Select device:")
 				c.SendLine("Google Pixel 3")
-				c.ExpectString("Type emulator name:")
+				c.ExpectString("Select emulator:")
 				c.SendLine("Google Pixel Emulator")
 				c.ExpectString("Download artifacts:")
 				c.SendLine("when tests are passing")
 				c.ExpectEOF()
 				return nil
 			},
-			ini: &initiator{infoReader: ir},
+			ini: &initiator{infoReader: ir, deviceReader: dr, vmdReader: er},
 			execution: func(i *initiator, cfg *initConfig) error {
 				newCfg, err := i.configure()
 				if err != nil {
@@ -829,7 +854,7 @@ func TestConfigure(t *testing.T) {
 				c.ExpectEOF()
 				return nil
 			},
-			ini: &initiator{infoReader: ir},
+			ini: &initiator{infoReader: ir, deviceReader: dr, vmdReader: er},
 			execution: func(i *initiator, cfg *initConfig) error {
 				newCfg, err := i.configure()
 				if err != nil {

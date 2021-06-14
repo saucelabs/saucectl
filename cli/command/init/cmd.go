@@ -18,6 +18,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/vmd"
@@ -91,6 +92,7 @@ var configurators = map[string]func(cfg *initConfig) interface{}{
 var (
 	testComposerTimeout = 5 * time.Second
 	rdcTimeout          = 5 * time.Second
+	restoTimeout        = 5 * time.Second
 )
 
 // Run runs the command
@@ -109,10 +111,18 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		AccessKey:  creds.AccessKey,
 	}
 
+	rs := resto.Client{
+		HTTPClient: &http.Client{Timeout: restoTimeout},
+		URL:        region.FromString("us-west-1").APIBaseURL(), // Will updated as soon
+		Username:   creds.Username,
+		AccessKey:  creds.AccessKey,
+	}
+
 	ini := initiator{
 		stdio:        terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr},
 		infoReader:   &tc,
 		deviceReader: &rc,
+		vmdReader:    &rs,
 	}
 
 	initCfg, err := ini.configure()

@@ -11,6 +11,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/vmd"
 )
 
 // Check routines
@@ -130,7 +131,13 @@ func (ini *initiator) configure() (*initConfig, error) {
 	}
 
 	if needsEmulator(cfg.frameworkName) {
-		err = ini.askEmulator(cfg)
+		vmdKind := vmd.AndroidEmulator
+		virtualDevices, err := ini.vmdReader.GetVirtualDevices(context.Background(), vmdKind)
+
+		if err != nil {
+			return &initConfig{}, err
+		}
+		err = ini.askEmulator(cfg, virtualDevices)
 		if err != nil {
 			return &initConfig{}, err
 		}
@@ -219,7 +226,7 @@ func (ini *initiator) askDevice(cfg *initConfig, devs []devices.Device) error {
 	}
 	q := &survey.Select{
 		Message: "Select device:",
-		Options: deviceNames,
+		Options: uniqSorted(deviceNames),
 	}
 	err := survey.AskOne(q, &cfg.device.Name,
 		survey.WithShowCursor(true),
@@ -230,10 +237,14 @@ func (ini *initiator) askDevice(cfg *initConfig, devs []devices.Device) error {
 	return nil
 }
 
-func (ini *initiator) askEmulator(cfg *initConfig) error {
-	// TODO: Propose selection of emulators !
-	q := &survey.Input{
-		Message: "Type emulator name:",
+func (ini *initiator) askEmulator(cfg *initConfig, vmds []vmd.VirtualDevice) error {
+	var vmdNames []string
+	for _, v := range vmds {
+		vmdNames = append(vmdNames, v.Name)
+	}
+	q := &survey.Select{
+		Message: "Select emulator:",
+		Options: uniqSorted(vmdNames),
 	}
 	err := survey.AskOne(q, &cfg.emulator.Name,
 		survey.WithShowCursor(true),
@@ -283,7 +294,6 @@ func metaToBrowsers(metadatas []framework.Metadata, frameworkName, frameworkVers
 	}
 	return []string{}
 }
-
 
 func dockerBrowsers(framework string) []string {
 	switch framework {
