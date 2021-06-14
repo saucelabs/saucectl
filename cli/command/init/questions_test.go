@@ -8,6 +8,7 @@ import (
 	"github.com/Netflix/go-expect"
 	"github.com/hinshun/vt10x"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/stretchr/testify/require"
@@ -85,13 +86,14 @@ type questionTest struct {
 }
 
 func TestAskFramework(t *testing.T) {
+	ir := &mocks.FakeFrameworkInfoReader{
+		FrameworkResponse: []string{"cypress", "espresso", "playwright"},
+	}
 	testCases := []questionTest{
 		{
 			name:      "Default",
 			procedure: stringToProcedure("✓🔚"),
-			ini: &initiator{
-				infoReader: &mocks.FakeFrameworkInfoReader{},
-			},
+			ini:       &initiator{infoReader: ir},
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askFramework(cfg)
 			},
@@ -101,9 +103,7 @@ func TestAskFramework(t *testing.T) {
 		{
 			name:      "Type In",
 			procedure: stringToProcedure("esp✓🔚"),
-			ini: &initiator{
-				infoReader: &mocks.FakeFrameworkInfoReader{},
-			},
+			ini:       &initiator{infoReader: ir},
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askFramework(cfg)
 			},
@@ -113,9 +113,7 @@ func TestAskFramework(t *testing.T) {
 		{
 			name:      "Arrow In",
 			procedure: stringToProcedure("↓✓🔚"),
-			ini: &initiator{
-				infoReader: &mocks.FakeFrameworkInfoReader{},
-			},
+			ini:       &initiator{infoReader: ir},
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askFramework(cfg)
 			},
@@ -329,6 +327,38 @@ func TestAskEmulator(t *testing.T) {
 }
 
 func TestAskPlatform(t *testing.T) {
+	versions := []framework.Metadata{
+		{
+			FrameworkName:    "testcafe",
+			FrameworkVersion: "1.5.0",
+			DockerImage:      "dummy-docker-image",
+			Platforms: []framework.Platform{
+				{
+					PlatformName: "Windows 10",
+					BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
+				},
+				{
+					PlatformName: "macOS 11.00",
+					BrowserNames: []string{"safari", "googlechrome", "firefox", "microsoftedge"},
+				},
+			},
+		},
+		{
+			FrameworkName:    "testcafe",
+			FrameworkVersion: "1.3.0",
+			Platforms: []framework.Platform{
+				{
+					PlatformName: "Windows 10",
+					BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
+				},
+				{
+					PlatformName: "macOS 11.00",
+					BrowserNames: []string{"safari", "googlechrome", "firefox", "microsoftedge"},
+				},
+			},
+		},
+	}
+
 	testCases := []questionTest{
 		{
 			name: "Windows 10",
@@ -337,7 +367,7 @@ func TestAskPlatform(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				_, err = c.SendLine(string(terminal.KeyEnter))
+				_, err = c.SendLine("Windows 10")
 				if err != nil {
 					return err
 				}
@@ -345,7 +375,7 @@ func TestAskPlatform(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				_, err = c.SendLine(string(terminal.KeyEnter))
+				_, err = c.SendLine("chrome")
 				if err != nil {
 					return err
 				}
@@ -355,14 +385,12 @@ func TestAskPlatform(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initiator{
-				infoReader: &mocks.FakeFrameworkInfoReader{},
-			},
+			ini: &initiator{},
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askPlatform(cfg)
 			},
-			startState:    &initConfig{frameworkName: "testcafe"},
-			expectedState: &initConfig{frameworkName: "testcafe", browserName: "chrome", mode: "sauce", platformName: "Windows 10"},
+			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", frameworkMetadatas: versions},
+			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", browserName: "googlechrome", mode: "sauce", platformName: "Windows 10", frameworkMetadatas: versions},
 		},
 		{
 			name: "macOS",
@@ -389,14 +417,12 @@ func TestAskPlatform(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initiator{
-				infoReader: &mocks.FakeFrameworkInfoReader{},
-			},
+			ini: &initiator{},
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askPlatform(cfg)
 			},
-			startState:    &initConfig{frameworkName: "testcafe"},
-			expectedState: &initConfig{frameworkName: "testcafe", platformName: "macOS 11.0", browserName: "firefox", mode: "sauce"},
+			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", frameworkMetadatas: versions},
+			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", platformName: "macOS 11.00", browserName: "firefox", mode: "sauce", frameworkMetadatas: versions},
 		},
 		{
 			name: "docker",
@@ -423,14 +449,12 @@ func TestAskPlatform(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initiator{
-				infoReader: &mocks.FakeFrameworkInfoReader{},
-			},
+			ini: &initiator{},
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askPlatform(cfg)
 			},
-			startState:    &initConfig{frameworkName: "testcafe"},
-			expectedState: &initConfig{frameworkName: "testcafe", platformName: "", browserName: "chrome", mode: "docker"},
+			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", frameworkMetadatas: versions},
+			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", platformName: "", browserName: "chrome", mode: "docker", frameworkMetadatas: versions},
 		},
 	}
 	for _, tt := range testCases {
@@ -441,11 +465,42 @@ func TestAskPlatform(t *testing.T) {
 }
 
 func TestAskVersion(t *testing.T) {
+	versions := []framework.Metadata{
+		{
+			FrameworkName:    "testcafe",
+			FrameworkVersion: "1.5.0",
+			Platforms: []framework.Platform{
+				{
+					PlatformName: "macOS 11.00",
+					BrowserNames: []string{"safari", "googlechrome", "firefox", "microsoftedge"},
+				},
+				{
+					PlatformName: "Windows 10",
+					BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
+				},
+			},
+		},
+		{
+			FrameworkName:    "testcafe",
+			FrameworkVersion: "1.3.0",
+			Platforms: []framework.Platform{
+				{
+					PlatformName: "macOS 11.00",
+					BrowserNames: []string{"safari", "googlechrome", "firefox", "microsoftedge"},
+				},
+				{
+					PlatformName: "Windows 10",
+					BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
+				},
+			},
+		},
+	}
+
 	testCases := []questionTest{
 		{
 			name: "Default",
 			procedure: func(c *expect.Console) error {
-				_, err := c.ExpectString("Select cypress version")
+				_, err := c.ExpectString("Select testcafe version")
 				if err != nil {
 					return err
 				}
@@ -465,13 +520,13 @@ func TestAskVersion(t *testing.T) {
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askVersion(cfg)
 			},
-			startState:    &initConfig{frameworkName: "cypress"},
-			expectedState: &initConfig{frameworkName: "cypress", frameworkVersion: "7.6.0"},
+			startState:    &initConfig{frameworkName: "testcafe", frameworkMetadatas: versions},
+			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", frameworkMetadatas: versions},
 		},
 		{
 			name: "Second",
 			procedure: func(c *expect.Console) error {
-				_, err := c.ExpectString("Select cypress version")
+				_, err := c.ExpectString("Select testcafe version")
 				if err != nil {
 					return err
 				}
@@ -495,8 +550,8 @@ func TestAskVersion(t *testing.T) {
 			execution: func(i *initiator, cfg *initConfig) error {
 				return i.askVersion(cfg)
 			},
-			startState:    &initConfig{frameworkName: "cypress"},
-			expectedState: &initConfig{frameworkName: "cypress", frameworkVersion: "7.5.0"},
+			startState:    &initConfig{frameworkName: "testcafe", frameworkMetadatas: versions},
+			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.3.0", frameworkMetadatas: versions},
 		},
 	}
 	for _, tt := range testCases {
@@ -674,6 +729,24 @@ func TestConfigure(t *testing.T) {
 		fs.WithDir("ios-folder-app.app", fs.WithMode(0755)))
 	defer dir.Remove()
 
+	frameworkVersions := []framework.Metadata{
+		{
+			FrameworkName:    "cypress",
+			FrameworkVersion: "7.5.0",
+			DockerImage:      "dummy-docker-image",
+			Platforms: []framework.Platform{
+				{
+					PlatformName: "windows 10",
+					BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
+				},
+			},
+		},
+	}
+	ir := &mocks.FakeFrameworkInfoReader{
+		VersionsResponse:  frameworkVersions,
+		FrameworkResponse: []string{"cypress", "espresso"},
+	}
+
 	testCases := []questionTest{
 		{
 			name: "Complete Configuration (espresso)",
@@ -695,9 +768,7 @@ func TestConfigure(t *testing.T) {
 				c.ExpectEOF()
 				return nil
 			},
-			ini: &initiator{
-				infoReader: &mocks.FakeFrameworkInfoReader{},
-			},
+			ini: &initiator{infoReader: ir},
 			execution: func(i *initiator, cfg *initConfig) error {
 				newCfg, err := i.configure()
 				if err != nil {
@@ -739,9 +810,7 @@ func TestConfigure(t *testing.T) {
 				c.ExpectEOF()
 				return nil
 			},
-			ini: &initiator{
-				infoReader: &mocks.FakeFrameworkInfoReader{},
-			},
+			ini: &initiator{infoReader: ir},
 			execution: func(i *initiator, cfg *initConfig) error {
 				newCfg, err := i.configure()
 				if err != nil {
@@ -752,15 +821,16 @@ func TestConfigure(t *testing.T) {
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
-				frameworkName:    "cypress",
-				frameworkVersion: "7.5.0",
-				rootDir:          ".",
-				cypressJson:      dir.Join("cypress.json"),
-				platformName:     "Windows 10",
-				browserName:      "chrome",
-				mode:             "sauce",
-				region:           "us-west-1",
-				artifactWhen:     config.WhenPass,
+				frameworkName:      "cypress",
+				frameworkVersion:   "7.5.0",
+				rootDir:            ".",
+				cypressJson:        dir.Join("cypress.json"),
+				platformName:       "Windows 10",
+				browserName:        "googlechrome",
+				mode:               "sauce",
+				region:             "us-west-1",
+				artifactWhen:       config.WhenPass,
+				frameworkMetadatas: frameworkVersions,
 			},
 		},
 	}

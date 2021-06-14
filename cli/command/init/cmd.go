@@ -2,8 +2,10 @@ package init
 
 import (
 	"errors"
+	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/rs/zerolog/log"
@@ -11,8 +13,11 @@ import (
 
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/mocks"
+	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/sentry"
+	"github.com/saucelabs/saucectl/internal/testcomposer"
 )
 
 var (
@@ -45,16 +50,9 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	return cmd
 }
 
-type FrameworkInfoReader interface {
-	Frameworks() ([]string, error)
-	Versions(frameworkName, region string) ([]string, error)
-	Platforms(frameworkName, region, frameworkVersion string) ([]string, error)
-	Browsers(frameworkName, region, frameworkVersion, platformName string) ([]string, error)
-}
-
 type initiator struct {
 	stdio      terminal.Stdio
-	infoReader FrameworkInfoReader
+	infoReader framework.MetadataService
 }
 
 type initConfig struct {
@@ -71,6 +69,8 @@ type initConfig struct {
 	artifactWhen     config.When
 	device           config.Device
 	emulator         config.Emulator
+
+	frameworkMetadatas []framework.Metadata
 }
 
 var configurators = map[string]func(cfg *initConfig) interface{}{
@@ -82,12 +82,22 @@ var configurators = map[string]func(cfg *initConfig) interface{}{
 	"xcuitest":   configureXCUITest,
 }
 
+var (
+	testComposerTimeout = 5 * time.Second
+)
+
 // Run runs the command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
-	// FIXME: Provision using API
+	creds := credentials.Get()
+	tc := testcomposer.Client{
+		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
+		URL:         region.FromString("us-west-1").APIBaseURL(), // Will updated as soon
+		Credentials: creds,
+	}
+
 	ini := initiator{
 		stdio:      terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr},
-		infoReader: &mocks.FakeFrameworkInfoReader{},
+		infoReader: &tc,
 	}
 
 	initCfg, err := ini.configure()

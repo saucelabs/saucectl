@@ -1,12 +1,15 @@
 package init
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/region"
-	"strings"
 )
 
 // Check routines
@@ -61,6 +64,13 @@ func (ini *initiator) configure() (*initConfig, error) {
 
 	if needsCredentials() {
 		// TODO: Implement
+	}
+
+	if needsVersion(cfg.frameworkName) || needsPlatform(cfg.frameworkName) {
+		cfg.frameworkMetadatas, err = ini.infoReader.Versions(context.Background(), cfg.frameworkName)
+		if err != nil {
+			return &initConfig{}, err
+		}
 	}
 
 	if needsVersion(cfg.frameworkName) {
@@ -125,14 +135,12 @@ func (ini *initiator) configure() (*initConfig, error) {
 	return cfg, nil
 }
 
-
 func (ini *initiator) askRegion(cfg *initConfig) error {
 	p := &survey.Select{
 		Message: "Select region:",
 		Options: []string{region.USWest1.String(), region.EUCentral1.String()},
 		Default: region.USWest1.String(),
 	}
-
 
 	err := survey.AskOne(p, &cfg.region, survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
 	if err != nil {
@@ -142,7 +150,7 @@ func (ini *initiator) askRegion(cfg *initConfig) error {
 }
 
 func (ini *initiator) askFramework(cfg *initConfig) error {
-	values, err := ini.infoReader.Frameworks()
+	values, err := ini.infoReader.Frameworks(context.Background())
 	if err != nil {
 		return err
 	}
@@ -196,7 +204,6 @@ func (ini *initiator) askDownloadWhen(cfg *initConfig) error {
 	return nil
 }
 
-
 func (ini *initiator) askDevice(cfg *initConfig) error {
 	// TODO: Check if device exists !
 	q := &survey.Input{
@@ -225,14 +232,63 @@ func (ini *initiator) askEmulator(cfg *initConfig) error {
 	return nil
 }
 
+func platformsForVersion(metadatas []framework.Metadata, frameworkName, version string) ([]framework.Platform, error) {
+	var platforms []framework.Platform
+	for _, m := range metadatas {
+		if m.FrameworkVersion == version {
+			platforms = m.Platforms
+		}
+		if m.DockerImage != "" {
+			platforms = append(platforms, framework.Platform{
+				PlatformName: "docker",
+				BrowserNames: dockerBrowsers(frameworkName),
+			})
+		}
+	}
+	return platforms, nil
+}
+
+func dockerBrowsers(framework string) []string {
+	switch framework {
+	case "playwright":
+		return []string{"chromium", "firefox"}
+	default:
+		return []string{"chrome", "firefox"}
+	}
+}
+
 func (ini *initiator) askPlatform(cfg *initConfig) error {
-	// Select Platform
-	platforms, _ := ini.infoReader.Platforms(cfg.frameworkName, cfg.region, cfg.frameworkVersion)
+	// Prepare platform / browsers
+	platforms, err := platformsForVersion(cfg.frameworkMetadatas, cfg.frameworkName, cfg.frameworkVersion)
+	if err != nil {
+		return err
+	}
+
+	var platformChoices []string
+	browserChoices := map[string][]string{}
+	for _, p := range platforms {
+		platformChoices = append(platformChoices, p.PlatformName)
+		browserChoices[p.PlatformName] = p.BrowserNames
+	}
+
 	q := &survey.Select{
 		Message: "Select platform:",
-		Options: platforms,
+		Options: platformChoices,
 	}
-	err := survey.AskOne(q, &cfg.platformName,
+	err = survey.AskOne(q, &cfg.platformName,
+		survey.WithShowCursor(true),
+		survey.WithValidator(survey.Required),
+		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
+	if err != nil {
+		return err
+	}
+
+	// Select browser
+	q = &survey.Select{
+		Message: "Select Browser:",
+		Options: browserChoices[cfg.platformName],
+	}
+	err = survey.AskOne(q, &cfg.browserName,
 		survey.WithShowCursor(true),
 		survey.WithValidator(survey.Required),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
@@ -245,34 +301,20 @@ func (ini *initiator) askPlatform(cfg *initConfig) error {
 		cfg.platformName = ""
 		cfg.mode = "docker"
 	}
-
-	// Select browser
-	browsers, _ := ini.infoReader.Browsers(cfg.frameworkName, cfg.region, cfg.frameworkVersion, cfg.platformName)
-	q = &survey.Select{
-		Message: "Select Browser:",
-		Options: browsers,
-	}
-	err = survey.AskOne(q, &cfg.browserName,
-		survey.WithShowCursor(true),
-		survey.WithValidator(survey.Required),
-		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
 func (ini *initiator) askVersion(cfg *initConfig) error {
-	versions, err := ini.infoReader.Versions(cfg.frameworkName, cfg.region)
-	if err != nil {
-		return err
+	var versions []string
+	for _, v := range cfg.frameworkMetadatas {
+		versions = append(versions, v.FrameworkVersion)
 	}
 	q := &survey.Select{
 		Message: fmt.Sprintf("Select %s version:", cfg.frameworkName),
 		Options: versions,
 	}
 
-	err = survey.AskOne(q, &cfg.frameworkVersion,
+	err := survey.AskOne(q, &cfg.frameworkVersion,
 		survey.WithShowCursor(true),
 		survey.WithValidator(survey.Required),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
@@ -281,7 +323,6 @@ func (ini *initiator) askVersion(cfg *initConfig) error {
 	}
 	return nil
 }
-
 
 func (ini *initiator) askFile(message string, val survey.Validator, comp completor, targetValue *string) error {
 	q := &survey.Input{
