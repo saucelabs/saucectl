@@ -74,6 +74,13 @@ type globalFlags struct {
 	dryRun         bool
 	tags           []string
 	build          string
+	artifacts      struct {
+		download struct {
+			when      string
+			match     []string
+			directory string
+		}
+	}
 }
 
 // Command creates the `run` command
@@ -117,6 +124,11 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	// Metadata
 	cmd.PersistentFlags().StringSliceVar(&gFlags.tags, "tags", []string{}, "Adds tags to tests")
 	cmd.PersistentFlags().StringVar(&gFlags.build, "build", "", "Associates tests with a build")
+
+	// Artifacts
+	cmd.PersistentFlags().StringVar(&gFlags.artifacts.download.when, "artifacts.download.when", "never", "Specifies when to download test artifacts")
+	cmd.PersistentFlags().StringSliceVar(&gFlags.artifacts.download.match, "artifacts.download.match", []string{}, "Specifies which test artifacts to download")
+	cmd.PersistentFlags().StringVar(&gFlags.artifacts.download.directory, "artifacts.download.directory", "", "Specifies the location where to download test artifacts to")
 
 	cmd.Flags().MarkDeprecated("test-env", "please set mode in config file")
 
@@ -224,7 +236,7 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 
 	p.Sauce.Metadata.ExpandEnv()
 	applyDefaultValues(&p.Sauce)
-	overrideCliParameters(cmd, &p.Sauce)
+	overrideCliParameters(cmd, &p.Sauce, &p.Artifacts)
 
 	// Merge env from CLI args and job config. CLI args take precedence.
 	for k, v := range gFlags.env {
@@ -337,7 +349,7 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 
 	p.Sauce.Metadata.ExpandEnv()
 	applyDefaultValues(&p.Sauce)
-	overrideCliParameters(cmd, &p.Sauce)
+	overrideCliParameters(cmd, &p.Sauce, &p.Artifacts)
 
 	// Merge env from CLI args and job config. CLI args take precedence.
 	for k, v := range gFlags.env {
@@ -444,7 +456,7 @@ func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 
 	p.Sauce.Metadata.ExpandEnv()
 	applyDefaultValues(&p.Sauce)
-	overrideCliParameters(cmd, &p.Sauce)
+	overrideCliParameters(cmd, &p.Sauce, &p.Artifacts)
 
 	for k, v := range gFlags.env {
 		for _, s := range p.Suites {
@@ -549,7 +561,7 @@ func runXcuitest(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc
 	}
 	p.Sauce.Metadata.ExpandEnv()
 	applyDefaultValues(&p.Sauce)
-	overrideCliParameters(cmd, &p.Sauce)
+	overrideCliParameters(cmd, &p.Sauce, &p.Artifacts)
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
@@ -612,7 +624,7 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 	}
 	p.Sauce.Metadata.ExpandEnv()
 	applyDefaultValues(&p.Sauce)
-	overrideCliParameters(cmd, &p.Sauce)
+	overrideCliParameters(cmd, &p.Sauce, &p.Artifacts)
 
 	for k, v := range gFlags.env {
 		for _, s := range p.Suites {
@@ -733,7 +745,7 @@ func applyDefaultValues(sauce *config.SauceConfig) {
 	}
 }
 
-func overrideCliParameters(cmd *cobra.Command, sauce *config.SauceConfig) {
+func overrideCliParameters(cmd *cobra.Command, sauce *config.SauceConfig, arti *config.Artifacts) {
 	if cmd.Flags().Lookup("region").Changed {
 		sauce.Region = gFlags.regionFlag
 	}
@@ -757,6 +769,15 @@ func overrideCliParameters(cmd *cobra.Command, sauce *config.SauceConfig) {
 	}
 	if len(gFlags.tags) != 0 {
 		sauce.Metadata.Tags = gFlags.tags
+	}
+	if cmd.Flags().Lookup("artifacts.download.when").Changed {
+		arti.Download.When = config.When(gFlags.artifacts.download.when)
+	}
+	if len(gFlags.artifacts.download.match) != 0 {
+		arti.Download.Match = gFlags.artifacts.download.match
+	}
+	if gFlags.artifacts.download.directory != "" {
+		arti.Download.Directory = gFlags.artifacts.download.directory
 	}
 }
 
