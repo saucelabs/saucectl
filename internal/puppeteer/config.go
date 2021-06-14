@@ -13,18 +13,18 @@ import (
 
 // Project represents the puppeteer project configuration.
 type Project struct {
-	config.TypeDef `yaml:",inline"`
-	ShowConsoleLog bool
+	config.TypeDef  `yaml:",inline"`
+	ShowConsoleLog  bool
 	SaucectlVersion string             `yaml:"-" json:"saucectlVersion"`
-	ConfigFilePath string             `yaml:"-" json:"-"`
-	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
-	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
-	BeforeExec     []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker         config.Docker      `yaml:"docker,omitempty" json:"docker"`
-	Puppeteer      Puppeteer          `yaml:"puppeteer,omitempty" json:"puppeteer"`
-	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
-	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
-	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
+	ConfigFilePath  string             `yaml:"-" json:"-"`
+	Sauce           config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
+	Suites          []Suite            `yaml:"suites,omitempty" json:"suites"`
+	BeforeExec      []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
+	Docker          config.Docker      `yaml:"docker,omitempty" json:"docker"`
+	Puppeteer       Puppeteer          `yaml:"puppeteer,omitempty" json:"puppeteer"`
+	Npm             config.Npm         `yaml:"npm,omitempty" json:"npm"`
+	RootDir         string             `yaml:"rootDir,omitempty" json:"rootDir"`
+	Artifacts       config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
 }
 
 // Suite represents the puppeteer test suite configuration.

@@ -18,20 +18,20 @@ var appleDeviceRegex = regexp.MustCompile(`(?i)(iP)(hone|ad)[\w\s\d]*(Simulator)
 
 // Project represents the testcafe project configuration.
 type Project struct {
-	config.TypeDef `yaml:",inline"`
-	ShowConsoleLog bool
+	config.TypeDef  `yaml:",inline"`
+	ShowConsoleLog  bool
 	SaucectlVersion string             `yaml:"-" json:"saucectlVersion"`
-	ConfigFilePath string             `yaml:"-" json:"-"`
-	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
-	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
-	BeforeExec     []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker         config.Docker      `yaml:"docker,omitempty" json:"docker"`
-	Testcafe       Testcafe           `yaml:"testcafe,omitempty" json:"testcafe"`
-	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
-	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
-	RunnerVersion  string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
-	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
-	Defaults       config.Defaults    `yaml:"defaults,omitempty" json:"defaults"`
+	ConfigFilePath  string             `yaml:"-" json:"-"`
+	Sauce           config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
+	Suites          []Suite            `yaml:"suites,omitempty" json:"suites"`
+	BeforeExec      []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
+	Docker          config.Docker      `yaml:"docker,omitempty" json:"docker"`
+	Testcafe        Testcafe           `yaml:"testcafe,omitempty" json:"testcafe"`
+	Npm             config.Npm         `yaml:"npm,omitempty" json:"npm"`
+	RootDir         string             `yaml:"rootDir,omitempty" json:"rootDir"`
+	RunnerVersion   string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
+	Artifacts       config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
+	Defaults        config.Defaults    `yaml:"defaults,omitempty" json:"defaults"`
 }
 
 // Suite represents the testcafe test suite configuration.
