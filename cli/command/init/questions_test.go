@@ -17,11 +17,30 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 // Test Case setup is partially reused from:
 //  - https://github.com/AlecAivazis/survey/blob/master/survey_test.go
 //  - https://github.com/AlecAivazis/survey/blob/master/survey_posix_test.go
+
+// As everything related to console may result in hanging, it's preferable
+// to add a timeout to avoid any test to stay for ages.
+func executeQuestionTestWithTimeout(t *testing.T, test questionTest) {
+	timeout := time.After(2 * time.Second)
+	done := make(chan bool)
+
+	go func() {
+		executeQuestionTest(t, test)
+		done <- true
+	}()
+
+	select {
+	case <-timeout:
+		t.Fatal("Test timed-out")
+	case <-done:
+	}
+}
 
 func executeQuestionTest(t *testing.T, test questionTest) {
 	buf := new(bytes.Buffer)
@@ -177,7 +196,7 @@ func TestAskRegion(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(lt *testing.T) {
-			executeQuestionTest(lt, tt)
+			executeQuestionTestWithTimeout(lt, tt)
 		})
 	}
 }
@@ -221,7 +240,7 @@ func TestAskDownloadWhen(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(lt *testing.T) {
-			executeQuestionTest(lt, tt)
+			executeQuestionTestWithTimeout(lt, tt)
 		})
 	}
 }
@@ -253,7 +272,7 @@ func TestAskDevice(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(lt *testing.T) {
-			executeQuestionTest(lt, tt)
+			executeQuestionTestWithTimeout(lt, tt)
 		})
 	}
 }
@@ -321,7 +340,7 @@ func TestAskEmulator(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(lt *testing.T) {
-			executeQuestionTest(lt, tt)
+			executeQuestionTestWithTimeout(lt, tt)
 		})
 	}
 }
@@ -459,7 +478,7 @@ func TestAskPlatform(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(lt *testing.T) {
-			executeQuestionTest(lt, tt)
+			executeQuestionTestWithTimeout(lt, tt)
 		})
 	}
 }
@@ -556,7 +575,7 @@ func TestAskVersion(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(lt *testing.T) {
-			executeQuestionTest(lt, tt)
+			executeQuestionTestWithTimeout(lt, tt)
 		})
 	}
 }
@@ -619,7 +638,7 @@ func TestAskFile(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(lt *testing.T) {
-			executeQuestionTest(lt, tt)
+			executeQuestionTestWithTimeout(lt, tt)
 		})
 	}
 }
@@ -836,7 +855,7 @@ func TestConfigure(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(lt *testing.T) {
-			executeQuestionTest(lt, tt)
+			executeQuestionTestWithTimeout(lt, tt)
 		})
 	}
 }
