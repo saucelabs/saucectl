@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/stretchr/testify/assert"
 )
@@ -331,7 +333,7 @@ func TestClient_DownloadArtifact(t *testing.T) {
 
 	rc := New(ts.URL, "dummy-user", "dummy-key", 10*time.Second, config.ArtifactDownload{
 		Directory: tempDir,
-		Match: []string{"junit.xml"},
+		Match:     []string{"junit.xml"},
 	})
 	rc.DownloadArtifact("test-123")
 
@@ -343,5 +345,76 @@ func TestClient_DownloadArtifact(t *testing.T) {
 
 	if string(d) != fileContent {
 		t.Errorf("file content mismatch: got '%v', expects: '%v'", d, fileContent)
+	}
+}
+
+func TestClient_GetDevices(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		completeQuery := fmt.Sprintf("%s?%s", r.URL.Path, r.URL.RawQuery)
+		switch completeQuery {
+		case "/v1/rdc/devices/filtered?os=ANDROID":
+			w.Write([]byte(`{"entities":[{"name": "OnePlus 5T"},{"name": "OnePlus 6"},{"name": "OnePlus 6T"}]}`))
+		case "/v1/rdc/devices/filtered?os=IOS":
+			w.Write([]byte(`{"entities":[{"name": "iPhone XR"},{"name": "iPhone XS"},{"name": "iPhone X"}]}`))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer ts.Close()
+
+	cl := Client{
+		HTTPClient:     &http.Client{Timeout: 1 * time.Second},
+		URL:            ts.URL,
+		Username:       "dummy-user",
+		AccessKey:      "dummy-key",
+	}
+	type args struct {
+		ctx context.Context
+		OS  string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []devices.Device
+		wantErr bool
+	}{
+		{
+			name: "Android devices",
+			args: args{
+				ctx: context.Background(),
+				OS:  "ANDROID",
+			},
+			want: []devices.Device{
+				{Name: "OnePlus 5T"},
+				{Name: "OnePlus 6"},
+				{Name: "OnePlus 6T"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "iOS devices",
+			args: args{
+				ctx: context.Background(),
+				OS:  "IOS",
+			},
+			want: []devices.Device{
+				{Name: "iPhone XR"},
+				{Name: "iPhone XS"},
+				{Name: "iPhone X"},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := cl.GetDevices(tt.args.ctx, tt.args.OS)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetDevices() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetDevices() got = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
