@@ -190,11 +190,10 @@ func TestClient_Search(t *testing.T) {
 				FrameworkVersion: "1",
 			}},
 			want: framework.Metadata{
-				FrameworkName:      "testycles",
-				FrameworkVersion:   "1",
-				CloudRunnerVersion: "0.1.0",
-				DockerImage:        "sauce/testycles:v1+v0.1.0",
-				GitRelease:         "",
+				FrameworkName:    "testycles",
+				FrameworkVersion: "1",
+				DockerImage:      "sauce/testycles:v1+v0.1.0",
+				GitRelease:       "",
 			},
 			wantErr: false,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
@@ -203,8 +202,7 @@ func TestClient_Search(t *testing.T) {
 					Name:    "testycles",
 					Version: "1",
 					Runner: runner{
-						CloudRunnerVersion: "0.1.0",
-						DockerImage:        "sauce/testycles:v1+v0.1.0",
+						DockerImage: "sauce/testycles:v1+v0.1.0",
 					},
 				})
 			},
@@ -238,7 +236,7 @@ func TestClient_Search(t *testing.T) {
 				t.Errorf("GetImage() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetImage() got = %v, want %v", got, tt.want)
 			}
 		})
@@ -326,6 +324,159 @@ func TestClient_UploadAsset(t *testing.T) {
 			if err := tt.client.UploadAsset(tt.args.jobID, tt.args.fileName, tt.args.contentType, tt.args.content); (err != nil) != tt.wantErr {
 				t.Errorf("UploadAsset() error = %v, wantErr %v", err, tt.wantErr)
 			}
+		})
+	}
+}
+
+func TestClient_Frameworks(t *testing.T) {
+	tests := []struct {
+		name     string
+		body     string
+		httpCode int
+		want     []string
+		wantErr  bool
+	}{
+		{
+			name:     "HTTP - 200",
+			body:     `["cypress","playwright","puppeteer","testcafe","espresso","xcuitest"]`,
+			httpCode: 200,
+			want:     []string{"cypress", "playwright", "puppeteer", "testcafe", "espresso", "xcuitest"},
+			wantErr:  false,
+		},
+		{
+			name:     "HTTP - 500",
+			body:     ``,
+			httpCode: 500,
+			want:     []string{},
+			wantErr:  true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				switch r.URL.Path {
+				case "/v1/testcomposer/frameworks":
+					w.WriteHeader(tt.httpCode)
+					w.Write([]byte(tt.body))
+				default:
+					w.WriteHeader(http.StatusInternalServerError)
+				}
+			}))
+			c := &Client{
+				HTTPClient:  http.DefaultClient,
+				URL:         ts.URL,
+				Credentials: credentials.Credentials{Username: "test", AccessKey: "123"},
+			}
+			got, err := c.Frameworks(context.Background())
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Frameworks() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Frameworks() got = %v, want %v", got, tt.want)
+			}
+			ts.Close()
+		})
+	}
+}
+
+func TestClient_Versions(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/testcomposer/frameworks/cypress/versions":
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`[{"name":"cypress","version":"7.3.0","runner":{"cloudRunnerVersion":"","dockerImage":"saucelabs/stt-cypress-mocha-node:v7.1.1","gitRelease":"saucelabs/sauce-cypress-runner:v7.1.1"},"platforms":[{"name":"windows 10","browsers":["googlechrome","firefox","microsoftedge"]}]},{"name":"cypress","version":"7.1.0","runner":{"cloudRunnerVersion":"","dockerImage":"saucelabs/stt-cypress-mocha-node:v7.0.6","gitRelease":"saucelabs/sauce-cypress-runner:v7.0.6"},"platforms":[{"name":"windows 10","browsers":["googlechrome","firefox","microsoftedge"]}]},{"name":"cypress","version":"6.6.0","runner":{"cloudRunnerVersion":"","dockerImage":"saucelabs/stt-cypress-mocha-node:v6.0.2","gitRelease":"saucelabs/sauce-cypress-runner:v6.0.2"},"platforms":[{"name":"windows 10","browsers":["googlechrome","firefox","microsoftedge"]}]}]`))
+		case "/v1/testcomposer/frameworks/non-existent/versions":
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}))
+	defer ts.Close()
+	c := &Client{
+		HTTPClient:  ts.Client(),
+		URL:         ts.URL,
+		Credentials: credentials.Credentials{Username: "test", AccessKey: "123"},
+	}
+	type args struct {
+		client        *Client
+		frameworkName string
+	}
+	tests := []struct {
+		name    string
+		want    []framework.Metadata
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "HTTP - 200",
+			args: args{
+				frameworkName: "cypress",
+			},
+			want: []framework.Metadata{
+				{
+					FrameworkName:    "cypress",
+					FrameworkVersion: "7.3.0",
+					GitRelease:       "saucelabs/sauce-cypress-runner:v7.1.1",
+					DockerImage:      "saucelabs/stt-cypress-mocha-node:v7.1.1",
+					Platforms: []framework.Platform{
+						{
+							PlatformName: "windows 10",
+							BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
+						},
+					},
+				}, {
+					FrameworkName:    "cypress",
+					FrameworkVersion: "7.1.0",
+					GitRelease:       "saucelabs/sauce-cypress-runner:v7.0.6",
+					DockerImage:      "saucelabs/stt-cypress-mocha-node:v7.0.6",
+					Platforms: []framework.Platform{
+						{
+							PlatformName: "windows 10",
+							BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
+						},
+					},
+				}, {
+					FrameworkName:    "cypress",
+					FrameworkVersion: "6.6.0",
+					GitRelease:       "saucelabs/sauce-cypress-runner:v6.0.2",
+					DockerImage:      "saucelabs/stt-cypress-mocha-node:v6.0.2",
+					Platforms: []framework.Platform{
+						{
+							PlatformName: "windows 10",
+							BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		}, {
+			name: "HTTP - 500",
+			args: args{
+				frameworkName: "buggy",
+			},
+			want:    []framework.Metadata{},
+			wantErr: true,
+		}, {
+			name: "HTTP - 404",
+			args: args{
+				frameworkName: "Non-existent",
+			},
+			want:    []framework.Metadata{},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := c.Versions(context.Background(), tt.args.frameworkName)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Versions() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Versions() got = %v, want %v", got, tt.want)
+			}
+			ts.Close()
 		})
 	}
 }

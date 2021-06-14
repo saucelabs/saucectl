@@ -40,9 +40,15 @@ type Job struct {
 
 // FrameworkResponse represents the response body for framework information.
 type FrameworkResponse struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
-	Runner  runner `json:"runner"`
+	Name      string     `json:"name"`
+	Version   string     `json:"version"`
+	Runner    runner     `json:"runner"`
+	Platforms []platform `json:"platforms"`
+}
+
+type platform struct {
+	Name     string
+	Browsers []string
 }
 
 type runner struct {
@@ -148,7 +154,6 @@ func (c *Client) Search(ctx context.Context, opts framework.SearchOptions) (fram
 	m := framework.Metadata{
 		FrameworkName:      resp.Name,
 		FrameworkVersion:   resp.Version,
-		CloudRunnerVersion: resp.Runner.CloudRunnerVersion,
 		DockerImage:        resp.Runner.DockerImage,
 		GitRelease:         resp.Runner.GitRelease,
 	}
@@ -225,4 +230,56 @@ func (c *Client) UploadAsset(jobID string, fileName string, contentType string, 
 		return err
 	}
 	return doRequestAsset(c.HTTPClient, request)
+}
+
+// Frameworks returns the list of available frameworks.
+func (c *Client) Frameworks(ctx context.Context) ([]string, error) {
+	url := fmt.Sprintf("%s/v1/testcomposer/frameworks", c.URL)
+
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return []string{}, err
+	}
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+
+	var resp []string
+	if err = c.doJSONResponse(req, 200, &resp); err != nil {
+		return []string{}, err
+	}
+	return resp, nil
+}
+
+// Versions return the list of available versions for a specific framework and region.
+func (c *Client) Versions(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
+	url := fmt.Sprintf("%s/v1/testcomposer/frameworks/%s/versions", c.URL, frameworkName)
+
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return []framework.Metadata{}, err
+	}
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+
+	var resp []FrameworkResponse
+	if err = c.doJSONResponse(req, 200, &resp); err != nil {
+		return []framework.Metadata{}, err
+	}
+
+	var frameworks []framework.Metadata
+	for _, f := range resp {
+		var platforms []framework.Platform
+		for _, p := range f.Platforms {
+			platforms = append(platforms, framework.Platform{
+				PlatformName: p.Name,
+				BrowserNames: p.Browsers,
+			})
+		}
+		frameworks = append(frameworks, framework.Metadata{
+			FrameworkName:      f.Name,
+			FrameworkVersion:   f.Version,
+			DockerImage:        f.Runner.DockerImage,
+			GitRelease:         f.Runner.GitRelease,
+			Platforms:          platforms,
+		})
+	}
+	return frameworks, nil
 }
