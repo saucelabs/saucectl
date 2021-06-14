@@ -20,6 +20,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
+	"github.com/saucelabs/saucectl/internal/vmd"
 )
 
 var (
@@ -56,6 +57,7 @@ type initiator struct {
 	stdio        terminal.Stdio
 	infoReader   framework.MetadataService
 	deviceReader devices.Reader
+	vmdReader    vmd.Reader
 
 	frameworks        []string
 	frameworkMetadata []framework.Metadata

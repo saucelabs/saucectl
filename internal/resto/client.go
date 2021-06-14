@@ -10,14 +10,16 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/ryanuber/go-glob"
-	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/requesth"
 
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/requesth"
+	"github.com/saucelabs/saucectl/internal/vmd"
 )
 
 var (
@@ -391,4 +393,42 @@ func (c *Client) downloadArtifact(targetDir, jobID, fileName string) error {
 	}
 	targetFile := filepath.Join(targetDir, fileName)
 	return os.WriteFile(targetFile, content, 0644)
+}
+
+
+type platformEntry struct {
+	LongName string `json:"long_name"`
+}
+
+func (c *Client) GetVirtualDevices(ctx context.Context, kind string) ([]vmd.VirtualDevice, error) {
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/rest/v1.1/info/platforms/all", c.URL), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	res, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return []vmd.VirtualDevice{}, err
+	}
+
+	var resp []platformEntry
+	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+		return []vmd.VirtualDevice{}, err
+	}
+
+	key := "Emulator"
+	if kind == vmd.IOSSimulator {
+		key = "Simulator"
+	}
+
+	var dev []vmd.VirtualDevice
+	for _, d := range resp {
+		if strings.Contains(d.LongName, key) {
+			dev = append(dev, vmd.VirtualDevice{
+				Name: d.LongName,
+			})
+		}
+	}
+	return dev, nil
 }

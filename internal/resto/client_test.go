@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"sort"
 	"testing"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/vmd"
 )
 
 func TestClient_GetJobDetails(t *testing.T) {
@@ -411,6 +413,71 @@ func TestClient_TestStop(t *testing.T) {
 			got, err := tc.client.StopJob(context.Background(), tc.jobID)
 			assert.Equal(t, err, tc.expectedErr)
 			assert.Equal(t, got, tc.expectedResp)
+		})
+	}
+}
+
+func TestClient_GetVirtualDevices(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/rest/v1.1/info/platforms/all":
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`[{"long_name": "Samsung Galaxy S7 FHD GoogleAPI Emulator"},{"long_name": "Samsung Galaxy S9 HD GoogleAPI Emulator"},{"long_name": "iPhone 6s Simulator"},{"long_name": "iPhone 8 Plus Simulator"}]`))
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}))
+
+	c := &Client{
+		HTTPClient: ts.Client(),
+		URL:        ts.URL,
+		Username:   "dummy-user",
+		AccessKey:  "dummy-key",
+	}
+
+	type args struct {
+		ctx  context.Context
+		kind string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []vmd.VirtualDevice
+		wantErr bool
+	}{
+		{
+			name: "iOS Virtual Devices",
+			args: args{
+				ctx:  context.Background(),
+				kind: vmd.IOSSimulator,
+			},
+			want: []vmd.VirtualDevice{
+				{Name: "iPhone 6s Simulator"},
+				{Name: "iPhone 8 Plus Simulator"},
+			},
+		},
+		{
+			name: "Android Virtual Devices",
+			args: args{
+				ctx:  context.Background(),
+				kind: vmd.AndroidEmulator,
+			},
+			want: []vmd.VirtualDevice{
+				{Name: "Samsung Galaxy S7 FHD GoogleAPI Emulator"},
+				{Name: "Samsung Galaxy S9 HD GoogleAPI Emulator"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := c.GetVirtualDevices(tt.args.ctx, tt.args.kind)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetVirtualDevices() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetVirtualDevices() got = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }
