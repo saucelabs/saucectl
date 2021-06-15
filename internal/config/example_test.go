@@ -18,5 +18,5 @@ func ExampleMetadata_ExpandEnv() {
 	m.ExpandEnv()
 
 	fmt.Println(m)
-	// Output: {Test Envy [xp1] Build Bob}
+	// Output: {[xp1] Build Bob}
 }
