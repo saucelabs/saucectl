@@ -111,7 +111,7 @@ type questionTest struct {
 
 func TestAskFramework(t *testing.T) {
 	ir := &mocks.FakeFrameworkInfoReader{
-		FrameworkResponse: []string{"cypress", "espresso", "playwright"},
+		FrameworkResponse: []framework.Framework{{Name: "cypress"}, {Name: "espresso"}, {Name: "playwright"}},
 	}
 	testCases := []questionTest{
 		{
@@ -772,7 +772,7 @@ func TestConfigure(t *testing.T) {
 	}
 	ir := &mocks.FakeFrameworkInfoReader{
 		VersionsResponse:  frameworkVersions,
-		FrameworkResponse: []string{"cypress", "espresso"},
+		FrameworkResponse: []framework.Framework{{Name: "cypress"}, {Name: "espresso"}},
 	}
 	dr := &mocks.FakeDevicesReader{
 		GetDevicesFn: func(ctx context.Context, s string) ([]devices.Device, error) {
@@ -865,15 +865,15 @@ func TestConfigure(t *testing.T) {
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
-				frameworkName:      "cypress",
-				frameworkVersion:   "7.5.0",
-				rootDir:            ".",
-				cypressJson:        dir.Join("cypress.json"),
-				platformName:       "windows 10",
-				browserName:        "googlechrome",
-				mode:               "sauce",
-				region:             "us-west-1",
-				artifactWhen:       config.WhenPass,
+				frameworkName:    "cypress",
+				frameworkVersion: "7.5.0",
+				rootDir:          ".",
+				cypressJson:      dir.Join("cypress.json"),
+				platformName:     "windows 10",
+				browserName:      "googlechrome",
+				mode:             "sauce",
+				region:           "us-west-1",
+				artifactWhen:     config.WhenPass,
 			},
 		},
 	}

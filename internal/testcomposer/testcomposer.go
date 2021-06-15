@@ -232,19 +232,22 @@ func (c *Client) UploadAsset(jobID string, fileName string, contentType string, 
 	return doRequestAsset(c.HTTPClient, request)
 }
 
+
+
 // Frameworks returns the list of available frameworks.
-func (c *Client) Frameworks(ctx context.Context) ([]string, error) {
+func (c *Client) Frameworks(ctx context.Context) ([]framework.Framework, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/frameworks", c.URL)
+	//url := fmt.Sprintf("http://127.0.0.1:8080/rest/v1/frameworks")
 
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return []string{}, err
+		return []framework.Framework{}, err
 	}
 	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
 
-	var resp []string
+	var resp []framework.Framework
 	if err = c.doJSONResponse(req, 200, &resp); err != nil {
-		return []string{}, err
+		return []framework.Framework{}, err
 	}
 	return resp, nil
 }

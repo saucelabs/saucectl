@@ -333,21 +333,28 @@ func TestClient_Frameworks(t *testing.T) {
 		name     string
 		body     string
 		httpCode int
-		want     []string
+		want     []framework.Framework
 		wantErr  bool
 	}{
 		{
 			name:     "HTTP - 200",
-			body:     `["cypress","playwright","puppeteer","testcafe","espresso","xcuitest"]`,
+			body:     `[{"name": "cypress"},{"name":"playwright"},{"name":"puppeteer"},{"name":"testcafe"},{"name":"espresso"},{"name":"xcuitest"}]`,
 			httpCode: 200,
-			want:     []string{"cypress", "playwright", "puppeteer", "testcafe", "espresso", "xcuitest"},
+			want:     []framework.Framework{
+				{Name: "cypress"},
+				{Name: "playwright"},
+				{Name: "puppeteer"},
+				{Name: "testcafe"},
+				{Name: "espresso"},
+				{Name: "xcuitest"},
+			},
 			wantErr:  false,
 		},
 		{
 			name:     "HTTP - 500",
 			body:     ``,
 			httpCode: 500,
-			want:     []string{},
+			want:     []framework.Framework{},
 			wantErr:  true,
 		},
 	}

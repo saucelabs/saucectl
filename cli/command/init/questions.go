@@ -170,9 +170,14 @@ func (ini *initiator) askFramework(cfg *initConfig) error {
 		return err
 	}
 
+	var frameworks []string
+	for _, f := range values {
+		frameworks = append(frameworks, f.Name)
+	}
+
 	p := &survey.Select{
 		Message: "Select framework:",
-		Options: values,
+		Options: frameworks,
 	}
 
 	err = survey.AskOne(p, &cfg.frameworkName, survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))

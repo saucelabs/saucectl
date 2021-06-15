@@ -8,7 +8,7 @@ import (
 )
 
 type FakeFrameworkInfoReader struct {
-	FrameworkResponse []string
+	FrameworkResponse []framework.Framework
 	FrameworkError    error
 	VersionsResponse  []framework.Metadata
 	VersionsError     error
@@ -18,7 +18,7 @@ func (fir *FakeFrameworkInfoReader) Search(ctx context.Context, opts framework.S
 	return framework.Metadata{}, errors.New("mock func not implemented")
 }
 
-func (fir *FakeFrameworkInfoReader) Frameworks(ctx context.Context) ([]string, error) {
+func (fir *FakeFrameworkInfoReader) Frameworks(ctx context.Context) ([]framework.Framework, error) {
 	return fir.FrameworkResponse, fir.FrameworkError
 }
 

@@ -16,7 +16,7 @@ type Framework struct {
 type MetadataService interface {
 	Search(ctx context.Context, opts SearchOptions) (Metadata, error)
 
-	Frameworks(ctx context.Context) ([]string, error)
+	Frameworks(ctx context.Context) ([]Framework, error)
 	Versions(ctx context.Context, frameworkName string) ([]Metadata, error)
 }
 
