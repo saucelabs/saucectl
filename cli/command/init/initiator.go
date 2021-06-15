@@ -77,7 +77,7 @@ func needsApps(framework string) bool {
 	return isNativeFramework(framework)
 }
 
-func needsCypressJson(framework string) bool {
+func needsCypressJSON(framework string) bool {
 	return framework == config.KindCypress
 }
 
@@ -121,8 +121,8 @@ func (ini *initiator) configure() (*initConfig, error) {
 		}
 	}
 
-	if needsCypressJson(cfg.frameworkName) {
-		err = ini.askFile("Cypress configuration file:", extValidator(cfg.frameworkName), completeBasic, &cfg.cypressJson)
+	if needsCypressJSON(cfg.frameworkName) {
+		err = ini.askFile("Cypress configuration file:", extValidator(cfg.frameworkName), completeBasic, &cfg.cypressJSON)
 		if err != nil {
 			return &initConfig{}, err
 		}
@@ -346,11 +346,22 @@ func metaToBrowsers(metadatas []framework.Metadata, frameworkName, frameworkVers
 	for _, v := range metadatas {
 		for _, p := range v.Platforms {
 			if v.FrameworkVersion == frameworkVersion && p.PlatformName == platformName {
-				return p.BrowserNames
+				return correctBrowsers(frameworkName, p.BrowserNames)
 			}
 		}
 	}
 	return []string{}
+}
+
+func correctBrowsers(frameworkName string, browsers []string) []string {
+	if frameworkName != config.KindPlaywright {
+		return browsers
+	}
+	var cb []string
+	for _, b := range browsers {
+		cb = append(cb, strings.TrimPrefix(b, "playwright-"))
+	}
+	return cb
 }
 
 func dockerBrowsers(framework string) []string {

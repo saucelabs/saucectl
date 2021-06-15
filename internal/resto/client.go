@@ -400,6 +400,7 @@ type platformEntry struct {
 	LongName string `json:"long_name"`
 }
 
+// GetVirtualDevices returns the list of available virtual devices.
 func (c *Client) GetVirtualDevices(ctx context.Context, kind string) ([]vmd.VirtualDevice, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/rest/v1.1/info/platforms/all", c.URL), nil)
 	if err != nil {

@@ -47,7 +47,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 type initConfig struct {
 	frameworkName    string
 	frameworkVersion string
-	cypressJson      string
+	cypressJSON      string
 	rootDir          string
 	app              string
 	testApp          string

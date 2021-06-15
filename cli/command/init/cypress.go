@@ -19,7 +19,7 @@ func configureCypress(cfg *initConfig) interface{} {
 		RootDir: ".",
 		Cypress: cypress.Cypress{
 			Version:    cfg.frameworkVersion,
-			ConfigFile: cfg.cypressJson,
+			ConfigFile: cfg.cypressJSON,
 		},
 		Suites: []cypress.Suite{
 			{

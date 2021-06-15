@@ -8,11 +8,13 @@ type VirtualDevice struct {
 	OS   string
 }
 
+// Constants for virtual device kinds.
 const (
 	IOSSimulator    = "ios-simulator"
 	AndroidEmulator = "android-emulator"
 )
 
+// Reader is the interface for getting available virtual devices.
 type Reader interface {
 	GetVirtualDevices(ctx context.Context, kind string) ([]VirtualDevice, error)
 }

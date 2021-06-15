@@ -112,7 +112,9 @@ type questionTest struct {
 
 func TestAskFramework(t *testing.T) {
 	ir := &mocks.FakeFrameworkInfoReader{
-		FrameworkResponse: []framework.Framework{{Name: "cypress"}, {Name: "espresso"}, {Name: "playwright"}},
+		FrameworksFn: func(ctx context.Context) ([]framework.Framework, error) {
+			return []framework.Framework{{Name: "cypress"}, {Name: "espresso"}, {Name: "playwright"}}, nil
+		},
 	}
 	testCases := []questionTest{
 		{
@@ -665,7 +667,7 @@ func Test_frameworkSpecificSettings(t *testing.T) {
 	type want struct {
 		nativeFramework  bool
 		needsApps        bool
-		needsCypressJson bool
+		needsCypressJSON bool
 		needsDevice      bool
 		needsEmulator    bool
 		needsPlatform    bool
@@ -710,7 +712,7 @@ func Test_frameworkSpecificSettings(t *testing.T) {
 				needsVersion:     true,
 				needsRootDir:     true,
 				needsPlatform:    true,
-				needsCypressJson: true,
+				needsCypressJSON: true,
 			},
 		},
 		{
@@ -730,8 +732,8 @@ func Test_frameworkSpecificSettings(t *testing.T) {
 			if got := isNativeFramework(tt.args.framework); got != tt.want.nativeFramework {
 				t.Errorf("isNativeFramework() = %v, want %v", got, tt.want)
 			}
-			if got := needsCypressJson(tt.args.framework); got != tt.want.needsCypressJson {
-				t.Errorf("needsCypressJson() = %v, want %v", got, tt.want)
+			if got := needsCypressJSON(tt.args.framework); got != tt.want.needsCypressJSON {
+				t.Errorf("needsCypressJSON() = %v, want %v", got, tt.want)
 			}
 			if got := needsVersion(tt.args.framework); got != tt.want.needsVersion {
 				t.Errorf("needsVersion() = %v, want %v", got, tt.want)
@@ -777,8 +779,12 @@ func TestConfigure(t *testing.T) {
 		},
 	}
 	ir := &mocks.FakeFrameworkInfoReader{
-		VersionsResponse:  frameworkVersions,
-		FrameworkResponse: []framework.Framework{{Name: "cypress"}, {Name: "espresso"}},
+		VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
+			return frameworkVersions, nil
+		},
+		FrameworksFn: func(ctx context.Context) ([]framework.Framework, error) {
+			return []framework.Framework{{Name: "cypress"}, {Name: "espresso"}}, nil
+		},
 	}
 	dr := &mocks.FakeDevicesReader{
 		GetDevicesFn: func(ctx context.Context, s string) ([]devices.Device, error) {
@@ -866,7 +872,7 @@ func TestConfigure(t *testing.T) {
 			expectedState: &initConfig{
 				frameworkName:    "cypress",
 				frameworkVersion: "7.5.0",
-				cypressJson:      dir.Join("cypress.json"),
+				cypressJSON:      dir.Join("cypress.json"),
 				platformName:     "windows 10",
 				browserName:      "googlechrome",
 				mode:             "sauce",

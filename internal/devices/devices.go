@@ -8,6 +8,7 @@ type Device struct {
 	OS   string
 }
 
+// Reader is the interface for retrieving available devices.
 type Reader interface {
 	GetDevices(ctx context.Context, OS string) ([]Device, error)
 }
