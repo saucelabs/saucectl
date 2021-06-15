@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/AlecAivazis/survey/v2/terminal"
 	"strings"
+
+	"github.com/AlecAivazis/survey/v2/terminal"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -23,11 +25,6 @@ type initiator struct {
 
 	frameworks        []string
 	frameworkMetadata []framework.Metadata
-}
-
-// Check routines
-func needsCredentials() bool {
-	return false
 }
 
 func isNativeFramework(framework string) bool {
@@ -73,10 +70,6 @@ func (ini *initiator) configure() (*initConfig, error) {
 	err = ini.askRegion(cfg)
 	if err != nil {
 		return &initConfig{}, err
-	}
-
-	if needsCredentials() {
-		// TODO: Implement
 	}
 
 	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), cfg.frameworkName)
@@ -158,6 +151,29 @@ func (ini *initiator) configure() (*initConfig, error) {
 		return &initConfig{}, err
 	}
 	return cfg, nil
+}
+
+func askCredentials(stdio terminal.Stdio) (credentials.Credentials, error) {
+	creds := credentials.Credentials{}
+	q := &survey.Input{Message: "SauceLabs username:"}
+
+	err := survey.AskOne(q, &creds.Username,
+		survey.WithValidator(survey.Required),
+		survey.WithShowCursor(true),
+		survey.WithStdio(stdio.In, stdio.Out, stdio.Err))
+	if err != nil {
+		return creds, err
+	}
+
+	q = &survey.Input{Message: "SauceLabs access key:"}
+	err = survey.AskOne(q, &creds.AccessKey,
+		survey.WithValidator(survey.Required),
+		survey.WithShowCursor(true),
+		survey.WithStdio(stdio.In, stdio.Out, stdio.Err))
+	if err != nil {
+		return creds, err
+	}
+	return creds, nil
 }
 
 func (ini *initiator) askRegion(cfg *initConfig) error {
@@ -281,9 +297,9 @@ func metaToPlatforms(metadatas []framework.Metadata, version string) []string {
 			for _, p := range m.Platforms {
 				platforms = append(platforms, p.PlatformName)
 			}
-		}
-		if m.DockerImage != "" {
-			platforms = append(platforms, "docker")
+			if m.DockerImage != "" {
+				platforms = append(platforms, "docker")
+			}
 		}
 	}
 	return platforms

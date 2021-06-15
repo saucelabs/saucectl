@@ -85,7 +85,35 @@ var (
 
 // Run runs the command
 func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
+	stdio := terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
+
 	creds := credentials.Get()
+	if !creds.IsValid() {
+		var err error
+		creds, err = askCredentials(stdio)
+		if err != nil {
+			return err
+		}
+		if err = credentials.ToFile(creds); err != nil {
+			return err
+		}
+	}
+
+	ini := createInitiator(stdio, creds)
+	initCfg, err := ini.configure()
+	if err != nil {
+		return err
+	}
+
+	if f, ok := configurators[initCfg.frameworkName]; ok {
+		return saveConfiguration(f(initCfg))
+	}
+	log.Error().Msgf("%s: not implemented", strings.ToLower(initCfg.frameworkName))
+	return errors.New("unsupported framework")
+}
+
+func createInitiator(stdio terminal.Stdio, creds credentials.Credentials) *initiator {
+
 	tc := testcomposer.Client{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         region.FromString("us-west-1").APIBaseURL(), // Will updated as soon
@@ -106,21 +134,10 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		AccessKey:  creds.AccessKey,
 	}
 
-	ini := initiator{
-		stdio:        terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr},
+	return &initiator{
+		stdio:        stdio,
 		infoReader:   &tc,
 		deviceReader: &rc,
 		vmdReader:    &rs,
 	}
-
-	initCfg, err := ini.configure()
-	if err != nil {
-		return err
-	}
-
-	if f, ok := configurators[initCfg.frameworkName]; ok {
-		return saveConfiguration(f(initCfg))
-	}
-	log.Error().Msgf("%s: not implemented", strings.ToLower(initCfg.frameworkName))
-	return errors.New("unsupported framework")
 }

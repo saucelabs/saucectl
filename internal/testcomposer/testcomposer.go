@@ -237,7 +237,6 @@ func (c *Client) UploadAsset(jobID string, fileName string, contentType string, 
 // Frameworks returns the list of available frameworks.
 func (c *Client) Frameworks(ctx context.Context) ([]framework.Framework, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/frameworks", c.URL)
-	//url := fmt.Sprintf("http://127.0.0.1:8080/rest/v1/frameworks")
 
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
