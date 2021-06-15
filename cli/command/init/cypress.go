@@ -16,7 +16,7 @@ func configureCypress(cfg *initConfig) interface{} {
 			Sauceignore: ".sauceignore",
 			Concurrency: 2, //TODO: Use MIN(AccountLimit, 10)
 		},
-		RootDir: cfg.rootDir,
+		RootDir: ".",
 		Cypress: cypress.Cypress{
 			Version:    cfg.frameworkVersion,
 			ConfigFile: cfg.cypressJson,
@@ -31,9 +31,9 @@ func configureCypress(cfg *initConfig) interface{} {
 		},
 		Artifacts: config.Artifacts{
 			Download: config.ArtifactDownload{
-				When: cfg.artifactWhen,
+				When:      cfg.artifactWhen,
 				Directory: "./artifacts",
-				Match: []string{"*"},
+				Match:     []string{"*"},
 			},
 		},
 	}

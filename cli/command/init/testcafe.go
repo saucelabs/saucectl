@@ -16,7 +16,7 @@ func configureTestcafe(cfg *initConfig) interface{} {
 			Sauceignore: ".sauceignore",
 			Concurrency: 2, //TODO: Use MIN(AccountLimit, 10)
 		},
-		RootDir: cfg.rootDir,
+		RootDir: ".",
 		Testcafe: testcafe.Testcafe{
 			Version: cfg.frameworkVersion,
 		},

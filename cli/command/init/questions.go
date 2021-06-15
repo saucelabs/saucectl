@@ -4,14 +4,26 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/AlecAivazis/survey/v2/terminal"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/vmd"
 )
+
+type initiator struct {
+	stdio        terminal.Stdio
+	infoReader   framework.MetadataService
+	deviceReader devices.Reader
+	vmdReader    vmd.Reader
+
+	frameworks        []string
+	frameworkMetadata []framework.Metadata
+}
 
 // Check routines
 func needsCredentials() bool {
@@ -79,12 +91,12 @@ func (ini *initiator) configure() (*initConfig, error) {
 		}
 	}
 
-	if needsRootDir(cfg.frameworkName) {
-		err = ini.askFile("Root project directory:", isDirectory, nil, &cfg.rootDir)
-		if err != nil {
-			return &initConfig{}, err
-		}
-	}
+	//if needsRootDir(cfg.frameworkName) {
+	//	err = ini.askFile("Root project directory:", isDirectory, nil, &cfg.rootDir)
+	//	if err != nil {
+	//		return &initConfig{}, err
+	//	}
+	//}
 
 	if needsCypressJson(cfg.frameworkName) {
 		err = ini.askFile("Cypress configuration file:", extValidator(cfg.frameworkName), completeBasic, &cfg.cypressJson)
@@ -113,12 +125,9 @@ func (ini *initiator) configure() (*initConfig, error) {
 	}
 
 	if needsDevice(cfg.frameworkName) {
-		patterns := []string{
-			"Amazon Kindle Fire .*", "Google Pixel .*", "HTC .*", "Huawei .*", "LG .*", "Motorola .*",
-			"OnePlus .*", "Samsung .*", "Sony .*",
-		}
+		patterns := androidDevicesPatterns
 		if cfg.frameworkName == config.KindXcuitest {
-			patterns = []string{"iPad .*", "iPhone .*"}
+			patterns = iOSDevicesPatterns
 		}
 		if err != nil {
 			return &initConfig{}, err

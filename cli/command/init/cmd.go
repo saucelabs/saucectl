@@ -14,14 +14,11 @@ import (
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
-	"github.com/saucelabs/saucectl/internal/devices"
-	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
-	"github.com/saucelabs/saucectl/internal/vmd"
 )
 
 var (
@@ -54,15 +51,6 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	return cmd
 }
 
-type initiator struct {
-	stdio        terminal.Stdio
-	infoReader   framework.MetadataService
-	deviceReader devices.Reader
-	vmdReader    vmd.Reader
-
-	frameworks        []string
-	frameworkMetadata []framework.Metadata
-}
 
 type initConfig struct {
 	frameworkName    string

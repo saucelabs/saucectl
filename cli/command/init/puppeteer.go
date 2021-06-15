@@ -16,7 +16,7 @@ func configurePuppeteer(cfg *initConfig) interface{} {
 			Sauceignore: ".sauceignore",
 			Concurrency: 2, //TODO: Use MIN(AccountLimit, 10)
 		},
-		RootDir: cfg.rootDir,
+		RootDir: ".",
 		Puppeteer: puppeteer.Puppeteer{
 			Version: cfg.frameworkVersion,
 		},

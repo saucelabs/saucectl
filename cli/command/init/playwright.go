@@ -16,7 +16,7 @@ func configurePlaywright(cfg *initConfig) interface{} {
 			Sauceignore: ".sauceignore",
 			Concurrency: 2, //TODO: Use MIN(AccountLimit, 10)
 		},
-		RootDir: cfg.rootDir,
+		RootDir: ".",
 		Playwright: playwright.Playwright{
 			Version: cfg.frameworkVersion,
 		},

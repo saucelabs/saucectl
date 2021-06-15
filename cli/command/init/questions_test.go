@@ -838,8 +838,6 @@ func TestConfigure(t *testing.T) {
 				c.SendLine("us-west-1")
 				c.ExpectString("Select cypress version")
 				c.SendLine("7.5.0")
-				c.ExpectString("Root project directory")
-				c.SendLine(".")
 				c.ExpectString("Cypress configuration file:")
 				c.SendLine(dir.Join("cypress.json"))
 				c.ExpectString("Select platform:")
@@ -864,7 +862,6 @@ func TestConfigure(t *testing.T) {
 			expectedState: &initConfig{
 				frameworkName:    "cypress",
 				frameworkVersion: "7.5.0",
-				rootDir:          ".",
 				cypressJson:      dir.Join("cypress.json"),
 				platformName:     "windows 10",
 				browserName:      "googlechrome",
