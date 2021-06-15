@@ -11,26 +11,24 @@ import (
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v2"
 
-	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/config"
 )
 
 // Project represents the cypress project configuration.
 type Project struct {
-	config.TypeDef  `yaml:",inline"`
-	Defaults        config.Defaults `yaml:"defaults" json:"defaults"`
-	ShowConsoleLog  bool
-	SaucectlVersion string             `yaml:"-" json:"saucectlVersion"`
-	ConfigFilePath  string             `yaml:"-" json:"-"`
-	Sauce           config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
-	Cypress         Cypress            `yaml:"cypress,omitempty" json:"cypress"`
-	Suites          []Suite            `yaml:"suites,omitempty" json:"suites"`
-	BeforeExec      []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker          config.Docker      `yaml:"docker,omitempty" json:"docker"`
-	Npm             config.Npm         `yaml:"npm,omitempty" json:"npm"`
-	RootDir         string             `yaml:"rootDir,omitempty" json:"rootDir"`
-	RunnerVersion   string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
-	Artifacts       config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
+	config.TypeDef `yaml:",inline"`
+	Defaults       config.Defaults `yaml:"defaults" json:"defaults"`
+	ShowConsoleLog bool
+	ConfigFilePath string             `yaml:"-" json:"-"`
+	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
+	Cypress        Cypress            `yaml:"cypress,omitempty" json:"cypress"`
+	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
+	BeforeExec     []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
+	Docker         config.Docker      `yaml:"docker,omitempty" json:"docker"`
+	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
+	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
+	RunnerVersion  string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
+	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
 }
 
 // Suite represents the cypress test suite configuration.
@@ -132,9 +130,6 @@ func FromFile(cfgPath string) (Project, error) {
 	if p.Docker.FileTransfer == "" {
 		p.Docker.FileTransfer = config.DockerFileMount
 	}
-
-	// Set SaucectlVersion for the docker mode
-	p.SaucectlVersion = version.Version
 
 	if p.Docker.Image != "" {
 		log.Info().Msgf(

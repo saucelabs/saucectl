@@ -6,25 +6,23 @@ import (
 	"os"
 
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/config"
 	"gopkg.in/yaml.v2"
 )
 
 // Project represents the puppeteer project configuration.
 type Project struct {
-	config.TypeDef  `yaml:",inline"`
-	ShowConsoleLog  bool
-	SaucectlVersion string             `yaml:"-" json:"saucectlVersion"`
-	ConfigFilePath  string             `yaml:"-" json:"-"`
-	Sauce           config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
-	Suites          []Suite            `yaml:"suites,omitempty" json:"suites"`
-	BeforeExec      []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker          config.Docker      `yaml:"docker,omitempty" json:"docker"`
-	Puppeteer       Puppeteer          `yaml:"puppeteer,omitempty" json:"puppeteer"`
-	Npm             config.Npm         `yaml:"npm,omitempty" json:"npm"`
-	RootDir         string             `yaml:"rootDir,omitempty" json:"rootDir"`
-	Artifacts       config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
+	config.TypeDef `yaml:",inline"`
+	ShowConsoleLog bool
+	ConfigFilePath string             `yaml:"-" json:"-"`
+	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
+	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
+	BeforeExec     []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
+	Docker         config.Docker      `yaml:"docker,omitempty" json:"docker"`
+	Puppeteer      Puppeteer          `yaml:"puppeteer,omitempty" json:"puppeteer"`
+	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
+	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
+	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
 }
 
 // Suite represents the puppeteer test suite configuration.
@@ -69,9 +67,6 @@ func FromFile(cfgPath string) (Project, error) {
 	if p.Docker.FileTransfer == "" {
 		p.Docker.FileTransfer = config.DockerFileMount
 	}
-
-	// Set SaucectlVersion for the docker mode
-	p.SaucectlVersion = version.Version
 
 	if p.Docker.Image != "" {
 		log.Info().Msgf(
