@@ -12,12 +12,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/Netflix/go-expect"
 	"github.com/hinshun/vt10x"
+	"github.com/stretchr/testify/require"
+
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/mocks"
@@ -871,6 +872,56 @@ func TestConfigure(t *testing.T) {
 				mode:             "sauce",
 				artifactWhen:     config.WhenPass,
 			},
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(lt *testing.T) {
+			executeQuestionTestWithTimeout(lt, tt)
+		})
+	}
+}
+
+func TestAskCredentials(t *testing.T) {
+	testCases := []questionTest{
+		{
+			name: "Default",
+			procedure: func(c *expect.Console) error {
+				_, err := c.ExpectString("SauceLabs username:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("dummy-user")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("SauceLabs access key:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("dummy-access-key")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectEOF()
+				if err != nil {
+					return err
+				}
+				return nil
+			},
+			ini: &initiator{},
+			execution: func(i *initiator, cfg *initConfig) error {
+				creds, err := askCredentials(i.stdio)
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				expect := &credentials.Credentials{Username: "dummy-user", AccessKey: "dummy-access-key"}
+				if reflect.DeepEqual(creds, expect) {
+					t.Fatalf("got: %v, want: %v", creds, expect)
+				}
+				return nil
+			},
+			startState:    &initConfig{},
+			expectedState: &initConfig{},
 		},
 	}
 	for _, tt := range testCases {
