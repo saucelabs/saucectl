@@ -1,10 +1,7 @@
 package init
 
 import (
-	"errors"
-	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2/terminal"
@@ -14,11 +11,7 @@ import (
 	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
-	"github.com/saucelabs/saucectl/internal/rdc"
-	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/sentry"
-	"github.com/saucelabs/saucectl/internal/testcomposer"
 )
 
 var (
@@ -51,7 +44,6 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	return cmd
 }
 
-
 type initConfig struct {
 	frameworkName    string
 	frameworkVersion string
@@ -66,15 +58,6 @@ type initConfig struct {
 	artifactWhen     config.When
 	device           config.Device
 	emulator         config.Emulator
-}
-
-var configurators = map[string]func(cfg *initConfig) interface{}{
-	"cypress":    configureCypress,
-	"espresso":   configureEspresso,
-	"playwright": configurePlaywright,
-	"puppeteer":  configurePuppeteer,
-	"testcafe":   configureTestcafe,
-	"xcuitest":   configureXCUITest,
 }
 
 var (
@@ -111,39 +94,11 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	}
 	initCfg.region = regio
 
-	if f, ok := configurators[initCfg.frameworkName]; ok {
-		return saveConfiguration(f(initCfg))
+	files, err := saveConfigurationFiles(initCfg)
+	if err != nil {
+		return err
 	}
-	log.Error().Msgf("%s: not implemented", strings.ToLower(initCfg.frameworkName))
-	return errors.New("unsupported framework")
+	displaySummary(files)
+	return nil
 }
 
-func newInitiator(stdio terminal.Stdio, creds credentials.Credentials, regio string) *initiator {
-	r := region.FromString(regio)
-	tc := testcomposer.Client{
-		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
-		URL:         r.APIBaseURL(),
-		Credentials: creds,
-	}
-
-	rc := rdc.Client{
-		HTTPClient: &http.Client{Timeout: rdcTimeout},
-		URL:        r.APIBaseURL(),
-		Username:   creds.Username,
-		AccessKey:  creds.AccessKey,
-	}
-
-	rs := resto.Client{
-		HTTPClient: &http.Client{Timeout: restoTimeout},
-		URL:        r.APIBaseURL(),
-		Username:   creds.Username,
-		AccessKey:  creds.AccessKey,
-	}
-
-	return &initiator{
-		stdio:        stdio,
-		infoReader:   &tc,
-		deviceReader: &rc,
-		vmdReader:    &rs,
-	}
-}

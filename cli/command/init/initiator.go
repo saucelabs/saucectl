@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2/terminal"
@@ -13,9 +14,19 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/resto"
+	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/vmd"
 )
+
+var androidDevicesPatterns = []string{
+	"Amazon Kindle Fire .*", "Google Pixel .*", "HTC .*", "Huawei .*",
+	"LG .*", "Motorola .*", "OnePlus .*", "Samsung .*", "Sony .*",
+}
+
+var iOSDevicesPatterns = []string{"iPad .*", "iPhone .*"}
 
 type initiator struct {
 	stdio        terminal.Stdio
@@ -25,6 +36,37 @@ type initiator struct {
 
 	frameworks        []string
 	frameworkMetadata []framework.Metadata
+}
+
+// newInitiator creates a new initiator instance.
+func newInitiator(stdio terminal.Stdio, creds credentials.Credentials, regio string) *initiator {
+	r := region.FromString(regio)
+	tc := testcomposer.Client{
+		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
+		URL:         r.APIBaseURL(),
+		Credentials: creds,
+	}
+
+	rc := rdc.Client{
+		HTTPClient: &http.Client{Timeout: rdcTimeout},
+		URL:        r.APIBaseURL(),
+		Username:   creds.Username,
+		AccessKey:  creds.AccessKey,
+	}
+
+	rs := resto.Client{
+		HTTPClient: &http.Client{Timeout: restoTimeout},
+		URL:        r.APIBaseURL(),
+		Username:   creds.Username,
+		AccessKey:  creds.AccessKey,
+	}
+
+	return &initiator{
+		stdio:        stdio,
+		infoReader:   &tc,
+		deviceReader: &rc,
+		vmdReader:    &rs,
+	}
 }
 
 func isNativeFramework(framework string) bool {
@@ -78,13 +120,6 @@ func (ini *initiator) configure() (*initConfig, error) {
 			return &initConfig{}, err
 		}
 	}
-
-	//if needsRootDir(cfg.frameworkName) {
-	//	err = ini.askFile("Root project directory:", isDirectory, nil, &cfg.rootDir)
-	//	if err != nil {
-	//		return &initConfig{}, err
-	//	}
-	//}
 
 	if needsCypressJson(cfg.frameworkName) {
 		err = ini.askFile("Cypress configuration file:", extValidator(cfg.frameworkName), completeBasic, &cfg.cypressJson)

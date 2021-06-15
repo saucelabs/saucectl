@@ -2,18 +2,59 @@ package init
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/rs/zerolog/log"
+	"gopkg.in/yaml.v2"
 
 	"github.com/saucelabs/saucectl/internal/config"
 )
 
-func saveConfiguration(p interface{}) error {
+
+var configurators = map[string]func(cfg *initConfig) interface{}{
+	"cypress":    configureCypress,
+	"espresso":   configureEspresso,
+	"playwright": configurePlaywright,
+	"puppeteer":  configurePuppeteer,
+	"testcafe":   configureTestcafe,
+	"xcuitest":   configureXCUITest,
+}
+
+var sauceignoreGenerators = map[string]func() string {
+	"cypress":    sauceignoreCypress,
+	"playwright": sauceignorePlaywright,
+	"puppeteer":  sauceignorePuppeteer,
+	"testcafe":   sauceignoreTestcafe,
+}
+
+func saveConfigurationFiles(initCfg *initConfig) ([]string, error) {
+	var files []string
+
+	configFormatter, ok := configurators[initCfg.frameworkName]
+	if ok {
+		err := saveSauceConfig(configFormatter(initCfg))
+		if err != nil {
+			return []string{}, err
+		}
+		files = append(files, ".sauce/config.yml")
+	}
+
+	sauceignoreGenerator, ok := sauceignoreGenerators[initCfg.frameworkName]
+	if ok {
+		err := saveSauceIgnore(sauceignoreGenerator())
+		if err != nil {
+			return []string{}, err
+		}
+		files = append(files, ".sauceignore")
+	}
+	return files, nil
+}
+
+func saveSauceConfig(p interface{}) error {
 	fi, err := os.Stat(".sauce")
 	if err != nil && os.IsNotExist(err) {
 		if err = os.Mkdir(".sauce", 0750); err != nil {
@@ -32,6 +73,25 @@ func saveConfiguration(p interface{}) error {
 		return err
 	}
 	return nil
+}
+
+func saveSauceIgnore(content string) error {
+	fd, err := os.Create(".sauceignore")
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+	fd.WriteString(content)
+	return nil
+}
+
+func displaySummary(files []string) {
+	println()
+	log.Info().Msg("The following files have been created:")
+	for _, f := range files {
+		log.Info().Msgf("  %s", f)
+	}
+	println()
 }
 
 func completeBasic(toComplete string) []string {

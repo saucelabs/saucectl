@@ -35,3 +35,21 @@ func configurePuppeteer(cfg *initConfig) interface{} {
 		},
 	}
 }
+
+func sauceignorePuppeteer() string {
+	return `# This file instructs saucectl to not package any files mentioned here.
+# Remove this to have node_modules uploaded with code
+node_modules/
+.git/
+.github/
+.DS_Store
+.hg/
+.vscode/
+.idea/
+.gitignore
+.hgignore
+.gitlab-ci.yml
+.npmrc
+*.gif
+`
+}
