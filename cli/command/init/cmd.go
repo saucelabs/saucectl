@@ -99,11 +99,17 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		}
 	}
 
-	ini := createInitiator(stdio, creds)
+	regio, err := askRegion(stdio)
+	if err != nil {
+		return err
+	}
+
+	ini := newInitiator(stdio, creds, regio)
 	initCfg, err := ini.configure()
 	if err != nil {
 		return err
 	}
+	initCfg.region = regio
 
 	if f, ok := configurators[initCfg.frameworkName]; ok {
 		return saveConfiguration(f(initCfg))
@@ -112,24 +118,24 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	return errors.New("unsupported framework")
 }
 
-func createInitiator(stdio terminal.Stdio, creds credentials.Credentials) *initiator {
-
+func newInitiator(stdio terminal.Stdio, creds credentials.Credentials, regio string) *initiator {
+	r := region.FromString(regio)
 	tc := testcomposer.Client{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
-		URL:         region.FromString("us-west-1").APIBaseURL(), // Will updated as soon
+		URL:         r.APIBaseURL(),
 		Credentials: creds,
 	}
 
 	rc := rdc.Client{
 		HTTPClient: &http.Client{Timeout: rdcTimeout},
-		URL:        region.FromString("us-west-1").APIBaseURL(), // Will updated as soon
+		URL:        r.APIBaseURL(),
 		Username:   creds.Username,
 		AccessKey:  creds.AccessKey,
 	}
 
 	rs := resto.Client{
 		HTTPClient: &http.Client{Timeout: restoTimeout},
-		URL:        region.FromString("us-west-1").APIBaseURL(), // Will updated as soon
+		URL:        r.APIBaseURL(),
 		Username:   creds.Username,
 		AccessKey:  creds.AccessKey,
 	}

@@ -67,11 +67,6 @@ func (ini *initiator) configure() (*initConfig, error) {
 		return &initConfig{}, err
 	}
 
-	err = ini.askRegion(cfg)
-	if err != nil {
-		return &initConfig{}, err
-	}
-
 	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), cfg.frameworkName)
 	if err != nil {
 		return &initConfig{}, err
@@ -176,18 +171,19 @@ func askCredentials(stdio terminal.Stdio) (credentials.Credentials, error) {
 	return creds, nil
 }
 
-func (ini *initiator) askRegion(cfg *initConfig) error {
+func askRegion(stdio terminal.Stdio) (string, error) {
+	var r string
 	p := &survey.Select{
 		Message: "Select region:",
 		Options: []string{region.USWest1.String(), region.EUCentral1.String()},
 		Default: region.USWest1.String(),
 	}
 
-	err := survey.AskOne(p, &cfg.region, survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
+	err := survey.AskOne(p, &r, survey.WithStdio(stdio.In, stdio.Out, stdio.Err))
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return r, nil
 }
 
 func (ini *initiator) askFramework(cfg *initConfig) error {

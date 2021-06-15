@@ -159,7 +159,9 @@ func TestAskRegion(t *testing.T) {
 			procedure: stringToProcedure("✓🔚"),
 			ini:       &initiator{},
 			execution: func(i *initiator, cfg *initConfig) error {
-				return i.askRegion(cfg)
+				regio, err := askRegion(i.stdio)
+				cfg.region = regio
+				return err
 			},
 			startState:    &initConfig{},
 			expectedState: &initConfig{region: region.USWest1.String()},
@@ -169,7 +171,9 @@ func TestAskRegion(t *testing.T) {
 			procedure: stringToProcedure("us-✓🔚"),
 			ini:       &initiator{},
 			execution: func(i *initiator, cfg *initConfig) error {
-				return i.askRegion(cfg)
+				regio, err := askRegion(i.stdio)
+				cfg.region = regio
+				return err
 			},
 			startState:    &initConfig{},
 			expectedState: &initConfig{region: region.USWest1.String()},
@@ -181,7 +185,9 @@ func TestAskRegion(t *testing.T) {
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 			},
 			execution: func(i *initiator, cfg *initConfig) error {
-				return i.askRegion(cfg)
+				regio, err := askRegion(i.stdio)
+				cfg.region = regio
+				return err
 			},
 			startState:    &initConfig{},
 			expectedState: &initConfig{region: region.EUCentral1.String()},
@@ -193,7 +199,9 @@ func TestAskRegion(t *testing.T) {
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 			},
 			execution: func(i *initiator, cfg *initConfig) error {
-				return i.askRegion(cfg)
+				regio, err := askRegion(i.stdio)
+				cfg.region = regio
+				return err
 			},
 			startState:    &initConfig{},
 			expectedState: &initConfig{region: region.EUCentral1.String()},
@@ -794,8 +802,6 @@ func TestConfigure(t *testing.T) {
 			procedure: func(c *expect.Console) error {
 				c.ExpectString("Select framework")
 				c.SendLine("espresso")
-				c.ExpectString("Select region")
-				c.SendLine("us-west-1")
 				c.ExpectString("Application to test")
 				c.SendLine(dir.Join("android-app.apk"))
 				c.ExpectString("Test application")
@@ -825,7 +831,6 @@ func TestConfigure(t *testing.T) {
 				testApp:       dir.Join("android-app.apk"),
 				emulator:      config.Emulator{Name: "Google Pixel Emulator"},
 				device:        config.Device{Name: "Google Pixel .*"},
-				region:        "us-west-1",
 				artifactWhen:  config.WhenPass,
 			},
 		},
@@ -834,8 +839,6 @@ func TestConfigure(t *testing.T) {
 			procedure: func(c *expect.Console) error {
 				c.ExpectString("Select framework")
 				c.SendLine("cypress")
-				c.ExpectString("Select region")
-				c.SendLine("us-west-1")
 				c.ExpectString("Select cypress version")
 				c.SendLine("7.5.0")
 				c.ExpectString("Cypress configuration file:")
@@ -866,7 +869,6 @@ func TestConfigure(t *testing.T) {
 				platformName:     "windows 10",
 				browserName:      "googlechrome",
 				mode:             "sauce",
-				region:           "us-west-1",
 				artifactWhen:     config.WhenPass,
 			},
 		},
