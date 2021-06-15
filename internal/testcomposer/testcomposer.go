@@ -232,8 +232,6 @@ func (c *Client) UploadAsset(jobID string, fileName string, contentType string, 
 	return doRequestAsset(c.HTTPClient, request)
 }
 
-
-
 // Frameworks returns the list of available frameworks.
 func (c *Client) Frameworks(ctx context.Context) ([]framework.Framework, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/frameworks", c.URL)
