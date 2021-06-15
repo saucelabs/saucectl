@@ -61,8 +61,6 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 	}
 	defer close(results)
 
-	// TODO fix jobnames. Don't need to hyphenate empty metadata name fields
-
 	// Submit suites to work on.
 	go func() {
 		for _, s := range r.Project.Suites {
