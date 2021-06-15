@@ -79,7 +79,7 @@ func (r *TestcafeRunner) runSuites(fileID string) bool {
 							PlatformName:     d.PlatformName,
 							PlatformVersion:  pv,
 							DeviceName:       d.Name,
-							Name:             fmt.Sprintf("%s - %s", r.Project.Sauce.Metadata.Name, s.Name),
+							Name:             s.Name,
 							Build:            r.Project.Sauce.Metadata.Build,
 							Tags:             r.Project.Sauce.Metadata.Tags,
 							Tunnel: job.TunnelOptions{
@@ -103,7 +103,7 @@ func (r *TestcafeRunner) runSuites(fileID string) bool {
 					BrowserName:      s.BrowserName,
 					BrowserVersion:   s.BrowserVersion,
 					PlatformName:     s.PlatformName,
-					Name:             fmt.Sprintf("%s - %s", r.Project.Sauce.Metadata.Name, s.Name),
+					Name:             s.Name,
 					Build:            r.Project.Sauce.Metadata.Build,
 					Tags:             r.Project.Sauce.Metadata.Tags,
 					Tunnel: job.TunnelOptions{

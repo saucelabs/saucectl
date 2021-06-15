@@ -11,7 +11,6 @@ func ExampleMetadata_ExpandEnv() {
 	os.Setenv("tbuild", "Bob")
 
 	m := Metadata{
-		Name:  "Test $tname",
 		Tags:  []string{"$ttag"},
 		Build: "Build $tbuild",
 	}
@@ -19,5 +18,5 @@ func ExampleMetadata_ExpandEnv() {
 	m.ExpandEnv()
 
 	fmt.Println(m)
-	// Output: {Test Envy [xp1] Build Bob}
+	// Output: {[xp1] Build Bob}
 }

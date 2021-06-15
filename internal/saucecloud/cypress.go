@@ -83,7 +83,7 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 				BrowserName:      s.Browser,
 				BrowserVersion:   s.BrowserVersion,
 				PlatformName:     s.PlatformName,
-				Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
+				Name:             s.Name,
 				Build:            r.Project.Sauce.Metadata.Build,
 				Tags:             r.Project.Sauce.Metadata.Tags,
 				Tunnel: job.TunnelOptions{

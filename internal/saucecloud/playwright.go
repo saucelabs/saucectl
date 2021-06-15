@@ -78,7 +78,7 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 				BrowserName:      s.Params.BrowserName,
 				BrowserVersion:   "",
 				PlatformName:     s.PlatformName,
-				Name:             r.Project.Sauce.Metadata.Name + " - " + s.Name,
+				Name:             s.Name,
 				Build:            r.Project.Sauce.Metadata.Build,
 				Tags:             r.Project.Sauce.Metadata.Tags,
 				Tunnel: job.TunnelOptions{
