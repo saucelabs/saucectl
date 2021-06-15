@@ -8,7 +8,6 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/vmd"
@@ -114,16 +113,18 @@ func (ini *initiator) configure() (*initConfig, error) {
 	}
 
 	if needsDevice(cfg.frameworkName) {
-		osName := "ANDROID"
-		if cfg.frameworkName == config.KindXcuitest {
-			osName = "IOS"
+		patterns := []string{
+			"Amazon Kindle Fire .*", "Google Pixel .*", "HTC .*", "Huawei .*", "LG .*", "Motorola .*",
+			"OnePlus .*", "Samsung .*", "Sony .*",
 		}
-		devices, err := ini.deviceReader.GetDevices(context.Background(), osName)
+		if cfg.frameworkName == config.KindXcuitest {
+			patterns = []string{"iPad .*", "iPhone .*"}
+		}
 		if err != nil {
 			return &initConfig{}, err
 		}
 
-		err = ini.askDevice(cfg, devices)
+		err = ini.askDevice(cfg, patterns)
 		if err != nil {
 			return &initConfig{}, err
 		}
@@ -224,14 +225,10 @@ func (ini *initiator) askDownloadWhen(cfg *initConfig) error {
 	return nil
 }
 
-func (ini *initiator) askDevice(cfg *initConfig, devs []devices.Device) error {
-	var deviceNames []string
-	for _, d := range devs {
-		deviceNames = append(deviceNames, d.Name)
-	}
+func (ini *initiator) askDevice(cfg *initConfig, suggestions []string) error {
 	q := &survey.Select{
-		Message: "Select device:",
-		Options: uniqSorted(deviceNames),
+		Message: "Select device pattern:",
+		Options: suggestions,
 	}
 	err := survey.AskOne(q, &cfg.device.Name,
 		survey.WithShowCursor(true),

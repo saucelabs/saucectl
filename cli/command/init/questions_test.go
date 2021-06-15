@@ -251,10 +251,7 @@ func TestAskDownloadWhen(t *testing.T) {
 }
 
 func TestAskDevice(t *testing.T) {
-	devs := []devices.Device{
-		{Name: "Google Pixel 3"},
-		{Name: "Google Pixel 4"},
-	}
+	devs := []string{"Google Pixel 3", "Google Pixel 4"}
 	testCases := []questionTest{
 		{
 			name:      "Default Device",
@@ -803,8 +800,8 @@ func TestConfigure(t *testing.T) {
 				c.SendLine(dir.Join("android-app.apk"))
 				c.ExpectString("Test application")
 				c.SendLine(dir.Join("android-app.apk"))
-				c.ExpectString("Select device:")
-				c.SendLine("Google Pixel 3")
+				c.ExpectString("Select device pattern:")
+				c.SendLine("Google Pixel .*")
 				c.ExpectString("Select emulator:")
 				c.SendLine("Google Pixel Emulator")
 				c.ExpectString("Download artifacts:")
@@ -827,7 +824,7 @@ func TestConfigure(t *testing.T) {
 				app:           dir.Join("android-app.apk"),
 				testApp:       dir.Join("android-app.apk"),
 				emulator:      config.Emulator{Name: "Google Pixel Emulator"},
-				device:        config.Device{Name: "Google Pixel 3"},
+				device:        config.Device{Name: "Google Pixel .*"},
 				region:        "us-west-1",
 				artifactWhen:  config.WhenPass,
 			},
