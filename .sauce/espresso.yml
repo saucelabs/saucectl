@@ -29,5 +29,5 @@ artifacts:
   download:
     when: always
     match:
-      - console.log
+      - junit.xml
     directory: ./artifacts/
