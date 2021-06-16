@@ -300,13 +300,9 @@ func (ini *initiator) askEmulator(cfg *initConfig, vmds []vmd.VirtualDevice) err
 		Message: "Select emulator:",
 		Options: uniqSorted(vmdNames),
 	}
-	err := survey.AskOne(q, &cfg.emulator.Name,
+	return survey.AskOne(q, &cfg.emulator.Name,
 		survey.WithShowCursor(true),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func metaToVersions(metadatas []framework.Metadata) []string {
