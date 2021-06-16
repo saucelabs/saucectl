@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/saucelabs/saucectl/cli/command/configure"
+	"github.com/saucelabs/saucectl/cli/command/run"
+	"github.com/saucelabs/saucectl/cli/command/signup"
 	"github.com/saucelabs/saucectl/cli/setup"
 	"os"
 	"time"
@@ -13,7 +16,7 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/command/commands"
+	"github.com/saucelabs/saucectl/cli/command/new"
 	"github.com/saucelabs/saucectl/cli/version"
 )
 
@@ -50,7 +53,12 @@ func main() {
 		return nil
 	}
 
-	commands.AddCommands(cmd, cli)
+	cmd.AddCommand(
+		new.Command(cli),
+		run.Command(cli),
+		configure.Command(cli),
+		signup.Command(cli),
+	)
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
