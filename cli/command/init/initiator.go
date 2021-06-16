@@ -286,13 +286,9 @@ func (ini *initiator) askDevice(cfg *initConfig, suggestions []string) error {
 		Message: "Select device pattern:",
 		Options: suggestions,
 	}
-	err := survey.AskOne(q, &cfg.device.Name,
+	return survey.AskOne(q, &cfg.device.Name,
 		survey.WithShowCursor(true),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (ini *initiator) askEmulator(cfg *initConfig, vmds []vmd.VirtualDevice) error {
