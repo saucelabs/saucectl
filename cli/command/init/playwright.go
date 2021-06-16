@@ -1,6 +1,7 @@
 package init
 
 import (
+	// imports embed to load .sauceignore
 	_ "embed"
 
 	"github.com/saucelabs/saucectl/internal/config"
