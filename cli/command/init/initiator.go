@@ -430,12 +430,9 @@ func (ini *initiator) askFile(message string, val survey.Validator, comp complet
 		Suggest: comp,
 	}
 
-	if err := survey.AskOne(q, targetValue,
+	return survey.AskOne(q, targetValue,
 		survey.WithShowCursor(true),
 		survey.WithValidator(survey.Required),
 		survey.WithValidator(val),
-		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err)); err != nil {
-		return err
-	}
-	return nil
+		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
 }
