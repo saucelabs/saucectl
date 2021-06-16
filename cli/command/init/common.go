@@ -24,7 +24,7 @@ var configurators = map[string]func(cfg *initConfig) interface{}{
 	"xcuitest":   configureXCUITest,
 }
 
-var sauceignoreGenerators = map[string]func() string {
+var sauceignores = map[string]string {
 	"cypress":    sauceignoreCypress,
 	"playwright": sauceignorePlaywright,
 	"puppeteer":  sauceignorePuppeteer,
@@ -43,9 +43,9 @@ func saveConfigurationFiles(initCfg *initConfig) ([]string, error) {
 		files = append(files, ".sauce/config.yml")
 	}
 
-	sauceignoreGenerator, ok := sauceignoreGenerators[initCfg.frameworkName]
+	sauceignore, ok := sauceignores[initCfg.frameworkName]
 	if ok {
-		err := saveSauceIgnore(sauceignoreGenerator())
+		err := saveSauceIgnore(sauceignore)
 		if err != nil {
 			return []string{}, err
 		}

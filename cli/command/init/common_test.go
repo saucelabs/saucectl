@@ -345,7 +345,6 @@ func Test_saveConfigurationFiles(t *testing.T) {
 	defer os.Chdir(pwd)
 
 	calledConfig := false
-	calledSauceignore := false
 
 	oldCypressConfig := configurators["cypress"]
 	oldXcuitestConfig := configurators["xcuitest"]
@@ -357,15 +356,9 @@ func Test_saveConfigurationFiles(t *testing.T) {
 		calledConfig = true
 		return map[string]string{}
 	}
-	oldCypressSauceignore := sauceignoreGenerators["cypress"]
-	sauceignoreGenerators["cypress"] = func() string {
-		calledSauceignore = true
-		return ""
-	}
 	defer func() {
 		configurators["cypress"] = oldCypressConfig
 		configurators["xcuitest"] = oldXcuitestConfig
-		sauceignoreGenerators["cypress"] = oldCypressSauceignore
 	}()
 
 	tests := []struct {
@@ -373,7 +366,6 @@ func Test_saveConfigurationFiles(t *testing.T) {
 		framework    string
 		want         []string
 		calledConfig bool
-		calledIgnore bool
 		wantErr      bool
 	}{
 		{
@@ -381,20 +373,17 @@ func Test_saveConfigurationFiles(t *testing.T) {
 			framework:    "cypress",
 			want:         []string{".sauce/config.yml", ".sauceignore"},
 			calledConfig: true,
-			calledIgnore: true,
 		},
 		{
 			name:         "XCUITest - config.yml",
 			framework:    "xcuitest",
 			want:         []string{".sauce/config.yml"},
 			calledConfig: true,
-			calledIgnore: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			calledConfig = false
-			calledSauceignore = false
 			got, err := saveConfigurationFiles(&initConfig{
 				frameworkName: tt.framework,
 			})
@@ -407,9 +396,6 @@ func Test_saveConfigurationFiles(t *testing.T) {
 			}
 			if calledConfig != tt.calledConfig {
 				t.Errorf("saveConfigurationFiles() calledConfig: got = %v, want %v", calledConfig, tt.calledConfig)
-			}
-			if calledSauceignore != tt.calledIgnore {
-				t.Errorf("saveConfigurationFiles() calledSauceignore: got = %v, want %v", calledSauceignore, tt.calledIgnore)
 			}
 		})
 	}
