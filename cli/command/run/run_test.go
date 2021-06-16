@@ -8,43 +8,9 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/playwright"
-	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/stretchr/testify/assert"
 )
-
-func Test_apiBaseURL(t *testing.T) {
-	type args struct {
-		r region.Region
-	}
-	tests := []struct {
-		name     string
-		args     args
-		sauceAPI string
-		want     string
-	}{
-		{
-			name:     "region based",
-			args:     args{r: region.EUCentral1},
-			sauceAPI: "",
-			want:     region.EUCentral1.APIBaseURL(),
-		},
-		{
-			name:     "override",
-			args:     args{r: region.USWest1},
-			sauceAPI: "https://nowhere.saucelabs.com",
-			want:     "https://nowhere.saucelabs.com",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gFlags.sauceAPI = tt.sauceAPI
-			if got := apiBaseURL(tt.args.r); got != tt.want {
-				t.Errorf("apiBaseURL() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
 func TestApplyDefaultValues(t *testing.T) {
 	type args struct {
@@ -257,38 +223,6 @@ func TestFilterEspressoSuite(t *testing.T) {
 				assert.Equal(t, tc.expErr, err.Error())
 			}
 			assert.True(t, reflect.DeepEqual(*tc.config, tc.expConfig))
-		})
-	}
-}
-
-func TestValidateFiles(t *testing.T) {
-	testCase := []struct {
-		name   string
-		files  []string
-		expErr string
-	}{
-		{
-			name: "files are all existed",
-			files: []string{
-				"cmd.go", "cmd_test.go",
-			},
-			expErr: "",
-		},
-		{
-			name: "one of the files is not existed",
-			files: []string{
-				"cmd.go", "test_file_not_existed.go",
-			},
-			expErr: "stat test_file_not_existed.go: no such file or directory",
-		},
-	}
-
-	for _, tc := range testCase {
-		t.Run(tc.name, func(t *testing.T) {
-			err := validateFiles(tc.files)
-			if err != nil {
-				assert.Equal(t, tc.expErr, err.Error())
-			}
 		})
 	}
 }
