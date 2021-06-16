@@ -60,6 +60,10 @@ func saveSauceConfig(p interface{}) error {
 		if err = os.Mkdir(".sauce", 0750); err != nil {
 			return err
 		}
+		fi, err = os.Stat(".sauce")
+		if err != nil {
+			return err
+		}
 	}
 	if !fi.IsDir() {
 		return fmt.Errorf(".sauce exists and is not a directory")
