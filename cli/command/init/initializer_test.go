@@ -123,7 +123,8 @@ func TestAskFramework(t *testing.T) {
 			procedure: stringToProcedure("✓🔚"),
 			ini:       &initializer{infoReader: ir},
 			execution: func(i *initializer, cfg *initConfig) error {
-				return i.askFramework(cfg)
+				cfg.frameworkName, _ = i.askFramework()
+				return nil
 			},
 			startState:    &initConfig{},
 			expectedState: &initConfig{frameworkName: "cypress"},
@@ -133,7 +134,8 @@ func TestAskFramework(t *testing.T) {
 			procedure: stringToProcedure("esp✓🔚"),
 			ini:       &initializer{infoReader: ir},
 			execution: func(i *initializer, cfg *initConfig) error {
-				return i.askFramework(cfg)
+				cfg.frameworkName, _ = i.askFramework()
+				return nil
 			},
 			startState:    &initConfig{},
 			expectedState: &initConfig{frameworkName: "espresso"},
@@ -143,7 +145,8 @@ func TestAskFramework(t *testing.T) {
 			procedure: stringToProcedure("↓✓🔚"),
 			ini:       &initializer{infoReader: ir},
 			execution: func(i *initializer, cfg *initConfig) error {
-				return i.askFramework(cfg)
+				cfg.frameworkName, _ = i.askFramework()
+				return nil
 			},
 			startState:    &initConfig{},
 			expectedState: &initConfig{frameworkName: "espresso"},
@@ -661,103 +664,6 @@ func TestAskFile(t *testing.T) {
 	}
 }
 
-func Test_frameworkSpecificSettings(t *testing.T) {
-	type args struct {
-		framework string
-	}
-	type want struct {
-		nativeFramework  bool
-		needsApps        bool
-		needsCypressJSON bool
-		needsDevice      bool
-		needsEmulator    bool
-		needsPlatform    bool
-		needsRootDir     bool
-		needsVersion     bool
-	}
-
-	tests := []struct {
-		name string
-		args args
-		want want
-	}{
-		{
-			name: "espresso",
-			args: args{
-				"espresso",
-			},
-			want: want{
-				nativeFramework: true,
-				needsApps:       true,
-				needsEmulator:   true,
-				needsDevice:     true,
-			},
-		},
-		{
-			name: "xcuitest",
-			args: args{
-				"xcuitest",
-			},
-			want: want{
-				nativeFramework: true,
-				needsApps:       true,
-				needsDevice:     true,
-			},
-		},
-		{
-			name: "cypress",
-			args: args{
-				"cypress",
-			},
-			want: want{
-				needsVersion:     true,
-				needsRootDir:     true,
-				needsPlatform:    true,
-				needsCypressJSON: true,
-			},
-		},
-		{
-			name: "testcafe",
-			args: args{
-				"testcafe",
-			},
-			want: want{
-				needsVersion:  true,
-				needsRootDir:  true,
-				needsPlatform: true,
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := isNativeFramework(tt.args.framework); got != tt.want.nativeFramework {
-				t.Errorf("isNativeFramework() = %v, want %v", got, tt.want)
-			}
-			if got := needsCypressJSON(tt.args.framework); got != tt.want.needsCypressJSON {
-				t.Errorf("needsCypressJSON() = %v, want %v", got, tt.want)
-			}
-			if got := needsVersion(tt.args.framework); got != tt.want.needsVersion {
-				t.Errorf("needsVersion() = %v, want %v", got, tt.want)
-			}
-			if got := needsPlatform(tt.args.framework); got != tt.want.needsPlatform {
-				t.Errorf("needsPlatform() = %v, want %v", got, tt.want)
-			}
-			if got := needsDevice(tt.args.framework); got != tt.want.needsDevice {
-				t.Errorf("needsDevice() = %v, want %v", got, tt.want)
-			}
-			if got := needsEmulator(tt.args.framework); got != tt.want.needsEmulator {
-				t.Errorf("needsEmulator() = %v, want %v", got, tt.want)
-			}
-			if got := needsRootDir(tt.args.framework); got != tt.want.needsRootDir {
-				t.Errorf("needsRootDir() = %v, want %v", got, tt.want)
-			}
-			if got := needsApps(tt.args.framework); got != tt.want.needsApps {
-				t.Errorf("needsApps() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestConfigure(t *testing.T) {
 	dir := fs.NewDir(t, "apps",
 		fs.WithFile("cypress.json", "{}", fs.WithMode(0644)),
@@ -834,7 +740,7 @@ func TestConfigure(t *testing.T) {
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
-				frameworkName: "espresso",
+				frameworkName: config.KindEspresso,
 				app:           dir.Join("android-app.apk"),
 				testApp:       dir.Join("android-app.apk"),
 				emulator:      config.Emulator{Name: "Google Pixel Emulator"},
@@ -871,7 +777,7 @@ func TestConfigure(t *testing.T) {
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
-				frameworkName:    "cypress",
+				frameworkName:    config.KindCypress,
 				frameworkVersion: "7.5.0",
 				cypressJSON:      dir.Join("cypress.json"),
 				platformName:     "windows 10",
@@ -929,6 +835,335 @@ func TestAskCredentials(t *testing.T) {
 			},
 			startState:    &initConfig{},
 			expectedState: &initConfig{},
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(lt *testing.T) {
+			executeQuestionTestWithTimeout(lt, tt)
+		})
+	}
+}
+
+func Test_initializers(t *testing.T) {
+	dir := fs.NewDir(t, "apps",
+		fs.WithFile("cypress.json", "{}", fs.WithMode(0644)),
+		fs.WithFile("android-app.apk", "myAppContent", fs.WithMode(0644)),
+		fs.WithFile("ios-app.ipa", "myAppContent", fs.WithMode(0644)),
+		fs.WithDir("ios-folder-app.app", fs.WithMode(0755)))
+	defer dir.Remove()
+
+	frameworkVersions := map[string][]framework.Metadata{
+		"cypress": {
+			{
+				FrameworkName:    "cypress",
+				FrameworkVersion: "7.5.0",
+				DockerImage:      "dummy-docker-image",
+				Platforms: []framework.Platform{
+					{
+						PlatformName: "windows 10",
+						BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
+					},
+				},
+			},
+		},
+		"playwright": {
+			{
+				FrameworkName:    "playwright",
+				FrameworkVersion: "1.11.0",
+				DockerImage:      "dummy-docker-image",
+				Platforms: []framework.Platform{
+					{
+						PlatformName: "windows 10",
+						BrowserNames: []string{"playwright-chromium", "playwright-firefox", "playwright-webkit"},
+					},
+				},
+			},
+		},
+		"testcafe": {
+			{
+				FrameworkName:    "testcafe",
+				FrameworkVersion: "1.12.0",
+				DockerImage:      "dummy-docker-image",
+				Platforms: []framework.Platform{
+					{
+						PlatformName: "windows 10",
+						BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
+					},
+					{
+						PlatformName: "macOS 11.00",
+						BrowserNames: []string{"googlechrome", "firefox", "microsoftedge", "safari"},
+					},
+				},
+			},
+		},
+		"puppeteer": {
+			{
+				FrameworkName:    "puppeteer",
+				FrameworkVersion: "8.0.0",
+				DockerImage:      "dummy-docker-image",
+				Platforms:        []framework.Platform{},
+			},
+		},
+	}
+	ir := &mocks.FakeFrameworkInfoReader{
+		VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
+			return frameworkVersions[frameworkName], nil
+		},
+		FrameworksFn: func(ctx context.Context) ([]framework.Framework, error) {
+			return []framework.Framework{
+				{Name: "cypress"},
+				{Name: "espresso"},
+				{Name: "playwright"},
+				{Name: "puppeteer"},
+				{Name: "testcafe"},
+				{Name: "xcuitest"},
+			}, nil
+		},
+	}
+
+	er := &mocks.FakeEmulatorsReader{
+		GetVirtualDevicesFn: func(ctx context.Context, s string) ([]vmd.VirtualDevice, error) {
+			return []vmd.VirtualDevice{
+				{Name: "Google Pixel Emulator"},
+				{Name: "Samsung Galaxy Emulator"},
+			}, nil
+		},
+	}
+
+	testCases := []questionTest{
+		{
+			name: "Cypress - Windows 10 - chrome",
+			procedure: func(c *expect.Console) error {
+				c.ExpectString("Select cypress version")
+				c.SendLine("7.5.0")
+				c.ExpectString("Cypress configuration file:")
+				c.SendLine(dir.Join("cypress.json"))
+				c.ExpectString("Select platform:")
+				c.SendLine("windows 10")
+				c.ExpectString("Select Browser:")
+				c.SendLine("chrome")
+				c.ExpectString("Download artifacts:")
+				c.SendLine("when tests are passing")
+				c.ExpectEOF()
+				return nil
+			},
+			ini: &initializer{infoReader: ir},
+			execution: func(i *initializer, cfg *initConfig) error {
+				newCfg, err := i.initializeCypress()
+				if err != nil {
+					return err
+				}
+				*cfg = *newCfg
+				return nil
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{
+				frameworkName:    config.KindCypress,
+				frameworkVersion: "7.5.0",
+				cypressJSON:      dir.Join("cypress.json"),
+				platformName:     "windows 10",
+				browserName:      "googlechrome",
+				mode:             "sauce",
+				artifactWhen:     config.WhenPass,
+			},
+		},
+		{
+			name: "Playwright - Windows 10 - chromium",
+			procedure: func(c *expect.Console) error {
+				c.ExpectString("Select playwright version")
+				c.SendLine("1.11.0")
+				c.ExpectString("Select platform:")
+				c.SendLine("windows 10")
+				c.ExpectString("Select Browser:")
+				c.SendLine("chromium")
+				c.ExpectString("Download artifacts:")
+				c.SendLine("when tests are passing")
+				c.ExpectEOF()
+				return nil
+			},
+			ini: &initializer{infoReader: ir},
+			execution: func(i *initializer, cfg *initConfig) error {
+				newCfg, err := i.initializePlaywright()
+				if err != nil {
+					return err
+				}
+				*cfg = *newCfg
+				return nil
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{
+				frameworkName:    config.KindPlaywright,
+				frameworkVersion: "1.11.0",
+				platformName:     "windows 10",
+				browserName:      "chromium",
+				mode:             "sauce",
+				artifactWhen:     config.WhenPass,
+			},
+		},
+		{
+			name: "Puppeteer - docker - chrome",
+			procedure: func(c *expect.Console) error {
+				c.ExpectString("Select puppeteer version")
+				c.SendLine("8.0.0")
+				c.ExpectString("Select platform:")
+				c.SendLine("docker")
+				c.ExpectString("Select Browser:")
+				c.SendLine("chrome")
+				c.ExpectString("Download artifacts:")
+				c.SendLine("when tests are passing")
+				c.ExpectEOF()
+				return nil
+			},
+			ini: &initializer{infoReader: ir},
+			execution: func(i *initializer, cfg *initConfig) error {
+				newCfg, err := i.initializePuppeteer()
+				if err != nil {
+					return err
+				}
+				*cfg = *newCfg
+				return nil
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{
+				frameworkName:    config.KindPuppeteer,
+				frameworkVersion: "8.0.0",
+				platformName:     "",
+				browserName:      "chrome",
+				mode:             "docker",
+				artifactWhen:     config.WhenPass,
+			},
+		},
+		{
+			name: "Testcafe - macOS 11.00 - safari",
+			procedure: func(c *expect.Console) error {
+				c.ExpectString("Select testcafe version")
+				c.SendLine("1.12.0")
+				c.ExpectString("Select platform:")
+				c.SendLine("macOS 11.00")
+				c.ExpectString("Select Browser:")
+				c.SendLine("safari")
+				c.ExpectString("Download artifacts:")
+				c.SendLine("when tests are passing")
+				c.ExpectEOF()
+				return nil
+			},
+			ini: &initializer{infoReader: ir},
+			execution: func(i *initializer, cfg *initConfig) error {
+				newCfg, err := i.initializeTestcafe()
+				if err != nil {
+					return err
+				}
+				*cfg = *newCfg
+				return nil
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{
+				frameworkName:    config.KindTestcafe,
+				frameworkVersion: "1.12.0",
+				platformName:     "macOS 11.00",
+				browserName:      "safari",
+				mode:             "sauce",
+				artifactWhen:     config.WhenPass,
+			},
+		},
+		{
+			name: "XCUITest - .ipa",
+			procedure: func(c *expect.Console) error {
+				c.ExpectString("Application to test:")
+				c.SendLine(dir.Join("ios-app.ipa"))
+				c.ExpectString("Test application:")
+				c.SendLine(dir.Join("ios-app.ipa"))
+				c.ExpectString("Select device pattern:")
+				c.SendLine("iPhone .*")
+				c.ExpectString("Download artifacts:")
+				c.SendLine("when tests are passing")
+				c.ExpectEOF()
+				return nil
+			},
+			ini: &initializer{infoReader: ir},
+			execution: func(i *initializer, cfg *initConfig) error {
+				newCfg, err := i.initializeXCUITest()
+				if err != nil {
+					return err
+				}
+				*cfg = *newCfg
+				return nil
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{
+				frameworkName: config.KindXcuitest,
+				app:           dir.Join("ios-app.ipa"),
+				testApp:       dir.Join("ios-app.ipa"),
+				device:        config.Device{Name: "iPhone .*"},
+				artifactWhen:  config.WhenPass,
+			},
+		},
+		{
+			name: "XCUITest - .app",
+			procedure: func(c *expect.Console) error {
+				c.ExpectString("Application to test:")
+				c.SendLine(dir.Join("ios-folder-app.app"))
+				c.ExpectString("Test application:")
+				c.SendLine(dir.Join("ios-folder-app.app"))
+				c.ExpectString("Select device pattern:")
+				c.SendLine("iPad .*")
+				c.ExpectString("Download artifacts:")
+				c.SendLine("when tests are passing")
+				c.ExpectEOF()
+				return nil
+			},
+			ini: &initializer{infoReader: ir},
+			execution: func(i *initializer, cfg *initConfig) error {
+				newCfg, err := i.initializeXCUITest()
+				if err != nil {
+					return err
+				}
+				*cfg = *newCfg
+				return nil
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{
+				frameworkName: config.KindXcuitest,
+				app:           dir.Join("ios-folder-app.app"),
+				testApp:       dir.Join("ios-folder-app.app"),
+				device:        config.Device{Name: "iPad .*"},
+				artifactWhen:  config.WhenPass,
+			},
+		},
+		{
+			name: "Espresso - .apk",
+			procedure: func(c *expect.Console) error {
+				c.ExpectString("Application to test:")
+				c.SendLine(dir.Join("android-app.apk"))
+				c.ExpectString("Test application:")
+				c.SendLine(dir.Join("android-app.apk"))
+				c.ExpectString("Select device pattern:")
+				c.SendLine("HTC .*")
+				c.ExpectString("Select emulator:")
+				c.SendLine("Samsung Galaxy Emulator")
+				c.ExpectString("Download artifacts:")
+				c.SendLine("when tests are passing")
+				c.ExpectEOF()
+				return nil
+			},
+			ini: &initializer{infoReader: ir, vmdReader: er},
+			execution: func(i *initializer, cfg *initConfig) error {
+				newCfg, err := i.initializeEspresso()
+				if err != nil {
+					return err
+				}
+				*cfg = *newCfg
+				return nil
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{
+				frameworkName: config.KindEspresso,
+				app:           dir.Join("android-app.apk"),
+				testApp:       dir.Join("android-app.apk"),
+				device:        config.Device{Name: "HTC .*"},
+				emulator:      config.Emulator{Name: "Samsung Galaxy Emulator"},
+				artifactWhen:  config.WhenPass,
+			},
 		},
 	}
 	for _, tt := range testCases {

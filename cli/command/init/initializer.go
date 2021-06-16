@@ -69,118 +69,28 @@ func newInitializer(stdio terminal.Stdio, creds credentials.Credentials, regio s
 	}
 }
 
-func isNativeFramework(framework string) bool {
-	return framework == config.KindEspresso || framework == config.KindXcuitest
-}
-
-func needsApps(framework string) bool {
-	return isNativeFramework(framework)
-}
-
-func needsCypressJSON(framework string) bool {
-	return framework == config.KindCypress
-}
-
-func needsDevice(framework string) bool {
-	return isNativeFramework(framework)
-}
-
-func needsEmulator(framework string) bool {
-	return framework == config.KindEspresso
-}
-
-func needsPlatform(framework string) bool {
-	return !isNativeFramework(framework)
-}
-
-func needsRootDir(framework string) bool {
-	return !isNativeFramework(framework)
-}
-
-func needsVersion(framework string) bool {
-	return !isNativeFramework(framework)
-}
-
 func (ini *initializer) configure() (*initConfig, error) {
-	cfg := &initConfig{}
-
-	err := ini.askFramework(cfg)
+	fName, err := ini.askFramework()
 	if err != nil {
 		return &initConfig{}, err
 	}
 
-	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), cfg.frameworkName)
-	if err != nil {
-		return &initConfig{}, err
+	switch fName {
+	case config.KindCypress:
+		return ini.initializeCypress()
+	case config.KindPlaywright:
+		return ini.initializePlaywright()
+	case config.KindPuppeteer:
+		return ini.initializePuppeteer()
+	case config.KindTestcafe:
+		return ini.initializeTestcafe()
+	case config.KindEspresso:
+		return ini.initializeEspresso()
+	case config.KindXcuitest:
+		return ini.initializeXCUITest()
+	default:
+		return &initConfig{}, fmt.Errorf("unsupported framework %v", frameworkName)
 	}
-
-	if needsVersion(cfg.frameworkName) {
-		err = ini.askVersion(cfg, frameworkMetadatas)
-		if err != nil {
-			return &initConfig{}, err
-		}
-	}
-
-	if needsCypressJSON(cfg.frameworkName) {
-		err = ini.askFile("Cypress configuration file:", extValidator(cfg.frameworkName), completeBasic, &cfg.cypressJSON)
-		if err != nil {
-			return &initConfig{}, err
-		}
-	}
-
-	if needsPlatform(cfg.frameworkName) {
-		err = ini.askPlatform(cfg, frameworkMetadatas)
-		if err != nil {
-			return &initConfig{}, err
-		}
-	}
-
-	if needsApps(cfg.frameworkName) {
-		err = ini.askFile("Application to test:", extValidator(cfg.frameworkName), completeBasic, &cfg.app)
-		if err != nil {
-			return &initConfig{}, err
-		}
-
-		err = ini.askFile("Test application:", extValidator(cfg.frameworkName), completeBasic, &cfg.testApp)
-		if err != nil {
-			return &initConfig{}, err
-		}
-	}
-
-	if needsDevice(cfg.frameworkName) {
-		patterns := androidDevicesPatterns
-		if cfg.frameworkName == config.KindXcuitest {
-			patterns = iOSDevicesPatterns
-		}
-		if err != nil {
-			return &initConfig{}, err
-		}
-
-		err = ini.askDevice(cfg, patterns)
-		if err != nil {
-			return &initConfig{}, err
-		}
-
-	}
-
-	if needsEmulator(cfg.frameworkName) {
-		vmdKind := vmd.AndroidEmulator
-		virtualDevices, err := ini.vmdReader.GetVirtualDevices(context.Background(), vmdKind)
-
-		if err != nil {
-			return &initConfig{}, err
-		}
-		err = ini.askEmulator(cfg, virtualDevices)
-		if err != nil {
-			return &initConfig{}, err
-		}
-	}
-
-	err = ini.askDownloadWhen(cfg)
-	if err != nil {
-		return &initConfig{}, err
-	}
-	return cfg, nil
 }
 
 func askCredentials(stdio terminal.Stdio) (credentials.Credentials, error) {
@@ -221,10 +131,10 @@ func askRegion(stdio terminal.Stdio) (string, error) {
 	return r, nil
 }
 
-func (ini *initializer) askFramework(cfg *initConfig) error {
+func (ini *initializer) askFramework() (string, error) {
 	values, err := ini.infoReader.Frameworks(context.Background())
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	var frameworks []string
@@ -237,12 +147,12 @@ func (ini *initializer) askFramework(cfg *initConfig) error {
 		Options: frameworks,
 	}
 
-	err = survey.AskOne(p, &cfg.frameworkName, survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
-	if cfg.frameworkName == "" {
-		return errors.New("interrupting configuration")
+	var selectedFramework string
+	err = survey.AskOne(p, &selectedFramework, survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
+	if selectedFramework == "" {
+		return "", errors.New("interrupting configuration")
 	}
-	cfg.frameworkName = strings.ToLower(cfg.frameworkName)
-	return err
+	return strings.ToLower(selectedFramework), err
 }
 
 type completor func(string) []string
@@ -431,4 +341,170 @@ func (ini *initializer) askFile(message string, val survey.Validator, comp compl
 		survey.WithValidator(survey.Required),
 		survey.WithValidator(val),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
+}
+
+func (ini *initializer) initializeCypress() (*initConfig, error) {
+	cfg := &initConfig{frameworkName: config.KindCypress}
+
+	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), cfg.frameworkName)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askVersion(cfg, frameworkMetadatas)
+	if err != nil {
+			return &initConfig{}, err
+		}
+
+	err = ini.askFile("Cypress configuration file:", extValidator(cfg.frameworkName), completeBasic, &cfg.cypressJSON)
+	if err != nil {
+			return &initConfig{}, err
+		}
+
+	err = ini.askPlatform(cfg, frameworkMetadatas)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askDownloadWhen(cfg)
+	if err != nil {
+		return &initConfig{}, err
+	}
+	return cfg, nil
+}
+
+func (ini *initializer) initializePlaywright() (*initConfig, error) {
+	cfg := &initConfig{frameworkName: config.KindPlaywright}
+
+	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), cfg.frameworkName)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askVersion(cfg, frameworkMetadatas)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askPlatform(cfg, frameworkMetadatas)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askDownloadWhen(cfg)
+	if err != nil {
+		return &initConfig{}, err
+	}
+	return cfg, nil
+}
+
+func (ini *initializer) initializeTestcafe() (*initConfig, error) {
+	cfg := &initConfig{frameworkName: config.KindTestcafe}
+
+	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), cfg.frameworkName)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askVersion(cfg, frameworkMetadatas)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askPlatform(cfg, frameworkMetadatas)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askDownloadWhen(cfg)
+	if err != nil {
+		return &initConfig{}, err
+	}
+	return cfg, nil
+}
+
+func (ini *initializer) initializePuppeteer() (*initConfig, error) {
+	cfg := &initConfig{frameworkName: config.KindPuppeteer}
+
+	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), cfg.frameworkName)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askVersion(cfg, frameworkMetadatas)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askPlatform(cfg, frameworkMetadatas)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askDownloadWhen(cfg)
+	if err != nil {
+		return &initConfig{}, err
+	}
+	return cfg, nil
+}
+
+func (ini *initializer) initializeEspresso() (*initConfig, error) {
+	cfg := &initConfig{frameworkName: config.KindEspresso}
+
+	err := ini.askFile("Application to test:", extValidator(cfg.frameworkName), completeBasic, &cfg.app)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askFile("Test application:", extValidator(cfg.frameworkName), completeBasic, &cfg.testApp)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askDevice(cfg, androidDevicesPatterns)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	virtualDevices, err := ini.vmdReader.GetVirtualDevices(context.Background(), vmd.AndroidEmulator)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askEmulator(cfg, virtualDevices)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askDownloadWhen(cfg)
+	if err != nil {
+		return &initConfig{}, err
+	}
+	return cfg, nil
+}
+
+func (ini *initializer) initializeXCUITest() (*initConfig, error) {
+	cfg := &initConfig{frameworkName: config.KindXcuitest}
+
+	err := ini.askFile("Application to test:", extValidator(cfg.frameworkName), completeBasic, &cfg.app)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askFile("Test application:", extValidator(cfg.frameworkName), completeBasic, &cfg.testApp)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askDevice(cfg, iOSDevicesPatterns)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askDownloadWhen(cfg)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	return cfg, nil
 }
