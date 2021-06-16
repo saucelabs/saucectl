@@ -200,7 +200,7 @@ jobs:
 
       - name: Saucectl RUN - CLI Driven
         run: |
-          ./saucectl run espresso -c ./sauce/espresso_light.yml --name "CLI Driven" --app ./tests/e2e/espresso/calc.apk --testApp ./tests/e2e/espresso/calc-success.apk --emulator name="Android GoogleApi Emulator",platformVersion=11.0 --testOptions.size small
+          ./saucectl run espresso -c .sauce/espresso_light.yml --name "CLI Driven" --app ./tests/e2e/espresso/calc.apk --testApp ./tests/e2e/espresso/calc-success.apk --emulator name="Android GoogleApi Emulator",platformVersion=11.0 --testOptions.size small
   xcuitest:
     needs: build
     runs-on: ubuntu-latest
