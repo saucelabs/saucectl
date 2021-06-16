@@ -58,9 +58,9 @@ func executeQuestionTest(t *testing.T, test questionTest) {
 	go func() {
 		defer close(donec)
 		if lerr := test.procedure(c); lerr != nil {
-			t.Logf("Error received: %v", lerr.Error())
-			//t.Errorf("error: %v", lerr)
-			//t.FailNow()
+			if lerr.Error() != "read /dev/ptmx: input/output error" {
+				t.Errorf("error: %v", lerr)
+			}
 		}
 	}()
 
