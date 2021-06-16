@@ -129,18 +129,6 @@ func extValidator(framework string) survey.Validator {
 	}
 }
 
-func isDirectory(s interface{}) error {
-	val := s.(string)
-	fi, err := os.Stat(val)
-	if err != nil {
-		return fmt.Errorf("%s: %v", val, err)
-	}
-	if !fi.IsDir() {
-		return fmt.Errorf("%s is not a directory", val)
-	}
-	return nil
-}
-
 func uniqSorted(ss []string) []string {
 	var out []string
 	idx := make(map[string]bool)

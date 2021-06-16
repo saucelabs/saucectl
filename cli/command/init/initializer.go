@@ -28,7 +28,7 @@ var androidDevicesPatterns = []string{
 
 var iOSDevicesPatterns = []string{"iPad .*", "iPhone .*"}
 
-type initiator struct {
+type initializer struct {
 	stdio        terminal.Stdio
 	infoReader   framework.MetadataService
 	deviceReader devices.Reader
@@ -38,8 +38,8 @@ type initiator struct {
 	frameworkMetadata []framework.Metadata
 }
 
-// newInitiator creates a new initiator instance.
-func newInitiator(stdio terminal.Stdio, creds credentials.Credentials, regio string) *initiator {
+// newInitializer creates a new initializer instance.
+func newInitializer(stdio terminal.Stdio, creds credentials.Credentials, regio string) *initializer {
 	r := region.FromString(regio)
 	tc := testcomposer.Client{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
@@ -61,7 +61,7 @@ func newInitiator(stdio terminal.Stdio, creds credentials.Credentials, regio str
 		AccessKey:  creds.AccessKey,
 	}
 
-	return &initiator{
+	return &initializer{
 		stdio:        stdio,
 		infoReader:   &tc,
 		deviceReader: &rc,
@@ -101,7 +101,7 @@ func needsVersion(framework string) bool {
 	return !isNativeFramework(framework)
 }
 
-func (ini *initiator) configure() (*initConfig, error) {
+func (ini *initializer) configure() (*initConfig, error) {
 	cfg := &initConfig{}
 
 	err := ini.askFramework(cfg)
@@ -221,7 +221,7 @@ func askRegion(stdio terminal.Stdio) (string, error) {
 	return r, nil
 }
 
-func (ini *initiator) askFramework(cfg *initConfig) error {
+func (ini *initializer) askFramework(cfg *initConfig) error {
 	values, err := ini.infoReader.Frameworks(context.Background())
 	if err != nil {
 		return err
@@ -261,7 +261,7 @@ var mapWhen = map[string]config.When{
 	"always":                 config.WhenAlways,
 }
 
-func (ini *initiator) askDownloadWhen(cfg *initConfig) error {
+func (ini *initializer) askDownloadWhen(cfg *initConfig) error {
 	q := &survey.Select{
 		Message: "Download artifacts:",
 		Default: whenStrings[0],
@@ -281,7 +281,7 @@ func (ini *initiator) askDownloadWhen(cfg *initConfig) error {
 	return nil
 }
 
-func (ini *initiator) askDevice(cfg *initConfig, suggestions []string) error {
+func (ini *initializer) askDevice(cfg *initConfig, suggestions []string) error {
 	q := &survey.Select{
 		Message: "Select device pattern:",
 		Options: suggestions,
@@ -291,7 +291,7 @@ func (ini *initiator) askDevice(cfg *initConfig, suggestions []string) error {
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
 }
 
-func (ini *initiator) askEmulator(cfg *initConfig, vmds []vmd.VirtualDevice) error {
+func (ini *initializer) askEmulator(cfg *initConfig, vmds []vmd.VirtualDevice) error {
 	var vmdNames []string
 	for _, v := range vmds {
 		vmdNames = append(vmdNames, v.Name)
@@ -365,7 +365,7 @@ func dockerBrowsers(framework string) []string {
 	}
 }
 
-func (ini *initiator) askPlatform(cfg *initConfig, metadatas []framework.Metadata) error {
+func (ini *initializer) askPlatform(cfg *initConfig, metadatas []framework.Metadata) error {
 	platformChoices := metaToPlatforms(metadatas, cfg.frameworkVersion)
 
 	q := &survey.Select{
@@ -402,7 +402,7 @@ func (ini *initiator) askPlatform(cfg *initConfig, metadatas []framework.Metadat
 	return nil
 }
 
-func (ini *initiator) askVersion(cfg *initConfig, metadatas []framework.Metadata) error {
+func (ini *initializer) askVersion(cfg *initConfig, metadatas []framework.Metadata) error {
 	versions := metaToVersions(metadatas)
 
 	q := &survey.Select{
@@ -420,7 +420,7 @@ func (ini *initiator) askVersion(cfg *initConfig, metadatas []framework.Metadata
 	return nil
 }
 
-func (ini *initiator) askFile(message string, val survey.Validator, comp completor, targetValue *string) error {
+func (ini *initializer) askFile(message string, val survey.Validator, comp completor, targetValue *string) error {
 	q := &survey.Input{
 		Message: message,
 		Suggest: comp,

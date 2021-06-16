@@ -87,7 +87,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return err
 	}
 
-	ini := newInitiator(stdio, creds, regio)
+	ini := newInitializer(stdio, creds, regio)
 	initCfg, err := ini.configure()
 	if err != nil {
 		return err

@@ -103,8 +103,8 @@ func stringToProcedure(actions string) func(*expect.Console) error {
 
 type questionTest struct {
 	name          string
-	ini           *initiator
-	execution     func(*initiator, *initConfig) error
+	ini           *initializer
+	execution     func(*initializer, *initConfig) error
 	procedure     func(*expect.Console) error
 	startState    *initConfig
 	expectedState *initConfig
@@ -120,8 +120,8 @@ func TestAskFramework(t *testing.T) {
 		{
 			name:      "Default",
 			procedure: stringToProcedure("✓🔚"),
-			ini:       &initiator{infoReader: ir},
-			execution: func(i *initiator, cfg *initConfig) error {
+			ini:       &initializer{infoReader: ir},
+			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askFramework(cfg)
 			},
 			startState:    &initConfig{},
@@ -130,8 +130,8 @@ func TestAskFramework(t *testing.T) {
 		{
 			name:      "Type In",
 			procedure: stringToProcedure("esp✓🔚"),
-			ini:       &initiator{infoReader: ir},
-			execution: func(i *initiator, cfg *initConfig) error {
+			ini:       &initializer{infoReader: ir},
+			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askFramework(cfg)
 			},
 			startState:    &initConfig{},
@@ -140,8 +140,8 @@ func TestAskFramework(t *testing.T) {
 		{
 			name:      "Arrow In",
 			procedure: stringToProcedure("↓✓🔚"),
-			ini:       &initiator{infoReader: ir},
-			execution: func(i *initiator, cfg *initConfig) error {
+			ini:       &initializer{infoReader: ir},
+			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askFramework(cfg)
 			},
 			startState:    &initConfig{},
@@ -160,8 +160,8 @@ func TestAskRegion(t *testing.T) {
 		{
 			name:      "Default",
 			procedure: stringToProcedure("✓🔚"),
-			ini:       &initiator{},
-			execution: func(i *initiator, cfg *initConfig) error {
+			ini:       &initializer{},
+			execution: func(i *initializer, cfg *initConfig) error {
 				regio, err := askRegion(i.stdio)
 				cfg.region = regio
 				return err
@@ -172,8 +172,8 @@ func TestAskRegion(t *testing.T) {
 		{
 			name:      "Type US",
 			procedure: stringToProcedure("us-✓🔚"),
-			ini:       &initiator{},
-			execution: func(i *initiator, cfg *initConfig) error {
+			ini:       &initializer{},
+			execution: func(i *initializer, cfg *initConfig) error {
 				regio, err := askRegion(i.stdio)
 				cfg.region = regio
 				return err
@@ -184,10 +184,10 @@ func TestAskRegion(t *testing.T) {
 		{
 			name:      "Type EU",
 			procedure: stringToProcedure("eu-✓🔚"),
-			ini: &initiator{
+			ini: &initializer{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 			},
-			execution: func(i *initiator, cfg *initConfig) error {
+			execution: func(i *initializer, cfg *initConfig) error {
 				regio, err := askRegion(i.stdio)
 				cfg.region = regio
 				return err
@@ -198,10 +198,10 @@ func TestAskRegion(t *testing.T) {
 		{
 			name:      "Select EU",
 			procedure: stringToProcedure("↓✓🔚"),
-			ini: &initiator{
+			ini: &initializer{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 			},
-			execution: func(i *initiator, cfg *initConfig) error {
+			execution: func(i *initializer, cfg *initConfig) error {
 				regio, err := askRegion(i.stdio)
 				cfg.region = regio
 				return err
@@ -222,8 +222,8 @@ func TestAskDownloadWhen(t *testing.T) {
 		{
 			name:      "Defaults to Fail",
 			procedure: stringToProcedure("✓🔚"),
-			ini:       &initiator{},
-			execution: func(i *initiator, cfg *initConfig) error {
+			ini:       &initializer{},
+			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askDownloadWhen(cfg)
 			},
 			startState:    &initConfig{},
@@ -232,10 +232,10 @@ func TestAskDownloadWhen(t *testing.T) {
 		{
 			name:      "Second is pass",
 			procedure: stringToProcedure("↓✓🔚"),
-			ini: &initiator{
+			ini: &initializer{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 			},
-			execution: func(i *initiator, cfg *initConfig) error {
+			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askDownloadWhen(cfg)
 			},
 			startState:    &initConfig{},
@@ -244,10 +244,10 @@ func TestAskDownloadWhen(t *testing.T) {
 		{
 			name:      "Type always",
 			procedure: stringToProcedure("alw✓🔚"),
-			ini: &initiator{
+			ini: &initializer{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 			},
-			execution: func(i *initiator, cfg *initConfig) error {
+			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askDownloadWhen(cfg)
 			},
 			startState:    &initConfig{},
@@ -267,8 +267,8 @@ func TestAskDevice(t *testing.T) {
 		{
 			name:      "Default Device",
 			procedure: stringToProcedure("✓🔚"),
-			ini:       &initiator{},
-			execution: func(i *initiator, cfg *initConfig) error {
+			ini:       &initializer{},
+			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askDevice(cfg, devs)
 			},
 			startState:    &initConfig{},
@@ -277,10 +277,10 @@ func TestAskDevice(t *testing.T) {
 		{
 			name:      "Input is captured",
 			procedure: stringToProcedure("Pixel 4✓🔚"),
-			ini: &initiator{
+			ini: &initializer{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 			},
-			execution: func(i *initiator, cfg *initConfig) error {
+			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askDevice(cfg, devs)
 			},
 			startState:    &initConfig{},
@@ -321,8 +321,8 @@ func TestAskEmulator(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initiator{},
-			execution: func(i *initiator, cfg *initConfig) error {
+			ini: &initializer{},
+			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askEmulator(cfg, vmds)
 			},
 			startState:    &initConfig{},
@@ -345,10 +345,10 @@ func TestAskEmulator(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initiator{
+			ini: &initializer{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 			},
-			execution: func(i *initiator, cfg *initConfig) error {
+			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askEmulator(cfg, vmds)
 			},
 			startState:    &initConfig{},
@@ -421,8 +421,8 @@ func TestAskPlatform(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initiator{},
-			execution: func(i *initiator, cfg *initConfig) error {
+			ini: &initializer{},
+			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askPlatform(cfg, metas)
 			},
 			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0"},
@@ -453,8 +453,8 @@ func TestAskPlatform(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initiator{},
-			execution: func(i *initiator, cfg *initConfig) error {
+			ini: &initializer{},
+			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askPlatform(cfg, metas)
 			},
 			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0"},
@@ -485,8 +485,8 @@ func TestAskPlatform(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initiator{},
-			execution: func(i *initiator, cfg *initConfig) error {
+			ini: &initializer{},
+			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askPlatform(cfg, metas)
 			},
 			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0"},
@@ -550,10 +550,10 @@ func TestAskVersion(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initiator{
+			ini: &initializer{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 			},
-			execution: func(i *initiator, cfg *initConfig) error {
+			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askVersion(cfg, metas)
 			},
 			startState:    &initConfig{frameworkName: "testcafe"},
@@ -580,10 +580,10 @@ func TestAskVersion(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initiator{
+			ini: &initializer{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 			},
-			execution: func(i *initiator, cfg *initConfig) error {
+			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askVersion(cfg, metas)
 			},
 			startState:    &initConfig{frameworkName: "testcafe"},
@@ -630,10 +630,10 @@ func TestAskFile(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initiator{
+			ini: &initializer{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 			},
-			execution: func(i *initiator, cfg *initConfig) error {
+			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askFile("Filename", func(ans interface{}) error {
 					val := ans.(string)
 					if !strings.HasSuffix(val, ".apk") {
@@ -822,8 +822,8 @@ func TestConfigure(t *testing.T) {
 				c.ExpectEOF()
 				return nil
 			},
-			ini: &initiator{infoReader: ir, deviceReader: dr, vmdReader: er},
-			execution: func(i *initiator, cfg *initConfig) error {
+			ini: &initializer{infoReader: ir, deviceReader: dr, vmdReader: er},
+			execution: func(i *initializer, cfg *initConfig) error {
 				newCfg, err := i.configure()
 				if err != nil {
 					return err
@@ -859,8 +859,8 @@ func TestConfigure(t *testing.T) {
 				c.ExpectEOF()
 				return nil
 			},
-			ini: &initiator{infoReader: ir, deviceReader: dr, vmdReader: er},
-			execution: func(i *initiator, cfg *initConfig) error {
+			ini: &initializer{infoReader: ir, deviceReader: dr, vmdReader: er},
+			execution: func(i *initializer, cfg *initConfig) error {
 				newCfg, err := i.configure()
 				if err != nil {
 					return err
@@ -914,8 +914,8 @@ func TestAskCredentials(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initiator{},
-			execution: func(i *initiator, cfg *initConfig) error {
+			ini: &initializer{},
+			execution: func(i *initializer, cfg *initConfig) error {
 				creds, err := askCredentials(i.stdio)
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
