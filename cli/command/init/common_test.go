@@ -104,7 +104,7 @@ func Test_extValidator(t *testing.T) {
 func Test_saveSauceIgnore(t *testing.T) {
 	dir := fs.NewDir(t, "tests",
 		fs.WithDir("open", fs.WithMode(0755)),
-		fs.WithDir("closed", fs.WithMode(0500)),
+		fs.WithDir("closed", fs.WithMode(0100)),
 	)
 	defer dir.Remove()
 
@@ -181,8 +181,8 @@ func Test_saveSauceConfig(t *testing.T) {
 			fs.WithDir(".sauce", fs.WithMode(0755),
 				fs.WithFile("config.yml", "dummy-file", fs.WithMode(0400)))),
 		fs.WithDir("existing-dir-denied", fs.WithMode(0755),
-			fs.WithDir(".sauce", fs.WithMode(0500))),
-		fs.WithDir("denied", fs.WithMode(0500)),
+			fs.WithDir(".sauce", fs.WithMode(0100))),
+		fs.WithDir("denied", fs.WithMode(0100)),
 	)
 	defer dir.Remove()
 
