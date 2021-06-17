@@ -403,19 +403,19 @@ func TestAskPlatform(t *testing.T) {
 		{
 			name: "Windows 10",
 			procedure: func(c *expect.Console) error {
-				_, err := c.ExpectString("Select platform")
-				if err != nil {
-					return err
-				}
-				_, err = c.SendLine("Windows 10")
-				if err != nil {
-					return err
-				}
-				_, err = c.ExpectString("Select Browser")
+				_, err := c.ExpectString("Select browser")
 				if err != nil {
 					return err
 				}
 				_, err = c.SendLine("chrome")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select platform")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("Windows 10")
 				if err != nil {
 					return err
 				}
@@ -430,24 +430,24 @@ func TestAskPlatform(t *testing.T) {
 				return i.askPlatform(cfg, metas)
 			},
 			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0"},
-			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", browserName: "googlechrome", mode: "sauce", platformName: "Windows 10"},
+			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", browserName: "chrome", mode: "sauce", platformName: "Windows 10"},
 		},
 		{
 			name: "macOS",
 			procedure: func(c *expect.Console) error {
-				_, err := c.ExpectString("Select platform")
-				if err != nil {
-					return err
-				}
-				_, err = c.SendLine("macOS")
-				if err != nil {
-					return err
-				}
-				_, err = c.ExpectString("Select Browser")
+				_, err := c.ExpectString("Select browser")
 				if err != nil {
 					return err
 				}
 				_, err = c.SendLine("firefox")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select platform")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("macOS")
 				if err != nil {
 					return err
 				}
@@ -467,19 +467,19 @@ func TestAskPlatform(t *testing.T) {
 		{
 			name: "docker",
 			procedure: func(c *expect.Console) error {
-				_, err := c.ExpectString("Select platform")
-				if err != nil {
-					return err
-				}
-				_, err = c.SendLine("docker")
-				if err != nil {
-					return err
-				}
-				_, err = c.ExpectString("Select Browser")
+				_, err := c.ExpectString("Select browser")
 				if err != nil {
 					return err
 				}
 				_, err = c.SendLine("chrome")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select platform")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("docker")
 				if err != nil {
 					return err
 				}
@@ -757,10 +757,10 @@ func TestConfigure(t *testing.T) {
 				c.SendLine("7.5.0")
 				c.ExpectString("Cypress configuration file:")
 				c.SendLine(dir.Join("cypress.json"))
+				c.ExpectString("Select browser:")
+				c.SendLine("chrome")
 				c.ExpectString("Select platform:")
 				c.SendLine("Windows 10")
-				c.ExpectString("Select Browser:")
-				c.SendLine("chrome")
 				c.ExpectString("Download artifacts:")
 				c.SendLine("when tests are passing")
 				c.ExpectEOF()
@@ -781,7 +781,7 @@ func TestConfigure(t *testing.T) {
 				frameworkVersion: "7.5.0",
 				cypressJSON:      dir.Join("cypress.json"),
 				platformName:     "windows 10",
-				browserName:      "googlechrome",
+				browserName:      "chrome",
 				mode:             "sauce",
 				artifactWhen:     config.WhenPass,
 			},
@@ -938,10 +938,10 @@ func Test_initializers(t *testing.T) {
 				c.SendLine("7.5.0")
 				c.ExpectString("Cypress configuration file:")
 				c.SendLine(dir.Join("cypress.json"))
+				c.ExpectString("Select browser:")
+				c.SendLine("chrome")
 				c.ExpectString("Select platform:")
 				c.SendLine("windows 10")
-				c.ExpectString("Select Browser:")
-				c.SendLine("chrome")
 				c.ExpectString("Download artifacts:")
 				c.SendLine("when tests are passing")
 				c.ExpectEOF()
@@ -962,7 +962,7 @@ func Test_initializers(t *testing.T) {
 				frameworkVersion: "7.5.0",
 				cypressJSON:      dir.Join("cypress.json"),
 				platformName:     "windows 10",
-				browserName:      "googlechrome",
+				browserName:      "chrome",
 				mode:             "sauce",
 				artifactWhen:     config.WhenPass,
 			},
@@ -972,10 +972,10 @@ func Test_initializers(t *testing.T) {
 			procedure: func(c *expect.Console) error {
 				c.ExpectString("Select playwright version")
 				c.SendLine("1.11.0")
+				c.ExpectString("Select browser:")
+				c.SendLine("chromium")
 				c.ExpectString("Select platform:")
 				c.SendLine("windows 10")
-				c.ExpectString("Select Browser:")
-				c.SendLine("chromium")
 				c.ExpectString("Download artifacts:")
 				c.SendLine("when tests are passing")
 				c.ExpectEOF()
@@ -1005,10 +1005,10 @@ func Test_initializers(t *testing.T) {
 			procedure: func(c *expect.Console) error {
 				c.ExpectString("Select puppeteer version")
 				c.SendLine("8.0.0")
+				c.ExpectString("Select browser:")
+				c.SendLine("chrome")
 				c.ExpectString("Select platform:")
 				c.SendLine("docker")
-				c.ExpectString("Select Browser:")
-				c.SendLine("chrome")
 				c.ExpectString("Download artifacts:")
 				c.SendLine("when tests are passing")
 				c.ExpectEOF()
@@ -1038,10 +1038,10 @@ func Test_initializers(t *testing.T) {
 			procedure: func(c *expect.Console) error {
 				c.ExpectString("Select testcafe version")
 				c.SendLine("1.12.0")
+				c.ExpectString("Select browser:")
+				c.SendLine("safari")
 				c.ExpectString("Select platform:")
 				c.SendLine("macOS 11.00")
-				c.ExpectString("Select Browser:")
-				c.SendLine("safari")
 				c.ExpectString("Download artifacts:")
 				c.SendLine("when tests are passing")
 				c.ExpectEOF()
@@ -1169,6 +1169,176 @@ func Test_initializers(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(lt *testing.T) {
 			executeQuestionTestWithTimeout(lt, tt)
+		})
+	}
+}
+
+func Test_metaToBrowsers(t *testing.T) {
+	type args struct {
+		metadatas        []framework.Metadata
+		frameworkName    string
+		frameworkVersion string
+	}
+	tests := []struct {
+		name          string
+		args          args
+		wantBrowsers  []string
+		wantPlatforms map[string][]string
+	}{
+		{
+			name: "1 version / 1 platform",
+			args: args{
+				frameworkName:    "framework",
+				frameworkVersion: "1.1.0",
+				metadatas: []framework.Metadata{
+					{
+						FrameworkName:    "framework",
+						FrameworkVersion: "1.1.0",
+						Platforms: []framework.Platform{
+							{
+								PlatformName: "windows 10",
+								BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
+							},
+						},
+					},
+				},
+			},
+			wantBrowsers: []string{"chrome", "firefox", "microsoftedge"},
+			wantPlatforms: map[string][]string{
+				"chrome":        {"windows 10"},
+				"firefox":       {"windows 10"},
+				"microsoftedge": {"windows 10"},
+			},
+		},
+		{
+			name: "1 version / docker only",
+			args: args{
+				frameworkName:    "framework",
+				frameworkVersion: "1.1.0",
+				metadatas: []framework.Metadata{
+					{
+						FrameworkName:    "framework",
+						DockerImage:      "framework-images",
+						FrameworkVersion: "1.1.0",
+						Platforms: []framework.Platform{},
+					},
+				},
+			},
+			wantBrowsers: []string{"chrome", "firefox"},
+			wantPlatforms: map[string][]string{
+				"chrome":        {"docker"},
+				"firefox":       {"docker"},
+			},
+		},
+		{
+			name: "1 version / 1 platform + docker",
+			args: args{
+				frameworkName:    "framework",
+				frameworkVersion: "1.1.0",
+				metadatas: []framework.Metadata{
+					{
+						FrameworkName:    "framework",
+						DockerImage:      "framework-image:latest",
+						FrameworkVersion: "1.1.0",
+						Platforms: []framework.Platform{
+							{
+								PlatformName: "windows 10",
+								BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
+							},
+						},
+					},
+				},
+			},
+			wantBrowsers: []string{"chrome", "firefox", "microsoftedge"},
+			wantPlatforms: map[string][]string{
+				"chrome":        {"docker", "windows 10"},
+				"firefox":       {"docker", "windows 10"},
+				"microsoftedge": {"windows 10"},
+			},
+		},
+		{
+			name: "1 version / 2 platform + docker",
+			args: args{
+				frameworkName:    "framework",
+				frameworkVersion: "1.1.0",
+				metadatas: []framework.Metadata{
+					{
+						FrameworkName:    "framework",
+						DockerImage:      "framework-image:latest",
+						FrameworkVersion: "1.1.0",
+						Platforms: []framework.Platform{
+							{
+								PlatformName: "windows 10",
+								BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
+							},
+							{
+								PlatformName: "macOS 11.00",
+								BrowserNames: []string{"googlechrome", "firefox", "safari", "microsoftedge"},
+							},
+						},
+					},
+				},
+			},
+			wantBrowsers: []string{"chrome", "firefox", "microsoftedge", "safari"},
+			wantPlatforms: map[string][]string{
+				"chrome":        {"docker", "macOS 11.00", "windows 10"},
+				"firefox":       {"docker", "macOS 11.00", "windows 10"},
+				"microsoftedge": {"macOS 11.00", "windows 10"},
+				"safari":        {"macOS 11.00"},
+			},
+		},
+		{
+			name: "2 version / 2 platform + docker",
+			args: args{
+				frameworkName:    "framework",
+				frameworkVersion: "1.1.0",
+				metadatas: []framework.Metadata{
+					{
+						FrameworkName:    "framework",
+						DockerImage:      "framework-image:latest",
+						FrameworkVersion: "1.2.0",
+						Platforms: []framework.Platform{
+							{
+								PlatformName: "windows 10",
+								BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
+							},
+						},
+					},
+					{
+						FrameworkName:    "framework",
+						DockerImage:      "framework-image:latest",
+						FrameworkVersion: "1.1.0",
+						Platforms: []framework.Platform{
+							{
+								PlatformName: "windows 10",
+								BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
+							},
+							{
+								PlatformName: "macOS 11.00",
+								BrowserNames: []string{"googlechrome", "firefox", "safari", "microsoftedge"},
+							},
+						},
+					},
+				},
+			},
+			wantBrowsers: []string{"chrome", "firefox", "microsoftedge", "safari"},
+			wantPlatforms: map[string][]string{
+				"chrome":        {"docker", "macOS 11.00", "windows 10"},
+				"firefox":       {"docker", "macOS 11.00", "windows 10"},
+				"microsoftedge": {"macOS 11.00", "windows 10"},
+				"safari":        {"macOS 11.00"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotBrowsers, gotPlatforms := metaToBrowsers(tt.args.metadatas, tt.args.frameworkName, tt.args.frameworkVersion)
+			if !reflect.DeepEqual(gotBrowsers, tt.wantBrowsers) {
+				t.Errorf("metaToBrowsers() got = %v, want %v", gotBrowsers, tt.wantBrowsers)
+			}
+			if !reflect.DeepEqual(gotPlatforms, tt.wantPlatforms) {
+				t.Errorf("metaToBrowsers() got1 = %v, want %v", gotPlatforms, tt.wantPlatforms)
+			}
 		})
 	}
 }

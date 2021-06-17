@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2/terminal"
@@ -215,6 +216,7 @@ func (ini *initializer) askEmulator(cfg *initConfig, vmds []vmd.VirtualDevice) e
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
 }
 
+// metaToVersions returns a list of versions for a list of meta.
 func metaToVersions(metadatas []framework.Metadata) []string {
 	var versions []string
 	for _, v := range metadatas {
@@ -223,47 +225,66 @@ func metaToVersions(metadatas []framework.Metadata) []string {
 	return versions
 }
 
-func metaToPlatforms(metadatas []framework.Metadata, version string) []string {
-	var platforms []string
-	for _, m := range metadatas {
-		if m.FrameworkVersion == version {
-			for _, p := range m.Platforms {
-				platforms = append(platforms, p.PlatformName)
-			}
-			if m.DockerImage != "" {
-				platforms = append(platforms, "docker")
-			}
-		}
-	}
-	return platforms
-}
+// metaToBrowsers return a sorted list of browsers, and a map containing all supported platform those browsers.
+func metaToBrowsers(metadatas []framework.Metadata, frameworkName, frameworkVersion string) ([]string, map[string][]string) {
+	var browsers []string
+	platforms := map[string][]string{}
 
-func metaToBrowsers(metadatas []framework.Metadata, frameworkName, frameworkVersion, platformName string) []string {
-	if platformName == "docker" {
-		return dockerBrowsers(frameworkName)
-	}
-
-	// It's not optimum to have double iteration, but since the set it pretty small this will be insignificant.
-	// It's helping for readability.
+	var platformsToMap []framework.Platform
 	for _, v := range metadatas {
-		for _, p := range v.Platforms {
-			if v.FrameworkVersion == frameworkVersion && p.PlatformName == platformName {
-				return correctBrowsers(frameworkName, p.BrowserNames)
+		if v.FrameworkVersion == frameworkVersion {
+			platformsToMap = v.Platforms
+
+			if v.DockerImage != "" {
+				platformsToMap = append(platformsToMap, framework.Platform{
+					PlatformName: "docker",
+					BrowserNames: dockerBrowsers(frameworkName),
+				})
 			}
 		}
 	}
-	return []string{}
+
+	for _, p := range platformsToMap {
+		if frameworkName == config.KindTestcafe && p.PlatformName == "ios" {
+			continue
+		}
+		for _, browserName := range correctBrowsers(p.BrowserNames) {
+			if _, ok := platforms[browserName]; !ok {
+				browsers = append(browsers, browserName)
+				platforms[browserName] = []string{}
+			}
+			platforms[browserName] = append(platforms[browserName], p.PlatformName)
+		}
+	}
+
+	sort.Strings(browsers)
+	for _, v := range platforms {
+		sort.Strings(v)
+	}
+	return browsers, platforms
 }
 
-func correctBrowsers(frameworkName string, browsers []string) []string {
-	if frameworkName != config.KindPlaywright {
-		return browsers
-	}
+func correctBrowsers(browsers []string) []string {
 	var cb []string
-	for _, b := range browsers {
-		cb = append(cb, strings.TrimPrefix(b, "playwright-"))
+	for _, browserName := range browsers {
+		cb = append(cb, correctBrowser(browserName))
 	}
 	return cb
+}
+
+func correctBrowser(browserName string) string {
+	switch browserName {
+	case "playwright-chromium":
+		return "chromium"
+	case "playwright-firefox":
+		return "firefox"
+	case "playwright-webkit":
+		return "webkit"
+	case "googlechrome":
+		return "chrome"
+	default:
+		return browserName
+	}
 }
 
 func dockerBrowsers(framework string) []string {
@@ -276,13 +297,14 @@ func dockerBrowsers(framework string) []string {
 }
 
 func (ini *initializer) askPlatform(cfg *initConfig, metadatas []framework.Metadata) error {
-	platformChoices := metaToPlatforms(metadatas, cfg.frameworkVersion)
+	browsers, platforms := metaToBrowsers(metadatas, cfg.frameworkName, cfg.frameworkVersion)
 
+	// Select browser
 	q := &survey.Select{
-		Message: "Select platform:",
-		Options: platformChoices,
+		Message: "Select browser:",
+		Options: browsers,
 	}
-	err := survey.AskOne(q, &cfg.platformName,
+	err := survey.AskOne(q, &cfg.browserName,
 		survey.WithShowCursor(true),
 		survey.WithValidator(survey.Required),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
@@ -290,13 +312,11 @@ func (ini *initializer) askPlatform(cfg *initConfig, metadatas []framework.Metad
 		return err
 	}
 
-	// Select browser
-	browserChoices := metaToBrowsers(metadatas, cfg.frameworkName, cfg.frameworkVersion, cfg.platformName)
 	q = &survey.Select{
-		Message: "Select Browser:",
-		Options: browserChoices,
+		Message: "Select platform:",
+		Options: platforms[cfg.browserName],
 	}
-	err = survey.AskOne(q, &cfg.browserName,
+	err = survey.AskOne(q, &cfg.platformName,
 		survey.WithShowCursor(true),
 		survey.WithValidator(survey.Required),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
