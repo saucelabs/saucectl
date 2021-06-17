@@ -41,6 +41,13 @@ var (
 	restoTimeout        = 60 * time.Second
 	rdcTimeout          = 15 * time.Second
 	githubTimeout       = 2 * time.Second
+
+	typeDef config.TypeDef
+
+	tcClient    testcomposer.Client
+	restoClient resto.Client
+	appsClient  appstore.AppStore
+	rdcClient   rdc.Client
 )
 
 // gFlags contains all global flags that are set when 'run' is invoked.
@@ -48,7 +55,6 @@ var gFlags = globalFlags{}
 
 type globalFlags struct {
 	cfgFilePath    string
-	cfgLogDir      string
 	globalTimeout  time.Duration
 	regionFlag     string
 	env            map[string]string
@@ -81,8 +87,11 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Use:              runUse,
 		Short:            runShort,
 		TraverseChildren: true,
+		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
+			return persistentPreRun()
+		},
 		Run: func(cmd *cobra.Command, args []string) {
-			exitCode, err := Run(cmd, cli, args)
+			exitCode, err := Run(cmd)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				sentry.CaptureError(err, sentry.Scope{
@@ -96,7 +105,6 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 
 	defaultCfgPath := filepath.Join(".sauce", "config.yml")
 	cmd.PersistentFlags().StringVarP(&gFlags.cfgFilePath, "config", "c", defaultCfgPath, "Specifies which config file to use")
-	cmd.PersistentFlags().StringVarP(&gFlags.cfgLogDir, "logDir", "l", defaultLogFir, "log path")
 	cmd.PersistentFlags().DurationVarP(&gFlags.globalTimeout, "timeout", "t", 0, "Global timeout that limits how long saucectl can run in total. Supports duration values like '10s', '30m' etc. (default: no timeout)")
 	cmd.PersistentFlags().StringVarP(&gFlags.regionFlag, "region", "r", "", "The sauce labs region. (default: us-west-1)")
 	cmd.PersistentFlags().StringToStringVarP(&gFlags.env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
@@ -134,8 +142,9 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	return cmd
 }
 
-// Run runs the command
-func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, error) {
+// persistentPreRun is a pre-run step that is executed for all subcommands before the main 'run` step.
+// All shared dependencies are initialized here.
+func persistentPreRun() error {
 	println("Running version", version.Version)
 	checkForUpdates()
 	go awaitGlobalTimeout()
@@ -146,35 +155,29 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		fmt.Println(`Set up your credentials by running:
 > saucectl configure`)
 		println()
-		return 1, fmt.Errorf("no credentials set")
+		return fmt.Errorf("no credentials set")
 	}
-
-	if gFlags.cfgLogDir == defaultLogFir {
-		pwd, _ := os.Getwd()
-		gFlags.cfgLogDir = filepath.Join(pwd, "logs")
-	}
-	cli.LogDir = gFlags.cfgLogDir
-	log.Info().Str("config", gFlags.cfgFilePath).Msg("Reading config file")
 
 	d, err := config.Describe(gFlags.cfgFilePath)
 	if err != nil {
-		return 1, err
+		return err
 	}
+	typeDef = d
 
-	tc := testcomposer.Client{
+	tcClient = testcomposer.Client{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         "", // updated later once region is determined
 		Credentials: creds,
 	}
 
-	rs := resto.Client{
+	restoClient = resto.Client{
 		HTTPClient: &http.Client{Timeout: restoTimeout},
 		URL:        "", // updated later once region is determined
 		Username:   creds.Username,
 		AccessKey:  creds.AccessKey,
 	}
 
-	rc := rdc.Client{
+	rdcClient = rdc.Client{
 		HTTPClient: &http.Client{
 			Timeout: rdcTimeout,
 		},
@@ -182,26 +185,31 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		AccessKey: creds.AccessKey,
 	}
 
-	as := appstore.New("", creds.Username, creds.AccessKey, appStoreTimeout)
+	appsClient = *appstore.New("", creds.Username, creds.AccessKey, appStoreTimeout)
 
+	return nil
+}
+
+// Run runs the command
+func Run(cmd *cobra.Command) (int, error) {
 	// TODO switch statement with pre-constructed type definition structs?
-	if d.Kind == config.KindCypress && d.APIVersion == config.VersionV1Alpha {
-		return runCypress(cmd, tc, rs, as)
+	if typeDef.Kind == config.KindCypress && typeDef.APIVersion == config.VersionV1Alpha {
+		return runCypress(cmd, tcClient, restoClient, &appsClient)
 	}
-	if d.Kind == config.KindPlaywright && d.APIVersion == config.VersionV1Alpha {
-		return runPlaywright(cmd, tc, rs, as)
+	if typeDef.Kind == config.KindPlaywright && typeDef.APIVersion == config.VersionV1Alpha {
+		return runPlaywright(cmd, tcClient, restoClient, &appsClient)
 	}
-	if d.Kind == config.KindTestcafe && d.APIVersion == config.VersionV1Alpha {
-		return runTestcafe(cmd, tc, rs, as)
+	if typeDef.Kind == config.KindTestcafe && typeDef.APIVersion == config.VersionV1Alpha {
+		return runTestcafe(cmd, tcClient, restoClient, &appsClient)
 	}
-	if d.Kind == config.KindPuppeteer && d.APIVersion == config.VersionV1Alpha {
-		return runPuppeteer(cmd, tc, rs)
+	if typeDef.Kind == config.KindPuppeteer && typeDef.APIVersion == config.VersionV1Alpha {
+		return runPuppeteer(cmd, tcClient, restoClient)
 	}
-	if d.Kind == config.KindEspresso && d.APIVersion == config.VersionV1Alpha {
-		return runEspresso(cmd, tc, rs, rc, as)
+	if typeDef.Kind == config.KindEspresso && typeDef.APIVersion == config.VersionV1Alpha {
+		return runEspresso(cmd, tcClient, restoClient, rdcClient, appsClient)
 	}
-	if d.Kind == config.KindXcuitest && d.APIVersion == config.VersionV1Alpha {
-		return runXcuitest(cmd, tc, rs, rc, as)
+	if typeDef.Kind == config.KindXcuitest && typeDef.APIVersion == config.VersionV1Alpha {
+		return runXcuitest(cmd, tcClient, restoClient, rdcClient, appsClient)
 	}
 
 	return 1, errors.New("unknown framework configuration")
