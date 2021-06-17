@@ -4,8 +4,8 @@ import "context"
 
 // VirtualDevice describes a virtual device that can be used to run tests.
 type VirtualDevice struct {
-	Name string
-	OS   string
+	Name      string
+	OSVersion []string
 }
 
 // Constants for virtual device kinds.

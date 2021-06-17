@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 	"time"
 
@@ -395,9 +396,9 @@ func (c *Client) downloadArtifact(targetDir, jobID, fileName string) error {
 	return os.WriteFile(targetFile, content, 0644)
 }
 
-
 type platformEntry struct {
-	LongName string `json:"long_name"`
+	LongName     string `json:"long_name"`
+	ShortVersion string `json:"short_version"`
 }
 
 // GetVirtualDevices returns the list of available virtual devices.
@@ -423,13 +424,25 @@ func (c *Client) GetVirtualDevices(ctx context.Context, kind string) ([]vmd.Virt
 		key = "Simulator"
 	}
 
-	var dev []vmd.VirtualDevice
+	devs := map[string]map[string]bool{}
 	for _, d := range resp {
-		if strings.Contains(d.LongName, key) {
-			dev = append(dev, vmd.VirtualDevice{
-				Name: d.LongName,
-			})
+		if !strings.Contains(d.LongName, key) {
+			continue
 		}
+		if _, ok := devs[d.LongName]; !ok {
+			devs[d.LongName] = map[string]bool{}
+		}
+		devs[d.LongName][d.ShortVersion] = true
+	}
+
+	var dev []vmd.VirtualDevice
+	for vmdName, versions := range devs {
+		d := vmd.VirtualDevice{Name: vmdName}
+		for version, _ := range versions {
+			d.OSVersion = append(d.OSVersion, version)
+		}
+		sort.Strings(d.OSVersion)
+		dev = append(dev, d)
 	}
 	return dev, nil
 }

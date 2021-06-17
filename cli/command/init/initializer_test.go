@@ -300,8 +300,8 @@ func TestAskDevice(t *testing.T) {
 
 func TestAskEmulator(t *testing.T) {
 	vmds := []vmd.VirtualDevice{
-		{Name: "Google Pixel 3 Emulator"},
-		{Name: "Google Pixel 4 Emulator"},
+		{Name: "Google Pixel 3 Emulator", OSVersion: []string{"9.0", "8.0", "7.0"}},
+		{Name: "Google Pixel 4 Emulator", OSVersion: []string{"9.0", "8.0", "7.0"}},
 	}
 	testCases := []questionTest{
 		{
@@ -315,7 +315,11 @@ func TestAskEmulator(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				_, err = c.Send(string(terminal.KeyEnter))
+				_, err = c.ExpectString("Select platform version:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("")
 				if err != nil {
 					return err
 				}
@@ -330,7 +334,7 @@ func TestAskEmulator(t *testing.T) {
 				return i.askEmulator(cfg, vmds)
 			},
 			startState:    &initConfig{},
-			expectedState: &initConfig{emulator: config.Emulator{Name: "Google Pixel 3 Emulator"}},
+			expectedState: &initConfig{emulator: config.Emulator{Name: "Google Pixel 3 Emulator", PlatformVersions: []string{"7.0"}}},
 		},
 		{
 			name: "Input is captured",
@@ -340,6 +344,14 @@ func TestAskEmulator(t *testing.T) {
 					return err
 				}
 				_, err = c.SendLine("Pixel 4")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select platform version:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("7.0")
 				if err != nil {
 					return err
 				}
@@ -356,7 +368,7 @@ func TestAskEmulator(t *testing.T) {
 				return i.askEmulator(cfg, vmds)
 			},
 			startState:    &initConfig{},
-			expectedState: &initConfig{emulator: config.Emulator{Name: "Google Pixel 4 Emulator"}},
+			expectedState: &initConfig{emulator: config.Emulator{Name: "Google Pixel 4 Emulator", PlatformVersions: []string{"7.0"}}},
 		},
 	}
 	for _, tt := range testCases {
@@ -704,8 +716,8 @@ func TestConfigure(t *testing.T) {
 	er := &mocks.FakeEmulatorsReader{
 		GetVirtualDevicesFn: func(ctx context.Context, s string) ([]vmd.VirtualDevice, error) {
 			return []vmd.VirtualDevice{
-				{Name: "Google Pixel Emulator"},
-				{Name: "Samsung Galaxy Emulator"},
+				{Name: "Google Pixel Emulator", OSVersion: []string{"9.0", "8.0", "7.0"}},
+				{Name: "Samsung Galaxy Emulator", OSVersion: []string{"9.0", "8.0", "7.0"}},
 			}, nil
 		},
 	}
@@ -724,6 +736,8 @@ func TestConfigure(t *testing.T) {
 				c.SendLine("Google Pixel .*")
 				c.ExpectString("Select emulator:")
 				c.SendLine("Google Pixel Emulator")
+				c.ExpectString("Select platform version:")
+				c.SendLine("7.0")
 				c.ExpectString("Download artifacts:")
 				c.SendLine("when tests are passing")
 				c.ExpectEOF()
@@ -743,7 +757,7 @@ func TestConfigure(t *testing.T) {
 				frameworkName: config.KindEspresso,
 				app:           dir.Join("android-app.apk"),
 				testApp:       dir.Join("android-app.apk"),
-				emulator:      config.Emulator{Name: "Google Pixel Emulator"},
+				emulator:      config.Emulator{Name: "Google Pixel Emulator", PlatformVersions: []string{"7.0"}},
 				device:        config.Device{Name: "Google Pixel .*"},
 				artifactWhen:  config.WhenPass,
 			},
@@ -924,8 +938,8 @@ func Test_initializers(t *testing.T) {
 	er := &mocks.FakeEmulatorsReader{
 		GetVirtualDevicesFn: func(ctx context.Context, s string) ([]vmd.VirtualDevice, error) {
 			return []vmd.VirtualDevice{
-				{Name: "Google Pixel Emulator"},
-				{Name: "Samsung Galaxy Emulator"},
+				{Name: "Google Pixel Emulator", OSVersion: []string{"9.0", "8.0", "7.0"}},
+				{Name: "Samsung Galaxy Emulator", OSVersion: []string{"9.0", "8.0", "7.0"}},
 			}, nil
 		},
 	}
@@ -1141,6 +1155,8 @@ func Test_initializers(t *testing.T) {
 				c.SendLine("HTC .*")
 				c.ExpectString("Select emulator:")
 				c.SendLine("Samsung Galaxy Emulator")
+				c.ExpectString("Select platform version:")
+				c.SendLine("8.0")
 				c.ExpectString("Download artifacts:")
 				c.SendLine("when tests are passing")
 				c.ExpectEOF()
@@ -1161,7 +1177,7 @@ func Test_initializers(t *testing.T) {
 				app:           dir.Join("android-app.apk"),
 				testApp:       dir.Join("android-app.apk"),
 				device:        config.Device{Name: "HTC .*"},
-				emulator:      config.Emulator{Name: "Samsung Galaxy Emulator"},
+				emulator:      config.Emulator{Name: "Samsung Galaxy Emulator", PlatformVersions: []string{"8.0"}},
 				artifactWhen:  config.WhenPass,
 			},
 		},
@@ -1220,14 +1236,14 @@ func Test_metaToBrowsers(t *testing.T) {
 						FrameworkName:    "framework",
 						DockerImage:      "framework-images",
 						FrameworkVersion: "1.1.0",
-						Platforms: []framework.Platform{},
+						Platforms:        []framework.Platform{},
 					},
 				},
 			},
 			wantBrowsers: []string{"chrome", "firefox"},
 			wantPlatforms: map[string][]string{
-				"chrome":        {"docker"},
-				"firefox":       {"docker"},
+				"chrome":  {"docker"},
+				"firefox": {"docker"},
 			},
 		},
 		{

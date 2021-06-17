@@ -202,18 +202,46 @@ func (ini *initializer) askDevice(cfg *initConfig, suggestions []string) error {
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
 }
 
-func (ini *initializer) askEmulator(cfg *initConfig, vmds []vmd.VirtualDevice) error {
+// vmdToMaps returns a list of virtual devices, and a map containing all supported platform versions.
+func vmdToMaps(vmds []vmd.VirtualDevice) ([]string, map[string][]string) {
 	var vmdNames []string
-	for _, v := range vmds {
-		vmdNames = append(vmdNames, v.Name)
+	vmdOSVersions := map[string][]string{}
+	for _, e := range vmds {
+		vmdNames = append(vmdNames, e.Name)
+		vmdOSVersions[e.Name] = e.OSVersion
 	}
+
+	sort.Strings(vmdNames)
+	for _, v := range vmdOSVersions {
+		sort.Strings(v)
+	}
+	return vmdNames, vmdOSVersions
+}
+
+func (ini *initializer) askEmulator(cfg *initConfig, vmds []vmd.VirtualDevice) error {
+	vmdNames, vmdOSVersions := vmdToMaps(vmds)
+
 	q := &survey.Select{
 		Message: "Select emulator:",
-		Options: uniqSorted(vmdNames),
+		Options: vmdNames,
 	}
-	return survey.AskOne(q, &cfg.emulator.Name,
+	err := survey.AskOne(q, &cfg.emulator.Name,
 		survey.WithShowCursor(true),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
+	if err != nil {
+		return err
+	}
+
+	q = &survey.Select{
+		Message: "Select platform version:",
+		Options: vmdOSVersions[cfg.emulator.Name],
+	}
+	var emulatorVersion string
+	err = survey.AskOne(q, &emulatorVersion,
+		survey.WithShowCursor(true),
+		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
+	cfg.emulator.PlatformVersions = []string{emulatorVersion}
+	return err
 }
 
 // metaToVersions returns a list of versions for a list of meta.
@@ -225,7 +253,7 @@ func metaToVersions(metadatas []framework.Metadata) []string {
 	return versions
 }
 
-// metaToBrowsers return a sorted list of browsers, and a map containing all supported platform those browsers.
+// metaToBrowsers returns a sorted list of browsers, and a map containing all supported platform those browsers.
 func metaToBrowsers(metadatas []framework.Metadata, frameworkName, frameworkVersion string) ([]string, map[string][]string) {
 	var browsers []string
 	platforms := map[string][]string{}
@@ -383,13 +411,13 @@ func (ini *initializer) initializeCypress() (*initConfig, error) {
 
 	err = ini.askVersion(cfg, frameworkMetadatas)
 	if err != nil {
-			return &initConfig{}, err
-		}
+		return &initConfig{}, err
+	}
 
 	err = ini.askFile("Cypress configuration file:", extValidator(cfg.frameworkName), completeBasic, &cfg.cypressJSON)
 	if err != nil {
-			return &initConfig{}, err
-		}
+		return &initConfig{}, err
+	}
 
 	err = ini.askPlatform(cfg, frameworkMetadatas)
 	if err != nil {

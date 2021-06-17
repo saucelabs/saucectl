@@ -422,7 +422,7 @@ func TestClient_GetVirtualDevices(t *testing.T) {
 		switch r.URL.Path {
 		case "/rest/v1.1/info/platforms/all":
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`[{"long_name": "Samsung Galaxy S7 FHD GoogleAPI Emulator"},{"long_name": "Samsung Galaxy S9 HD GoogleAPI Emulator"},{"long_name": "iPhone 6s Simulator"},{"long_name": "iPhone 8 Plus Simulator"}]`))
+			w.Write([]byte(`[{"long_name": "Samsung Galaxy S7 FHD GoogleAPI Emulator", "short_version": "7.0"},{"long_name": "Samsung Galaxy S9 HD GoogleAPI Emulator", "short_version": "8.0"},{"long_name": "iPhone 6s Simulator", "short_version": "11.0"},{"long_name": "iPhone 8 Plus Simulator", "short_version": "14.3"}]`))
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -452,8 +452,8 @@ func TestClient_GetVirtualDevices(t *testing.T) {
 				kind: vmd.IOSSimulator,
 			},
 			want: []vmd.VirtualDevice{
-				{Name: "iPhone 6s Simulator"},
-				{Name: "iPhone 8 Plus Simulator"},
+				{Name: "iPhone 6s Simulator", OSVersion: []string{"11.0"}},
+				{Name: "iPhone 8 Plus Simulator", OSVersion: []string{"14.3"}},
 			},
 		},
 		{
@@ -463,8 +463,8 @@ func TestClient_GetVirtualDevices(t *testing.T) {
 				kind: vmd.AndroidEmulator,
 			},
 			want: []vmd.VirtualDevice{
-				{Name: "Samsung Galaxy S7 FHD GoogleAPI Emulator"},
-				{Name: "Samsung Galaxy S9 HD GoogleAPI Emulator"},
+				{Name: "Samsung Galaxy S7 FHD GoogleAPI Emulator", OSVersion: []string{"7.0"}},
+				{Name: "Samsung Galaxy S9 HD GoogleAPI Emulator", OSVersion: []string{"8.0"}},
 			},
 		},
 	}
