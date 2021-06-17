@@ -86,8 +86,8 @@ func Command() *cobra.Command {
 		Use:              runUse,
 		Short:            runShort,
 		TraverseChildren: true,
-		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
-			return persistentPreRun()
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return preRun()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			exitCode, err := Run(cmd)
@@ -141,9 +141,8 @@ func Command() *cobra.Command {
 	return cmd
 }
 
-// persistentPreRun is a pre-run step that is executed for all subcommands before the main 'run` step.
-// All shared dependencies are initialized here.
-func persistentPreRun() error {
+// preRun is a pre-run step that is executed before the main 'run` step. All shared dependencies are initialized here.
+func preRun() error {
 	println("Running version", version.Version)
 	checkForUpdates()
 	go awaitGlobalTimeout()

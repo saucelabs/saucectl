@@ -37,6 +37,9 @@ func NewXCUITestCmd() *cobra.Command {
 		Short:            "Run xcuitest tests",
 		Hidden:           true, // TODO reveal command once ready
 		TraverseChildren: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return preRun()
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			exitCode, err := runXCUITestCmd(cmd)
 			if err != nil {
