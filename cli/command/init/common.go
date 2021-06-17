@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/rs/zerolog/log"
+	"github.com/fatih/color"
 	"gopkg.in/yaml.v2"
 
 	"github.com/saucelabs/saucectl/internal/config"
@@ -91,9 +91,9 @@ func saveSauceIgnore(content string) error {
 
 func displaySummary(files []string) {
 	println()
-	log.Info().Msg("The following files have been created:")
+	color.HiGreen("The following files have been created:")
 	for _, f := range files {
-		log.Info().Msgf("  %s", f)
+		color.Green("  %s", f)
 	}
 	println()
 }
