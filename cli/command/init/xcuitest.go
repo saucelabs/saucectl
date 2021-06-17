@@ -15,7 +15,7 @@ func configureXCUITest(cfg *initConfig) interface{} {
 		Sauce: config.SauceConfig{
 			Region:      cfg.region,
 			Sauceignore: ".sauceignore",
-			Concurrency: 2, //TODO: Use MIN(AccountLimit, 10)
+			Concurrency: cfg.concurrency,
 		},
 		Xcuitest: xcuitest.Xcuitest{
 			App:     cfg.app,

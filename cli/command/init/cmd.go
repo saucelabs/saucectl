@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/sentry"
@@ -58,6 +59,7 @@ type initConfig struct {
 	artifactWhen     config.When
 	device           config.Device
 	emulator         config.Emulator
+	concurrency      int
 }
 
 var (
@@ -93,6 +95,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return err
 	}
 	initCfg.region = regio
+	initCfg.concurrency = concurrency.Min(ini.ccyReader, 10)
 
 	files, err := saveConfigurationFiles(initCfg)
 	if err != nil {

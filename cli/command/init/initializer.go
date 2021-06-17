@@ -11,6 +11,7 @@ import (
 	"github.com/AlecAivazis/survey/v2/terminal"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/devices"
@@ -34,6 +35,7 @@ type initializer struct {
 	infoReader   framework.MetadataService
 	deviceReader devices.Reader
 	vmdReader    vmd.Reader
+	ccyReader    concurrency.Reader
 
 	frameworks        []string
 	frameworkMetadata []framework.Metadata
@@ -67,6 +69,7 @@ func newInitializer(stdio terminal.Stdio, creds credentials.Credentials, regio s
 		infoReader:   &tc,
 		deviceReader: &rc,
 		vmdReader:    &rs,
+		ccyReader:    &rs,
 	}
 }
 
