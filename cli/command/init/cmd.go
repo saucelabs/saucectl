@@ -20,36 +20,12 @@ var (
 	initShort   = "bootstrap project"
 	initLong    = "bootstrap an existing project for Sauce Labs"
 	initExample = "saucectl init"
-
-	frameworkName = ""
 )
-
-// Command creates the `run` command
-func Command(cli *command.SauceCtlCli) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     initUse,
-		Short:   initShort,
-		Long:    initLong,
-		Example: initExample,
-		Run: func(cmd *cobra.Command, args []string) {
-			log.Info().Msg("Start Init Command")
-			err := Run(cmd, cli, args)
-			if err != nil {
-				log.Err(err).Msg("failed to execute init command")
-				sentry.CaptureError(err, sentry.Scope{})
-				os.Exit(1)
-			}
-		},
-	}
-	cmd.Flags().StringVarP(&frameworkName, "framework", "f", "", "framework to init")
-	return cmd
-}
 
 type initConfig struct {
 	frameworkName    string
 	frameworkVersion string
 	cypressJSON      string
-	rootDir          string
 	app              string
 	testApp          string
 	platformName     string
@@ -57,6 +33,7 @@ type initConfig struct {
 	browserName      string
 	region           string
 	artifactWhen     config.When
+	artifactWhenStr  string
 	device           config.Device
 	emulator         config.Emulator
 	concurrency      int
@@ -68,8 +45,44 @@ var (
 	restoTimeout        = 5 * time.Second
 )
 
+// Command creates the `run` command
+func Command(cli *command.SauceCtlCli) *cobra.Command {
+	initCfg := &initConfig{}
+
+	cmd := &cobra.Command{
+		Use:     initUse,
+		Short:   initShort,
+		Long:    initLong,
+		Example: initExample,
+		Run: func(cmd *cobra.Command, args []string) {
+			log.Info().Msg("Start Init Command")
+			err := Run(cmd, initCfg)
+			if err != nil {
+				log.Err(err).Msg("failed to execute init command")
+				sentry.CaptureError(err, sentry.Scope{})
+				os.Exit(1)
+			}
+		},
+	}
+	cmd.Flags().StringVarP(&initCfg.region, "region", "r", "us-west-1", "region to use")
+	cmd.Flags().StringVarP(&initCfg.frameworkName, "framework", "f", "", "framework to configure")
+	cmd.Flags().StringVarP(&initCfg.cypressJSON, "cypress.config", "c", "", "path to cypress.json file (cypress only)")
+	cmd.Flags().StringVarP(&initCfg.app, "app", "a", "", "path to application to test (espresso/xcuitest only)")
+	cmd.Flags().StringVarP(&initCfg.testApp, "testApp", "t", "", "path to test application (espresso/xcuitest only)")
+	cmd.Flags().StringVarP(&initCfg.platformName, "platformName", "p", "", "platform name")
+	cmd.Flags().StringVarP(&initCfg.browserName, "browserName", "b", "", "browser name")
+	cmd.Flags().StringVarP(&initCfg.artifactWhenStr, "artifacts.download.when", "", "fail", "defines when to download artifacts")
+	cmd.Flags().StringVarP(&initCfg.device.Name, "device.name", "d", "", "defines which device to target")
+	cmd.Flags().StringVarP(&initCfg.emulator.Name, "emulator.name", "", "", "defines which emulator to target")
+	cmd.Flags().StringArrayVarP(&initCfg.emulator.PlatformVersions, "emulator.platformVersion", "", []string{}, "defines which emulator version to target")
+	return cmd
+}
+
 // Run runs the command
-func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
+func Run(cmd *cobra.Command, initCfg *initConfig) error {
+	if cmd.Flags().HasFlags() {
+		return batchMode(cmd, initCfg)
+	}
 	stdio := terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
 
 	creds := credentials.Get()
@@ -94,7 +107,7 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	if err != nil {
 		return err
 	}
-	initCfg, err := ini.configure()
+	initCfg, err = ini.configure()
 	if err != nil {
 		return err
 	}
@@ -106,6 +119,11 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 		return err
 	}
 	displaySummary(files)
+	return nil
+}
+
+func batchMode(cmd *cobra.Command, cfg *initConfig) error {
+	println("Batch mode")
 	return nil
 }
 

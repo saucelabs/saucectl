@@ -100,7 +100,7 @@ func (ini *initializer) configure() (*initConfig, error) {
 	case xcuitest.Kind:
 		return ini.initializeXCUITest()
 	default:
-		return &initConfig{}, fmt.Errorf("unsupported framework %v", frameworkName)
+		return &initConfig{}, fmt.Errorf("unsupported framework %v", fName)
 	}
 }
 
