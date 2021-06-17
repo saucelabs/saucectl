@@ -1251,8 +1251,8 @@ func Test_metaToBrowsers(t *testing.T) {
 			},
 			wantBrowsers: []string{"chrome", "firefox", "microsoftedge"},
 			wantPlatforms: map[string][]string{
-				"chrome":        {"docker", "windows 10"},
-				"firefox":       {"docker", "windows 10"},
+				"chrome":        {"windows 10", "docker"},
+				"firefox":       {"windows 10", "docker"},
 				"microsoftedge": {"windows 10"},
 			},
 		},
@@ -1281,8 +1281,8 @@ func Test_metaToBrowsers(t *testing.T) {
 			},
 			wantBrowsers: []string{"chrome", "firefox", "microsoftedge", "safari"},
 			wantPlatforms: map[string][]string{
-				"chrome":        {"docker", "macOS 11.00", "windows 10"},
-				"firefox":       {"docker", "macOS 11.00", "windows 10"},
+				"chrome":        {"macOS 11.00", "windows 10", "docker"},
+				"firefox":       {"macOS 11.00", "windows 10", "docker"},
 				"microsoftedge": {"macOS 11.00", "windows 10"},
 				"safari":        {"macOS 11.00"},
 			},
@@ -1323,8 +1323,8 @@ func Test_metaToBrowsers(t *testing.T) {
 			},
 			wantBrowsers: []string{"chrome", "firefox", "microsoftedge", "safari"},
 			wantPlatforms: map[string][]string{
-				"chrome":        {"docker", "macOS 11.00", "windows 10"},
-				"firefox":       {"docker", "macOS 11.00", "windows 10"},
+				"chrome":        {"macOS 11.00", "windows 10", "docker"},
+				"firefox":       {"macOS 11.00", "windows 10", "docker"},
 				"microsoftedge": {"macOS 11.00", "windows 10"},
 				"safari":        {"macOS 11.00"},
 			},

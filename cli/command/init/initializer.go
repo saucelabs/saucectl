@@ -231,15 +231,13 @@ func metaToBrowsers(metadatas []framework.Metadata, frameworkName, frameworkVers
 	platforms := map[string][]string{}
 
 	var platformsToMap []framework.Platform
+	hasDocker := false
 	for _, v := range metadatas {
 		if v.FrameworkVersion == frameworkVersion {
 			platformsToMap = v.Platforms
 
 			if v.DockerImage != "" {
-				platformsToMap = append(platformsToMap, framework.Platform{
-					PlatformName: "docker",
-					BrowserNames: dockerBrowsers(frameworkName),
-				})
+				hasDocker = true
 			}
 		}
 	}
@@ -257,10 +255,22 @@ func metaToBrowsers(metadatas []framework.Metadata, frameworkName, frameworkVers
 		}
 	}
 
-	sort.Strings(browsers)
 	for _, v := range platforms {
 		sort.Strings(v)
 	}
+
+	// ensure that docker is the last platform in the drop-down.
+	if hasDocker {
+		for _, browserName := range dockerBrowsers(frameworkName) {
+			if _, ok := platforms[browserName]; !ok {
+				browsers = append(browsers, browserName)
+				platforms[browserName] = []string{}
+			}
+			platforms[browserName] = append(platforms[browserName], "docker")
+		}
+	}
+
+	sort.Strings(browsers)
 	return browsers, platforms
 }
 
