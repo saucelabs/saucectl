@@ -26,7 +26,7 @@ func configurePuppeteer(cfg *initConfig) interface{} {
 		},
 		Suites: []puppeteer.Suite{
 			{
-				Name:    fmt.Sprintf("puppeteer - %s - %s", firstAvailable(cfg.platformName, cfg.mode), cfg.browserName),
+				Name:    fmt.Sprintf("puppeteer - %s - %s", firstNotEmpty(cfg.platformName, cfg.mode), cfg.browserName),
 				Browser: cfg.browserName,
 			},
 		},

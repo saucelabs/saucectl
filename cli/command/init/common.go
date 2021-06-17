@@ -146,7 +146,7 @@ func uniqSorted(ss []string) []string {
 	return out
 }
 
-func firstAvailable(args ...string) string {
+func firstNotEmpty(args ...string) string {
 	for _, arg := range args {
 		if arg != "" {
 			return arg

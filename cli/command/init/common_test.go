@@ -472,3 +472,44 @@ func Test_completeBasic(t *testing.T) {
 		})
 	}
 }
+
+func Test_firstNotEmpty(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+		want string
+	}{
+		{
+			name: "empty",
+			args: []string{},
+			want: "",
+		},
+		{
+			name: "just one",
+			args: []string{"hello"},
+			want: "hello",
+		},
+		{
+			name: "just one empty",
+			args: []string{""},
+			want: "",
+		},
+		{
+			name: "first full",
+			args: []string{"hello", "hi"},
+			want: "hello",
+		},
+		{
+			name: "second full",
+			args: []string{"", "hi"},
+			want: "hi",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := firstNotEmpty(tt.args...); got != tt.want {
+				t.Errorf("firstAvailable() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
