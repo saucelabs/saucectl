@@ -438,7 +438,7 @@ func (c *Client) GetVirtualDevices(ctx context.Context, kind string) ([]vmd.Virt
 	var dev []vmd.VirtualDevice
 	for vmdName, versions := range devs {
 		d := vmd.VirtualDevice{Name: vmdName}
-		for version, _ := range versions {
+		for version := range versions {
 			d.OSVersion = append(d.OSVersion, version)
 		}
 		sort.Strings(d.OSVersion)
