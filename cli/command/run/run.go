@@ -30,10 +30,6 @@ var (
 	runUse   = "run"
 	runShort = "Runs tests on Sauce Labs"
 
-	defaultLogFir      = "<cwd>/logs"
-	defaultRegion      = "us-west-1"
-	defaultSauceignore = ".sauceignore"
-
 	// General Request Timeouts
 	appStoreTimeout     = 300 * time.Second
 	testComposerTimeout = 300 * time.Second
@@ -105,7 +101,7 @@ func Command() *cobra.Command {
 	defaultCfgPath := filepath.Join(".sauce", "config.yml")
 	cmd.PersistentFlags().StringVarP(&gFlags.cfgFilePath, "config", "c", defaultCfgPath, "Specifies which config file to use")
 	cmd.PersistentFlags().DurationVarP(&gFlags.globalTimeout, "timeout", "t", 0, "Global timeout that limits how long saucectl can run in total. Supports duration values like '10s', '30m' etc. (default: no timeout)")
-	cmd.PersistentFlags().StringVarP(&gFlags.regionFlag, "region", "r", "", "The sauce labs region. (default: us-west-1)")
+	cmd.PersistentFlags().StringVarP(&gFlags.regionFlag, "region", "r", "us-west-1", "The sauce labs region.")
 	cmd.PersistentFlags().StringToStringVarP(&gFlags.env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
 	cmd.PersistentFlags().StringVar(&gFlags.sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
 	cmd.PersistentFlags().StringVar(&gFlags.suiteName, "suite", "", "Run specified test suite.")
@@ -116,7 +112,7 @@ func Command() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&gFlags.tunnelID, "tunnel-id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
 	cmd.PersistentFlags().StringVar(&gFlags.tunnelParent, "tunnel-parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
 	cmd.PersistentFlags().StringVar(&gFlags.runnerVersion, "runner-version", "", "Overrides the automatically determined runner version.")
-	cmd.PersistentFlags().StringVar(&gFlags.sauceignore, "sauceignore", "", "Specifies the path to the .sauceignore file.")
+	cmd.PersistentFlags().StringVar(&gFlags.sauceignore, "sauceignore", ".sauceignore", "Specifies the path to the .sauceignore file.")
 	cmd.PersistentFlags().StringToStringVar(&gFlags.experiments, "experiment", map[string]string{}, "Specifies a list of experimental flags and values")
 	cmd.PersistentFlags().BoolVarP(&gFlags.dryRun, "dry-run", "", false, "Simulate a test run without actually running any tests.")
 
@@ -226,18 +222,8 @@ func printTestEnv(testEnv string) {
 	}
 }
 
-func applyDefaultValues(sauce *config.SauceConfig) {
-	if sauce.Region == "" {
-		sauce.Region = defaultRegion
-	}
-
-	if sauce.Sauceignore == "" {
-		sauce.Sauceignore = defaultSauceignore
-	}
-}
-
 func applyGlobalFlags(cmd *cobra.Command, sauce *config.SauceConfig, arti *config.Artifacts) {
-	if cmd.Flags().Lookup("region").Changed {
+	if sauce.Region == "" || cmd.Flags().Lookup("region").Changed {
 		sauce.Region = gFlags.regionFlag
 	}
 	if cmd.Flags().Lookup("ccy").Changed {
@@ -249,7 +235,7 @@ func applyGlobalFlags(cmd *cobra.Command, sauce *config.SauceConfig, arti *confi
 	if cmd.Flags().Lookup("tunnel-parent").Changed {
 		sauce.Tunnel.Parent = gFlags.tunnelParent
 	}
-	if cmd.Flags().Lookup("sauceignore").Changed {
+	if sauce.Sauceignore == "" || cmd.Flags().Lookup("sauceignore").Changed {
 		sauce.Sauceignore = gFlags.sauceignore
 	}
 	if cmd.Flags().Lookup("experiment").Changed {

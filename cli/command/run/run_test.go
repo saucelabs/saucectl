@@ -5,37 +5,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestApplyDefaultValues(t *testing.T) {
-	type args struct {
-		region      string
-		sauceignore string
-	}
-	tests := []struct {
-		args            args
-		wantRegion      string
-		wantSauceignore string
-	}{
-		{args: args{region: "", sauceignore: ""}, wantRegion: defaultRegion, wantSauceignore: defaultSauceignore},
-		{args: args{region: "dummy-region", sauceignore: "/path/to/.sauceignore2"}, wantRegion: "dummy-region",
-			wantSauceignore: "/path/to/.sauceignore2"},
-	}
-	for _, tt := range tests {
-		sauce := config.SauceConfig{
-			Region:      tt.args.region,
-			Sauceignore: tt.args.sauceignore,
-		}
-		applyDefaultValues(&sauce)
-		assert.Equal(t, tt.wantRegion, sauce.Region)
-		assert.Equal(t, tt.wantSauceignore, sauce.Sauceignore)
-	}
-}
 
 func TestFilterCypressSuite(t *testing.T) {
 	s1 := cypress.Suite{Name: "suite1"}

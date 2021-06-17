@@ -21,7 +21,6 @@ func runTestcafe(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as
 	}
 
 	p.Sauce.Metadata.ExpandEnv()
-	applyDefaultValues(&p.Sauce)
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
 
 	for k, v := range gFlags.env {

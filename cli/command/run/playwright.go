@@ -21,7 +21,6 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 	}
 
 	p.Sauce.Metadata.ExpandEnv()
-	applyDefaultValues(&p.Sauce)
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
 
 	// Merge env from CLI args and job config. CLI args take precedence.

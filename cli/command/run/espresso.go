@@ -90,7 +90,6 @@ func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc
 		return 1, err
 	}
 	p.Sauce.Metadata.ExpandEnv()
-	applyDefaultValues(&p.Sauce)
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
 	applyEspressoFlags(&p)
 

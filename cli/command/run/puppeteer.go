@@ -18,7 +18,6 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 		return 1, err
 	}
 	p.Sauce.Metadata.ExpandEnv()
-	applyDefaultValues(&p.Sauce)
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
 
 	for k, v := range gFlags.env {
