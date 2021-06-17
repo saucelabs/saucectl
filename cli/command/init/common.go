@@ -145,3 +145,12 @@ func uniqSorted(ss []string) []string {
 	sort.Strings(out)
 	return out
 }
+
+func firstAvailable(args ...string) string {
+	for _, arg := range args {
+		if arg != "" {
+			return arg
+		}
+	}
+	return ""
+}

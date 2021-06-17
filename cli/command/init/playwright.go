@@ -3,6 +3,7 @@ package init
 import (
 	// imports embed to load .sauceignore
 	_ "embed"
+	"fmt"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/playwright"
@@ -25,7 +26,7 @@ func configurePlaywright(cfg *initConfig) interface{} {
 		},
 		Suites: []playwright.Suite{
 			{
-				Name:         "My First Suite", //TODO: Authorize to name you suite
+				Name:         fmt.Sprintf("playwright - %s - %s", firstAvailable(cfg.platformName, cfg.mode), cfg.browserName),
 				PlatformName: cfg.platformName,
 				Params: playwright.SuiteConfig{
 					BrowserName: cfg.browserName,

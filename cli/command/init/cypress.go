@@ -3,6 +3,7 @@ package init
 import (
 	// imports embed to load .sauceignore
 	_ "embed"
+	"fmt"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
@@ -26,7 +27,7 @@ func configureCypress(cfg *initConfig) interface{} {
 		},
 		Suites: []cypress.Suite{
 			{
-				Name:         "My First Suite", //TODO: Authorize to name you suite
+				Name:         fmt.Sprintf("cypress - %s - %s", firstAvailable(cfg.platformName, cfg.mode) , cfg.browserName),
 				PlatformName: cfg.platformName,
 				Browser:      cfg.browserName,
 				Mode:         cfg.mode,

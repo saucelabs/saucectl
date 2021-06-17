@@ -3,6 +3,7 @@ package init
 import (
 	// imports embed to load .sauceignore
 	_ "embed"
+	"fmt"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
@@ -25,7 +26,7 @@ func configurePuppeteer(cfg *initConfig) interface{} {
 		},
 		Suites: []puppeteer.Suite{
 			{
-				Name:    "My First Suite", //TODO: Authorize to name you suite
+				Name:    fmt.Sprintf("puppeteer - %s - %s", firstAvailable(cfg.platformName, cfg.mode), cfg.browserName),
 				Browser: cfg.browserName,
 			},
 		},

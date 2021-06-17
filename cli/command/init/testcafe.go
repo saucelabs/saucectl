@@ -3,6 +3,7 @@ package init
 import (
 	// imports embed to load .sauceignore
 	_ "embed"
+	"fmt"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/testcafe"
@@ -25,7 +26,7 @@ func configureTestcafe(cfg *initConfig) interface{} {
 		},
 		Suites: []testcafe.Suite{
 			{
-				Name:         "My First Suite", //TODO: Authorize to name you suite
+				Name:         fmt.Sprintf("testcafe - %s - %s", firstAvailable(cfg.platformName, cfg.mode), cfg.browserName),
 				PlatformName: cfg.platformName,
 				BrowserName:  cfg.browserName,
 				Mode:         cfg.mode,

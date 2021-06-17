@@ -1,6 +1,7 @@
 package init
 
 import (
+	"fmt"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
 )
@@ -22,9 +23,7 @@ func configureEspresso(cfg *initConfig) interface{} {
 		},
 		Suites: []espresso.Suite{
 			{
-				//TODO: Authorize to name you suite
-				Name:      "My First Suite",
-				// TODO: Check before adding element
+				Name:      fmt.Sprintf("espresso - %s - %s", cfg.device.Name , cfg.emulator.Name),
 				Devices:   []config.Device{cfg.device},
 				Emulators: []config.Emulator{cfg.emulator},
 			},

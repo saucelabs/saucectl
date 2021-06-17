@@ -1,6 +1,7 @@
 package init
 
 import (
+	"fmt"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
@@ -22,7 +23,7 @@ func configureXCUITest(cfg *initConfig) interface{} {
 		},
 		Suites: []xcuitest.Suite{
 			{
-				Name:    "My First Suite",
+				Name:    fmt.Sprintf("xcuitest - %s", cfg.device.Name),
 				Devices: []config.Device{cfg.device},
 			},
 		},
