@@ -3,16 +3,128 @@ package run
 import (
 	"errors"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/cli/command"
+	"github.com/saucelabs/saucectl/cli/flags"
+	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/appstore"
+	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
+	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 	"github.com/spf13/cobra"
+	"net/http"
+	"os"
+	"path/filepath"
 )
+
+// xcFlags contains all XCUITest related flags that are set when 'run' is invoked.
+var xcFlags = xcuitestFlags{}
+
+type xcuitestFlags struct {
+	Name        string
+	App         string
+	TestApp     string
+	TestOptions xcuitest.TestOptions
+	Device      flags.Device
+}
+
+// NewXCUITestCmd creates the 'run' command for XCUITest.
+func NewXCUITestCmd(cli *command.SauceCtlCli) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:              "xcuitest",
+		Short:            "Run xcuitest tests",
+		Hidden:           true, // TODO reveal command once ready
+		TraverseChildren: true,
+		Run: func(cmd *cobra.Command, args []string) {
+			exitCode, err := runXCUITestCmd(cmd, cli, args)
+			if err != nil {
+				log.Err(err).Msg("failed to execute run command")
+				sentry.CaptureError(err, sentry.Scope{
+					Username:   credentials.Get().Username,
+					ConfigFile: gFlags.cfgFilePath,
+				})
+			}
+			os.Exit(exitCode)
+		},
+	}
+
+	f := cmd.Flags()
+	f.StringVar(&xcFlags.Name, "name", "", "Sets the name of job as it will appear on Sauce Labs")
+	f.StringVar(&xcFlags.App, "app", "", "Specifies the app under test")
+	f.StringVar(&xcFlags.TestApp, "testApp", "", "Specifies the test app")
+
+	// Test Options
+	f.StringSliceVar(&xcFlags.TestOptions.Class, "testOptions.class", []string{}, "Include classes")
+
+	// Devices (no simulators)
+	f.Var(&xcFlags.Device, "device", "Specifies the device to use for testing")
+
+	return cmd
+}
+
+// runEspressoCmd runs the xcuitest 'run' command.
+func runXCUITestCmd(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, error) {
+	println("Running version", version.Version)
+	checkForUpdates()
+	go awaitGlobalTimeout()
+
+	creds := credentials.Get()
+	if !creds.IsValid() {
+		color.Red("\nSauceCTL requires a valid Sauce Labs account!\n\n")
+		fmt.Println(`Set up your credentials by running:
+> saucectl configure`)
+		println()
+		return 1, fmt.Errorf("no credentials set")
+	}
+
+	if gFlags.cfgLogDir == defaultLogFir {
+		pwd, _ := os.Getwd()
+		gFlags.cfgLogDir = filepath.Join(pwd, "logs")
+	}
+	cli.LogDir = gFlags.cfgLogDir
+	log.Info().Str("config", gFlags.cfgFilePath).Msg("Reading config file")
+
+	d, err := config.Describe(gFlags.cfgFilePath)
+	if err != nil {
+		return 1, err
+	}
+
+	tc := testcomposer.Client{
+		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
+		URL:         "", // updated later once region is determined
+		Credentials: creds,
+	}
+
+	rs := resto.Client{
+		HTTPClient: &http.Client{Timeout: restoTimeout},
+		URL:        "", // updated later once region is determined
+		Username:   creds.Username,
+		AccessKey:  creds.AccessKey,
+	}
+
+	rc := rdc.Client{
+		HTTPClient: &http.Client{
+			Timeout: rdcTimeout,
+		},
+		Username:  creds.Username,
+		AccessKey: creds.AccessKey,
+	}
+
+	as := appstore.New("", creds.Username, creds.AccessKey, appStoreTimeout)
+
+	if d.Kind == config.KindXcuitest && d.APIVersion == config.VersionV1Alpha {
+		return runXcuitest(cmd, tc, rs, rc, as)
+	}
+
+	return 1, errors.New("unknown framework configuration")
+}
 
 func runXcuitest(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as *appstore.AppStore) (int, error) {
 	p, err := xcuitest.FromFile(gFlags.cfgFilePath)
@@ -22,6 +134,7 @@ func runXcuitest(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc
 	p.Sauce.Metadata.ExpandEnv()
 	applyDefaultValues(&p.Sauce)
 	overrideCliParameters(cmd, &p.Sauce, &p.Artifacts)
+	applyXCUITestFlags(&p)
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
@@ -85,4 +198,32 @@ func filterXcuitestSuite(c *xcuitest.Project) error {
 		}
 	}
 	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
+}
+
+func applyXCUITestFlags(p *xcuitest.Project) {
+	if xcFlags.App != "" {
+		p.Xcuitest.App = xcFlags.App
+	}
+	if xcFlags.TestApp != "" {
+		p.Xcuitest.TestApp = xcFlags.TestApp
+	}
+
+	// No name, no adhoc suite.
+	if xcFlags.Name != "" {
+		setXCUITestAdhocSuite(p)
+	}
+}
+
+func setXCUITestAdhocSuite(p *xcuitest.Project) {
+	var dd []config.Device
+	if xcFlags.Device.Changed {
+		dd = append(dd, xcFlags.Device.Device)
+	}
+
+	s := xcuitest.Suite{
+		Name:        xcFlags.Name,
+		Devices:     dd,
+		TestOptions: xcFlags.TestOptions,
+	}
+	p.Suites = []xcuitest.Suite{s}
 }

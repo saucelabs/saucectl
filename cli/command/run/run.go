@@ -129,7 +129,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	_ = cmd.PersistentFlags().MarkHidden("runner-version")
 	_ = cmd.PersistentFlags().MarkHidden("experiment")
 
-	cmd.AddCommand(NewEspressoCmd(cli))
+	cmd.AddCommand(NewEspressoCmd(cli), NewXCUITestCmd(cli))
 
 	return cmd
 }
