@@ -83,7 +83,7 @@ func runXcuitest(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc
 	}
 	p.Sauce.Metadata.ExpandEnv()
 	applyDefaultValues(&p.Sauce)
-	overrideCliParameters(cmd, &p.Sauce, &p.Artifacts)
+	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
 	applyXCUITestFlags(&p)
 
 	regio := region.FromString(p.Sauce.Region)

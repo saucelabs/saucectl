@@ -236,7 +236,7 @@ func applyDefaultValues(sauce *config.SauceConfig) {
 	}
 }
 
-func overrideCliParameters(cmd *cobra.Command, sauce *config.SauceConfig, arti *config.Artifacts) {
+func applyGlobalFlags(cmd *cobra.Command, sauce *config.SauceConfig, arti *config.Artifacts) {
 	if cmd.Flags().Lookup("region").Changed {
 		sauce.Region = gFlags.regionFlag
 	}
