@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/flags"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -33,7 +32,7 @@ type espressoFlags struct {
 }
 
 // NewEspressoCmd creates the 'run' command for espresso.
-func NewEspressoCmd(cli *command.SauceCtlCli) *cobra.Command {
+func NewEspressoCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:              "espresso",
 		Short:            "Run espresso tests",

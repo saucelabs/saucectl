@@ -55,7 +55,7 @@ func main() {
 
 	cmd.AddCommand(
 		new.Command(cli),
-		run.Command(cli),
+		run.Command(),
 		configure.Command(cli),
 		signup.Command(cli),
 	)

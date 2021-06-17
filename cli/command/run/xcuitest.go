@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/flags"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -32,7 +31,7 @@ type xcuitestFlags struct {
 }
 
 // NewXCUITestCmd creates the 'run' command for XCUITest.
-func NewXCUITestCmd(cli *command.SauceCtlCli) *cobra.Command {
+func NewXCUITestCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:              "xcuitest",
 		Short:            "Run xcuitest tests",

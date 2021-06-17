@@ -14,7 +14,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -82,7 +81,7 @@ type globalFlags struct {
 }
 
 // Command creates the `run` command
-func Command(cli *command.SauceCtlCli) *cobra.Command {
+func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:              runUse,
 		Short:            runShort,
@@ -137,7 +136,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	_ = cmd.PersistentFlags().MarkHidden("runner-version")
 	_ = cmd.PersistentFlags().MarkHidden("experiment")
 
-	cmd.AddCommand(NewEspressoCmd(cli), NewXCUITestCmd(cli))
+	cmd.AddCommand(NewEspressoCmd(), NewXCUITestCmd())
 
 	return cmd
 }
