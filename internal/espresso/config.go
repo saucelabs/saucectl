@@ -125,7 +125,7 @@ func Validate(p Project) error {
 func validateDevices(suiteName string, devices []config.Device) error {
 	for didx, device := range devices {
 		if device.Name == "" && device.ID == "" {
-			return fmt.Errorf("missing device name or ID for suite: %s. Devices index: %d", suiteName, didx)
+			return fmt.Errorf("missing device name(s) or ID(s) for suite: %s. Devices index: %d", suiteName, didx)
 		}
 	}
 	return nil

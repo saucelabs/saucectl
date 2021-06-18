@@ -37,7 +37,7 @@ type CloudRunner struct {
 	ProjectUploader       storage.ProjectUploader
 	JobStarter            job.Starter
 	JobReader             job.Reader
-	RDCJobReader          job.Reader
+	RDCJobReader          job.RDCReader
 	JobWriter             job.Writer
 	JobStopper            job.Stopper
 	CCYReader             concurrency.Reader

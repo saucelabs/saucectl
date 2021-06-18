@@ -3,6 +3,8 @@ package saucecloud
 import (
 	"fmt"
 	"strings"
+	"context"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -75,6 +77,13 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 	go func() {
 		for _, s := range r.Project.Suites {
 			for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
+				if(c.isRealDevice && strings.Contains(c.ID, ",")) {
+					// if , detected in device names, ping rdc for availability before launching.
+					log.Debug().Str("device", fmt.Sprintf("%v", c)).Msg("Looking for available device")
+					j, _ := r.RDCJobReader.PollDevicesState(context.Background(), c.ID, 15*time.Second)
+					c.ID = j
+				}
+
 				log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
 				r.startJob(jobOpts, s, appFileID, testAppFileID, c)
 			}

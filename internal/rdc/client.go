@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"io"
 	"net/http"
 	"os"
@@ -173,6 +174,63 @@ func doRequestStatus(httpClient *http.Client, request *http.Request) (job.Job, e
 	}
 
 	return jobDetails, nil
+}
+
+// PollDevicesState polls the RDC API and loops through all ids given to it, returning the first 
+//  device to be found available
+func (c *Client) PollDevicesState(ctx context.Context, ids string, interval time.Duration) (string, error) {
+	req, err := requesth.NewWithContext(ctx, http.MethodGet,
+		fmt.Sprintf("%s/v1/rdc/devices/available", c.URL), nil)
+	if err != nil {
+		return "nil", err
+	}
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		j, err := doDeviceStatus(c.HTTPClient, req)
+		if err != nil {
+			return "nil", err
+		}
+
+		// first available wins. except with race
+		for _, id := range strings.Split(ids, ",") {
+			for _, item := range j {
+				if item == id {
+					return item, nil
+				}
+			}
+		}
+	}
+
+	return "", nil
+}
+
+func doDeviceStatus(httpClient *http.Client, request *http.Request) ([]string, error) {
+	resp, err := httpClient.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return nil, ErrServerError
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		err := fmt.Errorf("job status request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		return nil, err
+	}
+
+	var devicesAvailable []string
+	if err := json.NewDecoder(resp.Body).Decode(&devicesAvailable); err != nil {
+		return nil, err
+	}
+
+	return devicesAvailable, nil
 }
 
 // jobAssetsList represents known assets. As file list is fixed from API perspective, the list must be hardcoded.
