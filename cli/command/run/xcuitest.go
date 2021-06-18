@@ -38,10 +38,14 @@ func NewXCUITestCmd() *cobra.Command {
 		Hidden:           true, // TODO reveal command once ready
 		TraverseChildren: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if typeDef.Kind != config.KindXcuitest || typeDef.APIVersion != config.VersionV1Alpha {
+				return errors.New("unknown framework configuration")
+			}
+
 			return preRun()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			exitCode, err := runXCUITestCmd(cmd)
+			exitCode, err := runXcuitest(cmd, tcClient, restoClient, rdcClient, appsClient)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				sentry.CaptureError(err, sentry.Scope{
@@ -65,15 +69,6 @@ func NewXCUITestCmd() *cobra.Command {
 	f.Var(&xcFlags.Device, "device", "Specifies the device to use for testing")
 
 	return cmd
-}
-
-// runEspressoCmd runs the xcuitest 'run' command.
-func runXCUITestCmd(cmd *cobra.Command) (int, error) {
-	if typeDef.Kind == config.KindXcuitest && typeDef.APIVersion == config.VersionV1Alpha {
-		return runXcuitest(cmd, tcClient, restoClient, rdcClient, appsClient)
-	}
-
-	return 1, errors.New("unknown framework configuration")
 }
 
 func runXcuitest(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as appstore.AppStore) (int, error) {
