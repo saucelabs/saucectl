@@ -19,9 +19,6 @@ import (
 	"os"
 )
 
-// xcFlags contains all XCUITest related flags that are set when 'run' is invoked.
-var xcFlags = xcuitestFlags{}
-
 type xcuitestFlags struct {
 	Name        string
 	App         string
@@ -32,6 +29,8 @@ type xcuitestFlags struct {
 
 // NewXCUITestCmd creates the 'run' command for XCUITest.
 func NewXCUITestCmd() *cobra.Command {
+	lflags := xcuitestFlags{}
+
 	cmd := &cobra.Command{
 		Use:              "xcuitest",
 		Short:            "Run xcuitest tests",
@@ -41,7 +40,7 @@ func NewXCUITestCmd() *cobra.Command {
 			return preRun()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			exitCode, err := runXcuitest(cmd, tcClient, restoClient, rdcClient, appsClient)
+			exitCode, err := runXcuitest(cmd, lflags, tcClient, restoClient, rdcClient, appsClient)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				sentry.CaptureError(err, sentry.Scope{
@@ -54,27 +53,28 @@ func NewXCUITestCmd() *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	f.StringVar(&xcFlags.Name, "name", "", "Sets the name of job as it will appear on Sauce Labs")
-	f.StringVar(&xcFlags.App, "app", "", "Specifies the app under test")
-	f.StringVar(&xcFlags.TestApp, "testApp", "", "Specifies the test app")
+	f.StringVar(&lflags.Name, "name", "", "Sets the name of job as it will appear on Sauce Labs")
+	f.StringVar(&lflags.App, "app", "", "Specifies the app under test")
+	f.StringVar(&lflags.TestApp, "testApp", "", "Specifies the test app")
 
 	// Test Options
-	f.StringSliceVar(&xcFlags.TestOptions.Class, "testOptions.class", []string{}, "Include classes")
+	f.StringSliceVar(&lflags.TestOptions.Class, "testOptions.class", []string{}, "Include classes")
 
 	// Devices (no simulators)
-	f.Var(&xcFlags.Device, "device", "Specifies the device to use for testing")
+	f.Var(&lflags.Device, "device", "Specifies the device to use for testing")
 
 	return cmd
 }
 
-func runXcuitest(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as appstore.AppStore) (int, error) {
+func runXcuitest(cmd *cobra.Command, flags xcuitestFlags, tc testcomposer.Client, rs resto.Client, rc rdc.Client,
+	as appstore.AppStore) (int, error) {
 	p, err := xcuitest.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
 	p.Sauce.Metadata.ExpandEnv()
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
-	applyXCUITestFlags(&p)
+	applyXCUITestFlags(&p, flags)
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
@@ -140,30 +140,30 @@ func filterXcuitestSuite(c *xcuitest.Project) error {
 	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
 }
 
-func applyXCUITestFlags(p *xcuitest.Project) {
-	if xcFlags.App != "" {
-		p.Xcuitest.App = xcFlags.App
+func applyXCUITestFlags(p *xcuitest.Project, flags xcuitestFlags) {
+	if flags.App != "" {
+		p.Xcuitest.App = flags.App
 	}
-	if xcFlags.TestApp != "" {
-		p.Xcuitest.TestApp = xcFlags.TestApp
+	if flags.TestApp != "" {
+		p.Xcuitest.TestApp = flags.TestApp
 	}
 
 	// No name, no adhoc suite.
-	if xcFlags.Name != "" {
-		setXCUITestAdhocSuite(p)
+	if flags.Name != "" {
+		setXCUITestAdhocSuite(p, flags)
 	}
 }
 
-func setXCUITestAdhocSuite(p *xcuitest.Project) {
+func setXCUITestAdhocSuite(p *xcuitest.Project, flags xcuitestFlags) {
 	var dd []config.Device
-	if xcFlags.Device.Changed {
-		dd = append(dd, xcFlags.Device.Device)
+	if flags.Device.Changed {
+		dd = append(dd, flags.Device.Device)
 	}
 
 	s := xcuitest.Suite{
-		Name:        xcFlags.Name,
+		Name:        flags.Name,
 		Devices:     dd,
-		TestOptions: xcFlags.TestOptions,
+		TestOptions: flags.TestOptions,
 	}
 	p.Suites = []xcuitest.Suite{s}
 }
