@@ -12,8 +12,8 @@ import (
 func configurePuppeteer(cfg *initConfig) interface{} {
 	return puppeteer.Project{
 		TypeDef: config.TypeDef{
-			APIVersion: config.VersionV1Alpha,
-			Kind:       config.KindPuppeteer,
+			APIVersion: puppeteer.APIVersion,
+			Kind:       puppeteer.Kind,
 		},
 		Sauce: config.SauceConfig{
 			Region:      cfg.region,

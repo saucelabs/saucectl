@@ -9,8 +9,8 @@ import (
 func configureXCUITest(cfg *initConfig) interface{} {
 	return xcuitest.Project{
 		TypeDef: config.TypeDef{
-			APIVersion: config.VersionV1Alpha,
-			Kind:       config.KindXcuitest,
+			APIVersion: xcuitest.APIVersion,
+			Kind:       xcuitest.Kind,
 		},
 		Sauce: config.SauceConfig{
 			Region:      cfg.region,
