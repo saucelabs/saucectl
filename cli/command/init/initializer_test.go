@@ -1377,7 +1377,8 @@ func Test_initializer_checkCredentials(t *testing.T) {
 		{
 			name: "Invalid credentials",
 			frameworkFn: func(ctx context.Context) ([]framework.Framework, error) {
-				return []framework.Framework{}, errors.New("unexpected status '401' from test-composer: Unauthorized\n")
+				errMsg := "unexpected status '401' from test-composer: Unauthorized\n"
+				return []framework.Framework{}, fmt.Errorf(errMsg)
 			},
 			wantErr: errors.New("invalid credentials"),
 		},
