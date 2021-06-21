@@ -1358,3 +1358,47 @@ func Test_metaToBrowsers(t *testing.T) {
 		})
 	}
 }
+
+func Test_initializer_checkCredentials(t *testing.T) {
+	tests := []struct {
+		name        string
+		frameworkFn func(ctx context.Context) ([]framework.Framework, error)
+		wantErr     error
+	}{
+		{
+			name: "Success",
+			frameworkFn: func(ctx context.Context) ([]framework.Framework, error) {
+				return []framework.Framework{
+					{Name: "cypress"},
+				}, nil
+			},
+			wantErr: nil,
+		},
+		{
+			name: "Invalid credentials",
+			frameworkFn: func(ctx context.Context) ([]framework.Framework, error) {
+				return []framework.Framework{}, errors.New("unexpected status '401' from test-composer: Unauthorized\n")
+			},
+			wantErr: errors.New("invalid credentials"),
+		},
+		{
+			name: "Other error",
+			frameworkFn: func(ctx context.Context) ([]framework.Framework, error) {
+				return []framework.Framework{}, errors.New("other error")
+			},
+			wantErr: errors.New("other error"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ini := &initializer{
+				infoReader: &mocks.FakeFrameworkInfoReader{
+					FrameworksFn: tt.frameworkFn,
+				},
+			}
+			if err := ini.checkCredentials(); !reflect.DeepEqual(err, tt.wantErr) {
+				t.Errorf("checkCredentials() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

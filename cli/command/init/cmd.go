@@ -90,6 +90,10 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
 	}
 
 	ini := newInitializer(stdio, creds, regio)
+	err = ini.checkCredentials()
+	if err != nil {
+		return err
+	}
 	initCfg, err := ini.configure()
 	if err != nil {
 		return err

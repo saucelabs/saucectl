@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2/terminal"
+	"github.com/fatih/color"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/saucelabs/saucectl/internal/concurrency"
@@ -133,6 +134,18 @@ func askRegion(stdio terminal.Stdio) (string, error) {
 		return "", err
 	}
 	return r, nil
+}
+
+func (ini *initializer) checkCredentials() error {
+	_, err := ini.infoReader.Frameworks(context.Background())
+	if err != nil && err.Error() == "unexpected status '401' from test-composer: Unauthorized\n" {
+		println()
+		color.HiRed("It appears that your credentials are incorrect.")
+		fmt.Printf("Use %s to update your account settings.\n", color.HiBlueString("saucectl configure"))
+		println()
+		return errors.New("invalid credentials")
+	}
+	return err
 }
 
 func (ini *initializer) askFramework() (string, error) {
