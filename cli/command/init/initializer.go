@@ -653,7 +653,7 @@ func checkEmulators(vmds []vmd.VirtualDevice, emulatorName string, platformVersi
 }
 
 func (ini *initializer) initializeBatchCypress(initCfg *initConfig) (*initConfig, []error) {
-	initCfg.frameworkName = config.KindCypress
+	initCfg.frameworkName = cypress.Kind
 	var errs []error
 
 	if initCfg.frameworkVersion == "" {
@@ -708,7 +708,7 @@ func (ini *initializer) initializeBatchCypress(initCfg *initConfig) (*initConfig
 }
 
 func (ini *initializer) initializeBatchEspresso(initCfg *initConfig) (*initConfig, []error) {
-	initCfg.frameworkName = config.KindEspresso
+	initCfg.frameworkName = espresso.Kind
 	var errs []error
 	var err error
 
@@ -754,7 +754,7 @@ func (ini *initializer) initializeBatchEspresso(initCfg *initConfig) (*initConfi
 }
 
 func (ini *initializer) initializeBatchPlaywright(initCfg *initConfig) (*initConfig, []error) {
-	initCfg.frameworkName = config.KindPlaywright
+	initCfg.frameworkName = playwright.Kind
 	var errs []error
 
 	if initCfg.frameworkVersion == "" {
@@ -799,7 +799,7 @@ func (ini *initializer) initializeBatchPlaywright(initCfg *initConfig) (*initCon
 }
 
 func (ini *initializer) initializeBatchPuppeteer(initCfg *initConfig) (*initConfig, []error) {
-	initCfg.frameworkName = config.KindPuppeteer
+	initCfg.frameworkName = puppeteer.Kind
 	var errs []error
 
 	if initCfg.frameworkVersion == "" {
@@ -844,7 +844,7 @@ func (ini *initializer) initializeBatchPuppeteer(initCfg *initConfig) (*initConf
 }
 
 func (ini *initializer) initializeBatchTestcafe(initCfg *initConfig) (*initConfig, []error) {
-	initCfg.frameworkName = config.KindTestcafe
+	initCfg.frameworkName = testcafe.Kind
 	var errs []error
 
 	if initCfg.frameworkVersion == "" {
@@ -889,7 +889,7 @@ func (ini *initializer) initializeBatchTestcafe(initCfg *initConfig) (*initConfi
 }
 
 func (ini *initializer) initializeBatchXcuitest(initCfg *initConfig) (*initConfig, []error) {
-	initCfg.frameworkName = config.KindXcuitest
+	initCfg.frameworkName = xcuitest.Kind
 	var errs []error
 	var err error
 

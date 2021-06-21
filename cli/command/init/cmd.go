@@ -3,6 +3,12 @@ package init
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/playwright"
+	"github.com/saucelabs/saucectl/internal/puppeteer"
+	"github.com/saucelabs/saucectl/internal/testcafe"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
 	"os"
 	"time"
 
@@ -142,17 +148,17 @@ func batchMode(initCfg *initConfig) error {
 
 	var errs []error
 	switch initCfg.frameworkName {
-	case config.KindCypress:
+	case cypress.Kind:
 		initCfg, errs = ini.initializeBatchCypress(initCfg)
-	case config.KindEspresso:
+	case espresso.Kind:
 		initCfg, errs = ini.initializeBatchEspresso(initCfg)
-	case config.KindPlaywright:
+	case playwright.Kind:
 		initCfg, errs = ini.initializeBatchPlaywright(initCfg)
-	case config.KindPuppeteer:
+	case puppeteer.Kind:
 		initCfg, errs = ini.initializeBatchPuppeteer(initCfg)
-	case config.KindTestcafe:
+	case testcafe.Kind:
 		initCfg, errs = ini.initializeBatchTestcafe(initCfg)
-	case config.KindXcuitest:
+	case xcuitest.Kind:
 		initCfg, errs = ini.initializeBatchXcuitest(initCfg)
 	default:
 		println()

@@ -5,13 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/cypress"
-	"github.com/saucelabs/saucectl/internal/espresso"
-	"github.com/saucelabs/saucectl/internal/playwright"
-	"github.com/saucelabs/saucectl/internal/puppeteer"
-	"github.com/saucelabs/saucectl/internal/testcafe"
-	"github.com/saucelabs/saucectl/internal/xcuitest"
-	"gotest.tools/v3/fs"
 	"os"
 	"reflect"
 	"strings"
@@ -22,14 +15,21 @@ import (
 	"github.com/Netflix/go-expect"
 	"github.com/hinshun/vt10x"
 	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/fs"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/devices"
+	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/mocks"
+	"github.com/saucelabs/saucectl/internal/playwright"
+	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/vmd"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
 
 // Test Case setup is partially reused from:
@@ -120,7 +120,7 @@ type questionTest struct {
 func TestAskFramework(t *testing.T) {
 	ir := &mocks.FakeFrameworkInfoReader{
 		FrameworksFn: func(ctx context.Context) ([]framework.Framework, error) {
-			return []framework.Framework{{Name: "cypress"}, {Name: "espresso"}, {Name: "playwright"}}, nil
+			return []framework.Framework{{Name: cypress.Kind}, {Name: espresso.Kind}, {Name: playwright.Kind}}, nil
 		},
 	}
 	testCases := []questionTest{
@@ -133,7 +133,7 @@ func TestAskFramework(t *testing.T) {
 				return nil
 			},
 			startState:    &initConfig{},
-			expectedState: &initConfig{frameworkName: "cypress"},
+			expectedState: &initConfig{frameworkName: cypress.Kind},
 		},
 		{
 			name:      "Type In",
@@ -144,7 +144,7 @@ func TestAskFramework(t *testing.T) {
 				return nil
 			},
 			startState:    &initConfig{},
-			expectedState: &initConfig{frameworkName: "espresso"},
+			expectedState: &initConfig{frameworkName: espresso.Kind},
 		},
 		{
 			name:      "Arrow In",
@@ -155,7 +155,7 @@ func TestAskFramework(t *testing.T) {
 				return nil
 			},
 			startState:    &initConfig{},
-			expectedState: &initConfig{frameworkName: "espresso"},
+			expectedState: &initConfig{frameworkName: espresso.Kind},
 		},
 	}
 	for _, tt := range testCases {
@@ -387,7 +387,7 @@ func TestAskEmulator(t *testing.T) {
 func TestAskPlatform(t *testing.T) {
 	metas := []framework.Metadata{
 		{
-			FrameworkName:    "testcafe",
+			FrameworkName:    testcafe.Kind,
 			FrameworkVersion: "1.5.0",
 			DockerImage:      "dummy-docker-image",
 			Platforms: []framework.Platform{
@@ -402,7 +402,7 @@ func TestAskPlatform(t *testing.T) {
 			},
 		},
 		{
-			FrameworkName:    "testcafe",
+			FrameworkName:    testcafe.Kind,
 			FrameworkVersion: "1.3.0",
 			Platforms: []framework.Platform{
 				{
@@ -447,8 +447,8 @@ func TestAskPlatform(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askPlatform(cfg, metas)
 			},
-			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0"},
-			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", browserName: "chrome", mode: "sauce", platformName: "Windows 10"},
+			startState:    &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
+			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", browserName: "chrome", mode: "sauce", platformName: "Windows 10"},
 		},
 		{
 			name: "macOS",
@@ -479,8 +479,8 @@ func TestAskPlatform(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askPlatform(cfg, metas)
 			},
-			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0"},
-			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", platformName: "macOS 11.00", browserName: "firefox", mode: "sauce"},
+			startState:    &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
+			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", platformName: "macOS 11.00", browserName: "firefox", mode: "sauce"},
 		},
 		{
 			name: "docker",
@@ -511,8 +511,8 @@ func TestAskPlatform(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askPlatform(cfg, metas)
 			},
-			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0"},
-			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", platformName: "", browserName: "chrome", mode: "docker"},
+			startState:    &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
+			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", platformName: "", browserName: "chrome", mode: "docker"},
 		},
 	}
 	for _, tt := range testCases {
@@ -525,7 +525,7 @@ func TestAskPlatform(t *testing.T) {
 func TestAskVersion(t *testing.T) {
 	metas := []framework.Metadata{
 		{
-			FrameworkName:    "testcafe",
+			FrameworkName:    testcafe.Kind,
 			FrameworkVersion: "1.5.0",
 			Platforms: []framework.Platform{
 				{
@@ -539,7 +539,7 @@ func TestAskVersion(t *testing.T) {
 			},
 		},
 		{
-			FrameworkName:    "testcafe",
+			FrameworkName:    testcafe.Kind,
 			FrameworkVersion: "1.3.0",
 			Platforms: []framework.Platform{
 				{
@@ -578,8 +578,8 @@ func TestAskVersion(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askVersion(cfg, metas)
 			},
-			startState:    &initConfig{frameworkName: "testcafe"},
-			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0"},
+			startState:    &initConfig{frameworkName: testcafe.Kind},
+			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
 		},
 		{
 			name: "Second",
@@ -608,8 +608,8 @@ func TestAskVersion(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askVersion(cfg, metas)
 			},
-			startState:    &initConfig{frameworkName: "testcafe"},
-			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.3.0"},
+			startState:    &initConfig{frameworkName: testcafe.Kind},
+			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.3.0"},
 		},
 	}
 	for _, tt := range testCases {
@@ -692,7 +692,7 @@ func TestConfigure(t *testing.T) {
 
 	frameworkVersions := []framework.Metadata{
 		{
-			FrameworkName:    "cypress",
+			FrameworkName:    cypress.Kind,
 			FrameworkVersion: "7.5.0",
 			DockerImage:      "dummy-docker-image",
 			Platforms: []framework.Platform{
@@ -708,7 +708,7 @@ func TestConfigure(t *testing.T) {
 			return frameworkVersions, nil
 		},
 		FrameworksFn: func(ctx context.Context) ([]framework.Framework, error) {
-			return []framework.Framework{{Name: "cypress"}, {Name: "espresso"}}, nil
+			return []framework.Framework{{Name: cypress.Kind}, {Name: espresso.Kind}}, nil
 		},
 	}
 	dr := &mocks.FakeDevicesReader{
@@ -733,7 +733,7 @@ func TestConfigure(t *testing.T) {
 			name: "Complete Configuration (espresso)",
 			procedure: func(c *expect.Console) error {
 				c.ExpectString("Select framework")
-				c.SendLine("espresso")
+				c.SendLine(espresso.Kind)
 				c.ExpectString("Application to test")
 				c.SendLine(dir.Join("android-app.apk"))
 				c.ExpectString("Test application")
@@ -772,7 +772,7 @@ func TestConfigure(t *testing.T) {
 			name: "Complete Configuration (cypress)",
 			procedure: func(c *expect.Console) error {
 				c.ExpectString("Select framework")
-				c.SendLine("cypress")
+				c.SendLine(cypress.Kind)
 				c.ExpectString("Select cypress version")
 				c.SendLine("7.5.0")
 				c.ExpectString("Cypress configuration file:")
@@ -873,9 +873,9 @@ func Test_initializers(t *testing.T) {
 	defer dir.Remove()
 
 	frameworkVersions := map[string][]framework.Metadata{
-		"cypress": {
+		cypress.Kind: {
 			{
-				FrameworkName:    "cypress",
+				FrameworkName:    cypress.Kind,
 				FrameworkVersion: "7.5.0",
 				DockerImage:      "dummy-docker-image",
 				Platforms: []framework.Platform{
@@ -886,9 +886,9 @@ func Test_initializers(t *testing.T) {
 				},
 			},
 		},
-		"playwright": {
+		playwright.Kind: {
 			{
-				FrameworkName:    "playwright",
+				FrameworkName:    playwright.Kind,
 				FrameworkVersion: "1.11.0",
 				DockerImage:      "dummy-docker-image",
 				Platforms: []framework.Platform{
@@ -899,9 +899,9 @@ func Test_initializers(t *testing.T) {
 				},
 			},
 		},
-		"testcafe": {
+		testcafe.Kind: {
 			{
-				FrameworkName:    "testcafe",
+				FrameworkName:    testcafe.Kind,
 				FrameworkVersion: "1.12.0",
 				DockerImage:      "dummy-docker-image",
 				Platforms: []framework.Platform{
@@ -931,12 +931,12 @@ func Test_initializers(t *testing.T) {
 		},
 		FrameworksFn: func(ctx context.Context) ([]framework.Framework, error) {
 			return []framework.Framework{
-				{Name: "cypress"},
-				{Name: "espresso"},
-				{Name: "playwright"},
+				{Name: cypress.Kind},
+				{Name: espresso.Kind},
+				{Name: playwright.Kind},
 				{Name: "puppeteer"},
-				{Name: "testcafe"},
-				{Name: "xcuitest"},
+				{Name: testcafe.Kind},
+				{Name: xcuitest.Kind},
 			}, nil
 		},
 	}
@@ -1375,7 +1375,7 @@ func Test_checkCredentials(t *testing.T) {
 			name: "Success",
 			frameworkFn: func(ctx context.Context) ([]framework.Framework, error) {
 				return []framework.Framework{
-					{Name: "cypress"},
+					{Name: cypress.Kind},
 				}, nil
 			},
 			wantErr: nil,
@@ -1413,7 +1413,7 @@ func Test_checkCredentials(t *testing.T) {
 func Test_checkFrameworkVersion(t *testing.T) {
 	metadatas := []framework.Metadata{
 		{
-			FrameworkName:    "testcafe",
+			FrameworkName:    testcafe.Kind,
 			FrameworkVersion: "1.0.0",
 			Platforms: []framework.Platform{
 				{
@@ -1444,7 +1444,7 @@ func Test_checkFrameworkVersion(t *testing.T) {
 		{
 			name: "Available version",
 			args: args{
-				frameworkName:    "testcafe",
+				frameworkName:    testcafe.Kind,
 				frameworkVersion: "1.0.0",
 				metadatas:        metadatas,
 			},
@@ -1453,7 +1453,7 @@ func Test_checkFrameworkVersion(t *testing.T) {
 		{
 			name: "Unavailable version",
 			args: args{
-				frameworkName:    "testcafe",
+				frameworkName:    testcafe.Kind,
 				frameworkVersion: "buggy-version",
 				metadatas:        metadatas,
 			},
@@ -1473,7 +1473,7 @@ func Test_checkFrameworkVersion(t *testing.T) {
 func Test_checkBrowserAndPlatform(t *testing.T) {
 	metadatas := []framework.Metadata{
 		{
-			FrameworkName:    "testcafe",
+			FrameworkName:    testcafe.Kind,
 			FrameworkVersion: "1.0.0",
 			Platforms: []framework.Platform{
 				{
@@ -1506,7 +1506,7 @@ func Test_checkBrowserAndPlatform(t *testing.T) {
 		{
 			name: "Default",
 			args: args{
-				frameworkName:    "testcafe",
+				frameworkName:    testcafe.Kind,
 				frameworkVersion: "1.0.0",
 				platformName:     "windows 10",
 				browserName:      "chrome",
@@ -1516,7 +1516,7 @@ func Test_checkBrowserAndPlatform(t *testing.T) {
 		{
 			name: "Unavailable browser",
 			args: args{
-				frameworkName:    "testcafe",
+				frameworkName:    testcafe.Kind,
 				frameworkVersion: "1.0.0",
 				platformName:     "windows 10",
 				browserName:      "webkit",
@@ -1526,7 +1526,7 @@ func Test_checkBrowserAndPlatform(t *testing.T) {
 		{
 			name: "Unavailable browser on platform",
 			args: args{
-				frameworkName:    "testcafe",
+				frameworkName:    testcafe.Kind,
 				frameworkVersion: "1.0.0",
 				platformName:     "windows 10",
 				browserName:      "safari",
@@ -1692,7 +1692,7 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 		infoReader: &mocks.FakeFrameworkInfoReader{VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
 			return []framework.Metadata{
 				{
-					FrameworkName:    config.KindCypress,
+					FrameworkName:    cypress.Kind,
 					FrameworkVersion: "7.0.0",
 					Platforms: []framework.Platform{
 						{
@@ -1722,7 +1722,7 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 			name: "Basic",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName:    config.KindCypress,
+					frameworkName:    cypress.Kind,
 					frameworkVersion: "7.0.0",
 					browserName:      "chrome",
 					platformName:     "windows 10",
@@ -1732,7 +1732,7 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 				},
 			},
 			want: &initConfig{
-				frameworkName:    config.KindCypress,
+				frameworkName:    cypress.Kind,
 				frameworkVersion: "7.0.0",
 				browserName:      "chrome",
 				platformName:     "windows 10",
@@ -1746,7 +1746,7 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 			name: "invalid browser/platform",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName:    config.KindCypress,
+					frameworkName:    cypress.Kind,
 					frameworkVersion: "7.0.0",
 					browserName:      "dummy",
 					platformName:     "dummy",
@@ -1754,7 +1754,7 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 				},
 			},
 			want: &initConfig{
-				frameworkName:    config.KindCypress,
+				frameworkName:    cypress.Kind,
 				frameworkVersion: "7.0.0",
 				browserName:      "dummy",
 				platformName:     "dummy",
@@ -1770,11 +1770,11 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 			name: "no flags",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName: config.KindCypress,
+					frameworkName: cypress.Kind,
 				},
 			},
 			want: &initConfig{
-				frameworkName: config.KindCypress,
+				frameworkName: cypress.Kind,
 			},
 			wantErrs: []error{
 				errors.New("no cypress version specified"),
@@ -1787,13 +1787,13 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 			name: "invalid framework version / Invalid config file",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName:    config.KindCypress,
+					frameworkName:    cypress.Kind,
 					frameworkVersion: "8.0.0",
 					cypressJSON:      "/my/fake/cypress.json",
 				},
 			},
 			want: &initConfig{
-				frameworkName:    config.KindCypress,
+				frameworkName:    cypress.Kind,
 				frameworkVersion: "8.0.0",
 				cypressJSON:      "/my/fake/cypress.json",
 			},
@@ -1823,7 +1823,7 @@ func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 		infoReader: &mocks.FakeFrameworkInfoReader{VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
 			return []framework.Metadata{
 				{
-					FrameworkName:    config.KindTestcafe,
+					FrameworkName:    testcafe.Kind,
 					FrameworkVersion: "1.0.0",
 					Platforms: []framework.Platform{
 						{
@@ -1857,7 +1857,7 @@ func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 			name: "Basic",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName:    config.KindTestcafe,
+					frameworkName:    testcafe.Kind,
 					frameworkVersion: "1.0.0",
 					browserName:      "chrome",
 					platformName:     "windows 10",
@@ -1866,7 +1866,7 @@ func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 				},
 			},
 			want: &initConfig{
-				frameworkName:    config.KindTestcafe,
+				frameworkName:    testcafe.Kind,
 				frameworkVersion: "1.0.0",
 				browserName:      "chrome",
 				platformName:     "windows 10",
@@ -1879,7 +1879,7 @@ func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 			name: "invalid browser/platform",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName:    config.KindTestcafe,
+					frameworkName:    testcafe.Kind,
 					frameworkVersion: "1.0.0",
 					browserName:      "dummy",
 					platformName:     "dummy",
@@ -1887,7 +1887,7 @@ func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 				},
 			},
 			want: &initConfig{
-				frameworkName:    config.KindTestcafe,
+				frameworkName:    testcafe.Kind,
 				frameworkVersion: "1.0.0",
 				browserName:      "dummy",
 				platformName:     "dummy",
@@ -1902,11 +1902,11 @@ func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 			name: "no flags",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName: config.KindTestcafe,
+					frameworkName: testcafe.Kind,
 				},
 			},
 			want: &initConfig{
-				frameworkName: config.KindTestcafe,
+				frameworkName: testcafe.Kind,
 			},
 			wantErrs: []error{
 				errors.New("no testcafe version specified"),
@@ -1918,12 +1918,12 @@ func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 			name: "invalid framework version / Invalid config file",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName:    config.KindTestcafe,
+					frameworkName:    testcafe.Kind,
 					frameworkVersion: "8.0.0",
 				},
 			},
 			want: &initConfig{
-				frameworkName:    config.KindTestcafe,
+				frameworkName:    testcafe.Kind,
 				frameworkVersion: "8.0.0",
 			},
 			wantErrs: []error{
@@ -1951,7 +1951,7 @@ func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 		infoReader: &mocks.FakeFrameworkInfoReader{VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
 			return []framework.Metadata{
 				{
-					FrameworkName:    config.KindPlaywright,
+					FrameworkName:    playwright.Kind,
 					FrameworkVersion: "1.0.0",
 					Platforms: []framework.Platform{
 						{
@@ -1981,7 +1981,7 @@ func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 			name: "Basic",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName:    config.KindPlaywright,
+					frameworkName:    playwright.Kind,
 					frameworkVersion: "1.0.0",
 					browserName:      "chromium",
 					platformName:     "windows 10",
@@ -1990,7 +1990,7 @@ func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 				},
 			},
 			want: &initConfig{
-				frameworkName:    config.KindPlaywright,
+				frameworkName:    playwright.Kind,
 				frameworkVersion: "1.0.0",
 				browserName:      "chromium",
 				platformName:     "windows 10",
@@ -2003,7 +2003,7 @@ func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 			name: "invalid browser/platform",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName:    config.KindPlaywright,
+					frameworkName:    playwright.Kind,
 					frameworkVersion: "1.0.0",
 					browserName:      "dummy",
 					platformName:     "dummy",
@@ -2011,7 +2011,7 @@ func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 				},
 			},
 			want: &initConfig{
-				frameworkName:    config.KindPlaywright,
+				frameworkName:    playwright.Kind,
 				frameworkVersion: "1.0.0",
 				browserName:      "dummy",
 				platformName:     "dummy",
@@ -2026,11 +2026,11 @@ func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 			name: "no flags",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName: config.KindPlaywright,
+					frameworkName: playwright.Kind,
 				},
 			},
 			want: &initConfig{
-				frameworkName: config.KindPlaywright,
+				frameworkName: playwright.Kind,
 			},
 			wantErrs: []error{
 				errors.New("no playwright version specified"),
@@ -2042,12 +2042,12 @@ func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 			name: "invalid framework version / Invalid config file",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName:    config.KindPlaywright,
+					frameworkName:    playwright.Kind,
 					frameworkVersion: "8.0.0",
 				},
 			},
 			want: &initConfig{
-				frameworkName:    config.KindPlaywright,
+				frameworkName:    playwright.Kind,
 				frameworkVersion: "8.0.0",
 			},
 			wantErrs: []error{
@@ -2075,7 +2075,7 @@ func Test_initializer_initializeBatchPuppeteer(t *testing.T) {
 		infoReader: &mocks.FakeFrameworkInfoReader{VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
 			return []framework.Metadata{
 				{
-					FrameworkName:    config.KindPuppeteer,
+					FrameworkName:    "puppeteer",
 					FrameworkVersion: "1.0.0",
 					Platforms: []framework.Platform{
 						{
@@ -2105,7 +2105,7 @@ func Test_initializer_initializeBatchPuppeteer(t *testing.T) {
 			name: "Basic",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName:    config.KindPuppeteer,
+					frameworkName:    "puppeteer",
 					frameworkVersion: "1.0.0",
 					browserName:      "chrome",
 					platformName:     "docker",
@@ -2114,7 +2114,7 @@ func Test_initializer_initializeBatchPuppeteer(t *testing.T) {
 				},
 			},
 			want: &initConfig{
-				frameworkName:    config.KindPuppeteer,
+				frameworkName:    "puppeteer",
 				frameworkVersion: "1.0.0",
 				browserName:      "chrome",
 				platformName:     "docker",
@@ -2127,7 +2127,7 @@ func Test_initializer_initializeBatchPuppeteer(t *testing.T) {
 			name: "invalid browser/platform",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName:    config.KindPuppeteer,
+					frameworkName:    "puppeteer",
 					frameworkVersion: "1.0.0",
 					browserName:      "dummy",
 					platformName:     "dummy",
@@ -2135,7 +2135,7 @@ func Test_initializer_initializeBatchPuppeteer(t *testing.T) {
 				},
 			},
 			want: &initConfig{
-				frameworkName:    config.KindPuppeteer,
+				frameworkName:    "puppeteer",
 				frameworkVersion: "1.0.0",
 				browserName:      "dummy",
 				platformName:     "dummy",
@@ -2150,11 +2150,11 @@ func Test_initializer_initializeBatchPuppeteer(t *testing.T) {
 			name: "no flags",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName: config.KindPuppeteer,
+					frameworkName: "puppeteer",
 				},
 			},
 			want: &initConfig{
-				frameworkName: config.KindPuppeteer,
+				frameworkName: "puppeteer",
 			},
 			wantErrs: []error{
 				errors.New("no puppeteer version specified"),
@@ -2166,12 +2166,12 @@ func Test_initializer_initializeBatchPuppeteer(t *testing.T) {
 			name: "invalid framework version / Invalid config file",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName:    config.KindPuppeteer,
+					frameworkName:    "puppeteer",
 					frameworkVersion: "8.0.0",
 				},
 			},
 			want: &initConfig{
-				frameworkName:    config.KindPuppeteer,
+				frameworkName:    "puppeteer",
 				frameworkVersion: "8.0.0",
 			},
 			wantErrs: []error{
@@ -2216,7 +2216,7 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 			name: "Basic",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName: config.KindXcuitest,
+					frameworkName: xcuitest.Kind,
 					app:           dir.Join("ios-app.ipa"),
 					testApp:       dir.Join("ios-app.ipa"),
 					device: config.Device{
@@ -2227,7 +2227,7 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 				},
 			},
 			want: &initConfig{
-				frameworkName: config.KindXcuitest,
+				frameworkName: xcuitest.Kind,
 				app:           dir.Join("ios-app.ipa"),
 				testApp:       dir.Join("ios-app.ipa"),
 				device: config.Device{
@@ -2242,12 +2242,12 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 			name: "invalid download config",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName:   config.KindXcuitest,
+					frameworkName:   xcuitest.Kind,
 					artifactWhenStr: "dummy",
 				},
 			},
 			want: &initConfig{
-				frameworkName:   config.KindXcuitest,
+				frameworkName:   xcuitest.Kind,
 				artifactWhenStr: "dummy",
 			},
 			wantErrs: []error{
@@ -2261,11 +2261,11 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 			name: "no flags",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName: config.KindXcuitest,
+					frameworkName: xcuitest.Kind,
 				},
 			},
 			want: &initConfig{
-				frameworkName: config.KindXcuitest,
+				frameworkName: xcuitest.Kind,
 			},
 			wantErrs: []error{
 				errors.New("no app provided"),
@@ -2277,13 +2277,13 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 			name: "invalid app file / test file",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName: config.KindXcuitest,
+					frameworkName: xcuitest.Kind,
 					app:           dir.Join("truc", "ios-app.ipa"),
 					testApp:       dir.Join("truc", "ios-app.ipa"),
 				},
 			},
 			want: &initConfig{
-				frameworkName: config.KindXcuitest,
+				frameworkName: xcuitest.Kind,
 				app:           dir.Join("truc", "ios-app.ipa"),
 				testApp:       dir.Join("truc", "ios-app.ipa"),
 			},
@@ -2328,7 +2328,7 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 			name: "Basic",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName: config.KindEspresso,
+					frameworkName: espresso.Kind,
 					app:           dir.Join("android-app.apk"),
 					testApp:       dir.Join("android-app.apk"),
 					device: config.Device{
@@ -2339,7 +2339,7 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 				},
 			},
 			want: &initConfig{
-				frameworkName: config.KindEspresso,
+				frameworkName: espresso.Kind,
 				app:           dir.Join("android-app.apk"),
 				testApp:       dir.Join("android-app.apk"),
 				device: config.Device{
@@ -2354,12 +2354,12 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 			name: "invalid download config",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName:   config.KindEspresso,
+					frameworkName:   espresso.Kind,
 					artifactWhenStr: "dummy",
 				},
 			},
 			want: &initConfig{
-				frameworkName:   config.KindEspresso,
+				frameworkName:   espresso.Kind,
 				artifactWhenStr: "dummy",
 			},
 			wantErrs: []error{
@@ -2373,11 +2373,11 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 			name: "no flags",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName: config.KindEspresso,
+					frameworkName: espresso.Kind,
 				},
 			},
 			want: &initConfig{
-				frameworkName: config.KindEspresso,
+				frameworkName: espresso.Kind,
 			},
 			wantErrs: []error{
 				errors.New("no app provided"),
@@ -2389,13 +2389,13 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 			name: "invalid app file / test file",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName: config.KindEspresso,
+					frameworkName: espresso.Kind,
 					app:           dir.Join("truc", "android-app.apk"),
 					testApp:       dir.Join("truc", "android-app.apk"),
 				},
 			},
 			want: &initConfig{
-				frameworkName: config.KindEspresso,
+				frameworkName: espresso.Kind,
 				app:           dir.Join("truc", "android-app.apk"),
 				testApp:       dir.Join("truc", "android-app.apk"),
 			},
