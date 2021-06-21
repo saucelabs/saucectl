@@ -3,6 +3,12 @@ package run
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/playwright"
+	"github.com/saucelabs/saucectl/internal/puppeteer"
+	"github.com/saucelabs/saucectl/internal/testcafe"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -152,6 +158,10 @@ func preRun() error {
 		return fmt.Errorf("no credentials set")
 	}
 
+	// TODO Performing the "kind" check in the global run method is necessary for as long as we support the global
+	// `saucectl run`, rather then the framework specific `saucectl run {framework}`. After we drop the global run
+	// support, the run command does not need to the determine the config type any longer, and each framework should
+	// perform this validation on its own.
 	d, err := config.Describe(gFlags.cfgFilePath)
 	if err != nil {
 		return err
@@ -186,23 +196,22 @@ func preRun() error {
 
 // Run runs the command
 func Run(cmd *cobra.Command) (int, error) {
-	// TODO switch statement with pre-constructed type definition structs?
-	if typeDef.Kind == config.KindCypress && typeDef.APIVersion == config.VersionV1Alpha {
+	if typeDef.Kind == cypress.Kind {
 		return runCypress(cmd, tcClient, restoClient, &appsClient)
 	}
-	if typeDef.Kind == config.KindPlaywright && typeDef.APIVersion == config.VersionV1Alpha {
+	if typeDef.Kind == playwright.Kind {
 		return runPlaywright(cmd, tcClient, restoClient, &appsClient)
 	}
-	if typeDef.Kind == config.KindTestcafe && typeDef.APIVersion == config.VersionV1Alpha {
+	if typeDef.Kind == testcafe.Kind {
 		return runTestcafe(cmd, tcClient, restoClient, &appsClient)
 	}
-	if typeDef.Kind == config.KindPuppeteer && typeDef.APIVersion == config.VersionV1Alpha {
+	if typeDef.Kind == puppeteer.Kind {
 		return runPuppeteer(cmd, tcClient, restoClient)
 	}
-	if typeDef.Kind == config.KindEspresso && typeDef.APIVersion == config.VersionV1Alpha {
+	if typeDef.Kind == espresso.Kind {
 		return runEspresso(cmd, tcClient, restoClient, rdcClient, appsClient)
 	}
-	if typeDef.Kind == config.KindXcuitest && typeDef.APIVersion == config.VersionV1Alpha {
+	if typeDef.Kind == xcuitest.Kind {
 		return runXcuitest(cmd, tcClient, restoClient, rdcClient, appsClient)
 	}
 

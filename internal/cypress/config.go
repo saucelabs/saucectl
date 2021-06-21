@@ -14,6 +14,15 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 )
 
+// Config descriptors.
+var (
+	// Kind represents the type definition of this config.
+	Kind = "cypress"
+
+	// APIVersion represents the supported config version.
+	APIVersion = "v1alpha"
+)
+
 // Project represents the cypress project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline"`
@@ -84,6 +93,10 @@ func FromFile(cfgPath string) (Project, error) {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
 	p.ConfigFilePath = cfgPath
+
+	if p.Kind != Kind && p.APIVersion != APIVersion {
+		return p, config.ErrUnknownCfg
+	}
 
 	p.Cypress.Key = os.ExpandEnv(p.Cypress.Key)
 

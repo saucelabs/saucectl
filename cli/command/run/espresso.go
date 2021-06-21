@@ -39,10 +39,6 @@ func NewEspressoCmd() *cobra.Command {
 		Hidden:           true, // TODO reveal command once ready
 		TraverseChildren: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if typeDef.Kind != config.KindEspresso || typeDef.APIVersion != config.VersionV1Alpha {
-				return errors.New("unknown framework configuration")
-			}
-
 			return preRun()
 		},
 		Run: func(cmd *cobra.Command, args []string) {

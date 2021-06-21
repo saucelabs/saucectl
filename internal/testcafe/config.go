@@ -12,6 +12,15 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Config descriptors.
+var (
+	// Kind represents the type definition of this config.
+	Kind = "testcafe"
+
+	// APIVersion represents the supported config version.
+	APIVersion = "v1alpha"
+)
+
 // appleDeviceRegex is a device name matching regex for apple devices (mainly ipad/iphone).
 var appleDeviceRegex = regexp.MustCompile(`(?i)(iP)(hone|ad)[\w\s\d]*(Simulator)?`)
 
@@ -88,6 +97,10 @@ func FromFile(cfgPath string) (Project, error) {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
 	p.ConfigFilePath = cfgPath
+
+	if p.Kind != Kind && p.APIVersion != APIVersion {
+		return p, config.ErrUnknownCfg
+	}
 
 	if p.Testcafe.ProjectPath == "" && p.RootDir == "" {
 		return p, fmt.Errorf("could not find 'rootDir' in config yml, 'rootDir' must be set to specify project files")
