@@ -209,10 +209,10 @@ func Run(cmd *cobra.Command) (int, error) {
 		return runPuppeteer(cmd, tcClient, restoClient)
 	}
 	if typeDef.Kind == espresso.Kind {
-		return runEspresso(cmd, tcClient, restoClient, rdcClient, appsClient)
+		return runEspresso(cmd, espressoFlags{}, tcClient, restoClient, rdcClient, appsClient)
 	}
 	if typeDef.Kind == xcuitest.Kind {
-		return runXcuitest(cmd, tcClient, restoClient, rdcClient, appsClient)
+		return runXcuitest(cmd, xcuitestFlags{}, tcClient, restoClient, rdcClient, appsClient)
 	}
 
 	return 1, errors.New("unknown framework configuration")

@@ -19,9 +19,6 @@ import (
 	"os"
 )
 
-// espFlags contains all espresso related flags that are set when 'run' is invoked.
-var espFlags = espressoFlags{}
-
 type espressoFlags struct {
 	Name        string
 	App         string
@@ -33,6 +30,8 @@ type espressoFlags struct {
 
 // NewEspressoCmd creates the 'run' command for espresso.
 func NewEspressoCmd() *cobra.Command {
+	lflags := espressoFlags{}
+
 	cmd := &cobra.Command{
 		Use:              "espresso",
 		Short:            "Run espresso tests",
@@ -42,7 +41,7 @@ func NewEspressoCmd() *cobra.Command {
 			return preRun()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			exitCode, err := runEspresso(cmd, tcClient, restoClient, rdcClient, appsClient)
+			exitCode, err := runEspresso(cmd, lflags, tcClient, restoClient, rdcClient, appsClient)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				sentry.CaptureError(err, sentry.Scope{
@@ -55,34 +54,35 @@ func NewEspressoCmd() *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	f.StringVar(&espFlags.Name, "name", "", "Sets the name of job as it will appear on Sauce Labs")
-	f.StringVar(&espFlags.App, "app", "", "Specifies the app under test")
-	f.StringVar(&espFlags.TestApp, "testApp", "", "Specifies the test app")
+	f.StringVar(&lflags.Name, "name", "", "Sets the name of job as it will appear on Sauce Labs")
+	f.StringVar(&lflags.App, "app", "", "Specifies the app under test")
+	f.StringVar(&lflags.TestApp, "testApp", "", "Specifies the test app")
 
 	// Test Options
-	f.StringSliceVar(&espFlags.TestOptions.Class, "testOptions.class", []string{}, "Include classes")
-	f.StringSliceVar(&espFlags.TestOptions.NotClass, "testOptions.notClass", []string{}, "Exclude classes")
-	f.StringVar(&espFlags.TestOptions.Package, "testOptions.package", "", "Include package")
-	f.StringVar(&espFlags.TestOptions.Size, "testOptions.size", "", "Include tests based on size")
-	f.StringVar(&espFlags.TestOptions.Annotation, "testOptions.annotation", "", "Include tests based on the annotation")
-	f.IntVar(&espFlags.TestOptions.ShardIndex, "testOptions.shardIndex", 0, "The shard index for this particular run")
-	f.IntVar(&espFlags.TestOptions.NumShards, "testOptions.numShards", 0, "Total number of shards")
+	f.StringSliceVar(&lflags.TestOptions.Class, "testOptions.class", []string{}, "Include classes")
+	f.StringSliceVar(&lflags.TestOptions.NotClass, "testOptions.notClass", []string{}, "Exclude classes")
+	f.StringVar(&lflags.TestOptions.Package, "testOptions.package", "", "Include package")
+	f.StringVar(&lflags.TestOptions.Size, "testOptions.size", "", "Include tests based on size")
+	f.StringVar(&lflags.TestOptions.Annotation, "testOptions.annotation", "", "Include tests based on the annotation")
+	f.IntVar(&lflags.TestOptions.ShardIndex, "testOptions.shardIndex", 0, "The shard index for this particular run")
+	f.IntVar(&lflags.TestOptions.NumShards, "testOptions.numShards", 0, "Total number of shards")
 
 	// Emulators and Devices
-	f.Var(&espFlags.Emulator, "emulator", "Specifies the emulator to use for testing")
-	f.Var(&espFlags.Device, "device", "Specifies the device to use for testing")
+	f.Var(&lflags.Emulator, "emulator", "Specifies the emulator to use for testing")
+	f.Var(&lflags.Device, "device", "Specifies the device to use for testing")
 
 	return cmd
 }
 
-func runEspresso(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as appstore.AppStore) (int, error) {
+func runEspresso(cmd *cobra.Command, flags espressoFlags, tc testcomposer.Client, rs resto.Client, rc rdc.Client,
+	as appstore.AppStore) (int, error) {
 	p, err := espresso.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
 	p.Sauce.Metadata.ExpandEnv()
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
-	applyEspressoFlags(&p)
+	applyEspressoFlags(&p, flags)
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
@@ -148,36 +148,36 @@ func filterEspressoSuite(c *espresso.Project) error {
 	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
 }
 
-func applyEspressoFlags(p *espresso.Project) {
-	if espFlags.App != "" {
-		p.Espresso.App = espFlags.App
+func applyEspressoFlags(p *espresso.Project, flags espressoFlags) {
+	if flags.App != "" {
+		p.Espresso.App = flags.App
 	}
-	if espFlags.TestApp != "" {
-		p.Espresso.TestApp = espFlags.TestApp
+	if flags.TestApp != "" {
+		p.Espresso.TestApp = flags.TestApp
 	}
 
 	// No name, no adhoc suite.
-	if espFlags.Name != "" {
-		setAdhocSuite(p)
+	if flags.Name != "" {
+		setAdhocSuite(p, flags)
 	}
 }
 
-func setAdhocSuite(p *espresso.Project) {
+func setAdhocSuite(p *espresso.Project, flags espressoFlags) {
 	var dd []config.Device
-	if espFlags.Device.Changed {
-		dd = append(dd, espFlags.Device.Device)
+	if flags.Device.Changed {
+		dd = append(dd, flags.Device.Device)
 	}
 
 	var ee []config.Emulator
-	if espFlags.Emulator.Changed {
-		ee = append(ee, espFlags.Emulator.Emulator)
+	if flags.Emulator.Changed {
+		ee = append(ee, flags.Emulator.Emulator)
 	}
 
 	s := espresso.Suite{
-		Name:        espFlags.Name,
+		Name:        flags.Name,
 		Devices:     dd,
 		Emulators:   ee,
-		TestOptions: espFlags.TestOptions,
+		TestOptions: flags.TestOptions,
 	}
 	p.Suites = []espresso.Suite{s}
 }
