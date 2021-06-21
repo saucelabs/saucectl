@@ -8,7 +8,7 @@ sauce:
       - e2e
       - release team
       - other tag
-  build: Release $CI_COMMIT_SHORT_SHA
+    build: Release $CI_COMMIT_SHORT_SHA
 
 xcuitest:
   app: ./tests/e2e/xcuitest/SauceLabs.Mobile.Sample.XCUITest.App.ipa

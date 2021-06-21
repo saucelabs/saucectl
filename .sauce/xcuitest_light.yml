@@ -6,4 +6,4 @@ sauce:
   metadata:
     tags:
       - e2e
-  build: Release $CI_COMMIT_SHORT_SHA
+    build: Release $CI_COMMIT_SHORT_SHA
