@@ -89,7 +89,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 // Run runs the command
 func Run(cmd *cobra.Command, initCfg *initConfig) error {
 	if cmd.Flags().Changed("framework") {
-		return batchMode(cmd, initCfg)
+		return batchMode(initCfg)
 	}
 	stdio := terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
 
@@ -130,7 +130,7 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 	return nil
 }
 
-func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
+func batchMode(initCfg *initConfig) error {
 	stdio := terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
 	// TODO: Implement logic for using cfg.username / cfg.accessKey
 	creds := credentials.Get()
@@ -143,17 +143,17 @@ func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 	var errs []error
 	switch initCfg.frameworkName {
 	case config.KindCypress:
-		initCfg, errs = ini.initializeBatchCypress(cmd, initCfg)
+		initCfg, errs = ini.initializeBatchCypress(initCfg)
 	case config.KindEspresso:
-		initCfg, errs = ini.initializeBatchEspresso(cmd, initCfg)
+		initCfg, errs = ini.initializeBatchEspresso(initCfg)
 	case config.KindPlaywright:
-		initCfg, errs = ini.initializeBatchPlaywright(cmd, initCfg)
+		initCfg, errs = ini.initializeBatchPlaywright(initCfg)
 	case config.KindPuppeteer:
-		initCfg, errs = ini.initializeBatchPuppeteer(cmd, initCfg)
+		initCfg, errs = ini.initializeBatchPuppeteer(initCfg)
 	case config.KindTestcafe:
-		initCfg, errs = ini.initializeBatchTestcafe(cmd, initCfg)
+		initCfg, errs = ini.initializeBatchTestcafe(initCfg)
 	case config.KindXcuitest:
-		initCfg, errs = ini.initializeBatchXcuitest(cmd, initCfg)
+		initCfg, errs = ini.initializeBatchXcuitest(initCfg)
 	default:
 		println()
 		color.HiRed("Invalid framework selected")
