@@ -229,7 +229,7 @@ func vmdToMaps(vmds []vmd.VirtualDevice) ([]string, map[string][]string) {
 
 	sort.Strings(vmdNames)
 	for _, v := range vmdOSVersions {
-		sort.Strings(v)
+		sortVersions(v)
 	}
 	return vmdNames, vmdOSVersions
 }

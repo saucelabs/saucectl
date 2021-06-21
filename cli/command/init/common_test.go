@@ -6,6 +6,8 @@ import (
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_extValidator(t *testing.T) {
@@ -510,6 +512,52 @@ func Test_firstNotEmpty(t *testing.T) {
 			if got := firstNotEmpty(tt.args...); got != tt.want {
 				t.Errorf("firstAvailable() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func Test_sortVersions(t *testing.T) {
+	type args struct {
+		versions []string
+	}
+	tests := []struct {
+		name     string
+		args     args
+		expected []string
+	}{
+		{
+			name: "Already sorted",
+			args: args{
+				versions: []string{"11.0", "10.0", "9.0", "8.1", "8.0", "7.0"},
+			},
+			expected: []string{"11.0", "10.0", "9.0", "8.1", "8.0", "7.0"},
+		},
+		{
+			name: "Reversed",
+			args: args{
+				versions: []string{"7.0", "8.0", "8.1", "9.0", "10.0", "11.0"},
+			},
+			expected: []string{"11.0", "10.0", "9.0", "8.1", "8.0", "7.0"},
+		},
+		{
+			name: "Random",
+			args: args{
+				versions: []string{"9.0", "8.1", "7.0", "10.0", "11.0", "8.0"},
+			},
+			expected: []string{"11.0", "10.0", "9.0", "8.1", "8.0", "7.0"},
+		},
+		{
+			name: "Incomplete values",
+			args: args{
+				versions: []string{"9", "8.1", "7", "10.0.1", "11.0", "8.0"},
+			},
+			expected: []string{"11.0", "10.0.1", "9", "8.1", "8.0", "7"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sortVersions(tt.args.versions)
+			assert.Equal(t,  tt.expected, tt.args.versions)
 		})
 	}
 }

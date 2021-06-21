@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -153,4 +154,18 @@ func firstNotEmpty(args ...string) string {
 		}
 	}
 	return ""
+}
+
+func sortVersions(versions []string) {
+	sort.Slice(versions, func(i, j int) bool {
+		v1 := strings.Split(versions[i], ".")
+		v2 := strings.Split(versions[j], ".")
+		v1Major, _ := strconv.Atoi(v1[0])
+		v2Major, _ := strconv.Atoi(v2[0])
+
+		if v1Major == v2Major && len(v1) > 1 && len(v2) > 1 {
+			return strings.Compare(v1[1], v2[1]) == 1
+		}
+		return v1Major > v2Major
+	})
 }
