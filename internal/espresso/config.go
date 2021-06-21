@@ -10,6 +10,15 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Config descriptors.
+var (
+	// Kind represents the type definition of this config.
+	Kind = "espresso"
+
+	// APIVersion represents the supported config version.
+	APIVersion = "v1alpha"
+)
+
 // Project represents the espresso project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline"`
@@ -66,6 +75,10 @@ func FromFile(cfgPath string) (Project, error) {
 
 	p.Espresso.App = os.ExpandEnv(p.Espresso.App)
 	p.Espresso.TestApp = os.ExpandEnv(p.Espresso.TestApp)
+
+	if p.Kind != Kind && p.APIVersion != APIVersion {
+		return p, config.ErrUnknownCfg
+	}
 
 	if p.Sauce.Concurrency < 1 {
 		// Default concurrency is 2

@@ -10,6 +10,9 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// ErrUnknownCfg is thrown when the provided config doesn't match anything known, be it in "kind" or the version of it.
+var ErrUnknownCfg = errors.New("unknown framework configuration")
+
 // Metadata describes job metadata
 type Metadata struct {
 	Tags  []string `yaml:"tags" json:"tags,omitempty"`
@@ -111,21 +114,6 @@ type Npm struct {
 type Defaults struct {
 	Mode string `yaml:"mode,omitempty" json:"mode"`
 }
-
-// Version* contains referenced config version
-const (
-	VersionV1Alpha = "v1alpha"
-)
-
-// Kind* contains referenced config kinds
-const (
-	KindCypress    = "cypress"
-	KindPuppeteer  = "puppeteer"
-	KindPlaywright = "playwright"
-	KindTestcafe   = "testcafe"
-	KindEspresso   = "espresso"
-	KindXcuitest   = "xcuitest"
-)
 
 func readYaml(cfgFilePath string) ([]byte, error) {
 	if cfgFilePath == "" {

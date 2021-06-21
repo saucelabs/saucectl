@@ -10,6 +10,15 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Config descriptors.
+var (
+	// Kind represents the type definition of this config.
+	Kind = "puppeteer"
+
+	// APIVersion represents the supported config version.
+	APIVersion = "v1alpha"
+)
+
 // Project represents the puppeteer project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline"`
@@ -53,6 +62,10 @@ func FromFile(cfgPath string) (Project, error) {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
 	p.ConfigFilePath = cfgPath
+
+	if p.Kind != Kind && p.APIVersion != APIVersion {
+		return p, config.ErrUnknownCfg
+	}
 
 	if p.RootDir == "" {
 		return p, fmt.Errorf("could not find 'rootDir' in config yml, 'rootDir' must be set to specify project files")

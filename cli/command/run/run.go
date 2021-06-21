@@ -3,6 +3,12 @@ package run
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/playwright"
+	"github.com/saucelabs/saucectl/internal/puppeteer"
+	"github.com/saucelabs/saucectl/internal/testcafe"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,7 +20,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -31,16 +36,19 @@ var (
 	runUse   = "run"
 	runShort = "Runs tests on Sauce Labs"
 
-	defaultLogFir      = "<cwd>/logs"
-	defaultRegion      = "us-west-1"
-	defaultSauceignore = ".sauceignore"
-
 	// General Request Timeouts
 	appStoreTimeout     = 300 * time.Second
 	testComposerTimeout = 300 * time.Second
 	restoTimeout        = 60 * time.Second
 	rdcTimeout          = 15 * time.Second
 	githubTimeout       = 2 * time.Second
+
+	typeDef config.TypeDef
+
+	tcClient    testcomposer.Client
+	restoClient resto.Client
+	appsClient  appstore.AppStore
+	rdcClient   rdc.Client
 )
 
 // gFlags contains all global flags that are set when 'run' is invoked.
@@ -48,7 +56,6 @@ var gFlags = globalFlags{}
 
 type globalFlags struct {
 	cfgFilePath    string
-	cfgLogDir      string
 	globalTimeout  time.Duration
 	regionFlag     string
 	env            map[string]string
@@ -76,13 +83,16 @@ type globalFlags struct {
 }
 
 // Command creates the `run` command
-func Command(cli *command.SauceCtlCli) *cobra.Command {
+func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:              runUse,
 		Short:            runShort,
 		TraverseChildren: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return preRun()
+		},
 		Run: func(cmd *cobra.Command, args []string) {
-			exitCode, err := Run(cmd, cli, args)
+			exitCode, err := Run(cmd)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				sentry.CaptureError(err, sentry.Scope{
@@ -96,9 +106,8 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 
 	defaultCfgPath := filepath.Join(".sauce", "config.yml")
 	cmd.PersistentFlags().StringVarP(&gFlags.cfgFilePath, "config", "c", defaultCfgPath, "Specifies which config file to use")
-	cmd.PersistentFlags().StringVarP(&gFlags.cfgLogDir, "logDir", "l", defaultLogFir, "log path")
 	cmd.PersistentFlags().DurationVarP(&gFlags.globalTimeout, "timeout", "t", 0, "Global timeout that limits how long saucectl can run in total. Supports duration values like '10s', '30m' etc. (default: no timeout)")
-	cmd.PersistentFlags().StringVarP(&gFlags.regionFlag, "region", "r", "", "The sauce labs region. (default: us-west-1)")
+	cmd.PersistentFlags().StringVarP(&gFlags.regionFlag, "region", "r", "us-west-1", "The sauce labs region.")
 	cmd.PersistentFlags().StringToStringVarP(&gFlags.env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
 	cmd.PersistentFlags().StringVar(&gFlags.sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
 	cmd.PersistentFlags().StringVar(&gFlags.suiteName, "suite", "", "Run specified test suite.")
@@ -109,7 +118,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.PersistentFlags().StringVar(&gFlags.tunnelID, "tunnel-id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
 	cmd.PersistentFlags().StringVar(&gFlags.tunnelParent, "tunnel-parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
 	cmd.PersistentFlags().StringVar(&gFlags.runnerVersion, "runner-version", "", "Overrides the automatically determined runner version.")
-	cmd.PersistentFlags().StringVar(&gFlags.sauceignore, "sauceignore", "", "Specifies the path to the .sauceignore file.")
+	cmd.PersistentFlags().StringVar(&gFlags.sauceignore, "sauceignore", ".sauceignore", "Specifies the path to the .sauceignore file.")
 	cmd.PersistentFlags().StringToStringVar(&gFlags.experiments, "experiment", map[string]string{}, "Specifies a list of experimental flags and values")
 	cmd.PersistentFlags().BoolVarP(&gFlags.dryRun, "dry-run", "", false, "Simulate a test run without actually running any tests.")
 
@@ -129,13 +138,13 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	_ = cmd.PersistentFlags().MarkHidden("runner-version")
 	_ = cmd.PersistentFlags().MarkHidden("experiment")
 
-	cmd.AddCommand(NewEspressoCmd(cli))
+	cmd.AddCommand(NewEspressoCmd(), NewXCUITestCmd())
 
 	return cmd
 }
 
-// Run runs the command
-func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, error) {
+// preRun is a pre-run step that is executed before the main 'run` step. All shared dependencies are initialized here.
+func preRun() error {
 	println("Running version", version.Version)
 	checkForUpdates()
 	go awaitGlobalTimeout()
@@ -146,35 +155,33 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		fmt.Println(`Set up your credentials by running:
 > saucectl configure`)
 		println()
-		return 1, fmt.Errorf("no credentials set")
+		return fmt.Errorf("no credentials set")
 	}
 
-	if gFlags.cfgLogDir == defaultLogFir {
-		pwd, _ := os.Getwd()
-		gFlags.cfgLogDir = filepath.Join(pwd, "logs")
-	}
-	cli.LogDir = gFlags.cfgLogDir
-	log.Info().Str("config", gFlags.cfgFilePath).Msg("Reading config file")
-
+	// TODO Performing the "kind" check in the global run method is necessary for as long as we support the global
+	// `saucectl run`, rather then the framework specific `saucectl run {framework}`. After we drop the global run
+	// support, the run command does not need to the determine the config type any longer, and each framework should
+	// perform this validation on its own.
 	d, err := config.Describe(gFlags.cfgFilePath)
 	if err != nil {
-		return 1, err
+		return err
 	}
+	typeDef = d
 
-	tc := testcomposer.Client{
+	tcClient = testcomposer.Client{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         "", // updated later once region is determined
 		Credentials: creds,
 	}
 
-	rs := resto.Client{
+	restoClient = resto.Client{
 		HTTPClient: &http.Client{Timeout: restoTimeout},
 		URL:        "", // updated later once region is determined
 		Username:   creds.Username,
 		AccessKey:  creds.AccessKey,
 	}
 
-	rc := rdc.Client{
+	rdcClient = rdc.Client{
 		HTTPClient: &http.Client{
 			Timeout: rdcTimeout,
 		},
@@ -182,26 +189,30 @@ func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) (int, erro
 		AccessKey: creds.AccessKey,
 	}
 
-	as := appstore.New("", creds.Username, creds.AccessKey, appStoreTimeout)
+	appsClient = *appstore.New("", creds.Username, creds.AccessKey, appStoreTimeout)
 
-	// TODO switch statement with pre-constructed type definition structs?
-	if d.Kind == config.KindCypress && d.APIVersion == config.VersionV1Alpha {
-		return runCypress(cmd, tc, rs, as)
+	return nil
+}
+
+// Run runs the command
+func Run(cmd *cobra.Command) (int, error) {
+	if typeDef.Kind == cypress.Kind {
+		return runCypress(cmd, tcClient, restoClient, &appsClient)
 	}
-	if d.Kind == config.KindPlaywright && d.APIVersion == config.VersionV1Alpha {
-		return runPlaywright(cmd, tc, rs, as)
+	if typeDef.Kind == playwright.Kind {
+		return runPlaywright(cmd, tcClient, restoClient, &appsClient)
 	}
-	if d.Kind == config.KindTestcafe && d.APIVersion == config.VersionV1Alpha {
-		return runTestcafe(cmd, tc, rs, as)
+	if typeDef.Kind == testcafe.Kind {
+		return runTestcafe(cmd, tcClient, restoClient, &appsClient)
 	}
-	if d.Kind == config.KindPuppeteer && d.APIVersion == config.VersionV1Alpha {
-		return runPuppeteer(cmd, tc, rs)
+	if typeDef.Kind == puppeteer.Kind {
+		return runPuppeteer(cmd, tcClient, restoClient)
 	}
-	if d.Kind == config.KindEspresso && d.APIVersion == config.VersionV1Alpha {
-		return runEspresso(cmd, tc, rs, rc, as)
+	if typeDef.Kind == espresso.Kind {
+		return runEspresso(cmd, tcClient, restoClient, rdcClient, appsClient)
 	}
-	if d.Kind == config.KindXcuitest && d.APIVersion == config.VersionV1Alpha {
-		return runXcuitest(cmd, tc, rs, rc, as)
+	if typeDef.Kind == xcuitest.Kind {
+		return runXcuitest(cmd, tcClient, restoClient, rdcClient, appsClient)
 	}
 
 	return 1, errors.New("unknown framework configuration")
@@ -220,18 +231,8 @@ func printTestEnv(testEnv string) {
 	}
 }
 
-func applyDefaultValues(sauce *config.SauceConfig) {
-	if sauce.Region == "" {
-		sauce.Region = defaultRegion
-	}
-
-	if sauce.Sauceignore == "" {
-		sauce.Sauceignore = defaultSauceignore
-	}
-}
-
-func overrideCliParameters(cmd *cobra.Command, sauce *config.SauceConfig, arti *config.Artifacts) {
-	if cmd.Flags().Lookup("region").Changed {
+func applyGlobalFlags(cmd *cobra.Command, sauce *config.SauceConfig, arti *config.Artifacts) {
+	if sauce.Region == "" || cmd.Flags().Lookup("region").Changed {
 		sauce.Region = gFlags.regionFlag
 	}
 	if cmd.Flags().Lookup("ccy").Changed {
@@ -243,7 +244,7 @@ func overrideCliParameters(cmd *cobra.Command, sauce *config.SauceConfig, arti *
 	if cmd.Flags().Lookup("tunnel-parent").Changed {
 		sauce.Tunnel.Parent = gFlags.tunnelParent
 	}
-	if cmd.Flags().Lookup("sauceignore").Changed {
+	if sauce.Sauceignore == "" || cmd.Flags().Lookup("sauceignore").Changed {
 		sauce.Sauceignore = gFlags.sauceignore
 	}
 	if cmd.Flags().Lookup("experiment").Changed {

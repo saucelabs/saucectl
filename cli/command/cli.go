@@ -12,7 +12,6 @@ type SauceCtlCli struct {
 	in     *streams.In
 	out    *streams.Out
 	err    io.Writer
-	LogDir string
 }
 
 // Out returns the writer used for stdout

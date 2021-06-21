@@ -10,6 +10,15 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Config descriptors.
+var (
+	// Kind represents the type definition of this config.
+	Kind = "xcuitest"
+
+	// APIVersion represents the supported config version.
+	APIVersion = "v1alpha"
+)
+
 var supportedDeviceTypes = []string{"ANY", "PHONE", "TABLET"}
 
 // Project represents the xcuitest project configuration.
@@ -55,6 +64,10 @@ func FromFile(cfgPath string) (Project, error) {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
 	}
 	p.ConfigFilePath = cfgPath
+
+	if p.Kind != Kind && p.APIVersion != APIVersion {
+		return p, config.ErrUnknownCfg
+	}
 
 	if p.Sauce.Concurrency < 1 {
 		// Default concurrency is 2

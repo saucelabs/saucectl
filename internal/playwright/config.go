@@ -11,6 +11,15 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Config descriptors.
+var (
+	// Kind represents the type definition of this config.
+	Kind = "playwright"
+
+	// APIVersion represents the supported config version.
+	APIVersion = "v1alpha"
+)
+
 var supportedBrwsList = []string{"chromium", "firefox", "webkit"}
 
 // Project represents the playwright project configuration.
@@ -70,6 +79,10 @@ func FromFile(cfgPath string) (Project, error) {
 
 	if err := yaml.NewDecoder(f).Decode(&p); err != nil {
 		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
+	}
+
+	if p.Kind != Kind && p.APIVersion != APIVersion {
+		return p, config.ErrUnknownCfg
 	}
 
 	if err := checkSupportedBrowsers(&p); err != nil {
