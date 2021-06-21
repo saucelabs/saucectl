@@ -15,6 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/ryanuber/go-glob"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
@@ -307,4 +308,45 @@ func (c *Client) downloadArtifact(targetDir, jobID, fileName string) error {
 	}
 	targetFile := filepath.Join(targetDir, fileName)
 	return os.WriteFile(targetFile, content, 0644)
+}
+
+type devicesResponse struct {
+	Entities []device `json:"entities"`
+}
+
+type device struct {
+	Name string `json:"name"`
+	OS   string `json:"os"`
+}
+
+// GetDevices returns the list of available devices using a specific operating system.
+func (c *Client) GetDevices(ctx context.Context, OS string) ([]devices.Device, error) {
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v1/rdc/devices/filtered", c.URL), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	q := req.URL.Query()
+	q.Add("os", OS)
+	req.URL.RawQuery = q.Encode()
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	res, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return []devices.Device{}, err
+	}
+
+	var resp devicesResponse
+	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+		return []devices.Device{}, err
+	}
+
+	var dev []devices.Device
+	for _, d := range resp.Entities {
+		dev = append(dev, devices.Device{
+			Name: d.Name,
+			OS:   d.OS,
+		})
+	}
+	return dev, nil
 }

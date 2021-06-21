@@ -15,6 +15,9 @@ type Framework struct {
 // MetadataService represents an interface for retrieving framework metadata.
 type MetadataService interface {
 	Search(ctx context.Context, opts SearchOptions) (Metadata, error)
+
+	Frameworks(ctx context.Context) ([]Framework, error)
+	Versions(ctx context.Context, frameworkName string) ([]Metadata, error)
 }
 
 // SearchOptions represents read query options for MetadataService.Search().
@@ -25,11 +28,17 @@ type SearchOptions struct {
 
 // Metadata represents test runner metadata.
 type Metadata struct {
-	FrameworkName      string
-	FrameworkVersion   string
-	CloudRunnerVersion string
-	DockerImage        string
-	GitRelease         string
+	FrameworkName    string
+	FrameworkVersion string
+	DockerImage      string
+	GitRelease       string
+	Platforms        []Platform
+}
+
+// Platform represent a supported platform.
+type Platform struct {
+	PlatformName string
+	BrowserNames []string
 }
 
 // GitReleaseSegments segments GitRelease into separate parts of org, repo and tag.

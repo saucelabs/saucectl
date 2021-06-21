@@ -10,14 +10,17 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/ryanuber/go-glob"
-	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/requesth"
 
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/requesth"
+	"github.com/saucelabs/saucectl/internal/vmd"
 )
 
 var (
@@ -391,4 +394,58 @@ func (c *Client) downloadArtifact(targetDir, jobID, fileName string) error {
 	}
 	targetFile := filepath.Join(targetDir, fileName)
 	return os.WriteFile(targetFile, content, 0644)
+}
+
+type platformEntry struct {
+	LongName     string `json:"long_name"`
+	ShortVersion string `json:"short_version"`
+}
+
+// GetVirtualDevices returns the list of available virtual devices.
+func (c *Client) GetVirtualDevices(ctx context.Context, kind string) ([]vmd.VirtualDevice, error) {
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/rest/v1.1/info/platforms/all", c.URL), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	res, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return []vmd.VirtualDevice{}, err
+	}
+
+	var resp []platformEntry
+	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+		return []vmd.VirtualDevice{}, err
+	}
+
+	key := "Emulator"
+	if kind == vmd.IOSSimulator {
+		key = "Simulator"
+	}
+
+	devs := map[string]map[string]bool{}
+	for _, d := range resp {
+		if !strings.Contains(d.LongName, key) {
+			continue
+		}
+		if _, ok := devs[d.LongName]; !ok {
+			devs[d.LongName] = map[string]bool{}
+		}
+		devs[d.LongName][d.ShortVersion] = true
+	}
+
+	var dev []vmd.VirtualDevice
+	for vmdName, versions := range devs {
+		d := vmd.VirtualDevice{Name: vmdName}
+		for version := range versions {
+			d.OSVersion = append(d.OSVersion, version)
+		}
+		sort.Strings(d.OSVersion)
+		dev = append(dev, d)
+	}
+	sort.Slice(dev, func(i, j int) bool {
+		return dev[i].Name < dev[j].Name
+	})
+	return dev, nil
 }
