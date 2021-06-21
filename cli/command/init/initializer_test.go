@@ -334,7 +334,7 @@ func TestAskEmulator(t *testing.T) {
 				return i.askEmulator(cfg, vmds)
 			},
 			startState:    &initConfig{},
-			expectedState: &initConfig{emulator: config.Emulator{Name: "Google Pixel 3 Emulator", PlatformVersions: []string{"7.0"}}},
+			expectedState: &initConfig{emulator: config.Emulator{Name: "Google Pixel 3 Emulator", PlatformVersions: []string{"9.0"}}},
 		},
 		{
 			name: "Input is captured",
