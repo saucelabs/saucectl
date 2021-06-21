@@ -2,11 +2,12 @@ package init
 
 import (
 	"errors"
-	"github.com/fatih/color"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2/terminal"
+	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
@@ -68,10 +69,13 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 			}
 		},
 	}
+	cmd.Flags().StringVarP(&initCfg.username, "username", "u", "us-west-1", "username to use")
+	cmd.Flags().StringVarP(&initCfg.accessKey, "accessKey", "a", "us-west-1", "username to use")
 	cmd.Flags().StringVarP(&initCfg.region, "region", "r", "us-west-1", "region to use")
 	cmd.Flags().StringVarP(&initCfg.frameworkName, "framework", "f", "", "framework to configure")
-	cmd.Flags().StringVarP(&initCfg.cypressJSON, "cypress.config", "c", "", "path to cypress.json file (cypress only)")
-	cmd.Flags().StringVarP(&initCfg.app, "app", "a", "", "path to application to test (espresso/xcuitest only)")
+	cmd.Flags().StringVarP(&initCfg.frameworkVersion, "frameworkVersion", "v", "", "framework version to be used")
+	cmd.Flags().StringVarP(&initCfg.cypressJSON, "cypress.config", "", "", "path to cypress.json file (cypress only)")
+	cmd.Flags().StringVarP(&initCfg.app, "app", "", "", "path to application to test (espresso/xcuitest only)")
 	cmd.Flags().StringVarP(&initCfg.testApp, "testApp", "t", "", "path to test application (espresso/xcuitest only)")
 	cmd.Flags().StringVarP(&initCfg.platformName, "platformName", "p", "", "platform name")
 	cmd.Flags().StringVarP(&initCfg.browserName, "browserName", "b", "", "browser name")
@@ -84,7 +88,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 
 // Run runs the command
 func Run(cmd *cobra.Command, initCfg *initConfig) error {
-	if cmd.Flags().HasFlags() {
+	if cmd.Flags().Changed("framework") {
 		return batchMode(cmd, initCfg)
 	}
 	stdio := terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
@@ -126,34 +130,50 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 	return nil
 }
 
-func batchMode(cmd *cobra.Command, cfg *initConfig) error {
+func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 	stdio := terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
+	// TODO: Implement logic for using cfg.username / cfg.accessKey
 	creds := credentials.Get()
 	if !creds.IsValid() {
 		return errors.New("no credentials available")
 	}
 
-	ini := newInitializer(stdio, creds, cfg.region)
+	ini := newInitializer(stdio, creds, initCfg.region)
 
-	switch cfg.frameworkName {
+	var errs []error
+	switch initCfg.frameworkName {
 	case config.KindCypress:
-		ini.initializeBatchCypress()
+		initCfg, errs = ini.initializeBatchCypress(cmd, initCfg)
 	case config.KindEspresso:
-		ini.initializeBatchEspresso()
+		initCfg, errs = ini.initializeBatchEspresso(cmd, initCfg)
 	case config.KindPlaywright:
-		ini.initializeBatchPlaywright()
+		initCfg, errs = ini.initializeBatchPlaywright(cmd, initCfg)
 	case config.KindPuppeteer:
-		ini.initializeBatchPuppeteer()
+		initCfg, errs = ini.initializeBatchPuppeteer(cmd, initCfg)
 	case config.KindTestcafe:
-		ini.initializeBatchTestcafe()
+		initCfg, errs = ini.initializeBatchTestcafe(cmd, initCfg)
 	case config.KindXcuitest:
-		ini.initializeBatchXcuitest()
+		initCfg, errs = ini.initializeBatchXcuitest(cmd, initCfg)
 	default:
 		println()
-		color.HiRed("No framework selected")
+		color.HiRed("Invalid framework selected")
 		println()
-		return errors.New("no framework selected")
+		return errors.New("invalid framework selected")
 	}
+	if len(errs) > 0 {
+		fmt.Printf("%d errors occured:\n", len(errs))
+		for _, err := range errs {
+			fmt.Printf("- %v\n", err)
+		}
+		return fmt.Errorf("%s: %d errors occured", initCfg.frameworkName, len(errs))
+	}
+	initCfg.concurrency = concurrency.Min(ini.ccyReader, 10)
+
+	files, err := saveConfigurationFiles(initCfg)
+	if err != nil {
+		return err
+	}
+	displaySummary(files)
 	return nil
 }
 

@@ -170,3 +170,12 @@ func sortVersions(versions []string) {
 		return v1Major > v2Major
 	})
 }
+
+func sliceContainsString(slice []string, val string) bool {
+	for _, value := range slice {
+		if value == val {
+			return true
+		}
+	}
+	return false
+}
