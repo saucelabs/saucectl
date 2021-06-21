@@ -588,3 +588,27 @@ func (ini *initializer) initializeXCUITest() (*initConfig, error) {
 
 	return cfg, nil
 }
+
+
+func (ini *initializer) initializeBatchCypress() (*initConfig, []error) {
+	return &initConfig{}, []error{}
+}
+
+func (ini *initializer) initializeBatchEspresso() (*initConfig, []error) {
+	return &initConfig{}, []error{}
+}
+
+func (ini *initializer) initializeBatchPlaywright() (*initConfig, []error) {
+	return &initConfig{}, []error{}
+}
+
+func (ini *initializer) initializeBatchPuppeteer() (*initConfig, []error) {
+	return &initConfig{}, []error{}
+}
+
+func (ini *initializer) initializeBatchTestcafe() (*initConfig, []error) {
+	return &initConfig{}, []error{}
+}
+func (ini *initializer) initializeBatchXcuitest() (*initConfig, []error) {
+	return &initConfig{}, []error{}
+}

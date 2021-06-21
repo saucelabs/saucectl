@@ -1,6 +1,8 @@
 package init
 
 import (
+	"errors"
+	"github.com/fatih/color"
 	"os"
 	"time"
 
@@ -37,6 +39,8 @@ type initConfig struct {
 	device           config.Device
 	emulator         config.Emulator
 	concurrency      int
+	username         string
+	accessKey        string
 }
 
 var (
@@ -123,7 +127,33 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 }
 
 func batchMode(cmd *cobra.Command, cfg *initConfig) error {
-	println("Batch mode")
+	stdio := terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
+	creds := credentials.Get()
+	if !creds.IsValid() {
+		return errors.New("no credentials available")
+	}
+
+	ini := newInitializer(stdio, creds, cfg.region)
+
+	switch cfg.frameworkName {
+	case config.KindCypress:
+		ini.initializeBatchCypress()
+	case config.KindEspresso:
+		ini.initializeBatchEspresso()
+	case config.KindPlaywright:
+		ini.initializeBatchPlaywright()
+	case config.KindPuppeteer:
+		ini.initializeBatchPuppeteer()
+	case config.KindTestcafe:
+		ini.initializeBatchTestcafe()
+	case config.KindXcuitest:
+		ini.initializeBatchXcuitest()
+	default:
+		println()
+		color.HiRed("No framework selected")
+		println()
+		return errors.New("no framework selected")
+	}
 	return nil
 }
 
