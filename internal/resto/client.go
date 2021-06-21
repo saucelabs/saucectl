@@ -444,5 +444,8 @@ func (c *Client) GetVirtualDevices(ctx context.Context, kind string) ([]vmd.Virt
 		sort.Strings(d.OSVersion)
 		dev = append(dev, d)
 	}
+	sort.Slice(dev, func(i, j int) bool {
+		return dev[i].Name < dev[j].Name
+	})
 	return dev, nil
 }
