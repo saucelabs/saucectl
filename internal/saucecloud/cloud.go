@@ -171,9 +171,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	if opts.Framework == "espresso" {
 		l.Str("deviceName", opts.DeviceName).Str("platformVersion", opts.PlatformVersion).Str("deviceId", opts.DeviceID)
 		if isRDC {
-			if opts.DevicePrivateOnly {
-				l.Str("private", "true")
-			}
+			l.Bool("private", opts.DevicePrivateOnly)
 		}
 	} else {
 		l.Str("browser", opts.BrowserName)
