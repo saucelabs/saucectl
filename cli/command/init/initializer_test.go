@@ -5,6 +5,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/cli/flags"
+	"github.com/spf13/pflag"
 	"os"
 	"reflect"
 	"strings"
@@ -1606,8 +1608,7 @@ func Test_checkEmulators(t *testing.T) {
 	}
 
 	type args struct {
-		emulatorName     string
-		platformVersions []string
+		emulator config.Emulator
 	}
 	tests := []struct {
 		name     string
@@ -1618,8 +1619,10 @@ func Test_checkEmulators(t *testing.T) {
 		{
 			name: "single version",
 			args: args{
-				emulatorName:     "Google Api Emulator",
-				platformVersions: []string{"10.0"},
+				emulator: config.Emulator{
+					Name:             "Google Api Emulator",
+					PlatformVersions: []string{"10.0"},
+				},
 			},
 			want: config.Emulator{
 				Name:             "Google Api Emulator",
@@ -1630,8 +1633,10 @@ func Test_checkEmulators(t *testing.T) {
 		{
 			name: "multiple versions",
 			args: args{
-				emulatorName:     "Google Api Emulator",
-				platformVersions: []string{"10.0", "9.0"},
+				emulator: config.Emulator{
+					Name:             "Google Api Emulator",
+					PlatformVersions: []string{"10.0", "9.0"},
+				},
 			},
 			want: config.Emulator{
 				Name:             "Google Api Emulator",
@@ -1642,8 +1647,10 @@ func Test_checkEmulators(t *testing.T) {
 		{
 			name: "multiple + buggy versions",
 			args: args{
-				emulatorName:     "Google Api Emulator",
-				platformVersions: []string{"10.0", "8.1"},
+				emulator: config.Emulator{
+					Name:             "Google Api Emulator",
+					PlatformVersions: []string{"10.0", "8.1"},
+				},
 			},
 			want:     config.Emulator{},
 			wantErrs: []error{errors.New("emulator: Google Api Emulator does not support platform 8.1")},
@@ -1651,8 +1658,10 @@ func Test_checkEmulators(t *testing.T) {
 		{
 			name: "case sensitiveness correction",
 			args: args{
-				emulatorName:     "google api emulator",
-				platformVersions: []string{"10.0"},
+				emulator: config.Emulator{
+					Name:             "google api emulator",
+					PlatformVersions: []string{"10.0"},
+				},
 			},
 			want: config.Emulator{
 				Name:             "Google Api Emulator",
@@ -1663,8 +1672,10 @@ func Test_checkEmulators(t *testing.T) {
 		{
 			name: "invalid emulator",
 			args: args{
-				emulatorName:     "buggy emulator",
-				platformVersions: []string{"10.0"},
+				emulator: config.Emulator{
+					Name:             "buggy emulator",
+					PlatformVersions: []string{"10.0"},
+				},
 			},
 			want:     config.Emulator{},
 			wantErrs: []error{errors.New("emulator: buggy emulator does not exists")},
@@ -1672,7 +1683,7 @@ func Test_checkEmulators(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, errs := checkEmulators(vmds, tt.args.emulatorName, tt.args.platformVersions)
+			got, errs := checkEmulators(vmds, tt.args.emulator)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("checkEmulators() got = %v, want %v", got, tt.want)
 			}
@@ -2205,6 +2216,7 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 
 	type args struct {
 		initCfg *initConfig
+		flags   func() *pflag.FlagSet
 	}
 	tests := []struct {
 		name     string
@@ -2215,10 +2227,23 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 		{
 			name: "Basic",
 			args: args{
+				flags: func() *pflag.FlagSet {
+					var deviceFlag flags.Device
+					p := pflag.NewFlagSet("tests", pflag.ContinueOnError)
+					p.Var(&deviceFlag, "device", "")
+					p.Parse([]string{`--device`, `name=iPhone .*`})
+					return p
+				},
 				initCfg: &initConfig{
 					frameworkName: xcuitest.Kind,
 					app:           dir.Join("ios-app.ipa"),
 					testApp:       dir.Join("ios-app.ipa"),
+					deviceFlag: flags.Device{
+						Changed: true,
+						Device: config.Device{
+							Name: "iPhone .*",
+						},
+					},
 					device: config.Device{
 						Name: "iPhone .*",
 					},
@@ -2230,6 +2255,12 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 				frameworkName: xcuitest.Kind,
 				app:           dir.Join("ios-app.ipa"),
 				testApp:       dir.Join("ios-app.ipa"),
+				deviceFlag: flags.Device{
+					Changed: true,
+					Device: config.Device{
+						Name: "iPhone .*",
+					},
+				},
 				device: config.Device{
 					Name: "iPhone .*",
 				},
@@ -2241,6 +2272,12 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 		{
 			name: "invalid download config",
 			args: args{
+				flags: func() *pflag.FlagSet {
+					var deviceFlag flags.Device
+					p := pflag.NewFlagSet("tests", pflag.ContinueOnError)
+					p.Var(&deviceFlag, "device", "")
+					return p
+				},
 				initCfg: &initConfig{
 					frameworkName:   xcuitest.Kind,
 					artifactWhenStr: "dummy",
@@ -2253,13 +2290,19 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 			wantErrs: []error{
 				errors.New("no app provided"),
 				errors.New("no testApp provided"),
-				errors.New("no device.name provided"),
+				errors.New("no device provided"),
 				errors.New("dummy: unknown download condition"),
 			},
 		},
 		{
 			name: "no flags",
 			args: args{
+				flags: func() *pflag.FlagSet {
+					var deviceFlag flags.Device
+					p := pflag.NewFlagSet("tests", pflag.ContinueOnError)
+					p.Var(&deviceFlag, "device", "")
+					return p
+				},
 				initCfg: &initConfig{
 					frameworkName: xcuitest.Kind,
 				},
@@ -2270,12 +2313,16 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 			wantErrs: []error{
 				errors.New("no app provided"),
 				errors.New("no testApp provided"),
-				errors.New("no device.name provided"),
+				errors.New("no device provided"),
 			},
 		},
 		{
 			name: "invalid app file / test file",
 			args: args{
+				flags: func() *pflag.FlagSet {
+					p := pflag.NewFlagSet("tests", pflag.ContinueOnError)
+					return p
+				},
 				initCfg: &initConfig{
 					frameworkName: xcuitest.Kind,
 					app:           dir.Join("truc", "ios-app.ipa"),
@@ -2288,7 +2335,7 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 				testApp:       dir.Join("truc", "ios-app.ipa"),
 			},
 			wantErrs: []error{
-				errors.New("no device.name provided"),
+				errors.New("no device provided"),
 				fmt.Errorf("app: %s: stat %s: no such file or directory", dir.Join("truc", "ios-app.ipa"), dir.Join("truc", "ios-app.ipa")),
 				fmt.Errorf("testApp: %s: stat %s: no such file or directory", dir.Join("truc", "ios-app.ipa"), dir.Join("truc", "ios-app.ipa")),
 			},
@@ -2296,7 +2343,7 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, errs := ini.initializeBatchXcuitest(tt.args.initCfg)
+			got, errs := ini.initializeBatchXcuitest(tt.args.flags(), tt.args.initCfg)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("initializeBatchXcuitest() got = %v, want %v", got, tt.want)
 			}
@@ -2317,6 +2364,7 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 
 	type args struct {
 		initCfg *initConfig
+		flags   func() *pflag.FlagSet
 	}
 	tests := []struct {
 		name     string
@@ -2327,12 +2375,22 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 		{
 			name: "Basic",
 			args: args{
+				flags: func() *pflag.FlagSet {
+					var deviceFlag flags.Device
+					p := pflag.NewFlagSet("tests", pflag.ContinueOnError)
+					p.Var(&deviceFlag, "device", "")
+					p.Parse([]string{`--device`, `name=HTC .*`})
+					return p
+				},
 				initCfg: &initConfig{
 					frameworkName: espresso.Kind,
 					app:           dir.Join("android-app.apk"),
 					testApp:       dir.Join("android-app.apk"),
-					device: config.Device{
-						Name: "HTC .*",
+					deviceFlag: flags.Device{
+						Changed: true,
+						Device: config.Device{
+							Name: "HTC .*",
+						},
 					},
 					region:       "us-west-1",
 					artifactWhen: "fail",
@@ -2342,6 +2400,12 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 				frameworkName: espresso.Kind,
 				app:           dir.Join("android-app.apk"),
 				testApp:       dir.Join("android-app.apk"),
+				deviceFlag: flags.Device{
+					Changed: true,
+					Device: config.Device{
+						Name: "HTC .*",
+					},
+				},
 				device: config.Device{
 					Name: "HTC .*",
 				},
@@ -2353,6 +2417,12 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 		{
 			name: "invalid download config",
 			args: args{
+				flags: func() *pflag.FlagSet {
+					var deviceFlag flags.Device
+					p := pflag.NewFlagSet("tests", pflag.ContinueOnError)
+					p.Var(&deviceFlag, "device", "")
+					return p
+				},
 				initCfg: &initConfig{
 					frameworkName:   espresso.Kind,
 					artifactWhenStr: "dummy",
@@ -2372,6 +2442,12 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 		{
 			name: "no flags",
 			args: args{
+				flags: func() *pflag.FlagSet {
+					var deviceFlag flags.Device
+					p := pflag.NewFlagSet("tests", pflag.ContinueOnError)
+					p.Var(&deviceFlag, "device", "")
+					return p
+				},
 				initCfg: &initConfig{
 					frameworkName: espresso.Kind,
 				},
@@ -2388,6 +2464,12 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 		{
 			name: "invalid app file / test file",
 			args: args{
+				flags: func() *pflag.FlagSet {
+					var deviceFlag flags.Device
+					p := pflag.NewFlagSet("tests", pflag.ContinueOnError)
+					p.Var(&deviceFlag, "device", "")
+					return p
+				},
 				initCfg: &initConfig{
 					frameworkName: espresso.Kind,
 					app:           dir.Join("truc", "android-app.apk"),
@@ -2408,7 +2490,7 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, errs := ini.initializeBatchEspresso(tt.args.initCfg)
+			got, errs := ini.initializeBatchEspresso(tt.args.flags(), tt.args.initCfg)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("initializeBatchEspresso() got = %v, want %v", got, tt.want)
 			}

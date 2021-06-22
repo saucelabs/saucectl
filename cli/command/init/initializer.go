@@ -10,6 +10,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
+	"github.com/spf13/pflag"
 	"net/http"
 	"sort"
 	"strings"
@@ -610,7 +611,7 @@ func checkBrowserAndPlatform(metadatas []framework.Metadata, frameworkName, fram
 	return nil
 }
 
-func checkArtifactDownloadSetting(when string) (config.When, error){
+func checkArtifactDownloadSetting(when string) (config.When, error) {
 	switch when {
 	case "pass":
 		return config.WhenPass, nil
@@ -625,30 +626,32 @@ func checkArtifactDownloadSetting(when string) (config.When, error){
 	}
 }
 
-func checkEmulators(vmds []vmd.VirtualDevice, emulatorName string, platformVersions []string) (config.Emulator, []error) {
+func checkEmulators(vmds []vmd.VirtualDevice, emulator config.Emulator) (config.Emulator, []error) {
 	var errs []error
 
 	d := vmd.VirtualDevice{}
 	for _, dev := range vmds {
-		if strings.EqualFold(dev.Name, emulatorName) {
+		if strings.EqualFold(dev.Name, emulator.Name) {
 			d = dev
 			break
 		}
 	}
 	if d.Name == "" {
-		return config.Emulator{}, []error{fmt.Errorf("emulator: %s does not exists", emulatorName)}
+		return config.Emulator{}, []error{fmt.Errorf("emulator: %s does not exists", emulator.Name)}
 	}
-	for _, p := range platformVersions {
+	for _, p := range emulator.PlatformVersions {
 		if !sliceContainsString(d.OSVersion, p) {
-			errs = append(errs, fmt.Errorf("emulator: %s does not support platform %s", emulatorName, p))
+			errs = append(errs, fmt.Errorf("emulator: %s does not support platform %s", emulator.Name, p))
 		}
 	}
 	if len(errs) > 0 {
 		return config.Emulator{}, errs
 	}
 	return config.Emulator{
-		Name: d.Name,
-		PlatformVersions: platformVersions,
+		Name:             d.Name,
+		PlatformVersions: emulator.PlatformVersions,
+		PlatformName:     emulator.PlatformName,
+		Orientation:      emulator.Orientation,
 	}, []error{}
 }
 
@@ -707,7 +710,7 @@ func (ini *initializer) initializeBatchCypress(initCfg *initConfig) (*initConfig
 	return initCfg, errs
 }
 
-func (ini *initializer) initializeBatchEspresso(initCfg *initConfig) (*initConfig, []error) {
+func (ini *initializer) initializeBatchEspresso(f *pflag.FlagSet, initCfg *initConfig) (*initConfig, []error) {
 	initCfg.frameworkName = espresso.Kind
 	var errs []error
 	var err error
@@ -718,7 +721,7 @@ func (ini *initializer) initializeBatchEspresso(initCfg *initConfig) (*initConfi
 	if initCfg.testApp == "" {
 		errs = append(errs, errors.New("no testApp provided"))
 	}
-	if initCfg.device.Name == ""  && initCfg.emulator.Name == "" {
+	if !f.Changed("device") && !f.Changed("emulator") {
 		errs = append(errs, errors.New("either device or emulator configuration needs to be provided"))
 	}
 	if initCfg.artifactWhenStr != "" {
@@ -740,15 +743,18 @@ func (ini *initializer) initializeBatchEspresso(initCfg *initConfig) (*initConfi
 			errs = append(errs, fmt.Errorf("testApp: %s", err))
 		}
 	}
-	if initCfg.emulator.Name != "" && len(initCfg.emulator.PlatformVersions) > 0 {
+	if f.Changed("emulator") {
 		emulators, err := ini.vmdReader.GetVirtualDevices(context.Background(), vmd.AndroidEmulator)
 		if err != nil {
 			errs = append(errs, fmt.Errorf(""))
 		}
 		var lerrs []error
-		if initCfg.emulator, lerrs = checkEmulators(emulators, initCfg.emulator.Name, initCfg.emulator.PlatformVersions); len(lerrs) > 0 {
+		if initCfg.emulator, lerrs = checkEmulators(emulators, initCfg.emulatorFlag.Emulator); len(lerrs) > 0 {
 			errs = append(errs, lerrs...)
 		}
+	}
+	if f.Changed("device") {
+		initCfg.device = initCfg.deviceFlag.Device
 	}
 	return initCfg, errs
 }
@@ -888,7 +894,7 @@ func (ini *initializer) initializeBatchTestcafe(initCfg *initConfig) (*initConfi
 	return initCfg, errs
 }
 
-func (ini *initializer) initializeBatchXcuitest(initCfg *initConfig) (*initConfig, []error) {
+func (ini *initializer) initializeBatchXcuitest(f *pflag.FlagSet, initCfg *initConfig) (*initConfig, []error) {
 	initCfg.frameworkName = xcuitest.Kind
 	var errs []error
 	var err error
@@ -899,8 +905,8 @@ func (ini *initializer) initializeBatchXcuitest(initCfg *initConfig) (*initConfi
 	if initCfg.testApp == "" {
 		errs = append(errs, errors.New("no testApp provided"))
 	}
-	if initCfg.device.Name == "" {
-		errs = append(errs, errors.New("no device.name provided"))
+	if !f.Changed("device") {
+		errs = append(errs, errors.New("no device provided"))
 	}
 	if initCfg.artifactWhenStr != "" {
 		initCfg.artifactWhenStr = strings.ToLower(initCfg.artifactWhenStr)
@@ -919,6 +925,9 @@ func (ini *initializer) initializeBatchXcuitest(initCfg *initConfig) (*initConfi
 		if err = verifier(initCfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("testApp: %s", err))
 		}
+	}
+	if f.Changed("device") {
+		initCfg.device = initCfg.deviceFlag.Device
 	}
 	return initCfg, errs
 }

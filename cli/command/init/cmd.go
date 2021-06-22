@@ -3,6 +3,7 @@ package init
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/cli/flags"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/playwright"
@@ -45,6 +46,8 @@ type initConfig struct {
 	artifactWhenStr  string
 	device           config.Device
 	emulator         config.Emulator
+	deviceFlag       flags.Device
+	emulatorFlag     flags.Emulator
 	concurrency      int
 	username         string
 	accessKey        string
@@ -83,19 +86,18 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVarP(&initCfg.cypressJSON, "cypress.config", "", "", "path to cypress.json file (cypress only)")
 	cmd.Flags().StringVarP(&initCfg.app, "app", "", "", "path to application to test (espresso/xcuitest only)")
 	cmd.Flags().StringVarP(&initCfg.testApp, "testApp", "t", "", "path to test application (espresso/xcuitest only)")
-	cmd.Flags().StringVarP(&initCfg.platformName, "platformName", "p", "", "platform name")
-	cmd.Flags().StringVarP(&initCfg.browserName, "browserName", "b", "", "browser name")
+	cmd.Flags().StringVarP(&initCfg.platformName, "platformName", "p", "", "Specified platform name")
+	cmd.Flags().StringVarP(&initCfg.browserName, "browserName", "b", "", "Specifies browser name")
 	cmd.Flags().StringVarP(&initCfg.artifactWhenStr, "artifacts.download.when", "", "fail", "defines when to download artifacts")
-	cmd.Flags().StringVarP(&initCfg.device.Name, "device.name", "d", "", "defines which device to target")
-	cmd.Flags().StringVarP(&initCfg.emulator.Name, "emulator.name", "", "", "defines which emulator to target")
-	cmd.Flags().StringArrayVarP(&initCfg.emulator.PlatformVersions, "emulator.platformVersion", "", []string{}, "defines which emulator version to target")
+	cmd.Flags().Var(&initCfg.emulatorFlag, "emulator", "Specifies the emulator to use for testing")
+	cmd.Flags().Var(&initCfg.deviceFlag, "device", "Specifies the device to use for testing")
 	return cmd
 }
 
 // Run runs the command
 func Run(cmd *cobra.Command, initCfg *initConfig) error {
 	if cmd.Flags().Changed("framework") {
-		return batchMode(initCfg)
+		return batchMode(cmd, initCfg)
 	}
 	stdio := terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
 
@@ -136,7 +138,7 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 	return nil
 }
 
-func batchMode(initCfg *initConfig) error {
+func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 	stdio := terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
 	// TODO: Implement logic for using cfg.username / cfg.accessKey
 	creds := credentials.Get()
@@ -151,7 +153,7 @@ func batchMode(initCfg *initConfig) error {
 	case cypress.Kind:
 		initCfg, errs = ini.initializeBatchCypress(initCfg)
 	case espresso.Kind:
-		initCfg, errs = ini.initializeBatchEspresso(initCfg)
+		initCfg, errs = ini.initializeBatchEspresso(cmd.Flags(), initCfg)
 	case playwright.Kind:
 		initCfg, errs = ini.initializeBatchPlaywright(initCfg)
 	case puppeteer.Kind:
@@ -159,7 +161,7 @@ func batchMode(initCfg *initConfig) error {
 	case testcafe.Kind:
 		initCfg, errs = ini.initializeBatchTestcafe(initCfg)
 	case xcuitest.Kind:
-		initCfg, errs = ini.initializeBatchXcuitest(initCfg)
+		initCfg, errs = ini.initializeBatchXcuitest(cmd.Flags(), initCfg)
 	default:
 		println()
 		color.HiRed("Invalid framework selected")
