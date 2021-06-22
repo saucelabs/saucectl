@@ -180,7 +180,7 @@ func (r *EspressoRunner) calculateJobsCount(suites []espresso.Suite) int {
 }
 
 func (r *EspressoRunner) getSuiteNames() string {
-	names := []string{}
+	var names []string
 	for _, s := range r.Project.Suites {
 		names = append(names, s.Name)
 	}

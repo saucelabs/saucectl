@@ -65,7 +65,9 @@ type Suite struct {
 	DisableScreenshots bool              `yaml:"disableScreenshots,omitempty" json:"disableScreenshots"`
 	DisableVideo       bool              `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testcafe config.
 	Mode               string            `yaml:"mode,omitempty" json:"-"`
-	Devices            []config.Emulator `yaml:"devices,omitempty" json:"devices"`
+	// Deprecated. Reserved for future use for actual devices.
+	Devices    []config.Simulator `yaml:"devices,omitempty" json:"devices"`
+	Simulators []config.Simulator `yaml:"emulators,omitempty" json:"emulators"`
 }
 
 // Screenshots represents screenshots configuration.
@@ -136,6 +138,11 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 
 	for i, s := range p.Suites {
+		if len(s.Devices) != 0 {
+			// Force the user to migrate.
+			return p, errors.New("the 'devices' keyword in your config is now reserved for real devices, please use 'simulators' instead")
+		}
+
 		env := map[string]string{}
 		for k, v := range s.Env {
 			env[k] = os.ExpandEnv(v)
@@ -166,7 +173,7 @@ func setDefaultValues(suite *Suite) {
 
 	// If this suite is targeting devices, then the platformName on the device takes precedence and we can skip the
 	// defaults on the suite level.
-	if suite.PlatformName == "" && len(suite.Devices) == 0 {
+	if suite.PlatformName == "" && len(suite.Simulators) == 0 {
 		suite.PlatformName = "Windows 10"
 
 		if strings.ToLower(suite.BrowserName) == "safari" {
@@ -174,7 +181,7 @@ func setDefaultValues(suite *Suite) {
 		}
 	}
 
-	for _, d := range suite.Devices {
+	for _, d := range suite.Simulators {
 		if d.PlatformName == "" && appleDeviceRegex.MatchString(d.Name) {
 			d.PlatformName = "iOS"
 		}

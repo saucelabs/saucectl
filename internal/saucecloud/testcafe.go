@@ -42,7 +42,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 }
 
 func (r *TestcafeRunner) getSuiteNames() string {
-	names := []string{}
+	var names []string
 	for _, s := range r.Project.Suites {
 		names = append(names, s.Name)
 	}
@@ -64,8 +64,8 @@ func (r *TestcafeRunner) runSuites(fileID string) bool {
 	jobsCount := r.calcTestcafeJobsCount(r.Project.Suites)
 	go func() {
 		for _, s := range r.Project.Suites {
-			if len(s.Devices) > 0 {
-				for _, d := range s.Devices {
+			if len(s.Simulators) > 0 {
+				for _, d := range s.Simulators {
 					for _, pv := range d.PlatformVersions {
 						jobOpts <- job.StartOptions{
 							ConfigFilePath:   r.Project.ConfigFilePath,
@@ -125,8 +125,8 @@ func (r *TestcafeRunner) runSuites(fileID string) bool {
 func (r *TestcafeRunner) calcTestcafeJobsCount(suites []testcafe.Suite) int {
 	jobsCount := 0
 	for _, s := range suites {
-		if len(s.Devices) > 0 {
-			for _, d := range s.Devices {
+		if len(s.Simulators) > 0 {
+			for _, d := range s.Simulators {
 				jobsCount += len(d.PlatformVersions)
 			}
 		} else {
