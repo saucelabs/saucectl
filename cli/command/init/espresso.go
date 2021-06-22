@@ -6,7 +6,18 @@ import (
 	"github.com/saucelabs/saucectl/internal/espresso"
 )
 
+
 func configureEspresso(cfg *initConfig) interface{} {
+	var devices []config.Device
+	var emulators []config.Emulator
+
+	if emulatorIsSet(cfg.emulator) {
+		emulators = append(emulators, cfg.emulator)
+	}
+	if deviceIsSet(cfg.device) {
+		devices = append(devices, cfg.device)
+	}
+
 	return espresso.Project{
 		TypeDef: config.TypeDef{
 			APIVersion: espresso.APIVersion,
@@ -24,8 +35,8 @@ func configureEspresso(cfg *initConfig) interface{} {
 		Suites: []espresso.Suite{
 			{
 				Name:      fmt.Sprintf("espresso - %s - %s", cfg.device.Name , cfg.emulator.Name),
-				Devices:   []config.Device{cfg.device},
-				Emulators: []config.Emulator{cfg.emulator},
+				Devices:   devices,
+				Emulators: emulators,
 			},
 		},
 		Artifacts: config.Artifacts{
