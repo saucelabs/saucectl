@@ -94,7 +94,7 @@ func Test_calcTestcafeJobsCount(t *testing.T) {
 			expectedJobsCount: 2,
 		},
 		{
-			name: "suites with devices and platfrom versions",
+			name: "suites with simulators and platfrom versions",
 			suites: []testcafe.Suite{
 				{
 					Name: "first suite",
@@ -103,14 +103,14 @@ func Test_calcTestcafeJobsCount(t *testing.T) {
 					Name: "second suite",
 				},
 				{
-					Name: "suite with one device and two platforms",
-					Devices: []config.Emulator{
+					Name: "suite with one simulator and two platforms",
+					Simulators: []config.Simulator{
 						{PlatformVersions: []string{"12.0", "14.3"}},
 					},
 				},
 				{
-					Name: "suite with two device and two platforms",
-					Devices: []config.Emulator{
+					Name: "suite with two simulators and two platforms",
+					Simulators: []config.Simulator{
 						{PlatformVersions: []string{"12.0", "14.3"}},
 						{PlatformVersions: []string{"12.0", "14.3"}},
 					},

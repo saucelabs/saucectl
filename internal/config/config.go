@@ -53,6 +53,9 @@ type Emulator struct {
 	PlatformVersions []string `yaml:"platformVersions,omitempty" json:"platformVersions,omitempty"`
 }
 
+// Simulator represents the simulator configuration.
+type Simulator Emulator
+
 // When represents a conditional status for when artifacts should be downloaded.
 type When string
 

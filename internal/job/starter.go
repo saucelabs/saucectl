@@ -67,12 +67,6 @@ type Starter interface {
 	StartJob(ctx context.Context, opts StartOptions) (jobID string, isRDC bool, err error)
 }
 
-// The different device selectors possible for a RDC Job.
-const (
-	RDCTypeDynamicDeviceQuery   = "DynamicDeviceQuery"
-	RDCTypeHardcodedDeviceQuery = "HardcodedDeviceQuery"
-)
-
 // RDCDeviceQuery represents the device query for RDC tests.
 type RDCDeviceQuery struct {
 	Type               string `json:"type,omitempty"`
