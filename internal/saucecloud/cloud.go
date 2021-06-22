@@ -170,6 +170,9 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	// FIXME framework specifics shouldn't be handled in a generic package. Could simply do an empty string check instead.
 	if opts.Framework == "espresso" {
 		l.Str("deviceName", opts.DeviceName).Str("platformVersion", opts.PlatformVersion).Str("deviceId", opts.DeviceID)
+		if isRDC {
+			l.Bool("private", opts.DevicePrivateOnly)
+		}
 	} else {
 		l.Str("browser", opts.BrowserName)
 	}
