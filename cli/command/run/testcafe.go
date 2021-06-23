@@ -121,12 +121,6 @@ func runTestcafe(cmd *cobra.Command, flags testcafeFlags, tc testcomposer.Client
 		}
 	}
 
-	if gFlags.showConsoleLog {
-		p.ShowConsoleLog = true
-	}
-	if gFlags.runnerVersion != "" {
-		p.RunnerVersion = gFlags.runnerVersion
-	}
 	if cmd.Flags().Lookup("suite").Changed {
 		if err := filterTestcafeSuite(&p); err != nil {
 			return 1, err
@@ -241,6 +235,13 @@ func applyTestcafeFlags(p *testcafe.Project, flags testcafeFlags) {
 
 	if flags.FlagSet.Changed("npm.strictSSL") {
 		p.Npm.StrictSSL = flags.NPM.StrictSSL
+	}
+
+	if gFlags.showConsoleLog {
+		p.ShowConsoleLog = true
+	}
+	if gFlags.runnerVersion != "" {
+		p.RunnerVersion = gFlags.runnerVersion
 	}
 
 	// No name, no adhoc suite.
