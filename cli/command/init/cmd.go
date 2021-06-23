@@ -140,7 +140,6 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 
 func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 	stdio := terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
-	// TODO: Implement logic for using cfg.username / cfg.accessKey
 	creds := credentials.Get()
 	if !creds.IsValid() {
 		return errors.New("no credentials available")
