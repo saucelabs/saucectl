@@ -84,7 +84,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 	cmd.Flags().StringVarP(&initCfg.frameworkName, "framework", "f", "", "framework to configure")
 	cmd.Flags().StringVarP(&initCfg.frameworkVersion, "frameworkVersion", "v", "", "framework version to be used")
 	cmd.Flags().StringVarP(&initCfg.cypressJSON, "cypress.config", "", "", "path to cypress.json file (cypress only)")
-	cmd.Flags().StringVarP(&initCfg.app, "app", "", "", "path to application to test (espresso/xcuitest only)")
+	cmd.Flags().StringVar(&initCfg.app, "app", "", "path to application to test (espresso/xcuitest only)")
 	cmd.Flags().StringVarP(&initCfg.testApp, "testApp", "t", "", "path to test application (espresso/xcuitest only)")
 	cmd.Flags().StringVarP(&initCfg.platformName, "platformName", "p", "", "Specified platform name")
 	cmd.Flags().StringVarP(&initCfg.browserName, "browserName", "b", "", "Specifies browser name")
