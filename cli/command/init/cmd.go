@@ -59,7 +59,7 @@ var (
 	restoTimeout        = 5 * time.Second
 )
 
-// Command creates the `run` command
+// Command creates the `init` command
 func Command(cli *command.SauceCtlCli) *cobra.Command {
 	initCfg := &initConfig{}
 
@@ -184,4 +184,3 @@ func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 	displaySummary(files)
 	return nil
 }
-
