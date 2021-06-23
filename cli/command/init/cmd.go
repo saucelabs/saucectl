@@ -33,6 +33,8 @@ var (
 )
 
 type initConfig struct {
+	batchMode bool
+
 	frameworkName    string
 	frameworkVersion string
 	cypressJSON      string
@@ -146,6 +148,7 @@ func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 	}
 
 	ini := newInitializer(stdio, creds, initCfg.region)
+	initCfg.batchMode = true
 
 	var errs []error
 	switch initCfg.frameworkName {

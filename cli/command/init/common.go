@@ -2,7 +2,6 @@ package init
 
 import (
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
@@ -179,14 +178,4 @@ func sliceContainsString(slice []string, val string) bool {
 		}
 	}
 	return false
-}
-
-func deviceIsSet(d config.Device) bool {
-	if d.Name != "" || d.ID != "" {
-		return true
-	}
-	return false
-}
-func emulatorIsSet(e config.Emulator) bool {
-	return e.Name != ""
 }
