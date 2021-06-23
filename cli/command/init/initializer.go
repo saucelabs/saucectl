@@ -10,14 +10,14 @@ import (
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
+	"github.com/spf13/pflag"
 	"net/http"
 	"sort"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/fatih/color"
-
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -100,7 +100,7 @@ func (ini *initializer) configure() (*initConfig, error) {
 	case xcuitest.Kind:
 		return ini.initializeXCUITest()
 	default:
-		return &initConfig{}, fmt.Errorf("unsupported framework %v", frameworkName)
+		return &initConfig{}, fmt.Errorf("unsupported framework %v", fName)
 	}
 }
 
@@ -587,4 +587,347 @@ func (ini *initializer) initializeXCUITest() (*initConfig, error) {
 	}
 
 	return cfg, nil
+}
+
+func checkFrameworkVersion(metadatas []framework.Metadata, frameworkName, frameworkVersion string) error {
+	var supported []string
+	for _, fm := range metadatas {
+		if fm.FrameworkVersion == frameworkVersion {
+			return nil
+		}
+		supported = append(supported, fm.FrameworkVersion)
+	}
+	return fmt.Errorf("%s %s is not supported. Supported versions are: %s", frameworkName, frameworkVersion, strings.Join(supported, ", "))
+}
+
+func checkBrowserAndPlatform(metadatas []framework.Metadata, frameworkName, frameworkVersion, browserName, platformName string) error {
+	browsers, platforms := metaToBrowsers(metadatas, frameworkName, frameworkVersion)
+	if ok := sliceContainsString(browsers, browserName); !ok {
+		return fmt.Errorf("%s: unsupported browser. Supported browsers are: %s", browserName, strings.Join(browsers, ", "))
+	}
+	if ok := sliceContainsString(platforms[browserName], platformName); !ok {
+		return fmt.Errorf("%s: unsupported browser on %s", browserName, platformName)
+	}
+	return nil
+}
+
+func checkArtifactDownloadSetting(when string) (config.When, error) {
+	switch when {
+	case "pass":
+		return config.WhenPass, nil
+	case "fail":
+		return config.WhenFail, nil
+	case "always":
+		return config.WhenAlways, nil
+	case "never":
+		return config.WhenNever, nil
+	default:
+		return "", fmt.Errorf("%s: unknown download condition", when)
+	}
+}
+
+func checkEmulators(vmds []vmd.VirtualDevice, emulator config.Emulator) (config.Emulator, []error) {
+	var errs []error
+
+	d := vmd.VirtualDevice{}
+	for _, dev := range vmds {
+		if strings.EqualFold(dev.Name, emulator.Name) {
+			d = dev
+			break
+		}
+	}
+	if d.Name == "" {
+		return config.Emulator{}, []error{fmt.Errorf("emulator: %s does not exists", emulator.Name)}
+	}
+	for _, p := range emulator.PlatformVersions {
+		if !sliceContainsString(d.OSVersion, p) {
+			errs = append(errs, fmt.Errorf("emulator: %s does not support platform %s", emulator.Name, p))
+		}
+	}
+	if len(errs) > 0 {
+		return config.Emulator{}, errs
+	}
+	return config.Emulator{
+		Name:             d.Name,
+		PlatformVersions: emulator.PlatformVersions,
+		PlatformName:     emulator.PlatformName,
+		Orientation:      emulator.Orientation,
+	}, []error{}
+}
+
+func (ini *initializer) initializeBatchCypress(initCfg *initConfig) (*initConfig, []error) {
+	initCfg.frameworkName = cypress.Kind
+	var errs []error
+
+	if initCfg.frameworkVersion == "" {
+		errs = append(errs, fmt.Errorf("no %s version specified", initCfg.frameworkName))
+	}
+	if initCfg.cypressJSON == "" {
+		errs = append(errs, errors.New("no cypress config file specified"))
+	}
+	if initCfg.platformName == "" {
+		errs = append(errs, errors.New("no platform name specified"))
+	}
+	if initCfg.browserName == "" {
+		errs = append(errs, errors.New("no browser name specified"))
+	}
+
+	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), initCfg.frameworkName)
+	if err != nil {
+		errs = append(errs, err)
+		return &initConfig{}, errs
+	}
+
+	frameworkVersionSupported := true
+	if initCfg.frameworkVersion != "" {
+		if err = checkFrameworkVersion(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion); err != nil {
+			errs = append(errs, err)
+			frameworkVersionSupported = false
+		}
+	}
+
+	if initCfg.cypressJSON != "" {
+		verifier := extValidator(initCfg.frameworkName)
+		if err := verifier(initCfg.cypressJSON); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if frameworkVersionSupported && initCfg.platformName != "" && initCfg.browserName != "" {
+		initCfg.platformName = strings.ToLower(initCfg.platformName)
+		initCfg.browserName = strings.ToLower(initCfg.browserName)
+		if err = checkBrowserAndPlatform(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion, initCfg.browserName, initCfg.platformName); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if initCfg.artifactWhenStr != "" {
+		initCfg.artifactWhenStr = strings.ToLower(initCfg.artifactWhenStr)
+		if initCfg.artifactWhen, err = checkArtifactDownloadSetting(initCfg.artifactWhenStr); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return initCfg, errs
+}
+
+func (ini *initializer) initializeBatchEspresso(f *pflag.FlagSet, initCfg *initConfig) (*initConfig, []error) {
+	initCfg.frameworkName = espresso.Kind
+	var errs []error
+	var err error
+
+	if initCfg.app == "" {
+		errs = append(errs, errors.New("no app provided"))
+	}
+	if initCfg.testApp == "" {
+		errs = append(errs, errors.New("no testApp provided"))
+	}
+	if !f.Changed("device") && !f.Changed("emulator") {
+		errs = append(errs, errors.New("either device or emulator configuration needs to be provided"))
+	}
+	if initCfg.artifactWhenStr != "" {
+		initCfg.artifactWhenStr = strings.ToLower(initCfg.artifactWhenStr)
+		if initCfg.artifactWhen, err = checkArtifactDownloadSetting(initCfg.artifactWhenStr); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if initCfg.app != "" {
+		verifier := extValidator(initCfg.frameworkName)
+		if err = verifier(initCfg.app); err != nil {
+			errs = append(errs, fmt.Errorf("app: %s", err))
+		}
+	}
+	if initCfg.testApp != "" {
+		verifier := extValidator(initCfg.frameworkName)
+		if err = verifier(initCfg.app); err != nil {
+			errs = append(errs, fmt.Errorf("testApp: %s", err))
+		}
+	}
+	if f.Changed("emulator") {
+		emulators, err := ini.vmdReader.GetVirtualDevices(context.Background(), vmd.AndroidEmulator)
+		if err != nil {
+			errs = append(errs, fmt.Errorf(""))
+		}
+		var lerrs []error
+		if initCfg.emulator, lerrs = checkEmulators(emulators, initCfg.emulatorFlag.Emulator); len(lerrs) > 0 {
+			errs = append(errs, lerrs...)
+		}
+	}
+	if f.Changed("device") {
+		initCfg.device = initCfg.deviceFlag.Device
+	}
+	return initCfg, errs
+}
+
+func (ini *initializer) initializeBatchPlaywright(initCfg *initConfig) (*initConfig, []error) {
+	initCfg.frameworkName = playwright.Kind
+	var errs []error
+
+	if initCfg.frameworkVersion == "" {
+		errs = append(errs, fmt.Errorf("no %s version specified", initCfg.frameworkName))
+	}
+	if initCfg.platformName == "" {
+		errs = append(errs, errors.New("no platform name specified"))
+	}
+	if initCfg.browserName == "" {
+		errs = append(errs, errors.New("no browser name specified"))
+	}
+
+	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), initCfg.frameworkName)
+	if err != nil {
+		errs = append(errs, err)
+		return &initConfig{}, errs
+	}
+
+	frameworkVersionSupported := true
+	if initCfg.frameworkVersion != "" {
+		if err = checkFrameworkVersion(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion); err != nil {
+			errs = append(errs, err)
+			frameworkVersionSupported = false
+		}
+	}
+
+	if frameworkVersionSupported && initCfg.platformName != "" && initCfg.browserName != "" {
+		initCfg.platformName = strings.ToLower(initCfg.platformName)
+		initCfg.browserName = strings.ToLower(initCfg.browserName)
+		if err = checkBrowserAndPlatform(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion, initCfg.browserName, initCfg.platformName); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if initCfg.artifactWhenStr != "" {
+		initCfg.artifactWhenStr = strings.ToLower(initCfg.artifactWhenStr)
+		if initCfg.artifactWhen, err = checkArtifactDownloadSetting(initCfg.artifactWhenStr); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return initCfg, errs
+}
+
+func (ini *initializer) initializeBatchPuppeteer(initCfg *initConfig) (*initConfig, []error) {
+	initCfg.frameworkName = puppeteer.Kind
+	var errs []error
+
+	if initCfg.frameworkVersion == "" {
+		errs = append(errs, fmt.Errorf("no %s version specified", initCfg.frameworkName))
+	}
+	if initCfg.platformName == "" {
+		errs = append(errs, errors.New("no platform name specified"))
+	}
+	if initCfg.browserName == "" {
+		errs = append(errs, errors.New("no browser name specified"))
+	}
+
+	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), initCfg.frameworkName)
+	if err != nil {
+		errs = append(errs, err)
+		return &initConfig{}, errs
+	}
+
+	frameworkVersionSupported := true
+	if initCfg.frameworkVersion != "" {
+		if err = checkFrameworkVersion(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion); err != nil {
+			errs = append(errs, err)
+			frameworkVersionSupported = false
+		}
+	}
+
+	if frameworkVersionSupported && initCfg.platformName != "" && initCfg.browserName != "" {
+		initCfg.platformName = strings.ToLower(initCfg.platformName)
+		initCfg.browserName = strings.ToLower(initCfg.browserName)
+		if err = checkBrowserAndPlatform(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion, initCfg.browserName, initCfg.platformName); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if initCfg.artifactWhenStr != "" {
+		initCfg.artifactWhenStr = strings.ToLower(initCfg.artifactWhenStr)
+		if initCfg.artifactWhen, err = checkArtifactDownloadSetting(initCfg.artifactWhenStr); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return initCfg, errs
+}
+
+func (ini *initializer) initializeBatchTestcafe(initCfg *initConfig) (*initConfig, []error) {
+	initCfg.frameworkName = testcafe.Kind
+	var errs []error
+
+	if initCfg.frameworkVersion == "" {
+		errs = append(errs, fmt.Errorf("no %s version specified", initCfg.frameworkName))
+	}
+	if initCfg.platformName == "" {
+		errs = append(errs, errors.New("no platform name specified"))
+	}
+	if initCfg.browserName == "" {
+		errs = append(errs, errors.New("no browser name specified"))
+	}
+
+	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), initCfg.frameworkName)
+	if err != nil {
+		errs = append(errs, err)
+		return &initConfig{}, errs
+	}
+
+	frameworkVersionSupported := true
+	if initCfg.frameworkVersion != "" {
+		if err = checkFrameworkVersion(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion); err != nil {
+			errs = append(errs, err)
+			frameworkVersionSupported = false
+		}
+	}
+
+	if frameworkVersionSupported && initCfg.platformName != "" && initCfg.browserName != "" {
+		initCfg.platformName = strings.ToLower(initCfg.platformName)
+		initCfg.browserName = strings.ToLower(initCfg.browserName)
+		if err = checkBrowserAndPlatform(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion, initCfg.browserName, initCfg.platformName); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if initCfg.artifactWhenStr != "" {
+		initCfg.artifactWhenStr = strings.ToLower(initCfg.artifactWhenStr)
+		if initCfg.artifactWhen, err = checkArtifactDownloadSetting(initCfg.artifactWhenStr); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return initCfg, errs
+}
+
+func (ini *initializer) initializeBatchXcuitest(f *pflag.FlagSet, initCfg *initConfig) (*initConfig, []error) {
+	initCfg.frameworkName = xcuitest.Kind
+	var errs []error
+	var err error
+
+	if initCfg.app == "" {
+		errs = append(errs, errors.New("no app provided"))
+	}
+	if initCfg.testApp == "" {
+		errs = append(errs, errors.New("no testApp provided"))
+	}
+	if !f.Changed("device") {
+		errs = append(errs, errors.New("no device provided"))
+	}
+	if initCfg.artifactWhenStr != "" {
+		initCfg.artifactWhenStr = strings.ToLower(initCfg.artifactWhenStr)
+		if initCfg.artifactWhen, err = checkArtifactDownloadSetting(initCfg.artifactWhenStr); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if initCfg.app != "" {
+		verifier := extValidator(initCfg.frameworkName)
+		if err = verifier(initCfg.app); err != nil {
+			errs = append(errs, fmt.Errorf("app: %s", err))
+		}
+	}
+	if initCfg.testApp != "" {
+		verifier := extValidator(initCfg.frameworkName)
+		if err = verifier(initCfg.app); err != nil {
+			errs = append(errs, fmt.Errorf("testApp: %s", err))
+		}
+	}
+	if f.Changed("device") {
+		initCfg.device = initCfg.deviceFlag.Device
+	}
+	return initCfg, errs
 }

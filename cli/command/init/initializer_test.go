@@ -5,13 +5,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/cypress"
-	"github.com/saucelabs/saucectl/internal/espresso"
-	"github.com/saucelabs/saucectl/internal/playwright"
-	"github.com/saucelabs/saucectl/internal/puppeteer"
-	"github.com/saucelabs/saucectl/internal/testcafe"
-	"github.com/saucelabs/saucectl/internal/xcuitest"
-	"gotest.tools/v3/fs"
+	"github.com/saucelabs/saucectl/cli/flags"
+	"github.com/spf13/pflag"
 	"os"
 	"reflect"
 	"strings"
@@ -22,14 +17,21 @@ import (
 	"github.com/Netflix/go-expect"
 	"github.com/hinshun/vt10x"
 	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/fs"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/devices"
+	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/mocks"
+	"github.com/saucelabs/saucectl/internal/playwright"
+	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/vmd"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
 
 // Test Case setup is partially reused from:
@@ -120,7 +122,7 @@ type questionTest struct {
 func TestAskFramework(t *testing.T) {
 	ir := &mocks.FakeFrameworkInfoReader{
 		FrameworksFn: func(ctx context.Context) ([]framework.Framework, error) {
-			return []framework.Framework{{Name: "cypress"}, {Name: "espresso"}, {Name: "playwright"}}, nil
+			return []framework.Framework{{Name: cypress.Kind}, {Name: espresso.Kind}, {Name: playwright.Kind}}, nil
 		},
 	}
 	testCases := []questionTest{
@@ -133,7 +135,7 @@ func TestAskFramework(t *testing.T) {
 				return nil
 			},
 			startState:    &initConfig{},
-			expectedState: &initConfig{frameworkName: "cypress"},
+			expectedState: &initConfig{frameworkName: cypress.Kind},
 		},
 		{
 			name:      "Type In",
@@ -144,7 +146,7 @@ func TestAskFramework(t *testing.T) {
 				return nil
 			},
 			startState:    &initConfig{},
-			expectedState: &initConfig{frameworkName: "espresso"},
+			expectedState: &initConfig{frameworkName: espresso.Kind},
 		},
 		{
 			name:      "Arrow In",
@@ -155,7 +157,7 @@ func TestAskFramework(t *testing.T) {
 				return nil
 			},
 			startState:    &initConfig{},
-			expectedState: &initConfig{frameworkName: "espresso"},
+			expectedState: &initConfig{frameworkName: espresso.Kind},
 		},
 	}
 	for _, tt := range testCases {
@@ -387,7 +389,7 @@ func TestAskEmulator(t *testing.T) {
 func TestAskPlatform(t *testing.T) {
 	metas := []framework.Metadata{
 		{
-			FrameworkName:    "testcafe",
+			FrameworkName:    testcafe.Kind,
 			FrameworkVersion: "1.5.0",
 			DockerImage:      "dummy-docker-image",
 			Platforms: []framework.Platform{
@@ -402,7 +404,7 @@ func TestAskPlatform(t *testing.T) {
 			},
 		},
 		{
-			FrameworkName:    "testcafe",
+			FrameworkName:    testcafe.Kind,
 			FrameworkVersion: "1.3.0",
 			Platforms: []framework.Platform{
 				{
@@ -447,8 +449,8 @@ func TestAskPlatform(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askPlatform(cfg, metas)
 			},
-			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0"},
-			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", browserName: "chrome", mode: "sauce", platformName: "Windows 10"},
+			startState:    &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
+			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", browserName: "chrome", mode: "sauce", platformName: "Windows 10"},
 		},
 		{
 			name: "macOS",
@@ -479,8 +481,8 @@ func TestAskPlatform(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askPlatform(cfg, metas)
 			},
-			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0"},
-			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", platformName: "macOS 11.00", browserName: "firefox", mode: "sauce"},
+			startState:    &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
+			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", platformName: "macOS 11.00", browserName: "firefox", mode: "sauce"},
 		},
 		{
 			name: "docker",
@@ -511,8 +513,8 @@ func TestAskPlatform(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askPlatform(cfg, metas)
 			},
-			startState:    &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0"},
-			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0", platformName: "", browserName: "chrome", mode: "docker"},
+			startState:    &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
+			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", platformName: "", browserName: "chrome", mode: "docker"},
 		},
 	}
 	for _, tt := range testCases {
@@ -525,7 +527,7 @@ func TestAskPlatform(t *testing.T) {
 func TestAskVersion(t *testing.T) {
 	metas := []framework.Metadata{
 		{
-			FrameworkName:    "testcafe",
+			FrameworkName:    testcafe.Kind,
 			FrameworkVersion: "1.5.0",
 			Platforms: []framework.Platform{
 				{
@@ -539,7 +541,7 @@ func TestAskVersion(t *testing.T) {
 			},
 		},
 		{
-			FrameworkName:    "testcafe",
+			FrameworkName:    testcafe.Kind,
 			FrameworkVersion: "1.3.0",
 			Platforms: []framework.Platform{
 				{
@@ -578,8 +580,8 @@ func TestAskVersion(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askVersion(cfg, metas)
 			},
-			startState:    &initConfig{frameworkName: "testcafe"},
-			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.5.0"},
+			startState:    &initConfig{frameworkName: testcafe.Kind},
+			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
 		},
 		{
 			name: "Second",
@@ -608,8 +610,8 @@ func TestAskVersion(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askVersion(cfg, metas)
 			},
-			startState:    &initConfig{frameworkName: "testcafe"},
-			expectedState: &initConfig{frameworkName: "testcafe", frameworkVersion: "1.3.0"},
+			startState:    &initConfig{frameworkName: testcafe.Kind},
+			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.3.0"},
 		},
 	}
 	for _, tt := range testCases {
@@ -692,7 +694,7 @@ func TestConfigure(t *testing.T) {
 
 	frameworkVersions := []framework.Metadata{
 		{
-			FrameworkName:    "cypress",
+			FrameworkName:    cypress.Kind,
 			FrameworkVersion: "7.5.0",
 			DockerImage:      "dummy-docker-image",
 			Platforms: []framework.Platform{
@@ -708,7 +710,7 @@ func TestConfigure(t *testing.T) {
 			return frameworkVersions, nil
 		},
 		FrameworksFn: func(ctx context.Context) ([]framework.Framework, error) {
-			return []framework.Framework{{Name: "cypress"}, {Name: "espresso"}}, nil
+			return []framework.Framework{{Name: cypress.Kind}, {Name: espresso.Kind}}, nil
 		},
 	}
 	dr := &mocks.FakeDevicesReader{
@@ -733,7 +735,7 @@ func TestConfigure(t *testing.T) {
 			name: "Complete Configuration (espresso)",
 			procedure: func(c *expect.Console) error {
 				c.ExpectString("Select framework")
-				c.SendLine("espresso")
+				c.SendLine(espresso.Kind)
 				c.ExpectString("Application to test")
 				c.SendLine(dir.Join("android-app.apk"))
 				c.ExpectString("Test application")
@@ -772,7 +774,7 @@ func TestConfigure(t *testing.T) {
 			name: "Complete Configuration (cypress)",
 			procedure: func(c *expect.Console) error {
 				c.ExpectString("Select framework")
-				c.SendLine("cypress")
+				c.SendLine(cypress.Kind)
 				c.ExpectString("Select cypress version")
 				c.SendLine("7.5.0")
 				c.ExpectString("Cypress configuration file:")
@@ -873,9 +875,9 @@ func Test_initializers(t *testing.T) {
 	defer dir.Remove()
 
 	frameworkVersions := map[string][]framework.Metadata{
-		"cypress": {
+		cypress.Kind: {
 			{
-				FrameworkName:    "cypress",
+				FrameworkName:    cypress.Kind,
 				FrameworkVersion: "7.5.0",
 				DockerImage:      "dummy-docker-image",
 				Platforms: []framework.Platform{
@@ -886,9 +888,9 @@ func Test_initializers(t *testing.T) {
 				},
 			},
 		},
-		"playwright": {
+		playwright.Kind: {
 			{
-				FrameworkName:    "playwright",
+				FrameworkName:    playwright.Kind,
 				FrameworkVersion: "1.11.0",
 				DockerImage:      "dummy-docker-image",
 				Platforms: []framework.Platform{
@@ -899,9 +901,9 @@ func Test_initializers(t *testing.T) {
 				},
 			},
 		},
-		"testcafe": {
+		testcafe.Kind: {
 			{
-				FrameworkName:    "testcafe",
+				FrameworkName:    testcafe.Kind,
 				FrameworkVersion: "1.12.0",
 				DockerImage:      "dummy-docker-image",
 				Platforms: []framework.Platform{
@@ -931,12 +933,12 @@ func Test_initializers(t *testing.T) {
 		},
 		FrameworksFn: func(ctx context.Context) ([]framework.Framework, error) {
 			return []framework.Framework{
-				{Name: "cypress"},
-				{Name: "espresso"},
-				{Name: "playwright"},
+				{Name: cypress.Kind},
+				{Name: espresso.Kind},
+				{Name: playwright.Kind},
 				{Name: "puppeteer"},
-				{Name: "testcafe"},
-				{Name: "xcuitest"},
+				{Name: testcafe.Kind},
+				{Name: xcuitest.Kind},
 			}, nil
 		},
 	}
@@ -1365,7 +1367,7 @@ func Test_metaToBrowsers(t *testing.T) {
 	}
 }
 
-func Test_initializer_checkCredentials(t *testing.T) {
+func Test_checkCredentials(t *testing.T) {
 	tests := []struct {
 		name        string
 		frameworkFn func(ctx context.Context) ([]framework.Framework, error)
@@ -1375,7 +1377,7 @@ func Test_initializer_checkCredentials(t *testing.T) {
 			name: "Success",
 			frameworkFn: func(ctx context.Context) ([]framework.Framework, error) {
 				return []framework.Framework{
-					{Name: "cypress"},
+					{Name: cypress.Kind},
 				}, nil
 			},
 			wantErr: nil,
@@ -1405,6 +1407,1095 @@ func Test_initializer_checkCredentials(t *testing.T) {
 			}
 			if err := ini.checkCredentials(); !reflect.DeepEqual(err, tt.wantErr) {
 				t.Errorf("checkCredentials() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_checkFrameworkVersion(t *testing.T) {
+	metadatas := []framework.Metadata{
+		{
+			FrameworkName:    testcafe.Kind,
+			FrameworkVersion: "1.0.0",
+			Platforms: []framework.Platform{
+				{
+					PlatformName: "windows 10",
+					BrowserNames: []string{"chrome", "firefox"},
+				},
+				{
+					PlatformName: "macos 11.00",
+					BrowserNames: []string{"chrome", "firefox", "safari"},
+				},
+				{
+					PlatformName: "docker",
+					BrowserNames: []string{"chrome", "firefox"},
+				},
+			},
+		},
+	}
+	type args struct {
+		frameworkName    string
+		frameworkVersion string
+		metadatas        []framework.Metadata
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr error
+	}{
+		{
+			name: "Available version",
+			args: args{
+				frameworkName:    testcafe.Kind,
+				frameworkVersion: "1.0.0",
+				metadatas:        metadatas,
+			},
+			wantErr: nil,
+		},
+		{
+			name: "Unavailable version",
+			args: args{
+				frameworkName:    testcafe.Kind,
+				frameworkVersion: "buggy-version",
+				metadatas:        metadatas,
+			},
+			wantErr: errors.New("testcafe buggy-version is not supported. Supported versions are: 1.0.0"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := checkFrameworkVersion(tt.args.metadatas, tt.args.frameworkName, tt.args.frameworkVersion)
+			if !reflect.DeepEqual(err, tt.wantErr) {
+				t.Errorf("checkFrameworkVersion() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_checkBrowserAndPlatform(t *testing.T) {
+	metadatas := []framework.Metadata{
+		{
+			FrameworkName:    testcafe.Kind,
+			FrameworkVersion: "1.0.0",
+			Platforms: []framework.Platform{
+				{
+					PlatformName: "windows 10",
+					BrowserNames: []string{"chrome", "firefox"},
+				},
+				{
+					PlatformName: "macos 11.00",
+					BrowserNames: []string{"chrome", "firefox", "safari"},
+				},
+				{
+					PlatformName: "docker",
+					BrowserNames: []string{"chrome", "firefox"},
+				},
+			},
+		},
+	}
+
+	type args struct {
+		frameworkName    string
+		frameworkVersion string
+		browserName      string
+		platformName     string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr error
+	}{
+		{
+			name: "Default",
+			args: args{
+				frameworkName:    testcafe.Kind,
+				frameworkVersion: "1.0.0",
+				platformName:     "windows 10",
+				browserName:      "chrome",
+			},
+			wantErr: nil,
+		},
+		{
+			name: "Unavailable browser",
+			args: args{
+				frameworkName:    testcafe.Kind,
+				frameworkVersion: "1.0.0",
+				platformName:     "windows 10",
+				browserName:      "webkit",
+			},
+			wantErr: errors.New("webkit: unsupported browser. Supported browsers are: chrome, firefox, safari"),
+		},
+		{
+			name: "Unavailable browser on platform",
+			args: args{
+				frameworkName:    testcafe.Kind,
+				frameworkVersion: "1.0.0",
+				platformName:     "windows 10",
+				browserName:      "safari",
+			},
+			wantErr: errors.New("safari: unsupported browser on windows 10"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := checkBrowserAndPlatform(metadatas, tt.args.frameworkName, tt.args.frameworkVersion, tt.args.browserName, tt.args.platformName)
+			if !reflect.DeepEqual(err, tt.wantErr) {
+				t.Errorf("checkBrowserAndPlatform() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_checkArtifactDownloadSetting(t *testing.T) {
+	type args struct {
+		when string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    config.When
+		wantErr bool
+	}{
+		{
+			name: `Passing: fail`,
+			args: args{
+				when: "fail",
+			},
+			want:    config.WhenFail,
+			wantErr: false,
+		},
+		{
+			name: `Invalid kind`,
+			args: args{
+				when: "dummy-value",
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := checkArtifactDownloadSetting(tt.args.when)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("checkArtifactDownloadSetting() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("checkArtifactDownloadSetting() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_checkEmulators(t *testing.T) {
+	vmds := []vmd.VirtualDevice{
+		{
+			Name: "Google Api Emulator",
+			OSVersion: []string{
+				"11.0",
+				"10.0",
+				"9.0",
+			},
+		},
+		{
+			Name: "Samsung Galaxy Emulator",
+			OSVersion: []string{
+				"11.0",
+				"10.0",
+				"8.1",
+				"8.0",
+			},
+		},
+	}
+
+	type args struct {
+		emulator config.Emulator
+	}
+	tests := []struct {
+		name     string
+		args     args
+		want     config.Emulator
+		wantErrs []error
+	}{
+		{
+			name: "single version",
+			args: args{
+				emulator: config.Emulator{
+					Name:             "Google Api Emulator",
+					PlatformVersions: []string{"10.0"},
+				},
+			},
+			want: config.Emulator{
+				Name:             "Google Api Emulator",
+				PlatformVersions: []string{"10.0"},
+			},
+			wantErrs: []error{},
+		},
+		{
+			name: "multiple versions",
+			args: args{
+				emulator: config.Emulator{
+					Name:             "Google Api Emulator",
+					PlatformVersions: []string{"10.0", "9.0"},
+				},
+			},
+			want: config.Emulator{
+				Name:             "Google Api Emulator",
+				PlatformVersions: []string{"10.0", "9.0"},
+			},
+			wantErrs: []error{},
+		},
+		{
+			name: "multiple + buggy versions",
+			args: args{
+				emulator: config.Emulator{
+					Name:             "Google Api Emulator",
+					PlatformVersions: []string{"10.0", "8.1"},
+				},
+			},
+			want:     config.Emulator{},
+			wantErrs: []error{errors.New("emulator: Google Api Emulator does not support platform 8.1")},
+		},
+		{
+			name: "case sensitiveness correction",
+			args: args{
+				emulator: config.Emulator{
+					Name:             "google api emulator",
+					PlatformVersions: []string{"10.0"},
+				},
+			},
+			want: config.Emulator{
+				Name:             "Google Api Emulator",
+				PlatformVersions: []string{"10.0"},
+			},
+			wantErrs: []error{},
+		},
+		{
+			name: "invalid emulator",
+			args: args{
+				emulator: config.Emulator{
+					Name:             "buggy emulator",
+					PlatformVersions: []string{"10.0"},
+				},
+			},
+			want:     config.Emulator{},
+			wantErrs: []error{errors.New("emulator: buggy emulator does not exists")},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, errs := checkEmulators(vmds, tt.args.emulator)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("checkEmulators() got = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(errs, tt.wantErrs) {
+				t.Errorf("checkEmulators() got1 = %v, want %v", errs, tt.wantErrs)
+			}
+		})
+	}
+}
+
+func Test_initializer_initializeBatchCypress(t *testing.T) {
+	dir := fs.NewDir(t, "apps",
+		fs.WithFile("cypress.json", "{}", fs.WithMode(0644)))
+	defer dir.Remove()
+
+	ini := &initializer{
+		infoReader: &mocks.FakeFrameworkInfoReader{VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
+			return []framework.Metadata{
+				{
+					FrameworkName:    cypress.Kind,
+					FrameworkVersion: "7.0.0",
+					Platforms: []framework.Platform{
+						{
+							PlatformName: "windows 10",
+							BrowserNames: []string{"chrome", "firefox"},
+						},
+					},
+				},
+			}, nil
+		}},
+		ccyReader: &mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
+			return 2, nil
+		}},
+	}
+	var emptyErr []error
+
+	type args struct {
+		initCfg *initConfig
+	}
+	tests := []struct {
+		name     string
+		args     args
+		want     *initConfig
+		wantErrs []error
+	}{
+		{
+			name: "Basic",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName:    cypress.Kind,
+					frameworkVersion: "7.0.0",
+					browserName:      "chrome",
+					platformName:     "windows 10",
+					cypressJSON:      dir.Join("cypress.json"),
+					region:           "us-west-1",
+					artifactWhen:     "fail",
+				},
+			},
+			want: &initConfig{
+				frameworkName:    cypress.Kind,
+				frameworkVersion: "7.0.0",
+				browserName:      "chrome",
+				platformName:     "windows 10",
+				cypressJSON:      dir.Join("cypress.json"),
+				region:           "us-west-1",
+				artifactWhen:     config.WhenFail,
+			},
+			wantErrs: emptyErr,
+		},
+		{
+			name: "invalid browser/platform",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName:    cypress.Kind,
+					frameworkVersion: "7.0.0",
+					browserName:      "dummy",
+					platformName:     "dummy",
+					artifactWhenStr:  "dummy",
+				},
+			},
+			want: &initConfig{
+				frameworkName:    cypress.Kind,
+				frameworkVersion: "7.0.0",
+				browserName:      "dummy",
+				platformName:     "dummy",
+				artifactWhenStr:  "dummy",
+			},
+			wantErrs: []error{
+				errors.New("no cypress config file specified"),
+				errors.New("dummy: unsupported browser. Supported browsers are: chrome, firefox"),
+				errors.New("dummy: unknown download condition"),
+			},
+		},
+		{
+			name: "no flags",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName: cypress.Kind,
+				},
+			},
+			want: &initConfig{
+				frameworkName: cypress.Kind,
+			},
+			wantErrs: []error{
+				errors.New("no cypress version specified"),
+				errors.New("no cypress config file specified"),
+				errors.New("no platform name specified"),
+				errors.New("no browser name specified"),
+			},
+		},
+		{
+			name: "invalid framework version / Invalid config file",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName:    cypress.Kind,
+					frameworkVersion: "8.0.0",
+					cypressJSON:      "/my/fake/cypress.json",
+				},
+			},
+			want: &initConfig{
+				frameworkName:    cypress.Kind,
+				frameworkVersion: "8.0.0",
+				cypressJSON:      "/my/fake/cypress.json",
+			},
+			wantErrs: []error{
+				errors.New("no platform name specified"),
+				errors.New("no browser name specified"),
+				errors.New("cypress 8.0.0 is not supported. Supported versions are: 7.0.0"),
+				errors.New("/my/fake/cypress.json: stat /my/fake/cypress.json: no such file or directory"),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, errs := ini.initializeBatchCypress(tt.args.initCfg)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("initializeBatchCypress() got = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(errs, tt.wantErrs) {
+				t.Errorf("initializeBatchCypress() got1 = %v, want %v", errs, tt.wantErrs)
+			}
+		})
+	}
+}
+
+func Test_initializer_initializeBatchTestcafe(t *testing.T) {
+	ini := &initializer{
+		infoReader: &mocks.FakeFrameworkInfoReader{VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
+			return []framework.Metadata{
+				{
+					FrameworkName:    testcafe.Kind,
+					FrameworkVersion: "1.0.0",
+					Platforms: []framework.Platform{
+						{
+							PlatformName: "windows 10",
+							BrowserNames: []string{"chrome", "firefox"},
+						},
+						{
+							PlatformName: "macOS 11.00",
+							BrowserNames: []string{"chrome", "firefox", "safari"},
+						},
+					},
+				},
+			}, nil
+		}},
+		ccyReader: &mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
+			return 2, nil
+		}},
+	}
+	var emptyErr []error
+
+	type args struct {
+		initCfg *initConfig
+	}
+	tests := []struct {
+		name     string
+		args     args
+		want     *initConfig
+		wantErrs []error
+	}{
+		{
+			name: "Basic",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName:    testcafe.Kind,
+					frameworkVersion: "1.0.0",
+					browserName:      "chrome",
+					platformName:     "windows 10",
+					region:           "us-west-1",
+					artifactWhen:     "fail",
+				},
+			},
+			want: &initConfig{
+				frameworkName:    testcafe.Kind,
+				frameworkVersion: "1.0.0",
+				browserName:      "chrome",
+				platformName:     "windows 10",
+				region:           "us-west-1",
+				artifactWhen:     config.WhenFail,
+			},
+			wantErrs: emptyErr,
+		},
+		{
+			name: "invalid browser/platform",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName:    testcafe.Kind,
+					frameworkVersion: "1.0.0",
+					browserName:      "dummy",
+					platformName:     "dummy",
+					artifactWhenStr:  "dummy",
+				},
+			},
+			want: &initConfig{
+				frameworkName:    testcafe.Kind,
+				frameworkVersion: "1.0.0",
+				browserName:      "dummy",
+				platformName:     "dummy",
+				artifactWhenStr:  "dummy",
+			},
+			wantErrs: []error{
+				errors.New("dummy: unsupported browser. Supported browsers are: chrome, firefox, safari"),
+				errors.New("dummy: unknown download condition"),
+			},
+		},
+		{
+			name: "no flags",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName: testcafe.Kind,
+				},
+			},
+			want: &initConfig{
+				frameworkName: testcafe.Kind,
+			},
+			wantErrs: []error{
+				errors.New("no testcafe version specified"),
+				errors.New("no platform name specified"),
+				errors.New("no browser name specified"),
+			},
+		},
+		{
+			name: "invalid framework version / Invalid config file",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName:    testcafe.Kind,
+					frameworkVersion: "8.0.0",
+				},
+			},
+			want: &initConfig{
+				frameworkName:    testcafe.Kind,
+				frameworkVersion: "8.0.0",
+			},
+			wantErrs: []error{
+				errors.New("no platform name specified"),
+				errors.New("no browser name specified"),
+				errors.New("testcafe 8.0.0 is not supported. Supported versions are: 1.0.0"),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, errs := ini.initializeBatchTestcafe(tt.args.initCfg)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("initializeBatchTestcafe() got = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(errs, tt.wantErrs) {
+				t.Errorf("initializeBatchTestcafe() got1 = %v, want %v", errs, tt.wantErrs)
+			}
+		})
+	}
+}
+
+func Test_initializer_initializeBatchPlaywright(t *testing.T) {
+	ini := &initializer{
+		infoReader: &mocks.FakeFrameworkInfoReader{VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
+			return []framework.Metadata{
+				{
+					FrameworkName:    playwright.Kind,
+					FrameworkVersion: "1.0.0",
+					Platforms: []framework.Platform{
+						{
+							PlatformName: "windows 10",
+							BrowserNames: []string{"chromium", "firefox", "webkit"},
+						},
+					},
+				},
+			}, nil
+		}},
+		ccyReader: &mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
+			return 2, nil
+		}},
+	}
+	var emptyErr []error
+
+	type args struct {
+		initCfg *initConfig
+	}
+	tests := []struct {
+		name     string
+		args     args
+		want     *initConfig
+		wantErrs []error
+	}{
+		{
+			name: "Basic",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName:    playwright.Kind,
+					frameworkVersion: "1.0.0",
+					browserName:      "chromium",
+					platformName:     "windows 10",
+					region:           "us-west-1",
+					artifactWhen:     "fail",
+				},
+			},
+			want: &initConfig{
+				frameworkName:    playwright.Kind,
+				frameworkVersion: "1.0.0",
+				browserName:      "chromium",
+				platformName:     "windows 10",
+				region:           "us-west-1",
+				artifactWhen:     config.WhenFail,
+			},
+			wantErrs: emptyErr,
+		},
+		{
+			name: "invalid browser/platform",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName:    playwright.Kind,
+					frameworkVersion: "1.0.0",
+					browserName:      "dummy",
+					platformName:     "dummy",
+					artifactWhenStr:  "dummy",
+				},
+			},
+			want: &initConfig{
+				frameworkName:    playwright.Kind,
+				frameworkVersion: "1.0.0",
+				browserName:      "dummy",
+				platformName:     "dummy",
+				artifactWhenStr:  "dummy",
+			},
+			wantErrs: []error{
+				errors.New("dummy: unsupported browser. Supported browsers are: chromium, firefox, webkit"),
+				errors.New("dummy: unknown download condition"),
+			},
+		},
+		{
+			name: "no flags",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName: playwright.Kind,
+				},
+			},
+			want: &initConfig{
+				frameworkName: playwright.Kind,
+			},
+			wantErrs: []error{
+				errors.New("no playwright version specified"),
+				errors.New("no platform name specified"),
+				errors.New("no browser name specified"),
+			},
+		},
+		{
+			name: "invalid framework version / Invalid config file",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName:    playwright.Kind,
+					frameworkVersion: "8.0.0",
+				},
+			},
+			want: &initConfig{
+				frameworkName:    playwright.Kind,
+				frameworkVersion: "8.0.0",
+			},
+			wantErrs: []error{
+				errors.New("no platform name specified"),
+				errors.New("no browser name specified"),
+				errors.New("playwright 8.0.0 is not supported. Supported versions are: 1.0.0"),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, errs := ini.initializeBatchPlaywright(tt.args.initCfg)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("initializeBatchPlaywright() got = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(errs, tt.wantErrs) {
+				t.Errorf("initializeBatchPlaywright() got1 = %v, want %v", errs, tt.wantErrs)
+			}
+		})
+	}
+}
+
+func Test_initializer_initializeBatchPuppeteer(t *testing.T) {
+	ini := &initializer{
+		infoReader: &mocks.FakeFrameworkInfoReader{VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
+			return []framework.Metadata{
+				{
+					FrameworkName:    "puppeteer",
+					FrameworkVersion: "1.0.0",
+					Platforms: []framework.Platform{
+						{
+							PlatformName: "docker",
+							BrowserNames: []string{"chrome", "firefox"},
+						},
+					},
+				},
+			}, nil
+		}},
+		ccyReader: &mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
+			return 2, nil
+		}},
+	}
+	var emptyErr []error
+
+	type args struct {
+		initCfg *initConfig
+	}
+	tests := []struct {
+		name     string
+		args     args
+		want     *initConfig
+		wantErrs []error
+	}{
+		{
+			name: "Basic",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName:    "puppeteer",
+					frameworkVersion: "1.0.0",
+					browserName:      "chrome",
+					platformName:     "docker",
+					region:           "us-west-1",
+					artifactWhen:     "fail",
+				},
+			},
+			want: &initConfig{
+				frameworkName:    "puppeteer",
+				frameworkVersion: "1.0.0",
+				browserName:      "chrome",
+				platformName:     "docker",
+				region:           "us-west-1",
+				artifactWhen:     config.WhenFail,
+			},
+			wantErrs: emptyErr,
+		},
+		{
+			name: "invalid browser/platform",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName:    "puppeteer",
+					frameworkVersion: "1.0.0",
+					browserName:      "dummy",
+					platformName:     "dummy",
+					artifactWhenStr:  "dummy",
+				},
+			},
+			want: &initConfig{
+				frameworkName:    "puppeteer",
+				frameworkVersion: "1.0.0",
+				browserName:      "dummy",
+				platformName:     "dummy",
+				artifactWhenStr:  "dummy",
+			},
+			wantErrs: []error{
+				errors.New("dummy: unsupported browser. Supported browsers are: chrome, firefox"),
+				errors.New("dummy: unknown download condition"),
+			},
+		},
+		{
+			name: "no flags",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName: "puppeteer",
+				},
+			},
+			want: &initConfig{
+				frameworkName: "puppeteer",
+			},
+			wantErrs: []error{
+				errors.New("no puppeteer version specified"),
+				errors.New("no platform name specified"),
+				errors.New("no browser name specified"),
+			},
+		},
+		{
+			name: "invalid framework version / Invalid config file",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName:    "puppeteer",
+					frameworkVersion: "8.0.0",
+				},
+			},
+			want: &initConfig{
+				frameworkName:    "puppeteer",
+				frameworkVersion: "8.0.0",
+			},
+			wantErrs: []error{
+				errors.New("no platform name specified"),
+				errors.New("no browser name specified"),
+				errors.New("puppeteer 8.0.0 is not supported. Supported versions are: 1.0.0"),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, errs := ini.initializeBatchPuppeteer(tt.args.initCfg)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("initializeBatchPuppeteer() got = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(errs, tt.wantErrs) {
+				t.Errorf("initializeBatchPuppeteer() got1 = %v, want %v", errs, tt.wantErrs)
+			}
+		})
+	}
+}
+
+func Test_initializer_initializeBatchXcuitest(t *testing.T) {
+	dir := fs.NewDir(t, "apps",
+		fs.WithFile("ios-app.ipa", "myAppContent", fs.WithMode(0644)),
+		fs.WithDir("ios-folder-app.app", fs.WithMode(0755)))
+	defer dir.Remove()
+
+	ini := &initializer{}
+	var emptyErr []error
+
+	type args struct {
+		initCfg *initConfig
+		flags   func() *pflag.FlagSet
+	}
+	tests := []struct {
+		name     string
+		args     args
+		want     *initConfig
+		wantErrs []error
+	}{
+		{
+			name: "Basic",
+			args: args{
+				flags: func() *pflag.FlagSet {
+					var deviceFlag flags.Device
+					p := pflag.NewFlagSet("tests", pflag.ContinueOnError)
+					p.Var(&deviceFlag, "device", "")
+					p.Parse([]string{`--device`, `name=iPhone .*`})
+					return p
+				},
+				initCfg: &initConfig{
+					frameworkName: xcuitest.Kind,
+					app:           dir.Join("ios-app.ipa"),
+					testApp:       dir.Join("ios-app.ipa"),
+					deviceFlag: flags.Device{
+						Changed: true,
+						Device: config.Device{
+							Name: "iPhone .*",
+						},
+					},
+					device: config.Device{
+						Name: "iPhone .*",
+					},
+					region:       "us-west-1",
+					artifactWhen: "fail",
+				},
+			},
+			want: &initConfig{
+				frameworkName: xcuitest.Kind,
+				app:           dir.Join("ios-app.ipa"),
+				testApp:       dir.Join("ios-app.ipa"),
+				deviceFlag: flags.Device{
+					Changed: true,
+					Device: config.Device{
+						Name: "iPhone .*",
+					},
+				},
+				device: config.Device{
+					Name: "iPhone .*",
+				},
+				region:       "us-west-1",
+				artifactWhen: config.WhenFail,
+			},
+			wantErrs: emptyErr,
+		},
+		{
+			name: "invalid download config",
+			args: args{
+				flags: func() *pflag.FlagSet {
+					var deviceFlag flags.Device
+					p := pflag.NewFlagSet("tests", pflag.ContinueOnError)
+					p.Var(&deviceFlag, "device", "")
+					return p
+				},
+				initCfg: &initConfig{
+					frameworkName:   xcuitest.Kind,
+					artifactWhenStr: "dummy",
+				},
+			},
+			want: &initConfig{
+				frameworkName:   xcuitest.Kind,
+				artifactWhenStr: "dummy",
+			},
+			wantErrs: []error{
+				errors.New("no app provided"),
+				errors.New("no testApp provided"),
+				errors.New("no device provided"),
+				errors.New("dummy: unknown download condition"),
+			},
+		},
+		{
+			name: "no flags",
+			args: args{
+				flags: func() *pflag.FlagSet {
+					var deviceFlag flags.Device
+					p := pflag.NewFlagSet("tests", pflag.ContinueOnError)
+					p.Var(&deviceFlag, "device", "")
+					return p
+				},
+				initCfg: &initConfig{
+					frameworkName: xcuitest.Kind,
+				},
+			},
+			want: &initConfig{
+				frameworkName: xcuitest.Kind,
+			},
+			wantErrs: []error{
+				errors.New("no app provided"),
+				errors.New("no testApp provided"),
+				errors.New("no device provided"),
+			},
+		},
+		{
+			name: "invalid app file / test file",
+			args: args{
+				flags: func() *pflag.FlagSet {
+					p := pflag.NewFlagSet("tests", pflag.ContinueOnError)
+					return p
+				},
+				initCfg: &initConfig{
+					frameworkName: xcuitest.Kind,
+					app:           dir.Join("truc", "ios-app.ipa"),
+					testApp:       dir.Join("truc", "ios-app.ipa"),
+				},
+			},
+			want: &initConfig{
+				frameworkName: xcuitest.Kind,
+				app:           dir.Join("truc", "ios-app.ipa"),
+				testApp:       dir.Join("truc", "ios-app.ipa"),
+			},
+			wantErrs: []error{
+				errors.New("no device provided"),
+				fmt.Errorf("app: %s: stat %s: no such file or directory", dir.Join("truc", "ios-app.ipa"), dir.Join("truc", "ios-app.ipa")),
+				fmt.Errorf("testApp: %s: stat %s: no such file or directory", dir.Join("truc", "ios-app.ipa"), dir.Join("truc", "ios-app.ipa")),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, errs := ini.initializeBatchXcuitest(tt.args.flags(), tt.args.initCfg)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("initializeBatchXcuitest() got = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(errs, tt.wantErrs) {
+				t.Errorf("initializeBatchXcuitest() got1 = %v, want %v", errs, tt.wantErrs)
+			}
+		})
+	}
+}
+
+func Test_initializer_initializeBatchEspresso(t *testing.T) {
+	dir := fs.NewDir(t, "apps",
+		fs.WithFile("android-app.apk", "myAppContent", fs.WithMode(0644)))
+	defer dir.Remove()
+
+	ini := &initializer{}
+	var emptyErr []error
+
+	type args struct {
+		initCfg *initConfig
+		flags   func() *pflag.FlagSet
+	}
+	tests := []struct {
+		name     string
+		args     args
+		want     *initConfig
+		wantErrs []error
+	}{
+		{
+			name: "Basic",
+			args: args{
+				flags: func() *pflag.FlagSet {
+					var deviceFlag flags.Device
+					p := pflag.NewFlagSet("tests", pflag.ContinueOnError)
+					p.Var(&deviceFlag, "device", "")
+					p.Parse([]string{`--device`, `name=HTC .*`})
+					return p
+				},
+				initCfg: &initConfig{
+					frameworkName: espresso.Kind,
+					app:           dir.Join("android-app.apk"),
+					testApp:       dir.Join("android-app.apk"),
+					deviceFlag: flags.Device{
+						Changed: true,
+						Device: config.Device{
+							Name: "HTC .*",
+						},
+					},
+					region:       "us-west-1",
+					artifactWhen: "fail",
+				},
+			},
+			want: &initConfig{
+				frameworkName: espresso.Kind,
+				app:           dir.Join("android-app.apk"),
+				testApp:       dir.Join("android-app.apk"),
+				deviceFlag: flags.Device{
+					Changed: true,
+					Device: config.Device{
+						Name: "HTC .*",
+					},
+				},
+				device: config.Device{
+					Name: "HTC .*",
+				},
+				region:       "us-west-1",
+				artifactWhen: config.WhenFail,
+			},
+			wantErrs: emptyErr,
+		},
+		{
+			name: "invalid download config",
+			args: args{
+				flags: func() *pflag.FlagSet {
+					var deviceFlag flags.Device
+					p := pflag.NewFlagSet("tests", pflag.ContinueOnError)
+					p.Var(&deviceFlag, "device", "")
+					return p
+				},
+				initCfg: &initConfig{
+					frameworkName:   espresso.Kind,
+					artifactWhenStr: "dummy",
+				},
+			},
+			want: &initConfig{
+				frameworkName:   espresso.Kind,
+				artifactWhenStr: "dummy",
+			},
+			wantErrs: []error{
+				errors.New("no app provided"),
+				errors.New("no testApp provided"),
+				errors.New("either device or emulator configuration needs to be provided"),
+				errors.New("dummy: unknown download condition"),
+			},
+		},
+		{
+			name: "no flags",
+			args: args{
+				flags: func() *pflag.FlagSet {
+					var deviceFlag flags.Device
+					p := pflag.NewFlagSet("tests", pflag.ContinueOnError)
+					p.Var(&deviceFlag, "device", "")
+					return p
+				},
+				initCfg: &initConfig{
+					frameworkName: espresso.Kind,
+				},
+			},
+			want: &initConfig{
+				frameworkName: espresso.Kind,
+			},
+			wantErrs: []error{
+				errors.New("no app provided"),
+				errors.New("no testApp provided"),
+				errors.New("either device or emulator configuration needs to be provided"),
+			},
+		},
+		{
+			name: "invalid app file / test file",
+			args: args{
+				flags: func() *pflag.FlagSet {
+					var deviceFlag flags.Device
+					p := pflag.NewFlagSet("tests", pflag.ContinueOnError)
+					p.Var(&deviceFlag, "device", "")
+					return p
+				},
+				initCfg: &initConfig{
+					frameworkName: espresso.Kind,
+					app:           dir.Join("truc", "android-app.apk"),
+					testApp:       dir.Join("truc", "android-app.apk"),
+				},
+			},
+			want: &initConfig{
+				frameworkName: espresso.Kind,
+				app:           dir.Join("truc", "android-app.apk"),
+				testApp:       dir.Join("truc", "android-app.apk"),
+			},
+			wantErrs: []error{
+				errors.New("either device or emulator configuration needs to be provided"),
+				fmt.Errorf("app: %s: stat %s: no such file or directory", dir.Join("truc", "android-app.apk"), dir.Join("truc", "android-app.apk")),
+				fmt.Errorf("testApp: %s: stat %s: no such file or directory", dir.Join("truc", "android-app.apk"), dir.Join("truc", "android-app.apk")),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, errs := ini.initializeBatchEspresso(tt.args.flags(), tt.args.initCfg)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("initializeBatchEspresso() got = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(errs, tt.wantErrs) {
+				t.Errorf("initializeBatchEspresso() got1 = %v, want %v", errs, tt.wantErrs)
 			}
 		})
 	}
