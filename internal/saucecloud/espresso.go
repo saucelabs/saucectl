@@ -145,9 +145,11 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		Size:       s.TestOptions.Size,
 		Package:    s.TestOptions.Package,
 	}
-	if *s.TestOptions.NumShards > 1 {
+	displayName := s.Name
+	if s.TestOptions.NumShards != nil && *s.TestOptions.NumShards > 0 {
 		jto.NumShards = s.TestOptions.NumShards
 		jto.ShardIndex = s.TestOptions.ShardIndex
+		displayName = fmt.Sprintf("%s shard #%d of %d", displayName, *jto.ShardIndex, *jto.NumShards)
 	}
 	if s.TestOptions.ClearPackageData {
 		jto.ClearPackageData = &s.TestOptions.ClearPackageData
@@ -165,7 +167,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		DeviceID:          d.ID,
 		DeviceName:        d.name,
 		DeviceOrientation: d.orientation,
-		Name:              s.Name,
+		Name:              displayName,
 		Build:             r.Project.Sauce.Metadata.Build,
 		Tags:              r.Project.Sauce.Metadata.Tags,
 		Tunnel: job.TunnelOptions{
