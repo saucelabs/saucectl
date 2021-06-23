@@ -131,6 +131,9 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 	}
 	initCfg.region = regio
 	initCfg.concurrency = concurrency.Min(ini.ccyReader, 10)
+	if initCfg.concurrency == 0 {
+		initCfg.concurrency = 1
+	}
 
 	files, err := saveConfigurationFiles(initCfg)
 	if err != nil {
@@ -178,6 +181,9 @@ func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 		return fmt.Errorf("%s: %d errors occured", initCfg.frameworkName, len(errs))
 	}
 	initCfg.concurrency = concurrency.Min(ini.ccyReader, 10)
+	if initCfg.concurrency == 0 {
+		initCfg.concurrency = 1
+	}
 
 	files, err := saveConfigurationFiles(initCfg)
 	if err != nil {
