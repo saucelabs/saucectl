@@ -27,7 +27,7 @@ type testcafeFlags struct {
 	Suite     testcafe.Suite
 	Testcafe  testcafe.Testcafe
 	NPM       config.Npm
-	FlagSet   *pflag.FlagSet
+	FlagSet   pflag.FlagSet
 }
 
 // NewTestcafeCmd creates the 'run' command for TestCafe.
@@ -59,7 +59,7 @@ func NewTestcafeCmd() *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	lflags.FlagSet = f
+	lflags.FlagSet = *f
 	f.StringVar(&lflags.Suite.Name, "name", "", "Sets the name of the job as it will appear on Sauce Labs")
 
 	// Browser & Platform
