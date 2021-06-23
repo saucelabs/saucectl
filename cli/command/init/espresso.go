@@ -11,10 +11,10 @@ func configureEspresso(cfg *initConfig) interface{} {
 	var devices []config.Device
 	var emulators []config.Emulator
 
-	if cfg.emulator.Changed {
+	if cfg.emulatorFlag.Changed {
 		emulators = append(emulators, cfg.emulator)
 	}
-	if cfg.device.Changed {
+	if cfg.deviceFlag.Changed {
 		devices = append(devices, cfg.device)
 	}
 
