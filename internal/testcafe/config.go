@@ -169,6 +169,9 @@ func setDefaultValues(suite *Suite) {
 	}
 }
 
+// Validate validates basic configuration of the project and returns an error if any of the settings contain illegal
+// values. This is not an exhaustive operation and further validation should be performed both in the client and/or
+// server side depending on the workflow that is executed.
 func Validate(p *Project) error {
 	p.Testcafe.Version = config.StandardizeVersionFormat(p.Testcafe.Version)
 	if p.Testcafe.Version == "" {
