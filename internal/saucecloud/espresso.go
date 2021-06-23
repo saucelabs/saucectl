@@ -76,8 +76,9 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 		for _, s := range r.Project.Suites {
 			// Automatically apply ShardIndex if not specified
 			if s.TestOptions.NumShards != nil && s.TestOptions.ShardIndex == nil {
-				for i := 0; i <= *s.TestOptions.NumShards; i++ {
-					s.TestOptions.ShardIndex = &i
+				for i := 0; i < *s.TestOptions.NumShards; i++ {
+					sindex := i
+					s.TestOptions.ShardIndex = &sindex
 					for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
 						log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
 						r.startJob(jobOpts, s, appFileID, testAppFileID, c)
