@@ -53,7 +53,7 @@ func NewXCUITestCmd() *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	f.StringVar(&lflags.Name, "name", "", "Sets the name of job as it will appear on Sauce Labs")
+	f.StringVar(&lflags.Name, "name", "", "Sets the name of the job as it will appear on Sauce Labs")
 	f.StringVar(&lflags.App, "app", "", "Specifies the app under test")
 	f.StringVar(&lflags.TestApp, "testApp", "", "Specifies the test app")
 

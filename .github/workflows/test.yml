@@ -135,8 +135,11 @@ jobs:
       - name: Set permissions
         run: chmod +x ./saucectl
 
-      - name: Saucectl RUN
+      - name: Saucectl RUN - Config Driven
         run: ./saucectl run -c .sauce/testcafe.yml --timeout 10m
+
+      - name: Saucectl RUN - CLI Driven
+        run: ./saucectl run testcafe "*.test.js" -c .sauce/testcafe_light.yml --name "CLI Driven" --browserName Chrome --timeout 10
   cypress:
     needs: build
     runs-on: ubuntu-latest
