@@ -119,53 +119,6 @@ func TestRunSuites(t *testing.T) {
 	assert.True(t, ret)
 }
 
-func TestRunSuites_Cypress_NoConcurrency(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-
-	// Fake JobStarter
-	starter := mocks.FakeJobStarter{
-		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
-			return "fake-job-id", false, nil
-		},
-	}
-	reader := mocks.FakeJobReader{
-		PollJobFn: func(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
-			return job.Job{ID: id, Passed: true}, nil
-		},
-		GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
-			return []string{"file1", "file2"}, nil
-		},
-		GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
-			return []byte("file content"), nil
-		},
-	}
-	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
-		return 0, nil
-	}}
-	downloader := mocks.FakeArifactDownloader{
-		DownloadArtifactFn: func(jobID string) {},
-	}
-	runner := CypressRunner{
-		CloudRunner: CloudRunner{
-			JobStarter:         &starter,
-			JobReader:          &reader,
-			CCYReader:          ccyReader,
-			ArtifactDownloader: &downloader,
-		},
-		Project: cypress.Project{
-			Suites: []cypress.Suite{
-				{Name: "dummy-suite"},
-			},
-			Sauce: config.SauceConfig{
-				Concurrency: 1,
-			},
-		},
-	}
-	ret := runner.runSuites("dummy-file-id")
-	assert.False(t, ret)
-}
-
 func TestArchiveProject(t *testing.T) {
 	os.Mkdir("./test-arch/", 0755)
 	defer func() {

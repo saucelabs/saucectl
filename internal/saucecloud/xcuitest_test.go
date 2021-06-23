@@ -100,43 +100,6 @@ func TestXcuitestRunner_RunProject(t *testing.T) {
 	assert.Equal(t, "14.3", startOpts.PlatformVersion)
 }
 
-func TestRunSuites_Xcuitest_NoConcurrency(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-
-	// Fake JobStarter
-	starter := mocks.FakeJobStarter{
-		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
-			return "fake-job-id", false, nil
-		},
-	}
-	reader := mocks.FakeJobReader{
-		PollJobFn: func(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
-			return job.Job{ID: id, Passed: true}, nil
-		},
-	}
-	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
-		return 0, nil
-	}}
-	runner := XcuitestRunner{
-		CloudRunner: CloudRunner{
-			JobStarter: &starter,
-			JobReader:  &reader,
-			CCYReader:  ccyReader,
-		},
-		Project: xcuitest.Project{
-			Suites: []xcuitest.Suite{
-				{Name: "dummy-suite"},
-			},
-			Sauce: config.SauceConfig{
-				Concurrency: 1,
-			},
-		},
-	}
-	ret := runner.runSuites("dummy-file-id", "dummy-file-id")
-	assert.False(t, ret)
-}
-
 func TestCalculateJobsCount(t *testing.T) {
 	runner := &XcuitestRunner{
 		Project: xcuitest.Project{
