@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/command/configure"
-	initializer "github.com/saucelabs/saucectl/internal/command/init"
-	"github.com/saucelabs/saucectl/internal/command/new"
-	"github.com/saucelabs/saucectl/internal/command/run"
-	"github.com/saucelabs/saucectl/internal/command/signup"
+	"github.com/saucelabs/saucectl/internal/cmd/configure"
+	initializer "github.com/saucelabs/saucectl/internal/cmd/init"
+	"github.com/saucelabs/saucectl/internal/cmd/new"
+	"github.com/saucelabs/saucectl/internal/cmd/run"
+	"github.com/saucelabs/saucectl/internal/cmd/signup"
 	"github.com/saucelabs/saucectl/internal/setup"
 	"github.com/saucelabs/saucectl/internal/version"
 	"os"
