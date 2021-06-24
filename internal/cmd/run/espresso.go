@@ -65,14 +65,7 @@ func NewEspressoCmd() *cobra.Command {
 	f.StringVar(&lflags.TestOptions.Package, "testOptions.package", "", "Include package")
 	f.StringVar(&lflags.TestOptions.Size, "testOptions.size", "", "Include tests based on size")
 	f.StringVar(&lflags.TestOptions.Annotation, "testOptions.annotation", "", "Include tests based on the annotation")
-	var shardIndex, numShards int
-	f.IntVar(&numShards, "testOptions.numShards", 0, "Total number of shards")
-	f.IntVar(&shardIndex, "testOptions.shardIndex", -1, "The shard index for this particular run")
-
-	lflags.TestOptions.NumShards = &numShards
-	if shardIndex >= 0 {
-		lflags.TestOptions.ShardIndex = &shardIndex
-	}
+	f.IntVar(&lflags.TestOptions.NumShards, "testOptions.numShards", 0, "Total number of shards")
 
 	// Emulators and Devices
 	f.Var(&lflags.Emulator, "emulator", "Specifies the emulator to use for testing")

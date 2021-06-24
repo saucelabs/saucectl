@@ -75,10 +75,9 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 	go func() {
 		for _, s := range r.Project.Suites {
 			// Automatically apply ShardIndex if not specified
-			if s.TestOptions.NumShards != nil && s.TestOptions.ShardIndex == nil {
-				for i := 0; i < *s.TestOptions.NumShards; i++ {
-					sindex := i
-					s.TestOptions.ShardIndex = &sindex
+			if s.TestOptions.NumShards > 0 {
+				for i := 0; i < s.TestOptions.NumShards; i++ {
+					s.TestOptions.ShardIndex = i
 					for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
 						log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
 						r.startJob(jobOpts, s, appFileID, testAppFileID, c)
@@ -146,9 +145,9 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		Package:    s.TestOptions.Package,
 	}
 	displayName := s.Name
-	if s.TestOptions.NumShards != nil && *s.TestOptions.NumShards > 0 {
-		jto.NumShards = s.TestOptions.NumShards
-		jto.ShardIndex = s.TestOptions.ShardIndex
+	if s.TestOptions.NumShards > 0 {
+		jto.NumShards = &s.TestOptions.NumShards
+		jto.ShardIndex = &s.TestOptions.ShardIndex
 		displayName = fmt.Sprintf("%s shard #%d", displayName, *jto.ShardIndex)
 	}
 	if s.TestOptions.ClearPackageData {
@@ -189,8 +188,8 @@ func (r *EspressoRunner) calculateJobsCount(suites []espresso.Suite) int {
 	jobsCount := 0
 	for _, s := range suites {
 		jobsCount += len(enumerateDevicesAndEmulators(s.Devices, s.Emulators))
-		if s.TestOptions.NumShards != nil && s.TestOptions.ShardIndex == nil {
-			jobsCount = jobsCount * *s.TestOptions.NumShards
+		if s.TestOptions.NumShards > 0 {
+			jobsCount = jobsCount * s.TestOptions.NumShards
 		}
 	}
 	return jobsCount

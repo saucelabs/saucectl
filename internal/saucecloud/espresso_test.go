@@ -27,10 +27,6 @@ func TestEspresso_GetSuiteNames(t *testing.T) {
 	assert.Equal(t, "suite1, suite2, suite3", runner.getSuiteNames())
 }
 
-func createIntPointer(val int) *int {
-	return &val
-}
-
 func TestEspressoRunner_CalculateJobCount(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -57,36 +53,13 @@ func TestEspressoRunner_CalculateJobCount(t *testing.T) {
 			wants: 3,
 		},
 		{
-			name:  "should ignore NumShards if ShardIndex is defined",
-			wants: 3,
-			suites: []espresso.Suite{
-				{
-					Name: "valid espresso project",
-					TestOptions: espresso.TestOptions{
-						NumShards:  createIntPointer(3),
-						ShardIndex: createIntPointer(1),
-					},
-					Emulators: []config.Emulator{
-						{
-							Name:             "Android GoogleApi Emulator",
-							PlatformVersions: []string{"11.0", "10.0"},
-						},
-						{
-							Name:             "Android Emulator",
-							PlatformVersions: []string{"11.0"},
-						},
-					},
-				},
-			},
-		},
-		{
 			name:  "should multiply jobs by NumShards if defined",
 			wants: 9,
 			suites: []espresso.Suite{
 				{
 					Name: "valid espresso project",
 					TestOptions: espresso.TestOptions{
-						NumShards: createIntPointer(3),
+						NumShards: 3,
 					},
 					Emulators: []config.Emulator{
 						{
