@@ -3,7 +3,6 @@ package signup
 import (
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/spf13/cobra"
 	"os"
@@ -19,7 +18,7 @@ var (
 )
 
 // Command creates the `run` command
-func Command(cli *command.SauceCtlCli) *cobra.Command {
+func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     runUse,
 		Short:   runShort,
@@ -27,7 +26,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Example: runExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Info().Msg("Start Signup Command")
-			err := Run(cmd, cli, args)
+			err := Run()
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				sentry.CaptureError(err, sentry.Scope{})
@@ -39,7 +38,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 }
 
 // Run runs the command
-func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
+func Run() error {
 	saucebotSignup := `
                    (‾)
                    ||                          Puppeteer,

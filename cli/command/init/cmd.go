@@ -18,7 +18,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -62,7 +61,7 @@ var (
 )
 
 // Command creates the `init` command
-func Command(cli *command.SauceCtlCli) *cobra.Command {
+func Command() *cobra.Command {
 	initCfg := &initConfig{}
 
 	cmd := &cobra.Command{

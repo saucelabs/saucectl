@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/sentry"
@@ -24,7 +23,7 @@ var (
 )
 
 // Command creates the `configure` command
-func Command(cli *command.SauceCtlCli) *cobra.Command {
+func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     configureUse,
 		Short:   configureShort,
