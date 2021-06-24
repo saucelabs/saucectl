@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/saucelabs/saucectl/cli/command/configure"
 	initCmd "github.com/saucelabs/saucectl/cli/command/init"
-	"github.com/saucelabs/saucectl/cli/command/run"
+	"github.com/saucelabs/saucectl/internal/cmd/run"
 	"github.com/saucelabs/saucectl/internal/cmd/signup"
 	"github.com/saucelabs/saucectl/internal/setup"
 	"github.com/saucelabs/saucectl/internal/version"
