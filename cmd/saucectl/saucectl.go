@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	initCmd "github.com/saucelabs/saucectl/cli/command/init"
 	"github.com/saucelabs/saucectl/internal/cmd/configure"
+	"github.com/saucelabs/saucectl/internal/cmd/ini"
 	"github.com/saucelabs/saucectl/internal/cmd/new"
 	"github.com/saucelabs/saucectl/internal/cmd/run"
 	"github.com/saucelabs/saucectl/internal/cmd/signup"
@@ -56,7 +56,7 @@ func main() {
 		new.Command(),
 		run.Command(),
 		configure.Command(),
-		initCmd.Command(),
+		ini.Command(),
 		signup.Command(),
 	)
 	if err := cmd.Execute(); err != nil {

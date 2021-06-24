@@ -1,4 +1,4 @@
-package init
+package ini
 
 import (
 	// imports embed to load .sauceignore
