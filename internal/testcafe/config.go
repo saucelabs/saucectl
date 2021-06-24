@@ -43,28 +43,29 @@ type Project struct {
 
 // Suite represents the testcafe test suite configuration.
 type Suite struct {
-	Name               string            `yaml:"name,omitempty" json:"name"`
-	BrowserName        string            `yaml:"browserName,omitempty" json:"browserName"`
-	BrowserVersion     string            `yaml:"browserVersion,omitempty" json:"browserVersion"`
-	Src                []string          `yaml:"src,omitempty" json:"src"`
-	Screenshots        Screenshots       `yaml:"screenshots,omitempty" json:"screenshots"`
-	PlatformName       string            `yaml:"platformName,omitempty" json:"platformName"`
-	ScreenResolution   string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
-	Env                map[string]string `yaml:"env,omitempty" json:"env"`
-	TsConfigPath       string            `yaml:"tsConfigPath,omitempty" json:"tsConfigPath"`
-	ClientScripts      []string          `yaml:"clientScripts,omitempty" json:"clientScripts"`
-	SkipJsErrors       bool              `yaml:"skipJsErrors,omitempty" json:"skipJsErrors"`
-	QuarantineMode     bool              `yaml:"quarantineMode,omitempty" json:"quarantineMode"`
-	SkipUncaughtErrors bool              `yaml:"skipUncaughtErrors,omitempty" json:"skipUncaughtErrors"`
-	SelectorTimeout    int               `yaml:"selectorTimeout,omitempty" json:"selectorTimeout"`
-	AssertionTimeout   int               `yaml:"assertionTimeout,omitempty" json:"assertionTimeout"`
-	PageLoadTimeout    int               `yaml:"pageLoadTimeout,omitempty" json:"pageLoadTimeout"`
-	Speed              float64           `yaml:"speed,omitempty" json:"speed"`
-	StopOnFirstFail    bool              `yaml:"stopOnFirstFail,omitempty" json:"stopOnFirstFail"`
-	DisablePageCaching bool              `yaml:"disablePageCaching,omitempty" json:"disablePageCaching"`
-	DisableScreenshots bool              `yaml:"disableScreenshots,omitempty" json:"disableScreenshots"`
-	DisableVideo       bool              `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testcafe config.
-	Mode               string            `yaml:"mode,omitempty" json:"-"`
+	Name             string            `yaml:"name,omitempty" json:"name"`
+	BrowserName      string            `yaml:"browserName,omitempty" json:"browserName"`
+	BrowserVersion   string            `yaml:"browserVersion,omitempty" json:"browserVersion"`
+	Src              []string          `yaml:"src,omitempty" json:"src"`
+	Screenshots      Screenshots       `yaml:"screenshots,omitempty" json:"screenshots"`
+	PlatformName     string            `yaml:"platformName,omitempty" json:"platformName"`
+	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
+	Env              map[string]string `yaml:"env,omitempty" json:"env"`
+	// Deprecated as of TestCafe v1.10.0 https://testcafe.io/documentation/402638/reference/configuration-file#tsconfigpath
+	TsConfigPath       string   `yaml:"tsConfigPath,omitempty" json:"tsConfigPath"`
+	ClientScripts      []string `yaml:"clientScripts,omitempty" json:"clientScripts,omitempty"`
+	SkipJsErrors       bool     `yaml:"skipJsErrors,omitempty" json:"skipJsErrors"`
+	QuarantineMode     bool     `yaml:"quarantineMode,omitempty" json:"quarantineMode"`
+	SkipUncaughtErrors bool     `yaml:"skipUncaughtErrors,omitempty" json:"skipUncaughtErrors"`
+	SelectorTimeout    int      `yaml:"selectorTimeout,omitempty" json:"selectorTimeout"`
+	AssertionTimeout   int      `yaml:"assertionTimeout,omitempty" json:"assertionTimeout"`
+	PageLoadTimeout    int      `yaml:"pageLoadTimeout,omitempty" json:"pageLoadTimeout"`
+	Speed              float64  `yaml:"speed,omitempty" json:"speed"`
+	StopOnFirstFail    bool     `yaml:"stopOnFirstFail,omitempty" json:"stopOnFirstFail"`
+	DisablePageCaching bool     `yaml:"disablePageCaching,omitempty" json:"disablePageCaching"`
+	DisableScreenshots bool     `yaml:"disableScreenshots,omitempty" json:"disableScreenshots"`
+	DisableVideo       bool     `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testcafe config.
+	Mode               string   `yaml:"mode,omitempty" json:"-"`
 	// Deprecated. Reserved for future use for actual devices.
 	Devices    []config.Simulator `yaml:"devices,omitempty" json:"devices"`
 	Simulators []config.Simulator `yaml:"emulators,omitempty" json:"emulators"`
@@ -78,9 +79,6 @@ type Screenshots struct {
 
 // Testcafe represents the configuration for testcafe.
 type Testcafe struct {
-	// Deprecated. ProjectPath is succeeded by Project.RootDir.
-	ProjectPath string `yaml:"projectPath,omitempty" json:"projectPath"`
-
 	// Version represents the testcafe framework version.
 	Version string `yaml:"version,omitempty" json:"version"`
 }
@@ -102,23 +100,6 @@ func FromFile(cfgPath string) (Project, error) {
 
 	if p.Kind != Kind && p.APIVersion != APIVersion {
 		return p, config.ErrUnknownCfg
-	}
-
-	if p.Testcafe.ProjectPath == "" && p.RootDir == "" {
-		return p, fmt.Errorf("could not find 'rootDir' in config yml, 'rootDir' must be set to specify project files")
-	} else if p.Testcafe.ProjectPath != "" && p.RootDir == "" {
-		log.Warn().Msg("'testcafe.projectPath' is deprecated. Consider using 'rootDir' instead")
-		p.RootDir = p.Testcafe.ProjectPath
-	} else if p.Testcafe.ProjectPath != "" && p.RootDir != "" {
-		log.Info().Msgf(
-			"Found both 'testcafe.projectPath=%s' and 'rootDir=%s' in config. 'projectPath' is deprecated, so defaulting to rootDir '%s'",
-			p.Testcafe.ProjectPath, p.RootDir, p.RootDir,
-		)
-	}
-
-	p.Testcafe.Version = config.StandardizeVersionFormat(p.Testcafe.Version)
-	if p.Testcafe.Version == "" {
-		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
 
 	// Set default docker file transfer to mount
@@ -186,6 +167,18 @@ func setDefaultValues(suite *Suite) {
 			d.PlatformName = "iOS"
 		}
 	}
+}
+
+// Validate validates basic configuration of the project and returns an error if any of the settings contain illegal
+// values. This is not an exhaustive operation and further validation should be performed both in the client and/or
+// server side depending on the workflow that is executed.
+func Validate(p *Project) error {
+	p.Testcafe.Version = config.StandardizeVersionFormat(p.Testcafe.Version)
+	if p.Testcafe.Version == "" {
+		return errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+	}
+
+	return nil
 }
 
 // SplitSuites divided Suites to dockerSuites and sauceSuites

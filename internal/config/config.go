@@ -110,7 +110,7 @@ type Docker struct {
 type Npm struct {
 	Registry  string            `yaml:"registry,omitempty" json:"registry,omitempty"`
 	Packages  map[string]string `yaml:"packages,omitempty" json:"packages"`
-	StrictSSL *bool             `yaml:"strictSSL,omitempty" json:"strictSSL"`
+	StrictSSL bool             `yaml:"strictSSL,omitempty" json:"strictSSL"`
 }
 
 // Defaults represents default suite settings.

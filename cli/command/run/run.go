@@ -138,7 +138,11 @@ func Command() *cobra.Command {
 	_ = cmd.PersistentFlags().MarkHidden("runner-version")
 	_ = cmd.PersistentFlags().MarkHidden("experiment")
 
-	cmd.AddCommand(NewEspressoCmd(), NewXCUITestCmd())
+	cmd.AddCommand(
+		NewEspressoCmd(),
+		NewTestcafeCmd(),
+		NewXCUITestCmd(),
+	)
 
 	return cmd
 }
@@ -203,7 +207,7 @@ func Run(cmd *cobra.Command) (int, error) {
 		return runPlaywright(cmd, tcClient, restoClient, &appsClient)
 	}
 	if typeDef.Kind == testcafe.Kind {
-		return runTestcafe(cmd, tcClient, restoClient, &appsClient)
+		return runTestcafe(cmd, testcafeFlags{}, tcClient, restoClient, appsClient)
 	}
 	if typeDef.Kind == puppeteer.Kind {
 		return runPuppeteer(cmd, tcClient, restoClient)
