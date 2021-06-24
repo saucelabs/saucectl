@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/command/configure"
 	initCmd "github.com/saucelabs/saucectl/cli/command/init"
+	"github.com/saucelabs/saucectl/internal/cmd/configure"
 	"github.com/saucelabs/saucectl/internal/cmd/new"
 	"github.com/saucelabs/saucectl/internal/cmd/run"
 	"github.com/saucelabs/saucectl/internal/cmd/signup"
