@@ -60,7 +60,7 @@ func NewTestcafeCmd() *cobra.Command {
 
 	f := cmd.Flags()
 	lflags.FlagSet = *f
-	f.StringVar(&lflags.Suite.Name, "name", "", "Sets the name of the job as it will appear on Sauce Labs")
+	f.StringVar(&lflags.Suite.Name, "name", "", "Set the name of the job as it will appear on Sauce Labs")
 
 	// Browser & Platform
 	f.StringVar(&lflags.Suite.BrowserName, "browserName", "", "Run tests against this browser")
@@ -80,12 +80,12 @@ func NewTestcafeCmd() *cobra.Command {
 	f.BoolVar(&lflags.Suite.StopOnFirstFail, "stopOnFirstFail", false, "Stop an entire test run if any test fails")
 
 	// Timeouts
-	f.IntVar(&lflags.Suite.SelectorTimeout, "selectorTimeout", 10000, "milliseconds")
-	f.IntVar(&lflags.Suite.AssertionTimeout, "assertionTimeout", 3000, "milliseconds")
-	f.IntVar(&lflags.Suite.PageLoadTimeout, "pageLoadTimeout", 3000, "milliseconds")
+	f.IntVar(&lflags.Suite.SelectorTimeout, "selectorTimeout", 10000, "Specify the time (in milliseconds) within which selectors attempt to return a node")
+	f.IntVar(&lflags.Suite.AssertionTimeout, "assertionTimeout", 3000, "Specify the time (in milliseconds) TestCafe attempts to successfully execute an assertion")
+	f.IntVar(&lflags.Suite.PageLoadTimeout, "pageLoadTimeout", 3000, "Specify the time (in milliseconds) passed after the DOMContentLoaded event, within which TestCafe waits for the window.load event to fire")
 
 	// Misc
-	f.StringVar(&lflags.RootDir, "rootDir", ".", "Controls what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
+	f.StringVar(&lflags.RootDir, "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
 	f.StringVar(&lflags.Testcafe.Version, "testcafe.version", "", "The TestCafe version to use")
 	f.StringSliceVar(&lflags.Suite.ClientScripts, "clientScripts", []string{}, "Inject scripts from the specified files into each page visited during the tests")
 	f.Float64Var(&lflags.Suite.Speed, "speed", 1, "Specify the test execution speed")
@@ -111,6 +111,7 @@ func runTestcafe(cmd *cobra.Command, flags testcafeFlags, tc testcomposer.Client
 	p.Sauce.Metadata.ExpandEnv()
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
 	applyTestcafeFlags(&p, flags)
+	testcafe.SetDefaults(&p)
 
 	for k, v := range gFlags.env {
 		for _, s := range p.Suites {
@@ -126,25 +127,10 @@ func runTestcafe(cmd *cobra.Command, flags testcafeFlags, tc testcomposer.Client
 			return 1, err
 		}
 	}
-	if p.Defaults.Mode == "" {
-		p.Defaults.Mode = "sauce"
-	}
-	for i, s := range p.Suites {
-		if s.Mode == "" {
-			s.Mode = p.Defaults.Mode
-		}
-		p.Suites[i] = s
-	}
-	if gFlags.testEnv != "" {
-		for i, s := range p.Suites {
-			s.Mode = gFlags.testEnv
-			p.Suites[i] = s
-		}
-	}
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
-		log.Error().Str("region", gFlags.regionFlag).Msg("Unable to determine sauce region.")
+		log.Error().Str("region", p.Sauce.Region).Msg("Unable to determine sauce region.")
 		return 1, errors.New("no sauce region set")
 	}
 

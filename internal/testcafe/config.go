@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"gopkg.in/yaml.v2"
 )
@@ -102,69 +101,62 @@ func FromFile(cfgPath string) (Project, error) {
 		return p, config.ErrUnknownCfg
 	}
 
-	// Set default docker file transfer to mount
-	if p.Docker.FileTransfer == "" {
-		p.Docker.FileTransfer = config.DockerFileMount
-	}
-
-	if p.Docker.Image != "" {
-		log.Info().Msgf(
-			"Ignoring framework version for Docker, using provided image %s (only applicable to docker mode)",
-			p.Docker.Image)
-	}
-
-	if p.Sauce.Concurrency < 1 {
-		// Default concurrency is 2
-		p.Sauce.Concurrency = 2
-	}
-
 	for i, s := range p.Suites {
-		if len(s.Devices) != 0 {
-			// Force the user to migrate.
-			return p, errors.New("the 'devices' keyword in your config is now reserved for real devices, please use 'simulators' instead")
-		}
-
 		env := map[string]string{}
 		for k, v := range s.Env {
 			env[k] = os.ExpandEnv(v)
 		}
 		p.Suites[i].Env = env
-		setDefaultValues(&p.Suites[i])
 	}
+
 	return p, nil
 }
 
-func setDefaultValues(suite *Suite) {
-	// If value is 0, it's assumed that the value has not been filled.
-	// So we define it to the default value: 1 (full speed).
-	// Expected values for TestCafe are between .01 and 1.
-	if suite.Speed < .01 || suite.Speed > 1 {
-		suite.Speed = 1
-	}
-	// Set default timeout. ref: https://devexpress.github.io/testcafe/documentation/reference/configuration-file.html#selectortimeout
-	if suite.SelectorTimeout <= 0 {
-		suite.SelectorTimeout = 10000
-	}
-	if suite.AssertionTimeout <= 0 {
-		suite.AssertionTimeout = 3000
-	}
-	if suite.PageLoadTimeout <= 0 {
-		suite.PageLoadTimeout = 3000
+func SetDefaults(p *Project) {
+	if p.Sauce.Concurrency < 1 {
+		// Default concurrency is 2
+		p.Sauce.Concurrency = 2
 	}
 
-	// If this suite is targeting devices, then the platformName on the device takes precedence and we can skip the
-	// defaults on the suite level.
-	if suite.PlatformName == "" && len(suite.Simulators) == 0 {
-		suite.PlatformName = "Windows 10"
+	// Set default docker file transfer to mount
+	if p.Docker.FileTransfer == "" {
+		p.Docker.FileTransfer = config.DockerFileMount
+	}
 
-		if strings.ToLower(suite.BrowserName) == "safari" {
-			suite.PlatformName = "macOS 11.00"
+	for k := range p.Suites {
+		suite := &p.Suites[k]
+		// If value is 0, it's assumed that the value has not been filled.
+		// So we define it to the default value: 1 (full speed).
+		// Expected values for TestCafe are between .01 and 1.
+		if suite.Speed < .01 || suite.Speed > 1 {
+			suite.Speed = 1
 		}
-	}
+		// Set default timeout. ref: https://devexpress.github.io/testcafe/documentation/reference/configuration-file.html#selectortimeout
+		if suite.SelectorTimeout <= 0 {
+			suite.SelectorTimeout = 10000
+		}
+		if suite.AssertionTimeout <= 0 {
+			suite.AssertionTimeout = 3000
+		}
+		if suite.PageLoadTimeout <= 0 {
+			suite.PageLoadTimeout = 3000
+		}
 
-	for _, d := range suite.Simulators {
-		if d.PlatformName == "" && appleDeviceRegex.MatchString(d.Name) {
-			d.PlatformName = "iOS"
+		// If this suite is targeting devices, then the platformName on the device takes precedence and we can skip the
+		// defaults on the suite level.
+		if suite.PlatformName == "" && len(suite.Simulators) == 0 {
+			suite.PlatformName = "Windows 10"
+
+			if strings.ToLower(suite.BrowserName) == "safari" {
+				suite.PlatformName = "macOS 11.00"
+			}
+		}
+
+		for j := range suite.Simulators {
+			sim := &suite.Simulators[j]
+			if sim.PlatformName == "" && appleDeviceRegex.MatchString(sim.Name) {
+				sim.PlatformName = "iOS"
+			}
 		}
 	}
 }
@@ -178,6 +170,13 @@ func Validate(p *Project) error {
 		return errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
 
+	for _, v := range p.Suites {
+		// Force the user to migrate.
+		if len(v.Devices) != 0 {
+			return errors.New("the 'devices' keyword in your config is now reserved for real devices, please use 'simulators' instead")
+		}
+	}
+
 	return nil
 }
 
@@ -186,7 +185,7 @@ func SplitSuites(p Project) (Project, Project) {
 	var dockerSuites []Suite
 	var sauceSuites []Suite
 	for _, s := range p.Suites {
-		if s.Mode == "docker" {
+		if s.Mode == "docker" || p.Defaults.Mode == "docker" {
 			dockerSuites = append(dockerSuites, s)
 		} else {
 			sauceSuites = append(sauceSuites, s)
