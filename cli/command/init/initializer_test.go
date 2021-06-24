@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/flags"
+	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/spf13/pflag"
 	"os"
 	"reflect"

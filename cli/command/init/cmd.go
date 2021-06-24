@@ -3,9 +3,9 @@ package init
 import (
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/flags"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/testcafe"
@@ -37,21 +37,21 @@ type initConfig struct {
 	frameworkName    string
 	frameworkVersion string
 	cypressJSON      string
-	app              string
-	testApp          string
-	platformName     string
-	mode             string
-	browserName      string
-	region           string
-	artifactWhen     config.When
-	artifactWhenStr  string
-	device           config.Device
-	emulator         config.Emulator
-	deviceFlag       flags.Device
-	emulatorFlag     flags.Emulator
-	concurrency      int
-	username         string
-	accessKey        string
+	app             string
+	testApp         string
+	platformName    string
+	mode            string
+	browserName     string
+	region          string
+	artifactWhen    config.When
+	artifactWhenStr string
+	device          config.Device
+	emulator        config.Emulator
+	deviceFlag      flags.Device
+	emulatorFlag    flags.Emulator
+	concurrency     int
+	username        string
+	accessKey       string
 }
 
 var (
