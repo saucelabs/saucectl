@@ -1,7 +1,7 @@
 package sentry
 
 import (
-	"github.com/saucelabs/saucectl/cli/setup"
+	"github.com/saucelabs/saucectl/internal/setup"
 	"gotest.tools/v3/fs"
 	"net/http"
 	"net/http/httptest"

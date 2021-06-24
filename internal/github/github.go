@@ -3,8 +3,8 @@ package github
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/requesth"
+	"github.com/saucelabs/saucectl/internal/version"
 	"golang.org/x/mod/semver"
 	"net/http"
 	"strings"

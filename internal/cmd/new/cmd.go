@@ -1,7 +1,6 @@
 package new
 
 import (
-	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +20,7 @@ var (
 )
 
 // Command creates the `new` command
-func Command(cli *command.SauceCtlCli) *cobra.Command {
+func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Deprecated: deprecationMsg,
 		Use:        newUse,

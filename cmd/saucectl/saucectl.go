@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/command/configure"
-	initCmd "github.com/saucelabs/saucectl/cli/command/init"
-	"github.com/saucelabs/saucectl/cli/command/run"
-	"github.com/saucelabs/saucectl/cli/command/signup"
-	"github.com/saucelabs/saucectl/cli/setup"
+	"github.com/saucelabs/saucectl/internal/cmd/configure"
+	"github.com/saucelabs/saucectl/internal/cmd/ini"
+	"github.com/saucelabs/saucectl/internal/cmd/new"
+	"github.com/saucelabs/saucectl/internal/cmd/run"
+	"github.com/saucelabs/saucectl/internal/cmd/signup"
+	"github.com/saucelabs/saucectl/internal/setup"
+	"github.com/saucelabs/saucectl/internal/version"
 	"os"
 	"time"
 
@@ -16,9 +18,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/command/new"
-	"github.com/saucelabs/saucectl/cli/version"
 )
 
 var (
@@ -35,7 +34,6 @@ var (
 )
 
 func main() {
-	cli := command.NewSauceCtlCli()
 	cmd := &cobra.Command{
 		Use:              cmdUse,
 		Short:            cmdShort,
@@ -55,11 +53,11 @@ func main() {
 	}
 
 	cmd.AddCommand(
-		new.Command(cli),
+		new.Command(),
 		run.Command(),
-		configure.Command(cli),
-		initCmd.Command(cli),
-		signup.Command(cli),
+		configure.Command(),
+		ini.Command(),
+		signup.Command(),
 	)
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)

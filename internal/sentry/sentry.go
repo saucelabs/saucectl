@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/setup"
+	"github.com/saucelabs/saucectl/internal/setup"
 	"io"
 	"mime/multipart"
 	"net/http"
