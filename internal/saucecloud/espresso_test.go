@@ -28,13 +28,14 @@ func TestEspresso_GetSuiteNames(t *testing.T) {
 }
 
 func TestEspressoRunner_CalculateJobCount(t *testing.T) {
-	runner := &EspressoRunner{
-		Project: espresso.Project{
-			Espresso: espresso.Espresso{
-				App:     "/path/to/app.apk",
-				TestApp: "/path/to/testApp.apk",
-			},
-			Suites: []espresso.Suite{
+	tests := []struct {
+		name   string
+		suites []espresso.Suite
+		wants  int
+	}{
+		{
+			name: "should multiply emulator combinations",
+			suites: []espresso.Suite{
 				{
 					Name: "valid espresso project",
 					Emulators: []config.Emulator{
@@ -49,9 +50,45 @@ func TestEspressoRunner_CalculateJobCount(t *testing.T) {
 					},
 				},
 			},
+			wants: 3,
+		},
+		{
+			name:  "should multiply jobs by NumShards if defined",
+			wants: 9,
+			suites: []espresso.Suite{
+				{
+					Name: "valid espresso project",
+					TestOptions: espresso.TestOptions{
+						NumShards: 3,
+					},
+					Emulators: []config.Emulator{
+						{
+							Name:             "Android GoogleApi Emulator",
+							PlatformVersions: []string{"11.0", "10.0"},
+						},
+						{
+							Name:             "Android Emulator",
+							PlatformVersions: []string{"11.0"},
+						},
+					},
+				},
+			},
 		},
 	}
-	assert.Equal(t, runner.calculateJobsCount(runner.Project.Suites), 3)
+
+	for _, tt := range tests {
+		runner := &EspressoRunner{
+			Project: espresso.Project{
+				Espresso: espresso.Espresso{
+					App:     "/path/to/app.apk",
+					TestApp: "/path/to/testApp.apk",
+				},
+				Suites: tt.suites,
+			},
+		}
+
+		assert.Equal(t, runner.calculateJobsCount(runner.Project.Suites), tt.wants)
+	}
 }
 
 func TestEspressoRunner_RunProject(t *testing.T) {

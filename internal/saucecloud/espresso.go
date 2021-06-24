@@ -74,9 +74,20 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 	jobsCount := r.calculateJobsCount(r.Project.Suites)
 	go func() {
 		for _, s := range r.Project.Suites {
-			for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
-				log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
-				r.startJob(jobOpts, s, appFileID, testAppFileID, c)
+			// Automatically apply ShardIndex if not specified
+			if s.TestOptions.NumShards > 0 {
+				for i := 0; i < s.TestOptions.NumShards; i++ {
+					s.TestOptions.ShardIndex = i
+					for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
+						log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
+						r.startJob(jobOpts, s, appFileID, testAppFileID, c)
+					}
+				}
+			} else {
+				for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
+					log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
+					r.startJob(jobOpts, s, appFileID, testAppFileID, c)
+				}
 			}
 		}
 		close(jobOpts)
@@ -133,16 +144,18 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		Size:       s.TestOptions.Size,
 		Package:    s.TestOptions.Package,
 	}
-	if s.TestOptions.NumShards > 1 {
+	displayName := s.Name
+	if s.TestOptions.NumShards > 0 {
 		jto.NumShards = &s.TestOptions.NumShards
 		jto.ShardIndex = &s.TestOptions.ShardIndex
+		displayName = fmt.Sprintf("%s (shard %d/%d)", displayName, *jto.ShardIndex+1, *jto.NumShards)
 	}
 	if s.TestOptions.ClearPackageData {
 		jto.ClearPackageData = &s.TestOptions.ClearPackageData
 	}
 
 	jobOpts <- job.StartOptions{
-		DisplayName:       s.Name,
+		DisplayName:       displayName,
 		ConfigFilePath:    r.Project.ConfigFilePath,
 		App:               fmt.Sprintf("storage:%s", appFileID),
 		Suite:             fmt.Sprintf("storage:%s", testAppFileID),
@@ -153,7 +166,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		DeviceID:          d.ID,
 		DeviceName:        d.name,
 		DeviceOrientation: d.orientation,
-		Name:              s.Name,
+		Name:              displayName,
 		Build:             r.Project.Sauce.Metadata.Build,
 		Tags:              r.Project.Sauce.Metadata.Tags,
 		Tunnel: job.TunnelOptions{
@@ -175,6 +188,9 @@ func (r *EspressoRunner) calculateJobsCount(suites []espresso.Suite) int {
 	jobsCount := 0
 	for _, s := range suites {
 		jobsCount += len(enumerateDevicesAndEmulators(s.Devices, s.Emulators))
+		if s.TestOptions.NumShards > 0 {
+			jobsCount = jobsCount * s.TestOptions.NumShards
+		}
 	}
 	return jobsCount
 }

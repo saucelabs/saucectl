@@ -42,7 +42,7 @@ type TestOptions struct {
 	Package          string   `yaml:"package,omitempty" json:"package"`
 	Size             string   `yaml:"size,omitempty" json:"size"`
 	Annotation       string   `yaml:"annotation,omitempty" json:"annotation"`
-	ShardIndex       int      `yaml:"shardIndex,omitempty" json:"shardIndex"`
+	ShardIndex       int      `json:"shardIndex"`
 	NumShards        int      `yaml:"numShards,omitempty" json:"numShards"`
 	ClearPackageData bool     `yaml:"clearPackageData,omitempty" json:"clearPackageData"`
 }

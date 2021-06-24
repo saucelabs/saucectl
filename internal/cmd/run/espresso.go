@@ -3,6 +3,8 @@ package run
 import (
 	"errors"
 	"fmt"
+	"os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -16,7 +18,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 type espressoFlags struct {
@@ -64,7 +65,6 @@ func NewEspressoCmd() *cobra.Command {
 	f.StringVar(&lflags.TestOptions.Package, "testOptions.package", "", "Include package")
 	f.StringVar(&lflags.TestOptions.Size, "testOptions.size", "", "Include tests based on size")
 	f.StringVar(&lflags.TestOptions.Annotation, "testOptions.annotation", "", "Include tests based on the annotation")
-	f.IntVar(&lflags.TestOptions.ShardIndex, "testOptions.shardIndex", 0, "The shard index for this particular run")
 	f.IntVar(&lflags.TestOptions.NumShards, "testOptions.numShards", 0, "Total number of shards")
 
 	// Emulators and Devices
