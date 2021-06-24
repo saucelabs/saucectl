@@ -14,9 +14,9 @@ builds:
       - windows
       - darwin
     ldflags:
-      - -X github.com/saucelabs/saucectl/cli/version.Version={{.Version}}
-      - -X github.com/saucelabs/saucectl/cli/version.GitCommit={{.Commit}}
-      - -X github.com/saucelabs/saucectl/cli/setup.SentryDSN={{.Env.SENTRY_DSN}}
+      - -X github.com/saucelabs/saucectl/internal/version.Version={{.Version}}
+      - -X github.com/saucelabs/saucectl/internal/version.GitCommit={{.Commit}}
+      - -X github.com/saucelabs/saucectl/internal/setup.SentryDSN={{.Env.SENTRY_DSN}}
 brews:
   - tap:
       owner: saucelabs
