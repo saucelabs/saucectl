@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/saucelabs/saucectl/cli/command"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -25,7 +24,7 @@ var (
 )
 
 // Command creates the `run` command
-func Command(cli *command.SauceCtlCli) *cobra.Command {
+func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     initUse,
 		Short:   initShort,
@@ -33,7 +32,7 @@ func Command(cli *command.SauceCtlCli) *cobra.Command {
 		Example: initExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Info().Msg("Start Init Command")
-			err := Run(cmd, cli, args)
+			err := Run()
 			if err != nil {
 				log.Err(err).Msg("failed to execute init command")
 				sentry.CaptureError(err, sentry.Scope{})
@@ -69,7 +68,7 @@ var (
 )
 
 // Run runs the command
-func Run(cmd *cobra.Command, cli *command.SauceCtlCli, args []string) error {
+func Run() error {
 	stdio := terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
 
 	creds := credentials.Get()

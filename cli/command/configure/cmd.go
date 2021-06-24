@@ -24,7 +24,7 @@ var (
 )
 
 // Command creates the `configure` command
-func Command(cli *command.SauceCtlCli) *cobra.Command {
+func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     configureUse,
 		Short:   configureShort,
