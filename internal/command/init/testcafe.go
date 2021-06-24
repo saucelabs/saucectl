@@ -12,8 +12,8 @@ import (
 func configureTestcafe(cfg *initConfig) interface{} {
 	return testcafe.Project{
 		TypeDef: config.TypeDef{
-			APIVersion: config.VersionV1Alpha,
-			Kind:       config.KindTestcafe,
+			APIVersion: testcafe.APIVersion,
+			Kind:       testcafe.Kind,
 		},
 		Sauce: config.SauceConfig{
 			Region:      cfg.region,

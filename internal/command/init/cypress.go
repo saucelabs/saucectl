@@ -12,8 +12,8 @@ import (
 func configureCypress(cfg *initConfig) interface{} {
 	return cypress.Project{
 		TypeDef: config.TypeDef{
-			APIVersion: config.VersionV1Alpha,
-			Kind:       config.KindCypress,
+			APIVersion: cypress.APIVersion,
+			Kind:       cypress.Kind,
 		},
 		Sauce: config.SauceConfig{
 			Region:      cfg.region,

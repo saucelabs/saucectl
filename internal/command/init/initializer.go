@@ -4,6 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/playwright"
+	"github.com/saucelabs/saucectl/internal/puppeteer"
+	"github.com/saucelabs/saucectl/internal/testcafe"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
 	"net/http"
 	"sort"
 	"strings"
@@ -81,17 +87,17 @@ func (ini *initializer) configure() (*initConfig, error) {
 	}
 
 	switch fName {
-	case config.KindCypress:
+	case cypress.Kind:
 		return ini.initializeCypress()
-	case config.KindPlaywright:
+	case playwright.Kind:
 		return ini.initializePlaywright()
-	case config.KindPuppeteer:
+	case puppeteer.Kind:
 		return ini.initializePuppeteer()
-	case config.KindTestcafe:
+	case testcafe.Kind:
 		return ini.initializeTestcafe()
-	case config.KindEspresso:
+	case espresso.Kind:
 		return ini.initializeEspresso()
-	case config.KindXcuitest:
+	case xcuitest.Kind:
 		return ini.initializeXCUITest()
 	default:
 		return &initConfig{}, fmt.Errorf("unsupported framework %v", frameworkName)
@@ -287,7 +293,7 @@ func metaToBrowsers(metadatas []framework.Metadata, frameworkName, frameworkVers
 	}
 
 	for _, p := range platformsToMap {
-		if frameworkName == config.KindTestcafe && p.PlatformName == "ios" {
+		if frameworkName == testcafe.Kind && p.PlatformName == "ios" {
 			continue
 		}
 		for _, browserName := range correctBrowsers(p.BrowserNames) {
@@ -418,7 +424,7 @@ func (ini *initializer) askFile(message string, val survey.Validator, comp compl
 }
 
 func (ini *initializer) initializeCypress() (*initConfig, error) {
-	cfg := &initConfig{frameworkName: config.KindCypress}
+	cfg := &initConfig{frameworkName: cypress.Kind}
 
 	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), cfg.frameworkName)
 	if err != nil {
@@ -448,7 +454,7 @@ func (ini *initializer) initializeCypress() (*initConfig, error) {
 }
 
 func (ini *initializer) initializePlaywright() (*initConfig, error) {
-	cfg := &initConfig{frameworkName: config.KindPlaywright}
+	cfg := &initConfig{frameworkName: playwright.Kind}
 
 	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), cfg.frameworkName)
 	if err != nil {
@@ -473,7 +479,7 @@ func (ini *initializer) initializePlaywright() (*initConfig, error) {
 }
 
 func (ini *initializer) initializeTestcafe() (*initConfig, error) {
-	cfg := &initConfig{frameworkName: config.KindTestcafe}
+	cfg := &initConfig{frameworkName: testcafe.Kind}
 
 	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), cfg.frameworkName)
 	if err != nil {
@@ -498,7 +504,7 @@ func (ini *initializer) initializeTestcafe() (*initConfig, error) {
 }
 
 func (ini *initializer) initializePuppeteer() (*initConfig, error) {
-	cfg := &initConfig{frameworkName: config.KindPuppeteer}
+	cfg := &initConfig{frameworkName: puppeteer.Kind}
 
 	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), cfg.frameworkName)
 	if err != nil {
@@ -523,7 +529,7 @@ func (ini *initializer) initializePuppeteer() (*initConfig, error) {
 }
 
 func (ini *initializer) initializeEspresso() (*initConfig, error) {
-	cfg := &initConfig{frameworkName: config.KindEspresso}
+	cfg := &initConfig{frameworkName: espresso.Kind}
 
 	err := ini.askFile("Application to test:", extValidator(cfg.frameworkName), completeBasic, &cfg.app)
 	if err != nil {
@@ -558,7 +564,7 @@ func (ini *initializer) initializeEspresso() (*initConfig, error) {
 }
 
 func (ini *initializer) initializeXCUITest() (*initConfig, error) {
-	cfg := &initConfig{frameworkName: config.KindXcuitest}
+	cfg := &initConfig{frameworkName: xcuitest.Kind}
 
 	err := ini.askFile("Application to test:", extValidator(cfg.frameworkName), completeBasic, &cfg.app)
 	if err != nil {

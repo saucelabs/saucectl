@@ -5,6 +5,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/playwright"
+	"github.com/saucelabs/saucectl/internal/puppeteer"
+	"github.com/saucelabs/saucectl/internal/testcafe"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
 	"gotest.tools/v3/fs"
 	"os"
 	"reflect"
@@ -754,7 +760,7 @@ func TestConfigure(t *testing.T) {
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
-				frameworkName: config.KindEspresso,
+				frameworkName: espresso.Kind,
 				app:           dir.Join("android-app.apk"),
 				testApp:       dir.Join("android-app.apk"),
 				emulator:      config.Emulator{Name: "Google Pixel Emulator", PlatformVersions: []string{"7.0"}},
@@ -791,7 +797,7 @@ func TestConfigure(t *testing.T) {
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
-				frameworkName:    config.KindCypress,
+				frameworkName:    cypress.Kind,
 				frameworkVersion: "7.5.0",
 				cypressJSON:      dir.Join("cypress.json"),
 				platformName:     "windows 10",
@@ -972,7 +978,7 @@ func Test_initializers(t *testing.T) {
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
-				frameworkName:    config.KindCypress,
+				frameworkName:    cypress.Kind,
 				frameworkVersion: "7.5.0",
 				cypressJSON:      dir.Join("cypress.json"),
 				platformName:     "windows 10",
@@ -1006,7 +1012,7 @@ func Test_initializers(t *testing.T) {
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
-				frameworkName:    config.KindPlaywright,
+				frameworkName:    playwright.Kind,
 				frameworkVersion: "1.11.0",
 				platformName:     "windows 10",
 				browserName:      "chromium",
@@ -1039,7 +1045,7 @@ func Test_initializers(t *testing.T) {
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
-				frameworkName:    config.KindPuppeteer,
+				frameworkName:    puppeteer.Kind,
 				frameworkVersion: "8.0.0",
 				platformName:     "",
 				browserName:      "chrome",
@@ -1072,7 +1078,7 @@ func Test_initializers(t *testing.T) {
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
-				frameworkName:    config.KindTestcafe,
+				frameworkName:    testcafe.Kind,
 				frameworkVersion: "1.12.0",
 				platformName:     "macOS 11.00",
 				browserName:      "safari",
@@ -1105,7 +1111,7 @@ func Test_initializers(t *testing.T) {
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
-				frameworkName: config.KindXcuitest,
+				frameworkName: xcuitest.Kind,
 				app:           dir.Join("ios-app.ipa"),
 				testApp:       dir.Join("ios-app.ipa"),
 				device:        config.Device{Name: "iPhone .*"},
@@ -1137,7 +1143,7 @@ func Test_initializers(t *testing.T) {
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
-				frameworkName: config.KindXcuitest,
+				frameworkName: xcuitest.Kind,
 				app:           dir.Join("ios-folder-app.app"),
 				testApp:       dir.Join("ios-folder-app.app"),
 				device:        config.Device{Name: "iPad .*"},
@@ -1173,7 +1179,7 @@ func Test_initializers(t *testing.T) {
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
-				frameworkName: config.KindEspresso,
+				frameworkName: espresso.Kind,
 				app:           dir.Join("android-app.apk"),
 				testApp:       dir.Join("android-app.apk"),
 				device:        config.Device{Name: "HTC .*"},

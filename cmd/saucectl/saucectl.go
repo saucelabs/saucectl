@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	configure2 "github.com/saucelabs/saucectl/internal/command/configure"
-	"github.com/saucelabs/saucectl/internal/command/init"
-	new2 "github.com/saucelabs/saucectl/internal/command/new"
-	run2 "github.com/saucelabs/saucectl/internal/command/run"
-	signup2 "github.com/saucelabs/saucectl/internal/command/signup"
-	setup2 "github.com/saucelabs/saucectl/internal/setup"
-	version2 "github.com/saucelabs/saucectl/internal/version"
+	"github.com/saucelabs/saucectl/internal/command/configure"
+	initializer "github.com/saucelabs/saucectl/internal/command/init"
+	"github.com/saucelabs/saucectl/internal/command/new"
+	"github.com/saucelabs/saucectl/internal/command/run"
+	"github.com/saucelabs/saucectl/internal/command/signup"
+	"github.com/saucelabs/saucectl/internal/setup"
+	"github.com/saucelabs/saucectl/internal/version"
 	"os"
 	"time"
 
@@ -39,7 +39,7 @@ func main() {
 		Short:            cmdShort,
 		Long:             cmdLong,
 		TraverseChildren: true,
-		Version:          fmt.Sprintf("%s\n(build %s)", version2.Version, version2.GitCommit),
+		Version:          fmt.Sprintf("%s\n(build %s)", version.Version, version.GitCommit),
 	}
 
 	cmd.SetVersionTemplate("saucectl version {{.Version}}\n")
@@ -53,11 +53,11 @@ func main() {
 	}
 
 	cmd.AddCommand(
-		new2.Command(),
-		run2.Command(),
-		configure2.Command(),
-		init.Command(),
-		signup2.Command(),
+		new.Command(),
+		run.Command(),
+		configure.Command(),
+		initializer.Command(),
+		signup.Command(),
 	)
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
@@ -83,9 +83,9 @@ func setupLogging(verbose bool) {
 
 func setupSentry() {
 	err := sentry.Init(sentry.ClientOptions{
-		Dsn:         setup2.SentryDSN,
+		Dsn:         setup.SentryDSN,
 		Environment: "production",
-		Release:     fmt.Sprintf("saucectl@%s", version2.Version),
+		Release:     fmt.Sprintf("saucectl@%s", version.Version),
 		Debug:       false,
 	})
 	if err != nil {

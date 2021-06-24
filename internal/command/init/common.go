@@ -2,6 +2,9 @@ package init
 
 import (
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
 	"os"
 	"path/filepath"
 	"sort"
@@ -11,8 +14,6 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"gopkg.in/yaml.v2"
-
-	"github.com/saucelabs/saucectl/internal/config"
 )
 
 
@@ -107,11 +108,11 @@ func completeBasic(toComplete string) []string {
 func extValidator(framework string) survey.Validator {
 	var exts []string
 	switch framework {
-	case config.KindEspresso:
+	case espresso.Kind:
 		exts = []string{".apk"}
-	case config.KindXcuitest:
+	case xcuitest.Kind:
 		exts = []string{".ipa", ".app"}
-	case config.KindCypress:
+	case cypress.Kind:
 		exts = []string{".json"}
 	}
 

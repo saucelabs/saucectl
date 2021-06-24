@@ -9,8 +9,8 @@ import (
 func configureEspresso(cfg *initConfig) interface{} {
 	return espresso.Project{
 		TypeDef: config.TypeDef{
-			APIVersion: config.VersionV1Alpha,
-			Kind:       config.KindEspresso,
+			APIVersion: espresso.APIVersion,
+			Kind:       espresso.Kind,
 		},
 		Sauce: config.SauceConfig{
 			Region:      cfg.region,

@@ -12,8 +12,8 @@ import (
 func configurePlaywright(cfg *initConfig) interface{} {
 	return playwright.Project{
 		TypeDef: config.TypeDef{
-			APIVersion: config.VersionV1Alpha,
-			Kind:       config.KindPlaywright,
+			APIVersion: playwright.APIVersion,
+			Kind:       playwright.Kind,
 		},
 		Sauce: config.SauceConfig{
 			Region:      cfg.region,
