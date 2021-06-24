@@ -148,7 +148,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 	if s.TestOptions.NumShards > 0 {
 		jto.NumShards = &s.TestOptions.NumShards
 		jto.ShardIndex = &s.TestOptions.ShardIndex
-		displayName = fmt.Sprintf("%s shard #%d", displayName, *jto.ShardIndex)
+		displayName = fmt.Sprintf("%s (shard %d/%d)", displayName, *jto.ShardIndex+1, *jto.NumShards)
 	}
 	if s.TestOptions.ClearPackageData {
 		jto.ClearPackageData = &s.TestOptions.ClearPackageData
