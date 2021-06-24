@@ -155,7 +155,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 	}
 
 	jobOpts <- job.StartOptions{
-		DisplayName:       s.Name,
+		DisplayName:       displayName,
 		ConfigFilePath:    r.Project.ConfigFilePath,
 		App:               fmt.Sprintf("storage:%s", appFileID),
 		Suite:             fmt.Sprintf("storage:%s", testAppFileID),
