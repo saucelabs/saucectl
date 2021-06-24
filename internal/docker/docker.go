@@ -6,14 +6,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/version"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/saucelabs/saucectl/cli/version"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"

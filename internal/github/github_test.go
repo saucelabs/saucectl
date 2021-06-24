@@ -1,7 +1,7 @@
 package github
 
 import (
-	"github.com/saucelabs/saucectl/cli/version"
+	"github.com/saucelabs/saucectl/internal/version"
 	"net/http"
 	"net/http/httptest"
 	"testing"

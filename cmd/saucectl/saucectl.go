@@ -7,6 +7,7 @@ import (
 	"github.com/saucelabs/saucectl/cli/command/run"
 	"github.com/saucelabs/saucectl/cli/command/signup"
 	"github.com/saucelabs/saucectl/cli/setup"
+	"github.com/saucelabs/saucectl/internal/version"
 	"os"
 	"time"
 
@@ -17,7 +18,6 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/saucelabs/saucectl/cli/command/new"
-	"github.com/saucelabs/saucectl/cli/version"
 )
 
 var (
