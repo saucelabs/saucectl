@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/flags"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/espresso"
+	flags2 "github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
@@ -24,8 +24,8 @@ type espressoFlags struct {
 	App         string
 	TestApp     string
 	TestOptions espresso.TestOptions
-	Emulator    flags.Emulator
-	Device      flags.Device
+	Emulator    flags2.Emulator
+	Device      flags2.Device
 }
 
 // NewEspressoCmd creates the 'run' command for espresso.

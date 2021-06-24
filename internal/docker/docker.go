@@ -6,14 +6,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	version2 "github.com/saucelabs/saucectl/internal/version"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/saucelabs/saucectl/cli/version"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -239,7 +238,7 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 		Env: []string{
 			fmt.Sprintf("SAUCE_USERNAME=%s", username),
 			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", accessKey),
-			fmt.Sprintf("SAUCE_SAUCECTL_VERSION=%s", version.Version),
+			fmt.Sprintf("SAUCE_SAUCECTL_VERSION=%s", version2.Version),
 		},
 	}
 

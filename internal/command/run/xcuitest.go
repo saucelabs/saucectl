@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/cli/flags"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
+	flags2 "github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
@@ -24,7 +24,7 @@ type xcuitestFlags struct {
 	App         string
 	TestApp     string
 	TestOptions xcuitest.TestOptions
-	Device      flags.Device
+	Device      flags2.Device
 }
 
 // NewXCUITestCmd creates the 'run' command for XCUITest.

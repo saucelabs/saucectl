@@ -1,7 +1,7 @@
 package sentry
 
 import (
-	"github.com/saucelabs/saucectl/cli/setup"
+	setup2 "github.com/saucelabs/saucectl/internal/setup"
 	"gotest.tools/v3/fs"
 	"net/http"
 	"net/http/httptest"
@@ -108,7 +108,7 @@ func Test_attach(t *testing.T) {
 	}
 	purl.User = url.User("mockuser")
 	purl.Path = "/1234567" // mock project ID
-	setup.SentryDSN = purl.String()
+	setup2.SentryDSN = purl.String()
 
 	type args struct {
 		client   http.Client

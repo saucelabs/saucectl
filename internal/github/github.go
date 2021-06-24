@@ -3,8 +3,8 @@ package github
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/version"
 	"github.com/saucelabs/saucectl/internal/requesth"
+	version2 "github.com/saucelabs/saucectl/internal/version"
 	"golang.org/x/mod/semver"
 	"net/http"
 	"strings"
@@ -33,7 +33,7 @@ func (c *Client) HasUpdateAvailable() (string, error) {
 		return "", err
 	}
 
-	if isUpdateRequired(version.Version, r.TagName) {
+	if isUpdateRequired(version2.Version, r.TagName) {
 		return r.TagName, nil
 	}
 	return "", nil

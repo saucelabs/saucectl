@@ -1,7 +1,7 @@
 package github
 
 import (
-	"github.com/saucelabs/saucectl/cli/version"
+	version2 "github.com/saucelabs/saucectl/internal/version"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -78,7 +78,7 @@ func TestClient_HasUpdateAvailable(t *testing.T) {
 		}
 
 		// Forcing current version
-		version.Version = tt.current
+		version2.Version = tt.current
 		got, err := gh.HasUpdateAvailable()
 
 		if err != tt.wantErr {

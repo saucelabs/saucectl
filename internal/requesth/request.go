@@ -2,7 +2,7 @@ package requesth
 
 import (
 	"context"
-	"github.com/saucelabs/saucectl/cli/version"
+	version2 "github.com/saucelabs/saucectl/internal/version"
 	"io"
 	"net/http"
 )
@@ -14,7 +14,7 @@ func NewWithContext(ctx context.Context, method, url string, body io.Reader) (*h
 	if err != nil {
 		return r, err
 	}
-	r.Header.Set("User-Agent", "saucectl/"+version.Version)
+	r.Header.Set("User-Agent", "saucectl/"+version2.Version)
 
 	return r, err
 }
