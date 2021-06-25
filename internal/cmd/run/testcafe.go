@@ -15,7 +15,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"os"
 )
 
@@ -26,7 +25,6 @@ type testcafeFlags struct {
 	Suite     testcafe.Suite
 	Testcafe  testcafe.Testcafe
 	NPM       config.Npm
-	FlagSet   pflag.FlagSet
 }
 
 // NewTestcafeCmd creates the 'run' command for TestCafe.
@@ -58,7 +56,6 @@ func NewTestcafeCmd() *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	lflags.FlagSet = *f
 	f.StringVar(&lflags.Suite.Name, "name", "", "Set the name of the job as it will appear on Sauce Labs")
 
 	// Browser & Platform
@@ -109,7 +106,7 @@ func runTestcafe(cmd *cobra.Command, flags testcafeFlags, tc testcomposer.Client
 
 	p.Sauce.Metadata.ExpandEnv()
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
-	if err := applyTestcafeFlags(&p, flags); err != nil {
+	if err := applyTestcafeFlags(cmd, &p, flags); err != nil {
 		return 1, err
 	}
 	testcafe.SetDefaults(&p)
@@ -183,12 +180,12 @@ func filterTestcafeSuite(c *testcafe.Project) error {
 	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
 }
 
-func applyTestcafeFlags(p *testcafe.Project, flags testcafeFlags) error {
+func applyTestcafeFlags(cmd *cobra.Command, p *testcafe.Project, flags testcafeFlags) error {
 	if flags.Testcafe.Version != "" {
 		p.Testcafe.Version = flags.Testcafe.Version
 	}
 
-	if flags.FlagSet.Changed("rootDir") || p.RootDir == "" {
+	if cmd.Flags().Changed("rootDir") || p.RootDir == "" {
 		p.RootDir = flags.RootDir
 	}
 
@@ -200,7 +197,7 @@ func applyTestcafeFlags(p *testcafe.Project, flags testcafeFlags) error {
 		p.Npm.Packages = flags.NPM.Packages
 	}
 
-	if flags.FlagSet.Changed("npm.strictSSL") {
+	if cmd.Flags().Changed("npm.strictSSL") {
 		p.Npm.StrictSSL = flags.NPM.StrictSSL
 	}
 
@@ -211,7 +208,7 @@ func applyTestcafeFlags(p *testcafe.Project, flags testcafeFlags) error {
 		p.RunnerVersion = gFlags.runnerVersion
 	}
 
-	if flags.FlagSet.Lookup("suite").Changed {
+	if cmd.Flags().Lookup("suite").Changed {
 		if err := testcafe.FilterSuites(p, gFlags.suiteName); err != nil {
 			return err
 		}
