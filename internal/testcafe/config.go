@@ -113,6 +113,7 @@ func FromFile(cfgPath string) (Project, error) {
 	return p, nil
 }
 
+// SetDefaults applies config defaults in case the user has left them blank.
 func SetDefaults(p *Project) {
 	if p.Sauce.Concurrency < 1 {
 		// Default concurrency is 2
@@ -206,6 +207,7 @@ func SplitSuites(p Project) (Project, Project) {
 	return dockerProject, sauceProject
 }
 
+// FilterSuites filters out suites in the project that don't match the given suite name.
 func FilterSuites(p *Project, suiteName string) error {
 	for _, s := range p.Suites {
 		if s.Name == suiteName {
