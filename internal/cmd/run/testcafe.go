@@ -1,7 +1,6 @@
 package run
 
 import (
-	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
@@ -110,39 +109,21 @@ func runTestcafe(cmd *cobra.Command, flags testcafeFlags, tc testcomposer.Client
 
 	p.Sauce.Metadata.ExpandEnv()
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
-	applyTestcafeFlags(&p, flags)
+	if err := applyTestcafeFlags(&p, flags); err != nil {
+		return 1, err
+	}
 	testcafe.SetDefaults(&p)
 
-	for k, v := range gFlags.env {
-		for _, s := range p.Suites {
-			if s.Env == nil {
-				s.Env = map[string]string{}
-			}
-			s.Env[k] = v
-		}
-	}
-
-	if cmd.Flags().Lookup("suite").Changed {
-		if err := filterTestcafeSuite(&p); err != nil {
-			return 1, err
-		}
+	if err := testcafe.Validate(&p); err != nil {
+		return 1, err
 	}
 
 	regio := region.FromString(p.Sauce.Region)
-	if regio == region.None {
-		log.Error().Str("region", p.Sauce.Region).Msg("Unable to determine sauce region.")
-		return 1, errors.New("no sauce region set")
-	}
-
 	tc.URL = regio.APIBaseURL()
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
 
 	rs.ArtifactConfig = p.Artifacts.Download
-
-	if err := testcafe.Validate(&p); err != nil {
-		return 1, err
-	}
 
 	dockerProject, sauceProject := testcafe.SplitSuites(p)
 	if len(dockerProject.Suites) != 0 {
@@ -202,7 +183,7 @@ func filterTestcafeSuite(c *testcafe.Project) error {
 	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
 }
 
-func applyTestcafeFlags(p *testcafe.Project, flags testcafeFlags) {
+func applyTestcafeFlags(p *testcafe.Project, flags testcafeFlags) error {
 	if flags.Testcafe.Version != "" {
 		p.Testcafe.Version = flags.Testcafe.Version
 	}
@@ -230,13 +211,28 @@ func applyTestcafeFlags(p *testcafe.Project, flags testcafeFlags) {
 		p.RunnerVersion = gFlags.runnerVersion
 	}
 
-	// No name, no adhoc suite.
-	if flags.Suite.Name == "" {
-		return
+	if flags.FlagSet.Lookup("suite").Changed {
+		if err := testcafe.FilterSuites(p, gFlags.suiteName); err != nil {
+			return err
+		}
 	}
 
-	if flags.Simulator.Changed {
-		flags.Suite.Simulators = []config.Simulator{flags.Simulator.Simulator}
+	// Create an adhoc suite if "--name" is provided
+	if flags.Suite.Name != "" {
+		if flags.Simulator.Changed {
+			flags.Suite.Simulators = []config.Simulator{flags.Simulator.Simulator}
+		}
+		p.Suites = []testcafe.Suite{flags.Suite}
 	}
-	p.Suites = []testcafe.Suite{flags.Suite}
+
+	for k, v := range gFlags.env {
+		for _, s := range p.Suites {
+			if s.Env == nil {
+				s.Env = map[string]string{}
+			}
+			s.Env[k] = v
+		}
+	}
+
+	return nil
 }

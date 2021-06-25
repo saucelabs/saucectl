@@ -3,6 +3,7 @@ package testcafe
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 	"regexp"
 	"strings"
@@ -165,6 +166,11 @@ func SetDefaults(p *Project) {
 // values. This is not an exhaustive operation and further validation should be performed both in the client and/or
 // server side depending on the workflow that is executed.
 func Validate(p *Project) error {
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		return errors.New("no sauce region set")
+	}
+
 	p.Testcafe.Version = config.StandardizeVersionFormat(p.Testcafe.Version)
 	if p.Testcafe.Version == "" {
 		return errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
@@ -198,4 +204,14 @@ func SplitSuites(p Project) (Project, Project) {
 	sauceProject.Suites = sauceSuites
 
 	return dockerProject, sauceProject
+}
+
+func FilterSuites(p *Project, suiteName string) error {
+	for _, s := range p.Suites {
+		if s.Name == suiteName {
+			p.Suites = []Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf("no suite named '%s' found", suiteName)
 }
