@@ -2,46 +2,9 @@ package testcafe
 
 import (
 	"github.com/stretchr/testify/assert"
+	"reflect"
 	"testing"
 )
-
-func TestSetDefaultValues(t *testing.T) {
-	s := Suite{
-		Speed:            0,
-		SelectorTimeout:  0,
-		AssertionTimeout: 0,
-		PageLoadTimeout:  0,
-	}
-	setDefaultValues(&s)
-	assert.Equal(t, s.Speed, float64(1))
-	assert.Equal(t, s.SelectorTimeout, 10000)
-	assert.Equal(t, s.AssertionTimeout, 3000)
-	assert.Equal(t, s.PageLoadTimeout, 3000)
-
-	s = Suite{
-		Speed: 2,
-	}
-	setDefaultValues(&s)
-	assert.Equal(t, s.Speed, float64(1))
-
-	s = Suite{
-		Speed: 0.5,
-	}
-	setDefaultValues(&s)
-	assert.Equal(t, s.Speed, 0.5)
-
-	s = Suite{
-		Speed:            0,
-		SelectorTimeout:  -1,
-		AssertionTimeout: -1,
-		PageLoadTimeout:  -1,
-	}
-	setDefaultValues(&s)
-	assert.Equal(t, s.Speed, float64(1))
-	assert.Equal(t, s.SelectorTimeout, 10000)
-	assert.Equal(t, s.AssertionTimeout, 3000)
-	assert.Equal(t, s.PageLoadTimeout, 3000)
-}
 
 func Test_appleDeviceRegex(t *testing.T) {
 	tests := []struct {
@@ -103,6 +66,65 @@ func Test_appleDeviceRegex(t *testing.T) {
 			if got != tt.want {
 				t.Errorf("appleDeviceRegex.MatchString() got = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestFilterSuites(t *testing.T) {
+	testCase := []struct {
+		name      string
+		config    *Project
+		suiteName string
+		expConfig Project
+		expErr    string
+	}{
+		{
+			name: "filtered suite exists in config",
+			config: &Project{Suites: []Suite{
+				{
+					Name: "suite1",
+				},
+				{
+					Name: "suite2",
+				},
+			}},
+			suiteName: "suite1",
+			expConfig: Project{Suites: []Suite{
+				{
+					Name: "suite1",
+				},
+			}},
+		},
+		{
+			name: "filtered suite does not exist in config",
+			config: &Project{Suites: []Suite{
+				{
+					Name: "suite1",
+				},
+				{
+					Name: "suite2",
+				},
+			}},
+			suiteName: "suite3",
+			expConfig: Project{Suites: []Suite{
+				{
+					Name: "suite1",
+				},
+				{
+					Name: "suite2",
+				},
+			}},
+			expErr: "no suite named 'suite3' found",
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			err := FilterSuites(tc.config, tc.suiteName)
+			if err != nil {
+				assert.Equal(t, tc.expErr, err.Error())
+			}
+			assert.True(t, reflect.DeepEqual(*tc.config, tc.expConfig))
 		})
 	}
 }

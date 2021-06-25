@@ -122,12 +122,11 @@ func (r *ContainerRunner) fetchImage(docker *config.Docker) error {
 			return fmt.Errorf("unable to determine which docker image to run: %w", err)
 		}
 		docker.Image = m.DockerImage
+	} else {
+		log.Info().Msgf("Ignoring framework version for Docker, using provided image %s", docker.Image)
 	}
 
-	if err := r.pullImage(docker.Image); err != nil {
-		return err
-	}
-	return nil
+	return r.pullImage(docker.Image)
 }
 
 func (r *ContainerRunner) startContainer(options containerStartOptions) (string, error) {
