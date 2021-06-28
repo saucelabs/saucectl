@@ -24,7 +24,6 @@ type Job struct {
 	Status              string `json:"status"`
 	Error               string `json:"error"`
 	BrowserShortVersion string `json:"browser_short_version"`
-	Browser             string `json:"browser"`
 	BaseConfig          struct {
 		PlatformName    string `json:"platformName"`
 		PlatformVersion string `json:"platformVersion"`
