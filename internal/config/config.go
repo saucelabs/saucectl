@@ -110,7 +110,7 @@ type Docker struct {
 type Npm struct {
 	Registry  string            `yaml:"registry,omitempty" json:"registry,omitempty"`
 	Packages  map[string]string `yaml:"packages,omitempty" json:"packages"`
-	StrictSSL bool             `yaml:"strictSSL,omitempty" json:"strictSSL"`
+	StrictSSL bool              `yaml:"strictSSL,omitempty" json:"strictSSL"`
 }
 
 // Defaults represents default suite settings.
@@ -139,6 +139,10 @@ func readYaml(cfgFilePath string) ([]byte, error) {
 // Describe returns a description of the given config that is cfgPath.
 func Describe(cfgPath string) (TypeDef, error) {
 	var d TypeDef
+
+	if cfgPath == "" {
+		return TypeDef{}, nil
+	}
 
 	yamlFile, err := readYaml(cfgPath)
 	if err != nil {

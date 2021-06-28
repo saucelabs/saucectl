@@ -54,6 +54,10 @@ type Suite struct {
 func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
+	if cfgPath == "" {
+		return Project{}, nil
+	}
+
 	f, err := os.Open(cfgPath)
 	if err != nil {
 		return Project{}, fmt.Errorf("failed to locate project config: %v", err)
@@ -69,12 +73,23 @@ func FromFile(cfgPath string) (Project, error) {
 		return p, config.ErrUnknownCfg
 	}
 
+	return p, nil
+}
+
+// SetDefaults applies config defaults in case the user has left them blank.
+func SetDefaults(p *Project) {
 	if p.Sauce.Concurrency < 1 {
-		// Default concurrency is 2
 		p.Sauce.Concurrency = 2
 	}
 
-	return p, nil
+	for _, suite := range p.Suites {
+		for id := range suite.Devices {
+			suite.Devices[id].PlatformName = "iOS"
+
+			// device type only supports uppercase values
+			suite.Devices[id].Options.DeviceType = strings.ToUpper(suite.Devices[id].Options.DeviceType)
+		}
+	}
 }
 
 // Validate validates basic configuration of the project and returns an error if any of the settings contain illegal
@@ -116,18 +131,6 @@ func Validate(p Project) error {
 	}
 
 	return nil
-}
-
-// SetDeviceDefaultValues sets device default values.
-func SetDeviceDefaultValues(p *Project) {
-	for _, suite := range p.Suites {
-		for id := range suite.Devices {
-			suite.Devices[id].PlatformName = "iOS"
-
-			// device type only supports uppercase values
-			suite.Devices[id].Options.DeviceType = strings.ToUpper(suite.Devices[id].Options.DeviceType)
-		}
-	}
 }
 
 func isSupportedDeviceType(deviceType string) bool {

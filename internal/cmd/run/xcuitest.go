@@ -75,6 +75,7 @@ func runXcuitest(cmd *cobra.Command, flags xcuitestFlags, tc testcomposer.Client
 	p.Sauce.Metadata.ExpandEnv()
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
 	applyXCUITestFlags(&p, flags)
+	xcuitest.SetDefaults(&p)
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
@@ -82,7 +83,6 @@ func runXcuitest(cmd *cobra.Command, flags xcuitestFlags, tc testcomposer.Client
 		return 1, errors.New("no sauce region set")
 	}
 
-	xcuitest.SetDeviceDefaultValues(&p)
 	err = xcuitest.Validate(p)
 	if err != nil {
 		return 1, err

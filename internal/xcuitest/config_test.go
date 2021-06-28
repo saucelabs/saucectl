@@ -38,9 +38,9 @@ func TestValidate(t *testing.T) {
 				},
 				Suites: []Suite{
 					{
-						Name:    "iphone",
+						Name: "iphone",
 						Devices: []config.Device{
-							{ Name: "iPhone.*"},
+							{Name: "iPhone.*"},
 						},
 					},
 				},
@@ -56,9 +56,9 @@ func TestValidate(t *testing.T) {
 				},
 				Suites: []Suite{
 					{
-						Name:    "iphone",
+						Name: "iphone",
 						Devices: []config.Device{
-							{ Name: "iPhone.*"},
+							{Name: "iPhone.*"},
 						},
 					},
 				},
@@ -241,56 +241,71 @@ suites:
 	}
 }
 
-func TestSetDeviceDefaultValues(t *testing.T) {
-	p := Project{
-		Suites: []Suite{
-			{
-				Name: "test suite 1",
-				Devices: []config.Device{
-					{
-						Name: "iPhone 11",
-						Options: config.DeviceOptions{
-							DeviceType: "phone",
-						},
-					},
-					{
-						Name: "iPhone XR",
-						Options: config.DeviceOptions{
-							DeviceType: "tablet",
-						},
-					},
-				},
-			},
+func TestSetDefaults_Platform(t *testing.T) {
+	type args struct {
+		Device config.Device
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "no platform specified",
+			args: args{Device: config.Device{}},
+			want: "iOS",
+		},
+		{
+			name: "wrong platform specified",
+			args: args{Device: config.Device{PlatformName: "myOS"}},
+			want: "iOS",
 		},
 	}
 
-	SetDeviceDefaultValues(&p)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := Project{Suites: []Suite{{
+				Devices: []config.Device{tt.args.Device},
+			}}}
 
-	expected := Project{
-		Suites: []Suite{
-			{
-				Name: "test suite 1",
-				Devices: []config.Device{
-					{
-						Name:         "iPhone 11",
-						PlatformName: "iOS",
-						Options: config.DeviceOptions{
-							DeviceType: "PHONE",
-						},
-					},
-					{
-						Name:         "iPhone XR",
-						PlatformName: "iOS",
-						Options: config.DeviceOptions{
-							DeviceType: "TABLET",
-						},
-					},
-				},
-			},
+			SetDefaults(&p)
+
+			got := p.Suites[0].Devices[0].PlatformName
+			if got != tt.want {
+				t.Errorf("SetDefaults() got: %v, want: %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSetDefaults_DeviceType(t *testing.T) {
+	type args struct {
+		Device config.Device
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "device type is always uppercase",
+			args: args{Device: config.Device{Options: config.DeviceOptions{DeviceType: "phone"}}},
+			want: "PHONE",
 		},
 	}
 
-	if !reflect.DeepEqual(p, expected) {
-		t.Errorf("expected: %v, got: %v", expected, p)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := Project{Suites: []Suite{{
+				Devices: []config.Device{tt.args.Device},
+			}}}
+
+			SetDefaults(&p)
+
+			got := p.Suites[0].Devices[0].Options.DeviceType
+			if got != tt.want {
+				t.Errorf("SetDefaults() got: %v, want: %v", got, tt.want)
+			}
+		})
 	}
 }

@@ -83,6 +83,7 @@ func runEspresso(cmd *cobra.Command, flags espressoFlags, tc testcomposer.Client
 	p.Sauce.Metadata.ExpandEnv()
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
 	applyEspressoFlags(&p, flags)
+	espresso.SetDefaults(&p)
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
