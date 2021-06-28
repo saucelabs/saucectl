@@ -113,11 +113,16 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				platform = fmt.Sprintf("%s %s", platform, res.job.BaseConfig.PlatformVersion)
 			}
 
+			browser := res.browser
+			// browser is empty for mobile tests
+			if browser != "" {
+				browser = fmt.Sprintf("%s %s", browser, res.job.BrowserShortVersion)
+			}
 			reporter.Add(report.TestResult{
 				Name:       res.name,
 				Duration:   res.duration,
 				Passed:     res.job.Passed,
-				Browser:    res.browser,
+				Browser:    browser,
 				Platform:   platform,
 				DeviceName: res.job.BaseConfig.DeviceName,
 			})

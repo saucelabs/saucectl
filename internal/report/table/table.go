@@ -2,13 +2,14 @@ package table
 
 import (
 	"fmt"
+	"io"
+	"sync"
+	"time"
+
 	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/saucelabs/saucectl/internal/report"
-	"io"
-	"sync"
-	"time"
 )
 
 var defaultTableStyle = table.Style{
