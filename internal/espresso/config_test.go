@@ -183,7 +183,6 @@ suites:
 				Devices: []config.Device{
 					{
 						Name:            "Device name",
-						PlatformName:    Android,
 						PlatformVersion: "8.1",
 						Options: config.DeviceOptions{
 							DeviceType: "TABLET",
@@ -193,7 +192,6 @@ suites:
 				Emulators: []config.Emulator{
 					{
 						Name:         "Google Pixel C GoogleAPI Emulator",
-						PlatformName: Android,
 						PlatformVersions: []string{
 							"8.1",
 						},

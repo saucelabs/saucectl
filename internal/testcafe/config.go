@@ -87,6 +87,10 @@ type Testcafe struct {
 func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
+	if cfgPath == "" {
+		return Project{}, nil
+	}
+
 	f, err := os.Open(cfgPath)
 	if err != nil {
 		return p, fmt.Errorf("failed to locate project config: %v", err)
