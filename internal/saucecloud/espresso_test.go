@@ -54,10 +54,26 @@ func TestEspressoRunner_CalculateJobCount(t *testing.T) {
 		},
 		{
 			name:  "should multiply jobs by NumShards if defined",
-			wants: 9,
+			wants: 18,
 			suites: []espresso.Suite{
 				{
-					Name: "valid espresso project",
+					Name: "first suite",
+					TestOptions: espresso.TestOptions{
+						NumShards: 3,
+					},
+					Emulators: []config.Emulator{
+						{
+							Name:             "Android GoogleApi Emulator",
+							PlatformVersions: []string{"11.0", "10.0"},
+						},
+						{
+							Name:             "Android Emulator",
+							PlatformVersions: []string{"11.0"},
+						},
+					},
+				},
+				{
+					Name: "second suite",
 					TestOptions: espresso.TestOptions{
 						NumShards: 3,
 					},

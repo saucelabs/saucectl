@@ -185,14 +185,15 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 }
 
 func (r *EspressoRunner) calculateJobsCount(suites []espresso.Suite) int {
-	jobsCount := 0
+	total := 0
 	for _, s := range suites {
-		jobsCount += len(enumerateDevicesAndEmulators(s.Devices, s.Emulators))
+		jobs := len(enumerateDevicesAndEmulators(s.Devices, s.Emulators))
 		if s.TestOptions.NumShards > 0 {
-			jobsCount = jobsCount * s.TestOptions.NumShards
+			jobs *= s.TestOptions.NumShards
 		}
+		total += jobs
 	}
-	return jobsCount
+	return total
 }
 
 func (r *EspressoRunner) getSuiteNames() string {
