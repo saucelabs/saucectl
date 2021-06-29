@@ -83,6 +83,10 @@ type Cypress struct {
 func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
+	if cfgPath == "" {
+		return Project{}, nil
+	}
+
 	f, err := os.Open(cfgPath)
 	if err != nil {
 		return Project{}, fmt.Errorf("failed to locate project config: %v", err)
@@ -229,4 +233,15 @@ func SplitSuites(p Project) (Project, Project) {
 	sauceProject.Suites = sauceSuites
 
 	return dockerProject, sauceProject
+}
+
+// FilterSuites filters out suites in the project that don't match the given suite name.
+func FilterSuites(p *Project, suiteName string) error {
+	for _, s := range p.Suites {
+		if s.Name == suiteName {
+			p.Suites = []Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf("no suite named '%s' found", suiteName)
 }
