@@ -163,7 +163,7 @@ func preRun() error {
 	}
 
 	// TODO Performing the "kind" check in the global run method is necessary for as long as we support the global
-	// `saucectl run`, rather then the framework specific `saucectl run {framework}`. After we drop the global run
+	// `saucectl run`, rather than the framework specific `saucectl run {framework}`. After we drop the global run
 	// support, the run command does not need to the determine the config type any longer, and each framework should
 	// perform this validation on its own.
 	d, err := config.Describe(gFlags.cfgFilePath)

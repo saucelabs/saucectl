@@ -62,6 +62,10 @@ const Android = "Android"
 func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
+	if cfgPath == "" {
+		return Project{}, nil
+	}
+
 	f, err := os.Open(cfgPath)
 	if err != nil {
 		return Project{}, fmt.Errorf("failed to locate project config: %v", err)
@@ -80,22 +84,25 @@ func FromFile(cfgPath string) (Project, error) {
 		return p, config.ErrUnknownCfg
 	}
 
+	return p, nil
+}
+
+// SetDefaults applies config defaults in case the user has left them blank.
+func SetDefaults(p *Project) {
 	if p.Sauce.Concurrency < 1 {
-		// Default concurrency is 2
 		p.Sauce.Concurrency = 2
 	}
 
-	for sidx, suite := range p.Suites {
-		for didx := range suite.Devices {
+	for i, suite := range p.Suites {
+		for j := range suite.Devices {
 			// Android is the only choice.
-			p.Suites[sidx].Devices[didx].PlatformName = Android
+			p.Suites[i].Devices[j].PlatformName = Android
+			p.Suites[i].Devices[j].Options.DeviceType = strings.ToUpper(p.Suites[i].Devices[j].Options.DeviceType)
 		}
-		for eidx := range suite.Emulators {
-			p.Suites[sidx].Emulators[eidx].PlatformName = Android
+		for j := range suite.Emulators {
+			p.Suites[i].Emulators[j].PlatformName = Android
 		}
 	}
-
-	return p, nil
 }
 
 // Validate validates basic configuration of the project and returns an error if any of the settings contain illegal
@@ -139,6 +146,10 @@ func validateDevices(suiteName string, devices []config.Device) error {
 	for didx, device := range devices {
 		if device.Name == "" && device.ID == "" {
 			return fmt.Errorf("missing device name or ID for suite: %s. Devices index: %d", suiteName, didx)
+		}
+		if device.Options.DeviceType != "" && !config.IsSupportedDeviceType(device.Options.DeviceType) {
+			return fmt.Errorf("deviceType: %s is unsupported for suite: %s. Devices index: %d. Supported device types: %s",
+				device.Options.DeviceType, suiteName, didx, strings.Join(config.SupportedDeviceTypes, ","))
 		}
 	}
 	return nil
