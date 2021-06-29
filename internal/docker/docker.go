@@ -6,13 +6,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/version"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/version"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -453,19 +454,35 @@ func (handler *Handler) ContainerRemove(ctx context.Context, srcContainerID stri
 
 // ProjectDir returns the project directory as is configured for the given image.
 func (handler *Handler) ProjectDir(ctx context.Context, imageID string) (string, error) {
-	ii, _, err := handler.client.ImageInspectWithRaw(ctx, imageID)
+	// // The image can tell us via a label where saucectl should mount the project files.
+	// // We default to the working dir of the container as the default mounting target.
+	return handler.getObjectLabel(ctx, imageID, "com.saucelabs.project-dir")
+}
+
+// ChromeVersion returns the version of chrome installed in the given imageID
+func (handler *Handler) ChromeVersion(ctx context.Context, imageID string) (string, error) {
+	return handler.getObjectLabel(ctx, imageID, "selenium_chrome_version")
+}
+
+// FirefoxVersion returns the version of firefox installed in the given imageID
+func (handler *Handler) FirefoxVersion(ctx context.Context, imageID string) (string, error) {
+	return handler.getObjectLabel(ctx, imageID, "selenium_firefox_version")
+}
+
+func (handler *Handler) getObjectLabel(ctx context.Context, objectID string, label string) (string, error) {
+	ii, _, err := handler.client.ImageInspectWithRaw(ctx, objectID)
 	if err != nil {
+		log.Info().Msg("Error inspecting")
 		return "", err
 	}
 
-	// The image can tell us via a label where saucectl should mount the project files.
-	// We default to the working dir of the container as the default mounting target.
-	p := ii.Config.WorkingDir
-	if v := ii.Config.Labels["com.saucelabs.project-dir"]; v != "" {
+	p := ""
+	if v := ii.Config.Labels[label]; v != "" {
 		p = v
 	}
 
 	return p, nil
+
 }
 
 // JobInfoFile returns the file containing the job details url for the given image.
