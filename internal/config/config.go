@@ -180,3 +180,16 @@ func StandardizeVersionFormat(version string) string {
 	}
 	return version
 }
+
+// SupportedDeviceTypes contains the list of supported device types.
+var SupportedDeviceTypes = []string{"ANY", "PHONE", "TABLET"}
+
+// IsSupportedDeviceType check that the specified deviceType is valid.
+func IsSupportedDeviceType(deviceType string) bool {
+	for _, dt := range SupportedDeviceTypes {
+		if dt == deviceType {
+			return true
+		}
+	}
+	return false
+}

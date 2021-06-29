@@ -97,6 +97,7 @@ func SetDefaults(p *Project) {
 		for j := range suite.Devices {
 			// Android is the only choice.
 			p.Suites[i].Devices[j].PlatformName = Android
+			p.Suites[i].Devices[j].Options.DeviceType = strings.ToUpper(p.Suites[i].Devices[j].Options.DeviceType)
 		}
 		for j := range suite.Emulators {
 			p.Suites[i].Emulators[j].PlatformName = Android
@@ -145,6 +146,10 @@ func validateDevices(suiteName string, devices []config.Device) error {
 	for didx, device := range devices {
 		if device.Name == "" && device.ID == "" {
 			return fmt.Errorf("missing device name or ID for suite: %s. Devices index: %d", suiteName, didx)
+		}
+		if device.Options.DeviceType != "" && !config.IsSupportedDeviceType(device.Options.DeviceType) {
+			return fmt.Errorf("deviceType: %s is unsupported for suite: %s. Devices index: %d. Supported device types: %s",
+				device.Options.DeviceType, suiteName, didx, strings.Join(config.SupportedDeviceTypes, ","))
 		}
 	}
 	return nil

@@ -19,8 +19,6 @@ var (
 	APIVersion = "v1alpha"
 )
 
-var supportedDeviceTypes = []string{"ANY", "PHONE", "TABLET"}
-
 // Project represents the xcuitest project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline"`
@@ -123,9 +121,9 @@ func Validate(p Project) error {
 				return fmt.Errorf("missing device name or id for suite: %s. Devices index: %d", suite.Name, didx)
 			}
 
-			if device.Options.DeviceType != "" && !isSupportedDeviceType(device.Options.DeviceType) {
+			if device.Options.DeviceType != "" && !config.IsSupportedDeviceType(device.Options.DeviceType) {
 				return fmt.Errorf("deviceType: %s is unsupported for suite: %s. Devices index: %d. Supported device types: %s",
-					device.Options.DeviceType, suite.Name, didx, strings.Join(supportedDeviceTypes, ","))
+					device.Options.DeviceType, suite.Name, didx, strings.Join(config.SupportedDeviceTypes, ","))
 			}
 		}
 	}
@@ -133,12 +131,3 @@ func Validate(p Project) error {
 	return nil
 }
 
-func isSupportedDeviceType(deviceType string) bool {
-	for _, dt := range supportedDeviceTypes {
-		if dt == deviceType {
-			return true
-		}
-	}
-
-	return false
-}
