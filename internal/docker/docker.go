@@ -472,7 +472,6 @@ func (handler *Handler) FirefoxVersion(ctx context.Context, imageID string) (str
 func (handler *Handler) getObjectLabel(ctx context.Context, objectID string, label string) (string, error) {
 	ii, _, err := handler.client.ImageInspectWithRaw(ctx, objectID)
 	if err != nil {
-		log.Info().Msg("Error inspecting")
 		return "", err
 	}
 
