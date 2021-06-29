@@ -265,15 +265,18 @@ func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, re
 		containerID, output, jobDetails, passed, skipped, err := r.runSuite(opts)
 
 		browser := opts.Browser
-		if browser == "firefox" {
-			version, err := r.docker.FirefoxVersion(r.Ctx, opts.Docker.Image)
-			if err == nil {
-				browser = fmt.Sprintf("%s %s", browser, version)
-			}
-		} else if browser == "chrome" {
-			version, err := r.docker.ChromeVersion(r.Ctx, opts.Docker.Image)
-			if err == nil {
-				browser = fmt.Sprintf("%s %s", browser, version)
+		// Playwright uses its own bundled browsers, not the ones installed in the image
+		if r.Framework.Name != "playwright" {
+			if browser == "firefox" {
+				version, err := r.docker.FirefoxVersion(r.Ctx, opts.Docker.Image)
+				if err == nil {
+					browser = fmt.Sprintf("%s %s", browser, version)
+				}
+			} else if browser == "chrome" {
+				version, err := r.docker.ChromeVersion(r.Ctx, opts.Docker.Image)
+				if err == nil {
+					browser = fmt.Sprintf("%s %s", browser, version)
+				}
 			}
 		}
 
