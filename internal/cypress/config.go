@@ -9,9 +9,8 @@ import (
 	"unicode"
 
 	"github.com/rs/zerolog/log"
-	"gopkg.in/yaml.v2"
-
 	"github.com/saucelabs/saucectl/internal/config"
+	"gopkg.in/yaml.v2"
 )
 
 // Config descriptors.
@@ -104,30 +103,24 @@ func FromFile(cfgPath string) (Project, error) {
 
 	p.Cypress.Key = os.ExpandEnv(p.Cypress.Key)
 
-	p.Cypress.Version = config.StandardizeVersionFormat(p.Cypress.Version)
-
-	if p.Cypress.Version == "" {
-		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
-	}
-
-	cypressConfigFileCompletePath := filepath.Join(p.RootDir, p.Cypress.ConfigFile)
-	if _, err := os.Stat(cypressConfigFileCompletePath); err != nil {
-		return p, fmt.Errorf("unable to locate %s", cypressConfigFileCompletePath)
-	}
-	configDir := filepath.Dir(cypressConfigFileCompletePath)
-
-	// We must locate the cypress folder.
-	cPath := filepath.Join(configDir, "cypress")
-	if _, err := os.Stat(cPath); err != nil {
-		return p, fmt.Errorf("unable to locate the cypress folder in %s", configDir)
-	}
-	p.Cypress.ProjectPath = cPath
-
-	// Check rootDir if it is set.
-	if p.RootDir != "" {
-		if _, err := os.Stat(p.RootDir); err != nil {
-			return p, fmt.Errorf("unable to locate the rootDir folder %s", p.RootDir)
+	for _, s := range p.Suites {
+		for kk, v := range s.Config.Env {
+			s.Config.Env[kk] = os.ExpandEnv(v)
 		}
+	}
+
+	return p, nil
+}
+
+// SetDefaults applies config defaults in case the user has left them blank.
+func SetDefaults(p *Project) {
+	if p.Sauce.Concurrency < 1 {
+		p.Sauce.Concurrency = 2
+	}
+
+	// Default mode to Mount
+	if p.Docker.FileTransfer == "" {
+		p.Docker.FileTransfer = config.DockerFileMount
 	}
 
 	// Default rootDir to .
@@ -137,49 +130,41 @@ func FromFile(cfgPath string) (Project, error) {
 			"(equivalent to 'rootDir: .'). Please set 'rootDir' explicitly in your config!")
 	}
 
-	// Optionally include the env file if it exists.
-	envFile := filepath.Join(configDir, "cypress.env.json")
-	if _, err := os.Stat(envFile); err == nil {
-		p.Cypress.EnvFile = envFile
-	}
-
-	// Default mode to Mount
-	if p.Docker.FileTransfer == "" {
-		p.Docker.FileTransfer = config.DockerFileMount
-	}
-
-	if p.Docker.Image != "" {
-		log.Info().Msgf(
-			"Ignoring framework version for Docker, using provided image %s (only applicable to docker mode)",
-			p.Docker.Image)
-	}
-
-	if p.Sauce.Concurrency < 1 {
-		// Default concurrency is 2
-		p.Sauce.Concurrency = 2
-	}
-
-	for i, s := range p.Suites {
-		env := map[string]string{}
-		for k, v := range s.Config.Env {
-			env[k] = os.ExpandEnv(v)
-		}
-		p.Suites[i].Config.Env = env
-
+	for k := range p.Suites {
+		s := &p.Suites[k]
 		if s.PlatformName == "" {
 			s.PlatformName = "Windows 10"
 		}
 	}
-
-	return p, nil
 }
 
 // Validate validates basic configuration of the project and returns an error if any of the settings contain illegal
 // values. This is not an exhaustive operation and further validation should be performed both in the client and/or
 // server side depending on the workflow that is executed.
-func Validate(p Project) error {
-	if len(p.Suites) == 0 {
-		return errors.New("no suites defined")
+func Validate(p *Project) error {
+	p.Cypress.Version = config.StandardizeVersionFormat(p.Cypress.Version)
+
+	if p.Cypress.Version == "" {
+		return errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+	}
+
+	cypressConfigFileCompletePath := filepath.Join(p.RootDir, p.Cypress.ConfigFile)
+	if _, err := os.Stat(cypressConfigFileCompletePath); err != nil {
+		return fmt.Errorf("unable to locate %s", cypressConfigFileCompletePath)
+	}
+	configDir := filepath.Dir(cypressConfigFileCompletePath)
+
+	// We must locate the cypress folder.
+	cPath := filepath.Join(configDir, "cypress")
+	if _, err := os.Stat(cPath); err != nil {
+		return fmt.Errorf("unable to locate the cypress folder in %s", configDir)
+	}
+	p.Cypress.ProjectPath = cPath
+
+	// Optionally include the env file if it exists.
+	envFile := filepath.Join(configDir, "cypress.env.json")
+	if _, err := os.Stat(envFile); err == nil {
+		p.Cypress.EnvFile = envFile
 	}
 
 	// Validate docker.
@@ -189,7 +174,17 @@ func Validate(p Project) error {
 			strings.Join([]string{string(config.DockerFileMount), string(config.DockerFileCopy)}, "|"))
 	}
 
+	// Check rootDir exists.
+	if p.RootDir != "" {
+		if _, err := os.Stat(p.RootDir); err != nil {
+			return fmt.Errorf("unable to locate the rootDir folder %s", p.RootDir)
+		}
+	}
+
 	// Validate suites.
+	if len(p.Suites) == 0 {
+		return errors.New("no suites defined")
+	}
 	suiteNames := make(map[string]bool)
 	for _, s := range p.Suites {
 		if _, seen := suiteNames[s.Name]; seen {

@@ -92,8 +92,9 @@ func runCypress(cmd *cobra.Command, flags cypressFlags, tc testcomposer.Client, 
 	if err := applyCypressFlags(cmd, &p, flags); err != nil {
 		return 1, err
 	}
+	cypress.SetDefaults(&p)
 
-	if err := cypress.Validate(p); err != nil {
+	if err := cypress.Validate(&p); err != nil {
 		return 1, err
 	}
 
