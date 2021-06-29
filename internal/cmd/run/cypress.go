@@ -20,9 +20,9 @@ import (
 
 type cypressFlags struct {
 	RootDir string
-	Suite     cypress.Suite
-	Cypress   cypress.Cypress
-	NPM       config.Npm
+	Suite   cypress.Suite
+	Cypress cypress.Cypress
+	NPM     config.Npm
 }
 
 // NewCypressCmd creates the 'run' command for Cypress.
@@ -88,22 +88,6 @@ func runCypress(cmd *cobra.Command, flags cypressFlags, tc testcomposer.Client, 
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
 	if err := applyCypressFlags(cmd, &p, flags); err != nil {
 		return 1, err
-	}
-
-	if p.Defaults.Mode == "" {
-		p.Defaults.Mode = "sauce"
-	}
-	for i, s := range p.Suites {
-		if s.Mode == "" {
-			s.Mode = p.Defaults.Mode
-		}
-		p.Suites[i] = s
-	}
-	if gFlags.testEnv != "" {
-		for i, s := range p.Suites {
-			s.Mode = gFlags.testEnv
-			p.Suites[i] = s
-		}
 	}
 
 	if err := cypress.Validate(p); err != nil {
