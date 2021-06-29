@@ -64,8 +64,11 @@ func NewCypressCmd() *cobra.Command {
 	// Cypress
 	f.StringVar(&lflags.Cypress.Version, "cypress.version", "", "The Cypress version to use")
 	f.StringVar(&lflags.Cypress.ConfigFile, "cypress.configFile", "", "The path to the cypress.json config file")
-	f.StringVar(&lflags.Cypress.Key, "cypress.key", "", "")
-	f.BoolVar(&lflags.Cypress.Record, "cypress.record", false, "")
+	f.StringVar(&lflags.Cypress.Key, "cypress.key", "", "The Cypress record key")
+	f.BoolVar(&lflags.Cypress.Record, "cypress.record", false, "Whether or not to record tests to the cypress dashboard")
+
+	// Video & Screen(shots)
+	f.StringVar(&lflags.Suite.ScreenResolution, "screenResolution", "", "The screen resolution")
 
 	// Misc
 	f.StringVar(&lflags.RootDir, "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
@@ -168,6 +171,15 @@ func filterCypressSuite(c *cypress.Project) error {
 func applyCypressFlags(cmd *cobra.Command, p *cypress.Project, flags cypressFlags) error {
 	if flags.Cypress.Version != "" {
 		p.Cypress.Version = flags.Cypress.Version
+	}
+	if flags.Cypress.ConfigFile != "" {
+		p.Cypress.ConfigFile = flags.Cypress.ConfigFile
+	}
+	if flags.Cypress.Key != "" {
+		p.Cypress.Key = flags.Cypress.Key
+	}
+	if cmd.Flags().Changed("cyoress.record") {
+		p.Cypress.Record = flags.Cypress.Record
 	}
 
 	if cmd.Flags().Changed("rootDir") || p.RootDir == "" {
