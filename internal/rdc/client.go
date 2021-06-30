@@ -56,10 +56,10 @@ type readJobScreenshot struct {
 
 type readJobResponse struct {
 	AutomationBackend  string              `json:"automation_backend,omitempty"`
-	FrameworkLogUrl    string              `json:"framework_log_url,omitempty"`
-	DeviceLogUrl       string              `json:"device_log_url,omitempty"`
-	TestCasesUrl       string              `json:"test_cases_url,omitempty"`
-	VideoUrl           string              `json:"video_url,omitempty"`
+	FrameworkLogURL    string              `json:"framework_log_url,omitempty"`
+	DeviceLogURL       string              `json:"device_log_url,omitempty"`
+	TestCasesURL       string              `json:"test_cases_url,omitempty"`
+	VideoURL           string              `json:"video_url,omitempty"`
 	Screenshots        []readJobScreenshot `json:"screenshots,omitempty"`
 	Status             string              `json:"status,omitempty"`
 	ConsolidatedStatus string              `json:"consolidated_status,omitempty"`
@@ -219,10 +219,10 @@ func (c *Client) GetJobAssetFileNames(ctx context.Context, jobID string) ([]stri
 func extractAssetsFileNames(jr readJobResponse) []string {
 	var files []string
 
-	if strings.HasSuffix(jr.DeviceLogUrl, "/deviceLogs") {
+	if strings.HasSuffix(jr.DeviceLogURL, "/deviceLogs") {
 		files = append(files, "device.log")
 	}
-	if strings.HasSuffix(jr.VideoUrl, "/video.mp4") {
+	if strings.HasSuffix(jr.VideoURL, "/video.mp4") {
 		files = append(files, "video.mp4")
 	}
 	if len(jr.Screenshots) > 0 {
@@ -231,7 +231,7 @@ func extractAssetsFileNames(jr readJobResponse) []string {
 
 	// xcuitest.log is available for espresso according to API, but will always be empty,
 	// => hiding it until API is fixed.
-	if jr.AutomationBackend == xcuitest.Kind && strings.HasSuffix(jr.FrameworkLogUrl, "/xcuitestLogs") {
+	if jr.AutomationBackend == xcuitest.Kind && strings.HasSuffix(jr.FrameworkLogURL, "/xcuitestLogs") {
 		files = append(files, "xcuitest.log")
 	}
 	// junit.xml is available only for native frameworks.
