@@ -5,46 +5,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestFilterCypressSuite(t *testing.T) {
-	s1 := cypress.Suite{Name: "suite1"}
-	s2 := cypress.Suite{Name: "suite2"}
-	s3 := cypress.Suite{Name: "suite3"}
-	s4 := cypress.Suite{Name: "suite4"}
-
-	tests := []struct {
-		filterName    string
-		wantErr       bool
-		expectedCount int
-		expectUniq    string
-	}{
-		{filterName: "", wantErr: false, expectedCount: 4, expectUniq: ""},
-		{filterName: "impossible", wantErr: true, expectedCount: 0, expectUniq: ""},
-		{filterName: "suite1", wantErr: false, expectedCount: 1, expectUniq: "suite1"},
-		{filterName: "suite4", wantErr: false, expectedCount: 1, expectUniq: "suite4"},
-	}
-
-	for _, tt := range tests {
-		p := &cypress.Project{
-			Suites: []cypress.Suite{s1, s2, s3, s4},
-		}
-		gFlags.suiteName = tt.filterName
-		err := filterCypressSuite(p)
-		if tt.wantErr {
-			assert.NotNil(t, err, "error not received")
-			continue
-		}
-		assert.Equal(t, tt.expectedCount, len(p.Suites), "suite count mismatch")
-		if tt.expectUniq != "" {
-			assert.Equal(t, tt.expectUniq, p.Suites[0].Name, "suite name mismatch")
-		}
-	}
-}
 
 func TestFilterPlaywrightSuite(t *testing.T) {
 	s1 := playwright.Suite{Name: "suite1"}

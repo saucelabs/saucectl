@@ -196,7 +196,7 @@ func SplitSuites(p Project) (Project, Project) {
 	var dockerSuites []Suite
 	var sauceSuites []Suite
 	for _, s := range p.Suites {
-		if s.Mode == "docker" || p.Defaults.Mode == "docker" {
+		if s.Mode == "docker" || (s.Mode == "" && p.Defaults.Mode == "docker") {
 			dockerSuites = append(dockerSuites, s)
 		} else {
 			sauceSuites = append(sauceSuites, s)

@@ -97,7 +97,6 @@ func TestStartContainer(t *testing.T) {
 	project := cypress.Project{
 		Cypress: cypress.Cypress{
 			ConfigFile:  "../../../tests/e2e/cypress.json",
-			ProjectPath: "../../../tests/e2e/",
 		},
 	}
 	mockDocker := mocks.FakeClient{

@@ -223,7 +223,8 @@ func applyTestcafeFlags(cmd *cobra.Command, p *testcafe.Project, flags testcafeF
 	}
 
 	for k, v := range gFlags.env {
-		for _, s := range p.Suites {
+		for ks := range p.Suites {
+			s := &p.Suites[ks]
 			if s.Env == nil {
 				s.Env = map[string]string{}
 			}
