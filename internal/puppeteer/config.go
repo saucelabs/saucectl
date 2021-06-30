@@ -80,6 +80,7 @@ func FromFile(cfgPath string) (Project, error) {
 	return p, nil
 }
 
+// SetDefaults applies config defaults in case the user has left them blank.
 func SetDefaults(p *Project) {
 	if p.Kind == "" {
 		p.Kind = Kind
@@ -99,6 +100,9 @@ func SetDefaults(p *Project) {
 	}
 }
 
+// Validate validates basic configuration of the project and returns an error if any of the settings contain illegal
+// values. This is not an exhaustive operation and further validation should be performed both in the client and/or
+// server side depending on the workflow that is executed.
 func Validate(p *Project) error {
 	p.Puppeteer.Version = config.StandardizeVersionFormat(p.Puppeteer.Version)
 	if p.Puppeteer.Version == "" {
