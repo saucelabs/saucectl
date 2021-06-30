@@ -1,7 +1,6 @@
 package run
 
 import (
-	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -103,16 +102,6 @@ func runPuppeteerInDocker(p puppeteer.Project, testco testcomposer.Client, rs re
 	return cd.RunProject()
 }
 
-func filterPuppeteerSuite(c *puppeteer.Project) error {
-	for _, s := range c.Suites {
-		if s.Name == gFlags.suiteName {
-			c.Suites = []puppeteer.Suite{s}
-			return nil
-		}
-	}
-	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
-}
-
 func applyPuppeteerFlags(cmd *cobra.Command, p *puppeteer.Project, flags puppeteerFlags) error {
 	if flags.Puppeteer.Version != "" {
 		p.Puppeteer.Version = flags.Puppeteer.Version
@@ -139,7 +128,7 @@ func applyPuppeteerFlags(cmd *cobra.Command, p *puppeteer.Project, flags puppete
 	}
 
 	if cmd.Flags().Lookup("suite").Changed {
-		if err := filterPuppeteerSuite(p); err != nil {
+		if err := puppeteer.FilterSuites(p, gFlags.suiteName); err != nil {
 			return err
 		}
 	}
