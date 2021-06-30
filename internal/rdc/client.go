@@ -216,6 +216,7 @@ func (c *Client) GetJobAssetFileNames(ctx context.Context, jobID string) ([]stri
 	return extractAssetsFileNames(jr), nil
 }
 
+// extractAssetsFileNames infers available assets from an RDC job.
 func extractAssetsFileNames(jr readJobResponse) []string {
 	var files []string
 
@@ -241,6 +242,8 @@ func extractAssetsFileNames(jr readJobResponse) []string {
 	return files
 }
 
+// jobURIMappings contains the assets that don't get accessed by their filename.
+// Those items also requires to send "Accept: text/plain" header to get raw content instead of json.
 var jobURIMappings = map[string]string{
 	"device.log":      "deviceLogs",
 	"xcuitest.log":    "xcuitestLogs",
