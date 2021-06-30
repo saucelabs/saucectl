@@ -456,7 +456,7 @@ func (handler *Handler) ContainerRemove(ctx context.Context, srcContainerID stri
 func (handler *Handler) ProjectDir(ctx context.Context, imageID string) (string, error) {
 	// The image can tell us via a label where saucectl should mount the project files.
 	// We default to the working dir of the container as the default mounting target.
-	return handler.getObjectLabel(ctx, imageID, "com.saucelabs.project-dir")
+	return handler.getImageLabel(ctx, imageID, "com.saucelabs.project-dir")
 }
 
 // ChromeVersion returns the version of chrome installed in the given imageID
