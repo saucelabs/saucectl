@@ -2,7 +2,6 @@ package run
 
 import (
 	"errors"
-	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -156,17 +155,6 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 		},
 	}
 	return r.RunProject()
-}
-
-// TODO delete me and convert tests to cypress.FilterSuites
-func filterCypressSuite(c *cypress.Project) error {
-	for _, s := range c.Suites {
-		if s.Name == gFlags.suiteName {
-			c.Suites = []cypress.Suite{s}
-			return nil
-		}
-	}
-	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
 }
 
 func applyCypressFlags(cmd *cobra.Command, p *cypress.Project, flags cypressFlags) error {

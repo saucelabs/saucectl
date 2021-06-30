@@ -512,6 +512,11 @@ func unregisterSignalCapture(c chan os.Signal) {
 
 // uploadSauceConfig adds job configuration as an asset.
 func (r *CloudRunner) uploadSauceConfig(jobID string, cfgFile string) {
+	// A config file is optional.
+	if cfgFile == "" {
+		return
+	}
+
 	f, err := os.Open(cfgFile)
 	if err != nil {
 		log.Warn().Msgf("failed to open configuration: %v", err)

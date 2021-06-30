@@ -150,7 +150,7 @@ func Validate(p *Project) error {
 
 	cypressConfigFileCompletePath := filepath.Join(p.RootDir, p.Cypress.ConfigFile)
 	if _, err := os.Stat(cypressConfigFileCompletePath); err != nil {
-		return fmt.Errorf("unable to locate %s", cypressConfigFileCompletePath)
+		return fmt.Errorf("unable to locate the cypress config file at %s", cypressConfigFileCompletePath)
 	}
 	configDir := filepath.Dir(cypressConfigFileCompletePath)
 
