@@ -162,7 +162,7 @@ jobs:
 
       - name: Saucectl RUN - CLI Driven
         run: |
-          ./saucectl run cypress "**/*.*" -c "" --rootDir tests/e2e/ --browser chrome --cypress.version 7.3.0 --cypress.configFile cypress.json --timeout 10m
+          ./saucectl run cypress "**/*.*" -c "" --name "CLI Driven" --rootDir tests/e2e/ --browser chrome --cypress.version 7.3.0 --cypress.configFile cypress.json --timeout 10m
   cypress-windows:
     needs: build
     runs-on: windows-latest
