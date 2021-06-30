@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"testing"
 	"time"
 
@@ -253,9 +254,79 @@ func TestClient_GetJobStatus(t *testing.T) {
 }
 
 func TestClient_GetJobAssetFileNames(t *testing.T) {
-	client := New("", "test-user", "test-password", 1*time.Second, config.ArtifactDownload{})
-	files, _ := client.GetJobAssetFileNames(context.Background(), "dummy-job")
-	assert.True(t, reflect.DeepEqual(files, jobAssetsList))
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/rdc/jobs/1":
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"automation_backend":"xcuitest","framework_log_url":"https://dummy/xcuitestLogs","device_log_url":"https://dummy/deviceLogs","video_url":"https://dummy/video.mp4"}`))
+		case "/v1/rdc/jobs/2":
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"automation_backend":"xcuitest","framework_log_url":"https://dummy/xcuitestLogs","screenshots":[{"id":"sc1"}],"video_url":"https://dummy/video.mp4"}`))
+		case "/v1/rdc/jobs/3":
+			w.WriteHeader(http.StatusOK)
+			// The discrepancy between automation_backend and framework_log_url is wanted, as this is how the backend is currently responding.
+			w.Write([]byte(`{"automation_backend":"espresso","framework_log_url":"https://dummy/xcuitestLogs","video_url":"https://dummy/video.mp4"}`))
+		case "/v1/rdc/jobs/4":
+			w.WriteHeader(http.StatusOK)
+			// The discrepancy between automation_backend and framework_log_url is wanted, as this is how the backend is currently responding.
+			w.Write([]byte(`{"automation_backend":"espresso","framework_log_url":"https://dummy/xcuitestLogs","device_log_url":"https://dummy/deviceLogs","screenshots":[{"id":"sc1"}],"video_url":"https://dummy/video.mp4"}`))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer ts.Close()
+	client := New(ts.URL, "test-user", "test-password", 1*time.Second, config.ArtifactDownload{})
+
+	testCases := []struct {
+		name     string
+		jobID    string
+		expected []string
+		wantErr  error
+	}{
+		{
+			name:     "XCUITest w/o screenshots",
+			jobID:    "1",
+			expected: []string{"device.log", "junit.xml", "video.mp4", "xcuitest.log"},
+			wantErr:  nil,
+		},
+		{
+			name:     "XCUITest w/ screenshots w/o deviceLogs",
+			jobID:    "2",
+			expected: []string{"junit.xml", "screenshots.zip", "video.mp4", "xcuitest.log"},
+			wantErr:  nil,
+		},
+		{
+			name:     "espresso w/o screenshots",
+			jobID:    "3",
+			expected: []string{"junit.xml", "video.mp4"},
+			wantErr:  nil,
+		},
+		{
+			name:     "espresso w/ screenshots w/o deviceLogs",
+			jobID:    "4",
+			expected: []string{"device.log", "junit.xml", "screenshots.zip", "video.mp4"},
+			wantErr:  nil,
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			files, err := client.GetJobAssetFileNames(context.Background(), tt.jobID)
+			if err != nil {
+				if !reflect.DeepEqual(err, tt.wantErr) {
+					t.Errorf("GetJobAssetFileNames(): got: %v, want: %v", err, tt.wantErr)
+				}
+				return
+			}
+			if tt.wantErr != nil {
+				t.Errorf("GetJobAssetFileNames(): got: %v, want: %v", err, tt.wantErr)
+			}
+			sort.Strings(files)
+			sort.Strings(tt.expected)
+			if !reflect.DeepEqual(files, tt.expected) {
+				t.Errorf("GetJobAssetFileNames(): got: %v, want: %v", files, tt.expected)
+			}
+		})
+	}
 }
 
 func TestClient_GetJobAssetFileContent(t *testing.T) {
@@ -263,7 +334,7 @@ func TestClient_GetJobAssetFileContent(t *testing.T) {
 		switch r.URL.Path {
 		case "/v1/rdc/jobs/jobID/deviceLogs":
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`[{"id": 1,"time": "15:10:16","level": "INFO","message": "Icing : Usage reports ok 0, Failed Usage reports 0, indexed 0, rejected 0"},{"id": 2,"time": "15:10:16","level": "INFO","message": "GmsCoreXrpcWrapper : Returning a channel provider with trafficStatsTag=12803"},{"id": 3,"time": "15:10:16","level": "INFO","message": "Icing : Usage reports ok 0, Failed Usage reports 0, indexed 0, rejected 0"}]`))
+			w.Write([]byte("INFO 15:10:16 1 Icing : Usage reports ok 0, Failed Usage reports 0, indexed 0, rejected 0\nINFO 15:10:16 2 GmsCoreXrpcWrapper : Returning a channel provider with trafficStatsTag=12803\nINFO 15:10:16 3 Icing : Usage reports ok 0, Failed Usage reports 0, indexed 0, rejected 0\n"))
 		case "/v1/rdc/jobs/jobID/junit.xml":
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("<xml>junit.xml</xml>"))
@@ -299,7 +370,7 @@ func TestClient_GetJobAssetFileContent(t *testing.T) {
 			name:     "Download invalid filename",
 			jobID:    "jobID",
 			fileName: "buggy-file.txt",
-			wantErr:  errors.New("asset 'buggy-file.txt' not available"),
+			wantErr:  errors.New("asset not found"),
 		},
 	}
 	for _, tt := range testCases {
@@ -315,6 +386,8 @@ func TestClient_DownloadArtifact(t *testing.T) {
 	fileContent := "<xml>junit.xml</xml>"
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case "/v1/rdc/jobs/test-123":
+			w.Write([]byte(`{"automation_backend":"espresso"}`))
 		case "/v1/rdc/jobs/test-123/junit.xml":
 			w.Write([]byte(fileContent))
 		default:
@@ -363,10 +436,10 @@ func TestClient_GetDevices(t *testing.T) {
 	defer ts.Close()
 
 	cl := Client{
-		HTTPClient:     &http.Client{Timeout: 1 * time.Second},
-		URL:            ts.URL,
-		Username:       "dummy-user",
-		AccessKey:      "dummy-key",
+		HTTPClient: &http.Client{Timeout: 1 * time.Second},
+		URL:        ts.URL,
+		Username:   "dummy-user",
+		AccessKey:  "dummy-key",
 	}
 	type args struct {
 		ctx context.Context
