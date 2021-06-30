@@ -69,13 +69,6 @@ type Cypress struct {
 
 	// Key represents the cypress framework key flag.
 	Key string `yaml:"key" json:"key"`
-
-	// ProjectPath is the path to the cypress directory itself. Not set by the user, but is instead based on the
-	// location of ConfigFile.
-	ProjectPath string `yaml:"-" json:"-"`
-
-	// EnvFile is the path to cypress.env.json. Not set by the user, but is instead based on the location of ConfigFile.
-	EnvFile string `yaml:"-" json:"-"`
 }
 
 // FromFile creates a new cypress Project based on the filepath cfgPath.
@@ -158,13 +151,6 @@ func Validate(p *Project) error {
 	cPath := filepath.Join(configDir, "cypress")
 	if _, err := os.Stat(cPath); err != nil {
 		return fmt.Errorf("unable to locate the cypress folder in %s", configDir)
-	}
-	p.Cypress.ProjectPath = cPath
-
-	// Optionally include the env file if it exists.
-	envFile := filepath.Join(configDir, "cypress.env.json")
-	if _, err := os.Stat(envFile); err == nil {
-		p.Cypress.EnvFile = envFile
 	}
 
 	// Validate docker.
