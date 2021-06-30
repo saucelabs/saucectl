@@ -462,13 +462,13 @@ func (handler *Handler) ProjectDir(ctx context.Context, imageID string) (string,
 // ChromeVersion returns the version of chrome installed in the given imageID
 func (handler *Handler) ChromeVersion(ctx context.Context, imageID string) (string, error) {
 	// This label is set in the testrunner-image docker image
-	return handler.getImageLabel(ctx, imageID, "selenium_chrome_version")
+	return handler.getImageLabel(ctx, imageID, "com.saucelabs.chrome_version")
 }
 
 // FirefoxVersion returns the version of firefox installed in the given imageID
 func (handler *Handler) FirefoxVersion(ctx context.Context, imageID string) (string, error) {
 	// This label is set in the testrunner-image docker image
-	return handler.getImageLabel(ctx, imageID, "selenium_firefox_version")
+	return handler.getImageLabel(ctx, imageID, "com.saucelabs.firefox_version")
 }
 
 func (handler *Handler) getImageLabel(ctx context.Context, imageID string, label string) (string, error) {
