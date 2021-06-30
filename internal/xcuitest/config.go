@@ -3,6 +3,7 @@ package xcuitest
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 	"strings"
 
@@ -94,6 +95,11 @@ func SetDefaults(p *Project) {
 // values. This is not an exhaustive operation and further validation should be performed both in the client and/or
 // server side depending on the workflow that is executed.
 func Validate(p Project) error {
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		return errors.New("no sauce region set")
+	}
+
 	if p.Xcuitest.App == "" {
 		return errors.New("missing path to app .ipa")
 	}

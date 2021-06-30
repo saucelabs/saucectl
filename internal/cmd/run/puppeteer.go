@@ -1,7 +1,6 @@
 package run
 
 import (
-	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -87,13 +86,9 @@ func runPuppeteer(cmd *cobra.Command, flags puppeteerFlags, tc testcomposer.Clie
 	}
 
 	regio := region.FromString(p.Sauce.Region)
-	if regio == region.None {
-		log.Error().Str("region", gFlags.regionFlag).Msg("Unable to determine sauce region.")
-		return 1, errors.New("no sauce region set")
-	}
-
 	rs.URL = regio.APIBaseURL()
 	tc.URL = regio.APIBaseURL()
+
 	return runPuppeteerInDocker(p, tc, rs)
 }
 

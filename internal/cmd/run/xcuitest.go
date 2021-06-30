@@ -1,7 +1,6 @@
 package run
 
 import (
-	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
@@ -77,14 +76,7 @@ func runXcuitest(cmd *cobra.Command, flags xcuitestFlags, tc testcomposer.Client
 	applyXCUITestFlags(&p, flags)
 	xcuitest.SetDefaults(&p)
 
-	regio := region.FromString(p.Sauce.Region)
-	if regio == region.None {
-		log.Error().Str("region", gFlags.regionFlag).Msg("Unable to determine sauce region.")
-		return 1, errors.New("no sauce region set")
-	}
-
-	err = xcuitest.Validate(p)
-	if err != nil {
+	if err := xcuitest.Validate(p); err != nil {
 		return 1, err
 	}
 
@@ -93,6 +85,8 @@ func runXcuitest(cmd *cobra.Command, flags xcuitestFlags, tc testcomposer.Client
 			return 1, err
 		}
 	}
+
+	regio := region.FromString(p.Sauce.Region)
 
 	tc.URL = regio.APIBaseURL()
 	rs.URL = regio.APIBaseURL()

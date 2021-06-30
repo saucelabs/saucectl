@@ -1,7 +1,6 @@
 package run
 
 import (
-	"errors"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -98,10 +97,6 @@ func runCypress(cmd *cobra.Command, flags cypressFlags, tc testcomposer.Client, 
 	}
 
 	regio := region.FromString(p.Sauce.Region)
-	if regio == region.None {
-		log.Error().Str("region", gFlags.regionFlag).Msg("Unable to determine sauce region.")
-		return 1, errors.New("no sauce region set")
-	}
 
 	tc.URL = regio.APIBaseURL()
 	rs.URL = regio.APIBaseURL()

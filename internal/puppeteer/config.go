@@ -3,6 +3,7 @@ package puppeteer
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 
 	"github.com/saucelabs/saucectl/internal/config"
@@ -109,6 +110,11 @@ func Validate(p *Project) error {
 		if _, err := os.Stat(p.RootDir); err != nil {
 			return fmt.Errorf("unable to locate the rootDir folder %s", p.RootDir)
 		}
+	}
+
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		return errors.New("no sauce region set")
 	}
 
 	return nil
