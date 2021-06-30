@@ -108,6 +108,14 @@ func FromFile(cfgPath string) (Project, error) {
 
 // SetDefaults applies config defaults in case the user has left them blank.
 func SetDefaults(p *Project) {
+	if p.Kind == "" {
+		p.Kind = Kind
+	}
+
+	if p.APIVersion == "" {
+		p.APIVersion = APIVersion
+	}
+
 	if p.Sauce.Concurrency < 1 {
 		p.Sauce.Concurrency = 2
 	}
