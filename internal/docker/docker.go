@@ -475,13 +475,7 @@ func (handler *Handler) getObjectLabel(ctx context.Context, objectID string, lab
 		return "", err
 	}
 
-	p := ""
-	if v := ii.Config.Labels[label]; v != "" {
-		p = v
-	}
-
-	return p, nil
-
+	return ii.Config.Labels[label], nil
 }
 
 // JobInfoFile returns the file containing the job details url for the given image.
