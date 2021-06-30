@@ -18,12 +18,13 @@ func TestValidateThrowsErrors(t *testing.T) {
 	}{
 		{
 			name:        "validating throws error on empty app",
-			p:           &Project{},
+			p:           &Project{Sauce: config.SauceConfig{Region: "us-west-1"}},
 			expectedErr: errors.New("missing path to app .apk"),
 		},
 		{
 			name: "validating throws error on app missing .apk",
 			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
 					App: "/path/to/app",
 				},
@@ -33,6 +34,7 @@ func TestValidateThrowsErrors(t *testing.T) {
 		{
 			name: "validating throws error on empty app",
 			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
 					App: "/path/to/app.apk",
 				},
@@ -42,6 +44,7 @@ func TestValidateThrowsErrors(t *testing.T) {
 		{
 			name: "validating throws error on test app missing .apk",
 			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
 					App:     "/path/to/app.apk",
 					TestApp: "/path/to/testApp",
@@ -52,6 +55,7 @@ func TestValidateThrowsErrors(t *testing.T) {
 		{
 			name: "validating throws error on missing suites",
 			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
 					App:     "/path/to/app.apk",
 					TestApp: "/path/to/testApp.apk",
@@ -62,6 +66,7 @@ func TestValidateThrowsErrors(t *testing.T) {
 		{
 			name: "validating throws error on missing devices",
 			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
 					App:     "/path/to/app.apk",
 					TestApp: "/path/to/testApp.apk",
@@ -78,6 +83,7 @@ func TestValidateThrowsErrors(t *testing.T) {
 		{
 			name: "validating throws error on missing device name",
 			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
 					App:     "/path/to/app.apk",
 					TestApp: "/path/to/testApp.apk",
@@ -98,6 +104,7 @@ func TestValidateThrowsErrors(t *testing.T) {
 		{
 			name: "validating throws error on missing Emulator suffix on device name",
 			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
 					App:     "/path/to/app.apk",
 					TestApp: "/path/to/testApp.apk",
@@ -118,6 +125,7 @@ func TestValidateThrowsErrors(t *testing.T) {
 		{
 			name: "validating throws error on missing platform versions",
 			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
 					App:     "/path/to/app.apk",
 					TestApp: "/path/to/testApp.apk",
@@ -191,7 +199,7 @@ suites:
 				},
 				Emulators: []config.Emulator{
 					{
-						Name:         "Google Pixel C GoogleAPI Emulator",
+						Name: "Google Pixel C GoogleAPI Emulator",
 						PlatformVersions: []string{
 							"8.1",
 						},
