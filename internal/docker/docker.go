@@ -459,18 +459,6 @@ func (handler *Handler) ProjectDir(ctx context.Context, imageID string) (string,
 	return handler.getImageLabel(ctx, imageID, "com.saucelabs.project-dir")
 }
 
-// ChromeVersion returns the version of chrome installed in the given imageID
-func (handler *Handler) ChromeVersion(ctx context.Context, imageID string) (string, error) {
-	// This label is set in the testrunner-image docker image
-	return handler.getImageLabel(ctx, imageID, "com.saucelabs.chrome_version")
-}
-
-// FirefoxVersion returns the version of firefox installed in the given imageID
-func (handler *Handler) FirefoxVersion(ctx context.Context, imageID string) (string, error) {
-	// This label is set in the testrunner-image docker image
-	return handler.getImageLabel(ctx, imageID, "com.saucelabs.firefox_version")
-}
-
 func (handler *Handler) getImageLabel(ctx context.Context, imageID string, label string) (string, error) {
 	ii, _, err := handler.client.ImageInspectWithRaw(ctx, imageID)
 	if err != nil {
@@ -478,6 +466,19 @@ func (handler *Handler) getImageLabel(ctx context.Context, imageID string, label
 	}
 
 	return ii.Config.Labels[label], nil
+}
+
+// GetBrowserVersion gets the given browser's version from an image's labels
+func (handler *Handler) GetBrowserVersion(ctx context.Context, imageID string, browser string) string {
+	label := fmt.Sprintf("com.saucelabs.%s_version", browser)
+	val, _ := handler.getImageLabel(ctx, imageID, label)
+	if val == "" {
+		// fallback to old label
+		label = fmt.Sprintf("selenium_%s_version", browser)
+		val, _ = handler.getImageLabel(ctx, imageID, label)
+	}
+
+	return val
 }
 
 // JobInfoFile returns the file containing the job details url for the given image.
