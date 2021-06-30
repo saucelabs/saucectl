@@ -139,7 +139,7 @@ jobs:
         run: ./saucectl run -c .sauce/testcafe.yml --timeout 10m
 
       - name: Saucectl RUN - CLI Driven
-        run: ./saucectl run testcafe "*.test.js" -c .sauce/testcafe_light.yml --name "CLI Driven" --browserName chrome --timeout 10m
+        run: ./saucectl run testcafe "*.test.js" -c "" --name "CLI Driven" --browserName chrome --rootDir tests/e2e/testcafe/ --testcafe.version 1.14.2 --timeout 10m
   cypress:
     needs: build
     runs-on: ubuntu-latest
@@ -156,9 +156,13 @@ jobs:
       - name: Set permissions
         run: chmod +x ./saucectl
 
-      - name: Saucectl RUN
+      - name: Saucectl RUN - Config Driven
         run: |
           ./saucectl run -c .sauce/cypress.yml --timeout 10m
+
+      - name: Saucectl RUN - CLI Driven
+        run: |
+          ./saucectl run "**/*.*" -c "" --rootDir tests/e2e/ --browser chrome --cypress.version 7.3.0 --cypress.configFile cypress.json --timeout 10m
   cypress-windows:
     needs: build
     runs-on: windows-latest
@@ -203,7 +207,7 @@ jobs:
 
       - name: Saucectl RUN - CLI Driven
         run: |
-          ./saucectl run espresso -c .sauce/espresso_light.yml --name "CLI Driven" --app ./tests/e2e/espresso/calc.apk --testApp ./tests/e2e/espresso/calc-success.apk --emulator name="Android GoogleApi Emulator",platformVersion=11.0 --testOptions.size small
+          ./saucectl run espresso -c "" --name "CLI Driven" --app ./tests/e2e/espresso/calc.apk --testApp ./tests/e2e/espresso/calc-success.apk --emulator name="Android GoogleApi Emulator",platformVersion=11.0 --testOptions.size small
   xcuitest:
     needs: build
     runs-on: ubuntu-latest
@@ -229,4 +233,4 @@ jobs:
 
       - name: Saucectl RUN - CLI Driven
         run: |
-          ./saucectl run xcuitest -c .sauce/xcuitest_light.yml --name "cli driven" --app ./tests/e2e/xcuitest/SauceLabs.Mobile.Sample.XCUITest.App.ipa --testApp ./tests/e2e/xcuitest/SwagLabsMobileAppUITests-Runner.ipa --device name="iPhone.*" --timeout 10m
+          ./saucectl run xcuitest -c "" --name "cli driven" --app ./tests/e2e/xcuitest/SauceLabs.Mobile.Sample.XCUITest.App.ipa --testApp ./tests/e2e/xcuitest/SwagLabsMobileAppUITests-Runner.ipa --device name="iPhone.*" --timeout 10m
