@@ -10,14 +10,18 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/ryanuber/go-glob"
+
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/devices"
+	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/requesth"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
 
 var (
@@ -46,10 +50,20 @@ type concurrencyResponse struct {
 	Organization organizationResponse `json:"organization,omitempty"`
 }
 
+type readJobScreenshot struct {
+	ID string `json:"id,omitempty"`
+}
+
 type readJobResponse struct {
-	Status             string `json:"status,omitempty"`
-	ConsolidatedStatus string `json:"consolidated_status,omitempty"`
-	Error              string `json:"error,omitempty"`
+	AutomationBackend  string              `json:"automation_backend,omitempty"`
+	FrameworkLogURL    string              `json:"framework_log_url,omitempty"`
+	DeviceLogURL       string              `json:"device_log_url,omitempty"`
+	TestCasesURL       string              `json:"test_cases_url,omitempty"`
+	VideoURL           string              `json:"video_url,omitempty"`
+	Screenshots        []readJobScreenshot `json:"screenshots,omitempty"`
+	Status             string              `json:"status,omitempty"`
+	ConsolidatedStatus string              `json:"consolidated_status,omitempty"`
+	Error              string              `json:"error,omitempty"`
 }
 
 // New creates a new client.
@@ -176,20 +190,75 @@ func doRequestStatus(httpClient *http.Client, request *http.Request) (job.Job, e
 	return jobDetails, nil
 }
 
-// jobAssetsList represents known assets. As file list is fixed from API perspective, the list must be hardcoded.
-var jobAssetsList = []string{"junit.xml", "video.mp4", "deviceLogs", "screenshots.zip"}
-
 // GetJobAssetFileNames returns all assets files available.
 func (c *Client) GetJobAssetFileNames(ctx context.Context, jobID string) ([]string, error) {
-	return jobAssetsList, nil
+	req, err := requesth.NewWithContext(ctx, http.MethodGet,
+		fmt.Sprintf("%s/v1/rdc/jobs/%s", c.URL, jobID), nil)
+	if err != nil {
+		return []string{}, err
+	}
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return []string{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return []string{}, fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
+	}
+
+	var jr readJobResponse
+	if err := json.NewDecoder(resp.Body).Decode(&jr); err != nil {
+		return []string{}, err
+	}
+	return extractAssetsFileNames(jr), nil
+}
+
+// extractAssetsFileNames infers available assets from an RDC job.
+func extractAssetsFileNames(jr readJobResponse) []string {
+	var files []string
+
+	if strings.HasSuffix(jr.DeviceLogURL, "/deviceLogs") {
+		files = append(files, "device.log")
+	}
+	if strings.HasSuffix(jr.VideoURL, "/video.mp4") {
+		files = append(files, "video.mp4")
+	}
+	if len(jr.Screenshots) > 0 {
+		files = append(files, "screenshots.zip")
+	}
+
+	// xcuitest.log is available for espresso according to API, but will always be empty,
+	// => hiding it until API is fixed.
+	if jr.AutomationBackend == xcuitest.Kind && strings.HasSuffix(jr.FrameworkLogURL, "/xcuitestLogs") {
+		files = append(files, "xcuitest.log")
+	}
+	// junit.xml is available only for native frameworks.
+	if jr.AutomationBackend == xcuitest.Kind || jr.AutomationBackend == espresso.Kind {
+		files = append(files, "junit.xml")
+	}
+	return files
+}
+
+// jobURIMappings contains the assets that don't get accessed by their filename.
+// Those items also requires to send "Accept: text/plain" header to get raw content instead of json.
+var jobURIMappings = map[string]string{
+	"device.log":      "deviceLogs",
+	"xcuitest.log":    "xcuitestLogs",
 }
 
 // GetJobAssetFileContent returns the job asset file content.
 func (c *Client) GetJobAssetFileContent(ctx context.Context, jobID, fileName string) ([]byte, error) {
-	if !jobAssetsAvailable(fileName) {
-		return []byte{}, fmt.Errorf("asset '%s' not available", fileName)
+	acceptHeader := ""
+	URIFileName := fileName
+	if _, ok := jobURIMappings[fileName]; ok {
+		URIFileName = jobURIMappings[fileName]
+		acceptHeader = "text/plain"
 	}
-	request, err := createAssetRequest(ctx, c.URL, c.Username, c.AccessKey, jobID, fileName)
+
+	request, err := createAssetRequest(ctx, c.URL, c.Username, c.AccessKey, jobID, URIFileName, acceptHeader)
 	if err != nil {
 		return nil, err
 	}
@@ -198,14 +267,10 @@ func (c *Client) GetJobAssetFileContent(ctx context.Context, jobID, fileName str
 	if err != nil {
 		return []byte{}, err
 	}
-
-	if fileName == "deviceLogs" {
-		return convertDeviceLogs(data)
-	}
 	return data, err
 }
 
-func createAssetRequest(ctx context.Context, url, username, accessKey, jobID, fileName string) (*http.Request, error) {
+func createAssetRequest(ctx context.Context, url, username, accessKey, jobID, fileName, acceptHeader string) (*http.Request, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/v1/rdc/jobs/%s/%s", url, jobID, fileName), nil)
 	if err != nil {
@@ -213,7 +278,9 @@ func createAssetRequest(ctx context.Context, url, username, accessKey, jobID, fi
 	}
 
 	req.SetBasicAuth(username, accessKey)
-
+	if acceptHeader != "" {
+		req.Header.Set("Accept", acceptHeader)
+	}
 	return req, nil
 }
 
@@ -239,15 +306,6 @@ func doAssetRequest(httpClient *http.Client, request *http.Request) ([]byte, err
 	}
 
 	return io.ReadAll(resp.Body)
-}
-
-func jobAssetsAvailable(asset string) bool {
-	for _, a := range jobAssetsList {
-		if a == asset {
-			return true
-		}
-	}
-	return false
 }
 
 // deviceLogLine represent a line from device console.

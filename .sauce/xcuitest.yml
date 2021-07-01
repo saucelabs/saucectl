@@ -34,5 +34,6 @@ artifacts:
   download:
     when: always
     match:
-      - "*.junit.xml"
+      - junit.xml
+      - xcuitest.log
     directory: ./artifacts/
