@@ -3,6 +3,7 @@ package cypress
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 	"path/filepath"
 	"strings"
@@ -107,6 +108,14 @@ func FromFile(cfgPath string) (Project, error) {
 
 // SetDefaults applies config defaults in case the user has left them blank.
 func SetDefaults(p *Project) {
+	if p.Kind == "" {
+		p.Kind = Kind
+	}
+
+	if p.APIVersion == "" {
+		p.APIVersion = APIVersion
+	}
+
 	if p.Sauce.Concurrency < 1 {
 		p.Sauce.Concurrency = 2
 	}
@@ -165,6 +174,11 @@ func Validate(p *Project) error {
 		if _, err := os.Stat(p.RootDir); err != nil {
 			return fmt.Errorf("unable to locate the rootDir folder %s", p.RootDir)
 		}
+	}
+
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		return errors.New("no sauce region set")
 	}
 
 	// Validate suites.

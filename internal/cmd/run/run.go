@@ -141,6 +141,7 @@ func Command() *cobra.Command {
 	cmd.AddCommand(
 		NewCypressCmd(),
 		NewEspressoCmd(),
+		NewPuppeteerCmd(),
 		NewTestcafeCmd(),
 		NewXCUITestCmd(),
 	)
@@ -211,7 +212,7 @@ func Run(cmd *cobra.Command) (int, error) {
 		return runTestcafe(cmd, testcafeFlags{}, tcClient, restoClient, appsClient)
 	}
 	if typeDef.Kind == puppeteer.Kind {
-		return runPuppeteer(cmd, tcClient, restoClient)
+		return runPuppeteer(cmd, puppeteerFlags{}, tcClient, restoClient)
 	}
 	if typeDef.Kind == espresso.Kind {
 		return runEspresso(cmd, espressoFlags{}, tcClient, restoClient, rdcClient, appsClient)

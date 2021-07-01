@@ -3,9 +3,9 @@ package puppeteer
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"gopkg.in/yaml.v2"
 )
@@ -52,6 +52,10 @@ type Puppeteer struct {
 func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
+	if cfgPath == "" {
+		return Project{}, nil
+	}
+
 	f, err := os.Open(cfgPath)
 	if err != nil {
 		return p, fmt.Errorf("failed to locate project config: %v", err)
@@ -67,37 +71,66 @@ func FromFile(cfgPath string) (Project, error) {
 		return p, config.ErrUnknownCfg
 	}
 
-	if p.RootDir == "" {
-		return p, fmt.Errorf("could not find 'rootDir' in config yml, 'rootDir' must be set to specify project files")
+	for _, s := range p.Suites {
+		for kk, v := range s.Env {
+			s.Env[kk] = os.ExpandEnv(v)
+		}
 	}
 
-	p.Puppeteer.Version = config.StandardizeVersionFormat(p.Puppeteer.Version)
-	if p.Puppeteer.Version == "" {
-		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+	return p, nil
+}
+
+// SetDefaults applies config defaults in case the user has left them blank.
+func SetDefaults(p *Project) {
+	if p.Kind == "" {
+		p.Kind = Kind
+	}
+
+	if p.APIVersion == "" {
+		p.APIVersion = APIVersion
+	}
+
+	if p.Sauce.Concurrency < 1 {
+		p.Sauce.Concurrency = 2
 	}
 
 	// Set default docker file transfer to mount
 	if p.Docker.FileTransfer == "" {
 		p.Docker.FileTransfer = config.DockerFileMount
 	}
+}
 
-	if p.Docker.Image != "" {
-		log.Info().Msgf(
-			"Ignoring framework version for Docker, using provided image %s (only applicable to docker mode)",
-			p.Docker.Image)
+// Validate validates basic configuration of the project and returns an error if any of the settings contain illegal
+// values. This is not an exhaustive operation and further validation should be performed both in the client and/or
+// server side depending on the workflow that is executed.
+func Validate(p *Project) error {
+	p.Puppeteer.Version = config.StandardizeVersionFormat(p.Puppeteer.Version)
+	if p.Puppeteer.Version == "" {
+		return errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
 
-	if p.Sauce.Concurrency < 1 {
-		// Default concurrency is 2
-		p.Sauce.Concurrency = 2
-	}
-
-	for i, s := range p.Suites {
-		env := map[string]string{}
-		for k, v := range s.Env {
-			env[k] = os.ExpandEnv(v)
+	// Check rootDir exists.
+	if p.RootDir != "" {
+		if _, err := os.Stat(p.RootDir); err != nil {
+			return fmt.Errorf("unable to locate the rootDir folder %s", p.RootDir)
 		}
-		p.Suites[i].Env = env
 	}
-	return p, nil
+
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		return errors.New("no sauce region set")
+	}
+
+	return nil
+}
+
+// FilterSuites filters out suites in the project that don't match the given suite name.
+func FilterSuites(p *Project, suiteName string) error {
+	for _, s := range p.Suites {
+		if s.Name == suiteName {
+			p.Suites = []Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf("no suite named '%s' found", suiteName)
 }

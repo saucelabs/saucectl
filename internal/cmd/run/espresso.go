@@ -1,7 +1,6 @@
 package run
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
@@ -85,14 +84,7 @@ func runEspresso(cmd *cobra.Command, flags espressoFlags, tc testcomposer.Client
 	applyEspressoFlags(&p, flags)
 	espresso.SetDefaults(&p)
 
-	regio := region.FromString(p.Sauce.Region)
-	if regio == region.None {
-		log.Error().Str("region", gFlags.regionFlag).Msg("Unable to determine sauce region.")
-		return 1, errors.New("no sauce region set")
-	}
-
-	err = espresso.Validate(p)
-	if err != nil {
+	if err := espresso.Validate(p); err != nil {
 		return 1, err
 	}
 
@@ -101,6 +93,8 @@ func runEspresso(cmd *cobra.Command, flags espressoFlags, tc testcomposer.Client
 			return 1, err
 		}
 	}
+
+	regio := region.FromString(p.Sauce.Region)
 
 	tc.URL = regio.APIBaseURL()
 	rs.URL = regio.APIBaseURL()

@@ -99,8 +99,11 @@ jobs:
       - name: Set permissions
         run: chmod +x ./saucectl
 
-      - name: Saucectl RUN
+      - name: Saucectl RUN - Config Driven
         run: ./saucectl run -c .sauce/puppeteer.yml --timeout 10m
+
+      - name: Saucectl RUN - CLI Driven
+        run: ./saucectl run puppeteer "**/*.test.js" -c "" --name "CLI Driven" --browser chrome --puppeteer.version 9.1.1 --rootDir tests/e2e/puppeteer --timeout 10m
   playwright:
     needs: build
     runs-on: ubuntu-latest
