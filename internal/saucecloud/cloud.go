@@ -113,11 +113,16 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				platform = fmt.Sprintf("%s %s", platform, res.job.BaseConfig.PlatformVersion)
 			}
 
+			browser := res.browser
+			// browser is empty for mobile tests
+			if browser != "" {
+				browser = fmt.Sprintf("%s %s", browser, res.job.BrowserShortVersion)
+			}
 			reporter.Add(report.TestResult{
 				Name:       res.name,
 				Duration:   res.duration,
 				Passed:     res.job.Passed,
-				Browser:    res.browser,
+				Browser:    browser,
 				Platform:   platform,
 				DeviceName: res.job.BaseConfig.DeviceName,
 			})
@@ -507,6 +512,11 @@ func unregisterSignalCapture(c chan os.Signal) {
 
 // uploadSauceConfig adds job configuration as an asset.
 func (r *CloudRunner) uploadSauceConfig(jobID string, cfgFile string) {
+	// A config file is optional.
+	if cfgFile == "" {
+		return
+	}
+
 	f, err := os.Open(cfgFile)
 	if err != nil {
 		log.Warn().Msgf("failed to open configuration: %v", err)

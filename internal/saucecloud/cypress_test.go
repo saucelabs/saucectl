@@ -236,7 +236,6 @@ func TestRunProject(t *testing.T) {
 			Cypress: cypress.Cypress{
 				Version:     "5.6.0",
 				ConfigFile:  "../../tests/e2e/cypress.json",
-				ProjectPath: "../../tests/e2e/cypress",
 			},
 			Suites: []cypress.Suite{
 				{Name: "dummy-suite"},

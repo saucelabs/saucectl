@@ -3,6 +3,7 @@ package espresso
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 	"strings"
 
@@ -89,6 +90,14 @@ func FromFile(cfgPath string) (Project, error) {
 
 // SetDefaults applies config defaults in case the user has left them blank.
 func SetDefaults(p *Project) {
+	if p.Kind == "" {
+		p.Kind = Kind
+	}
+
+	if p.APIVersion == "" {
+		p.APIVersion = APIVersion
+	}
+
 	if p.Sauce.Concurrency < 1 {
 		p.Sauce.Concurrency = 2
 	}
@@ -97,6 +106,7 @@ func SetDefaults(p *Project) {
 		for j := range suite.Devices {
 			// Android is the only choice.
 			p.Suites[i].Devices[j].PlatformName = Android
+			p.Suites[i].Devices[j].Options.DeviceType = strings.ToUpper(p.Suites[i].Devices[j].Options.DeviceType)
 		}
 		for j := range suite.Emulators {
 			p.Suites[i].Emulators[j].PlatformName = Android
@@ -108,6 +118,11 @@ func SetDefaults(p *Project) {
 // values. This is not an exhaustive operation and further validation should be performed both in the client and/or
 // server side depending on the workflow that is executed.
 func Validate(p Project) error {
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		return errors.New("no sauce region set")
+	}
+
 	if p.Espresso.App == "" {
 		return errors.New("missing path to app .apk")
 	}
@@ -145,6 +160,10 @@ func validateDevices(suiteName string, devices []config.Device) error {
 	for didx, device := range devices {
 		if device.Name == "" && device.ID == "" {
 			return fmt.Errorf("missing device name or ID for suite: %s. Devices index: %d", suiteName, didx)
+		}
+		if device.Options.DeviceType != "" && !config.IsSupportedDeviceType(device.Options.DeviceType) {
+			return fmt.Errorf("deviceType: %s is unsupported for suite: %s. Devices index: %d. Supported device types: %s",
+				device.Options.DeviceType, suiteName, didx, strings.Join(config.SupportedDeviceTypes, ","))
 		}
 	}
 	return nil

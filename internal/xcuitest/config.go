@@ -3,6 +3,7 @@ package xcuitest
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 	"strings"
 
@@ -18,8 +19,6 @@ var (
 	// APIVersion represents the supported config version.
 	APIVersion = "v1alpha"
 )
-
-var supportedDeviceTypes = []string{"ANY", "PHONE", "TABLET"}
 
 // Project represents the xcuitest project configuration.
 type Project struct {
@@ -78,6 +77,14 @@ func FromFile(cfgPath string) (Project, error) {
 
 // SetDefaults applies config defaults in case the user has left them blank.
 func SetDefaults(p *Project) {
+	if p.Kind == "" {
+		p.Kind = Kind
+	}
+
+	if p.APIVersion == "" {
+		p.APIVersion = APIVersion
+	}
+
 	if p.Sauce.Concurrency < 1 {
 		p.Sauce.Concurrency = 2
 	}
@@ -96,6 +103,11 @@ func SetDefaults(p *Project) {
 // values. This is not an exhaustive operation and further validation should be performed both in the client and/or
 // server side depending on the workflow that is executed.
 func Validate(p Project) error {
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		return errors.New("no sauce region set")
+	}
+
 	if p.Xcuitest.App == "" {
 		return errors.New("missing path to app .ipa")
 	}
@@ -123,9 +135,9 @@ func Validate(p Project) error {
 				return fmt.Errorf("missing device name or id for suite: %s. Devices index: %d", suite.Name, didx)
 			}
 
-			if device.Options.DeviceType != "" && !isSupportedDeviceType(device.Options.DeviceType) {
+			if device.Options.DeviceType != "" && !config.IsSupportedDeviceType(device.Options.DeviceType) {
 				return fmt.Errorf("deviceType: %s is unsupported for suite: %s. Devices index: %d. Supported device types: %s",
-					device.Options.DeviceType, suite.Name, didx, strings.Join(supportedDeviceTypes, ","))
+					device.Options.DeviceType, suite.Name, didx, strings.Join(config.SupportedDeviceTypes, ","))
 			}
 		}
 	}
@@ -133,12 +145,3 @@ func Validate(p Project) error {
 	return nil
 }
 
-func isSupportedDeviceType(deviceType string) bool {
-	for _, dt := range supportedDeviceTypes {
-		if dt == deviceType {
-			return true
-		}
-	}
-
-	return false
-}

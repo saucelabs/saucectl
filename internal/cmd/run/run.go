@@ -139,7 +139,9 @@ func Command() *cobra.Command {
 	_ = cmd.PersistentFlags().MarkHidden("experiment")
 
 	cmd.AddCommand(
+		NewCypressCmd(),
 		NewEspressoCmd(),
+		NewPuppeteerCmd(),
 		NewTestcafeCmd(),
 		NewXCUITestCmd(),
 	)
@@ -201,7 +203,7 @@ func preRun() error {
 // Run runs the command
 func Run(cmd *cobra.Command) (int, error) {
 	if typeDef.Kind == cypress.Kind {
-		return runCypress(cmd, tcClient, restoClient, &appsClient)
+		return runCypress(cmd, cypressFlags{}, tcClient, restoClient, appsClient)
 	}
 	if typeDef.Kind == playwright.Kind {
 		return runPlaywright(cmd, tcClient, restoClient, &appsClient)
@@ -210,7 +212,7 @@ func Run(cmd *cobra.Command) (int, error) {
 		return runTestcafe(cmd, testcafeFlags{}, tcClient, restoClient, appsClient)
 	}
 	if typeDef.Kind == puppeteer.Kind {
-		return runPuppeteer(cmd, tcClient, restoClient)
+		return runPuppeteer(cmd, puppeteerFlags{}, tcClient, restoClient)
 	}
 	if typeDef.Kind == espresso.Kind {
 		return runEspresso(cmd, espressoFlags{}, tcClient, restoClient, rdcClient, appsClient)

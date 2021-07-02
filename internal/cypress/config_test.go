@@ -1,97 +1,66 @@
 package cypress
 
 import (
-	"github.com/saucelabs/saucectl/internal/config"
-	"testing"
-	"errors"
 	"github.com/stretchr/testify/assert"
+	"reflect"
+	"testing"
 )
 
-func TestValidateThrowsErrors(t *testing.T) {
-	testCases := []struct {
-		name        string
-		p           *Project
-		expectedErr error
+func TestFilterSuites(t *testing.T) {
+	testCase := []struct {
+		name      string
+		config    *Project
+		suiteName string
+		expConfig Project
+		expErr    string
 	}{
 		{
-			name:        "validating throws error on empty suites",
-			p:           &Project{},
-			expectedErr: errors.New("no suites defined"),
+			name: "filtered suite exists in config",
+			config: &Project{Suites: []Suite{
+				{
+					Name: "suite1",
+				},
+				{
+					Name: "suite2",
+				},
+			}},
+			suiteName: "suite1",
+			expConfig: Project{Suites: []Suite{
+				{
+					Name: "suite1",
+				},
+			}},
 		},
 		{
-			name:        "validating throws error on wrong docker file transfer mode",
-			p:           &Project{
-				Suites: []Suite {
-					{
-						Name: "some suite",
-					},
+			name: "filtered suite does not exist in config",
+			config: &Project{Suites: []Suite{
+				{
+					Name: "suite1",
 				},
-				Docker: config.Docker{
-					FileTransfer: "fruta",
+				{
+					Name: "suite2",
 				},
-			},
-			expectedErr: errors.New("illegal file transfer type 'fruta', must be one of 'mount|copy'"),
-		},
-		{
-			name:        "validating throws error on missing browser name",
-			p:           &Project{
-				Suites: []Suite {
-					{
-						Name: "some suite",
-					},
+			}},
+			suiteName: "suite3",
+			expConfig: Project{Suites: []Suite{
+				{
+					Name: "suite1",
 				},
-				Docker: config.Docker{
-					FileTransfer: "copy",
+				{
+					Name: "suite2",
 				},
-			},
-			expectedErr: errors.New("no browser specified in suite 'some suite'"),
-		},
-		{
-			name:        "validating throws error on missing config",
-			p:           &Project{
-				Suites: []Suite {
-					{
-						Name: "some suite",
-						Browser: "chrome",
-					},
-				},
-				Docker: config.Docker{
-					FileTransfer: "copy",
-				},
-			},
-			expectedErr: errors.New("no config.testFiles specified in suite 'some suite'"),
-		},
-		{
-			name:        "validating throws error on non-unique suite name",
-			p:           &Project{
-				Suites: []Suite {
-					{
-						Name: "some suite",
-						Browser: "chrome",
-						Config: SuiteConfig{
-							TestFiles: []string{"spec.js"},
-						},
-					},
-					{
-						Name: "some suite",
-						Browser: "chrome",
-						Config: SuiteConfig{
-							TestFiles: []string{"spec.js"},
-						},
-					},
-				},
-				Docker: config.Docker{
-					FileTransfer: "copy",
-				},
-			},
-			expectedErr: errors.New("suite names must be unique, but found duplicate for 'some suite'"),
+			}},
+			expErr: "no suite named 'suite3' found",
 		},
 	}
-	for _, tc := range testCases {
+
+	for _, tc := range testCase {
 		t.Run(tc.name, func(t *testing.T) {
-			err := Validate(*tc.p)
-			assert.NotNil(t, err)
-			assert.Equal(t, err.Error(), tc.expectedErr.Error())
+			err := FilterSuites(tc.config, tc.suiteName)
+			if err != nil {
+				assert.Equal(t, tc.expErr, err.Error())
+			}
+			assert.True(t, reflect.DeepEqual(*tc.config, tc.expConfig))
 		})
 	}
 }
