@@ -1,7 +1,6 @@
 package run
 
 import (
-	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/docker"
@@ -77,10 +76,7 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 	if err := puppeteer.Validate(&p); err != nil {
 		return 1, err
 	}
-
-	// FIXME remove debug line
-	fmt.Printf("%+v\n", p)
-
+	
 	regio := region.FromString(p.Sauce.Region)
 	rs.URL = regio.APIBaseURL()
 	tc.URL = regio.APIBaseURL()
