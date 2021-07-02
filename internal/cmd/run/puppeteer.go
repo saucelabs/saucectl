@@ -78,6 +78,7 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 		return 1, err
 	}
 
+	// FIXME remove debug line
 	fmt.Printf("%+v\n", p)
 
 	regio := region.FromString(p.Sauce.Region)
@@ -108,17 +109,6 @@ func applyPuppeteerFlags(p *puppeteer.Project) error {
 	// Use the adhoc suite instead, if one is provided
 	if p.Suite.Name != "" {
 		p.Suites = []puppeteer.Suite{p.Suite}
-	}
-
-	// TODO move that somewhere else
-	for k, v := range p.Env {
-		for ks := range p.Suites {
-			s := &p.Suites[ks]
-			if s.Env == nil {
-				s.Env = map[string]string{}
-			}
-			s.Env[k] = v
-		}
 	}
 
 	return nil

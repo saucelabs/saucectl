@@ -60,12 +60,6 @@ func FromFile(cfgPath string) (Project, error) {
 
 	p.ConfigFilePath = cfgPath
 
-	for _, s := range p.Suites {
-		for kk, v := range s.Env {
-			s.Env[kk] = os.ExpandEnv(v)
-		}
-	}
-
 	return p, nil
 }
 
@@ -86,6 +80,17 @@ func SetDefaults(p *Project) {
 	// Set default docker file transfer to mount
 	if p.Docker.FileTransfer == "" {
 		p.Docker.FileTransfer = config.DockerFileMount
+	}
+
+	// Apply global env vars onto every suite.
+	for k, v := range p.Env {
+		for ks := range p.Suites {
+			s := &p.Suites[ks]
+			if s.Env == nil {
+				s.Env = map[string]string{}
+			}
+			s.Env[k] = os.ExpandEnv(v)
+		}
 	}
 }
 
