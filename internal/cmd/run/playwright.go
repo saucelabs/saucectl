@@ -39,7 +39,7 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 	if gFlags.runnerVersion != "" {
 		p.RunnerVersion = gFlags.runnerVersion
 	}
-	if cmd.Flags().Lookup("suite").Changed {
+	if cmd.Flags().Lookup("select-suite").Changed {
 		if err := filterPlaywrightSuite(&p); err != nil {
 			return 1, err
 		}

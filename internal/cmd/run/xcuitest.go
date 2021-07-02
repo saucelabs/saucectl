@@ -80,7 +80,7 @@ func runXcuitest(cmd *cobra.Command, flags xcuitestFlags, tc testcomposer.Client
 		return 1, err
 	}
 
-	if cmd.Flags().Lookup("suite").Changed {
+	if cmd.Flags().Lookup("select-suite").Changed {
 		if err := filterXcuitestSuite(&p); err != nil {
 			return 1, err
 		}

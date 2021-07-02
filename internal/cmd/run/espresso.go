@@ -88,7 +88,7 @@ func runEspresso(cmd *cobra.Command, flags espressoFlags, tc testcomposer.Client
 		return 1, err
 	}
 
-	if cmd.Flags().Lookup("suite").Changed {
+	if cmd.Flags().Lookup("select-suite").Changed {
 		if err := filterEspressoSuite(&p); err != nil {
 			return 1, err
 		}
