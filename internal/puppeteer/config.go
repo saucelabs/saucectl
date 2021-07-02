@@ -3,11 +3,10 @@ package puppeteer
 import (
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/region"
-	"os"
-
 	"github.com/saucelabs/saucectl/internal/config"
-	"gopkg.in/yaml.v2"
+	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/spf13/viper"
+	"os"
 )
 
 // Config descriptors.
@@ -21,17 +20,20 @@ var (
 
 // Project represents the puppeteer project configuration.
 type Project struct {
-	config.TypeDef `yaml:",inline"`
+	config.TypeDef `yaml:",inline" mapstructure:",squash"`
 	ShowConsoleLog bool
 	ConfigFilePath string             `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
-	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
-	BeforeExec     []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker         config.Docker      `yaml:"docker,omitempty" json:"docker"`
-	Puppeteer      Puppeteer          `yaml:"puppeteer,omitempty" json:"puppeteer"`
-	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
-	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
-	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
+	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
+	Suite      Suite             `yaml:"suite,omitempty" json:"-"`
+	Suites     []Suite           `yaml:"suites,omitempty" json:"suites"`
+	BeforeExec []string          `yaml:"beforeExec,omitempty" json:"beforeExec"`
+	Docker     config.Docker     `yaml:"docker,omitempty" json:"docker"`
+	Puppeteer  Puppeteer         `yaml:"puppeteer,omitempty" json:"puppeteer"`
+	Npm        config.Npm        `yaml:"npm,omitempty" json:"npm"`
+	RootDir    string            `yaml:"rootDir,omitempty" json:"rootDir"`
+	Artifacts  config.Artifacts  `yaml:"artifacts,omitempty" json:"artifacts"`
+	Env        map[string]string `yaml:"env,omitempty" json:"env"`
 }
 
 // Suite represents the puppeteer test suite configuration.
@@ -52,24 +54,11 @@ type Puppeteer struct {
 func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
-	if cfgPath == "" {
-		return Project{}, nil
+	if err := viper.Unmarshal(&p); err != nil {
+		return p, err
 	}
 
-	f, err := os.Open(cfgPath)
-	if err != nil {
-		return p, fmt.Errorf("failed to locate project config: %v", err)
-	}
-	defer f.Close()
-
-	if err := yaml.NewDecoder(f).Decode(&p); err != nil {
-		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
-	}
 	p.ConfigFilePath = cfgPath
-
-	if p.Kind != Kind && p.APIVersion != APIVersion {
-		return p, config.ErrUnknownCfg
-	}
 
 	for _, s := range p.Suites {
 		for kk, v := range s.Env {

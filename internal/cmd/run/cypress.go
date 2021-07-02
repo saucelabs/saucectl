@@ -189,7 +189,7 @@ func applyCypressFlags(cmd *cobra.Command, p *cypress.Project, flags cypressFlag
 		p.RunnerVersion = gFlags.runnerVersion
 	}
 
-	if cmd.Flags().Lookup("suite").Changed {
+	if cmd.Flags().Lookup("select-suite").Changed {
 		if err := cypress.FilterSuites(p, gFlags.suiteName); err != nil {
 			return err
 		}

@@ -208,7 +208,7 @@ func applyTestcafeFlags(cmd *cobra.Command, p *testcafe.Project, flags testcafeF
 		p.RunnerVersion = gFlags.runnerVersion
 	}
 
-	if cmd.Flags().Lookup("suite").Changed {
+	if cmd.Flags().Lookup("select-suite").Changed {
 		if err := testcafe.FilterSuites(p, gFlags.suiteName); err != nil {
 			return err
 		}
