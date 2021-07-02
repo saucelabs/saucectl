@@ -27,10 +27,13 @@ func configureCypress(cfg *initConfig) interface{} {
 		},
 		Suites: []cypress.Suite{
 			{
-				Name:         fmt.Sprintf("cypress - %s - %s", firstNotEmpty(cfg.platformName, cfg.mode) , cfg.browserName),
+				Name:         fmt.Sprintf("cypress - %s - %s", firstNotEmpty(cfg.platformName, cfg.mode), cfg.browserName),
 				PlatformName: cfg.platformName,
 				Browser:      cfg.browserName,
 				Mode:         cfg.mode,
+				Config: cypress.SuiteConfig{
+					TestFiles: []string{"**/*.*"},
+				},
 			},
 		},
 		Artifacts: config.Artifacts{
