@@ -60,11 +60,23 @@ type Suite struct {
 
 // SuiteConfig represents the configuration specific to a suite
 type SuiteConfig struct {
-	BrowserName         string `yaml:"browserName,omitempty" json:"browserName,omitempty"`
-	HeadFul             bool   `yaml:"headful,omitempty" json:"headful,omitempty"`
-	ScreenshotOnFailure bool   `yaml:"screenshotOnFailure,omitempty" json:"screenshotOnFailure,omitempty"`
-	SlowMo              int    `yaml:"slowMo,omitempty" json:"slowMo,omitempty"`
-	Video               bool   `yaml:"video,omitempty" json:"video,omitempty"`
+	BrowserName string `yaml:"browserName,omitempty" json:"browserName,omitempty"`
+
+	// Fields appeared in v1.12+
+	Headed        bool   `yaml:"headed,omitempty" json:"headed,omitempty"`
+	GlobalTimeout int    `yaml:"globalTimeout,omitempty" json:"globalTimeout,omitempty"`
+	Timeout       string `yaml:"timeout,omitempty" json:"timeout,omitempty"`
+	Grep          string `yaml:"grep,omitempty" json:"grep,omitempty"`
+	RepeatEach    int    `yaml:"repeatEach,omitempty" json:"repeatEach,omitempty"`
+	Retries       int    `yaml:"retries,omitempty" json:"retries,omitempty"`
+	MaxFailures   int    `yaml:"maxFailures,omitempty" json:"maxFailures,omitempty"`
+	Shard         string `yaml:"shard,omitempty" json:"shard,omitempty"`
+
+	// Deprecated fields in v1.12+
+	HeadFul             bool `yaml:"headful,omitempty" json:"headful,omitempty"`
+	ScreenshotOnFailure bool `yaml:"screenshotOnFailure,omitempty" json:"screenshotOnFailure,omitempty"`
+	SlowMo              int  `yaml:"slowMo,omitempty" json:"slowMo,omitempty"`
+	Video               bool `yaml:"video,omitempty" json:"video,omitempty"`
 }
 
 // FromFile creates a new playwright Project based on the filepath cfgPath.
