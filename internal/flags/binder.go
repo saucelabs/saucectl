@@ -33,6 +33,6 @@ func (s *SnakeCharmer) StringToString(flagName, fieldName string, value map[stri
 
 func (s *SnakeCharmer) mustBind(flagName, fieldName string) {
 	if err := viper.BindPFlag(fieldName, s.Fset.Lookup(flagName)); err != nil {
-		log.Fatal().Msgf("Failed to bind flags and config fields %v", err)
+		log.Fatal().Msgf("Failed to bind flags and config fields: %v", err)
 	}
 }
