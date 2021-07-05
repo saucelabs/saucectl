@@ -37,21 +37,21 @@ type initConfig struct {
 	frameworkName    string
 	frameworkVersion string
 	cypressJSON      string
-	app             string
-	testApp         string
-	platformName    string
-	mode            string
-	browserName     string
-	region          string
-	artifactWhen    config.When
-	artifactWhenStr string
-	device          config.Device
-	emulator        config.Emulator
-	deviceFlag      flags.Device
-	emulatorFlag    flags.Emulator
-	concurrency     int
-	username        string
-	accessKey       string
+	app              string
+	testApp          string
+	platformName     string
+	mode             string
+	browserName      string
+	region           string
+	artifactWhen     config.When
+	artifactWhenStr  string
+	device           config.Device
+	emulator         config.Emulator
+	deviceFlag       flags.Device
+	emulatorFlag     flags.Emulator
+	concurrency      int
+	username         string
+	accessKey        string
 }
 
 var (
@@ -79,8 +79,8 @@ func Command() *cobra.Command {
 			}
 		},
 	}
-	cmd.Flags().StringVarP(&initCfg.username, "username", "u", "us-west-1", "username to use")
-	cmd.Flags().StringVarP(&initCfg.accessKey, "accessKey", "a", "us-west-1", "username to use")
+	cmd.Flags().StringVarP(&initCfg.username, "username", "u", "", "username to use")
+	cmd.Flags().StringVarP(&initCfg.accessKey, "accessKey", "a", "", "access key for the Sauce Labs account making the request")
 	cmd.Flags().StringVarP(&initCfg.region, "region", "r", "us-west-1", "region to use")
 	cmd.Flags().StringVarP(&initCfg.frameworkName, "framework", "f", "", "framework to configure")
 	cmd.Flags().StringVarP(&initCfg.frameworkVersion, "frameworkVersion", "v", "", "framework version to be used")
