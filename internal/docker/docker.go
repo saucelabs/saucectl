@@ -470,7 +470,7 @@ func (handler *Handler) getImageLabel(ctx context.Context, imageID string, label
 
 // GetBrowserVersion gets the given browser's version from an image's labels
 func (handler *Handler) GetBrowserVersion(ctx context.Context, imageID string, browser string) string {
-	label := fmt.Sprintf("com.saucelabs.%s_version", browser)
+	label := fmt.Sprintf("com.saucelabs.%s-version", browser)
 	val, _ := handler.getImageLabel(ctx, imageID, label)
 	if val == "" {
 		// fallback to old label
