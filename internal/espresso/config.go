@@ -22,7 +22,7 @@ var (
 
 // Project represents the espresso project configuration.
 type Project struct {
-	config.TypeDef `yaml:",inline"`
+	config.TypeDef `yaml:",inline" mapstructure:",squash"`
 	ConfigFilePath string             `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Espresso       Espresso           `yaml:"espresso,omitempty" json:"espresso"`
@@ -72,7 +72,7 @@ func FromFile(cfgPath string) (Project, error) {
 
 	p.Espresso.App = os.ExpandEnv(p.Espresso.App)
 	p.Espresso.TestApp = os.ExpandEnv(p.Espresso.TestApp)
-	
+
 	return p, nil
 }
 
