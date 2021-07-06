@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/spf13/viper"
 	"os"
 	"strings"
 
@@ -65,7 +64,7 @@ const Android = "Android"
 func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
-	if err := viper.Unmarshal(&p); err != nil {
+	if err := config.Unmarshal(cfgPath, &p); err != nil {
 		return p, err
 	}
 	p.ConfigFilePath = cfgPath

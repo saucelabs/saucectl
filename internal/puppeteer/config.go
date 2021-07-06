@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/spf13/viper"
 	"os"
 )
 
@@ -54,7 +53,7 @@ type Puppeteer struct {
 func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
-	if err := viper.Unmarshal(&p); err != nil {
+	if err := config.Unmarshal(cfgPath, &p); err != nil {
 		return p, err
 	}
 

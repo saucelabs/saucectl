@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
 	"strings"
@@ -192,4 +193,20 @@ func IsSupportedDeviceType(deviceType string) bool {
 		}
 	}
 	return false
+}
+
+// Unmarshal parses the file cfgPath into the given project struct.
+func Unmarshal(cfgPath string, project interface{}) error {
+	if cfgPath == "" {
+		return nil
+	}
+
+	name := strings.TrimSuffix(filepath.Base(cfgPath), filepath.Ext(cfgPath)) // config name without extension
+	viper.SetConfigName(name)
+	viper.AddConfigPath(filepath.Dir(cfgPath))
+	if err := viper.ReadInConfig(); err != nil {
+		return fmt.Errorf("failed to locate project config: %v", err)
+	}
+
+	return viper.Unmarshal(&project)
 }

@@ -15,7 +15,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"syscall"
 	"time"
 
@@ -178,16 +177,6 @@ func preRun() error {
 		return err
 	}
 	typeDef = d
-
-	// Prepare viper for all subcommands.
-	if gFlags.cfgFilePath != "" {
-		name := strings.TrimSuffix(filepath.Base(gFlags.cfgFilePath), filepath.Ext(gFlags.cfgFilePath)) // config name without extension
-		viper.SetConfigName(name)
-		viper.AddConfigPath(filepath.Dir(gFlags.cfgFilePath))
-		if err := viper.ReadInConfig(); err != nil {
-			return fmt.Errorf("failed to locate project config: %v", err)
-		}
-	}
 
 	tcClient = testcomposer.Client{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
