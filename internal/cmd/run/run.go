@@ -10,10 +10,12 @@ import (
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/version"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
+	"github.com/spf13/viper"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
 
@@ -110,7 +112,7 @@ func Command() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&gFlags.regionFlag, "region", "r", "us-west-1", "The sauce labs region.")
 	cmd.PersistentFlags().StringToStringVarP(&gFlags.env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
 	cmd.PersistentFlags().StringVar(&gFlags.sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
-	cmd.PersistentFlags().StringVar(&gFlags.suiteName, "suite", "", "Run specified test suite.")
+	cmd.PersistentFlags().StringVar(&gFlags.suiteName, "select-suite", "", "Run specified test suite.")
 	cmd.PersistentFlags().BoolVar(&gFlags.testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
 	cmd.PersistentFlags().StringVar(&gFlags.testEnv, "test-env", "", "Specifies the environment in which the tests should run. Choice: docker|sauce.")
 	cmd.PersistentFlags().BoolVarP(&gFlags.showConsoleLog, "show-console-log", "", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
@@ -138,8 +140,13 @@ func Command() *cobra.Command {
 	_ = cmd.PersistentFlags().MarkHidden("runner-version")
 	_ = cmd.PersistentFlags().MarkHidden("experiment")
 
+	viper.BindPFlag("showConsoleLog", cmd.PersistentFlags().Lookup("show-console-log"))
+	viper.BindPFlag("env", cmd.PersistentFlags().Lookup("env"))
+
 	cmd.AddCommand(
+		NewCypressCmd(),
 		NewEspressoCmd(),
+		NewPuppeteerCmd(),
 		NewTestcafeCmd(),
 		NewXCUITestCmd(),
 	)
@@ -172,6 +179,16 @@ func preRun() error {
 	}
 	typeDef = d
 
+	// Prepare viper for all subcommands.
+	if gFlags.cfgFilePath != "" {
+		name := strings.TrimSuffix(filepath.Base(gFlags.cfgFilePath), filepath.Ext(gFlags.cfgFilePath)) // config name without extension
+		viper.SetConfigName(name)
+		viper.AddConfigPath(filepath.Dir(gFlags.cfgFilePath))
+		if err := viper.ReadInConfig(); err != nil {
+			return fmt.Errorf("failed to locate project config: %v", err)
+		}
+	}
+
 	tcClient = testcomposer.Client{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         "", // updated later once region is determined
@@ -201,7 +218,7 @@ func preRun() error {
 // Run runs the command
 func Run(cmd *cobra.Command) (int, error) {
 	if typeDef.Kind == cypress.Kind {
-		return runCypress(cmd, tcClient, restoClient, &appsClient)
+		return runCypress(cmd, cypressFlags{}, tcClient, restoClient, appsClient)
 	}
 	if typeDef.Kind == playwright.Kind {
 		return runPlaywright(cmd, tcClient, restoClient, &appsClient)

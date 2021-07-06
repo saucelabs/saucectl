@@ -25,13 +25,16 @@ func TestValidate(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name:        "validating throws error on empty app",
-			p:           &Project{},
+			name: "validating throws error on empty app",
+			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
+			},
 			expectedErr: errors.New("missing path to app .ipa"),
 		},
 		{
 			name: "validating passing with .ipa",
 			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Xcuitest: Xcuitest{
 					App:     "/path/to/app.ipa",
 					TestApp: "/path/to/app.ipa",
@@ -50,6 +53,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "validating passing with .app",
 			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Xcuitest: Xcuitest{
 					App:     "/path/to/app.app",
 					TestApp: "/path/to/app.app",
@@ -68,6 +72,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "validating error with app other than .ipa / .app",
 			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Xcuitest: Xcuitest{
 					App:     "/path/to/app.zip",
 					TestApp: "/path/to/app.app",
@@ -78,6 +83,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "validating error with test app other than .ipa / .app",
 			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Xcuitest: Xcuitest{
 					App:     "/path/to/app.ipa",
 					TestApp: "/path/to/app.zip",
@@ -88,6 +94,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "validating throws error on empty testApp",
 			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Xcuitest: Xcuitest{
 					App:     appF,
 					TestApp: "",
@@ -98,6 +105,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "validating throws error on not test app .ipa",
 			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Xcuitest: Xcuitest{
 					App:     appF,
 					TestApp: "/path/to/bundle/tests",
@@ -108,6 +116,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "validating throws error on missing suites",
 			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Xcuitest: Xcuitest{
 					App:     appF,
 					TestApp: testAppF,
@@ -118,6 +127,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "validating throws error on missing devices",
 			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Xcuitest: Xcuitest{
 					App:     appF,
 					TestApp: testAppF,
@@ -134,6 +144,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "validating throws error on missing device name",
 			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Xcuitest: Xcuitest{
 					App:     appF,
 					TestApp: testAppF,
@@ -154,6 +165,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "validating throws error on unsupported device type",
 			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Xcuitest: Xcuitest{
 					App:     appF,
 					TestApp: testAppF,

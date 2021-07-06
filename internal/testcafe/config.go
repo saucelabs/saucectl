@@ -119,6 +119,14 @@ func FromFile(cfgPath string) (Project, error) {
 
 // SetDefaults applies config defaults in case the user has left them blank.
 func SetDefaults(p *Project) {
+	if p.Kind == "" {
+		p.Kind = Kind
+	}
+
+	if p.APIVersion == "" {
+		p.APIVersion = APIVersion
+	}
+
 	if p.Sauce.Concurrency < 1 {
 		// Default concurrency is 2
 		p.Sauce.Concurrency = 2
@@ -196,7 +204,7 @@ func SplitSuites(p Project) (Project, Project) {
 	var dockerSuites []Suite
 	var sauceSuites []Suite
 	for _, s := range p.Suites {
-		if s.Mode == "docker" || p.Defaults.Mode == "docker" {
+		if s.Mode == "docker" || (s.Mode == "" && p.Defaults.Mode == "docker") {
 			dockerSuites = append(dockerSuites, s)
 		} else {
 			sauceSuites = append(sauceSuites, s)
