@@ -10,12 +10,12 @@ import (
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/version"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"syscall"
 	"time"
 
@@ -140,12 +140,11 @@ func Command() *cobra.Command {
 	_ = cmd.PersistentFlags().MarkHidden("runner-version")
 	_ = cmd.PersistentFlags().MarkHidden("experiment")
 
-	viper.BindPFlag("showConsoleLog", cmd.PersistentFlags().Lookup("show-console-log"))
-	viper.BindPFlag("env", cmd.PersistentFlags().Lookup("env"))
+	pflags :=cmd.PersistentFlags()
 
 	cmd.AddCommand(
 		NewCypressCmd(),
-		NewEspressoCmd(),
+		NewEspressoCmd(newViperWithPflags(pflags)),
 		NewPuppeteerCmd(),
 		NewTestcafeCmd(),
 		NewXCUITestCmd(),
@@ -179,16 +178,6 @@ func preRun() error {
 	}
 	typeDef = d
 
-	// Prepare viper for all subcommands.
-	if gFlags.cfgFilePath != "" {
-		name := strings.TrimSuffix(filepath.Base(gFlags.cfgFilePath), filepath.Ext(gFlags.cfgFilePath)) // config name without extension
-		viper.SetConfigName(name)
-		viper.AddConfigPath(filepath.Dir(gFlags.cfgFilePath))
-		if err := viper.ReadInConfig(); err != nil {
-			return fmt.Errorf("failed to locate project config: %v", err)
-		}
-	}
-
 	tcClient = testcomposer.Client{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         "", // updated later once region is determined
@@ -217,6 +206,8 @@ func preRun() error {
 
 // Run runs the command
 func Run(cmd *cobra.Command) (int, error) {
+	v := newViperWithPflags(cmd.PersistentFlags())
+
 	if typeDef.Kind == cypress.Kind {
 		return runCypress(cmd, cypressFlags{}, tcClient, restoClient, appsClient)
 	}
@@ -230,7 +221,7 @@ func Run(cmd *cobra.Command) (int, error) {
 		return runPuppeteer(cmd, tcClient, restoClient)
 	}
 	if typeDef.Kind == espresso.Kind {
-		return runEspresso(cmd, espressoFlags{}, tcClient, restoClient, rdcClient, appsClient)
+		return runEspresso(cmd, v, espressoFlags{}, tcClient, restoClient, rdcClient, appsClient)
 	}
 	if typeDef.Kind == xcuitest.Kind {
 		return runXcuitest(cmd, xcuitestFlags{}, tcClient, restoClient, rdcClient, appsClient)
@@ -330,4 +321,13 @@ func checkForUpdates() {
 	if v != "" {
 		log.Warn().Msgf("A new version of saucectl is available (%s)", v)
 	}
+}
+
+func newViperWithPflags(fset *pflag.FlagSet) *viper.Viper {
+	v := viper.New()
+
+	v.BindPFlag("showConsoleLog", fset.Lookup("show-console-log"))
+	v.BindPFlag("env", fset.Lookup("env"))
+
+	return v
 }

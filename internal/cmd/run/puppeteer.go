@@ -41,7 +41,7 @@ func NewPuppeteerCmd() *cobra.Command {
 		},
 	}
 
-	sc := flags.SnakeCharmer{Fset: cmd.Flags()}
+	sc := flags.SnakeCharmer{Viper: viper.New(), Fset: cmd.Flags()}
 
 	sc.String("name", "suite.name", "", "Set the name of the job as it will appear on Sauce Labs")
 
@@ -76,7 +76,7 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 	if err := puppeteer.Validate(&p); err != nil {
 		return 1, err
 	}
-	
+
 	regio := region.FromString(p.Sauce.Region)
 	rs.URL = regio.APIBaseURL()
 	tc.URL = regio.APIBaseURL()

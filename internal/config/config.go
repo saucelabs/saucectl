@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
 	"strings"
@@ -192,4 +193,19 @@ func IsSupportedDeviceType(deviceType string) bool {
 		}
 	}
 	return false
+}
+
+func SetupViper(v *viper.Viper, cfgFilePath string) error {
+	if cfgFilePath == "" {
+		return nil
+	}
+
+	name := strings.TrimSuffix(filepath.Base(cfgFilePath), filepath.Ext(cfgFilePath)) // config name without extension
+	v.SetConfigName(name)
+	v.AddConfigPath(filepath.Dir(cfgFilePath))
+	if err := v.ReadInConfig(); err != nil {
+		return fmt.Errorf("failed to locate project config: %v", err)
+	}
+
+	return nil
 }
