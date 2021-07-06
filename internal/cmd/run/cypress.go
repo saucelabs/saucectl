@@ -3,29 +3,24 @@ package run
 import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/docker"
+	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	"os"
 )
 
-type cypressFlags struct {
-	RootDir string
-	Suite   cypress.Suite
-	Cypress cypress.Cypress
-	NPM     config.Npm
-}
-
 // NewCypressCmd creates the 'run' command for Cypress.
 func NewCypressCmd() *cobra.Command {
-	lflags := cypressFlags{}
+	sc := flags.SnakeCharmer{Fmap: map[string]*pflag.Flag{}}
 
 	cmd := &cobra.Command{
 		Use:              "cypress",
@@ -37,9 +32,9 @@ func NewCypressCmd() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			// Test patterns are passed in via positional args.
-			lflags.Suite.Config.TestFiles = args
+			viper.Set("suite.config.testFiles", args)
 
-			exitCode, err := runCypress(cmd, lflags, tcClient, restoClient, appsClient)
+			exitCode, err := runCypress(cmd, tcClient, restoClient, appsClient)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				sentry.CaptureError(err, sentry.Scope{
@@ -51,35 +46,35 @@ func NewCypressCmd() *cobra.Command {
 		},
 	}
 
-	f := cmd.Flags()
-	f.StringVar(&lflags.Suite.Name, "name", "", "Set the name of the job as it will appear on Sauce Labs")
+	sc.Fset = cmd.Flags()
+	sc.String("name", "suite.name", "", "Set the name of the job as it will appear on Sauce Labs")
 
 	// Browser & Platform
-	f.StringVar(&lflags.Suite.Browser, "browser", "", "Run tests against this browser")
-	f.StringVar(&lflags.Suite.BrowserVersion, "browserVersion", "", "The browser version (default: latest)")
-	f.StringVar(&lflags.Suite.PlatformName, "platformName", "", "Run tests against this platform")
+	sc.String("browser", "suite.browser", "", "Run tests against this browser")
+	sc.String("browserVersion", "suite.browserVersion", "", "The browser version (default: latest)")
+	sc.String("platformName", "suite.platformName", "", "Run tests against this platform")
 
 	// Cypress
-	f.StringVar(&lflags.Cypress.Version, "cypress.version", "", "The Cypress version to use")
-	f.StringVar(&lflags.Cypress.ConfigFile, "cypress.configFile", "", "The path to the cypress.json config file")
-	f.StringVar(&lflags.Cypress.Key, "cypress.key", "", "The Cypress record key")
-	f.BoolVar(&lflags.Cypress.Record, "cypress.record", false, "Whether or not to record tests to the cypress dashboard")
+	sc.String("cypress.version", "cypress.version", "", "The Cypress version to use")
+	sc.String("cypress.configFile", "cypress.configFile", "", "The path to the cypress.json config file")
+	sc.String("cypress.key", "cypress.key", "", "The Cypress record key")
+	sc.Bool("cypress.record", "cypress.record", false, "Whether or not to record tests to the cypress dashboard")
 
 	// Video & Screen(shots)
-	f.StringVar(&lflags.Suite.ScreenResolution, "screenResolution", "", "The screen resolution")
+	sc.String("screenResolution", "suite.screenResolution", "", "The screen resolution")
 
 	// Misc
-	f.StringVar(&lflags.RootDir, "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
+	sc.String("rootDir", "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
 
 	// NPM
-	f.StringVar(&lflags.NPM.Registry, "npm.registry", "", "Specify the npm registry URL")
-	f.StringToStringVar(&lflags.NPM.Packages, "npm.packages", map[string]string{}, "Specify npm packages that are required to run tests")
-	f.BoolVar(&lflags.NPM.StrictSSL, "npm.strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
+	sc.String("npm.registry", "npm.registry", "", "Specify the npm registry URL")
+	sc.StringToString("npm.packages", "npm.packages", map[string]string{}, "Specify npm packages that are required to run tests")
+	sc.Bool("npm.strictSSL", "npm.strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
 
 	return cmd
 }
 
-func runCypress(cmd *cobra.Command, flags cypressFlags, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
+func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
 	p, err := cypress.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -87,7 +82,7 @@ func runCypress(cmd *cobra.Command, flags cypressFlags, tc testcomposer.Client, 
 
 	p.Sauce.Metadata.ExpandEnv()
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
-	if err := applyCypressFlags(cmd, &p, flags); err != nil {
+	if err := applyCypressFlags(&p); err != nil {
 		return 1, err
 	}
 	cypress.SetDefaults(&p)
@@ -152,62 +147,16 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 	return r.RunProject()
 }
 
-func applyCypressFlags(cmd *cobra.Command, p *cypress.Project, flags cypressFlags) error {
-	if flags.Cypress.Version != "" {
-		p.Cypress.Version = flags.Cypress.Version
-	}
-	if flags.Cypress.ConfigFile != "" {
-		p.Cypress.ConfigFile = flags.Cypress.ConfigFile
-	}
-	if flags.Cypress.Key != "" {
-		p.Cypress.Key = flags.Cypress.Key
-	}
-	if cmd.Flags().Changed("cyoress.record") {
-		p.Cypress.Record = flags.Cypress.Record
-	}
-
-	if cmd.Flags().Changed("rootDir") || p.RootDir == "" {
-		p.RootDir = flags.RootDir
-	}
-
-	if flags.NPM.Registry != "" {
-		p.Npm.Registry = flags.NPM.Registry
-	}
-
-	if len(flags.NPM.Packages) != 0 {
-		p.Npm.Packages = flags.NPM.Packages
-	}
-
-	if cmd.Flags().Changed("npm.strictSSL") {
-		p.Npm.StrictSSL = flags.NPM.StrictSSL
-	}
-
-	if gFlags.showConsoleLog {
-		p.ShowConsoleLog = true
-	}
-	if gFlags.runnerVersion != "" {
-		p.RunnerVersion = gFlags.runnerVersion
-	}
-
-	if cmd.Flags().Lookup("select-suite").Changed {
+func applyCypressFlags(p *cypress.Project) error {
+	if gFlags.suiteName != "" {
 		if err := cypress.FilterSuites(p, gFlags.suiteName); err != nil {
 			return err
 		}
 	}
 
 	// Create an adhoc suite if "--name" is provided
-	if flags.Suite.Name != "" {
-		p.Suites = []cypress.Suite{flags.Suite}
-	}
-
-	for k, v := range gFlags.env {
-		for ks := range p.Suites {
-			s := &p.Suites[ks]
-			if s.Config.Env == nil {
-				s.Config.Env = map[string]string{}
-			}
-			s.Config.Env[k] = v
-		}
+	if p.Suite.Name != "" {
+		p.Suites = []cypress.Suite{p.Suite}
 	}
 
 	return nil

@@ -31,13 +31,16 @@ type Project struct {
 	ConfigFilePath string             `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Cypress        Cypress            `yaml:"cypress,omitempty" json:"cypress"`
-	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
-	BeforeExec     []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker         config.Docker      `yaml:"docker,omitempty" json:"docker"`
-	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
-	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
-	RunnerVersion  string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
-	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
+	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
+	Suite         Suite             `yaml:"suite,omitempty" json:"-"`
+	Suites        []Suite           `yaml:"suites,omitempty" json:"suites"`
+	BeforeExec    []string          `yaml:"beforeExec,omitempty" json:"beforeExec"`
+	Docker        config.Docker     `yaml:"docker,omitempty" json:"docker"`
+	Npm           config.Npm        `yaml:"npm,omitempty" json:"npm"`
+	RootDir       string            `yaml:"rootDir,omitempty" json:"rootDir"`
+	RunnerVersion string            `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
+	Artifacts     config.Artifacts  `yaml:"artifacts,omitempty" json:"artifacts"`
+	Env           map[string]string `yaml:"env,omitempty" json:"env"`
 }
 
 // Suite represents the cypress test suite configuration.
@@ -136,6 +139,17 @@ func SetDefaults(p *Project) {
 		s := &p.Suites[k]
 		if s.PlatformName == "" {
 			s.PlatformName = "Windows 10"
+		}
+	}
+
+	// Apply global env vars onto every suite.
+	for k, v := range p.Env {
+		for ks := range p.Suites {
+			s := &p.Suites[ks]
+			if s.Config.Env == nil {
+				s.Config.Env = map[string]string{}
+			}
+			s.Config.Env[k] = os.ExpandEnv(v)
 		}
 	}
 }
