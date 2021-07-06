@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/report"
-	"github.com/saucelabs/saucectl/internal/report/table"
 	"io"
 	"os"
 	"os/signal"
@@ -14,6 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/saucelabs/saucectl/internal/report/table"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -262,10 +263,13 @@ func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, re
 		}
 		start := time.Now()
 		containerID, output, jobDetails, passed, skipped, err := r.runSuite(opts)
+
+		browser := fmt.Sprintf("%s %s", opts.Browser, r.docker.GetBrowserVersion(r.Ctx, opts.Docker.Image, opts.Browser))
+
 		results <- result{
 			name:          opts.DisplayName,
 			containerID:   containerID,
-			browser:       opts.Browser,
+			browser:       browser,
 			jobInfo:       jobDetails,
 			passed:        passed,
 			skipped:       skipped,

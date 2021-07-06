@@ -6,13 +6,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/version"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/version"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -453,19 +454,31 @@ func (handler *Handler) ContainerRemove(ctx context.Context, srcContainerID stri
 
 // ProjectDir returns the project directory as is configured for the given image.
 func (handler *Handler) ProjectDir(ctx context.Context, imageID string) (string, error) {
+	// The image can tell us via a label where saucectl should mount the project files.
+	// We default to the working dir of the container as the default mounting target.
+	return handler.getImageLabel(ctx, imageID, "com.saucelabs.project-dir")
+}
+
+func (handler *Handler) getImageLabel(ctx context.Context, imageID string, label string) (string, error) {
 	ii, _, err := handler.client.ImageInspectWithRaw(ctx, imageID)
 	if err != nil {
 		return "", err
 	}
 
-	// The image can tell us via a label where saucectl should mount the project files.
-	// We default to the working dir of the container as the default mounting target.
-	p := ii.Config.WorkingDir
-	if v := ii.Config.Labels["com.saucelabs.project-dir"]; v != "" {
-		p = v
+	return ii.Config.Labels[label], nil
+}
+
+// GetBrowserVersion gets the given browser's version from an image's labels
+func (handler *Handler) GetBrowserVersion(ctx context.Context, imageID string, browser string) string {
+	label := fmt.Sprintf("com.saucelabs.%s-version", browser)
+	val, _ := handler.getImageLabel(ctx, imageID, label)
+	if val == "" {
+		// fallback to old label
+		label = fmt.Sprintf("selenium_%s_version", browser)
+		val, _ = handler.getImageLabel(ctx, imageID, label)
 	}
 
-	return p, nil
+	return val
 }
 
 // JobInfoFile returns the file containing the job details url for the given image.
