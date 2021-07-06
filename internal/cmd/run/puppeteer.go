@@ -11,18 +11,22 @@ import (
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"os"
 )
 
 // NewPuppeteerCmd creates the 'run' command for Puppeteer.
 func NewPuppeteerCmd() *cobra.Command {
+	sc := flags.SnakeCharmer{Fmap: map[string]*pflag.Flag{}}
+
 	cmd := &cobra.Command{
 		Use:              "puppeteer",
 		Short:            "Run puppeteer tests",
 		Hidden:           true, // TODO reveal command once ready
 		TraverseChildren: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			sc.BindAll()
 			return preRun()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
@@ -41,7 +45,7 @@ func NewPuppeteerCmd() *cobra.Command {
 		},
 	}
 
-	sc := flags.SnakeCharmer{Fset: cmd.Flags()}
+	sc.Fset = cmd.Flags()
 
 	sc.String("name", "suite.name", "", "Set the name of the job as it will appear on Sauce Labs")
 
@@ -76,7 +80,7 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 	if err := puppeteer.Validate(&p); err != nil {
 		return 1, err
 	}
-	
+
 	regio := region.FromString(p.Sauce.Region)
 	rs.URL = regio.APIBaseURL()
 	tc.URL = regio.APIBaseURL()
