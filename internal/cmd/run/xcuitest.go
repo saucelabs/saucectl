@@ -1,7 +1,6 @@
 package run
 
 import (
-	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -71,17 +70,13 @@ func runXcuitest(cmd *cobra.Command, flags xcuitestFlags, tc testcomposer.Client
 	}
 	p.Sauce.Metadata.ExpandEnv()
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
-	applyXCUITestFlags(&p, flags)
+	if err := applyXCUITestFlags(&p, flags); err != nil {
+		return 1, err
+	}
 	xcuitest.SetDefaults(&p)
 
 	if err := xcuitest.Validate(p); err != nil {
 		return 1, err
-	}
-
-	if cmd.Flags().Lookup("select-suite").Changed {
-		if err := filterXcuitestSuite(&p); err != nil {
-			return 1, err
-		}
 	}
 
 	regio := region.FromString(p.Sauce.Region)
@@ -122,19 +117,15 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 	return r.RunProject()
 }
 
-func filterXcuitestSuite(c *xcuitest.Project) error {
-	for _, s := range c.Suites {
-		if s.Name == gFlags.suiteName {
-			c.Suites = []xcuitest.Suite{s}
-			return nil
+func applyXCUITestFlags(p *xcuitest.Project, flags xcuitestFlags) error {
+	if gFlags.suiteName != "" {
+		if err := xcuitest.FilterSuites(p, gFlags.suiteName); err != nil {
+			return err
 		}
 	}
-	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
-}
 
-func applyXCUITestFlags(p *xcuitest.Project, flags xcuitestFlags) {
 	if p.Suite.Name == "" {
-		return
+		return nil
 	}
 
 	if flags.Device.Changed {
@@ -142,4 +133,6 @@ func applyXCUITestFlags(p *xcuitest.Project, flags xcuitestFlags) {
 	}
 
 	p.Suites = []xcuitest.Suite{p.Suite}
+
+	return nil
 }

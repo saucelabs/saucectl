@@ -79,19 +79,15 @@ func runEspresso(cmd *cobra.Command, flags espressoFlags, tc testcomposer.Client
 	}
 	p.Sauce.Metadata.ExpandEnv()
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
-	applyEspressoFlags(&p, flags)
+	if err := applyEspressoFlags(&p, flags); err != nil {
+		return 1, err
+	}
 	espresso.SetDefaults(&p)
 
 	if err := espresso.Validate(p); err != nil {
 		return 1, err
 	}
-
-	if cmd.Flags().Lookup("select-suite").Changed {
-		if err := filterEspressoSuite(&p); err != nil {
-			return 1, err
-		}
-	}
-
+	
 	regio := region.FromString(p.Sauce.Region)
 
 	tc.URL = regio.APIBaseURL()
@@ -141,9 +137,15 @@ func filterEspressoSuite(c *espresso.Project) error {
 	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
 }
 
-func applyEspressoFlags(p *espresso.Project, flags espressoFlags) {
+func applyEspressoFlags(p *espresso.Project, flags espressoFlags) error {
+	if gFlags.suiteName != "" {
+		if err := espresso.FilterSuites(p, gFlags.suiteName); err != nil {
+			return err
+		}
+	}
+
 	if p.Suite.Name == "" {
-		return
+		return nil
 	}
 
 	if flags.Device.Changed {
@@ -155,4 +157,6 @@ func applyEspressoFlags(p *espresso.Project, flags espressoFlags) {
 	}
 
 	p.Suites = []espresso.Suite{p.Suite}
+
+	return nil
 }
