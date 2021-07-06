@@ -8,11 +8,20 @@ import (
 
 // SnakeCharmer because Cobra and Viper. Get it?
 // It's a convenience wrapper around cobra and viper, allowing the user to declare and bind flags at the same time.
+//
+// Example:
+//	sc := flags.SnakeCharmer{Fmap: map[string]*pflag.Flag{}}
+//	sc.Fset = cmd.Flags()
+//	sc.String("name", "suite.name", "", "Set the name of the job as it will appear on Sauce Labs")
+//  sc.BindAll()
+//
 type SnakeCharmer struct {
 	Fset *pflag.FlagSet
+	// Fmap maps field names (key) to flags (value).
 	Fmap map[string]*pflag.Flag
 }
 
+// BindAll binds all previously added flags to their respective fields.
 func (s *SnakeCharmer) BindAll() {
 	for fieldName, flag := range s.Fmap {
 		if err := viper.BindPFlag(fieldName, flag); err != nil {
