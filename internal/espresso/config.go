@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/spf13/viper"
 	"os"
 	"strings"
 
 	"github.com/saucelabs/saucectl/internal/config"
-	"gopkg.in/yaml.v2"
 )
 
 // Config descriptors.
@@ -26,8 +26,10 @@ type Project struct {
 	ConfigFilePath string             `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Espresso       Espresso           `yaml:"espresso,omitempty" json:"espresso"`
-	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
-	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
+	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
+	Suite     Suite            `yaml:"suite,omitempty" json:"-"`
+	Suites    []Suite          `yaml:"suites,omitempty" json:"suites"`
+	Artifacts config.Artifacts `yaml:"artifacts,omitempty" json:"artifacts"`
 }
 
 // Espresso represents espresso apps configuration.
@@ -63,28 +65,14 @@ const Android = "Android"
 func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
-	if cfgPath == "" {
-		return Project{}, nil
-	}
-
-	f, err := os.Open(cfgPath)
-	if err != nil {
-		return Project{}, fmt.Errorf("failed to locate project config: %v", err)
-	}
-	defer f.Close()
-
-	if err := yaml.NewDecoder(f).Decode(&p); err != nil {
-		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
+	if err := viper.Unmarshal(&p); err != nil {
+		return p, err
 	}
 	p.ConfigFilePath = cfgPath
 
 	p.Espresso.App = os.ExpandEnv(p.Espresso.App)
 	p.Espresso.TestApp = os.ExpandEnv(p.Espresso.TestApp)
-
-	if p.Kind != Kind && p.APIVersion != APIVersion {
-		return p, config.ErrUnknownCfg
-	}
-
+	
 	return p, nil
 }
 

@@ -2,11 +2,11 @@ package run
 
 import (
 	"fmt"
+	"github.com/spf13/pflag"
 	"os"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
@@ -20,16 +20,13 @@ import (
 )
 
 type espressoFlags struct {
-	Name        string
-	App         string
-	TestApp     string
-	TestOptions espresso.TestOptions
-	Emulator    flags.Emulator
-	Device      flags.Device
+	Emulator flags.Emulator
+	Device   flags.Device
 }
 
 // NewEspressoCmd creates the 'run' command for espresso.
 func NewEspressoCmd() *cobra.Command {
+	sc := flags.SnakeCharmer{Fmap: map[string]*pflag.Flag{}}
 	lflags := espressoFlags{}
 
 	cmd := &cobra.Command{
@@ -38,6 +35,7 @@ func NewEspressoCmd() *cobra.Command {
 		Hidden:           true, // TODO reveal command once ready
 		TraverseChildren: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			sc.BindAll()
 			return preRun()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
@@ -53,22 +51,22 @@ func NewEspressoCmd() *cobra.Command {
 		},
 	}
 
-	f := cmd.Flags()
-	f.StringVar(&lflags.Name, "name", "", "Sets the name of the job as it will appear on Sauce Labs")
-	f.StringVar(&lflags.App, "app", "", "Specifies the app under test")
-	f.StringVar(&lflags.TestApp, "testApp", "", "Specifies the test app")
+	sc.Fset = cmd.Flags()
+	sc.String("name", "suite.name", "", "Sets the name of the job as it will appear on Sauce Labs")
+	sc.String("app", "espresso.app", "", "Specifies the app under test")
+	sc.String("testApp", "espresso.testApp", "", "Specifies the test app")
 
 	// Test Options
-	f.StringSliceVar(&lflags.TestOptions.Class, "testOptions.class", []string{}, "Include classes")
-	f.StringSliceVar(&lflags.TestOptions.NotClass, "testOptions.notClass", []string{}, "Exclude classes")
-	f.StringVar(&lflags.TestOptions.Package, "testOptions.package", "", "Include package")
-	f.StringVar(&lflags.TestOptions.Size, "testOptions.size", "", "Include tests based on size")
-	f.StringVar(&lflags.TestOptions.Annotation, "testOptions.annotation", "", "Include tests based on the annotation")
-	f.IntVar(&lflags.TestOptions.NumShards, "testOptions.numShards", 0, "Total number of shards")
+	sc.StringSlice("testOptions.class", "suite.testOptions.class", []string{}, "Include classes")
+	sc.StringSlice("testOptions.notClass", "suite.testOptions.notClass", []string{}, "Exclude classes")
+	sc.String("testOptions.package", "suite.testOptions.package", "", "Include package")
+	sc.String("testOptions.size", "suite.testOptions.size", "", "Include tests based on size")
+	sc.String("testOptions.annotation", "suite.testOptions.annotation", "", "Include tests based on the annotation")
+	sc.Int("testOptions.numShards", "suite.testOptions.numShards", 0, "Total number of shards")
 
 	// Emulators and Devices
-	f.Var(&lflags.Emulator, "emulator", "Specifies the emulator to use for testing")
-	f.Var(&lflags.Device, "device", "Specifies the device to use for testing")
+	cmd.Flags().Var(&lflags.Emulator, "emulator", "Specifies the emulator to use for testing")
+	cmd.Flags().Var(&lflags.Device, "device", "Specifies the device to use for testing")
 
 	return cmd
 }
@@ -144,35 +142,17 @@ func filterEspressoSuite(c *espresso.Project) error {
 }
 
 func applyEspressoFlags(p *espresso.Project, flags espressoFlags) {
-	if flags.App != "" {
-		p.Espresso.App = flags.App
-	}
-	if flags.TestApp != "" {
-		p.Espresso.TestApp = flags.TestApp
+	if p.Suite.Name == "" {
+		return
 	}
 
-	// No name, no adhoc suite.
-	if flags.Name != "" {
-		setAdhocSuite(p, flags)
-	}
-}
-
-func setAdhocSuite(p *espresso.Project, flags espressoFlags) {
-	var dd []config.Device
 	if flags.Device.Changed {
-		dd = append(dd, flags.Device.Device)
+		p.Suite.Devices = append(p.Suite.Devices, flags.Device.Device)
 	}
 
-	var ee []config.Emulator
 	if flags.Emulator.Changed {
-		ee = append(ee, flags.Emulator.Emulator)
+		p.Suite.Emulators = append(p.Suite.Emulators, flags.Emulator.Emulator)
 	}
 
-	s := espresso.Suite{
-		Name:        flags.Name,
-		Devices:     dd,
-		Emulators:   ee,
-		TestOptions: flags.TestOptions,
-	}
-	p.Suites = []espresso.Suite{s}
+	p.Suites = []espresso.Suite{p.Suite}
 }
