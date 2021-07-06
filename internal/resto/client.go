@@ -53,7 +53,7 @@ type concurrencyResponse struct {
 	}
 }
 
-// availableTunnelsResponse is the response body as is returned by resto's rest/v1.1/users/{username}/available_tunnels endpoint.
+// availableTunnelsResponse is the response body as is returned by resto's rest/v1/users/{username}/tunnels endpoint.
 type availableTunnelsResponse map[string][]tunnel
 
 type tunnel struct {
@@ -165,7 +165,7 @@ func (c *Client) IsTunnelRunning(ctx context.Context, id string, wait time.Durat
 
 func (c *Client) isTunnelRunning(ctx context.Context, id string) error {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
-		fmt.Sprintf("%s/rest/v1.1/%s/available_tunnels", c.URL, c.Username), nil)
+		fmt.Sprintf("%s/rest/v1/%s/tunnels", c.URL, c.Username), nil)
 	if err != nil {
 		return err
 	}
@@ -173,6 +173,7 @@ func (c *Client) isTunnelRunning(ctx context.Context, id string) error {
 
 	q := req.URL.Query()
 	q.Add("full", "true")
+	q.Add("all", "true")
 	req.URL.RawQuery = q.Encode()
 
 	res, err := c.HTTPClient.Do(req)
