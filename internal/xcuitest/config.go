@@ -4,11 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/region"
-	"os"
 	"strings"
 
 	"github.com/saucelabs/saucectl/internal/config"
-	"gopkg.in/yaml.v2"
 )
 
 // Config descriptors.
@@ -22,13 +20,15 @@ var (
 
 // Project represents the xcuitest project configuration.
 type Project struct {
-	config.TypeDef `yaml:",inline"`
+	config.TypeDef `yaml:",inline" mapstructure:",squash"`
 	ConfigFilePath string             `yaml:"-" json:"-"`
 	DryRun         bool               `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Xcuitest       Xcuitest           `yaml:"xcuitest,omitempty" json:"xcuitest"`
-	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
-	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
+	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
+	Suite     Suite            `yaml:"suite,omitempty" json:"-"`
+	Suites    []Suite          `yaml:"suites,omitempty" json:"suites"`
+	Artifacts config.Artifacts `yaml:"artifacts,omitempty" json:"artifacts"`
 }
 
 // Xcuitest represents xcuitest apps configuration.
@@ -53,24 +53,11 @@ type Suite struct {
 func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
-	if cfgPath == "" {
-		return Project{}, nil
+	if err := config.Unmarshal(cfgPath, &p); err != nil {
+		return p, err
 	}
 
-	f, err := os.Open(cfgPath)
-	if err != nil {
-		return Project{}, fmt.Errorf("failed to locate project config: %v", err)
-	}
-	defer f.Close()
-
-	if err := yaml.NewDecoder(f).Decode(&p); err != nil {
-		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
-	}
 	p.ConfigFilePath = cfgPath
-
-	if p.Kind != Kind && p.APIVersion != APIVersion {
-		return p, config.ErrUnknownCfg
-	}
 
 	return p, nil
 }
@@ -145,3 +132,13 @@ func Validate(p Project) error {
 	return nil
 }
 
+// FilterSuites filters out suites in the project that don't match the given suite name.
+func FilterSuites(p *Project, suiteName string) error {
+	for _, s := range p.Suites {
+		if s.Name == suiteName {
+			p.Suites = []Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf("no suite named '%s' found", suiteName)
+}
