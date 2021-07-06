@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/rdc"
@@ -15,19 +14,17 @@ import (
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"os"
 )
 
 type xcuitestFlags struct {
-	Name        string
-	App         string
-	TestApp     string
-	TestOptions xcuitest.TestOptions
-	Device      flags.Device
+	Device flags.Device
 }
 
 // NewXCUITestCmd creates the 'run' command for XCUITest.
 func NewXCUITestCmd() *cobra.Command {
+	sc := flags.SnakeCharmer{Fmap: map[string]*pflag.Flag{}}
 	lflags := xcuitestFlags{}
 
 	cmd := &cobra.Command{
@@ -36,6 +33,7 @@ func NewXCUITestCmd() *cobra.Command {
 		Hidden:           true, // TODO reveal command once ready
 		TraverseChildren: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			sc.BindAll()
 			return preRun()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
@@ -51,16 +49,16 @@ func NewXCUITestCmd() *cobra.Command {
 		},
 	}
 
-	f := cmd.Flags()
-	f.StringVar(&lflags.Name, "name", "", "Sets the name of the job as it will appear on Sauce Labs")
-	f.StringVar(&lflags.App, "app", "", "Specifies the app under test")
-	f.StringVar(&lflags.TestApp, "testApp", "", "Specifies the test app")
+	sc.Fset = cmd.Flags()
+	sc.String("name", "suite.name", "", "Sets the name of the job as it will appear on Sauce Labs")
+	sc.String("app", "xcuitest.app", "", "Specifies the app under test")
+	sc.String("testApp", "xcuitest.testApp", "", "Specifies the test app")
 
 	// Test Options
-	f.StringSliceVar(&lflags.TestOptions.Class, "testOptions.class", []string{}, "Include classes")
+	sc.StringSlice("testOptions.class", "suite.testOptions.class", []string{}, "Include classes")
 
 	// Devices (no simulators)
-	f.Var(&lflags.Device, "device", "Specifies the device to use for testing")
+	cmd.Flags().Var(&lflags.Device, "device", "Specifies the device to use for testing")
 
 	return cmd
 }
@@ -135,29 +133,13 @@ func filterXcuitestSuite(c *xcuitest.Project) error {
 }
 
 func applyXCUITestFlags(p *xcuitest.Project, flags xcuitestFlags) {
-	if flags.App != "" {
-		p.Xcuitest.App = flags.App
-	}
-	if flags.TestApp != "" {
-		p.Xcuitest.TestApp = flags.TestApp
+	if p.Suite.Name == "" {
+		return
 	}
 
-	// No name, no adhoc suite.
-	if flags.Name != "" {
-		setXCUITestAdhocSuite(p, flags)
-	}
-}
-
-func setXCUITestAdhocSuite(p *xcuitest.Project, flags xcuitestFlags) {
-	var dd []config.Device
 	if flags.Device.Changed {
-		dd = append(dd, flags.Device.Device)
+		p.Suite.Devices = append(p.Suite.Devices, flags.Device.Device)
 	}
 
-	s := xcuitest.Suite{
-		Name:        flags.Name,
-		Devices:     dd,
-		TestOptions: flags.TestOptions,
-	}
-	p.Suites = []xcuitest.Suite{s}
+	p.Suites = []xcuitest.Suite{p.Suite}
 }
