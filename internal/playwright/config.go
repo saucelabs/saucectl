@@ -8,7 +8,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
-	"gopkg.in/yaml.v2"
 )
 
 // Config descriptors.
@@ -24,19 +23,22 @@ var supportedBrwsList = []string{"chromium", "firefox", "webkit"}
 
 // Project represents the playwright project configuration.
 type Project struct {
-	config.TypeDef `yaml:",inline"`
+	config.TypeDef `yaml:",inline" mapstructure:",squash"`
 	ShowConsoleLog bool
 	ConfigFilePath string             `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Playwright     Playwright         `yaml:"playwright,omitempty" json:"playwright"`
-	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
-	BeforeExec     []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker         config.Docker      `yaml:"docker,omitempty" json:"docker"`
-	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
-	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
-	RunnerVersion  string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
-	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
-	Defaults       config.Defaults    `yaml:"defaults,omitempty" json:"defaults"`
+	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
+	Suite         Suite             `yaml:"suite,omitempty" json:"-"`
+	Suites        []Suite           `yaml:"suites,omitempty" json:"suites"`
+	BeforeExec    []string          `yaml:"beforeExec,omitempty" json:"beforeExec"`
+	Docker        config.Docker     `yaml:"docker,omitempty" json:"docker"`
+	Npm           config.Npm        `yaml:"npm,omitempty" json:"npm"`
+	RootDir       string            `yaml:"rootDir,omitempty" json:"rootDir"`
+	RunnerVersion string            `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
+	Artifacts     config.Artifacts  `yaml:"artifacts,omitempty" json:"artifacts"`
+	Defaults      config.Defaults   `yaml:"defaults,omitempty" json:"defaults"`
+	Env           map[string]string `yaml:"env,omitempty" json:"env"`
 }
 
 // Playwright represents crucial playwright configuration that is required for setting up a project.
@@ -51,7 +53,7 @@ type Suite struct {
 	Name              string            `yaml:"name,omitempty" json:"name"`
 	Mode              string            `yaml:"mode,omitempty" json:"-"`
 	PlaywrightVersion string            `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
-	TestMatch         string            `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
+	TestMatch         []string          `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
 	PlatformName      string            `yaml:"platformName,omitempty" json:"platformName,omitempty"`
 	Params            SuiteConfig       `yaml:"params,omitempty" json:"param,omitempty"`
 	ScreenResolution  string            `yaml:"screenResolution,omitempty" json:"screenResolution,omitempty"`
@@ -83,18 +85,8 @@ type SuiteConfig struct {
 func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
-	f, err := os.Open(cfgPath)
-	if err != nil {
-		return Project{}, fmt.Errorf("failed to locate project config: %v", err)
-	}
-	defer f.Close()
-
-	if err := yaml.NewDecoder(f).Decode(&p); err != nil {
-		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
-	}
-
-	if p.Kind != Kind && p.APIVersion != APIVersion {
-		return p, config.ErrUnknownCfg
+	if err := config.Unmarshal(cfgPath, &p); err != nil {
+		return p, err
 	}
 
 	if err := checkSupportedBrowsers(&p); err != nil {
@@ -193,4 +185,15 @@ func isSupportedBrowser(browser string) bool {
 	}
 
 	return false
+}
+
+// FilterSuites filters out suites in the project that don't match the given suite name.
+func FilterSuites(p *Project, suiteName string) error {
+	for _, s := range p.Suites {
+		if s.Name == suiteName {
+			p.Suites = []Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf("no suite named '%s' found", suiteName)
 }

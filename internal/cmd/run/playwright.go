@@ -2,19 +2,75 @@ package run
 
 import (
 	"errors"
-	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
+	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/docker"
+	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
+	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+	"os"
 )
 
-func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
+// NewPlaywrightCmd creates the 'run' command for Playwright.
+func NewPlaywrightCmd() *cobra.Command {
+	sc := flags.SnakeCharmer{Fmap: map[string]*pflag.Flag{}}
+
+	cmd := &cobra.Command{
+		Use:              "playwright",
+		Short:            "Run playwright tests",
+		Hidden:           true, // TODO reveal command once ready
+		TraverseChildren: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			sc.BindAll()
+			return preRun()
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			// Test patterns are passed in via positional args.
+			viper.Set("suite.testMatch", args)
+
+			exitCode, err := runPlaywright(cmd, tcClient, restoClient, appsClient)
+			if err != nil {
+				log.Err(err).Msg("failed to execute run command")
+				sentry.CaptureError(err, sentry.Scope{
+					Username:   credentials.Get().Username,
+					ConfigFile: gFlags.cfgFilePath,
+				})
+			}
+			os.Exit(exitCode)
+		},
+	}
+
+	sc.Fset = cmd.Flags()
+
+	sc.String("name", "suite.name", "", "Set the name of the job as it will appear on Sauce Labs")
+
+	// Browser & Platform
+	sc.String("browser", "suite.params.browserName", "", "Run tests against this browser")
+	sc.String("platformName", "suite.platformName", "", "Run tests against this platform")
+
+	// Playwright
+	sc.String("playwright.version", "playwright.version", "", "The Playwright version to use")
+
+	// Misc
+	sc.String("rootDir", "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
+
+	// NPM
+	sc.String("npm.registry", "npm.registry", "", "Specify the npm registry URL")
+	sc.StringToString("npm.packages", "npm.packages", map[string]string{}, "Specify npm packages that are required to run tests")
+	sc.Bool("npm.strictSSL", "npm.strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
+
+	return cmd
+}
+
+func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
 	p, err := playwright.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -22,42 +78,8 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 
 	p.Sauce.Metadata.ExpandEnv()
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
-
-	// Merge env from CLI args and job config. CLI args take precedence.
-	for k, v := range gFlags.env {
-		for _, s := range p.Suites {
-			if s.Env == nil {
-				s.Env = map[string]string{}
-			}
-			s.Env[k] = v
-		}
-	}
-
-	if gFlags.showConsoleLog {
-		p.ShowConsoleLog = true
-	}
-	if gFlags.runnerVersion != "" {
-		p.RunnerVersion = gFlags.runnerVersion
-	}
-	if cmd.Flags().Lookup("select-suite").Changed {
-		if err := filterPlaywrightSuite(&p); err != nil {
-			return 1, err
-		}
-	}
-	if p.Defaults.Mode == "" {
-		p.Defaults.Mode = "sauce"
-	}
-	for i, s := range p.Suites {
-		if s.Mode == "" {
-			s.Mode = p.Defaults.Mode
-		}
-		p.Suites[i] = s
-	}
-	if gFlags.testEnv != "" {
-		for i, s := range p.Suites {
-			s.Mode = gFlags.testEnv
-			p.Suites[i] = s
-		}
+	if err := applyPlaywrightFlags(&p); err != nil {
+		return 1, err
 	}
 
 	regio := region.FromString(p.Sauce.Region)
@@ -97,14 +119,14 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs 
 	return cd.RunProject()
 }
 
-func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as *appstore.AppStore) (int, error) {
+func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
 	log.Info().Msg("Running Playwright in Sauce Labs")
 	printTestEnv("sauce")
 
 	r := saucecloud.PlaywrightRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader:    as,
+			ProjectUploader:    &as,
 			JobStarter:         &tc,
 			JobReader:          &rs,
 			JobStopper:         &rs,
@@ -120,13 +142,17 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 	return r.RunProject()
 }
 
-func filterPlaywrightSuite(c *playwright.Project) error {
-	for _, s := range c.Suites {
-		if s.Name == gFlags.suiteName {
-			c.Suites = []playwright.Suite{s}
-			return nil
+func applyPlaywrightFlags(p *playwright.Project) error {
+	if gFlags.suiteName != "" {
+		if err := playwright.FilterSuites(p, gFlags.suiteName); err != nil {
+			return err
 		}
 	}
-	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
-}
 
+	// Use the adhoc suite instead, if one is provided
+	if p.Suite.Name != "" {
+		p.Suites = []playwright.Suite{p.Suite}
+	}
+
+	return nil
+}
