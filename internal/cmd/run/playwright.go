@@ -80,6 +80,7 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 	if err := applyPlaywrightFlags(&p); err != nil {
 		return 1, err
 	}
+	playwright.SetDefaults(&p)
 
 	if err := playwright.Validate(&p); err != nil {
 		return 1, err

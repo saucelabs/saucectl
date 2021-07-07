@@ -89,29 +89,42 @@ func FromFile(cfgPath string) (Project, error) {
 
 	p.ConfigFilePath = cfgPath
 
-	// Default mode to Mount
+	return p, nil
+}
+
+// SetDefaults applies config defaults in case the user has left them blank.
+func SetDefaults(p *Project) {
+	if p.Kind == "" {
+		p.Kind = Kind
+	}
+
+	if p.APIVersion == "" {
+		p.APIVersion = APIVersion
+	}
+
+	if p.Sauce.Concurrency < 1 {
+		p.Sauce.Concurrency = 2
+	}
+
+	// Set default docker file transfer to mount
 	if p.Docker.FileTransfer == "" {
 		p.Docker.FileTransfer = config.DockerFileMount
 	}
 
-	if p.Sauce.Concurrency < 1 {
-		// Default concurrency is 2
-		p.Sauce.Concurrency = 2
-	}
+	// Apply global env vars onto every suite.
+	for k, v := range p.Env {
+		for ks := range p.Suites {
+			s := &p.Suites[ks]
+			if s.Env == nil {
+				s.Env = map[string]string{}
+			}
+			s.Env[k] = os.ExpandEnv(v)
 
-	for i, s := range p.Suites {
-		env := map[string]string{}
-		for k, v := range s.Env {
-			env[k] = os.ExpandEnv(v)
-		}
-		p.Suites[i].Env = env
-
-		if s.PlatformName == "" {
-			s.PlatformName = "Windows 10"
+			if s.PlatformName == "" {
+				s.PlatformName = "Windows 10"
+			}
 		}
 	}
-
-	return p, nil
 }
 
 // SplitSuites divided Suites to dockerSuites and sauceSuites
