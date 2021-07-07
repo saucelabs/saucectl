@@ -51,7 +51,7 @@ type Suite struct {
 	Name              string            `yaml:"name,omitempty" json:"name"`
 	Mode              string            `yaml:"mode,omitempty" json:"-"`
 	PlaywrightVersion string            `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
-	TestMatch         string            `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
+	TestMatch         []string          `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
 	PlatformName      string            `yaml:"platformName,omitempty" json:"platformName,omitempty"`
 	Params            SuiteConfig       `yaml:"params,omitempty" json:"param,omitempty"`
 	ScreenResolution  string            `yaml:"screenResolution,omitempty" json:"screenResolution,omitempty"`
