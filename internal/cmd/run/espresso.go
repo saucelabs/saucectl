@@ -1,7 +1,6 @@
 package run
 
 import (
-	"fmt"
 	"github.com/spf13/pflag"
 	"os"
 
@@ -87,7 +86,7 @@ func runEspresso(cmd *cobra.Command, flags espressoFlags, tc testcomposer.Client
 	if err := espresso.Validate(p); err != nil {
 		return 1, err
 	}
-	
+
 	regio := region.FromString(p.Sauce.Region)
 
 	tc.URL = regio.APIBaseURL()
