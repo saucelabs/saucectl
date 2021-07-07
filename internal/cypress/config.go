@@ -25,7 +25,7 @@ var (
 
 // Project represents the cypress project configuration.
 type Project struct {
-	config.TypeDef `yaml:",inline"`
+	config.TypeDef `yaml:",inline" mapstructure:",squash"`
 	Defaults       config.Defaults `yaml:"defaults" json:"defaults"`
 	ShowConsoleLog bool
 	ConfigFilePath string             `yaml:"-" json:"-"`
