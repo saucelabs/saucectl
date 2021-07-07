@@ -3,10 +3,10 @@ package playwright
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 )
 
@@ -43,9 +43,7 @@ type Project struct {
 
 // Playwright represents crucial playwright configuration that is required for setting up a project.
 type Playwright struct {
-	// Deprecated. ProjectPath is succeeded by Project.RootDir.
-	ProjectPath string `yaml:"projectPath,omitempty" json:"projectPath,omitempty"`
-	Version     string `yaml:"version,omitempty" json:"version,omitempty"`
+	Version string `yaml:"version,omitempty" json:"version,omitempty"`
 }
 
 // Suite represents the playwright test suite configuration.
@@ -89,40 +87,11 @@ func FromFile(cfgPath string) (Project, error) {
 		return p, err
 	}
 
-	if err := checkSupportedBrowsers(&p); err != nil {
-		return Project{}, err
-	}
-
 	p.ConfigFilePath = cfgPath
-
-	p.Playwright.Version = config.StandardizeVersionFormat(p.Playwright.Version)
-
-	if p.Playwright.Version == "" {
-		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
-	}
-
-	// Default project path
-	if p.Playwright.ProjectPath == "" && p.RootDir == "" {
-		return Project{}, fmt.Errorf("could not find 'rootDir' in config yml, 'rootDir' must be set to specify project files")
-	} else if p.Playwright.ProjectPath != "" && p.RootDir == "" {
-		log.Warn().Msg("'playwright.projectPath' is deprecated. Use 'rootDir' instead.")
-		p.RootDir = p.Playwright.ProjectPath
-	} else if p.Playwright.ProjectPath != "" && p.RootDir != "" {
-		log.Warn().Msgf(
-			"Found both 'playwright.projectPath=%s' and 'rootDir=%s' in config. 'projectPath' is deprecated, so defaulting to rootDir '%s'",
-			p.Playwright.ProjectPath, p.RootDir, p.RootDir,
-		)
-	}
 
 	// Default mode to Mount
 	if p.Docker.FileTransfer == "" {
 		p.Docker.FileTransfer = config.DockerFileMount
-	}
-
-	if p.Docker.Image != "" {
-		log.Info().Msgf(
-			"Ignoring framework version for Docker, using provided image %s (only applicable to docker mode)",
-			p.Docker.Image)
 	}
 
 	if p.Sauce.Concurrency < 1 {
@@ -163,6 +132,34 @@ func SplitSuites(p Project) (Project, Project) {
 	sauceProject.Suites = sauceSuites
 
 	return dockerProject, sauceProject
+}
+
+// Validate validates basic configuration of the project and returns an error if any of the settings contain illegal
+// values. This is not an exhaustive operation and further validation should be performed both in the client and/or
+// server side depending on the workflow that is executed.
+func Validate(p *Project) error {
+	p.Playwright.Version = config.StandardizeVersionFormat(p.Playwright.Version)
+	if p.Playwright.Version == "" {
+		return errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+	}
+
+	// Check rootDir exists.
+	if p.RootDir != "" {
+		if _, err := os.Stat(p.RootDir); err != nil {
+			return fmt.Errorf("unable to locate the rootDir folder %s", p.RootDir)
+		}
+	}
+
+	if err := checkSupportedBrowsers(p); err != nil {
+		return err
+	}
+
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		return errors.New("no sauce region set")
+	}
+
+	return nil
 }
 
 func checkSupportedBrowsers(p *Project) error {
