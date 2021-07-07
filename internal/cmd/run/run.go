@@ -145,6 +145,7 @@ func Command() *cobra.Command {
 	cmd.AddCommand(
 		NewCypressCmd(),
 		NewEspressoCmd(),
+		NewPlaywrightCmd(),
 		NewPuppeteerCmd(),
 		NewTestcafeCmd(),
 		NewXCUITestCmd(),
@@ -210,7 +211,7 @@ func Run(cmd *cobra.Command) (int, error) {
 		return runCypress(cmd, tcClient, restoClient, appsClient)
 	}
 	if typeDef.Kind == playwright.Kind {
-		return runPlaywright(cmd, tcClient, restoClient, &appsClient)
+		return runPlaywright(cmd, tcClient, restoClient, appsClient)
 	}
 	if typeDef.Kind == testcafe.Kind {
 		return runTestcafe(cmd, testcafeFlags{}, tcClient, restoClient, appsClient)

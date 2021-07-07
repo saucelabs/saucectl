@@ -3,12 +3,11 @@ package playwright
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
-	"gopkg.in/yaml.v2"
 )
 
 // Config descriptors.
@@ -24,26 +23,27 @@ var supportedBrwsList = []string{"chromium", "firefox", "webkit"}
 
 // Project represents the playwright project configuration.
 type Project struct {
-	config.TypeDef `yaml:",inline"`
+	config.TypeDef `yaml:",inline" mapstructure:",squash"`
 	ShowConsoleLog bool
 	ConfigFilePath string             `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Playwright     Playwright         `yaml:"playwright,omitempty" json:"playwright"`
-	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
-	BeforeExec     []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker         config.Docker      `yaml:"docker,omitempty" json:"docker"`
-	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
-	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
-	RunnerVersion  string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
-	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
-	Defaults       config.Defaults    `yaml:"defaults,omitempty" json:"defaults"`
+	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
+	Suite         Suite             `yaml:"suite,omitempty" json:"-"`
+	Suites        []Suite           `yaml:"suites,omitempty" json:"suites"`
+	BeforeExec    []string          `yaml:"beforeExec,omitempty" json:"beforeExec"`
+	Docker        config.Docker     `yaml:"docker,omitempty" json:"docker"`
+	Npm           config.Npm        `yaml:"npm,omitempty" json:"npm"`
+	RootDir       string            `yaml:"rootDir,omitempty" json:"rootDir"`
+	RunnerVersion string            `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
+	Artifacts     config.Artifacts  `yaml:"artifacts,omitempty" json:"artifacts"`
+	Defaults      config.Defaults   `yaml:"defaults,omitempty" json:"defaults"`
+	Env           map[string]string `yaml:"env,omitempty" json:"env"`
 }
 
 // Playwright represents crucial playwright configuration that is required for setting up a project.
 type Playwright struct {
-	// Deprecated. ProjectPath is succeeded by Project.RootDir.
-	ProjectPath string `yaml:"projectPath,omitempty" json:"projectPath,omitempty"`
-	Version     string `yaml:"version,omitempty" json:"version,omitempty"`
+	Version string `yaml:"version,omitempty" json:"version,omitempty"`
 }
 
 // Suite represents the playwright test suite configuration.
@@ -51,7 +51,7 @@ type Suite struct {
 	Name              string            `yaml:"name,omitempty" json:"name"`
 	Mode              string            `yaml:"mode,omitempty" json:"-"`
 	PlaywrightVersion string            `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
-	TestMatch         string            `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
+	TestMatch         []string          `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
 	PlatformName      string            `yaml:"platformName,omitempty" json:"platformName,omitempty"`
 	Params            SuiteConfig       `yaml:"params,omitempty" json:"param,omitempty"`
 	ScreenResolution  string            `yaml:"screenResolution,omitempty" json:"screenResolution,omitempty"`
@@ -65,7 +65,7 @@ type SuiteConfig struct {
 	// Fields appeared in v1.12+
 	Headed        bool   `yaml:"headed,omitempty" json:"headed,omitempty"`
 	GlobalTimeout int    `yaml:"globalTimeout,omitempty" json:"globalTimeout,omitempty"`
-	Timeout       string `yaml:"timeout,omitempty" json:"timeout,omitempty"`
+	Timeout       int    `yaml:"timeout,omitempty" json:"timeout,omitempty"`
 	Grep          string `yaml:"grep,omitempty" json:"grep,omitempty"`
 	RepeatEach    int    `yaml:"repeatEach,omitempty" json:"repeatEach,omitempty"`
 	Retries       int    `yaml:"retries,omitempty" json:"retries,omitempty"`
@@ -83,74 +83,48 @@ type SuiteConfig struct {
 func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
-	f, err := os.Open(cfgPath)
-	if err != nil {
-		return Project{}, fmt.Errorf("failed to locate project config: %v", err)
-	}
-	defer f.Close()
-
-	if err := yaml.NewDecoder(f).Decode(&p); err != nil {
-		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
-	}
-
-	if p.Kind != Kind && p.APIVersion != APIVersion {
-		return p, config.ErrUnknownCfg
-	}
-
-	if err := checkSupportedBrowsers(&p); err != nil {
-		return Project{}, err
+	if err := config.Unmarshal(cfgPath, &p); err != nil {
+		return p, err
 	}
 
 	p.ConfigFilePath = cfgPath
 
-	p.Playwright.Version = config.StandardizeVersionFormat(p.Playwright.Version)
+	return p, nil
+}
 
-	if p.Playwright.Version == "" {
-		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+// SetDefaults applies config defaults in case the user has left them blank.
+func SetDefaults(p *Project) {
+	if p.Kind == "" {
+		p.Kind = Kind
 	}
 
-	// Default project path
-	if p.Playwright.ProjectPath == "" && p.RootDir == "" {
-		return Project{}, fmt.Errorf("could not find 'rootDir' in config yml, 'rootDir' must be set to specify project files")
-	} else if p.Playwright.ProjectPath != "" && p.RootDir == "" {
-		log.Warn().Msg("'playwright.projectPath' is deprecated. Use 'rootDir' instead.")
-		p.RootDir = p.Playwright.ProjectPath
-	} else if p.Playwright.ProjectPath != "" && p.RootDir != "" {
-		log.Warn().Msgf(
-			"Found both 'playwright.projectPath=%s' and 'rootDir=%s' in config. 'projectPath' is deprecated, so defaulting to rootDir '%s'",
-			p.Playwright.ProjectPath, p.RootDir, p.RootDir,
-		)
+	if p.APIVersion == "" {
+		p.APIVersion = APIVersion
 	}
 
-	// Default mode to Mount
+	if p.Sauce.Concurrency < 1 {
+		p.Sauce.Concurrency = 2
+	}
+
+	// Set default docker file transfer to mount
 	if p.Docker.FileTransfer == "" {
 		p.Docker.FileTransfer = config.DockerFileMount
 	}
 
-	if p.Docker.Image != "" {
-		log.Info().Msgf(
-			"Ignoring framework version for Docker, using provided image %s (only applicable to docker mode)",
-			p.Docker.Image)
-	}
+	// Apply global env vars onto every suite.
+	for k, v := range p.Env {
+		for ks := range p.Suites {
+			s := &p.Suites[ks]
+			if s.Env == nil {
+				s.Env = map[string]string{}
+			}
+			s.Env[k] = os.ExpandEnv(v)
 
-	if p.Sauce.Concurrency < 1 {
-		// Default concurrency is 2
-		p.Sauce.Concurrency = 2
-	}
-
-	for i, s := range p.Suites {
-		env := map[string]string{}
-		for k, v := range s.Env {
-			env[k] = os.ExpandEnv(v)
-		}
-		p.Suites[i].Env = env
-
-		if s.PlatformName == "" {
-			s.PlatformName = "Windows 10"
+			if s.PlatformName == "" {
+				s.PlatformName = "Windows 10"
+			}
 		}
 	}
-
-	return p, nil
 }
 
 // SplitSuites divided Suites to dockerSuites and sauceSuites
@@ -173,6 +147,34 @@ func SplitSuites(p Project) (Project, Project) {
 	return dockerProject, sauceProject
 }
 
+// Validate validates basic configuration of the project and returns an error if any of the settings contain illegal
+// values. This is not an exhaustive operation and further validation should be performed both in the client and/or
+// server side depending on the workflow that is executed.
+func Validate(p *Project) error {
+	p.Playwright.Version = config.StandardizeVersionFormat(p.Playwright.Version)
+	if p.Playwright.Version == "" {
+		return errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+	}
+
+	// Check rootDir exists.
+	if p.RootDir != "" {
+		if _, err := os.Stat(p.RootDir); err != nil {
+			return fmt.Errorf("unable to locate the rootDir folder %s", p.RootDir)
+		}
+	}
+
+	if err := checkSupportedBrowsers(p); err != nil {
+		return err
+	}
+
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		return errors.New("no sauce region set")
+	}
+
+	return nil
+}
+
 func checkSupportedBrowsers(p *Project) error {
 	errMsg := "browserName: %s is not supported. List of supported browsers: %s"
 
@@ -193,4 +195,15 @@ func isSupportedBrowser(browser string) bool {
 	}
 
 	return false
+}
+
+// FilterSuites filters out suites in the project that don't match the given suite name.
+func FilterSuites(p *Project, suiteName string) error {
+	for _, s := range p.Suites {
+		if s.Name == suiteName {
+			p.Suites = []Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf("no suite named '%s' found", suiteName)
 }
