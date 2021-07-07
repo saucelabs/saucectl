@@ -11,7 +11,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
-	"gopkg.in/yaml.v2"
 )
 
 // Config descriptors.
@@ -79,32 +78,13 @@ type Cypress struct {
 func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
-	if cfgPath == "" {
-		return Project{}, nil
+	if err := config.Unmarshal(cfgPath, &p); err != nil {
+		return p, err
 	}
 
-	f, err := os.Open(cfgPath)
-	if err != nil {
-		return Project{}, fmt.Errorf("failed to locate project config: %v", err)
-	}
-	defer f.Close()
-
-	if err := yaml.NewDecoder(f).Decode(&p); err != nil {
-		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
-	}
 	p.ConfigFilePath = cfgPath
 
-	if p.Kind != Kind && p.APIVersion != APIVersion {
-		return p, config.ErrUnknownCfg
-	}
-
 	p.Cypress.Key = os.ExpandEnv(p.Cypress.Key)
-
-	for _, s := range p.Suites {
-		for kk, v := range s.Config.Env {
-			s.Config.Env[kk] = os.ExpandEnv(v)
-		}
-	}
 
 	return p, nil
 }
