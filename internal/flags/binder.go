@@ -36,6 +36,12 @@ func (s *SnakeCharmer) Bool(flagName, fieldName string, value bool, usage string
 	s.addBind(flagName, fieldName)
 }
 
+// Float64 defines a float64 flag with specified flagName, default value, usage string and then binds it to fieldName.
+func (s *SnakeCharmer) Float64(flagName, fieldName string, value float64, usage string) {
+	s.Fset.Float64(flagName, value, usage)
+	s.addBind(flagName, fieldName)
+}
+
 // Int defines an int flag with specified flagName, default value, usage string and then binds it to fieldName.
 func (s *SnakeCharmer) Int(flagName, fieldName string, value int, usage string) {
 	s.Fset.Int(flagName, value, usage)

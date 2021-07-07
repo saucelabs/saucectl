@@ -1,7 +1,6 @@
 package run
 
 import (
-	"fmt"
 	"github.com/spf13/pflag"
 	"os"
 
@@ -87,7 +86,7 @@ func runEspresso(cmd *cobra.Command, flags espressoFlags, tc testcomposer.Client
 	if err := espresso.Validate(p); err != nil {
 		return 1, err
 	}
-	
+
 	regio := region.FromString(p.Sauce.Region)
 
 	tc.URL = regio.APIBaseURL()
@@ -125,16 +124,6 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 	}
 
 	return r.RunProject()
-}
-
-func filterEspressoSuite(c *espresso.Project) error {
-	for _, s := range c.Suites {
-		if s.Name == gFlags.suiteName {
-			c.Suites = []espresso.Suite{s}
-			return nil
-		}
-	}
-	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
 }
 
 func applyEspressoFlags(p *espresso.Project, flags espressoFlags) error {

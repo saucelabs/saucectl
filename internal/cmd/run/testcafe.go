@@ -1,7 +1,6 @@
 package run
 
 import (
-	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -15,20 +14,18 @@ import (
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	"os"
 )
 
 type testcafeFlags struct {
-	RootDir string
-	// Simulator is set outside of Suite due to its special, flaggable type.
 	Simulator flags.Simulator
-	Suite     testcafe.Suite
-	Testcafe  testcafe.Testcafe
-	NPM       config.Npm
 }
 
 // NewTestcafeCmd creates the 'run' command for TestCafe.
 func NewTestcafeCmd() *cobra.Command {
+	sc := flags.SnakeCharmer{Fmap: map[string]*pflag.Flag{}}
 	lflags := testcafeFlags{}
 
 	cmd := &cobra.Command{
@@ -37,11 +34,12 @@ func NewTestcafeCmd() *cobra.Command {
 		Hidden:           true, // TODO reveal command once ready
 		TraverseChildren: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			sc.BindAll()
 			return preRun()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			// Test patterns are passed in via positional args.
-			lflags.Suite.Src = args
+			viper.Set("suite.src", args)
 
 			exitCode, err := runTestcafe(cmd, lflags, tcClient, restoClient, appsClient)
 			if err != nil {
@@ -56,41 +54,42 @@ func NewTestcafeCmd() *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	f.StringVar(&lflags.Suite.Name, "name", "", "Set the name of the job as it will appear on Sauce Labs")
+	sc.Fset = cmd.Flags()
+	sc.String("name", "suite.name", "", "Set the name of the job as it will appear on Sauce Labs")
 
 	// Browser & Platform
-	f.StringVar(&lflags.Suite.BrowserName, "browserName", "", "Run tests against this browser")
-	f.StringVar(&lflags.Suite.BrowserVersion, "browserVersion", "", "The browser version (default: latest)")
-	f.StringVar(&lflags.Suite.PlatformName, "platformName", "", "Run tests against this platform")
+	sc.String("browserName", "suite.browserName", "", "Run tests against this browser")
+	sc.String("browserVersion", "suite.browserVersion", "", "The browser version (default: latest)")
+	sc.String("platformName", "suite.platformName", "", "Run tests against this platform")
 
 	// Video & Screen(shots)
-	f.BoolVar(&lflags.Suite.DisableScreenshots, "disableScreenshots", false, "Prevent TestCafe from taking screenshots")
-	f.StringVar(&lflags.Suite.ScreenResolution, "screenResolution", "", "The screen resolution")
-	f.BoolVar(&lflags.Suite.Screenshots.TakeOnFails, "screenshots.takeOnFails", false, "Take screenshot on test failure")
-	f.BoolVar(&lflags.Suite.Screenshots.FullPage, "screenshots.fullPage", false, "Take screenshots of the entire page")
+	sc.Bool("disableScreenshots", "suite.disableScreenshots", false, "Prevent TestCafe from taking screenshots")
+	sc.String("screenResolution", "suite.screenResolution", "", "The screen resolution")
+	sc.Bool("screenshots.takeOnFails", "suite.screenshots.takeOnFails", false, "Take screenshot on test failure")
+	sc.Bool("screenshots.fullPage", "suite.screenshots.fullPage", false, "Take screenshots of the entire page")
 
 	// Error Handling
-	f.BoolVar(&lflags.Suite.QuarantineMode, "quarantineMode", false, "Enable the quarantine mode for tests that fail")
-	f.BoolVar(&lflags.Suite.SkipJsErrors, "skipJsErrors", false, "Ignore JavaScript errors that occur on a tested web page")
-	f.BoolVar(&lflags.Suite.SkipUncaughtErrors, "skipUncaughtErrors", false, "Ignore uncaught errors or unhandled promise rejections on the server during test execution")
-	f.BoolVar(&lflags.Suite.StopOnFirstFail, "stopOnFirstFail", false, "Stop an entire test run if any test fails")
+	sc.Bool("quarantineMode", "suite.quarantineMode", false, "Enable the quarantine mode for tests that fail")
+	sc.Bool("skipJsErrors", "suite.skipJsErrors", false, "Ignore JavaScript errors that occur on a tested web page")
+	sc.Bool("skipUncaughtErrors", "suite.skipUncaughtErrors", false, "Ignore uncaught errors or unhandled promise rejections on the server during test execution")
+	sc.Bool("stopOnFirstFail", "suite.stopOnFirstFail", false, "Stop an entire test run if any test fails")
 
 	// Timeouts
-	f.IntVar(&lflags.Suite.SelectorTimeout, "selectorTimeout", 10000, "Specify the time (in milliseconds) within which selectors attempt to return a node")
-	f.IntVar(&lflags.Suite.AssertionTimeout, "assertionTimeout", 3000, "Specify the time (in milliseconds) TestCafe attempts to successfully execute an assertion")
-	f.IntVar(&lflags.Suite.PageLoadTimeout, "pageLoadTimeout", 3000, "Specify the time (in milliseconds) passed after the DOMContentLoaded event, within which TestCafe waits for the window.load event to fire")
+	sc.Int("selectorTimeout", "suite.selectorTimeout", 10000, "Specify the time (in milliseconds) within which selectors attempt to return a node")
+	sc.Int("assertionTimeout", "suite.assertionTimeout", 3000, "Specify the time (in milliseconds) TestCafe attempts to successfully execute an assertion")
+	sc.Int("pageLoadTimeout", "suite.pageLoadTimeout", 3000, "Specify the time (in milliseconds) passed after the DOMContentLoaded event, within which TestCafe waits for the window.load event to fire")
 
 	// Misc
-	f.StringVar(&lflags.RootDir, "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
-	f.StringVar(&lflags.Testcafe.Version, "testcafe.version", "", "The TestCafe version to use")
-	f.StringSliceVar(&lflags.Suite.ClientScripts, "clientScripts", []string{}, "Inject scripts from the specified files into each page visited during the tests")
-	f.Float64Var(&lflags.Suite.Speed, "speed", 1, "Specify the test execution speed")
-	f.BoolVar(&lflags.Suite.DisablePageCaching, "disablePageCaching", false, "Prevent the browser from caching page content")
+	sc.String("rootDir", "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
+	sc.String("testcafe.version", "testcafe.version", "", "The TestCafe version to use")
+	sc.StringSlice("clientScripts", "suite.clientScripts", []string{}, "Inject scripts from the specified files into each page visited during the tests")
+	sc.Float64("speed", "suite.speed", 1, "Specify the test execution speed")
+	sc.Bool("disablePageCaching", "suite.disablePageCaching", false, "Prevent the browser from caching page content")
 
 	// NPM
-	f.StringVar(&lflags.NPM.Registry, "npm.registry", "", "Specify the npm registry URL")
-	f.StringToStringVar(&lflags.NPM.Packages, "npm.packages", map[string]string{}, "Specify npm packages that are required to run tests")
-	f.BoolVar(&lflags.NPM.StrictSSL, "npm.strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
+	sc.String("npm.registry", "npm.registry", "", "Specify the npm registry URL")
+	sc.StringToString("npm.packages", "npm.packages", map[string]string{}, "Specify npm packages that are required to run tests")
+	sc.Bool("npm.strictSSL", "npm.strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
 
 	// Simulators
 	f.Var(&lflags.Simulator, "simulator", "Specifies the simulator to use for testing")
@@ -106,7 +105,7 @@ func runTestcafe(cmd *cobra.Command, flags testcafeFlags, tc testcomposer.Client
 
 	p.Sauce.Metadata.ExpandEnv()
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
-	if err := applyTestcafeFlags(cmd, &p, flags); err != nil {
+	if err := applyTestcafeFlags(&p, flags); err != nil {
 		return 1, err
 	}
 	testcafe.SetDefaults(&p)
@@ -170,67 +169,22 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 	return r.RunProject()
 }
 
-func filterTestcafeSuite(c *testcafe.Project) error {
-	for _, s := range c.Suites {
-		if s.Name == gFlags.suiteName {
-			c.Suites = []testcafe.Suite{s}
-			return nil
-		}
-	}
-	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
-}
-
-func applyTestcafeFlags(cmd *cobra.Command, p *testcafe.Project, flags testcafeFlags) error {
-	if flags.Testcafe.Version != "" {
-		p.Testcafe.Version = flags.Testcafe.Version
-	}
-
-	if cmd.Flags().Changed("rootDir") || p.RootDir == "" {
-		p.RootDir = flags.RootDir
-	}
-
-	if flags.NPM.Registry != "" {
-		p.Npm.Registry = flags.NPM.Registry
-	}
-
-	if len(flags.NPM.Packages) != 0 {
-		p.Npm.Packages = flags.NPM.Packages
-	}
-
-	if cmd.Flags().Changed("npm.strictSSL") {
-		p.Npm.StrictSSL = flags.NPM.StrictSSL
-	}
-
-	if gFlags.showConsoleLog {
-		p.ShowConsoleLog = true
-	}
-	if gFlags.runnerVersion != "" {
-		p.RunnerVersion = gFlags.runnerVersion
-	}
-
-	if cmd.Flags().Lookup("select-suite").Changed {
+func applyTestcafeFlags(p *testcafe.Project, flags testcafeFlags) error {
+	if gFlags.suiteName != "" {
 		if err := testcafe.FilterSuites(p, gFlags.suiteName); err != nil {
 			return err
 		}
 	}
 
-	// Create an adhoc suite if "--name" is provided
-	if flags.Suite.Name != "" {
-		if flags.Simulator.Changed {
-			flags.Suite.Simulators = []config.Simulator{flags.Simulator.Simulator}
-		}
-		p.Suites = []testcafe.Suite{flags.Suite}
+	if p.Suite.Name == "" {
+		return nil
 	}
 
-	for k, v := range gFlags.env {
-		for ks := range p.Suites {
-			s := &p.Suites[ks]
-			if s.Env == nil {
-				s.Env = map[string]string{}
-			}
-			s.Env[k] = v
-		}
+	if flags.Simulator.Changed {
+		p.Suite.Simulators = []config.Simulator{flags.Simulator.Simulator}
 	}
+
+	p.Suites = []testcafe.Suite{p.Suite}
 
 	return nil
 }

@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/saucelabs/saucectl/internal/config"
-	"gopkg.in/yaml.v2"
 )
 
 // Config descriptors.
@@ -26,19 +25,22 @@ var appleDeviceRegex = regexp.MustCompile(`(?i)(iP)(hone|ad)[\w\s\d]*(Simulator)
 
 // Project represents the testcafe project configuration.
 type Project struct {
-	config.TypeDef `yaml:",inline"`
+	config.TypeDef `yaml:",inline" mapstructure:",squash"`
 	ShowConsoleLog bool
 	ConfigFilePath string             `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
-	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
-	BeforeExec     []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker         config.Docker      `yaml:"docker,omitempty" json:"docker"`
-	Testcafe       Testcafe           `yaml:"testcafe,omitempty" json:"testcafe"`
-	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
-	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
-	RunnerVersion  string             `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
-	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
-	Defaults       config.Defaults    `yaml:"defaults,omitempty" json:"defaults"`
+	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
+	Suite         Suite             `yaml:"suite,omitempty" json:"-"`
+	Suites        []Suite           `yaml:"suites,omitempty" json:"suites"`
+	BeforeExec    []string          `yaml:"beforeExec,omitempty" json:"beforeExec"`
+	Docker        config.Docker     `yaml:"docker,omitempty" json:"docker"`
+	Testcafe      Testcafe          `yaml:"testcafe,omitempty" json:"testcafe"`
+	Npm           config.Npm        `yaml:"npm,omitempty" json:"npm"`
+	RootDir       string            `yaml:"rootDir,omitempty" json:"rootDir"`
+	RunnerVersion string            `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
+	Artifacts     config.Artifacts  `yaml:"artifacts,omitempty" json:"artifacts"`
+	Defaults      config.Defaults   `yaml:"defaults,omitempty" json:"defaults"`
+	Env           map[string]string `yaml:"env,omitempty" json:"env"`
 }
 
 // Suite represents the testcafe test suite configuration.
@@ -87,32 +89,11 @@ type Testcafe struct {
 func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
-	if cfgPath == "" {
-		return Project{}, nil
+	if err := config.Unmarshal(cfgPath, &p); err != nil {
+		return p, err
 	}
 
-	f, err := os.Open(cfgPath)
-	if err != nil {
-		return p, fmt.Errorf("failed to locate project config: %v", err)
-	}
-	defer f.Close()
-
-	if err := yaml.NewDecoder(f).Decode(&p); err != nil {
-		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
-	}
 	p.ConfigFilePath = cfgPath
-
-	if p.Kind != Kind && p.APIVersion != APIVersion {
-		return p, config.ErrUnknownCfg
-	}
-
-	for i, s := range p.Suites {
-		env := map[string]string{}
-		for k, v := range s.Env {
-			env[k] = os.ExpandEnv(v)
-		}
-		p.Suites[i].Env = env
-	}
 
 	return p, nil
 }
@@ -171,6 +152,17 @@ func SetDefaults(p *Project) {
 			if sim.PlatformName == "" && appleDeviceRegex.MatchString(sim.Name) {
 				sim.PlatformName = "iOS"
 			}
+		}
+	}
+
+	// Apply global env vars onto every suite.
+	for k, v := range p.Env {
+		for ks := range p.Suites {
+			s := &p.Suites[ks]
+			if s.Env == nil {
+				s.Env = map[string]string{}
+			}
+			s.Env[k] = os.ExpandEnv(v)
 		}
 	}
 }
