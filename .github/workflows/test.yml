@@ -124,7 +124,7 @@ jobs:
         run: ./saucectl run -c .sauce/playwright.yml --timeout 10m
 
       - name: Saucectl RUN - CLI Driven
-        run: ./saucectl run playwright "**/*.js" -c "" --name "CLI Driven" --browserName chromium --rootDir tests/e2e/playwright/ --playwright.version 1.11.1 --timeout 10m
+        run: ./saucectl run playwright "**/*.js" -c "" --name "CLI Driven" --browser chromium --rootDir tests/e2e/playwright/ --playwright.version 1.11.1 --timeout 10m
   testcafe:
     needs: build
     runs-on: ubuntu-latest
