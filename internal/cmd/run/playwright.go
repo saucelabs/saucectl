@@ -59,13 +59,13 @@ func NewPlaywrightCmd() *cobra.Command {
 	sc.String("playwright.version", "playwright.version", "", "The Playwright version to use")
 
 	// Playwright Test Options
-	sc.Bool("headed", "suite.params.headed", true, "Run tests in headed browsers")
+	sc.Bool("headed", "suite.params.headed", false, "Run tests in headed browsers")
 	sc.Int("globalTimeout", "suite.params.globalTimeout", 0, "Total timeout for the whole test run in milliseconds")
-	sc.Int("testTimeout", "suite.params.timeout", 30000, "Maximum timeout in milliseconds for each test")
+	sc.Int("testTimeout", "suite.params.timeout", 0, "Maximum timeout in milliseconds for each test")
 	sc.String("grep", "suite.params.grep", "", "Only run tests matching this regular expression")
-	sc.Int("repeatEach", "suite.params.repeatEach", 1, "Run each test N times")
+	sc.Int("repeatEach", "suite.params.repeatEach", 0, "Run each test N times")
 	sc.Int("retries", "suite.params.retries", 0, "The maximum number of retries for flaky tests")
-	sc.Int("maxFailures", "suite.params.maxFailures", 1, "Stop after the first N test failures")
+	sc.Int("maxFailures", "suite.params.maxFailures", 0, "Stop after the first N test failures")
 	// TODO sharding
 
 	// Misc
