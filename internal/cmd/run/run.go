@@ -207,7 +207,7 @@ func preRun() error {
 // Run runs the command
 func Run(cmd *cobra.Command) (int, error) {
 	if typeDef.Kind == cypress.Kind {
-		return runCypress(cmd, cypressFlags{}, tcClient, restoClient, appsClient)
+		return runCypress(cmd, tcClient, restoClient, appsClient)
 	}
 	if typeDef.Kind == playwright.Kind {
 		return runPlaywright(cmd, tcClient, restoClient, &appsClient)
