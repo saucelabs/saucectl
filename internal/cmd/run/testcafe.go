@@ -1,7 +1,6 @@
 package run
 
 import (
-	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -167,16 +166,6 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 		},
 	}
 	return r.RunProject()
-}
-
-func filterTestcafeSuite(c *testcafe.Project) error {
-	for _, s := range c.Suites {
-		if s.Name == gFlags.suiteName {
-			c.Suites = []testcafe.Suite{s}
-			return nil
-		}
-	}
-	return fmt.Errorf("suite name '%s' is invalid", gFlags.suiteName)
 }
 
 func applyTestcafeFlags(p *testcafe.Project, flags testcafeFlags) error {
