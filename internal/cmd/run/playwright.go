@@ -153,8 +153,8 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 }
 
 func applyPlaywrightFlags(p *playwright.Project) error {
-	if gFlags.suiteName != "" {
-		if err := playwright.FilterSuites(p, gFlags.suiteName); err != nil {
+	if gFlags.selectedSuite != "" {
+		if err := playwright.FilterSuites(p, gFlags.selectedSuite); err != nil {
 			return err
 		}
 	}

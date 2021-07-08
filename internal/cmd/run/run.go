@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/version"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
-	"github.com/spf13/viper"
+	"github.com/spf13/pflag"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -56,35 +57,20 @@ var (
 var gFlags = globalFlags{}
 
 type globalFlags struct {
-	cfgFilePath    string
-	globalTimeout  time.Duration
-	regionFlag     string
-	env            map[string]string
-	sauceAPI       string
-	suiteName      string
-	testEnvSilent  bool
-	testEnv        string
-	showConsoleLog bool
-	concurrency    int
-	tunnelID       string
-	tunnelParent   string
-	runnerVersion  string
-	sauceignore    string
-	experiments    map[string]string
-	dryRun         bool
-	tags           []string
-	build          string
-	artifacts      struct {
-		download struct {
-			when      string
-			match     []string
-			directory string
-		}
-	}
+	cfgFilePath   string
+	globalTimeout time.Duration
+	sauceAPI      string
+	selectedSuite string
+	testEnvSilent bool
+	testEnv       string
+	runnerVersion string
+	dryRun        bool
 }
 
 // Command creates the `run` command
 func Command() *cobra.Command {
+	sc := flags.SnakeCharmer{Fmap: map[string]*pflag.Flag{}}
+
 	cmd := &cobra.Command{
 		Use:              runUse,
 		Short:            runShort,
@@ -105,32 +91,35 @@ func Command() *cobra.Command {
 		},
 	}
 
+	sc.Fset = cmd.PersistentFlags()
+
 	defaultCfgPath := filepath.Join(".sauce", "config.yml")
 	cmd.PersistentFlags().StringVarP(&gFlags.cfgFilePath, "config", "c", defaultCfgPath, "Specifies which config file to use")
 	cmd.PersistentFlags().DurationVarP(&gFlags.globalTimeout, "timeout", "t", 0, "Global timeout that limits how long saucectl can run in total. Supports duration values like '10s', '30m' etc. (default: no timeout)")
-	cmd.PersistentFlags().StringVarP(&gFlags.regionFlag, "region", "r", "us-west-1", "The sauce labs region.")
-	cmd.PersistentFlags().StringToStringVarP(&gFlags.env, "env", "e", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
+	sc.StringP("region", "r", "sauce.region", "us-west-1", "The sauce labs region.")
+	sc.StringToStringP("env", "e", "env", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
+	// FIXME sauce-api is actually not implemented, but probably should
 	cmd.PersistentFlags().StringVar(&gFlags.sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
-	cmd.PersistentFlags().StringVar(&gFlags.suiteName, "select-suite", "", "Run specified test suite.")
+	cmd.PersistentFlags().StringVar(&gFlags.selectedSuite, "select-suite", "", "Run specified test suite.")
 	cmd.PersistentFlags().BoolVar(&gFlags.testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
 	cmd.PersistentFlags().StringVar(&gFlags.testEnv, "test-env", "", "Specifies the environment in which the tests should run. Choice: docker|sauce.")
-	cmd.PersistentFlags().BoolVarP(&gFlags.showConsoleLog, "show-console-log", "", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
-	cmd.PersistentFlags().IntVar(&gFlags.concurrency, "ccy", 2, "Concurrency specifies how many suites are run at the same time.")
-	cmd.PersistentFlags().StringVar(&gFlags.tunnelID, "tunnel-id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
-	cmd.PersistentFlags().StringVar(&gFlags.tunnelParent, "tunnel-parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
+	sc.Bool("show-console-log", "ShowConsoleLog", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
+	sc.Int("ccy", "sauce.concurrency", 2, "Concurrency specifies how many suites are run at the same time.")
+	sc.String("tunnel-id", "sauce.tunnel.id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
+	sc.String("tunnel-parent", "sauce.tunnel.parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
 	cmd.PersistentFlags().StringVar(&gFlags.runnerVersion, "runner-version", "", "Overrides the automatically determined runner version.")
-	cmd.PersistentFlags().StringVar(&gFlags.sauceignore, "sauceignore", ".sauceignore", "Specifies the path to the .sauceignore file.")
-	cmd.PersistentFlags().StringToStringVar(&gFlags.experiments, "experiment", map[string]string{}, "Specifies a list of experimental flags and values")
+	sc.String("sauceignore", "sauce.sauceignore", ".sauceignore", "Specifies the path to the .sauceignore file.")
+	sc.StringToString("experiment", "sauce.experiment", map[string]string{}, "Specifies a list of experimental flags and values")
 	cmd.PersistentFlags().BoolVarP(&gFlags.dryRun, "dry-run", "", false, "Simulate a test run without actually running any tests.")
 
 	// Metadata
-	cmd.PersistentFlags().StringSliceVar(&gFlags.tags, "tags", []string{}, "Adds tags to tests")
-	cmd.PersistentFlags().StringVar(&gFlags.build, "build", "", "Associates tests with a build")
+	sc.StringSlice("tags", "sauce.metadata.tags", []string{}, "Adds tags to tests")
+	sc.String("build", "sauce.metadata.build", "", "Associates tests with a build")
 
 	// Artifacts
-	cmd.PersistentFlags().StringVar(&gFlags.artifacts.download.when, "artifacts.download.when", "never", "Specifies when to download test artifacts")
-	cmd.PersistentFlags().StringSliceVar(&gFlags.artifacts.download.match, "artifacts.download.match", []string{}, "Specifies which test artifacts to download")
-	cmd.PersistentFlags().StringVar(&gFlags.artifacts.download.directory, "artifacts.download.directory", "", "Specifies the location where to download test artifacts to")
+	sc.String("artifacts.download.when", "artifacts.download.when", "never", "Specifies when to download test artifacts")
+	sc.StringSlice("artifacts.download.match", "artifacts.download.match", []string{}, "Specifies which test artifacts to download")
+	sc.String("artifacts.download.directory", "artifacts.download.directory", "", "Specifies the location where to download test artifacts to")
 
 	cmd.Flags().MarkDeprecated("test-env", "please set mode in config file")
 
@@ -139,8 +128,7 @@ func Command() *cobra.Command {
 	_ = cmd.PersistentFlags().MarkHidden("runner-version")
 	_ = cmd.PersistentFlags().MarkHidden("experiment")
 
-	viper.BindPFlag("showConsoleLog", cmd.PersistentFlags().Lookup("show-console-log"))
-	viper.BindPFlag("env", cmd.PersistentFlags().Lookup("env"))
+	sc.BindAll()
 
 	cmd.AddCommand(
 		NewCypressCmd(),
@@ -243,39 +231,6 @@ func printTestEnv(testEnv string) {
 }
 
 func applyGlobalFlags(cmd *cobra.Command, sauce *config.SauceConfig, arti *config.Artifacts) {
-	if sauce.Region == "" || cmd.Flags().Lookup("region").Changed {
-		sauce.Region = gFlags.regionFlag
-	}
-	if cmd.Flags().Lookup("ccy").Changed {
-		sauce.Concurrency = gFlags.concurrency
-	}
-	if cmd.Flags().Lookup("tunnel-id").Changed {
-		sauce.Tunnel.ID = gFlags.tunnelID
-	}
-	if cmd.Flags().Lookup("tunnel-parent").Changed {
-		sauce.Tunnel.Parent = gFlags.tunnelParent
-	}
-	if sauce.Sauceignore == "" || cmd.Flags().Lookup("sauceignore").Changed {
-		sauce.Sauceignore = gFlags.sauceignore
-	}
-	if cmd.Flags().Lookup("experiment").Changed {
-		sauce.Experiments = gFlags.experiments
-	}
-	if gFlags.build != "" {
-		sauce.Metadata.Build = gFlags.build
-	}
-	if len(gFlags.tags) != 0 {
-		sauce.Metadata.Tags = gFlags.tags
-	}
-	if cmd.Flags().Lookup("artifacts.download.when").Changed {
-		arti.Download.When = config.When(gFlags.artifacts.download.when)
-	}
-	if len(gFlags.artifacts.download.match) != 0 {
-		arti.Download.Match = gFlags.artifacts.download.match
-	}
-	if gFlags.artifacts.download.directory != "" {
-		arti.Download.Directory = gFlags.artifacts.download.directory
-	}
 }
 
 // awaitGlobalTimeout waits for the global timeout event. In case of global timeout event, it attempts to interrupt the

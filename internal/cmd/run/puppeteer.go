@@ -100,8 +100,8 @@ func runPuppeteerInDocker(p puppeteer.Project, testco testcomposer.Client, rs re
 }
 
 func applyPuppeteerFlags(p *puppeteer.Project) error {
-	if gFlags.suiteName != "" {
-		if err := puppeteer.FilterSuites(p, gFlags.suiteName); err != nil {
+	if gFlags.selectedSuite != "" {
+		if err := puppeteer.FilterSuites(p, gFlags.selectedSuite); err != nil {
 			return err
 		}
 	}

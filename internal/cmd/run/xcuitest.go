@@ -118,8 +118,8 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 }
 
 func applyXCUITestFlags(p *xcuitest.Project, flags xcuitestFlags) error {
-	if gFlags.suiteName != "" {
-		if err := xcuitest.FilterSuites(p, gFlags.suiteName); err != nil {
+	if gFlags.selectedSuite != "" {
+		if err := xcuitest.FilterSuites(p, gFlags.selectedSuite); err != nil {
 			return err
 		}
 	}

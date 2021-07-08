@@ -170,8 +170,8 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 }
 
 func applyTestcafeFlags(p *testcafe.Project, flags testcafeFlags) error {
-	if gFlags.suiteName != "" {
-		if err := testcafe.FilterSuites(p, gFlags.suiteName); err != nil {
+	if gFlags.selectedSuite != "" {
+		if err := testcafe.FilterSuites(p, gFlags.selectedSuite); err != nil {
 			return err
 		}
 	}
