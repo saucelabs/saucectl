@@ -96,11 +96,7 @@ func Command() *cobra.Command {
 	cmd.PersistentFlags().DurationVarP(&gFlags.globalTimeout, "timeout", "t", 0, "Global timeout that limits how long saucectl can run in total. Supports duration values like '10s', '30m' etc. (default: no timeout)")
 	sc.StringP("region", "r", "sauce.region", "us-west-1", "The sauce labs region.")
 	sc.StringToStringP("env", "e", "env", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
-	// FIXME sauce-api is actually not implemented, but probably should
-	cmd.PersistentFlags().StringVar(&gFlags.sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
-	cmd.PersistentFlags().StringVar(&gFlags.selectedSuite, "select-suite", "", "Run specified test suite.")
-	cmd.PersistentFlags().BoolVar(&gFlags.testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
-	sc.Bool("show-console-log", "ShowConsoleLog", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
+	sc.Bool("show-console-log", "showConsoleLog", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
 	sc.Int("ccy", "sauce.concurrency", 2, "Concurrency specifies how many suites are run at the same time.")
 	sc.String("tunnel-id", "sauce.tunnel.id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
 	sc.String("tunnel-parent", "sauce.tunnel.parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
@@ -119,6 +115,10 @@ func Command() *cobra.Command {
 	sc.String("artifacts.download.directory", "artifacts.download.directory", "", "Specifies the location where to download test artifacts to")
 
 	// Hide undocumented flags that the user does not need to care about.
+	// FIXME sauce-api is actually not implemented, but probably should
+	cmd.PersistentFlags().StringVar(&gFlags.sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
+	cmd.PersistentFlags().StringVar(&gFlags.selectedSuite, "select-suite", "", "Run specified test suite.")
+	cmd.PersistentFlags().BoolVar(&gFlags.testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
 	_ = cmd.PersistentFlags().MarkHidden("sauce-api")
 	_ = cmd.PersistentFlags().MarkHidden("runner-version")
 	_ = cmd.PersistentFlags().MarkHidden("experiment")
