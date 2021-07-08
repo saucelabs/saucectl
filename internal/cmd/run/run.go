@@ -100,7 +100,6 @@ func Command() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&gFlags.sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
 	cmd.PersistentFlags().StringVar(&gFlags.selectedSuite, "select-suite", "", "Run specified test suite.")
 	cmd.PersistentFlags().BoolVar(&gFlags.testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
-	cmd.PersistentFlags().StringVar(&gFlags.testEnv, "test-env", "", "Specifies the environment in which the tests should run. Choice: docker|sauce.")
 	sc.Bool("show-console-log", "ShowConsoleLog", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
 	sc.Int("ccy", "sauce.concurrency", 2, "Concurrency specifies how many suites are run at the same time.")
 	sc.String("tunnel-id", "sauce.tunnel.id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
@@ -118,8 +117,6 @@ func Command() *cobra.Command {
 	sc.String("artifacts.download.when", "artifacts.download.when", "never", "Specifies when to download test artifacts")
 	sc.StringSlice("artifacts.download.match", "artifacts.download.match", []string{}, "Specifies which test artifacts to download")
 	sc.String("artifacts.download.directory", "artifacts.download.directory", "", "Specifies the location where to download test artifacts to")
-
-	cmd.Flags().MarkDeprecated("test-env", "please set mode in config file")
 
 	// Hide undocumented flags that the user does not need to care about.
 	_ = cmd.PersistentFlags().MarkHidden("sauce-api")
