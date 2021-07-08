@@ -63,7 +63,6 @@ type globalFlags struct {
 	selectedSuite string
 	testEnvSilent bool
 	testEnv       string
-	dryRun        bool
 }
 
 // Command creates the `run` command
@@ -106,10 +105,10 @@ func Command() *cobra.Command {
 	sc.Int("ccy", "sauce.concurrency", 2, "Concurrency specifies how many suites are run at the same time.")
 	sc.String("tunnel-id", "sauce.tunnel.id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
 	sc.String("tunnel-parent", "sauce.tunnel.parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
-	sc.String( "runner-version","runnerVersion", "", "Overrides the automatically determined runner version.")
+	sc.String("runner-version", "runnerVersion", "", "Overrides the automatically determined runner version.")
 	sc.String("sauceignore", "sauce.sauceignore", ".sauceignore", "Specifies the path to the .sauceignore file.")
 	sc.StringToString("experiment", "sauce.experiment", map[string]string{}, "Specifies a list of experimental flags and values")
-	cmd.PersistentFlags().BoolVarP(&gFlags.dryRun, "dry-run", "", false, "Simulate a test run without actually running any tests.")
+	sc.Bool("dry-run", "dryRun", false, "Simulate a test run without actually running any tests.")
 
 	// Metadata
 	sc.StringSlice("tags", "sauce.metadata.tags", []string{}, "Adds tags to tests")

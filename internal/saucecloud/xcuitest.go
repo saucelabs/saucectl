@@ -30,7 +30,7 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	if r.DryRun {
+	if r.Project.DryRun {
 		r.dryRun()
 		return 0, nil
 	}

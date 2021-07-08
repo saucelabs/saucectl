@@ -26,6 +26,7 @@ var appleDeviceRegex = regexp.MustCompile(`(?i)(iP)(hone|ad)[\w\s\d]*(Simulator)
 // Project represents the testcafe project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
+	DryRun         bool `yaml:"-" json:"-"`
 	ShowConsoleLog bool
 	ConfigFilePath string             `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`

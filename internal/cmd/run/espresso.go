@@ -119,7 +119,6 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 			ShowConsoleLog:        false,
 			ArtifactDownloader:    &rs,
 			RDCArtifactDownloader: &rc,
-			DryRun:                gFlags.dryRun,
 		},
 	}
 

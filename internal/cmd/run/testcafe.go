@@ -163,7 +163,6 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
-			DryRun:             gFlags.dryRun,
 		},
 	}
 	return r.RunProject()
