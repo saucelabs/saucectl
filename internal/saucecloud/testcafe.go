@@ -22,7 +22,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	if r.DryRun {
+	if r.Project.DryRun {
 		if err := r.dryRun(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.getSuiteNames()); err != nil {
 			return exitCode, err
 		}

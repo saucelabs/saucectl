@@ -142,15 +142,14 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
-			DryRun:             gFlags.dryRun,
 		},
 	}
 	return r.RunProject()
 }
 
 func applyCypressFlags(p *cypress.Project) error {
-	if gFlags.suiteName != "" {
-		if err := cypress.FilterSuites(p, gFlags.suiteName); err != nil {
+	if gFlags.selectedSuite != "" {
+		if err := cypress.FilterSuites(p, gFlags.selectedSuite); err != nil {
 			return err
 		}
 	}

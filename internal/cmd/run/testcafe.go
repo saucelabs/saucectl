@@ -163,15 +163,14 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
-			DryRun:             gFlags.dryRun,
 		},
 	}
 	return r.RunProject()
 }
 
 func applyTestcafeFlags(p *testcafe.Project, flags testcafeFlags) error {
-	if gFlags.suiteName != "" {
-		if err := testcafe.FilterSuites(p, gFlags.suiteName); err != nil {
+	if gFlags.selectedSuite != "" {
+		if err := testcafe.FilterSuites(p, gFlags.selectedSuite); err != nil {
 			return err
 		}
 	}
