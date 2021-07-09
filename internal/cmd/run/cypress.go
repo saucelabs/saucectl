@@ -53,7 +53,7 @@ func NewCypressCmd() *cobra.Command {
 	// Browser & Platform
 	sc.String("browser", "suite.browser", "", "Run tests against this browser")
 	sc.String("browserVersion", "suite.browserVersion", "", "The browser version (default: latest)")
-	sc.String("platformName", "suite.platformName", "", "Run tests against this platform")
+	sc.String("platform", "suite.platformName", "", "Run tests against this platform")
 
 	// Cypress
 	sc.String("cypress.version", "cypress.version", "", "The Cypress version to use")
