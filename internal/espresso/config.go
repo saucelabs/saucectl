@@ -23,6 +23,7 @@ var (
 // Project represents the espresso project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
+	DryRun         bool               `yaml:"-" json:"-"`
 	ConfigFilePath string             `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Espresso       Espresso           `yaml:"espresso,omitempty" json:"espresso"`

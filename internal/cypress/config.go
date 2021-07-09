@@ -26,6 +26,7 @@ var (
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
 	Defaults       config.Defaults `yaml:"defaults" json:"defaults"`
+	DryRun         bool            `yaml:"-" json:"-"`
 	ShowConsoleLog bool
 	ConfigFilePath string             `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`

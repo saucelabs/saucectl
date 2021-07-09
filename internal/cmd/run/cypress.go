@@ -53,7 +53,7 @@ func NewCypressCmd() *cobra.Command {
 	// Browser & Platform
 	sc.String("browser", "suite.browser", "", "Run tests against this browser")
 	sc.String("browserVersion", "suite.browserVersion", "", "The browser version (default: latest)")
-	sc.String("platformName", "suite.platformName", "", "Run tests against this platform")
+	sc.String("platform", "suite.platformName", "", "Run tests against this platform")
 
 	// Cypress
 	sc.String("cypress.version", "cypress.version", "", "The Cypress version to use")
@@ -142,15 +142,14 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
-			DryRun:             gFlags.dryRun,
 		},
 	}
 	return r.RunProject()
 }
 
 func applyCypressFlags(p *cypress.Project) error {
-	if gFlags.suiteName != "" {
-		if err := cypress.FilterSuites(p, gFlags.suiteName); err != nil {
+	if gFlags.selectedSuite != "" {
+		if err := cypress.FilterSuites(p, gFlags.selectedSuite); err != nil {
 			return err
 		}
 	}

@@ -121,7 +121,6 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 			ShowConsoleLog:        false,
 			ArtifactDownloader:    &rs,
 			RDCArtifactDownloader: &rc,
-			DryRun:                gFlags.dryRun,
 		},
 	}
 
@@ -129,8 +128,8 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 }
 
 func applyEspressoFlags(p *espresso.Project, flags espressoFlags) error {
-	if gFlags.suiteName != "" {
-		if err := espresso.FilterSuites(p, gFlags.suiteName); err != nil {
+	if gFlags.selectedSuite != "" {
+		if err := espresso.FilterSuites(p, gFlags.selectedSuite); err != nil {
 			return err
 		}
 	}

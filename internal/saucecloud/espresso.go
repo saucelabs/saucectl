@@ -33,7 +33,7 @@ type EspressoRunner struct {
 func (r *EspressoRunner) RunProject() (int, error) {
 	exitCode := 1
 
-	if r.DryRun {
+	if r.Project.DryRun {
 		r.dryRun()
 		return 0, nil
 	}

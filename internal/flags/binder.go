@@ -36,6 +36,12 @@ func (s *SnakeCharmer) Bool(flagName, fieldName string, value bool, usage string
 	s.addBind(flagName, fieldName)
 }
 
+// BoolP is like Bool(), but accepts a shorthand letter.
+func (s *SnakeCharmer) BoolP(flagName, shorthand, fieldName string, value bool, usage string) {
+	s.Fset.BoolP(flagName, shorthand, value, usage)
+	s.addBind(flagName, fieldName)
+}
+
 // Float64 defines a float64 flag with specified flagName, default value, usage string and then binds it to fieldName.
 func (s *SnakeCharmer) Float64(flagName, fieldName string, value float64, usage string) {
 	s.Fset.Float64(flagName, value, usage)
@@ -54,6 +60,12 @@ func (s *SnakeCharmer) String(flagName, fieldName, value, usage string) {
 	s.addBind(flagName, fieldName)
 }
 
+// StringP is like String(), but accepts a shorthand letter.
+func (s *SnakeCharmer) StringP(flagName, shorthand, fieldName, value, usage string) {
+	s.Fset.StringP(flagName, shorthand, value, usage)
+	s.addBind(flagName, fieldName)
+}
+
 // StringSlice defines a []string flag with specified flagName, default value, usage string and then binds it to fieldName.
 func (s *SnakeCharmer) StringSlice(flagName, fieldName string, value []string, usage string) {
 	s.Fset.StringSlice(flagName, value, usage)
@@ -64,6 +76,12 @@ func (s *SnakeCharmer) StringSlice(flagName, fieldName string, value []string, u
 // it to fieldName.
 func (s *SnakeCharmer) StringToString(flagName, fieldName string, value map[string]string, usage string) {
 	s.Fset.StringToString(flagName, value, usage)
+	s.addBind(flagName, fieldName)
+}
+
+// StringToStringP is like StringToString(), but accepts a shorthand letter.
+func (s *SnakeCharmer) StringToStringP(flagName, shorthand, fieldName string, value map[string]string, usage string) {
+	s.Fset.StringToStringP(flagName, shorthand, value, usage)
 	s.addBind(flagName, fieldName)
 }
 

@@ -58,9 +58,9 @@ func NewTestcafeCmd() *cobra.Command {
 	sc.String("name", "suite.name", "", "Set the name of the job as it will appear on Sauce Labs")
 
 	// Browser & Platform
-	sc.String("browserName", "suite.browserName", "", "Run tests against this browser")
+	sc.String("browser", "suite.browserName", "", "Run tests against this browser")
 	sc.String("browserVersion", "suite.browserVersion", "", "The browser version (default: latest)")
-	sc.String("platformName", "suite.platformName", "", "Run tests against this platform")
+	sc.String("platform", "suite.platformName", "", "Run tests against this platform")
 
 	// Video & Screen(shots)
 	sc.Bool("disableScreenshots", "suite.disableScreenshots", false, "Prevent TestCafe from taking screenshots")
@@ -163,15 +163,14 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
-			DryRun:             gFlags.dryRun,
 		},
 	}
 	return r.RunProject()
 }
 
 func applyTestcafeFlags(p *testcafe.Project, flags testcafeFlags) error {
-	if gFlags.suiteName != "" {
-		if err := testcafe.FilterSuites(p, gFlags.suiteName); err != nil {
+	if gFlags.selectedSuite != "" {
+		if err := testcafe.FilterSuites(p, gFlags.selectedSuite); err != nil {
 			return err
 		}
 	}
