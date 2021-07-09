@@ -159,6 +159,10 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		jto.ClearPackageData = &s.TestOptions.ClearPackageData
 	}
 
+	for i, ID := range otherAppsIDs {
+		otherAppsIDs[i] = fmt.Sprintf("storage:%s", ID)
+	}
+
 	jobOpts <- job.StartOptions{
 		DisplayName:       displayName,
 		ConfigFilePath:    r.Project.ConfigFilePath,
