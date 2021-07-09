@@ -77,8 +77,12 @@ or peruse some of our example repositories:
   - https://github.com/saucelabs/saucectl-puppeteer-example
   - https://github.com/saucelabs/saucectl-testcafe-example`
 
+
+// UploadingTimeout is a the message to warn the user that its upload reach the timeout.
+const UploadingTimeout = `Failed to upload the project because it took too long. `
+
 // UploadingTimeoutSuggestion is a recommendation to add unnecessary files to .sauceignore in the case that the bundled file is too big.
-const UploadingTimeoutSuggestion = `Failed to upload the project because it took too long. We *highly* recommend using .sauceignore file so that saucectl does not
+const UploadingTimeoutSuggestion = `We *highly* recommend using .sauceignore file so that saucectl does not
 create big archives with unnecessary files.
 
 For more information, visit https://docs.saucelabs.com/testrunner-toolkit/configuration/bundling/index.html#exclude-files-from-the-bundle
@@ -102,8 +106,13 @@ func LogGlobalTimeoutShutdown() {
 └───────────────────────────────────────────────────┘`)
 }
 
+// LogUploadTimeout prints out a timeout warning.
+func LogUploadTimeout() {
+	red := color.New(color.FgRed).SprintFunc()
+	fmt.Printf("\n%s: %s\n\n", red("TIMEOUT"), UploadingTimeout)
+}
+
 // LogUploadTimeoutSuggestion prints out adding unnecessary files to .sauceignore
 func LogUploadTimeoutSuggestion() {
-	red := color.New(color.FgRed).SprintFunc()
-	fmt.Printf("\n%s: %s\n\n", red("TIMEOUT"), UploadingTimeoutSuggestion)
+	fmt.Printf("%s\n\n", UploadingTimeoutSuggestion)
 }
