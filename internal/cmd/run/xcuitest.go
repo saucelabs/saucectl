@@ -53,7 +53,7 @@ func NewXCUITestCmd() *cobra.Command {
 	sc.String("name", "suite.name", "", "Sets the name of the job as it will appear on Sauce Labs")
 	sc.String("app", "xcuitest.app", "", "Specifies the app under test")
 	sc.String("testApp", "xcuitest.testApp", "", "Specifies the test app")
-	sc.StringSlice("otherApps", "xcuitest.otherApps", []string{}, "Specifies the other apps")
+	sc.StringSlice("otherApps", "xcuitest.otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
 
 	// Test Options
 	sc.StringSlice("testOptions.class", "suite.testOptions.class", []string{}, "Include classes")

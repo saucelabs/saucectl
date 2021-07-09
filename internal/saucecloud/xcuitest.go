@@ -50,13 +50,9 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	var otherAppsIDs []string
-	for _, o := range r.Project.Xcuitest.OtherApps {
-		ID, err := r.uploadProject(o, otherAppsUpload)
-		if err != nil {
-			return exitCode, err
-		}
-		otherAppsIDs = append(otherAppsIDs, fmt.Sprintf("storage:%s", ID))
+	otherAppsIDs, err := r.uploadProjects(r.Project.Xcuitest.OtherApps, otherAppsUpload)
+	if err != nil {
+		return exitCode, err
 	}
 
 	passed := r.runSuites(appFileID, testAppFileID, otherAppsIDs)

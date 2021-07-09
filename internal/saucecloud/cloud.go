@@ -319,6 +319,19 @@ var (
 	otherAppsUpload uploadType = "other applications"
 )
 
+func (r *CloudRunner) uploadProjects(filename []string, pType uploadType) ([]string, error) {
+	var IDs []string
+	for _, f := range filename {
+		ID, err := r.uploadProject(f, pType)
+		if err != nil {
+			return []string{}, err
+		}
+		IDs = append(IDs, ID)
+	}
+
+	return IDs, nil
+}
+
 func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, error) {
 	log.Info().Msgf("Checking if %s has already been uploaded previously", filename)
 	if storageID, _ := r.checkIfFileAlreadyUploaded(filename); storageID != "" {
