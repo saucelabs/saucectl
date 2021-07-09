@@ -21,12 +21,13 @@ type StartOptions struct {
 	// DisplayName is used for local logging purposes only (e.g. console).
 	DisplayName string `json:"-"`
 
-	User           string `json:"username"`
-	AccessKey      string `json:"accessKey"`
-	App            string `json:"app,omitempty"`
-	Suite          string `json:"suite,omitempty"`
-	Framework      string `json:"framework,omitempty"`
-	ConfigFilePath string `json:"-"`
+	User           string   `json:"username"`
+	AccessKey      string   `json:"accessKey"`
+	App            string   `json:"app,omitempty"`
+	Suite          string   `json:"suite,omitempty"`
+	OtherApps      []string `json:"otherApps,omitempty"`
+	Framework      string   `json:"framework,omitempty"`
+	ConfigFilePath string   `json:"-"`
 
 	// FrameworkVersion contains the targeted version of the framework
 	// It should not be confused with automation tool (like jest/folio).
@@ -79,6 +80,7 @@ type RDCStarterOptions struct {
 	TestFramework string            `json:"test_framework"`
 	AppID         string            `json:"app_id"`
 	TestAppID     string            `json:"test_app_id"`
+	OtherApps     []string          `json:"other_apps"`
 	DeviceQuery   RDCDeviceQuery    `json:"device_query,omitempty"`
 	TestOptions   map[string]string `json:"test_options,omitempty"`
 	TestName      string            `json:"test_name,omitempty"`

@@ -313,9 +313,10 @@ func (r *CloudRunner) archiveProject(project interface{}, tempDir string, projec
 type uploadType string
 
 var (
-	testAppUpload uploadType = "test application"
-	appUpload     uploadType = "application"
-	projectUpload uploadType = "project"
+	testAppUpload   uploadType = "test application"
+	appUpload       uploadType = "application"
+	projectUpload   uploadType = "project"
+	otherAppsUpload uploadType = "other applications"
 )
 
 func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, error) {

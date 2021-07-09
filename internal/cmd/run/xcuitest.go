@@ -1,6 +1,8 @@
 package run
 
 import (
+	"os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -14,7 +16,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"os"
 )
 
 type xcuitestFlags struct {
@@ -52,6 +53,7 @@ func NewXCUITestCmd() *cobra.Command {
 	sc.String("name", "suite.name", "", "Sets the name of the job as it will appear on Sauce Labs")
 	sc.String("app", "xcuitest.app", "", "Specifies the app under test")
 	sc.String("testApp", "xcuitest.testApp", "", "Specifies the test app")
+	sc.StringSlice("otherApps", "xcuitest.otherApps", []string{}, "Specifies the other apps")
 
 	// Test Options
 	sc.StringSlice("testOptions.class", "suite.testOptions.class", []string{}, "Include classes")

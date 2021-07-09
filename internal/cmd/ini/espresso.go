@@ -2,10 +2,10 @@ package ini
 
 import (
 	"fmt"
+
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
 )
-
 
 func configureEspresso(cfg *initConfig) interface{} {
 	var devices []config.Device
@@ -29,20 +29,21 @@ func configureEspresso(cfg *initConfig) interface{} {
 			Concurrency: cfg.concurrency,
 		},
 		Espresso: espresso.Espresso{
-			App:     cfg.app,
-			TestApp: cfg.testApp,
+			App:       cfg.app,
+			TestApp:   cfg.testApp,
+			OtherApps: cfg.otherApps,
 		},
 		Suites: []espresso.Suite{
 			{
-				Name:      fmt.Sprintf("espresso - %s - %s", cfg.device.Name , cfg.emulator.Name),
+				Name:      fmt.Sprintf("espresso - %s - %s", cfg.device.Name, cfg.emulator.Name),
 				Devices:   devices,
 				Emulators: emulators,
 			},
 		},
 		Artifacts: config.Artifacts{
 			Download: config.ArtifactDownload{
-				When: cfg.artifactWhen,
-				Match: []string{"*"},
+				When:      cfg.artifactWhen,
+				Match:     []string{"*"},
 				Directory: "artifacts",
 			},
 		},
