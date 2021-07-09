@@ -53,7 +53,7 @@ func NewPlaywrightCmd() *cobra.Command {
 
 	// Browser & Platform
 	sc.String("browser", "suite.params.browserName", "", "Run tests against this browser")
-	sc.String("platformName", "suite.platformName", "", "Run tests against this platform")
+	sc.String("platform", "suite.platformName", "", "Run tests against this platform")
 
 	// Playwright
 	sc.String("playwright.version", "playwright.version", "", "The Playwright version to use")
