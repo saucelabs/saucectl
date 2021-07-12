@@ -2,6 +2,7 @@ package ini
 
 import (
 	"fmt"
+
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
@@ -14,12 +15,12 @@ func configureXCUITest(cfg *initConfig) interface{} {
 		},
 		Sauce: config.SauceConfig{
 			Region:      cfg.region,
-			Sauceignore: ".sauceignore",
 			Concurrency: cfg.concurrency,
 		},
 		Xcuitest: xcuitest.Xcuitest{
-			App:     cfg.app,
-			TestApp: cfg.testApp,
+			App:       cfg.app,
+			TestApp:   cfg.testApp,
+			OtherApps: cfg.otherApps,
 		},
 		Suites: []xcuitest.Suite{
 			{

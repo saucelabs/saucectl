@@ -50,7 +50,12 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	passed := r.runSuites(appFileID, testAppFileID)
+	otherAppsIDs, err := r.uploadProjects(r.Project.Xcuitest.OtherApps, otherAppsUpload)
+	if err != nil {
+		return exitCode, err
+	}
+
+	passed := r.runSuites(appFileID, testAppFileID, otherAppsIDs)
 	if passed {
 		exitCode = 0
 	}
@@ -67,7 +72,7 @@ func (r *XcuitestRunner) dryRun() {
 	}
 }
 
-func (r *XcuitestRunner) runSuites(appFileID, testAppFileID string) bool {
+func (r *XcuitestRunner) runSuites(appFileID, testAppFileID string, otherAppsIDs []string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
@@ -83,7 +88,7 @@ func (r *XcuitestRunner) runSuites(appFileID, testAppFileID string) bool {
 		for _, s := range r.Project.Suites {
 			for _, d := range s.Devices {
 				log.Debug().Str("suite", s.Name).Str("deviceName", d.Name).Str("deviceID", d.ID).Str("platformVersion", d.PlatformVersion).Msg("Starting job")
-				r.startJob(jobOpts, appFileID, testAppFileID, s, d)
+				r.startJob(jobOpts, appFileID, testAppFileID, otherAppsIDs, s, d)
 			}
 		}
 		close(jobOpts)
@@ -92,12 +97,16 @@ func (r *XcuitestRunner) runSuites(appFileID, testAppFileID string) bool {
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
 }
 
-func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, testAppFileID string, s xcuitest.Suite, d config.Device) {
+func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, testAppFileID string, otherAppsIDs []string, s xcuitest.Suite, d config.Device) {
+	for i, ID := range otherAppsIDs {
+		otherAppsIDs[i] = fmt.Sprintf("storage:%s", ID)
+	}
 	jobOpts <- job.StartOptions{
 		ConfigFilePath:   r.Project.ConfigFilePath,
 		DisplayName:      s.Name,
 		App:              fmt.Sprintf("storage:%s", appFileID),
 		Suite:            fmt.Sprintf("storage:%s", testAppFileID),
+		OtherApps:        otherAppsIDs,
 		Framework:        "xcuitest",
 		FrameworkVersion: "1.0.0-stable",
 		PlatformName:     d.PlatformName,

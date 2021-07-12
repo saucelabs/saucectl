@@ -52,7 +52,12 @@ func (r *EspressoRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	passed := r.runSuites(appFileID, testAppFileID)
+	otherAppsIDs, err := r.uploadProjects(r.Project.Espresso.OtherApps, otherAppsUpload)
+	if err != nil {
+		return exitCode, err
+	}
+
+	passed := r.runSuites(appFileID, testAppFileID, otherAppsIDs)
 	if passed {
 		exitCode = 0
 	}
@@ -60,7 +65,7 @@ func (r *EspressoRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool {
+func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string, otherAppsIDs []string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
@@ -80,13 +85,13 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string) bool 
 					s.TestOptions.ShardIndex = i
 					for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
 						log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
-						r.startJob(jobOpts, s, appFileID, testAppFileID, c)
+						r.startJob(jobOpts, s, appFileID, testAppFileID, otherAppsIDs, c)
 					}
 				}
 			} else {
 				for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
 					log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
-					r.startJob(jobOpts, s, appFileID, testAppFileID, c)
+					r.startJob(jobOpts, s, appFileID, testAppFileID, otherAppsIDs, c)
 				}
 			}
 		}
@@ -136,7 +141,7 @@ func enumerateDevicesAndEmulators(devices []config.Device, emulators []config.Em
 }
 
 // startJob add the job to the list for the workers.
-func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Suite, appFileID, testAppFileID string, d deviceConfig) {
+func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Suite, appFileID, testAppFileID string, otherAppsIDs []string, d deviceConfig) {
 	jto := job.TestOptions{
 		NotClass:   s.TestOptions.NotClass,
 		Class:      s.TestOptions.Class,
@@ -154,11 +159,16 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		jto.ClearPackageData = &s.TestOptions.ClearPackageData
 	}
 
+	for i, ID := range otherAppsIDs {
+		otherAppsIDs[i] = fmt.Sprintf("storage:%s", ID)
+	}
+
 	jobOpts <- job.StartOptions{
 		DisplayName:       displayName,
 		ConfigFilePath:    r.Project.ConfigFilePath,
 		App:               fmt.Sprintf("storage:%s", appFileID),
 		Suite:             fmt.Sprintf("storage:%s", testAppFileID),
+		OtherApps:         otherAppsIDs,
 		Framework:         "espresso",
 		FrameworkVersion:  "1.0.0-stable",
 		PlatformName:      d.platformName,

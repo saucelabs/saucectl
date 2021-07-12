@@ -3,6 +3,9 @@ package ini
 import (
 	"errors"
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
@@ -10,8 +13,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
-	"os"
-	"time"
 
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/fatih/color"
@@ -39,6 +40,7 @@ type initConfig struct {
 	cypressJSON      string
 	app              string
 	testApp          string
+	otherApps        []string
 	platformName     string
 	mode             string
 	browserName      string
@@ -87,6 +89,7 @@ func Command() *cobra.Command {
 	cmd.Flags().StringVar(&initCfg.cypressJSON, "cypress.config", "", "path to cypress.json file (cypress only)")
 	cmd.Flags().StringVar(&initCfg.app, "app", "", "path to application to test (espresso/xcuitest only)")
 	cmd.Flags().StringVarP(&initCfg.testApp, "testApp", "t", "", "path to test application (espresso/xcuitest only)")
+	cmd.Flags().StringSliceVarP(&initCfg.otherApps, "otherApps", "o", []string{}, "path to other applications (espresso/xcuitest only)")
 	cmd.Flags().StringVarP(&initCfg.platformName, "platformName", "p", "", "Specified platform name")
 	cmd.Flags().StringVarP(&initCfg.browserName, "browserName", "b", "", "Specifies browser name")
 	cmd.Flags().StringVar(&initCfg.artifactWhenStr, "artifacts.download.when", "fail", "defines when to download artifacts")

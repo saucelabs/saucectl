@@ -312,10 +312,24 @@ func (r *CloudRunner) archiveProject(project interface{}, tempDir string, projec
 type uploadType string
 
 var (
-	testAppUpload uploadType = "test application"
-	appUpload     uploadType = "application"
-	projectUpload uploadType = "project"
+	testAppUpload   uploadType = "test application"
+	appUpload       uploadType = "application"
+	projectUpload   uploadType = "project"
+	otherAppsUpload uploadType = "other applications"
 )
+
+func (r *CloudRunner) uploadProjects(filename []string, pType uploadType) ([]string, error) {
+	var IDs []string
+	for _, f := range filename {
+		ID, err := r.uploadProject(f, pType)
+		if err != nil {
+			return []string{}, err
+		}
+		IDs = append(IDs, ID)
+	}
+
+	return IDs, nil
+}
 
 func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, error) {
 	log.Info().Msgf("Checking if %s has already been uploaded previously", filename)

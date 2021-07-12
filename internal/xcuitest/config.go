@@ -3,8 +3,9 @@ package xcuitest
 import (
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/region"
 	"strings"
+
+	"github.com/saucelabs/saucectl/internal/region"
 
 	"github.com/saucelabs/saucectl/internal/config"
 )
@@ -33,8 +34,9 @@ type Project struct {
 
 // Xcuitest represents xcuitest apps configuration.
 type Xcuitest struct {
-	App     string `yaml:"app,omitempty" json:"app"`
-	TestApp string `yaml:"testApp,omitempty" json:"testApp"`
+	App       string   `yaml:"app,omitempty" json:"app"`
+	TestApp   string   `yaml:"testApp,omitempty" json:"testApp"`
+	OtherApps []string `yaml:"otherApps,omitempty" json:"otherApps"`
 }
 
 // TestOptions represents the xcuitest test filter options configuration.
