@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -66,6 +67,11 @@ func New(url, username, accessKey string, timeout time.Duration) *AppStore {
 	}
 }
 
+// isMobileAppPackage determines if a file is a mobile app package.
+func isMobileAppPackage(name string) bool {
+	return strings.HasSuffix(name, ".ipa") || strings.HasSuffix(name, ".apk")
+}
+
 // Upload uploads file to remote storage
 func (s *AppStore) Upload(name string) (storage.ArtifactMeta, error) {
 	body, contentType, err := readFile(name)
@@ -81,7 +87,10 @@ func (s *AppStore) Upload(name string) (storage.ArtifactMeta, error) {
 	resp, err := s.HTTPClient.Do(request)
 	if err != nil {
 		if err.(*url.Error).Timeout() {
-			msg.LogUploadTimeoutSuggestion()
+			msg.LogUploadTimeout()
+			if !isMobileAppPackage(name) {
+				msg.LogUploadTimeoutSuggestion()
+			}
 			return storage.ArtifactMeta{}, errors.New("failed to upload project")
 		}
 		return storage.ArtifactMeta{}, err

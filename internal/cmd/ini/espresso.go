@@ -25,7 +25,6 @@ func configureEspresso(cfg *initConfig) interface{} {
 		},
 		Sauce: config.SauceConfig{
 			Region:      cfg.region,
-			Sauceignore: ".sauceignore",
 			Concurrency: cfg.concurrency,
 		},
 		Espresso: espresso.Espresso{
