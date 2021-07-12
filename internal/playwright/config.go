@@ -139,7 +139,7 @@ func shardSuites(suites []Suite) []Suite {
 	var shardedSuites []Suite
 	for _, s := range suites {
 		// Use the original suite if there is nothing to shard.
-		if s.NumShards < 1 {
+		if s.NumShards <= 1 {
 			shardedSuites = append(shardedSuites, s)
 			continue
 		}

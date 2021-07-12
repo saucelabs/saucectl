@@ -38,9 +38,13 @@ func Test_shardSuites(t *testing.T) {
 		},
 		{
 			name: "shard nothing",
-			args: args{[]Suite{{Name: "Test"}}},
+			args: args{[]Suite{
+				{Name: "Test"},
+				{Name: "Test", NumShards: 1},
+			}},
 			want: []Suite{
 				{Name: "Test"},
+				{Name: "Test", NumShards: 1},
 			},
 		},
 	}
