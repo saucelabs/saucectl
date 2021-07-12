@@ -3,9 +3,10 @@ package espresso
 import (
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 	"strings"
+
+	"github.com/saucelabs/saucectl/internal/region"
 
 	"github.com/saucelabs/saucectl/internal/config"
 )
@@ -34,8 +35,9 @@ type Project struct {
 
 // Espresso represents espresso apps configuration.
 type Espresso struct {
-	App     string `yaml:"app,omitempty" json:"app"`
-	TestApp string `yaml:"testApp,omitempty" json:"testApp"`
+	App       string   `yaml:"app,omitempty" json:"app"`
+	TestApp   string   `yaml:"testApp,omitempty" json:"testApp"`
+	OtherApps []string `yaml:"otherApps,omitempty" json:"otherApps"`
 }
 
 // TestOptions represents the espresso test filter options configuration.
@@ -72,6 +74,12 @@ func FromFile(cfgPath string) (Project, error) {
 
 	p.Espresso.App = os.ExpandEnv(p.Espresso.App)
 	p.Espresso.TestApp = os.ExpandEnv(p.Espresso.TestApp)
+
+	var otherApps []string
+	for _, o := range p.Espresso.OtherApps {
+		otherApps = append(otherApps, os.ExpandEnv(o))
+	}
+	p.Espresso.OtherApps = otherApps
 
 	return p, nil
 }

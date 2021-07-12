@@ -21,12 +21,13 @@ type StartOptions struct {
 	// DisplayName is used for local logging purposes only (e.g. console).
 	DisplayName string `json:"-"`
 
-	User           string `json:"username"`
-	AccessKey      string `json:"accessKey"`
-	App            string `json:"app,omitempty"`
-	Suite          string `json:"suite,omitempty"`
-	Framework      string `json:"framework,omitempty"`
-	ConfigFilePath string `json:"-"`
+	User           string   `json:"username"`
+	AccessKey      string   `json:"accessKey"`
+	App            string   `json:"app,omitempty"`
+	Suite          string   `json:"suite,omitempty"`
+	OtherApps      []string `json:"otherApps,omitempty"`
+	Framework      string   `json:"framework,omitempty"`
+	ConfigFilePath string   `json:"-"`
 
 	// FrameworkVersion contains the targeted version of the framework
 	// It should not be confused with automation tool (like jest/folio).
@@ -65,26 +66,4 @@ type TunnelOptions struct {
 // Starter is the interface for starting jobs.
 type Starter interface {
 	StartJob(ctx context.Context, opts StartOptions) (jobID string, isRDC bool, err error)
-}
-
-// RDCDeviceQuery represents the device query for RDC tests.
-type RDCDeviceQuery struct {
-	Type               string `json:"type,omitempty"`
-	DeviceDescriptorID string `json:"device_descriptor_id,omitempty"`
-	RequestDeviceType  string `json:"requested_device_type,omitempty"`
-}
-
-// RDCStarterOptions represents the options for starting a job on RDC Cloud.
-type RDCStarterOptions struct {
-	TestFramework string            `json:"test_framework"`
-	AppID         string            `json:"app_id"`
-	TestAppID     string            `json:"test_app_id"`
-	DeviceQuery   RDCDeviceQuery    `json:"device_query,omitempty"`
-	TestOptions   map[string]string `json:"test_options,omitempty"`
-	TestName      string            `json:"test_name,omitempty"`
-}
-
-// RDCStarter is the interface for starting jobs on RDC
-type RDCStarter interface {
-	StartJob(opts RDCStarterOptions) (string, error)
 }

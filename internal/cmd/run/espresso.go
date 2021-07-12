@@ -1,8 +1,9 @@
 package run
 
 import (
-	"github.com/spf13/pflag"
 	"os"
+
+	"github.com/spf13/pflag"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
@@ -54,6 +55,7 @@ func NewEspressoCmd() *cobra.Command {
 	sc.String("name", "suite.name", "", "Sets the name of the job as it will appear on Sauce Labs")
 	sc.String("app", "espresso.app", "", "Specifies the app under test")
 	sc.String("testApp", "espresso.testApp", "", "Specifies the test app")
+	sc.StringSlice("otherApps", "espresso.otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
 
 	// Test Options
 	sc.StringSlice("testOptions.class", "suite.testOptions.class", []string{}, "Include classes")
