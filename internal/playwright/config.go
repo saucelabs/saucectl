@@ -57,6 +57,7 @@ type Suite struct {
 	Params            SuiteConfig       `yaml:"params,omitempty" json:"param,omitempty"`
 	ScreenResolution  string            `yaml:"screenResolution,omitempty" json:"screenResolution,omitempty"`
 	Env               map[string]string `yaml:"env,omitempty" json:"env,omitempty"`
+	NumShards         int               `yaml:"numShards,omitempty" json:"-"`
 }
 
 // SuiteConfig represents the configuration specific to a suite
@@ -71,7 +72,9 @@ type SuiteConfig struct {
 	RepeatEach    int    `yaml:"repeatEach,omitempty" json:"repeatEach,omitempty"`
 	Retries       int    `yaml:"retries,omitempty" json:"retries,omitempty"`
 	MaxFailures   int    `yaml:"maxFailures,omitempty" json:"maxFailures,omitempty"`
-	Shard         string `yaml:"shard,omitempty" json:"shard,omitempty"`
+
+	// Shard is set by saucectl (not user) based on Suite.NumShards.
+	Shard string `yaml:"-" json:"shard,omitempty"`
 
 	// Deprecated fields in v1.12+
 	HeadFul             bool `yaml:"headful,omitempty" json:"headful,omitempty"`
@@ -126,6 +129,29 @@ func SetDefaults(p *Project) {
 			}
 		}
 	}
+
+	p.Suites = shardSuites(p.Suites)
+}
+
+// shardSuites applies sharding by replacing the original suites with the appropriate number of replicas according to
+// the numShards setting on each suite. A suite is only sharded if numShards > 1.
+func shardSuites(suites []Suite) []Suite {
+	var shardedSuites []Suite
+	for _, s := range suites {
+		// Use the original suite if there is nothing to shard.
+		if s.NumShards < 1 {
+			shardedSuites = append(shardedSuites, s)
+			continue
+		}
+
+		for i := 1; i <= s.NumShards; i++ {
+			replica := s
+			replica.Params.Shard = fmt.Sprintf("%d/%d", i, s.NumShards)
+			replica.Name = fmt.Sprintf("%s (shard %s)", replica.Name, replica.Params.Shard)
+			shardedSuites = append(shardedSuites, replica)
+		}
+	}
+	return shardedSuites
 }
 
 // SplitSuites divided Suites to dockerSuites and sauceSuites

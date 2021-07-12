@@ -66,7 +66,7 @@ func NewPlaywrightCmd() *cobra.Command {
 	sc.Int("repeatEach", "suite.params.repeatEach", 0, "Run each test N times")
 	sc.Int("retries", "suite.params.retries", 0, "The maximum number of retries for flaky tests")
 	sc.Int("maxFailures", "suite.params.maxFailures", 0, "Stop after the first N test failures")
-	// TODO sharding
+	sc.Int("numShards", "suite.numShards", 0, "Split tests across N number of shards")
 
 	// Misc
 	sc.String("rootDir", "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
