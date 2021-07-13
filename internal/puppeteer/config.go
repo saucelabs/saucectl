@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 )
@@ -80,6 +81,12 @@ func SetDefaults(p *Project) {
 	// Set default docker file transfer to mount
 	if p.Docker.FileTransfer == "" {
 		p.Docker.FileTransfer = config.DockerFileMount
+	}
+
+	// Default rootDir to .
+	if p.RootDir == "" {
+		p.RootDir = "."
+		msg.LogRootDirWarning()
 	}
 
 	// Apply global env vars onto every suite.
