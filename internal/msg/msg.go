@@ -116,6 +116,7 @@ func LogUploadTimeoutSuggestion() {
 	fmt.Printf("%s\n\n", UploadingTimeoutSuggestion)
 }
 
+// LogRootDirWarning prints out a warning message regarding the lack of an explicit rootDir configuration.
 func LogRootDirWarning() {
 	red := color.New(color.FgRed).SprintFunc()
 	fmt.Printf("\n%s: %s\n\n", red("WARNING"), "'rootDir' is not defined. Using the current working directory instead "+
