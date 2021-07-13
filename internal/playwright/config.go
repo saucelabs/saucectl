@@ -3,6 +3,7 @@ package playwright
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 	"strings"
@@ -115,6 +116,12 @@ func SetDefaults(p *Project) {
 		p.Docker.FileTransfer = config.DockerFileMount
 	}
 
+	// Default rootDir to .
+	if p.RootDir == "" {
+		p.RootDir = "."
+		msg.LogRootDirWarning()
+	}
+
 	// Apply global env vars onto every suite.
 	for k, v := range p.Env {
 		for ks := range p.Suites {
@@ -159,7 +166,7 @@ func SplitSuites(p Project) (Project, Project) {
 	var dockerSuites []Suite
 	var sauceSuites []Suite
 	for _, s := range p.Suites {
-		if s.Mode == "docker" {
+		if s.Mode == "docker" || (s.Mode == "" && p.Defaults.Mode == "docker") {
 			dockerSuites = append(dockerSuites, s)
 		} else {
 			sauceSuites = append(sauceSuites, s)

@@ -77,7 +77,6 @@ or peruse some of our example repositories:
   - https://github.com/saucelabs/saucectl-puppeteer-example
   - https://github.com/saucelabs/saucectl-testcafe-example`
 
-
 // UploadingTimeout is a the message to warn the user that its upload reach the timeout.
 const UploadingTimeout = `Failed to upload the project because it took too long. `
 
@@ -115,4 +114,10 @@ func LogUploadTimeout() {
 // LogUploadTimeoutSuggestion prints out adding unnecessary files to .sauceignore
 func LogUploadTimeoutSuggestion() {
 	fmt.Printf("%s\n\n", UploadingTimeoutSuggestion)
+}
+
+func LogRootDirWarning() {
+	red := color.New(color.FgRed).SprintFunc()
+	fmt.Printf("\n%s: %s\n\n", red("WARNING"), "'rootDir' is not defined. Using the current working directory instead "+
+		"(equivalent to 'rootDir: .'). Please set 'rootDir' explicitly in your config!")
 }

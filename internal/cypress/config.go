@@ -3,13 +3,13 @@ package cypress
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 	"path/filepath"
 	"strings"
 	"unicode"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 )
 
@@ -112,8 +112,7 @@ func SetDefaults(p *Project) {
 	// Default rootDir to .
 	if p.RootDir == "" {
 		p.RootDir = "."
-		log.Warn().Msg("'rootDir' is not defined. Using the current working directory instead " +
-			"(equivalent to 'rootDir: .'). Please set 'rootDir' explicitly in your config!")
+		msg.LogRootDirWarning()
 	}
 
 	for k := range p.Suites {

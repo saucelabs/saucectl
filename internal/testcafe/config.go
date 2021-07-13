@@ -3,6 +3,7 @@ package testcafe
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 	"regexp"
@@ -117,6 +118,12 @@ func SetDefaults(p *Project) {
 	// Set default docker file transfer to mount
 	if p.Docker.FileTransfer == "" {
 		p.Docker.FileTransfer = config.DockerFileMount
+	}
+
+	// Default rootDir to .
+	if p.RootDir == "" {
+		p.RootDir = "."
+		msg.LogRootDirWarning()
 	}
 
 	for k := range p.Suites {
