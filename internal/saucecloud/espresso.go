@@ -158,6 +158,9 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 	if s.TestOptions.ClearPackageData {
 		jto.ClearPackageData = &s.TestOptions.ClearPackageData
 	}
+	if s.TestOptions.UseTestOrchestrator {
+		jto.UseTestOrchestrator = &s.TestOptions.UseTestOrchestrator
+	}
 
 	for i, ID := range otherAppsIDs {
 		otherAppsIDs[i] = fmt.Sprintf("storage:%s", ID)

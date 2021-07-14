@@ -64,6 +64,7 @@ func NewEspressoCmd() *cobra.Command {
 	sc.String("testOptions.size", "suite.testOptions.size", "", "Include tests based on size")
 	sc.String("testOptions.annotation", "suite.testOptions.annotation", "", "Include tests based on the annotation")
 	sc.Int("testOptions.numShards", "suite.testOptions.numShards", 0, "Total number of shards")
+	sc.Bool("testOptions.useTestOrchestrator", "suite.testOptions.useTestOrchestrator", false, "Set the instrumentation to start with Test Orchestrator")
 
 	// Emulators and Devices
 	cmd.Flags().Var(&lflags.Emulator, "emulator", "Specifies the emulator to use for testing")
