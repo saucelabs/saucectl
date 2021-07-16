@@ -29,7 +29,7 @@ func TestValidateThrowsErrors(t *testing.T) {
 					App: "/path/to/app",
 				},
 			},
-			expectedErr: errors.New("invaild application file: /path/to/app, make sure extension is .apk"),
+			expectedErr: errors.New("invalid application file: /path/to/app, make sure extension is one of the following: .apk"),
 		},
 		{
 			name: "validating throws error on empty app",
@@ -50,7 +50,7 @@ func TestValidateThrowsErrors(t *testing.T) {
 					TestApp: "/path/to/testApp",
 				},
 			},
-			expectedErr: errors.New("invaild test application file: /path/to/testApp, make sure extension is .apk"),
+			expectedErr: errors.New("invalid test application file: /path/to/testApp, make sure extension is one of the following: .apk"),
 		},
 		{
 			name: "validating throws error on missing suites",

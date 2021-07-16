@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/saucelabs/saucectl/internal/region"
-
+	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/region"
 )
 
 // Config descriptors.
@@ -100,15 +100,21 @@ func Validate(p Project) error {
 	if p.Xcuitest.App == "" {
 		return errors.New("missing path to app .ipa")
 	}
-	if !strings.HasSuffix(p.Xcuitest.App, ".ipa") && !strings.HasSuffix(p.Xcuitest.App, ".app") {
-		return fmt.Errorf("invalid application file: %s, make sure extension is .ipa or .app", p.Xcuitest.App)
+	if err := apps.Validate("application", p.Xcuitest.App, []string{".ipa", ".app"}, false); err != nil {
+		return err
 	}
 
 	if p.Xcuitest.TestApp == "" {
 		return errors.New("missing path to test app .ipa")
 	}
-	if !strings.HasSuffix(p.Xcuitest.TestApp, ".ipa") && !strings.HasSuffix(p.Xcuitest.TestApp, ".app") {
-		return fmt.Errorf("invalid application test file: %s, make sure extension is .ipa or .app", p.Xcuitest.TestApp)
+	if err := apps.Validate("test application", p.Xcuitest.TestApp, []string{".ipa", ".app"}, false); err != nil {
+		return err
+	}
+
+	for _, app := range p.Xcuitest.OtherApps {
+		if err := apps.Validate("other application", app, []string{".ipa", ".app"}, true); err != nil {
+			return err
+		}
 	}
 
 	if len(p.Suites) == 0 {
