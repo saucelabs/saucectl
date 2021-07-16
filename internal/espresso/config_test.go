@@ -11,6 +11,12 @@ import (
 )
 
 func TestValidateThrowsErrors(t *testing.T) {
+	dir := fs.NewDir(t, "espresso",
+		fs.WithFile("test.apk", "", fs.WithMode(0655)))
+	defer dir.Remove()
+	appAPK := filepath.Join(dir.Path(), "test.apk")
+
+
 	testCases := []struct {
 		name        string
 		p           *Project
@@ -36,7 +42,7 @@ func TestValidateThrowsErrors(t *testing.T) {
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
-					App: "/path/to/app.apk",
+					App: appAPK,
 				},
 			},
 			expectedErr: errors.New("missing path to test app .apk"),
@@ -46,7 +52,7 @@ func TestValidateThrowsErrors(t *testing.T) {
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
-					App:     "/path/to/app.apk",
+					App:     appAPK,
 					TestApp: "/path/to/testApp",
 				},
 			},
@@ -57,8 +63,8 @@ func TestValidateThrowsErrors(t *testing.T) {
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
-					App:     "/path/to/app.apk",
-					TestApp: "/path/to/testApp.apk",
+					App:     appAPK,
+					TestApp: appAPK,
 				},
 			},
 			expectedErr: errors.New("no suites defined"),
@@ -68,8 +74,8 @@ func TestValidateThrowsErrors(t *testing.T) {
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
-					App:     "/path/to/app.apk",
-					TestApp: "/path/to/testApp.apk",
+					App:     appAPK,
+					TestApp: appAPK,
 				},
 				Suites: []Suite{
 					{
@@ -85,8 +91,8 @@ func TestValidateThrowsErrors(t *testing.T) {
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
-					App:     "/path/to/app.apk",
-					TestApp: "/path/to/testApp.apk",
+					App:     appAPK,
+					TestApp: appAPK,
 				},
 				Suites: []Suite{
 					{
@@ -106,8 +112,8 @@ func TestValidateThrowsErrors(t *testing.T) {
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
-					App:     "/path/to/app.apk",
-					TestApp: "/path/to/testApp.apk",
+					App:     appAPK,
+					TestApp: appAPK,
 				},
 				Suites: []Suite{
 					{
@@ -127,8 +133,8 @@ func TestValidateThrowsErrors(t *testing.T) {
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
-					App:     "/path/to/app.apk",
-					TestApp: "/path/to/testApp.apk",
+					App:     appAPK,
+					TestApp: appAPK,
 				},
 				Suites: []Suite{
 					{

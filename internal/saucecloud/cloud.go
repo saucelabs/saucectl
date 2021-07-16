@@ -11,6 +11,7 @@ import (
 	"time"
 
 	ptable "github.com/jedib0t/go-pretty/v6/table"
+	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/table"
@@ -332,6 +333,10 @@ func (r *CloudRunner) uploadProjects(filename []string, pType uploadType) ([]str
 }
 
 func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, error) {
+	if apps.IsStorageID(filename) {
+		return filename, nil
+	}
+
 	log.Info().Msgf("Checking if %s has already been uploaded previously", filename)
 	if storageID, _ := r.checkIfFileAlreadyUploaded(filename); storageID != "" {
 		log.Info().Msgf("Skipping upload, using storage:%s", storageID)

@@ -17,10 +17,18 @@ func hasValidExtension(file string, exts []string) bool {
 	return false
 }
 
+// IsStorageID checks if a link is an entry of app-storage.
+func IsStorageID(link string) bool {
+	re := regexp.MustCompile("^(storage:(//)?)?[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$")
+	if re.MatchString(link) {
+		return true
+	}
+	return false
+}
+
 // Validate validates that the apps is valid (storageID / File / URL).
 func Validate(kind, app string, validExt []string, URLAllowed bool) error {
-	re := regexp.MustCompile("^(storage:(//)?)?[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$")
-	if re.MatchString(app) {
+	if IsStorageID(app) {
 		return nil
 	}
 
