@@ -58,16 +58,6 @@ func TestValidate(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "Supports HTTP link",
-			args: args{
-				kind:       "application",
-				app:        "https://my.dummy.org/app.ipa",
-				validExt:   []string{".ipa"},
-				URLAllowed: true,
-			},
-			wantErr: nil,
-		},
-		{
 			name: "Non-existing file",
 			args: args{
 				kind:       "application",
@@ -96,16 +86,6 @@ func TestValidate(t *testing.T) {
 				URLAllowed: false,
 			},
 			wantErr: fmt.Errorf("invalid application file: storage:bad-link, make sure extension is one of the following: .ipa"),
-		},
-		{
-			name: "Bad url link",
-			args: args{
-				kind:       "application",
-				app:        "https://my.dummy.org/app.apk\x7f",
-				validExt:   []string{".ipa"},
-				URLAllowed: true,
-			},
-			wantErr: fmt.Errorf("invalid application file: https://my.dummy.org/app.apk\x7F, make sure extension is one of the following: .ipa"),
 		},
 	}
 	for _, tt := range tests {

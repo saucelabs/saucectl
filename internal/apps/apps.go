@@ -2,7 +2,6 @@ package apps
 
 import (
 	"fmt"
-	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -29,10 +28,6 @@ func IsStorageID(link string) bool {
 // Validate validates that the apps is valid (storageID / File / URL).
 func Validate(kind, app string, validExt []string, URLAllowed bool) error {
 	if IsStorageID(app) {
-		return nil
-	}
-
-	if _, err := url.ParseRequestURI(app); URLAllowed && err == nil {
 		return nil
 	}
 
