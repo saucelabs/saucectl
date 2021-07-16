@@ -6,9 +6,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/saucelabs/saucectl/internal/region"
-
+	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/region"
 )
 
 // Config descriptors.
@@ -123,15 +123,21 @@ func Validate(p Project) error {
 	if p.Espresso.App == "" {
 		return errors.New("missing path to app .apk")
 	}
-	if !strings.HasSuffix(p.Espresso.App, ".apk") {
-		return fmt.Errorf("invaild application file: %s, make sure extension is .apk", p.Espresso.App)
+	if err := apps.Validate("application", p.Espresso.App, []string{".apk"}, false); err != nil {
+		return err
 	}
 
 	if p.Espresso.TestApp == "" {
 		return errors.New("missing path to test app .apk")
 	}
-	if !strings.HasSuffix(p.Espresso.TestApp, ".apk") {
-		return fmt.Errorf("invaild test application file: %s, make sure extension is .apk", p.Espresso.TestApp)
+	if err := apps.Validate("test application", p.Espresso.TestApp, []string{".apk"}, false); err != nil {
+		return err
+	}
+
+	for _, app := range p.Espresso.OtherApps {
+		if err := apps.Validate("other application", app, []string{".apk"}, true); err != nil {
+			return err
+		}
 	}
 
 	if len(p.Suites) == 0 {

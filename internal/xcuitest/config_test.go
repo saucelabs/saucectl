@@ -14,10 +14,14 @@ import (
 func TestValidate(t *testing.T) {
 	dir := fs.NewDir(t, "xcuitest-config",
 		fs.WithFile("test.ipa", "", fs.WithMode(0655)),
-		fs.WithFile("testApp.ipa", "", fs.WithMode(0655)))
+		fs.WithFile("testApp.ipa", "", fs.WithMode(0655)),
+		fs.WithDir("test.app", fs.WithMode(0755)),
+		fs.WithDir("testApp.app", fs.WithMode(0755)))
 	defer dir.Remove()
 	appF := filepath.Join(dir.Path(), "test.ipa")
 	testAppF := filepath.Join(dir.Path(), "testApp.ipa")
+	appD := filepath.Join(dir.Path(), "test.app")
+	testAppD := filepath.Join(dir.Path(), "testApp.app")
 
 	testCases := []struct {
 		name        string
@@ -36,8 +40,8 @@ func TestValidate(t *testing.T) {
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Xcuitest: Xcuitest{
-					App:     "/path/to/app.ipa",
-					TestApp: "/path/to/app.ipa",
+					App:     appF,
+					TestApp: testAppF,
 				},
 				Suites: []Suite{
 					{
@@ -55,8 +59,8 @@ func TestValidate(t *testing.T) {
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Xcuitest: Xcuitest{
-					App:     "/path/to/app.app",
-					TestApp: "/path/to/app.app",
+					App:     appD,
+					TestApp: testAppD,
 				},
 				Suites: []Suite{
 					{
@@ -75,21 +79,21 @@ func TestValidate(t *testing.T) {
 				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Xcuitest: Xcuitest{
 					App:     "/path/to/app.zip",
-					TestApp: "/path/to/app.app",
+					TestApp: testAppD,
 				},
 			},
-			expectedErr: errors.New("invalid application file: /path/to/app.zip, make sure extension is .ipa or .app"),
+			expectedErr: errors.New("invalid application file: /path/to/app.zip, make sure extension is one of the following: .ipa, .app"),
 		},
 		{
 			name: "validating error with test app other than .ipa / .app",
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Xcuitest: Xcuitest{
-					App:     "/path/to/app.ipa",
+					App:     appF,
 					TestApp: "/path/to/app.zip",
 				},
 			},
-			expectedErr: errors.New("invalid application test file: /path/to/app.zip, make sure extension is .ipa or .app"),
+			expectedErr: errors.New("invalid test application file: /path/to/app.zip, make sure extension is one of the following: .ipa, .app"),
 		},
 		{
 			name: "validating throws error on empty testApp",
@@ -111,7 +115,7 @@ func TestValidate(t *testing.T) {
 					TestApp: "/path/to/bundle/tests",
 				},
 			},
-			expectedErr: errors.New("invalid application test file: /path/to/bundle/tests, make sure extension is .ipa or .app"),
+			expectedErr: errors.New("invalid test application file: /path/to/bundle/tests, make sure extension is one of the following: .ipa, .app"),
 		},
 		{
 			name: "validating throws error on missing suites",
