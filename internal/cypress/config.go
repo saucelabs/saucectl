@@ -134,6 +134,53 @@ func SetDefaults(p *Project) {
 	}
 }
 
+func checkAvailability(path string, mustBeDirectory bool) error {
+	st, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	if mustBeDirectory && !st.IsDir() {
+		return fmt.Errorf("%s: not a folder", path)
+	}
+	return nil
+}
+
+// ValidateCypressConfiguration validates that Cypress config has required folders.
+func ValidateCypressConfiguration(configFile string) error {
+	configDir := filepath.Dir(configFile)
+	cfg, err := ConfigFromFile(configFile)
+	if err != nil {
+		return err
+	}
+
+	integrationFolder := "cypress/integration"
+	if cfg.IntegrationFolder != "" {
+		integrationFolder = cfg.IntegrationFolder
+	}
+	if err = checkAvailability(filepath.Join(configDir, integrationFolder), true); err != nil {
+		return err
+	}
+
+	if cfg.FixturesFolder != "" {
+		if err = checkAvailability(filepath.Join(configDir, cfg.FixturesFolder), true); err != nil {
+			return err
+		}
+	}
+
+	if cfg.SupportFile != "" {
+		if err = checkAvailability(filepath.Join(configDir, cfg.SupportFile), false); err != nil {
+			return err
+		}
+	}
+
+	if cfg.PluginsFile != "" {
+		if err = checkAvailability(filepath.Join(configDir, cfg.PluginsFile), false); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Validate validates basic configuration of the project and returns an error if any of the settings contain illegal
 // values. This is not an exhaustive operation and further validation should be performed both in the client and/or
 // server side depending on the workflow that is executed.
@@ -148,12 +195,10 @@ func Validate(p *Project) error {
 	if _, err := os.Stat(cypressConfigFileCompletePath); err != nil {
 		return fmt.Errorf("unable to locate the cypress config file at %s", cypressConfigFileCompletePath)
 	}
-	configDir := filepath.Dir(cypressConfigFileCompletePath)
 
-	// We must locate the cypress folder.
-	cPath := filepath.Join(configDir, "cypress")
-	if _, err := os.Stat(cPath); err != nil {
-		return fmt.Errorf("unable to locate the cypress folder in %s", configDir)
+	// Validate cypress configuration
+	if err := ValidateCypressConfiguration(cypressConfigFileCompletePath); err != nil {
+		return err
 	}
 
 	// Validate docker.
