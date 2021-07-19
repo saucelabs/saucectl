@@ -3,10 +3,11 @@ package puppeteer
 import (
 	"errors"
 	"fmt"
+	"os"
+
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
-	"os"
 )
 
 // Config descriptors.
@@ -43,6 +44,7 @@ type Suite struct {
 	Browser   string            `yaml:"browser,omitempty" json:"browser"`
 	TestMatch []string          `yaml:"testMatch,omitempty" json:"testMatch"`
 	Env       map[string]string `yaml:"env,omitempty" json:"env"`
+	Args      []string          `yaml:"args,omitempty" json:"args"`
 }
 
 // Puppeteer represents the configuration for puppeteer.
