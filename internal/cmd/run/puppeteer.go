@@ -1,6 +1,8 @@
 package run
 
 import (
+	"os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/docker"
@@ -13,7 +15,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"os"
 )
 
 // NewPuppeteerCmd creates the 'run' command for Puppeteer.
@@ -62,6 +63,8 @@ func NewPuppeteerCmd() *cobra.Command {
 	sc.String("npm.registry", "npm.registry", "", "Specify the npm registry URL")
 	sc.StringToString("npm.packages", "npm.packages", map[string]string{}, "Specify npm packages that are required to run tests")
 	sc.Bool("npm.strictSSL", "npm.strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
+
+	sc.StringSlice("browserArgs", "suite.browserArgs", []string{}, "Pass browser args to puppeteer")
 
 	return cmd
 }
