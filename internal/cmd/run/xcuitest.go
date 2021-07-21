@@ -70,7 +70,10 @@ func runXcuitest(cmd *cobra.Command, flags xcuitestFlags, tc testcomposer.Client
 	if err != nil {
 		return 1, err
 	}
+
+	p.CommandLine = generateCommandFlags(cmd)
 	p.Sauce.Metadata.ExpandEnv()
+
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
 	if err := applyXCUITestFlags(&p, flags); err != nil {
 		return 1, err

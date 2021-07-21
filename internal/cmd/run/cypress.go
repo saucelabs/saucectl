@@ -74,12 +74,13 @@ func NewCypressCmd() *cobra.Command {
 
 	return cmd
 }
-
 func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
 	p, err := cypress.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
+
+	p.CommandLine = generateCommandFlags(cmd)
 
 	p.Sauce.Metadata.ExpandEnv()
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)

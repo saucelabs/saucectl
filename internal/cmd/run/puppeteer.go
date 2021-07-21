@@ -71,7 +71,10 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 	if err != nil {
 		return 1, err
 	}
+
+	p.CommandLine = generateCommandFlags(cmd)
 	p.Sauce.Metadata.ExpandEnv()
+
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
 	if err := applyPuppeteerFlags(&p); err != nil {
 		return 1, err

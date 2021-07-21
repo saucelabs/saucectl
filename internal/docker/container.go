@@ -55,6 +55,7 @@ type containerStartOptions struct {
 	RootDir        string
 	Sauceignore    string
 	ConfigFilePath string
+	CommandLine    string
 }
 
 // result represents the result of a local job
@@ -394,6 +395,7 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 	jobID := jobIDFromURL(jobIDFromURL(jobInfo.JobDetailsURL))
 	if jobID != "" {
 		r.uploadSauceConfig(jobID, options.ConfigFilePath)
+		r.uploadSaucectlCommand(jobID, options.CommandLine)
 	}
 	return
 }
@@ -419,6 +421,14 @@ func (r *ContainerRunner) uploadSauceConfig(jobID string, cfgFile string) {
 		log.Warn().Msgf("failed to attach configuration: %v", err)
 	}
 }
+
+// uploadSaucectlCommand adds commandline parameters as an asset.
+func (r *ContainerRunner) uploadSaucectlCommand(jobID string, content string) {
+	if err := r.JobWriter.UploadAsset(jobID, "flags.txt", "text/plain", []byte(content)); err != nil {
+		log.Warn().Msgf("failed to attach command line: %v", err)
+	}
+}
+
 
 // jobIDFromURL returns the jobID from the URL return by containers.
 func jobIDFromURL(URL string) string {

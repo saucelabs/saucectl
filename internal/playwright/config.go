@@ -28,6 +28,7 @@ type Project struct {
 	ShowConsoleLog bool
 	DryRun         bool               `yaml:"-" json:"-"`
 	ConfigFilePath string             `yaml:"-" json:"-"`
+	CommandLine    string             `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	Playwright     Playwright         `yaml:"playwright,omitempty" json:"playwright"`
 	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.

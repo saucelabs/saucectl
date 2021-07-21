@@ -79,7 +79,10 @@ func runEspresso(cmd *cobra.Command, flags espressoFlags, tc testcomposer.Client
 	if err != nil {
 		return 1, err
 	}
+
+	p.CommandLine = generateCommandFlags(cmd)
 	p.Sauce.Metadata.ExpandEnv()
+
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
 	if err := applyEspressoFlags(&p, flags); err != nil {
 		return 1, err

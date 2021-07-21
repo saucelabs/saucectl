@@ -29,6 +29,7 @@ type StartOptions struct {
 	OtherApps      []string `json:"otherApps,omitempty"`
 	Framework      string   `json:"framework,omitempty"`
 	ConfigFilePath string   `json:"-"`
+	CommandLine    string   `json:"-"`
 
 	// FrameworkVersion contains the targeted version of the framework
 	// It should not be confused with automation tool (like jest/folio).

@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
 
@@ -270,4 +271,57 @@ func checkForUpdates() {
 	if v != "" {
 		log.Warn().Msgf("A new version of saucectl is available (%s)", v)
 	}
+}
+
+// FIXME: Move somewhere else
+var redactedFlags = []string{"cypress.key", "env"}
+
+func sliceContainsString(slice []string, val string) bool {
+	for _, value := range slice {
+		if value == val {
+			return true
+		}
+	}
+	return false
+}
+
+func redactStringToString(flag *pflag.Flag) interface{} {
+	val := flag.Value.String()
+	idx := strings.Index(val, "=[")
+	val = val[idx+2:len(val)-2]
+
+	var out []string
+	entries := strings.Split(val, ",")
+	for _, entry := range entries {
+		keys := strings.Split(entry, "=")
+		keyVal := "***EMPTY***"
+		if len(keys) > 1 && keys[1] != "" {
+			keyVal = "***REDACTED***"
+		}
+		out = append(out, fmt.Sprintf("%s=%s", keys[0], keyVal))
+	}
+	return out
+}
+
+func redactValue(flag *pflag.Flag) interface{} {
+	if flag.Value.Type() == "stringToString" {
+		return redactStringToString(flag)
+	}
+
+	if flag.Value.String() == "" {
+		return "***EMPTY***"
+	}
+	return "***REDACTED***"
+}
+
+func generateCommandFlags(cmd *cobra.Command) string {
+	cmdLine := ""
+	cmd.Flags().Visit(func(flag *pflag.Flag) {
+		if sliceContainsString(redactedFlags, flag.Name) {
+			cmdLine += fmt.Sprintf("--%s=%s\n", flag.Name, redactValue(flag))
+		} else {
+			cmdLine += fmt.Sprintf("--%s=%s\n", flag.Name, flag.Value)
+		}
+	})
+	return cmdLine
 }

@@ -69,6 +69,7 @@ func (r *TestcafeRunner) runSuites(fileID string) bool {
 					for _, pv := range d.PlatformVersions {
 						jobOpts <- job.StartOptions{
 							ConfigFilePath:   r.Project.ConfigFilePath,
+							CommandLine:      r.Project.CommandLine,
 							DisplayName:      s.Name,
 							App:              fmt.Sprintf("storage:%s", fileID),
 							Suite:            s.Name,

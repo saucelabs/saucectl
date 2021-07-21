@@ -154,6 +154,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 
 	if !isRDC {
 		r.uploadSauceConfig(id, opts.ConfigFilePath)
+		r.uploadSaucectlCommand(id, opts.CommandLine)
 	}
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
 	// if a soft exit is requested during startContainer phase, it gently exits.
@@ -547,5 +548,12 @@ func (r *CloudRunner) uploadSauceConfig(jobID string, cfgFile string) {
 	}
 	if err := r.JobWriter.UploadAsset(jobID, filepath.Base(cfgFile), "text/plain", content); err != nil {
 		log.Warn().Msgf("failed to attach configuration: %v", err)
+	}
+}
+
+// uploadSaucectlCommand adds commandline parameters as an asset.
+func (r *CloudRunner) uploadSaucectlCommand(jobID string, content string) {
+	if err := r.JobWriter.UploadAsset(jobID, "flags.txt", "text/plain", []byte(content)); err != nil {
+		log.Warn().Msgf("failed to attach command line: %v", err)
 	}
 }
