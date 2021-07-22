@@ -71,6 +71,7 @@ type Suite struct {
 	DisableScreenshots bool     `yaml:"disableScreenshots,omitempty" json:"disableScreenshots"`
 	DisableVideo       bool     `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testcafe config.
 	Mode               string   `yaml:"mode,omitempty" json:"-"`
+	Timeout            int      `yaml:"timeout,omitempty" json:"timeout"`
 	// Deprecated. Reserved for future use for actual devices.
 	Devices    []config.Simulator `yaml:"devices,omitempty" json:"devices"`
 	Simulators []config.Simulator `yaml:"emulators,omitempty" json:"emulators"`

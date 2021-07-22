@@ -116,7 +116,8 @@ type Npm struct {
 
 // Defaults represents default suite settings.
 type Defaults struct {
-	Mode string `yaml:"mode,omitempty" json:"mode"`
+	Mode    string `yaml:"mode,omitempty" json:"mode"`
+	Timeout int    `yaml:"timeout,omitempty" json:"timeout"`
 }
 
 func readYaml(cfgFilePath string) ([]byte, error) {

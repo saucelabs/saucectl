@@ -60,6 +60,7 @@ type Suite struct {
 	Devices     []config.Device   `yaml:"devices,omitempty" json:"devices"`
 	Emulators   []config.Emulator `yaml:"emulators,omitempty" json:"emulators"`
 	TestOptions TestOptions       `yaml:"testOptions,omitempty" json:"testOptions"`
+	Timeout     int               `yaml:"timeout,omitempty" json:"timeout"`
 }
 
 // Android constant
