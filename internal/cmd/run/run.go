@@ -1,6 +1,7 @@
 package run
 
 import (
+	"encoding/csv"
 	"errors"
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/cypress"
@@ -276,6 +277,30 @@ func checkForUpdates() {
 // redactedFlags contains the list of flags that needs to be redacted before upload.
 var redactedFlags = []string{"cypress.key", "env"}
 
+// stringToStringConv converts the stringToString value to a map.
+// This function has been copied from pflag library as stringToString is private.
+func stringToStringConv(val string) (map[string]string, error) {
+	val = strings.Trim(val, "[]")
+	// An empty string would cause an empty map
+	if len(val) == 0 {
+		return map[string]string{}, nil
+	}
+	r := csv.NewReader(strings.NewReader(val))
+	ss, err := r.Read()
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[string]string, len(ss))
+	for _, pair := range ss {
+		kv := strings.SplitN(pair, "=", 2)
+		if len(kv) != 2 {
+			return nil, fmt.Errorf("%s must be formatted as key=value", pair)
+		}
+		out[kv[0]] = kv[1]
+	}
+	return out, nil
+}
+
 func sliceContainsString(slice []string, val string) bool {
 	for _, value := range slice {
 		if value == val {
@@ -287,21 +312,16 @@ func sliceContainsString(slice []string, val string) bool {
 
 // redactStringToString redacts a stringToString flag.
 func redactStringToString(flag *pflag.Flag) interface{} {
-	val := flag.Value.String()
-	idx := strings.Index(val, "=[")
-	val = val[idx+2:len(val)-2]
+	params, _ := stringToStringConv(flag.Value.String())
 
-	var out []string
-	entries := strings.Split(val, ",")
-	for _, entry := range entries {
-		keys := strings.Split(entry, "=")
-		keyVal := "***EMPTY***"
-		if len(keys) > 1 && keys[1] != "" {
-			keyVal = "***REDACTED***"
+	for key, val := range params {
+		if val == "" {
+			params[key] = "***EMPTY***"
+		} else {
+			params[key] = "***REDACTED***"
 		}
-		out = append(out, fmt.Sprintf("%s=%s", keys[0], keyVal))
 	}
-	return out
+	return params
 }
 
 // redactValue redacts potential sensitive values.
