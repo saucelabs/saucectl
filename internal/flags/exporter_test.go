@@ -24,7 +24,7 @@ func (m *mockedValue) String() string {
 	return m.content
 }
 
-func Test_redactValue(t *testing.T) {
+func Test_redactStringValue(t *testing.T) {
 	tests := []struct {
 		name string
 		flag *pflag.Flag
@@ -54,6 +54,24 @@ func Test_redactValue(t *testing.T) {
 			},
 			want: "***EMPTY***",
 		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := redactStringValue(tt.flag); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("redactValue() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+
+func Test_redactStringToStringValue(t *testing.T) {
+	tests := []struct {
+		name string
+		flag *pflag.Flag
+		want interface{}
+	}{
 		{
 			name: "Sensitive Test - stringToString",
 			flag: &pflag.Flag{
@@ -100,7 +118,7 @@ func Test_redactValue(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := redactValue(tt.flag); !reflect.DeepEqual(got, tt.want) {
+			if got := redactStringToString(tt.flag); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("redactValue() = %v, want %v", got, tt.want)
 			}
 		})

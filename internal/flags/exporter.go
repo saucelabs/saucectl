@@ -43,11 +43,11 @@ func sliceContainsString(slice []string, val string) bool {
 	return false
 }
 
-// redactStringToString redacts a stringToString flag.
-func redactStringToString(flag *pflag.Flag) interface{} {
+// redactStringToString redacts the values of a stringToString flag.
+func redactStringToString(flag *pflag.Flag) map[string]string {
 	params, err := stringToStringConv(flag.Value.String())
 	if err != nil {
-		return map[string]interface{}{}
+		return map[string]string{}
 	}
 
 	for key, val := range params {
@@ -60,26 +60,42 @@ func redactStringToString(flag *pflag.Flag) interface{} {
 	return params
 }
 
-// redactValue redacts potential sensitive values.
-func redactValue(flag *pflag.Flag) interface{} {
-	if flag.Value.Type() == "stringToString" {
-		return redactStringToString(flag)
-	}
-
+// redactStringValue redacts the value of a string flag.
+func redactStringValue(flag *pflag.Flag) string {
 	if flag.Value.String() == "" {
 		return "***EMPTY***"
 	}
 	return "***REDACTED***"
 }
 
+// cleanString redacts value if the flag is marked as sensitive.
+func cleanString(fl *pflag.Flag) string {
+	if sliceContainsString(redactedFlags, fl.Name) {
+		return redactStringValue(fl)
+	}
+	return fl.Value.String()
+}
+
+// cleanStringToString redacts entry values if the flag is marked as sensitive.
+func cleanStringToString(fl *pflag.Flag) map[string]string {
+	if sliceContainsString(redactedFlags, fl.Name) {
+		return redactStringToString(fl)
+	}
+	values, err := stringToStringConv(fl.Value.String())
+	if err != nil {
+		return map[string]string{}
+	}
+	return values
+}
+
 // CaptureCommandLineFlags build the map of command line flags of the current execution.
 func CaptureCommandLineFlags(set *pflag.FlagSet) map[string]interface{} {
 	flags := map[string]interface{}{}
 	set.Visit(func(flag *pflag.Flag) {
-		if sliceContainsString(redactedFlags, flag.Name) {
-			flags[flag.Name] = redactValue(flag)
+		if flag.Value.Type() == "stringToString" {
+			flags[flag.Name] = cleanStringToString(flag)
 		} else {
-			flags[flag.Name] = flag.Value
+			flags[flag.Name] = cleanString(flag)
 		}
 	})
 	return flags
