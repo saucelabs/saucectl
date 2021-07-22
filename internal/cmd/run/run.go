@@ -312,7 +312,10 @@ func sliceContainsString(slice []string, val string) bool {
 
 // redactStringToString redacts a stringToString flag.
 func redactStringToString(flag *pflag.Flag) interface{} {
-	params, _ := stringToStringConv(flag.Value.String())
+	params, err := stringToStringConv(flag.Value.String())
+	if err != nil {
+		return map[string]interface{}{}
+	}
 
 	for key, val := range params {
 		if val == "" {
