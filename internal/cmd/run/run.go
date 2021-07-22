@@ -314,14 +314,14 @@ func redactValue(flag *pflag.Flag) interface{} {
 	return "***REDACTED***"
 }
 
-func generateCommandFlags(cmd *cobra.Command) string {
-	cmdLine := ""
+func generateCommandFlags(cmd *cobra.Command) map[string]interface{} {
+	flags := map[string]interface{}{}
 	cmd.Flags().Visit(func(flag *pflag.Flag) {
 		if sliceContainsString(redactedFlags, flag.Name) {
-			cmdLine += fmt.Sprintf("--%s=%s\n", flag.Name, redactValue(flag))
+			flags[flag.Name] = redactValue(flag)
 		} else {
-			cmdLine += fmt.Sprintf("--%s=%s\n", flag.Name, flag.Value)
+			flags[flag.Name] = flag.Value
 		}
 	})
-	return cmdLine
+	return flags
 }

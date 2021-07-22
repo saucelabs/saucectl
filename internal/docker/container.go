@@ -55,7 +55,7 @@ type containerStartOptions struct {
 	RootDir        string
 	Sauceignore    string
 	ConfigFilePath string
-	CommandLine    string
+	CommandLine    map[string]interface{}
 }
 
 // result represents the result of a local job
@@ -423,12 +423,16 @@ func (r *ContainerRunner) uploadSauceConfig(jobID string, cfgFile string) {
 }
 
 // uploadSaucectlCommand adds commandline parameters as an asset.
-func (r *ContainerRunner) uploadSaucectlCommand(jobID string, content string) {
-	if err := r.JobWriter.UploadAsset(jobID, "flags.txt", "text/plain", []byte(content)); err != nil {
+func (r *ContainerRunner) uploadSaucectlCommand(jobID string, content interface{}) {
+	encoded, err := json.Marshal(content)
+	if err != nil {
+		log.Warn().Msgf("failed to attach encode command line: %v", err)
+		return
+	}
+	if err := r.JobWriter.UploadAsset(jobID, "flags.json", "text/plain", encoded); err != nil {
 		log.Warn().Msgf("failed to attach command line: %v", err)
 	}
 }
-
 
 // jobIDFromURL returns the jobID from the URL return by containers.
 func jobIDFromURL(URL string) string {
