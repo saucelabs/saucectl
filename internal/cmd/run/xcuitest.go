@@ -64,18 +64,18 @@ func NewXCUITestCmd() *cobra.Command {
 	return cmd
 }
 
-func runXcuitest(cmd *cobra.Command, flags xcuitestFlags, tc testcomposer.Client, rs resto.Client, rc rdc.Client,
+func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, tc testcomposer.Client, rs resto.Client, rc rdc.Client,
 	as appstore.AppStore) (int, error) {
 	p, err := xcuitest.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
 
-	p.CommandLine = buildCommandLineFlagsMap(cmd)
+	p.CommandLine = flags.ExportCommandLineFlagsMap(cmd)
 	p.Sauce.Metadata.ExpandEnv()
 
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
-	if err := applyXCUITestFlags(&p, flags); err != nil {
+	if err := applyXCUITestFlags(&p, xcuiFlags); err != nil {
 		return 1, err
 	}
 	xcuitest.SetDefaults(&p)

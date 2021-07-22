@@ -97,17 +97,17 @@ func NewTestcafeCmd() *cobra.Command {
 	return cmd
 }
 
-func runTestcafe(cmd *cobra.Command, flags testcafeFlags, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
+func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
 	p, err := testcafe.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
 
-	p.CommandLine = buildCommandLineFlagsMap(cmd)
+	p.CommandLine = flags.ExportCommandLineFlagsMap(cmd)
 	p.Sauce.Metadata.ExpandEnv()
 
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
-	if err := applyTestcafeFlags(&p, flags); err != nil {
+	if err := applyTestcafeFlags(&p, tcFlags); err != nil {
 		return 1, err
 	}
 	testcafe.SetDefaults(&p)
