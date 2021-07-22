@@ -103,7 +103,7 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, tc testcomposer.Clie
 		return 1, err
 	}
 
-	p.CommandLine = flags.ExportCommandLineFlagsMap(cmd)
+	p.CommandLine = flags.CaptureCommandLineFlags(cmd)
 	p.Sauce.Metadata.ExpandEnv()
 
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)

@@ -72,8 +72,8 @@ func redactValue(flag *pflag.Flag) interface{} {
 	return "***REDACTED***"
 }
 
-// ExportCommandLineFlagsMap build the map of command line flags of the current execution.
-func ExportCommandLineFlagsMap(set *pflag.FlagSet) map[string]interface{} {
+// CaptureCommandLineFlags build the map of command line flags of the current execution.
+func CaptureCommandLineFlags(set *pflag.FlagSet) map[string]interface{} {
 	flags := map[string]interface{}{}
 	set.Visit(func(flag *pflag.Flag) {
 		if sliceContainsString(redactedFlags, flag.Name) {

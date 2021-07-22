@@ -80,7 +80,7 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, tc testcompose
 		return 1, err
 	}
 
-	p.CommandLine = flags.ExportCommandLineFlagsMap(cmd)
+	p.CommandLine = flags.CaptureCommandLineFlags(cmd)
 	p.Sauce.Metadata.ExpandEnv()
 
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)

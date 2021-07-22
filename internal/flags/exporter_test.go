@@ -1,6 +1,7 @@
 package flags
 
 import (
+	"encoding/json"
 	"github.com/spf13/pflag"
 	"reflect"
 	"testing"
@@ -149,7 +150,7 @@ func TestExportCommandLineFlagsMap(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want map[string]interface{}
+		want string
 	}{
 		{
 			name: "Redacted argument",
@@ -161,9 +162,7 @@ func TestExportCommandLineFlagsMap(t *testing.T) {
 					return pf
 				},
 			},
-			want: map[string]interface{}{
-				"cypress.key": "***REDACTED***",
-			},
+			want: `{"cypress.key":"***REDACTED***"}`,
 		},
 		{
 			name: "Redacted map argument",
@@ -175,12 +174,7 @@ func TestExportCommandLineFlagsMap(t *testing.T) {
 					return pf
 				},
 			},
-			want: map[string]interface{}{
-				"env": map[string]string{
-					"KEY1": "***REDACTED***",
-					"KEY2": "***REDACTED***",
-				},
-			},
+			want: `{"env":{"KEY1":"***REDACTED***","KEY2":"***REDACTED***"}}`,
 		},
 		{
 			name: "Not redacted string argument",
@@ -192,9 +186,7 @@ func TestExportCommandLineFlagsMap(t *testing.T) {
 					return pf
 				},
 			},
-			want: map[string]interface{}{
-				"name": "myname",
-			},
+			want: `{"name":"myname"}`,
 		},
 		{
 			name: "Not redacted map argument",
@@ -206,19 +198,20 @@ func TestExportCommandLineFlagsMap(t *testing.T) {
 					return pf
 				},
 			},
-			want: map[string]interface{}{
-				"xtra": map[string]string{
-					"KEY1": "val1",
-					"KEY2": "val2",
-				},
-			},
+			want: `{"xtra":{"KEY1":"val1","KEY2":"val2"}}`,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ExportCommandLineFlagsMap(tt.args.setBuilder()); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ExportCommandLineFlagsMap() = %v, want %v", got, tt.want)
+			got := CaptureCommandLineFlags(tt.args.setBuilder())
+
+			st, err := json.Marshal(got)
+			if err != nil {
+				t.Errorf("Marshalling failed: %v", err)
+			}
+			if string(st) != tt.want {
+				t.Errorf("CaptureCommandLineFlags() = %v, want %v", string(st), tt.want)
 			}
 		})
 	}
