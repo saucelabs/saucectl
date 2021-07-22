@@ -80,7 +80,7 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 		return 1, err
 	}
 
-	p.CommandLine = generateCommandFlags(cmd)
+	p.CommandLine = buildCommandLineFlagsMap(cmd)
 	p.Sauce.Metadata.ExpandEnv()
 
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)

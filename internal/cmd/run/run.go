@@ -273,7 +273,7 @@ func checkForUpdates() {
 	}
 }
 
-// FIXME: Move somewhere else
+// redactedFlags contains the list of flags that needs to be redacted before upload.
 var redactedFlags = []string{"cypress.key", "env"}
 
 func sliceContainsString(slice []string, val string) bool {
@@ -285,6 +285,7 @@ func sliceContainsString(slice []string, val string) bool {
 	return false
 }
 
+// redactStringToString redacts a stringToString flag.
 func redactStringToString(flag *pflag.Flag) interface{} {
 	val := flag.Value.String()
 	idx := strings.Index(val, "=[")
@@ -303,6 +304,7 @@ func redactStringToString(flag *pflag.Flag) interface{} {
 	return out
 }
 
+// redactValue redacts potential sensitive values.
 func redactValue(flag *pflag.Flag) interface{} {
 	if flag.Value.Type() == "stringToString" {
 		return redactStringToString(flag)
@@ -314,7 +316,8 @@ func redactValue(flag *pflag.Flag) interface{} {
 	return "***REDACTED***"
 }
 
-func generateCommandFlags(cmd *cobra.Command) map[string]interface{} {
+// buildCommandLineFlagsMap build the map of command line flags of the current execution.
+func buildCommandLineFlagsMap(cmd *cobra.Command) map[string]interface{} {
 	flags := map[string]interface{}{}
 	cmd.Flags().Visit(func(flag *pflag.Flag) {
 		if sliceContainsString(redactedFlags, flag.Name) {
