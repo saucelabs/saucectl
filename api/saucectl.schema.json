@@ -318,6 +318,29 @@
                 "platformVersion": {
                   "description": "The version of the iOS operating system.",
                   "type": "string"
+                },
+                "options": {
+                  "description": "Further specify desired device attributes within the pool of devices that match the name and version criteria.",
+                  "type": "object",
+                  "properties": {
+                    "carrierConnectivity": {
+                      "description": "Limit the device selection to those that are connected to a cellular network.",
+                      "type": "boolean"
+                    },
+                    "deviceType": {
+                      "description": "Limit the device selection to a specific type of device.",
+                      "enum": [
+                        "ANY",
+                        "PHONE",
+                        "TABLET"
+                      ]
+                    },
+                    "private": {
+                      "description": "Limit the device selection to only match from your organization's private pool.",
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false
                 }
               },
               "anyOf": [
