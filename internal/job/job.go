@@ -32,6 +32,9 @@ type Job struct {
 
 	// IsRDC flags a job started as a RDC run.
 	IsRDC bool `json:"-"`
+
+	// HasTimedOut flags a job as an unfinished one.
+	HasTimedOut bool `json:"-"`
 }
 
 // Done returns true if the job status is one of DoneStates. False otherwise.

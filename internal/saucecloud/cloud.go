@@ -129,7 +129,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			})
 		}
 
-		if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, artifactCfg) {
+		if !res.job.HasTimedOut && download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, artifactCfg) {
 			if res.job.IsRDC {
 				r.RDCArtifactDownloader.DownloadArtifact(res.job.ID)
 			} else {
@@ -199,13 +199,15 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 
 	// Check timeout
 	if reachedTimeout {
-		color.Red("Suite '%s' has reached %d timeout", opts.DisplayName, opts.Timeout)
+		color.Red("Suite '%s' has reached %ds timeout", opts.DisplayName, opts.Timeout)
 		if !isRDC {
 			j, err = r.JobStopper.StopJob(context.Background(), j.ID)
 			if err != nil {
-				// Log fail to stop
+				color.HiRedString("Failed to stop suite '%s': %v", opts.DisplayName, err)
 			}
 		}
+		j.Passed = false
+		j.HasTimedOut = true
 		return j, false, fmt.Errorf("suite '%s' has reached timeout", opts.DisplayName)
 	}
 
