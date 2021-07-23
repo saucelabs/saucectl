@@ -201,7 +201,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	if reachedTimeout {
 		color.Red("Suite '%s' has reached %ds timeout", opts.DisplayName, opts.Timeout)
 		if !isRDC {
-			j, err = r.JobStopper.StopJob(context.Background(), j.ID)
+			j, err = r.JobStopper.StopJob(context.Background(), id)
 			if err != nil {
 				color.HiRedString("Failed to stop suite '%s': %v", opts.DisplayName, err)
 			}

@@ -146,25 +146,28 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
+	deathTicker := time.NewTicker(1 * time.Second)
+	defer deathTicker.Stop()
 	deathclock := time.Now().Add(timeout)
 
-	for range ticker.C {
-		j, err = doRequestStatus(c.HTTPClient, req)
-		if err != nil {
-			return job.Job{}, false, err
-		}
+	for {
+		select {
+		case <-ticker.C:
+			j, err = doRequestStatus(c.HTTPClient, req)
+			if err != nil {
+				return job.Job{}, false, err
+			}
 
-		if job.Done(j.Status) {
-			j.IsRDC = true
-			return j, false, nil
-		}
-		if timeout > 0 && time.Now().After(deathclock) {
-			j.IsRDC = true
-			return j, true, nil
+			if job.Done(j.Status) {
+				j.IsRDC = true
+				return j, false, nil
+			}
+		case <-deathTicker.C:
+			if timeout > 0 && time.Now().After(deathclock) {
+				return job.Job{}, true, nil
+			}
 		}
 	}
-
-	return job.Job{}, false, nil
 }
 
 func doRequestStatus(httpClient *http.Client, request *http.Request) (job.Job, error) {
@@ -251,8 +254,8 @@ func extractAssetsFileNames(jr readJobResponse) []string {
 // jobURIMappings contains the assets that don't get accessed by their filename.
 // Those items also requires to send "Accept: text/plain" header to get raw content instead of json.
 var jobURIMappings = map[string]string{
-	"device.log":      "deviceLogs",
-	"xcuitest.log":    "xcuitestLogs",
+	"device.log":   "deviceLogs",
+	"xcuitest.log": "xcuitestLogs",
 }
 
 // GetJobAssetFileContent returns the job asset file content.
