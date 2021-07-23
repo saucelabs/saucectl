@@ -30,7 +30,7 @@ type Project struct {
 	DryRun         bool `yaml:"-" json:"-"`
 	ShowConsoleLog bool
 	ConfigFilePath string                 `yaml:"-" json:"-"`
-	CommandLine    map[string]interface{} `yaml:"-" json:"-"`
+	CLIFlags       map[string]interface{} `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
 	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
 	Suite         Suite             `yaml:"suite,omitempty" json:"-"`

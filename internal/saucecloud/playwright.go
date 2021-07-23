@@ -70,7 +70,7 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 			}
 			jobOpts <- job.StartOptions{
 				ConfigFilePath:   r.Project.ConfigFilePath,
-				CommandLine:      r.Project.CommandLine,
+				CLIFlags:         r.Project.CLIFlags,
 				DisplayName:      s.Name,
 				App:              fmt.Sprintf("storage:%s", fileID),
 				Suite:            s.Name,

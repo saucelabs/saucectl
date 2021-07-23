@@ -70,7 +70,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 				RootDir:        r.Project.RootDir,
 				Sauceignore:    r.Project.Sauce.Sauceignore,
 				ConfigFilePath: r.Project.ConfigFilePath,
-				CommandLine:    r.Project.CommandLine,
+				CLIFlags:       r.Project.CLIFlags,
 			}
 		}
 		close(containerOpts)

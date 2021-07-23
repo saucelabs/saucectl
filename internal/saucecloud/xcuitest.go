@@ -103,7 +103,7 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 	}
 	jobOpts <- job.StartOptions{
 		ConfigFilePath:   r.Project.ConfigFilePath,
-		CommandLine:      r.Project.CommandLine,
+		CLIFlags:         r.Project.CLIFlags,
 		DisplayName:      s.Name,
 		App:              fmt.Sprintf("storage:%s", appFileID),
 		Suite:            fmt.Sprintf("storage:%s", testAppFileID),

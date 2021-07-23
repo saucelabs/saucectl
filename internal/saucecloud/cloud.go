@@ -155,7 +155,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 
 	if !isRDC {
 		r.uploadSauceConfig(id, opts.ConfigFilePath)
-		r.uploadSaucectlCommand(id, opts.CommandLine)
+		r.uploadCLIFlags(id, opts.CLIFlags)
 	}
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
 	// if a soft exit is requested during startContainer phase, it gently exits.
@@ -552,14 +552,14 @@ func (r *CloudRunner) uploadSauceConfig(jobID string, cfgFile string) {
 	}
 }
 
-// uploadSaucectlCommand adds commandline parameters as an asset.
-func (r *CloudRunner) uploadSaucectlCommand(jobID string, content interface{}) {
+// uploadCLIFlags adds commandline parameters as an asset.
+func (r *CloudRunner) uploadCLIFlags(jobID string, content interface{}) {
 	encoded, err := json.Marshal(content)
 	if err != nil {
-		log.Warn().Msgf("failed to attach encode command line: %v", err)
+		log.Warn().Msgf("Failed to encode CLI flags: %v", err)
 		return
 	}
 	if err := r.JobWriter.UploadAsset(jobID, "flags.json", "text/plain", encoded); err != nil {
-		log.Warn().Msgf("failed to attach command line: %v", err)
+		log.Warn().Msgf("Failed to report CLI flags: %v", err)
 	}
 }
