@@ -92,10 +92,6 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
-	// Set an exceeding value.
-	if timeout == 0 {
-		timeout = 24 * time.Hour
-	}
 	deathclock := time.Now().Add(timeout)
 
 	for range ticker.C {
@@ -108,7 +104,7 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 			return j, false, nil
 		}
 
-		if time.Now().After(deathclock) {
+		if timeout > 0 && time.Now().After(deathclock) {
 			return j, true, nil
 		}
 	}
