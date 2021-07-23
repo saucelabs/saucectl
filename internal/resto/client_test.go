@@ -197,7 +197,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond, 0)
+			got, _, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond, 0)
 			assert.Equal(t, err, tc.expectedErr)
 			assert.Equal(t, got, tc.expectedResp)
 		})

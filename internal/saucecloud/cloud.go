@@ -145,7 +145,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	return passed
 }
 
-func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool, err error) {
+func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {
 	log.Info().Str("suite", opts.DisplayName).Str("region", r.Region.String()).Msg("Starting suite.")
 
 	id, isRDC, err := r.JobStarter.StartJob(context.Background(), opts)
@@ -178,13 +178,14 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	l.Msg("Suite started.")
 
 	// High interval poll to not oversaturate the job reader with requests
+	var reachedTimeout bool
 	if !isRDC {
 		sigChan := r.registerInterruptOnSignal(id, opts.DisplayName)
 		defer unregisterSignalCapture(sigChan)
 
-		j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second, time.Duration(opts.Timeout) * time.Second)
+		j, reachedTimeout, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second, time.Duration(opts.Timeout) * time.Second)
 	} else {
-		j, err = r.RDCJobReader.PollJob(context.Background(), id, 15*time.Second, time.Duration(opts.Timeout) * time.Second)
+		j, reachedTimeout, err = r.RDCJobReader.PollJob(context.Background(), id, 15*time.Second, time.Duration(opts.Timeout) * time.Second)
 	}
 
 	if err != nil {
@@ -194,6 +195,18 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	// Enrich RDC data
 	if isRDC {
 		enrichRDCReport(&j, opts)
+	}
+
+	// Check timeout
+	if reachedTimeout {
+		color.Red("Suite '%s' has reached %d timeout", opts.DisplayName, opts.Timeout)
+		if !isRDC {
+			j, err = r.JobStopper.StopJob(context.Background(), j.ID)
+			if err != nil {
+				// Log fail to stop
+			}
+		}
+		return j, false, fmt.Errorf("suite '%s' has reached timeout", opts.DisplayName)
 	}
 
 	if !j.Passed {

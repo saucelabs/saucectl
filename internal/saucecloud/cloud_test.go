@@ -123,13 +123,13 @@ func TestSkippedRunJobs(t *testing.T) {
 				},
 			},
 			JobReader: &mocks.FakeJobReader{
-				PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+				PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, bool, error) {
 					return job.Job{
 						ID:     "fake-id",
 						Passed: true,
 						Error:  "",
 						Status: job.StateComplete,
-					}, nil
+					}, false, nil
 				},
 			},
 			JobWriter: &mocks.FakeJobWriter{

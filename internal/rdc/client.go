@@ -135,11 +135,11 @@ func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
 }
 
 // PollJob polls job details at an interval, until the job has ended, whether successfully or due to an error.
-func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.Duration) (job.Job, error) {
+func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.Duration) (j job.Job, reachedTimeout bool, err error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/v1/rdc/jobs/%s", c.URL, id), nil)
 	if err != nil {
-		return job.Job{}, err
+		return job.Job{}, false, err
 	}
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
@@ -153,21 +153,22 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 	deathclock := time.Now().Add(timeout)
 
 	for range ticker.C {
-		if time.Now().After(deathclock) {
-			return job.Job{}, errors.New("timeout reached")
-		}
-		j, err := doRequestStatus(c.HTTPClient, req)
+		j, err = doRequestStatus(c.HTTPClient, req)
 		if err != nil {
-			return job.Job{}, err
+			return job.Job{}, false, err
 		}
 
 		if job.Done(j.Status) {
 			j.IsRDC = true
-			return j, nil
+			return j, false, nil
+		}
+		if time.Now().After(deathclock) {
+			j.IsRDC = true
+			return j, true, nil
 		}
 	}
 
-	return job.Job{}, nil
+	return job.Job{}, false, nil
 }
 
 func doRequestStatus(httpClient *http.Client, request *http.Request) (job.Job, error) {
