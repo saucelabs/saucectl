@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/fatih/color"
 	"io"
 	"os"
 	"os/signal"
@@ -45,6 +46,9 @@ type ContainerRunner struct {
 type containerStartOptions struct {
 	// DisplayName is used for local logging purposes only (e.g. console).
 	DisplayName string
+
+	// Timeout is used for local/per-suite timeout.
+	Timeout int
 
 	Docker         config.Docker
 	BeforeExec     []string
@@ -178,11 +182,35 @@ func (r *ContainerRunner) startContainer(options containerStartOptions) (string,
 	return containerID, nil
 }
 
-func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string) (output string, jobInfo jobInfo, passed bool, err error) {
-	exitCode, output, err := r.docker.ExecuteAttach(r.Ctx, containerID, cmd, env)
+func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string, timeout time.Duration) (output string, jobInfo jobInfo, passed bool, err error) {
+	c := make(chan bool)
+
+	var exitCode int
+	go func(c chan bool) {
+		exitCode, output, err = r.docker.ExecuteAttach(r.Ctx, containerID, cmd, env)
+		c <- true
+	}(c)
+
+	if timeout == 0 {
+		timeout = 24 * time.Hour
+	}
+	deathclock := time.NewTimer(timeout)
+	defer deathclock.Stop()
+
+	timedOut := false
+	select {
+	case <-deathclock.C:
+		timedOut = true
+	case <-c:
+	}
 
 	if err != nil {
 		return "", jobInfo, false, err
+	}
+
+	if timedOut {
+		color.Red("Suite '%s' has reached timeout", suiteName)
+		return "", jobInfo, false, fmt.Errorf("suite '%s' has reached timeout", suiteName)
 	}
 
 	passed = true
@@ -388,9 +416,10 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 		return
 	}
 
+	timeout := time.Duration(options.Timeout) * time.Second
 	output, jobInfo, passed, err = r.run(containerID, options.SuiteName,
 		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", options.SuiteName},
-		options.Environment)
+		options.Environment, timeout)
 
 	jobID := jobIDFromURL(jobIDFromURL(jobInfo.JobDetailsURL))
 	if jobID != "" {

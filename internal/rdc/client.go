@@ -146,28 +146,27 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
-	deathTicker := time.NewTicker(1 * time.Second)
-	defer deathTicker.Stop()
-	deathclock := time.Now().Add(timeout)
-
-	for {
-		select {
-		case <-ticker.C:
-			j, err = doRequestStatus(c.HTTPClient, req)
-			if err != nil {
-				return job.Job{}, false, err
-			}
-
-			if job.Done(j.Status) {
-				j.IsRDC = true
-				return j, false, nil
-			}
-		case <-deathTicker.C:
-			if timeout > 0 && time.Now().After(deathclock) {
-				return job.Job{}, true, nil
-			}
-		}
+	if timeout == 0 {
+		timeout = 24 * time.Hour
 	}
+	deathclock := time.NewTimer(timeout)
+	defer deathclock.Stop()
+
+	select {
+	case <-ticker.C:
+		j, err = doRequestStatus(c.HTTPClient, req)
+		if err != nil {
+			return job.Job{}, false, err
+		}
+
+		if job.Done(j.Status) {
+			j.IsRDC = true
+			return j, false, nil
+		}
+	case <-deathclock.C:
+		return job.Job{}, true, nil
+	}
+	return job.Job{}, false, nil
 }
 
 func doRequestStatus(httpClient *http.Client, request *http.Request) (job.Job, error) {
