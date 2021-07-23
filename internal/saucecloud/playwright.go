@@ -72,6 +72,7 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 				ConfigFilePath:   r.Project.ConfigFilePath,
 				CLIFlags:         r.Project.CLIFlags,
 				DisplayName:      s.Name,
+				Timeout:          s.Timeout,
 				App:              fmt.Sprintf("storage:%s", fileID),
 				Suite:            s.Name,
 				Framework:        "playwright",

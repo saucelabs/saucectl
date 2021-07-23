@@ -105,6 +105,7 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		ConfigFilePath:   r.Project.ConfigFilePath,
 		CLIFlags:         r.Project.CLIFlags,
 		DisplayName:      s.Name,
+		Timeout:          s.Timeout,
 		App:              fmt.Sprintf("storage:%s", appFileID),
 		Suite:            fmt.Sprintf("storage:%s", testAppFileID),
 		OtherApps:        otherAppsIDs,

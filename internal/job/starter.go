@@ -22,6 +22,9 @@ type StartOptions struct {
 	// DisplayName is used for local logging purposes only (e.g. console).
 	DisplayName string `json:"-"`
 
+	// Timeout is used for local/per-suite timeout.
+	Timeout int `json:"-"`
+
 	User           string                 `json:"username"`
 	AccessKey      string                 `json:"accessKey"`
 	App            string                 `json:"app,omitempty"`

@@ -19,7 +19,7 @@ func (fjs *FakeJobStarter) StartJob(ctx context.Context, opts job.StartOptions) 
 // FakeJobReader resto mock
 type FakeJobReader struct {
 	ReadJobFn                func(ctx context.Context, id string) (job.Job, error)
-	PollJobFn                func(ctx context.Context, id string, interval time.Duration) (job.Job, error)
+	PollJobFn                func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error)
 	GetJobAssetFileNamesFn   func(ctx context.Context, jobID string) ([]string, error)
 	GetJobAssetFileContentFn func(ctx context.Context, jobID, fileName string) ([]byte, error)
 }
@@ -30,8 +30,8 @@ func (fjr *FakeJobReader) ReadJob(ctx context.Context, id string) (job.Job, erro
 }
 
 // PollJob mock function
-func (fjr *FakeJobReader) PollJob(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
-	return fjr.PollJobFn(ctx, id, interval)
+func (fjr *FakeJobReader) PollJob(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+	return fjr.PollJobFn(ctx, id, interval, timeout)
 }
 
 // GetJobAssetFileContent mock function

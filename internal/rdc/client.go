@@ -135,7 +135,7 @@ func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
 }
 
 // PollJob polls job details at an interval, until the job has ended, whether successfully or due to an error.
-func (c *Client) PollJob(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
+func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.Duration) (job.Job, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/v1/rdc/jobs/%s", c.URL, id), nil)
 	if err != nil {
@@ -146,7 +146,16 @@ func (c *Client) PollJob(ctx context.Context, id string, interval time.Duration)
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
+	// Set an exceeding value.
+	if timeout == 0 {
+		timeout = 24 * time.Hour
+	}
+	deathclock := time.Now().Add(timeout)
+
 	for range ticker.C {
+		if time.Now().After(deathclock) {
+			return job.Job{}, errors.New("timeout reached")
+		}
 		j, err := doRequestStatus(c.HTTPClient, req)
 		if err != nil {
 			return job.Job{}, err

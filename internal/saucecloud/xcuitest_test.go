@@ -35,7 +35,7 @@ func TestXcuitestRunner_RunProject(t *testing.T) {
 		},
 	}
 	reader := mocks.FakeJobReader{
-		PollJobFn: func(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
+		PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
 			return job.Job{ID: id, Passed: true}, nil
 		},
 		GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
