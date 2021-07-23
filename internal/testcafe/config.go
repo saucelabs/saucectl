@@ -147,6 +147,10 @@ func SetDefaults(p *Project) {
 			suite.PageLoadTimeout = 3000
 		}
 
+		if suite.Timeout <= 0 {
+			suite.Timeout = p.Defaults.Timeout
+		}
+
 		// If this suite is targeting devices, then the platformName on the device takes precedence and we can skip the
 		// defaults on the suite level.
 		if suite.PlatformName == "" && len(suite.Simulators) == 0 {

@@ -22,6 +22,7 @@ var (
 // Project represents the xcuitest project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
+	Defaults       config.Defaults        `yaml:"defaults,omitempty" json:"defaults"`
 	ConfigFilePath string                 `yaml:"-" json:"-"`
 	DryRun         bool                   `yaml:"-" json:"-"`
 	CLIFlags       map[string]interface{} `yaml:"-" json:"-"`
@@ -80,12 +81,20 @@ func SetDefaults(p *Project) {
 		p.Sauce.Concurrency = 2
 	}
 
-	for _, suite := range p.Suites {
+	if p.Defaults.Timeout < 0 {
+		p.Defaults.Timeout = 0
+	}
+
+	for ks, suite := range p.Suites {
 		for id := range suite.Devices {
 			suite.Devices[id].PlatformName = "iOS"
 
 			// device type only supports uppercase values
 			suite.Devices[id].Options.DeviceType = strings.ToUpper(suite.Devices[id].Options.DeviceType)
+		}
+
+		if suite.Timeout <= 0 {
+			p.Suites[ks].Timeout = p.Defaults.Timeout
 		}
 	}
 }

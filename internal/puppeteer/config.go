@@ -22,6 +22,7 @@ var (
 // Project represents the puppeteer project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
+	Defaults       config.Defaults `yaml:"defaults,omitempty" json:"defaults"`
 	ShowConsoleLog bool
 	DryRun         bool                   `yaml:"-" json:"-"`
 	ConfigFilePath string                 `yaml:"-" json:"-"`
@@ -93,6 +94,10 @@ func SetDefaults(p *Project) {
 		msg.LogRootDirWarning()
 	}
 
+	if p.Defaults.Timeout < 0 {
+		p.Defaults.Timeout = 0
+	}
+
 	// Apply global env vars onto every suite.
 	for k, v := range p.Env {
 		for ks := range p.Suites {
@@ -101,6 +106,14 @@ func SetDefaults(p *Project) {
 				s.Env = map[string]string{}
 			}
 			s.Env[k] = os.ExpandEnv(v)
+		}
+	}
+
+	// Apply default settings into every suite.
+	for ks := range p.Suites {
+		s := &p.Suites[ks]
+		if s.Timeout <= 0 {
+			s.Timeout = p.Defaults.Timeout
 		}
 	}
 }

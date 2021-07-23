@@ -124,6 +124,10 @@ func SetDefaults(p *Project) {
 		msg.LogRootDirWarning()
 	}
 
+	if p.Defaults.Timeout < 0 {
+		p.Defaults.Timeout = 0
+	}
+
 	// Apply global env vars onto every suite.
 	for k, v := range p.Env {
 		for ks := range p.Suites {
@@ -135,6 +139,9 @@ func SetDefaults(p *Project) {
 
 			if s.PlatformName == "" {
 				s.PlatformName = "Windows 10"
+			}
+			if s.Timeout <= 0 {
+				s.Timeout = p.Defaults.Timeout
 			}
 		}
 	}

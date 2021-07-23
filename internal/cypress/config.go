@@ -117,10 +117,18 @@ func SetDefaults(p *Project) {
 		msg.LogRootDirWarning()
 	}
 
+	if p.Defaults.Timeout < 0 {
+		p.Defaults.Timeout = 0
+	}
+
 	for k := range p.Suites {
 		s := &p.Suites[k]
 		if s.PlatformName == "" {
 			s.PlatformName = "Windows 10"
+		}
+
+		if s.Timeout == 0 {
+			s.Timeout = p.Defaults.Timeout
 		}
 	}
 
