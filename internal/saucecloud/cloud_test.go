@@ -179,6 +179,9 @@ func TestRunJobTimeout(t *testing.T) {
 				return job.Job{ID: jobID}, nil
 			},
 		},
+		JobWriter: &mocks.FakeJobWriter{UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+			return nil
+		}},
 	}
 
 	opts := make(chan job.StartOptions)
