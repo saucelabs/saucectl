@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://saucelabs.com/schema/v1alpha/docker.schema.json",
+  "title": "saucectl docker specific schema",
+  "description": "Subschema for docker specific settings",
+  "type": "object",
+  "properties": {
+    "docker": {
+      "description": "TBD",
+      "type": "object",
+      "properties": {
+        "fileTransfer": {
+          "description": "TBD",
+          "enum": [
+            "copy",
+            "mount"
+          ]
+        },
+        "image": {
+          "description": "TBD",
+          "type": "string"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
