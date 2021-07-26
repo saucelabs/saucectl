@@ -128,7 +128,7 @@ func SetDefaults(p *Project) {
 			s.PlatformName = "Windows 10"
 		}
 
-		if s.Timeout == 0 {
+		if s.Timeout <= 0 {
 			s.Timeout = p.Defaults.Timeout
 		}
 	}
