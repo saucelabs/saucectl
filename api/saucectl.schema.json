@@ -650,6 +650,163 @@
         ],
         "additionalProperties": false
       }
+    },
+    "testcafe": {
+      "description": "Contains details specific to the TestCafe project.",
+      "type": "object",
+      "properties": {
+        "version": {
+          "description": "TBD",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "suites_testcafe": {
+      "description": "The set of properties providing details about the test suites to run.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the test suite, which will be reflected in the test results in Sauce Labs.",
+            "type": "string"
+          },
+          "browserName": {
+            "description": "TBD",
+            "enum": [
+              "chrome",
+              "firefox",
+              "microsoftedge",
+              "safari"
+            ]
+          },
+          "browserVersion": {
+            "description": "TBD",
+            "type": "string"
+          },
+          "platformName": {
+            "description": "TBD",
+            "enum": [
+              "macOS 11.00",
+              "Windows 10"
+            ]
+          },
+          "assertionTimeout": {
+            "description": "TBD",
+            "type": "integer",
+            "minimum": 0
+          },
+          "clientScripts": {
+            "description": "TBD",
+            "type": "array"
+          },
+          "env": {
+            "description": "TBD",
+            "type": "object"
+          },
+          "mode": {
+            "$ref": "#/definitions/mode"
+          },
+          "disablePageCaching": {
+            "description": "TBD",
+            "type": "boolean"
+          },
+          "disableScreenshots": {
+            "description": "TBD",
+            "type": "boolean"
+          },
+          "disableVideo": {
+            "description": "TBD",
+            "type": "boolean"
+          },
+          "pageLoadTimeout": {
+            "description": "TBD",
+            "type": "integer"
+          },
+          "quarantineMode": {
+            "description": "TBD",
+            "type": "boolean"
+          },
+          "screenResolution": {
+            "description": "TBD",
+            "type": "string"
+          },
+          "screenshots": {
+            "description": "TBD",
+            "type": "object",
+            "properties": {
+              "takeOnFails": {
+                "description": "TBD",
+                "type": "boolean"
+              },
+              "fullPage": {
+                "description": "TBD",
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          },
+          "selectorTimeout": {
+            "description": "TBD",
+            "type": "integer",
+            "minimum": 0
+          },
+          "simulators": {
+            "description": "TBD",
+            "type": "array",
+            "items": {
+              "properties": {
+                "name": {
+                  "description": "TBD",
+                  "type": "string"
+                },
+                "orientation": {
+                  "description": "TBD",
+                  "type": "string"
+                },
+                "platformName": {
+                  "description": "TBD",
+                  "type": "string"
+                },
+                "platformVersions": {
+                  "description": "TBD",
+                  "type": "array"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "skipJsErrors": {
+            "description": "TBD",
+            "type": "boolean"
+          },
+          "skipUncaughtErrors": {
+            "description": "TBD",
+            "type": "boolean"
+          },
+          "speed": {
+            "description": "TBD",
+            "type": "number"
+          },
+          "src": {
+            "description": "TBD",
+            "type": "array"
+          },
+          "stopOnFirstFail": {
+            "description": "TBD",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
     }
   },
   "properties": {
@@ -659,6 +816,7 @@
         "espresso",
         "playwright",
         "puppeteer",
+        "testcafe",
         "xcuitest"
       ]
     }
@@ -811,6 +969,47 @@
           },
           "suites": {
             "$ref": "#/definitions/suites_puppeteer"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "testcafe"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "apiVersion": {
+            "const": "v1alpha"
+          },
+          "kind": {
+            "const": "testcafe"
+          },
+          "sauce": {
+            "$ref": "#/definitions/sauce"
+          },
+          "rootDir": {
+            "$ref": "#/definitions/rootDir"
+          },
+          "defaults": {
+            "$ref": "#/definitions/defaults"
+          },
+          "docker": {
+            "$ref": "#/definitions/docker"
+          },
+          "artifacts": {
+            "$ref": "#/definitions/artifacts"
+          },
+          "testcafe": {
+            "$ref": "#/definitions/testcafe"
+          },
+          "suites": {
+            "$ref": "#/definitions/suites_testcafe"
           }
         },
         "additionalProperties": false
