@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://saucelabs.com/schema/v1alpha/cypress.schema.json",
+  "title": "saucectl cypress runner configuration",
+  "description": "Configuration file for cypress using saucectl",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "artifacts.schema.json"
+    },
+    {
+      "$ref": "docker.schema.json"
+    },
+    {
+      "$ref": "npm.schema.json"
+    },
+    {
+      "$ref": "sauce.schema.json"
+    }
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "v1alpha"
+    },
+    "kind": {
+      "const": "cypress"
+    },
+    "rootDir": {
+      "description": "TBD",
+      "type": "string"
+    },
+    "cypress": {
+      "description": "Contains details specific to the Cypress project.",
+      "type": "object",
+      "properties": {
+        "configFile": {
+          "description": "TBD",
+          "type": "string"
+        },
+        "key": {
+          "description": "TBD",
+          "type": "string"
+        },
+        "record": {
+          "description": "TBD",
+          "type": "boolean"
+        },
+        "version": {
+          "description": "TBD",
+          "type": "string"
+        }
+      },
+      "required": [
+        "configFile",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "suites": {
+      "description": "The set of properties providing details about the test suites to run.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the test suite, which will be reflected in the test results in Sauce Labs.",
+            "type": "string"
+          },
+          "browser": {
+            "description": "TBD",
+            "enum": [
+              "chrome",
+              "firefox",
+              "microsoftedge"
+            ]
+          },
+          "browserVersion": {
+            "description": "TBD",
+            "type": "string"
+          },
+          "platformName": {
+            "description": "TBD",
+            "enum": [
+              "Windows 10"
+            ]
+          },
+          "config": {
+            "description": "TBD",
+            "type": "object",
+            "properties": {
+              "testFiles": {
+                "description": "TBD",
+                "type": "array"
+              },
+              "env": {
+                "description": "TBD",
+                "type": "object"
+              }
+            }
+          },
+          "mode": {
+            "description": "TBD",
+            "enum": [
+              "docker",
+              "sauce"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "browser"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "cypress",
+    "suites"
+  ],
+  "additionalProperties": false
+}
+
