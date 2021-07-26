@@ -73,15 +73,18 @@ func NewEspressoCmd() *cobra.Command {
 	return cmd
 }
 
-func runEspresso(cmd *cobra.Command, flags espressoFlags, tc testcomposer.Client, rs resto.Client, rc rdc.Client,
+func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, tc testcomposer.Client, rs resto.Client, rc rdc.Client,
 	as appstore.AppStore) (int, error) {
 	p, err := espresso.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
+
+	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
 	p.Sauce.Metadata.ExpandEnv()
+
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
-	if err := applyEspressoFlags(&p, flags); err != nil {
+	if err := applyEspressoFlags(&p, espressoFlags); err != nil {
 		return 1, err
 	}
 	espresso.SetDefaults(&p)

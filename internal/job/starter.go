@@ -22,13 +22,14 @@ type StartOptions struct {
 	// DisplayName is used for local logging purposes only (e.g. console).
 	DisplayName string `json:"-"`
 
-	User           string   `json:"username"`
-	AccessKey      string   `json:"accessKey"`
-	App            string   `json:"app,omitempty"`
-	Suite          string   `json:"suite,omitempty"`
-	OtherApps      []string `json:"otherApps,omitempty"`
-	Framework      string   `json:"framework,omitempty"`
-	ConfigFilePath string   `json:"-"`
+	User           string                 `json:"username"`
+	AccessKey      string                 `json:"accessKey"`
+	App            string                 `json:"app,omitempty"`
+	Suite          string                 `json:"suite,omitempty"`
+	OtherApps      []string               `json:"otherApps,omitempty"`
+	Framework      string                 `json:"framework,omitempty"`
+	ConfigFilePath string                 `json:"-"`
+	CLIFlags       map[string]interface{} `json:"-"`
 
 	// FrameworkVersion contains the targeted version of the framework
 	// It should not be confused with automation tool (like jest/folio).

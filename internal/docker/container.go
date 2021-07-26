@@ -55,6 +55,7 @@ type containerStartOptions struct {
 	RootDir        string
 	Sauceignore    string
 	ConfigFilePath string
+	CLIFlags       map[string]interface{}
 }
 
 // result represents the result of a local job
@@ -394,6 +395,7 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 	jobID := jobIDFromURL(jobIDFromURL(jobInfo.JobDetailsURL))
 	if jobID != "" {
 		r.uploadSauceConfig(jobID, options.ConfigFilePath)
+		r.uploadCLIFlags(jobID, options.CLIFlags)
 	}
 	return
 }
@@ -417,6 +419,18 @@ func (r *ContainerRunner) uploadSauceConfig(jobID string, cfgFile string) {
 	}
 	if err := r.JobWriter.UploadAsset(jobID, filepath.Base(cfgFile), "text/plain", content); err != nil {
 		log.Warn().Msgf("failed to attach configuration: %v", err)
+	}
+}
+
+// uploadCLIFlags adds commandline parameters as an asset.
+func (r *ContainerRunner) uploadCLIFlags(jobID string, content interface{}) {
+	encoded, err := json.Marshal(content)
+	if err != nil {
+		log.Warn().Msgf("Failed to encode CLI flags: %v", err)
+		return
+	}
+	if err := r.JobWriter.UploadAsset(jobID, "flags.json", "text/plain", encoded); err != nil {
+		log.Warn().Msgf("Failed to report CLI flags: %v", err)
 	}
 }
 

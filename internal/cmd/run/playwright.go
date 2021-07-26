@@ -85,7 +85,9 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 		return 1, err
 	}
 
+	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
 	p.Sauce.Metadata.ExpandEnv()
+
 	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
 	if err := applyPlaywrightFlags(&p); err != nil {
 		return 1, err

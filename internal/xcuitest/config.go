@@ -22,10 +22,11 @@ var (
 // Project represents the xcuitest project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
-	ConfigFilePath string             `yaml:"-" json:"-"`
-	DryRun         bool               `yaml:"-" json:"-"`
-	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
-	Xcuitest       Xcuitest           `yaml:"xcuitest,omitempty" json:"xcuitest"`
+	ConfigFilePath string                 `yaml:"-" json:"-"`
+	DryRun         bool                   `yaml:"-" json:"-"`
+	CLIFlags       map[string]interface{} `yaml:"-" json:"-"`
+	Sauce          config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
+	Xcuitest       Xcuitest               `yaml:"xcuitest,omitempty" json:"xcuitest"`
 	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
 	Suite     Suite            `yaml:"suite,omitempty" json:"-"`
 	Suites    []Suite          `yaml:"suites,omitempty" json:"suites"`

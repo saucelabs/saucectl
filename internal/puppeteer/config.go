@@ -23,9 +23,10 @@ var (
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
 	ShowConsoleLog bool
-	DryRun         bool               `yaml:"-" json:"-"`
-	ConfigFilePath string             `yaml:"-" json:"-"`
-	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
+	DryRun         bool                   `yaml:"-" json:"-"`
+	ConfigFilePath string                 `yaml:"-" json:"-"`
+	CLIFlags       map[string]interface{} `yaml:"-" json:"-"`
+	Sauce          config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
 	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
 	Suite      Suite             `yaml:"suite,omitempty" json:"-"`
 	Suites     []Suite           `yaml:"suites,omitempty" json:"suites"`
