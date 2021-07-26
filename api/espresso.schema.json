@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
-  "$id": "https://saucelabs.com/schema/v1alpha/saucectl.espresso.schema.json",
+  "$id": "https://saucelabs.com/schema/v1alpha/espresso.schema.json",
   "title": "saucectl espresso runner configuration",
   "description": "Configuration file for espresso using saucectl",
   "type": "object",
   "allOf": [
     {
-      "$ref": "saucectl.sauce.schema.json"
+      "$ref": "sauce.schema.json"
     },
     {
-      "$ref": "saucectl.artifacts.schema.json"
+      "$ref": "artifacts.schema.json"
     }
   ],
   "properties": {
@@ -167,7 +167,7 @@
                   "additionalProperties": false
                 }
               },
-              "anyOf": [
+              "oneOf": [
                 {
                   "required": [
                     "id"
