@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
-  "$id": "https://saucelabs.com/schema/v1alpha/saucectl.artifacts.schema.json",
+  "$id": "https://saucelabs.com/schema/v1alpha/artifacts.schema.json",
   "title": "saucectl artifacts schema",
   "description": "Subschema for controlling artifacts",
   "type": "object",

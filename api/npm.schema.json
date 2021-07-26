@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://saucelabs.com/schema/v1alpha/npm.schema.json",
+  "title": "saucectl npm specific schema",
+  "description": "Subschema for npm specific settings",
+  "type": "object",
+  "properties": {
+    "npm": {
+      "description": "TBD",
+      "type": "object",
+      "properties": {
+        "packages": {
+          "description": "TBD",
+          "type": "object"
+        },
+        "registry": {
+          "description": "TBD",
+          "type": "string"
+        },
+        "strictSSL": {
+          "description": "TBD",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
