@@ -75,7 +75,7 @@ type Suite struct {
 	Mode               string   `yaml:"mode,omitempty" json:"-"`
 	// Deprecated. Reserved for future use for actual devices.
 	Devices    []config.Simulator `yaml:"devices,omitempty" json:"devices"`
-	Simulators []config.Simulator `yaml:"emulators,omitempty" json:"emulators"`
+	Simulators []config.Simulator `yaml:"simulators,omitempty" json:"simulators"`
 }
 
 // Screenshots represents screenshots configuration.
