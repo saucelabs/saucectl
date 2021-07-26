@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v2"
 )
@@ -116,7 +117,8 @@ type Npm struct {
 
 // Defaults represents default suite settings.
 type Defaults struct {
-	Mode string `yaml:"mode,omitempty" json:"mode"`
+	Mode    string        `yaml:"mode,omitempty" json:"mode"`
+	Timeout time.Duration `yaml:"timeout,omitempty" json:"timeout"`
 }
 
 func readYaml(cfgFilePath string) ([]byte, error) {

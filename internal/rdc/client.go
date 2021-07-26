@@ -134,8 +134,8 @@ func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
 	}, nil
 }
 
-// PollJob polls job details at an interval, until the job has ended, whether successfully or due to an error.
-func (c *Client) PollJob(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
+// PollJob polls job details at an interval, until timeout has been reached or until the job has ended, whether successfully or due to an error.
+func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.Duration) (j job.Job, err error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/v1/rdc/jobs/%s", c.URL, id), nil)
 	if err != nil {
@@ -146,19 +146,33 @@ func (c *Client) PollJob(ctx context.Context, id string, interval time.Duration)
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		j, err := doRequestStatus(c.HTTPClient, req)
-		if err != nil {
-			return job.Job{}, err
-		}
+	if timeout <= 0 {
+		timeout = 24 * time.Hour
+	}
+	deathclock := time.NewTimer(timeout)
+	defer deathclock.Stop()
 
-		if job.Done(j.Status) {
-			j.IsRDC = true
+	for {
+		select {
+		case <-ticker.C:
+			j, err = doRequestStatus(c.HTTPClient, req)
+			if err != nil {
+				return job.Job{}, err
+			}
+
+			if job.Done(j.Status) {
+				j.IsRDC = true
+				return j, nil
+			}
+		case <-deathclock.C:
+			j, err = doRequestStatus(c.HTTPClient, req)
+			if err != nil {
+				return job.Job{}, err
+			}
+			j.TimedOut = true
 			return j, nil
 		}
 	}
-
-	return job.Job{}, nil
 }
 
 func doRequestStatus(httpClient *http.Client, request *http.Request) (job.Job, error) {
@@ -245,8 +259,8 @@ func extractAssetsFileNames(jr readJobResponse) []string {
 // jobURIMappings contains the assets that don't get accessed by their filename.
 // Those items also requires to send "Accept: text/plain" header to get raw content instead of json.
 var jobURIMappings = map[string]string{
-	"device.log":      "deviceLogs",
-	"xcuitest.log":    "xcuitestLogs",
+	"device.log":   "deviceLogs",
+	"xcuitest.log": "xcuitestLogs",
 }
 
 // GetJobAssetFileContent returns the job asset file content.

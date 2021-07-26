@@ -69,6 +69,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 				Sauceignore:    r.Project.Sauce.Sauceignore,
 				ConfigFilePath: r.Project.ConfigFilePath,
 				CLIFlags:       r.Project.CLIFlags,
+				Timeout:        suite.Timeout,
 			}
 		}
 		close(containerOpts)

@@ -2,6 +2,7 @@ package job
 
 import (
 	"context"
+	"time"
 )
 
 // TestOptions represents the espresso test filter options configuration.
@@ -21,6 +22,9 @@ type TestOptions struct {
 type StartOptions struct {
 	// DisplayName is used for local logging purposes only (e.g. console).
 	DisplayName string `json:"-"`
+
+	// Timeout is used for local/per-suite timeout.
+	Timeout time.Duration `json:"-"`
 
 	User           string                 `json:"username"`
 	AccessKey      string                 `json:"accessKey"`

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/fatih/color"
 	"io"
 	"os"
 	"os/signal"
@@ -46,6 +47,9 @@ type containerStartOptions struct {
 	// DisplayName is used for local logging purposes only (e.g. console).
 	DisplayName string
 
+	// Timeout is used for local/per-suite timeout.
+	Timeout time.Duration
+
 	Docker         config.Docker
 	BeforeExec     []string
 	Project        interface{}
@@ -64,6 +68,7 @@ type result struct {
 	err           error
 	passed        bool
 	skipped       bool
+	timedOut      bool
 	consoleOutput string
 	name          string
 	browser       string
@@ -178,11 +183,34 @@ func (r *ContainerRunner) startContainer(options containerStartOptions) (string,
 	return containerID, nil
 }
 
-func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string) (output string, jobInfo jobInfo, passed bool, err error) {
-	exitCode, output, err := r.docker.ExecuteAttach(r.Ctx, containerID, cmd, env)
+func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string, timeout time.Duration) (output string, jobInfo jobInfo, passed bool, timedOut bool, err error) {
+	c := make(chan bool)
+
+	var exitCode int
+	go func(c chan bool) {
+		exitCode, output, err = r.docker.ExecuteAttach(r.Ctx, containerID, cmd, env)
+		c <- true
+	}(c)
+
+	if timeout <= 0 {
+		timeout = 24 * time.Hour
+	}
+	deathclock := time.NewTimer(timeout)
+	defer deathclock.Stop()
+
+	select {
+	case <-deathclock.C:
+		timedOut = true
+	case <-c:
+	}
 
 	if err != nil {
-		return "", jobInfo, false, err
+		return "", jobInfo, false, false, err
+	}
+
+	if timedOut {
+		color.Red("Suite '%s' has reached timeout", suiteName)
+		return "", jobInfo, false, true, fmt.Errorf("suite '%s' has reached timeout", suiteName)
 	}
 
 	passed = true
@@ -195,7 +223,7 @@ func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env m
 	if err != nil {
 		log.Warn().Msgf("unable to retrieve test result url: %s", err)
 	}
-	return output, jobInfo, passed, err
+	return output, jobInfo, passed, timedOut, err
 }
 
 // readJobInfo reads test url from inside the test runner container.
@@ -263,7 +291,7 @@ func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, re
 			continue
 		}
 		start := time.Now()
-		containerID, output, jobDetails, passed, skipped, err := r.runSuite(opts)
+		containerID, output, jobDetails, passed, skipped, timedOut, err := r.runSuite(opts)
 
 		browser := fmt.Sprintf("%s %s", opts.Browser, r.docker.GetBrowserVersion(r.Ctx, opts.Docker.Image, opts.Browser))
 
@@ -277,6 +305,7 @@ func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, re
 			consoleOutput: output,
 			duration:      time.Since(start),
 			err:           err,
+			timedOut:      timedOut,
 		}
 	}
 }
@@ -311,7 +340,7 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 		inProgress--
 
 		jobID := getJobID(res.jobInfo.JobDetailsURL)
-		if download.ShouldDownloadArtifact(jobID, res.passed, artifactCfg) {
+		if download.ShouldDownloadArtifact(jobID, res.passed, res.timedOut, artifactCfg) {
 			r.ArtfactDownloader.DownloadArtifact(jobID)
 		}
 
@@ -368,7 +397,7 @@ func (r *ContainerRunner) logSuite(res result) {
 }
 
 // runSuite runs the selected suite.
-func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobInfo jobInfo, passed bool, skipped bool, err error) {
+func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobInfo jobInfo, passed bool, skipped bool, timedOut bool, err error) {
 	log.Info().Str("suite", options.DisplayName).Msg("Setting up test environment")
 	containerID, err = r.startContainer(options)
 	defer r.tearDown(containerID, options.SuiteName)
@@ -388,9 +417,9 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 		return
 	}
 
-	output, jobInfo, passed, err = r.run(containerID, options.SuiteName,
+	output, jobInfo, passed, timedOut, err = r.run(containerID, options.SuiteName,
 		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", options.SuiteName},
-		options.Environment)
+		options.Environment, options.Timeout)
 
 	jobID := jobIDFromURL(jobIDFromURL(jobInfo.JobDetailsURL))
 	if jobID != "" {

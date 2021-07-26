@@ -9,11 +9,12 @@ import (
 
 func TestShouldDownloadArtifact(t *testing.T) {
 	type testCase struct {
-		name   string
-		config config.ArtifactDownload
-		jobID  string
-		passed bool
-		want   bool
+		name     string
+		config   config.ArtifactDownload
+		jobID    string
+		passed   bool
+		timedOut bool
+		want     bool
 	}
 	testCases := []testCase{
 		{
@@ -83,10 +84,18 @@ func TestShouldDownloadArtifact(t *testing.T) {
 			passed: false,
 			want:   true,
 		},
+		{
+			name:     "should not download artifacts when it has timedOut",
+			config:   config.ArtifactDownload{When: config.WhenFail},
+			jobID:    "fake-id",
+			passed:   false,
+			timedOut: true,
+			want:     false,
+		},
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ShouldDownloadArtifact(tt.jobID, tt.passed, tt.config)
+			got := ShouldDownloadArtifact(tt.jobID, tt.passed, tt.timedOut, tt.config)
 			assert.Equal(t, tt.want, got)
 		})
 	}

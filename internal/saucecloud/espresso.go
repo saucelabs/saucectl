@@ -168,6 +168,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 
 	jobOpts <- job.StartOptions{
 		DisplayName:       displayName,
+		Timeout:           s.Timeout,
 		ConfigFilePath:    r.Project.ConfigFilePath,
 		CLIFlags:          r.Project.CLIFlags,
 		App:               fmt.Sprintf("storage:%s", appFileID),

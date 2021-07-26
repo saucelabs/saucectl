@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/saucelabs/saucectl/internal/config"
 )
@@ -56,6 +57,7 @@ type Suite struct {
 	PlatformName     string            `yaml:"platformName,omitempty" json:"platformName"`
 	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
 	Env              map[string]string `yaml:"env,omitempty" json:"env"`
+	Timeout          time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
 	// Deprecated as of TestCafe v1.10.0 https://testcafe.io/documentation/402638/reference/configuration-file#tsconfigpath
 	TsConfigPath       string   `yaml:"tsConfigPath,omitempty" json:"tsConfigPath"`
 	ClientScripts      []string `yaml:"clientScripts,omitempty" json:"clientScripts,omitempty"`
@@ -116,6 +118,10 @@ func SetDefaults(p *Project) {
 		p.Sauce.Concurrency = 2
 	}
 
+	if p.Defaults.Timeout < 0 {
+		p.Defaults.Timeout = 0
+	}
+
 	// Set default docker file transfer to mount
 	if p.Docker.FileTransfer == "" {
 		p.Docker.FileTransfer = config.DockerFileMount
@@ -144,6 +150,10 @@ func SetDefaults(p *Project) {
 		}
 		if suite.PageLoadTimeout <= 0 {
 			suite.PageLoadTimeout = 3000
+		}
+
+		if suite.Timeout <= 0 {
+			suite.Timeout = p.Defaults.Timeout
 		}
 
 		// If this suite is targeting devices, then the platformName on the device takes precedence and we can skip the

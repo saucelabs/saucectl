@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -22,6 +23,7 @@ var (
 // Project represents the xcuitest project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
+	Defaults       config.Defaults        `yaml:"defaults,omitempty" json:"defaults"`
 	ConfigFilePath string                 `yaml:"-" json:"-"`
 	DryRun         bool                   `yaml:"-" json:"-"`
 	CLIFlags       map[string]interface{} `yaml:"-" json:"-"`
@@ -48,6 +50,7 @@ type TestOptions struct {
 // Suite represents the xcuitest test suite configuration.
 type Suite struct {
 	Name        string          `yaml:"name,omitempty" json:"name"`
+	Timeout     time.Duration   `yaml:"timeout,omitempty" json:"timeout"`
 	Devices     []config.Device `yaml:"devices,omitempty" json:"devices"`
 	TestOptions TestOptions     `yaml:"testOptions,omitempty" json:"testOptions"`
 }
@@ -79,12 +82,20 @@ func SetDefaults(p *Project) {
 		p.Sauce.Concurrency = 2
 	}
 
-	for _, suite := range p.Suites {
+	if p.Defaults.Timeout < 0 {
+		p.Defaults.Timeout = 0
+	}
+
+	for ks, suite := range p.Suites {
 		for id := range suite.Devices {
 			suite.Devices[id].PlatformName = "iOS"
 
 			// device type only supports uppercase values
 			suite.Devices[id].Options.DeviceType = strings.ToUpper(suite.Devices[id].Options.DeviceType)
+		}
+
+		if suite.Timeout <= 0 {
+			p.Suites[ks].Timeout = p.Defaults.Timeout
 		}
 	}
 }

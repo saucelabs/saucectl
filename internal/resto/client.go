@@ -82,8 +82,8 @@ func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
 	return doRequest(c.HTTPClient, request)
 }
 
-// PollJob polls job details at an interval, until the job has ended, whether successfully or due to an error.
-func (c *Client) PollJob(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
+// PollJob polls job details at an interval, until timeout has been reached or until the job has ended, whether successfully or due to an error.
+func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.Duration) (j job.Job, err error) {
 	request, err := createRequest(ctx, c.URL, c.Username, c.AccessKey, id)
 	if err != nil {
 		return job.Job{}, err
@@ -92,18 +92,32 @@ func (c *Client) PollJob(ctx context.Context, id string, interval time.Duration)
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		j, err := doRequest(c.HTTPClient, request)
-		if err != nil {
-			return job.Job{}, err
-		}
+	if timeout <= 0 {
+		timeout = 24 * time.Hour
+	}
+	deathclock := time.NewTimer(timeout)
+	defer deathclock.Stop()
 
-		if job.Done(j.Status) {
+	for {
+		select {
+		case <-ticker.C:
+			j, err = doRequest(c.HTTPClient, request)
+			if err != nil {
+				return job.Job{}, err
+			}
+
+			if job.Done(j.Status) {
+				return j, nil
+			}
+		case <-deathclock.C:
+			j, err = doRequest(c.HTTPClient, request)
+			if err != nil {
+				return job.Job{}, err
+			}
+			j.TimedOut = true
 			return j, nil
 		}
 	}
-
-	return job.Job{}, nil
 }
 
 // GetJobAssetFileNames return the job assets list.

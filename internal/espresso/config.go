@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -23,6 +24,7 @@ var (
 // Project represents the espresso project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
+	Defaults       config.Defaults        `yaml:"defaults" json:"defaults"`
 	DryRun         bool                   `yaml:"-" json:"-"`
 	ConfigFilePath string                 `yaml:"-" json:"-"`
 	CLIFlags       map[string]interface{} `yaml:"-" json:"-"`
@@ -60,6 +62,7 @@ type Suite struct {
 	Devices     []config.Device   `yaml:"devices,omitempty" json:"devices"`
 	Emulators   []config.Emulator `yaml:"emulators,omitempty" json:"emulators"`
 	TestOptions TestOptions       `yaml:"testOptions,omitempty" json:"testOptions"`
+	Timeout     time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
 }
 
 // Android constant
@@ -100,6 +103,10 @@ func SetDefaults(p *Project) {
 		p.Sauce.Concurrency = 2
 	}
 
+	if p.Defaults.Timeout < 0 {
+		p.Defaults.Timeout = 0
+	}
+
 	for i, suite := range p.Suites {
 		for j := range suite.Devices {
 			// Android is the only choice.
@@ -108,6 +115,10 @@ func SetDefaults(p *Project) {
 		}
 		for j := range suite.Emulators {
 			p.Suites[i].Emulators[j].PlatformName = Android
+		}
+
+		if suite.Timeout <= 0 {
+			p.Suites[i].Timeout = p.Defaults.Timeout
 		}
 	}
 }

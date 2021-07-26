@@ -129,7 +129,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			})
 		}
 
-		if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, artifactCfg) {
+		if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, res.job.TimedOut, artifactCfg) {
 			if res.job.IsRDC {
 				r.RDCArtifactDownloader.DownloadArtifact(res.job.ID)
 			} else {
@@ -145,7 +145,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	return passed
 }
 
-func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool, err error) {
+func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {
 	log.Info().Str("suite", opts.DisplayName).Str("region", r.Region.String()).Msg("Starting suite.")
 
 	id, isRDC, err := r.JobStarter.StartJob(context.Background(), opts)
@@ -182,9 +182,9 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 		sigChan := r.registerInterruptOnSignal(id, opts.DisplayName)
 		defer unregisterSignalCapture(sigChan)
 
-		j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second)
+		j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second, opts.Timeout)
 	} else {
-		j, err = r.RDCJobReader.PollJob(context.Background(), id, 15*time.Second)
+		j, err = r.RDCJobReader.PollJob(context.Background(), id, 15*time.Second, opts.Timeout)
 	}
 
 	if err != nil {
@@ -194,6 +194,20 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, interrupted bool
 	// Enrich RDC data
 	if isRDC {
 		enrichRDCReport(&j, opts)
+	}
+
+	// Check timeout
+	if j.TimedOut {
+		color.Red("Suite '%s' has reached %ds timeout", opts.DisplayName, opts.Timeout)
+		if !isRDC {
+			j, err = r.JobStopper.StopJob(context.Background(), id)
+			if err != nil {
+				color.HiRedString("Failed to stop suite '%s': %v", opts.DisplayName, err)
+			}
+		}
+		j.Passed = false
+		j.TimedOut = true
+		return j, false, fmt.Errorf("suite '%s' has reached timeout", opts.DisplayName)
 	}
 
 	if !j.Passed {

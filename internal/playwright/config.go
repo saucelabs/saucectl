@@ -7,6 +7,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/saucelabs/saucectl/internal/config"
 )
@@ -53,6 +54,7 @@ type Playwright struct {
 type Suite struct {
 	Name              string            `yaml:"name,omitempty" json:"name"`
 	Mode              string            `yaml:"mode,omitempty" json:"-"`
+	Timeout           time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
 	PlaywrightVersion string            `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
 	TestMatch         []string          `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
 	PlatformName      string            `yaml:"platformName,omitempty" json:"platformName,omitempty"`
@@ -123,6 +125,10 @@ func SetDefaults(p *Project) {
 		msg.LogRootDirWarning()
 	}
 
+	if p.Defaults.Timeout < 0 {
+		p.Defaults.Timeout = 0
+	}
+
 	// Apply global env vars onto every suite.
 	for k, v := range p.Env {
 		for ks := range p.Suites {
@@ -134,6 +140,9 @@ func SetDefaults(p *Project) {
 
 			if s.PlatformName == "" {
 				s.PlatformName = "Windows 10"
+			}
+			if s.Timeout <= 0 {
+				s.Timeout = p.Defaults.Timeout
 			}
 		}
 	}
