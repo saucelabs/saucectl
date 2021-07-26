@@ -341,7 +341,7 @@
                   "additionalProperties": false
                 }
               },
-              "anyOf": [
+              "oneOf": [
                 {
                   "required": [
                     "id"
