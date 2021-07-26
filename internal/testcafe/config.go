@@ -117,6 +117,10 @@ func SetDefaults(p *Project) {
 		p.Sauce.Concurrency = 2
 	}
 
+	if p.Defaults.Timeout < 0 {
+		p.Defaults.Timeout = 0
+	}
+
 	// Set default docker file transfer to mount
 	if p.Docker.FileTransfer == "" {
 		p.Docker.FileTransfer = config.DockerFileMount
