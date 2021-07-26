@@ -42,6 +42,25 @@
       "description": "TBD",
       "type": "string"
     },
+    "npm": {
+      "description": "TBD",
+      "type": "object",
+      "properties": {
+        "packages": {
+          "description": "TBD",
+          "type": "object"
+        },
+        "registry": {
+          "description": "TBD",
+          "type": "string"
+        },
+        "strictSSL": {
+          "description": "TBD",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
     "sauce": {
       "description": "All settings related to how tests are run and identified in the Sauce Labs platform.",
       "type": "object",
@@ -858,6 +877,9 @@
           },
           "suites": {
             "$ref": "#/definitions/suites_cypress"
+          },
+          "npm": {
+            "$ref": "#/definitions/npm"
           }
         },
         "additionalProperties": false
@@ -931,6 +953,9 @@
           },
           "suites": {
             "$ref": "#/definitions/suites_playwright"
+          },
+          "npm": {
+            "$ref": "#/definitions/npm"
           }
         },
         "additionalProperties": false
@@ -969,6 +994,9 @@
           },
           "suites": {
             "$ref": "#/definitions/suites_puppeteer"
+          },
+          "npm": {
+            "$ref": "#/definitions/npm"
           }
         },
         "additionalProperties": false
@@ -1010,6 +1038,9 @@
           },
           "suites": {
             "$ref": "#/definitions/suites_testcafe"
+          },
+          "npm": {
+            "$ref": "#/definitions/npm"
           }
         },
         "additionalProperties": false
