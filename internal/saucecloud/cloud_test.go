@@ -123,13 +123,13 @@ func TestSkippedRunJobs(t *testing.T) {
 				},
 			},
 			JobReader: &mocks.FakeJobReader{
-				PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, bool, error) {
+				PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
 					return job.Job{
 						ID:     "fake-id",
 						Passed: true,
 						Error:  "",
 						Status: job.StateComplete,
-					}, false, nil
+					}, nil
 				},
 			},
 			JobWriter: &mocks.FakeJobWriter{
@@ -160,4 +160,65 @@ func TestRunJobsSkipped(t *testing.T) {
 	res := <-results
 	assert.Nil(t, res.err)
 	assert.True(t, res.skipped)
+}
+
+func TestRunJobTimeout(t *testing.T) {
+	r := CloudRunner{
+		JobStarter: &mocks.FakeJobStarter{
+			StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+				return "1", false, nil
+			},
+		},
+		JobReader: &mocks.FakeJobReader{
+			PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+				return job.Job{ID: id, TimedOut: true}, nil
+			},
+		},
+		JobStopper: &mocks.FakeJobStopper{
+			StopJobFn: func(ctx context.Context, jobID string) (job.Job, error) {
+				return job.Job{ID: jobID}, nil
+			},
+		},
+	}
+
+	opts := make(chan job.StartOptions)
+	results := make(chan result)
+
+	go r.runJobs(opts, results)
+	opts <- job.StartOptions{
+		DisplayName: "dummy",
+		Timeout:     1,
+	}
+	close(opts)
+	res := <-results
+	assert.Error(t, res.err, "suite 'dummy' has reached timeout")
+	assert.True(t, res.job.TimedOut)
+}
+
+func TestRunJobTimeoutRDC(t *testing.T) {
+	r := CloudRunner{
+		JobStarter: &mocks.FakeJobStarter{
+			StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+				return "1", true, nil
+			},
+		},
+		RDCJobReader: &mocks.FakeJobReader{
+			PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+				return job.Job{ID: id, TimedOut: true}, nil
+			},
+		},
+	}
+
+	opts := make(chan job.StartOptions)
+	results := make(chan result)
+
+	go r.runJobs(opts, results)
+	opts <- job.StartOptions{
+		DisplayName: "dummy",
+		Timeout:     1,
+	}
+	close(opts)
+	res := <-results
+	assert.Error(t, res.err, "suite 'dummy' has reached timeout")
+	assert.True(t, res.job.TimedOut)
 }

@@ -135,11 +135,11 @@ func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
 }
 
 // PollJob polls job details at an interval, until the job has ended, whether successfully or due to an error.
-func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.Duration) (j job.Job, reachedTimeout bool, err error) {
+func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.Duration) (j job.Job, err error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/v1/rdc/jobs/%s", c.URL, id), nil)
 	if err != nil {
-		return job.Job{}, false, err
+		return job.Job{}, err
 	}
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
@@ -152,21 +152,27 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 	deathclock := time.NewTimer(timeout)
 	defer deathclock.Stop()
 
-	select {
-	case <-ticker.C:
-		j, err = doRequestStatus(c.HTTPClient, req)
-		if err != nil {
-			return job.Job{}, false, err
-		}
+	for {
+		select {
+		case <-ticker.C:
+			j, err = doRequestStatus(c.HTTPClient, req)
+			if err != nil {
+				return job.Job{}, err
+			}
 
-		if job.Done(j.Status) {
-			j.IsRDC = true
-			return j, false, nil
+			if job.Done(j.Status) {
+				j.IsRDC = true
+				return j, nil
+			}
+		case <-deathclock.C:
+			j, err = doRequestStatus(c.HTTPClient, req)
+			if err != nil {
+				return job.Job{}, err
+			}
+			j.TimedOut = true
+			return j, nil
 		}
-	case <-deathclock.C:
-		return job.Job{}, true, nil
 	}
-	return job.Job{}, false, nil
 }
 
 func doRequestStatus(httpClient *http.Client, request *http.Request) (job.Job, error) {

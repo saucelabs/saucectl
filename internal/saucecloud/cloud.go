@@ -129,7 +129,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			})
 		}
 
-		if !res.job.HasTimedOut && download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, artifactCfg) {
+		if !res.job.TimedOut && download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, artifactCfg) {
 			if res.job.IsRDC {
 				r.RDCArtifactDownloader.DownloadArtifact(res.job.ID)
 			} else {
@@ -178,14 +178,13 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	l.Msg("Suite started.")
 
 	// High interval poll to not oversaturate the job reader with requests
-	var reachedTimeout bool
 	if !isRDC {
 		sigChan := r.registerInterruptOnSignal(id, opts.DisplayName)
 		defer unregisterSignalCapture(sigChan)
 
-		j, reachedTimeout, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second, time.Duration(opts.Timeout) * time.Second)
+		j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second, time.Duration(opts.Timeout) * time.Second)
 	} else {
-		j, reachedTimeout, err = r.RDCJobReader.PollJob(context.Background(), id, 15*time.Second, time.Duration(opts.Timeout) * time.Second)
+		j, err = r.RDCJobReader.PollJob(context.Background(), id, 15*time.Second, time.Duration(opts.Timeout) * time.Second)
 	}
 
 	if err != nil {
@@ -198,7 +197,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	}
 
 	// Check timeout
-	if reachedTimeout {
+	if j.TimedOut {
 		color.Red("Suite '%s' has reached %ds timeout", opts.DisplayName, opts.Timeout)
 		if !isRDC {
 			j, err = r.JobStopper.StopJob(context.Background(), id)
@@ -207,7 +206,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 			}
 		}
 		j.Passed = false
-		j.HasTimedOut = true
+		j.TimedOut = true
 		return j, false, fmt.Errorf("suite '%s' has reached timeout", opts.DisplayName)
 	}
 

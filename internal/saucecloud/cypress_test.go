@@ -41,8 +41,8 @@ func TestRunSuite(t *testing.T) {
 		},
 	}
 	reader := mocks.FakeJobReader{
-		PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, bool, error) {
-			return job.Job{ID: id, Passed: true}, false, nil
+		PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+			return job.Job{ID: id, Passed: true}, nil
 		},
 	}
 	writer := mocks.FakeJobWriter{
@@ -76,8 +76,8 @@ func TestRunSuites(t *testing.T) {
 		},
 	}
 	reader := mocks.FakeJobReader{
-		PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, bool, error) {
-			return job.Job{ID: id, Passed: true}, false, nil
+		PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+			return job.Job{ID: id, Passed: true}, nil
 		},
 		GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
 			return []string{"file1", "file2"}, nil
@@ -197,8 +197,8 @@ func TestRunProject(t *testing.T) {
 		},
 	}
 	reader := mocks.FakeJobReader{
-		PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, bool, error) {
-			return job.Job{ID: id, Passed: true}, false, nil
+		PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+			return job.Job{ID: id, Passed: true}, nil
 		},
 		GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
 			return []string{"file1", "file2"}, nil
