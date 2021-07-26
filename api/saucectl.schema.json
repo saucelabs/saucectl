@@ -494,6 +494,110 @@
         ],
         "additionalProperties": false
       }
+    },
+    "playwright": {
+      "description": "Contains details specific to the Cypress project.",
+      "type": "object",
+      "properties": {
+        "version": {
+          "description": "TBD",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "suites_playwright": {
+      "description": "The set of properties providing details about the test suites to run.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the test suite, which will be reflected in the test results in Sauce Labs.",
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/definitions/mode"
+          },
+          "playwrightVersion": {
+            "description": "TBD",
+            "type": "string"
+          },
+          "testMatch": {
+            "description": "TBD",
+            "type": "array"
+          },
+          "platformName": {
+            "description": "TBD",
+            "enum": [
+              "Windows 10"
+            ]
+          },
+          "params": {
+            "description": "TBD",
+            "type": "object",
+            "properties": {
+              "browserName": {
+                "description": "TBD",
+                "enum": [
+                  "chromium",
+                  "firefox",
+                  "webkit"
+                ]
+              },
+              "headed": {
+                "description": "TBD",
+                "type": "boolean"
+              },
+              "globalTimeout": {
+                "description": "TBD",
+                "type": "integer"
+              },
+              "timeout": {
+                "description": "TBD",
+                "type": "integer"
+              },
+              "grep": {
+                "description": "TBD",
+                "type": "string"
+              },
+              "repeatEach": {
+                "description": "TBD",
+                "type": "integer"
+              },
+              "retries": {
+                "description": "TBD",
+                "type": "integer"
+              },
+              "maxFailures": {
+                "description": "TBD",
+                "type": "integer"
+              }
+            }
+          },
+          "screenResolution": {
+            "description": "TBD",
+            "type": "string"
+          },
+          "env": {
+            "description": "TBD",
+            "type": "object"
+          },
+          "numShards": {
+            "description": "TBD",
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
     }
   },
   "properties": {
@@ -501,6 +605,7 @@
       "enum": [
         "cypress",
         "espresso",
+        "playwright",
         "xcuitest"
       ]
     }
@@ -574,6 +679,47 @@
           },
           "suites": {
             "$ref": "#/definitions/suites_espresso"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "playwright"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "apiVersion": {
+            "const": "v1alpha"
+          },
+          "kind": {
+            "const": "playwright"
+          },
+          "sauce": {
+            "$ref": "#/definitions/sauce"
+          },
+          "rootDir": {
+            "$ref": "#/definitions/rootDir"
+          },
+          "defaults": {
+            "$ref": "#/definitions/defaults"
+          },
+          "docker": {
+            "$ref": "#/definitions/docker"
+          },
+          "artifacts": {
+            "$ref": "#/definitions/artifacts"
+          },
+          "playwright": {
+            "$ref": "#/definitions/playwright"
+          },
+          "suites": {
+            "$ref": "#/definitions/suites_playwright"
           }
         },
         "additionalProperties": false
