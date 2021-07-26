@@ -417,10 +417,9 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 		return
 	}
 
-	timeout := time.Duration(options.Timeout) * time.Second
 	output, jobInfo, passed, timedOut, err = r.run(containerID, options.SuiteName,
 		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", options.SuiteName},
-		options.Environment, timeout)
+		options.Environment, options.Timeout)
 
 	jobID := jobIDFromURL(jobIDFromURL(jobInfo.JobDetailsURL))
 	if jobID != "" {
