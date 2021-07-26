@@ -191,7 +191,7 @@ func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env m
 		c <- true
 	}(c)
 
-	if timeout == 0 {
+	if timeout <= 0 {
 		timeout = 24 * time.Hour
 	}
 	deathclock := time.NewTimer(timeout)
