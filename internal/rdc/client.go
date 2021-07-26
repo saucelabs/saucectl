@@ -134,7 +134,7 @@ func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
 	}, nil
 }
 
-// PollJob polls job details at an interval, until the job has ended, whether successfully or due to an error.
+// PollJob polls job details at an interval, until timeout has been reached or until the job has ended, whether successfully or due to an error.
 func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.Duration) (j job.Job, err error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/v1/rdc/jobs/%s", c.URL, id), nil)

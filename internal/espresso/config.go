@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -61,7 +62,7 @@ type Suite struct {
 	Devices     []config.Device   `yaml:"devices,omitempty" json:"devices"`
 	Emulators   []config.Emulator `yaml:"emulators,omitempty" json:"emulators"`
 	TestOptions TestOptions       `yaml:"testOptions,omitempty" json:"testOptions"`
-	Timeout     int               `yaml:"timeout,omitempty" json:"timeout"`
+	Timeout     time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
 }
 
 // Android constant

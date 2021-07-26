@@ -7,6 +7,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/saucelabs/saucectl/internal/config"
 )
@@ -53,7 +54,7 @@ type Playwright struct {
 type Suite struct {
 	Name              string            `yaml:"name,omitempty" json:"name"`
 	Mode              string            `yaml:"mode,omitempty" json:"-"`
-	Timeout           int               `yaml:"timeout,omitempty" json:"timeout"`
+	Timeout           time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
 	PlaywrightVersion string            `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
 	TestMatch         []string          `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
 	PlatformName      string            `yaml:"platformName,omitempty" json:"platformName,omitempty"`

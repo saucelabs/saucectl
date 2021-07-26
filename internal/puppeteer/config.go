@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -47,7 +48,7 @@ type Suite struct {
 	TestMatch   []string          `yaml:"testMatch,omitempty" json:"testMatch"`
 	Env         map[string]string `yaml:"env,omitempty" json:"env"`
 	BrowserArgs []string          `yaml:"browserArgs,omitempty" json:"browserArgs"`
-	Timeout     int               `yaml:"timeout,omitempty" json:"timeout"`
+	Timeout     time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
 }
 
 // Puppeteer represents the configuration for puppeteer.

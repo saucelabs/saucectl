@@ -182,9 +182,9 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 		sigChan := r.registerInterruptOnSignal(id, opts.DisplayName)
 		defer unregisterSignalCapture(sigChan)
 
-		j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second, time.Duration(opts.Timeout) * time.Second)
+		j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second, opts.Timeout)
 	} else {
-		j, err = r.RDCJobReader.PollJob(context.Background(), id, 15*time.Second, time.Duration(opts.Timeout) * time.Second)
+		j, err = r.RDCJobReader.PollJob(context.Background(), id, 15*time.Second, opts.Timeout)
 	}
 
 	if err != nil {

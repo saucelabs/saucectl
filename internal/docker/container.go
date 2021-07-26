@@ -48,7 +48,7 @@ type containerStartOptions struct {
 	DisplayName string
 
 	// Timeout is used for local/per-suite timeout.
-	Timeout int
+	Timeout time.Duration
 
 	Docker         config.Docker
 	BeforeExec     []string

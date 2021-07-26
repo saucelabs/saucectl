@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/saucelabs/saucectl/internal/config"
@@ -46,14 +47,14 @@ type Project struct {
 
 // Suite represents the cypress test suite configuration.
 type Suite struct {
-	Name             string      `yaml:"name,omitempty" json:"name"`
-	Browser          string      `yaml:"browser,omitempty" json:"browser"`
-	BrowserVersion   string      `yaml:"browserVersion,omitempty" json:"browserVersion"`
-	PlatformName     string      `yaml:"platformName,omitempty" json:"platformName"`
-	Config           SuiteConfig `yaml:"config,omitempty" json:"config"`
-	ScreenResolution string      `yaml:"screenResolution,omitempty" json:"screenResolution"`
-	Mode             string      `yaml:"mode,omitempty" json:"-"`
-	Timeout          int         `yaml:"timeout,omitempty" json:"timeout"`
+	Name             string        `yaml:"name,omitempty" json:"name"`
+	Browser          string        `yaml:"browser,omitempty" json:"browser"`
+	BrowserVersion   string        `yaml:"browserVersion,omitempty" json:"browserVersion"`
+	PlatformName     string        `yaml:"platformName,omitempty" json:"platformName"`
+	Config           SuiteConfig   `yaml:"config,omitempty" json:"config"`
+	ScreenResolution string        `yaml:"screenResolution,omitempty" json:"screenResolution"`
+	Mode             string        `yaml:"mode,omitempty" json:"-"`
+	Timeout          time.Duration `yaml:"timeout,omitempty" json:"timeout"`
 }
 
 // SuiteConfig represents the cypress config overrides.

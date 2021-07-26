@@ -82,7 +82,7 @@ func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
 	return doRequest(c.HTTPClient, request)
 }
 
-// PollJob polls job details at an interval, until the job has ended, whether successfully or due to an error.
+// PollJob polls job details at an interval, until timeout has been reached or until the job has ended, whether successfully or due to an error.
 func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.Duration) (j job.Job, err error) {
 	request, err := createRequest(ctx, c.URL, c.Username, c.AccessKey, id)
 	if err != nil {

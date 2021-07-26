@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/saucelabs/saucectl/internal/config"
 )
@@ -56,6 +57,7 @@ type Suite struct {
 	PlatformName     string            `yaml:"platformName,omitempty" json:"platformName"`
 	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
 	Env              map[string]string `yaml:"env,omitempty" json:"env"`
+	Timeout          time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
 	// Deprecated as of TestCafe v1.10.0 https://testcafe.io/documentation/402638/reference/configuration-file#tsconfigpath
 	TsConfigPath       string   `yaml:"tsConfigPath,omitempty" json:"tsConfigPath"`
 	ClientScripts      []string `yaml:"clientScripts,omitempty" json:"clientScripts,omitempty"`
@@ -71,7 +73,6 @@ type Suite struct {
 	DisableScreenshots bool     `yaml:"disableScreenshots,omitempty" json:"disableScreenshots"`
 	DisableVideo       bool     `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testcafe config.
 	Mode               string   `yaml:"mode,omitempty" json:"-"`
-	Timeout            int      `yaml:"timeout,omitempty" json:"timeout"`
 	// Deprecated. Reserved for future use for actual devices.
 	Devices    []config.Simulator `yaml:"devices,omitempty" json:"devices"`
 	Simulators []config.Simulator `yaml:"emulators,omitempty" json:"emulators"`
