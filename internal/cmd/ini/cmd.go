@@ -123,7 +123,7 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 	}
 
 	ini := newInitializer(stdio, creds, regio)
-	err = ini.checkCredentials()
+	err = ini.checkCredentials(regio)
 	if err != nil {
 		return err
 	}

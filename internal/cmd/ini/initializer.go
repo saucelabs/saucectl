@@ -83,7 +83,7 @@ func newInitializer(stdio terminal.Stdio, creds credentials.Credentials, regio s
 func (ini *initializer) configure() (*initConfig, error) {
 	fName, err := ini.askFramework()
 	if err != nil {
-		return &initConfig{}, err
+		return &initConfig{}, fmt.Errorf("unable to fetch frameworks list")
 	}
 
 	switch fName {
@@ -142,7 +142,7 @@ func askRegion(stdio terminal.Stdio) (string, error) {
 	return r, nil
 }
 
-func (ini *initializer) checkCredentials() error {
+func (ini *initializer) checkCredentials(region string) error {
 	_, err := ini.infoReader.Frameworks(context.Background())
 	if err != nil && err.Error() == "unexpected status '401' from test-composer: Unauthorized\n" {
 		println()
@@ -150,6 +150,13 @@ func (ini *initializer) checkCredentials() error {
 		fmt.Printf("Use %s to update your account settings.\n", color.HiBlueString("saucectl configure"))
 		println()
 		return errors.New("invalid credentials")
+	}
+	if err != nil && strings.Contains(err.Error(), "context deadline exceeded") {
+		println()
+		color.HiRed("saucectl cannot reach Sauce Labs infrastructure.")
+		fmt.Printf("Check that you can access %s.\n", color.HiBlueString("https://api.%s.saucelabs.com", region))
+		println()
+		return errors.New("unable to check credentials")
 	}
 	return err
 }
