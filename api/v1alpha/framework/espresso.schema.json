@@ -6,10 +6,10 @@
   "type": "object",
   "allOf": [
     {
-      "$ref": "subschema/sauce.schema.json"
+      "$ref": "../subschema/sauce.schema.json"
     },
     {
-      "$ref": "subschema/artifacts.schema.json"
+      "$ref": "../subschema/artifacts.schema.json"
     }
   ],
   "properties": {
@@ -24,7 +24,7 @@
       "type": "object",
       "properties": {
         "timeout": {
-          "$ref": "subschema/common.schema.json#/definitions/timeout"
+          "$ref": "../subschema/common.schema.json#/definitions/timeout"
         }
       }
     },
@@ -192,7 +192,7 @@
             }
           },
           "timeout": {
-            "$ref": "subschema/common.schema.json#/definitions/timeout"
+            "$ref": "../subschema/common.schema.json#/definitions/timeout"
           }
         },
         "anyOf": [
@@ -220,6 +220,6 @@
     "espresso",
     "suites"
   ],
-  "additionalProperties": false
+  "additionalProperties": true
 }
 

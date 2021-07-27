@@ -6,16 +6,16 @@
   "type": "object",
   "allOf": [
     {
-      "$ref": "subschema/artifacts.schema.json"
+      "$ref": "../subschema/artifacts.schema.json"
     },
     {
-      "$ref": "subschema/docker.schema.json"
+      "$ref": "../subschema/docker.schema.json"
     },
     {
-      "$ref": "subschema/npm.schema.json"
+      "$ref": "../subschema/npm.schema.json"
     },
     {
-      "$ref": "subschema/sauce.schema.json"
+      "$ref": "../subschema/sauce.schema.json"
     }
   ],
   "properties": {
@@ -30,7 +30,7 @@
       "type": "object",
       "properties": {
         "timeout": {
-          "$ref": "subschema/common.schema.json#/definitions/timeout"
+          "$ref": "../subschema/common.schema.json#/definitions/timeout"
         }
       }
     },
@@ -75,7 +75,7 @@
             "type": "array"
           },
           "env": {
-            "$ref": "subschema/common.schema.json#/definitions/env"
+            "$ref": "../subschema/common.schema.json#/definitions/env"
           },
           "browserArgs": {
             "description": "TBD",
@@ -83,7 +83,7 @@
           }
         },
         "timeout": {
-          "$ref": "subschema/common.schema.json#/definitions/timeout"
+          "$ref": "../subschema/common.schema.json#/definitions/timeout"
         },
         "required": [
           "name",
@@ -99,6 +99,6 @@
     "puppeteer",
     "suites"
   ],
-  "additionalProperties": false
+  "additionalProperties": true
 }
 

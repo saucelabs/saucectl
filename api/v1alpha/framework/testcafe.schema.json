@@ -6,16 +6,16 @@
   "type": "object",
   "allOf": [
     {
-      "$ref": "subschema/artifacts.schema.json"
+      "$ref": "../subschema/artifacts.schema.json"
     },
     {
-      "$ref": "subschema/docker.schema.json"
+      "$ref": "../subschema/docker.schema.json"
     },
     {
-      "$ref": "subschema/npm.schema.json"
+      "$ref": "../subschema/npm.schema.json"
     },
     {
-      "$ref": "subschema/sauce.schema.json"
+      "$ref": "../subschema/sauce.schema.json"
     }
   ],
   "properties": {
@@ -30,10 +30,10 @@
       "type": "object",
       "properties": {
         "mode": {
-          "$ref": "subschema/common.schema.json#/definitions/mode"
+          "$ref": "../subschema/common.schema.json#/definitions/mode"
         },
         "timeout": {
-          "$ref": "subschema/common.schema.json#/definitions/timeout"
+          "$ref": "../subschema/common.schema.json#/definitions/timeout"
         }
       }
     },
@@ -96,10 +96,10 @@
             "type": "array"
           },
           "env": {
-            "$ref": "subschema/common.schema.json#/definitions/env"
+            "$ref": "../subschema/common.schema.json#/definitions/env"
           },
           "mode": {
-            "$ref": "subschema/common.schema.json#/definitions/mode"
+            "$ref": "../subschema/common.schema.json#/definitions/mode"
           },
           "disablePageCaching": {
             "description": "TBD",
@@ -191,7 +191,7 @@
             "type": "boolean"
           },
           "timeout": {
-            "$ref": "subschema/common.schema.json#/definitions/timeout"
+            "$ref": "../subschema/common.schema.json#/definitions/timeout"
           }
         },
         "required": [
@@ -207,6 +207,6 @@
     "testcafe",
     "suites"
   ],
-  "additionalProperties": false
+  "additionalProperties": true
 }
 

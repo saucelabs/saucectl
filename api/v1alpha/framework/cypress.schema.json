@@ -6,16 +6,16 @@
   "type": "object",
   "allOf": [
     {
-      "$ref": "subschema/artifacts.schema.json"
+      "$ref": "../subschema/artifacts.schema.json"
     },
     {
-      "$ref": "subschema/docker.schema.json"
+      "$ref": "../subschema/docker.schema.json"
     },
     {
-      "$ref": "subschema/npm.schema.json"
+      "$ref": "../subschema/npm.schema.json"
     },
     {
-      "$ref": "subschema/sauce.schema.json"
+      "$ref": "../subschema/sauce.schema.json"
     }
   ],
   "properties": {
@@ -111,15 +111,15 @@
                 "type": "array"
               },
               "env": {
-                "$ref": "subschema/common.schema.json#/definitions/env"
+                "$ref": "../subschema/common.schema.json#/definitions/env"
               }
             }
           },
           "mode": {
-            "$ref": "subschema/common.schema.json#/definitions/mode"
+            "$ref": "../subschema/common.schema.json#/definitions/mode"
           },
           "timeout": {
-            "$ref": "subschema/common.schema.json#/definitions/timeout"
+            "$ref": "../subschema/common.schema.json#/definitions/timeout"
           }
         },
         "required": [
@@ -136,6 +136,6 @@
     "cypress",
     "suites"
   ],
-  "additionalProperties": false
+  "additionalProperties": true
 }
 

@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://saucelabs.com/schema/v1alpha/saucectl.schema.json",
+  "title": "SauceCTL Runner Configuration",
+  "description": "Configuration file for saucectl.",
+  "type": "object",
+  "properties": {
+    "kind": {
+      "enum": [
+        "cypress",
+        "espresso",
+        "playwright",
+        "puppeteer",
+        "testcafe",
+        "xcuitest"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "cypress"
+          }
+        }
+      },
+      "then": {
+        "$ref": "framework/cypress.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "espresso"
+          }
+        }
+      },
+      "then": {
+        "$ref": "framework/espresso.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "playwright"
+          }
+        }
+      },
+      "then": {
+        "$ref": "framework/playwright.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "puppeteer"
+          }
+        }
+      },
+      "then": {
+        "$ref": "framework/puppeteer.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "testcafe"
+          }
+        }
+      },
+      "then": {
+        "$ref": "framework/testcafe.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "xcuitest"
+          }
+        }
+      },
+      "then": {
+        "$ref": "framework/xcuitest.schema.json"
+      }
+    }
+  ]
+}

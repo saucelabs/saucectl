@@ -6,16 +6,16 @@
   "type": "object",
   "allOf": [
     {
-      "$ref": "subschema/artifacts.schema.json"
+      "$ref": "../subschema/artifacts.schema.json"
     },
     {
-      "$ref": "subschema/docker.schema.json"
+      "$ref": "../subschema/docker.schema.json"
     },
     {
-      "$ref": "subschema/npm.schema.json"
+      "$ref": "../subschema/npm.schema.json"
     },
     {
-      "$ref": "subschema/sauce.schema.json"
+      "$ref": "../subschema/sauce.schema.json"
     }
   ],
   "properties": {
@@ -30,10 +30,10 @@
       "type": "object",
       "properties": {
         "mode": {
-          "$ref": "subschema/common.schema.json#/definitions/mode"
+          "$ref": "../subschema/common.schema.json#/definitions/mode"
         },
         "timeout": {
-          "$ref": "subschema/common.schema.json#/definitions/timeout"
+          "$ref": "../subschema/common.schema.json#/definitions/timeout"
         }
       }
     },
@@ -67,7 +67,7 @@
             "type": "string"
           },
           "mode": {
-            "$ref": "subschema/common.schema.json#/definitions/mode"
+            "$ref": "../subschema/common.schema.json#/definitions/mode"
           },
           "playwrightVersion": {
             "description": "TBD",
@@ -130,7 +130,7 @@
             "type": "string"
           },
           "env": {
-            "$ref": "subschema/common.schema.json#/definitions/env"
+            "$ref": "../subschema/common.schema.json#/definitions/env"
           },
           "numShards": {
             "description": "TBD",
@@ -138,7 +138,7 @@
             "minimum": 0
           },
           "timeout": {
-            "$ref": "subschema/common.schema.json#/definitions/timeout"
+            "$ref": "../subschema/common.schema.json#/definitions/timeout"
           }
         },
         "required": [
@@ -154,6 +154,6 @@
     "playwright",
     "suites"
   ],
-  "additionalProperties": false
+  "additionalProperties": true
 }
 
