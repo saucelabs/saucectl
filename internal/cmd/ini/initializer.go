@@ -37,6 +37,11 @@ var androidDevicesPatterns = []string{
 
 var iOSDevicesPatterns = []string{"iPad .*", "iPhone .*"}
 
+var fallbackAndroidVirtualDevices = []vmd.VirtualDevice{
+	{Name: "Android Emulator", OSVersion: []string{"11.0", "10.0"}},
+	{Name: "Android GoogleAPI Emulator", OSVersion: []string{"11.0", "10.0"}},
+}
+
 type initializer struct {
 	stdio        terminal.Stdio
 	infoReader   framework.MetadataService
@@ -555,7 +560,12 @@ func (ini *initializer) initializeEspresso() (*initConfig, error) {
 
 	virtualDevices, err := ini.vmdReader.GetVirtualDevices(context.Background(), vmd.AndroidEmulator)
 	if err != nil {
-		return &initConfig{}, err
+		println()
+		color.HiRed("saucectl is unable to fetch the emulators list.")
+		fmt.Printf("You will be able to choose only in a subset of available emulators.\n")
+		fmt.Printf("Check your connectivity, and try again.\n")
+		println()
+		virtualDevices = fallbackAndroidVirtualDevices
 	}
 
 	err = ini.askEmulator(cfg, virtualDevices)
