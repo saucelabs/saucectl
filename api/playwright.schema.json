@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://saucelabs.com/schema/v1alpha/playwright.schema.json",
+  "title": "saucectl playwright runner configuration",
+  "description": "Configuration file for playwright using saucectl",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "artifacts.schema.json"
+    },
+    {
+      "$ref": "docker.schema.json"
+    },
+    {
+      "$ref": "npm.schema.json"
+    },
+    {
+      "$ref": "sauce.schema.json"
+    }
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "v1alpha"
+    },
+    "kind": {
+      "const": "playwright"
+    },
+    "rootDir": {
+      "description": "TBD",
+      "type": "string"
+    },
+    "playwright": {
+      "description": "Contains details specific to the Playwright project.",
+      "type": "object",
+      "properties": {
+        "version": {
+          "description": "TBD",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "suites": {
+      "description": "The set of properties providing details about the test suites to run.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the test suite, which will be reflected in the test results in Sauce Labs.",
+            "type": "string"
+          },
+          "mode": {
+            "description": "TBD",
+            "enum": [
+              "docker",
+              "sauce"
+            ]
+          },
+          "playwrightVersion": {
+            "description": "TBD",
+            "type": "string"
+          },
+          "testMatch": {
+            "description": "TBD",
+            "type": "array"
+          },
+          "platformName": {
+            "description": "TBD",
+            "enum": [
+              "Windows 10"
+            ]
+          },
+          "params": {
+            "description": "TBD",
+            "type": "object",
+            "properties": {
+              "browserName": {
+                "description": "TBD",
+                "enum": [
+                  "chromium",
+                  "firefox",
+                  "webkit"
+                ]
+              },
+              "headed": {
+                "description": "TBD",
+                "type": "boolean"
+              },
+              "globalTimeout": {
+                "description": "TBD",
+                "type": "integer"
+              },
+              "timeout": {
+                "description": "TBD",
+                "type": "integer"
+              },
+              "grep": {
+                "description": "TBD",
+                "type": "string"
+              },
+              "repeatEach": {
+                "description": "TBD",
+                "type": "integer"
+              },
+              "retries": {
+                "description": "TBD",
+                "type": "integer"
+              },
+              "maxFailures": {
+                "description": "TBD",
+                "type": "integer"
+              }
+            }
+          },
+          "screenResolution": {
+            "description": "TBD",
+            "type": "string"
+          },
+          "env": {
+            "description": "TBD",
+            "type": "object"
+          },
+          "numShards": {
+            "description": "TBD",
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "playwright",
+    "suites"
+  ],
+  "additionalProperties": false
+}
+
