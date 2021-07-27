@@ -6,16 +6,16 @@
   "type": "object",
   "allOf": [
     {
-      "$ref": "artifacts.schema.json"
+      "$ref": "subschema/artifacts.schema.json"
     },
     {
-      "$ref": "docker.schema.json"
+      "$ref": "subschema/docker.schema.json"
     },
     {
-      "$ref": "npm.schema.json"
+      "$ref": "subschema/npm.schema.json"
     },
     {
-      "$ref": "sauce.schema.json"
+      "$ref": "subschema/sauce.schema.json"
     }
   ],
   "properties": {
