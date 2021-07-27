@@ -30,15 +30,10 @@
       "type": "object",
       "properties": {
         "mode": {
-          "description": "TBD",
-          "enum": [
-            "docker",
-            "sauce"
-          ]
+          "$ref": "subschema/common.schema.json#/definitions/mode"
         },
         "timeout": {
-          "description": "TBD",
-          "type": "string"
+          "$ref": "subschema/common.schema.json#/definitions/timeout"
         }
       }
     },
@@ -72,11 +67,7 @@
             "type": "string"
           },
           "mode": {
-            "description": "TBD",
-            "enum": [
-              "docker",
-              "sauce"
-            ]
+            "$ref": "subschema/common.schema.json#/definitions/mode"
           },
           "playwrightVersion": {
             "description": "TBD",
@@ -139,8 +130,7 @@
             "type": "string"
           },
           "env": {
-            "description": "TBD",
-            "type": "object"
+            "$ref": "subschema/common.schema.json#/definitions/env"
           },
           "numShards": {
             "description": "TBD",
@@ -148,8 +138,7 @@
             "minimum": 0
           },
           "timeout": {
-            "description": "TBD",
-            "type": "string"
+            "$ref": "subschema/common.schema.json#/definitions/timeout"
           }
         },
         "required": [

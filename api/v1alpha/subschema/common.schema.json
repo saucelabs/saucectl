@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://saucelabs.com/schema/v1alpha/common.schema.json",
+  "title": "saucectl common subschema",
+  "description": "Subschema for common settings",
+  "type": "object",
+  "definitions": {
+    "env": {
+      "description": "TBD",
+      "type": "object"
+    },
+    "mode": {
+      "description": "TBD",
+      "enum": [
+        "docker",
+        "sauce"
+      ]
+    },
+    "timeout": {
+      "description": "TBD",
+      "type": "string"
+    }
+  }
+}

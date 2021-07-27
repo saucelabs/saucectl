@@ -30,8 +30,7 @@
       "type": "object",
       "properties": {
         "timeout": {
-          "description": "TBD",
-          "type": "string"
+          "$ref": "subschema/common.schema.json#/definitions/timeout"
         }
       }
     },
@@ -76,8 +75,7 @@
             "type": "array"
           },
           "env": {
-            "description": "TBD",
-            "type": "object"
+            "$ref": "subschema/common.schema.json#/definitions/env"
           },
           "browserArgs": {
             "description": "TBD",
@@ -85,8 +83,7 @@
           }
         },
         "timeout": {
-          "description": "TBD",
-          "type": "string"
+          "$ref": "subschema/common.schema.json#/definitions/timeout"
         },
         "required": [
           "name",

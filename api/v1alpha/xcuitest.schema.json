@@ -24,8 +24,7 @@
       "type": "object",
       "properties": {
         "timeout": {
-          "description": "TBD",
-          "type": "string"
+          "$ref": "subschema/common.schema.json#/definitions/mode"
         }
       }
     },
@@ -131,8 +130,7 @@
             }
           },
           "timeout": {
-            "description": "TBD",
-            "type": "string"
+            "$ref": "subschema/common.schema.json#/definitions/timeout"
           }
         },
         "anyOf": [
