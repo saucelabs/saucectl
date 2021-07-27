@@ -136,9 +136,8 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 	initCfg.concurrency, err = ini.ccyReader.ReadAllowedCCY(context.Background())
 	if err != nil {
 		println()
-		color.HiRed("Unable to determine allowed concurrency.\n")
-		fmt.Printf("Defaulting to 1.\n")
-		fmt.Printf("Check your connectivity, and try again.\n")
+		color.HiRed("Unable to determine your exact allowed concurrency.\n")
+		color.HiBlue("Using 1 as default value.\n")
 		println()
 		initCfg.concurrency = 1
 	}
@@ -193,9 +192,8 @@ func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 	initCfg.concurrency, err = ini.ccyReader.ReadAllowedCCY(context.Background())
 	if err != nil {
 		println()
-		color.HiRed("Unable to determine allowed concurrency.\n")
-		fmt.Printf("Defaulting to 1.\n")
-		fmt.Printf("Check your connectivity, and try again.\n")
+		color.HiRed("Unable to determine your exact allowed concurrency.\n")
+		color.HiBlue("Using 1 as default value.\n")
 		println()
 		initCfg.concurrency = 1
 	}

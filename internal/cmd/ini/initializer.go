@@ -159,7 +159,7 @@ func (ini *initializer) checkCredentials(region string) error {
 	if err != nil && strings.Contains(err.Error(), "context deadline exceeded") {
 		println()
 		color.HiRed("saucectl cannot reach Sauce Labs infrastructure.")
-		fmt.Printf("Check that you can access %s.\n", color.HiBlueString("https://api.%s.saucelabs.com", region))
+		fmt.Printf("Check your connection and that you can access %s.\n", color.HiBlueString("https://api.%s.saucelabs.com", region))
 		println()
 		return errors.New("unable to check credentials")
 	}
@@ -563,7 +563,7 @@ func (ini *initializer) initializeEspresso() (*initConfig, error) {
 		println()
 		color.HiRed("saucectl is unable to fetch the emulators list.")
 		fmt.Printf("You will be able to choose only in a subset of available emulators.\n")
-		fmt.Printf("Check your connectivity, and try again.\n")
+		fmt.Printf("To get the complete list, check your connection and try again.\n")
 		println()
 		virtualDevices = fallbackAndroidVirtualDevices
 	}
