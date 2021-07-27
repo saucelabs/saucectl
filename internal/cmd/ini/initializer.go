@@ -37,6 +37,10 @@ var androidDevicesPatterns = []string{
 
 var iOSDevicesPatterns = []string{"iPad .*", "iPhone .*"}
 
+var fallbackAndroidVirtualDevices = []vmd.VirtualDevice{
+	{Name: "Android GoogleAPI Emulator", OSVersion: []string{"11.0", "10.0"}},
+}
+
 type initializer struct {
 	stdio        terminal.Stdio
 	infoReader   framework.MetadataService
@@ -83,7 +87,7 @@ func newInitializer(stdio terminal.Stdio, creds credentials.Credentials, regio s
 func (ini *initializer) configure() (*initConfig, error) {
 	fName, err := ini.askFramework()
 	if err != nil {
-		return &initConfig{}, err
+		return &initConfig{}, fmt.Errorf("unable to fetch frameworks list")
 	}
 
 	switch fName {
@@ -142,7 +146,7 @@ func askRegion(stdio terminal.Stdio) (string, error) {
 	return r, nil
 }
 
-func (ini *initializer) checkCredentials() error {
+func (ini *initializer) checkCredentials(region string) error {
 	_, err := ini.infoReader.Frameworks(context.Background())
 	if err != nil && err.Error() == "unexpected status '401' from test-composer: Unauthorized\n" {
 		println()
@@ -150,6 +154,13 @@ func (ini *initializer) checkCredentials() error {
 		fmt.Printf("Use %s to update your account settings.\n", color.HiBlueString("saucectl configure"))
 		println()
 		return errors.New("invalid credentials")
+	}
+	if err != nil && strings.Contains(err.Error(), "context deadline exceeded") {
+		println()
+		color.HiRed("saucectl cannot reach Sauce Labs infrastructure.")
+		fmt.Printf("Check your connection and that you can access %s.\n", color.HiBlueString("https://api.%s.saucelabs.com", region))
+		println()
+		return errors.New("unable to check credentials")
 	}
 	return err
 }
@@ -548,7 +559,12 @@ func (ini *initializer) initializeEspresso() (*initConfig, error) {
 
 	virtualDevices, err := ini.vmdReader.GetVirtualDevices(context.Background(), vmd.AndroidEmulator)
 	if err != nil {
-		return &initConfig{}, err
+		println()
+		color.HiRed("saucectl is unable to fetch the emulators list.")
+		fmt.Printf("You will be able to choose only in a subset of available emulators.\n")
+		fmt.Printf("To get the complete list, check your connection and try again.\n")
+		println()
+		virtualDevices = fallbackAndroidVirtualDevices
 	}
 
 	err = ini.askEmulator(cfg, virtualDevices)

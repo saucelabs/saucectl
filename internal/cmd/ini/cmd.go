@@ -1,6 +1,7 @@
 package ini
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -19,7 +20,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/sentry"
@@ -123,7 +123,7 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 	}
 
 	ini := newInitializer(stdio, creds, regio)
-	err = ini.checkCredentials()
+	err = ini.checkCredentials(regio)
 	if err != nil {
 		return err
 	}
@@ -132,8 +132,13 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 		return err
 	}
 	initCfg.region = regio
-	initCfg.concurrency = concurrency.Min(ini.ccyReader, 10)
-	if initCfg.concurrency == 0 {
+
+	initCfg.concurrency, err = ini.ccyReader.ReadAllowedCCY(context.Background())
+	if err != nil {
+		println()
+		color.HiRed("Unable to determine your exact allowed concurrency.\n")
+		color.HiBlue("Using 1 as default value.\n")
+		println()
 		initCfg.concurrency = 1
 	}
 
@@ -182,7 +187,16 @@ func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 		}
 		return fmt.Errorf("%s: %d errors occured", initCfg.frameworkName, len(errs))
 	}
-	initCfg.concurrency = concurrency.Min(ini.ccyReader, 10)
+
+	var err error
+	initCfg.concurrency, err = ini.ccyReader.ReadAllowedCCY(context.Background())
+	if err != nil {
+		println()
+		color.HiRed("Unable to determine your exact allowed concurrency.\n")
+		color.HiBlue("Using 1 as default value.\n")
+		println()
+		initCfg.concurrency = 1
+	}
 	if initCfg.concurrency == 0 {
 		initCfg.concurrency = 1
 	}
