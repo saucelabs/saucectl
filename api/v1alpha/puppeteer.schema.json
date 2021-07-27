@@ -25,6 +25,16 @@
     "kind": {
       "const": "puppeteer"
     },
+    "defaults": {
+      "description": "TBD",
+      "type": "object",
+      "properties": {
+        "timeout": {
+          "description": "TBD",
+          "type": "string"
+        }
+      }
+    },
     "rootDir": {
       "description": "TBD",
       "type": "string"
@@ -73,6 +83,10 @@
             "description": "TBD",
             "type": "array"
           }
+        },
+        "timeout": {
+          "description": "TBD",
+          "type": "string"
         },
         "required": [
           "name",

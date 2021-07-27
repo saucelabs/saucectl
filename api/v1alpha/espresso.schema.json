@@ -19,6 +19,16 @@
     "kind": {
       "const": "espresso"
     },
+    "defaults": {
+      "description": "TBD",
+      "type": "object",
+      "properties": {
+        "timeout": {
+          "description": "TBD",
+          "type": "string"
+        }
+      }
+    },
     "espresso": {
       "description": "Contains details specific to the Espresso project.",
       "type": "object",
@@ -181,6 +191,10 @@
               ],
               "additionalProperties": false
             }
+          },
+          "timeout": {
+            "description": "TBD",
+            "type": "string"
           }
         },
         "anyOf": [

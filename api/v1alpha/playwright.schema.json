@@ -25,6 +25,23 @@
     "kind": {
       "const": "playwright"
     },
+    "defaults": {
+      "description": "TBD",
+      "type": "object",
+      "properties": {
+        "mode": {
+          "description": "TBD",
+          "enum": [
+            "docker",
+            "sauce"
+          ]
+        },
+        "timeout": {
+          "description": "TBD",
+          "type": "string"
+        }
+      }
+    },
     "rootDir": {
       "description": "TBD",
       "type": "string"
@@ -129,6 +146,10 @@
             "description": "TBD",
             "type": "integer",
             "minimum": 0
+          },
+          "timeout": {
+            "description": "TBD",
+            "type": "string"
           }
         },
         "required": [

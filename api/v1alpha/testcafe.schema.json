@@ -25,6 +25,23 @@
     "kind": {
       "const": "testcafe"
     },
+    "defaults": {
+      "description": "TBD",
+      "type": "object",
+      "properties": {
+        "mode": {
+          "description": "TBD",
+          "enum": [
+            "docker",
+            "sauce"
+          ]
+        },
+        "timeout": {
+          "description": "TBD",
+          "type": "string"
+        }
+      }
+    },
     "rootDir": {
       "description": "TBD",
       "type": "string"
@@ -182,6 +199,10 @@
           "stopOnFirstFail": {
             "description": "TBD",
             "type": "boolean"
+          },
+          "timeout": {
+            "description": "TBD",
+            "type": "string"
           }
         },
         "required": [

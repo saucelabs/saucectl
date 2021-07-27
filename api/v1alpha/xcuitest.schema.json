@@ -19,6 +19,16 @@
     "kind": {
       "const": "xcuitest"
     },
+    "defaults": {
+      "description": "TBD",
+      "type": "object",
+      "properties": {
+        "timeout": {
+          "description": "TBD",
+          "type": "string"
+        }
+      }
+    },
     "xcuitest": {
       "description": "Contains details specific to the XCUITest project.",
       "type": "object",
@@ -119,6 +129,10 @@
               ],
               "additionalProperties": false
             }
+          },
+          "timeout": {
+            "description": "TBD",
+            "type": "string"
           }
         },
         "anyOf": [
