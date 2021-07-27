@@ -38,7 +38,6 @@ var androidDevicesPatterns = []string{
 var iOSDevicesPatterns = []string{"iPad .*", "iPhone .*"}
 
 var fallbackAndroidVirtualDevices = []vmd.VirtualDevice{
-	{Name: "Android Emulator", OSVersion: []string{"11.0", "10.0"}},
 	{Name: "Android GoogleAPI Emulator", OSVersion: []string{"11.0", "10.0"}},
 }
 
