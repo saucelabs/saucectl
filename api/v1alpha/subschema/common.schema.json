@@ -34,6 +34,10 @@
       "description": "The directory of files that need to be bundled and uploaded for the tests to run.",
       "type": "string"
     },
+    "screenResolution": {
+      "description": "Specifies a browser window screen resolution, which may be useful if you are attempting to simulate a browser on a particular device type.",
+      "type": "string"
+    },
     "timeout": {
       "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
       "type": "string",

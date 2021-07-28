@@ -119,8 +119,7 @@
             "type": "boolean"
           },
           "screenResolution": {
-            "description": "TBD",
-            "type": "string"
+            "$ref": "../subschema/common.schema.json#/definitions/screenResolution"
           },
           "screenshots": {
             "description": "Allows you to specify the screenshot options.",

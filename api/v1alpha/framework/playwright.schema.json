@@ -122,8 +122,7 @@
             }
           },
           "screenResolution": {
-            "description": "TBD",
-            "type": "string"
+            "$ref": "../subschema/common.schema.json#/definitions/screenResolution"
           },
           "env": {
             "$ref": "../subschema/common.schema.json#/definitions/env"
