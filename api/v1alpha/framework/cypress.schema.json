@@ -37,8 +37,7 @@
       }
     },
     "rootDir": {
-      "description": "TBD",
-      "type": "string"
+      "$ref": "../subschema/common.schema.json#/definitions/rootDir"
     },
     "cypress": {
       "description": "Contains details specific to the Cypress project.",

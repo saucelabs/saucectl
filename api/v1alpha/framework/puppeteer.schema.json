@@ -34,8 +34,7 @@
       }
     },
     "rootDir": {
-      "description": "TBD",
-      "type": "string"
+      "$ref": "../subschema/common.schema.json#/definitions/rootDir"
     },
     "puppeteer": {
       "description": "Contains details specific to the Puppeteer project.",

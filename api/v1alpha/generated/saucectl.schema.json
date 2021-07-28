@@ -792,10 +792,7 @@
               "timeout": {
                 "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
                 "type": "string",
-                "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$",
-                "examples": [
-                  "15m"
-                ]
+                "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$"
               },
               "required": [
                 "name",

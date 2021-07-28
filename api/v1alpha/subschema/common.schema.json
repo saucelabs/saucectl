@@ -20,6 +20,10 @@
         "sauce"
       ]
     },
+    "rootDir": {
+      "description": "The directory of files that need to be bundled and uploaded for the tests to run.",
+      "type": "string"
+    },
     "timeout": {
       "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
       "type": "string",
