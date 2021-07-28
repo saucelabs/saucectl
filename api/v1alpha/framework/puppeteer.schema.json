@@ -75,8 +75,12 @@
             "$ref": "../subschema/common.schema.json#/definitions/env"
           },
           "browserArgs": {
-            "description": "TBD",
-            "type": "array"
+            "description": "Browser specific arguments.",
+            "type": "array",
+            "examples": [
+              ["--no-sandbox"],
+              ["--disable-features=site-per-process"]
+            ]
           }
         },
         "timeout": {

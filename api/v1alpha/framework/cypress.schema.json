@@ -44,15 +44,18 @@
       "type": "object",
       "properties": {
         "configFile": {
-          "description": "TBD",
-          "type": "string"
+          "description": "The designated cypress configuration file. SauceCTL determines related files based on the location of the config file. By default saucectl defers to the test file location defined in cypress.json.",
+          "type": "string",
+          "examples": [
+            "cypress.json"
+          ]
         },
         "key": {
-          "description": "TBD",
+          "description": "The secret key that grants permission to record your tests in the Cypress dashboard.",
           "type": "string"
         },
         "record": {
-          "description": "TBD",
+          "description": "Whether to record your test results in the Cypress dashboard.",
           "type": "boolean"
         },
         "version": {

@@ -199,7 +199,7 @@
             "type": "object"
           },
           "rootDir": {
-            "description": "TBD",
+            "description": "The directory of files that need to be bundled and uploaded for the tests to run.",
             "type": "string"
           },
           "cypress": {
@@ -207,19 +207,22 @@
             "type": "object",
             "properties": {
               "configFile": {
-                "description": "TBD",
-                "type": "string"
+                "description": "The designated cypress configuration file. SauceCTL determines related files based on the location of the config file. By default saucectl defers to the test file location defined in cypress.json.",
+                "type": "string",
+                "examples": [
+                  "cypress.json"
+                ]
               },
               "key": {
-                "description": "TBD",
+                "description": "The secret key that grants permission to record your tests in the Cypress dashboard.",
                 "type": "string"
               },
               "record": {
-                "description": "TBD",
+                "description": "Whether to record your test results in the Cypress dashboard.",
                 "type": "boolean"
               },
               "version": {
-                "description": "TBD",
+                "description": "Which framework version to use. Please consult https://docs.saucelabs.com/web-apps/automated-testing/cypress#supported-testing-platforms for available versions.",
                 "type": "string"
               }
             },
@@ -578,16 +581,14 @@
             }
           },
           "rootDir": {
-            "description": "TBD",
-            "type": "string"
+            "$ref": "#/allOf/0/then/properties/rootDir"
           },
           "playwright": {
             "description": "Contains details specific to the Playwright project.",
             "type": "object",
             "properties": {
               "version": {
-                "description": "TBD",
-                "type": "string"
+                "$ref": "#/allOf/0/then/properties/cypress/properties/version"
               }
             },
             "required": [
@@ -742,16 +743,14 @@
             }
           },
           "rootDir": {
-            "description": "TBD",
-            "type": "string"
+            "$ref": "#/allOf/0/then/properties/rootDir"
           },
           "puppeteer": {
             "description": "Contains details specific to the Puppeteer project.",
             "type": "object",
             "properties": {
               "version": {
-                "description": "TBD",
-                "type": "string"
+                "$ref": "#/allOf/0/then/properties/cypress/properties/version"
               }
             },
             "required": [
@@ -785,8 +784,16 @@
                   "$ref": "#/allOf/2/then/properties/suites/items/properties/env"
                 },
                 "browserArgs": {
-                  "description": "TBD",
-                  "type": "array"
+                  "description": "Browser specific arguments.",
+                  "type": "array",
+                  "examples": [
+                    [
+                      "--no-sandbox"
+                    ],
+                    [
+                      "--disable-features=site-per-process"
+                    ]
+                  ]
                 }
               },
               "timeout": {
@@ -858,16 +865,14 @@
             }
           },
           "rootDir": {
-            "description": "TBD",
-            "type": "string"
+            "$ref": "#/allOf/0/then/properties/rootDir"
           },
           "testcafe": {
             "description": "Contains details specific to the TestCafe project.",
             "type": "object",
             "properties": {
               "version": {
-                "description": "TBD",
-                "type": "string"
+                "$ref": "#/allOf/0/then/properties/cypress/properties/version"
               }
             },
             "required": [
