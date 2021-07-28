@@ -81,10 +81,10 @@
               ["--no-sandbox"],
               ["--disable-features=site-per-process"]
             ]
+          },
+          "timeout": {
+            "$ref": "../subschema/common.schema.json#/definitions/timeout"
           }
-        },
-        "timeout": {
-          "$ref": "../subschema/common.schema.json#/definitions/timeout"
         },
         "required": [
           "name",
