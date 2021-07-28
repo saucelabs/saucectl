@@ -5,6 +5,10 @@
   "description": "Subschema for common settings",
   "type": "object",
   "definitions": {
+    "defaults": {
+      "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
+      "type": "object"
+    },
     "env": {
       "description": "Set one or more environment variables. Values can be environment variables themselves.",
       "type": "object"

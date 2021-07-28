@@ -86,18 +86,18 @@
             "type": "object",
             "properties": {
               "docker": {
-                "description": "TBD",
+                "description": "Properties specific to docker.",
                 "type": "object",
                 "properties": {
                   "fileTransfer": {
-                    "description": "TBD",
+                    "description": "Control how files are made available to the docker image.",
                     "enum": [
                       "copy",
                       "mount"
                     ]
                   },
                   "image": {
-                    "description": "TBD",
+                    "description": "Override which docker image to use (in case you have a custom image).",
                     "type": "string"
                   }
                 }
@@ -113,19 +113,19 @@
             "type": "object",
             "properties": {
               "npm": {
-                "description": "TBD",
+                "description": "Settings specific to npm.",
                 "type": "object",
                 "properties": {
                   "packages": {
-                    "description": "TBD",
+                    "description": "Specifies any npm packages that are required to run tests.",
                     "type": "object"
                   },
                   "registry": {
-                    "description": "TBD",
+                    "description": "Override the default and official NPM registry URL with a custom one.",
                     "type": "string"
                   },
                   "strictSSL": {
-                    "description": "TBD",
+                    "description": "Whether or not to do SSL key validation when making requests to the registry via https.",
                     "type": "boolean"
                   }
                 },
@@ -187,20 +187,16 @@
             "const": "cypress"
           },
           "defaults": {
-            "description": "TBD",
-            "type": "object",
             "properties": {
               "mode": {
-                "description": "Instructs saucectl run tests remotely through Sauce Labs (sauce) or locally on docker.",
-                "enum": [
-                  "docker",
-                  "sauce"
-                ]
+                "$ref": "../subschema/common.schema.json#/definitions/mode"
               },
               "timeout": {
-                "$ref": "#/allOf/3/then/properties/suites/items/timeout"
+                "$ref": "../subschema/common.schema.json#/definitions/timeout"
               }
-            }
+            },
+            "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
+            "type": "object"
           },
           "rootDir": {
             "description": "TBD",
@@ -276,7 +272,11 @@
                   }
                 },
                 "mode": {
-                  "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
+                  "description": "Instructs saucectl run tests remotely through Sauce Labs (sauce) or locally on docker.",
+                  "enum": [
+                    "docker",
+                    "sauce"
+                  ]
                 },
                 "timeout": {
                   "$ref": "#/allOf/3/then/properties/suites/items/timeout"
@@ -329,11 +329,10 @@
             "const": "espresso"
           },
           "defaults": {
-            "description": "TBD",
-            "type": "object",
+            "$ref": "#/allOf/0/then/properties/defaults",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/3/then/properties/suites/items/timeout"
+                "$ref": "../subschema/common.schema.json#/definitions/timeout"
               }
             }
           },
@@ -568,14 +567,13 @@
             "const": "playwright"
           },
           "defaults": {
-            "description": "TBD",
-            "type": "object",
+            "$ref": "#/allOf/0/then/properties/defaults",
             "properties": {
               "mode": {
-                "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
+                "$ref": "../subschema/common.schema.json#/definitions/mode"
               },
               "timeout": {
-                "$ref": "#/allOf/3/then/properties/suites/items/timeout"
+                "$ref": "../subschema/common.schema.json#/definitions/timeout"
               }
             }
           },
@@ -609,7 +607,7 @@
                   "type": "string"
                 },
                 "mode": {
-                  "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/mode"
                 },
                 "playwrightVersion": {
                   "description": "TBD",
@@ -646,7 +644,7 @@
                       "type": "integer"
                     },
                     "timeout": {
-                      "description": "TBD",
+                      "description": "Changes the timeout for the test (milliseconds).",
                       "type": "integer"
                     },
                     "grep": {
@@ -736,11 +734,10 @@
             "const": "puppeteer"
           },
           "defaults": {
-            "description": "TBD",
-            "type": "object",
+            "$ref": "#/allOf/0/then/properties/defaults",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/3/then/properties/suites/items/timeout"
+                "$ref": "../subschema/common.schema.json#/definitions/timeout"
               }
             }
           },
@@ -795,7 +792,10 @@
               "timeout": {
                 "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
                 "type": "string",
-                "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$"
+                "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$",
+                "examples": [
+                  "15m"
+                ]
               },
               "required": [
                 "name",
@@ -850,14 +850,13 @@
             "const": "testcafe"
           },
           "defaults": {
-            "description": "TBD",
-            "type": "object",
+            "$ref": "#/allOf/0/then/properties/defaults",
             "properties": {
               "mode": {
-                "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
+                "$ref": "../subschema/common.schema.json#/definitions/mode"
               },
               "timeout": {
-                "$ref": "#/allOf/3/then/properties/suites/items/timeout"
+                "$ref": "../subschema/common.schema.json#/definitions/timeout"
               }
             }
           },
@@ -923,7 +922,7 @@
                   "$ref": "#/allOf/2/then/properties/suites/items/properties/env"
                 },
                 "mode": {
-                  "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/mode"
                 },
                 "disablePageCaching": {
                   "description": "TBD",
@@ -1064,11 +1063,10 @@
             "const": "xcuitest"
           },
           "defaults": {
-            "description": "TBD",
-            "type": "object",
+            "$ref": "#/allOf/0/then/properties/defaults",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
+                "$ref": "../subschema/common.schema.json#/definitions/timeout"
               }
             }
           },

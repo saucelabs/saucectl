@@ -26,8 +26,7 @@
       "const": "puppeteer"
     },
     "defaults": {
-      "description": "TBD",
-      "type": "object",
+      "$ref": "../subschema/common.schema.json#/definitions/defaults",
       "properties": {
         "timeout": {
           "$ref": "../subschema/common.schema.json#/definitions/timeout"
