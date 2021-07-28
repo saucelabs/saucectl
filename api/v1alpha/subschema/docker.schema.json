@@ -20,7 +20,8 @@
           "description": "Override which docker image to use (in case you have a custom image).",
           "type": "string"
         }
-      }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": true
