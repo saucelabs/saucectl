@@ -56,11 +56,14 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '12'
-      - working-directory: scripts/json-schema-bundler
+      - name: Install dependencies
+        working-directory: scripts/json-schema-bundler
         run: npm ci
-      - working-directory: scripts/json-schema-bundler
+      - name: Generate schema
+        working-directory: scripts/json-schema-bundler
         run: npm run bundle -- -s ../../api/v1alpha/global.schema.json -o ../../api/v1alpha/generated/fresh.schema.json
-      - working-directory: api/v1alpha/generated
+      - name: Check schema
+        working-directory: api/v1alpha/generated
         run: diff saucectl.schema.json fresh.schema.json || echo "Outdated schema. Please generate a new schema via 'make schema' and check it in!"
   build:
     needs: lint
