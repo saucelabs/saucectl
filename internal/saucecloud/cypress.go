@@ -21,7 +21,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	if err := r.validateTunnel(r.Project.Sauce.Tunnel.ID); err != nil {
+	if err := r.validateTunnel(r.Project.Sauce.Tunnel.ID, r.Project.Sauce.Tunnel.Parent); err != nil {
 		return 1, err
 	}
 

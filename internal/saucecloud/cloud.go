@@ -461,7 +461,7 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	fmt.Println()
 }
 
-func (r *CloudRunner) validateTunnel(id string) error {
+func (r *CloudRunner) validateTunnel(id, parent string) error {
 	if id == "" {
 		return nil
 	}
@@ -469,7 +469,7 @@ func (r *CloudRunner) validateTunnel(id string) error {
 	// This wait value is deliberately not configurable.
 	wait := 30 * time.Second
 	log.Info().Str("timeout", wait.String()).Msg("Performing tunnel readiness check...")
-	if err := r.TunnelService.IsTunnelRunning(context.Background(), id, wait); err != nil {
+	if err := r.TunnelService.IsTunnelRunning(context.Background(), id, parent, wait); err != nil {
 		return err
 	}
 
