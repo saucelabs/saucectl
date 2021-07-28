@@ -261,6 +261,10 @@
                   ],
                   "description": "A specific operating system on which to run the tests. Sauce Labs will try to choose a reasonable default if not explicitly specified."
                 },
+                "screenResolution": {
+                  "description": "Specifies a browser window screen resolution, which may be useful if you are attempting to simulate a browser on a particular device type.",
+                  "type": "string"
+                },
                 "config": {
                   "description": "Provides details related to the Cypress test configuration.",
                   "type": "object",
@@ -272,7 +276,10 @@
                     "env": {
                       "$ref": "#/allOf/2/then/properties/suites/items/properties/env"
                     }
-                  }
+                  },
+                  "required": [
+                    "testFiles"
+                  ]
                 },
                 "mode": {
                   "description": "Instructs saucectl run tests remotely through Sauce Labs (sauce) or locally on docker.",
@@ -289,7 +296,8 @@
               },
               "required": [
                 "name",
-                "browser"
+                "browser",
+                "config"
               ],
               "additionalProperties": false
             }
@@ -626,7 +634,7 @@
                   ]
                 },
                 "params": {
-                  "description": "TBD",
+                  "description": "Details any additional parameters you wish to set for the test suite.",
                   "type": "object",
                   "properties": {
                     "browserName": {
@@ -638,11 +646,11 @@
                       ]
                     },
                     "headed": {
-                      "description": "TBD",
+                      "description": "Run tests in headed browsers.",
                       "type": "boolean"
                     },
                     "globalTimeout": {
-                      "description": "TBD",
+                      "description": "Total timeout in milliseconds for the whole test run.",
                       "type": "integer"
                     },
                     "timeout": {
@@ -650,33 +658,35 @@
                       "type": "integer"
                     },
                     "grep": {
-                      "description": "TBD",
+                      "description": "Patterns to filter tests based on their title.",
                       "type": "string"
                     },
                     "repeatEach": {
-                      "description": "TBD",
-                      "type": "integer"
+                      "description": "The number of times to repeat each test.",
+                      "type": "integer",
+                      "minimum": 0
                     },
                     "retries": {
-                      "description": "TBD",
-                      "type": "integer"
+                      "description": "The maximum number of retry attempts given to failed tests.",
+                      "type": "integer",
+                      "minimum": 0
                     },
                     "maxFailures": {
-                      "description": "TBD",
-                      "type": "integer"
+                      "description": "The maximum number of test failures for this test run. After reaching this number, testing will stop and exit with an error. Setting to zero (default) disables this behavior.",
+                      "type": "integer",
+                      "minimum": 0
                     }
                   }
                 },
                 "screenResolution": {
-                  "description": "TBD",
-                  "type": "string"
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/screenResolution"
                 },
                 "env": {
                   "description": "Set one or more environment variables. Values can be environment variables themselves.",
                   "type": "object"
                 },
                 "numShards": {
-                  "description": "TBD",
+                  "description": "When sharding is configured, saucectl automatically creates the sharded jobs based on the number of shards you specify. For example, for a suite that specifies 2 shards, saucectl clones the suite and runs shard 1/2 on the first suite, and the other shard 2/2 on the identical clone suite.",
                   "type": "integer",
                   "minimum": 0
                 },
@@ -946,8 +956,7 @@
                   "type": "boolean"
                 },
                 "screenResolution": {
-                  "description": "TBD",
-                  "type": "string"
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/screenResolution"
                 },
                 "screenshots": {
                   "description": "Allows you to specify the screenshot options.",

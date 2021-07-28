@@ -115,11 +115,7 @@
                   "type": "string"
                 },
                 "orientation": {
-                  "description": "The screen orientation to use.",
-                  "enum": [
-                    "landscape",
-                    "portrait"
-                  ]
+                  "$ref": "../subschema/common.schema.json#/definitions/orientation"
                 },
                 "platformVersions": {
                   "description": "The set of one or more versions of the device platform on which to run the test suite.",

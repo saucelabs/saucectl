@@ -154,11 +154,7 @@
                   ]
                 },
                 "orientation": {
-                  "description": "The screen orientation to use.",
-                  "enum": [
-                    "landscape",
-                    "portrait"
-                  ]
+                  "$ref": "../subschema/common.schema.json#/definitions/orientation"
                 },
                 "platformName": {
                   "$ref": "../subschema/common.schema.json#/definitions/platformName",

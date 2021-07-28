@@ -110,7 +110,10 @@
               "env": {
                 "$ref": "../subschema/common.schema.json#/definitions/env"
               }
-            }
+            },
+            "required": [
+              "testFiles"
+            ]
           },
           "mode": {
             "$ref": "../subschema/common.schema.json#/definitions/mode"
@@ -121,7 +124,8 @@
         },
         "required": [
           "name",
-          "browser"
+          "browser",
+          "config"
         ],
         "additionalProperties": false
       }
