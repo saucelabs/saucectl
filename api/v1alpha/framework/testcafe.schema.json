@@ -76,7 +76,7 @@
             "$ref": "../subschema/common.schema.json#/definitions/browserVersion"
           },
           "platformName": {
-            "description": "TBD",
+            "$ref": "../subschema/common.schema.json#/definitions/platformName",
             "enum": [
               "macOS 11.00",
               "Windows 10"
@@ -155,7 +155,7 @@
                   "type": "string"
                 },
                 "platformName": {
-                  "description": "TBD",
+                  "$ref": "../subschema/common.schema.json#/definitions/platformName",
                   "type": "string"
                 },
                 "platformVersions": {

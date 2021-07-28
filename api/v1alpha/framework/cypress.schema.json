@@ -91,7 +91,7 @@
             "$ref": "../subschema/common.schema.json#/definitions/browserVersion"
           },
           "platformName": {
-            "description": "TBD",
+            "$ref": "../subschema/common.schema.json#/definitions/platformName",
             "enum": [
               "Windows 10"
             ]

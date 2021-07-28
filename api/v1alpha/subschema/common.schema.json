@@ -27,6 +27,9 @@
         "sauce"
       ]
     },
+    "platformName": {
+      "description": "A specific operating system on which to run the tests. Sauce Labs will try to choose a reasonable default if not explicitly specified."
+    },
     "rootDir": {
       "description": "The directory of files that need to be bundled and uploaded for the tests to run.",
       "type": "string"

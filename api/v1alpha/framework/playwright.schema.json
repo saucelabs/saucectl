@@ -67,15 +67,14 @@
             "$ref": "../subschema/common.schema.json#/definitions/mode"
           },
           "playwrightVersion": {
-            "description": "TBD",
-            "type": "string"
+            "$ref": "../subschema/common.schema.json#/definitions/version"
           },
           "testMatch": {
             "description": "TBD",
             "type": "array"
           },
           "platformName": {
-            "description": "TBD",
+            "$ref": "../subschema/common.schema.json#/definitions/platformName",
             "enum": [
               "Windows 10"
             ]
