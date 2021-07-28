@@ -28,6 +28,10 @@
       "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
       "type": "string",
       "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$"
+    },
+    "version": {
+      "description": "Which framework version to use. Please consult https://docs.saucelabs.com/web-apps/automated-testing/cypress#supported-testing-platforms for available versions.",
+      "type": "string"
     }
   }
 }

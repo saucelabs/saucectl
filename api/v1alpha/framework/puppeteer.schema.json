@@ -41,8 +41,7 @@
       "type": "object",
       "properties": {
         "version": {
-          "description": "TBD",
-          "type": "string"
+          "$ref": "../subschema/common.schema.json#/definitions/version"
         }
       },
       "required": [
