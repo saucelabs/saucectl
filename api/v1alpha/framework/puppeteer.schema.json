@@ -68,7 +68,7 @@
             ]
           },
           "testMatch": {
-            "description": "TBD",
+            "description": "The glob patterns Jest uses to detect test files.",
             "type": "array"
           },
           "env": {

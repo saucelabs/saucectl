@@ -8,6 +8,10 @@
     "browser": {
       "description": "The name of the browser in which to run the tests."
     },
+    "browserVersion": {
+      "description": "Which version of the browser to use.",
+      "type": "string"
+    },
     "defaults": {
       "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
       "type": "object"

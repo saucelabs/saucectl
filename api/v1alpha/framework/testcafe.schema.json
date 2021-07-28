@@ -73,8 +73,7 @@
             ]
           },
           "browserVersion": {
-            "description": "TBD",
-            "type": "string"
+            "$ref": "../subschema/common.schema.json#/definitions/browserVersion"
           },
           "platformName": {
             "description": "TBD",
