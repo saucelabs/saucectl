@@ -6,19 +6,19 @@
   "type": "object",
   "properties": {
     "npm": {
-      "description": "TBD",
+      "description": "Settings specific to npm.",
       "type": "object",
       "properties": {
         "packages": {
-          "description": "TBD",
+          "description": "Specifies any npm packages that are required to run tests.",
           "type": "object"
         },
         "registry": {
-          "description": "TBD",
+          "description": "Override the default and official NPM registry URL with a custom one.",
           "type": "string"
         },
         "strictSSL": {
-          "description": "TBD",
+          "description": "Whether or not to do SSL key validation when making requests to the registry via https.",
           "type": "boolean"
         }
       },

@@ -6,18 +6,18 @@
   "type": "object",
   "properties": {
     "docker": {
-      "description": "TBD",
+      "description": "Properties specific to docker.",
       "type": "object",
       "properties": {
         "fileTransfer": {
-          "description": "TBD",
+          "description": "Control how files are made available to the docker image.",
           "enum": [
             "copy",
             "mount"
           ]
         },
         "image": {
-          "description": "TBD",
+          "description": "Override which docker image to use (in case you have a custom image).",
           "type": "string"
         }
       }
