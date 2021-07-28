@@ -70,7 +70,7 @@
             "$ref": "../subschema/common.schema.json#/definitions/version"
           },
           "testMatch": {
-            "description": "TBD",
+            "description": "Paths to the playwright test files. Regex values are supported to indicate all files of a certain type or in a certain directory, etc.",
             "type": "array"
           },
           "platformName": {

@@ -97,11 +97,11 @@
             ]
           },
           "config": {
-            "description": "TBD",
+            "description": "Provides details related to the Cypress test configuration.",
             "type": "object",
             "properties": {
               "testFiles": {
-                "description": "TBD",
+                "description": "One or more paths to the Cypress test files to run for this suite, if not otherwise specified explicitly in cypress.json.",
                 "type": "array"
               },
               "env": {
