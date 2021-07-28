@@ -6,19 +6,20 @@
   "type": "object",
   "definitions": {
     "env": {
-      "description": "TBD",
+      "description": "Set one or more environment variables. Values can be environment variables themselves.",
       "type": "object"
     },
     "mode": {
-      "description": "TBD",
+      "description": "Instructs saucectl run tests remotely through Sauce Labs (sauce) or locally on docker.",
       "enum": [
         "docker",
         "sauce"
       ]
     },
     "timeout": {
-      "description": "TBD",
-      "type": "string"
+      "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
+      "type": "string",
+      "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$"
     }
   }
 }

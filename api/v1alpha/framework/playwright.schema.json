@@ -104,7 +104,7 @@
                 "type": "integer"
               },
               "timeout": {
-                "description": "TBD",
+                "description": "Changes the timeout for the test (milliseconds).",
                 "type": "integer"
               },
               "grep": {

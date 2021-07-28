@@ -191,15 +191,14 @@
             "type": "object",
             "properties": {
               "mode": {
-                "description": "TBD",
+                "description": "Instructs saucectl run tests remotely through Sauce Labs (sauce) or locally on docker.",
                 "enum": [
                   "docker",
                   "sauce"
                 ]
               },
               "timeout": {
-                "description": "TBD",
-                "type": "string"
+                "$ref": "#/allOf/3/then/properties/suites/items/timeout"
               }
             }
           },
@@ -277,7 +276,7 @@
                   }
                 },
                 "mode": {
-                  "$ref": "#/allOf/2/then/properties/defaults/properties/mode"
+                  "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
                 },
                 "timeout": {
                   "$ref": "#/allOf/3/then/properties/suites/items/timeout"
@@ -573,11 +572,7 @@
             "type": "object",
             "properties": {
               "mode": {
-                "description": "TBD",
-                "enum": [
-                  "docker",
-                  "sauce"
-                ]
+                "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
               },
               "timeout": {
                 "$ref": "#/allOf/3/then/properties/suites/items/timeout"
@@ -614,7 +609,7 @@
                   "type": "string"
                 },
                 "mode": {
-                  "$ref": "#/allOf/2/then/properties/defaults/properties/mode"
+                  "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
                 },
                 "playwrightVersion": {
                   "description": "TBD",
@@ -677,7 +672,7 @@
                   "type": "string"
                 },
                 "env": {
-                  "description": "TBD",
+                  "description": "Set one or more environment variables. Values can be environment variables themselves.",
                   "type": "object"
                 },
                 "numShards": {
@@ -798,8 +793,9 @@
                 }
               },
               "timeout": {
-                "description": "TBD",
-                "type": "string"
+                "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
+                "type": "string",
+                "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$"
               },
               "required": [
                 "name",
@@ -858,7 +854,7 @@
             "type": "object",
             "properties": {
               "mode": {
-                "$ref": "#/allOf/2/then/properties/defaults/properties/mode"
+                "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
               },
               "timeout": {
                 "$ref": "#/allOf/3/then/properties/suites/items/timeout"
@@ -927,7 +923,7 @@
                   "$ref": "#/allOf/2/then/properties/suites/items/properties/env"
                 },
                 "mode": {
-                  "$ref": "#/allOf/2/then/properties/defaults/properties/mode"
+                  "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
                 },
                 "disablePageCaching": {
                   "description": "TBD",
@@ -1072,7 +1068,7 @@
             "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/2/then/properties/defaults/properties/mode"
+                "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
               }
             }
           },
