@@ -165,11 +165,11 @@ func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
 
 // IsTunnelRunning checks whether tunnelID is running. If not, it will wait for the tunnel to become available or
 // timeout. Whichever comes first.
-func (c *Client) IsTunnelRunning(ctx context.Context, id, parent string, wait time.Duration) error {
+func (c *Client) IsTunnelRunning(ctx context.Context, id, owner string, wait time.Duration) error {
 	deathclock := time.Now().Add(wait)
 	var err error
 	for time.Now().Before(deathclock) {
-		if err = c.isTunnelRunning(ctx, id, parent); err == nil {
+		if err = c.isTunnelRunning(ctx, id, owner); err == nil {
 			return nil
 		}
 		time.Sleep(1 * time.Second)
@@ -178,7 +178,7 @@ func (c *Client) IsTunnelRunning(ctx context.Context, id, parent string, wait ti
 	return err
 }
 
-func (c *Client) isTunnelRunning(ctx context.Context, id, parent string) error {
+func (c *Client) isTunnelRunning(ctx context.Context, id, owner string) error {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/rest/v1/%s/tunnels", c.URL, c.Username), nil)
 	if err != nil {
@@ -207,9 +207,8 @@ func (c *Client) isTunnelRunning(ctx context.Context, id, parent string) error {
 	}
 
 	// Owner should be the current user or the defined parent if there is one.
-	owner := c.Username
-	if parent != "" {
-		owner = parent
+	if owner == "" {
+		owner = c.Username
 	}
 
 	for _, tt := range resp {
