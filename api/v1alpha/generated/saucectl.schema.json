@@ -244,12 +244,12 @@
                   "type": "string"
                 },
                 "browser": {
-                  "description": "TBD",
                   "enum": [
                     "chrome",
                     "firefox",
                     "microsoftedge"
-                  ]
+                  ],
+                  "description": "The name of the browser in which to run the tests."
                 },
                 "browserVersion": {
                   "description": "TBD",
@@ -282,7 +282,9 @@
                   ]
                 },
                 "timeout": {
-                  "$ref": "#/allOf/3/then/properties/suites/items/timeout"
+                  "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
+                  "type": "string",
+                  "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$"
                 }
               },
               "required": [
@@ -503,7 +505,7 @@
                   }
                 },
                 "timeout": {
-                  "$ref": "#/allOf/3/then/properties/suites/items/timeout"
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/timeout"
                 }
               },
               "anyOf": [
@@ -629,7 +631,7 @@
                   "type": "object",
                   "properties": {
                     "browserName": {
-                      "description": "TBD",
+                      "$ref": "#/allOf/0/then/properties/suites/items/properties/browser",
                       "enum": [
                         "chromium",
                         "firefox",
@@ -680,7 +682,7 @@
                   "minimum": 0
                 },
                 "timeout": {
-                  "$ref": "#/allOf/3/then/properties/suites/items/timeout"
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/timeout"
                 }
               },
               "required": [
@@ -770,7 +772,7 @@
                   "type": "string"
                 },
                 "browser": {
-                  "description": "TBD",
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/browser",
                   "enum": [
                     "chrome",
                     "firefox"
@@ -794,12 +796,10 @@
                       "--disable-features=site-per-process"
                     ]
                   ]
+                },
+                "timeout": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/timeout"
                 }
-              },
-              "timeout": {
-                "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
-                "type": "string",
-                "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$"
               },
               "required": [
                 "name",
@@ -892,7 +892,7 @@
                   "type": "string"
                 },
                 "browserName": {
-                  "description": "TBD",
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/browser",
                   "enum": [
                     "chrome",
                     "firefox",
@@ -1016,7 +1016,7 @@
                   "type": "boolean"
                 },
                 "timeout": {
-                  "$ref": "#/allOf/3/then/properties/suites/items/timeout"
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/timeout"
                 }
               },
               "required": [
@@ -1174,7 +1174,7 @@
                   }
                 },
                 "timeout": {
-                  "$ref": "#/allOf/3/then/properties/suites/items/timeout"
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/timeout"
                 }
               },
               "anyOf": [

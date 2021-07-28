@@ -64,7 +64,7 @@
             "type": "string"
           },
           "browserName": {
-            "description": "TBD",
+            "$ref": "../subschema/common.schema.json#/definitions/browser",
             "enum": [
               "chrome",
               "firefox",

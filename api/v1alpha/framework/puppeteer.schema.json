@@ -61,7 +61,7 @@
             "type": "string"
           },
           "browser": {
-            "description": "TBD",
+            "$ref": "../subschema/common.schema.json#/definitions/browser",
             "enum": [
               "chrome",
               "firefox"
@@ -78,8 +78,12 @@
             "description": "Browser specific arguments.",
             "type": "array",
             "examples": [
-              ["--no-sandbox"],
-              ["--disable-features=site-per-process"]
+              [
+                "--no-sandbox"
+              ],
+              [
+                "--disable-features=site-per-process"
+              ]
             ]
           },
           "timeout": {

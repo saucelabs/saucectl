@@ -85,7 +85,7 @@
             "type": "object",
             "properties": {
               "browserName": {
-                "description": "TBD",
+                "$ref": "../subschema/common.schema.json#/definitions/browser",
                 "enum": [
                   "chromium",
                   "firefox",

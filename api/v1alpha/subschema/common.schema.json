@@ -5,6 +5,9 @@
   "description": "Subschema for common settings",
   "type": "object",
   "definitions": {
+    "browser": {
+      "description": "The name of the browser in which to run the tests."
+    },
     "defaults": {
       "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
       "type": "object"

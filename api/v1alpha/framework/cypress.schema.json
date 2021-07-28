@@ -80,7 +80,7 @@
             "type": "string"
           },
           "browser": {
-            "description": "TBD",
+            "$ref": "../subschema/common.schema.json#/definitions/browser",
             "enum": [
               "chrome",
               "firefox",
