@@ -122,7 +122,10 @@
                 "type": "integer",
                 "minimum": 0
               }
-            }
+            },
+            "required": [
+              "browserName"
+            ]
           },
           "screenResolution": {
             "$ref": "../subschema/common.schema.json#/definitions/screenResolution"
@@ -140,7 +143,9 @@
           }
         },
         "required": [
-          "name"
+          "name",
+          "params",
+          "testMatch"
         ],
         "additionalProperties": false
       }

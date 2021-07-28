@@ -676,7 +676,10 @@
                       "type": "integer",
                       "minimum": 0
                     }
-                  }
+                  },
+                  "required": [
+                    "browserName"
+                  ]
                 },
                 "screenResolution": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/screenResolution"
@@ -695,7 +698,9 @@
                 }
               },
               "required": [
-                "name"
+                "name",
+                "params",
+                "testMatch"
               ],
               "additionalProperties": false
             }
@@ -812,7 +817,8 @@
               },
               "required": [
                 "name",
-                "browser"
+                "browser",
+                "testMatch"
               ],
               "additionalProperties": false
             }
@@ -991,11 +997,7 @@
                         ]
                       },
                       "orientation": {
-                        "description": "The screen orientation to use.",
-                        "enum": [
-                          "landscape",
-                          "portrait"
-                        ]
+                        "$ref": "#/allOf/1/then/properties/suites/items/properties/emulators/items/properties/orientation"
                       },
                       "platformName": {
                         "$ref": "#/allOf/0/then/properties/suites/items/properties/platformName",
@@ -1036,7 +1038,9 @@
                 }
               },
               "required": [
-                "name"
+                "name",
+                "browserName",
+                "src"
               ],
               "additionalProperties": false
             }

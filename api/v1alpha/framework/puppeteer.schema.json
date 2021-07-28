@@ -92,7 +92,8 @@
         },
         "required": [
           "name",
-          "browser"
+          "browser",
+          "testMatch"
         ],
         "additionalProperties": false
       }

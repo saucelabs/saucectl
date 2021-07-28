@@ -195,7 +195,9 @@
           }
         },
         "required": [
-          "name"
+          "name",
+          "browserName",
+          "src"
         ],
         "additionalProperties": false
       }
