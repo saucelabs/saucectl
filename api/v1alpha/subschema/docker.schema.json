@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://saucelabs.com/schema/v1alpha/docker.schema.json",
+  "title": "saucectl docker specific schema",
+  "description": "Subschema for docker specific settings",
+  "type": "object",
+  "properties": {
+    "docker": {
+      "description": "Properties specific to docker.",
+      "type": "object",
+      "properties": {
+        "fileTransfer": {
+          "description": "Control how files are made available to the docker image.",
+          "enum": [
+            "copy",
+            "mount"
+          ]
+        },
+        "image": {
+          "description": "Override which docker image to use (in case you have a custom image).",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

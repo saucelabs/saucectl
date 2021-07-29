@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://saucelabs.com/schema/v1alpha/playwright.schema.json",
+  "title": "saucectl playwright runner configuration",
+  "description": "Configuration file for playwright using saucectl",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "../subschema/artifacts.schema.json"
+    },
+    {
+      "$ref": "../subschema/docker.schema.json"
+    },
+    {
+      "$ref": "../subschema/npm.schema.json"
+    },
+    {
+      "$ref": "../subschema/sauce.schema.json"
+    }
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "v1alpha"
+    },
+    "kind": {
+      "const": "playwright"
+    },
+    "defaults": {
+      "$ref": "../subschema/common.schema.json#/definitions/defaults",
+      "properties": {
+        "mode": {
+          "$ref": "../subschema/common.schema.json#/definitions/mode"
+        },
+        "timeout": {
+          "$ref": "../subschema/common.schema.json#/definitions/timeout"
+        }
+      }
+    },
+    "rootDir": {
+      "$ref": "../subschema/common.schema.json#/definitions/rootDir"
+    },
+    "playwright": {
+      "description": "Contains details specific to the Playwright project.",
+      "type": "object",
+      "properties": {
+        "version": {
+          "$ref": "../subschema/common.schema.json#/definitions/version"
+        }
+      },
+      "required": [
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "suites": {
+      "description": "The set of properties providing details about the test suites to run.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the test suite, which will be reflected in the test results in Sauce Labs.",
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "../subschema/common.schema.json#/definitions/mode"
+          },
+          "playwrightVersion": {
+            "$ref": "../subschema/common.schema.json#/definitions/version"
+          },
+          "testMatch": {
+            "description": "Paths to the playwright test files. Regex values are supported to indicate all files of a certain type or in a certain directory, etc.",
+            "type": "array"
+          },
+          "platformName": {
+            "$ref": "../subschema/common.schema.json#/definitions/platformName",
+            "enum": [
+              "Windows 10"
+            ]
+          },
+          "params": {
+            "description": "Details any additional parameters you wish to set for the test suite.",
+            "type": "object",
+            "properties": {
+              "browserName": {
+                "$ref": "../subschema/common.schema.json#/definitions/browser",
+                "enum": [
+                  "chromium",
+                  "firefox",
+                  "webkit"
+                ]
+              },
+              "headed": {
+                "description": "Run tests in headed browsers.",
+                "type": "boolean"
+              },
+              "globalTimeout": {
+                "description": "Total timeout in milliseconds for the whole test run.",
+                "type": "integer"
+              },
+              "timeout": {
+                "description": "Changes the timeout for the test (milliseconds).",
+                "type": "integer"
+              },
+              "grep": {
+                "description": "Patterns to filter tests based on their title.",
+                "type": "string"
+              },
+              "repeatEach": {
+                "description": "The number of times to repeat each test.",
+                "type": "integer",
+                "minimum": 0
+              },
+              "retries": {
+                "description": "The maximum number of retry attempts given to failed tests.",
+                "type": "integer",
+                "minimum": 0
+              },
+              "maxFailures": {
+                "description": "The maximum number of test failures for this test run. After reaching this number, testing will stop and exit with an error. Setting to zero (default) disables this behavior.",
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "browserName"
+            ]
+          },
+          "screenResolution": {
+            "$ref": "../subschema/common.schema.json#/definitions/screenResolution"
+          },
+          "env": {
+            "$ref": "../subschema/common.schema.json#/definitions/env"
+          },
+          "numShards": {
+            "description": "When sharding is configured, saucectl automatically creates the sharded jobs based on the number of shards you specify. For example, for a suite that specifies 2 shards, saucectl clones the suite and runs shard 1/2 on the first suite, and the other shard 2/2 on the identical clone suite.",
+            "type": "integer",
+            "minimum": 0
+          },
+          "timeout": {
+            "$ref": "../subschema/common.schema.json#/definitions/timeout"
+          }
+        },
+        "required": [
+          "name",
+          "params",
+          "testMatch"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "playwright",
+    "suites"
+  ],
+  "additionalProperties": true
+}
+

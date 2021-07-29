@@ -48,6 +48,23 @@ jobs:
           coverage=$(go tool cover -func=coverage.txt | tail -n 1 | awk '{ print $3 }' | tr -d '%' | cut -d . -f 1)
           threshold=40
           if [ $coverage -lt $threshold ]; then echo 'Code coverage below threshold!' && exit 1; fi
+  check-schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '12'
+      - name: Install dependencies
+        working-directory: scripts/json-schema-bundler
+        run: npm ci
+      - name: Generate schema
+        working-directory: scripts/json-schema-bundler
+        run: npm run bundle -- -s ../../api/v1alpha/global.schema.json -o ../../api/v1alpha/generated/fresh.schema.json
+      - name: Check schema
+        working-directory: api/v1alpha/generated
+        run: diff saucectl.schema.json fresh.schema.json || echo "Outdated schema. Please generate a new schema via 'make schema' and check it in!"
   build:
     needs: lint
     runs-on: ubuntu-latest

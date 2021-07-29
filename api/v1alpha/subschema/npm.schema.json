@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://saucelabs.com/schema/v1alpha/npm.schema.json",
+  "title": "saucectl npm specific schema",
+  "description": "Subschema for npm specific settings",
+  "type": "object",
+  "properties": {
+    "npm": {
+      "description": "Settings specific to npm.",
+      "type": "object",
+      "properties": {
+        "packages": {
+          "description": "Specifies any npm packages that are required to run tests.",
+          "type": "object"
+        },
+        "registry": {
+          "description": "Override the default and official NPM registry URL with a custom one.",
+          "type": "string"
+        },
+        "strictSSL": {
+          "description": "Whether or not to do SSL key validation when making requests to the registry via https.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

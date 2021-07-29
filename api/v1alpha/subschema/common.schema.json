@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://saucelabs.com/schema/v1alpha/common.schema.json",
+  "title": "saucectl common subschema",
+  "description": "Subschema for common settings",
+  "type": "object",
+  "definitions": {
+    "browser": {
+      "description": "The name of the browser in which to run the tests."
+    },
+    "browserVersion": {
+      "description": "Which version of the browser to use.",
+      "type": "string"
+    },
+    "defaults": {
+      "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
+      "type": "object"
+    },
+    "env": {
+      "description": "Set one or more environment variables. Values can be environment variables themselves.",
+      "type": "object"
+    },
+    "mode": {
+      "description": "Instructs saucectl run tests remotely through Sauce Labs (sauce) or locally on docker.",
+      "enum": [
+        "docker",
+        "sauce"
+      ]
+    },
+    "orientation": {
+      "description": "The screen orientation to use.",
+      "enum": [
+        "landscape",
+        "portrait"
+      ]
+    },
+    "platformName": {
+      "description": "A specific operating system on which to run the tests. Sauce Labs will try to choose a reasonable default if not explicitly specified."
+    },
+    "rootDir": {
+      "description": "The directory of files that need to be bundled and uploaded for the tests to run.",
+      "type": "string"
+    },
+    "screenResolution": {
+      "description": "Specifies a browser window screen resolution, which may be useful if you are attempting to simulate a browser on a particular device type.",
+      "type": "string"
+    },
+    "timeout": {
+      "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
+      "type": "string",
+      "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$",
+      "examples": [
+        "1h",
+        "10m",
+        "90s"
+      ]
+    },
+    "version": {
+      "description": "Which framework version to use. Please consult https://docs.saucelabs.com/web-apps/automated-testing/cypress#supported-testing-platforms for available versions.",
+      "type": "string"
+    }
+  }
+}

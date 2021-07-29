@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://saucelabs.com/schema/v1alpha/testcafe.schema.json",
+  "title": "saucectl testcafe runner configuration",
+  "description": "Configuration file for testcafe using saucectl",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "../subschema/artifacts.schema.json"
+    },
+    {
+      "$ref": "../subschema/docker.schema.json"
+    },
+    {
+      "$ref": "../subschema/npm.schema.json"
+    },
+    {
+      "$ref": "../subschema/sauce.schema.json"
+    }
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "v1alpha"
+    },
+    "kind": {
+      "const": "testcafe"
+    },
+    "defaults": {
+      "$ref": "../subschema/common.schema.json#/definitions/defaults",
+      "properties": {
+        "mode": {
+          "$ref": "../subschema/common.schema.json#/definitions/mode"
+        },
+        "timeout": {
+          "$ref": "../subschema/common.schema.json#/definitions/timeout"
+        }
+      }
+    },
+    "rootDir": {
+      "$ref": "../subschema/common.schema.json#/definitions/rootDir"
+    },
+    "testcafe": {
+      "description": "Contains details specific to the TestCafe project.",
+      "type": "object",
+      "properties": {
+        "version": {
+          "$ref": "../subschema/common.schema.json#/definitions/version"
+        }
+      },
+      "required": [
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "suites": {
+      "description": "The set of properties providing details about the test suites to run.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the test suite, which will be reflected in the test results in Sauce Labs.",
+            "type": "string"
+          },
+          "browserName": {
+            "$ref": "../subschema/common.schema.json#/definitions/browser",
+            "enum": [
+              "chrome",
+              "firefox",
+              "microsoftedge",
+              "safari"
+            ]
+          },
+          "browserVersion": {
+            "$ref": "../subschema/common.schema.json#/definitions/browserVersion"
+          },
+          "platformName": {
+            "$ref": "../subschema/common.schema.json#/definitions/platformName",
+            "enum": [
+              "macOS 11.00",
+              "Windows 10"
+            ]
+          },
+          "assertionTimeout": {
+            "description": "Specifies the time (in milliseconds) TestCafe attempts to successfully execute an assertion if a selector property or a client function was passed as an actual value.",
+            "type": "integer",
+            "minimum": 0
+          },
+          "clientScripts": {
+            "description": "Injects scripts into pages visited during the tests.",
+            "type": "array"
+          },
+          "env": {
+            "$ref": "../subschema/common.schema.json#/definitions/env"
+          },
+          "mode": {
+            "$ref": "../subschema/common.schema.json#/definitions/mode"
+          },
+          "disablePageCaching": {
+            "description": "Prevents the browser from caching page content.",
+            "type": "boolean"
+          },
+          "disableScreenshots": {
+            "description": "Prevents TestCafe from taking screenshots.",
+            "type": "boolean"
+          },
+          "disableVideo": {
+            "description": "Disable video recording.",
+            "type": "boolean"
+          },
+          "pageLoadTimeout": {
+            "description": "Specifies the time (in milliseconds) passed after the DOMContentLoaded event, within which TestCafe waits for the window.load event to fire.\n\nAfter the timeout passes or the window.load event is raised (whichever happens first), TestCafe starts the test.",
+            "type": "integer",
+            "minimum": 0
+          },
+          "quarantineMode": {
+            "description": "Enable quarantine mode to eliminate false negatives and detect unstable tests. TestCafe quarantines tests that fail, and repeats them until they yield conclusive results.",
+            "type": "boolean"
+          },
+          "screenResolution": {
+            "$ref": "../subschema/common.schema.json#/definitions/screenResolution"
+          },
+          "screenshots": {
+            "description": "Allows you to specify the screenshot options.",
+            "type": "object",
+            "properties": {
+              "takeOnFails": {
+                "description": "Specifies that a screenshot should be taken whenever a test fails.",
+                "type": "boolean"
+              },
+              "fullPage": {
+                "description": "Specifies that the full page should be captured, including content that is not visible due to overflow.",
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          },
+          "selectorTimeout": {
+            "description": "Specifies the time (in milliseconds) within which selectors attempt to return a node.",
+            "type": "integer",
+            "minimum": 0
+          },
+          "simulators": {
+            "description": "Run tests against the simulators defined here.",
+            "type": "array",
+            "items": {
+              "properties": {
+                "name": {
+                  "description": "The name of the simulator.",
+                  "type": "string",
+                  "examples": [
+                    "iPhone 12 Simulator"
+                  ]
+                },
+                "orientation": {
+                  "$ref": "../subschema/common.schema.json#/definitions/orientation"
+                },
+                "platformName": {
+                  "$ref": "../subschema/common.schema.json#/definitions/platformName",
+                  "type": "string"
+                },
+                "platformVersions": {
+                  "description": "Which platform versions (OS versions) should be used. Multiple values are treated as 'AND', thus tests run across multiple versions.",
+                  "type": "array"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "skipJsErrors": {
+            "description": "Determines whether to ignore JavaScript errors on a webpage.",
+            "type": "boolean"
+          },
+          "skipUncaughtErrors": {
+            "description": "Ignores uncaught errors and unhandled promise rejections in test code.",
+            "type": "boolean"
+          },
+          "speed": {
+            "description": "Specifies the test execution speed. Provide a number between 1 (the fastest) and 0.01 (the slowest).",
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 1
+          },
+          "src": {
+            "description": "Specifies files or directories from which to run tests.",
+            "type": "array"
+          },
+          "stopOnFirstFail": {
+            "description": "Stops a test run if a test fails.",
+            "type": "boolean"
+          },
+          "timeout": {
+            "$ref": "../subschema/common.schema.json#/definitions/timeout"
+          }
+        },
+        "required": [
+          "name",
+          "browserName",
+          "src"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "testcafe",
+    "suites"
+  ],
+  "additionalProperties": true
+}
+

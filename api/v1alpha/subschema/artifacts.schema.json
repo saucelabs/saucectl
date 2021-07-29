@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://saucelabs.com/schema/v1alpha/artifacts.schema.json",
+  "title": "saucectl artifacts schema",
+  "description": "Subschema for controlling artifacts",
+  "type": "object",
+  "properties": {
+    "artifacts": {
+      "description": "Manage test output, such as logs, videos, and screenshots.",
+      "type": "object",
+      "properties": {
+        "download": {
+          "description": "Settings related to downloading test artifacts from Sauce Labs.",
+          "type": "object",
+          "properties": {
+            "match": {
+              "description": "Specifies which artifacts to download based on whether they match the file pattern provided. Supports the wildcard character '*'.",
+              "type": "array"
+            },
+            "when": {
+              "description": "Specifies when and under what circumstances to download artifacts.",
+              "enum": [
+                "always",
+                "fail",
+                "never",
+                "pass"
+              ]
+            },
+            "directory": {
+              "description": "Specifies the path to the folder in which to download artifacts. A separate subdirectory is generated in this location for each suite.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "when",
+            "match",
+            "directory"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}
+
