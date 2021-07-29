@@ -35,6 +35,23 @@
             "us-west-1",
             "eu-central-1"
           ]
+        },
+        "tunnel": {
+          "description": "SauceCTL supports using Sauce Connect to establish a secure connection when running your tests on Sauce Labs. To do so, launch a tunnel; then provide the identifier in this property.",
+          "properties": {
+            "id": {
+              "description": "The tunnel identifier, aka 'Tunnel Name'.",
+              "type": "string"
+            },
+            "parent": {
+              "description": "The owner (username) of the tunnel. Must be specified if the user that created the tunnel differs from the user that is running the tests.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

@@ -146,13 +146,6 @@
                 "description": "All settings related to how tests are run and identified in the Sauce Labs platform.",
                 "type": "object",
                 "properties": {
-                  "region": {
-                    "description": "Which Sauce Labs data center to target.",
-                    "enum": [
-                      "us-west-1",
-                      "eu-central-1"
-                    ]
-                  },
                   "concurrency": {
                     "description": "Sets the maximum number of suites to execute at the same time. Excess suites are queued and run in order as each suite completes.",
                     "type": "integer",
@@ -162,15 +155,39 @@
                     "description": "The set of properties that allows you to provide additional information about your project that helps you distinguish it in the various environments in which it is used and reviewed.",
                     "type": "object",
                     "properties": {
-                      "tags": {
-                        "description": "Tag your jobs so you can find them easier in Sauce Labs.",
-                        "type": "array"
-                      },
                       "build": {
                         "description": "Sauce Labs can aggregate all jobs under one view based on their association with a build.",
                         "type": "string"
+                      },
+                      "tags": {
+                        "description": "Tag your jobs so you can find them easier in Sauce Labs.",
+                        "type": "array"
                       }
                     },
+                    "additionalProperties": false
+                  },
+                  "region": {
+                    "description": "Which Sauce Labs data center to target.",
+                    "enum": [
+                      "us-west-1",
+                      "eu-central-1"
+                    ]
+                  },
+                  "tunnel": {
+                    "description": "SauceCTL supports using Sauce Connect to establish a secure connection when running your tests on Sauce Labs. To do so, launch a tunnel; then provide the identifier in this property.",
+                    "properties": {
+                      "id": {
+                        "description": "The tunnel identifier, aka 'Tunnel Name'.",
+                        "type": "string"
+                      },
+                      "parent": {
+                        "description": "The owner (username) of the tunnel. Must be specified if the user that created the tunnel differs from the user that is running the tests.",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ],
                     "additionalProperties": false
                   }
                 },
