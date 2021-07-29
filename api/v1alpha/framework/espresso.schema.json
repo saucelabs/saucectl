@@ -137,11 +137,19 @@
               "properties": {
                 "id": {
                   "description": "Request a specific device for this test suite by its ID. You can look up device IDs in the Sauce Labs app or using our Devices API (https://docs.saucelabs.com/dev/api/rdc#get-devices).",
-                  "type": "string"
+                  "type": "string",
+                  "examples": [
+                    "Google_Pixel_5_real",
+                    "Google_Pixel_5_real_us"
+                  ]
                 },
                 "name": {
                   "description": "Match the device name in full or partially (regex), which may provide a larger pool of available devices of the type you want.",
-                  "type": "string"
+                  "type": "string",
+                  "examples": [
+                    "Google Pixel .*",
+                    "Samsung .*"
+                  ]
                 },
                 "platformVersion": {
                   "description": "The version of the Android operating system.",

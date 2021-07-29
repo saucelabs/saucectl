@@ -48,7 +48,12 @@
     "timeout": {
       "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
       "type": "string",
-      "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$"
+      "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$",
+      "examples": [
+        "1h",
+        "10m",
+        "90s"
+      ]
     },
     "version": {
       "description": "Which framework version to use. Please consult https://docs.saucelabs.com/web-apps/automated-testing/cypress#supported-testing-platforms for available versions.",
