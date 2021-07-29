@@ -1405,7 +1405,7 @@ func Test_checkCredentials(t *testing.T) {
 					FrameworksFn: tt.frameworkFn,
 				},
 			}
-			if err := ini.checkCredentials(); !reflect.DeepEqual(err, tt.wantErr) {
+			if err := ini.checkCredentials("us-west-1"); !reflect.DeepEqual(err, tt.wantErr) {
 				t.Errorf("checkCredentials() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

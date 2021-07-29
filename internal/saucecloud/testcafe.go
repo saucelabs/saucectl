@@ -18,7 +18,7 @@ type TestcafeRunner struct {
 func (r *TestcafeRunner) RunProject() (int, error) {
 	exitCode := 1
 
-	if err := r.validateTunnel(r.Project.Sauce.Tunnel.ID); err != nil {
+	if err := r.validateTunnel(r.Project.Sauce.Tunnel.ID, r.Project.Sauce.Tunnel.Parent); err != nil {
 		return 1, err
 	}
 

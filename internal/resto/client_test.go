@@ -484,3 +484,81 @@ func TestClient_GetVirtualDevices(t *testing.T) {
 		})
 	}
 }
+
+func TestClient_isTunnelRunning(t *testing.T) {
+	var responseBody string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/rest/v1/DummyUser/tunnels":
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(responseBody))
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}))
+	defer ts.Close()
+	c := Client{
+		HTTPClient: ts.Client(),
+		URL:        ts.URL,
+		Username:   "DummyUser",
+		AccessKey:  "DummyKey",
+	}
+
+	type args struct {
+		ctx    context.Context
+		id     string
+		parent string
+	}
+	tests := []struct {
+		name     string
+		response string
+		args     args
+		wantErr  bool
+	}{
+		{
+			name:     "Not found",
+			response: `{}`,
+			args: args{
+				ctx: context.Background(),
+				id:  "not-found",
+			},
+			wantErr: true,
+		},
+		{
+			name:     "Tunnel found",
+			response: `{"DummyUser":[{"id":"found-tunnel","owner":"DummyUser","status":"running"}]}`,
+			args: args{
+				ctx: context.Background(),
+				id:  "found-tunnel",
+			},
+			wantErr: false,
+		},
+		{
+			name:     "Tunnel not found (other user)",
+			response: `{"OtherDummyUser":[{"id":"found-tunnel","owner":"OtherDummyUser","status":"running"}]}`,
+			args: args{
+				ctx: context.Background(),
+				id:  "found-tunnel",
+			},
+			wantErr: true,
+		},
+		{
+			name:     "Tunnel found (other user)",
+			response: `{"OtherDummyUser":[{"id":"found-tunnel","owner":"OtherDummyUser","status":"running"}]}`,
+			args: args{
+				ctx:    context.Background(),
+				id:     "found-tunnel",
+				parent: "OtherDummyUser",
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			responseBody = tt.response
+			if err := c.isTunnelRunning(tt.args.ctx, tt.args.id, tt.args.parent); (err != nil) != tt.wantErr {
+				t.Errorf("isTunnelRunning() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
