@@ -36,6 +36,10 @@
             "eu-central-1"
           ]
         },
+        "sauceignore": {
+          "description": "Path to the .sauceignore file.",
+          "default": ".sauceignore"
+        },
         "tunnel": {
           "description": "SauceCTL supports using Sauce Connect to establish a secure connection when running your tests on Sauce Labs. To do so, launch a tunnel; then provide the identifier in this property.",
           "properties": {
