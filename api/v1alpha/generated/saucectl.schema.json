@@ -313,7 +313,12 @@
                 "timeout": {
                   "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
                   "type": "string",
-                  "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$"
+                  "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$",
+                  "examples": [
+                    "1h",
+                    "10m",
+                    "90s"
+                  ]
                 }
               },
               "required": [
@@ -385,7 +390,8 @@
               },
               "otherApps": {
                 "description": "A list of applications to be installed alongside the main app. Supports environment variables as values.",
-                "type": "array"
+                "type": "array",
+                "maxItems": 7
               }
             },
             "required": [
@@ -485,11 +491,19 @@
                     "properties": {
                       "id": {
                         "description": "Request a specific device for this test suite by its ID. You can look up device IDs in the Sauce Labs app or using our Devices API (https://docs.saucelabs.com/dev/api/rdc#get-devices).",
-                        "type": "string"
+                        "type": "string",
+                        "examples": [
+                          "Google_Pixel_5_real",
+                          "Google_Pixel_5_real_us"
+                        ]
                       },
                       "name": {
                         "description": "Match the device name in full or partially (regex), which may provide a larger pool of available devices of the type you want.",
-                        "type": "string"
+                        "type": "string",
+                        "examples": [
+                          "Google Pixel .*",
+                          "Samsung .*"
+                        ]
                       },
                       "platformVersion": {
                         "description": "The version of the Android operating system.",
@@ -1166,11 +1180,19 @@
                     "properties": {
                       "id": {
                         "description": "Request a specific device for this test suite by its ID. You can look up device IDs in the Sauce Labs app or using our Devices API (https://docs.saucelabs.com/dev/api/rdc#get-devices).",
-                        "type": "string"
+                        "type": "string",
+                        "examples": [
+                          "iPhone_12_Pro_14_real",
+                          "iPhone_12_Pro_real_us"
+                        ]
                       },
                       "name": {
                         "description": "Match the device name in full or partially (regex), which may provide a larger pool of available devices of the type you want.",
-                        "type": "string"
+                        "type": "string",
+                        "examples": [
+                          "iPad .*",
+                          "iPhone .*"
+                        ]
                       },
                       "platformVersion": {
                         "description": "The version of the iOS operating system.",
