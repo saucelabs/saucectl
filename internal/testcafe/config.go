@@ -156,6 +156,13 @@ func SetDefaults(p *Project) {
 			suite.Timeout = p.Defaults.Timeout
 		}
 
+		if suite.Env == nil {
+			suite.Env = map[string]string{}
+		}
+		for envK, envV := range suite.Env {
+			suite.Env[envK] = os.ExpandEnv(envV)
+		}
+
 		// If this suite is targeting devices, then the platformName on the device takes precedence and we can skip the
 		// defaults on the suite level.
 		if suite.PlatformName == "" && len(suite.Simulators) == 0 {

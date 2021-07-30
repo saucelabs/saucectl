@@ -129,6 +129,24 @@ func SetDefaults(p *Project) {
 		p.Defaults.Timeout = 0
 	}
 
+	for k := range p.Suites {
+		s := &p.Suites[k]
+		if s.PlatformName == "" {
+			s.PlatformName = "Windows 10"
+		}
+
+		if s.Timeout <= 0 {
+			s.Timeout = p.Defaults.Timeout
+		}
+
+		if s.Env == nil {
+			s.Env = map[string]string{}
+		}
+		for envK, envV := range s.Env {
+			s.Env[envK] = os.ExpandEnv(envV)
+		}
+	}
+
 	// Apply global env vars onto every suite.
 	for k, v := range p.Env {
 		for ks := range p.Suites {
@@ -137,13 +155,6 @@ func SetDefaults(p *Project) {
 				s.Env = map[string]string{}
 			}
 			s.Env[k] = os.ExpandEnv(v)
-
-			if s.PlatformName == "" {
-				s.PlatformName = "Windows 10"
-			}
-			if s.Timeout <= 0 {
-				s.Timeout = p.Defaults.Timeout
-			}
 		}
 	}
 
