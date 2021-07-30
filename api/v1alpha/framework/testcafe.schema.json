@@ -36,6 +36,9 @@
         }
       }
     },
+    "env": {
+      "$ref": "../subschema/common.schema.json#/definitions/env"
+    },
     "rootDir": {
       "$ref": "../subschema/common.schema.json#/definitions/rootDir"
     },
