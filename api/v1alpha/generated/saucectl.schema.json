@@ -254,6 +254,10 @@
             ],
             "additionalProperties": false
           },
+          "env": {
+            "description": "Set one or more environment variables. Values can be environment variables themselves.",
+            "type": "object"
+          },
           "suites": {
             "description": "The set of properties providing details about the test suites to run.",
             "type": "array",
@@ -296,7 +300,7 @@
                       "type": "array"
                     },
                     "env": {
-                      "$ref": "#/allOf/2/then/properties/suites/items/properties/env"
+                      "$ref": "#/allOf/0/then/properties/env"
                     }
                   },
                   "required": [
@@ -626,6 +630,9 @@
               }
             }
           },
+          "env": {
+            "$ref": "#/allOf/0/then/properties/env"
+          },
           "rootDir": {
             "$ref": "#/allOf/0/then/properties/rootDir"
           },
@@ -721,8 +728,7 @@
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/screenResolution"
                 },
                 "env": {
-                  "description": "Set one or more environment variables. Values can be environment variables themselves.",
-                  "type": "object"
+                  "$ref": "#/allOf/0/then/properties/env"
                 },
                 "numShards": {
                   "description": "When sharding is configured, saucectl automatically creates the sharded jobs based on the number of shards you specify. For example, for a suite that specifies 2 shards, saucectl clones the suite and runs shard 1/2 on the first suite, and the other shard 2/2 on the identical clone suite.",
@@ -794,6 +800,9 @@
               }
             }
           },
+          "env": {
+            "$ref": "#/allOf/0/then/properties/env"
+          },
           "rootDir": {
             "$ref": "#/allOf/0/then/properties/rootDir"
           },
@@ -833,7 +842,7 @@
                   "type": "array"
                 },
                 "env": {
-                  "$ref": "#/allOf/2/then/properties/suites/items/properties/env"
+                  "$ref": "#/allOf/0/then/properties/env"
                 },
                 "browserArgs": {
                   "description": "Browser specific arguments.",
@@ -915,6 +924,9 @@
               }
             }
           },
+          "env": {
+            "$ref": "#/allOf/0/then/properties/env"
+          },
           "rootDir": {
             "$ref": "#/allOf/0/then/properties/rootDir"
           },
@@ -971,7 +983,7 @@
                   "type": "array"
                 },
                 "env": {
-                  "$ref": "#/allOf/2/then/properties/suites/items/properties/env"
+                  "$ref": "#/allOf/0/then/properties/env"
                 },
                 "mode": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/mode"
