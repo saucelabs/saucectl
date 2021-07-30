@@ -17,7 +17,10 @@ xcuitest:
 suites:
   - name: "saucy xcuitest"
     testOptions:
-      class: ["SwagLabsMobileAppUITests.LoginTests/testSuccessfulLogin"]
+      class:
+        - "SwagLabsMobileAppUITests.LoginTests/testSuccessfulLogin"
+      notClass:
+        - "SwagLabsMobileAppUITests.SwagLabsFlow/testCompleteFlow"
     devices:
       # If set, only device by ID will be queried.
       #- id: <rdc_device_id>

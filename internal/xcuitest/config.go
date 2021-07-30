@@ -44,7 +44,8 @@ type Xcuitest struct {
 
 // TestOptions represents the xcuitest test filter options configuration.
 type TestOptions struct {
-	Class []string `yaml:"class,omitempty" json:"class"`
+	NotClass []string `yaml:"notClass,omitempty" json:"notClass"`
+	Class    []string `yaml:"class,omitempty" json:"class"`
 }
 
 // Suite represents the xcuitest test suite configuration.
