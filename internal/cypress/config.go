@@ -131,6 +131,13 @@ func SetDefaults(p *Project) {
 		if s.Timeout <= 0 {
 			s.Timeout = p.Defaults.Timeout
 		}
+
+		if s.Config.Env == nil {
+			s.Config.Env = map[string]string{}
+		}
+		for envK, envV := range s.Config.Env {
+			s.Config.Env[envK] = os.ExpandEnv(envV)
+		}
 	}
 
 	// Apply global env vars onto every suite.
