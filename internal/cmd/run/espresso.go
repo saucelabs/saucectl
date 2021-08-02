@@ -58,8 +58,8 @@ func NewEspressoCmd() *cobra.Command {
 	sc.StringSlice("otherApps", "espresso.otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
 
 	// Test Options
-	sc.StringSlice("testOptions.class", "suite.testOptions.class", []string{}, "Include classes")
-	sc.StringSlice("testOptions.notClass", "suite.testOptions.notClass", []string{}, "Exclude classes")
+	sc.StringSlice("testOptions.class", "suite.testOptions.class", []string{}, "Only run the specified classes")
+	sc.StringSlice("testOptions.notClass", "suite.testOptions.notClass", []string{}, "Run all classes except those specified here")
 	sc.String("testOptions.package", "suite.testOptions.package", "", "Include package")
 	sc.String("testOptions.size", "suite.testOptions.size", "", "Include tests based on size")
 	sc.String("testOptions.annotation", "suite.testOptions.annotation", "", "Include tests based on the annotation")

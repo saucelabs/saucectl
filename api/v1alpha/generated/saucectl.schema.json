@@ -1183,7 +1183,7 @@
                       "type": "array"
                     },
                     "notClass": {
-                      "description": "Do not run the specified classes.",
+                      "description": "Run all classes except those specified here.",
                       "type": "array"
                     }
                   },
