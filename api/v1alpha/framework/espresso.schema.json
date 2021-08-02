@@ -41,7 +41,8 @@
         },
         "otherApps": {
           "description": "A list of applications to be installed alongside the main app. Supports environment variables as values.",
-          "type": "array"
+          "type": "array",
+          "maxItems": 7
         }
       },
       "required": [

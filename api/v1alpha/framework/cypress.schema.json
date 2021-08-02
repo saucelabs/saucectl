@@ -68,6 +68,9 @@
       ],
       "additionalProperties": false
     },
+    "env": {
+      "$ref": "../subschema/common.schema.json#/definitions/env"
+    },
     "suites": {
       "description": "The set of properties providing details about the test suites to run.",
       "type": "array",
