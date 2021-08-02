@@ -61,6 +61,7 @@ type StartOptions struct {
 	Experiments       map[string]string `json:"experiments,omitempty"`
 	TestOptions       TestOptions       `json:"testOptions,omitempty"`
 	TestsToRun        []string          `json:"testsToRun,omitempty"`
+	TestsToSkip       []string          `json:"testsToSkip,omitempty"`
 }
 
 // TunnelOptions represents the options that configure the usage of a tunnel when running tests in the Sauce Labs cloud.

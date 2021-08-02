@@ -68,6 +68,10 @@
               "class": {
                 "description": "Only run the specified classes.",
                 "type": "array"
+              },
+              "notClass": {
+                "description": "Run all classes except those specified here.",
+                "type": "array"
               }
             },
             "additionalProperties": false

@@ -56,7 +56,8 @@ func NewXCUITestCmd() *cobra.Command {
 	sc.StringSlice("otherApps", "xcuitest.otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
 
 	// Test Options
-	sc.StringSlice("testOptions.class", "suite.testOptions.class", []string{}, "Include classes")
+	sc.StringSlice("testOptions.class", "suite.testOptions.class", []string{}, "Only run the specified classes")
+	sc.StringSlice("testOptions.notClass", "suite.testOptions.notClass", []string{}, "Run all classes except those specified here")
 
 	// Devices (no simulators)
 	cmd.Flags().Var(&lflags.Device, "device", "Specifies the device to use for testing")
