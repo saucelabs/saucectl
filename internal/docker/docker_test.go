@@ -135,7 +135,7 @@ func TestExecuteInContainer(t *testing.T) {
 		client: &mockDocker,
 	}
 
-	IDResponse, hijackedResponse, err := handler.Execute(context.Background(), "dummy-container-id", []string{"npm", "dummy-command"}, map[string]string{})
+	IDResponse, hijackedResponse, err := handler.Execute(context.Background(), "dummy-container-id", []string{"npm", "dummy-command"})
 	assert.Nil(t, err)
 	assert.NotNil(t, hijackedResponse)
 	assert.Equal(t, IDResponse.ID, "dummy-id")

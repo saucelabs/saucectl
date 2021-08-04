@@ -183,12 +183,12 @@ func (r *ContainerRunner) startContainer(options containerStartOptions) (string,
 	return containerID, nil
 }
 
-func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string, timeout time.Duration) (output string, jobInfo jobInfo, passed bool, timedOut bool, err error) {
+func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, timeout time.Duration) (output string, jobInfo jobInfo, passed bool, timedOut bool, err error) {
 	c := make(chan bool)
 
 	var exitCode int
 	go func(c chan bool) {
-		exitCode, output, err = r.docker.ExecuteAttach(r.Ctx, containerID, cmd, env)
+		exitCode, output, err = r.docker.ExecuteAttach(r.Ctx, containerID, cmd)
 		c <- true
 	}(c)
 
@@ -257,7 +257,7 @@ func (r *ContainerRunner) readJobInfo(containerID string) (jobInfo, error) {
 func (r *ContainerRunner) beforeExec(containerID, suiteName string, tasks []string) error {
 	for _, task := range tasks {
 		log.Info().Str("task", task).Str("suite", suiteName).Msg("Running BeforeExec")
-		exitCode, _, err := r.docker.ExecuteAttach(r.Ctx, containerID, strings.Fields(task), nil)
+		exitCode, _, err := r.docker.ExecuteAttach(r.Ctx, containerID, strings.Fields(task))
 		if err != nil {
 			return err
 		}
@@ -419,7 +419,7 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 
 	output, jobInfo, passed, timedOut, err = r.run(containerID, options.SuiteName,
 		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", options.SuiteName},
-		options.Environment, options.Timeout)
+		options.Timeout)
 
 	jobID := jobIDFromURL(jobIDFromURL(jobInfo.JobDetailsURL))
 	if jobID != "" {
