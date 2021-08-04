@@ -135,25 +135,22 @@ func SetDefaults(p *Project) {
 		if s.Config.Env == nil {
 			s.Config.Env = map[string]string{}
 		}
+
+
+		// Apply global env vars onto suite.
+		for k, v := range p.Env {
+			s.Config.Env[k] = v
+		}
+
+		// Expand env vars.
 		for envK, envV := range s.Config.Env {
 			s.Config.Env[envK] = os.ExpandEnv(envV)
 
-			// Remove CYPRESS_ prefix as we directly pass it in Cypress.
+			// Add an entry without CYPRESS_ prefix as we directly pass it in Cypress.
 			if strings.HasPrefix(envK, "CYPRESS_") {
 				newKey := strings.TrimPrefix(envK, "CYPRESS_")
-				s.Config.Env[newKey] = s.Config.Env[envV]
+				s.Config.Env[newKey] = s.Config.Env[envK]
 			}
-		}
-	}
-
-	// Apply global env vars onto every suite.
-	for k, v := range p.Env {
-		for ks := range p.Suites {
-			s := &p.Suites[ks]
-			if s.Config.Env == nil {
-				s.Config.Env = map[string]string{}
-			}
-			s.Config.Env[k] = os.ExpandEnv(v)
 		}
 	}
 }
