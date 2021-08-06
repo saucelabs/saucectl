@@ -79,7 +79,8 @@
               "options": {
                 "description": "Options to pass to the reporter."
               }
-            }
+            },
+            "additionalProperties": false
           }
         }
       },
@@ -163,4 +164,3 @@
   ],
   "additionalProperties": true
 }
-
