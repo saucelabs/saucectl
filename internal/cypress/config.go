@@ -63,6 +63,12 @@ type SuiteConfig struct {
 	Env       map[string]string `yaml:"env,omitempty" json:"env"`
 }
 
+// Reporter represents a cypress report configuration.
+type Reporter struct {
+	Name string `yaml:"name" json:"name"`
+	Options map[string]interface{} `yaml:"options" json:"options"`
+}
+
 // Cypress represents crucial cypress configuration that is required for setting up a project.
 type Cypress struct {
 	// ConfigFile is the path to "cypress.json".
@@ -76,6 +82,9 @@ type Cypress struct {
 
 	// Key represents the cypress framework key flag.
 	Key string `yaml:"key" json:"key"`
+
+	// Reporters represents the customer reporters.
+	Reporters []Reporter `yaml:"reporters" json:"reporters"`
 }
 
 // FromFile creates a new cypress Project based on the filepath cfgPath.

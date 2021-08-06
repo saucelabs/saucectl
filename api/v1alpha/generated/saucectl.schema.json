@@ -246,6 +246,27 @@
               "version": {
                 "description": "Which framework version to use. Please consult https://docs.saucelabs.com/web-apps/automated-testing/cypress#supported-testing-platforms for available versions.",
                 "type": "string"
+              },
+              "reporters": {
+                "description": "Set of reporter to use.",
+                "type": "array",
+                "minimum": 0,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "description": "Name of the reporter.",
+                      "type": "string",
+                      "examples": [
+                        "dot",
+                        "nyan"
+                      ]
+                    },
+                    "options": {
+                      "description": "Options to pass to the reporter."
+                    }
+                  }
+                }
               }
             },
             "required": [
