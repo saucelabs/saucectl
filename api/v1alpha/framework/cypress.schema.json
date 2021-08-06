@@ -69,7 +69,7 @@
             "type": "object",
             "properties": {
               "name": {
-                "description": "Name of the reporter.",
+                "description": "Name of the reporter. You may have to install the associated npm dependency through npm.packages field.",
                 "type": "string",
                 "examples": [
                   "dot",
