@@ -76,6 +76,9 @@ type Cypress struct {
 
 	// Key represents the cypress framework key flag.
 	Key string `yaml:"key" json:"key"`
+
+	// Reporters represents the customer reporters.
+	Reporters map[string]map[string]interface{} `yaml:"reporters" json:"reporters"`
 }
 
 // FromFile creates a new cypress Project based on the filepath cfgPath.
