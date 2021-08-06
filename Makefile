@@ -46,6 +46,7 @@ testcafe-ci: build-linux
 cypress-ci: build-linux
 	docker run --name cypress-ci -e "CI=true" -v $(shell pwd):/home/gitty/ -w "/home/gitty" --rm saucelabs/stt-cypress-mocha-node:latest "/home/gitty/saucectl" run -c ./.sauce/cypress.yml --verbose
 
+#schema: @ Build the json schema
 schema:
 	$(eval INPUT_SCHEMA := $(shell pwd)/api/v1alpha/global.schema.json)
 	$(eval OUTPUT_SCHEMA := $(shell pwd)/api/v1alpha/generated/saucectl.schema.json)
