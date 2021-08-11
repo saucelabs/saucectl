@@ -29,7 +29,7 @@
       "additionalProperties": false
     },
     "espresso": {
-      "description": "Contains details specific to the Affogato project.",
+      "description": "Contains details specific to the Espresso project.",
       "type": "object",
       "properties": {
         "app": {
