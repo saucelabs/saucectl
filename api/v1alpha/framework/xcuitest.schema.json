@@ -25,7 +25,8 @@
         "timeout": {
           "$ref": "../subschema/common.schema.json#/definitions/timeout"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "xcuitest": {
       "description": "Contains details specific to the XCUITest project.",

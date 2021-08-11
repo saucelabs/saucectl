@@ -25,7 +25,8 @@
         "timeout": {
           "$ref": "../subschema/common.schema.json#/definitions/timeout"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "espresso": {
       "description": "Contains details specific to the Espresso project.",

@@ -217,6 +217,7 @@
                 "$ref": "../subschema/common.schema.json#/definitions/timeout"
               }
             },
+            "additionalProperties": false,
             "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
             "type": "object"
           },
@@ -255,7 +256,7 @@
                   "type": "object",
                   "properties": {
                     "name": {
-                      "description": "Name of the reporter.",
+                      "description": "Name of the reporter. You may have to install the associated npm dependency through npm.packages field.",
                       "type": "string",
                       "examples": [
                         "dot",
@@ -265,7 +266,8 @@
                     "options": {
                       "description": "Options to pass to the reporter."
                     }
-                  }
+                  },
+                  "additionalProperties": false
                 }
               }
             },
@@ -399,7 +401,8 @@
               "timeout": {
                 "$ref": "../subschema/common.schema.json#/definitions/timeout"
               }
-            }
+            },
+            "additionalProperties": false
           },
           "espresso": {
             "description": "Contains details specific to the Espresso project.",
@@ -649,7 +652,8 @@
               "timeout": {
                 "$ref": "../subschema/common.schema.json#/definitions/timeout"
               }
-            }
+            },
+            "additionalProperties": false
           },
           "env": {
             "$ref": "#/allOf/0/then/properties/env"
@@ -819,7 +823,8 @@
               "timeout": {
                 "$ref": "../subschema/common.schema.json#/definitions/timeout"
               }
-            }
+            },
+            "additionalProperties": false
           },
           "env": {
             "$ref": "#/allOf/0/then/properties/env"
@@ -943,7 +948,8 @@
               "timeout": {
                 "$ref": "../subschema/common.schema.json#/definitions/timeout"
               }
-            }
+            },
+            "additionalProperties": false
           },
           "env": {
             "$ref": "#/allOf/0/then/properties/env"
@@ -1159,7 +1165,8 @@
               "timeout": {
                 "$ref": "../subschema/common.schema.json#/definitions/timeout"
               }
-            }
+            },
+            "additionalProperties": false
           },
           "xcuitest": {
             "description": "Contains details specific to the XCUITest project.",

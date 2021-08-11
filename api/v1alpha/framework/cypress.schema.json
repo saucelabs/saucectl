@@ -34,7 +34,8 @@
         "timeout": {
           "$ref": "../subschema/common.schema.json#/definitions/timeout"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "rootDir": {
       "$ref": "../subschema/common.schema.json#/definitions/rootDir"
