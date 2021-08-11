@@ -64,7 +64,7 @@ jobs:
         run: npm run bundle -- -s ../../api/v1alpha/global.schema.json -o ../../api/v1alpha/generated/fresh.schema.json
       - name: Check schema
         working-directory: api/v1alpha/generated
-        run: diff saucectl.schema.json fresh.schema.json || echo "Outdated schema. Please generate a new schema via 'make schema' and check it in!"
+        run: diff saucectl.schema.json fresh.schema.json
   build:
     needs: lint
     runs-on: ubuntu-latest
