@@ -95,9 +95,10 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 				ScreenResolution: s.ScreenResolution,
 				RunnerVersion:    r.Project.RunnerVersion,
 				Experiments:      r.Project.Sauce.Experiments,
+				Attempt:          1,
+				Retries:          s.Retries,
 			}
 		}
-		close(jobOpts)
 	}()
 
 	return r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites))

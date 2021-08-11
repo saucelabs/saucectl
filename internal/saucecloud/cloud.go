@@ -175,6 +175,10 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	} else {
 		l.Str("browser", opts.BrowserName)
 	}
+
+	if opts.Retries > 0 && opts.Attempt > 1 {
+		l.Str("attempt", fmt.Sprintf("%d of %d", opts.Attempt, opts.Retries+1))
+	}
 	l.Msg("Suite started.")
 
 	// High interval poll to not oversaturate the job reader with requests
@@ -233,7 +237,7 @@ func enrichRDCReport(j *job.Job, opts job.StartOptions) {
 	}
 }
 
-func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- result) {
+func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- result) {
 	for opts := range jobOpts {
 		start := time.Now()
 
@@ -249,6 +253,12 @@ func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- re
 
 		jobData, skipped, err := r.runJob(opts)
 
+		if opts.Attempt <= opts.Retries && !jobData.Passed {
+			opts.Attempt++
+			jobOpts <- opts
+			continue
+		}
+
 		results <- result{
 			name:     opts.DisplayName,
 			browser:  opts.BrowserName,
@@ -256,6 +266,8 @@ func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- re
 			skipped:  skipped,
 			err:      err,
 			duration: time.Since(start),
+			attempts: opts.Attempt,
+			retries:  opts.Retries,
 		}
 	}
 }
