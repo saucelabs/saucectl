@@ -2,10 +2,11 @@ package cypress
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"gotest.tools/v3/fs"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/fs"
 )
 
 func TestFilterSuites(t *testing.T) {
@@ -119,7 +120,7 @@ func TestValidateCypressConfiguration(t *testing.T) {
 					fs.WithFile("cypress.json", `{"integrationFo}`, fs.WithMode(0644)))
 				return dir
 			},
-			wantErr:     "unexpected EOF",
+			wantErr: "unexpected EOF",
 		},
 		{
 			name: "Un-existing integrationFolder",
@@ -194,7 +195,7 @@ func TestValidateCypressConfiguration(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			d := tt.creator(t)
 			defer d.Remove()
-			err := ValidateCypressConfiguration(d.Join("cypress.json"))
+			err := ValidateCypressConfiguration(d.Path(), "cypress.json")
 
 			if tt.wantErr != "" {
 				expectedErr := tt.wantErr
