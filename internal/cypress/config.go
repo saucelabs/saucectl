@@ -3,7 +3,6 @@ package cypress
 import (
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -179,15 +178,6 @@ func checkAvailability(path string, mustBeDirectory bool) error {
 
 // ValidateCypressConfiguration validates that Cypress config has required folders.
 func ValidateCypressConfiguration(rootDir string, cypressCfgFile string) error {
-	// cypress.json must be under rootDir
-	found, err := isCypressCfgUnderRootDir(rootDir, cypressCfgFile)
-	if err != nil {
-		return err
-	}
-	if !found {
-		return fmt.Errorf("cypress config file(%s) must be placed under rootDir(%s)", cypressCfgFile, rootDir)
-	}
-
 	isIgnored, err := isCypressCfgIgnored()
 	if err != nil {
 		return err
@@ -233,23 +223,6 @@ func ValidateCypressConfiguration(rootDir string, cypressCfgFile string) error {
 		}
 	}
 	return nil
-}
-
-func isCypressCfgUnderRootDir(rootDir, cypressCfgFile string) (bool, error) {
-	found := false
-	if err := filepath.Walk(rootDir, func(path string, info fs.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() && info.Name() == cypressCfgFile {
-			found = true
-		}
-		return nil
-	}); err != nil {
-		return false, err
-	}
-
-	return found, nil
 }
 
 func isCypressCfgIgnored() (bool, error) {
