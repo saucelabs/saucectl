@@ -193,7 +193,7 @@ func ValidateCypressConfiguration(rootDir string, cypressCfgFile string) error {
 		return err
 	}
 	if isIgnored {
-		return fmt.Errorf("cypress.json is added into .sauceignore. In order to run your test successfully, please remove that from .sauceignore")
+		return fmt.Errorf("your .sauceignore configuration seems to include statements that match crucial cypress configuration files (e.g. cypress.json). In order to run your test successfully, please adjust your .sauceignore configuration")
 	}
 
 	cypressCfgPath := filepath.Join(rootDir, cypressCfgFile)
