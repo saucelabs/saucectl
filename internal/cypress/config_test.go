@@ -195,7 +195,7 @@ func TestValidateCypressConfiguration(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			d := tt.creator(t)
 			defer d.Remove()
-			err := ValidateCypressConfiguration(d.Path(), "cypress.json")
+			err := ValidateCypressConfiguration(d.Path(), "cypress.json", ".sauceignore")
 
 			if tt.wantErr != "" {
 				expectedErr := tt.wantErr

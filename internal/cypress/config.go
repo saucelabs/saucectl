@@ -177,8 +177,8 @@ func checkAvailability(path string, mustBeDirectory bool) error {
 }
 
 // ValidateCypressConfiguration validates that Cypress config has required folders.
-func ValidateCypressConfiguration(rootDir string, cypressCfgFile string) error {
-	isIgnored, err := isCypressCfgIgnored()
+func ValidateCypressConfiguration(rootDir string, cypressCfgFile, sauceIgnoreFile string) error {
+	isIgnored, err := isCypressCfgIgnored(sauceIgnoreFile)
 	if err != nil {
 		return err
 	}
@@ -225,11 +225,11 @@ func ValidateCypressConfiguration(rootDir string, cypressCfgFile string) error {
 	return nil
 }
 
-func isCypressCfgIgnored() (bool, error) {
-	if _, err := os.Stat(".sauceignore"); err != nil {
+func isCypressCfgIgnored(sauceIgnoreFile string) (bool, error) {
+	if _, err := os.Stat(sauceIgnoreFile); err != nil {
 		return false, nil
 	}
-	matcher, err := sauceignore.NewMatcherFromFile(".sauceignore")
+	matcher, err := sauceignore.NewMatcherFromFile(sauceIgnoreFile)
 	if err != nil {
 		return false, err
 	}
@@ -247,7 +247,7 @@ func Validate(p *Project) error {
 		return errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
 	// Validate cypress configuration
-	if err := ValidateCypressConfiguration(p.RootDir, p.Cypress.ConfigFile); err != nil {
+	if err := ValidateCypressConfiguration(p.RootDir, p.Cypress.ConfigFile, p.Sauce.Sauceignore); err != nil {
 		return err
 	}
 
