@@ -178,7 +178,7 @@ func checkAvailability(path string, mustBeDirectory bool) error {
 
 // ValidateCypressConfiguration validates that Cypress config has required folders.
 func ValidateCypressConfiguration(rootDir string, cypressCfgFile, sauceIgnoreFile string) error {
-	isIgnored, err := isCypressCfgIgnored(sauceIgnoreFile)
+	isIgnored, err := isCypressCfgIgnored(sauceIgnoreFile, cypressCfgFile)
 	if err != nil {
 		return err
 	}
@@ -225,7 +225,7 @@ func ValidateCypressConfiguration(rootDir string, cypressCfgFile, sauceIgnoreFil
 	return nil
 }
 
-func isCypressCfgIgnored(sauceIgnoreFile string) (bool, error) {
+func isCypressCfgIgnored(sauceIgnoreFile, cypressCfgFile string) (bool, error) {
 	if _, err := os.Stat(sauceIgnoreFile); err != nil {
 		return false, nil
 	}
@@ -234,7 +234,7 @@ func isCypressCfgIgnored(sauceIgnoreFile string) (bool, error) {
 		return false, err
 	}
 
-	return matcher.Match([]string{"cypress.json"}, false), nil
+	return matcher.Match([]string{cypressCfgFile}, false), nil
 }
 
 // Validate validates basic configuration of the project and returns an error if any of the settings contain illegal
