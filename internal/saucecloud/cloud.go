@@ -146,7 +146,12 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 }
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {
-	log.Info().Str("suite", opts.DisplayName).Str("region", r.Region.String()).Msg("Starting suite.")
+	isRetry := opts.Retries > 0 && opts.Attempt > 1
+	msg := "Starting suite."
+	if isRetry {
+		msg = "Retrying suite."
+	}
+	log.Info().Str("suite", opts.DisplayName).Str("region", r.Region.String()).Msg(msg)
 
 	id, isRDC, err := r.JobStarter.StartJob(context.Background(), opts)
 	if err != nil {
@@ -256,6 +261,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 		if opts.Attempt <= opts.Retries && !jobData.Passed {
 			opts.Attempt++
 			jobOpts <- opts
+			log.Error().Err(err).Msg("Suite errored.")
 			continue
 		}
 
