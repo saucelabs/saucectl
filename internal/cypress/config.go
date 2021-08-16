@@ -56,7 +56,6 @@ type Suite struct {
 	Config           SuiteConfig   `yaml:"config,omitempty" json:"config"`
 	ScreenResolution string        `yaml:"screenResolution,omitempty" json:"screenResolution"`
 	Mode             string        `yaml:"mode,omitempty" json:"-"`
-	Retries          int           `yaml:"retries,omitempty" json:"-"`
 	Timeout          time.Duration `yaml:"timeout,omitempty" json:"timeout"`
 }
 

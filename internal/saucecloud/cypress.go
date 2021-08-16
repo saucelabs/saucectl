@@ -96,7 +96,7 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 				RunnerVersion:    r.Project.RunnerVersion,
 				Experiments:      r.Project.Sauce.Experiments,
 				Attempt:          1,
-				Retries:          s.Retries,
+				Retries:          r.Project.Sauce.Retries,
 			}
 		}
 	}()

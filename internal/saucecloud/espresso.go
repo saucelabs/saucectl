@@ -190,6 +190,8 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		},
 		Experiments: r.Project.Sauce.Experiments,
 		TestOptions: jto,
+		Attempt:     1,
+		Retries:     r.Project.Sauce.Retries,
 
 		// RDC Specific flags
 		RealDevice:        d.isRealDevice,
