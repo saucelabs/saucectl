@@ -184,7 +184,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	}
 
 	if isRetry {
-		l.Str("attempt", fmt.Sprintf("%d of %d", opts.Attempt, opts.Retries+1))
+		l.Str("attempt", fmt.Sprintf("%d of %d", opts.Attempt+1, opts.Retries+1))
 	}
 	l.Msg("Suite started.")
 
