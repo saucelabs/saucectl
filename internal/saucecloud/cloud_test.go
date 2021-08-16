@@ -199,37 +199,56 @@ func TestRunJobTimeout(t *testing.T) {
 }
 
 func TestRunJobRetries(t *testing.T) {
-	r := CloudRunner{
-		JobStarter: &mocks.FakeJobStarter{
-			StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
-				return "1", false, nil
-			},
-		},
-		JobReader: &mocks.FakeJobReader{
-			PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
-				return job.Job{ID: id, Passed: false}, nil
-			},
-		},
-		JobStopper: &mocks.FakeJobStopper{
-			StopJobFn: func(ctx context.Context, jobID string) (job.Job, error) {
-				return job.Job{ID: jobID}, nil
-			},
-		},
-		JobWriter: &mocks.FakeJobWriter{UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
-			return nil
-		}},
+	type testCase struct {
+		retries      int
+		wantAttempts int
 	}
 
-	opts := make(chan job.StartOptions, 2)
-	results := make(chan result)
-
-	go r.runJobs(opts, results)
-	opts <- job.StartOptions{
-		DisplayName: "retry job",
-		Retries:     1,
+	tests := []testCase{
+		{
+			retries:      0,
+			wantAttempts: 1,
+		},
+		{
+			retries:      4,
+			wantAttempts: 5,
+		},
 	}
-	res := <-results
-	assert.Equal(t, res.attempts, 2)
+	for _, tt := range tests {
+		r := CloudRunner{
+			JobStarter: &mocks.FakeJobStarter{
+				StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+					return "1", false, nil
+				},
+			},
+			JobReader: &mocks.FakeJobReader{
+				PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+					return job.Job{ID: id, Passed: false}, nil
+				},
+			},
+			JobStopper: &mocks.FakeJobStopper{
+				StopJobFn: func(ctx context.Context, jobID string) (job.Job, error) {
+					return job.Job{ID: jobID}, nil
+				},
+			},
+			JobWriter: &mocks.FakeJobWriter{UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+				return nil
+			}},
+		}
+
+		opts := make(chan job.StartOptions, tt.retries+1)
+		results := make(chan result)
+
+		go r.runJobs(opts, results)
+		opts <- job.StartOptions{
+			DisplayName: "retry job",
+			Retries:     tt.retries,
+		}
+		res := <-results
+		close(opts)
+		close(results)
+		assert.Equal(t, res.attempts, tt.wantAttempts)
+	}
 }
 
 func TestRunJobTimeoutRDC(t *testing.T) {
