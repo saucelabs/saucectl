@@ -91,7 +91,6 @@ func (r *XcuitestRunner) runSuites(appFileID, testAppFileID string, otherAppsIDs
 				r.startJob(jobOpts, appFileID, testAppFileID, otherAppsIDs, s, d)
 			}
 		}
-		close(jobOpts)
 	}()
 
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)

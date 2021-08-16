@@ -94,7 +94,6 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 				Retries:          r.Project.Sauce.Retries,
 			}
 		}
-		close(jobOpts)
 	}()
 
 	return r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites))

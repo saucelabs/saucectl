@@ -95,7 +95,6 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string, other
 				}
 			}
 		}
-		close(jobOpts)
 	}()
 
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
