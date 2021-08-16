@@ -66,7 +66,7 @@ type result struct {
 const ConsoleLogAsset = "console.log"
 
 func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartOptions, chan result, error) {
-	jobOpts := make(chan job.StartOptions, maxRetries)
+	jobOpts := make(chan job.StartOptions, maxRetries+1)
 	results := make(chan result, ccy)
 
 	log.Info().Int("concurrency", ccy).Msg("Launching workers.")
