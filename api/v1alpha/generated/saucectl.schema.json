@@ -193,6 +193,11 @@
                       "id"
                     ],
                     "additionalProperties": false
+                  },
+                  "retries": {
+                    "description": "The number of times to retry a failing suite.",
+                    "type": "integer",
+                    "minimum": 1
                   }
                 },
                 "additionalProperties": false
