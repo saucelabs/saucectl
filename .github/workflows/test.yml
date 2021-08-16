@@ -256,4 +256,13 @@ jobs:
 
       - name: Saucectl RUN - CLI Driven
         run: |
-          ./saucectl run xcuitest -c "" --name "cli driven" --app ./tests/e2e/xcuitest/SauceLabs.Mobile.Sample.XCUITest.App.ipa --testApp ./tests/e2e/xcuitest/SwagLabsMobileAppUITests-Runner.ipa --device name="iPhone.*" --timeout 10m
+          ./saucectl run xcuitest \
+          -c "" \
+          --name "cli driven" \
+          --retries 2 \
+          --app ./tests/e2e/xcuitest/SauceLabs.Mobile.Sample.XCUITest.App.ipa \
+          --testApp ./tests/e2e/xcuitest/SwagLabsMobileAppUITests-Runner.ipa \
+          --testOptions.class SwagLabsMobileAppUITests.LoginTests/testSuccessfulLogin \
+          --testOptions.notClass SwagLabsMobileAppUITests.SwagLabsFlow/testCompleteFlow \
+          --device name="iPhone.*" \
+          --timeout 10m
