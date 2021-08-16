@@ -58,13 +58,15 @@ type result struct {
 	skipped  bool
 	err      error
 	duration time.Duration
+	attempts int
+	retries  int
 }
 
 // ConsoleLogAsset represents job asset log file name.
 const ConsoleLogAsset = "console.log"
 
-func (r *CloudRunner) createWorkerPool(ccy int) (chan job.StartOptions, chan result, error) {
-	jobOpts := make(chan job.StartOptions)
+func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartOptions, chan result, error) {
+	jobOpts := make(chan job.StartOptions, maxRetries)
 	results := make(chan result, ccy)
 
 	log.Info().Int("concurrency", ccy).Msg("Launching workers.")
@@ -248,10 +250,12 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 
 		if r.interrupted {
 			results <- result{
-				name:    opts.DisplayName,
-				browser: opts.BrowserName,
-				skipped: true,
-				err:     nil,
+				name:     opts.DisplayName,
+				browser:  opts.BrowserName,
+				skipped:  true,
+				err:      nil,
+				retries:  opts.Retries,
+				attempts: opts.Attempt,
 			}
 			continue
 		}

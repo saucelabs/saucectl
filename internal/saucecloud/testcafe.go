@@ -54,7 +54,7 @@ func (r *TestcafeRunner) runSuites(fileID string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
-	jobOpts, results, err := r.createWorkerPool(r.Project.Sauce.Concurrency)
+	jobOpts, results, err := r.createWorkerPool(r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
 	if err != nil {
 		return false
 	}
