@@ -148,7 +148,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 }
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {
-	isRetry := opts.Retries > 0 && opts.Attempt > 1
+	isRetry := opts.Retries > 0 && opts.Attempt >= 1
 	msg := "Starting suite."
 	if isRetry {
 		msg = "Retrying suite."
@@ -183,7 +183,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 		l.Str("browser", opts.BrowserName)
 	}
 
-	if opts.Retries > 0 && opts.Attempt > 1 {
+	if isRetry {
 		l.Str("attempt", fmt.Sprintf("%d of %d", opts.Attempt, opts.Retries+1))
 	}
 	l.Msg("Suite started.")
