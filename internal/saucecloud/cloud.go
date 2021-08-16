@@ -258,7 +258,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 
 		jobData, skipped, err := r.runJob(opts)
 
-		if opts.Attempt <= opts.Retries && !jobData.Passed {
+		if opts.Attempt < opts.Retries && !jobData.Passed {
 			opts.Attempt++
 			jobOpts <- opts
 			log.Error().Err(err).Msg("Suite errored.")
@@ -272,7 +272,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			skipped:  skipped,
 			err:      err,
 			duration: time.Since(start),
-			attempts: opts.Attempt,
+			attempts: opts.Attempt + 1,
 			retries:  opts.Retries,
 		}
 	}

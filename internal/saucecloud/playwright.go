@@ -90,7 +90,7 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 				ScreenResolution: s.ScreenResolution,
 				RunnerVersion:    r.Project.RunnerVersion,
 				Experiments:      r.Project.Sauce.Experiments,
-				Attempt:          1,
+				Attempt:          0,
 				Retries:          r.Project.Sauce.Retries,
 			}
 		}

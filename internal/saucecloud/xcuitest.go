@@ -124,7 +124,7 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		Experiments: r.Project.Sauce.Experiments,
 		TestsToRun:  s.TestOptions.Class,
 		TestsToSkip: s.TestOptions.NotClass,
-		Attempt:     1,
+		Attempt:     0,
 		Retries:     r.Project.Sauce.Retries,
 
 		// RDC Specific flags
