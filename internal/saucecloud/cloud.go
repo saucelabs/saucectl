@@ -254,8 +254,8 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 				browser:  opts.BrowserName,
 				skipped:  true,
 				err:      nil,
+				attempts: opts.Attempt + 1,
 				retries:  opts.Retries,
-				attempts: opts.Attempt,
 			}
 			continue
 		}
