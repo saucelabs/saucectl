@@ -81,7 +81,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	inProgress := expected
 	passed := true
 
-	junitRequired := r.reportersRequire(report.JUnitArtifact)
+	junitRequired := report.IsArtifactRequired(r.Reporters, report.JUnitArtifact)
 
 	done := make(chan interface{})
 	go func() {
@@ -168,18 +168,6 @@ func (r *CloudRunner) getAsset(jobId string, name string, rdc bool) ([]byte, err
 	}
 
 	return r.JobReader.GetJobAssetFileContent(context.Background(), jobId, name)
-}
-
-func (r CloudRunner) reportersRequire(at report.ArtifactType) bool {
-	for _, rep := range r.Reporters {
-		for _, req := range rep.ArtifactRequirements() {
-			if req == at {
-				return true
-			}
-		}
-	}
-
-	return false
 }
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {

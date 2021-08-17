@@ -39,3 +39,15 @@ type Reporter interface {
 	// ArtifactRequirements returns a list of artifact types that this reporter requires to create a proper report.
 	ArtifactRequirements() []ArtifactType
 }
+
+func IsArtifactRequired(reps []Reporter, at ArtifactType) bool {
+	for _, r := range reps {
+		for _, ar := range r.ArtifactRequirements() {
+			if ar == at {
+				return true
+			}
+		}
+	}
+
+	return false
+}

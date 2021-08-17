@@ -316,7 +316,7 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 	inProgress := expected
 	passed := true
 
-	junitRequired := r.reportersRequire(report.JUnitArtifact)
+	junitRequired := report.IsArtifactRequired(r.Reporters, report.JUnitArtifact)
 
 	done := make(chan interface{})
 	go func() {
@@ -379,18 +379,6 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 	}
 
 	return passed
-}
-
-func (r ContainerRunner) reportersRequire(at report.ArtifactType) bool {
-	for _, rep := range r.Reporters {
-		for _, req := range rep.ArtifactRequirements() {
-			if req == at {
-				return true
-			}
-		}
-	}
-
-	return false
 }
 
 func getJobID(jobURL string) string {
