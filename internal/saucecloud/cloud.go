@@ -148,12 +148,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 }
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {
-	isRetry := opts.Retries > 0 && opts.Attempt >= 1
-	msg := "Starting suite."
-	if isRetry {
-		msg = "Retrying suite."
-	}
-	log.Info().Str("suite", opts.DisplayName).Str("region", r.Region.String()).Msg(msg)
+	log.Info().Str("suite", opts.DisplayName).Str("region", r.Region.String()).Msg("Starting suite.")
 
 	id, isRDC, err := r.JobStarter.StartJob(context.Background(), opts)
 	if err != nil {
@@ -183,9 +178,6 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 		l.Str("browser", opts.BrowserName)
 	}
 
-	if isRetry {
-		l.Str("attempt", fmt.Sprintf("%d of %d", opts.Attempt+1, opts.Retries+1))
-	}
 	l.Msg("Suite started.")
 
 	// High interval poll to not oversaturate the job reader with requests
@@ -263,9 +255,10 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 		jobData, skipped, err := r.runJob(opts)
 
 		if opts.Attempt < opts.Retries && !jobData.Passed {
+			log.Warn().Err(err).Msg("Suite errored.")
 			opts.Attempt++
 			jobOpts <- opts
-			log.Error().Err(err).Msg("Suite errored.")
+			log.Info().Str("suite", opts.DisplayName).Str("attempt", fmt.Sprintf("%d of %d", opts.Attempt+1, opts.Retries+1)).Msg("Retrying suite.")
 			continue
 		}
 
