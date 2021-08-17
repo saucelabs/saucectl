@@ -82,6 +82,14 @@ type Artifacts struct {
 	Download ArtifactDownload `yaml:"download,omitempty" json:"download"`
 }
 
+// Reporters represents the reporter configuration.
+type Reporters struct {
+	JUnit struct {
+		Enabled  bool   `yaml:"enabled"`
+		Filename string `yaml:"filename"`
+	} `yaml:"junit"`
+}
+
 // Tunnel represents a sauce labs tunnel.
 type Tunnel struct {
 	ID     string `yaml:"id,omitempty" json:"id"`

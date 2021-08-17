@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://saucelabs.com/schema/v1alpha/reporters.schema.json",
+  "title": "saucectl reporters specific schema",
+  "description": "Subschema for reporters specific settings",
+  "type": "object",
+  "properties": {
+    "reporters": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "description": "Toggles the reporter on/off.",
+          "type": "boolean"
+        },
+        "filename": {
+          "description": "Filename for the generated junit report",
+          "type": "string",
+          "default": "saucectl-report.xml"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

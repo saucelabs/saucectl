@@ -83,7 +83,6 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, tc testcompose
 	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
 	p.Sauce.Metadata.ExpandEnv()
 
-	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
 	if err := applyEspressoFlags(&p, espressoFlags); err != nil {
 		return 1, err
 	}
@@ -125,6 +124,7 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 			ShowConsoleLog:        false,
 			ArtifactDownloader:    &rs,
 			RDCArtifactDownloader: &rc,
+			Reporters:             createReporters(p.Reporters),
 		},
 	}
 

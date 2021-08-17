@@ -78,7 +78,6 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
 	p.Sauce.Metadata.ExpandEnv()
 
-	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
 	if err := applyPuppeteerFlags(&p); err != nil {
 		return 1, err
 	}
@@ -98,7 +97,7 @@ func runPuppeteerInDocker(p puppeteer.Project, testco testcomposer.Client, rs re
 	log.Info().Msg("Running puppeteer in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewPuppeteer(p, &testco, &testco, &rs)
+	cd, err := docker.NewPuppeteer(p, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
 	if err != nil {
 		return 1, err
 	}

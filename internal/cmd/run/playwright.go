@@ -88,7 +88,6 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
 	p.Sauce.Metadata.ExpandEnv()
 
-	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
 	if err := applyPlaywrightFlags(&p); err != nil {
 		return 1, err
 	}
@@ -124,7 +123,7 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs 
 	log.Info().Msg("Running Playwright in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewPlaywright(p, &testco, &testco, &rs)
+	cd, err := docker.NewPlaywright(p, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
 	if err != nil {
 		return 1, err
 	}
@@ -148,6 +147,7 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
+			Reporters:          createReporters(p.Reporters),
 		},
 	}
 	return r.RunProject()

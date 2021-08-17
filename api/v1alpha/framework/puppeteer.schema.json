@@ -16,6 +16,9 @@
     },
     {
       "$ref": "../subschema/sauce.schema.json"
+    },
+    {
+      "$ref": "../subschema/reporters.schema.json"
     }
   ],
   "properties": {

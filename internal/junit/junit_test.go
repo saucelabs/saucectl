@@ -21,7 +21,7 @@ func TestParse(t *testing.T) {
 			</testsuite>
 			`),
 			want: TestSuites{
-				TestSuite: []TestSuite{
+				TestSuites: []TestSuite{
 					{
 						Errors:  3,
 						Package: "com.example.android.testing.androidjunitrunnersample",
@@ -41,7 +41,7 @@ func TestParse(t *testing.T) {
 			`),
 			want: TestSuites{
 				XMLName: xml.Name{Space: "", Local: "testsuites"},
-				TestSuite: []TestSuite{
+				TestSuites: []TestSuite{
 					{
 						Errors:  3,
 						Package: "com.example.android.testing.androidjunitrunnersample",

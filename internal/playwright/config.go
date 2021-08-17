@@ -41,6 +41,7 @@ type Project struct {
 	RootDir       string            `yaml:"rootDir,omitempty" json:"rootDir"`
 	RunnerVersion string            `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
 	Artifacts     config.Artifacts  `yaml:"artifacts,omitempty" json:"artifacts"`
+	Reporters     config.Reporters  `yaml:"reporters,omitempty" json:"-"`
 	Defaults      config.Defaults   `yaml:"defaults,omitempty" json:"defaults"`
 	Env           map[string]string `yaml:"env,omitempty" json:"env"`
 }

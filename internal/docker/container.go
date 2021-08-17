@@ -14,9 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/report"
-	"github.com/saucelabs/saucectl/internal/report/table"
-
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/download"
@@ -24,6 +21,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/progress"
+	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 )
 
@@ -38,6 +36,8 @@ type ContainerRunner struct {
 	ShowConsoleLog    bool
 	JobReader         job.Reader
 	ArtfactDownloader download.ArtifactDownloader
+
+	Reporters []report.Reporter
 
 	interrupted bool
 }
@@ -316,10 +316,7 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 	inProgress := expected
 	passed := true
 
-	reporter := table.Reporter{
-		TestResults: make([]report.TestResult, 0, expected),
-		Dst:         os.Stdout,
-	}
+	junitRequired := report.IsArtifactRequired(r.Reporters, report.JUnitArtifact)
 
 	done := make(chan interface{})
 	go func() {
@@ -348,21 +345,39 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 			passed = false
 		}
 
-		if !res.skipped {
-			reporter.Add(report.TestResult{
-				Name:     res.name,
-				Duration: res.duration,
-				Passed:   res.passed,
-				Browser:  res.browser,
-				Platform: "Docker",
+		var artifacts []report.Artifact
+
+		if junitRequired {
+			jb, err := r.JobReader.GetJobAssetFileContent(context.Background(), jobID, "junit.xml")
+			artifacts = append(artifacts, report.Artifact{
+				AssetType: report.JUnitArtifact,
+				Body:      jb,
+				Error:     err,
 			})
+		}
+
+		if !res.skipped {
+			tr := report.TestResult{
+				Name:      res.name,
+				Duration:  res.duration,
+				Passed:    res.passed,
+				Browser:   res.browser,
+				Platform:  "Docker",
+				URL:       res.jobInfo.JobDetailsURL,
+				Artifacts: artifacts,
+			}
+			for _, rep := range r.Reporters {
+				rep.Add(tr)
+			}
 		}
 
 		r.logSuite(res)
 	}
 	close(done)
 
-	reporter.Render()
+	for _, rep := range r.Reporters {
+		rep.Render()
+	}
 
 	return passed
 }

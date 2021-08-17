@@ -106,7 +106,6 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, tc testcomposer.Clie
 	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
 	p.Sauce.Metadata.ExpandEnv()
 
-	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
 	if err := applyTestcafeFlags(&p, tcFlags); err != nil {
 		return 1, err
 	}
@@ -141,7 +140,7 @@ func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client, rs rest
 	log.Info().Msg("Running Testcafe in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewTestcafe(p, &testco, &testco, &rs)
+	cd, err := docker.NewTestcafe(p, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
 	if err != nil {
 		return 1, err
 	}
@@ -165,6 +164,7 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
+			Reporters:          createReporters(p.Reporters),
 		},
 	}
 	return r.RunProject()

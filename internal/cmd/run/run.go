@@ -6,8 +6,11 @@ import (
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
+	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/saucelabs/saucectl/internal/report/table"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/version"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
@@ -114,6 +117,10 @@ func Command() *cobra.Command {
 	sc.String("artifacts.download.when", "artifacts.download.when", "never", "Specifies when to download test artifacts")
 	sc.StringSlice("artifacts.download.match", "artifacts.download.match", []string{}, "Specifies which test artifacts to download")
 	sc.String("artifacts.download.directory", "artifacts.download.directory", "", "Specifies the location where to download test artifacts to")
+
+	// Reporters
+	sc.Bool("reporters.junit.enabled", "reporters.junit.enabled", false, "Toggle saucectl's own junit reporting on/off. This only affects the reports that saucectl itself generates as a summary of your tests. Each Job in Sauce Labs has an independent report regardless.")
+	sc.String("reporters.junit.filename", "reporters.junit.filename", "saucectl-report.xml", "Specifies the report filename.")
 
 	// Hide undocumented flags that the user does not need to care about.
 	// FIXME sauce-api is actually not implemented, but probably should
@@ -226,9 +233,6 @@ func printTestEnv(testEnv string) {
 	}
 }
 
-func applyGlobalFlags(cmd *cobra.Command, sauce *config.SauceConfig, arti *config.Artifacts) {
-}
-
 // awaitGlobalTimeout waits for the global timeout event. In case of global timeout event, it attempts to interrupt the
 // current process. Should this fail, a hard immediate exit is performed.
 func awaitGlobalTimeout() {
@@ -271,4 +275,18 @@ func checkForUpdates() {
 	if v != "" {
 		log.Warn().Msgf("A new version of saucectl is available (%s)", v)
 	}
+}
+
+func createReporters(c config.Reporters) []report.Reporter {
+	reps := []report.Reporter{&table.Reporter{
+		Dst: os.Stdout,
+	}}
+
+	if c.JUnit.Enabled {
+		reps = append(reps, &junit.Reporter{
+			Filename: c.JUnit.Filename,
+		})
+	}
+
+	return reps
 }
