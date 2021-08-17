@@ -106,7 +106,6 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, tc testcomposer.Clie
 	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
 	p.Sauce.Metadata.ExpandEnv()
 
-	applyGlobalFlags(cmd, &p.Sauce, &p.Artifacts)
 	if err := applyTestcafeFlags(&p, tcFlags); err != nil {
 		return 1, err
 	}

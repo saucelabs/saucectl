@@ -232,9 +232,6 @@ func printTestEnv(testEnv string) {
 	}
 }
 
-func applyGlobalFlags(cmd *cobra.Command, sauce *config.SauceConfig, arti *config.Artifacts) {
-}
-
 // awaitGlobalTimeout waits for the global timeout event. In case of global timeout event, it attempts to interrupt the
 // current process. Should this fail, a hard immediate exit is performed.
 func awaitGlobalTimeout() {
