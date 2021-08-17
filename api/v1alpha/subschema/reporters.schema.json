@@ -12,7 +12,7 @@
           "description": "Toggles the reporter on/off.",
           "type": "boolean"
         },
-        "path": {
+        "filename": {
           "description": "Filename for the generated junit report",
           "type": "string",
           "default": "saucectl-report.xml"

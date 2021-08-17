@@ -84,8 +84,8 @@ type Artifacts struct {
 // Reporters represents the reporter configuration.
 type Reporters struct {
 	JUnit struct {
-		Enabled bool   `yaml:"enabled"`
-		Path    string `yaml:"path"`
+		Enabled  bool   `yaml:"enabled"`
+		Filename string `yaml:"filename"`
 	} `yaml:"junit"`
 }
 

@@ -119,7 +119,7 @@ func Command() *cobra.Command {
 
 	// Reporters
 	sc.Bool("reporters.junit.enabled", "reporters.junit.enabled", true, "Toggle saucectl's own junit reporting on/off. This only affects the reports that saucectl itself generates as a summary of your tests. Each Job in Sauce Labs has an independent report regardless.")
-	sc.String("reporters.junit.path", "reporters.junit.path", "saucectl-report.xml", "Specifies the report filename.")
+	sc.String("reporters.junit.filename", "reporters.junit.filename", "saucectl-report.xml", "Specifies the report filename.")
 
 	// Hide undocumented flags that the user does not need to care about.
 	// FIXME sauce-api is actually not implemented, but probably should
@@ -283,7 +283,7 @@ func createReporters(c config.Reporters) []report.Reporter {
 
 	if c.JUnit.Enabled {
 		reps = append(reps, &junit.Reporter{
-			Path: c.JUnit.Path,
+			Filename: c.JUnit.Filename,
 		})
 	}
 

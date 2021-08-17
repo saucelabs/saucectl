@@ -104,7 +104,7 @@ func TestReporter_Render(t *testing.T) {
 
 			r := &Reporter{
 				TestResults: tt.fields.TestResults,
-				Path:        f.Name(),
+				Filename:    f.Name(),
 			}
 			r.Render()
 
