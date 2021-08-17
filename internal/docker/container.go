@@ -363,6 +363,7 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 				Passed:    res.passed,
 				Browser:   res.browser,
 				Platform:  "Docker",
+				URL:       res.jobInfo.JobDetailsURL,
 				Artifacts: artifacts,
 			}
 			for _, rep := range r.Reporters {
