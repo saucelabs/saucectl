@@ -316,6 +316,8 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 	inProgress := expected
 	passed := true
 
+	junitRequired := r.reportersRequire(report.JUnitArtifact)
+
 	done := make(chan interface{})
 	go func() {
 		t := time.NewTicker(10 * time.Second)
@@ -343,13 +345,25 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 			passed = false
 		}
 
+		var artifacts []report.Artifact
+
+		if junitRequired {
+			jb, err := r.JobReader.GetJobAssetFileContent(context.Background(), jobID, "junit.xml")
+			artifacts = append(artifacts, report.Artifact{
+				AssetType: report.JUnitArtifact,
+				Body:      jb,
+				Error:     err,
+			})
+		}
+
 		if !res.skipped {
 			tr := report.TestResult{
-				Name:     res.name,
-				Duration: res.duration,
-				Passed:   res.passed,
-				Browser:  res.browser,
-				Platform: "Docker",
+				Name:      res.name,
+				Duration:  res.duration,
+				Passed:    res.passed,
+				Browser:   res.browser,
+				Platform:  "Docker",
+				Artifacts: artifacts,
 			}
 			for _, rep := range r.Reporters {
 				rep.Add(tr)
@@ -365,6 +379,18 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 	}
 
 	return passed
+}
+
+func (r ContainerRunner) reportersRequire(at report.ArtifactType) bool {
+	for _, rep := range r.Reporters {
+		for _, req := range rep.ArtifactRequirements() {
+			if req == at {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 func getJobID(jobURL string) string {
