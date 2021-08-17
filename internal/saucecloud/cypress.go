@@ -63,8 +63,7 @@ func (r *CypressRunner) checkCypressVersion() error {
 func (r *CypressRunner) runSuites(fileID string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
-
-	jobOpts, results, err := r.createWorkerPool(r.Project.Sauce.Concurrency)
+	jobOpts, results, err := r.createWorkerPool(r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
 	if err != nil {
 		return false
 	}
@@ -95,9 +94,10 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 				ScreenResolution: s.ScreenResolution,
 				RunnerVersion:    r.Project.RunnerVersion,
 				Experiments:      r.Project.Sauce.Experiments,
+				Attempt:          0,
+				Retries:          r.Project.Sauce.Retries,
 			}
 		}
-		close(jobOpts)
 	}()
 
 	return r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites))

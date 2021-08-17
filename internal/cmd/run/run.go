@@ -104,6 +104,7 @@ func Command() *cobra.Command {
 	sc.String("sauceignore", "sauce.sauceignore", ".sauceignore", "Specifies the path to the .sauceignore file.")
 	sc.StringToString("experiment", "sauce.experiment", map[string]string{}, "Specifies a list of experimental flags and values")
 	sc.Bool("dry-run", "dryRun", false, "Simulate a test run without actually running any tests.")
+	sc.Int("retries", "sauce.retries", 0, "Retries specifies the number of times to retry a failed suite (sauce mode only)")
 
 	// Metadata
 	sc.StringSlice("tags", "sauce.metadata.tags", []string{}, "Adds tags to tests")

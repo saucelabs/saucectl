@@ -58,13 +58,15 @@ type result struct {
 	skipped  bool
 	err      error
 	duration time.Duration
+	attempts int
+	retries  int
 }
 
 // ConsoleLogAsset represents job asset log file name.
 const ConsoleLogAsset = "console.log"
 
-func (r *CloudRunner) createWorkerPool(ccy int) (chan job.StartOptions, chan result, error) {
-	jobOpts := make(chan job.StartOptions)
+func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartOptions, chan result, error) {
+	jobOpts := make(chan job.StartOptions, maxRetries+1)
 	results := make(chan result, ccy)
 
 	log.Info().Int("concurrency", ccy).Msg("Launching workers.")
@@ -175,6 +177,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	} else {
 		l.Str("browser", opts.BrowserName)
 	}
+
 	l.Msg("Suite started.")
 
 	// High interval poll to not oversaturate the job reader with requests
@@ -233,21 +236,31 @@ func enrichRDCReport(j *job.Job, opts job.StartOptions) {
 	}
 }
 
-func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- result) {
+func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- result) {
 	for opts := range jobOpts {
 		start := time.Now()
 
 		if r.interrupted {
 			results <- result{
-				name:    opts.DisplayName,
-				browser: opts.BrowserName,
-				skipped: true,
-				err:     nil,
+				name:     opts.DisplayName,
+				browser:  opts.BrowserName,
+				skipped:  true,
+				err:      nil,
+				attempts: opts.Attempt + 1,
+				retries:  opts.Retries,
 			}
 			continue
 		}
 
 		jobData, skipped, err := r.runJob(opts)
+
+		if opts.Attempt < opts.Retries && !jobData.Passed {
+			log.Warn().Err(err).Msg("Suite errored.")
+			opts.Attempt++
+			jobOpts <- opts
+			log.Info().Str("suite", opts.DisplayName).Str("attempt", fmt.Sprintf("%d of %d", opts.Attempt+1, opts.Retries+1)).Msg("Retrying suite.")
+			continue
+		}
 
 		results <- result{
 			name:     opts.DisplayName,
@@ -256,6 +269,8 @@ func (r *CloudRunner) runJobs(jobOpts <-chan job.StartOptions, results chan<- re
 			skipped:  skipped,
 			err:      err,
 			duration: time.Since(start),
+			attempts: opts.Attempt + 1,
+			retries:  opts.Retries,
 		}
 	}
 }

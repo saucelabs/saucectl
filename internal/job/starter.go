@@ -41,6 +41,7 @@ type StartOptions struct {
 	// Currently supported: Cypress.
 	FrameworkVersion string `json:"frameworkVersion,omitempty"`
 
+	Attempt           int               `json:"-"`
 	BrowserName       string            `json:"browserName,omitempty"`
 	BrowserVersion    string            `json:"browserVersion,omitempty"`
 	PlatformName      string            `json:"platformName,omitempty"`
@@ -57,6 +58,7 @@ type StartOptions struct {
 	Tags              []string          `json:"tags,omitempty"`
 	Tunnel            TunnelOptions     `json:"tunnel,omitempty"`
 	ScreenResolution  string            `json:"screenResolution,omitempty"`
+	Retries           int               `json:"-"`
 	RunnerVersion     string            `json:"runnerVersion,omitempty"`
 	Experiments       map[string]string `json:"experiments,omitempty"`
 	TestOptions       TestOptions       `json:"testOptions,omitempty"`
