@@ -117,6 +117,7 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 			ShowConsoleLog:        false,
 			ArtifactDownloader:    &rs,
 			RDCArtifactDownloader: &rc,
+			Reporters:             createReporters(p.Reporters),
 		},
 	}
 	return r.RunProject()

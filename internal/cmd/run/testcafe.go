@@ -165,6 +165,7 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
+			Reporters:          createReporters(p.Reporters),
 		},
 	}
 	return r.RunProject()

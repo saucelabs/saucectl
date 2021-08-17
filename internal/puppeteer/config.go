@@ -38,6 +38,7 @@ type Project struct {
 	Npm        config.Npm        `yaml:"npm,omitempty" json:"npm"`
 	RootDir    string            `yaml:"rootDir,omitempty" json:"rootDir"`
 	Artifacts  config.Artifacts  `yaml:"artifacts,omitempty" json:"artifacts"`
+	Reporters     config.Reporters  `yaml:"reporters,omitempty" json:"-"`
 	Env        map[string]string `yaml:"env,omitempty" json:"env"`
 }
 

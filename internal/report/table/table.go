@@ -119,6 +119,11 @@ func (r *Reporter) Reset() {
 	r.TestResults = make([]report.TestResult, 0)
 }
 
+// ArtifactRequirements returns a list of artifact types are this reporter requires to create a proper report.
+func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
+	return nil
+}
+
 func footer(errors, tests int, dur time.Duration) table.Row {
 	symbol := statusSymbol(errors == 0)
 	if errors != 0 {

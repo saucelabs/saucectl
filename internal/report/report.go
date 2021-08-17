@@ -10,6 +10,22 @@ type TestResult struct {
 	Browser    string
 	Platform   string
 	DeviceName string
+	URL        string
+	Artifacts  []Artifact
+}
+
+// ArtifactType represents the type of assets (e.g. a junit report). Semantically similar to Content-Type.
+type ArtifactType int
+
+const JUnitArtifact ArtifactType = iota
+
+// Artifact represents an artifact (aka asset) that was generated as part of a job.
+type Artifact struct {
+	AssetType ArtifactType
+	Body      []byte
+
+	// Error contains optional error information in case the artifact was not retrieved.
+	Error error
 }
 
 // Reporter is the interface for rest result reporting.
@@ -20,4 +36,6 @@ type Reporter interface {
 	Render()
 	// Reset resets the state of the reporter (e.g. remove any previously reported TestResults).
 	Reset()
+	// ArtifactRequirements returns a list of artifact types that this reporter requires to create a proper report.
+	ArtifactRequirements() []ArtifactType
 }

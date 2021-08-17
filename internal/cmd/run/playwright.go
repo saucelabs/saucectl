@@ -148,6 +148,7 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
+			Reporters:          createReporters(p.Reporters),
 		},
 	}
 	return r.RunProject()

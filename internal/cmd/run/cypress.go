@@ -129,7 +129,7 @@ func runCypressInDocker(p cypress.Project, testco testcomposer.Client, rs resto.
 func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
 	log.Info().Msg("Running Cypress in Sauce Labs")
 	printTestEnv("sauce")
-
+	
 	r := saucecloud.CypressRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
@@ -143,6 +143,7 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
+			Reporters:          createReporters(p.Reporters),
 		},
 	}
 	return r.RunProject()

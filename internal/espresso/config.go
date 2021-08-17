@@ -34,6 +34,7 @@ type Project struct {
 	Suite     Suite            `yaml:"suite,omitempty" json:"-"`
 	Suites    []Suite          `yaml:"suites,omitempty" json:"suites"`
 	Artifacts config.Artifacts `yaml:"artifacts,omitempty" json:"artifacts"`
+	Reporters     config.Reporters  `yaml:"reporters,omitempty" json:"-"`
 }
 
 // Espresso represents espresso apps configuration.

@@ -42,6 +42,7 @@ type Project struct {
 	RootDir       string            `yaml:"rootDir,omitempty" json:"rootDir"`
 	RunnerVersion string            `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
 	Artifacts     config.Artifacts  `yaml:"artifacts,omitempty" json:"artifacts"`
+	Reporters     config.Reporters  `yaml:"reporters,omitempty" json:"-"`
 	Env           map[string]string `yaml:"env,omitempty" json:"env"`
 }
 
@@ -65,7 +66,7 @@ type SuiteConfig struct {
 
 // Reporter represents a cypress report configuration.
 type Reporter struct {
-	Name string `yaml:"name" json:"name"`
+	Name    string                 `yaml:"name" json:"name"`
 	Options map[string]interface{} `yaml:"options" json:"options"`
 }
 
@@ -144,7 +145,6 @@ func SetDefaults(p *Project) {
 		if s.Config.Env == nil {
 			s.Config.Env = map[string]string{}
 		}
-
 
 		// Apply global env vars onto suite.
 		for k, v := range p.Env {

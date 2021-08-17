@@ -11,23 +11,21 @@ import (
 	"strings"
 	"time"
 
-	ptable "github.com/jedib0t/go-pretty/v6/table"
-	"github.com/saucelabs/saucectl/internal/apps"
-	"github.com/saucelabs/saucectl/internal/espresso"
-	"github.com/saucelabs/saucectl/internal/report"
-	"github.com/saucelabs/saucectl/internal/report/table"
-
 	"github.com/fatih/color"
+	ptable "github.com/jedib0t/go-pretty/v6/table"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/download"
+	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/saucelabs/saucectl/internal/tunnel"
@@ -47,6 +45,8 @@ type CloudRunner struct {
 	ShowConsoleLog        bool
 	ArtifactDownloader    download.ArtifactDownloader
 	RDCArtifactDownloader download.ArtifactDownloader
+
+	Reporters []report.Reporter
 
 	interrupted bool
 }
@@ -81,10 +81,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	inProgress := expected
 	passed := true
 
-	reporter := table.Reporter{
-		TestResults: make([]report.TestResult, 0, expected),
-		Dst:         os.Stdout,
-	}
+	junitRequired := r.reportersRequire(report.JUnitArtifact)
 
 	done := make(chan interface{})
 	go func() {
@@ -119,14 +116,32 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			if browser != "" {
 				browser = fmt.Sprintf("%s %s", browser, res.job.BrowserShortVersion)
 			}
-			reporter.Add(report.TestResult{
+
+			var artifacts []report.Artifact
+
+			if junitRequired {
+				jb, err := r.getAsset(res.job.ID, "junit.xml", res.job.IsRDC)
+				artifacts = append(artifacts, report.Artifact{
+					AssetType: report.JUnitArtifact,
+					Body:      jb,
+					Error:     err,
+				})
+			}
+
+			tr := report.TestResult{
 				Name:       res.name,
 				Duration:   res.duration,
 				Passed:     res.job.Passed,
 				Browser:    browser,
 				Platform:   platform,
 				DeviceName: res.job.BaseConfig.DeviceName,
-			})
+				URL:        fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID),
+				Artifacts:  artifacts,
+			}
+
+			for _, rep := range r.Reporters {
+				rep.Add(tr)
+			}
 		}
 
 		if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, res.job.TimedOut, artifactCfg) {
@@ -140,9 +155,32 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	}
 	close(done)
 
-	reporter.Render()
+	for _, rep := range r.Reporters {
+		rep.Render()
+		fmt.Println()
+	}
 
 	return passed
+}
+
+func (r *CloudRunner) getAsset(jobId string, name string, rdc bool) ([]byte, error) {
+	if rdc {
+		return r.RDCJobReader.GetJobAssetFileContent(context.Background(), jobId, name)
+	}
+
+	return r.JobReader.GetJobAssetFileContent(context.Background(), jobId, name)
+}
+
+func (r CloudRunner) reportersRequire(at report.ArtifactType) bool {
+	for _, rep := range r.Reporters {
+		for _, req := range rep.ArtifactRequirements() {
+			if req == at {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {
@@ -438,8 +476,8 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	headerColor.Print("\nErrors:\n\n")
 	bodyColor := color.New(color.FgHiRed)
 	errCount := 1
-	for _, ts := range testsuites.TestSuite {
-		for _, tc := range ts.TestCase {
+	for _, ts := range testsuites.TestSuites {
+		for _, tc := range ts.TestCases {
 			if tc.Error != "" {
 				fmt.Printf("\t%d) %s.%s\n\n", errCount, tc.ClassName, tc.Name)
 				headerColor.Println("\tError was:")
@@ -453,7 +491,7 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	t := ptable.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(ptable.Row{"espresso testsuite", "tests", "pass", "fail", "error"})
-	for _, ts := range testsuites.TestSuite {
+	for _, ts := range testsuites.TestSuites {
 		passed := ts.Tests - ts.Errors - ts.Failures
 		t.AppendRow(ptable.Row{ts.Package, ts.Tests, passed, ts.Failures, ts.Errors})
 	}
