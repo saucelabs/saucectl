@@ -97,7 +97,7 @@ func runPuppeteerInDocker(p puppeteer.Project, testco testcomposer.Client, rs re
 	log.Info().Msg("Running puppeteer in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewPuppeteer(p, &testco, &testco, &rs)
+	cd, err := docker.NewPuppeteer(p, &testco, &testco, &rs, createReporters(p.Reporters))
 	if err != nil {
 		return 1, err
 	}

@@ -157,7 +157,6 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 
 	for _, rep := range r.Reporters {
 		rep.Render()
-		fmt.Println()
 	}
 
 	return passed

@@ -140,7 +140,7 @@ func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client, rs rest
 	log.Info().Msg("Running Testcafe in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewTestcafe(p, &testco, &testco, &rs)
+	cd, err := docker.NewTestcafe(p, &testco, &testco, &rs, createReporters(p.Reporters))
 	if err != nil {
 		return 1, err
 	}

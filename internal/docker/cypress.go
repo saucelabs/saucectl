@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"github.com/saucelabs/saucectl/internal/report"
 
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/download"
@@ -16,7 +17,7 @@ type CypressRunner struct {
 }
 
 // NewCypress creates a new CypressRunner instance.
-func NewCypress(c cypress.Project, ms framework.MetadataService, wr job.Writer, dl download.ArtifactDownloader) (*CypressRunner, error) {
+func NewCypress(c cypress.Project, ms framework.MetadataService, wr job.Writer, dl download.ArtifactDownloader, reps []report.Reporter) (*CypressRunner, error) {
 	r := CypressRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -31,6 +32,7 @@ func NewCypress(c cypress.Project, ms framework.MetadataService, wr job.Writer, 
 			ShowConsoleLog:    c.ShowConsoleLog,
 			JobWriter:         wr,
 			ArtfactDownloader: dl,
+			Reporters:         reps,
 		},
 	}
 

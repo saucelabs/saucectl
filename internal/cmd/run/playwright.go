@@ -123,7 +123,7 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs 
 	log.Info().Msg("Running Playwright in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewPlaywright(p, &testco, &testco, &rs)
+	cd, err := docker.NewPlaywright(p, &testco, &testco, &rs, createReporters(p.Reporters))
 	if err != nil {
 		return 1, err
 	}
