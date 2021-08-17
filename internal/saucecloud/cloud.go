@@ -162,12 +162,12 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	return passed
 }
 
-func (r *CloudRunner) getAsset(jobId string, name string, rdc bool) ([]byte, error) {
+func (r *CloudRunner) getAsset(jobID string, name string, rdc bool) ([]byte, error) {
 	if rdc {
-		return r.RDCJobReader.GetJobAssetFileContent(context.Background(), jobId, name)
+		return r.RDCJobReader.GetJobAssetFileContent(context.Background(), jobID, name)
 	}
 
-	return r.JobReader.GetJobAssetFileContent(context.Background(), jobId, name)
+	return r.JobReader.GetJobAssetFileContent(context.Background(), jobID, name)
 }
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {

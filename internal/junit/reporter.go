@@ -10,6 +10,7 @@ import (
 	"sync"
 )
 
+// Reporter is a junit implementation for report.Reporter.
 type Reporter struct {
 	TestResults []report.TestResult
 	Path        string
@@ -23,6 +24,7 @@ func (r *Reporter) Add(t report.TestResult) {
 	r.TestResults = append(r.TestResults, t)
 }
 
+// Render renders out a test summary junit report to the destination of Reporter.Path.
 func (r *Reporter) Render() {
 	r.lock.Lock()
 	defer r.lock.Unlock()

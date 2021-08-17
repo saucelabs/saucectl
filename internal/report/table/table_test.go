@@ -168,7 +168,7 @@ func TestReporter_Add(t *testing.T) {
 			if len(r.TestResults) != 1 {
 				t.Errorf("len(TestResults) got = %d, want = %d", len(r.TestResults), 1)
 			}
-			if reflect.DeepEqual(r.TestResults[0], tt.args.t) {
+			if !reflect.DeepEqual(r.TestResults[0], tt.args.t) {
 				t.Errorf(" got = %v, want = %v", r.TestResults[0], tt.args.t)
 			}
 		})
