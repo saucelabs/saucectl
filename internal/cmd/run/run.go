@@ -119,7 +119,7 @@ func Command() *cobra.Command {
 	sc.String("artifacts.download.directory", "artifacts.download.directory", "", "Specifies the location where to download test artifacts to")
 
 	// Reporters
-	sc.Bool("reporters.junit.enabled", "reporters.junit.enabled", true, "Toggle saucectl's own junit reporting on/off. This only affects the reports that saucectl itself generates as a summary of your tests. Each Job in Sauce Labs has an independent report regardless.")
+	sc.Bool("reporters.junit.enabled", "reporters.junit.enabled", false, "Toggle saucectl's own junit reporting on/off. This only affects the reports that saucectl itself generates as a summary of your tests. Each Job in Sauce Labs has an independent report regardless.")
 	sc.String("reporters.junit.filename", "reporters.junit.filename", "saucectl-report.xml", "Specifies the report filename.")
 
 	// Hide undocumented flags that the user does not need to care about.
