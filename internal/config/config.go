@@ -29,6 +29,7 @@ type SauceConfig struct {
 	Concurrency int               `yaml:"concurrency,omitempty" json:"concurrency,omitempty"`
 	Sauceignore string            `yaml:"sauceignore,omitempty" json:"sauceignore,omitempty"`
 	Experiments map[string]string `yaml:"experiments,omitempty" json:"experiments,omitempty"`
+	Retries     int               `yaml:"retries,omitempty" json:"-"`
 }
 
 // DeviceOptions represents the devices capabilities required from a real device.

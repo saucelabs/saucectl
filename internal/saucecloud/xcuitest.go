@@ -76,7 +76,7 @@ func (r *XcuitestRunner) runSuites(appFileID, testAppFileID string, otherAppsIDs
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
-	jobOpts, results, err := r.createWorkerPool(r.Project.Sauce.Concurrency)
+	jobOpts, results, err := r.createWorkerPool(r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
 	if err != nil {
 		return false
 	}
@@ -91,7 +91,6 @@ func (r *XcuitestRunner) runSuites(appFileID, testAppFileID string, otherAppsIDs
 				r.startJob(jobOpts, appFileID, testAppFileID, otherAppsIDs, s, d)
 			}
 		}
-		close(jobOpts)
 	}()
 
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
@@ -125,6 +124,8 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		Experiments: r.Project.Sauce.Experiments,
 		TestsToRun:  s.TestOptions.Class,
 		TestsToSkip: s.TestOptions.NotClass,
+		Attempt:     0,
+		Retries:     r.Project.Sauce.Retries,
 
 		// RDC Specific flags
 		RealDevice:        true,

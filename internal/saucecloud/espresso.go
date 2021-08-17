@@ -69,7 +69,7 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string, other
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
-	jobOpts, results, err := r.createWorkerPool(r.Project.Sauce.Concurrency)
+	jobOpts, results, err := r.createWorkerPool(r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
 	if err != nil {
 		return false
 	}
@@ -95,7 +95,6 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string, other
 				}
 			}
 		}
-		close(jobOpts)
 	}()
 
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
@@ -190,6 +189,8 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		},
 		Experiments: r.Project.Sauce.Experiments,
 		TestOptions: jto,
+		Attempt:     0,
+		Retries:     r.Project.Sauce.Retries,
 
 		// RDC Specific flags
 		RealDevice:        d.isRealDevice,

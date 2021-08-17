@@ -3,6 +3,7 @@ kind: xcuitest
 sauce:
   region: us-west-1
   concurrency: 1
+  retries: 2
   metadata:
     tags:
       - e2e

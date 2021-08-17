@@ -3,13 +3,15 @@ package cypress
 import (
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/sauceignore"
 
 	"github.com/saucelabs/saucectl/internal/config"
 )
@@ -176,9 +178,22 @@ func checkAvailability(path string, mustBeDirectory bool) error {
 }
 
 // ValidateCypressConfiguration validates that Cypress config has required folders.
-func ValidateCypressConfiguration(configFile string) error {
-	configDir := filepath.Dir(configFile)
-	cfg, err := ConfigFromFile(configFile)
+func ValidateCypressConfiguration(rootDir string, cypressCfgFile, sauceIgnoreFile string) error {
+	isIgnored, err := isCypressCfgIgnored(sauceIgnoreFile, cypressCfgFile)
+	if err != nil {
+		return err
+	}
+	if isIgnored {
+		return fmt.Errorf("your .sauceignore configuration seems to include statements that match crucial cypress configuration files (e.g. cypress.json). In order to run your test successfully, please adjust your .sauceignore configuration")
+	}
+
+	cypressCfgPath := filepath.Join(rootDir, cypressCfgFile)
+	if _, err := os.Stat(cypressCfgPath); err != nil {
+		return fmt.Errorf("unable to locate the cypress config file at %s", cypressCfgPath)
+	}
+
+	configDir := filepath.Dir(cypressCfgPath)
+	cfg, err := ConfigFromFile(cypressCfgPath)
 	if err != nil {
 		return err
 	}
@@ -211,6 +226,18 @@ func ValidateCypressConfiguration(configFile string) error {
 	return nil
 }
 
+func isCypressCfgIgnored(sauceIgnoreFile, cypressCfgFile string) (bool, error) {
+	if _, err := os.Stat(sauceIgnoreFile); err != nil {
+		return false, nil
+	}
+	matcher, err := sauceignore.NewMatcherFromFile(sauceIgnoreFile)
+	if err != nil {
+		return false, err
+	}
+
+	return matcher.Match([]string{cypressCfgFile}, false), nil
+}
+
 // Validate validates basic configuration of the project and returns an error if any of the settings contain illegal
 // values. This is not an exhaustive operation and further validation should be performed both in the client and/or
 // server side depending on the workflow that is executed.
@@ -220,14 +247,8 @@ func Validate(p *Project) error {
 	if p.Cypress.Version == "" {
 		return errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
-
-	cypressConfigFileCompletePath := filepath.Join(p.RootDir, p.Cypress.ConfigFile)
-	if _, err := os.Stat(cypressConfigFileCompletePath); err != nil {
-		return fmt.Errorf("unable to locate the cypress config file at %s", cypressConfigFileCompletePath)
-	}
-
 	// Validate cypress configuration
-	if err := ValidateCypressConfiguration(cypressConfigFileCompletePath); err != nil {
+	if err := ValidateCypressConfiguration(p.RootDir, p.Cypress.ConfigFile, p.Sauce.Sauceignore); err != nil {
 		return err
 	}
 
