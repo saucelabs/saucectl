@@ -3,13 +3,15 @@ package appstore
 import (
 	"crypto/md5"
 	"fmt"
-	"gotest.tools/v3/fs"
 	"net/http"
 	"net/http/httptest"
 	"path"
 	"reflect"
+	"regexp"
 	"testing"
 	"time"
+
+	"gotest.tools/v3/fs"
 )
 
 func TestAppStore_Upload(t *testing.T) {
@@ -27,16 +29,19 @@ func TestAppStore_Upload(t *testing.T) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		completeQuery := fmt.Sprintf("%s?%s", r.URL.Path, r.URL.RawQuery)
-		switch completeQuery {
-		case "/v1/storage/list?":
-			w.WriteHeader(200)
-			w.Write([]byte(fmt.Sprintf(`{"items": [{"id":"matching-id", "etag": "%s"}], "links": {"next": "?page=2"}}`, b1Hash)))
-		case "/v1/storage/list?page=2":
+		re := regexp.MustCompile(`name=([^&]+)`)
+		filename := re.FindStringSubmatch(r.URL.RawQuery)[1]
+		if matched, _ := regexp.Match(`.*page=2.*`, []byte(r.URL.RawQuery)); matched {
 			w.WriteHeader(200)
 			w.Write([]byte(fmt.Sprintf(`{"items": [{"id":"matching-id-next", "etag": "%s"}]}`, b2Hash)))
-		default:
-			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
+		if matched, _ := regexp.Match(`\/v1\/storage\/list\?name=.*&per_page=100`, []byte(completeQuery)); matched {
+			w.WriteHeader(200)
+			w.Write([]byte(fmt.Sprintf(`{"items": [{"id":"matching-id", "etag": "%s"}], "links": {"next": "?name=%s&per_page=100&page=2"}}`, b1Hash, filename)))
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
 	}))
 	defer ts.Close()
 

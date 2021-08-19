@@ -157,7 +157,7 @@ func (s *AppStore) Find(filename string) (storage.ArtifactMeta, error) {
 		return storage.ArtifactMeta{}, err
 	}
 
-	queryString := ""
+	queryString := fmt.Sprintf("?name=%s", filepath.Base(filename))
 	for {
 		request, err := createLocateRequest(fmt.Sprintf("%s/v1/storage/list", s.URL), s.Username, s.AccessKey, queryString)
 		if err != nil {
@@ -197,7 +197,7 @@ func calculateBundleHash(filename string) (string, error) {
 }
 
 func createLocateRequest(url, username, accesskey string, queryString string) (*http.Request, error) {
-	req, err := requesth.New(http.MethodGet, fmt.Sprintf("%s%s", url, queryString), nil)
+	req, err := requesth.New(http.MethodGet, fmt.Sprintf("%s%s&per_page=100", url, queryString), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -217,5 +217,6 @@ func (s *AppStore) executeLocateRequest(request *http.Request) (ListResponse, er
 	if err := json.NewDecoder(resp.Body).Decode(&lr); err != nil {
 		return ListResponse{}, err
 	}
+
 	return lr, nil
 }
