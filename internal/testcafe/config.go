@@ -3,12 +3,13 @@ package testcafe
 import (
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/region"
 
 	"github.com/saucelabs/saucectl/internal/config"
 )
@@ -53,6 +54,7 @@ type Suite struct {
 	Name             string            `yaml:"name,omitempty" json:"name"`
 	BrowserName      string            `yaml:"browserName,omitempty" json:"browserName"`
 	BrowserVersion   string            `yaml:"browserVersion,omitempty" json:"browserVersion"`
+	BrowserArgs      []string          `yaml:"browserArgs,omitempty" json:"browserArgs"`
 	Src              []string          `yaml:"src,omitempty" json:"src"`
 	Screenshots      Screenshots       `yaml:"screenshots,omitempty" json:"screenshots"`
 	PlatformName     string            `yaml:"platformName,omitempty" json:"platformName"`

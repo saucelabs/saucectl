@@ -98,6 +98,18 @@
                   "webkit"
                 ]
               },
+              "browserArgs": {
+                "description": "Browser specific arguments.",
+                "type": "array",
+                "examples": [
+                  [
+                    "--no-sandbox"
+                  ],
+                  [
+                    "--disable-features=site-per-process"
+                  ]
+                ]
+              },
               "headed": {
                 "description": "Run tests in headed browsers.",
                 "type": "boolean"
