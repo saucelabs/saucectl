@@ -82,6 +82,18 @@
           "browserVersion": {
             "$ref": "../subschema/common.schema.json#/definitions/browserVersion"
           },
+          "browserArgs": {
+            "description": "Browser specific arguments.",
+            "type": "array",
+            "examples": [
+              [
+                "--no-sandbox"
+              ],
+              [
+                "--disable-features=site-per-process"
+              ]
+            ]
+          },
           "platformName": {
             "$ref": "../subschema/common.schema.json#/definitions/platformName",
             "enum": [

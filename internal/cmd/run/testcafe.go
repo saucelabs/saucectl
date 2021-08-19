@@ -1,6 +1,8 @@
 package run
 
 import (
+	"os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -16,7 +18,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"os"
 )
 
 type testcafeFlags struct {
@@ -60,6 +61,7 @@ func NewTestcafeCmd() *cobra.Command {
 	// Browser & Platform
 	sc.String("browser", "suite.browserName", "", "Run tests against this browser")
 	sc.String("browserVersion", "suite.browserVersion", "", "The browser version (default: latest)")
+	sc.StringSlice("browserArgs", "suite.browserArgs", []string{}, "Set browser args")
 	sc.String("platform", "suite.platformName", "", "Run tests against this platform")
 
 	// Video & Screen(shots)
