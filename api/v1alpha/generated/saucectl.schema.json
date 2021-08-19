@@ -749,18 +749,6 @@
                         "webkit"
                       ]
                     },
-                    "browserArgs": {
-                      "description": "Browser specific arguments.",
-                      "type": "array",
-                      "examples": [
-                        [
-                          "--no-sandbox"
-                        ],
-                        [
-                          "--disable-features=site-per-process"
-                        ]
-                      ]
-                    },
                     "headed": {
                       "description": "Run tests in headed browsers.",
                       "type": "boolean"
@@ -1046,6 +1034,18 @@
                 },
                 "browserVersion": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/browserVersion"
+                },
+                "browserArgs": {
+                  "description": "Browser specific arguments.",
+                  "type": "array",
+                  "examples": [
+                    [
+                      "--no-sandbox"
+                    ],
+                    [
+                      "--disable-features=site-per-process"
+                    ]
+                  ]
                 },
                 "platformName": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/platformName",
