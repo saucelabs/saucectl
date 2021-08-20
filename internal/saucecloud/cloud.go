@@ -463,7 +463,7 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	// Some frameworks produce a junit.xml instead, check for that file if there's no console.log
 	assetContent, err = r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, "junit.xml")
 	if err != nil {
-		log.Warn().Str("suite", res.name).Msg("Failed to retrieve the console output.")
+		log.Warn().Err(err).Str("suite", res.name).Msg("Failed to retrieve the console output.")
 		return
 	}
 
