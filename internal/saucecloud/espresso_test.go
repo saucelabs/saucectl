@@ -171,6 +171,9 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 							PlatformVersions: []string{"11.0"},
 						},
 					},
+					TestOptions: espresso.TestOptions{
+						NotAnnotation: "my.annotation",
+					},
 				},
 			},
 			Sauce: config.SauceConfig{
@@ -182,4 +185,5 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, cnt, 0)
 	assert.Equal(t, "landscape", startOpts.DeviceOrientation)
+	assert.Equal(t, "my.annotation", startOpts.TestOptions.NotAnnotation)
 }
