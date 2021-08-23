@@ -142,11 +142,12 @@ func enumerateDevicesAndEmulators(devices []config.Device, emulators []config.Em
 // startJob add the job to the list for the workers.
 func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Suite, appFileID, testAppFileID string, otherAppsIDs []string, d deviceConfig) {
 	jto := job.TestOptions{
-		NotClass:   s.TestOptions.NotClass,
-		Class:      s.TestOptions.Class,
-		Annotation: s.TestOptions.Annotation,
-		Size:       s.TestOptions.Size,
-		Package:    s.TestOptions.Package,
+		NotClass:      s.TestOptions.NotClass,
+		Class:         s.TestOptions.Class,
+		Annotation:    s.TestOptions.Annotation,
+		NotAnnotation: s.TestOptions.NotAnnotation,
+		Size:          s.TestOptions.Size,
+		Package:       s.TestOptions.Package,
 	}
 	displayName := s.Name
 	if s.TestOptions.NumShards > 0 {
