@@ -141,7 +141,7 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs 
 	log.Info().Msg("Running Playwright in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewPlaywright(p, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
+	cd, err := docker.NewPlaywright(p, region.None, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
 	if err != nil {
 		return 1, err
 	}
@@ -170,8 +170,6 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 			Reporters:          createReporters(p.Reporters),
 		},
 	}
-
-	cleanPlaywrightPackages(&p)
 	return r.RunProject()
 }
 

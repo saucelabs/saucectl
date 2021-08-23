@@ -3,13 +3,13 @@ package docker
 import (
 	"context"
 
-	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/report"
 )
 
 // PuppeterRunner represents the docker implementation of a test runner.
@@ -35,7 +35,7 @@ func NewPuppeteer(c puppeteer.Project, regio region.Region, ms framework.Metadat
 			JobReader:         jr,
 			ArtfactDownloader: dl,
 			Reporters:         reps,
-			Notifier: slack.SlackNotifier{
+			Notifier: slack.Notifier{
 				Token:     c.Notifications.Slack.Token,
 				Channels:  c.Notifications.Slack.Channels,
 				Framework: "puppeteer",

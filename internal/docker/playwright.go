@@ -3,13 +3,13 @@ package docker
 import (
 	"context"
 
-	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/report"
 )
 
 // PlaywrightRunner represents the docker implementation of a test runner.
@@ -36,7 +36,7 @@ func NewPlaywright(c playwright.Project, regio region.Region, ms framework.Metad
 			JobReader:         jr,
 			ArtfactDownloader: dl,
 			Reporters:         reps,
-			Notifier: slack.SlackNotifier{
+			Notifier: slack.Notifier{
 				Token:     c.Notifications.Slack.Token,
 				Channels:  c.Notifications.Slack.Channels,
 				Framework: "playwright",

@@ -10,6 +10,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/region"
+	"gopkg.in/yaml.v2"
 )
 
 // Config descriptors.
@@ -32,11 +33,11 @@ type Project struct {
 	Sauce          config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
 	Espresso       Espresso               `yaml:"espresso,omitempty" json:"espresso"`
 	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
-	Suite     Suite            `yaml:"suite,omitempty" json:"-"`
-	Suites    []Suite          `yaml:"suites,omitempty" json:"suites"`
-	Artifacts config.Artifacts `yaml:"artifacts,omitempty" json:"artifacts"`
-	Reporters     config.Reporters  `yaml:"reporters,omitempty" json:"-"`
-	Notifications  config.Notifications `yaml:"notifications,omitempty" json:"notifications"`
+	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
+	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`
+	Artifacts     config.Artifacts     `yaml:"artifacts,omitempty" json:"artifacts"`
+	Reporters     config.Reporters     `yaml:"reporters,omitempty" json:"-"`
+	Notifications config.Notifications `yaml:"notifications,omitempty" json:"notifications"`
 }
 
 // Espresso represents espresso apps configuration.

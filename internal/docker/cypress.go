@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
@@ -34,7 +35,7 @@ func NewCypress(c cypress.Project, ms framework.MetadataService, wr job.Writer, 
 			JobWriter:         wr,
 			JobReader:         jr,
 			ArtfactDownloader: dl,
-			Notifier: slack.SlackNotifier{
+			Notifier: slack.Notifier{
 				Token:     c.Notifications.Slack.Token,
 				Channels:  c.Notifications.Slack.Channels,
 				Framework: "cypress",
@@ -42,7 +43,7 @@ func NewCypress(c cypress.Project, ms framework.MetadataService, wr job.Writer, 
 				Metadata:  c.Sauce.Metadata,
 				TestEnv:   "docker",
 			},
-			Reporters:         reps,
+			Reporters: reps,
 		},
 	}
 

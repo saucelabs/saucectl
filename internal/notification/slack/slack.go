@@ -8,10 +8,11 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/rs/zerolog/log"
+	"github.com/slack-go/slack"
+
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/slack-go/slack"
 )
 
 var defaultTableStyle = table.Style{
@@ -53,8 +54,8 @@ var defaultTableStyle = table.Style{
 	Title: table.TitleOptionsDefault,
 }
 
-// SlackNotifier represents notifier for slack
-type SlackNotifier struct {
+// Notifier represents notifier for slack
+type Notifier struct {
 	Token       string
 	Channels    []string
 	TestResults []TestResult
@@ -65,6 +66,7 @@ type SlackNotifier struct {
 	TestEnv     string
 }
 
+// TestResult represents notificatio result.
 type TestResult struct {
 	Name       string
 	Duration   time.Duration
@@ -76,7 +78,8 @@ type TestResult struct {
 	JobURL     string
 }
 
-func (s *SlackNotifier) SendMessage() {
+// SendMessage send notification message.
+func (s *Notifier) SendMessage() {
 	api := slack.New(s.Token)
 	//attachment := s.newMsg()
 
@@ -96,8 +99,9 @@ func (s *SlackNotifier) SendMessage() {
 	}
 }
 
-func (s *SlackNotifier) createBlocks() []slack.Block {
-	headerText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("*%s* %s", s.Metadata.Name, statusEmoji(s.Passed)), false, false)
+func (s *Notifier) createBlocks() []slack.Block {
+	// TODO s.Metadata.Name ???
+	headerText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("*%s* %s", s.Metadata.Build, statusEmoji(s.Passed)), false, false)
 	headerSection := slack.NewSectionBlock(headerText, nil, nil)
 
 	contextElementText := slack.NewImageBlockElement(s.getFrameworkIcon(), "Framework icon")
@@ -126,7 +130,7 @@ func (s *SlackNotifier) createBlocks() []slack.Block {
 	return blocks
 }
 
-func (s *SlackNotifier) getFrameworkIcon() string {
+func (s *Notifier) getFrameworkIcon() string {
 	switch s.Framework {
 	case "cypress":
 		return "https://miro.medium.com/max/1200/1*cenjHE5G6nX-8ftK4MuT-A.png"
@@ -145,7 +149,7 @@ func (s *SlackNotifier) getFrameworkIcon() string {
 	}
 }
 
-func (s *SlackNotifier) getTestEnvEmoji() string {
+func (s *Notifier) getTestEnvEmoji() string {
 	if s.TestEnv == "sauce" {
 		return ":saucy:"
 	}
@@ -153,7 +157,7 @@ func (s *SlackNotifier) getTestEnvEmoji() string {
 }
 
 // ShouldSendNotification returns true if it should send notification, otherwise false
-func (s *SlackNotifier) ShouldSendNotification(cfg config.Notifications) bool {
+func (s *Notifier) ShouldSendNotification(cfg config.Notifications) bool {
 	for _, ts := range s.TestResults {
 		if ts.JobID == "" {
 			return false
@@ -192,7 +196,8 @@ func regenerateName(name, wholeName string, length int) string {
 	return wholeName
 }
 
-func (s *SlackNotifier) RenderTable() string {
+// RenderTable renders result table.
+func (s *Notifier) RenderTable() string {
 	tables := [][]string{}
 	longestName := 0
 	for _, ts := range s.TestResults {
@@ -256,7 +261,7 @@ func (s *SlackNotifier) RenderTable() string {
 	*/
 }
 
-func (s *SlackNotifier) getJobURL(name, ID, jobURL string) string {
+func (s *Notifier) getJobURL(name, ID, jobURL string) string {
 	url := fmt.Sprintf("%s/tests/%s", s.Region.AppBaseURL(), ID)
 	if jobURL != "" {
 		url = jobURL
@@ -264,7 +269,7 @@ func (s *SlackNotifier) getJobURL(name, ID, jobURL string) string {
 	return fmt.Sprintf("<%s|%s>", url, name)
 }
 
-func (s *SlackNotifier) creatAttachment() slack.Attachment {
+func (s *Notifier) creatAttachment() slack.Attachment {
 	color := "#F00000"
 	if s.Passed {
 		color = "#008000"

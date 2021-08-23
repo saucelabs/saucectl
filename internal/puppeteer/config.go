@@ -30,17 +30,17 @@ type Project struct {
 	CLIFlags       map[string]interface{} `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
 	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
-	Suite      Suite             `yaml:"suite,omitempty" json:"-"`
-	Suites     []Suite           `yaml:"suites,omitempty" json:"suites"`
-	BeforeExec []string          `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker     config.Docker     `yaml:"docker,omitempty" json:"docker"`
-	Puppeteer  Puppeteer         `yaml:"puppeteer,omitempty" json:"puppeteer"`
-	Npm        config.Npm        `yaml:"npm,omitempty" json:"npm"`
-	RootDir    string            `yaml:"rootDir,omitempty" json:"rootDir"`
-	Artifacts  config.Artifacts  `yaml:"artifacts,omitempty" json:"artifacts"`
-	Reporters  config.Reporters  `yaml:"reporters,omitempty" json:"-"`
-	Env        map[string]string `yaml:"env,omitempty" json:"env"`
-	Notifications  config.Notifications `yaml:"notifications,omitempty" json:"notifications"`
+	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
+	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`
+	BeforeExec    []string             `yaml:"beforeExec,omitempty" json:"beforeExec"`
+	Docker        config.Docker        `yaml:"docker,omitempty" json:"docker"`
+	Puppeteer     Puppeteer            `yaml:"puppeteer,omitempty" json:"puppeteer"`
+	Npm           config.Npm           `yaml:"npm,omitempty" json:"npm"`
+	RootDir       string               `yaml:"rootDir,omitempty" json:"rootDir"`
+	Artifacts     config.Artifacts     `yaml:"artifacts,omitempty" json:"artifacts"`
+	Reporters     config.Reporters     `yaml:"reporters,omitempty" json:"-"`
+	Env           map[string]string    `yaml:"env,omitempty" json:"env"`
+	Notifications config.Notifications `yaml:"notifications,omitempty" json:"notifications"`
 }
 
 // Suite represents the puppeteer test suite configuration.

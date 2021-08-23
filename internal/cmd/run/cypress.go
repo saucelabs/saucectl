@@ -136,7 +136,7 @@ func runCypressInDocker(p cypress.Project, testco testcomposer.Client, rs resto.
 	log.Info().Msg("Running Cypress in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewCypress(p, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
+	cd, err := docker.NewCypress(p, region.None, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
 	if err != nil {
 		return 1, err
 	}
@@ -165,8 +165,6 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			Reporters:          createReporters(p.Reporters),
 		},
 	}
-
-	cleanCypressPackages(&p)
 	return r.RunProject()
 }
 

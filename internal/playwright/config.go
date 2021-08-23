@@ -36,18 +36,18 @@ type Project struct {
 	Sauce          config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
 	Playwright     Playwright             `yaml:"playwright,omitempty" json:"playwright"`
 	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
-	Suite         Suite             `yaml:"suite,omitempty" json:"-"`
-	Suites        []Suite           `yaml:"suites,omitempty" json:"suites"`
-	BeforeExec    []string          `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker        config.Docker     `yaml:"docker,omitempty" json:"docker"`
-	Npm           config.Npm        `yaml:"npm,omitempty" json:"npm"`
-	RootDir       string            `yaml:"rootDir,omitempty" json:"rootDir"`
-	RunnerVersion string            `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
-	Artifacts     config.Artifacts  `yaml:"artifacts,omitempty" json:"artifacts"`
-	Reporters     config.Reporters  `yaml:"reporters,omitempty" json:"-"`
-	Defaults      config.Defaults   `yaml:"defaults,omitempty" json:"defaults"`
-	Env           map[string]string `yaml:"env,omitempty" json:"env"`
-	Notifications  config.Notifications `yaml:"notifications,omitempty" json:"notifications"`
+	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
+	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`
+	BeforeExec    []string             `yaml:"beforeExec,omitempty" json:"beforeExec"`
+	Docker        config.Docker        `yaml:"docker,omitempty" json:"docker"`
+	Npm           config.Npm           `yaml:"npm,omitempty" json:"npm"`
+	RootDir       string               `yaml:"rootDir,omitempty" json:"rootDir"`
+	RunnerVersion string               `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
+	Artifacts     config.Artifacts     `yaml:"artifacts,omitempty" json:"artifacts"`
+	Reporters     config.Reporters     `yaml:"reporters,omitempty" json:"-"`
+	Defaults      config.Defaults      `yaml:"defaults,omitempty" json:"defaults"`
+	Env           map[string]string    `yaml:"env,omitempty" json:"env"`
+	Notifications config.Notifications `yaml:"notifications,omitempty" json:"notifications"`
 }
 
 // Playwright represents crucial playwright configuration that is required for setting up a project.
@@ -107,10 +107,6 @@ func FromFile(cfgPath string) (Project, error) {
 	return p, nil
 }
 
-
-
-	if p.Playwright.Version == "" {
-		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
 // SetDefaults applies config defaults in case the user has left them blank.
 func SetDefaults(p *Project) {
 	if p.Kind == "" {

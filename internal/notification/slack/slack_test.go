@@ -69,7 +69,8 @@ func TestShouldSendNotification(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		got := ShouldSendNotification(tc.params.jobID, tc.params.passed, tc.params.config)
+		notifier := Notifier{Passed: tc.params.passed}
+		got := notifier.ShouldSendNotification(tc.params.config)
 		if tc.expected != got {
 			t.Errorf("test case name: %s  got: %v expected: %v", tc.name, got, tc.expected)
 		}
