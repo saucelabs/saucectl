@@ -155,6 +155,81 @@ func TestTestComposer_StartJob(t *testing.T) {
 	}
 }
 
+func TestClient_GetSlackToken(t *testing.T) {
+	respo := Responder{
+		Test: t,
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		respo.Play(w, r)
+	}))
+	defer server.Close()
+
+	type fields struct {
+		HTTPClient  *http.Client
+		URL         string
+		Credentials credentials.Credentials
+	}
+	tests := []struct {
+		name       string
+		fields     fields
+		want       string
+		wantErr    bool
+		serverFunc func(w http.ResponseWriter, r *http.Request)
+	}{
+		{
+			name:    "token is exists",
+			fields:  fields{HTTPClient: server.Client(), URL: server.URL},
+			want:    "user token",
+			wantErr: false,
+			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(200)
+				json.NewEncoder(w).Encode(TokenResponse{
+					Token: "user token",
+				})
+			},
+		},
+		{
+			name:    "token validation error",
+			fields:  fields{HTTPClient: server.Client(), URL: server.URL},
+			want:    "",
+			wantErr: true,
+			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(422)
+			},
+		},
+		{
+			name:    "token is not exists",
+			fields:  fields{HTTPClient: server.Client(), URL: server.URL},
+			want:    "",
+			wantErr: true,
+			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(404)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Client{
+				HTTPClient:  tt.fields.HTTPClient,
+				URL:         tt.fields.URL,
+				Credentials: tt.fields.Credentials,
+			}
+
+			respo.Record(tt.serverFunc)
+
+			got, err := c.GetSlackToken(context.Background())
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetSlackToken error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetSlackToken got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestClient_Search(t *testing.T) {
 	respo := Responder{
 		Test: t,
@@ -340,7 +415,7 @@ func TestClient_Frameworks(t *testing.T) {
 			name:     "HTTP - 200",
 			body:     `[{"name": "cypress"},{"name":"playwright"},{"name":"puppeteer"},{"name":"testcafe"},{"name":"espresso"},{"name":"xcuitest"}]`,
 			httpCode: 200,
-			want:     []framework.Framework{
+			want: []framework.Framework{
 				{Name: "cypress"},
 				{Name: "playwright"},
 				{Name: "puppeteer"},
@@ -348,7 +423,7 @@ func TestClient_Frameworks(t *testing.T) {
 				{Name: "espresso"},
 				{Name: "xcuitest"},
 			},
-			wantErr:  false,
+			wantErr: false,
 		},
 		{
 			name:     "HTTP - 500",

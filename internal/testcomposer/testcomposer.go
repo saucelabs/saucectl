@@ -46,6 +46,11 @@ type FrameworkResponse struct {
 	Platforms []platform `json:"platforms"`
 }
 
+// TokenResponse represents the response body for slack token.
+type TokenResponse struct {
+	Token string `json:"token"`
+}
+
 type platform struct {
 	Name     string
 	Browsers []string
@@ -55,6 +60,24 @@ type runner struct {
 	CloudRunnerVersion string `json:"cloudRunnerVersion"`
 	DockerImage        string `json:"dockerImage"`
 	GitRelease         string `json:"gitRelease"`
+}
+
+// GetSlackToken gets slack token.
+func (c *Client) GetSlackToken(ctx context.Context) (string, error) {
+	url := fmt.Sprintf("%s/v1/testcomposer/slack/token", c.URL)
+
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+
+	var resp TokenResponse
+	if err := c.doJSONResponse(req, 200, &resp); err != nil {
+		return "", err
+	}
+
+	return resp.Token, nil
 }
 
 // StartJob creates a new job in Sauce Labs.
@@ -152,10 +175,10 @@ func (c *Client) Search(ctx context.Context, opts framework.SearchOptions) (fram
 	}
 
 	m := framework.Metadata{
-		FrameworkName:      resp.Name,
-		FrameworkVersion:   resp.Version,
-		DockerImage:        resp.Runner.DockerImage,
-		GitRelease:         resp.Runner.GitRelease,
+		FrameworkName:    resp.Name,
+		FrameworkVersion: resp.Version,
+		DockerImage:      resp.Runner.DockerImage,
+		GitRelease:       resp.Runner.GitRelease,
 	}
 
 	return m, nil
@@ -274,11 +297,11 @@ func (c *Client) Versions(ctx context.Context, frameworkName string) ([]framewor
 			})
 		}
 		frameworks = append(frameworks, framework.Metadata{
-			FrameworkName:      f.Name,
-			FrameworkVersion:   f.Version,
-			DockerImage:        f.Runner.DockerImage,
-			GitRelease:         f.Runner.GitRelease,
-			Platforms:          platforms,
+			FrameworkName:    f.Name,
+			FrameworkVersion: f.Version,
+			DockerImage:      f.Runner.DockerImage,
+			GitRelease:       f.Runner.GitRelease,
+			Platforms:        platforms,
 		})
 	}
 	return frameworks, nil
