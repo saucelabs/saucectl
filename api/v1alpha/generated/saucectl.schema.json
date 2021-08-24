@@ -500,6 +500,10 @@
                       "description": "Only run tests with this annotation.",
                       "type": "string"
                     },
+                    "notAnnotation": {
+                      "description": "Run all tests except those with this annotation.",
+                      "type": "string"
+                    },
                     "numShards": {
                       "description": "When sharding is configured, saucectl automatically creates the sharded jobs for each of the devices defined for the suite based on the number of shards you specify. For example, for a suite testing a single emulator version that specifies 2 shards, saucectl clones the suite and runs one shard index on the first suite, and the other shard index on the identical clone suite.",
                       "type": "integer",
