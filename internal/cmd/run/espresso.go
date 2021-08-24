@@ -63,6 +63,7 @@ func NewEspressoCmd() *cobra.Command {
 	sc.String("testOptions.package", "suite.testOptions.package", "", "Include package")
 	sc.String("testOptions.size", "suite.testOptions.size", "", "Include tests based on size")
 	sc.String("testOptions.annotation", "suite.testOptions.annotation", "", "Include tests based on the annotation")
+	sc.String("testOptions.notAnnotation", "suite.testOptions.notAnnotation", "", "Run all tests except those with this annotation")
 	sc.Int("testOptions.numShards", "suite.testOptions.numShards", 0, "Total number of shards")
 	sc.Bool("testOptions.useTestOrchestrator", "suite.testOptions.useTestOrchestrator", false, "Set the instrumentation to start with Test Orchestrator")
 
