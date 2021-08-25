@@ -452,16 +452,22 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 		return
 	}
 
-	// Display log only when at least it has started
+	jr := r.JobReader
+	if res.job.IsRDC {
+		jr = r.RDCJobReader
+	}
+
 	var assetContent []byte
 	var err error
-	if assetContent, err = r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, ConsoleLogAsset); err == nil {
+
+	// Display log only when at least it has started
+	if assetContent, err = jr.GetJobAssetFileContent(context.Background(), res.job.ID, ConsoleLogAsset); err == nil {
 		log.Info().Str("suite", res.name).Msgf("console.log output: \n%s", assetContent)
 		return
 	}
 
 	// Some frameworks produce a junit.xml instead, check for that file if there's no console.log
-	assetContent, err = r.JobReader.GetJobAssetFileContent(context.Background(), res.job.ID, "junit.xml")
+	assetContent, err = jr.GetJobAssetFileContent(context.Background(), res.job.ID, "junit.xml")
 	if err != nil {
 		log.Warn().Err(err).Str("suite", res.name).Msg("Failed to retrieve the console output.")
 		return
