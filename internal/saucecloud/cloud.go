@@ -489,6 +489,7 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	headerColor.Print("\nErrors:\n\n")
 	bodyColor := color.New(color.FgHiRed)
 	errCount := 1
+	failCount := 1
 	for _, ts := range testsuites.TestSuites {
 		for _, tc := range ts.TestCases {
 			if tc.Error != "" {
@@ -496,6 +497,11 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 				headerColor.Println("\tError was:")
 				bodyColor.Printf("\t%s\n", tc.Error)
 				errCount++
+			} else if tc.Failure != "" {
+				fmt.Printf("\n\t%d) %s.%s\n\n", failCount, tc.ClassName, tc.Name)
+				headerColor.Println("\tFailure was:")
+				bodyColor.Printf("\t%s\n", tc.Failure)
+				failCount++
 			}
 		}
 	}
