@@ -2,8 +2,10 @@ package flags
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"strconv"
 	"strings"
 )
@@ -35,6 +37,12 @@ func (d *Device) Set(s string) error {
 
 	for _, v := range rec {
 		vs := strings.Split(v, "=")
+
+		if len(vs) < 2 {
+			msg.Error("--device must be specified using a key-value format, e.g. \"--device name=iPhone,private=true\"")
+			return errors.New("wrong input format; must be of key-value")
+		}
+
 		val := vs[1]
 		switch vs[0] {
 		case "id":
