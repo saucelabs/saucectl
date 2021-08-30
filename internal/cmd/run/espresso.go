@@ -32,6 +32,8 @@ func NewEspressoCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:              "espresso",
 		Short:            "Run espresso tests",
+		Long:             "Unlike 'saucectl run', this command allows you to bypass the config file partially or entirely by configuring an adhoc suite (--name) via flags.",
+		Example:          `saucectl run espresso -c "" --name "My Suite" --app app.apk --testApp testApp.apk --otherApps=a.apk,b.apk --device name="Google Pixel.*",platformVersion=14.0,carrierConnectivity=false,deviceType=PHONE,private=false --emulator name="Android Emulator",platformVersion=8.0`,
 		Hidden:           true, // TODO reveal command once ready
 		TraverseChildren: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -58,18 +60,18 @@ func NewEspressoCmd() *cobra.Command {
 	sc.StringSlice("otherApps", "espresso.otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
 
 	// Test Options
-	sc.StringSlice("testOptions.class", "suite.testOptions.class", []string{}, "Only run the specified classes")
-	sc.StringSlice("testOptions.notClass", "suite.testOptions.notClass", []string{}, "Run all classes except those specified here")
-	sc.String("testOptions.package", "suite.testOptions.package", "", "Include package")
-	sc.String("testOptions.size", "suite.testOptions.size", "", "Include tests based on size")
-	sc.String("testOptions.annotation", "suite.testOptions.annotation", "", "Include tests based on the annotation")
-	sc.String("testOptions.notAnnotation", "suite.testOptions.notAnnotation", "", "Run all tests except those with this annotation")
-	sc.Int("testOptions.numShards", "suite.testOptions.numShards", 0, "Total number of shards")
-	sc.Bool("testOptions.useTestOrchestrator", "suite.testOptions.useTestOrchestrator", false, "Set the instrumentation to start with Test Orchestrator")
+	sc.StringSlice("testOptions.class", "suite.testOptions.class", []string{}, "Only run the specified classes. Requires --name to be set.")
+	sc.StringSlice("testOptions.notClass", "suite.testOptions.notClass", []string{}, "Run all classes except those specified here. Requires --name to be set.")
+	sc.String("testOptions.package", "suite.testOptions.package", "", "Include package. Requires --name to be set.")
+	sc.String("testOptions.size", "suite.testOptions.size", "", "Include tests based on size. Requires --name to be set.")
+	sc.String("testOptions.annotation", "suite.testOptions.annotation", "", "Include tests based on the annotation. Requires --name to be set.")
+	sc.String("testOptions.notAnnotation", "suite.testOptions.notAnnotation", "", "Run all tests except those with this annotation. Requires --name to be set.")
+	sc.Int("testOptions.numShards", "suite.testOptions.numShards", 0, "Total number of shards. Requires --name to be set.")
+	sc.Bool("testOptions.useTestOrchestrator", "suite.testOptions.useTestOrchestrator", false, "Set the instrumentation to start with Test Orchestrator. Requires --name to be set.")
 
 	// Emulators and Devices
-	cmd.Flags().Var(&lflags.Emulator, "emulator", "Specifies the emulator to use for testing")
-	cmd.Flags().Var(&lflags.Device, "device", "Specifies the device to use for testing")
+	cmd.Flags().Var(&lflags.Emulator, "emulator", "Specifies the emulator to use for testing. Requires --name to be set.")
+	cmd.Flags().Var(&lflags.Device, "device", "Specifies the device to use for testing. Requires --name to be set.")
 
 	return cmd
 }
@@ -140,6 +142,21 @@ func applyEspressoFlags(p *espresso.Project, flags espressoFlags) error {
 	}
 
 	if p.Suite.Name == "" {
+		isErr := len(p.Suite.TestOptions.Class) != 0 ||
+			len(p.Suite.TestOptions.NotClass) != 0 ||
+			p.Suite.TestOptions.Package != "" ||
+			p.Suite.TestOptions.Size != "" ||
+			p.Suite.TestOptions.Annotation != "" ||
+			p.Suite.TestOptions.NotAnnotation != "" ||
+			p.Suite.TestOptions.NumShards != 0 ||
+			p.Suite.TestOptions.UseTestOrchestrator ||
+			flags.Device.Changed ||
+			flags.Emulator.Changed
+
+		if isErr {
+			return ErrEmptySuiteName
+		}
+
 		return nil
 	}
 
