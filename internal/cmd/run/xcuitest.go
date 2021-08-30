@@ -29,7 +29,9 @@ func NewXCUITestCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:              "xcuitest",
-		Short:            "Run xcuitest tests",
+		Short:            "Run xcuitest tests.",
+		Long:             "Unlike 'saucectl run', this command allows you to bypass the config file partially or entirely by configuring an adhoc suite (--name) via flags.",
+		Example:          `saucectl run xcuitest -c "" --name "My Suite" --app app.ipa --testApp testApp.ipa --otherApps=a.ipa,b.ipa --device name="iPhone.*",platformVersion=14.0,carrierConnectivity=false,deviceType=PHONE,private=false`,
 		Hidden:           true, // TODO reveal command once ready
 		TraverseChildren: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -50,17 +52,17 @@ func NewXCUITestCmd() *cobra.Command {
 	}
 
 	sc.Fset = cmd.Flags()
-	sc.String("name", "suite.name", "", "Sets the name of the job as it will appear on Sauce Labs")
+	sc.String("name", "suite.name", "", "Creates a new adhoc suite with this name. Suites defined in the config will be ignored.")
 	sc.String("app", "xcuitest.app", "", "Specifies the app under test")
 	sc.String("testApp", "xcuitest.testApp", "", "Specifies the test app")
 	sc.StringSlice("otherApps", "xcuitest.otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
 
 	// Test Options
-	sc.StringSlice("testOptions.class", "suite.testOptions.class", []string{}, "Only run the specified classes")
-	sc.StringSlice("testOptions.notClass", "suite.testOptions.notClass", []string{}, "Run all classes except those specified here")
+	sc.StringSlice("testOptions.class", "suite.testOptions.class", []string{}, "Only run the specified classes. Requires --name to be set.")
+	sc.StringSlice("testOptions.notClass", "suite.testOptions.notClass", []string{}, "Run all classes except those specified here. Requires --name to be set.")
 
 	// Devices (no simulators)
-	cmd.Flags().Var(&lflags.Device, "device", "Specifies the device to use for testing")
+	cmd.Flags().Var(&lflags.Device, "device", "Specifies the device to use for testing. Requires --name to be set.")
 
 	return cmd
 }
@@ -130,6 +132,14 @@ func applyXCUITestFlags(p *xcuitest.Project, flags xcuitestFlags) error {
 	}
 
 	if p.Suite.Name == "" {
+		isErr := len(p.Suite.TestOptions.Class) != 0 ||
+			len(p.Suite.TestOptions.NotClass) != 0 ||
+			flags.Device.Changed
+
+		if isErr {
+			return ErrEmptySuiteName
+		}
+
 		return nil
 	}
 
