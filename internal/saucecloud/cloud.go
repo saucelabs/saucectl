@@ -435,12 +435,17 @@ func (r *CloudRunner) logSuite(res result) {
 	}
 
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
+	msg := "Suite finsihed."
 	if res.job.Passed {
 		log.Info().Str("suite", res.name).Bool("passed", res.job.Passed).Str("url", jobDetailsPage).
-			Msg("Suite finished.")
+			Msg(msg)
 	} else {
-		log.Error().Str("suite", res.name).Bool("passed", res.job.Passed).Str("url", jobDetailsPage).
-			Msg("Suite finished.")
+		l := log.Error().Str("suite", res.name).Bool("passed", res.job.Passed).Str("url", jobDetailsPage)
+		if res.job.Status == job.StateError {
+			l.Str("error", res.job.Error)
+			msg = "Suite finished with error."
+		}
+		l.Msg(msg)
 	}
 	r.logSuiteConsole(res)
 }
@@ -484,13 +489,19 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	headerColor.Print("\nErrors:\n\n")
 	bodyColor := color.New(color.FgHiRed)
 	errCount := 1
+	failCount := 1
 	for _, ts := range testsuites.TestSuites {
 		for _, tc := range ts.TestCases {
 			if tc.Error != "" {
-				fmt.Printf("\t%d) %s.%s\n\n", errCount, tc.ClassName, tc.Name)
+				fmt.Printf("\n\t%d) %s.%s\n\n", errCount, tc.ClassName, tc.Name)
 				headerColor.Println("\tError was:")
 				bodyColor.Printf("\t%s\n", tc.Error)
 				errCount++
+			} else if tc.Failure != "" {
+				fmt.Printf("\n\t%d) %s.%s\n\n", failCount, tc.ClassName, tc.Name)
+				headerColor.Println("\tFailure was:")
+				bodyColor.Printf("\t%s\n", tc.Failure)
+				failCount++
 			}
 		}
 	}
