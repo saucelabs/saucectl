@@ -3,6 +3,13 @@ package run
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
+	"runtime"
+	"syscall"
+	"time"
+
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
@@ -16,13 +23,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/version"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 	"github.com/spf13/pflag"
-	"net/http"
-	"os"
-	"path/filepath"
-	"runtime"
-	"strings"
-	"syscall"
-	"time"
 
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"

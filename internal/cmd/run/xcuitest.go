@@ -8,6 +8,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 
+	"github.com/saucelabs/saucectl/internal/notification/slack"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -134,6 +136,15 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 			ArtifactDownloader:    &rs,
 			RDCArtifactDownloader: &rc,
 			Reporters:             createReporters(p.Reporters),
+			SlackService:          &tc,
+			Notifier: slack.Notifier{
+				Token:     p.Notifications.Slack.Token,
+				Channels:  p.Notifications.Slack.Channels,
+				Framework: "XCUITest",
+				Region:    regio,
+				Metadata:  p.Sauce.Metadata,
+				TestEnv:   "sauce",
+			},
 		},
 	}
 	return r.RunProject()

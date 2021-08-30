@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/saucelabs/saucectl/internal/notification/slack"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -158,7 +160,7 @@ func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client, rs rest
 	log.Info().Msg("Running Testcafe in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewTestcafe(p, region.None, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
+	cd, err := docker.NewTestcafe(p, region.None, &testco, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
 	if err != nil {
 		return 1, err
 	}
@@ -185,6 +187,15 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
 			Reporters:          createReporters(p.Reporters),
+			SlackService:       &tc,
+			Notifier: slack.Notifier{
+				Token:     p.Notifications.Slack.Token,
+				Channels:  p.Notifications.Slack.Channels,
+				Framework: "testcafe",
+				Region:    regio,
+				Metadata:  p.Sauce.Metadata,
+				TestEnv:   "sauce",
+			},
 		},
 	}
 	cleanTestCafePackages(&p)

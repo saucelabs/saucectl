@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/saucelabs/saucectl/internal/notification/slack"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -141,7 +143,7 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs 
 	log.Info().Msg("Running Playwright in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewPlaywright(p, region.None, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
+	cd, err := docker.NewPlaywright(p, region.None, &testco, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
 	if err != nil {
 		return 1, err
 	}
@@ -168,8 +170,18 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
 			Reporters:          createReporters(p.Reporters),
+			SlackService:       &tc,
+			Notifier: slack.Notifier{
+				Token:     p.Notifications.Slack.Token,
+				Channels:  p.Notifications.Slack.Channels,
+				Framework: "playwright",
+				Region:    regio,
+				Metadata:  p.Sauce.Metadata,
+				TestEnv:   "sauce",
+			},
 		},
 	}
+
 	return r.RunProject()
 }
 

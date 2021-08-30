@@ -39,6 +39,7 @@ type ContainerRunner struct {
 	JobReader         job.Reader
 	ArtfactDownloader download.ArtifactDownloader
 	Notifier          slack.Notifier
+	SlackService      slack.Service
 
 	Reporters []report.Reporter
 
@@ -396,7 +397,13 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, no
 	r.Notifier.Passed = passed
 
 	if r.Notifier.ShouldSendNotification(notifierCfg) {
-		r.Notifier.SendMessage()
+		token, err := r.SlackService.GetSlackToken(context.Background())
+		if err == nil {
+			r.Notifier.Token = token
+			r.Notifier.SendMessage()
+		} else {
+			log.Err(err).Msg("Failed to send slack notification")
+		}
 	}
 
 	return passed

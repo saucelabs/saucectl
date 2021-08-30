@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/saucelabs/saucectl/internal/notification/slack"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -136,7 +138,7 @@ func runCypressInDocker(p cypress.Project, testco testcomposer.Client, rs resto.
 	log.Info().Msg("Running Cypress in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewCypress(p, region.None, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
+	cd, err := docker.NewCypress(p, region.None, &testco, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
 	if err != nil {
 		return 1, err
 	}
@@ -163,6 +165,15 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
 			Reporters:          createReporters(p.Reporters),
+			SlackService:       &tc,
+			Notifier: slack.Notifier{
+				Token:     p.Notifications.Slack.Token,
+				Channels:  p.Notifications.Slack.Channels,
+				Framework: "cypress",
+				Region:    regio,
+				Metadata:  p.Sauce.Metadata,
+				TestEnv:   "sauce",
+			},
 		},
 	}
 	return r.RunProject()

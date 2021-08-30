@@ -19,7 +19,7 @@ type TestcafeRunner struct {
 }
 
 // NewTestcafe creates a new TestcafeRunner instance.
-func NewTestcafe(c testcafe.Project, regio region.Region, ms framework.MetadataService, wr job.Writer, jr job.Reader, dl download.ArtifactDownloader, reps []report.Reporter) (*TestcafeRunner, error) {
+func NewTestcafe(c testcafe.Project, regio region.Region, slSvc slack.Service, ms framework.MetadataService, wr job.Writer, jr job.Reader, dl download.ArtifactDownloader, reps []report.Reporter) (*TestcafeRunner, error) {
 	r := TestcafeRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -43,6 +43,7 @@ func NewTestcafe(c testcafe.Project, regio region.Region, ms framework.MetadataS
 				Metadata:  c.Sauce.Metadata,
 				TestEnv:   "docker",
 			},
+			SlackService: slSvc,
 		},
 	}
 	var err error

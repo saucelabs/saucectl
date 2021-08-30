@@ -19,7 +19,7 @@ type PuppeterRunner struct {
 }
 
 // NewPuppeteer creates a new PuppeterRunner instance.
-func NewPuppeteer(c puppeteer.Project, regio region.Region, ms framework.MetadataService, wr job.Writer, jr job.Reader, dl download.ArtifactDownloader, reps []report.Reporter) (*PuppeterRunner, error) {
+func NewPuppeteer(c puppeteer.Project, regio region.Region, slSvc slack.Service, ms framework.MetadataService, wr job.Writer, jr job.Reader, dl download.ArtifactDownloader, reps []report.Reporter) (*PuppeterRunner, error) {
 	r := PuppeterRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -43,6 +43,7 @@ func NewPuppeteer(c puppeteer.Project, regio region.Region, ms framework.Metadat
 				Metadata:  c.Sauce.Metadata,
 				TestEnv:   "docker",
 			},
+			SlackService: slSvc,
 		},
 	}
 	var err error

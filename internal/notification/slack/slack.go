@@ -81,6 +81,7 @@ type TestResult struct {
 // SendMessage send notification message.
 func (s *Notifier) SendMessage() {
 	api := slack.New(s.Token)
+
 	//attachment := s.newMsg()
 
 	for _, c := range s.Channels {
@@ -159,7 +160,7 @@ func (s *Notifier) getTestEnvEmoji() string {
 // ShouldSendNotification returns true if it should send notification, otherwise false
 func (s *Notifier) ShouldSendNotification(cfg config.Notifications) bool {
 	for _, ts := range s.TestResults {
-		if ts.JobID == "" {
+		if ts.JobURL == "" {
 			return false
 		}
 	}

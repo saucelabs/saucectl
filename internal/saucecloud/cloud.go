@@ -47,6 +47,7 @@ type CloudRunner struct {
 	ArtifactDownloader    download.ArtifactDownloader
 	RDCArtifactDownloader download.ArtifactDownloader
 	Notifier              slack.Notifier
+	SlackService          slack.Service
 
 	Reporters []report.Reporter
 
@@ -134,6 +135,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, notifi
 				})
 			}
 
+			url := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 			tr := report.TestResult{
 				Name:       res.name,
 				Duration:   res.duration,
@@ -141,7 +143,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, notifi
 				Browser:    browser,
 				Platform:   platform,
 				DeviceName: res.job.BaseConfig.DeviceName,
-				URL:        fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID),
+				URL:        url,
 				Artifacts:  artifacts,
 				Origin:     "sauce",
 			}
@@ -150,10 +152,10 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, notifi
 				Name:       res.name,
 				Duration:   res.duration,
 				Passed:     res.job.Passed,
-				Browser:    res.browser,
+				Browser:    browser,
 				Platform:   platform,
 				DeviceName: res.job.BaseConfig.DeviceName,
-				JobURL:     res.url,
+				JobURL:     url,
 			})
 
 			for _, rep := range r.Reporters {
@@ -180,7 +182,13 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, notifi
 	r.Notifier.Passed = passed
 
 	if r.Notifier.ShouldSendNotification(notifierCfg) {
-		r.Notifier.SendMessage()
+		token, err := r.SlackService.GetSlackToken(context.Background())
+		if err == nil {
+			r.Notifier.Token = token
+			r.Notifier.SendMessage()
+		} else {
+			log.Err(err).Msg("Failed to send slack notification")
+		}
 	}
 
 	return passed
