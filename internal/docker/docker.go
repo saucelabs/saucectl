@@ -243,6 +243,10 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 		},
 	}
 
+	for k, v := range options.Environment {
+		containerConfig.Env = append(containerConfig.Env, fmt.Sprintf("%s=%s", k, v))
+	}
+
 	container, err := handler.client.ContainerCreate(ctx, containerConfig, hostConfig, networkConfig, "")
 	if err != nil {
 		return nil, err
