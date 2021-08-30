@@ -122,3 +122,9 @@ func LogRootDirWarning() {
 	fmt.Printf("\n%s: %s\n\n", red("WARNING"), "'rootDir' is not defined. Using the current working directory instead "+
 		"(equivalent to 'rootDir: .'). Please set 'rootDir' explicitly in your config!")
 }
+
+// Error prints out the given message, prefixed with a color coded 'ERROR: ' segment.
+func Error(msg string) {
+	red := color.New(color.FgRed).SprintFunc()
+	fmt.Printf("\n%s: %s\n\n", red("ERROR"), msg)
+}
