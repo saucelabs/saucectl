@@ -5,9 +5,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/saucelabs/saucectl/internal/notification/slack"
-
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -15,6 +17,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/resto"
@@ -167,7 +170,6 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			Reporters:          createReporters(p.Reporters),
 			SlackService:       &tc,
 			Notifier: slack.Notifier{
-				Token:     p.Notifications.Slack.Token,
 				Channels:  p.Notifications.Slack.Channels,
 				Framework: "cypress",
 				Region:    regio,

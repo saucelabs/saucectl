@@ -91,7 +91,6 @@ type Notifications struct {
 
 // Slack represents slack configuration.
 type Slack struct {
-	Token    string     `yaml:"token,omitempty" json:"token"`
 	Channels []string   `yaml:"channels,omitempty" json:"channels"`
 	Send     sendStatus `yaml:"send,omitempty" json:"send"`
 }

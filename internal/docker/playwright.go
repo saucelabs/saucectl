@@ -37,7 +37,6 @@ func NewPlaywright(c playwright.Project, regio region.Region, slSvc slack.Servic
 			ArtfactDownloader: dl,
 			Reporters:         reps,
 			Notifier: slack.Notifier{
-				Token:     c.Notifications.Slack.Token,
 				Channels:  c.Notifications.Slack.Channels,
 				Framework: "playwright",
 				Region:    regio,

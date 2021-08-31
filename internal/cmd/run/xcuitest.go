@@ -8,12 +8,14 @@ import (
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 
-	"github.com/saucelabs/saucectl/internal/notification/slack"
-
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
@@ -21,8 +23,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 type xcuitestFlags struct {
@@ -138,9 +138,8 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 			Reporters:             createReporters(p.Reporters),
 			SlackService:          &tc,
 			Notifier: slack.Notifier{
-				Token:     p.Notifications.Slack.Token,
 				Channels:  p.Notifications.Slack.Channels,
-				Framework: "XCUITest",
+				Framework: "xcuitest",
 				Region:    regio,
 				Metadata:  p.Sauce.Metadata,
 				TestEnv:   "sauce",

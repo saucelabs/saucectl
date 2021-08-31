@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-
 	"github.com/rs/zerolog/log"
+
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"

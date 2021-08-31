@@ -147,7 +147,6 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 			Reporters:             createReporters(p.Reporters),
 			SlackService:          &tc,
 			Notifier: slack.Notifier{
-				Token:     p.Notifications.Slack.Token,
 				Channels:  p.Notifications.Slack.Channels,
 				Framework: "espresso",
 				Region:    regio,

@@ -10,7 +10,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/region"
-	"gopkg.in/yaml.v2"
 )
 
 // Config descriptors.

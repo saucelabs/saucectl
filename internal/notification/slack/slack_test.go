@@ -24,18 +24,10 @@ func TestShouldSendNotification(t *testing.T) {
 			expected: false,
 		},
 		{
-			name: "empty slack token",
-			params: params{
-				jobID:  "123",
-				config: config.Notifications{config.Slack{Token: ""}},
-			},
-			expected: false,
-		},
-		{
 			name: "empty slack channel",
 			params: params{
 				jobID:  "123",
-				config: config.Notifications{config.Slack{Token: "123", Channels: []string{}}},
+				config: config.Notifications{config.Slack{Channels: []string{}}},
 			},
 			expected: false,
 		},
@@ -43,7 +35,7 @@ func TestShouldSendNotification(t *testing.T) {
 			name: "send always",
 			params: params{
 				jobID:  "123",
-				config: config.Notifications{config.Slack{Token: "123", Channels: []string{"test-channel"}, Send: config.SendAlways}},
+				config: config.Notifications{config.Slack{Channels: []string{"test-channel"}, Send: config.SendAlways}},
 				passed: true,
 			},
 			expected: true,
@@ -52,7 +44,7 @@ func TestShouldSendNotification(t *testing.T) {
 			name: "send on failure",
 			params: params{
 				jobID:  "123",
-				config: config.Notifications{config.Slack{Token: "123", Channels: []string{"test-channel"}, Send: config.SendOnFailure}},
+				config: config.Notifications{config.Slack{Channels: []string{"test-channel"}, Send: config.SendOnFailure}},
 				passed: false,
 			},
 			expected: true,
@@ -61,7 +53,7 @@ func TestShouldSendNotification(t *testing.T) {
 			name: "default",
 			params: params{
 				jobID:  "123",
-				config: config.Notifications{config.Slack{Token: "123", Channels: []string{"test-channel"}}},
+				config: config.Notifications{config.Slack{Channels: []string{"test-channel"}}},
 				passed: true,
 			},
 			expected: false,

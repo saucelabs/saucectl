@@ -12,7 +12,6 @@ require (
 	github.com/Netflix/go-expect v0.0.0-20180615182759-c93bf25de8e8
 	github.com/briandowns/spinner v1.11.1
 	github.com/containerd/continuity v0.0.0-20200710164510-efbc4488d8fe // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200618181300-9dc6525e6118+incompatible // translates to v19.03.12
 	github.com/docker/go-connections v0.4.0
@@ -33,6 +32,7 @@ require (
 	github.com/ryanuber/go-glob v1.0.0
 	github.com/segmentio/backo-go v0.0.0-20200129164019-23eae7c10bd3 // indirect
 	github.com/slack-go/slack v0.9.1 // indirect
+	github.com/slack-go/slack v0.9.1
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.8.1

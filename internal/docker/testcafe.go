@@ -36,7 +36,6 @@ func NewTestcafe(c testcafe.Project, regio region.Region, slSvc slack.Service, m
 			ArtfactDownloader: dl,
 			Reporters:         reps,
 			Notifier: slack.Notifier{
-				Token:     c.Notifications.Slack.Token,
 				Channels:  c.Notifications.Slack.Channels,
 				Framework: "testcafe",
 				Region:    regio,
