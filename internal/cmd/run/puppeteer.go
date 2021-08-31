@@ -1,6 +1,7 @@
 package run
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/rs/zerolog/log"
@@ -8,6 +9,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
@@ -85,12 +87,6 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 	puppeteer.SetDefaults(&p)
 	// Don't allow framework installation, it is provided by the runner
 
-	version, hasFramework := p.Npm.Packages["puppeteer"]
-	if hasFramework {
-		log.Warn().Msgf("Ignoring puppeteer@%s. Define the required puppeteer version with the puppeteer.version property in your config", version)
-		p.Npm.Packages = config.CleanNpmPackages(p.Npm.Packages, []string{"puppeteer"})
-	}
-
 	if err := puppeteer.Validate(&p); err != nil {
 		return 1, err
 	}
@@ -110,6 +106,8 @@ func runPuppeteerInDocker(p puppeteer.Project, testco testcomposer.Client, rs re
 	if err != nil {
 		return 1, err
 	}
+
+	cleanPuppeteerPackages(&p)
 	return cd.RunProject()
 }
 
@@ -126,4 +124,21 @@ func applyPuppeteerFlags(p *puppeteer.Project) error {
 	}
 
 	return nil
+}
+
+func cleanPuppeteerPackages(p *puppeteer.Project) {
+	// Don't allow framework installation, it is provided by the runner
+	ignoredPackages := []string{}
+	puppeteerVersion, hasPuppeteer := p.Npm.Packages["puppeteer"]
+	puppeteerCoreVersion, hasPuppeteerCore := p.Npm.Packages["puppeteer-core"]
+	if hasPuppeteer {
+		ignoredPackages = append(ignoredPackages, fmt.Sprintf("puppeteer@%s", puppeteerVersion))
+	}
+	if hasPuppeteerCore {
+		ignoredPackages = append(ignoredPackages, fmt.Sprintf("puppeteer-core@%s", puppeteerCoreVersion))
+	}
+	if hasPuppeteer || hasPuppeteerCore {
+		log.Warn().Msg(msg.IgnoredNpmPackagesMsg("puppeteer", p.Puppeteer.Version, ignoredPackages))
+		p.Npm.Packages = config.CleanNpmPackages(p.Npm.Packages, []string{"puppeteer", "puppeteer-core"})
+	}
 }

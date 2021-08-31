@@ -1,6 +1,7 @@
 package run
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/rs/zerolog/log"
@@ -9,6 +10,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
@@ -113,12 +115,6 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, tc testcomposer.Clie
 	}
 	testcafe.SetDefaults(&p)
 
-	version, hasFramework := p.Npm.Packages["testcafe"]
-	if hasFramework {
-		log.Warn().Msgf("Ignoring testcafe@%s. Define the required testcafe version with the testcafe.version property in your config", version)
-		p.Npm.Packages = config.CleanNpmPackages(p.Npm.Packages, []string{"testcafe"})
-	}
-
 	if err := testcafe.Validate(&p); err != nil {
 		return 1, err
 	}
@@ -152,6 +148,8 @@ func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client, rs rest
 	if err != nil {
 		return 1, err
 	}
+
+	cleanTestCafePackages(&p)
 	return cd.RunProject()
 }
 
@@ -175,6 +173,7 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 			Reporters:          createReporters(p.Reporters),
 		},
 	}
+	cleanTestCafePackages(&p)
 	return r.RunProject()
 }
 
@@ -196,4 +195,12 @@ func applyTestcafeFlags(p *testcafe.Project, flags testcafeFlags) error {
 	p.Suites = []testcafe.Suite{p.Suite}
 
 	return nil
+}
+
+func cleanTestCafePackages(p *testcafe.Project) {
+	version, hasFramework := p.Npm.Packages["testcafe"]
+	if hasFramework {
+		log.Warn().Msg(msg.IgnoredNpmPackagesMsg("testcafe", p.Testcafe.Version, []string{fmt.Sprintf("testcafe@%s", version)}))
+		p.Npm.Packages = config.CleanNpmPackages(p.Npm.Packages, []string{"testcafe"})
+	}
 }

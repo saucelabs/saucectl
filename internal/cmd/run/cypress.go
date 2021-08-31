@@ -1,6 +1,7 @@
 package run
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/rs/zerolog/log"
@@ -10,6 +11,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
@@ -90,13 +92,6 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 	}
 	cypress.SetDefaults(&p)
 
-	// Don't allow framework installation, it is provided by the runner
-	version, hasCypress := p.Npm.Packages["cypress"]
-	if hasCypress {
-		log.Warn().Msgf("Ignoring cypress@%s. Define the required cypress version with the cypress.version property in your config", version)
-		p.Npm.Packages = config.CleanNpmPackages(p.Npm.Packages, []string{"cypress"})
-	}
-
 	if err := cypress.Validate(&p); err != nil {
 		return 1, err
 	}
@@ -131,6 +126,8 @@ func runCypressInDocker(p cypress.Project, testco testcomposer.Client, rs resto.
 	if err != nil {
 		return 1, err
 	}
+
+	cleanCypressPackages(&p)
 	return cd.RunProject()
 }
 
@@ -154,6 +151,8 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			Reporters:          createReporters(p.Reporters),
 		},
 	}
+
+	cleanCypressPackages(&p)
 	return r.RunProject()
 }
 
@@ -170,4 +169,13 @@ func applyCypressFlags(p *cypress.Project) error {
 	}
 
 	return nil
+}
+
+func cleanCypressPackages(p *cypress.Project) {
+	// Don't allow framework installation, it is provided by the runner
+	version, hasFramework := p.Npm.Packages["cypress"]
+	if hasFramework {
+		log.Warn().Msg(msg.IgnoredNpmPackagesMsg("cypress", p.Cypress.Version, []string{fmt.Sprintf("cypress@%s", version)}))
+		p.Npm.Packages = config.CleanNpmPackages(p.Npm.Packages, []string{"cypress"})
+	}
 }

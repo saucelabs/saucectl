@@ -2,6 +2,7 @@ package msg
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/fatih/color"
 )
@@ -127,4 +128,9 @@ func LogRootDirWarning() {
 func Error(msg string) {
 	red := color.New(color.FgRed).SprintFunc()
 	fmt.Printf("\n%s: %s\n\n", red("ERROR"), msg)
+}
+
+// IgnoredNpmPackagesMsg returns a warning message that framework npm packages are ignored.
+func IgnoredNpmPackagesMsg(framework string, installedVersion string, ignoredPackages []string) string {
+	return fmt.Sprintf("%s.version (%s) already defined in your config. Ignoring installation of npm packages: %s", framework, installedVersion, strings.Join(ignoredPackages, ", "))
 }
