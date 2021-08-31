@@ -113,6 +113,12 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, tc testcomposer.Clie
 	}
 	testcafe.SetDefaults(&p)
 
+	version, hasFramework := p.Npm.Packages["testcafe"]
+	if hasFramework {
+		log.Warn().Msgf("Ignoring testcafe@%s. Define the required testcafe version with the testcafe.version property in your config", version)
+		p.Npm.Packages = config.CleanNpmPackages(p.Npm.Packages, []string{"testcafe"})
+	}
+
 	if err := testcafe.Validate(&p); err != nil {
 		return 1, err
 	}

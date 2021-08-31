@@ -1,8 +1,11 @@
 package run
 
 import (
+	"os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
@@ -15,7 +18,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"os"
 )
 
 // NewPlaywrightCmd creates the 'run' command for Playwright.
@@ -92,6 +94,19 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 		return 1, err
 	}
 	playwright.SetDefaults(&p)
+	// Don't allow framework installation, it is provided by the runner
+
+	playwrightVersion, hasPlaywright := p.Npm.Packages["playwright"]
+	playwrightTestVersion, hasPlaywrightTest := p.Npm.Packages["@playwright/test"]
+	if hasPlaywright {
+		log.Warn().Msgf("Ignoring playwright@%s. Define the required playwright version with the playwright.version property in your config", playwrightVersion)
+	}
+	if hasPlaywrightTest {
+		log.Warn().Msgf("Ignoring @playwright/test@%s. Define the required playwright version with the playwright.version property in your config", playwrightTestVersion)
+	}
+	if hasPlaywright || hasPlaywrightTest {
+		p.Npm.Packages = config.CleanNpmPackages(p.Npm.Packages, []string{"playwright", "@playwright/test"})
+	}
 
 	if err := playwright.Validate(&p); err != nil {
 		return 1, err

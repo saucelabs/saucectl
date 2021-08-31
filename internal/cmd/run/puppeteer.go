@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
@@ -82,6 +83,14 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 		return 1, err
 	}
 	puppeteer.SetDefaults(&p)
+	// Don't allow framework installation, it is provided by the runner
+
+	version, hasFramework := p.Npm.Packages["puppeteer"]
+	if hasFramework {
+		log.Warn().Msgf("Ignoring puppeteer@%s. Define the required puppeteer version with the puppeteer.version property in your config", version)
+		p.Npm.Packages = config.CleanNpmPackages(p.Npm.Packages, []string{"puppeteer"})
+	}
+
 	if err := puppeteer.Validate(&p); err != nil {
 		return 1, err
 	}
