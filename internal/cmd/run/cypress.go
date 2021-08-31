@@ -1,8 +1,11 @@
 package run
 
 import (
+	"os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/docker"
@@ -15,7 +18,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"os"
 )
 
 // NewCypressCmd creates the 'run' command for Cypress.
@@ -87,6 +89,13 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 		return 1, err
 	}
 	cypress.SetDefaults(&p)
+
+	// Don't allow framework installation, it is provided by the runner
+	version, hasCypress := p.Npm.Packages["cypress"]
+	if hasCypress {
+		log.Warn().Msgf("Ignoring cypress@%s. Define the required cypress version with the cypress.version property in your config", version)
+		p.Npm.Packages = config.CleanNpmPackages(p.Npm.Packages, []string{"cypress"})
+	}
 
 	if err := cypress.Validate(&p); err != nil {
 		return 1, err
