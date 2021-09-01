@@ -2,10 +2,11 @@ package ini
 
 import (
 	"errors"
-	"gotest.tools/v3/fs"
 	"os"
 	"reflect"
 	"testing"
+
+	"gotest.tools/v3/fs"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -43,7 +44,7 @@ func Test_extValidator(t *testing.T) {
 				framework: "espresso",
 				filename:  dir.Join("my.zip"),
 			},
-			want: errors.New("invalid extension. must be one of the following: .apk"),
+			want: errors.New("invalid extension. must be one of the following: .apk, .aab"),
 		},
 		{
 			name: "xcuitest - .ipa",
@@ -557,7 +558,7 @@ func Test_sortVersions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sortVersions(tt.args.versions)
-			assert.Equal(t,  tt.expected, tt.args.versions)
+			assert.Equal(t, tt.expected, tt.args.versions)
 		})
 	}
 }
