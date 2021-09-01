@@ -69,7 +69,7 @@ func New(url, username, accessKey string, timeout time.Duration) *AppStore {
 
 // isMobileAppPackage determines if a file is a mobile app package.
 func isMobileAppPackage(name string) bool {
-	return strings.HasSuffix(name, ".ipa") || strings.HasSuffix(name, ".apk")
+	return strings.HasSuffix(name, ".ipa") || strings.HasSuffix(name, ".apk") || strings.HasSuffix(name, ".aab")
 }
 
 // Upload uploads file to remote storage

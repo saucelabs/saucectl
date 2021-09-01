@@ -34,7 +34,7 @@ type Project struct {
 	Suite     Suite            `yaml:"suite,omitempty" json:"-"`
 	Suites    []Suite          `yaml:"suites,omitempty" json:"suites"`
 	Artifacts config.Artifacts `yaml:"artifacts,omitempty" json:"artifacts"`
-	Reporters     config.Reporters  `yaml:"reporters,omitempty" json:"-"`
+	Reporters config.Reporters `yaml:"reporters,omitempty" json:"-"`
 }
 
 // Espresso represents espresso apps configuration.
@@ -137,19 +137,19 @@ func Validate(p Project) error {
 	if p.Espresso.App == "" {
 		return errors.New("missing path to app .apk")
 	}
-	if err := apps.Validate("application", p.Espresso.App, []string{".apk"}, false); err != nil {
+	if err := apps.Validate("application", p.Espresso.App, []string{".apk", ".aab"}, false); err != nil {
 		return err
 	}
 
 	if p.Espresso.TestApp == "" {
 		return errors.New("missing path to test app .apk")
 	}
-	if err := apps.Validate("test application", p.Espresso.TestApp, []string{".apk"}, false); err != nil {
+	if err := apps.Validate("test application", p.Espresso.TestApp, []string{".apk", ".aab"}, false); err != nil {
 		return err
 	}
 
 	for _, app := range p.Espresso.OtherApps {
-		if err := apps.Validate("other application", app, []string{".apk"}, true); err != nil {
+		if err := apps.Validate("other application", app, []string{".apk", ".aab"}, true); err != nil {
 			return err
 		}
 	}

@@ -2,20 +2,20 @@ package ini
 
 import (
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/cypress"
-	"github.com/saucelabs/saucectl/internal/espresso"
-	"github.com/saucelabs/saucectl/internal/xcuitest"
 	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"gopkg.in/yaml.v2"
 )
-
 
 var configurators = map[string]func(cfg *initConfig) interface{}{
 	"cypress":    configureCypress,
@@ -26,7 +26,7 @@ var configurators = map[string]func(cfg *initConfig) interface{}{
 	"xcuitest":   configureXCUITest,
 }
 
-var sauceignores = map[string]string {
+var sauceignores = map[string]string{
 	"cypress":    sauceignoreCypress,
 	"playwright": sauceignorePlaywright,
 	"puppeteer":  sauceignorePuppeteer,
@@ -109,7 +109,7 @@ func extValidator(framework string) survey.Validator {
 	var exts []string
 	switch framework {
 	case espresso.Kind:
-		exts = []string{".apk"}
+		exts = []string{".apk", ".aab"}
 	case xcuitest.Kind:
 		exts = []string{".ipa", ".app"}
 	case cypress.Kind:
