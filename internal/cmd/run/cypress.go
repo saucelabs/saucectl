@@ -1,12 +1,17 @@
 package run
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
@@ -15,7 +20,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"os"
 )
 
 // NewCypressCmd creates the 'run' command for Cypress.
@@ -122,6 +126,8 @@ func runCypressInDocker(p cypress.Project, testco testcomposer.Client, rs resto.
 	if err != nil {
 		return 1, err
 	}
+
+	cleanCypressPackages(&p)
 	return cd.RunProject()
 }
 
@@ -145,6 +151,8 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			Reporters:          createReporters(p.Reporters),
 		},
 	}
+
+	cleanCypressPackages(&p)
 	return r.RunProject()
 }
 
@@ -161,4 +169,13 @@ func applyCypressFlags(p *cypress.Project) error {
 	}
 
 	return nil
+}
+
+func cleanCypressPackages(p *cypress.Project) {
+	// Don't allow framework installation, it is provided by the runner
+	version, hasFramework := p.Npm.Packages["cypress"]
+	if hasFramework {
+		log.Warn().Msg(msg.IgnoredNpmPackagesMsg("cypress", p.Cypress.Version, []string{fmt.Sprintf("cypress@%s", version)}))
+		p.Npm.Packages = config.CleanNpmPackages(p.Npm.Packages, []string{"cypress"})
+	}
 }
