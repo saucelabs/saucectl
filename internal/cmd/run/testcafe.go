@@ -187,10 +187,9 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 			ArtifactDownloader: &rs,
 			Reporters:          createReporters(p.Reporters),
 			SlackService:       &tc,
-			Notifier: slack.Notifier{
+			Notifier: &slack.Notifier{
 				Channels:  p.Notifications.Slack.Channels,
 				Framework: "testcafe",
-				Region:    regio,
 				Metadata:  p.Sauce.Metadata,
 				TestEnv:   "sauce",
 			},

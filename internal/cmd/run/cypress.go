@@ -169,10 +169,9 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			ArtifactDownloader: &rs,
 			Reporters:          createReporters(p.Reporters),
 			SlackService:       &tc,
-			Notifier: slack.Notifier{
+			Notifier: &slack.Notifier{
 				Channels:  p.Notifications.Slack.Channels,
 				Framework: "cypress",
-				Region:    regio,
 				Metadata:  p.Sauce.Metadata,
 				TestEnv:   "sauce",
 			},

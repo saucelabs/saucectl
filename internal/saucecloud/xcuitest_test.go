@@ -3,7 +3,6 @@ package saucecloud
 import (
 	"archive/zip"
 	"context"
-	"gotest.tools/v3/fs"
 	"io"
 	"os"
 	"path"
@@ -11,6 +10,9 @@ import (
 	"regexp"
 	"testing"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/notification/slack"
+	"gotest.tools/v3/fs"
 
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
@@ -69,6 +71,7 @@ func TestXcuitestRunner_RunProject(t *testing.T) {
 			CCYReader:          ccyReader,
 			ProjectUploader:    uploader,
 			ArtifactDownloader: &downloader,
+			Notifier:           &slack.Notifier{},
 		},
 		Project: xcuitest.Project{
 			Xcuitest: xcuitest.Xcuitest{

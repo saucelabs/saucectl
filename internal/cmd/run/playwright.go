@@ -170,10 +170,9 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 			ArtifactDownloader: &rs,
 			Reporters:          createReporters(p.Reporters),
 			SlackService:       &tc,
-			Notifier: slack.Notifier{
+			Notifier: &slack.Notifier{
 				Channels:  p.Notifications.Slack.Channels,
 				Framework: "playwright",
-				Region:    regio,
 				Metadata:  p.Sauce.Metadata,
 				TestEnv:   "sauce",
 			},

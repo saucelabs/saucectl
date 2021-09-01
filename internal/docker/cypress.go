@@ -37,10 +37,9 @@ func NewCypress(c cypress.Project, ms framework.MetadataService, wr job.Writer, 
 			JobWriter:         wr,
 			JobReader:         jr,
 			ArtfactDownloader: dl,
-			Notifier: slack.Notifier{
+			Notifier: &slack.Notifier{
 				Channels:  c.Notifications.Slack.Channels,
 				Framework: "cypress",
-				Region:    regio,
 				Metadata:  c.Sauce.Metadata,
 				TestEnv:   "docker",
 			},

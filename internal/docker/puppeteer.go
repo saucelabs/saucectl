@@ -35,10 +35,9 @@ func NewPuppeteer(c puppeteer.Project, regio region.Region, slSvc slack.Service,
 			JobReader:         jr,
 			ArtfactDownloader: dl,
 			Reporters:         reps,
-			Notifier: slack.Notifier{
+			Notifier: &slack.Notifier{
 				Channels:  c.Notifications.Slack.Channels,
 				Framework: "puppeteer",
-				Region:    regio,
 				Metadata:  c.Sauce.Metadata,
 				TestEnv:   "docker",
 			},

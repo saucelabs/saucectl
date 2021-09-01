@@ -6,36 +6,68 @@ import (
 	"strings"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/report"
+
 	"github.com/rs/zerolog/log"
 	"github.com/slack-go/slack"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
-	"github.com/saucelabs/saucectl/internal/region"
 )
 
 // Notifier represents notifier for slack
 type Notifier struct {
-	Token       string
-	Channels    []string
-	TestResults []TestResult
-	Framework   string
-	Passed      bool
-	Region      region.Region
-	Metadata    config.Metadata
-	TestEnv     string
+	Token          string
+	Channels       []string
+	TestResults    []report.TestResult
+	Framework      string
+	Passed         bool
+	Metadata       config.Metadata
+	TestEnv        string
+	RenderedResult string
 }
 
-// TestResult represents notificatio result.
-type TestResult struct {
-	Name       string
-	Duration   time.Duration
-	Passed     bool
-	Browser    string
-	Platform   string
-	DeviceName string
-	JobID      string
-	JobURL     string
+// Add adds the TestResult to the reporter. TestResults added this way can then be rendered out by calling Render().
+func (s *Notifier) Add(t report.TestResult) {
+	s.TestResults = append(s.TestResults, t)
+}
+
+// Render renders the test results. The destination is RenderedResult.
+func (s *Notifier) Render() {
+	tables := [][]string{}
+	longestName := 0
+	for _, ts := range s.TestResults {
+		if longestName < len(ts.Name) {
+			longestName = len(ts.Name)
+		}
+	}
+	header := []string{"Passed", "Name                     ", "Duration", "Status", "Browser", "Platform", "Device"}
+	tables = append(tables, header)
+
+	for _, ts := range s.TestResults {
+		tables = append(tables, []string{statusSymbol(ts.Passed), regenerateName(ts.Name, s.getJobURL(ts.Name, ts.URL), longestName), ts.Duration.Truncate(1 * time.Second).String(),
+			statusText(ts.Passed), ts.Browser, ts.Platform, ts.DeviceName})
+	}
+	var res string
+	for _, t := range tables {
+		res = fmt.Sprintf("%s\n%s", res, strings.Join(t, "\t"))
+	}
+
+	s.RenderedResult = res
+}
+
+// GetRenderedResult returns rendered result.
+func (s *Notifier) GetRenderedResult() string {
+	s.Render()
+	return s.RenderedResult
+}
+
+// Reset resets the state of the reporter (e.g. remove any previously reported TestResults).
+func (s *Notifier) Reset() {}
+
+// ArtifactRequirements returns a list of artifact types that this reporter requires to create a proper report.
+func (s *Notifier) ArtifactRequirements() []report.ArtifactType {
+	return nil
 }
 
 // SendMessage send notification message.
@@ -70,7 +102,7 @@ func (s *Notifier) SendMessage() {
 // ShouldSendNotification returns true if it should send notification, otherwise false
 func (s *Notifier) ShouldSendNotification(cfg config.Notifications) bool {
 	for _, ts := range s.TestResults {
-		if ts.JobURL == "" {
+		if ts.URL == "" {
 			return false
 		}
 	}
@@ -87,38 +119,15 @@ func (s *Notifier) ShouldSendNotification(cfg config.Notifications) bool {
 	return false
 }
 
-// renderTable renders result table.
-func (s *Notifier) renderTable() string {
-	tables := [][]string{}
-	longestName := 0
-	for _, ts := range s.TestResults {
-		if longestName < len(ts.Name) {
-			longestName = len(ts.Name)
-		}
-	}
-	header := []string{"Passed", "Name                     ", "Duration", "Status", "Browser", "Platform", "Device"}
-	tables = append(tables, header)
-
-	for _, ts := range s.TestResults {
-		tables = append(tables, []string{statusSymbol(ts.Passed), regenerateName(ts.Name, s.getJobURL(ts.Name, ts.JobID, ts.JobURL), longestName), ts.Duration.Truncate(1 * time.Second).String(),
-			statusText(ts.Passed), ts.Browser, ts.Platform, ts.DeviceName})
-	}
-	var info string
-	for _, t := range tables {
-		info = fmt.Sprintf("%s\n%s", info, strings.Join(t, "\t"))
-	}
-	return info
-}
-
 func (s *Notifier) createBlocks() []slack.Block {
-	headerText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("*%s* %s", s.Metadata.Build, statusEmoji(s.Passed)), false, false)
+	headerText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("*%s*", s.Metadata.Build), false, false)
 	headerSection := slack.NewSectionBlock(headerText, nil, nil)
 
 	contextElementText := slack.NewImageBlockElement(s.getFrameworkIcon(), "Framework icon")
-	contextText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("%s %s | *Build ID*: %s | %s", s.getTestEnvEmoji(), credentials.Get().Username, s.Metadata.Build, time.Now().Format("2006-01-02 15:04:05")), false, false)
+	contextText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("%s | *Build ID*: %s | %s | %s", s.getTestEnvEmoji(), s.Metadata.Build, credentials.Get().Username, time.Now().Format("2006-01-02 15:04:05")), false, false)
 	frameworkIconSection := slack.NewContextBlock("", []slack.MixedElement{contextElementText, contextText}...)
 
-	resultText := slack.NewTextBlockObject("mrkdwn", s.renderTable(), false, false)
+	resultText := slack.NewTextBlockObject("mrkdwn", s.GetRenderedResult(), false, false)
 	resultSection := slack.NewSectionBlock(resultText, nil, nil)
 
 	blocks := make([]slack.Block, 0)
@@ -164,12 +173,8 @@ func regenerateName(name, wholeName string, length int) string {
 	return wholeName
 }
 
-func (s *Notifier) getJobURL(name, ID, jobURL string) string {
-	url := fmt.Sprintf("%s/tests/%s", s.Region.AppBaseURL(), ID)
-	if jobURL != "" {
-		url = jobURL
-	}
-	return fmt.Sprintf("<%s|%s>", url, name)
+func (s *Notifier) getJobURL(name, jobURL string) string {
+	return fmt.Sprintf("<%s|%s>", jobURL, name)
 }
 
 func (s *Notifier) creatAttachment() slack.Attachment {
@@ -189,13 +194,6 @@ func statusSymbol(passed bool) string {
 	}
 
 	return "✔      "
-}
-
-func statusEmoji(passed bool) string {
-	if passed {
-		return ":happy:"
-	}
-	return ":frogonfire:"
 }
 
 func statusText(passed bool) string {

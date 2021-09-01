@@ -137,10 +137,9 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 			RDCArtifactDownloader: &rc,
 			Reporters:             createReporters(p.Reporters),
 			SlackService:          &tc,
-			Notifier: slack.Notifier{
+			Notifier: &slack.Notifier{
 				Channels:  p.Notifications.Slack.Channels,
 				Framework: "xcuitest",
-				Region:    regio,
 				Metadata:  p.Sauce.Metadata,
 				TestEnv:   "sauce",
 			},

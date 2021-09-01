@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/notification/slack"
+
 	"github.com/jarcoal/httpmock"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
@@ -105,6 +107,7 @@ func TestRunSuites(t *testing.T) {
 			JobWriter:          &writer,
 			CCYReader:          ccyReader,
 			ArtifactDownloader: downloader,
+			Notifier:           &slack.Notifier{},
 		},
 		Project: cypress.Project{
 			Suites: []cypress.Suite{
@@ -230,12 +233,13 @@ func TestRunProject(t *testing.T) {
 			CCYReader:          ccyReader,
 			ProjectUploader:    uploader,
 			ArtifactDownloader: &downloader,
+			Notifier:           &slack.Notifier{},
 		},
 		Project: cypress.Project{
 			RootDir: ".",
 			Cypress: cypress.Cypress{
-				Version:     "5.6.0",
-				ConfigFile:  "../../tests/e2e/cypress.json",
+				Version:    "5.6.0",
+				ConfigFile: "../../tests/e2e/cypress.json",
 			},
 			Suites: []cypress.Suite{
 				{Name: "dummy-suite"},

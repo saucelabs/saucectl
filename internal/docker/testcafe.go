@@ -35,10 +35,9 @@ func NewTestcafe(c testcafe.Project, regio region.Region, slSvc slack.Service, m
 			JobReader:         jr,
 			ArtfactDownloader: dl,
 			Reporters:         reps,
-			Notifier: slack.Notifier{
+			Notifier: &slack.Notifier{
 				Channels:  c.Notifications.Slack.Channels,
 				Framework: "testcafe",
-				Region:    regio,
 				Metadata:  c.Sauce.Metadata,
 				TestEnv:   "docker",
 			},
