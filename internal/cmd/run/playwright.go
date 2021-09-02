@@ -1,11 +1,16 @@
 package run
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
@@ -15,7 +20,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"os"
 )
 
 // NewPlaywrightCmd creates the 'run' command for Playwright.
@@ -127,6 +131,8 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs 
 	if err != nil {
 		return 1, err
 	}
+
+	cleanPlaywrightPackages(&p)
 	return cd.RunProject()
 }
 
@@ -150,6 +156,8 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 			Reporters:          createReporters(p.Reporters),
 		},
 	}
+
+	cleanPlaywrightPackages(&p)
 	return r.RunProject()
 }
 
@@ -166,4 +174,21 @@ func applyPlaywrightFlags(p *playwright.Project) error {
 	}
 
 	return nil
+}
+
+func cleanPlaywrightPackages(p *playwright.Project) {
+	// Don't allow framework installation, it is provided by the runner
+	ignoredPackages := []string{}
+	playwrightVersion, hasPlaywright := p.Npm.Packages["playwright"]
+	playwrightTestVersion, hasPlaywrightTest := p.Npm.Packages["@playwright/test"]
+	if hasPlaywright {
+		ignoredPackages = append(ignoredPackages, fmt.Sprintf("playwright@%s", playwrightVersion))
+	}
+	if hasPlaywrightTest {
+		ignoredPackages = append(ignoredPackages, fmt.Sprintf("@playwright/test@%s", playwrightTestVersion))
+	}
+	if hasPlaywright || hasPlaywrightTest {
+		log.Warn().Msg(msg.IgnoredNpmPackagesMsg("playwright", p.Playwright.Version, ignoredPackages))
+		p.Npm.Packages = config.CleanNpmPackages(p.Npm.Packages, []string{"playwright", "@playwright/test"})
+	}
 }

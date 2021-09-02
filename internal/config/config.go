@@ -3,11 +3,12 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/spf13/viper"
 
 	"gopkg.in/yaml.v2"
 )
@@ -204,6 +205,17 @@ func IsSupportedDeviceType(deviceType string) bool {
 		}
 	}
 	return false
+}
+
+// CleanNpmPackages removes any packages in denyList from packages
+func CleanNpmPackages(packages map[string]string, denyList []string) map[string]string {
+	for _, p := range denyList {
+		_, exists := packages[p]
+		if exists {
+			delete(packages, p)
+		}
+	}
+	return packages
 }
 
 // Unmarshal parses the file cfgPath into the given project struct.
