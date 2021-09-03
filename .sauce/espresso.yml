@@ -34,5 +34,5 @@ artifacts:
 
 notifications:
   slack:
-    channels: ["some channel1", "some channel2"]
+    channels: ["devx-slack-notifications"]
     send: always # possible values [always,failure,never]
