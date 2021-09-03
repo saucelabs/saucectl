@@ -104,8 +104,8 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, tc testcomposer.Cl
 
 	defer func() {
 		props := usage.Properties{}
-		props.SetFramework("xcuitest").SetSauceConfig(p.Sauce).SetArtifacts(p.Artifacts).SetNumSuites(len(p.Suites)).
-			SetJobs(captor.Default.TestResults)
+		props.SetFramework("xcuitest").SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).SetArtifacts(p.Artifacts).
+			SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults)
 		tracker.Collect(strings.Title(fullCommandName(cmd)), props)
 		_ = tracker.Close()
 	}()

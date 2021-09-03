@@ -113,8 +113,8 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, tc testcompose
 
 	defer func() {
 		props := usage.Properties{}
-		props.SetFramework("espresso").SetSauceConfig(p.Sauce).SetArtifacts(p.Artifacts).SetNumSuites(len(p.Suites)).
-			SetJobs(captor.Default.TestResults)
+		props.SetFramework("espresso").SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).SetArtifacts(p.Artifacts).
+			SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults)
 		tracker.Collect(strings.Title(fullCommandName(cmd)), props)
 		_ = tracker.Close()
 	}()

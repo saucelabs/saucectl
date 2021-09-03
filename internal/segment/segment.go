@@ -11,10 +11,12 @@ import (
 	"runtime"
 )
 
+// Tracker is the segment implemention for usage.Tracker.
 type Tracker struct {
 	client analytics.Client
 }
 
+// New creates a new instance of Tracker.
 func New() *Tracker {
 	client, err := analytics.NewWithConfig(setup.SegmentWriteKey, analytics.Config{
 		BatchSize: 1,
@@ -38,6 +40,7 @@ func New() *Tracker {
 	return &Tracker{client: client}
 }
 
+// Collect reports the usage of subject along with its attached metadata that is props.
 func (t *Tracker) Collect(subject string, props usage.Properties) {
 	if t.client == nil {
 		return
@@ -51,13 +54,13 @@ func (t *Tracker) Collect(subject string, props usage.Properties) {
 		p[k] = v
 	}
 
-	userId := credentials.Get().Username
-	if userId == "" {
-		userId = "saucectlanon"
+	userID := credentials.Get().Username
+	if userID == "" {
+		userID = "saucectlanon"
 	}
 
 	if err := t.client.Enqueue(analytics.Track{
-		UserId:     userId,
+		UserId:     userID,
 		Event:      "Command Executed",
 		Properties: p,
 
@@ -72,6 +75,7 @@ func (t *Tracker) Collect(subject string, props usage.Properties) {
 	}
 }
 
+// Close closes the underlying client.
 func (t *Tracker) Close() error {
 	return t.client.Close()
 }
