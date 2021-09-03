@@ -44,7 +44,7 @@ func (p Properties) SetFlags(flags *pflag.FlagSet) Properties {
 		ff = append(ff, flag.Name)
 	})
 
-	p["flags"] = flags
+	p["flags"] = ff
 
 	return p
 }
