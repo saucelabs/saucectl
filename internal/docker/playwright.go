@@ -8,7 +8,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/playwright"
-	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
 )
 
@@ -19,7 +18,7 @@ type PlaywrightRunner struct {
 }
 
 // NewPlaywright creates a new PlaywrightRunner instance.
-func NewPlaywright(c playwright.Project, regio region.Region, slSvc slack.Service, ms framework.MetadataService, wr job.Writer, jr job.Reader, dl download.ArtifactDownloader, reps []report.Reporter) (*PlaywrightRunner, error) {
+func NewPlaywright(c playwright.Project, slSvc slack.Service, ms framework.MetadataService, wr job.Writer, jr job.Reader, dl download.ArtifactDownloader, reps []report.Reporter) (*PlaywrightRunner, error) {
 	r := PlaywrightRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{

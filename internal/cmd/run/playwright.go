@@ -15,8 +15,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
-	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
@@ -142,7 +142,7 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs 
 	log.Info().Msg("Running Playwright in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewPlaywright(p, region.None, &testco, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
+	cd, err := docker.NewPlaywright(p, &testco, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
 	if err != nil {
 		return 1, err
 	}

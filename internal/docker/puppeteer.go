@@ -8,7 +8,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
-	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
 )
 
@@ -19,7 +18,7 @@ type PuppeterRunner struct {
 }
 
 // NewPuppeteer creates a new PuppeterRunner instance.
-func NewPuppeteer(c puppeteer.Project, regio region.Region, slSvc slack.Service, ms framework.MetadataService, wr job.Writer, jr job.Reader, dl download.ArtifactDownloader, reps []report.Reporter) (*PuppeterRunner, error) {
+func NewPuppeteer(c puppeteer.Project, slSvc slack.Service, ms framework.MetadataService, wr job.Writer, jr job.Reader, dl download.ArtifactDownloader, reps []report.Reporter) (*PuppeterRunner, error) {
 	r := PuppeterRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
