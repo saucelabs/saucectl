@@ -179,6 +179,7 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 		},
 	}
 
+	cleanPlaywrightPackages(&p)
 	return r.RunProject()
 }
 

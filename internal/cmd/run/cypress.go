@@ -177,6 +177,8 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			},
 		},
 	}
+
+	cleanCypressPackages(&p)
 	return r.RunProject()
 }
 
