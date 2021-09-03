@@ -11,7 +11,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/notification/slack"
-	"github.com/saucelabs/saucectl/internal/region"
 )
 
 // CypressRunner represents the docker implementation of a test runner.
