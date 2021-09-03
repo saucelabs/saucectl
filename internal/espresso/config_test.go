@@ -2,12 +2,13 @@ package espresso
 
 import (
 	"errors"
-	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/stretchr/testify/assert"
-	"gotest.tools/v3/fs"
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/fs"
 )
 
 func TestValidateThrowsErrors(t *testing.T) {
@@ -15,7 +16,6 @@ func TestValidateThrowsErrors(t *testing.T) {
 		fs.WithFile("test.apk", "", fs.WithMode(0655)))
 	defer dir.Remove()
 	appAPK := filepath.Join(dir.Path(), "test.apk")
-
 
 	testCases := []struct {
 		name        string
@@ -25,7 +25,7 @@ func TestValidateThrowsErrors(t *testing.T) {
 		{
 			name:        "validating throws error on empty app",
 			p:           &Project{Sauce: config.SauceConfig{Region: "us-west-1"}},
-			expectedErr: errors.New("missing path to app .apk"),
+			expectedErr: errors.New("missing path to app. Define a path to an .apk or .aab file in the espresso.app property of your config"),
 		},
 		{
 			name: "validating throws error on app missing .apk",
@@ -35,7 +35,7 @@ func TestValidateThrowsErrors(t *testing.T) {
 					App: "/path/to/app",
 				},
 			},
-			expectedErr: errors.New("invalid application file: /path/to/app, make sure extension is one of the following: .apk"),
+			expectedErr: errors.New("invalid application file: /path/to/app, make sure extension is one of the following: .apk, .aab"),
 		},
 		{
 			name: "validating throws error on empty app",
@@ -45,7 +45,7 @@ func TestValidateThrowsErrors(t *testing.T) {
 					App: appAPK,
 				},
 			},
-			expectedErr: errors.New("missing path to test app .apk"),
+			expectedErr: errors.New("missing path to test app. Define a path to an .apk or .aab file in the espresso.testApp property of your config"),
 		},
 		{
 			name: "validating throws error on test app missing .apk",
@@ -56,7 +56,7 @@ func TestValidateThrowsErrors(t *testing.T) {
 					TestApp: "/path/to/testApp",
 				},
 			},
-			expectedErr: errors.New("invalid test application file: /path/to/testApp, make sure extension is one of the following: .apk"),
+			expectedErr: errors.New("invalid test application file: /path/to/testApp, make sure extension is one of the following: .apk, .aab"),
 		},
 		{
 			name: "validating throws error on missing suites",
