@@ -13,9 +13,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// ErrUnknownCfg is thrown when the provided config doesn't match anything known, be it in "kind" or the version of it.
-var ErrUnknownCfg = errors.New("unknown framework configuration")
-
 // Metadata describes job metadata
 type Metadata struct {
 	Tags  []string `yaml:"tags" json:"tags,omitempty"`
@@ -93,7 +90,7 @@ type Reporters struct {
 
 // Tunnel represents a sauce labs tunnel.
 type Tunnel struct {
-	ID     string `yaml:"id,omitempty" json:"id"`
+	ID     string `yaml:"id,omitempty" json:"id,omitempty"`
 	Parent string `yaml:"parent,omitempty" json:"parent,omitempty"`
 }
 
@@ -114,8 +111,8 @@ const (
 
 // Docker represents docker settings.
 type Docker struct {
-	FileTransfer DockerFileMode `yaml:"fileTransfer,omitempty" json:"fileTransfer"`
-	Image        string         `yaml:"image,omitempty" json:"image"`
+	FileTransfer DockerFileMode `yaml:"fileTransfer,omitempty" json:"fileTransfer,omitempty"`
+	Image        string         `yaml:"image,omitempty" json:"image,omitempty"`
 }
 
 // Npm represents the npm settings

@@ -139,6 +139,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				DeviceName: res.job.BaseConfig.DeviceName,
 				URL:        fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID),
 				Artifacts:  artifacts,
+				Origin:     "sauce",
 			}
 
 			for _, rep := range r.Reporters {

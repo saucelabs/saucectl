@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/segment"
 	"os"
 	"time"
 
@@ -72,6 +73,13 @@ func Command() *cobra.Command {
 		Long:    initLong,
 		Example: initExample,
 		Run: func(cmd *cobra.Command, args []string) {
+			tracker := segment.New()
+
+			defer func() {
+				tracker.Collect("Init", nil)
+				_ = tracker.Close()
+			}()
+
 			log.Info().Msg("Start Init Command")
 			err := Run(cmd, initCfg)
 			if err != nil {

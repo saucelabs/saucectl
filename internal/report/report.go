@@ -4,14 +4,15 @@ import "time"
 
 // TestResult represents the test result.
 type TestResult struct {
-	Name       string
-	Duration   time.Duration
-	Passed     bool
-	Browser    string
-	Platform   string
-	DeviceName string
-	URL        string
-	Artifacts  []Artifact
+	Name       string        `json:"name"`
+	Duration   time.Duration `json:"duration"`
+	Passed     bool          `json:"passed"`
+	Browser    string        `json:"browser"`
+	Platform   string        `json:"platform"`
+	DeviceName string        `json:"deviceName"`
+	URL        string        `json:"url"`
+	Artifacts  []Artifact    `json:"-"`
+	Origin     string        `json:"origin"`
 }
 
 // ArtifactType represents the type of assets (e.g. a junit report). Semantically similar to Content-Type.

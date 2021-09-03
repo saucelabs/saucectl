@@ -10,6 +10,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/report/table"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/version"
@@ -19,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
 
@@ -281,9 +283,11 @@ func checkForUpdates() {
 }
 
 func createReporters(c config.Reporters) []report.Reporter {
-	reps := []report.Reporter{&table.Reporter{
-		Dst: os.Stdout,
-	}}
+	reps := []report.Reporter{
+		&captor.Default,
+		&table.Reporter{
+			Dst: os.Stdout,
+		}}
 
 	if c.JUnit.Enabled {
 		reps = append(reps, &junit.Reporter{
@@ -292,4 +296,17 @@ func createReporters(c config.Reporters) []report.Reporter {
 	}
 
 	return reps
+}
+
+// fullCommandName returns the full command name by concatenating the command names of any parents,
+// except the name of the CLI itself.
+func fullCommandName(cmd *cobra.Command) string {
+	name := ""
+
+	for cmd.Name() != "saucectl" {
+		name = fmt.Sprintf("%s %s", cmd.Name(), name)
+		cmd = cmd.Parent()
+	}
+
+	return strings.TrimSpace(name)
 }
