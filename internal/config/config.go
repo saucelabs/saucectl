@@ -75,15 +75,6 @@ type ArtifactDownload struct {
 	Directory string   `yaml:"directory,omitempty" json:"directory"`
 }
 
-type sendStatus string
-
-// These conditions indicate when to send slack notifications.
-const (
-	SendOnFailure sendStatus = "failure"
-	SendAlways    sendStatus = "always"
-	SendNever     sendStatus = "never"
-)
-
 // Notifications represents the test notifications configuration.
 type Notifications struct {
 	Slack Slack `yaml:"slack,omitempty" json:"slack"`
@@ -91,8 +82,8 @@ type Notifications struct {
 
 // Slack represents slack configuration.
 type Slack struct {
-	Channels []string   `yaml:"channels,omitempty" json:"channels"`
-	Send     sendStatus `yaml:"send,omitempty" json:"send"`
+	Channels []string `yaml:"channels,omitempty" json:"channels"`
+	Send     When     `yaml:"send,omitempty" json:"send"`
 }
 
 // Artifacts represents the test artifacts configuration.

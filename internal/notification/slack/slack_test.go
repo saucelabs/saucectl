@@ -35,16 +35,25 @@ func TestShouldSendNotification(t *testing.T) {
 			name: "send always",
 			params: params{
 				jobID:  "123",
-				config: config.Notifications{config.Slack{Channels: []string{"test-channel"}, Send: config.SendAlways}},
+				config: config.Notifications{config.Slack{Channels: []string{"test-channel"}, Send: config.WhenAlways}},
 				passed: true,
 			},
 			expected: true,
 		},
 		{
-			name: "send on failure",
+			name: "send pass",
 			params: params{
 				jobID:  "123",
-				config: config.Notifications{config.Slack{Channels: []string{"test-channel"}, Send: config.SendOnFailure}},
+				config: config.Notifications{config.Slack{Channels: []string{"test-channel"}, Send: config.WhenPass}},
+				passed: true,
+			},
+			expected: true,
+		},
+		{
+			name: "send on fail",
+			params: params{
+				jobID:  "123",
+				config: config.Notifications{config.Slack{Channels: []string{"test-channel"}, Send: config.WhenFail}},
 				passed: false,
 			},
 			expected: true,

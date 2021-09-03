@@ -107,12 +107,13 @@ func (s *Notifier) ShouldSendNotification(cfg config.Notifications) bool {
 		}
 	}
 
-	if len(cfg.Slack.Channels) == 0 || cfg.Slack.Send == config.SendNever {
+	if len(cfg.Slack.Channels) == 0 || cfg.Slack.Send == config.WhenNever {
 		return false
 	}
 
-	if cfg.Slack.Send == config.SendAlways ||
-		(cfg.Slack.Send == config.SendOnFailure && !s.Passed) {
+	if cfg.Slack.Send == config.WhenAlways ||
+		(cfg.Slack.Send == config.WhenFail && !s.Passed) ||
+		(s.Passed && cfg.Slack.Send == config.WhenPass) {
 		return true
 	}
 
