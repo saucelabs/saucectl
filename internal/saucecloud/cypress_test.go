@@ -107,7 +107,7 @@ func TestRunSuites(t *testing.T) {
 			JobWriter:          &writer,
 			CCYReader:          ccyReader,
 			ArtifactDownloader: downloader,
-			Notifier:           &slack.Notifier{},
+			SlackReporter:      &slack.Reporter{},
 		},
 		Project: cypress.Project{
 			Suites: []cypress.Suite{
@@ -233,7 +233,7 @@ func TestRunProject(t *testing.T) {
 			CCYReader:          ccyReader,
 			ProjectUploader:    uploader,
 			ArtifactDownloader: &downloader,
-			Notifier:           &slack.Notifier{},
+			SlackReporter:      &slack.Reporter{},
 		},
 		Project: cypress.Project{
 			RootDir: ".",

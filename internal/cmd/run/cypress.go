@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/saucelabs/saucectl/internal/report"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -168,12 +170,14 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
 			Reporters:          createReporters(p.Reporters),
-			SlackService:       &tc,
-			Notifier: &slack.Notifier{
-				Channels:  p.Notifications.Slack.Channels,
-				Framework: "cypress",
-				Metadata:  p.Sauce.Metadata,
-				TestEnv:   "sauce",
+			SlackReporter: &slack.Reporter{
+				Channels:    p.Notifications.Slack.Channels,
+				Framework:   "cypress",
+				Metadata:    p.Sauce.Metadata,
+				TestEnv:     "sauce",
+				TestResults: []report.TestResult{},
+				Config:      p.Notifications,
+				Service:     &tc,
 			},
 		},
 	}

@@ -34,13 +34,15 @@ func NewPuppeteer(c puppeteer.Project, slSvc slack.Service, ms framework.Metadat
 			JobReader:         jr,
 			ArtfactDownloader: dl,
 			Reporters:         reps,
-			Notifier: &slack.Notifier{
-				Channels:  c.Notifications.Slack.Channels,
-				Framework: "puppeteer",
-				Metadata:  c.Sauce.Metadata,
-				TestEnv:   "docker",
+			SlackReporter: &slack.Reporter{
+				Channels:    c.Notifications.Slack.Channels,
+				Framework:   "puppeteer",
+				Metadata:    c.Sauce.Metadata,
+				TestEnv:     "docker",
+				TestResults: []report.TestResult{},
+				Config:      c.Notifications,
+				Service:     slSvc,
 			},
-			SlackService: slSvc,
 		},
 	}
 	var err error

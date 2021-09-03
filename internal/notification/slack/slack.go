@@ -1,6 +1,7 @@
 package slack
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -15,28 +16,29 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 )
 
-// Notifier represents notifier for slack
-type Notifier struct {
+// Reporter represents reporter for slack
+type Reporter struct {
 	Token          string
 	Channels       []string
 	TestResults    []report.TestResult
 	Framework      string
-	Passed         bool
 	Metadata       config.Metadata
 	TestEnv        string
 	RenderedResult string
+	Config         config.Notifications
+	Service        Service
 }
 
 // Add adds the TestResult to the reporter. TestResults added this way can then be rendered out by calling Render().
-func (s *Notifier) Add(t report.TestResult) {
-	s.TestResults = append(s.TestResults, t)
+func (r *Reporter) Add(t report.TestResult) {
+	r.TestResults = append(r.TestResults, t)
 }
 
 // Render renders the test results. The destination is RenderedResult.
-func (s *Notifier) Render() {
+func (r *Reporter) Render() {
 	tables := [][]string{}
 	longestName := 0
-	for _, ts := range s.TestResults {
+	for _, ts := range r.TestResults {
 		if longestName < len(ts.Name) {
 			longestName = len(ts.Name)
 		}
@@ -44,8 +46,8 @@ func (s *Notifier) Render() {
 	header := []string{"Passed", "Name                     ", "Duration", "Status", "Browser", "Platform", "Device"}
 	tables = append(tables, header)
 
-	for _, ts := range s.TestResults {
-		tables = append(tables, []string{statusSymbol(ts.Passed), regenerateName(ts.Name, s.getJobURL(ts.Name, ts.URL), longestName), ts.Duration.Truncate(1 * time.Second).String(),
+	for _, ts := range r.TestResults {
+		tables = append(tables, []string{statusSymbol(ts.Passed), regenerateName(ts.Name, r.getJobURL(ts.Name, ts.URL), longestName), ts.Duration.Truncate(1 * time.Second).String(),
 			statusText(ts.Passed), ts.Browser, ts.Platform, ts.DeviceName})
 	}
 	var res string
@@ -53,32 +55,42 @@ func (s *Notifier) Render() {
 		res = fmt.Sprintf("%s\n%s", res, strings.Join(t, "\t"))
 	}
 
-	s.RenderedResult = res
+	r.RenderedResult = res
 }
 
 // GetRenderedResult returns rendered result.
-func (s *Notifier) GetRenderedResult() string {
-	s.Render()
-	return s.RenderedResult
+func (r *Reporter) GetRenderedResult() string {
+	r.Render()
+	return r.RenderedResult
 }
 
 // Reset resets the state of the reporter (e.g. remove any previously reported TestResults).
-func (s *Notifier) Reset() {}
+func (r *Reporter) Reset() {}
 
 // ArtifactRequirements returns a list of artifact types that this reporter requires to create a proper report.
-func (s *Notifier) ArtifactRequirements() []report.ArtifactType {
+func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 	return nil
 }
 
 // SendMessage send notification message.
-func (s *Notifier) SendMessage() {
-	api := slack.New(s.Token)
+func (r *Reporter) SendMessage(passed bool) {
+	if !r.shouldSendNotification(passed) {
+		return
+	}
 
-	for _, c := range s.Channels {
+	token, err := r.Service.GetSlackToken(context.Background())
+	if err != nil {
+		log.Err(err).Msg("Failed to get slack token")
+		return
+	}
+
+	api := slack.New(token)
+
+	for _, c := range r.Channels {
 		_, timestamp, err := api.PostMessage(
 			c,
 			slack.MsgOptionText("saucectl test result", false),
-			slack.MsgOptionAttachments(s.creatAttachment()),
+			slack.MsgOptionAttachments(r.creatAttachment(passed)),
 			slack.MsgOptionAsUser(true),
 		)
 
@@ -99,36 +111,38 @@ func (s *Notifier) SendMessage() {
 	}
 }
 
-// ShouldSendNotification returns true if it should send notification, otherwise false
-func (s *Notifier) ShouldSendNotification(cfg config.Notifications) bool {
-	for _, ts := range s.TestResults {
+// shouldSendNotification returns true if it should send notification, otherwise false
+func (r *Reporter) shouldSendNotification(passed bool) bool {
+	for _, ts := range r.TestResults {
 		if ts.URL == "" {
 			return false
 		}
 	}
 
-	if len(cfg.Slack.Channels) == 0 || cfg.Slack.Send == config.WhenNever {
+	if len(r.Config.Slack.Channels) == 0 ||
+		r.Config.Slack.Send == config.WhenNever ||
+		r.Token == "" {
 		return false
 	}
 
-	if cfg.Slack.Send == config.WhenAlways ||
-		(cfg.Slack.Send == config.WhenFail && !s.Passed) ||
-		(s.Passed && cfg.Slack.Send == config.WhenPass) {
+	if r.Config.Slack.Send == config.WhenAlways ||
+		(r.Config.Slack.Send == config.WhenFail && !passed) ||
+		(passed && r.Config.Slack.Send == config.WhenPass) {
 		return true
 	}
 
 	return false
 }
 
-func (s *Notifier) createBlocks() []slack.Block {
-	headerText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("*%s*", s.Metadata.Build), false, false)
+func (r *Reporter) createBlocks() []slack.Block {
+	headerText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("*%s*", r.Metadata.Build), false, false)
 	headerSection := slack.NewSectionBlock(headerText, nil, nil)
 
-	contextElementText := slack.NewImageBlockElement(s.getFrameworkIcon(), "Framework icon")
-	contextText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("%s | *Build ID*: %s | %s | %s", s.getTestEnvEmoji(), s.Metadata.Build, credentials.Get().Username, time.Now().Format("2006-01-02 15:04:05")), false, false)
+	contextElementText := slack.NewImageBlockElement(r.getFrameworkIcon(), "Framework icon")
+	contextText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("%s | *Build ID*: %s | %s | %s", r.getTestEnvEmoji(), r.Metadata.Build, credentials.Get().Username, time.Now().Format("2006-01-02 15:04:05")), false, false)
 	frameworkIconSection := slack.NewContextBlock("", []slack.MixedElement{contextElementText, contextText}...)
 
-	resultText := slack.NewTextBlockObject("mrkdwn", s.GetRenderedResult(), false, false)
+	resultText := slack.NewTextBlockObject("mrkdwn", r.GetRenderedResult(), false, false)
 	resultSection := slack.NewSectionBlock(resultText, nil, nil)
 
 	blocks := make([]slack.Block, 0)
@@ -139,8 +153,8 @@ func (s *Notifier) createBlocks() []slack.Block {
 	return blocks
 }
 
-func (s *Notifier) getFrameworkIcon() string {
-	switch s.Framework {
+func (r *Reporter) getFrameworkIcon() string {
+	switch r.Framework {
 	case "cypress":
 		return "https://miro.medium.com/max/1200/1*cenjHE5G6nX-8ftK4MuT-A.png"
 	case "playwright":
@@ -158,8 +172,8 @@ func (s *Notifier) getFrameworkIcon() string {
 	}
 }
 
-func (s *Notifier) getTestEnvEmoji() string {
-	if s.TestEnv == "sauce" {
+func (r *Reporter) getTestEnvEmoji() string {
+	if r.TestEnv == "sauce" {
 		return ":saucy:"
 	}
 	return ":docker:"
@@ -174,18 +188,18 @@ func regenerateName(name, wholeName string, length int) string {
 	return wholeName
 }
 
-func (s *Notifier) getJobURL(name, jobURL string) string {
+func (r *Reporter) getJobURL(name, jobURL string) string {
 	return fmt.Sprintf("<%s|%s>", jobURL, name)
 }
 
-func (s *Notifier) creatAttachment() slack.Attachment {
+func (r *Reporter) creatAttachment(passed bool) slack.Attachment {
 	color := "#F00000"
-	if s.Passed {
+	if passed {
 		color = "#008000"
 	}
 	return slack.Attachment{
 		Color:  color,
-		Blocks: slack.Blocks{BlockSet: s.createBlocks()},
+		Blocks: slack.Blocks{BlockSet: r.createBlocks()},
 	}
 }
 

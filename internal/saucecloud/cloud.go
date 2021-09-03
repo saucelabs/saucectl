@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/notification"
+
 	"github.com/fatih/color"
 	ptable "github.com/jedib0t/go-pretty/v6/table"
 	"github.com/rs/zerolog/log"
@@ -23,7 +25,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/junit"
-	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
@@ -46,8 +47,7 @@ type CloudRunner struct {
 	ShowConsoleLog        bool
 	ArtifactDownloader    download.ArtifactDownloader
 	RDCArtifactDownloader download.ArtifactDownloader
-	Notifier              report.Reporter
-	SlackService          slack.Service
+	SlackReporter         notification.Reporter
 
 	Reporters []report.Reporter
 
@@ -88,8 +88,6 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, notifi
 	passed := true
 
 	junitRequired := report.IsArtifactRequired(r.Reporters, report.JUnitArtifact)
-	slackNtfr, _ := r.Notifier.(*slack.Notifier)
-	slackNtfr.TestResults = []report.TestResult{}
 
 	done := make(chan interface{})
 	go func() {
@@ -153,7 +151,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, notifi
 				rep.Add(tr)
 			}
 
-			r.Notifier.Add(tr)
+			r.SlackReporter.Add(tr)
 		}
 
 		if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, res.job.TimedOut, artifactCfg) {
@@ -171,17 +169,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, notifi
 		rep.Render()
 	}
 
-	slackNtfr.Passed = passed
-
-	if slackNtfr.ShouldSendNotification(notifierCfg) {
-		token, err := r.SlackService.GetSlackToken(context.Background())
-		if err == nil {
-			slackNtfr.Token = token
-			slackNtfr.SendMessage()
-		} else {
-			log.Err(err).Msg("Failed to send slack notification")
-		}
-	}
+	r.SlackReporter.SendMessage(passed)
 
 	return passed
 }

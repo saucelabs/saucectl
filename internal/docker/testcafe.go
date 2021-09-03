@@ -34,13 +34,15 @@ func NewTestcafe(c testcafe.Project, slSvc slack.Service, ms framework.MetadataS
 			JobReader:         jr,
 			ArtfactDownloader: dl,
 			Reporters:         reps,
-			Notifier: &slack.Notifier{
-				Channels:  c.Notifications.Slack.Channels,
-				Framework: "testcafe",
-				Metadata:  c.Sauce.Metadata,
-				TestEnv:   "docker",
+			SlackReporter: &slack.Reporter{
+				Channels:    c.Notifications.Slack.Channels,
+				Framework:   "testcafe",
+				Metadata:    c.Sauce.Metadata,
+				TestEnv:     "docker",
+				TestResults: []report.TestResult{},
+				Config:      c.Notifications,
+				Service:     slSvc,
 			},
-			SlackService: slSvc,
 		},
 	}
 	var err error

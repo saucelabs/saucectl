@@ -157,7 +157,7 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 			CCYReader:          ccyReader,
 			ProjectUploader:    uploader,
 			ArtifactDownloader: &downloader,
-			Notifier:           &slack.Notifier{},
+			SlackReporter:      &slack.Reporter{},
 		},
 		Project: espresso.Project{
 			Espresso: espresso.Espresso{

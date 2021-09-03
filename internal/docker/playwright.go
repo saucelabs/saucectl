@@ -35,13 +35,15 @@ func NewPlaywright(c playwright.Project, slSvc slack.Service, ms framework.Metad
 			JobReader:         jr,
 			ArtfactDownloader: dl,
 			Reporters:         reps,
-			Notifier: &slack.Notifier{
-				Channels:  c.Notifications.Slack.Channels,
-				Framework: "playwright",
-				Metadata:  c.Sauce.Metadata,
-				TestEnv:   "docker",
+			SlackReporter: &slack.Reporter{
+				Channels:    c.Notifications.Slack.Channels,
+				Framework:   "playwright",
+				Metadata:    c.Sauce.Metadata,
+				TestEnv:     "docker",
+				TestResults: []report.TestResult{},
+				Config:      c.Notifications,
+				Service:     slSvc,
 			},
-			SlackService: slSvc,
 		},
 	}
 

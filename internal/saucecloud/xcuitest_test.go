@@ -71,7 +71,7 @@ func TestXcuitestRunner_RunProject(t *testing.T) {
 			CCYReader:          ccyReader,
 			ProjectUploader:    uploader,
 			ArtifactDownloader: &downloader,
-			Notifier:           &slack.Notifier{},
+			SlackReporter:      &slack.Reporter{},
 		},
 		Project: xcuitest.Project{
 			Xcuitest: xcuitest.Xcuitest{
