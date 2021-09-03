@@ -18,7 +18,6 @@ import (
 
 // Reporter represents reporter for slack
 type Reporter struct {
-	Token          string
 	Channels       []string
 	TestResults    []report.TestResult
 	Framework      string
@@ -43,12 +42,10 @@ func (r *Reporter) Render() {
 			longestName = len(ts.Name)
 		}
 	}
-	header := []string{"Passed", "Name                     ", "Duration", "Status", "Browser", "Platform", "Device"}
-	tables = append(tables, header)
 
 	for _, ts := range r.TestResults {
-		tables = append(tables, []string{statusSymbol(ts.Passed), regenerateName(ts.Name, r.getJobURL(ts.Name, ts.URL), longestName), ts.Duration.Truncate(1 * time.Second).String(),
-			statusText(ts.Passed), ts.Browser, ts.Platform, ts.DeviceName})
+		tables = append(tables, []string{statusText(ts.Passed), regenerateName(ts.Name, r.getJobURL(ts.Name, ts.URL), longestName),
+			ts.Platform, ts.DeviceName, ts.Browser, ts.Duration.Truncate(1 * time.Second).String()})
 	}
 	var res string
 	for _, t := range tables {
@@ -120,8 +117,7 @@ func (r *Reporter) shouldSendNotification(passed bool) bool {
 	}
 
 	if len(r.Config.Slack.Channels) == 0 ||
-		r.Config.Slack.Send == config.WhenNever ||
-		r.Token == "" {
+		r.Config.Slack.Send == config.WhenNever {
 		return false
 	}
 
@@ -138,45 +134,26 @@ func (r *Reporter) createBlocks() []slack.Block {
 	headerText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("*%s*", r.Metadata.Build), false, false)
 	headerSection := slack.NewSectionBlock(headerText, nil, nil)
 
-	contextElementText := slack.NewImageBlockElement(r.getFrameworkIcon(), "Framework icon")
-	contextText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("%s | *Build ID*: %s | %s | %s", r.getTestEnvEmoji(), r.Metadata.Build, credentials.Get().Username, time.Now().Format("2006-01-02 15:04:05")), false, false)
-	frameworkIconSection := slack.NewContextBlock("", []slack.MixedElement{contextElementText, contextText}...)
+	contextText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("%s | *Build ID*: %s | %s | %s", r.getFrameworkName(), r.Metadata.Build, credentials.Get().Username, time.Now().Format("2006-01-02 15:04:05")), false, false)
+	contextSection := slack.NewSectionBlock(contextText, nil, nil)
 
 	resultText := slack.NewTextBlockObject("mrkdwn", r.GetRenderedResult(), false, false)
 	resultSection := slack.NewSectionBlock(resultText, nil, nil)
 
 	blocks := make([]slack.Block, 0)
 	blocks = append(blocks, headerSection)
-	blocks = append(blocks, frameworkIconSection)
+	blocks = append(blocks, contextSection)
 	blocks = append(blocks, resultSection)
 
 	return blocks
 }
 
-func (r *Reporter) getFrameworkIcon() string {
-	switch r.Framework {
-	case "cypress":
-		return "https://miro.medium.com/max/1200/1*cenjHE5G6nX-8ftK4MuT-A.png"
-	case "playwright":
-		return "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_BzH2Y-hRybEebvPMQRSRYjtw6vgdiPandQJCf_o6HIbz8oKz5GqieUfM1VN2094BYok&usqp=CAU"
-	case "testcafe":
-		return "https://coursinator.com/blog/wp-content/uploads/testcafe-twitter-card-icon.png"
-	case "puppeteer":
-		return "https://cdn.dribbble.com/users/3800131/screenshots/15188869/media/823b8d9b8055e21c18408aca4342ae60.png"
-	case "espresso":
-		return "https://developer.android.com/images/training/testing/espresso.png"
-	case "xcuitest":
-		return "https://secureservercdn.net/198.71.233.197/a9j.9a0.myftpupload.com/wp-content/uploads/2019/01/XCUITest-framework.jpg"
-	default:
-		return ""
+func (r *Reporter) getFrameworkName() string {
+	if r.Framework == "xcuitest" {
+		return "XCUITest"
 	}
-}
 
-func (r *Reporter) getTestEnvEmoji() string {
-	if r.TestEnv == "sauce" {
-		return ":saucy:"
-	}
-	return ":docker:"
+	return strings.Title(r.Framework)
 }
 
 func regenerateName(name, wholeName string, length int) string {
@@ -201,14 +178,6 @@ func (r *Reporter) creatAttachment(passed bool) slack.Attachment {
 		Color:  color,
 		Blocks: slack.Blocks{BlockSet: r.createBlocks()},
 	}
-}
-
-func statusSymbol(passed bool) string {
-	if !passed {
-		return "✖      "
-	}
-
-	return "✔      "
 }
 
 func statusText(passed bool) string {
