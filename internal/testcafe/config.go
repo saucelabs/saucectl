@@ -46,7 +46,7 @@ type Project struct {
 	Reporters     config.Reporters     `yaml:"reporters,omitempty" json:"-"`
 	Defaults      config.Defaults      `yaml:"defaults,omitempty" json:"defaults"`
 	Env           map[string]string    `yaml:"env,omitempty" json:"env"`
-	Notifications config.Notifications `yaml:"notifications,omitempty" json:"notifications"`
+	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
 }
 
 // Suite represents the testcafe test suite configuration.
