@@ -31,8 +31,7 @@ type Job struct {
 	} `json:"base_config"`
 
 	// IsRDC flags a job started as a RDC run.
-	IsRDC bool   `json:"-"`
-	URL   string `json:"url"`
+	IsRDC bool `json:"-"`
 
 	// TimedOut flags a job as an unfinished one.
 	TimedOut bool `json:"-"`

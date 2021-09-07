@@ -61,7 +61,6 @@ type result struct {
 	skipped  bool
 	err      error
 	duration time.Duration
-	url      string
 	attempts int
 	retries  int
 }
@@ -306,7 +305,6 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			duration: time.Since(start),
 			attempts: opts.Attempt + 1,
 			retries:  opts.Retries,
-			url:      jobData.URL,
 		}
 	}
 }
