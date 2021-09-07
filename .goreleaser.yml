@@ -17,6 +17,7 @@ builds:
       - -X github.com/saucelabs/saucectl/internal/version.Version={{.Version}}
       - -X github.com/saucelabs/saucectl/internal/version.GitCommit={{.Commit}}
       - -X github.com/saucelabs/saucectl/internal/setup.SentryDSN={{.Env.SENTRY_DSN}}
+      - -X github.com/saucelabs/saucectl/internal/setup.SegmentWriteKey={{.Env.SEGMENT_WRITE_KEY}}
 brews:
   - tap:
       owner: saucelabs

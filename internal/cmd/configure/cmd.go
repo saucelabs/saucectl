@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/spf13/cobra"
 	"os"
@@ -30,6 +31,13 @@ func Command() *cobra.Command {
 		Long:    configureLong,
 		Example: configureExample,
 		Run: func(cmd *cobra.Command, args []string) {
+			tracker := segment.New()
+
+			defer func() {
+				tracker.Collect("Configure", nil)
+				_ = tracker.Close()
+			}()
+
 			if err := Run(); err != nil {
 				log.Err(err).Msg("failed to execute configure command")
 				sentry.CaptureError(err, sentry.Scope{

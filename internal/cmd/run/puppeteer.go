@@ -3,6 +3,7 @@ package run
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -12,9 +13,12 @@ import (
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/resto"
+	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
+	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -94,6 +98,16 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 	regio := region.FromString(p.Sauce.Region)
 	rs.URL = regio.APIBaseURL()
 	tc.URL = regio.APIBaseURL()
+
+	tracker := segment.New()
+
+	defer func() {
+		props := usage.Properties{}
+		props.SetFramework("puppeteer").SetFVersion(p.Puppeteer.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
+			SetArtifacts(p.Artifacts).SetDocker(p.Docker).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults)
+		tracker.Collect(strings.Title(fullCommandName(cmd)), props)
+		_ = tracker.Close()
+	}()
 
 	return runPuppeteerInDocker(p, tc, rs)
 }

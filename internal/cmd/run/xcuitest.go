@@ -1,7 +1,11 @@
 package run
 
 import (
+	"github.com/saucelabs/saucectl/internal/report/captor"
+	"github.com/saucelabs/saucectl/internal/segment"
+	"github.com/saucelabs/saucectl/internal/usage"
 	"os"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
@@ -95,6 +99,16 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, tc testcomposer.Cl
 
 	rs.ArtifactConfig = p.Artifacts.Download
 	rc.ArtifactConfig = p.Artifacts.Download
+
+	tracker := segment.New()
+
+	defer func() {
+		props := usage.Properties{}
+		props.SetFramework("xcuitest").SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).SetArtifacts(p.Artifacts).
+			SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults)
+		tracker.Collect(strings.Title(fullCommandName(cmd)), props)
+		_ = tracker.Close()
+	}()
 
 	return runXcuitestInCloud(p, regio, tc, rs, rc, as)
 }

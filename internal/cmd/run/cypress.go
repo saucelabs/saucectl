@@ -3,6 +3,7 @@ package run
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
@@ -13,10 +14,13 @@ import (
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
+	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
+	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -103,6 +107,16 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 	as.URL = regio.APIBaseURL()
 
 	rs.ArtifactConfig = p.Artifacts.Download
+
+	tracker := segment.New()
+
+	defer func() {
+		props := usage.Properties{}
+		props.SetFramework("cypress").SetFVersion(p.Cypress.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
+			SetArtifacts(p.Artifacts).SetDocker(p.Docker).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults)
+		tracker.Collect(strings.Title(fullCommandName(cmd)), props)
+		_ = tracker.Close()
+	}()
 
 	dockerProject, sauceProject := cypress.SplitSuites(p)
 	if len(dockerProject.Suites) != 0 {

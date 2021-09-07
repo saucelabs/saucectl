@@ -365,7 +365,9 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 				Platform:  "Docker",
 				URL:       res.jobInfo.JobDetailsURL,
 				Artifacts: artifacts,
+				Origin:    "docker",
 			}
+
 			for _, rep := range r.Reporters {
 				rep.Add(tr)
 			}
