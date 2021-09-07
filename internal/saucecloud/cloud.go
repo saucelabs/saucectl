@@ -11,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/notification"
-
 	"github.com/fatih/color"
 	ptable "github.com/jedib0t/go-pretty/v6/table"
 	"github.com/rs/zerolog/log"
@@ -47,7 +45,7 @@ type CloudRunner struct {
 	ShowConsoleLog        bool
 	ArtifactDownloader    download.ArtifactDownloader
 	RDCArtifactDownloader download.ArtifactDownloader
-	SlackReporter         notification.Reporter
+	SlackReporter         report.Reporter
 
 	Reporters []report.Reporter
 
@@ -168,7 +166,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 		rep.Render()
 	}
 
-	r.SlackReporter.SendMessage(passed)
+	r.SlackReporter.Render()
 
 	return passed
 }

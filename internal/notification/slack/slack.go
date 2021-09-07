@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/report"
@@ -26,15 +27,22 @@ type Reporter struct {
 	RenderedResult string
 	Config         config.Notifications
 	Service        Service
+	lock           sync.Mutex
 }
 
 // Add adds the TestResult to the reporter. TestResults added this way can then be rendered out by calling Render().
 func (r *Reporter) Add(t report.TestResult) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
 	r.TestResults = append(r.TestResults, t)
 }
 
-// Render renders the test results. The destination is RenderedResult.
+// Render renders the test results and sends message to the Slack.
 func (r *Reporter) Render() {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
 	tables := [][]string{}
 	longestName := 0
 	for _, ts := range r.TestResults {
@@ -43,9 +51,13 @@ func (r *Reporter) Render() {
 		}
 	}
 
+	passed := true
 	for _, ts := range r.TestResults {
 		tables = append(tables, []string{statusText(ts.Passed), regenerateName(ts.Name, r.getJobURL(ts.Name, ts.URL), longestName),
 			ts.Platform, ts.DeviceName, ts.Browser, ts.Duration.Truncate(1 * time.Second).String()})
+		if !ts.Passed {
+			passed = false
+		}
 	}
 	var res string
 	for _, t := range tables {
@@ -53,11 +65,12 @@ func (r *Reporter) Render() {
 	}
 
 	r.RenderedResult = res
+
+	r.sendMessage(passed)
 }
 
 // GetRenderedResult returns rendered result.
 func (r *Reporter) GetRenderedResult() string {
-	r.Render()
 	return r.RenderedResult
 }
 
@@ -69,8 +82,8 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 	return nil
 }
 
-// SendMessage send notification message.
-func (r *Reporter) SendMessage(passed bool) {
+// sendMessage sends notification message.
+func (r *Reporter) sendMessage(passed bool) {
 	if !r.shouldSendNotification(passed) {
 		return
 	}

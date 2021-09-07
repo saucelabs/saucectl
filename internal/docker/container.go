@@ -13,8 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/notification"
-
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 
@@ -39,7 +37,7 @@ type ContainerRunner struct {
 	ShowConsoleLog    bool
 	JobReader         job.Reader
 	ArtfactDownloader download.ArtifactDownloader
-	SlackReporter     notification.Reporter
+	SlackReporter     report.Reporter
 
 	Reporters []report.Reporter
 
@@ -387,7 +385,7 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 		rep.Render()
 	}
 
-	r.SlackReporter.SendMessage(passed)
+	r.SlackReporter.Render()
 
 	return passed
 }
