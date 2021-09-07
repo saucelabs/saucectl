@@ -178,7 +178,7 @@ func TestClient_GetSlackToken(t *testing.T) {
 		serverFunc func(w http.ResponseWriter, r *http.Request)
 	}{
 		{
-			name:    "token is exists",
+			name:    "token exists",
 			fields:  fields{HTTPClient: server.Client(), URL: server.URL},
 			want:    "user token",
 			wantErr: false,
@@ -199,7 +199,7 @@ func TestClient_GetSlackToken(t *testing.T) {
 			},
 		},
 		{
-			name:    "token is not exists",
+			name:    "token does not exists",
 			fields:  fields{HTTPClient: server.Client(), URL: server.URL},
 			want:    "",
 			wantErr: true,
