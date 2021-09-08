@@ -37,7 +37,6 @@ type ContainerRunner struct {
 	ShowConsoleLog    bool
 	JobReader         job.Reader
 	ArtfactDownloader download.ArtifactDownloader
-	SlackReporter     report.Reporter
 
 	Reporters []report.Reporter
 
@@ -373,8 +372,6 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 			for _, rep := range r.Reporters {
 				rep.Add(tr)
 			}
-
-			r.SlackReporter.Add(tr)
 		}
 
 		r.logSuite(res)
@@ -384,8 +381,6 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 	for _, rep := range r.Reporters {
 		rep.Render()
 	}
-
-	r.SlackReporter.Render()
 
 	return passed
 }

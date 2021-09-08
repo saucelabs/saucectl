@@ -5,8 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/saucelabs/saucectl/internal/report"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -18,7 +16,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
@@ -144,7 +141,11 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs 
 	log.Info().Msg("Running Playwright in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewPlaywright(p, &testco, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
+	reporters := createReporters(p.Reporters)
+	reporters = append(reporters, createSlackReporter(p.Notifications, p.Sauce.Metadata, &testco,
+		"playwright", "docker"))
+
+	cd, err := docker.NewPlaywright(p, &testco, &testco, &rs, &rs, reporters)
 	if err != nil {
 		return 1, err
 	}
@@ -156,6 +157,10 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs 
 func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
 	log.Info().Msg("Running Playwright in Sauce Labs")
 	printTestEnv("sauce")
+
+	reporters := createReporters(p.Reporters)
+	reporters = append(reporters, createSlackReporter(p.Notifications, p.Sauce.Metadata, &tc,
+		"playwright", "sauce"))
 
 	r := saucecloud.PlaywrightRunner{
 		Project: p,
@@ -170,16 +175,7 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
-			Reporters:          createReporters(p.Reporters),
-			SlackReporter: &slack.Reporter{
-				Channels:    p.Notifications.Slack.Channels,
-				Framework:   "playwright",
-				Metadata:    p.Sauce.Metadata,
-				TestEnv:     "sauce",
-				TestResults: []report.TestResult{},
-				Config:      p.Notifications,
-				Service:     &tc,
-			},
+			Reporters:          reporters,
 		},
 	}
 

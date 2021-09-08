@@ -8,8 +8,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 
-	"github.com/saucelabs/saucectl/internal/report"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -17,7 +15,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/flags"
-	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
@@ -122,6 +119,10 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 	log.Info().Msg("Running XCUITest in Sauce Labs")
 	printTestEnv("sauce")
 
+	reporters := createReporters(p.Reporters)
+	reporters = append(reporters, createSlackReporter(p.Notifications, p.Sauce.Metadata, &tc,
+		"xcuitest", "sauce"))
+
 	r := saucecloud.XcuitestRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
@@ -137,16 +138,7 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 			ShowConsoleLog:        p.ShowConsoleLog,
 			ArtifactDownloader:    &rs,
 			RDCArtifactDownloader: &rc,
-			Reporters:             createReporters(p.Reporters),
-			SlackReporter: &slack.Reporter{
-				Channels:    p.Notifications.Slack.Channels,
-				Framework:   "xcuitest",
-				Metadata:    p.Sauce.Metadata,
-				TestEnv:     "sauce",
-				TestResults: []report.TestResult{},
-				Config:      p.Notifications,
-				Service:     &tc,
-			},
+			Reporters:             reporters,
 		},
 	}
 	return r.RunProject()

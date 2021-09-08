@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/notification/slack"
+
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
@@ -308,6 +310,19 @@ func createReporters(c config.Reporters) []report.Reporter {
 	}
 
 	return reps
+}
+
+func createSlackReporter(ntfs config.Notifications, metadata config.Metadata, svc slack.Service,
+	framework, env string) report.Reporter {
+	return &slack.Reporter{
+		Channels:    ntfs.Slack.Channels,
+		Framework:   framework,
+		Metadata:    metadata,
+		TestEnv:     env,
+		TestResults: []report.TestResult{},
+		Config:      ntfs,
+		Service:     svc,
+	}
 }
 
 // fullCommandName returns the full command name by concatenating the command names of any parents,

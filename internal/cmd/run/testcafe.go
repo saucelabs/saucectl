@@ -5,8 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/saucelabs/saucectl/internal/report"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -18,7 +16,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/resto"
@@ -161,7 +158,11 @@ func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client, rs rest
 	log.Info().Msg("Running Testcafe in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewTestcafe(p, &testco, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
+	reporters := createReporters(p.Reporters)
+	reporters = append(reporters, createSlackReporter(p.Notifications, p.Sauce.Metadata, &testco,
+		"testcafe", "docker"))
+
+	cd, err := docker.NewTestcafe(p, &testco, &testco, &rs, &rs, reporters)
 	if err != nil {
 		return 1, err
 	}
@@ -173,6 +174,10 @@ func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client, rs rest
 func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
 	log.Info().Msg("Running Testcafe in Sauce Labs")
 	printTestEnv("sauce")
+
+	reporters := createReporters(p.Reporters)
+	reporters = append(reporters, createSlackReporter(p.Notifications, p.Sauce.Metadata, &tc,
+		"testcafe", "sauce"))
 
 	r := saucecloud.TestcafeRunner{
 		Project: p,
@@ -187,16 +192,7 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
-			Reporters:          createReporters(p.Reporters),
-			SlackReporter: &slack.Reporter{
-				Channels:    p.Notifications.Slack.Channels,
-				Framework:   "testcafe",
-				Metadata:    p.Sauce.Metadata,
-				TestEnv:     "sauce",
-				TestResults: []report.TestResult{},
-				Config:      p.Notifications,
-				Service:     &tc,
-			},
+			Reporters:          reporters,
 		},
 	}
 	cleanTestCafePackages(&p)

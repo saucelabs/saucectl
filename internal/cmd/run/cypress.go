@@ -5,8 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/saucelabs/saucectl/internal/report"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -19,7 +17,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/resto"
@@ -143,7 +140,10 @@ func runCypressInDocker(p cypress.Project, testco testcomposer.Client, rs resto.
 	log.Info().Msg("Running Cypress in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewCypress(p, &testco, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
+	reporters := createReporters(p.Reporters)
+	reporters = append(reporters, createSlackReporter(p.Notifications, p.Sauce.Metadata, &testco,
+		"cypress", "docker"))
+	cd, err := docker.NewCypress(p, &testco, &testco, &rs, &rs, reporters)
 	if err != nil {
 		return 1, err
 	}
@@ -155,6 +155,10 @@ func runCypressInDocker(p cypress.Project, testco testcomposer.Client, rs resto.
 func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
 	log.Info().Msg("Running Cypress in Sauce Labs")
 	printTestEnv("sauce")
+
+	reporters := createReporters(p.Reporters)
+	reporters = append(reporters, createSlackReporter(p.Notifications, p.Sauce.Metadata, &tc,
+		"cypress", "sauce"))
 
 	r := saucecloud.CypressRunner{
 		Project: p,
@@ -169,16 +173,7 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
-			Reporters:          createReporters(p.Reporters),
-			SlackReporter: &slack.Reporter{
-				Channels:    p.Notifications.Slack.Channels,
-				Framework:   "cypress",
-				Metadata:    p.Sauce.Metadata,
-				TestEnv:     "sauce",
-				TestResults: []report.TestResult{},
-				Config:      p.Notifications,
-				Service:     &tc,
-			},
+			Reporters:          reporters,
 		},
 	}
 

@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/notification/slack"
-
 	"github.com/jarcoal/httpmock"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
@@ -157,7 +155,6 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 			CCYReader:          ccyReader,
 			ProjectUploader:    uploader,
 			ArtifactDownloader: &downloader,
-			SlackReporter:      &slack.Reporter{},
 		},
 		Project: espresso.Project{
 			Espresso: espresso.Espresso{

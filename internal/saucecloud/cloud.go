@@ -45,7 +45,6 @@ type CloudRunner struct {
 	ShowConsoleLog        bool
 	ArtifactDownloader    download.ArtifactDownloader
 	RDCArtifactDownloader download.ArtifactDownloader
-	SlackReporter         report.Reporter
 
 	Reporters []report.Reporter
 
@@ -147,8 +146,6 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			for _, rep := range r.Reporters {
 				rep.Add(tr)
 			}
-
-			r.SlackReporter.Add(tr)
 		}
 
 		if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, res.job.TimedOut, artifactCfg) {
@@ -165,8 +162,6 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	for _, rep := range r.Reporters {
 		rep.Render()
 	}
-
-	r.SlackReporter.Render()
 
 	return passed
 }

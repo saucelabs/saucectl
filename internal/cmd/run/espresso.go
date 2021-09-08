@@ -8,10 +8,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 
-	"github.com/saucelabs/saucectl/internal/report"
-
-	"github.com/saucelabs/saucectl/internal/notification/slack"
-
 	"github.com/spf13/pflag"
 
 	"github.com/rs/zerolog/log"
@@ -131,6 +127,10 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 	log.Info().Msg("Running Espresso in Sauce Labs")
 	printTestEnv("sauce")
 
+	reporters := createReporters(p.Reporters)
+	reporters = append(reporters, createSlackReporter(p.Notifications, p.Sauce.Metadata, &tc,
+		"espresso", "sauce"))
+
 	r := saucecloud.EspressoRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
@@ -146,16 +146,7 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 			ShowConsoleLog:        p.ShowConsoleLog,
 			ArtifactDownloader:    &rs,
 			RDCArtifactDownloader: &rc,
-			Reporters:             createReporters(p.Reporters),
-			SlackReporter: &slack.Reporter{
-				Channels:    p.Notifications.Slack.Channels,
-				Framework:   "espresso",
-				Metadata:    p.Sauce.Metadata,
-				TestEnv:     "sauce",
-				TestResults: []report.TestResult{},
-				Config:      p.Notifications,
-				Service:     &tc,
-			},
+			Reporters:             reporters,
 		},
 	}
 
