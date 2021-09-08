@@ -8,6 +8,7 @@ on:
 env:
   GH_TOKEN: ${{secrets.GH_TOKEN}}
   SENTRY_DSN: ${{secrets.SENTRY_DSN}}
+  SEGMENT_WRITE_KEY: ${{secrets.SEGMENT_WRITE_KEY}}
 
 jobs:
   release:
