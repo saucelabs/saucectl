@@ -28,7 +28,6 @@ func New() *Tracker {
 			OS: analytics.OSInfo{
 				Name: runtime.GOOS + " " + runtime.GOARCH,
 			},
-			Extra: map[string]interface{}{"ci": ci.GetProvider().Name},
 		},
 	})
 	if err != nil {
@@ -48,7 +47,7 @@ func (t *Tracker) Collect(subject string, props usage.Properties) {
 
 	p := analytics.NewProperties()
 	p.Set("subject_name", subject).Set("product_area", "DevX").
-		Set("product_sub_area", "SauceCTL")
+		Set("product_sub_area", "SauceCTL").Set("ci", ci.GetProvider().Name)
 
 	for k, v := range props {
 		p[k] = v
