@@ -3,7 +3,6 @@ package slack
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -97,7 +96,7 @@ func (r *Reporter) sendMessage(passed bool) {
 	api := slack.New(token)
 
 	for _, c := range r.Channels {
-		_, timestamp, err := api.PostMessage(
+		_, _, err := api.PostMessage(
 			c,
 			slack.MsgOptionText("saucectl test result", false),
 			slack.MsgOptionAttachments(r.creatAttachment(passed)),
@@ -109,26 +108,12 @@ func (r *Reporter) sendMessage(passed bool) {
 			continue
 		}
 
-		timestampArr := strings.Split(timestamp, ".")
-		i, err := strconv.ParseInt(timestampArr[0], 10, 64)
-		if err != nil {
-			log.Info().Msgf("Couldn't parse slack timestamp, err: %s", err)
-		} else {
-			i = time.Now().Unix()
-		}
-
-		log.Info().Msgf("Message successfully sent to slack channel %s at %s", c, time.Unix(i, 0))
+		log.Info().Msgf("Message successfully sent to slack channel %s", c)
 	}
 }
 
 // shouldSendNotification returns true if it should send notification, otherwise false
 func (r *Reporter) shouldSendNotification(passed bool) bool {
-	for _, ts := range r.TestResults {
-		if ts.URL == "" {
-			return false
-		}
-	}
-
 	if len(r.Config.Slack.Channels) == 0 ||
 		r.Config.Slack.Send == config.WhenNever {
 		return false
@@ -153,12 +138,7 @@ func (r *Reporter) createBlocks() []slack.Block {
 	resultText := slack.NewTextBlockObject("mrkdwn", r.GetRenderedResult(), false, false)
 	resultSection := slack.NewSectionBlock(resultText, nil, nil)
 
-	blocks := make([]slack.Block, 0)
-	blocks = append(blocks, headerSection)
-	blocks = append(blocks, contextSection)
-	blocks = append(blocks, resultSection)
-
-	return blocks
+	return []slack.Block{headerSection, contextSection, resultSection}
 }
 
 func (r *Reporter) getFrameworkName() string {
