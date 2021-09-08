@@ -118,11 +118,8 @@ func runPuppeteerInDocker(p puppeteer.Project, testco testcomposer.Client, rs re
 	log.Info().Msg("Running puppeteer in Docker")
 	printTestEnv("docker")
 
-	reporters := createReporters(p.Reporters)
-	reporters = append(reporters, createSlackReporter(p.Notifications, p.Sauce.Metadata, &testco,
-		"puppeteer", "docker"))
-
-	cd, err := docker.NewPuppeteer(p, &testco, &testco, &rs, &rs, reporters)
+	cd, err := docker.NewPuppeteer(p, &testco, &testco, &rs, &rs, createReporters(p.Reporters, p.Notifications,
+		p.Sauce.Metadata, &testco, "puppeteer", "docker"))
 	if err != nil {
 		return 1, err
 	}

@@ -283,7 +283,8 @@ func checkForUpdates() {
 	}
 }
 
-func createReporters(c config.Reporters) []report.Reporter {
+func createReporters(c config.Reporters, ntfs config.Notifications, metadata config.Metadata,
+	svc slack.Service, framework, env string) []report.Reporter {
 	reps := []report.Reporter{
 		&captor.Default,
 		&table.Reporter{
@@ -296,12 +297,7 @@ func createReporters(c config.Reporters) []report.Reporter {
 		})
 	}
 
-	return reps
-}
-
-func createSlackReporter(ntfs config.Notifications, metadata config.Metadata, svc slack.Service,
-	framework, env string) report.Reporter {
-	return &slack.Reporter{
+	reps = append(reps, &slack.Reporter{
 		Channels:    ntfs.Slack.Channels,
 		Framework:   framework,
 		Metadata:    metadata,
@@ -309,7 +305,9 @@ func createSlackReporter(ntfs config.Notifications, metadata config.Metadata, sv
 		TestResults: []report.TestResult{},
 		Config:      ntfs,
 		Service:     svc,
-	}
+	})
+
+	return reps
 }
 
 // fullCommandName returns the full command name by concatenating the command names of any parents,

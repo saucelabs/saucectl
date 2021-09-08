@@ -142,11 +142,8 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs 
 	log.Info().Msg("Running Playwright in Docker")
 	printTestEnv("docker")
 
-	reporters := createReporters(p.Reporters)
-	reporters = append(reporters, createSlackReporter(p.Notifications, p.Sauce.Metadata, &testco,
+	cd, err := docker.NewPlaywright(p, &testco, &testco, &rs, &rs, createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testco,
 		"playwright", "docker"))
-
-	cd, err := docker.NewPlaywright(p, &testco, &testco, &rs, &rs, reporters)
 	if err != nil {
 		return 1, err
 	}
@@ -158,10 +155,6 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs 
 func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
 	log.Info().Msg("Running Playwright in Sauce Labs")
 	printTestEnv("sauce")
-
-	reporters := createReporters(p.Reporters)
-	reporters = append(reporters, createSlackReporter(p.Notifications, p.Sauce.Metadata, &tc,
-		"playwright", "sauce"))
 
 	r := saucecloud.PlaywrightRunner{
 		Project: p,
@@ -176,7 +169,8 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
-			Reporters:          reporters,
+			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc,
+				"playwright", "sauce"),
 		},
 	}
 

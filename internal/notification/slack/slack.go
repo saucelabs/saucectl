@@ -73,10 +73,10 @@ func (r *Reporter) GetRenderedResult() string {
 	return r.RenderedResult
 }
 
-// Reset resets the state of the reporter (e.g. remove any previously reported TestResults).
+// Reset no need to implement
 func (r *Reporter) Reset() {}
 
-// ArtifactRequirements returns a list of artifact types that this reporter requires to create a proper report.
+// ArtifactRequirements no need to implement
 func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 	return nil
 }

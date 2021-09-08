@@ -137,10 +137,8 @@ func runCypressInDocker(p cypress.Project, testco testcomposer.Client, rs resto.
 	log.Info().Msg("Running Cypress in Docker")
 	printTestEnv("docker")
 
-	reporters := createReporters(p.Reporters)
-	reporters = append(reporters, createSlackReporter(p.Notifications, p.Sauce.Metadata, &testco,
+	cd, err := docker.NewCypress(p, &testco, &testco, &rs, &rs, createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testco,
 		"cypress", "docker"))
-	cd, err := docker.NewCypress(p, &testco, &testco, &rs, &rs, reporters)
 	if err != nil {
 		return 1, err
 	}
@@ -152,10 +150,6 @@ func runCypressInDocker(p cypress.Project, testco testcomposer.Client, rs resto.
 func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
 	log.Info().Msg("Running Cypress in Sauce Labs")
 	printTestEnv("sauce")
-
-	reporters := createReporters(p.Reporters)
-	reporters = append(reporters, createSlackReporter(p.Notifications, p.Sauce.Metadata, &tc,
-		"cypress", "sauce"))
 
 	r := saucecloud.CypressRunner{
 		Project: p,
@@ -170,7 +164,8 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
-			Reporters:          reporters,
+			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc,
+				"cypress", "sauce"),
 		},
 	}
 

@@ -118,10 +118,6 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 	log.Info().Msg("Running XCUITest in Sauce Labs")
 	printTestEnv("sauce")
 
-	reporters := createReporters(p.Reporters)
-	reporters = append(reporters, createSlackReporter(p.Notifications, p.Sauce.Metadata, &tc,
-		"xcuitest", "sauce"))
-
 	r := saucecloud.XcuitestRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
@@ -137,7 +133,8 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 			ShowConsoleLog:        p.ShowConsoleLog,
 			ArtifactDownloader:    &rs,
 			RDCArtifactDownloader: &rc,
-			Reporters:             reporters,
+			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc,
+				"xcuitest", "sauce"),
 		},
 	}
 	return r.RunProject()

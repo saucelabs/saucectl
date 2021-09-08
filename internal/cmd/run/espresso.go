@@ -126,10 +126,6 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 	log.Info().Msg("Running Espresso in Sauce Labs")
 	printTestEnv("sauce")
 
-	reporters := createReporters(p.Reporters)
-	reporters = append(reporters, createSlackReporter(p.Notifications, p.Sauce.Metadata, &tc,
-		"espresso", "sauce"))
-
 	r := saucecloud.EspressoRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
@@ -145,7 +141,8 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 			ShowConsoleLog:        p.ShowConsoleLog,
 			ArtifactDownloader:    &rs,
 			RDCArtifactDownloader: &rc,
-			Reporters:             reporters,
+			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc,
+				"espresso", "sauce"),
 		},
 	}
 
