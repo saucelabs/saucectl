@@ -24,6 +24,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
+	"github.com/saucelabs/saucectl/internal/usage"
 )
 
 // NewPlaywrightCmd creates the 'run' command for Playwright.
