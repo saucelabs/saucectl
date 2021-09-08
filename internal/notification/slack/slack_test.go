@@ -21,11 +21,6 @@ func Test_shouldSendNotification(t *testing.T) {
 		expected bool
 	}{
 		{
-			name:     "empty URL",
-			params:   params{testResults: []report.TestResult{report.TestResult{URL: ""}}},
-			expected: false,
-		},
-		{
 			name: "empty slack channel",
 			params: params{
 				testResults: []report.TestResult{report.TestResult{URL: "http://example.com"}},
