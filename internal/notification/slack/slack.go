@@ -165,6 +165,9 @@ func (r *Reporter) getFrameworkName() string {
 	if r.Framework == "xcuitest" {
 		return "XCUITest"
 	}
+	if r.Framework == "testcafe" {
+		return "TestCafe"
+	}
 
 	return strings.Title(r.Framework)
 }
