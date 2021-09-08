@@ -59,7 +59,13 @@ func (p Properties) SetJobs(jobs []report.TestResult) Properties {
 // SetNPM reports the npm usage.
 func (p Properties) SetNPM(npm config.Npm) Properties {
 	p["npm_registry"] = npm.Registry
-	p["npm_packages"] = npm.Packages
+
+	var pkgs []string
+	for k := range npm.Packages {
+		pkgs = append(pkgs, k)
+	}
+	p["npm_packages"] = pkgs
+
 	return p
 }
 
