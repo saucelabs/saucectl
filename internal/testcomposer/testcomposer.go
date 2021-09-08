@@ -64,7 +64,7 @@ type runner struct {
 
 // GetSlackToken gets slack token.
 func (c *Client) GetSlackToken(ctx context.Context) (string, error) {
-	url := fmt.Sprintf("%s/v1/testcomposer/slack/token", c.URL)
+	url := fmt.Sprintf("%s/v1/testcomposer/users/%s/settings/slack", c.URL, c.Credentials.Username)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
