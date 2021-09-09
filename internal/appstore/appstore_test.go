@@ -23,7 +23,7 @@ func TestAppStore_Upload(t *testing.T) {
 	defer dir.Remove()
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if fmt.Sprintf("sha256=%s", b1Hash) == r.URL.RawQuery {
+		if fmt.Sprintf("sha256=%s&per_page=1", b1Hash) == r.URL.RawQuery {
 			w.WriteHeader(200)
 			w.Write([]byte(fmt.Sprintf(`{
 				"items": [
