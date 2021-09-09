@@ -1,13 +1,12 @@
 package appstore
 
 import (
-	"crypto/md5"
+	"crypto/sha256"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"path"
 	"reflect"
-	"regexp"
 	"testing"
 	"time"
 
@@ -17,31 +16,32 @@ import (
 func TestAppStore_Upload(t *testing.T) {
 	dir := fs.NewDir(t, "bundles",
 		fs.WithFile("bundle-1.zip", "bundle-1-content", fs.WithMode(0644)),
-		fs.WithFile("bundle-2.zip", "bundle-2-content", fs.WithMode(0644)),
-		fs.WithFile("bundle-3.zip", "bundle-3-content", fs.WithMode(0644)))
-	b1 := md5.New()
+		fs.WithFile("bundle-2.zip", "bundle-2-content", fs.WithMode(0644)))
+	b1 := sha256.New()
 	b1.Write([]byte("bundle-1-content"))
 	b1Hash := fmt.Sprintf("%x", b1.Sum(nil))
-	b2 := md5.New()
-	b2.Write([]byte("bundle-2-content"))
-	b2Hash := fmt.Sprintf("%x", b2.Sum(nil))
 	defer dir.Remove()
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		completeQuery := fmt.Sprintf("%s?%s", r.URL.Path, r.URL.RawQuery)
-		re := regexp.MustCompile(`name=([^&]+)`)
-		filename := re.FindStringSubmatch(r.URL.RawQuery)[1]
-		if matched, _ := regexp.Match(`.*page=2.*`, []byte(r.URL.RawQuery)); matched {
+		if fmt.Sprintf("sha256=%s&per_page=1", b1Hash) == r.URL.RawQuery {
 			w.WriteHeader(200)
-			w.Write([]byte(fmt.Sprintf(`{"items": [{"id":"matching-id-next", "etag": "%s"}]}`, b2Hash)))
+			w.Write([]byte(fmt.Sprintf(`{
+				"items": [
+					{
+						"id": "matching-id",
+						"sha256": "%s"
+					}
+				],
+				"total_items": 1
+			}`, b1Hash)))
 			return
 		}
-		if matched, _ := regexp.Match(`\/v1\/storage\/list\?name=.*&per_page=100`, []byte(completeQuery)); matched {
-			w.WriteHeader(200)
-			w.Write([]byte(fmt.Sprintf(`{"items": [{"id":"matching-id", "etag": "%s"}], "links": {"next": "?name=%s&per_page=100&page=2"}}`, b1Hash, filename)))
-			return
-		}
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(200)
+		w.Write([]byte(`{
+			"items": [
+			],
+			"total_items": 0
+		}`))
 	}))
 	defer ts.Close()
 
@@ -50,9 +50,8 @@ func TestAppStore_Upload(t *testing.T) {
 		want    string
 		wantErr error
 	}{
-		{look: path.Join(dir.Path(), "bundle-3.zip"), want: "", wantErr: nil},
+		{look: path.Join(dir.Path(), "bundle-2.zip"), want: "", wantErr: nil},
 		{look: path.Join(dir.Path(), "bundle-1.zip"), want: "matching-id", wantErr: nil},
-		{look: path.Join(dir.Path(), "bundle-2.zip"), want: "matching-id-next", wantErr: nil},
 		{look: "", want: "", wantErr: nil},
 	}
 

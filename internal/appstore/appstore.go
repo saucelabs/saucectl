@@ -2,7 +2,7 @@ package appstore
 
 import (
 	"bytes"
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -157,29 +157,21 @@ func (s *AppStore) Find(filename string) (storage.ArtifactMeta, error) {
 		return storage.ArtifactMeta{}, err
 	}
 
-	queryString := fmt.Sprintf("?name=%s", filepath.Base(filename))
-	for {
-		request, err := createLocateRequest(fmt.Sprintf("%s/v1/storage/list", s.URL), s.Username, s.AccessKey, queryString)
-		if err != nil {
-			return storage.ArtifactMeta{}, err
-		}
-
-		lr, err := s.executeLocateRequest(request)
-		if err != nil {
-			return storage.ArtifactMeta{}, err
-		}
-
-		for _, item := range lr.Items {
-			if item.ETag == hash {
-				return storage.ArtifactMeta{ID: item.ID}, nil
-			}
-		}
-
-		queryString = lr.Links.Next
-		if queryString == "" {
-			return storage.ArtifactMeta{}, nil
-		}
+	queryString := fmt.Sprintf("?sha256=%s", hash)
+	request, err := createLocateRequest(fmt.Sprintf("%s/v1/storage/files", s.URL), s.Username, s.AccessKey, queryString)
+	if err != nil {
+		return storage.ArtifactMeta{}, err
 	}
+
+	lr, err := s.executeLocateRequest(request)
+	if err != nil {
+		return storage.ArtifactMeta{}, err
+	}
+	if lr.TotalItems == 0 {
+		return storage.ArtifactMeta{}, nil
+	}
+
+	return storage.ArtifactMeta{ID: lr.Items[0].ID}, nil
 }
 
 func calculateBundleHash(filename string) (string, error) {
@@ -188,7 +180,7 @@ func calculateBundleHash(filename string) (string, error) {
 		return "", err
 	}
 	defer fs.Close()
-	hsh := md5.New()
+	hsh := sha256.New()
 	if _, err := io.Copy(hsh, fs); err != nil {
 		return "", err
 	}
@@ -197,7 +189,7 @@ func calculateBundleHash(filename string) (string, error) {
 }
 
 func createLocateRequest(url, username, accesskey string, queryString string) (*http.Request, error) {
-	req, err := requesth.New(http.MethodGet, fmt.Sprintf("%s%s&per_page=100", url, queryString), nil)
+	req, err := requesth.New(http.MethodGet, fmt.Sprintf("%s%s&per_page=1", url, queryString), nil)
 	if err != nil {
 		return nil, err
 	}
