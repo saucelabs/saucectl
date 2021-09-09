@@ -52,7 +52,7 @@ func (r *Reporter) Render() {
 
 	passed := true
 	for _, ts := range r.TestResults {
-		tables = append(tables, []string{statusText(ts.Passed), regenerateName(ts.Name, r.getJobURL(ts.Name, ts.URL), longestName),
+		tables = append(tables, []string{statusText(ts.Passed), addRightSpaces(ts.Name, r.getJobURL(ts.Name, ts.URL), longestName),
 			ts.Platform, ts.DeviceName, ts.Browser, ts.Duration.Truncate(1 * time.Second).String()})
 		if !ts.Passed {
 			passed = false
@@ -152,7 +152,7 @@ func (r *Reporter) getFrameworkName() string {
 	return strings.Title(r.Framework)
 }
 
-func regenerateName(name, wholeName string, length int) string {
+func addRightSpaces(name, wholeName string, length int) string {
 	minus := length - len(name)
 	for minus > 0 {
 		wholeName = fmt.Sprintf("%s%s", wholeName, " ")

@@ -77,3 +77,42 @@ func Test_shouldSendNotification(t *testing.T) {
 		}
 	}
 }
+
+func Test_addRightSpaces(t *testing.T) {
+	type params struct {
+		name      string
+		wholeName string
+		length    int
+	}
+	testCases := []struct {
+		name     string
+		params   params
+		expected string
+	}{
+		{
+			name: "add right spaces",
+			params: params{
+				name:      "very long name",
+				wholeName: "short name",
+				length:    20,
+			},
+			expected: "short name      ",
+		},
+		{
+			name: "wholeName stays the same",
+			params: params{
+				name:      "some long string",
+				wholeName: "short name",
+				length:    16,
+			},
+			expected: "short name",
+		},
+	}
+
+	for _, tc := range testCases {
+		got := addRightSpaces(tc.params.name, tc.params.wholeName, tc.params.length)
+		if got != tc.expected {
+			t.Errorf("test case name: %s  got: '%v' expected: %v", tc.name, got, tc.expected)
+		}
+	}
+}
