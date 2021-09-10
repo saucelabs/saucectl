@@ -52,7 +52,8 @@ func (r *Reporter) Render() {
 
 	passed := true
 	for _, ts := range r.TestResults {
-		tables = append(tables, []string{statusText(ts.Passed), addRightSpaces(ts.Name, r.getJobURL(ts.Name, ts.URL), longestName),
+		url := ts.URL + "?utm_source=slack&utm_medium=chat&utm_campaign=testresults"
+		tables = append(tables, []string{statusText(ts.Passed), addRightSpaces(ts.Name, r.getJobURL(ts.Name, url), longestName),
 			ts.Platform, ts.DeviceName, ts.Browser, ts.Duration.Truncate(1 * time.Second).String()})
 		if !ts.Passed {
 			passed = false
