@@ -72,6 +72,7 @@ func NewPuppeteerCmd() *cobra.Command {
 	sc.Bool("npm.strictSSL", "npm.strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
 
 	sc.StringSlice("browserArgs", "suite.browserArgs", []string{}, "Pass browser args to puppeteer")
+	sc.StringSlice("groups", "suite.groups", []string{}, "Pass groups to puppeteer")
 
 	return cmd
 }

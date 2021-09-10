@@ -50,6 +50,7 @@ type Suite struct {
 	Env         map[string]string `yaml:"env,omitempty" json:"env"`
 	BrowserArgs []string          `yaml:"browserArgs,omitempty" json:"browserArgs"`
 	Timeout     time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
+	Groups      []string          `yaml:"groups,omitempty" json:"groups"`
 }
 
 // Puppeteer represents the configuration for puppeteer.

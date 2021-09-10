@@ -927,6 +927,16 @@
                 },
                 "timeout": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/timeout"
+                },
+                "groups": {
+                  "description": "Specific groups of tests.",
+                  "type": "array",
+                  "examples": [
+                    [
+                      "group1",
+                      "group2"
+                    ]
+                  ]
                 }
               },
               "required": [
