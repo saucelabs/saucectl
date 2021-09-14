@@ -493,7 +493,7 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 			fmt.Println(ts.SystemOut)
 		}
 		for _, tc := range ts.TestCases {
-			if tc.Error != "" {
+			if tc.Error != "" || tc.Failure != "" {
 				hasError = true
 			}
 			if tc.SystemOut != "" {
