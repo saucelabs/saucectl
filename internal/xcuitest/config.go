@@ -23,8 +23,9 @@ var (
 // Project represents the xcuitest project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
-	Defaults       config.Defaults        `yaml:"defaults,omitempty" json:"defaults"`
-	ConfigFilePath string                 `yaml:"-" json:"-"`
+	Defaults       config.Defaults `yaml:"defaults,omitempty" json:"defaults"`
+	ConfigFilePath string          `yaml:"-" json:"-"`
+	ShowConsoleLog bool
 	DryRun         bool                   `yaml:"-" json:"-"`
 	CLIFlags       map[string]interface{} `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
@@ -33,7 +34,7 @@ type Project struct {
 	Suite     Suite            `yaml:"suite,omitempty" json:"-"`
 	Suites    []Suite          `yaml:"suites,omitempty" json:"suites"`
 	Artifacts config.Artifacts `yaml:"artifacts,omitempty" json:"artifacts"`
-	Reporters     config.Reporters  `yaml:"reporters,omitempty" json:"-"`
+	Reporters config.Reporters `yaml:"reporters,omitempty" json:"-"`
 }
 
 // Xcuitest represents xcuitest apps configuration.

@@ -24,7 +24,8 @@ var (
 // Project represents the espresso project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
-	Defaults       config.Defaults        `yaml:"defaults" json:"defaults"`
+	Defaults       config.Defaults `yaml:"defaults" json:"defaults"`
+	ShowConsoleLog bool
 	DryRun         bool                   `yaml:"-" json:"-"`
 	ConfigFilePath string                 `yaml:"-" json:"-"`
 	CLIFlags       map[string]interface{} `yaml:"-" json:"-"`
