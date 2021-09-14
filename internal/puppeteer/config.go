@@ -24,7 +24,7 @@ var (
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
 	Defaults       config.Defaults        `yaml:"defaults,omitempty" json:"defaults"`
-	ShowConsoleLog bool                   `yaml:"showConsoleLog"`
+	ShowConsoleLog bool                   `yaml:"showConsoleLog" json:"-"`
 	DryRun         bool                   `yaml:"-" json:"-"`
 	ConfigFilePath string                 `yaml:"-" json:"-"`
 	CLIFlags       map[string]interface{} `yaml:"-" json:"-"`

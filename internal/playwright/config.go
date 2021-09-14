@@ -27,7 +27,7 @@ var supportedBrwsList = []string{"chromium", "firefox", "webkit"}
 // Project represents the playwright project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
-	ShowConsoleLog bool                   `yaml:"showConsoleLog"`
+	ShowConsoleLog bool                   `yaml:"showConsoleLog" json:"-"`
 	DryRun         bool                   `yaml:"-" json:"-"`
 	ConfigFilePath string                 `yaml:"-" json:"-"`
 	CLIFlags       map[string]interface{} `yaml:"-" json:"-"`
