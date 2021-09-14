@@ -485,24 +485,15 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 		return
 	}
 
-	// Print out system-out if any
-	fmt.Println("\nSystem output:")
 	var hasError bool
 	for _, ts := range testsuites.TestSuites {
-		if ts.SystemOut != "" {
-			fmt.Println(ts.SystemOut)
-		}
 		for _, tc := range ts.TestCases {
 			if tc.Error != "" || tc.Failure != "" {
 				hasError = true
-			}
-			if tc.SystemOut != "" {
-				fmt.Printf("%s.%s\n", tc.ClassName, tc.Name)
-				fmt.Println(tc.SystemOut)
+				break
 			}
 		}
 	}
-
 	// Print summary of failures from junit.xml
 	headerColor := color.New(color.FgRed).Add(color.Bold).Add(color.Underline)
 	if hasError {
