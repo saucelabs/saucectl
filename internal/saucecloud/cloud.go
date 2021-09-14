@@ -436,7 +436,7 @@ func (r *CloudRunner) logSuite(res result) {
 	}
 
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
-	msg := "Suite finsihed."
+	msg := "Suite finished."
 	if res.job.Passed {
 		log.Info().Str("suite", res.name).Bool("passed", res.job.Passed).Str("url", jobDetailsPage).
 			Msg(msg)
