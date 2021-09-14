@@ -497,18 +497,17 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 				hasError = true
 			}
 			if tc.SystemOut != "" {
-				fmt.Printf("%s.%s", tc.ClassName, tc.Name)
+				fmt.Printf("%s.%s\n", tc.ClassName, tc.Name)
 				fmt.Println(tc.SystemOut)
 			}
 		}
 	}
-	if !hasError {
-		return
-	}
 
 	// Print summary of failures from junit.xml
 	headerColor := color.New(color.FgRed).Add(color.Bold).Add(color.Underline)
-	headerColor.Print("\nErrors:\n\n")
+	if hasError {
+		headerColor.Print("\nErrors:\n\n")
+	}
 	bodyColor := color.New(color.FgHiRed)
 	errCount := 1
 	failCount := 1
