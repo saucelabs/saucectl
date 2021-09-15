@@ -9,11 +9,10 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
-
-	"github.com/saucelabs/saucectl/internal/config"
 )
 
 // Config descriptors.
@@ -36,16 +35,17 @@ type Project struct {
 	Sauce          config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
 	Cypress        Cypress                `yaml:"cypress,omitempty" json:"cypress"`
 	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
-	Suite         Suite             `yaml:"suite,omitempty" json:"-"`
-	Suites        []Suite           `yaml:"suites,omitempty" json:"suites"`
-	BeforeExec    []string          `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker        config.Docker     `yaml:"docker,omitempty" json:"docker"`
-	Npm           config.Npm        `yaml:"npm,omitempty" json:"npm"`
-	RootDir       string            `yaml:"rootDir,omitempty" json:"rootDir"`
-	RunnerVersion string            `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
-	Artifacts     config.Artifacts  `yaml:"artifacts,omitempty" json:"artifacts"`
-	Reporters     config.Reporters  `yaml:"reporters,omitempty" json:"-"`
-	Env           map[string]string `yaml:"env,omitempty" json:"env"`
+	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
+	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`
+	BeforeExec    []string             `yaml:"beforeExec,omitempty" json:"beforeExec"`
+	Docker        config.Docker        `yaml:"docker,omitempty" json:"docker"`
+	Npm           config.Npm           `yaml:"npm,omitempty" json:"npm"`
+	RootDir       string               `yaml:"rootDir,omitempty" json:"rootDir"`
+	RunnerVersion string               `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
+	Artifacts     config.Artifacts     `yaml:"artifacts,omitempty" json:"artifacts"`
+	Reporters     config.Reporters     `yaml:"reporters,omitempty" json:"-"`
+	Env           map[string]string    `yaml:"env,omitempty" json:"env"`
+	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
 }
 
 // Suite represents the cypress test suite configuration.

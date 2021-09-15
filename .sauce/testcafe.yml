@@ -44,3 +44,8 @@ suites:
         platformName: iOS
         platformVersions:
           - "14.3"
+
+notifications:
+  slack:
+    channels: ["devx-slack-notifications"]
+    send: always # possible values [always,fail,never,pass]

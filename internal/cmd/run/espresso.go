@@ -4,24 +4,23 @@ import (
 	"os"
 	"strings"
 
-	"github.com/saucelabs/saucectl/internal/report/captor"
-	"github.com/saucelabs/saucectl/internal/segment"
-	"github.com/saucelabs/saucectl/internal/usage"
-
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
+	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
-	"github.com/spf13/cobra"
+	"github.com/saucelabs/saucectl/internal/usage"
 )
 
 type espressoFlags struct {
@@ -142,7 +141,8 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 			ShowConsoleLog:        p.ShowConsoleLog,
 			ArtifactDownloader:    &rs,
 			RDCArtifactDownloader: &rc,
-			Reporters:             createReporters(p.Reporters),
+			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc,
+				"espresso", "sauce"),
 		},
 	}
 

@@ -75,6 +75,17 @@ type ArtifactDownload struct {
 	Directory string   `yaml:"directory,omitempty" json:"directory"`
 }
 
+// Notifications represents the test notifications configuration.
+type Notifications struct {
+	Slack Slack `yaml:"slack,omitempty" json:"slack"`
+}
+
+// Slack represents slack configuration.
+type Slack struct {
+	Channels []string `yaml:"channels,omitempty" json:"channels"`
+	Send     When     `yaml:"send,omitempty" json:"send"`
+}
+
 // Artifacts represents the test artifacts configuration.
 type Artifacts struct {
 	Download ArtifactDownload `yaml:"download,omitempty" json:"download"`

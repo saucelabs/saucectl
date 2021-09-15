@@ -2,11 +2,11 @@ package docker
 
 import (
 	"context"
-	"github.com/saucelabs/saucectl/internal/report"
 
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 )
 

@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"

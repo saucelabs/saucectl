@@ -41,3 +41,8 @@ artifacts:
       - junit.xml
       - xcuitest.log
     directory: ./artifacts/
+
+notifications:
+  slack:
+    channels: ["devx-slack-notifications"]
+    send: always # possible values [always,fail,never,pass]

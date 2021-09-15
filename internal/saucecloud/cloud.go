@@ -130,6 +130,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				})
 			}
 
+			url := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 			tr := report.TestResult{
 				Name:       res.name,
 				Duration:   res.duration,
@@ -137,7 +138,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				Browser:    browser,
 				Platform:   platform,
 				DeviceName: res.job.BaseConfig.DeviceName,
-				URL:        fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID),
+				URL:        url,
 				Artifacts:  artifacts,
 				Origin:     "sauce",
 			}

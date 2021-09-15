@@ -6,6 +6,10 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -21,9 +25,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/usage"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 )
 
 // NewPlaywrightCmd creates the 'run' command for Playwright.
@@ -141,7 +142,8 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs 
 	log.Info().Msg("Running Playwright in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewPlaywright(p, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
+	cd, err := docker.NewPlaywright(p, &testco, &testco, &rs, &rs, createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testco,
+		"playwright", "docker"))
 	if err != nil {
 		return 1, err
 	}
@@ -167,7 +169,8 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
-			Reporters:          createReporters(p.Reporters),
+			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc,
+				"playwright", "sauce"),
 		},
 	}
 

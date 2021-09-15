@@ -3,7 +3,6 @@ package saucecloud
 import (
 	"archive/zip"
 	"context"
-	"gotest.tools/v3/fs"
 	"io"
 	"os"
 	"path"
@@ -11,6 +10,8 @@ import (
 	"regexp"
 	"testing"
 	"time"
+
+	"gotest.tools/v3/fs"
 
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"

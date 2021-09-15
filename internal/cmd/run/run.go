@@ -3,19 +3,6 @@ package run
 import (
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/cypress"
-	"github.com/saucelabs/saucectl/internal/espresso"
-	"github.com/saucelabs/saucectl/internal/flags"
-	"github.com/saucelabs/saucectl/internal/junit"
-	"github.com/saucelabs/saucectl/internal/playwright"
-	"github.com/saucelabs/saucectl/internal/puppeteer"
-	"github.com/saucelabs/saucectl/internal/report"
-	"github.com/saucelabs/saucectl/internal/report/captor"
-	"github.com/saucelabs/saucectl/internal/report/table"
-	"github.com/saucelabs/saucectl/internal/testcafe"
-	"github.com/saucelabs/saucectl/internal/version"
-	"github.com/saucelabs/saucectl/internal/xcuitest"
-	"github.com/spf13/pflag"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -27,16 +14,30 @@ import (
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/github"
+	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/notification/slack"
+	"github.com/saucelabs/saucectl/internal/playwright"
+	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/rdc"
+	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/saucelabs/saucectl/internal/report/captor"
+	"github.com/saucelabs/saucectl/internal/report/table"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/sentry"
+	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
+	"github.com/saucelabs/saucectl/internal/version"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
 
 var (
@@ -282,7 +283,8 @@ func checkForUpdates() {
 	}
 }
 
-func createReporters(c config.Reporters) []report.Reporter {
+func createReporters(c config.Reporters, ntfs config.Notifications, metadata config.Metadata,
+	svc slack.Service, framework, env string) []report.Reporter {
 	reps := []report.Reporter{
 		&captor.Default,
 		&table.Reporter{
@@ -294,6 +296,16 @@ func createReporters(c config.Reporters) []report.Reporter {
 			Filename: c.JUnit.Filename,
 		})
 	}
+
+	reps = append(reps, &slack.Reporter{
+		Channels:    ntfs.Slack.Channels,
+		Framework:   framework,
+		Metadata:    metadata,
+		TestEnv:     env,
+		TestResults: []report.TestResult{},
+		Config:      ntfs,
+		Service:     svc,
+	})
 
 	return reps
 }

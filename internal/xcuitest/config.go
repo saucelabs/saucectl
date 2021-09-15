@@ -31,10 +31,11 @@ type Project struct {
 	Sauce          config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
 	Xcuitest       Xcuitest               `yaml:"xcuitest,omitempty" json:"xcuitest"`
 	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
-	Suite     Suite            `yaml:"suite,omitempty" json:"-"`
-	Suites    []Suite          `yaml:"suites,omitempty" json:"suites"`
-	Artifacts config.Artifacts `yaml:"artifacts,omitempty" json:"artifacts"`
-	Reporters config.Reporters `yaml:"reporters,omitempty" json:"-"`
+	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
+	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`
+	Artifacts     config.Artifacts     `yaml:"artifacts,omitempty" json:"artifacts"`
+	Reporters     config.Reporters     `yaml:"reporters,omitempty" json:"-"`
+	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
 }
 
 // Xcuitest represents xcuitest apps configuration.

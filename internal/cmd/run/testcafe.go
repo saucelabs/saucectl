@@ -6,6 +6,10 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -21,9 +25,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/usage"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 )
 
 type testcafeFlags struct {
@@ -158,7 +159,8 @@ func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client, rs rest
 	log.Info().Msg("Running Testcafe in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewTestcafe(p, &testco, &testco, &rs, &rs, createReporters(p.Reporters))
+	cd, err := docker.NewTestcafe(p, &testco, &testco, &rs, &rs, createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testco,
+		"testcafe", "docker"))
 	if err != nil {
 		return 1, err
 	}
@@ -184,7 +186,8 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
-			Reporters:          createReporters(p.Reporters),
+			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc,
+				"testcafe", "sauce"),
 		},
 	}
 	cleanTestCafePackages(&p)
