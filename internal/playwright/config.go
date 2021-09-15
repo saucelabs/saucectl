@@ -3,11 +3,12 @@ package playwright
 import (
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/region"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/region"
 
 	"github.com/saucelabs/saucectl/internal/config"
 )
@@ -26,7 +27,7 @@ var supportedBrwsList = []string{"chromium", "firefox", "webkit"}
 // Project represents the playwright project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
-	ShowConsoleLog bool
+	ShowConsoleLog bool                   `yaml:"showConsoleLog" json:"-"`
 	DryRun         bool                   `yaml:"-" json:"-"`
 	ConfigFilePath string                 `yaml:"-" json:"-"`
 	CLIFlags       map[string]interface{} `yaml:"-" json:"-"`

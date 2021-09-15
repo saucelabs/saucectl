@@ -1,11 +1,12 @@
 package run
 
 import (
+	"os"
+	"strings"
+
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
-	"os"
-	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/appstore"
@@ -129,7 +130,7 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 			CCYReader:             &rs,
 			TunnelService:         &rs,
 			Region:                regio,
-			ShowConsoleLog:        false,
+			ShowConsoleLog:        p.ShowConsoleLog,
 			ArtifactDownloader:    &rs,
 			RDCArtifactDownloader: &rc,
 			Reporters:             createReporters(p.Reporters),

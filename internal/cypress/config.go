@@ -28,9 +28,9 @@ var (
 // Project represents the cypress project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
-	Defaults       config.Defaults `yaml:"defaults" json:"defaults"`
-	DryRun         bool            `yaml:"-" json:"-"`
-	ShowConsoleLog bool
+	Defaults       config.Defaults        `yaml:"defaults" json:"defaults"`
+	DryRun         bool                   `yaml:"-" json:"-"`
+	ShowConsoleLog bool                   `yaml:"showConsoleLog" json:"-"`
 	ConfigFilePath string                 `yaml:"-" json:"-"`
 	CLIFlags       map[string]interface{} `yaml:"-" json:"-"`
 	Sauce          config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`

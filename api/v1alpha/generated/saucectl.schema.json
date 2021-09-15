@@ -238,6 +238,10 @@
           "kind": {
             "const": "cypress"
           },
+          "showConsoleLog": {
+            "description": "Shows suites console.log locally. By default console.log is only shown on failures.",
+            "type": "boolean"
+          },
           "defaults": {
             "properties": {
               "mode": {
@@ -427,6 +431,9 @@
           },
           "kind": {
             "const": "espresso"
+          },
+          "showConsoleLog": {
+            "$ref": "#/allOf/0/then/properties/showConsoleLog"
           },
           "defaults": {
             "$ref": "#/allOf/0/then/properties/defaults",
@@ -683,6 +690,9 @@
           "kind": {
             "const": "playwright"
           },
+          "showConsoleLog": {
+            "$ref": "#/allOf/0/then/properties/showConsoleLog"
+          },
           "defaults": {
             "$ref": "#/allOf/0/then/properties/defaults",
             "properties": {
@@ -860,6 +870,9 @@
           "kind": {
             "const": "puppeteer"
           },
+          "showConsoleLog": {
+            "$ref": "#/allOf/0/then/properties/showConsoleLog"
+          },
           "defaults": {
             "$ref": "#/allOf/0/then/properties/defaults",
             "properties": {
@@ -994,6 +1007,9 @@
           },
           "kind": {
             "const": "testcafe"
+          },
+          "showConsoleLog": {
+            "$ref": "#/allOf/0/then/properties/showConsoleLog"
           },
           "defaults": {
             "$ref": "#/allOf/0/then/properties/defaults",
@@ -1229,6 +1245,9 @@
           },
           "kind": {
             "const": "xcuitest"
+          },
+          "showConsoleLog": {
+            "$ref": "#/allOf/0/then/properties/showConsoleLog"
           },
           "defaults": {
             "$ref": "#/allOf/0/then/properties/defaults",

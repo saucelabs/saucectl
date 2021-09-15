@@ -58,6 +58,10 @@
     "version": {
       "description": "Which framework version to use. Please consult https://docs.saucelabs.com/web-apps/automated-testing/cypress#supported-testing-platforms for available versions.",
       "type": "string"
+    },
+    "showConsoleLog": {
+      "description": "Shows suites console.log locally. By default console.log is only shown on failures.",
+      "type": "boolean"
     }
   }
 }

@@ -487,7 +487,9 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 
 	// Print summary of failures from junit.xml
 	headerColor := color.New(color.FgRed).Add(color.Bold).Add(color.Underline)
-	headerColor.Print("\nErrors:\n\n")
+	if !res.job.Passed {
+		headerColor.Print("\nErrors:\n\n")
+	}
 	bodyColor := color.New(color.FgHiRed)
 	errCount := 1
 	failCount := 1
