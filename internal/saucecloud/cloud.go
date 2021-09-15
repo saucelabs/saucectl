@@ -485,18 +485,9 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 		return
 	}
 
-	var hasError bool
-	for _, ts := range testsuites.TestSuites {
-		for _, tc := range ts.TestCases {
-			if tc.Error != "" || tc.Failure != "" {
-				hasError = true
-				break
-			}
-		}
-	}
 	// Print summary of failures from junit.xml
 	headerColor := color.New(color.FgRed).Add(color.Bold).Add(color.Underline)
-	if hasError {
+	if !res.job.Passed {
 		headerColor.Print("\nErrors:\n\n")
 	}
 	bodyColor := color.New(color.FgHiRed)
