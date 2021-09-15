@@ -28,6 +28,9 @@
     "kind": {
       "const": "playwright"
     },
+    "showConsoleLog": {
+      "$ref": "../subschema/common.schema.json#/definitions/showConsoleLog"
+    },
     "defaults": {
       "$ref": "../subschema/common.schema.json#/definitions/defaults",
       "properties": {
