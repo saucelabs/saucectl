@@ -15,7 +15,6 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
-
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
@@ -23,6 +22,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/saucelabs/saucectl/internal/report/table"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 )
 
@@ -41,6 +41,8 @@ type ContainerRunner struct {
 	Reporters []report.Reporter
 
 	interrupted bool
+	startTime   time.Time
+	endTime     time.Time
 }
 
 // containerStartOptions represent data required to start a new container.
@@ -275,6 +277,7 @@ func (r *ContainerRunner) createWorkerPool(ccy int) (chan containerStartOptions,
 
 	log.Info().Int("concurrency", ccy).Msg("Launching workers.")
 
+	r.startTime = time.Now()
 	for i := 0; i < ccy; i++ {
 		go r.runJobs(jobOpts, results)
 	}
@@ -377,8 +380,12 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 		r.logSuite(res)
 	}
 	close(done)
+	r.endTime = time.Now()
 
 	for _, rep := range r.Reporters {
+		if rpt, ok := rep.(*table.Reporter); ok {
+			rpt.TotalDuration = r.endTime.Sub(r.startTime)
+		}
 		rep.Render()
 	}
 

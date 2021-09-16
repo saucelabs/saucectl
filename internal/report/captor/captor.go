@@ -1,8 +1,10 @@
 package captor
 
 import (
-	"github.com/saucelabs/saucectl/internal/report"
 	"sync"
+	"time"
+
+	"github.com/saucelabs/saucectl/internal/report"
 )
 
 // Default is the default, global instance of Reporter. Use judiciously.
@@ -10,8 +12,9 @@ var Default = Reporter{}
 
 // Reporter is a simple implementation for report.Reporter, a no-output reporter for capturing test results.
 type Reporter struct {
-	TestResults []report.TestResult
-	lock        sync.Mutex
+	TestResults   []report.TestResult
+	lock          sync.Mutex
+	TotalDuration time.Duration
 }
 
 // Add adds the test result.

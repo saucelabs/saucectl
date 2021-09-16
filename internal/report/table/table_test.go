@@ -2,15 +2,17 @@ package table
 
 import (
 	"bytes"
-	"github.com/saucelabs/saucectl/internal/report"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/report"
 )
 
 func TestReporter_Render(t *testing.T) {
 	type fields struct {
-		TestResults []report.TestResult
+		TestResults   []report.TestResult
+		TotalDuration time.Duration
 	}
 	tests := []struct {
 		name   string
@@ -20,6 +22,7 @@ func TestReporter_Render(t *testing.T) {
 		{
 			name: "all pass",
 			fields: fields{
+				TotalDuration: 34479 * time.Millisecond,
 				TestResults: []report.TestResult{
 					{
 						Name:     "Firefox",
@@ -37,19 +40,19 @@ func TestReporter_Render(t *testing.T) {
 					},
 				},
 			},
-			want:
-			`
+			want: `
        Name                              Duration    Status    Browser    Platform    
 ──────────────────────────────────────────────────────────────────────────────────────
   ✔    Firefox                                34s    passed    Firefox    Windows 10  
   ✔    Chrome                                  5s    passed    Chrome     Windows 10  
 ──────────────────────────────────────────────────────────────────────────────────────
-  ✔    All tests have passed                  39s                                     
+  ✔    All tests have passed                  34s                                     
 `,
 		},
 		{
 			name: "with failure",
 			fields: fields{
+				TotalDuration: 205931 * time.Millisecond,
 				TestResults: []report.TestResult{
 					{
 						Name:     "Firefox",
@@ -67,8 +70,7 @@ func TestReporter_Render(t *testing.T) {
 					},
 				},
 			},
-			want:
-			`
+			want: `
        Name                               Duration    Status    Browser    Platform    
 ───────────────────────────────────────────────────────────────────────────────────────
   ✔    Firefox                                 34s    passed    Firefox    Windows 10  
@@ -83,8 +85,9 @@ func TestReporter_Render(t *testing.T) {
 			var buffy bytes.Buffer
 
 			r := &Reporter{
-				TestResults: tt.fields.TestResults,
-				Dst:         &buffy,
+				TestResults:   tt.fields.TestResults,
+				Dst:           &buffy,
+				TotalDuration: tt.fields.TotalDuration,
 			}
 			r.Render()
 
