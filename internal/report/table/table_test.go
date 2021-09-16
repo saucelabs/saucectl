@@ -11,9 +11,9 @@ import (
 
 func TestReporter_Render(t *testing.T) {
 	type fields struct {
-		TestResults   []report.TestResult
-		TotalDuration time.Duration
+		TestResults []report.TestResult
 	}
+	startTime := time.Now()
 	tests := []struct {
 		name   string
 		fields fields
@@ -22,21 +22,24 @@ func TestReporter_Render(t *testing.T) {
 		{
 			name: "all pass",
 			fields: fields{
-				TotalDuration: 34479 * time.Millisecond,
 				TestResults: []report.TestResult{
 					{
-						Name:     "Firefox",
-						Duration: 34479 * time.Millisecond,
-						Passed:   true,
-						Browser:  "Firefox",
-						Platform: "Windows 10",
+						Name:      "Firefox",
+						Duration:  34479 * time.Millisecond,
+						StartTime: startTime,
+						EndTime:   startTime.Add(34479 * time.Millisecond),
+						Passed:    true,
+						Browser:   "Firefox",
+						Platform:  "Windows 10",
 					},
 					{
-						Name:     "Chrome",
-						Duration: 5123 * time.Millisecond,
-						Passed:   true,
-						Browser:  "Chrome",
-						Platform: "Windows 10",
+						Name:      "Chrome",
+						Duration:  5123 * time.Millisecond,
+						StartTime: startTime,
+						EndTime:   startTime.Add(5123 * time.Millisecond),
+						Passed:    true,
+						Browser:   "Chrome",
+						Platform:  "Windows 10",
 					},
 				},
 			},
@@ -52,21 +55,24 @@ func TestReporter_Render(t *testing.T) {
 		{
 			name: "with failure",
 			fields: fields{
-				TotalDuration: 205931 * time.Millisecond,
 				TestResults: []report.TestResult{
 					{
-						Name:     "Firefox",
-						Duration: 34479 * time.Millisecond,
-						Passed:   true,
-						Browser:  "Firefox",
-						Platform: "Windows 10",
+						Name:      "Firefox",
+						Duration:  34479 * time.Millisecond,
+						StartTime: startTime,
+						EndTime:   startTime.Add(34479 * time.Millisecond),
+						Passed:    true,
+						Browser:   "Firefox",
+						Platform:  "Windows 10",
 					},
 					{
-						Name:     "Chrome",
-						Duration: 171452 * time.Millisecond,
-						Passed:   false,
-						Browser:  "Chrome",
-						Platform: "Windows 10",
+						Name:      "Chrome",
+						Duration:  171452 * time.Millisecond,
+						StartTime: startTime,
+						EndTime:   startTime.Add(171452 * time.Millisecond),
+						Passed:    false,
+						Browser:   "Chrome",
+						Platform:  "Windows 10",
 					},
 				},
 			},
@@ -76,7 +82,7 @@ func TestReporter_Render(t *testing.T) {
   ✔    Firefox                                 34s    passed    Firefox    Windows 10  
   ✖    Chrome                                2m51s    failed    Chrome     Windows 10  
 ───────────────────────────────────────────────────────────────────────────────────────
-  ✖    1 of 2 suites have failed (50%)       3m25s                                     
+  ✖    1 of 2 suites have failed (50%)       2m51s                                     
 `,
 		},
 	}
@@ -85,9 +91,8 @@ func TestReporter_Render(t *testing.T) {
 			var buffy bytes.Buffer
 
 			r := &Reporter{
-				TestResults:   tt.fields.TestResults,
-				Dst:           &buffy,
-				TotalDuration: tt.fields.TotalDuration,
+				TestResults: tt.fields.TestResults,
+				Dst:         &buffy,
 			}
 			r.Render()
 

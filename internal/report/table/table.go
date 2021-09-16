@@ -53,10 +53,9 @@ var defaultTableStyle = table.Style{
 
 // Reporter is a table writer implementation for report.Reporter.
 type Reporter struct {
-	TestResults   []report.TestResult
-	Dst           io.Writer
-	lock          sync.Mutex
-	TotalDuration time.Duration
+	TestResults []report.TestResult
+	Dst         io.Writer
+	lock        sync.Mutex
 }
 
 // Add adds the test result to the summary table.
@@ -107,7 +106,7 @@ func (r *Reporter) Render() {
 			statusText(ts.Passed), ts.Browser, ts.Platform, ts.DeviceName})
 	}
 
-	t.AppendFooter(footer(errors, len(r.TestResults), r.TotalDuration))
+	t.AppendFooter(footer(errors, len(r.TestResults), calDuration(r.TestResults)))
 
 	_, _ = fmt.Fprintln(r.Dst)
 	t.Render()
@@ -148,4 +147,22 @@ func statusSymbol(passed bool) string {
 	}
 
 	return color.GreenString("✔")
+}
+
+func calDuration(results []report.TestResult) time.Duration {
+	if len(results) == 0 {
+		return 0
+	}
+	start := results[0].StartTime
+	end := results[0].EndTime
+	for _, r := range results {
+		if start.After(r.StartTime) {
+			start = r.StartTime
+		}
+		if end.Before(r.EndTime) {
+			end = r.EndTime
+		}
+	}
+
+	return end.Sub(start)
 }

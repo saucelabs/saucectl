@@ -26,7 +26,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
-	"github.com/saucelabs/saucectl/internal/report/table"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/saucelabs/saucectl/internal/tunnel"
@@ -50,19 +49,19 @@ type CloudRunner struct {
 	Reporters []report.Reporter
 
 	interrupted bool
-	startTime   time.Time
-	endTime     time.Time
 }
 
 type result struct {
-	name     string
-	browser  string
-	job      job.Job
-	skipped  bool
-	err      error
-	duration time.Duration
-	attempts int
-	retries  int
+	name      string
+	browser   string
+	job       job.Job
+	skipped   bool
+	err       error
+	duration  time.Duration
+	startTime time.Time
+	endTime   time.Time
+	attempts  int
+	retries   int
 }
 
 // ConsoleLogAsset represents job asset log file name.
@@ -73,7 +72,6 @@ func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartO
 	results := make(chan result, ccy)
 
 	log.Info().Int("concurrency", ccy).Msg("Launching workers.")
-	r.startTime = time.Now()
 	for i := 0; i < ccy; i++ {
 		go r.runJobs(jobOpts, results)
 	}
@@ -138,6 +136,8 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			tr := report.TestResult{
 				Name:       res.name,
 				Duration:   res.duration,
+				StartTime:  res.startTime,
+				EndTime:    res.endTime,
 				Passed:     res.job.Passed,
 				Browser:    browser,
 				Platform:   platform,
@@ -162,12 +162,8 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 		r.logSuite(res)
 	}
 	close(done)
-	r.endTime = time.Now()
 
 	for _, rep := range r.Reporters {
-		if rpt, ok := rep.(*table.Reporter); ok {
-			rpt.TotalDuration = r.endTime.Sub(r.startTime)
-		}
 		rep.Render()
 	}
 
@@ -298,14 +294,16 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 		}
 
 		results <- result{
-			name:     opts.DisplayName,
-			browser:  opts.BrowserName,
-			job:      jobData,
-			skipped:  skipped,
-			err:      err,
-			duration: time.Since(start),
-			attempts: opts.Attempt + 1,
-			retries:  opts.Retries,
+			name:      opts.DisplayName,
+			browser:   opts.BrowserName,
+			job:       jobData,
+			skipped:   skipped,
+			err:       err,
+			startTime: start,
+			endTime:   time.Now(),
+			duration:  time.Since(start),
+			attempts:  opts.Attempt + 1,
+			retries:   opts.Retries,
 		}
 	}
 }
