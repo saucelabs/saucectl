@@ -15,7 +15,6 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
-
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
@@ -75,6 +74,8 @@ type result struct {
 	browser       string
 	duration      time.Duration
 	jobInfo       jobInfo
+	startTime     time.Time
+	endTime       time.Time
 }
 
 // jobInfo represents the info on the job given by the container
@@ -305,6 +306,8 @@ func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, re
 			skipped:       skipped,
 			consoleOutput: output,
 			duration:      time.Since(start),
+			startTime:     start,
+			endTime:       time.Now(),
 			err:           err,
 			timedOut:      timedOut,
 		}
@@ -361,6 +364,8 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 			tr := report.TestResult{
 				Name:      res.name,
 				Duration:  res.duration,
+				StartTime: res.startTime,
+				EndTime:   res.endTime,
 				Passed:    res.passed,
 				Browser:   res.browser,
 				Platform:  "Docker",

@@ -106,7 +106,7 @@ func (r *Reporter) Render() {
 			statusText(ts.Passed), ts.Browser, ts.Platform, ts.DeviceName})
 	}
 
-	t.AppendFooter(footer(errors, len(r.TestResults), totalDur))
+	t.AppendFooter(footer(errors, len(r.TestResults), calDuration(r.TestResults)))
 
 	_, _ = fmt.Fprintln(r.Dst)
 	t.Render()
@@ -147,4 +147,19 @@ func statusSymbol(passed bool) string {
 	}
 
 	return color.GreenString("✔")
+}
+
+func calDuration(results []report.TestResult) time.Duration {
+	start := time.Now()
+	end := start
+	for _, r := range results {
+		if r.StartTime.Before(start) {
+			start = r.StartTime
+		}
+		if r.EndTime.After(end) {
+			end = r.EndTime
+		}
+	}
+
+	return end.Sub(start)
 }

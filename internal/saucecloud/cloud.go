@@ -52,14 +52,16 @@ type CloudRunner struct {
 }
 
 type result struct {
-	name     string
-	browser  string
-	job      job.Job
-	skipped  bool
-	err      error
-	duration time.Duration
-	attempts int
-	retries  int
+	name      string
+	browser   string
+	job       job.Job
+	skipped   bool
+	err       error
+	duration  time.Duration
+	startTime time.Time
+	endTime   time.Time
+	attempts  int
+	retries   int
 }
 
 // ConsoleLogAsset represents job asset log file name.
@@ -134,6 +136,8 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			tr := report.TestResult{
 				Name:       res.name,
 				Duration:   res.duration,
+				StartTime:  res.startTime,
+				EndTime:    res.endTime,
 				Passed:     res.job.Passed,
 				Browser:    browser,
 				Platform:   platform,
@@ -290,14 +294,16 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 		}
 
 		results <- result{
-			name:     opts.DisplayName,
-			browser:  opts.BrowserName,
-			job:      jobData,
-			skipped:  skipped,
-			err:      err,
-			duration: time.Since(start),
-			attempts: opts.Attempt + 1,
-			retries:  opts.Retries,
+			name:      opts.DisplayName,
+			browser:   opts.BrowserName,
+			job:       jobData,
+			skipped:   skipped,
+			err:       err,
+			startTime: start,
+			endTime:   time.Now(),
+			duration:  time.Since(start),
+			attempts:  opts.Attempt + 1,
+			retries:   opts.Retries,
 		}
 	}
 }

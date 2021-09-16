@@ -1,8 +1,9 @@
 package captor
 
 import (
-	"github.com/saucelabs/saucectl/internal/report"
 	"sync"
+
+	"github.com/saucelabs/saucectl/internal/report"
 )
 
 // Default is the default, global instance of Reporter. Use judiciously.

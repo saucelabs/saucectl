@@ -2,16 +2,18 @@ package table
 
 import (
 	"bytes"
-	"github.com/saucelabs/saucectl/internal/report"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/report"
 )
 
 func TestReporter_Render(t *testing.T) {
 	type fields struct {
 		TestResults []report.TestResult
 	}
+	startTime := time.Now()
 	tests := []struct {
 		name   string
 		fields fields
@@ -22,29 +24,32 @@ func TestReporter_Render(t *testing.T) {
 			fields: fields{
 				TestResults: []report.TestResult{
 					{
-						Name:     "Firefox",
-						Duration: 34479 * time.Millisecond,
-						Passed:   true,
-						Browser:  "Firefox",
-						Platform: "Windows 10",
+						Name:      "Firefox",
+						Duration:  34479 * time.Millisecond,
+						StartTime: startTime,
+						EndTime:   startTime.Add(34479 * time.Millisecond),
+						Passed:    true,
+						Browser:   "Firefox",
+						Platform:  "Windows 10",
 					},
 					{
-						Name:     "Chrome",
-						Duration: 5123 * time.Millisecond,
-						Passed:   true,
-						Browser:  "Chrome",
-						Platform: "Windows 10",
+						Name:      "Chrome",
+						Duration:  5123 * time.Millisecond,
+						StartTime: startTime,
+						EndTime:   startTime.Add(5123 * time.Millisecond),
+						Passed:    true,
+						Browser:   "Chrome",
+						Platform:  "Windows 10",
 					},
 				},
 			},
-			want:
-			`
+			want: `
        Name                              Duration    Status    Browser    Platform    
 ──────────────────────────────────────────────────────────────────────────────────────
   ✔    Firefox                                34s    passed    Firefox    Windows 10  
   ✔    Chrome                                  5s    passed    Chrome     Windows 10  
 ──────────────────────────────────────────────────────────────────────────────────────
-  ✔    All tests have passed                  39s                                     
+  ✔    All tests have passed                  34s                                     
 `,
 		},
 		{
@@ -52,29 +57,32 @@ func TestReporter_Render(t *testing.T) {
 			fields: fields{
 				TestResults: []report.TestResult{
 					{
-						Name:     "Firefox",
-						Duration: 34479 * time.Millisecond,
-						Passed:   true,
-						Browser:  "Firefox",
-						Platform: "Windows 10",
+						Name:      "Firefox",
+						Duration:  34479 * time.Millisecond,
+						StartTime: startTime,
+						EndTime:   startTime.Add(34479 * time.Millisecond),
+						Passed:    true,
+						Browser:   "Firefox",
+						Platform:  "Windows 10",
 					},
 					{
-						Name:     "Chrome",
-						Duration: 171452 * time.Millisecond,
-						Passed:   false,
-						Browser:  "Chrome",
-						Platform: "Windows 10",
+						Name:      "Chrome",
+						Duration:  171452 * time.Millisecond,
+						StartTime: startTime,
+						EndTime:   startTime.Add(171452 * time.Millisecond),
+						Passed:    false,
+						Browser:   "Chrome",
+						Platform:  "Windows 10",
 					},
 				},
 			},
-			want:
-			`
+			want: `
        Name                               Duration    Status    Browser    Platform    
 ───────────────────────────────────────────────────────────────────────────────────────
   ✔    Firefox                                 34s    passed    Firefox    Windows 10  
   ✖    Chrome                                2m51s    failed    Chrome     Windows 10  
 ───────────────────────────────────────────────────────────────────────────────────────
-  ✖    1 of 2 suites have failed (50%)       3m25s                                     
+  ✖    1 of 2 suites have failed (50%)       2m51s                                     
 `,
 		},
 	}
