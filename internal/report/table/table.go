@@ -150,16 +150,13 @@ func statusSymbol(passed bool) string {
 }
 
 func calDuration(results []report.TestResult) time.Duration {
-	if len(results) == 0 {
-		return 0
-	}
-	start := results[0].StartTime
-	end := results[0].EndTime
+	start := time.Now()
+	end := start
 	for _, r := range results {
-		if start.After(r.StartTime) {
+		if r.StartTime.Before(start) {
 			start = r.StartTime
 		}
-		if end.Before(r.EndTime) {
+		if r.EndTime.After(end) {
 			end = r.EndTime
 		}
 	}

@@ -6,7 +6,7 @@ import "time"
 type TestResult struct {
 	Name       string        `json:"name"`
 	Duration   time.Duration `json:"duration"`
-	StartTime  time.Time     `json:"sstartTime"`
+	StartTime  time.Time     `json:"startTime"`
 	EndTime    time.Time     `json:"endTime"`
 	Passed     bool          `json:"passed"`
 	Browser    string        `json:"browser"`
