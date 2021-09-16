@@ -2,6 +2,11 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"time"
+
+	"github.com/saucelabs/saucectl/internal/cmd/completion"
+
 	"github.com/saucelabs/saucectl/internal/cmd/configure"
 	"github.com/saucelabs/saucectl/internal/cmd/ini"
 	"github.com/saucelabs/saucectl/internal/cmd/new"
@@ -9,8 +14,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/cmd/signup"
 	"github.com/saucelabs/saucectl/internal/setup"
 	"github.com/saucelabs/saucectl/internal/version"
-	"os"
-	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -58,6 +61,7 @@ func main() {
 		configure.Command(),
 		ini.Command(),
 		signup.Command(),
+		completion.Command(),
 	)
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
