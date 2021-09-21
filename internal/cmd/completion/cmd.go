@@ -26,14 +26,14 @@ Bash:
 Zsh:
 
   # If shell completion is not already enabled in your environment,
-  # you will need to enable it.  You can execute the following once:
+  # enable it by executing the following once:
 
   $ echo "autoload -U compinit; compinit" >> ~/.zshrc
 
   # To load completions for each session, execute once:
   $ saucectl completion zsh > "${fpath[1]}/_saucectl"
 
-  # You will need to start a new shell for this setup to take effect.
+  # Start a new shell to apply this setup.
 
 fish:
 
@@ -46,9 +46,9 @@ PowerShell:
 
   PS> saucectl completion powershell | Out-String | Invoke-Expression
 
-  # To load completions for every new session, run:
+  # To load completions for every new session, 
+  # run the following and then source this file from your Powershell profile:
   PS> saucectl completion powershell > saucectl.ps1
-  # and source this file from your PowerShell profile.
 `,
 		DisableFlagsInUseLine: true,
 		ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
