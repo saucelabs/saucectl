@@ -130,16 +130,13 @@ func (r *Reporter) shouldSendNotification(passed bool) bool {
 }
 
 func (r *Reporter) createBlocks() []slack.Block {
-	headerText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("*%s*", r.Metadata.Build), false, false)
-	headerSection := slack.NewSectionBlock(headerText, nil, nil)
-
 	contextText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("%s | *Build ID*: %s | %s | %s", r.getFrameworkName(), r.Metadata.Build, credentials.Get().Username, time.Now().Format("2006-01-02 15:04:05")), false, false)
 	contextSection := slack.NewSectionBlock(contextText, nil, nil)
 
 	resultText := slack.NewTextBlockObject("mrkdwn", r.GetRenderedResult(), false, false)
 	resultSection := slack.NewSectionBlock(resultText, nil, nil)
 
-	return []slack.Block{headerSection, contextSection, resultSection}
+	return []slack.Block{contextSection, resultSection}
 }
 
 func (r *Reporter) getFrameworkName() string {
