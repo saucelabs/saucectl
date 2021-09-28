@@ -193,7 +193,7 @@ func ValidateCypressConfiguration(rootDir string, cypressCfgFile, sauceIgnoreFil
 	}
 
 	configDir := filepath.Dir(cypressCfgPath)
-	cfg, err := ConfigFromFile(cypressCfgPath)
+	cfg, err := configFromFile(cypressCfgPath)
 	if err != nil {
 		return err
 	}

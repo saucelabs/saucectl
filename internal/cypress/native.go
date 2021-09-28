@@ -13,8 +13,8 @@ type Config struct {
 	SupportFile       string `json:"supportFile,omitempty"`
 }
 
-// ConfigFromFile loads cypress configuration into Config structure.
-func ConfigFromFile(fileName string) (Config, error) {
+// configFromFile loads cypress configuration into Config structure.
+func configFromFile(fileName string) (Config, error) {
 	var c Config
 
 	fd, err := os.Open(fileName)
