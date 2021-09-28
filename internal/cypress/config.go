@@ -3,6 +3,8 @@ package cypress
 import (
 	"errors"
 	"fmt"
+	"github.com/bmatcuk/doublestar/v4"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -58,6 +60,7 @@ type Suite struct {
 	ScreenResolution string        `yaml:"screenResolution,omitempty" json:"screenResolution"`
 	Mode             string        `yaml:"mode,omitempty" json:"-"`
 	Timeout          time.Duration `yaml:"timeout,omitempty" json:"timeout"`
+	Shard            string        `yaml:"shard,omitempty" json:"-"`
 }
 
 // SuiteConfig represents the cypress config overrides.
@@ -177,53 +180,50 @@ func checkAvailability(path string, mustBeDirectory bool) error {
 	return nil
 }
 
-// ValidateCypressConfiguration validates that Cypress config has required folders.
-func ValidateCypressConfiguration(rootDir string, cypressCfgFile, sauceIgnoreFile string) error {
+// loadCypressConfiguration reads the cypress.json file and performs basic validation.
+func loadCypressConfiguration(rootDir string, cypressCfgFile, sauceIgnoreFile string) (Config, error) {
 	isIgnored, err := isCypressCfgIgnored(sauceIgnoreFile, cypressCfgFile)
 	if err != nil {
-		return err
+		return Config{}, err
 	}
 	if isIgnored {
-		return fmt.Errorf("your .sauceignore configuration seems to include statements that match crucial cypress configuration files (e.g. cypress.json). In order to run your test successfully, please adjust your .sauceignore configuration")
+		return Config{}, fmt.Errorf("your .sauceignore configuration seems to include statements that match crucial cypress configuration files (e.g. cypress.json). In order to run your test successfully, please adjust your .sauceignore configuration")
 	}
 
 	cypressCfgPath := filepath.Join(rootDir, cypressCfgFile)
-	if _, err := os.Stat(cypressCfgPath); err != nil {
-		return fmt.Errorf("unable to locate the cypress config file at %s", cypressCfgPath)
+	cfg, err := configFromFile(cypressCfgPath)
+	if err != nil {
+		return Config{}, err
+	}
+
+	if cfg.IntegrationFolder == "" {
+		cfg.IntegrationFolder = "cypress/integration"
 	}
 
 	configDir := filepath.Dir(cypressCfgPath)
-	cfg, err := ConfigFromFile(cypressCfgPath)
-	if err != nil {
-		return err
-	}
-
-	integrationFolder := "cypress/integration"
-	if cfg.IntegrationFolder != "" {
-		integrationFolder = cfg.IntegrationFolder
-	}
-	if err = checkAvailability(filepath.Join(configDir, integrationFolder), true); err != nil {
-		return err
+	if err = checkAvailability(filepath.Join(configDir, cfg.IntegrationFolder), true); err != nil {
+		return Config{}, err
 	}
 
 	if cfg.FixturesFolder != "" {
 		if err = checkAvailability(filepath.Join(configDir, cfg.FixturesFolder), true); err != nil {
-			return err
+			return Config{}, err
 		}
 	}
 
 	if cfg.SupportFile != "" {
 		if err = checkAvailability(filepath.Join(configDir, cfg.SupportFile), false); err != nil {
-			return err
+			return Config{}, err
 		}
 	}
 
 	if cfg.PluginsFile != "" {
 		if err = checkAvailability(filepath.Join(configDir, cfg.PluginsFile), false); err != nil {
-			return err
+			return Config{}, err
 		}
 	}
-	return nil
+
+	return cfg, nil
 }
 
 func isCypressCfgIgnored(sauceIgnoreFile, cypressCfgFile string) (bool, error) {
@@ -246,10 +246,6 @@ func Validate(p *Project) error {
 
 	if p.Cypress.Version == "" {
 		return errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
-	}
-	// Validate cypress configuration
-	if err := ValidateCypressConfiguration(p.RootDir, p.Cypress.ConfigFile, p.Sauce.Sauceignore); err != nil {
-		return err
 	}
 
 	// Validate docker.
@@ -297,7 +293,14 @@ func Validate(p *Project) error {
 		}
 	}
 
-	return nil
+	cfg, err := loadCypressConfiguration(p.RootDir, p.Cypress.ConfigFile, p.Sauce.Sauceignore)
+	if err != nil {
+		return err
+	}
+
+	p.Suites, err = shardSuites(cfg, p.Suites)
+
+	return err
 }
 
 // SplitSuites divided Suites to dockerSuites and sauceSuites
@@ -318,6 +321,58 @@ func SplitSuites(p Project) (Project, Project) {
 	sauceProject.Suites = sauceSuites
 
 	return dockerProject, sauceProject
+}
+
+func shardSuites(cfg Config, suites []Suite) ([]Suite, error) {
+	absIntFolder := cfg.AbsIntegrationFolder()
+
+	var shardedSuites []Suite
+	for _, s := range suites {
+		// Use the original suite if there is nothing to shard.
+		if s.Shard != "spec" {
+			shardedSuites = append(shardedSuites, s)
+			continue
+		}
+
+		if err := filepath.WalkDir(absIntFolder, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+
+			if d.IsDir() {
+				return nil
+			}
+
+			// Normalize path separators, since the target execution environment may not support backslashes.
+			pathSlashes := filepath.ToSlash(path)
+
+			for _, pattern := range s.Config.TestFiles {
+				patternSlashes := filepath.ToSlash(pattern)
+				ok, err := doublestar.Match(patternSlashes, pathSlashes)
+				if err != nil {
+					return fmt.Errorf("test file pattern '%s' is not supported: %s", patternSlashes, err)
+				}
+
+				if ok {
+					rel, err := filepath.Rel(absIntFolder, path)
+					if err != nil {
+						return err
+					}
+					rel = filepath.ToSlash(rel)
+					replica := s
+					replica.Name = fmt.Sprintf("%s - %s", s.Name, rel)
+					replica.Config.TestFiles = []string{rel}
+					shardedSuites = append(shardedSuites, replica)
+				}
+			}
+
+			return nil
+		}); err != nil {
+			return shardedSuites, err
+		}
+	}
+
+	return shardedSuites, nil
 }
 
 // FilterSuites filters out suites in the project that don't match the given suite name.
