@@ -145,6 +145,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				URL:        url,
 				Artifacts:  artifacts,
 				Origin:     "sauce",
+				Attempts:   res.attempts,
 			}
 
 			for _, rep := range r.Reporters {
@@ -283,6 +284,10 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			continue
 		}
 
+		if opts.Attempt == 0 {
+			opts.StartTime = start
+		}
+
 		jobData, skipped, err := r.runJob(opts)
 
 		if opts.Attempt < opts.Retries && !jobData.Passed {
@@ -299,7 +304,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			job:       jobData,
 			skipped:   skipped,
 			err:       err,
-			startTime: start,
+			startTime: opts.StartTime,
 			endTime:   time.Now(),
 			duration:  time.Since(start),
 			attempts:  opts.Attempt + 1,
