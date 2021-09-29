@@ -2,7 +2,6 @@ package table
 
 import (
 	"bytes"
-	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -102,7 +101,6 @@ func TestReporter_Render(t *testing.T) {
 			r.Render()
 
 			out := buffy.String()
-			fmt.Println(out)
 			if !reflect.DeepEqual(out, tt.want) {
 				t.Errorf("Render() got = \n%s, want = \n%s", out, tt.want)
 			}
