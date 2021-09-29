@@ -339,7 +339,7 @@ func doRequest(httpClient *http.Client, request *http.Request) (job.Job, error) 
 
 func createRequest(ctx context.Context, url, username, accessKey, jobID string) (*http.Request, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
-		fmt.Sprintf("%s/rest/v1.1/%s/jobs/%s", url, username, jobID), nil)
+		fmt.Sprintf("%s/rest/v1.1/jobs/%s", url, jobID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -352,7 +352,7 @@ func createRequest(ctx context.Context, url, username, accessKey, jobID string) 
 
 func createListAssetsRequest(ctx context.Context, url, username, accessKey, jobID string) (*http.Request, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
-		fmt.Sprintf("%s/rest/v1/%s/jobs/%s/assets", url, username, jobID), nil)
+		fmt.Sprintf("%s/rest/v1/jobs/%s/assets", url, jobID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -364,7 +364,7 @@ func createListAssetsRequest(ctx context.Context, url, username, accessKey, jobI
 
 func createAssetRequest(ctx context.Context, url, username, accessKey, jobID, fileName string) (*http.Request, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
-		fmt.Sprintf("%s/rest/v1/%s/jobs/%s/assets/%s", url, username, jobID, fileName), nil)
+		fmt.Sprintf("%s/rest/v1/jobs/%s/%s", url, jobID, fileName), nil)
 	if err != nil {
 		return nil, err
 	}
