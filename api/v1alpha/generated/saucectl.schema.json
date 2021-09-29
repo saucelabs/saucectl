@@ -371,6 +371,13 @@
                     "sauce"
                   ]
                 },
+                "shard": {
+                  "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec) so that they can easily run in parallel.",
+                  "enum": [
+                    "",
+                    "spec"
+                  ]
+                },
                 "timeout": {
                   "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
                   "type": "string",

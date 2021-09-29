@@ -2,25 +2,36 @@ package cypress
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+	"path/filepath"
 )
 
 // Config represents the cypress.json native configuration file.
 type Config struct {
+	// Path is the location of the config file itself.
+	Path string `yaml:"-" json:"-"`
+
 	FixturesFolder    string `json:"fixturesFolder,omitempty"`
 	IntegrationFolder string `json:"integrationFolder,omitempty"`
 	PluginsFile       string `json:"pluginsFile,omitempty"`
 	SupportFile       string `json:"supportFile,omitempty"`
 }
 
-// ConfigFromFile loads cypress configuration into Config structure.
-func ConfigFromFile(fileName string) (Config, error) {
+// AbsIntegrationFolder returns the absolute path to Config.IntegrationFolder.
+func (c Config) AbsIntegrationFolder() string {
+	return filepath.Join(filepath.Join(filepath.Dir(c.Path), c.IntegrationFolder))
+}
+
+// configFromFile loads cypress configuration into Config structure.
+func configFromFile(fileName string) (Config, error) {
 	var c Config
 
 	fd, err := os.Open(fileName)
 	if err != nil {
-		return c, err
+		return c, fmt.Errorf("unable to locate the cypress config file at: %s", fileName)
 	}
 	err = json.NewDecoder(fd).Decode(&c)
+	c.Path = fileName
 	return c, err
 }
