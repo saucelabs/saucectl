@@ -2,6 +2,7 @@ package table
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -31,6 +32,7 @@ func TestReporter_Render(t *testing.T) {
 						Passed:    true,
 						Browser:   "Firefox",
 						Platform:  "Windows 10",
+						Attempts:  3,
 					},
 					{
 						Name:      "Chrome",
@@ -40,16 +42,17 @@ func TestReporter_Render(t *testing.T) {
 						Passed:    true,
 						Browser:   "Chrome",
 						Platform:  "Windows 10",
+						Attempts:  1,
 					},
 				},
 			},
 			want: `
-       Name                              Duration    Status    Browser    Platform    
-──────────────────────────────────────────────────────────────────────────────────────
-  ✔    Firefox                                34s    passed    Firefox    Windows 10  
-  ✔    Chrome                                  5s    passed    Chrome     Windows 10  
-──────────────────────────────────────────────────────────────────────────────────────
-  ✔    All tests have passed                  34s                                     
+       Name                              Duration    Status    Browser    Platform      Attempts  
+──────────────────────────────────────────────────────────────────────────────────────────────────
+  ✔    Firefox                                34s    passed    Firefox    Windows 10           3  
+  ✔    Chrome                                  5s    passed    Chrome     Windows 10           1  
+──────────────────────────────────────────────────────────────────────────────────────────────────
+  ✔    All tests have passed                  34s                                                 
 `,
 		},
 		{
@@ -64,6 +67,7 @@ func TestReporter_Render(t *testing.T) {
 						Passed:    true,
 						Browser:   "Firefox",
 						Platform:  "Windows 10",
+						Attempts:  1,
 					},
 					{
 						Name:      "Chrome",
@@ -73,16 +77,17 @@ func TestReporter_Render(t *testing.T) {
 						Passed:    false,
 						Browser:   "Chrome",
 						Platform:  "Windows 10",
+						Attempts:  3,
 					},
 				},
 			},
 			want: `
-       Name                               Duration    Status    Browser    Platform    
-───────────────────────────────────────────────────────────────────────────────────────
-  ✔    Firefox                                 34s    passed    Firefox    Windows 10  
-  ✖    Chrome                                2m51s    failed    Chrome     Windows 10  
-───────────────────────────────────────────────────────────────────────────────────────
-  ✖    1 of 2 suites have failed (50%)       2m51s                                     
+       Name                               Duration    Status    Browser    Platform      Attempts  
+───────────────────────────────────────────────────────────────────────────────────────────────────
+  ✔    Firefox                                 34s    passed    Firefox    Windows 10           1  
+  ✖    Chrome                                2m51s    failed    Chrome     Windows 10           3  
+───────────────────────────────────────────────────────────────────────────────────────────────────
+  ✖    1 of 2 suites have failed (50%)       2m51s                                                 
 `,
 		},
 	}
@@ -97,6 +102,7 @@ func TestReporter_Render(t *testing.T) {
 			r.Render()
 
 			out := buffy.String()
+			fmt.Println(out)
 			if !reflect.DeepEqual(out, tt.want) {
 				t.Errorf("Render() got = \n%s, want = \n%s", out, tt.want)
 			}

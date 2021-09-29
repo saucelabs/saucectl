@@ -75,7 +75,7 @@ func (r *Reporter) Render() {
 	t.SetStyle(defaultTableStyle)
 	t.SuppressEmptyColumns()
 
-	t.AppendHeader(table.Row{"", "Name", "Duration", "Status", "Browser", "Platform", "Device"})
+	t.AppendHeader(table.Row{"", "Name", "Duration", "Status", "Browser", "Platform", "Device", "Attempts"})
 	t.SetColumnConfigs([]table.ColumnConfig{
 		{
 			Number:   0, // it's the first nameless column that contains the passed/fail icon
@@ -103,7 +103,7 @@ func (r *Reporter) Render() {
 
 		// the order of values must match the order of the header
 		t.AppendRow(table.Row{statusSymbol(ts.Passed), ts.Name, ts.Duration.Truncate(1 * time.Second),
-			statusText(ts.Passed), ts.Browser, ts.Platform, ts.DeviceName})
+			statusText(ts.Passed), ts.Browser, ts.Platform, ts.DeviceName, ts.Attempts})
 	}
 
 	t.AppendFooter(footer(errors, len(r.TestResults), calDuration(r.TestResults)))
