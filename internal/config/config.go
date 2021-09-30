@@ -102,6 +102,7 @@ type Reporters struct {
 // Tunnel represents a sauce labs tunnel.
 type Tunnel struct {
 	ID     string `yaml:"id,omitempty" json:"id,omitempty"`
+	Name   string `yaml:"name,omitempty" json:"name,omitempty"`
 	Parent string `yaml:"parent,omitempty" json:"parent,omitempty"`
 }
 

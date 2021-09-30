@@ -120,6 +120,10 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, tc testcomposer.Clie
 	}
 	testcafe.SetDefaults(&p)
 
+	if p.Sauce.Tunnel.ID != "" {
+		p.Sauce.Tunnel.Name = p.Sauce.Tunnel.ID
+	}
+
 	if err := testcafe.Validate(&p); err != nil {
 		return 1, err
 	}

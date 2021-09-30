@@ -18,7 +18,7 @@ type PlaywrightRunner struct {
 func (r *PlaywrightRunner) RunProject() (int, error) {
 	exitCode := 1
 
-	if err := r.validateTunnel(r.Project.Sauce.Tunnel.ID, r.Project.Sauce.Tunnel.Parent); err != nil {
+	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Parent); err != nil {
 		return 1, err
 	}
 
@@ -84,7 +84,7 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 				Build:            r.Project.Sauce.Metadata.Build,
 				Tags:             r.Project.Sauce.Metadata.Tags,
 				Tunnel: job.TunnelOptions{
-					ID:     r.Project.Sauce.Tunnel.ID,
+					ID:     r.Project.Sauce.Tunnel.Name,
 					Parent: r.Project.Sauce.Tunnel.Parent,
 				},
 				ScreenResolution: s.ScreenResolution,

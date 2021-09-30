@@ -26,7 +26,7 @@ type XcuitestRunner struct {
 func (r *XcuitestRunner) RunProject() (int, error) {
 	exitCode := 1
 
-	if err := r.validateTunnel(r.Project.Sauce.Tunnel.ID, r.Project.Sauce.Tunnel.Parent); err != nil {
+	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Parent); err != nil {
 		return exitCode, err
 	}
 
@@ -118,7 +118,7 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		Build:            r.Project.Sauce.Metadata.Build,
 		Tags:             r.Project.Sauce.Metadata.Tags,
 		Tunnel: job.TunnelOptions{
-			ID:     r.Project.Sauce.Tunnel.ID,
+			ID:     r.Project.Sauce.Tunnel.Name,
 			Parent: r.Project.Sauce.Tunnel.Parent,
 		},
 		Experiments: r.Project.Sauce.Experiments,

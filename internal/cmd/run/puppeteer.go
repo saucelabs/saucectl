@@ -91,7 +91,6 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 		return 1, err
 	}
 	puppeteer.SetDefaults(&p)
-	// Don't allow framework installation, it is provided by the runner
 
 	if err := puppeteer.Validate(&p); err != nil {
 		return 1, err
