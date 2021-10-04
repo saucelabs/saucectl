@@ -99,10 +99,6 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 	}
 	cypress.SetDefaults(&p)
 
-	if p.Sauce.Tunnel.ID != "" {
-		p.Sauce.Tunnel.Name = p.Sauce.Tunnel.ID
-	}
-
 	if err := cypress.Validate(&p); err != nil {
 		return 1, err
 	}

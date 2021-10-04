@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -137,15 +136,8 @@ func SetDefaults(p *Project) {
 		msg.LogRootDirWarning()
 	}
 
-	if p.Sauce.Tunnel.ID != "" {
-		log.Warn().Msg("tunnel.id has been deprecated, please use tunnel.name instead")
-		p.Sauce.Tunnel.Name = p.Sauce.Tunnel.ID
-	}
+	p.Sauce.Tunnel.SetDefaults()
 
-	if p.Sauce.Tunnel.Parent != "" {
-		log.Warn().Msg("tunnel.parent has been deprecated, please use tunnel.owner instead")
-		p.Sauce.Tunnel.Owner = p.Sauce.Tunnel.Parent
-	}
 	for k := range p.Suites {
 		suite := &p.Suites[k]
 		// If value is 0, it's assumed that the value has not been filled.

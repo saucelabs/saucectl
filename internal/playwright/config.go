@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -132,15 +131,7 @@ func SetDefaults(p *Project) {
 		p.Defaults.Timeout = 0
 	}
 
-	if p.Sauce.Tunnel.ID != "" {
-		log.Warn().Msg("tunnel.id has been deprecated, please use tunnel.name instead")
-		p.Sauce.Tunnel.Name = p.Sauce.Tunnel.ID
-	}
-
-	if p.Sauce.Tunnel.Parent != "" {
-		log.Warn().Msg("tunnel.parent has been deprecated, please use tunnel.owner instead")
-		p.Sauce.Tunnel.Owner = p.Sauce.Tunnel.Parent
-	}
+	p.Sauce.Tunnel.SetDefaults()
 
 	for k := range p.Suites {
 		s := &p.Suites[k]

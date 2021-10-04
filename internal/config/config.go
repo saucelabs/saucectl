@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
-
 	"gopkg.in/yaml.v2"
 )
 
@@ -244,4 +244,15 @@ func Unmarshal(cfgPath string, project interface{}) error {
 	}
 
 	return viper.Unmarshal(&project)
+}
+
+func (t *Tunnel) SetDefaults() {
+	if t.ID != "" {
+		log.Warn().Msg("tunnel.id has been deprecated, please use tunnel.name instead")
+		t.Name = t.ID
+	}
+	if t.Parent != "" {
+		log.Warn().Msg("tunnel.parent has been deprecated, please use tunnel.owner instead")
+		t.Owner = t.Parent
+	}
 }
