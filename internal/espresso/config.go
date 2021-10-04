@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -112,15 +111,8 @@ func SetDefaults(p *Project) {
 		p.Defaults.Timeout = 0
 	}
 
-	if p.Sauce.Tunnel.ID != "" {
-		log.Warn().Msg("tunnel.id has been deprecated, please use tunnel.name instead")
-		p.Sauce.Tunnel.Name = p.Sauce.Tunnel.ID
-	}
+	p.Sauce.Tunnel.SetDefaults()
 
-	if p.Sauce.Tunnel.Parent != "" {
-		log.Warn().Msg("tunnel.parent has been deprecated, please use tunnel.owner instead")
-		p.Sauce.Tunnel.Owner = p.Sauce.Tunnel.Parent
-	}
 	for i, suite := range p.Suites {
 		for j := range suite.Devices {
 			// Android is the only choice.
