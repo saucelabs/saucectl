@@ -3,13 +3,14 @@ package cypress
 import (
 	"errors"
 	"fmt"
-	"github.com/bmatcuk/doublestar/v4"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/bmatcuk/doublestar/v4"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -135,6 +136,14 @@ func SetDefaults(p *Project) {
 
 	if p.Defaults.Timeout < 0 {
 		p.Defaults.Timeout = 0
+	}
+
+	if p.Sauce.Tunnel.ID != "" {
+		p.Sauce.Tunnel.Name = p.Sauce.Tunnel.ID
+	}
+
+	if p.Sauce.Tunnel.Parent != "" {
+		p.Sauce.Tunnel.Owner = p.Sauce.Tunnel.Parent
 	}
 
 	for k := range p.Suites {

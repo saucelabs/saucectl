@@ -21,7 +21,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Parent); err != nil {
+	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
 		return 1, err
 	}
 
@@ -89,7 +89,7 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 				Tags:             r.Project.Sauce.Metadata.Tags,
 				Tunnel: job.TunnelOptions{
 					ID:     r.Project.Sauce.Tunnel.Name,
-					Parent: r.Project.Sauce.Tunnel.Parent,
+					Parent: r.Project.Sauce.Tunnel.Owner,
 				},
 				ScreenResolution: s.ScreenResolution,
 				RunnerVersion:    r.Project.RunnerVersion,

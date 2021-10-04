@@ -87,10 +87,6 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, tc testcomposer.Cl
 	}
 	xcuitest.SetDefaults(&p)
 
-	if p.Sauce.Tunnel.ID != "" {
-		p.Sauce.Tunnel.Name = p.Sauce.Tunnel.ID
-	}
-
 	if err := xcuitest.Validate(p); err != nil {
 		return 1, err
 	}

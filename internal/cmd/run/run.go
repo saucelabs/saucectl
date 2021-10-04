@@ -110,6 +110,7 @@ func Command() *cobra.Command {
 	sc.String("tunnel-id", "sauce.tunnel.id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
 	sc.String("tunnel-name", "sauce.tunnel.name", "", "Sets the sauce-connect tunnel name to be used for the run.")
 	sc.String("tunnel-parent", "sauce.tunnel.parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
+	sc.String("tunnel-owner", "sauce.tunnel.owner", "", "Sets the sauce-connect tunnel owner to be used for the run.")
 	sc.String("runner-version", "runnerVersion", "", "Overrides the automatically determined runner version.")
 	sc.String("sauceignore", "sauce.sauceignore", ".sauceignore", "Specifies the path to the .sauceignore file.")
 	sc.StringToString("experiment", "sauce.experiment", map[string]string{}, "Specifies a list of experimental flags and values")
@@ -140,6 +141,7 @@ func Command() *cobra.Command {
 
 	// Deprecated flags
 	sc.Fset.MarkDeprecated("tunnel-id", "please use --tunnel-name instead")
+	sc.Fset.MarkDeprecated("tunnel-parent", "please use --tunnel-owner instead")
 
 	sc.BindAll()
 

@@ -81,7 +81,7 @@ func (p Properties) SetSauceConfig(c config.SauceConfig) Properties {
 	p["concurrency"] = c.Concurrency
 	p["region"] = c.Region
 	p["tunnel"] = c.Tunnel.Name
-	p["tunnel_owner"] = c.Tunnel.Parent
+	p["tunnel_owner"] = c.Tunnel.Owner
 	p["retries"] = c.Retries
 
 	return p

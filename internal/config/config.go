@@ -104,6 +104,7 @@ type Tunnel struct {
 	ID     string `yaml:"id,omitempty" json:"id,omitempty"`
 	Name   string `yaml:"name,omitempty" json:"name,omitempty"`
 	Parent string `yaml:"parent,omitempty" json:"parent,omitempty"`
+	Owner  string `yaml:"owner,omitempty" json:"owner,omitempty"`
 }
 
 // TypeDef represents the type definition of the config.

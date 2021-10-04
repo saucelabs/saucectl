@@ -95,10 +95,6 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, tc testcompose
 	}
 	espresso.SetDefaults(&p)
 
-	if p.Sauce.Tunnel.ID != "" {
-		p.Sauce.Tunnel.Name = p.Sauce.Tunnel.ID
-	}
-
 	if err := espresso.Validate(p); err != nil {
 		return 1, err
 	}

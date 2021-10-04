@@ -111,6 +111,14 @@ func SetDefaults(p *Project) {
 		p.Defaults.Timeout = 0
 	}
 
+	if p.Sauce.Tunnel.ID != "" {
+		p.Sauce.Tunnel.Name = p.Sauce.Tunnel.ID
+	}
+
+	if p.Sauce.Tunnel.Parent != "" {
+		p.Sauce.Tunnel.Owner = p.Sauce.Tunnel.Parent
+	}
+
 	for i, suite := range p.Suites {
 		for j := range suite.Devices {
 			// Android is the only choice.

@@ -38,7 +38,7 @@ func (r *EspressoRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Parent); err != nil {
+	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
 		return 1, err
 	}
 
@@ -186,7 +186,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		Tags:              r.Project.Sauce.Metadata.Tags,
 		Tunnel: job.TunnelOptions{
 			ID:     r.Project.Sauce.Tunnel.Name,
-			Parent: r.Project.Sauce.Tunnel.Parent,
+			Parent: r.Project.Sauce.Tunnel.Owner,
 		},
 		Experiments: r.Project.Sauce.Experiments,
 		TestOptions: jto,
