@@ -84,6 +84,7 @@ func NewCypressCmd() *cobra.Command {
 
 	return cmd
 }
+
 func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
 	p, err := cypress.FromFile(gFlags.cfgFilePath)
 	if err != nil {

@@ -3,7 +3,6 @@ package cypress
 import (
 	"errors"
 	"fmt"
-	"github.com/bmatcuk/doublestar/v4"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -11,6 +10,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -136,6 +136,8 @@ func SetDefaults(p *Project) {
 	if p.Defaults.Timeout < 0 {
 		p.Defaults.Timeout = 0
 	}
+
+	p.Sauce.Tunnel.SetDefaults()
 
 	for k := range p.Suites {
 		s := &p.Suites[k]

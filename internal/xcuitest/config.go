@@ -90,6 +90,8 @@ func SetDefaults(p *Project) {
 		p.Defaults.Timeout = 0
 	}
 
+	p.Sauce.Tunnel.SetDefaults()
+
 	for ks, suite := range p.Suites {
 		for id := range suite.Devices {
 			suite.Devices[id].PlatformName = "iOS"

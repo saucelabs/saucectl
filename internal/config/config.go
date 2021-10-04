@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
-
 	"gopkg.in/yaml.v2"
 )
 
@@ -101,8 +101,14 @@ type Reporters struct {
 
 // Tunnel represents a sauce labs tunnel.
 type Tunnel struct {
-	ID     string `yaml:"id,omitempty" json:"id,omitempty"`
+	// ID represents the tunnel identifier (aka tunnel name).
+	// Deprecated. Use Name instead.
+	ID   string `yaml:"id,omitempty" json:"id,omitempty"`
+	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+	// Parent represents the tunnel owner.
+	// Deprecated. Use Owner instead.
 	Parent string `yaml:"parent,omitempty" json:"parent,omitempty"`
+	Owner  string `yaml:"owner,omitempty" json:"owner,omitempty"`
 }
 
 // TypeDef represents the type definition of the config.
@@ -238,4 +244,16 @@ func Unmarshal(cfgPath string, project interface{}) error {
 	}
 
 	return viper.Unmarshal(&project)
+}
+
+// SetDefaults updates tunnel default values
+func (t *Tunnel) SetDefaults() {
+	if t.ID != "" {
+		log.Warn().Msg("tunnel.id has been deprecated, please use tunnel.name instead")
+		t.Name = t.ID
+	}
+	if t.Parent != "" {
+		log.Warn().Msg("tunnel.parent has been deprecated, please use tunnel.owner instead")
+		t.Owner = t.Parent
+	}
 }

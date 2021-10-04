@@ -11,11 +11,11 @@ docker:
   fileTransfer: mount
 rootDir: tests/e2e/playwright/
 playwright:
-  version: 1.11.1
+  version: 1.14.1
 suites:
   - name: "firefox test in docker"
     mode: docker
-    testMatch: '**/*.js'
+    testMatch: ['.*.js']
     env:
       hello: world
     params:
@@ -23,7 +23,7 @@ suites:
 
   - name: "chromium test in sauce"
     platformName: "Windows 10"
-    testMatch: '**/*.js'
+    testMatch: ['.*.js']
     env:
       hello: world
     params:
@@ -31,7 +31,7 @@ suites:
 
   - name: "webkit test in sauce"
     platformName: "Windows 10"
-    testMatch: '**/*.js'
+    testMatch: ['.*.js']
     params:
       browserName: "webkit"
 
