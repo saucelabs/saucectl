@@ -246,6 +246,7 @@ func Unmarshal(cfgPath string, project interface{}) error {
 	return viper.Unmarshal(&project)
 }
 
+// SetDefaults updates tunnel default values
 func (t *Tunnel) SetDefaults() {
 	if t.ID != "" {
 		log.Warn().Msg("tunnel.id has been deprecated, please use tunnel.name instead")
