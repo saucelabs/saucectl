@@ -112,6 +112,8 @@ func SetDefaults(p *Project) {
 		p.Defaults.Timeout = 0
 	}
 
+	p.Sauce.Tunnel.SetDefaults()
+
 	for i, suite := range p.Suites {
 		for j := range suite.Devices {
 			// Android is the only choice.

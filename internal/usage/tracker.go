@@ -1,10 +1,11 @@
 package usage
 
 import (
+	"io"
+
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/spf13/pflag"
-	"io"
 )
 
 // Properties is a scoped data transfer object for usage reporting and contains usage event related data.
@@ -79,8 +80,8 @@ func (p Properties) SetNumSuites(n int) Properties {
 func (p Properties) SetSauceConfig(c config.SauceConfig) Properties {
 	p["concurrency"] = c.Concurrency
 	p["region"] = c.Region
-	p["tunnel"] = c.Tunnel.ID
-	p["tunnel_owner"] = c.Tunnel.Parent
+	p["tunnel"] = c.Tunnel.Name
+	p["tunnel_owner"] = c.Tunnel.Owner
 	p["retries"] = c.Retries
 
 	return p

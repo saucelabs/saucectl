@@ -136,6 +136,8 @@ func SetDefaults(p *Project) {
 		msg.LogRootDirWarning()
 	}
 
+	p.Sauce.Tunnel.SetDefaults()
+
 	for k := range p.Suites {
 		suite := &p.Suites[k]
 		// If value is 0, it's assumed that the value has not been filled.

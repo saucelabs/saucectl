@@ -131,6 +131,8 @@ func SetDefaults(p *Project) {
 		p.Defaults.Timeout = 0
 	}
 
+	p.Sauce.Tunnel.SetDefaults()
+
 	for k := range p.Suites {
 		s := &p.Suites[k]
 		if s.PlatformName == "" {
