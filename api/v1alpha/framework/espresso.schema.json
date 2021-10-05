@@ -85,6 +85,10 @@
                 "description": "Only run tests in the specified package.",
                 "type": "string"
               },
+              "notPackage": {
+                "description": "Run all tests except those in this package.",
+                "type": "string"
+              },
               "size": {
                 "description": "Run only tests that are annotated with the matching size value.",
                 "enum": [
