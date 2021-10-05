@@ -148,6 +148,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		NotAnnotation: s.TestOptions.NotAnnotation,
 		Size:          s.TestOptions.Size,
 		Package:       s.TestOptions.Package,
+		NotPackage:    s.TestOptions.NotPackage,
 	}
 	displayName := s.Name
 	if s.TestOptions.NumShards > 0 {
