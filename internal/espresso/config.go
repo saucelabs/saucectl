@@ -51,6 +51,7 @@ type TestOptions struct {
 	NotClass            []string `yaml:"notClass,omitempty" json:"notClass"`
 	Class               []string `yaml:"class,omitempty" json:"class"`
 	Package             string   `yaml:"package,omitempty" json:"package"`
+	NotPackage          string   `yaml:"notPackage,omitempty" json:"notPackage"`
 	Size                string   `yaml:"size,omitempty" json:"size"`
 	Annotation          string   `yaml:"annotation,omitempty" json:"annotation"`
 	NotAnnotation       string   `yaml:"notAnnotation,omitempty" json:"notAnnotation"`

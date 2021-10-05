@@ -160,6 +160,7 @@ func applyEspressoFlags(p *espresso.Project, flags espressoFlags) error {
 		isErr := len(p.Suite.TestOptions.Class) != 0 ||
 			len(p.Suite.TestOptions.NotClass) != 0 ||
 			p.Suite.TestOptions.Package != "" ||
+			p.Suite.TestOptions.NotPackage != "" ||
 			p.Suite.TestOptions.Size != "" ||
 			p.Suite.TestOptions.Annotation != "" ||
 			p.Suite.TestOptions.NotAnnotation != "" ||
