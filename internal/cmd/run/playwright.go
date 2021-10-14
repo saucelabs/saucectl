@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -25,6 +24,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/usage"
+	"github.com/saucelabs/saucectl/internal/viper"
 )
 
 // NewPlaywrightCmd creates the 'run' command for Playwright.
@@ -42,7 +42,7 @@ func NewPlaywrightCmd() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			// Test patterns are passed in via positional args.
-			viper.Set("suite.testMatch", args)
+			viper.Set("suite::testMatch", args)
 
 			exitCode, err := runPlaywright(cmd, tcClient, restoClient, appsClient)
 			if err != nil {
@@ -58,32 +58,32 @@ func NewPlaywrightCmd() *cobra.Command {
 
 	sc.Fset = cmd.Flags()
 
-	sc.String("name", "suite.name", "", "Set the name of the job as it will appear on Sauce Labs")
+	sc.String("name", "suite::name", "", "Set the name of the job as it will appear on Sauce Labs")
 
 	// Browser & Platform
-	sc.String("browser", "suite.params.browserName", "", "Run tests against this browser")
-	sc.String("platform", "suite.platformName", "", "Run tests against this platform")
+	sc.String("browser", "suite::params::browserName", "", "Run tests against this browser")
+	sc.String("platform", "suite::platformName", "", "Run tests against this platform")
 
 	// Playwright
-	sc.String("playwright.version", "playwright.version", "", "The Playwright version to use")
+	sc.String("playwright.version", "playwright::version", "", "The Playwright version to use")
 
 	// Playwright Test Options
-	sc.Bool("headed", "suite.params.headed", false, "Run tests in headed browsers")
-	sc.Int("globalTimeout", "suite.params.globalTimeout", 0, "Total timeout for the whole test run in milliseconds")
-	sc.Int("testTimeout", "suite.params.timeout", 0, "Maximum timeout in milliseconds for each test")
-	sc.String("grep", "suite.params.grep", "", "Only run tests matching this regular expression")
-	sc.Int("repeatEach", "suite.params.repeatEach", 0, "Run each test N times")
-	sc.Int("retries", "suite.params.retries", 0, "The maximum number of retries for flaky tests")
-	sc.Int("maxFailures", "suite.params.maxFailures", 0, "Stop after the first N test failures")
-	sc.Int("numShards", "suite.numShards", 0, "Split tests across N number of shards")
+	sc.Bool("headed", "suite::params::headed", false, "Run tests in headed browsers")
+	sc.Int("globalTimeout", "suite::params::globalTimeout", 0, "Total timeout for the whole test run in milliseconds")
+	sc.Int("testTimeout", "suite::params::timeout", 0, "Maximum timeout in milliseconds for each test")
+	sc.String("grep", "suite::params::grep", "", "Only run tests matching this regular expression")
+	sc.Int("repeatEach", "suite::params::repeatEach", 0, "Run each test N times")
+	sc.Int("retries", "suite::params::retries", 0, "The maximum number of retries for flaky tests")
+	sc.Int("maxFailures", "suite::params::maxFailures", 0, "Stop after the first N test failures")
+	sc.Int("numShards", "suite::numShards", 0, "Split tests across N number of shards")
 
 	// Misc
 	sc.String("rootDir", "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
 
 	// NPM
-	sc.String("npm.registry", "npm.registry", "", "Specify the npm registry URL")
-	sc.StringToString("npm.packages", "npm.packages", map[string]string{}, "Specify npm packages that are required to run tests")
-	sc.Bool("npm.strictSSL", "npm.strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
+	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")
+	sc.StringToString("npm.packages", "npm::packages", map[string]string{}, "Specify npm packages that are required to run tests")
+	sc.Bool("npm.strictSSL", "npm::strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
 
 	return cmd
 }

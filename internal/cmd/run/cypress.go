@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -25,6 +24,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/usage"
+	"github.com/saucelabs/saucectl/internal/viper"
 )
 
 // NewCypressCmd creates the 'run' command for Cypress.
@@ -42,7 +42,7 @@ func NewCypressCmd() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			// Test patterns are passed in via positional args.
-			viper.Set("suite.config.testFiles", args)
+			viper.Set("suite::config::testFiles", args)
 
 			exitCode, err := runCypress(cmd, tcClient, restoClient, appsClient)
 			if err != nil {
@@ -57,30 +57,30 @@ func NewCypressCmd() *cobra.Command {
 	}
 
 	sc.Fset = cmd.Flags()
-	sc.String("name", "suite.name", "", "Set the name of the job as it will appear on Sauce Labs")
+	sc.String("name", "suite::name", "", "Set the name of the job as it will appear on Sauce Labs")
 
 	// Browser & Platform
-	sc.String("browser", "suite.browser", "", "Run tests against this browser")
-	sc.String("browserVersion", "suite.browserVersion", "", "The browser version (default: latest)")
-	sc.String("platform", "suite.platformName", "", "Run tests against this platform")
+	sc.String("browser", "suite::browser", "", "Run tests against this browser")
+	sc.String("browserVersion", "suite::browserVersion", "", "The browser version (default: latest)")
+	sc.String("platform", "suite::platformName", "", "Run tests against this platform")
 
 	// Cypress
-	sc.String("cypress.version", "cypress.version", "", "The Cypress version to use")
-	sc.String("cypress.configFile", "cypress.configFile", "", "The path to the cypress.json config file")
-	sc.String("cypress.key", "cypress.key", "", "The Cypress record key")
-	sc.Bool("cypress.record", "cypress.record", false, "Whether or not to record tests to the cypress dashboard")
+	sc.String("cypress.version", "cypress::version", "", "The Cypress version to use")
+	sc.String("cypress.configFile", "cypress::configFile", "", "The path to the cypress.json config file")
+	sc.String("cypress.key", "cypress::key", "", "The Cypress record key")
+	sc.Bool("cypress.record", "cypress::record", false, "Whether or not to record tests to the cypress dashboard")
 
 	// Video & Screen(shots)
-	sc.String("screenResolution", "suite.screenResolution", "", "The screen resolution")
+	sc.String("screenResolution", "suite::screenResolution", "", "The screen resolution")
 
 	// Misc
 	sc.String("rootDir", "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
-	sc.String("shard", "suite.shard", "", "Controls whether or not (and how) tests are sharded across multiple machines")
+	sc.String("shard", "suite::shard", "", "Controls whether or not (and how) tests are sharded across multiple machines")
 
 	// NPM
-	sc.String("npm.registry", "npm.registry", "", "Specify the npm registry URL")
-	sc.StringToString("npm.packages", "npm.packages", map[string]string{}, "Specify npm packages that are required to run tests")
-	sc.Bool("npm.strictSSL", "npm.strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
+	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")
+	sc.StringToString("npm.packages", "npm::packages", map[string]string{}, "Specify npm packages that are required to run tests")
+	sc.Bool("npm.strictSSL", "npm::strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
 
 	return cmd
 }

@@ -57,14 +57,14 @@ func NewXCUITestCmd() *cobra.Command {
 	}
 
 	sc.Fset = cmd.Flags()
-	sc.String("name", "suite.name", "", "Creates a new adhoc suite with this name. Suites defined in the config will be ignored.")
-	sc.String("app", "xcuitest.app", "", "Specifies the app under test")
-	sc.String("testApp", "xcuitest.testApp", "", "Specifies the test app")
-	sc.StringSlice("otherApps", "xcuitest.otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
+	sc.String("name", "suite::name", "", "Creates a new adhoc suite with this name. Suites defined in the config will be ignored.")
+	sc.String("app", "xcuitest::app", "", "Specifies the app under test")
+	sc.String("testApp", "xcuitest::testApp", "", "Specifies the test app")
+	sc.StringSlice("otherApps", "xcuitest::otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
 
 	// Test Options
-	sc.StringSlice("testOptions.class", "suite.testOptions.class", []string{}, "Only run the specified classes. Requires --name to be set.")
-	sc.StringSlice("testOptions.notClass", "suite.testOptions.notClass", []string{}, "Run all classes except those specified here. Requires --name to be set.")
+	sc.StringSlice("testOptions.class", "suite::testOptions::class", []string{}, "Only run the specified classes. Requires --name to be set.")
+	sc.StringSlice("testOptions.notClass", "suite::testOptions::notClass", []string{}, "Run all classes except those specified here. Requires --name to be set.")
 
 	// Devices (no simulators)
 	cmd.Flags().Var(&lflags.Device, "device", "Specifies the device to use for testing. Requires --name to be set.")

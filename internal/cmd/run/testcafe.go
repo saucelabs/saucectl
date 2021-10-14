@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -25,6 +24,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/usage"
+	"github.com/saucelabs/saucectl/internal/viper"
 )
 
 type testcafeFlags struct {
@@ -47,7 +47,7 @@ func NewTestcafeCmd() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			// Test patterns are passed in via positional args.
-			viper.Set("suite.src", args)
+			viper.Set("suite::src", args)
 
 			exitCode, err := runTestcafe(cmd, lflags, tcClient, restoClient, appsClient)
 			if err != nil {
@@ -63,42 +63,42 @@ func NewTestcafeCmd() *cobra.Command {
 
 	f := cmd.Flags()
 	sc.Fset = cmd.Flags()
-	sc.String("name", "suite.name", "", "Set the name of the job as it will appear on Sauce Labs")
+	sc.String("name", "suite::name", "", "Set the name of the job as it will appear on Sauce Labs")
 
 	// Browser & Platform
-	sc.String("browser", "suite.browserName", "", "Run tests against this browser")
-	sc.String("browserVersion", "suite.browserVersion", "", "The browser version (default: latest)")
-	sc.StringSlice("browserArgs", "suite.browserArgs", []string{}, "Set browser args")
-	sc.String("platform", "suite.platformName", "", "Run tests against this platform")
+	sc.String("browser", "suite::browserName", "", "Run tests against this browser")
+	sc.String("browserVersion", "suite::browserVersion", "", "The browser version (default: latest)")
+	sc.StringSlice("browserArgs", "suite::browserArgs", []string{}, "Set browser args")
+	sc.String("platform", "suite::platformName", "", "Run tests against this platform")
 
 	// Video & Screen(shots)
-	sc.Bool("disableScreenshots", "suite.disableScreenshots", false, "Prevent TestCafe from taking screenshots")
-	sc.String("screenResolution", "suite.screenResolution", "", "The screen resolution")
-	sc.Bool("screenshots.takeOnFails", "suite.screenshots.takeOnFails", false, "Take screenshot on test failure")
-	sc.Bool("screenshots.fullPage", "suite.screenshots.fullPage", false, "Take screenshots of the entire page")
+	sc.Bool("disableScreenshots", "suite::disableScreenshots", false, "Prevent TestCafe from taking screenshots")
+	sc.String("screenResolution", "suite::screenResolution", "", "The screen resolution")
+	sc.Bool("screenshots.takeOnFails", "suite::screenshots::takeOnFails", false, "Take screenshot on test failure")
+	sc.Bool("screenshots.fullPage", "suite::screenshots::fullPage", false, "Take screenshots of the entire page")
 
 	// Error Handling
-	sc.Bool("quarantineMode", "suite.quarantineMode", false, "Enable the quarantine mode for tests that fail")
-	sc.Bool("skipJsErrors", "suite.skipJsErrors", false, "Ignore JavaScript errors that occur on a tested web page")
-	sc.Bool("skipUncaughtErrors", "suite.skipUncaughtErrors", false, "Ignore uncaught errors or unhandled promise rejections on the server during test execution")
-	sc.Bool("stopOnFirstFail", "suite.stopOnFirstFail", false, "Stop an entire test run if any test fails")
+	sc.Bool("quarantineMode", "suite::quarantineMode", false, "Enable the quarantine mode for tests that fail")
+	sc.Bool("skipJsErrors", "suite::skipJsErrors", false, "Ignore JavaScript errors that occur on a tested web page")
+	sc.Bool("skipUncaughtErrors", "suite::skipUncaughtErrors", false, "Ignore uncaught errors or unhandled promise rejections on the server during test execution")
+	sc.Bool("stopOnFirstFail", "suite::stopOnFirstFail", false, "Stop an entire test run if any test fails")
 
 	// Timeouts
-	sc.Int("selectorTimeout", "suite.selectorTimeout", 10000, "Specify the time (in milliseconds) within which selectors attempt to return a node")
-	sc.Int("assertionTimeout", "suite.assertionTimeout", 3000, "Specify the time (in milliseconds) TestCafe attempts to successfully execute an assertion")
-	sc.Int("pageLoadTimeout", "suite.pageLoadTimeout", 3000, "Specify the time (in milliseconds) passed after the DOMContentLoaded event, within which TestCafe waits for the window.load event to fire")
+	sc.Int("selectorTimeout", "suite::selectorTimeout", 10000, "Specify the time (in milliseconds) within which selectors attempt to return a node")
+	sc.Int("assertionTimeout", "suite::assertionTimeout", 3000, "Specify the time (in milliseconds) TestCafe attempts to successfully execute an assertion")
+	sc.Int("pageLoadTimeout", "suite::pageLoadTimeout", 3000, "Specify the time (in milliseconds) passed after the DOMContentLoaded event, within which TestCafe waits for the window.load event to fire")
 
 	// Misc
 	sc.String("rootDir", "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
-	sc.String("testcafe.version", "testcafe.version", "", "The TestCafe version to use")
-	sc.StringSlice("clientScripts", "suite.clientScripts", []string{}, "Inject scripts from the specified files into each page visited during the tests")
-	sc.Float64("speed", "suite.speed", 1, "Specify the test execution speed")
-	sc.Bool("disablePageCaching", "suite.disablePageCaching", false, "Prevent the browser from caching page content")
+	sc.String("testcafe.version", "testcafe::version", "", "The TestCafe version to use")
+	sc.StringSlice("clientScripts", "suite::clientScripts", []string{}, "Inject scripts from the specified files into each page visited during the tests")
+	sc.Float64("speed", "suite::speed", 1, "Specify the test execution speed")
+	sc.Bool("disablePageCaching", "suite::disablePageCaching", false, "Prevent the browser from caching page content")
 
 	// NPM
-	sc.String("npm.registry", "npm.registry", "", "Specify the npm registry URL")
-	sc.StringToString("npm.packages", "npm.packages", map[string]string{}, "Specify npm packages that are required to run tests")
-	sc.Bool("npm.strictSSL", "npm.strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
+	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")
+	sc.StringToString("npm.packages", "npm::packages", map[string]string{}, "Specify npm packages that are required to run tests")
+	sc.Bool("npm.strictSSL", "npm::strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
 
 	// Simulators
 	f.Var(&lflags.Simulator, "simulator", "Specifies the simulator to use for testing")
