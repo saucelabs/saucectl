@@ -63,7 +63,7 @@ func NewTestcafeCmd() *cobra.Command {
 
 	f := cmd.Flags()
 	sc.Fset = cmd.Flags()
-	sc.String("name", "suitename", "", "Set the name of the job as it will appear on Sauce Labs")
+	sc.String("name", "suite::name", "", "Set the name of the job as it will appear on Sauce Labs")
 
 	// Browser & Platform
 	sc.String("browser", "suite::browserName", "", "Run tests against this browser")
