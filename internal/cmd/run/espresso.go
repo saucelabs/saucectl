@@ -58,20 +58,20 @@ func NewEspressoCmd() *cobra.Command {
 	}
 
 	sc.Fset = cmd.Flags()
-	sc.String("name", "suite.name", "", "Sets the name of the job as it will appear on Sauce Labs")
-	sc.String("app", "espresso.app", "", "Specifies the app under test")
-	sc.String("testApp", "espresso.testApp", "", "Specifies the test app")
-	sc.StringSlice("otherApps", "espresso.otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
+	sc.String("name", "suite::name", "", "Sets the name of the job as it will appear on Sauce Labs")
+	sc.String("app", "espresso::app", "", "Specifies the app under test")
+	sc.String("testApp", "espresso::testApp", "", "Specifies the test app")
+	sc.StringSlice("otherApps", "espresso::otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
 
 	// Test Options
-	sc.StringSlice("testOptions.class", "suite.testOptions.class", []string{}, "Only run the specified classes. Requires --name to be set.")
-	sc.StringSlice("testOptions.notClass", "suite.testOptions.notClass", []string{}, "Run all classes except those specified here. Requires --name to be set.")
-	sc.String("testOptions.package", "suite.testOptions.package", "", "Include package. Requires --name to be set.")
-	sc.String("testOptions.size", "suite.testOptions.size", "", "Include tests based on size. Requires --name to be set.")
-	sc.String("testOptions.annotation", "suite.testOptions.annotation", "", "Include tests based on the annotation. Requires --name to be set.")
-	sc.String("testOptions.notAnnotation", "suite.testOptions.notAnnotation", "", "Run all tests except those with this annotation. Requires --name to be set.")
-	sc.Int("testOptions.numShards", "suite.testOptions.numShards", 0, "Total number of shards. Requires --name to be set.")
-	sc.Bool("testOptions.useTestOrchestrator", "suite.testOptions.useTestOrchestrator", false, "Set the instrumentation to start with Test Orchestrator. Requires --name to be set.")
+	sc.StringSlice("testOptions.class", "suite::testOptions::class", []string{}, "Only run the specified classes. Requires --name to be set.")
+	sc.StringSlice("testOptions.notClass", "suite::testOptions::notClass", []string{}, "Run all classes except those specified here. Requires --name to be set.")
+	sc.String("testOptions.package", "suite::testOptions::package", "", "Include package. Requires --name to be set.")
+	sc.String("testOptions.size", "suite::testOptions::size", "", "Include tests based on size. Requires --name to be set.")
+	sc.String("testOptions.annotation", "suite::testOptions::annotation", "", "Include tests based on the annotation. Requires --name to be set.")
+	sc.String("testOptions.notAnnotation", "suite::testOptions::notAnnotation", "", "Run all tests except those with this annotation. Requires --name to be set.")
+	sc.Int("testOptions.numShards", "suite::testOptions::numShards", 0, "Total number of shards. Requires --name to be set.")
+	sc.Bool("testOptions.useTestOrchestrator", "suite::testOptions::useTestOrchestrator", false, "Set the instrumentation to start with Test Orchestrator. Requires --name to be set.")
 
 	// Emulators and Devices
 	cmd.Flags().Var(&lflags.Emulator, "emulator", "Specifies the emulator to use for testing. Requires --name to be set.")

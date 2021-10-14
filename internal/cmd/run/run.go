@@ -103,32 +103,32 @@ func Command() *cobra.Command {
 	defaultCfgPath := filepath.Join(".sauce", "config.yml")
 	cmd.PersistentFlags().StringVarP(&gFlags.cfgFilePath, "config", "c", defaultCfgPath, "Specifies which config file to use")
 	cmd.PersistentFlags().DurationVarP(&gFlags.globalTimeout, "timeout", "t", 0, "Global timeout that limits how long saucectl can run in total. Supports duration values like '10s', '30m' etc. (default: no timeout)")
-	sc.StringP("region", "r", "sauce.region", "us-west-1", "The sauce labs region.")
+	sc.StringP("region", "r", "sauce::region", "us-west-1", "The sauce labs region.")
 	sc.StringToStringP("env", "e", "env", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
 	sc.Bool("show-console-log", "showConsoleLog", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
-	sc.Int("ccy", "sauce.concurrency", 2, "Concurrency specifies how many suites are run at the same time.")
-	sc.String("tunnel-id", "sauce.tunnel.id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
-	sc.String("tunnel-name", "sauce.tunnel.name", "", "Sets the sauce-connect tunnel name to be used for the run.")
-	sc.String("tunnel-parent", "sauce.tunnel.parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
-	sc.String("tunnel-owner", "sauce.tunnel.owner", "", "Sets the sauce-connect tunnel owner to be used for the run.")
+	sc.Int("ccy", "sauce::concurrency", 2, "Concurrency specifies how many suites are run at the same time.")
+	sc.String("tunnel-id", "sauce::tunnel::id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
+	sc.String("tunnel-name", "sauce::tunnel::name", "", "Sets the sauce-connect tunnel name to be used for the run.")
+	sc.String("tunnel-parent", "sauce::tunnel:;parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
+	sc.String("tunnel-owner", "sauce::tunnel::owner", "", "Sets the sauce-connect tunnel owner to be used for the run.")
 	sc.String("runner-version", "runnerVersion", "", "Overrides the automatically determined runner version.")
-	sc.String("sauceignore", "sauce.sauceignore", ".sauceignore", "Specifies the path to the .sauceignore file.")
-	sc.StringToString("experiment", "sauce.experiment", map[string]string{}, "Specifies a list of experimental flags and values")
+	sc.String("sauceignore", "sauce::sauceignore", ".sauceignore", "Specifies the path to the .sauceignore file.")
+	sc.StringToString("experiment", "sauce::experiment", map[string]string{}, "Specifies a list of experimental flags and values")
 	sc.Bool("dry-run", "dryRun", false, "Simulate a test run without actually running any tests.")
-	sc.Int("retries", "sauce.retries", 0, "Retries specifies the number of times to retry a failed suite (sauce mode only)")
+	sc.Int("retries", "sauce::retries", 0, "Retries specifies the number of times to retry a failed suite (sauce mode only)")
 
 	// Metadata
-	sc.StringSlice("tags", "sauce.metadata.tags", []string{}, "Adds tags to tests")
-	sc.String("build", "sauce.metadata.build", "", "Associates tests with a build")
+	sc.StringSlice("tags", "sauce::metadata::tags", []string{}, "Adds tags to tests")
+	sc.String("build", "sauce::metadata::build", "", "Associates tests with a build")
 
 	// Artifacts
-	sc.String("artifacts.download.when", "artifacts.download.when", "never", "Specifies when to download test artifacts")
-	sc.StringSlice("artifacts.download.match", "artifacts.download.match", []string{}, "Specifies which test artifacts to download")
-	sc.String("artifacts.download.directory", "artifacts.download.directory", "", "Specifies the location where to download test artifacts to")
+	sc.String("artifacts.download.when", "artifacts::download::when", "never", "Specifies when to download test artifacts")
+	sc.StringSlice("artifacts.download.match", "artifacts::download::match", []string{}, "Specifies which test artifacts to download")
+	sc.String("artifacts.download.directory", "artifacts::download::directory", "", "Specifies the location where to download test artifacts to")
 
 	// Reporters
-	sc.Bool("reporters.junit.enabled", "reporters.junit.enabled", false, "Toggle saucectl's own junit reporting on/off. This only affects the reports that saucectl itself generates as a summary of your tests. Each Job in Sauce Labs has an independent report regardless.")
-	sc.String("reporters.junit.filename", "reporters.junit.filename", "saucectl-report.xml", "Specifies the report filename.")
+	sc.Bool("reporters.junit.enabled", "reporters::junit::enabled", false, "Toggle saucectl's own junit reporting on/off. This only affects the reports that saucectl itself generates as a summary of your tests. Each Job in Sauce Labs has an independent report regardless.")
+	sc.String("reporters.junit.filename", "reporters::junit::filename", "saucectl-report.xml", "Specifies the report filename.")
 
 	// Hide undocumented flags that the user does not need to care about.
 	// FIXME sauce-api is actually not implemented, but probably should

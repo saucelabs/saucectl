@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -23,6 +22,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/usage"
+	"github.com/saucelabs/saucectl/internal/viper"
 )
 
 // NewPuppeteerCmd creates the 'run' command for Puppeteer.
@@ -40,7 +40,7 @@ func NewPuppeteerCmd() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			// Test patterns are passed in via positional args.
-			viper.Set("suite.testMatch", args)
+			viper.Set("suite::testMatch", args)
 
 			exitCode, err := runPuppeteer(cmd, tcClient, restoClient)
 			if err != nil {
@@ -56,24 +56,24 @@ func NewPuppeteerCmd() *cobra.Command {
 
 	sc.Fset = cmd.Flags()
 
-	sc.String("name", "suite.name", "", "Set the name of the job as it will appear on Sauce Labs")
+	sc.String("name", "suite::name", "", "Set the name of the job as it will appear on Sauce Labs")
 
 	// Browser & Platform
-	sc.String("browser", "suite.browser", "", "Run tests against this browser")
+	sc.String("browser", "suite::browser", "", "Run tests against this browser")
 
 	// Puppeteer
-	sc.String("puppeteer.version", "puppeteer.version", "", "The Puppeteer version to use")
+	sc.String("puppeteer.version", "puppeteer::version", "", "The Puppeteer version to use")
 
 	// Misc
 	sc.String("rootDir", "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
 
 	// NPM
-	sc.String("npm.registry", "npm.registry", "", "Specify the npm registry URL")
-	sc.StringToString("npm.packages", "npm.packages", map[string]string{}, "Specify npm packages that are required to run tests")
-	sc.Bool("npm.strictSSL", "npm.strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
+	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")
+	sc.StringToString("npm.packages", "npm::packages", map[string]string{}, "Specify npm packages that are required to run tests")
+	sc.Bool("npm.strictSSL", "npm::strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
 
-	sc.StringSlice("browserArgs", "suite.browserArgs", []string{}, "Pass browser args to puppeteer")
-	sc.StringSlice("groups", "suite.groups", []string{}, "Pass groups to puppeteer")
+	sc.StringSlice("browserArgs", "suite::browserArgs", []string{}, "Pass browser args to puppeteer")
+	sc.StringSlice("groups", "suite::groups", []string{}, "Pass groups to puppeteer")
 
 	return cmd
 }
