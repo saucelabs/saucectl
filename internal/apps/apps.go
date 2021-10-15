@@ -23,13 +23,7 @@ func hasValidExtension(file string, exts []string) bool {
 
 // IsStorageReference checks if a link is an entry of app-storage.
 func IsStorageReference(link string) bool {
-	if reFileID.MatchString(link) {
-		return true
-	}
-	if reFilePattern.MatchString(link) {
-		return true
-	}
-	return false
+	return reFileID.MatchString(link) || reFilePattern.MatchString(link)
 }
 
 // StandardizeReferenceLink standardize the provided storageID reference to make it work for VMD and RDC.
