@@ -40,22 +40,22 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	appFileID, err := r.uploadProject(appPath, appUpload)
+	appFileURI, err := r.uploadProject(appPath, appUpload)
 	if err != nil {
 		return exitCode, err
 	}
 
-	testAppFileID, err := r.uploadProject(testAppPath, testAppUpload)
+	testAppFileURI, err := r.uploadProject(testAppPath, testAppUpload)
 	if err != nil {
 		return exitCode, err
 	}
 
-	otherAppsIDs, err := r.uploadProjects(r.Project.Xcuitest.OtherApps, otherAppsUpload)
+	otherAppsURIs, err := r.uploadProjects(r.Project.Xcuitest.OtherApps, otherAppsUpload)
 	if err != nil {
 		return exitCode, err
 	}
 
-	passed := r.runSuites(appFileID, testAppFileID, otherAppsIDs)
+	passed := r.runSuites(appFileURI, testAppFileURI, otherAppsURIs)
 	if passed {
 		exitCode = 0
 	}
@@ -97,16 +97,13 @@ func (r *XcuitestRunner) runSuites(appFileID, testAppFileID string, otherAppsIDs
 }
 
 func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, testAppFileID string, otherAppsIDs []string, s xcuitest.Suite, d config.Device) {
-	for i, ID := range otherAppsIDs {
-		otherAppsIDs[i] = fmt.Sprintf("storage:%s", ID)
-	}
 	jobOpts <- job.StartOptions{
 		ConfigFilePath:   r.Project.ConfigFilePath,
 		CLIFlags:         r.Project.CLIFlags,
 		DisplayName:      s.Name,
 		Timeout:          s.Timeout,
-		App:              fmt.Sprintf("storage:%s", appFileID),
-		Suite:            fmt.Sprintf("storage:%s", testAppFileID),
+		App:              appFileID,
+		Suite:            testAppFileID,
 		OtherApps:        otherAppsIDs,
 		Framework:        "xcuitest",
 		FrameworkVersion: "1.0.0-stable",

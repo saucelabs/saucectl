@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+var (
+	reFileID = regexp.MustCompile("(storage:(//)?)?(?P<fileID>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$")
+	reFilePattern = regexp.MustCompile("^(storage:filename=)(?P<filename>[\\S][\\S ]+(\\.ipa|\\.apk))$")
+)
+
 func hasValidExtension(file string, exts []string) bool {
 	for _, ext := range exts {
 		if strings.HasSuffix(file, ext) {
@@ -16,18 +21,27 @@ func hasValidExtension(file string, exts []string) bool {
 	return false
 }
 
-// IsStorageID checks if a link is an entry of app-storage.
-func IsStorageID(link string) bool {
-	re := regexp.MustCompile("^(storage:(//)?)?[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$")
-	if re.MatchString(link) {
-		return true
+// IsStorageReference checks if a link is an entry of app-storage.
+func IsStorageReference(link string) bool {
+	return reFileID.MatchString(link) || reFilePattern.MatchString(link)
+}
+
+// StandardizeReferenceLink standardize the provided storageID reference to make it work for VMD and RDC.
+func StandardizeReferenceLink(storageRef string) string {
+	if reFileID.MatchString(storageRef) {
+		if !strings.HasPrefix(storageRef, "storage:") {
+			return fmt.Sprintf("storage:%s", storageRef)
+		}
+		if strings.HasPrefix(storageRef, "storage://") {
+			return strings.Replace(storageRef, "storage://", "storage:", 1)
+		}
 	}
-	return false
+	return storageRef
 }
 
 // Validate validates that the apps is valid (storageID / File / URL).
-func Validate(kind, app string, validExt []string, URLAllowed bool) error {
-	if IsStorageID(app) {
+func Validate(kind, app string, validExt []string) error {
+	if IsStorageReference(app) {
 		return nil
 	}
 

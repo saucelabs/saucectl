@@ -42,22 +42,22 @@ func (r *EspressoRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	appFileID, err := r.uploadProject(r.Project.Espresso.App, appUpload)
+	appFileURI, err := r.uploadProject(r.Project.Espresso.App, appUpload)
 	if err != nil {
 		return exitCode, err
 	}
 
-	testAppFileID, err := r.uploadProject(r.Project.Espresso.TestApp, testAppUpload)
+	testAppFileURI, err := r.uploadProject(r.Project.Espresso.TestApp, testAppUpload)
 	if err != nil {
 		return exitCode, err
 	}
 
-	otherAppsIDs, err := r.uploadProjects(r.Project.Espresso.OtherApps, otherAppsUpload)
+	otherAppsURIs, err := r.uploadProjects(r.Project.Espresso.OtherApps, otherAppsUpload)
 	if err != nil {
 		return exitCode, err
 	}
 
-	passed := r.runSuites(appFileID, testAppFileID, otherAppsIDs)
+	passed := r.runSuites(appFileURI, testAppFileURI, otherAppsURIs)
 	if passed {
 		exitCode = 0
 	}
@@ -65,7 +65,7 @@ func (r *EspressoRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string, otherAppsIDs []string) bool {
+func (r *EspressoRunner) runSuites(appFileURI string, testAppFileURI string, otherAppsURIs []string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
@@ -85,13 +85,13 @@ func (r *EspressoRunner) runSuites(appFileID string, testAppFileID string, other
 					s.TestOptions.ShardIndex = i
 					for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
 						log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
-						r.startJob(jobOpts, s, appFileID, testAppFileID, otherAppsIDs, c)
+						r.startJob(jobOpts, s, appFileURI, testAppFileURI, otherAppsURIs, c)
 					}
 				}
 			} else {
 				for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
 					log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
-					r.startJob(jobOpts, s, appFileID, testAppFileID, otherAppsIDs, c)
+					r.startJob(jobOpts, s, appFileURI, testAppFileURI, otherAppsURIs, c)
 				}
 			}
 		}
@@ -140,7 +140,7 @@ func enumerateDevicesAndEmulators(devices []config.Device, emulators []config.Em
 }
 
 // startJob add the job to the list for the workers.
-func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Suite, appFileID, testAppFileID string, otherAppsIDs []string, d deviceConfig) {
+func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Suite, appFileURI, testAppFileURI string, otherAppsURIs []string, d deviceConfig) {
 	jto := job.TestOptions{
 		NotClass:      s.TestOptions.NotClass,
 		Class:         s.TestOptions.Class,
@@ -163,18 +163,14 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		jto.UseTestOrchestrator = &s.TestOptions.UseTestOrchestrator
 	}
 
-	for i, ID := range otherAppsIDs {
-		otherAppsIDs[i] = fmt.Sprintf("storage:%s", ID)
-	}
-
 	jobOpts <- job.StartOptions{
 		DisplayName:       displayName,
 		Timeout:           s.Timeout,
 		ConfigFilePath:    r.Project.ConfigFilePath,
 		CLIFlags:          r.Project.CLIFlags,
-		App:               fmt.Sprintf("storage:%s", appFileID),
-		Suite:             fmt.Sprintf("storage:%s", testAppFileID),
-		OtherApps:         otherAppsIDs,
+		App:               appFileURI,
+		Suite:             testAppFileURI,
+		OtherApps:         otherAppsURIs,
 		Framework:         "espresso",
 		FrameworkVersion:  "1.0.0-stable",
 		PlatformName:      d.platformName,

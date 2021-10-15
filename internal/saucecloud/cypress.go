@@ -31,12 +31,12 @@ func (r *CypressRunner) RunProject() (int, error) {
 		}
 		return 0, nil
 	}
-	fileID, err := r.archiveAndUpload(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore)
+	fileURI, err := r.archiveAndUpload(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore)
 	if err != nil {
 		return exitCode, err
 	}
 
-	passed := r.runSuites(fileID)
+	passed := r.runSuites(fileURI)
 	if passed {
 		exitCode = 0
 	}
@@ -60,7 +60,7 @@ func (r *CypressRunner) checkCypressVersion() error {
 	return nil
 }
 
-func (r *CypressRunner) runSuites(fileID string) bool {
+func (r *CypressRunner) runSuites(fileURI string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 	jobOpts, results, err := r.createWorkerPool(r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
@@ -77,7 +77,7 @@ func (r *CypressRunner) runSuites(fileID string) bool {
 				CLIFlags:         r.Project.CLIFlags,
 				DisplayName:      s.Name,
 				Timeout:          s.Timeout,
-				App:              fmt.Sprintf("storage:%s", fileID),
+				App:              fileURI,
 				Suite:            s.Name,
 				Framework:        "cypress",
 				FrameworkVersion: r.Project.Cypress.Version,
