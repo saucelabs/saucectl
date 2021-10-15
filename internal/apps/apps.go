@@ -23,11 +23,9 @@ func hasValidExtension(file string, exts []string) bool {
 
 // IsStorageReference checks if a link is an entry of app-storage.
 func IsStorageReference(link string) bool {
-	// Fix remove the // (unsupported by VMD)
 	if reFileID.MatchString(link) {
 		return true
 	}
-	// Valid extension (aabt) not supported by filename synthax
 	if reFilePattern.MatchString(link) {
 		return true
 	}
