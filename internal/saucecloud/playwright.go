@@ -1,7 +1,6 @@
 package saucecloud
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/saucelabs/saucectl/internal/job"
@@ -29,12 +28,12 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	fileID, err := r.archiveAndUpload(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore)
+	fileURI, err := r.archiveAndUpload(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore)
 	if err != nil {
 		return exitCode, err
 	}
 
-	passed := r.runSuites(fileID)
+	passed := r.runSuites(fileURI)
 	if passed {
 		exitCode = 0
 	}
@@ -51,7 +50,7 @@ func (r *PlaywrightRunner) getSuiteNames() string {
 	return strings.Join(names, ", ")
 }
 
-func (r *PlaywrightRunner) runSuites(fileID string) bool {
+func (r *PlaywrightRunner) runSuites(fileURI string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
@@ -73,7 +72,7 @@ func (r *PlaywrightRunner) runSuites(fileID string) bool {
 				CLIFlags:         r.Project.CLIFlags,
 				DisplayName:      s.Name,
 				Timeout:          s.Timeout,
-				App:              fmt.Sprintf("storage:%s", fileID),
+				App:              fileURI,
 				Suite:            s.Name,
 				Framework:        "playwright",
 				FrameworkVersion: s.PlaywrightVersion,

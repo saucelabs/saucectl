@@ -40,22 +40,22 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	appFileID, err := r.uploadProject(appPath, appUpload)
+	appFileURI, err := r.uploadProject(appPath, appUpload)
 	if err != nil {
 		return exitCode, err
 	}
 
-	testAppFileID, err := r.uploadProject(testAppPath, testAppUpload)
+	testAppFileURI, err := r.uploadProject(testAppPath, testAppUpload)
 	if err != nil {
 		return exitCode, err
 	}
 
-	otherAppsIDs, err := r.uploadProjects(r.Project.Xcuitest.OtherApps, otherAppsUpload)
+	otherAppsURIs, err := r.uploadProjects(r.Project.Xcuitest.OtherApps, otherAppsUpload)
 	if err != nil {
 		return exitCode, err
 	}
 
-	passed := r.runSuites(appFileID, testAppFileID, otherAppsIDs)
+	passed := r.runSuites(appFileURI, testAppFileURI, otherAppsURIs)
 	if passed {
 		exitCode = 0
 	}
