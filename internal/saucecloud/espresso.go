@@ -163,17 +163,13 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		jto.UseTestOrchestrator = &s.TestOptions.UseTestOrchestrator
 	}
 
-	for i, ID := range otherAppsIDs {
-		otherAppsIDs[i] = fmt.Sprintf("storage:%s", ID)
-	}
-
 	jobOpts <- job.StartOptions{
 		DisplayName:       displayName,
 		Timeout:           s.Timeout,
 		ConfigFilePath:    r.Project.ConfigFilePath,
 		CLIFlags:          r.Project.CLIFlags,
-		App:               fmt.Sprintf("storage:%s", appFileID),
-		Suite:             fmt.Sprintf("storage:%s", testAppFileID),
+		App:               appFileID,
+		Suite:             testAppFileID,
 		OtherApps:         otherAppsIDs,
 		Framework:         "espresso",
 		FrameworkVersion:  "1.0.0-stable",

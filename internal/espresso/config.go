@@ -142,19 +142,19 @@ func Validate(p Project) error {
 	if p.Espresso.App == "" {
 		return errors.New("missing path to app. Define a path to an .apk or .aab file in the espresso.app property of your config")
 	}
-	if err := apps.Validate("application", p.Espresso.App, []string{".apk", ".aab"}, false); err != nil {
+	if err := apps.Validate("application", p.Espresso.App, []string{".apk", ".aab"}); err != nil {
 		return err
 	}
 
 	if p.Espresso.TestApp == "" {
 		return errors.New("missing path to test app. Define a path to an .apk or .aab file in the espresso.testApp property of your config")
 	}
-	if err := apps.Validate("test application", p.Espresso.TestApp, []string{".apk", ".aab"}, false); err != nil {
+	if err := apps.Validate("test application", p.Espresso.TestApp, []string{".apk", ".aab"}); err != nil {
 		return err
 	}
 
 	for _, app := range p.Espresso.OtherApps {
-		if err := apps.Validate("other application", app, []string{".apk", ".aab"}, true); err != nil {
+		if err := apps.Validate("other application", app, []string{".apk", ".aab"}); err != nil {
 			return err
 		}
 	}

@@ -182,6 +182,7 @@ func (r *CloudRunner) getAsset(jobID string, name string, rdc bool) ([]byte, err
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {
 	log.Info().Str("suite", opts.DisplayName).Str("region", r.Region.String()).Msg("Starting suite.")
 
+	log.Info().Str("appId", opts.App).Str("testAppId", opts.Suite).Msg("Starting")
 	id, isRDC, err := r.JobStarter.StartJob(context.Background(), opts)
 	if err != nil {
 		return job.Job{}, false, err
@@ -402,14 +403,14 @@ func (r *CloudRunner) uploadProjects(filename []string, pType uploadType) ([]str
 }
 
 func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, error) {
-	if apps.IsStorageID(filename) {
-		return filename, nil
+	if apps.IsStorageReference(filename) {
+		return apps.StandardizeReferenceLink(filename), nil
 	}
 
 	log.Info().Msgf("Checking if %s has already been uploaded previously", filename)
 	if storageID, _ := r.checkIfFileAlreadyUploaded(filename); storageID != "" {
 		log.Info().Msgf("Skipping upload, using storage:%s", storageID)
-		return storageID, nil
+		return fmt.Sprintf("storage:%s", storageID), nil
 	}
 
 	filename, err := filepath.Abs(filename)
@@ -425,7 +426,7 @@ func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, 
 		return "", err
 	}
 	log.Info().Dur("durationMs", time.Since(start)).Str("storageId", resp.ID).Msgf("%s uploaded.", strings.Title(string(pType)))
-	return resp.ID, nil
+	return fmt.Sprintf("storage:%s", resp.ID), nil
 }
 
 func (r *CloudRunner) checkIfFileAlreadyUploaded(fileName string) (storageID string, err error) {

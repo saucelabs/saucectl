@@ -97,16 +97,13 @@ func (r *XcuitestRunner) runSuites(appFileID, testAppFileID string, otherAppsIDs
 }
 
 func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, testAppFileID string, otherAppsIDs []string, s xcuitest.Suite, d config.Device) {
-	for i, ID := range otherAppsIDs {
-		otherAppsIDs[i] = fmt.Sprintf("storage:%s", ID)
-	}
 	jobOpts <- job.StartOptions{
 		ConfigFilePath:   r.Project.ConfigFilePath,
 		CLIFlags:         r.Project.CLIFlags,
 		DisplayName:      s.Name,
 		Timeout:          s.Timeout,
-		App:              fmt.Sprintf("storage:%s", appFileID),
-		Suite:            fmt.Sprintf("storage:%s", testAppFileID),
+		App:              appFileID,
+		Suite:            testAppFileID,
 		OtherApps:        otherAppsIDs,
 		Framework:        "xcuitest",
 		FrameworkVersion: "1.0.0-stable",

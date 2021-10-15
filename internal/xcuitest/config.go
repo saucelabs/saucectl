@@ -118,19 +118,19 @@ func Validate(p Project) error {
 	if p.Xcuitest.App == "" {
 		return errors.New("missing path to app .ipa")
 	}
-	if err := apps.Validate("application", p.Xcuitest.App, []string{".ipa", ".app"}, false); err != nil {
+	if err := apps.Validate("application", p.Xcuitest.App, []string{".ipa", ".app"}); err != nil {
 		return err
 	}
 
 	if p.Xcuitest.TestApp == "" {
 		return errors.New("missing path to test app .ipa")
 	}
-	if err := apps.Validate("test application", p.Xcuitest.TestApp, []string{".ipa", ".app"}, false); err != nil {
+	if err := apps.Validate("test application", p.Xcuitest.TestApp, []string{".ipa", ".app"}); err != nil {
 		return err
 	}
 
 	for _, app := range p.Xcuitest.OtherApps {
-		if err := apps.Validate("other application", app, []string{".ipa", ".app"}, true); err != nil {
+		if err := apps.Validate("other application", app, []string{".ipa", ".app"}); err != nil {
 			return err
 		}
 	}
