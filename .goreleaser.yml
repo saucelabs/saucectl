@@ -18,6 +18,9 @@ builds:
       - -X github.com/saucelabs/saucectl/internal/version.GitCommit={{.Commit}}
       - -X github.com/saucelabs/saucectl/internal/setup.SentryDSN={{.Env.SENTRY_DSN}}
       - -X github.com/saucelabs/saucectl/internal/setup.SegmentWriteKey={{.Env.SEGMENT_WRITE_KEY}}
+    ignore:
+      - goos: windows
+        goarch: arm64
 brews:
   - tap:
       owner: saucelabs
