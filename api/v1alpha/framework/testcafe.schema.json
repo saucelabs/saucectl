@@ -132,31 +132,31 @@
             "type": "boolean"
           },
           "filter": {
-            "description": "Permits to filter which tests to execute",
+            "description": "Allows you to specify which tests or fixtures to run.",
             "type": "object",
             "properties": {
               "test": {
-                "description": "Runs a test with the specified name",
+                "description": "Runs a test with the specified name.",
                 "type": "string"
               },
               "testGrep": {
-                "description": "Runs tests whose names match the specified grep pattern",
+                "description": "Runs tests whose names match the specified grep pattern.",
                 "type": "string"
               },
               "testMeta": {
-                "description": "Runs tests whose metadata matches the specified key-value pair",
+                "description": "Runs tests whose metadata matches the specified key-value pair.",
                 "type": "object"
               },
               "fixture": {
-                "description": "Runs a test with the specified fixture name",
+                "description": "Runs a test with the specified fixture name.",
                 "type": "string"
               },
               "fixtureGrep": {
-                "description": "Runs tests whose fixture names match the specified grep pattern",
+                "description": "Runs tests whose fixture names match the specified grep pattern.",
                 "type": "string"
               },
               "fixtureMeta": {
-                "description": "Runs tests whose fixture’s metadata matches the specified key-value pair",
+                "description": "Runs tests whose fixture’s metadata matches the specified key-value pair.",
                 "type": "object"
               }
             }
