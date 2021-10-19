@@ -104,7 +104,7 @@ func Command() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&gFlags.cfgFilePath, "config", "c", defaultCfgPath, "Specifies which config file to use")
 	cmd.PersistentFlags().DurationVarP(&gFlags.globalTimeout, "timeout", "t", 0, "Global timeout that limits how long saucectl can run in total. Supports duration values like '10s', '30m' etc. (default: no timeout)")
 	sc.StringP("region", "r", "sauce::region", "us-west-1", "The sauce labs region.")
-	sc.StringToStringP("env", "e", "env", map[string]string{}, "Set environment variables, e.g. -e foo=bar.")
+	sc.StringToStringP("env", "e", "env", map[string]string{}, "Set environment variables, e.g. -e foo=bar. Not supported when running espresso/xcuitest!")
 	sc.Bool("show-console-log", "showConsoleLog", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
 	sc.Int("ccy", "sauce::concurrency", 2, "Concurrency specifies how many suites are run at the same time.")
 	sc.String("tunnel-id", "sauce::tunnel::id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
