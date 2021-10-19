@@ -132,7 +132,7 @@
             "type": "boolean"
           },
           "filter": {
-            "description": "",
+            "description": "Permits to filter which tests to execute",
             "type": "object",
             "properties": {
               "test": {
