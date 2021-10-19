@@ -1122,6 +1122,36 @@
                   "description": "Disable video recording.",
                   "type": "boolean"
                 },
+                "filter": {
+                  "description": "Allows you to specify which tests or fixtures to run.",
+                  "type": "object",
+                  "properties": {
+                    "test": {
+                      "description": "Runs a test with the specified name.",
+                      "type": "string"
+                    },
+                    "testGrep": {
+                      "description": "Runs tests whose names match the specified grep pattern.",
+                      "type": "string"
+                    },
+                    "testMeta": {
+                      "description": "Runs tests whose metadata matches the specified key-value pair.",
+                      "type": "object"
+                    },
+                    "fixture": {
+                      "description": "Runs a test with the specified fixture name.",
+                      "type": "string"
+                    },
+                    "fixtureGrep": {
+                      "description": "Runs tests whose fixture names match the specified grep pattern.",
+                      "type": "string"
+                    },
+                    "fixtureMeta": {
+                      "description": "Runs tests whose fixture’s metadata matches the specified key-value pair.",
+                      "type": "object"
+                    }
+                  }
+                },
                 "pageLoadTimeout": {
                   "description": "Specifies the time (in milliseconds) passed after the DOMContentLoaded event, within which TestCafe waits for the window.load event to fire.\n\nAfter the timeout passes or the window.load event is raised (whichever happens first), TestCafe starts the test.",
                   "type": "integer",

@@ -49,6 +49,16 @@ type Project struct {
 	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
 }
 
+// Filter represents the testcafe filters configuration
+type Filter struct {
+	Test        string            `yaml:"test,omitempty" json:"test,omitempy"`
+	TestGrep    string            `yaml:"testGrep,omitempty" json:"testGrep,omitempty"`
+	Fixture     string            `yaml:"fixture,omitempty" json:"fixture,omitempty"`
+	FixtureGrep string            `yaml:"fixtureGrep,omitempty" json:"fixtureGrep,omitempty"`
+	TestMeta    map[string]string `yaml:"testMeta,omitempty" json:"testMeta,omitempty"`
+	FixtureMeta map[string]string `yaml:"fixtureMeta,omitempty" json:"fixtureMeta,omitempty"`
+}
+
 // Suite represents the testcafe test suite configuration.
 type Suite struct {
 	Name             string            `yaml:"name,omitempty" json:"name"`
@@ -74,6 +84,7 @@ type Suite struct {
 	StopOnFirstFail    bool     `yaml:"stopOnFirstFail,omitempty" json:"stopOnFirstFail"`
 	DisablePageCaching bool     `yaml:"disablePageCaching,omitempty" json:"disablePageCaching"`
 	DisableScreenshots bool     `yaml:"disableScreenshots,omitempty" json:"disableScreenshots"`
+	Filter             Filter   `yaml:"filter,omitempty" json:"filter,omitempty"`
 	DisableVideo       bool     `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testcafe config.
 	Mode               string   `yaml:"mode,omitempty" json:"-"`
 	// Deprecated. Reserved for future use for actual devices.

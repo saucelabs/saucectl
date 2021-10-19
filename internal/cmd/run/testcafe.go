@@ -88,6 +88,14 @@ func NewTestcafeCmd() *cobra.Command {
 	sc.Int("assertionTimeout", "suite::assertionTimeout", 3000, "Specify the time (in milliseconds) TestCafe attempts to successfully execute an assertion")
 	sc.Int("pageLoadTimeout", "suite::pageLoadTimeout", 3000, "Specify the time (in milliseconds) passed after the DOMContentLoaded event, within which TestCafe waits for the window.load event to fire")
 
+	// Filters
+	sc.String("filter.test", "suite::filter::test", "", "Runs a test with the specified name")
+	sc.String("filter.testGrep", "suite::filter::testGrep", "", "Runs tests whose names match the specified grep pattern")
+	sc.String("filter.fixture", "suite::filter::fixture", "", "Runs a test with the specified fixture name")
+	sc.String("filter.fixtureGrep", "suite::filter::fixtureGrep", "", "Runs tests whose fixture names match the specified grep pattern")
+	sc.StringToString("filter.testMeta", "suite::filter::testMeta", map[string]string{}, "Runs tests whose metadata matches the specified key-value pair")
+	sc.StringToString("filter.fixtureMeta", "suite::filter::fixtureMeta", map[string]string{}, "Runs tests whose fixture’s metadata matches the specified key-value pair")
+
 	// Misc
 	sc.String("rootDir", "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
 	sc.String("testcafe.version", "testcafe::version", "", "The TestCafe version to use")
