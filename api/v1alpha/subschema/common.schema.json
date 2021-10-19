@@ -17,7 +17,7 @@
       "type": "object"
     },
     "env": {
-      "description": "Set one or more environment variables. Values can be environment variables themselves.",
+      "description": "Set one or more environment variables. Values can be environment variables themselves. Not supported when running espresso/xcuitest!",
       "type": "object"
     },
     "mode": {
