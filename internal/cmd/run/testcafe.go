@@ -28,7 +28,7 @@ import (
 )
 
 type testcafeFlags struct {
-	QuarantineMode flags.QurantineMode
+	QuarantineMode flags.QuarantineMode
 	Simulator      flags.Simulator
 }
 

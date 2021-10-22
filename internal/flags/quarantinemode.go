@@ -9,14 +9,14 @@ import (
 	"strings"
 )
 
-// QurantineMode represents the testcafe quarantineMode configuration.
-type QurantineMode struct {
+// QuarantineMode represents the testcafe quarantineMode configuration.
+type QuarantineMode struct {
 	Values  map[string]interface{}
 	Changed bool
 }
 
 // String returns a string represenation of the quarantineMode.
-func (q QurantineMode) String() string {
+func (q QuarantineMode) String() string {
 	if !q.Changed {
 		return ""
 	}
@@ -26,7 +26,7 @@ func (q QurantineMode) String() string {
 // Set sets the quarantineMode to the values present in s.
 // The input has to be a comma separated string in the format of "key=value,key2=value2".
 // This method is called by cobra when CLI flags are parsed.
-func (q *QurantineMode) Set(s string) error {
+func (q *QuarantineMode) Set(s string) error {
 	q.Changed = true
 	q.Values = make(map[string]interface{})
 
@@ -59,7 +59,7 @@ func (q *QurantineMode) Set(s string) error {
 	return nil
 }
 
-func (q *QurantineMode) setInt(key string, val string) error {
+func (q *QuarantineMode) setInt(key string, val string) error {
 	vint, err := strconv.Atoi(val)
 	if err != nil {
 		return fmt.Errorf("%s must be an integer: %s", key, err)
@@ -71,6 +71,6 @@ func (q *QurantineMode) setInt(key string, val string) error {
 }
 
 // Type returns the value type.
-func (q QurantineMode) Type() string {
+func (q QuarantineMode) Type() string {
 	return "quarantineMode"
 }
