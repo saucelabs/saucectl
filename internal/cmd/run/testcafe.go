@@ -28,7 +28,8 @@ import (
 )
 
 type testcafeFlags struct {
-	Simulator flags.Simulator
+	QuarantineMode flags.QurantineMode
+	Simulator      flags.Simulator
 }
 
 // NewTestcafeCmd creates the 'run' command for TestCafe.
@@ -78,7 +79,7 @@ func NewTestcafeCmd() *cobra.Command {
 	sc.Bool("screenshots.fullPage", "suite::screenshots::fullPage", false, "Take screenshots of the entire page")
 
 	// Error Handling
-	sc.Bool("quarantineMode", "suite::quarantineMode", false, "Enable the quarantine mode for tests that fail")
+	f.Var(&lflags.QuarantineMode, "quarantineMode", "Enable quarantine mode to eliminate false negatives and detect unstable tests")
 	sc.Bool("skipJsErrors", "suite::skipJsErrors", false, "Ignore JavaScript errors that occur on a tested web page")
 	sc.Bool("skipUncaughtErrors", "suite::skipUncaughtErrors", false, "Ignore uncaught errors or unhandled promise rejections on the server during test execution")
 	sc.Bool("stopOnFirstFail", "suite::stopOnFirstFail", false, "Stop an entire test run if any test fails")
@@ -211,6 +212,10 @@ func applyTestcafeFlags(p *testcafe.Project, flags testcafeFlags) error {
 
 	if p.Suite.Name == "" {
 		return nil
+	}
+
+	if flags.QuarantineMode.Changed {
+		p.Suite.QuarantineMode = flags.QuarantineMode.Values
 	}
 
 	if flags.Simulator.Changed {

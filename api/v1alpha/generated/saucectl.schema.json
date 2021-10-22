@@ -1159,7 +1159,19 @@
                 },
                 "quarantineMode": {
                   "description": "Enable quarantine mode to eliminate false negatives and detect unstable tests. TestCafe quarantines tests that fail, and repeats them until they yield conclusive results.",
-                  "type": "boolean"
+                  "type": "object",
+                  "properties": {
+                    "successThreshold": {
+                      "description": "The number of successful attempts necessary to confirm a test’s success. The option value should be greater than 0.",
+                      "type": "integer",
+                      "default": 3
+                    },
+                    "attemptLimit": {
+                      "description": "The maximum number of test execution attempts. The option value must be larger than the value of the successThreshold.",
+                      "type": "integer",
+                      "default": 5
+                    }
+                  }
                 },
                 "screenResolution": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/screenResolution"

@@ -72,21 +72,21 @@ type Suite struct {
 	Env              map[string]string `yaml:"env,omitempty" json:"env"`
 	Timeout          time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
 	// Deprecated as of TestCafe v1.10.0 https://testcafe.io/documentation/402638/reference/configuration-file#tsconfigpath
-	TsConfigPath       string   `yaml:"tsConfigPath,omitempty" json:"tsConfigPath"`
-	ClientScripts      []string `yaml:"clientScripts,omitempty" json:"clientScripts,omitempty"`
-	SkipJsErrors       bool     `yaml:"skipJsErrors,omitempty" json:"skipJsErrors"`
-	QuarantineMode     bool     `yaml:"quarantineMode,omitempty" json:"quarantineMode"`
-	SkipUncaughtErrors bool     `yaml:"skipUncaughtErrors,omitempty" json:"skipUncaughtErrors"`
-	SelectorTimeout    int      `yaml:"selectorTimeout,omitempty" json:"selectorTimeout"`
-	AssertionTimeout   int      `yaml:"assertionTimeout,omitempty" json:"assertionTimeout"`
-	PageLoadTimeout    int      `yaml:"pageLoadTimeout,omitempty" json:"pageLoadTimeout"`
-	Speed              float64  `yaml:"speed,omitempty" json:"speed"`
-	StopOnFirstFail    bool     `yaml:"stopOnFirstFail,omitempty" json:"stopOnFirstFail"`
-	DisablePageCaching bool     `yaml:"disablePageCaching,omitempty" json:"disablePageCaching"`
-	DisableScreenshots bool     `yaml:"disableScreenshots,omitempty" json:"disableScreenshots"`
-	Filter             Filter   `yaml:"filter,omitempty" json:"filter,omitempty"`
-	DisableVideo       bool     `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testcafe config.
-	Mode               string   `yaml:"mode,omitempty" json:"-"`
+	TsConfigPath       string                 `yaml:"tsConfigPath,omitempty" json:"tsConfigPath"`
+	ClientScripts      []string               `yaml:"clientScripts,omitempty" json:"clientScripts,omitempty"`
+	SkipJsErrors       bool                   `yaml:"skipJsErrors,omitempty" json:"skipJsErrors"`
+	QuarantineMode     map[string]interface{} `yaml:"quarantineMode,omitempty" json:"quarantineMode"`
+	SkipUncaughtErrors bool                   `yaml:"skipUncaughtErrors,omitempty" json:"skipUncaughtErrors"`
+	SelectorTimeout    int                    `yaml:"selectorTimeout,omitempty" json:"selectorTimeout"`
+	AssertionTimeout   int                    `yaml:"assertionTimeout,omitempty" json:"assertionTimeout"`
+	PageLoadTimeout    int                    `yaml:"pageLoadTimeout,omitempty" json:"pageLoadTimeout"`
+	Speed              float64                `yaml:"speed,omitempty" json:"speed"`
+	StopOnFirstFail    bool                   `yaml:"stopOnFirstFail,omitempty" json:"stopOnFirstFail"`
+	DisablePageCaching bool                   `yaml:"disablePageCaching,omitempty" json:"disablePageCaching"`
+	DisableScreenshots bool                   `yaml:"disableScreenshots,omitempty" json:"disableScreenshots"`
+	Filter             Filter                 `yaml:"filter,omitempty" json:"filter,omitempty"`
+	DisableVideo       bool                   `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testcafe config.
+	Mode               string                 `yaml:"mode,omitempty" json:"-"`
 	// Deprecated. Reserved for future use for actual devices.
 	Devices    []config.Simulator `yaml:"devices,omitempty" json:"devices"`
 	Simulators []config.Simulator `yaml:"simulators,omitempty" json:"simulators"`
