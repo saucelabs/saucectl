@@ -675,7 +675,7 @@ func (r *CloudRunner) checkVersionAvailability(frameworkName string, frameworkVe
 	return nil
 }
 
-// logAvailableVersions display the available cloud version for the frameworkName framework.
+// logAvailableVersions displays the available cloud version for the framework.
 func (r *CloudRunner) logAvailableVersions(frameworkName string) {
 	versions, err := r.MetadataService.Versions(context.Background(), frameworkName)
 	if err != nil {
