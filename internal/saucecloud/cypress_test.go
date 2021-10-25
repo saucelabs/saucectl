@@ -13,6 +13,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/mocks"
 )
@@ -222,6 +223,16 @@ func TestRunProject(t *testing.T) {
 		UploadSuccess: true,
 	}
 
+	mdService := &mocks.FakeFrameworkInfoReader{
+		SearchFn: func(ctx context.Context, opts framework.SearchOptions) (framework.Metadata, error) {
+			return framework.Metadata{
+                FrameworkName: "cypress",
+				FrameworkVersion: "5.6.0",
+				Deprecated: false,
+            }, nil
+		},
+	}
+
 	runner := CypressRunner{
 		CloudRunner: CloudRunner{
 			JobStarter:         &starter,
@@ -230,6 +241,7 @@ func TestRunProject(t *testing.T) {
 			CCYReader:          ccyReader,
 			ProjectUploader:    uploader,
 			ArtifactDownloader: &downloader,
+			MetadataService:    mdService,
 		},
 		Project: cypress.Project{
 			RootDir: ".",

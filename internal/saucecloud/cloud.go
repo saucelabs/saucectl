@@ -3,6 +3,7 @@ package saucecloud
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -20,6 +21,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/junit"
@@ -42,6 +44,7 @@ type CloudRunner struct {
 	CCYReader             concurrency.Reader
 	TunnelService         tunnel.Service
 	Region                region.Region
+	MetadataService       framework.MetadataService
 	ShowConsoleLog        bool
 	ArtifactDownloader    download.ArtifactDownloader
 	RDCArtifactDownloader download.ArtifactDownloader
@@ -648,4 +651,46 @@ func (r *CloudRunner) uploadCLIFlags(jobID string, content interface{}) {
 	if err := r.JobWriter.UploadAsset(jobID, "flags.json", "text/plain", encoded); err != nil {
 		log.Warn().Msgf("Failed to report CLI flags: %v", err)
 	}
+}
+
+// checkVersion checks if the requested version is available on Cloud.
+func (r *CloudRunner) checkVersionAvailability(frameworkName string, frameworkVersion string) error {
+	metadata, err := r.MetadataService.Search(context.Background(), framework.SearchOptions{
+		Name:             frameworkName,
+		FrameworkVersion: frameworkVersion,
+	})
+	if err != nil && isUnsupportedVersion(err) {
+		color.Red(fmt.Sprintf("\nVersion %s for %s is not available !\n\n", frameworkVersion, frameworkName))
+		r.logAvailableVersions(frameworkName)
+		return errors.New("unsupported framework version")
+	}
+	if err != nil {
+		return errors.New("unable to check framework version availability")
+	}
+	if metadata.Deprecated {
+		color.Red(fmt.Sprintf("\nVersion %s for %s is deprecated and will be removed during the next framework upgrade !\n\n", frameworkVersion, frameworkName))
+		fmt.Printf("You should update your version of %s to a more recent one.\n", frameworkName)
+		r.logAvailableVersions(frameworkName)
+	}
+	return nil
+}
+
+// logAvailableVersions display the available cloud version for the frameworkName framework.
+func (r *CloudRunner) logAvailableVersions(frameworkName string) {
+	versions, err := r.MetadataService.Versions(context.Background(), frameworkName)
+	if err != nil {
+		return
+	}
+	fmt.Printf("Available versions of %s are:\n", frameworkName)
+	for _, v := range versions {
+		if !v.Deprecated {
+			fmt.Printf(" - %s\n", v.FrameworkVersion)
+		}
+	}
+	println()
+}
+
+// isUnsupportedVersion returns true if the error is an unsupported version.
+func isUnsupportedVersion(err error) bool {
+    return strings.Contains(err.Error(), "Bad Request: unsupported version")
 }

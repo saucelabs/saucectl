@@ -162,6 +162,7 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			JobStopper:         &rs,
 			JobWriter:          &tc,
 			CCYReader:          &rs,
+			MetadataService:    &tc,
 			TunnelService:      &rs,
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,

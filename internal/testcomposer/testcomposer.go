@@ -178,6 +178,7 @@ func (c *Client) Search(ctx context.Context, opts framework.SearchOptions) (fram
 	m := framework.Metadata{
 		FrameworkName:    resp.Name,
 		FrameworkVersion: resp.Version,
+		Deprecated:       resp.Deprecated,
 		DockerImage:      resp.Runner.DockerImage,
 		GitRelease:       resp.Runner.GitRelease,
 	}

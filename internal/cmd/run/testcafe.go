@@ -192,6 +192,7 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 			JobWriter:          &tc,
 			CCYReader:          &rs,
 			TunnelService:      &rs,
+			MetadataService:    &tc,
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,
