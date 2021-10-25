@@ -40,10 +40,11 @@ type Job struct {
 
 // FrameworkResponse represents the response body for framework information.
 type FrameworkResponse struct {
-	Name      string     `json:"name"`
-	Version   string     `json:"version"`
-	Runner    runner     `json:"runner"`
-	Platforms []platform `json:"platforms"`
+	Name       string     `json:"name"`
+	Deprecated bool       `json:"deprecated"`
+	Version    string     `json:"version"`
+	Runner     runner     `json:"runner"`
+	Platforms  []platform `json:"platforms"`
 }
 
 // TokenResponse represents the response body for slack token.
@@ -299,6 +300,7 @@ func (c *Client) Versions(ctx context.Context, frameworkName string) ([]framewor
 		frameworks = append(frameworks, framework.Metadata{
 			FrameworkName:    f.Name,
 			FrameworkVersion: f.Version,
+			Deprecated:       f.Deprecated,
 			DockerImage:      f.Runner.DockerImage,
 			GitRelease:       f.Runner.GitRelease,
 			Platforms:        platforms,
