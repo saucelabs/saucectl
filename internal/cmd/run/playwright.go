@@ -166,6 +166,7 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 			JobWriter:          &tc,
 			CCYReader:          &rs,
 			TunnelService:      &rs,
+			MetadataService:    &tc,
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
 			ArtifactDownloader: &rs,

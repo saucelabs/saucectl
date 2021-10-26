@@ -129,6 +129,7 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 			JobWriter:             &tc,
 			CCYReader:             &rs,
 			TunnelService:         &rs,
+			MetadataService:       &tc,
 			Region:                regio,
 			ShowConsoleLog:        p.ShowConsoleLog,
 			ArtifactDownloader:    &rs,

@@ -21,6 +21,10 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
+	if err := r.checkVersionAvailability(cypress.Kind, r.Project.Cypress.Version); err != nil {
+		return exitCode, err
+	}
+
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
 		return 1, err
 	}

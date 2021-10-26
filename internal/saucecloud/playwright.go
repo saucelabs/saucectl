@@ -17,6 +17,10 @@ type PlaywrightRunner struct {
 func (r *PlaywrightRunner) RunProject() (int, error) {
 	exitCode := 1
 
+	if err := r.checkVersionAvailability(playwright.Kind, r.Project.Playwright.Version); err != nil {
+		return exitCode, err
+	}
+
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
 		return 1, err
 	}

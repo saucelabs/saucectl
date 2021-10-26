@@ -18,6 +18,10 @@ type TestcafeRunner struct {
 func (r *TestcafeRunner) RunProject() (int, error) {
 	exitCode := 1
 
+	if err := r.checkVersionAvailability(testcafe.Kind, r.Project.Testcafe.Version); err != nil {
+		return exitCode, err
+	}
+
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
 		return 1, err
 	}

@@ -30,6 +30,7 @@ type SearchOptions struct {
 type Metadata struct {
 	FrameworkName    string
 	FrameworkVersion string
+	Deprecated       bool
 	DockerImage      string
 	GitRelease       string
 	Platforms        []Platform
