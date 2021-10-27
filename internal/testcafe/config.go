@@ -51,7 +51,7 @@ type Project struct {
 
 // Filter represents the testcafe filters configuration
 type Filter struct {
-	Test        string            `yaml:"test,omitempty" json:"test,omitempy"`
+	Test        string            `yaml:"test,omitempty" json:"test,omitempty"`
 	TestGrep    string            `yaml:"testGrep,omitempty" json:"testGrep,omitempty"`
 	Fixture     string            `yaml:"fixture,omitempty" json:"fixture,omitempty"`
 	FixtureGrep string            `yaml:"fixtureGrep,omitempty" json:"fixtureGrep,omitempty"`
