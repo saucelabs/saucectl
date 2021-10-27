@@ -64,6 +64,7 @@ type Suite struct {
 	ScreenResolution  string            `yaml:"screenResolution,omitempty" json:"screenResolution,omitempty"`
 	Env               map[string]string `yaml:"env,omitempty" json:"env,omitempty"`
 	NumShards         int               `yaml:"numShards,omitempty" json:"-"`
+	Shard             string            `yaml:"shard,omitempty" json:"-"`
 }
 
 // SuiteConfig represents the configuration specific to a suite
@@ -226,9 +227,24 @@ func Validate(p *Project) error {
 		return err
 	}
 
+	if err := checkShards(p); err != nil {
+		return err
+	}
+
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
 		return errors.New("no sauce region set")
+	}
+
+	return nil
+}
+
+func checkShards(p *Project) error {
+	errMsg := "suite name: %s numShards and shard can't be used at the same time"
+	for _, suite := range p.Suites {
+		if suite.NumShards >= 2 && suite.Shard != "" {
+			return fmt.Errorf(errMsg, suite.Name)
+		}
 	}
 
 	return nil
