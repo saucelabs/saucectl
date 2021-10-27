@@ -3,7 +3,10 @@ package testcafe
 import (
 	"errors"
 	"fmt"
+	"github.com/bmatcuk/doublestar/v4"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -87,6 +90,7 @@ type Suite struct {
 	Filter             Filter                 `yaml:"filter,omitempty" json:"filter,omitempty"`
 	DisableVideo       bool                   `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testcafe config.
 	Mode               string                 `yaml:"mode,omitempty" json:"-"`
+	Shard              string                 `yaml:"shard,omitempty" json:"-"`
 	// Deprecated. Reserved for future use for actual devices.
 	Devices    []config.Simulator `yaml:"devices,omitempty" json:"devices"`
 	Simulators []config.Simulator `yaml:"simulators,omitempty" json:"simulators"`
@@ -230,7 +234,10 @@ func Validate(p *Project) error {
 		}
 	}
 
-	return nil
+	var err error
+	p.Suites, err = shardSuites(p.RootDir, p.Suites)
+
+	return err
 }
 
 // SplitSuites divided Suites to dockerSuites and sauceSuites
@@ -251,6 +258,57 @@ func SplitSuites(p Project) (Project, Project) {
 	sauceProject.Suites = sauceSuites
 
 	return dockerProject, sauceProject
+}
+
+// shardSuites divides suites into shards based on the pattern.
+func shardSuites(rootDir string, suites []Suite) ([]Suite, error) {
+	var shardedSuites []Suite
+
+	for _, s := range suites {
+		if s.Shard != "spec" {
+			shardedSuites = append(shardedSuites, s)
+			continue
+		}
+
+		if err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+
+			if d.IsDir() {
+				return nil
+			}
+
+			// Normalize path separators, since the target execution environment may not support backslashes.
+			pathSlashes := filepath.ToSlash(path)
+			relSlashes, err := filepath.Rel(rootDir, pathSlashes)
+
+			for _, pattern := range s.Src {
+				patternSlashes := filepath.ToSlash(pattern)
+				ok, err := doublestar.Match(patternSlashes, relSlashes)
+				if err != nil {
+					return fmt.Errorf("test file pattern '%s' is not supported: %s", patternSlashes, err)
+				}
+
+				if ok {
+					rel, err := filepath.Rel(rootDir, path)
+					if err != nil {
+						return err
+					}
+					rel = filepath.ToSlash(rel)
+					replica := s
+					replica.Name = fmt.Sprintf("%s - %s", s.Name, rel)
+					replica.Src = []string{rel}
+					shardedSuites = append(shardedSuites, replica)
+				}
+			}
+
+			return nil
+		}); err != nil {
+			return shardedSuites, err
+		}
+	}
+	return shardedSuites, nil
 }
 
 // FilterSuites filters out suites in the project that don't match the given suite name.
