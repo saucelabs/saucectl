@@ -51,7 +51,7 @@ type Project struct {
 
 // Filter represents the testcafe filters configuration
 type Filter struct {
-	Test        string            `yaml:"test,omitempty" json:"test,omitempy"`
+	Test        string            `yaml:"test,omitempty" json:"test,omitempty"`
 	TestGrep    string            `yaml:"testGrep,omitempty" json:"testGrep,omitempty"`
 	Fixture     string            `yaml:"fixture,omitempty" json:"fixture,omitempty"`
 	FixtureGrep string            `yaml:"fixtureGrep,omitempty" json:"fixtureGrep,omitempty"`
@@ -75,7 +75,7 @@ type Suite struct {
 	TsConfigPath       string                 `yaml:"tsConfigPath,omitempty" json:"tsConfigPath"`
 	ClientScripts      []string               `yaml:"clientScripts,omitempty" json:"clientScripts,omitempty"`
 	SkipJsErrors       bool                   `yaml:"skipJsErrors,omitempty" json:"skipJsErrors"`
-	QuarantineMode     map[string]interface{} `yaml:"quarantineMode,omitempty" json:"quarantineMode"`
+	QuarantineMode     map[string]interface{} `yaml:"quarantineMode,omitempty" json:"quarantineMode,omitempty"`
 	SkipUncaughtErrors bool                   `yaml:"skipUncaughtErrors,omitempty" json:"skipUncaughtErrors"`
 	SelectorTimeout    int                    `yaml:"selectorTimeout,omitempty" json:"selectorTimeout"`
 	AssertionTimeout   int                    `yaml:"assertionTimeout,omitempty" json:"assertionTimeout"`

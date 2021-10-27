@@ -10,7 +10,7 @@ sauce:
 docker:
   fileTransfer: copy
 testcafe:
-  version: 1.14.2
+  version: 1.16.1
 rootDir: tests/e2e/testcafe/
 suites:
   - name: Firefox in docker
