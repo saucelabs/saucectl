@@ -119,6 +119,13 @@
           "mode": {
             "$ref": "../subschema/common.schema.json#/definitions/mode"
           },
+          "shard": {
+            "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec) so that they can easily run in parallel.",
+            "enum": [
+              "",
+              "spec"
+            ]
+          },
           "disablePageCaching": {
             "description": "Prevents the browser from caching page content.",
             "type": "boolean"
