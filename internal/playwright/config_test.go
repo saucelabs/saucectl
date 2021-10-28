@@ -52,7 +52,7 @@ func Test_shardSuites(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := shardSuites(tt.args.suites); !reflect.DeepEqual(got, tt.want) {
+			if got := shardSuitesByNumShards(tt.args.suites); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("shardSuites() = %v, want %v", got, tt.want)
 			}
 		})
@@ -89,16 +89,6 @@ func TestValidate(t *testing.T) {
 				}},
 			wantErr: true,
 			errMsg:  "browserName: ie is not supported. List of supported browsers: chromium, firefox, webkit",
-		},
-		{
-			name: "numShards and shard can't be used at the same time",
-			p: Project{
-				Playwright: Playwright{Version: "v1.1.1"},
-				Suites: []Suite{
-					{Name: "suite #1", NumShards: 2, Shard: "spec", Params: SuiteConfig{BrowserName: "chromium"}},
-				}},
-			wantErr: true,
-			errMsg:  "suite name: suite #1 numShards and shard can't be used at the same time",
 		},
 		{
 			name: "empty region",
