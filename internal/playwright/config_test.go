@@ -4,6 +4,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/fs"
+
 	"github.com/saucelabs/saucectl/internal/config"
 )
 
@@ -54,6 +57,80 @@ func Test_shardSuites(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := shardSuitesByNumShards(tt.args.suites); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("shardSuites() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestShardSuites(t *testing.T) {
+	dir := fs.NewDir(t, "testcafe",
+		fs.WithDir("tests",
+			fs.WithMode(0755),
+			fs.WithDir("dir1",
+				fs.WithMode(0755),
+				fs.WithFile("example1.tests.js", "", fs.WithMode(0644)),
+			),
+			fs.WithDir("dir2",
+				fs.WithMode(0755),
+				fs.WithFile("example2.tests.js", "", fs.WithMode(0644)),
+			),
+			fs.WithDir("dir3",
+				fs.WithMode(0755),
+				fs.WithFile("example3.tests.js", "", fs.WithMode(0644)),
+			),
+		),
+	)
+	defer dir.Remove()
+
+	testCases := []struct {
+		name           string
+		p              *Project
+		wantErr        bool
+		expectedErrMsg string
+		expectedSuites []Suite
+	}{
+		{
+			name: "numShards and shard can't be used at the same time",
+			p: &Project{Suites: []Suite{
+				{
+					Name:      "suite #1",
+					NumShards: 2,
+					Shard:     "spec",
+				},
+			}},
+			wantErr:        true,
+			expectedErrMsg: "suite name: suite #1 numShards and shard can't be used at the same time",
+		},
+		{
+			name: "split by spec",
+			p: &Project{
+				RootDir: dir.Path(),
+				Suites: []Suite{
+					{
+						Name:      "suite #1",
+						Shard:     "spec",
+						TestMatch: []string{".*.js"},
+					},
+				}},
+			wantErr:        false,
+			expectedErrMsg: "",
+			expectedSuites: []Suite{
+				{Name: "suite #1 - tests/dir1/example1.tests.js", Mode: "", Timeout: 0, PlaywrightVersion: "", TestMatch: []string{"tests/dir1/example1.tests.js"}, PlatformName: "", Params: SuiteConfig{BrowserName: "", Headed: false, GlobalTimeout: 0, Timeout: 0, Grep: "", RepeatEach: 0, Retries: 0, MaxFailures: 0, Shard: "", HeadFul: false, ScreenshotOnFailure: false, SlowMo: 0, Video: false}, ScreenResolution: "", Env: map[string]string(nil), NumShards: 0, Shard: "spec"},
+				{Name: "suite #1 - tests/dir2/example2.tests.js", Mode: "", Timeout: 0, PlaywrightVersion: "", TestMatch: []string{"tests/dir2/example2.tests.js"}, PlatformName: "", Params: SuiteConfig{BrowserName: "", Headed: false, GlobalTimeout: 0, Timeout: 0, Grep: "", RepeatEach: 0, Retries: 0, MaxFailures: 0, Shard: "", HeadFul: false, ScreenshotOnFailure: false, SlowMo: 0, Video: false}, ScreenResolution: "", Env: map[string]string(nil), NumShards: 0, Shard: "spec"},
+				{Name: "suite #1 - tests/dir3/example3.tests.js", Mode: "", Timeout: 0, PlaywrightVersion: "", TestMatch: []string{"tests/dir3/example3.tests.js"}, PlatformName: "", Params: SuiteConfig{BrowserName: "", Headed: false, GlobalTimeout: 0, Timeout: 0, Grep: "", RepeatEach: 0, Retries: 0, MaxFailures: 0, Shard: "", HeadFul: false, ScreenshotOnFailure: false, SlowMo: 0, Video: false}, ScreenResolution: "", Env: map[string]string(nil), NumShards: 0, Shard: "spec"},
+			},
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ShardSuites(tt.p)
+			if tt.wantErr {
+				if err.Error() != tt.expectedErrMsg {
+					t.Errorf("ShardSuites() = %v, want %v", err.Error(), tt.expectedErrMsg)
+				}
+			} else {
+				assert.Equal(t, tt.expectedSuites, tt.p.Suites)
 			}
 		})
 	}

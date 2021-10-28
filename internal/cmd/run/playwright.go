@@ -45,7 +45,6 @@ func NewPlaywrightCmd() *cobra.Command {
 			viper.Set("suite::testMatch", args)
 
 			exitCode, err := runPlaywright(cmd, tcClient, restoClient, appsClient)
-			fmt.Println(exitCode)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				sentry.CaptureError(err, sentry.Scope{
@@ -107,8 +106,6 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 	if err := playwright.Validate(&p); err != nil {
 		return 1, err
 	}
-
-	fmt.Println("validate")
 
 	if err := playwright.ShardSuites(&p); err != nil {
 		return 1, err

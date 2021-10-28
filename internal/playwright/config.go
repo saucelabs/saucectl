@@ -6,10 +6,9 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
-
-	"github.com/bmatcuk/doublestar/v4"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -178,7 +177,6 @@ func ShardSuites(p *Project) error {
 	p.Suites = shardSuitesByNumShards(p.Suites)
 	shardedBySpec, err := shardSuitesBySpec(p.RootDir, p.Suites)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 	p.Suites = shardedBySpec
@@ -225,7 +223,7 @@ func shardSuitesBySpec(rootDir string, suites []Suite) ([]Suite, error) {
 
 			for _, pattern := range s.TestMatch {
 				patternSlashes := filepath.ToSlash(pattern)
-				ok, err := doublestar.Match(patternSlashes, relSlashes)
+				ok, err := regexp.MatchString(patternSlashes, relSlashes)
 				if err != nil {
 					return fmt.Errorf("test file pattern '%s' is not supported: %s", patternSlashes, err)
 				}
