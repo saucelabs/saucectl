@@ -3,7 +3,10 @@ package playwright
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -64,6 +67,7 @@ type Suite struct {
 	ScreenResolution  string            `yaml:"screenResolution,omitempty" json:"screenResolution,omitempty"`
 	Env               map[string]string `yaml:"env,omitempty" json:"env,omitempty"`
 	NumShards         int               `yaml:"numShards,omitempty" json:"-"`
+	Shard             string            `yaml:"shard,omitempty" json:"-"`
 }
 
 // SuiteConfig represents the configuration specific to a suite
@@ -161,13 +165,93 @@ func SetDefaults(p *Project) {
 			s.Env[k] = os.ExpandEnv(v)
 		}
 	}
-
-	p.Suites = shardSuites(p.Suites)
 }
 
-// shardSuites applies sharding by replacing the original suites with the appropriate number of replicas according to
+// ShardSuites applies sharding by NumShards or by Shard (based on pattern)
+func ShardSuites(p *Project) error {
+	if err := checkShards(p); err != nil {
+		return err
+	}
+
+	// either sharding by NumShards or by Shard will be applied
+	p.Suites = shardSuitesByNumShards(p.Suites)
+	shardedBySpec, err := shardSuitesBySpec(p.RootDir, p.Suites)
+	if err != nil {
+		return err
+	}
+	p.Suites = shardedBySpec
+
+	return nil
+}
+
+func checkShards(p *Project) error {
+	errMsg := "suite name: %s numShards and shard can't be used at the same time"
+	for _, suite := range p.Suites {
+		if suite.NumShards >= 2 && suite.Shard != "" {
+			return fmt.Errorf(errMsg, suite.Name)
+		}
+	}
+
+	return nil
+}
+
+// shardSuitesBySpec divides suites into shards based on the pattern.
+func shardSuitesBySpec(rootDir string, suites []Suite) ([]Suite, error) {
+	var shardedSuites []Suite
+
+	for _, s := range suites {
+		if s.Shard != "spec" {
+			shardedSuites = append(shardedSuites, s)
+			continue
+		}
+
+		if err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+
+			if d.IsDir() {
+				return nil
+			}
+
+			// Normalize path separators, since the target execution environment may not support backslashes.
+			pathSlashes := filepath.ToSlash(path)
+			relSlashes, err := filepath.Rel(rootDir, pathSlashes)
+			if err != nil {
+				return err
+			}
+
+			for _, pattern := range s.TestMatch {
+				patternSlashes := filepath.ToSlash(pattern)
+				ok, err := regexp.MatchString(patternSlashes, relSlashes)
+				if err != nil {
+					return fmt.Errorf("test file pattern '%s' is not supported: %s", patternSlashes, err)
+				}
+
+				if ok {
+					rel, err := filepath.Rel(rootDir, path)
+					if err != nil {
+						return err
+					}
+					rel = filepath.ToSlash(rel)
+					replica := s
+					replica.Name = fmt.Sprintf("%s - %s", s.Name, rel)
+					replica.TestMatch = []string{rel}
+					shardedSuites = append(shardedSuites, replica)
+				}
+			}
+
+			return nil
+		}); err != nil {
+			return shardedSuites, err
+		}
+	}
+	return shardedSuites, nil
+}
+
+// shardSuitesByNumShards applies sharding by replacing the original suites with the appropriate number of replicas according to
 // the numShards setting on each suite. A suite is only sharded if numShards > 1.
-func shardSuites(suites []Suite) []Suite {
+func shardSuitesByNumShards(suites []Suite) []Suite {
 	var shardedSuites []Suite
 	for _, s := range suites {
 		// Use the original suite if there is nothing to shard.

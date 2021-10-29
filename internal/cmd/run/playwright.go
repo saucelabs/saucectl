@@ -79,6 +79,7 @@ func NewPlaywrightCmd() *cobra.Command {
 
 	// Misc
 	sc.String("rootDir", "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
+	sc.String("shard", "suite.shard", "", "Controls whether or not (and how) tests are sharded across multiple machines")
 
 	// NPM
 	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")
@@ -103,6 +104,10 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 	playwright.SetDefaults(&p)
 
 	if err := playwright.Validate(&p); err != nil {
+		return 1, err
+	}
+
+	if err := playwright.ShardSuites(&p); err != nil {
 		return 1, err
 	}
 
