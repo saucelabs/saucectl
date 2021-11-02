@@ -135,7 +135,7 @@ func SetDefaults(p *Project) {
 func Validate(p *Project) error {
 	p.Puppeteer.Version = config.StandardizeVersionFormat(p.Puppeteer.Version)
 	if p.Puppeteer.Version == "" {
-		return errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+		return errors.New("missing framework version. Check available versions here: https://docs.saucelabs.com/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
 
 	// Check rootDir exists.

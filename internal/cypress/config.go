@@ -247,7 +247,7 @@ func Validate(p *Project) error {
 	p.Cypress.Version = config.StandardizeVersionFormat(p.Cypress.Version)
 
 	if p.Cypress.Version == "" {
-		return errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+		return errors.New("missing framework version. Check available versions here: https://docs.saucelabs.com/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
 
 	// Validate docker.
