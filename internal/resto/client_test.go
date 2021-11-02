@@ -136,7 +136,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 		case "/rest/v1.1/test/jobs/4":
 			w.WriteHeader(http.StatusUnauthorized)
 		case "/rest/v1.1/test/jobs/5":
-			if retryCount < GetStatusRetryTime-1 {
+			if retryCount < GetStatusMaxRetry-1 {
 				w.WriteHeader(http.StatusRequestTimeout)
 				retryCount++
 				return

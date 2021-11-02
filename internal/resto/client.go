@@ -32,8 +32,8 @@ var (
 	ErrTunnelNotFound = errors.New("tunnel not found")
 )
 
-// GetStatusRetryTime is the total retry times when pulling job status
-const GetStatusRetryTime = 3
+// GetStatusMaxRetry is the total retry times when pulling job status
+const GetStatusMaxRetry = 3
 
 // Client http client.
 type Client struct {
@@ -107,10 +107,8 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 		select {
 		case <-ticker.C:
 			j, err = doRequest(c.HTTPClient, request)
-			fmt.Println("ticker=============")
 			if err != nil {
-				fmt.Println("retryTime: ", retryTime)
-				if retryTime == GetStatusRetryTime {
+				if retryTime == GetStatusMaxRetry {
 					return job.Job{}, err
 				}
 				retryTime++
