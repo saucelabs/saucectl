@@ -33,6 +33,9 @@ var (
 	ErrAssetNotFound = errors.New("asset not found")
 )
 
+// GetStatusRetryTime is the total retry times when pulling job status
+const GetStatusRetryTime = 3
+
 // Client http client.
 type Client struct {
 	HTTPClient     *http.Client
@@ -152,12 +155,18 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 	deathclock := time.NewTimer(timeout)
 	defer deathclock.Stop()
 
+	var retryTime int
 	for {
 		select {
 		case <-ticker.C:
 			j, err = doRequestStatus(c.HTTPClient, req)
 			if err != nil {
-				return job.Job{}, err
+				if retryTime == GetStatusRetryTime {
+					return job.Job{}, err
+				}
+				retryTime++
+				time.Sleep(interval)
+				continue
 			}
 
 			if job.Done(j.Status) {

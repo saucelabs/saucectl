@@ -106,6 +106,7 @@ func TestClient_GetJobDetails(t *testing.T) {
 func TestClient_GetJobStatus(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 
+	var retryCount int
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/rest/v1.1/test/jobs/1":
@@ -134,6 +135,22 @@ func TestClient_GetJobStatus(t *testing.T) {
 			w.WriteHeader(http.StatusNotFound)
 		case "/rest/v1.1/test/jobs/4":
 			w.WriteHeader(http.StatusUnauthorized)
+		case "/rest/v1.1/test/jobs/5":
+			if retryCount < GetStatusRetryTime-1 {
+				w.WriteHeader(http.StatusRequestTimeout)
+				retryCount++
+				return
+			}
+			details := &job.Job{
+				ID:     "5",
+				Passed: false,
+				Status: "new",
+				Error:  "",
+			}
+			randJobStatus(details, true)
+
+			resp, _ := json.Marshal(details)
+			w.Write(resp)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -192,6 +209,18 @@ func TestClient_GetJobStatus(t *testing.T) {
 			jobID:        "333",
 			expectedResp: job.Job{},
 			expectedErr:  ErrServerError,
+		},
+		{
+			name:   "get job details with ID 5. retry 2 times and succeed",
+			client: New(ts.URL, "test", "123", timeout),
+			jobID:  "5",
+			expectedResp: job.Job{
+				ID:     "5",
+				Passed: false,
+				Status: "complete",
+				Error:  "",
+			},
+			expectedErr: nil,
 		},
 	}
 
