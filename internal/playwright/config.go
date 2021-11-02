@@ -296,7 +296,7 @@ func SplitSuites(p Project) (Project, Project) {
 func Validate(p *Project) error {
 	p.Playwright.Version = config.StandardizeVersionFormat(p.Playwright.Version)
 	if p.Playwright.Version == "" {
-		return errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+		return errors.New("missing framework version. Check available versions here: https://docs.saucelabs.com/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
 
 	// Check rootDir exists.

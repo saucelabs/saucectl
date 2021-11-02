@@ -59,7 +59,7 @@ func (r *CypressRunner) getSuiteNames() string {
 // checkCypressVersion do several checks before running Cypress tests.
 func (r *CypressRunner) checkCypressVersion() error {
 	if r.Project.Cypress.Version == "" {
-		return fmt.Errorf("missing cypress version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+		return fmt.Errorf("missing cypress version. Check available versions here: https://docs.saucelabs.com/testrunner-toolkit#supported-frameworks-and-browsers")
 	}
 	return nil
 }
