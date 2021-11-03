@@ -14,11 +14,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog/log"
 	"github.com/ryanuber/go-glob"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/logger"
 	"github.com/saucelabs/saucectl/internal/requesth"
 	"github.com/saucelabs/saucectl/internal/vmd"
 )
@@ -37,11 +39,12 @@ const getStatusMaxRetry = 3
 
 // Client http client.
 type Client struct {
-	HTTPClient     *http.Client
-	URL            string
-	Username       string
-	AccessKey      string
-	ArtifactConfig config.ArtifactDownload
+	HTTPClient          *http.Client
+	RetryableHTTPClient *retryablehttp.Client
+	URL                 string
+	Username            string
+	AccessKey           string
+	ArtifactConfig      config.ArtifactDownload
 }
 
 // concurrencyResponse is the response body as is returned by resto's rest/v1.2/users/{username}/concurrency endpoint.
@@ -69,10 +72,11 @@ type tunnel struct {
 // New creates a new client.
 func New(url, username, accessKey string, timeout time.Duration) Client {
 	return Client{
-		HTTPClient: &http.Client{Timeout: timeout},
-		URL:        url,
-		Username:   username,
-		AccessKey:  accessKey,
+		HTTPClient:          &http.Client{Timeout: timeout},
+		RetryableHTTPClient: retryablehttp.NewClient(),
+		URL:                 url,
+		Username:            username,
+		AccessKey:           accessKey,
 	}
 }
 
@@ -83,7 +87,7 @@ func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
 		return job.Job{}, err
 	}
 
-	return doRequest(c.HTTPClient, request)
+	return doRequest(c.RetryableHTTPClient, request, 0)
 }
 
 // PollJob polls job details at an interval, until timeout has been reached or until the job has ended, whether successfully or due to an error.
@@ -102,25 +106,19 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 	deathclock := time.NewTimer(timeout)
 	defer deathclock.Stop()
 
-	var retryCount int
 	for {
 		select {
 		case <-ticker.C:
-			j, err = doRequest(c.HTTPClient, request)
+			j, err = doRequest(c.RetryableHTTPClient, request, interval)
 			if err != nil {
-				if retryCount == getStatusMaxRetry {
-					return job.Job{}, err
-				}
-				retryCount++
-				log.Error().Msgf("Failed to fetch job status due to: %s. Start to retry(%d)...", err.Error(), retryCount)
-				continue
+				return job.Job{}, err
 			}
 
 			if job.Done(j.Status) {
 				return j, nil
 			}
 		case <-deathclock.C:
-			j, err = doRequest(c.HTTPClient, request)
+			j, err = doRequest(c.RetryableHTTPClient, request, interval)
 			if err != nil {
 				return job.Job{}, err
 			}
@@ -243,7 +241,7 @@ func (c *Client) StopJob(ctx context.Context, id string) (job.Job, error) {
 	if err != nil {
 		return job.Job{}, err
 	}
-	j, err := doRequest(c.HTTPClient, request)
+	j, err := doRequest(c.RetryableHTTPClient, request, 0)
 	if err != nil {
 		return job.Job{}, err
 	}
@@ -317,8 +315,17 @@ func doAssetRequest(httpClient *http.Client, request *http.Request) ([]byte, err
 	return io.ReadAll(resp.Body)
 }
 
-func doRequest(httpClient *http.Client, request *http.Request) (job.Job, error) {
-	resp, err := httpClient.Do(request)
+func doRequest(httpClient *retryablehttp.Client, request *http.Request, interval time.Duration) (job.Job, error) {
+	httpClient.Logger = &logger.Logger{}
+	httpClient.RetryMax = getStatusMaxRetry
+	httpClient.RetryWaitMax = interval
+	httpClient.RetryWaitMin = interval
+
+	retryRep, err := retryablehttp.FromRequest(request)
+	if err != nil {
+		return job.Job{}, err
+	}
+	resp, err := httpClient.Do(retryRep)
 	if err != nil {
 		return job.Job{}, err
 	}
