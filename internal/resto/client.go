@@ -87,7 +87,7 @@ func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
 		return job.Job{}, err
 	}
 
-	return doRequest(c.RetryableHTTPClient, request, 0)
+	return doRequest(c.RetryableHTTPClient, request, 0, getStatusMaxRetry)
 }
 
 // PollJob polls job details at an interval, until timeout has been reached or until the job has ended, whether successfully or due to an error.
@@ -109,7 +109,7 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 	for {
 		select {
 		case <-ticker.C:
-			j, err = doRequest(c.RetryableHTTPClient, request, interval)
+			j, err = doRequest(c.RetryableHTTPClient, request, interval, getStatusMaxRetry)
 			if err != nil {
 				return job.Job{}, err
 			}
@@ -118,7 +118,7 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 				return j, nil
 			}
 		case <-deathclock.C:
-			j, err = doRequest(c.RetryableHTTPClient, request, interval)
+			j, err = doRequest(c.RetryableHTTPClient, request, interval, getStatusMaxRetry)
 			if err != nil {
 				return job.Job{}, err
 			}
@@ -241,7 +241,7 @@ func (c *Client) StopJob(ctx context.Context, id string) (job.Job, error) {
 	if err != nil {
 		return job.Job{}, err
 	}
-	j, err := doRequest(c.RetryableHTTPClient, request, 0)
+	j, err := doRequest(c.RetryableHTTPClient, request, 0, 0)
 	if err != nil {
 		return job.Job{}, err
 	}
@@ -315,9 +315,9 @@ func doAssetRequest(httpClient *http.Client, request *http.Request) ([]byte, err
 	return io.ReadAll(resp.Body)
 }
 
-func doRequest(httpClient *retryablehttp.Client, request *http.Request, interval time.Duration) (job.Job, error) {
+func doRequest(httpClient *retryablehttp.Client, request *http.Request, interval time.Duration, retryCount int) (job.Job, error) {
 	httpClient.Logger = &logger.Logger{}
-	httpClient.RetryMax = getStatusMaxRetry
+	httpClient.RetryMax = retryCount
 	httpClient.RetryWaitMax = interval
 	httpClient.RetryWaitMin = interval
 

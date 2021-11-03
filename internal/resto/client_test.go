@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -90,15 +91,17 @@ func TestClient_GetJobDetails(t *testing.T) {
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "333",
 			expectedResp: job.Job{},
-			expectedErr:  ErrServerError,
+			expectedErr:  errors.New("giving up after 4 attempt(s)"),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := tc.client.ReadJob(context.Background(), tc.jobID)
-			assert.Equal(t, err, tc.expectedErr)
 			assert.Equal(t, got, tc.expectedResp)
+			if err != nil {
+				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))
+			}
 		})
 	}
 }
@@ -137,7 +140,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 			w.WriteHeader(http.StatusUnauthorized)
 		case "/rest/v1.1/test/jobs/5":
 			if retryCount < getStatusMaxRetry-1 {
-				w.WriteHeader(http.StatusRequestTimeout)
+				w.WriteHeader(http.StatusInternalServerError)
 				retryCount++
 				return
 			}
@@ -208,7 +211,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "333",
 			expectedResp: job.Job{},
-			expectedErr:  ErrServerError,
+			expectedErr:  errors.New("giving up after 4 attempt(s)"),
 		},
 		{
 			name:   "get job details with ID 5. retry 2 times and succeed",
@@ -227,8 +230,10 @@ func TestClient_GetJobStatus(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond, 0)
-			assert.Equal(t, err, tc.expectedErr)
 			assert.Equal(t, got, tc.expectedResp)
+			if err != nil {
+				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))
+			}
 		})
 	}
 }
@@ -436,15 +441,17 @@ func TestClient_TestStop(t *testing.T) {
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "333",
 			expectedResp: job.Job{},
-			expectedErr:  ErrServerError,
+			expectedErr:  errors.New("giving up after 4 attempt(s)"),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := tc.client.StopJob(context.Background(), tc.jobID)
-			assert.Equal(t, err, tc.expectedErr)
 			assert.Equal(t, got, tc.expectedResp)
+			if err != nil {
+				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))
+			}
 		})
 	}
 }

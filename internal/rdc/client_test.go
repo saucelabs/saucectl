@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -178,13 +179,14 @@ func TestClient_GetJobStatus(t *testing.T) {
 
 			resp, _ := json.Marshal(details)
 			w.Write(resp)
+			w.WriteHeader(200)
 		case "/v1/rdc/jobs/3":
 			w.WriteHeader(http.StatusNotFound)
 		case "/v1/rdc/jobs/4":
 			w.WriteHeader(http.StatusUnauthorized)
 		case "/v1/rdc/jobs/5":
 			if retryCount < getStatusMaxRetry-1 {
-				w.WriteHeader(http.StatusRequestTimeout)
+				w.WriteHeader(http.StatusInternalServerError)
 				retryCount++
 				return
 			}
@@ -198,6 +200,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 
 			resp, _ := json.Marshal(details)
 			w.Write(resp)
+			w.WriteHeader(200)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -257,7 +260,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 			client:       New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:        "333",
 			expectedResp: job.Job{},
-			expectedErr:  ErrServerError,
+			expectedErr:  errors.New("giving up after 4 attempt(s)"),
 		},
 		{
 			name:   "get job details with ID 5. retry 2 times and succeed",
@@ -277,8 +280,10 @@ func TestClient_GetJobStatus(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond, 0)
-			assert.Equal(t, tc.expectedErr, err)
 			assert.Equal(t, tc.expectedResp, got)
+			if err != nil {
+				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))
+			}
 		})
 	}
 }
