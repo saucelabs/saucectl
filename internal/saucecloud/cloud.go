@@ -226,7 +226,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	}
 
 	if err != nil {
-		return job.Job{}, false, fmt.Errorf("failed to retrieve job status for suite %s", opts.DisplayName)
+		return job.Job{}, false, fmt.Errorf("failed to retrieve job status for suite %s. Reason: %s", opts.DisplayName, err.Error())
 	}
 
 	// Enrich RDC data

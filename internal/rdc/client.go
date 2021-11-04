@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -202,10 +201,6 @@ func doRequestStatus(httpClient *retryablehttp.Client, request *http.Request) (j
 	}
 	resp, err := httpClient.Do(retryRep)
 	if err != nil {
-		if err, ok := err.(net.Error); ok && err.Timeout() {
-			log.Error().Msgf("Request failed due to timeout")
-		}
-
 		return job.Job{}, err
 	}
 	defer resp.Body.Close()
