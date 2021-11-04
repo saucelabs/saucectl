@@ -226,7 +226,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	}
 
 	if err != nil {
-		return job.Job{}, false, fmt.Errorf("failed to retrieve job status for suite %s", opts.DisplayName)
+		return job.Job{}, false, fmt.Errorf("failed to retrieve job status for suite %s: %s", opts.DisplayName, err.Error())
 	}
 
 	// Enrich RDC data
@@ -692,5 +692,5 @@ func (r *CloudRunner) logAvailableVersions(frameworkName string) {
 
 // isUnsupportedVersion returns true if the error is an unsupported version.
 func isUnsupportedVersion(err error) bool {
-    return strings.Contains(err.Error(), "Bad Request: unsupported version")
+	return strings.Contains(err.Error(), "Bad Request: unsupported version")
 }

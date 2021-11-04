@@ -188,20 +188,9 @@ func preRun() error {
 		Credentials: creds,
 	}
 
-	restoClient = resto.Client{
-		HTTPClient: &http.Client{Timeout: restoTimeout},
-		URL:        "", // updated later once region is determined
-		Username:   creds.Username,
-		AccessKey:  creds.AccessKey,
-	}
+	restoClient = resto.New("", creds.Username, creds.AccessKey, 0)
 
-	rdcClient = rdc.Client{
-		HTTPClient: &http.Client{
-			Timeout: rdcTimeout,
-		},
-		Username:  creds.Username,
-		AccessKey: creds.AccessKey,
-	}
+	rdcClient = rdc.New("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 
 	appsClient = *appstore.New("", creds.Username, creds.AccessKey, appStoreTimeout)
 

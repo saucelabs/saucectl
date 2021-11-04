@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog/log"
 	"github.com/ryanuber/go-glob"
 
@@ -32,9 +33,12 @@ var (
 	ErrTunnelNotFound = errors.New("tunnel not found")
 )
 
+// retryMax is the total retry times when pulling job status
+const retryMax = 3
+
 // Client http client.
 type Client struct {
-	HTTPClient     *http.Client
+	HTTPClient     *retryablehttp.Client
 	URL            string
 	Username       string
 	AccessKey      string
@@ -65,8 +69,12 @@ type tunnel struct {
 
 // New creates a new client.
 func New(url, username, accessKey string, timeout time.Duration) Client {
+	httpClient := retryablehttp.NewClient()
+	httpClient.HTTPClient = &http.Client{Timeout: timeout}
+	httpClient.Logger = nil
+	httpClient.RetryMax = retryMax
 	return Client{
-		HTTPClient: &http.Client{Timeout: timeout},
+		HTTPClient: httpClient,
 		URL:        url,
 		Username:   username,
 		AccessKey:  accessKey,
@@ -149,7 +157,12 @@ func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
 	}
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
-	resp, err := c.HTTPClient.Do(req)
+	r, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return 0, err
+	}
+
+	resp, err := c.HTTPClient.Do(r)
 	if err != nil {
 		return 0, err
 	}
@@ -191,7 +204,12 @@ func (c *Client) isTunnelRunning(ctx context.Context, id, owner string) error {
 	q.Add("all", "true")
 	req.URL.RawQuery = q.Encode()
 
-	res, err := c.HTTPClient.Do(req)
+	r, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return err
+	}
+
+	res, err := c.HTTPClient.Do(r)
 	if err != nil {
 		return err
 	}
@@ -241,8 +259,12 @@ func (c *Client) StopJob(ctx context.Context, id string) (job.Job, error) {
 	return j, nil
 }
 
-func doListAssetsRequest(httpClient *http.Client, request *http.Request) ([]string, error) {
-	resp, err := httpClient.Do(request)
+func doListAssetsRequest(httpClient *retryablehttp.Client, request *http.Request) ([]string, error) {
+	req, err := retryablehttp.FromRequest(request)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -284,8 +306,12 @@ func isSpecialFile(fileName string) bool {
 	return false
 }
 
-func doAssetRequest(httpClient *http.Client, request *http.Request) ([]byte, error) {
-	resp, err := httpClient.Do(request)
+func doAssetRequest(httpClient *retryablehttp.Client, request *http.Request) ([]byte, error) {
+	req, err := retryablehttp.FromRequest(request)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -308,8 +334,12 @@ func doAssetRequest(httpClient *http.Client, request *http.Request) ([]byte, err
 	return io.ReadAll(resp.Body)
 }
 
-func doRequest(httpClient *http.Client, request *http.Request) (job.Job, error) {
-	resp, err := httpClient.Do(request)
+func doRequest(httpClient *retryablehttp.Client, request *http.Request) (job.Job, error) {
+	req, err := retryablehttp.FromRequest(request)
+	if err != nil {
+		return job.Job{}, err
+	}
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return job.Job{}, err
 	}
@@ -433,7 +463,12 @@ func (c *Client) GetVirtualDevices(ctx context.Context, kind string) ([]vmd.Virt
 	}
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
-	res, err := c.HTTPClient.Do(req)
+	r, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return []vmd.VirtualDevice{}, err
+	}
+
+	res, err := c.HTTPClient.Do(r)
 	if err != nil {
 		return []vmd.VirtualDevice{}, err
 	}

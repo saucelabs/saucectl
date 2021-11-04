@@ -12,9 +12,11 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -53,7 +55,7 @@ func TestClient_ReadAllowedCCY(t *testing.T) {
 			name:       "error endpoint",
 			statusCode: http.StatusInternalServerError,
 			want:       0,
-			wantErr:    errors.New("unexpected statusCode: 500"),
+			wantErr:    errors.New("giving up after 4 attempt(s)"),
 		},
 	}
 
@@ -66,8 +68,11 @@ func TestClient_ReadAllowedCCY(t *testing.T) {
 
 		client := New(ts.URL, "test", "123", timeout, config.ArtifactDownload{})
 		ccy, err := client.ReadAllowedCCY(context.Background())
-		assert.Equal(t, err, tt.wantErr)
 		assert.Equal(t, ccy, tt.want)
+		if err != nil {
+			assert.True(t, strings.Contains(err.Error(), tt.wantErr.Error()))
+		}
+
 		ts.Close()
 	}
 }
@@ -153,6 +158,7 @@ func randJobStatus(j *job.Job, isComplete bool) {
 func TestClient_GetJobStatus(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 
+	var retryCount int
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/v1/rdc/jobs/1":
@@ -177,10 +183,28 @@ func TestClient_GetJobStatus(t *testing.T) {
 
 			resp, _ := json.Marshal(details)
 			w.Write(resp)
+			w.WriteHeader(200)
 		case "/v1/rdc/jobs/3":
 			w.WriteHeader(http.StatusNotFound)
 		case "/v1/rdc/jobs/4":
 			w.WriteHeader(http.StatusUnauthorized)
+		case "/v1/rdc/jobs/5":
+			if retryCount < retryMax-1 {
+				w.WriteHeader(http.StatusInternalServerError)
+				retryCount++
+				return
+			}
+			details := &job.Job{
+				ID:     "5",
+				Passed: false,
+				Status: "new",
+				Error:  "",
+			}
+			randJobStatus(details, true)
+
+			resp, _ := json.Marshal(details)
+			w.Write(resp)
+			w.WriteHeader(200)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -240,15 +264,30 @@ func TestClient_GetJobStatus(t *testing.T) {
 			client:       New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:        "333",
 			expectedResp: job.Job{},
-			expectedErr:  ErrServerError,
+			expectedErr:  errors.New("giving up after 4 attempt(s)"),
+		},
+		{
+			name:   "get job details with ID 5. retry 2 times and succeed",
+			client: New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			jobID:  "5",
+			expectedResp: job.Job{
+				ID:     "5",
+				Passed: false,
+				Status: "complete",
+				Error:  "",
+				IsRDC:  true,
+			},
+			expectedErr: nil,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond, 0)
-			assert.Equal(t, tc.expectedErr, err)
 			assert.Equal(t, tc.expectedResp, got)
+			if err != nil {
+				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))
+			}
 		})
 	}
 }
@@ -434,9 +473,11 @@ func TestClient_GetDevices(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
+	client := retryablehttp.NewClient()
+	client.HTTPClient = &http.Client{Timeout: 1 * time.Second}
 
 	cl := Client{
-		HTTPClient: &http.Client{Timeout: 1 * time.Second},
+		HTTPClient: client,
 		URL:        ts.URL,
 		Username:   "dummy-user",
 		AccessKey:  "dummy-key",
