@@ -16,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -54,7 +55,7 @@ func TestClient_ReadAllowedCCY(t *testing.T) {
 			name:       "error endpoint",
 			statusCode: http.StatusInternalServerError,
 			want:       0,
-			wantErr:    errors.New("unexpected statusCode: 500"),
+			wantErr:    errors.New("giving up after 1 attempt(s)"),
 		},
 	}
 
@@ -67,8 +68,11 @@ func TestClient_ReadAllowedCCY(t *testing.T) {
 
 		client := New(ts.URL, "test", "123", timeout, config.ArtifactDownload{})
 		ccy, err := client.ReadAllowedCCY(context.Background())
-		assert.Equal(t, err, tt.wantErr)
 		assert.Equal(t, ccy, tt.want)
+		if err != nil {
+			assert.True(t, strings.Contains(err.Error(), tt.wantErr.Error()))
+		}
+
 		ts.Close()
 	}
 }
@@ -469,9 +473,11 @@ func TestClient_GetDevices(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
+	client := retryablehttp.NewClient()
+	client.HTTPClient = &http.Client{Timeout: 1 * time.Second}
 
 	cl := Client{
-		HTTPClient: &http.Client{Timeout: 1 * time.Second},
+		HTTPClient: client,
 		URL:        ts.URL,
 		Username:   "dummy-user",
 		AccessKey:  "dummy-key",

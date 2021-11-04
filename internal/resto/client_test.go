@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -13,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/saucelabs/saucectl/internal/job"
@@ -250,6 +252,8 @@ func TestClient_GetJobAssetFileNames(t *testing.T) {
 			w.WriteHeader(http.StatusUnauthorized)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
+			completeStatusResp := []byte(`{"console.log": "console.log", "examples__actions.spec.js.mp4": "examples__actions.spec.js.mp4", "examples__actions.spec.js.json": "examples__actions.spec.js.json", "video.mp4": "video.mp4", "selenium-log": null, "sauce-log": null, "examples__actions.spec.js.xml": "examples__actions.spec.js.xml", "video": "video.mp4", "screenshots": []}`)
+			w.Write(completeStatusResp)
 		}
 	}))
 	defer ts.Close()
@@ -288,7 +292,7 @@ func TestClient_GetJobAssetFileNames(t *testing.T) {
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "4",
 			expectedResp: nil,
-			expectedErr:  ErrServerError,
+			expectedErr:  errors.New("giving up after 1 attempt(s)"),
 		},
 	}
 	for _, tc := range testCases {
@@ -296,8 +300,10 @@ func TestClient_GetJobAssetFileNames(t *testing.T) {
 			got, err := tc.client.GetJobAssetFileNames(context.Background(), tc.jobID)
 			sort.Strings(tc.expectedResp)
 			sort.Strings(got)
-			assert.Equal(t, tc.expectedErr, err)
 			assert.Equal(t, tc.expectedResp, got)
+			if err != nil {
+				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))
+			}
 		})
 	}
 }
@@ -340,7 +346,7 @@ func TestClient_GetJobAssetFileContent(t *testing.T) {
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "333",
 			expectedResp: nil,
-			expectedErr:  ErrServerError,
+			expectedErr:  errors.New("giving up after 1 attempt(s)"),
 		},
 		{
 			name:         "get job asset with ID 2",
@@ -361,8 +367,10 @@ func TestClient_GetJobAssetFileContent(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := tc.client.GetJobAssetFileContent(context.Background(), tc.jobID, "console.log")
-			assert.Equal(t, err, tc.expectedErr)
 			assert.Equal(t, got, tc.expectedResp)
+			if err != nil {
+				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))
+			}
 		})
 	}
 }
@@ -441,13 +449,14 @@ func TestClient_TestStop(t *testing.T) {
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "333",
 			expectedResp: job.Job{},
-			expectedErr:  errors.New("giving up after 4 attempt(s)"),
+			expectedErr:  errors.New("giving up after 1 attempt(s)"),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := tc.client.StopJob(context.Background(), tc.jobID)
+			fmt.Println("errr: ", err)
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
 				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))
@@ -467,8 +476,10 @@ func TestClient_GetVirtualDevices(t *testing.T) {
 		}
 	}))
 
+	client := retryablehttp.NewClient()
+	client.HTTPClient = ts.Client()
 	c := &Client{
-		HTTPClient: ts.Client(),
+		HTTPClient: client,
 		URL:        ts.URL,
 		Username:   "dummy-user",
 		AccessKey:  "dummy-key",
@@ -533,8 +544,10 @@ func TestClient_isTunnelRunning(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
+	client := retryablehttp.NewClient()
+	client.HTTPClient = ts.Client()
 	c := Client{
-		HTTPClient: ts.Client(),
+		HTTPClient: client,
 		URL:        ts.URL,
 		Username:   "DummyUser",
 		AccessKey:  "DummyKey",

@@ -4,6 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"sort"
+	"strings"
+
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/playwright"
@@ -11,9 +15,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 	"github.com/spf13/pflag"
-	"net/http"
-	"sort"
-	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
@@ -61,19 +62,9 @@ func newInitializer(stdio terminal.Stdio, creds credentials.Credentials, regio s
 		Credentials: creds,
 	}
 
-	rc := rdc.Client{
-		HTTPClient: &http.Client{Timeout: rdcTimeout},
-		URL:        r.APIBaseURL(),
-		Username:   creds.Username,
-		AccessKey:  creds.AccessKey,
-	}
+	rc := rdc.New(r.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 
-	rs := resto.Client{
-		HTTPClient: &http.Client{Timeout: restoTimeout},
-		URL:        r.APIBaseURL(),
-		Username:   creds.Username,
-		AccessKey:  creds.AccessKey,
-	}
+	rs := resto.New(r.APIBaseURL(), creds.Username, creds.AccessKey, restoTimeout)
 
 	return &initializer{
 		stdio:        stdio,

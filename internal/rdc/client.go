@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -21,7 +22,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/logger"
 	"github.com/saucelabs/saucectl/internal/requesth"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
@@ -40,12 +40,11 @@ const getStatusMaxRetry = 3
 
 // Client http client.
 type Client struct {
-	HTTPClient          *http.Client
-	RetryableHTTPClient *retryablehttp.Client
-	URL                 string
-	Username            string
-	AccessKey           string
-	ArtifactConfig      config.ArtifactDownload
+	HTTPClient     *retryablehttp.Client
+	URL            string
+	Username       string
+	AccessKey      string
+	ArtifactConfig config.ArtifactDownload
 }
 
 type organizationResponse struct {
@@ -74,13 +73,17 @@ type readJobResponse struct {
 
 // New creates a new client.
 func New(url, username, accessKey string, timeout time.Duration, artifactConfig config.ArtifactDownload) Client {
+	httpClient := retryablehttp.NewClient()
+	httpClient.HTTPClient = &http.Client{Timeout: timeout}
+	httpClient.Logger = nil
+	httpClient.RetryMax = 0
+
 	return Client{
-		HTTPClient:          &http.Client{Timeout: timeout},
-		RetryableHTTPClient: retryablehttp.NewClient(),
-		URL:                 url,
-		Username:            username,
-		AccessKey:           accessKey,
-		ArtifactConfig:      artifactConfig,
+		HTTPClient:     httpClient,
+		URL:            url,
+		Username:       username,
+		AccessKey:      accessKey,
+		ArtifactConfig: artifactConfig,
 	}
 }
 
@@ -93,7 +96,12 @@ func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
 	}
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
-	resp, err := c.HTTPClient.Do(req)
+	r, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return 0, err
+	}
+
+	resp, err := c.HTTPClient.Do(r)
 	if err != nil {
 		return 0, err
 	}
@@ -119,7 +127,12 @@ func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
 	}
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
-	resp, err := c.HTTPClient.Do(req)
+	r, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return job.Job{}, err
+	}
+
+	resp, err := c.HTTPClient.Do(r)
 	if err != nil {
 		return job.Job{}, err
 	}
@@ -162,7 +175,7 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 	for {
 		select {
 		case <-ticker.C:
-			j, err = doRequestStatus(c.RetryableHTTPClient, req, interval)
+			j, err = doRequestStatus(c.HTTPClient, req, interval)
 			if err != nil {
 				return job.Job{}, err
 			}
@@ -172,7 +185,7 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 				return j, nil
 			}
 		case <-deathclock.C:
-			j, err = doRequestStatus(c.RetryableHTTPClient, req, interval)
+			j, err = doRequestStatus(c.HTTPClient, req, interval)
 			if err != nil {
 				return job.Job{}, err
 			}
@@ -183,8 +196,11 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 }
 
 func doRequestStatus(httpClient *retryablehttp.Client, request *http.Request, interval time.Duration) (job.Job, error) {
-	httpClient.Logger = &logger.Logger{}
 	httpClient.RetryMax = getStatusMaxRetry
+	defer func() {
+		httpClient.RetryMax = 0
+	}()
+
 	httpClient.RetryWaitMax = interval
 	httpClient.RetryWaitMin = interval
 
@@ -194,6 +210,10 @@ func doRequestStatus(httpClient *retryablehttp.Client, request *http.Request, in
 	}
 	resp, err := httpClient.Do(retryRep)
 	if err != nil {
+		if err, ok := err.(net.Error); ok && err.Timeout() {
+			log.Error().Msgf("Request failed due to timeout")
+		}
+
 		return job.Job{}, err
 	}
 	defer resp.Body.Close()
@@ -229,7 +249,12 @@ func (c *Client) GetJobAssetFileNames(ctx context.Context, jobID string) ([]stri
 	}
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
-	resp, err := c.HTTPClient.Do(req)
+	r, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return []string{}, err
+	}
+
+	resp, err := c.HTTPClient.Do(r)
 	if err != nil {
 		return []string{}, err
 	}
@@ -314,8 +339,12 @@ func createAssetRequest(ctx context.Context, url, username, accessKey, jobID, fi
 	return req, nil
 }
 
-func doAssetRequest(httpClient *http.Client, request *http.Request) ([]byte, error) {
-	resp, err := httpClient.Do(request)
+func doAssetRequest(httpClient *retryablehttp.Client, request *http.Request) ([]byte, error) {
+	req, err := retryablehttp.FromRequest(request)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -419,7 +448,12 @@ func (c *Client) GetDevices(ctx context.Context, OS string) ([]devices.Device, e
 	req.URL.RawQuery = q.Encode()
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
-	res, err := c.HTTPClient.Do(req)
+	r, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := c.HTTPClient.Do(r)
 	if err != nil {
 		return []devices.Device{}, err
 	}
