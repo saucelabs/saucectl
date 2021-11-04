@@ -34,8 +34,8 @@ var (
 	ErrTunnelNotFound = errors.New("tunnel not found")
 )
 
-// getStatusMaxRetry is the total retry times when pulling job status
-const getStatusMaxRetry = 3
+// retryMax is the total retry times when pulling job status
+const retryMax = 3
 
 // Client http client.
 type Client struct {
@@ -73,7 +73,7 @@ func New(url, username, accessKey string, timeout time.Duration) Client {
 	httpClient := retryablehttp.NewClient()
 	httpClient.HTTPClient = &http.Client{Timeout: timeout}
 	httpClient.Logger = nil
-	httpClient.RetryMax = 0
+	httpClient.RetryMax = retryMax
 	return Client{
 		HTTPClient: httpClient,
 		URL:        url,
@@ -89,7 +89,7 @@ func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
 		return job.Job{}, err
 	}
 
-	return doRequest(c.HTTPClient, request, 0, getStatusMaxRetry)
+	return doRequest(c.HTTPClient, request)
 }
 
 // PollJob polls job details at an interval, until timeout has been reached or until the job has ended, whether successfully or due to an error.
@@ -111,7 +111,7 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 	for {
 		select {
 		case <-ticker.C:
-			j, err = doRequest(c.HTTPClient, request, interval, getStatusMaxRetry)
+			j, err = doRequest(c.HTTPClient, request)
 			if err != nil {
 				return job.Job{}, err
 			}
@@ -120,7 +120,7 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 				return j, nil
 			}
 		case <-deathclock.C:
-			j, err = doRequest(c.HTTPClient, request, interval, getStatusMaxRetry)
+			j, err = doRequest(c.HTTPClient, request)
 			if err != nil {
 				return job.Job{}, err
 			}
@@ -253,7 +253,7 @@ func (c *Client) StopJob(ctx context.Context, id string) (job.Job, error) {
 	if err != nil {
 		return job.Job{}, err
 	}
-	j, err := doRequest(c.HTTPClient, request, 0, 0)
+	j, err := doRequest(c.HTTPClient, request)
 	if err != nil {
 		return job.Job{}, err
 	}
@@ -335,14 +335,7 @@ func doAssetRequest(httpClient *retryablehttp.Client, request *http.Request) ([]
 	return io.ReadAll(resp.Body)
 }
 
-func doRequest(httpClient *retryablehttp.Client, request *http.Request, interval time.Duration, retryCount int) (job.Job, error) {
-	httpClient.RetryMax = retryCount
-	httpClient.RetryWaitMax = interval
-	httpClient.RetryWaitMin = interval
-	defer func() {
-		httpClient.RetryMax = 0
-	}()
-
+func doRequest(httpClient *retryablehttp.Client, request *http.Request) (job.Job, error) {
 	req, err := retryablehttp.FromRequest(request)
 	if err != nil {
 		return job.Job{}, err
@@ -350,7 +343,7 @@ func doRequest(httpClient *retryablehttp.Client, request *http.Request, interval
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		if err, ok := err.(net.Error); ok && err.Timeout() {
-			log.Error().Msgf("Request failed due to timeout, retried %d time(s)", retryCount)
+			log.Error().Msgf("Request failed due to timeout")
 		}
 		return job.Job{}, err
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -141,7 +140,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 		case "/rest/v1.1/test/jobs/4":
 			w.WriteHeader(http.StatusUnauthorized)
 		case "/rest/v1.1/test/jobs/5":
-			if retryCount < getStatusMaxRetry-1 {
+			if retryCount < retryMax-1 {
 				w.WriteHeader(http.StatusInternalServerError)
 				retryCount++
 				return
@@ -292,7 +291,7 @@ func TestClient_GetJobAssetFileNames(t *testing.T) {
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "4",
 			expectedResp: nil,
-			expectedErr:  errors.New("giving up after 1 attempt(s)"),
+			expectedErr:  errors.New("giving up after 4 attempt(s)"),
 		},
 	}
 	for _, tc := range testCases {
@@ -346,7 +345,7 @@ func TestClient_GetJobAssetFileContent(t *testing.T) {
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "333",
 			expectedResp: nil,
-			expectedErr:  errors.New("giving up after 1 attempt(s)"),
+			expectedErr:  errors.New("giving up after 4 attempt(s)"),
 		},
 		{
 			name:         "get job asset with ID 2",
@@ -449,14 +448,13 @@ func TestClient_TestStop(t *testing.T) {
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "333",
 			expectedResp: job.Job{},
-			expectedErr:  errors.New("giving up after 1 attempt(s)"),
+			expectedErr:  errors.New("giving up after 4 attempt(s)"),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := tc.client.StopJob(context.Background(), tc.jobID)
-			fmt.Println("errr: ", err)
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
 				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))

@@ -36,7 +36,7 @@ var (
 )
 
 // getStatusMaxRetry is the total retry times when pulling job status
-const getStatusMaxRetry = 3
+const retryMax = 3
 
 // Client http client.
 type Client struct {
@@ -76,7 +76,7 @@ func New(url, username, accessKey string, timeout time.Duration, artifactConfig 
 	httpClient := retryablehttp.NewClient()
 	httpClient.HTTPClient = &http.Client{Timeout: timeout}
 	httpClient.Logger = nil
-	httpClient.RetryMax = 0
+	httpClient.RetryMax = retryMax
 
 	return Client{
 		HTTPClient:     httpClient,
@@ -175,7 +175,7 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 	for {
 		select {
 		case <-ticker.C:
-			j, err = doRequestStatus(c.HTTPClient, req, interval)
+			j, err = doRequestStatus(c.HTTPClient, req)
 			if err != nil {
 				return job.Job{}, err
 			}
@@ -185,7 +185,7 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 				return j, nil
 			}
 		case <-deathclock.C:
-			j, err = doRequestStatus(c.HTTPClient, req, interval)
+			j, err = doRequestStatus(c.HTTPClient, req)
 			if err != nil {
 				return job.Job{}, err
 			}
@@ -195,15 +195,7 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 	}
 }
 
-func doRequestStatus(httpClient *retryablehttp.Client, request *http.Request, interval time.Duration) (job.Job, error) {
-	httpClient.RetryMax = getStatusMaxRetry
-	defer func() {
-		httpClient.RetryMax = 0
-	}()
-
-	httpClient.RetryWaitMax = interval
-	httpClient.RetryWaitMin = interval
-
+func doRequestStatus(httpClient *retryablehttp.Client, request *http.Request) (job.Job, error) {
 	retryRep, err := retryablehttp.FromRequest(request)
 	if err != nil {
 		return job.Job{}, err

@@ -55,7 +55,7 @@ func TestClient_ReadAllowedCCY(t *testing.T) {
 			name:       "error endpoint",
 			statusCode: http.StatusInternalServerError,
 			want:       0,
-			wantErr:    errors.New("giving up after 1 attempt(s)"),
+			wantErr:    errors.New("giving up after 4 attempt(s)"),
 		},
 	}
 
@@ -189,7 +189,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 		case "/v1/rdc/jobs/4":
 			w.WriteHeader(http.StatusUnauthorized)
 		case "/v1/rdc/jobs/5":
-			if retryCount < getStatusMaxRetry-1 {
+			if retryCount < retryMax-1 {
 				w.WriteHeader(http.StatusInternalServerError)
 				retryCount++
 				return
