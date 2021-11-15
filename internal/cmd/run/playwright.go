@@ -119,7 +119,7 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 
 	rs.ArtifactConfig = p.Artifacts.Download
 
-	tracker := segment.New(gFlags.disableUsageMetrics)
+	tracker := segment.New(!gFlags.disableUsageMetrics)
 
 	defer func() {
 		props := usage.Properties{}

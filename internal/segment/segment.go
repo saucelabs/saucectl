@@ -43,7 +43,7 @@ func New(enabled bool) *Tracker {
 
 // Collect reports the usage of subject along with its attached metadata that is props.
 func (t *Tracker) Collect(subject string, props usage.Properties) {
-	if t.Enabled {
+	if !t.Enabled {
 		return
 	}
 	if t.client == nil {

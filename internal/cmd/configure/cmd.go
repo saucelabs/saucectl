@@ -32,7 +32,7 @@ func Command() *cobra.Command {
 		Long:    configureLong,
 		Example: configureExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			tracker := segment.New(false)
+			tracker := segment.New(true)
 
 			defer func() {
 				tracker.Collect("Configure", nil)
