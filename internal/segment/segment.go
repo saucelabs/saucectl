@@ -14,7 +14,7 @@ import (
 
 // Tracker is the segment implemention for usage.Tracker.
 type Tracker struct {
-	client     analytics.Client
+	client  analytics.Client
 	Enabled bool
 }
 
@@ -38,12 +38,12 @@ func New(enabled bool) *Tracker {
 		return &Tracker{}
 	}
 
-	return &Tracker{client: client, IsDisabled: IsDisabled}
+	return &Tracker{client: client, Enabled: enabled}
 }
 
 // Collect reports the usage of subject along with its attached metadata that is props.
 func (t *Tracker) Collect(subject string, props usage.Properties) {
-	if t.IsDisabled {
+	if t.Enabled {
 		return
 	}
 	if t.client == nil {
