@@ -19,7 +19,7 @@ type Tracker struct {
 }
 
 // New creates a new instance of Tracker.
-func New(IsDisabled bool) *Tracker {
+func New(enabled bool) *Tracker {
 	client, err := analytics.NewWithConfig(setup.SegmentWriteKey, analytics.Config{
 		BatchSize: 1,
 		DefaultContext: &analytics.Context{
