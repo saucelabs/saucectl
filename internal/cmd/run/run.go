@@ -70,6 +70,7 @@ type globalFlags struct {
 	globalTimeout       time.Duration
 	sauceAPI            string
 	selectedSuite       string
+	testEnvSilent       bool
 	disableUsageMetrics bool
 }
 
