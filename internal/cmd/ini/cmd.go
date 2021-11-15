@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/segment"
 	"os"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/segment"
 
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/espresso"
@@ -73,7 +74,7 @@ func Command() *cobra.Command {
 		Long:    initLong,
 		Example: initExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			tracker := segment.New()
+			tracker := segment.New(false)
 
 			defer func() {
 				tracker.Collect("Init", nil)

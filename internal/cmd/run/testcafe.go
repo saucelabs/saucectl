@@ -140,7 +140,7 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, tc testcomposer.Clie
 
 	rs.ArtifactConfig = p.Artifacts.Download
 
-	tracker := segment.New()
+	tracker := segment.New(gFlags.disableUsageMetrics)
 
 	defer func() {
 		props := usage.Properties{}

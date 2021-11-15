@@ -3,6 +3,9 @@ package configure
 import (
 	"errors"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -10,8 +13,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/spf13/cobra"
-	"os"
-	"strings"
 )
 
 var (
@@ -31,7 +32,7 @@ func Command() *cobra.Command {
 		Long:    configureLong,
 		Example: configureExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			tracker := segment.New()
+			tracker := segment.New(false)
 
 			defer func() {
 				tracker.Collect("Configure", nil)
