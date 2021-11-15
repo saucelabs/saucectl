@@ -111,7 +111,8 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 
 	rs.ArtifactConfig = p.Artifacts.Download
 
-	tracker := segment.New(!gFlags.disableUsageMetrics)
+	enabled := !gFlags.disableUsageMetrics
+	tracker := segment.New(&enabled)
 
 	defer func() {
 		props := usage.Properties{}

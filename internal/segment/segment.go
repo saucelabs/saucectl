@@ -15,11 +15,11 @@ import (
 // Tracker is the segment implemention for usage.Tracker.
 type Tracker struct {
 	client  analytics.Client
-	Enabled bool
+	Enabled *bool
 }
 
 // New creates a new instance of Tracker.
-func New(enabled bool) *Tracker {
+func New(enabled *bool) *Tracker {
 	client, err := analytics.NewWithConfig(setup.SegmentWriteKey, analytics.Config{
 		BatchSize: 1,
 		DefaultContext: &analytics.Context{
@@ -43,7 +43,7 @@ func New(enabled bool) *Tracker {
 
 // Collect reports the usage of subject along with its attached metadata that is props.
 func (t *Tracker) Collect(subject string, props usage.Properties) {
-	if !t.Enabled {
+	if t.Enabled != nil && !(*t.Enabled) {
 		return
 	}
 	if t.client == nil {

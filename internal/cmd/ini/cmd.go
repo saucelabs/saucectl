@@ -74,7 +74,7 @@ func Command() *cobra.Command {
 		Long:    initLong,
 		Example: initExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			tracker := segment.New(true)
+			tracker := segment.New(nil)
 
 			defer func() {
 				tracker.Collect("Init", nil)

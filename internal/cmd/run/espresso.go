@@ -109,7 +109,8 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, tc testcompose
 	rs.ArtifactConfig = p.Artifacts.Download
 	rc.ArtifactConfig = p.Artifacts.Download
 
-	tracker := segment.New(!gFlags.disableUsageMetrics)
+	enabled := !gFlags.disableUsageMetrics
+	tracker := segment.New(&enabled)
 
 	defer func() {
 		props := usage.Properties{}
