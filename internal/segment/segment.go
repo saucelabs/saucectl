@@ -15,7 +15,7 @@ import (
 // Tracker is the segment implemention for usage.Tracker.
 type Tracker struct {
 	client     analytics.Client
-	IsDisabled bool
+	Enabled bool
 }
 
 // New creates a new instance of Tracker.
