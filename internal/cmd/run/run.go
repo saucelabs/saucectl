@@ -71,7 +71,6 @@ type globalFlags struct {
 	sauceAPI      string
 	selectedSuite string
 	testEnvSilent bool
-	testEnv       string
 }
 
 // Command creates the `run` command
