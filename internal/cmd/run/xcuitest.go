@@ -11,6 +11,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
@@ -136,6 +137,7 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 			RDCArtifactDownloader: &rc,
 			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc,
 				"xcuitest", "sauce"),
+			Framework: framework.Framework{Name: xcuitest.Kind},
 		},
 	}
 	return r.RunProject()
