@@ -1,6 +1,8 @@
 package segment
 
 import (
+	"runtime"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -8,16 +10,16 @@ import (
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/version"
 	"gopkg.in/segmentio/analytics-go.v3"
-	"runtime"
 )
 
 // Tracker is the segment implemention for usage.Tracker.
 type Tracker struct {
-	client analytics.Client
+	client  analytics.Client
+	Enabled bool
 }
 
 // New creates a new instance of Tracker.
-func New() *Tracker {
+func New(enabled bool) *Tracker {
 	client, err := analytics.NewWithConfig(setup.SegmentWriteKey, analytics.Config{
 		BatchSize: 1,
 		DefaultContext: &analytics.Context{
@@ -36,11 +38,14 @@ func New() *Tracker {
 		return &Tracker{}
 	}
 
-	return &Tracker{client: client}
+	return &Tracker{client: client, Enabled: enabled}
 }
 
 // Collect reports the usage of subject along with its attached metadata that is props.
 func (t *Tracker) Collect(subject string, props usage.Properties) {
+	if !t.Enabled {
+		return
+	}
 	if t.client == nil {
 		return
 	}

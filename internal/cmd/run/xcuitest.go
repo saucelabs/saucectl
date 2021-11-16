@@ -102,7 +102,7 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, tc testcomposer.Cl
 	rs.ArtifactConfig = p.Artifacts.Download
 	rc.ArtifactConfig = p.Artifacts.Download
 
-	tracker := segment.New()
+	tracker := segment.New(!gFlags.disableUsageMetrics)
 
 	defer func() {
 		props := usage.Properties{}
