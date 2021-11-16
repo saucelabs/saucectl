@@ -100,8 +100,7 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 	rs.URL = regio.APIBaseURL()
 	tc.URL = regio.APIBaseURL()
 
-	enabled := !gFlags.disableUsageMetrics
-	tracker := segment.New(&enabled)
+	tracker := segment.New(!gFlags.disableUsageMetrics)
 
 	defer func() {
 		props := usage.Properties{}

@@ -16,12 +16,13 @@ import (
 )
 
 var (
-	configureUse     = "configure"
-	configureShort   = "Configure your Sauce Labs credentials"
-	configureLong    = `Persist locally your Sauce Labs credentials`
-	configureExample = "saucectl configure"
-	cliUsername      = ""
-	cliAccessKey     = ""
+	configureUse           = "configure"
+	configureShort         = "Configure your Sauce Labs credentials"
+	configureLong          = `Persist locally your Sauce Labs credentials`
+	configureExample       = "saucectl configure"
+	cliUsername            = ""
+	cliAccessKey           = ""
+	cliDisableUsageMetrics = false
 )
 
 // Command creates the `configure` command
@@ -32,7 +33,7 @@ func Command() *cobra.Command {
 		Long:    configureLong,
 		Example: configureExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			tracker := segment.New(nil)
+			tracker := segment.New(!cliDisableUsageMetrics)
 
 			defer func() {
 				tracker.Collect("Configure", nil)
@@ -50,6 +51,7 @@ func Command() *cobra.Command {
 	}
 	cmd.Flags().StringVarP(&cliUsername, "username", "u", "", "username, available on your sauce labs account")
 	cmd.Flags().StringVarP(&cliAccessKey, "accessKey", "a", "", "accessKey, available on your sauce labs account")
+	cmd.Flags().BoolVar(&cliDisableUsageMetrics, "disable-usage-metrics", false, "Disable usage metrics collection.")
 	return cmd
 }
 
