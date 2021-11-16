@@ -48,6 +48,7 @@ type CloudRunner struct {
 	ShowConsoleLog        bool
 	ArtifactDownloader    download.ArtifactDownloader
 	RDCArtifactDownloader download.ArtifactDownloader
+	Framework             framework.Framework
 
 	Reporters []report.Reporter
 
@@ -527,7 +528,7 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	fmt.Println()
 	t := ptable.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(ptable.Row{"espresso testsuite", "tests", "pass", "fail", "error"})
+	t.AppendHeader(ptable.Row{fmt.Sprintf("%s testsuite", r.Framework.Name), "tests", "pass", "fail", "error"})
 	for _, ts := range testsuites.TestSuites {
 		passed := ts.Tests - ts.Errors - ts.Failures
 		t.AppendRow(ptable.Row{ts.Package, ts.Tests, passed, ts.Failures, ts.Errors})
