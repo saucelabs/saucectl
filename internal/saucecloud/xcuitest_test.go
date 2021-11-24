@@ -37,7 +37,7 @@ func TestXcuitestRunner_RunProject(t *testing.T) {
 	}
 	reader := mocks.FakeJobReader{
 		PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
-			return job.Job{ID: id, Passed: true}, nil
+			return job.Job{ID: id, Passed: true, Status: job.StatePassed}, nil
 		},
 		GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
 			return []string{"file1", "file2"}, nil
@@ -95,7 +95,7 @@ func TestXcuitestRunner_RunProject(t *testing.T) {
 	}
 	cnt, err := runner.RunProject()
 	assert.Nil(t, err)
-	assert.Equal(t, cnt, 0)
+	assert.Equal(t, 0, cnt)
 	assert.Equal(t, "iPhone 11", startOpts.DeviceName)
 	assert.Equal(t, "iOS", startOpts.PlatformName)
 	assert.Equal(t, "14.3", startOpts.PlatformVersion)

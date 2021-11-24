@@ -360,13 +360,17 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 			})
 		}
 
+		status := job.StatePassed
+		if !res.passed {
+			status = job.StateFailed
+		}
 		if !res.skipped {
 			tr := report.TestResult{
 				Name:      res.name,
 				Duration:  res.duration,
 				StartTime: res.startTime,
 				EndTime:   res.endTime,
-				Passed:    res.passed,
+				Status:    status,
 				Browser:   res.browser,
 				Platform:  "Docker",
 				URL:       res.jobInfo.JobDetailsURL,

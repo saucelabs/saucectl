@@ -7,7 +7,10 @@ const (
 	StateInProgress = "in progress"
 	StateComplete   = "complete"
 	StateError      = "error"
+)
 
+// The following states are only used by RDC.
+const (
 	StatePassed = "passed"
 	StateFailed = "failed"
 )
@@ -30,11 +33,23 @@ type Job struct {
 		DeviceName      string `json:"deviceName"`
 	} `json:"base_config"`
 
-	// IsRDC flags a job started as a RDC run.
+	// IsRDC flags a job started as an RDC run.
 	IsRDC bool `json:"-"`
 
 	// TimedOut flags a job as an unfinished one.
 	TimedOut bool `json:"-"`
+}
+
+// TotalStatus returns the total status of a job, combining the result of fields Status + Passed.
+func (j Job) TotalStatus() string {
+	if Done(j.Status) {
+		if j.Passed {
+			return StatePassed
+		}
+		return StateFailed
+	}
+
+	return j.Status
 }
 
 // Done returns true if the job status is one of DoneStates. False otherwise.

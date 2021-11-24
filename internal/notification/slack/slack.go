@@ -3,6 +3,7 @@ package slack
 import (
 	"context"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/job"
 	"strings"
 	"sync"
 	"time"
@@ -53,9 +54,9 @@ func (r *Reporter) Render() {
 	passed := true
 	for _, ts := range r.TestResults {
 		url := ts.URL + "?utm_source=slack&utm_medium=chat&utm_campaign=testresults"
-		tables = append(tables, []string{statusText(ts.Passed), addRightSpaces(ts.Name, r.getJobURL(ts.Name, url), longestName),
+		tables = append(tables, []string{ts.Status, addRightSpaces(ts.Name, r.getJobURL(ts.Name, url), longestName),
 			ts.Platform, ts.DeviceName, ts.Browser, ts.Duration.Truncate(1 * time.Second).String()})
-		if !ts.Passed {
+		if ts.Status != job.StatePassed {
 			passed = false
 		}
 	}
@@ -172,11 +173,4 @@ func (r *Reporter) creatAttachment(passed bool) slack.Attachment {
 		Color:  color,
 		Blocks: slack.Blocks{BlockSet: r.createBlocks()},
 	}
-}
-
-func statusText(passed bool) string {
-	if !passed {
-		return "failed"
-	}
-	return "passed"
 }

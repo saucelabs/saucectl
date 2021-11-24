@@ -2,6 +2,7 @@ package table
 
 import (
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/job"
 	"io"
 	"sync"
 	"time"
@@ -93,20 +94,24 @@ func (r *Reporter) Render() {
 	})
 
 	errors := 0
+	inProgress := 0
 	var totalDur time.Duration
 	for _, ts := range r.TestResults {
-		if !ts.Passed {
+		if !job.Done(ts.Status) {
+			inProgress++
+		}
+		if ts.Status == job.StateFailed {
 			errors++
 		}
 
 		totalDur += ts.Duration
 
 		// the order of values must match the order of the header
-		t.AppendRow(table.Row{statusSymbol(ts.Passed), ts.Name, ts.Duration.Truncate(1 * time.Second),
-			statusText(ts.Passed), ts.Browser, ts.Platform, ts.DeviceName, ts.Attempts})
+		t.AppendRow(table.Row{statusSymbol(ts.Status), ts.Name, ts.Duration.Truncate(1 * time.Second),
+			statusText(ts.Status), ts.Browser, ts.Platform, ts.DeviceName, ts.Attempts})
 	}
 
-	t.AppendFooter(footer(errors, len(r.TestResults), calDuration(r.TestResults)))
+	t.AppendFooter(footer(errors, inProgress, len(r.TestResults), calDuration(r.TestResults)))
 
 	_, _ = fmt.Fprintln(r.Dst)
 	t.Render()
@@ -124,29 +129,37 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 	return nil
 }
 
-func footer(errors, tests int, dur time.Duration) table.Row {
-	symbol := statusSymbol(errors == 0)
+func footer(errors, inProgress, tests int, dur time.Duration) table.Row {
 	if errors != 0 {
 		relative := float64(errors) / float64(tests) * 100
-		return table.Row{symbol, fmt.Sprintf("%d of %d suites have failed (%.0f%%)", errors, tests, relative), dur.Truncate(1 * time.Second)}
+		return table.Row{statusSymbol(job.StateError), fmt.Sprintf("%d of %d suites have failed (%.0f%%)", errors, tests, relative), dur.Truncate(1 * time.Second)}
 	}
-	return table.Row{symbol, "All tests have passed", dur.Truncate(1 * time.Second)}
+	if inProgress != 0 {
+		return table.Row{statusSymbol(job.StateInProgress), "All tests have launched", dur.Truncate(1 * time.Second)}
+	}
+	return table.Row{statusSymbol(job.StatePassed), "All tests have passed", dur.Truncate(1 * time.Second)}
 }
 
-func statusText(passed bool) string {
-	if !passed {
-		return color.RedString("failed")
+func statusText(status string) string {
+	switch status {
+	case job.StatePassed:
+		return color.GreenString(status)
+	case job.StateInProgress, job.StateQueued, job.StateNew:
+		return color.BlueString(status)
+	default:
+		return color.RedString(status)
 	}
-
-	return color.GreenString("passed")
 }
 
-func statusSymbol(passed bool) string {
-	if !passed {
+func statusSymbol(status string) string {
+	switch status {
+	case job.StatePassed:
+		return color.GreenString("✔")
+	case job.StateInProgress, job.StateQueued, job.StateNew:
+		return color.BlueString("*")
+	default:
 		return color.RedString("✖")
 	}
-
-	return color.GreenString("✔")
 }
 
 func calDuration(results []report.TestResult) time.Duration {

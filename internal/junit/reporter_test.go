@@ -1,6 +1,7 @@
 package junit
 
 import (
+	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/report"
 	"io"
 	"os"
@@ -25,7 +26,7 @@ func TestReporter_Render(t *testing.T) {
 					{
 						Name:     "Firefox",
 						Duration: 34479 * time.Millisecond,
-						Passed:   true,
+						Status:   job.StatePassed,
 						Browser:  "Firefox",
 						Platform: "Windows 10",
 						URL:      "https://app.saucelabs.com/tests/1234",
@@ -33,7 +34,7 @@ func TestReporter_Render(t *testing.T) {
 					{
 						Name:     "Chrome",
 						Duration: 5123 * time.Millisecond,
-						Passed:   true,
+						Status:   job.StatePassed,
 						Browser:  "Chrome",
 						Platform: "Windows 10",
 					},
@@ -63,14 +64,14 @@ func TestReporter_Render(t *testing.T) {
 					{
 						Name:     "Firefox",
 						Duration: 34479 * time.Millisecond,
-						Passed:   true,
+						Status:   job.StatePassed,
 						Browser:  "Firefox",
 						Platform: "Windows 10",
 					},
 					{
 						Name:     "Chrome",
 						Duration: 171452 * time.Millisecond,
-						Passed:   false,
+						Status:   job.StateFailed,
 						Browser:  "Chrome",
 						Platform: "Windows 10",
 					},

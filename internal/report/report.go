@@ -8,7 +8,7 @@ type TestResult struct {
 	Duration   time.Duration `json:"duration"`
 	StartTime  time.Time     `json:"startTime"`
 	EndTime    time.Time     `json:"endTime"`
-	Passed     bool          `json:"passed"`
+	Status     string        `json:"status"`
 	Browser    string        `json:"browser"`
 	Platform   string        `json:"platform"`
 	DeviceName string        `json:"deviceName"`

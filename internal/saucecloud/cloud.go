@@ -52,6 +52,8 @@ type CloudRunner struct {
 
 	Reporters []report.Reporter
 
+	Async bool
+
 	interrupted bool
 }
 
@@ -142,7 +144,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				Duration:   res.duration,
 				StartTime:  res.startTime,
 				EndTime:    res.endTime,
-				Passed:     res.job.Passed,
+				Status:     res.job.TotalStatus(),
 				Browser:    browser,
 				Platform:   platform,
 				DeviceName: res.job.BaseConfig.DeviceName,
@@ -164,6 +166,8 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				r.ArtifactDownloader.DownloadArtifact(res.job.ID)
 			}
 		}
+
+		// Since we don't know much about the state of the job in async mode, we'll just
 		r.logSuite(res)
 	}
 	close(done)
@@ -215,6 +219,11 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	}
 
 	l.Msg("Suite started.")
+
+	// Async mode. Mark the job as started without waiting for the result.
+	if r.Async {
+		return job.Job{ID: id, IsRDC: isRDC, Status: job.StateInProgress}, false, nil
+	}
 
 	// High interval poll to not oversaturate the job reader with requests
 	if !isRDC {
@@ -442,6 +451,11 @@ func (r *CloudRunner) checkIfFileAlreadyUploaded(fileName string) (storageID str
 
 // logSuite display the result of a suite
 func (r *CloudRunner) logSuite(res result) {
+	// Job isn't done, hence nothing more to log about it.
+	if !job.Done(res.job.Status) {
+		return
+	}
+
 	if res.skipped {
 		log.Error().Err(res.err).Str("suite", res.name).Msg("Suite skipped.")
 		return
@@ -458,7 +472,7 @@ func (r *CloudRunner) logSuite(res result) {
 			Msg(msg)
 	} else {
 		l := log.Error().Str("suite", res.name).Bool("passed", res.job.Passed).Str("url", jobDetailsPage)
-		if res.job.Status == job.StateError {
+		if res.job.TotalStatus() == job.StateError {
 			l.Str("error", res.job.Error)
 			msg = "Suite finished with error."
 		}
