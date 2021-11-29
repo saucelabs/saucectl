@@ -82,6 +82,7 @@ type SuiteConfig struct {
 	RepeatEach    int    `yaml:"repeatEach,omitempty" json:"repeatEach,omitempty"`
 	Retries       int    `yaml:"retries,omitempty" json:"retries,omitempty"`
 	MaxFailures   int    `yaml:"maxFailures,omitempty" json:"maxFailures,omitempty"`
+	Project       string `yaml:"project" json:"project,omitempty"`
 
 	// Shard is set by saucectl (not user) based on Suite.NumShards.
 	Shard string `yaml:"-" json:"shard,omitempty"`
