@@ -159,7 +159,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			}
 		}
 
-		if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, res.job.TimedOut, artifactCfg) {
+		if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, res.job.TimedOut, r.Async, artifactCfg) {
 			if res.job.IsRDC {
 				r.RDCArtifactDownloader.DownloadArtifact(res.job.ID)
 			} else {
