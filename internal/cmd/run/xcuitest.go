@@ -138,6 +138,7 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc,
 				"xcuitest", "sauce"),
 			Framework: framework.Framework{Name: xcuitest.Kind},
+			Async:     gFlags.async,
 		},
 	}
 	return r.RunProject()

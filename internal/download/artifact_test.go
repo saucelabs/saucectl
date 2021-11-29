@@ -14,6 +14,7 @@ func TestShouldDownloadArtifact(t *testing.T) {
 		jobID    string
 		passed   bool
 		timedOut bool
+		async    bool
 		want     bool
 	}
 	testCases := []testCase{
@@ -27,6 +28,13 @@ func TestShouldDownloadArtifact(t *testing.T) {
 			name:   "should not download when jobID is empty and not being required",
 			config: config.ArtifactDownload{When: config.WhenNever},
 			jobID:  "",
+			want:   false,
+		},
+		{
+			name:   "should not download when jobs are processed asynchronously",
+			config: config.ArtifactDownload{When: config.WhenAlways},
+			jobID:  "fake-id",
+			async:  true,
 			want:   false,
 		},
 		{
@@ -95,7 +103,7 @@ func TestShouldDownloadArtifact(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ShouldDownloadArtifact(tt.jobID, tt.passed, tt.timedOut, tt.config)
+			got := ShouldDownloadArtifact(tt.jobID, tt.passed, tt.timedOut, tt.async, tt.config)
 			assert.Equal(t, tt.want, got)
 		})
 	}

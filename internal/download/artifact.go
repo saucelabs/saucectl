@@ -3,8 +3,8 @@ package download
 import "github.com/saucelabs/saucectl/internal/config"
 
 // ShouldDownloadArtifact returns true if it should download artifacts, otherwise false
-func ShouldDownloadArtifact(jobID string, passed, timedOut bool, cfg config.ArtifactDownload) bool {
-	if jobID == "" || timedOut {
+func ShouldDownloadArtifact(jobID string, passed, timedOut bool, async bool, cfg config.ArtifactDownload) bool {
+	if jobID == "" || timedOut || async {
 		return false
 	}
 	if cfg.When == config.WhenAlways {

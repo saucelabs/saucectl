@@ -341,7 +341,7 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 		inProgress--
 
 		jobID := getJobID(res.jobInfo.JobDetailsURL)
-		if download.ShouldDownloadArtifact(jobID, res.passed, res.timedOut, artifactCfg) {
+		if download.ShouldDownloadArtifact(jobID, res.passed, res.timedOut, false, artifactCfg) {
 			r.ArtfactDownloader.DownloadArtifact(jobID)
 		}
 
@@ -360,13 +360,17 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 			})
 		}
 
+		status := job.StatePassed
+		if !res.passed {
+			status = job.StateFailed
+		}
 		if !res.skipped {
 			tr := report.TestResult{
 				Name:      res.name,
 				Duration:  res.duration,
 				StartTime: res.startTime,
 				EndTime:   res.endTime,
-				Passed:    res.passed,
+				Status:    status,
 				Browser:   res.browser,
 				Platform:  "Docker",
 				URL:       res.jobInfo.JobDetailsURL,

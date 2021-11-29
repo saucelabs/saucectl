@@ -169,6 +169,7 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			ArtifactDownloader: &rs,
 			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc,
 				"cypress", "sauce"),
+			Async: gFlags.async,
 		},
 	}
 

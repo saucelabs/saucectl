@@ -2,6 +2,7 @@ package table
 
 import (
 	"bytes"
+	"github.com/saucelabs/saucectl/internal/job"
 	"reflect"
 	"testing"
 	"time"
@@ -28,7 +29,7 @@ func TestReporter_Render(t *testing.T) {
 						Duration:  34479 * time.Millisecond,
 						StartTime: startTime,
 						EndTime:   startTime.Add(34479 * time.Millisecond),
-						Passed:    true,
+						Status:    job.StatePassed,
 						Browser:   "Firefox",
 						Platform:  "Windows 10",
 						Attempts:  3,
@@ -38,7 +39,7 @@ func TestReporter_Render(t *testing.T) {
 						Duration:  5123 * time.Millisecond,
 						StartTime: startTime,
 						EndTime:   startTime.Add(5123 * time.Millisecond),
-						Passed:    true,
+						Status:    job.StatePassed,
 						Browser:   "Chrome",
 						Platform:  "Windows 10",
 						Attempts:  1,
@@ -63,7 +64,7 @@ func TestReporter_Render(t *testing.T) {
 						Duration:  34479 * time.Millisecond,
 						StartTime: startTime,
 						EndTime:   startTime.Add(34479 * time.Millisecond),
-						Passed:    true,
+						Status:   job.StatePassed,
 						Browser:   "Firefox",
 						Platform:  "Windows 10",
 						Attempts:  1,
@@ -73,7 +74,7 @@ func TestReporter_Render(t *testing.T) {
 						Duration:  171452 * time.Millisecond,
 						StartTime: startTime,
 						EndTime:   startTime.Add(171452 * time.Millisecond),
-						Passed:    false,
+						Status:   job.StateFailed,
 						Browser:   "Chrome",
 						Platform:  "Windows 10",
 						Attempts:  3,
@@ -123,7 +124,7 @@ func TestReporter_Reset(t *testing.T) {
 					{
 						Name:     "Firefox",
 						Duration: 34479 * time.Millisecond,
-						Passed:   true,
+						Status:   job.StatePassed,
 						Browser:  "Firefox",
 						Platform: "Windows 10",
 					}},
@@ -163,7 +164,7 @@ func TestReporter_Add(t *testing.T) {
 				t: report.TestResult{
 					Name:     "Firefox",
 					Duration: 34479 * time.Millisecond,
-					Passed:   true,
+					Status:   job.StatePassed,
 					Browser:  "Firefox",
 					Platform: "Windows 10",
 				},
