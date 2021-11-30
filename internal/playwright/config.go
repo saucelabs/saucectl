@@ -52,7 +52,8 @@ type Project struct {
 
 // Playwright represents crucial playwright configuration that is required for setting up a project.
 type Playwright struct {
-	Version string `yaml:"version,omitempty" json:"version,omitempty"`
+	Version    string `yaml:"version,omitempty" json:"version,omitempty"`
+	ConfigFile string `yaml:"configFile,omitempty" json:"configFile,omitempty"`
 }
 
 // Suite represents the playwright test suite configuration.
