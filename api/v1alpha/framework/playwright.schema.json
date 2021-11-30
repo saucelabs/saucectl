@@ -55,6 +55,10 @@
       "properties": {
         "version": {
           "$ref": "../subschema/common.schema.json#/definitions/version"
+        },
+        "configFile": {
+          "description": "The path to playwright config file",
+          "type": "string"
         }
       },
       "required": [
@@ -131,6 +135,10 @@
                 "description": "The maximum number of test failures for this test run. After reaching this number, testing will stop and exit with an error. Setting to zero (default) disables this behavior.",
                 "type": "integer",
                 "minimum": 0
+              },
+              "project": {
+                "description": "Specify playwright project",
+                "type": "string"
               }
             },
             "required": [

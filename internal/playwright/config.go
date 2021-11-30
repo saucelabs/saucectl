@@ -52,7 +52,8 @@ type Project struct {
 
 // Playwright represents crucial playwright configuration that is required for setting up a project.
 type Playwright struct {
-	Version string `yaml:"version,omitempty" json:"version,omitempty"`
+	Version    string `yaml:"version,omitempty" json:"version,omitempty"`
+	ConfigFile string `yaml:"configFile,omitempty" json:"configFile,omitempty"`
 }
 
 // Suite represents the playwright test suite configuration.
@@ -82,6 +83,7 @@ type SuiteConfig struct {
 	RepeatEach    int    `yaml:"repeatEach,omitempty" json:"repeatEach,omitempty"`
 	Retries       int    `yaml:"retries,omitempty" json:"retries,omitempty"`
 	MaxFailures   int    `yaml:"maxFailures,omitempty" json:"maxFailures,omitempty"`
+	Project       string `yaml:"project" json:"project,omitempty"`
 
 	// Shard is set by saucectl (not user) based on Suite.NumShards.
 	Shard string `yaml:"-" json:"shard,omitempty"`
