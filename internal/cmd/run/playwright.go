@@ -66,7 +66,7 @@ func NewPlaywrightCmd() *cobra.Command {
 
 	// Playwright
 	sc.String("playwright.version", "playwright::version", "", "The Playwright version to use")
-	sc.String("playwright.configFile", "playwright::version", "", "The path to playwright config file")
+	sc.String("playwright.configFile", "playwright::configFile", "", "The path to playwright config file")
 
 	// Playwright Test Options
 	sc.Bool("headed", "suite::params::headed", false, "Run tests in headed browsers")
