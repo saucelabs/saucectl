@@ -103,6 +103,9 @@ func expandEnvInMap(mp map[interface{}]interface{}) map[interface{}]interface{} 
 func expandReporterConfigEnv(reporters []cypress.Reporter) {
 	for _, reporter := range reporters {
 		for fieldIdx := range reporter.Options {
+			if reporter.Options[fieldIdx] == nil {
+				continue
+			}
 			if reflect.TypeOf(reporter.Options[fieldIdx]).String() == "string" {
 				reporter.Options[fieldIdx] = os.ExpandEnv(reporter.Options[fieldIdx].(string))
 			}
