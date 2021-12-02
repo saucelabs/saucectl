@@ -109,7 +109,7 @@ func expandReporterConfigEnv(reporters []cypress.Reporter) {
 			if reflect.TypeOf(reporter.Options[fieldIdx]).Kind() == reflect.String {
 				reporter.Options[fieldIdx] = os.ExpandEnv(reporter.Options[fieldIdx].(string))
 			}
-			if reflect.ValueOf(reporter.Options[fieldIdx]).Kind().String() == "map" {
+			if reflect.ValueOf(reporter.Options[fieldIdx]).Kind() == reflect.Map {
 				reporter.Options[fieldIdx] = expandEnvInMap(reporter.Options[fieldIdx].(map[interface{}]interface{}))
 			}
 		}
