@@ -680,7 +680,7 @@ func (r *CloudRunner) checkVersionAvailability(frameworkName string, frameworkVe
 		return errors.New("unsupported framework version")
 	}
 	if err != nil {
-		return errors.New(fmt.Sprintf("unable to check framework version availability: %v", err))
+		return fmt.Errorf("unable to check framework version availability: %v", err)
 	}
 	if metadata.Deprecated {
 		color.Red(fmt.Sprintf("\nVersion %s for %s is deprecated and will be removed during our next framework release cycle !\n\n", frameworkVersion, frameworkName))
