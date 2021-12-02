@@ -89,7 +89,7 @@ func NewCypressCmd() *cobra.Command {
 // expandEnvInMap expands all environment variables in the given map in depth.
 func expandEnvInMap(mp map[interface{}]interface{}) map[interface{}]interface{} {
 	for idx := range mp {
-		if reflect.TypeOf(mp[idx]).String() == "string" {
+		if reflect.TypeOf(mp[idx]).Kind() == reflect.String {
 			mp[idx] = os.ExpandEnv(mp[idx].(string))
 		}
 		if reflect.ValueOf(mp[idx]).Kind().String() == "map" {
