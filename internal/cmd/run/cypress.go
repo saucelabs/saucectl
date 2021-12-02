@@ -92,7 +92,7 @@ func expandEnvInMap(mp map[interface{}]interface{}) map[interface{}]interface{} 
 		if reflect.TypeOf(mp[idx]).Kind() == reflect.String {
 			mp[idx] = os.ExpandEnv(mp[idx].(string))
 		}
-		if reflect.ValueOf(mp[idx]).Kind().String() == "map" {
+		if reflect.ValueOf(mp[idx]).Kind() == reflect.Map {
 			mp[idx] = expandEnvInMap(mp[idx].(map[interface{}]interface{}))
 		}
 	}
