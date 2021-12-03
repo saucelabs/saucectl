@@ -192,7 +192,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 
 	id, isRDC, err := r.JobStarter.StartJob(context.Background(), opts)
 	if err != nil {
-		return job.Job{}, false, err
+		return job.Job{Status: job.StateError}, false, err
 	}
 
 	if !isRDC {
