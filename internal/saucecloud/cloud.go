@@ -112,6 +112,11 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 		if !res.job.Passed {
 			passed = false
 		}
+		// When there is a technical issue, job.Error may be empty
+		if res.job.Error == "" && res.err != nil {
+			res.job.Status = job.StateError
+			res.job.Error = res.err.Error()
+		}
 		completed++
 		inProgress--
 
