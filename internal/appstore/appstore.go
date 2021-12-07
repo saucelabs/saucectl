@@ -156,6 +156,7 @@ func (s *AppStore) Find(filename string) (storage.ArtifactMeta, error) {
 	if err != nil {
 		return storage.ArtifactMeta{}, err
 	}
+	log.Info().Msgf("Checksum: %s", hash)
 
 	queryString := fmt.Sprintf("?sha256=%s", hash)
 	request, err := createLocateRequest(fmt.Sprintf("%s/v1/storage/files", s.URL), s.Username, s.AccessKey, queryString)
