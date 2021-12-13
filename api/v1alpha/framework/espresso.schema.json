@@ -111,13 +111,16 @@
                 "minimum": 0
               },
               "clearPackageData": {
-                "description": "Removes all shared states from the testing device's CPU and memory at the completion of each test.",
+                "description": "Removes all shared states from the testing device's CPU and memory at the completion of each test. Real devices only. Has to be used in conjunction with the 'useTestOrchestrator' flag.",
                 "type": "boolean"
               },
               "useTestOrchestrator": {
-                "description": "Run each of your tests in its own Instrumentation instance to remove most of the app's shared state from the device CPU and memory between tests. Use this setting in conjunction with clearPackageData: true to completely remove all shared state.",
+                "description": "Run each of your tests in its own Instrumentation instance to remove most of the app's shared state from the device CPU and memory between tests. Real devices only. Use this setting in conjunction with clearPackageData: true to completely remove all shared state.",
                 "type": "boolean"
               }
+            },
+            "dependencies": {
+              "clearPackageData": ["useTestOrchestrator"]
             },
             "additionalProperties": false
           },
