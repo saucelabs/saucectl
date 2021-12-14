@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"gotest.tools/assert"
+	"gotest.tools/v3/assert"
 	"gotest.tools/v3/fs"
 
 	"github.com/saucelabs/saucectl/internal/sauceignore"

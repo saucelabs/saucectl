@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/saucelabs/saucectl/internal/config"
-	"gotest.tools/assert"
+	"gotest.tools/v3/assert"
 )
 
 func TestShouldDownloadArtifact(t *testing.T) {
