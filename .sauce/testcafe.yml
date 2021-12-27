@@ -23,7 +23,11 @@ suites:
     browserName: chrome
     src:
       - "*.test.js"
-    platformName: "mac 11.00"
+    platformName: "macOS 11.00"
+    compilerOptions:
+      typescript:
+        options:
+          allowUnreachableCode: true
 
   - name: Firefox in sauce
     browserName: firefox
