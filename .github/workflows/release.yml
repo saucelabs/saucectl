@@ -26,6 +26,15 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.17.x
+
+      -
+        name: Install osslsigncode
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
+          apt-get update -y
+          apt-get install -y osslsigncode
       -
         name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v1
