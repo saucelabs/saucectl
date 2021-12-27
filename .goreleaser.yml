@@ -21,6 +21,12 @@ builds:
     ignore:
       - goos: windows
         goarch: arm64
+    hooks:
+      post:
+        - cmd: ./scripts/sign-binary.sh
+          env:
+            - BINARY={{ .Path }}
+            - TARGET={{ .Target	}}
 brews:
   - tap:
       owner: saucelabs
