@@ -18,7 +18,7 @@ if [[ "${TARGET}" == windows* ]];then
     -certs ${CRT_PATH} \
     -key ${KEY_PATH} \
     -n ${PROGRAM_NAME} \
-    -i  ${WEBSITE_URL} \
+    -i ${WEBSITE_URL} \
     -in ${BINARY} \
     -out ${TMP_BINARY}
 
