@@ -52,7 +52,8 @@ type CloudRunner struct {
 
 	Reporters []report.Reporter
 
-	Async bool
+	Async    bool
+	FailFast bool
 
 	interrupted bool
 }
