@@ -312,6 +312,11 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			continue
 		}
 
+		if r.FailFast && !jobData.Passed {
+			log.Warn().Err(err).Msg("FailFast mode enabled. Skipping upcoming suites.")
+			r.interrupted = true
+		}
+
 		results <- result{
 			name:      opts.DisplayName,
 			browser:   opts.BrowserName,
