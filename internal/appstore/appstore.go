@@ -91,7 +91,7 @@ func (s *AppStore) Upload(name string) (storage.ArtifactMeta, error) {
 			if !isMobileAppPackage(name) {
 				msg.LogUploadTimeoutSuggestion()
 			}
-			return storage.ArtifactMeta{}, errors.New("failed to upload project")
+			return storage.ArtifactMeta{}, errors.New(msg.FailedToUpload)
 		}
 		return storage.ArtifactMeta{}, err
 	}
@@ -102,8 +102,8 @@ func (s *AppStore) Upload(name string) (storage.ArtifactMeta, error) {
 		if err != nil {
 			return storage.ArtifactMeta{}, err
 		}
-		log.Error().Msgf("Failed to upload project. Invalid response %d, body: %v", resp.StatusCode, string(b))
-		return storage.ArtifactMeta{}, errors.New("failed to upload project")
+		log.Error().Msgf("%s. Invalid response %d, body: %v", msg.FailedToUpload, resp.StatusCode, string(b))
+		return storage.ArtifactMeta{}, errors.New(msg.FailedToUpload)
 	}
 
 	var ur UploadResponse

@@ -4,9 +4,10 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"strconv"
 	"strings"
+
+	"github.com/saucelabs/saucectl/internal/msg"
 )
 
 // QuarantineMode represents the testcafe quarantineMode configuration.
@@ -40,7 +41,7 @@ func (q *QuarantineMode) Set(s string) error {
 
 		if len(kvPair) < 2 {
 			msg.Error("--quarantineMode must be specified using a key-value format, e.g. \"--quarantineMode attemptLimit=3,successThreshold=2\"")
-			return errors.New("wrong input format; must be of key-value")
+			return errors.New(msg.InvalidKeyValueInputFormat)
 		}
 
 		val := kvPair[1]

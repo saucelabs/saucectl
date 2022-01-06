@@ -15,14 +15,15 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
 var (
 	// ErrServerError is returned when the server was not able to correctly handle our request (status code >= 500).
-	ErrServerError = errors.New("internal server error")
+	ErrServerError = errors.New(msg.InternalServerError)
 	// ErrJobNotFound is returned when the requested job was not found.
-	ErrJobNotFound = errors.New("job was not found")
+	ErrJobNotFound = errors.New(msg.JobNotFound)
 )
 
 // Client service

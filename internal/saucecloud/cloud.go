@@ -25,6 +25,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/junit"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
@@ -677,7 +678,7 @@ func (r *CloudRunner) checkVersionAvailability(frameworkName string, frameworkVe
 	if err != nil && isUnsupportedVersion(err) {
 		color.Red(fmt.Sprintf("\nVersion %s for %s is not available !\n\n", frameworkVersion, frameworkName))
 		r.logAvailableVersions(frameworkName)
-		return errors.New("unsupported framework version")
+		return errors.New(msg.UnsupportedFrameworkVersion)
 	}
 	if err != nil {
 		return fmt.Errorf("unable to check framework version availability: %v", err)

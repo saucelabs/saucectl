@@ -9,6 +9,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 )
 
@@ -136,18 +137,18 @@ func SetDefaults(p *Project) {
 func Validate(p Project) error {
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
-		return errors.New("no sauce region set")
+		return errors.New(msg.MissingRegion)
 	}
 
 	if p.Espresso.App == "" {
-		return errors.New("missing path to app. Define a path to an .apk or .aab file in the espresso.app property of your config")
+		return errors.New(msg.MissingAppPath)
 	}
 	if err := apps.Validate("application", p.Espresso.App, []string{".apk", ".aab"}); err != nil {
 		return err
 	}
 
 	if p.Espresso.TestApp == "" {
-		return errors.New("missing path to test app. Define a path to an .apk or .aab file in the espresso.testApp property of your config")
+		return errors.New(msg.MissingTestAppPath)
 	}
 	if err := apps.Validate("test application", p.Espresso.TestApp, []string{".apk", ".aab"}); err != nil {
 		return err
@@ -160,12 +161,12 @@ func Validate(p Project) error {
 	}
 
 	if len(p.Suites) == 0 {
-		return errors.New("no suites defined")
+		return errors.New(msg.EmptySuite)
 	}
 
 	for _, suite := range p.Suites {
 		if len(suite.Devices) == 0 && len(suite.Emulators) == 0 {
-			return fmt.Errorf("missing devices or emulators configuration for suite: %s", suite.Name)
+			return fmt.Errorf(msg.MissingDevicesOrEmulatorConfig, suite.Name)
 		}
 		if err := validateDevices(suite.Name, suite.Devices); err != nil {
 			return err
@@ -181,10 +182,10 @@ func Validate(p Project) error {
 func validateDevices(suiteName string, devices []config.Device) error {
 	for didx, device := range devices {
 		if device.Name == "" && device.ID == "" {
-			return fmt.Errorf("missing device name or ID for suite: %s. Devices index: %d", suiteName, didx)
+			return fmt.Errorf(msg.MissingDevice, suiteName, didx)
 		}
 		if device.Options.DeviceType != "" && !config.IsSupportedDeviceType(device.Options.DeviceType) {
-			return fmt.Errorf("deviceType: %s is unsupported for suite: %s. Devices index: %d. Supported device types: %s",
+			return fmt.Errorf(msg.InvalidDeviceType,
 				device.Options.DeviceType, suiteName, didx, strings.Join(config.SupportedDeviceTypes, ","))
 		}
 	}
@@ -194,13 +195,13 @@ func validateDevices(suiteName string, devices []config.Device) error {
 func validateEmulators(suiteName string, emulators []config.Emulator) error {
 	for eidx, emulator := range emulators {
 		if emulator.Name == "" {
-			return fmt.Errorf("missing emulator name for suite: %s. Emulators index: %d", suiteName, eidx)
+			return fmt.Errorf(msg.MissingEmulatorName, suiteName, eidx)
 		}
 		if !strings.Contains(strings.ToLower(emulator.Name), "emulator") {
-			return fmt.Errorf("missing `emulator` in emulator name: %s. Suite name: %s. Emulators index: %d", emulator.Name, suiteName, eidx)
+			return fmt.Errorf(msg.InvalidEmulatorName, emulator.Name, suiteName, eidx)
 		}
 		if len(emulator.PlatformVersions) == 0 {
-			return fmt.Errorf("missing platform versions for emulator: %s. Suite name: %s. Emulators index: %d", emulator.Name, suiteName, eidx)
+			return fmt.Errorf(msg.MissingEmulatorPlatformVersion, emulator.Name, suiteName, eidx)
 		}
 	}
 	return nil
@@ -214,5 +215,5 @@ func FilterSuites(p *Project, suiteName string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("no suite named '%s' found", suiteName)
+	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
 }

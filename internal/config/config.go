@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/viper"
 	"gopkg.in/yaml.v2"
 )
@@ -147,7 +148,7 @@ type Defaults struct {
 
 func readYaml(cfgFilePath string) ([]byte, error) {
 	if cfgFilePath == "" {
-		return nil, errors.New("no config file was provided")
+		return nil, errors.New(msg.MissingConfigFile)
 	}
 
 	pwd, err := os.Getwd()
@@ -182,7 +183,7 @@ func Describe(cfgPath string) (TypeDef, error) {
 
 	// Sanity check.
 	if d.APIVersion == "" {
-		return TypeDef{}, errors.New("invalid sauce config, which is either malformed or corrupt, please refer to https://docs.saucelabs.com/testrunner-toolkit/configuration for creating a valid config")
+		return TypeDef{}, errors.New(msg.InvalidSauceConfig)
 	}
 
 	// Normalize certain values for ease of use.

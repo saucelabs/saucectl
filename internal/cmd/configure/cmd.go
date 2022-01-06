@@ -72,11 +72,11 @@ func interactiveConfiguration() (credentials.Credentials, error) {
 			Validate: func(val interface{}) error {
 				str, ok := val.(string)
 				if !ok {
-					return errors.New("invalid username")
+					return errors.New(msg.InvaildUsername)
 				}
 				str = strings.TrimSpace(str)
 				if str == "" {
-					return errors.New("you need to type a username")
+					return errors.New(msg.EmptyUsername)
 
 				}
 				return nil
@@ -91,11 +91,11 @@ func interactiveConfiguration() (credentials.Credentials, error) {
 			Validate: func(val interface{}) error {
 				str, ok := val.(string)
 				if !ok {
-					return errors.New("invalid access key")
+					return errors.New(msg.InvalidAccessKey)
 				}
 				str = strings.TrimSpace(str)
 				if str == "" {
-					return errors.New("you need to type an access key")
+					return errors.New(msg.EmptyAccessKey)
 
 				}
 				return nil
@@ -129,7 +129,7 @@ func Run() error {
 
 	if !creds.IsValid() {
 		log.Error().Msg("The provided credentials appear to be invalid and will NOT be saved.")
-		return fmt.Errorf("invalid credentials provided")
+		return fmt.Errorf(msg.InvalidCredentials)
 	}
 	if err := credentials.ToFile(creds); err != nil {
 		return fmt.Errorf("unable to save credentials: %s", err)
