@@ -182,7 +182,7 @@ func Validate(p Project) error {
 func validateDevices(suiteName string, devices []config.Device) error {
 	for didx, device := range devices {
 		if device.Name == "" && device.ID == "" {
-			return fmt.Errorf(msg.MissingDevice, suiteName, didx)
+			return fmt.Errorf(msg.MissingDeviceConfig, suiteName, didx)
 		}
 		if device.Options.DeviceType != "" && !config.IsSupportedDeviceType(device.Options.DeviceType) {
 			return fmt.Errorf(msg.InvalidDeviceType,
