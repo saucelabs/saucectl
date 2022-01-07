@@ -87,6 +87,13 @@ func (p Properties) SetSauceConfig(c config.SauceConfig) Properties {
 	return p
 }
 
+// SetSlack reports the info relative to slack notifications.
+func (p Properties) SetSlack(slack config.Slack) Properties {
+	p["slack_channels_count"] = len(slack.Channels)
+	p["slack_when"] = slack.Send
+	return p
+}
+
 // Tracker is an interface for providing usage tracking.
 type Tracker interface {
 	io.Closer
