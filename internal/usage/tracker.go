@@ -97,7 +97,7 @@ func (p Properties) SetSlack(slack config.Slack) Properties {
 // SetNotificationsCount reports the number of notifications.
 func (p Properties) SetNotificationsCount(sent, failed int) Properties {
 	p["slack_sent_notifications"] = sent
-	p["slack_failed_notification"] = failed
+	p["slack_failed_notifications"] = failed
 	return p
 }
 
