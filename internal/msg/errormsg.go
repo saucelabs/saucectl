@@ -13,7 +13,7 @@ const (
 // cmd setting
 const (
 	// InvalidUsername indicates invalid username
-	InvaildUsername = "invalid username"
+	InvalidUsername = "invalid username"
 	// EmptyUsername asks user to type a username
 	EmptyUsername = "you need to type a username"
 	// InvalidAccessKey indicates invalid key
