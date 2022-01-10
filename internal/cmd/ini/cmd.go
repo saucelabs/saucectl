@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/segment"
 
 	"github.com/saucelabs/saucectl/internal/cypress"
@@ -165,7 +166,7 @@ func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 	stdio := terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
 	creds := credentials.Get()
 	if !creds.IsValid() {
-		return errors.New("no credentials available")
+		return errors.New(msg.EmptyCredentials)
 	}
 
 	ini := newInitializer(stdio, creds, initCfg.region)
@@ -189,7 +190,7 @@ func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 		println()
 		color.HiRed("Invalid framework selected")
 		println()
-		return errors.New("invalid framework selected")
+		return errors.New(msg.InvalidSelectedFramework)
 	}
 	if len(errs) > 0 {
 		fmt.Printf("%d errors occured:\n", len(errs))

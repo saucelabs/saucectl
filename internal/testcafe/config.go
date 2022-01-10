@@ -3,13 +3,14 @@ package testcafe
 import (
 	"errors"
 	"fmt"
-	"github.com/bmatcuk/doublestar/v4"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/bmatcuk/doublestar/v4"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -233,18 +234,18 @@ func SetDefaults(p *Project) {
 func Validate(p *Project) error {
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
-		return errors.New("no sauce region set")
+		return errors.New(msg.MissingRegion)
 	}
 
 	p.Testcafe.Version = config.StandardizeVersionFormat(p.Testcafe.Version)
 	if p.Testcafe.Version == "" {
-		return errors.New("missing framework version. Check available versions here: https://docs.saucelabs.com/testrunner-toolkit#supported-frameworks-and-browsers")
+		return errors.New(msg.MissingFrameworkVersionConfig)
 	}
 
 	for _, v := range p.Suites {
 		// Force the user to migrate.
 		if len(v.Devices) != 0 {
-			return errors.New("the 'devices' keyword in your config is now reserved for real devices, please use 'simulators' instead")
+			return errors.New(msg.InvalidTestCafeDeviceSetting)
 		}
 	}
 

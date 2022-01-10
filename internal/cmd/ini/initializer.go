@@ -10,6 +10,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/testcafe"
@@ -78,7 +79,7 @@ func newInitializer(stdio terminal.Stdio, creds credentials.Credentials, regio s
 func (ini *initializer) configure() (*initConfig, error) {
 	fName, err := ini.askFramework()
 	if err != nil {
-		return &initConfig{}, fmt.Errorf("unable to fetch frameworks list")
+		return &initConfig{}, fmt.Errorf(msg.UnableToFetchFrameworkList)
 	}
 
 	switch fName {
@@ -144,14 +145,14 @@ func (ini *initializer) checkCredentials(region string) error {
 		color.HiRed("It appears that your credentials are incorrect.")
 		fmt.Printf("Use %s to update your account settings.\n", color.HiBlueString("saucectl configure"))
 		println()
-		return errors.New("invalid credentials")
+		return errors.New(msg.InvalidCredentials)
 	}
 	if err != nil && strings.Contains(err.Error(), "context deadline exceeded") {
 		println()
 		color.HiRed("saucectl cannot reach Sauce Labs infrastructure.")
 		fmt.Printf("Check your connection and that you can access %s.\n", color.HiBlueString("https://api.%s.saucelabs.com", region))
 		println()
-		return errors.New("unable to check credentials")
+		return errors.New(msg.UnableToCheckCredentials)
 	}
 	return err
 }
@@ -667,16 +668,16 @@ func (ini *initializer) initializeBatchCypress(initCfg *initConfig) (*initConfig
 	var errs []error
 
 	if initCfg.frameworkVersion == "" {
-		errs = append(errs, fmt.Errorf("no %s version specified", initCfg.frameworkName))
+		errs = append(errs, fmt.Errorf(msg.MissingFrameworkVersion, initCfg.frameworkName))
 	}
 	if initCfg.cypressJSON == "" {
-		errs = append(errs, errors.New("no cypress config file specified"))
+		errs = append(errs, errors.New(msg.MissingCypressConfig))
 	}
 	if initCfg.platformName == "" {
-		errs = append(errs, errors.New("no platform name specified"))
+		errs = append(errs, errors.New(msg.MissingPlatformName))
 	}
 	if initCfg.browserName == "" {
-		errs = append(errs, errors.New("no browser name specified"))
+		errs = append(errs, errors.New(msg.MissingBrowserName))
 	}
 
 	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), initCfg.frameworkName)
@@ -723,13 +724,13 @@ func (ini *initializer) initializeBatchEspresso(f *pflag.FlagSet, initCfg *initC
 	var err error
 
 	if initCfg.app == "" {
-		errs = append(errs, errors.New("no app provided"))
+		errs = append(errs, errors.New(msg.MissingApp))
 	}
 	if initCfg.testApp == "" {
-		errs = append(errs, errors.New("no testApp provided"))
+		errs = append(errs, errors.New(msg.MissingTestApp))
 	}
 	if !f.Changed("device") && !f.Changed("emulator") {
-		errs = append(errs, errors.New("either device or emulator configuration needs to be provided"))
+		errs = append(errs, errors.New(msg.MissingDeviceOrEmulator))
 	}
 	if initCfg.artifactWhenStr != "" {
 		initCfg.artifactWhenStr = strings.ToLower(initCfg.artifactWhenStr)
@@ -771,13 +772,13 @@ func (ini *initializer) initializeBatchPlaywright(initCfg *initConfig) (*initCon
 	var errs []error
 
 	if initCfg.frameworkVersion == "" {
-		errs = append(errs, fmt.Errorf("no %s version specified", initCfg.frameworkName))
+		errs = append(errs, fmt.Errorf(msg.MissingFrameworkVersion, initCfg.frameworkName))
 	}
 	if initCfg.platformName == "" {
-		errs = append(errs, errors.New("no platform name specified"))
+		errs = append(errs, errors.New(msg.MissingPlatformName))
 	}
 	if initCfg.browserName == "" {
-		errs = append(errs, errors.New("no browser name specified"))
+		errs = append(errs, errors.New(msg.MissingBrowserName))
 	}
 
 	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), initCfg.frameworkName)
@@ -816,13 +817,13 @@ func (ini *initializer) initializeBatchPuppeteer(initCfg *initConfig) (*initConf
 	var errs []error
 
 	if initCfg.frameworkVersion == "" {
-		errs = append(errs, fmt.Errorf("no %s version specified", initCfg.frameworkName))
+		errs = append(errs, fmt.Errorf(msg.MissingFrameworkVersion, initCfg.frameworkName))
 	}
 	if initCfg.platformName == "" {
-		errs = append(errs, errors.New("no platform name specified"))
+		errs = append(errs, errors.New(msg.MissingPlatformName))
 	}
 	if initCfg.browserName == "" {
-		errs = append(errs, errors.New("no browser name specified"))
+		errs = append(errs, errors.New(msg.MissingBrowserName))
 	}
 
 	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), initCfg.frameworkName)
@@ -861,13 +862,13 @@ func (ini *initializer) initializeBatchTestcafe(initCfg *initConfig) (*initConfi
 	var errs []error
 
 	if initCfg.frameworkVersion == "" {
-		errs = append(errs, fmt.Errorf("no %s version specified", initCfg.frameworkName))
+		errs = append(errs, fmt.Errorf(msg.MissingFrameworkVersion, initCfg.frameworkName))
 	}
 	if initCfg.platformName == "" {
-		errs = append(errs, errors.New("no platform name specified"))
+		errs = append(errs, errors.New(msg.MissingPlatformName))
 	}
 	if initCfg.browserName == "" {
-		errs = append(errs, errors.New("no browser name specified"))
+		errs = append(errs, errors.New(msg.MissingBrowserName))
 	}
 
 	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), initCfg.frameworkName)
@@ -907,13 +908,13 @@ func (ini *initializer) initializeBatchXcuitest(f *pflag.FlagSet, initCfg *initC
 	var err error
 
 	if initCfg.app == "" {
-		errs = append(errs, errors.New("no app provided"))
+		errs = append(errs, errors.New(msg.MissingApp))
 	}
 	if initCfg.testApp == "" {
-		errs = append(errs, errors.New("no testApp provided"))
+		errs = append(errs, errors.New(msg.MissingTestApp))
 	}
 	if !f.Changed("device") {
-		errs = append(errs, errors.New("no device provided"))
+		errs = append(errs, errors.New(msg.MissingDevice))
 	}
 	if initCfg.artifactWhenStr != "" {
 		initCfg.artifactWhenStr = strings.ToLower(initCfg.artifactWhenStr)
