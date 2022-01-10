@@ -63,6 +63,18 @@ type Filter struct {
 	FixtureMeta map[string]string `yaml:"fixtureMeta,omitempty" json:"fixtureMeta,omitempty"`
 }
 
+// CompilerOptions represents the compiler options.
+type CompilerOptions struct {
+	TypeScript TypescriptCompilerOptions `yaml:"typescript,omitempty" json:"typescript,omitempty"`
+}
+
+// TypescriptCompilerOptions represents the typescript compiler options.
+type TypescriptCompilerOptions struct {
+	ConfigPath               string            `yaml:"configPath,omitempty" json:"configPath,omitempty"`
+	CustomCompilerModulePath string            `yaml:"customCompilerModulePath,omitempty" json:"customCompilerModulePath,omitempty"`
+	Options                  map[string]string `yaml:"options,omitempty" json:"options,omitempty"`
+}
+
 // Suite represents the testcafe test suite configuration.
 type Suite struct {
 	Name             string            `yaml:"name,omitempty" json:"name"`
@@ -92,6 +104,8 @@ type Suite struct {
 	DisableVideo       bool                   `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testcafe config.
 	Mode               string                 `yaml:"mode,omitempty" json:"-"`
 	Shard              string                 `yaml:"shard,omitempty" json:"-"`
+	// TypeScript compiling options
+	CompilerOptions CompilerOptions `yaml:"compilerOptions,omitempty" json:"compilerOptions"`
 	// Deprecated. Reserved for future use for actual devices.
 	Devices    []config.Simulator `yaml:"devices,omitempty" json:"devices"`
 	Simulators []config.Simulator `yaml:"simulators,omitempty" json:"simulators"`
