@@ -296,13 +296,14 @@ func createReporters(c config.Reporters, ntfs config.Notifications, metadata con
 	}
 
 	reps = append(reps, &slack.Reporter{
-		Channels:    ntfs.Slack.Channels,
-		Framework:   framework,
-		Metadata:    metadata,
-		TestEnv:     env,
-		TestResults: []report.TestResult{},
-		Config:      ntfs,
-		Service:     svc,
+		Channels:            ntfs.Slack.Channels,
+		Framework:           framework,
+		Metadata:            metadata,
+		TestEnv:             env,
+		TestResults:         []report.TestResult{},
+		Config:              ntfs,
+		Service:             svc,
+		DisableUsageMetrics: gFlags.disableUsageMetrics,
 	})
 
 	return reps
