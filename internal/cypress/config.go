@@ -247,12 +247,12 @@ func Validate(p *Project) error {
 	p.Cypress.Version = config.StandardizeVersionFormat(p.Cypress.Version)
 
 	if p.Cypress.Version == "" {
-		return errors.New("missing framework version. Check available versions here: https://docs.saucelabs.com/testrunner-toolkit#supported-frameworks-and-browsers")
+		return errors.New(msg.MissingCypressVersion)
 	}
 
 	// Validate docker.
 	if p.Docker.FileTransfer != config.DockerFileMount && p.Docker.FileTransfer != config.DockerFileCopy {
-		return fmt.Errorf("illegal file transfer type '%s', must be one of '%s'",
+		return fmt.Errorf(msg.InvalidDockerFileTransferType,
 			p.Docker.FileTransfer,
 			strings.Join([]string{string(config.DockerFileMount), string(config.DockerFileCopy)}, "|"))
 	}
@@ -260,38 +260,38 @@ func Validate(p *Project) error {
 	// Check rootDir exists.
 	if p.RootDir != "" {
 		if _, err := os.Stat(p.RootDir); err != nil {
-			return fmt.Errorf("unable to locate the rootDir folder %s", p.RootDir)
+			return fmt.Errorf(msg.UnableToLocateRootDir, p.RootDir)
 		}
 	}
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
-		return errors.New("no sauce region set")
+		return errors.New(msg.MissingRegion)
 	}
 
 	// Validate suites.
 	if len(p.Suites) == 0 {
-		return errors.New("no suites defined")
+		return errors.New(msg.EmptySuite)
 	}
 	suiteNames := make(map[string]bool)
 	for _, s := range p.Suites {
 		if _, seen := suiteNames[s.Name]; seen {
-			return fmt.Errorf("suite names must be unique, but found duplicate for '%s'", s.Name)
+			return fmt.Errorf(msg.DuplicateSuiteName, s.Name)
 		}
 		suiteNames[s.Name] = true
 
 		for _, c := range s.Name {
 			if unicode.IsSymbol(c) {
-				return fmt.Errorf("illegal symbol '%c' in suite name: '%s'", c, s.Name)
+				return fmt.Errorf(msg.IllegalSymbol, c, s.Name)
 			}
 		}
 
 		if s.Browser == "" {
-			return fmt.Errorf("no browser specified in suite '%s'", s.Name)
+			return fmt.Errorf(msg.MissingBrowserInSuite, s.Name)
 		}
 
 		if len(s.Config.TestFiles) == 0 {
-			return fmt.Errorf("no config.testFiles specified in suite '%s'", s.Name)
+			return fmt.Errorf(msg.MissingTestFiles, s.Name)
 		}
 	}
 
@@ -385,5 +385,5 @@ func FilterSuites(p *Project, suiteName string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("no suite named '%s' found", suiteName)
+	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
 }

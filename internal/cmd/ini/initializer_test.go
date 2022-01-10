@@ -5,13 +5,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/flags"
-	"github.com/spf13/pflag"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/spf13/pflag"
 
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/Netflix/go-expect"
@@ -1388,7 +1389,7 @@ func Test_checkCredentials(t *testing.T) {
 				errMsg := "unexpected status '401' from test-composer: Unauthorized\n"
 				return []framework.Framework{}, fmt.Errorf(errMsg)
 			},
-			wantErr: errors.New("invalid credentials"),
+			wantErr: errors.New("invalid credentials provided"),
 		},
 		{
 			name: "Other error",

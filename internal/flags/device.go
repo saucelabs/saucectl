@@ -4,10 +4,11 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"strconv"
 	"strings"
+
+	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/msg"
 )
 
 // Device represents the RDC device configuration.
@@ -40,7 +41,7 @@ func (d *Device) Set(s string) error {
 
 		if len(vs) < 2 {
 			msg.Error("--device must be specified using a key-value format, e.g. \"--device name=iPhone,private=true\"")
-			return errors.New("wrong input format; must be of key-value")
+			return errors.New(msg.InvalidKeyValueInputFormat)
 		}
 
 		val := vs[1]

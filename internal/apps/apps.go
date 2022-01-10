@@ -5,10 +5,12 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/saucelabs/saucectl/internal/msg"
 )
 
 var (
-	reFileID = regexp.MustCompile("(storage:(//)?)?(?P<fileID>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$")
+	reFileID      = regexp.MustCompile("(storage:(//)?)?(?P<fileID>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$")
 	reFilePattern = regexp.MustCompile("^(storage:filename=)(?P<filename>[\\S][\\S ]+(\\.ipa|\\.apk))$")
 )
 
@@ -52,5 +54,5 @@ func Validate(kind, app string, validExt []string) error {
 	if _, err := os.Stat(app); err == nil {
 		return nil
 	}
-	return fmt.Errorf("%s: file not found", app)
+	return fmt.Errorf(msg.FileNotFound, app)
 }

@@ -135,19 +135,19 @@ func SetDefaults(p *Project) {
 func Validate(p *Project) error {
 	p.Puppeteer.Version = config.StandardizeVersionFormat(p.Puppeteer.Version)
 	if p.Puppeteer.Version == "" {
-		return errors.New("missing framework version. Check available versions here: https://docs.saucelabs.com/testrunner-toolkit#supported-frameworks-and-browsers")
+		return errors.New(msg.MissingFrameworkVersionConfig)
 	}
 
 	// Check rootDir exists.
 	if p.RootDir != "" {
 		if _, err := os.Stat(p.RootDir); err != nil {
-			return fmt.Errorf("unable to locate the rootDir folder %s", p.RootDir)
+			return fmt.Errorf(msg.UnableToLocateRootDir, p.RootDir)
 		}
 	}
 
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
-		return errors.New("no sauce region set")
+		return errors.New(msg.MissingRegion)
 	}
 
 	return nil
@@ -161,5 +161,5 @@ func FilterSuites(p *Project, suiteName string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("no suite named '%s' found", suiteName)
+	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
 }
