@@ -94,6 +94,19 @@ func (p Properties) SetSlack(slack config.Slack) Properties {
 	return p
 }
 
+// SetNotificationsCount reports the number of notifications.
+func (p Properties) SetNotificationsCount(sent, failed int) Properties {
+	p["slack_sent_notifications"] = sent
+	p["slack_failed_notification"] = failed
+	return p
+}
+
+// SetError reports an error.
+func (p Properties) SetError(errMessage string) Properties {
+	p["error"] = errMessage
+	return p
+}
+
 // Tracker is an interface for providing usage tracking.
 type Tracker interface {
 	io.Closer
