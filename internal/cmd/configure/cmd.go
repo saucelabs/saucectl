@@ -72,7 +72,7 @@ func interactiveConfiguration() (credentials.Credentials, error) {
 			Validate: func(val interface{}) error {
 				str, ok := val.(string)
 				if !ok {
-					return errors.New(msg.InvaildUsername)
+					return errors.New(msg.InvalidUsername)
 				}
 				str = strings.TrimSpace(str)
 				if str == "" {
