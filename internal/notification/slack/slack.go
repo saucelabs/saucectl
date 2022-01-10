@@ -134,8 +134,10 @@ func (r *Reporter) sendMessage(passed bool) {
 
 		if err != nil {
 			log.Error().Msgf("Failed to send message to slack, err: %s", err.Error())
+			failedNotifications++
 			continue
 		}
+		sentNotifications++
 
 		log.Info().Msgf("Message successfully sent to slack channel %s", c)
 	}
