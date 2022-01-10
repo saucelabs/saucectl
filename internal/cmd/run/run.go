@@ -59,7 +59,7 @@ var (
 	rdcClient   rdc.Client
 
 	// ErrEmptySuiteName is thrown when a flag is specified that has a dependency on the --name flag.
-	ErrEmptySuiteName = errors.New(msg.EmptySuiteName)
+	ErrEmptySuiteName = errors.New(msg.EmptyAdhocSuiteName)
 )
 
 // gFlags contains all global flags that are set when 'run' is invoked.

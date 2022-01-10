@@ -44,8 +44,8 @@ const (
 	MissingDeviceOrEmulator = "either device or emulator configuration needs to be provided"
 	// MissingDevice indicates no device provided
 	MissingDevice = "no device provided"
-	// EmptySuiteName is thrown when a flag is specified that has a dependency on the --name flag.
-	EmptySuiteName = "adhoc suite parameters can only be used with a new adhoc suite by setting --name"
+	// EmptyAdhocSuiteName is thrown when a flag is specified that has a dependency on the --name flag.
+	EmptyAdhocSuiteName = "adhoc suite parameters can only be used with a new adhoc suite by setting --name"
 	// UnknownFrameworkConfig indicates unknown framework config
 	UnknownFrameworkConfig = "unknown framework configuration"
 	// UnableToFetchFrameworkList indicates fail to fetch framework list
