@@ -1137,6 +1137,31 @@
                     "spec"
                   ]
                 },
+                "compilerOptions": {
+                  "description": "Specifies the typescript compiler options to be used when running the tests.",
+                  "type": "object",
+                  "properties": {
+                    "typescript": {
+                      "description": "Specifies the TypeScript options.",
+                      "type": "object",
+                      "properties": {
+                        "configPath": {
+                          "description": "Specifies the path to the TypeScript tsconfig.json file.",
+                          "type": "string"
+                        },
+                        "customCompilerModulePath": {
+                          "description": "Specifies the path to a custom TypeScript compiler module.",
+                          "type": "string"
+                        },
+                        "options": {
+                          "description": "Specifies TypeScript compiler options. Full reference: https://www.typescriptlang.org/tsconfig#compilerOptions",
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                },
                 "disablePageCaching": {
                   "description": "Prevents the browser from caching page content.",
                   "type": "boolean"

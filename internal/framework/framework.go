@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"regexp"
+
+	"github.com/saucelabs/saucectl/internal/msg"
 )
 
 // Framework represents a test framework (e.g. cypress).
@@ -52,7 +54,7 @@ func GitReleaseSegments(m *Metadata) (org, repo, tag string, err error) {
 
 	// We expect a full match, plus 3 subgroups (org, repo tag). Thus a total of 4.
 	if len(matches) != 4 {
-		return "", "", "", errors.New("malformed git release string in metadata")
+		return "", "", "", errors.New(msg.InvalidGitRelease)
 	}
 
 	orgIndex := r.SubexpIndex("org")

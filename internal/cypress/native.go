@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/saucelabs/saucectl/internal/msg"
 )
 
 // Config represents the cypress.json native configuration file.
@@ -29,7 +31,7 @@ func configFromFile(fileName string) (Config, error) {
 
 	fd, err := os.Open(fileName)
 	if err != nil {
-		return c, fmt.Errorf("unable to locate the cypress config file at: %s", fileName)
+		return c, fmt.Errorf(msg.UnableToLocateCypressCfg, fileName)
 	}
 	err = json.NewDecoder(fd).Decode(&c)
 	c.Path = fileName

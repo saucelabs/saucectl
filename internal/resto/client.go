@@ -20,17 +20,18 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/requesth"
 	"github.com/saucelabs/saucectl/internal/vmd"
 )
 
 var (
 	// ErrServerError is returned when the server was not able to correctly handle our request (status code >= 500).
-	ErrServerError = errors.New("internal server error")
+	ErrServerError = errors.New(msg.InternalServerError)
 	// ErrJobNotFound is returned when the requested job was not found.
-	ErrJobNotFound = errors.New("job was not found")
+	ErrJobNotFound = errors.New(msg.JobNotFound)
 	// ErrTunnelNotFound is returned when the requested tunnel was not found.
-	ErrTunnelNotFound = errors.New("tunnel not found")
+	ErrTunnelNotFound = errors.New(msg.TunnelNotFound)
 )
 
 // retryMax is the total retry times when pulling job status

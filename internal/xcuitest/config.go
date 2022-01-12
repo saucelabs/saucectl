@@ -8,6 +8,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 )
 
@@ -112,18 +113,18 @@ func SetDefaults(p *Project) {
 func Validate(p Project) error {
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
-		return errors.New("no sauce region set")
+		return errors.New(msg.MissingRegion)
 	}
 
 	if p.Xcuitest.App == "" {
-		return errors.New("missing path to app .ipa")
+		return errors.New(msg.MissingXcuitestAppPath)
 	}
 	if err := apps.Validate("application", p.Xcuitest.App, []string{".ipa", ".app"}); err != nil {
 		return err
 	}
 
 	if p.Xcuitest.TestApp == "" {
-		return errors.New("missing path to test app .ipa")
+		return errors.New(msg.MissingXcuitestTestAppPath)
 	}
 	if err := apps.Validate("test application", p.Xcuitest.TestApp, []string{".ipa", ".app"}); err != nil {
 		return err
@@ -136,20 +137,20 @@ func Validate(p Project) error {
 	}
 
 	if len(p.Suites) == 0 {
-		return errors.New("no suites defined")
+		return errors.New(msg.EmptySuite)
 	}
 
 	for _, suite := range p.Suites {
 		if len(suite.Devices) == 0 {
-			return fmt.Errorf("missing devices configuration for suite: %s", suite.Name)
+			return fmt.Errorf(msg.MissingXcuitestDeviceConfig, suite.Name)
 		}
 		for didx, device := range suite.Devices {
 			if device.ID == "" && device.Name == "" {
-				return fmt.Errorf("missing device name or id for suite: %s. Devices index: %d", suite.Name, didx)
+				return fmt.Errorf(msg.MissingDeviceConfig, suite.Name, didx)
 			}
 
 			if device.Options.DeviceType != "" && !config.IsSupportedDeviceType(device.Options.DeviceType) {
-				return fmt.Errorf("deviceType: %s is unsupported for suite: %s. Devices index: %d. Supported device types: %s",
+				return fmt.Errorf(msg.InvalidDeviceType,
 					device.Options.DeviceType, suite.Name, didx, strings.Join(config.SupportedDeviceTypes, ","))
 			}
 		}
@@ -166,5 +167,5 @@ func FilterSuites(p *Project, suiteName string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("no suite named '%s' found", suiteName)
+	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
 }

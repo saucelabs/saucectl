@@ -4,9 +4,10 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
-	"strings"
 )
 
 // Simulator represents the simulator configuration.
@@ -42,7 +43,7 @@ func (e *Simulator) Set(s string) error {
 
 		if len(vs) < 2 {
 			msg.Error("--simulator must be specified using a key-value format, e.g. \"--simulator name=iPhone X Simulator,platformVersion=14.0\"")
-			return errors.New("wrong input format; must be of key-value")
+			return errors.New(msg.InvalidKeyValueInputFormat)
 		}
 
 		val := vs[1]
