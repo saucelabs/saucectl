@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	specs "github.com/opencontainers/image-spec/specs-go/v1"
 	"io"
 	"os"
 	"path"
@@ -65,7 +66,7 @@ type CommonAPIClient interface {
 	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
 	ImageList(ctx context.Context, options types.ImageListOptions) ([]types.ImageSummary, error)
 	ImagePull(ctx context.Context, ref string, options types.ImagePullOptions) (io.ReadCloser, error)
-	ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (container.ContainerCreateCreatedBody, error)
+	ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, platform *specs.Platform, containerName string) (container.ContainerCreateCreatedBody, error)
 	ContainerStart(ctx context.Context, containerID string, options types.ContainerStartOptions) error
 	ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error)
 	CopyToContainer(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error
@@ -247,7 +248,7 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 		containerConfig.Env = append(containerConfig.Env, fmt.Sprintf("%s=%s", k, v))
 	}
 
-	container, err := handler.client.ContainerCreate(ctx, containerConfig, hostConfig, networkConfig, "")
+	container, err := handler.client.ContainerCreate(ctx, containerConfig, hostConfig, networkConfig, nil,"")
 	if err != nil {
 		return nil, err
 	}

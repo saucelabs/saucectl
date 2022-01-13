@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
-	"gotest.tools/assert"
+	"gotest.tools/v3/assert"
 )
 
 func TestPatternsFromFile(t *testing.T) {
