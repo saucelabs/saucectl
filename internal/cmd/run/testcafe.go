@@ -199,7 +199,8 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 			ArtifactDownloader: &rs,
 			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc,
 				"testcafe", "sauce"),
-			Async: gFlags.async,
+			Async:    gFlags.async,
+			FailFast: gFlags.failFast,
 		},
 	}
 	cleanTestCafePackages(&p)

@@ -147,6 +147,7 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 				"espresso", "sauce"),
 			Framework: framework.Framework{Name: espresso.Kind},
 			Async:     gFlags.async,
+			FailFast:  gFlags.failFast,
 		},
 	}
 
