@@ -53,7 +53,8 @@ type CloudRunner struct {
 
 	Reporters []report.Reporter
 
-	Async bool
+	Async    bool
+	FailFast bool
 
 	interrupted bool
 }
@@ -310,6 +311,11 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			jobOpts <- opts
 			log.Info().Str("suite", opts.DisplayName).Str("attempt", fmt.Sprintf("%d of %d", opts.Attempt+1, opts.Retries+1)).Msg("Retrying suite.")
 			continue
+		}
+
+		if r.FailFast && !jobData.Passed {
+			log.Warn().Err(err).Msg("FailFast mode enabled. Skipping upcoming suites.")
+			r.interrupted = true
 		}
 
 		results <- result{

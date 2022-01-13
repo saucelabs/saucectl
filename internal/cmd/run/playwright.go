@@ -180,7 +180,8 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 			ArtifactDownloader: &rs,
 			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc,
 				"playwright", "sauce"),
-			Async: gFlags.async,
+			Async:    gFlags.async,
+			FailFast: gFlags.failFast,
 		},
 	}
 
