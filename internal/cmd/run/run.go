@@ -59,7 +59,7 @@ var (
 	rdcClient   rdc.Client
 
 	// ErrEmptySuiteName is thrown when a flag is specified that has a dependency on the --name flag.
-	ErrEmptySuiteName = errors.New("adhoc suite parameters can only be used with a new adhoc suite by setting --name")
+	ErrEmptySuiteName = errors.New(msg.EmptyAdhocSuiteName)
 )
 
 // gFlags contains all global flags that are set when 'run' is invoked.
@@ -223,7 +223,7 @@ func Run(cmd *cobra.Command) (int, error) {
 		return runXcuitest(cmd, xcuitestFlags{}, tcClient, restoClient, rdcClient, appsClient)
 	}
 
-	return 1, errors.New("unknown framework configuration")
+	return 1, errors.New(msg.UnknownFrameworkConfig)
 }
 
 func printTestEnv(testEnv string) {
@@ -298,13 +298,14 @@ func createReporters(c config.Reporters, ntfs config.Notifications, metadata con
 	}
 
 	reps = append(reps, &slack.Reporter{
-		Channels:    ntfs.Slack.Channels,
-		Framework:   framework,
-		Metadata:    metadata,
-		TestEnv:     env,
-		TestResults: []report.TestResult{},
-		Config:      ntfs,
-		Service:     svc,
+		Channels:            ntfs.Slack.Channels,
+		Framework:           framework,
+		Metadata:            metadata,
+		TestEnv:             env,
+		TestResults:         []report.TestResult{},
+		Config:              ntfs,
+		Service:             svc,
+		DisableUsageMetrics: gFlags.disableUsageMetrics,
 	})
 
 	return reps

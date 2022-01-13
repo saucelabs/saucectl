@@ -21,17 +21,18 @@ import (
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/requesth"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
 
 var (
 	// ErrServerError is returned when the server was not able to correctly handle our request (status code >= 500).
-	ErrServerError = errors.New("internal server error")
+	ErrServerError = errors.New(msg.InternalServerError)
 	// ErrJobNotFound is returned when the requested job was not found.
-	ErrJobNotFound = errors.New("job was not found")
+	ErrJobNotFound = errors.New(msg.JobNotFound)
 	// ErrAssetNotFound is returned when the requested asset is not found.
-	ErrAssetNotFound = errors.New("asset not found")
+	ErrAssetNotFound = errors.New(msg.AssetNotFound)
 )
 
 // getStatusMaxRetry is the total retry times when pulling job status

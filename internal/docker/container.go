@@ -20,6 +20,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
@@ -87,7 +88,7 @@ type jobInfo struct {
 func (r *ContainerRunner) pullImage(img string) error {
 	// Check docker image name property from the config file.
 	if img == "" {
-		return errors.New("no docker image specified")
+		return errors.New(msg.EmptyDockerImgName)
 	}
 
 	// Check if image exists.

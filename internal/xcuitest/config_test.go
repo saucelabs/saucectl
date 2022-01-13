@@ -164,7 +164,7 @@ func TestValidate(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: errors.New("missing device name or id for suite: no device name. Devices index: 0"),
+			expectedErr: errors.New("missing device name or ID for suite: no device name. Devices index: 0"),
 		},
 		{
 			name: "validating throws error on unsupported device type",

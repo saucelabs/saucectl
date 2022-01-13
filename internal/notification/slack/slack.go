@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/segment"
+	"github.com/saucelabs/saucectl/internal/usage"
 	"strings"
 	"sync"
 	"time"
@@ -28,6 +30,8 @@ type Reporter struct {
 	Config         config.Notifications
 	Service        Service
 	lock           sync.Mutex
+
+	DisableUsageMetrics bool
 }
 
 // Add adds the TestResult to the reporter. TestResults added this way can then be rendered out by calling Render().
@@ -83,6 +87,24 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 	return nil
 }
 
+// reportNotificationFailure reports failure to get slack token.
+func (r *Reporter) reportGetTokenFailure(err error) {
+	tracker := segment.New(!r.DisableUsageMetrics)
+	props := usage.Properties{}
+	props.SetFramework(r.Framework).SetError(err.Error())
+	tracker.Collect("slack notifications", props)
+	_ = tracker.Close()
+}
+
+// reportNotificationStats reports success / failures to send slack notifications.
+func reportNotificationStats(disableUsageMetrics bool, sent *int, failed *int) {
+	tracker := segment.New(!disableUsageMetrics)
+	props := usage.Properties{}
+	props.SetNotificationsCount(*sent, *failed)
+	tracker.Collect("slack notifications", props)
+	_ = tracker.Close()
+}
+
 // sendMessage sends notification message.
 func (r *Reporter) sendMessage(passed bool) {
 	if !r.shouldSendNotification(passed) {
@@ -92,8 +114,13 @@ func (r *Reporter) sendMessage(passed bool) {
 	token, err := r.Service.GetSlackToken(context.Background())
 	if err != nil {
 		log.Err(err).Msg("Failed to get slack token")
+		r.reportGetTokenFailure(err)
 		return
 	}
+
+	var sentNotifications int
+	var failedNotifications int
+	defer reportNotificationStats(r.DisableUsageMetrics, &sentNotifications, &failedNotifications)
 
 	api := slack.New(token)
 
@@ -107,8 +134,10 @@ func (r *Reporter) sendMessage(passed bool) {
 
 		if err != nil {
 			log.Error().Msgf("Failed to send message to slack, err: %s", err.Error())
+			failedNotifications++
 			continue
 		}
+		sentNotifications++
 
 		log.Info().Msgf("Message successfully sent to slack channel %s", c)
 	}

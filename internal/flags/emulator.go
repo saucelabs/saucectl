@@ -4,9 +4,10 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
-	"strings"
 )
 
 // Emulator represents the emulator configuration.
@@ -42,7 +43,7 @@ func (e *Emulator) Set(s string) error {
 
 		if len(vs) < 2 {
 			msg.Error("--emulator must be specified using a key-value format, e.g. \"--emulator name=Android Emulator,platformVersion=11.0\"")
-			return errors.New("wrong input format; must be of key-value")
+			return errors.New(msg.InvalidKeyValueInputFormat)
 		}
 
 		val := vs[1]

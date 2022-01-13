@@ -78,9 +78,6 @@ or peruse some of our example repositories:
   - https://github.com/saucelabs/saucectl-puppeteer-example
   - https://github.com/saucelabs/saucectl-testcafe-example`
 
-// UploadingTimeout is a the message to warn the user that its upload reach the timeout.
-const UploadingTimeout = `Failed to upload the project because it took too long. `
-
 // UploadingTimeoutSuggestion is a recommendation to add unnecessary files to .sauceignore in the case that the bundled file is too big.
 const UploadingTimeoutSuggestion = `We *highly* recommend using .sauceignore file so that saucectl does not
 create big archives with unnecessary files.
