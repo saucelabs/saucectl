@@ -266,3 +266,19 @@ jobs:
           --testOptions.notClass SwagLabsMobileAppUITests.SwagLabsFlow/testCompleteFlow \
           --device name="iPhone.*" \
           --timeout 10m
+  windows-doctor:
+    needs: build
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Download saucectl binary
+        uses: actions/download-artifact@v2
+        with:
+          name: saucectlbin
+
+      - name: saucectl doctor
+        run: |
+          ./saucectl.exe doctor

@@ -113,6 +113,33 @@ func (handler *Handler) IsInstalled() bool {
 	return err == nil
 }
 
+// IsLaunchable checks if the given image is launchable by spawning a container and cleaning it up right after.
+func (handler *Handler) IsLaunchable(image string) error {
+	hostConfig := &container.HostConfig{}
+	networkConfig := &network.NetworkingConfig{}
+	containerConfig := &container.Config{
+		Image: image,
+	}
+
+	con, err := handler.client.ContainerCreate(context.Background(), containerConfig, hostConfig, networkConfig, nil, "")
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		if con.ID != "" {
+			_ = handler.ContainerStop(context.Background(), con.ID)
+			_ = handler.ContainerRemove(context.Background(), con.ID)
+		}
+	}()
+
+	if err := handler.client.ContainerStart(context.Background(), con.ID, types.ContainerStartOptions{}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // HasBaseImage checks if base image is installed
 func (handler *Handler) HasBaseImage(ctx context.Context, baseImage string) (bool, error) {
 	listFilters := filters.NewArgs()
@@ -248,7 +275,7 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 		containerConfig.Env = append(containerConfig.Env, fmt.Sprintf("%s=%s", k, v))
 	}
 
-	container, err := handler.client.ContainerCreate(ctx, containerConfig, hostConfig, networkConfig, nil,"")
+	container, err := handler.client.ContainerCreate(ctx, containerConfig, hostConfig, networkConfig, nil, "")
 	if err != nil {
 		return nil, err
 	}

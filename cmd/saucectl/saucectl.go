@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/cmd/doctor"
 	"os"
 	"time"
 
@@ -62,6 +63,7 @@ func main() {
 		ini.Command(),
 		signup.Command(),
 		completion.Command(),
+		doctor.Command(),
 	)
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
