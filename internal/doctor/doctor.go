@@ -40,6 +40,7 @@ func VerifyDocker() error {
 
 	if err := handler.IsLaunchable("hello-world"); err != nil {
 		fmt.Printf("    %s Launch Containers: %s\n", err, color.RedString("[✖]"))
+		return err
 	}
 	fmt.Printf("    %s Launch Containers\n", color.GreenString("[✔]"))
 
