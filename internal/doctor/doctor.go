@@ -48,7 +48,7 @@ func VerifyDocker() error {
 	printPass(1, "Pull Images")
 
 	if err := handler.IsLaunchable("hello-world"); err != nil {
-		printFail(1, "Launch Containers: %s")
+		printFail(1, "Launch Containers: %s", err)
 		return err
 	}
 	printPass(1, "Launch Containers")
