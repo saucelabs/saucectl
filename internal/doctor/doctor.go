@@ -33,7 +33,7 @@ func VerifyDocker() error {
 	fmt.Printf("    %s Connection\n", color.GreenString("[✔]"))
 
 	if err := handler.PullImage(context.Background(), "hello-world"); err != nil {
-		fmt.Printf("    %s Pulling Images: %s\n", err, color.RedString("[✖]"))
+		fmt.Printf("    %s Pulling Images: %s\n", color.RedString("[✖]"), err)
 		return err
 	}
 	fmt.Printf("    %s Pull Images\n", color.GreenString("[✔]"))
