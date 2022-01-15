@@ -600,7 +600,7 @@ func (r *CloudRunner) stopSuiteExecution(jobID string, suiteName string) {
 
 // registerInterruptOnSignal stops execution on Sauce Cloud when a SIGINT is captured.
 func (r *CloudRunner) registerInterruptOnSignal(jobID, suiteName string) chan os.Signal {
-	sigChan := make(chan os.Signal)
+	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
 	go func(c <-chan os.Signal, jobID, suiteName string) {
@@ -616,7 +616,7 @@ func (r *CloudRunner) registerInterruptOnSignal(jobID, suiteName string) chan os
 
 // registerSkipSuitesOnSignal prevent new suites from being executed when a SIGINT is captured.
 func (r *CloudRunner) registerSkipSuitesOnSignal() chan os.Signal {
-	sigChan := make(chan os.Signal)
+	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
 	go func(c <-chan os.Signal, cr *CloudRunner) {

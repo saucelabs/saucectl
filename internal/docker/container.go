@@ -503,7 +503,7 @@ func jobIDFromURL(URL string) string {
 
 // registerInterruptOnSignal runs tearDown on SIGINT / Interrupt.
 func (r *ContainerRunner) registerInterruptOnSignal(containerID, suiteName string, interrupted *bool) chan os.Signal {
-	sigChan := make(chan os.Signal)
+	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
 	go func(c <-chan os.Signal, interrupted *bool, containerID, suiteName string) {
@@ -520,7 +520,7 @@ func (r *ContainerRunner) registerInterruptOnSignal(containerID, suiteName strin
 
 // registerSkipSuitesOnSignal prevent new suites from being executed when a SIGINT is captured.
 func (r *ContainerRunner) registerSkipSuitesOnSignal() chan os.Signal {
-	sigChan := make(chan os.Signal)
+	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
 	go func(c <-chan os.Signal, cr *ContainerRunner) {
