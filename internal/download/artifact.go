@@ -29,6 +29,6 @@ func ShouldDownloadArtifact(jobID string, passed, timedOut bool, async bool, cfg
 func Cleanup(directory string) {
 	err := os.RemoveAll(directory)
 	if err != nil {
-		log.Err(err).Msg("Unable to cleanup previous artifacts ()")
+		log.Err(err).Msg("Unable to cleanup previous artifacts")
 	}
 }
