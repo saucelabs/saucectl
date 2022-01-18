@@ -9,6 +9,10 @@
       "description": "Manage test output, such as logs, videos, and screenshots.",
       "type": "object",
       "properties": {
+        "cleanup": {
+          "description": "Whether to remove all contents of artifacts directory",
+          "type": "boolean"
+        },
         "download": {
           "description": "Settings related to downloading test artifacts from Sauce Labs.",
           "type": "object",

@@ -129,6 +129,7 @@ func Command() *cobra.Command {
 	sc.String("artifacts.download.when", "artifacts::download::when", "never", "Specifies when to download test artifacts")
 	sc.StringSlice("artifacts.download.match", "artifacts::download::match", []string{}, "Specifies which test artifacts to download")
 	sc.String("artifacts.download.directory", "artifacts::download::directory", "", "Specifies the location where to download test artifacts to")
+	sc.Bool("artifacts.cleanup", "artifacts::cleanup", false, "Specifies whether to remove all contents of artifacts directory")
 
 	// Reporters
 	sc.Bool("reporters.junit.enabled", "reporters::junit::enabled", false, "Toggle saucectl's own junit reporting on/off. This only affects the reports that saucectl itself generates as a summary of your tests. Each Job in Sauce Labs has an independent report regardless.")
