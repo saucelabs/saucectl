@@ -157,7 +157,7 @@ func archiveAppsToIpaIfRequired(appPath, testAppPath string) (archivedAppPath st
 		archivedTestAppPath, err = archiveAppToIpa(testAppPath)
 		if err != nil {
 			log.Error().Msgf("Unable to archive %s to ipa: %v", testAppPath, err)
-			fmt.Errorf("unable to archive %s", testAppPath)
+			archivedErr = fmt.Errorf("unable to archive %s", testAppPath)
 			return
 		}
 	}

@@ -15,7 +15,7 @@ build-%:
 
 #lint: @ Run the linter
 lint:
-	golint ./...
+	go vet ./...
 
 #format: @ Format code with gofmt
 format:
