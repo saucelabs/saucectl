@@ -26,8 +26,7 @@ jobs:
 
       - name: Lint project
         run: |
-          go get -u golang.org/x/lint/golint
-          golint -set_exit_status ./...
+          go vet ./...
   test:
     runs-on: ubuntu-latest
     container:

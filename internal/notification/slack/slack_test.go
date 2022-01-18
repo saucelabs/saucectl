@@ -24,7 +24,7 @@ func Test_shouldSendNotification(t *testing.T) {
 			name: "empty slack channel",
 			params: params{
 				testResults: []report.TestResult{report.TestResult{URL: "http://example.com"}},
-				config:      config.Notifications{config.Slack{Channels: []string{}}},
+				config:      config.Notifications{Slack: config.Slack{Channels: []string{}}},
 			},
 			expected: false,
 		},
@@ -32,7 +32,7 @@ func Test_shouldSendNotification(t *testing.T) {
 			name: "send always",
 			params: params{
 				testResults: []report.TestResult{report.TestResult{URL: "http://example.com"}},
-				config:      config.Notifications{config.Slack{Channels: []string{"test-channel"}, Send: config.WhenAlways}},
+				config:      config.Notifications{Slack: config.Slack{Channels: []string{"test-channel"}, Send: config.WhenAlways}},
 				passed:      true,
 			},
 			expected: true,
@@ -41,7 +41,7 @@ func Test_shouldSendNotification(t *testing.T) {
 			name: "send pass",
 			params: params{
 				testResults: []report.TestResult{report.TestResult{URL: "http://example.com"}},
-				config:      config.Notifications{config.Slack{Channels: []string{"test-channel"}, Send: config.WhenPass}},
+				config:      config.Notifications{Slack: config.Slack{Channels: []string{"test-channel"}, Send: config.WhenPass}},
 				passed:      true,
 			},
 			expected: true,
@@ -50,7 +50,7 @@ func Test_shouldSendNotification(t *testing.T) {
 			name: "send on fail",
 			params: params{
 				testResults: []report.TestResult{report.TestResult{URL: "http://example.com"}},
-				config:      config.Notifications{config.Slack{Channels: []string{"test-channel"}, Send: config.WhenFail}},
+				config:      config.Notifications{Slack: config.Slack{Channels: []string{"test-channel"}, Send: config.WhenFail}},
 				passed:      false,
 			},
 			expected: true,
@@ -59,7 +59,7 @@ func Test_shouldSendNotification(t *testing.T) {
 			name: "default",
 			params: params{
 				testResults: []report.TestResult{report.TestResult{URL: "http://example.com"}},
-				config:      config.Notifications{config.Slack{Channels: []string{"test-channel"}}},
+				config:      config.Notifications{Slack: config.Slack{Channels: []string{"test-channel"}}},
 				passed:      true,
 			},
 			expected: false,
