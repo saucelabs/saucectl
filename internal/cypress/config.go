@@ -67,6 +67,7 @@ type Suite struct {
 type SuiteConfig struct {
 	TestFiles []string          `yaml:"testFiles,omitempty" json:"testFiles"`
 	Env       map[string]string `yaml:"env,omitempty" json:"env"`
+	Headless  bool              `yaml:"headless,omitempty" json:"headless"`
 }
 
 // Reporter represents a cypress report configuration.
