@@ -77,6 +77,7 @@ type SuiteConfig struct {
 
 	// Fields appeared in v1.12+
 	Headed        bool   `yaml:"headed,omitempty" json:"headed,omitempty"`
+	Headless      bool   `yaml:"headless,omitempty" json:"headless,omitempty"`
 	GlobalTimeout int    `yaml:"globalTimeout,omitempty" json:"globalTimeout,omitempty"`
 	Timeout       int    `yaml:"timeout,omitempty" json:"timeout,omitempty"`
 	Grep          string `yaml:"grep,omitempty" json:"grep,omitempty"`

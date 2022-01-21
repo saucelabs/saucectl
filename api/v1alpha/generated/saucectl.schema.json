@@ -795,6 +795,10 @@
                       "description": "Run tests in headed browsers.",
                       "type": "boolean"
                     },
+                    "headless": {
+                      "description": "Run tests in headless mode.",
+                      "type": "boolean"
+                    },
                     "globalTimeout": {
                       "description": "Total timeout in milliseconds for the whole test run.",
                       "type": "integer"

@@ -71,6 +71,7 @@ func NewPlaywrightCmd() *cobra.Command {
 
 	// Playwright Test Options
 	sc.Bool("headed", "suite::params::headed", false, "Run tests in headed browsers")
+	sc.Bool("headless", "suite::params::headless", false, "Run tests in headless mode")
 	sc.Int("globalTimeout", "suite::params::globalTimeout", 0, "Total timeout for the whole test run in milliseconds")
 	sc.Int("testTimeout", "suite::params::timeout", 0, "Maximum timeout in milliseconds for each test")
 	sc.String("grep", "suite::params::grep", "", "Only run tests matching this regular expression")
@@ -79,6 +80,7 @@ func NewPlaywrightCmd() *cobra.Command {
 	sc.Int("maxFailures", "suite::params::maxFailures", 0, "Stop after the first N test failures")
 	sc.Int("numShards", "suite::numShards", 0, "Split tests across N number of shards")
 	sc.String("project", "suite::params::project", "", "Specify playwright project")
+	sc.Bool("headless", "suite::params::headless", false, "Run tests in headless mode")
 
 	// Misc
 	sc.String("rootDir", "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
