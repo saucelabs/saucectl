@@ -72,6 +72,7 @@ func NewTestcafeCmd() *cobra.Command {
 	sc.String("browserVersion", "suite::browserVersion", "", "The browser version (default: latest)")
 	sc.StringSlice("browserArgs", "suite::browserArgs", []string{}, "Set browser args")
 	sc.String("platform", "suite::platformName", "", "Run tests against this platform")
+	sc.Bool("headless", "suite::headless", false, "Controls whether or not tests are run in headless mode (default: false)")
 
 	// Video & Screen(shots)
 	sc.Bool("disableScreenshots", "suite::disableScreenshots", false, "Prevent TestCafe from taking screenshots")
