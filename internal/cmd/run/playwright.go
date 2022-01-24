@@ -71,6 +71,7 @@ func NewPlaywrightCmd() *cobra.Command {
 
 	// Playwright Test Options
 	sc.Bool("headed", "suite::params::headed", false, "Run tests in headed browsers")
+	sc.Bool("headless", "suite::params::headless", false, "Run tests in headless mode")
 	sc.Int("globalTimeout", "suite::params::globalTimeout", 0, "Total timeout for the whole test run in milliseconds")
 	sc.Int("testTimeout", "suite::params::timeout", 0, "Maximum timeout in milliseconds for each test")
 	sc.String("grep", "suite::params::grep", "", "Only run tests matching this regular expression")
@@ -88,6 +89,9 @@ func NewPlaywrightCmd() *cobra.Command {
 	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")
 	sc.StringToString("npm.packages", "npm::packages", map[string]string{}, "Specify npm packages that are required to run tests")
 	sc.Bool("npm.strictSSL", "npm::strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
+
+	// Depreated flags
+	sc.Fset.MarkDeprecated("headed", "please use --headless instead")
 
 	return cmd
 }

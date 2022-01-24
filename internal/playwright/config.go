@@ -76,7 +76,7 @@ type SuiteConfig struct {
 	BrowserName string `yaml:"browserName,omitempty" json:"browserName,omitempty"`
 
 	// Fields appeared in v1.12+
-	Headed        bool   `yaml:"headed,omitempty" json:"headed,omitempty"`
+	Headless      bool   `yaml:"headless,omitempty" json:"headless,omitempty"`
 	GlobalTimeout int    `yaml:"globalTimeout,omitempty" json:"globalTimeout,omitempty"`
 	Timeout       int    `yaml:"timeout,omitempty" json:"timeout,omitempty"`
 	Grep          string `yaml:"grep,omitempty" json:"grep,omitempty"`
@@ -93,6 +93,9 @@ type SuiteConfig struct {
 	ScreenshotOnFailure bool `yaml:"screenshotOnFailure,omitempty" json:"screenshotOnFailure,omitempty"`
 	SlowMo              int  `yaml:"slowMo,omitempty" json:"slowMo,omitempty"`
 	Video               bool `yaml:"video,omitempty" json:"video,omitempty"`
+
+	// Will be deprecated since `headless` is introduced
+	Headed bool `yaml:"headed,omitempty" json:"headed,omitempty"`
 }
 
 // FromFile creates a new playwright Project based on the filepath cfgPath.

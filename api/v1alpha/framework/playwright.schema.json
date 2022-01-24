@@ -105,8 +105,8 @@
                   "webkit"
                 ]
               },
-              "headed": {
-                "description": "Run tests in headed browsers.",
+              "headless": {
+                "description": "Run tests in headless mode.",
                 "type": "boolean"
               },
               "globalTimeout": {
