@@ -104,6 +104,7 @@ type Suite struct {
 	DisableVideo       bool                   `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testcafe config.
 	Mode               string                 `yaml:"mode,omitempty" json:"-"`
 	Shard              string                 `yaml:"shard,omitempty" json:"-"`
+	Headless           bool                   `yaml:"headless,omitempty" json:"headless"`
 	// TypeScript compiling options
 	CompilerOptions CompilerOptions `yaml:"compilerOptions,omitempty" json:"compilerOptions"`
 	// Deprecated. Reserved for future use for actual devices.
