@@ -61,13 +61,13 @@ type Suite struct {
 	Mode             string        `yaml:"mode,omitempty" json:"-"`
 	Timeout          time.Duration `yaml:"timeout,omitempty" json:"timeout"`
 	Shard            string        `yaml:"shard,omitempty" json:"-"`
+	Headless         bool          `yaml:"headless,omitempty" json:"headless"`
 }
 
 // SuiteConfig represents the cypress config overrides.
 type SuiteConfig struct {
 	TestFiles []string          `yaml:"testFiles,omitempty" json:"testFiles"`
 	Env       map[string]string `yaml:"env,omitempty" json:"env"`
-	Headless  bool              `yaml:"headless,omitempty" json:"headless"`
 }
 
 // Reporter represents a cypress report configuration.

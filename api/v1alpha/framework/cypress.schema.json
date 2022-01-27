@@ -139,10 +139,6 @@
                 "description": "One or more paths to the Cypress test files to run for this suite, if not otherwise specified explicitly in cypress.json.",
                 "type": "array"
               },
-              "headless": {
-                "description": "Controls whether or not tests are run in headless mode (default: false)",
-                "type": "boolean"
-              },
               "env": {
                 "$ref": "../subschema/common.schema.json#/definitions/env"
               }
@@ -160,6 +156,10 @@
               "",
               "spec"
             ]
+          },
+          "headless": {
+            "description": "Controls whether or not tests are run in headless mode (default: false)",
+            "type": "boolean"
           },
           "timeout": {
             "$ref": "../subschema/common.schema.json#/definitions/timeout"
