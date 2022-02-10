@@ -208,7 +208,7 @@ func loadCypressConfiguration(rootDir string, cypressCfgFile, sauceIgnoreFile st
 		return Config{}, err
 	}
 
-	if f, ok := cfg.FixturesFolder.(string); ok {
+	if f, ok := cfg.FixturesFolder.(string); ok && f != "" {
 		if err = checkAvailability(filepath.Join(configDir, f), true); err != nil {
 			return Config{}, err
 		}
