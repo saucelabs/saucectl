@@ -14,10 +14,10 @@ type Config struct {
 	// Path is the location of the config file itself.
 	Path string `yaml:"-" json:"-"`
 
-	FixturesFolder    string `json:"fixturesFolder,omitempty"`
-	IntegrationFolder string `json:"integrationFolder,omitempty"`
-	PluginsFile       string `json:"pluginsFile,omitempty"`
-	SupportFile       string `json:"supportFile,omitempty"`
+	FixturesFolder    interface{} `json:"fixturesFolder,omitempty"`
+	IntegrationFolder string      `json:"integrationFolder,omitempty"`
+	PluginsFile       string      `json:"pluginsFile,omitempty"`
+	SupportFile       string      `json:"supportFile,omitempty"`
 }
 
 // AbsIntegrationFolder returns the absolute path to Config.IntegrationFolder.
