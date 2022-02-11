@@ -208,6 +208,8 @@ func loadCypressConfiguration(rootDir string, cypressCfgFile, sauceIgnoreFile st
 		return Config{}, err
 	}
 
+	// FixturesFolder sets the path to folder containing fixture files (Pass false to disable)
+	// ref:  https://docs.cypress.io/guides/references/configuration#Folders-Files
 	if f, ok := cfg.FixturesFolder.(string); ok && f != "" {
 		if err = checkAvailability(filepath.Join(configDir, f), true); err != nil {
 			return Config{}, err
