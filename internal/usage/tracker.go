@@ -101,6 +101,11 @@ func (p Properties) SetNotificationsCount(sent, failed int) Properties {
 	return p
 }
 
+func (p Properties) SetSharding(sharded bool) Properties {
+	p["sharded"] = sharded
+	return p
+}
+
 // SetError reports an error.
 func (p Properties) SetError(errMessage string) Properties {
 	p["error"] = errMessage

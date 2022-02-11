@@ -388,3 +388,12 @@ func FilterSuites(p *Project, suiteName string) error {
 	}
 	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
 }
+
+func IsSharded(suites []Suite) bool {
+	for _, s := range suites {
+		if s.Shard != "" {
+			return true
+		}
+	}
+	return false
+}

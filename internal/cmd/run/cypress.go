@@ -151,7 +151,7 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 		props := usage.Properties{}
 		props.SetFramework("cypress").SetFVersion(p.Cypress.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
 			SetArtifacts(p.Artifacts).SetDocker(p.Docker).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).
-			SetSlack(p.Notifications.Slack)
+			SetSlack(p.Notifications.Slack).SetSharding(cypress.IsSharded(p.Suites))
 		tracker.Collect(strings.Title(fullCommandName(cmd)), props)
 		_ = tracker.Close()
 	}()
