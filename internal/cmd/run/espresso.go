@@ -116,7 +116,8 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, tc testcompose
 	defer func() {
 		props := usage.Properties{}
 		props.SetFramework("espresso").SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).SetArtifacts(p.Artifacts).
-			SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).SetSlack(p.Notifications.Slack)
+			SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).SetSlack(p.Notifications.Slack).
+			SetSharding(espresso.IsSharded(p.Suites))
 		tracker.Collect(strings.Title(fullCommandName(cmd)), props)
 		_ = tracker.Close()
 	}()
