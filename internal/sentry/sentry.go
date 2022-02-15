@@ -81,7 +81,7 @@ func attach(client http.Client, eventID, filename string) {
 	}
 
 	// Check the response
-	if res.StatusCode != http.StatusOK {
+	if res.StatusCode >= 400  {
 		b, _ := io.ReadAll(res.Body)
 		log.Debug().Int("status", res.StatusCode).
 			Msgf("Failed to send sentry attachment. Sentry responded with: %s", b)

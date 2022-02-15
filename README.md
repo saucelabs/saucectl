@@ -54,6 +54,10 @@ saucectl run
 ```
 This command will run the test based on the `./.sauce/config.yml` file.
 
+### Flags
+
+[Please refer to our docs](https://docs.saucelabs.com/testrunner-toolkit/saucectl/#-saucectl-run-flags) to learn more about the flags or run `saucectl run -h`.
+
 ## The `configure` Command
 ```sh
 saucectl configure

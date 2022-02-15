@@ -208,8 +208,10 @@ func loadCypressConfiguration(rootDir string, cypressCfgFile, sauceIgnoreFile st
 		return Config{}, err
 	}
 
-	if cfg.FixturesFolder != "" {
-		if err = checkAvailability(filepath.Join(configDir, cfg.FixturesFolder), true); err != nil {
+	// FixturesFolder sets the path to folder containing fixture files (Pass false to disable)
+	// ref:  https://docs.cypress.io/guides/references/configuration#Folders-Files
+	if f, ok := cfg.FixturesFolder.(string); ok && f != "" {
+		if err = checkAvailability(filepath.Join(configDir, f), true); err != nil {
 			return Config{}, err
 		}
 	}
@@ -387,4 +389,13 @@ func FilterSuites(p *Project, suiteName string) error {
 		}
 	}
 	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
+}
+
+func IsSharded(suites []Suite) bool {
+	for _, s := range suites {
+		if s.Shard != "" {
+			return true
+		}
+	}
+	return false
 }
