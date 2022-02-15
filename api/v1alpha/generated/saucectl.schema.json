@@ -344,6 +344,7 @@
                 },
                 "platformName": {
                   "enum": [
+                    "macOS 11.00",
                     "Windows 10"
                   ],
                   "description": "A specific operating system on which to run the tests. Sauce Labs will try to choose a reasonable default if not explicitly specified."
@@ -776,6 +777,7 @@
                 "platformName": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/platformName",
                   "enum": [
+                    "macOS 11.00",
                     "Windows 10"
                   ]
                 },
