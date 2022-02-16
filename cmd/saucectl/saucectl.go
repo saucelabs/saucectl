@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/cmd/doctor"
 	"os"
 	"time"
+
+	"github.com/fatih/color"
+	"github.com/saucelabs/saucectl/internal/cmd/doctor"
 
 	"github.com/saucelabs/saucectl/internal/cmd/completion"
 
@@ -50,8 +52,9 @@ func main() {
 	cmd.Flags().BoolP("version", "v", false, "print version")
 
 	verbosity := cmd.PersistentFlags().Bool("verbose", false, "turn on verbose logging")
+	noColor := cmd.PersistentFlags().Bool("no-color", false, "disable colorized output")
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		setupLogging(*verbosity)
+		setupLogging(*verbosity, *noColor)
 		setupSentry()
 		return nil
 	}
@@ -70,7 +73,8 @@ func main() {
 	}
 }
 
-func setupLogging(verbose bool) {
+func setupLogging(verbose bool, noColor bool) {
+	color.NoColor = noColor
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	zerolog.DurationFieldInteger = true
 	timeFormat := "15:04:05"
@@ -84,7 +88,7 @@ func setupLogging(verbose bool) {
 		return time.Now().In(time.Local)
 	}
 
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: timeFormat})
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: timeFormat, NoColor: noColor})
 }
 
 func setupSentry() {
