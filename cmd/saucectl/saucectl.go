@@ -74,7 +74,7 @@ func main() {
 }
 
 func setupLogging(verbose bool, noColor bool) {
-	color.NoColor = true
+	color.NoColor = noColor
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	zerolog.DurationFieldInteger = true
 	timeFormat := "15:04:05"
