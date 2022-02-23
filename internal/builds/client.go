@@ -2,6 +2,7 @@ package builds
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -26,7 +27,7 @@ const (
 	// VDC refers to jobs executed on virtual devices (e.g. VMs, emulators, simulators)
 	VDC BuildSource = "vdc"
 	// RDC refers to jobs executed on real mobile devices
-	RDC             = "rdc"
+	RDC = "rdc"
 )
 
 // buildResponse is the response body returned from /v2/builds/{buildSource}/jobs/{jobID}/build/
@@ -48,7 +49,7 @@ func New(url, username, accessKey string, timeout time.Duration) Client {
 	}
 }
 
-func (c *Client) GetBuildForJob(ctx context.Context, job job.Job) (string, error) {
+func (c *Client) GetBuildIdForJob(ctx context.Context, job job.Job) (string, error) {
 	jobID := job.ID
 	var buildSource BuildSource
 	if job.IsRDC {
@@ -57,7 +58,7 @@ func (c *Client) GetBuildForJob(ctx context.Context, job job.Job) (string, error
 		buildSource = VDC
 	}
 
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, fmt.Sprintf("/v2/builds/%s/jobs/%s/build/", buildSource, jobID), nil)
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v2/builds/%s/jobs/%s/build/", c.URL, buildSource, jobID), nil)
 	if err != nil {
 		return "", err
 	}
@@ -75,8 +76,13 @@ func (c *Client) GetBuildForJob(ctx context.Context, job job.Job) (string, error
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		// TODO: Handle non-OK status
+		return "", fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
 	}
 
-	return "", nil
+	var br buildResponse
+	if err := json.NewDecoder(resp.Body).Decode(&br); err != nil {
+		return "", err
+	}
+
+	return br.ID, nil
 }
