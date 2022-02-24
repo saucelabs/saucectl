@@ -30,6 +30,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/saucelabs/saucectl/internal/report/buildtable"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/report/table"
 	"github.com/saucelabs/saucectl/internal/resto"
@@ -288,8 +289,10 @@ func createReporters(c config.Reporters, ntfs config.Notifications, metadata con
 	svc slack.Service, framework, env string) []report.Reporter {
 	reps := []report.Reporter{
 		&captor.Default,
-		&table.Reporter{
-			Dst: os.Stdout,
+		&buildtable.Reporter{
+			TableReporter: table.Reporter{
+				Dst: os.Stdout,
+			},
 		}}
 
 	if c.JUnit.Enabled {
