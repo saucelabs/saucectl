@@ -24,10 +24,8 @@ type Client struct {
 type BuildSource string
 
 const (
-	// VDC refers to jobs executed on virtual devices (e.g. VMs, emulators, simulators)
 	VDC BuildSource = "vdc"
-	// RDC refers to jobs executed on real mobile devices
-	RDC = "rdc"
+	RDC             = "rdc"
 )
 
 // buildResponse is the response body returned from /v2/builds/{buildSource}/jobs/{jobID}/build/

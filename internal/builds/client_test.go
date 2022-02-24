@@ -5,10 +5,12 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestClient_GetBuildForJob(t *testing.T) {
@@ -22,8 +24,8 @@ func TestClient_GetBuildForJob(t *testing.T) {
 		{
 			name:         "happy case",
 			statusCode:   http.StatusOK,
-			responseBody: []byte{},
-			want:         "",
+			responseBody: []byte(`{"id": "happy-build-id"}`),
+			want:         "happy-build-id",
 			wantErr:      nil,
 		},
 		{
@@ -31,21 +33,21 @@ func TestClient_GetBuildForJob(t *testing.T) {
 			statusCode:   http.StatusNotFound,
 			responseBody: nil,
 			want:         "",
-			wantErr:      errors.New(""),
+			wantErr:      errors.New("unexpected statusCode: 404"),
 		},
 		{
 			name:         "validation error",
 			statusCode:   http.StatusUnprocessableEntity,
 			responseBody: nil,
 			want:         "",
-			wantErr:      errors.New(""),
+			wantErr:      errors.New("unexpected statusCode: 422"),
 		},
 		{
 			name:         "unparseable response",
 			statusCode:   http.StatusOK,
-			responseBody: []byte{},
+			responseBody: []byte(`{"id": "bad-json-response"`),
 			want:         "",
-			wantErr:      errors.New(""),
+			wantErr:      errors.New("unexpected EOF"),
 		},
 	}
 	for _, tt := range testCases {
@@ -56,13 +58,15 @@ func TestClient_GetBuildForJob(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		client := New(ts.URL, "user", "key", 3 * time.Second)
-
+		client := New(ts.URL, "user", "key", 3*time.Second)
 
 		// act
-		// _, _ := client.GetBuildForJob(context.Background(), job.Job{})
-
+		bid, err := client.GetBuildIdForJob(context.Background(), job.Job{})
 
 		// assert
+		assert.Equal(t, bid, tt.want)
+		if err != nil {
+			assert.True(t, strings.Contains(err.Error(), tt.wantErr.Error()))
+		}
 	}
 }
