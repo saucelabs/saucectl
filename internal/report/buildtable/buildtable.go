@@ -61,7 +61,7 @@ func (r *Reporter) Render() {
 		}
 		printPadding(1)
 		printBuildLink(bURL)
-		printPadding(1)
+		printPadding(2)
 	}
 	if len(r.RDCTableReport.TestResults) > 0 {
 		r.RDCTableReport.Render()
@@ -74,7 +74,7 @@ func (r *Reporter) Render() {
 		}
 		printPadding(1)
 		printBuildLink(bURL)
-		printPadding(1)
+		printPadding(2)
 	}
 }
 
