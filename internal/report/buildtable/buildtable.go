@@ -56,6 +56,9 @@ func (r *Reporter) Render() {
 		jURL = r.VDCTableReport.TestResults[0].URL
 		bURL = r.buildURLFromJobURL(jURL, build.VDC)
 
+		if bURL == "" {
+			bURL = "N/A"
+		}
 		printPadding(1)
 		printBuildLink(bURL)
 		printPadding(1)
