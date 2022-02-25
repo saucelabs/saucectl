@@ -154,6 +154,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				Artifacts:  artifacts,
 				Origin:     "sauce",
 				Attempts:   res.attempts,
+				IsRDC:      res.job.IsRDC,
 			}
 
 			for _, rep := range r.Reporters {

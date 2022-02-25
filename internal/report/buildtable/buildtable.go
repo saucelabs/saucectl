@@ -35,7 +35,11 @@ func New(svc build.Reader) Reporter {
 
 // Add adds a TestResult to the report
 func (r *Reporter) Add(t report.TestResult) {
-	r.VDCTableReport.Add(t)
+	if t.IsRDC {
+		r.RDCTableReport.Add(t)
+	} else {
+		r.VDCTableReport.Add(t)
+	}
 }
 
 // Render renders the report
@@ -57,11 +61,15 @@ func (r *Reporter) Render() {
 		printPadding(1)
 	}
 	if len(r.RDCTableReport.TestResults) > 0 {
+		printPadding(1)
 		r.RDCTableReport.Render()
 
 		jURL = r.RDCTableReport.TestResults[0].URL
 		bURL = r.buildURLFromJobURL(jURL, build.RDC)
 
+		if bURL == "" {
+			bURL = "N/A"
+		}
 		printPadding(1)
 		printBuildLink(bURL)
 		printPadding(1)
@@ -85,7 +93,7 @@ func (r *Reporter) buildURLFromJobURL(jobURL string, buildSource build.BuildSour
 		return ""
 	}
 	p := strings.Split(pURL.Path, "/")
-	jID := p[len(p) - 1]
+	jID := p[len(p)-1]
 
 	bID, err := r.Service.GetBuildID(context.Background(), jID, buildSource)
 	if err != nil {
