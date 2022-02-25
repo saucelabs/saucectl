@@ -35,7 +35,7 @@ func New(svc build.Reader) Reporter {
 
 // Add adds a TestResult to the report
 func (r *Reporter) Add(t report.TestResult) {
-	if t.IsRDC {
+	if t.RDC {
 		r.RDCTableReport.Add(t)
 	} else {
 		r.VDCTableReport.Add(t)
@@ -64,7 +64,6 @@ func (r *Reporter) Render() {
 		printPadding(1)
 	}
 	if len(r.RDCTableReport.TestResults) > 0 {
-		printPadding(1)
 		r.RDCTableReport.Render()
 
 		jURL = r.RDCTableReport.TestResults[0].URL
