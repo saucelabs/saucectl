@@ -149,7 +149,7 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 			ShowConsoleLog:        p.ShowConsoleLog,
 			ArtifactDownloader:    &rs,
 			RDCArtifactDownloader: &rc,
-			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc,
+			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc, &rs,
 				"espresso", "sauce"),
 			Framework: framework.Framework{Name: espresso.Kind},
 			Async:     gFlags.async,
