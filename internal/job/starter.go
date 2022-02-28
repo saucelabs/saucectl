@@ -5,21 +5,6 @@ import (
 	"time"
 )
 
-// TestOptions represents the espresso test filter options configuration.
-type TestOptions struct {
-	NotClass            []string `yaml:"notClass,omitempty" json:"notClass"`
-	Class               []string `yaml:"class,omitempty" json:"class"`
-	Package             string   `yaml:"package,omitempty" json:"package"`
-	NotPackage          string   `yaml:"notPackage,omitempty" json:"notPackage"`
-	Size                string   `yaml:"size,omitempty" json:"size"`
-	Annotation          string   `yaml:"annotation,omitempty" json:"annotation"`
-	NotAnnotation       string   `yaml:"notAnnotation,omitempty" json:"notAnnotation"`
-	ShardIndex          *int     `yaml:"shardIndex,omitempty" json:"shardIndex"`
-	NumShards           *int     `yaml:"numShards,omitempty" json:"numShards"`
-	ClearPackageData    *bool    `yaml:"clearPackageData,omitempty" json:"clearPackageData"`
-	UseTestOrchestrator *bool    `yaml:"useTestOrchestrator,omitempty" json:"useTestOrchestrator"`
-}
-
 // StartOptions represents the options for starting a job in the Sauce Labs cloud.
 type StartOptions struct {
 	// DisplayName is used for local logging purposes only (e.g. console).
@@ -43,30 +28,30 @@ type StartOptions struct {
 	// Currently supported: Cypress.
 	FrameworkVersion string `json:"frameworkVersion,omitempty"`
 
-	Attempt           int               `json:"-"`
-	BrowserName       string            `json:"browserName,omitempty"`
-	BrowserVersion    string            `json:"browserVersion,omitempty"`
-	PlatformName      string            `json:"platformName,omitempty"`
-	PlatformVersion   string            `json:"platformVersion,omitempty"`
-	DeviceID          string            `json:"deviceId,omitempty"`
-	DeviceName        string            `json:"deviceName,omitempty"`
-	DeviceOrientation string            `json:"deviceOrientation"`
-	DevicePrivateOnly bool              `json:"devicePrivateOnly,omitempty"`
-	DeviceType        string            `json:"deviceType,omitempty"`
-	DeviceHasCarrier  bool              `json:"deviceHasCarrier,omitempty"`
-	RealDevice        bool              `json:"realDevice,omitempty"`
-	Name              string            `json:"name,omitempty"`
-	Build             string            `json:"build,omitempty"`
-	Tags              []string          `json:"tags,omitempty"`
-	Tunnel            TunnelOptions     `json:"tunnel,omitempty"`
-	ScreenResolution  string            `json:"screenResolution,omitempty"`
-	Retries           int               `json:"-"`
-	RunnerVersion     string            `json:"runnerVersion,omitempty"`
-	Experiments       map[string]string `json:"experiments,omitempty"`
-	TestOptions       TestOptions       `json:"testOptions,omitempty"`
-	TestsToRun        []string          `json:"testsToRun,omitempty"`
-	TestsToSkip       []string          `json:"testsToSkip,omitempty"`
-	StartTime         time.Time         `json:"startTime,omitempty"`
+	Attempt           int                    `json:"-"`
+	BrowserName       string                 `json:"browserName,omitempty"`
+	BrowserVersion    string                 `json:"browserVersion,omitempty"`
+	PlatformName      string                 `json:"platformName,omitempty"`
+	PlatformVersion   string                 `json:"platformVersion,omitempty"`
+	DeviceID          string                 `json:"deviceId,omitempty"`
+	DeviceName        string                 `json:"deviceName,omitempty"`
+	DeviceOrientation string                 `json:"deviceOrientation"`
+	DevicePrivateOnly bool                   `json:"devicePrivateOnly,omitempty"`
+	DeviceType        string                 `json:"deviceType,omitempty"`
+	DeviceHasCarrier  bool                   `json:"deviceHasCarrier,omitempty"`
+	RealDevice        bool                   `json:"realDevice,omitempty"`
+	Name              string                 `json:"name,omitempty"`
+	Build             string                 `json:"build,omitempty"`
+	Tags              []string               `json:"tags,omitempty"`
+	Tunnel            TunnelOptions          `json:"tunnel,omitempty"`
+	ScreenResolution  string                 `json:"screenResolution,omitempty"`
+	Retries           int                    `json:"-"`
+	RunnerVersion     string                 `json:"runnerVersion,omitempty"`
+	Experiments       map[string]string      `json:"experiments,omitempty"`
+	TestOptions       map[string]interface{} `json:"testOptions,omitempty"`
+	TestsToRun        []string               `json:"testsToRun,omitempty"`
+	TestsToSkip       []string               `json:"testsToSkip,omitempty"`
+	StartTime         time.Time              `json:"startTime,omitempty"`
 }
 
 // TunnelOptions represents the options that configure the usage of a tunnel when running tests in the Sauce Labs cloud.
