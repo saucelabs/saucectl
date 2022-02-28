@@ -81,7 +81,7 @@ func (r *EspressoRunner) runSuites(appFileURI string, testAppFileURI string, oth
 	go func() {
 		for _, s := range r.Project.Suites {
 			numShards, _ := getNumShardsAndShardIndex(s.TestOptions)
-			// Automatically apply ShardIndex if not numShard is defined
+			// Automatically apply ShardIndex if numShards is defined
 			if numShards > 0 {
 				for i := 0; i < numShards; i++ {
 					s.TestOptions["shardIndex"] = i
