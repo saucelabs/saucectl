@@ -17,6 +17,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/saucelabs/saucectl/internal/appstore"
+	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
@@ -30,8 +31,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/saucelabs/saucectl/internal/report/buildtable"
 	"github.com/saucelabs/saucectl/internal/report/captor"
-	"github.com/saucelabs/saucectl/internal/report/table"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcafe"
@@ -285,12 +286,13 @@ func checkForUpdates() {
 }
 
 func createReporters(c config.Reporters, ntfs config.Notifications, metadata config.Metadata,
-	svc slack.Service, framework, env string) []report.Reporter {
+	svc slack.Service, buildReader build.Reader, framework, env string) []report.Reporter {
+	buildReporter := buildtable.New(buildReader)
+
 	reps := []report.Reporter{
 		&captor.Default,
-		&table.Reporter{
-			Dst: os.Stdout,
-		}}
+		&buildReporter,
+	}
 
 	if c.JUnit.Enabled {
 		reps = append(reps, &junit.Reporter{

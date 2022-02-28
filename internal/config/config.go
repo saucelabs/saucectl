@@ -195,11 +195,15 @@ func Describe(cfgPath string) (TypeDef, error) {
 
 // ExpandEnv expands environment variables inside metadata fields.
 func (m *Metadata) ExpandEnv() {
-	m.Build = os.ExpandEnv(m.Build)
+	if m.Build == "" {
+		now := time.Now()
+		m.Build = fmt.Sprintf("build-%s", now.Format(time.RFC3339))
+	} else {
+		m.Build = os.ExpandEnv(m.Build)
+	}
 	for i, v := range m.Tags {
 		m.Tags[i] = os.ExpandEnv(v)
 	}
-
 }
 
 // StandardizeVersionFormat remove the leading v in version to ensure reliable comparisons.
