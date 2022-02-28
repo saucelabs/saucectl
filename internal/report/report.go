@@ -16,6 +16,7 @@ type TestResult struct {
 	Artifacts  []Artifact    `json:"-"`
 	Origin     string        `json:"origin"`
 	Attempts   int           `json:"attempts"`
+	RDC        bool          `json:"-"`
 }
 
 // ArtifactType represents the type of assets (e.g. a junit report). Semantically similar to Content-Type.

@@ -18,6 +18,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/ryanuber/go-glob"
 
+	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -508,4 +509,34 @@ func (c *Client) GetVirtualDevices(ctx context.Context, kind string) ([]vmd.Virt
 		return dev[i].Name < dev[j].Name
 	})
 	return dev, nil
+}
+
+func (c *Client) GetBuildID(ctx context.Context, jobID string, buildSource build.BuildSource) (string, error) {
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v2/builds/%s/jobs/%s/build/", c.URL, buildSource, jobID), nil)
+	if err != nil {
+		return "", err
+	}
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	r, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := c.HTTPClient.Do(r)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
+	}
+
+	var br build.Build
+	if err := json.NewDecoder(resp.Body).Decode(&br); err != nil {
+		return "", err
+	}
+
+	return br.ID, nil
 }
