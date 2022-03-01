@@ -2,6 +2,7 @@ package saucecloud
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -79,10 +80,11 @@ func (r *EspressoRunner) runSuites(appFileURI string, testAppFileURI string, oth
 	jobsCount := r.calculateJobsCount(r.Project.Suites)
 	go func() {
 		for _, s := range r.Project.Suites {
-			// Automatically apply ShardIndex if not specified
-			if s.TestOptions.NumShards > 0 {
-				for i := 0; i < s.TestOptions.NumShards; i++ {
-					s.TestOptions.ShardIndex = i
+			numShards, _ := getNumShardsAndShardIndex(s.TestOptions)
+			// Automatically apply ShardIndex if numShards is defined
+			if numShards > 0 {
+				for i := 0; i < numShards; i++ {
+					s.TestOptions["shardIndex"] = i
 					for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
 						log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
 						r.startJob(jobOpts, s, appFileURI, testAppFileURI, otherAppsURIs, c)
@@ -139,28 +141,31 @@ func enumerateDevicesAndEmulators(devices []config.Device, emulators []config.Em
 	return configs
 }
 
+// getNumShardsAndShardIndex extracts numShards and shardIndex from testOptions.
+func getNumShardsAndShardIndex(testOptions map[string]interface{}) (int, int) {
+	outNumShards := 0
+	outShardIndex := 0
+	numShards, hasNumShards := testOptions["numShards"]
+	shardIndex, hasShardIndex := testOptions["shardIndex"]
+	if hasNumShards {
+		if v, err := strconv.Atoi(fmt.Sprintf("%v", numShards)); err == nil {
+			outNumShards = v
+		}
+	}
+	if hasShardIndex {
+		if v, err := strconv.Atoi(fmt.Sprintf("%v", shardIndex)); err == nil {
+			outShardIndex = v
+		}
+	}
+	return outNumShards, outShardIndex
+}
+
 // startJob add the job to the list for the workers.
 func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Suite, appFileURI, testAppFileURI string, otherAppsURIs []string, d deviceConfig) {
-	jto := job.TestOptions{
-		NotClass:      s.TestOptions.NotClass,
-		Class:         s.TestOptions.Class,
-		Annotation:    s.TestOptions.Annotation,
-		NotAnnotation: s.TestOptions.NotAnnotation,
-		Size:          s.TestOptions.Size,
-		Package:       s.TestOptions.Package,
-		NotPackage:    s.TestOptions.NotPackage,
-	}
 	displayName := s.Name
-	if s.TestOptions.NumShards > 0 {
-		jto.NumShards = &s.TestOptions.NumShards
-		jto.ShardIndex = &s.TestOptions.ShardIndex
-		displayName = fmt.Sprintf("%s (shard %d/%d)", displayName, *jto.ShardIndex+1, *jto.NumShards)
-	}
-	if s.TestOptions.ClearPackageData {
-		jto.ClearPackageData = &s.TestOptions.ClearPackageData
-	}
-	if s.TestOptions.UseTestOrchestrator {
-		jto.UseTestOrchestrator = &s.TestOptions.UseTestOrchestrator
+	numShards, shardIndex := getNumShardsAndShardIndex(s.TestOptions)
+	if numShards > 0 {
+		displayName = fmt.Sprintf("%s (shard %d/%d)", displayName, shardIndex+1, numShards)
 	}
 
 	jobOpts <- job.StartOptions{
@@ -186,7 +191,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 			Parent: r.Project.Sauce.Tunnel.Owner,
 		},
 		Experiments: r.Project.Sauce.Experiments,
-		TestOptions: jto,
+		TestOptions: s.TestOptions,
 		Attempt:     0,
 		Retries:     r.Project.Sauce.Retries,
 
@@ -202,8 +207,9 @@ func (r *EspressoRunner) calculateJobsCount(suites []espresso.Suite) int {
 	total := 0
 	for _, s := range suites {
 		jobs := len(enumerateDevicesAndEmulators(s.Devices, s.Emulators))
-		if s.TestOptions.NumShards > 0 {
-			jobs *= s.TestOptions.NumShards
+		numShards, _ := getNumShardsAndShardIndex(s.TestOptions)
+		if numShards > 0 {
+			jobs *= numShards
 		}
 		total += jobs
 	}
