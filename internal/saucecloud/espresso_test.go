@@ -58,8 +58,8 @@ func TestEspressoRunner_CalculateJobCount(t *testing.T) {
 			suites: []espresso.Suite{
 				{
 					Name: "first suite",
-					TestOptions: espresso.TestOptions{
-						NumShards: 3,
+					TestOptions: map[string]interface{}{
+						"numShards": 3,
 					},
 					Emulators: []config.Emulator{
 						{
@@ -74,8 +74,8 @@ func TestEspressoRunner_CalculateJobCount(t *testing.T) {
 				},
 				{
 					Name: "second suite",
-					TestOptions: espresso.TestOptions{
-						NumShards: 3,
+					TestOptions: map[string]interface{}{
+						"numShards": 3,
 					},
 					Emulators: []config.Emulator{
 						{
@@ -171,8 +171,8 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 							PlatformVersions: []string{"11.0"},
 						},
 					},
-					TestOptions: espresso.TestOptions{
-						NotAnnotation: "my.annotation",
+					TestOptions: map[string]interface{}{
+						"notAnnotation": "my.annotation",
 					},
 				},
 			},
@@ -185,5 +185,5 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, cnt, 0)
 	assert.Equal(t, "landscape", startOpts.DeviceOrientation)
-	assert.Equal(t, "my.annotation", startOpts.TestOptions.NotAnnotation)
+	assert.Equal(t, "my.annotation", startOpts.TestOptions["notAnnotation"])
 }

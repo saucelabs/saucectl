@@ -122,7 +122,7 @@
             "dependencies": {
               "clearPackageData": ["useTestOrchestrator"]
             },
-            "additionalProperties": false
+            "additionalProperties": true
           },
           "emulators": {
             "description": "Defines details for running this suite on virtual devices using an emulator.",

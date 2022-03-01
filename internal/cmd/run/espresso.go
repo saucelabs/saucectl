@@ -160,6 +160,11 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 	return r.RunProject()
 }
 
+func hasKey(testOptions map[string]interface{}, key string) bool {
+	_, ok := testOptions[key]
+	return ok
+}
+
 func applyEspressoFlags(p *espresso.Project, flags espressoFlags) error {
 	if gFlags.selectedSuite != "" {
 		if err := espresso.FilterSuites(p, gFlags.selectedSuite); err != nil {
@@ -168,15 +173,15 @@ func applyEspressoFlags(p *espresso.Project, flags espressoFlags) error {
 	}
 
 	if p.Suite.Name == "" {
-		isErr := len(p.Suite.TestOptions.Class) != 0 ||
-			len(p.Suite.TestOptions.NotClass) != 0 ||
-			p.Suite.TestOptions.Package != "" ||
-			p.Suite.TestOptions.NotPackage != "" ||
-			p.Suite.TestOptions.Size != "" ||
-			p.Suite.TestOptions.Annotation != "" ||
-			p.Suite.TestOptions.NotAnnotation != "" ||
-			p.Suite.TestOptions.NumShards != 0 ||
-			p.Suite.TestOptions.UseTestOrchestrator ||
+		isErr := hasKey(p.Suite.TestOptions, "class") ||
+			hasKey(p.Suite.TestOptions, "notClass") ||
+			hasKey(p.Suite.TestOptions, "package") ||
+			hasKey(p.Suite.TestOptions, "notPackage") ||
+			hasKey(p.Suite.TestOptions, "size") ||
+			hasKey(p.Suite.TestOptions, "annotation") ||
+			hasKey(p.Suite.TestOptions, "notAnnotation") ||
+			hasKey(p.Suite.TestOptions, "numShards") ||
+			hasKey(p.Suite.TestOptions, "useTestOrchestrator") ||
 			flags.Device.Changed ||
 			flags.Emulator.Changed
 

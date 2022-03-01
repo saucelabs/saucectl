@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -64,11 +65,11 @@ type TestOptions struct {
 
 // Suite represents the espresso test suite configuration.
 type Suite struct {
-	Name        string            `yaml:"name,omitempty" json:"name"`
-	Devices     []config.Device   `yaml:"devices,omitempty" json:"devices"`
-	Emulators   []config.Emulator `yaml:"emulators,omitempty" json:"emulators"`
-	TestOptions TestOptions       `yaml:"testOptions,omitempty" json:"testOptions"`
-	Timeout     time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
+	Name        string                 `yaml:"name,omitempty" json:"name"`
+	Devices     []config.Device        `yaml:"devices,omitempty" json:"devices"`
+	Emulators   []config.Emulator      `yaml:"emulators,omitempty" json:"emulators"`
+	TestOptions map[string]interface{} `yaml:"testOptions,omitempty" json:"testOptions"`
+	Timeout     time.Duration          `yaml:"timeout,omitempty" json:"timeout"`
 }
 
 // Android constant
@@ -220,8 +221,9 @@ func FilterSuites(p *Project, suiteName string) error {
 
 func IsSharded(suites []Suite) bool {
 	for _, suite := range suites {
-		if suite.TestOptions.NumShards > 0 {
-			return true
+		if v, ok := suite.TestOptions["numShards"]; ok {
+			val, err := strconv.Atoi(fmt.Sprintf("%v", v))
+			return err == nil && val > 0
 		}
 	}
 	return false
