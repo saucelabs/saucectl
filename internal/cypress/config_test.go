@@ -1,7 +1,9 @@
 package cypress
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"reflect"
 	"testing"
 
@@ -206,6 +208,126 @@ func Test_loadCypressConfiguration(t *testing.T) {
 			} else {
 				assert.Nil(t, err, "ValidateCypressConfiguration() error = %v, wanted no-error", err)
 			}
+		})
+	}
+}
+
+func Test_shardSuites(t *testing.T) {
+	dir := fs.NewDir(t, "cypress",
+		fs.WithMode(0755),
+		fs.WithDir("cypress",
+			fs.WithMode(0755),
+			fs.WithDir("integration",
+				fs.WithMode(0755),
+				fs.WithFile("file1.spec.js", "dummy", fs.WithMode(0644)),
+				fs.WithFile("file2.spec.js", "dummy", fs.WithMode(0644)),
+			)))
+
+	defer dir.Remove()
+
+	oldPwd, _ := os.Getwd()
+	defer os.Chdir(oldPwd)
+	os.Chdir(dir.Path())
+
+	type args struct {
+		cfg    Config
+		suites []Suite
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []Suite
+		wantErr error
+	}{
+		{
+			name: "Single suite",
+			args: args{
+				cfg: Config{
+					Path:              ".",
+					IntegrationFolder: "cypress/integration/",
+				},
+				suites: []Suite{
+					{
+						Name: "Demo #1",
+						Config: SuiteConfig{
+							TestFiles: []string{"**/*.spec.js"},
+						},
+						Shard: "none",
+					},
+				},
+			},
+			want: []Suite{
+				{
+					Name: "Demo #1",
+					Config: SuiteConfig{
+						TestFiles: []string{"**/*.spec.js"},
+					},
+					Shard: "none",
+				},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "Sharded suite",
+			args: args{
+				cfg: Config{
+					Path:              ".",
+					IntegrationFolder: "cypress/integration/",
+				},
+				suites: []Suite{
+					{
+						Name: "Demo #1",
+						Config: SuiteConfig{
+							TestFiles: []string{"**/*.spec.js"},
+						},
+						Shard: "spec",
+					},
+				},
+			},
+			want: []Suite{
+				{
+					Name: "Demo #1 - file1.spec.js",
+					Config: SuiteConfig{
+						TestFiles: []string{"file1.spec.js"},
+					},
+					Shard: "spec",
+				},
+				{
+					Name: "Demo #1 - file2.spec.js",
+					Config: SuiteConfig{
+						TestFiles: []string{"file2.spec.js"},
+					},
+					Shard: "spec",
+				},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "Sharded suite - no match",
+			args: args{
+				cfg: Config{
+					Path:              ".",
+					IntegrationFolder: "cypress/integration/",
+				},
+				suites: []Suite{
+					{
+						Name: "Demo #1",
+						Config: SuiteConfig{
+							TestFiles: []string{"**/*.fail.js"},
+						},
+						Shard: "spec",
+					},
+				},
+			},
+			want:    nil,
+			wantErr: errors.New("suite 'Demo #1' patterns has no matching"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := shardSuites(tt.args.cfg, tt.args.suites)
+			assert.Equal(t, tt.wantErr, err, "err for shardSuites(%v, %v)", tt.args.cfg, tt.args.suites)
+			assert.Equalf(t, tt.want, got, "shardSuites(%v, %v)", tt.args.cfg, tt.args.suites)
 		})
 	}
 }
