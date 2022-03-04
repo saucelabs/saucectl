@@ -120,6 +120,23 @@ func TestShardSuites(t *testing.T) {
 				{Name: "suite #1 - tests/dir3/example3.tests.js", Mode: "", Timeout: 0, PlaywrightVersion: "", TestMatch: []string{"tests/dir3/example3.tests.js"}, PlatformName: "", Params: SuiteConfig{BrowserName: "", Headed: false, GlobalTimeout: 0, Timeout: 0, Grep: "", RepeatEach: 0, Retries: 0, MaxFailures: 0, Shard: "", HeadFul: false, ScreenshotOnFailure: false, SlowMo: 0, Video: false}, ScreenResolution: "", Env: map[string]string(nil), NumShards: 0, Shard: "spec"},
 			},
 		},
+		{
+			name: "split by spec - no match",
+			p: &Project{
+				RootDir: dir.Path(),
+				Suites: []Suite{
+					{
+						Name:      "suite #1",
+						Shard:     "spec",
+						TestMatch: []string{"failing.*.js"},
+					},
+				}},
+			wantErr:        true,
+			expectedErrMsg: "suite 'suite #1' patterns has no matching",
+			expectedSuites: []Suite{
+				{Name: "suite #1", Mode: "", Timeout: 0, PlaywrightVersion: "", TestMatch: []string{"tests/dir1/example1.tests.js"}, PlatformName: "", Params: SuiteConfig{BrowserName: "", Headed: false, GlobalTimeout: 0, Timeout: 0, Grep: "", RepeatEach: 0, Retries: 0, MaxFailures: 0, Shard: "", HeadFul: false, ScreenshotOnFailure: false, SlowMo: 0, Video: false}, ScreenResolution: "", Env: map[string]string(nil), NumShards: 0, Shard: "spec"},
+			},
+		},
 	}
 
 	for _, tt := range testCases {
