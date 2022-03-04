@@ -142,5 +142,5 @@ func PathTooLongForArchive(path string) {
 // SuiteSplitNoMatch prints the error message due to no files matching pattern found.
 func SuiteSplitNoMatch(suiteName, path string, pattern []string) {
 	color.Red(fmt.Sprintf("\nNo matching files found for suite '%s'\n", suiteName))
-	fmt.Printf("saucectl looked for the %s in %s\n\n", strings.Join(pattern, ","), path)
+	fmt.Printf("saucectl looked for %s in %s\n\n", strings.Join(pattern, ","), path)
 }
