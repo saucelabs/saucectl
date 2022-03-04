@@ -377,7 +377,7 @@ func shardSuites(cfg Config, suites []Suite) ([]Suite, error) {
 
 			if !hasMatchingFiles {
 				msg.SuiteSplitNoMatch(s.Name, absIntFolder, s.Config.TestFiles)
-				return fmt.Errorf("suite '%s' patterns has no matching", s.Name)
+				return fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
 			}
 
 			return nil

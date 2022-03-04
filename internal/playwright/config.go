@@ -252,7 +252,7 @@ func shardSuitesBySpec(rootDir string, suites []Suite) ([]Suite, error) {
 
 			if !hasMatchingFiles {
 				msg.SuiteSplitNoMatch(s.Name, rootDir, s.TestMatch)
-				return fmt.Errorf("suite '%s' patterns has no matching", s.Name)
+				return fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
 			}
 
 			return nil

@@ -252,7 +252,7 @@ func Test_shardSuites_withSplitNoMatch(t *testing.T) {
 	// Absolute path
 	suites, err = shardSuites(rootDir, origSuites)
 
-	assert.Equal(t, err, errors.New("suite 'Demo Suite' patterns has no matching"))
+	assert.Equal(t, err, errors.New("suite 'Demo Suite' patterns have no matching files"))
 	assert.Equal(t, expectedSuites, suites)
 
 	// Relative path
@@ -261,6 +261,6 @@ func Test_shardSuites_withSplitNoMatch(t *testing.T) {
 	}
 	suites, err = shardSuites(".", origSuites)
 
-	assert.Equal(t, err, errors.New("suite 'Demo Suite' patterns has no matching"))
+	assert.Equal(t, err, errors.New("suite 'Demo Suite' patterns have no matching files"))
 	assert.Equal(t, expectedSuites, suites)
 }

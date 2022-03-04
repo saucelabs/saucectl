@@ -320,7 +320,7 @@ func Test_shardSuites(t *testing.T) {
 				},
 			},
 			want:    nil,
-			wantErr: errors.New("suite 'Demo #1' patterns has no matching"),
+			wantErr: errors.New("suite 'Demo #1' patterns have no matching files"),
 		},
 	}
 	for _, tt := range tests {

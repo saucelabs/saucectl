@@ -132,7 +132,7 @@ func TestShardSuites(t *testing.T) {
 					},
 				}},
 			wantErr:        true,
-			expectedErrMsg: "suite 'suite #1' patterns has no matching",
+			expectedErrMsg: "suite 'suite #1' patterns have no matching files",
 			expectedSuites: []Suite{
 				{Name: "suite #1", Mode: "", Timeout: 0, PlaywrightVersion: "", TestMatch: []string{"tests/dir1/example1.tests.js"}, PlatformName: "", Params: SuiteConfig{BrowserName: "", Headed: false, GlobalTimeout: 0, Timeout: 0, Grep: "", RepeatEach: 0, Retries: 0, MaxFailures: 0, Shard: "", HeadFul: false, ScreenshotOnFailure: false, SlowMo: 0, Video: false}, ScreenResolution: "", Env: map[string]string(nil), NumShards: 0, Shard: "spec"},
 			},
