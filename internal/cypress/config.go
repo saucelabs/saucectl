@@ -339,6 +339,9 @@ func shardSuites(cfg Config, suites []Suite) ([]Suite, error) {
 			continue
 		}
 
+		// Use this value to check if saucectl found matching files.
+		hasMatchingFiles := false
+
 		if err := filepath.WalkDir(absIntFolder, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
 				return err
@@ -368,7 +371,13 @@ func shardSuites(cfg Config, suites []Suite) ([]Suite, error) {
 					replica.Name = fmt.Sprintf("%s - %s", s.Name, rel)
 					replica.Config.TestFiles = []string{rel}
 					shardedSuites = append(shardedSuites, replica)
+					hasMatchingFiles = true
 				}
+			}
+
+			if !hasMatchingFiles {
+				msg.SuiteSplitNoMatch(s.Name, absIntFolder, s.Config.TestFiles)
+				return fmt.Errorf("suite '%s' patterns has no matching", s.Name)
 			}
 
 			return nil

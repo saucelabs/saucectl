@@ -138,3 +138,9 @@ func PathTooLongForArchive(path string) {
 	fmt.Printf("Example: %s\n\n", path)
 	fmt.Printf("If you didn't mean to include those files, exclude them via the .sauceignore file.\nIf you need to include those files, then you have to shorten the filepath, for example, by renaming files, folders or avoid nesting files too deeply.\n\n")
 }
+
+// SuiteSplitNoMatch prints the error message due to no files matching pattern found.
+func SuiteSplitNoMatch(suiteName, path string, pattern []string) {
+	color.Red(fmt.Sprintf("\nNo matching files found for suite '%s'\n", suiteName))
+	fmt.Printf("saucectl looked for the %s in %s\n\n", strings.Join(pattern, ","), path)
+}
