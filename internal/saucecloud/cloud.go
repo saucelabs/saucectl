@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -74,6 +75,12 @@ type result struct {
 
 // ConsoleLogAsset represents job asset log file name.
 const ConsoleLogAsset = "console.log"
+
+// BaseDirLength represents the path length where project will be unpacked.
+const BaseDirLength = 53
+
+// MaxDirLength represents the maximum path length acceptable.
+const MaxDirLength = 255
 
 func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartOptions, chan result, error) {
 	jobOpts := make(chan job.StartOptions, maxRetries+1)
@@ -349,13 +356,40 @@ func (r CloudRunner) archiveAndUpload(project interface{}, folder string, saucei
 	return r.uploadProject(zipName, projectUpload)
 }
 
-func (r *CloudRunner) archiveProject(project interface{}, tempDir string, projectFolder string, sauceignoreFile string) (string, error) {
-	start := time.Now()
+func checkPathLength(projectFolder string, matcher sauceignore.Matcher) (string, error) {
+	exampleName := ""
+	maxLength := 0
+	if err := filepath.Walk(projectFolder, func(fileP string, info fs.FileInfo, err error) error {
+		if matcher.Match(strings.Split(fileP, string(os.PathSeparator)), info.IsDir()) {
+			return nil
+		}
+		if maxLength < len(fileP) {
+			exampleName = fileP
+			maxLength = len(fileP)
+		}
+		return nil
+	}); err != nil {
+		// When walk fails, we may not want to fail saucectl execution.
+		return "", nil
+	}
+	if BaseDirLength+maxLength > MaxDirLength {
+		return exampleName, errors.New("path too long")
+	}
+	return "", nil
+}
 
+func (r *CloudRunner) archiveProject(project interface{}, tempDir string, projectFolder string, sauceignoreFile string) (string, error) {
 	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
 		return "", err
 	}
+
+	if path, err := checkPathLength(projectFolder, matcher); err != nil {
+		msg.PathTooLongForArchive(path)
+		return "", err
+	}
+
+	start := time.Now()
 
 	zipName := filepath.Join(tempDir, "app.zip")
 	z, err := zip.NewFileWriter(zipName, matcher)

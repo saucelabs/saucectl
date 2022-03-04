@@ -2,6 +2,9 @@ package saucecloud
 
 import (
 	"context"
+	"errors"
+	"github.com/saucelabs/saucectl/internal/sauceignore"
+	"gotest.tools/v3/fs"
 	"os"
 	"os/exec"
 	"syscall"
@@ -277,4 +280,86 @@ func TestRunJobTimeoutRDC(t *testing.T) {
 	res := <-results
 	assert.Error(t, res.err, "suite 'dummy' has reached timeout")
 	assert.True(t, res.job.TimedOut)
+}
+
+func TestCheckPathLength(t *testing.T) {
+	dir := fs.NewDir(t, "passing",
+		fs.WithDir("failing-test",
+			fs.WithMode(0755),
+			fs.WithDir("bqRamRa7aqyg3mDeaP8zvx7fUs5m5vr74g9ecPyAUkk93MyeETA6hWjyhgsPGtNQS9WEwJpmswcCADYJs7y8t55FsP79TZw7Fy7x",
+				fs.WithMode(0755),
+				fs.WithDir("dR6y58AjgHCunQ6VtrbbsWyhdMXLtf7xUAvuwmx67sqDpDW2Ln6bYFX6tzK8xufHM9UJWT9KLENTF4UtYehwxbZev59rUtWNbW2k",
+					fs.WithMode(0755),
+					fs.WithFile("test.spec.js", "dummy-content", fs.WithMode(0644)),
+				),
+			),
+		),
+		fs.WithDir("passing-test",
+			fs.WithMode(0755),
+			fs.WithDir("dir1",
+				fs.WithMode(0755),
+				fs.WithDir("dir2",
+					fs.WithMode(0755),
+					fs.WithFile("test.spec.js", "dummy-content", fs.WithMode(0644)),
+				),
+			),
+		),
+	)
+	defer dir.Remove()
+
+	// Use created dir as referential
+	wd, _ := os.Getwd()
+	defer os.Chdir(wd)
+	os.Chdir(dir.Path())
+
+	type args struct {
+		projectFolder string
+		matcher       sauceignore.Matcher
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr error
+	}{
+		{
+			name: "Passing filepath",
+			args: args{
+				projectFolder: "passing-test",
+				matcher:       sauceignore.NewMatcher([]sauceignore.Pattern{}),
+			},
+			want:    "",
+			wantErr: nil,
+		},
+		{
+			name: "Failing filepath",
+			args: args{
+				projectFolder: "failing-test",
+				matcher:       sauceignore.NewMatcher([]sauceignore.Pattern{}),
+			},
+			want:    "failing-test/bqRamRa7aqyg3mDeaP8zvx7fUs5m5vr74g9ecPyAUkk93MyeETA6hWjyhgsPGtNQS9WEwJpmswcCADYJs7y8t55FsP79TZw7Fy7x/dR6y58AjgHCunQ6VtrbbsWyhdMXLtf7xUAvuwmx67sqDpDW2Ln6bYFX6tzK8xufHM9UJWT9KLENTF4UtYehwxbZev59rUtWNbW2k/test.spec.js",
+			wantErr: errors.New("path too long"),
+		},
+		{
+			name: "Excluding filepath",
+			args: args{
+				projectFolder: "failing-test",
+				matcher: sauceignore.NewMatcher([]sauceignore.Pattern{
+					{
+						"bqRamRa7aqyg3mDeaP8zvx7fUs5m5vr74g9ecPyAUkk93MyeETA6hWjyhgsPGtNQS9WEwJpmswcCADYJs7y8t55FsP79TZw7Fy7x",
+					},
+				}),
+			},
+			want:    "",
+			wantErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := checkPathLength(tt.args.projectFolder, tt.args.matcher)
+
+			assert.Equalf(t, tt.want, got, "checkPathLength(%v, %v)", tt.args.projectFolder, tt.args.matcher)
+			assert.Equalf(t, tt.wantErr, err, "checkPathLength(%v, %v)", tt.args.projectFolder, tt.args.matcher)
+		})
+	}
 }
