@@ -136,5 +136,5 @@ func IgnoredNpmPackagesMsg(framework string, installedVersion string, ignoredPac
 func PathTooLongForArchive(path string) {
 	color.Red("\nSome of your filepaths are too long (200 char limit) !\n\n")
 	fmt.Printf("Example: %s\n\n", path)
-	fmt.Printf("If you didn't mean to include those files, exclude them via the .sauceignore file.\nIf you need to include those files, then you have to shorten the filepath, for example, by renaming files, folders or avoid nesting files too deeply.\n")
+	fmt.Printf("If you didn't mean to include those files, exclude them via the .sauceignore file.\nIf you need to include those files, then you have to shorten the filepath, for example, by renaming files, folders or avoid nesting files too deeply.\n\n")
 }
