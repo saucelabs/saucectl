@@ -77,6 +77,7 @@ type result struct {
 const ConsoleLogAsset = "console.log"
 
 // BaseFilepathLength represents the path length where project will be unpacked.
+// Example: "D:\sauce-playwright-runner\1.12.0\bundle\__project__\"
 const BaseFilepathLength = 53
 
 // MaxFilepathLength represents the maximum path length acceptable.
