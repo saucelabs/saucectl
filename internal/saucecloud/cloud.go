@@ -76,11 +76,11 @@ type result struct {
 // ConsoleLogAsset represents job asset log file name.
 const ConsoleLogAsset = "console.log"
 
-// BaseDirLength represents the path length where project will be unpacked.
-const BaseDirLength = 53
+// BaseFilepathLength represents the path length where project will be unpacked.
+const BaseFilepathLength = 53
 
-// MaxDirLength represents the maximum path length acceptable.
-const MaxDirLength = 255
+// MaxFilepathLength represents the maximum path length acceptable.
+const MaxFilepathLength = 255
 
 func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartOptions, chan result, error) {
 	jobOpts := make(chan job.StartOptions, maxRetries+1)
@@ -372,7 +372,7 @@ func checkPathLength(projectFolder string, matcher sauceignore.Matcher) (string,
 		// When walk fails, we may not want to fail saucectl execution.
 		return "", nil
 	}
-	if BaseDirLength+maxLength > MaxDirLength {
+	if BaseFilepathLength+maxLength > MaxFilepathLength {
 		return exampleName, errors.New("path too long")
 	}
 	return "", nil
