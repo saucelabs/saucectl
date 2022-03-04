@@ -346,7 +346,7 @@ func TestCheckPathLength(t *testing.T) {
 				projectFolder: "failing-test",
 				matcher: sauceignore.NewMatcher([]sauceignore.Pattern{
 					{
-						"bqRamRa7aqyg3mDeaP8zvx7fUs5m5vr74g9ecPyAUkk93MyeETA6hWjyhgsPGtNQS9WEwJpmswcCADYJs7y8t55FsP79TZw7Fy7x",
+						P: "bqRamRa7aqyg3mDeaP8zvx7fUs5m5vr74g9ecPyAUkk93MyeETA6hWjyhgsPGtNQS9WEwJpmswcCADYJs7y8t55FsP79TZw7Fy7x",
 					},
 				}),
 			},
