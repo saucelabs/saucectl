@@ -3,6 +3,7 @@ package xcuitest
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -67,6 +68,15 @@ func FromFile(cfgPath string) (Project, error) {
 	if err := config.Unmarshal(cfgPath, &p); err != nil {
 		return p, err
 	}
+
+	p.Xcuitest.App = os.ExpandEnv(p.Xcuitest.App)
+	p.Xcuitest.TestApp = os.ExpandEnv(p.Xcuitest.TestApp)
+
+	var otherApps []string
+	for _, o := range p.Xcuitest.OtherApps {
+		otherApps = append(otherApps, os.ExpandEnv(o))
+	}
+	p.Xcuitest.OtherApps = otherApps
 
 	p.ConfigFilePath = cfgPath
 
