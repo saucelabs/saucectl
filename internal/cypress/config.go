@@ -353,6 +353,10 @@ func shardSuites(cfg Config, suites []Suite) ([]Suite, error) {
 
 			// Normalize path separators, since the target execution environment may not support backslashes.
 			pathSlashes := filepath.ToSlash(path)
+			pathSlashes, err = filepath.Rel(absIntFolder, pathSlashes)
+			if err != nil {
+				return fmt.Errorf("file '%s' is not relative to %s: %s", pathSlashes, absIntFolder, err)
+			}
 
 			for _, pattern := range s.Config.TestFiles {
 				patternSlashes := filepath.ToSlash(pattern)

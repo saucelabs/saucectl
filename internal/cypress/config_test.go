@@ -219,6 +219,18 @@ func Test_shardSuites(t *testing.T) {
 			fs.WithMode(0755),
 			fs.WithDir("integration",
 				fs.WithMode(0755),
+				fs.WithDir("a",
+					fs.WithMode(0755),
+					fs.WithFile("todo.spec.js", "dummy", fs.WithMode(0644)),
+					fs.WithDir("b",
+						fs.WithMode(0755),
+						fs.WithFile("todo.spec.js", "dummy", fs.WithMode(0644)),
+						fs.WithDir("c",
+							fs.WithMode(0755),
+							fs.WithFile("todo.spec.js", "dummy", fs.WithMode(0644)),
+						),
+					),
+				),
 				fs.WithFile("file1.spec.js", "dummy", fs.WithMode(0644)),
 				fs.WithFile("file2.spec.js", "dummy", fs.WithMode(0644)),
 			)))
@@ -286,6 +298,27 @@ func Test_shardSuites(t *testing.T) {
 			},
 			want: []Suite{
 				{
+					Name: "Demo #1 - a/b/c/todo.spec.js",
+					Config: SuiteConfig{
+						TestFiles: []string{"a/b/c/todo.spec.js"},
+					},
+					Shard: "spec",
+				},
+				{
+					Name: "Demo #1 - a/b/todo.spec.js",
+					Config: SuiteConfig{
+						TestFiles: []string{"a/b/todo.spec.js"},
+					},
+					Shard: "spec",
+				},
+				{
+					Name: "Demo #1 - a/todo.spec.js",
+					Config: SuiteConfig{
+						TestFiles: []string{"a/todo.spec.js"},
+					},
+					Shard: "spec",
+				},
+				{
 					Name: "Demo #1 - file1.spec.js",
 					Config: SuiteConfig{
 						TestFiles: []string{"file1.spec.js"},
@@ -321,6 +354,48 @@ func Test_shardSuites(t *testing.T) {
 			},
 			want:    []Suite{},
 			wantErr: errors.New("suite 'Demo #1' patterns have no matching files"),
+		},
+		{
+			name: "Sharded with hard prefix",
+			args: args{
+				cfg: Config{
+					Path:              ".",
+					IntegrationFolder: "cypress/integration/",
+				},
+				suites: []Suite{
+					{
+						Name: "Demo #1",
+						Config: SuiteConfig{
+							TestFiles: []string{"a/**/todo.spec.js"},
+						},
+						Shard: "spec",
+					},
+				},
+			},
+			want: []Suite{
+				{
+					Name: "Demo #1 - a/b/c/todo.spec.js",
+					Config: SuiteConfig{
+						TestFiles: []string{"a/b/c/todo.spec.js"},
+					},
+					Shard: "spec",
+				},
+				{
+					Name: "Demo #1 - a/b/todo.spec.js",
+					Config: SuiteConfig{
+						TestFiles: []string{"a/b/todo.spec.js"},
+					},
+					Shard: "spec",
+				},
+				{
+					Name: "Demo #1 - a/todo.spec.js",
+					Config: SuiteConfig{
+						TestFiles: []string{"a/todo.spec.js"},
+					},
+					Shard: "spec",
+				},
+			},
+			wantErr: nil,
 		},
 	}
 	for _, tt := range tests {
