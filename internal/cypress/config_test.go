@@ -319,7 +319,7 @@ func Test_shardSuites(t *testing.T) {
 					},
 				},
 			},
-			want:    nil,
+			want:    []Suite{},
 			wantErr: errors.New("suite 'Demo #1' patterns have no matching files"),
 		},
 	}
