@@ -46,9 +46,8 @@ func SplitTestFiles(files []string, concurrency int) [][]string {
 		count++
 	}
 	// if filecount cannot be devided by concurrency, then there are some files left. Merge left files into the last group
-	for i < fileCount {
-		groups[concurrency-1] = append(groups[concurrency-1], files[i])
-		i++
+	if i < fileCount {
+		groups[concurrency-1] = append(groups[concurrency-1], files[i:fileCount-1]...)
 	}
 
 	return groups
