@@ -1,10 +1,19 @@
 package fpath
 
 import (
-	"github.com/rs/zerolog/log"
+	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
+
+	"github.com/bmatcuk/doublestar/v4"
+	"github.com/rs/zerolog/log"
+)
+
+const (
+	FindByRegex        = "regex"
+	FindByShellPattern = "shellpattern"
 )
 
 // Globs returns the names of all files matching the glob patterns.
@@ -111,4 +120,54 @@ func DeepCopy(src string, target string) error {
 	}
 
 	return nil
+}
+
+// FindFiles returns file lists find by shell pattern
+func FindFiles(rootDir string, sources []string, matchBy string) ([]string, error) {
+	files := []string{}
+	if err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		// Normalize path separators, since the target execution environment may not support backslashes.
+		pathSlashes := filepath.ToSlash(path)
+		relSlashes, err := filepath.Rel(rootDir, pathSlashes)
+		if err != nil {
+			return err
+		}
+
+		for _, pattern := range sources {
+			patternSlashes := filepath.ToSlash(pattern)
+			var ok bool
+			var err error
+			if matchBy == FindByShellPattern {
+				ok, err = doublestar.Match(patternSlashes, relSlashes)
+			}
+			if matchBy == FindByRegex {
+				ok, err = regexp.MatchString(patternSlashes, relSlashes)
+			}
+			if err != nil {
+				return fmt.Errorf("test file pattern '%s' is not supported: %s", patternSlashes, err)
+			}
+
+			if ok {
+				rel, err := filepath.Rel(rootDir, path)
+				if err != nil {
+					return err
+				}
+				rel = filepath.ToSlash(rel)
+				files = append(files, rel)
+			}
+		}
+		return nil
+	}); err != nil {
+		return files, err
+	}
+
+	return files, nil
 }

@@ -3,14 +3,13 @@ package playwright
 import (
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
-	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 )
@@ -180,11 +179,11 @@ func ShardSuites(p *Project) error {
 
 	// either sharding by NumShards or by Shard will be applied
 	p.Suites = shardSuitesByNumShards(p.Suites)
-	shardedBySpec, err := shardSuitesBySpec(p.RootDir, p.Suites)
+	shardedSuites, err := shardInSuites(p.RootDir, p.Suites, p.Sauce.Concurrency)
 	if err != nil {
 		return err
 	}
-	p.Suites = shardedBySpec
+	p.Suites = shardedSuites
 
 	return nil
 }
@@ -200,64 +199,39 @@ func checkShards(p *Project) error {
 	return nil
 }
 
-// shardSuitesBySpec divides suites into shards based on the pattern.
-func shardSuitesBySpec(rootDir string, suites []Suite) ([]Suite, error) {
+// shardInSuites divides suites into shards based on the pattern.
+func shardInSuites(rootDir string, suites []Suite, concurrencyCount int) ([]Suite, error) {
 	var shardedSuites []Suite
 
 	for _, s := range suites {
-		if s.Shard != "spec" {
+		if s.Shard != "spec" && s.Shard != "concurrency" {
 			shardedSuites = append(shardedSuites, s)
 			continue
 		}
-
-		// Use this value to check if saucectl found matching files.
-		hasMatchingFiles := false
-
-		if err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-
-			if d.IsDir() {
-				return nil
-			}
-
-			// Normalize path separators, since the target execution environment may not support backslashes.
-			pathSlashes := filepath.ToSlash(path)
-			relSlashes, err := filepath.Rel(rootDir, pathSlashes)
-			if err != nil {
-				return err
-			}
-
-			for _, pattern := range s.TestMatch {
-				patternSlashes := filepath.ToSlash(pattern)
-				ok, err := regexp.MatchString(patternSlashes, relSlashes)
-				if err != nil {
-					return fmt.Errorf("test file pattern '%s' is not supported: %s", patternSlashes, err)
-				}
-
-				if ok {
-					rel, err := filepath.Rel(rootDir, path)
-					if err != nil {
-						return err
-					}
-					rel = filepath.ToSlash(rel)
-					replica := s
-					replica.Name = fmt.Sprintf("%s - %s", s.Name, rel)
-					replica.TestMatch = []string{rel}
-					shardedSuites = append(shardedSuites, replica)
-					hasMatchingFiles = true
-				}
-			}
-
-			return nil
-		}); err != nil {
-			return shardedSuites, err
+		testFiles, err := fpath.FindFiles(rootDir, s.TestMatch, fpath.FindByRegex)
+		if err != nil {
+			return []Suite{}, err
 		}
-
-		if !hasMatchingFiles {
+		if len(testFiles) == 0 {
 			msg.SuiteSplitNoMatch(s.Name, rootDir, s.TestMatch)
 			return []Suite{}, fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
+		}
+		if s.Shard == "spec" {
+			for _, f := range testFiles {
+				replica := s
+				replica.Name = fmt.Sprintf("%s - %s", s.Name, f)
+				replica.TestMatch = []string{f}
+				shardedSuites = append(shardedSuites, replica)
+			}
+		}
+		if s.Shard == "concurrency" {
+			groups := concurrency.SplitTestFiles(testFiles, concurrencyCount)
+			for i, group := range groups {
+				replica := s
+				replica.Name = fmt.Sprintf("%s - concurrency %d", s.Name, i+1)
+				replica.TestMatch = group
+				shardedSuites = append(shardedSuites, replica)
+			}
 		}
 	}
 	return shardedSuites, nil

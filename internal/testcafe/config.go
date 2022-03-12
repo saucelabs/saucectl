@@ -3,16 +3,14 @@ package testcafe
 import (
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/bmatcuk/doublestar/v4"
-
+	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 )
@@ -251,7 +249,7 @@ func Validate(p *Project) error {
 	}
 
 	var err error
-	p.Suites, err = shardSuites(p.RootDir, p.Suites)
+	p.Suites, err = shardSuites(p.RootDir, p.Suites, p.Sauce.Concurrency)
 
 	return err
 }
@@ -277,61 +275,41 @@ func SplitSuites(p Project) (Project, Project) {
 }
 
 // shardSuites divides suites into shards based on the pattern.
-func shardSuites(rootDir string, suites []Suite) ([]Suite, error) {
+func shardSuites(rootDir string, suites []Suite, concurrencyCount int) ([]Suite, error) {
 	var shardedSuites []Suite
 
 	for _, s := range suites {
-		if s.Shard != "spec" {
+		if s.Shard != "spec" && s.Shard != "concurrency" {
 			shardedSuites = append(shardedSuites, s)
 			continue
 		}
-
-		// Use this value to check if saucectl found matching files.
-		hasMatchingFiles := false
-
-		if err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-
-			if d.IsDir() {
-				return nil
-			}
-
-			// Normalize path separators, since the target execution environment may not support backslashes.
-			pathSlashes := filepath.ToSlash(path)
-			relSlashes, err := filepath.Rel(rootDir, pathSlashes)
-
-			for _, pattern := range s.Src {
-				patternSlashes := filepath.ToSlash(pattern)
-				ok, err := doublestar.Match(patternSlashes, relSlashes)
-				if err != nil {
-					return fmt.Errorf("test file pattern '%s' is not supported: %s", patternSlashes, err)
-				}
-
-				if ok {
-					rel, err := filepath.Rel(rootDir, path)
-					if err != nil {
-						return err
-					}
-					rel = filepath.ToSlash(rel)
-					replica := s
-					replica.Name = fmt.Sprintf("%s - %s", s.Name, rel)
-					replica.Src = []string{rel}
-					shardedSuites = append(shardedSuites, replica)
-					hasMatchingFiles = true
-				}
-			}
-			return nil
-		}); err != nil {
-			return shardedSuites, err
+		testFiles, err := fpath.FindFiles(rootDir, s.Src, fpath.FindByShellPattern)
+		if err != nil {
+			return []Suite{}, err
 		}
-
-		if !hasMatchingFiles {
+		if len(testFiles) == 0 {
 			msg.SuiteSplitNoMatch(s.Name, rootDir, s.Src)
 			return []Suite{}, fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
 		}
+		if s.Shard == "spec" {
+			for _, f := range testFiles {
+				replica := s
+				replica.Name = fmt.Sprintf("%s - %s", s.Name, f)
+				replica.Src = []string{f}
+				shardedSuites = append(shardedSuites, replica)
+			}
+		}
+		if s.Shard == "concurrency" {
+			groups := concurrency.SplitTestFiles(testFiles, concurrencyCount)
+			for i, group := range groups {
+				replica := s
+				replica.Name = fmt.Sprintf("%s - concurrency %d", s.Name, i+1)
+				replica.Src = group
+				shardedSuites = append(shardedSuites, replica)
+			}
+		}
 	}
+
 	return shardedSuites, nil
 }
 

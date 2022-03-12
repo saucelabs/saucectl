@@ -2,6 +2,7 @@ package concurrency
 
 import (
 	"context"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -21,4 +22,33 @@ func Min(r Reader, ccy int) int {
 	}
 
 	return ccy
+}
+
+// SplitTestFiles splits test files into groups to match concurrency
+func SplitTestFiles(files []string, concurrency int) [][]string {
+	if concurrency == 1 {
+		return [][]string{files}
+	}
+	groups := [][]string{}
+	fileCount := len(files)
+	if concurrency > fileCount {
+		concurrency = fileCount // if concurrency amount is bigger than fileCount, then run one file in one concurrency
+	}
+	groupLen := fileCount / concurrency
+	var count, i int
+	for count < concurrency {
+		group := []string{}
+		for j := i; j < fileCount && j < i+groupLen; j++ {
+			group = append(group, files[j])
+		}
+		groups = append(groups, group)
+		i += groupLen
+		count++
+	}
+	for i < fileCount {
+		groups[concurrency-1] = append(groups[concurrency-1], files[i])
+		i++
+	}
+
+	return groups
 }
