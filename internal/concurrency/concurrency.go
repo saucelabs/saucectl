@@ -29,26 +29,20 @@ func SplitTestFiles(files []string, concurrency int) [][]string {
 	if concurrency == 1 {
 		return [][]string{files}
 	}
-	groups := [][]string{}
-	fileCount := len(files)
-	if concurrency > fileCount {
-		concurrency = fileCount // if concurrency amount is bigger than fileCount, then run one testfile per concurrency
+	if concurrency > len(files) {
+		concurrency = len(files)
 	}
-	groupLen := fileCount / concurrency
-	var count, i int
-	for count < concurrency {
-		group := []string{}
-		for j := i; j < fileCount && j < i+groupLen; j++ {
-			group = append(group, files[j])
+	buckets := make([][]string, concurrency)
+	for i := 0; i < concurrency; i++ {
+		buckets[i] = make([]string, 0)
+	}
+	index := len(files) - 1
+	for index >= 0 {
+		for i := 0; index >= 0 && i < concurrency; i++ {
+			buckets[i] = append(buckets[i], files[index])
+			index--
 		}
-		groups = append(groups, group)
-		i += groupLen
-		count++
-	}
-	// if filecount cannot be devided by concurrency, then there are some files left. Merge left files into the last group
-	if i < fileCount {
-		groups[concurrency-1] = append(groups[concurrency-1], files[i:fileCount-1]...)
 	}
 
-	return groups
+	return buckets
 }
