@@ -98,7 +98,7 @@ func Test_SplitTestFiles(t *testing.T) {
 			expResult: [][]string{[]string{"1"}, []string{"2", "3"}},
 		},
 		{
-			name:      "concuurrency is equal to file count",
+			name:      "file count can be devidec by concurrency",
 			files:     []string{"1", "2", "3"},
 			count:     3,
 			expResult: [][]string{[]string{"1"}, []string{"2"}, []string{"3"}},

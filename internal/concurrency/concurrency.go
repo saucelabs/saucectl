@@ -32,7 +32,7 @@ func SplitTestFiles(files []string, concurrency int) [][]string {
 	groups := [][]string{}
 	fileCount := len(files)
 	if concurrency > fileCount {
-		concurrency = fileCount // if concurrency amount is bigger than fileCount, then run one file in one concurrency
+		concurrency = fileCount // if concurrency amount is bigger than fileCount, then run one testfile per concurrency
 	}
 	groupLen := fileCount / concurrency
 	var count, i int
@@ -45,6 +45,7 @@ func SplitTestFiles(files []string, concurrency int) [][]string {
 		i += groupLen
 		count++
 	}
+	// if filecount cannot be devided by concurrency, then there are some files left. Merge left files into the last group
 	for i < fileCount {
 		groups[concurrency-1] = append(groups[concurrency-1], files[i])
 		i++
