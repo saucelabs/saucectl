@@ -380,6 +380,7 @@
                   "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec or concurrency) so that they can easily run in parallel.",
                   "enum": [
                     "",
+                    "concurrency",
                     "spec"
                   ]
                 },
@@ -848,6 +849,7 @@
                   "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec or concurrency) so that they can easily run in parallel.",
                   "enum": [
                     "",
+                    "concurrency",
                     "spec"
                   ]
                 },
@@ -1148,6 +1150,7 @@
                   "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec or concurrency) so that they can easily run in parallel.",
                   "enum": [
                     "",
+                    "concurrency",
                     "spec"
                   ]
                 },
