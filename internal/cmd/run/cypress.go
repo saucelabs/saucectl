@@ -77,7 +77,7 @@ func NewCypressCmd() *cobra.Command {
 
 	// Misc
 	sc.String("rootDir", "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
-	sc.String("shard", "suite::shard", "", "Controls whether or not (and how) tests are sharded across multiple machines")
+	sc.String("shard", "suite::shard", "", "Controls whether or not (and how) tests are sharded across multiple machines, supported value: spec|concurrency")
 	sc.String("headless", "suite::headless", "", "Controls whether or not tests are run in headless mode (default: false)")
 
 	// NPM

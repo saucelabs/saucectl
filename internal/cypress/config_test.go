@@ -400,7 +400,7 @@ func Test_shardSuites(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := shardSuites(tt.args.cfg, tt.args.suites)
+			got, err := shardSuites(tt.args.cfg, tt.args.suites, 1)
 			assert.Equal(t, tt.wantErr, err, "err for shardSuites(%v, %v)", tt.args.cfg, tt.args.suites)
 			assert.Equalf(t, tt.want, got, "shardSuites(%v, %v)", tt.args.cfg, tt.args.suites)
 		})

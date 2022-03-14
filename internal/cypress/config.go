@@ -3,15 +3,15 @@ package cypress
 import (
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 	"unicode"
 
-	"github.com/bmatcuk/doublestar/v4"
+	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
@@ -303,8 +303,7 @@ func Validate(p *Project) error {
 		return err
 	}
 
-	p.Suites, err = shardSuites(cfg, p.Suites)
-
+	p.Suites, err = shardSuites(cfg, p.Suites, p.Sauce.Concurrency)
 	return err
 }
 
@@ -328,60 +327,39 @@ func SplitSuites(p Project) (Project, Project) {
 	return dockerProject, sauceProject
 }
 
-func shardSuites(cfg Config, suites []Suite) ([]Suite, error) {
-	absIntFolder := cfg.AbsIntegrationFolder()
-
+func shardSuites(cfg Config, suites []Suite, ccy int) ([]Suite, error) {
 	var shardedSuites []Suite
 	for _, s := range suites {
 		// Use the original suite if there is nothing to shard.
-		if s.Shard != "spec" {
+		if s.Shard != "spec" && s.Shard != "concurrency" {
 			shardedSuites = append(shardedSuites, s)
 			continue
 		}
-
-		// Use this value to check if saucectl found matching files.
-		hasMatchingFiles := false
-
-		if err := filepath.WalkDir(absIntFolder, func(path string, d fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-
-			if d.IsDir() {
-				return nil
-			}
-
-			// Normalize path separators, since the target execution environment may not support backslashes.
-			rel, err := filepath.Rel(absIntFolder, path)
-			if err != nil {
-				return fmt.Errorf("file '%s' is not relative to %s: %s", path, absIntFolder, err)
-			}
-			rel = filepath.ToSlash(rel)
-
-			for _, pattern := range s.Config.TestFiles {
-				patternSlashes := filepath.ToSlash(pattern)
-				ok, err := doublestar.Match(patternSlashes, rel)
-				if err != nil {
-					return fmt.Errorf("test file pattern '%s' is not supported: %s", patternSlashes, err)
-				}
-
-				if ok {
-					replica := s
-					replica.Name = fmt.Sprintf("%s - %s", s.Name, rel)
-					replica.Config.TestFiles = []string{rel}
-					shardedSuites = append(shardedSuites, replica)
-					hasMatchingFiles = true
-				}
-			}
-
-			return nil
-		}); err != nil {
+		testFiles, err := fpath.FindFiles(cfg.AbsIntegrationFolder(), s.Config.TestFiles, fpath.FindByShellPattern)
+		if err != nil {
 			return shardedSuites, err
 		}
-
-		if !hasMatchingFiles {
-			msg.SuiteSplitNoMatch(s.Name, absIntFolder, s.Config.TestFiles)
+		if len(testFiles) == 0 {
+			msg.SuiteSplitNoMatch(s.Name, cfg.AbsIntegrationFolder(), s.Config.TestFiles)
 			return []Suite{}, fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
+		}
+
+		if s.Shard == "spec" {
+			for _, f := range testFiles {
+				replica := s
+				replica.Name = fmt.Sprintf("%s - %s", s.Name, f)
+				replica.Config.TestFiles = []string{f}
+				shardedSuites = append(shardedSuites, replica)
+			}
+		}
+		if s.Shard == "concurrency" {
+			fileGroups := concurrency.SplitTestFiles(testFiles, ccy)
+			for i, group := range fileGroups {
+				replica := s
+				replica.Name = fmt.Sprintf("%s - %d/%d", s.Name, i+1, len(fileGroups))
+				replica.Config.TestFiles = group
+				shardedSuites = append(shardedSuites, replica)
+			}
 		}
 	}
 

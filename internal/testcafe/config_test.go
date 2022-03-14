@@ -2,11 +2,12 @@ package testcafe
 
 import (
 	"errors"
-	"github.com/stretchr/testify/assert"
-	"gotest.tools/v3/fs"
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/fs"
 )
 
 func Test_appleDeviceRegex(t *testing.T) {
@@ -183,7 +184,7 @@ func Test_shardSuites_withSplit(t *testing.T) {
 	var suites []Suite
 
 	// Absolute path
-	suites, err = shardSuites(rootDir, origSuites)
+	suites, err = shardSuites(rootDir, origSuites, 1)
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, expectedSuites, suites)
@@ -192,7 +193,7 @@ func Test_shardSuites_withSplit(t *testing.T) {
 	if err := os.Chdir(rootDir); err != nil {
 		t.Errorf("Unexpected error %s", err)
 	}
-	suites, err = shardSuites(".", origSuites)
+	suites, err = shardSuites(".", origSuites, 1)
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, expectedSuites, suites)
@@ -209,7 +210,7 @@ func Test_shardSuites_withoutSplit(t *testing.T) {
 	var suites []Suite
 
 	// Absolute path
-	suites, err = shardSuites("", origSuites)
+	suites, err = shardSuites("", origSuites, 1)
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, origSuites, suites)
@@ -250,7 +251,7 @@ func Test_shardSuites_withSplitNoMatch(t *testing.T) {
 	suites := []Suite{}
 
 	// Absolute path
-	suites, err = shardSuites(rootDir, origSuites)
+	suites, err = shardSuites(rootDir, origSuites, 1)
 
 	assert.Equal(t, err, errors.New("suite 'Demo Suite' patterns have no matching files"))
 	assert.Equal(t, expectedSuites, suites)
@@ -259,7 +260,7 @@ func Test_shardSuites_withSplitNoMatch(t *testing.T) {
 	if err := os.Chdir(rootDir); err != nil {
 		t.Errorf("Unexpected error %s", err)
 	}
-	suites, err = shardSuites(".", origSuites)
+	suites, err = shardSuites(".", origSuites, 1)
 
 	assert.Equal(t, err, errors.New("suite 'Demo Suite' patterns have no matching files"))
 	assert.Equal(t, expectedSuites, suites)
