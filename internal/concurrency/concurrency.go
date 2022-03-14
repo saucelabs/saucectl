@@ -33,9 +33,6 @@ func SplitTestFiles(files []string, concurrency int) [][]string {
 		concurrency = len(files)
 	}
 	buckets := make([][]string, concurrency)
-	for i := 0; i < concurrency; i++ {
-		buckets[i] = make([]string, 0)
-	}
 	index := len(files) - 1
 	for index >= 0 {
 		for i := 0; index >= 0 && i < concurrency; i++ {
