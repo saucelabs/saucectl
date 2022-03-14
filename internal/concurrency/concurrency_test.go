@@ -95,19 +95,19 @@ func Test_SplitTestFiles(t *testing.T) {
 			name:      "concuurrency is less than file count",
 			files:     []string{"1", "2", "3", "4", "5"},
 			count:     3,
-			expResult: [][]string{[]string{"5", "2"}, []string{"4", "1"}, []string{"3"}},
+			expResult: [][]string{[]string{"1", "4"}, []string{"2", "5"}, []string{"3"}},
 		},
 		{
 			name:      "file count can be devidec by concurrency",
 			files:     []string{"1", "2", "3"},
 			count:     3,
-			expResult: [][]string{[]string{"3"}, []string{"2"}, []string{"1"}},
+			expResult: [][]string{[]string{"1"}, []string{"2"}, []string{"3"}},
 		},
 		{
 			name:      "concuurrency is greater than file count",
 			files:     []string{"1", "2", "3"},
 			count:     5,
-			expResult: [][]string{[]string{"3"}, []string{"2"}, []string{"1"}},
+			expResult: [][]string{[]string{"1"}, []string{"2"}, []string{"3"}},
 		},
 	}
 
