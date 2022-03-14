@@ -327,7 +327,7 @@ func SplitSuites(p Project) (Project, Project) {
 	return dockerProject, sauceProject
 }
 
-func shardSuites(cfg Config, suites []Suite, concurrencyCount int) ([]Suite, error) {
+func shardSuites(cfg Config, suites []Suite, ccy int) ([]Suite, error) {
 	var shardedSuites []Suite
 	for _, s := range suites {
 		// Use the original suite if there is nothing to shard.
@@ -353,7 +353,7 @@ func shardSuites(cfg Config, suites []Suite, concurrencyCount int) ([]Suite, err
 			}
 		}
 		if s.Shard == "concurrency" {
-			fileGroups := concurrency.SplitTestFiles(testFiles, concurrencyCount)
+			fileGroups := concurrency.SplitTestFiles(testFiles, ccy)
 			for i, group := range fileGroups {
 				replica := s
 				replica.Name = fmt.Sprintf("%s - %d/%d", s.Name, i+1, len(fileGroups))

@@ -275,7 +275,7 @@ func SplitSuites(p Project) (Project, Project) {
 }
 
 // shardSuites divides suites into shards based on the pattern.
-func shardSuites(rootDir string, suites []Suite, concurrencyCount int) ([]Suite, error) {
+func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 	var shardedSuites []Suite
 
 	for _, s := range suites {
@@ -300,7 +300,7 @@ func shardSuites(rootDir string, suites []Suite, concurrencyCount int) ([]Suite,
 			}
 		}
 		if s.Shard == "concurrency" {
-			groups := concurrency.SplitTestFiles(testFiles, concurrencyCount)
+			groups := concurrency.SplitTestFiles(testFiles, ccy)
 			for i, group := range groups {
 				replica := s
 				replica.Name = fmt.Sprintf("%s - %d/%d", s.Name, i+1, len(groups))
