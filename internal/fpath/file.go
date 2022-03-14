@@ -122,7 +122,7 @@ func DeepCopy(src string, target string) error {
 	return nil
 }
 
-// FindFiles returns file lists find by shell pattern
+// FindFiles returns a list of files as identified by the sources. Source pattern interpretation (e.g. regex or glob) is controlled by matchBy.
 func FindFiles(rootDir string, sources []string, matchBy string) ([]string, error) {
 	files := []string{}
 	if err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
