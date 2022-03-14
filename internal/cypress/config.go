@@ -356,7 +356,7 @@ func shardSuites(cfg Config, suites []Suite, concurrencyCount int) ([]Suite, err
 			fileGroups := concurrency.SplitTestFiles(testFiles, concurrencyCount)
 			for i, group := range fileGroups {
 				replica := s
-				replica.Name = fmt.Sprintf("%s - concurrency %d", s.Name, i+1)
+				replica.Name = fmt.Sprintf("%s - %d/%d", s.Name, i+1, len(fileGroups))
 				replica.Config.TestFiles = group
 				shardedSuites = append(shardedSuites, replica)
 			}
