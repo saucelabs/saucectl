@@ -56,17 +56,21 @@ func GetDirName(suiteName string, cfg config.ArtifactDownload) (string, error) {
 	}
 	maxVersion := 0
 	for _, file := range files {
-		if file.IsDir() {
-			fileName := strings.Split(file.Name(), ".")
-			if len(fileName) == 2 && fileName[0] == suiteName {
-				version, err := strconv.Atoi(fileName[1])
-				if err != nil {
-					return "", err
-				}
-				if version > maxVersion {
-					maxVersion = version
-				}
-			}
+		if !file.IsDir() {
+			continue
+		}
+
+		fileName := strings.Split(file.Name(), ".")
+		if len(fileName) != 2 || fileName[0] != suiteName {
+			continue
+		}
+
+		version, err := strconv.Atoi(fileName[1])
+		if err != nil {
+			return "", err
+		}
+		if version > maxVersion {
+			maxVersion = version
 		}
 	}
 	suiteName = fmt.Sprintf("%s.%d", suiteName, maxVersion+1)
