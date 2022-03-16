@@ -447,9 +447,9 @@ func TestClient_DownloadArtifact(t *testing.T) {
 		Directory: tempDir,
 		Match:     []string{"junit.xml"},
 	})
-	rc.DownloadArtifact("test-123")
+	rc.DownloadArtifact("test-123", "suite name")
 
-	fileName := filepath.Join(tempDir, "test-123", "junit.xml")
+	fileName := filepath.Join(tempDir, "suite_name", "junit.xml")
 	d, err := os.ReadFile(fileName)
 	if err != nil {
 		t.Errorf("file '%s' not found: %v", fileName, err)

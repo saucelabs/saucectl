@@ -343,7 +343,7 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 
 		jobID := getJobID(res.jobInfo.JobDetailsURL)
 		if download.ShouldDownloadArtifact(jobID, res.passed, res.timedOut, false, artifactCfg) {
-			r.ArtfactDownloader.DownloadArtifact(jobID)
+			r.ArtfactDownloader.DownloadArtifact(jobID, res.name)
 		}
 
 		if !res.passed {

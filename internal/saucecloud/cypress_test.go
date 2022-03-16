@@ -93,7 +93,7 @@ func TestRunSuites(t *testing.T) {
 		},
 	}
 	downloader := &mocks.FakeArifactDownloader{
-		DownloadArtifactFn: func(jobID string) {
+		DownloadArtifactFn: func(jobID string, suiteName string) {
 		},
 	}
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
@@ -214,7 +214,7 @@ func TestRunProject(t *testing.T) {
 		},
 	}
 	downloader := mocks.FakeArifactDownloader{
-		DownloadArtifactFn: func(jobID string) {},
+		DownloadArtifactFn: func(jobID, suiteName string) {},
 	}
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 		return 1, nil
@@ -226,10 +226,10 @@ func TestRunProject(t *testing.T) {
 	mdService := &mocks.FakeFrameworkInfoReader{
 		SearchFn: func(ctx context.Context, opts framework.SearchOptions) (framework.Metadata, error) {
 			return framework.Metadata{
-                FrameworkName: "cypress",
+				FrameworkName:    "cypress",
 				FrameworkVersion: "5.6.0",
-				Deprecated: false,
-            }, nil
+				Deprecated:       false,
+			}, nil
 		},
 	}
 

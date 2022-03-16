@@ -1,14 +1,18 @@
 package download
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 )
 
 // ShouldDownloadArtifact returns true if it should download artifacts, otherwise false
-func ShouldDownloadArtifact(jobID string, passed, timedOut bool, async bool, cfg config.ArtifactDownload) bool {
+func ShouldDownloadArtifact(jobID string, passed, timedOut, async bool, cfg config.ArtifactDownload) bool {
 	if jobID == "" || timedOut || async {
 		return false
 	}
@@ -31,4 +35,44 @@ func Cleanup(directory string) {
 	if err != nil {
 		log.Err(err).Msg("Unable to cleanup previous artifacts")
 	}
+}
+
+// GetDirName returns a target folder name
+func GetDirName(suiteName string, cfg config.ArtifactDownload) (string, error) {
+	suiteName = strings.ReplaceAll(suiteName, "/", "-")
+	suiteName = strings.ReplaceAll(suiteName, "\\", "-")
+	suiteName = strings.ReplaceAll(suiteName, ".", "-")
+	suiteName = strings.ReplaceAll(suiteName, " ", "_")
+	// If targetDir doesn't exist, no need to find maxVersion and return
+	targetDir := filepath.Join(cfg.Directory, suiteName)
+	if _, err := os.Open(targetDir); os.IsNotExist(err) {
+		return targetDir, nil
+	}
+	// Find the maxVersion of downloaded artifacts in artifacts dir
+	f, err := os.Open(cfg.Directory)
+	if err != nil {
+		return "", nil
+	}
+	files, err := f.Readdir(0)
+	if err != nil {
+		return "", err
+	}
+	maxVersion := 0
+	for _, file := range files {
+		if file.IsDir() {
+			fileName := strings.Split(file.Name(), ".")
+			if len(fileName) == 2 && fileName[0] == suiteName {
+				version, err := strconv.Atoi(fileName[1])
+				if err != nil {
+					return "", err
+				}
+				if version > maxVersion {
+					maxVersion = version
+				}
+			}
+		}
+	}
+	suiteName = fmt.Sprintf("%s.%d", suiteName, maxVersion+1)
+
+	return filepath.Join(cfg.Directory, suiteName), nil
 }
