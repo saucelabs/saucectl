@@ -39,10 +39,7 @@ func Cleanup(directory string) {
 
 // GetDirName returns a target folder name
 func GetDirName(suiteName string, cfg config.ArtifactDownload) (string, error) {
-	suiteName = strings.ReplaceAll(suiteName, "/", "-")
-	suiteName = strings.ReplaceAll(suiteName, "\\", "-")
-	suiteName = strings.ReplaceAll(suiteName, ".", "-")
-	suiteName = strings.ReplaceAll(suiteName, " ", "_")
+	suiteName = strings.NewReplacer("/", "-", "\\", "-", ".", "-", " ", "_").Replace(suiteName)
 	// If targetDir doesn't exist, no need to find maxVersion and return
 	targetDir := filepath.Join(cfg.Directory, suiteName)
 	if _, err := os.Open(targetDir); os.IsNotExist(err) {
