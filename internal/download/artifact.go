@@ -37,7 +37,10 @@ func Cleanup(directory string) {
 	}
 }
 
-// GetDirName returns a target folder name
+// GetDirName returns a target folder for downloading artifacts.
+// It creates a targetDir from suiteName by replacing / \ . and space with hyphen and underscore.
+// If there isn't targetDir under artifacts directory, it returns targetDir. e.g. `chrome_test`
+// If there is an existing targetDir, it finds the maxVersion from the suffix and adds one to that. e.g. `chrome_test.1`
 func GetDirName(suiteName string, cfg config.ArtifactDownload) (string, error) {
 	suiteName = strings.NewReplacer("/", "-", "\\", "-", ".", "-", " ", "_").Replace(suiteName)
 	// If targetDir doesn't exist, no need to find maxVersion and return
@@ -50,7 +53,7 @@ func GetDirName(suiteName string, cfg config.ArtifactDownload) (string, error) {
 	if err != nil {
 		return "", nil
 	}
-	files, err := f.Readdir(0)
+	files, err := f.ReadDir(0)
 	if err != nil {
 		return "", err
 	}
