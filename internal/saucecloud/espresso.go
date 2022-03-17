@@ -195,7 +195,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 			Parent: r.Project.Sauce.Tunnel.Owner,
 		},
 		Experiments: r.Project.Sauce.Experiments,
-		TestOptions: s.TestOptions,
+		TestOptions: testOptions,
 		Attempt:     0,
 		Retries:     r.Project.Sauce.Retries,
 
