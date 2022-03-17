@@ -46,7 +46,6 @@ var (
 	runShort = "Runs tests on Sauce Labs"
 
 	// General Request Timeouts
-	appStoreTimeout     = 300 * time.Second
 	testComposerTimeout = 300 * time.Second
 	restoTimeout        = 60 * time.Second
 	rdcTimeout          = 15 * time.Second
@@ -75,6 +74,7 @@ type globalFlags struct {
 	disableUsageMetrics bool
 	async               bool
 	failFast            bool
+	appStoreTimeout     time.Duration
 }
 
 // Command creates the `run` command
@@ -108,6 +108,7 @@ func Command() *cobra.Command {
 	cmd.PersistentFlags().DurationVarP(&gFlags.globalTimeout, "timeout", "t", 0, "Global timeout that limits how long saucectl can run in total. Supports duration values like '10s', '30m' etc. (default: no timeout)")
 	cmd.PersistentFlags().BoolVar(&gFlags.async, "async", false, "Launches tests without waiting for test results (sauce mode only)")
 	cmd.PersistentFlags().BoolVar(&gFlags.failFast, "fail-fast", false, "Stops suites after the first failure (sauce mode only)")
+	cmd.PersistentFlags().DurationVar(&gFlags.appStoreTimeout, "uploadTimeout", 300*time.Second, "Upload timeout that limits how long saucectl can upload test files. Supports duration values like '10s' '30m' etc. (default: 300 seconds)")
 	sc.StringP("region", "r", "sauce::region", "us-west-1", "The sauce labs region.")
 	sc.StringToStringP("env", "e", "env", map[string]string{}, "Set environment variables, e.g. -e foo=bar. Not supported when running espresso/xcuitest!")
 	sc.Bool("show-console-log", "showConsoleLog", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
@@ -199,7 +200,7 @@ func preRun() error {
 
 	rdcClient = rdc.New("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 
-	appsClient = *appstore.New("", creds.Username, creds.AccessKey, appStoreTimeout)
+	appsClient = *appstore.New("", creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
 
 	return nil
 }
