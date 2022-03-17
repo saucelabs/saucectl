@@ -163,6 +163,10 @@ func getNumShardsAndShardIndex(testOptions map[string]interface{}) (int, int) {
 // startJob add the job to the list for the workers.
 func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Suite, appFileURI, testAppFileURI string, otherAppsURIs []string, d deviceConfig) {
 	displayName := s.Name
+	testOptions := map[string]interface{}{}
+	for k, v := range s.TestOptions {
+		testOptions[k] = v
+	}
 	numShards, shardIndex := getNumShardsAndShardIndex(s.TestOptions)
 	if numShards > 0 {
 		displayName = fmt.Sprintf("%s (shard %d/%d)", displayName, shardIndex+1, numShards)
