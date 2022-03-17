@@ -59,7 +59,7 @@ func TestXcuitestRunner_RunProject(t *testing.T) {
 		UploadSuccess: true,
 	}
 	downloader := mocks.FakeArifactDownloader{
-		DownloadArtifactFn: func(jobID string) {},
+		DownloadArtifactFn: func(jobID, suiteName string) {},
 	}
 
 	runner := &XcuitestRunner{
