@@ -84,6 +84,12 @@ func (r *EspressoRunner) runSuites(appFileURI string, testAppFileURI string, oth
 			// Automatically apply ShardIndex if numShards is defined
 			if numShards > 0 {
 				for i := 0; i < numShards; i++ {
+					// Enforce copy of the map to ensure it is not shared.
+					testOptions := map[string]interface{}{}
+					for k, v := range s.TestOptions {
+						testOptions[k] = v
+					}
+					s.TestOptions = testOptions
 					s.TestOptions["shardIndex"] = i
 					for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
 						log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
@@ -163,10 +169,6 @@ func getNumShardsAndShardIndex(testOptions map[string]interface{}) (int, int) {
 // startJob add the job to the list for the workers.
 func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Suite, appFileURI, testAppFileURI string, otherAppsURIs []string, d deviceConfig) {
 	displayName := s.Name
-	testOptions := map[string]interface{}{}
-	for k, v := range s.TestOptions {
-		testOptions[k] = v
-	}
 	numShards, shardIndex := getNumShardsAndShardIndex(s.TestOptions)
 	if numShards > 0 {
 		displayName = fmt.Sprintf("%s (shard %d/%d)", displayName, shardIndex+1, numShards)
@@ -195,7 +197,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 			Parent: r.Project.Sauce.Tunnel.Owner,
 		},
 		Experiments: r.Project.Sauce.Experiments,
-		TestOptions: testOptions,
+		TestOptions: s.TestOptions,
 		Attempt:     0,
 		Retries:     r.Project.Sauce.Retries,
 
