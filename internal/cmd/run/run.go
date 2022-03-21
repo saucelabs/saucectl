@@ -108,7 +108,7 @@ func Command() *cobra.Command {
 	cmd.PersistentFlags().DurationVarP(&gFlags.globalTimeout, "timeout", "t", 0, "Global timeout that limits how long saucectl can run in total. Supports duration values like '10s', '30m' etc. (default: no timeout)")
 	cmd.PersistentFlags().BoolVar(&gFlags.async, "async", false, "Launches tests without waiting for test results (sauce mode only)")
 	cmd.PersistentFlags().BoolVar(&gFlags.failFast, "fail-fast", false, "Stops suites after the first failure (sauce mode only)")
-	cmd.PersistentFlags().DurationVar(&gFlags.appStoreTimeout, "uploadTimeout", 300*time.Second, "Upload timeout that limits how long saucectl can upload test files. Supports duration values like '10s' '30m' etc. (default: 300 seconds)")
+	cmd.PersistentFlags().DurationVar(&gFlags.appStoreTimeout, "uploadTimeout", 5*time.Minute, "Upload timeout that limits how long saucectl will wait for an upload to finish. Supports duration values like '10s' '30m' etc. (default: 5m)")
 	sc.StringP("region", "r", "sauce::region", "us-west-1", "The sauce labs region.")
 	sc.StringToStringP("env", "e", "env", map[string]string{}, "Set environment variables, e.g. -e foo=bar. Not supported when running espresso/xcuitest!")
 	sc.Bool("show-console-log", "showConsoleLog", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
