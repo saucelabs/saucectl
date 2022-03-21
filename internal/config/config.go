@@ -147,6 +147,12 @@ type Defaults struct {
 	Timeout time.Duration `yaml:"timeout,omitempty" json:"timeout"`
 }
 
+// Instrumentation represents instrumentation options
+type Instrumentation struct {
+	AudioCapture   bool `yaml:"audioCapture,omitempty" json:"audioCapture"`
+	NetworkCapture bool `yaml:"networkCapture,omitempty" json:"networkCapture"`
+}
+
 func readYaml(cfgFilePath string) ([]byte, error) {
 	if cfgFilePath == "" {
 		return nil, errors.New(msg.MissingConfigFile)
