@@ -84,6 +84,12 @@ func (r *EspressoRunner) runSuites(appFileURI string, testAppFileURI string, oth
 			// Automatically apply ShardIndex if numShards is defined
 			if numShards > 0 {
 				for i := 0; i < numShards; i++ {
+					// Enforce copy of the map to ensure it is not shared.
+					testOptions := map[string]interface{}{}
+					for k, v := range s.TestOptions {
+						testOptions[k] = v
+					}
+					s.TestOptions = testOptions
 					s.TestOptions["shardIndex"] = i
 					for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
 						log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
