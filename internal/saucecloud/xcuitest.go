@@ -129,6 +129,10 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		DeviceHasCarrier:  d.Options.CarrierConnectivity,
 		DeviceType:        d.Options.DeviceType,
 		DevicePrivateOnly: d.Options.Private,
+
+		// Instrumentation options, for RDC only
+		AudioCapture:   r.Project.Instrumentation.AudioCapture,
+		NetworkCapture: r.Project.Instrumentation.NetworkCapture,
 	}
 }
 

@@ -75,6 +75,10 @@ func NewEspressoCmd() *cobra.Command {
 	sc.Int("testOptions.numShards", "suite::testOptions::numShards", 0, "Total number of shards. Requires --name to be set.")
 	sc.Bool("testOptions.useTestOrchestrator", "suite::testOptions::useTestOrchestrator", false, "Set the instrumentation to start with Test Orchestrator. Requires --name to be set.")
 
+	// Instrumentation devices settings
+	sc.Bool("instrumentation.audioCapture", "instrumentation::audioCapture", false, "Set the instrumentation to capture audio.")
+	sc.Bool("instrumentation.networkCapture", "instrumentation::networkCapture", false, "Set the instrumentation to capture network.")
+
 	// Emulators and Devices
 	cmd.Flags().Var(&lflags.Emulator, "emulator", "Specifies the emulator to use for testing. Requires --name to be set.")
 	cmd.Flags().Var(&lflags.Device, "device", "Specifies the device to use for testing. Requires --name to be set.")

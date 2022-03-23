@@ -52,6 +52,8 @@ type StartOptions struct {
 	TestsToRun        []string               `json:"testsToRun,omitempty"`
 	TestsToSkip       []string               `json:"testsToSkip,omitempty"`
 	StartTime         time.Time              `json:"startTime,omitempty"`
+	AudioCapture      bool                   `json:"audioCapture,omitempty"`
+	NetworkCapture    bool                   `json:"networkCapture,omitempty"`
 }
 
 // TunnelOptions represents the options that configure the usage of a tunnel when running tests in the Sauce Labs cloud.
