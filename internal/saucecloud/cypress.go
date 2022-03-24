@@ -21,7 +21,9 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	if err := r.checkVersionAvailability(cypress.Kind, r.Project.Cypress.Version); err != nil {
+	var err error
+	var depreciationNotice string
+	if depreciationNotice, err = r.checkVersionAvailability(cypress.Kind, r.Project.Cypress.Version); err != nil {
 		return exitCode, err
 	}
 
@@ -45,6 +47,9 @@ func (r *CypressRunner) RunProject() (int, error) {
 		exitCode = 0
 	}
 
+	if depreciationNotice != "" {
+		fmt.Printf(depreciationNotice)
+	}
 	return exitCode, nil
 }
 

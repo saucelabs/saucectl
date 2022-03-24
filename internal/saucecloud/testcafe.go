@@ -18,7 +18,9 @@ type TestcafeRunner struct {
 func (r *TestcafeRunner) RunProject() (int, error) {
 	exitCode := 1
 
-	if err := r.checkVersionAvailability(testcafe.Kind, r.Project.Testcafe.Version); err != nil {
+	var err error
+	var depreciationNotice string
+	if depreciationNotice, err = r.checkVersionAvailability(testcafe.Kind, r.Project.Testcafe.Version); err != nil {
 		return exitCode, err
 	}
 
@@ -42,6 +44,9 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
+	if depreciationNotice != "" {
+		fmt.Printf(depreciationNotice)
+	}
 	return exitCode, nil
 }
 
