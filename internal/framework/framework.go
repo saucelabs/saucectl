@@ -38,6 +38,10 @@ type Metadata struct {
 	Platforms        []Platform
 }
 
+type MetadataSearchStrategy interface {
+	Find(ctx context.Context, svc MetadataService, frameworkName string, searchValue string) (Metadata, error)
+}
+
 // Platform represent a supported platform.
 type Platform struct {
 	PlatformName string
@@ -62,4 +66,8 @@ func GitReleaseSegments(m *Metadata) (org, repo, tag string, err error) {
 	tagIndex := r.SubexpIndex("tag")
 
 	return matches[orgIndex], matches[repoIndex], matches[tagIndex], nil
+}
+
+func Find(supportedVersions []Metadata, requestedVersion string) (Metadata, error) {
+	return Metadata{}, nil
 }

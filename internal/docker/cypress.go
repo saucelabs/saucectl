@@ -34,6 +34,7 @@ func NewCypress(c cypress.Project, ms framework.MetadataService, wr job.Writer, 
 			JobReader:         jr,
 			ArtfactDownloader: dl,
 			Reporters:         reps,
+			MetadataSearchStrategy: framework.ExactStrategy{},
 		},
 	}
 

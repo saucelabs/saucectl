@@ -37,20 +37,21 @@ import (
 
 // CloudRunner represents the cloud runner for the Sauce Labs cloud.
 type CloudRunner struct {
-	ProjectUploader       storage.ProjectUploader
-	JobStarter            job.Starter
-	JobReader             job.Reader
-	RDCJobReader          job.Reader
-	JobWriter             job.Writer
-	JobStopper            job.Stopper
-	CCYReader             concurrency.Reader
-	TunnelService         tunnel.Service
-	Region                region.Region
-	MetadataService       framework.MetadataService
-	ShowConsoleLog        bool
-	ArtifactDownloader    download.ArtifactDownloader
-	RDCArtifactDownloader download.ArtifactDownloader
-	Framework             framework.Framework
+	ProjectUploader        storage.ProjectUploader
+	JobStarter             job.Starter
+	JobReader              job.Reader
+	RDCJobReader           job.Reader
+	JobWriter              job.Writer
+	JobStopper             job.Stopper
+	CCYReader              concurrency.Reader
+	TunnelService          tunnel.Service
+	Region                 region.Region
+	MetadataService        framework.MetadataService
+	ShowConsoleLog         bool
+	ArtifactDownloader     download.ArtifactDownloader
+	RDCArtifactDownloader  download.ArtifactDownloader
+	Framework              framework.Framework
+	MetadataSearchStrategy framework.MetadataSearchStrategy
 
 	Reporters []report.Reporter
 
@@ -715,10 +716,7 @@ func (r *CloudRunner) uploadCLIFlags(jobID string, content interface{}) {
 func (r *CloudRunner) checkVersionAvailability(frameworkName string, frameworkVersion string) (string, error) {
 	var depreciationNotice string
 
-	metadata, err := r.MetadataService.Search(context.Background(), framework.SearchOptions{
-		Name:             frameworkName,
-		FrameworkVersion: frameworkVersion,
-	})
+	metadata, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, frameworkName, frameworkVersion)
 	if err != nil && isUnsupportedVersion(err) {
 		color.Red(fmt.Sprintf("\nVersion %s for %s is not available !\n\n", frameworkVersion, frameworkName))
 		fmt.Printf(r.getAvailableVersionsMessage(frameworkName))

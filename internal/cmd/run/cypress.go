@@ -3,7 +3,6 @@ package run
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"reflect"
 	"strings"
 
@@ -18,8 +17,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/node"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/resto"
@@ -130,21 +129,21 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 	p.Sauce.Metadata.ExpandEnv()
 	expandReporterConfigEnv(p.Cypress.Reporters)
 
-	// TODO: Resolve cypress version from package.json if necessary
-	if p.Cypress.Version == "package.json" {
-		fp := filepath.Join(p.RootDir, p.Cypress.Version)
-		packageJson, err := node.PackageFromFile(fp)
-		if err != nil {
-			// TODO: Handle err
-		}
-		var ver string
-		var ok bool
-		ver, ok = packageJson.DevDependencies["cypress"]
-		if ok {
-			p.Cypress.Version = ver
-		}
-		// TODO: Handle unresolvable package
-	}
+	// Resolve cypress version from package.json if necessary
+	// if p.Cypress.Version == "package.json" {
+	// 	fp := filepath.Join(p.RootDir, p.Cypress.Version)
+	// 	packageJson, err := node.PackageFromFile(fp)
+	// 	if err != nil {
+	// 		// TODO: Handle err
+	// 	}
+	// 	var ver string
+	// 	var ok bool
+	// 	ver, ok = packageJson.DevDependencies["cypress"]
+	// 	if ok {
+	// 		p.Cypress.Version = ver
+	// 	}
+	// 	// TODO: Handle unresolvable package
+	// }
 
 	if err := applyCypressFlags(&p); err != nil {
 		return 1, err
@@ -228,6 +227,7 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 				"cypress", "sauce"),
 			Async:    gFlags.async,
 			FailFast: gFlags.failFast,
+			MetadataSearchStrategy: framework.ExactStrategy{},
 		},
 	}
 

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 )
 
@@ -12,6 +13,7 @@ import (
 type CypressRunner struct {
 	CloudRunner
 	Project cypress.Project
+	MetadataSearchStrategy framework.MetadataSearchStrategy
 }
 
 // RunProject runs the tests defined in cypress.Project.
