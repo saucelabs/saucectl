@@ -717,6 +717,7 @@ func (r *CloudRunner) checkVersionAvailability(frameworkName string, frameworkVe
 	var depreciationNotice string
 
 	metadata, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, frameworkName, frameworkVersion)
+
 	if err != nil && isUnsupportedVersion(err) {
 		color.Red(fmt.Sprintf("\nVersion %s for %s is not available !\n\n", frameworkVersion, frameworkName))
 		fmt.Printf(r.getAvailableVersionsMessage(frameworkName))

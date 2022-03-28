@@ -227,7 +227,7 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 				"cypress", "sauce"),
 			Async:    gFlags.async,
 			FailFast: gFlags.failFast,
-			MetadataSearchStrategy: framework.ExactStrategy{},
+			MetadataSearchStrategy: framework.NewSearchStrategy(p.Cypress.Version),
 		},
 	}
 

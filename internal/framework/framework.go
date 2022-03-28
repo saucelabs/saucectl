@@ -38,10 +38,6 @@ type Metadata struct {
 	Platforms        []Platform
 }
 
-type MetadataSearchStrategy interface {
-	Find(ctx context.Context, svc MetadataService, frameworkName string, searchValue string) (Metadata, error)
-}
-
 // Platform represent a supported platform.
 type Platform struct {
 	PlatformName string

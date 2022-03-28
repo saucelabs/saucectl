@@ -33,8 +33,10 @@ func NewPuppeteer(c puppeteer.Project, ms framework.MetadataService, wr job.Writ
 			JobReader:         jr,
 			ArtfactDownloader: dl,
 			Reporters:         reps,
+			MetadataSearchStrategy: framework.NewSearchStrategy(c.Puppeteer.Version),
 		},
 	}
+
 	var err error
 	r.docker, err = Create()
 	if err != nil {

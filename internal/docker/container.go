@@ -126,6 +126,7 @@ func (r *ContainerRunner) fetchImage(docker *config.Docker) error {
 
 	if docker.Image == "" {
 		m, err := r.MetadataSearchStrategy.Find(r.Ctx, r.FrameworkMeta, r.Framework.Name, r.Framework.Version)
+
 		if err != nil {
 			return fmt.Errorf("unable to determine which docker image to run: %w", err)
 		}
