@@ -1,6 +1,7 @@
 package saucecloud
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/saucelabs/saucectl/internal/job"
@@ -17,7 +18,9 @@ type PlaywrightRunner struct {
 func (r *PlaywrightRunner) RunProject() (int, error) {
 	exitCode := 1
 
-	if err := r.checkVersionAvailability(playwright.Kind, r.Project.Playwright.Version); err != nil {
+	var err error
+	var depreciationNotice string
+	if depreciationNotice, err = r.checkVersionAvailability(playwright.Kind, r.Project.Playwright.Version); err != nil {
 		return exitCode, err
 	}
 
@@ -42,6 +45,9 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		exitCode = 0
 	}
 
+	if depreciationNotice != "" {
+		fmt.Printf(depreciationNotice)
+	}
 	return exitCode, nil
 }
 
