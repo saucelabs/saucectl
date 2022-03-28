@@ -21,11 +21,11 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	var err error
-	var depreciationNotice string
-	if depreciationNotice, err = r.checkVersionAvailability(cypress.Kind, r.Project.Cypress.Version); err != nil {
+	m, err := r.checkVersionAvailability(cypress.Kind, r.Project.Cypress.Version); 
+	if err != nil {
 		return exitCode, err
 	}
+	r.Project.Cypress.Version = m.FrameworkVersion
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
 		return 1, err
@@ -47,8 +47,8 @@ func (r *CypressRunner) RunProject() (int, error) {
 		exitCode = 0
 	}
 
-	if depreciationNotice != "" {
-		fmt.Printf(depreciationNotice)
+	if m.Deprecated {
+		fmt.Printf(r.deprecationMessage(cypress.Kind, r.Project.Cypress.Version))
 	}
 	return exitCode, nil
 }

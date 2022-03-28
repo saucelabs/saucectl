@@ -18,11 +18,11 @@ type TestcafeRunner struct {
 func (r *TestcafeRunner) RunProject() (int, error) {
 	exitCode := 1
 
-	var err error
-	var depreciationNotice string
-	if depreciationNotice, err = r.checkVersionAvailability(testcafe.Kind, r.Project.Testcafe.Version); err != nil {
+	m, err := r.checkVersionAvailability(testcafe.Kind, r.Project.Testcafe.Version)
+	if err != nil {
 		return exitCode, err
 	}
+	r.Project.Testcafe.Version = m.FrameworkVersion
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
 		return 1, err
@@ -44,8 +44,8 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	if depreciationNotice != "" {
-		fmt.Printf(depreciationNotice)
+	if m.Deprecated {
+		fmt.Printf(r.deprecationMessage(testcafe.Kind, r.Project.Testcafe.Version))
 	}
 	return exitCode, nil
 }

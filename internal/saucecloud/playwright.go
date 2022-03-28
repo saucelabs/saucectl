@@ -18,11 +18,11 @@ type PlaywrightRunner struct {
 func (r *PlaywrightRunner) RunProject() (int, error) {
 	exitCode := 1
 
-	var err error
-	var depreciationNotice string
-	if depreciationNotice, err = r.checkVersionAvailability(playwright.Kind, r.Project.Playwright.Version); err != nil {
+	m, err := r.checkVersionAvailability(playwright.Kind, r.Project.Playwright.Version)
+	if err != nil {
 		return exitCode, err
 	}
+	r.Project.Playwright.Version = m.FrameworkVersion
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
 		return 1, err
@@ -45,8 +45,8 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		exitCode = 0
 	}
 
-	if depreciationNotice != "" {
-		fmt.Printf(depreciationNotice)
+	if m.Deprecated {
+		fmt.Printf(r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version))
 	}
 	return exitCode, nil
 }
