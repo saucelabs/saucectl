@@ -3,6 +3,7 @@ package run
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -105,6 +106,11 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 
 	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
 	p.Sauce.Metadata.ExpandEnv()
+
+	// Normalize path to package.json file
+	if p.Playwright.Version == "package.json" {
+		p.Playwright.Version = filepath.Join(p.RootDir, p.Playwright.Version)
+	}
 
 	if err := applyPlaywrightFlags(&p); err != nil {
 		return 1, err

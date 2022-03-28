@@ -3,6 +3,7 @@ package run
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 
@@ -129,21 +130,10 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 	p.Sauce.Metadata.ExpandEnv()
 	expandReporterConfigEnv(p.Cypress.Reporters)
 
-	// Resolve cypress version from package.json if necessary
-	// if p.Cypress.Version == "package.json" {
-	// 	fp := filepath.Join(p.RootDir, p.Cypress.Version)
-	// 	packageJson, err := node.PackageFromFile(fp)
-	// 	if err != nil {
-	// 		// TODO: Handle err
-	// 	}
-	// 	var ver string
-	// 	var ok bool
-	// 	ver, ok = packageJson.DevDependencies["cypress"]
-	// 	if ok {
-	// 		p.Cypress.Version = ver
-	// 	}
-	// 	// TODO: Handle unresolvable package
-	// }
+	// Normalize path to package.json file
+	if p.Cypress.Version == "package.json" {
+		p.Cypress.Version = filepath.Join(p.RootDir, p.Cypress.Version)
+	}
 
 	if err := applyCypressFlags(&p); err != nil {
 		return 1, err
