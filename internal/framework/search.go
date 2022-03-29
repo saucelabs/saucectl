@@ -23,7 +23,6 @@ func (e *FrameworkUnavailableError) Error() string {
 
 var (
 	ErrServerError         = errors.New("Unable to check framework version availability")
-	ErrPackageJsonNotFound = errors.New("Could not read package.json")
 	ErrVersionUndefined    = errors.New("Framework version is not defined")
 )
 
@@ -65,7 +64,7 @@ func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, framewor
 	p, err := node.PackageFromFile(packageJsonPath)
 
 	if err != nil {
-		return Metadata{}, ErrPackageJsonNotFound
+		return Metadata{}, fmt.Errorf("Error reading package.json: %w", err)
 	}
 
 	var ver string

@@ -2,7 +2,6 @@ package node
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 )
 
@@ -16,7 +15,7 @@ func PackageFromFile(filename string) (Package, error) {
 
 	fd, err := os.Open(filename)
 	if err != nil {
-		return p, fmt.Errorf("%s", filename)
+		return p, err 
 	}
 
 	err = json.NewDecoder(fd).Decode(&p)
