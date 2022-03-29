@@ -17,6 +17,7 @@ type PlaywrightRunner struct {
 
 // RunProject runs the tests defined in cypress.Project.
 func (r *PlaywrightRunner) RunProject() (int, error) {
+	var deprecationMessage string
 	exitCode := 1
 
 	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, playwright.Kind, r.Project.Playwright.Version)
@@ -27,7 +28,8 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 	r.Project.Playwright.Version = m.FrameworkVersion
 
 	if m.Deprecated {
-		fmt.Printf(r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version))
+		deprecationMessage = r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version)
+		fmt.Print(deprecationMessage)
 	}
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
@@ -51,9 +53,10 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		exitCode = 0
 	}
 
-	if m.Deprecated {
-		fmt.Printf(r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version))
+	if deprecationMessage != "" {
+		fmt.Printf(deprecationMessage)
 	}
+
 	return exitCode, nil
 }
 

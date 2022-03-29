@@ -17,6 +17,7 @@ type TestcafeRunner struct {
 
 // RunProject runs the defined tests on sauce cloud
 func (r *TestcafeRunner) RunProject() (int, error) {
+	var deprecationMessage string
 	exitCode := 1
 
 	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, testcafe.Kind, r.Project.Testcafe.Version)
@@ -27,7 +28,8 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 	r.Project.Testcafe.Version = m.FrameworkVersion
 
 	if m.Deprecated {
-		fmt.Printf(r.deprecationMessage(testcafe.Kind, r.Project.Testcafe.Version))
+		deprecationMessage = r.deprecationMessage(testcafe.Kind, r.Project.Testcafe.Version)
+		fmt.Print(deprecationMessage)
 	}
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
@@ -50,9 +52,10 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	if m.Deprecated {
-		fmt.Printf(r.deprecationMessage(testcafe.Kind, r.Project.Testcafe.Version))
+	if deprecationMessage != "" {
+		fmt.Printf(deprecationMessage)
 	}
+
 	return exitCode, nil
 }
 

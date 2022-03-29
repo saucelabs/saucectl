@@ -17,6 +17,7 @@ type CypressRunner struct {
 
 // RunProject runs the tests defined in cypress.Project.
 func (r *CypressRunner) RunProject() (int, error) {
+	var deprecationMessage string
 	exitCode := 1
 
 	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, cypress.Kind, r.Project.Cypress.Version)
@@ -27,7 +28,8 @@ func (r *CypressRunner) RunProject() (int, error) {
 	r.Project.Cypress.Version = m.FrameworkVersion
 
 	if m.Deprecated {
-		fmt.Printf(r.deprecationMessage(cypress.Kind, r.Project.Cypress.Version))
+		deprecationMessage = r.deprecationMessage(cypress.Kind, r.Project.Cypress.Version)
+		fmt.Print(deprecationMessage)
 	}
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
@@ -50,9 +52,10 @@ func (r *CypressRunner) RunProject() (int, error) {
 		exitCode = 0
 	}
 
-	if m.Deprecated {
-		fmt.Printf(r.deprecationMessage(cypress.Kind, r.Project.Cypress.Version))
+	if deprecationMessage != "" {
+		fmt.Printf(deprecationMessage)
 	}
+
 	return exitCode, nil
 }
 
