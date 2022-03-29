@@ -712,24 +712,6 @@ func (r *CloudRunner) uploadCLIFlags(jobID string, content interface{}) {
 	}
 }
 
-// checkVersion checks if the requested version is available on Cloud.
-func (r *CloudRunner) checkVersionAvailability(frameworkName string, frameworkVersion string) (framework.Metadata, error) {
-	metadata, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, frameworkName, frameworkVersion)
-
-	if err != nil && isUnsupportedVersion(err) {
-		color.Red(fmt.Sprintf("\nVersion %s for %s is not available !\n\n", frameworkVersion, frameworkName))
-		fmt.Printf(r.getAvailableVersionsMessage(frameworkName))
-		return framework.Metadata{}, errors.New(msg.UnsupportedFrameworkVersion)
-	}
-	if err != nil {
-		return framework.Metadata{}, fmt.Errorf("unable to check framework version availability: %v", err)
-	}
-	if metadata.Deprecated {
-		fmt.Printf(r.deprecationMessage(frameworkName, frameworkVersion))
-	}
-	return metadata, nil
-}
-
 func (r *CloudRunner) deprecationMessage(frameworkName string, frameworkVersion string) string {
 	return fmt.Sprintf(
 		"%s%s%s",
