@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
@@ -82,7 +83,20 @@ func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, framewor
 		return Metadata{}, ErrServerError
 	}
 
-	// TODO: Need to sort allVersions
+	sort.Slice(allVersions, func(i, j int) bool {
+		vi, err := semver.NewVersion(allVersions[i].FrameworkVersion)
+		if err != nil {
+			return false
+		}
+
+		vj, err := semver.NewVersion(allVersions[j].FrameworkVersion)
+		if err != nil {
+			return false
+		}
+
+		// sort in descending order
+		return vi.GreaterThan(vj)
+	})
 
 	c, err := semver.NewConstraint(ver)
 	for _, v := range allVersions {
