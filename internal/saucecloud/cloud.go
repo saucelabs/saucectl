@@ -739,6 +739,14 @@ func (r *CloudRunner) deprecationMessage(frameworkName string, frameworkVersion 
 	)
 }
 
+func (r *CloudRunner) logFrameworkError(err error) {
+	var unavailableErr *framework.FrameworkUnavailableError
+	if errors.As(err, &unavailableErr) {
+		color.Red(fmt.Sprintf("\n%s\n\n", err.Error()))
+		fmt.Print(r.getAvailableVersionsMessage(unavailableErr.Name))
+	}
+}
+
 // logAvailableVersions displays the available cloud version for the framework.
 func (r *CloudRunner) getAvailableVersionsMessage(frameworkName string) string {
 	versions, err := r.MetadataService.Versions(context.Background(), frameworkName)

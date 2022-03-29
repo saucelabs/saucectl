@@ -1,6 +1,7 @@
 package saucecloud
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -17,15 +18,17 @@ type CypressRunner struct {
 // RunProject runs the tests defined in cypress.Project.
 func (r *CypressRunner) RunProject() (int, error) {
 	exitCode := 1
-	if err := r.checkCypressVersion(); err != nil {
-		return exitCode, err
-	}
 
-	m, err := r.checkVersionAvailability(cypress.Kind, r.Project.Cypress.Version); 
+	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, cypress.Kind, r.Project.Cypress.Version)
 	if err != nil {
+		r.logFrameworkError(err)
 		return exitCode, err
 	}
 	r.Project.Cypress.Version = m.FrameworkVersion
+
+	if m.Deprecated {
+		fmt.Printf(r.deprecationMessage(cypress.Kind, r.Project.Cypress.Version))
+	}
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
 		return 1, err

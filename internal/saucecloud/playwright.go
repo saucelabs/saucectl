@@ -2,6 +2,7 @@ package saucecloud
 
 import (
 	"fmt"
+	"context"
 	"strings"
 
 	"github.com/saucelabs/saucectl/internal/job"
@@ -18,11 +19,16 @@ type PlaywrightRunner struct {
 func (r *PlaywrightRunner) RunProject() (int, error) {
 	exitCode := 1
 
-	m, err := r.checkVersionAvailability(playwright.Kind, r.Project.Playwright.Version)
+	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, playwright.Kind, r.Project.Playwright.Version)
 	if err != nil {
+		r.logFrameworkError(err)
 		return exitCode, err
 	}
 	r.Project.Playwright.Version = m.FrameworkVersion
+
+	if m.Deprecated {
+		fmt.Printf(r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version))
+	}
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
 		return 1, err
