@@ -63,7 +63,3 @@ func GitReleaseSegments(m *Metadata) (org, repo, tag string, err error) {
 
 	return matches[orgIndex], matches[repoIndex], matches[tagIndex], nil
 }
-
-func Find(supportedVersions []Metadata, requestedVersion string) (Metadata, error) {
-	return Metadata{}, nil
-}
