@@ -23,6 +23,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	bt "github.com/backtrace-labs/backtrace-go"
 	"github.com/getsentry/sentry-go"
 )
 
@@ -56,6 +57,7 @@ func main() {
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		setupLogging(*verbosity, *noColor)
 		setupSentry()
+		setupBacktrace()
 		return nil
 	}
 
@@ -68,6 +70,7 @@ func main() {
 		completion.Command(),
 		doctor.Command(),
 	)
+
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
@@ -102,4 +105,9 @@ func setupSentry() {
 		log.Debug().Err(err).Msg("Failed to setup sentry")
 		return
 	}
+}
+
+func setupBacktrace() {
+	bt.Options.Endpoint = setup.BackTraceEndpoint
+	bt.Options.Token = setup.BackTraceToken
 }

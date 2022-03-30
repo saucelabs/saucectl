@@ -5,27 +5,27 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/segment"
-
+	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
+	"github.com/saucelabs/saucectl/internal/segment"
+	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 
 	"github.com/AlecAivazis/survey/v2/terminal"
+	bt "github.com/backtrace-labs/backtrace-go"
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-
-	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/credentials"
-	"github.com/saucelabs/saucectl/internal/sentry"
 )
 
 var (
@@ -34,6 +34,8 @@ var (
 	initLong    = "bootstrap an existing project for Sauce Labs"
 	initExample = "saucectl init"
 )
+
+var wg sync.WaitGroup
 
 type initConfig struct {
 	batchMode bool
@@ -88,6 +90,12 @@ func Command() *cobra.Command {
 			if err != nil {
 				log.Err(err).Msg("failed to execute init command")
 				sentry.CaptureError(err, sentry.Scope{})
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					bt.Report(err, nil)
+					bt.FinishSendingReports()
+				}()
 				os.Exit(1)
 			}
 		},
