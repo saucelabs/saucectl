@@ -107,15 +107,15 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
 	p.Sauce.Metadata.ExpandEnv()
 
-	// Normalize path to package.json file
-	if p.Playwright.Version == "package.json" {
-		p.Playwright.Version = filepath.Join(p.RootDir, p.Playwright.Version)
-	}
-
 	if err := applyPlaywrightFlags(&p); err != nil {
 		return 1, err
 	}
 	playwright.SetDefaults(&p)
+
+	// Resolve path to package.json file
+	if strings.Contains(p.Playwright.Version, "package.json") {
+		p.Playwright.Version = filepath.Join(p.RootDir, p.Playwright.Version)
+	}
 
 	if err := playwright.Validate(&p); err != nil {
 		return 1, err

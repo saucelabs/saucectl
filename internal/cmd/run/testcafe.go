@@ -128,15 +128,15 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, tc testcomposer.Clie
 	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
 	p.Sauce.Metadata.ExpandEnv()
 
-	// Normalize path to package.json file
-	if p.Testcafe.Version == "package.json" {
-		p.Testcafe.Version = filepath.Join(p.RootDir, p.Testcafe.Version)
-	}
-
 	if err := applyTestcafeFlags(&p, tcFlags); err != nil {
 		return 1, err
 	}
 	testcafe.SetDefaults(&p)
+
+	// Resolve path to package.json file
+	if strings.Contains(p.Testcafe.Version, "package.json") {
+		p.Testcafe.Version = filepath.Join(p.RootDir, p.Testcafe.Version)
+	}
 
 	if err := testcafe.Validate(&p); err != nil {
 		return 1, err
