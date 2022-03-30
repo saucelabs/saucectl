@@ -52,7 +52,7 @@ func (s ExactStrategy) Find(ctx context.Context, svc MetadataService, frameworkN
 		FrameworkVersion: frameworkVersion,
 	})
 
-	if strings.Contains(err.Error(), "Bad Request: unsupported version") {
+	if err != nil && strings.Contains(err.Error(), "Bad Request: unsupported version") {
 		return Metadata{}, &FrameworkUnavailableError{
 			Name:    frameworkName,
 			Version: frameworkVersion,
