@@ -66,6 +66,21 @@ func (s ExactStrategy) Find(ctx context.Context, svc MetadataService, frameworkN
 	return m, nil
 }
 
+func toNpmPackageName(frameworkName string) string {
+	mapping := map[string]string{
+		"cypress":    "cypress",
+		"playwright": "@playwright/test",
+		"testcafe":   "testcafe",
+	}
+
+	p, ok := mapping[frameworkName]
+	if !ok {
+		return frameworkName
+	}
+
+	return p
+}
+
 func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, frameworkName string, packageJsonPath string) (Metadata, error) {
 	p, err := node.PackageFromFile(packageJsonPath)
 
@@ -75,9 +90,10 @@ func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, framewor
 
 	var ver string
 	var ok bool
-	ver, ok = p.DevDependencies["cypress"]
+	packageName := toNpmPackageName(frameworkName)
+	ver, ok = p.DevDependencies[packageName]
 	if !ok {
-		ver, ok = p.Dependencies["cypress"]
+		ver, ok = p.Dependencies[packageName]
 		if !ok {
 			return Metadata{}, ErrVersionUndefined
 		}
