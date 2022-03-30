@@ -34,7 +34,7 @@ func NewPlaywright(c playwright.Project, ms framework.MetadataService, wr job.Wr
 			JobReader:         jr,
 			ArtfactDownloader: dl,
 			Reporters:         reps,
-			MetadataSearchStrategy: framework.NewSearchStrategy(c.Playwright.Version),
+			MetadataSearchStrategy: framework.NewSearchStrategy(c.Playwright.Version, c.RootDir),
 		},
 	}
 

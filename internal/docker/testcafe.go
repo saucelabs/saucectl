@@ -33,7 +33,7 @@ func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer
 			JobReader:         jr,
 			ArtfactDownloader: dl,
 			Reporters:         reps,
-			MetadataSearchStrategy: framework.NewSearchStrategy(c.Testcafe.Version),
+			MetadataSearchStrategy: framework.NewSearchStrategy(c.Testcafe.Version, c.RootDir),
 		},
 	}
 

@@ -3,7 +3,6 @@ package run
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -133,11 +132,6 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, tc testcomposer.Clie
 	}
 	testcafe.SetDefaults(&p)
 
-	// Resolve path to package.json file
-	if strings.Contains(p.Testcafe.Version, "package.json") {
-		p.Testcafe.Version = filepath.Join(p.RootDir, p.Testcafe.Version)
-	}
-
 	if err := testcafe.Validate(&p); err != nil {
 		return 1, err
 	}
@@ -214,7 +208,7 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 				"testcafe", "sauce"),
 			Async:    gFlags.async,
 			FailFast: gFlags.failFast,
-			MetadataSearchStrategy: framework.NewSearchStrategy(p.Testcafe.Version),
+			MetadataSearchStrategy: framework.NewSearchStrategy(p.Testcafe.Version, p.RootDir),
 		},
 	}
 

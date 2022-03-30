@@ -33,7 +33,7 @@ func NewPuppeteer(c puppeteer.Project, ms framework.MetadataService, wr job.Writ
 			JobReader:         jr,
 			ArtfactDownloader: dl,
 			Reporters:         reps,
-			MetadataSearchStrategy: framework.NewSearchStrategy(c.Puppeteer.Version),
+			MetadataSearchStrategy: framework.NewSearchStrategy(c.Puppeteer.Version, c.RootDir),
 		},
 	}
 

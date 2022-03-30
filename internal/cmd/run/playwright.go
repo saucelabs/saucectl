@@ -3,7 +3,6 @@ package run
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -112,11 +111,6 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 	}
 	playwright.SetDefaults(&p)
 
-	// Resolve path to package.json file
-	if strings.Contains(p.Playwright.Version, "package.json") {
-		p.Playwright.Version = filepath.Join(p.RootDir, p.Playwright.Version)
-	}
-
 	if err := playwright.Validate(&p); err != nil {
 		return 1, err
 	}
@@ -198,7 +192,7 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 				"playwright", "sauce"),
 			Async:    gFlags.async,
 			FailFast: gFlags.failFast,
-			MetadataSearchStrategy: framework.NewSearchStrategy(p.Playwright.Version),
+			MetadataSearchStrategy: framework.NewSearchStrategy(p.Playwright.Version, p.RootDir),
 		},
 	}
 

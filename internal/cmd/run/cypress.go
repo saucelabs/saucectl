@@ -3,7 +3,6 @@ package run
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"reflect"
 	"strings"
 
@@ -135,11 +134,6 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 	}
 	cypress.SetDefaults(&p)
 
-	// Resolve path to package.json file
-	if strings.Contains(p.Cypress.Version, "package.json") {
-		p.Cypress.Version = filepath.Join(p.RootDir, p.Cypress.Version)
-	}
-
 	if err := cypress.Validate(&p); err != nil {
 		return 1, err
 	}
@@ -217,7 +211,7 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 				"cypress", "sauce"),
 			Async:    gFlags.async,
 			FailFast: gFlags.failFast,
-			MetadataSearchStrategy: framework.NewSearchStrategy(p.Cypress.Version),
+			MetadataSearchStrategy: framework.NewSearchStrategy(p.Cypress.Version, p.RootDir),
 		},
 	}
 
