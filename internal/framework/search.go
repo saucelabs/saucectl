@@ -72,6 +72,7 @@ func toNpmPackageName(frameworkName string) string {
 	mapping := map[string]string{
 		"cypress":    "cypress",
 		"playwright": "@playwright/test",
+		"puppeteer":  "puppeteer",
 		"testcafe":   "testcafe",
 	}
 
