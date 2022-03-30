@@ -242,6 +242,7 @@ func TestRunProject(t *testing.T) {
 			ProjectUploader:    uploader,
 			ArtifactDownloader: &downloader,
 			MetadataService:    mdService,
+			MetadataSearchStrategy: framework.ExactStrategy{},
 		},
 		Project: cypress.Project{
 			RootDir: ".",
