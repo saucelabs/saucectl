@@ -102,7 +102,7 @@ func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, framewor
 		}
 	}
 
-	allVersions, err := svc.Versions(context.Background(), frameworkName)
+	allVersions, err := svc.Versions(ctx, frameworkName)
 	if err != nil {
 		return Metadata{}, ErrServerError
 	}
