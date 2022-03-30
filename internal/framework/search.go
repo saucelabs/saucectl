@@ -123,6 +123,10 @@ func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, framewor
 	})
 
 	c, err := semver.NewConstraint(ver)
+	if err != nil {
+		return Metadata{}, fmt.Errorf("unable to parse package version (%s): %w", ver, err)
+	}
+
 	for _, v := range allVersions {
 		sv, err := semver.NewVersion(v.FrameworkVersion)
 		if err != nil {
