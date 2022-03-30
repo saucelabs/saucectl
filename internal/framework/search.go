@@ -20,14 +20,14 @@ type FrameworkUnavailableError struct {
 
 // Error returns the error string
 func (e *FrameworkUnavailableError) Error() string {
-	s := fmt.Sprintf("Version %s for %s is not available", e.Version, e.Name)
+	s := fmt.Sprintf("version %s for %s is not available", e.Version, e.Name)
 	return s
 }
 
 // Misc errors
 var (
-	ErrServerError      = errors.New("Unable to check framework version availability")
-	ErrVersionUndefined = errors.New("Framework version is not defined")
+	ErrServerError      = errors.New("unable to check framework version availability")
+	ErrVersionUndefined = errors.New("framework version is not defined")
 )
 
 // MetadataSearchStrategy is a generic strategy for determining if the requested framework version is supported
@@ -87,7 +87,7 @@ func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, framewor
 	p, err := node.PackageFromFile(s.packageJsonFilePath)
 
 	if err != nil {
-		return Metadata{}, fmt.Errorf("Error reading package.json: %w", err)
+		return Metadata{}, fmt.Errorf("error reading package.json: %w", err)
 	}
 
 	var ver string
