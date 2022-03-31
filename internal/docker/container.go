@@ -28,15 +28,16 @@ import (
 
 // ContainerRunner represents the container runner for docker.
 type ContainerRunner struct {
-	Ctx               context.Context
-	docker            *Handler
-	containerConfig   *containerConfig
-	Framework         framework.Framework
-	FrameworkMeta     framework.MetadataService
-	JobWriter         job.Writer
-	ShowConsoleLog    bool
-	JobReader         job.Reader
-	ArtfactDownloader download.ArtifactDownloader
+	Ctx                    context.Context
+	docker                 *Handler
+	containerConfig        *containerConfig
+	Framework              framework.Framework
+	FrameworkMeta          framework.MetadataService
+	JobWriter              job.Writer
+	ShowConsoleLog         bool
+	JobReader              job.Reader
+	ArtfactDownloader      download.ArtifactDownloader
+	MetadataSearchStrategy framework.MetadataSearchStrategy
 
 	Reporters []report.Reporter
 
@@ -124,10 +125,8 @@ func (r *ContainerRunner) fetchImage(docker *config.Docker) error {
 	}
 
 	if docker.Image == "" {
-		m, err := r.FrameworkMeta.Search(r.Ctx, framework.SearchOptions{
-			Name:             r.Framework.Name,
-			FrameworkVersion: r.Framework.Version,
-		})
+		m, err := r.MetadataSearchStrategy.Find(r.Ctx, r.FrameworkMeta, r.Framework.Name, r.Framework.Version)
+
 		if err != nil {
 			return fmt.Errorf("unable to determine which docker image to run: %w", err)
 		}

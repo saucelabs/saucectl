@@ -91,6 +91,7 @@ func TestSignalDetectionExit(t *testing.T) {
 		defer unregisterSignalCapture(c)
 
 		c <- syscall.SIGINT
+		time.Sleep(1 * time.Second)
 		c <- syscall.SIGINT
 		return
 	}

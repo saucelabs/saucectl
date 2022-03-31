@@ -37,20 +37,21 @@ import (
 
 // CloudRunner represents the cloud runner for the Sauce Labs cloud.
 type CloudRunner struct {
-	ProjectUploader       storage.ProjectUploader
-	JobStarter            job.Starter
-	JobReader             job.Reader
-	RDCJobReader          job.Reader
-	JobWriter             job.Writer
-	JobStopper            job.Stopper
-	CCYReader             concurrency.Reader
-	TunnelService         tunnel.Service
-	Region                region.Region
-	MetadataService       framework.MetadataService
-	ShowConsoleLog        bool
-	ArtifactDownloader    download.ArtifactDownloader
-	RDCArtifactDownloader download.ArtifactDownloader
-	Framework             framework.Framework
+	ProjectUploader        storage.ProjectUploader
+	JobStarter             job.Starter
+	JobReader              job.Reader
+	RDCJobReader           job.Reader
+	JobWriter              job.Writer
+	JobStopper             job.Stopper
+	CCYReader              concurrency.Reader
+	TunnelService          tunnel.Service
+	Region                 region.Region
+	MetadataService        framework.MetadataService
+	ShowConsoleLog         bool
+	ArtifactDownloader     download.ArtifactDownloader
+	RDCArtifactDownloader  download.ArtifactDownloader
+	Framework              framework.Framework
+	MetadataSearchStrategy framework.MetadataSearchStrategy
 
 	Reporters []report.Reporter
 
@@ -711,32 +712,21 @@ func (r *CloudRunner) uploadCLIFlags(jobID string, content interface{}) {
 	}
 }
 
-// checkVersion checks if the requested version is available on Cloud and returns any depreciationNotice.
-func (r *CloudRunner) checkVersionAvailability(frameworkName string, frameworkVersion string) (string, error) {
-	var depreciationNotice string
+func (r *CloudRunner) deprecationMessage(frameworkName string, frameworkVersion string) string {
+	return fmt.Sprintf(
+		"%s%s%s",
+		color.RedString(fmt.Sprintf("\nVersion %s for %s is deprecated and will be removed during our next framework release cycle !\n\n", frameworkVersion, frameworkName)),
+		fmt.Sprintf("You should update your version of %s to a more recent one.\n", frameworkName),
+		r.getAvailableVersionsMessage(frameworkName),
+	)
+}
 
-	metadata, err := r.MetadataService.Search(context.Background(), framework.SearchOptions{
-		Name:             frameworkName,
-		FrameworkVersion: frameworkVersion,
-	})
-	if err != nil && isUnsupportedVersion(err) {
-		color.Red(fmt.Sprintf("\nVersion %s for %s is not available !\n\n", frameworkVersion, frameworkName))
-		fmt.Printf(r.getAvailableVersionsMessage(frameworkName))
-		return depreciationNotice, errors.New(msg.UnsupportedFrameworkVersion)
+func (r *CloudRunner) logFrameworkError(err error) {
+	var unavailableErr *framework.FrameworkUnavailableError
+	if errors.As(err, &unavailableErr) {
+		color.Red(fmt.Sprintf("\n%s\n\n", err.Error()))
+		fmt.Print(r.getAvailableVersionsMessage(unavailableErr.Name))
 	}
-	if err != nil {
-		return depreciationNotice, fmt.Errorf("unable to check framework version availability: %v", err)
-	}
-	if metadata.Deprecated {
-		depreciationNotice = fmt.Sprintf(
-			"%s%s%s",
-			color.RedString(fmt.Sprintf("\nVersion %s for %s is deprecated and will be removed during our next framework release cycle !\n\n", frameworkVersion, frameworkName)),
-			fmt.Sprintf("You should update your version of %s to a more recent one.\n", frameworkName),
-			r.getAvailableVersionsMessage(frameworkName),
-		)
-		fmt.Printf(depreciationNotice)
-	}
-	return depreciationNotice, nil
 }
 
 // logAvailableVersions displays the available cloud version for the framework.
