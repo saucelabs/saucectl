@@ -127,7 +127,7 @@ func askRegion(stdio terminal.Stdio) (string, error) {
 	var r string
 	p := &survey.Select{
 		Message: "Select region:",
-		Options: []string{region.USWest1.String(), region.EUCentral1.String()},
+		Options: []string{region.USWest1.String(), region.EUCentral1.String(), region.APACSoutheast1.String()},
 		Default: region.USWest1.String(),
 	}
 

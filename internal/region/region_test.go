@@ -1,8 +1,9 @@
 package region
 
 import (
-	"gotest.tools/v3/assert"
 	"testing"
+
+	"gotest.tools/v3/assert"
 )
 
 func TestFromString(t *testing.T) {
@@ -23,6 +24,11 @@ func TestFromString(t *testing.T) {
 			name: "eu-central-1",
 			args: args{"eu-central-1"},
 			want: EUCentral1,
+		},
+		{
+			name: "apac-southeast-1",
+			args: args{"apac-southeast-1"},
+			want: APACSoutheast1,
 		},
 		{
 			name: "wonderland",

@@ -11,7 +11,7 @@ const (
 	// EUCentral1 is a sauce labs region in the EU, aka eu-central-1.
 	EUCentral1
 	// APACSoutheast is a sauce labs region in the APAC, aka apac-southeast-1
-	APACSoutheast
+	APACSoutheast1
 	// Staging is a sauce labs internal pre-production environment.
 	Staging
 )
@@ -43,7 +43,7 @@ var meta = []struct {
 	{
 		"apac-southeast-1",
 		"https://api.apac-southeast-1.saucelabs.com",
-		"https://api.apac-southeast-1.saucelabs.com",
+		"https://app.apac-southeast-1.saucelabs.com",
 	},
 	// Staging
 	{
