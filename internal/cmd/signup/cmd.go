@@ -3,7 +3,6 @@ package signup
 import (
 	"fmt"
 	"os"
-	"sync"
 
 	bt "github.com/backtrace-labs/backtrace-go"
 	"github.com/rs/zerolog/log"
@@ -16,8 +15,6 @@ var (
 	runShort   = "Signup for Sauce Labs"
 	runLong    = "Provide a web link for free trial signup"
 	runExample = "saucectl signup"
-
-	wg sync.WaitGroup
 )
 
 // Command creates the `run` command
@@ -33,12 +30,8 @@ func Command() *cobra.Command {
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				sentry.CaptureError(err, sentry.Scope{})
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-					bt.Report(err, nil)
-					bt.FinishSendingReports()
-				}()
+				bt.Report(err, nil)
+				bt.FinishSendingReports()
 				os.Exit(1)
 			}
 		},

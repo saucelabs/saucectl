@@ -59,15 +59,11 @@ func NewTestcafeCmd() *cobra.Command {
 					Username:   credentials.Get().Username,
 					ConfigFile: gFlags.cfgFilePath,
 				})
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-					bt.Report(err, map[string]interface{}{
-						"username":   credentials.Get().Username,
-						"configFile": gFlags.cfgFilePath,
-					})
-					bt.FinishSendingReports()
-				}()
+				bt.Report(err, map[string]interface{}{
+					"username":   credentials.Get().Username,
+					"configFile": gFlags.cfgFilePath,
+				})
+				bt.FinishSendingReports()
 			}
 			os.Exit(exitCode)
 		},

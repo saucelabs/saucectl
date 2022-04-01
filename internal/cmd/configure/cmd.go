@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"sync"
 
 	"github.com/AlecAivazis/survey/v2"
 	bt "github.com/backtrace-labs/backtrace-go"
@@ -25,7 +24,6 @@ var (
 	cliUsername            = ""
 	cliAccessKey           = ""
 	cliDisableUsageMetrics = false
-	wg                     sync.WaitGroup
 )
 
 // Command creates the `configure` command
@@ -48,14 +46,10 @@ func Command() *cobra.Command {
 				sentry.CaptureError(err, sentry.Scope{
 					Username: cliUsername,
 				})
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-					bt.Report(err, map[string]interface{}{
-						"username": cliUsername,
-					})
-					bt.FinishSendingReports()
-				}()
+				bt.Report(err, map[string]interface{}{
+					"username": cliUsername,
+				})
+				bt.FinishSendingReports()
 				os.Exit(1)
 			}
 		},

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/config"
@@ -34,8 +33,6 @@ var (
 	initLong    = "bootstrap an existing project for Sauce Labs"
 	initExample = "saucectl init"
 )
-
-var wg sync.WaitGroup
 
 type initConfig struct {
 	batchMode bool
@@ -90,12 +87,8 @@ func Command() *cobra.Command {
 			if err != nil {
 				log.Err(err).Msg("failed to execute init command")
 				sentry.CaptureError(err, sentry.Scope{})
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-					bt.Report(err, nil)
-					bt.FinishSendingReports()
-				}()
+				bt.Report(err, nil)
+				bt.FinishSendingReports()
 				os.Exit(1)
 			}
 		},

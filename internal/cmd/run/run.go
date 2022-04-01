@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 
@@ -62,8 +61,6 @@ var (
 
 	// ErrEmptySuiteName is thrown when a flag is specified that has a dependency on the --name flag.
 	ErrEmptySuiteName = errors.New(msg.EmptyAdhocSuiteName)
-
-	wg sync.WaitGroup
 )
 
 // gFlags contains all global flags that are set when 'run' is invoked.
@@ -100,17 +97,12 @@ func Command() *cobra.Command {
 					Username:   credentials.Get().Username,
 					ConfigFile: gFlags.cfgFilePath,
 				})
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-					bt.Report(err, map[string]interface{}{
-						"username":   credentials.Get().Username,
-						"configFile": gFlags.cfgFilePath,
-					})
-					bt.FinishSendingReports()
-				}()
+				bt.Report(err, map[string]interface{}{
+					"username":   credentials.Get().Username,
+					"configFile": gFlags.cfgFilePath,
+				})
+				bt.FinishSendingReports()
 			}
-			wg.Wait()
 			os.Exit(exitCode)
 		},
 	}
