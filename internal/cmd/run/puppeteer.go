@@ -3,6 +3,7 @@ package run
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	bt "github.com/backtrace-labs/backtrace-go"
@@ -93,6 +94,11 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 
 	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
 	p.Sauce.Metadata.ExpandEnv()
+
+	// Normalize path to package.json file
+	if p.Puppeteer.Version == "package.json" {
+		p.Puppeteer.Version = filepath.Join(p.RootDir, p.Puppeteer.Version)
+	}
 
 	if err := applyPuppeteerFlags(&p); err != nil {
 		return 1, err

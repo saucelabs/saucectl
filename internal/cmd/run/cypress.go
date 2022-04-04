@@ -18,6 +18,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
@@ -216,6 +217,7 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 				"cypress", "sauce"),
 			Async:    gFlags.async,
 			FailFast: gFlags.failFast,
+			MetadataSearchStrategy: framework.NewSearchStrategy(p.Cypress.Version, p.RootDir),
 		},
 	}
 

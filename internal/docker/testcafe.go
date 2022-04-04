@@ -33,8 +33,10 @@ func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer
 			JobReader:         jr,
 			ArtfactDownloader: dl,
 			Reporters:         reps,
+			MetadataSearchStrategy: framework.NewSearchStrategy(c.Testcafe.Version, c.RootDir),
 		},
 	}
+
 	var err error
 	r.docker, err = Create()
 	if err != nil {

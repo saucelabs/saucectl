@@ -1,6 +1,7 @@
 package saucecloud
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -16,10 +17,19 @@ type TestcafeRunner struct {
 
 // RunProject runs the defined tests on sauce cloud
 func (r *TestcafeRunner) RunProject() (int, error) {
+	var deprecationMessage string
 	exitCode := 1
 
-	if err := r.checkVersionAvailability(testcafe.Kind, r.Project.Testcafe.Version); err != nil {
+	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, testcafe.Kind, r.Project.Testcafe.Version)
+	if err != nil {
+		r.logFrameworkError(err)
 		return exitCode, err
+	}
+	r.Project.Testcafe.Version = m.FrameworkVersion
+
+	if m.Deprecated {
+		deprecationMessage = r.deprecationMessage(testcafe.Kind, r.Project.Testcafe.Version)
+		fmt.Print(deprecationMessage)
 	}
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
@@ -40,6 +50,10 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 	passed := r.runSuites(fileURI)
 	if passed {
 		return 0, nil
+	}
+
+	if deprecationMessage != "" {
+		fmt.Printf(deprecationMessage)
 	}
 
 	return exitCode, nil
