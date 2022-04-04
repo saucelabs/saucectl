@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
@@ -21,7 +22,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 
 	"github.com/AlecAivazis/survey/v2/terminal"
-	bt "github.com/backtrace-labs/backtrace-go"
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -87,8 +87,7 @@ func Command() *cobra.Command {
 			if err != nil {
 				log.Err(err).Msg("failed to execute init command")
 				sentry.CaptureError(err, sentry.Scope{})
-				bt.Report(err, nil)
-				bt.FinishSendingReports()
+				backtrace.Report(err, nil, "")
 				os.Exit(1)
 			}
 		},

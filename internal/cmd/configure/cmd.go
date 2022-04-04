@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	bt "github.com/backtrace-labs/backtrace-go"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/segment"
@@ -46,10 +46,9 @@ func Command() *cobra.Command {
 				sentry.CaptureError(err, sentry.Scope{
 					Username: cliUsername,
 				})
-				bt.Report(err, map[string]interface{}{
+				backtrace.Report(err, map[string]interface{}{
 					"username": cliUsername,
-				})
-				bt.FinishSendingReports()
+				}, "")
 				os.Exit(1)
 			}
 		},

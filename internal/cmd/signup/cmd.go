@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	bt "github.com/backtrace-labs/backtrace-go"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/spf13/cobra"
 )
@@ -30,8 +30,7 @@ func Command() *cobra.Command {
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				sentry.CaptureError(err, sentry.Scope{})
-				bt.Report(err, nil)
-				bt.FinishSendingReports()
+				backtrace.Report(err, nil, "")
 				os.Exit(1)
 			}
 		},

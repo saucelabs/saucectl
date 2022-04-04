@@ -4,12 +4,12 @@ import (
 	"os"
 	"strings"
 
-	bt "github.com/backtrace-labs/backtrace-go"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
 	"github.com/saucelabs/saucectl/internal/appstore"
+	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/flags"
@@ -54,11 +54,9 @@ func NewXCUITestCmd() *cobra.Command {
 					Username:   credentials.Get().Username,
 					ConfigFile: gFlags.cfgFilePath,
 				})
-				bt.Report(err, map[string]interface{}{
-					"username":   credentials.Get().Username,
-					"configFile": gFlags.cfgFilePath,
-				})
-				bt.FinishSendingReports()
+				backtrace.Report(err, map[string]interface{}{
+					"username": credentials.Get().Username,
+				}, gFlags.cfgFilePath)
 			}
 			os.Exit(exitCode)
 		},
