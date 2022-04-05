@@ -21,7 +21,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/segment"
-	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/usage"
 )
@@ -51,10 +50,6 @@ func NewEspressoCmd() *cobra.Command {
 			exitCode, err := runEspresso(cmd, lflags, tcClient, restoClient, rdcClient, appsClient)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
-				sentry.CaptureError(err, sentry.Scope{
-					Username:   credentials.Get().Username,
-					ConfigFile: gFlags.cfgFilePath,
-				})
 				backtrace.Report(err, map[string]interface{}{
 					"username": credentials.Get().Username,
 				}, gFlags.cfgFilePath)

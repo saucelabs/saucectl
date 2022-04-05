@@ -24,7 +24,6 @@ import (
 	"github.com/spf13/cobra"
 
 	bt "github.com/backtrace-labs/backtrace-go"
-	"github.com/getsentry/sentry-go"
 )
 
 var (
@@ -56,7 +55,6 @@ func main() {
 	noColor := cmd.PersistentFlags().Bool("no-color", false, "disable colorized output")
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		setupLogging(*verbosity, *noColor)
-		setupSentry()
 		setupBacktrace()
 		return nil
 	}
@@ -92,19 +90,6 @@ func setupLogging(verbose bool, noColor bool) {
 	}
 
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: timeFormat, NoColor: noColor})
-}
-
-func setupSentry() {
-	err := sentry.Init(sentry.ClientOptions{
-		Dsn:         setup.SentryDSN,
-		Environment: "production",
-		Release:     fmt.Sprintf("saucectl@%s", version.Version),
-		Debug:       false,
-	})
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to setup sentry")
-		return
-	}
 }
 
 func setupBacktrace() {

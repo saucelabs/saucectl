@@ -12,7 +12,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/segment"
-	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/spf13/cobra"
 )
 
@@ -43,9 +42,6 @@ func Command() *cobra.Command {
 
 			if err := Run(); err != nil {
 				log.Err(err).Msg("failed to execute configure command")
-				sentry.CaptureError(err, sentry.Scope{
-					Username: cliUsername,
-				})
 				backtrace.Report(err, map[string]interface{}{
 					"username": cliUsername,
 				}, "")

@@ -17,7 +17,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/segment"
-	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 
@@ -86,7 +85,6 @@ func Command() *cobra.Command {
 			err := Run(cmd, initCfg)
 			if err != nil {
 				log.Err(err).Msg("failed to execute init command")
-				sentry.CaptureError(err, sentry.Scope{})
 				backtrace.Report(err, nil, "")
 				os.Exit(1)
 			}
