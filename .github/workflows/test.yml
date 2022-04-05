@@ -160,8 +160,9 @@ jobs:
       - name: Saucectl RUN - Config Driven
         run: ./saucectl run -c .sauce/testcafe.yml --timeout 10m
 
-      - name: Saucectl RUN - CLI Driven
-        run: ./saucectl run testcafe "*.test.js" -c "" --name "CLI Driven" --browser chrome --rootDir tests/e2e/testcafe/ --testcafe.version 1.18.3 --timeout 10m
+      # CLI driven test is disabled temporarily because of a bug in testcafe runner. It'll be enabled after the runner getting released
+      #- name: Saucectl RUN - CLI Driven
+      #  run: ./saucectl run testcafe "*.test.js" -c "" --name "CLI Driven" --browser chrome --rootDir tests/e2e/testcafe/ --testcafe.version 1.18.3 --timeout 10m
   cypress:
     needs: build
     runs-on: ubuntu-latest
