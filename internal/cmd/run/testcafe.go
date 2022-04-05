@@ -70,7 +70,7 @@ func NewTestcafeCmd() *cobra.Command {
 	// Browser & Platform
 	sc.String("browser", "suite::browserName", "", "Run tests against this browser")
 	sc.String("browserVersion", "suite::browserVersion", "", "The browser version (default: latest)")
-	sc.StringSlice("browserArgs", "suite::browserArgs", nil, "Set browser args")
+	sc.StringSlice("browserArgs", "suite::browserArgs", []string{}, "Set browser args")
 	sc.String("platform", "suite::platformName", "", "Run tests against this platform")
 	sc.Bool("headless", "suite::headless", false, "Controls whether or not tests are run in headless mode (default: false)")
 
