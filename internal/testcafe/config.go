@@ -213,6 +213,10 @@ func SetDefaults(p *Project) {
 				sim.PlatformName = "iOS"
 			}
 		}
+
+		if len(suite.BrowserArgs) == 0 {
+			suite.BrowserArgs = nil
+		}
 	}
 
 	// Apply global env vars onto every suite.
