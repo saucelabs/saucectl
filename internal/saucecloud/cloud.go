@@ -105,7 +105,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	junitRequired := report.IsArtifactRequired(r.Reporters, report.JUnitArtifact)
 
 	done := make(chan interface{})
-	go func() {
+	go func(r *CloudRunner) {
 		t := time.NewTicker(10 * time.Second)
 		defer t.Stop()
 		for {
@@ -113,10 +113,12 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			case <-done:
 				return
 			case <-t.C:
-				log.Info().Msgf("Suites in progress: %d", inProgress)
+				if !r.interrupted {
+					log.Info().Msgf("Suites in progress: %d", inProgress)
+				}
 			}
 		}
-	}()
+	}(r)
 	for i := 0; i < expected; i++ {
 		res := <-results
 		// in case one of test suites not passed
@@ -184,8 +186,10 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	}
 	close(done)
 
-	for _, rep := range r.Reporters {
-		rep.Render()
+	if !r.interrupted {
+		for _, rep := range r.Reporters {
+			rep.Render()
+		}
 	}
 
 	return passed
@@ -208,13 +212,22 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	}
 
 	if !isRDC {
+		sigChan := r.registerInterruptOnSignal(id, opts.DisplayName)
+		defer unregisterSignalCapture(sigChan)
+
 		r.uploadSauceConfig(id, opts.ConfigFilePath)
 		r.uploadCLIFlags(id, opts.CLIFlags)
 	}
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
 	// if a soft exit is requested during startContainer phase, it gently exits.
 	if r.interrupted {
-		return job.Job{}, true, nil
+		r.stopSuiteExecution(id, opts.DisplayName)
+		if !isRDC {
+			j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second, opts.Timeout)
+		} else {
+			j, err = r.RDCJobReader.PollJob(context.Background(), id, 15*time.Second, opts.Timeout)
+		}
+		return j, true, err
 	}
 
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
@@ -239,16 +252,13 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 
 	// High interval poll to not oversaturate the job reader with requests
 	if !isRDC {
-		sigChan := r.registerInterruptOnSignal(id, opts.DisplayName)
-		defer unregisterSignalCapture(sigChan)
-
 		j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second, opts.Timeout)
 	} else {
 		j, err = r.RDCJobReader.PollJob(context.Background(), id, 15*time.Second, opts.Timeout)
 	}
 
 	if err != nil {
-		return job.Job{}, false, fmt.Errorf("failed to retrieve job status for suite %s: %s", opts.DisplayName, err.Error())
+		return job.Job{}, r.interrupted, fmt.Errorf("failed to retrieve job status for suite %s: %s", opts.DisplayName, err.Error())
 	}
 
 	// Enrich RDC data
@@ -272,7 +282,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 
 	if !j.Passed {
 		// We may need to differentiate when a job has crashed vs. when there is errors.
-		return j, false, fmt.Errorf("suite '%s' has test failures", opts.DisplayName)
+		return j, r.interrupted, fmt.Errorf("suite '%s' has test failures", opts.DisplayName)
 	}
 
 	return j, false, nil
@@ -315,7 +325,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 
 		jobData, skipped, err := r.runJob(opts)
 
-		if opts.Attempt < opts.Retries && !jobData.Passed {
+		if opts.Attempt < opts.Retries && !jobData.Passed && !skipped {
 			log.Warn().Err(err).Msg("Suite errored.")
 			opts.Attempt++
 			jobOpts <- opts
@@ -629,6 +639,7 @@ func (r *CloudRunner) dryRun(project interface{}, folder string, sauceIgnoreFile
 
 // stopSuiteExecution stops the current execution on Sauce Cloud
 func (r *CloudRunner) stopSuiteExecution(jobID string, suiteName string) {
+	log.Info().Str("suite", suiteName).Msg("Stopping suite")
 	_, err := r.JobStopper.StopJob(context.Background(), jobID)
 	if err != nil {
 		log.Warn().Err(err).Str("suite", suiteName).Msg("Unable to stop suite.")
@@ -645,7 +656,6 @@ func (r *CloudRunner) registerInterruptOnSignal(jobID, suiteName string) chan os
 		if sig == nil {
 			return
 		}
-		log.Info().Str("suite", suiteName).Msg("Stopping suite")
 		r.stopSuiteExecution(jobID, suiteName)
 	}(sigChan, jobID, suiteName)
 	return sigChan
@@ -665,7 +675,7 @@ func (r *CloudRunner) registerSkipSuitesOnSignal() chan os.Signal {
 			if cr.interrupted {
 				os.Exit(1)
 			}
-			log.Info().Msg("Ctrl-C captured. Ctrl-C again to exit now.")
+			println("\nStopping run. Waiting for all in progress tests to be stopped... (press Ctrl-c again to exit without waiting)\n")
 			cr.interrupted = true
 		}
 	}(sigChan, r)
