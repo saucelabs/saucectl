@@ -2,10 +2,11 @@ package signup
 
 import (
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/sentry"
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/backtrace"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -13,8 +14,6 @@ var (
 	runShort   = "Signup for Sauce Labs"
 	runLong    = "Provide a web link for free trial signup"
 	runExample = "saucectl signup"
-
-	defaultLogFir = "<cwd>/logs"
 )
 
 // Command creates the `run` command
@@ -29,7 +28,7 @@ func Command() *cobra.Command {
 			err := Run()
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
-				sentry.CaptureError(err, sentry.Scope{})
+				backtrace.Report(err, nil, "")
 				os.Exit(1)
 			}
 		},
