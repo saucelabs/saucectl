@@ -160,7 +160,7 @@ jobs:
       - name: Saucectl RUN - Config Driven
         run: ./saucectl run -c .sauce/testcafe.yml --timeout 10m
 
-      # CLI driven test is disabled temporarily because of a bug in testcafe runner. It'll be enabled after the runner getting released
+      # CLI driven test is disabled temporarily because of a bug in the testcafe runner. Re-enable after https://github.com/saucelabs/sauce-testcafe-runner/commit/79b6afe0bfe164808ae070c19cef8d2395b2254c ships.
       #- name: Saucectl RUN - CLI Driven
       #  run: ./saucectl run testcafe "*.test.js" -c "" --name "CLI Driven" --browser chrome --rootDir tests/e2e/testcafe/ --testcafe.version 1.18.3 --timeout 10m
   cypress:
