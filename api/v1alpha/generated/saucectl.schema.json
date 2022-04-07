@@ -221,13 +221,14 @@
                 "properties": {
                   "junit": {
                     "type": "object",
+                    "description": "The JUnit reporter merges test results from all jobs in the JUnit format into a single report.",
                     "properties": {
                       "enabled": {
                         "description": "Toggles the reporter on/off.",
                         "type": "boolean"
                       },
                       "filename": {
-                        "description": "Filename for the generated junit report",
+                        "description": "Filename for the generated JUnit report.",
                         "type": "string",
                         "default": "saucectl-report.xml"
                       }
