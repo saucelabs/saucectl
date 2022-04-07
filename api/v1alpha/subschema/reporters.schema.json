@@ -8,14 +8,19 @@
     "reporters": {
       "type": "object",
       "properties": {
-        "enabled": {
-          "description": "Toggles the reporter on/off.",
-          "type": "boolean"
-        },
-        "filename": {
-          "description": "Filename for the generated junit report",
-          "type": "string",
-          "default": "saucectl-report.xml"
+        "junit": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "description": "Toggles the reporter on/off.",
+              "type": "boolean"
+            },
+            "filename": {
+              "description": "Filename for the generated junit report",
+              "type": "string",
+              "default": "saucectl-report.xml"
+            }
+          }
         }
       },
       "additionalProperties": false
