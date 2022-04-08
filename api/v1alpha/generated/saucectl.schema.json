@@ -397,6 +397,10 @@
                     "10m",
                     "90s"
                   ]
+                },
+                "preExec": {
+                  "description": "Specifies which commands to execute before starting the tests.",
+                  "type": "array"
                 }
               },
               "required": [
@@ -855,6 +859,9 @@
                 },
                 "timeout": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/timeout"
+                },
+                "preExec": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/preExec"
                 }
               },
               "required": [
@@ -1316,6 +1323,9 @@
                 },
                 "timeout": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/timeout"
+                },
+                "preExec": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/preExec"
                 }
               },
               "required": [

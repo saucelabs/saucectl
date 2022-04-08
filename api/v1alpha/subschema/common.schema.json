@@ -62,6 +62,10 @@
     "showConsoleLog": {
       "description": "Shows suites console.log locally. By default console.log is only shown on failures.",
       "type": "boolean"
+    },
+    "preExec": {
+      "description": "Specifies which commands to execute before starting the tests.",
+      "type": "array"
     }
   }
 }

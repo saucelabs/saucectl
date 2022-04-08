@@ -167,6 +167,9 @@
           },
           "timeout": {
             "$ref": "../subschema/common.schema.json#/definitions/timeout"
+          },
+          "preExec": {
+            "$ref": "../subschema/common.schema.json#/definitions/preExec"
           }
         },
         "required": [
