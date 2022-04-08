@@ -85,6 +85,7 @@ type Suite struct {
 	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
 	Env              map[string]string `yaml:"env,omitempty" json:"env"`
 	Timeout          time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
+	PreExec          []string          `yaml:"preExec,omitempty" json:"preExec"`
 	// Deprecated as of TestCafe v1.10.0 https://testcafe.io/documentation/402638/reference/configuration-file#tsconfigpath
 	TsConfigPath       string                 `yaml:"tsConfigPath,omitempty" json:"tsConfigPath"`
 	ClientScripts      []string               `yaml:"clientScripts,omitempty" json:"clientScripts,omitempty"`
