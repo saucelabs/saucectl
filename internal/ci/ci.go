@@ -1,6 +1,19 @@
 package ci
 
-import "os"
+import (
+	"fmt"
+	"os"
+	"reflect"
+)
+
+type CI struct {
+	Provider  Provider
+	OriginURL string
+	Repo      string
+	RefName   string // branch
+	SHA       string
+	User      string
+}
 
 // Provider represents a CI Provider.
 type Provider struct {
@@ -80,4 +93,61 @@ func GetProvider() Provider {
 	}
 
 	return None
+}
+
+func GetTags() []string {
+	envs := []string{}
+	provider := GetProvider()
+	if reflect.DeepEqual(provider, None) {
+		return envs
+	}
+
+	var ci CI
+	if reflect.DeepEqual(provider, AppVeyor) {
+		ci = CI{
+			Provider:  provider,
+			OriginURL: os.Getenv("APPVEYOR_URL"),
+			Repo:      os.Getenv("APPVEYOR_REPO_NAME"),
+			RefName:   os.Getenv("APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH"),
+			SHA:       os.Getenv("APPVEYOR_REPO_COMMIT"),
+			User:      os.Getenv("APPVEYOR_REPO_COMMIT_AUTHOR"),
+		}
+	}
+	if reflect.DeepEqual(provider, AWS) {
+		ci = CI{
+			Provider:  provider,
+			OriginURL: os.Getenv("CODEBUILD_PUBLIC_BUILD_URL"),
+			Repo:      os.Getenv("CODEBUILD_SOURCE_REPO_URL"),
+			RefName:   os.Getenv("CODEBUILD_SOURCE_VERSION"),
+			SHA:       os.Getenv("CODEBUILD_RESOLVED_SOURCE_VERSION"),
+			User:      os.Getenv("CODEBUILD_WEBHOOK_ACTOR_ACCOUNT_ID"),
+		}
+	}
+	if reflect.DeepEqual(provider, GitHub) {
+		ci = CI{
+			Provider:  provider,
+			OriginURL: fmt.Sprintf("%s/%s/runs/%s", os.Getenv("GITHUB_SERVER_URL"), os.Getenv("GITHUB_REPOSITORY"), os.Getenv("GITHUB_RUN_ID")),
+			Repo:      os.Getenv("GITHUB_REPOSITORY"),
+			RefName:   os.Getenv("GITHUB_REF_NAME"),
+			SHA:       os.Getenv("GITHUB_SHA"),
+			User:      os.Getenv("GITHUB_ACTOR"),
+		}
+	}
+	if reflect.DeepEqual(provider, GitLab) {
+		ci = CI{
+			Provider:  provider,
+			OriginURL: os.Getenv("CI_JOB_URL"),
+			Repo:      os.Getenv("CI_PROJECT_PATH"),
+			RefName:   os.Getenv("CI_COMMIT_REF_NAME"),
+			SHA:       os.Getenv("CI_COMMIT_SHA"),
+			User:      os.Getenv("GITLAB_USER_LOGIN"),
+		}
+	}
+	return []string{
+		fmt.Sprintf("%s:%s:%s", ci.Provider.Name, "originURL", ci.OriginURL),
+		fmt.Sprintf("%s:%s:%s", ci.Provider.Name, "repo", ci.Repo),
+		fmt.Sprintf("%s:%s:%s", ci.Provider.Name, "refName", ci.RefName),
+		fmt.Sprintf("%s:%s:%s", ci.Provider.Name, "SHA", ci.SHA),
+		fmt.Sprintf("%s:%s:%s", ci.Provider.Name, "user", ci.User),
+	}
 }

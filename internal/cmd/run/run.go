@@ -75,6 +75,7 @@ type globalFlags struct {
 	async               bool
 	failFast            bool
 	appStoreTimeout     time.Duration
+	disableCIInfo       bool
 }
 
 // Command creates the `run` command
@@ -142,6 +143,7 @@ func Command() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&gFlags.selectedSuite, "select-suite", "", "Run specified test suite.")
 	cmd.PersistentFlags().BoolVar(&gFlags.testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
 	cmd.PersistentFlags().BoolVar(&gFlags.disableUsageMetrics, "disable-usage-metrics", false, "Disable usage metrics collection.")
+	cmd.PersistentFlags().BoolVar(&gFlags.disableCIInfo, "disable-ci-info", false, "Disable CI info collection.")
 	_ = cmd.PersistentFlags().MarkHidden("sauce-api")
 	_ = cmd.PersistentFlags().MarkHidden("runner-version")
 	_ = cmd.PersistentFlags().MarkHidden("experiment")
