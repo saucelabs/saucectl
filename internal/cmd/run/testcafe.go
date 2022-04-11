@@ -143,7 +143,7 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, tc testcomposer.Clie
 
 	rs.ArtifactConfig = p.Artifacts.Download
 
-	if !gFlags.disableCIInfo {
+	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
 

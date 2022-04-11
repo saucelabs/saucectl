@@ -115,7 +115,7 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, tc testcompose
 	rs.ArtifactConfig = p.Artifacts.Download
 	rc.ArtifactConfig = p.Artifacts.Download
 
-	if !gFlags.disableCIInfo {
+	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
 

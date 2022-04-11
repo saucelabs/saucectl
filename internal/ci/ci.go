@@ -104,7 +104,6 @@ func getCI(provider Provider) CI {
 			Repo:      os.Getenv("APPVEYOR_REPO_NAME"),
 			RefName:   os.Getenv("APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH"),
 			SHA:       os.Getenv("APPVEYOR_REPO_COMMIT"),
-			User:      os.Getenv("APPVEYOR_REPO_COMMIT_AUTHOR"),
 		}
 	}
 	if reflect.DeepEqual(provider, AWS) {
@@ -124,7 +123,7 @@ func getCI(provider Provider) CI {
 			Repo:      os.Getenv("System_PullRequest_SourceRepositoryURI"),
 			RefName:   os.Getenv("Build_SourceBranchName"),
 			SHA:       os.Getenv("Build_SourceVersion"),
-			User:      os.Getenv("Build_Reason"),
+			User:      os.Getenv("Build_RequestedFor"),
 		}
 	}
 	if reflect.DeepEqual(provider, Bamboo) {
@@ -183,7 +182,6 @@ func getCI(provider Provider) CI {
 			Repo:      os.Getenv("CI_REPO_NAME"),
 			RefName:   os.Getenv("CI_BRANCH"),
 			SHA:       os.Getenv("CI_COMMIT_ID"),
-			User:      os.Getenv("CI_COMMITTER_USERNAME"),
 		}
 	}
 	if reflect.DeepEqual(provider, Drone) {
@@ -193,7 +191,6 @@ func getCI(provider Provider) CI {
 			Repo:      os.Getenv("DRONE_REPO"),
 			RefName:   os.Getenv("DRONE_BRANCH"),
 			SHA:       os.Getenv("DRONE_COMMIT_SHA"),
-			User:      os.Getenv("DRONE_COMMIT_AUTHOR"),
 		}
 	}
 	if reflect.DeepEqual(provider, GitHub) {
@@ -224,7 +221,6 @@ func getCI(provider Provider) CI {
 			Repo:      os.Getenv("GIT_URL"),
 			RefName:   os.Getenv("GIT_BRANCH"),
 			SHA:       os.Getenv("GIT_COMMIT"),
-			User:      os.Getenv("CHANGE_AUTHOR"),
 		}
 	}
 	if reflect.DeepEqual(provider, Semaphore) {

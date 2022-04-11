@@ -107,7 +107,7 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, tc testcomposer.Cl
 	rs.ArtifactConfig = p.Artifacts.Download
 	rc.ArtifactConfig = p.Artifacts.Download
 
-	if !gFlags.disableCIInfo {
+	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
 

@@ -138,7 +138,7 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 		return 1, err
 	}
 
-	if !gFlags.disableCIInfo {
+	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
 

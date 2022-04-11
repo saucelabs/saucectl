@@ -107,7 +107,7 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 	rs.URL = regio.APIBaseURL()
 	tc.URL = regio.APIBaseURL()
 
-	if !gFlags.disableCIInfo {
+	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
 
