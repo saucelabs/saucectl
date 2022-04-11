@@ -1,8 +1,8 @@
 package saucecloud
 
 import (
-	"fmt"
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/saucelabs/saucectl/internal/job"
@@ -54,7 +54,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 	}
 
 	if deprecationMessage != "" {
-		fmt.Printf(deprecationMessage)
+		fmt.Print(deprecationMessage)
 	}
 
 	return exitCode, nil

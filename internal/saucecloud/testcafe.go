@@ -53,7 +53,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 	}
 
 	if deprecationMessage != "" {
-		fmt.Printf(deprecationMessage)
+		fmt.Print(deprecationMessage)
 	}
 
 	return exitCode, nil
