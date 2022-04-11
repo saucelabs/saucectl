@@ -95,13 +95,7 @@ func GetProvider() Provider {
 	return None
 }
 
-func GetTags() []string {
-	envs := []string{}
-	provider := GetProvider()
-	if reflect.DeepEqual(provider, None) {
-		return envs
-	}
-
+func getCI(provider Provider) CI {
 	var ci CI
 	if reflect.DeepEqual(provider, AppVeyor) {
 		ci = CI{
@@ -126,7 +120,7 @@ func GetTags() []string {
 	if reflect.DeepEqual(provider, GitHub) {
 		ci = CI{
 			Provider:  provider,
-			OriginURL: fmt.Sprintf("%s/%s/runs/%s", os.Getenv("GITHUB_SERVER_URL"), os.Getenv("GITHUB_REPOSITORY"), os.Getenv("GITHUB_RUN_ID")),
+			OriginURL: fmt.Sprintf("%s/%s/actions/runs/%s", os.Getenv("GITHUB_SERVER_URL"), os.Getenv("GITHUB_REPOSITORY"), os.Getenv("GITHUB_RUN_ID")),
 			Repo:      os.Getenv("GITHUB_REPOSITORY"),
 			RefName:   os.Getenv("GITHUB_REF_NAME"),
 			SHA:       os.Getenv("GITHUB_SHA"),
@@ -143,6 +137,17 @@ func GetTags() []string {
 			User:      os.Getenv("GITLAB_USER_LOGIN"),
 		}
 	}
+	return ci
+}
+
+// GetTags return tag list containing CI info
+func GetTags() []string {
+	envs := []string{}
+	provider := GetProvider()
+	if reflect.DeepEqual(provider, None) {
+		return envs
+	}
+	ci := getCI(provider)
 	return []string{
 		fmt.Sprintf("%s:%s:%s", ci.Provider.Name, "originURL", ci.OriginURL),
 		fmt.Sprintf("%s:%s:%s", ci.Provider.Name, "repo", ci.Repo),
