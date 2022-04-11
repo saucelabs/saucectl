@@ -515,7 +515,7 @@ func (c *Client) GetVirtualDevices(ctx context.Context, kind string) ([]vmd.Virt
 	return dev, nil
 }
 
-func (c *Client) GetBuildID(ctx context.Context, jobID string, buildSource build.BuildSource) (string, error) {
+func (c *Client) GetBuildID(ctx context.Context, jobID string, buildSource build.Source) (string, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v2/builds/%s/jobs/%s/build/", c.URL, buildSource, jobID), nil)
 	if err != nil {
 		return "", err
