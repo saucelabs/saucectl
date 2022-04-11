@@ -62,6 +62,7 @@ type Suite struct {
 	Timeout          time.Duration `yaml:"timeout,omitempty" json:"timeout"`
 	Shard            string        `yaml:"shard,omitempty" json:"-"`
 	Headless         bool          `yaml:"headless,omitempty" json:"headless"`
+	PreExec          []string      `yaml:"preExec,omitempty" json:"preExec"`
 }
 
 // SuiteConfig represents the cypress config overrides.

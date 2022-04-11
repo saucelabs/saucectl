@@ -68,6 +68,7 @@ type Suite struct {
 	Env               map[string]string `yaml:"env,omitempty" json:"env,omitempty"`
 	NumShards         int               `yaml:"numShards,omitempty" json:"-"`
 	Shard             string            `yaml:"shard,omitempty" json:"-"`
+	PreExec           []string          `yaml:"preExec,omitempty" json:"preExec"`
 }
 
 // SuiteConfig represents the configuration specific to a suite
