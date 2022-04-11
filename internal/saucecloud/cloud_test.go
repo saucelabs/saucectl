@@ -105,50 +105,41 @@ func TestSignalDetectionExit(t *testing.T) {
 }
 
 func TestSkippedRunJobs(t *testing.T) {
-	type testCase struct {
-		interrupted bool
-		wantErr     bool
-		wantSkipped bool
-		wantJobID   bool
-	}
-	tests := []testCase{
-		{
-			interrupted: true,
-			wantSkipped: true,
-			wantErr:     false,
-			wantJobID:   false,
+	sut := CloudRunner{
+		JobStarter: &mocks.FakeJobStarter{
+			StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+				return "fake-id", false, nil
+			},
+		},
+		JobStopper: &mocks.FakeJobStopper{
+			StopJobFn: func(ctx context.Context, id string) (job.Job, error) {
+				return job.Job{
+					ID: "fake-id",
+				}, nil
+			},
+		},
+		JobReader: &mocks.FakeJobReader{
+			PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+				return job.Job{
+					ID:     "fake-id",
+					Passed: true,
+					Error:  "",
+					Status: job.StateComplete,
+				}, nil
+			},
+		},
+		JobWriter: &mocks.FakeJobWriter{
+			UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+				return nil
+			},
 		},
 	}
-	for _, tt := range tests {
-		r := CloudRunner{
-			JobStarter: &mocks.FakeJobStarter{
-				StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
-					return "fake-id", false, nil
-				},
-			},
-			JobReader: &mocks.FakeJobReader{
-				PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
-					return job.Job{
-						ID:     "fake-id",
-						Passed: true,
-						Error:  "",
-						Status: job.StateComplete,
-					}, nil
-				},
-			},
-			JobWriter: &mocks.FakeJobWriter{
-				UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
-					return nil
-				},
-			},
-		}
-		r.interrupted = tt.interrupted
+	sut.interrupted = true
 
-		j, skipped, err := r.runJob(job.StartOptions{})
-		assert.Equal(t, tt.wantSkipped, skipped)
-		assert.Equal(t, tt.wantErr, err != nil)
-		assert.Equal(t, tt.wantJobID, j.ID != "")
-	}
+	_, skipped, err := sut.runJob(job.StartOptions{})
+
+	assert.True(t, skipped)
+	assert.Nil(t, err)
 }
 
 func TestRunJobsSkipped(t *testing.T) {
