@@ -481,7 +481,6 @@ func TestClient_Versions(t *testing.T) {
 		Credentials: credentials.Credentials{Username: "test", AccessKey: "123"},
 	}
 	type args struct {
-		client        *Client
 		frameworkName string
 	}
 	tests := []struct {

@@ -422,7 +422,6 @@ func Test_completeBasic(t *testing.T) {
 	defer os.Chdir(pwd)
 
 	type args struct {
-		folder     string
 		toComplete string
 	}
 	tests := []struct {

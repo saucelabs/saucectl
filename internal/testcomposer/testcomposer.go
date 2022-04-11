@@ -127,22 +127,6 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 	return j.JobID, j.IsRDC, nil
 }
 
-func (c *Client) newJSONRequest(ctx context.Context, url, method string, payload interface{}) (*http.Request, error) {
-	var b bytes.Buffer
-	if err := json.NewEncoder(&b).Encode(payload); err != nil {
-		return nil, err
-	}
-
-	req, err := requesth.NewWithContext(ctx, method, url, &b)
-	if err != nil {
-		return nil, err
-	}
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	return req, err
-}
-
 func (c *Client) doJSONResponse(req *http.Request, expectStatus int, v interface{}) error {
 	res, err := c.HTTPClient.Do(req)
 	if err != nil {

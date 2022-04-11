@@ -47,7 +47,6 @@ var (
 
 	// General Request Timeouts
 	testComposerTimeout = 300 * time.Second
-	restoTimeout        = 60 * time.Second
 	rdcTimeout          = 15 * time.Second
 	githubTimeout       = 2 * time.Second
 

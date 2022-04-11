@@ -9,9 +9,6 @@ import (
 )
 
 func TestConfigFromFile(t *testing.T) {
-	type args struct {
-		fileName string
-	}
 	tests := []struct {
 		name        string
 		fileContent string
