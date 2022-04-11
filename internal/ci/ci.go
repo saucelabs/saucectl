@@ -117,6 +117,85 @@ func getCI(provider Provider) CI {
 			User:      os.Getenv("CODEBUILD_WEBHOOK_ACTOR_ACCOUNT_ID"),
 		}
 	}
+	if reflect.DeepEqual(provider, Azure) {
+		ci = CI{
+			Provider:  provider,
+			OriginURL: os.Getenv("Build_BuildUri"),
+			Repo:      os.Getenv("System_PullRequest_SourceRepositoryURI"),
+			RefName:   os.Getenv("Build_SourceBranchName"),
+			SHA:       os.Getenv("Build_SourceVersion"),
+			User:      os.Getenv("Build_Reason"),
+		}
+	}
+	if reflect.DeepEqual(provider, Bamboo) {
+		ci = CI{
+			Provider:  provider,
+			OriginURL: os.Getenv("bamboo_buildResultsUrl"),
+			Repo:      os.Getenv("bamboo_planRepository_repositoryUrl"),
+			RefName:   os.Getenv("bamboo_planRepository_branch"),
+			SHA:       os.Getenv("bamboo_planRepository_revision"),
+			User:      os.Getenv("bamboo_ManualBuildTriggerReason_userName"),
+		}
+	}
+	if reflect.DeepEqual(provider, Bitbucket) {
+		ci = CI{
+			Provider: provider,
+			Repo:     os.Getenv("BITBUCKET_REPO_FULL_NAME"),
+			RefName:  os.Getenv("BITBUCKET_BRANCH"),
+			SHA:      os.Getenv("BITBUCKET_COMMIT"),
+			User:     os.Getenv("BITBUCKET_STEP_TRIGGERER_UUID"),
+		}
+	}
+	if reflect.DeepEqual(provider, Buildkite) {
+		ci = CI{
+			Provider:  provider,
+			OriginURL: os.Getenv("BUILDKITE_BUILD_URL"),
+			Repo:      os.Getenv("BUILDKITE_REPO"),
+			RefName:   os.Getenv("BUILDKITE_BRANCH"),
+			SHA:       os.Getenv("BUILDKITE_COMMIT"),
+			User:      os.Getenv("BUILDKITE_BUILD_CREATOR"),
+		}
+	}
+	if reflect.DeepEqual(provider, Buddy) {
+		ci = CI{
+			Provider:  provider,
+			OriginURL: os.Getenv("BUDDY_PIPELINE_URL"),
+			Repo:      os.Getenv("BUDDY_PROJECT_URL"),
+			RefName:   os.Getenv("BUDDY_EXECUTION_BRANCH"),
+			SHA:       os.Getenv("BUDDY_EXECUTION_REVISION"),
+			User:      os.Getenv("BUDDY_INVOKER_NAME"),
+		}
+	}
+	if reflect.DeepEqual(provider, Circle) {
+		ci = CI{
+			Provider:  provider,
+			OriginURL: os.Getenv("CIRCLE_BUILD_URL"),
+			Repo:      os.Getenv("CIRCLE_REPOSITORY_URL"),
+			RefName:   os.Getenv("CIRCLE_BRANCH"),
+			SHA:       os.Getenv("CIRCLE_SHA1"),
+			User:      os.Getenv("CIRCLE_USERNAME"),
+		}
+	}
+	if reflect.DeepEqual(provider, CodeShip) {
+		ci = CI{
+			Provider:  provider,
+			OriginURL: os.Getenv("CI_BUILD_URL"),
+			Repo:      os.Getenv("CI_REPO_NAME"),
+			RefName:   os.Getenv("CI_BRANCH"),
+			SHA:       os.Getenv("CI_COMMIT_ID"),
+			User:      os.Getenv("CI_COMMITTER_USERNAME"),
+		}
+	}
+	if reflect.DeepEqual(provider, Drone) {
+		ci = CI{
+			Provider:  provider,
+			OriginURL: os.Getenv("DRONE_BUILD_LINK"),
+			Repo:      os.Getenv("DRONE_REPO"),
+			RefName:   os.Getenv("DRONE_BRANCH"),
+			SHA:       os.Getenv("DRONE_COMMIT_SHA"),
+			User:      os.Getenv("DRONE_COMMIT_AUTHOR"),
+		}
+	}
 	if reflect.DeepEqual(provider, GitHub) {
 		ci = CI{
 			Provider:  provider,
@@ -137,22 +216,57 @@ func getCI(provider Provider) CI {
 			User:      os.Getenv("GITLAB_USER_LOGIN"),
 		}
 	}
+
+	if reflect.DeepEqual(provider, Jenkins) {
+		ci = CI{
+			Provider:  provider,
+			OriginURL: os.Getenv("JOB_URL"),
+			Repo:      os.Getenv("GIT_URL"),
+			RefName:   os.Getenv("GIT_BRANCH"),
+			SHA:       os.Getenv("GIT_COMMIT"),
+			User:      os.Getenv("CHANGE_AUTHOR"),
+		}
+	}
+	if reflect.DeepEqual(provider, Semaphore) {
+		ci = CI{
+			Provider: provider,
+			Repo:     os.Getenv("SEMAPHORE_GIT_URL"),
+			RefName:  os.Getenv("SEMAPHORE_GIT_BRANCH"),
+			SHA:      os.Getenv("SEMAPHORE_GIT_SHA"),
+		}
+	}
+	if reflect.DeepEqual(provider, Travis) {
+		ci = CI{
+			Provider:  provider,
+			OriginURL: os.Getenv("TRAVIS_BUILD_WEB_URL"),
+			Repo:      os.Getenv("TRAVIS_REPO_SLUG"),
+			RefName:   os.Getenv("TRAVIS_BRANCH"),
+			SHA:       os.Getenv("TRAVIS_COMMIT"),
+		}
+	}
+	if reflect.DeepEqual(provider, TeamCity) {
+		ci = CI{
+			Provider: provider,
+		}
+	}
+
 	return ci
 }
 
-// GetTags return tag list containing CI info
+// GetTags returns tag list containing CI info
 func GetTags() []string {
-	envs := []string{}
 	provider := GetProvider()
 	if reflect.DeepEqual(provider, None) {
-		return envs
+		return []string{}
 	}
+
 	ci := getCI(provider)
 	return []string{
-		fmt.Sprintf("%s:%s:%s", ci.Provider.Name, "originURL", ci.OriginURL),
-		fmt.Sprintf("%s:%s:%s", ci.Provider.Name, "repo", ci.Repo),
-		fmt.Sprintf("%s:%s:%s", ci.Provider.Name, "refName", ci.RefName),
-		fmt.Sprintf("%s:%s:%s", ci.Provider.Name, "SHA", ci.SHA),
-		fmt.Sprintf("%s:%s:%s", ci.Provider.Name, "user", ci.User),
+		ci.Provider.Name,
+		fmt.Sprintf("%s:%s", "originURL", ci.OriginURL),
+		fmt.Sprintf("%s:%s", "repo", ci.Repo),
+		fmt.Sprintf("%s:%s", "refName", ci.RefName),
+		fmt.Sprintf("%s:%s", "SHA", ci.SHA),
+		fmt.Sprintf("%s:%s", "user", ci.User),
 	}
 }
