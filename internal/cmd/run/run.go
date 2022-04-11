@@ -235,8 +235,10 @@ func printTestEnv(testEnv string) {
 	switch testEnv {
 	case "docker":
 		fmt.Println(msg.DockerLogo)
+		fmt.Println()
 	case "sauce":
 		fmt.Println(msg.SauceLogo)
+		fmt.Println()
 	}
 }
 
