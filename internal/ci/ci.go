@@ -10,7 +10,7 @@ type CI struct {
 	Provider  Provider
 	OriginURL string
 	Repo      string
-	RefName   string // branch
+	RefName   string // branch or tag
 	SHA       string
 	User      string
 }
