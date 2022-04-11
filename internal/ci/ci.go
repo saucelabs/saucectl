@@ -99,11 +99,10 @@ func getCI(provider Provider) CI {
 	var ci CI
 	if reflect.DeepEqual(provider, AppVeyor) {
 		ci = CI{
-			Provider:  provider,
-			OriginURL: os.Getenv("APPVEYOR_URL"),
-			Repo:      os.Getenv("APPVEYOR_REPO_NAME"),
-			RefName:   os.Getenv("APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH"),
-			SHA:       os.Getenv("APPVEYOR_REPO_COMMIT"),
+			Provider: provider,
+			Repo:     os.Getenv("APPVEYOR_REPO_NAME"),
+			RefName:  os.Getenv("APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH"),
+			SHA:      os.Getenv("APPVEYOR_REPO_COMMIT"),
 		}
 	}
 	if reflect.DeepEqual(provider, AWS) {
