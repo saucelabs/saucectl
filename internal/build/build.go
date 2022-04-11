@@ -13,7 +13,7 @@ type Source string
 
 const (
 	VDC Source = "vdc"
-	RDC        = "rdc"
+	RDC Source = "rdc"
 )
 
 // Reader is the interface for requesting build information.
