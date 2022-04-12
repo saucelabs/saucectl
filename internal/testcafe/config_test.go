@@ -246,9 +246,9 @@ func Test_shardSuites_withSplitNoMatch(t *testing.T) {
 		},
 	}
 
-	expectedSuites := []Suite{}
+	expectedSuites := make([]Suite, 0)
 	var err error
-	suites := []Suite{}
+	var suites []Suite
 
 	// Absolute path
 	suites, err = shardSuites(rootDir, origSuites, 1)
