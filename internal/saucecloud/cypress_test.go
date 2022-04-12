@@ -3,6 +3,7 @@ package saucecloud
 import (
 	"archive/zip"
 	"context"
+	"io"
 	"os"
 	"testing"
 	"time"
@@ -159,6 +160,9 @@ func TestArchiveProject(t *testing.T) {
 	rd, _ := cypressConfig.Open()
 	b := make([]byte, 3)
 	n, err := rd.Read(b)
+	if err != nil && err != io.EOF {
+		t.Errorf("error reading cypress.json: %s", err)
+	}
 	assert.Equal(t, 3, n)
 	assert.Equal(t, []byte("{}\n"), b)
 }
