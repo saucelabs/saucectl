@@ -100,7 +100,7 @@ func getCI(provider Provider) CI {
 	if reflect.DeepEqual(provider, AppVeyor) {
 		ci = CI{
 			Provider:  provider,
-			OriginURL: os.Getenv(fmt.Sprintf("%s/project/%s/%s/builds/%s", os.Getenv("APPVEYOR_URL"), os.Getenv("APPVEYOR_ACCOUNT_NAME"), os.Getenv("APPVEYOR_PROJECT_NAME"), os.Getenv("APPVEYOR_BUILD_ID"))),
+			OriginURL: fmt.Sprintf("%s/project/%s/%s/builds/%s", os.Getenv("APPVEYOR_URL"), os.Getenv("APPVEYOR_ACCOUNT_NAME"), os.Getenv("APPVEYOR_PROJECT_NAME"), os.Getenv("APPVEYOR_BUILD_ID")),
 			Repo:      os.Getenv("APPVEYOR_REPO_NAME"),
 			RefName:   os.Getenv("APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH"),
 			SHA:       os.Getenv("APPVEYOR_REPO_COMMIT"),
@@ -138,11 +138,12 @@ func getCI(provider Provider) CI {
 	}
 	if reflect.DeepEqual(provider, Bitbucket) {
 		ci = CI{
-			Provider: provider,
-			Repo:     os.Getenv("BITBUCKET_REPO_FULL_NAME"),
-			RefName:  os.Getenv("BITBUCKET_BRANCH"),
-			SHA:      os.Getenv("BITBUCKET_COMMIT"),
-			User:     os.Getenv("BITBUCKET_STEP_TRIGGERER_UUID"),
+			Provider:  provider,
+			OriginURL: fmt.Sprintf("https://bitbucket.org/%s/addon/pipelines/home#!/results/%s", os.Getenv("BITBUCKET_REPO_FULL_NAME"), os.Getenv("BITBUCKET_BUILD_NUMBER")),
+			Repo:      os.Getenv("BITBUCKET_REPO_FULL_NAME"),
+			RefName:   os.Getenv("BITBUCKET_BRANCH"),
+			SHA:       os.Getenv("BITBUCKET_COMMIT"),
+			User:      os.Getenv("BITBUCKET_STEP_TRIGGERER_UUID"),
 		}
 	}
 	if reflect.DeepEqual(provider, Buildkite) {
@@ -225,10 +226,11 @@ func getCI(provider Provider) CI {
 	}
 	if reflect.DeepEqual(provider, Semaphore) {
 		ci = CI{
-			Provider: provider,
-			Repo:     os.Getenv("SEMAPHORE_GIT_URL"),
-			RefName:  os.Getenv("SEMAPHORE_GIT_BRANCH"),
-			SHA:      os.Getenv("SEMAPHORE_GIT_SHA"),
+			Provider:  provider,
+			OriginURL: fmt.Sprintf("%s/workflows/%s?pipeline_id=%s", os.Getenv("SEMAPHORE_ORGANIZATION_URL"), os.Getenv("SEMAPHORE_PROJECT_ID"), os.Getenv("SEMAPHORE_JOB_ID")),
+			Repo:      os.Getenv("SEMAPHORE_GIT_URL"),
+			RefName:   os.Getenv("SEMAPHORE_GIT_BRANCH"),
+			SHA:       os.Getenv("SEMAPHORE_GIT_SHA"),
 		}
 	}
 	if reflect.DeepEqual(provider, Travis) {
