@@ -122,7 +122,11 @@ func TestRunSuites(t *testing.T) {
 }
 
 func TestArchiveProject(t *testing.T) {
-	os.Mkdir("./test-arch/", 0755)
+	err := os.Mkdir("./test-arch/", 0755)
+	if err != nil {
+		t.Errorf("failed to create test-arch directory: %v", err)
+		return
+	}
 	defer func() {
 		os.RemoveAll("./test-arch/")
 	}()
@@ -188,7 +192,10 @@ func TestUploadProject(t *testing.T) {
 }
 
 func TestRunProject(t *testing.T) {
-	os.Mkdir("./test-arch/", 0755)
+	err := os.Mkdir("./test-arch/", 0755)
+	if err != nil {
+		t.Errorf("failed to create test-arch directory: %v", err)
+	}
 	httpmock.Activate()
 	defer func() {
 		os.RemoveAll("./test-arch/")
