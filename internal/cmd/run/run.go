@@ -146,8 +146,8 @@ func Command() *cobra.Command {
 	_ = cmd.PersistentFlags().MarkHidden("experiment")
 
 	// Deprecated flags
-	sc.Fset.MarkDeprecated("tunnel-id", "please use --tunnel-name instead")
-	sc.Fset.MarkDeprecated("tunnel-parent", "please use --tunnel-owner instead")
+	_ = sc.Fset.MarkDeprecated("tunnel-id", "please use --tunnel-name instead")
+	_ = sc.Fset.MarkDeprecated("tunnel-parent", "please use --tunnel-owner instead")
 
 	sc.BindAll()
 
