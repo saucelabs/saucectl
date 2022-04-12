@@ -143,7 +143,7 @@ func Command() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&gFlags.selectedSuite, "select-suite", "", "Run specified test suite.")
 	cmd.PersistentFlags().BoolVar(&gFlags.testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
 	cmd.PersistentFlags().BoolVar(&gFlags.disableUsageMetrics, "disable-usage-metrics", false, "Disable usage metrics collection.")
-	cmd.PersistentFlags().BoolVar(&gFlags.noAutoTagging, "no-auto-tagging", false, "Disable CI info collection.")
+	cmd.PersistentFlags().BoolVar(&gFlags.noAutoTagging, "no-auto-tagging", false, "Disable the automatic tagging of jobs with metadata, such as CI or GIT information.")
 	_ = cmd.PersistentFlags().MarkHidden("sauce-api")
 	_ = cmd.PersistentFlags().MarkHidden("runner-version")
 	_ = cmd.PersistentFlags().MarkHidden("experiment")
