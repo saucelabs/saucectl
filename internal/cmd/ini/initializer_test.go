@@ -2232,7 +2232,10 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 					var deviceFlag flags.Device
 					p := pflag.NewFlagSet("tests", pflag.ContinueOnError)
 					p.Var(&deviceFlag, "device", "")
-					p.Parse([]string{`--device`, `name=iPhone .*`})
+					err := p.Parse([]string{`--device`, `name=iPhone .*`})
+					if err != nil {
+						t.Errorf("failed to parse test args: %v", err)
+					}
 					return p
 				},
 				initCfg: &initConfig{
@@ -2380,7 +2383,10 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 					var deviceFlag flags.Device
 					p := pflag.NewFlagSet("tests", pflag.ContinueOnError)
 					p.Var(&deviceFlag, "device", "")
-					p.Parse([]string{`--device`, `name=HTC .*`})
+					err := p.Parse([]string{`--device`, `name=HTC .*`})
+					if err != nil {
+						t.Errorf("failed to parse test args: %v", err)
+					}
 					return p
 				},
 				initCfg: &initConfig{
