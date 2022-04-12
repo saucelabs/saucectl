@@ -69,6 +69,7 @@ type Suite struct {
 	NumShards         int               `yaml:"numShards,omitempty" json:"-"`
 	Shard             string            `yaml:"shard,omitempty" json:"-"`
 	PreExec           []string          `yaml:"preExec,omitempty" json:"preExec"`
+	ExcludedTestFiles []string          `yaml:"excludedTestFiles,omitempty" json:"testIgnore"`
 }
 
 // SuiteConfig represents the configuration specific to a suite
@@ -209,14 +210,32 @@ func shardInSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			shardedSuites = append(shardedSuites, s)
 			continue
 		}
-		testFiles, err := fpath.FindFiles(rootDir, s.TestMatch, fpath.FindByRegex)
+		files, err := fpath.FindFiles(rootDir, s.TestMatch, fpath.FindByRegex)
 		if err != nil {
 			return []Suite{}, err
 		}
-		if len(testFiles) == 0 {
+		if len(files) == 0 {
 			msg.SuiteSplitNoMatch(s.Name, rootDir, s.TestMatch)
 			return []Suite{}, fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
 		}
+		excludedFiles, err := fpath.FindFiles(rootDir, s.ExcludedTestFiles, fpath.FindByRegex)
+		if err != nil {
+			return []Suite{}, err
+		}
+		var testFiles []string
+		for _, f := range files {
+			excluded := false
+			for _, e := range excludedFiles {
+				if f == e {
+					excluded = true
+					break
+				}
+			}
+			if !excluded {
+				testFiles = append(testFiles, f)
+			}
+		}
+
 		if s.Shard == "spec" {
 			for _, f := range testFiles {
 				replica := s
