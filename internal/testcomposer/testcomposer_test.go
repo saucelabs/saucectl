@@ -184,9 +184,12 @@ func TestClient_GetSlackToken(t *testing.T) {
 			wantErr: false,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(200)
-				json.NewEncoder(w).Encode(TokenResponse{
+				err := json.NewEncoder(w).Encode(TokenResponse{
 					Token: "user token",
 				})
+				if err != nil {
+					t.Errorf("failed to encode json response: %v", err)
+				}
 			},
 		},
 		{
@@ -273,13 +276,16 @@ func TestClient_Search(t *testing.T) {
 			wantErr: false,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(200)
-				json.NewEncoder(w).Encode(FrameworkResponse{
+				err := json.NewEncoder(w).Encode(FrameworkResponse{
 					Name:    "testycles",
 					Version: "1",
 					Runner: runner{
 						DockerImage: "sauce/testycles:v1+v0.1.0",
 					},
 				})
+				if err != nil {
+					t.Errorf("failed to encode json response: %v", err)
+				}
 			},
 		},
 		{

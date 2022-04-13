@@ -94,17 +94,21 @@ func executeQuestionTest(t *testing.T, test questionTest) {
 func stringToProcedure(actions string) func(*expect.Console) error {
 	return func(c *expect.Console) error {
 		for _, chr := range actions {
+			var err error
 			switch chr {
 			case '↓':
-				c.Send(string(terminal.KeyArrowDown))
+				_, err = c.Send(string(terminal.KeyArrowDown))
 			case '↑':
-				c.Send(string(terminal.KeyArrowUp))
+				_, err = c.Send(string(terminal.KeyArrowUp))
 			case '✓':
-				c.Send(string(terminal.KeyEnter))
+				_, err = c.Send(string(terminal.KeyEnter))
 			case '🔚':
-				c.ExpectEOF()
+				_, err = c.ExpectEOF()
 			default:
-				c.Send(fmt.Sprintf("%c", chr))
+				_, err = c.Send(fmt.Sprintf("%c", chr))
+			}
+			if err != nil {
+				return err
 			}
 		}
 		return nil
@@ -735,21 +739,66 @@ func TestConfigure(t *testing.T) {
 		{
 			name: "Complete Configuration (espresso)",
 			procedure: func(c *expect.Console) error {
-				c.ExpectString("Select framework")
-				c.SendLine(espresso.Kind)
-				c.ExpectString("Application to test")
-				c.SendLine(dir.Join("android-app.apk"))
-				c.ExpectString("Test application")
-				c.SendLine(dir.Join("android-app.apk"))
-				c.ExpectString("Select device pattern:")
-				c.SendLine("Google Pixel .*")
-				c.ExpectString("Select emulator:")
-				c.SendLine("Google Pixel Emulator")
-				c.ExpectString("Select platform version:")
-				c.SendLine("7.0")
-				c.ExpectString("Download artifacts:")
-				c.SendLine("when tests are passing")
-				c.ExpectEOF()
+				_, err := c.ExpectString("Select framework")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine(espresso.Kind)
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Application to test")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine(dir.Join("android-app.apk"))
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Test application")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine(dir.Join("android-app.apk"))
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select device pattern:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("Google Pixel .*")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select emulator:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("Google Pixel Emulator")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select platform version:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("7.0")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Download artifacts:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("when tests are passing")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectEOF()
+				if err != nil {
+					return err
+				}
 				return nil
 			},
 			ini: &initializer{infoReader: ir, deviceReader: dr, vmdReader: er},
@@ -774,19 +823,58 @@ func TestConfigure(t *testing.T) {
 		{
 			name: "Complete Configuration (cypress)",
 			procedure: func(c *expect.Console) error {
-				c.ExpectString("Select framework")
-				c.SendLine(cypress.Kind)
-				c.ExpectString("Select cypress version")
-				c.SendLine("7.5.0")
-				c.ExpectString("Cypress configuration file:")
-				c.SendLine(dir.Join("cypress.json"))
-				c.ExpectString("Select browser:")
-				c.SendLine("chrome")
-				c.ExpectString("Select platform:")
-				c.SendLine("Windows 10")
-				c.ExpectString("Download artifacts:")
-				c.SendLine("when tests are passing")
-				c.ExpectEOF()
+				_, err := c.ExpectString("Select framework")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine(cypress.Kind)
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select cypress version")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("7.5.0")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Cypress configuration file:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine(dir.Join("cypress.json"))
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select browser:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("chrome")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select platform:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("Windows 10")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Download artifacts:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("when tests are passing")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectEOF()
+				if err != nil {
+					return err
+				}
 				return nil
 			},
 			ini: &initializer{infoReader: ir, deviceReader: dr, vmdReader: er},
@@ -957,17 +1045,50 @@ func Test_initializers(t *testing.T) {
 		{
 			name: "Cypress - Windows 10 - chrome",
 			procedure: func(c *expect.Console) error {
-				c.ExpectString("Select cypress version")
-				c.SendLine("7.5.0")
-				c.ExpectString("Cypress configuration file:")
-				c.SendLine(dir.Join("cypress.json"))
-				c.ExpectString("Select browser:")
-				c.SendLine("chrome")
-				c.ExpectString("Select platform:")
-				c.SendLine("windows 10")
-				c.ExpectString("Download artifacts:")
-				c.SendLine("when tests are passing")
-				c.ExpectEOF()
+				_, err := c.ExpectString("Select cypress version")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("7.5.0")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Cypress configuration file:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine(dir.Join("cypress.json"))
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select browser:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("chrome")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select platform:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("windows 10")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Download artifacts:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("when tests are passing")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectEOF()
+				if err != nil {
+					return err
+				}
 				return nil
 			},
 			ini: &initializer{infoReader: ir},
@@ -993,15 +1114,42 @@ func Test_initializers(t *testing.T) {
 		{
 			name: "Playwright - Windows 10 - chromium",
 			procedure: func(c *expect.Console) error {
-				c.ExpectString("Select playwright version")
-				c.SendLine("1.11.0")
-				c.ExpectString("Select browser:")
-				c.SendLine("chromium")
-				c.ExpectString("Select platform:")
-				c.SendLine("windows 10")
-				c.ExpectString("Download artifacts:")
-				c.SendLine("when tests are passing")
-				c.ExpectEOF()
+				_, err := c.ExpectString("Select playwright version")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("1.11.0")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select browser:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("chromium")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select platform:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("windows 10")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Download artifacts:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("when tests are passing")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectEOF()
+				if err != nil {
+					return err
+				}
 				return nil
 			},
 			ini: &initializer{infoReader: ir},
@@ -1026,15 +1174,43 @@ func Test_initializers(t *testing.T) {
 		{
 			name: "Puppeteer - docker - chrome",
 			procedure: func(c *expect.Console) error {
-				c.ExpectString("Select puppeteer version")
-				c.SendLine("8.0.0")
-				c.ExpectString("Select browser:")
-				c.SendLine("chrome")
-				c.ExpectString("Select platform:")
-				c.SendLine("docker")
-				c.ExpectString("Download artifacts:")
-				c.SendLine("when tests are passing")
-				c.ExpectEOF()
+
+				_, err := c.ExpectString("Select puppeteer version")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("8.0.0")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select browser:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("chrome")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select platform:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("docker")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Download artifacts:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("when tests are passing")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectEOF()
+				if err != nil {
+					return err
+				}
 				return nil
 			},
 			ini: &initializer{infoReader: ir},
@@ -1059,15 +1235,42 @@ func Test_initializers(t *testing.T) {
 		{
 			name: "Testcafe - macOS 11.00 - safari",
 			procedure: func(c *expect.Console) error {
-				c.ExpectString("Select testcafe version")
-				c.SendLine("1.12.0")
-				c.ExpectString("Select browser:")
-				c.SendLine("safari")
-				c.ExpectString("Select platform:")
-				c.SendLine("macOS 11.00")
-				c.ExpectString("Download artifacts:")
-				c.SendLine("when tests are passing")
-				c.ExpectEOF()
+				_, err := c.ExpectString("Select testcafe version")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("1.12.0")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select browser:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("safari")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select platform:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("macOS 11.00")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Download artifacts:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("when tests are passing")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectEOF()
+				if err != nil {
+					return err
+				}
 				return nil
 			},
 			ini: &initializer{infoReader: ir},
@@ -1092,15 +1295,42 @@ func Test_initializers(t *testing.T) {
 		{
 			name: "XCUITest - .ipa",
 			procedure: func(c *expect.Console) error {
-				c.ExpectString("Application to test:")
-				c.SendLine(dir.Join("ios-app.ipa"))
-				c.ExpectString("Test application:")
-				c.SendLine(dir.Join("ios-app.ipa"))
-				c.ExpectString("Select device pattern:")
-				c.SendLine("iPhone .*")
-				c.ExpectString("Download artifacts:")
-				c.SendLine("when tests are passing")
-				c.ExpectEOF()
+				_, err := c.ExpectString("Application to test:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine(dir.Join("ios-app.ipa"))
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Test application:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine(dir.Join("ios-app.ipa"))
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select device pattern:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("iPhone .*")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Download artifacts:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("when tests are passing")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectEOF()
+				if err != nil {
+					return err
+				}
 				return nil
 			},
 			ini: &initializer{infoReader: ir},
@@ -1124,15 +1354,42 @@ func Test_initializers(t *testing.T) {
 		{
 			name: "XCUITest - .app",
 			procedure: func(c *expect.Console) error {
-				c.ExpectString("Application to test:")
-				c.SendLine(dir.Join("ios-folder-app.app"))
-				c.ExpectString("Test application:")
-				c.SendLine(dir.Join("ios-folder-app.app"))
-				c.ExpectString("Select device pattern:")
-				c.SendLine("iPad .*")
-				c.ExpectString("Download artifacts:")
-				c.SendLine("when tests are passing")
-				c.ExpectEOF()
+				_, err := c.ExpectString("Application to test:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine(dir.Join("ios-folder-app.app"))
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Test application:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine(dir.Join("ios-folder-app.app"))
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select device pattern:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("iPad .*")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Download artifacts:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("when tests are passing")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectEOF()
+				if err != nil {
+					return err
+				}
 				return nil
 			},
 			ini: &initializer{infoReader: ir},
@@ -1156,19 +1413,58 @@ func Test_initializers(t *testing.T) {
 		{
 			name: "Espresso - .apk",
 			procedure: func(c *expect.Console) error {
-				c.ExpectString("Application to test:")
-				c.SendLine(dir.Join("android-app.apk"))
-				c.ExpectString("Test application:")
-				c.SendLine(dir.Join("android-app.apk"))
-				c.ExpectString("Select device pattern:")
-				c.SendLine("HTC .*")
-				c.ExpectString("Select emulator:")
-				c.SendLine("Samsung Galaxy Emulator")
-				c.ExpectString("Select platform version:")
-				c.SendLine("8.0")
-				c.ExpectString("Download artifacts:")
-				c.SendLine("when tests are passing")
-				c.ExpectEOF()
+				_, err := c.ExpectString("Application to test:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine(dir.Join("android-app.apk"))
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Test application:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine(dir.Join("android-app.apk"))
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select device pattern:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("HTC .*")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select emulator:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("Samsung Galaxy Emulator")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select platform version:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("8.0")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Download artifacts:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("when tests are passing")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectEOF()
+				if err != nil {
+					return err
+				}
 				return nil
 			},
 			ini: &initializer{infoReader: ir, vmdReader: er},
