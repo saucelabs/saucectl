@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/saucelabs/saucectl/internal/appstore"
+	"github.com/saucelabs/saucectl/internal/backtrace"
+	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/flags"
@@ -19,7 +21,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/segment"
-	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
@@ -49,10 +50,9 @@ func NewXCUITestCmd() *cobra.Command {
 			exitCode, err := runXcuitest(cmd, lflags, tcClient, restoClient, rdcClient, appsClient)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
-				sentry.CaptureError(err, sentry.Scope{
-					Username:   credentials.Get().Username,
-					ConfigFile: gFlags.cfgFilePath,
-				})
+				backtrace.Report(err, map[string]interface{}{
+					"username": credentials.Get().Username,
+				}, gFlags.cfgFilePath)
 			}
 			os.Exit(exitCode)
 		},
@@ -106,6 +106,10 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, tc testcomposer.Cl
 
 	rs.ArtifactConfig = p.Artifacts.Download
 	rc.ArtifactConfig = p.Artifacts.Download
+
+	if !gFlags.noAutoTagging {
+		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
+	}
 
 	tracker := segment.New(!gFlags.disableUsageMetrics)
 

@@ -2,6 +2,7 @@ package saucecloud
 
 import (
 	"fmt"
+	"context"
 	"strings"
 
 	"github.com/saucelabs/saucectl/internal/job"
@@ -16,12 +17,19 @@ type PlaywrightRunner struct {
 
 // RunProject runs the tests defined in cypress.Project.
 func (r *PlaywrightRunner) RunProject() (int, error) {
+	var deprecationMessage string
 	exitCode := 1
 
-	var err error
-	var depreciationNotice string
-	if depreciationNotice, err = r.checkVersionAvailability(playwright.Kind, r.Project.Playwright.Version); err != nil {
+	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, playwright.Kind, r.Project.Playwright.Version)
+	if err != nil {
+		r.logFrameworkError(err)
 		return exitCode, err
+	}
+	r.Project.Playwright.Version = m.FrameworkVersion
+
+	if m.Deprecated {
+		deprecationMessage = r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version)
+		fmt.Print(deprecationMessage)
 	}
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
@@ -45,9 +53,10 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		exitCode = 0
 	}
 
-	if depreciationNotice != "" {
-		fmt.Printf(depreciationNotice)
+	if deprecationMessage != "" {
+		fmt.Printf(deprecationMessage)
 	}
+
 	return exitCode, nil
 }
 

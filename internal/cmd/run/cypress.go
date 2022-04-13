@@ -11,19 +11,21 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/saucelabs/saucectl/internal/appstore"
+	"github.com/saucelabs/saucectl/internal/backtrace"
+	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/segment"
-	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/viper"
@@ -49,10 +51,9 @@ func NewCypressCmd() *cobra.Command {
 			exitCode, err := runCypress(cmd, tcClient, restoClient, appsClient)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
-				sentry.CaptureError(err, sentry.Scope{
-					Username:   credentials.Get().Username,
-					ConfigFile: gFlags.cfgFilePath,
-				})
+				backtrace.Report(err, map[string]interface{}{
+					"username": credentials.Get().Username,
+				}, gFlags.cfgFilePath)
 			}
 			os.Exit(exitCode)
 		},
@@ -137,6 +138,10 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 		return 1, err
 	}
 
+	if !gFlags.noAutoTagging {
+		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
+	}
+
 	regio := region.FromString(p.Sauce.Region)
 
 	tc.URL = regio.APIBaseURL()
@@ -208,8 +213,9 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 			ArtifactDownloader: &rs,
 			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc, &rs,
 				"cypress", "sauce"),
-			Async:    gFlags.async,
-			FailFast: gFlags.failFast,
+			Async:                  gFlags.async,
+			FailFast:               gFlags.failFast,
+			MetadataSearchStrategy: framework.NewSearchStrategy(p.Cypress.Version, p.RootDir),
 		},
 	}
 

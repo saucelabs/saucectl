@@ -235,13 +235,14 @@ func TestRunProject(t *testing.T) {
 
 	runner := CypressRunner{
 		CloudRunner: CloudRunner{
-			JobStarter:         &starter,
-			JobReader:          &reader,
-			JobWriter:          &writer,
-			CCYReader:          ccyReader,
-			ProjectUploader:    uploader,
-			ArtifactDownloader: &downloader,
-			MetadataService:    mdService,
+			JobStarter:             &starter,
+			JobReader:              &reader,
+			JobWriter:              &writer,
+			CCYReader:              ccyReader,
+			ProjectUploader:        uploader,
+			ArtifactDownloader:     &downloader,
+			MetadataService:        mdService,
+			MetadataSearchStrategy: framework.ExactStrategy{},
 		},
 		Project: cypress.Project{
 			RootDir: ".",

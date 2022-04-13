@@ -7,14 +7,16 @@ import (
 	"os"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/segment"
-
+	"github.com/saucelabs/saucectl/internal/backtrace"
+	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
+	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 
@@ -22,10 +24,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-
-	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/credentials"
-	"github.com/saucelabs/saucectl/internal/sentry"
 )
 
 var (
@@ -87,7 +85,7 @@ func Command() *cobra.Command {
 			err := Run(cmd, initCfg)
 			if err != nil {
 				log.Err(err).Msg("failed to execute init command")
-				sentry.CaptureError(err, sentry.Scope{})
+				backtrace.Report(err, nil, "")
 				os.Exit(1)
 			}
 		},

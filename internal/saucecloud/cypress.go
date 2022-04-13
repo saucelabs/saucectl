@@ -1,6 +1,7 @@
 package saucecloud
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -16,15 +17,19 @@ type CypressRunner struct {
 
 // RunProject runs the tests defined in cypress.Project.
 func (r *CypressRunner) RunProject() (int, error) {
+	var deprecationMessage string
 	exitCode := 1
-	if err := r.checkCypressVersion(); err != nil {
+
+	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, cypress.Kind, r.Project.Cypress.Version)
+	if err != nil {
+		r.logFrameworkError(err)
 		return exitCode, err
 	}
+	r.Project.Cypress.Version = m.FrameworkVersion
 
-	var err error
-	var depreciationNotice string
-	if depreciationNotice, err = r.checkVersionAvailability(cypress.Kind, r.Project.Cypress.Version); err != nil {
-		return exitCode, err
+	if m.Deprecated {
+		deprecationMessage = r.deprecationMessage(cypress.Kind, r.Project.Cypress.Version)
+		fmt.Print(deprecationMessage)
 	}
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
@@ -47,9 +52,10 @@ func (r *CypressRunner) RunProject() (int, error) {
 		exitCode = 0
 	}
 
-	if depreciationNotice != "" {
-		fmt.Printf(depreciationNotice)
+	if deprecationMessage != "" {
+		fmt.Printf(deprecationMessage)
 	}
+
 	return exitCode, nil
 }
 

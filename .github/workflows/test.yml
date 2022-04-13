@@ -21,6 +21,9 @@ jobs:
       - name: Install Dependencies
         run: apk add --no-cache git gcc g++ curl
 
+      - name: GIT permission workaround https://github.blog/2022-04-12-git-security-vulnerability-announced/
+        run: git config --global --add safe.directory /__w/saucectl/saucectl
+
       - name: Checkout Code
         uses: actions/checkout@v2
 
@@ -35,6 +38,9 @@ jobs:
     steps:
       - name: Install Dependencies
         run: apk add --no-cache git gcc g++ curl bash
+
+      - name: GIT permission workaround https://github.blog/2022-04-12-git-security-vulnerability-announced/
+        run: git config --global --add safe.directory /__w/saucectl/saucectl
 
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -73,6 +79,9 @@ jobs:
     steps:
       - name: Install Dependencies
         run: apk add --no-cache git gcc g++ curl
+
+      - name: GIT permission workaround https://github.blog/2022-04-12-git-security-vulnerability-announced/
+        run: git config --global --add safe.directory /__w/saucectl/saucectl
 
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -140,7 +149,7 @@ jobs:
         run: ./saucectl run -c .sauce/playwright.yml --timeout 10m
 
       - name: Saucectl RUN - CLI Driven
-        run: ./saucectl run playwright ".*.js" -c "" --name "CLI Driven" --browser chromium --rootDir tests/e2e/playwright/ --playwright.version 1.14.1 --timeout 10m
+        run: ./saucectl run playwright ".*.js" -c "" --name "CLI Driven" --browser chromium --rootDir tests/e2e/playwright/ --playwright.version 1.18.1 --timeout 10m
   testcafe:
     needs: build
     runs-on: ubuntu-latest
@@ -160,8 +169,9 @@ jobs:
       - name: Saucectl RUN - Config Driven
         run: ./saucectl run -c .sauce/testcafe.yml --timeout 10m
 
-      - name: Saucectl RUN - CLI Driven
-        run: ./saucectl run testcafe "*.test.js" -c "" --name "CLI Driven" --browser chrome --rootDir tests/e2e/testcafe/ --testcafe.version 1.14.2 --timeout 10m
+      # CLI driven test is disabled temporarily because of a bug in the testcafe runner. Re-enable after https://github.com/saucelabs/sauce-testcafe-runner/commit/79b6afe0bfe164808ae070c19cef8d2395b2254c ships.
+      #- name: Saucectl RUN - CLI Driven
+      #  run: ./saucectl run testcafe "*.test.js" -c "" --name "CLI Driven" --browser chrome --rootDir tests/e2e/testcafe/ --testcafe.version 1.18.3 --timeout 10m
   cypress:
     needs: build
     runs-on: ubuntu-latest

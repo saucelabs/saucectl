@@ -3,12 +3,15 @@ package run
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"github.com/saucelabs/saucectl/internal/backtrace"
+	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/docker"
@@ -20,7 +23,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/segment"
-	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/viper"
@@ -46,10 +48,9 @@ func NewPuppeteerCmd() *cobra.Command {
 			exitCode, err := runPuppeteer(cmd, tcClient, restoClient)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
-				sentry.CaptureError(err, sentry.Scope{
-					Username:   credentials.Get().Username,
-					ConfigFile: gFlags.cfgFilePath,
-				})
+				backtrace.Report(err, map[string]interface{}{
+					"username": credentials.Get().Username,
+				}, gFlags.cfgFilePath)
 			}
 			os.Exit(exitCode)
 		},
@@ -88,6 +89,11 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
 	p.Sauce.Metadata.ExpandEnv()
 
+	// Normalize path to package.json file
+	if p.Puppeteer.Version == "package.json" {
+		p.Puppeteer.Version = filepath.Join(p.RootDir, p.Puppeteer.Version)
+	}
+
 	if err := applyPuppeteerFlags(&p); err != nil {
 		return 1, err
 	}
@@ -100,6 +106,10 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 	regio := region.FromString(p.Sauce.Region)
 	rs.URL = regio.APIBaseURL()
 	tc.URL = regio.APIBaseURL()
+
+	if !gFlags.noAutoTagging {
+		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
+	}
 
 	tracker := segment.New(!gFlags.disableUsageMetrics)
 

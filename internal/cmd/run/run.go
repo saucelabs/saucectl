@@ -17,6 +17,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/saucelabs/saucectl/internal/appstore"
+	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -34,7 +35,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/report/buildtable"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/resto"
-	"github.com/saucelabs/saucectl/internal/sentry"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/version"
@@ -75,6 +75,7 @@ type globalFlags struct {
 	async               bool
 	failFast            bool
 	appStoreTimeout     time.Duration
+	noAutoTagging       bool
 }
 
 // Command creates the `run` command
@@ -92,10 +93,9 @@ func Command() *cobra.Command {
 			exitCode, err := Run(cmd)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
-				sentry.CaptureError(err, sentry.Scope{
-					Username:   credentials.Get().Username,
-					ConfigFile: gFlags.cfgFilePath,
-				})
+				backtrace.Report(err, map[string]interface{}{
+					"username": credentials.Get().Username,
+				}, gFlags.cfgFilePath)
 			}
 			os.Exit(exitCode)
 		},
@@ -143,6 +143,7 @@ func Command() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&gFlags.selectedSuite, "select-suite", "", "Run specified test suite.")
 	cmd.PersistentFlags().BoolVar(&gFlags.testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
 	cmd.PersistentFlags().BoolVar(&gFlags.disableUsageMetrics, "disable-usage-metrics", false, "Disable usage metrics collection.")
+	cmd.PersistentFlags().BoolVar(&gFlags.noAutoTagging, "no-auto-tagging", false, "Disable the automatic tagging of jobs with metadata, such as CI or GIT information.")
 	_ = cmd.PersistentFlags().MarkHidden("sauce-api")
 	_ = cmd.PersistentFlags().MarkHidden("runner-version")
 	_ = cmd.PersistentFlags().MarkHidden("experiment")
