@@ -23,19 +23,24 @@ import (
 
 func TestClient_GetJobDetails(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
 		switch r.URL.Path {
 		case "/rest/v1.1/test/jobs/1":
 			completeStatusResp := []byte(`{"browser_short_version": "85", "video_url": "https://localhost/jobs/1/video.mp4", "creation_time": 1605637528, "custom-data": null, "browser_version": "85.0.4183.83", "owner": "test", "automation_backend": "webdriver", "id": "1", "collects_automator_log": false, "record_screenshots": true, "record_video": true, "build": null, "passed": null, "public": "team", "assigned_tunnel_id": null, "status": "complete", "log_url": "https://localhost/jobs/1/selenium-server.log", "start_time": 1605637528, "proxied": false, "modification_time": 1605637554, "tags": [], "name": null, "commands_not_successful": 4, "consolidated_status": "complete", "selenium_version": null, "manual": false, "end_time": 1605637554, "error": null, "os": "Windows 10", "breakpointed": null, "browser": "googlechrome"}`)
-			w.Write(completeStatusResp)
+			_, err = w.Write(completeStatusResp)
 		case "/rest/v1.1/test/jobs/2":
 			errorStatusResp := []byte(`{"browser_short_version": "85", "video_url": "https://localhost/jobs/2/video.mp4", "creation_time": 1605637528, "custom-data": null, "browser_version": "85.0.4183.83", "owner": "test", "automation_backend": "webdriver", "id": "2", "collects_automator_log": false, "record_screenshots": true, "record_video": true, "build": null, "passed": null, "public": "team", "assigned_tunnel_id": null, "status": "error", "log_url": "https://localhost/jobs/2/selenium-server.log", "start_time": 1605637528, "proxied": false, "modification_time": 1605637554, "tags": [], "name": null, "commands_not_successful": 4, "consolidated_status": "error", "selenium_version": null, "manual": false, "end_time": 1605637554, "error": "User Abandoned Test -- User terminated", "os": "Windows 10", "breakpointed": null, "browser": "googlechrome"}`)
-			w.Write(errorStatusResp)
+			_, err = w.Write(errorStatusResp)
 		case "/rest/v1.1/test/jobs/3":
 			w.WriteHeader(http.StatusNotFound)
 		case "/rest/v1.1/test/jobs/4":
 			w.WriteHeader(http.StatusUnauthorized)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
 		}
 	}))
 	defer ts.Close()
@@ -113,6 +118,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 
 	var retryCount int
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
 		switch r.URL.Path {
 		case "/rest/v1.1/test/jobs/1":
 			details := &job.Job{
@@ -124,7 +130,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 			randJobStatus(details, true)
 
 			resp, _ := json.Marshal(details)
-			w.Write(resp)
+			_, err = w.Write(resp)
 		case "/rest/v1.1/test/jobs/2":
 			details := &job.Job{
 				ID:     "2",
@@ -135,7 +141,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 			randJobStatus(details, false)
 
 			resp, _ := json.Marshal(details)
-			w.Write(resp)
+			_, err = w.Write(resp)
 		case "/rest/v1.1/test/jobs/3":
 			w.WriteHeader(http.StatusNotFound)
 		case "/rest/v1.1/test/jobs/4":
@@ -155,9 +161,13 @@ func TestClient_GetJobStatus(t *testing.T) {
 			randJobStatus(details, true)
 
 			resp, _ := json.Marshal(details)
-			w.Write(resp)
+			_, err = w.Write(resp)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
 		}
 	}))
 	defer ts.Close()
@@ -242,10 +252,11 @@ func TestClient_GetJobStatus(t *testing.T) {
 
 func TestClient_GetJobAssetFileNames(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
 		switch r.URL.Path {
 		case "/rest/v1/test/jobs/1/assets":
 			completeStatusResp := []byte(`{"console.log": "console.log", "examples__actions.spec.js.mp4": "examples__actions.spec.js.mp4", "examples__actions.spec.js.json": "examples__actions.spec.js.json", "video.mp4": "video.mp4", "selenium-log": null, "sauce-log": null, "examples__actions.spec.js.xml": "examples__actions.spec.js.xml", "video": "video.mp4", "screenshots": []}`)
-			w.Write(completeStatusResp)
+			_, err = w.Write(completeStatusResp)
 		case "/rest/v1/test/jobs/2/assets":
 			w.WriteHeader(http.StatusNotFound)
 		case "/rest/v1/test/jobs/3/assets":
@@ -253,7 +264,11 @@ func TestClient_GetJobAssetFileNames(t *testing.T) {
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 			completeStatusResp := []byte(`{"console.log": "console.log", "examples__actions.spec.js.mp4": "examples__actions.spec.js.mp4", "examples__actions.spec.js.json": "examples__actions.spec.js.json", "video.mp4": "video.mp4", "selenium-log": null, "sauce-log": null, "examples__actions.spec.js.xml": "examples__actions.spec.js.xml", "video": "video.mp4", "screenshots": []}`)
-			w.Write(completeStatusResp)
+			_, err = w.Write(completeStatusResp)
+		}
+
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
 		}
 	}))
 	defer ts.Close()
@@ -310,18 +325,23 @@ func TestClient_GetJobAssetFileNames(t *testing.T) {
 
 func TestClient_GetJobAssetFileContent(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
 		switch r.URL.Path {
 		case "/rest/v1/test/jobs/1/assets/console.log":
 			fileContent := []byte(`Sauce Cypress Runner 0.2.3`)
-			w.Write(fileContent)
+			_, err = w.Write(fileContent)
 		case "/rest/v1/test/jobs/2/assets/console.log":
 			w.WriteHeader(http.StatusNotFound)
 		case "/rest/v1/test/jobs/3/assets/console.log":
 			w.WriteHeader(http.StatusUnauthorized)
 			fileContent := []byte(`unauthorized`)
-			w.Write(fileContent)
+			_, err = w.Write(fileContent)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
 		}
 	}))
 	defer ts.Close()
@@ -392,19 +412,24 @@ func randJobStatus(j *job.Job, isComplete bool) {
 
 func TestClient_TestStop(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
 		switch r.URL.Path {
 		case "/rest/v1/test/jobs/1/stop":
 			completeStatusResp := []byte(`{"browser_short_version": "85", "video_url": "https://localhost/jobs/1/video.mp4", "creation_time": 1605637528, "custom-data": null, "browser_version": "85.0.4183.83", "owner": "test", "automation_backend": "webdriver", "id": "1", "collects_automator_log": false, "record_screenshots": true, "record_video": true, "build": null, "passed": null, "public": "team", "assigned_tunnel_id": null, "status": "complete", "log_url": "https://localhost/jobs/1/selenium-server.log", "start_time": 1605637528, "proxied": false, "modification_time": 1605637554, "tags": [], "name": null, "commands_not_successful": 4, "consolidated_status": "complete", "selenium_version": null, "manual": false, "end_time": 1605637554, "error": null, "os": "Windows 10", "breakpointed": null, "browser": "googlechrome"}`)
-			w.Write(completeStatusResp)
+			_, err = w.Write(completeStatusResp)
 		case "/rest/v1/test/jobs/2/stop":
 			errorStatusResp := []byte(`{"browser_short_version": "85", "video_url": "https://localhost/jobs/2/video.mp4", "creation_time": 1605637528, "custom-data": null, "browser_version": "85.0.4183.83", "owner": "test", "automation_backend": "webdriver", "id": "2", "collects_automator_log": false, "record_screenshots": true, "record_video": true, "build": null, "passed": null, "public": "team", "assigned_tunnel_id": null, "status": "error", "log_url": "https://localhost/jobs/2/selenium-server.log", "start_time": 1605637528, "proxied": false, "modification_time": 1605637554, "tags": [], "name": null, "commands_not_successful": 4, "consolidated_status": "error", "selenium_version": null, "manual": false, "end_time": 1605637554, "error": "User Abandoned Test -- User terminated", "os": "Windows 10", "breakpointed": null, "browser": "googlechrome"}`)
-			w.Write(errorStatusResp)
+			_, err = w.Write(errorStatusResp)
 		case "/rest/v1/test/jobs/3/stop":
 			w.WriteHeader(http.StatusNotFound)
 		case "/rest/v1/test/jobs/4/stop":
 			w.WriteHeader(http.StatusUnauthorized)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
 		}
 	}))
 	defer ts.Close()
@@ -466,12 +491,17 @@ func TestClient_TestStop(t *testing.T) {
 
 func TestClient_GetVirtualDevices(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
 		switch r.URL.Path {
 		case "/rest/v1.1/info/platforms/all":
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`[{"long_name": "Samsung Galaxy S7 FHD GoogleAPI Emulator", "short_version": "7.0"},{"long_name": "Samsung Galaxy S9 HD GoogleAPI Emulator", "short_version": "8.0"},{"long_name": "iPhone 6s Simulator", "short_version": "11.0"},{"long_name": "iPhone 8 Plus Simulator", "short_version": "14.3"}]`))
+			_, err = w.Write([]byte(`[{"long_name": "Samsung Galaxy S7 FHD GoogleAPI Emulator", "short_version": "7.0"},{"long_name": "Samsung Galaxy S9 HD GoogleAPI Emulator", "short_version": "8.0"},{"long_name": "iPhone 6s Simulator", "short_version": "11.0"},{"long_name": "iPhone 8 Plus Simulator", "short_version": "14.3"}]`))
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
 		}
 	}))
 
@@ -534,12 +564,17 @@ func TestClient_GetVirtualDevices(t *testing.T) {
 func TestClient_isTunnelRunning(t *testing.T) {
 	var responseBody string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
 		switch r.URL.Path {
 		case "/rest/v1/DummyUser/tunnels":
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(responseBody))
+			_, err = w.Write([]byte(responseBody))
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
 		}
 	}))
 	defer ts.Close()
@@ -652,7 +687,7 @@ func TestClient_GetBuildID(t *testing.T) {
 		// arrange
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(tt.statusCode)
-			w.Write(tt.responseBody)
+			_, _ = w.Write(tt.responseBody)
 		}))
 		defer ts.Close()
 

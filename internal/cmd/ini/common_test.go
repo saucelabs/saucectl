@@ -344,8 +344,14 @@ func Test_saveConfigurationFiles(t *testing.T) {
 	defer dir.Remove()
 
 	pwd, _ := os.Getwd()
-	os.Chdir(dir.Path())
-	defer os.Chdir(pwd)
+	if err := os.Chdir(dir.Path()); err != nil {
+		t.Errorf("failed to change directory to %s: %v", dir.Path(), err)
+	}
+	defer func() {
+		if err := os.Chdir(pwd); err != nil {
+			t.Errorf("failed to change directory to %s: %v", pwd, err)
+		}
+	}()
 
 	calledConfig := false
 
@@ -418,8 +424,14 @@ func Test_completeBasic(t *testing.T) {
 	defer dir.Remove()
 
 	pwd, _ := os.Getwd()
-	os.Chdir(dir.Path())
-	defer os.Chdir(pwd)
+	if err := os.Chdir(dir.Path()); err != nil {
+		t.Errorf("failed to change directory to %s: %v", dir.Path(), err)
+	}
+	defer func() {
+		if err := os.Chdir(pwd); err != nil {
+			t.Errorf("failed to change directory to %s: %v", pwd, err)
+		}
+	}()
 
 	type args struct {
 		toComplete string

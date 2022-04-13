@@ -129,7 +129,11 @@ func readFile(fileName string) (*bytes.Buffer, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
-	io.Copy(part, file)
+
+	_, err = io.Copy(part, file)
+	if err != nil {
+		return nil, "", err
+	}
 
 	return body, writer.FormDataContentType(), nil
 }

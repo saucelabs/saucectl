@@ -70,7 +70,22 @@ func TestArchive(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			os.Chdir(tt.dirName)
+			f, err := os.Open(tt.dirName)
+			if err != nil {
+				t.Errorf("unable to open file %s: %v", tt.dirName, err)
+			}
+
+			fInfo, err := f.Stat()
+			if err != nil {
+				t.Errorf("unable to stat file %s: %v", tt.dirName, err)
+			}
+			
+			if fInfo.IsDir() {
+				err := os.Chdir(tt.dirName)
+				if err != nil {
+					t.Errorf("unable to change directory to %s: %v", tt.dirName, err)
+				}
+			}
 			reader, err := Archive(".", tt.matcher, tt.options)
 			if err != nil {
 				t.Error(err)

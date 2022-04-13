@@ -63,7 +63,10 @@ func TestClient_ReadAllowedCCY(t *testing.T) {
 	for _, tt := range testCases {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(tt.statusCode)
-			w.Write(tt.responseBody)
+			_, err := w.Write(tt.responseBody)
+			if err != nil {
+				t.Errorf("%s: failed to respond: %v", tt.name, err)
+			}
 		}))
 
 		client := New(ts.URL, "test", "123", timeout, config.ArtifactDownload{})
@@ -79,20 +82,24 @@ func TestClient_ReadAllowedCCY(t *testing.T) {
 
 func TestClient_ReadJob(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
 		switch r.URL.Path {
 		case "/v1/rdc/jobs/test1":
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"error": null, "status": "passed", "consolidated_status": "passed"}`))
+			_, err = w.Write([]byte(`{"error": null, "status": "passed", "consolidated_status": "passed"}`))
 		case "/v1/rdc/jobs/test2":
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"error": "no-device-found", "status": "failed", "consolidated_status": "failed"}`))
+			_, err = w.Write([]byte(`{"error": "no-device-found", "status": "failed", "consolidated_status": "failed"}`))
 		case "/v1/rdc/jobs/test3":
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"error": null, "status": "in progress", "consolidated_status": "in progress"}`))
+			_, err = w.Write([]byte(`{"error": null, "status": "in progress", "consolidated_status": "in progress"}`))
 		case "/v1/rdc/jobs/test4":
 			w.WriteHeader(http.StatusNotFound)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
+		}
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
 		}
 	}))
 	defer ts.Close()
@@ -160,6 +167,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 
 	var retryCount int
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
 		switch r.URL.Path {
 		case "/v1/rdc/jobs/1":
 			details := &job.Job{
@@ -171,7 +179,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 			randJobStatus(details, true)
 
 			resp, _ := json.Marshal(details)
-			w.Write(resp)
+			_, err = w.Write(resp)
 		case "/v1/rdc/jobs/2":
 			details := &job.Job{
 				ID:     "2",
@@ -182,7 +190,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 			randJobStatus(details, false)
 
 			resp, _ := json.Marshal(details)
-			w.Write(resp)
+			_, err = w.Write(resp)
 			w.WriteHeader(200)
 		case "/v1/rdc/jobs/3":
 			w.WriteHeader(http.StatusNotFound)
@@ -203,10 +211,14 @@ func TestClient_GetJobStatus(t *testing.T) {
 			randJobStatus(details, true)
 
 			resp, _ := json.Marshal(details)
-			w.Write(resp)
+			_, err = w.Write(resp)
 			w.WriteHeader(200)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
 		}
 	}))
 	defer ts.Close()
@@ -294,23 +306,28 @@ func TestClient_GetJobStatus(t *testing.T) {
 
 func TestClient_GetJobAssetFileNames(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
 		switch r.URL.Path {
 		case "/v1/rdc/jobs/1":
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"automation_backend":"xcuitest","framework_log_url":"https://dummy/xcuitestLogs","device_log_url":"https://dummy/deviceLogs","video_url":"https://dummy/video.mp4"}`))
+			_, err = w.Write([]byte(`{"automation_backend":"xcuitest","framework_log_url":"https://dummy/xcuitestLogs","device_log_url":"https://dummy/deviceLogs","video_url":"https://dummy/video.mp4"}`))
 		case "/v1/rdc/jobs/2":
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"automation_backend":"xcuitest","framework_log_url":"https://dummy/xcuitestLogs","screenshots":[{"id":"sc1"}],"video_url":"https://dummy/video.mp4"}`))
+			_, err = w.Write([]byte(`{"automation_backend":"xcuitest","framework_log_url":"https://dummy/xcuitestLogs","screenshots":[{"id":"sc1"}],"video_url":"https://dummy/video.mp4"}`))
 		case "/v1/rdc/jobs/3":
 			w.WriteHeader(http.StatusOK)
 			// The discrepancy between automation_backend and framework_log_url is wanted, as this is how the backend is currently responding.
-			w.Write([]byte(`{"automation_backend":"espresso","framework_log_url":"https://dummy/xcuitestLogs","video_url":"https://dummy/video.mp4"}`))
+			_, err = w.Write([]byte(`{"automation_backend":"espresso","framework_log_url":"https://dummy/xcuitestLogs","video_url":"https://dummy/video.mp4"}`))
 		case "/v1/rdc/jobs/4":
 			w.WriteHeader(http.StatusOK)
 			// The discrepancy between automation_backend and framework_log_url is wanted, as this is how the backend is currently responding.
-			w.Write([]byte(`{"automation_backend":"espresso","framework_log_url":"https://dummy/xcuitestLogs","device_log_url":"https://dummy/deviceLogs","screenshots":[{"id":"sc1"}],"video_url":"https://dummy/video.mp4"}`))
+			_, err = w.Write([]byte(`{"automation_backend":"espresso","framework_log_url":"https://dummy/xcuitestLogs","device_log_url":"https://dummy/deviceLogs","screenshots":[{"id":"sc1"}],"video_url":"https://dummy/video.mp4"}`))
 		default:
 			w.WriteHeader(http.StatusNotFound)
+		}
+
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
 		}
 	}))
 	defer ts.Close()
@@ -370,15 +387,20 @@ func TestClient_GetJobAssetFileNames(t *testing.T) {
 
 func TestClient_GetJobAssetFileContent(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
 		switch r.URL.Path {
 		case "/v1/rdc/jobs/jobID/deviceLogs":
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("INFO 15:10:16 1 Icing : Usage reports ok 0, Failed Usage reports 0, indexed 0, rejected 0\nINFO 15:10:16 2 GmsCoreXrpcWrapper : Returning a channel provider with trafficStatsTag=12803\nINFO 15:10:16 3 Icing : Usage reports ok 0, Failed Usage reports 0, indexed 0, rejected 0\n"))
+			_, err = w.Write([]byte("INFO 15:10:16 1 Icing : Usage reports ok 0, Failed Usage reports 0, indexed 0, rejected 0\nINFO 15:10:16 2 GmsCoreXrpcWrapper : Returning a channel provider with trafficStatsTag=12803\nINFO 15:10:16 3 Icing : Usage reports ok 0, Failed Usage reports 0, indexed 0, rejected 0\n"))
 		case "/v1/rdc/jobs/jobID/junit.xml":
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("<xml>junit.xml</xml>"))
+			_, err = w.Write([]byte("<xml>junit.xml</xml>"))
 		default:
 			w.WriteHeader(http.StatusNotFound)
+		}
+
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
 		}
 	}))
 	defer ts.Close()
@@ -424,13 +446,18 @@ func TestClient_GetJobAssetFileContent(t *testing.T) {
 func TestClient_DownloadArtifact(t *testing.T) {
 	fileContent := "<xml>junit.xml</xml>"
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
 		switch r.URL.Path {
 		case "/v1/rdc/jobs/test-123":
-			w.Write([]byte(`{"automation_backend":"espresso"}`))
+			_, err = w.Write([]byte(`{"automation_backend":"espresso"}`))
 		case "/v1/rdc/jobs/test-123/junit.xml":
-			w.Write([]byte(fileContent))
+			_, err = w.Write([]byte(fileContent))
 		default:
 			w.WriteHeader(http.StatusNotFound)
+		}
+
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
 		}
 	}))
 	defer ts.Close()
@@ -462,14 +489,19 @@ func TestClient_DownloadArtifact(t *testing.T) {
 
 func TestClient_GetDevices(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
 		completeQuery := fmt.Sprintf("%s?%s", r.URL.Path, r.URL.RawQuery)
 		switch completeQuery {
 		case "/v1/rdc/devices/filtered?os=ANDROID":
-			w.Write([]byte(`{"entities":[{"name": "OnePlus 5T"},{"name": "OnePlus 6"},{"name": "OnePlus 6T"}]}`))
+			_, err = w.Write([]byte(`{"entities":[{"name": "OnePlus 5T"},{"name": "OnePlus 6"},{"name": "OnePlus 6T"}]}`))
 		case "/v1/rdc/devices/filtered?os=IOS":
-			w.Write([]byte(`{"entities":[{"name": "iPhone XR"},{"name": "iPhone XS"},{"name": "iPhone X"}]}`))
+			_, err = w.Write([]byte(`{"entities":[{"name": "iPhone XR"},{"name": "iPhone XS"},{"name": "iPhone X"}]}`))
 		default:
 			w.WriteHeader(http.StatusNotFound)
+		}
+
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
 		}
 	}))
 	defer ts.Close()
