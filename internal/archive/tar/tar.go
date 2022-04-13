@@ -106,6 +106,10 @@ func Archive(src string, matcher sauceignore.Matcher, opts Options) (io.Reader, 
 	}
 
 	walker := func(file string, fileInfo os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
 		err = addFileToArchive(file, fileInfo, src, matcher, opts, w)
 		if err != nil {
 			return err
