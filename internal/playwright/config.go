@@ -9,6 +9,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/file"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -222,19 +223,8 @@ func shardInSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 		if err != nil {
 			return []Suite{}, err
 		}
-		var testFiles []string
-		for _, f := range files {
-			excluded := false
-			for _, e := range excludedFiles {
-				if f == e {
-					excluded = true
-					break
-				}
-			}
-			if !excluded {
-				testFiles = append(testFiles, f)
-			}
-		}
+
+		testFiles := file.FilterFiles(files, excludedFiles)
 
 		if s.Shard == "spec" {
 			for _, f := range testFiles {

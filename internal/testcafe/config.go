@@ -10,6 +10,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/file"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -262,7 +263,7 @@ func Validate(p *Project) error {
 				return err
 			}
 
-			p.Suites[i].Src = filterTestFiles(files, excludedFiles)
+			p.Suites[i].Src = file.FilterFiles(files, excludedFiles)
 		}
 	}
 
@@ -292,24 +293,6 @@ func SplitSuites(p Project) (Project, Project) {
 	return dockerProject, sauceProject
 }
 
-func filterTestFiles(files, excludedFiles []string) []string {
-	var testFiles []string
-	for _, f := range files {
-		excluded := false
-		for _, e := range excludedFiles {
-			if f == e {
-				excluded = true
-				break
-			}
-		}
-		if !excluded {
-			testFiles = append(testFiles, f)
-		}
-	}
-
-	return testFiles
-}
-
 // shardSuites divides suites into shards based on the pattern.
 func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 	var shardedSuites []Suite
@@ -332,7 +315,7 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			return []Suite{}, err
 		}
 
-		testFiles := filterTestFiles(files, excludedFiles)
+		testFiles := file.FilterFiles(files, excludedFiles)
 
 		if s.Shard == "spec" {
 			for _, f := range testFiles {
