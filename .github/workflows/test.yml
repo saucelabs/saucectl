@@ -11,9 +11,6 @@ env:
   SAUCE_ACCESS_KEY: ${{secrets.SAUCE_ACCESS_KEY}}
   BUILD_ID: saucectl-run-${{ github.run_id }}
 
-permissions:
-  contents: write # Explicitly add this.
-
 jobs:
   lint:
     runs-on: ubuntu-latest
