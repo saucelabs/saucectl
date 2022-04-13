@@ -62,6 +62,7 @@ type Suite struct {
 	Timeout           time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
 	PlaywrightVersion string            `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
 	TestMatch         []string          `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
+	ExcludedTestFiles []string          `yaml:"excludedTestFiles,omitempty" json:"testIgnore"`
 	PlatformName      string            `yaml:"platformName,omitempty" json:"platformName,omitempty"`
 	Params            SuiteConfig       `yaml:"params,omitempty" json:"param,omitempty"`
 	ScreenResolution  string            `yaml:"screenResolution,omitempty" json:"screenResolution,omitempty"`
@@ -69,7 +70,6 @@ type Suite struct {
 	NumShards         int               `yaml:"numShards,omitempty" json:"-"`
 	Shard             string            `yaml:"shard,omitempty" json:"-"`
 	PreExec           []string          `yaml:"preExec,omitempty" json:"preExec"`
-	ExcludedTestFiles []string          `yaml:"excludedTestFiles,omitempty" json:"testIgnore"`
 }
 
 // SuiteConfig represents the configuration specific to a suite

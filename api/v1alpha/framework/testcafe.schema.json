@@ -296,6 +296,9 @@
           },
           "preExec": {
             "$ref": "../subschema/common.schema.json#/definitions/preExec"
+          },
+          "excludedTestFiles": {
+            "$ref": "../subschema/common.schema.json#/definitions/excludedTestFiles"
           }
         },
         "required": [

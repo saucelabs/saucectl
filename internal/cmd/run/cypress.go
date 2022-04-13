@@ -71,6 +71,7 @@ func NewCypressCmd() *cobra.Command {
 	sc.String("cypress.configFile", "cypress::configFile", "", "The path to the cypress.json config file")
 	sc.String("cypress.key", "cypress::key", "", "The Cypress record key")
 	sc.Bool("cypress.record", "cypress::record", false, "Whether or not to record tests to the cypress dashboard")
+	sc.StringSlice("excludedTestFiles", "suite::config::excludedTestFiles", []string{}, "Exclude test files to skip the tests, using glob pattern")
 
 	// Video & Screen(shots)
 	sc.String("screenResolution", "suite::screenResolution", "", "The screen resolution")
