@@ -8,10 +8,11 @@ func FilterFiles(testFiles, excludedList []string) []string {
 		for _, e := range excludedList {
 			if t == e {
 				excluded = true
+				break
 			}
-			if !excluded {
-				files = append(files, t)
-			}
+		}
+		if !excluded {
+			files = append(files, t)
 		}
 	}
 
