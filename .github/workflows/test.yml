@@ -18,9 +18,10 @@ jobs:
       image: golang:1.17-alpine
 
     steps:
-      - run: git config --global --add safe.directory /__w/saucectl/saucectl
       - name: Install Dependencies
         run: apk add --no-cache git gcc g++ curl
+
+      - run: git config --global --add safe.directory /__w/saucectl/saucectl
 
       - name: Checkout Code
         uses: actions/checkout@v2
