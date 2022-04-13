@@ -21,6 +21,9 @@ jobs:
       - name: Install Dependencies
         run: apk add --no-cache git gcc g++ curl
 
+      - name: GIT permission workaround https://github.blog/2022-04-12-git-security-vulnerability-announced/
+        run: git config --global --add safe.directory /__w/saucectl/saucectl
+
       - name: Checkout Code
         uses: actions/checkout@v3
 
@@ -35,6 +38,9 @@ jobs:
     steps:
       - name: Install Dependencies
         run: apk add --no-cache git gcc g++ curl bash
+
+      - name: GIT permission workaround https://github.blog/2022-04-12-git-security-vulnerability-announced/
+        run: git config --global --add safe.directory /__w/saucectl/saucectl
 
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -73,6 +79,9 @@ jobs:
     steps:
       - name: Install Dependencies
         run: apk add --no-cache git gcc g++ curl
+
+      - name: GIT permission workaround https://github.blog/2022-04-12-git-security-vulnerability-announced/
+        run: git config --global --add safe.directory /__w/saucectl/saucectl
 
       - name: Checkout Code
         uses: actions/checkout@v3
