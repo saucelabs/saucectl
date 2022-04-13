@@ -1,7 +1,7 @@
 package file
 
-// FilterFiles returns file list which excluding given excluded file list
-func FilterFiles(testFiles, excludedList []string) []string {
+// ExcludeFiles returns file list which excluding given excluded file list
+func ExcludeFiles(testFiles, excludedList []string) []string {
 	var files []string
 	for _, t := range testFiles {
 		excluded := false

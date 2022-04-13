@@ -263,7 +263,7 @@ func Validate(p *Project) error {
 				return err
 			}
 
-			p.Suites[i].Src = file.FilterFiles(files, excludedFiles)
+			p.Suites[i].Src = file.ExcludeFiles(files, excludedFiles)
 		}
 	}
 
@@ -315,7 +315,7 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			return []Suite{}, err
 		}
 
-		testFiles := file.FilterFiles(files, excludedFiles)
+		testFiles := file.ExcludeFiles(files, excludedFiles)
 
 		if s.Shard == "spec" {
 			for _, f := range testFiles {

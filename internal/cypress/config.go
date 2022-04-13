@@ -351,7 +351,7 @@ func shardSuites(cfg Config, suites []Suite, ccy int) ([]Suite, error) {
 			return shardedSuites, err
 		}
 
-		testFiles := file.FilterFiles(files, excludedFiles)
+		testFiles := file.ExcludeFiles(files, excludedFiles)
 
 		if s.Shard == "spec" {
 			for _, f := range testFiles {
