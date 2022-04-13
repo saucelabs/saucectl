@@ -253,18 +253,29 @@ func getCI(provider Provider) CI {
 
 // GetTags returns tag list containing CI info
 func GetTags() []string {
+	var tags []string
 	provider := GetProvider()
 	if reflect.DeepEqual(provider, None) {
-		return []string{}
+		return tags
 	}
 
 	ci := getCI(provider)
-	return []string{
-		ci.Provider.Name,
-		fmt.Sprintf("%s:%s", "originURL", ci.OriginURL),
-		fmt.Sprintf("%s:%s", "repo", ci.Repo),
-		fmt.Sprintf("%s:%s", "refName", ci.RefName),
-		fmt.Sprintf("%s:%s", "SHA", ci.SHA),
-		fmt.Sprintf("%s:%s", "user", ci.User),
+	tags = append(tags, ci.Provider.Name)
+	if ci.OriginURL != "" {
+		tags = append(tags, fmt.Sprintf("%s:%s", "originURL", ci.OriginURL))
 	}
+	if ci.Repo != "" {
+		tags = append(tags, fmt.Sprintf("%s:%s", "repo", ci.Repo))
+	}
+	if ci.RefName != "" {
+		tags = append(tags, fmt.Sprintf("%s:%s", "refName", ci.RefName))
+	}
+	if ci.SHA != "" {
+		tags = append(tags, fmt.Sprintf("%s:%s", "SHA", ci.SHA))
+	}
+	if ci.User != "" {
+		tags = append(tags, fmt.Sprintf("%s:%s", "user", ci.User))
+	}
+
+	return tags
 }
