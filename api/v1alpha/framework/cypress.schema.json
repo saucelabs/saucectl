@@ -140,9 +140,6 @@
                 "description": "One or more paths to the Cypress test files to run for this suite, if not otherwise specified explicitly in cypress.json.",
                 "type": "array"
               },
-              "excludedTestFiles": {
-                "$ref": "../subschema/common.schema.json#/definitions/excludedTestFiles"
-              },
               "env": {
                 "$ref": "../subschema/common.schema.json#/definitions/env"
               }
@@ -171,6 +168,9 @@
           },
           "preExec": {
             "$ref": "../subschema/common.schema.json#/definitions/preExec"
+          },
+          "excludedTestFiles": {
+            "$ref": "../subschema/common.schema.json#/definitions/excludedTestFiles"
           }
         },
         "required": [

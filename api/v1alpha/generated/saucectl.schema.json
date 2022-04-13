@@ -367,9 +367,6 @@
                       "description": "One or more paths to the Cypress test files to run for this suite, if not otherwise specified explicitly in cypress.json.",
                       "type": "array"
                     },
-                    "excludedTestFiles": {
-                      "$ref": "#/allOf/2/then/properties/suites/items/properties/excludedTestFiles"
-                    },
                     "env": {
                       "$ref": "#/allOf/0/then/properties/env"
                     }
@@ -409,6 +406,10 @@
                 },
                 "preExec": {
                   "description": "Specifies which commands to execute before starting the tests.",
+                  "type": "array"
+                },
+                "excludedTestFiles": {
+                  "description": "Exclude test files to skip the tests.",
                   "type": "array"
                 }
               },
@@ -789,8 +790,7 @@
                   "type": "array"
                 },
                 "excludedTestFiles": {
-                  "description": "Exclude test files to skip the tests.",
-                  "type": "array"
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/excludedTestFiles"
                 },
                 "platformName": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/platformName",
@@ -1341,7 +1341,7 @@
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/preExec"
                 },
                 "excludedTestFiles": {
-                  "$ref": "#/allOf/2/then/properties/suites/items/properties/excludedTestFiles"
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/excludedTestFiles"
                 }
               },
               "required": [
