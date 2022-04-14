@@ -15,7 +15,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
-	"github.com/saucelabs/saucectl/internal/testfiles"
 )
 
 // Config descriptors.
@@ -351,7 +350,7 @@ func shardSuites(cfg Config, suites []Suite, ccy int) ([]Suite, error) {
 			return shardedSuites, err
 		}
 
-		testFiles := testfiles.ExcludeFiles(files, excludedFiles)
+		testFiles := fpath.ExcludeFiles(files, excludedFiles)
 
 		if s.Shard == "spec" {
 			for _, f := range testFiles {
