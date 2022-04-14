@@ -68,7 +68,7 @@ type Suite struct {
 // SuiteConfig represents the cypress config overrides.
 type SuiteConfig struct {
 	TestFiles         []string          `yaml:"testFiles,omitempty" json:"testFiles"`
-	ExcludedTestFiles []string          `yaml:"excludedTestFiles,omitempty" json:"ignoreTestFiles"`
+	ExcludedTestFiles []string          `yaml:"excludedTestFiles,omitempty" json:"ignoreTestFiles,omitempty"`
 	Env               map[string]string `yaml:"env,omitempty" json:"env"`
 }
 
