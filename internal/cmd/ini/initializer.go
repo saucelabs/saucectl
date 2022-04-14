@@ -49,9 +49,6 @@ type initializer struct {
 	deviceReader devices.Reader
 	vmdReader    vmd.Reader
 	ccyReader    concurrency.Reader
-
-	frameworks        []string
-	frameworkMetadata []framework.Metadata
 }
 
 // newInitializer creates a new initializer instance.

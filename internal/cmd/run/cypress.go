@@ -12,6 +12,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/backtrace"
+	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
@@ -136,6 +137,10 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 
 	if err := cypress.Validate(&p); err != nil {
 		return 1, err
+	}
+
+	if !gFlags.noAutoTagging {
+		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
 
 	regio := region.FromString(p.Sauce.Region)

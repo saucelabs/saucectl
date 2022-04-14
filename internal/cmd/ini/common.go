@@ -87,8 +87,8 @@ func saveSauceIgnore(content string) error {
 		return err
 	}
 	defer fd.Close()
-	fd.WriteString(content)
-	return nil
+	_, err = fd.WriteString(content)
+	return err
 }
 
 func displaySummary(files []string) {

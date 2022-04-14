@@ -64,12 +64,17 @@ func TestClient_HasUpdateAvailable(t *testing.T) {
 	}
 	for idx, tt := range testCases {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var err error
 			switch r.URL.Path {
 			case "/repos/saucelabs/saucectl/releases/latest":
 				w.WriteHeader(200)
-				w.Write(tt.body)
+				_, err = w.Write(tt.body)
 			default:
 				w.WriteHeader(http.StatusInternalServerError)
+			}
+
+			if err != nil {
+				t.Errorf("%d: failed to respond: %v", idx, err)
 			}
 		}))
 		gh := Client{

@@ -11,6 +11,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/backtrace"
+	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/docker"
@@ -91,8 +92,8 @@ func NewPlaywrightCmd() *cobra.Command {
 	sc.StringToString("npm.packages", "npm::packages", map[string]string{}, "Specify npm packages that are required to run tests")
 	sc.Bool("npm.strictSSL", "npm::strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
 
-	// Depreated flags
-	sc.Fset.MarkDeprecated("headed", "please use --headless instead")
+	// Deprecated flags
+	_ = sc.Fset.MarkDeprecated("headed", "please use --headless instead")
 
 	return cmd
 }
@@ -126,6 +127,10 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 	as.URL = regio.APIBaseURL()
 
 	rs.ArtifactConfig = p.Artifacts.Download
+
+	if !gFlags.noAutoTagging {
+		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
+	}
 
 	tracker := segment.New(!gFlags.disableUsageMetrics)
 

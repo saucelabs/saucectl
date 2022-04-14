@@ -8,16 +8,16 @@ type Build struct {
 	Name string `json:"name"`
 }
 
-// BuildSource defines the type of test device associated with the job and build.
-type BuildSource string
+// Source defines the type of test device associated with the job and build.
+type Source string
 
 const (
-	VDC BuildSource = "vdc"
-	RDC             = "rdc"
+	VDC Source = "vdc"
+	RDC Source = "rdc"
 )
 
 // Reader is the interface for requesting build information.
 type Reader interface {
 	// GetBuildID returns the build id for a given job id.
-	GetBuildID(ctx context.Context, jobID string, buildSource BuildSource) (string, error)
+	GetBuildID(ctx context.Context, jobID string, buildSource Source) (string, error)
 }

@@ -238,8 +238,14 @@ func Test_shardSuites(t *testing.T) {
 	defer dir.Remove()
 
 	oldPwd, _ := os.Getwd()
-	defer os.Chdir(oldPwd)
-	os.Chdir(dir.Path())
+	defer func() {
+		if err := os.Chdir(oldPwd); err != nil {
+			t.Errorf("failed to change directory to %s: %v", oldPwd, err)
+		}
+	}()
+	if err := os.Chdir(dir.Path()); err != nil {
+		t.Errorf("failed to change directory to %s: %v", dir.Path(), err)
+	}
 
 	type args struct {
 		cfg    Config

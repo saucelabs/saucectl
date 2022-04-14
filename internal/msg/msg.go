@@ -23,8 +23,7 @@ const DockerLogo = `
  | |  | | |  | | |    | ' /| |__  | |__) | | \  / | |  | | |  | | |__   
  | |  | | |  | | |    |  < |  __| |  _  /  | |\/| | |  | | |  | |  __|  
  | |__| | |__| | |____| . \| |____| | \ \  | |  | | |__| | |__| | |____ 
- |_____/ \____/ \_____|_|\_\______|_|  \_\ |_|  |_|\____/|_____/|______|
-`
+ |_____/ \____/ \_____|_|\_\______|_|  \_\ |_|  |_|\____/|_____/|______|`
 
 // SauceLogo is an eyecatcher message that indicates the user is running tests in the Sauce Labs cloud.
 const SauceLogo = `
@@ -56,8 +55,7 @@ const SauceLogo = `
  | (___   /  \ | |  | | |    | |__    | |    | |   | |  | | |  | | |  | |
   \___ \ / /\ \| |  | | |    |  __|   | |    | |   | |  | | |  | | |  | |
   ____) / ____ \ |__| | |____| |____  | |____| |___| |__| | |__| | |__| |
- |_____/_/    \_\____/ \_____|______|  \_____|______\____/ \____/|_____/
-`
+ |_____/_/    \_\____/ \_____|______|  \_____|______\____/ \____/|_____/`
 
 // SignupMessage explains how to obtain a Sauce Labs account and where to find the access key.
 const SignupMessage = `Don't have an account? Signup here:

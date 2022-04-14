@@ -118,6 +118,7 @@ func TestStartContainer(t *testing.T) {
 	// Buggy container start
 	cont, err = handler.StartContainer(context.Background(), containerStartOptions{RootDir: project.RootDir})
 	assert.NotNil(t, err)
+	assert.Nil(t, cont)
 
 	// Successfull container start
 	mockDocker.ContainerCreateSuccess = true

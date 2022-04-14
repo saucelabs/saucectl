@@ -11,6 +11,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/backtrace"
+	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/docker"
@@ -142,6 +143,10 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, tc testcomposer.Clie
 	as.URL = regio.APIBaseURL()
 
 	rs.ArtifactConfig = p.Artifacts.Download
+
+	if !gFlags.noAutoTagging {
+		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
+	}
 
 	tracker := segment.New(!gFlags.disableUsageMetrics)
 

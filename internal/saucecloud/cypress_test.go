@@ -3,6 +3,7 @@ package saucecloud
 import (
 	"archive/zip"
 	"context"
+	"io"
 	"os"
 	"testing"
 	"time"
@@ -121,7 +122,11 @@ func TestRunSuites(t *testing.T) {
 }
 
 func TestArchiveProject(t *testing.T) {
-	os.Mkdir("./test-arch/", 0755)
+	err := os.Mkdir("./test-arch/", 0755)
+	if err != nil {
+		t.Errorf("failed to create test-arch directory: %v", err)
+		return
+	}
 	defer func() {
 		os.RemoveAll("./test-arch/")
 	}()
@@ -159,6 +164,9 @@ func TestArchiveProject(t *testing.T) {
 	rd, _ := cypressConfig.Open()
 	b := make([]byte, 3)
 	n, err := rd.Read(b)
+	if err != nil && err != io.EOF {
+		t.Errorf("error reading cypress.json: %s", err)
+	}
 	assert.Equal(t, 3, n)
 	assert.Equal(t, []byte("{}\n"), b)
 }
@@ -184,7 +192,10 @@ func TestUploadProject(t *testing.T) {
 }
 
 func TestRunProject(t *testing.T) {
-	os.Mkdir("./test-arch/", 0755)
+	err := os.Mkdir("./test-arch/", 0755)
+	if err != nil {
+		t.Errorf("failed to create test-arch directory: %v", err)
+	}
 	httpmock.Activate()
 	defer func() {
 		os.RemoveAll("./test-arch/")

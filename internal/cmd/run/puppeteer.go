@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/saucelabs/saucectl/internal/backtrace"
+	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/docker"
@@ -105,6 +106,10 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 	regio := region.FromString(p.Sauce.Region)
 	rs.URL = regio.APIBaseURL()
 	tc.URL = regio.APIBaseURL()
+
+	if !gFlags.noAutoTagging {
+		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
+	}
 
 	tracker := segment.New(!gFlags.disableUsageMetrics)
 

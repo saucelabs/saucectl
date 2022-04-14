@@ -247,6 +247,9 @@ func (r *ContainerRunner) readJobInfo(containerID string) (jobInfo, error) {
 	fileName := filepath.Base(r.containerConfig.jobInfoFilePath)
 	filePath := filepath.Join(dir, fileName)
 	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return jobInfo{}, err
+	}
 
 	var info jobInfo
 	err = json.Unmarshal(content, &info)
