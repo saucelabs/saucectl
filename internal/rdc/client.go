@@ -1,7 +1,6 @@
 package rdc
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -354,32 +353,6 @@ func doAssetRequest(httpClient *retryablehttp.Client, request *http.Request) ([]
 	}
 
 	return io.ReadAll(resp.Body)
-}
-
-// deviceLogLine represent a line from device console.
-type deviceLogLine struct {
-	ID      int    `json:"id,omitempty"`
-	Time    string `json:"time,omitempty"`
-	Level   string `json:"level,omitempty"`
-	Message string `json:"message,omitempty"`
-}
-
-type deviceLogLines []deviceLogLine
-
-// As device logs are represented as an JSON list, we convert them to
-// raw text as it would be when looking device logs.
-func convertDeviceLogs(data []byte) ([]byte, error) {
-	var lines deviceLogLines
-	err := json.NewDecoder(bytes.NewReader(data)).Decode(&lines)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	var b bytes.Buffer
-	for _, line := range lines {
-		b.Write([]byte(fmt.Sprintf("%s %s %d %s\n", line.Level, line.Time, line.ID, line.Message)))
-	}
-	return b.Bytes(), nil
 }
 
 // DownloadArtifact does downloading artifacts

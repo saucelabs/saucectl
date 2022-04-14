@@ -130,7 +130,10 @@ func TestTestComposer_StartJob(t *testing.T) {
 			wantErr: fmt.Errorf("job start failed; unexpected response code:'500', msg:'Internal server error'"),
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(500)
-				w.Write([]byte("Internal server error"))
+				_, err := w.Write([]byte("Internal server error"))
+				if err != nil {
+					t.Errorf("failed to write response: %v", err)
+				}
 			},
 		},
 	}
@@ -184,9 +187,12 @@ func TestClient_GetSlackToken(t *testing.T) {
 			wantErr: false,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(200)
-				json.NewEncoder(w).Encode(TokenResponse{
+				err := json.NewEncoder(w).Encode(TokenResponse{
 					Token: "user token",
 				})
+				if err != nil {
+					t.Errorf("failed to encode json response: %v", err)
+				}
 			},
 		},
 		{
@@ -273,13 +279,16 @@ func TestClient_Search(t *testing.T) {
 			wantErr: false,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(200)
-				json.NewEncoder(w).Encode(FrameworkResponse{
+				err := json.NewEncoder(w).Encode(FrameworkResponse{
 					Name:    "testycles",
 					Version: "1",
 					Runner: runner{
 						DockerImage: "sauce/testycles:v1+v0.1.0",
 					},
 				})
+				if err != nil {
+					t.Errorf("failed to encode json response: %v", err)
+				}
 			},
 		},
 		{
@@ -320,17 +329,22 @@ func TestClient_Search(t *testing.T) {
 
 func TestClient_UploadAsset(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
 		switch r.URL.Path {
 		case "/v1/testcomposer/jobs/1/assets":
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("{\"uploaded\":null}"))
+			_, err = w.Write([]byte("{\"uploaded\":null}"))
 		case "/v1/testcomposer/jobs/2/assets":
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("{\"uploaded\":null,\"errors\":[\"failed to upload config.yml: content-type not allowed\"]}"))
+			_, err = w.Write([]byte("{\"uploaded\":null,\"errors\":[\"failed to upload config.yml: content-type not allowed\"]}"))
 		case "/v1/testcomposer/jobs/3/assets":
 			w.WriteHeader(http.StatusNotFound)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
 		}
 	}))
 	defer ts.Close()
@@ -436,12 +450,16 @@ func TestClient_Frameworks(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				var err error
 				switch r.URL.Path {
 				case "/v1/testcomposer/frameworks":
 					w.WriteHeader(tt.httpCode)
-					w.Write([]byte(tt.body))
+					_, err = w.Write([]byte(tt.body))
 				default:
 					w.WriteHeader(http.StatusInternalServerError)
+				}
+				if err != nil {
+					t.Errorf("failed to respond: %v", err)
 				}
 			}))
 			c := &Client{
@@ -464,14 +482,19 @@ func TestClient_Frameworks(t *testing.T) {
 
 func TestClient_Versions(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
 		switch r.URL.Path {
 		case "/v1/testcomposer/frameworks/cypress/versions":
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`[{"name":"cypress","version":"7.3.0","deprecated":false,"runner":{"cloudRunnerVersion":"","dockerImage":"saucelabs/stt-cypress-mocha-node:v7.1.1","gitRelease":"saucelabs/sauce-cypress-runner:v7.1.1"},"platforms":[{"name":"windows 10","browsers":["googlechrome","firefox","microsoftedge"]}]},{"name":"cypress","version":"7.1.0","deprecated":true,"runner":{"cloudRunnerVersion":"","dockerImage":"saucelabs/stt-cypress-mocha-node:v7.0.6","gitRelease":"saucelabs/sauce-cypress-runner:v7.0.6"},"platforms":[{"name":"windows 10","browsers":["googlechrome","firefox","microsoftedge"]}]},{"name":"cypress","version":"6.6.0","deprecated":true,"runner":{"cloudRunnerVersion":"","dockerImage":"saucelabs/stt-cypress-mocha-node:v6.0.2","gitRelease":"saucelabs/sauce-cypress-runner:v6.0.2"},"platforms":[{"name":"windows 10","browsers":["googlechrome","firefox","microsoftedge"]}]}]`))
+			_, err = w.Write([]byte(`[{"name":"cypress","version":"7.3.0","deprecated":false,"runner":{"cloudRunnerVersion":"","dockerImage":"saucelabs/stt-cypress-mocha-node:v7.1.1","gitRelease":"saucelabs/sauce-cypress-runner:v7.1.1"},"platforms":[{"name":"windows 10","browsers":["googlechrome","firefox","microsoftedge"]}]},{"name":"cypress","version":"7.1.0","deprecated":true,"runner":{"cloudRunnerVersion":"","dockerImage":"saucelabs/stt-cypress-mocha-node:v7.0.6","gitRelease":"saucelabs/sauce-cypress-runner:v7.0.6"},"platforms":[{"name":"windows 10","browsers":["googlechrome","firefox","microsoftedge"]}]},{"name":"cypress","version":"6.6.0","deprecated":true,"runner":{"cloudRunnerVersion":"","dockerImage":"saucelabs/stt-cypress-mocha-node:v6.0.2","gitRelease":"saucelabs/sauce-cypress-runner:v6.0.2"},"platforms":[{"name":"windows 10","browsers":["googlechrome","firefox","microsoftedge"]}]}]`))
 		case "/v1/testcomposer/frameworks/non-existent/versions":
 			w.WriteHeader(http.StatusNotFound)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
 		}
 	}))
 	defer ts.Close()
@@ -481,7 +504,6 @@ func TestClient_Versions(t *testing.T) {
 		Credentials: credentials.Credentials{Username: "test", AccessKey: "123"},
 	}
 	type args struct {
-		client        *Client
 		frameworkName string
 	}
 	tests := []struct {

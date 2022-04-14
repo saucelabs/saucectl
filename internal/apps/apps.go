@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	reFileID      = regexp.MustCompile("(storage:(//)?)?(?P<fileID>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$")
-	reFilePattern = regexp.MustCompile("^(storage:filename=)(?P<filename>[\\S][\\S ]+(\\.ipa|\\.apk))$")
+	reFileID      = regexp.MustCompile(`(storage:(//)?)?(?P<fileID>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$`)
+	reFilePattern = regexp.MustCompile(`^(storage:filename=)(?P<filename>[\S][\S ]+(\.ipa|\.apk))$`)
 )
 
 func hasValidExtension(file string, exts []string) bool {

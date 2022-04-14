@@ -47,7 +47,6 @@ var (
 
 	// General Request Timeouts
 	testComposerTimeout = 300 * time.Second
-	restoTimeout        = 60 * time.Second
 	rdcTimeout          = 15 * time.Second
 	githubTimeout       = 2 * time.Second
 
@@ -149,8 +148,8 @@ func Command() *cobra.Command {
 	_ = cmd.PersistentFlags().MarkHidden("experiment")
 
 	// Deprecated flags
-	sc.Fset.MarkDeprecated("tunnel-id", "please use --tunnel-name instead")
-	sc.Fset.MarkDeprecated("tunnel-parent", "please use --tunnel-owner instead")
+	_ = sc.Fset.MarkDeprecated("tunnel-id", "please use --tunnel-name instead")
+	_ = sc.Fset.MarkDeprecated("tunnel-parent", "please use --tunnel-owner instead")
 
 	sc.BindAll()
 
@@ -238,8 +237,10 @@ func printTestEnv(testEnv string) {
 	switch testEnv {
 	case "docker":
 		fmt.Println(msg.DockerLogo)
+		fmt.Println()
 	case "sauce":
 		fmt.Println(msg.SauceLogo)
+		fmt.Println()
 	}
 }
 

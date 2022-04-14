@@ -301,8 +301,14 @@ func TestCheckPathLength(t *testing.T) {
 
 	// Use created dir as referential
 	wd, _ := os.Getwd()
-	defer os.Chdir(wd)
-	os.Chdir(dir.Path())
+	defer func() {
+		if err := os.Chdir(wd); err != nil {
+			t.Errorf("failed to change directory to %s: %v", wd, err)
+		}
+	}()
+	if err := os.Chdir(dir.Path()); err != nil {
+		t.Errorf("failed to change directory to %s: %v", dir.Path(), err)
+	}
 
 	type args struct {
 		projectFolder string

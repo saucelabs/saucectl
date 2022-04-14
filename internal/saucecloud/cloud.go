@@ -754,8 +754,3 @@ func (r *CloudRunner) getAvailableVersionsMessage(frameworkName string) string {
 	msg += "\n"
 	return msg
 }
-
-// isUnsupportedVersion returns true if the error is an unsupported version.
-func isUnsupportedVersion(err error) bool {
-	return strings.Contains(err.Error(), "Bad Request: unsupported version")
-}

@@ -25,7 +25,7 @@ func TestAppStore_Upload(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if fmt.Sprintf("sha256=%s&per_page=1", b1Hash) == r.URL.RawQuery {
 			w.WriteHeader(200)
-			w.Write([]byte(fmt.Sprintf(`{
+			_, _ = w.Write([]byte(fmt.Sprintf(`{
 				"items": [
 					{
 						"id": "matching-id",
@@ -37,7 +37,7 @@ func TestAppStore_Upload(t *testing.T) {
 			return
 		}
 		w.WriteHeader(200)
-		w.Write([]byte(`{
+		_, _ = w.Write([]byte(`{
 			"items": [
 			],
 			"total_items": 0

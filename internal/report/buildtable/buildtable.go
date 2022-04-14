@@ -89,7 +89,7 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 	return nil
 }
 
-func (r *Reporter) buildURLFromJobURL(jobURL string, buildSource build.BuildSource) string {
+func (r *Reporter) buildURLFromJobURL(jobURL string, buildSource build.Source) string {
 	pURL, err := url.Parse(jobURL)
 	if err != nil {
 		return ""

@@ -176,7 +176,10 @@ func TestExportCommandLineFlagsMap(t *testing.T) {
 				setBuilder: func() *pflag.FlagSet {
 					pf := pflag.NewFlagSet("XXX", pflag.ContinueOnError)
 					pf.String("cypress.key", "", "demo-usage")
-					pf.Parse([]string{"--cypress.key", "sensitive-value"})
+					err := pf.Parse([]string{"--cypress.key", "sensitive-value"})
+					if err != nil {
+						t.Errorf("failed to parse test args: %v", err)
+					}
 					return pf
 				},
 			},
@@ -188,7 +191,10 @@ func TestExportCommandLineFlagsMap(t *testing.T) {
 				setBuilder: func() *pflag.FlagSet {
 					pf := pflag.NewFlagSet("XXX", pflag.ContinueOnError)
 					pf.StringToString("env", map[string]string{}, "demo-usage")
-					pf.Parse([]string{"--env", "KEY1=val1", "--env", "KEY2=val2"})
+					err := pf.Parse([]string{"--env", "KEY1=val1", "--env", "KEY2=val2"})
+					if err != nil {
+						t.Errorf("failed to parse test args: %v", err)
+					}
 					return pf
 				},
 			},
@@ -200,7 +206,10 @@ func TestExportCommandLineFlagsMap(t *testing.T) {
 				setBuilder: func() *pflag.FlagSet {
 					pf := pflag.NewFlagSet("XXX", pflag.ContinueOnError)
 					pf.String("name", "", "demo-usage")
-					pf.Parse([]string{"--name", "myname"})
+					err := pf.Parse([]string{"--name", "myname"})
+					if err != nil {
+						t.Errorf("failed to parse test args: %v", err)
+					}
 					return pf
 				},
 			},
@@ -212,7 +221,10 @@ func TestExportCommandLineFlagsMap(t *testing.T) {
 				setBuilder: func() *pflag.FlagSet {
 					pf := pflag.NewFlagSet("XXX", pflag.ContinueOnError)
 					pf.StringToString("xtra", map[string]string{}, "demo-usage")
-					pf.Parse([]string{"--xtra", "KEY1=val1", "--xtra", "KEY2=val2"})
+					err := pf.Parse([]string{"--xtra", "KEY1=val1", "--xtra", "KEY2=val2"})
+					if err != nil {
+						t.Errorf("failed to parse test args: %v", err)
+					}
 					return pf
 				},
 			},

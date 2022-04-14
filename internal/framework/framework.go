@@ -49,7 +49,7 @@ type Platform struct {
 // The expected GitRelease format is "org/repo:tag".
 func GitReleaseSegments(m *Metadata) (org, repo, tag string, err error) {
 	// :punct: is a bit more generous than what would actually appear, but was chosen for the sake for readability.
-	r := regexp.MustCompile("(?P<org>[[:punct:][:word:]]+)\\/(?P<repo>[[:punct:][:word:]]+):(?P<tag>[[:punct:][:word:]]+)")
+	r := regexp.MustCompile(`(?P<org>[[:punct:][:word:]]+)/(?P<repo>[[:punct:][:word:]]+):(?P<tag>[[:punct:][:word:]]+)`)
 	matches := r.FindStringSubmatch(m.GitRelease)
 
 	// We expect a full match, plus 3 subgroups (org, repo tag). Thus a total of 4.
