@@ -21,7 +21,7 @@ suites:
       env:
         hello: world
       testFiles: [ "**/*.*" ]
-      ignoreTestFiles: []
+      excludedTestFiles: []
 
   - name: "saucy test in sauce"
     browser: "chrome"
@@ -30,7 +30,7 @@ suites:
       env:
         hello: world
       testFiles: [ "**/*.*" ]
-      ignoreTestFiles: []
+      excludedTestFiles: []
 
 artifacts:
   download:
