@@ -256,7 +256,7 @@ func Validate(p *Project) error {
 			}
 			if len(files) == 0 {
 				msg.SuiteSplitNoMatch(v.Name, p.RootDir, v.Src)
-				return fmt.Errorf("suite '%s' patterns have no matching files", v.Name)
+				return fmt.Errorf("suite '%s' test patterns have no matching files", v.Name)
 			}
 			excludedFiles, err := fpath.FindFiles(p.RootDir, v.ExcludedTestFiles, fpath.FindByShellPattern)
 			if err != nil {
