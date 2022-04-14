@@ -11,7 +11,7 @@ rootDir: tests/e2e/
 docker:
   fileTransfer: mount
 cypress:
-  version: 7.3.0
+  version: 9.5.3
   configFile: "cypress.json"
 suites:
   - name: "saucy test in docker"
@@ -21,6 +21,7 @@ suites:
       env:
         hello: world
       testFiles: [ "**/*.*" ]
+      ignoreTestFiles: []
 
   - name: "saucy test in sauce"
     browser: "chrome"
@@ -29,6 +30,7 @@ suites:
       env:
         hello: world
       testFiles: [ "**/*.*" ]
+      ignoreTestFiles: []
 
 artifacts:
   download:
