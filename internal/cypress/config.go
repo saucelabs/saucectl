@@ -52,24 +52,24 @@ type Project struct {
 
 // Suite represents the cypress test suite configuration.
 type Suite struct {
-	Name              string        `yaml:"name,omitempty" json:"name"`
-	Browser           string        `yaml:"browser,omitempty" json:"browser"`
-	BrowserVersion    string        `yaml:"browserVersion,omitempty" json:"browserVersion"`
-	PlatformName      string        `yaml:"platformName,omitempty" json:"platformName"`
-	Config            SuiteConfig   `yaml:"config,omitempty" json:"config"`
-	ScreenResolution  string        `yaml:"screenResolution,omitempty" json:"screenResolution"`
-	Mode              string        `yaml:"mode,omitempty" json:"-"`
-	Timeout           time.Duration `yaml:"timeout,omitempty" json:"timeout"`
-	Shard             string        `yaml:"shard,omitempty" json:"-"`
-	Headless          bool          `yaml:"headless,omitempty" json:"headless"`
-	PreExec           []string      `yaml:"preExec,omitempty" json:"preExec"`
-	ExcludedTestFiles []string      `yaml:"excludedTestFiles,omitempty" json:"ignoreTestFiles"`
+	Name             string        `yaml:"name,omitempty" json:"name"`
+	Browser          string        `yaml:"browser,omitempty" json:"browser"`
+	BrowserVersion   string        `yaml:"browserVersion,omitempty" json:"browserVersion"`
+	PlatformName     string        `yaml:"platformName,omitempty" json:"platformName"`
+	Config           SuiteConfig   `yaml:"config,omitempty" json:"config"`
+	ScreenResolution string        `yaml:"screenResolution,omitempty" json:"screenResolution"`
+	Mode             string        `yaml:"mode,omitempty" json:"-"`
+	Timeout          time.Duration `yaml:"timeout,omitempty" json:"timeout"`
+	Shard            string        `yaml:"shard,omitempty" json:"-"`
+	Headless         bool          `yaml:"headless,omitempty" json:"headless"`
+	PreExec          []string      `yaml:"preExec,omitempty" json:"preExec"`
 }
 
 // SuiteConfig represents the cypress config overrides.
 type SuiteConfig struct {
-	TestFiles []string          `yaml:"testFiles,omitempty" json:"testFiles"`
-	Env       map[string]string `yaml:"env,omitempty" json:"env"`
+	TestFiles         []string          `yaml:"testFiles,omitempty" json:"testFiles"`
+	ExcludedTestFiles []string          `yaml:"excludedTestFiles,omitempty" json:"ignoreTestFiles"`
+	Env               map[string]string `yaml:"env,omitempty" json:"env"`
 }
 
 // Reporter represents a cypress report configuration.
@@ -345,7 +345,7 @@ func shardSuites(cfg Config, suites []Suite, ccy int) ([]Suite, error) {
 			msg.SuiteSplitNoMatch(s.Name, cfg.AbsIntegrationFolder(), s.Config.TestFiles)
 			return []Suite{}, fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
 		}
-		excludedFiles, err := fpath.FindFiles(cfg.AbsIntegrationFolder(), s.ExcludedTestFiles, fpath.FindByShellPattern)
+		excludedFiles, err := fpath.FindFiles(cfg.AbsIntegrationFolder(), s.Config.ExcludedTestFiles, fpath.FindByShellPattern)
 		if err != nil {
 			return shardedSuites, err
 		}
