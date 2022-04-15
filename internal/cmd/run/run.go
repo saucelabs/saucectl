@@ -3,6 +3,7 @@ package run
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -158,6 +159,7 @@ func Command() *cobra.Command {
 		NewEspressoCmd(),
 		NewPlaywrightCmd(),
 		NewPuppeteerCmd(),
+		NewReplayCmd(),
 		NewTestcafeCmd(),
 		NewXCUITestCmd(),
 	)
@@ -218,6 +220,9 @@ func Run(cmd *cobra.Command) (int, error) {
 	}
 	if typeDef.Kind == puppeteer.Kind {
 		return runPuppeteer(cmd, tcClient, restoClient)
+	}
+	if typeDef.Kind == replay.Kind {
+		return runReplay(cmd, tcClient, restoClient, appsClient)
 	}
 	if typeDef.Kind == espresso.Kind {
 		return runEspresso(cmd, espressoFlags{}, tcClient, restoClient, rdcClient, appsClient)
