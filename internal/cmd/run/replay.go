@@ -83,6 +83,12 @@ func runReplay(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as a
 		return 1, err
 	}
 
+	ss, err  := replay.ShardSuites(p.Suites)
+	if err != nil {
+		return 1, err
+	}
+	p.Suites = ss
+
 	regio := region.FromString(p.Sauce.Region)
 
 	tc.URL = regio.APIBaseURL()

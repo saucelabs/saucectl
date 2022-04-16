@@ -3,6 +3,8 @@ package replay
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/fpath"
+	"os"
 	"regexp"
 	"time"
 
@@ -44,6 +46,8 @@ type Suite struct {
 	BrowserName    string        `yaml:"browserName,omitempty" json:"browserName,omitempty"`
 	BrowserVersion string        `yaml:"browserVersion,omitempty" json:"browserVersion,omitempty"`
 	Platform       string        `yaml:"platform,omitempty" json:"platform,omitempty"`
+
+	Recordings []string `yaml:"recordings,omitempty" json:"-"`
 }
 
 // FromFile creates a new replay Project based on the filepath cfgPath.
@@ -125,8 +129,29 @@ func FilterSuites(p *Project, suiteName string) error {
 	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
 }
 
-func ApplyMatrix(p *Project) {
-	//for _, s := range p.Suites {
-	//	s.
-	//}
+func ShardSuites(suites []Suite) ([]Suite, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
+	var shardedSuites []Suite
+	for _, s := range suites {
+		testFiles, err := fpath.FindFiles(wd, s.Recordings, fpath.FindByShellPattern)
+		if err != nil {
+			return []Suite{}, err
+		}
+		if len(testFiles) == 0 {
+			msg.SuiteSplitNoMatch(s.Name, wd, s.Recordings)
+			return []Suite{}, fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
+		}
+		for _, f := range testFiles {
+			replica := s
+			replica.Name = fmt.Sprintf("%s - %s", s.Name, f)
+			replica.Recording = f
+			shardedSuites = append(shardedSuites, replica)
+		}
+	}
+
+	return shardedSuites, nil
 }

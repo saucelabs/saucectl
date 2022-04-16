@@ -462,7 +462,8 @@ func (r *CloudRunner) archiveProject(project interface{}, tempDir string, projec
 	return zipName, nil
 }
 
-// archiveFiles creates a zip file in the tempDir directory from the given files.
+// archiveFiles creates a zip file from the given files. Files retain their relative paths within the zip.
+// Temporary files, as well as the zip itself, are created in the tempDir directory.
 func (r *CloudRunner) archiveFiles(project interface{}, tempDir string, files []string, sauceignoreFile string) (string, error) {
 	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
@@ -487,9 +488,9 @@ func (r *CloudRunner) archiveFiles(project interface{}, tempDir string, files []
 		return "", err
 	}
 
-	for _, child := range files {
-		log.Debug().Str("name", child).Msg("Adding to archive")
-		if err := z.Add(child, ""); err != nil {
+	for _, f := range files {
+		log.Debug().Str("name", f).Msg("Adding to archive")
+		if err := z.Add(f, filepath.Dir(f)); err != nil {
 			return "", err
 		}
 	}
