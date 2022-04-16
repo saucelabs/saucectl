@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/fpath"
-	"os"
 	"regexp"
 	"time"
 
@@ -130,19 +129,14 @@ func FilterSuites(p *Project, suiteName string) error {
 }
 
 func ShardSuites(suites []Suite) ([]Suite, error) {
-	wd, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-
 	var shardedSuites []Suite
 	for _, s := range suites {
-		testFiles, err := fpath.FindFiles(wd, s.Recordings, fpath.FindByShellPattern)
+		testFiles, err := fpath.FindFiles(".", s.Recordings, fpath.FindByShellPattern)
 		if err != nil {
 			return []Suite{}, err
 		}
 		if len(testFiles) == 0 {
-			msg.SuiteSplitNoMatch(s.Name, wd, s.Recordings)
+			msg.SuiteSplitNoMatch(s.Name, ".", s.Recordings)
 			return []Suite{}, fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
 		}
 		for _, f := range testFiles {
