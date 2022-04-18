@@ -41,7 +41,7 @@ func NewReplayCmd() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			// Test patterns are passed in via positional args.
-			viper.Set("suite::recording", args[0]) // TODO suite::recordings
+			viper.Set("suite::recordings", args)
 
 			exitCode, err := runReplay(cmd, tcClient, restoClient, appsClient)
 			if err != nil {
