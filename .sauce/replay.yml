@@ -1,0 +1,13 @@
+apiVersion: v1alpha
+kind: puppeteer-replay
+sauce:
+  region: us-west-1
+  concurrency: 10
+  metadata:
+    tags:
+      - e2e
+    build: "$BUILD_ID"
+suites:
+  - name: "Sauce Demo Recording"
+    recordings: [ "tests/e2e/replay/recording.json" ]
+    browserName: "Googlechrome"
