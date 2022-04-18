@@ -62,6 +62,7 @@ type Suite struct {
 	Timeout           time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
 	PlaywrightVersion string            `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
 	TestMatch         []string          `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
+	ExcludedTestFiles []string          `yaml:"excludedTestFiles,omitempty" json:"testIgnore"`
 	PlatformName      string            `yaml:"platformName,omitempty" json:"platformName,omitempty"`
 	Params            SuiteConfig       `yaml:"params,omitempty" json:"param,omitempty"`
 	ScreenResolution  string            `yaml:"screenResolution,omitempty" json:"screenResolution,omitempty"`
@@ -209,14 +210,21 @@ func shardInSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			shardedSuites = append(shardedSuites, s)
 			continue
 		}
-		testFiles, err := fpath.FindFiles(rootDir, s.TestMatch, fpath.FindByRegex)
+		files, err := fpath.FindFiles(rootDir, s.TestMatch, fpath.FindByRegex)
 		if err != nil {
 			return []Suite{}, err
 		}
-		if len(testFiles) == 0 {
+		if len(files) == 0 {
 			msg.SuiteSplitNoMatch(s.Name, rootDir, s.TestMatch)
 			return []Suite{}, fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
 		}
+		excludedFiles, err := fpath.FindFiles(rootDir, s.ExcludedTestFiles, fpath.FindByRegex)
+		if err != nil {
+			return []Suite{}, err
+		}
+
+		testFiles := fpath.ExcludeFiles(files, excludedFiles)
+
 		if s.Shard == "spec" {
 			for _, f := range testFiles {
 				replica := s

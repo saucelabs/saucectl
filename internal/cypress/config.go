@@ -67,8 +67,9 @@ type Suite struct {
 
 // SuiteConfig represents the cypress config overrides.
 type SuiteConfig struct {
-	TestFiles []string          `yaml:"testFiles,omitempty" json:"testFiles"`
-	Env       map[string]string `yaml:"env,omitempty" json:"env"`
+	TestFiles         []string          `yaml:"testFiles,omitempty" json:"testFiles"`
+	ExcludedTestFiles []string          `yaml:"excludedTestFiles,omitempty" json:"ignoreTestFiles,omitempty"`
+	Env               map[string]string `yaml:"env,omitempty" json:"env"`
 }
 
 // Reporter represents a cypress report configuration.
@@ -336,14 +337,20 @@ func shardSuites(cfg Config, suites []Suite, ccy int) ([]Suite, error) {
 			shardedSuites = append(shardedSuites, s)
 			continue
 		}
-		testFiles, err := fpath.FindFiles(cfg.AbsIntegrationFolder(), s.Config.TestFiles, fpath.FindByShellPattern)
+		files, err := fpath.FindFiles(cfg.AbsIntegrationFolder(), s.Config.TestFiles, fpath.FindByShellPattern)
 		if err != nil {
 			return shardedSuites, err
 		}
-		if len(testFiles) == 0 {
+		if len(files) == 0 {
 			msg.SuiteSplitNoMatch(s.Name, cfg.AbsIntegrationFolder(), s.Config.TestFiles)
 			return []Suite{}, fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
 		}
+		excludedFiles, err := fpath.FindFiles(cfg.AbsIntegrationFolder(), s.Config.ExcludedTestFiles, fpath.FindByShellPattern)
+		if err != nil {
+			return shardedSuites, err
+		}
+
+		testFiles := fpath.ExcludeFiles(files, excludedFiles)
 
 		if s.Shard == "spec" {
 			for _, f := range testFiles {
