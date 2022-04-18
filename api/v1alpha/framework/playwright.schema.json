@@ -87,6 +87,9 @@
             "description": "Paths to the playwright test files. Regex values are supported to indicate all files of a certain type or in a certain directory, etc.",
             "type": "array"
           },
+          "excludedTestFiles": {
+            "$ref": "../subschema/common.schema.json#/definitions/excludedTestFiles"
+          },
           "platformName": {
             "$ref": "../subschema/common.schema.json#/definitions/platformName",
             "enum": [

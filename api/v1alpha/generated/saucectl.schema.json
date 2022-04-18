@@ -367,6 +367,9 @@
                       "description": "One or more paths to the Cypress test files to run for this suite, if not otherwise specified explicitly in cypress.json.",
                       "type": "array"
                     },
+                    "excludedTestFiles": {
+                      "$ref": "#/allOf/2/then/properties/suites/items/properties/excludedTestFiles"
+                    },
                     "env": {
                       "$ref": "#/allOf/0/then/properties/env"
                     }
@@ -783,6 +786,10 @@
                 },
                 "testMatch": {
                   "description": "Paths to the playwright test files. Regex values are supported to indicate all files of a certain type or in a certain directory, etc.",
+                  "type": "array"
+                },
+                "excludedTestFiles": {
+                  "description": "Exclude test files to skip the tests.",
                   "type": "array"
                 },
                 "platformName": {
@@ -1332,6 +1339,9 @@
                 },
                 "preExec": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/preExec"
+                },
+                "excludedTestFiles": {
+                  "$ref": "#/allOf/2/then/properties/suites/items/properties/excludedTestFiles"
                 }
               },
               "required": [

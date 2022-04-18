@@ -66,6 +66,10 @@
     "preExec": {
       "description": "Specifies which commands to execute before starting the tests.",
       "type": "array"
+    },
+    "excludedTestFiles": {
+      "description": "Exclude test files to skip the tests.",
+      "type": "array"
     }
   }
 }

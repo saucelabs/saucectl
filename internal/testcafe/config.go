@@ -75,17 +75,18 @@ type TypescriptCompilerOptions struct {
 
 // Suite represents the testcafe test suite configuration.
 type Suite struct {
-	Name             string            `yaml:"name,omitempty" json:"name"`
-	BrowserName      string            `yaml:"browserName,omitempty" json:"browserName"`
-	BrowserVersion   string            `yaml:"browserVersion,omitempty" json:"browserVersion"`
-	BrowserArgs      []string          `yaml:"browserArgs,omitempty" json:"browserArgs"`
-	Src              []string          `yaml:"src,omitempty" json:"src"`
-	Screenshots      Screenshots       `yaml:"screenshots,omitempty" json:"screenshots"`
-	PlatformName     string            `yaml:"platformName,omitempty" json:"platformName"`
-	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
-	Env              map[string]string `yaml:"env,omitempty" json:"env"`
-	Timeout          time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
-	PreExec          []string          `yaml:"preExec,omitempty" json:"preExec"`
+	Name              string            `yaml:"name,omitempty" json:"name"`
+	BrowserName       string            `yaml:"browserName,omitempty" json:"browserName"`
+	BrowserVersion    string            `yaml:"browserVersion,omitempty" json:"browserVersion"`
+	BrowserArgs       []string          `yaml:"browserArgs,omitempty" json:"browserArgs"`
+	Src               []string          `yaml:"src,omitempty" json:"src"`
+	Screenshots       Screenshots       `yaml:"screenshots,omitempty" json:"screenshots"`
+	PlatformName      string            `yaml:"platformName,omitempty" json:"platformName"`
+	ScreenResolution  string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
+	Env               map[string]string `yaml:"env,omitempty" json:"env"`
+	Timeout           time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
+	PreExec           []string          `yaml:"preExec,omitempty" json:"preExec"`
+	ExcludedTestFiles []string          `yaml:"excludedTestFiles,omitempty" json:"-"`
 	// Deprecated as of TestCafe v1.10.0 https://testcafe.io/documentation/402638/reference/configuration-file#tsconfigpath
 	TsConfigPath       string                 `yaml:"tsConfigPath,omitempty" json:"tsConfigPath"`
 	ClientScripts      []string               `yaml:"clientScripts,omitempty" json:"clientScripts,omitempty"`
@@ -242,10 +243,26 @@ func Validate(p *Project) error {
 		return errors.New(msg.MissingFrameworkVersionConfig)
 	}
 
-	for _, v := range p.Suites {
+	for i, v := range p.Suites {
 		// Force the user to migrate.
 		if len(v.Devices) != 0 {
 			return errors.New(msg.InvalidTestCafeDeviceSetting)
+		}
+		if len(v.ExcludedTestFiles) != 0 {
+			files, err := fpath.FindFiles(p.RootDir, v.Src, fpath.FindByShellPattern)
+			if err != nil {
+				return err
+			}
+			if len(files) == 0 {
+				msg.SuiteSplitNoMatch(v.Name, p.RootDir, v.Src)
+				return fmt.Errorf("suite '%s' test patterns have no matching files", v.Name)
+			}
+			excludedFiles, err := fpath.FindFiles(p.RootDir, v.ExcludedTestFiles, fpath.FindByShellPattern)
+			if err != nil {
+				return err
+			}
+
+			p.Suites[i].Src = fpath.ExcludeFiles(files, excludedFiles)
 		}
 	}
 
@@ -284,14 +301,21 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			shardedSuites = append(shardedSuites, s)
 			continue
 		}
-		testFiles, err := fpath.FindFiles(rootDir, s.Src, fpath.FindByShellPattern)
+		files, err := fpath.FindFiles(rootDir, s.Src, fpath.FindByShellPattern)
 		if err != nil {
 			return []Suite{}, err
 		}
-		if len(testFiles) == 0 {
+		if len(files) == 0 {
 			msg.SuiteSplitNoMatch(s.Name, rootDir, s.Src)
 			return []Suite{}, fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
 		}
+		excludedFiles, err := fpath.FindFiles(rootDir, s.ExcludedTestFiles, fpath.FindByShellPattern)
+		if err != nil {
+			return []Suite{}, err
+		}
+
+		testFiles := fpath.ExcludeFiles(files, excludedFiles)
+
 		if s.Shard == "spec" {
 			for _, f := range testFiles {
 				replica := s
