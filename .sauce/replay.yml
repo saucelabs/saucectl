@@ -10,4 +10,3 @@ sauce:
 suites:
   - name: "Sauce Demo Recording"
     recordings: [ "tests/e2e/replay/recording.json" ]
-    browserName: "Googlechrome"
