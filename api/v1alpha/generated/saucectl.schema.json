@@ -11,6 +11,7 @@
         "espresso",
         "playwright",
         "puppeteer",
+        "puppeteer-replay",
         "testcafe",
         "xcuitest"
       ]
@@ -349,11 +350,11 @@
                   "type": "string"
                 },
                 "platformName": {
+                  "$ref": "#/allOf/4/then/properties/suites/items/properties/platform",
                   "enum": [
                     "macOS 11.00",
                     "Windows 10"
-                  ],
-                  "description": "A specific operating system on which to run the tests. Sauce Labs will try to choose a reasonable default if not explicitly specified."
+                  ]
                 },
                 "screenResolution": {
                   "description": "Specifies a browser window screen resolution, which may be useful if you are attempting to simulate a browser on a particular device type.",
@@ -786,7 +787,7 @@
                   "type": "array"
                 },
                 "platformName": {
-                  "$ref": "#/allOf/0/then/properties/suites/items/properties/platformName",
+                  "$ref": "#/allOf/4/then/properties/suites/items/properties/platform",
                   "enum": [
                     "macOS 11.00",
                     "Windows 10"
@@ -1030,6 +1031,89 @@
       "if": {
         "properties": {
           "kind": {
+            "const": "puppeteer-replay"
+          }
+        }
+      },
+      "then": {
+        "$schema": "https://json-schema.org/draft-07/schema",
+        "$id": "https://saucelabs.com/schema/v1alpha/replay.schema.json",
+        "title": "saucectl puppeteer-replay runner configuration",
+        "description": "Configuration file for puppeteer-replay using saucectl",
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/allOf/0/then/allOf/0"
+          },
+          {
+            "$ref": "#/allOf/0/then/allOf/3"
+          }
+        ],
+        "properties": {
+          "apiVersion": {
+            "const": "v1alpha"
+          },
+          "kind": {
+            "const": "puppeteer-replay"
+          },
+          "showConsoleLog": {
+            "$ref": "#/allOf/0/then/properties/showConsoleLog"
+          },
+          "defaults": {
+            "$ref": "#/allOf/0/then/properties/defaults",
+            "properties": {
+              "timeout": {
+                "$ref": "../subschema/common.schema.json#/definitions/timeout"
+              }
+            },
+            "additionalProperties": false
+          },
+          "suites": {
+            "description": "The set of properties providing details about the test suites to run.",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "description": "The name of the test suite, which will be reflected in the test results in Sauce Labs.",
+                  "type": "string"
+                },
+                "recordings": {
+                  "description": "Relative paths to the chrome devtools recordings.",
+                  "type": "array"
+                },
+                "platform": {
+                  "enum": [
+                    "macOS 11.00",
+                    "Windows 10"
+                  ],
+                  "description": "A specific operating system on which to run the tests. Sauce Labs will try to choose a reasonable default if not explicitly specified."
+                },
+                "timeout": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/timeout"
+                }
+              },
+              "required": [
+                "name",
+                "recordings"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "apiVersion",
+          "kind",
+          "suites"
+        ],
+        "additionalProperties": true
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
             "const": "testcafe"
           }
         }
@@ -1138,7 +1222,7 @@
                   "type": "boolean"
                 },
                 "platformName": {
-                  "$ref": "#/allOf/0/then/properties/suites/items/properties/platformName",
+                  "$ref": "#/allOf/4/then/properties/suites/items/properties/platform",
                   "enum": [
                     "macOS 11.00",
                     "Windows 10"
@@ -1294,7 +1378,7 @@
                         "$ref": "#/allOf/1/then/properties/suites/items/properties/emulators/items/properties/orientation"
                       },
                       "platformName": {
-                        "$ref": "#/allOf/0/then/properties/suites/items/properties/platformName",
+                        "$ref": "#/allOf/4/then/properties/suites/items/properties/platform",
                         "type": "string"
                       },
                       "platformVersions": {

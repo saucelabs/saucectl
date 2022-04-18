@@ -11,6 +11,7 @@
         "espresso",
         "playwright",
         "puppeteer",
+        "puppeteer-replay",
         "testcafe",
         "xcuitest"
       ]
@@ -63,6 +64,18 @@
       },
       "then": {
         "$ref": "framework/puppeteer.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "puppeteer-replay"
+          }
+        }
+      },
+      "then": {
+        "$ref": "framework/replay.schema.json"
       }
     },
     {
