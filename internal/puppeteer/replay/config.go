@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/config"
@@ -139,9 +140,12 @@ func ShardSuites(suites []Suite) ([]Suite, error) {
 		}
 		if len(testFiles) == 0 {
 			msg.SuiteSplitNoMatch(s.Name, ".", s.Recordings)
-			return []Suite{}, fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
+			return shardedSuites, fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
 		}
 		for _, f := range testFiles {
+			if !strings.HasSuffix(f, ".json") {
+				return shardedSuites, fmt.Errorf("suite '%s' specifies non-json file '%s' as recording", s.Name, f)
+			}
 			replica := s
 			replica.Name = fmt.Sprintf("%s - %s", s.Name, f)
 			replica.Recording = f

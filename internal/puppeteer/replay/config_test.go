@@ -24,6 +24,10 @@ func TestShardSuites(t *testing.T) {
 				fs.WithMode(0755),
 				fs.WithFile("recording3.json", "", fs.WithMode(0644)),
 			),
+			fs.WithDir("dir4",
+				fs.WithMode(0755),
+				fs.WithFile("trap.xml", "", fs.WithMode(0644)),
+			),
 		),
 	)
 	defer dir.Remove()
@@ -77,7 +81,17 @@ func TestShardSuites(t *testing.T) {
 					},
 				}},
 			wantErr: true,
-			want:    []Suite{},
+		},
+		{
+			name: "non-json recordings",
+			args: args{
+				suites: []Suite{
+					{
+						Name:       "suite #1",
+						Recordings: []string{"tests/dir4/trap.xml"},
+					},
+				}},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
