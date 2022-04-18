@@ -148,7 +148,7 @@ type Defaults struct {
 }
 
 // OverwriteDeviceSettings represents override settings.
-type OverwriteDeviceSettings struct {
+type AppSettings struct {
 	AudioCapture    bool            `yaml:"audioCapture,omitempty" json:"audioCapture"`
 	Instrumentation Instrumentation `yaml:"instrumentation,omitempty" json:"instrumentation"`
 }
