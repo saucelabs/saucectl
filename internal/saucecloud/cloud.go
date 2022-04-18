@@ -352,7 +352,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 		}
 	}
 }
-
+// remoteArchiveFolder archives the contents of the folder to a remote storage.
 func (r CloudRunner) remoteArchiveFolder(project interface{}, folder string, sauceignoreFile string) (string, error) {
 	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload")
 	if err != nil {
@@ -360,7 +360,7 @@ func (r CloudRunner) remoteArchiveFolder(project interface{}, folder string, sau
 	}
 	defer os.RemoveAll(tempDir)
 
-	zipName, err := r.archiveProject(project, tempDir, folder, sauceignoreFile)
+	zipName, err := r.archiveFolder(project, tempDir, folder, sauceignoreFile)
 	if err != nil {
 		return "", err
 	}
@@ -368,6 +368,7 @@ func (r CloudRunner) remoteArchiveFolder(project interface{}, folder string, sau
 	return r.uploadProject(zipName, projectUpload)
 }
 
+// remoteArchiveFiles archives the files to a remote storage.
 func (r CloudRunner) remoteArchiveFiles(project interface{}, files []string, sauceignoreFile string) (string, error) {
 	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload")
 	if err != nil {
@@ -405,8 +406,8 @@ func checkPathLength(projectFolder string, matcher sauceignore.Matcher) (string,
 	return "", nil
 }
 
-// archiveProject creates a zip file in the tempDir directory from the given projectFolder.
-func (r *CloudRunner) archiveProject(project interface{}, tempDir string, projectFolder string, sauceignoreFile string) (string, error) {
+// archiveFolder creates a zip file in the tempDir directory from the given projectFolder.
+func (r *CloudRunner) archiveFolder(project interface{}, tempDir string, projectFolder string, sauceignoreFile string) (string, error) {
 	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
 		return "", err
@@ -692,7 +693,7 @@ func (r *CloudRunner) dryRun(project interface{}, folder string, sauceIgnoreFile
 		return err
 	}
 	log.Info().Msgf("The following test suites would have run: [%s].", suiteNames)
-	zipName, err := r.archiveProject(project, tmpDir, folder, sauceIgnoreFile)
+	zipName, err := r.archiveFolder(project, tmpDir, folder, sauceIgnoreFile)
 	if err != nil {
 		return err
 	}
