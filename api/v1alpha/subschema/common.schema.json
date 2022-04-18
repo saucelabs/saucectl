@@ -76,15 +76,15 @@
       "type": "object",
       "properties": {
         "audioCapture": {
-          "description": "Overwrite settings for real device to capture audio.",
+          "description": "Overwrite app settings for real device to capture audio.",
           "type": "boolean"
         },
         "instrumentation": {
-          "description": "Overwrite settings for real device instrumentation.",
+          "description": "Overwrite app settings for real device instrumentation.",
           "type": "object",
           "properties": {
             "networkCapture": {
-              "description": "Overwrite settings for real device to capture network.",
+              "description": "Overwrite app settings for real device to capture network.",
               "type": "boolean"
             }
           }
