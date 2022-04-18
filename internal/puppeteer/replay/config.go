@@ -88,7 +88,8 @@ func SetDefaults(p *Project) {
 			s.Platform = "Windows 10"
 		}
 
-		if s.BrowserName == "" {
+		rgx := regexp.MustCompile(`^(?i)chrome$`)
+		if s.BrowserName == "" || rgx.MatchString(s.BrowserName) {
 			s.BrowserName = "googlechrome"
 		}
 
@@ -128,6 +129,7 @@ func FilterSuites(p *Project, suiteName string) error {
 	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
 }
 
+// ShardSuites automatically shards the suites for each recording.
 func ShardSuites(suites []Suite) ([]Suite, error) {
 	var shardedSuites []Suite
 	for _, s := range suites {
