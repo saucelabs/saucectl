@@ -33,12 +33,11 @@ type Project struct {
 	Sauce          config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
 	Xcuitest       Xcuitest               `yaml:"xcuitest,omitempty" json:"xcuitest"`
 	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
-	Suite           Suite                  `yaml:"suite,omitempty" json:"-"`
-	Suites          []Suite                `yaml:"suites,omitempty" json:"suites"`
-	Artifacts       config.Artifacts       `yaml:"artifacts,omitempty" json:"artifacts"`
-	Reporters       config.Reporters       `yaml:"reporters,omitempty" json:"-"`
-	Notifications   config.Notifications   `yaml:"notifications,omitempty" json:"-"`
-	Instrumentation config.Instrumentation `yaml:"instrumentation,omitempty" json:"-"`
+	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
+	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`
+	Artifacts     config.Artifacts     `yaml:"artifacts,omitempty" json:"artifacts"`
+	Reporters     config.Reporters     `yaml:"reporters,omitempty" json:"-"`
+	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
 }
 
 // Xcuitest represents xcuitest apps configuration.
@@ -56,11 +55,15 @@ type TestOptions struct {
 
 // Suite represents the xcuitest test suite configuration.
 type Suite struct {
-	Name        string          `yaml:"name,omitempty" json:"name"`
-	Timeout     time.Duration   `yaml:"timeout,omitempty" json:"timeout"`
-	Devices     []config.Device `yaml:"devices,omitempty" json:"devices"`
-	TestOptions TestOptions     `yaml:"testOptions,omitempty" json:"testOptions"`
+	Name                    string                         `yaml:"name,omitempty" json:"name"`
+	Timeout                 time.Duration                  `yaml:"timeout,omitempty" json:"timeout"`
+	Devices                 []config.Device                `yaml:"devices,omitempty" json:"devices"`
+	TestOptions             TestOptions                    `yaml:"testOptions,omitempty" json:"testOptions"`
+	OverwriteDeviceSettings config.OverwriteDeviceSettings `yaml:"overwriteDeviceSettings,omityEmpty" json:"overwriteDeviceSettings"`
 }
+
+// IOS constant
+const IOS = "iOS"
 
 // FromFile creates a new xcuitest Project based on the filepath cfgPath.
 func FromFile(cfgPath string) (Project, error) {

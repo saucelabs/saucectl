@@ -130,9 +130,10 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		DeviceType:        d.Options.DeviceType,
 		DevicePrivateOnly: d.Options.Private,
 
-		// Instrumentation options, for RDC only
-		AudioCapture:   r.Project.Instrumentation.AudioCapture,
-		NetworkCapture: r.Project.Instrumentation.NetworkCapture,
+		// Overwrite device settings
+		RealDeviceKind: strings.ToLower(xcuitest.IOS),
+		AudioCapture:   s.OverwriteDeviceSettings.AudioCapture,
+		NetworkCapture: s.OverwriteDeviceSettings.Instrumentation.NetworkCapture,
 	}
 }
 

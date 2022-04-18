@@ -70,6 +70,26 @@
     "excludedTestFiles": {
       "description": "Exclude test files to skip the tests.",
       "type": "array"
+    },
+    "overwriteDeviceSettings": {
+      "description": "Overwrite real device settings.",
+      "type": "object",
+      "properties": {
+        "audioCapture": {
+          "description": "Overwrite settings for real device to capture audio.",
+          "type": "boolean"
+        },
+        "instrumentation": {
+          "description": "Overwrite settings for real device instrumentation.",
+          "type": "object",
+          "properties": {
+            "networkCapture": {
+              "description": "Overwrite settings for real device to capture network.",
+              "type": "boolean"
+            }
+          }
+        }
+      }
     }
   }
 }

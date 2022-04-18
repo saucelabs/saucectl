@@ -52,6 +52,7 @@ type StartOptions struct {
 	TestsToRun        []string               `json:"testsToRun,omitempty"`
 	TestsToSkip       []string               `json:"testsToSkip,omitempty"`
 	StartTime         time.Time              `json:"startTime,omitempty"`
+	RealDeviceKind    string                 `json:"realDeviceKind,omitempty"`
 	AudioCapture      bool                   `json:"audioCapture,omitempty"`
 	NetworkCapture    bool                   `json:"networkCapture,omitempty"`
 }
