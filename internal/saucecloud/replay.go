@@ -1,8 +1,9 @@
 package saucecloud
 
 import (
-	"errors"
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
+	"os"
 	"strings"
 
 	"github.com/saucelabs/saucectl/internal/job"
@@ -22,14 +23,27 @@ func (r *ReplayRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	if r.Project.DryRun {
-		// TODO implement dry run
-		return 0, errors.New("dry run not implemented")
+	var files []string
+	var suiteNames []string
+	for _, suite := range r.Project.Suites {
+		suiteNames = append(suiteNames, suite.Name)
+		files = append(files, suite.Recording)
 	}
 
-	var files []string
-	for _, suite := range r.Project.Suites {
-		files = append(files, suite.Recording)
+	if r.Project.DryRun {
+		log.Warn().Msg("Running tests in dry run mode.")
+		tmpDir, err := os.MkdirTemp("./", "sauce-app-payload-*")
+		if err != nil {
+			return 1, err
+		}
+		log.Info().Msgf("The following test suites would have run: [%s].", suiteNames)
+		zipName, err := r.archiveFiles(r.Project, tmpDir, files, "")
+		if err != nil {
+			return 1, err
+		}
+
+		log.Info().Msgf("Saving bundled project to %s.", zipName)
+		return 0, nil
 	}
 
 	fileURI, err := r.remoteArchiveFiles(r.Project, files, "")
