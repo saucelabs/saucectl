@@ -2,11 +2,9 @@ package saucecloud
 
 import (
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
 	"os"
-	"strings"
-
-	"github.com/saucelabs/saucectl/internal/job"
 )
 
 // ReplayRunner represents the Sauce Labs cloud implementation for puppeteer-replay.
@@ -57,15 +55,6 @@ func (r *ReplayRunner) RunProject() (int, error) {
 	}
 
 	return exitCode, nil
-}
-
-func (r *ReplayRunner) getSuiteNames() string {
-	var names []string
-	for _, s := range r.Project.Suites {
-		names = append(names, s.Name)
-	}
-
-	return strings.Join(names, ", ")
 }
 
 func (r *ReplayRunner) runSuites(fileURI string) bool {
