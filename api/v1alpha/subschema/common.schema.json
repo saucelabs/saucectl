@@ -71,7 +71,7 @@
       "description": "Exclude test files to skip the tests.",
       "type": "array"
     },
-    "overwriteDeviceSettings": {
+    "appSettings": {
       "description": "Overwrite real device settings.",
       "type": "object",
       "properties": {

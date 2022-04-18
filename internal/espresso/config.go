@@ -65,12 +65,12 @@ type TestOptions struct {
 
 // Suite represents the espresso test suite configuration.
 type Suite struct {
-	Name                    string                         `yaml:"name,omitempty" json:"name"`
-	Devices                 []config.Device                `yaml:"devices,omitempty" json:"devices"`
-	Emulators               []config.Emulator              `yaml:"emulators,omitempty" json:"emulators"`
-	TestOptions             map[string]interface{}         `yaml:"testOptions,omitempty" json:"testOptions"`
-	Timeout                 time.Duration                  `yaml:"timeout,omitempty" json:"timeout"`
-	OverwriteDeviceSettings config.OverwriteDeviceSettings `yaml:"overwriteDeviceSettings,omityEmpty" json:"overwriteDeviceSettings"`
+	Name        string                 `yaml:"name,omitempty" json:"name"`
+	Devices     []config.Device        `yaml:"devices,omitempty" json:"devices"`
+	Emulators   []config.Emulator      `yaml:"emulators,omitempty" json:"emulators"`
+	TestOptions map[string]interface{} `yaml:"testOptions,omitempty" json:"testOptions"`
+	Timeout     time.Duration          `yaml:"timeout,omitempty" json:"timeout"`
+	AppSettings config.AppSettings     `yaml:"appSettings,omityEmpty" json:"appSettings"`
 }
 
 // Android constant

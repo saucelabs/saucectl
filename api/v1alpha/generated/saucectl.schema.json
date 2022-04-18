@@ -662,7 +662,7 @@
                 "timeout": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/timeout"
                 },
-                "overwriteDeviceSettings": {
+                "appSettings": {
                   "description": "Overwrite real device settings.",
                   "type": "object",
                   "properties": {

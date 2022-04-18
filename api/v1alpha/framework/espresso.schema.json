@@ -216,8 +216,8 @@
           "timeout": {
             "$ref": "../subschema/common.schema.json#/definitions/timeout"
           },
-          "overwriteDeviceSettings": {
-            "$ref": "../subschema/common.schema.json#/definitions/overwriteDeviceSettings"
+          "appSettings": {
+            "$ref": "../subschema/common.schema.json#/definitions/appSettings"
           }
         },
         "anyOf": [

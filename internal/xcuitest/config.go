@@ -55,11 +55,11 @@ type TestOptions struct {
 
 // Suite represents the xcuitest test suite configuration.
 type Suite struct {
-	Name                    string                         `yaml:"name,omitempty" json:"name"`
-	Timeout                 time.Duration                  `yaml:"timeout,omitempty" json:"timeout"`
-	Devices                 []config.Device                `yaml:"devices,omitempty" json:"devices"`
-	TestOptions             TestOptions                    `yaml:"testOptions,omitempty" json:"testOptions"`
-	OverwriteDeviceSettings config.OverwriteDeviceSettings `yaml:"overwriteDeviceSettings,omityEmpty" json:"overwriteDeviceSettings"`
+	Name        string             `yaml:"name,omitempty" json:"name"`
+	Timeout     time.Duration      `yaml:"timeout,omitempty" json:"timeout"`
+	Devices     []config.Device    `yaml:"devices,omitempty" json:"devices"`
+	TestOptions TestOptions        `yaml:"testOptions,omitempty" json:"testOptions"`
+	AppSettings config.AppSettings `yaml:"appSettings,omityEmpty" json:"appSettings"`
 }
 
 // IOS constant

@@ -147,7 +147,7 @@ type Defaults struct {
 	Timeout time.Duration `yaml:"timeout,omitempty" json:"timeout"`
 }
 
-// OverwriteDeviceSettings represents override settings.
+// AppSettings represents override settings.
 type AppSettings struct {
 	AudioCapture    bool            `yaml:"audioCapture,omitempty" json:"audioCapture"`
 	Instrumentation Instrumentation `yaml:"instrumentation,omitempty" json:"instrumentation"`
