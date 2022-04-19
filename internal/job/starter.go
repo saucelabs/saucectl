@@ -52,9 +52,19 @@ type StartOptions struct {
 	TestsToRun        []string               `json:"testsToRun,omitempty"`
 	TestsToSkip       []string               `json:"testsToSkip,omitempty"`
 	StartTime         time.Time              `json:"startTime,omitempty"`
+	AppSettings       AppSettings            `json:"appSettings,omitempty"`
 	RealDeviceKind    string                 `json:"realDeviceKind,omitempty"`
-	AudioCapture      bool                   `json:"audioCapture,omitempty"`
-	NetworkCapture    bool                   `json:"networkCapture,omitempty"`
+}
+
+// AppSettings represents app settings for real device
+type AppSettings struct {
+	AudioCapture    bool            `json:"audioCapture,omitempty"`
+	Instrumentation Instrumentation `json:"instrumentation,omitempty"`
+}
+
+// Instrumentation represents instrumentation settings for real device
+type Instrumentation struct {
+	NetworkCapture bool `json:"networkCapture,omitempty"`
 }
 
 // TunnelOptions represents the options that configure the usage of a tunnel when running tests in the Sauce Labs cloud.

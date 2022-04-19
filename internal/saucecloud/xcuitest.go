@@ -132,8 +132,12 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 
 		// Overwrite device settings
 		RealDeviceKind: strings.ToLower(xcuitest.IOS),
-		AudioCapture:   s.AppSettings.AudioCapture,
-		NetworkCapture: s.AppSettings.Instrumentation.NetworkCapture,
+		AppSettings: job.AppSettings{
+			AudioCapture: s.AppSettings.AudioCapture,
+			Instrumentation: job.Instrumentation{
+				NetworkCapture: s.AppSettings.Instrumentation.NetworkCapture,
+			},
+		},
 	}
 }
 

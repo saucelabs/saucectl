@@ -209,8 +209,12 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 
 		// Overwrite device settings
 		RealDeviceKind: strings.ToLower(espresso.Android),
-		AudioCapture:   s.AppSettings.AudioCapture,
-		NetworkCapture: s.AppSettings.Instrumentation.NetworkCapture,
+		AppSettings: job.AppSettings{
+			AudioCapture: s.AppSettings.AudioCapture,
+			Instrumentation: job.Instrumentation{
+				NetworkCapture: s.AppSettings.Instrumentation.NetworkCapture,
+			},
+		},
 	}
 }
 
