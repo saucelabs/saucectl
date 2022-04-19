@@ -12,6 +12,10 @@ espresso:
   testApp: ./tests/e2e/espresso/calc-success.apk
 suites:
   - name: "saucy barista"
+    appSettings:
+      audioCapture: true
+      instrumentation:
+        networkCapture: true
     testOptions:
       class:
         - com.example.android.testing.androidjunitrunnersample.CalculatorAddParameterizedTest
