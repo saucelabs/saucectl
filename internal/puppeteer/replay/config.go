@@ -3,6 +3,7 @@ package replay
 import (
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"regexp"
 	"strings"
@@ -144,13 +145,18 @@ func ShardSuites(suites []Suite) ([]Suite, error) {
 		}
 		for _, f := range testFiles {
 			if !strings.HasSuffix(f, ".json") {
-				return shardedSuites, fmt.Errorf("suite '%s' specifies non-json file '%s' as recording", s.Name, f)
+				log.Warn().Msgf("Suite '%s' specifies non-json file '%s' as recording. Skipping.", s.Name, f)
+				continue
 			}
 			replica := s
 			replica.Name = fmt.Sprintf("%s - %s", s.Name, f)
 			replica.Recording = f
 			shardedSuites = append(shardedSuites, replica)
 		}
+	}
+
+	if len(shardedSuites) == 0 {
+		return shardedSuites, errors.New("no viable suites found")
 	}
 
 	return shardedSuites, nil
