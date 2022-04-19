@@ -1475,6 +1475,9 @@
                   },
                   "additionalProperties": false
                 },
+                "appSettings": {
+                  "$ref": "#/allOf/1/then/properties/suites/items/properties/appSettings"
+                },
                 "devices": {
                   "description": "Define details for running this suite on real devices.",
                   "type": "array",
