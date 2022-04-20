@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/viper"
@@ -259,7 +261,59 @@ func Unmarshal(cfgPath string, project interface{}) error {
 		}
 	}
 
-	return viper.Unmarshal(&project)
+	return viper.Unmarshal(&project, func(decodeCfg *mapstructure.DecoderConfig) {
+		decodeCfg.DecodeHook = func(in reflect.Kind, out reflect.Kind, v interface{}) (interface{}, error) {
+			return expandEnv(v), nil
+		}
+	})
+}
+
+func expandEnv(v interface{}) interface{} {
+	if v == nil {
+		return nil
+	}
+	switch reflect.TypeOf(v).Kind() {
+	case reflect.String:
+		return os.ExpandEnv(v.(string))
+	case reflect.Slice:
+		if val, ok := v.([]string); ok {
+			var strs []string
+			for _, item := range val {
+				strs = append(strs, os.ExpandEnv(item))
+			}
+			return strs
+		}
+
+		var items []interface{}
+		for _, item := range v.([]interface{}) {
+			items = append(items, expandEnv(item))
+		}
+		return items
+	case reflect.Map:
+		mp, ok := v.(map[string]string)
+		if ok {
+			for key, val := range mp {
+				mp[key] = os.ExpandEnv(val)
+			}
+			return mp
+		}
+		mp2, ok := v.(map[string]interface{})
+		if ok {
+			for key, val := range mp2 {
+				mp2[key] = expandEnv(val)
+			}
+			return mp2
+		}
+		interfaceMp, ok := v.(map[interface{}]interface{})
+		if ok {
+			for key, val := range interfaceMp {
+				interfaceMp[key] = expandEnv(val)
+			}
+			return interfaceMp
+		}
+		return v
+	}
+	return v
 }
 
 // SetDefaults updates tunnel default values
