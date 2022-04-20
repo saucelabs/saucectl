@@ -268,7 +268,6 @@ jobs:
           REGION: us-west-1
           CONCURRENCY: 2
           TAG: env-tag
-          BUILD: env-build
           APP: ./tests/e2e/espresso/calc.apk
           TEST_APP: ./tests/e2e/espresso/calc-success.apk
           SUITE_NAME: "Sauce test env var config file"
@@ -286,7 +285,7 @@ jobs:
           SLACK_CHANNEL: devx-slack-notifications
           NOTIFICATION_SEND: always
         run: |
-          ./saucectl run -c .sauce/espresso-env-var.yml
+          ./saucectl run -c .sauce/espresso-env-var.yml --dry-run
 
   xcuitest:
     needs: build

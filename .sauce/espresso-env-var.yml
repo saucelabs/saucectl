@@ -6,7 +6,7 @@ sauce:
   metadata:
     tags:
       - $TAG
-    build: $BUILD
+    build: $BUILD_ID
 espresso:
   app: $APP
   testApp: $TEST_APP
