@@ -21,7 +21,7 @@ suites:
         platformVersions:
           - $PLATFORM_VERSION1
           - $PLATFORM_VERSION2
-      - name: $GOOGLE_PIXEL
+      - name: $GOOGLE_PIXEL_REAL_DEVICE
         platformVersions:
           - $PLATFORM_VERSION3
 artifacts:

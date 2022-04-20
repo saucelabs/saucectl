@@ -285,7 +285,7 @@ jobs:
           SLACK_CHANNEL: devx-slack-notifications
           NOTIFICATION_SEND: always
         run: |
-          ./saucectl run -c .sauce/espresso-env-var.yml --dry-run
+          ./saucectl run -c .sauce/espresso-env-var.yml
 
   xcuitest:
     needs: build
