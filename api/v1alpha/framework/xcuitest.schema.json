@@ -83,6 +83,9 @@
             },
             "additionalProperties": false
           },
+          "appSettings": {
+            "$ref": "../subschema/common.schema.json#/definitions/appSettings"
+          },
           "devices": {
             "description": "Define details for running this suite on real devices.",
             "type": "array",

@@ -68,12 +68,12 @@ func NewXCUITestCmd() *cobra.Command {
 	sc.StringSlice("testOptions.class", "suite::testOptions::class", []string{}, "Only run the specified classes. Requires --name to be set.")
 	sc.StringSlice("testOptions.notClass", "suite::testOptions::notClass", []string{}, "Run all classes except those specified here. Requires --name to be set.")
 
-	// Instrumentation devices settings
-	sc.Bool("instrumentation.audioCapture", "instrumentation::audioCapture", false, "Set the instrumentation to capture audio.")
-	sc.Bool("instrumentation.networkCapture", "instrumentation::networkCapture", false, "Set the instrumentation to capture network.")
-
 	// Devices (no simulators)
 	cmd.Flags().Var(&lflags.Device, "device", "Specifies the device to use for testing. Requires --name to be set.")
+
+	// Overwrite devices settings
+	sc.Bool("audioCapture", "suite::appSettings::audioCapture", false, "Overwrite app settings for real device to capture audio.")
+	sc.Bool("networkCapture", "suite::appSettings::instrumentation::networkCapture", false, "Overwrite app settings for real device to capture network.")
 
 	return cmd
 }

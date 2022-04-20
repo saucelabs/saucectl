@@ -215,6 +215,9 @@
           },
           "timeout": {
             "$ref": "../subschema/common.schema.json#/definitions/timeout"
+          },
+          "appSettings": {
+            "$ref": "../subschema/common.schema.json#/definitions/appSettings"
           }
         },
         "anyOf": [

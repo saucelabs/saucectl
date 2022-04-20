@@ -207,9 +207,14 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		DeviceType:        d.deviceType,
 		DevicePrivateOnly: d.privateOnly,
 
-		// Instrumentation options, for RDC only
-		AudioCapture:   r.Project.Instrumentation.AudioCapture,
-		NetworkCapture: r.Project.Instrumentation.NetworkCapture,
+		// Overwrite device settings
+		RealDeviceKind: strings.ToLower(espresso.Android),
+		AppSettings: job.AppSettings{
+			AudioCapture: s.AppSettings.AudioCapture,
+			Instrumentation: job.Instrumentation{
+				NetworkCapture: s.AppSettings.Instrumentation.NetworkCapture,
+			},
+		},
 	}
 }
 

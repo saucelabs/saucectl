@@ -34,12 +34,11 @@ type Project struct {
 	Sauce          config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
 	Espresso       Espresso               `yaml:"espresso,omitempty" json:"espresso"`
 	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
-	Suite           Suite                  `yaml:"suite,omitempty" json:"-"`
-	Suites          []Suite                `yaml:"suites,omitempty" json:"suites"`
-	Artifacts       config.Artifacts       `yaml:"artifacts,omitempty" json:"artifacts"`
-	Reporters       config.Reporters       `yaml:"reporters,omitempty" json:"-"`
-	Notifications   config.Notifications   `yaml:"notifications,omitempty" json:"-"`
-	Instrumentation config.Instrumentation `yaml:"instrumentation,omitempty" json:"-"`
+	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
+	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`
+	Artifacts     config.Artifacts     `yaml:"artifacts,omitempty" json:"artifacts"`
+	Reporters     config.Reporters     `yaml:"reporters,omitempty" json:"-"`
+	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
 }
 
 // Espresso represents espresso apps configuration.
@@ -71,6 +70,7 @@ type Suite struct {
 	Emulators   []config.Emulator      `yaml:"emulators,omitempty" json:"emulators"`
 	TestOptions map[string]interface{} `yaml:"testOptions,omitempty" json:"testOptions"`
 	Timeout     time.Duration          `yaml:"timeout,omitempty" json:"timeout"`
+	AppSettings config.AppSettings     `yaml:"appSettings,omityEmpty" json:"appSettings"`
 }
 
 // Android constant
