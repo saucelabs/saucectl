@@ -142,7 +142,7 @@ func TestArchiveProject(t *testing.T) {
 	wd, _ := os.Getwd()
 	log.Info().Msg(wd)
 
-	z, err := runner.archiveProject(runner.Project, "./test-arch/", runner.Project.RootDir, "")
+	z, err := runner.archiveFolder(runner.Project, "./test-arch/", runner.Project.RootDir, "")
 	if err != nil {
 		t.Fail()
 	}

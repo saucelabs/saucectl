@@ -352,15 +352,31 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 		}
 	}
 }
-
-func (r CloudRunner) archiveAndUpload(project interface{}, folder string, sauceignoreFile string) (string, error) {
+// remoteArchiveFolder archives the contents of the folder to a remote storage.
+func (r CloudRunner) remoteArchiveFolder(project interface{}, folder string, sauceignoreFile string) (string, error) {
 	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload")
 	if err != nil {
 		return "", err
 	}
 	defer os.RemoveAll(tempDir)
 
-	zipName, err := r.archiveProject(project, tempDir, folder, sauceignoreFile)
+	zipName, err := r.archiveFolder(project, tempDir, folder, sauceignoreFile)
+	if err != nil {
+		return "", err
+	}
+
+	return r.uploadProject(zipName, projectUpload)
+}
+
+// remoteArchiveFiles archives the files to a remote storage.
+func (r CloudRunner) remoteArchiveFiles(project interface{}, files []string, sauceignoreFile string) (string, error) {
+	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload")
+	if err != nil {
+		return "", err
+	}
+	defer os.RemoveAll(tempDir)
+
+	zipName, err := r.archiveFiles(project, tempDir, files, sauceignoreFile)
 	if err != nil {
 		return "", err
 	}
@@ -390,7 +406,8 @@ func checkPathLength(projectFolder string, matcher sauceignore.Matcher) (string,
 	return "", nil
 }
 
-func (r *CloudRunner) archiveProject(project interface{}, tempDir string, projectFolder string, sauceignoreFile string) (string, error) {
+// archiveFolder creates a zip file in the tempDir directory from the given projectFolder.
+func (r *CloudRunner) archiveFolder(project interface{}, tempDir string, projectFolder string, sauceignoreFile string) (string, error) {
 	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
 		return "", err
@@ -429,6 +446,54 @@ func (r *CloudRunner) archiveProject(project interface{}, tempDir string, projec
 	log.Debug().Str("name", rcPath).Msg("Adding to archive")
 	if err := z.Add(rcPath, ""); err != nil {
 		return "", err
+	}
+
+	err = z.Close()
+	if err != nil {
+		return "", err
+	}
+
+	f, err := os.Stat(zipName)
+	if err != nil {
+		return "", err
+	}
+
+	log.Info().Dur("durationMs", time.Since(start)).Int64("size", f.Size()).Msg("Project archived.")
+
+	return zipName, nil
+}
+
+// archiveFiles creates a zip file from the given files. Files retain their relative paths within the zip.
+// Temporary files, as well as the zip itself, are created in the tempDir directory.
+func (r *CloudRunner) archiveFiles(project interface{}, tempDir string, files []string, sauceignoreFile string) (string, error) {
+	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
+	if err != nil {
+		return "", err
+	}
+
+	start := time.Now()
+
+	zipName := filepath.Join(tempDir, "app.zip")
+	z, err := zip.NewFileWriter(zipName, matcher)
+	if err != nil {
+		return "", err
+	}
+	defer z.Close()
+
+	rcPath := filepath.Join(tempDir, "sauce-runner.json")
+	if err := jsonio.WriteFile(rcPath, project); err != nil {
+		return "", err
+	}
+	log.Debug().Str("name", rcPath).Msg("Adding to archive")
+	if err := z.Add(rcPath, ""); err != nil {
+		return "", err
+	}
+
+	for _, f := range files {
+		log.Debug().Str("name", f).Msg("Adding to archive")
+		if err := z.Add(f, filepath.Dir(f)); err != nil {
+			return "", err
+		}
 	}
 
 	err = z.Close()
@@ -628,7 +693,7 @@ func (r *CloudRunner) dryRun(project interface{}, folder string, sauceIgnoreFile
 		return err
 	}
 	log.Info().Msgf("The following test suites would have run: [%s].", suiteNames)
-	zipName, err := r.archiveProject(project, tmpDir, folder, sauceIgnoreFile)
+	zipName, err := r.archiveFolder(project, tmpDir, folder, sauceIgnoreFile)
 	if err != nil {
 		return err
 	}

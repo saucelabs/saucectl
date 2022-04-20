@@ -43,7 +43,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	fileURI, err := r.archiveAndUpload(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore)
+	fileURI, err := r.remoteArchiveFolder(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore)
 	if err != nil {
 		return exitCode, err
 	}

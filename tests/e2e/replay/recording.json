@@ -1,0 +1,85 @@
+{
+  "title": "sauce demo",
+  "steps": [
+    {
+      "type": "setViewport",
+      "width": 630,
+      "height": 1213,
+      "deviceScaleFactor": 1,
+      "isMobile": false,
+      "hasTouch": false,
+      "isLandscape": false
+    },
+    {
+      "type": "navigate",
+      "url": "https://www.saucedemo.com/",
+      "assertedEvents": [
+        {
+          "type": "navigation",
+          "url": "https://www.saucedemo.com/",
+          "title": "Swag Labs"
+        }
+      ]
+    },
+    {
+      "type": "click",
+      "selectors": [
+        [
+          "aria/Username"
+        ],
+        [
+          "[data-test=username]"
+        ]
+      ],
+      "target": "main",
+      "offsetX": 109.5,
+      "offsetY": 3
+    },
+    {
+      "type": "change",
+      "value": "standard_user",
+      "selectors": [
+        [
+          "aria/Username"
+        ],
+        [
+          "[data-test=username]"
+        ]
+      ],
+      "target": "main"
+    },
+    {
+      "type": "keyDown",
+      "target": "main",
+      "key": "Tab"
+    },
+    {
+      "type": "keyUp",
+      "key": "Tab",
+      "target": "main"
+    },
+    {
+      "type": "change",
+      "value": "secret_sauce",
+      "selectors": [
+        [
+          "aria/Password"
+        ],
+        [
+          "[data-test=password]"
+        ]
+      ],
+      "target": "main"
+    },
+    {
+      "type": "keyDown",
+      "target": "main",
+      "key": "Enter"
+    },
+    {
+      "type": "keyUp",
+      "key": "Enter",
+      "target": "main"
+    }
+  ]
+}
