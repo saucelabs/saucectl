@@ -108,14 +108,8 @@ func SetDefaults(p *Project) {
 		if s.Timeout <= 0 {
 			s.Timeout = p.Defaults.Timeout
 		}
-
-		if s.Env == nil {
-			s.Env = map[string]string{}
-		}
-		for envK, envV := range s.Env {
-			s.Env[envK] = os.ExpandEnv(envV)
-		}
 	}
+	p.Sauce.Metadata.SetDefaultBuild()
 
 	// Apply global env vars onto every suite.
 	for k, v := range p.Env {
@@ -124,7 +118,7 @@ func SetDefaults(p *Project) {
 			if s.Env == nil {
 				s.Env = map[string]string{}
 			}
-			s.Env[k] = os.ExpandEnv(v)
+			s.Env[k] = v
 		}
 	}
 }

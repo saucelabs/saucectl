@@ -3,7 +3,6 @@ package espresso
 import (
 	"errors"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -85,15 +84,6 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 	p.ConfigFilePath = cfgPath
 
-	p.Espresso.App = os.ExpandEnv(p.Espresso.App)
-	p.Espresso.TestApp = os.ExpandEnv(p.Espresso.TestApp)
-
-	var otherApps []string
-	for _, o := range p.Espresso.OtherApps {
-		otherApps = append(otherApps, os.ExpandEnv(o))
-	}
-	p.Espresso.OtherApps = otherApps
-
 	return p, nil
 }
 
@@ -116,6 +106,7 @@ func SetDefaults(p *Project) {
 	}
 
 	p.Sauce.Tunnel.SetDefaults()
+	p.Sauce.Metadata.SetDefaultBuild()
 
 	for i, suite := range p.Suites {
 		for j := range suite.Devices {

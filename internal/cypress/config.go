@@ -106,8 +106,6 @@ func FromFile(cfgPath string) (Project, error) {
 
 	p.ConfigFilePath = cfgPath
 
-	p.Cypress.Key = os.ExpandEnv(p.Cypress.Key)
-
 	return p, nil
 }
 
@@ -141,6 +139,7 @@ func SetDefaults(p *Project) {
 	}
 
 	p.Sauce.Tunnel.SetDefaults()
+	p.Sauce.Metadata.SetDefaultBuild()
 
 	for k := range p.Suites {
 		s := &p.Suites[k]
@@ -161,10 +160,8 @@ func SetDefaults(p *Project) {
 			s.Config.Env[k] = v
 		}
 
-		// Expand env vars.
-		for envK, envV := range s.Config.Env {
-			s.Config.Env[envK] = os.ExpandEnv(envV)
-
+		// Update cypress related env vars.
+		for envK, _ := range s.Config.Env {
 			// Add an entry without CYPRESS_ prefix as we directly pass it in Cypress.
 			if strings.HasPrefix(envK, "CYPRESS_") {
 				newKey := strings.TrimPrefix(envK, "CYPRESS_")

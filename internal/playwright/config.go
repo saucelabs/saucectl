@@ -142,6 +142,7 @@ func SetDefaults(p *Project) {
 	}
 
 	p.Sauce.Tunnel.SetDefaults()
+	p.Sauce.Metadata.SetDefaultBuild()
 
 	for k := range p.Suites {
 		s := &p.Suites[k]
@@ -152,13 +153,6 @@ func SetDefaults(p *Project) {
 		if s.Timeout <= 0 {
 			s.Timeout = p.Defaults.Timeout
 		}
-
-		if s.Env == nil {
-			s.Env = map[string]string{}
-		}
-		for envK, envV := range s.Env {
-			s.Env[envK] = os.ExpandEnv(envV)
-		}
 	}
 
 	// Apply global env vars onto every suite.
@@ -168,7 +162,7 @@ func SetDefaults(p *Project) {
 			if s.Env == nil {
 				s.Env = map[string]string{}
 			}
-			s.Env[k] = os.ExpandEnv(v)
+			s.Env[k] = v
 		}
 	}
 }

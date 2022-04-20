@@ -206,15 +206,11 @@ func Describe(cfgPath string) (TypeDef, error) {
 	return d, nil
 }
 
-// ExpandEnv expands environment variables inside metadata fields.
-func (m *Metadata) ExpandEnv() {
-	m.Build = os.ExpandEnv(m.Build)
+// SetDefaultBuild sets default build if it's empty
+func (m *Metadata) SetDefaultBuild() {
 	if m.Build == "" {
 		now := time.Now()
 		m.Build = fmt.Sprintf("build-%s", now.Format(time.RFC3339))
-	}
-	for i, v := range m.Tags {
-		m.Tags[i] = os.ExpandEnv(v)
 	}
 }
 
@@ -290,26 +286,23 @@ func expandEnv(v interface{}) interface{} {
 		}
 		return items
 	case reflect.Map:
-		mp, ok := v.(map[string]string)
-		if ok {
+		if mp, ok := v.(map[string]string); ok {
 			for key, val := range mp {
 				mp[key] = os.ExpandEnv(val)
 			}
 			return mp
 		}
-		mp2, ok := v.(map[string]interface{})
-		if ok {
-			for key, val := range mp2 {
-				mp2[key] = expandEnv(val)
+		if mp, ok := v.(map[string]interface{}); ok {
+			for key, val := range mp {
+				mp[key] = expandEnv(val)
 			}
-			return mp2
+			return mp
 		}
-		interfaceMp, ok := v.(map[interface{}]interface{})
-		if ok {
-			for key, val := range interfaceMp {
-				interfaceMp[key] = expandEnv(val)
+		if mp, ok := v.(map[interface{}]interface{}); ok {
+			for key, val := range mp {
+				mp[key] = expandEnv(val)
 			}
-			return interfaceMp
+			return mp
 		}
 		return v
 	}

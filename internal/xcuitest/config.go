@@ -3,7 +3,6 @@ package xcuitest
 import (
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -73,15 +72,6 @@ func FromFile(cfgPath string) (Project, error) {
 		return p, err
 	}
 
-	p.Xcuitest.App = os.ExpandEnv(p.Xcuitest.App)
-	p.Xcuitest.TestApp = os.ExpandEnv(p.Xcuitest.TestApp)
-
-	var otherApps []string
-	for _, o := range p.Xcuitest.OtherApps {
-		otherApps = append(otherApps, os.ExpandEnv(o))
-	}
-	p.Xcuitest.OtherApps = otherApps
-
 	p.ConfigFilePath = cfgPath
 
 	return p, nil
@@ -106,6 +96,7 @@ func SetDefaults(p *Project) {
 	}
 
 	p.Sauce.Tunnel.SetDefaults()
+	p.Sauce.Metadata.SetDefaultBuild()
 
 	for ks, suite := range p.Suites {
 		for id := range suite.Devices {
