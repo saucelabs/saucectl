@@ -3,11 +3,12 @@ package replay
 import (
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/fpath"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/fpath"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -83,6 +84,7 @@ func SetDefaults(p *Project) {
 	}
 
 	p.Sauce.Tunnel.SetDefaults()
+	p.Sauce.Metadata.SetDefaultBuild()
 
 	for k := range p.Suites {
 		s := &p.Suites[k]

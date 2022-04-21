@@ -1,10 +1,11 @@
 package run
 
 import (
-	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
-	"github.com/saucelabs/saucectl/internal/viper"
 	"os"
 	"strings"
+
+	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
+	"github.com/saucelabs/saucectl/internal/viper"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -72,8 +73,6 @@ func runReplay(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as a
 		return 1, err
 	}
 
-	p.Sauce.Metadata.ExpandEnv()
-
 	if err := applyPuppeteerReplayFlags(&p); err != nil {
 		return 1, err
 	}
@@ -83,7 +82,7 @@ func runReplay(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as a
 		return 1, err
 	}
 
-	ss, err  := replay.ShardSuites(p.Suites)
+	ss, err := replay.ShardSuites(p.Suites)
 	if err != nil {
 		return 1, err
 	}
