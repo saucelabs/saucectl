@@ -54,7 +54,13 @@
       "type": "object",
       "properties": {
         "version": {
-          "$ref": "../subschema/common.schema.json#/definitions/version"
+          "$ref": "../subschema/common.schema.json#/definitions/version",
+          "enum": [
+            "package.json",
+            "1.20.2",
+            "1.18.1",
+            "1.17.1"
+          ]
         },
         "configFile": {
           "description": "The path to playwright config file",

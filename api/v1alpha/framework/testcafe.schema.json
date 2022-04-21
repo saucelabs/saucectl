@@ -54,7 +54,14 @@
       "type": "object",
       "properties": {
         "version": {
-          "$ref": "../subschema/common.schema.json#/definitions/version"
+          "$ref": "../subschema/common.schema.json#/definitions/version",
+          "enum": [
+            "package.json",
+            "1.18.5",
+            "1.18.3",
+            "1.17.1",
+            "1.16.1"
+          ]
         }
       },
       "required": [
