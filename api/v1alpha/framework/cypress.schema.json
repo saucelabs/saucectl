@@ -66,7 +66,14 @@
           "type": "boolean"
         },
         "version": {
-          "$ref": "../subschema/common.schema.json#/definitions/version"
+          "$ref": "../subschema/common.schema.json#/definitions/version",
+          "enum": [
+            "package.json",
+            "9.5.3",
+            "9.3.1",
+            "9.1.0",
+            "8.6.0"
+          ]
         },
         "reporters": {
           "description": "Set of reporter to use.",
