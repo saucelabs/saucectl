@@ -102,6 +102,8 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 		return 1, err
 	}
 
+	cypress.SetDefaults(&p)
+
 	if err := cypress.Validate(&p); err != nil {
 		return 1, err
 	}
