@@ -1,6 +1,6 @@
 module github.com/saucelabs/saucectl
 
-go 1.17
+go 1.18
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.12
@@ -10,7 +10,6 @@ require (
 	github.com/docker/docker v20.10.12+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/fatih/color v1.9.0
-	github.com/getsentry/sentry-go v0.10.0
 	github.com/go-git/go-git/v5 v5.2.0
 	github.com/hinshun/vt10x v0.0.0-20180616224451-1954e6464174
 	github.com/jarcoal/httpmock v1.0.6
@@ -42,7 +41,7 @@ require (
 )
 
 require (
-	github.com/Masterminds/semver/v3 v3.1.1 // indirect
+	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/Microsoft/go-winio v0.4.17 // indirect
 	github.com/Microsoft/hcsshim v0.9.1 // indirect
 	github.com/backtrace-labs/backtrace-go v0.0.0-20200519161839-4457930c4c2e
