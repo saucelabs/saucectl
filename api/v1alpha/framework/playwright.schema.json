@@ -94,7 +94,8 @@
             "$ref": "../subschema/common.schema.json#/definitions/platformName",
             "enum": [
               "macOS 11.00",
-              "Windows 10"
+              "Windows 10",
+              "Windows 11"
             ]
           },
           "params": {
