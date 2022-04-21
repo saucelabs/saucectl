@@ -353,7 +353,8 @@
                   "$ref": "#/allOf/4/then/properties/suites/items/properties/platform",
                   "enum": [
                     "macOS 11.00",
-                    "Windows 10"
+                    "Windows 10",
+                    "Windows 11"
                   ]
                 },
                 "screenResolution": {
@@ -817,7 +818,8 @@
                   "$ref": "#/allOf/4/then/properties/suites/items/properties/platform",
                   "enum": [
                     "macOS 11.00",
-                    "Windows 10"
+                    "Windows 10",
+                    "Windows 11"
                   ]
                 },
                 "params": {
@@ -1113,7 +1115,8 @@
                 "platform": {
                   "enum": [
                     "macOS 11.00",
-                    "Windows 10"
+                    "Windows 10",
+                    "Windows 11"
                   ],
                   "description": "A specific operating system on which to run the tests. Sauce Labs will try to choose a reasonable default if not explicitly specified."
                 },
@@ -1252,7 +1255,8 @@
                   "$ref": "#/allOf/4/then/properties/suites/items/properties/platform",
                   "enum": [
                     "macOS 11.00",
-                    "Windows 10"
+                    "Windows 10",
+                    "Windows 11"
                   ]
                 },
                 "assertionTimeout": {
