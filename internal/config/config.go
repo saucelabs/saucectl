@@ -279,12 +279,13 @@ func expandEnv(v interface{}) interface{} {
 			}
 			return strs
 		}
-
-		var items []interface{}
-		for _, item := range v.([]interface{}) {
-			items = append(items, expandEnv(item))
+		if val, ok := v.([]interface{}); ok {
+			var items []interface{}
+			for _, item := range val {
+				items = append(items, expandEnv(item))
+			}
+			return items
 		}
-		return items
 	case reflect.Map:
 		if mp, ok := v.(map[string]string); ok {
 			for key, val := range mp {
@@ -304,7 +305,6 @@ func expandEnv(v interface{}) interface{} {
 			}
 			return mp
 		}
-		return v
 	}
 	return v
 }
