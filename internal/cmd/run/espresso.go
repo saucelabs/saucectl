@@ -94,7 +94,6 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, tc testcompose
 	}
 
 	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
-	p.Sauce.Metadata.ExpandEnv()
 
 	if err := applyEspressoFlags(&p, espressoFlags); err != nil {
 		return 1, err

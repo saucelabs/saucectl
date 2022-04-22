@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/viper"
@@ -204,15 +206,11 @@ func Describe(cfgPath string) (TypeDef, error) {
 	return d, nil
 }
 
-// ExpandEnv expands environment variables inside metadata fields.
-func (m *Metadata) ExpandEnv() {
-	m.Build = os.ExpandEnv(m.Build)
+// SetDefaultBuild sets default build if it's empty
+func (m *Metadata) SetDefaultBuild() {
 	if m.Build == "" {
 		now := time.Now()
 		m.Build = fmt.Sprintf("build-%s", now.Format(time.RFC3339))
-	}
-	for i, v := range m.Tags {
-		m.Tags[i] = os.ExpandEnv(v)
 	}
 }
 
@@ -259,7 +257,56 @@ func Unmarshal(cfgPath string, project interface{}) error {
 		}
 	}
 
-	return viper.Unmarshal(&project)
+	return viper.Unmarshal(&project, func(decodeCfg *mapstructure.DecoderConfig) {
+		decodeCfg.DecodeHook = func(in reflect.Kind, out reflect.Kind, v interface{}) (interface{}, error) {
+			return expandEnv(v), nil
+		}
+	})
+}
+
+func expandEnv(v interface{}) interface{} {
+	if v == nil {
+		return nil
+	}
+	switch reflect.TypeOf(v).Kind() {
+	case reflect.String:
+		return os.ExpandEnv(v.(string))
+	case reflect.Slice:
+		if val, ok := v.([]string); ok {
+			var strs []string
+			for _, item := range val {
+				strs = append(strs, os.ExpandEnv(item))
+			}
+			return strs
+		}
+		if val, ok := v.([]interface{}); ok {
+			var items []interface{}
+			for _, item := range val {
+				items = append(items, expandEnv(item))
+			}
+			return items
+		}
+	case reflect.Map:
+		if mp, ok := v.(map[string]string); ok {
+			for key, val := range mp {
+				mp[key] = os.ExpandEnv(val)
+			}
+			return mp
+		}
+		if mp, ok := v.(map[string]interface{}); ok {
+			for key, val := range mp {
+				mp[key] = expandEnv(val)
+			}
+			return mp
+		}
+		if mp, ok := v.(map[interface{}]interface{}); ok {
+			for key, val := range mp {
+				mp[key] = expandEnv(val)
+			}
+			return mp
+		}
+	}
+	return v
 }
 
 // SetDefaults updates tunnel default values

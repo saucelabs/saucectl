@@ -87,7 +87,6 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 	}
 
 	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
-	p.Sauce.Metadata.ExpandEnv()
 
 	// Normalize path to package.json file
 	if p.Puppeteer.Version == "package.json" {

@@ -3,7 +3,6 @@ package testcafe
 import (
 	"errors"
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -168,6 +167,7 @@ func SetDefaults(p *Project) {
 	}
 
 	p.Sauce.Tunnel.SetDefaults()
+	p.Sauce.Metadata.SetDefaultBuild()
 
 	for k := range p.Suites {
 		suite := &p.Suites[k]
@@ -190,13 +190,6 @@ func SetDefaults(p *Project) {
 
 		if suite.Timeout <= 0 {
 			suite.Timeout = p.Defaults.Timeout
-		}
-
-		if suite.Env == nil {
-			suite.Env = map[string]string{}
-		}
-		for envK, envV := range suite.Env {
-			suite.Env[envK] = os.ExpandEnv(envV)
 		}
 
 		// If this suite is targeting devices, then the platformName on the device takes precedence and we can skip the
@@ -224,7 +217,7 @@ func SetDefaults(p *Project) {
 			if s.Env == nil {
 				s.Env = map[string]string{}
 			}
-			s.Env[k] = os.ExpandEnv(v)
+			s.Env[k] = v
 		}
 	}
 }

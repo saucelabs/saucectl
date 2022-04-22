@@ -263,6 +263,30 @@ jobs:
       - name: Saucectl RUN - CLI Driven
         run: |
           ./saucectl run espresso -c "" --name "CLI Driven" --app ./tests/e2e/espresso/calc.apk --testApp ./tests/e2e/espresso/calc-success.apk --emulator name="Android GoogleApi Emulator",platformVersion=11.0 --testOptions.size small
+      - name: Saucectl RUN - env var file
+        env:
+          REGION: us-west-1
+          CONCURRENCY: 2
+          TAG: env-tag
+          APP: ./tests/e2e/espresso/calc.apk
+          TEST_APP: ./tests/e2e/espresso/calc-success.apk
+          SUITE_NAME: "Sauce test env var config file"
+          TEST_CLASS1: com.example.android.testing.androidjunitrunnersample.CalculatorAddParameterizedTest
+          TEST_CLASS2: com.example.android.testing.androidjunitrunnersample.CalculatorInstrumentationTest
+          EMULATOR_NAME: "Android GoogleApi Emulator"
+          PLATFORM_VERSION1: 11.0
+          PLATFORM_VERSION2: 10.0
+          GOOGLE_PIXEL_REAL_DEVICE: "Google Pixel C GoogleAPI Emulator"
+          PLATFORM_VERSION3: 8.1
+          ARTIFACTS_DOWNLOAD_WHEN: always
+          ARTIFACTS_MATCH1: junit.xml
+          ARTIFACTS_MATCH2: device.log
+          ARTIFACTS_DOWNLOAD_FOLDER: ./artifacts/
+          SLACK_CHANNEL: devx-slack-notifications
+          NOTIFICATION_SEND: always
+        run: |
+          ./saucectl run -c .sauce/espresso-env-var.yml
+
   xcuitest:
     needs: build
     runs-on: ubuntu-latest

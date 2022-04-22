@@ -3,7 +3,6 @@ package run
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -90,36 +89,6 @@ func NewCypressCmd() *cobra.Command {
 	return cmd
 }
 
-// expandEnvInMap expands all environment variables in the given map in depth.
-func expandEnvInMap(mp map[interface{}]interface{}) map[interface{}]interface{} {
-	for idx := range mp {
-		if reflect.TypeOf(mp[idx]).Kind() == reflect.String {
-			mp[idx] = os.ExpandEnv(mp[idx].(string))
-		}
-		if reflect.ValueOf(mp[idx]).Kind() == reflect.Map {
-			mp[idx] = expandEnvInMap(mp[idx].(map[interface{}]interface{}))
-		}
-	}
-	return mp
-}
-
-// expandReporterConfigEnv expands all environments variables in the given reporter configs.
-func expandReporterConfigEnv(reporters []cypress.Reporter) {
-	for _, reporter := range reporters {
-		for fieldIdx := range reporter.Options {
-			if reporter.Options[fieldIdx] == nil {
-				continue
-			}
-			if reflect.TypeOf(reporter.Options[fieldIdx]).Kind() == reflect.String {
-				reporter.Options[fieldIdx] = os.ExpandEnv(reporter.Options[fieldIdx].(string))
-			}
-			if reflect.ValueOf(reporter.Options[fieldIdx]).Kind() == reflect.Map {
-				reporter.Options[fieldIdx] = expandEnvInMap(reporter.Options[fieldIdx].(map[interface{}]interface{}))
-			}
-		}
-	}
-}
-
 func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
 	p, err := cypress.FromFile(gFlags.cfgFilePath)
 	if err != nil {
@@ -127,12 +96,12 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 	}
 
 	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
-	p.Sauce.Metadata.ExpandEnv()
-	expandReporterConfigEnv(p.Cypress.Reporters)
+	p.Sauce.Metadata.SetDefaultBuild()
 
 	if err := applyCypressFlags(&p); err != nil {
 		return 1, err
 	}
+
 	cypress.SetDefaults(&p)
 
 	if err := cypress.Validate(&p); err != nil {
