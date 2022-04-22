@@ -1,10 +1,10 @@
 saucectl
 ========
-![build](https://github.com/saucelabs/saucectl-internal/workflows/saucectl%20pipeline/badge.svg?branch=master)
+![build](https://github.com/saucelabs/saucectl-internal/workflows/saucectl%20pipeline/badge.svg?branch=main)
 
 A command line interface for the Sauce Labs Testrunner Toolkit. This repository contains the Go binary that you use to kick off tests. If you look for more documentation on it, please have a look into our [example repo](https://github.com/saucelabs/testrunner-toolkit).
 
-For information on how to contribute to `saucectl` please have a look into our [contribution guidelines](https://github.com/saucelabs/saucectl/blob/master/CONTRIBUTING.md).
+For information on how to contribute to `saucectl` please have a look into our [contribution guidelines](CONTRIBUTING.md).
 
 ## Requirements
 
@@ -28,9 +28,6 @@ npm install -g saucectl
 brew tap saucelabs/saucectl
 brew install saucectl
 ```
-
-# FAQ
-Please consult the [FAQ](https://github.com/saucelabs/testrunner-toolkit/blob/master/docs/FAQS.md) before using saucectl.
 
 # Using `saucectl`
 
@@ -136,4 +133,4 @@ image:
 ```
 
 # Licensing
-`saucectl` is licensed under the Apache License, Version 2.0. See [LICENSE](https://github.com/saucelabs/saucectl/blob/master/LICENSE) for the full license text.
+`saucectl` is licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for the full license text.

@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - master
+      - main
 
 env:
   SAUCE_USERNAME: ${{secrets.SAUCE_USERNAME}}
@@ -15,7 +15,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     container:
-      image: golang:1.17-alpine
+      image: golang:1.18-alpine
 
     steps:
       - name: Install Dependencies
@@ -33,7 +33,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     container:
-      image: golang:1.17-alpine
+      image: golang:1.18-alpine
 
     steps:
       - name: Install Dependencies
@@ -74,7 +74,7 @@ jobs:
     needs: lint
     runs-on: ubuntu-latest
     container:
-      image: golang:1.17-alpine
+      image: golang:1.18-alpine
 
     steps:
       - name: Install Dependencies
