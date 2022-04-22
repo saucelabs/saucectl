@@ -1,6 +1,6 @@
 saucectl
 ========
-![build](https://github.com/saucelabs/saucectl-internal/workflows/saucectl%20pipeline/badge.svg?branch=main)
+![build](https://github.com/saucelabs/saucectl-internal/workflows/saucectl%20tests%20pipeline/badge.svg?branch=main)
 
 A command line interface for the Sauce Labs Testrunner Toolkit. This repository contains the Go binary that you use to kick off tests. If you look for more documentation on it, please have a look into our [example repo](https://github.com/saucelabs/testrunner-toolkit).
 
