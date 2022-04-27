@@ -10,7 +10,7 @@ import (
 
 // TestResult represents struct to log in test_result.json
 type TestResult struct {
-	Result []report.TestResult
+	Results []report.TestResult
 }
 
 // Add adds a TestResult to the report
