@@ -318,13 +318,14 @@ func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, re
 	}
 }
 
-func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int, disableLogResult bool) bool {
+func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int) bool {
 	// TODO find a better way to get the expected
 	completed := 0
 	inProgress := expected
 	passed := true
 
 	junitRequired := report.IsArtifactRequired(r.Reporters, report.JUnitArtifact)
+	jsonResultRequired := report.IsArtifactRequired(r.Reporters, report.JSONArtifact)
 
 	done := make(chan interface{})
 	go func() {
@@ -363,8 +364,8 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 				Error:     err,
 			})
 		}
-		if !disableLogResult {
-			for _, f := range r.getArtifactsNames(context.Background(), jobID, res.name, artifactCfg) {
+		if jsonResultRequired {
+			for _, f := range r.getArtifactNames(context.Background(), jobID, res.name, artifactCfg) {
 				artifacts = append(artifacts, report.Artifact{
 					FilePath: f,
 				})
@@ -405,7 +406,7 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 	return passed
 }
 
-func (r *ContainerRunner) getArtifactsNames(ctx context.Context, jobID, suiteName string, cfg config.ArtifactDownload) []string {
+func (r *ContainerRunner) getArtifactNames(ctx context.Context, jobID, suiteName string, cfg config.ArtifactDownload) []string {
 	targetDir, err := download.GetDirName(suiteName, cfg)
 	if err != nil {
 		log.Error().Msgf("Failed to get dir name (%v)", err)
@@ -414,7 +415,7 @@ func (r *ContainerRunner) getArtifactsNames(ctx context.Context, jobID, suiteNam
 	var files []string
 	files, err = r.JobReader.GetJobAssetFileNames(ctx, jobID)
 	if err != nil {
-		log.Error().Msgf("failed to download artifacts: (%v)", err)
+		log.Error().Msgf("failed to get artifact list: (%v)", err)
 		return []string{}
 	}
 	var res []string

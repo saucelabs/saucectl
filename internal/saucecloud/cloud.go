@@ -97,13 +97,14 @@ func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartO
 	return jobOpts, results, nil
 }
 
-func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int, disableLogResult bool) bool {
+func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int) bool {
 	// TODO find a better way to get the expected
 	completed := 0
 	inProgress := expected
 	passed := true
 
 	junitRequired := report.IsArtifactRequired(r.Reporters, report.JUnitArtifact)
+	jsonResultRequired := report.IsArtifactRequired(r.Reporters, report.JSONArtifact)
 
 	done := make(chan interface{})
 	go func(r *CloudRunner) {
@@ -152,8 +153,8 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				})
 			}
 
-			if !disableLogResult {
-				for _, f := range r.getArtifactsNames(context.Background(), res.job.ID, res.name, res.job.IsRDC, artifactCfg) {
+			if jsonResultRequired {
+				for _, f := range r.getArtifactNames(context.Background(), res.job.ID, res.name, res.job.IsRDC, artifactCfg) {
 					artifacts = append(artifacts, report.Artifact{
 						FilePath: f,
 					})
@@ -220,7 +221,7 @@ func (r *CloudRunner) getArtifactNames(ctx context.Context, jobID, suiteName str
 	} else {
 		files, err = r.JobReader.GetJobAssetFileNames(ctx, jobID)
 		if err != nil {
-			log.Error().Msgf("failed to download artifacts: (%v)", err)
+			log.Error().Msgf("failed to get artifact list (%v)", err)
 			return []string{}
 		}
 	}
