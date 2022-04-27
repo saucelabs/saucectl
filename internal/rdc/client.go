@@ -356,36 +356,44 @@ func doAssetRequest(httpClient *retryablehttp.Client, request *http.Request) ([]
 }
 
 // DownloadArtifact does downloading artifacts
-func (c *Client) DownloadArtifact(jobID, suiteName string) {
+func (c *Client) DownloadArtifact(jobID, suiteName string) []string {
 	targetDir, err := download.GetDirName(suiteName, c.ArtifactConfig)
 	if err != nil {
 		log.Error().Msgf("Unable to create artifacts folder (%v)", err)
-		return
+		return []string{}
 	}
 	if err := os.MkdirAll(targetDir, 0755); err != nil {
 		log.Error().Msgf("Unable to create %s to fetch artifacts (%v)", targetDir, err)
-		return
+		return []string{}
 	}
+
 	files, err := c.GetJobAssetFileNames(context.Background(), jobID)
 	if err != nil {
 		log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
-		return
+		return []string{}
 	}
+
 	filepaths := fpath.MatchFiles(files, c.ArtifactConfig.Match)
+	var artifacts []string
 	for _, f := range filepaths {
-		if err := c.downloadArtifact(targetDir, jobID, f); err != nil {
+		targetFile, err := c.downloadArtifact(targetDir, jobID, f)
+		if err != nil {
 			log.Err(err).Msg("Unable to download artifacts")
+			return artifacts
 		}
+		artifacts = append(artifacts, targetFile)
 	}
+
+	return artifacts
 }
 
-func (c *Client) downloadArtifact(targetDir, jobID, fileName string) error {
+func (c *Client) downloadArtifact(targetDir, jobID, fileName string) (string, error) {
 	content, err := c.GetJobAssetFileContent(context.Background(), jobID, fileName)
 	if err != nil {
-		return err
+		return "", err
 	}
 	targetFile := filepath.Join(targetDir, fileName)
-	return os.WriteFile(targetFile, content, 0644)
+	return targetFile, os.WriteFile(targetFile, content, 0644)
 }
 
 type devicesResponse struct {

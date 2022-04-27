@@ -22,7 +22,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/espresso"
-	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
@@ -153,14 +152,6 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				})
 			}
 
-			if jsonResultRequired {
-				for _, f := range r.getArtifactNames(context.Background(), res.job.ID, res.name, res.job.IsRDC, artifactCfg) {
-					artifacts = append(artifacts, report.Artifact{
-						FilePath: f,
-					})
-				}
-			}
-
 			url := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 			tr := report.TestResult{
 				Name:       res.name,
@@ -178,19 +169,26 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				RDC:        res.job.IsRDC,
 			}
 
+			var files []string
+			if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, res.job.TimedOut, r.Async, artifactCfg) {
+				if res.job.IsRDC {
+					files = r.RDCArtifactDownloader.DownloadArtifact(res.job.ID, res.name)
+				} else {
+					files = r.ArtifactDownloader.DownloadArtifact(res.job.ID, res.name)
+				}
+			}
+			if jsonResultRequired {
+				for _, f := range files {
+					artifacts = append(artifacts, report.Artifact{
+						FilePath: f,
+					})
+				}
+			}
+
 			for _, rep := range r.Reporters {
 				rep.Add(tr)
 			}
 		}
-
-		if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, res.job.TimedOut, r.Async, artifactCfg) {
-			if res.job.IsRDC {
-				r.RDCArtifactDownloader.DownloadArtifact(res.job.ID, res.name)
-			} else {
-				r.ArtifactDownloader.DownloadArtifact(res.job.ID, res.name)
-			}
-		}
-
 		// Since we don't know much about the state of the job in async mode, we'll just
 		r.logSuite(res)
 	}
@@ -203,35 +201,6 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	}
 
 	return passed
-}
-
-func (r *CloudRunner) getArtifactNames(ctx context.Context, jobID, suiteName string, isRDC bool, cfg config.ArtifactDownload) []string {
-	targetDir, err := download.GetDirName(suiteName, cfg)
-	if err != nil {
-		log.Error().Msgf("Failed to get dir name (%v)", err)
-	}
-
-	var files []string
-	if isRDC {
-		files, err = r.RDCJobReader.GetJobAssetFileNames(ctx, jobID)
-		if err != nil {
-			log.Error().Msgf("failed to get artifacts name (%v)", err)
-			return []string{}
-		}
-	} else {
-		files, err = r.JobReader.GetJobAssetFileNames(ctx, jobID)
-		if err != nil {
-			log.Error().Msgf("failed to get artifact list (%v)", err)
-			return []string{}
-		}
-	}
-	var res []string
-	matchedFiles := fpath.MatchFiles(files, cfg.Match)
-	for _, f := range matchedFiles {
-		res = append(res, filepath.Join(targetDir, f))
-	}
-
-	return res
 }
 
 func (r *CloudRunner) getAsset(jobID string, name string, rdc bool) ([]byte, error) {

@@ -1,4 +1,4 @@
-package jsonresult
+package json
 
 import (
 	"bytes"
@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"sync"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -18,7 +17,6 @@ type Reporter struct {
 	WebhookURL string
 	Filename   string
 	Results    []report.TestResult
-	lock       sync.Locker
 }
 
 // Add adds a TestResult
@@ -44,7 +42,7 @@ func (r *Reporter) Render() {
 			}
 			if resp.StatusCode != http.StatusOK {
 				body, _ := io.ReadAll(resp.Body)
-				log.Error().Msgf(":'%d', msg:'%v'", resp.StatusCode, string(body))
+				log.Error().Str("webhook", r.WebhookURL).Msgf("failed to send test result to webhook, status: '%d', msg:'%v'", resp.StatusCode, string(body))
 			}
 		}
 	}
@@ -52,18 +50,14 @@ func (r *Reporter) Render() {
 	if r.Filename != "" {
 		err = os.WriteFile(r.Filename, body, 0666)
 		if err != nil {
-			log.Error().Msgf("failed to write test result to test_result.json (%v)", err)
+			log.Error().Err(err).Msg("failed to write test result to test_result.json")
 		}
 	}
 }
 
 // Reset resets the reporter to its initial state. This action will delete all test results.
 func (r *Reporter) Reset() {
-	r.lock.Lock()
-	defer r.lock.Unlock()
-	r.WebhookURL = ""
-	r.Filename = ""
-	r.Results = make([]report.TestResult, 0)
+	r = &Reporter{}
 }
 
 // ArtifactRequirements returns a list of artifact types this reporter requires to create a proper report.

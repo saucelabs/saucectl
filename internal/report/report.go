@@ -22,11 +22,10 @@ type TestResult struct {
 // ArtifactType represents the type of assets (e.g. a junit report). Semantically similar to Content-Type.
 type ArtifactType int
 
-// JUnitArtifact represents the junit artifact type (https://llg.cubic.org/docs/junit/).
-const JUnitArtifact ArtifactType = iota
-
 const (
+	// JUnitArtifact represents the junit artifact type (https://llg.cubic.org/docs/junit/).
 	JUnitArtifact ArtifactType = iota
+	// JSONArtifact represents the json artifact type
 	JSONArtifact
 )
 
