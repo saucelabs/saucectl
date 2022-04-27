@@ -374,7 +374,7 @@ func (c *Client) DownloadArtifact(jobID, suiteName string) {
 	filepaths := fpath.MatchFiles(files, c.ArtifactConfig.Match)
 	for _, f := range filepaths {
 		if err := c.downloadArtifact(targetDir, jobID, f); err != nil {
-			log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
+			log.Err(err).Msg("Unable to download artifacts")
 		}
 	}
 }
