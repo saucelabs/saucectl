@@ -15,10 +15,10 @@ import (
 
 // Reporter represents struct to report in json format
 type Reporter struct {
-	URL      string
-	Filename string
-	Results  []report.TestResult
-	lock     sync.Locker
+	WebhookURL string
+	Filename   string
+	Results    []report.TestResult
+	lock       sync.Locker
 }
 
 // Add adds a TestResult
@@ -26,7 +26,7 @@ func (r *Reporter) Add(t report.TestResult) {
 	r.Results = append(r.Results, t)
 }
 
-// Render sends the result to specified webhook URL and log the result to the specified json file
+// Render sends the result to specified webhook WebhookURL and log the result to the specified json file
 func (r *Reporter) Render() {
 	body, err := json.Marshal(r.Results)
 	if err != nil {
@@ -34,8 +34,8 @@ func (r *Reporter) Render() {
 		return
 	}
 
-	if r.URL != "" {
-		resp, err := http.Post(r.URL, "application/json", bytes.NewBuffer(body))
+	if r.WebhookURL != "" {
+		resp, err := http.Post(r.WebhookURL, "application/json", bytes.NewBuffer(body))
 		if err != nil {
 			log.Error().Msgf("failed to send result (%v)", err)
 		} else {
@@ -61,7 +61,7 @@ func (r *Reporter) Render() {
 func (r *Reporter) Reset() {
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	r.URL = ""
+	r.WebhookURL = ""
 	r.Filename = ""
 	r.Results = make([]report.TestResult, 0)
 }
