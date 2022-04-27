@@ -36,7 +36,7 @@ func (j *TestResult) Reset() {
 	j.Result = []report.TestResult{}
 }
 
-// ArtifactRequirements returns a list of artifact types are this reporter requires to create a proper report.
+// ArtifactRequirements returns a list of artifact types this reporter requires to create a proper report.
 func (j *TestResult) ArtifactRequirements() []report.ArtifactType {
 	return nil
 }
