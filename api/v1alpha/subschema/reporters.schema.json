@@ -22,6 +22,25 @@
               "default": "saucectl-report.xml"
             }
           }
+        },
+        "json": {
+          "type": "object",
+          "description": "The JSON reporter merges test results from all jobs in the JSON format into a single report.",
+          "properties": {
+            "enabled": {
+              "description": "Toggles the reporter on/off.",
+              "type": "boolean"
+            },
+            "webhookURL": {
+              "description": "Webhook URL to pass JSON report.",
+              "type": "string"
+            },
+            "filename": {
+              "description": "Filename for the generated JSON report.",
+              "type": "string",
+              "default": "saucectl-test-result.xml"
+            }
+          }
         }
       },
       "additionalProperties": false

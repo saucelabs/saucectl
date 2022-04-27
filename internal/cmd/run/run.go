@@ -139,7 +139,7 @@ func Command() *cobra.Command {
 	sc.Bool("reporters.junit.enabled", "reporters::junit::enabled", false, "Toggle saucectl's own junit reporting on/off. This only affects the reports that saucectl itself generates as a summary of your tests. Each Job in Sauce Labs has an independent report regardless.")
 	sc.String("reporters.junit.filename", "reporters::junit::filename", "saucectl-report.xml", "Specifies the report filename.")
 	sc.Bool("reporters.json.enabled", "reporters::json::enabled", false, "Toggle saucectl's JSON test result reporting on/off. This only affects the reports that saucectl itself generates as a summary of your tests.")
-	sc.String("reporters.json.filename", "reporters::json::filename", "sauce_test_result.json", "Specifies the report filename.")
+	sc.String("reporters.json.filename", "reporters::json::filename", "saucectl-test-result.json", "Specifies the report filename.")
 	sc.String("reporters.json.webhookURL", "reporters::json::webhookURL", "", "Specifies the webhook URL.")
 
 	// Hide undocumented flags that the user does not need to care about.
