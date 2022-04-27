@@ -25,8 +25,10 @@ type ArtifactType int
 // JUnitArtifact represents the junit artifact type (https://llg.cubic.org/docs/junit/).
 const JUnitArtifact ArtifactType = iota
 
-// JSONArtifact represents the json artifact type
-const JSONArtifact ArtifactType = iota
+const (
+	JUnitArtifact ArtifactType = iota
+	JSONArtifact
+)
 
 // Artifact represents an artifact (aka asset) that was generated as part of a job.
 type Artifact struct {
