@@ -13,7 +13,7 @@ type TestResult struct {
 	Platform   string        `json:"platform"`
 	DeviceName string        `json:"deviceName"`
 	URL        string        `json:"url"`
-	Artifacts  []Artifact    `json:"-"`
+	Artifacts  []Artifact    `json:"artifacts"`
 	Origin     string        `json:"origin"`
 	Attempts   int           `json:"attempts"`
 	RDC        bool          `json:"-"`
@@ -27,11 +27,12 @@ const JUnitArtifact ArtifactType = iota
 
 // Artifact represents an artifact (aka asset) that was generated as part of a job.
 type Artifact struct {
-	AssetType ArtifactType
-	Body      []byte
+	FilePath  string       `json:"filePath"`
+	AssetType ArtifactType `json:"-"`
+	Body      []byte       `json:"-"`
 
 	// Error contains optional error information in case the artifact was not retrieved.
-	Error error
+	Error error `json:"-"`
 }
 
 // Reporter is the interface for rest result reporting.

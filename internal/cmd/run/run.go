@@ -3,7 +3,6 @@ package run
 import (
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -11,6 +10,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
 
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
@@ -35,6 +36,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/buildtable"
 	"github.com/saucelabs/saucectl/internal/report/captor"
+	"github.com/saucelabs/saucectl/internal/report/console"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
@@ -122,6 +124,7 @@ func Command() *cobra.Command {
 	sc.StringToString("experiment", "sauce::experiment", map[string]string{}, "Specifies a list of experimental flags and values")
 	sc.Bool("dry-run", "dryRun", false, "Simulate a test run without actually running any tests.")
 	sc.Int("retries", "sauce::retries", 0, "Retries specifies the number of times to retry a failed suite (sauce mode only)")
+	sc.Bool("disable-log-result", "reporters::disableLogResult", false, "Disable logging test result in console.")
 
 	// Metadata
 	sc.StringSlice("tags", "sauce::metadata::tags", []string{}, "Adds tags to tests")
@@ -306,6 +309,10 @@ func createReporters(c config.Reporters, ntfs config.Notifications, metadata con
 		reps = append(reps, &junit.Reporter{
 			Filename: c.JUnit.Filename,
 		})
+	}
+
+	if !c.DisableLogResult {
+		reps = append(reps, &console.TestResult{})
 	}
 
 	reps = append(reps, &slack.Reporter{

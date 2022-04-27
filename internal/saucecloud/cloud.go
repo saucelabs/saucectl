@@ -22,6 +22,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
@@ -96,7 +97,7 @@ func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartO
 	return jobOpts, results, nil
 }
 
-func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int) bool {
+func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int, disableLogResult bool) bool {
 	// TODO find a better way to get the expected
 	completed := 0
 	inProgress := expected
@@ -151,6 +152,14 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				})
 			}
 
+			if !disableLogResult {
+				for _, f := range r.getArtifactsNames(context.Background(), res.job.ID, res.name, res.job.IsRDC, artifactCfg) {
+					artifacts = append(artifacts, report.Artifact{
+						FilePath: f,
+					})
+				}
+			}
+
 			url := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 			tr := report.TestResult{
 				Name:       res.name,
@@ -193,6 +202,35 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	}
 
 	return passed
+}
+
+func (r *CloudRunner) getArtifactsNames(ctx context.Context, jobID, suiteName string, isRDC bool, cfg config.ArtifactDownload) []string {
+	targetDir, err := download.GetDirName(suiteName, cfg)
+	if err != nil {
+		log.Error().Msgf("Failed to get dir name (%v)", err)
+	}
+
+	var files []string
+	if isRDC {
+		files, err = r.RDCJobReader.GetJobAssetFileNames(ctx, jobID)
+		if err != nil {
+			log.Error().Msgf("failed to get artifacts name (%v)", err)
+			return []string{}
+		}
+	} else {
+		files, err = r.JobReader.GetJobAssetFileNames(ctx, jobID)
+		if err != nil {
+			log.Error().Msgf("failed to download artifacts: (%v)", err)
+			return []string{}
+		}
+	}
+	var res []string
+	matchedFiles := fpath.MatchFiles(files, cfg.Match)
+	for _, f := range matchedFiles {
+		res = append(res, filepath.Join(targetDir, f))
+	}
+
+	return res
 }
 
 func (r *CloudRunner) getAsset(jobID string, name string, rdc bool) ([]byte, error) {
@@ -352,6 +390,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 		}
 	}
 }
+
 // remoteArchiveFolder archives the contents of the folder to a remote storage.
 func (r CloudRunner) remoteArchiveFolder(project interface{}, folder string, sauceignoreFile string) (string, error) {
 	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload")

@@ -9,6 +9,7 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/rs/zerolog/log"
+	"github.com/ryanuber/go-glob"
 )
 
 type MatchPattern string
@@ -191,4 +192,19 @@ func ExcludeFiles(testFiles, excludedList []string) []string {
 	}
 
 	return files
+}
+
+// MatchFiles returns matched file by specified pattern
+func MatchFiles(files []string, match []string) []string {
+	var res []string
+	for _, f := range files {
+		for _, pattern := range match {
+			if glob.Glob(pattern, f) {
+				res = append(res, f)
+				break
+			}
+		}
+	}
+
+	return res
 }

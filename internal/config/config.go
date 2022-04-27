@@ -101,6 +101,7 @@ type Reporters struct {
 		Enabled  bool   `yaml:"enabled"`
 		Filename string `yaml:"filename"`
 	} `yaml:"junit"`
+	DisableLogResult bool `yaml:"disableLogResult"`
 }
 
 // Tunnel represents a sauce labs tunnel.

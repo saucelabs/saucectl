@@ -14,12 +14,12 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog/log"
-	"github.com/ryanuber/go-glob"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/requesth"
@@ -371,14 +371,10 @@ func (c *Client) DownloadArtifact(jobID, suiteName string) {
 		log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
 		return
 	}
-	for _, f := range files {
-		for _, pattern := range c.ArtifactConfig.Match {
-			if glob.Glob(pattern, f) {
-				if err := c.downloadArtifact(targetDir, jobID, f); err != nil {
-					log.Error().Err(err).Msgf("Failed to download file: %s", f)
-				}
-				break
-			}
+	filepaths := fpath.MatchFiles(files, c.ArtifactConfig.Match)
+	for _, f := range filepaths {
+		if err := c.downloadArtifact(targetDir, jobID, f); err != nil {
+			log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
 		}
 	}
 }
