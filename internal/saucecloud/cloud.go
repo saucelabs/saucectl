@@ -204,7 +204,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	return passed
 }
 
-func (r *CloudRunner) getArtifactsNames(ctx context.Context, jobID, suiteName string, isRDC bool, cfg config.ArtifactDownload) []string {
+func (r *CloudRunner) getArtifactNames(ctx context.Context, jobID, suiteName string, isRDC bool, cfg config.ArtifactDownload) []string {
 	targetDir, err := download.GetDirName(suiteName, cfg)
 	if err != nil {
 		log.Error().Msgf("Failed to get dir name (%v)", err)
