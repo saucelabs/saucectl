@@ -27,7 +27,7 @@ const JUnitArtifact ArtifactType = iota
 
 // Artifact represents an artifact (aka asset) that was generated as part of a job.
 type Artifact struct {
-	FilePath  string       `json:"filePath"`
+	FilePath  string       `json:"filePath,omitempty"`
 	AssetType ArtifactType `json:"-"`
 	Body      []byte       `json:"-"`
 
