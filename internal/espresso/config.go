@@ -24,15 +24,14 @@ var (
 
 // Project represents the espresso project configuration.
 type Project struct {
-	config.TypeDef   `yaml:",inline" mapstructure:",squash"`
-	Defaults         config.Defaults        `yaml:"defaults" json:"defaults"`
-	ShowConsoleLog   bool                   `yaml:"showConsoleLog" json:"-"`
-	DryRun           bool                   `yaml:"-" json:"-"`
-	ConfigFilePath   string                 `yaml:"-" json:"-"`
-	CLIFlags         map[string]interface{} `yaml:"-" json:"-"`
-	DisableLogResult bool                   `yaml:"-" json:"-"`
-	Sauce            config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
-	Espresso         Espresso               `yaml:"espresso,omitempty" json:"espresso"`
+	config.TypeDef `yaml:",inline" mapstructure:",squash"`
+	Defaults       config.Defaults        `yaml:"defaults" json:"defaults"`
+	ShowConsoleLog bool                   `yaml:"showConsoleLog" json:"-"`
+	DryRun         bool                   `yaml:"-" json:"-"`
+	ConfigFilePath string                 `yaml:"-" json:"-"`
+	CLIFlags       map[string]interface{} `yaml:"-" json:"-"`
+	Sauce          config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
+	Espresso       Espresso               `yaml:"espresso,omitempty" json:"espresso"`
 	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
 	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
 	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`

@@ -28,12 +28,12 @@ func NewPlaywright(c playwright.Project, ms framework.MetadataService, wr job.Wr
 				Name:    c.Kind,
 				Version: c.Playwright.Version,
 			},
-			FrameworkMeta:     ms,
-			ShowConsoleLog:    c.ShowConsoleLog,
-			JobWriter:         wr,
-			JobReader:         jr,
-			ArtfactDownloader: dl,
-			Reporters:         reps,
+			FrameworkMeta:          ms,
+			ShowConsoleLog:         c.ShowConsoleLog,
+			JobWriter:              wr,
+			JobReader:              jr,
+			ArtfactDownloader:      dl,
+			Reporters:              reps,
 			MetadataSearchStrategy: framework.NewSearchStrategy(c.Playwright.Version, c.RootDir),
 		},
 	}
@@ -81,7 +81,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		close(containerOpts)
 	}()
 
-	hasPassed := r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites))
+	hasPassed := r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites), r.Project.Reporters.DisableLogResult)
 	if !hasPassed {
 		return 1, nil
 	}

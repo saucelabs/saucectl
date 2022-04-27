@@ -115,5 +115,5 @@ func (r *CypressRunner) runSuites(fileURI string) bool {
 		}
 	}()
 
-	return r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites), r.Project.DisableLogResult)
+	return r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites), r.Project.Reporters.DisableLogResult)
 }

@@ -23,15 +23,14 @@ var (
 
 // Project represents the xcuitest project configuration.
 type Project struct {
-	config.TypeDef   `yaml:",inline" mapstructure:",squash"`
-	Defaults         config.Defaults        `yaml:"defaults,omitempty" json:"defaults"`
-	ConfigFilePath   string                 `yaml:"-" json:"-"`
-	ShowConsoleLog   bool                   `yaml:"showConsoleLog" json:"-"`
-	DryRun           bool                   `yaml:"-" json:"-"`
-	DisableLogResult bool                   `yaml:"-" json:"-"`
-	CLIFlags         map[string]interface{} `yaml:"-" json:"-"`
-	Sauce            config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
-	Xcuitest         Xcuitest               `yaml:"xcuitest,omitempty" json:"xcuitest"`
+	config.TypeDef `yaml:",inline" mapstructure:",squash"`
+	Defaults       config.Defaults        `yaml:"defaults,omitempty" json:"defaults"`
+	ConfigFilePath string                 `yaml:"-" json:"-"`
+	ShowConsoleLog bool                   `yaml:"showConsoleLog" json:"-"`
+	DryRun         bool                   `yaml:"-" json:"-"`
+	CLIFlags       map[string]interface{} `yaml:"-" json:"-"`
+	Sauce          config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
+	Xcuitest       Xcuitest               `yaml:"xcuitest,omitempty" json:"xcuitest"`
 	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
 	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
 	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`

@@ -26,13 +26,12 @@ var (
 
 // Project represents the replay project configuration.
 type Project struct {
-	config.TypeDef   `yaml:",inline" mapstructure:",squash"`
-	ConfigFilePath   string             `yaml:"-" json:"-"`
-	DryRun           bool               `yaml:"-" json:"-"`
-	DisableLogResult bool               `yaml:"-" json:"-"`
-	ShowConsoleLog   bool               `yaml:"showConsoleLog" json:"-"`
-	Defaults         config.Defaults    `yaml:"defaults,omitempty" json:"defaults"`
-	Sauce            config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
+	config.TypeDef `yaml:",inline" mapstructure:",squash"`
+	ConfigFilePath string             `yaml:"-" json:"-"`
+	DryRun         bool               `yaml:"-" json:"-"`
+	ShowConsoleLog bool               `yaml:"showConsoleLog" json:"-"`
+	Defaults       config.Defaults    `yaml:"defaults,omitempty" json:"defaults"`
+	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
 	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
 	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`

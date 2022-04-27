@@ -27,12 +27,12 @@ func NewPuppeteer(c puppeteer.Project, ms framework.MetadataService, wr job.Writ
 				Name:    c.Kind,
 				Version: c.Puppeteer.Version,
 			},
-			FrameworkMeta:     ms,
-			ShowConsoleLog:    c.ShowConsoleLog,
-			JobWriter:         wr,
-			JobReader:         jr,
-			ArtfactDownloader: dl,
-			Reporters:         reps,
+			FrameworkMeta:          ms,
+			ShowConsoleLog:         c.ShowConsoleLog,
+			JobWriter:              wr,
+			JobReader:              jr,
+			ArtfactDownloader:      dl,
+			Reporters:              reps,
 			MetadataSearchStrategy: framework.NewSearchStrategy(c.Puppeteer.Version, c.RootDir),
 		},
 	}
@@ -80,7 +80,7 @@ func (r *PuppeterRunner) RunProject() (int, error) {
 		close(containerOpts)
 	}()
 
-	hasPassed := r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites))
+	hasPassed := r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites), r.Project.Reporters.DisableLogResult)
 	if !hasPassed {
 		return 1, nil
 	}

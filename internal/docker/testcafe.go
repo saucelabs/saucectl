@@ -27,12 +27,12 @@ func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer
 				Name:    c.Kind,
 				Version: c.Testcafe.Version,
 			},
-			FrameworkMeta:     ms,
-			ShowConsoleLog:    c.ShowConsoleLog,
-			JobWriter:         wr,
-			JobReader:         jr,
-			ArtfactDownloader: dl,
-			Reporters:         reps,
+			FrameworkMeta:          ms,
+			ShowConsoleLog:         c.ShowConsoleLog,
+			JobWriter:              wr,
+			JobReader:              jr,
+			ArtfactDownloader:      dl,
+			Reporters:              reps,
 			MetadataSearchStrategy: framework.NewSearchStrategy(c.Testcafe.Version, c.RootDir),
 		},
 	}
@@ -80,7 +80,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		close(containerOpts)
 	}()
 
-	hasPassed := r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites))
+	hasPassed := r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites), r.Project.Reporters.DisableLogResult)
 	if !hasPassed {
 		return 1, nil
 	}

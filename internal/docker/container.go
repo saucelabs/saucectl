@@ -17,6 +17,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/download"
+	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
@@ -317,7 +318,7 @@ func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, re
 	}
 }
 
-func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int) bool {
+func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int, disableLogResult bool) bool {
 	// TODO find a better way to get the expected
 	completed := 0
 	inProgress := expected
@@ -362,6 +363,13 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 				Error:     err,
 			})
 		}
+		if !disableLogResult {
+			for _, f := range r.getArtifactsNames(context.Background(), jobID, res.name, artifactCfg) {
+				artifacts = append(artifacts, report.Artifact{
+					FilePath: f,
+				})
+			}
+		}
 
 		status := job.StatePassed
 		if !res.passed {
@@ -395,6 +403,27 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 	}
 
 	return passed
+}
+
+func (r *ContainerRunner) getArtifactsNames(ctx context.Context, jobID, suiteName string, cfg config.ArtifactDownload) []string {
+	targetDir, err := download.GetDirName(suiteName, cfg)
+	if err != nil {
+		log.Error().Msgf("Failed to get dir name (%v)", err)
+	}
+
+	var files []string
+	files, err = r.JobReader.GetJobAssetFileNames(ctx, jobID)
+	if err != nil {
+		log.Error().Msgf("failed to download artifacts: (%v)", err)
+		return []string{}
+	}
+	var res []string
+	matchedFiles := fpath.MatchFiles(files, cfg.Match)
+	for _, f := range matchedFiles {
+		res = append(res, filepath.Join(targetDir, f))
+	}
+
+	return res
 }
 
 func getJobID(jobURL string) string {

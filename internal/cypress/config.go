@@ -28,15 +28,14 @@ var (
 
 // Project represents the cypress project configuration.
 type Project struct {
-	config.TypeDef   `yaml:",inline" mapstructure:",squash"`
-	Defaults         config.Defaults        `yaml:"defaults" json:"defaults"`
-	DryRun           bool                   `yaml:"-" json:"-"`
-	ShowConsoleLog   bool                   `yaml:"showConsoleLog" json:"-"`
-	ConfigFilePath   string                 `yaml:"-" json:"-"`
-	CLIFlags         map[string]interface{} `yaml:"-" json:"-"`
-	DisableLogResult bool                   `yaml:"-" json:"-"`
-	Sauce            config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
-	Cypress          Cypress                `yaml:"cypress,omitempty" json:"cypress"`
+	config.TypeDef `yaml:",inline" mapstructure:",squash"`
+	Defaults       config.Defaults        `yaml:"defaults" json:"defaults"`
+	DryRun         bool                   `yaml:"-" json:"-"`
+	ShowConsoleLog bool                   `yaml:"showConsoleLog" json:"-"`
+	ConfigFilePath string                 `yaml:"-" json:"-"`
+	CLIFlags       map[string]interface{} `yaml:"-" json:"-"`
+	Sauce          config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
+	Cypress        Cypress                `yaml:"cypress,omitempty" json:"cypress"`
 	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
 	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
 	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`
