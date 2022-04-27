@@ -22,12 +22,12 @@ func (j *TestResult) Add(t report.TestResult) {
 func (j *TestResult) Render() {
 	body, err := json.Marshal(j.Result)
 	if err != nil {
-		log.Error().Msgf("failed to generate test result: %s", err.Error())
+		log.Error().Msgf("failed to generate test result (%v)", err)
 		return
 	}
 	err = os.WriteFile("test_result.json", body, 0666)
 	if err != nil {
-		log.Error().Msgf("failed to write test result to test_result.json: %s", err.Error())
+		log.Error().Msgf("failed to write test result to test_result.json (%v)", err)
 	}
 }
 
