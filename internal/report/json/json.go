@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/report"
 )
 
@@ -35,10 +34,10 @@ func (r *Reporter) Render() {
 	if r.WebhookURL != "" {
 		resp, err := http.Post(r.WebhookURL, "application/json", bytes.NewBuffer(body))
 		if err != nil {
-			log.Error().Msgf("failed to send result (%v)", err)
+			log.Error().Str("webhook", r.WebhookURL).Msgf("failed to send result (%v)", err)
 		} else {
 			if resp.StatusCode >= http.StatusInternalServerError {
-				log.Error().Msg(msg.InternalServerError)
+				log.Error().Str("webhook", r.WebhookURL).Msgf("failed to send result, status: '%s'", resp.Status)
 			}
 			if resp.StatusCode != http.StatusOK {
 				body, _ := io.ReadAll(resp.Body)
