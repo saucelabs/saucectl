@@ -41,7 +41,7 @@ func (r *Reporter) Render() {
 				log.Error().Str("webhook", r.WebhookURL).Msgf("failed to send test result to webhook, status: '%d', msg:'%v'", resp.StatusCode, string(webhookBody))
 			}
 			if resp.StatusCode%100 == 2 {
-				log.Info().Str("webhook", r.WebhookURL).Msgf("Test result has been sent successfully to webhook, msg: '%v'.", string(webhookBody))
+				log.Info().Str("webhook", r.WebhookURL).Msgf("test result has been sent successfully to webhook, msg: '%v'.", string(webhookBody))
 			}
 		}
 	}
