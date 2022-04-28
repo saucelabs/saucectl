@@ -1,10 +1,11 @@
 package saucecloud
 
 import (
+	"os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
-	"os"
 )
 
 // ReplayRunner represents the Sauce Labs cloud implementation for puppeteer-replay.

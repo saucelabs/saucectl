@@ -144,7 +144,7 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 		UploadSuccess: true,
 	}
 	downloader := mocks.FakeArifactDownloader{
-		DownloadArtifactFn: func(jobID, suiteName string) {},
+		DownloadArtifactFn: func(jobID, suiteName string) []string { return []string{} },
 	}
 
 	runner := &EspressoRunner{

@@ -3,7 +3,6 @@ package run
 import (
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -11,6 +10,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
 
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
@@ -35,6 +36,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/buildtable"
 	"github.com/saucelabs/saucectl/internal/report/captor"
+	"github.com/saucelabs/saucectl/internal/report/json"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/testcomposer"
@@ -136,6 +138,9 @@ func Command() *cobra.Command {
 	// Reporters
 	sc.Bool("reporters.junit.enabled", "reporters::junit::enabled", false, "Toggle saucectl's own junit reporting on/off. This only affects the reports that saucectl itself generates as a summary of your tests. Each Job in Sauce Labs has an independent report regardless.")
 	sc.String("reporters.junit.filename", "reporters::junit::filename", "saucectl-report.xml", "Specifies the report filename.")
+	sc.Bool("reporters.json.enabled", "reporters::json::enabled", false, "Toggle saucectl's JSON test result reporting on/off. This only affects the reports that saucectl itself generates as a summary of your tests.")
+	sc.String("reporters.json.filename", "reporters::json::filename", "saucectl-report.json", "Specifies the report filename.")
+	sc.String("reporters.json.webhookURL", "reporters::json::webhookURL", "", "Specifies the webhook URL. When saucectl test is finished, it'll send a HTTP POST payload to the configured webhook URL.")
 
 	// Hide undocumented flags that the user does not need to care about.
 	// FIXME sauce-api is actually not implemented, but probably should
@@ -305,6 +310,13 @@ func createReporters(c config.Reporters, ntfs config.Notifications, metadata con
 	if c.JUnit.Enabled {
 		reps = append(reps, &junit.Reporter{
 			Filename: c.JUnit.Filename,
+		})
+	}
+
+	if c.JSON.Enabled {
+		reps = append(reps, &json.Reporter{
+			WebhookURL: c.JSON.WebhookURL,
+			Filename:   c.JSON.Filename,
 		})
 	}
 

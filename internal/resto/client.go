@@ -419,25 +419,27 @@ func createStopRequest(ctx context.Context, url, username, accessKey, jobID stri
 	return req, nil
 }
 
-// DownloadArtifact does downloading artifacts
-func (c *Client) DownloadArtifact(jobID, suiteName string) {
+// DownloadArtifact does downloading artifacts and returns downloaded file list
+func (c *Client) DownloadArtifact(jobID, suiteName string) []string {
 	targetDir, err := download.GetDirName(suiteName, c.ArtifactConfig)
 	if err != nil {
 		log.Error().Msgf("Unable to create artifacts folder (%v)", err)
-		return
+		return []string{}
 	}
 	if err := os.MkdirAll(targetDir, 0755); err != nil {
 		log.Error().Msgf("Unable to create %s to fetch artifacts (%v)", targetDir, err)
-		return
+		return []string{}
 	}
 	files, err := c.GetJobAssetFileNames(context.Background(), jobID)
 	if err != nil {
 		log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
-		return
+		return []string{}
 	}
+	var artifacts []string
 	for _, f := range files {
 		for _, pattern := range c.ArtifactConfig.Match {
 			if glob.Glob(pattern, f) {
+				artifacts = append(artifacts, f)
 				if err := c.downloadArtifact(targetDir, jobID, f); err != nil {
 					log.Error().Err(err).Msgf("Failed to download file: %s", f)
 				}
@@ -445,6 +447,7 @@ func (c *Client) DownloadArtifact(jobID, suiteName string) {
 			}
 		}
 	}
+	return artifacts
 }
 
 func (c *Client) downloadArtifact(targetDir, jobID, fileName string) error {

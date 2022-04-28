@@ -103,6 +103,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	passed := true
 
 	junitRequired := report.IsArtifactRequired(r.Reporters, report.JUnitArtifact)
+	jsonResultRequired := report.IsArtifactRequired(r.Reporters, report.JSONArtifact)
 
 	done := make(chan interface{})
 	go func(r *CloudRunner) {
@@ -168,19 +169,26 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				RDC:        res.job.IsRDC,
 			}
 
+			var files []string
+			if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, res.job.TimedOut, r.Async, artifactCfg) {
+				if res.job.IsRDC {
+					files = r.RDCArtifactDownloader.DownloadArtifact(res.job.ID, res.name)
+				} else {
+					files = r.ArtifactDownloader.DownloadArtifact(res.job.ID, res.name)
+				}
+			}
+			if jsonResultRequired {
+				for _, f := range files {
+					artifacts = append(artifacts, report.Artifact{
+						FilePath: f,
+					})
+				}
+			}
+
 			for _, rep := range r.Reporters {
 				rep.Add(tr)
 			}
 		}
-
-		if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, res.job.TimedOut, r.Async, artifactCfg) {
-			if res.job.IsRDC {
-				r.RDCArtifactDownloader.DownloadArtifact(res.job.ID, res.name)
-			} else {
-				r.ArtifactDownloader.DownloadArtifact(res.job.ID, res.name)
-			}
-		}
-
 		// Since we don't know much about the state of the job in async mode, we'll just
 		r.logSuite(res)
 	}
@@ -352,6 +360,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 		}
 	}
 }
+
 // remoteArchiveFolder archives the contents of the folder to a remote storage.
 func (r CloudRunner) remoteArchiveFolder(project interface{}, folder string, sauceignoreFile string) (string, error) {
 	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload")

@@ -94,7 +94,8 @@ func TestRunSuites(t *testing.T) {
 		},
 	}
 	downloader := &mocks.FakeArifactDownloader{
-		DownloadArtifactFn: func(jobID string, suiteName string) {
+		DownloadArtifactFn: func(jobID string, suiteName string) []string {
+			return []string{}
 		},
 	}
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
@@ -225,7 +226,9 @@ func TestRunProject(t *testing.T) {
 		},
 	}
 	downloader := mocks.FakeArifactDownloader{
-		DownloadArtifactFn: func(jobID, suiteName string) {},
+		DownloadArtifactFn: func(jobID, suiteName string) []string {
+			return []string{}
+		},
 	}
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 		return 1, nil

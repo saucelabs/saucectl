@@ -324,6 +324,7 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 	passed := true
 
 	junitRequired := report.IsArtifactRequired(r.Reporters, report.JUnitArtifact)
+	jsonResultRequired := report.IsArtifactRequired(r.Reporters, report.JSONArtifact)
 
 	done := make(chan interface{})
 	go func() {
@@ -344,8 +345,10 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 		inProgress--
 
 		jobID := getJobID(res.jobInfo.JobDetailsURL)
+
+		var files []string
 		if download.ShouldDownloadArtifact(jobID, res.passed, res.timedOut, false, artifactCfg) {
-			r.ArtfactDownloader.DownloadArtifact(jobID, res.name)
+			files = r.ArtfactDownloader.DownloadArtifact(jobID, res.name)
 		}
 
 		if !res.passed {
@@ -361,6 +364,13 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 				Body:      jb,
 				Error:     err,
 			})
+		}
+		if jsonResultRequired {
+			for _, f := range files {
+				artifacts = append(artifacts, report.Artifact{
+					FilePath: f,
+				})
+			}
 		}
 
 		status := job.StatePassed
