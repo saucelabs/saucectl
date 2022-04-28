@@ -355,7 +355,7 @@ func doAssetRequest(httpClient *retryablehttp.Client, request *http.Request) ([]
 	return io.ReadAll(resp.Body)
 }
 
-// DownloadArtifact does downloading artifacts
+// DownloadArtifact does downloading artifacts and returns downloaded file list
 func (c *Client) DownloadArtifact(jobID, suiteName string) []string {
 	targetDir, err := download.GetDirName(suiteName, c.ArtifactConfig)
 	if err != nil {

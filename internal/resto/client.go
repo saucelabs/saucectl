@@ -419,7 +419,7 @@ func createStopRequest(ctx context.Context, url, username, accessKey, jobID stri
 	return req, nil
 }
 
-// DownloadArtifact does downloading artifacts
+// DownloadArtifact does downloading artifacts and returns downloaded file list
 func (c *Client) DownloadArtifact(jobID, suiteName string) []string {
 	targetDir, err := download.GetDirName(suiteName, c.ArtifactConfig)
 	if err != nil {
