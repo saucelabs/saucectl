@@ -34,14 +34,14 @@ func (r *Reporter) Render() {
 	if r.WebhookURL != "" {
 		resp, err := http.Post(r.WebhookURL, "application/json", bytes.NewBuffer(body))
 		if err != nil {
-			log.Error().Str("webhook", r.WebhookURL).Msgf("failed to send result (%v)", err)
+			log.Error().Err(err).Str("webhook", r.WebhookURL).Msg("failed to send test result to webhook.")
 		} else {
-			if resp.StatusCode >= http.StatusInternalServerError {
-				log.Error().Str("webhook", r.WebhookURL).Msgf("failed to send result, status: '%s'", resp.Status)
+			webhookBody, _ := io.ReadAll(resp.Body)
+			if resp.StatusCode >= http.StatusBadRequest {
+				log.Error().Str("webhook", r.WebhookURL).Msgf("failed to send test result to webhook, status: '%d', msg:'%v'", resp.StatusCode, string(webhookBody))
 			}
-			if resp.StatusCode != http.StatusOK {
-				body, _ := io.ReadAll(resp.Body)
-				log.Error().Str("webhook", r.WebhookURL).Msgf("failed to send test result to webhook, status: '%d', msg:'%v'", resp.StatusCode, string(body))
+			if resp.StatusCode%100 == 2 {
+				log.Info().Str("webhook", r.WebhookURL).Msgf("Test result has been sent successfully to webhook, msg: '%v'.", string(webhookBody))
 			}
 		}
 	}
@@ -49,7 +49,7 @@ func (r *Reporter) Render() {
 	if r.Filename != "" {
 		err = os.WriteFile(r.Filename, body, 0666)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to write test result to test_result.json")
+			log.Error().Err(err).Msgf("failed to write test result to %s", r.Filename)
 		}
 	}
 }
