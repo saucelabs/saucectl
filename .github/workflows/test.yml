@@ -44,8 +44,15 @@ jobs:
 
       - name: Checkout Code
         uses: actions/checkout@v3
+
+      - uses: actions/cache@v3
         with:
-          fetch-depth: 50
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
       - name: Run tests
         run: |
@@ -85,6 +92,15 @@ jobs:
 
       - name: Checkout Code
         uses: actions/checkout@v3
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
       - name: Build project
         run: |
