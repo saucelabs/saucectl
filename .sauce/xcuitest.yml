@@ -11,6 +11,9 @@ sauce:
       - other tag
     build: Release $CI_COMMIT_SHORT_SHA
 
+defaults:
+  timeout: 5m
+
 xcuitest:
   app: ./tests/e2e/xcuitest/SauceLabs.Mobile.Sample.XCUITest.App.ipa
   testApp: ./tests/e2e/xcuitest/SwagLabsMobileAppUITests-Runner.ipa

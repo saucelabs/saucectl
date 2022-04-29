@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/mitchellh/mapstructure"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/viper"
@@ -264,9 +265,13 @@ func Unmarshal(cfgPath string, project interface{}) error {
 	}
 
 	return viper.Unmarshal(&project, func(decodeCfg *mapstructure.DecoderConfig) {
-		decodeCfg.DecodeHook = func(in reflect.Kind, out reflect.Kind, v interface{}) (interface{}, error) {
-			return expandEnv(v), nil
-		}
+		decodeCfg.DecodeHook = mapstructure.ComposeDecodeHookFunc(
+			mapstructure.StringToTimeDurationHookFunc(),
+			mapstructure.StringToSliceHookFunc(","),
+			func(in reflect.Kind, out reflect.Kind, v interface{}) (interface{}, error) {
+				return expandEnv(v), nil
+			},
+		)
 	})
 }
 
