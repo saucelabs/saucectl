@@ -37,15 +37,22 @@ jobs:
 
     steps:
       - name: Install Dependencies
-        run: apk add --no-cache git gcc g++ curl bash
+        run: apk add --no-cache git gcc g++ curl bash tar
 
       - name: GIT permission workaround https://github.blog/2022-04-12-git-security-vulnerability-announced/
         run: git config --global --add safe.directory /__w/saucectl/saucectl
 
       - name: Checkout Code
         uses: actions/checkout@v3
+
+      - uses: actions/cache@v3
         with:
-          fetch-depth: 50
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
       - name: Run tests
         run: |
@@ -78,13 +85,22 @@ jobs:
 
     steps:
       - name: Install Dependencies
-        run: apk add --no-cache git gcc g++ curl
+        run: apk add --no-cache git gcc g++ curl tar
 
       - name: GIT permission workaround https://github.blog/2022-04-12-git-security-vulnerability-announced/
         run: git config --global --add safe.directory /__w/saucectl/saucectl
 
       - name: Checkout Code
         uses: actions/checkout@v3
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
       - name: Build project
         run: |
