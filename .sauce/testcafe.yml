@@ -7,6 +7,8 @@ sauce:
     tags:
       - e2e
     build: "$BUILD_ID"
+defaults:
+  timeout: 5m
 docker:
   fileTransfer: copy
 testcafe:

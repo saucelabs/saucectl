@@ -8,6 +8,8 @@ sauce:
       - e2e
     build: "$BUILD_ID"
 rootDir: tests/e2e/
+defaults:
+  timeout: 5m
 docker:
   fileTransfer: mount
 cypress:
