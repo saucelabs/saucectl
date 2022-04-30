@@ -70,6 +70,7 @@ type Suite struct {
 	TestOptions map[string]interface{} `yaml:"testOptions,omitempty" json:"testOptions"`
 	Timeout     time.Duration          `yaml:"timeout,omitempty" json:"timeout"`
 	AppSettings config.AppSettings     `yaml:"appSettings,omityEmpty" json:"appSettings"`
+	Timezone    string                 `yaml:"timezone,omitempty" json:"timezone"`
 }
 
 // Android constant

@@ -104,6 +104,7 @@ type Suite struct {
 	Mode               string                 `yaml:"mode,omitempty" json:"-"`
 	Shard              string                 `yaml:"shard,omitempty" json:"-"`
 	Headless           bool                   `yaml:"headless,omitempty" json:"headless"`
+	Timezone           string                 `yaml:"timezone,omitempty" json:"timezone"`
 	// TypeScript compiling options
 	CompilerOptions CompilerOptions `yaml:"compilerOptions,omitempty" json:"compilerOptions"`
 	// Deprecated. Reserved for future use for actual devices.

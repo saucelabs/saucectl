@@ -63,6 +63,7 @@ type Suite struct {
 	Shard            string        `yaml:"shard,omitempty" json:"-"`
 	Headless         bool          `yaml:"headless,omitempty" json:"headless"`
 	PreExec          []string      `yaml:"preExec,omitempty" json:"preExec"`
+	Timezone         string        `yaml:"timezone,omitempty" json:"timezone"`
 }
 
 // SuiteConfig represents the cypress config overrides.

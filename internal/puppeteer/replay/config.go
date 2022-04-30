@@ -48,6 +48,7 @@ type Suite struct {
 	BrowserName    string        `yaml:"browserName,omitempty" json:"browserName,omitempty"`
 	BrowserVersion string        `yaml:"browserVersion,omitempty" json:"browserVersion,omitempty"`
 	Platform       string        `yaml:"platform,omitempty" json:"platform,omitempty"`
+	Timezone       string        `yaml:"timezone,omitempty" json:"timezone,omitempty"`
 
 	Recordings []string `yaml:"recordings,omitempty" json:"-"`
 }
