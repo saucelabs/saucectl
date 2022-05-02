@@ -136,6 +136,7 @@ func (r *TestcafeRunner) runSuites(fileURI string) bool {
 					Experiments:      r.Project.Sauce.Experiments,
 					Attempt:          0,
 					Retries:          r.Project.Sauce.Retries,
+					Timezone:         s.Timezone,
 				}
 			}
 		}
