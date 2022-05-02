@@ -179,6 +179,9 @@
           },
           "preExec": {
             "$ref": "../subschema/common.schema.json#/definitions/preExec"
+          },
+          "timezone": {
+            "$ref": "../subschema/common.schema.json#/definitions/timezone"
           }
         },
         "required": [

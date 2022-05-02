@@ -89,6 +89,10 @@
           }
         }
       }
+    },
+    "timezone": {
+      "description": "Specifies the timezone for the suite.",
+      "type": "string"
     }
   }
 }

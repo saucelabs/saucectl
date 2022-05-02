@@ -307,6 +307,9 @@
           },
           "excludedTestFiles": {
             "$ref": "../subschema/common.schema.json#/definitions/excludedTestFiles"
+          },
+          "timezone": {
+            "$ref": "../subschema/common.schema.json#/definitions/timezone"
           }
         },
         "required": [

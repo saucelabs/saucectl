@@ -437,6 +437,10 @@
                 "preExec": {
                   "description": "Specifies which commands to execute before starting the tests.",
                   "type": "array"
+                },
+                "timezone": {
+                  "description": "Specifies the timezone for the suite.",
+                  "type": "string"
                 }
               },
               "required": [
@@ -708,6 +712,9 @@
                       }
                     }
                   }
+                },
+                "timezone": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/timezone"
                 }
               },
               "anyOf": [
@@ -929,6 +936,9 @@
                 },
                 "preExec": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/preExec"
+                },
+                "timezone": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/timezone"
                 }
               },
               "required": [
@@ -1494,6 +1504,9 @@
                 },
                 "excludedTestFiles": {
                   "$ref": "#/allOf/2/then/properties/suites/items/properties/excludedTestFiles"
+                },
+                "timezone": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/timezone"
                 }
               },
               "required": [

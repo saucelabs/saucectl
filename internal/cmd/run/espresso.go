@@ -64,6 +64,7 @@ func NewEspressoCmd() *cobra.Command {
 	sc.String("app", "espresso::app", "", "Specifies the app under test")
 	sc.String("testApp", "espresso::testApp", "", "Specifies the test app")
 	sc.StringSlice("otherApps", "espresso::otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
+	sc.String("timezone", "suite::timezone", "", "Specifies timezone for this test")
 
 	// Test Options
 	sc.StringSlice("testOptions.class", "suite::testOptions::class", []string{}, "Only run the specified classes. Requires --name to be set.")

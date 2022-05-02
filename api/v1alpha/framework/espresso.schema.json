@@ -218,6 +218,9 @@
           },
           "appSettings": {
             "$ref": "../subschema/common.schema.json#/definitions/appSettings"
+          },
+          "timezone": {
+            "$ref": "../subschema/common.schema.json#/definitions/timezone"
           }
         },
         "anyOf": [
