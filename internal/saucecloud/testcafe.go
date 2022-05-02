@@ -109,7 +109,7 @@ func (r *TestcafeRunner) runSuites(fileURI string) bool {
 							ScreenResolution: s.ScreenResolution,
 							RunnerVersion:    r.Project.RunnerVersion,
 							Experiments:      r.Project.Sauce.Experiments,
-							Timezone:         s.Timezone,
+							TimeZone:         s.TimeZone,
 						}
 					}
 				}
@@ -136,7 +136,7 @@ func (r *TestcafeRunner) runSuites(fileURI string) bool {
 					Experiments:      r.Project.Sauce.Experiments,
 					Attempt:          0,
 					Retries:          r.Project.Sauce.Retries,
-					Timezone:         s.Timezone,
+					TimeZone:         s.TimeZone,
 				}
 			}
 		}

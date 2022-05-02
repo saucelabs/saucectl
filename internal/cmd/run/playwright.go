@@ -86,7 +86,7 @@ func NewPlaywrightCmd() *cobra.Command {
 	// Misc
 	sc.String("rootDir", "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
 	sc.String("shard", "suite.shard", "", "Controls whether or not (and how) tests are sharded across multiple machines, supported value: spec|concurrency")
-	sc.String("timezone", "suite::timezone", "", "Specifies timezone for this test")
+	sc.String("timeZone", "suite::timeZone", "", "Specifies timeZone for this test")
 
 	// NPM
 	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")

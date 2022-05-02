@@ -181,8 +181,8 @@
           "preExec": {
             "$ref": "../subschema/common.schema.json#/definitions/preExec"
           },
-          "timezone": {
-            "$ref": "../subschema/common.schema.json#/definitions/timezone"
+          "timeZone": {
+            "$ref": "../subschema/common.schema.json#/definitions/timeZone"
           }
         },
         "required": [

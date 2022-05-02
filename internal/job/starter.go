@@ -54,7 +54,7 @@ type StartOptions struct {
 	StartTime         time.Time              `json:"startTime,omitempty"`
 	AppSettings       AppSettings            `json:"appSettings,omitempty"`
 	RealDeviceKind    string                 `json:"realDeviceKind,omitempty"`
-	Timezone          string                 `json:"timezone,omitempty"`
+	TimeZone          string                 `json:"timeZone,omitempty"`
 }
 
 // AppSettings represents app settings for real device

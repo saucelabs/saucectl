@@ -90,8 +90,8 @@
         }
       }
     },
-    "timezone": {
-      "description": "Specifies the timezone for the suite.",
+    "timeZone": {
+      "description": "Specifies the timeZone for the suite.",
       "type": "string"
     }
   }
