@@ -200,7 +200,6 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		TestOptions: s.TestOptions,
 		Attempt:     0,
 		Retries:     r.Project.Sauce.Retries,
-		Timezone:    s.Timezone,
 
 		// RDC Specific flags
 		RealDevice:        d.isRealDevice,
