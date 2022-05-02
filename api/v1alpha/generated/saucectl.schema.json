@@ -712,9 +712,6 @@
                       }
                     }
                   }
-                },
-                "timezone": {
-                  "$ref": "#/allOf/0/then/properties/suites/items/properties/timezone"
                 }
               },
               "anyOf": [
