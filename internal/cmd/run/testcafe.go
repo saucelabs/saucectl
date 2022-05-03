@@ -107,6 +107,7 @@ func NewTestcafeCmd() *cobra.Command {
 	sc.Float64("speed", "suite::speed", 1, "Specify the test execution speed")
 	sc.Bool("disablePageCaching", "suite::disablePageCaching", false, "Prevent the browser from caching page content")
 	sc.StringSlice("excludedTestFiles", "suite::excludedTestFiles", []string{}, "Exclude test files to skip the tests, using glob pattern")
+	sc.String("timeZone", "suite::timeZone", "", "Specifies timeZone for this test")
 
 	// NPM
 	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")

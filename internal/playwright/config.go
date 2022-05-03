@@ -70,6 +70,7 @@ type Suite struct {
 	NumShards         int               `yaml:"numShards,omitempty" json:"-"`
 	Shard             string            `yaml:"shard,omitempty" json:"-"`
 	PreExec           []string          `yaml:"preExec,omitempty" json:"preExec"`
+	TimeZone          string            `yaml:"timeZone,omitempty" json:"timeZone"`
 }
 
 // SuiteConfig represents the configuration specific to a suite
