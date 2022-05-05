@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/saucelabs/saucectl/internal/node"
 )
 
