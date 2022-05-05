@@ -92,7 +92,7 @@ func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, framewor
 	if !ok {
 		ver, ok = p.Dependencies[packageName]
 		if !ok {
-			return Metadata{}, fmt.Errorf("unable to determine package dependencies for %s:%s", packageName, ver)
+			return Metadata{}, fmt.Errorf("unable to determine dependencies for package %s:%s", packageName, ver)
 		}
 	}
 
