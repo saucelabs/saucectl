@@ -78,8 +78,14 @@ func toNpmPackageName(frameworkName string) string {
 	return p
 }
 
+// Monkey patch functions to allow mocking during unit testing
+var (
+	PackageFromFile = node.PackageFromFile
+	NewConstraint   = semver.NewConstraint
+)
+
 func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, frameworkName string, packageJsonPath string) (Metadata, error) {
-	p, err := node.PackageFromFile(s.packageJsonFilePath)
+	p, err := PackageFromFile(s.packageJsonFilePath)
 
 	if err != nil {
 		return Metadata{}, fmt.Errorf("error reading package.json: %w", err)
@@ -92,7 +98,7 @@ func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, framewor
 	if !ok {
 		ver, ok = p.Dependencies[packageName]
 		if !ok {
-			return Metadata{}, fmt.Errorf("unable to determine dependencies for package %s:%s", packageName, ver)
+			return Metadata{}, fmt.Errorf("unable to determine dependencies for package: %s", packageName)
 		}
 	}
 
@@ -116,7 +122,7 @@ func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, framewor
 		return vi.GreaterThan(vj)
 	})
 
-	c, err := semver.NewConstraint(ver)
+	c, err := NewConstraint(ver)
 	if err != nil {
 		return Metadata{}, fmt.Errorf("unable to parse package version (%s): %w", ver, err)
 	}

@@ -2,7 +2,9 @@ package framework
 
 import (
 	"context"
+	"github.com/Masterminds/semver/v3"
 	"github.com/pkg/errors"
+	"github.com/saucelabs/saucectl/internal/node"
 	"testing"
 )
 
@@ -94,6 +96,100 @@ func TestFrameworkFind_ExactStrategy(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.testName, func(t *testing.T) {
 			_, err := ExactStrategy{}.Find(tc.ctx, tc.svc, tc.frameworkName, tc.frameworkVersion)
+
+			if err != nil && err.Error() != tc.expectedMessage {
+				t.Errorf("Wrong error message displays:\nExpected: %s\nActual: %s", tc.expectedMessage, err.Error())
+			}
+		})
+	}
+}
+
+func TestFrameworkFind_PackageStrategy(t *testing.T) {
+	var tests = []struct {
+		testName        string
+		expectedMessage string
+		ctx             context.Context
+		svc             MetadataService
+		frameworkName   string
+		packageJsonPath string
+		packageFromFile func(filename string) (node.Package, error)
+		newConstraint   func(c string) (*semver.Constraints, error)
+	}{
+		{
+			"packageFromFileError",
+			"error reading package.json: unknown format",
+			nil,
+			nil,
+			"nostromo",
+			"path/to/package.json",
+			func(filename string) (node.Package, error) {
+				return node.Package{}, errors.Errorf("unknown format")
+			},
+			nil,
+		},
+		{
+			"undeterminedPackageDependenciesError",
+			"unable to determine dependencies for package: nostromo",
+			nil,
+			nil,
+			"nostromo",
+			"path/to/package.json",
+			func(filename string) (node.Package, error) {
+				return node.Package{
+					Dependencies:    map[string]string{"dallas": "1.0.0"},
+					DevDependencies: map[string]string{"bishop": "1.0.0"},
+				}, nil
+			},
+			nil,
+		},
+		{
+			"undeterminedFrameworkVersionsError",
+			"unable to determine framework versions: unknown error",
+			nil,
+			&MockMetadataService{
+				MockVersions: func(context.Context, string) ([]Metadata, error) {
+					return nil, errors.New("unknown error")
+				},
+			},
+			"nostromo",
+			"path/to/package.json",
+			func(filename string) (node.Package, error) {
+				return node.Package{
+					Dependencies:    map[string]string{"nostromo": "1.0.0"},
+					DevDependencies: map[string]string{"nostromo": "1.0.0"},
+				}, nil
+			},
+			nil,
+		},
+		{
+			"unableToVerifyPackageConstraint",
+			"unable to parse package version (1.0.0): package not found",
+			nil,
+			&MockMetadataService{
+				MockVersions: func(context.Context, string) ([]Metadata, error) {
+					return nil, nil
+				},
+			},
+			"nostromo",
+			"path/to/package.json",
+			func(filename string) (node.Package, error) {
+				return node.Package{
+					Dependencies:    map[string]string{"nostromo": "1.0.0"},
+					DevDependencies: map[string]string{"nostromo": "1.0.0"},
+				}, nil
+			},
+			func(c string) (*semver.Constraints, error) {
+				return nil, errors.New("package not found")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			PackageFromFile = tc.packageFromFile
+			NewConstraint = tc.newConstraint
+
+			_, err := PackageStrategy{}.Find(tc.ctx, tc.svc, tc.frameworkName, tc.packageJsonPath)
 
 			if err != nil && err.Error() != tc.expectedMessage {
 				t.Errorf("Wrong error message displays:\nExpected: %s\nActual: %s", tc.expectedMessage, err.Error())
