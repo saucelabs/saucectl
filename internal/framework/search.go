@@ -24,12 +24,6 @@ func (e *FrameworkUnavailableError) Error() string {
 	return s
 }
 
-// Misc errors
-var (
-	ErrServerError      = errors.New("unable to check framework version availability")
-	ErrVersionUndefined = errors.New("framework version is not defined")
-)
-
 // MetadataSearchStrategy is a generic strategy for determining if the requested framework version is supported
 type MetadataSearchStrategy interface {
 	Find(ctx context.Context, svc MetadataService, frameworkName string, searchValue string) (Metadata, error)
@@ -46,7 +40,7 @@ type PackageStrategy struct {
 
 func (s ExactStrategy) Find(ctx context.Context, svc MetadataService, frameworkName string, frameworkVersion string) (Metadata, error) {
 	if frameworkVersion == "" {
-		return Metadata{}, ErrVersionUndefined
+		return Metadata{}, errors.New("framework version not defined")
 	}
 
 	m, err := svc.Search(ctx, SearchOptions{
@@ -62,7 +56,7 @@ func (s ExactStrategy) Find(ctx context.Context, svc MetadataService, frameworkN
 	}
 
 	if err != nil {
-		return Metadata{}, ErrServerError
+		return Metadata{}, fmt.Errorf("framework availability unknown: %w", err)
 	}
 
 	return m, nil
@@ -84,8 +78,14 @@ func toNpmPackageName(frameworkName string) string {
 	return p
 }
 
+// Monkey patch functions to allow mocking during unit testing
+var (
+	PackageFromFile = node.PackageFromFile
+	NewConstraint   = semver.NewConstraint
+)
+
 func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, frameworkName string, packageJsonPath string) (Metadata, error) {
-	p, err := node.PackageFromFile(s.packageJsonFilePath)
+	p, err := PackageFromFile(s.packageJsonFilePath)
 
 	if err != nil {
 		return Metadata{}, fmt.Errorf("error reading package.json: %w", err)
@@ -98,13 +98,13 @@ func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, framewor
 	if !ok {
 		ver, ok = p.Dependencies[packageName]
 		if !ok {
-			return Metadata{}, ErrVersionUndefined
+			return Metadata{}, fmt.Errorf("unable to determine dependencies for package: %s", packageName)
 		}
 	}
 
 	allVersions, err := svc.Versions(ctx, frameworkName)
 	if err != nil {
-		return Metadata{}, ErrServerError
+		return Metadata{}, fmt.Errorf("unable to determine framework versions: %w", err)
 	}
 
 	sort.Slice(allVersions, func(i, j int) bool {
@@ -122,7 +122,7 @@ func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, framewor
 		return vi.GreaterThan(vj)
 	})
 
-	c, err := semver.NewConstraint(ver)
+	c, err := NewConstraint(ver)
 	if err != nil {
 		return Metadata{}, fmt.Errorf("unable to parse package version (%s): %w", ver, err)
 	}
