@@ -81,7 +81,7 @@ func Download(remoteUrl string) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("Unable to download app from %s: %s", remoteUrl, resp.Status)
+		return "", fmt.Errorf("unable to download app from %s: %s", remoteUrl, resp.Status)
 	}
 
 	dir, err := ioutil.TempDir("", "tmp-app")
