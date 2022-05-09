@@ -7,6 +7,7 @@ const (
 	StateInProgress = "in progress"
 	StateComplete   = "complete"
 	StateError      = "error"
+	StateUnknown    = "?"
 )
 
 // The following states are only used by RDC.

@@ -108,7 +108,7 @@ func (r *Reporter) Render() {
 		}
 		if ts.TimedOut {
 			errors++
-			ts.Status = "?"
+			ts.Status = job.StateUnknown
 		}
 
 		totalDur += ts.Duration
