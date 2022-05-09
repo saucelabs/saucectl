@@ -277,7 +277,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 
 	// Check timeout
 	if j.TimedOut {
-		color.Red("Suite '%s' has reached %.2fs timeout", opts.DisplayName, opts.Timeout.Seconds())
+		color.Red("Suite '%s' has reached timeout of %s", opts.DisplayName, opts.Timeout)
 		if !isRDC {
 			j, err = r.JobStopper.StopJob(context.Background(), id)
 			if err != nil {
