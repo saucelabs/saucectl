@@ -100,7 +100,7 @@ func (r *Reporter) Render() {
 		totalDur   time.Duration
 	)
 	for _, ts := range r.TestResults {
-		if !job.Done(ts.Status) {
+		if !job.Done(ts.Status) && !ts.TimedOut {
 			inProgress++
 		}
 		if ts.Status == job.StateFailed {
