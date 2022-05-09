@@ -378,6 +378,7 @@
                   "$ref": "#/allOf/4/then/properties/suites/items/properties/platform",
                   "enum": [
                     "macOS 11.00",
+                    "macOS 12",
                     "Windows 10",
                     "Windows 11"
                   ]
@@ -510,15 +511,15 @@
             "type": "object",
             "properties": {
               "app": {
-                "description": "Path to the application. Supports environment variables as values.",
+                "description": "Local path or remote url to the application. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
                 "type": "string"
               },
               "testApp": {
-                "description": "Path to the test application. Supports environment variables as values.",
+                "description": "Local path or remote url to the test application. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
                 "type": "string"
               },
               "otherApps": {
-                "description": "A list of applications to be installed alongside the main app. Supports environment variables as values.",
+                "description": "A list of applications to be installed alongside the main app. Applications can be defined as a local path or a remote url. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
                 "type": "array",
                 "maxItems": 7
               }
@@ -853,6 +854,7 @@
                   "$ref": "#/allOf/4/then/properties/suites/items/properties/platform",
                   "enum": [
                     "macOS 11.00",
+                    "macOS 12",
                     "Windows 10",
                     "Windows 11"
                   ]
@@ -1159,6 +1161,7 @@
                 "platform": {
                   "enum": [
                     "macOS 11.00",
+                    "macOS 12",
                     "Windows 10",
                     "Windows 11"
                   ],
@@ -1306,6 +1309,7 @@
                   "$ref": "#/allOf/4/then/properties/suites/items/properties/platform",
                   "enum": [
                     "macOS 11.00",
+                    "macOS 12",
                     "Windows 10",
                     "Windows 11"
                   ]
@@ -1573,15 +1577,15 @@
             "type": "object",
             "properties": {
               "app": {
-                "description": "Path to the application. Supports environment variables as values.",
+                "description": "Local path or remote url to the application. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
                 "type": "string"
               },
               "testApp": {
-                "description": "Path to the test application. Supports environment variables as values.",
+                "description": "Local path or remote url to the test application. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
                 "type": "string"
               },
               "otherApps": {
-                "description": "A list of applications to be installed alongside the main app. Supports environment variables as values.",
+                "description": "A list of applications to be installed alongside the main app. Applications can be defined as a local path or a remote url. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
                 "type": "array"
               }
             },

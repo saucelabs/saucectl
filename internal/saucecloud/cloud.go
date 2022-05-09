@@ -547,6 +547,21 @@ func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, 
 		return apps.StandardizeReferenceLink(filename), nil
 	}
 
+	if apps.IsRemote(filename) {
+		log.Info().Msgf("Downloading from remote: %s", filename)
+
+		progress.Show("Downloading %s", filename)
+		dest, err := apps.Download(filename)
+		progress.Stop()
+
+		if err != nil {
+			return "", err
+		}
+		defer os.RemoveAll(dest)
+
+		filename = dest
+	}
+
 	log.Info().Msgf("Checking if %s has already been uploaded previously", filename)
 	if storageID, _ := r.checkIfFileAlreadyUploaded(filename); storageID != "" {
 		log.Info().Msgf("Skipping upload, using storage:%s", storageID)
