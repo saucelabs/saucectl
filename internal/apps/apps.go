@@ -2,7 +2,11 @@ package apps
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
 	"os"
+	"path"
 	"regexp"
 	"strings"
 
@@ -12,6 +16,7 @@ import (
 var (
 	reFileID      = regexp.MustCompile(`(storage:(//)?)?(?P<fileID>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$`)
 	reFilePattern = regexp.MustCompile(`^(storage:filename=)(?P<filename>[\S][\S ]+(\.ipa|\.apk))$`)
+	reRemoteFile  = regexp.MustCompile(`(?i)https?`)
 )
 
 func hasValidExtension(file string, exts []string) bool {
@@ -21,6 +26,11 @@ func hasValidExtension(file string, exts []string) bool {
 		}
 	}
 	return false
+}
+
+// IsRemote (naively) checks if the given string is a remote url
+func IsRemote(name string) bool {
+	return reRemoteFile.MatchString(name)
 }
 
 // IsStorageReference checks if a link is an entry of app-storage.
@@ -47,6 +57,10 @@ func Validate(kind, app string, validExt []string) error {
 		return nil
 	}
 
+	if IsRemote(app) {
+		return nil
+	}
+
 	if !hasValidExtension(app, validExt) {
 		return fmt.Errorf("invalid %s file: %s, make sure extension is one of the following: %s", kind, app, strings.Join(validExt, ", "))
 	}
@@ -55,4 +69,38 @@ func Validate(kind, app string, validExt []string) error {
 		return nil
 	}
 	return fmt.Errorf(msg.FileNotFound, app)
+}
+
+// Download downloads a file from remoteUrl to a temp directory and returns the path to the downloaded file
+func Download(remoteUrl string) (string, error) {
+	resp, err := http.Get(remoteUrl)
+
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("unable to download app from %s: %s", remoteUrl, resp.Status)
+	}
+
+	dir, err := ioutil.TempDir("", "tmp-app")
+	if err != nil {
+		return "", err
+	}
+
+	tmpFilePath := path.Join(dir, path.Base(remoteUrl))
+
+	f, err := os.Create(tmpFilePath)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	_, err = io.Copy(f, resp.Body)
+	if err != nil {
+		return "", nil
+	}
+
+	return tmpFilePath, nil
 }
