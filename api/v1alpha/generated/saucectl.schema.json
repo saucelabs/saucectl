@@ -378,6 +378,7 @@
                   "$ref": "#/allOf/4/then/properties/suites/items/properties/platform",
                   "enum": [
                     "macOS 11.00",
+                    "macOS 12",
                     "Windows 10",
                     "Windows 11"
                   ]
@@ -853,6 +854,7 @@
                   "$ref": "#/allOf/4/then/properties/suites/items/properties/platform",
                   "enum": [
                     "macOS 11.00",
+                    "macOS 12",
                     "Windows 10",
                     "Windows 11"
                   ]
@@ -1159,6 +1161,7 @@
                 "platform": {
                   "enum": [
                     "macOS 11.00",
+                    "macOS 12",
                     "Windows 10",
                     "Windows 11"
                   ],
@@ -1306,6 +1309,7 @@
                   "$ref": "#/allOf/4/then/properties/suites/items/properties/platform",
                   "enum": [
                     "macOS 11.00",
+                    "macOS 12",
                     "Windows 10",
                     "Windows 11"
                   ]
