@@ -2,10 +2,11 @@ package table
 
 import (
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/job"
 	"io"
 	"sync"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/job"
 
 	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -93,15 +94,21 @@ func (r *Reporter) Render() {
 		},
 	})
 
-	errors := 0
-	inProgress := 0
-	var totalDur time.Duration
+	var (
+		errors     int
+		inProgress int
+		totalDur   time.Duration
+	)
 	for _, ts := range r.TestResults {
 		if !job.Done(ts.Status) {
 			inProgress++
 		}
 		if ts.Status == job.StateFailed {
 			errors++
+		}
+		if ts.TimedOut {
+			errors++
+			ts.Status = "Timeout"
 		}
 
 		totalDur += ts.Duration

@@ -167,6 +167,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				Origin:     "sauce",
 				Attempts:   res.attempts,
 				RDC:        res.job.IsRDC,
+				TimedOut:   res.job.TimedOut,
 			}
 
 			var files []string
