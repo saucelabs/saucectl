@@ -108,7 +108,7 @@ func (r *Reporter) Render() {
 		}
 		if ts.TimedOut {
 			errors++
-			ts.Status = "Timeout"
+			ts.Status = "?"
 		}
 
 		totalDur += ts.Duration
