@@ -3,7 +3,7 @@ saucectl
 ![build](https://github.com/saucelabs/saucectl-internal/workflows/saucectl%20tests%20pipeline/badge.svg?branch=main)
 
 The `saucectl` command line interface orchestrates the tests in your framework, providing rich parallelization,
-test history filtering, and analytics of Sauce Labs.
+test history filtering, and analytics in Sauce Labs.
 
 ![demo.gif](demo.gif)
 
