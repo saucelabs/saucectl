@@ -28,7 +28,7 @@ test history filtering, and analytics in Sauce Labs.
 // [Examples](https://github.com/saucelabs/saucectl-xcuitest-example)
 
 # Contributing
-For information on how to contribute to `saucectl` please have a look into our [contribution guidelines](CONTRIBUTING.md)
+For information on how to contribute to `saucectl` please have a look into our [contribution guidelines](CONTRIBUTING.md).
 
 # Licensing
 `saucectl` is licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for the full license text.
