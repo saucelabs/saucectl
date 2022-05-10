@@ -389,6 +389,7 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 				URL:       res.jobInfo.JobDetailsURL,
 				Artifacts: artifacts,
 				Origin:    "docker",
+				TimedOut:  res.timedOut,
 			}
 
 			for _, rep := range r.Reporters {
