@@ -15,12 +15,14 @@ const (
 )
 
 var meta = []struct {
-	Name       string
-	APIBaseURL string
-	AppBaseURL string
+	Name             string
+	APIBaseURL       string
+	AppBaseURL       string
+	WebDriverBaseURL string
 }{
 	// None
 	{
+		"",
 		"",
 		"",
 		"",
@@ -30,18 +32,21 @@ var meta = []struct {
 		"us-west-1",
 		"https://api.us-west-1.saucelabs.com",
 		"https://app.saucelabs.com",
+		"https://ondemand.us-west-1.saucelabs.com",
 	},
 	// EUCentral1
 	{
 		"eu-central-1",
 		"https://api.eu-central-1.saucelabs.com",
 		"https://app.eu-central-1.saucelabs.com",
+		"https://ondemand.eu-central-1.saucelabs.com",
 	},
 	// Staging
 	{
 		"staging",
 		"https://api.staging.saucelabs.net",
 		"https://app.staging.saucelabs.net",
+		"https://ondemand.staging.saucelabs.net",
 	},
 }
 
