@@ -273,10 +273,9 @@ func Validate(p *Project) error {
 // normalizeBrowsers converts the user specified browsers into something our platform can understand better.
 func normalizeBrowsers(suites []Suite) error {
 	for i := range suites {
-		suite := suites[i]
-		switch suite.BrowserName {
+		switch suites[i].BrowserName {
 		case "chrome":
-			suite.BrowserName = "googlechrome"
+			suites[i].BrowserName = "googlechrome"
 		}
 	}
 

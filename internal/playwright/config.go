@@ -313,16 +313,15 @@ func Validate(p *Project) error {
 // normalizeBrowsers converts the user specified browsers into something our platform can understand better.
 func normalizeBrowsers(suites []Suite) error {
 	for i := range suites {
-		suite := suites[i]
-		switch suite.Params.BrowserName {
+		switch suites[i].Params.BrowserName {
 		case "chrome", "chromium":
-			suite.Params.BrowserName = "playwright-chromium"
+			suites[i].Params.BrowserName = "playwright-chromium"
 		case "firefox":
-			suite.Params.BrowserName = "playwright-firefox"
+			suites[i].Params.BrowserName = "playwright-firefox"
 		case "webkit":
-			suite.Params.BrowserName = "playwright-webkit"
+			suites[i].Params.BrowserName = "playwright-webkit"
 		default:
-			return fmt.Errorf(msg.UnsupportedBrowser, suite.Params.BrowserName, strings.Join(supportedBrowsers, ", "))
+			return fmt.Errorf(msg.UnsupportedBrowser, suites[i].Params.BrowserName, strings.Join(supportedBrowsers, ", "))
 		}
 	}
 
