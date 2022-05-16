@@ -23,7 +23,7 @@ var (
 	APIVersion = "v1alpha"
 )
 
-var supportedBrwsList = []string{"chromium", "firefox", "webkit"}
+var supportedBrowsers = []string{"chromium", "firefox", "webkit"}
 
 // Project represents the playwright project configuration.
 type Project struct {
@@ -298,7 +298,7 @@ func Validate(p *Project) error {
 		}
 	}
 
-	if err := checkSupportedBrowsers(p); err != nil {
+	if err := normalizeBrowsers(p.Suites); err != nil {
 		return err
 	}
 
@@ -310,24 +310,23 @@ func Validate(p *Project) error {
 	return nil
 }
 
-func checkSupportedBrowsers(p *Project) error {
-	for _, suite := range p.Suites {
-		if suite.Params.BrowserName != "" && !isSupportedBrowser(suite.Params.BrowserName) {
-			return fmt.Errorf(msg.UnsupportedBrowser, suite.Params.BrowserName, strings.Join(supportedBrwsList, ", "))
+// normalizeBrowsers converts the user specified browsers into something our platform can understand better.
+func normalizeBrowsers(suites []Suite) error {
+	for i := range suites {
+		suite := suites[i]
+		switch suite.Params.BrowserName {
+		case "chrome", "chromium":
+			suite.Params.BrowserName = "playwright-chromium"
+		case "firefox":
+			suite.Params.BrowserName = "playwright-firefox"
+		case "webkit":
+			suite.Params.BrowserName = "playwright-webkit"
+		default:
+			return fmt.Errorf(msg.UnsupportedBrowser, suite.Params.BrowserName, strings.Join(supportedBrowsers, ", "))
 		}
 	}
 
 	return nil
-}
-
-func isSupportedBrowser(browser string) bool {
-	for _, supportedBr := range supportedBrwsList {
-		if supportedBr == browser {
-			return true
-		}
-	}
-
-	return false
 }
 
 // FilterSuites filters out suites in the project that don't match the given suite name.
