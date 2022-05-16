@@ -130,7 +130,11 @@
                 "type": "integer"
               },
               "grep": {
-                "description": "Patterns to filter tests based on their title.",
+                "description": "Patterns to run tests based on their title.",
+                "type": "string"
+              },
+              "grepInvert": {
+                "description": "Patterns to skip tests based on their title.",
                 "type": "string"
               },
               "repeatEach": {
