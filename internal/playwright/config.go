@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/concurrency"
@@ -297,12 +298,36 @@ func Validate(p *Project) error {
 		}
 	}
 
+	if err := checkSupportedBrowsers(p); err != nil {
+		return err
+	}
+
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
 		return errors.New(msg.MissingRegion)
 	}
 
 	return nil
+}
+
+func checkSupportedBrowsers(p *Project) error {
+	for _, suite := range p.Suites {
+		if suite.Params.BrowserName != "" && !isSupportedBrowser(suite.Params.BrowserName) {
+			return fmt.Errorf(msg.UnsupportedBrowser, suite.Params.BrowserName, strings.Join(supportedBrowsers, ", "))
+		}
+	}
+
+	return nil
+}
+
+func isSupportedBrowser(browser string) bool {
+	for _, supportedBr := range supportedBrowsers {
+		if supportedBr == browser {
+			return true
+		}
+	}
+
+	return false
 }
 
 // FilterSuites filters out suites in the project that don't match the given suite name.
