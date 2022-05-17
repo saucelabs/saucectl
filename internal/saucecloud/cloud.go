@@ -39,6 +39,7 @@ import (
 type CloudRunner struct {
 	ProjectUploader        storage.ProjectUploader
 	JobStarter             job.Starter
+	RDCJobStarter          job.Starter
 	JobReader              job.Reader
 	RDCJobReader           job.Reader
 	JobWriter              job.Writer
@@ -215,12 +216,17 @@ func (r *CloudRunner) getAsset(jobID string, name string, rdc bool) ([]byte, err
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {
 	log.Info().Str("suite", opts.DisplayName).Str("region", r.Region.String()).Msg("Starting suite.")
 
-	id, isRDC, err := r.JobStarter.StartJob(context.Background(), opts)
+	var id string
+	if opts.RealDevice {
+		id, _, err = r.RDCJobStarter.StartJob(context.Background(), opts)
+	} else {
+		id, _, err = r.JobStarter.StartJob(context.Background(), opts)
+	}
 	if err != nil {
 		return job.Job{Status: job.StateError}, false, err
 	}
 
-	if !isRDC {
+	if !opts.RealDevice {
 		sigChan := r.registerInterruptOnSignal(id, opts.DisplayName)
 		defer unregisterSignalCapture(sigChan)
 
@@ -231,7 +237,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	// if a soft exit is requested during startContainer phase, it gently exits.
 	if r.interrupted {
 		r.stopSuiteExecution(id, opts.DisplayName)
-		if !isRDC {
+		if !opts.RealDevice {
 			j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second, opts.Timeout)
 		} else {
 			j, err = r.RDCJobReader.PollJob(context.Background(), id, 15*time.Second, opts.Timeout)
@@ -245,7 +251,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	// FIXME framework specifics shouldn't be handled in a generic package. Could simply do an empty string check instead.
 	if opts.Framework == "espresso" {
 		l.Str("deviceName", opts.DeviceName).Str("platformVersion", opts.PlatformVersion).Str("deviceId", opts.DeviceID)
-		if isRDC {
+		if opts.RealDevice {
 			l.Bool("private", opts.DevicePrivateOnly)
 		}
 	} else {
@@ -256,11 +262,11 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 
 	// Async mode. Mark the job as started without waiting for the result.
 	if r.Async {
-		return job.Job{ID: id, IsRDC: isRDC, Status: job.StateInProgress}, false, nil
+		return job.Job{ID: id, IsRDC: opts.RealDevice, Status: job.StateInProgress}, false, nil
 	}
 
 	// High interval poll to not oversaturate the job reader with requests
-	if !isRDC {
+	if !opts.RealDevice {
 		j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second, opts.Timeout)
 	} else {
 		j, err = r.RDCJobReader.PollJob(context.Background(), id, 15*time.Second, opts.Timeout)
@@ -271,14 +277,14 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	}
 
 	// Enrich RDC data
-	if isRDC {
+	if opts.RealDevice {
 		enrichRDCReport(&j, opts)
 	}
 
 	// Check timeout
 	if j.TimedOut {
 		color.Red("Suite '%s' has reached timeout of %s", opts.DisplayName, opts.Timeout)
-		if !isRDC {
+		if !opts.RealDevice {
 			j, err = r.JobStopper.StopJob(context.Background(), id)
 			if err != nil {
 				color.HiRedString("Failed to stop suite '%s': %v", opts.DisplayName, err)

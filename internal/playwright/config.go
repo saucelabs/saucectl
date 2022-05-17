@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/concurrency"
@@ -298,31 +297,9 @@ func Validate(p *Project) error {
 		}
 	}
 
-	if err := normalizeBrowsers(p.Suites); err != nil {
-		return err
-	}
-
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
 		return errors.New(msg.MissingRegion)
-	}
-
-	return nil
-}
-
-// normalizeBrowsers converts the user specified browsers into something our platform can understand better.
-func normalizeBrowsers(suites []Suite) error {
-	for i := range suites {
-		switch suites[i].Params.BrowserName {
-		case "chrome", "chromium":
-			suites[i].Params.BrowserName = "playwright-chromium"
-		case "firefox":
-			suites[i].Params.BrowserName = "playwright-firefox"
-		case "webkit":
-			suites[i].Params.BrowserName = "playwright-webkit"
-		default:
-			return fmt.Errorf(msg.UnsupportedBrowser, suites[i].Params.BrowserName, strings.Join(supportedBrowsers, ", "))
-		}
 	}
 
 	return nil

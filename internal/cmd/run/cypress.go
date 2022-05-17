@@ -116,6 +116,7 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 	regio := region.FromString(p.Sauce.Region)
 
 	tc.URL = regio.APIBaseURL()
+	webdriverClient.URL = regio.WebDriverBaseURL()
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
 
@@ -172,7 +173,7 @@ func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.C
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader:    &as,
-			JobStarter:         &tc,
+			JobStarter:         &webdriverClient,
 			JobReader:          &rs,
 			JobStopper:         &rs,
 			JobWriter:          &tc,

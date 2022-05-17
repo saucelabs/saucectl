@@ -107,6 +107,7 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, tc testcompose
 	regio := region.FromString(p.Sauce.Region)
 
 	tc.URL = regio.APIBaseURL()
+	webdriverClient.URL = regio.WebDriverBaseURL()
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
 	rc.URL = regio.APIBaseURL()
@@ -144,7 +145,8 @@ func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader:       &as,
-			JobStarter:            &tc,
+			JobStarter:            &webdriverClient,
+			RDCJobStarter:         &rc,
 			JobReader:             &rs,
 			RDCJobReader:          &rc,
 			JobStopper:            &rs,

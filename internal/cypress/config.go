@@ -298,10 +298,6 @@ func Validate(p *Project) error {
 		}
 	}
 
-	if err := normalizeBrowsers(p.Suites); err != nil {
-		return err
-	}
-
 	cfg, err := loadCypressConfiguration(p.RootDir, p.Cypress.ConfigFile, p.Sauce.Sauceignore)
 	if err != nil {
 		return err
@@ -309,18 +305,6 @@ func Validate(p *Project) error {
 
 	p.Suites, err = shardSuites(cfg, p.Suites, p.Sauce.Concurrency)
 	return err
-}
-
-// normalizeBrowsers converts the user specified browsers into something our platform can understand better.
-func normalizeBrowsers(suites []Suite) error {
-	for i := range suites {
-		switch suites[i].Browser {
-		case "chrome":
-			suites[i].Browser = "googlechrome"
-		}
-	}
-
-	return nil
 }
 
 // SplitSuites divided Suites to dockerSuites and sauceSuites

@@ -122,6 +122,7 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 
 	regio := region.FromString(p.Sauce.Region)
 
+	webdriverClient.URL = regio.WebDriverBaseURL()
 	tc.URL = regio.APIBaseURL()
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
@@ -183,7 +184,7 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomp
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader:    &as,
-			JobStarter:         &tc,
+			JobStarter:         &webdriverClient,
 			JobReader:          &rs,
 			JobStopper:         &rs,
 			JobWriter:          &tc,

@@ -1,6 +1,7 @@
 package run
 
 import (
+	"github.com/saucelabs/saucectl/internal/framework"
 	"os"
 	"strings"
 
@@ -90,6 +91,7 @@ func runReplay(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as a
 
 	regio := region.FromString(p.Sauce.Region)
 
+	webdriverClient.URL = regio.WebDriverBaseURL()
 	tc.URL = regio.APIBaseURL()
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
@@ -126,7 +128,7 @@ func runPuppeteerReplayInSauce(p replay.Project, regio region.Region, tc testcom
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader:    &as,
-			JobStarter:         &tc,
+			JobStarter:         &webdriverClient,
 			JobReader:          &rs,
 			JobStopper:         &rs,
 			JobWriter:          &tc,
@@ -138,8 +140,9 @@ func runPuppeteerReplayInSauce(p replay.Project, regio region.Region, tc testcom
 			ArtifactDownloader: &rs,
 			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc, &rs,
 				"puppeteer-replay", "sauce"),
-			Async:    gFlags.async,
-			FailFast: gFlags.failFast,
+			Async:                  gFlags.async,
+			FailFast:               gFlags.failFast,
+			MetadataSearchStrategy: framework.ExactStrategy{},
 		},
 	}
 

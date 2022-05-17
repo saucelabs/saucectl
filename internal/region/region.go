@@ -75,3 +75,8 @@ func (r Region) APIBaseURL() string {
 func (r Region) AppBaseURL() string {
 	return meta[r].AppBaseURL
 }
+
+// WebDriverBaseURL returns the webdriver base URL for the region.
+func (r Region) WebDriverBaseURL() string {
+	return meta[r].WebDriverBaseURL
+}

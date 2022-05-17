@@ -138,6 +138,8 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, tc testcomposer.Clie
 	}
 
 	regio := region.FromString(p.Sauce.Region)
+
+	webdriverClient.URL = regio.WebDriverBaseURL()
 	tc.URL = regio.APIBaseURL()
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
@@ -199,7 +201,7 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader:    &as,
-			JobStarter:         &tc,
+			JobStarter:         &webdriverClient,
 			JobReader:          &rs,
 			JobStopper:         &rs,
 			JobWriter:          &tc,

@@ -260,26 +260,10 @@ func Validate(p *Project) error {
 		}
 	}
 
-	if err := normalizeBrowsers(p.Suites); err != nil {
-		return err
-	}
-
 	var err error
 	p.Suites, err = shardSuites(p.RootDir, p.Suites, p.Sauce.Concurrency)
 
 	return err
-}
-
-// normalizeBrowsers converts the user specified browsers into something our platform can understand better.
-func normalizeBrowsers(suites []Suite) error {
-	for i := range suites {
-		switch suites[i].BrowserName {
-		case "chrome":
-			suites[i].BrowserName = "googlechrome"
-		}
-	}
-
-	return nil
 }
 
 // SplitSuites divided Suites to dockerSuites and sauceSuites

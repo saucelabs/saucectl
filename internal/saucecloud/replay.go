@@ -1,6 +1,7 @@
 package saucecloud
 
 import (
+	"context"
 	"os"
 
 	"github.com/rs/zerolog/log"
@@ -17,6 +18,13 @@ type ReplayRunner struct {
 // RunProject runs the tests defined in cypress.Project.
 func (r *ReplayRunner) RunProject() (int, error) {
 	exitCode := 1
+
+	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, replay.Kind, "latest")
+	if err != nil {
+		r.logFrameworkError(err)
+		return exitCode, err
+	}
+	r.Project.RunnerVersion = m.CloudRunnerVersion
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
 		return 1, err
@@ -79,6 +87,7 @@ func (r *ReplayRunner) runSuites(fileURI string) bool {
 				Suite:            s.Name,
 				Framework:        "puppeteer-replay",
 				FrameworkVersion: "latest",
+				RunnerVersion:    r.Project.RunnerVersion,
 				BrowserName:      s.BrowserName,
 				BrowserVersion:   s.BrowserVersion,
 				PlatformName:     s.Platform,
