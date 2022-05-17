@@ -76,6 +76,7 @@ func NewPlaywrightCmd() *cobra.Command {
 	sc.Int("globalTimeout", "suite::params::globalTimeout", 0, "Total timeout for the whole test run in milliseconds")
 	sc.Int("testTimeout", "suite::params::timeout", 0, "Maximum timeout in milliseconds for each test")
 	sc.String("grep", "suite::params::grep", "", "Only run tests matching this regular expression")
+	sc.String("grep-invert", "suite::params::grepInvert", "", "Only run tests not matching this regular expression. ")
 	sc.Int("repeatEach", "suite::params::repeatEach", 0, "Run each test N times")
 	sc.Int("retries", "suite::params::retries", 0, "The maximum number of retries for flaky tests")
 	sc.Int("maxFailures", "suite::params::maxFailures", 0, "Stop after the first N test failures")

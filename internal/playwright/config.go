@@ -82,6 +82,7 @@ type SuiteConfig struct {
 	GlobalTimeout int    `yaml:"globalTimeout,omitempty" json:"globalTimeout,omitempty"`
 	Timeout       int    `yaml:"timeout,omitempty" json:"timeout,omitempty"`
 	Grep          string `yaml:"grep,omitempty" json:"grep,omitempty"`
+	GrepInvert    string `yaml:"grepInvert,omitempty" json:"grepInvert,omitempty"`
 	RepeatEach    int    `yaml:"repeatEach,omitempty" json:"repeatEach,omitempty"`
 	Retries       int    `yaml:"retries,omitempty" json:"retries,omitempty"`
 	MaxFailures   int    `yaml:"maxFailures,omitempty" json:"maxFailures,omitempty"`
