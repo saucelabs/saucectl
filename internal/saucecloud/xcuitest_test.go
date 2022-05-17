@@ -64,8 +64,8 @@ func TestXcuitestRunner_RunProject(t *testing.T) {
 
 	runner := &XcuitestRunner{
 		CloudRunner: CloudRunner{
-			JobStarter:         &starter,
-			JobReader:          &reader,
+			RDCJobStarter:      &starter,
+			RDCJobReader:       &reader,
 			JobWriter:          &writer,
 			CCYReader:          ccyReader,
 			ProjectUploader:    uploader,

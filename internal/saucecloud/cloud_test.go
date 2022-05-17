@@ -248,7 +248,7 @@ func TestRunJobRetries(t *testing.T) {
 
 func TestRunJobTimeoutRDC(t *testing.T) {
 	r := CloudRunner{
-		JobStarter: &mocks.FakeJobStarter{
+		RDCJobStarter: &mocks.FakeJobStarter{
 			StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
 				return "1", true, nil
 			},
@@ -267,6 +267,7 @@ func TestRunJobTimeoutRDC(t *testing.T) {
 	opts <- job.StartOptions{
 		DisplayName: "dummy",
 		Timeout:     1,
+		RealDevice:  true,
 	}
 	close(opts)
 	res := <-results
