@@ -90,6 +90,7 @@ func TestClient_ReadAllowedCCY(t *testing.T) {
 		}))
 
 		client := New(ts.URL, "test", "123", timeout, config.ArtifactDownload{})
+		client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
 		ccy, err := client.ReadAllowedCCY(context.Background())
 		assert.Equal(t, ccy, tt.want)
 		if err != nil {
@@ -315,6 +316,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
 			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond, 0)
 			assert.Equal(t, tc.expectedResp, got)
 			if err != nil {
