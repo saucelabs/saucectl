@@ -57,7 +57,7 @@ const (
 	// MissingConfigFile indicates no config file
 	MissingConfigFile = "no config file was provided"
 	// InvalidSauceConfig indicates it's not a valid sauce config
-	InvalidSauceConfig = "invalid sauce config, which is either malformed or corrupt, please refer to https://docs.saucelabs.com/dev/cli/saucectl/usage/use-cases/#integrating-saucectl-in-your-ci-pipeline/ for creating a valid config"
+	InvalidSauceConfig = "invalid sauce config, which is either malformed or corrupt, please refer to https://docs.saucelabs.com/dev/cli/saucectl/#configure-saucectl-for-your-tests for creating a valid config"
 )
 
 // common config settings
