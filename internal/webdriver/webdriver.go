@@ -55,8 +55,8 @@ type runner struct {
 
 // SessionRequest represents the webdriver session request.
 type SessionRequest struct {
-	Capabilities        *Capabilities `json:"capabilities,omitempty"`
-	DesiredCapabilities *MatchingCaps `json:"desiredCapabilities,omitempty"`
+	Capabilities        Capabilities `json:"capabilities,omitempty"`
+	DesiredCapabilities MatchingCaps `json:"desiredCapabilities,omitempty"`
 }
 
 // Capabilities represents the webdriver capabilities.
@@ -147,14 +147,11 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 		DeviceOrientation: opts.DeviceOrientation,
 	}}
 
+	// Emulator/Simulator requests are allergic to W3C capabilities. Requests get routed to RDC. However, using legacy
+	// format alone is insufficient, we need both.
 	session := SessionRequest{
-		Capabilities: &caps,
-	}
-
-	// Espresso emulator requests are allergic to W3C capabilities, so use legacy format. However, using legacy format
-	// alone does not work, as the platform interprets this as a request for appium.
-	if opts.Framework == "espresso" {
-		session.DesiredCapabilities = &caps.AlwaysMatch
+		Capabilities:        caps,
+		DesiredCapabilities: caps.AlwaysMatch,
 	}
 
 	var b bytes.Buffer
