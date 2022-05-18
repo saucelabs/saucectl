@@ -164,7 +164,7 @@ func TestValidate(t *testing.T) {
 			name:    "missing version",
 			p:       Project{Playwright: Playwright{Version: "v"}},
 			wantErr: true,
-			errMsg:  "missing framework version. Check available versions here: https://docs.saucelabs.com/testrunner-toolkit#supported-frameworks-and-browsers",
+			errMsg:  "missing framework version. Check available versions here: https://docs.saucelabs.com/dev/cli/saucectl/#supported-frameworks-and-browsers",
 		},
 		{
 			name: "unable to locate the rootDir folder",
