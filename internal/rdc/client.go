@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"time"
 
@@ -573,8 +572,8 @@ func formatEspressoArgs(options map[string]interface{}) map[string]string {
 
 		// class/notClass need special treatment, because we accept these as slices, but the backend wants
 		// a comma separated string.
-		if (k == "class" || k == "notClass") && reflect.TypeOf(v).Kind() == reflect.Slice {
-			value = slice.Join(v.([]any))
+		if k == "class" || k == "notClass" {
+			value = slice.Join(v, ",")
 		}
 
 		if value == "" {
