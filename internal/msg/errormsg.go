@@ -57,7 +57,7 @@ const (
 	// MissingConfigFile indicates no config file
 	MissingConfigFile = "no config file was provided"
 	// InvalidSauceConfig indicates it's not a valid sauce config
-	InvalidSauceConfig = "invalid sauce config, which is either malformed or corrupt, please refer to https://docs.saucelabs.com/testrunner-toolkit/configuration for creating a valid config"
+	InvalidSauceConfig = "invalid sauce config, which is either malformed or corrupt, please refer to https://docs.saucelabs.com/dev/cli/saucectl/usage/use-cases/#integrating-saucectl-in-your-ci-pipeline/ for creating a valid config"
 )
 
 // common config settings
@@ -73,7 +73,7 @@ const (
 	// InvalidGitRelease indicates the git release is malformed
 	InvalidGitRelease = "malformed git release string in metadata"
 	// MissingFrameworkVersionConfig indicates empty framework version in the sauce config
-	MissingFrameworkVersionConfig = "missing framework version. Check available versions here: https://docs.saucelabs.com/testrunner-toolkit#supported-frameworks-and-browsers"
+	MissingFrameworkVersionConfig = "missing framework version. Check available versions here: https://docs.saucelabs.com/dev/cli/saucectl/#supported-frameworks-and-browsers"
 	// UnableToLocateRootDir indicates no rootDir provided
 	UnableToLocateRootDir = "unable to locate the rootDir folder %s"
 	// UnsupportedBrowser indicates the specified browser is not supported
@@ -91,7 +91,7 @@ const (
 // cypress config settings
 const (
 	// MissingCypressVersion indicates no valid cypress version provided
-	MissingCypressVersion = "missing framework version. Check available versions here: https://docs.saucelabs.com/testrunner-toolkit#supported-frameworks-and-browsers"
+	MissingCypressVersion = "missing framework version. Check available versions here: https://docs.saucelabs.com/dev/cli/saucectl/#supported-frameworks-and-browsers"
 	// DuplicateSuiteName indicates duplicate suite name
 	DuplicateSuiteName = "suite names must be unique, but found duplicate for '%s'"
 	// IllegalSymbol indicates suitename contains illegal symbol
