@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"regexp"
@@ -16,7 +17,7 @@ import (
 var (
 	reFileID      = regexp.MustCompile(`(storage:(//)?)?(?P<fileID>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$`)
 	reFilePattern = regexp.MustCompile(`^(storage:filename=)(?P<filename>[\S][\S ]+(\.ipa|\.apk))$`)
-	reRemoteFile  = regexp.MustCompile(`(?i)https?`)
+	reHttpSchemePattern = regexp.MustCompile(`(?i)^https?`)
 )
 
 func hasValidExtension(file string, exts []string) bool {
@@ -30,7 +31,11 @@ func hasValidExtension(file string, exts []string) bool {
 
 // IsRemote (naively) checks if the given string is a remote url
 func IsRemote(name string) bool {
-	return reRemoteFile.MatchString(name)
+	parsedURL, err := url.Parse(name)
+	if err != nil {
+		return false
+	}
+	return reHttpSchemePattern.MatchString(parsedURL.Scheme) && parsedURL.Host != ""
 }
 
 // IsStorageReference checks if a link is an entry of app-storage.

@@ -93,6 +93,53 @@ func TestValidate(t *testing.T) {
 	}
 }
 
+func TestIsRemote(t *testing.T) {
+	tests := []struct {
+		name string
+		filename string
+		want bool
+	}{
+		{
+			name:     "Valid remote url",
+			filename: "http://a.file.to/download",
+			want:     true,
+		},
+		{
+			name:     "case insensitive scheme",
+			filename: "HTTP://a.file.to/download",
+			want:     true,
+		},
+		{
+			name:     "Local file url",
+			filename: "file://a.file.to/download",
+			want:     false,
+		},
+		{
+			name:     "http prefixed filename",
+			filename: "httpApplication.ipa",
+			want:     false,
+		},
+		{
+			name:     "local absolute filepath",
+			filename: "/a/local/path",
+			want:     false,
+		},
+		{
+			name:     "local relative filepath",
+			filename: "./a/local/path",
+			want:     false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsRemote(tt.filename); got != tt.want {
+				t.Errorf("IsRemote() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func Test_hasValidExtension(t *testing.T) {
 	type args struct {
 		file string
