@@ -6,10 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/slice"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 
@@ -181,7 +183,7 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 		AppID:               opts.App,
 		TestAppID:           opts.Suite,
 		OtherApps:           opts.OtherApps,
-		TestOptions:         formatEspressoArgsForRDC(opts.TestOptions),
+		TestOptions:         formatEspressoArgs(opts.TestOptions),
 		TestsToRun:          opts.TestsToRun,
 		TestsToSkip:         opts.TestsToSkip,
 		DeviceQuery:         prepareDeviceQuery(opts),
@@ -555,8 +557,8 @@ func (c *Client) GetDevices(ctx context.Context, OS string) ([]devices.Device, e
 	return dev, nil
 }
 
-// formatEspressoArgsForRDC adapts option shape to match RDC expectations
-func formatEspressoArgsForRDC(options map[string]interface{}) map[string]string {
+// formatEspressoArgs adapts option shape to match RDC expectations
+func formatEspressoArgs(options map[string]interface{}) map[string]string {
 	mappedOptions := map[string]string{}
 	for k, v := range options {
 		if v == nil {
@@ -568,6 +570,13 @@ func formatEspressoArgsForRDC(options map[string]interface{}) map[string]string 
 		}
 
 		value := fmt.Sprintf("%v", v)
+
+		// class/notClass need special treatment, because we accept these as slices, but the backend wants
+		// a comma separated string.
+		if (k == "class" || k == "notClass") && reflect.TypeOf(v).Kind() == reflect.Slice {
+			value = slice.Join(v.([]any))
+		}
+
 		if value == "" {
 			continue
 		}

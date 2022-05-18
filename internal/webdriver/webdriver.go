@@ -5,9 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/slice"
 	"github.com/saucelabs/saucectl/internal/version"
 	"io"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -196,7 +198,15 @@ func formatEspressoArgs(options map[string]interface{}) []map[string]string {
 		if v == nil {
 			continue
 		}
+
 		value := fmt.Sprintf("%v", v)
+
+		// class/notClass need special treatment, because we accept these as slices, but the backend wants
+		// a comma separated string.
+		if (k == "class" || k == "notClass") && reflect.TypeOf(v).Kind() == reflect.Slice {
+			value = slice.Join(v.([]any))
+		}
+
 		if value == "" {
 			continue
 		}
