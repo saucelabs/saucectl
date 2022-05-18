@@ -105,6 +105,16 @@ func TestIsRemote(t *testing.T) {
 			want:     true,
 		},
 		{
+			name:     "case insensitive scheme",
+			filename: "HTTP://a.file.to/download",
+			want:     true,
+		},
+		{
+			name:     "Local file url",
+			filename: "file://a.file.to/download",
+			want:     false,
+		},
+		{
 			name:     "http prefixed filename",
 			filename: "httpApplication.ipa",
 			want:     false,
