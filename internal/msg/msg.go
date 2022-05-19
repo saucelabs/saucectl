@@ -68,7 +68,7 @@ https://app.saucelabs.com/user-settings`
 const SauceIgnoreNotExist = `The .sauceignore file does not exist. We *highly* recommend creating one so that saucectl does not
 create archives with unnecessary files. You are very likely to experience longer startup times.
 
-For more information, visit https://docs.saucelabs.com/testrunner-toolkit/configuration/bundling/index.html#exclude-files-from-the-bundle
+For more information, visit https://docs.saucelabs.com/dev/cli/saucectl/usage/use-cases/#excluding-files-from-the-bundle
 
 or peruse some of our example repositories:
   - https://github.com/saucelabs/saucectl-cypress-example
@@ -80,7 +80,7 @@ or peruse some of our example repositories:
 const UploadingTimeoutSuggestion = `We *highly* recommend using .sauceignore file so that saucectl does not
 create big archives with unnecessary files.
 
-For more information, visit https://docs.saucelabs.com/testrunner-toolkit/configuration/bundling/index.html#exclude-files-from-the-bundle
+For more information, visit https://docs.saucelabs.com/dev/cli/saucectl/usage/use-cases/#excluding-files-from-the-bundle
 
 or peruse some of our example repositories:
   - https://github.com/saucelabs/saucectl-cypress-example
