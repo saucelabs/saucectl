@@ -3,6 +3,7 @@ package run
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/webdriver"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -49,16 +50,17 @@ var (
 	runShort = "Runs tests on Sauce Labs"
 
 	// General Request Timeouts
-	testComposerTimeout = 300 * time.Second
+	testComposerTimeout = 15 * time.Minute
 	rdcTimeout          = 15 * time.Second
 	githubTimeout       = 2 * time.Second
 
 	typeDef config.TypeDef
 
-	tcClient    testcomposer.Client
-	restoClient resto.Client
-	appsClient  appstore.AppStore
-	rdcClient   rdc.Client
+	tcClient        testcomposer.Client
+	webdriverClient webdriver.Client
+	restoClient     resto.Client
+	appsClient      appstore.AppStore
+	rdcClient       rdc.Client
 
 	// ErrEmptySuiteName is thrown when a flag is specified that has a dependency on the --name flag.
 	ErrEmptySuiteName = errors.New(msg.EmptyAdhocSuiteName)
@@ -198,6 +200,12 @@ func preRun() error {
 	typeDef = d
 
 	tcClient = testcomposer.Client{
+		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
+		URL:         "", // updated later once region is determined
+		Credentials: creds,
+	}
+
+	webdriverClient = webdriver.Client{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         "", // updated later once region is determined
 		Credentials: creds,

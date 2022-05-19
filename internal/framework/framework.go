@@ -30,12 +30,13 @@ type SearchOptions struct {
 
 // Metadata represents test runner metadata.
 type Metadata struct {
-	FrameworkName    string
-	FrameworkVersion string
-	Deprecated       bool
-	DockerImage      string
-	GitRelease       string
-	Platforms        []Platform
+	FrameworkName      string
+	FrameworkVersion   string
+	Deprecated         bool
+	DockerImage        string
+	GitRelease         string
+	Platforms          []Platform
+	CloudRunnerVersion string
 }
 
 // Platform represent a supported platform.

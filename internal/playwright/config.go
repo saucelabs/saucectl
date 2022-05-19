@@ -23,7 +23,7 @@ var (
 	APIVersion = "v1alpha"
 )
 
-var supportedBrwsList = []string{"chromium", "firefox", "webkit"}
+var supportedBrowsers = []string{"chromium", "firefox", "webkit"}
 
 // Project represents the playwright project configuration.
 type Project struct {
@@ -314,7 +314,7 @@ func Validate(p *Project) error {
 func checkSupportedBrowsers(p *Project) error {
 	for _, suite := range p.Suites {
 		if suite.Params.BrowserName != "" && !isSupportedBrowser(suite.Params.BrowserName) {
-			return fmt.Errorf(msg.UnsupportedBrowser, suite.Params.BrowserName, strings.Join(supportedBrwsList, ", "))
+			return fmt.Errorf(msg.UnsupportedBrowser, suite.Params.BrowserName, strings.Join(supportedBrowsers, ", "))
 		}
 	}
 
@@ -322,7 +322,7 @@ func checkSupportedBrowsers(p *Project) error {
 }
 
 func isSupportedBrowser(browser string) bool {
-	for _, supportedBr := range supportedBrwsList {
+	for _, supportedBr := range supportedBrowsers {
 		if supportedBr == browser {
 			return true
 		}

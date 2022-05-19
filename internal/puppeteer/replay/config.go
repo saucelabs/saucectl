@@ -38,6 +38,7 @@ type Project struct {
 	Artifacts     config.Artifacts     `yaml:"artifacts,omitempty" json:"artifacts"`
 	Reporters     config.Reporters     `yaml:"reporters,omitempty" json:"-"`
 	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
+	RunnerVersion string               `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
 }
 
 // Suite represents the playwright test suite configuration.

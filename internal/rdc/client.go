@@ -1,10 +1,12 @@
 package rdc
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/slice"
 	"io"
 	"net/http"
 	"os"
@@ -41,6 +43,7 @@ const retryMax = 3
 // Client http client.
 type Client struct {
 	HTTPClient     *retryablehttp.Client
+	NativeClient   *http.Client
 	URL            string
 	Username       string
 	AccessKey      string
@@ -71,15 +74,54 @@ type readJobResponse struct {
 	Error              string              `json:"error,omitempty"`
 }
 
+// SessionRequest represents the RDC session request.
+type SessionRequest struct {
+	TestFramework       string            `json:"test_framework,omitempty"`
+	AppID               string            `json:"app_id,omitempty"`
+	TestAppID           string            `json:"test_app_id,omitempty"`
+	OtherApps           []string          `json:"other_apps,omitempty"`
+	DeviceQuery         DeviceQuery       `json:"device_query,omitempty"`
+	TestOptions         map[string]string `json:"test_options,omitempty"`
+	TestsToRun          []string          `json:"tests_to_run,omitempty"`
+	TestsToSkip         []string          `json:"tests_to_skip,omitempty"`
+	TestName            string            `json:"test_name,omitempty"`
+	TunnelName          string            `json:"tunnel_name,omitempty"`
+	TunnelOwner         string            `json:"tunnel_owner,omitempty"`
+	UseTestOrchestrator bool              `json:"use_test_orchestrator,omitempty"`
+	Tags                []string          `json:"tags,omitempty"`
+	Build               string            `json:"build,omitempty"`
+	AppSettings         job.AppSettings   `json:"settings,omitempty"`
+	RealDeviceKind      string            `json:"kind,omitempty"`
+}
+
+// DeviceQuery represents the device selection query for RDC.
+type DeviceQuery struct {
+	Type                         string `json:"type"`
+	DeviceDescriptorID           string `json:"device_descriptor_id,omitempty"`
+	PrivateDevicesOnly           bool   `json:"private_devices_only,omitempty"`
+	CarrierConnectivityRequested bool   `json:"carrier_connectivity_requested,omitempty"`
+	RequestedDeviceType          string `json:"requested_device_type,omitempty"`
+	DeviceName                   string `json:"device_name,omitempty"`
+	PlatformVersion              string `json:"platform_version,omitempty"`
+}
+
+type sessionStartResponse struct {
+	TestReport struct {
+		ID string `json:"id"`
+	} `json:"test_report"`
+}
+
 // New creates a new client.
 func New(url, username, accessKey string, timeout time.Duration, artifactConfig config.ArtifactDownload) Client {
+	nativeClient := &http.Client{Timeout: timeout}
 	httpClient := retryablehttp.NewClient()
-	httpClient.HTTPClient = &http.Client{Timeout: timeout}
+	httpClient.HTTPClient = nativeClient
 	httpClient.Logger = nil
 	httpClient.RetryMax = retryMax
 
 	return Client{
 		HTTPClient:     httpClient,
+		NativeClient:   nativeClient,
 		URL:            url,
 		Username:       username,
 		AccessKey:      accessKey,
@@ -116,6 +158,78 @@ func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
 		return 0, err
 	}
 	return cr.Organization.Maximum, nil
+}
+
+// StartJob creates a new job in Sauce Labs.
+func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+	url := fmt.Sprintf("%s/v1/rdc/native-composer/tests", c.URL)
+
+	var frameworkName string
+	switch opts.Framework {
+	case "espresso":
+		frameworkName = "ANDROID_INSTRUMENTATION"
+	case "xcuitest":
+		frameworkName = "XCUITEST"
+	}
+
+	useTestOrchestrator := false
+	if v, ok := opts.TestOptions["useTestOrchestrator"]; ok {
+		useTestOrchestrator = fmt.Sprintf("%v", v) == "true"
+	}
+
+	jobReq := SessionRequest{
+		TestName:            opts.Name,
+		AppID:               opts.App,
+		TestAppID:           opts.Suite,
+		OtherApps:           opts.OtherApps,
+		TestOptions:         formatEspressoArgs(opts.TestOptions),
+		TestsToRun:          opts.TestsToRun,
+		TestsToSkip:         opts.TestsToSkip,
+		DeviceQuery:         prepareDeviceQuery(opts),
+		TestFramework:       frameworkName,
+		TunnelName:          opts.Tunnel.ID,
+		TunnelOwner:         opts.Tunnel.Parent,
+		UseTestOrchestrator: useTestOrchestrator,
+		Tags:                opts.Tags,
+		Build:               opts.Build,
+		RealDeviceKind:      opts.RealDeviceKind,
+		AppSettings:         opts.AppSettings,
+	}
+
+	var b bytes.Buffer
+	err = json.NewEncoder(&b).Encode(jobReq)
+	if err != nil {
+		return
+	}
+
+	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, &b)
+	if err != nil {
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	resp, err := c.NativeClient.Do(req)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+
+	if resp.StatusCode >= 300 {
+		err = fmt.Errorf("job start failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, strings.TrimSpace(string(body)))
+		return "", true, err
+	}
+
+	var sessionStart sessionStartResponse
+	if err = json.Unmarshal(body, &sessionStart); err != nil {
+		return "", true, fmt.Errorf("job start status unknown: unable to parse server response: %w", err)
+	}
+
+	return sessionStart.TestReport.ID, true, nil
 }
 
 // ReadJob returns the job details.
@@ -440,4 +554,50 @@ func (c *Client) GetDevices(ctx context.Context, OS string) ([]devices.Device, e
 		})
 	}
 	return dev, nil
+}
+
+// formatEspressoArgs adapts option shape to match RDC expectations
+func formatEspressoArgs(options map[string]interface{}) map[string]string {
+	mappedOptions := map[string]string{}
+	for k, v := range options {
+		if v == nil {
+			continue
+		}
+		// We let the user set 'useTestOrchestrator' inside TestOptions, but RDC has a dedicated setting for it.
+		if k == "useTestOrchestrator" {
+			continue
+		}
+
+		value := fmt.Sprintf("%v", v)
+
+		// class/notClass need special treatment, because we accept these as slices, but the backend wants
+		// a comma separated string.
+		if k == "class" || k == "notClass" {
+			value = slice.Join(v, ",")
+		}
+
+		if value == "" {
+			continue
+		}
+		mappedOptions[k] = value
+	}
+	return mappedOptions
+}
+
+// prepareDeviceQuery prepares the DeviceQuery according jobs requirements.
+func prepareDeviceQuery(opts job.StartOptions) DeviceQuery {
+	if opts.DeviceID != "" {
+		return DeviceQuery{
+			Type:               "HardcodedDeviceQuery",
+			DeviceDescriptorID: opts.DeviceID,
+		}
+	}
+	return DeviceQuery{
+		Type:                         "DynamicDeviceQuery",
+		CarrierConnectivityRequested: opts.DeviceHasCarrier,
+		DeviceName:                   opts.DeviceName,
+		PlatformVersion:              opts.PlatformVersion,
+		PrivateDevicesOnly:           opts.DevicePrivateOnly,
+		RequestedDeviceType:          opts.DeviceType,
+	}
 }

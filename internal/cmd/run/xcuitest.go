@@ -98,6 +98,7 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, tc testcomposer.Cl
 
 	regio := region.FromString(p.Sauce.Region)
 
+	webdriverClient.URL = regio.WebDriverBaseURL()
 	tc.URL = regio.APIBaseURL()
 	rs.URL = regio.APIBaseURL()
 	as.URL = regio.APIBaseURL()
@@ -135,7 +136,8 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region, tc testcomposer
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader:       &as,
-			JobStarter:            &tc,
+			JobStarter:            &webdriverClient,
+			RDCJobStarter:         &rc,
 			JobReader:             &rs,
 			RDCJobReader:          &rc,
 			JobStopper:            &rs,
