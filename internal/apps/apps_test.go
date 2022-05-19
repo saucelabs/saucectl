@@ -17,9 +17,9 @@ func TestValidate(t *testing.T) {
 	badAppIPA := filepath.Join(dir.Path(), "bad-test.ipa")
 
 	type args struct {
-		kind       string
-		app        string
-		validExt   []string
+		kind     string
+		app      string
+		validExt []string
 	}
 	tests := []struct {
 		name    string
@@ -29,54 +29,54 @@ func TestValidate(t *testing.T) {
 		{
 			name: "Valid application file",
 			args: args{
-				kind:       "application",
-				app:        appIPA,
-				validExt:   []string{".ipa"},
+				kind:     "application",
+				app:      appIPA,
+				validExt: []string{".ipa"},
 			},
 			wantErr: nil,
 		},
 		{
 			name: "Supports storage link - format01",
 			args: args{
-				kind:       "application",
-				app:        "storage:f8b9ed63-cea7-4fd3-8b18-d9ad7b71c11d",
-				validExt:   []string{".ipa"},
+				kind:     "application",
+				app:      "storage:f8b9ed63-cea7-4fd3-8b18-d9ad7b71c11d",
+				validExt: []string{".ipa"},
 			},
 			wantErr: nil,
 		},
 		{
 			name: "Supports storage link - format02",
 			args: args{
-				kind:       "application",
-				app:        "storage://f8b9ed63-cea7-4fd3-8b18-d9ad7b71c11d",
-				validExt:   []string{".ipa"},
+				kind:     "application",
+				app:      "storage://f8b9ed63-cea7-4fd3-8b18-d9ad7b71c11d",
+				validExt: []string{".ipa"},
 			},
 			wantErr: nil,
 		},
 		{
 			name: "Non-existing file",
 			args: args{
-				kind:       "application",
-				app:        badAppIPA,
-				validExt:   []string{".ipa"},
+				kind:     "application",
+				app:      badAppIPA,
+				validExt: []string{".ipa"},
 			},
 			wantErr: fmt.Errorf("%s: file not found", badAppIPA),
 		},
 		{
 			name: "Invalid file extension",
 			args: args{
-				kind:       "application",
-				app:        appZIP,
-				validExt:   []string{".ipa"},
+				kind:     "application",
+				app:      appZIP,
+				validExt: []string{".ipa"},
 			},
 			wantErr: fmt.Errorf("invalid application file: %s, make sure extension is one of the following: %s", appZIP, ".ipa"),
 		},
 		{
 			name: "Bad storage id",
 			args: args{
-				kind:       "application",
-				app:        "storage:bad-link",
-				validExt:   []string{".ipa"},
+				kind:     "application",
+				app:      "storage:bad-link",
+				validExt: []string{".ipa"},
 			},
 			wantErr: fmt.Errorf("invalid application file: storage:bad-link, make sure extension is one of the following: .ipa"),
 		},
@@ -95,9 +95,9 @@ func TestValidate(t *testing.T) {
 
 func TestIsRemote(t *testing.T) {
 	tests := []struct {
-		name string
+		name     string
 		filename string
-		want bool
+		want     bool
 	}{
 		{
 			name:     "Valid remote url",
@@ -246,78 +246,35 @@ func TestIsStorageReference(t *testing.T) {
 
 func TestStandardizeReferenceLink(t *testing.T) {
 	tests := []struct {
-		name string
+		name       string
 		storageRef string
-		want string
+		want       string
 	}{
 		{
-			name: "Only ID",
+			name:       "Only ID",
 			storageRef: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-			want: "storage:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+			want:       "storage:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
 		},
 		{
-			name: "storage:ID",
+			name:       "storage:ID",
 			storageRef: "storage:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-			want: "storage:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+			want:       "storage:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
 		},
 		{
-			name: "storage://ID",
+			name:       "storage://ID",
 			storageRef: "storage://aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-			want: "storage:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+			want:       "storage:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
 		},
 		{
-			name: "storage:filename=dummy",
+			name:       "storage:filename=dummy",
 			storageRef: "storage:filename=dummy",
-			want: "storage:filename=dummy",
+			want:       "storage:filename=dummy",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := StandardizeReferenceLink(tt.storageRef); got != tt.want {
 				t.Errorf("StandardizeReferenceLink() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestValidate1(t *testing.T) {
-	type args struct {
-		kind     string
-		app      string
-		validExt []string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := Validate(tt.args.kind, tt.args.app, tt.args.validExt); (err != nil) != tt.wantErr {
-				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func Test_hasValidExtension1(t *testing.T) {
-	type args struct {
-		file string
-		exts []string
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := hasValidExtension(tt.args.file, tt.args.exts); got != tt.want {
-				t.Errorf("hasValidExtension() = %v, want %v", got, tt.want)
 			}
 		})
 	}
