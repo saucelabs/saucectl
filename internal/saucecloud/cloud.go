@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"io"
 	"io/fs"
 	"os"
@@ -586,7 +588,8 @@ func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, 
 	if err != nil {
 		return "", err
 	}
-	log.Info().Dur("durationMs", time.Since(start)).Str("storageId", resp.ID).Msgf("%s uploaded.", strings.Title(string(pType)))
+	log.Info().Dur("durationMs", time.Since(start)).Str("storageId", resp.ID).
+		Msgf("%s uploaded.", cases.Title(language.English).String(string(pType)))
 	return fmt.Sprintf("storage:%s", resp.ID), nil
 }
 

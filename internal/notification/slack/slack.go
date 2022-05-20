@@ -6,6 +6,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"strings"
 	"sync"
 	"time"
@@ -177,7 +179,7 @@ func (r *Reporter) getFrameworkName() string {
 		return "TestCafe"
 	}
 
-	return strings.Title(r.Framework)
+	return cases.Title(language.English).String(r.Framework)
 }
 
 func addRightSpaces(name, wholeName string, length int) string {
