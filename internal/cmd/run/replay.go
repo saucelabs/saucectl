@@ -2,11 +2,11 @@ package run
 
 import (
 	"github.com/saucelabs/saucectl/internal/framework"
-	"os"
-	"strings"
-
 	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
 	"github.com/saucelabs/saucectl/internal/viper"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+	"os"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -109,7 +109,7 @@ func runReplay(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as a
 		props.SetFramework("puppeteer-replay").SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
 			SetArtifacts(p.Artifacts).SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).
 			SetSlack(p.Notifications.Slack)
-		tracker.Collect(strings.Title(fullCommandName(cmd)), props)
+		tracker.Collect(cases.Title(language.English).String(fullCommandName(cmd)), props)
 		_ = tracker.Close()
 	}()
 

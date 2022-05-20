@@ -56,7 +56,7 @@ func (r *Reporter) Render() {
 
 // Reset resets the reporter to its initial state. This action will delete all test results.
 func (r *Reporter) Reset() {
-	r = &Reporter{}
+	r.Results = make([]report.TestResult, 0)
 }
 
 // ArtifactRequirements returns a list of artifact types this reporter requires to create a proper report.

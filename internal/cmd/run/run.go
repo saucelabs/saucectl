@@ -72,7 +72,6 @@ var gFlags = globalFlags{}
 type globalFlags struct {
 	cfgFilePath         string
 	globalTimeout       time.Duration
-	sauceAPI            string
 	selectedSuite       string
 	testEnvSilent       bool
 	disableUsageMetrics bool
@@ -144,14 +143,12 @@ func Command() *cobra.Command {
 	sc.String("reporters.json.filename", "reporters::json::filename", "saucectl-report.json", "Specifies the report filename.")
 	sc.String("reporters.json.webhookURL", "reporters::json::webhookURL", "", "Specifies the webhook URL. When saucectl test is finished, it'll send a HTTP POST payload to the configured webhook URL.")
 
-	// Hide undocumented flags that the user does not need to care about.
-	// FIXME sauce-api is actually not implemented, but probably should
-	cmd.PersistentFlags().StringVar(&gFlags.sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
 	cmd.PersistentFlags().StringVar(&gFlags.selectedSuite, "select-suite", "", "Run specified test suite.")
 	cmd.PersistentFlags().BoolVar(&gFlags.testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
 	cmd.PersistentFlags().BoolVar(&gFlags.disableUsageMetrics, "disable-usage-metrics", false, "Disable usage metrics collection.")
 	cmd.PersistentFlags().BoolVar(&gFlags.noAutoTagging, "no-auto-tagging", false, "Disable the automatic tagging of jobs with metadata, such as CI or GIT information.")
-	_ = cmd.PersistentFlags().MarkHidden("sauce-api")
+
+	// Hide undocumented flags that the user does not need to care about.
 	_ = cmd.PersistentFlags().MarkHidden("runner-version")
 	_ = cmd.PersistentFlags().MarkHidden("experiment")
 
@@ -188,11 +185,7 @@ func preRun() error {
 		println()
 		return fmt.Errorf("no credentials set")
 	}
-
-	// TODO Performing the "kind" check in the global run method is necessary for as long as we support the global
-	// `saucectl run`, rather than the framework specific `saucectl run {framework}`. After we drop the global run
-	// support, the run command does not need to the determine the config type any longer, and each framework should
-	// perform this validation on its own.
+	
 	d, err := config.Describe(gFlags.cfgFilePath)
 	if err != nil {
 		return err

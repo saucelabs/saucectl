@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"io"
 	"io/fs"
 	"os"
@@ -248,8 +250,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
 	l := log.Info().Str("url", jobDetailsPage).Str("suite", opts.DisplayName).Str("platform", opts.PlatformName)
 
-	// FIXME framework specifics shouldn't be handled in a generic package. Could simply do an empty string check instead.
-	if opts.Framework == "espresso" {
+	if opts.RealDevice {
 		l.Str("deviceName", opts.DeviceName).Str("platformVersion", opts.PlatformVersion).Str("deviceId", opts.DeviceID)
 		if opts.RealDevice {
 			l.Bool("private", opts.DevicePrivateOnly)
@@ -587,7 +588,8 @@ func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, 
 	if err != nil {
 		return "", err
 	}
-	log.Info().Dur("durationMs", time.Since(start)).Str("storageId", resp.ID).Msgf("%s uploaded.", strings.Title(string(pType)))
+	log.Info().Dur("durationMs", time.Since(start)).Str("storageId", resp.ID).
+		Msgf("%s uploaded.", cases.Title(language.English).String(string(pType)))
 	return fmt.Sprintf("storage:%s", resp.ID), nil
 }
 

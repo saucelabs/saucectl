@@ -2,12 +2,12 @@ package run
 
 import (
 	"fmt"
-	"os"
-	"strings"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+	"os"
 
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/backtrace"
@@ -157,7 +157,7 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, tc testcomposer.Clie
 		props.SetFramework("testcafe").SetFVersion(p.Testcafe.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
 			SetArtifacts(p.Artifacts).SetDocker(p.Docker).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).
 			SetSlack(p.Notifications.Slack).SetSharding(testcafe.IsSharded(p.Suites))
-		tracker.Collect(strings.Title(fullCommandName(cmd)), props)
+		tracker.Collect(cases.Title(language.English).String(fullCommandName(cmd)), props)
 		_ = tracker.Close()
 	}()
 
