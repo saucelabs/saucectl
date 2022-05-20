@@ -162,7 +162,7 @@ func SetDefaults(p *Project) {
 		}
 
 		// Update cypress related env vars.
-		for envK, _ := range s.Config.Env {
+		for envK := range s.Config.Env {
 			// Add an entry without CYPRESS_ prefix as we directly pass it in Cypress.
 			if strings.HasPrefix(envK, "CYPRESS_") {
 				newKey := strings.TrimPrefix(envK, "CYPRESS_")
