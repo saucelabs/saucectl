@@ -104,6 +104,7 @@ func TestClient_GetJobDetails(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
 			got, err := tc.client.ReadJob(context.Background(), tc.jobID)
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
@@ -241,6 +242,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
 			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond, 0)
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
@@ -312,6 +314,7 @@ func TestClient_GetJobAssetFileNames(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
 			got, err := tc.client.GetJobAssetFileNames(context.Background(), tc.jobID)
 			sort.Strings(tc.expectedResp)
 			sort.Strings(got)
@@ -386,6 +389,7 @@ func TestClient_GetJobAssetFileContent(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
 			got, err := tc.client.GetJobAssetFileContent(context.Background(), tc.jobID, "console.log")
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
@@ -480,6 +484,7 @@ func TestClient_TestStop(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
 			got, err := tc.client.StopJob(context.Background(), tc.jobID)
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
@@ -507,6 +512,7 @@ func TestClient_GetVirtualDevices(t *testing.T) {
 
 	client := retryablehttp.NewClient()
 	client.HTTPClient = ts.Client()
+	client.RetryWaitMax = 1 * time.Millisecond
 	c := &Client{
 		HTTPClient: client,
 		URL:        ts.URL,
@@ -580,6 +586,7 @@ func TestClient_isTunnelRunning(t *testing.T) {
 	defer ts.Close()
 	client := retryablehttp.NewClient()
 	client.HTTPClient = ts.Client()
+	client.RetryWaitMax = 1 * time.Millisecond
 	c := Client{
 		HTTPClient: client,
 		URL:        ts.URL,
@@ -692,6 +699,7 @@ func TestClient_GetBuildID(t *testing.T) {
 		defer ts.Close()
 
 		client := New(ts.URL, "user", "key", 3*time.Second)
+		client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
 
 		// act
 		bid, err := client.GetBuildID(context.Background(), "some-job-id", build.VDC)
