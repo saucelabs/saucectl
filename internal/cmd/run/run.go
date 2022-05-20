@@ -72,7 +72,6 @@ var gFlags = globalFlags{}
 type globalFlags struct {
 	cfgFilePath         string
 	globalTimeout       time.Duration
-	sauceAPI            string
 	selectedSuite       string
 	testEnvSilent       bool
 	disableUsageMetrics bool
@@ -145,13 +144,10 @@ func Command() *cobra.Command {
 	sc.String("reporters.json.webhookURL", "reporters::json::webhookURL", "", "Specifies the webhook URL. When saucectl test is finished, it'll send a HTTP POST payload to the configured webhook URL.")
 
 	// Hide undocumented flags that the user does not need to care about.
-	// FIXME sauce-api is actually not implemented, but probably should
-	cmd.PersistentFlags().StringVar(&gFlags.sauceAPI, "sauce-api", "", "Overrides the region specific sauce API URL. (e.g. https://api.us-west-1.saucelabs.com)")
 	cmd.PersistentFlags().StringVar(&gFlags.selectedSuite, "select-suite", "", "Run specified test suite.")
 	cmd.PersistentFlags().BoolVar(&gFlags.testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
 	cmd.PersistentFlags().BoolVar(&gFlags.disableUsageMetrics, "disable-usage-metrics", false, "Disable usage metrics collection.")
 	cmd.PersistentFlags().BoolVar(&gFlags.noAutoTagging, "no-auto-tagging", false, "Disable the automatic tagging of jobs with metadata, such as CI or GIT information.")
-	_ = cmd.PersistentFlags().MarkHidden("sauce-api")
 	_ = cmd.PersistentFlags().MarkHidden("runner-version")
 	_ = cmd.PersistentFlags().MarkHidden("experiment")
 
