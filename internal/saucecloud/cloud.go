@@ -248,8 +248,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
 	l := log.Info().Str("url", jobDetailsPage).Str("suite", opts.DisplayName).Str("platform", opts.PlatformName)
 
-	// FIXME framework specifics shouldn't be handled in a generic package. Could simply do an empty string check instead.
-	if opts.Framework == "espresso" {
+	if opts.RealDevice {
 		l.Str("deviceName", opts.DeviceName).Str("platformVersion", opts.PlatformVersion).Str("deviceId", opts.DeviceID)
 		if opts.RealDevice {
 			l.Bool("private", opts.DevicePrivateOnly)
