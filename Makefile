@@ -15,7 +15,7 @@ build-%:
 
 #lint: @ Run the linter
 lint:
-	go vet ./...
+	golangci-lint run
 
 #format: @ Format code with gofmt
 format:
