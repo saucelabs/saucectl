@@ -285,12 +285,13 @@ func (c *Client) Versions(ctx context.Context, frameworkName string) ([]framewor
 			})
 		}
 		frameworks = append(frameworks, framework.Metadata{
-			FrameworkName:    f.Name,
-			FrameworkVersion: f.Version,
-			Deprecated:       f.Deprecated,
-			DockerImage:      f.Runner.DockerImage,
-			GitRelease:       f.Runner.GitRelease,
-			Platforms:        platforms,
+			FrameworkName:      f.Name,
+			FrameworkVersion:   f.Version,
+			Deprecated:         f.Deprecated,
+			DockerImage:        f.Runner.DockerImage,
+			GitRelease:         f.Runner.GitRelease,
+			Platforms:          platforms,
+			CloudRunnerVersion: f.Runner.CloudRunnerVersion,
 		})
 	}
 	return frameworks, nil
