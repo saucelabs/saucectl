@@ -93,15 +93,15 @@ func TestRunSuites(t *testing.T) {
 						return nil
 					},
 				},
+				VDCDownloader: &mocks.FakeArtifactDownloader{
+					DownloadArtifactFn: func(jobID string, suiteName string) []string {
+						return []string{}
+					},
+				},
 			},
 			CCYReader: mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 				return 1, nil
 			}},
-			ArtifactDownloader: &mocks.FakeArifactDownloader{
-				DownloadArtifactFn: func(jobID string, suiteName string) []string {
-					return []string{}
-				},
-			},
 		},
 		Project: cypress.Project{
 			Suites: []cypress.Suite{
@@ -197,11 +197,6 @@ func TestRunProject(t *testing.T) {
 		httpmock.DeactivateAndReset()
 	}()
 
-	downloader := mocks.FakeArifactDownloader{
-		DownloadArtifactFn: func(jobID, suiteName string) []string {
-			return []string{}
-		},
-	}
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 		return 1, nil
 	}}
@@ -243,10 +238,14 @@ func TestRunProject(t *testing.T) {
 						return nil
 					},
 				},
+				VDCDownloader: &mocks.FakeArtifactDownloader{
+					DownloadArtifactFn: func(jobID, suiteName string) []string {
+						return []string{}
+					},
+				},
 			},
 			CCYReader:              ccyReader,
 			ProjectUploader:        uploader,
-			ArtifactDownloader:     &downloader,
 			MetadataService:        mdService,
 			MetadataSearchStrategy: framework.ExactStrategy{},
 		},

@@ -33,9 +33,6 @@ func TestXcuitestRunner_RunProject(t *testing.T) {
 	uploader := &mocks.FakeProjectUploader{
 		UploadSuccess: true,
 	}
-	downloader := mocks.FakeArifactDownloader{
-		DownloadArtifactFn: func(jobID, suiteName string) []string { return []string{} },
-	}
 
 	var startOpts job.StartOptions
 	runner := &XcuitestRunner{
@@ -63,10 +60,12 @@ func TestXcuitestRunner_RunProject(t *testing.T) {
 						return nil
 					},
 				},
+				VDCDownloader: &mocks.FakeArtifactDownloader{
+					DownloadArtifactFn: func(jobID, suiteName string) []string { return []string{} },
+				},
 			},
-			CCYReader:          ccyReader,
-			ProjectUploader:    uploader,
-			ArtifactDownloader: &downloader,
+			CCYReader:       ccyReader,
+			ProjectUploader: uploader,
 		},
 		Project: xcuitest.Project{
 			Xcuitest: xcuitest.Xcuitest{

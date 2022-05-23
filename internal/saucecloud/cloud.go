@@ -46,8 +46,6 @@ type CloudRunner struct {
 	Region                 region.Region
 	MetadataService        framework.MetadataService
 	ShowConsoleLog         bool
-	ArtifactDownloader     download.ArtifactDownloader
-	RDCArtifactDownloader  download.ArtifactDownloader
 	Framework              framework.Framework
 	MetadataSearchStrategy framework.MetadataSearchStrategy
 
@@ -174,11 +172,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 
 			var files []string
 			if download.ShouldDownloadArtifact(res.job.ID, res.job.Passed, res.job.TimedOut, r.Async, artifactCfg) {
-				if res.job.IsRDC {
-					files = r.RDCArtifactDownloader.DownloadArtifact(res.job.ID, res.name)
-				} else {
-					files = r.ArtifactDownloader.DownloadArtifact(res.job.ID, res.name)
-				}
+				files = r.JobService.DownloadArtifact(res.job.ID, res.name, res.job.IsRDC)
 			}
 			if jsonResultRequired {
 				for _, f := range files {
@@ -233,9 +227,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 
 	if opts.RealDevice {
 		l.Str("deviceName", opts.DeviceName).Str("platformVersion", opts.PlatformVersion).Str("deviceId", opts.DeviceID)
-		if opts.RealDevice {
-			l.Bool("private", opts.DevicePrivateOnly)
-		}
+		l.Bool("private", opts.DevicePrivateOnly)
 	} else {
 		l.Str("browser", opts.BrowserName)
 	}

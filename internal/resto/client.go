@@ -420,7 +420,7 @@ func createStopRequest(ctx context.Context, url, username, accessKey, jobID stri
 }
 
 // DownloadArtifact does downloading artifacts and returns downloaded file list
-func (c *Client) DownloadArtifact(jobID, suiteName string) []string {
+func (c *Client) DownloadArtifact(jobID, suiteName string, realDevice bool) []string {
 	targetDir, err := download.GetDirName(suiteName, c.ArtifactConfig)
 	if err != nil {
 		log.Error().Msgf("Unable to create artifacts folder (%v)", err)

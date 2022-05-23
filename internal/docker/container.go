@@ -36,7 +36,7 @@ type ContainerRunner struct {
 	JobWriter              job.Writer
 	ShowConsoleLog         bool
 	JobReader              job.Reader
-	ArtfactDownloader      download.ArtifactDownloader
+	ArtfactDownloader      job.ArtifactDownloader
 	MetadataSearchStrategy framework.MetadataSearchStrategy
 
 	Reporters []report.Reporter
@@ -348,7 +348,7 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 
 		var files []string
 		if download.ShouldDownloadArtifact(jobID, res.passed, res.timedOut, false, artifactCfg) {
-			files = r.ArtfactDownloader.DownloadArtifact(jobID, res.name)
+			files = r.ArtfactDownloader.DownloadArtifact(jobID, res.name, false)
 		}
 
 		if !res.passed {

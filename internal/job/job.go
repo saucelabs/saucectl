@@ -70,4 +70,10 @@ type Service interface {
 	Reader
 	Writer
 	Stopper
+	ArtifactDownloader
+}
+
+// ArtifactDownloader represents the interface for downloading artifacts.
+type ArtifactDownloader interface {
+	DownloadArtifact(jobID, suiteName string, realDevice bool) []string
 }
