@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -348,4 +349,48 @@ func ShouldDownloadArtifact(jobID string, passed, timedOut, async bool, cfg Arti
 	}
 
 	return false
+}
+
+// GetSuiteArtifactFolder returns a target folder that's based on a combination of suiteName and the configured artifact
+// download folder.
+// The suiteName is sanitized by undergoing character replacements that are safe to be used as a directory name.
+// If the determined target directory already exists, a running number is added as a suffix.
+func GetSuiteArtifactFolder(suiteName string, cfg ArtifactDownload) (string, error) {
+	suiteName = strings.NewReplacer("/", "-", "\\", "-", ".", "-", " ", "_").Replace(suiteName)
+	// If targetDir doesn't exist, no need to find maxVersion and return
+	targetDir := filepath.Join(cfg.Directory, suiteName)
+	if _, err := os.Open(targetDir); os.IsNotExist(err) {
+		return targetDir, nil
+	}
+	// Find the maxVersion of downloaded artifacts in artifacts dir
+	f, err := os.Open(cfg.Directory)
+	if err != nil {
+		return "", nil
+	}
+	files, err := f.ReadDir(0)
+	if err != nil {
+		return "", err
+	}
+	maxVersion := 0
+	for _, file := range files {
+		if !file.IsDir() {
+			continue
+		}
+
+		fileName := strings.Split(file.Name(), ".")
+		if len(fileName) != 2 || fileName[0] != suiteName {
+			continue
+		}
+
+		version, err := strconv.Atoi(fileName[1])
+		if err != nil {
+			return "", err
+		}
+		if version > maxVersion {
+			maxVersion = version
+		}
+	}
+	suiteName = fmt.Sprintf("%s.%d", suiteName, maxVersion+1)
+
+	return filepath.Join(cfg.Directory, suiteName), nil
 }

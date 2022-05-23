@@ -20,7 +20,6 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/requesth"
@@ -421,7 +420,7 @@ func createStopRequest(ctx context.Context, url, username, accessKey, jobID stri
 
 // DownloadArtifact does downloading artifacts and returns downloaded file list
 func (c *Client) DownloadArtifact(jobID, suiteName string, realDevice bool) []string {
-	targetDir, err := download.GetDirName(suiteName, c.ArtifactConfig)
+	targetDir, err := config.GetSuiteArtifactFolder(suiteName, c.ArtifactConfig)
 	if err != nil {
 		log.Error().Msgf("Unable to create artifacts folder (%v)", err)
 		return []string{}

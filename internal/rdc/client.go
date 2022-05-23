@@ -19,7 +19,6 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/devices"
-	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -471,7 +470,7 @@ func doAssetRequest(httpClient *retryablehttp.Client, request *http.Request) ([]
 
 // DownloadArtifact does downloading artifacts and returns downloaded file list
 func (c *Client) DownloadArtifact(jobID, suiteName string, realDevice bool) []string {
-	targetDir, err := download.GetDirName(suiteName, c.ArtifactConfig)
+	targetDir, err := config.GetSuiteArtifactFolder(suiteName, c.ArtifactConfig)
 	if err != nil {
 		log.Error().Msgf("Unable to create artifacts folder (%v)", err)
 		return []string{}
