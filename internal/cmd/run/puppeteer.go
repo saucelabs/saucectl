@@ -21,9 +21,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
-	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/segment"
-	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/viper"
 )
@@ -45,7 +43,7 @@ func NewPuppeteerCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::testMatch", args)
 
-			exitCode, err := runPuppeteer(cmd, tcClient, restoClient)
+			exitCode, err := runPuppeteer(cmd)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -80,7 +78,7 @@ func NewPuppeteerCmd() *cobra.Command {
 	return cmd
 }
 
-func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (int, error) {
+func runPuppeteer(cmd *cobra.Command) (int, error) {
 	p, err := puppeteer.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -103,8 +101,8 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 	}
 
 	regio := region.FromString(p.Sauce.Region)
-	rs.URL = regio.APIBaseURL()
-	tc.URL = regio.APIBaseURL()
+	restoClient.URL = regio.APIBaseURL()
+	testcompClient.URL = regio.APIBaseURL()
 
 	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
@@ -125,15 +123,15 @@ func runPuppeteer(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client) (
 		download.Cleanup(p.Artifacts.Download.Directory)
 	}
 
-	return runPuppeteerInDocker(p, tc, rs)
+	return runPuppeteerInDocker(p)
 }
 
-func runPuppeteerInDocker(p puppeteer.Project, testco testcomposer.Client, rs resto.Client) (int, error) {
+func runPuppeteerInDocker(p puppeteer.Project) (int, error) {
 	log.Info().Msg("Running puppeteer in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewPuppeteer(p, &testco, &testco, &rs, &rs, createReporters(p.Reporters, p.Notifications,
-		p.Sauce.Metadata, &testco, &rs, "puppeteer", "docker"))
+	cd, err := docker.NewPuppeteer(p, &testcompClient, &testcompClient, &restoClient, &rdcClient, createReporters(p.Reporters, p.Notifications,
+		p.Sauce.Metadata, &testcompClient, &restoClient, "puppeteer", "docker"))
 	if err != nil {
 		return 1, err
 	}

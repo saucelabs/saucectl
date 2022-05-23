@@ -358,7 +358,7 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 		var artifacts []report.Artifact
 
 		if junitRequired {
-			jb, err := r.JobReader.GetJobAssetFileContent(context.Background(), jobID, "junit.xml")
+			jb, err := r.JobReader.GetJobAssetFileContent(context.Background(), jobID, "junit.xml", false)
 			artifacts = append(artifacts, report.Artifact{
 				AssetType: report.JUnitArtifact,
 				Body:      jb,
@@ -487,7 +487,7 @@ func (r *ContainerRunner) uploadSauceConfig(jobID string, cfgFile string) {
 		log.Warn().Msgf("failed to read configuration: %v", err)
 		return
 	}
-	if err := r.JobWriter.UploadAsset(jobID, filepath.Base(cfgFile), "text/plain", content); err != nil {
+	if err := r.JobWriter.UploadAsset(jobID, false, filepath.Base(cfgFile), "text/plain", content); err != nil {
 		log.Warn().Msgf("failed to attach configuration: %v", err)
 	}
 }
@@ -499,7 +499,7 @@ func (r *ContainerRunner) uploadCLIFlags(jobID string, content interface{}) {
 		log.Warn().Msgf("Failed to encode CLI flags: %v", err)
 		return
 	}
-	if err := r.JobWriter.UploadAsset(jobID, "flags.json", "text/plain", encoded); err != nil {
+	if err := r.JobWriter.UploadAsset(jobID, false, "flags.json", "text/plain", encoded); err != nil {
 		log.Warn().Msgf("Failed to report CLI flags: %v", err)
 	}
 }

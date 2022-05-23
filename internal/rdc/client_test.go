@@ -160,7 +160,7 @@ func TestClient_ReadJob(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		job, err := client.ReadJob(context.Background(), tt.jobID)
+		job, err := client.ReadJob(context.Background(), tt.jobID, false)
 		assert.Equal(t, err, tt.wantErr)
 		if err == nil {
 			assert.True(t, reflect.DeepEqual(job, tt.want))
@@ -317,7 +317,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
-			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond, 0)
+			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond, 0, false)
 			assert.Equal(t, tc.expectedResp, got)
 			if err != nil {
 				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))
@@ -388,7 +388,7 @@ func TestClient_GetJobAssetFileNames(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			files, err := client.GetJobAssetFileNames(context.Background(), tt.jobID)
+			files, err := client.GetJobAssetFileNames(context.Background(), tt.jobID, false)
 			if err != nil {
 				if !reflect.DeepEqual(err, tt.wantErr) {
 					t.Errorf("GetJobAssetFileNames(): got: %v, want: %v", err, tt.wantErr)
@@ -457,7 +457,7 @@ func TestClient_GetJobAssetFileContent(t *testing.T) {
 		},
 	}
 	for _, tt := range testCases {
-		data, err := client.GetJobAssetFileContent(context.Background(), tt.jobID, tt.fileName)
+		data, err := client.GetJobAssetFileContent(context.Background(), tt.jobID, tt.fileName, false)
 		assert.Equal(t, err, tt.wantErr)
 		if err == nil {
 			assert.Equal(t, tt.want, data)

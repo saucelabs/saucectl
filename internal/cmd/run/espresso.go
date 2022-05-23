@@ -8,7 +8,6 @@ import (
 	"golang.org/x/text/language"
 	"os"
 
-	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -16,13 +15,10 @@ import (
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
-	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
-	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/segment"
-	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/usage"
 )
 
@@ -48,7 +44,7 @@ func NewEspressoCmd() *cobra.Command {
 			return preRun()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			exitCode, err := runEspresso(cmd, lflags, tcClient, restoClient, rdcClient, appsClient)
+			exitCode, err := runEspresso(cmd, lflags)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -86,8 +82,7 @@ func NewEspressoCmd() *cobra.Command {
 	return cmd
 }
 
-func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, tc testcomposer.Client, rs resto.Client, rc rdc.Client,
-	as appstore.AppStore) (int, error) {
+func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags) (int, error) {
 	p, err := espresso.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -106,14 +101,14 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, tc testcompose
 
 	regio := region.FromString(p.Sauce.Region)
 
-	tc.URL = regio.APIBaseURL()
+	testcompClient.URL = regio.APIBaseURL()
 	webdriverClient.URL = regio.WebDriverBaseURL()
-	rs.URL = regio.APIBaseURL()
-	as.URL = regio.APIBaseURL()
-	rc.URL = regio.APIBaseURL()
+	restoClient.URL = regio.APIBaseURL()
+	appsClient.URL = regio.APIBaseURL()
+	rdcClient.URL = regio.APIBaseURL()
 
-	rs.ArtifactConfig = p.Artifacts.Download
-	rc.ArtifactConfig = p.Artifacts.Download
+	restoClient.ArtifactConfig = p.Artifacts.Download
+	rdcClient.ArtifactConfig = p.Artifacts.Download
 
 	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
@@ -134,31 +129,33 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, tc testcompose
 		download.Cleanup(p.Artifacts.Download.Directory)
 	}
 
-	return runEspressoInCloud(p, regio, tc, rs, rc, as)
+	return runEspressoInCloud(p, regio)
 }
 
-func runEspressoInCloud(p espresso.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, rc rdc.Client, as appstore.AppStore) (int, error) {
+func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Running Espresso in Sauce Labs")
 	printTestEnv("sauce")
 
 	r := saucecloud.EspressoRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader:       &as,
-			JobStarter:            &webdriverClient,
-			RDCJobStarter:         &rc,
-			JobReader:             &rs,
-			RDCJobReader:          &rc,
-			JobStopper:            &rs,
-			JobWriter:             &tc,
-			CCYReader:             &rs,
-			TunnelService:         &rs,
-			MetadataService:       &tc,
+			ProjectUploader: &appsClient,
+			JobService: saucecloud.JobService{
+				VDCStarter: &webdriverClient,
+				RDCStarter: &rdcClient,
+				VDCReader:  &restoClient,
+				RDCReader:  &rdcClient,
+				VDCWriter:  &testcompClient,
+				VDCStopper: &restoClient,
+			},
+			CCYReader:             &restoClient,
+			TunnelService:         &restoClient,
+			MetadataService:       &testcompClient,
 			Region:                regio,
 			ShowConsoleLog:        p.ShowConsoleLog,
-			ArtifactDownloader:    &rs,
-			RDCArtifactDownloader: &rc,
-			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc, &rs,
+			ArtifactDownloader:    &restoClient,
+			RDCArtifactDownloader: &rdcClient,
+			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
 				"espresso", "sauce"),
 			Framework: framework.Framework{Name: espresso.Kind},
 			Async:     gFlags.async,

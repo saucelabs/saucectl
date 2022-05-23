@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -20,10 +19,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
-	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/segment"
-	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/usage"
 )
 
@@ -45,7 +42,7 @@ func NewReplayCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::recordings", args)
 
-			exitCode, err := runReplay(cmd, tcClient, restoClient, appsClient)
+			exitCode, err := runReplay(cmd)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -68,7 +65,7 @@ func NewReplayCmd() *cobra.Command {
 	return cmd
 }
 
-func runReplay(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
+func runReplay(cmd *cobra.Command) (int, error) {
 	p, err := replay.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -92,11 +89,11 @@ func runReplay(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as a
 	regio := region.FromString(p.Sauce.Region)
 
 	webdriverClient.URL = regio.WebDriverBaseURL()
-	tc.URL = regio.APIBaseURL()
-	rs.URL = regio.APIBaseURL()
-	as.URL = regio.APIBaseURL()
+	testcompClient.URL = regio.APIBaseURL()
+	restoClient.URL = regio.APIBaseURL()
+	appsClient.URL = regio.APIBaseURL()
 
-	rs.ArtifactConfig = p.Artifacts.Download
+	restoClient.ArtifactConfig = p.Artifacts.Download
 
 	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
@@ -117,28 +114,32 @@ func runReplay(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as a
 		download.Cleanup(p.Artifacts.Download.Directory)
 	}
 
-	return runPuppeteerReplayInSauce(p, regio, tc, rs, as)
+	return runPuppeteerReplayInSauce(p, regio)
 }
 
-func runPuppeteerReplayInSauce(p replay.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
+func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Replaying chrome devtools recordings")
 	printTestEnv("sauce")
 
 	r := saucecloud.ReplayRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader:    &as,
-			JobStarter:         &webdriverClient,
-			JobReader:          &rs,
-			JobStopper:         &rs,
-			JobWriter:          &tc,
-			CCYReader:          &rs,
-			TunnelService:      &rs,
-			MetadataService:    &tc,
+			ProjectUploader: &appsClient,
+			JobService: saucecloud.JobService{
+				VDCStarter: &webdriverClient,
+				RDCStarter: &rdcClient,
+				VDCReader:  &restoClient,
+				RDCReader:  &rdcClient,
+				VDCWriter:  &testcompClient,
+				VDCStopper: &restoClient,
+			},
+			CCYReader:          &restoClient,
+			TunnelService:      &restoClient,
+			MetadataService:    &testcompClient,
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
-			ArtifactDownloader: &rs,
-			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc, &rs,
+			ArtifactDownloader: &restoClient,
+			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
 				"puppeteer-replay", "sauce"),
 			Async:                  gFlags.async,
 			FailFast:               gFlags.failFast,

@@ -36,27 +36,25 @@ func TestRunSuite(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	// Fake JobStarter
-	starter := mocks.FakeJobStarter{
-		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
-			return "fake-job-id", false, nil
-		},
-	}
-	reader := mocks.FakeJobReader{
-		PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
-			return job.Job{ID: id, Passed: true}, nil
-		},
-	}
-	writer := mocks.FakeJobWriter{
-		UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
-			return nil
-		},
-	}
 	runner := CypressRunner{
 		CloudRunner: CloudRunner{
-			JobStarter: &starter,
-			JobReader:  &reader,
-			JobWriter:  &writer,
+			JobService: JobService{
+				VDCStarter: &mocks.FakeJobStarter{
+					StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+						return "fake-job-id", false, nil
+					},
+				},
+				VDCReader: &mocks.FakeJobReader{
+					PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+						return job.Job{ID: id, Passed: true}, nil
+					},
+				},
+				VDCWriter: &mocks.FakeJobWriter{
+					UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+						return nil
+					},
+				},
+			},
 		},
 	}
 
@@ -71,43 +69,39 @@ func TestRunSuites(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	// Fake JobStarter
-	starter := mocks.FakeJobStarter{
-		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
-			return "fake-job-id", false, nil
-		},
-	}
-	reader := mocks.FakeJobReader{
-		PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
-			return job.Job{ID: id, Passed: true, Status: job.StatePassed}, nil
-		},
-		GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
-			return []string{"file1", "file2"}, nil
-		},
-		GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
-			return []byte("file content"), nil
-		},
-	}
-	writer := mocks.FakeJobWriter{
-		UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
-			return nil
-		},
-	}
-	downloader := &mocks.FakeArifactDownloader{
-		DownloadArtifactFn: func(jobID string, suiteName string) []string {
-			return []string{}
-		},
-	}
-	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
-		return 1, nil
-	}}
 	runner := CypressRunner{
 		CloudRunner: CloudRunner{
-			JobStarter:         &starter,
-			JobReader:          &reader,
-			JobWriter:          &writer,
-			CCYReader:          ccyReader,
-			ArtifactDownloader: downloader,
+			JobService: JobService{
+				VDCStarter: &mocks.FakeJobStarter{
+					StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+						return "fake-job-id", false, nil
+					},
+				},
+				VDCReader: &mocks.FakeJobReader{
+					PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+						return job.Job{ID: id, Passed: true, Status: job.StatePassed}, nil
+					},
+					GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
+						return []string{"file1", "file2"}, nil
+					},
+					GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+						return []byte("file content"), nil
+					},
+				},
+				VDCWriter: &mocks.FakeJobWriter{
+					UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+						return nil
+					},
+				},
+			},
+			CCYReader: mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
+				return 1, nil
+			}},
+			ArtifactDownloader: &mocks.FakeArifactDownloader{
+				DownloadArtifactFn: func(jobID string, suiteName string) []string {
+					return []string{}
+				},
+			},
 		},
 		Project: cypress.Project{
 			Suites: []cypress.Suite{
@@ -203,28 +197,6 @@ func TestRunProject(t *testing.T) {
 		httpmock.DeactivateAndReset()
 	}()
 
-	// Fake JobStarter
-	starter := mocks.FakeJobStarter{
-		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
-			return "fake-job-id", false, nil
-		},
-	}
-	reader := mocks.FakeJobReader{
-		PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
-			return job.Job{ID: id, Passed: true}, nil
-		},
-		GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
-			return []string{"file1", "file2"}, nil
-		},
-		GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
-			return []byte("file content"), nil
-		},
-	}
-	writer := mocks.FakeJobWriter{
-		UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
-			return nil
-		},
-	}
 	downloader := mocks.FakeArifactDownloader{
 		DownloadArtifactFn: func(jobID, suiteName string) []string {
 			return []string{}
@@ -249,9 +221,29 @@ func TestRunProject(t *testing.T) {
 
 	runner := CypressRunner{
 		CloudRunner: CloudRunner{
-			JobStarter:             &starter,
-			JobReader:              &reader,
-			JobWriter:              &writer,
+			JobService: JobService{
+				VDCStarter: &mocks.FakeJobStarter{
+					StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+						return "fake-job-id", false, nil
+					},
+				},
+				VDCReader: &mocks.FakeJobReader{
+					PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+						return job.Job{ID: id, Passed: true}, nil
+					},
+					GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
+						return []string{"file1", "file2"}, nil
+					},
+					GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+						return []byte("file content"), nil
+					},
+				},
+				VDCWriter: &mocks.FakeJobWriter{
+					UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+						return nil
+					},
+				},
+			},
 			CCYReader:              ccyReader,
 			ProjectUploader:        uploader,
 			ArtifactDownloader:     &downloader,

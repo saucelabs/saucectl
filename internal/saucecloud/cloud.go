@@ -40,12 +40,7 @@ import (
 // CloudRunner represents the cloud runner for the Sauce Labs cloud.
 type CloudRunner struct {
 	ProjectUploader        storage.ProjectUploader
-	JobStarter             job.Starter
-	RDCJobStarter          job.Starter
-	JobReader              job.Reader
-	RDCJobReader           job.Reader
-	JobWriter              job.Writer
-	JobStopper             job.Stopper
+	JobService             job.Service
 	CCYReader              concurrency.Reader
 	TunnelService          tunnel.Service
 	Region                 region.Region
@@ -147,7 +142,11 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			var artifacts []report.Artifact
 
 			if junitRequired {
-				jb, err := r.getAsset(res.job.ID, "junit.xml", res.job.IsRDC)
+				jb, err := r.JobService.GetJobAssetFileContent(
+					context.Background(),
+					res.job.ID,
+					"junit.xml",
+					res.job.IsRDC)
 				artifacts = append(artifacts, report.Artifact{
 					AssetType: report.JUnitArtifact,
 					Body:      jb,
@@ -207,43 +206,25 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	return passed
 }
 
-func (r *CloudRunner) getAsset(jobID string, name string, rdc bool) ([]byte, error) {
-	if rdc {
-		return r.RDCJobReader.GetJobAssetFileContent(context.Background(), jobID, name)
-	}
-
-	return r.JobReader.GetJobAssetFileContent(context.Background(), jobID, name)
-}
-
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {
 	log.Info().Str("suite", opts.DisplayName).Str("region", r.Region.String()).Msg("Starting suite.")
 
-	var id string
-	if opts.RealDevice {
-		id, _, err = r.RDCJobStarter.StartJob(context.Background(), opts)
-	} else {
-		id, _, err = r.JobStarter.StartJob(context.Background(), opts)
-	}
+	id, _, err := r.JobService.StartJob(context.Background(), opts)
 	if err != nil {
 		return job.Job{Status: job.StateError}, false, err
 	}
 
-	if !opts.RealDevice {
-		sigChan := r.registerInterruptOnSignal(id, opts.DisplayName)
-		defer unregisterSignalCapture(sigChan)
+	sigChan := r.registerInterruptOnSignal(id, opts.RealDevice, opts.DisplayName)
+	defer unregisterSignalCapture(sigChan)
 
-		r.uploadSauceConfig(id, opts.ConfigFilePath)
-		r.uploadCLIFlags(id, opts.CLIFlags)
-	}
+	r.uploadSauceConfig(id, opts.RealDevice, opts.ConfigFilePath)
+	r.uploadCLIFlags(id, opts.RealDevice, opts.CLIFlags)
+
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
 	// if a soft exit is requested during startContainer phase, it gently exits.
 	if r.interrupted {
-		r.stopSuiteExecution(id, opts.DisplayName)
-		if !opts.RealDevice {
-			j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second, opts.Timeout)
-		} else {
-			j, err = r.RDCJobReader.PollJob(context.Background(), id, 15*time.Second, opts.Timeout)
-		}
+		r.stopSuiteExecution(id, opts.RealDevice, opts.DisplayName)
+		j, err = r.JobService.PollJob(context.Background(), id, 15*time.Second, opts.Timeout, opts.RealDevice)
 		return j, true, err
 	}
 
@@ -267,12 +248,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	}
 
 	// High interval poll to not oversaturate the job reader with requests
-	if !opts.RealDevice {
-		j, err = r.JobReader.PollJob(context.Background(), id, 15*time.Second, opts.Timeout)
-	} else {
-		j, err = r.RDCJobReader.PollJob(context.Background(), id, 15*time.Second, opts.Timeout)
-	}
-
+	j, err = r.JobService.PollJob(context.Background(), id, 15*time.Second, opts.Timeout, opts.RealDevice)
 	if err != nil {
 		return job.Job{}, r.interrupted, fmt.Errorf("failed to retrieve job status for suite %s: %s", opts.DisplayName, err.Error())
 	}
@@ -286,7 +262,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	if j.TimedOut {
 		color.Red("Suite '%s' has reached timeout of %s", opts.DisplayName, opts.Timeout)
 		if !opts.RealDevice {
-			j, err = r.JobStopper.StopJob(context.Background(), id)
+			j, err = r.JobService.StopJob(context.Background(), id, false)
 			if err != nil {
 				color.HiRedString("Failed to stop suite '%s': %v", opts.DisplayName, err)
 			}
@@ -640,22 +616,17 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 		return
 	}
 
-	jr := r.JobReader
-	if res.job.IsRDC {
-		jr = r.RDCJobReader
-	}
-
 	var assetContent []byte
 	var err error
 
 	// Display log only when at least it has started
-	if assetContent, err = jr.GetJobAssetFileContent(context.Background(), res.job.ID, ConsoleLogAsset); err == nil {
+	if assetContent, err = r.JobService.GetJobAssetFileContent(context.Background(), res.job.ID, ConsoleLogAsset, res.job.IsRDC); err == nil {
 		log.Info().Str("suite", res.name).Msgf("console.log output: \n%s", assetContent)
 		return
 	}
 
 	// Some frameworks produce a junit.xml instead, check for that file if there's no console.log
-	assetContent, err = jr.GetJobAssetFileContent(context.Background(), res.job.ID, "junit.xml")
+	assetContent, err = r.JobService.GetJobAssetFileContent(context.Background(), res.job.ID, "junit.xml", res.job.IsRDC)
 	if err != nil {
 		log.Warn().Err(err).Str("suite", res.name).Msg("Failed to retrieve the console output.")
 		return
@@ -736,16 +707,16 @@ func (r *CloudRunner) dryRun(project interface{}, folder string, sauceIgnoreFile
 }
 
 // stopSuiteExecution stops the current execution on Sauce Cloud
-func (r *CloudRunner) stopSuiteExecution(jobID string, suiteName string) {
+func (r *CloudRunner) stopSuiteExecution(jobID string, realDevice bool, suiteName string) {
 	log.Info().Str("suite", suiteName).Msg("Stopping suite")
-	_, err := r.JobStopper.StopJob(context.Background(), jobID)
+	_, err := r.JobService.StopJob(context.Background(), jobID, realDevice)
 	if err != nil {
 		log.Warn().Err(err).Str("suite", suiteName).Msg("Unable to stop suite.")
 	}
 }
 
 // registerInterruptOnSignal stops execution on Sauce Cloud when a SIGINT is captured.
-func (r *CloudRunner) registerInterruptOnSignal(jobID, suiteName string) chan os.Signal {
+func (r *CloudRunner) registerInterruptOnSignal(jobID string, realDevice bool, suiteName string) chan os.Signal {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
@@ -754,7 +725,7 @@ func (r *CloudRunner) registerInterruptOnSignal(jobID, suiteName string) chan os
 		if sig == nil {
 			return
 		}
-		r.stopSuiteExecution(jobID, suiteName)
+		r.stopSuiteExecution(jobID, realDevice, suiteName)
 	}(sigChan, jobID, suiteName)
 	return sigChan
 }
@@ -787,7 +758,7 @@ func unregisterSignalCapture(c chan os.Signal) {
 }
 
 // uploadSauceConfig adds job configuration as an asset.
-func (r *CloudRunner) uploadSauceConfig(jobID string, cfgFile string) {
+func (r *CloudRunner) uploadSauceConfig(jobID string, realDevice bool, cfgFile string) {
 	// A config file is optional.
 	if cfgFile == "" {
 		return
@@ -803,19 +774,19 @@ func (r *CloudRunner) uploadSauceConfig(jobID string, cfgFile string) {
 		log.Warn().Msgf("failed to read configuration: %v", err)
 		return
 	}
-	if err := r.JobWriter.UploadAsset(jobID, filepath.Base(cfgFile), "text/plain", content); err != nil {
+	if err := r.JobService.UploadAsset(jobID, realDevice, filepath.Base(cfgFile), "text/plain", content); err != nil {
 		log.Warn().Msgf("failed to attach configuration: %v", err)
 	}
 }
 
 // uploadCLIFlags adds commandline parameters as an asset.
-func (r *CloudRunner) uploadCLIFlags(jobID string, content interface{}) {
+func (r *CloudRunner) uploadCLIFlags(jobID string, realDevice bool, content interface{}) {
 	encoded, err := json.Marshal(content)
 	if err != nil {
 		log.Warn().Msgf("Failed to encode CLI flags: %v", err)
 		return
 	}
-	if err := r.JobWriter.UploadAsset(jobID, "flags.json", "text/plain", encoded); err != nil {
+	if err := r.JobService.UploadAsset(jobID, realDevice, "flags.json", "text/plain", encoded); err != nil {
 		log.Warn().Msgf("Failed to report CLI flags: %v", err)
 	}
 }

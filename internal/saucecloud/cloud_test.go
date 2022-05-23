@@ -11,68 +11,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/mocks"
-	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCloudRunner_logSuiteConsole(t *testing.T) {
-	type fields struct {
-		ProjectUploader storage.ProjectUploader
-		JobStarter      job.Starter
-		JobReader       job.Reader
-		JobWriter       job.Writer
-		CCYReader       concurrency.Reader
-		Region          region.Region
-		ShowConsoleLog  bool
-	}
-	type args struct {
-		res result
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-	}{
-		{
-			name: "simple test",
-			fields: fields{
-				JobReader: &mocks.FakeJobReader{
-					GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
-						return []byte("dummy-content"), nil
-					},
-				},
-				JobWriter: &mocks.FakeJobWriter{
-					UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
-						return nil
-					},
-				},
-			},
-			args: args{
-				res: result{
-					job: job.Job{
-						ID: "fake-job-id",
-					},
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := &CloudRunner{
-				JobReader: tt.fields.JobReader,
-				JobWriter: tt.fields.JobWriter,
-			}
-			r.logSuiteConsole(tt.args.res)
-		})
-	}
-}
-
 func TestSignalDetection(t *testing.T) {
-	r := CloudRunner{JobStopper: &mocks.FakeJobStopper{}}
+	r := CloudRunner{JobService: JobService{VDCStopper: &mocks.FakeJobStopper{}}}
 	assert.False(t, r.interrupted)
 	c := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(c)
@@ -85,7 +30,7 @@ func TestSignalDetection(t *testing.T) {
 
 func TestSignalDetectionExit(t *testing.T) {
 	if os.Getenv("FORCE_EXIT_TEST") == "1" {
-		r := CloudRunner{JobStopper: &mocks.FakeJobStopper{}}
+		r := CloudRunner{JobService: JobService{VDCStopper: &mocks.FakeJobStopper{}}}
 		assert.False(t, r.interrupted)
 		c := r.registerSkipSuitesOnSignal()
 		defer unregisterSignalCapture(c)
@@ -106,31 +51,33 @@ func TestSignalDetectionExit(t *testing.T) {
 
 func TestSkippedRunJobs(t *testing.T) {
 	sut := CloudRunner{
-		JobStarter: &mocks.FakeJobStarter{
-			StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
-				return "fake-id", false, nil
+		JobService: JobService{
+			VDCStarter: &mocks.FakeJobStarter{
+				StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+					return "fake-id", false, nil
+				},
 			},
-		},
-		JobStopper: &mocks.FakeJobStopper{
-			StopJobFn: func(ctx context.Context, id string) (job.Job, error) {
-				return job.Job{
-					ID: "fake-id",
-				}, nil
+			VDCStopper: &mocks.FakeJobStopper{
+				StopJobFn: func(ctx context.Context, id string) (job.Job, error) {
+					return job.Job{
+						ID: "fake-id",
+					}, nil
+				},
 			},
-		},
-		JobReader: &mocks.FakeJobReader{
-			PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
-				return job.Job{
-					ID:     "fake-id",
-					Passed: true,
-					Error:  "",
-					Status: job.StateComplete,
-				}, nil
+			VDCReader: &mocks.FakeJobReader{
+				PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+					return job.Job{
+						ID:     "fake-id",
+						Passed: true,
+						Error:  "",
+						Status: job.StateComplete,
+					}, nil
+				},
 			},
-		},
-		JobWriter: &mocks.FakeJobWriter{
-			UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
-				return nil
+			VDCWriter: &mocks.FakeJobWriter{
+				UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+					return nil
+				},
 			},
 		},
 	}
@@ -159,24 +106,26 @@ func TestRunJobsSkipped(t *testing.T) {
 
 func TestRunJobTimeout(t *testing.T) {
 	r := CloudRunner{
-		JobStarter: &mocks.FakeJobStarter{
-			StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
-				return "1", false, nil
+		JobService: JobService{
+			VDCStarter: &mocks.FakeJobStarter{
+				StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+					return "1", false, nil
+				},
 			},
-		},
-		JobReader: &mocks.FakeJobReader{
-			PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
-				return job.Job{ID: id, TimedOut: true}, nil
+			VDCReader: &mocks.FakeJobReader{
+				PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+					return job.Job{ID: id, TimedOut: true}, nil
+				},
 			},
-		},
-		JobStopper: &mocks.FakeJobStopper{
-			StopJobFn: func(ctx context.Context, jobID string) (job.Job, error) {
-				return job.Job{ID: jobID}, nil
+			VDCStopper: &mocks.FakeJobStopper{
+				StopJobFn: func(ctx context.Context, jobID string) (job.Job, error) {
+					return job.Job{ID: jobID}, nil
+				},
 			},
+			VDCWriter: &mocks.FakeJobWriter{UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+				return nil
+			}},
 		},
-		JobWriter: &mocks.FakeJobWriter{UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
-			return nil
-		}},
 	}
 
 	opts := make(chan job.StartOptions)
@@ -211,24 +160,26 @@ func TestRunJobRetries(t *testing.T) {
 	}
 	for _, tt := range tests {
 		r := CloudRunner{
-			JobStarter: &mocks.FakeJobStarter{
-				StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
-					return "1", false, nil
+			JobService: JobService{
+				VDCStarter: &mocks.FakeJobStarter{
+					StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+						return "1", false, nil
+					},
 				},
-			},
-			JobReader: &mocks.FakeJobReader{
-				PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
-					return job.Job{ID: id, Passed: false}, nil
+				VDCReader: &mocks.FakeJobReader{
+					PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+						return job.Job{ID: id, Passed: false}, nil
+					},
 				},
-			},
-			JobStopper: &mocks.FakeJobStopper{
-				StopJobFn: func(ctx context.Context, jobID string) (job.Job, error) {
-					return job.Job{ID: jobID}, nil
+				VDCStopper: &mocks.FakeJobStopper{
+					StopJobFn: func(ctx context.Context, jobID string) (job.Job, error) {
+						return job.Job{ID: jobID}, nil
+					},
 				},
+				VDCWriter: &mocks.FakeJobWriter{UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+					return nil
+				}},
 			},
-			JobWriter: &mocks.FakeJobWriter{UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
-				return nil
-			}},
 		}
 
 		opts := make(chan job.StartOptions, tt.retries+1)
@@ -248,14 +199,16 @@ func TestRunJobRetries(t *testing.T) {
 
 func TestRunJobTimeoutRDC(t *testing.T) {
 	r := CloudRunner{
-		RDCJobStarter: &mocks.FakeJobStarter{
-			StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
-				return "1", true, nil
+		JobService: JobService{
+			RDCStarter: &mocks.FakeJobStarter{
+				StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+					return "1", true, nil
+				},
 			},
-		},
-		RDCJobReader: &mocks.FakeJobReader{
-			PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
-				return job.Job{ID: id, TimedOut: true}, nil
+			RDCReader: &mocks.FakeJobReader{
+				PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+					return job.Job{ID: id, TimedOut: true}, nil
+				},
 			},
 		},
 	}

@@ -233,7 +233,7 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 }
 
 // ReadJob returns the job details.
-func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
+func (c *Client) ReadJob(ctx context.Context, id string, realDevice bool) (job.Job, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/v1/rdc/jobs/%s", c.URL, id), nil)
 	if err != nil {
@@ -269,7 +269,7 @@ func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
 }
 
 // PollJob polls job details at an interval, until timeout has been reached or until the job has ended, whether successfully or due to an error.
-func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.Duration) (j job.Job, err error) {
+func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.Duration, realDevice bool) (job.Job, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/v1/rdc/jobs/%s", c.URL, id), nil)
 	if err != nil {
@@ -289,7 +289,7 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 	for {
 		select {
 		case <-ticker.C:
-			j, err = doRequestStatus(c.HTTPClient, req)
+			j, err := doRequestStatus(c.HTTPClient, req)
 			if err != nil {
 				return job.Job{}, err
 			}
@@ -299,7 +299,7 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 				return j, nil
 			}
 		case <-deathclock.C:
-			j, err = doRequestStatus(c.HTTPClient, req)
+			j, err := doRequestStatus(c.HTTPClient, req)
 			if err != nil {
 				return job.Job{}, err
 			}
@@ -343,7 +343,7 @@ func doRequestStatus(httpClient *retryablehttp.Client, request *http.Request) (j
 }
 
 // GetJobAssetFileNames returns all assets files available.
-func (c *Client) GetJobAssetFileNames(ctx context.Context, jobID string) ([]string, error) {
+func (c *Client) GetJobAssetFileNames(ctx context.Context, jobID string, realDevice bool) ([]string, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/v1/rdc/jobs/%s", c.URL, jobID), nil)
 	if err != nil {
@@ -407,7 +407,7 @@ var jobURIMappings = map[string]string{
 }
 
 // GetJobAssetFileContent returns the job asset file content.
-func (c *Client) GetJobAssetFileContent(ctx context.Context, jobID, fileName string) ([]byte, error) {
+func (c *Client) GetJobAssetFileContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
 	acceptHeader := ""
 	URIFileName := fileName
 	if _, ok := jobURIMappings[fileName]; ok {
@@ -481,7 +481,7 @@ func (c *Client) DownloadArtifact(jobID, suiteName string) []string {
 		return []string{}
 	}
 
-	files, err := c.GetJobAssetFileNames(context.Background(), jobID)
+	files, err := c.GetJobAssetFileNames(context.Background(), jobID, false)
 	if err != nil {
 		log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
 		return []string{}
@@ -502,7 +502,7 @@ func (c *Client) DownloadArtifact(jobID, suiteName string) []string {
 }
 
 func (c *Client) downloadArtifact(targetDir, jobID, fileName string) (string, error) {
-	content, err := c.GetJobAssetFileContent(context.Background(), jobID, fileName)
+	content, err := c.GetJobAssetFileContent(context.Background(), jobID, fileName, false)
 	if err != nil {
 		return "", err
 	}

@@ -9,7 +9,6 @@ import (
 	"golang.org/x/text/language"
 	"os"
 
-	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -22,10 +21,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
-	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/segment"
-	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/viper"
 )
@@ -47,7 +44,7 @@ func NewCypressCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::config::testFiles", args)
 
-			exitCode, err := runCypress(cmd, tcClient, restoClient, appsClient)
+			exitCode, err := runCypress(cmd)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -90,7 +87,7 @@ func NewCypressCmd() *cobra.Command {
 	return cmd
 }
 
-func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
+func runCypress(cmd *cobra.Command) (int, error) {
 	p, err := cypress.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -115,12 +112,12 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 
 	regio := region.FromString(p.Sauce.Region)
 
-	tc.URL = regio.APIBaseURL()
+	testcompClient.URL = regio.APIBaseURL()
 	webdriverClient.URL = regio.WebDriverBaseURL()
-	rs.URL = regio.APIBaseURL()
-	as.URL = regio.APIBaseURL()
+	restoClient.URL = regio.APIBaseURL()
+	appsClient.URL = regio.APIBaseURL()
 
-	rs.ArtifactConfig = p.Artifacts.Download
+	restoClient.ArtifactConfig = p.Artifacts.Download
 
 	tracker := segment.New(!gFlags.disableUsageMetrics)
 
@@ -140,23 +137,23 @@ func runCypress(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as 
 
 	dockerProject, sauceProject := cypress.SplitSuites(p)
 	if len(dockerProject.Suites) != 0 {
-		exitCode, err := runCypressInDocker(dockerProject, tc, rs)
+		exitCode, err := runCypressInDocker(dockerProject)
 		if err != nil || exitCode != 0 {
 			return exitCode, err
 		}
 	}
 	if len(sauceProject.Suites) != 0 {
-		return runCypressInSauce(sauceProject, regio, tc, rs, as)
+		return runCypressInSauce(sauceProject, regio)
 	}
 
 	return 0, nil
 }
 
-func runCypressInDocker(p cypress.Project, testco testcomposer.Client, rs resto.Client) (int, error) {
+func runCypressInDocker(p cypress.Project) (int, error) {
 	log.Info().Msg("Running Cypress in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewCypress(p, &testco, &testco, &rs, &rs, createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testco, &rs,
+	cd, err := docker.NewCypress(p, &testcompClient, &testcompClient, &restoClient, &restoClient, createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
 		"cypress", "docker"))
 	if err != nil {
 		return 1, err
@@ -166,25 +163,29 @@ func runCypressInDocker(p cypress.Project, testco testcomposer.Client, rs resto.
 	return cd.RunProject()
 }
 
-func runCypressInSauce(p cypress.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
+func runCypressInSauce(p cypress.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Running Cypress in Sauce Labs")
 	printTestEnv("sauce")
 
 	r := saucecloud.CypressRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader:    &as,
-			JobStarter:         &webdriverClient,
-			JobReader:          &rs,
-			JobStopper:         &rs,
-			JobWriter:          &tc,
-			CCYReader:          &rs,
-			MetadataService:    &tc,
-			TunnelService:      &rs,
+			ProjectUploader: &appsClient,
+			JobService: saucecloud.JobService{
+				VDCStarter: &webdriverClient,
+				RDCStarter: &rdcClient,
+				VDCReader:  &restoClient,
+				RDCReader:  &rdcClient,
+				VDCWriter:  &testcompClient,
+				VDCStopper: &restoClient,
+			},
+			CCYReader:          &restoClient,
+			MetadataService:    &testcompClient,
+			TunnelService:      &restoClient,
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
-			ArtifactDownloader: &rs,
-			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc, &rs,
+			ArtifactDownloader: &restoClient,
+			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
 				"cypress", "sauce"),
 			Async:                  gFlags.async,
 			FailFast:               gFlags.failFast,

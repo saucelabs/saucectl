@@ -63,3 +63,11 @@ func Done(status string) bool {
 
 	return false
 }
+
+// Service represents the interface for Job interactions.
+type Service interface {
+	Starter
+	Reader
+	Writer
+	Stopper
+}

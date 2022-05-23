@@ -9,7 +9,6 @@ import (
 	"golang.org/x/text/language"
 	"os"
 
-	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -21,11 +20,9 @@ import (
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
-	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/testcafe"
-	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/viper"
 )
@@ -53,7 +50,7 @@ func NewTestcafeCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::src", args)
 
-			exitCode, err := runTestcafe(cmd, lflags, tcClient, restoClient, appsClient)
+			exitCode, err := runTestcafe(cmd, lflags)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -120,7 +117,7 @@ func NewTestcafeCmd() *cobra.Command {
 	return cmd
 }
 
-func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
+func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags) (int, error) {
 	p, err := testcafe.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -140,11 +137,11 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, tc testcomposer.Clie
 	regio := region.FromString(p.Sauce.Region)
 
 	webdriverClient.URL = regio.WebDriverBaseURL()
-	tc.URL = regio.APIBaseURL()
-	rs.URL = regio.APIBaseURL()
-	as.URL = regio.APIBaseURL()
+	testcompClient.URL = regio.APIBaseURL()
+	restoClient.URL = regio.APIBaseURL()
+	appsClient.URL = regio.APIBaseURL()
 
-	rs.ArtifactConfig = p.Artifacts.Download
+	restoClient.ArtifactConfig = p.Artifacts.Download
 
 	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
@@ -167,23 +164,23 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, tc testcomposer.Clie
 
 	dockerProject, sauceProject := testcafe.SplitSuites(p)
 	if len(dockerProject.Suites) != 0 {
-		exitCode, err := runTestcafeInDocker(dockerProject, tc, rs)
+		exitCode, err := runTestcafeInDocker(dockerProject)
 		if err != nil || exitCode != 0 {
 			return exitCode, err
 		}
 	}
 	if len(sauceProject.Suites) != 0 {
-		return runTestcafeInCloud(sauceProject, regio, tc, rs, as)
+		return runTestcafeInCloud(sauceProject, regio)
 	}
 
 	return 0, nil
 }
 
-func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client, rs resto.Client) (int, error) {
+func runTestcafeInDocker(p testcafe.Project) (int, error) {
 	log.Info().Msg("Running Testcafe in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewTestcafe(p, &testco, &testco, &rs, &rs, createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testco, &rs,
+	cd, err := docker.NewTestcafe(p, &testcompClient, &testcompClient, &restoClient, &restoClient, createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
 		"testcafe", "docker"))
 	if err != nil {
 		return 1, err
@@ -193,25 +190,29 @@ func runTestcafeInDocker(p testcafe.Project, testco testcomposer.Client, rs rest
 	return cd.RunProject()
 }
 
-func runTestcafeInCloud(p testcafe.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
+func runTestcafeInCloud(p testcafe.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Running Testcafe in Sauce Labs")
 	printTestEnv("sauce")
 
 	r := saucecloud.TestcafeRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader:    &as,
-			JobStarter:         &webdriverClient,
-			JobReader:          &rs,
-			JobStopper:         &rs,
-			JobWriter:          &tc,
-			CCYReader:          &rs,
-			TunnelService:      &rs,
-			MetadataService:    &tc,
+			ProjectUploader: &appsClient,
+			JobService: saucecloud.JobService{
+				VDCStarter: &webdriverClient,
+				RDCStarter: &rdcClient,
+				VDCReader:  &restoClient,
+				RDCReader:  &rdcClient,
+				VDCWriter:  &testcompClient,
+				VDCStopper: &restoClient,
+			},
+			CCYReader:          &restoClient,
+			TunnelService:      &restoClient,
+			MetadataService:    &testcompClient,
 			Region:             regio,
 			ShowConsoleLog:     p.ShowConsoleLog,
-			ArtifactDownloader: &rs,
-			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc, &rs,
+			ArtifactDownloader: &restoClient,
+			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
 				"testcafe", "sauce"),
 			Async:                  gFlags.async,
 			FailFast:               gFlags.failFast,
