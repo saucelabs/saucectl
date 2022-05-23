@@ -85,6 +85,10 @@ func New(url, username, accessKey string, timeout time.Duration) Client {
 
 // ReadJob returns the job details.
 func (c *Client) ReadJob(ctx context.Context, id string, realDevice bool) (job.Job, error) {
+	if realDevice {
+		return job.Job{}, errors.New("the VDC client does not support real device jobs")
+	}
+
 	request, err := createRequest(ctx, c.URL, c.Username, c.AccessKey, id)
 	if err != nil {
 		return job.Job{}, err
@@ -95,6 +99,10 @@ func (c *Client) ReadJob(ctx context.Context, id string, realDevice bool) (job.J
 
 // PollJob polls job details at an interval, until timeout has been reached or until the job has ended, whether successfully or due to an error.
 func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.Duration, realDevice bool) (job.Job, error) {
+	if realDevice {
+		return job.Job{}, errors.New("the VDC client does not support real device jobs")
+	}
+
 	request, err := createRequest(ctx, c.URL, c.Username, c.AccessKey, id)
 	if err != nil {
 		return job.Job{}, err
@@ -133,6 +141,10 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 
 // GetJobAssetFileNames return the job assets list.
 func (c *Client) GetJobAssetFileNames(ctx context.Context, jobID string, realDevice bool) ([]string, error) {
+	if realDevice {
+		return nil, errors.New("the VDC client does not support real device jobs")
+	}
+
 	request, err := createListAssetsRequest(ctx, c.URL, c.Username, c.AccessKey, jobID)
 	if err != nil {
 		return nil, err
@@ -142,6 +154,10 @@ func (c *Client) GetJobAssetFileNames(ctx context.Context, jobID string, realDev
 
 // GetJobAssetFileContent returns the job asset file content.
 func (c *Client) GetJobAssetFileContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
+	if realDevice {
+		return nil, errors.New("the VDC client does not support real device jobs")
+	}
+
 	request, err := createAssetRequest(ctx, c.URL, c.Username, c.AccessKey, jobID, fileName)
 	if err != nil {
 		return nil, err
@@ -250,6 +266,10 @@ func (c *Client) isTunnelRunning(ctx context.Context, id, owner string) error {
 
 // StopJob stops the job on the Sauce Cloud.
 func (c *Client) StopJob(ctx context.Context, jobID string, realDevice bool) (job.Job, error) {
+	if realDevice {
+		return job.Job{}, errors.New("the VDC client does not support real device jobs")
+	}
+
 	request, err := createStopRequest(ctx, c.URL, c.Username, c.AccessKey, jobID)
 	if err != nil {
 		return job.Job{}, err
@@ -429,7 +449,7 @@ func (c *Client) DownloadArtifact(jobID, suiteName string, realDevice bool) []st
 		log.Error().Msgf("Unable to create %s to fetch artifacts (%v)", targetDir, err)
 		return []string{}
 	}
-	files, err := c.GetJobAssetFileNames(context.Background(), jobID, false)
+	files, err := c.GetJobAssetFileNames(context.Background(), jobID, realDevice)
 	if err != nil {
 		log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
 		return []string{}
