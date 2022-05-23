@@ -418,7 +418,7 @@ func createStopRequest(ctx context.Context, url, username, accessKey, jobID stri
 	return req, nil
 }
 
-// DownloadArtifact does downloading artifacts and returns downloaded file list
+// DownloadArtifact downloads artifacts and returns a list of what was downloaded.
 func (c *Client) DownloadArtifact(jobID, suiteName string, realDevice bool) []string {
 	targetDir, err := config.GetSuiteArtifactFolder(suiteName, c.ArtifactConfig)
 	if err != nil {
