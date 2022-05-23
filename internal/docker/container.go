@@ -16,7 +16,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
@@ -347,7 +346,7 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 		jobID := getJobID(res.jobInfo.JobDetailsURL)
 
 		var files []string
-		if download.ShouldDownloadArtifact(jobID, res.passed, res.timedOut, false, artifactCfg) {
+		if config.ShouldDownloadArtifact(jobID, res.passed, res.timedOut, false, artifactCfg) {
 			files = r.ArtfactDownloader.DownloadArtifact(jobID, res.name, false)
 		}
 

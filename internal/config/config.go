@@ -331,3 +331,21 @@ func (t *Tunnel) SetDefaults() {
 		t.Owner = t.Parent
 	}
 }
+
+// ShouldDownloadArtifact returns true if it should download artifacts, otherwise false
+func ShouldDownloadArtifact(jobID string, passed, timedOut, async bool, cfg ArtifactDownload) bool {
+	if jobID == "" || timedOut || async {
+		return false
+	}
+	if cfg.When == WhenAlways {
+		return true
+	}
+	if cfg.When == WhenFail && !passed {
+		return true
+	}
+	if cfg.When == WhenPass && passed {
+		return true
+	}
+
+	return false
+}
