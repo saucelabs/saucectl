@@ -261,11 +261,9 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	// Check timeout
 	if j.TimedOut {
 		color.Red("Suite '%s' has reached timeout of %s", opts.DisplayName, opts.Timeout)
-		if !opts.RealDevice {
-			j, err = r.JobService.StopJob(context.Background(), id, false)
-			if err != nil {
-				color.HiRedString("Failed to stop suite '%s': %v", opts.DisplayName, err)
-			}
+		j, err = r.JobService.StopJob(context.Background(), id, opts.RealDevice)
+		if err != nil {
+			color.HiRedString("Failed to stop suite '%s': %v", opts.DisplayName, err)
 		}
 		j.Passed = false
 		j.TimedOut = true
