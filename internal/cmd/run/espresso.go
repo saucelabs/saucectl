@@ -11,7 +11,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/credentials"
-	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
@@ -125,9 +124,7 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags) (int, error) {
 		_ = tracker.Close()
 	}()
 
-	if p.Artifacts.Cleanup {
-		download.Cleanup(p.Artifacts.Download.Directory)
-	}
+	cleanupArtifacts(p.Artifacts)
 
 	return runEspressoInCloud(p, regio)
 }

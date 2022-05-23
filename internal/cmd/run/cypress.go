@@ -15,7 +15,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/docker"
-	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -131,9 +130,7 @@ func runCypress(cmd *cobra.Command) (int, error) {
 		_ = tracker.Close()
 	}()
 
-	if p.Artifacts.Cleanup {
-		download.Cleanup(p.Artifacts.Download.Directory)
-	}
+	cleanupArtifacts(p.Artifacts)
 
 	dockerProject, sauceProject := cypress.SplitSuites(p)
 	if len(dockerProject.Suites) != 0 {

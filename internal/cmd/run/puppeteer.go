@@ -15,7 +15,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/docker"
-	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
@@ -119,9 +118,7 @@ func runPuppeteer(cmd *cobra.Command) (int, error) {
 		_ = tracker.Close()
 	}()
 
-	if p.Artifacts.Cleanup {
-		download.Cleanup(p.Artifacts.Download.Directory)
-	}
+	cleanupArtifacts(p.Artifacts)
 
 	return runPuppeteerInDocker(p)
 }

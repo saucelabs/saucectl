@@ -11,7 +11,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/credentials"
-	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -116,9 +115,7 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags) (int, error) {
 		_ = tracker.Close()
 	}()
 
-	if p.Artifacts.Cleanup {
-		download.Cleanup(p.Artifacts.Download.Directory)
-	}
+	cleanupArtifacts(p.Artifacts)
 
 	return runXcuitestInCloud(p, regio)
 }

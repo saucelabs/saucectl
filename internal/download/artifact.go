@@ -7,17 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 )
-
-// Cleanup removes previous downloaded artifacts
-func Cleanup(directory string) {
-	err := os.RemoveAll(directory)
-	if err != nil {
-		log.Err(err).Msg("Unable to cleanup previous artifacts")
-	}
-}
 
 // GetDirName returns a target folder that's based on a combination of suiteName and the configured artifact download folder.
 // The suiteName is sanitized by undergoing character replacements that are safe to be used as a directory name.

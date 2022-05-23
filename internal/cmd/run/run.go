@@ -349,3 +349,15 @@ func fullCommandName(cmd *cobra.Command) string {
 
 	return strings.TrimSpace(name)
 }
+
+// cleanupArtifacts removes any files in the artifact folder. Does nothing if cleanup is turned off.
+func cleanupArtifacts(c config.Artifacts) {
+	if !c.Cleanup {
+		return
+	}
+
+	err := os.RemoveAll(c.Download.Directory)
+	if err != nil {
+		log.Err(err).Msg("Unable to clean up previous artifacts")
+	}
+}

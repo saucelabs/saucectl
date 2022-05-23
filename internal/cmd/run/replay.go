@@ -15,7 +15,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/credentials"
-	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
@@ -110,9 +109,7 @@ func runReplay(cmd *cobra.Command) (int, error) {
 		_ = tracker.Close()
 	}()
 
-	if p.Artifacts.Cleanup {
-		download.Cleanup(p.Artifacts.Download.Directory)
-	}
+	cleanupArtifacts(p.Artifacts)
 
 	return runPuppeteerReplayInSauce(p, regio)
 }
