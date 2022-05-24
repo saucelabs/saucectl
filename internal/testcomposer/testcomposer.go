@@ -235,7 +235,7 @@ func doRequestAsset(httpClient *http.Client, request *http.Request) error {
 }
 
 // UploadAsset uploads an asset to the specified jobID.
-func (c *Client) UploadAsset(jobID string, fileName string, contentType string, content []byte) error {
+func (c *Client) UploadAsset(jobID string, realDevice bool, fileName string, contentType string, content []byte) error {
 	request, err := createUploadAssetRequest(context.Background(), c.URL, c.Credentials.Username, c.Credentials.AccessKey, jobID, fileName, contentType, content)
 	if err != nil {
 		return err

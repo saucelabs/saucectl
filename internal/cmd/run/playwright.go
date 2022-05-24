@@ -9,23 +9,19 @@ import (
 	"golang.org/x/text/language"
 	"os"
 
-	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/docker"
-	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
-	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/segment"
-	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/viper"
 )
@@ -47,7 +43,7 @@ func NewPlaywrightCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::testMatch", args)
 
-			exitCode, err := runPlaywright(cmd, tcClient, restoClient, appsClient)
+			exitCode, err := runPlaywright(cmd)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -100,7 +96,7 @@ func NewPlaywrightCmd() *cobra.Command {
 	return cmd
 }
 
-func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
+func runPlaywright(cmd *cobra.Command) (int, error) {
 	p, err := playwright.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
@@ -124,11 +120,11 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 	regio := region.FromString(p.Sauce.Region)
 
 	webdriverClient.URL = regio.WebDriverBaseURL()
-	tc.URL = regio.APIBaseURL()
-	rs.URL = regio.APIBaseURL()
-	as.URL = regio.APIBaseURL()
+	testcompClient.URL = regio.APIBaseURL()
+	restoClient.URL = regio.APIBaseURL()
+	appsClient.URL = regio.APIBaseURL()
 
-	rs.ArtifactConfig = p.Artifacts.Download
+	restoClient.ArtifactConfig = p.Artifacts.Download
 
 	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
@@ -145,29 +141,27 @@ func runPlaywright(cmd *cobra.Command, tc testcomposer.Client, rs resto.Client, 
 		_ = tracker.Close()
 	}()
 
-	if p.Artifacts.Cleanup {
-		download.Cleanup(p.Artifacts.Download.Directory)
-	}
+	cleanupArtifacts(p.Artifacts)
 
 	dockerProject, sauceProject := playwright.SplitSuites(p)
 	if len(dockerProject.Suites) != 0 {
-		exitCode, err := runPlaywrightInDocker(dockerProject, tc, rs)
+		exitCode, err := runPlaywrightInDocker(dockerProject)
 		if err != nil || exitCode != 0 {
 			return exitCode, err
 		}
 	}
 	if len(sauceProject.Suites) != 0 {
-		return runPlaywrightInSauce(sauceProject, regio, tc, rs, as)
+		return runPlaywrightInSauce(sauceProject, regio)
 	}
 
 	return 0, nil
 }
 
-func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs resto.Client) (int, error) {
+func runPlaywrightInDocker(p playwright.Project) (int, error) {
 	log.Info().Msg("Running Playwright in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewPlaywright(p, &testco, &testco, &rs, &rs, createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testco, &rs,
+	cd, err := docker.NewPlaywright(p, &testcompClient, &testcompClient, &restoClient, &restoClient, createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
 		"playwright", "docker"))
 	if err != nil {
 		return 1, err
@@ -177,25 +171,29 @@ func runPlaywrightInDocker(p playwright.Project, testco testcomposer.Client, rs 
 	return cd.RunProject()
 }
 
-func runPlaywrightInSauce(p playwright.Project, regio region.Region, tc testcomposer.Client, rs resto.Client, as appstore.AppStore) (int, error) {
+func runPlaywrightInSauce(p playwright.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Running Playwright in Sauce Labs")
 	printTestEnv("sauce")
 
 	r := saucecloud.PlaywrightRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
-			ProjectUploader:    &as,
-			JobStarter:         &webdriverClient,
-			JobReader:          &rs,
-			JobStopper:         &rs,
-			JobWriter:          &tc,
-			CCYReader:          &rs,
-			TunnelService:      &rs,
-			MetadataService:    &tc,
-			Region:             regio,
-			ShowConsoleLog:     p.ShowConsoleLog,
-			ArtifactDownloader: &rs,
-			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &tc, &rs,
+			ProjectUploader: &appsClient,
+			JobService: saucecloud.JobService{
+				VDCStarter:    &webdriverClient,
+				RDCStarter:    &rdcClient,
+				VDCReader:     &restoClient,
+				RDCReader:     &rdcClient,
+				VDCWriter:     &testcompClient,
+				VDCStopper:    &restoClient,
+				VDCDownloader: &restoClient,
+			},
+			CCYReader:       &restoClient,
+			TunnelService:   &restoClient,
+			MetadataService: &testcompClient,
+			Region:          regio,
+			ShowConsoleLog:  p.ShowConsoleLog,
+			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
 				"playwright", "sauce"),
 			Async:                  gFlags.async,
 			FailFast:               gFlags.failFast,

@@ -27,49 +27,45 @@ func TestXcuitestRunner_RunProject(t *testing.T) {
 	defer func() {
 		httpmock.DeactivateAndReset()
 	}()
-	// Fake JobStarter
-	var startOpts job.StartOptions
-	starter := mocks.FakeJobStarter{
-		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
-			startOpts = opts
-			return "fake-job-id", false, nil
-		},
-	}
-	reader := mocks.FakeJobReader{
-		PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
-			return job.Job{ID: id, Passed: true, Status: job.StatePassed}, nil
-		},
-		GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
-			return []string{"file1", "file2"}, nil
-		},
-		GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
-			return []byte("file content"), nil
-		},
-	}
-
-	writer := mocks.FakeJobWriter{
-		UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
-			return nil
-		},
-	}
 	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 		return 1, nil
 	}}
 	uploader := &mocks.FakeProjectUploader{
 		UploadSuccess: true,
 	}
-	downloader := mocks.FakeArifactDownloader{
-		DownloadArtifactFn: func(jobID, suiteName string) []string { return []string{} },
-	}
 
+	var startOpts job.StartOptions
 	runner := &XcuitestRunner{
 		CloudRunner: CloudRunner{
-			RDCJobStarter:      &starter,
-			RDCJobReader:       &reader,
-			JobWriter:          &writer,
-			CCYReader:          ccyReader,
-			ProjectUploader:    uploader,
-			ArtifactDownloader: &downloader,
+			JobService: JobService{
+				RDCStarter: &mocks.FakeJobStarter{
+					StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+						startOpts = opts
+						return "fake-job-id", false, nil
+					},
+				},
+				RDCReader: &mocks.FakeJobReader{
+					PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+						return job.Job{ID: id, Passed: true, Status: job.StatePassed}, nil
+					},
+					GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
+						return []string{"file1", "file2"}, nil
+					},
+					GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+						return []byte("file content"), nil
+					},
+				},
+				VDCWriter: &mocks.FakeJobWriter{
+					UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+						return nil
+					},
+				},
+				VDCDownloader: &mocks.FakeArtifactDownloader{
+					DownloadArtifactFn: func(jobID, suiteName string) []string { return []string{} },
+				},
+			},
+			CCYReader:       ccyReader,
+			ProjectUploader: uploader,
 		},
 		Project: xcuitest.Project{
 			Xcuitest: xcuitest.Xcuitest{

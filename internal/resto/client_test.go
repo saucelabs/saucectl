@@ -105,7 +105,7 @@ func TestClient_GetJobDetails(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
-			got, err := tc.client.ReadJob(context.Background(), tc.jobID)
+			got, err := tc.client.ReadJob(context.Background(), tc.jobID, false)
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
 				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))
@@ -243,7 +243,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
-			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond, 0)
+			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond, 0, false)
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
 				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))
@@ -315,7 +315,7 @@ func TestClient_GetJobAssetFileNames(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
-			got, err := tc.client.GetJobAssetFileNames(context.Background(), tc.jobID)
+			got, err := tc.client.GetJobAssetFileNames(context.Background(), tc.jobID, false)
 			sort.Strings(tc.expectedResp)
 			sort.Strings(got)
 			assert.Equal(t, tc.expectedResp, got)
@@ -390,7 +390,7 @@ func TestClient_GetJobAssetFileContent(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
-			got, err := tc.client.GetJobAssetFileContent(context.Background(), tc.jobID, "console.log")
+			got, err := tc.client.GetJobAssetFileContent(context.Background(), tc.jobID, "console.log", false)
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
 				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))
@@ -485,7 +485,7 @@ func TestClient_TestStop(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
-			got, err := tc.client.StopJob(context.Background(), tc.jobID)
+			got, err := tc.client.StopJob(context.Background(), tc.jobID, false)
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
 				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))

@@ -16,7 +16,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
@@ -36,7 +35,7 @@ type ContainerRunner struct {
 	JobWriter              job.Writer
 	ShowConsoleLog         bool
 	JobReader              job.Reader
-	ArtfactDownloader      download.ArtifactDownloader
+	ArtfactDownloader      job.ArtifactDownloader
 	MetadataSearchStrategy framework.MetadataSearchStrategy
 
 	Reporters []report.Reporter
@@ -347,8 +346,8 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 		jobID := getJobID(res.jobInfo.JobDetailsURL)
 
 		var files []string
-		if download.ShouldDownloadArtifact(jobID, res.passed, res.timedOut, false, artifactCfg) {
-			files = r.ArtfactDownloader.DownloadArtifact(jobID, res.name)
+		if config.ShouldDownloadArtifact(jobID, res.passed, res.timedOut, false, artifactCfg) {
+			files = r.ArtfactDownloader.DownloadArtifact(jobID, res.name, false)
 		}
 
 		if !res.passed {
@@ -358,7 +357,7 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 		var artifacts []report.Artifact
 
 		if junitRequired {
-			jb, err := r.JobReader.GetJobAssetFileContent(context.Background(), jobID, "junit.xml")
+			jb, err := r.JobReader.GetJobAssetFileContent(context.Background(), jobID, "junit.xml", false)
 			artifacts = append(artifacts, report.Artifact{
 				AssetType: report.JUnitArtifact,
 				Body:      jb,
@@ -487,7 +486,7 @@ func (r *ContainerRunner) uploadSauceConfig(jobID string, cfgFile string) {
 		log.Warn().Msgf("failed to read configuration: %v", err)
 		return
 	}
-	if err := r.JobWriter.UploadAsset(jobID, filepath.Base(cfgFile), "text/plain", content); err != nil {
+	if err := r.JobWriter.UploadAsset(jobID, false, filepath.Base(cfgFile), "text/plain", content); err != nil {
 		log.Warn().Msgf("failed to attach configuration: %v", err)
 	}
 }
@@ -499,7 +498,7 @@ func (r *ContainerRunner) uploadCLIFlags(jobID string, content interface{}) {
 		log.Warn().Msgf("Failed to encode CLI flags: %v", err)
 		return
 	}
-	if err := r.JobWriter.UploadAsset(jobID, "flags.json", "text/plain", encoded); err != nil {
+	if err := r.JobWriter.UploadAsset(jobID, false, "flags.json", "text/plain", encoded); err != nil {
 		log.Warn().Msgf("Failed to report CLI flags: %v", err)
 	}
 }

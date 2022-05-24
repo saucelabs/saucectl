@@ -56,7 +56,7 @@ var (
 
 	typeDef config.TypeDef
 
-	tcClient        testcomposer.Client
+	testcompClient  testcomposer.Client
 	webdriverClient webdriver.Client
 	restoClient     resto.Client
 	appsClient      appstore.AppStore
@@ -185,14 +185,14 @@ func preRun() error {
 		println()
 		return fmt.Errorf("no credentials set")
 	}
-	
+
 	d, err := config.Describe(gFlags.cfgFilePath)
 	if err != nil {
 		return err
 	}
 	typeDef = d
 
-	tcClient = testcomposer.Client{
+	testcompClient = testcomposer.Client{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         "", // updated later once region is determined
 		Credentials: creds,
@@ -216,25 +216,25 @@ func preRun() error {
 // Run runs the command
 func Run(cmd *cobra.Command) (int, error) {
 	if typeDef.Kind == cypress.Kind {
-		return runCypress(cmd, tcClient, restoClient, appsClient)
+		return runCypress(cmd)
 	}
 	if typeDef.Kind == playwright.Kind {
-		return runPlaywright(cmd, tcClient, restoClient, appsClient)
+		return runPlaywright(cmd)
 	}
 	if typeDef.Kind == testcafe.Kind {
-		return runTestcafe(cmd, testcafeFlags{}, tcClient, restoClient, appsClient)
+		return runTestcafe(cmd, testcafeFlags{})
 	}
 	if typeDef.Kind == puppeteer.Kind {
-		return runPuppeteer(cmd, tcClient, restoClient)
+		return runPuppeteer(cmd)
 	}
 	if typeDef.Kind == replay.Kind {
-		return runReplay(cmd, tcClient, restoClient, appsClient)
+		return runReplay(cmd)
 	}
 	if typeDef.Kind == espresso.Kind {
-		return runEspresso(cmd, espressoFlags{}, tcClient, restoClient, rdcClient, appsClient)
+		return runEspresso(cmd, espressoFlags{})
 	}
 	if typeDef.Kind == xcuitest.Kind {
-		return runXcuitest(cmd, xcuitestFlags{}, tcClient, restoClient, rdcClient, appsClient)
+		return runXcuitest(cmd, xcuitestFlags{})
 	}
 
 	return 1, errors.New(msg.UnknownFrameworkConfig)
@@ -348,4 +348,16 @@ func fullCommandName(cmd *cobra.Command) string {
 	}
 
 	return strings.TrimSpace(name)
+}
+
+// cleanupArtifacts removes any files in the artifact folder. Does nothing if cleanup is turned off.
+func cleanupArtifacts(c config.Artifacts) {
+	if !c.Cleanup {
+		return
+	}
+
+	err := os.RemoveAll(c.Download.Directory)
+	if err != nil {
+		log.Err(err).Msg("Unable to clean up previous artifacts")
+	}
 }

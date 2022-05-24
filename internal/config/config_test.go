@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	assert2 "gotest.tools/v3/assert"
 	"os"
 	"strings"
 	"testing"
@@ -175,6 +176,108 @@ func TestConfig_ExpandEnv(t *testing.T) {
 			result := expandEnv(tc.input)
 			assert.False(t, strings.Contains(fmt.Sprint(result), "$"))
 			assert.Equal(t, tc.expected, result)
+		})
+	}
+}
+
+func TestShouldDownloadArtifact(t *testing.T) {
+	type testCase struct {
+		name     string
+		config   ArtifactDownload
+		jobID    string
+		passed   bool
+		timedOut bool
+		async    bool
+		want     bool
+	}
+	testCases := []testCase{
+		{
+			name:   "should not download when jobID is empty even being required",
+			config: ArtifactDownload{When: WhenAlways},
+			jobID:  "",
+			want:   false,
+		},
+		{
+			name:   "should not download when jobID is empty and not being required",
+			config: ArtifactDownload{When: WhenNever},
+			jobID:  "",
+			want:   false,
+		},
+		{
+			name:   "should not download when jobs are processed asynchronously",
+			config: ArtifactDownload{When: WhenAlways},
+			jobID:  "fake-id",
+			async:  true,
+			want:   false,
+		},
+		{
+			name:   "should download artifacts when it's always required",
+			config: ArtifactDownload{When: WhenAlways},
+			jobID:  "fake-id",
+			want:   true,
+		},
+		{
+			name:   "should download artifacts when it's always required even it's failed",
+			config: ArtifactDownload{When: WhenAlways},
+			jobID:  "fake-id",
+			passed: false,
+			want:   true,
+		},
+		{
+			name:   "should not download artifacts when it's not required",
+			config: ArtifactDownload{When: WhenNever},
+			jobID:  "fake-id",
+			passed: true,
+			want:   false,
+		},
+		{
+			name:   "should not download artifacts when it's not required and failed",
+			config: ArtifactDownload{When: WhenNever},
+			jobID:  "fake-id",
+			passed: false,
+			want:   false,
+		},
+		{
+			name:   "should download artifacts when it only requires passed one and test is passed",
+			config: ArtifactDownload{When: WhenPass},
+			jobID:  "fake-id",
+			passed: true,
+			want:   true,
+		},
+		{
+			name:   "should download artifacts when it requires passed one but test is failed",
+			config: ArtifactDownload{When: WhenPass},
+			jobID:  "fake-id",
+			passed: false,
+			want:   false,
+		},
+		{
+			name:   "should download artifacts when it requirs failed one but test is passed",
+			config: ArtifactDownload{When: WhenFail},
+			jobID:  "fake-id",
+			passed: true,
+			want:   false,
+		},
+		{
+			name:   "should download artifacts when it requires failed one and test is failed",
+			config: ArtifactDownload{When: WhenFail},
+			jobID:  "fake-id",
+			passed: false,
+			want:   true,
+		},
+		{
+			name:     "should not download artifacts when it has timedOut",
+			config:   ArtifactDownload{When: WhenFail},
+			jobID:    "fake-id",
+			passed:   false,
+			timedOut: true,
+			want:     false,
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ShouldDownloadArtifact(tt.jobID, tt.passed, tt.timedOut, tt.async, tt.config)
+			assert2.Equal(t, tt.want, got)
 		})
 	}
 }
