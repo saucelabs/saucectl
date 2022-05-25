@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
@@ -14,8 +13,11 @@ const commentPrefix = "#"
 
 // patternsFromFile reads .sauceignore file and creates ignore patters if .sauceignore file is exists.
 func patternsFromFile(path string) ([]Pattern, error) {
-	fPath := filepath.Join(path)
-	f, err := os.Open(fPath)
+	if path == "" {
+		return []Pattern{}, nil
+	}
+
+	f, err := os.Open(path)
 	if err != nil {
 		// In case .sauceignore file doesn't exists.
 		if os.IsNotExist(err) {
