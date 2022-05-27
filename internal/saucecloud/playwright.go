@@ -26,7 +26,9 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 	r.Project.Playwright.Version = m.FrameworkVersion
-	r.Project.RunnerVersion = m.CloudRunnerVersion
+	if r.Project.RunnerVersion == "" {
+		r.Project.RunnerVersion = m.CloudRunnerVersion
+	}
 
 	if m.Deprecated {
 		deprecationMessage = r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version)

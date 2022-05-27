@@ -26,7 +26,9 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 	r.Project.Testcafe.Version = m.FrameworkVersion
-	r.Project.RunnerVersion = m.CloudRunnerVersion
+	if r.Project.RunnerVersion == "" {
+		r.Project.RunnerVersion = m.CloudRunnerVersion
+	}
 
 	if m.Deprecated {
 		deprecationMessage = r.deprecationMessage(testcafe.Kind, r.Project.Testcafe.Version)

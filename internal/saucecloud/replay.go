@@ -24,7 +24,9 @@ func (r *ReplayRunner) RunProject() (int, error) {
 		r.logFrameworkError(err)
 		return exitCode, err
 	}
-	r.Project.RunnerVersion = m.CloudRunnerVersion
+	if r.Project.RunnerVersion == "" {
+		r.Project.RunnerVersion = m.CloudRunnerVersion
+	}
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
 		return 1, err
