@@ -86,7 +86,7 @@ func interactiveConfiguration() (credentials.Credentials, error) {
 			Name: "accessKey",
 			Prompt: &survey.Input{
 				Message: "SauceLabs access key",
-				Default: creds.AccessKey,
+				Default: mask(creds.AccessKey),
 			},
 			Validate: func(val interface{}) error {
 				str, ok := val.(string)
@@ -136,4 +136,22 @@ func Run() error {
 	}
 	println("You're all set!")
 	return nil
+}
+
+func mask(str string) string {
+	n := len(str)
+	if n == 0 {
+		return ""
+	}
+	res := []byte{}
+	for i := 0; i < n; i++ {
+		if str[i] == '-' {
+			res = append(res, str[i])
+		} else if i >= n-4 {
+			res = append(res, str[i])
+		} else {
+			res = append(res, '*')
+		}
+	}
+	return string(res)
 }
