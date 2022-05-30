@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 )
 
@@ -46,6 +47,7 @@ func (w *Writer) Add(src, dst string) error {
 	if w.M.Match(strings.Split(src, string(os.PathSeparator)), finfo.IsDir()) {
 		return nil
 	}
+	log.Debug().Str("name", src).Msg("Adding to archive")
 
 	if !finfo.IsDir() {
 		w, err := w.W.Create(path.Join(dst, finfo.Name()))
