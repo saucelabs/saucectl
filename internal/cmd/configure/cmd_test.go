@@ -15,7 +15,7 @@ func Test_mask(t *testing.T) {
 		{
 			name:   "it should mask access key",
 			input:  "1234567-8912-3456-7891-234567891234",
-			expect: "*******************************1234",
+			expect: "*******-****-****-****-********1234",
 		},
 		{
 			name:   "it should return empty string when input is empty",

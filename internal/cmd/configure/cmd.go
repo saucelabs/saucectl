@@ -145,7 +145,9 @@ func mask(str string) string {
 	}
 	res := []byte{}
 	for i := 0; i < n; i++ {
-		if i >= n-4 {
+		if str[i] == '-' {
+			res = append(res, str[i])
+		} else if i >= n-4 {
 			res = append(res, str[i])
 		} else {
 			res = append(res, '*')
