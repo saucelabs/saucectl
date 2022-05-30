@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"io"
 	"io/fs"
 	"os"
@@ -14,6 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	"github.com/fatih/color"
 	ptable "github.com/jedib0t/go-pretty/v6/table"
@@ -420,12 +421,10 @@ func (r *CloudRunner) archiveFolder(project interface{}, tempDir string, project
 	}
 
 	for _, child := range folderContent {
-		log.Debug().Str("name", child.Name()).Msg("Adding to archive")
 		if err := z.Add(filepath.Join(projectFolder, child.Name()), ""); err != nil {
 			return "", err
 		}
 	}
-	log.Debug().Str("name", rcPath).Msg("Adding to archive")
 	if err := z.Add(rcPath, ""); err != nil {
 		return "", err
 	}
