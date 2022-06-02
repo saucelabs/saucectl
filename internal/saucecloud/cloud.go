@@ -119,7 +119,9 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	for i := 0; i < expected; i++ {
 		res := <-results
 		// in case one of test suites not passed
-		if !res.job.Passed {
+		// ignore jobs that are still in progress (i.e. async execution or client timeout)
+		// since their status is unknown
+		if job.Done(res.job.Status) && !res.job.Passed {
 			passed = false
 		}
 		completed++
