@@ -341,9 +341,15 @@ func doRequestStatus(httpClient *retryablehttp.Client, request *http.Request) (j
 		return job.Job{}, err
 	}
 
+	body, _ := io.ReadAll(resp.Body)
 	var jobDetails job.Job
-	if err := json.NewDecoder(resp.Body).Decode(&jobDetails); err != nil {
+	if err := json.Unmarshal(body, &jobDetails); err != nil {
 		return job.Job{}, err
+	}
+
+	// Sanity check.
+	if jobDetails.ID == "" {
+		return job.Job{}, fmt.Errorf("job status request failed; unexpected response: %s", string(body))
 	}
 
 	return jobDetails, nil
