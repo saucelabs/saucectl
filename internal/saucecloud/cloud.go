@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/node"
 	"io"
 	"io/fs"
 	"os"
@@ -53,6 +54,8 @@ type CloudRunner struct {
 
 	Async    bool
 	FailFast bool
+
+	NPMDependencies []string
 
 	interrupted bool
 }
@@ -393,7 +396,7 @@ func checkPathLength(projectFolder string, matcher sauceignore.Matcher) (string,
 
 // archiveFolder creates a zip file in the tempDir directory from the given projectFolder.
 func (r *CloudRunner) archiveFolder(project interface{}, tempDir string, projectFolder string, sauceignoreFile string) (string, error) {
-	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
+	matcher, err := r.getFileMatcher(projectFolder, sauceignoreFile)
 	if err != nil {
 		return "", err
 	}
@@ -812,4 +815,32 @@ func (r *CloudRunner) getAvailableVersionsMessage(frameworkName string) string {
 	}
 	msg += "\n"
 	return msg
+}
+
+func (r *CloudRunner) getFileMatcher(projectFolder, sauceignoreFile string) (sauceignore.Matcher, error) {
+	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
+	if err != nil {
+		return matcher, err
+	}
+
+	modDir := filepath.Join(projectFolder, "node_modules")
+	if !matcher.Match([]string{modDir}, true) {
+		_, err := os.Stat(modDir)
+		if err == nil && len(r.NPMDependencies) > 0 {
+			log.Info().Msg("Picking up select dependencies from node_modules")
+			patterns, _ := sauceignore.PatternsFromFile(sauceignoreFile)
+			// by default, ignore everything under node_modules
+			patterns = append(patterns, sauceignore.NewPattern("/node_modules/*"))
+
+			// but un-ignore dependencies we want to keep
+			reqs := node.Requirements(filepath.Join(projectFolder, "node_modules"), r.NPMDependencies...)
+			log.Info().Msgf("Found a total of %d related dependencies", len(reqs))
+			for _, req := range reqs {
+				patterns = append(patterns, sauceignore.NewPattern("!/node_modules/"+req))
+			}
+			matcher = sauceignore.NewMatcher(patterns)
+		}
+	}
+
+	return matcher, nil
 }

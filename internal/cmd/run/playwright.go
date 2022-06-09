@@ -198,6 +198,7 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region) (int, error
 			Async:                  gFlags.async,
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.NewSearchStrategy(p.Playwright.Version, p.RootDir),
+			NPMDependencies:        p.Npm.Dependencies,
 		},
 	}
 
