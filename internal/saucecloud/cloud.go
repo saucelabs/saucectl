@@ -840,6 +840,7 @@ func (r *CloudRunner) getFileMatcher(projectFolder, sauceignoreFile string) (sau
 		if err == nil && len(r.NPMDependencies) > 0 {
 			log.Info().Msg("Picking up select dependencies from node_modules")
 			patterns, _ := sauceignore.PatternsFromFile(sauceignoreFile)
+
 			// by default, ignore everything under node_modules
 			patterns = append(patterns, sauceignore.NewPattern("/node_modules/*"))
 

@@ -13,6 +13,23 @@ type Package struct {
 	PeerDependencies map[string]string `json:"peerDependencies,omitempty"`
 }
 
+// permExcludes is a list of packages we never want to resolve, because they are provided by Sauce Labs.
+var permExcludes = []string{
+	"cypress",
+	"playwright",
+	"playwright-core",
+	"testcafe",
+}
+
+func isPkgExcluded(pkg string) bool {
+	for _, p := range permExcludes {
+		if p == pkg {
+			return true
+		}
+	}
+	return false
+}
+
 func PackageFromFile(filename string) (Package, error) {
 	var p Package
 
@@ -45,6 +62,11 @@ func Requirements(root string, pkgs ...string) []string {
 // to the rootDeps map.
 func requirements(rootDeps map[string]struct{}, root, pkg string, rootDep bool) {
 	if _, ok := rootDeps[pkg]; ok {
+		return
+	}
+
+	if isPkgExcluded(pkg) {
+		log.Info().Msgf("Skipping dependency %s, as it's provided by Sauce Labs", pkg)
 		return
 	}
 
