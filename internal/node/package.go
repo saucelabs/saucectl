@@ -29,7 +29,7 @@ func PackageFromFile(filename string) (Package, error) {
 func Requirements(root string, pkgs ...string) []string {
 	rootDeps := make(map[string]struct{})
 
-	log.Info().Msgf("Getting requirements for %s", pkgs)
+	log.Info().Msgf("Getting requirements for npm dependencies %s", pkgs)
 	for _, pkg := range pkgs {
 		requirements(rootDeps, root, pkg, true)
 	}

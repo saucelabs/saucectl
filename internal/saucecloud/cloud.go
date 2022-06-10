@@ -375,19 +375,24 @@ func (r CloudRunner) remoteArchiveFiles(project interface{}, files []string, sau
 func checkPathLength(projectFolder string, matcher sauceignore.Matcher) (string, error) {
 	exampleName := ""
 	maxLength := 0
-	if err := filepath.Walk(projectFolder, func(fileP string, info fs.FileInfo, err error) error {
-		if matcher.Match(strings.Split(fileP, string(os.PathSeparator)), info.IsDir()) {
+	if err := filepath.Walk(projectFolder, func(file string, info fs.FileInfo, err error) error {
+		if matcher.Match(strings.Split(file, string(os.PathSeparator)), info.IsDir()) {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
 			return nil
 		}
-		if maxLength < len(fileP) {
-			exampleName = fileP
-			maxLength = len(fileP)
+
+		if maxLength < len(file) {
+			exampleName = file
+			maxLength = len(file)
 		}
 		return nil
 	}); err != nil {
 		// When walk fails, we may not want to fail saucectl execution.
 		return "", nil
 	}
+
 	if BaseFilepathLength+maxLength > MaxFilepathLength {
 		return exampleName, errors.New("path too long")
 	}
@@ -824,7 +829,13 @@ func (r *CloudRunner) getFileMatcher(projectFolder, sauceignoreFile string) (sau
 	}
 
 	modDir := filepath.Join(projectFolder, "node_modules")
-	if !matcher.Match([]string{modDir}, true) {
+	modDirIgnored := matcher.Match([]string{modDir}, true)
+
+	if modDirIgnored && len(r.NPMDependencies) > 0 {
+		return matcher, fmt.Errorf("'node_modules' is ignored by sauceignore, but you have npm dependencies defined in your project; please remove 'node_modules' from your sauceignore file")
+	}
+
+	if !modDirIgnored {
 		_, err := os.Stat(modDir)
 		if err == nil && len(r.NPMDependencies) > 0 {
 			log.Info().Msg("Picking up select dependencies from node_modules")
@@ -834,7 +845,7 @@ func (r *CloudRunner) getFileMatcher(projectFolder, sauceignoreFile string) (sau
 
 			// but un-ignore dependencies we want to keep
 			reqs := node.Requirements(filepath.Join(projectFolder, "node_modules"), r.NPMDependencies...)
-			log.Info().Msgf("Found a total of %d related dependencies", len(reqs))
+			log.Info().Msgf("Found a total of %d related npm dependencies", len(reqs))
 			for _, req := range reqs {
 				patterns = append(patterns, sauceignore.NewPattern("!/node_modules/"+req))
 			}
