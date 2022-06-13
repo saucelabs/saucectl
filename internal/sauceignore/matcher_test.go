@@ -48,7 +48,7 @@ func TestPatternsFromFile(t *testing.T) {
 
 	for _, tc := range testsCases {
 		t.Run(tc.name, func(t *testing.T) {
-			gotPatters, err := patternsFromFile(tc.path)
+			gotPatters, err := PatternsFromFile(tc.path)
 			assert.Equal(t, err, tc.expectedErr)
 			assert.Equal(t, len(gotPatters), len(tc.expectedPatters))
 		})

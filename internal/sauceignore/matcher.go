@@ -11,8 +11,8 @@ import (
 
 const commentPrefix = "#"
 
-// patternsFromFile reads .sauceignore file and creates ignore patters if .sauceignore file is exists.
-func patternsFromFile(path string) ([]Pattern, error) {
+// PatternsFromFile reads .sauceignore file and creates ignore patters if .sauceignore file is exists.
+func PatternsFromFile(path string) ([]Pattern, error) {
 	if path == "" {
 		return []Pattern{}, nil
 	}
@@ -81,7 +81,7 @@ func NewMatcher(ps []Pattern) Matcher {
 
 // NewMatcherFromFile constructs a new matcher from file.
 func NewMatcherFromFile(path string) (Matcher, error) {
-	ps, err := patternsFromFile(path)
+	ps, err := PatternsFromFile(path)
 	if err != nil {
 		return nil, err
 	}
