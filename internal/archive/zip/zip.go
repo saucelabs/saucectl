@@ -36,7 +36,8 @@ func New(f io.Writer, matcher sauceignore.Matcher) (Writer, error) {
 	return w, nil
 }
 
-// Add adds the file at src to the destination dst in the archive.
+// Add adds the file at src to the destination dst in the archive and returns a count of
+// the files added to the archive.
 func (w *Writer) Add(src, dst string) (int, error) {
 	finfo, err := os.Stat(src)
 	if err != nil {
