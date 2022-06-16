@@ -126,6 +126,10 @@
                     "description": "Specifies any npm packages that are required to run tests.",
                     "type": "object"
                   },
+                  "dependencies": {
+                    "description": "Specify local npm dependencies for saucectl to upload. These dependencies must already be installed in the local node_modules directory.",
+                    "type": "array"
+                  },
                   "registry": {
                     "description": "Override the default and official NPM registry URL with a custom one.",
                     "type": "string"
