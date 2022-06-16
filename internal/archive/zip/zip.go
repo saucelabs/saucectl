@@ -37,46 +37,50 @@ func New(f io.Writer, matcher sauceignore.Matcher) (Writer, error) {
 }
 
 // Add adds the file at src to the destination dst in the archive.
-func (w *Writer) Add(src, dst string) error {
+func (w *Writer) Add(src, dst string) (int, error) {
 	finfo, err := os.Stat(src)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// Only will be applied if we have .sauceignore file and have patterns to exclude files and folders
 	if w.M.Match(strings.Split(src, string(os.PathSeparator)), finfo.IsDir()) {
-		return nil
+		return 0, nil
 	}
 	log.Debug().Str("name", src).Msg("Adding to archive")
 
 	if !finfo.IsDir() {
 		w, err := w.W.Create(path.Join(dst, finfo.Name()))
 		if err != nil {
-			return err
+			return 0, err
 		}
 		b, err := os.ReadFile(src)
 		if err != nil {
-			return err
+			return 0, err
 		}
 		_, err = w.Write(b)
-		return err
+		return 1, err
 	}
 
 	files, err := os.ReadDir(src)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
+	totalFileCount := 0
 	for _, f := range files {
 		base := filepath.Base(src)
 		rebase := path.Join(dst, base)
 		fpath := filepath.Join(src, f.Name())
-		if err := w.Add(fpath, rebase); err != nil {
-			return err
+		fileCount, err := w.Add(fpath, rebase)
+		if err != nil {
+			return 0, err
 		}
+
+		totalFileCount += fileCount
 	}
 
-	return nil
+	return totalFileCount, nil
 }
 
 // Close closes the archive. Adding more files to the archive is not possible after this.

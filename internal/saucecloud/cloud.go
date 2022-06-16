@@ -430,14 +430,19 @@ func (r *CloudRunner) archiveFolder(project interface{}, tempDir string, project
 		return "", err
 	}
 
+	totalFileCount := 0
 	for _, child := range folderContent {
-		if err := z.Add(filepath.Join(projectFolder, child.Name()), ""); err != nil {
+		fileCount, err := z.Add(filepath.Join(projectFolder, child.Name()), "")
+		if err != nil {
 			return "", err
 		}
+		totalFileCount += fileCount
 	}
-	if err := z.Add(rcPath, ""); err != nil {
+	fileCount, err := z.Add(rcPath, "")
+	if err != nil {
 		return "", err
 	}
+	totalFileCount += fileCount
 
 	err = z.Close()
 	if err != nil {
@@ -449,7 +454,7 @@ func (r *CloudRunner) archiveFolder(project interface{}, tempDir string, project
 		return "", err
 	}
 
-	log.Info().Dur("durationMs", time.Since(start)).Int64("size", f.Size()).Msg("Project archived.")
+	log.Info().Dur("durationMs", time.Since(start)).Int64("size", f.Size()).Int("fileCount", totalFileCount).Msg("Project archived.")
 
 	return zipName, nil
 }
@@ -475,16 +480,22 @@ func (r *CloudRunner) archiveFiles(project interface{}, tempDir string, files []
 	if err := jsonio.WriteFile(rcPath, project); err != nil {
 		return "", err
 	}
+
+	totalFileCount := 0
 	log.Debug().Str("name", rcPath).Msg("Adding to archive")
-	if err := z.Add(rcPath, ""); err != nil {
+	fileCount, err := z.Add(rcPath, "")
+	if err != nil {
 		return "", err
 	}
+	totalFileCount += fileCount
 
 	for _, f := range files {
 		log.Debug().Str("name", f).Msg("Adding to archive")
-		if err := z.Add(f, filepath.Dir(f)); err != nil {
+		fileCount, err := z.Add(f, filepath.Dir(f))
+		if err != nil {
 			return "", err
 		}
+		totalFileCount += fileCount
 	}
 
 	err = z.Close()
@@ -497,7 +508,7 @@ func (r *CloudRunner) archiveFiles(project interface{}, tempDir string, files []
 		return "", err
 	}
 
-	log.Info().Dur("durationMs", time.Since(start)).Int64("size", f.Size()).Msg("Project archived.")
+	log.Info().Dur("durationMs", time.Since(start)).Int64("size", f.Size()).Int("fileCount", totalFileCount).Msg("Project archived.")
 
 	return zipName, nil
 }
