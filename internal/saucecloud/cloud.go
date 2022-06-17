@@ -83,6 +83,12 @@ const BaseFilepathLength = 53
 // MaxFilepathLength represents the maximum path length acceptable.
 const MaxFilepathLength = 255
 
+// ArchiveFileCountSoftLimit is the threshold count of files added to the archive
+// before a warning is printed.
+// The value here (2^15) is somewhat arbitrary. In testing, ~32K files in the archive
+// resulted in about 30s for download and extraction.
+const ArchiveFileCountSoftLimit = 32768
+
 func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartOptions, chan result, error) {
 	jobOpts := make(chan job.StartOptions, maxRetries+1)
 	results := make(chan result, ccy)
@@ -455,6 +461,9 @@ func (r *CloudRunner) archiveFolder(project interface{}, tempDir string, project
 	}
 
 	log.Info().Dur("durationMs", time.Since(start)).Int64("size", f.Size()).Int("fileCount", totalFileCount).Msg("Project archived.")
+	if (totalFileCount >= ArchiveFileCountSoftLimit) {
+		msg.LogArchiveSizeWarning()
+	}
 
 	return zipName, nil
 }
@@ -509,6 +518,9 @@ func (r *CloudRunner) archiveFiles(project interface{}, tempDir string, files []
 	}
 
 	log.Info().Dur("durationMs", time.Since(start)).Int64("size", f.Size()).Int("fileCount", totalFileCount).Msg("Project archived.")
+	if (totalFileCount >= ArchiveFileCountSoftLimit) {
+		msg.LogArchiveSizeWarning()
+	}
 
 	return zipName, nil
 }
