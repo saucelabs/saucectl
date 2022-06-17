@@ -66,6 +66,7 @@ func (p Properties) SetNPM(npm config.Npm) Properties {
 		pkgs = append(pkgs, k)
 	}
 	p["npm_packages"] = pkgs
+	p["npm_dependencies"] = npm.Dependencies
 
 	return p
 }
