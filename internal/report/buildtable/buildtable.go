@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/table"
@@ -99,6 +100,7 @@ func (r *Reporter) buildURLFromJobURL(jobURL string, buildSource build.Source) s
 
 	bID, err := r.Service.GetBuildID(context.Background(), jID, buildSource)
 	if err != nil {
+		log.Debug().Err(err).Msg(fmt.Sprintf("Failed to retrieve build url for job %s", jID))
 		return ""
 	}
 
