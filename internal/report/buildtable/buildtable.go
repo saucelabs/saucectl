@@ -93,7 +93,7 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 func (r *Reporter) buildURLFromJobURL(jobURL string, buildSource build.Source) string {
 	pURL, err := url.Parse(jobURL)
 	if err != nil {
-		log.Debug().Str("jobURL", jobURL).Msg("Failed to parse job url")
+		log.Debug().Err(err).Msgf("Failed to parse job url (%s)", jobURL)
 		return ""
 	}
 	p := strings.Split(pURL.Path, "/")
@@ -101,7 +101,7 @@ func (r *Reporter) buildURLFromJobURL(jobURL string, buildSource build.Source) s
 
 	bID, err := r.Service.GetBuildID(context.Background(), jID, buildSource)
 	if err != nil {
-		log.Debug().Err(err).Msg(fmt.Sprintf("Failed to retrieve build url for job %s", jID))
+		log.Debug().Err(err).Msgf("Failed to retrieve build url for job %s", jID)
 		return ""
 	}
 
