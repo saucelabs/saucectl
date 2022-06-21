@@ -12,10 +12,21 @@ import (
 	"gopkg.in/segmentio/analytics-go.v3"
 )
 
-// Tracker is the segment implemention for usage.Tracker.
+// Tracker is the segment implementation for usage.Tracker.
 type Tracker struct {
 	client  analytics.Client
 	Enabled bool
+}
+
+// debugLogger is a logger that redirects logs to the debug log.
+type debugLogger struct{}
+
+func (l debugLogger) Logf(format string, args ...interface{}) {
+	log.Debug().Msgf(format, args...)
+}
+
+func (l debugLogger) Errorf(format string, args ...interface{}) {
+	log.Debug().Msgf(format, args...)
 }
 
 // New creates a new instance of Tracker.
@@ -31,6 +42,7 @@ func New(enabled bool) *Tracker {
 				Name: runtime.GOOS + " " + runtime.GOARCH,
 			},
 		},
+		Logger: debugLogger{},
 	})
 	if err != nil {
 		// Usage is not crucial to the execution of saucectl, so proceed without notifying or blocking the user.
