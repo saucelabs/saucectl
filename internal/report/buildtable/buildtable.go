@@ -93,6 +93,7 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 func (r *Reporter) buildURLFromJobURL(jobURL string, buildSource build.Source) string {
 	pURL, err := url.Parse(jobURL)
 	if err != nil {
+		log.Debug().Str("jobURL", jobURL).Msg("Failed to parse job url")
 		return ""
 	}
 	p := strings.Split(pURL.Path, "/")
