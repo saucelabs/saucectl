@@ -76,9 +76,8 @@ or peruse some of our example repositories:
   - https://github.com/saucelabs/saucectl-puppeteer-example
   - https://github.com/saucelabs/saucectl-testcafe-example`
 
-// UploadingTimeoutSuggestion is a recommendation to add unnecessary files to .sauceignore in the case that the bundled file is too big.
-const UploadingTimeoutSuggestion = `We *highly* recommend using .sauceignore file so that saucectl does not
-create big archives with unnecessary files.
+// SauceIgnoreSuggestion is a recommendation to add unnecessary files to .sauceignore in the case that the bundled file is too big.
+const SauceIgnoreSuggestion = `We *highly* recommend using .sauceignore file so that saucectl does not create big archives with unnecessary files.
 
 For more information, visit https://docs.saucelabs.com/dev/cli/saucectl/usage/use-cases/#excluding-files-from-the-bundle
 
@@ -87,6 +86,16 @@ or peruse some of our example repositories:
   - https://github.com/saucelabs/saucectl-playwright-example
   - https://github.com/saucelabs/saucectl-puppeteer-example
   - https://github.com/saucelabs/saucectl-testcafe-example`
+
+// ArchiveFileCountWarning is a warning to the user that their project archive may be unintentionally large.
+const ArchiveFileCountWarning = "The project archive is unusually large which can cause delays in your test execution."
+
+// LogArchiveSizeWarning prints out a warning about the project archive size along with
+// suggestions on how to fix it.
+func LogArchiveSizeWarning() {
+	warning := color.New(color.FgYellow)
+	fmt.Printf("\n%s\n\n%s\n\n", warning.Sprint(ArchiveFileCountWarning), SauceIgnoreSuggestion)
+}
 
 // LogSauceIgnoreNotExist prints out a formatted and color coded version of SauceIgnoreNotExist.
 func LogSauceIgnoreNotExist() {
@@ -109,7 +118,7 @@ func LogUploadTimeout() {
 
 // LogUploadTimeoutSuggestion prints out adding unnecessary files to .sauceignore
 func LogUploadTimeoutSuggestion() {
-	fmt.Printf("%s\n\n", UploadingTimeoutSuggestion)
+	fmt.Printf("%s\n\n", SauceIgnoreSuggestion)
 }
 
 // LogRootDirWarning prints out a warning message regarding the lack of an explicit rootDir configuration.
