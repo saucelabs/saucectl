@@ -54,7 +54,12 @@ func (r *Reporter) Render() {
 	if len(r.VDCTableReport.TestResults) > 0 {
 		r.VDCTableReport.Render()
 
-		jURL = r.VDCTableReport.TestResults[0].URL
+		for _, tr := range r.VDCTableReport.TestResults {
+			if tr.URL != "" {
+				jURL = tr.URL
+				break
+			}
+		}
 		bURL = r.buildURLFromJobURL(jURL, build.VDC)
 
 		if bURL == "" {
@@ -67,7 +72,12 @@ func (r *Reporter) Render() {
 	if len(r.RDCTableReport.TestResults) > 0 {
 		r.RDCTableReport.Render()
 
-		jURL = r.RDCTableReport.TestResults[0].URL
+		for _, tr := range r.RDCTableReport.TestResults {
+			if tr.URL != "" {
+				jURL = tr.URL
+				break
+			}
+		}
 		bURL = r.buildURLFromJobURL(jURL, build.RDC)
 
 		if bURL == "" {
