@@ -62,8 +62,7 @@ func (w *Writer) Add(src, dst string) (int, error) {
 		}
 		defer f.Close()
 
-		reader := bufio.NewReader(f)
-		_, err = reader.WriteTo(w)
+		_, err = io.Copy(w, f)
 		return 1, err
 	}
 
