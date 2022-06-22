@@ -464,7 +464,7 @@ func (r *CloudRunner) archiveFolder(project interface{}, tempDir string, project
 	}
 
 	log.Info().Dur("durationMs", time.Since(start)).Int64("size", f.Size()).Int("fileCount", totalFileCount).Msg("Project archived.")
-	if (totalFileCount >= ArchiveFileCountSoftLimit) {
+	if totalFileCount >= ArchiveFileCountSoftLimit {
 		msg.LogArchiveSizeWarning()
 	}
 
@@ -521,7 +521,7 @@ func (r *CloudRunner) archiveFiles(project interface{}, tempDir string, files []
 	}
 
 	log.Info().Dur("durationMs", time.Since(start)).Int64("size", f.Size()).Int("fileCount", totalFileCount).Msg("Project archived.")
-	if (totalFileCount >= ArchiveFileCountSoftLimit) {
+	if totalFileCount >= ArchiveFileCountSoftLimit {
 		msg.LogArchiveSizeWarning()
 	}
 
