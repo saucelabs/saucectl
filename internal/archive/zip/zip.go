@@ -2,7 +2,6 @@ package zip
 
 import (
 	"archive/zip"
-	"bufio"
 	"io"
 	"os"
 	"path"
