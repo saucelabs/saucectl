@@ -1,23 +1,21 @@
 package run
 
 import (
-	"fmt"
+	"os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"os"
 
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
@@ -93,54 +91,47 @@ func runCypress(cmd *cobra.Command) (int, error) {
 		return 1, err
 	}
 
-	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
-	p.Sauce.Metadata.SetDefaultBuild()
-
-	if err := applyCypressFlags(&p); err != nil {
+	var regio region.Region
+	p.SetCLIFlags(flags.CaptureCommandLineFlags(cmd.Flags()))
+	if err := p.ApplyFlags(gFlags.selectedSuite); err != nil {
 		return 1, err
 	}
-
-	cypress.SetDefaults(&p)
-
-	if err := cypress.Validate(&p); err != nil {
-		return 1, err
-	}
-
+	p.SetDefaults()
 	if !gFlags.noAutoTagging {
-		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
+		p.AppendTags(ci.GetTags())
 	}
 
-	regio := region.FromString(p.Sauce.Region)
+	if err := p.Validate(); err != nil {
+		return 1, err
+	}
 
+	regio = region.FromString(p.GetSauceCfg().Region)
 	testcompClient.URL = regio.APIBaseURL()
 	webdriverClient.URL = regio.WebDriverBaseURL()
 	restoClient.URL = regio.APIBaseURL()
 	appsClient.URL = regio.APIBaseURL()
-
-	restoClient.ArtifactConfig = p.Artifacts.Download
-
+	restoClient.ArtifactConfig = p.GetArtifactsCfg().Download
 	tracker := segment.New(!gFlags.disableUsageMetrics)
 
 	defer func() {
 		props := usage.Properties{}
-		props.SetFramework("cypress").SetFVersion(p.Cypress.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
-			SetArtifacts(p.Artifacts).SetDocker(p.Docker).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).
-			SetSlack(p.Notifications.Slack).SetSharding(cypress.IsSharded(p.Suites))
+		props.SetFramework("cypress").SetFVersion(p.GetVersion()).SetFlags(cmd.Flags()).SetSauceConfig(p.GetSauceCfg()).
+			SetArtifacts(p.GetArtifactsCfg()).SetDocker(p.GetDocker()).SetNPM(p.GetNpm()).SetNumSuites(len(p.GetSuites())).SetJobs(captor.Default.TestResults).
+			SetSlack(p.GetNotifications().Slack).SetSharding(p.IsSharded())
 
 		tracker.Collect(cases.Title(language.English).String(fullCommandName(cmd)), props)
 		_ = tracker.Close()
 	}()
 
-	cleanupArtifacts(p.Artifacts)
-
+	cleanupArtifacts(p.GetArtifactsCfg())
 	dockerProject, sauceProject := cypress.SplitSuites(p)
-	if len(dockerProject.Suites) != 0 {
+	if dockerProject != nil && dockerProject.GetSuiteCount() != 0 {
 		exitCode, err := runCypressInDocker(dockerProject)
 		if err != nil || exitCode != 0 {
 			return exitCode, err
 		}
 	}
-	if len(sauceProject.Suites) != 0 {
+	if sauceProject.GetSuiteCount() != 0 {
 		return runCypressInSauce(sauceProject, regio)
 	}
 
@@ -151,13 +142,13 @@ func runCypressInDocker(p cypress.Project) (int, error) {
 	log.Info().Msg("Running Cypress in Docker")
 	printTestEnv("docker")
 
-	cd, err := docker.NewCypress(p, &testcompClient, &testcompClient, &restoClient, &restoClient, createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
+	cd, err := docker.NewCypress(p, &testcompClient, &testcompClient, &restoClient, &restoClient, createReporters(p.GetReporter(), p.GetNotifications(), p.GetSauceCfg().Metadata, &testcompClient, &restoClient,
 		"cypress", "docker"))
 	if err != nil {
 		return 1, err
 	}
 
-	cleanCypressPackages(&p)
+	p.CleanPackages()
 	return cd.RunProject()
 }
 
@@ -182,40 +173,16 @@ func runCypressInSauce(p cypress.Project, regio region.Region) (int, error) {
 			MetadataService: &testcompClient,
 			TunnelService:   &restoClient,
 			Region:          regio,
-			ShowConsoleLog:  p.ShowConsoleLog,
-			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
+			ShowConsoleLog:  p.GetShowConsoleLog(),
+			Reporters: createReporters(p.GetReporter(), p.GetNotifications(), p.GetSauceCfg().Metadata, &testcompClient, &restoClient,
 				"cypress", "sauce"),
 			Async:                  gFlags.async,
 			FailFast:               gFlags.failFast,
-			MetadataSearchStrategy: framework.NewSearchStrategy(p.Cypress.Version, p.RootDir),
-			NPMDependencies:        p.Npm.Dependencies,
+			MetadataSearchStrategy: framework.NewSearchStrategy(p.GetVersion(), p.GetRootDir()),
+			NPMDependencies:        p.GetNpm().Dependencies,
 		},
 	}
 
-	cleanCypressPackages(&p)
+	p.CleanPackages()
 	return r.RunProject()
-}
-
-func applyCypressFlags(p *cypress.Project) error {
-	if gFlags.selectedSuite != "" {
-		if err := cypress.FilterSuites(p, gFlags.selectedSuite); err != nil {
-			return err
-		}
-	}
-
-	// Create an adhoc suite if "--name" is provided
-	if p.Suite.Name != "" {
-		p.Suites = []cypress.Suite{p.Suite}
-	}
-
-	return nil
-}
-
-func cleanCypressPackages(p *cypress.Project) {
-	// Don't allow framework installation, it is provided by the runner
-	version, hasFramework := p.Npm.Packages["cypress"]
-	if hasFramework {
-		log.Warn().Msg(msg.IgnoredNpmPackagesMsg("cypress", p.Cypress.Version, []string{fmt.Sprintf("cypress@%s", version)}))
-		p.Npm.Packages = config.CleanNpmPackages(p.Npm.Packages, []string{"cypress"})
-	}
 }

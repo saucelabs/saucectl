@@ -99,7 +99,7 @@ const (
 	// MissingBrowserInSuite indicates no browser specified
 	MissingBrowserInSuite = "no browser specified in suite '%s'"
 	// MissingTestFiles indicates no testFiles specified
-	MissingTestFiles = "no config.testFiles specified in suite '%s'"
+	MissingTestFiles = "no test files specified in suite '%s'"
 	// UnableToLocateCypressCfg indicates it cannot locate cypress config file by the path
 	UnableToLocateCypressCfg = "unable to locate the cypress config file at: %s"
 )

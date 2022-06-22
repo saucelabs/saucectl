@@ -1,4 +1,4 @@
-package cypress
+package v1alpha
 
 import (
 	"errors"

@@ -24,16 +24,16 @@ func NewCypress(c cypress.Project, ms framework.MetadataService, wr job.Writer, 
 			docker:          nil,
 			containerConfig: &containerConfig{},
 			Framework: framework.Framework{
-				Name:    c.Kind,
-				Version: c.Cypress.Version,
+				Name:    c.GetKind(),
+				Version: c.GetVersion(),
 			},
 			FrameworkMeta:          ms,
-			ShowConsoleLog:         c.ShowConsoleLog,
+			ShowConsoleLog:         c.GetShowConsoleLog(),
 			JobWriter:              wr,
 			JobReader:              jr,
 			ArtfactDownloader:      dl,
 			Reporters:              reps,
-			MetadataSearchStrategy: framework.NewSearchStrategy(c.Cypress.Version, c.RootDir),
+			MetadataSearchStrategy: framework.NewSearchStrategy(c.GetVersion(), c.GetRootDir()),
 		},
 	}
 
@@ -48,39 +48,41 @@ func NewCypress(c cypress.Project, ms framework.MetadataService, wr job.Writer, 
 
 // RunProject runs the tests defined in config.Project.
 func (r *CypressRunner) RunProject() (int, error) {
-	verifyFileTransferCompatibility(r.Project.Sauce.Concurrency, &r.Project.Docker)
+	docker := r.Project.GetDocker()
+	verifyFileTransferCompatibility(r.Project.GetSauceCfg().Concurrency, &docker)
 
-	if err := r.fetchImage(&r.Project.Docker); err != nil {
+	if err := r.fetchImage(&docker); err != nil {
 		return 1, err
 	}
 
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
-	containerOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency)
+	containerOpts, results := r.createWorkerPool(r.Project.GetSauceCfg().Concurrency)
 	defer close(results)
 
 	go func() {
-		for _, suite := range r.Project.Suites {
+		for _, suite := range r.Project.GetSuites() {
 			containerOpts <- containerStartOptions{
-				Docker:         r.Project.Docker,
-				BeforeExec:     r.Project.BeforeExec,
+				Docker:         docker,
+				BeforeExec:     r.Project.GetBeforeExec(),
 				Project:        r.Project,
 				Browser:        suite.Browser,
 				DisplayName:    suite.Name,
 				SuiteName:      suite.Name,
-				Environment:    suite.Config.Env,
-				RootDir:        r.Project.RootDir,
-				Sauceignore:    r.Project.Sauce.Sauceignore,
-				ConfigFilePath: r.Project.ConfigFilePath,
-				CLIFlags:       r.Project.CLIFlags,
+				Environment:    suite.Env,
+				RootDir:        r.Project.GetRootDir(),
+				Sauceignore:    r.Project.GetSauceCfg().Sauceignore,
+				ConfigFilePath: r.Project.GetCfgPath(),
+				CLIFlags:       r.Project.GetCLIFlags(),
 				Timeout:        suite.Timeout,
 			}
 		}
 		close(containerOpts)
+
 	}()
 
-	hasPassed := r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites))
+	hasPassed := r.collectResults(r.Project.GetArtifactsCfg().Download, results, r.Project.GetSuiteCount())
 	if !hasPassed {
 		return 1, nil
 	}
