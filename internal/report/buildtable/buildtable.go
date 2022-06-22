@@ -111,7 +111,7 @@ func (r *Reporter) buildURLFromJobURL(jobURL string, buildSource build.Source) s
 
 	bID, err := r.Service.GetBuildID(context.Background(), jID, buildSource)
 	if err != nil {
-		log.Debug().Err(err).Msgf("Failed to retrieve build url for job %s", jID)
+		log.Debug().Err(err).Msgf("Failed to retrieve build id for job (%s)", jID)
 		return ""
 	}
 
