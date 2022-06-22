@@ -2,6 +2,7 @@ package framework
 
 import (
 	"context"
+	"fmt"
 	"github.com/Masterminds/semver/v3"
 	"github.com/pkg/errors"
 	"github.com/saucelabs/saucectl/internal/node"
@@ -59,21 +60,17 @@ func TestFrameworkFind_ExactStrategy(t *testing.T) {
 			"invalidSearchOptions",
 			"version 1.0 for buster is not available",
 			nil,
-			&MockMetadataService{
-				MockSearch: func(context.Context, SearchOptions) (Metadata, error) {
-					return Metadata{}, errors.Errorf("Bad Request: unsupported version")
-				},
-			},
+			&MockMetadataService{},
 			"buster",
 			"1.0",
 		},
 		{
 			"unknownFrameworkError",
-			"framework availability unknown: unexpected error present",
+			"unable to determine available versions for framework: framework not supported",
 			nil,
 			&MockMetadataService{
-				MockSearch: func(context.Context, SearchOptions) (Metadata, error) {
-					return Metadata{}, errors.Errorf("unexpected error present")
+				MockVersions: func(ctx context.Context, frameworkName string) ([]Metadata, error) {
+					return []Metadata{}, fmt.Errorf("framework not supported")
 				},
 			},
 			"buster",
@@ -84,8 +81,8 @@ func TestFrameworkFind_ExactStrategy(t *testing.T) {
 			"",
 			nil,
 			&MockMetadataService{
-				MockSearch: func(context.Context, SearchOptions) (Metadata, error) {
-					return Metadata{}, nil
+				MockVersions: func(ctx context.Context, frameworkName string) ([]Metadata, error) {
+					return []Metadata{{FrameworkName: "buster-final", FrameworkVersion: "3.0"}}, nil
 				},
 			},
 			"buster-final",

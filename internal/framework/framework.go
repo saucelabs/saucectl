@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"regexp"
+	"strings"
 
 	"github.com/saucelabs/saucectl/internal/msg"
 )
@@ -63,4 +64,25 @@ func GitReleaseSegments(m *Metadata) (org, repo, tag string, err error) {
 	tagIndex := r.SubexpIndex("tag")
 
 	return matches[orgIndex], matches[repoIndex], matches[tagIndex], nil
+}
+
+// HasPlatform returns true if the provided Metadata has a matching platform.
+func HasPlatform(m Metadata, platform string) bool {
+	for _, p := range m.Platforms {
+		if strings.ToLower(platform) == strings.ToLower(p.PlatformName) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// PlatformNames extracts platform names from the given platforms and returns them.
+func PlatformNames(platforms []Platform) []string {
+	var pp []string
+	for _, platform := range platforms {
+		pp = append(pp, platform.PlatformName)
+	}
+
+	return pp
 }
