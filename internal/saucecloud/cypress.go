@@ -2,7 +2,10 @@ package saucecloud
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"strings"
 
 	"github.com/saucelabs/saucectl/internal/cypress"
@@ -35,6 +38,13 @@ func (r *CypressRunner) RunProject() (int, error) {
 		fmt.Print(deprecationMessage)
 	}
 
+	for _, s := range r.Project.Suites {
+		if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
+			msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
+			return 1, errors.New("unsupported platform")
+		}
+	}
+
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
 		return 1, err
 	}
@@ -63,7 +73,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 }
 
 func (r *CypressRunner) getSuiteNames() string {
-	names := []string{}
+	var names []string
 	for _, s := range r.Project.Suites {
 		names = append(names, s.Name)
 	}

@@ -151,3 +151,13 @@ func SuiteSplitNoMatch(suiteName, path string, pattern []string) {
 	color.Red(fmt.Sprintf("\nNo matching files found for suite '%s'\n", suiteName))
 	fmt.Printf("saucectl looked for %s in %s\n\n", strings.Join(pattern, ","), path)
 }
+
+func LogUnsupportedPlatform(platform string, supported []string) {
+	fmt.Printf("\nThe selected platform %s is not available.\n\n", platform)
+	fmt.Println("Available platforms are:")
+	var msg string
+	for _, p := range supported {
+		msg += fmt.Sprintf(" - %s\n", p)
+	}
+	fmt.Println(msg)
+}

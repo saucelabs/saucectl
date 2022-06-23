@@ -2,7 +2,10 @@ package saucecloud
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"strings"
 
 	"github.com/saucelabs/saucectl/internal/job"
@@ -33,6 +36,12 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 	if m.Deprecated {
 		deprecationMessage = r.deprecationMessage(testcafe.Kind, r.Project.Testcafe.Version)
 		fmt.Print(deprecationMessage)
+	}
+	for _, s := range r.Project.Suites {
+		if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
+			msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
+			return 1, errors.New("unsupported platform")
+		}
 	}
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
