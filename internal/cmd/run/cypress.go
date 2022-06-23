@@ -91,7 +91,6 @@ func runCypress(cmd *cobra.Command) (int, error) {
 		return 1, err
 	}
 
-	var regio region.Region
 	p.SetCLIFlags(flags.CaptureCommandLineFlags(cmd.Flags()))
 	if err := p.ApplyFlags(gFlags.selectedSuite); err != nil {
 		return 1, err
@@ -105,7 +104,7 @@ func runCypress(cmd *cobra.Command) (int, error) {
 		return 1, err
 	}
 
-	regio = region.FromString(p.GetSauceCfg().Region)
+	regio := region.FromString(p.GetSauceCfg().Region)
 	testcompClient.URL = regio.APIBaseURL()
 	webdriverClient.URL = regio.WebDriverBaseURL()
 	restoClient.URL = regio.APIBaseURL()
