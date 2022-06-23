@@ -69,7 +69,7 @@ func GitReleaseSegments(m *Metadata) (org, repo, tag string, err error) {
 // HasPlatform returns true if the provided Metadata has a matching platform.
 func HasPlatform(m Metadata, platform string) bool {
 	for _, p := range m.Platforms {
-		if strings.ToLower(platform) == strings.ToLower(p.PlatformName) {
+		if strings.EqualFold(platform, p.PlatformName) {
 			return true
 		}
 	}
