@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/table"
@@ -92,6 +93,7 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 func (r *Reporter) buildURLFromJobURL(jobURL string, buildSource build.Source) string {
 	pURL, err := url.Parse(jobURL)
 	if err != nil {
+		log.Debug().Err(err).Msgf("Failed to parse job url (%s)", jobURL)
 		return ""
 	}
 	p := strings.Split(pURL.Path, "/")
@@ -99,6 +101,7 @@ func (r *Reporter) buildURLFromJobURL(jobURL string, buildSource build.Source) s
 
 	bID, err := r.Service.GetBuildID(context.Background(), jID, buildSource)
 	if err != nil {
+		log.Debug().Err(err).Msgf("Failed to retrieve build url for job %s", jID)
 		return ""
 	}
 
