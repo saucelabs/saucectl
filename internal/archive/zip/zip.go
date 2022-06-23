@@ -55,11 +55,13 @@ func (w *Writer) Add(src, dst string) (int, error) {
 		if err != nil {
 			return 0, err
 		}
-		b, err := os.ReadFile(src)
+		f, err := os.Open(src)
 		if err != nil {
 			return 0, err
 		}
-		_, err = w.Write(b)
+		defer f.Close()
+
+		_, err = io.Copy(w, f)
 		return 1, err
 	}
 
