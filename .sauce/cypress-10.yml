@@ -12,13 +12,12 @@ defaults:
   mode: sauce
   timeout: 5m
 docker:
-  image: cypress
   fileTransfer: mount
 cypress:
   version: 9.7.0
   configFile: "cypress.config.js"
 suites:
-  - name: "saucy test on Windows 10"
+  - name: "chrome test"
     browser: "chrome"
     platformName: "macOS 11.00"
     config:
@@ -27,7 +26,7 @@ suites:
       specPattern: [ "cypress/**/*.js" ]
       excludedTestFiles: []
 
-  - name: "saucy test on Mac"
+  - name: "firefox test"
     browser: "firefox"
     platformName: "macOS 11.00"
     config:
