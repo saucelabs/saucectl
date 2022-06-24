@@ -38,6 +38,7 @@ func NewCypressCmd() *cobra.Command {
 			return preRun()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			// Test patterns are passed in via positional args.
 			viper.Set("suite::config::specPattern", args)
 
 			exitCode, err := runCypress(cmd)
