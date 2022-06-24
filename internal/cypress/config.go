@@ -26,7 +26,7 @@ type Project interface {
 	GetRunnerVersion() string
 	SetVersion(version string)
 	GetSauceCfg() config.SauceConfig
-	GetDryRun() bool
+	IsDryRun() bool
 	GetRootDir() string
 	GetSuiteNames() string
 	GetCfgPath() string
