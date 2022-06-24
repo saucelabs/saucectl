@@ -2,11 +2,13 @@ package saucecloud
 
 import (
 	"context"
-	"os"
-
+	"errors"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
+	"os"
 )
 
 // ReplayRunner represents the Sauce Labs cloud implementation for puppeteer-replay.
@@ -26,6 +28,13 @@ func (r *ReplayRunner) RunProject() (int, error) {
 	}
 	if r.Project.RunnerVersion == "" {
 		r.Project.RunnerVersion = m.CloudRunnerVersion
+	}
+
+	for _, s := range r.Project.Suites {
+		if s.Platform != "" && !framework.HasPlatform(m, s.Platform) {
+			msg.LogUnsupportedPlatform(s.Platform, framework.PlatformNames(m.Platforms))
+			return 1, errors.New("unsupported platform")
+		}
 	}
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {

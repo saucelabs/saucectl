@@ -207,12 +207,11 @@ func TestRunProject(t *testing.T) {
 	}
 
 	mdService := &mocks.FakeFrameworkInfoReader{
-		SearchFn: func(ctx context.Context, opts framework.SearchOptions) (framework.Metadata, error) {
-			return framework.Metadata{
+		VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
+			return []framework.Metadata{{
 				FrameworkName:    "cypress",
 				FrameworkVersion: "5.6.0",
-				Deprecated:       false,
-			}, nil
+			}}, nil
 		},
 	}
 

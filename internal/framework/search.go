@@ -43,23 +43,26 @@ func (s ExactStrategy) Find(ctx context.Context, svc MetadataService, frameworkN
 		return Metadata{}, errors.New("framework version not defined")
 	}
 
-	m, err := svc.Search(ctx, SearchOptions{
-		Name:             frameworkName,
-		FrameworkVersion: frameworkVersion,
-	})
+	versions, err := svc.Versions(ctx, frameworkName)
+	if err != nil {
+		return Metadata{}, fmt.Errorf("unable to determine available versions for framework: %w", err)
+	}
 
-	if err != nil && strings.Contains(err.Error(), "Bad Request: unsupported version") {
-		return Metadata{}, &FrameworkUnavailableError{
-			Name:    frameworkName,
-			Version: frameworkVersion,
+	for _, version := range versions {
+		// Not looking for any specific version, so pick the latest == first one.
+		if frameworkVersion == "latest" {
+			return version, nil
+		}
+
+		if version.FrameworkVersion == frameworkVersion {
+			return version, nil
 		}
 	}
 
-	if err != nil {
-		return Metadata{}, fmt.Errorf("framework availability unknown: %w", err)
+	return Metadata{}, &FrameworkUnavailableError{
+		Name:    frameworkName,
+		Version: frameworkVersion,
 	}
-
-	return m, nil
 }
 
 func toNpmPackageName(frameworkName string) string {
