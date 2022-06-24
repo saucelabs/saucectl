@@ -39,35 +39,35 @@ func (r *CypressRunner) RunProject() (int, error) {
 	}
 
 	if err := r.validateTunnel(r.Project.GetSauceCfg().Tunnel.Name, r.Project.GetSauceCfg().Tunnel.Owner); err != nil {
-		for _, s := range r.Project.Suites {
+		for _, s := range r.Project.GetSuites() {
 			if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
 				msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
 				return 1, errors.New("unsupported platform")
 			}
 		}
+	}
 
-		if r.Project.GetDryRun() {
-			if err := r.dryRun(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore, r.Project.GetSuiteNames()); err != nil {
-				return exitCode, err
-			}
-			return 0, nil
-		}
-		fileURI, err := r.remoteArchiveFolder(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore)
-		if err != nil {
+	if r.Project.GetDryRun() {
+		if err := r.dryRun(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore, r.Project.GetSuiteNames()); err != nil {
 			return exitCode, err
 		}
-
-		passed := r.runSuites(fileURI)
-		if passed {
-			exitCode = 0
-		}
-
-		if deprecationMessage != "" {
-			fmt.Print(deprecationMessage)
-		}
-
-		return exitCode, nil
+		return 0, nil
 	}
+	fileURI, err := r.remoteArchiveFolder(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore)
+	if err != nil {
+		return exitCode, err
+	}
+
+	passed := r.runSuites(fileURI)
+	if passed {
+		exitCode = 0
+	}
+
+	if deprecationMessage != "" {
+		fmt.Print(deprecationMessage)
+	}
+
+	return exitCode, nil
 }
 
 // checkCypressVersion do several checks before running Cypress tests.
