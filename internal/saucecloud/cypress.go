@@ -38,16 +38,18 @@ func (r *CypressRunner) RunProject() (int, error) {
 		fmt.Print(deprecationMessage)
 	}
 
-	if err := r.validateTunnel(r.Project.GetSauceCfg().Tunnel.Name, r.Project.GetSauceCfg().Tunnel.Owner); err != nil {
-		for _, s := range r.Project.GetSuites() {
-			if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
-				msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
-				return 1, errors.New("unsupported platform")
-			}
+	for _, s := range r.Project.GetSuites() {
+		if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
+			msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
+			return 1, errors.New("unsupported platform")
 		}
 	}
 
-	if r.Project.GetDryRun() {
+	if err := r.validateTunnel(r.Project.GetSauceCfg().Tunnel.Name, r.Project.GetSauceCfg().Tunnel.Owner); err != nil {
+		return 1, err
+	}
+
+	if r.Project.IsDryRun() {
 		if err := r.dryRun(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore, r.Project.GetSuiteNames()); err != nil {
 			return exitCode, err
 		}

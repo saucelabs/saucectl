@@ -332,7 +332,7 @@ func (p *Project) GetSauceCfg() config.SauceConfig {
 	return p.Sauce
 }
 
-func (p *Project) GetDryRun() bool {
+func (p *Project) IsDryRun() bool {
 	return p.DryRun
 }
 
@@ -360,7 +360,7 @@ func (p *Project) GetArtifactsCfg() config.Artifacts {
 	return p.Artifacts
 }
 
-func (p *Project) GetShowConsoleLog() bool {
+func (p *Project) IsShowConsoleLog() bool {
 	return p.ShowConsoleLog
 }
 

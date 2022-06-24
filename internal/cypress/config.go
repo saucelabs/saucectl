@@ -66,10 +66,7 @@ func FromFile(cfgPath string) (Project, error) {
 	if version == v1alpha.APIVersion {
 		return v1alpha.FromFile(cfgPath)
 	}
-	if version == v1.APIVersion {
-		return v1.FromFile(cfgPath)
-	}
-	return nil, nil
+	return v1.FromFile(cfgPath)
 }
 
 // SplitSuites divided Suites to dockerSuites and sauceSuites
