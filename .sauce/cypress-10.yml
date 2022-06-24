@@ -24,7 +24,6 @@ suites:
       env:
         hello: world
       specPattern: [ "cypress/**/*.js" ]
-      excludedTestFiles: []
 
   - name: "firefox test"
     browser: "firefox"
