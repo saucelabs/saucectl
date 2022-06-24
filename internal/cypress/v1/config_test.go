@@ -224,3 +224,38 @@ func TestCypressV1_Validate(t *testing.T) {
 		})
 	}
 }
+
+func TestCyress_CleanPackages(t *testing.T) {
+	testCase := []struct {
+		name      string
+		project   Project
+		expResult map[string]string
+	}{
+		{
+			name: "clean cypress package in npm packages",
+			project: Project{Npm: config.Npm{
+				Packages: map[string]string{
+					"cypress": "10.1.0",
+				},
+			}},
+			expResult: map[string]string{},
+		},
+		{
+			name: "no need to clean npm packages",
+			project: Project{Npm: config.Npm{
+				Packages: map[string]string{
+					"lodash": "*",
+				},
+			}},
+			expResult: map[string]string{
+				"lodash": "*",
+			},
+		},
+	}
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.project.CleanPackages()
+			assert.Equal(t, tc.expResult, tc.project.Npm.Packages)
+		})
+	}
+}
