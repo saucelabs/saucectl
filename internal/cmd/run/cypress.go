@@ -124,7 +124,7 @@ func runCypress(cmd *cobra.Command) (int, error) {
 
 	cleanupArtifacts(p.GetArtifactsCfg())
 	dockerProject, sauceProject := cypress.SplitSuites(p)
-	if dockerProject != nil && dockerProject.GetSuiteCount() != 0 {
+	if dockerProject.GetSuiteCount() != 0 {
 		exitCode, err := runCypressInDocker(dockerProject)
 		if err != nil || exitCode != 0 {
 			return exitCode, err

@@ -175,7 +175,6 @@ func (p *Project) SetDefaults() {
 // values. This is not an exhaustive operation and further validation should be performed both in the client and/or
 // server side depending on the workflow that is executed.
 func (p *Project) Validate() error {
-	fmt.Println("p: ", p)
 	p.Cypress.Version = config.StandardizeVersionFormat(p.Cypress.Version)
 
 	if p.Cypress.Version == "" {
@@ -230,26 +229,6 @@ func (p *Project) Validate() error {
 	var err error
 	p.Suites, err = shardSuites(p.RootDir, p.Suites, p.Sauce.Concurrency)
 	return err
-}
-
-// SplitSuites divided Suites to dockerSuites and sauceSuites
-func (p *Project) SplitSuites() (interface{}, interface{}) {
-	var dockerSuites []Suite
-	var sauceSuites []Suite
-	for _, s := range p.Suites {
-		if s.Mode == "docker" || (s.Mode == "" && p.Defaults.Mode == "docker") {
-			dockerSuites = append(dockerSuites, s)
-		} else {
-			sauceSuites = append(sauceSuites, s)
-		}
-	}
-
-	dockerProject := p
-	dockerProject.Suites = dockerSuites
-	sauceProject := p
-	sauceProject.Suites = sauceSuites
-
-	return dockerProject, sauceProject
 }
 
 func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
@@ -315,21 +294,6 @@ func IsSharded(suites []Suite) bool {
 		}
 	}
 	return false
-}
-
-func ApplyCypressFlags(suite string, p *Project) error {
-	if suite != "" {
-		if err := FilterSuites(p, suite); err != nil {
-			return err
-		}
-	}
-
-	// Create an adhoc suite if "--name" is provided
-	if p.Suite.Name != "" {
-		p.Suites = []Suite{p.Suite}
-	}
-
-	return nil
 }
 
 func (p *Project) CleanPackages() {

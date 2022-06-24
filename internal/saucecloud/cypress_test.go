@@ -13,20 +13,22 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/cypress"
+	v1 "github.com/saucelabs/saucectl/internal/cypress/v1"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/mocks"
 )
 
 func TestPreliminarySteps_Basic(t *testing.T) {
-	runner := CypressRunner{Project: cypress.Project{Cypress: cypress.Cypress{Version: "5.6.2"}}}
+	runner := CypressRunner{Project: &v1.Project{Cypress: v1.Cypress{Version: "10.1.0"}}}
 	assert.Nil(t, runner.checkCypressVersion())
 }
 
 func TestPreliminarySteps_NoCypressVersion(t *testing.T) {
 	want := "missing cypress version. Check available versions here: https://docs.saucelabs.com/dev/cli/saucectl/#supported-frameworks-and-browsers"
-	runner := CypressRunner{}
+	runner := CypressRunner{
+		Project: &v1.Project{},
+	}
 	err := runner.checkCypressVersion()
 	assert.NotNil(t, err)
 	assert.Equal(t, want, err.Error())
@@ -103,8 +105,8 @@ func TestRunSuites(t *testing.T) {
 				return 1, nil
 			}},
 		},
-		Project: cypress.Project{
-			Suites: []cypress.Suite{
+		Project: &v1.Project{
+			Suites: []v1.Suite{
 				{Name: "dummy-suite"},
 			},
 			Sauce: config.SauceConfig{
@@ -127,9 +129,9 @@ func TestArchiveProject(t *testing.T) {
 	}()
 
 	runner := CypressRunner{
-		Project: cypress.Project{
+		Project: &v1.Project{
 			RootDir: "../../tests/e2e/",
-			Cypress: cypress.Cypress{
+			Cypress: v1.Cypress{
 				ConfigFile: "cypress.json",
 			},
 		},
@@ -137,7 +139,7 @@ func TestArchiveProject(t *testing.T) {
 	wd, _ := os.Getwd()
 	log.Info().Msg(wd)
 
-	z, err := runner.archiveFolder(runner.Project, "./test-arch/", runner.Project.RootDir, "")
+	z, err := runner.archiveFolder(runner.Project, "./test-arch/", runner.Project.GetRootDir(), "")
 	if err != nil {
 		t.Fail()
 	}
@@ -249,13 +251,13 @@ func TestRunProject(t *testing.T) {
 			MetadataService:        mdService,
 			MetadataSearchStrategy: framework.ExactStrategy{},
 		},
-		Project: cypress.Project{
+		Project: &v1.Project{
 			RootDir: ".",
-			Cypress: cypress.Cypress{
+			Cypress: v1.Cypress{
 				Version:    "5.6.0",
 				ConfigFile: "../../tests/e2e/cypress.json",
 			},
-			Suites: []cypress.Suite{
+			Suites: []v1.Suite{
 				{Name: "dummy-suite"},
 			},
 			Sauce: config.SauceConfig{
@@ -267,18 +269,4 @@ func TestRunProject(t *testing.T) {
 	cnt, err := runner.RunProject()
 	assert.Nil(t, err)
 	assert.Equal(t, cnt, 0)
-}
-
-func TestCypress_GetSuiteNames(t *testing.T) {
-	runner := &CypressRunner{
-		Project: cypress.Project{
-			Suites: []cypress.Suite{
-				{Name: "suite1"},
-				{Name: "suite2"},
-				{Name: "suite3"},
-			},
-		},
-	}
-
-	assert.Equal(t, "suite1, suite2, suite3", runner.getSuiteNames())
 }

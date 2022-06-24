@@ -308,32 +308,6 @@ func (p *Project) Validate() error {
 	return err
 }
 
-// SplitSuites divided Suites to dockerSuites and sauceSuites
-func (p *Project) SplitSuites() (interface{}, interface{}) {
-	var dockerSuites []Suite
-	var sauceSuites []Suite
-	for _, s := range p.Suites {
-		if s.Mode == "docker" || (s.Mode == "" && p.Defaults.Mode == "docker") {
-			dockerSuites = append(dockerSuites, s)
-		} else {
-			sauceSuites = append(sauceSuites, s)
-		}
-	}
-
-	var dockerProject *Project
-	if len(dockerSuites) != 0 {
-		dockerProject = p
-		dockerProject.Suites = dockerSuites
-	}
-	var sauceProject *Project
-	if len(sauceSuites) != 0 {
-		sauceProject = p
-		sauceProject.Suites = sauceSuites
-	}
-
-	return dockerProject, sauceProject
-}
-
 func shardSuites(cfg Config, suites []Suite, ccy int) ([]Suite, error) {
 	var shardedSuites []Suite
 	for _, s := range suites {
@@ -390,6 +364,7 @@ func (p *Project) FilterSuites(suiteName string) error {
 	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
 }
 
+// IsSharded returns is it's sharded
 func (p *Project) IsSharded() bool {
 	for _, s := range p.Suites {
 		if s.Shard != "" {
@@ -399,21 +374,7 @@ func (p *Project) IsSharded() bool {
 	return false
 }
 
-func ApplyCypressFlags(suite string, p *Project) error {
-	if suite != "" {
-		if err := p.FilterSuites(suite); err != nil {
-			return err
-		}
-	}
-
-	// Create an adhoc suite if "--name" is provided
-	if p.Suite.Name != "" {
-		p.Suites = []Suite{p.Suite}
-	}
-
-	return nil
-}
-
+// CleanPackages removes cypress from npm packages
 func (p *Project) CleanPackages() {
 	// Don't allow framework installation, it is provided by the runner
 	version, hasFramework := p.Npm.Packages["cypress"]
@@ -423,6 +384,7 @@ func (p *Project) CleanPackages() {
 	}
 }
 
+// GetSuiteCount returns the amount of suites
 func (p *Project) GetSuiteCount() int {
 	if p == nil {
 		return 0
@@ -430,34 +392,42 @@ func (p *Project) GetSuiteCount() int {
 	return len(p.Suites)
 }
 
+// GetVersion returns cypress version
 func (p *Project) GetVersion() string {
 	return p.Cypress.Version
 }
 
+// GetRunnerVersion returns RunnerVersion
 func (p *Project) GetRunnerVersion() string {
 	return p.RunnerVersion
 }
 
+// SetVersion sets cypress version
 func (p *Project) SetVersion(version string) {
 	p.Cypress.Version = version
 }
 
+// SetRunnerVersion sets runner version
 func (p *Project) SetRunnerVersion(version string) {
 	p.RunnerVersion = version
 }
 
+// GetSauceCfg returns sauce related config
 func (p *Project) GetSauceCfg() config.SauceConfig {
 	return p.Sauce
 }
 
+// GetDryRun returns DryRun
 func (p *Project) GetDryRun() bool {
 	return p.DryRun
 }
 
+// GetRootDir returns RootDir
 func (p *Project) GetRootDir() string {
 	return p.RootDir
 }
 
+// GetSuiteNames returns combined suite names
 func (p *Project) GetSuiteNames() string {
 	var names []string
 	for _, s := range p.Suites {
@@ -466,46 +436,57 @@ func (p *Project) GetSuiteNames() string {
 	return strings.Join(names, ", ")
 }
 
+// GetCfgPath returns ConfigFilePath
 func (p *Project) GetCfgPath() string {
 	return p.ConfigFilePath
 }
 
+// GetCLIFlags returns CLIFlags
 func (p *Project) GetCLIFlags() map[string]interface{} {
 	return p.CLIFlags
 }
 
+// GetArtifactsCfg returns config.Artifacts
 func (p *Project) GetArtifactsCfg() config.Artifacts {
 	return p.Artifacts
 }
 
+// GetShowConsoleLog returns ShowConsoleLog
 func (p *Project) GetShowConsoleLog() bool {
 	return p.ShowConsoleLog
 }
 
+// GetDocker returns config.Docker
 func (p *Project) GetDocker() config.Docker {
 	return p.Docker
 }
 
+// GetBeforeExec returns BeforeExec
 func (p *Project) GetBeforeExec() []string {
 	return p.BeforeExec
 }
 
+// GetReporter returns config.Reporters
 func (p *Project) GetReporter() config.Reporters {
 	return p.Reporters
 }
 
+// GetNotifications returns config.Notifications
 func (p *Project) GetNotifications() config.Notifications {
 	return p.Notifications
 }
 
+// GetNpm returns config.Npm
 func (p *Project) GetNpm() config.Npm {
 	return p.Npm
 }
 
+// SetCLIFlags sets cli flags
 func (p *Project) SetCLIFlags(flags map[string]interface{}) {
 	p.CLIFlags = flags
 }
 
+// GetSuites returns suites
 func (p *Project) GetSuites() []config.Suite {
 	suites := []config.Suite{}
 	for _, s := range p.Suites {
@@ -527,10 +508,12 @@ func (p *Project) GetSuites() []config.Suite {
 	return suites
 }
 
+// GetKind returns Kind
 func (p *Project) GetKind() string {
 	return p.Kind
 }
 
+// GetSuite returns suite
 func (p *Project) GetSuite() config.Suite {
 	s := p.Suite
 	return config.Suite{
@@ -549,6 +532,7 @@ func (p *Project) GetSuite() config.Suite {
 	}
 }
 
+// ApplyFlags applys cli flags on cypress project
 func (p *Project) ApplyFlags(selectedSuite string) error {
 	if selectedSuite != "" {
 		if err := p.FilterSuites(selectedSuite); err != nil {
@@ -564,10 +548,12 @@ func (p *Project) ApplyFlags(selectedSuite string) error {
 	return nil
 }
 
+// AppendTags adds tags
 func (p *Project) AppendTags(tags []string) {
 	p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, tags...)
 }
 
+// GetAPIVersion returns APIVersion
 func (p *Project) GetAPIVersion() string {
 	return p.APIVersion
 }

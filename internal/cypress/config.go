@@ -13,7 +13,6 @@ var (
 )
 
 type Project interface {
-	SplitSuites() (interface{}, interface{})
 	FilterSuites(suiteName string) error
 	CleanPackages()
 	ApplyFlags(selectedSuite string) error

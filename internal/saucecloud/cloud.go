@@ -717,7 +717,6 @@ func (r *CloudRunner) validateTunnel(name, owner string) error {
 
 func (r *CloudRunner) dryRun(project interface{}, folder string, sauceIgnoreFile string, suiteNames string) error {
 	log.Warn().Msg("Running tests in dry run mode.")
-	fmt.Println("project: ", project)
 	tmpDir, err := os.MkdirTemp("./", "sauce-app-payload-*")
 	if err != nil {
 		return err
