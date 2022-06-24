@@ -32,7 +32,7 @@ type Project interface {
 	GetCfgPath() string
 	GetCLIFlags() map[string]interface{}
 	GetArtifactsCfg() config.Artifacts
-	GetShowConsoleLog() bool
+	IsShowConsoleLog() bool
 	GetDocker() config.Docker
 	GetBeforeExec() []string
 	GetReporter() config.Reporters
