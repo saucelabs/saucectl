@@ -277,26 +277,6 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 	return shardedSuites, nil
 }
 
-// FilterSuites filters out suites in the project that don't match the given suite name.
-func FilterSuites(p *Project, suiteName string) error {
-	for _, s := range p.Suites {
-		if s.Name == suiteName {
-			p.Suites = []Suite{s}
-			return nil
-		}
-	}
-	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
-}
-
-func IsSharded(suites []Suite) bool {
-	for _, s := range suites {
-		if s.Shard != "" {
-			return true
-		}
-	}
-	return false
-}
-
 func (p *Project) CleanPackages() {
 	// Don't allow framework installation, it is provided by the runner
 	version, hasFramework := p.Npm.Packages["cypress"]
@@ -306,6 +286,7 @@ func (p *Project) CleanPackages() {
 	}
 }
 
+// GetSuiteCount returns the amount of suites
 func (p *Project) GetSuiteCount() int {
 	if p == nil {
 		return 0
@@ -313,34 +294,42 @@ func (p *Project) GetSuiteCount() int {
 	return len(p.Suites)
 }
 
+// GetVersion returns cypress version
 func (p *Project) GetVersion() string {
 	return p.Cypress.Version
 }
 
+// GetRunnerVersion returns RunnerVersion
 func (p *Project) GetRunnerVersion() string {
 	return p.RunnerVersion
 }
 
+// SetVersion sets cypress version
 func (p *Project) SetVersion(version string) {
 	p.Cypress.Version = version
 }
 
+// SetRunnerVersion sets runner version
 func (p *Project) SetRunnerVersion(version string) {
 	p.RunnerVersion = version
 }
 
+// GetSauceCfg returns sauce related config
 func (p *Project) GetSauceCfg() config.SauceConfig {
 	return p.Sauce
 }
 
+// IsDryRun returns DryRun
 func (p *Project) IsDryRun() bool {
 	return p.DryRun
 }
 
+// GetRootDir returns RootDir
 func (p *Project) GetRootDir() string {
 	return p.RootDir
 }
 
+// GetSuiteNames returns combined suite names
 func (p *Project) GetSuiteNames() string {
 	var names []string
 	for _, s := range p.Suites {
@@ -349,46 +338,57 @@ func (p *Project) GetSuiteNames() string {
 	return strings.Join(names, ", ")
 }
 
+// GetCfgPath returns ConfigFilePath
 func (p *Project) GetCfgPath() string {
 	return p.ConfigFilePath
 }
 
+// GetCLIFlags returns CLIFlags
 func (p *Project) GetCLIFlags() map[string]interface{} {
 	return p.CLIFlags
 }
 
+// GetArtifactsCfg returns config.Artifacts
 func (p *Project) GetArtifactsCfg() config.Artifacts {
 	return p.Artifacts
 }
 
+// IsShowConsoleLog returns ShowConsoleLog
 func (p *Project) IsShowConsoleLog() bool {
 	return p.ShowConsoleLog
 }
 
+// GetDocker returns config.Docker
 func (p *Project) GetDocker() config.Docker {
 	return p.Docker
 }
 
+// GetBeforeExec returns BeforeExec
 func (p *Project) GetBeforeExec() []string {
 	return p.BeforeExec
 }
 
+// GetReporter returns config.Reporters
 func (p *Project) GetReporter() config.Reporters {
 	return p.Reporters
 }
 
+// GetNotifications returns config.Notifications
 func (p *Project) GetNotifications() config.Notifications {
 	return p.Notifications
 }
 
+// GetNpm returns config.Npm
 func (p *Project) GetNpm() config.Npm {
 	return p.Npm
 }
 
+// SetCLIFlags sets cli flags
 func (p *Project) SetCLIFlags(flags map[string]interface{}) {
 	p.CLIFlags = flags
 }
 
+// GetSuites returns suites
 func (p *Project) GetSuites() []suite.Suite {
 	suites := []suite.Suite{}
 	for _, s := range p.Suites {
@@ -410,6 +410,7 @@ func (p *Project) GetSuites() []suite.Suite {
 	return suites
 }
 
+// GetKind returns Kind
 func (p *Project) GetKind() string {
 	return p.Kind
 }
@@ -425,6 +426,7 @@ func (p *Project) FilterSuites(suiteName string) error {
 	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
 }
 
+// ApplyFlags applys cli flags on cypress project
 func (p *Project) ApplyFlags(selectedSuite string) error {
 	if selectedSuite != "" {
 		if err := p.FilterSuites(selectedSuite); err != nil {
@@ -440,10 +442,12 @@ func (p *Project) ApplyFlags(selectedSuite string) error {
 	return nil
 }
 
+// AppendTags adds tags
 func (p *Project) AppendTags(tags []string) {
 	p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, tags...)
 }
 
+// GetSuite returns suite
 func (p *Project) GetSuite() suite.Suite {
 	s := p.Suite
 	return suite.Suite{
@@ -462,6 +466,7 @@ func (p *Project) GetSuite() suite.Suite {
 	}
 }
 
+// IsSharded returns is it's sharded
 func (p *Project) IsSharded() bool {
 	for _, s := range p.Suites {
 		if s.Shard != "" {
@@ -471,6 +476,7 @@ func (p *Project) IsSharded() bool {
 	return false
 }
 
+// GetAPIVersion returns APIVersion
 func (p *Project) GetAPIVersion() string {
 	return p.APIVersion
 }
