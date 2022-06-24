@@ -14,7 +14,7 @@ defaults:
 docker:
   fileTransfer: mount
 cypress:
-  version: 9.7.0
+  version: 10.1.0
   configFile: "cypress.config.js"
 suites:
   - name: "chrome test"
