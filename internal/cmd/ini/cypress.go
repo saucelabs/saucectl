@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	v1 "github.com/saucelabs/saucectl/internal/cypress/v1"
@@ -17,7 +18,7 @@ func configureCypress(cfg *initConfig) interface{} {
 	versions := strings.Split(cfg.frameworkVersion, ".")
 	version, err := strconv.Atoi(versions[0])
 	if err != nil {
-		fmt.Errorf("failed to parse frameworkVersion: %v", err)
+		log.Err(err).Msg("failed to parse frameworkVersion")
 	}
 	if version < 10 {
 		return v1alpha.Project{
