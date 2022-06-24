@@ -23,7 +23,7 @@ suites:
     config:
       env:
         hello: world
-      specPattern: [ "cypress/**/*.js" ]
+      specPattern: [ "cypress/e2e/**/*.js" ]
 
   - name: "firefox test"
     browser: "firefox"
@@ -31,7 +31,7 @@ suites:
     config:
       env:
         hello: world
-      specPattern: [ "cypress/**/*.js" ]
+      specPattern: [ "cypress/e2e/**/*.js" ]
 
 artifacts:
   download:
