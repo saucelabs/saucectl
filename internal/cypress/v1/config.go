@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/cypress/suite"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -388,10 +389,10 @@ func (p *Project) SetCLIFlags(flags map[string]interface{}) {
 	p.CLIFlags = flags
 }
 
-func (p *Project) GetSuites() []config.Suite {
-	suites := []config.Suite{}
+func (p *Project) GetSuites() []suite.Suite {
+	suites := []suite.Suite{}
 	for _, s := range p.Suites {
-		suites = append(suites, config.Suite{
+		suites = append(suites, suite.Suite{
 			Name:             s.Name,
 			Browser:          s.Browser,
 			BrowserVersion:   s.BrowserVersion,
@@ -443,9 +444,9 @@ func (p *Project) AppendTags(tags []string) {
 	p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, tags...)
 }
 
-func (p *Project) GetSuite() config.Suite {
+func (p *Project) GetSuite() suite.Suite {
 	s := p.Suite
-	return config.Suite{
+	return suite.Suite{
 		Name:             s.Name,
 		Browser:          s.Browser,
 		BrowserVersion:   s.BrowserVersion,

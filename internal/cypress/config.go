@@ -2,6 +2,7 @@ package cypress
 
 import (
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/cypress/suite"
 	v1 "github.com/saucelabs/saucectl/internal/cypress/v1"
 	"github.com/saucelabs/saucectl/internal/cypress/v1alpha"
 )
@@ -39,10 +40,10 @@ type Project interface {
 	GetNotifications() config.Notifications
 	GetNpm() config.Npm
 	SetCLIFlags(map[string]interface{})
-	GetSuites() []config.Suite
+	GetSuites() []suite.Suite
 	GetKind() string
 	SetRunnerVersion(string)
-	GetSuite() config.Suite
+	GetSuite() suite.Suite
 	GetAPIVersion() string
 }
 
