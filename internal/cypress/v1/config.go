@@ -64,11 +64,11 @@ type Suite struct {
 	Headless         bool          `yaml:"headless,omitempty" json:"headless"`
 	PreExec          []string      `yaml:"preExec,omitempty" json:"preExec"`
 	TimeZone         string        `yaml:"timeZone,omitempty" json:"timeZone"`
-	TestingType      string        `yaml:"testingType,omitempty" json:"testingType"`
 }
 
 // SuiteConfig represents the cypress config overrides.
 type SuiteConfig struct {
+	TestingType        string            `yaml:"testingType,omitempty" json:"testingType"`
 	SpecPattern        []string          `yaml:"specPattern,omitempty" json:"specPattern"`
 	ExcludeSpecPattern []string          `yaml:"excludeSpecPattern,omitempty" json:"excludeSpecPattern,omitempty"`
 	Env                map[string]string `yaml:"env,omitempty" json:"env"`
@@ -223,7 +223,7 @@ func (p *Project) Validate() error {
 			return fmt.Errorf(msg.MissingBrowserInSuite, s.Name)
 		}
 
-		if s.TestingType != "e2e" && s.TestingType != "component" {
+		if s.Config.TestingType != "e2e" && s.Config.TestingType != "component" {
 			return fmt.Errorf(msg.InvalidCypressTestingType, s.Name)
 		}
 

@@ -173,8 +173,7 @@ func TestCypressV1_Validate(t *testing.T) {
 				Sauce:   config.SauceConfig{Region: "us-west-1"},
 				Suites: []Suite{
 					Suite{
-						Name:    "suite 1",
-						Browser: "chrome",
+						Name: "suite 1",
 						Config: SuiteConfig{
 							SpecPattern: []string{"a"},
 						},
@@ -190,6 +189,35 @@ func TestCypressV1_Validate(t *testing.T) {
 			expErr: true,
 		},
 		{
+			name: "empty testingType",
+			project: &Project{
+				Cypress: Cypress{Version: "v1.1.1"},
+				RootDir: "../",
+				Docker:  config.Docker{FileTransfer: "mount"},
+				Sauce:   config.SauceConfig{Region: "us-west-1"},
+				Suites: []Suite{
+					Suite{
+						Name:    "suite 1",
+						Browser: "chrome",
+						Config: SuiteConfig{
+							TestingType: "e2e",
+							SpecPattern: []string{"a"},
+						},
+					},
+					Suite{
+						Name:    "suite 2",
+						Browser: "chrome",
+						Config: SuiteConfig{
+							TestingType: "e2e",
+							SpecPattern: []string{"a"},
+						},
+					},
+				},
+			},
+			expErr: true,
+		},
+
+		{
 			name: "empty specPattern",
 			project: &Project{
 				Cypress: Cypress{Version: "v1.1.1"},
@@ -201,13 +229,16 @@ func TestCypressV1_Validate(t *testing.T) {
 						Name:    "suite 1",
 						Browser: "chrome",
 						Config: SuiteConfig{
+							TestingType: "e2e",
 							SpecPattern: []string{"a"},
 						},
 					},
 					Suite{
 						Name:    "suite 2",
 						Browser: "chrome",
-						Config:  SuiteConfig{},
+						Config: SuiteConfig{
+							TestingType: "e2e",
+						},
 					},
 				},
 			},

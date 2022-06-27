@@ -20,20 +20,20 @@ suites:
   - name: "chrome test"
     browser: "chrome"
     platformName: "macOS 11.00"
-    testingType: "e2e"
     config:
       env:
         hello: world
       specPattern: [ "cypress/e2e/**/*.js" ]
+      testingType: "e2e"
 
   - name: "firefox test"
     browser: "firefox"
     platformName: "macOS 11.00"
-    testingType: "e2e"
     config:
       env:
         hello: world
       specPattern: [ "cypress/e2e/**/*.js" ]
+      testingType: "e2e"
 
 artifacts:
   download:
