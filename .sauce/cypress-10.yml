@@ -7,7 +7,7 @@ sauce:
     tags:
       - e2e
     build: "$BUILD_ID"
-rootDir: tests/e2e/cypress_10
+rootDir: tests/e2e/cypress_10/e2e/
 defaults:
   mode: sauce
   timeout: 5m
@@ -20,6 +20,7 @@ suites:
   - name: "chrome test"
     browser: "chrome"
     platformName: "macOS 11.00"
+    testingType: "e2e"
     config:
       env:
         hello: world
@@ -28,6 +29,7 @@ suites:
   - name: "firefox test"
     browser: "firefox"
     platformName: "macOS 11.00"
+    testingType: "e2e"
     config:
       env:
         hello: world

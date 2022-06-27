@@ -64,6 +64,7 @@ type Suite struct {
 	Headless         bool          `yaml:"headless,omitempty" json:"headless"`
 	PreExec          []string      `yaml:"preExec,omitempty" json:"preExec"`
 	TimeZone         string        `yaml:"timeZone,omitempty" json:"timeZone"`
+	TestingType      string        `yaml:"testingType,omitempty" json:"testingType"`
 }
 
 // SuiteConfig represents the cypress config overrides.
@@ -220,6 +221,10 @@ func (p *Project) Validate() error {
 
 		if s.Browser == "" {
 			return fmt.Errorf(msg.MissingBrowserInSuite, s.Name)
+		}
+
+		if s.TestingType != "e2e" && s.TestingType != "component" {
+			return fmt.Errorf(msg.InvalidCypressTestingType, s.Name)
 		}
 
 		if len(s.Config.SpecPattern) == 0 {

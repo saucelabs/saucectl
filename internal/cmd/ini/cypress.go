@@ -78,6 +78,7 @@ func configureCypress(cfg *initConfig) interface{} {
 				PlatformName: cfg.platformName,
 				Browser:      cfg.browserName,
 				Mode:         cfg.mode,
+				TestingType:  "e2e",
 				Config: v1.SuiteConfig{
 					SpecPattern: []string{"**/*.*"},
 				},
