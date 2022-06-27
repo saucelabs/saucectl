@@ -5,15 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/requesth"
 	"github.com/saucelabs/saucectl/internal/slice"
 	"github.com/saucelabs/saucectl/internal/version"
 	"io"
 	"net/http"
-	"strings"
-
-	"github.com/saucelabs/saucectl/internal/credentials"
-	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
 // Client service
@@ -177,14 +175,14 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 		return
 	}
 
-	if resp.StatusCode >= 300 {
-		err = fmt.Errorf("job start failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, strings.TrimSpace(string(body)))
-		return "", false, err
-	}
-
 	var sessionStart sessionStartResponse
 	if err = json.Unmarshal(body, &sessionStart); err != nil {
-		return "", false, fmt.Errorf("job start status unknown: unable to parse server response: %w", err)
+		return "", false, fmt.Errorf("job start failed (%d): %s", resp.StatusCode, body)
+	}
+
+	if sessionStart.SessionID == "" {
+		err = fmt.Errorf("job start failed (%d): %s", resp.StatusCode, sessionStart.Value.Message)
+		return "", false, err
 	}
 
 	return sessionStart.SessionID, false, nil

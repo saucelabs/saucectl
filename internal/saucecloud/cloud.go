@@ -624,7 +624,7 @@ func (r *CloudRunner) logSuite(res result) {
 			Msg(msg)
 	} else {
 		l := log.Error().Str("suite", res.name).Bool("passed", res.job.Passed).Str("url", jobDetailsPage)
-		if res.job.TotalStatus() == job.StateError {
+		if res.job.Error != "" {
 			l.Str("error", res.job.Error)
 			msg = "Suite finished with error."
 		}
@@ -637,6 +637,11 @@ func (r *CloudRunner) logSuite(res result) {
 func (r *CloudRunner) logSuiteConsole(res result) {
 	// To avoid clutter, we don't show the console on job passes.
 	if res.job.Passed && !r.ShowConsoleLog {
+		return
+	}
+
+	// If a job errored (not to be confused with tests failing), there are likely no assets available anyway.
+	if res.job.Error != "" {
 		return
 	}
 

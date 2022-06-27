@@ -376,7 +376,7 @@ func TestClient_GetJobAssetFileContent(t *testing.T) {
 			client:       New(ts.URL, "test", "123", timeout),
 			jobID:        "2",
 			expectedResp: nil,
-			expectedErr:  ErrJobNotFound,
+			expectedErr:  ErrAssetNotFound,
 		},
 		{
 			name:         "get job asset with ID 3",
