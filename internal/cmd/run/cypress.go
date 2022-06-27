@@ -66,7 +66,7 @@ func NewCypressCmd() *cobra.Command {
 	sc.String("cypress.key", "cypress::key", "", "The Cypress record key")
 	sc.Bool("cypress.record", "cypress::record", false, "Whether or not to record tests to the cypress dashboard")
 	sc.StringSlice("excludeSpecPattern", "suite::config::excludeSpecPattern", []string{}, "Exclude test files to skip the tests, using glob pattern")
-	sc.String("testingType", "suite::testingType", "e2e", "Specify the type of tests to execute; either e2e or component. Defaults to e2e")
+	sc.String("testingType", "suite::config::testingType", "e2e", "Specify the type of tests to execute; either e2e or component. Defaults to e2e")
 
 	// Video & Screen(shots)
 	sc.String("screenResolution", "suite::screenResolution", "", "The screen resolution")
