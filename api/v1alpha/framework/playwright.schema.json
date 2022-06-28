@@ -156,6 +156,10 @@
               "project": {
                 "description": "Specify playwright project",
                 "type": "string"
+              },
+              "updateSnapshots": {
+                "description": "Whether to update expected snapshots with the actual results produced by the test run",
+                "type": "boolean"
               }
             },
             "required": [
