@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/node"
 	"io"
 	"io/fs"
 	"os"
@@ -13,6 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/node"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"

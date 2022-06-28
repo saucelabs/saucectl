@@ -4,12 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/framework"
-	"github.com/saucelabs/saucectl/internal/msg"
-	"strings"
 
 	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/msg"
 )
 
 // CypressRunner represents the Sauce Labs cloud implementation for cypress.
@@ -23,39 +22,40 @@ func (r *CypressRunner) RunProject() (int, error) {
 	var deprecationMessage string
 	exitCode := 1
 
-	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, cypress.Kind, r.Project.Cypress.Version)
+	cyVersion := r.Project.GetVersion()
+	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, cypress.Kind, cyVersion)
 	if err != nil {
 		r.logFrameworkError(err)
 		return exitCode, err
 	}
-	r.Project.Cypress.Version = m.FrameworkVersion
-	if r.Project.RunnerVersion == "" {
-		r.Project.RunnerVersion = m.CloudRunnerVersion
+	r.Project.SetVersion(m.FrameworkVersion)
+	if r.Project.GetRunnerVersion() == "" {
+		r.Project.SetRunnerVersion(m.CloudRunnerVersion)
 	}
 
 	if m.Deprecated {
-		deprecationMessage = r.deprecationMessage(cypress.Kind, r.Project.Cypress.Version)
+		deprecationMessage = r.deprecationMessage(cypress.Kind, cyVersion)
 		fmt.Print(deprecationMessage)
 	}
 
-	for _, s := range r.Project.Suites {
+	for _, s := range r.Project.GetSuites() {
 		if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
 			msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
 			return 1, errors.New("unsupported platform")
 		}
 	}
 
-	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
+	if err := r.validateTunnel(r.Project.GetSauceCfg().Tunnel.Name, r.Project.GetSauceCfg().Tunnel.Owner); err != nil {
 		return 1, err
 	}
 
-	if r.Project.DryRun {
-		if err := r.dryRun(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.getSuiteNames()); err != nil {
+	if r.Project.IsDryRun() {
+		if err := r.dryRun(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore, r.Project.GetSuiteNames()); err != nil {
 			return exitCode, err
 		}
 		return 0, nil
 	}
-	fileURI, err := r.remoteArchiveFolder(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore)
+	fileURI, err := r.remoteArchiveFolder(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore)
 	if err != nil {
 		return exitCode, err
 	}
@@ -72,17 +72,9 @@ func (r *CypressRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-func (r *CypressRunner) getSuiteNames() string {
-	var names []string
-	for _, s := range r.Project.Suites {
-		names = append(names, s.Name)
-	}
-	return strings.Join(names, ", ")
-}
-
 // checkCypressVersion do several checks before running Cypress tests.
 func (r *CypressRunner) checkCypressVersion() error {
-	if r.Project.Cypress.Version == "" {
+	if r.Project.GetVersion() == "" {
 		return fmt.Errorf("missing cypress version. Check available versions here: https://docs.saucelabs.com/dev/cli/saucectl/#supported-frameworks-and-browsers")
 	}
 	return nil
@@ -91,7 +83,7 @@ func (r *CypressRunner) checkCypressVersion() error {
 func (r *CypressRunner) runSuites(fileURI string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
-	jobOpts, results, err := r.createWorkerPool(r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
+	jobOpts, results, err := r.createWorkerPool(r.Project.GetSauceCfg().Concurrency, r.Project.GetSauceCfg().Retries)
 	if err != nil {
 		return false
 	}
@@ -99,35 +91,35 @@ func (r *CypressRunner) runSuites(fileURI string) bool {
 
 	// Submit suites to work on.
 	go func() {
-		for _, s := range r.Project.Suites {
+		for _, s := range r.Project.GetSuites() {
 			jobOpts <- job.StartOptions{
-				ConfigFilePath:   r.Project.ConfigFilePath,
-				CLIFlags:         r.Project.CLIFlags,
+				ConfigFilePath:   r.Project.GetCfgPath(),
+				CLIFlags:         r.Project.GetCLIFlags(),
 				DisplayName:      s.Name,
 				Timeout:          s.Timeout,
 				App:              fileURI,
 				Suite:            s.Name,
 				Framework:        "cypress",
-				FrameworkVersion: r.Project.Cypress.Version,
+				FrameworkVersion: r.Project.GetVersion(),
 				BrowserName:      s.Browser,
 				BrowserVersion:   s.BrowserVersion,
 				PlatformName:     s.PlatformName,
 				Name:             s.Name,
-				Build:            r.Project.Sauce.Metadata.Build,
-				Tags:             r.Project.Sauce.Metadata.Tags,
+				Build:            r.Project.GetSauceCfg().Metadata.Build,
+				Tags:             r.Project.GetSauceCfg().Metadata.Tags,
 				Tunnel: job.TunnelOptions{
-					ID:     r.Project.Sauce.Tunnel.Name,
-					Parent: r.Project.Sauce.Tunnel.Owner,
+					ID:     r.Project.GetSauceCfg().Tunnel.Name,
+					Parent: r.Project.GetSauceCfg().Tunnel.Owner,
 				},
 				ScreenResolution: s.ScreenResolution,
-				RunnerVersion:    r.Project.RunnerVersion,
-				Experiments:      r.Project.Sauce.Experiments,
+				RunnerVersion:    r.Project.GetRunnerVersion(),
+				Experiments:      r.Project.GetSauceCfg().Experiments,
 				Attempt:          0,
-				Retries:          r.Project.Sauce.Retries,
+				Retries:          r.Project.GetSauceCfg().Retries,
 				TimeZone:         s.TimeZone,
 			}
 		}
 	}()
 
-	return r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites))
+	return r.collectResults(r.Project.GetArtifactsCfg().Download, results, r.Project.GetSuiteCount())
 }

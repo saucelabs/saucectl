@@ -1,4 +1,4 @@
-package cypress
+package v1alpha
 
 import (
 	"errors"
@@ -61,7 +61,7 @@ func TestFilterSuites(t *testing.T) {
 
 	for _, tc := range testCase {
 		t.Run(tc.name, func(t *testing.T) {
-			err := FilterSuites(tc.config, tc.suiteName)
+			err := tc.config.FilterSuites(tc.suiteName)
 			if err != nil {
 				assert.Equal(t, tc.expErr, err.Error())
 			}
