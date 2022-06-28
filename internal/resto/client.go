@@ -31,6 +31,8 @@ var (
 	ErrServerError = errors.New(msg.InternalServerError)
 	// ErrJobNotFound is returned when the requested job was not found.
 	ErrJobNotFound = errors.New(msg.JobNotFound)
+	// ErrAssetNotFound is returned when the requested asset was not found.
+	ErrAssetNotFound = errors.New(msg.AssetNotFound)
 	// ErrTunnelNotFound is returned when the requested tunnel was not found.
 	ErrTunnelNotFound = errors.New(msg.TunnelNotFound)
 )
@@ -344,7 +346,7 @@ func doAssetRequest(httpClient *retryablehttp.Client, request *http.Request) ([]
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, ErrJobNotFound
+		return nil, ErrAssetNotFound
 	}
 
 	if resp.StatusCode != http.StatusOK {

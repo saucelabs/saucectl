@@ -92,9 +92,10 @@ func TestClient_StartJob(t *testing.T) {
 				jobStarterPayload: job.StartOptions{},
 			},
 			want:    "",
-			wantErr: fmt.Errorf("job start failed; unexpected response code:'300', msg:''"),
+			wantErr: fmt.Errorf("job start failed (401): go away"),
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(300)
+				w.WriteHeader(401)
+				_, _ = w.Write([]byte("go away"))
 			},
 		},
 		{
@@ -108,10 +109,10 @@ func TestClient_StartJob(t *testing.T) {
 				jobStarterPayload: job.StartOptions{},
 			},
 			want:    "",
-			wantErr: fmt.Errorf("job start failed; unexpected response code:'500', msg:'Internal server error'"),
+			wantErr: fmt.Errorf("job start failed (500): internal server error"),
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(500)
-				_, err := w.Write([]byte("Internal server error"))
+				_, err := w.Write([]byte("internal server error"))
 				if err != nil {
 					t.Errorf("failed to write response: %v", err)
 				}
