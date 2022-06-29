@@ -2,12 +2,13 @@ package run
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"os"
 
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
@@ -79,6 +80,7 @@ func NewPlaywrightCmd() *cobra.Command {
 	sc.Int("numShards", "suite::numShards", 0, "Split tests across N number of shards")
 	sc.String("project", "suite::params::project", "", "Specify playwright project")
 	sc.StringSlice("excludedTestFiles", "suite::excludedTestFiles", []string{}, "Exclude test files to skip the tests, using regex")
+	sc.Bool("updateSnapshots", "suite::params::updateSnapshots", false, "Whether to update expected snapshots with the actual results produced by the test run.")
 
 	// Misc
 	sc.String("rootDir", "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")

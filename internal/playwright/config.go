@@ -78,15 +78,16 @@ type SuiteConfig struct {
 	BrowserName string `yaml:"browserName,omitempty" json:"browserName,omitempty"`
 
 	// Fields appeared in v1.12+
-	Headless      bool   `yaml:"headless,omitempty" json:"headless,omitempty"`
-	GlobalTimeout int    `yaml:"globalTimeout,omitempty" json:"globalTimeout,omitempty"`
-	Timeout       int    `yaml:"timeout,omitempty" json:"timeout,omitempty"`
-	Grep          string `yaml:"grep,omitempty" json:"grep,omitempty"`
-	GrepInvert    string `yaml:"grepInvert,omitempty" json:"grepInvert,omitempty"`
-	RepeatEach    int    `yaml:"repeatEach,omitempty" json:"repeatEach,omitempty"`
-	Retries       int    `yaml:"retries,omitempty" json:"retries,omitempty"`
-	MaxFailures   int    `yaml:"maxFailures,omitempty" json:"maxFailures,omitempty"`
-	Project       string `yaml:"project" json:"project,omitempty"`
+	Headless        bool   `yaml:"headless,omitempty" json:"headless,omitempty"`
+	GlobalTimeout   int    `yaml:"globalTimeout,omitempty" json:"globalTimeout,omitempty"`
+	Timeout         int    `yaml:"timeout,omitempty" json:"timeout,omitempty"`
+	Grep            string `yaml:"grep,omitempty" json:"grep,omitempty"`
+	GrepInvert      string `yaml:"grepInvert,omitempty" json:"grepInvert,omitempty"`
+	RepeatEach      int    `yaml:"repeatEach,omitempty" json:"repeatEach,omitempty"`
+	Retries         int    `yaml:"retries,omitempty" json:"retries,omitempty"`
+	MaxFailures     int    `yaml:"maxFailures,omitempty" json:"maxFailures,omitempty"`
+	Project         string `yaml:"project" json:"project,omitempty"`
+	UpdateSnapshots bool   `yaml:"updateSnapshots,omitempty" json:"updateSnapshots"`
 
 	// Shard is set by saucectl (not user) based on Suite.NumShards.
 	Shard string `yaml:"-" json:"shard,omitempty"`
