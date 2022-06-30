@@ -844,14 +844,14 @@ func (r *CloudRunner) getAvailableVersionsMessage(frameworkName string) string {
 	if err != nil {
 		return ""
 	}
-	msg := fmt.Sprintf("Available versions of %s are:\n", frameworkName)
+	m := fmt.Sprintf("Available versions of %s are:\n", frameworkName)
 	for _, v := range versions {
 		if !v.Deprecated {
-			msg += fmt.Sprintf(" - %s\n", v.FrameworkVersion)
+			m += fmt.Sprintf(" - %s\n", v.FrameworkVersion)
 		}
 	}
-	msg += "\n"
-	return msg
+	m += "\n"
+	return m
 }
 
 func (r *CloudRunner) getFileMatcher(projectFolder, sauceignoreFile string) (sauceignore.Matcher, error) {
