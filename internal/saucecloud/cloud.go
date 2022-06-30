@@ -844,14 +844,14 @@ func (r *CloudRunner) getAvailableVersionsMessage(frameworkName string) string {
 	if err != nil {
 		return ""
 	}
-	msg := fmt.Sprintf("Available versions of %s are:\n", frameworkName)
+	m := fmt.Sprintf("Available versions of %s are:\n", frameworkName)
 	for _, v := range versions {
 		if !v.Deprecated {
-			msg += fmt.Sprintf(" - %s\n", v.FrameworkVersion)
+			m += fmt.Sprintf(" - %s\n", v.FrameworkVersion)
 		}
 	}
-	msg += "\n"
-	return msg
+	m += "\n"
+	return m
 }
 
 func (r *CloudRunner) getFileMatcher(projectFolder, sauceignoreFile string) (sauceignore.Matcher, error) {
@@ -880,9 +880,24 @@ func (r *CloudRunner) getFileMatcher(projectFolder, sauceignoreFile string) (sau
 			reqs := node.Requirements(filepath.Join(projectFolder, "node_modules"), r.NPMDependencies...)
 			log.Info().Msgf("Found a total of %d related npm dependencies", len(reqs))
 			for _, req := range reqs {
+				segments := strings.Split(req, string(os.PathSeparator))
+
+				// Scoped packages, like '@saucelabs/hot-sauce', need special treatment in gitignore due to nested
+				// folders. Gitignore will ignore any subfolder inclusions, if the parent is already excluded.
+				// Since by default we ignore all files under 'node_modules/*', adding an inclusion of only
+				// '@saucelabs/hot-sauce' does not work, because '@saucelabs/` is excluded, which is its parent.
+				// We need to explicitly include the parent folder and exclude all its files by default, which prevents
+				// random packages within the scope to be picked up, unless specifically included.
+				if len(segments) > 1 {
+					for i := 0; i < len(segments)-1; i++ {
+						segment := segments[i]
+						patterns = append(patterns, sauceignore.NewPattern("/node_modules/"+segment+"/*"))
+						patterns = append(patterns, sauceignore.NewPattern("!/node_modules/"+segment))
+					}
+				}
 				patterns = append(patterns, sauceignore.NewPattern("!/node_modules/"+req))
 			}
-			matcher = sauceignore.NewMatcher(patterns)
+			matcher = sauceignore.NewMatcher(sauceignore.Dedupe(patterns))
 		}
 	}
 

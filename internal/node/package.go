@@ -37,6 +37,7 @@ func PackageFromFile(filename string) (Package, error) {
 	if err != nil {
 		return p, err
 	}
+	defer fd.Close()
 
 	err = json.NewDecoder(fd).Decode(&p)
 	return p, err

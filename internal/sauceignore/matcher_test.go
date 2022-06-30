@@ -3,6 +3,7 @@ package sauceignore
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
@@ -162,4 +163,33 @@ node_modules/
 	return func() {
 		os.RemoveAll(tmpDir)
 	}, file, nil
+}
+
+func TestDedupe(t *testing.T) {
+	type args struct {
+		patterns []Pattern
+	}
+	tests := []struct {
+		name string
+		args args
+		want []Pattern
+	}{
+		{
+			name: "remove one duplicate",
+			args: args{[]Pattern{NewPattern("a"), NewPattern("b"), NewPattern("b")}},
+			want: []Pattern{NewPattern("a"), NewPattern("b")},
+		},
+		{
+			name: "no duplicate input",
+			args: args{[]Pattern{NewPattern("a"), NewPattern("b"), NewPattern("c")}},
+			want: []Pattern{NewPattern("a"), NewPattern("b"), NewPattern("c")},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Dedupe(tt.args.patterns); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Dedupe() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
