@@ -67,6 +67,7 @@ get_binaries() {
     darwin/amd64) BINARIES="saucectl" ;;
     darwin/arm64) BINARIES="saucectl" ;;
     linux/386) BINARIES="saucectl" ;;
+    linux/arm64) BINARIES="saucectl" ;;
     linux/amd64) BINARIES="saucectl" ;;
     windows/386) BINARIES="saucectl" ;;
     windows/amd64) BINARIES="saucectl" ;;
