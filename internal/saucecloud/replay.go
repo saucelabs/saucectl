@@ -8,7 +8,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
-	"os"
 )
 
 // ReplayRunner represents the Sauce Labs cloud implementation for puppeteer-replay.
@@ -48,25 +47,14 @@ func (r *ReplayRunner) RunProject() (int, error) {
 		files = append(files, suite.Recording)
 	}
 
-	if r.Project.DryRun {
-		log.Warn().Msg("Running tests in dry run mode.")
-		tmpDir, err := os.MkdirTemp("./", "sauce-app-payload-*")
-		if err != nil {
-			return 1, err
-		}
-		log.Info().Msgf("The following test suites would have run: [%s].", suiteNames)
-		zipName, err := r.archiveFiles(r.Project, tmpDir, files, "")
-		if err != nil {
-			return 1, err
-		}
-
-		log.Info().Msgf("Saving bundled project to %s.", zipName)
-		return 0, nil
-	}
-
-	fileURI, err := r.remoteArchiveFiles(r.Project, files, "")
+	fileURI, err := r.remoteArchiveFiles(r.Project, files, "", r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
+	}
+
+	if r.Project.DryRun {
+		log.Info().Msgf("The following test suites would have run: %s.", suiteNames)
+		return 0, nil
 	}
 
 	passed := r.runSuites(fileURI)

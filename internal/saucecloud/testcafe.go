@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"strings"
@@ -48,17 +49,16 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	if r.Project.DryRun {
-		if err := r.dryRun(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.getSuiteNames()); err != nil {
-			return exitCode, err
-		}
-		return 0, nil
-	}
-
-	fileURI, err := r.remoteArchiveFolder(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore)
+	fileURI, err := r.remoteArchiveFolder(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
+
+	if r.Project.DryRun {
+		log.Info().Msgf("The following test suites would have run: [%s].", r.getSuiteNames())
+		return 0, nil
+	}
+
 	passed := r.runSuites(fileURI)
 	if passed {
 		return 0, nil
