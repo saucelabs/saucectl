@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog/log"
 
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/framework"
@@ -49,15 +50,14 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	if r.Project.IsDryRun() {
-		if err := r.dryRun(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore, r.Project.GetSuiteNames()); err != nil {
-			return exitCode, err
-		}
-		return 0, nil
-	}
-	fileURI, err := r.remoteArchiveFolder(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore)
+	fileURI, err := r.remoteArchiveFolder(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore, r.Project.IsDryRun())
 	if err != nil {
 		return exitCode, err
+	}
+
+	if r.Project.IsDryRun() {
+		log.Info().Msgf("The following test suites would have run: [%s].", r.Project.GetSuiteNames())
+		return 0, nil
 	}
 
 	passed := r.runSuites(fileURI)

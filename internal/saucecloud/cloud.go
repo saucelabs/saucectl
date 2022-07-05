@@ -351,32 +351,46 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 }
 
 // remoteArchiveFolder archives the contents of the folder to a remote storage.
-func (r CloudRunner) remoteArchiveFolder(project interface{}, folder string, sauceignoreFile string) (string, error) {
-	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload")
+func (r CloudRunner) remoteArchiveFolder(project interface{}, folder string, sauceignoreFile string, dryRun bool) (string, error) {
+	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
 	if err != nil {
 		return "", err
 	}
-	defer os.RemoveAll(tempDir)
+	if !dryRun {
+		defer os.RemoveAll(tempDir)
+	}
 
 	zipName, err := r.archiveFolder(project, tempDir, folder, sauceignoreFile)
 	if err != nil {
 		return "", err
 	}
 
+	if dryRun {
+		log.Info().Msgf("Skipping upload in dry run. Bundled project saved to %s", zipName)
+		return "", nil
+	}
+
 	return r.uploadProject(zipName, projectUpload)
 }
 
 // remoteArchiveFiles archives the files to a remote storage.
-func (r CloudRunner) remoteArchiveFiles(project interface{}, files []string, sauceignoreFile string) (string, error) {
-	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload")
+func (r CloudRunner) remoteArchiveFiles(project interface{}, files []string, sauceignoreFile string, dryRun bool) (string, error) {
+	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
 	if err != nil {
 		return "", err
 	}
-	defer os.RemoveAll(tempDir)
+	if !dryRun {
+		defer os.RemoveAll(tempDir)
+	}
 
 	zipName, err := r.archiveFiles(project, tempDir, files, sauceignoreFile)
 	if err != nil {
 		return "", err
+	}
+
+	if dryRun {
+		log.Info().Msgf("Skipping upload in dry run. Bundled project saved to %s", zipName)
+		return "", nil
 	}
 
 	return r.uploadProject(zipName, projectUpload)
@@ -717,22 +731,6 @@ func (r *CloudRunner) validateTunnel(name, owner string) error {
 	}
 
 	log.Info().Msg("Tunnel is ready!")
-	return nil
-}
-
-func (r *CloudRunner) dryRun(project interface{}, folder string, sauceIgnoreFile string, suiteNames string) error {
-	log.Warn().Msg("Running tests in dry run mode.")
-	tmpDir, err := os.MkdirTemp("./", "sauce-app-payload-*")
-	if err != nil {
-		return err
-	}
-	log.Info().Msgf("The following test suites would have run: [%s].", suiteNames)
-	zipName, err := r.archiveFolder(project, tmpDir, folder, sauceIgnoreFile)
-	if err != nil {
-		return err
-	}
-
-	log.Info().Msgf("Saving bundled project to %s.", zipName)
 	return nil
 }
 
