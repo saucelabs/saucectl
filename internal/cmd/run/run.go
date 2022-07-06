@@ -123,7 +123,7 @@ func Command() *cobra.Command {
 	sc.String("tunnel-owner", "sauce::tunnel::owner", "", "Sets the sauce-connect tunnel owner to be used for the run.")
 	sc.String("runner-version", "runnerVersion", "", "Overrides the automatically determined runner version.")
 	sc.String("sauceignore", "sauce::sauceignore", ".sauceignore", "Specifies the path to the .sauceignore file.")
-	sc.String("root-dir", "rootDir", ".", "Specifies the test directory")
+	sc.String("root-dir", "rootDir", ".", "Specifies the project directory. Not applicable to mobile frameworks.")
 	sc.StringToString("experiment", "sauce::experiment", map[string]string{}, "Specifies a list of experimental flags and values")
 	sc.Bool("dry-run", "dryRun", false, "Simulate a test run without actually running any tests.")
 	sc.Int("retries", "sauce::retries", 0, "Retries specifies the number of times to retry a failed suite (sauce mode only)")
