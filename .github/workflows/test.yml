@@ -74,9 +74,9 @@ jobs:
         run: npm ci
       - name: Generate schema
         working-directory: scripts/json-schema-bundler
-        run: npm run bundle -- -s ../../api/v1alpha/global.schema.json -o ../../api/v1alpha/generated/fresh.schema.json
+        run: npm run bundle -- -s ../../api/global.schema.json -o ../../api/fresh.schema.json
       - name: Check schema
-        working-directory: api/v1alpha/generated
+        working-directory: api/
         run: diff saucectl.schema.json fresh.schema.json
   build:
     needs: lint

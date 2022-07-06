@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://saucelabs.com/schema/v1/common.schema.json",
+  "title": "saucectl common subschema",
+  "description": "Subschema for common settings",
+  "type": "object",
+  "definitions": {
+    "browser": {
+      "description": "The name of the browser in which to run the tests."
+    },
+    "browserVersion": {
+      "description": "Which version of the browser to use.",
+      "type": "string"
+    },
+    "defaults": {
+      "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
+      "type": "object"
+    },
+    "env": {
+      "description": "Set one or more environment variables. Values can be environment variables themselves. Not supported when running espresso/xcuitest!",
+      "type": "object"
+    },
+    "mode": {
+      "description": "Instructs saucectl run tests remotely through Sauce Labs (sauce) or locally on docker.",
+      "enum": [
+        "docker",
+        "sauce"
+      ]
+    },
+    "orientation": {
+      "description": "The screen orientation to use.",
+      "enum": [
+        "landscape",
+        "portrait"
+      ]
+    },
+    "platformName": {
+      "description": "A specific operating system on which to run the tests. Sauce Labs will try to choose a reasonable default if not explicitly specified."
+    },
+    "rootDir": {
+      "description": "The directory of files that need to be bundled and uploaded for the tests to run.",
+      "type": "string"
+    },
+    "screenResolution": {
+      "description": "Specifies a browser window screen resolution, which may be useful if you are attempting to simulate a browser on a particular device type.",
+      "type": "string"
+    },
+    "timeout": {
+      "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
+      "type": "string",
+      "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$",
+      "examples": [
+        "1h",
+        "10m",
+        "90s"
+      ]
+    },
+    "version": {
+      "description": "Which framework version to use."
+    },
+    "showConsoleLog": {
+      "description": "Shows suites console.log locally. By default console.log is only shown on failures.",
+      "type": "boolean"
+    },
+    "preExec": {
+      "description": "Specifies which commands to execute before starting the tests.",
+      "type": "array"
+    },
+    "excludedTestFiles": {
+      "description": "Exclude test files to skip the tests.",
+      "type": "array"
+    },
+    "appSettings": {
+      "description": "Overwrite real device settings.",
+      "type": "object",
+      "properties": {
+        "audioCapture": {
+          "description": "Overwrite app settings for real device to capture audio.",
+          "type": "boolean"
+        },
+        "instrumentation": {
+          "description": "Overwrite app settings for real device instrumentation.",
+          "type": "object",
+          "properties": {
+            "networkCapture": {
+              "description": "Overwrite app settings for real device to capture network.",
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "timeZone": {
+      "description": "Specifies the timeZone for the suite.",
+      "type": "string"
+    }
+  }
+}
