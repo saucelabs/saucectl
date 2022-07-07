@@ -162,6 +162,10 @@ func (p *Project) SetDefaults() {
 			s.Config.Env[k] = v
 		}
 
+		if s.Config.TestingType == "" {
+			s.Config.TestingType = "e2e"
+		}
+
 		// Update cypress related env vars.
 		for envK := range s.Config.Env {
 			// Add an entry without CYPRESS_ prefix as we directly pass it in Cypress.

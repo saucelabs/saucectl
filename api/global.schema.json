@@ -23,11 +23,29 @@
         "properties": {
           "kind": {
             "const": "cypress"
+          },
+          "apiVersion": {
+            "const": "v1alpha"
           }
         }
       },
       "then": {
-        "$ref": "framework/cypress.schema.json"
+        "$ref": "v1alpha/framework/cypress.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "cypress"
+          },
+          "apiVersion": {
+            "const": "v1"
+          }
+        }
+      },
+      "then": {
+        "$ref": "v1/framework/cypress.schema.json"
       }
     },
     {
@@ -39,7 +57,7 @@
         }
       },
       "then": {
-        "$ref": "framework/espresso.schema.json"
+        "$ref": "v1alpha/framework/espresso.schema.json"
       }
     },
     {
@@ -51,7 +69,7 @@
         }
       },
       "then": {
-        "$ref": "framework/playwright.schema.json"
+        "$ref": "v1alpha/framework/playwright.schema.json"
       }
     },
     {
@@ -63,7 +81,7 @@
         }
       },
       "then": {
-        "$ref": "framework/puppeteer.schema.json"
+        "$ref": "v1alpha/framework/puppeteer.schema.json"
       }
     },
     {
@@ -75,7 +93,7 @@
         }
       },
       "then": {
-        "$ref": "framework/replay.schema.json"
+        "$ref": "v1alpha/framework/replay.schema.json"
       }
     },
     {
@@ -87,7 +105,7 @@
         }
       },
       "then": {
-        "$ref": "framework/testcafe.schema.json"
+        "$ref": "v1alpha/framework/testcafe.schema.json"
       }
     },
     {
@@ -99,7 +117,7 @@
         }
       },
       "then": {
-        "$ref": "framework/xcuitest.schema.json"
+        "$ref": "v1alpha/framework/xcuitest.schema.json"
       }
     }
   ]

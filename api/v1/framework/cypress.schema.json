@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://saucelabs.com/schema/v1/cypress.schema.json",
+  "title": "saucectl cypress runner configuration",
+  "description": "Configuration file for cypress using saucectl",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "../subschema/artifacts.schema.json"
+    },
+    {
+      "$ref": "../subschema/docker.schema.json"
+    },
+    {
+      "$ref": "../subschema/npm.schema.json"
+    },
+    {
+      "$ref": "../subschema/sauce.schema.json"
+    },
+    {
+      "$ref": "../subschema/reporters.schema.json"
+    }
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "v1"
+    },
+    "kind": {
+      "const": "cypress"
+    },
+    "showConsoleLog": {
+      "$ref": "../subschema/common.schema.json#/definitions/showConsoleLog"
+    },
+    "defaults": {
+      "$ref": "../subschema/common.schema.json#/definitions/defaults",
+      "properties": {
+        "mode": {
+          "$ref": "../subschema/common.schema.json#/definitions/mode"
+        },
+        "timeout": {
+          "$ref": "../subschema/common.schema.json#/definitions/timeout"
+        }
+      },
+      "additionalProperties": false
+    },
+    "rootDir": {
+      "$ref": "../subschema/common.schema.json#/definitions/rootDir"
+    },
+    "cypress": {
+      "description": "Contains details specific to the Cypress project.",
+      "type": "object",
+      "properties": {
+        "configFile": {
+          "description": "The designated cypress configuration file.",
+          "type": "string",
+          "examples": [
+            "cypress.config.js"
+          ]
+        },
+        "key": {
+          "description": "The secret key that grants permission to record your tests in the Cypress dashboard.",
+          "type": "string"
+        },
+        "record": {
+          "description": "Whether to record your test results in the Cypress dashboard.",
+          "type": "boolean"
+        },
+        "version": {
+          "$ref": "../subschema/common.schema.json#/definitions/version",
+          "enum": [
+            "package.json",
+            "10.1.0"
+          ]
+        },
+        "reporters": {
+          "description": "Set of reporter to use.",
+          "type": "array",
+          "minimum": 0,
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Name of the reporter. You may have to install the associated npm dependency through npm.packages field.",
+                "type": "string",
+                "examples": [
+                  "dot",
+                  "nyan"
+                ]
+              },
+              "options": {
+                "description": "Options to pass to the reporter."
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "configFile",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "env": {
+      "$ref": "../subschema/common.schema.json#/definitions/env"
+    },
+    "suites": {
+      "description": "The set of properties providing details about the test suites to run.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the test suite, which will be reflected in the test results in Sauce Labs.",
+            "type": "string"
+          },
+          "browser": {
+            "$ref": "../subschema/common.schema.json#/definitions/browser",
+            "enum": [
+              "chrome",
+              "firefox",
+              "microsoftedge"
+            ]
+          },
+          "browserVersion": {
+            "$ref": "../subschema/common.schema.json#/definitions/browserVersion"
+          },
+          "platformName": {
+            "$ref": "../subschema/common.schema.json#/definitions/platformName",
+            "enum": [
+              "macOS 11.00",
+              "macOS 12",
+              "Windows 10",
+              "Windows 11"
+            ]
+          },
+          "screenResolution": {
+            "$ref": "../subschema/common.schema.json#/definitions/screenResolution"
+          },
+          "config": {
+            "description": "Provides details related to the Cypress test configuration.",
+            "type": "object",
+            "properties": {
+              "testingType": {
+                "description": "Specify the type of tests to execute; either e2e or component. Defaults to e2e",
+                "enum": [
+                  "e2e",
+                  "component"
+                ],
+                "default": "e2e"
+              },
+              "specPattern": {
+                "description": "One or more paths to the Cypress test files to run for this suite.",
+                "type": "array"
+              },
+              "excludeSpecPattern": {
+                "description": "Exclude test files for this suite.",
+                "type": "array"
+              }, 
+              "env": {
+                "$ref": "../subschema/common.schema.json#/definitions/env"
+              }
+            },
+            "required": [
+              "specPattern"
+            ]
+          },
+          "mode": {
+            "$ref": "../subschema/common.schema.json#/definitions/mode"
+          },
+          "shard": {
+            "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec or concurrency) so that they can easily run in parallel.",
+            "enum": [
+              "",
+              "concurrency",
+              "spec"
+            ]
+          },
+          "headless": {
+            "description": "Controls whether or not tests are run in headless mode (default: false)",
+            "type": "boolean"
+          },
+          "timeout": {
+            "$ref": "../subschema/common.schema.json#/definitions/timeout"
+          },
+          "preExec": {
+            "$ref": "../subschema/common.schema.json#/definitions/preExec"
+          },
+          "timeZone": {
+            "$ref": "../subschema/common.schema.json#/definitions/timeZone"
+          }
+        },
+        "required": [
+          "name",
+          "browser",
+          "config"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "cypress",
+    "suites"
+  ],
+  "additionalProperties": true
+}
