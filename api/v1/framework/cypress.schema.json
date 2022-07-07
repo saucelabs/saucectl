@@ -163,8 +163,7 @@
               }
             },
             "required": [
-              "specPattern",
-              "testingType"
+              "specPattern"
             ]
           },
           "mode": {
