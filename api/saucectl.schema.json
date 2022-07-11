@@ -280,17 +280,28 @@
             "type": "boolean"
           },
           "defaults": {
+            "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
+            "type": "object",
             "properties": {
               "mode": {
-                "$ref": "../subschema/common.schema.json#/definitions/mode"
+                "description": "Instructs saucectl run tests remotely through Sauce Labs (sauce) or locally on docker.",
+                "enum": [
+                  "docker",
+                  "sauce"
+                ]
               },
               "timeout": {
-                "$ref": "../subschema/common.schema.json#/definitions/timeout"
+                "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
+                "type": "string",
+                "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$",
+                "examples": [
+                  "1h",
+                  "10m",
+                  "90s"
+                ]
               }
             },
-            "additionalProperties": false,
-            "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
-            "type": "object"
+            "additionalProperties": false
           },
           "rootDir": {
             "description": "The directory of files that need to be bundled and uploaded for the tests to run.",
@@ -415,11 +426,7 @@
                   ]
                 },
                 "mode": {
-                  "description": "Instructs saucectl run tests remotely through Sauce Labs (sauce) or locally on docker.",
-                  "enum": [
-                    "docker",
-                    "sauce"
-                  ]
+                  "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
                 },
                 "shard": {
                   "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec or concurrency) so that they can easily run in parallel.",
@@ -434,14 +441,7 @@
                   "type": "boolean"
                 },
                 "timeout": {
-                  "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
-                  "type": "string",
-                  "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$",
-                  "examples": [
-                    "1h",
-                    "10m",
-                    "90s"
-                  ]
+                  "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
                 },
                 "preExec": {
                   "description": "Specifies which commands to execute before starting the tests.",
@@ -732,17 +732,28 @@
             "type": "boolean"
           },
           "defaults": {
+            "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
+            "type": "object",
             "properties": {
               "mode": {
-                "$ref": "../subschema/common.schema.json#/definitions/mode"
+                "description": "Instructs saucectl run tests remotely through Sauce Labs (sauce) or locally on docker.",
+                "enum": [
+                  "docker",
+                  "sauce"
+                ]
               },
               "timeout": {
-                "$ref": "../subschema/common.schema.json#/definitions/timeout"
+                "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
+                "type": "string",
+                "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$",
+                "examples": [
+                  "1h",
+                  "10m",
+                  "90s"
+                ]
               }
             },
-            "additionalProperties": false,
-            "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
-            "type": "object"
+            "additionalProperties": false
           },
           "rootDir": {
             "description": "The directory of files that need to be bundled and uploaded for the tests to run.",
@@ -872,11 +883,7 @@
                   ]
                 },
                 "mode": {
-                  "description": "Instructs saucectl run tests remotely through Sauce Labs (sauce) or locally on docker.",
-                  "enum": [
-                    "docker",
-                    "sauce"
-                  ]
+                  "$ref": "#/allOf/1/then/properties/defaults/properties/mode"
                 },
                 "shard": {
                   "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec or concurrency) so that they can easily run in parallel.",
@@ -891,14 +898,7 @@
                   "type": "boolean"
                 },
                 "timeout": {
-                  "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
-                  "type": "string",
-                  "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$",
-                  "examples": [
-                    "1h",
-                    "10m",
-                    "90s"
-                  ]
+                  "$ref": "#/allOf/1/then/properties/defaults/properties/timeout"
                 },
                 "preExec": {
                   "description": "Specifies which commands to execute before starting the tests.",
@@ -963,10 +963,11 @@
             "$ref": "#/allOf/0/then/properties/showConsoleLog"
           },
           "defaults": {
-            "$ref": "#/allOf/0/then/properties/defaults",
+            "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
+            "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "../subschema/common.schema.json#/definitions/timeout"
+                "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -1157,7 +1158,7 @@
                   }
                 },
                 "timeout": {
-                  "$ref": "#/allOf/0/then/properties/suites/items/properties/timeout"
+                  "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
                 },
                 "appSettings": {
                   "description": "Overwrite real device settings.",
@@ -1250,13 +1251,14 @@
             "$ref": "#/allOf/0/then/properties/showConsoleLog"
           },
           "defaults": {
-            "$ref": "#/allOf/0/then/properties/defaults",
+            "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
+            "type": "object",
             "properties": {
               "mode": {
-                "$ref": "../subschema/common.schema.json#/definitions/mode"
+                "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
               },
               "timeout": {
-                "$ref": "../subschema/common.schema.json#/definitions/timeout"
+                "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -1303,7 +1305,7 @@
                   "type": "string"
                 },
                 "mode": {
-                  "$ref": "#/allOf/0/then/properties/suites/items/properties/mode"
+                  "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
                 },
                 "playwrightVersion": {
                   "description": "Which framework version to use."
@@ -1405,7 +1407,7 @@
                   ]
                 },
                 "timeout": {
-                  "$ref": "#/allOf/0/then/properties/suites/items/properties/timeout"
+                  "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
                 },
                 "preExec": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/preExec"
@@ -1474,10 +1476,11 @@
             "$ref": "#/allOf/0/then/properties/showConsoleLog"
           },
           "defaults": {
-            "$ref": "#/allOf/0/then/properties/defaults",
+            "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
+            "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "../subschema/common.schema.json#/definitions/timeout"
+                "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -1546,7 +1549,7 @@
                   ]
                 },
                 "timeout": {
-                  "$ref": "#/allOf/0/then/properties/suites/items/properties/timeout"
+                  "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
                 },
                 "groups": {
                   "description": "Specific groups of tests.",
@@ -1610,10 +1613,11 @@
             "$ref": "#/allOf/0/then/properties/showConsoleLog"
           },
           "defaults": {
-            "$ref": "#/allOf/0/then/properties/defaults",
+            "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
+            "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "../subschema/common.schema.json#/definitions/timeout"
+                "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -1643,7 +1647,7 @@
                   "description": "A specific operating system on which to run the tests. Sauce Labs will try to choose a reasonable default if not explicitly specified."
                 },
                 "timeout": {
-                  "$ref": "#/allOf/0/then/properties/suites/items/properties/timeout"
+                  "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
                 }
               },
               "required": [
@@ -1704,13 +1708,14 @@
             "$ref": "#/allOf/0/then/properties/showConsoleLog"
           },
           "defaults": {
-            "$ref": "#/allOf/0/then/properties/defaults",
+            "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
+            "type": "object",
             "properties": {
               "mode": {
-                "$ref": "../subschema/common.schema.json#/definitions/mode"
+                "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
               },
               "timeout": {
-                "$ref": "../subschema/common.schema.json#/definitions/timeout"
+                "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -1803,7 +1808,7 @@
                   "$ref": "#/allOf/0/then/properties/env"
                 },
                 "mode": {
-                  "$ref": "#/allOf/0/then/properties/suites/items/properties/mode"
+                  "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
                 },
                 "shard": {
                   "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec or concurrency) so that they can easily run in parallel.",
@@ -1974,7 +1979,7 @@
                   "type": "boolean"
                 },
                 "timeout": {
-                  "$ref": "#/allOf/0/then/properties/suites/items/properties/timeout"
+                  "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
                 },
                 "preExec": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/preExec"
@@ -2040,10 +2045,11 @@
             "$ref": "#/allOf/0/then/properties/showConsoleLog"
           },
           "defaults": {
-            "$ref": "#/allOf/0/then/properties/defaults",
+            "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
+            "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "../subschema/common.schema.json#/definitions/timeout"
+                "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -2165,7 +2171,7 @@
                   }
                 },
                 "timeout": {
-                  "$ref": "#/allOf/0/then/properties/suites/items/properties/timeout"
+                  "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
                 }
               },
               "anyOf": [
