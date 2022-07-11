@@ -26,7 +26,8 @@
       "$ref": "../subschema/common.schema.json#/definitions/showConsoleLog"
     },
     "defaults": {
-      "$ref": "../subschema/common.schema.json#/definitions/defaults",
+      "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
+      "type": "object",
       "properties": {
         "timeout": {
           "$ref": "../subschema/common.schema.json#/definitions/timeout"
