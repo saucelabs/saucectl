@@ -138,12 +138,11 @@ func FindFiles(rootDir string, sources []string, matchBy MatchPattern) ([]string
 		}
 
 		// Normalize path separators, since the target execution environment may not support backslashes.
-		pathSlashes := filepath.ToSlash(path)
-		relSlashes, err := filepath.Rel(rootDir, pathSlashes)
+		rel, err := filepath.Rel(rootDir, path)
 		if err != nil {
 			return err
 		}
-
+		relSlashes := filepath.ToSlash(rel)
 		for _, pattern := range sources {
 			patternSlashes := filepath.ToSlash(pattern)
 			var ok bool
