@@ -350,8 +350,8 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 	}
 }
 
-// remoteArchiveFolder archives the contents of the folder to a remote storage.
-func (r CloudRunner) remoteArchiveFolder(project interface{}, folder string, sauceignoreFile string, dryRun bool) (string, error) {
+// remoteArchiveProject archives the contents of the folder to a remote storage.
+func (r CloudRunner) remoteArchiveProject(project interface{}, folder string, sauceignoreFile string, dryRun bool) (string, error) {
 	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
 	if err != nil {
 		return "", err
@@ -360,17 +360,58 @@ func (r CloudRunner) remoteArchiveFolder(project interface{}, folder string, sau
 		defer os.RemoveAll(tempDir)
 	}
 
-	zipName, err := r.archiveFolder(project, tempDir, folder, sauceignoreFile)
+	var files []string
+
+	contents, err := os.ReadDir(folder)
 	if err != nil {
 		return "", err
 	}
 
+	for _, file := range contents {
+		// we never want mode_modules as part of the app payload
+		if file.Name() == "node_modules" {
+			continue
+		}
+		files = append(files, filepath.Join(folder, file.Name()))
+	}
+
+	archives := make(map[string]uploadType)
+
+	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
+	if err != nil {
+		return "", err
+	}
+
+	appZip, err := r.archiveFiles(project, "app", tempDir, folder, files, matcher)
+	if err != nil {
+		return "", err
+	}
+	archives[appZip] = projectUpload
+
+	modZip, err := r.archiveNodeModules(tempDir, folder, matcher)
+	if err != nil {
+		return "", err
+	}
+	if modZip != "" {
+		archives[modZip] = nodeModulesUpload
+	}
+
+	// TODO move this to uploadProject
 	if dryRun {
-		log.Info().Msgf("Skipping upload in dry run. Bundled project saved to %s", zipName)
+		log.Info().Msgf("Skipping upload in dry run. Bundles saved to %s", archives)
 		return "", nil
 	}
 
-	return r.uploadProject(zipName, projectUpload)
+	var uris []string
+	for k, v := range archives {
+		uri, err := r.uploadProject(k, v)
+		if err != nil {
+			return "", err
+		}
+		uris = append(uris, uri)
+	}
+
+	return strings.Join(uris, ","), nil
 }
 
 // remoteArchiveFiles archives the files to a remote storage.
@@ -383,7 +424,12 @@ func (r CloudRunner) remoteArchiveFiles(project interface{}, files []string, sau
 		defer os.RemoveAll(tempDir)
 	}
 
-	zipName, err := r.archiveFiles(project, tempDir, files, sauceignoreFile)
+	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
+	if err != nil {
+		return "", err
+	}
+
+	zipName, err := r.archiveFiles(project, "app", tempDir, ".", files, matcher)
 	if err != nil {
 		return "", err
 	}
@@ -423,102 +469,78 @@ func checkPathLength(projectFolder string, matcher sauceignore.Matcher) (string,
 	return "", nil
 }
 
-// archiveFolder creates a zip file in the tempDir directory from the given projectFolder.
-func (r *CloudRunner) archiveFolder(project interface{}, tempDir string, projectFolder string, sauceignoreFile string) (string, error) {
-	matcher, err := r.getFileMatcher(projectFolder, sauceignoreFile)
-	if err != nil {
-		return "", err
+// archiveNodeModules archives node_modules located under rootDir and returns the path to the zip file. Returns an empty
+// string if node_modules doesn't exist or is actively ignored.
+func (r *CloudRunner) archiveNodeModules(tempDir string, rootDir string, matcher sauceignore.Matcher) (string, error) {
+	modDir := filepath.Join(rootDir, "node_modules")
+	ignored := matcher.Match([]string{modDir}, true)
+
+	_, err := os.Stat(modDir)
+	hasMods := err == nil
+	wantMods := len(r.NPMDependencies) > 0
+
+	if !hasMods && wantMods {
+		return "", fmt.Errorf("unable to access 'node_modules' folder, but you have npm dependencies defined in your project")
 	}
 
-	if path, err := checkPathLength(projectFolder, matcher); err != nil {
-		msg.PathTooLongForArchive(path)
-		return "", err
+	if ignored && wantMods {
+		return "", fmt.Errorf("'node_modules' is ignored by sauceignore, but you have npm dependencies defined in your project; please remove 'node_modules' from your sauceignore file")
 	}
 
+	var files []string
+
+	// does the user only want a subset of dependencies?
+	if hasMods && wantMods {
+		reqs := node.Requirements(filepath.Join(rootDir, "node_modules"), r.NPMDependencies...)
+		log.Info().Msgf("Found a total of %d related npm dependencies", len(reqs))
+		for _, v := range reqs {
+			files = append(files, filepath.Join("node_modules", v))
+		}
+	}
+
+	// node_modules exists, has not been ignored and a subset has not been specified, so include the entire folder.
+	// This is the legacy behavior (backwards compatible) of saucectl.
+	if hasMods && !ignored && !wantMods {
+		files = append(files, "node_modules")
+	}
+
+	return r.archiveFiles(nil, "node_modules", tempDir, rootDir, files, matcher)
+}
+
+// archiveFiles creates a zip file with the given name and files. Files added to the zip retain their paths relative to
+// the rootDir. Temporary files, as well as the zip itself, are created in the tempDir directory.
+func (r *CloudRunner) archiveFiles(project interface{}, name string, tempDir string, rootDir string, files []string, matcher sauceignore.Matcher) (string, error) {
 	start := time.Now()
 
-	zipName := filepath.Join(tempDir, "app.zip")
+	zipName := filepath.Join(tempDir, name+".zip")
 	z, err := zip.NewFileWriter(zipName, matcher)
 	if err != nil {
 		return "", err
 	}
 	defer z.Close()
 
-	rcPath := filepath.Join(tempDir, "sauce-runner.json")
-	if err := jsonio.WriteFile(rcPath, project); err != nil {
-		return "", err
-	}
-
-	folderContent, err := os.ReadDir(projectFolder)
-	if err != nil {
-		return "", err
-	}
-
 	totalFileCount := 0
-	for _, child := range folderContent {
-		fileCount, err := z.Add(filepath.Join(projectFolder, child.Name()), "")
+
+	if project != nil {
+		rcPath := filepath.Join(tempDir, "sauce-runner.json")
+		if err := jsonio.WriteFile(rcPath, project); err != nil {
+			return "", err
+		}
+		log.Debug().Str("name", rcPath).Msg("Adding to archive")
+		fileCount, err := z.Add(rcPath, "")
 		if err != nil {
 			return "", err
 		}
 		totalFileCount += fileCount
 	}
-	fileCount, err := z.Add(rcPath, "")
-	if err != nil {
-		return "", err
-	}
-	totalFileCount += fileCount
-
-	err = z.Close()
-	if err != nil {
-		return "", err
-	}
-
-	f, err := os.Stat(zipName)
-	if err != nil {
-		return "", err
-	}
-
-	log.Info().Dur("durationMs", time.Since(start)).Int64("size", f.Size()).Int("fileCount", totalFileCount).Msg("Project archived.")
-	if totalFileCount >= ArchiveFileCountSoftLimit {
-		msg.LogArchiveSizeWarning()
-	}
-
-	return zipName, nil
-}
-
-// archiveFiles creates a zip file from the given files. Files retain their relative paths within the zip.
-// Temporary files, as well as the zip itself, are created in the tempDir directory.
-func (r *CloudRunner) archiveFiles(project interface{}, tempDir string, files []string, sauceignoreFile string) (string, error) {
-	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
-	if err != nil {
-		return "", err
-	}
-
-	start := time.Now()
-
-	zipName := filepath.Join(tempDir, "app.zip")
-	z, err := zip.NewFileWriter(zipName, matcher)
-	if err != nil {
-		return "", err
-	}
-	defer z.Close()
-
-	rcPath := filepath.Join(tempDir, "sauce-runner.json")
-	if err := jsonio.WriteFile(rcPath, project); err != nil {
-		return "", err
-	}
-
-	totalFileCount := 0
-	log.Debug().Str("name", rcPath).Msg("Adding to archive")
-	fileCount, err := z.Add(rcPath, "")
-	if err != nil {
-		return "", err
-	}
-	totalFileCount += fileCount
 
 	for _, f := range files {
 		log.Debug().Str("name", f).Msg("Adding to archive")
-		fileCount, err := z.Add(f, filepath.Dir(f))
+		rel, err := filepath.Rel(rootDir, filepath.Dir(f))
+		if err != nil {
+			return "", err
+		}
+		fileCount, err := z.Add(f, rel)
 		if err != nil {
 			return "", err
 		}
@@ -535,7 +557,12 @@ func (r *CloudRunner) archiveFiles(project interface{}, tempDir string, files []
 		return "", err
 	}
 
-	log.Info().Dur("durationMs", time.Since(start)).Int64("size", f.Size()).Int("fileCount", totalFileCount).Msg("Project archived.")
+	log.Info().
+		Dur("durationMs", time.Since(start)).
+		Int64("size", f.Size()).
+		Int("fileCount", totalFileCount).
+		Msg("Archive created.")
+
 	if totalFileCount >= ArchiveFileCountSoftLimit {
 		msg.LogArchiveSizeWarning()
 	}
@@ -546,10 +573,11 @@ func (r *CloudRunner) archiveFiles(project interface{}, tempDir string, files []
 type uploadType string
 
 var (
-	testAppUpload   uploadType = "test application"
-	appUpload       uploadType = "application"
-	projectUpload   uploadType = "project"
-	otherAppsUpload uploadType = "other applications"
+	testAppUpload     uploadType = "test application"
+	appUpload         uploadType = "application"
+	projectUpload     uploadType = "project"
+	nodeModulesUpload uploadType = "node modules"
+	otherAppsUpload   uploadType = "other applications"
 )
 
 func (r *CloudRunner) uploadProjects(filename []string, pType uploadType) ([]string, error) {
@@ -850,54 +878,4 @@ func (r *CloudRunner) getAvailableVersionsMessage(frameworkName string) string {
 	}
 	m += "\n"
 	return m
-}
-
-func (r *CloudRunner) getFileMatcher(projectFolder, sauceignoreFile string) (sauceignore.Matcher, error) {
-	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
-	if err != nil {
-		return matcher, err
-	}
-
-	modDir := filepath.Join(projectFolder, "node_modules")
-	modDirIgnored := matcher.Match([]string{modDir}, true)
-
-	if modDirIgnored && len(r.NPMDependencies) > 0 {
-		return matcher, fmt.Errorf("'node_modules' is ignored by sauceignore, but you have npm dependencies defined in your project; please remove 'node_modules' from your sauceignore file")
-	}
-
-	if !modDirIgnored {
-		_, err := os.Stat(modDir)
-		if err == nil && len(r.NPMDependencies) > 0 {
-			log.Info().Msg("Picking up select dependencies from node_modules")
-			patterns, _ := sauceignore.PatternsFromFile(sauceignoreFile)
-
-			// by default, ignore everything under node_modules
-			patterns = append(patterns, sauceignore.NewPattern("/node_modules/*"))
-
-			// but un-ignore dependencies we want to keep
-			reqs := node.Requirements(filepath.Join(projectFolder, "node_modules"), r.NPMDependencies...)
-			log.Info().Msgf("Found a total of %d related npm dependencies", len(reqs))
-			for _, req := range reqs {
-				segments := strings.Split(req, string(os.PathSeparator))
-
-				// Scoped packages, like '@saucelabs/hot-sauce', need special treatment in gitignore due to nested
-				// folders. Gitignore will ignore any subfolder inclusions, if the parent is already excluded.
-				// Since by default we ignore all files under 'node_modules/*', adding an inclusion of only
-				// '@saucelabs/hot-sauce' does not work, because '@saucelabs/` is excluded, which is its parent.
-				// We need to explicitly include the parent folder and exclude all its files by default, which prevents
-				// random packages within the scope to be picked up, unless specifically included.
-				if len(segments) > 1 {
-					for i := 0; i < len(segments)-1; i++ {
-						segment := segments[i]
-						patterns = append(patterns, sauceignore.NewPattern("/node_modules/"+segment+"/*"))
-						patterns = append(patterns, sauceignore.NewPattern("!/node_modules/"+segment))
-					}
-				}
-				patterns = append(patterns, sauceignore.NewPattern("!/node_modules/"+req))
-			}
-			matcher = sauceignore.NewMatcher(sauceignore.Dedupe(patterns))
-		}
-	}
-
-	return matcher, nil
 }

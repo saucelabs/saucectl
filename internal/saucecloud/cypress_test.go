@@ -1,15 +1,12 @@
 package saucecloud
 
 import (
-	"archive/zip"
 	"context"
-	"io"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/jarcoal/httpmock"
-	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/saucelabs/saucectl/internal/config"
@@ -116,56 +113,6 @@ func TestRunSuites(t *testing.T) {
 	}
 	ret := runner.runSuites("dummy-file-id")
 	assert.True(t, ret)
-}
-
-func TestArchiveProject(t *testing.T) {
-	err := os.Mkdir("./test-arch/", 0755)
-	if err != nil {
-		t.Errorf("failed to create test-arch directory: %v", err)
-		return
-	}
-	defer func() {
-		os.RemoveAll("./test-arch/")
-	}()
-
-	runner := CypressRunner{
-		Project: &v1.Project{
-			RootDir: "../../tests/e2e/",
-			Cypress: v1.Cypress{
-				ConfigFile: "cypress.json",
-			},
-		},
-	}
-	wd, _ := os.Getwd()
-	log.Info().Msg(wd)
-
-	z, err := runner.archiveFolder(runner.Project, "./test-arch/", runner.Project.GetRootDir(), "")
-	if err != nil {
-		t.Fail()
-	}
-	zipFile, _ := os.Open(z)
-	defer func() {
-		zipFile.Close()
-	}()
-	zipInfo, _ := zipFile.Stat()
-	zipStream, _ := zip.NewReader(zipFile, zipInfo.Size())
-
-	var cypressConfig *zip.File
-	for _, f := range zipStream.File {
-		if f.Name == "cypress.json" {
-			cypressConfig = f
-			break
-		}
-	}
-	assert.NotNil(t, cypressConfig)
-	rd, _ := cypressConfig.Open()
-	b := make([]byte, 3)
-	n, err := rd.Read(b)
-	if err != nil && err != io.EOF {
-		t.Errorf("error reading cypress.json: %s", err)
-	}
-	assert.Equal(t, 3, n)
-	assert.Equal(t, []byte("{}\n"), b)
 }
 
 func TestUploadProject(t *testing.T) {
