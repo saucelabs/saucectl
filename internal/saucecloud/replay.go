@@ -36,7 +36,7 @@ func (r *ReplayRunner) RunProject() (int, error) {
 		}
 	}
 
-	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
+	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner, r.Project.DryRun); err != nil {
 		return 1, err
 	}
 

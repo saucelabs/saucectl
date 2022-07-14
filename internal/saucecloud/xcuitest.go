@@ -26,13 +26,8 @@ type XcuitestRunner struct {
 func (r *XcuitestRunner) RunProject() (int, error) {
 	exitCode := 1
 
-	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
+	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner, r.Project.DryRun); err != nil {
 		return exitCode, err
-	}
-
-	if r.Project.DryRun {
-		r.dryRun()
-		return 0, nil
 	}
 
 	appPath, testAppPath, err := archiveAppsToIpaIfRequired(r.Project.Xcuitest.App, r.Project.Xcuitest.TestApp)
@@ -40,19 +35,24 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	appFileURI, err := r.uploadProject(appPath, appUpload)
+	appFileURI, err := r.uploadProject(appPath, appUpload, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
 
-	testAppFileURI, err := r.uploadProject(testAppPath, testAppUpload)
+	testAppFileURI, err := r.uploadProject(testAppPath, testAppUpload, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
 
-	otherAppsURIs, err := r.uploadProjects(r.Project.Xcuitest.OtherApps, otherAppsUpload)
+	otherAppsURIs, err := r.uploadProjects(r.Project.Xcuitest.OtherApps, otherAppsUpload, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
+	}
+
+	if r.Project.DryRun {
+		r.dryRun()
+		return 0, nil
 	}
 
 	passed := r.runSuites(appFileURI, testAppFileURI, otherAppsURIs)

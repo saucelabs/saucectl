@@ -396,15 +396,9 @@ func (r CloudRunner) remoteArchiveProject(project interface{}, folder string, sa
 		archives[modZip] = nodeModulesUpload
 	}
 
-	// TODO move this to uploadProject
-	if dryRun {
-		log.Info().Msgf("Skipping upload in dry run. Bundles saved to %s", archives)
-		return "", nil
-	}
-
 	var uris []string
 	for k, v := range archives {
-		uri, err := r.uploadProject(k, v)
+		uri, err := r.uploadProject(k, v, dryRun)
 		if err != nil {
 			return "", err
 		}
@@ -434,12 +428,7 @@ func (r CloudRunner) remoteArchiveFiles(project interface{}, files []string, sau
 		return "", err
 	}
 
-	if dryRun {
-		log.Info().Msgf("Skipping upload in dry run. Bundled project saved to %s", zipName)
-		return "", nil
-	}
-
-	return r.uploadProject(zipName, projectUpload)
+	return r.uploadProject(zipName, projectUpload, dryRun)
 }
 
 func checkPathLength(projectFolder string, matcher sauceignore.Matcher) (string, error) {
@@ -580,10 +569,10 @@ var (
 	otherAppsUpload   uploadType = "other applications"
 )
 
-func (r *CloudRunner) uploadProjects(filename []string, pType uploadType) ([]string, error) {
+func (r *CloudRunner) uploadProjects(filename []string, pType uploadType, dryRun bool) ([]string, error) {
 	var IDs []string
 	for _, f := range filename {
-		ID, err := r.uploadProject(f, pType)
+		ID, err := r.uploadProject(f, pType, dryRun)
 		if err != nil {
 			return []string{}, err
 		}
@@ -593,7 +582,12 @@ func (r *CloudRunner) uploadProjects(filename []string, pType uploadType) ([]str
 	return IDs, nil
 }
 
-func (r *CloudRunner) uploadProject(filename string, pType uploadType) (string, error) {
+func (r *CloudRunner) uploadProject(filename string, pType uploadType, dryRun bool) (string, error) {
+	if dryRun {
+		log.Info().Str("file", filename).Msgf("Skipping upload in dry run.")
+		return "", nil
+	}
+
 	if apps.IsStorageReference(filename) {
 		return apps.StandardizeReferenceLink(filename), nil
 	}
@@ -746,8 +740,13 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	fmt.Println()
 }
 
-func (r *CloudRunner) validateTunnel(name, owner string) error {
+func (r *CloudRunner) validateTunnel(name, owner string, dryRun bool) error {
 	if name == "" {
+		return nil
+	}
+
+	if dryRun {
+		log.Info().Msg("Skipping tunnel validation in dry run.")
 		return nil
 	}
 
