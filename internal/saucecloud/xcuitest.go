@@ -162,12 +162,11 @@ func archiveAppsToIpaIfRequired(project *xcuitest.Project) (err error) {
 		}
 	}
 	for i, s := range project.Suites {
-		testApp := s.TestApp
-		if !strings.HasSuffix(testApp, ".ipa") {
-			project.Suites[i].TestApp, err = archiveAppToIpa(testApp)
+		if !strings.HasSuffix(s.TestApp, ".ipa") {
+			project.Suites[i].TestApp, err = archiveAppToIpa(s.TestApp)
 			if err != nil {
-				log.Error().Msgf("Unable to archive %s to ipa: %v", testApp, err)
-				err = fmt.Errorf("unable to archive %s", testApp)
+				log.Error().Msgf("Unable to archive %s to ipa: %v", s.TestApp, err)
+				err = fmt.Errorf("unable to archive %s", s.TestApp)
 				return
 			}
 		}
