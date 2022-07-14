@@ -30,32 +30,33 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	appPath, testAppPath, err := archiveAppsToIpaIfRequired(r.Project.Xcuitest.App, r.Project.Xcuitest.TestApp)
-	if err != nil {
-		return exitCode, err
-	}
-
-	appFileURI, err := r.uploadProject(appPath, appUpload, r.Project.DryRun)
-	if err != nil {
-		return exitCode, err
-	}
-
-	testAppFileURI, err := r.uploadProject(testAppPath, testAppUpload, r.Project.DryRun)
-	if err != nil {
-		return exitCode, err
-	}
-
-	otherAppsURIs, err := r.uploadProjects(r.Project.Xcuitest.OtherApps, otherAppsUpload, r.Project.DryRun)
-	if err != nil {
-		return exitCode, err
-	}
-
 	if r.Project.DryRun {
 		r.dryRun()
 		return 0, nil
 	}
 
-	passed := r.runSuites(appFileURI, testAppFileURI, otherAppsURIs)
+	err := archiveAppsToIpaIfRequired(&r.Project)
+	if err != nil {
+		return exitCode, err
+	}
+
+	r.Project.Xcuitest.App, err = r.uploadProject(r.Project.Xcuitest.App, appUpload, r.Project.DryRun)
+	if err != nil {
+		return exitCode, err
+	}
+
+	r.Project.Xcuitest.OtherApps, err = r.uploadProjects(r.Project.Xcuitest.OtherApps, otherAppsUpload, r.Project.DryRun)
+	if err != nil {
+		return exitCode, err
+	}
+	for i, s := range r.Project.Suites {
+		r.Project.Suites[i].TestApp, err = r.uploadProject(s.TestApp, testAppUpload, r.Project.DryRun)
+		if err != nil {
+			return exitCode, err
+		}
+	}
+
+	passed := r.runSuites()
 	if passed {
 		exitCode = 0
 	}
@@ -72,7 +73,7 @@ func (r *XcuitestRunner) dryRun() {
 	}
 }
 
-func (r *XcuitestRunner) runSuites(appFileID, testAppFileID string, otherAppsIDs []string) bool {
+func (r *XcuitestRunner) runSuites() bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
@@ -88,7 +89,7 @@ func (r *XcuitestRunner) runSuites(appFileID, testAppFileID string, otherAppsIDs
 		for _, s := range r.Project.Suites {
 			for _, d := range s.Devices {
 				log.Debug().Str("suite", s.Name).Str("deviceName", d.Name).Str("deviceID", d.ID).Str("platformVersion", d.PlatformVersion).Msg("Starting job")
-				r.startJob(jobOpts, appFileID, testAppFileID, otherAppsIDs, s, d)
+				r.startJob(jobOpts, r.Project.Xcuitest.App, s.TestApp, r.Project.Xcuitest.OtherApps, s, d)
 			}
 		}
 	}()
@@ -150,27 +151,28 @@ func (r *XcuitestRunner) calculateJobsCount(suites []xcuitest.Suite) int {
 }
 
 // archiveAppsToIpaIfRequired checks if apps are a .ipa package. Otherwise, it generates one.
-func archiveAppsToIpaIfRequired(appPath, testAppPath string) (archivedAppPath string, archivedTestAppPath string, archivedErr error) {
-	archivedAppPath = appPath
-	archivedTestAppPath = testAppPath
-	var err error
+func archiveAppsToIpaIfRequired(project *xcuitest.Project) (err error) {
+	appPath := project.Xcuitest.App
 	if !strings.HasSuffix(appPath, ".ipa") {
-		archivedAppPath, err = archiveAppToIpa(appPath)
+		project.Xcuitest.App, err = archiveAppToIpa(appPath)
 		if err != nil {
 			log.Error().Msgf("Unable to archive %s to ipa: %v", appPath, err)
-			archivedErr = fmt.Errorf("unable to archive %s", appPath)
+			err = fmt.Errorf("unable to archive %s", appPath)
 			return
 		}
 	}
-	if !strings.HasSuffix(testAppPath, ".ipa") {
-		archivedTestAppPath, err = archiveAppToIpa(testAppPath)
-		if err != nil {
-			log.Error().Msgf("Unable to archive %s to ipa: %v", testAppPath, err)
-			archivedErr = fmt.Errorf("unable to archive %s", testAppPath)
-			return
+	for i, s := range project.Suites {
+		testApp := s.TestApp
+		if !strings.HasSuffix(testApp, ".ipa") {
+			project.Suites[i].TestApp, err = archiveAppToIpa(testApp)
+			if err != nil {
+				log.Error().Msgf("Unable to archive %s to ipa: %v", testApp, err)
+				err = fmt.Errorf("unable to archive %s", testApp)
+				return
+			}
 		}
 	}
-	return archivedAppPath, archivedTestAppPath, nil
+	return
 }
 
 // archiveAppToIpa generates a valid IPA file from a .app folder.

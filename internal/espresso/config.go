@@ -65,6 +65,7 @@ type TestOptions struct {
 // Suite represents the espresso test suite configuration.
 type Suite struct {
 	Name        string                 `yaml:"name,omitempty" json:"name"`
+	TestApp     string                 `yaml:"testApp,omitempty" json:"testApp"`
 	Devices     []config.Device        `yaml:"devices,omitempty" json:"devices"`
 	Emulators   []config.Emulator      `yaml:"emulators,omitempty" json:"emulators"`
 	TestOptions map[string]interface{} `yaml:"testOptions,omitempty" json:"testOptions"`
@@ -120,6 +121,10 @@ func SetDefaults(p *Project) {
 
 		if suite.Timeout <= 0 {
 			p.Suites[i].Timeout = p.Defaults.Timeout
+		}
+
+		if suite.TestApp == "" {
+			p.Suites[i].TestApp = p.Espresso.TestApp
 		}
 	}
 }

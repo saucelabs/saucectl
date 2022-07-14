@@ -38,27 +38,25 @@ func (r *EspressoRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	appFileURI, err := r.uploadProject(r.Project.Espresso.App, appUpload, r.Project.DryRun)
+	var err error
+	r.Project.Espresso.App, err = r.uploadProject(r.Project.Espresso.App, appUpload, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
 
-	testAppFileURI, err := r.uploadProject(r.Project.Espresso.TestApp, testAppUpload, r.Project.DryRun)
+	r.Project.Espresso.OtherApps, err = r.uploadProjects(r.Project.Espresso.OtherApps, otherAppsUpload, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
 
-	otherAppsURIs, err := r.uploadProjects(r.Project.Espresso.OtherApps, otherAppsUpload, r.Project.DryRun)
-	if err != nil {
-		return exitCode, err
+	for i, suite := range r.Project.Suites {
+		r.Project.Suites[i].TestApp, err = r.uploadProject(suite.TestApp, testAppUpload, r.Project.DryRun)
+		if err != nil {
+			return exitCode, err
+		}
 	}
 
-	if r.Project.DryRun {
-		r.dryRun()
-		return 0, nil
-	}
-
-	passed := r.runSuites(appFileURI, testAppFileURI, otherAppsURIs)
+	passed := r.runSuites()
 	if passed {
 		exitCode = 0
 	}
@@ -66,7 +64,7 @@ func (r *EspressoRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-func (r *EspressoRunner) runSuites(appFileURI string, testAppFileURI string, otherAppsURIs []string) bool {
+func (r *EspressoRunner) runSuites() bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
@@ -93,13 +91,13 @@ func (r *EspressoRunner) runSuites(appFileURI string, testAppFileURI string, oth
 					s.TestOptions["shardIndex"] = i
 					for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
 						log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
-						r.startJob(jobOpts, s, appFileURI, testAppFileURI, otherAppsURIs, c)
+						r.startJob(jobOpts, s, r.Project.Espresso.App, s.TestApp, r.Project.Espresso.OtherApps, c)
 					}
 				}
 			} else {
 				for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
 					log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
-					r.startJob(jobOpts, s, appFileURI, testAppFileURI, otherAppsURIs, c)
+					r.startJob(jobOpts, s, r.Project.Espresso.App, s.TestApp, r.Project.Espresso.OtherApps, c)
 				}
 			}
 		}

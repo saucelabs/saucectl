@@ -55,6 +55,7 @@ type TestOptions struct {
 // Suite represents the xcuitest test suite configuration.
 type Suite struct {
 	Name        string             `yaml:"name,omitempty" json:"name"`
+	TestApp     string             `yaml:"testApp,omitempty" json:"testApp"`
 	Timeout     time.Duration      `yaml:"timeout,omitempty" json:"timeout"`
 	Devices     []config.Device    `yaml:"devices,omitempty" json:"devices"`
 	TestOptions TestOptions        `yaml:"testOptions,omitempty" json:"testOptions"`
@@ -108,6 +109,10 @@ func SetDefaults(p *Project) {
 
 		if suite.Timeout <= 0 {
 			p.Suites[ks].Timeout = p.Defaults.Timeout
+		}
+
+		if suite.TestApp == "" {
+			p.Suites[ks].TestApp = p.Xcuitest.TestApp
 		}
 	}
 }

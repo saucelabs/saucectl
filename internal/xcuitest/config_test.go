@@ -8,6 +8,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/config"
 
+	"gotest.tools/assert"
 	"gotest.tools/v3/fs"
 )
 
@@ -322,6 +323,47 @@ func TestSetDefaults_DeviceType(t *testing.T) {
 			if got != tt.want {
 				t.Errorf("SetDefaults() got: %v, want: %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestSetDefaults_TestApp(t *testing.T) {
+	testCase := []struct {
+		name      string
+		project   Project
+		expResult string
+	}{
+		{
+			name: "Set TestApp on suite level",
+			project: Project{
+				Xcuitest: Xcuitest{
+					TestApp: "test-app",
+				},
+				Suites: []Suite{
+					{
+						TestApp: "suite-test-app",
+					},
+				},
+			},
+			expResult: "suite-test-app",
+		},
+		{
+			name: "Set empty TestApp on suite level",
+			project: Project{
+				Xcuitest: Xcuitest{
+					TestApp: "test-app",
+				},
+				Suites: []Suite{
+					{},
+				},
+			},
+			expResult: "test-app",
+		},
+	}
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			SetDefaults(&tc.project)
+			assert.Equal(t, tc.expResult, tc.project.Suites[0].TestApp)
 		})
 	}
 }

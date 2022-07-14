@@ -221,3 +221,44 @@ suites:
 	}
 
 }
+
+func TestSetDefaults_TestApp(t *testing.T) {
+	testCase := []struct {
+		name      string
+		project   Project
+		expResult string
+	}{
+		{
+			name: "Set TestApp on suite level",
+			project: Project{
+				Espresso: Espresso{
+					TestApp: "test-app",
+				},
+				Suites: []Suite{
+					{
+						TestApp: "suite-test-app",
+					},
+				},
+			},
+			expResult: "suite-test-app",
+		},
+		{
+			name: "Set empty TestApp on suite level",
+			project: Project{
+				Espresso: Espresso{
+					TestApp: "test-app",
+				},
+				Suites: []Suite{
+					{},
+				},
+			},
+			expResult: "test-app",
+		},
+	}
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			SetDefaults(&tc.project)
+			assert.Equal(t, tc.expResult, tc.project.Suites[0].TestApp)
+		})
+	}
+}
