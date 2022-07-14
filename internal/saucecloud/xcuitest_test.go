@@ -74,7 +74,8 @@ func TestXcuitestRunner_RunProject(t *testing.T) {
 			},
 			Suites: []xcuitest.Suite{
 				{
-					Name: "my xcuitest project",
+					Name:    "my xcuitest project",
+					TestApp: "/path/to/testApp.ipa",
 					Devices: []config.Device{
 						{
 							Name:            "iPhone 11",
@@ -139,12 +140,24 @@ func TestXcuitestRunner_ensureAppsAreIpa(t *testing.T) {
 	originalAppPath := path.Join(dir.Path(), "my-app.app")
 	originalTestAppPath := path.Join(dir.Path(), "my-test-app.app")
 
+	project := &xcuitest.Project{
+		Xcuitest: xcuitest.Xcuitest{
+			App: originalAppPath,
+		},
+		Suites: []xcuitest.Suite{
+			xcuitest.Suite{
+				TestApp: originalTestAppPath,
+			},
+		},
+	}
 	// Run it
-	appPath, testAppPath, err := archiveAppsToIpaIfRequired(originalAppPath, originalTestAppPath)
-
+	err := archiveAppsToIpaIfRequired(project)
 	if err != nil {
 		t.Errorf("got error: %v", err)
 	}
+	appPath := project.Xcuitest.App
+	testAppPath := project.Suites[0].TestApp
+
 	defer os.Remove(appPath)
 	defer os.Remove(testAppPath)
 
