@@ -49,10 +49,18 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 	if err != nil {
 		return exitCode, err
 	}
+
+	cache := map[string]string{}
 	for i, s := range r.Project.Suites {
-		r.Project.Suites[i].TestApp, err = r.uploadProject(s.TestApp, testAppUpload, r.Project.DryRun)
-		if err != nil {
-			return exitCode, err
+		if val, ok := cache[s.TestApp]; ok {
+			r.Project.Suites[i].TestApp = val
+		} else {
+			testAppURL, err := r.uploadProject(s.TestApp, testAppUpload, r.Project.DryRun)
+			if err != nil {
+				return exitCode, err
+			}
+			r.Project.Suites[i].TestApp = testAppURL
+			cache[s.TestApp] = testAppURL
 		}
 	}
 
@@ -161,13 +169,22 @@ func archiveAppsToIpaIfRequired(project *xcuitest.Project) (err error) {
 			return
 		}
 	}
+	cache := map[string]string{}
 	for i, s := range project.Suites {
 		if !strings.HasSuffix(s.TestApp, ".ipa") {
-			project.Suites[i].TestApp, err = archiveAppToIpa(s.TestApp)
-			if err != nil {
-				log.Error().Msgf("Unable to archive %s to ipa: %v", s.TestApp, err)
-				err = fmt.Errorf("unable to archive %s", s.TestApp)
-				return
+			if val, ok := cache[s.TestApp]; ok {
+				project.Suites[i].TestApp = val
+			} else {
+				var testAppPath string
+				testAppPath, err = archiveAppToIpa(s.TestApp)
+				if err != nil {
+					log.Error().Msgf("Unable to archive %s to ipa: %v", s.TestApp, err)
+					err = fmt.Errorf("unable to archive %s", s.TestApp)
+					return
+
+				}
+				project.Suites[i].TestApp = testAppPath
+				cache[s.TestApp] = testAppPath
 			}
 		}
 	}

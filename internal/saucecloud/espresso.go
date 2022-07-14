@@ -49,10 +49,17 @@ func (r *EspressoRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
+	cache := map[string]string{}
 	for i, suite := range r.Project.Suites {
-		r.Project.Suites[i].TestApp, err = r.uploadProject(suite.TestApp, testAppUpload, r.Project.DryRun)
-		if err != nil {
-			return exitCode, err
+		if val, ok := cache[suite.TestApp]; ok {
+			r.Project.Suites[i].TestApp = val
+		} else {
+			testAppURL, err := r.uploadProject(suite.TestApp, testAppUpload, r.Project.DryRun)
+			if err != nil {
+				return exitCode, err
+			}
+			r.Project.Suites[i].TestApp = testAppURL
+			cache[suite.TestApp] = testAppURL
 		}
 	}
 
