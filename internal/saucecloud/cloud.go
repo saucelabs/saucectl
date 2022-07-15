@@ -469,7 +469,7 @@ func (r *CloudRunner) archiveNodeModules(tempDir string, rootDir string, matcher
 	wantMods := len(r.NPMDependencies) > 0
 
 	if !hasMods && wantMods {
-		return "", fmt.Errorf("unable to access 'node_modules' folder, but you have npm dependencies defined in your project")
+		return "", fmt.Errorf("unable to access 'node_modules' folder, but you have npm dependencies defined in your configuration")
 	}
 
 	if ignored && wantMods {
