@@ -476,6 +476,10 @@ func (r *CloudRunner) archiveNodeModules(tempDir string, rootDir string, matcher
 		return "", fmt.Errorf("'node_modules' is ignored by sauceignore, but you have npm dependencies defined in your project; please remove 'node_modules' from your sauceignore file")
 	}
 
+	if !hasMods {
+		return "", nil
+	}
+
 	var files []string
 
 	// does the user only want a subset of dependencies?
