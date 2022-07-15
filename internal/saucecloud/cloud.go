@@ -490,6 +490,9 @@ func (r *CloudRunner) archiveNodeModules(tempDir string, rootDir string, matcher
 	// node_modules exists, has not been ignored and a subset has not been specified, so include the entire folder.
 	// This is the legacy behavior (backwards compatible) of saucectl.
 	if hasMods && !ignored && !wantMods {
+		log.Warn().Msg("Adding the entire node_modules folder to the payload. " +
+			"This behavior is deprecated, not recommended and will be removed in the future. " +
+			"Please address your dependency needs via https://docs.saucelabs.com/dev/cli/saucectl/usage/use-cases/#set-npm-packages-in-configyml")
 		files = append(files, "node_modules")
 	}
 
