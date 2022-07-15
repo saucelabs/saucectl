@@ -462,7 +462,7 @@ func checkPathLength(projectFolder string, matcher sauceignore.Matcher) (string,
 // string if node_modules doesn't exist or is actively ignored.
 func (r *CloudRunner) archiveNodeModules(tempDir string, rootDir string, matcher sauceignore.Matcher) (string, error) {
 	modDir := filepath.Join(rootDir, "node_modules")
-	ignored := matcher.Match([]string{modDir}, true)
+	ignored := matcher.Match(strings.Split(modDir, string(os.PathSeparator)), true)
 
 	_, err := os.Stat(modDir)
 	hasMods := err == nil
@@ -487,7 +487,7 @@ func (r *CloudRunner) archiveNodeModules(tempDir string, rootDir string, matcher
 		reqs := node.Requirements(filepath.Join(rootDir, "node_modules"), r.NPMDependencies...)
 		log.Info().Msgf("Found a total of %d related npm dependencies", len(reqs))
 		for _, v := range reqs {
-			files = append(files, filepath.Join("node_modules", v))
+			files = append(files, filepath.Join(rootDir, "node_modules", v))
 		}
 	}
 
@@ -497,7 +497,7 @@ func (r *CloudRunner) archiveNodeModules(tempDir string, rootDir string, matcher
 		log.Warn().Msg("Adding the entire node_modules folder to the payload. " +
 			"This behavior is deprecated, not recommended and will be removed in the future. " +
 			"Please address your dependency needs via https://docs.saucelabs.com/dev/cli/saucectl/usage/use-cases/#set-npm-packages-in-configyml")
-		files = append(files, "node_modules")
+		files = append(files, filepath.Join(rootDir, "node_modules"))
 	}
 
 	return r.archiveFiles(nil, "node_modules", tempDir, rootDir, files, matcher)
