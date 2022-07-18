@@ -53,14 +53,15 @@ func (r *EspressoRunner) RunProject() (int, error) {
 	for i, suite := range r.Project.Suites {
 		if val, ok := cache[suite.TestApp]; ok {
 			r.Project.Suites[i].TestApp = val
-		} else {
-			testAppURL, err := r.uploadProject(suite.TestApp, testAppUpload, r.Project.DryRun)
-			if err != nil {
-				return exitCode, err
-			}
-			r.Project.Suites[i].TestApp = testAppURL
-			cache[suite.TestApp] = testAppURL
+			continue
 		}
+
+		testAppURL, err := r.uploadProject(suite.TestApp, testAppUpload, r.Project.DryRun)
+		if err != nil {
+			return exitCode, err
+		}
+		r.Project.Suites[i].TestApp = testAppURL
+		cache[suite.TestApp] = testAppURL
 	}
 
 	passed := r.runSuites()
