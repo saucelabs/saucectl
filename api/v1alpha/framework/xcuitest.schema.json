@@ -69,6 +69,10 @@
             "description": "The name of the test suite, which will be reflected in the test results in Sauce Labs.",
             "type": "string"
           },
+          "testApp": {
+            "description": "Local path or remote url to the test application. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
+            "type": "string"
+          },
           "testOptions": {
             "description": "Allows you to control various details on how tests are executed.",
             "type": "object",
