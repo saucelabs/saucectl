@@ -30,11 +30,6 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	if r.Project.DryRun {
-		r.dryRun()
-		return 0, nil
-	}
-
 	err := archiveAppsToIpaIfRequired(&r.Project)
 	if err != nil {
 		return exitCode, err
@@ -63,6 +58,11 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		}
 		r.Project.Suites[i].TestApp = testAppURL
 		cache[s.TestApp] = testAppURL
+	}
+
+	if r.Project.DryRun {
+		r.dryRun()
+		return 0, nil
 	}
 
 	passed := r.runSuites()

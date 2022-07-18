@@ -64,6 +64,11 @@ func (r *EspressoRunner) RunProject() (int, error) {
 		cache[suite.TestApp] = testAppURL
 	}
 
+	if r.Project.DryRun {
+		r.dryRun()
+		return 0, nil
+	}
+
 	passed := r.runSuites()
 	if passed {
 		exitCode = 0
