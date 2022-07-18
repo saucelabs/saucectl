@@ -3,10 +3,12 @@ package saucecloud
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"gotest.tools/v3/fs"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"syscall"
 	"testing"
 	"time"
@@ -312,6 +314,138 @@ func TestCheckPathLength(t *testing.T) {
 
 			assert.Equalf(t, tt.want, got, "checkPathLength(%v, %v)", tt.args.projectFolder, tt.args.matcher)
 			assert.Equalf(t, tt.wantErr, err, "checkPathLength(%v, %v)", tt.args.projectFolder, tt.args.matcher)
+		})
+	}
+}
+
+func TestCloudRunner_archiveNodeModules(t *testing.T) {
+	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	projectsDir := fs.NewDir(t, "project",
+		fs.WithDir("has-mods",
+			fs.WithDir("node_modules",
+				fs.WithDir("mod1",
+					fs.WithFile("package.json", "{}"),
+				),
+			),
+		),
+		fs.WithDir("no-mods"),
+	)
+	defer projectsDir.Remove()
+
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Errorf("Failed to get the current working dir: %v", err)
+	}
+
+	if err := os.Chdir(projectsDir.Path()); err != nil {
+		t.Errorf("Failed to change the current working dir: %v", err)
+	}
+	defer func() {
+		if err := os.Chdir(wd); err != nil {
+			t.Errorf("Failed to change the current working dir back to original: %v", err)
+		}
+	}()
+
+	type fields struct {
+		NPMDependencies []string
+	}
+	type args struct {
+		tempDir string
+		rootDir string
+		matcher sauceignore.Matcher
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    string
+		wantErr assert.ErrorAssertionFunc
+	}{
+		{
+			"want to include mods, but node_modules does not exist",
+			fields{
+				NPMDependencies: []string{"mod1"},
+			},
+			args{
+				tempDir: tempDir,
+				rootDir: "no-mods",
+				matcher: sauceignore.NewMatcher([]sauceignore.Pattern{}),
+			},
+			"",
+			func(t assert.TestingT, err error, args ...interface{}) bool {
+				return assert.EqualError(t, err, "unable to access 'node_modules' folder, but you have npm dependencies defined in your configuration; ensure that the folder exists and is accessible", args)
+			},
+		},
+		{
+			"have and want mods, but mods are ignored",
+			fields{
+				NPMDependencies: []string{"mod1"},
+			},
+			args{
+				tempDir: tempDir,
+				rootDir: "has-mods",
+				matcher: sauceignore.NewMatcher([]sauceignore.Pattern{sauceignore.NewPattern("/has-mods/node_modules")}),
+			},
+			"",
+			func(t assert.TestingT, err error, args ...interface{}) bool {
+				return assert.EqualError(t, err, "'node_modules' is ignored by sauceignore, but you have npm dependencies defined in your project; please remove 'node_modules' from your sauceignore file", args)
+			},
+		},
+		{
+			"have mods, don't want them and they are ignored",
+			fields{
+				NPMDependencies: []string{}, // no mods selected, because we don't want any
+			},
+			args{
+				tempDir: tempDir,
+				rootDir: "has-mods",
+				matcher: sauceignore.NewMatcher([]sauceignore.Pattern{sauceignore.NewPattern("/has-mods/node_modules")}),
+			},
+			"",
+			assert.NoError,
+		},
+		{
+			"no mods wanted and no mods exist",
+			fields{
+				NPMDependencies: []string{},
+			},
+			args{
+				tempDir: tempDir,
+				rootDir: "no-mods",
+				matcher: sauceignore.NewMatcher([]sauceignore.Pattern{}),
+			},
+			"",
+			assert.NoError,
+		},
+		{
+			"has and wants mods (happy path)",
+			fields{
+				NPMDependencies: []string{"mod1"},
+			},
+			args{
+				tempDir: tempDir,
+				rootDir: "has-mods",
+				matcher: sauceignore.NewMatcher([]sauceignore.Pattern{}),
+			},
+			filepath.Join(tempDir, "node_modules.zip"),
+			assert.NoError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &CloudRunner{
+				NPMDependencies: tt.fields.NPMDependencies,
+			}
+			got, err := r.archiveNodeModules(tt.args.tempDir, tt.args.rootDir, tt.args.matcher)
+			if !tt.wantErr(t, err, fmt.Sprintf("archiveNodeModules(%v, %v, %v)", tt.args.tempDir, tt.args.rootDir, tt.args.matcher)) {
+				return
+			}
+			assert.Equalf(t, tt.want, got, "archiveNodeModules(%v, %v, %v)", tt.args.tempDir, tt.args.rootDir, tt.args.matcher)
 		})
 	}
 }

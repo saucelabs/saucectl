@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
-
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -46,11 +45,11 @@ func (r *CypressRunner) RunProject() (int, error) {
 		}
 	}
 
-	if err := r.validateTunnel(r.Project.GetSauceCfg().Tunnel.Name, r.Project.GetSauceCfg().Tunnel.Owner); err != nil {
+	if err := r.validateTunnel(r.Project.GetSauceCfg().Tunnel.Name, r.Project.GetSauceCfg().Tunnel.Owner, r.Project.IsDryRun()); err != nil {
 		return 1, err
 	}
 
-	fileURI, err := r.remoteArchiveFolder(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore, r.Project.IsDryRun())
+	fileURI, err := r.remoteArchiveProject(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore, r.Project.IsDryRun())
 	if err != nil {
 		return exitCode, err
 	}

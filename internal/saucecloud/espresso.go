@@ -34,28 +34,28 @@ type EspressoRunner struct {
 func (r *EspressoRunner) RunProject() (int, error) {
 	exitCode := 1
 
-	if r.Project.DryRun {
-		r.dryRun()
-		return 0, nil
-	}
-
-	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner); err != nil {
+	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner, r.Project.DryRun); err != nil {
 		return 1, err
 	}
 
-	appFileURI, err := r.uploadProject(r.Project.Espresso.App, appUpload)
+	appFileURI, err := r.uploadProject(r.Project.Espresso.App, appUpload, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
 
-	testAppFileURI, err := r.uploadProject(r.Project.Espresso.TestApp, testAppUpload)
+	testAppFileURI, err := r.uploadProject(r.Project.Espresso.TestApp, testAppUpload, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
 
-	otherAppsURIs, err := r.uploadProjects(r.Project.Espresso.OtherApps, otherAppsUpload)
+	otherAppsURIs, err := r.uploadProjects(r.Project.Espresso.OtherApps, otherAppsUpload, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
+	}
+
+	if r.Project.DryRun {
+		r.dryRun()
+		return 0, nil
 	}
 
 	passed := r.runSuites(appFileURI, testAppFileURI, otherAppsURIs)
