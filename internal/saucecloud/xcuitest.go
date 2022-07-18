@@ -54,14 +54,15 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 	for i, s := range r.Project.Suites {
 		if val, ok := cache[s.TestApp]; ok {
 			r.Project.Suites[i].TestApp = val
-		} else {
-			testAppURL, err := r.uploadProject(s.TestApp, testAppUpload, r.Project.DryRun)
-			if err != nil {
-				return exitCode, err
-			}
-			r.Project.Suites[i].TestApp = testAppURL
-			cache[s.TestApp] = testAppURL
+			continue
 		}
+
+		testAppURL, err := r.uploadProject(s.TestApp, testAppUpload, r.Project.DryRun)
+		if err != nil {
+			return exitCode, err
+		}
+		r.Project.Suites[i].TestApp = testAppURL
+		cache[s.TestApp] = testAppURL
 	}
 
 	passed := r.runSuites()
