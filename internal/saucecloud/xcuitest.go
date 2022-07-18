@@ -180,7 +180,7 @@ func archiveAppsToIpaIfRequired(project *xcuitest.Project) (err error) {
 			project.Suites[i].TestApp = val
 			continue
 		}
-			
+
 		var testAppPath string
 		testAppPath, err = archiveAppToIpa(s.TestApp)
 		if err != nil {
@@ -189,7 +189,6 @@ func archiveAppsToIpaIfRequired(project *xcuitest.Project) (err error) {
 		}
 		project.Suites[i].TestApp = testAppPath
 		cache[s.TestApp] = testAppPath
-		}
 	}
 	return
 }
