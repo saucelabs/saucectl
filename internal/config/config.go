@@ -33,6 +33,7 @@ type SauceConfig struct {
 	Sauceignore string            `yaml:"sauceignore,omitempty" json:"sauceignore,omitempty"`
 	Experiments map[string]string `yaml:"experiments,omitempty" json:"experiments,omitempty"`
 	Retries     int               `yaml:"retries,omitempty" json:"-"`
+	Visibility  string            `yaml:"visibility,omitempty" json:"-"`
 }
 
 // DeviceOptions represents the devices capabilities required from a real device.
