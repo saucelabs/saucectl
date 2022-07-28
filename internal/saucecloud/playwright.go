@@ -123,6 +123,7 @@ func (r *PlaywrightRunner) runSuites(fileURI string) bool {
 				Attempt:          0,
 				Retries:          r.Project.Sauce.Retries,
 				TimeZone:         s.TimeZone,
+				Visibility:       r.Project.Sauce.Visibility,
 			}
 		}
 	}()

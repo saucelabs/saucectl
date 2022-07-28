@@ -91,6 +91,7 @@ type SauceOpts struct {
 	SauceCloudNode   string   `json:"_sauceCloudNode,omitempty"`
 	UserAgent        string   `json:"user_agent,omitempty"`
 	TimeZone         string   `json:"timeZone,omitempty"`
+	Visibility       string   `json:"public,omitempty"`
 }
 
 // Batch represents capabilities for batch frameworks.
@@ -141,6 +142,7 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 			IdleTimeout: 9999,
 			MaxDuration: 10800,
 			TimeZone:    opts.TimeZone,
+			Visibility:  opts.Visibility,
 		},
 		DeviceName:        opts.DeviceName,
 		DeviceOrientation: opts.DeviceOrientation,

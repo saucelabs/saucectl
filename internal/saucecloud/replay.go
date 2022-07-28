@@ -100,6 +100,7 @@ func (r *ReplayRunner) runSuites(fileURI string) bool {
 				Experiments: r.Project.Sauce.Experiments,
 				Attempt:     0,
 				Retries:     r.Project.Sauce.Retries,
+				Visibility:  r.Project.Sauce.Visibility,
 			}
 		}
 	}()

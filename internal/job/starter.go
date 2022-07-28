@@ -55,6 +55,7 @@ type StartOptions struct {
 	AppSettings       AppSettings            `json:"appSettings,omitempty"`
 	RealDeviceKind    string                 `json:"realDeviceKind,omitempty"`
 	TimeZone          string                 `json:"timeZone,omitempty"`
+	Visibility        string                 `json:"public,omitempty"`
 }
 
 // AppSettings represents app settings for real device
