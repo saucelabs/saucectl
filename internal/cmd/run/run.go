@@ -201,7 +201,19 @@ func preRun() error {
 	}
 
 	webdriverClient = webdriver.Client{
-		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
+		HTTPClient: &http.Client{
+			Timeout: testComposerTimeout,
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				// Sauce can queue up Job start requests for up to 10 minutes and sends redirects in the meantime to
+				// keep the connection alive. A redirect is sent every 45 seconds.
+				// 10m / 45s requires a minimum of 14 redirects.
+				if len(via) >= 20 {
+					return errors.New("stopped after 20 redirects")
+				}
+
+				return nil
+			},
+		},
 		URL:         "", // updated later once region is determined
 		Credentials: creds,
 	}
