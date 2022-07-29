@@ -87,7 +87,7 @@ const (
 	// InvalidDockerFileTransferType indicates illegal file transfer type
 	InvalidDockerFileTransferType = "illegal file transfer type '%s', must be one of '%s'"
 	// InvalidVisibilityWarning indicates that the configured visibility is invalid and has no effect on the test results
-	InvalidVisibilityWarning = "\"%s\" is not a valid visibility value. Setting to default visibility."
+	InvalidVisibilityWarning = `"%s" is not a valid visibility value. Setting to default visibility.`
 )
 
 // cypress config settings
