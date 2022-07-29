@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/fpath"
@@ -234,7 +233,7 @@ func Validate(p *Project) error {
 	}
 
 	if ok := config.ValidateVisibility(p.Sauce.Visibility); !ok {
-		log.Warn().Msgf(msg.InvalidVisibilityWarning, p.Sauce.Visibility)
+		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
 	}
 
 	p.Testcafe.Version = config.StandardizeVersionFormat(p.Testcafe.Version)

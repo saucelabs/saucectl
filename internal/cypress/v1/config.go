@@ -207,7 +207,7 @@ func (p *Project) Validate() error {
 	}
 
 	if ok := config.ValidateVisibility(p.Sauce.Visibility); !ok {
-		log.Warn().Msgf(msg.InvalidVisibilityWarning, p.Sauce.Visibility)
+		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
 	}
 
 	// Validate suites.

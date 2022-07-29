@@ -60,6 +60,22 @@ type Emulator struct {
 	PlatformVersions []string `yaml:"platformVersions,omitempty" json:"platformVersions,omitempty"`
 }
 
+const (
+	VisibilityPublic           = "public"
+	VisibilityPublicRestricted = "public restricted"
+	VisibilityTeam             = "team"
+	VisibilityShare            = "share"
+	VisibilityPrivate          = "private"
+)
+
+var ValidVisibilityValues = []string{
+	VisibilityPublic,
+	VisibilityPublicRestricted,
+	VisibilityTeam,
+	VisibilityShare,
+	VisibilityPrivate,
+}
+
 // Simulator represents the simulator configuration.
 type Simulator Emulator
 
@@ -398,18 +414,13 @@ func GetSuiteArtifactFolder(suiteName string, cfg ArtifactDownload) (string, err
 }
 
 // ValidateVisibility checks that the user specified job visibility is valid
-func ValidateVisibility(visibility string) (bool) {
-	supported := []string{
-		"",
-		"public",
-		"public restricted",
-		"team",
-		"share",
-		"private",
+func ValidateVisibility(visibility string) bool {
+	if visibility == "" {
+		return true
 	}
 
-	for _, s := range supported {
-		if s == visibility {
+	for _, v := range ValidVisibilityValues {
+		if v == visibility {
 			return true
 		}
 	}

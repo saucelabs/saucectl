@@ -138,6 +138,23 @@ func Validate(p Project) error {
 		return errors.New(msg.MissingRegion)
 	}
 
+	if ok := config.ValidateVisibility(p.Sauce.Visibility); !ok {
+		// Visibility is only valid for VMD runs
+		isVMD := false
+		for _, s := range p.Suites {
+			if len(s.Emulators) > 0 {
+				isVMD = true
+				break
+			}
+		}
+		if len(p.Suite.Emulators) > 0 {
+			isVMD = true
+		}
+		if isVMD {
+			return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ", "))
+		}
+	}
+
 	if p.Espresso.App == "" {
 		return errors.New(msg.MissingAppPath)
 	}
