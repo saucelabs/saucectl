@@ -396,3 +396,23 @@ func GetSuiteArtifactFolder(suiteName string, cfg ArtifactDownload) (string, err
 
 	return filepath.Join(cfg.Directory, suiteName), nil
 }
+
+// ValidateVisibility checks that the user specified job visibility is valid
+func ValidateVisibility(visibility string) (bool) {
+	supported := []string{
+		"",
+		"public",
+		"public restricted",
+		"team",
+		"share",
+		"private",
+	}
+
+	for _, s := range supported {
+		if s == visibility {
+			return true
+		}
+	}
+
+	return false
+}
