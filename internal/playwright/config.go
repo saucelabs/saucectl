@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/fpath"
@@ -307,6 +308,10 @@ func Validate(p *Project) error {
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
 		return errors.New(msg.MissingRegion)
+	}
+
+	if ok := config.ValidateVisibility(p.Sauce.Visibility); !ok {
+		log.Warn().Msgf(msg.InvalidVisibilityWarning, p.Sauce.Visibility)
 	}
 
 	return nil
