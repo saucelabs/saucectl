@@ -781,7 +781,7 @@
               "version": {
                 "enum": [
                   "package.json",
-                  "10.1.0"
+                  "10.3.1"
                 ],
                 "description": "Which framework version to use."
               },
@@ -1281,6 +1281,7 @@
                 "$ref": "#/allOf/3/then/properties/suites/items/properties/playwrightVersion",
                 "enum": [
                   "package.json",
+                  "1.24.1",
                   "1.22.2",
                   "1.20.2",
                   "1.18.1",
@@ -1503,6 +1504,7 @@
                 "$ref": "#/allOf/3/then/properties/suites/items/properties/playwrightVersion",
                 "enum": [
                   "package.json",
+                  "15.5.0",
                   "14.2.0",
                   "13.1.3",
                   "12.0.1",
@@ -1738,6 +1740,7 @@
                 "$ref": "#/allOf/3/then/properties/suites/items/properties/playwrightVersion",
                 "enum": [
                   "package.json",
+                  "1.20.0",
                   "1.19.0",
                   "1.18.5",
                   "1.18.3",
