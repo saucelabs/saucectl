@@ -781,8 +781,7 @@
               "version": {
                 "enum": [
                   "package.json",
-                  "10.3.1",
-                  "10.1.0"
+                  "10.3.1"
                 ],
                 "description": "Which framework version to use."
               },
