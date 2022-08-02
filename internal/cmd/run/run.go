@@ -52,7 +52,7 @@ var (
 
 	// General Request Timeouts
 	testComposerTimeout = 15 * time.Minute
-	rdcTimeout          = 1 * time.Minute
+	rdcTimeout          = 15 * time.Minute
 	githubTimeout       = 2 * time.Second
 
 	typeDef config.TypeDef
