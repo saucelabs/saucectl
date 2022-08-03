@@ -113,6 +113,10 @@ func Validate(p *Project) error {
 		return errors.New(msg.MissingRegion)
 	}
 
+	if ok := config.ValidateVisibility(p.Sauce.Visibility); !ok {
+		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
+	}
+
 	rgx := regexp.MustCompile(`^(?i)(google)?chrome$`)
 	for _, s := range p.Suites {
 		if !rgx.MatchString(s.BrowserName) {

@@ -86,6 +86,8 @@ const (
 	MissingDeviceConfig = "missing device name or ID for suite: %s. Devices index: %d"
 	// InvalidDockerFileTransferType indicates illegal file transfer type
 	InvalidDockerFileTransferType = "illegal file transfer type '%s', must be one of '%s'"
+	// InvalidVisibility indicates that the configured visibility is invalid and has no effect on the test results
+	InvalidVisibility = "'%s' is not a valid visibility value. Must be one of [%s]"
 )
 
 // cypress config settings

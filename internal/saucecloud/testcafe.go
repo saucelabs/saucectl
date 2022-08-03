@@ -122,6 +122,7 @@ func (r *TestcafeRunner) runSuites(fileURI string) bool {
 							RunnerVersion:    r.Project.RunnerVersion,
 							Experiments:      r.Project.Sauce.Experiments,
 							TimeZone:         s.TimeZone,
+							Visibility:       r.Project.Sauce.Visibility,
 						}
 					}
 				}
@@ -149,6 +150,7 @@ func (r *TestcafeRunner) runSuites(fileURI string) bool {
 					Attempt:          0,
 					Retries:          r.Project.Sauce.Retries,
 					TimeZone:         s.TimeZone,
+					Visibility:       r.Project.Sauce.Visibility,
 				}
 			}
 		}

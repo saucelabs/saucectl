@@ -206,6 +206,10 @@ func (p *Project) Validate() error {
 		return errors.New(msg.MissingRegion)
 	}
 
+	if ok := config.ValidateVisibility(p.Sauce.Visibility); !ok {
+		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
+	}
+
 	// Validate suites.
 	if len(p.Suites) == 0 {
 		return errors.New(msg.EmptySuite)

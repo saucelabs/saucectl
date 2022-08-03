@@ -211,6 +211,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		TestOptions: s.TestOptions,
 		Attempt:     0,
 		Retries:     r.Project.Sauce.Retries,
+		Visibility: r.Project.Sauce.Visibility,
 
 		// RDC Specific flags
 		RealDevice:        d.isRealDevice,

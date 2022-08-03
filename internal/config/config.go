@@ -33,6 +33,7 @@ type SauceConfig struct {
 	Sauceignore string            `yaml:"sauceignore,omitempty" json:"sauceignore,omitempty"`
 	Experiments map[string]string `yaml:"experiments,omitempty" json:"experiments,omitempty"`
 	Retries     int               `yaml:"retries,omitempty" json:"-"`
+	Visibility  string            `yaml:"visibility,omitempty" json:"-"`
 }
 
 // DeviceOptions represents the devices capabilities required from a real device.
@@ -57,6 +58,22 @@ type Emulator struct {
 	PlatformName     string   `yaml:"platformName,omitempty" json:"platformName"`
 	Orientation      string   `yaml:"orientation,omitempty" json:"orientation,omitempty"`
 	PlatformVersions []string `yaml:"platformVersions,omitempty" json:"platformVersions,omitempty"`
+}
+
+const (
+	VisibilityPublic           = "public"
+	VisibilityPublicRestricted = "public restricted"
+	VisibilityTeam             = "team"
+	VisibilityShare            = "share"
+	VisibilityPrivate          = "private"
+)
+
+var ValidVisibilityValues = []string{
+	VisibilityPublic,
+	VisibilityPublicRestricted,
+	VisibilityTeam,
+	VisibilityShare,
+	VisibilityPrivate,
 }
 
 // Simulator represents the simulator configuration.
@@ -394,4 +411,19 @@ func GetSuiteArtifactFolder(suiteName string, cfg ArtifactDownload) (string, err
 	suiteName = fmt.Sprintf("%s.%d", suiteName, maxVersion+1)
 
 	return filepath.Join(cfg.Directory, suiteName), nil
+}
+
+// ValidateVisibility checks that the user specified job visibility is valid
+func ValidateVisibility(visibility string) bool {
+	if visibility == "" {
+		return true
+	}
+
+	for _, v := range ValidVisibilityValues {
+		if v == visibility {
+			return true
+		}
+	}
+
+	return false
 }

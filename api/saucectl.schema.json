@@ -210,6 +210,33 @@
                     "description": "The number of times to retry a failing suite.",
                     "type": "integer",
                     "minimum": 0
+                  },
+                  "visibility": {
+                    "description": "Set the visibility level of test results for suites run on Sauce Labs.",
+                    "default": "team",
+                    "type": "string",
+                    "oneOf": [
+                      {
+                        "const": "public",
+                        "title": "Accessible to everyone."
+                      },
+                      {
+                        "const": "public restricted",
+                        "title": "Share your test's results page and video, but keeps the logs only for you."
+                      },
+                      {
+                        "const": "share",
+                        "title": "Only accessible to people with a valid link."
+                      },
+                      {
+                        "const": "team",
+                        "title": "Only accessible to people under the same root account as you."
+                      },
+                      {
+                        "const": "private",
+                        "title": "Only you (the owner) will be able to view assets and test results page."
+                      }
+                    ]
                   }
                 },
                 "additionalProperties": false
@@ -662,6 +689,33 @@
                     "description": "The number of times to retry a failing suite.",
                     "type": "integer",
                     "minimum": 0
+                  },
+                  "visibility": {
+                    "description": "Set the visibility level of test results for suites run on Sauce Labs.",
+                    "default": "team",
+                    "type": "string",
+                    "oneOf": [
+                      {
+                        "const": "public",
+                        "title": "Accessible to everyone."
+                      },
+                      {
+                        "const": "public restricted",
+                        "title": "Share your test's results page and video, but keeps the logs only for you."
+                      },
+                      {
+                        "const": "share",
+                        "title": "Only accessible to people with a valid link."
+                      },
+                      {
+                        "const": "team",
+                        "title": "Only accessible to people under the same root account as you."
+                      },
+                      {
+                        "const": "private",
+                        "title": "Only you (the owner) will be able to view assets and test results page."
+                      }
+                    ]
                   }
                 },
                 "additionalProperties": false
