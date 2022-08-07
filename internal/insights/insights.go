@@ -38,7 +38,7 @@ const (
 
 func (c *Client) GetHistory(ctx context.Context, user user.User, launchBy LaunchBy) (TestHistory, error) {
 	now := time.Now().Unix()
-	start := time.Now().AddDate(0, 0, -1).Unix()
+	start := time.Now().AddDate(0, 0, -7).Unix()
 	url := fmt.Sprintf("%s/v2/insights/vdc/test-cases?user_id=%s&start=%d&since=%d&end=%d&until=%d&org_id=%s&limit=200&sort=desc&sort_by=%s",
 		c.URL, user.ID, start, start, now, now, user.Organization.ID, launchBy)
 
