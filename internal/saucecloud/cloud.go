@@ -7,13 +7,17 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/node"
+	"github.com/saucelabs/saucectl/internal/user"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -50,6 +54,7 @@ type CloudRunner struct {
 	ShowConsoleLog         bool
 	Framework              framework.Framework
 	MetadataSearchStrategy framework.MetadataSearchStrategy
+	LaunchBy               insights.LaunchBy
 
 	Reporters []report.Reporter
 
@@ -884,4 +889,22 @@ func (r *CloudRunner) getAvailableVersionsMessage(frameworkName string) string {
 	}
 	m += "\n"
 	return m
+}
+
+func (r *CloudRunner) getTestHistory() (insights.TestHistory, error) {
+	client := insights.Client{
+		HTTPClient:  &http.Client{},
+		URL:         r.Region.APIBaseURL(),
+		Credentials: credentials.Get(),
+	}
+	uclient := user.Client{
+		HTTPClient:  &http.Client{},
+		URL:         r.Region.APIBaseURL(),
+		Credentials: credentials.Get(),
+	}
+	user, err := uclient.Get(context.Background())
+	if err != nil {
+		return insights.TestHistory{}, err
+	}
+	return client.GetHistory(context.Background(), user, insights.LaunchByFailrate)
 }

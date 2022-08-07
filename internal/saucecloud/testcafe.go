@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/msg"
-	"strings"
 
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/testcafe"
@@ -90,10 +91,19 @@ func (r *TestcafeRunner) runSuites(fileURI string) bool {
 	}
 	defer close(results)
 
+	suites := r.Project.Suites
+	if r.LaunchBy != "" {
+		history, err := r.getTestHistory()
+		if err != nil {
+			return false
+		}
+		suites = testcafe.SortByHistory(suites, history)
+	}
+
 	// Submit suites to work on
 	jobsCount := r.calcTestcafeJobsCount(r.Project.Suites)
 	go func() {
-		for _, s := range r.Project.Suites {
+		for _, s := range suites {
 			if len(s.Simulators) > 0 {
 				for _, d := range s.Simulators {
 					for _, pv := range d.PlatformVersions {

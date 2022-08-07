@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/cypress"
+	"github.com/saucelabs/saucectl/internal/cypress/suite"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -88,9 +90,17 @@ func (r *CypressRunner) runSuites(fileURI string) bool {
 	}
 	defer close(results)
 
+	suites := r.Project.GetSuites()
+	if r.LaunchBy != "" {
+		history, err := r.getTestHistory()
+		if err != nil {
+			return false
+		}
+		suites = suite.SortByHistory(suites, history)
+	}
 	// Submit suites to work on.
 	go func() {
-		for _, s := range r.Project.GetSuites() {
+		for _, s := range suites {
 			jobOpts <- job.StartOptions{
 				ConfigFilePath:   r.Project.GetCfgPath(),
 				CLIFlags:         r.Project.GetCLIFlags(),

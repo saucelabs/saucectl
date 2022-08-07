@@ -2,12 +2,13 @@ package run
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"os"
 
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
@@ -16,6 +17,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
@@ -216,6 +218,7 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region) (int, error) {
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.NewSearchStrategy(p.Testcafe.Version, p.RootDir),
 			NPMDependencies:        p.Npm.Dependencies,
+			LaunchBy:               insights.LaunchBy(gFlags.launchBy),
 		},
 	}
 

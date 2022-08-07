@@ -9,6 +9,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 )
@@ -228,4 +229,18 @@ func IsSharded(suites []Suite) bool {
 		}
 	}
 	return false
+}
+
+func SortByHistory(suites []Suite, history insights.TestHistory) []Suite {
+	hash := map[string]Suite{}
+	for _, s := range suites {
+		hash[s.Name] = s
+	}
+	res := []Suite{}
+	for _, s := range history.TestCases {
+		if v, ok := hash[s.Name]; ok {
+			res = append(res, v)
+		}
+	}
+	return res
 }

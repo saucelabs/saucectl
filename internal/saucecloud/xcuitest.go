@@ -92,10 +92,19 @@ func (r *XcuitestRunner) runSuites() bool {
 	}
 	defer close(results)
 
+	suites := r.Project.Suites
+	if r.LaunchBy != "" {
+		history, err := r.getTestHistory()
+		if err != nil {
+			return false
+		}
+		suites = xcuitest.SortByHistory(suites, history)
+	}
+
 	// Submit suites to work on.
-	jobsCount := r.calculateJobsCount(r.Project.Suites)
+	jobsCount := r.calculateJobsCount(suites)
 	go func() {
-		for _, s := range r.Project.Suites {
+		for _, s := range suites {
 			for _, d := range s.Devices {
 				log.Debug().Str("suite", s.Name).Str("deviceName", d.Name).Str("deviceID", d.ID).Str("platformVersion", d.PlatformVersion).Msg("Starting job")
 				r.startJob(jobOpts, r.Project.Xcuitest.App, s.TestApp, r.Project.Xcuitest.OtherApps, s, d)

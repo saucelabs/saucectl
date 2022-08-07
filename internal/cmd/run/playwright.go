@@ -17,6 +17,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -202,6 +203,7 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region) (int, error
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.NewSearchStrategy(p.Playwright.Version, p.RootDir),
 			NPMDependencies:        p.Npm.Dependencies,
+			LaunchBy:               insights.LaunchBy(gFlags.launchBy),
 		},
 	}
 

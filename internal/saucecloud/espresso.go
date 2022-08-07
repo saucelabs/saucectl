@@ -87,10 +87,19 @@ func (r *EspressoRunner) runSuites() bool {
 	}
 	defer close(results)
 
+	suites := r.Project.Suites
+	if r.LaunchBy != "" {
+		history, err := r.getTestHistory()
+		if err != nil {
+			return false
+		}
+		suites = espresso.SortByHistory(suites, history)
+	}
+
 	// Submit suites to work on.
-	jobsCount := r.calculateJobsCount(r.Project.Suites)
+	jobsCount := r.calculateJobsCount(suites)
 	go func() {
-		for _, s := range r.Project.Suites {
+		for _, s := range suites {
 			numShards, _ := getNumShardsAndShardIndex(s.TestOptions)
 			// Automatically apply ShardIndex if numShards is defined
 			if numShards > 0 {
@@ -211,7 +220,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		TestOptions: s.TestOptions,
 		Attempt:     0,
 		Retries:     r.Project.Sauce.Retries,
-		Visibility: r.Project.Sauce.Visibility,
+		Visibility:  r.Project.Sauce.Visibility,
 
 		// RDC Specific flags
 		RealDevice:        d.isRealDevice,
