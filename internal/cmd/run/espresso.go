@@ -15,7 +15,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
-	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
@@ -159,7 +158,6 @@ func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
 			Framework: framework.Framework{Name: espresso.Kind},
 			Async:     gFlags.async,
 			FailFast:  gFlags.failFast,
-			LaunchBy:  insights.LaunchBy(gFlags.launchBy),
 		},
 	}
 

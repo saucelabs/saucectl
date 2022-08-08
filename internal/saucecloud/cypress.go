@@ -91,7 +91,7 @@ func (r *CypressRunner) runSuites(fileURI string) bool {
 	defer close(results)
 
 	suites := r.Project.GetSuites()
-	if r.LaunchBy != "" {
+	if r.Project.GetSauceCfg().LaunchBy != "" {
 		history, err := r.getTestHistory()
 		if err != nil {
 			return false

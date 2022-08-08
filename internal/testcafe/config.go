@@ -242,6 +242,11 @@ func Validate(p *Project) error {
 		return errors.New(msg.MissingFrameworkVersionConfig)
 	}
 
+	if p.Sauce.LaunchBy != "" && p.Sauce.LaunchBy != config.LaunchByFailrate {
+		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchBy,
+			string(config.LaunchByFailrate))
+	}
+
 	for i, v := range p.Suites {
 		// Force the user to migrate.
 		if len(v.Devices) != 0 {

@@ -54,7 +54,6 @@ type CloudRunner struct {
 	ShowConsoleLog         bool
 	Framework              framework.Framework
 	MetadataSearchStrategy framework.MetadataSearchStrategy
-	LaunchBy               insights.LaunchBy
 
 	Reporters []report.Reporter
 
@@ -906,5 +905,5 @@ func (r *CloudRunner) getTestHistory() (insights.TestHistory, error) {
 	if err != nil {
 		return insights.TestHistory{}, err
 	}
-	return client.GetHistory(context.Background(), user, insights.LaunchByFailrate)
+	return client.GetHistory(context.Background(), user, config.LaunchByFailrate)
 }

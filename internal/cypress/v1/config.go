@@ -210,6 +210,11 @@ func (p *Project) Validate() error {
 		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
 	}
 
+	if p.Sauce.LaunchBy != "" && p.Sauce.LaunchBy != config.LaunchByFailrate {
+		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchBy,
+			string(config.LaunchByFailrate))
+	}
+
 	// Validate suites.
 	if len(p.Suites) == 0 {
 		return errors.New(msg.EmptySuite)

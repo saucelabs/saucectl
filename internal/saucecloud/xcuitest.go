@@ -93,7 +93,7 @@ func (r *XcuitestRunner) runSuites() bool {
 	defer close(results)
 
 	suites := r.Project.Suites
-	if r.LaunchBy != "" {
+	if r.Project.Sauce.LaunchBy != "" {
 		history, err := r.getTestHistory()
 		if err != nil {
 			return false

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/requesth"
 	"github.com/saucelabs/saucectl/internal/user"
@@ -30,13 +31,7 @@ type TestCase struct {
 	FailRate float64 `json:"fail_rate"`
 }
 
-type LaunchBy string
-
-const (
-	LaunchByFailrate LaunchBy = "fail_rate"
-)
-
-func (c *Client) GetHistory(ctx context.Context, user user.User, launchBy LaunchBy) (TestHistory, error) {
+func (c *Client) GetHistory(ctx context.Context, user user.User, launchBy config.LaunchBy) (TestHistory, error) {
 	now := time.Now().Unix()
 	start := time.Now().AddDate(0, 0, -7).Unix()
 	url := fmt.Sprintf("%s/v2/insights/vdc/test-cases?user_id=%s&start=%d&since=%d&end=%d&until=%d&org_id=%s&limit=200&sort=desc&sort_by=%s",

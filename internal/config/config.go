@@ -24,6 +24,12 @@ type Metadata struct {
 	Build string   `yaml:"build" json:"build"`
 }
 
+type LaunchBy string
+
+const (
+	LaunchByFailrate LaunchBy = "fail_rate"
+)
+
 // SauceConfig represents sauce labs related settings.
 type SauceConfig struct {
 	Region      string            `yaml:"region,omitempty" json:"region"`
@@ -34,6 +40,7 @@ type SauceConfig struct {
 	Experiments map[string]string `yaml:"experiments,omitempty" json:"experiments,omitempty"`
 	Retries     int               `yaml:"retries,omitempty" json:"-"`
 	Visibility  string            `yaml:"visibility,omitempty" json:"-"`
+	LaunchBy    LaunchBy          `yaml:"launchBy,omitempty" json:"launchBy,omitempty"`
 }
 
 // DeviceOptions represents the devices capabilities required from a real device.

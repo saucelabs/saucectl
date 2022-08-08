@@ -80,7 +80,6 @@ type globalFlags struct {
 	failFast            bool
 	appStoreTimeout     time.Duration
 	noAutoTagging       bool
-	launchBy            string
 }
 
 // Command creates the `run` command
@@ -128,6 +127,7 @@ func Command() *cobra.Command {
 	sc.StringToString("experiment", "sauce::experiment", map[string]string{}, "Specifies a list of experimental flags and values")
 	sc.Bool("dry-run", "dryRun", false, "Simulate a test run without actually running any tests.")
 	sc.Int("retries", "sauce::retries", 0, "Retries specifies the number of times to retry a failed suite (sauce mode only)")
+	sc.String("launch-by", "sauce::launchBy", "", "Launch jobs by test history data. e.g. fail_rate.")
 
 	// Metadata
 	sc.StringSlice("tags", "sauce::metadata::tags", []string{}, "Adds tags to tests")
@@ -150,7 +150,6 @@ func Command() *cobra.Command {
 	cmd.PersistentFlags().BoolVar(&gFlags.testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
 	cmd.PersistentFlags().BoolVar(&gFlags.disableUsageMetrics, "disable-usage-metrics", false, "Disable usage metrics collection.")
 	cmd.PersistentFlags().BoolVar(&gFlags.noAutoTagging, "no-auto-tagging", false, "Disable the automatic tagging of jobs with metadata, such as CI or GIT information.")
-	cmd.PersistentFlags().StringVar(&gFlags.launchBy, "launch-by", "", "Launch test by test history, e.g. fail rate")
 
 	// Hide undocumented flags that the user does not need to care about.
 	_ = cmd.PersistentFlags().MarkHidden("runner-version")

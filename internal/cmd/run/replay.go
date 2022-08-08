@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/saucelabs/saucectl/internal/framework"
-	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
 	"github.com/saucelabs/saucectl/internal/viper"
 	"golang.org/x/text/cases"
@@ -143,7 +142,6 @@ func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, erro
 			Async:                  gFlags.async,
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.ExactStrategy{},
-			LaunchBy:               insights.LaunchBy(gFlags.launchBy),
 		},
 	}
 

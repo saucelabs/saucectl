@@ -88,6 +88,8 @@ const (
 	InvalidDockerFileTransferType = "illegal file transfer type '%s', must be one of '%s'"
 	// InvalidVisibility indicates that the configured visibility is invalid and has no effect on the test results
 	InvalidVisibility = "'%s' is not a valid visibility value. Must be one of [%s]"
+	// InvalidLaunchingOption indicates the launching option is invalid
+	InvalidLaunchingOption = "illegal launching option '%s', must be %s"
 )
 
 // cypress config settings

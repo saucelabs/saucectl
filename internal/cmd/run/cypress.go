@@ -16,7 +16,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
-	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
@@ -181,7 +180,6 @@ func runCypressInSauce(p cypress.Project, regio region.Region) (int, error) {
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.NewSearchStrategy(p.GetVersion(), p.GetRootDir()),
 			NPMDependencies:        p.GetNpm().Dependencies,
-			LaunchBy:               insights.LaunchBy(gFlags.launchBy),
 		},
 	}
 

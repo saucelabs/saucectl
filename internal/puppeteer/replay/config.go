@@ -118,6 +118,11 @@ func Validate(p *Project) error {
 		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
 	}
 
+	if p.Sauce.LaunchBy != "" && p.Sauce.LaunchBy != config.LaunchByFailrate {
+		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchBy,
+			string(config.LaunchByFailrate))
+	}
+
 	rgx := regexp.MustCompile(`^(?i)(google)?chrome$`)
 	for _, s := range p.Suites {
 		if !rgx.MatchString(s.BrowserName) {

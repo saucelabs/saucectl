@@ -163,6 +163,11 @@ func Validate(p Project) error {
 		}
 	}
 
+	if p.Sauce.LaunchBy != "" && p.Sauce.LaunchBy != config.LaunchByFailrate {
+		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchBy,
+			string(config.LaunchByFailrate))
+	}
+
 	if len(p.Suites) == 0 {
 		return errors.New(msg.EmptySuite)
 	}
