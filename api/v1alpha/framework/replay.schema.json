@@ -47,6 +47,15 @@
             "description": "Relative paths to the chrome devtools recordings.",
             "type": "array"
           },
+          "browserName": {
+            "$ref": "../subschema/common.schema.json#/definitions/browser",
+            "enum": [
+              "chrome"
+            ]
+          },
+          "browserVersion": {
+            "$ref": "../subschema/common.schema.json#/definitions/browserVersion"
+          },
           "platform": {
             "$ref": "../subschema/common.schema.json#/definitions/platformName",
             "enum": [
