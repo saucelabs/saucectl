@@ -27,7 +27,7 @@ type Metadata struct {
 type LaunchBy string
 
 const (
-	LaunchByFailrate LaunchBy = "fail_rate"
+	LaunchByFailrate LaunchBy = "fail rate"
 )
 
 // SauceConfig represents sauce labs related settings.
