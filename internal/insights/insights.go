@@ -39,7 +39,7 @@ func (c *Client) GetHistory(ctx context.Context, user user.User, launchBy config
 	url := fmt.Sprintf("%s/v2/insights/vdc/test-cases?user_id=%s&start=%d&since=%d&end=%d&until=%d&org_id=%s&limit=200&sort=desc&sort_by=%s",
 		c.URL, user.ID, start, start, now, now, user.Organization.ID, launchBy)
 
-	testHistory := TestHistory{}
+	var testHistory TestHistory
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return testHistory, err
