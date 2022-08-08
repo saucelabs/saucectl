@@ -11,26 +11,31 @@ import (
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
+// Client service
 type Client struct {
 	HTTPClient  *http.Client
 	URL         string
 	Credentials credentials.Credentials
 }
 
+// User represents user data structure
 type User struct {
 	ID           string       `json:"id"`
 	Groups       []Group      `json:"groups"`
 	Organization Organization `json:"organization"`
 }
 
+// Group represents the group that the user belongs to
 type Group struct {
 	ID string `json:"id"`
 }
 
+// Organization represents the organization that the user belongs to
 type Organization struct {
 	ID string `json:"id"`
 }
 
+// Get user data
 func (c *Client) Get(ctx context.Context) (User, error) {
 	url := fmt.Sprintf("%s/team-management/v1/users/me", c.URL)
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)

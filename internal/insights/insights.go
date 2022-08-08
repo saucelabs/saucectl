@@ -14,23 +14,25 @@ import (
 	"github.com/saucelabs/saucectl/internal/user"
 )
 
-//https://api.us-west-1.saucelabs.com/v2/insights/vdc/test-cases?start=1659051369&since=1659051369&end=1659656169&until=1659656169&org_id=7fb25570b4064716b9b6daae1a846790&limit=200&offset=0&sort=desc&sort_by=fail_rate
-
+// Client service
 type Client struct {
 	HTTPClient  *http.Client
 	URL         string
 	Credentials credentials.Credentials
 }
 
+// TestHistory represents test history data structure
 type TestHistory struct {
 	TestCases []TestCase `json:"test_cases"`
 }
 
+// TestCase represents test case data structure
 type TestCase struct {
 	Name     string  `json:"name"`
 	FailRate float64 `json:"fail_rate"`
 }
 
+// GetHistory returns test history from insights
 func (c *Client) GetHistory(ctx context.Context, user user.User, launchBy config.LaunchBy) (TestHistory, error) {
 	now := time.Now().Unix()
 	start := time.Now().AddDate(0, 0, -7).Unix()

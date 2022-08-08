@@ -186,6 +186,7 @@ func FilterSuites(p *Project, suiteName string) error {
 	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
 }
 
+// SortByHistory sorts the suites by test history
 func SortByHistory(suites []Suite, history insights.TestHistory) []Suite {
 	hash := map[string]Suite{}
 	for _, s := range suites {
