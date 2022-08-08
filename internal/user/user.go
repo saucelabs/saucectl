@@ -53,7 +53,7 @@ func (c *Client) Get(ctx context.Context) (User, error) {
 	if err != nil {
 		return User{}, err
 	}
-	user := User{}
+	var user User
 	err = json.Unmarshal(body, &user)
 	if err != nil {
 		return user, err
