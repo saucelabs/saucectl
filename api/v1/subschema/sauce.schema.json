@@ -73,6 +73,13 @@
             { "const": "team", "title": "Only accessible to people under the same root account as you." },
             { "const": "private", "title": "Only you (the owner) will be able to view assets and test results page." }
           ]
+        },
+        "launchBy": {
+          "description": "Launch job according to test history.",
+          "type": "string",
+          "oneOf": [
+            { "const": "fail_rate", "title": "Launch job by fail rate from test history"}
+          ]
         }
       },
       "additionalProperties": false
