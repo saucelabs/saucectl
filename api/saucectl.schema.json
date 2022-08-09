@@ -1707,6 +1707,15 @@
                   "description": "Relative paths to the chrome devtools recordings.",
                   "type": "array"
                 },
+                "browserName": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/browser",
+                  "enum": [
+                    "chrome"
+                  ]
+                },
+                "browserVersion": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/browserVersion"
+                },
                 "platform": {
                   "enum": [
                     "macOS 11.00",
