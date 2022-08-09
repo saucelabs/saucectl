@@ -163,11 +163,8 @@ func Validate(p Project) error {
 		}
 	}
 
-	if p.Sauce.LaunchOrder != "" {
-		if p.Sauce.LaunchOrder != config.LaunchOrderFailRate && p.Sauce.LaunchOrder != config.LaunchOrderErrorRate {
-			return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchOrder,
-				strings.Join([]string{string(config.LaunchOrderFailRate), string(config.LaunchOrderErrorRate)}, "|"))
-		}
+	if p.Sauce.LaunchOrder != "" && p.Sauce.LaunchOrder != config.LaunchOrderFailRate {
+		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchOrder, string(config.LaunchOrderFailRate))
 	}
 
 	if len(p.Suites) == 0 {

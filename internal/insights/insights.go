@@ -23,8 +23,7 @@ type Client struct {
 }
 
 var LaunchOptions = map[config.LaunchOrder]string{
-	config.LaunchOrderFailRate:  "fail_rate",
-	config.LaunchOrderErrorRate: "error_rate",
+	config.LaunchOrderFailRate: "fail_rate",
 }
 
 func New(url string, creds credentials.Credentials, timeout time.Duration) Client {

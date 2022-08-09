@@ -718,16 +718,12 @@
                     ]
                   },
                   "launchOrder": {
-                    "description": "Launch jobs based on the failure/error rate. Jobs with the highest failure/error rate launch first.",
+                    "description": "Launch jobs based on the failure rate. Jobs with the highest failure rate launch first.",
                     "type": "string",
                     "oneOf": [
                       {
                         "const": "fail rate",
                         "title": "Launch job based on the failure rate"
-                      },
-                      {
-                        "const": "error rate",
-                        "title": "Launch job based on the error rate"
                       }
                     ]
                   }

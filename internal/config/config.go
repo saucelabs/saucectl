@@ -27,8 +27,7 @@ type Metadata struct {
 type LaunchOrder string
 
 const (
-	LaunchOrderFailRate  LaunchOrder = "fail rate"
-	LaunchOrderErrorRate LaunchOrder = "error rate"
+	LaunchOrderFailRate LaunchOrder = "fail rate"
 )
 
 // SauceConfig represents sauce labs related settings.
