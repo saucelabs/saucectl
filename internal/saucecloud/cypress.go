@@ -94,7 +94,7 @@ func (r *CypressRunner) runSuites(fileURI string) bool {
 	if r.Project.GetSauceCfg().LaunchOrder != "" {
 		history, err := r.getHistory(r.Project.GetSauceCfg().LaunchOrder)
 		if err != nil {
-			log.Warn().Err(err).Msgf("Unable to retrieve job history. Launching jobs in the default order.")
+			log.Warn().Err(err).Msg(msg.RetrieveJobHistoryError)
 		} else {
 			suites = suite.SortByHistory(suites, history)
 		}

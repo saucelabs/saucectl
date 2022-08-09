@@ -158,4 +158,6 @@ const (
 	AssetNotFound = "asset not found"
 	// TunnelNotFound indicates tunnel was not found
 	TunnelNotFound = "tunnel not found"
+	// RetrieveJobHistoryError indicates failed to retrieve job history
+	RetrieveJobHistoryError = "Unable to retrieve job history. Launching jobs in the default order."
 )
