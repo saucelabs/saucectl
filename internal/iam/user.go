@@ -20,5 +20,5 @@ type Organization struct {
 }
 
 type Service interface {
-	Get(context.Context) (User, error)
+	GetUser(context.Context) (User, error)
 }

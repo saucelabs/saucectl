@@ -890,7 +890,7 @@ func (r *CloudRunner) getAvailableVersionsMessage(frameworkName string) string {
 }
 
 func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHistory, error) {
-	user, err := r.UserService.Get(context.Background())
+	user, err := r.UserService.GetUser(context.Background())
 	if err != nil {
 		return insights.JobHistory{}, err
 	}

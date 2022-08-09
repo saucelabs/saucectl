@@ -95,7 +95,7 @@ func (r *TestcafeRunner) runSuites(fileURI string) bool {
 	if r.Project.Sauce.LaunchOrder != "" {
 		history, err := r.getHistory(r.Project.Sauce.LaunchOrder)
 		if err != nil {
-			log.Debug().Err(err).Msg("failed to get job history")
+			log.Warn().Err(err).Msgf("Unable to get job history by %s. Launching job in the orignal order", string(r.Project.Sauce.LaunchOrder))
 		} else {
 			suites = testcafe.SortByHistory(suites, history)
 		}
