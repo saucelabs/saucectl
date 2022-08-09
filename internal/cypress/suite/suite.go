@@ -28,7 +28,7 @@ func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
 	for _, s := range suites {
 		hash[s.Name] = s
 	}
-	res := []Suite{}
+	var res []Suite
 	for _, s := range history.TestCases {
 		if v, ok := hash[s.Name]; ok {
 			res = append(res, v)
