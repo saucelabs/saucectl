@@ -12,6 +12,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/iam"
+	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
 // Client service
@@ -40,7 +41,8 @@ func (c *Client) GetHistory(ctx context.Context, user iam.User, launchOrder conf
 	now := time.Now().Unix()
 
 	var jobHistory JobHistory
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/v2/insights/vdc/test-cases", c.URL), nil)
+	url := fmt.Sprintf("%s/v2/insights/vdc/test-cases", c.URL)
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return jobHistory, err
 	}
@@ -51,6 +53,8 @@ func (c *Client) GetHistory(ctx context.Context, user iam.User, launchOrder conf
 	q.Add("since", strconv.FormatInt(start, 10))
 	q.Add("end", strconv.FormatInt(now, 10))
 	q.Add("until", strconv.FormatInt(now, 10))
+	q.Add("limit", "200")
+	q.Add("offset", "0")
 	q.Add("sort_by", LaunchOptions[launchOrder])
 	req.URL.RawQuery = q.Encode()
 	fmt.Println("req.URL: ", req.URL)
