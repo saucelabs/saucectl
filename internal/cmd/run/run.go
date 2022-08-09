@@ -56,6 +56,8 @@ var (
 	testComposerTimeout = 15 * time.Minute
 	rdcTimeout          = 15 * time.Minute
 	githubTimeout       = 2 * time.Second
+	insightsTimeout     = 10 * time.Second
+	iamTimeout          = 10 * time.Second
 
 	typeDef config.TypeDef
 
@@ -229,9 +231,9 @@ func preRun() error {
 
 	appsClient = *appstore.New("", creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
 
-	insightsClient = insights.New("", creds, gFlags.globalTimeout)
+	insightsClient = insights.New("", creds, insightsTimeout)
 
-	iamClient = iam.New("", creds, gFlags.globalTimeout)
+	iamClient = iam.New("", creds, iamTimeout)
 
 	return nil
 }
