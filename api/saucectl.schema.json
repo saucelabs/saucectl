@@ -717,13 +717,17 @@
                       }
                     ]
                   },
-                  "launchBy": {
-                    "description": "Launch job according to test history.",
+                  "launchOrder": {
+                    "description": "Launch jobs based on the failure/error rate. Jobs with the highest failure/error rate launch first.",
                     "type": "string",
                     "oneOf": [
                       {
-                        "const": "fail_rate",
-                        "title": "Launch job by fail rate from test history"
+                        "const": "fail rate",
+                        "title": "Launch job based on the failure rate"
+                      },
+                      {
+                        "const": "error rate",
+                        "title": "Launch job based on the error rate"
                       }
                     ]
                   }

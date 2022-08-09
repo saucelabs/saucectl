@@ -98,6 +98,8 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags) (int, error) {
 	restoClient.URL = regio.APIBaseURL()
 	appsClient.URL = regio.APIBaseURL()
 	rdcClient.URL = regio.APIBaseURL()
+	insightsClient.URL = regio.APIBaseURL()
+	iamClient.URL = regio.APIBaseURL()
 
 	restoClient.ArtifactConfig = p.Artifacts.Download
 	rdcClient.ArtifactConfig = p.Artifacts.Download
@@ -142,6 +144,8 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
 			CCYReader:       &restoClient,
 			TunnelService:   &restoClient,
 			MetadataService: &testcompClient,
+			InsightsService: &insightsClient,
+			UserService:     &iamClient,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
 			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,

@@ -93,12 +93,13 @@ func (r *XcuitestRunner) runSuites() bool {
 	defer close(results)
 
 	suites := r.Project.Suites
-	if r.Project.Sauce.LaunchBy != "" {
-		history, err := r.getTestHistory()
+	if r.Project.Sauce.LaunchOrder != "" {
+		history, err := r.getHistory(r.Project.Sauce.LaunchOrder)
 		if err != nil {
-			return false
+			log.Debug().Err(err).Msg("failed to get job history")
+		} else {
+			suites = xcuitest.SortByHistory(suites, history)
 		}
-		suites = xcuitest.SortByHistory(suites, history)
 	}
 
 	// Submit suites to work on.

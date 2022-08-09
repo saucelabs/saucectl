@@ -314,9 +314,11 @@ func Validate(p *Project) error {
 		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
 	}
 
-	if p.Sauce.LaunchBy != "" && p.Sauce.LaunchBy != config.LaunchByFailrate {
-		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchBy,
-			string(config.LaunchByFailrate))
+	if p.Sauce.LaunchOrder != "" {
+		if p.Sauce.LaunchOrder != config.LaunchOrderFailRate && p.Sauce.LaunchOrder != config.LaunchOrderErrorRate {
+			return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchOrder,
+				strings.Join([]string{string(config.LaunchOrderFailRate), string(config.LaunchOrderErrorRate)}, "|"))
+		}
 	}
 
 	return nil
@@ -362,8 +364,8 @@ func IsSharded(suites []Suite) bool {
 	return false
 }
 
-// SortByHistory sorts the suites by test history
-func SortByHistory(suites []Suite, history insights.TestHistory) []Suite {
+// SortByHistory sorts the suites by the order of job history
+func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
 	hash := map[string]Suite{}
 	for _, s := range suites {
 		hash[s.Name] = s
@@ -372,7 +374,11 @@ func SortByHistory(suites []Suite, history insights.TestHistory) []Suite {
 	for _, s := range history.TestCases {
 		if v, ok := hash[s.Name]; ok {
 			res = append(res, v)
+			delete(hash, s.Name)
 		}
+	}
+	for _, v := range hash {
+		res = append(res, v)
 	}
 	return res
 }

@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/iam"
+	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/webdriver"
 
 	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
@@ -62,6 +64,8 @@ var (
 	restoClient     resto.Client
 	appsClient      appstore.AppStore
 	rdcClient       rdc.Client
+	insightsClient  insights.Client
+	iamClient       iam.Client
 
 	// ErrEmptySuiteName is thrown when a flag is specified that has a dependency on the --name flag.
 	ErrEmptySuiteName = errors.New(msg.EmptyAdhocSuiteName)
@@ -127,7 +131,7 @@ func Command() *cobra.Command {
 	sc.StringToString("experiment", "sauce::experiment", map[string]string{}, "Specifies a list of experimental flags and values")
 	sc.Bool("dry-run", "dryRun", false, "Simulate a test run without actually running any tests.")
 	sc.Int("retries", "sauce::retries", 0, "Retries specifies the number of times to retry a failed suite (sauce mode only)")
-	sc.String("launch-by", "sauce::launchBy", "", "Launch jobs by test history data, e.g. fail_rate.")
+	sc.String("launch-order", "sauce::launchOrder", "", `Launch jobs based on the failure/error rate. Jobs with the highest failure/error rate launch first. Supports values: ["fail rate", "error rate"]`)
 
 	// Metadata
 	sc.StringSlice("tags", "sauce::metadata::tags", []string{}, "Adds tags to tests")
@@ -224,6 +228,10 @@ func preRun() error {
 	rdcClient = rdc.New("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 
 	appsClient = *appstore.New("", creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
+
+	insightsClient = insights.New("", creds, gFlags.globalTimeout)
+
+	iamClient = iam.New("", creds, gFlags.globalTimeout)
 
 	return nil
 }

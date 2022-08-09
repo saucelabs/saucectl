@@ -91,12 +91,13 @@ func (r *CypressRunner) runSuites(fileURI string) bool {
 	defer close(results)
 
 	suites := r.Project.GetSuites()
-	if r.Project.GetSauceCfg().LaunchBy != "" {
-		history, err := r.getTestHistory()
+	if r.Project.GetSauceCfg().LaunchOrder != "" {
+		history, err := r.getHistory(r.Project.GetSauceCfg().LaunchOrder)
 		if err != nil {
-			return false
+			log.Debug().Err(err).Msg("failed to get job history")
+		} else {
+			suites = suite.SortByHistory(suites, history)
 		}
-		suites = suite.SortByHistory(suites, history)
 	}
 	// Submit suites to work on.
 	go func() {

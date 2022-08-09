@@ -278,9 +278,11 @@ func (p *Project) Validate() error {
 		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
 	}
 
-	if p.Sauce.LaunchBy != "" && p.Sauce.LaunchBy != config.LaunchByFailrate {
-		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchBy,
-			string(config.LaunchByFailrate))
+	if p.Sauce.LaunchOrder != "" {
+		if p.Sauce.LaunchOrder != config.LaunchOrderFailRate && p.Sauce.LaunchOrder != config.LaunchOrderErrorRate {
+			return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchOrder,
+				strings.Join([]string{string(config.LaunchOrderFailRate), string(config.LaunchOrderErrorRate)}, "|"))
+		}
 	}
 
 	// Validate suites.

@@ -126,6 +126,8 @@ func runPlaywright(cmd *cobra.Command) (int, error) {
 	testcompClient.URL = regio.APIBaseURL()
 	restoClient.URL = regio.APIBaseURL()
 	appsClient.URL = regio.APIBaseURL()
+	insightsClient.URL = regio.APIBaseURL()
+	iamClient.URL = regio.APIBaseURL()
 
 	restoClient.ArtifactConfig = p.Artifacts.Download
 
@@ -194,6 +196,8 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region) (int, error
 			CCYReader:       &restoClient,
 			TunnelService:   &restoClient,
 			MetadataService: &testcompClient,
+			InsightsService: &insightsClient,
+			UserService:     &iamClient,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
 			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
