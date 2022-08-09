@@ -45,18 +45,23 @@ func (c *Client) GetHistory(ctx context.Context, user iam.User, launchOrder conf
 	if err != nil {
 		return jobHistory, err
 	}
+
 	q := req.URL.Query()
-	q.Add("user_id", user.ID)
-	q.Add("org_id", user.Organization.ID)
-	q.Add("start", strconv.FormatInt(start, 10))
-	q.Add("since", strconv.FormatInt(start, 10))
-	q.Add("end", strconv.FormatInt(now, 10))
-	q.Add("until", strconv.FormatInt(now, 10))
-	q.Add("limit", "200")
-	q.Add("offset", "0")
-	q.Add("sort_by", LaunchOptions[launchOrder])
+	queries := map[string]string{
+		"user_id": user.ID,
+		"org_id":  user.Organization.ID,
+		"start":   strconv.FormatInt(start, 10),
+		"since":   strconv.FormatInt(start, 10),
+		"end":     strconv.FormatInt(now, 10),
+		"until":   strconv.FormatInt(now, 10),
+		"limit":   "200",
+		"offset":  "0",
+		"sort_by": string(launchOrder),
+	}
+	for k, v := range queries {
+		q.Add(k, v)
+	}
 	req.URL.RawQuery = q.Encode()
-	fmt.Println("req.URL: ", req.URL)
 
 	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
