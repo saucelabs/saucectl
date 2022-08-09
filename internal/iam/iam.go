@@ -28,7 +28,7 @@ func New(url string, creds credentials.Credentials, timeout time.Duration) Clien
 }
 
 // Get user data
-func (c *Client) Get(ctx context.Context) (User, error) {
+func (c *Client) GetUser(ctx context.Context) (User, error) {
 	url := fmt.Sprintf("%s/team-management/v1/users/me", c.URL)
 
 	var user User
