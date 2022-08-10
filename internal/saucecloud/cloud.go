@@ -14,8 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/node"
-
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
@@ -28,10 +26,13 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/iam"
+	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/node"
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
@@ -51,6 +52,8 @@ type CloudRunner struct {
 	ShowConsoleLog         bool
 	Framework              framework.Framework
 	MetadataSearchStrategy framework.MetadataSearchStrategy
+	InsightsService        insights.Service
+	UserService            iam.Service
 
 	Reporters []report.Reporter
 
@@ -885,4 +888,12 @@ func (r *CloudRunner) getAvailableVersionsMessage(frameworkName string) string {
 	}
 	m += "\n"
 	return m
+}
+
+func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHistory, error) {
+	user, err := r.UserService.GetUser(context.Background())
+	if err != nil {
+		return insights.JobHistory{}, err
+	}
+	return r.InsightsService.GetHistory(context.Background(), user, launchOrder)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/msg"
 )
 
 // deviceConfig represent the configuration for a specific device.
@@ -87,10 +88,19 @@ func (r *EspressoRunner) runSuites() bool {
 	}
 	defer close(results)
 
+	suites := r.Project.Suites
+	if r.Project.Sauce.LaunchOrder != "" {
+		history, err := r.getHistory(r.Project.Sauce.LaunchOrder)
+		if err != nil {
+			log.Warn().Err(err).Msg(msg.RetrieveJobHistoryError)
+		} else {
+			suites = espresso.SortByHistory(suites, history)
+		}
+	}
 	// Submit suites to work on.
-	jobsCount := r.calculateJobsCount(r.Project.Suites)
+	jobsCount := r.calculateJobsCount(suites)
 	go func() {
-		for _, s := range r.Project.Suites {
+		for _, s := range suites {
 			numShards, _ := getNumShardsAndShardIndex(s.TestOptions)
 			// Automatically apply ShardIndex if numShards is defined
 			if numShards > 0 {
@@ -211,7 +221,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		TestOptions: s.TestOptions,
 		Attempt:     0,
 		Retries:     r.Project.Sauce.Retries,
-		Visibility: r.Project.Sauce.Visibility,
+		Visibility:  r.Project.Sauce.Visibility,
 
 		// RDC Specific flags
 		RealDevice:        d.isRealDevice,

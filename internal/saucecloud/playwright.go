@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/msg"
-	"strings"
 
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/playwright"
@@ -91,9 +92,19 @@ func (r *PlaywrightRunner) runSuites(fileURI string) bool {
 	}
 	defer close(results)
 
+	suites := r.Project.Suites
+	if r.Project.Sauce.LaunchOrder != "" {
+		history, err := r.getHistory(r.Project.Sauce.LaunchOrder)
+		if err != nil {
+			log.Warn().Err(err).Msg(msg.RetrieveJobHistoryError)
+		} else {
+			suites = playwright.SortByHistory(suites, history)
+		}
+	}
+
 	// Submit suites to work on.
 	go func() {
-		for _, s := range r.Project.Suites {
+		for _, s := range suites {
 			// Define frameworkVersion if not set at suite level
 			if s.PlaywrightVersion == "" {
 				s.PlaywrightVersion = r.Project.Playwright.Version

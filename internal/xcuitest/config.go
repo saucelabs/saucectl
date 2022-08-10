@@ -8,6 +8,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 )
@@ -146,6 +147,10 @@ func Validate(p Project) error {
 		}
 	}
 
+	if p.Sauce.LaunchOrder != "" && p.Sauce.LaunchOrder != config.LaunchOrderFailRate {
+		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchOrder, string(config.LaunchOrderFailRate))
+	}
+
 	if len(p.Suites) == 0 {
 		return errors.New(msg.EmptySuite)
 	}
@@ -178,4 +183,23 @@ func FilterSuites(p *Project, suiteName string) error {
 		}
 	}
 	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
+}
+
+// SortByHistory sorts the suites by the order of job history
+func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
+	hash := map[string]Suite{}
+	for _, s := range suites {
+		hash[s.Name] = s
+	}
+	var res []Suite
+	for _, s := range history.TestCases {
+		if v, ok := hash[s.Name]; ok {
+			res = append(res, v)
+			delete(hash, s.Name)
+		}
+	}
+	for _, v := range hash {
+		res = append(res, v)
+	}
+	return res
 }
