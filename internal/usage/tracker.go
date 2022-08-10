@@ -113,6 +113,12 @@ func (p Properties) SetError(errMessage string) Properties {
 	return p
 }
 
+// SetLaunchOrder reports launch order of jobs
+func (p Properties) SetLaunchOrder(launchOrder config.LaunchOrder) Properties {
+	p["launch_order"] = string(launchOrder)
+	return p
+}
+
 // Tracker is an interface for providing usage tracking.
 type Tracker interface {
 	io.Closer
