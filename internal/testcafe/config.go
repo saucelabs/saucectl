@@ -10,6 +10,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/fpath"
+	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 )
@@ -241,6 +242,10 @@ func Validate(p *Project) error {
 		return errors.New(msg.MissingFrameworkVersionConfig)
 	}
 
+	if p.Sauce.LaunchOrder != "" && p.Sauce.LaunchOrder != config.LaunchOrderFailRate {
+		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchOrder, string(config.LaunchOrderFailRate))
+	}
+
 	for i, v := range p.Suites {
 		// Force the user to migrate.
 		if len(v.Devices) != 0 {
@@ -354,4 +359,23 @@ func IsSharded(suites []Suite) bool {
 		}
 	}
 	return false
+}
+
+// SortByHistory sorts the suites in the order of job history
+func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
+	hash := map[string]Suite{}
+	for _, s := range suites {
+		hash[s.Name] = s
+	}
+	var res []Suite
+	for _, s := range history.TestCases {
+		if v, ok := hash[s.Name]; ok {
+			res = append(res, v)
+			delete(hash, s.Name)
+		}
+	}
+	for _, v := range hash {
+		res = append(res, v)
+	}
+	return res
 }

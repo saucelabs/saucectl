@@ -3,6 +3,7 @@ package saucecloud
 import (
 	"context"
 	"errors"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -75,9 +76,18 @@ func (r *ReplayRunner) runSuites(fileURI string) bool {
 	}
 	defer close(results)
 
+	suites := r.Project.Suites
+	if r.Project.Sauce.LaunchOrder != "" {
+		history, err := r.getHistory(r.Project.Sauce.LaunchOrder)
+		if err != nil {
+			log.Warn().Err(err).Msg(msg.RetrieveJobHistoryError)
+		} else {
+			suites = replay.SortByHistory(suites, history)
+		}
+	}
 	// Submit suites to work on.
 	go func() {
-		for _, s := range r.Project.Suites {
+		for _, s := range suites {
 			jobOpts <- job.StartOptions{
 				ConfigFilePath:   r.Project.ConfigFilePath,
 				DisplayName:      s.Name,

@@ -1,12 +1,13 @@
 package run
 
 import (
+	"os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"os"
 
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
@@ -105,6 +106,8 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags) (int, error) {
 	restoClient.URL = regio.APIBaseURL()
 	appsClient.URL = regio.APIBaseURL()
 	rdcClient.URL = regio.APIBaseURL()
+	insightsClient.URL = regio.APIBaseURL()
+	iamClient.URL = regio.APIBaseURL()
 
 	restoClient.ArtifactConfig = p.Artifacts.Download
 	rdcClient.ArtifactConfig = p.Artifacts.Download
@@ -150,6 +153,8 @@ func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
 			CCYReader:       &restoClient,
 			TunnelService:   &restoClient,
 			MetadataService: &testcompClient,
+			InsightsService: &insightsClient,
+			UserService:     &iamClient,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
 			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,

@@ -110,6 +110,8 @@ func runCypress(cmd *cobra.Command) (int, error) {
 	webdriverClient.URL = regio.WebDriverBaseURL()
 	restoClient.URL = regio.APIBaseURL()
 	appsClient.URL = regio.APIBaseURL()
+	insightsClient.URL = regio.APIBaseURL()
+	iamClient.URL = regio.APIBaseURL()
 	restoClient.ArtifactConfig = p.GetArtifactsCfg().Download
 	tracker := segment.New(!gFlags.disableUsageMetrics)
 
@@ -172,6 +174,8 @@ func runCypressInSauce(p cypress.Project, regio region.Region) (int, error) {
 			CCYReader:       &restoClient,
 			MetadataService: &testcompClient,
 			TunnelService:   &restoClient,
+			InsightsService: &insightsClient,
+			UserService:     &iamClient,
 			Region:          regio,
 			ShowConsoleLog:  p.IsShowConsoleLog(),
 			Reporters: createReporters(p.GetReporter(), p.GetNotifications(), p.GetSauceCfg().Metadata, &testcompClient, &restoClient,
