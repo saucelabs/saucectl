@@ -113,7 +113,7 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags) (int, error) {
 	defer func() {
 		props := usage.Properties{}
 		props.SetFramework("xcuitest").SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).SetArtifacts(p.Artifacts).
-			SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).SetSlack(p.Notifications.Slack)
+			SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).SetSlack(p.Notifications.Slack).SetLaunchOrder(p.Sauce.LaunchOrder)
 		tracker.Collect(cases.Title(language.English).String(fullCommandName(cmd)), props)
 		_ = tracker.Close()
 	}()
