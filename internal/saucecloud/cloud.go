@@ -509,9 +509,6 @@ func (r *CloudRunner) archiveNodeModules(tempDir string, rootDir string, matcher
 func (r *CloudRunner) archiveFiles(project interface{}, name string, tempDir string, rootDir string, files []string, matcher sauceignore.Matcher) (string, error) {
 	start := time.Now()
 
-	// Keep file order stable for consistent zip archives
-	sort.Strings(files)
-
 	zipName := filepath.Join(tempDir, name+".zip")
 	z, err := zip.NewFileWriter(zipName, matcher)
 	if err != nil {
@@ -533,6 +530,8 @@ func (r *CloudRunner) archiveFiles(project interface{}, name string, tempDir str
 		totalFileCount += fileCount
 	}
 
+	// Keep file order stable for consistent zip archives
+	sort.Strings(files)
 	for _, f := range files {
 		rel, err := filepath.Rel(rootDir, filepath.Dir(f))
 		if err != nil {
