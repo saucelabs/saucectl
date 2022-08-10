@@ -119,7 +119,7 @@ func runCypress(cmd *cobra.Command) (int, error) {
 		props := usage.Properties{}
 		props.SetFramework("cypress").SetFVersion(p.GetVersion()).SetFlags(cmd.Flags()).SetSauceConfig(p.GetSauceCfg()).
 			SetArtifacts(p.GetArtifactsCfg()).SetDocker(p.GetDocker()).SetNPM(p.GetNpm()).SetNumSuites(len(p.GetSuites())).SetJobs(captor.Default.TestResults).
-			SetSlack(p.GetNotifications().Slack).SetSharding(p.IsSharded())
+			SetSlack(p.GetNotifications().Slack).SetSharding(p.IsSharded()).SetLaunchOrder(p.GetSauceCfg().LaunchOrder)
 
 		tracker.Collect(cases.Title(language.English).String(fullCommandName(cmd)), props)
 		_ = tracker.Close()
