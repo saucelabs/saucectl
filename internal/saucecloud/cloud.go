@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -508,6 +509,9 @@ func (r *CloudRunner) archiveNodeModules(tempDir string, rootDir string, matcher
 func (r *CloudRunner) archiveFiles(project interface{}, name string, tempDir string, rootDir string, files []string, matcher sauceignore.Matcher) (string, error) {
 	start := time.Now()
 
+	// Keep file order stable for consistent zip archives
+	sort.Strings(files)
+
 	zipName := filepath.Join(tempDir, name+".zip")
 	z, err := zip.NewFileWriter(zipName, matcher)
 	if err != nil {
@@ -522,7 +526,6 @@ func (r *CloudRunner) archiveFiles(project interface{}, name string, tempDir str
 		if err := jsonio.WriteFile(rcPath, project); err != nil {
 			return "", err
 		}
-		log.Debug().Str("name", rcPath).Msg("Adding to archive")
 		fileCount, err := z.Add(rcPath, "")
 		if err != nil {
 			return "", err
@@ -531,7 +534,6 @@ func (r *CloudRunner) archiveFiles(project interface{}, name string, tempDir str
 	}
 
 	for _, f := range files {
-		log.Debug().Str("name", f).Msg("Adding to archive")
 		rel, err := filepath.Rel(rootDir, filepath.Dir(f))
 		if err != nil {
 			return "", err
