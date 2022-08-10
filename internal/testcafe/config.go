@@ -374,8 +374,10 @@ func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
 			delete(hash, s.Name)
 		}
 	}
-	for _, v := range hash {
-		res = append(res, v)
+	for _, v := range suites {
+		if _, ok := hash[v.Name]; ok {
+			res = append(res, v)
+		}
 	}
 	return res
 }
