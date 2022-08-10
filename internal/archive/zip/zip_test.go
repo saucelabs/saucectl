@@ -77,7 +77,7 @@ func TestZipper_Add(t *testing.T) {
 			z := &Writer{
 				W:       tt.fields.W,
 				M:       tt.fields.M,
-				zipFile: tt.fields.ZipFile,
+				ZipFile: tt.fields.ZipFile,
 			}
 			fileCount, err := z.Add(tt.args.src, tt.args.dst)
 			if (err != nil) != tt.wantErr {

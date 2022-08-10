@@ -16,7 +16,7 @@ import (
 type Writer struct {
 	W       *zip.Writer
 	M       sauceignore.Matcher
-	zipFile *os.File
+	ZipFile *os.File
 }
 
 // NewFileWriter returns a new Writer that archives files to name.
@@ -26,7 +26,7 @@ func NewFileWriter(name string, matcher sauceignore.Matcher) (Writer, error) {
 		return Writer{}, err
 	}
 
-	w := Writer{W: zip.NewWriter(f), M: matcher, zipFile: f}
+	w := Writer{W: zip.NewWriter(f), M: matcher, ZipFile: f}
 
 	return w, nil
 }
@@ -98,7 +98,7 @@ func (w *Writer) Close() error {
 	if err := w.W.Close(); err != nil {
 		return err
 	}
-	if err := w.zipFile.Close(); err != nil {
+	if err := w.ZipFile.Close(); err != nil {
 		return err
 	}
 
