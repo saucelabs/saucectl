@@ -1,6 +1,10 @@
 package suite
 
-import "time"
+import (
+	"time"
+
+	"github.com/saucelabs/saucectl/internal/insights"
+)
 
 // Suite represents the general test suite configuration.
 type Suite struct {
@@ -16,4 +20,23 @@ type Suite struct {
 	PreExec          []string          `yaml:"preExec,omitempty" json:"preExec"`
 	TimeZone         string            `yaml:"timeZone,omitempty" json:"timeZone"`
 	Env              map[string]string `yaml:"env,omitempty" json:"env"`
+}
+
+// SortByHistory sorts the suites in the order of job history
+func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
+	hash := map[string]Suite{}
+	for _, s := range suites {
+		hash[s.Name] = s
+	}
+	var res []Suite
+	for _, s := range history.TestCases {
+		if v, ok := hash[s.Name]; ok {
+			res = append(res, v)
+			delete(hash, s.Name)
+		}
+	}
+	for _, v := range hash {
+		res = append(res, v)
+	}
+	return res
 }

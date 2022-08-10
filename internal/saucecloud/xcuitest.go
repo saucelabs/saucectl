@@ -12,6 +12,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
@@ -92,10 +93,20 @@ func (r *XcuitestRunner) runSuites() bool {
 	}
 	defer close(results)
 
+	suites := r.Project.Suites
+	if r.Project.Sauce.LaunchOrder != "" {
+		history, err := r.getHistory(r.Project.Sauce.LaunchOrder)
+		if err != nil {
+			log.Warn().Err(err).Msg(msg.RetrieveJobHistoryError)
+		} else {
+			suites = xcuitest.SortByHistory(suites, history)
+		}
+	}
+
 	// Submit suites to work on.
-	jobsCount := r.calculateJobsCount(r.Project.Suites)
+	jobsCount := r.calculateJobsCount(suites)
 	go func() {
-		for _, s := range r.Project.Suites {
+		for _, s := range suites {
 			for _, d := range s.Devices {
 				log.Debug().Str("suite", s.Name).Str("deviceName", d.Name).Str("deviceID", d.ID).Str("platformVersion", d.PlatformVersion).Msg("Starting job")
 				r.startJob(jobOpts, r.Project.Xcuitest.App, s.TestApp, r.Project.Xcuitest.OtherApps, s, d)

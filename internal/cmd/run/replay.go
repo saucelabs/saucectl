@@ -1,12 +1,13 @@
 package run
 
 import (
+	"os"
+
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
 	"github.com/saucelabs/saucectl/internal/viper"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"os"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -91,6 +92,8 @@ func runReplay(cmd *cobra.Command) (int, error) {
 	testcompClient.URL = regio.APIBaseURL()
 	restoClient.URL = regio.APIBaseURL()
 	appsClient.URL = regio.APIBaseURL()
+	insightsClient.URL = regio.APIBaseURL()
+	iamClient.URL = regio.APIBaseURL()
 
 	restoClient.ArtifactConfig = p.Artifacts.Download
 
@@ -134,6 +137,8 @@ func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, erro
 			CCYReader:       &restoClient,
 			TunnelService:   &restoClient,
 			MetadataService: &testcompClient,
+			InsightsService: &insightsClient,
+			UserService:     &iamClient,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
 			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,

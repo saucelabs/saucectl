@@ -9,6 +9,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/fpath"
+	"github.com/saucelabs/saucectl/internal/insights"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -117,6 +118,10 @@ func Validate(p *Project) error {
 		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
 	}
 
+	if p.Sauce.LaunchOrder != "" && p.Sauce.LaunchOrder != config.LaunchOrderFailRate {
+		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchOrder, string(config.LaunchOrderFailRate))
+	}
+
 	rgx := regexp.MustCompile(`^(?i)(google)?chrome$`)
 	for _, s := range p.Suites {
 		if !rgx.MatchString(s.BrowserName) {
@@ -167,4 +172,23 @@ func ShardSuites(suites []Suite) ([]Suite, error) {
 	}
 
 	return shardedSuites, nil
+}
+
+// SortByHistory sorts the suites by the order of job history
+func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
+	hash := map[string]Suite{}
+	for _, s := range suites {
+		hash[s.Name] = s
+	}
+	var res []Suite
+	for _, s := range history.TestCases {
+		if v, ok := hash[s.Name]; ok {
+			res = append(res, v)
+			delete(hash, s.Name)
+		}
+	}
+	for _, v := range hash {
+		res = append(res, v)
+	}
+	return res
 }
