@@ -14,8 +14,9 @@ import (
 
 // Writer is a wrapper around zip.Writer and implements zip archiving for archive.Writer.
 type Writer struct {
-	W *zip.Writer
-	M sauceignore.Matcher
+	W       *zip.Writer
+	M       sauceignore.Matcher
+	ZipFile *os.File
 }
 
 // NewFileWriter returns a new Writer that archives files to name.
@@ -25,7 +26,7 @@ func NewFileWriter(name string, matcher sauceignore.Matcher) (Writer, error) {
 		return Writer{}, err
 	}
 
-	w := Writer{W: zip.NewWriter(f), M: matcher}
+	w := Writer{W: zip.NewWriter(f), M: matcher, ZipFile: f}
 
 	return w, nil
 }
@@ -48,9 +49,9 @@ func (w *Writer) Add(src, dst string) (int, error) {
 	if w.M.Match(strings.Split(src, string(os.PathSeparator)), finfo.IsDir()) {
 		return 0, nil
 	}
-	log.Debug().Str("name", src).Msg("Adding to archive")
 
 	if !finfo.IsDir() {
+		log.Debug().Str("name", src).Msg("Adding to archive")
 		w, err := w.W.Create(path.Join(dst, finfo.Name()))
 		if err != nil {
 			return 0, err
@@ -59,9 +60,15 @@ func (w *Writer) Add(src, dst string) (int, error) {
 		if err != nil {
 			return 0, err
 		}
-		defer f.Close()
 
-		_, err = io.Copy(w, f)
+		if _, err := io.Copy(w, f); err != nil {
+			return 0, err
+		}
+
+		if err := f.Close(); err != nil {
+			return 0, err
+		}
+
 		return 1, err
 	}
 
@@ -88,5 +95,12 @@ func (w *Writer) Add(src, dst string) (int, error) {
 
 // Close closes the archive. Adding more files to the archive is not possible after this.
 func (w *Writer) Close() error {
-	return w.W.Close()
+	if err := w.W.Close(); err != nil {
+		return err
+	}
+	if err := w.ZipFile.Close(); err != nil {
+		return err
+	}
+
+	return nil
 }
