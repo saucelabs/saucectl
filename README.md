@@ -21,6 +21,9 @@ test history filtering, and analytics in Sauce Labs.
 - [Puppeteer](https://docs.saucelabs.com/web-apps/automated-testing/puppeteer/)
 // [Examples](https://github.com/saucelabs/saucectl-puppeteer-example)
 
+- [Replay](https://docs.saucelabs.com/web-apps/automated-testing/replay/)
+// [Examples](https://github.com/saucelabs/saucectl-replay-example)
+
 - [TestCafe](https://docs.saucelabs.com/web-apps/automated-testing/testcafe/)
 // [Examples](https://github.com/saucelabs/saucectl-testcafe-example)
 
