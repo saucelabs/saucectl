@@ -15,7 +15,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     container:
-      image: golang:1.18-alpine
+      image: golang:1.19-alpine
 
     steps:
       - name: Install Dependencies
@@ -34,7 +34,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     container:
-      image: golang:1.18-alpine
+      image: golang:1.19-alpine
 
     steps:
       - name: Install Dependencies
@@ -82,7 +82,7 @@ jobs:
     needs: lint
     runs-on: ubuntu-latest
     container:
-      image: golang:1.18-alpine
+      image: golang:1.19-alpine
 
     steps:
       - name: Install Dependencies
