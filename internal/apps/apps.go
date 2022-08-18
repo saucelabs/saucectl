@@ -3,7 +3,6 @@ package apps
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -15,8 +14,8 @@ import (
 )
 
 var (
-	reFileID      = regexp.MustCompile(`(storage:(//)?)?(?P<fileID>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$`)
-	reFilePattern = regexp.MustCompile(`^(storage:filename=)(?P<filename>[\S][\S ]+(\.ipa|\.apk))$`)
+	reFileID            = regexp.MustCompile(`(storage:(//)?)?(?P<fileID>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$`)
+	reFilePattern       = regexp.MustCompile(`^(storage:filename=)(?P<filename>[\S][\S ]+(\.ipa|\.apk))$`)
 	reHttpSchemePattern = regexp.MustCompile(`(?i)^https?`)
 )
 
@@ -89,7 +88,7 @@ func Download(remoteUrl string) (string, error) {
 		return "", fmt.Errorf("unable to download app from %s: %s", remoteUrl, resp.Status)
 	}
 
-	dir, err := ioutil.TempDir("", "tmp-app")
+	dir, err := os.MkdirTemp("", "tmp-app")
 	if err != nil {
 		return "", err
 	}
