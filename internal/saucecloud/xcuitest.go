@@ -2,7 +2,6 @@ package saucecloud
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -208,7 +207,7 @@ func archiveAppsToIpaIfRequired(project *xcuitest.Project) (err error) {
 func archiveAppToIpa(appPath string) (string, error) {
 	log.Info().Msgf("Archiving %s to .ipa", path.Base(appPath))
 	fileName := fmt.Sprintf("%s-*.ipa", strings.TrimSuffix(path.Base(appPath), ".app"))
-	tmpFile, err := ioutil.TempFile(os.TempDir(), fileName)
+	tmpFile, err := os.CreateTemp(os.TempDir(), fileName)
 	if err != nil {
 		return "", err
 	}
