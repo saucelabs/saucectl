@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/apif"
+	"github.com/saucelabs/saucectl/internal/apitesting"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/webdriver"
@@ -58,6 +60,7 @@ var (
 	githubTimeout       = 2 * time.Second
 	insightsTimeout     = 10 * time.Second
 	iamTimeout          = 10 * time.Second
+	apifTimeout         = 10 * time.Second
 
 	typeDef config.TypeDef
 
@@ -68,6 +71,7 @@ var (
 	rdcClient       rdc.Client
 	insightsClient  insights.Client
 	iamClient       iam.Client
+	apifClient      apitesting.Client
 
 	// ErrEmptySuiteName is thrown when a flag is specified that has a dependency on the --name flag.
 	ErrEmptySuiteName = errors.New(msg.EmptyAdhocSuiteName)
@@ -235,6 +239,8 @@ func preRun() error {
 
 	iamClient = iam.New("", creds, iamTimeout)
 
+	apifClient = apitesting.New("", creds.Username, creds.AccessKey, apifTimeout)
+
 	return nil
 }
 
@@ -260,6 +266,9 @@ func Run(cmd *cobra.Command) (int, error) {
 	}
 	if typeDef.Kind == xcuitest.Kind {
 		return runXcuitest(cmd, xcuitestFlags{})
+	}
+	if typeDef.Kind == apif.Kind {
+		return runApif()
 	}
 
 	return 1, errors.New(msg.UnknownFrameworkConfig)

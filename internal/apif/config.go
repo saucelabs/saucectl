@@ -1,0 +1,38 @@
+package apif
+
+import "github.com/saucelabs/saucectl/internal/config"
+
+// Config descriptors.
+var (
+	// Kind represents the type definition of this config.
+	Kind = "apif"
+
+	// APIVersion represents the supported config version.
+	APIVersion = "v1alpha"
+)
+
+type Project struct {
+	config.TypeDef `yaml:",inline" mapstructure:",squash"`
+	ConfigFilePath string             `yaml:"-" json:"-"`
+	Suites         []Suite            `yaml:"suites,omitempty"`
+	Sauce          config.SauceConfig `yaml:"sauce,omitempty"`
+}
+
+type Suite struct {
+	Name    string   `yaml:"name,omitempty"`
+	Project string   `yaml:"project,omitempty"`
+	Tags    []string `yaml:"tags,omitempty"`
+	Tests   []string `yaml:"tests,omitempty"`
+}
+
+// FromFile creates a new apif Project based on the filepath cfgPath.
+func FromFile(cfgPath string) (Project, error) {
+	var p Project
+
+	if err := config.Unmarshal(cfgPath, &p); err != nil {
+		return p, err
+	}
+	p.ConfigFilePath = cfgPath
+
+	return p, nil
+}
