@@ -18,13 +18,13 @@ func runApif() (int, error) {
 
 	regio := region.FromString(p.Sauce.Region)	
 
-	testcompClient.URL = regio.APIBaseURL()
-	webdriverClient.URL = regio.WebDriverBaseURL()
-	restoClient.URL = regio.APIBaseURL()
-	appsClient.URL = regio.APIBaseURL()
-	rdcClient.URL = regio.APIBaseURL()
-	insightsClient.URL = regio.APIBaseURL()
-	iamClient.URL = regio.APIBaseURL()
+	// testcompClient.URL = regio.APIBaseURL()
+	// webdriverClient.URL = regio.WebDriverBaseURL()
+	// restoClient.URL = regio.APIBaseURL()
+	// appsClient.URL = regio.APIBaseURL()
+	// rdcClient.URL = regio.APIBaseURL()
+	// insightsClient.URL = regio.APIBaseURL()
+	// iamClient.URL = regio.APIBaseURL()
 
 	apifClient.URL = regio.APIBaseURL()
 

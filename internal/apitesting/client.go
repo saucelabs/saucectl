@@ -58,7 +58,6 @@ func (c *Client) RunAllSync(ctx context.Context, hookId string, format string, b
 	if err != nil {
 		return runResp, err
 	}
-	// TODO: Check response code?
 	if resp.StatusCode != 200 {
 		return runResp, fmt.Errorf("Got a non-200 response: %d", resp.StatusCode)
 	}
@@ -69,7 +68,76 @@ func (c *Client) RunAllSync(ctx context.Context, hookId string, format string, b
 		return runResp, err
 	}
 
-	
+	err = json.Unmarshal(body, &runResp)
+	if err != nil {
+		return runResp, err
+	}
+
+	return runResp, nil
+}
+
+func (c *Client) RunTestSync(ctx context.Context, hookId string, format string, buildId string) ([]RunSyncResponse, error) {
+	var runResp []RunSyncResponse
+
+	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_run-sync?format=%s", c.URL, hookId, format)
+	log.Info().Str("username", c.Username).Msgf("api url: %s", url)
+	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
+	if err != nil {
+		return runResp, err
+	}
+
+	req.SetBasicAuth(c.Username, c.AccessKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return runResp, err
+	}
+	if resp.StatusCode != 200 {
+		return runResp, fmt.Errorf("Got a non-200 response: %d", resp.StatusCode)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return runResp, err
+	}
+
+	err = json.Unmarshal(body, &runResp)
+	if err != nil {
+		return runResp, err
+	}
+
+	return runResp, nil
+}
+
+func (c *Client) RunTagSync(ctx context.Context, hookId string, testTag string, format string, buildId string) ([]RunSyncResponse, error) {
+	var runResp []RunSyncResponse
+
+	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_tag/%s/_run-sync?format=%s", c.URL, hookId, testTag, format)
+	log.Info().Str("username", c.Username).Msgf("api url: %s", url)
+	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
+	if err != nil {
+		return runResp, err
+	}
+
+	req.SetBasicAuth(c.Username, c.AccessKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return runResp, err
+	}
+	if resp.StatusCode != 200 {
+		return runResp, fmt.Errorf("Got a non-200 response: %d", resp.StatusCode)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return runResp, err
+	}
+
 	err = json.Unmarshal(body, &runResp)
 	if err != nil {
 		return runResp, err
