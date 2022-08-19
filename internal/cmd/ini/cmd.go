@@ -36,7 +36,6 @@ var (
 type initConfig struct {
 	batchMode bool
 
-	apiVersion          string
 	frameworkName       string
 	frameworkVersion    string
 	cypressJSON         string
