@@ -114,11 +114,10 @@ func extValidator(framework, frameworkVersion string) survey.Validator {
 	case xcuitest.Kind:
 		exts = []string{".ipa", ".app"}
 	case cypress.Kind:
+		exts = []string{".js", ".ts", ".mjs", ".cjs"}
 		if getMajorVersion(frameworkVersion) < 10 {
 			exts = []string{".json"}
-			break
 		}
-		exts = []string{".js", ".ts", ".mjs", ".cjs"}
 	}
 	fmt.Println("ext: ", exts)
 
