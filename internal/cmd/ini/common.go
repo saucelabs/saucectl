@@ -119,7 +119,6 @@ func extValidator(framework, frameworkVersion string) survey.Validator {
 			exts = []string{".json"}
 		}
 	}
-	fmt.Println("ext: ", exts)
 
 	return func(s interface{}) error {
 		val := s.(string)
