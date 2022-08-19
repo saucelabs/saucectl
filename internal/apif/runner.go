@@ -8,12 +8,14 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/apitesting"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/report"
 )
 
 type ApifRunner struct {
-	Project Project
-	Client  apitesting.Client
-	Region  region.Region
+	Project   Project
+	Client    apitesting.Client
+	Region    region.Region
+	Reporters []report.Reporter
 }
 
 func (r *ApifRunner) RunSuites() {
@@ -76,9 +78,6 @@ func (r *ApifRunner) collectResults(expected int, results chan []apitesting.Sync
 				return
 			case <-t.C:
 				log.Info().Msgf("Suites in progress: %d", inProgress)
-				// if !r.interrupted {
-				// 	log.Info().Msgf("Suites in progress: %d", inProgress)
-				// }
 			}
 		}
 	}(r)
@@ -89,13 +88,28 @@ func (r *ApifRunner) collectResults(expected int, results chan []apitesting.Sync
 		inProgress--
 
 		for _, testResult := range res {
-		log.Info().
-			Int("failures", testResult.FailuresCount).
-			Str("project", testResult.Project.Name).
-			Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.ID)).
-			Str("test", testResult.Test.Name).
-			Msg("Finished test.")
+			log.Info().
+				Int("failures", testResult.FailuresCount).
+				Str("project", testResult.Project.Name).
+				Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.ID)).
+				Str("test", testResult.Test.Name).
+				Msg("Finished test.")
+
+			status := "passed"
+			if testResult.FailuresCount > 0 {
+				status = "failed"
+			}
+			for _, rep := range r.Reporters {
+				rep.Add(report.TestResult{
+					Name: fmt.Sprintf("%s - %s", testResult.Project.Name, testResult.Test.Name),
+					Status: status,
+				})
+			}
 		}
 	}
 	close(done)
+
+	for _, rep := range r.Reporters {
+		rep.Render()
+	}
 }

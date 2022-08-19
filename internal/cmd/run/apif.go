@@ -2,10 +2,13 @@ package run
 
 import (
 	"context"
+	"os"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/apif"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/saucelabs/saucectl/internal/report/table"
 )
 
 func runApif() (int, error) {
@@ -37,6 +40,11 @@ func runApif() (int, error) {
 		Project: p,
 		Client: apifClient,
 		Region: regio,
+		Reporters: []report.Reporter{
+			&table.Reporter{
+				Dst: os.Stdout,
+			},
+		},
 	}
 
 	r.RunSuites()
