@@ -76,10 +76,10 @@ func (c *Client) RunAllSync(ctx context.Context, hookId string, format string, b
 	return runResp, nil
 }
 
-func (c *Client) RunTestSync(ctx context.Context, hookId string, format string, buildId string) ([]RunSyncResponse, error) {
+func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, format string, buildId string) ([]RunSyncResponse, error) {
 	var runResp []RunSyncResponse
 
-	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_run-sync?format=%s", c.URL, hookId, format)
+	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/%s/_run-sync?format=%s", c.URL, hookId, testId, format)
 	log.Info().Str("username", c.Username).Msgf("api url: %s", url)
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {

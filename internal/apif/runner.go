@@ -16,23 +16,49 @@ type ApifRunner struct {
 func (r *ApifRunner) RunSuites() {
 	// TODO: 1. Make channels
 	results := make(chan []apitesting.RunSyncResponse)
+	expected := 0
 
 	for _, s := range r.Project.Suites {
 		suite := s
 
-		go func() {
-			// TODO: Choose correct api based on Suite config
-			resp, err := r.Client.RunAllSync(context.Background(), suite.Project, "json", "")
-			if err != nil {
-				log.Error().Err(err).Msg("Failed to run")
+		if len(suite.Tags) == 0 && len(suite.Tests) == 0 {
+			go func() {
+				resp, err := r.Client.RunAllSync(context.Background(), suite.Project, "json", "")
+				if err != nil {
+					log.Error().Err(err).Msg("Failed to run")
+				}
+				results <- resp
+			}()
+			expected++
+		} else {
+			for _, t := range suite.Tests {
+				test := t
+				go func() {
+					resp, err := r.Client.RunTestSync(context.Background(), suite.Project, test, "json", "")
+					if err != nil {
+						log.Error().Err(err).Msg("Failed to run")
+					}
+					results <- resp
+				}()
+				expected++
 			}
 
-			results <- resp
-		}()
+			for _, t := range suite.Tags {
+				tag := t
+				go func() {
+					resp, err := r.Client.RunTagSync(context.Background(), suite.Project, tag, "json", "")
+					if err != nil {
+						log.Error().Err(err).Msg("Failed to run")
+					}
+					results <- resp
+				}()
+				expected++
+			}
+		}
 	}
 
 	// TODO: 3. Collect results
-	r.collectResults(len(r.Project.Suites), results)
+	r.collectResults(expected, results)
 }
 
 func (r *ApifRunner) collectResults(expected int, results chan []apitesting.RunSyncResponse) {
