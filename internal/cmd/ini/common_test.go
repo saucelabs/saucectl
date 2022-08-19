@@ -595,3 +595,32 @@ func Test_sortVersions(t *testing.T) {
 		})
 	}
 }
+
+func TestCommon_getMajorVersion(t *testing.T) {
+	testCases := []struct {
+		name    string
+		version string
+		expRes  int
+	}{
+		{
+			name:    "get valid major version",
+			version: "10.3.1",
+			expRes:  10,
+		},
+		{
+			name:   "version is empty",
+			expRes: 0,
+		},
+		{
+			name:    "version is invalid",
+			version: "test,",
+			expRes:  0,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := getMajorVersion(tc.version)
+			assert.Equal(t, tc.expRes, result)
+		})
+	}
+}
