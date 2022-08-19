@@ -2,20 +2,22 @@ package apif
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/apitesting"
+	"github.com/saucelabs/saucectl/internal/region"
 )
 
 type ApifRunner struct {
 	Project Project
-	Client apitesting.Client
+	Client  apitesting.Client
+	Region  region.Region
 }
 
 func (r *ApifRunner) RunSuites() {
-	// TODO: 1. Make channels
-	results := make(chan []apitesting.RunSyncResponse)
+	results := make(chan []apitesting.SyncTestResult)
 	expected := 0
 
 	for _, s := range r.Project.Suites {
@@ -27,6 +29,7 @@ func (r *ApifRunner) RunSuites() {
 				if err != nil {
 					log.Error().Err(err).Msg("Failed to run")
 				}
+
 				results <- resp
 			}()
 			expected++
@@ -57,11 +60,10 @@ func (r *ApifRunner) RunSuites() {
 		}
 	}
 
-	// TODO: 3. Collect results
 	r.collectResults(expected, results)
 }
 
-func (r *ApifRunner) collectResults(expected int, results chan []apitesting.RunSyncResponse) {
+func (r *ApifRunner) collectResults(expected int, results chan []apitesting.SyncTestResult) {
 	inProgress := expected
 
 	done := make(chan interface{})
@@ -86,8 +88,13 @@ func (r *ApifRunner) collectResults(expected int, results chan []apitesting.RunS
 
 		inProgress--
 
-		for _, r := range res {
-			log.Info().Int("failures", r.FailuresCount).Str("Project", r.Project.Name).Msg("Finished tests")
+		for _, testResult := range res {
+		log.Info().
+			Int("failures", testResult.FailuresCount).
+			Str("project", testResult.Project.Name).
+			Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.ID)).
+			Str("test", testResult.Test.Name).
+			Msg("Finished test.")
 		}
 	}
 	close(done)

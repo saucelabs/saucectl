@@ -36,6 +36,7 @@ func runApif() (int, error) {
 	r := apif.ApifRunner{
 		Project: p,
 		Client: apifClient,
+		Region: regio,
 	}
 
 	r.RunSuites()

@@ -19,15 +19,21 @@ type Client struct {
 	AccessKey  string
 }
 
-type RunSyncResponse struct {
-	ID            string  `json:"id"`
-	FailuresCount int     `json:"failuresCount"`
-	Project       Project `json:"project"`
+type SyncTestResult struct {
+	ID            string  `json:"id,omitempty"`
+	FailuresCount int     `json:"failuresCount,omitempty"`
+	Project       Project `json:"project,omitempty"`
+	Test          Test    `json:"test,omitempty"`
+}
+
+type Test struct {
+	ID   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 type Project struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 func New(url string, username string, accessKey string, timeout time.Duration) Client {
@@ -39,10 +45,10 @@ func New(url string, username string, accessKey string, timeout time.Duration) C
 	}
 }
 
-func (c *Client) RunAllSync(ctx context.Context, hookId string, format string, buildId string) ([]RunSyncResponse, error) {
+func (c *Client) RunAllSync(ctx context.Context, hookId string, format string, buildId string) ([]SyncTestResult, error) {
 	log.Info().Str("hookId", hookId).Msg("Running project")
 
-	var runResp []RunSyncResponse
+	var runResp []SyncTestResult
 
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_run-all-sync?format=%s", c.URL, hookId, format)
 	log.Info().Str("username", c.Username).Msgf("api url: %s", url)
@@ -76,8 +82,8 @@ func (c *Client) RunAllSync(ctx context.Context, hookId string, format string, b
 	return runResp, nil
 }
 
-func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, format string, buildId string) ([]RunSyncResponse, error) {
-	var runResp []RunSyncResponse
+func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, format string, buildId string) ([]SyncTestResult, error) {
+	var runResp []SyncTestResult
 
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/%s/_run-sync?format=%s", c.URL, hookId, testId, format)
 	log.Info().Str("username", c.Username).Msgf("api url: %s", url)
@@ -111,8 +117,8 @@ func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, 
 	return runResp, nil
 }
 
-func (c *Client) RunTagSync(ctx context.Context, hookId string, testTag string, format string, buildId string) ([]RunSyncResponse, error) {
-	var runResp []RunSyncResponse
+func (c *Client) RunTagSync(ctx context.Context, hookId string, testTag string, format string, buildId string) ([]SyncTestResult, error) {
+	var runResp []SyncTestResult
 
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_tag/%s/_run-sync?format=%s", c.URL, hookId, testTag, format)
 	log.Info().Str("username", c.Username).Msgf("api url: %s", url)
