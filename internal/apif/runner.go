@@ -27,6 +27,7 @@ func (r *ApifRunner) RunSuites() {
 
 		if len(suite.Tags) == 0 && len(suite.Tests) == 0 {
 			go func() {
+				log.Info().Str("project", suite.Project).Msg("Running project.")
 				resp, err := r.Client.RunAllSync(context.Background(), suite.Project, "json", "")
 				if err != nil {
 					log.Error().Err(err).Msg("Failed to run")
@@ -39,6 +40,7 @@ func (r *ApifRunner) RunSuites() {
 			for _, t := range suite.Tests {
 				test := t
 				go func() {
+					log.Info().Str("test", test).Str("project", suite.Project).Msg("Running test.")
 					resp, err := r.Client.RunTestSync(context.Background(), suite.Project, test, "json", "")
 					if err != nil {
 						log.Error().Err(err).Msg("Failed to run")
@@ -51,6 +53,7 @@ func (r *ApifRunner) RunSuites() {
 			for _, t := range suite.Tags {
 				tag := t
 				go func() {
+					log.Info().Str("tag", tag).Str("project", suite.Project).Msg("Running tag.")
 					resp, err := r.Client.RunTagSync(context.Background(), suite.Project, tag, "json", "")
 					if err != nil {
 						log.Error().Err(err).Msg("Failed to run")

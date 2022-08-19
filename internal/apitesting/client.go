@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
@@ -46,12 +45,9 @@ func New(url string, username string, accessKey string, timeout time.Duration) C
 }
 
 func (c *Client) RunAllSync(ctx context.Context, hookId string, format string, buildId string) ([]SyncTestResult, error) {
-	log.Info().Str("hookId", hookId).Msg("Running project")
-
 	var runResp []SyncTestResult
 
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_run-all-sync?format=%s", c.URL, hookId, format)
-	log.Info().Str("username", c.Username).Msgf("api url: %s", url)
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
 		return runResp, err
@@ -86,7 +82,6 @@ func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, 
 	var runResp []SyncTestResult
 
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/%s/_run-sync?format=%s", c.URL, hookId, testId, format)
-	log.Info().Str("username", c.Username).Msgf("api url: %s", url)
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
 		return runResp, err
@@ -121,7 +116,6 @@ func (c *Client) RunTagSync(ctx context.Context, hookId string, testTag string, 
 	var runResp []SyncTestResult
 
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_tag/%s/_run-sync?format=%s", c.URL, hookId, testTag, format)
-	log.Info().Str("username", c.Username).Msgf("api url: %s", url)
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
 		return runResp, err
