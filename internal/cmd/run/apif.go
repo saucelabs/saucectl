@@ -32,7 +32,13 @@ func runApif() (int, error) {
 	// TODO: Validate
 
 	// TODO: Run suites
-	runSuites(p.Suites)
+	// runSuites(p.Suites)
+	r := apif.ApifRunner{
+		Project: p,
+		Client: apifClient,
+	}
+
+	r.RunSuites()
 	return 0, nil
 }
 
