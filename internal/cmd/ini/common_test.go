@@ -15,6 +15,7 @@ func Test_extValidator(t *testing.T) {
 	dir := fs.NewDir(t, "apps",
 		fs.WithFile("my.zip", "--", fs.WithMode(0644)),
 		fs.WithFile("my.json", "--", fs.WithMode(0644)),
+		fs.WithFile("my.js", "--", fs.WithMode(0644)),
 		fs.WithFile("my.apk", "--", fs.WithMode(0644)),
 		fs.WithFile("my.ipa", "--", fs.WithMode(0644)),
 		fs.WithDir("my.app", fs.WithMode(0755)),
@@ -22,8 +23,9 @@ func Test_extValidator(t *testing.T) {
 	defer dir.Remove()
 
 	type args struct {
-		framework string
-		filename  string
+		framework        string
+		frameworkVersion string
+		filename         string
 	}
 	tests := []struct {
 		name string
@@ -73,18 +75,38 @@ func Test_extValidator(t *testing.T) {
 		{
 			name: "cypress - .json",
 			args: args{
-				framework: "cypress",
-				filename:  dir.Join("my.json"),
+				framework:        "cypress",
+				frameworkVersion: "9.7.0",
+				filename:         dir.Join("my.json"),
+			},
+			want: nil,
+		},
+		{
+			name: "cypress 10 - .js",
+			args: args{
+				framework:        "cypress",
+				frameworkVersion: "10.3.1",
+				filename:         dir.Join("my.js"),
 			},
 			want: nil,
 		},
 		{
 			name: "cypress - .zip",
 			args: args{
-				framework: "cypress",
-				filename:  dir.Join("my.zip"),
+				framework:        "cypress",
+				frameworkVersion: "9.7.0",
+				filename:         dir.Join("my.zip"),
 			},
 			want: errors.New("invalid extension. must be one of the following: .json"),
+		},
+		{
+			name: "cypress 10 - .zip",
+			args: args{
+				framework:        "cypress",
+				frameworkVersion: "10.3.1",
+				filename:         dir.Join("my.zip"),
+			},
+			want: errors.New("invalid extension. must be one of the following: .js, .ts, .mjs, .cjs"),
 		},
 		{
 			name: "espresso - bad .apk",
@@ -97,7 +119,7 @@ func Test_extValidator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := (extValidator(tt.args.framework))(tt.args.filename); !reflect.DeepEqual(got, tt.want) {
+			if got := (extValidator(tt.args.framework, tt.args.frameworkVersion))(tt.args.filename); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("extValidator() = %v, want %v", got, tt.want)
 			}
 		})
@@ -570,6 +592,35 @@ func Test_sortVersions(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			sortVersions(tt.args.versions)
 			assert.Equal(t, tt.expected, tt.args.versions)
+		})
+	}
+}
+
+func TestCommon_getMajorVersion(t *testing.T) {
+	testCases := []struct {
+		name    string
+		version string
+		expRes  int
+	}{
+		{
+			name:    "get valid major version",
+			version: "10.3.1",
+			expRes:  10,
+		},
+		{
+			name:   "version is empty",
+			expRes: 0,
+		},
+		{
+			name:    "version is invalid",
+			version: "test,",
+			expRes:  0,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := getMajorVersion(tc.version)
+			assert.Equal(t, tc.expRes, result)
 		})
 	}
 }

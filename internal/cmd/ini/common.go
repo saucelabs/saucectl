@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
@@ -105,7 +106,7 @@ func completeBasic(toComplete string) []string {
 	return files
 }
 
-func extValidator(framework string) survey.Validator {
+func extValidator(framework, frameworkVersion string) survey.Validator {
 	var exts []string
 	switch framework {
 	case espresso.Kind:
@@ -113,7 +114,10 @@ func extValidator(framework string) survey.Validator {
 	case xcuitest.Kind:
 		exts = []string{".ipa", ".app"}
 	case cypress.Kind:
-		exts = []string{".json"}
+		exts = []string{".js", ".ts", ".mjs", ".cjs"}
+		if getMajorVersion(frameworkVersion) < 10 {
+			exts = []string{".json"}
+		}
 	}
 
 	return func(s interface{}) error {
@@ -133,6 +137,16 @@ func extValidator(framework string) survey.Validator {
 		}
 		return nil
 	}
+}
+
+func getMajorVersion(frameworkVersion string) int {
+	version := strings.Split(frameworkVersion, ".")[0]
+	v, err := strconv.Atoi(version)
+	if err != nil {
+		log.Err(err).Msg("failed to get framework version.")
+		return 0
+	}
+	return v
 }
 
 func uniqSorted(ss []string) []string {

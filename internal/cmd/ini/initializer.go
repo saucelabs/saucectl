@@ -436,7 +436,7 @@ func (ini *initializer) initializeCypress() (*initConfig, error) {
 		return &initConfig{}, err
 	}
 
-	err = ini.askFile("Cypress configuration file:", extValidator(cfg.frameworkName), completeBasic, &cfg.cypressJSON)
+	err = ini.askFile("Cypress configuration file:", extValidator(cfg.frameworkName, cfg.frameworkVersion), completeBasic, &cfg.cypressJSON)
 	if err != nil {
 		return &initConfig{}, err
 	}
@@ -531,12 +531,12 @@ func (ini *initializer) initializePuppeteer() (*initConfig, error) {
 func (ini *initializer) initializeEspresso() (*initConfig, error) {
 	cfg := &initConfig{frameworkName: espresso.Kind}
 
-	err := ini.askFile("Application to test:", extValidator(cfg.frameworkName), completeBasic, &cfg.app)
+	err := ini.askFile("Application to test:", extValidator(cfg.frameworkName, ""), completeBasic, &cfg.app)
 	if err != nil {
 		return &initConfig{}, err
 	}
 
-	err = ini.askFile("Test application:", extValidator(cfg.frameworkName), completeBasic, &cfg.testApp)
+	err = ini.askFile("Test application:", extValidator(cfg.frameworkName, ""), completeBasic, &cfg.testApp)
 	if err != nil {
 		return &initConfig{}, err
 	}
@@ -571,12 +571,12 @@ func (ini *initializer) initializeEspresso() (*initConfig, error) {
 func (ini *initializer) initializeXCUITest() (*initConfig, error) {
 	cfg := &initConfig{frameworkName: xcuitest.Kind}
 
-	err := ini.askFile("Application to test:", extValidator(cfg.frameworkName), completeBasic, &cfg.app)
+	err := ini.askFile("Application to test:", extValidator(cfg.frameworkName, ""), completeBasic, &cfg.app)
 	if err != nil {
 		return &initConfig{}, err
 	}
 
-	err = ini.askFile("Test application:", extValidator(cfg.frameworkName), completeBasic, &cfg.testApp)
+	err = ini.askFile("Test application:", extValidator(cfg.frameworkName, ""), completeBasic, &cfg.testApp)
 	if err != nil {
 		return &initConfig{}, err
 	}
@@ -692,7 +692,7 @@ func (ini *initializer) initializeBatchCypress(initCfg *initConfig) (*initConfig
 	}
 
 	if initCfg.cypressJSON != "" {
-		verifier := extValidator(initCfg.frameworkName)
+		verifier := extValidator(initCfg.frameworkName, "")
 		if err := verifier(initCfg.cypressJSON); err != nil {
 			errs = append(errs, err)
 		}
@@ -737,13 +737,13 @@ func (ini *initializer) initializeBatchEspresso(f *pflag.FlagSet, initCfg *initC
 	}
 
 	if initCfg.app != "" {
-		verifier := extValidator(initCfg.frameworkName)
+		verifier := extValidator(initCfg.frameworkName, "")
 		if err = verifier(initCfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("app: %s", err))
 		}
 	}
 	if initCfg.testApp != "" {
-		verifier := extValidator(initCfg.frameworkName)
+		verifier := extValidator(initCfg.frameworkName, "")
 		if err = verifier(initCfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("testApp: %s", err))
 		}
@@ -920,13 +920,13 @@ func (ini *initializer) initializeBatchXcuitest(f *pflag.FlagSet, initCfg *initC
 		}
 	}
 	if initCfg.app != "" {
-		verifier := extValidator(initCfg.frameworkName)
+		verifier := extValidator(initCfg.frameworkName, "")
 		if err = verifier(initCfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("app: %s", err))
 		}
 	}
 	if initCfg.testApp != "" {
-		verifier := extValidator(initCfg.frameworkName)
+		verifier := extValidator(initCfg.frameworkName, "")
 		if err = verifier(initCfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("testApp: %s", err))
 		}
