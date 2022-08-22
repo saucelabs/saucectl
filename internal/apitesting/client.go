@@ -21,7 +21,7 @@ type Client struct {
 }
 
 type SyncTestResult struct {
-	ID            string  `json:"id,omitempty"`
+	EventID       string  `json:"id,omitempty"`
 	FailuresCount int     `json:"failuresCount,omitempty"`
 	Project       Project `json:"project,omitempty"`
 	Test          Test    `json:"test,omitempty"`
@@ -54,7 +54,7 @@ func (c *Client) RunAllSync(ctx context.Context, hookId string, format string, b
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
-	return doSyncRequest(c.HTTPClient, req)
+	return doSyncRun(c.HTTPClient, req)
 }
 
 func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, format string, buildId string) ([]SyncTestResult, error) {
@@ -65,7 +65,7 @@ func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, 
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
-	return doSyncRequest(c.HTTPClient, req)
+	return doSyncRun(c.HTTPClient, req)
 }
 
 func (c *Client) RunTagSync(ctx context.Context, hookId string, testTag string, format string, buildId string) ([]SyncTestResult, error) {
@@ -76,10 +76,36 @@ func (c *Client) RunTagSync(ctx context.Context, hookId string, testTag string, 
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
-	return doSyncRequest(c.HTTPClient, req)
+	return doSyncRun(c.HTTPClient, req)
 }
 
-func doSyncRequest(client *http.Client, request *http.Request) ([]SyncTestResult, error) {
+func (c *Client) GetProject(ctx context.Context, hookId string) (Project, error) {
+	url := fmt.Sprintf("%s/api-testing/rest/v4/%s", c.URL, hookId)
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return Project{}, err
+	}
+
+	req.SetBasicAuth(c.Username, c.AccessKey)
+	resp, err := c.HTTPClient.Do(req)
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return Project{}, errors.New(msg.InternalServerError)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return Project{}, fmt.Errorf("Failed to fetch project details; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+	}
+
+	project := Project{}
+	if err := json.NewDecoder(resp.Body).Decode(&project); err != nil {
+		return project, err
+	}
+	return project, nil
+}
+
+func doSyncRun(client *http.Client, request *http.Request) ([]SyncTestResult, error) {
 	request.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(request)

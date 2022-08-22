@@ -94,7 +94,7 @@ func (r *ApifRunner) collectResults(expected int, results chan []apitesting.Sync
 			log.Info().
 				Int("failures", testResult.FailuresCount).
 				Str("project", testResult.Project.Name).
-				Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.ID)).
+				Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)).
 				Str("test", testResult.Test.Name).
 				Msg("Finished test.")
 
