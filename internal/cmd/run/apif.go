@@ -46,20 +46,3 @@ func runApif() (int, error) {
 	r.RunSuites()
 	return 0, nil
 }
-
-func runSuites(suites []apif.Suite) bool {
-	var failureCount int
-	for _, s := range suites {
-		resp, err := apifClient.RunAllSync(context.Background(), s.HookId, "json", "")
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to run")
-		}
-
-		for _, r := range resp {
-			failureCount += r.FailuresCount
-		}
-	}
-
-	log.Info().Int("failures", failureCount).Msg("Finished running")
-	return true
-}

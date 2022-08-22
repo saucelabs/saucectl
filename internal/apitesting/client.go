@@ -3,11 +3,13 @@ package apitesting
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
@@ -45,12 +47,10 @@ func New(url string, username string, accessKey string, timeout time.Duration) C
 }
 
 func (c *Client) RunAllSync(ctx context.Context, hookId string, format string, buildId string) ([]SyncTestResult, error) {
-	var runResp []SyncTestResult
-
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_run-all-sync?format=%s", c.URL, hookId, format)
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
-		return runResp, err
+		return []SyncTestResult{}, err
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
@@ -58,12 +58,10 @@ func (c *Client) RunAllSync(ctx context.Context, hookId string, format string, b
 }
 
 func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, format string, buildId string) ([]SyncTestResult, error) {
-	var runResp []SyncTestResult
-
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/%s/_run-sync?format=%s", c.URL, hookId, testId, format)
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
-		return runResp, err
+		return []SyncTestResult{}, err
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
@@ -71,12 +69,10 @@ func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, 
 }
 
 func (c *Client) RunTagSync(ctx context.Context, hookId string, testTag string, format string, buildId string) ([]SyncTestResult, error) {
-	var runResp []SyncTestResult
-
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_tag/%s/_run-sync?format=%s", c.URL, hookId, testTag, format)
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
-		return runResp, err
+		return []SyncTestResult{}, err
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
@@ -84,28 +80,27 @@ func (c *Client) RunTagSync(ctx context.Context, hookId string, testTag string, 
 }
 
 func doSyncRequest(client *http.Client, request *http.Request) ([]SyncTestResult, error) {
-	var runResp []SyncTestResult
-
 	request.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(request)
 	if err != nil {
-		return runResp, err
-	}
-	if resp.StatusCode != 200 {
-		return runResp, fmt.Errorf("Got a non-200 response: %d", resp.StatusCode)
+		return []SyncTestResult{}, err
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return runResp, err
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return []SyncTestResult{}, errors.New(msg.InternalServerError)
 	}
 
-	err = json.Unmarshal(body, &runResp)
-	if err != nil {
-		return runResp, err
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return []SyncTestResult{}, fmt.Errorf("Test execution failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 	}
 
-	return runResp, nil
+	testResults := []SyncTestResult{}
+	if err := json.NewDecoder(resp.Body).Decode(&testResults); err != nil {
+		return []SyncTestResult{}, err
+	}
+
+	return testResults, nil
 }
