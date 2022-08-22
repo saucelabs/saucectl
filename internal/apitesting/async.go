@@ -31,6 +31,9 @@ func (c *Client) RunAllAsync(ctx context.Context, hookId string, buildId string,
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
 	resp, err := doAsyncRun(c.HTTPClient, req)
+	if err != nil {
+		return []TestResult{}, err
+	}
 
 	apifProject, err := c.GetProject(ctx, hookId)
 
@@ -64,6 +67,9 @@ func (c *Client) RunTestAsync(ctx context.Context, hookId string, testId string,
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
 	resp, err := doAsyncRun(c.HTTPClient, req)
+	if err != nil {
+		return []TestResult{}, err
+	}
 
 	apifProject, err := c.GetProject(ctx, hookId)
 
@@ -87,7 +93,7 @@ func (c *Client) RunTestAsync(ctx context.Context, hookId string, testId string,
 }
 
 func (c *Client) RunTagAsync(ctx context.Context, hookId string, testTag string, buildId string, tunnel config.Tunnel) ([]TestResult, error) {
-	url := c.composeURL(fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_tag/%s/_run", hookId, testTag), buildId, "", tunnel)
+	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_tag/%s/_run", hookId, testTag), buildId, "", tunnel)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
@@ -97,6 +103,9 @@ func (c *Client) RunTagAsync(ctx context.Context, hookId string, testTag string,
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
 	resp, err := doAsyncRun(c.HTTPClient, req)
+	if err != nil {
+		return []TestResult{}, err
+	}
 
 	apifProject, err := c.GetProject(ctx, hookId)
 
