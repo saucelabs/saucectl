@@ -19,10 +19,10 @@ type Project struct {
 }
 
 type Suite struct {
-	Name    string   `yaml:"name,omitempty"`
-	Project string   `yaml:"project,omitempty"`
-	Tags    []string `yaml:"tags,omitempty"`
-	Tests   []string `yaml:"tests,omitempty"`
+	Name   string   `yaml:"name,omitempty"`
+	HookId string   `yaml:"hookId,omitempty"`
+	Tags   []string `yaml:"tags,omitempty"`
+	Tests  []string `yaml:"tests,omitempty"`
 }
 
 // FromFile creates a new apif Project based on the filepath cfgPath.

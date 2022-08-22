@@ -17,9 +17,7 @@ func runApif() (int, error) {
 		return 1, err
 	}
 
-	log.Info().Str("kind", p.Kind).Msg("Running apif tests")
-
-	regio := region.FromString(p.Sauce.Region)	
+	regio := region.FromString(p.Sauce.Region)
 
 	// testcompClient.URL = regio.APIBaseURL()
 	// webdriverClient.URL = regio.WebDriverBaseURL()
@@ -34,12 +32,10 @@ func runApif() (int, error) {
 	// TODO: Set defaults
 	// TODO: Validate
 
-	// TODO: Run suites
-	// runSuites(p.Suites)
 	r := apif.ApifRunner{
 		Project: p,
-		Client: apifClient,
-		Region: regio,
+		Client:  apifClient,
+		Region:  regio,
 		Reporters: []report.Reporter{
 			&table.Reporter{
 				Dst: os.Stdout,
@@ -54,7 +50,7 @@ func runApif() (int, error) {
 func runSuites(suites []apif.Suite) bool {
 	var failureCount int
 	for _, s := range suites {
-		resp, err := apifClient.RunAllSync(context.Background(), s.Project, "json", "")
+		resp, err := apifClient.RunAllSync(context.Background(), s.HookId, "json", "")
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to run")
 		}
