@@ -45,6 +45,7 @@ func (c *Client) RunAllAsync(ctx context.Context, hookId string, buildId string)
 		testResults = append(testResults, TestResult{
 			EventID: e,
 			Project: apifProject,
+			Async: true,
 		})
 	}
 	return testResults, nil
@@ -76,6 +77,7 @@ func (c *Client) RunTestAsync(ctx context.Context, hookId string, testId string,
 		testResults = append(testResults, TestResult{
 			EventID: e,
 			Project: apifProject,
+			Async: true,
 		})
 	}
 	return testResults, nil
@@ -107,6 +109,7 @@ func (c *Client) RunTagAsync(ctx context.Context, hookId string, testTag string,
 		testResults = append(testResults, TestResult{
 			EventID: e,
 			Project: apifProject,
+			Async: true,
 		})
 	}
 	return testResults, nil

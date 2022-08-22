@@ -7,6 +7,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/apitesting"
+	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
 )
@@ -50,7 +51,15 @@ func (r *ApifRunner) RunSuites() {
 				test := t
 				go func() {
 					log.Info().Str("test", test).Str("project", suite.HookId).Msg("Running test.")
-					resp, err := r.Client.RunTestSync(context.Background(), suite.HookId, test, "", "json")
+					var resp []apitesting.TestResult
+					var err error
+
+					if r.Async {
+						resp, err = r.Client.RunTestAsync(context.Background(), suite.HookId, test, "")
+					} else {
+						resp, err = r.Client.RunTestSync(context.Background(), suite.HookId, test, "", "json")
+					}
+
 					if err != nil {
 						log.Error().Err(err).Msg("Failed to run test.")
 					}
@@ -63,7 +72,15 @@ func (r *ApifRunner) RunSuites() {
 				tag := t
 				go func() {
 					log.Info().Str("tag", tag).Str("project", suite.HookId).Msg("Running tag.")
-					resp, err := r.Client.RunTagSync(context.Background(), suite.HookId, tag, "", "json")
+
+					var resp []apitesting.TestResult
+					var err error
+
+					if r.Async {
+						resp, err = r.Client.RunTagAsync(context.Background(), suite.HookId, tag, "")
+					} else {
+						resp, err = r.Client.RunTagSync(context.Background(), suite.HookId, tag, "", "json")
+					}
 					if err != nil {
 						log.Error().Err(err).Msg("Failed to run tag.")
 					}
@@ -100,20 +117,35 @@ func (r *ApifRunner) collectResults(expected int, results chan []apitesting.Test
 		inProgress--
 
 		for _, testResult := range res {
-			log.Info().
-				Int("failures", testResult.FailuresCount).
-				Str("project", testResult.Project.Name).
-				Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)).
-				Str("test", testResult.Test.Name).
-				Msg("Finished test.")
+			var testName string
 
-			status := "passed"
-			if testResult.FailuresCount > 0 {
-				status = "failed"
+			if testResult.Async {
+				testName = fmt.Sprintf("%s", testResult.Project.Name)
+				log.Info().
+					Str("project", testResult.Project.Name).
+					Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)).
+					Msg("Async test started.")
+			} else {
+				testName = fmt.Sprintf("%s - %s", testResult.Project.Name, testResult.Test.Name)
+
+				log.Info().
+					Int("failures", testResult.FailuresCount).
+					Str("project", testResult.Project.Name).
+					Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)).
+					Str("test", testResult.Test.Name).
+					Msg("Finished test.")
 			}
+
+			status := job.StatePassed
+			if testResult.FailuresCount > 0 {
+				status = job.StateFailed
+			} else if testResult.Async {
+				status = job.StateInProgress
+			}
+
 			for _, rep := range r.Reporters {
 				rep.Add(report.TestResult{
-					Name:   fmt.Sprintf("%s - %s", testResult.Project.Name, testResult.Test.Name),
+					Name:   testName,
 					Status: status,
 				})
 			}

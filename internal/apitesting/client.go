@@ -25,6 +25,7 @@ type TestResult struct {
 	FailuresCount int     `json:"failuresCount,omitempty"`
 	Project       Project `json:"project,omitempty"`
 	Test          Test    `json:"test,omitempty"`
+	Async         bool    `json:"-,omitempty"`
 }
 
 type Test struct {
