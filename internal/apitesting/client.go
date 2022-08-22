@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
@@ -74,7 +75,7 @@ func (c *Client) GetProject(ctx context.Context, hookId string) (Project, error)
 	return project, nil
 }
 
-func (c *Client) composeURL(path string, buildId string, format string) string {
+func (c *Client) composeURL(path string, buildId string, format string, tunnel config.Tunnel) string {
 	// NOTE: API url is not user provided so skip error check
 	url, _ := url.Parse(c.URL)
 	url.Path = path
@@ -85,6 +86,15 @@ func (c *Client) composeURL(path string, buildId string, format string) string {
 	}
 	if format != "" {
 		query.Set("format", format)
+	}
+
+	if tunnel.Name != "" {
+		t := tunnel.Name
+		if tunnel.Owner != "" {
+			t = fmt.Sprintf("%s:%s", t, tunnel.Owner)
+		}
+
+		query.Set("tunnelId", t)
 	}
 
 	url.RawQuery = query.Encode()

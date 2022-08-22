@@ -8,12 +8,13 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
-func (c *Client) RunAllSync(ctx context.Context, hookId string, buildId string) ([]TestResult, error) {
-	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_run-all-sync", hookId), buildId, "json")
+func (c *Client) RunAllSync(ctx context.Context, hookId string, buildId string, tunnel config.Tunnel) ([]TestResult, error) {
+	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_run-all-sync", hookId), buildId, "json", tunnel)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
@@ -24,8 +25,8 @@ func (c *Client) RunAllSync(ctx context.Context, hookId string, buildId string) 
 	return doSyncRun(c.HTTPClient, req)
 }
 
-func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, buildId string) ([]TestResult, error) {
-	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/%s/_run-sync", hookId, testId), buildId, "json")
+func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, buildId string, tunnel config.Tunnel) ([]TestResult, error) {
+	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/%s/_run-sync", hookId, testId), buildId, "json", tunnel)
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
 		return []TestResult{}, err
@@ -35,8 +36,8 @@ func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, 
 	return doSyncRun(c.HTTPClient, req)
 }
 
-func (c *Client) RunTagSync(ctx context.Context, hookId string, testTag string, buildId string) ([]TestResult, error) {
-	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_tag/%s/_run-sync", hookId, testTag), buildId, "json")
+func (c *Client) RunTagSync(ctx context.Context, hookId string, testTag string, buildId string, tunnel config.Tunnel) ([]TestResult, error) {
+	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_tag/%s/_run-sync", hookId, testTag), buildId, "json", tunnel)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {

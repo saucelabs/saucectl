@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
@@ -19,8 +20,8 @@ type AsyncResponse struct {
 	TestIDs    []string
 }
 
-func (c *Client) RunAllAsync(ctx context.Context, hookId string, buildId string) ([]TestResult, error) {
-	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_run-all", hookId), buildId, "")
+func (c *Client) RunAllAsync(ctx context.Context, hookId string, buildId string, tunnel config.Tunnel) ([]TestResult, error) {
+	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_run-all", hookId), buildId, "", tunnel)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
@@ -52,8 +53,8 @@ func (c *Client) RunAllAsync(ctx context.Context, hookId string, buildId string)
 	return testResults, nil
 }
 
-func (c *Client) RunTestAsync(ctx context.Context, hookId string, testId string, buildId string) ([]TestResult, error) {
-	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/%s/_run", hookId, testId), buildId, "")
+func (c *Client) RunTestAsync(ctx context.Context, hookId string, testId string, buildId string, tunnel config.Tunnel) ([]TestResult, error) {
+	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/%s/_run", hookId, testId), buildId, "", tunnel)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
@@ -85,8 +86,8 @@ func (c *Client) RunTestAsync(ctx context.Context, hookId string, testId string,
 	return testResults, nil
 }
 
-func (c *Client) RunTagAsync(ctx context.Context, hookId string, testTag string, buildId string) ([]TestResult, error) {
-	url := c.composeURL(fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_tag/%s/_run", hookId, testTag), buildId, "")
+func (c *Client) RunTagAsync(ctx context.Context, hookId string, testTag string, buildId string, tunnel config.Tunnel) ([]TestResult, error) {
+	url := c.composeURL(fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_tag/%s/_run", hookId, testTag), buildId, "", tunnel)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
