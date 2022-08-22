@@ -54,28 +54,7 @@ func (c *Client) RunAllSync(ctx context.Context, hookId string, format string, b
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return runResp, err
-	}
-	if resp.StatusCode != 200 {
-		return runResp, fmt.Errorf("Got a non-200 response: %d", resp.StatusCode)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return runResp, err
-	}
-
-	err = json.Unmarshal(body, &runResp)
-	if err != nil {
-		return runResp, err
-	}
-
-	return runResp, nil
+	return doSyncRequest(c.HTTPClient, req)
 }
 
 func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, format string, buildId string) ([]SyncTestResult, error) {
@@ -88,28 +67,7 @@ func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, 
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return runResp, err
-	}
-	if resp.StatusCode != 200 {
-		return runResp, fmt.Errorf("Got a non-200 response: %d", resp.StatusCode)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return runResp, err
-	}
-
-	err = json.Unmarshal(body, &runResp)
-	if err != nil {
-		return runResp, err
-	}
-
-	return runResp, nil
+	return doSyncRequest(c.HTTPClient, req)
 }
 
 func (c *Client) RunTagSync(ctx context.Context, hookId string, testTag string, format string, buildId string) ([]SyncTestResult, error) {
@@ -122,9 +80,15 @@ func (c *Client) RunTagSync(ctx context.Context, hookId string, testTag string, 
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
-	req.Header.Set("Content-Type", "application/json")
+	return doSyncRequest(c.HTTPClient, req)
+}
 
-	resp, err := c.HTTPClient.Do(req)
+func doSyncRequest(client *http.Client, request *http.Request) ([]SyncTestResult, error) {
+	var runResp []SyncTestResult
+
+	request.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(request)
 	if err != nil {
 		return runResp, err
 	}
