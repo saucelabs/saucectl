@@ -16,10 +16,11 @@ type ApifRunner struct {
 	Client    apitesting.Client
 	Region    region.Region
 	Reporters []report.Reporter
+	Async     bool
 }
 
 func (r *ApifRunner) RunSuites() {
-	results := make(chan []apitesting.SyncTestResult)
+	results := make(chan []apitesting.TestResult)
 	expected := 0
 
 	for _, s := range r.Project.Suites {
@@ -28,7 +29,15 @@ func (r *ApifRunner) RunSuites() {
 		if len(suite.Tags) == 0 && len(suite.Tests) == 0 {
 			go func() {
 				log.Info().Str("project", suite.HookId).Msg("Running project.")
-				resp, err := r.Client.RunAllSync(context.Background(), suite.HookId, "json", "")
+
+				var resp []apitesting.TestResult
+				var err error
+
+				if r.Async {
+					resp, err = r.Client.RunAllAsync(context.Background(), suite.HookId, "")
+				} else {
+					resp, err = r.Client.RunAllSync(context.Background(), suite.HookId, "", "json")
+				}
 				if err != nil {
 					log.Error().Err(err).Msg("Failed to run project.")
 				}
@@ -41,7 +50,7 @@ func (r *ApifRunner) RunSuites() {
 				test := t
 				go func() {
 					log.Info().Str("test", test).Str("project", suite.HookId).Msg("Running test.")
-					resp, err := r.Client.RunTestSync(context.Background(), suite.HookId, test, "json", "")
+					resp, err := r.Client.RunTestSync(context.Background(), suite.HookId, test, "", "json")
 					if err != nil {
 						log.Error().Err(err).Msg("Failed to run test.")
 					}
@@ -54,7 +63,7 @@ func (r *ApifRunner) RunSuites() {
 				tag := t
 				go func() {
 					log.Info().Str("tag", tag).Str("project", suite.HookId).Msg("Running tag.")
-					resp, err := r.Client.RunTagSync(context.Background(), suite.HookId, tag, "json", "")
+					resp, err := r.Client.RunTagSync(context.Background(), suite.HookId, tag, "", "json")
 					if err != nil {
 						log.Error().Err(err).Msg("Failed to run tag.")
 					}
@@ -68,7 +77,7 @@ func (r *ApifRunner) RunSuites() {
 	r.collectResults(expected, results)
 }
 
-func (r *ApifRunner) collectResults(expected int, results chan []apitesting.SyncTestResult) {
+func (r *ApifRunner) collectResults(expected int, results chan []apitesting.TestResult) {
 	inProgress := expected
 
 	done := make(chan interface{})
@@ -104,7 +113,7 @@ func (r *ApifRunner) collectResults(expected int, results chan []apitesting.Sync
 			}
 			for _, rep := range r.Reporters {
 				rep.Add(report.TestResult{
-					Name: fmt.Sprintf("%s - %s", testResult.Project.Name, testResult.Test.Name),
+					Name:   fmt.Sprintf("%s - %s", testResult.Project.Name, testResult.Test.Name),
 					Status: status,
 				})
 			}

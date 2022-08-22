@@ -20,7 +20,7 @@ type Client struct {
 	AccessKey  string
 }
 
-type SyncTestResult struct {
+type TestResult struct {
 	EventID       string  `json:"id,omitempty"`
 	FailuresCount int     `json:"failuresCount,omitempty"`
 	Project       Project `json:"project,omitempty"`
@@ -44,39 +44,6 @@ func New(url string, username string, accessKey string, timeout time.Duration) C
 		Username:   username,
 		AccessKey:  accessKey,
 	}
-}
-
-func (c *Client) RunAllSync(ctx context.Context, hookId string, format string, buildId string) ([]SyncTestResult, error) {
-	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_run-all-sync?format=%s", c.URL, hookId, format)
-	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
-	if err != nil {
-		return []SyncTestResult{}, err
-	}
-
-	req.SetBasicAuth(c.Username, c.AccessKey)
-	return doSyncRun(c.HTTPClient, req)
-}
-
-func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, format string, buildId string) ([]SyncTestResult, error) {
-	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/%s/_run-sync?format=%s", c.URL, hookId, testId, format)
-	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
-	if err != nil {
-		return []SyncTestResult{}, err
-	}
-
-	req.SetBasicAuth(c.Username, c.AccessKey)
-	return doSyncRun(c.HTTPClient, req)
-}
-
-func (c *Client) RunTagSync(ctx context.Context, hookId string, testTag string, format string, buildId string) ([]SyncTestResult, error) {
-	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_tag/%s/_run-sync?format=%s", c.URL, hookId, testTag, format)
-	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
-	if err != nil {
-		return []SyncTestResult{}, err
-	}
-
-	req.SetBasicAuth(c.Username, c.AccessKey)
-	return doSyncRun(c.HTTPClient, req)
 }
 
 func (c *Client) GetProject(ctx context.Context, hookId string) (Project, error) {
@@ -103,30 +70,4 @@ func (c *Client) GetProject(ctx context.Context, hookId string) (Project, error)
 		return project, err
 	}
 	return project, nil
-}
-
-func doSyncRun(client *http.Client, request *http.Request) ([]SyncTestResult, error) {
-	request.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(request)
-	if err != nil {
-		return []SyncTestResult{}, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= http.StatusInternalServerError {
-		return []SyncTestResult{}, errors.New(msg.InternalServerError)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return []SyncTestResult{}, fmt.Errorf("Test execution failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
-	}
-
-	testResults := []SyncTestResult{}
-	if err := json.NewDecoder(resp.Body).Decode(&testResults); err != nil {
-		return []SyncTestResult{}, err
-	}
-
-	return testResults, nil
 }
