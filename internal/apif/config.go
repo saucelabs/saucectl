@@ -11,6 +11,7 @@ var (
 	APIVersion = "v1alpha"
 )
 
+// Project represents the apif project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
 	ConfigFilePath string             `yaml:"-" json:"-"`
@@ -18,6 +19,7 @@ type Project struct {
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty"`
 }
 
+// Suite represents the apif suite configuration.
 type Suite struct {
 	Name   string   `yaml:"name,omitempty"`
 	HookId string   `yaml:"hookId,omitempty"`

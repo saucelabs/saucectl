@@ -58,6 +58,10 @@ func (c *Client) GetProject(ctx context.Context, hookId string) (Project, error)
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return Project{}, err
+	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode >= http.StatusInternalServerError {
 		return Project{}, errors.New(msg.InternalServerError)

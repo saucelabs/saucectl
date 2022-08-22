@@ -120,7 +120,8 @@ func (r *ApifRunner) collectResults(expected int, results chan []apitesting.Test
 			var testName string
 
 			if testResult.Async {
-				testName = fmt.Sprintf("%s", testResult.Project.Name)
+				testName = testResult.Project.Name
+
 				log.Info().
 					Str("project", testResult.Project.Name).
 					Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)).
