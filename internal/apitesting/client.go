@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -71,4 +72,22 @@ func (c *Client) GetProject(ctx context.Context, hookId string) (Project, error)
 		return project, err
 	}
 	return project, nil
+}
+
+func (c *Client) composeURL(path string, buildId string, format string) string {
+	// NOTE: API url is not user provided so skip error check
+	url, _ := url.Parse(c.URL)
+	url.Path = path
+
+	query := url.Query()
+	if buildId != "" {
+		query.Set("buildId", buildId)
+	}
+	if format != "" {
+		query.Set("format", format)
+	}
+
+	url.RawQuery = query.Encode()
+
+	return url.String()
 }

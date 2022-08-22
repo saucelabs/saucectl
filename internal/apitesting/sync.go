@@ -12,8 +12,9 @@ import (
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
-func (c *Client) RunAllSync(ctx context.Context, hookId string, buildId string, format string) ([]TestResult, error) {
-	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_run-all-sync?format=%s", c.URL, hookId, format)
+func (c *Client) RunAllSync(ctx context.Context, hookId string, buildId string) ([]TestResult, error) {
+	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_run-all-sync", hookId), buildId, "json")
+
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
 		return []TestResult{}, err
@@ -23,8 +24,8 @@ func (c *Client) RunAllSync(ctx context.Context, hookId string, buildId string, 
 	return doSyncRun(c.HTTPClient, req)
 }
 
-func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, buildId string, format string) ([]TestResult, error) {
-	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/%s/_run-sync?format=%s", c.URL, hookId, testId, format)
+func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, buildId string) ([]TestResult, error) {
+	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/%s/_run-sync", hookId, testId), buildId, "json")
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
 		return []TestResult{}, err
@@ -34,8 +35,9 @@ func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, 
 	return doSyncRun(c.HTTPClient, req)
 }
 
-func (c *Client) RunTagSync(ctx context.Context, hookId string, testTag string, buildId string, format string) ([]TestResult, error) {
-	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_tag/%s/_run-sync?format=%s", c.URL, hookId, testTag, format)
+func (c *Client) RunTagSync(ctx context.Context, hookId string, testTag string, buildId string) ([]TestResult, error) {
+	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_tag/%s/_run-sync", hookId, testTag), buildId, "json")
+
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
 		return []TestResult{}, err
@@ -65,8 +67,7 @@ func doSyncRun(client *http.Client, request *http.Request) ([]TestResult, error)
 
 	testResults := []TestResult{}
 	if err := json.NewDecoder(resp.Body).Decode(&testResults); err != nil {
-		return []TestResult{}, err
-	}
+		return []TestResult{}, err }
 
 	return testResults, nil
 }

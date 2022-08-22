@@ -20,7 +20,8 @@ type AsyncResponse struct {
 }
 
 func (c *Client) RunAllAsync(ctx context.Context, hookId string, buildId string) ([]TestResult, error) {
-	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_run-all", c.URL, hookId)
+	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_run-all", hookId), buildId, "")
+
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
 		return []TestResult{}, err
@@ -34,7 +35,7 @@ func (c *Client) RunAllAsync(ctx context.Context, hookId string, buildId string)
 
 	if err != nil {
 		apifProject = Project{
-			ID: "",
+			ID:   "",
 			Name: "",
 		}
 	}
@@ -45,14 +46,15 @@ func (c *Client) RunAllAsync(ctx context.Context, hookId string, buildId string)
 		testResults = append(testResults, TestResult{
 			EventID: e,
 			Project: apifProject,
-			Async: true,
+			Async:   true,
 		})
 	}
 	return testResults, nil
 }
 
 func (c *Client) RunTestAsync(ctx context.Context, hookId string, testId string, buildId string) ([]TestResult, error) {
-	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/%s/_run", c.URL, hookId, testId)
+	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/%s/_run", hookId, testId), buildId, "")
+
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
 		return []TestResult{}, err
@@ -66,7 +68,7 @@ func (c *Client) RunTestAsync(ctx context.Context, hookId string, testId string,
 
 	if err != nil {
 		apifProject = Project{
-			ID: "",
+			ID:   "",
 			Name: "",
 		}
 	}
@@ -77,14 +79,15 @@ func (c *Client) RunTestAsync(ctx context.Context, hookId string, testId string,
 		testResults = append(testResults, TestResult{
 			EventID: e,
 			Project: apifProject,
-			Async: true,
+			Async:   true,
 		})
 	}
 	return testResults, nil
 }
 
 func (c *Client) RunTagAsync(ctx context.Context, hookId string, testTag string, buildId string) ([]TestResult, error) {
-	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_tag/%s/_run", c.URL, hookId, testTag)
+	url := c.composeURL(fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/_tag/%s/_run", hookId, testTag), buildId, "")
+
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
 		return []TestResult{}, err
@@ -98,7 +101,7 @@ func (c *Client) RunTagAsync(ctx context.Context, hookId string, testTag string,
 
 	if err != nil {
 		apifProject = Project{
-			ID: "",
+			ID:   "",
 			Name: "",
 		}
 	}
@@ -109,7 +112,7 @@ func (c *Client) RunTagAsync(ctx context.Context, hookId string, testTag string,
 		testResults = append(testResults, TestResult{
 			EventID: e,
 			Project: apifProject,
-			Async: true,
+			Async:   true,
 		})
 	}
 	return testResults, nil

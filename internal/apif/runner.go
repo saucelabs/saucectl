@@ -35,9 +35,9 @@ func (r *ApifRunner) RunSuites() {
 				var err error
 
 				if r.Async {
-					resp, err = r.Client.RunAllAsync(context.Background(), suite.HookId, "")
+					resp, err = r.Client.RunAllAsync(context.Background(), suite.HookId, r.Project.Sauce.Metadata.Build)
 				} else {
-					resp, err = r.Client.RunAllSync(context.Background(), suite.HookId, "", "json")
+					resp, err = r.Client.RunAllSync(context.Background(), suite.HookId, r.Project.Sauce.Metadata.Build)
 				}
 				if err != nil {
 					log.Error().Err(err).Msg("Failed to run project.")
@@ -55,9 +55,9 @@ func (r *ApifRunner) RunSuites() {
 					var err error
 
 					if r.Async {
-						resp, err = r.Client.RunTestAsync(context.Background(), suite.HookId, test, "")
+						resp, err = r.Client.RunTestAsync(context.Background(), suite.HookId, test, r.Project.Sauce.Metadata.Build)
 					} else {
-						resp, err = r.Client.RunTestSync(context.Background(), suite.HookId, test, "", "json")
+						resp, err = r.Client.RunTestSync(context.Background(), suite.HookId, test, r.Project.Sauce.Metadata.Build)
 					}
 
 					if err != nil {
@@ -77,9 +77,9 @@ func (r *ApifRunner) RunSuites() {
 					var err error
 
 					if r.Async {
-						resp, err = r.Client.RunTagAsync(context.Background(), suite.HookId, tag, "")
+						resp, err = r.Client.RunTagAsync(context.Background(), suite.HookId, tag, r.Project.Sauce.Metadata.Build)
 					} else {
-						resp, err = r.Client.RunTagSync(context.Background(), suite.HookId, tag, "", "json")
+						resp, err = r.Client.RunTagSync(context.Background(), suite.HookId, tag, r.Project.Sauce.Metadata.Build)
 					}
 					if err != nil {
 						log.Error().Err(err).Msg("Failed to run tag.")
