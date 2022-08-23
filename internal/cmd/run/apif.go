@@ -16,7 +16,9 @@ func runApif() (int, error) {
 	}
 
 	apif.SetDefaults(&p)
-	apif.Validate(p)
+	if err := apif.Validate(p); err != nil {
+		return 1, err
+	}
 
 	regio := region.FromString(p.Sauce.Region)
 	restoClient.URL = regio.APIBaseURL()
