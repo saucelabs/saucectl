@@ -1,0 +1,21 @@
+apiVersion: v1alpha
+kind: apif
+sauce:
+  region: us-west-1
+  metadata:
+    tags:
+      - e2e
+    build: "$BUILD_ID"
+  # tunnel:
+  #   name: tuna
+      # owner: mikehan
+
+suites:
+  - name: "run all tests for Felix Project"
+    hookId: 31f42020-0974-418c-9362-312d6535db97
+    # tags:
+    #   - product
+    tests:
+      - 6244d915ca28694aab2a77f3
+    #   - 624641ddc02a2f3fabc7e93c
+

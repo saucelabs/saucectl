@@ -13,8 +13,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/tunnel"
 )
 
-// ApifRunner represents an executor for api tests
-type ApifRunner struct {
+// Runner represents an executor for api tests
+type Runner struct {
 	Project       Project
 	Client        apitesting.Client
 	Region        region.Region
@@ -24,7 +24,7 @@ type ApifRunner struct {
 }
 
 // RunProject runs the tests defined in apif.Project
-func (r *ApifRunner) RunProject() (int, error) {
+func (r *Runner) RunProject() (int, error) {
 	exitCode := 1
 	if err := tunnel.ValidateTunnel(r.TunnelService, r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner, tunnel.V2AlphaFilter, false); err != nil {
 		return 1, err
@@ -37,7 +37,7 @@ func (r *ApifRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-func (r *ApifRunner) runSuites() bool {
+func (r *Runner) runSuites() bool {
 	results := make(chan []apitesting.TestResult)
 	expected := 0
 
@@ -111,12 +111,12 @@ func (r *ApifRunner) runSuites() bool {
 	return r.collectResults(expected, results)
 }
 
-func (r *ApifRunner) collectResults(expected int, results chan []apitesting.TestResult) bool {
+func (r *Runner) collectResults(expected int, results chan []apitesting.TestResult) bool {
 	inProgress := expected
 	passed := true
 
 	done := make(chan interface{})
-	go func(r *ApifRunner) {
+	go func(r *Runner) {
 		t := time.NewTicker(10 * time.Second)
 		defer t.Stop()
 		for {

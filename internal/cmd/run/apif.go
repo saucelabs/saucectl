@@ -30,7 +30,7 @@ func runApif() (int, error) {
 	restoClient.URL = regio.APIBaseURL()
 	apifClient.URL = regio.APIBaseURL()
 
-	r := apif.ApifRunner{
+	r := apif.Runner{
 		Project: p,
 		Client:  apifClient,
 		Region:  regio,
