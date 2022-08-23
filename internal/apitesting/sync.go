@@ -66,7 +66,7 @@ func doSyncRun(client *http.Client, request *http.Request) ([]TestResult, error)
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return []TestResult{}, fmt.Errorf("Test execution failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		return []TestResult{}, fmt.Errorf("test execution failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 	}
 
 	testResults := []TestResult{}

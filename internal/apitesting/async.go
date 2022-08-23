@@ -147,7 +147,7 @@ func doAsyncRun(client *http.Client, request *http.Request) (AsyncResponse, erro
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return AsyncResponse{}, fmt.Errorf("Test execution failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		return AsyncResponse{}, fmt.Errorf("test execution failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 	}
 
 	asyncResponse := AsyncResponse{}
