@@ -2312,9 +2312,6 @@
           "kind": {
             "const": "apif"
           },
-          "showConsoleLog": {
-            "$ref": "#/allOf/0/then/properties/showConsoleLog"
-          },
           "suites": {
             "description": "The set of properties providing details about the test suites to run.",
             "type": "array",
