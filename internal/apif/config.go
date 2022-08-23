@@ -39,6 +39,7 @@ func FromFile(cfgPath string) (Project, error) {
 	return p, nil
 }
 
+// SetDefaults applies config defaults in case the user has left them blank.
 func SetDefaults(p *Project) {
 	if p.Kind == "" {
 		p.Kind = Kind

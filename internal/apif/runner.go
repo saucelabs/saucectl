@@ -23,6 +23,7 @@ type ApifRunner struct {
 	TunnelService tunnel.Service
 }
 
+// RunProject runs the tests defined in apif.Project
 func (r *ApifRunner) RunProject() (int, error) {
 	exitCode := 1
 	if err := tunnel.ValidateTunnel(r.TunnelService, r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner, tunnel.V2AlphaFilter, false); err != nil {

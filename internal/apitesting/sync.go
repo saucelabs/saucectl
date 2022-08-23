@@ -13,6 +13,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
+// RunAllSync sychronously runs all the tests for a project described by hookId.
 func (c *Client) RunAllSync(ctx context.Context, hookId string, buildId string, tunnel config.Tunnel) ([]TestResult, error) {
 	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_run-all-sync", hookId), buildId, "json", tunnel)
 
@@ -25,6 +26,7 @@ func (c *Client) RunAllSync(ctx context.Context, hookId string, buildId string, 
 	return doSyncRun(c.HTTPClient, req)
 }
 
+// RunTestSync sychronously runs a single testId for a project described by hookId.
 func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, buildId string, tunnel config.Tunnel) ([]TestResult, error) {
 	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/%s/_run-sync", hookId, testId), buildId, "json", tunnel)
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
@@ -36,6 +38,7 @@ func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, 
 	return doSyncRun(c.HTTPClient, req)
 }
 
+// RunTagSync sychronously runs the all the tests tagged with testTag for a project described by hookId.
 func (c *Client) RunTagSync(ctx context.Context, hookId string, testTag string, buildId string, tunnel config.Tunnel) ([]TestResult, error) {
 	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_tag/%s/_run-sync", hookId, testTag), buildId, "json", tunnel)
 

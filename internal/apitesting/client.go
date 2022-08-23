@@ -15,6 +15,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
+// Client describes an interface to the api-testing rest endpoints.
 type Client struct {
 	HTTPClient *http.Client
 	URL        string
@@ -22,6 +23,7 @@ type Client struct {
 	AccessKey  string
 }
 
+// TestResult describes the result from running an api test.
 type TestResult struct {
 	EventID       string  `json:"id,omitempty"`
 	FailuresCount int     `json:"failuresCount,omitempty"`
@@ -30,16 +32,19 @@ type TestResult struct {
 	Async         bool    `json:"-,omitempty"`
 }
 
+// Test describes a single test.
 type Test struct {
 	ID   string `json:"id,omitempty"`
 	Name string `json:"name,omitempty"`
 }
 
+// Project describes the metadata for an api testing project.
 type Project struct {
 	ID   string `json:"id,omitempty"`
 	Name string `json:"name,omitempty"`
 }
 
+// New returns a apitesting.Client
 func New(url string, username string, accessKey string, timeout time.Duration) Client {
 	return Client{
 		HTTPClient: &http.Client{Timeout: timeout},
@@ -49,6 +54,7 @@ func New(url string, username string, accessKey string, timeout time.Duration) C
 	}
 }
 
+// GetProject returns Project metadata for a given hookId.
 func (c *Client) GetProject(ctx context.Context, hookId string) (Project, error) {
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s", c.URL, hookId)
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
