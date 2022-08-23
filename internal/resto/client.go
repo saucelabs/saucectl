@@ -23,7 +23,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/requesth"
-	tunnelPkg "github.com/saucelabs/saucectl/internal/tunnel"
+	tunnels "github.com/saucelabs/saucectl/internal/tunnel"
 	"github.com/saucelabs/saucectl/internal/vmd"
 )
 
@@ -199,7 +199,7 @@ func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
 
 // IsTunnelRunning checks whether tunnelID is running. If not, it will wait for the tunnel to become available or
 // timeout. Whichever comes first.
-func (c *Client) IsTunnelRunning(ctx context.Context, id, owner string, filter tunnelPkg.Filter, wait time.Duration) error {
+func (c *Client) IsTunnelRunning(ctx context.Context, id, owner string, filter tunnels.Filter, wait time.Duration) error {
 	deathclock := time.Now().Add(wait)
 	var err error
 	for time.Now().Before(deathclock) {
@@ -212,7 +212,7 @@ func (c *Client) IsTunnelRunning(ctx context.Context, id, owner string, filter t
 	return err
 }
 
-func (c *Client) isTunnelRunning(ctx context.Context, id, owner string, filter tunnelPkg.Filter) error {
+func (c *Client) isTunnelRunning(ctx context.Context, id, owner string, filter tunnels.Filter) error {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/rest/v1/%s/tunnels", c.URL, c.Username), nil)
 	if err != nil {

@@ -18,7 +18,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/job"
-	tunnelPkg "github.com/saucelabs/saucectl/internal/tunnel"
+	tunnels "github.com/saucelabs/saucectl/internal/tunnel"
 	"github.com/saucelabs/saucectl/internal/vmd"
 )
 
@@ -599,7 +599,7 @@ func TestClient_isTunnelRunning(t *testing.T) {
 		ctx    context.Context
 		id     string
 		parent string
-		filter tunnelPkg.Filter
+		filter tunnels.Filter
 	}
 	tests := []struct {
 		name     string
