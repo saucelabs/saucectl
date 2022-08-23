@@ -41,10 +41,7 @@ func (c *Client) RunAllAsync(ctx context.Context, hookId string, buildId string,
 	apifProject, err := c.GetProject(ctx, hookId)
 
 	if err != nil {
-		apifProject = Project{
-			ID:   "",
-			Name: "",
-		}
+		log.Warn().Err(err).Msg("failed to fetch project details; go to your project dashboard for test results")
 	}
 
 	var testResults []TestResult
@@ -112,10 +109,7 @@ func (c *Client) RunTagAsync(ctx context.Context, hookId string, testTag string,
 	apifProject, err := c.GetProject(ctx, hookId)
 
 	if err != nil {
-		apifProject = Project{
-			ID:   "",
-			Name: "",
-		}
+		log.Warn().Err(err).Msg("failed to fetch project details; go to your project dashboard for test results")
 	}
 
 	var testResults []TestResult
