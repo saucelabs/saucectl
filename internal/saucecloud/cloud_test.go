@@ -451,7 +451,7 @@ func TestCloudRunner_archiveNodeModules(t *testing.T) {
 			},
 			"",
 			func(t assert.TestingT, err error, args ...interface{}) bool {
-				return assert.EqualError(t, err, "unable to find required dependencies. Please check 'node_modules' folder and make sure the dependencies exist", args)
+				return assert.EqualError(t, err, "unable to find required dependencies; please check 'node_modules' folder and make sure the dependencies exist", args)
 			},
 		},
 	}
