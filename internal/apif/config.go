@@ -38,3 +38,19 @@ func FromFile(cfgPath string) (Project, error) {
 
 	return p, nil
 }
+
+func SetDefaults(p *Project) {
+	if p.Kind == "" {
+		p.Kind = Kind
+	}
+
+	if p.APIVersion == "" {
+		p.APIVersion = APIVersion
+	}
+
+	if p.Sauce.Concurrency < 1 {
+		p.Sauce.Concurrency = 2
+	}
+
+	p.Sauce.Tunnel.SetDefaults()
+}
