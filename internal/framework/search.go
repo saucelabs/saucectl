@@ -12,14 +12,14 @@ import (
 	"github.com/saucelabs/saucectl/internal/node"
 )
 
-// FrameworkUnavailableError is an error type returned if the requested framework version is unavailable.
-type FrameworkUnavailableError struct {
+// UnavailableError is an error type returned if the requested framework version is unavailable.
+type UnavailableError struct {
 	Name    string
 	Version string
 }
 
 // Error returns the error string
-func (e *FrameworkUnavailableError) Error() string {
+func (e *UnavailableError) Error() string {
 	s := fmt.Sprintf("version %s for %s is not available", e.Version, e.Name)
 	return s
 }
@@ -60,7 +60,7 @@ func (s ExactStrategy) Find(ctx context.Context, svc MetadataService, frameworkN
 		}
 	}
 
-	return Metadata{}, &FrameworkUnavailableError{
+	return Metadata{}, &UnavailableError{
 		Name:    frameworkName,
 		Version: frameworkVersion,
 	}
@@ -142,7 +142,7 @@ func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, framewor
 		}
 	}
 
-	return Metadata{}, &FrameworkUnavailableError{
+	return Metadata{}, &UnavailableError{
 		Name:    frameworkName,
 		Version: ver,
 	}
