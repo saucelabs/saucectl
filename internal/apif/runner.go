@@ -44,17 +44,18 @@ func (r *Runner) runSuites() bool {
 	for _, s := range r.Project.Suites {
 		suite := s
 
+		// If no tags or no tests are defined for the suite, run all tests for a hookId
 		if len(suite.Tags) == 0 && len(suite.Tests) == 0 {
 			go func() {
-				log.Info().Str("project", suite.HookId).Msg("Running project.")
+				log.Info().Str("hookId", suite.HookID).Msg("Running project.")
 
 				var resp []apitesting.TestResult
 				var err error
 
 				if r.Async {
-					resp, err = r.Client.RunAllAsync(context.Background(), suite.HookId, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
+					resp, err = r.Client.RunAllAsync(context.Background(), suite.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
 				} else {
-					resp, err = r.Client.RunAllSync(context.Background(), suite.HookId, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
+					resp, err = r.Client.RunAllSync(context.Background(), suite.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
 				}
 				if err != nil {
 					log.Error().Err(err).Msg("Failed to run project.")
@@ -67,14 +68,14 @@ func (r *Runner) runSuites() bool {
 			for _, t := range suite.Tests {
 				test := t
 				go func() {
-					log.Info().Str("test", test).Str("project", suite.HookId).Msg("Running test.")
+					log.Info().Str("test", test).Str("project", suite.HookID).Msg("Running test.")
 					var resp []apitesting.TestResult
 					var err error
 
 					if r.Async {
-						resp, err = r.Client.RunTestAsync(context.Background(), suite.HookId, test, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
+						resp, err = r.Client.RunTestAsync(context.Background(), suite.HookID, test, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
 					} else {
-						resp, err = r.Client.RunTestSync(context.Background(), suite.HookId, test, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
+						resp, err = r.Client.RunTestSync(context.Background(), suite.HookID, test, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
 					}
 
 					if err != nil {
@@ -88,15 +89,15 @@ func (r *Runner) runSuites() bool {
 			for _, t := range suite.Tags {
 				tag := t
 				go func() {
-					log.Info().Str("tag", tag).Str("project", suite.HookId).Msg("Running tag.")
+					log.Info().Str("tag", tag).Str("project", suite.HookID).Msg("Running tag.")
 
 					var resp []apitesting.TestResult
 					var err error
 
 					if r.Async {
-						resp, err = r.Client.RunTagAsync(context.Background(), suite.HookId, tag, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
+						resp, err = r.Client.RunTagAsync(context.Background(), suite.HookID, tag, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
 					} else {
-						resp, err = r.Client.RunTagSync(context.Background(), suite.HookId, tag, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
+						resp, err = r.Client.RunTagSync(context.Background(), suite.HookID, tag, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
 					}
 					if err != nil {
 						log.Error().Err(err).Msg("Failed to run tag.")

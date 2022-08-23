@@ -22,7 +22,7 @@ type Project struct {
 // Suite represents the apif suite configuration.
 type Suite struct {
 	Name   string   `yaml:"name,omitempty"`
-	HookId string   `yaml:"hookId,omitempty"`
+	HookID string   `yaml:"hookId,omitempty"`
 	Tags   []string `yaml:"tags,omitempty"`
 	Tests  []string `yaml:"tests,omitempty"`
 }
