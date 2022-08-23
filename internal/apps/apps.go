@@ -16,7 +16,7 @@ import (
 var (
 	reFileID            = regexp.MustCompile(`(storage:(//)?)?(?P<fileID>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$`)
 	reFilePattern       = regexp.MustCompile(`^(storage:filename=)(?P<filename>[\S][\S ]+(\.ipa|\.apk))$`)
-	reHttpSchemePattern = regexp.MustCompile(`(?i)^https?`)
+	reHTTPSchemePattern = regexp.MustCompile(`(?i)^https?`)
 )
 
 func hasValidExtension(file string, exts []string) bool {
@@ -34,7 +34,7 @@ func IsRemote(name string) bool {
 	if err != nil {
 		return false
 	}
-	return reHttpSchemePattern.MatchString(parsedURL.Scheme) && parsedURL.Host != ""
+	return reHTTPSchemePattern.MatchString(parsedURL.Scheme) && parsedURL.Host != ""
 }
 
 // IsStorageReference checks if a link is an entry of app-storage.
@@ -75,9 +75,9 @@ func Validate(kind, app string, validExt []string) error {
 	return fmt.Errorf(msg.FileNotFound, app)
 }
 
-// Download downloads a file from remoteUrl to a temp directory and returns the path to the downloaded file
-func Download(remoteUrl string) (string, error) {
-	resp, err := http.Get(remoteUrl)
+// Download downloads a file from remoteURL to a temp directory and returns the path to the downloaded file
+func Download(remoteURL string) (string, error) {
+	resp, err := http.Get(remoteURL)
 
 	if err != nil {
 		return "", err
@@ -85,7 +85,7 @@ func Download(remoteUrl string) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("unable to download app from %s: %s", remoteUrl, resp.Status)
+		return "", fmt.Errorf("unable to download app from %s: %s", remoteURL, resp.Status)
 	}
 
 	dir, err := os.MkdirTemp("", "tmp-app")
@@ -93,7 +93,7 @@ func Download(remoteUrl string) (string, error) {
 		return "", err
 	}
 
-	tmpFilePath := path.Join(dir, path.Base(remoteUrl))
+	tmpFilePath := path.Join(dir, path.Base(remoteURL))
 
 	f, err := os.Create(tmpFilePath)
 	if err != nil {
