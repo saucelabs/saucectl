@@ -490,7 +490,7 @@ func (r *CloudRunner) archiveNodeModules(tempDir string, rootDir string, matcher
 	if hasMods && wantMods {
 		reqs := node.Requirements(filepath.Join(rootDir, "node_modules"), r.NPMDependencies...)
 		if len(reqs) == 0 {
-			return "", fmt.Errorf("unable to find required dependencies. Please check 'node_modules' folder and make sure the dependencies exist")
+			return "", fmt.Errorf("unable to find required dependencies; please check 'node_modules' folder and make sure the dependencies exist")
 		}
 		log.Info().Msgf("Found a total of %d related npm dependencies", len(reqs))
 		for _, v := range reqs {
