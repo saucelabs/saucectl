@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/sauceignore"
-	"gotest.tools/v3/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/sauceignore"
+	"gotest.tools/v3/fs"
 
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/mocks"
@@ -334,6 +335,9 @@ func TestCloudRunner_archiveNodeModules(t *testing.T) {
 			),
 		),
 		fs.WithDir("no-mods"),
+		fs.WithDir("empty-mods",
+			fs.WithDir(("node_modules")),
+		),
 	)
 	defer projectsDir.Remove()
 
@@ -434,6 +438,21 @@ func TestCloudRunner_archiveNodeModules(t *testing.T) {
 			},
 			filepath.Join(tempDir, "node_modules.zip"),
 			assert.NoError,
+		},
+		{
+			"want mods, but node_modules folder is empty",
+			fields{
+				NPMDependencies: []string{"mod1"},
+			},
+			args{
+				tempDir: tempDir,
+				rootDir: "empty-mods",
+				matcher: sauceignore.NewMatcher([]sauceignore.Pattern{}),
+			},
+			"",
+			func(t assert.TestingT, err error, args ...interface{}) bool {
+				return assert.EqualError(t, err, "unable to find required dependencies; please check 'node_modules' folder and make sure the dependencies exist", args)
+			},
 		},
 	}
 	for _, tt := range tests {
