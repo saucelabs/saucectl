@@ -1,6 +1,12 @@
 package apif
 
-import "github.com/saucelabs/saucectl/internal/config"
+import (
+	"errors"
+
+	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/region"
+)
 
 // Config descriptors.
 var (
@@ -54,4 +60,26 @@ func SetDefaults(p *Project) {
 	}
 
 	p.Sauce.Tunnel.SetDefaults()
+}
+
+func Validate(p Project) error {
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		return errors.New(msg.MissingRegion)
+	}
+
+	for _, s := range p.Suites {
+		if err := validateSuite(s); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateSuite(suite Suite) error {
+	if suite.HookID == "" {
+		return errors.New("suites must have a hookId defined")
+	}
+	return nil
 }
