@@ -33,9 +33,10 @@ type MetadataSearchStrategy interface {
 type ExactStrategy struct {
 }
 
-// PackageStrategy searches for metadata of a framework from a package.json file. If the requested version is a range (e.g. ~9.0.0), it matches the most recent version that satifies the constraint.
+// PackageStrategy searches for metadata of a framework from a package.json file.
+// If the requested version is a range (e.g. ~9.0.0), it matches the most recent version that satisfies the constraint.
 type PackageStrategy struct {
-	packageJsonFilePath string
+	packageJSONFilePath string
 }
 
 func (s ExactStrategy) Find(ctx context.Context, svc MetadataService, frameworkName string, frameworkVersion string) (Metadata, error) {
@@ -87,8 +88,8 @@ var (
 	NewConstraint   = semver.NewConstraint
 )
 
-func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, frameworkName string, packageJsonPath string) (Metadata, error) {
-	p, err := PackageFromFile(s.packageJsonFilePath)
+func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, frameworkName string, frameworkVersion string) (Metadata, error) {
+	p, err := PackageFromFile(s.packageJSONFilePath)
 
 	if err != nil {
 		return Metadata{}, fmt.Errorf("error reading package.json: %w", err)
@@ -151,7 +152,7 @@ func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, framewor
 func NewSearchStrategy(version string, rootDir string) MetadataSearchStrategy {
 	if strings.Contains(version, "package.json") {
 		return PackageStrategy{
-			packageJsonFilePath: filepath.Join(rootDir, version),
+			packageJSONFilePath: filepath.Join(rootDir, version),
 		}
 	} else {
 		return ExactStrategy{}

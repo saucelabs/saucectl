@@ -108,7 +108,7 @@ func TestFrameworkFind_PackageStrategy(t *testing.T) {
 		ctx             context.Context
 		svc             MetadataService
 		frameworkName   string
-		packageJsonPath string
+		packageJSONPath string
 		packageFromFile func(filename string) (node.Package, error)
 		newConstraint   func(c string) (*semver.Constraints, error)
 	}{
@@ -186,7 +186,7 @@ func TestFrameworkFind_PackageStrategy(t *testing.T) {
 			PackageFromFile = tc.packageFromFile
 			NewConstraint = tc.newConstraint
 
-			_, err := PackageStrategy{}.Find(tc.ctx, tc.svc, tc.frameworkName, tc.packageJsonPath)
+			_, err := PackageStrategy{}.Find(tc.ctx, tc.svc, tc.frameworkName, tc.packageJSONPath)
 
 			if err != nil && err.Error() != tc.expectedMessage {
 				t.Errorf("Wrong error message displays:\nExpected: %s\nActual: %s", tc.expectedMessage, err.Error())
