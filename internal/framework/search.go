@@ -154,7 +154,7 @@ func NewSearchStrategy(version string, rootDir string) MetadataSearchStrategy {
 		return PackageStrategy{
 			packageJSONFilePath: filepath.Join(rootDir, version),
 		}
-	} else {
-		return ExactStrategy{}
 	}
+
+	return ExactStrategy{}
 }
