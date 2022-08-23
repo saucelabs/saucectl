@@ -18,6 +18,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/job"
+	tunnelPkg "github.com/saucelabs/saucectl/internal/tunnel"
 	"github.com/saucelabs/saucectl/internal/vmd"
 )
 
@@ -598,6 +599,7 @@ func TestClient_isTunnelRunning(t *testing.T) {
 		ctx    context.Context
 		id     string
 		parent string
+		filter tunnelPkg.Filter
 	}
 	tests := []struct {
 		name     string
@@ -646,7 +648,7 @@ func TestClient_isTunnelRunning(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			responseBody = tt.response
-			if err := c.isTunnelRunning(tt.args.ctx, tt.args.id, tt.args.parent); (err != nil) != tt.wantErr {
+			if err := c.isTunnelRunning(tt.args.ctx, tt.args.id, tt.args.parent, tt.args.filter); (err != nil) != tt.wantErr {
 				t.Errorf("isTunnelRunning() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
