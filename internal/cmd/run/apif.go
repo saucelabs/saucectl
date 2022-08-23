@@ -19,7 +19,7 @@ func runApif() (int, error) {
 
 	// testcompClient.URL = regio.APIBaseURL()
 	// webdriverClient.URL = regio.WebDriverBaseURL()
-	// restoClient.URL = regio.APIBaseURL()
+	restoClient.URL = regio.APIBaseURL()
 	// appsClient.URL = regio.APIBaseURL()
 	// rdcClient.URL = regio.APIBaseURL()
 	// insightsClient.URL = regio.APIBaseURL()
@@ -40,8 +40,8 @@ func runApif() (int, error) {
 			},
 		},
 		Async: gFlags.async,
+		TunnelService: &restoClient,
 	}
 
-	r.RunSuites()
-	return 0, nil
+	return r.RunProject()
 }

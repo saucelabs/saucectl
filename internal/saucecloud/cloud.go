@@ -752,24 +752,25 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 }
 
 func (r *CloudRunner) validateTunnel(name, owner string, dryRun bool) error {
-	if name == "" {
-		return nil
-	}
+	return tunnel.ValidateTunnel(r.TunnelService, name, owner, tunnel.NoneFilter, dryRun)
+	// if name == "" {
+	// 	return nil
+	// }
 
-	if dryRun {
-		log.Info().Msg("Skipping tunnel validation in dry run.")
-		return nil
-	}
+	// if dryRun {
+	// 	log.Info().Msg("Skipping tunnel validation in dry run.")
+	// 	return nil
+	// }
 
-	// This wait value is deliberately not configurable.
-	wait := 30 * time.Second
-	log.Info().Str("timeout", wait.String()).Msg("Performing tunnel readiness check...")
-	if err := r.TunnelService.IsTunnelRunning(context.Background(), name, owner, wait); err != nil {
-		return err
-	}
+	// // This wait value is deliberately not configurable.
+	// wait := 30 * time.Second
+	// log.Info().Str("timeout", wait.String()).Msg("Performing tunnel readiness check...")
+	// if err := r.TunnelService.IsTunnelRunning(context.Background(), name, owner, wait); err != nil {
+	// 	return err
+	// }
 
-	log.Info().Msg("Tunnel is ready!")
-	return nil
+	// log.Info().Msg("Tunnel is ready!")
+	// return nil
 }
 
 // stopSuiteExecution stops the current execution on Sauce Cloud

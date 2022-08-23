@@ -23,6 +23,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/requesth"
+	tunnelPkg "github.com/saucelabs/saucectl/internal/tunnel"
 	"github.com/saucelabs/saucectl/internal/vmd"
 )
 
@@ -198,11 +199,11 @@ func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
 
 // IsTunnelRunning checks whether tunnelID is running. If not, it will wait for the tunnel to become available or
 // timeout. Whichever comes first.
-func (c *Client) IsTunnelRunning(ctx context.Context, id, owner string, wait time.Duration) error {
+func (c *Client) IsTunnelRunning(ctx context.Context, id, owner string, filter tunnelPkg.Filter, wait time.Duration) error {
 	deathclock := time.Now().Add(wait)
 	var err error
 	for time.Now().Before(deathclock) {
-		if err = c.isTunnelRunning(ctx, id, owner); err == nil {
+		if err = c.isTunnelRunning(ctx, id, owner, filter); err == nil {
 			return nil
 		}
 		time.Sleep(1 * time.Second)
@@ -211,7 +212,7 @@ func (c *Client) IsTunnelRunning(ctx context.Context, id, owner string, wait tim
 	return err
 }
 
-func (c *Client) isTunnelRunning(ctx context.Context, id, owner string) error {
+func (c *Client) isTunnelRunning(ctx context.Context, id, owner string, filter tunnelPkg.Filter) error {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/rest/v1/%s/tunnels", c.URL, c.Username), nil)
 	if err != nil {
@@ -222,6 +223,10 @@ func (c *Client) isTunnelRunning(ctx context.Context, id, owner string) error {
 	q := req.URL.Query()
 	q.Add("full", "true")
 	q.Add("all", "true")
+
+	if filter != "" {
+		q.Add("filter", string(filter))
+	}
 	req.URL.RawQuery = q.Encode()
 
 	r, err := retryablehttp.FromRequest(req)

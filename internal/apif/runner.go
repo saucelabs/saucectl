@@ -10,17 +10,33 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/saucelabs/saucectl/internal/tunnel"
 )
 
+// ApifRunner represents an executor for api tests
 type ApifRunner struct {
-	Project   Project
-	Client    apitesting.Client
-	Region    region.Region
-	Reporters []report.Reporter
-	Async     bool
+	Project       Project
+	Client        apitesting.Client
+	Region        region.Region
+	Reporters     []report.Reporter
+	Async         bool
+	TunnelService tunnel.Service
 }
 
-func (r *ApifRunner) RunSuites() {
+func (r *ApifRunner) RunProject() (int, error) {
+	exitCode := 1
+	if err := tunnel.ValidateTunnel(r.TunnelService, r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner, tunnel.V2AlphaFilter, false); err != nil {
+		return 1, err
+	}
+
+	passed := r.runSuites()
+	if passed {
+		exitCode = 0
+	}
+	return exitCode, nil
+}
+
+func (r *ApifRunner) runSuites() bool {
 	results := make(chan []apitesting.TestResult)
 	expected := 0
 
@@ -91,11 +107,12 @@ func (r *ApifRunner) RunSuites() {
 		}
 	}
 
-	r.collectResults(expected, results)
+	return r.collectResults(expected, results)
 }
 
-func (r *ApifRunner) collectResults(expected int, results chan []apitesting.TestResult) {
+func (r *ApifRunner) collectResults(expected int, results chan []apitesting.TestResult) bool {
 	inProgress := expected
+	passed := true
 
 	done := make(chan interface{})
 	go func(r *ApifRunner) {
@@ -140,6 +157,7 @@ func (r *ApifRunner) collectResults(expected int, results chan []apitesting.Test
 			status := job.StatePassed
 			if testResult.FailuresCount > 0 {
 				status = job.StateFailed
+				passed = false
 			} else if testResult.Async {
 				status = job.StateInProgress
 			}
@@ -157,4 +175,6 @@ func (r *ApifRunner) collectResults(expected int, results chan []apitesting.Test
 	for _, rep := range r.Reporters {
 		rep.Render()
 	}
+
+	return passed
 }
