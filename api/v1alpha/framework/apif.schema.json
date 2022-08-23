@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://saucelabs.com/schema/v1alpha/apif.schema.json",
+  "title": "saucectl api testing runner configuration",
+  "description": "Configuration file for api testing using saucectl",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "../subschema/sauce.schema.json"
+    }
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "v1alpha"
+    },
+    "kind": {
+      "const": "apif"
+    },
+    "suites": {
+      "description": "The set of properties providing details about the test suites to run.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the test suite, which will be reflected in the test results in Sauce Labs.",
+            "type": "string"
+          },
+          "hookId": {
+            "description": "Your project's hook ID, which you can create and/or retrieve from your project's Webhooks tab.",
+            "type": "string"
+          },
+          "tests": {
+            "description": "A list of test IDs to run for the project defined by hookId.",
+            "type": "array"
+          },
+          "tags": {
+            "description": "A test tag to run for the project defined by hookId.",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "hookId"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "suites"
+  ],
+  "additionalProperties": true
+}
+
