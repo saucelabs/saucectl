@@ -75,7 +75,7 @@ func (c *Client) GetProject(ctx context.Context, hookId string) (Project, error)
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return Project{}, fmt.Errorf("failed to fetch project details; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		return Project{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 	}
 
 	project := Project{}

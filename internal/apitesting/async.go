@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/requesth"
@@ -77,10 +78,7 @@ func (c *Client) RunTestAsync(ctx context.Context, hookId string, testId string,
 	apifProject, err := c.GetProject(ctx, hookId)
 
 	if err != nil {
-		apifProject = Project{
-			ID:   "",
-			Name: "",
-		}
+		log.Warn().Err(err).Msg("failed to fetch project details; go to your project dashboard for test results")
 	}
 
 	var testResults []TestResult
