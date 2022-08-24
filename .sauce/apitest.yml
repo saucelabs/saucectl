@@ -1,0 +1,23 @@
+apiVersion: v1alpha
+kind: apitest
+sauce:
+  region: us-west-1
+  metadata:
+    build: "$BUILD_ID"
+  # tunnel:
+  #   name: tunnelname
+  #   owner: tunnelowner
+
+suites:
+  - name: "run all tests for Devx test Project"
+    hookId: ffbc8b37-83d8-4e6a-83a7-50616c3b9498
+
+  - name: "run a tag for Felix Project"
+    hookId: 31f42020-0974-418c-9362-312d6535db97
+    tags:
+      - product
+
+  - name: "run a single test for Felix Project"
+    hookId: 31f42020-0974-418c-9362-312d6535db97
+    tests:
+      - 6244d915ca28694aab2a77f3

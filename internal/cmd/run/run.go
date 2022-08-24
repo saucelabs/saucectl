@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/apitest"
+	"github.com/saucelabs/saucectl/internal/apitesting"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/webdriver"
@@ -58,16 +60,18 @@ var (
 	githubTimeout       = 2 * time.Second
 	insightsTimeout     = 10 * time.Second
 	iamTimeout          = 10 * time.Second
+	apitestingTimeout   = 10 * time.Second
 
 	typeDef config.TypeDef
 
-	testcompClient  testcomposer.Client
-	webdriverClient webdriver.Client
-	restoClient     resto.Client
-	appsClient      appstore.AppStore
-	rdcClient       rdc.Client
-	insightsClient  insights.Client
-	iamClient       iam.Client
+	testcompClient   testcomposer.Client
+	webdriverClient  webdriver.Client
+	restoClient      resto.Client
+	appsClient       appstore.AppStore
+	rdcClient        rdc.Client
+	insightsClient   insights.Client
+	iamClient        iam.Client
+	apitestingClient apitesting.Client
 
 	// ErrEmptySuiteName is thrown when a flag is specified that has a dependency on the --name flag.
 	ErrEmptySuiteName = errors.New(msg.EmptyAdhocSuiteName)
@@ -235,6 +239,8 @@ func preRun() error {
 
 	iamClient = iam.New("", creds, iamTimeout)
 
+	apitestingClient = apitesting.New("", creds.Username, creds.AccessKey, apitestingTimeout)
+
 	return nil
 }
 
@@ -260,6 +266,9 @@ func Run(cmd *cobra.Command) (int, error) {
 	}
 	if typeDef.Kind == xcuitest.Kind {
 		return runXcuitest(cmd, xcuitestFlags{})
+	}
+	if typeDef.Kind == apitest.Kind {
+		return runApitest()
 	}
 
 	return 1, errors.New(msg.UnknownFrameworkConfig)

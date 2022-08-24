@@ -360,6 +360,32 @@ jobs:
           --testOptions.notClass SwagLabsMobileAppUITests.SwagLabsFlow/testCompleteFlow \
           --device name="iPhone.*" \
           --timeout 10m
+
+  apitest:
+    needs: build
+    runs-on: ubuntu-latest
+    # apitest is not publicly released so let's be a bit lax during pre-release
+    continue-on-error: true
+    env:
+      BUILD_ID: ${{ github.run_id }}
+      BUILD_ENV: GitHub Actions
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Download saucectl binary
+        uses: actions/download-artifact@v2
+        with:
+          name: saucectlbin
+
+      - name: Set permissions
+        run: chmod +x ./saucectl
+
+      - name: Saucectl RUN - Config Driven
+        run: |
+          ./saucectl run -c .sauce/apitest.yml
+
   windows-doctor:
     needs: build
     runs-on: windows-latest

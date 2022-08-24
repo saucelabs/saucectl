@@ -173,10 +173,10 @@ func calDuration(results []report.TestResult) time.Duration {
 	start := time.Now()
 	end := start
 	for _, r := range results {
-		if r.StartTime.Before(start) {
+		if r.StartTime.Before(start) && !r.StartTime.IsZero() {
 			start = r.StartTime
 		}
-		if r.EndTime.After(end) {
+		if r.EndTime.After(end) && !r.StartTime.IsZero() {
 			end = r.EndTime
 		}
 	}

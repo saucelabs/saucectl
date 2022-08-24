@@ -119,6 +119,18 @@
       "then": {
         "$ref": "v1alpha/framework/xcuitest.schema.json"
       }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "apitest"
+          }
+        }
+      },
+      "then": {
+        "$ref": "v1alpha/framework/apitest.schema.json"
+      }
     }
   ]
 }
