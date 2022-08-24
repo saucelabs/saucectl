@@ -22,9 +22,9 @@ type AsyncResponse struct {
 	TestIDs    []string `json:"testIds,omitempty"`
 }
 
-// RunAllAsync runs all the tests for the project described by hookId and returns without waiting for their results.
-func (c *Client) RunAllAsync(ctx context.Context, hookId string, buildId string, tunnel config.Tunnel) ([]TestResult, error) {
-	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_run-all", hookId), buildId, "", tunnel)
+// RunAllAsync runs all the tests for the project described by hookID and returns without waiting for their results.
+func (c *Client) RunAllAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel) ([]TestResult, error) {
+	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_run-all", hookID), buildID, "", tunnel)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
@@ -38,7 +38,7 @@ func (c *Client) RunAllAsync(ctx context.Context, hookId string, buildId string,
 		return []TestResult{}, err
 	}
 
-	apifProject, err := c.GetProject(ctx, hookId)
+	apifProject, err := c.GetProject(ctx, hookID)
 
 	if err != nil {
 		log.Warn().Err(err).Msg("failed to fetch project details; go to your project dashboard for test results")
@@ -56,9 +56,9 @@ func (c *Client) RunAllAsync(ctx context.Context, hookId string, buildId string,
 	return testResults, nil
 }
 
-// RunTestAsync runs a single test described by testId for the project described by hookId and returns without waiting for results.
-func (c *Client) RunTestAsync(ctx context.Context, hookId string, testId string, buildId string, tunnel config.Tunnel) ([]TestResult, error) {
-	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/%s/_run", hookId, testId), buildId, "", tunnel)
+// RunTestAsync runs a single test described by testID for the project described by hookID and returns without waiting for results.
+func (c *Client) RunTestAsync(ctx context.Context, hookID string, testID string, buildID string, tunnel config.Tunnel) ([]TestResult, error) {
+	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/%s/_run", hookID, testID), buildID, "", tunnel)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
@@ -72,7 +72,7 @@ func (c *Client) RunTestAsync(ctx context.Context, hookId string, testId string,
 		return []TestResult{}, err
 	}
 
-	apifProject, err := c.GetProject(ctx, hookId)
+	apifProject, err := c.GetProject(ctx, hookID)
 
 	if err != nil {
 		log.Warn().Err(err).Msg("failed to fetch project details; go to your project dashboard for test results")
@@ -90,9 +90,9 @@ func (c *Client) RunTestAsync(ctx context.Context, hookId string, testId string,
 	return testResults, nil
 }
 
-// RunTagAsync runs all the tests for a testTag for a project described by hookId and returns without waiting for results.
-func (c *Client) RunTagAsync(ctx context.Context, hookId string, testTag string, buildId string, tunnel config.Tunnel) ([]TestResult, error) {
-	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_tag/%s/_run", hookId, testTag), buildId, "", tunnel)
+// RunTagAsync runs all the tests for a testTag for a project described by hookID and returns without waiting for results.
+func (c *Client) RunTagAsync(ctx context.Context, hookID string, testTag string, buildID string, tunnel config.Tunnel) ([]TestResult, error) {
+	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_tag/%s/_run", hookID, testTag), buildID, "", tunnel)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
@@ -106,7 +106,7 @@ func (c *Client) RunTagAsync(ctx context.Context, hookId string, testTag string,
 		return []TestResult{}, err
 	}
 
-	apifProject, err := c.GetProject(ctx, hookId)
+	apifProject, err := c.GetProject(ctx, hookID)
 
 	if err != nil {
 		log.Warn().Err(err).Msg("failed to fetch project details; go to your project dashboard for test results")

@@ -54,9 +54,9 @@ func New(url string, username string, accessKey string, timeout time.Duration) C
 	}
 }
 
-// GetProject returns Project metadata for a given hookId.
-func (c *Client) GetProject(ctx context.Context, hookId string) (Project, error) {
-	url := fmt.Sprintf("%s/api-testing/rest/v4/%s", c.URL, hookId)
+// GetProject returns Project metadata for a given hookID.
+func (c *Client) GetProject(ctx context.Context, hookID string) (Project, error) {
+	url := fmt.Sprintf("%s/api-testing/rest/v4/%s", c.URL, hookID)
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return Project{}, err
@@ -85,14 +85,14 @@ func (c *Client) GetProject(ctx context.Context, hookId string) (Project, error)
 	return project, nil
 }
 
-func (c *Client) composeURL(path string, buildId string, format string, tunnel config.Tunnel) string {
+func (c *Client) composeURL(path string, buildID string, format string, tunnel config.Tunnel) string {
 	// NOTE: API url is not user provided so skip error check
 	url, _ := url.Parse(c.URL)
 	url.Path = path
 
 	query := url.Query()
-	if buildId != "" {
-		query.Set("buildId", buildId)
+	if buildID != "" {
+		query.Set("buildId", buildID)
 	}
 	if format != "" {
 		query.Set("format", format)

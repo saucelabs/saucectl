@@ -13,9 +13,9 @@ import (
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
-// RunAllSync sychronously runs all the tests for a project described by hookId.
-func (c *Client) RunAllSync(ctx context.Context, hookId string, buildId string, tunnel config.Tunnel) ([]TestResult, error) {
-	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_run-all-sync", hookId), buildId, "json", tunnel)
+// RunAllSync sychronously runs all the tests for a project described by hookID.
+func (c *Client) RunAllSync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel) ([]TestResult, error) {
+	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_run-all-sync", hookID), buildID, "json", tunnel)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
@@ -26,9 +26,9 @@ func (c *Client) RunAllSync(ctx context.Context, hookId string, buildId string, 
 	return doSyncRun(c.HTTPClient, req)
 }
 
-// RunTestSync sychronously runs a single testId for a project described by hookId.
-func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, buildId string, tunnel config.Tunnel) ([]TestResult, error) {
-	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/%s/_run-sync", hookId, testId), buildId, "json", tunnel)
+// RunTestSync sychronously runs a single testID for a project described by hookID.
+func (c *Client) RunTestSync(ctx context.Context, hookID string, testID string, buildID string, tunnel config.Tunnel) ([]TestResult, error) {
+	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/%s/_run-sync", hookID, testID), buildID, "json", tunnel)
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
 		return []TestResult{}, err
@@ -38,9 +38,9 @@ func (c *Client) RunTestSync(ctx context.Context, hookId string, testId string, 
 	return doSyncRun(c.HTTPClient, req)
 }
 
-// RunTagSync sychronously runs the all the tests tagged with testTag for a project described by hookId.
-func (c *Client) RunTagSync(ctx context.Context, hookId string, testTag string, buildId string, tunnel config.Tunnel) ([]TestResult, error) {
-	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_tag/%s/_run-sync", hookId, testTag), buildId, "json", tunnel)
+// RunTagSync sychronously runs the all the tests tagged with testTag for a project described by hookID.
+func (c *Client) RunTagSync(ctx context.Context, hookID string, testTag string, buildID string, tunnel config.Tunnel) ([]TestResult, error) {
+	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_tag/%s/_run-sync", hookID, testTag), buildID, "json", tunnel)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
