@@ -853,7 +853,7 @@ func (r *CloudRunner) deprecationMessage(frameworkName string, frameworkVersion 
 }
 
 func (r *CloudRunner) logFrameworkError(err error) {
-	var unavailableErr *framework.FrameworkUnavailableError
+	var unavailableErr *framework.UnavailableError
 	if errors.As(err, &unavailableErr) {
 		color.Red(fmt.Sprintf("\n%s\n\n", err.Error()))
 		fmt.Print(r.getAvailableVersionsMessage(unavailableErr.Name))

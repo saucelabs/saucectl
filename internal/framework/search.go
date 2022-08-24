@@ -12,14 +12,14 @@ import (
 	"github.com/saucelabs/saucectl/internal/node"
 )
 
-// FrameworkUnavailableError is an error type returned if the requested framework version is unavailable.
-type FrameworkUnavailableError struct {
+// UnavailableError is an error type returned if the requested framework version is unavailable.
+type UnavailableError struct {
 	Name    string
 	Version string
 }
 
 // Error returns the error string
-func (e *FrameworkUnavailableError) Error() string {
+func (e *UnavailableError) Error() string {
 	s := fmt.Sprintf("version %s for %s is not available", e.Version, e.Name)
 	return s
 }
@@ -33,9 +33,10 @@ type MetadataSearchStrategy interface {
 type ExactStrategy struct {
 }
 
-// PackageStrategy searches for metadata of a framework from a package.json file. If the requested version is a range (e.g. ~9.0.0), it matches the most recent version that satifies the constraint.
+// PackageStrategy searches for metadata of a framework from a package.json file.
+// If the requested version is a range (e.g. ~9.0.0), it matches the most recent version that satisfies the constraint.
 type PackageStrategy struct {
-	packageJsonFilePath string
+	packageJSONFilePath string
 }
 
 func (s ExactStrategy) Find(ctx context.Context, svc MetadataService, frameworkName string, frameworkVersion string) (Metadata, error) {
@@ -59,7 +60,7 @@ func (s ExactStrategy) Find(ctx context.Context, svc MetadataService, frameworkN
 		}
 	}
 
-	return Metadata{}, &FrameworkUnavailableError{
+	return Metadata{}, &UnavailableError{
 		Name:    frameworkName,
 		Version: frameworkVersion,
 	}
@@ -87,8 +88,8 @@ var (
 	NewConstraint   = semver.NewConstraint
 )
 
-func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, frameworkName string, packageJsonPath string) (Metadata, error) {
-	p, err := PackageFromFile(s.packageJsonFilePath)
+func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, frameworkName string, frameworkVersion string) (Metadata, error) {
+	p, err := PackageFromFile(s.packageJSONFilePath)
 
 	if err != nil {
 		return Metadata{}, fmt.Errorf("error reading package.json: %w", err)
@@ -141,7 +142,7 @@ func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, framewor
 		}
 	}
 
-	return Metadata{}, &FrameworkUnavailableError{
+	return Metadata{}, &UnavailableError{
 		Name:    frameworkName,
 		Version: ver,
 	}
@@ -151,9 +152,9 @@ func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, framewor
 func NewSearchStrategy(version string, rootDir string) MetadataSearchStrategy {
 	if strings.Contains(version, "package.json") {
 		return PackageStrategy{
-			packageJsonFilePath: filepath.Join(rootDir, version),
+			packageJSONFilePath: filepath.Join(rootDir, version),
 		}
-	} else {
-		return ExactStrategy{}
 	}
+
+	return ExactStrategy{}
 }
