@@ -78,7 +78,7 @@ func (c *Client) GetProject(ctx context.Context, hookID string) (Project, error)
 		return Project{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 	}
 
-	project := Project{}
+	var project Project
 	if err := json.NewDecoder(resp.Body).Decode(&project); err != nil {
 		return project, err
 	}
