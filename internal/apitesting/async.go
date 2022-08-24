@@ -142,7 +142,7 @@ func doAsyncRun(client *http.Client, request *http.Request) (AsyncResponse, erro
 		return AsyncResponse{}, fmt.Errorf("test execution failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 	}
 
-	asyncResponse := AsyncResponse{}
+	var asyncResponse AsyncResponse
 	if err := json.NewDecoder(resp.Body).Decode(&asyncResponse); err != nil {
 		return AsyncResponse{}, err
 	}
