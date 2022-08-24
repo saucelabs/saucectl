@@ -1,4 +1,4 @@
-package apif
+package apitest
 
 import (
 	"errors"
@@ -11,13 +11,13 @@ import (
 // Config descriptors.
 var (
 	// Kind represents the type definition of this config.
-	Kind = "apif"
+	Kind = "apitest"
 
 	// APIVersion represents the supported config version.
 	APIVersion = "v1alpha"
 )
 
-// Project represents the apif project configuration.
+// Project represents the apitest project configuration.
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
 	ConfigFilePath string             `yaml:"-" json:"-"`
@@ -25,7 +25,7 @@ type Project struct {
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty"`
 }
 
-// Suite represents the apif suite configuration.
+// Suite represents the apitest suite configuration.
 type Suite struct {
 	Name   string   `yaml:"name,omitempty"`
 	HookID string   `yaml:"hookId,omitempty"`
@@ -33,7 +33,7 @@ type Suite struct {
 	Tests  []string `yaml:"tests,omitempty"`
 }
 
-// FromFile creates a new apif Project based on the filepath cfgPath.
+// FromFile creates a new apitest Project based on the filepath cfgPath.
 func FromFile(cfgPath string) (Project, error) {
 	var p Project
 

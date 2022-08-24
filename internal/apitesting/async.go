@@ -38,7 +38,7 @@ func (c *Client) RunAllAsync(ctx context.Context, hookID string, buildID string,
 		return []TestResult{}, err
 	}
 
-	apifProject, err := c.GetProject(ctx, hookID)
+	apitestProject, err := c.GetProject(ctx, hookID)
 
 	if err != nil {
 		log.Warn().Err(err).Msg("failed to fetch project details; go to your project dashboard for test results")
@@ -49,7 +49,7 @@ func (c *Client) RunAllAsync(ctx context.Context, hookID string, buildID string,
 	for _, e := range resp.EventIDs {
 		testResults = append(testResults, TestResult{
 			EventID: e,
-			Project: apifProject,
+			Project: apitestProject,
 			Async:   true,
 		})
 	}
@@ -72,7 +72,7 @@ func (c *Client) RunTestAsync(ctx context.Context, hookID string, testID string,
 		return []TestResult{}, err
 	}
 
-	apifProject, err := c.GetProject(ctx, hookID)
+	apitestProject, err := c.GetProject(ctx, hookID)
 
 	if err != nil {
 		log.Warn().Err(err).Msg("failed to fetch project details; go to your project dashboard for test results")
@@ -83,7 +83,7 @@ func (c *Client) RunTestAsync(ctx context.Context, hookID string, testID string,
 	for _, e := range resp.EventIDs {
 		testResults = append(testResults, TestResult{
 			EventID: e,
-			Project: apifProject,
+			Project: apitestProject,
 			Async:   true,
 		})
 	}
@@ -106,7 +106,7 @@ func (c *Client) RunTagAsync(ctx context.Context, hookID string, testTag string,
 		return []TestResult{}, err
 	}
 
-	apifProject, err := c.GetProject(ctx, hookID)
+	apitestProject, err := c.GetProject(ctx, hookID)
 
 	if err != nil {
 		log.Warn().Err(err).Msg("failed to fetch project details; go to your project dashboard for test results")
@@ -117,7 +117,7 @@ func (c *Client) RunTagAsync(ctx context.Context, hookID string, testTag string,
 	for _, e := range resp.EventIDs {
 		testResults = append(testResults, TestResult{
 			EventID: e,
-			Project: apifProject,
+			Project: apitestProject,
 			Async:   true,
 		})
 	}

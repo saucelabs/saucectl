@@ -3,30 +3,30 @@ package run
 import (
 	"os"
 
-	"github.com/saucelabs/saucectl/internal/apif"
+	"github.com/saucelabs/saucectl/internal/apitest"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/table"
 )
 
-func runApif() (int, error) {
-	p, err := apif.FromFile(gFlags.cfgFilePath)
+func runApitest() (int, error) {
+	p, err := apitest.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
 
-	apif.SetDefaults(&p)
-	if err := apif.Validate(p); err != nil {
+	apitest.SetDefaults(&p)
+	if err := apitest.Validate(p); err != nil {
 		return 1, err
 	}
 
 	regio := region.FromString(p.Sauce.Region)
 	restoClient.URL = regio.APIBaseURL()
-	apifClient.URL = regio.APIBaseURL()
+	apitestingClient.URL = regio.APIBaseURL()
 
-	r := apif.Runner{
+	r := apitest.Runner{
 		Project: p,
-		Client:  apifClient,
+		Client:  apitestingClient,
 		Region:  regio,
 		Reporters: []report.Reporter{
 			&table.Reporter{

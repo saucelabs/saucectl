@@ -1,4 +1,4 @@
-package apif
+package apitest
 
 import (
 	"context"
@@ -23,7 +23,7 @@ type Runner struct {
 	TunnelService tunnel.Service
 }
 
-// RunProject runs the tests defined in apif.Project
+// RunProject runs the tests defined in apitest.Project
 func (r *Runner) RunProject() (int, error) {
 	exitCode := 1
 	if err := tunnel.ValidateTunnel(r.TunnelService, r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner, tunnel.V2AlphaFilter, false); err != nil {
@@ -68,7 +68,7 @@ func (r *Runner) runSuites() bool {
 			for _, t := range suite.Tests {
 				test := t
 				go func() {
-					log.Info().Str("test", test).Str("project", suite.HookID).Msg("Running test.")
+					log.Info().Str("test", test).Str("hookId", suite.HookID).Msg("Running test.")
 					var resp []apitesting.TestResult
 					var err error
 
@@ -89,7 +89,7 @@ func (r *Runner) runSuites() bool {
 			for _, t := range suite.Tags {
 				tag := t
 				go func() {
-					log.Info().Str("tag", tag).Str("project", suite.HookID).Msg("Running tag.")
+					log.Info().Str("tag", tag).Str("hookId", suite.HookID).Msg("Running tag.")
 
 					var resp []apitesting.TestResult
 					var err error

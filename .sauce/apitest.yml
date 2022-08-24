@@ -1,14 +1,12 @@
 apiVersion: v1alpha
-kind: apif
+kind: apitest
 sauce:
   region: us-west-1
   metadata:
-    tags:
-      - e2e
     build: "$BUILD_ID"
   # tunnel:
-  #   name: tuna
-      # owner: mikehan
+  #   name: tunnelname
+  #   owner: tunnelowner
 
 suites:
   - name: "run all tests for Felix Project"
