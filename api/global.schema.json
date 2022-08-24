@@ -124,12 +124,12 @@
       "if": {
         "properties": {
           "kind": {
-            "const": "apif"
+            "const": "apitest"
           }
         }
       },
       "then": {
-        "$ref": "v1alpha/framework/apif.schema.json"
+        "$ref": "v1alpha/framework/apitest.schema.json"
       }
     }
   ]

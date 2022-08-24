@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
-  "$id": "https://saucelabs.com/schema/v1alpha/apif.schema.json",
+  "$id": "https://saucelabs.com/schema/v1alpha/apitest.schema.json",
   "title": "saucectl api testing runner configuration",
   "description": "Configuration file for api testing using saucectl",
   "type": "object",
@@ -14,7 +14,7 @@
       "const": "v1alpha"
     },
     "kind": {
-      "const": "apif"
+      "const": "apitest"
     },
     "suites": {
       "description": "The set of properties providing details about the test suites to run.",
