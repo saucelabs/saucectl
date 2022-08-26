@@ -44,8 +44,10 @@ type Links struct {
 
 // Item represents the metadata about the uploaded file.
 type Item struct {
-	ID   string `json:"id"`
-	ETag string `json:"etag"`
+	ID              string `json:"id"`
+	Name            string `json:"name"`
+	Size            int    `json:"size"`
+	UploadTimestamp int    `json:"upload_timestamp"`
 }
 
 // AppStore implements a remote file storage for storage.ProjectUploader.
@@ -177,6 +179,54 @@ func (s *AppStore) Find(filename string) (storage.ArtifactMeta, error) {
 	}
 
 	return storage.ArtifactMeta{ID: lr.Items[0].ID}, nil
+}
+
+func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
+	uri, _ := url.Parse(s.URL)
+	uri.Path = "/v1/storage/files"
+
+	query := uri.Query()
+	query.Set("per_page", "100") // 100 is the max that app storage allows
+	if opts.Q != "" {
+		query.Set("q", opts.Q)
+	}
+	if opts.Name != "" {
+		query.Set("name", opts.Name)
+	}
+
+	uri.RawQuery = query.Encode()
+
+	req, err := requesth.New(http.MethodGet, uri.String(), nil)
+	if err != nil {
+		return storage.List{}, err
+	}
+	req.SetBasicAuth(s.Username, s.AccessKey)
+
+	resp, err := s.HTTPClient.Do(req)
+	if err != nil {
+		return storage.List{}, err
+	}
+	defer resp.Body.Close()
+
+	var listResp ListResponse
+	if err := json.NewDecoder(resp.Body).Decode(&listResp); err != nil {
+		return storage.List{}, err
+	}
+
+	var items []storage.Item
+	for _, v := range listResp.Items {
+		items = append(items, storage.Item{
+			ID:       v.ID,
+			Name:     v.Name,
+			Size:     v.Size,
+			Uploaded: time.Unix(int64(v.UploadTimestamp), 0),
+		})
+	}
+
+	return storage.List{
+		Items:     items,
+		Truncated: listResp.TotalItems > len(items),
+	}, nil
 }
 
 func calculateBundleHash(filename string) (string, error) {

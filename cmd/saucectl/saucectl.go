@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/cmd/storage"
 	"os"
 	"time"
 
@@ -67,6 +68,7 @@ func main() {
 		signup.Command(),
 		completion.Command(),
 		doctor.Command(),
+		storage.Command(),
 	)
 
 	if err := cmd.Execute(); err != nil {

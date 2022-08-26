@@ -4,6 +4,7 @@ package storage
 type ProjectUploader interface {
 	Upload(name string) (ArtifactMeta, error)
 	Find(name string) (ArtifactMeta, error)
+	List(opts ListOptions) (List, error)
 }
 
 // ArtifactMeta represents metadata of the uploaded file.
