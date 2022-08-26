@@ -2,10 +2,11 @@ package storage
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/dustin/go-humanize"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/spf13/cobra"
 	"os"
@@ -64,23 +65,26 @@ func ListCommand() *cobra.Command {
 		},
 		Short:        "Returns the list of files that have been uploaded to Sauce Storage.",
 		SilenceUsage: true,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			list, err := appsClient.List(storage.ListOptions{
 				Q:    query,
 				Name: name,
 			})
 			if err != nil {
-				log.Err(err).Msg("Failed to retrieve files")
+				return fmt.Errorf("failed to retrieve list: %w", err)
 			}
-			// TODO handle empty list case (not an error, but nothing was found)
 			switch out {
 			case "text":
 				renderTable(list)
 			case "json":
-				renderJSON(list)
+				if err := renderJSON(list); err != nil {
+					return fmt.Errorf("failed to render output: %w", err)
+				}
 			default:
-				log.Error().Msgf("Unknown output format: %s", out)
+				return errors.New("unknown output format")
 			}
+
+			return nil
 		},
 	}
 
