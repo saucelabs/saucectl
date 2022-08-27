@@ -63,8 +63,7 @@ func ListCommand() *cobra.Command {
 		Aliases: []string{
 			"ls",
 		},
-		Short:        "Returns the list of files that have been uploaded to Sauce Storage.",
-		SilenceUsage: true,
+		Short: "Returns the list of files that have been uploaded to Sauce Storage.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			list, err := appsClient.List(storage.ListOptions{
 				Q:    query,
