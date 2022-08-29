@@ -1,6 +1,10 @@
 package storage
 
-import "time"
+import (
+	"errors"
+	"fmt"
+	"time"
+)
 
 // ListOptions represents parameters that modify the file list behavior.
 type ListOptions struct {
@@ -21,4 +25,24 @@ type Item struct {
 	Name     string    `json:"name"`
 	Size     int       `json:"size"`
 	Uploaded time.Time `json:"uploaded"`
+}
+
+// ErrFileNotFound is returned when the requested file does not exist.
+var ErrFileNotFound = errors.New("file not found")
+
+// ErrBadRequest usually indicates a user error.
+var ErrBadRequest = errors.New("bad request")
+
+// ErrAccessDenied is returned when the service denies access. Either due to insufficient rights or wrong credentials.
+var ErrAccessDenied = errors.New("access denied")
+
+// ServerError represents any server side error that isn't already covered by other types of errors in this package.
+type ServerError struct {
+	Code  int
+	Title string
+	Msg   string
+}
+
+func (s *ServerError) Error() string {
+	return fmt.Sprintf("server error with status '%d'; title '%s'; msg '%s'", s.Code, s.Title, s.Msg)
 }

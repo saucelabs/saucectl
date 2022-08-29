@@ -40,6 +40,8 @@ func DownloadCommand() *cobra.Command {
 				return fmt.Errorf("failed to write to file: %w", err)
 			}
 
+			println("OK!")
+
 			return nil
 		},
 	}

@@ -35,6 +35,13 @@ type ListResponse struct {
 	TotalItems int    `json:"total_items"`
 }
 
+// errorResponse is a generic error response from the server.
+type errorResponse struct {
+	Code   int    `json:"code"`
+	Title  string `json:"title"`
+	Detail string `json:"detail"`
+}
+
 // Links represents the pagination information returned by the app store.
 type Links struct {
 	Self string `json:"self"`
@@ -74,6 +81,7 @@ func isMobileAppPackage(name string) bool {
 	return strings.HasSuffix(name, ".ipa") || strings.HasSuffix(name, ".apk") || strings.HasSuffix(name, ".aab")
 }
 
+// Download downloads a file with the given id. It's the caller's responsibility to close the reader.
 func (s *AppStore) Download(id string) (io.ReadCloser, error) {
 	req, err := requesth.New(http.MethodGet, fmt.Sprintf("%s/v1/storage/download/%s", s.URL, id), nil)
 	if err != nil {
@@ -83,7 +91,22 @@ func (s *AppStore) Download(id string) (io.ReadCloser, error) {
 	req.SetBasicAuth(s.Username, s.AccessKey)
 
 	resp, err := s.HTTPClient.Do(req)
-	return resp.Body, err
+	if err != nil {
+		return nil, err
+	}
+
+	switch resp.StatusCode {
+	case 200:
+		return resp.Body, nil
+	case 400:
+		return nil, storage.ErrBadRequest
+	case 401, 403:
+		return nil, storage.ErrAccessDenied
+	case 404:
+		return nil, storage.ErrFileNotFound
+	default:
+		return nil, newServerError(resp)
+	}
 }
 
 // Upload uploads file to remote storage
@@ -279,4 +302,28 @@ func (s *AppStore) executeLocateRequest(request *http.Request) (ListResponse, er
 	}
 
 	return lr, nil
+}
+
+// newServerError inspects server error responses, trying to gather as much information as possible, especially if the body
+// conforms to the errorResponse format, and returns a storage.ServerError.
+func newServerError(resp *http.Response) *storage.ServerError {
+	var errResp errorResponse
+	body, _ := io.ReadAll(resp.Body)
+	defer resp.Body.Close()
+
+	reader := bytes.NewReader(body)
+	err := json.NewDecoder(reader).Decode(&errResp)
+	if err != nil {
+		return &storage.ServerError{
+			Code:  resp.StatusCode,
+			Title: resp.Status,
+			Msg:   string(body),
+		}
+	}
+
+	return &storage.ServerError{
+		Code:  errResp.Code,
+		Title: errResp.Title,
+		Msg:   errResp.Detail,
+	}
 }
