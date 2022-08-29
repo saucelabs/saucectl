@@ -82,30 +82,30 @@ func isMobileAppPackage(name string) bool {
 }
 
 // Download downloads a file with the given id. It's the caller's responsibility to close the reader.
-func (s *AppStore) Download(id string) (io.ReadCloser, error) {
+func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
 	req, err := requesth.New(http.MethodGet, fmt.Sprintf("%s/v1/storage/download/%s", s.URL, id), nil)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	req.SetBasicAuth(s.Username, s.AccessKey)
 
 	resp, err := s.HTTPClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	switch resp.StatusCode {
 	case 200:
-		return resp.Body, nil
+		return resp.Body, resp.ContentLength, nil
 	case 400:
-		return nil, storage.ErrBadRequest
+		return nil, 0, storage.ErrBadRequest
 	case 401, 403:
-		return nil, storage.ErrAccessDenied
+		return nil, 0, storage.ErrAccessDenied
 	case 404:
-		return nil, storage.ErrFileNotFound
+		return nil, 0, storage.ErrFileNotFound
 	default:
-		return nil, newServerError(resp)
+		return nil, 0, newServerError(resp)
 	}
 }
 

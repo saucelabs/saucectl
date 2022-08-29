@@ -3,6 +3,7 @@ package storage
 import (
 	"errors"
 	"fmt"
+	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
 	"io"
 	"os"
@@ -22,7 +23,7 @@ func DownloadCommand() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			reader, err := appsClient.Download(args[0])
+			reader, size, err := appsClient.Download(args[0])
 			if err != nil {
 				return fmt.Errorf("download failed: %w", err)
 			}
@@ -34,13 +35,12 @@ func DownloadCommand() *cobra.Command {
 			}
 			defer file.Close()
 
-			// TODO progress bar would be great. Possible?
-			_, err = io.Copy(file, reader)
+			bar := progressbar.DefaultBytes(size, "Downloading")
+			_, err = io.Copy(io.MultiWriter(file, bar), reader)
+			_ = bar.Close()
 			if err != nil {
 				return fmt.Errorf("failed to write to file: %w", err)
 			}
-
-			println("OK!")
 
 			return nil
 		},
