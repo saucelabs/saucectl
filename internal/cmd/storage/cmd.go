@@ -35,6 +35,8 @@ func Command() *cobra.Command {
 
 	cmd.AddCommand(
 		ListCommand(),
+		UploadCommand(),
+		DownloadCommand(),
 	)
 
 	return cmd

@@ -151,6 +151,6 @@ func renderTable(list storage.List) {
 	}
 }
 
-func renderJSON(list storage.List) error {
-	return json.NewEncoder(os.Stdout).Encode(list)
+func renderJSON(val any) error {
+	return json.NewEncoder(os.Stdout).Encode(val)
 }

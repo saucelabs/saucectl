@@ -74,6 +74,18 @@ func isMobileAppPackage(name string) bool {
 	return strings.HasSuffix(name, ".ipa") || strings.HasSuffix(name, ".apk") || strings.HasSuffix(name, ".aab")
 }
 
+func (s *AppStore) Download(id string) (io.ReadCloser, error) {
+	req, err := requesth.New(http.MethodGet, fmt.Sprintf("%s/v1/storage/download/%s", s.URL, id), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.SetBasicAuth(s.Username, s.AccessKey)
+
+	resp, err := s.HTTPClient.Do(req)
+	return resp.Body, err
+}
+
 // Upload uploads file to remote storage
 func (s *AppStore) Upload(name string) (storage.ArtifactMeta, error) {
 	body, contentType, err := readFile(name)
@@ -132,6 +144,7 @@ func readFile(fileName string) (*bytes.Buffer, string, error) {
 		return nil, "", err
 	}
 
+	// FIXME This consumes quite a bit of memory (think of large mobile apps, node modules etc.).
 	_, err = io.Copy(part, file)
 	if err != nil {
 		return nil, "", err
