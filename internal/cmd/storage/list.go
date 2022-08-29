@@ -110,7 +110,7 @@ func renderTable(list storage.List) {
 	t.SetStyle(defaultTableStyle)
 	t.SuppressEmptyColumns()
 
-	t.AppendHeader(table.Row{"Size", "Uploaded", "Name", "ID"})
+	t.AppendHeader(table.Row{"Size", "Uploaded", "ID", "Name"})
 	t.SetColumnConfigs([]table.ColumnConfig{
 		{
 			Name:        "Size",
@@ -132,16 +132,16 @@ func renderTable(list storage.List) {
 			},
 		},
 		{
-			Name: "Name",
+			Name: "ID",
 		},
 		{
-			Name: "ID",
+			Name: "Name",
 		},
 	})
 
 	for _, item := range list.Items {
 		// the order of values must match the order of the header
-		t.AppendRow(table.Row{item.Size, item.Uploaded, item.Name, item.ID})
+		t.AppendRow(table.Row{item.Size, item.Uploaded, item.ID, item.Name})
 	}
 
 	println(t.Render())
