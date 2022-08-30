@@ -13,7 +13,7 @@ var (
 	appsClient appstore.AppStore
 )
 
-func Command() *cobra.Command {
+func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	var regio string
 
 	cmd := &cobra.Command{
@@ -21,6 +21,10 @@ func Command() *cobra.Command {
 		Short:            "Interact with the Sauce Storage.",
 		TraverseChildren: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			if preRun != nil {
+				preRun(cmd, args)
+			}
+
 			appsClient = appstore.AppStore{
 				HTTPClient: &http.Client{Timeout: 15 * time.Minute},
 				URL:        region.FromString(regio).APIBaseURL(),

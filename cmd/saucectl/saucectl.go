@@ -54,10 +54,9 @@ func main() {
 
 	verbosity := cmd.PersistentFlags().Bool("verbose", false, "turn on verbose logging")
 	noColor := cmd.PersistentFlags().Bool("no-color", false, "disable colorized output")
-	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+	cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		setupLogging(*verbosity, *noColor)
 		setupBacktrace()
-		return nil
 	}
 
 	cmd.AddCommand(
@@ -68,7 +67,7 @@ func main() {
 		signup.Command(),
 		completion.Command(),
 		doctor.Command(),
-		storage.Command(),
+		storage.Command(cmd.PersistentPreRun),
 	)
 
 	if err := cmd.Execute(); err != nil {
