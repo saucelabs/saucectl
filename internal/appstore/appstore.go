@@ -112,6 +112,7 @@ func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
 	}
 }
 
+// UploadStream uploads the contents of reader and stores them under the given filename.
 func (s *AppStore) UploadStream(filename string, reader io.Reader) (storage.ArtifactMeta, error) {
 	// Write header
 	buffy := &bytes.Buffer{}
@@ -122,10 +123,15 @@ func (s *AppStore) UploadStream(filename string, reader io.Reader) (storage.Arti
 		fmt.Sprintf(`form-data; name="payload"; filename="%s"`, quoteEscaper.Replace(filename)))
 	h.Set("Content-Type", "application/octet-stream")
 
-	writer.CreatePart(h)
+	_, err := writer.CreatePart(h)
+	if err != nil {
+		return storage.ArtifactMeta{}, err
+	}
 	headerSize := buffy.Len()
 
-	writer.Close()
+	if err := writer.Close(); err != nil {
+		return storage.ArtifactMeta{}, err
+	}
 
 	req, err := requesth.New(http.MethodPost, fmt.Sprintf("%s/v1/storage/upload", s.URL), io.MultiReader(
 		bytes.NewReader(buffy.Bytes()[:headerSize]),
