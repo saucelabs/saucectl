@@ -22,7 +22,7 @@ func Command() *cobra.Command {
 		TraverseChildren: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			appsClient = appstore.AppStore{
-				HTTPClient: &http.Client{Timeout: 10 * time.Second},
+				HTTPClient: &http.Client{Timeout: 15 * time.Minute},
 				URL:        region.FromString(regio).APIBaseURL(),
 				Username:   credentials.Get().Username,
 				AccessKey:  credentials.Get().AccessKey,

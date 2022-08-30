@@ -3,7 +3,9 @@ package storage
 import (
 	"errors"
 	"fmt"
+	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 func UploadCommand() *cobra.Command {
@@ -20,15 +22,26 @@ func UploadCommand() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO progress bar would be great. Possible?
-			resp, err := appsClient.Upload(args[0])
+			file, err := os.Open(args[0])
+			if err != nil {
+				return fmt.Errorf("failed to open file: %w", err)
+			}
+			finfo, err := file.Stat()
+			if err != nil {
+				return fmt.Errorf("failed to inspect file: %w", err)
+			}
+
+			bar := newProgressBar(out, finfo.Size(), "Uploading")
+			reader := progressbar.NewReader(file, bar)
+
+			resp, err := appsClient.UploadStream(finfo.Name(), &reader)
 			if err != nil {
 				return fmt.Errorf("failed to upload file: %w", err)
 			}
 
 			switch out {
 			case "text":
-				println(resp.ID)
+				println("Success! The ID of your file is " + resp.ID)
 			case "json":
 				if err := renderJSON(resp); err != nil {
 					return fmt.Errorf("failed to render output: %w", err)
@@ -47,4 +60,13 @@ func UploadCommand() *cobra.Command {
 	)
 
 	return cmd
+}
+
+func newProgressBar(outputFormat string, size int64, description ...string) *progressbar.ProgressBar {
+	switch outputFormat {
+	case "text":
+		return progressbar.DefaultBytes(size, description...)
+	default:
+		return progressbar.DefaultBytesSilent(size, description...)
+	}
 }

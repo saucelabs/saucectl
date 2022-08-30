@@ -9,6 +9,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/textproto"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -99,7 +100,7 @@ func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
 	case 200:
 		return resp.Body, resp.ContentLength, nil
 	case 400:
-		return nil, 0, storage.ErrBadRequest
+		return nil, 0, storage.ErrBadRequest // TODO consider parsing server response as well?
 	case 401, 403:
 		return nil, 0, storage.ErrAccessDenied
 	case 404:
@@ -109,9 +110,55 @@ func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
 	}
 }
 
+func (s *AppStore) UploadStream(filename string, reader io.Reader) (storage.ArtifactMeta, error) {
+	// Write header
+	buffy := &bytes.Buffer{}
+	writer := multipart.NewWriter(buffy)
+
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition",
+		fmt.Sprintf(`form-data; name="payload"; filename="%s"`, filename)) // TODO escape quotes from filename
+	h.Set("Content-Type", "application/octet-stream")
+
+	writer.CreatePart(h)
+	headerSize := buffy.Len()
+
+	writer.Close()
+
+	req, err := requesth.New(http.MethodPost, fmt.Sprintf("%s/v1/storage/upload", s.URL), io.MultiReader(
+		bytes.NewReader(buffy.Bytes()[:headerSize]),
+		reader,
+		bytes.NewReader(buffy.Bytes()[headerSize:]),
+	))
+	if err != nil {
+		return storage.ArtifactMeta{}, err
+	}
+
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.SetBasicAuth(s.Username, s.AccessKey)
+
+	resp, err := s.HTTPClient.Do(req)
+
+	switch resp.StatusCode {
+	case 200, 201:
+		var ur UploadResponse
+		if err := json.NewDecoder(resp.Body).Decode(&ur); err != nil {
+			return storage.ArtifactMeta{}, err
+		}
+
+		return storage.ArtifactMeta{ID: ur.Item.ID}, err
+	case 400:
+		return storage.ArtifactMeta{}, storage.ErrBadRequest // TODO consider parsing server response as well?
+	case 401, 403:
+		return storage.ArtifactMeta{}, storage.ErrAccessDenied
+	default:
+		return storage.ArtifactMeta{}, newServerError(resp)
+	}
+}
+
 // Upload uploads file to remote storage
-func (s *AppStore) Upload(name string) (storage.ArtifactMeta, error) {
-	body, contentType, err := readFile(name)
+func (s *AppStore) Upload(filename string) (storage.ArtifactMeta, error) {
+	body, contentType, err := readFile(filename)
 	if err != nil {
 		return storage.ArtifactMeta{}, err
 	}
@@ -125,7 +172,7 @@ func (s *AppStore) Upload(name string) (storage.ArtifactMeta, error) {
 	if err != nil {
 		if err.(*url.Error).Timeout() {
 			msg.LogUploadTimeout()
-			if !isMobileAppPackage(name) {
+			if !isMobileAppPackage(filename) {
 				msg.LogUploadTimeoutSuggestion()
 			}
 			return storage.ArtifactMeta{}, errors.New(msg.FailedToUpload)
@@ -176,7 +223,7 @@ func readFile(fileName string) (*bytes.Buffer, string, error) {
 	return body, writer.FormDataContentType(), nil
 }
 
-func createRequest(url, username, accesskey string, body *bytes.Buffer, contentType string) (*http.Request, error) {
+func createRequest(url, username, accesskey string, body io.Reader, contentType string) (*http.Request, error) {
 	req, err := requesth.New(http.MethodPost, url, body)
 	if err != nil {
 		return nil, err
