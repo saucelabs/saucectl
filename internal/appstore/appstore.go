@@ -58,6 +58,8 @@ type Item struct {
 	UploadTimestamp int    `json:"upload_timestamp"`
 }
 
+var quoteEscaper = strings.NewReplacer("\\", "\\\\", `"`, "\\\"")
+
 // AppStore implements a remote file storage for storage.ProjectUploader.
 // See https://wiki.saucelabs.com/display/DOCS/Application+Storage for more details.
 type AppStore struct {
@@ -117,7 +119,7 @@ func (s *AppStore) UploadStream(filename string, reader io.Reader) (storage.Arti
 
 	h := make(textproto.MIMEHeader)
 	h.Set("Content-Disposition",
-		fmt.Sprintf(`form-data; name="payload"; filename="%s"`, filename)) // TODO escape quotes from filename
+		fmt.Sprintf(`form-data; name="payload"; filename="%s"`, quoteEscaper.Replace(filename)))
 	h.Set("Content-Type", "application/octet-stream")
 
 	writer.CreatePart(h)
