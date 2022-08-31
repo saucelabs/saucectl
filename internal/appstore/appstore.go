@@ -282,6 +282,8 @@ func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 	}
 	defer resp.Body.Close()
 
+	// TODO handle non 200 responses
+
 	var listResp ListResponse
 	if err := json.NewDecoder(resp.Body).Decode(&listResp); err != nil {
 		return storage.List{}, err
