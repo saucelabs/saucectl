@@ -31,6 +31,8 @@ func UploadCommand() *cobra.Command {
 				return fmt.Errorf("failed to inspect file: %w", err)
 			}
 
+			// TODO Check if file exists by default. Add flag to force upload.
+
 			bar := newProgressBar(out, finfo.Size(), "Uploading")
 			reader := progressbar.NewReader(file, bar)
 
