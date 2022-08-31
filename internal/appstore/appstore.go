@@ -58,7 +58,7 @@ type Item struct {
 	UploadTimestamp int    `json:"upload_timestamp"`
 }
 
-// AppStore implements a remote file storage for storage.ProjectUploader.
+// AppStore implements a remote file storage for storage.AppService.
 // See https://wiki.saucelabs.com/display/DOCS/Application+Storage for more details.
 type AppStore struct {
 	HTTPClient *http.Client

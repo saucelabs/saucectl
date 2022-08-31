@@ -2,8 +2,8 @@ package storage
 
 import "io"
 
-// ProjectUploader is the interface for uploading bundled project files, later to be used in the Sauce Cloud.
-type ProjectUploader interface {
+// AppService is the interface for interacting with the Sauce application storage.
+type AppService interface {
 	Upload(name string) (ArtifactMeta, error)
 	// UploadStream uploads the contents of reader and stores them under the given filename.
 	UploadStream(filename string, reader io.Reader) (ArtifactMeta, error)
