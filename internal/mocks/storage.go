@@ -3,11 +3,24 @@ package mocks
 import (
 	"errors"
 	"github.com/saucelabs/saucectl/internal/storage"
+	"io"
 )
 
 // FakeProjectUploader mock struct
 type FakeProjectUploader struct {
 	UploadSuccess bool
+}
+
+func (fpu *FakeProjectUploader) UploadStream(filename string, reader io.Reader) (storage.Item, error) {
+	panic("not implemented")
+}
+
+func (fpu *FakeProjectUploader) Download(id string) (io.ReadCloser, int64, error) {
+	panic("not implemented")
+}
+
+func (fpu *FakeProjectUploader) List(opts storage.ListOptions) (storage.List, error) {
+	panic("not implemented")
 }
 
 // Upload mock function
