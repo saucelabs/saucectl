@@ -21,6 +21,7 @@ type List struct {
 	Truncated bool   `json:"truncated"`
 }
 
+// Item represents the file in storage.
 type Item struct {
 	ID       string    `json:"id"`
 	Name     string    `json:"name"`
@@ -50,15 +51,10 @@ func (s *ServerError) Error() string {
 
 // AppService is the interface for interacting with the Sauce application storage.
 type AppService interface {
-	Upload(name string) (ArtifactMeta, error)
+	Upload(name string) (Item, error)
 	// UploadStream uploads the contents of reader and stores them under the given filename.
-	UploadStream(filename string, reader io.Reader) (ArtifactMeta, error)
+	UploadStream(filename string, reader io.Reader) (Item, error)
 	Download(id string) (io.ReadCloser, int64, error)
-	Find(name string) (ArtifactMeta, error)
+	Find(name string) (Item, error)
 	List(opts ListOptions) (List, error)
-}
-
-// ArtifactMeta represents metadata of the uploaded file.
-type ArtifactMeta struct {
-	ID string
 }

@@ -111,15 +111,15 @@ func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
 }
 
 // UploadStream uploads the contents of reader and stores them under the given filename.
-func (s *AppStore) UploadStream(filename string, reader io.Reader) (storage.ArtifactMeta, error) {
+func (s *AppStore) UploadStream(filename string, reader io.Reader) (storage.Item, error) {
 	multipartReader, contentType, err := multipartext.NewMultipartReader(filename, reader)
 	if err != nil {
-		return storage.ArtifactMeta{}, err
+		return storage.Item{}, err
 	}
 
 	req, err := requesth.New(http.MethodPost, fmt.Sprintf("%s/v1/storage/upload", s.URL), multipartReader)
 	if err != nil {
-		return storage.ArtifactMeta{}, err
+		return storage.Item{}, err
 	}
 
 	req.Header.Set("Content-Type", contentType)
@@ -131,29 +131,29 @@ func (s *AppStore) UploadStream(filename string, reader io.Reader) (storage.Arti
 	case 200, 201:
 		var ur UploadResponse
 		if err := json.NewDecoder(resp.Body).Decode(&ur); err != nil {
-			return storage.ArtifactMeta{}, err
+			return storage.Item{}, err
 		}
 
-		return storage.ArtifactMeta{ID: ur.Item.ID}, err
+		return storage.Item{ID: ur.Item.ID}, err
 	case 400:
-		return storage.ArtifactMeta{}, storage.ErrBadRequest // TODO consider parsing server response as well?
+		return storage.Item{}, storage.ErrBadRequest // TODO consider parsing server response as well?
 	case 401, 403:
-		return storage.ArtifactMeta{}, storage.ErrAccessDenied
+		return storage.Item{}, storage.ErrAccessDenied
 	default:
-		return storage.ArtifactMeta{}, newServerError(resp)
+		return storage.Item{}, newServerError(resp)
 	}
 }
 
 // Upload uploads file to remote storage
-func (s *AppStore) Upload(filename string) (storage.ArtifactMeta, error) {
+func (s *AppStore) Upload(filename string) (storage.Item, error) {
 	body, contentType, err := readFile(filename)
 	if err != nil {
-		return storage.ArtifactMeta{}, err
+		return storage.Item{}, err
 	}
 
 	request, err := createRequest(fmt.Sprintf("%s/v1/storage/upload", s.URL), s.Username, s.AccessKey, body, contentType)
 	if err != nil {
-		return storage.ArtifactMeta{}, err
+		return storage.Item{}, err
 	}
 
 	resp, err := s.HTTPClient.Do(request)
@@ -163,28 +163,28 @@ func (s *AppStore) Upload(filename string) (storage.ArtifactMeta, error) {
 			if !isMobileAppPackage(filename) {
 				msg.LogUploadTimeoutSuggestion()
 			}
-			return storage.ArtifactMeta{}, errors.New(msg.FailedToUpload)
+			return storage.Item{}, errors.New(msg.FailedToUpload)
 		}
-		return storage.ArtifactMeta{}, err
+		return storage.Item{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 201 {
 		b, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return storage.ArtifactMeta{}, err
+			return storage.Item{}, err
 		}
 		log.Error().Msgf("%s. Invalid response %d, body: %v", msg.FailedToUpload, resp.StatusCode, string(b))
-		return storage.ArtifactMeta{}, errors.New(msg.FailedToUpload)
+		return storage.Item{}, errors.New(msg.FailedToUpload)
 	}
 
 	var ur UploadResponse
 
 	if err := json.NewDecoder(resp.Body).Decode(&ur); err != nil {
-		return storage.ArtifactMeta{}, err
+		return storage.Item{}, err
 	}
 
-	return storage.ArtifactMeta{ID: ur.Item.ID}, err
+	return storage.Item{ID: ur.Item.ID}, err
 }
 
 func readFile(fileName string) (*bytes.Buffer, string, error) {
@@ -224,32 +224,32 @@ func createRequest(url, username, accesskey string, body io.Reader, contentType 
 }
 
 // Find looks for a file having the same signature.
-func (s *AppStore) Find(filename string) (storage.ArtifactMeta, error) {
+func (s *AppStore) Find(filename string) (storage.Item, error) {
 	if filename == "" {
-		return storage.ArtifactMeta{}, nil
+		return storage.Item{}, nil
 	}
 
 	hash, err := calculateBundleHash(filename)
 	if err != nil {
-		return storage.ArtifactMeta{}, err
+		return storage.Item{}, err
 	}
 	log.Info().Msgf("Checksum: %s", hash)
 
 	queryString := fmt.Sprintf("?sha256=%s", hash)
 	request, err := createLocateRequest(fmt.Sprintf("%s/v1/storage/files", s.URL), s.Username, s.AccessKey, queryString)
 	if err != nil {
-		return storage.ArtifactMeta{}, err
+		return storage.Item{}, err
 	}
 
 	lr, err := s.executeLocateRequest(request)
 	if err != nil {
-		return storage.ArtifactMeta{}, err
+		return storage.Item{}, err
 	}
 	if lr.TotalItems == 0 {
-		return storage.ArtifactMeta{}, nil
+		return storage.Item{}, nil
 	}
 
-	return storage.ArtifactMeta{ID: lr.Items[0].ID}, nil
+	return storage.Item{ID: lr.Items[0].ID}, nil
 }
 
 func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
