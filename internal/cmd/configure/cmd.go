@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -55,58 +56,90 @@ func Command() *cobra.Command {
 	return cmd
 }
 
+func printCreds(creds credentials.Credentials) {
+	println()
+
+	labelStyle := color.New(color.Bold)
+	valueStyle := color.New(color.FgBlue)
+
+	fmt.Println("Currently configured credentials:")
+	fmt.Println(labelStyle.Sprint("      Username:"), valueStyle.Sprint(creds.Username))
+	fmt.Println(labelStyle.Sprint("    Access key:"), valueStyle.Sprint(mask(creds.AccessKey)))
+
+	println()
+	println()
+}
+
 // interactiveConfiguration expect user to manually type-in its credentials
 func interactiveConfiguration() (credentials.Credentials, error) {
-	fmt.Println(msg.SignupMessage)
+	overwrite := true
+	var err error
 
 	creds := credentials.Get()
 
-	println("") // visual paragraph break
-	qs := []*survey.Question{
-		{
-			Name: "username",
-			Prompt: &survey.Input{
-				Message: "SauceLabs username",
-				Default: creds.Username,
-			},
-			Validate: func(val interface{}) error {
-				str, ok := val.(string)
-				if !ok {
-					return errors.New(msg.InvalidUsername)
-				}
-				str = strings.TrimSpace(str)
-				if str == "" {
-					return errors.New(msg.EmptyUsername)
+	if creds.IsValid() {
+		printCreds(creds)
 
-				}
-				return nil
-			},
-		},
-		{
-			Name: "accessKey",
-			Prompt: &survey.Input{
-				Message: "SauceLabs access key",
-				Default: mask(creds.AccessKey),
-			},
-			Validate: func(val interface{}) error {
-				str, ok := val.(string)
-				if !ok {
-					return errors.New(msg.InvalidAccessKey)
-				}
-				str = strings.TrimSpace(str)
-				if str == "" {
-					return errors.New(msg.EmptyAccessKey)
-
-				}
-				return nil
-			},
-		},
+		qs := &survey.Confirm{
+			Message: "Overwrite existing credentials?",
+		}
+		err = survey.AskOne(qs, &overwrite)
+		if err != nil {
+			return creds, err
+		}
 	}
 
-	if err := survey.Ask(qs, &creds); err != nil {
-		return creds, err
+	if overwrite {
+		if !creds.IsValid() {
+			fmt.Println(msg.SignupMessage)
+		}
+
+		qs := []*survey.Question{
+			{
+				Name: "username",
+				Prompt: &survey.Input{
+					Message: "SauceLabs username",
+				},
+				Validate: func(val interface{}) error {
+					str, ok := val.(string)
+					if !ok {
+						return errors.New(msg.InvalidUsername)
+					}
+					str = strings.TrimSpace(str)
+					if str == "" {
+						return errors.New(msg.EmptyUsername)
+
+					}
+					return nil
+				},
+			},
+			{
+				Name: "accessKey",
+				Prompt: &survey.Password{
+					Message: "SauceLabs access key",
+				},
+				Validate: func(val interface{}) error {
+					str, ok := val.(string)
+					if !ok {
+						return errors.New(msg.InvalidAccessKey)
+					}
+					str = strings.TrimSpace(str)
+					if str == "" {
+						return errors.New(msg.EmptyAccessKey)
+
+					}
+					return nil
+				},
+			},
+		}
+
+		println() // visual paragraph break
+		if err = survey.Ask(qs, &creds); err != nil {
+			return creds, err
+		}
+		println() // visual paragraph break
 	}
-	println() // visual paragraph break
+
 	return creds, nil
 }
 
