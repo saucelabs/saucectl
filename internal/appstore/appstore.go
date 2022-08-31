@@ -141,7 +141,8 @@ func (s *AppStore) UploadStream(filename string, reader io.Reader) (storage.Item
 }
 
 // Upload uploads file to remote storage
-// TODO get rid of this and consolidate with UploadStream
+//
+// Deprecated: Use UploadStream.
 func (s *AppStore) Upload(filename string) (storage.Item, error) {
 	body, contentType, err := readFile(filename)
 	if err != nil {

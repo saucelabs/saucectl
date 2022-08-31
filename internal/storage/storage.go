@@ -48,6 +48,7 @@ func (s *ServerError) Error() string {
 
 // AppService is the interface for interacting with the Sauce application storage.
 type AppService interface {
+	// Deprecated: Use UploadStream.
 	Upload(name string) (Item, error)
 	// UploadStream uploads the contents of reader and stores them under the given filename.
 	UploadStream(filename string, reader io.Reader) (Item, error)
