@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -20,9 +21,13 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 		Use:              "storage",
 		Short:            "Interact with the Sauce Storage.",
 		TraverseChildren: true,
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if preRun != nil {
 				preRun(cmd, args)
+			}
+
+			if region.FromString(regio) == region.None {
+				return errors.New("invalid region")
 			}
 
 			appsClient = appstore.AppStore{
@@ -31,11 +36,13 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 				Username:   credentials.Get().Username,
 				AccessKey:  credentials.Get().AccessKey,
 			}
+
+			return nil
 		},
 	}
 
 	flags := cmd.PersistentFlags()
-	flags.StringVarP(&regio, "region", "r", "us-west-1", "The Sauce Labs region.")
+	flags.StringVarP(&regio, "region", "r", "us-west-1", "The Sauce Labs region. Options: us-west-1, eu-central-1.")
 
 	cmd.AddCommand(
 		ListCommand(),
