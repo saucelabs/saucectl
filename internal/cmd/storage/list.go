@@ -13,7 +13,6 @@ import (
 	"time"
 )
 
-// TODO maybe expose report.table.defaultTableStyle instead?
 var defaultTableStyle = table.Style{
 	Name: "saucy",
 	Box: table.BoxStyle{
