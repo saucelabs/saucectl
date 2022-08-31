@@ -48,7 +48,7 @@ func DownloadCommand() *cobra.Command {
 
 	flags := cmd.Flags()
 	flags.StringVarP(&filename, "filename", "f", "",
-		"The filename to use when saving to disk.",
+		"Save the file to disk with this name.",
 	)
 
 	_ = cmd.MarkFlagRequired("filename")
