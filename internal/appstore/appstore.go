@@ -6,10 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/multipartext"
 	"io"
 	"mime/multipart"
 	"net/http"
-	"net/textproto"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -57,8 +57,6 @@ type Item struct {
 	Size            int    `json:"size"`
 	UploadTimestamp int    `json:"upload_timestamp"`
 }
-
-var quoteEscaper = strings.NewReplacer("\\", "\\\\", `"`, "\\\"")
 
 // AppStore implements a remote file storage for storage.ProjectUploader.
 // See https://wiki.saucelabs.com/display/DOCS/Application+Storage for more details.
@@ -114,35 +112,17 @@ func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
 
 // UploadStream uploads the contents of reader and stores them under the given filename.
 func (s *AppStore) UploadStream(filename string, reader io.Reader) (storage.ArtifactMeta, error) {
-	// Write header
-	buffy := &bytes.Buffer{}
-	writer := multipart.NewWriter(buffy)
-
-	h := make(textproto.MIMEHeader)
-	h.Set("Content-Disposition",
-		fmt.Sprintf(`form-data; name="payload"; filename="%s"`, quoteEscaper.Replace(filename)))
-	h.Set("Content-Type", "application/octet-stream")
-
-	_, err := writer.CreatePart(h)
-	if err != nil {
-		return storage.ArtifactMeta{}, err
-	}
-	headerSize := buffy.Len()
-
-	if err := writer.Close(); err != nil {
-		return storage.ArtifactMeta{}, err
-	}
-
-	req, err := requesth.New(http.MethodPost, fmt.Sprintf("%s/v1/storage/upload", s.URL), io.MultiReader(
-		bytes.NewReader(buffy.Bytes()[:headerSize]),
-		reader,
-		bytes.NewReader(buffy.Bytes()[headerSize:]),
-	))
+	multipartReader, contentType, err := multipartext.NewMultipartReader(filename, reader)
 	if err != nil {
 		return storage.ArtifactMeta{}, err
 	}
 
-	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req, err := requesth.New(http.MethodPost, fmt.Sprintf("%s/v1/storage/upload", s.URL), multipartReader)
+	if err != nil {
+		return storage.ArtifactMeta{}, err
+	}
+
+	req.Header.Set("Content-Type", contentType)
 	req.SetBasicAuth(s.Username, s.AccessKey)
 
 	resp, err := s.HTTPClient.Do(req)
