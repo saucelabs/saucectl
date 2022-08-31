@@ -256,6 +256,7 @@ func (s *AppStore) Find(filename string) (storage.Item, error) {
 	return storage.Item{ID: lr.Items[0].ID}, nil
 }
 
+// List returns a list of items stored in the Sauce app storage that match the search criteria specified by opts.
 func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 	uri, _ := url.Parse(s.URL)
 	uri.Path = "/v1/storage/files"
@@ -287,7 +288,7 @@ func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 	defer resp.Body.Close()
 
 	switch resp.StatusCode {
-	case 200, 201:
+	case 200:
 		var listResp ListResponse
 		if err := json.NewDecoder(resp.Body).Decode(&listResp); err != nil {
 			return storage.List{}, err
