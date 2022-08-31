@@ -282,27 +282,32 @@ func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 	}
 	defer resp.Body.Close()
 
-	// TODO handle non 200 responses
+	switch resp.StatusCode {
+	case 200, 201:
+		var listResp ListResponse
+		if err := json.NewDecoder(resp.Body).Decode(&listResp); err != nil {
+			return storage.List{}, err
+		}
 
-	var listResp ListResponse
-	if err := json.NewDecoder(resp.Body).Decode(&listResp); err != nil {
-		return storage.List{}, err
+		var items []storage.Item
+		for _, v := range listResp.Items {
+			items = append(items, storage.Item{
+				ID:       v.ID,
+				Name:     v.Name,
+				Size:     v.Size,
+				Uploaded: time.Unix(int64(v.UploadTimestamp), 0),
+			})
+		}
+
+		return storage.List{
+			Items:     items,
+			Truncated: listResp.TotalItems > len(items),
+		}, nil
+	case 401, 403:
+		return storage.List{}, storage.ErrAccessDenied
+	default:
+		return storage.List{}, newServerError(resp)
 	}
-
-	var items []storage.Item
-	for _, v := range listResp.Items {
-		items = append(items, storage.Item{
-			ID:       v.ID,
-			Name:     v.Name,
-			Size:     v.Size,
-			Uploaded: time.Unix(int64(v.UploadTimestamp), 0),
-		})
-	}
-
-	return storage.List{
-		Items:     items,
-		Truncated: listResp.TotalItems > len(items),
-	}, nil
 }
 
 func calculateBundleHash(filename string) (string, error) {
