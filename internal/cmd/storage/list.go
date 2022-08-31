@@ -56,6 +56,7 @@ func ListCommand() *cobra.Command {
 	var query string
 	var name string
 	var out string
+	var sha256 string
 
 	cmd := &cobra.Command{
 		Use: "list",
@@ -65,8 +66,9 @@ func ListCommand() *cobra.Command {
 		Short: "Returns the list of files that have been uploaded to Sauce Storage.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			list, err := appsClient.List(storage.ListOptions{
-				Q:    query,
-				Name: name,
+				Q:      query,
+				Name:   name,
+				SHA256: sha256,
 			})
 			if err != nil {
 				return fmt.Errorf("failed to retrieve list: %w", err)
@@ -91,7 +93,10 @@ func ListCommand() *cobra.Command {
 		"Any search term (such as app name, file name, description, build number or version) by which you want to filter.",
 	)
 	flags.StringVarP(&name, "name", "n", "",
-		"The file name (case-insensitive) by which you want to filter.",
+		"The filename (case-insensitive) by which you want to filter.",
+	)
+	flags.StringVar(&sha256, "sha256", "",
+		"The checksum of the file by which you want to filter.",
 	)
 	flags.StringVarP(&out, "out", "o", "text",
 		"Output format to the console. Options: text, json.",

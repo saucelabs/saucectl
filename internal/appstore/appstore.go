@@ -262,6 +262,9 @@ func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 	if opts.Name != "" {
 		query.Set("name", opts.Name)
 	}
+	if opts.SHA256 != "" {
+		query.Set("sha256", opts.SHA256)
+	}
 
 	uri.RawQuery = query.Encode()
 

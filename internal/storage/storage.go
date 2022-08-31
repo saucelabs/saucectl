@@ -12,8 +12,11 @@ type ListOptions struct {
 	// Q is any search term (such as app name, file name, description, build number or version) by which you want to filter.
 	Q string
 
-	// Name The file name (case-insensitive) by which you want to filter.
+	// Name is the filename (case-insensitive) by which you want to filter.
 	Name string
+
+	// SHA256 is the checksum of the file by which you want to filter.
+	SHA256 string
 }
 
 type List struct {
