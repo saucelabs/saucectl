@@ -55,7 +55,7 @@ type Item struct {
 	ID              string `json:"id"`
 	Name            string `json:"name"`
 	Size            int    `json:"size"`
-	UploadTimestamp int    `json:"upload_timestamp"`
+	UploadTimestamp int64  `json:"upload_timestamp"`
 }
 
 // AppStore implements a remote file storage for storage.AppService.
@@ -132,7 +132,11 @@ func (s *AppStore) UploadStream(filename string, reader io.Reader) (storage.Item
 			return storage.Item{}, err
 		}
 
-		return storage.Item{ID: ur.Item.ID}, err
+		return storage.Item{
+			ID:       ur.Item.ID,
+			Name:     ur.Item.Name,
+			Uploaded: time.Unix(ur.Item.UploadTimestamp, 0),
+		}, err
 	case 401, 403:
 		return storage.Item{}, storage.ErrAccessDenied
 	default:
@@ -295,7 +299,7 @@ func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 				ID:       v.ID,
 				Name:     v.Name,
 				Size:     v.Size,
-				Uploaded: time.Unix(int64(v.UploadTimestamp), 0),
+				Uploaded: time.Unix(v.UploadTimestamp, 0),
 			})
 		}
 
