@@ -32,9 +32,6 @@ type Item struct {
 // ErrFileNotFound is returned when the requested file does not exist.
 var ErrFileNotFound = errors.New("file not found")
 
-// ErrBadRequest usually indicates a user error.
-var ErrBadRequest = errors.New("bad request")
-
 // ErrAccessDenied is returned when the service denies access. Either due to insufficient rights or wrong credentials.
 var ErrAccessDenied = errors.New("access denied")
 

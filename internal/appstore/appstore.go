@@ -99,8 +99,6 @@ func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
 	switch resp.StatusCode {
 	case 200:
 		return resp.Body, resp.ContentLength, nil
-	case 400:
-		return nil, 0, storage.ErrBadRequest // TODO consider parsing server response as well?
 	case 401, 403:
 		return nil, 0, storage.ErrAccessDenied
 	case 404:
@@ -135,8 +133,6 @@ func (s *AppStore) UploadStream(filename string, reader io.Reader) (storage.Item
 		}
 
 		return storage.Item{ID: ur.Item.ID}, err
-	case 400:
-		return storage.Item{}, storage.ErrBadRequest // TODO consider parsing server response as well?
 	case 401, 403:
 		return storage.Item{}, storage.ErrAccessDenied
 	default:
