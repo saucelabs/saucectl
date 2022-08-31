@@ -222,6 +222,8 @@ func createRequest(url, username, accesskey string, body io.Reader, contentType 
 }
 
 // Find looks for a file having the same signature.
+//
+// Deprecated: Use List instead.
 func (s *AppStore) Find(filename string) (storage.Item, error) {
 	if filename == "" {
 		return storage.Item{}, nil
