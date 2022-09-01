@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"syscall"
 	"time"
 
@@ -367,21 +366,6 @@ func createReporters(c config.Reporters, ntfs config.Notifications, metadata con
 	})
 
 	return reps
-}
-
-// fullCommandName returns the full command name by concatenating the command names of any parents,
-// except the name of the CLI itself.
-func fullCommandName(cmd *cobra.Command) string {
-	name := ""
-
-	for cmd.Name() != "saucectl" {
-		// Prepending, because we are looking up names from the bottom up: cypress < run < saucectl
-		// which ends up correctly as 'run cypress' (sans saucectl).
-		name = fmt.Sprintf("%s %s", cmd.Name(), name)
-		cmd = cmd.Parent()
-	}
-
-	return strings.TrimSpace(name)
 }
 
 // cleanupArtifacts removes any files in the artifact folder. Does nothing if cleanup is turned off.
