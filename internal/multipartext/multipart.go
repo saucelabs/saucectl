@@ -35,11 +35,11 @@ func NewMultipartReader(filename string, src io.Reader) (io.Reader, string, erro
 		return nil, "", err
 	}
 
-	return io.MultiReader(io.MultiReader(
+	return io.MultiReader(
 			bytes.NewReader(buffy.Bytes()[:headerSize]),
 			src,
 			bytes.NewReader(buffy.Bytes()[headerSize:]),
-		)),
+		),
 		writer.FormDataContentType(),
 		nil
 }
