@@ -31,7 +31,7 @@ func UploadCommand() *cobra.Command {
 			return nil
 		},
 		PreRun: func(cmd *cobra.Command, args []string) {
-			tracker := segment.New(true)
+			tracker := segment.DefaultTracker
 
 			go func() {
 				tracker.Collect(

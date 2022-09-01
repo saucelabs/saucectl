@@ -117,7 +117,7 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags) (int, error) {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
 
-	tracker := segment.New(!gFlags.disableUsageMetrics)
+	tracker := segment.DefaultTracker
 
 	defer func() {
 		props := usage.Properties{}

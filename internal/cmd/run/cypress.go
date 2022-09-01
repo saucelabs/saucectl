@@ -114,7 +114,7 @@ func runCypress(cmd *cobra.Command) (int, error) {
 	insightsClient.URL = regio.APIBaseURL()
 	iamClient.URL = regio.APIBaseURL()
 	restoClient.ArtifactConfig = p.GetArtifactsCfg().Download
-	tracker := segment.New(!gFlags.disableUsageMetrics)
+	tracker := segment.DefaultTracker
 
 	defer func() {
 		props := usage.Properties{}

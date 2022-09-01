@@ -108,7 +108,7 @@ func runPuppeteer(cmd *cobra.Command) (int, error) {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
 
-	tracker := segment.New(!gFlags.disableUsageMetrics)
+	tracker := segment.DefaultTracker
 
 	defer func() {
 		props := usage.Properties{}

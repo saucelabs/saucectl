@@ -12,6 +12,9 @@ import (
 	"gopkg.in/segmentio/analytics-go.v3"
 )
 
+// DefaultTracker is the default Tracker.
+var DefaultTracker = New(true)
+
 // Tracker is the segment implementation for usage.Tracker.
 type Tracker struct {
 	client  analytics.Client

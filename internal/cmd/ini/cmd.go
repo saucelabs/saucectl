@@ -36,26 +36,25 @@ var (
 type initConfig struct {
 	batchMode bool
 
-	frameworkName       string
-	frameworkVersion    string
-	cypressJSON         string
-	app                 string
-	testApp             string
-	otherApps           []string
-	platformName        string
-	mode                string
-	browserName         string
-	region              string
-	artifactWhen        config.When
-	artifactWhenStr     string
-	device              config.Device
-	emulator            config.Emulator
-	deviceFlag          flags.Device
-	emulatorFlag        flags.Emulator
-	concurrency         int
-	username            string
-	accessKey           string
-	disableUsageMetrics bool
+	frameworkName    string
+	frameworkVersion string
+	cypressJSON      string
+	app              string
+	testApp          string
+	otherApps        []string
+	platformName     string
+	mode             string
+	browserName      string
+	region           string
+	artifactWhen     config.When
+	artifactWhenStr  string
+	device           config.Device
+	emulator         config.Emulator
+	deviceFlag       flags.Device
+	emulatorFlag     flags.Emulator
+	concurrency      int
+	username         string
+	accessKey        string
 }
 
 var (
@@ -74,7 +73,7 @@ func Command() *cobra.Command {
 		Long:    initLong,
 		Example: initExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			tracker := segment.New(!initCfg.disableUsageMetrics)
+			tracker := segment.DefaultTracker
 
 			defer func() {
 				tracker.Collect("Init", nil)
@@ -104,7 +103,6 @@ func Command() *cobra.Command {
 	cmd.Flags().StringVar(&initCfg.artifactWhenStr, "artifacts.download.when", "fail", "defines when to download artifacts")
 	cmd.Flags().Var(&initCfg.emulatorFlag, "emulator", "Specifies the emulator to use for testing")
 	cmd.Flags().Var(&initCfg.deviceFlag, "device", "Specifies the device to use for testing")
-	cmd.Flags().BoolVar(&initCfg.disableUsageMetrics, "disable-usage-metrics", false, "Disable usage metrics collection.")
 	return cmd
 }
 
