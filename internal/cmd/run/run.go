@@ -80,15 +80,14 @@ var (
 var gFlags = globalFlags{}
 
 type globalFlags struct {
-	cfgFilePath         string
-	globalTimeout       time.Duration
-	selectedSuite       string
-	testEnvSilent       bool
-	disableUsageMetrics bool
-	async               bool
-	failFast            bool
-	appStoreTimeout     time.Duration
-	noAutoTagging       bool
+	cfgFilePath     string
+	globalTimeout   time.Duration
+	selectedSuite   string
+	testEnvSilent   bool
+	async           bool
+	failFast        bool
+	appStoreTimeout time.Duration
+	noAutoTagging   bool
 }
 
 // Command creates the `run` command
@@ -354,14 +353,13 @@ func createReporters(c config.Reporters, ntfs config.Notifications, metadata con
 	}
 
 	reps = append(reps, &slack.Reporter{
-		Channels:            ntfs.Slack.Channels,
-		Framework:           framework,
-		Metadata:            metadata,
-		TestEnv:             env,
-		TestResults:         []report.TestResult{},
-		Config:              ntfs,
-		Service:             svc,
-		DisableUsageMetrics: gFlags.disableUsageMetrics,
+		Channels:    ntfs.Slack.Channels,
+		Framework:   framework,
+		Metadata:    metadata,
+		TestEnv:     env,
+		TestResults: []report.TestResult{},
+		Config:      ntfs,
+		Service:     svc,
 	})
 
 	return reps
