@@ -28,7 +28,8 @@ test:
 #coverage: @ Run test and check coverage
 coverage:
 	go test -coverprofile=coverage.out ./...
-	goverreport -sort=block -order=desc -threshold=40
+	go tool cover -func=coverage.out
+	@rm coverage.out
 
 #playwright-ci: @ Run tests against playwright in CI mode
 playwright-ci: build-linux

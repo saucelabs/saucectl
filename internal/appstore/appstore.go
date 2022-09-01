@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/multipartext"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -35,6 +36,13 @@ type ListResponse struct {
 	TotalItems int    `json:"total_items"`
 }
 
+// errorResponse is a generic error response from the server.
+type errorResponse struct {
+	Code   int    `json:"code"`
+	Title  string `json:"title"`
+	Detail string `json:"detail"`
+}
+
 // Links represents the pagination information returned by the app store.
 type Links struct {
 	Self string `json:"self"`
@@ -44,11 +52,13 @@ type Links struct {
 
 // Item represents the metadata about the uploaded file.
 type Item struct {
-	ID   string `json:"id"`
-	ETag string `json:"etag"`
+	ID              string `json:"id"`
+	Name            string `json:"name"`
+	Size            int    `json:"size"`
+	UploadTimestamp int64  `json:"upload_timestamp"`
 }
 
-// AppStore implements a remote file storage for storage.ProjectUploader.
+// AppStore implements a remote file storage for storage.AppService.
 // See https://wiki.saucelabs.com/display/DOCS/Application+Storage for more details.
 type AppStore struct {
 	HTTPClient *http.Client
@@ -72,47 +82,111 @@ func isMobileAppPackage(name string) bool {
 	return strings.HasSuffix(name, ".ipa") || strings.HasSuffix(name, ".apk") || strings.HasSuffix(name, ".aab")
 }
 
-// Upload uploads file to remote storage
-func (s *AppStore) Upload(name string) (storage.ArtifactMeta, error) {
-	body, contentType, err := readFile(name)
+// Download downloads a file with the given id. It's the caller's responsibility to close the reader.
+func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
+	req, err := requesth.New(http.MethodGet, fmt.Sprintf("%s/v1/storage/download/%s", s.URL, id), nil)
 	if err != nil {
-		return storage.ArtifactMeta{}, err
+		return nil, 0, err
+	}
+
+	req.SetBasicAuth(s.Username, s.AccessKey)
+
+	resp, err := s.HTTPClient.Do(req)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	switch resp.StatusCode {
+	case 200:
+		return resp.Body, resp.ContentLength, nil
+	case 401, 403:
+		return nil, 0, storage.ErrAccessDenied
+	case 404:
+		return nil, 0, storage.ErrFileNotFound
+	default:
+		return nil, 0, newServerError(resp)
+	}
+}
+
+// UploadStream uploads the contents of reader and stores them under the given filename.
+func (s *AppStore) UploadStream(filename string, reader io.Reader) (storage.Item, error) {
+	multipartReader, contentType, err := multipartext.NewMultipartReader(filename, reader)
+	if err != nil {
+		return storage.Item{}, err
+	}
+
+	req, err := requesth.New(http.MethodPost, fmt.Sprintf("%s/v1/storage/upload", s.URL), multipartReader)
+	if err != nil {
+		return storage.Item{}, err
+	}
+
+	req.Header.Set("Content-Type", contentType)
+	req.SetBasicAuth(s.Username, s.AccessKey)
+
+	resp, err := s.HTTPClient.Do(req)
+
+	switch resp.StatusCode {
+	case 200, 201:
+		var ur UploadResponse
+		if err := json.NewDecoder(resp.Body).Decode(&ur); err != nil {
+			return storage.Item{}, err
+		}
+
+		return storage.Item{
+			ID:       ur.Item.ID,
+			Name:     ur.Item.Name,
+			Uploaded: time.Unix(ur.Item.UploadTimestamp, 0),
+		}, err
+	case 401, 403:
+		return storage.Item{}, storage.ErrAccessDenied
+	default:
+		return storage.Item{}, newServerError(resp)
+	}
+}
+
+// Upload uploads file to remote storage
+//
+// Deprecated: Use UploadStream.
+func (s *AppStore) Upload(filename string) (storage.Item, error) {
+	body, contentType, err := readFile(filename)
+	if err != nil {
+		return storage.Item{}, err
 	}
 
 	request, err := createRequest(fmt.Sprintf("%s/v1/storage/upload", s.URL), s.Username, s.AccessKey, body, contentType)
 	if err != nil {
-		return storage.ArtifactMeta{}, err
+		return storage.Item{}, err
 	}
 
 	resp, err := s.HTTPClient.Do(request)
 	if err != nil {
 		if err.(*url.Error).Timeout() {
 			msg.LogUploadTimeout()
-			if !isMobileAppPackage(name) {
+			if !isMobileAppPackage(filename) {
 				msg.LogUploadTimeoutSuggestion()
 			}
-			return storage.ArtifactMeta{}, errors.New(msg.FailedToUpload)
+			return storage.Item{}, errors.New(msg.FailedToUpload)
 		}
-		return storage.ArtifactMeta{}, err
+		return storage.Item{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 201 {
 		b, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return storage.ArtifactMeta{}, err
+			return storage.Item{}, err
 		}
 		log.Error().Msgf("%s. Invalid response %d, body: %v", msg.FailedToUpload, resp.StatusCode, string(b))
-		return storage.ArtifactMeta{}, errors.New(msg.FailedToUpload)
+		return storage.Item{}, errors.New(msg.FailedToUpload)
 	}
 
 	var ur UploadResponse
 
 	if err := json.NewDecoder(resp.Body).Decode(&ur); err != nil {
-		return storage.ArtifactMeta{}, err
+		return storage.Item{}, err
 	}
 
-	return storage.ArtifactMeta{ID: ur.Item.ID}, err
+	return storage.Item{ID: ur.Item.ID}, err
 }
 
 func readFile(fileName string) (*bytes.Buffer, string, error) {
@@ -130,6 +204,7 @@ func readFile(fileName string) (*bytes.Buffer, string, error) {
 		return nil, "", err
 	}
 
+	// FIXME This consumes quite a bit of memory (think of large mobile apps, node modules etc.).
 	_, err = io.Copy(part, file)
 	if err != nil {
 		return nil, "", err
@@ -138,7 +213,7 @@ func readFile(fileName string) (*bytes.Buffer, string, error) {
 	return body, writer.FormDataContentType(), nil
 }
 
-func createRequest(url, username, accesskey string, body *bytes.Buffer, contentType string) (*http.Request, error) {
+func createRequest(url, username, accesskey string, body io.Reader, contentType string) (*http.Request, error) {
 	req, err := requesth.New(http.MethodPost, url, body)
 	if err != nil {
 		return nil, err
@@ -151,32 +226,93 @@ func createRequest(url, username, accesskey string, body *bytes.Buffer, contentT
 }
 
 // Find looks for a file having the same signature.
-func (s *AppStore) Find(filename string) (storage.ArtifactMeta, error) {
+//
+// Deprecated: Use List instead.
+func (s *AppStore) Find(filename string) (storage.Item, error) {
 	if filename == "" {
-		return storage.ArtifactMeta{}, nil
+		return storage.Item{}, nil
 	}
 
 	hash, err := calculateBundleHash(filename)
 	if err != nil {
-		return storage.ArtifactMeta{}, err
+		return storage.Item{}, err
 	}
 	log.Info().Msgf("Checksum: %s", hash)
 
 	queryString := fmt.Sprintf("?sha256=%s", hash)
 	request, err := createLocateRequest(fmt.Sprintf("%s/v1/storage/files", s.URL), s.Username, s.AccessKey, queryString)
 	if err != nil {
-		return storage.ArtifactMeta{}, err
+		return storage.Item{}, err
 	}
 
 	lr, err := s.executeLocateRequest(request)
 	if err != nil {
-		return storage.ArtifactMeta{}, err
+		return storage.Item{}, err
 	}
 	if lr.TotalItems == 0 {
-		return storage.ArtifactMeta{}, nil
+		return storage.Item{}, nil
 	}
 
-	return storage.ArtifactMeta{ID: lr.Items[0].ID}, nil
+	return storage.Item{ID: lr.Items[0].ID}, nil
+}
+
+// List returns a list of items stored in the Sauce app storage that match the search criteria specified by opts.
+func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
+	uri, _ := url.Parse(s.URL)
+	uri.Path = "/v1/storage/files"
+
+	query := uri.Query()
+	query.Set("per_page", "100") // 100 is the max that app storage allows
+	if opts.Q != "" {
+		query.Set("q", opts.Q)
+	}
+	if opts.Name != "" {
+		query.Set("name", opts.Name)
+	}
+	if opts.SHA256 != "" {
+		query.Set("sha256", opts.SHA256)
+	}
+
+	uri.RawQuery = query.Encode()
+
+	req, err := requesth.New(http.MethodGet, uri.String(), nil)
+	if err != nil {
+		return storage.List{}, err
+	}
+	req.SetBasicAuth(s.Username, s.AccessKey)
+
+	resp, err := s.HTTPClient.Do(req)
+	if err != nil {
+		return storage.List{}, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200:
+		var listResp ListResponse
+		if err := json.NewDecoder(resp.Body).Decode(&listResp); err != nil {
+			return storage.List{}, err
+		}
+
+		var items []storage.Item
+		for _, v := range listResp.Items {
+			items = append(items, storage.Item{
+				ID:       v.ID,
+				Name:     v.Name,
+				Size:     v.Size,
+				Uploaded: time.Unix(v.UploadTimestamp, 0),
+			})
+		}
+
+		return storage.List{
+			Items:     items,
+			Truncated: listResp.TotalItems > len(items),
+		}, nil
+	case 401, 403:
+		return storage.List{}, storage.ErrAccessDenied
+	default:
+		return storage.List{}, newServerError(resp)
+	}
 }
 
 func calculateBundleHash(filename string) (string, error) {
@@ -216,4 +352,28 @@ func (s *AppStore) executeLocateRequest(request *http.Request) (ListResponse, er
 	}
 
 	return lr, nil
+}
+
+// newServerError inspects server error responses, trying to gather as much information as possible, especially if the body
+// conforms to the errorResponse format, and returns a storage.ServerError.
+func newServerError(resp *http.Response) *storage.ServerError {
+	var errResp errorResponse
+	body, _ := io.ReadAll(resp.Body)
+	defer resp.Body.Close()
+
+	reader := bytes.NewReader(body)
+	err := json.NewDecoder(reader).Decode(&errResp)
+	if err != nil {
+		return &storage.ServerError{
+			Code:  resp.StatusCode,
+			Title: resp.Status,
+			Msg:   string(body),
+		}
+	}
+
+	return &storage.ServerError{
+		Code:  errResp.Code,
+		Title: errResp.Title,
+		Msg:   errResp.Detail,
+	}
 }

@@ -43,7 +43,7 @@ import (
 
 // CloudRunner represents the cloud runner for the Sauce Labs cloud.
 type CloudRunner struct {
-	ProjectUploader        storage.ProjectUploader
+	ProjectUploader        storage.AppService
 	JobService             job.Service
 	CCYReader              concurrency.Reader
 	TunnelService          tunnel.Service
