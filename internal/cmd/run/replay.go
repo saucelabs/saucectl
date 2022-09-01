@@ -1,6 +1,7 @@
 package run
 
 import (
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"os"
 
 	"github.com/saucelabs/saucectl/internal/framework"
@@ -101,14 +102,14 @@ func runReplay(cmd *cobra.Command) (int, error) {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
 
-	tracker := segment.New(!gFlags.disableUsageMetrics)
+	tracker := segment.DefaultTracker
 
 	defer func() {
 		props := usage.Properties{}
 		props.SetFramework("puppeteer-replay").SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
 			SetArtifacts(p.Artifacts).SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).
 			SetSlack(p.Notifications.Slack).SetLaunchOrder(p.Sauce.LaunchOrder)
-		tracker.Collect(cases.Title(language.English).String(fullCommandName(cmd)), props)
+		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
 		_ = tracker.Close()
 	}()
 

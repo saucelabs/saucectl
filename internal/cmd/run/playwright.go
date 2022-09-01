@@ -2,6 +2,7 @@ package run
 
 import (
 	"fmt"
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"os"
 
 	"github.com/rs/zerolog/log"
@@ -135,14 +136,14 @@ func runPlaywright(cmd *cobra.Command) (int, error) {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
 
-	tracker := segment.New(!gFlags.disableUsageMetrics)
+	tracker := segment.DefaultTracker
 
 	defer func() {
 		props := usage.Properties{}
 		props.SetFramework("playwright").SetFVersion(p.Playwright.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
 			SetArtifacts(p.Artifacts).SetDocker(p.Docker).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).
 			SetSlack(p.Notifications.Slack).SetSharding(playwright.IsSharded(p.Suites)).SetLaunchOrder(p.Sauce.LaunchOrder)
-		tracker.Collect(cases.Title(language.English).String(fullCommandName(cmd)), props)
+		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
 		_ = tracker.Close()
 	}()
 

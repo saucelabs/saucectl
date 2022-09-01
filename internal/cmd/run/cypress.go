@@ -1,6 +1,7 @@
 package run
 
 import (
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"os"
 
 	"github.com/rs/zerolog/log"
@@ -113,7 +114,7 @@ func runCypress(cmd *cobra.Command) (int, error) {
 	insightsClient.URL = regio.APIBaseURL()
 	iamClient.URL = regio.APIBaseURL()
 	restoClient.ArtifactConfig = p.GetArtifactsCfg().Download
-	tracker := segment.New(!gFlags.disableUsageMetrics)
+	tracker := segment.DefaultTracker
 
 	defer func() {
 		props := usage.Properties{}
@@ -121,7 +122,7 @@ func runCypress(cmd *cobra.Command) (int, error) {
 			SetArtifacts(p.GetArtifactsCfg()).SetDocker(p.GetDocker()).SetNPM(p.GetNpm()).SetNumSuites(len(p.GetSuites())).SetJobs(captor.Default.TestResults).
 			SetSlack(p.GetNotifications().Slack).SetSharding(p.IsSharded()).SetLaunchOrder(p.GetSauceCfg().LaunchOrder)
 
-		tracker.Collect(cases.Title(language.English).String(fullCommandName(cmd)), props)
+		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
 		_ = tracker.Close()
 	}()
 

@@ -3,6 +3,7 @@ package run
 import (
 	"fmt"
 	"github.com/rs/zerolog/log"
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/text/cases"
@@ -107,14 +108,14 @@ func runPuppeteer(cmd *cobra.Command) (int, error) {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
 
-	tracker := segment.New(!gFlags.disableUsageMetrics)
+	tracker := segment.DefaultTracker
 
 	defer func() {
 		props := usage.Properties{}
 		props.SetFramework("puppeteer").SetFVersion(p.Puppeteer.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
 			SetArtifacts(p.Artifacts).SetDocker(p.Docker).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).
 			SetSlack(p.Notifications.Slack)
-		tracker.Collect(cases.Title(language.English).String(fullCommandName(cmd)), props)
+		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
 		_ = tracker.Close()
 	}()
 

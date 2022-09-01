@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"syscall"
 	"time"
 
@@ -81,15 +80,14 @@ var (
 var gFlags = globalFlags{}
 
 type globalFlags struct {
-	cfgFilePath         string
-	globalTimeout       time.Duration
-	selectedSuite       string
-	testEnvSilent       bool
-	disableUsageMetrics bool
-	async               bool
-	failFast            bool
-	appStoreTimeout     time.Duration
-	noAutoTagging       bool
+	cfgFilePath     string
+	globalTimeout   time.Duration
+	selectedSuite   string
+	testEnvSilent   bool
+	async           bool
+	failFast        bool
+	appStoreTimeout time.Duration
+	noAutoTagging   bool
 }
 
 // Command creates the `run` command
@@ -158,7 +156,6 @@ func Command() *cobra.Command {
 
 	cmd.PersistentFlags().StringVar(&gFlags.selectedSuite, "select-suite", "", "Run specified test suite.")
 	cmd.PersistentFlags().BoolVar(&gFlags.testEnvSilent, "test-env-silent", false, "Skips the test environment announcement.")
-	cmd.PersistentFlags().BoolVar(&gFlags.disableUsageMetrics, "disable-usage-metrics", false, "Disable usage metrics collection.")
 	cmd.PersistentFlags().BoolVar(&gFlags.noAutoTagging, "no-auto-tagging", false, "Disable the automatic tagging of jobs with metadata, such as CI or GIT information.")
 
 	// Hide undocumented flags that the user does not need to care about.
@@ -356,32 +353,16 @@ func createReporters(c config.Reporters, ntfs config.Notifications, metadata con
 	}
 
 	reps = append(reps, &slack.Reporter{
-		Channels:            ntfs.Slack.Channels,
-		Framework:           framework,
-		Metadata:            metadata,
-		TestEnv:             env,
-		TestResults:         []report.TestResult{},
-		Config:              ntfs,
-		Service:             svc,
-		DisableUsageMetrics: gFlags.disableUsageMetrics,
+		Channels:    ntfs.Slack.Channels,
+		Framework:   framework,
+		Metadata:    metadata,
+		TestEnv:     env,
+		TestResults: []report.TestResult{},
+		Config:      ntfs,
+		Service:     svc,
 	})
 
 	return reps
-}
-
-// fullCommandName returns the full command name by concatenating the command names of any parents,
-// except the name of the CLI itself.
-func fullCommandName(cmd *cobra.Command) string {
-	name := ""
-
-	for cmd.Name() != "saucectl" {
-		// Prepending, because we are looking up names from the bottom up: cypress < run < saucectl
-		// which ends up correctly as 'run cypress' (sans saucectl).
-		name = fmt.Sprintf("%s %s", cmd.Name(), name)
-		cmd = cmd.Parent()
-	}
-
-	return strings.TrimSpace(name)
 }
 
 // cleanupArtifacts removes any files in the artifact folder. Does nothing if cleanup is turned off.

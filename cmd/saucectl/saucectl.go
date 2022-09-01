@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/cmd/storage"
+	"github.com/saucelabs/saucectl/internal/segment"
 	"os"
 	"time"
 
@@ -54,9 +55,12 @@ func main() {
 
 	verbosity := cmd.PersistentFlags().Bool("verbose", false, "turn on verbose logging")
 	noColor := cmd.PersistentFlags().Bool("no-color", false, "disable colorized output")
+	noTracking := cmd.PersistentFlags().Bool("disable-usage-metrics", false, "Disable usage metrics collection.")
+
 	cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		setupLogging(*verbosity, *noColor)
 		setupBacktrace()
+		segment.DefaultTracker.Enabled = !*noTracking
 	}
 
 	cmd.AddCommand(

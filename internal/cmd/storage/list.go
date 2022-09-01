@@ -7,8 +7,13 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
+	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/storage"
+	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"os"
 	"time"
 )
@@ -64,6 +69,17 @@ func ListCommand() *cobra.Command {
 			"ls",
 		},
 		Short: "Returns the list of files that have been uploaded to Sauce Storage.",
+		PreRun: func(cmd *cobra.Command, args []string) {
+			tracker := segment.DefaultTracker
+
+			go func() {
+				tracker.Collect(
+					cases.Title(language.English).String(cmds.FullName(cmd)),
+					usage.Properties{}.SetFlags(cmd.Flags()),
+				)
+				_ = tracker.Close()
+			}()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			list, err := appsClient.List(storage.ListOptions{
 				Q:      query,
