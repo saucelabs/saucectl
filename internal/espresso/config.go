@@ -71,7 +71,7 @@ type Suite struct {
 	Emulators   []config.Emulator      `yaml:"emulators,omitempty" json:"emulators"`
 	TestOptions map[string]interface{} `yaml:"testOptions,omitempty" json:"testOptions"`
 	Timeout     time.Duration          `yaml:"timeout,omitempty" json:"timeout"`
-	AppSettings config.AppSettings     `yaml:"appSettings,omityEmpty" json:"appSettings"`
+	AppSettings config.AppSettings     `yaml:"appSettings,omitempty" json:"appSettings"`
 }
 
 // Android constant

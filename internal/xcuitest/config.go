@@ -60,7 +60,7 @@ type Suite struct {
 	Timeout     time.Duration      `yaml:"timeout,omitempty" json:"timeout"`
 	Devices     []config.Device    `yaml:"devices,omitempty" json:"devices"`
 	TestOptions TestOptions        `yaml:"testOptions,omitempty" json:"testOptions"`
-	AppSettings config.AppSettings `yaml:"appSettings,omityEmpty" json:"appSettings"`
+	AppSettings config.AppSettings `yaml:"appSettings,omitempty" json:"appSettings"`
 }
 
 // IOS constant
