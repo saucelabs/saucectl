@@ -1,8 +1,9 @@
 package run
 
 import (
-	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"os"
+
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -111,7 +112,7 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags) (int, error) {
 
 	tracker := segment.DefaultTracker
 
-	defer func() {
+	go func() {
 		props := usage.Properties{}
 		props.SetFramework("xcuitest").SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).SetArtifacts(p.Artifacts).
 			SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).SetSlack(p.Notifications.Slack).SetLaunchOrder(p.Sauce.LaunchOrder)
