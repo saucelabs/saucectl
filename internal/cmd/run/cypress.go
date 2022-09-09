@@ -1,8 +1,9 @@
 package run
 
 import (
-	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"os"
+
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -116,7 +117,7 @@ func runCypress(cmd *cobra.Command) (int, error) {
 	restoClient.ArtifactConfig = p.GetArtifactsCfg().Download
 	tracker := segment.DefaultTracker
 
-	defer func() {
+	go func() {
 		props := usage.Properties{}
 		props.SetFramework("cypress").SetFVersion(p.GetVersion()).SetFlags(cmd.Flags()).SetSauceConfig(p.GetSauceCfg()).
 			SetArtifacts(p.GetArtifactsCfg()).SetDocker(p.GetDocker()).SetNPM(p.GetNpm()).SetNumSuites(len(p.GetSuites())).SetJobs(captor.Default.TestResults).

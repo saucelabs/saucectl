@@ -2,14 +2,15 @@ package run
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/rs/zerolog/log"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"os"
-	"path/filepath"
 
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
@@ -110,7 +111,7 @@ func runPuppeteer(cmd *cobra.Command) (int, error) {
 
 	tracker := segment.DefaultTracker
 
-	defer func() {
+	go func() {
 		props := usage.Properties{}
 		props.SetFramework("puppeteer").SetFVersion(p.Puppeteer.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
 			SetArtifacts(p.Artifacts).SetDocker(p.Docker).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).

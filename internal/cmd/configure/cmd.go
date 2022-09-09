@@ -35,7 +35,7 @@ func Command() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			tracker := segment.DefaultTracker
 
-			defer func() {
+			go func() {
 				tracker.Collect("Configure", nil)
 				_ = tracker.Close()
 			}()
