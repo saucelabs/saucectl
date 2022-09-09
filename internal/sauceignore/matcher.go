@@ -2,9 +2,10 @@ package sauceignore
 
 import (
 	"bufio"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"os"
 	"strings"
+
+	"github.com/saucelabs/saucectl/internal/msg"
 
 	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
 )
@@ -36,6 +37,8 @@ func PatternsFromFile(path string) ([]Pattern, error) {
 			ps = append(ps, NewPattern(s))
 		}
 	}
+	// make sure sauce-runner.json is included
+	ps = append(ps, Pattern{"!sauce-runner.json"})
 
 	return ps, nil
 }
