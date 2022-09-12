@@ -37,7 +37,7 @@ func PatternsFromFile(path string) ([]Pattern, error) {
 			ps = append(ps, NewPattern(s))
 		}
 	}
-	// make sure sauce-runner.json is included
+	// make sure that sauce-runner.json is never accidentally ignored by the user
 	ps = append(ps, Pattern{"!sauce-runner.json"})
 
 	return ps, nil
