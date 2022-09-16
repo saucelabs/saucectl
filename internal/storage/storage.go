@@ -17,6 +17,9 @@ type ListOptions struct {
 
 	// SHA256 is the checksum of the file by which you want to filter.
 	SHA256 string
+
+	// Limits the number of results returned.
+	MaxResults int
 }
 
 type List struct {
