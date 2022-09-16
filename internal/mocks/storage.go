@@ -20,7 +20,10 @@ func (fpu *FakeProjectUploader) Download(id string) (io.ReadCloser, int64, error
 }
 
 func (fpu *FakeProjectUploader) List(opts storage.ListOptions) (storage.List, error) {
-	panic("not implemented")
+	return storage.List{
+		Items:     []storage.Item{},
+		Truncated: false,
+	}, nil
 }
 
 // Upload mock function

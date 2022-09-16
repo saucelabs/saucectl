@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -261,8 +262,16 @@ func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 	uri, _ := url.Parse(s.URL)
 	uri.Path = "/v1/storage/files"
 
+	// Default MaxResults if not set or out of range.
+	if opts.MaxResults < 1 || opts.MaxResults > 100 {
+		opts.MaxResults = 100
+	}
+
 	query := uri.Query()
-	query.Set("per_page", "100") // 100 is the max that app storage allows
+	query.Set("per_page", strconv.Itoa(opts.MaxResults))
+	if opts.MaxResults == 1 {
+		query.Set("paginate", "no")
+	}
 	if opts.Q != "" {
 		query.Set("q", opts.Q)
 	}

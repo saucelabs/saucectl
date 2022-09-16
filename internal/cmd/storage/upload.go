@@ -62,7 +62,8 @@ func UploadCommand() *cobra.Command {
 			// Look up the file first.
 			if !force {
 				list, err := appsClient.List(storage.ListOptions{
-					SHA256: hash,
+					SHA256:     hash,
+					MaxResults: 1,
 				})
 				if err != nil {
 					return fmt.Errorf("storage lookup failed: %w", err)

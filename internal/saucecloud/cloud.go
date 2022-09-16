@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/files"
 	"io"
 	"io/fs"
 	"os"
@@ -622,7 +623,7 @@ func (r *CloudRunner) uploadProject(filename string, pType uploadType, dryRun bo
 	}
 
 	log.Info().Msgf("Checking if %s has already been uploaded previously", filename)
-	if storageID, _ := r.checkIfFileAlreadyUploaded(filename); storageID != "" {
+	if storageID, _ := r.isFileStored(filename); storageID != "" {
 		log.Info().Msgf("Skipping upload, using storage:%s", storageID)
 		return fmt.Sprintf("storage:%s", storageID), nil
 	}
@@ -644,12 +645,28 @@ func (r *CloudRunner) uploadProject(filename string, pType uploadType, dryRun bo
 	return fmt.Sprintf("storage:%s", resp.ID), nil
 }
 
-func (r *CloudRunner) checkIfFileAlreadyUploaded(fileName string) (storageID string, err error) {
-	resp, err := r.ProjectUploader.Find(fileName)
+// isFileStored calculates the checksum of the given file and looks up its existence in the Sauce Labs app storage.
+// Returns an empty string if no file was found.
+func (r *CloudRunner) isFileStored(filename string) (storageID string, err error) {
+	hash, err := files.NewSHA256(filename)
 	if err != nil {
 		return "", err
 	}
-	return resp.ID, nil
+
+	log.Info().Msgf("Checksum: %s", hash)
+
+	l, err := r.ProjectUploader.List(storage.ListOptions{
+		SHA256:     hash,
+		MaxResults: 1,
+	})
+	if err != nil {
+		return "", err
+	}
+	if len(l.Items) == 0 {
+		return "", nil
+	}
+
+	return l.Items[0].ID, nil
 }
 
 // logSuite display the result of a suite
