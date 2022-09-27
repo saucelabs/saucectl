@@ -1,0 +1,183 @@
+package run
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/backtrace"
+	"github.com/saucelabs/saucectl/internal/ci"
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
+	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/cucumber"
+	"github.com/saucelabs/saucectl/internal/docker"
+	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/report/captor"
+	"github.com/saucelabs/saucectl/internal/segment"
+	"github.com/saucelabs/saucectl/internal/usage"
+	"github.com/saucelabs/saucectl/internal/viper"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+)
+
+// NewCucumberCmd creates the 'run' command for replay.
+func NewCucumberCmd() *cobra.Command {
+	sc := flags.SnakeCharmer{Fmap: map[string]*pflag.Flag{}}
+
+	cmd := &cobra.Command{
+		Use:              "cucumber",
+		Short:            "Run Cucumber test",
+		Hidden:           true,
+		TraverseChildren: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			sc.BindAll()
+			return preRun()
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			// Test patterns are passed in via positional args.
+			viper.Set("suite::options::paths", args)
+
+			exitCode, err := runCucumber(cmd)
+			if err != nil {
+				log.Err(err).Msg("failed to execute run command")
+				backtrace.Report(err, map[string]interface{}{
+					"username": credentials.Get().Username,
+				}, gFlags.cfgFilePath)
+			}
+			os.Exit(exitCode)
+		},
+	}
+
+	sc.Fset = cmd.Flags()
+
+	sc.String("name", "suite::name", "", "Set the name of the job as it will appear on Sauce Labs.")
+
+	// Browser & Platform
+	sc.String("browser", "suite::browserName", "chrome", "Set the browser to use. Only chrome is supported at this time.")
+	sc.String("browserVersion", "suite::browserVersion", "", "Set the browser version to use. If not specified, the latest version will be used.")
+	sc.String("platform", "suite::platform", "", "Run against this platform.")
+
+	return cmd
+}
+
+func runCucumber(cmd *cobra.Command) (int, error) {
+	p, err := cucumber.FromFile(gFlags.cfgFilePath)
+	if err != nil {
+		return 1, err
+	}
+
+	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
+
+	cucumber.SetDefaults(&p)
+
+	if err := cucumber.Validate(&p); err != nil {
+		return 1, err
+	}
+
+	regio := region.FromString(p.Sauce.Region)
+
+	webdriverClient.URL = regio.WebDriverBaseURL()
+	testcompClient.URL = regio.APIBaseURL()
+	restoClient.URL = regio.APIBaseURL()
+	appsClient.URL = regio.APIBaseURL()
+	insightsClient.URL = regio.APIBaseURL()
+	iamClient.URL = regio.APIBaseURL()
+
+	restoClient.ArtifactConfig = p.Artifacts.Download
+
+	if !gFlags.noAutoTagging {
+		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
+	}
+
+	tracker := segment.DefaultTracker
+
+	go func() {
+		props := usage.Properties{}
+		props.SetFramework("cucumber").SetFVersion(p.Cucumber.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
+			SetArtifacts(p.Artifacts).SetDocker(p.Docker).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).
+			SetSlack(p.Notifications.Slack).SetSharding(cucumber.IsSharded(p.Suites)).SetLaunchOrder(p.Sauce.LaunchOrder)
+		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
+		_ = tracker.Close()
+	}()
+
+	cleanupArtifacts(p.Artifacts)
+
+	dockerProject, sauceProject := cucumber.SplitSuites(p)
+	if len(dockerProject.Suites) != 0 {
+		exitCode, err := runCucumberInDocker(dockerProject)
+		if err != nil || exitCode != 0 {
+			return exitCode, err
+		}
+	}
+	if len(sauceProject.Suites) != 0 {
+		//return runCucumberInCloud(sauceProject, regio)
+	}
+
+	return 0, nil
+}
+
+func runCucumberInDocker(p cucumber.Project) (int, error) {
+	log.Info().Msg("Running Cucumber in Docker")
+	printTestEnv("docker")
+
+	cd, err := docker.NewCucumber(p, &testcompClient, &testcompClient, &restoClient, &restoClient, createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
+		"cucumber", "docker"))
+	if err != nil {
+		return 1, err
+	}
+
+	cleanCucumberPackages(&p)
+	return cd.RunProject()
+}
+
+/*
+func runCucumberInCloud(p cucumber.Project, regio region.Region) (int, error) {
+	log.Info().Msg("Running Cucumber in Sauce Labs")
+	printTestEnv("sauce")
+
+	r := saucecloud.CucumberRunner{
+		Project: p,
+		CloudRunner: saucecloud.CloudRunner{
+			ProjectUploader: &appsClient,
+			JobService: saucecloud.JobService{
+				VDCStarter:    &webdriverClient,
+				RDCStarter:    &rdcClient,
+				VDCReader:     &restoClient,
+				RDCReader:     &rdcClient,
+				VDCWriter:     &testcompClient,
+				VDCStopper:    &restoClient,
+				VDCDownloader: &restoClient,
+			},
+			CCYReader:       &restoClient,
+			TunnelService:   &restoClient,
+			MetadataService: &testcompClient,
+			InsightsService: &insightsClient,
+			UserService:     &iamClient,
+			Region:          regio,
+			ShowConsoleLog:  p.ShowConsoleLog,
+			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
+				"cucumber", "sauce"),
+			Async:                  gFlags.async,
+			FailFast:               gFlags.failFast,
+			MetadataSearchStrategy: framework.NewSearchStrategy(p.Cucumber.Version, p.RootDir),
+			NPMDependencies:        p.Npm.Dependencies,
+		},
+	}
+
+	cleanCucumberPackages(&p)
+	return r.RunProject()
+}
+*/
+
+func cleanCucumberPackages(p *cucumber.Project) {
+	version, hasFramework := p.Npm.Packages["@cucumber/cucumber"]
+	if hasFramework {
+		log.Warn().Msg(msg.IgnoredNpmPackagesMsg("cucumber", p.Cucumber.Version, []string{fmt.Sprintf("cucumber@%s", version)}))
+		p.Npm.Packages = config.CleanNpmPackages(p.Npm.Packages, []string{"@cucumber/cucumber"})
+	}
+}

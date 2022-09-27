@@ -12,6 +12,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/apitest"
 	"github.com/saucelabs/saucectl/internal/apitesting"
+	"github.com/saucelabs/saucectl/internal/cucumber"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/webdriver"
@@ -266,6 +267,9 @@ func Run(cmd *cobra.Command) (int, error) {
 	}
 	if typeDef.Kind == apitest.Kind {
 		return runApitest()
+	}
+	if typeDef.Kind == cucumber.Kind {
+		return runCucumber(cmd)
 	}
 
 	return 1, errors.New(msg.UnknownFrameworkConfig)
