@@ -13,9 +13,11 @@ import (
 	"github.com/saucelabs/saucectl/internal/cucumber"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
+	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/viper"
@@ -115,7 +117,7 @@ func runCucumber(cmd *cobra.Command) (int, error) {
 		}
 	}
 	if len(sauceProject.Suites) != 0 {
-		//return runCucumberInCloud(sauceProject, regio)
+		return runCucumberInCloud(sauceProject, regio)
 	}
 
 	return 0, nil
@@ -135,7 +137,6 @@ func runCucumberInDocker(p cucumber.Project) (int, error) {
 	return cd.RunProject()
 }
 
-/*
 func runCucumberInCloud(p cucumber.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Running Cucumber in Sauce Labs")
 	printTestEnv("sauce")
@@ -172,7 +173,6 @@ func runCucumberInCloud(p cucumber.Project, regio region.Region) (int, error) {
 	cleanCucumberPackages(&p)
 	return r.RunProject()
 }
-*/
 
 func cleanCucumberPackages(p *cucumber.Project) {
 	version, hasFramework := p.Npm.Packages["@cucumber/cucumber"]

@@ -49,19 +49,21 @@ type Project struct {
 type Cucumber struct {
 	// Version represents the testcafe framework version.
 	Version string `yaml:"version,omitempty" json:"version"`
+	Config  string `yaml:"config,omitempty" json:"config"`
 }
 
 // Suite represents the cucumber test suite configuration.
 type Suite struct {
-	Name           string            `yaml:"name,omitempty" json:"name"`
-	BrowserName    string            `yaml:"browserName,omitempty" json:"browserName"`
-	BrowserVersion string            `yaml:"browserVersion,omitempty" json:"browserVersion"`
-	PlatformName   string            `yaml:"platformName,omitempty" json:"platformName"`
-	Env            map[string]string `yaml:"env,omitempty" json:"env"`
-	Shard          string            `yaml:"shard,omitempty" json:"shard"`
-	Mode           string            `yaml:"mode,omitemty" json:"mode"`
-	Timeout        time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
-	Options        Options           `yaml:"options,omitempty" json:"options"`
+	Name             string            `yaml:"name,omitempty" json:"name"`
+	BrowserName      string            `yaml:"browserName,omitempty" json:"browserName"`
+	BrowserVersion   string            `yaml:"browserVersion,omitempty" json:"browserVersion"`
+	PlatformName     string            `yaml:"platformName,omitempty" json:"platformName"`
+	Env              map[string]string `yaml:"env,omitempty" json:"env"`
+	Shard            string            `yaml:"shard,omitempty" json:"shard"`
+	Mode             string            `yaml:"mode,omitemty" json:"mode"`
+	Timeout          time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
+	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
+	Options          Options           `yaml:"options,omitempty" json:"options"`
 }
 
 type Options struct {
