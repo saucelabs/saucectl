@@ -23,6 +23,7 @@ var (
 	APIVersion = "v1alpha"
 )
 
+// Project represents cucumber sauce config
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
 	DryRun         bool                   `yaml:"-" json:"-"`
@@ -46,6 +47,7 @@ type Project struct {
 	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
 }
 
+// Cucumber represents the cucumber config
 type Cucumber struct {
 	// Version represents the testcafe framework version.
 	Version string `yaml:"version,omitempty" json:"version"`
@@ -55,8 +57,8 @@ type Cucumber struct {
 // Suite represents the cucumber test suite configuration.
 type Suite struct {
 	Name             string            `yaml:"name,omitempty" json:"name"`
-	BrowserName      string            `yaml:"browserName,omitempty" json:"browserName"`
-	BrowserVersion   string            `yaml:"browserVersion,omitempty" json:"browserVersion"`
+	BrowserName      string            `yaml:"-" json:"-"`
+	BrowserVersion   string            `yaml:"-" json:"-"`
 	PlatformName     string            `yaml:"platformName,omitempty" json:"platformName"`
 	Env              map[string]string `yaml:"env,omitempty" json:"env"`
 	Shard            string            `yaml:"shard,omitempty" json:"shard"`
@@ -66,15 +68,17 @@ type Suite struct {
 	Options          Options           `yaml:"options,omitempty" json:"options"`
 }
 
+// Options represents cucumber settings
 type Options struct {
-	Name              string   `yaml:"name,omitempty" json:"name"`
-	Paths             []string `yaml:"paths,omitempty" json:"paths"`
-	ExcludedTestFiles []string `yaml:"excludedTestFiles,omitempty" json:"excludedTestFiles"`
-	Backtrace         bool     `yaml:"backtrace,omitempty" json:"backtrace"`
-	Require           []string `yaml:"require,omitempty" json:"require"`
-	Import            []string `yaml:"import,omitempty" json:"import"`
-	Tags              []string `yaml:"tags,omitempty" json:"tags"`
-	Format            []string `yaml:"format,omitempty" json:"format"`
+	Name              string            `yaml:"name,omitempty" json:"name"`
+	Paths             []string          `yaml:"paths,omitempty" json:"paths"`
+	ExcludedTestFiles []string          `yaml:"excludedTestFiles,omitempty" json:"excludedTestFiles"`
+	Backtrace         bool              `yaml:"backtrace,omitempty" json:"backtrace"`
+	Require           []string          `yaml:"require,omitempty" json:"require"`
+	Import            []string          `yaml:"import,omitempty" json:"import"`
+	Tags              []string          `yaml:"tags,omitempty" json:"tags"`
+	Format            []string          `yaml:"format,omitempty" json:"format"`
+	FormatOptions     map[string]string `yaml:"formatOptions,omitempty" json:"formatOptions"`
 }
 
 // FromFile creates a new testcafe project based on the filepath.
@@ -143,6 +147,17 @@ func SetDefaults(p *Project) {
 				s.Env = map[string]string{}
 			}
 			s.Env[k] = v
+		}
+	}
+
+	// Set browser and version from env vars
+	for _, s := range p.Suites {
+		s.BrowserName = "cucumber"
+		if v, ok := s.Env["BROWSER_NAME"]; ok {
+			s.BrowserName = v
+		}
+		if v, ok := s.Env["BROWSER_VERSION"]; ok {
+			s.BrowserVersion = v
 		}
 	}
 }
@@ -269,6 +284,7 @@ func FilterSuites(p *Project, suiteName string) error {
 	return fmt.Errorf("no suite named '%s' found", suiteName)
 }
 
+// IsSharded checks if the suite is sharded
 func IsSharded(suites []Suite) bool {
 	for _, s := range suites {
 		if s.Shard != "" {

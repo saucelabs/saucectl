@@ -58,11 +58,17 @@ func NewCucumberCmd() *cobra.Command {
 	sc.Fset = cmd.Flags()
 
 	sc.String("name", "suite::name", "", "Set the name of the job as it will appear on Sauce Labs.")
+	sc.String("platformName", "suite::platformName", "", "Run against this platform.")
 
-	// Browser & Platform
-	sc.String("browser", "suite::browserName", "chrome", "Set the browser to use. Only chrome is supported at this time.")
-	sc.String("browserVersion", "suite::browserVersion", "", "Set the browser version to use. If not specified, the latest version will be used.")
-	sc.String("platform", "suite::platform", "", "Run against this platform.")
+	// Cucumber
+	sc.String("cucumber-name", "suite::options::name", "", "Regular expressions of which scenario names should match one of to be run")
+	sc.StringSlice("paths", "suite::options::paths", []string{}, "Paths to where the feature files are, using glob pattern")
+	sc.StringSlice("excludedTestFiles", "suite::options::excludedTestFiles", []string{}, "Exclude test files to skip the tests, using glob pattern")
+	sc.Bool("backtrace", "suite::options::backtrace", false, "Show the full backtrace for errors")
+	sc.StringSlice("require", "suite::options::require", []string{}, "Paths to where your support code is, for CommonJS.")
+	sc.StringSlice("import", "suite::options::import", []string{}, "Paths to where your support code is, for ESM")
+	sc.StringSlice("tags", "suite::options::tags", []string{}, "Tag expression to filter which scenarios should be run")
+	sc.StringSlice("format", "suite::options::format", []string{}, "Name/path and (optionally) output file path of each formatter to use")
 
 	return cmd
 }
