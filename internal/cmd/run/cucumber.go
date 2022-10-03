@@ -27,7 +27,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-// NewCucumberCmd creates the 'run' command for replay.
+// NewCucumberCmd creates the 'run' command for cucumber.
 func NewCucumberCmd() *cobra.Command {
 	sc := flags.SnakeCharmer{Fmap: map[string]*pflag.Flag{}}
 
