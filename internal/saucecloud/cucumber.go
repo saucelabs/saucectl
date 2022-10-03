@@ -25,18 +25,18 @@ func (r *CucumberRunner) RunProject() (int, error) {
 	var deprecationMessage string
 	exitCode := 1
 
-	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, cucumber.Kind, r.Project.Cucumber.Version)
+	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, cucumber.Kind, r.Project.Playwright.Version)
 	if err != nil {
 		r.logFrameworkError(err)
 		return exitCode, err
 	}
-	r.Project.Cucumber.Version = m.FrameworkVersion
+	r.Project.Playwright.Version = m.FrameworkVersion
 	if r.Project.RunnerVersion == "" {
 		r.Project.RunnerVersion = m.CloudRunnerVersion
 	}
 
 	if m.Deprecated {
-		deprecationMessage = r.deprecationMessage(cucumber.Kind, r.Project.Cucumber.Version)
+		deprecationMessage = r.deprecationMessage(cucumber.Kind, r.Project.Playwright.Version)
 		fmt.Print(deprecationMessage)
 	}
 	for _, s := range r.Project.Suites {
@@ -110,7 +110,7 @@ func (r *CucumberRunner) runSuites(fileURI string) bool {
 				App:              fmt.Sprintf("storage:%s", fileURI),
 				Suite:            s.Name,
 				Framework:        "cucumber",
-				FrameworkVersion: r.Project.Cucumber.Version,
+				FrameworkVersion: r.Project.Playwright.Version,
 				BrowserName:      s.BrowserName,
 				BrowserVersion:   s.BrowserVersion,
 				PlatformName:     s.PlatformName,

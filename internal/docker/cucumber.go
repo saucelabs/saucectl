@@ -24,7 +24,7 @@ func NewCucumber(c cucumber.Project, ms framework.MetadataService, wr job.Writer
 			containerConfig: &containerConfig{},
 			Framework: framework.Framework{
 				Name:    c.Kind,
-				Version: c.Cucumber.Version,
+				Version: c.Playwright.Version,
 			},
 			FrameworkMeta:          ms,
 			ShowConsoleLog:         c.ShowConsoleLog,
@@ -32,7 +32,7 @@ func NewCucumber(c cucumber.Project, ms framework.MetadataService, wr job.Writer
 			JobReader:              jr,
 			ArtfactDownloader:      dl,
 			Reporters:              reps,
-			MetadataSearchStrategy: framework.NewSearchStrategy(c.Cucumber.Version, c.RootDir),
+			MetadataSearchStrategy: framework.NewSearchStrategy(c.Playwright.Version, c.RootDir),
 		},
 	}
 

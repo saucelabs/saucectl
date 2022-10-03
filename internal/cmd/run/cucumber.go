@@ -1,20 +1,17 @@
 package run
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cucumber"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
@@ -106,7 +103,7 @@ func runCucumber(cmd *cobra.Command) (int, error) {
 
 	go func() {
 		props := usage.Properties{}
-		props.SetFramework("cucumber").SetFVersion(p.Cucumber.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
+		props.SetFramework("cucumber").SetFVersion(p.Playwright.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
 			SetArtifacts(p.Artifacts).SetDocker(p.Docker).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).
 			SetSlack(p.Notifications.Slack).SetSharding(cucumber.IsSharded(p.Suites)).SetLaunchOrder(p.Sauce.LaunchOrder)
 		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
@@ -139,7 +136,7 @@ func runCucumberInDocker(p cucumber.Project) (int, error) {
 		return 1, err
 	}
 
-	cleanCucumberPackages(&p)
+	p.Npm.Packages = cleanPlaywrightPackages(p.Npm, p.Playwright.Version)
 	return cd.RunProject()
 }
 
@@ -171,19 +168,11 @@ func runCucumberInCloud(p cucumber.Project, regio region.Region) (int, error) {
 				"cucumber", "sauce"),
 			Async:                  gFlags.async,
 			FailFast:               gFlags.failFast,
-			MetadataSearchStrategy: framework.NewSearchStrategy(p.Cucumber.Version, p.RootDir),
+			MetadataSearchStrategy: framework.NewSearchStrategy(p.Playwright.Version, p.RootDir),
 			NPMDependencies:        p.Npm.Dependencies,
 		},
 	}
 
-	cleanCucumberPackages(&p)
+	p.Npm.Packages = cleanPlaywrightPackages(p.Npm, p.Playwright.Version)
 	return r.RunProject()
-}
-
-func cleanCucumberPackages(p *cucumber.Project) {
-	version, hasFramework := p.Npm.Packages["@cucumber/cucumber"]
-	if hasFramework {
-		log.Warn().Msg(msg.IgnoredNpmPackagesMsg("cucumber", p.Cucumber.Version, []string{fmt.Sprintf("cucumber@%s", version)}))
-		p.Npm.Packages = config.CleanNpmPackages(p.Npm.Packages, []string{"@cucumber/cucumber"})
-	}
 }

@@ -17,7 +17,7 @@ import (
 // Config descriptors.
 var (
 	// Kind represents the type definition of this config.
-	Kind = "cucumber"
+	Kind = "playwright-cucumberjs"
 
 	// APIVersion represents the supported config version.
 	APIVersion = "v1alpha"
@@ -36,7 +36,7 @@ type Project struct {
 	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`
 	BeforeExec    []string             `yaml:"beforeExec,omitempty" json:"beforeExec"`
 	Docker        config.Docker        `yaml:"docker,omitempty" json:"docker"`
-	Cucumber      Cucumber             `yaml:"cucumber,omitempty" json:"cucumber"`
+	Playwright    Playwright           `yaml:"playwright,omitempty" json:"playwright"`
 	Npm           config.Npm           `yaml:"npm,omitempty" json:"npm"`
 	RootDir       string               `yaml:"rootDir,omitempty" json:"rootDir"`
 	RunnerVersion string               `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
@@ -47,29 +47,30 @@ type Project struct {
 	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
 }
 
-// Cucumber represents the cucumber config
-type Cucumber struct {
-	// Version represents the cucumber framework version.
+// Playwright represents the playwright setting
+type Playwright struct {
+	// Version represents the playwright framework version.
 	Version string `yaml:"version,omitempty" json:"version"`
-	Config  string `yaml:"config,omitempty" json:"config"`
 }
 
-// Suite represents the cucumber test suite configuration.
+// Suite represents the playwright-cucumberjs test suite configuration.
 type Suite struct {
 	Name             string            `yaml:"name,omitempty" json:"name"`
-	BrowserName      string            `yaml:"-" json:"-"`
-	BrowserVersion   string            `yaml:"-" json:"-"`
+	BrowserName      string            `yaml:"browserName,omitempty" json:"browserName"`
+	BrowserVersion   string            `yaml:"browserVersion,omitempty" json:"browserVersion"`
 	PlatformName     string            `yaml:"platformName,omitempty" json:"platformName"`
 	Env              map[string]string `yaml:"env,omitempty" json:"env"`
 	Shard            string            `yaml:"shard,omitempty" json:"shard"`
 	Mode             string            `yaml:"mode,omitemty" json:"mode"`
 	Timeout          time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
 	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
+	PreExec          []string          `yaml:"preExec,omitempty" json:"preExec"`
 	Options          Options           `yaml:"options,omitempty" json:"options"`
 }
 
 // Options represents cucumber settings
 type Options struct {
+	Config            string            `yaml:"config,omitempty" json:"config"`
 	Name              string            `yaml:"name,omitempty" json:"name"`
 	Paths             []string          `yaml:"paths,omitempty" json:"paths"`
 	ExcludedTestFiles []string          `yaml:"excludedTestFiles,omitempty" json:"excludedTestFiles"`
@@ -130,6 +131,9 @@ func SetDefaults(p *Project) {
 	for k := range p.Suites {
 		suite := &p.Suites[k]
 
+		if suite.BrowserName == "" {
+			suite.BrowserName = "chromium"
+		}
 		if suite.PlatformName == "" {
 			suite.PlatformName = "Windows 11"
 
@@ -149,17 +153,6 @@ func SetDefaults(p *Project) {
 			s.Env[k] = v
 		}
 	}
-
-	// Set browser and version from env vars
-	for _, s := range p.Suites {
-		s.BrowserName = "cucumber"
-		if v, ok := s.Env["BROWSER_NAME"]; ok {
-			s.BrowserName = v
-		}
-		if v, ok := s.Env["BROWSER_VERSION"]; ok {
-			s.BrowserVersion = v
-		}
-	}
 }
 
 // Validate validates basic configuration of the project and returns an error if any of the settings contain illegal
@@ -175,8 +168,8 @@ func Validate(p *Project) error {
 		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
 	}
 
-	p.Cucumber.Version = config.StandardizeVersionFormat(p.Cucumber.Version)
-	if p.Cucumber.Version == "" {
+	p.Playwright.Version = config.StandardizeVersionFormat(p.Playwright.Version)
+	if p.Playwright.Version == "" {
 		return errors.New(msg.MissingFrameworkVersionConfig)
 	}
 

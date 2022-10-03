@@ -178,7 +178,7 @@ func runPlaywrightInDocker(p playwright.Project) (int, error) {
 		return 1, err
 	}
 
-	cleanPlaywrightPackages(&p)
+	p.Npm.Packages = cleanPlaywrightPackages(p.Npm, p.Playwright.Version)
 	return cd.RunProject()
 }
 
@@ -215,7 +215,7 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region) (int, error
 		},
 	}
 
-	cleanPlaywrightPackages(&p)
+	p.Npm.Packages = cleanPlaywrightPackages(p.Npm, p.Playwright.Version)
 	return r.RunProject()
 }
 
@@ -234,11 +234,11 @@ func applyPlaywrightFlags(p *playwright.Project) error {
 	return nil
 }
 
-func cleanPlaywrightPackages(p *playwright.Project) {
+func cleanPlaywrightPackages(n config.Npm, version string) map[string]string {
 	// Don't allow framework installation, it is provided by the runner
 	ignoredPackages := []string{}
-	playwrightVersion, hasPlaywright := p.Npm.Packages["playwright"]
-	playwrightTestVersion, hasPlaywrightTest := p.Npm.Packages["@playwright/test"]
+	playwrightVersion, hasPlaywright := n.Packages["playwright"]
+	playwrightTestVersion, hasPlaywrightTest := n.Packages["@playwright/test"]
 	if hasPlaywright {
 		ignoredPackages = append(ignoredPackages, fmt.Sprintf("playwright@%s", playwrightVersion))
 	}
@@ -246,7 +246,8 @@ func cleanPlaywrightPackages(p *playwright.Project) {
 		ignoredPackages = append(ignoredPackages, fmt.Sprintf("@playwright/test@%s", playwrightTestVersion))
 	}
 	if hasPlaywright || hasPlaywrightTest {
-		log.Warn().Msg(msg.IgnoredNpmPackagesMsg("playwright", p.Playwright.Version, ignoredPackages))
-		p.Npm.Packages = config.CleanNpmPackages(p.Npm.Packages, []string{"playwright", "@playwright/test"})
+		log.Warn().Msg(msg.IgnoredNpmPackagesMsg("playwright", version, ignoredPackages))
+		return config.CleanNpmPackages(n.Packages, []string{"playwright", "@playwright/test"})
 	}
+	return n.Packages
 }
