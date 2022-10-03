@@ -49,7 +49,7 @@ type Project struct {
 
 // Cucumber represents the cucumber config
 type Cucumber struct {
-	// Version represents the testcafe framework version.
+	// Version represents the cucumber framework version.
 	Version string `yaml:"version,omitempty" json:"version"`
 	Config  string `yaml:"config,omitempty" json:"config"`
 }
@@ -81,7 +81,7 @@ type Options struct {
 	FormatOptions     map[string]string `yaml:"formatOptions,omitempty" json:"formatOptions"`
 }
 
-// FromFile creates a new testcafe project based on the filepath.
+// FromFile creates a new cucumber project based on the filepath.
 func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
@@ -131,10 +131,10 @@ func SetDefaults(p *Project) {
 		suite := &p.Suites[k]
 
 		if suite.PlatformName == "" {
-			suite.PlatformName = "Windows 10"
+			suite.PlatformName = "Windows 11"
 
 			if strings.ToLower(suite.BrowserName) == "safari" {
-				suite.PlatformName = "macOS 11.00"
+				suite.PlatformName = "macOS 12"
 			}
 		}
 	}
