@@ -139,6 +139,10 @@ func Validate(p Project) error {
 		return errors.New(msg.MissingRegion)
 	}
 
+	if regio == region.USEast4 && p.Sauce.Tunnel.Name != "" {
+		return errors.New(msg.NoTunnelSupport)
+	}
+
 	if ok := config.ValidateVisibility(p.Sauce.Visibility); !ok {
 		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
 	}
@@ -180,6 +184,9 @@ func Validate(p Project) error {
 		}
 		if err := validateEmulators(suite.Name, suite.Emulators); err != nil {
 			return err
+		}
+		if regio == region.USEast4 && len(suite.Emulators) > 0 {
+			return errors.New(msg.NoEmulatorSupport)
 		}
 	}
 

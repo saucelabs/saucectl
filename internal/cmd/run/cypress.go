@@ -1,6 +1,8 @@
 package run
 
 import (
+	"errors"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"os"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
@@ -108,6 +110,10 @@ func runCypress(cmd *cobra.Command) (int, error) {
 	}
 
 	regio := region.FromString(p.GetSauceCfg().Region)
+	if regio == region.USEast4 {
+		return 1, errors.New(msg.NoFrameworkSupport)
+	}
+
 	testcompClient.URL = regio.APIBaseURL()
 	webdriverClient.URL = regio.WebDriverBaseURL()
 	restoClient.URL = regio.APIBaseURL()

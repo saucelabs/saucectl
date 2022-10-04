@@ -1,6 +1,7 @@
 package run
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -123,6 +124,9 @@ func runPlaywright(cmd *cobra.Command) (int, error) {
 	}
 
 	regio := region.FromString(p.Sauce.Region)
+	if regio == region.USEast4 {
+		return 1, errors.New(msg.NoFrameworkSupport)
+	}
 
 	webdriverClient.URL = regio.WebDriverBaseURL()
 	testcompClient.URL = regio.APIBaseURL()

@@ -1,6 +1,7 @@
 package run
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -102,6 +103,10 @@ func runPuppeteer(cmd *cobra.Command) (int, error) {
 	}
 
 	regio := region.FromString(p.Sauce.Region)
+	if regio == region.USEast4 {
+		return 1, errors.New(msg.NoFrameworkSupport)
+	}
+
 	restoClient.URL = regio.APIBaseURL()
 	testcompClient.URL = regio.APIBaseURL()
 
