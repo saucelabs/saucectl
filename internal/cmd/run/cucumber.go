@@ -103,7 +103,7 @@ func runCucumber(cmd *cobra.Command) (int, error) {
 
 	go func() {
 		props := usage.Properties{}
-		props.SetFramework("cucumber").SetFVersion(p.Playwright.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
+		props.SetFramework("playwright-cucumberjs").SetFVersion(p.Playwright.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
 			SetArtifacts(p.Artifacts).SetDocker(p.Docker).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).
 			SetSlack(p.Notifications.Slack).SetSharding(cucumber.IsSharded(p.Suites)).SetLaunchOrder(p.Sauce.LaunchOrder)
 		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
@@ -127,7 +127,7 @@ func runCucumber(cmd *cobra.Command) (int, error) {
 }
 
 func runCucumberInDocker(p cucumber.Project) (int, error) {
-	log.Info().Msg("Running Cucumber in Docker")
+	log.Info().Msg("Running Playwright-Cucumberjs in Docker")
 	printTestEnv("docker")
 
 	cd, err := docker.NewCucumber(p, &testcompClient, &testcompClient, &restoClient, &restoClient, createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
@@ -141,7 +141,7 @@ func runCucumberInDocker(p cucumber.Project) (int, error) {
 }
 
 func runCucumberInCloud(p cucumber.Project, regio region.Region) (int, error) {
-	log.Info().Msg("Running Cucumber in Sauce Labs")
+	log.Info().Msg("Running Playwright-Cucumberjs in Sauce Labs")
 	printTestEnv("sauce")
 
 	r := saucecloud.CucumberRunner{
