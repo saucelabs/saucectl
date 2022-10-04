@@ -378,10 +378,6 @@ func (r CloudRunner) remoteArchiveProject(project interface{}, folder string, sa
 		if file.Name() == "node_modules" {
 			continue
 		}
-		// skip sauce-runner.json since it will be a separate payload
-		if file.Name() == "sauce-runner.json" {
-			continue
-		}
 		files = append(files, filepath.Join(folder, file.Name()))
 	}
 
