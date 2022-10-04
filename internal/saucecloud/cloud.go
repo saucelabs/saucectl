@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/files"
 	"io"
 	"io/fs"
 	"os"
@@ -14,6 +13,9 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/files"
+	"github.com/saucelabs/saucectl/internal/jsonio"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -30,7 +32,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/node"
@@ -387,7 +388,7 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 		return "", err
 	}
 
-	appZip, err := r.archiveFiles(project, "app", tempDir, folder, files, matcher)
+	appZip, err := r.archiveFiles("app", tempDir, folder, files, matcher)
 	if err != nil {
 		return "", err
 	}
@@ -400,6 +401,12 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 	if modZip != "" {
 		archives[modZip] = nodeModulesUpload
 	}
+
+	configZip, err := r.archiveRunnerConfig(project, tempDir)
+	if err != nil {
+		return "", err
+	}
+	archives[configZip] = runnerConfigUpload
 
 	var uris []string
 	for k, v := range archives {
@@ -423,17 +430,35 @@ func (r *CloudRunner) remoteArchiveFiles(project interface{}, files []string, sa
 		defer os.RemoveAll(tempDir)
 	}
 
+	archives := make(map[string]uploadType)
+
 	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
 		return "", err
 	}
 
-	zipName, err := r.archiveFiles(project, "app", tempDir, ".", files, matcher)
+	zipName, err := r.archiveFiles("app", tempDir, ".", files, matcher)
 	if err != nil {
 		return "", err
 	}
+	archives[zipName] = projectUpload
 
-	return r.uploadProject(zipName, projectUpload, dryRun)
+	configZip, err := r.archiveRunnerConfig(project, tempDir)
+	if err != nil {
+		return "", err
+	}
+	archives[configZip] = runnerConfigUpload
+
+	var uris []string
+	for k, v := range archives {
+		uri, err := r.uploadProject(k, v, dryRun)
+		if err != nil {
+			return "", err
+		}
+		uris = append(uris, uri)
+	}
+
+	return strings.Join(uris, ","), nil
 }
 
 func checkPathLength(projectFolder string, matcher sauceignore.Matcher) (string, error) {
@@ -508,12 +533,32 @@ func (r *CloudRunner) archiveNodeModules(tempDir string, rootDir string, matcher
 		files = append(files, filepath.Join(rootDir, "node_modules"))
 	}
 
-	return r.archiveFiles(nil, "node_modules", tempDir, rootDir, files, matcher)
+	return r.archiveFiles("node_modules", tempDir, rootDir, files, matcher)
+}
+
+func (r *CloudRunner) archiveRunnerConfig(project interface{}, tempDir string) (string, error) {
+	zipName := filepath.Join(tempDir, "config.zip")
+	z, err := zip.NewFileWriter(zipName, sauceignore.NewMatcher([]sauceignore.Pattern{}))
+	if err != nil {
+		return "", err
+	}
+	defer z.Close()
+
+	rcPath := filepath.Join(tempDir, "sauce-runner.json")
+	if err := jsonio.WriteFile(rcPath, project); err != nil {
+		return "", err
+	}
+
+	_, err = z.Add(rcPath, "")
+	if err != nil {
+		return "", err
+	}
+	return zipName, nil
 }
 
 // archiveFiles creates a zip file with the given name and files. Files added to the zip retain their paths relative to
 // the rootDir. Temporary files, as well as the zip itself, are created in the tempDir directory.
-func (r *CloudRunner) archiveFiles(project interface{}, name string, tempDir string, rootDir string, files []string, matcher sauceignore.Matcher) (string, error) {
+func (r *CloudRunner) archiveFiles(name string, tempDir string, rootDir string, files []string, matcher sauceignore.Matcher) (string, error) {
 	start := time.Now()
 
 	zipName := filepath.Join(tempDir, name+".zip")
@@ -524,18 +569,6 @@ func (r *CloudRunner) archiveFiles(project interface{}, name string, tempDir str
 	defer z.Close()
 
 	totalFileCount := 0
-
-	if project != nil {
-		rcPath := filepath.Join(tempDir, "sauce-runner.json")
-		if err := jsonio.WriteFile(rcPath, project); err != nil {
-			return "", err
-		}
-		fileCount, err := z.Add(rcPath, "")
-		if err != nil {
-			return "", err
-		}
-		totalFileCount += fileCount
-	}
 
 	// Keep file order stable for consistent zip archives
 	sort.Strings(files)
@@ -577,11 +610,12 @@ func (r *CloudRunner) archiveFiles(project interface{}, name string, tempDir str
 type uploadType string
 
 var (
-	testAppUpload     uploadType = "test application"
-	appUpload         uploadType = "application"
-	projectUpload     uploadType = "project"
-	nodeModulesUpload uploadType = "node modules"
-	otherAppsUpload   uploadType = "other applications"
+	testAppUpload      uploadType = "test application"
+	appUpload          uploadType = "application"
+	projectUpload      uploadType = "project"
+	runnerConfigUpload uploadType = "runner config"
+	nodeModulesUpload  uploadType = "node modules"
+	otherAppsUpload    uploadType = "other applications"
 )
 
 func (r *CloudRunner) uploadProjects(filename []string, pType uploadType, dryRun bool) ([]string, error) {

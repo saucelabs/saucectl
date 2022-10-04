@@ -42,7 +42,6 @@ func TestPatternsFromFile(t *testing.T) {
 				gitignore.ParsePattern(".git/", nil),
 				gitignore.ParsePattern(".github/", nil),
 				gitignore.ParsePattern(".DS_Store", nil),
-				gitignore.ParsePattern("!sauce-runner.json", nil),
 			},
 			expectedErr: nil,
 		},
