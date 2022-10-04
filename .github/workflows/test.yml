@@ -79,7 +79,7 @@ jobs:
         working-directory: api/
         run: diff saucectl.schema.json fresh.schema.json
   build:
-    needs: lint
+    needs: [lint, test]
     runs-on: ubuntu-latest
     container:
       image: golang:1.19-alpine
