@@ -58,7 +58,7 @@ func NewCucumberCmd() *cobra.Command {
 	sc.String("platformName", "suite::platformName", "", "Run against this platform.")
 
 	// Cucumber
-	sc.String("cucumber-name", "suite::options::name", "", "Regular expressions of which scenario names should match one of to be run")
+	sc.String("scenario-name", "suite::options::name", "", "Regular expressions of which scenario names should match one of to be run")
 	sc.StringSlice("paths", "suite::options::paths", []string{}, "Paths to where the feature files are, using glob pattern")
 	sc.StringSlice("excludedTestFiles", "suite::options::excludedTestFiles", []string{}, "Exclude test files to skip the tests, using glob pattern")
 	sc.Bool("backtrace", "suite::options::backtrace", false, "Show the full backtrace for errors")
