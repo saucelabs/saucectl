@@ -127,6 +127,10 @@ func Validate(p Project) error {
 		return errors.New(msg.MissingRegion)
 	}
 
+	if regio == region.USEast4 && p.Sauce.Tunnel.Name != "" {
+		return errors.New(msg.NoTunnelSupport)
+	}
+
 	if p.Xcuitest.App == "" {
 		return errors.New(msg.MissingXcuitestAppPath)
 	}

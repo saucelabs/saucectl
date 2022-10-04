@@ -1,6 +1,8 @@
 package run
 
 import (
+	"errors"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"os"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
@@ -89,6 +91,9 @@ func runReplay(cmd *cobra.Command) (int, error) {
 	p.Suites = ss
 
 	regio := region.FromString(p.Sauce.Region)
+	if regio == region.USEast4 {
+		return 1, errors.New(msg.NoFrameworkSupport)
+	}
 
 	webdriverClient.URL = regio.WebDriverBaseURL()
 	testcompClient.URL = regio.APIBaseURL()
