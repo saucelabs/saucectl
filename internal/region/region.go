@@ -6,8 +6,10 @@ type Region uint
 const (
 	// None is an undefined sauce labs region.
 	None Region = iota
-	// USWest1 is a sauce labs region in the US, aka us-west-1.
+	// USWest1 is a sauce labs region in western US, aka us-west-1.
 	USWest1
+	// USEast4 is a sauce labs region in eastern US, aka us-east-4.
+	USEast4
 	// EUCentral1 is a sauce labs region in the EU, aka eu-central-1.
 	EUCentral1
 	// Staging is a sauce labs internal pre-production environment.
@@ -33,6 +35,13 @@ var meta = []struct {
 		"https://api.us-west-1.saucelabs.com",
 		"https://app.saucelabs.com",
 		"https://ondemand.us-west-1.saucelabs.com",
+	},
+	// USEast4
+	{
+		"us-east-4",
+		"https://api.us-east-4.saucelabs.com",
+		"https://app.us-east-4.saucelabs.com",
+		"https://ondemand.us-east-4.saucelabs.com",
 	},
 	// EUCentral1
 	{
