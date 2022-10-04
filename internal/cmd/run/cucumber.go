@@ -29,7 +29,7 @@ func NewCucumberCmd() *cobra.Command {
 	sc := flags.SnakeCharmer{Fmap: map[string]*pflag.Flag{}}
 
 	cmd := &cobra.Command{
-		Use:              "cucumber",
+		Use:              "cucumberjs",
 		Short:            "Run Cucumber test",
 		Hidden:           true,
 		TraverseChildren: true,
