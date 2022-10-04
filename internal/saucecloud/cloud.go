@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/files"
 	"io"
 	"io/fs"
 	"os"
@@ -14,6 +13,9 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/files"
+	"github.com/saucelabs/saucectl/internal/jsonio"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -30,7 +32,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/node"
@@ -377,10 +378,20 @@ func (r CloudRunner) remoteArchiveProject(project interface{}, folder string, sa
 		if file.Name() == "node_modules" {
 			continue
 		}
+		// skip sauce-runner.json since it will be a separate payload
+		if file.Name() == "sauce-runner.json" {
+			continue
+		}
 		files = append(files, filepath.Join(folder, file.Name()))
 	}
 
 	archives := make(map[string]uploadType)
+
+	configZip, err := r.archiveRunnerConfig(project, tempDir)
+	if err != nil {
+		return "", err
+	}
+	archives[configZip] = projectUpload
 
 	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
@@ -510,6 +521,11 @@ func (r *CloudRunner) archiveNodeModules(tempDir string, rootDir string, matcher
 
 	return r.archiveFiles(nil, "node_modules", tempDir, rootDir, files, matcher)
 }
+
+func (r *CloudRunner) archiveRunnerConfig(project interface{}, tempDir string) (string, error) {
+	return r.archiveFiles(project, "config", tempDir, ".", []string{}, nil)
+}
+
 
 // archiveFiles creates a zip file with the given name and files. Files added to the zip retain their paths relative to
 // the rootDir. Temporary files, as well as the zip itself, are created in the tempDir directory.
