@@ -109,7 +109,7 @@ func (r *CucumberRunner) runSuites(fileURI string) bool {
 				DisplayName:      s.Name,
 				App:              fmt.Sprintf("storage:%s", fileURI),
 				Suite:            s.Name,
-				Framework:        "cucumber",
+				Framework:        "playwright",
 				FrameworkVersion: r.Project.Playwright.Version,
 				BrowserName:      s.BrowserName,
 				BrowserVersion:   s.BrowserVersion,
