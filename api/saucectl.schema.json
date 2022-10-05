@@ -2507,7 +2507,10 @@
                       "description": "Options to be provided to cucumber formatters.",
                       "type": "array"
                     }
-                  }
+                  },
+                  "required": [
+                    "paths"
+                  ]
                 },
                 "mode": {
                   "$ref": "#/allOf/0/then/properties/defaults/properties/mode"

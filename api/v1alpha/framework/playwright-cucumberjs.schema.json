@@ -138,7 +138,10 @@
                 "description": "Options to be provided to cucumber formatters.",
                 "type": "array"
               }
-            }
+            },
+            "required": [
+              "paths"
+            ]
           },
           "mode": {
             "$ref": "../subschema/common.schema.json#/definitions/mode"
