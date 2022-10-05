@@ -92,9 +92,9 @@
           "screenResolution": {
             "$ref": "../subschema/common.schema.json#/definitions/screenResolution"
           },
-					"env": {
-						"$ref": "../subschema/common.schema.json#/definitions/env"
-					},
+          "env": {
+            "$ref": "../subschema/common.schema.json#/definitions/env"
+          },
           "options": {
             "description": "Provides details related to the Cucumberjs test configuration.",
             "type": "object",
@@ -107,34 +107,34 @@
                 "description": "Regular expressions of which cucumber scenario names should match one of to be run.",
                 "type": "string"
               },
-	            "paths": {
+              "paths": {
                 "description": "Paths to where your feature files are.",
                 "type": "array"
               },
               "excludedTestFiles": {
                 "$ref": "../subschema/common.schema.json#/definitions/excludedTestFiles"
               }, 
-							"backtrace": {
+              "backtrace": {
                 "description": "Show the full backtrace for errors.",
                 "type": "boolean"
               },
-							"require": {
+              "require": {
                 "description": "Paths to where your support code is, for CommonJS.",
                 "type": "array"
               },
-							"import": {
+              "import": {
                 "description": "Paths to where your support code is, for ESM.",
                 "type": "array"
               },
-							"tags": {
+              "tags": {
                 "description": "Tag expression to filter which scenarios should be run.",
                 "type": "array"
               }, 
-							"format": {
+              "format": {
                 "description": "Name/path and (optionally) output file path of each formatter to use.",
                 "type": "array"
               }, 
-							"formatOptions": {
+              "formatOptions": {
                 "description": "Options to be provided to cucumber formatters.",
                 "type": "array"
               }
