@@ -386,6 +386,30 @@ jobs:
         run: |
           ./saucectl run -c .sauce/apitest.yml
 
+            apitest:
+
+  playwright-cucumberjs:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Download saucectl binary
+        uses: actions/download-artifact@v2
+        with:
+          name: saucectlbin
+
+      - name: Set permissions
+        run: chmod +x ./saucectl
+
+      # Download bundled runner temporarily
+      - name: Saucectl RUN - Config Driven
+        working-directory: ./tests/e2e/playwright-cucumberjs
+        run: |
+          npm i; ../../../saucectl run --runner-version "url: https://storage.googleapis.com/sauce-devx-runners-bhtb/sauce-playwright-runner-3186013574.zip"
+
   windows-doctor:
     needs: build
     runs-on: windows-latest
