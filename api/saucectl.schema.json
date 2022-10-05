@@ -2464,7 +2464,7 @@
                 "env": {
                   "$ref": "#/allOf/0/then/properties/env"
                 },
-                "Options": {
+                "options": {
                   "description": "Provides details related to the Cucumberjs test configuration.",
                   "type": "object",
                   "properties": {
@@ -2531,9 +2531,7 @@
                 }
               },
               "required": [
-                "name",
-                "browser",
-                "config"
+                "name"
               ],
               "additionalProperties": false
             }

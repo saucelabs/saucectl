@@ -95,7 +95,7 @@
 					"env": {
 						"$ref": "../subschema/common.schema.json#/definitions/env"
 					},
-          "Options": {
+          "options": {
             "description": "Provides details related to the Cucumberjs test configuration.",
             "type": "object",
             "properties": {
@@ -162,9 +162,7 @@
           }
         },
         "required": [
-          "name",
-          "browser",
-          "config"
+          "name"
         ],
         "additionalProperties": false
       }
