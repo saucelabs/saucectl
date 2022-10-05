@@ -10,6 +10,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/cucumber"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/playwright"
 
 	"github.com/saucelabs/saucectl/internal/job"
 )
@@ -25,7 +26,7 @@ func (r *CucumberRunner) RunProject() (int, error) {
 	var deprecationMessage string
 	exitCode := 1
 
-	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, cucumber.Kind, r.Project.Playwright.Version)
+	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, playwright.Kind, r.Project.Playwright.Version)
 	if err != nil {
 		r.logFrameworkError(err)
 		return exitCode, err
@@ -36,7 +37,7 @@ func (r *CucumberRunner) RunProject() (int, error) {
 	}
 
 	if m.Deprecated {
-		deprecationMessage = r.deprecationMessage(cucumber.Kind, r.Project.Playwright.Version)
+		deprecationMessage = r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version)
 		fmt.Print(deprecationMessage)
 	}
 	for _, s := range r.Project.Suites {
