@@ -386,8 +386,6 @@ jobs:
         run: |
           ./saucectl run -c .sauce/apitest.yml
 
-            apitest:
-
   playwright-cucumberjs:
     needs: build
     runs-on: ubuntu-latest
