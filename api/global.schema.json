@@ -14,7 +14,8 @@
         "puppeteer",
         "puppeteer-replay",
         "testcafe",
-        "xcuitest"
+        "xcuitest",
+        "playwright-cucumberjs"
       ]
     }
   },
@@ -131,6 +132,18 @@
       },
       "then": {
         "$ref": "v1alpha/framework/apitest.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "playwright-cucumberjs"
+          }
+        }
+      },
+      "then": {
+        "$ref": "v1alpha/framework/playwright-cucumberjs.schema.json"
       }
     }
   ]

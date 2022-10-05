@@ -6,13 +6,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	specs "github.com/opencontainers/image-spec/specs-go/v1"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 	"time"
+
+	specs "github.com/opencontainers/image-spec/specs-go/v1"
 
 	"github.com/saucelabs/saucectl/internal/version"
 
