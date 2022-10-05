@@ -64,7 +64,7 @@ func NewCucumberCmd() *cobra.Command {
 	sc.Bool("backtrace", "suite::options::backtrace", false, "Show the full backtrace for errors")
 	sc.StringSlice("require", "suite::options::require", []string{}, "Paths to where your support code is, for CommonJS.")
 	sc.StringSlice("import", "suite::options::import", []string{}, "Paths to where your support code is, for ESM")
-	sc.StringSlice("tags", "suite::options::tags", []string{}, "Tag expression to filter which scenarios should be run")
+	sc.StringSlice("scenario-tags", "suite::options::tags", []string{}, "Tag expression to filter which scenarios should be run")
 	sc.StringSlice("format", "suite::options::format", []string{}, "Name/path and (optionally) output file path of each formatter to use")
 
 	return cmd

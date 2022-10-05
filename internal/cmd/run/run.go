@@ -177,6 +177,7 @@ func Command() *cobra.Command {
 		NewReplayCmd(),
 		NewTestcafeCmd(),
 		NewXCUITestCmd(),
+		NewCucumberCmd(),
 	)
 
 	return cmd
