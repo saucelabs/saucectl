@@ -42,7 +42,7 @@ var ErrFileNotFound = errors.New("file not found")
 var ErrAccessDenied = errors.New("access denied")
 
 // ErrTooManyRequest is returned when the request number is exceeding rate limit.
-var ErrTooManyRequest = errors.New("too many requests. Your request exceeds the API rate limit. Please try it later")
+var ErrTooManyRequest = errors.New("too many requests, please try again later")
 
 // ServerError represents any server side error that isn't already covered by other types of errors in this package.
 type ServerError struct {
