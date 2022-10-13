@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/multipartext"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -16,6 +15,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/multipartext"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -104,6 +105,8 @@ func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
 		return nil, 0, storage.ErrAccessDenied
 	case 404:
 		return nil, 0, storage.ErrFileNotFound
+	case 429:
+		return nil, 0, storage.ErrTooManyRequest
 	default:
 		return nil, 0, newServerError(resp)
 	}
@@ -140,6 +143,8 @@ func (s *AppStore) UploadStream(filename string, reader io.Reader) (storage.Item
 		}, err
 	case 401, 403:
 		return storage.Item{}, storage.ErrAccessDenied
+	case 429:
+		return storage.Item{}, storage.ErrTooManyRequest
 	default:
 		return storage.Item{}, newServerError(resp)
 	}
@@ -319,6 +324,8 @@ func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 		}, nil
 	case 401, 403:
 		return storage.List{}, storage.ErrAccessDenied
+	case 429:
+		return storage.List{}, storage.ErrTooManyRequest
 	default:
 		return storage.List{}, newServerError(resp)
 	}
