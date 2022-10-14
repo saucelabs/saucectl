@@ -43,9 +43,12 @@ type Project struct {
 
 // Espresso represents espresso apps configuration.
 type Espresso struct {
-	App       string   `yaml:"app,omitempty" json:"app"`
-	TestApp   string   `yaml:"testApp,omitempty" json:"testApp"`
-	OtherApps []string `yaml:"otherApps,omitempty" json:"otherApps"`
+	App                  string   `yaml:"app,omitempty" json:"app"`
+	AppDescription       string   `yaml:"appDescription,omitempty" json:"appDescription"`
+	TestApp              string   `yaml:"testApp,omitempty" json:"testApp"`
+	TestAppDescription   string   `yaml:"testAppDescription,omitempty" json:"testAppDescription"`
+	OtherApps            []string `yaml:"otherApps,omitempty" json:"otherApps"`
+	OtherAppDescriptions []string `yaml:"otherAppDescriptions,omitempty" json:"otherAppDescriptions"`
 }
 
 // TestOptions represents the espresso test filter options configuration.
@@ -65,13 +68,14 @@ type TestOptions struct {
 
 // Suite represents the espresso test suite configuration.
 type Suite struct {
-	Name        string                 `yaml:"name,omitempty" json:"name"`
-	TestApp     string                 `yaml:"testApp,omitempty" json:"testApp"`
-	Devices     []config.Device        `yaml:"devices,omitempty" json:"devices"`
-	Emulators   []config.Emulator      `yaml:"emulators,omitempty" json:"emulators"`
-	TestOptions map[string]interface{} `yaml:"testOptions,omitempty" json:"testOptions"`
-	Timeout     time.Duration          `yaml:"timeout,omitempty" json:"timeout"`
-	AppSettings config.AppSettings     `yaml:"appSettings,omitempty" json:"appSettings"`
+	Name               string                 `yaml:"name,omitempty" json:"name"`
+	TestApp            string                 `yaml:"testApp,omitempty" json:"testApp"`
+	TestAppDescription string                 `yaml:"testAppDescription,omitempty" json:"testAppDescription"`
+	Devices            []config.Device        `yaml:"devices,omitempty" json:"devices"`
+	Emulators          []config.Emulator      `yaml:"emulators,omitempty" json:"emulators"`
+	TestOptions        map[string]interface{} `yaml:"testOptions,omitempty" json:"testOptions"`
+	Timeout            time.Duration          `yaml:"timeout,omitempty" json:"timeout"`
+	AppSettings        config.AppSettings     `yaml:"appSettings,omitempty" json:"appSettings"`
 }
 
 // Android constant
@@ -126,6 +130,7 @@ func SetDefaults(p *Project) {
 
 		if suite.TestApp == "" {
 			p.Suites[i].TestApp = p.Espresso.TestApp
+			p.Suites[i].TestAppDescription = p.Espresso.TestAppDescription
 		}
 	}
 }

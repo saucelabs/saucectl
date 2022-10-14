@@ -13,10 +13,13 @@ var quoteEscaper = strings.NewReplacer("\\", "\\\\", `"`, "\\\"")
 
 // NewMultipartReader creates a new io.Reader that serves multipart form-data from src.
 // Also returns the form data content type (see multipart.Writer#FormDataContentType).
-func NewMultipartReader(filename string, src io.Reader) (io.Reader, string, error) {
+func NewMultipartReader(filename, description string, src io.Reader) (io.Reader, string, error) {
 	// Create the multipart header.
 	buffy := &bytes.Buffer{}
 	writer := multipart.NewWriter(buffy)
+	if description != "" {
+		writer.WriteField("description", description)
+	}
 
 	header := make(textproto.MIMEHeader)
 	header.Set("Content-Disposition",

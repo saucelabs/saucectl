@@ -59,8 +59,11 @@ func NewXCUITestCmd() *cobra.Command {
 	sc.Fset = cmd.Flags()
 	sc.String("name", "suite::name", "", "Creates a new adhoc suite with this name. Suites defined in the config will be ignored.")
 	sc.String("app", "xcuitest::app", "", "Specifies the app under test")
+	sc.String("appDescription", "xcuitest::appDescription", "", "Specifies the description for the app")
 	sc.String("testApp", "xcuitest::testApp", "", "Specifies the test app")
+	sc.String("testAppDescription", "xcuitest::testAppDescription", "", "Specifies the description for the testApp")
 	sc.StringSlice("otherApps", "xcuitest::otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
+	sc.StringSlice("otherAppDescriptions", "xcuitest::otherAppDescriptions", []string{}, "Specifies the descriptions for otherApps. The order should match otherApps")
 
 	// Test Options
 	sc.StringSlice("testOptions.class", "suite::testOptions::class", []string{}, "Only run the specified classes. Requires --name to be set.")

@@ -42,9 +42,12 @@ type Project struct {
 
 // Xcuitest represents xcuitest apps configuration.
 type Xcuitest struct {
-	App       string   `yaml:"app,omitempty" json:"app"`
-	TestApp   string   `yaml:"testApp,omitempty" json:"testApp"`
-	OtherApps []string `yaml:"otherApps,omitempty" json:"otherApps"`
+	App                  string   `yaml:"app,omitempty" json:"app"`
+	AppDescription       string   `yaml:"appDescription,omitempty" json:"appDescription"`
+	TestApp              string   `yaml:"testApp,omitempty" json:"testApp"`
+	TestAppDescription   string   `yaml:"testAppDescription,omitempty" json:"testAppDescription"`
+	OtherApps            []string `yaml:"otherApps,omitempty" json:"otherApps"`
+	OtherAppDescriptions []string `yaml:"otherAppDescriptions,omitempty" json:"otherAppDescriptions"`
 }
 
 // TestOptions represents the xcuitest test filter options configuration.
@@ -55,12 +58,13 @@ type TestOptions struct {
 
 // Suite represents the xcuitest test suite configuration.
 type Suite struct {
-	Name        string             `yaml:"name,omitempty" json:"name"`
-	TestApp     string             `yaml:"testApp,omitempty" json:"testApp"`
-	Timeout     time.Duration      `yaml:"timeout,omitempty" json:"timeout"`
-	Devices     []config.Device    `yaml:"devices,omitempty" json:"devices"`
-	TestOptions TestOptions        `yaml:"testOptions,omitempty" json:"testOptions"`
-	AppSettings config.AppSettings `yaml:"appSettings,omitempty" json:"appSettings"`
+	Name               string             `yaml:"name,omitempty" json:"name"`
+	TestApp            string             `yaml:"testApp,omitempty" json:"testApp"`
+	TestAppDescription string             `yaml:"testAppDescription,omitempty" json:"testAppDescription"`
+	Timeout            time.Duration      `yaml:"timeout,omitempty" json:"timeout"`
+	Devices            []config.Device    `yaml:"devices,omitempty" json:"devices"`
+	TestOptions        TestOptions        `yaml:"testOptions,omitempty" json:"testOptions"`
+	AppSettings        config.AppSettings `yaml:"appSettings,omitempty" json:"appSettings"`
 }
 
 // IOS constant
@@ -114,6 +118,7 @@ func SetDefaults(p *Project) {
 
 		if suite.TestApp == "" {
 			p.Suites[ks].TestApp = p.Xcuitest.TestApp
+			p.Suites[ks].TestAppDescription = p.Xcuitest.TestAppDescription
 		}
 	}
 }

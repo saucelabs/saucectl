@@ -40,12 +40,12 @@ func (r *EspressoRunner) RunProject() (int, error) {
 	}
 
 	var err error
-	r.Project.Espresso.App, err = r.uploadProject(r.Project.Espresso.App, appUpload, r.Project.DryRun)
+	r.Project.Espresso.App, err = r.uploadProject(r.Project.Espresso.App, r.Project.Espresso.AppDescription, appUpload, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
 
-	r.Project.Espresso.OtherApps, err = r.uploadProjects(r.Project.Espresso.OtherApps, otherAppsUpload, r.Project.DryRun)
+	r.Project.Espresso.OtherApps, err = r.uploadProjects(r.Project.Espresso.OtherApps, r.Project.Espresso.OtherAppDescriptions, otherAppsUpload, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
@@ -57,7 +57,7 @@ func (r *EspressoRunner) RunProject() (int, error) {
 			continue
 		}
 
-		testAppURL, err := r.uploadProject(suite.TestApp, testAppUpload, r.Project.DryRun)
+		testAppURL, err := r.uploadProject(suite.TestApp, suite.TestAppDescription, testAppUpload, r.Project.DryRun)
 		if err != nil {
 			return exitCode, err
 		}
