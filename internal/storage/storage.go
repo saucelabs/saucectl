@@ -41,6 +41,9 @@ var ErrFileNotFound = errors.New("file not found")
 // ErrAccessDenied is returned when the service denies access. Either due to insufficient rights or wrong credentials.
 var ErrAccessDenied = errors.New("access denied")
 
+// ErrTooManyRequest is returned when the request number is exceeding rate limit.
+var ErrTooManyRequest = errors.New("too many requests, please try again later")
+
 // ServerError represents any server side error that isn't already covered by other types of errors in this package.
 type ServerError struct {
 	Code  int
