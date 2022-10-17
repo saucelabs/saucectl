@@ -48,7 +48,7 @@ type Espresso struct {
 	TestApp               string   `yaml:"testApp,omitempty" json:"testApp"`
 	TestAppDescription    string   `yaml:"testAppDescription,omitempty" json:"testAppDescription"`
 	OtherApps             []string `yaml:"otherApps,omitempty" json:"otherApps"`
-	OtherAppsDescriptions []string `yaml:"otherAppDescriptions,omitempty" json:"otherAppDescriptions"`
+	OtherAppsDescriptions []string `yaml:"otherAppsDescriptions,omitempty" json:"otherAppsDescriptions"`
 }
 
 // TestOptions represents the espresso test filter options configuration.
