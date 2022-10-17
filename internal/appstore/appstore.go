@@ -206,10 +206,8 @@ func readFile(fileName, description string) (*bytes.Buffer, string, error) {
 	writer := multipart.NewWriter(body)
 	defer writer.Close()
 
-	if description != "" {
-		if err := writer.WriteField("description", description); err != nil {
-			return nil, "", err
-		}
+	if err := writer.WriteField("description", description); err != nil {
+		return nil, "", err
 	}
 
 	part, err := writer.CreateFormFile("payload", filepath.Base(file.Name()))
