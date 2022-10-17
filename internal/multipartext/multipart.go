@@ -17,10 +17,6 @@ func NewMultipartReader(filename, description string, src io.Reader) (io.Reader,
 	// Create the multipart header.
 	buffy := &bytes.Buffer{}
 	writer := multipart.NewWriter(buffy)
-	if err := writer.WriteField("description", description); err != nil {
-		return nil, "", err
-	}
-
 	header := make(textproto.MIMEHeader)
 	header.Set("Content-Disposition",
 		fmt.Sprintf(`form-data; name="payload"; filename="%s"`, quoteEscaper.Replace(filename)))
@@ -32,6 +28,10 @@ func NewMultipartReader(filename, description string, src io.Reader) (io.Reader,
 		return nil, "", err
 	}
 	headerSize := buffy.Len()
+
+	if err := writer.WriteField("description", description); err != nil {
+		return nil, "", err
+	}
 
 	// Finish the multipart message.
 	if err := writer.Close(); err != nil {

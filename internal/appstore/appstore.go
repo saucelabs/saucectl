@@ -206,10 +206,6 @@ func readFile(fileName, description string) (*bytes.Buffer, string, error) {
 	writer := multipart.NewWriter(body)
 	defer writer.Close()
 
-	if err := writer.WriteField("description", description); err != nil {
-		return nil, "", err
-	}
-
 	part, err := writer.CreateFormFile("payload", filepath.Base(file.Name()))
 	if err != nil {
 		return nil, "", err
@@ -218,6 +214,10 @@ func readFile(fileName, description string) (*bytes.Buffer, string, error) {
 	// FIXME This consumes quite a bit of memory (think of large mobile apps, node modules etc.).
 	_, err = io.Copy(part, file)
 	if err != nil {
+		return nil, "", err
+	}
+
+	if err := writer.WriteField("description", description); err != nil {
 		return nil, "", err
 	}
 
