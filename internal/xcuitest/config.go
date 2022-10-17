@@ -42,11 +42,11 @@ type Project struct {
 
 // Xcuitest represents xcuitest apps configuration.
 type Xcuitest struct {
-	App                  string   `yaml:"app,omitempty" json:"app"`
-	AppDescription       string   `yaml:"appDescription,omitempty" json:"appDescription"`
-	TestApp              string   `yaml:"testApp,omitempty" json:"testApp"`
-	TestAppDescription   string   `yaml:"testAppDescription,omitempty" json:"testAppDescription"`
-	OtherApps            []string `yaml:"otherApps,omitempty" json:"otherApps"`
+	App                   string   `yaml:"app,omitempty" json:"app"`
+	AppDescription        string   `yaml:"appDescription,omitempty" json:"appDescription"`
+	TestApp               string   `yaml:"testApp,omitempty" json:"testApp"`
+	TestAppDescription    string   `yaml:"testAppDescription,omitempty" json:"testAppDescription"`
+	OtherApps             []string `yaml:"otherApps,omitempty" json:"otherApps"`
 	OtherAppsDescriptions []string `yaml:"otherAppsDescriptions,omitempty" json:"otherAppsDescriptions"`
 }
 
@@ -148,6 +148,9 @@ func Validate(p Project) error {
 	}
 	if err := apps.Validate("test application", p.Xcuitest.TestApp, []string{".ipa", ".app"}); err != nil {
 		return err
+	}
+	if len(p.Xcuitest.OtherApps) != len(p.Xcuitest.OtherAppsDescriptions) {
+		return errors.New(msg.InvalidOtherAppsDescriptions)
 	}
 
 	for _, app := range p.Xcuitest.OtherApps {

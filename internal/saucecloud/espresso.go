@@ -45,7 +45,7 @@ func (r *EspressoRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	r.Project.Espresso.OtherApps, err = r.uploadProjects(r.Project.Espresso.OtherApps, r.Project.Espresso.OtherAppDescriptions, otherAppsUpload, r.Project.DryRun)
+	r.Project.Espresso.OtherApps, err = r.uploadProjects(r.Project.Espresso.OtherApps, r.Project.Espresso.OtherAppsDescriptions, otherAppsUpload, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}

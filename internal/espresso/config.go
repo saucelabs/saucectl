@@ -43,12 +43,12 @@ type Project struct {
 
 // Espresso represents espresso apps configuration.
 type Espresso struct {
-	App                  string   `yaml:"app,omitempty" json:"app"`
-	AppDescription       string   `yaml:"appDescription,omitempty" json:"appDescription"`
-	TestApp              string   `yaml:"testApp,omitempty" json:"testApp"`
-	TestAppDescription   string   `yaml:"testAppDescription,omitempty" json:"testAppDescription"`
-	OtherApps            []string `yaml:"otherApps,omitempty" json:"otherApps"`
-	OtherAppDescriptions []string `yaml:"otherAppDescriptions,omitempty" json:"otherAppDescriptions"`
+	App                   string   `yaml:"app,omitempty" json:"app"`
+	AppDescription        string   `yaml:"appDescription,omitempty" json:"appDescription"`
+	TestApp               string   `yaml:"testApp,omitempty" json:"testApp"`
+	TestAppDescription    string   `yaml:"testAppDescription,omitempty" json:"testAppDescription"`
+	OtherApps             []string `yaml:"otherApps,omitempty" json:"otherApps"`
+	OtherAppsDescriptions []string `yaml:"otherAppsDescriptions,omitempty" json:"otherAppsDescriptions"`
 }
 
 // TestOptions represents the espresso test filter options configuration.
@@ -164,6 +164,9 @@ func Validate(p Project) error {
 	}
 	if err := apps.Validate("test application", p.Espresso.TestApp, []string{".apk", ".aab"}); err != nil {
 		return err
+	}
+	if len(p.Espresso.OtherApps) != len(p.Espresso.OtherAppsDescriptions) {
+		return errors.New(msg.InvalidOtherAppsDescriptions)
 	}
 
 	for _, app := range p.Espresso.OtherApps {

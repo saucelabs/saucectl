@@ -40,7 +40,7 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	r.Project.Xcuitest.OtherApps, err = r.uploadProjects(r.Project.Xcuitest.OtherApps, r.Project.Xcuitest.OtherAppDescriptions, otherAppsUpload, r.Project.DryRun)
+	r.Project.Xcuitest.OtherApps, err = r.uploadProjects(r.Project.Xcuitest.OtherApps, r.Project.Xcuitest.OtherAppsDescriptions, otherAppsUpload, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}

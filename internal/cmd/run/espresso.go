@@ -64,7 +64,7 @@ func NewEspressoCmd() *cobra.Command {
 	sc.String("testApp", "espresso::testApp", "", "Specifies the test app")
 	sc.String("testAppDescription", "espresso::testAppDescription", "", "Specifies description for the testApp")
 	sc.StringSlice("otherApps", "espresso::otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
-	sc.StringSlice("otherAppDescriptions", "espresso::otherAppDescriptions", []string{}, "Specifies descriptions for otherApps. The order should match otherApps")
+	sc.StringSlice("otherAppsDescriptions", "espresso::otherAppsDescriptions", []string{}, "Specifies descriptions for otherApps. The order should match otherApps")
 
 	// Test Options
 	sc.StringSlice("testOptions.class", "suite::testOptions::class", []string{}, "Only run the specified classes. Requires --name to be set.")

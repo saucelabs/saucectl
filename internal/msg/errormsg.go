@@ -130,6 +130,8 @@ const (
 	InvalidEmulatorName = "missing `emulator` in emulator name: %s. Suite name: %s. Emulators index: %d"
 	// MissingEmulatorPlatformVersion indicates no emulator platform version provided
 	MissingEmulatorPlatformVersion = "missing platform versions for emulator: %s. Suite name: %s. Emulators index: %d"
+	// InvalidOtherAppsDescriptions indicates otherAppsDescriptions cannot match otherApps
+	InvalidOtherAppsDescriptions = "otherAppsDescriptions cannot match otherApps"
 )
 
 // testcafe config settings

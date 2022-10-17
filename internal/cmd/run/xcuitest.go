@@ -63,7 +63,7 @@ func NewXCUITestCmd() *cobra.Command {
 	sc.String("testApp", "xcuitest::testApp", "", "Specifies the test app")
 	sc.String("testAppDescription", "xcuitest::testAppDescription", "", "Specifies description for the testApp")
 	sc.StringSlice("otherApps", "xcuitest::otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
-	sc.StringSlice("otherAppDescriptions", "xcuitest::otherAppDescriptions", []string{}, "Specifies descriptions for otherApps. The order should match otherApps")
+	sc.StringSlice("otherAppsDescriptions", "xcuitest::otherAppsDescriptions", []string{}, "Specifies descriptions for otherApps. The order should match otherApps")
 
 	// Test Options
 	sc.StringSlice("testOptions.class", "suite::testOptions::class", []string{}, "Only run the specified classes. Requires --name to be set.")
