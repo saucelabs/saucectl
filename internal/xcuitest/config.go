@@ -149,7 +149,7 @@ func Validate(p Project) error {
 	if err := apps.Validate("test application", p.Xcuitest.TestApp, []string{".ipa", ".app"}); err != nil {
 		return err
 	}
-	if len(p.Xcuitest.OtherApps) != len(p.Xcuitest.OtherAppsDescriptions) {
+	if len(p.Xcuitest.OtherAppsDescriptions) > 0 && len(p.Xcuitest.OtherApps) != len(p.Xcuitest.OtherAppsDescriptions) {
 		return errors.New(msg.InvalidOtherAppsDescriptions)
 	}
 
