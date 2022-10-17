@@ -207,7 +207,9 @@ func readFile(fileName, description string) (*bytes.Buffer, string, error) {
 	defer writer.Close()
 
 	if description != "" {
-		writer.WriteField("description", description)
+		if err := writer.WriteField("description", description); err != nil {
+			return nil, "", err
+		}
 	}
 
 	part, err := writer.CreateFormFile("payload", filepath.Base(file.Name()))

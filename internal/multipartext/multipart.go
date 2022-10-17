@@ -18,7 +18,9 @@ func NewMultipartReader(filename, description string, src io.Reader) (io.Reader,
 	buffy := &bytes.Buffer{}
 	writer := multipart.NewWriter(buffy)
 	if description != "" {
-		writer.WriteField("description", description)
+		if err := writer.WriteField("description", description); err != nil {
+			return nil, "", err
+		}
 	}
 
 	header := make(textproto.MIMEHeader)
