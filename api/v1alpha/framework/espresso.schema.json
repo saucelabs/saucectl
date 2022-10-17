@@ -60,7 +60,7 @@
           "type": "array",
           "maxItems": 7
         },
-        "otherAppDescriptions": {
+        "otherAppsDescriptions": {
           "description": "Description for otherApps. The order should match otherApps",
           "type": "array",
           "maxItems": 7
