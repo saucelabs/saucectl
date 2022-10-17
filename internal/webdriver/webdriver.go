@@ -220,7 +220,14 @@ func formatEspressoArgs(options map[string]interface{}) []map[string]string {
 // normalizeBrowser converts the user specified browsers into something Sauce Labs can understand better.
 func normalizeBrowser(framework, browser string) string {
 	switch framework {
-	case "cypress", "testcafe":
+	case "cypress":
+		switch browser {
+		case "chrome":
+			return "googlechrome"
+		case "webkit":
+			return "cypress-webkit"
+		}
+	case "testcafe":
 		switch browser {
 		case "chrome":
 			return "googlechrome"

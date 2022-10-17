@@ -122,7 +122,8 @@
             "enum": [
               "chrome",
               "firefox",
-              "microsoftedge"
+              "microsoftedge",
+              "webkit"
             ]
           },
           "browserVersion": {
