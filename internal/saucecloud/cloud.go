@@ -620,7 +620,7 @@ var (
 
 func (r *CloudRunner) uploadProjects(filenames, descriptions []string, pType uploadType, dryRun bool) ([]string, error) {
 	var IDs []string
-	for i, f := range filename {
+	for i, f := range filenames {
 		ID, err := r.uploadProject(f, descriptions[i], pType, dryRun)
 		if err != nil {
 			return []string{}, err
