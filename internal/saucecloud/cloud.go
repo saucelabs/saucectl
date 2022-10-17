@@ -618,7 +618,7 @@ var (
 	otherAppsUpload    uploadType = "other applications"
 )
 
-func (r *CloudRunner) uploadProjects(filename, descriptions []string, pType uploadType, dryRun bool) ([]string, error) {
+func (r *CloudRunner) uploadProjects(filenames, descriptions []string, pType uploadType, dryRun bool) ([]string, error) {
 	var IDs []string
 	for i, f := range filename {
 		ID, err := r.uploadProject(f, descriptions[i], pType, dryRun)
