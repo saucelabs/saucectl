@@ -59,11 +59,6 @@
           "description": "A list of applications to be installed alongside the main app. Applications can be defined as a local path or a remote url. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
           "type": "array",
           "maxItems": 7
-        },
-        "otherAppsDescriptions": {
-          "description": "Description for otherApps. The order should match otherApps",
-          "type": "array",
-          "maxItems": 7
         }
       },
       "required": [
