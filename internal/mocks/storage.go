@@ -2,8 +2,9 @@ package mocks
 
 import (
 	"errors"
-	"github.com/saucelabs/saucectl/internal/storage"
 	"io"
+
+	"github.com/saucelabs/saucectl/internal/storage"
 )
 
 // FakeProjectUploader mock struct
@@ -11,7 +12,7 @@ type FakeProjectUploader struct {
 	UploadSuccess bool
 }
 
-func (fpu *FakeProjectUploader) UploadStream(filename string, reader io.Reader) (storage.Item, error) {
+func (fpu *FakeProjectUploader) UploadStream(filename, description string, reader io.Reader) (storage.Item, error) {
 	panic("not implemented")
 }
 
@@ -27,7 +28,7 @@ func (fpu *FakeProjectUploader) List(opts storage.ListOptions) (storage.List, er
 }
 
 // Upload mock function
-func (fpu *FakeProjectUploader) Upload(name string) (storage.Item, error) {
+func (fpu *FakeProjectUploader) Upload(name, description string) (storage.Item, error) {
 	if fpu.UploadSuccess {
 		return storage.Item{
 			ID: "fake-id",

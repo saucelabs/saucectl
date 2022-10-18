@@ -410,7 +410,7 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 
 	var uris []string
 	for k, v := range archives {
-		uri, err := r.uploadProject(k, v, dryRun)
+		uri, err := r.uploadProject(k, "", v, dryRun)
 		if err != nil {
 			return "", err
 		}
@@ -451,7 +451,7 @@ func (r *CloudRunner) remoteArchiveFiles(project interface{}, files []string, sa
 
 	var uris []string
 	for k, v := range archives {
-		uri, err := r.uploadProject(k, v, dryRun)
+		uri, err := r.uploadProject(k, "", v, dryRun)
 		if err != nil {
 			return "", err
 		}
@@ -618,10 +618,10 @@ var (
 	otherAppsUpload    uploadType = "other applications"
 )
 
-func (r *CloudRunner) uploadProjects(filename []string, pType uploadType, dryRun bool) ([]string, error) {
+func (r *CloudRunner) uploadProjects(filenames []string, pType uploadType, dryRun bool) ([]string, error) {
 	var IDs []string
-	for _, f := range filename {
-		ID, err := r.uploadProject(f, pType, dryRun)
+	for _, f := range filenames {
+		ID, err := r.uploadProject(f, "", pType, dryRun)
 		if err != nil {
 			return []string{}, err
 		}
@@ -631,7 +631,7 @@ func (r *CloudRunner) uploadProjects(filename []string, pType uploadType, dryRun
 	return IDs, nil
 }
 
-func (r *CloudRunner) uploadProject(filename string, pType uploadType, dryRun bool) (string, error) {
+func (r *CloudRunner) uploadProject(filename, description string, pType uploadType, dryRun bool) (string, error) {
 	if dryRun {
 		log.Info().Str("file", filename).Msgf("Skipping upload in dry run.")
 		return "", nil
@@ -669,7 +669,7 @@ func (r *CloudRunner) uploadProject(filename string, pType uploadType, dryRun bo
 	progress.Show("Uploading %s %s", pType, filename)
 
 	start := time.Now()
-	resp, err := r.ProjectUploader.Upload(filename)
+	resp, err := r.ProjectUploader.Upload(filename, description)
 	progress.Stop()
 	if err != nil {
 		return "", err

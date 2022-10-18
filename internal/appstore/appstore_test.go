@@ -4,8 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/storage"
-	"github.com/xtgo/uuid"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -14,6 +12,9 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/storage"
+	"github.com/xtgo/uuid"
 
 	"gotest.tools/v3/fs"
 )
@@ -201,7 +202,7 @@ func TestAppStore_UploadStream(t *testing.T) {
 				_ = f.Close()
 			}(f)
 
-			got, err := s.UploadStream(tt.args.filename, f)
+			got, err := s.UploadStream(tt.args.filename, "", f)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UploadStream() error = %v, wantErr %v", err, tt.wantErr)
 				return

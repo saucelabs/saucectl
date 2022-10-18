@@ -113,8 +113,8 @@ func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
 }
 
 // UploadStream uploads the contents of reader and stores them under the given filename.
-func (s *AppStore) UploadStream(filename string, reader io.Reader) (storage.Item, error) {
-	multipartReader, contentType, err := multipartext.NewMultipartReader(filename, reader)
+func (s *AppStore) UploadStream(filename, description string, reader io.Reader) (storage.Item, error) {
+	multipartReader, contentType, err := multipartext.NewMultipartReader(filename, description, reader)
 	if err != nil {
 		return storage.Item{}, err
 	}
@@ -153,8 +153,8 @@ func (s *AppStore) UploadStream(filename string, reader io.Reader) (storage.Item
 // Upload uploads file to remote storage
 //
 // Deprecated: Use UploadStream.
-func (s *AppStore) Upload(filename string) (storage.Item, error) {
-	body, contentType, err := readFile(filename)
+func (s *AppStore) Upload(filename string, description string) (storage.Item, error) {
+	body, contentType, err := readFile(filename, description)
 	if err != nil {
 		return storage.Item{}, err
 	}
@@ -195,7 +195,7 @@ func (s *AppStore) Upload(filename string) (storage.Item, error) {
 	return storage.Item{ID: ur.Item.ID}, err
 }
 
-func readFile(fileName string) (*bytes.Buffer, string, error) {
+func readFile(fileName, description string) (*bytes.Buffer, string, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
 		return nil, "", err
@@ -205,6 +205,7 @@ func readFile(fileName string) (*bytes.Buffer, string, error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 	defer writer.Close()
+
 	part, err := writer.CreateFormFile("payload", filepath.Base(file.Name()))
 	if err != nil {
 		return nil, "", err
@@ -213,6 +214,10 @@ func readFile(fileName string) (*bytes.Buffer, string, error) {
 	// FIXME This consumes quite a bit of memory (think of large mobile apps, node modules etc.).
 	_, err = io.Copy(part, file)
 	if err != nil {
+		return nil, "", err
+	}
+
+	if err := writer.WriteField("description", description); err != nil {
 		return nil, "", err
 	}
 

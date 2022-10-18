@@ -35,7 +35,7 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	r.Project.Xcuitest.App, err = r.uploadProject(r.Project.Xcuitest.App, appUpload, r.Project.DryRun)
+	r.Project.Xcuitest.App, err = r.uploadProject(r.Project.Xcuitest.App, r.Project.Xcuitest.AppDescription, appUpload, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
@@ -52,7 +52,7 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 			continue
 		}
 
-		testAppURL, err := r.uploadProject(s.TestApp, testAppUpload, r.Project.DryRun)
+		testAppURL, err := r.uploadProject(s.TestApp, s.TestAppDescription, testAppUpload, r.Project.DryRun)
 		if err != nil {
 			return exitCode, err
 		}

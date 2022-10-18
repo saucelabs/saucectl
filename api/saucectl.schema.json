@@ -1048,8 +1048,16 @@
                 "description": "Local path or remote url to the application. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
                 "type": "string"
               },
+              "appDescription": {
+                "description": "Description for the app",
+                "type": "string"
+              },
               "testApp": {
                 "description": "Local path or remote url to the test application. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
+                "type": "string"
+              },
+              "testAppDescription": {
+                "description": "Description for the testApp",
                 "type": "string"
               },
               "otherApps": {
@@ -1077,6 +1085,10 @@
                 },
                 "testApp": {
                   "description": "Local path or remote url to the test application. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
+                  "type": "string"
+                },
+                "testAppDescription": {
+                  "description": "Description for the testApp",
                   "type": "string"
                 },
                 "testOptions": {
@@ -2149,8 +2161,16 @@
                 "description": "Local path or remote url to the application. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
                 "type": "string"
               },
+              "appDescription": {
+                "description": "Description for the app",
+                "type": "string"
+              },
               "testApp": {
                 "description": "Local path or remote url to the test application. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
+                "type": "string"
+              },
+              "testAppDescription": {
+                "description": "Description for the testApp",
                 "type": "string"
               },
               "otherApps": {
@@ -2177,6 +2197,10 @@
                 },
                 "testApp": {
                   "description": "Local path or remote url to the test application. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
+                  "type": "string"
+                },
+                "testAppDescription": {
+                  "description": "Description for the testApp",
                   "type": "string"
                 },
                 "testOptions": {

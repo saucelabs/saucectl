@@ -3,6 +3,8 @@ package storage
 import (
 	"errors"
 	"fmt"
+	"os"
+
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/files"
 	"github.com/saucelabs/saucectl/internal/segment"
@@ -12,12 +14,12 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"os"
 )
 
 func UploadCommand() *cobra.Command {
 	var out string
 	var force bool
+	var description string
 
 	cmd := &cobra.Command{
 		Use: "upload filename",
@@ -79,7 +81,7 @@ func UploadCommand() *cobra.Command {
 				bar := newProgressBar(out, finfo.Size(), "Uploading")
 				reader := progressbar.NewReader(file, bar)
 
-				item, err = appsClient.UploadStream(finfo.Name(), &reader)
+				item, err = appsClient.UploadStream(finfo.Name(), description, &reader)
 				if err != nil {
 					return fmt.Errorf("failed to upload file: %w", err)
 				}
@@ -111,6 +113,7 @@ func UploadCommand() *cobra.Command {
 	flags.BoolVar(&force, "force", false,
 		"Forces the upload to happen, even if there's already a file in storage with a matching checksum.",
 	)
+	flags.StringVarP(&description, "description", "d", "", "A description to distinguish your app.")
 
 	return cmd
 }
