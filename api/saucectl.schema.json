@@ -848,6 +848,7 @@
               "version": {
                 "enum": [
                   "package.json",
+                  "10.10.0",
                   "10.7.0",
                   "10.3.1"
                 ],
@@ -901,7 +902,8 @@
                   "enum": [
                     "chrome",
                     "firefox",
-                    "microsoftedge"
+                    "microsoftedge",
+                    "webkit"
                   ],
                   "description": "The name of the browser in which to run the tests."
                 },
@@ -1361,6 +1363,7 @@
                 "$ref": "#/allOf/9/then/properties/playwright/properties/version",
                 "enum": [
                   "package.json",
+                  "1.27.1",
                   "1.25.1",
                   "1.24.1",
                   "1.22.2",
@@ -1831,6 +1834,7 @@
                 "$ref": "#/allOf/9/then/properties/playwright/properties/version",
                 "enum": [
                   "package.json",
+                  "2.0.1",
                   "2.0.0",
                   "1.20.0",
                   "1.19.0",
