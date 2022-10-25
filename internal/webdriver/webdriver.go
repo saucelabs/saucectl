@@ -15,8 +15,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/version"
 )
 
-const VideoFPS = 25
-
 // Client service
 type Client struct {
 	HTTPClient  *http.Client
@@ -142,7 +140,7 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 				RunnerVersion:    opts.RunnerVersion,
 				TestFile:         opts.Suite,
 				Args:             formatEspressoArgs(opts.TestOptions),
-				VideoFPS:         VideoFPS,
+				VideoFPS:         25,
 			},
 			IdleTimeout: 9999,
 			MaxDuration: 10800,
