@@ -1425,7 +1425,8 @@
                       "enum": [
                         "chromium",
                         "firefox",
-                        "webkit"
+                        "webkit",
+                        "chrome"
                       ]
                     },
                     "headless": {

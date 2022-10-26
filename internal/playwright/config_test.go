@@ -183,7 +183,7 @@ func TestValidate(t *testing.T) {
 					{Params: SuiteConfig{BrowserName: "ie"}},
 				}},
 			wantErr: true,
-			errMsg:  "browserName: ie is not supported. List of supported browsers: chromium, firefox, webkit",
+			errMsg:  "browserName: ie is not supported. List of supported browsers: chromium, firefox, webkit, chrome",
 		},
 		{
 			name: "empty region",

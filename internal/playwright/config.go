@@ -24,7 +24,7 @@ var (
 	APIVersion = "v1alpha"
 )
 
-var supportedBrowsers = []string{"chromium", "firefox", "webkit"}
+var supportedBrowsers = []string{"chromium", "firefox", "webkit", "chrome"}
 
 // Project represents the playwright project configuration.
 type Project struct {

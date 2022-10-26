@@ -237,7 +237,9 @@ func normalizeBrowser(framework, browser string) string {
 		}
 	case "playwright":
 		switch browser {
-		case "chrome", "chromium":
+		case "chrome":
+			return "googlechrome"
+		case "chromium":
 			return "playwright-chromium"
 		case "firefox":
 			return "playwright-firefox"
