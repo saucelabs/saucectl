@@ -5,13 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/requesth"
 	"github.com/saucelabs/saucectl/internal/slice"
 	"github.com/saucelabs/saucectl/internal/version"
-	"io"
-	"net/http"
 )
 
 // Client service
@@ -101,6 +102,7 @@ type Batch struct {
 	RunnerVersion    string              `json:"runnerVersion,omitempty"`
 	TestFile         string              `json:"testFile,omitempty"`
 	Args             []map[string]string `json:"args"`
+	VideoFPS         int                 `json:"video_fps"`
 }
 
 // sessionStartResponse represents the response body for starting a session.
@@ -138,6 +140,7 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 				RunnerVersion:    opts.RunnerVersion,
 				TestFile:         opts.Suite,
 				Args:             formatEspressoArgs(opts.TestOptions),
+				VideoFPS:         25,
 			},
 			IdleTimeout: 9999,
 			MaxDuration: 10800,
