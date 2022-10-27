@@ -159,7 +159,7 @@ func SetDefaults(p *Project) {
 			s.Timeout = p.Defaults.Timeout
 		}
 
-		if s.Params.Workers == 0 {
+		if s.Params.Workers <= 0 {
 			s.Params.Workers = 1
 		}
 	}
