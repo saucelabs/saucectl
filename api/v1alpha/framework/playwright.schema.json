@@ -165,6 +165,11 @@
               "updateSnapshots": {
                 "description": "Whether to update expected snapshots with the actual results produced by the test run",
                 "type": "boolean"
+              },
+              "workers": {
+                "description": "Set the maximum number of parallel worker processes (default: 1)",
+                "type": "integer",
+                "minimum": 1
               }
             },
             "required": [
