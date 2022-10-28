@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/cypress/grep"
 	"github.com/saucelabs/saucectl/internal/cypress/suite"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -261,6 +262,11 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 		if err != nil {
 			return shardedSuites, err
 		}
+
+		if s.Config.Env["grep"] != "" {
+			files = grep.Match(rootDir, files, s.Config.Env["grep"])
+		}
+
 		if len(files) == 0 {
 			msg.SuiteSplitNoMatch(s.Name, rootDir, s.Config.SpecPattern)
 			return []Suite{}, fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
