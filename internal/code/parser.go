@@ -6,10 +6,10 @@ import (
 )
 
 var (
-	reTestCasePattern  = regexp.MustCompile(` *(?:it|test)(?:\.\w+)?\(([\s\S]*?,\s*\()`)
+	reTestCasePattern  = regexp.MustCompile(`(?m)^ *(?:it|test)(?:\.\w+)?\(([\s\S]*?,\s*\()`)
 	reTitlePattern     = regexp.MustCompile(`["'\x60](.*)["'\x60], *[{(]`)
-	reMultiTagPattern  = regexp.MustCompile(`tags:\s*\[([\s\S]*?)\]`)
-	reSingleTagPattern = regexp.MustCompile(`tags:\s*['"](.*?)["']`)
+	reMultiTagPattern  = regexp.MustCompile(`tags\s*:\s*\[([\s\S]*?)\]`)
+	reSingleTagPattern = regexp.MustCompile(`tags\s*:\s*['"](.*?)["']`)
 )
 
 type TestCase struct {
