@@ -12,13 +12,13 @@ var (
 	reSingleTagPattern = regexp.MustCompile(`tags\s*:\s*['"](.*?)["']`)
 )
 
+// TestCase describes a cypress test case parsed from a cypress spec file.
 type TestCase struct {
+	// Title is the name of the test case, the first argument to `it|test`.
 	Title string
+	// Tags is an optional list of tags. This is simply a space delimited
+	// concatenation of all tags defined for the testcase.
 	Tags  string
-}
-
-type TestFile struct {
-	TestCases []TestCase
 }
 
 // Parse takes the contents of a test file and parses testcases
