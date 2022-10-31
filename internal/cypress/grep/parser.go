@@ -39,25 +39,25 @@ type All struct {
 	Expressions []Expression
 }
 
-func (q Partial) Eval(input string) bool {
-	if q.Invert {
-		return !strings.Contains(input, q.Query)
+func (p Partial) Eval(input string) bool {
+	if p.Invert {
+		return !strings.Contains(input, p.Query)
 	}
-	return strings.Contains(input, q.Query)
+	return strings.Contains(input, p.Query)
 }
 
-func (q Exact) Eval(input string) bool {
+func (e Exact) Eval(input string) bool {
 	words := strings.Split(input, " ")
 	contains := false
 
 	for _, w := range words {
-		if w == q.Query {
+		if w == e.Query {
 			contains = true
 			break
 		}
 	}
 
-	if q.Invert {
+	if e.Invert {
 		return !contains
 	}
 	return contains
@@ -76,8 +76,8 @@ func (a *Any) add(p Expression) {
 	a.Expressions = append(a.Expressions, p)
 }
 
-func (e All) Eval(input string) bool {
-	for _, p := range e.Expressions {
+func (a All) Eval(input string) bool {
+	for _, p := range a.Expressions {
 		if !p.Eval(input) {
 			return false
 		}
@@ -85,8 +85,8 @@ func (e All) Eval(input string) bool {
 	return true
 }
 
-func (e *All) add(p Expression) {
-	e.Expressions = append(e.Expressions, p)
+func (a *All) add(p Expression) {
+	a.Expressions = append(a.Expressions, p)
 }
 
 // ParseGrepExp parses a cypress-grep expression and returns an Expression.
