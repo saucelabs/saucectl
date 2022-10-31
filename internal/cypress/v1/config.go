@@ -263,14 +263,21 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			return shardedSuites, err
 		}
 
-		if s.Config.Env["grep"] != "" || s.Config.Env["grepTags"] != ""{
-			files = grep.Match(rootDir, files, s.Config.Env["grep"], s.Config.Env["grepTags"])
-		}
-
 		if len(files) == 0 {
 			msg.SuiteSplitNoMatch(s.Name, rootDir, s.Config.SpecPattern)
 			return []Suite{}, fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
 		}
+
+		// TODO: Opt in to grep/grepTags filtering explicitly?
+		if s.Config.Env["grep"] != "" || s.Config.Env["grepTags"] != ""{
+			var unmatched []string
+			files, unmatched = grep.Match(rootDir, files, s.Config.Env["grep"], s.Config.Env["grepTags"])
+			if len(unmatched) > 0 {
+				// TODO: Log out what files were filtered and why
+				log.Info().Msg("")
+			}
+		}
+
 		excludedFiles, err := fpath.FindFiles(rootDir, s.Config.ExcludeSpecPattern, fpath.FindByShellPattern)
 		if err != nil {
 			return shardedSuites, err

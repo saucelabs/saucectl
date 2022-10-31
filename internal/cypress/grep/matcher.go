@@ -7,8 +7,9 @@ import (
 	"github.com/saucelabs/saucectl/internal/code"
 )
 
-func Match(rootDir string, files []string, title string, tag string) []string {
-	var matched []string
+// Match finds the files whose contents match the grep expression in the title parameter
+// and the grep tag expression in the tag parameter.
+func Match(rootDir string, files []string, title string, tag string) (matched []string, unmatched []string) {
 	for _, f := range files {
 		b, err := ioutil.ReadFile(filepath.Join(rootDir, f))	
 		if err != nil {
@@ -29,8 +30,11 @@ func Match(rootDir string, files []string, title string, tag string) []string {
 			}
 			if include {
 				matched = append(matched, f)
+			} else {
+				unmatched = append(unmatched, f)
 			}
 		}
 	}
-	return matched
+
+	return matched, unmatched
 }
