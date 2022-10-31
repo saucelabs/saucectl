@@ -3,7 +3,6 @@ package grep
 import (
 	"io/ioutil"
 	"path/filepath"
-	"strings"
 
 	"github.com/saucelabs/saucectl/internal/code"
 )
@@ -16,12 +15,13 @@ func Match(rootDir string, files []string, title string) []string {
 		}
 
 		testcases := code.Parse(string(b))
+		expr := ParseGrepExp(title)
+
 		for _, tc := range testcases {
-			if strings.Contains(tc.Title, title) {
+			if expr.Eval(tc.Title) {
 				matched = append(matched, f)
 			}
 		}
-
 	}
 	return matched
 }
