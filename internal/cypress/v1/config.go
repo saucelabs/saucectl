@@ -263,8 +263,8 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			return shardedSuites, err
 		}
 
-		if s.Config.Env["grep"] != "" {
-			files = grep.Match(rootDir, files, s.Config.Env["grep"])
+		if s.Config.Env["grep"] != "" || s.Config.Env["grepTags"] != ""{
+			files = grep.Match(rootDir, files, s.Config.Env["grep"], s.Config.Env["grepTags"])
 		}
 
 		if len(files) == 0 {
