@@ -269,12 +269,14 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 		}
 
 		// TODO: Opt in to grep/grepTags filtering explicitly?
-		if s.Config.Env["grep"] != "" || s.Config.Env["grepTags"] != ""{
+		grepExp, grepExists := s.Config.Env["grep"]
+		grepTagsExp, grepTagsExists := s.Config.Env["grepTags"]
+
+		if grepExists || grepTagsExists {
 			var unmatched []string
-			files, unmatched = grep.Match(rootDir, files, s.Config.Env["grep"], s.Config.Env["grepTags"])
+			files, unmatched = grep.Match(rootDir, files, grepExp, grepTagsExp)
 			if len(unmatched) > 0 {
-				// TODO: Log out what files were filtered and why
-				log.Info().Msg("")
+				log.Info().Msg(fmt.Sprintf("Files filtered out by grep (\"%s\") and grepTags(\"%s\"): %s", grepExp, grepTagsExp, unmatched))
 			}
 		}
 
