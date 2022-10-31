@@ -40,10 +40,11 @@ type All struct {
 }
 
 func (p Partial) Eval(input string) bool {
+	contains := strings.Contains(input, p.Query)
 	if p.Invert {
-		return !strings.Contains(input, p.Query)
+		return !contains
 	}
-	return strings.Contains(input, p.Query)
+	return contains
 }
 
 func (e Exact) Eval(input string) bool {
