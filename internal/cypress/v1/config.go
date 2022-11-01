@@ -278,7 +278,7 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			if len(files) == 0 {
 				log.Warn().Str("suiteName", s.Name).Str("grep", grepExp).Str("grepTags", grepTagsExp).Msg("No files match the configured grep and grepTags expressions")
 			} else if len(unmatched) > 0 {
-				log.Info().Str("suiteName", s.Name).Str("grep", grepExp).Str("grepTags", grepTagsExp).Msg(fmt.Sprintf("Files filtered out by grep and grepTags: [%s]", unmatched))
+				log.Info().Str("suiteName", s.Name).Str("grep", grepExp).Str("grepTags", grepTagsExp).Msgf("Files filtered out by grep and grepTags: [%s]", unmatched)
 			}
 
 		}
