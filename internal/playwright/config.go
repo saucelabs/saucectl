@@ -24,7 +24,7 @@ var (
 	APIVersion = "v1alpha"
 )
 
-var supportedBrowsers = []string{"chromium", "firefox", "webkit"}
+var supportedBrowsers = []string{"chromium", "firefox", "webkit", "chrome"}
 
 // Project represents the playwright project configuration.
 type Project struct {
@@ -89,6 +89,7 @@ type SuiteConfig struct {
 	MaxFailures     int    `yaml:"maxFailures,omitempty" json:"maxFailures,omitempty"`
 	Project         string `yaml:"project" json:"project,omitempty"`
 	UpdateSnapshots bool   `yaml:"updateSnapshots,omitempty" json:"updateSnapshots"`
+	Workers         int    `yaml:"workers,omitempty" json:"workers,omitempty"`
 
 	// Shard is set by saucectl (not user) based on Suite.NumShards.
 	Shard string `yaml:"-" json:"shard,omitempty"`
@@ -156,6 +157,10 @@ func SetDefaults(p *Project) {
 
 		if s.Timeout <= 0 {
 			s.Timeout = p.Defaults.Timeout
+		}
+
+		if s.Params.Workers <= 0 {
+			s.Params.Workers = 1
 		}
 	}
 

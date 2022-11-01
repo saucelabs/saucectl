@@ -84,6 +84,7 @@ func NewPlaywrightCmd() *cobra.Command {
 	sc.String("project", "suite::params::project", "", "Specify playwright project")
 	sc.StringSlice("excludedTestFiles", "suite::excludedTestFiles", []string{}, "Exclude test files to skip the tests, using regex")
 	sc.Bool("updateSnapshots", "suite::params::updateSnapshots", false, "Whether to update expected snapshots with the actual results produced by the test run.")
+	sc.Int("workers", "suite::params::workers", 1, "Set the maximum number of parallel worker processes (Default: 1).")
 
 	// Misc
 	sc.String("rootDir", "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
