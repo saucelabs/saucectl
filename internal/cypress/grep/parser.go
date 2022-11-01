@@ -5,6 +5,12 @@ import (
 	"strings"
 )
 
+// Functions to parse cypress-grep expressions.
+// cypress-grep expressions can include simple logical operations (e.g.
+// NOT, AND, OR). These expressions are parsed into Expressions that are
+// logical predicates that evaluate to true or false depending if the expression matches
+// a given input string.
+
 var reDelimiter = regexp.MustCompile(`[ ,]`)
 
 // Expression is an interface that represents a logical statement.
@@ -33,7 +39,7 @@ type Any struct {
 	Expressions []Expression
 }
 
-// All represents a compositite expression thave evaluates to true if all
+// All represents a composite expression thave evaluates to true if all
 // child expressions evaluate to true.
 type All struct {
 	Expressions []Expression
