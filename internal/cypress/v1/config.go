@@ -275,9 +275,12 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 		if grepExists || grepTagsExists {
 			var unmatched []string
 			files, unmatched = grep.Match(rootDir, files, grepExp, grepTagsExp)
-			if len(unmatched) > 0 {
-				log.Info().Msg(fmt.Sprintf("Files filtered out by grep (\"%s\") and grepTags(\"%s\"): %s", grepExp, grepTagsExp, unmatched))
+			if len(files) == 0 {
+				log.Warn().Str("suiteName", s.Name).Str("grep", grepExp).Str("grepTags", grepTagsExp).Msg(fmt.Sprintf("No files match the configured grep and grepTags expressions"))
+			} else if len(unmatched) > 0 {
+				log.Info().Str("suiteName", s.Name).Str("grep", grepExp).Str("grepTags", grepTagsExp).Msg(fmt.Sprintf("Files filtered out by grep and grepTags: [%s]", unmatched))
 			}
+
 		}
 
 		excludedFiles, err := fpath.FindFiles(rootDir, s.Config.ExcludeSpecPattern, fpath.FindByShellPattern)
