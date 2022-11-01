@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/saucelabs/saucectl/internal/code"
+	"github.com/saucelabs/saucectl/internal/cypress/code"
 )
 
 // Match finds the files whose contents match the grep expression in the title parameter
