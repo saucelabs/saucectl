@@ -34,7 +34,7 @@ type Exact struct {
 }
 
 // Any represents a composite expression that evaluates to true if any
-// child expression evalutes to true.
+// child expression evaluates to true.
 type Any struct {
 	Expressions []Expression
 }
