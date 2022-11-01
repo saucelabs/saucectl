@@ -5,81 +5,6 @@ import (
 	"testing"
 )
 
-func Test_parseTitle(t *testing.T) {
-	tests := []struct {
-		name  string
-		input string
-		want  string
-	}{
-		{
-			name: "basic title match",
-			input: `it("test title", () => {`,
-			want: "test title",
-		},
-		{
-			name: "match with test object argument",
-			input: `'test title', { tags: ['config', 'some-other-tag'] }`,
-			want: "test title",
-		},
-		{
-			name: "nested quotation marks",
-			input: `'title "with nested" quotations', { tags: ['config', 'some-other-tag'] }`,
-			want: `title "with nested" quotations`,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := parseTitle(tt.input); got != tt.want {
-				t.Errorf("parseTitle() = \"%v\", want \"%v\"", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_parseTags(t *testing.T) {
-	tests := []struct {
-		name  string
-		input string
-		want  string
-	}{
-		{
-			name: "no tags",
-			input: `it("test title", () => {`,
-			want: "",
-		},
-		{
-			name: "multi tag",
-			input: `'test title', { tags: ['tag1', 'tag2'] }`,
-			want: "tag1 tag2",
-		},
-		{
-			name: "single tag",
-			input: `'title', { tags: 'tag' }`,
-			want: `tag`,
-		},
-		{
-			name: "multiline definition",
-			input: `
-'title "with nested" quotations', { 
-  tags: [
-    'tag1', 
-	'tag2',
-  ],
-}`,
-			want: `tag1 tag2`,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := parseTags(tt.input); got != tt.want {
-				t.Errorf("parseTags() = \"%v\", want \"%v\"", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestParse(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -89,13 +14,20 @@ func TestParse(t *testing.T) {
 		{
 			name: "basic test case match",
 			input: `
-it('test title', () => {
-  expect(true).to.be.true
+context('Actions', () => {
+  beforeEach(() => {
+    cy.visit('https://example.cypress.io/commands/actions')
+  })
+  it('.type() - type into a DOM element', () => {
+    // https://on.cypress.io/type
+    cy.get('.action-email')
+        .type('fake@email.com').should('have.value', 'fake@email.com')
+  })
 })
 `,
 			want: []TestCase {
 				{
-					Title: "test title",
+					Title: ".type() - type into a DOM element",
 					Tags: "",
 				},
 			},
@@ -103,13 +35,20 @@ it('test title', () => {
 		{
 			name: "parse test case with multiple tags",
 			input: `
-it("test title", { tags: ['@tag1', "@tag2"] }, () => {
-  expect(true).to.be.true
+context('Actions', () => {
+  beforeEach(() => {
+    cy.visit('https://example.cypress.io/commands/actions')
+  })
+  it('.type() - type into a DOM element', { tags: ['@tag1', "@tag2"] }, () => {
+    // https://on.cypress.io/type
+    cy.get('.action-email')
+        .type('fake@email.com').should('have.value', 'fake@email.com')
+  })
 })
 `,
 			want: []TestCase {
 				{
-					Title: "test title",
+					Title: ".type() - type into a DOM element",
 					Tags: "@tag1 @tag2",
 				},
 			},
@@ -117,13 +56,20 @@ it("test title", { tags: ['@tag1', "@tag2"] }, () => {
 		{
 			name: "parse test case with single tag",
 			input: `
-it("test title", { tags: '@tag1' }, () => {
-  expect(true).to.be.true
+context('Actions', () => {
+  beforeEach(() => {
+    cy.visit('https://example.cypress.io/commands/actions')
+  })
+  it('.type() - type into a DOM element', { tags: '@tag1' }, () => {
+    // https://on.cypress.io/type
+    cy.get('.action-email')
+        .type('fake@email.com').should('have.value', 'fake@email.com')
+  })
 })
 `,
 			want: []TestCase {
 				{
-					Title: "test title",
+					Title: ".type() - type into a DOM element",
 					Tags: "@tag1",
 				},
 			},
@@ -131,18 +77,25 @@ it("test title", { tags: '@tag1' }, () => {
 		{
 			name: "parse test case with complex test object",
 			input: `
-it("test title", {
-  tags: [
-    '@tag1', 
-    '@tag2'
-  ],
-}, () => {
-  expect(true).to.be.true
+context('Actions', () => {
+  beforeEach(() => {
+    cy.visit('https://example.cypress.io/commands/actions')
+  })
+  it('.type() - type into a DOM element', {
+    tags: [
+      '@tag1', 
+      '@tag2'
+    ],
+  }, (() => {
+    // https://on.cypress.io/type
+    cy.get('.action-email')
+        .type('fake@email.com').should('have.value', 'fake@email.com')
+  })
 })
 `,
 			want: []TestCase {
 				{
-					Title: "test title",
+					Title: ".type() - type into a DOM element",
 					Tags: "@tag1 @tag2",
 				},
 			},
@@ -150,34 +103,70 @@ it("test title", {
 		{
 			name: "parse multiple test cases",
 			input: `
-it("test title1", {
-  tags: [
-    '@tag1', 
-    '@tag2'
-  ],
-}, () => {
-  expect(true).to.be.true
-})
-it("test title2", {
-  "quoted key": "string",
-  tags: '@tag1', 
-  field1: 1,
-  field2: {
-	nest1: 1,
-	nest2: [1, 2, 3],
-  }
-}, () => {
-  expect(true).to.be.true
-})
+context('Actions', function () {
+  beforeEach(function () {
+    cy.visit('https://example.cypress.io/commands/actions');
+  });
 
+  // https://on.cypress.io/interacting-with-elements
+
+  it('.type() - type into a DOM element',
+    {
+      tags: [
+        '@tag1',
+        '@tag2',
+      ],
+    },
+    function () {
+      // https://on.cypress.io/type
+      cy.get('.action-email')
+        .type('fake@email.com').should('have.value', 'fake@email.com')
+
+        // .type() with special character sequences
+        .type('{leftarrow}{rightarrow}{uparrow}{downarrow}')
+        .type('{del}{selectall}{backspace}')
+
+        // .type() with key modifiers
+        .type('{alt}{option}') //these are equivalent
+        .type('{ctrl}{control}') //these are equivalent
+        .type('{meta}{command}{cmd}') //these are equivalent
+        .type('{shift}')
+
+        // Delay each keypress by 0.1 sec
+        .type('slow.typing@email.com', { delay: 100 })
+        .should('have.value', 'slow.typing@email.com');
+
+      cy.get('.action-disabled')
+        // Ignore error checking prior to type
+        // like whether the input is visible or disabled
+        .type('disabled error checking', { force: true })
+        .should('have.value', 'disabled error checking');
+    }
+  );
+
+  it('.focus() - focus on a DOM element',
+    {
+      tags: '@tag1',
+      otherAttr: 'somevalue',
+      object: {
+        hoo: 'hah',
+      },
+    },
+    function () {
+    // https://on.cypress.io/focus
+      cy.get('.action-focus').focus()
+        .should('have.class', 'focus')
+        .prev().should('have.attr', 'style', 'color: orange;');
+    }
+  );
 `,
 			want: []TestCase {
 				{
-					Title: "test title1",
+					Title: ".type() - type into a DOM element",
 					Tags: "@tag1 @tag2",
 				},
 				{
-					Title: "test title2",
+					Title: ".focus() - focus on a DOM element",
 					Tags: "@tag1",
 				},
 			},

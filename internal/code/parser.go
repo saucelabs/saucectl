@@ -5,14 +5,20 @@ import (
 	"strings"
 )
 
+// Functions to parse cypress spec files for testcases and their metadata (e.g.
+// test titles and tags).
+// The general strategy is to parse in multiple passes; the first pass extracts
+// testcase definitions (e.g. it('some test title', { tags: '@tag' }, () => ...)
+// and subsequent passes extract the titles and tags.
+
 var (
-	reTestCasePattern  = regexp.MustCompile(`(?m)^ *(?:it|test)(?:\.\w+)?\(([\s\S]*?,\s*\()`)
-	reTitlePattern     = regexp.MustCompile(`["'\x60](.*)["'\x60], *[{(]`)
+	reTestCasePattern  = regexp.MustCompile(`(?m)^ *(?:it|test)(?:\.\w+)?(\([\s\S]*?,\s*(?:function)?\s*\()`)
+	reTitlePattern     = regexp.MustCompile(`\(["'\x60](.*?)["'\x60],\s*?(?:function)?|[{(]`)
 	reMultiTagPattern  = regexp.MustCompile(`tags\s*:\s*\[([\s\S]*?)\]`)
 	reSingleTagPattern = regexp.MustCompile(`tags\s*:\s*['"](.*?)["']`)
 )
 
-// TestCase describes a cypress test case parsed from a cypress spec file.
+// TestCase describes the metadata for a cypress test case parsed from a cypress spec file.
 type TestCase struct {
 	// Title is the name of the test case, the first argument to `it|test`.
 	Title string
