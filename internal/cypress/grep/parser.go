@@ -39,7 +39,7 @@ type Any struct {
 	Expressions []Expression
 }
 
-// All represents a composite expression thave evaluates to true if all
+// All represents a composite expression that evaluates to true if all
 // child expressions evaluate to true.
 type All struct {
 	Expressions []Expression
