@@ -963,6 +963,10 @@
                     "spec"
                   ]
                 },
+                "shardGrepEnabled": {
+                  "description": "When sharding is configured and the suite is configured to filter using cypress-grep, let saucectl filter tests before executing.",
+                  "type": "boolean"
+                },
                 "headless": {
                   "description": "Controls whether or not tests are run in headless mode (default: false)",
                   "type": "boolean"
