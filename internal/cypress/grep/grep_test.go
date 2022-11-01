@@ -46,9 +46,9 @@ context('Assertions', () => {
 		},
 	}
 
-	m, u := Match(mockFS, []string{"spec1.js", "spec2.js"}, "", "@flakey")
+	matched, unmatched := Match(mockFS, []string{"spec1.js", "spec2.js"}, "", "@flakey")
 
-	got := len(m) + len(u)
+	got := len(matched) + len(unmatched)
 	want := len(mockFS)
 	if (got != want) {
 		t.Errorf("The returned slices from Match should not have duplicate values: got(%d) want(%d)", got, want)
