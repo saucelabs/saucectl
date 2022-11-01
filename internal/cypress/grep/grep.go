@@ -5,17 +5,17 @@
 package grep
 
 import (
-	"io/ioutil"
-	"path/filepath"
+	"io/fs"
 
 	"github.com/saucelabs/saucectl/internal/cypress/code"
 )
 
 // Match finds the files whose contents match the grep expression in the title parameter
 // and the grep tag expression in the tag parameter.
-func Match(rootDir string, files []string, title string, tag string) (matched []string, unmatched []string) {
+func Match(sys fs.FS, files []string, title string, tag string) (matched []string, unmatched []string) {
 	for _, f := range files {
-		b, err := ioutil.ReadFile(filepath.Join(rootDir, f))	
+		b, err := fs.ReadFile(sys, f)
+
 		if err != nil {
 			continue
 		}
