@@ -24,6 +24,10 @@ func TestParseGrepTagsExp(t *testing.T) {
 					input: "@tag1",
 					want:  false,
 				},
+				{
+					input: "",
+					want: false,
+				},
 			},
 		},
 		{
@@ -70,6 +74,10 @@ func TestParseGrepTagsExp(t *testing.T) {
 					input: "@tag2",
 					want:  true,
 				},
+				{
+					input: "",
+					want: true,
+				},
 			},
 		},
 		{
@@ -114,7 +122,7 @@ func TestParseGrepTagsExp(t *testing.T) {
 					want:  true,
 				},
 				{
-					input: "",
+					input: "@slow",
 					want:  false,
 				},
 			},
