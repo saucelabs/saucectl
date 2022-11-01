@@ -1,3 +1,7 @@
+// Package grep implements functions to parse and filter spec files by cypress-grep expressions.
+//
+// See https://www.npmjs.com/package/@cypress/grep for details on the specific syntax
+// of cypress-grep expressions.
 package grep
 
 import (
