@@ -24,19 +24,22 @@ func Match(rootDir string, files []string, title string, tag string) (matched []
 		grepExp := ParseGrepExp(title)
 		grepTagsExp := ParseGrepTagsExp(tag)
 
+		include := false
 		for _, tc := range testcases {
-			include := true
 			if title != "" {
-				include = include && grepExp.Eval(tc.Title)
+				include = include || grepExp.Eval(tc.Title)
 			}
 			if tag != "" {
-				include = include && grepTagsExp.Eval(tc.Tags)
+				include = include || grepTagsExp.Eval(tc.Tags)
 			}
 			if include {
+				// As long as one testcase matched, we know the spec will need to be executed
 				matched = append(matched, f)
-			} else {
-				unmatched = append(unmatched, f)
+				break
 			}
+		}
+		if !include {
+			unmatched = append(unmatched, f)
 		}
 	}
 
