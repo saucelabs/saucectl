@@ -1,6 +1,7 @@
 package grep
 
 import (
+	"reflect"
 	"testing"
 	"testing/fstest"
 )
@@ -52,5 +53,15 @@ context('Assertions', () => {
 	want := len(mockFS)
 	if (got != want) {
 		t.Errorf("The returned slices from Match should not have duplicate values: got(%d) want(%d)", got, want)
+	}
+
+	wantMatch := []string{"spec1.js", "spec2.js"}
+	if (!reflect.DeepEqual(matched, wantMatch)) {
+		t.Errorf("Match() matched got = (%s) want = (%s)", matched, wantMatch)
+	}
+
+	wantUnmatched := []string(nil)
+	if (!reflect.DeepEqual(unmatched, wantUnmatched)) {
+		t.Errorf("Match() unmatched got = (%s) want = (%s)", unmatched, wantUnmatched)
 	}
  }
