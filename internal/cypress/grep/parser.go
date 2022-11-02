@@ -70,7 +70,7 @@ func (e Exact) Eval(input string) bool {
 	return contains
 }
 
-func (a Any) Eval(input string) bool {
+func (a *Any) Eval(input string) bool {
 	for _, p := range a.Expressions {
 		if p.Eval(input) {
 			return true
@@ -83,7 +83,7 @@ func (a *Any) add(p Expression) {
 	a.Expressions = append(a.Expressions, p)
 }
 
-func (a All) Eval(input string) bool {
+func (a *All) Eval(input string) bool {
 	for _, p := range a.Expressions {
 		if !p.Eval(input) {
 			return false
