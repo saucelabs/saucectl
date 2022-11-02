@@ -120,11 +120,11 @@ func ParseGrepExp(expr string) Expression {
 	}
 
 	parsed := All{}
-	parsed.add(invertedMatches)
+	parsed.add(&invertedMatches)
 	if len(substringMatches.Expressions) > 0 {
-		parsed.add(substringMatches)
+		parsed.add(&substringMatches)
 	}
-	return parsed
+	return &parsed
 }
 
 // ParseGrepTagsExp parses a cypress-grep tag expression.
@@ -174,10 +174,10 @@ func ParseGrepTagsExp(expr string) Expression {
 			matcher.add(n)
 		}
 
-		parsed.add(matcher)
+		parsed.add(&matcher)
 	}
 
-	return parsed
+	return &parsed
 }
 
 // normalize trims leading and trailing whitespace from a slice of strings
