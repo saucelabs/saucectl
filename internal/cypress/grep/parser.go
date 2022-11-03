@@ -45,6 +45,15 @@ type All struct {
 	Expressions []Expression
 }
 
+// Literal represents an expression that always evaluates to a literal truth value.
+type Literal struct {
+	value bool
+}
+
+func (l Literal) Eval(input string) bool {
+	return l.value
+}
+
 func (p Partial) Eval(input string) bool {
 	contains := strings.Contains(input, p.Query)
 	if p.Invert {
@@ -96,11 +105,16 @@ func (a *All) add(p Expression) {
 	a.Expressions = append(a.Expressions, p)
 }
 
-// ParseGrepExp parses a cypress-grep expression and returns an Expression.
+// ParseGrepTitleExp parses a cypress-grep expression and returns an Expression.
 //
 // The returned Expression can be used to evaluate whether a given string
 // can match the expression.
-func ParseGrepExp(expr string) Expression {
+func ParseGrepTitleExp(expr string) Expression {
+	if expr == "" {
+		return Literal{
+			value: true,
+		}
+	}
 	strs := strings.Split(expr, ";")
 	strs = normalize(strs)
 
@@ -132,6 +146,11 @@ func ParseGrepExp(expr string) Expression {
 // The returned Expression can be used to evaluate whether a given string
 // can match the expression.
 func ParseGrepTagsExp(expr string) Expression {
+	if expr == "" {
+		return Literal{
+			value: true,
+		}
+	}
 	exprs := reDelimiter.Split(expr, -1)
 	exprs = normalize(exprs)
 

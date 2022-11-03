@@ -2,128 +2,200 @@ package grep
 
 import "testing"
 
+// Most test cases copied from cypress-grep unit tests: https://github.com/cypress-io/cypress/blob/d422aadfa10e5aaac17ed0e4dd5e18a73d821490/npm/grep/cypress/e2e/unit.js
 func TestParseGrepTagsExp(t *testing.T) {
 	type testCase struct {
-		input string
-		want  bool
+		exp  string
+		tags string
+		want bool
 	}
 	tests := []struct {
-		name       string
-		expression string
-		testCases  []testCase
+		name      string
+		testCases []testCase
 	}{
 		{
-			name:       "Simple expression",
-			expression: "@tag",
+			name: "Simple expression",
 			testCases: []testCase{
 				{
-					input: "@tag",
-					want:  true,
+					exp:  "@tag",
+					tags: "@tag",
+					want: true,
 				},
 				{
-					input: "@tag1",
-					want:  false,
+					exp:  "@tag",
+					tags: "@tag1",
+					want: false,
 				},
 				{
-					input: "",
+					exp:  "@tag",
+					tags: "",
 					want: false,
 				},
 			},
 		},
 		{
-			name:       "AND matching",
-			expression: "@tag1+@tag2",
+			name: "AND matching",
 			testCases: []testCase{
 				{
-					input: "@tag1",
-					want:  false,
+					exp:  "smoke+slow",
+					tags: "fast smoke",
+					want: false,
 				},
 				{
-					input: "@tag1 @tag2",
-					want:  true,
-				},
-			},
-		},
-		{
-			name:       "OR matching",
-			expression: "@tag1 @tag2",
-			testCases: []testCase{
-				{
-					input: "@tag1 @anotherTag",
-					want:  true,
+					exp:  "smoke+slow",
+					tags: "mobile smoke slow",
+					want: true,
 				},
 				{
-					input: "@tag2 @anotherTag",
-					want:  true,
+					exp:  "smoke+slow",
+					tags: "slow extra smoke",
+					want: true,
 				},
 				{
-					input: "@anotherTag",
-					want:  false,
-				},
-			},
-		},
-		{
-			name:       "inverted tag",
-			expression: "-@tag1",
-			testCases: []testCase{
-				{
-					input: "@tag1 @tag2",
-					want:  false,
+					exp:  "smoke+slow",
+					tags: "smoke",
+					want: false,
 				},
 				{
-					input: "@tag2",
-					want:  true,
-				},
-				{
-					input: "",
+					exp:  "@smoke+@screen-b",
+					tags: "@smoke @screen-b",
 					want: true,
 				},
 			},
 		},
 		{
-			name:       "NOT expression",
-			// This expression is equivalent to @smoke+-@slow @e2e+-@slow
-			expression: "@smoke @e2e --@slow",
+			name: "OR matching",
 			testCases: []testCase{
 				{
-					input: "@smoke @slow",
-					want:  false,
+					exp:  "smoke slow",
+					tags: "fast smoke",
+					want: true,
 				},
 				{
-					input: "@smoke",
-					want:  true,
+					exp:  "smoke",
+					tags: "mobile smoke slow",
+					want: true,
 				},
 				{
-					input: "@slow",
-					want:  false,
+					exp:  "slow",
+					tags: "slow extra smoke",
+					want: true,
+				},
+				{
+					exp:  "smoke",
+					tags: "smoke",
+					want: true,
+				},
+				{
+					exp:  "smoke",
+					tags: "slow",
+					want: false,
+				},
+				{
+					exp:  "@smoke,@slow",
+					tags: "@fast @smoke",
+					want: true,
 				},
 			},
 		},
 		{
-			name:       "empty expression",
-			expression: "",
+			name: "inverted tag",
 			testCases: []testCase{
 				{
-					input: "@smoke @slow",
-					want:  false,
+					exp:  "smoke+-slow",
+					tags: "smoke slow",
+					want: false,
 				},
 				{
-					input: "",
-					want:  false,
+					exp:  "mobile+-slow",
+					tags: "smoke slow",
+					want: false,
+				},
+				{
+					exp:  "smoke -slow",
+					tags: "smoke fast",
+					want: true,
+				},
+				{
+					exp:  "-slow",
+					tags: "smoke slow",
+					want: false,
+				},
+				{
+					exp:  "-slow",
+					tags: "smoke",
+					want: true,
+				},
+				{
+					exp:  "-slow",
+					tags: "",
+					want: true,
 				},
 			},
 		},
 		{
-			name:       "should handle slightly malformed expressions",
-			expression: "    +@smoke",
+			name: "global inverted tag",
 			testCases: []testCase{
 				{
-					input: "@smoke @slow",
-					want:  true,
+					// This expression is equivalent to @smoke+-@slow @e2e+-@slow
+					exp:  "@smoke @e2e --@slow",
+					tags: "@smoke @slow",
+					want: false,
 				},
 				{
-					input: "@slow",
-					want:  false,
+					exp:  "@smoke @e2e --@slow",
+					tags: "@smoke",
+					want: true,
+				},
+				{
+					exp:  "@smoke @e2e --@slow",
+					tags: "@slow",
+					want: false,
+				},
+			},
+		},
+		{
+			name: "empty values",
+			testCases: []testCase{
+				{
+					exp:  "",
+					tags: "@smoke @slow",
+					want: true,
+				},
+				{
+					exp:  "",
+					tags: "",
+					want: true,
+				},
+				{
+					exp:  "@smoke",
+					tags: "",
+					want: false,
+				},
+			},
+		},
+		{
+			name: "should handle slightly malformed expressions",
+			testCases: []testCase{
+				{
+					exp:  "    +@smoke",
+					tags: "@smoke @slow",
+					want: true,
+				},
+				{
+					exp:  "    +@smoke",
+					tags: "@slow",
+					want: false,
+				},
+				{
+					exp:  ",, @tag1,-@tag2,, ,, ,",
+					tags: "@tag1",
+					want: true,
+				},
+				{
+					exp:  ",, @tag1,-@tag2,, ,, ,",
+					tags: "@tag2",
+					want: false,
 				},
 			},
 		},
@@ -131,87 +203,132 @@ func TestParseGrepTagsExp(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := ParseGrepTagsExp(tt.expression)
 			for _, tc := range tt.testCases {
-				if got := p.Eval(tc.input); got != tc.want {
-					t.Errorf("expression \"%s\" should match \"%s\"", tt.expression, tc.input)
+				p := ParseGrepTagsExp(tc.exp)
+				if got := p.Eval(tc.tags); got != tc.want {
+					t.Errorf("expression (%s) for (%s) got = (%t); want = (%t)", tc.exp, tc.tags, got, tc.want)
 				}
 			}
 		})
 	}
 }
 
-func TestParseGrepExp(t *testing.T) {
+func TestParseTitleGrepExp(t *testing.T) {
 	type testCase struct {
-		input string
+		exp   string
+		title string
 		want  bool
 	}
 	tests := []struct {
-		name       string
-		expression string
-		testCases  []testCase
+		name      string
+		testCases []testCase
 	}{
 		{
-			name:       "Simple expression",
-			expression: "title",
+			name: "Simple tag",
 			testCases: []testCase{
 				{
-					input: "a test title",
-					want:  true,
-				},
-				{
-					input: "another test",
-					want:  false,
-				},
-			},
-		},
-		{
-			name:       "Inverted expression",
-			expression: "-title",
-			testCases: []testCase{
-				{
-					input: "a test title",
+					exp:   "@tag1",
+					title: "no tag1 here",
 					want:  false,
 				},
 				{
-					input: "another test",
+					title: "has @tag1 in the name",
 					want:  true,
 				},
 			},
 		},
 		{
-			name:       "OR matching",
-			expression: "title; test",
+			name: "With invert title",
 			testCases: []testCase{
 				{
-					input: "a test title",
+					exp:   "-hello",
+					title: "no greetings",
 					want:  true,
 				},
 				{
-					input: "another test",
-					want:  true,
-				},
-				{
-					input: "should not match",
+					exp:   "-hello",
+					title: "has hello world",
 					want:  false,
 				},
 			},
 		},
 		{
-			name:       "complex matching",
-			expression: "test; -title",
+			name: "Multiple invert strings and a simple one",
 			testCases: []testCase{
 				{
-					input: "a test title",
+					exp:   "-name;-hey;number",
+					title: "number should only be matches without a n-a-m-e",
+					want:  true,
+				},
+				{
+					exp:   "-name;-hey;number",
+					title: "number can't be name",
 					want:  false,
 				},
 				{
-					input: "another test",
+					exp:   "-name;-hey;number",
+					title: "The man needs a name",
+					want:  false,
+				},
+				{
+					exp:   "-name;-hey;number",
+					title: "number hey name",
+					want:  false,
+				},
+				{
+					exp:   "-name;-hey;number",
+					title: "numbers hey name",
+					want:  false,
+				},
+				{
+					exp:   "-name;-hey;number",
+					title: "number hsey nsame",
 					want:  true,
 				},
 				{
-					input: "should match this test",
+					exp:   "-name;-hey;number",
+					title: "This wont match",
+					want:  false,
+				},
+			},
+		},
+		{
+			name: "Only inverted strings",
+			testCases: []testCase{
+				{
+					exp:   "-name;-hey",
+					title: "I'm matched",
 					want:  true,
+				},
+				{
+					exp:   "-name;-hey",
+					title: "hey! I'm not",
+					want:  false,
+				},
+				{
+					exp:   "-name;-hey",
+					title: "My name is weird",
+					want:  false,
+				},
+			},
+		},
+		{
+			name: "Empty values",
+			testCases: []testCase{
+				{
+					exp: "",
+					title: "",
+					want: true,
+				},
+				{
+					exp: "",
+					title: "test title",
+					want: true,
+				},
+				{
+					exp: "some title to match",
+					title: "",
+					want: false,
 				},
 			},
 		},
@@ -219,10 +336,10 @@ func TestParseGrepExp(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := ParseGrepExp(tt.expression)
 			for _, tc := range tt.testCases {
-				if got := p.Eval(tc.input); got != tc.want {
-					t.Errorf("expression \"%s\" should match \"%s\"", tt.expression, tc.input)
+				p := ParseGrepTitleExp(tc.exp)
+				if got := p.Eval(tc.title); got != tc.want {
+					t.Errorf("title expression (%s) for (%s) got = (%t); want = (%t)", tc.exp, tc.title, got, tc.want)
 				}
 			}
 		})
