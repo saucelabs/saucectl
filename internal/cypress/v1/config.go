@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/cypress/grep"
 	"github.com/saucelabs/saucectl/internal/cypress/suite"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -61,6 +62,7 @@ type Suite struct {
 	Mode             string        `yaml:"mode,omitempty" json:"-"`
 	Timeout          time.Duration `yaml:"timeout,omitempty" json:"timeout"`
 	Shard            string        `yaml:"shard,omitempty" json:"-"`
+	ShardGrepEnabled bool          `yaml:"shardGrepEnabled,omitempty" json:"-"`
 	Headless         bool          `yaml:"headless,omitempty" json:"headless"`
 	PreExec          []string      `yaml:"preExec,omitempty" json:"preExec"`
 	TimeZone         string        `yaml:"timeZone,omitempty" json:"timeZone"`
@@ -261,10 +263,28 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 		if err != nil {
 			return shardedSuites, err
 		}
+
 		if len(files) == 0 {
 			msg.SuiteSplitNoMatch(s.Name, rootDir, s.Config.SpecPattern)
 			return []Suite{}, fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
 		}
+
+		if s.ShardGrepEnabled {
+			grepExp, grepExists := s.Config.Env["grep"]
+			grepTagsExp, grepTagsExists := s.Config.Env["grepTags"]
+
+			if grepExists || grepTagsExists {
+				var unmatched []string
+				files, unmatched = grep.MatchFiles(os.DirFS(rootDir), files, grepExp, grepTagsExp)
+
+				if len(files) == 0 {
+					log.Warn().Str("suiteName", s.Name).Str("grep", grepExp).Str("grepTags", grepTagsExp).Msg("No files match the configured grep and grepTags expressions")
+				} else if len(unmatched) > 0 {
+					log.Info().Str("suiteName", s.Name).Str("grep", grepExp).Str("grepTags", grepTagsExp).Msgf("Files filtered out by grep and grepTags: [%s]", unmatched)
+				}
+			}
+		}
+
 		excludedFiles, err := fpath.FindFiles(rootDir, s.Config.ExcludeSpecPattern, fpath.FindByShellPattern)
 		if err != nil {
 			return shardedSuites, err
