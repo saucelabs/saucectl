@@ -42,10 +42,9 @@ func MatchFiles(sys fs.FS, files []string, title string, tag string) (matched []
 }
 
 func match(titleExp Expression, tagsExp Expression, title string, tags string) bool {
-	// Be permissive if the title or tags are empty since that may be a result
-	// of a code parsing issue.
+	// Allow empty title to match. This mimics the behaviour of cypress-grep.
 	titleMatch := title == "" || titleExp.Eval(title)
-	tagMatch := tags == "" || tagsExp.Eval(tags)
+	tagMatch := tagsExp.Eval(tags)
 
 	return titleMatch && tagMatch
 }
