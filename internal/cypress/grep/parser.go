@@ -110,6 +110,7 @@ func (a *All) add(p Expression) {
 // The returned Expression can be used to evaluate whether a given string
 // can match the expression.
 func ParseGrepTitleExp(expr string) Expression {
+	// Treat an empty expression as if grepping were disabled
 	if expr == "" {
 		return Literal{
 			value: true,
@@ -146,6 +147,7 @@ func ParseGrepTitleExp(expr string) Expression {
 // The returned Expression can be used to evaluate whether a given string
 // can match the expression.
 func ParseGrepTagsExp(expr string) Expression {
+	// Treat an empty expression as if grepping were disabled
 	if expr == "" {
 		return Literal{
 			value: true,
