@@ -12,7 +12,7 @@ import (
 // and subsequent passes extract the titles and tags.
 
 var (
-	reTestCasePattern  = regexp.MustCompile(`(?m)^ *(?:it|test)(?:\.\w+)?(\([\s\S]*?,\s*(?:function)?\s*\()`)
+	reTestCasePattern  = regexp.MustCompile(`(?m)^ *(?:it|test|context|describe)(?:\.\w+)?(\([\s\S]*?,\s*(?:function)?\s*\()`)
 	reTitlePattern     = regexp.MustCompile(`\(["'\x60](.*?)["'\x60],\s*?(?:function)?|[{(]`)
 	reMultiTagPattern  = regexp.MustCompile(`tags\s*:\s*\[([\s\S]*?)\]`)
 	reSingleTagPattern = regexp.MustCompile(`tags\s*:\s*['"](.*?)["']`)

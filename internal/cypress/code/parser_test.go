@@ -27,6 +27,10 @@ context('Actions', () => {
 `,
 			want: []TestCase {
 				{
+					Title: "Actions",
+					Tags: "",
+				},
+				{
 					Title: ".type() - type into a DOM element",
 					Tags: "",
 				},
@@ -48,6 +52,10 @@ context('Actions', () => {
 `,
 			want: []TestCase {
 				{
+					Title: "Actions",
+					Tags: "",
+				},
+				{
 					Title: ".type() - type into a DOM element",
 					Tags: "@tag1 @tag2",
 				},
@@ -68,6 +76,10 @@ context('Actions', () => {
 })
 `,
 			want: []TestCase {
+				{
+					Title: "Actions",
+					Tags: "",
+				},
 				{
 					Title: ".type() - type into a DOM element",
 					Tags: "@tag1",
@@ -94,6 +106,10 @@ context('Actions', () => {
 })
 `,
 			want: []TestCase {
+				{
+					Title: "Actions",
+					Tags: "",
+				},
 				{
 					Title: ".type() - type into a DOM element",
 					Tags: "@tag1 @tag2",
@@ -161,6 +177,10 @@ context('Actions', function () {
   );
 `,
 			want: []TestCase {
+				{
+					Title: "Actions",
+					Tags: "",
+				},
 				{
 					Title: ".type() - type into a DOM element",
 					Tags: "@tag1 @tag2",
