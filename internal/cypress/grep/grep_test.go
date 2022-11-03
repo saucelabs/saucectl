@@ -6,7 +6,7 @@ import (
 	"testing/fstest"
 )
 
-func Test_matchFS(t *testing.T) {
+func TestMatchFiles(t *testing.T) {
 	mockFS := fstest.MapFS{
 		"spec1.js": {
 			Data: []byte(`
@@ -47,21 +47,21 @@ context('Assertions', () => {
 		},
 	}
 
-	matched, unmatched := Match(mockFS, []string{"spec1.js", "spec2.js"}, "", "@flakey")
+	matched, unmatched := MatchFiles(mockFS, []string{"spec1.js", "spec2.js"}, "", "@flakey")
 
 	got := len(matched) + len(unmatched)
 	want := len(mockFS)
-	if (got != want) {
+	if got != want {
 		t.Errorf("The returned slices from Match should not have duplicate values: got(%d) want(%d)", got, want)
 	}
 
 	wantMatch := []string{"spec1.js", "spec2.js"}
-	if (!reflect.DeepEqual(matched, wantMatch)) {
-		t.Errorf("Match() matched got = (%s) want = (%s)", matched, wantMatch)
+	if !reflect.DeepEqual(matched, wantMatch) {
+		t.Errorf("MatchFiles() matched got = (%s) want = (%s)", matched, wantMatch)
 	}
 
 	wantUnmatched := []string(nil)
-	if (!reflect.DeepEqual(unmatched, wantUnmatched)) {
-		t.Errorf("Match() unmatched got = (%s) want = (%s)", unmatched, wantUnmatched)
+	if !reflect.DeepEqual(unmatched, wantUnmatched) {
+		t.Errorf("MatchFiles() unmatched got = (%s) want = (%s)", unmatched, wantUnmatched)
 	}
- }
+}

@@ -275,7 +275,7 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 
 			if grepExists || grepTagsExists {
 				var unmatched []string
-				files, unmatched = grep.Match(os.DirFS(rootDir), files, grepExp, grepTagsExp)
+				files, unmatched = grep.MatchFiles(os.DirFS(rootDir), files, grepExp, grepTagsExp)
 
 				if len(files) == 0 {
 					log.Warn().Str("suiteName", s.Name).Str("grep", grepExp).Str("grepTags", grepTagsExp).Msg("No files match the configured grep and grepTags expressions")

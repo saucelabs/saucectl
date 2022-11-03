@@ -10,9 +10,9 @@ import (
 	"github.com/saucelabs/saucectl/internal/cypress/code"
 )
 
-// Match finds the files whose contents match the grep expression in the title parameter
+// MatchFiles finds the files whose contents match the grep expression in the title parameter
 // and the grep tag expression in the tag parameter.
-func Match(sys fs.FS, files []string, title string, tag string) (matched []string, unmatched []string) {
+func MatchFiles(sys fs.FS, files []string, title string, tag string) (matched []string, unmatched []string) {
 	for _, f := range files {
 		b, err := fs.ReadFile(sys, f)
 
@@ -21,17 +21,12 @@ func Match(sys fs.FS, files []string, title string, tag string) (matched []strin
 		}
 
 		testcases := code.Parse(string(b))
-		grepExp := ParseGrepExp(title)
+		grepExp := ParseGrepTitleExp(title)
 		grepTagsExp := ParseGrepTagsExp(tag)
 
 		include := false
 		for _, tc := range testcases {
-			if title != "" {
-				include = include || grepExp.Eval(tc.Title)
-			}
-			if tag != "" {
-				include = include || grepTagsExp.Eval(tc.Tags)
-			}
+			include = include || match(grepExp, grepTagsExp, tc.Title, tc.Tags)
 			if include {
 				// As long as one testcase matched, we know the spec will need to be executed
 				matched = append(matched, f)
@@ -44,4 +39,13 @@ func Match(sys fs.FS, files []string, title string, tag string) (matched []strin
 	}
 
 	return matched, unmatched
+}
+
+func match(titleExp Expression, tagsExp Expression, title string, tags string) bool {
+	// Be permissive if the title or tags are empty since that may be a result
+	// of a code parsing issue.
+	titleMatch := title == "" || titleExp.Eval(title)
+	tagMatch := tags == "" || tagsExp.Eval(tags)
+
+	return titleMatch && tagMatch
 }
