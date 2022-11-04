@@ -113,13 +113,13 @@ jobs:
           GOOS=windows GOARCH=amd64 go build cmd/saucectl/saucectl.go
 
       - name: Check GoReleaser config
-        uses: goreleaser/goreleaser-action@v1
+        uses: goreleaser/goreleaser-action@v3
         with:
           version: latest
           args: check
 
       - name: Upload binary
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: saucectlbin
           path: |

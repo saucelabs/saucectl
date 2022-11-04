@@ -9,14 +9,11 @@ sauce:
     build: "$BUILD_ID"
 defaults:
   timeout: 5m
-docker:
-  image: playwright-2
-  fileTransfer: copy
 playwright:
-  version: 1.25.1
+  version: 1.27.1
 rootDir: ./
 suites:
-  - name: mycucuc
+  - name: My Cucumber Test
     mode: sauce
     browserName: chromium
     options:
