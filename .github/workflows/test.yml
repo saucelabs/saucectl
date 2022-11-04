@@ -14,16 +14,10 @@ env:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    container:
-      image: golang:1.19-alpine
-
     steps:
-      - name: Install Dependencies
-        run: apk add --no-cache git gcc g++ curl
-
-      - name: GIT permission workaround https://github.blog/2022-04-12-git-security-vulnerability-announced/
-        run: git config --global --add safe.directory /__w/saucectl/saucectl
-
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
       - name: Checkout Code
         uses: actions/checkout@v3
 
@@ -406,7 +400,8 @@ jobs:
       - name: Saucectl RUN - Config Driven
         working-directory: ./tests/e2e/playwright-cucumberjs
         run: |
-          npm i; ../../../saucectl run --runner-version "url: https://storage.googleapis.com/sauce-devx-runners-bhtb/sauce-playwright-runner-3186013574.zip"
+          npm ci --production
+          ../../../saucectl run
 
   windows-doctor:
     needs: build
