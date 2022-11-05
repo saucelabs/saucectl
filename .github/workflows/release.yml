@@ -46,7 +46,9 @@ jobs:
 
       - name: Get the Version
         id: get_version
-        run: echo "{VERSION}=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+        run: |
+          echo $GETHUB_REF
+          echo "{VERSION}={$GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
 
       - name: Trigger node-saucectl Release
         run: |
