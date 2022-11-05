@@ -44,15 +44,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-      - name: Get the Version
-        id: get_version
-        run: |
-          echo $GETHUB_REF
-          echo "{VERSION}={$GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
-
       - name: Trigger node-saucectl Release
         run: |
-          version=$(echo "${{ steps.get_version.outputs.VERSION }}" | cut -c2-)
+          version=$(echo $GITHUB_REF_NAME | cut -c2-)
           echo "Release saucectl $version"
           curl -X POST https://api.github.com/repos/saucelabs/node-saucectl/dispatches \
           -H 'Accept: application/vnd.github.everest-preview+json' \
