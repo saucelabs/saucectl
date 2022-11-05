@@ -44,11 +44,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-      - name: Get the version
+      - name: Get the Version
         id: get_version
         run: echo "name=VERSION::${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
 
-      - name: Trigger node-saucectl release
+      - name: Trigger node-saucectl Release
         run: |
           version=$(echo "${{ steps.get_version.outputs.VERSION }}" | cut -c2-)
           echo "Release saucectl $version"
