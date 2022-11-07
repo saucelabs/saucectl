@@ -58,6 +58,7 @@ jobs:
         with:
           node-version: '16'
           cache: npm
+          cache-dependency-path: scripts/json-schema-bundler/package-lock.json
 
       - name: Install Dependencies
         working-directory: scripts/json-schema-bundler
