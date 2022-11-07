@@ -35,6 +35,7 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.19
+          cache: true
 
       - name: Checkout Code
         uses: actions/checkout@v3
