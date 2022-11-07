@@ -36,7 +36,6 @@ jobs:
         with:
           go-version: 1.19
           cache: true
-          cache-dependency-path: ./go.sum
 
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -82,7 +81,6 @@ jobs:
         with:
           go-version: 1.19
           cache: true
-          cache-dependency-path: ./go.sum
 
       - name: Checkout Code
         uses: actions/checkout@v3
