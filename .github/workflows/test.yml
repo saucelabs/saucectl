@@ -40,16 +40,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Cache Go Modules
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
       - name: Run tests
         run: |
           go test -coverprofile=coverage.txt -covermode=atomic ./...
@@ -93,16 +83,6 @@ jobs:
 
       - name: Checkout Code
         uses: actions/checkout@v3
-
-      - name: Cache Go Modules
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
 
       - name: Build Project
         run: |
