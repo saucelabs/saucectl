@@ -37,20 +37,16 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v1
+        uses: goreleaser/goreleaser-action@v3
         with:
           version: latest
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-      - name: Get the version
-        id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-
-      - name: Trigger node-saucectl release
+      - name: Trigger node-saucectl Release
         run: |
-          version=$(echo "${{ steps.get_version.outputs.VERSION }}" | cut -c2-)
+          version=$(echo $GITHUB_REF_NAME | cut -c2-)
           echo "Release saucectl $version"
           curl -X POST https://api.github.com/repos/saucelabs/node-saucectl/dispatches \
           -H 'Accept: application/vnd.github.everest-preview+json' \

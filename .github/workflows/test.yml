@@ -14,15 +14,11 @@ env:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    container:
-      image: golang:1.19-alpine
-
     steps:
-      - name: Install Dependencies
-        run: apk add --no-cache git gcc g++ curl
-
-      - name: GIT permission workaround https://github.blog/2022-04-12-git-security-vulnerability-announced/
-        run: git config --global --add safe.directory /__w/saucectl/saucectl
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
 
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -31,29 +27,18 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
+
   test:
     runs-on: ubuntu-latest
-    container:
-      image: golang:1.19-alpine
-
     steps:
-      - name: Install Dependencies
-        run: apk add --no-cache git gcc g++ curl bash tar
-
-      - name: GIT permission workaround https://github.blog/2022-04-12-git-security-vulnerability-announced/
-        run: git config --global --add safe.directory /__w/saucectl/saucectl
-
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - uses: actions/cache@v3
+      - name: Setup Go
+        uses: actions/setup-go@v3
         with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+          go-version: 1.19
+          cache: true
 
       - name: Run tests
         run: |
@@ -61,49 +46,46 @@ jobs:
           coverage=$(go tool cover -func=coverage.txt | tail -n 1 | awk '{ print $3 }' | tr -d '%' | cut -d . -f 1)
           threshold=40
           if [ $coverage -lt $threshold ]; then echo 'Code coverage below threshold!' && exit 1; fi
+
   check-schema:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '12'
-      - name: Install dependencies
-        working-directory: scripts/json-schema-bundler
-        run: npm ci
-      - name: Generate schema
-        working-directory: scripts/json-schema-bundler
-        run: npm run bundle -- -s ../../api/global.schema.json -o ../../api/fresh.schema.json
-      - name: Check schema
-        working-directory: api/
-        run: diff saucectl.schema.json fresh.schema.json
-  build:
-    needs: [lint, test]
-    runs-on: ubuntu-latest
-    container:
-      image: golang:1.19-alpine
-
-    steps:
-      - name: Install Dependencies
-        run: apk add --no-cache git gcc g++ curl tar
-
-      - name: GIT permission workaround https://github.blog/2022-04-12-git-security-vulnerability-announced/
-        run: git config --global --add safe.directory /__w/saucectl/saucectl
-
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - uses: actions/cache@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+          node-version: '16'
+          cache: npm
+          cache-dependency-path: scripts/json-schema-bundler/package-lock.json
 
-      - name: Build project
+      - name: Install Dependencies
+        working-directory: scripts/json-schema-bundler
+        run: npm ci
+
+      - name: Generate Schema
+        working-directory: scripts/json-schema-bundler
+        run: npm run bundle -- -s ../../api/global.schema.json -o ../../api/fresh.schema.json
+
+      - name: Check Schema
+        working-directory: api/
+        run: diff saucectl.schema.json fresh.schema.json
+
+  build:
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+          cache: true
+
+      - name: Build Project
         run: |
           SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-8)
           LDFLAG_VERSION="github.com/saucelabs/saucectl/cli/version.Version=v0.0.0+$SHORT_SHA"
@@ -112,19 +94,20 @@ jobs:
           CGO_ENABLED=0 go build -ldflags="-X $LDFLAG_VERSION -X $LDFLAG_SHA" cmd/saucectl/saucectl.go
           GOOS=windows GOARCH=amd64 go build cmd/saucectl/saucectl.go
 
-      - name: Check GoReleaser config
-        uses: goreleaser/goreleaser-action@v1
+      - name: Check GoReleaser Config
+        uses: goreleaser/goreleaser-action@v3
         with:
           version: latest
           args: check
 
-      - name: Upload binary
-        uses: actions/upload-artifact@v2
+      - name: Upload Binary
+        uses: actions/upload-artifact@v3
         with:
           name: saucectlbin
           path: |
             saucectl
             saucectl.exe
+
   puppeteer:
     needs: build
     runs-on: ubuntu-latest
@@ -133,12 +116,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Download saucectl binary
-        uses: actions/download-artifact@v2
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
         with:
           name: saucectlbin
 
-      - name: Set permissions
+      - name: Set Permissions
         run: chmod +x ./saucectl
 
       - name: Saucectl RUN - Config Driven
@@ -155,12 +138,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Download saucectl binary
-        uses: actions/download-artifact@v2
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
         with:
           name: saucectlbin
 
-      - name: Set permissions
+      - name: Set Permissions
         run: chmod +x ./saucectl
 
       - name: Saucectl RUN - Config Driven
@@ -177,12 +160,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Download saucectl binary
-        uses: actions/download-artifact@v2
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
         with:
           name: saucectlbin
 
-      - name: Set permissions
+      - name: Set Permissions
         run: chmod +x ./saucectl
 
       - name: Saucectl RUN - Config Driven
@@ -190,6 +173,7 @@ jobs:
 
       - name: Saucectl RUN - CLI Driven
         run: ./saucectl run playwright ".*.js" -c "" --name "CLI Driven" --browser chromium --rootDir tests/e2e/playwright/ --playwright.version 1.18.1 --timeout 10m
+
   testcafe:
     needs: build
     runs-on: ubuntu-latest
@@ -198,12 +182,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Download saucectl binary
-        uses: actions/download-artifact@v2
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
         with:
           name: saucectlbin
 
-      - name: Set permissions
+      - name: Set Permissions
         run: chmod +x ./saucectl
 
       - name: Saucectl RUN - Config Driven
@@ -220,12 +204,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Download saucectl binary
-        uses: actions/download-artifact@v2
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
         with:
           name: saucectlbin
 
-      - name: Set permissions
+      - name: Set Permissions
         run: chmod +x ./saucectl
 
       - name: Saucectl RUN - Config Driven
@@ -240,12 +224,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Download saucectl binary
-        uses: actions/download-artifact@v2
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
         with:
           name: saucectlbin
 
-      - name: Set permissions
+      - name: Set Permissions
         run: chmod +x ./saucectl
 
       - name: Saucectl RUN - Config Driven
@@ -267,14 +251,15 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Download saucectl binary
-        uses: actions/download-artifact@v2
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
         with:
           name: saucectlbin
 
       - name: Saucectl RUN
         run: |
           ./saucectl.exe run -c .sauce/cypress.yml --select-suite "saucy test in sauce" --timeout 10m
+
   espresso:
     needs: build
     runs-on: ubuntu-latest
@@ -286,12 +271,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Download saucectl binary
-        uses: actions/download-artifact@v2
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
         with:
           name: saucectlbin
 
-      - name: Set permissions
+      - name: Set Permissions
         run: chmod +x ./saucectl
 
       - name: Saucectl RUN - Config Driven
@@ -336,12 +321,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Download saucectl binary
-        uses: actions/download-artifact@v2
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
         with:
           name: saucectlbin
 
-      - name: Set permissions
+      - name: Set Permissions
         run: chmod +x ./saucectl
 
       - name: Saucectl RUN - Config Driven
@@ -374,8 +359,8 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Download saucectl binary
-        uses: actions/download-artifact@v2
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
         with:
           name: saucectlbin
 
@@ -394,19 +379,19 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Download saucectl binary
-        uses: actions/download-artifact@v2
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
         with:
           name: saucectlbin
 
-      - name: Set permissions
+      - name: Set Permissions
         run: chmod +x ./saucectl
 
-      # Download bundled runner temporarily
       - name: Saucectl RUN - Config Driven
         working-directory: ./tests/e2e/playwright-cucumberjs
         run: |
-          npm i; ../../../saucectl run --runner-version "url: https://storage.googleapis.com/sauce-devx-runners-bhtb/sauce-playwright-runner-3186013574.zip"
+          npm ci --production
+          ../../../saucectl run
 
   windows-doctor:
     needs: build
@@ -417,7 +402,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Download saucectl binary
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: saucectlbin
 
