@@ -76,7 +76,8 @@ type Suite struct {
 
 // SuiteConfig represents the configuration specific to a suite
 type SuiteConfig struct {
-	BrowserName string `yaml:"browserName,omitempty" json:"browserName,omitempty"`
+	BrowserName    string `yaml:"browserName,omitempty" json:"browserName,omitempty"`
+	BrowserVersion string `yaml:"-" json:"-"`
 
 	// Fields appeared in v1.12+
 	Headless        bool   `yaml:"headless,omitempty" json:"headless,omitempty"`

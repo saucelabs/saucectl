@@ -20,6 +20,12 @@ type PlaywrightRunner struct {
 	Project playwright.Project
 }
 
+var PlaywrightBrowserMap = map[string]string{
+	"chromium": "playwright-chromium",
+	"firefox":  "playwright-firefox",
+	"webkit":   "playwright-webkit",
+}
+
 // RunProject runs the tests defined in cypress.Project.
 func (r *PlaywrightRunner) RunProject() (int, error) {
 	var deprecationMessage string
@@ -40,11 +46,12 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		fmt.Print(deprecationMessage)
 	}
 
-	for _, s := range r.Project.Suites {
+	for i, s := range r.Project.Suites {
 		if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
 			msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
 			return 1, errors.New("unsupported platform")
 		}
+		r.Project.Suites[i].Params.BrowserVersion = m.BrowserDefaults[PlaywrightBrowserMap[s.Params.BrowserName]]
 	}
 
 	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner, r.Project.DryRun); err != nil {
@@ -119,7 +126,7 @@ func (r *PlaywrightRunner) runSuites(fileURI string) bool {
 				Framework:        "playwright",
 				FrameworkVersion: s.PlaywrightVersion,
 				BrowserName:      s.Params.BrowserName,
-				BrowserVersion:   "",
+				BrowserVersion:   s.Params.BrowserVersion,
 				PlatformName:     s.PlatformName,
 				Name:             s.Name,
 				Build:            r.Project.Sauce.Metadata.Build,

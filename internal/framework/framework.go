@@ -38,6 +38,7 @@ type Metadata struct {
 	GitRelease         string
 	Platforms          []Platform
 	CloudRunnerVersion string
+	BrowserDefaults    map[string]string
 }
 
 // Platform represent a supported platform.
