@@ -41,11 +41,12 @@ type Job struct {
 
 // FrameworkResponse represents the response body for framework information.
 type FrameworkResponse struct {
-	Name       string     `json:"name"`
-	Deprecated bool       `json:"deprecated"`
-	Version    string     `json:"version"`
-	Runner     runner     `json:"runner"`
-	Platforms  []platform `json:"platforms"`
+	Name            string            `json:"name"`
+	Deprecated      bool              `json:"deprecated"`
+	Version         string            `json:"version"`
+	Runner          runner            `json:"runner"`
+	Platforms       []platform        `json:"platforms"`
+	BrowserDefaults map[string]string `json:"browserDefaults"`
 }
 
 // TokenResponse represents the response body for slack token.
@@ -292,6 +293,7 @@ func (c *Client) Versions(ctx context.Context, frameworkName string) ([]framewor
 			GitRelease:         f.Runner.GitRelease,
 			Platforms:          platforms,
 			CloudRunnerVersion: f.Runner.CloudRunnerVersion,
+			BrowserDefaults:    f.BrowserDefaults,
 		})
 	}
 	return frameworks, nil
