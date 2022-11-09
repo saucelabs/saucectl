@@ -77,6 +77,7 @@ type Suite struct {
 // SuiteConfig represents the configuration specific to a suite
 type SuiteConfig struct {
 	BrowserName    string `yaml:"browserName,omitempty" json:"browserName,omitempty"`
+        // BrowserVersion for playwright is not specified by the user, but determined by Test-Composer
 	BrowserVersion string `yaml:"-" json:"-"`
 
 	// Fields appeared in v1.12+
