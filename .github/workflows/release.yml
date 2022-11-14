@@ -47,7 +47,7 @@ jobs:
         run: |
           version=$(echo $GITHUB_REF_NAME | cut -c2-)
           echo "Release saucectl $version"
-          [[ $version =~ "-" ]] && curl -X POST https://api.github.com/repos/saucelabs/node-saucectl/dispatches \
+          (echo $version | grep -q "-") && echo "Publishing $version" && curl -X POST https://api.github.com/repos/saucelabs/node-saucectl/dispatches \
           -H 'Accept: application/vnd.github.everest-preview+json' \
           -u devx-sauce-bot:$GH_TOKEN \
           --data "{\"event_type\": \"saucectl_release\", \"client_payload\": { \"version\": \"$version\" }}"
