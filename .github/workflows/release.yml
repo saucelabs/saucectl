@@ -1,8 +1,9 @@
 name: saucectl release
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - v*
 
 env:
   GH_TOKEN: ${{secrets.GH_TOKEN}}
@@ -42,15 +43,11 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-      - name: Print GitHub event action
-        run: |
-          echo "${{ github.event.release }}"
       - name: Trigger node-saucectl Release
-        if: github.event_name == 'release' && github.event.action == 'published'
         run: |
           version=$(echo $GITHUB_REF_NAME | cut -c2-)
           echo "Release saucectl $version"
-          curl -X POST https://api.github.com/repos/saucelabs/node-saucectl/dispatches \
+          [[ $version =~ "-" ]] && curl -X POST https://api.github.com/repos/saucelabs/node-saucectl/dispatches \
           -H 'Accept: application/vnd.github.everest-preview+json' \
           -u devx-sauce-bot:$GH_TOKEN \
           --data "{\"event_type\": \"saucectl_release\", \"client_payload\": { \"version\": \"$version\" }}"
