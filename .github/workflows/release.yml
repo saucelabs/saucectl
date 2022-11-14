@@ -44,7 +44,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Trigger node-saucectl Release
-        if: ${{ !contains($GITHUB_REF_NAME, "-") }}
+        if: ${{ !contains(github.ref, '-') }}
         run: |
           version=$(echo $GITHUB_REF_NAME | cut -c2-)
           echo "Release saucectl $version"
