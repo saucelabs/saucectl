@@ -43,9 +43,11 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-
+      - name: Print GitHub event action
+        run: |
+          echo "${{ github.event.action }}"
       - name: Trigger node-saucectl Release
-        if: github.event_name == 'release' && github.event.action == 'published'
+        #if: github.event_name == 'release' && github.event.action == 'published'
         run: |
           version=$(echo $GITHUB_REF_NAME | cut -c2-)
           echo "Release saucectl $version"
