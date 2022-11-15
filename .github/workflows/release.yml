@@ -45,6 +45,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Trigger node-saucectl Release
+        # pre-release version contains `-` and should be skipped when publishing node-saucectl.
         if: ${{ !contains(github.ref, '-') }}
         run: |
           version=$(echo $GITHUB_REF_NAME | cut -c2-)
