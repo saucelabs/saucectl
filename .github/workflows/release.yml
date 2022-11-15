@@ -43,6 +43,7 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
       - name: Trigger node-saucectl Release
         if: ${{ !contains(github.ref, '-') }}
         run: |
