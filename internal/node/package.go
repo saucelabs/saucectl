@@ -2,9 +2,10 @@ package node
 
 import (
 	"encoding/json"
-	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
+
+	"github.com/rs/zerolog/log"
 )
 
 type Package struct {
@@ -18,6 +19,7 @@ var permExcludes = []string{
 	"cypress",
 	"playwright",
 	"playwright-core",
+	"@playwright/test",
 	"testcafe",
 }
 
