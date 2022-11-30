@@ -80,6 +80,7 @@ type Options struct {
 	Tags              []string          `yaml:"tags,omitempty" json:"tags"`
 	Format            []string          `yaml:"format,omitempty" json:"format"`
 	FormatOptions     map[string]string `yaml:"formatOptions,omitempty" json:"formatOptions"`
+	Parallel          int               `yaml:"parallel,omitempty" json:"parallel"`
 }
 
 // FromFile creates a new cucumber project based on the filepath.

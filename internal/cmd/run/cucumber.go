@@ -66,6 +66,7 @@ func NewCucumberCmd() *cobra.Command {
 	sc.StringSlice("import", "suite::options::import", []string{}, "Paths to where your support code is, for ESM")
 	sc.StringSlice("scenario-tags", "suite::options::tags", []string{}, "Tag expression to filter which scenarios should be run")
 	sc.StringSlice("format", "suite::options::format", []string{}, "Name/path and (optionally) output file path of each formatter to use")
+	sc.Int("parallel", "suite::options::parallel", 0, "Run tests in parallel with the given number of worker processes, default: 0")
 
 	return cmd
 }

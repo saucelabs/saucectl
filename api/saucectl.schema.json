@@ -2544,6 +2544,10 @@
                     "formatOptions": {
                       "description": "Options to be provided to cucumber formatters.",
                       "type": "array"
+                    },
+                    "parallel": {
+                      "description": "Run tests in parallel with the given number of worker processes.",
+                      "type": "integer"
                     }
                   },
                   "required": [
