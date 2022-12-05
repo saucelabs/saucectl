@@ -13,6 +13,9 @@ import (
 	"github.com/saucelabs/saucectl/internal/tunnel"
 )
 
+var pollMaximumWait = time.Second * 180
+var pollWaitTime = time.Second * 5
+
 // Runner represents an executor for api tests
 type Runner struct {
 	Project       Project
@@ -91,25 +94,32 @@ func (r *Runner) runSuites() bool {
 func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, results chan []apitesting.TestResult) {
 	for _, eventID := range eventIDs {
 		go func(lEventId string) {
-			// TODO: Implement timeout
-			for {
-				// TODO: Make Dynamic
-				time.Sleep(5 * time.Second)
+			timeout := time.Now()
+			timeout = timeout.Add(pollMaximumWait)
 
+			for {
 				result, err := r.Client.GetEventResult(context.Background(), hookID, lEventId)
 
 				if err == nil {
 					results <- []apitesting.TestResult{result}
 					break
 				}
-				if err.Error() == "event not found" {
-					continue
-				}
-				if err != nil {
+				if err.Error() != "event not found" {
+					results <- []apitesting.TestResult{{
+						EventID:       eventID,
+						FailuresCount: 1,
+					}}
 					break
 				}
+				if timeout.Before(time.Now()) {
+					results <- []apitesting.TestResult{{
+						EventID: eventID,
+						Async:   true,
+					}}
+					break
+				}
+				time.Sleep(pollWaitTime)
 			}
-
 		}(eventID)
 	}
 }
