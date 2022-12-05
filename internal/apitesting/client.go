@@ -29,7 +29,7 @@ type TestResult struct {
 	FailuresCount        int     `json:"failuresCount,omitempty"`
 	Project              Project `json:"project,omitempty"`
 	Test                 Test    `json:"test,omitempty"`
-	ExecutionTimeSeconds int     `json:"executionTimeSeconds",omitempty`
+	ExecutionTimeSeconds int     `json:"executionTimeSeconds,omitempty"`
 	Async                bool    `json:"-,omitempty"`
 }
 

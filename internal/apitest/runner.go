@@ -127,7 +127,7 @@ func (r *Runner) collectResults(expected int, results chan []apitesting.TestResu
 			case <-done:
 				return
 			case <-t.C:
-				log.Info().Msgf("Suites in progress: %d", inProgress)
+				log.Info().Msgf("Tests in progress: %d", inProgress)
 			}
 		}
 	}(r)
@@ -139,23 +139,23 @@ func (r *Runner) collectResults(expected int, results chan []apitesting.TestResu
 
 		for _, testResult := range res {
 			var testName string
-			var reportUrl string
+			var reportURL string
 
 			if testResult.Async {
 				testName = testResult.Project.Name
-				reportUrl = fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)
+				reportURL = fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)
 				log.Info().
 					Str("project", testResult.Project.Name).
-					Str("report", reportUrl).
+					Str("report", reportURL).
 					Msg("Async test started.")
 			} else {
 				testName = fmt.Sprintf("%s - %s", testResult.Project.Name, testResult.Test.Name)
-				reportUrl = fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)
+				reportURL = fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)
 
 				log.Info().
 					Int("failures", testResult.FailuresCount).
 					Str("project", testResult.Project.Name).
-					Str("report", reportUrl).
+					Str("report", reportURL).
 					Str("test", testResult.Test.Name).
 					Msg("Finished test.")
 			}
@@ -171,7 +171,7 @@ func (r *Runner) collectResults(expected int, results chan []apitesting.TestResu
 			for _, rep := range r.Reporters {
 				rep.Add(report.TestResult{
 					Name:     testName,
-					URL:      reportUrl,
+					URL:      reportURL,
 					Status:   status,
 					Duration: time.Second * time.Duration(testResult.ExecutionTimeSeconds),
 					Attempts: 1,
