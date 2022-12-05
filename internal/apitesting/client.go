@@ -25,11 +25,12 @@ type Client struct {
 
 // TestResult describes the result from running an api test.
 type TestResult struct {
-	EventID       string  `json:"id,omitempty"`
-	FailuresCount int     `json:"failuresCount,omitempty"`
-	Project       Project `json:"project,omitempty"`
-	Test          Test    `json:"test,omitempty"`
-	Async         bool    `json:"-,omitempty"`
+	EventID              string  `json:"_id,omitempty"`
+	FailuresCount        int     `json:"failuresCount,omitempty"`
+	Project              Project `json:"project,omitempty"`
+	Test                 Test    `json:"test,omitempty"`
+	ExecutionTimeSeconds int     `json:"executionTimeSeconds",omitempty`
+	Async                bool    `json:"-,omitempty"`
 }
 
 // Test describes a single test.
@@ -83,6 +84,36 @@ func (c *Client) GetProject(ctx context.Context, hookID string) (Project, error)
 		return project, err
 	}
 	return project, nil
+}
+
+func (c *Client) GetEventResult(ctx context.Context, hookID string, eventID string) (TestResult, error) {
+	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/insights/events/%s", c.URL, hookID, eventID)
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return TestResult{}, err
+	}
+	req.SetBasicAuth(c.Username, c.AccessKey)
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return TestResult{}, err
+	}
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return TestResult{}, errors.New(msg.InternalServerError)
+	}
+	// 404 needs to be treated differently to ensure calling parent is aware of the specific error.
+	// API replies 404 until the event is fully processed.
+	if resp.StatusCode == http.StatusNotFound {
+		return TestResult{}, errors.New("event not found")
+	}
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return TestResult{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+	}
+	var testResult TestResult
+	if err := json.NewDecoder(resp.Body).Decode(&testResult); err != nil {
+		return testResult, err
+	}
+	return testResult, nil
 }
 
 func (c *Client) composeURL(path string, buildID string, format string, tunnel config.Tunnel) string {

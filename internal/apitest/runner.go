@@ -43,73 +43,75 @@ func (r *Runner) runSuites() bool {
 
 	for _, s := range r.Project.Suites {
 		suite := s
+		var resp apitesting.AsyncResponse
+		var err error
 
 		// If no tags or no tests are defined for the suite, run all tests for a hookId
 		if len(suite.Tags) == 0 && len(suite.Tests) == 0 {
-			go func() {
-				log.Info().Str("hookId", suite.HookID).Msg("Running project.")
+			log.Info().Str("hookId", suite.HookID).Msg("Running project.")
 
-				var resp []apitesting.TestResult
-				var err error
+			resp, err = r.Client.RunAllAsync(context.Background(), suite.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to run project.")
+			}
 
-				if r.Async {
-					resp, err = r.Client.RunAllAsync(context.Background(), suite.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
-				} else {
-					resp, err = r.Client.RunAllSync(context.Background(), suite.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
-				}
-				if err != nil {
-					log.Error().Err(err).Msg("Failed to run project.")
-				}
-
-				results <- resp
-			}()
-			expected++
+			r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results)
+			expected += len(resp.EventIDs)
 		} else {
 			for _, t := range suite.Tests {
 				test := t
-				go func() {
-					log.Info().Str("test", test).Str("hookId", suite.HookID).Msg("Running test.")
-					var resp []apitesting.TestResult
-					var err error
+				log.Info().Str("test", test).Str("hookId", suite.HookID).Msg("Running test.")
 
-					if r.Async {
-						resp, err = r.Client.RunTestAsync(context.Background(), suite.HookID, test, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
-					} else {
-						resp, err = r.Client.RunTestSync(context.Background(), suite.HookID, test, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
-					}
+				resp, err = r.Client.RunTestAsync(context.Background(), suite.HookID, test, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
 
-					if err != nil {
-						log.Error().Err(err).Msg("Failed to run test.")
-					}
-					results <- resp
-				}()
-				expected++
+				if err != nil {
+					log.Error().Err(err).Msg("Failed to run test.")
+				}
+				r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results)
+				expected += len(resp.EventIDs)
 			}
 
 			for _, t := range suite.Tags {
 				tag := t
-				go func() {
-					log.Info().Str("tag", tag).Str("hookId", suite.HookID).Msg("Running tag.")
+				log.Info().Str("tag", tag).Str("hookId", suite.HookID).Msg("Running tag.")
 
-					var resp []apitesting.TestResult
-					var err error
-
-					if r.Async {
-						resp, err = r.Client.RunTagAsync(context.Background(), suite.HookID, tag, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
-					} else {
-						resp, err = r.Client.RunTagSync(context.Background(), suite.HookID, tag, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
-					}
-					if err != nil {
-						log.Error().Err(err).Msg("Failed to run tag.")
-					}
-					results <- resp
-				}()
-				expected++
+				resp, err = r.Client.RunTagAsync(context.Background(), suite.HookID, tag, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
+				if err != nil {
+					log.Error().Err(err).Msg("Failed to run tag.")
+				}
+				r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results)
+				expected += len(resp.EventIDs)
 			}
 		}
 	}
 
 	return r.collectResults(expected, results)
+}
+
+func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, results chan []apitesting.TestResult) {
+	for _, eventID := range eventIDs {
+		go func(lEventId string) {
+			// TODO: Implement timeout
+			for {
+				// TODO: Make Dynamic
+				time.Sleep(5 * time.Second)
+
+				result, err := r.Client.GetEventResult(context.Background(), hookID, lEventId)
+
+				if err == nil {
+					results <- []apitesting.TestResult{result}
+					break
+				}
+				if err.Error() == "event not found" {
+					continue
+				}
+				if err != nil {
+					break
+				}
+			}
+
+		}(eventID)
+	}
 }
 
 func (r *Runner) collectResults(expected int, results chan []apitesting.TestResult) bool {
@@ -137,21 +139,23 @@ func (r *Runner) collectResults(expected int, results chan []apitesting.TestResu
 
 		for _, testResult := range res {
 			var testName string
+			var reportUrl string
 
 			if testResult.Async {
 				testName = testResult.Project.Name
-
+				reportUrl = fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)
 				log.Info().
 					Str("project", testResult.Project.Name).
-					Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)).
+					Str("report", reportUrl).
 					Msg("Async test started.")
 			} else {
 				testName = fmt.Sprintf("%s - %s", testResult.Project.Name, testResult.Test.Name)
+				reportUrl = fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)
 
 				log.Info().
 					Int("failures", testResult.FailuresCount).
 					Str("project", testResult.Project.Name).
-					Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)).
+					Str("report", reportUrl).
 					Str("test", testResult.Test.Name).
 					Msg("Finished test.")
 			}
@@ -166,8 +170,11 @@ func (r *Runner) collectResults(expected int, results chan []apitesting.TestResu
 
 			for _, rep := range r.Reporters {
 				rep.Add(report.TestResult{
-					Name:   testName,
-					Status: status,
+					Name:     testName,
+					URL:      reportUrl,
+					Status:   status,
+					Duration: time.Second * time.Duration(testResult.ExecutionTimeSeconds),
+					Attempts: 1,
 				})
 			}
 		}

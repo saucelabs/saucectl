@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/requesth"
@@ -23,105 +22,58 @@ type AsyncResponse struct {
 }
 
 // RunAllAsync runs all the tests for the project described by hookID and returns without waiting for their results.
-func (c *Client) RunAllAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel) ([]TestResult, error) {
+func (c *Client) RunAllAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel) (AsyncResponse, error) {
 	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_run-all", hookID), buildID, "", tunnel)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
-		return []TestResult{}, err
+		return AsyncResponse{}, err
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
 	resp, err := doAsyncRun(c.HTTPClient, req)
 	if err != nil {
-		return []TestResult{}, err
+		return AsyncResponse{}, err
 	}
-
-	apitestProject, err := c.GetProject(ctx, hookID)
-
-	if err != nil {
-		log.Warn().Err(err).Msg("failed to fetch project details; go to your project dashboard for test results")
-	}
-
-	var testResults []TestResult
-
-	for _, e := range resp.EventIDs {
-		testResults = append(testResults, TestResult{
-			EventID: e,
-			Project: apitestProject,
-			Async:   true,
-		})
-	}
-	return testResults, nil
+	return resp, nil
 }
 
 // RunTestAsync runs a single test described by testID for the project described by hookID and returns without waiting for results.
-func (c *Client) RunTestAsync(ctx context.Context, hookID string, testID string, buildID string, tunnel config.Tunnel) ([]TestResult, error) {
+func (c *Client) RunTestAsync(ctx context.Context, hookID string, testID string, buildID string, tunnel config.Tunnel) (AsyncResponse, error) {
 	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/%s/_run", hookID, testID), buildID, "", tunnel)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
-		return []TestResult{}, err
+		return AsyncResponse{}, err
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
 	resp, err := doAsyncRun(c.HTTPClient, req)
 	if err != nil {
-		return []TestResult{}, err
+		return AsyncResponse{}, err
 	}
 
-	apitestProject, err := c.GetProject(ctx, hookID)
-
-	if err != nil {
-		log.Warn().Err(err).Msg("failed to fetch project details; go to your project dashboard for test results")
-	}
-
-	var testResults []TestResult
-
-	for _, e := range resp.EventIDs {
-		testResults = append(testResults, TestResult{
-			EventID: e,
-			Project: apitestProject,
-			Async:   true,
-		})
-	}
-	return testResults, nil
+	return resp, nil
 }
 
 // RunTagAsync runs all the tests for a testTag for a project described by hookID and returns without waiting for results.
-func (c *Client) RunTagAsync(ctx context.Context, hookID string, testTag string, buildID string, tunnel config.Tunnel) ([]TestResult, error) {
+func (c *Client) RunTagAsync(ctx context.Context, hookID string, testTag string, buildID string, tunnel config.Tunnel) (AsyncResponse, error) {
 	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_tag/%s/_run", hookID, testTag), buildID, "", tunnel)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
-		return []TestResult{}, err
+		return AsyncResponse{}, err
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
 	resp, err := doAsyncRun(c.HTTPClient, req)
 	if err != nil {
-		return []TestResult{}, err
+		return AsyncResponse{}, err
 	}
-
-	apitestProject, err := c.GetProject(ctx, hookID)
-
-	if err != nil {
-		log.Warn().Err(err).Msg("failed to fetch project details; go to your project dashboard for test results")
-	}
-
-	var testResults []TestResult
-
-	for _, e := range resp.EventIDs {
-		testResults = append(testResults, TestResult{
-			EventID: e,
-			Project: apitestProject,
-			Async:   true,
-		})
-	}
-	return testResults, nil
+	return resp, nil
 }
 
 func doAsyncRun(client *http.Client, request *http.Request) (AsyncResponse, error) {
