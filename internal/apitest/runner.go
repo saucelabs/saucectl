@@ -106,14 +106,14 @@ func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, res
 				}
 				if err.Error() != "event not found" {
 					results <- []apitesting.TestResult{{
-						EventID:       eventID,
+						EventID:       lEventId,
 						FailuresCount: 1,
 					}}
 					break
 				}
 				if timeout.Before(time.Now()) {
 					results <- []apitesting.TestResult{{
-						EventID: eventID,
+						EventID: lEventId,
 						Async:   true,
 					}}
 					break
