@@ -128,7 +128,7 @@ func Command() *cobra.Command {
 	sc.Int("ccy", "sauce::concurrency", 2, "Concurrency specifies how many suites are run at the same time.")
 	sc.String("tunnel-id", "sauce::tunnel::id", "", "Sets the sauce-connect tunnel ID to be used for the run.")
 	sc.String("tunnel-name", "sauce::tunnel::name", "", "Sets the sauce-connect tunnel name to be used for the run.")
-	sc.String("tunnel-parent", "sauce::tunnel:;parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
+	sc.String("tunnel-parent", "sauce::tunnel::parent", "", "Sets the sauce-connect tunnel parent to be used for the run.")
 	sc.String("tunnel-owner", "sauce::tunnel::owner", "", "Sets the sauce-connect tunnel owner to be used for the run.")
 	sc.String("runner-version", "runnerVersion", "", "Overrides the automatically determined runner version.")
 	sc.String("sauceignore", "sauce::sauceignore", ".sauceignore", "Specifies the path to the .sauceignore file.")
