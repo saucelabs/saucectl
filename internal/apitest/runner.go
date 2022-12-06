@@ -13,7 +13,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/tunnel"
 )
 
-var pollMaximumWait = time.Second * 180
+var pollDefaultWait = time.Second * 180
 var pollWaitTime = time.Second * 5
 
 // Runner represents an executor for api tests
@@ -42,10 +42,17 @@ func (r *Runner) RunProject() (int, error) {
 
 func (r *Runner) runSuites() bool {
 	results := make(chan []apitesting.TestResult)
+
 	expected := 0
 
 	for _, s := range r.Project.Suites {
 		suite := s
+
+		maximumWaitTime := pollDefaultWait
+		if suite.Timeout != 0 {
+			pollWaitTime = suite.Timeout
+		}
+
 		var resp apitesting.AsyncResponse
 		var err error
 
@@ -61,7 +68,7 @@ func (r *Runner) runSuites() bool {
 			if r.Async {
 				r.fetchTestDetails(suite.HookID, resp.EventIDs, resp.TestIDs, results)
 			} else {
-				r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results)
+				r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results, maximumWaitTime)
 			}
 			expected += len(resp.EventIDs)
 		} else {
@@ -77,7 +84,7 @@ func (r *Runner) runSuites() bool {
 				if r.Async {
 					r.fetchTestDetails(suite.HookID, resp.EventIDs, resp.TestIDs, results)
 				} else {
-					r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results)
+					r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results, maximumWaitTime)
 				}
 				expected += len(resp.EventIDs)
 			}
@@ -93,7 +100,7 @@ func (r *Runner) runSuites() bool {
 				if r.Async {
 					r.fetchTestDetails(suite.HookID, resp.EventIDs, resp.TestIDs, results)
 				} else {
-					r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results)
+					r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results, maximumWaitTime)
 				}
 				expected += len(resp.EventIDs)
 			}
@@ -126,7 +133,7 @@ func (r *Runner) fetchTestDetails(hookID string, eventIDs []string, testIDs []st
 	}
 }
 
-func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, results chan []apitesting.TestResult) {
+func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, results chan []apitesting.TestResult, pollMaximumWait time.Duration) {
 	project, _ := r.Client.GetProject(context.Background(), hookID)
 
 	for _, eventID := range eventIDs {
