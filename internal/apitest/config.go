@@ -2,6 +2,7 @@ package apitest
 
 import (
 	"errors"
+	"time"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -27,10 +28,11 @@ type Project struct {
 
 // Suite represents the apitest suite configuration.
 type Suite struct {
-	Name   string   `yaml:"name,omitempty"`
-	HookID string   `yaml:"hookId,omitempty"`
-	Tags   []string `yaml:"tags,omitempty"`
-	Tests  []string `yaml:"tests,omitempty"`
+	Name    string        `yaml:"name,omitempty"`
+	HookID  string        `yaml:"hookId,omitempty"`
+	Tags    []string      `yaml:"tags,omitempty"`
+	Tests   []string      `yaml:"tests,omitempty"`
+	Timeout time.Duration `yaml:"timeout,omitempty"`
 }
 
 // FromFile creates a new apitest Project based on the filepath cfgPath.
