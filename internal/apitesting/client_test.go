@@ -117,6 +117,7 @@ func TestClient_GetProject(t *testing.T) {
 		wantErr bool
 	}{
 		{
+			name: "Passing Project Fetch",
 			args: args{ctx: context.Background(), hookID: "dummyProject"},
 			want: Project{
 				ID:   "6244d915ca28694aab000000",
@@ -125,6 +126,7 @@ func TestClient_GetProject(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name:    "Failing Project Fetch",
 			args:    args{ctx: context.Background(), hookID: "nonExistingProject"},
 			wantErr: true,
 		},
@@ -156,6 +158,71 @@ func TestClient_GetProject(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := c.GetProject(tt.args.ctx, tt.args.hookID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetProject() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetProject() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestClient_GetTest(t *testing.T) {
+	type args struct {
+		ctx    context.Context
+		hookID string
+		testID string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    Test
+		wantErr bool
+	}{
+		{
+			name: "Passing Test Fetch",
+			args: args{ctx: context.Background(), hookID: "dummyProject", testID: "existingTest"},
+			want: Test{
+				ID:   "638788b12d29c47170d20db4",
+				Name: "test_cli",
+			},
+			wantErr: false,
+		},
+		{
+			name:    "Failing test fetch",
+			args:    args{ctx: context.Background(), hookID: "dummyProject", testID: "nonexistentTest"},
+			wantErr: true,
+		},
+	}
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
+		switch r.URL.Path {
+		case "/api-testing/rest/v4/dummyProject/tests/existingTest":
+			completeStatusResp := []byte(`{"published":{"id":"638788b12d29c47170d20db4","name":"test_cli","description":"","lastModified":"2022-11-30T17:20:08Z","tags":["canfail"],"user":{"id":"de8691a22ff343f08aa6fb63e963121d","name":"Username"},"unit":"assertions:\n  - id: get\n    children:\n      - id: header\n        name: x-rapidmock-delay\n        value: \"10000\"\n    url: https://api.rapidmock.com/mocks/f6GeB\n    var: payload\n    mode: json\n  - id: if\n    children:\n      - id: comment\n        text: endpoint is not working fine, test will be stopped\n      - id: flow\n        command: stop\n    expression: payload_response.statusCode!='200'\nconfigs: []","input":"- id: global\n  children:\n    - id: variable\n      name: protocol\n      value: http://\n    - id: variable\n      name: domain\n      value: demoapi.apifortress.com\n    - id: variable\n      name: endpoint\n      value: /api/retail/product/${id}\n    - id: variable\n      name: auth\n      value: ABC123\n- id: sets\n  children:\n    - id: set\n      children:\n        - id: variable\n          name: id\n          value: \"1\"\n      name: product 1\n    - id: set\n      children:\n        - id: variable\n          name: id\n          value: \"4\"\n      name: product 2\n    - id: set\n      children:\n        - id: variable\n          name: id\n          value: \"7\"\n      name: product 3","complete":true},"workingCopy":{"id":"638790c8e90a3c46b5c83a98","user":{"id":"de8691a22ff343f08aa6fb63e963121d","name":"Username"},"unit":"assertions:\n  - id: get\n    children:\n      - id: header\n        name: x-rapidmock-delay\n        value: \"10000\"\n    url: https://api.rapidmock.com/mocks/f6GeB\n    var: payload\n    mode: json\n  - id: if\n    children:\n      - id: comment\n        text: endpoint is not working fine, test will be stopped\n      - id: flow\n        command: stop\n    expression: payload_response.statusCode!='200'\nconfigs: []","input":"- id: global\n  children:\n    - id: variable\n      name: protocol\n      value: http://\n    - id: variable\n      name: domain\n      value: demoapi.apifortress.com\n    - id: variable\n      name: endpoint\n      value: /api/retail/product/${id}\n    - id: variable\n      name: auth\n      value: ABC123\n- id: sets\n  children:\n    - id: set\n      children:\n        - id: variable\n          name: id\n          value: \"1\"\n      name: product 1\n    - id: set\n      children:\n        - id: variable\n          name: id\n          value: \"4\"\n      name: product 2\n    - id: set\n      children:\n        - id: variable\n          name: id\n          value: \"7\"\n      name: product 3","lastModified":"2022-11-30T17:20:08Z"}}`)
+			_, err = w.Write(completeStatusResp)
+		case "/api-testing/rest/v4/dummyProject/tests/nonexistentTest":
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
+		}
+	}))
+	defer ts.Close()
+	c := &Client{
+		HTTPClient: ts.Client(),
+		URL:        ts.URL,
+		Username:   "dummy",
+		AccessKey:  "accesskey",
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := c.GetTest(tt.args.ctx, tt.args.hookID, tt.args.testID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetProject() error = %v, wantErr %v", err, tt.wantErr)
 				return

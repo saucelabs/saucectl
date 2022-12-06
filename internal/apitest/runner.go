@@ -58,7 +58,11 @@ func (r *Runner) runSuites() bool {
 				log.Error().Err(err).Msg("Failed to run project.")
 			}
 
-			r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results)
+			if r.Async {
+				r.fetchTestDetails(suite.HookID, resp.EventIDs, resp.TestIDs, results)
+			} else {
+				r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results)
+			}
 			expected += len(resp.EventIDs)
 		} else {
 			for _, t := range suite.Tests {
@@ -70,7 +74,11 @@ func (r *Runner) runSuites() bool {
 				if err != nil {
 					log.Error().Err(err).Msg("Failed to run test.")
 				}
-				r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results)
+				if r.Async {
+					r.fetchTestDetails(suite.HookID, resp.EventIDs, resp.TestIDs, results)
+				} else {
+					r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results)
+				}
 				expected += len(resp.EventIDs)
 			}
 
@@ -82,13 +90,40 @@ func (r *Runner) runSuites() bool {
 				if err != nil {
 					log.Error().Err(err).Msg("Failed to run tag.")
 				}
-				r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results)
+				if r.Async {
+					r.fetchTestDetails(suite.HookID, resp.EventIDs, resp.TestIDs, results)
+				} else {
+					r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results)
+				}
 				expected += len(resp.EventIDs)
 			}
 		}
 	}
 
 	return r.collectResults(expected, results)
+}
+
+func (r *Runner) fetchTestDetails(hookID string, eventIDs []string, testIDs []string, results chan []apitesting.TestResult) {
+	project, _ := r.Client.GetProject(context.Background(), hookID)
+	for _, eventID := range eventIDs {
+		reportURL := fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)
+		log.Info().
+			Str("project", project.Name).
+			Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)).
+			Str("report", reportURL).
+			Msg("Async test started.")
+	}
+
+	for _, testID := range testIDs {
+		go func(p apitesting.Project, testID string) {
+			test, _ := r.Client.GetTest(context.Background(), hookID, testID)
+			results <- []apitesting.TestResult{{
+				Test:    test,
+				Project: p,
+				Async:   true,
+			}}
+		}(project, testID)
+	}
 }
 
 func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, results chan []apitesting.TestResult) {
@@ -152,12 +187,7 @@ func (r *Runner) collectResults(expected int, results chan []apitesting.TestResu
 			var reportURL string
 
 			if testResult.Async {
-				testName = testResult.Project.Name
-				reportURL = fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)
-				log.Info().
-					Str("project", testResult.Project.Name).
-					Str("report", reportURL).
-					Msg("Async test started.")
+				testName = fmt.Sprintf("%s - %s", testResult.Project.Name, testResult.Test.Name)
 			} else {
 				testName = fmt.Sprintf("%s - %s", testResult.Project.Name, testResult.Test.Name)
 				reportURL = fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)

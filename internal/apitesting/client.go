@@ -33,6 +33,11 @@ type TestResult struct {
 	Async                bool    `json:"-,omitempty"`
 }
 
+// PublishedTest describes a published test.
+type PublishedTest struct {
+	Published Test
+}
+
 // Test describes a single test.
 type Test struct {
 	ID   string `json:"id,omitempty"`
@@ -114,6 +119,36 @@ func (c *Client) GetEventResult(ctx context.Context, hookID string, eventID stri
 		return testResult, err
 	}
 	return testResult, nil
+}
+
+func (c *Client) GetTest(ctx context.Context, hookID string, testID string) (Test, error) {
+	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/%s", c.URL, hookID, testID)
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return Test{}, err
+	}
+
+	req.SetBasicAuth(c.Username, c.AccessKey)
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return Test{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return Test{}, errors.New(msg.InternalServerError)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return Test{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+	}
+
+	var test PublishedTest
+	if err := json.NewDecoder(resp.Body).Decode(&test); err != nil {
+		return test.Published, err
+	}
+	return test.Published, nil
 }
 
 func (c *Client) composeURL(path string, buildID string, format string, tunnel config.Tunnel) string {
