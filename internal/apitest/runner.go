@@ -137,11 +137,11 @@ func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, res
 	project, _ := r.Client.GetProject(context.Background(), hookID)
 
 	for _, eventID := range eventIDs {
-		go func(lEventId string) {
+		go func(lEventID string) {
 			timeout := (time.Now()).Add(pollMaximumWait)
 
 			for {
-				result, err := r.Client.GetEventResult(context.Background(), hookID, lEventId)
+				result, err := r.Client.GetEventResult(context.Background(), hookID, lEventID)
 
 				if err == nil {
 					results <- []apitesting.TestResult{result}
@@ -149,21 +149,21 @@ func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, res
 				}
 				if err.Error() != "event not found" {
 					results <- []apitesting.TestResult{{
-						EventID:       lEventId,
+						EventID:       lEventID,
 						FailuresCount: 1,
 					}}
 					break
 				}
 				if timeout.Before(time.Now()) {
-					reportURL := fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)
+					reportURL := fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, lEventID)
 					log.Warn().
 						Str("project", project.Name).
-						Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)).
+						Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, lEventID)).
 						Str("report", reportURL).
 						Msg("Test did not finished before timeout.")
 					results <- []apitesting.TestResult{{
 						Project:  project,
-						EventID:  lEventId,
+						EventID:  lEventID,
 						Async:    true,
 						TimedOut: true,
 					}}

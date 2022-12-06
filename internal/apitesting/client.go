@@ -30,8 +30,8 @@ type TestResult struct {
 	Project              Project `json:"project,omitempty"`
 	Test                 Test    `json:"test,omitempty"`
 	ExecutionTimeSeconds int     `json:"executionTimeSeconds,omitempty"`
-	Async                bool    `json:"-,omitempty"`
-	TimedOut             bool    `json:"-,omitempty"`
+	Async                bool    `json:"-"`
+	TimedOut             bool    `json:"-"`
 }
 
 // PublishedTest describes a published test.
