@@ -148,6 +148,12 @@ func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, res
 					break
 				}
 				if timeout.Before(time.Now()) {
+					reportURL := fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)
+					log.Warn().
+						Str("project", project.Name).
+						Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)).
+						Str("report", reportURL).
+						Msg("Test did not finished before timeout.")
 					results <- []apitesting.TestResult{{
 						Project:  project,
 						EventID:  lEventId,
