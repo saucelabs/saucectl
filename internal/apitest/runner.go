@@ -207,14 +207,11 @@ func (r *Runner) collectResults(expected int, results chan []apitesting.TestResu
 			}
 
 			status := job.StatePassed
-			if testResult.FailuresCount > 0 {
+			if testResult.FailuresCount > 0 || testResult.TimedOut {
 				status = job.StateFailed
 				passed = false
 			} else if testResult.Async {
 				status = job.StateInProgress
-			} else if testResult.TimedOut {
-				status = job.StateInProgress
-				passed = false
 			}
 
 			for _, rep := range r.Reporters {
