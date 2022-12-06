@@ -127,10 +127,11 @@ func (r *Runner) fetchTestDetails(hookID string, eventIDs []string, testIDs []st
 }
 
 func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, results chan []apitesting.TestResult) {
+	project, _ := r.Client.GetProject(context.Background(), hookID)
+
 	for _, eventID := range eventIDs {
 		go func(lEventId string) {
-			timeout := time.Now()
-			timeout = timeout.Add(pollMaximumWait)
+			timeout := (time.Now()).Add(pollMaximumWait)
 
 			for {
 				result, err := r.Client.GetEventResult(context.Background(), hookID, lEventId)
@@ -148,8 +149,10 @@ func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, res
 				}
 				if timeout.Before(time.Now()) {
 					results <- []apitesting.TestResult{{
-						EventID: lEventId,
-						Async:   true,
+						Project:  project,
+						EventID:  lEventId,
+						Async:    true,
+						TimedOut: true,
 					}}
 					break
 				}
@@ -183,13 +186,10 @@ func (r *Runner) collectResults(expected int, results chan []apitesting.TestResu
 		inProgress--
 
 		for _, testResult := range res {
-			var testName string
 			var reportURL string
+			testName := buildTestName(testResult.Project, testResult.Test)
 
-			if testResult.Async {
-				testName = fmt.Sprintf("%s - %s", testResult.Project.Name, testResult.Test.Name)
-			} else {
-				testName = fmt.Sprintf("%s - %s", testResult.Project.Name, testResult.Test.Name)
+			if !testResult.Async {
 				reportURL = fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)
 
 				log.Info().
@@ -206,15 +206,19 @@ func (r *Runner) collectResults(expected int, results chan []apitesting.TestResu
 				passed = false
 			} else if testResult.Async {
 				status = job.StateInProgress
+			} else if testResult.TimedOut {
+				status = job.StateInProgress
+				passed = false
 			}
 
 			for _, rep := range r.Reporters {
 				rep.Add(report.TestResult{
-					Name:     testName,
-					URL:      reportURL,
-					Status:   status,
-					Duration: time.Second * time.Duration(testResult.ExecutionTimeSeconds),
-					Attempts: 1,
+					Name:      testName,
+					URL:       reportURL,
+					Status:    status,
+					Duration:  time.Second * time.Duration(testResult.ExecutionTimeSeconds),
+					StartTime: (time.Now()).Add(-time.Second * time.Duration(testResult.ExecutionTimeSeconds)),
+					Attempts:  1,
 				})
 			}
 		}
@@ -226,4 +230,11 @@ func (r *Runner) collectResults(expected int, results chan []apitesting.TestResu
 	}
 
 	return passed
+}
+
+func buildTestName(project apitesting.Project, test apitesting.Test) string {
+	if test.Name != "" {
+		return fmt.Sprintf("%s - %s", project.Name, test.Name)
+	}
+	return project.Name
 }
