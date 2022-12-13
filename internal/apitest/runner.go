@@ -3,6 +3,8 @@ package apitest
 import (
 	"context"
 	"fmt"
+	"io/fs"
+	"path/filepath"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -38,6 +40,13 @@ func (r *Runner) RunProject() (int, error) {
 		exitCode = 0
 	}
 	return exitCode, nil
+}
+
+func findTests(rootDir string, testMatch []string) []string {
+	filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+		return nil
+	})
+	return []string{}
 }
 
 func (r *Runner) runSuites() bool {

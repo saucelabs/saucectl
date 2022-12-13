@@ -24,6 +24,7 @@ type Project struct {
 	ConfigFilePath string             `yaml:"-" json:"-"`
 	Suites         []Suite            `yaml:"suites,omitempty"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty"`
+	RootDir        string             `yaml:"rootDir,omitempty"`
 }
 
 // Suite represents the apitest suite configuration.
