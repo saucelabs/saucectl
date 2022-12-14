@@ -2,7 +2,10 @@ package apitest
 
 import (
 	"github.com/saucelabs/saucectl/internal/apitesting"
+	"github.com/stretchr/testify/assert"
 	"gotest.tools/v3/fs"
+	"net/http"
+	"net/http/httptest"
 	"path"
 	"reflect"
 	"testing"
@@ -273,4 +276,108 @@ func Test_buildTestName(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRunner_loadTests(t *testing.T) {
+	dir := createTestDirs(t)
+	defer dir.Remove()
+
+	type args struct {
+		s     Suite
+		tests []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []apitesting.TestRequest
+	}{
+		{
+			name: "Complete tests",
+			args: args{
+				s: Suite{
+					Name: "suiteName",
+				},
+				tests: []string{
+					"tests/01_basic_test",
+				},
+			},
+			want: []apitesting.TestRequest{
+				{
+					Name:  "suiteName - tests/01_basic_test",
+					Unit:  "yaml-unit-content",
+					Input: "yaml-input-content",
+					Tags:  []string{},
+				},
+			},
+		},
+	}
+
+	r := Runner{
+		Project: Project{
+			RootDir: dir.Path(),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := r.loadTests(tt.args.s, tt.args.tests); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("loadTests() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRunner_runLocalTests(t *testing.T) {
+	dir := createTestDirs(t)
+	defer dir.Remove()
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api-testing/rest/v4/dummyHookId/tests/_exec":
+			_, _ = w.Write([]byte(`{"contextIds":["221270ac-0229-49d1-9025-251a10e9133d"],"eventIds":["c4ca4238a0b923820dcc509a"],"taskId":"6ddf80b7-9753-4802-992b-d42948cdb99f","testIds":["c20ad4d76fe97759aa27a0c9"]}`))
+		case "/api-testing/rest/v4/dummyHookId/insights/events/c4ca4238a0b923820dcc509a":
+			completeStatusResp := []byte(`{"_id":"c4ca4238a0b923820dcc509a","events":[],"tags":["canfail"],"criticalFailures":[],"httpFailures":[],"facts":{},"date":1670258196613,"test":{"name":"test_demo","id":"638788b12d29c47170999eee"},"failuresCount":0,"warningsCount":0,"compressed":false,"run":{"name":"","id":""},"company":{"name":"","id":"7fb25570b4064716b9b6daae1a997bba"},"project":{"name":"Test Project","id":"6244d915ca28694aab958bbe"},"temp":false,"expireAt":"2023-06-06T04:37:07Z","executionTimeSeconds":31,"taskId":"ad24fdd6-8e47-401c-81ce-866553194bdd","agent":"wstestjs","mode":"ondemand","buildId":"Test","clientname":"","initiator":{"name":"Incitator","id":"de8691a22ff343f08aa6fb63e485fe0d","teamid":"0205cb60678a4372193bac4052c048be"}}`)
+			_, _ = w.Write(completeStatusResp)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}))
+	defer ts.Close()
+	client := ts.Client()
+
+	r := Runner{
+		Client: apitesting.Client{
+			HTTPClient: client,
+			URL:        ts.URL,
+		},
+		Project: Project{
+			RootDir: dir.Path(),
+		},
+	}
+	s := Suite{
+		HookID:    "dummyHookId",
+		Name:      "Basic Test",
+		TestMatch: []string{"01_basic_test"},
+		Tags:      []string{"canfail"},
+	}
+	c := make(chan []apitesting.TestResult)
+
+	res := r.runLocalTests(s, c)
+	assert.Equal(t, 1, res)
+
+	results := <-c
+	assert.Equal(t, []apitesting.TestResult{
+		{
+			EventID:       "c4ca4238a0b923820dcc509a",
+			FailuresCount: 0,
+			Project: apitesting.Project{
+				ID:   "6244d915ca28694aab958bbe",
+				Name: "Test Project",
+			},
+			Test: apitesting.Test{
+				Name: "test_demo",
+				ID:   "638788b12d29c47170999eee",
+			},
+			ExecutionTimeSeconds: 31,
+		},
+	}, results)
 }

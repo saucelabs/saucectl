@@ -300,6 +300,14 @@ func TestClient_composeURL(t *testing.T) {
 			},
 			want: "/dummy/path?tunnelId=tunnelId",
 		},
+		{
+			name: "Path with taskId",
+			args: args{
+				path:   "/dummy/path",
+				taskID: "taskId",
+			},
+			want: "/dummy/path?taskId=taskId",
+		},
 	}
 	c := &Client{}
 	for _, tt := range tests {
