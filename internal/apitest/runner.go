@@ -3,6 +3,12 @@ package apitest
 import (
 	"context"
 	"fmt"
+	"github.com/xtgo/uuid"
+	"io/fs"
+	"os"
+	"path"
+	"path/filepath"
+	"regexp"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -15,6 +21,9 @@ import (
 
 var pollDefaultWait = time.Second * 180
 var pollWaitTime = time.Second * 5
+
+var unitFileName = "unit.yaml"
+var inputFileName = "input.yaml"
 
 // Runner represents an executor for api tests
 type Runner struct {
@@ -40,74 +49,243 @@ func (r *Runner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
+func hasUnitInputFiles(dir string) bool {
+	st, err := os.Stat(path.Join(dir, unitFileName))
+	if err != nil || st.IsDir() {
+		return false
+	}
+
+	st, err = os.Stat(path.Join(dir, inputFileName))
+	if err != nil || st.IsDir() {
+		return false
+	}
+	return true
+}
+
+func matchPath(dir string, pathMatch []string) bool {
+	if len(pathMatch) == 0 {
+		return true
+	}
+	for _, v := range pathMatch {
+		re, err := regexp.Compile(v)
+		if err != nil {
+			continue
+		}
+		if re.MatchString(dir) {
+			return true
+		}
+	}
+	return false
+}
+
+func findTests(rootDir string, testMatch []string) ([]string, error) {
+	var tests []string
+
+	walker := func(path string, d fs.DirEntry, err error) error {
+		if !d.IsDir() {
+			return nil
+		}
+		if !hasUnitInputFiles(path) {
+			return nil
+		}
+
+		relPath, _ := filepath.Rel(rootDir, path)
+		if matchPath(relPath, testMatch) {
+			tests = append(tests, relPath)
+		}
+		return nil
+	}
+
+	if err := filepath.WalkDir(rootDir, walker); err != nil {
+		return []string{}, err
+	}
+	return tests, nil
+}
+
+func loadTest(unitPath string, inputPath string, suiteName string, testName string, tags []string) (apitesting.TestRequest, error) {
+	unitContent, err := os.ReadFile(unitPath)
+	if err != nil {
+		return apitesting.TestRequest{}, err
+	}
+	inputContent, err := os.ReadFile(inputPath)
+	if err != nil {
+		return apitesting.TestRequest{}, err
+	}
+	return apitesting.TestRequest{
+		Name:  fmt.Sprintf("%s - %s", suiteName, testName),
+		Tags:  append([]string{}, tags...),
+		Input: string(inputContent),
+		Unit:  string(unitContent),
+	}, nil
+}
+
+func (r *Runner) loadTests(s Suite, tests []string) []apitesting.TestRequest {
+	var testRequests []apitesting.TestRequest
+
+	for _, test := range tests {
+		req, err := loadTest(
+			path.Join(r.Project.RootDir, test, unitFileName),
+			path.Join(r.Project.RootDir, test, inputFileName),
+			s.Name,
+			test,
+			s.Tags)
+		if err != nil {
+			log.Warn().
+				Str("testName", test).
+				Err(err).
+				Msg("Unable to load test.")
+		}
+		testRequests = append(testRequests, req)
+	}
+	return testRequests
+}
+
+func (r *Runner) runLocalTests(s Suite, results chan []apitesting.TestResult) int {
+	expected := 0
+	taskID := uuid.NewRandom().String()
+
+	maximumWaitTime := pollDefaultWait
+	if s.Timeout != 0 {
+		pollWaitTime = s.Timeout
+	}
+
+	var eventIDs []string
+	var testNames []string
+
+	matchingTests, err := findTests(r.Project.RootDir, s.TestMatch)
+	if err != nil {
+		log.Error().Err(err).Str("rootDir", r.Project.RootDir).Msg("Unable to walk rootDir")
+		return 0
+	}
+	tests := r.loadTests(s, matchingTests)
+
+	for _, test := range tests {
+		log.Info().
+			Str("hookId", s.HookID).
+			Str("testName", test.Name).
+			Msg("Running test.")
+
+		resp, err := r.Client.RunEphemeralAsync(context.Background(), s.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, taskID, test)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Str("testName", test.Name).
+				Msg("Failed to run test.")
+			continue
+		}
+		testNames = append(testNames, test.Name)
+		eventIDs = append(eventIDs, resp.EventIDs...)
+		expected++
+	}
+
+	if r.Async {
+		r.buildLocalTestDetails(s.HookID, eventIDs, testNames, results)
+	} else {
+		r.startPollingAsyncResponse(s.HookID, eventIDs, results, maximumWaitTime)
+	}
+	return expected
+}
+
+func (r *Runner) runRemoteTests(s Suite, results chan []apitesting.TestResult) int {
+	expected := 0
+	maximumWaitTime := pollDefaultWait
+	if s.Timeout != 0 {
+		pollWaitTime = s.Timeout
+	}
+
+	if len(s.Tags) == 0 && len(s.Tests) == 0 {
+		log.Info().Str("hookId", s.HookID).Msg("Running project.")
+
+		resp, err := r.Client.RunAllAsync(context.Background(), s.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to run project.")
+		}
+
+		if r.Async {
+			r.fetchTestDetails(s.HookID, resp.EventIDs, resp.TestIDs, results)
+		} else {
+			r.startPollingAsyncResponse(s.HookID, resp.EventIDs, results, maximumWaitTime)
+		}
+		return len(resp.EventIDs)
+	}
+
+	for _, t := range s.Tests {
+		test := t
+		log.Info().Str("test", test).Str("hookId", s.HookID).Msg("Running test.")
+
+		resp, err := r.Client.RunTestAsync(context.Background(), s.HookID, test, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
+
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to run test.")
+		}
+		if r.Async {
+			r.fetchTestDetails(s.HookID, resp.EventIDs, resp.TestIDs, results)
+		} else {
+			r.startPollingAsyncResponse(s.HookID, resp.EventIDs, results, maximumWaitTime)
+		}
+		expected += len(resp.EventIDs)
+	}
+
+	for _, t := range s.Tags {
+		tag := t
+		log.Info().Str("tag", tag).Str("hookId", s.HookID).Msg("Running tag.")
+
+		resp, err := r.Client.RunTagAsync(context.Background(), s.HookID, tag, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to run tag.")
+		}
+		if r.Async {
+			r.fetchTestDetails(s.HookID, resp.EventIDs, resp.TestIDs, results)
+		} else {
+			r.startPollingAsyncResponse(s.HookID, resp.EventIDs, results, maximumWaitTime)
+		}
+		expected += len(resp.EventIDs)
+	}
+	return expected
+}
+
 func (r *Runner) runSuites() bool {
 	results := make(chan []apitesting.TestResult)
-
 	expected := 0
 
 	for _, s := range r.Project.Suites {
 		suite := s
+		log.Info().
+			Str("hookId", suite.HookID).
+			Str("suite", suite.Name).
+			Bool("parallel", true).
+			Msg("Starting suite")
 
-		maximumWaitTime := pollDefaultWait
-		if suite.Timeout != 0 {
-			pollWaitTime = suite.Timeout
-		}
-
-		var resp apitesting.AsyncResponse
-		var err error
-
-		// If no tags or no tests are defined for the suite, run all tests for a hookId
-		if len(suite.Tags) == 0 && len(suite.Tests) == 0 {
-			log.Info().Str("hookId", suite.HookID).Msg("Running project.")
-
-			resp, err = r.Client.RunAllAsync(context.Background(), suite.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
-			if err != nil {
-				log.Error().Err(err).Msg("Failed to run project.")
-			}
-
-			if r.Async {
-				r.fetchTestDetails(suite.HookID, resp.EventIDs, resp.TestIDs, results)
-			} else {
-				r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results, maximumWaitTime)
-			}
-			expected += len(resp.EventIDs)
+		if s.UseRemoteTests {
+			expected += r.runRemoteTests(s, results)
 		} else {
-			for _, t := range suite.Tests {
-				test := t
-				log.Info().Str("test", test).Str("hookId", suite.HookID).Msg("Running test.")
-
-				resp, err = r.Client.RunTestAsync(context.Background(), suite.HookID, test, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
-
-				if err != nil {
-					log.Error().Err(err).Msg("Failed to run test.")
-				}
-				if r.Async {
-					r.fetchTestDetails(suite.HookID, resp.EventIDs, resp.TestIDs, results)
-				} else {
-					r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results, maximumWaitTime)
-				}
-				expected += len(resp.EventIDs)
-			}
-
-			for _, t := range suite.Tags {
-				tag := t
-				log.Info().Str("tag", tag).Str("hookId", suite.HookID).Msg("Running tag.")
-
-				resp, err = r.Client.RunTagAsync(context.Background(), suite.HookID, tag, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
-				if err != nil {
-					log.Error().Err(err).Msg("Failed to run tag.")
-				}
-				if r.Async {
-					r.fetchTestDetails(suite.HookID, resp.EventIDs, resp.TestIDs, results)
-				} else {
-					r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results, maximumWaitTime)
-				}
-				expected += len(resp.EventIDs)
-			}
+			expected += r.runLocalTests(s, results)
 		}
+
+	}
+	return r.collectResults(expected, results)
+}
+
+func (r *Runner) buildLocalTestDetails(hookID string, eventIDs []string, testNames []string, results chan []apitesting.TestResult) {
+	project, _ := r.Client.GetProject(context.Background(), hookID)
+	for _, eventID := range eventIDs {
+		reportURL := fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)
+		log.Info().
+			Str("project", project.Name).
+			Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)).
+			Str("report", reportURL).
+			Msg("Async test started.")
 	}
 
-	return r.collectResults(expected, results)
+	for _, testName := range testNames {
+		go func(p apitesting.Project, testID string) {
+			results <- []apitesting.TestResult{{
+				Test:    apitesting.Test{Name: testID},
+				Project: p,
+				Async:   true,
+			}}
+		}(project, testName)
+	}
 }
 
 func (r *Runner) fetchTestDetails(hookID string, eventIDs []string, testIDs []string, results chan []apitesting.TestResult) {
@@ -144,6 +322,10 @@ func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, res
 				result, err := r.Client.GetEventResult(context.Background(), hookID, lEventID)
 
 				if err == nil {
+					log.Info().
+						Str("hookId", hookID).
+						Str("testName", result.Test.Name).
+						Msg("Finished test.")
 					results <- []apitesting.TestResult{result}
 					break
 				}

@@ -240,6 +240,7 @@ func TestClient_composeURL(t *testing.T) {
 		buildID string
 		format  string
 		tunnel  config.Tunnel
+		taskID  string
 	}
 	tests := []struct {
 		name string
@@ -299,11 +300,19 @@ func TestClient_composeURL(t *testing.T) {
 			},
 			want: "/dummy/path?tunnelId=tunnelId",
 		},
+		{
+			name: "Path with taskId",
+			args: args{
+				path:   "/dummy/path",
+				taskID: "taskId",
+			},
+			want: "/dummy/path?taskId=taskId",
+		},
 	}
 	c := &Client{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := c.composeURL(tt.args.path, tt.args.buildID, tt.args.format, tt.args.tunnel); got != tt.want {
+			if got := c.composeURL(tt.args.path, tt.args.buildID, tt.args.format, tt.args.tunnel, tt.args.taskID); got != tt.want {
 				t.Errorf("composeURL() = %v, want %v", got, tt.want)
 			}
 		})
