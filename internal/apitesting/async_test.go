@@ -129,7 +129,7 @@ func TestClient_RunEphemeralAsync(t *testing.T) {
 				case "/api-testing/rest/v4/dummyHookId/tests/_exec":
 					tt.assertRequest(t, r)
 					completeStatusResp := tt.reply
-					w.Write(completeStatusResp)
+					_, _ = w.Write(completeStatusResp)
 				default:
 					w.WriteHeader(http.StatusInternalServerError)
 				}

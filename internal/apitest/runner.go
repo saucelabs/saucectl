@@ -78,10 +78,10 @@ func matchPath(dir string, pathMatch []string) bool {
 	return false
 }
 
-func findTests(rootDir string, testMatch []string) []string {
+func findTests(rootDir string, testMatch []string) ([]string, error) {
 	var tests []string
 
-	filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+	walker := func(path string, d fs.DirEntry, err error) error {
 		if !d.IsDir() {
 			return nil
 		}
@@ -94,8 +94,12 @@ func findTests(rootDir string, testMatch []string) []string {
 			tests = append(tests, relPath)
 		}
 		return nil
-	})
-	return tests
+	}
+
+	if err := filepath.WalkDir(rootDir, walker); err != nil {
+		return []string{}, err
+	}
+	return tests, nil
 }
 
 func loadTest(unitPath string, inputPath string, suiteName string, testName string, tags []string) (apitesting.TestRequest, error) {
@@ -148,7 +152,12 @@ func (r *Runner) runLocalTests(s Suite, results chan []apitesting.TestResult) in
 	var eventIDs []string
 	var testNames []string
 
-	tests := r.loadTests(s, findTests(r.Project.RootDir, s.TestMatch))
+	matchingTests, err := findTests(r.Project.RootDir, s.TestMatch)
+	if err != nil {
+		log.Error().Err(err).Str("rootDir", r.Project.RootDir).Msg("Unable to walk rootDir")
+		return 0
+	}
+	tests := r.loadTests(s, matchingTests)
 
 	for _, test := range tests {
 		log.Info().

@@ -59,9 +59,10 @@ func Test_findTests(t *testing.T) {
 		match   []string
 	}
 	tests := []struct {
-		name string
-		args args
-		want []string
+		name    string
+		args    args
+		want    []string
+		wantErr bool
 	}{
 		{
 			name: "no filters",
@@ -150,8 +151,13 @@ func Test_findTests(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := findTests(tt.args.rootDir, tt.args.match); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("findTests() = %v, want %v", got, tt.want)
+			got, err := findTests(tt.args.rootDir, tt.args.match)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("findTests() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("findTests() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
