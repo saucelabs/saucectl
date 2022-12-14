@@ -3,6 +3,7 @@ package apitest
 import (
 	"context"
 	"fmt"
+	"github.com/xtgo/uuid"
 	"io/fs"
 	"os"
 	"path"
@@ -20,6 +21,9 @@ import (
 
 var pollDefaultWait = time.Second * 180
 var pollWaitTime = time.Second * 5
+
+var unitFileName = "unit.yaml"
+var inputFileName = "input.yaml"
 
 // Runner represents an executor for api tests
 type Runner struct {
@@ -46,12 +50,12 @@ func (r *Runner) RunProject() (int, error) {
 }
 
 func hasUnitInputFiles(dir string) bool {
-	st, err := os.Stat(path.Join(dir, "unit.yaml"))
+	st, err := os.Stat(path.Join(dir, unitFileName))
 	if err != nil || st.IsDir() {
 		return false
 	}
 
-	st, err = os.Stat(path.Join(dir, "input.yaml"))
+	st, err = os.Stat(path.Join(dir, inputFileName))
 	if err != nil || st.IsDir() {
 		return false
 	}
@@ -75,7 +79,7 @@ func matchPath(dir string, pathMatch []string) bool {
 }
 
 func findTests(rootDir string, testMatch []string) []string {
-	var candidates []string
+	var tests []string
 
 	filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
 		if !d.IsDir() {
@@ -87,80 +91,95 @@ func findTests(rootDir string, testMatch []string) []string {
 
 		relPath, _ := filepath.Rel(rootDir, path)
 		if matchPath(relPath, testMatch) {
-			candidates = append(candidates, relPath)
+			tests = append(tests, relPath)
 		}
 		return nil
 	})
-	return candidates
+	return tests
+}
+
+func loadTest(unitPath string, inputPath string, suiteName string, testName string, tags []string) (apitesting.TestRequest, error) {
+	unitContent, err := os.ReadFile(unitPath)
+	if err != nil {
+		return apitesting.TestRequest{}, err
+	}
+	inputContent, err := os.ReadFile(inputPath)
+	if err != nil {
+		return apitesting.TestRequest{}, err
+	}
+	return apitesting.TestRequest{
+		Name:  fmt.Sprintf("%s - %s", suiteName, testName),
+		Tags:  append([]string{}, tags...),
+		Input: string(inputContent),
+		Unit:  string(unitContent),
+	}, nil
+}
+
+func (r *Runner) loadTests(s Suite, tests []string) []apitesting.TestRequest {
+	var testRequests []apitesting.TestRequest
+
+	for _, test := range tests {
+		req, err := loadTest(
+			path.Join(r.Project.RootDir, test, unitFileName),
+			path.Join(r.Project.RootDir, test, inputFileName),
+			s.Name,
+			test,
+			s.Tags)
+		if err != nil {
+			log.Warn().
+				Str("testName", test).
+				Err(err).
+				Msg("Unable to load test.")
+		}
+		testRequests = append(testRequests, req)
+	}
+	return testRequests
 }
 
 func (r *Runner) runSuites() bool {
 	results := make(chan []apitesting.TestResult)
+	var eventIDs []string
 
 	expected := 0
 
 	for _, s := range r.Project.Suites {
+		taskID := uuid.NewRandom().String()
 		suite := s
+		log.Info().
+			Str("hookId", suite.HookID).
+			Str("taskId", taskID).
+			Str("suite", suite.Name).
+			Bool("sequential", suite.Sequential).
+			Msg("Starting suite")
 
 		maximumWaitTime := pollDefaultWait
 		if suite.Timeout != 0 {
 			pollWaitTime = suite.Timeout
 		}
 
-		var resp apitesting.AsyncResponse
-		var err error
+		testNames := findTests(r.Project.RootDir, s.TestMatch)
+		tests := r.loadTests(s, testNames)
 
-		// If no tags or no tests are defined for the suite, run all tests for a hookId
-		if len(suite.Tags) == 0 && len(suite.Tests) == 0 {
-			log.Info().Str("hookId", suite.HookID).Msg("Running project.")
+		for _, test := range tests {
+			log.Info().
+				Str("hookId", suite.HookID).
+				Str("testName", test.Name).
+				Msg("Running test.")
 
-			resp, err = r.Client.RunAllAsync(context.Background(), suite.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
+			resp, err := r.Client.RunEphemeralAsync(context.Background(), suite.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, taskID, test)
 			if err != nil {
-				log.Error().Err(err).Msg("Failed to run project.")
+				log.Error().
+					Err(err).
+					Str("testName", test.Name).
+					Msg("Failed to run test.")
+				continue
 			}
-
-			if r.Async {
-				r.fetchTestDetails(suite.HookID, resp.EventIDs, resp.TestIDs, results)
-			} else {
-				r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results, maximumWaitTime)
-			}
-			expected += len(resp.EventIDs)
-		} else {
-			for _, t := range suite.Tests {
-				test := t
-				log.Info().Str("test", test).Str("hookId", suite.HookID).Msg("Running test.")
-
-				resp, err = r.Client.RunTestAsync(context.Background(), suite.HookID, test, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
-
-				if err != nil {
-					log.Error().Err(err).Msg("Failed to run test.")
-				}
-				if r.Async {
-					r.fetchTestDetails(suite.HookID, resp.EventIDs, resp.TestIDs, results)
-				} else {
-					r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results, maximumWaitTime)
-				}
-				expected += len(resp.EventIDs)
-			}
-
-			for _, t := range suite.Tags {
-				tag := t
-				log.Info().Str("tag", tag).Str("hookId", suite.HookID).Msg("Running tag.")
-
-				resp, err = r.Client.RunTagAsync(context.Background(), suite.HookID, tag, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
-				if err != nil {
-					log.Error().Err(err).Msg("Failed to run tag.")
-				}
-				if r.Async {
-					r.fetchTestDetails(suite.HookID, resp.EventIDs, resp.TestIDs, results)
-				} else {
-					r.startPollingAsyncResponse(suite.HookID, resp.EventIDs, results, maximumWaitTime)
-				}
-				expected += len(resp.EventIDs)
-			}
+			eventIDs = append(eventIDs, resp.EventIDs...)
+			expected++
 		}
-	}
 
+		r.startPollingAsyncResponse(suite.HookID, eventIDs, results, maximumWaitTime)
+	}
 	return r.collectResults(expected, results)
 }
 

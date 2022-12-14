@@ -2,11 +2,10 @@ package apitest
 
 import (
 	"errors"
-	"time"
-
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
+	"time"
 )
 
 // Config descriptors.
@@ -29,11 +28,12 @@ type Project struct {
 
 // Suite represents the apitest suite configuration.
 type Suite struct {
-	Name    string        `yaml:"name,omitempty"`
-	HookID  string        `yaml:"hookId,omitempty"`
-	Tags    []string      `yaml:"tags,omitempty"`
-	Tests   []string      `yaml:"tests,omitempty"`
-	Timeout time.Duration `yaml:"timeout,omitempty"`
+	Timeout    time.Duration `yaml:"timeout,omitempty"`
+	Name       string        `yaml:"name,omitempty"`
+	HookID     string        `yaml:"hookId,omitempty"`
+	Tags       []string      `yaml:"tags,omitempty"`
+	Sequential bool          `yaml:"sequential,omitempty"`
+	TestMatch  []string      `yaml:"testMatch,omitempty"`
 }
 
 // FromFile creates a new apitest Project based on the filepath cfgPath.
@@ -63,6 +63,10 @@ func SetDefaults(p *Project) {
 	}
 
 	p.Sauce.Tunnel.SetDefaults()
+
+	if p.RootDir == "" {
+		p.RootDir = "."
+	}
 }
 
 func Validate(p Project) error {

@@ -152,7 +152,7 @@ func (c *Client) GetTest(ctx context.Context, hookID string, testID string) (Tes
 	return test.Published, nil
 }
 
-func (c *Client) composeURL(path string, buildID string, format string, tunnel config.Tunnel) string {
+func (c *Client) composeURL(path string, buildID string, format string, tunnel config.Tunnel, taskID string) string {
 	// NOTE: API url is not user provided so skip error check
 	url, _ := url.Parse(c.URL)
 	url.Path = path
@@ -172,6 +172,10 @@ func (c *Client) composeURL(path string, buildID string, format string, tunnel c
 		}
 
 		query.Set("tunnelId", t)
+	}
+
+	if taskID != "" {
+		query.Set("taskId", taskID)
 	}
 
 	url.RawQuery = query.Encode()
