@@ -138,11 +138,11 @@ func (r *Runner) loadTests(s Suite, tests []string) []apitesting.TestRequest {
 
 func (r *Runner) runSuites() bool {
 	results := make(chan []apitesting.TestResult)
-	var eventIDs []string
 
 	expected := 0
 
 	for _, s := range r.Project.Suites {
+		var eventIDs []string
 		taskID := uuid.NewRandom().String()
 		suite := s
 		log.Info().
@@ -217,6 +217,10 @@ func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, res
 				result, err := r.Client.GetEventResult(context.Background(), hookID, lEventID)
 
 				if err == nil {
+					log.Info().
+						Str("hookId", hookID).
+						Str("testName", result.Test.Name).
+						Msg("Finished test.")
 					results <- []apitesting.TestResult{result}
 					break
 				}
