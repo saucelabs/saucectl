@@ -143,7 +143,7 @@ func (r *Runner) runSuites() bool {
 
 	for _, s := range r.Project.Suites {
 		var eventIDs []string
-		var names []string
+		var testNames []string
 
 		taskID := uuid.NewRandom().String()
 		suite := s
@@ -159,8 +159,7 @@ func (r *Runner) runSuites() bool {
 			pollWaitTime = suite.Timeout
 		}
 
-		testNames := findTests(r.Project.RootDir, s.TestMatch)
-		tests := r.loadTests(s, testNames)
+		tests := r.loadTests(s, findTests(r.Project.RootDir, s.TestMatch))
 
 		for _, test := range tests {
 			log.Info().
@@ -176,13 +175,13 @@ func (r *Runner) runSuites() bool {
 					Msg("Failed to run test.")
 				continue
 			}
-			names = append(names, test.Name)
+			testNames = append(testNames, test.Name)
 			eventIDs = append(eventIDs, resp.EventIDs...)
 			expected++
 		}
 
 		if r.Async {
-			r.fetchTestDetails(suite.HookID, eventIDs, names, results)
+			r.fetchTestDetails(suite.HookID, eventIDs, testNames, results)
 		} else {
 			r.startPollingAsyncResponse(suite.HookID, eventIDs, results, maximumWaitTime)
 		}
