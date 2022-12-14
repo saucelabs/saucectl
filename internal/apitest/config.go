@@ -28,12 +28,13 @@ type Project struct {
 
 // Suite represents the apitest suite configuration.
 type Suite struct {
-	Timeout    time.Duration `yaml:"timeout,omitempty"`
-	Name       string        `yaml:"name,omitempty"`
-	HookID     string        `yaml:"hookId,omitempty"`
-	Tags       []string      `yaml:"tags,omitempty"`
-	Sequential bool          `yaml:"sequential,omitempty"`
-	TestMatch  []string      `yaml:"testMatch,omitempty"`
+	Timeout        time.Duration `yaml:"timeout,omitempty"`
+	Name           string        `yaml:"name,omitempty"`
+	HookID         string        `yaml:"hookId,omitempty"`
+	UseRemoteTests bool          `yaml:"useRemoteTests,omitempty"`
+	Tests          []string      `yaml:"tests,omitempty"`
+	Tags           []string      `yaml:"tags,omitempty"`
+	TestMatch      []string      `yaml:"testMatch,omitempty"`
 }
 
 // FromFile creates a new apitest Project based on the filepath cfgPath.

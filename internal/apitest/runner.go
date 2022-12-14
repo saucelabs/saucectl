@@ -136,55 +136,62 @@ func (r *Runner) loadTests(s Suite, tests []string) []apitesting.TestRequest {
 	return testRequests
 }
 
+func (r *Runner) runLocalTests(s Suite, results chan []apitesting.TestResult) int {
+	expected := 0
+	taskID := uuid.NewRandom().String()
+
+	maximumWaitTime := pollDefaultWait
+	if s.Timeout != 0 {
+		pollWaitTime = s.Timeout
+	}
+
+	var eventIDs []string
+	var testNames []string
+
+	tests := r.loadTests(s, findTests(r.Project.RootDir, s.TestMatch))
+
+	for _, test := range tests {
+		log.Info().
+			Str("hookId", s.HookID).
+			Str("testName", test.Name).
+			Msg("Running test.")
+
+		resp, err := r.Client.RunEphemeralAsync(context.Background(), s.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, taskID, test)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Str("testName", test.Name).
+				Msg("Failed to run test.")
+			continue
+		}
+		testNames = append(testNames, test.Name)
+		eventIDs = append(eventIDs, resp.EventIDs...)
+		expected++
+	}
+
+	if r.Async {
+		r.fetchTestDetails(s.HookID, eventIDs, testNames, results)
+	} else {
+		r.startPollingAsyncResponse(s.HookID, eventIDs, results, maximumWaitTime)
+	}
+	return expected
+}
+
 func (r *Runner) runSuites() bool {
 	results := make(chan []apitesting.TestResult)
 
 	expected := 0
 
 	for _, s := range r.Project.Suites {
-		var eventIDs []string
-		var testNames []string
-
-		taskID := uuid.NewRandom().String()
 		suite := s
 		log.Info().
 			Str("hookId", suite.HookID).
-			Str("taskId", taskID).
 			Str("suite", suite.Name).
-			Bool("sequential", suite.Sequential).
+			Bool("parallel", true).
 			Msg("Starting suite")
 
-		maximumWaitTime := pollDefaultWait
-		if suite.Timeout != 0 {
-			pollWaitTime = suite.Timeout
-		}
+		expected += r.runLocalTests(s, results)
 
-		tests := r.loadTests(s, findTests(r.Project.RootDir, s.TestMatch))
-
-		for _, test := range tests {
-			log.Info().
-				Str("hookId", suite.HookID).
-				Str("testName", test.Name).
-				Msg("Running test.")
-
-			resp, err := r.Client.RunEphemeralAsync(context.Background(), suite.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, taskID, test)
-			if err != nil {
-				log.Error().
-					Err(err).
-					Str("testName", test.Name).
-					Msg("Failed to run test.")
-				continue
-			}
-			testNames = append(testNames, test.Name)
-			eventIDs = append(eventIDs, resp.EventIDs...)
-			expected++
-		}
-
-		if r.Async {
-			r.fetchTestDetails(suite.HookID, eventIDs, testNames, results)
-		} else {
-			r.startPollingAsyncResponse(suite.HookID, eventIDs, results, maximumWaitTime)
-		}
 	}
 	return r.collectResults(expected, results)
 }
