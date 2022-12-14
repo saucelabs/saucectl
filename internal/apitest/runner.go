@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"os"
+	"path"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -42,11 +45,53 @@ func (r *Runner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
+func hasUnitInputFiles(dir string) bool {
+	st, err := os.Stat(path.Join(dir, "unit.yaml"))
+	if err != nil || st.IsDir() {
+		return false
+	}
+
+	st, err = os.Stat(path.Join(dir, "input.yaml"))
+	if err != nil || st.IsDir() {
+		return false
+	}
+	return true
+}
+
+func matchPath(dir string, pathMatch []string) bool {
+	if len(pathMatch) == 0 {
+		return true
+	}
+	for _, v := range pathMatch {
+		re, err := regexp.Compile(v)
+		if err != nil {
+			continue
+		}
+		if re.MatchString(dir) {
+			return true
+		}
+	}
+	return false
+}
+
 func findTests(rootDir string, testMatch []string) []string {
+	var candidates []string
+
 	filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+		if !d.IsDir() {
+			return nil
+		}
+		if !hasUnitInputFiles(path) {
+			return nil
+		}
+
+		relPath, _ := filepath.Rel(rootDir, path)
+		if matchPath(relPath, testMatch) {
+			candidates = append(candidates, relPath)
+		}
 		return nil
 	})
-	return []string{}
+	return candidates
 }
 
 func (r *Runner) runSuites() bool {
