@@ -170,16 +170,73 @@ func (r *Runner) runLocalTests(s Suite, results chan []apitesting.TestResult) in
 	}
 
 	if r.Async {
-		r.fetchTestDetails(s.HookID, eventIDs, testNames, results)
+		r.buildLocalTestDetails(s.HookID, eventIDs, testNames, results)
 	} else {
 		r.startPollingAsyncResponse(s.HookID, eventIDs, results, maximumWaitTime)
 	}
 	return expected
 }
 
+func (r *Runner) runRemoteTests(s Suite, results chan []apitesting.TestResult) int {
+	expected := 0
+	maximumWaitTime := pollDefaultWait
+	if s.Timeout != 0 {
+		pollWaitTime = s.Timeout
+	}
+
+	if len(s.Tags) == 0 && len(s.Tests) == 0 {
+		log.Info().Str("hookId", s.HookID).Msg("Running project.")
+
+		resp, err := r.Client.RunAllAsync(context.Background(), s.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to run project.")
+		}
+
+		if r.Async {
+			r.fetchTestDetails(s.HookID, resp.EventIDs, resp.TestIDs, results)
+		} else {
+			r.startPollingAsyncResponse(s.HookID, resp.EventIDs, results, maximumWaitTime)
+		}
+		return len(resp.EventIDs)
+	}
+
+	for _, t := range s.Tests {
+		test := t
+		log.Info().Str("test", test).Str("hookId", s.HookID).Msg("Running test.")
+
+		resp, err := r.Client.RunTestAsync(context.Background(), s.HookID, test, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
+
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to run test.")
+		}
+		if r.Async {
+			r.fetchTestDetails(s.HookID, resp.EventIDs, resp.TestIDs, results)
+		} else {
+			r.startPollingAsyncResponse(s.HookID, resp.EventIDs, results, maximumWaitTime)
+		}
+		expected += len(resp.EventIDs)
+	}
+
+	for _, t := range s.Tags {
+		tag := t
+		log.Info().Str("tag", tag).Str("hookId", s.HookID).Msg("Running tag.")
+
+		resp, err := r.Client.RunTagAsync(context.Background(), s.HookID, tag, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to run tag.")
+		}
+		if r.Async {
+			r.fetchTestDetails(s.HookID, resp.EventIDs, resp.TestIDs, results)
+		} else {
+			r.startPollingAsyncResponse(s.HookID, resp.EventIDs, results, maximumWaitTime)
+		}
+		expected += len(resp.EventIDs)
+	}
+	return expected
+}
+
 func (r *Runner) runSuites() bool {
 	results := make(chan []apitesting.TestResult)
-
 	expected := 0
 
 	for _, s := range r.Project.Suites {
@@ -190,13 +247,17 @@ func (r *Runner) runSuites() bool {
 			Bool("parallel", true).
 			Msg("Starting suite")
 
-		expected += r.runLocalTests(s, results)
+		if s.UseRemoteTests {
+			expected += r.runRemoteTests(s, results)
+		} else {
+			expected += r.runLocalTests(s, results)
+		}
 
 	}
 	return r.collectResults(expected, results)
 }
 
-func (r *Runner) fetchTestDetails(hookID string, eventIDs []string, testNames []string, results chan []apitesting.TestResult) {
+func (r *Runner) buildLocalTestDetails(hookID string, eventIDs []string, testNames []string, results chan []apitesting.TestResult) {
 	project, _ := r.Client.GetProject(context.Background(), hookID)
 	for _, eventID := range eventIDs {
 		reportURL := fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)
@@ -215,6 +276,29 @@ func (r *Runner) fetchTestDetails(hookID string, eventIDs []string, testNames []
 				Async:   true,
 			}}
 		}(project, testName)
+	}
+}
+
+func (r *Runner) fetchTestDetails(hookID string, eventIDs []string, testIDs []string, results chan []apitesting.TestResult) {
+	project, _ := r.Client.GetProject(context.Background(), hookID)
+	for _, eventID := range eventIDs {
+		reportURL := fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)
+		log.Info().
+			Str("project", project.Name).
+			Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)).
+			Str("report", reportURL).
+			Msg("Async test started.")
+	}
+
+	for _, testID := range testIDs {
+		go func(p apitesting.Project, testID string) {
+			test, _ := r.Client.GetTest(context.Background(), hookID, testID)
+			results <- []apitesting.TestResult{{
+				Test:    test,
+				Project: p,
+				Async:   true,
+			}}
+		}(project, testID)
 	}
 }
 
