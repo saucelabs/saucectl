@@ -143,6 +143,8 @@ func (r *Runner) runSuites() bool {
 
 	for _, s := range r.Project.Suites {
 		var eventIDs []string
+		var names []string
+
 		taskID := uuid.NewRandom().String()
 		suite := s
 		log.Info().
@@ -174,16 +176,21 @@ func (r *Runner) runSuites() bool {
 					Msg("Failed to run test.")
 				continue
 			}
+			names = append(names, test.Name)
 			eventIDs = append(eventIDs, resp.EventIDs...)
 			expected++
 		}
 
-		r.startPollingAsyncResponse(suite.HookID, eventIDs, results, maximumWaitTime)
+		if r.Async {
+			r.fetchTestDetails(suite.HookID, eventIDs, names, results)
+		} else {
+			r.startPollingAsyncResponse(suite.HookID, eventIDs, results, maximumWaitTime)
+		}
 	}
 	return r.collectResults(expected, results)
 }
 
-func (r *Runner) fetchTestDetails(hookID string, eventIDs []string, testIDs []string, results chan []apitesting.TestResult) {
+func (r *Runner) fetchTestDetails(hookID string, eventIDs []string, testNames []string, results chan []apitesting.TestResult) {
 	project, _ := r.Client.GetProject(context.Background(), hookID)
 	for _, eventID := range eventIDs {
 		reportURL := fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)
@@ -194,15 +201,14 @@ func (r *Runner) fetchTestDetails(hookID string, eventIDs []string, testIDs []st
 			Msg("Async test started.")
 	}
 
-	for _, testID := range testIDs {
+	for _, testName := range testNames {
 		go func(p apitesting.Project, testID string) {
-			test, _ := r.Client.GetTest(context.Background(), hookID, testID)
 			results <- []apitesting.TestResult{{
-				Test:    test,
+				Test:    apitesting.Test{Name: testID},
 				Project: p,
 				Async:   true,
 			}}
-		}(project, testID)
+		}(project, testName)
 	}
 }
 
