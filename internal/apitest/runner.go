@@ -3,6 +3,7 @@ package apitest
 import (
 	"context"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/xtgo/uuid"
 	"io/fs"
 	"os"
@@ -33,6 +34,17 @@ type Runner struct {
 	Reporters     []report.Reporter
 	Async         bool
 	TunnelService tunnel.Service
+}
+
+// FilterSuites filters out suites in the project that don't match the given suite name.
+func FilterSuites(p *Project, suiteName string) error {
+	for _, s := range p.Suites {
+		if s.Name == suiteName {
+			p.Suites = []Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
 }
 
 // RunProject runs the tests defined in apitest.Project
