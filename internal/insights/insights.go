@@ -1,8 +1,10 @@
 package insights
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -79,4 +81,38 @@ func (c *Client) GetHistory(ctx context.Context, user iam.User, launchOrder conf
 		return jobHistory, err
 	}
 	return jobHistory, nil
+}
+
+type testRunsInput struct {
+	TestRuns []TestRun `json:"test-runs,omitempty"`
+}
+
+// PostTestRun publish test-run results to insights API.
+func (c *Client) PostTestRun(ctx context.Context, runs []TestRun) error {
+	url := fmt.Sprintf("%s/test-runs/", c.URL)
+
+	input := testRunsInput{
+		TestRuns: runs,
+	}
+	payload, err := json.Marshal(input)
+	if err != nil {
+		return err
+	}
+	payloadReader := bytes.NewReader(payload)
+	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, payloadReader)
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	// API Replies 204, doc says 200. Supporting both for now.
+	if resp.StatusCode == http.StatusNoContent || resp.StatusCode == http.StatusOK {
+		return nil
+	}
+
+	return errors.New(fmt.Sprintf("Unexpected status code from API: %d", resp.StatusCode))
 }
