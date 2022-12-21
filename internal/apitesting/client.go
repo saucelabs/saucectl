@@ -166,9 +166,11 @@ func (c *Client) composeURL(path string, buildID string, format string, tunnel c
 	}
 
 	if tunnel.Name != "" {
-		t := tunnel.Name
+		var t string
 		if tunnel.Owner != "" {
-			t = fmt.Sprintf("%s:%s", t, tunnel.Owner)
+			t = fmt.Sprintf("%s:%s", tunnel.Owner, tunnel.Name)
+		} else {
+			t = fmt.Sprintf("%s:%s", c.Username, tunnel.Name)
 		}
 
 		query.Set("tunnelId", t)
