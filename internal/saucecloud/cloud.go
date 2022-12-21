@@ -951,7 +951,7 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 		CreationTime: res.startTime,
 		StartTime:    res.startTime,
 		EndTime:      res.endTime,
-		Status:       cleanStatus(res.job.Status),
+		Status:       jobToInsightStatus(res.job.Status),
 		Device:       res.job.BaseConfig.DeviceName,
 		Browser:      res.browser,
 		OS:           res.job.BaseConfig.PlatformName,
@@ -962,7 +962,7 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 	}
 }
 
-func cleanStatus(status string) string {
+func jobToInsightStatus(status string) string {
 	switch status {
 	case job.StateComplete:
 	case job.StatePassed:
