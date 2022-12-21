@@ -106,7 +106,7 @@ func TestClient_RunEphemeralAsync(t *testing.T) {
 				test:    TestRequest{},
 			},
 			assertRequest: func(t *testing.T, r *http.Request) {
-				assert.Equal(t, "/api-testing/rest/v4/dummyHookId/tests/_exec?buildId=generatedBuildId&tunnelId=tunnelId", r.RequestURI)
+				assert.Equal(t, "/api-testing/rest/v4/dummyHookId/tests/_exec?buildId=generatedBuildId&tunnelId=dummyUser%3AtunnelId", r.RequestURI)
 			},
 			reply: []byte(`{"contextIds":["221270ac-0229-49d1-9025-251a10e9133d"],"eventIds":["c4ca4238a0b923820dcc509a"],"taskId":"6ddf80b7-9753-4802-992b-d42948cdb99f","testIds":["c20ad4d76fe97759aa27a0c9"]}`),
 			want: AsyncResponse{

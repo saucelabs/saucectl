@@ -288,7 +288,7 @@ func TestClient_composeURL(t *testing.T) {
 					Owner: "tunnelOwner",
 				},
 			},
-			want: "/dummy/path?tunnelId=tunnelId%3AtunnelOwner",
+			want: "/dummy/path?tunnelId=tunnelOwner%3AtunnelId",
 		},
 		{
 			name: "Path with tunnel without owner",
@@ -298,7 +298,7 @@ func TestClient_composeURL(t *testing.T) {
 					Name: "tunnelId",
 				},
 			},
-			want: "/dummy/path?tunnelId=tunnelId",
+			want: "/dummy/path?tunnelId=dummyUsername%3AtunnelId",
 		},
 		{
 			name: "Path with taskId",
@@ -309,7 +309,9 @@ func TestClient_composeURL(t *testing.T) {
 			want: "/dummy/path?taskId=taskId",
 		},
 	}
-	c := &Client{}
+	c := &Client{
+		Username: "dummyUsername",
+	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := c.composeURL(tt.args.path, tt.args.buildID, tt.args.format, tt.args.tunnel, tt.args.taskID); got != tt.want {
