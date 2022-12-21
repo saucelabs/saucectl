@@ -12,6 +12,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 	v1 "github.com/saucelabs/saucectl/internal/cypress/v1"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/mocks"
 )
@@ -100,6 +101,9 @@ func TestRunSuites(t *testing.T) {
 			},
 			CCYReader: mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 				return 1, nil
+			}},
+			InsightsService: mocks.FakeInsightService{PostTestRunFn: func(ctx context.Context, runs []insights.TestRun) error {
+				return nil
 			}},
 		},
 		Project: &v1.Project{

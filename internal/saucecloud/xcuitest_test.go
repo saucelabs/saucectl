@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
@@ -33,6 +34,9 @@ func TestXcuitestRunner_RunProject(t *testing.T) {
 	uploader := &mocks.FakeProjectUploader{
 		UploadSuccess: true,
 	}
+	insightsSvc := mocks.FakeInsightService{PostTestRunFn: func(ctx context.Context, runs []insights.TestRun) error {
+		return nil
+	}}
 
 	var startOpts job.StartOptions
 	runner := &XcuitestRunner{
@@ -66,6 +70,7 @@ func TestXcuitestRunner_RunProject(t *testing.T) {
 			},
 			CCYReader:       ccyReader,
 			ProjectUploader: uploader,
+			InsightsService: insightsSvc,
 		},
 		Project: xcuitest.Project{
 			Xcuitest: xcuitest.Xcuitest{
