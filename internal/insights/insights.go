@@ -1,118 +1,80 @@
 package insights
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"errors"
-	"fmt"
-	"io"
-	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/iam"
-	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
-// Client service
-type Client struct {
-	HTTPClient  *http.Client
-	URL         string
-	Credentials credentials.Credentials
+// JobHistory represents job history data structure
+type JobHistory struct {
+	TestCases []TestCase `json:"test_cases"`
 }
 
-var LaunchOptions = map[config.LaunchOrder]string{
-	config.LaunchOrderFailRate: "fail_rate",
+// TestCase represents test case data structure
+type TestCase struct {
+	Name     string  `json:"name"`
+	FailRate float64 `json:"fail_rate"`
 }
 
-func New(url string, creds credentials.Credentials, timeout time.Duration) Client {
-	return Client{
-		HTTPClient:  &http.Client{Timeout: timeout},
-		URL:         url,
-		Credentials: creds,
-	}
+// TestRun represents a
+type TestRun struct {
+	ID           string     `json:"id,omitempty"`
+	Name         string     `json:"name,omitempty"`
+	UserID       string     `json:"user_id,omitempty"`
+	OrgID        string     `json:"org_id,omitempty"`
+	TeamID       string     `json:"team_id,omitempty"`
+	GroupID      string     `json:"group_id,omitempty"`
+	AuthorID     string     `json:"author_id,omitempty"`
+	PathName     string     `json:"path_name,omitempty"`
+	BuildID      string     `json:"build_id,omitempty"`
+	BuildName    string     `json:"build_name,omitempty"`
+	CreationTime time.Time  `json:"creation_time,omitempty"`
+	StartTime    time.Time  `json:"start_time,omitempty"`
+	EndTime      time.Time  `json:"end_time,omitempty"`
+	Duration     int        `json:"duration,omitempty"`
+	Browser      string     `json:"browser,omitempty"`
+	Device       string     `json:"device,omitempty"`
+	OS           string     `json:"os,omitempty"`
+	AppName      string     `json:"app_name,omitempty"`
+	Status       string     `json:"status,omitempty"`
+	Platform     string     `json:"platform,omitempty"`
+	Type         string     `json:"type,omitempty"`
+	Framework    string     `json:"framework,omitempty"`
+	CI           *CI        `json:"ci,omitempty"`
+	SauceJob     *Job       `json:"sauce_job,omitempty"`
+	Errors       []JobError `json:"errors,omitempty"`
+	Tags         []string   `json:"tags,omitempty"`
 }
 
-// GetHistory returns job history from insights
-func (c *Client) GetHistory(ctx context.Context, user iam.User, launchOrder config.LaunchOrder) (JobHistory, error) {
-	start := time.Now().AddDate(0, 0, -7).Unix()
-	now := time.Now().Unix()
-
-	var jobHistory JobHistory
-	url := fmt.Sprintf("%s/v2/insights/vdc/test-cases", c.URL)
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return jobHistory, err
-	}
-
-	q := req.URL.Query()
-	queries := map[string]string{
-		"user_id": user.ID,
-		"org_id":  user.Organization.ID,
-		"start":   strconv.FormatInt(start, 10),
-		"since":   strconv.FormatInt(start, 10),
-		"end":     strconv.FormatInt(now, 10),
-		"until":   strconv.FormatInt(now, 10),
-		"limit":   "200",
-		"offset":  "0",
-		"sort_by": string(launchOrder),
-	}
-	for k, v := range queries {
-		q.Add(k, v)
-	}
-	req.URL.RawQuery = q.Encode()
-
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return jobHistory, err
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return jobHistory, err
-	}
-
-	err = json.Unmarshal(body, &jobHistory)
-	if err != nil {
-		return jobHistory, err
-	}
-	return jobHistory, nil
+type CI struct {
+	RefName    string `json:"ref_name,omitempty"`
+	CommitSha  string `json:"commit_sha,omitempty"`
+	Repository string `json:"repository,omitempty"`
+	Branch     string `json:"branch,omitempty"`
 }
 
-type testRunsInput struct {
-	TestRuns []TestRun `json:"test-runs,omitempty"`
+type Job struct {
+	ID   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
-// PostTestRun publish test-run results to insights API.
-func (c *Client) PostTestRun(ctx context.Context, runs []TestRun) error {
-	url := fmt.Sprintf("%s/test-runs/", c.URL)
+type JobError struct {
+	Message string `json:"message,omitempty"`
+	Path    string `json:"path,omitempty"`
+	Line    int    `json:"line,omitempty"`
+}
 
-	input := testRunsInput{
-		TestRuns: runs,
-	}
-	payload, err := json.Marshal(input)
-	if err != nil {
-		return err
-	}
-	payloadReader := bytes.NewReader(payload)
-	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, payloadReader)
-	if err != nil {
-		return err
-	}
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return err
-	}
+// The different states that a run can be in.
+const (
+	StatePassed  = "passed"
+	StateFailed  = "failed"
+	StateSkipped = "skipped"
+)
 
-	// API Replies 204, doc says 200. Supporting both for now.
-	if resp.StatusCode == http.StatusNoContent || resp.StatusCode == http.StatusOK {
-		return nil
-	}
-
-	return errors.New(fmt.Sprintf("Unexpected status code from API: %d", resp.StatusCode))
+type Service interface {
+	GetHistory(context.Context, iam.User, config.LaunchOrder) (JobHistory, error)
+	PostTestRun(ctx context.Context, runs []TestRun) error
 }

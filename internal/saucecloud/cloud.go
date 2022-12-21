@@ -209,6 +209,9 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 		}
 		// Since we don't know much about the state of the job in async mode, we'll just
 		r.logSuite(res)
+
+		// Report suite to Insights
+		r.reportSuiteToInsights(res)
 	}
 	close(done)
 
@@ -933,4 +936,40 @@ func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHi
 		return insights.JobHistory{}, err
 	}
 	return r.InsightsService.GetHistory(context.Background(), user, launchOrder)
+}
+
+func (r *CloudRunner) reportSuiteToInsights(res result) {
+	// Skip reporting if job is not completed
+	if !job.Done(res.job.Status) || res.skipped || res.job.ID == "" {
+		return
+	}
+
+	run := insights.TestRun{
+		ID:           res.job.ID,
+		Name:         res.name,
+		Duration:     int(res.duration.Seconds()),
+		CreationTime: res.startTime,
+		StartTime:    res.startTime,
+		EndTime:      res.endTime,
+		Status:       cleanStatus(res.job.Status),
+		Device:       res.job.BaseConfig.DeviceName,
+		Browser:      res.browser,
+		OS:           res.job.BaseConfig.PlatformName,
+	}
+	err := r.InsightsService.PostTestRun(context.Background(), []insights.TestRun{run})
+	if err != nil {
+		log.Warn().Err(err).Msg(msg.InsightsReportError)
+	}
+}
+
+func cleanStatus(status string) string {
+	switch status {
+	case job.StateComplete:
+	case job.StatePassed:
+		return insights.StatePassed
+	case job.StateFailed:
+	case job.StateError:
+		return insights.StateFailed
+	}
+	return ""
 }
