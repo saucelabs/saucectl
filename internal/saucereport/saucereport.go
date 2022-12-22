@@ -2,6 +2,9 @@ package saucereport
 
 import "time"
 
+// SauceReportFileName is the name for Sauce Labs report.
+const SauceReportFileName = "sauce-test-json.json"
+
 // The different states that a job can be in.
 const (
 	StatusPassed  = "passed"
@@ -36,7 +39,7 @@ type Test struct {
 	Metadata       Metadata     `json:"metadata,omitempty"`
 	Output         string       `json:"output,omitempty"`
 	Code           Code         `json:"code,omitempty"`
-	VideoTimestamp int          `json:"VideoTimestamp,omitempty"`
+	VideoTimestamp float64      `json:"VideoTimestamp,omitempty"`
 }
 
 // Code represents the code of a test.

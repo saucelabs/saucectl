@@ -16,6 +16,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/files"
 	"github.com/saucelabs/saucectl/internal/jsonio"
+	"github.com/saucelabs/saucectl/internal/saucereport"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -944,22 +945,69 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 		return
 	}
 
-	run := insights.TestRun{
-		ID:           res.job.ID,
-		Name:         res.name,
-		Duration:     int(res.duration.Seconds()),
-		CreationTime: res.startTime,
-		StartTime:    res.startTime,
-		EndTime:      res.endTime,
-		Status:       jobToInsightStatus(res.job.Status),
-		Device:       res.job.BaseConfig.DeviceName,
-		Browser:      res.browser,
-		OS:           res.job.BaseConfig.PlatformName,
-	}
-	err := r.InsightsService.PostTestRun(context.Background(), []insights.TestRun{run})
+	assets, err := r.JobService.GetJobAssetFileNames(context.Background(), res.job.ID, res.job.IsRDC)
 	if err != nil {
+		// TODO: Update message
 		log.Warn().Err(err).Msg(msg.InsightsReportError)
 	}
+
+	if arrayContains(assets, saucereport.SauceReportFileName) {
+		r.loadSauceTestReport(res.job.ID, res.job.IsRDC)
+	}
+
+	// TODO: To Implement
+	if arrayContains(assets, "junit.xml") {
+
+	}
+
+	// Fetch sauce-test-report.json
+	// Evaluate sauce-test-report.json
+	// Generate API content
+	// Publish to API
+
+	//run := insights.TestRun{
+	//	ID:           res.job.ID,
+	//	Name:         res.name,
+	//	Duration:     int(res.duration.Seconds()),
+	//	CreationTime: res.startTime,
+	//	StartTime:    res.startTime,
+	//	EndTime:      res.endTime,
+	//	Status:       jobToInsightStatus(res.job.Status),
+	//	Device:       res.job.BaseConfig.DeviceName,
+	//	Browser:      res.browser,
+	//	OS:           res.job.BaseConfig.PlatformName,
+	//}
+	//err := r.InsightsService.PostTestRun(context.Background(), []insights.TestRun{run})
+	//if err != nil {
+	//	log.Warn().Err(err).Msg(msg.InsightsReportError)
+	//}
+}
+
+func (r *CloudRunner) loadSauceTestReport(jobID string, isRDC bool) (saucereport.SauceReport, error) {
+	fileContent, err := r.JobService.GetJobAssetFileContent(context.Background(), jobID, saucereport.SauceReportFileName, isRDC)
+	if err != nil {
+		// TODO: Update message
+		log.Warn().Err(err).Msg(msg.InsightsReportError)
+		return saucereport.SauceReport{}, err
+	}
+	// TODO: Parse Content
+	var report saucereport.SauceReport
+	err = json.Unmarshal(fileContent, &report)
+	if err != nil {
+		// TODO: Update message
+		log.Warn().Err(err).Msg(msg.InsightsReportError)
+		return saucereport.SauceReport{}, err
+	}
+	return report, nil
+}
+
+func arrayContains(list []string, want string) bool {
+	for _, item := range list {
+		if item == want {
+			return true
+		}
+	}
+	return false
 }
 
 func jobToInsightStatus(status string) string {
