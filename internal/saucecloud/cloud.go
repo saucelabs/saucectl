@@ -951,36 +951,30 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 		log.Warn().Err(err).Msg(msg.InsightsReportError)
 	}
 
+	var testRuns []insights.TestRun
+
 	if arrayContains(assets, saucereport.SauceReportFileName) {
-		r.loadSauceTestReport(res.job.ID, res.job.IsRDC)
+		report, err := r.loadSauceTestReport(res.job.ID, res.job.IsRDC)
+		if err != nil {
+			// TODO: Update message
+			log.Warn().Err(err).Msg(msg.InsightsReportError)
+		}
+		testRuns, _ = insights.FromSauceReport(res.job.ID, res.name, report)
+	} else if arrayContains(assets, junit.JunitFileName) {
+		report, err := r.loadJUnitReport(res.job.ID, res.job.IsRDC)
+		if err != nil {
+			// TODO: Update message
+			log.Warn().Err(err).Msg(msg.InsightsReportError)
+		}
+		testRuns, _ = insights.FromJUnit(res.job.ID, res.name, report)
 	}
 
-	// TODO: To Implement
-	if arrayContains(assets, junit.JunitFileName) {
-		r.loadJUnitReport(res.job.ID, res.job.IsRDC)
+	if len(testRuns) > 0 {
+		if err := r.InsightsService.PostTestRun(context.Background(), testRuns); err != nil {
+			// TODO: Update message
+			log.Warn().Err(err).Msg(msg.InsightsReportError)
+		}
 	}
-
-	// Fetch sauce-test-report.json
-	// Evaluate sauce-test-report.json
-	// Generate API content
-	// Publish to API
-
-	//run := insights.TestRun{
-	//	ID:           res.job.ID,
-	//	Name:         res.name,
-	//	Duration:     int(res.duration.Seconds()),
-	//	CreationTime: res.startTime,
-	//	StartTime:    res.startTime,
-	//	EndTime:      res.endTime,
-	//	Status:       jobToInsightStatus(res.job.Status),
-	//	Device:       res.job.BaseConfig.DeviceName,
-	//	Browser:      res.browser,
-	//	OS:           res.job.BaseConfig.PlatformName,
-	//}
-	//err := r.InsightsService.PostTestRun(context.Background(), []insights.TestRun{run})
-	//if err != nil {
-	//	log.Warn().Err(err).Msg(msg.InsightsReportError)
-	//}
 }
 
 func (r *CloudRunner) loadSauceTestReport(jobID string, isRDC bool) (saucereport.SauceReport, error) {
@@ -1010,16 +1004,4 @@ func arrayContains(list []string, want string) bool {
 		}
 	}
 	return false
-}
-
-func jobToInsightStatus(status string) string {
-	switch status {
-	case job.StateComplete:
-	case job.StatePassed:
-		return insights.StatePassed
-	case job.StateFailed:
-	case job.StateError:
-		return insights.StateFailed
-	}
-	return ""
 }
