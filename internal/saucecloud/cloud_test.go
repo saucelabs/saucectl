@@ -547,10 +547,7 @@ func TestCloudRunner_loadSauceTestReport(t *testing.T) {
 				},
 			},
 			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
-				if err != nil {
-					return false
-				}
-				return true
+				return err == nil
 			},
 			want: saucereport.SauceReport{
 				Status:      saucereport.StatusFailed,
@@ -720,10 +717,7 @@ func TestCloudRunner_loadJUnitReport(t *testing.T) {
 				},
 			},
 			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
-				if err != nil {
-					return false
-				}
-				return true
+				return err == nil
 			},
 		},
 	}
