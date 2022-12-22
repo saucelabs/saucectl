@@ -67,5 +67,5 @@ func Parse(fileContent []byte) (SauceReport, error) {
 	if err != nil {
 		return SauceReport{}, err
 	}
-	return SauceReport{}, nil
+	return report, nil
 }
