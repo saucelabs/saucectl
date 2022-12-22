@@ -1,6 +1,9 @@
 package saucereport
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // SauceReportFileName is the name for Sauce Labs report.
 const SauceReportFileName = "sauce-test-json.json"
@@ -56,3 +59,13 @@ type Attachment struct {
 
 // Metadata represents metadata.
 type Metadata map[string]interface{}
+
+// Parse parses an json-encoded byte string and returns a `SauceReport` struct
+func Parse(fileContent []byte) (SauceReport, error) {
+	var report SauceReport
+	err := json.Unmarshal(fileContent, &report)
+	if err != nil {
+		return SauceReport{}, err
+	}
+	return SauceReport{}, nil
+}

@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/saucereport"
 	"gotest.tools/v3/fs"
@@ -634,6 +635,113 @@ func TestCloudRunner_loadSauceTestReport(t *testing.T) {
 				return
 			}
 			assert.Equalf(t, tt.want, got, "loadSauceTestReport(%v, %v)", tt.args.jobID, tt.args.isRDC)
+		})
+	}
+}
+
+func TestCloudRunner_loadJUnitReport(t *testing.T) {
+	type args struct {
+		jobID string
+		isRDC bool
+	}
+	type fields struct {
+		GetJobAssetFileNamesFn   func(ctx context.Context, jobID string) ([]string, error)
+		GetJobAssetFileContentFn func(ctx context.Context, jobID, fileName string) ([]byte, error)
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    junit.TestSuites
+		wantErr assert.ErrorAssertionFunc
+	}{
+		{
+			name: "Unmarshall XML",
+			fields: fields{
+				GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
+					return []string{junit.JunitFileName}, nil
+				},
+				GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+					if fileName == junit.JunitFileName {
+						return []byte(`<?xml version="1.0" encoding="utf-8"?><testsuite package="com.saucelabs.mydemoapp.android" tests="7" time="52.056"><testcase classname="com.saucelabs.mydemoapp.android.view.activities.DashboardToCheckout" name="dashboardProductTest" status="success"/><testcase classname="com.saucelabs.mydemoapp.android.view.activities.LoginTest" name="succesfulLoginTest" status="success"/><testcase classname="com.saucelabs.mydemoapp.android.view.activities.LoginTest" name="noUsernameLoginTest" status="success"/><testcase classname="com.saucelabs.mydemoapp.android.view.activities.LoginTest" name="noPasswordLoginTest" status="success"/><testcase classname="com.saucelabs.mydemoapp.android.view.activities.LoginTest" name="noCredentialLoginTest" status="success"/><testcase classname="com.saucelabs.mydemoapp.android.view.activities.WebViewTest" name="webViewTest" status="success"/><testcase classname="com.saucelabs.mydemoapp.android.view.activities.WebViewTest" name="withoutUrlTest" status="success"/><system-out>INSTRUMENTATION_STATUS: class=com.saucelabs.mydemoapp.android.view.activities.DashboardToCheckout</system-out></testsuite>`), nil
+					}
+					return []byte{}, errors.New("not-found")
+				},
+			},
+			args: args{
+				jobID: "dummy-jobID",
+				isRDC: false,
+			},
+			want: junit.TestSuites{
+				TestSuites: []junit.TestSuite{
+					{
+						Package: "com.saucelabs.mydemoapp.android",
+						Tests:   7,
+						Time:    "52.056",
+						TestCases: []junit.TestCase{
+							{
+								ClassName: "com.saucelabs.mydemoapp.android.view.activities.DashboardToCheckout",
+								Name:      "dashboardProductTest",
+								Status:    "success",
+							},
+							{
+								ClassName: "com.saucelabs.mydemoapp.android.view.activities.LoginTest",
+								Name:      "succesfulLoginTest",
+								Status:    "success",
+							},
+							{
+								ClassName: "com.saucelabs.mydemoapp.android.view.activities.LoginTest",
+								Name:      "noUsernameLoginTest",
+								Status:    "success",
+							},
+							{
+								ClassName: "com.saucelabs.mydemoapp.android.view.activities.LoginTest",
+								Name:      "noPasswordLoginTest",
+								Status:    "success",
+							},
+							{
+								ClassName: "com.saucelabs.mydemoapp.android.view.activities.LoginTest",
+								Name:      "noCredentialLoginTest",
+								Status:    "success",
+							},
+							{
+								ClassName: "com.saucelabs.mydemoapp.android.view.activities.WebViewTest",
+								Name:      "webViewTest",
+								Status:    "success",
+							},
+							{
+								ClassName: "com.saucelabs.mydemoapp.android.view.activities.WebViewTest",
+								Name:      "withoutUrlTest",
+								Status:    "success",
+							},
+						},
+						SystemOut: "INSTRUMENTATION_STATUS: class=com.saucelabs.mydemoapp.android.view.activities.DashboardToCheckout",
+					},
+				},
+			},
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				if err != nil {
+					return false
+				}
+				return true
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &CloudRunner{
+				JobService: JobService{
+					VDCReader: &mocks.FakeJobReader{
+						GetJobAssetFileNamesFn:   tt.fields.GetJobAssetFileNamesFn,
+						GetJobAssetFileContentFn: tt.fields.GetJobAssetFileContentFn,
+					},
+				},
+			}
+			got, err := r.loadJUnitReport(tt.args.jobID, tt.args.isRDC)
+			if !tt.wantErr(t, err, fmt.Sprintf("loadJUnitReport(%v, %v)", tt.args.jobID, tt.args.isRDC)) {
+				return
+			}
+			assert.Equalf(t, tt.want, got, "loadJUnitReport(%v, %v)", tt.args.jobID, tt.args.isRDC)
 		})
 	}
 }

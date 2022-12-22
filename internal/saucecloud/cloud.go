@@ -957,7 +957,7 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 
 	// TODO: To Implement
 	if arrayContains(assets, junit.JunitFileName) {
-
+		r.loadJUnitReport(res.job.ID, res.job.IsRDC)
 	}
 
 	// Fetch sauce-test-report.json
@@ -990,15 +990,17 @@ func (r *CloudRunner) loadSauceTestReport(jobID string, isRDC bool) (saucereport
 		log.Warn().Err(err).Msg(msg.InsightsReportError)
 		return saucereport.SauceReport{}, err
 	}
-	// TODO: Parse Content
-	var report saucereport.SauceReport
-	err = json.Unmarshal(fileContent, &report)
+	return saucereport.Parse(fileContent)
+}
+
+func (r *CloudRunner) loadJUnitReport(jobID string, isRDC bool) (junit.TestSuites, error) {
+	fileContent, err := r.JobService.GetJobAssetFileContent(context.Background(), jobID, junit.JunitFileName, isRDC)
 	if err != nil {
 		// TODO: Update message
 		log.Warn().Err(err).Msg(msg.InsightsReportError)
-		return saucereport.SauceReport{}, err
+		return junit.TestSuites{}, err
 	}
-	return report, nil
+	return junit.Parse(fileContent)
 }
 
 func arrayContains(list []string, want string) bool {
