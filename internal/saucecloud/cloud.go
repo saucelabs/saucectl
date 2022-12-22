@@ -162,7 +162,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				jb, err := r.JobService.GetJobAssetFileContent(
 					context.Background(),
 					res.job.ID,
-					"junit.xml",
+					junit.JunitFileName,
 					res.job.IsRDC)
 				artifacts = append(artifacts, report.Artifact{
 					AssetType: report.JUnitArtifact,
@@ -761,7 +761,7 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	}
 
 	// Some frameworks produce a junit.xml instead, check for that file if there's no console.log
-	assetContent, err = r.JobService.GetJobAssetFileContent(context.Background(), res.job.ID, "junit.xml", res.job.IsRDC)
+	assetContent, err = r.JobService.GetJobAssetFileContent(context.Background(), res.job.ID, junit.JunitFileName, res.job.IsRDC)
 	if err != nil {
 		log.Warn().Err(err).Str("suite", res.name).Msg("Failed to retrieve the console output.")
 		return
@@ -956,7 +956,7 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 	}
 
 	// TODO: To Implement
-	if arrayContains(assets, "junit.xml") {
+	if arrayContains(assets, junit.JunitFileName) {
 
 	}
 

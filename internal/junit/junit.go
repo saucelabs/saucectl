@@ -2,6 +2,9 @@ package junit
 
 import "encoding/xml"
 
+// JunitFileName is the name of the JUnit report.
+const JunitFileName = "junit.xml"
+
 // TestCase maps to <testcase> element
 type TestCase struct {
 	Name       string `xml:"name,attr"`
