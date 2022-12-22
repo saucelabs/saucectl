@@ -67,6 +67,11 @@ func TestXcuitestRunner_RunProject(t *testing.T) {
 				VDCDownloader: &mocks.FakeArtifactDownloader{
 					DownloadArtifactFn: func(jobID, suiteName string) []string { return []string{} },
 				},
+				VDCReader: &mocks.FakeJobReader{
+					GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
+						return []string{}, nil
+					},
+				},
 			},
 			CCYReader:       ccyReader,
 			ProjectUploader: uploader,
