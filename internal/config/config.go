@@ -437,6 +437,7 @@ func ValidateVisibility(visibility string) bool {
 	return false
 }
 
+// ValidateRetrySettings checks the retries, maxAttempt and minPass settings
 func ValidateRetrySettings(cfg SauceConfig) string {
 	if cfg.Retries > 0 && cfg.MaxAttempt > 1 {
 		return "retries and maxAttempt should not be set at the same time"

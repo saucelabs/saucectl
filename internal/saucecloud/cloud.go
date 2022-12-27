@@ -78,7 +78,6 @@ type result struct {
 	endTime   time.Time
 	attempts  int
 	retries   int
-	passCount int
 }
 
 // ConsoleLogAsset represents job asset log file name.
