@@ -1,9 +1,11 @@
 package insights
 
 import (
+	"time"
+
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/saucereport"
-	"time"
+	"github.com/xtgo/uuid"
 )
 
 // TestRun represents a
@@ -61,10 +63,50 @@ const (
 	StateSkipped = "skipped"
 )
 
-func FromJUnit(jobID string, jobName string, suites junit.TestSuites) ([]TestRun, error) {
+// The different types that a run can be.
+const (
+	TypeWeb    = "web"
+	TypeMobile = "mobile"
+	TypeAPI    = "api"
+	TypeOther  = "other"
+)
+
+// The different platform that a run can be executed on.
+const (
+	PlatformVDC   = "vdc"
+	PlatformRDC   = "rdc"
+	PlatformAPI   = "api"
+	PlatformOther = "other"
+)
+
+func FromJUnit(suites junit.TestSuites) ([]TestRun, error) {
 	return []TestRun{}, nil
 }
 
-func FromSauceReport(jobID string, jobName string, report saucereport.SauceReport) ([]TestRun, error) {
-	return []TestRun{}, nil
+func FromSauceReport(report saucereport.SauceReport) ([]TestRun, error) {
+	var testRuns []TestRun
+	for _, s := range report.Suites {
+		testRuns = append(testRuns, deepConvert(s)...)
+	}
+	return testRuns, nil
+}
+
+func deepConvert(suite saucereport.Suite) []TestRun {
+	var runs []TestRun
+
+	for _, test := range suite.Tests {
+		runs = append(runs, TestRun{
+			Name:      test.Name,
+			ID:        uuid.NewRandom().String(),
+			Status:    test.Status, //FIXME: Uniformize
+			StartTime: test.StartTime,
+			EndTime:   test.StartTime.Add(time.Duration(test.Duration)),
+			Duration:  test.Duration,
+		})
+	}
+
+	for _, child := range suite.Suites {
+		runs = append(runs, deepConvert(child)...)
+	}
+	return runs
 }

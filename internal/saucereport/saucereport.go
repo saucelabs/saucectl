@@ -6,7 +6,7 @@ import (
 )
 
 // SauceReportFileName is the name for Sauce Labs report.
-const SauceReportFileName = "sauce-test-json.json"
+const SauceReportFileName = "sauce-test-report.json"
 
 // The different states that a job can be in.
 const (

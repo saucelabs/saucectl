@@ -14,10 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/files"
-	"github.com/saucelabs/saucectl/internal/jsonio"
-	"github.com/saucelabs/saucectl/internal/saucereport"
-
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
@@ -29,10 +25,12 @@ import (
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/files"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/node"
@@ -40,8 +38,10 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
+	"github.com/saucelabs/saucectl/internal/saucereport"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/saucelabs/saucectl/internal/tunnel"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
 
 // CloudRunner represents the cloud runner for the Sauce Labs cloud.
@@ -68,6 +68,18 @@ type CloudRunner struct {
 	interrupted bool
 }
 
+type insightDetails struct {
+	AppName    string
+	Browser    string
+	BuildName  string
+	CI         string
+	DeviceID   string
+	DeviceName string
+	Framework  string
+	Platform   string
+	Tags       []string
+}
+
 type result struct {
 	name      string
 	browser   string
@@ -79,6 +91,8 @@ type result struct {
 	endTime   time.Time
 	attempts  int
 	retries   int
+
+	details insightDetails
 }
 
 // ConsoleLogAsset represents job asset log file name.
@@ -133,6 +147,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			}
 		}
 	}(r)
+
 	for i := 0; i < expected; i++ {
 		res := <-results
 		// in case one of test suites not passed
@@ -314,6 +329,17 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 	for opts := range jobOpts {
 		start := time.Now()
 
+		details := insightDetails{
+			Framework:  opts.Framework,
+			Browser:    opts.BrowserName,
+			Tags:       opts.Tags,
+			BuildName:  opts.Build,
+			Platform:   opts.PlatformName,
+			DeviceID:   opts.DeviceID,
+			DeviceName: opts.DeviceName,
+			// FIXME: Support CI
+		}
+
 		if r.interrupted {
 			results <- result{
 				name:     opts.DisplayName,
@@ -322,6 +348,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 				err:      nil,
 				attempts: opts.Attempt + 1,
 				retries:  opts.Retries,
+				details:  details,
 			}
 			continue
 		}
@@ -356,6 +383,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			duration:  time.Since(start),
 			attempts:  opts.Attempt + 1,
 			retries:   opts.Retries,
+			details:   details,
 		}
 	}
 }
@@ -939,10 +967,10 @@ func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHi
 	return r.InsightsService.GetHistory(context.Background(), user, launchOrder)
 }
 
-func (r *CloudRunner) reportSuiteToInsights(res result) {
+func (r *CloudRunner) reportSuiteToInsights(res result) []insights.TestRun {
 	// Skip reporting if job is not completed
 	if !job.Done(res.job.Status) || res.skipped || res.job.ID == "" {
-		return
+		return []insights.TestRun{}
 	}
 
 	assets, err := r.JobService.GetJobAssetFileNames(context.Background(), res.job.ID, res.job.IsRDC)
@@ -957,24 +985,24 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 		report, err := r.loadSauceTestReport(res.job.ID, res.job.IsRDC)
 		if err != nil {
 			// TODO: Update message
-			log.Warn().Err(err).Msg(msg.InsightsReportError)
+			log.Warn().Err(err).Str("action", "parsingJSON").Msg(msg.InsightsReportError)
 		}
-		testRuns, _ = insights.FromSauceReport(res.job.ID, res.name, report)
+		testRuns, _ = insights.FromSauceReport(report)
 	} else if arrayContains(assets, junit.JunitFileName) {
 		report, err := r.loadJUnitReport(res.job.ID, res.job.IsRDC)
 		if err != nil {
 			// TODO: Update message
-			log.Warn().Err(err).Msg(msg.InsightsReportError)
+			log.Warn().Err(err).Str("action", "parsingXML").Msg(msg.InsightsReportError)
 		}
-		testRuns, _ = insights.FromJUnit(res.job.ID, res.name, report)
+		testRuns, _ = insights.FromJUnit(report)
 	}
-
+	enrichInsightTestRun(testRuns, res.job.ID, res.name, res.details, res.job.IsRDC)
 	if len(testRuns) > 0 {
 		if err := r.InsightsService.PostTestRun(context.Background(), testRuns); err != nil {
-			// TODO: Update message
-			log.Warn().Err(err).Msg(msg.InsightsReportError)
+			log.Warn().Err(err).Str("action", "posting").Msg(msg.InsightsReportError)
 		}
 	}
+	return testRuns
 }
 
 func (r *CloudRunner) loadSauceTestReport(jobID string, isRDC bool) (saucereport.SauceReport, error) {
@@ -1004,4 +1032,53 @@ func arrayContains(list []string, want string) bool {
 		}
 	}
 	return false
+}
+
+func enrichInsightTestRun(runs []insights.TestRun, jobID string, jobName string, details insightDetails, isRDC bool) {
+	for idx := range runs {
+		runs[idx].Browser = details.Browser
+		runs[idx].BuildName = details.BuildName
+		runs[idx].Device = resolveDevice(details.DeviceName, details.DeviceID)
+		runs[idx].Framework = details.Framework
+		runs[idx].OS = resolveOS(details.Platform, details.Framework)
+		runs[idx].Platform = resolvePlatform(isRDC)
+		runs[idx].SauceJob = &insights.Job{
+			ID:   jobID,
+			Name: jobName,
+		}
+		runs[idx].Tags = details.Tags
+		runs[idx].Type = resolveType(details.Framework)
+		//FIXME: Resolve: runs[idx].CI
+	}
+}
+
+func resolveDevice(deviceName string, deviceID string) string {
+	if deviceName != "" {
+		return deviceName
+	}
+	return deviceID
+}
+
+func resolvePlatform(isRDC bool) string {
+	if isRDC {
+		return insights.PlatformRDC
+	}
+	return insights.PlatformVDC
+}
+
+func resolveType(framework string) string {
+	if framework == espresso.Kind || framework == xcuitest.Kind {
+		return insights.TypeMobile
+	}
+	return insights.TypeWeb
+}
+
+func resolveOS(platform string, framework string) string {
+	if framework == xcuitest.Kind {
+		return "iOS"
+	}
+	if framework == espresso.Kind {
+		return "Android"
+	}
+	return platform
 }
