@@ -256,6 +256,10 @@ func (p *Project) Validate() error {
 		return errors.New(msg.MissingCypressVersion)
 	}
 
+	if !config.ValidateRetrySettings(p.GetSauceCfg()) {
+		return errors.New(msg.InvalidRetriesAndAttempt)
+	}
+
 	// Validate docker.
 	if p.Docker.FileTransfer != config.DockerFileMount && p.Docker.FileTransfer != config.DockerFileCopy {
 		return fmt.Errorf(msg.InvalidDockerFileTransferType,

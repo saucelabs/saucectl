@@ -131,6 +131,10 @@ func Validate(p Project) error {
 		return errors.New(msg.MissingRegion)
 	}
 
+	if !config.ValidateRetrySettings(p.Sauce) {
+		return errors.New(msg.InvalidRetriesAndAttempt)
+	}
+
 	if regio == region.USEast4 && p.Sauce.Tunnel.Name != "" {
 		return errors.New(msg.NoTunnelSupport)
 	}

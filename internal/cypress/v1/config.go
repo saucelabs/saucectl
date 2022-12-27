@@ -190,8 +190,8 @@ func (p *Project) Validate() error {
 		return errors.New(msg.MissingCypressVersion)
 	}
 
-	if msg := config.ValidateRetrySettings(p.GetSauceCfg()); msg != "" {
-		return errors.New(msg)
+	if !config.ValidateRetrySettings(p.GetSauceCfg()) {
+		return errors.New(msg.InvalidRetriesAndAttempt)
 	}
 
 	// Validate docker.

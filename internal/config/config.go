@@ -438,12 +438,14 @@ func ValidateVisibility(visibility string) bool {
 }
 
 // ValidateRetrySettings checks the retries, maxAttempt and minPass settings
-func ValidateRetrySettings(cfg SauceConfig) string {
+func ValidateRetrySettings(cfg SauceConfig) bool {
 	if cfg.Retries > 0 && cfg.MaxAttempt > 1 {
-		return "retries and maxAttempt should not be set at the same time"
+		log.Error().Int("retries", cfg.Retries).Int("maxAttempt", cfg.MaxAttempt).Msg(msg.ConflictRetriesAndMaxAttempt)
+		return false
 	}
 	if cfg.MaxAttempt > 1 && cfg.MinPass > cfg.MaxAttempt {
-		return "minPass should not be greater than maxAttempt"
+		log.Error().Int("maxAttempt", cfg.MaxAttempt).Int("minPass", cfg.MinPass).Msg(msg.InvalidMinPassAndMaxAttempt)
+		return false
 	}
-	return ""
+	return true
 }

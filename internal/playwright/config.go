@@ -305,6 +305,10 @@ func Validate(p *Project) error {
 		return errors.New(msg.MissingFrameworkVersionConfig)
 	}
 
+	if !config.ValidateRetrySettings(p.Sauce) {
+		return errors.New(msg.InvalidRetriesAndAttempt)
+	}
+
 	// Check rootDir exists.
 	if p.RootDir != "" {
 		if _, err := os.Stat(p.RootDir); err != nil {

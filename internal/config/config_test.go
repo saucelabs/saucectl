@@ -287,7 +287,7 @@ func TestValidateRetrySettings(t *testing.T) {
 	testCases := []struct {
 		name string
 		cfg  SauceConfig
-		want string
+		want bool
 	}{
 		{
 			name: "should return error when setting retries and maxAttempt",
@@ -295,7 +295,7 @@ func TestValidateRetrySettings(t *testing.T) {
 				Retries:    1,
 				MaxAttempt: 3,
 			},
-			want: "retries and maxAttempt should not be set at the same time",
+			want: false,
 		},
 		{
 			name: "should return error when setting minPass is greater than maxAttempt",
@@ -303,14 +303,14 @@ func TestValidateRetrySettings(t *testing.T) {
 				MaxAttempt: 3,
 				MinPass:    4,
 			},
-			want: "minPass should not be greater than maxAttempt",
+			want: false,
 		},
 		{
 			name: "should not return error when only setting retries",
 			cfg: SauceConfig{
 				Retries: 2,
 			},
-			want: "",
+			want: true,
 		},
 		{
 			name: "should not return error when setting valid maxAttempt and minPass",
@@ -318,7 +318,7 @@ func TestValidateRetrySettings(t *testing.T) {
 				MaxAttempt: 3,
 				MinPass:    2,
 			},
-			want: "",
+			want: true,
 		},
 	}
 	for _, tc := range testCases {
