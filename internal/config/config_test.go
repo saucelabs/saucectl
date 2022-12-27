@@ -292,7 +292,7 @@ func TestValidateRetrySettings(t *testing.T) {
 		{
 			name: "should return error when setting retries and maxAttempt",
 			cfg: SauceConfig{
-				Retries:    2,
+				Retries:    1,
 				MaxAttempt: 3,
 			},
 			want: "retries and maxAttempt should not be set at the same time",

@@ -438,7 +438,7 @@ func ValidateVisibility(visibility string) bool {
 }
 
 func ValidateRetrySettings(cfg SauceConfig) string {
-	if cfg.Retries > 1 && cfg.MaxAttempt > 1 {
+	if cfg.Retries > 0 && cfg.MaxAttempt > 1 {
 		return "retries and maxAttempt should not be set at the same time"
 	}
 	if cfg.MaxAttempt > 1 && cfg.MinPass > cfg.MaxAttempt {
