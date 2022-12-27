@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
-	assert2 "gotest.tools/v3/assert"
 	"os"
 	"strings"
 	"testing"
+
+	assert2 "gotest.tools/v3/assert"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -278,6 +279,52 @@ func TestShouldDownloadArtifact(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := ShouldDownloadArtifact(tt.jobID, tt.passed, tt.timedOut, tt.async, tt.config)
 			assert2.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestValidateRetrySettings(t *testing.T) {
+	testCases := []struct {
+		name string
+		cfg  SauceConfig
+		want string
+	}{
+		{
+			name: "should return error when setting retries and maxAttempt",
+			cfg: SauceConfig{
+				Retries:    2,
+				MaxAttempt: 3,
+			},
+			want: "retries and maxAttempt should not be set at the same time",
+		},
+		{
+			name: "should return error when setting minPass is greater than maxAttempt",
+			cfg: SauceConfig{
+				MaxAttempt: 3,
+				MinPass:    4,
+			},
+			want: "minPass should not be greater than maxAttempt",
+		},
+		{
+			name: "should not return error when only setting retries",
+			cfg: SauceConfig{
+				Retries: 2,
+			},
+			want: "",
+		},
+		{
+			name: "should not return error when setting valid maxAttempt and minPass",
+			cfg: SauceConfig{
+				MaxAttempt: 3,
+				MinPass:    2,
+			},
+			want: "",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := ValidateRetrySettings(tc.cfg)
+			assert2.Equal(t, tc.want, got)
 		})
 	}
 }

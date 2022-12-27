@@ -221,6 +221,8 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		TestOptions: s.TestOptions,
 		Attempt:     0,
 		Retries:     r.Project.Sauce.Retries,
+		MaxAttempt:  r.Project.Sauce.MaxAttempt,
+		MinPass:     r.Project.Sauce.MinPass,
 		Visibility:  r.Project.Sauce.Visibility,
 
 		// RDC Specific flags

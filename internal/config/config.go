@@ -39,6 +39,8 @@ type SauceConfig struct {
 	Sauceignore string            `yaml:"sauceignore,omitempty" json:"sauceignore,omitempty"`
 	Experiments map[string]string `yaml:"experiments,omitempty" json:"experiments,omitempty"`
 	Retries     int               `yaml:"retries,omitempty" json:"-"`
+	MaxAttempt  int               `yaml:"maxAttempt,omitempty" json:"-"`
+	MinPass     int               `yaml:"minPass,omitempty" json:"-"`
 	Visibility  string            `yaml:"visibility,omitempty" json:"-"`
 	LaunchOrder LaunchOrder       `yaml:"launchOrder,omitempty" json:"launchOrder,omitempty"`
 }
@@ -433,4 +435,14 @@ func ValidateVisibility(visibility string) bool {
 	}
 
 	return false
+}
+
+func ValidateRetrySettings(cfg SauceConfig) string {
+	if cfg.Retries > 1 && cfg.MaxAttempt > 1 {
+		return "retries and maxAttempt should not be set at the same time"
+	}
+	if cfg.MaxAttempt > 1 && cfg.MinPass > cfg.MaxAttempt {
+		return "minPass should not be greater than maxAttempt"
+	}
+	return ""
 }

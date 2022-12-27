@@ -126,6 +126,8 @@ func (r *CypressRunner) runSuites(fileURI string) bool {
 				Experiments:      r.Project.GetSauceCfg().Experiments,
 				Attempt:          0,
 				Retries:          r.Project.GetSauceCfg().Retries,
+				MaxAttempt:       r.Project.GetSauceCfg().MaxAttempt,
+				MinPass:          r.Project.GetSauceCfg().MinPass,
 				TimeZone:         s.TimeZone,
 				Visibility:       r.Project.GetSauceCfg().Visibility,
 			}

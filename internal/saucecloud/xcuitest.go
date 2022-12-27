@@ -143,6 +143,8 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		TestsToSkip: s.TestOptions.NotClass,
 		Attempt:     0,
 		Retries:     r.Project.Sauce.Retries,
+		MaxAttempt:  r.Project.Sauce.MaxAttempt,
+		MinPass:     r.Project.Sauce.MinPass,
 
 		// RDC Specific flags
 		RealDevice:        true,

@@ -78,6 +78,7 @@ type result struct {
 	endTime   time.Time
 	attempts  int
 	retries   int
+	passCount int
 }
 
 // ConsoleLogAsset represents job asset log file name.
@@ -328,6 +329,10 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 
 		jobData, skipped, err := r.runJob(opts)
 
+		if jobData.Passed {
+			opts.PassCount++
+		}
+
 		if opts.Attempt < opts.Retries && !jobData.Passed && !skipped {
 			log.Warn().Err(err).Msg("Suite errored.")
 			go func(opt job.StartOptions) {
@@ -337,6 +342,13 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 					Msg("Retrying suite.")
 				jobOpts <- opt
 			}(opts)
+			continue
+		}
+
+		if opts.Attempt+1 < opts.MaxAttempt && opts.PassCount < opts.MinPass {
+			opts.Attempt++
+			jobOpts <- opts
+			log.Info().Str("suite", opts.DisplayName).Str("attempt", fmt.Sprintf("%d of %d", opts.Attempt+1, opts.MaxAttempt)).Msg("Retrying suite.")
 			continue
 		}
 

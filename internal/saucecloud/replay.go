@@ -110,6 +110,8 @@ func (r *ReplayRunner) runSuites(fileURI string) bool {
 				Experiments: r.Project.Sauce.Experiments,
 				Attempt:     0,
 				Retries:     r.Project.Sauce.Retries,
+				MaxAttempt:  r.Project.Sauce.MaxAttempt,
+				MinPass:     r.Project.Sauce.MinPass,
 				Visibility:  r.Project.Sauce.Visibility,
 			}
 		}
