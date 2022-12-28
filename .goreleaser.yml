@@ -37,6 +37,7 @@ brews:
       email: devx.bot@saucelabs.com
 archives:
   - name_template: >-
+      - name_template: >-
       {{ .ProjectName }}_{{ .Version }}_
       {{- if eq .Os "darwin"}}mac_
       {{- else if eq .Os "linux" }}linux_
