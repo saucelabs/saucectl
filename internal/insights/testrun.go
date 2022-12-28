@@ -143,7 +143,7 @@ func deepConvert(suite saucereport.Suite) []TestRun {
 		newRun := TestRun{
 			Name:         test.Name,
 			ID:           uuid.NewRandom().String(),
-			Status:       uniformizeJsonStatus(test.Status),
+			Status:       uniformizeJSONStatus(test.Status),
 			CreationTime: test.StartTime,
 			StartTime:    test.StartTime,
 			EndTime:      test.StartTime.Add(time.Duration(test.Duration)),
@@ -165,7 +165,7 @@ func deepConvert(suite saucereport.Suite) []TestRun {
 	return runs
 }
 
-func uniformizeJsonStatus(status string) string {
+func uniformizeJSONStatus(status string) string {
 	switch status {
 	case "failed":
 	case "error":
