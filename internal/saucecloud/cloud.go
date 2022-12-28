@@ -1006,8 +1006,7 @@ func (r *CloudRunner) reportSuiteToInsights(res result) []insights.TestRun {
 func (r *CloudRunner) loadSauceTestReport(jobID string, isRDC bool) (saucereport.SauceReport, error) {
 	fileContent, err := r.JobService.GetJobAssetFileContent(context.Background(), jobID, saucereport.SauceReportFileName, isRDC)
 	if err != nil {
-		// TODO: Update message
-		log.Warn().Err(err).Msg(msg.InsightsReportError)
+		log.Warn().Err(err).Str("action", "loading-json-report").Msg(msg.InsightsReportError)
 		return saucereport.SauceReport{}, err
 	}
 	return saucereport.Parse(fileContent)
@@ -1016,8 +1015,7 @@ func (r *CloudRunner) loadSauceTestReport(jobID string, isRDC bool) (saucereport
 func (r *CloudRunner) loadJUnitReport(jobID string, isRDC bool) (junit.TestSuites, error) {
 	fileContent, err := r.JobService.GetJobAssetFileContent(context.Background(), jobID, junit.JunitFileName, isRDC)
 	if err != nil {
-		// TODO: Update message
-		log.Warn().Err(err).Msg(msg.InsightsReportError)
+		log.Warn().Err(err).Str("action", "loading-xml-report").Msg(msg.InsightsReportError)
 		return junit.TestSuites{}, err
 	}
 	return junit.Parse(fileContent)

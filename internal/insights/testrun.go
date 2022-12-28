@@ -88,6 +88,7 @@ func FromJUnit(suites junit.TestSuites) ([]TestRun, error) {
 
 	for _, s := range suites.TestSuites {
 		for _, ss := range s.TestCases {
+			status := StatePassed
 			var startDate time.Time
 			var err error
 			if ss.Timestamp == "" {
@@ -104,6 +105,7 @@ func FromJUnit(suites junit.TestSuites) ([]TestRun, error) {
 			endTime := startDate.Add(time.Duration(duration) * time.Second)
 			var failures []TestRunError
 			if ss.Failure != "" {
+				status = StateFailed
 				failures = []TestRunError{
 					{
 						Message: ss.Failure,
@@ -113,7 +115,7 @@ func FromJUnit(suites junit.TestSuites) ([]TestRun, error) {
 			testRuns = append(testRuns, TestRun{
 				Name:         fmt.Sprintf("%s.%s", ss.ClassName, ss.Name),
 				ID:           uuid.NewRandom().String(),
-				Status:       ss.Error, // FIXME: Resolve status
+				Status:       status,
 				CreationTime: startDate,
 				StartTime:    startDate,
 				EndTime:      endTime,
