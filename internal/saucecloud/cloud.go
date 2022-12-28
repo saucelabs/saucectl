@@ -344,7 +344,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			continue
 		}
 
-		if opts.Attempt+1 < opts.MaxAttempt && opts.PassCount < opts.MinPass {
+		if opts.Attempt == opts.MaxAttempt && opts.PassCount < opts.MinPass {
 			opts.Attempt++
 			jobOpts <- opts
 			log.Info().Str("suite", opts.DisplayName).Str("attempt", fmt.Sprintf("%d of %d", opts.Attempt+1, opts.MaxAttempt)).Msg("Retrying suite.")
