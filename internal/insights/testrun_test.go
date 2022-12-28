@@ -116,6 +116,73 @@ func TestFromSauceReport(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "Nested suites",
+			args: args{
+				report: saucereport.SauceReport{
+					Suites: []saucereport.Suite{
+						{
+							Name:   "Suite #1",
+							Status: StatePassed,
+							Suites: []saucereport.Suite{
+								{
+									Name: "Suite #1.1",
+									Tests: []saucereport.Test{
+										{
+											Name:      "Test #1.1.1",
+											Status:    StatePassed,
+											StartTime: time.Date(2022, 12, 13, 14, 15, 16, 17, time.UTC),
+											Duration:  20,
+										},
+										{
+											Name:      "Test #1.1.2",
+											Status:    StatePassed,
+											StartTime: time.Date(2022, 12, 14, 14, 15, 16, 17, time.UTC),
+											Duration:  20,
+										},
+									},
+								},
+							},
+							Tests: []saucereport.Test{
+								{
+									Name:      "Test #1.1",
+									Status:    StatePassed,
+									StartTime: time.Date(2022, 12, 15, 14, 15, 16, 17, time.UTC),
+									Duration:  20,
+								},
+							},
+						},
+					},
+				},
+			},
+			want: []TestRun{
+				{
+					Name:         "Test #1.1",
+					CreationTime: time.Date(2022, 12, 15, 14, 15, 16, 17, time.UTC),
+					StartTime:    time.Date(2022, 12, 15, 14, 15, 16, 17, time.UTC),
+					EndTime:      time.Date(2022, 12, 15, 14, 15, 36, 17, time.UTC),
+					Duration:     20,
+					Status:       StatePassed,
+				},
+				{
+					Name:         "Test #1.1.1",
+					CreationTime: time.Date(2022, 12, 13, 14, 15, 16, 17, time.UTC),
+					StartTime:    time.Date(2022, 12, 13, 14, 15, 16, 17, time.UTC),
+					EndTime:      time.Date(2022, 12, 13, 14, 15, 36, 17, time.UTC),
+					Duration:     20,
+					Status:       StatePassed,
+				},
+				{
+					Name:         "Test #1.1.2",
+					CreationTime: time.Date(2022, 12, 14, 14, 15, 16, 17, time.UTC),
+					StartTime:    time.Date(2022, 12, 14, 14, 15, 16, 17, time.UTC),
+					EndTime:      time.Date(2022, 12, 14, 14, 15, 36, 17, time.UTC),
+					Duration:     20,
+					Status:       StatePassed,
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
