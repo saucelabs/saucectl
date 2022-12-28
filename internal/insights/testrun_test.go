@@ -122,7 +122,7 @@ func TestFromSauceReport(t *testing.T) {
 			got, err := FromSauceReport(tt.args.report)
 
 			// Replicate IDs as they are random
-			for idx, _ := range got {
+			for idx := range got {
 				tt.want[idx].ID = got[idx].ID
 			}
 
