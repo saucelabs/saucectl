@@ -986,13 +986,13 @@ func (r *CloudRunner) reportSuiteToInsights(res result) []insights.TestRun {
 		if err != nil {
 			log.Warn().Err(err).Str("action", "parsingJSON").Msg(msg.InsightsReportError)
 		}
-		testRuns, _ = insights.FromSauceReport(report)
+		testRuns = insights.FromSauceReport(report)
 	} else if arrayContains(assets, junit.JunitFileName) {
 		report, err := r.loadJUnitReport(res.job.ID, res.job.IsRDC)
 		if err != nil {
 			log.Warn().Err(err).Str("action", "parsingXML").Msg(msg.InsightsReportError)
 		}
-		testRuns, _ = insights.FromJUnit(report)
+		testRuns = insights.FromJUnit(report)
 	}
 	enrichInsightTestRun(testRuns, res.job.ID, res.name, res.details, res.job.IsRDC)
 	if len(testRuns) > 0 {

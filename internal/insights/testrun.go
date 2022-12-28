@@ -83,19 +83,18 @@ const (
 	PlatformOther = "other"
 )
 
-func FromJUnit(suites junit.TestSuites) ([]TestRun, error) {
+func FromJUnit(suites junit.TestSuites) []TestRun {
 	var testRuns []TestRun
 
 	for _, s := range suites.TestSuites {
 		for _, ss := range s.TestCases {
 			status := StatePassed
-			var startDate time.Time
+			startDate := time.Now()
 			var err error
-			if ss.Timestamp == "" {
+			if ss.Timestamp != "" {
 				startDate, err = time.Parse(time.RFC3339, ss.Timestamp)
 				if err != nil {
 					log.Warn().Err(err).Msg("unable to parse date. using time.Now().")
-					startDate = time.Now()
 				}
 			}
 			duration, err := strconv.ParseFloat(ss.Time, 64)
@@ -125,15 +124,15 @@ func FromJUnit(suites junit.TestSuites) ([]TestRun, error) {
 		}
 	}
 
-	return testRuns, nil
+	return testRuns
 }
 
-func FromSauceReport(report saucereport.SauceReport) ([]TestRun, error) {
+func FromSauceReport(report saucereport.SauceReport) []TestRun {
 	var testRuns []TestRun
 	for _, s := range report.Suites {
 		testRuns = append(testRuns, deepConvert(s)...)
 	}
-	return testRuns, nil
+	return testRuns
 }
 
 func deepConvert(suite saucereport.Suite) []TestRun {

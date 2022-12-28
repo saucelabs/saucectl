@@ -1,10 +1,12 @@
 package insights
 
 import (
-	"github.com/saucelabs/saucectl/internal/saucereport"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/junit"
+	"github.com/saucelabs/saucectl/internal/saucereport"
 )
 
 func Test_uniformizeJSONStatus(t *testing.T) {
@@ -59,10 +61,9 @@ func TestFromSauceReport(t *testing.T) {
 		report saucereport.SauceReport
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    []TestRun
-		wantErr bool
+		name string
+		args args
+		want []TestRun
 	}{
 		{
 			name: "Basic Passing Report",
@@ -114,7 +115,6 @@ func TestFromSauceReport(t *testing.T) {
 					},
 				},
 			},
-			wantErr: false,
 		},
 		{
 			name: "Nested suites",
@@ -181,24 +181,100 @@ func TestFromSauceReport(t *testing.T) {
 					Status:       StatePassed,
 				},
 			},
-			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := FromSauceReport(tt.args.report)
+			got := FromSauceReport(tt.args.report)
 
 			// Replicate IDs as they are random
 			for idx := range got {
 				tt.want[idx].ID = got[idx].ID
 			}
 
-			if (err != nil) != tt.wantErr {
-				t.Errorf("FromSauceReport() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("FromSauceReport() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFromJUnit(t *testing.T) {
+	type args struct {
+		suites junit.TestSuites
+	}
+	tests := []struct {
+		name string
+		args args
+		want []TestRun
+	}{
+		{
+			name: "Basic test",
+			args: args{
+				suites: junit.TestSuites{
+					TestSuites: []junit.TestSuite{
+						{
+							Name:   "Test #1",
+							Tests:  2,
+							Errors: 1,
+							Time:   "10.45",
+							TestCases: []junit.TestCase{
+								{
+									Name:      "Test #1.1",
+									Status:    StatePassed,
+									Time:      "5.40",
+									Timestamp: "2022-12-12T01:01:01Z",
+									ClassName: "ClassName",
+								},
+								{
+									Name:      "Test #1.2",
+									Status:    StateFailed,
+									Time:      "5.05",
+									Timestamp: "2022-12-13T01:01:01Z",
+									ClassName: "ClassName",
+									Failure:   "dummy-error-message",
+								},
+							},
+						},
+					},
+				},
+			},
+			want: []TestRun{
+				{
+					Name:         "ClassName.Test #1.1",
+					Status:       StatePassed,
+					CreationTime: time.Date(2022, 12, 12, 1, 1, 1, 0, time.UTC),
+					StartTime:    time.Date(2022, 12, 12, 1, 1, 1, 0, time.UTC),
+					Duration:     5,
+					EndTime:      time.Date(2022, 12, 12, 1, 1, 6, 0, time.UTC),
+				},
+				{
+					Name:         "ClassName.Test #1.2",
+					Status:       StateFailed,
+					CreationTime: time.Date(2022, 12, 13, 1, 1, 1, 0, time.UTC),
+					StartTime:    time.Date(2022, 12, 13, 1, 1, 1, 0, time.UTC),
+					Duration:     5,
+					EndTime:      time.Date(2022, 12, 13, 1, 1, 6, 0, time.UTC),
+					Errors: []TestRunError{
+						{
+							Message: "dummy-error-message",
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := FromJUnit(tt.args.suites)
+
+			// Replicate IDs as they are random
+			for idx := range got {
+				tt.want[idx].ID = got[idx].ID
+			}
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("FromJUnit() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
