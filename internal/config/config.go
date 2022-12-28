@@ -447,5 +447,9 @@ func ValidateRetrySettings(cfg SauceConfig) bool {
 		log.Error().Int("maxAttempt", cfg.MaxAttempt).Int("minPass", cfg.MinPass).Msg(msg.InvalidMinPassAndMaxAttempt)
 		return false
 	}
+	if cfg.MaxAttempt > 1 && cfg.MinPass < 1 {
+		log.Error().Int("maxAttempt", cfg.MaxAttempt).Int("minPass", cfg.MinPass).Msg(msg.InvalidMinPass)
+		return false
+	}
 	return true
 }

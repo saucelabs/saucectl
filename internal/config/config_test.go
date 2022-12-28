@@ -306,6 +306,14 @@ func TestValidateRetrySettings(t *testing.T) {
 			want: false,
 		},
 		{
+			name: "should return error when minPass is less than 1",
+			cfg: SauceConfig{
+				MaxAttempt: 3,
+				MinPass:    0,
+			},
+			want: false,
+		},
+		{
 			name: "should not return error when only setting retries",
 			cfg: SauceConfig{
 				Retries: 2,
