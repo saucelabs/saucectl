@@ -146,7 +146,7 @@ func deepConvert(suite saucereport.Suite) []TestRun {
 			Status:       uniformizeJSONStatus(test.Status),
 			CreationTime: test.StartTime,
 			StartTime:    test.StartTime,
-			EndTime:      test.StartTime.Add(time.Duration(test.Duration)),
+			EndTime:      test.StartTime.Add(time.Duration(test.Duration) * time.Second),
 			Duration:     test.Duration,
 		}
 		if test.Status == StateFailed && test.Output != "" {
@@ -168,6 +168,7 @@ func deepConvert(suite saucereport.Suite) []TestRun {
 func uniformizeJSONStatus(status string) string {
 	switch status {
 	case "failed":
+		fallthrough
 	case "error":
 		return StateFailed
 	case "skipped":
