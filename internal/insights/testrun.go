@@ -1,11 +1,15 @@
 package insights
 
 import (
+	"fmt"
+	"strconv"
 	"time"
+
+	"github.com/rs/zerolog/log"
+	"github.com/xtgo/uuid"
 
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/saucereport"
-	"github.com/xtgo/uuid"
 )
 
 // TestRun represents a
@@ -80,7 +84,46 @@ const (
 )
 
 func FromJUnit(suites junit.TestSuites) ([]TestRun, error) {
-	return []TestRun{}, nil
+	var testRuns []TestRun
+
+	for _, s := range suites.TestSuites {
+		for _, ss := range s.TestCases {
+			var startDate time.Time
+			var err error
+			if ss.Timestamp == "" {
+				startDate, err = time.Parse(time.RFC3339, ss.Timestamp)
+				if err != nil {
+					log.Warn().Err(err).Msg("unable to parse date. using time.Now().")
+					startDate = time.Now()
+				}
+			}
+			duration, err := strconv.ParseFloat(ss.Time, 64)
+			if err != nil {
+				log.Warn().Err(err).Msg("unable to parse duration. using 0.")
+			}
+			endTime := startDate.Add(time.Duration(duration) * time.Second)
+			var failures []TestRunError
+			if ss.Failure != "" {
+				failures = []TestRunError{
+					{
+						Message: ss.Failure,
+					},
+				}
+			}
+			testRuns = append(testRuns, TestRun{
+				Name:         fmt.Sprintf("%s.%s", ss.ClassName, ss.Name),
+				ID:           uuid.NewRandom().String(),
+				Status:       ss.Error, // FIXME: Resolve status
+				CreationTime: startDate,
+				StartTime:    startDate,
+				EndTime:      endTime,
+				Duration:     int(duration),
+				Errors:       failures,
+			})
+		}
+	}
+
+	return testRuns, nil
 }
 
 func FromSauceReport(report saucereport.SauceReport) ([]TestRun, error) {
@@ -96,12 +139,13 @@ func deepConvert(suite saucereport.Suite) []TestRun {
 
 	for _, test := range suite.Tests {
 		newRun := TestRun{
-			Name:      test.Name,
-			ID:        uuid.NewRandom().String(),
-			Status:    test.Status, //FIXME: Uniformize
-			StartTime: test.StartTime,
-			EndTime:   test.StartTime.Add(time.Duration(test.Duration)),
-			Duration:  test.Duration,
+			Name:         test.Name,
+			ID:           uuid.NewRandom().String(),
+			Status:       test.Status, //FIXME: Uniformize
+			CreationTime: test.StartTime,
+			StartTime:    test.StartTime,
+			EndTime:      test.StartTime.Add(time.Duration(test.Duration)),
+			Duration:     test.Duration,
 		}
 		if test.Status == StateFailed && test.Output != "" {
 			newRun.Errors = []TestRunError{
