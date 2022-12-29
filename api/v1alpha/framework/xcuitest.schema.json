@@ -169,6 +169,9 @@
           },
           "timeout": {
             "$ref": "../subschema/common.schema.json#/definitions/timeout"
+          },
+          "rerun": {
+            "$ref": "../subschema/common.schema.json#/definitions/rerun"
           }
         },
         "anyOf": [

@@ -185,6 +185,9 @@
           },
           "timeZone": {
             "$ref": "../subschema/common.schema.json#/definitions/timeZone"
+          },
+          "rerun": {
+            "$ref": "../subschema/common.schema.json#/definitions/rerun"
           }
         },
         "required": [

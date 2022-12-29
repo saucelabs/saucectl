@@ -235,6 +235,9 @@
           },
           "appSettings": {
             "$ref": "../subschema/common.schema.json#/definitions/appSettings"
+          },
+          "rerun": {
+            "$ref": "../subschema/common.schema.json#/definitions/rerun"
           }
         },
         "anyOf": [

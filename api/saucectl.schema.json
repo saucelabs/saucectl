@@ -214,16 +214,6 @@
                     "type": "integer",
                     "minimum": 0
                   },
-                  "maxAttempt": {
-                    "description": "The maximum number of attempts to run a suite.",
-                    "type": "integer",
-                    "minimum": 1
-                  },
-                  "minPass": {
-                    "description": "The threshold of passed attempts.",
-                    "type": "integer",
-                    "minimum": 1
-                  },
                   "visibility": {
                     "description": "Set the visibility level of test results for suites run on Sauce Labs.",
                     "default": "team",
@@ -490,6 +480,22 @@
                 "timeZone": {
                   "description": "Specifies the timeZone for the suite.",
                   "type": "string"
+                },
+                "rerun": {
+                  "description": "Specifies rerun settings.",
+                  "type": "object",
+                  "properties": {
+                    "maxAttempt": {
+                      "description": "The maximum number of attempts to run a suite.",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "passThreshold": {
+                      "description": "The threshold of passed attempts.",
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
                 }
               },
               "required": [
@@ -702,16 +708,6 @@
                     "description": "The number of times to retry a failing suite.",
                     "type": "integer",
                     "minimum": 0
-                  },
-                  "maxAttempt": {
-                    "description": "The maximum number of attempts to run a suite.",
-                    "type": "integer",
-                    "minimum": 1
-                  },
-                  "minPass": {
-                    "description": "The threshold of passed attempts.",
-                    "type": "integer",
-                    "minimum": 1
                   },
                   "visibility": {
                     "description": "Set the visibility level of test results for suites run on Sauce Labs.",
@@ -1002,6 +998,22 @@
                 "timeZone": {
                   "description": "Specifies the timeZone for the suite.",
                   "type": "string"
+                },
+                "rerun": {
+                  "description": "Specifies rerun settings.",
+                  "type": "object",
+                  "properties": {
+                    "maxAttempt": {
+                      "description": "The maximum number of attempts to run a suite.",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "passThreshold": {
+                      "description": "The threshold of passed attempts.",
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
                 }
               },
               "required": [
@@ -1290,6 +1302,9 @@
                       }
                     }
                   }
+                },
+                "rerun": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/rerun"
                 }
               },
               "anyOf": [
@@ -1535,6 +1550,9 @@
                 },
                 "timeZone": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/timeZone"
+                },
+                "rerun": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/rerun"
                 }
               },
               "required": [
@@ -1780,6 +1798,9 @@
                 },
                 "timeout": {
                   "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
+                },
+                "rerun": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/rerun"
                 }
               },
               "required": [
@@ -2125,6 +2146,9 @@
                 },
                 "timeZone": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/timeZone"
+                },
+                "rerun": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/rerun"
                 }
               },
               "required": [
@@ -2324,6 +2348,9 @@
                 },
                 "timeout": {
                   "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
+                },
+                "rerun": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/rerun"
                 }
               },
               "anyOf": [
@@ -2596,6 +2623,9 @@
                 },
                 "timeZone": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/timeZone"
+                },
+                "rerun": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/rerun"
                 }
               },
               "required": [

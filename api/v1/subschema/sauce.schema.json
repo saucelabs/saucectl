@@ -62,16 +62,6 @@
           "type": "integer",
           "minimum": 0
         },
-        "maxAttempt": {
-          "description": "The maximum number of attempts to run a suite.",
-          "type": "integer",
-          "minimum": 1
-        },
-        "minPass": {
-          "description": "The threshold of passed attempts.",
-          "type": "integer",
-          "minimum": 1
-        },
         "visibility": {
           "description": "Set the visibility level of test results for suites run on Sauce Labs.",
           "default": "team",
