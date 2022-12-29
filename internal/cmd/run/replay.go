@@ -2,8 +2,9 @@ package run
 
 import (
 	"errors"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"os"
+
+	"github.com/saucelabs/saucectl/internal/msg"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 
@@ -60,6 +61,8 @@ func NewReplayCmd() *cobra.Command {
 	sc.Fset = cmd.Flags()
 
 	sc.String("name", "suite::name", "", "Set the name of the job as it will appear on Sauce Labs.")
+	sc.Int("maxAttempt", "suite::rerun::maxAttempt", 1, "Specifies the maximum number of attempts to run a suite (sauce mode only)")
+	sc.Int("passThreshold", "suite::rerun::passThreshold", 1, "Specifies the threshold of passed attempts (sauce mode only)")
 
 	// Browser & Platform
 	sc.String("browser", "suite::browserName", "chrome", "Set the browser to use. Only chrome is supported at this time.")

@@ -39,8 +39,6 @@ type SauceConfig struct {
 	Sauceignore string            `yaml:"sauceignore,omitempty" json:"sauceignore,omitempty"`
 	Experiments map[string]string `yaml:"experiments,omitempty" json:"experiments,omitempty"`
 	Retries     int               `yaml:"retries,omitempty" json:"-"`
-	MaxAttempt  int               `yaml:"maxAttempt,omitempty" json:"-"`
-	MinPass     int               `yaml:"minPass,omitempty" json:"-"`
 	Visibility  string            `yaml:"visibility,omitempty" json:"-"`
 	LaunchOrder LaunchOrder       `yaml:"launchOrder,omitempty" json:"launchOrder,omitempty"`
 }
@@ -182,6 +180,12 @@ type Npm struct {
 type Defaults struct {
 	Mode    string        `yaml:"mode,omitempty" json:"mode"`
 	Timeout time.Duration `yaml:"timeout,omitempty" json:"timeout"`
+}
+
+// Rerun represents rerun settings
+type Rerun struct {
+	MaxAttempt    int `yaml:"maxAttempt,omitempty" json:"maxAttempt,omitempty"`
+	PassThreshold int `yaml:"passThreshold,omitempty" json:"passThreshold,omitempty"`
 }
 
 // AppSettings represents override settings.
@@ -437,19 +441,16 @@ func ValidateVisibility(visibility string) bool {
 	return false
 }
 
-// ValidateRetrySettings checks the retries, maxAttempt and minPass settings
-func ValidateRetrySettings(cfg SauceConfig) bool {
-	if cfg.Retries > 0 && cfg.MaxAttempt > 1 {
-		log.Error().Int("retries", cfg.Retries).Int("maxAttempt", cfg.MaxAttempt).Msg(msg.ConflictRetriesAndMaxAttempt)
+// ValidateRerun checks the retries, maxAttempt and passThreshold settings
+func ValidateRerun(rerun Rerun) bool {
+	if rerun.MaxAttempt > 1 && rerun.PassThreshold < 1 {
+		log.Error().Int("maxAttempt", rerun.MaxAttempt).Int("passThreshold", rerun.PassThreshold).Msg(msg.InvalidPassThreshold)
 		return false
 	}
-	if cfg.MaxAttempt > 1 && cfg.MinPass > cfg.MaxAttempt {
-		log.Error().Int("maxAttempt", cfg.MaxAttempt).Int("minPass", cfg.MinPass).Msg(msg.InvalidMinPassAndMaxAttempt)
+	if rerun.MaxAttempt < rerun.PassThreshold {
+		log.Error().Int("maxAttempt", rerun.MaxAttempt).Int("passThreshold", rerun.PassThreshold).Msg(msg.InvalidPassThresholdAndMaxAttempt)
 		return false
 	}
-	if cfg.MaxAttempt > 1 && cfg.MinPass < 1 {
-		log.Error().Int("maxAttempt", cfg.MaxAttempt).Int("minPass", cfg.MinPass).Msg(msg.InvalidMinPass)
-		return false
-	}
+
 	return true
 }

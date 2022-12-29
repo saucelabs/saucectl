@@ -3,6 +3,7 @@ package suite
 import (
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/insights"
 )
 
@@ -20,6 +21,7 @@ type Suite struct {
 	PreExec          []string          `yaml:"preExec,omitempty" json:"preExec"`
 	TimeZone         string            `yaml:"timeZone,omitempty" json:"timeZone"`
 	Env              map[string]string `yaml:"env,omitempty" json:"env"`
+	Rerun            config.Rerun      `yaml:"rerun,omitempty" json:"rerun,omitempty"`
 }
 
 // SortByHistory sorts the suites in the order of job history

@@ -75,6 +75,7 @@ type Suite struct {
 	Shard             string            `yaml:"shard,omitempty" json:"-"`
 	PreExec           []string          `yaml:"preExec,omitempty" json:"preExec"`
 	TimeZone          string            `yaml:"timeZone,omitempty" json:"timeZone"`
+	Rerun             config.Rerun      `yaml:"rerun,omitempty" json:"rerun,omitempty"`
 }
 
 // SuiteConfig represents the configuration specific to a suite
@@ -303,10 +304,6 @@ func Validate(p *Project) error {
 	p.Playwright.Version = config.StandardizeVersionFormat(p.Playwright.Version)
 	if p.Playwright.Version == "" {
 		return errors.New(msg.MissingFrameworkVersionConfig)
-	}
-
-	if !config.ValidateRetrySettings(p.Sauce) {
-		return errors.New(msg.InvalidRetriesAndAttempt)
 	}
 
 	// Check rootDir exists.

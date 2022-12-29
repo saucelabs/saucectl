@@ -75,6 +75,7 @@ type Suite struct {
 	TestOptions        map[string]interface{} `yaml:"testOptions,omitempty" json:"testOptions"`
 	Timeout            time.Duration          `yaml:"timeout,omitempty" json:"timeout"`
 	AppSettings        config.AppSettings     `yaml:"appSettings,omitempty" json:"appSettings"`
+	Rerun              config.Rerun           `yaml:"rerun,omitempty" json:"rerun,omitempty"`
 }
 
 // Android constant
@@ -147,10 +148,6 @@ func Validate(p Project) error {
 		return errors.New(msg.NoTunnelSupport)
 	}
 
-	if !config.ValidateRetrySettings(p.Sauce) {
-		return errors.New(msg.InvalidRetriesAndAttempt)
-	}
-
 	if ok := config.ValidateVisibility(p.Sauce.Visibility); !ok {
 		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
 	}
@@ -195,6 +192,9 @@ func Validate(p Project) error {
 		}
 		if regio == region.USEast4 && len(suite.Emulators) > 0 {
 			return errors.New(msg.NoEmulatorSupport)
+		}
+		if !config.ValidateRerun(suite.Rerun) {
+			return fmt.Errorf(msg.InvalidRerun)
 		}
 	}
 

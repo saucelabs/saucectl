@@ -195,6 +195,10 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		displayName = fmt.Sprintf("%s (shard %d/%d)", displayName, shardIndex+1, numShards)
 	}
 
+	retries := r.Project.Sauce.Retries
+	if s.Rerun.MaxAttempt > 0 {
+		retries = 0
+	}
 	jobOpts <- job.StartOptions{
 		DisplayName:       displayName,
 		Timeout:           s.Timeout,
@@ -217,13 +221,13 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 			ID:     r.Project.Sauce.Tunnel.Name,
 			Parent: r.Project.Sauce.Tunnel.Owner,
 		},
-		Experiments: r.Project.Sauce.Experiments,
-		TestOptions: s.TestOptions,
-		Attempt:     0,
-		Retries:     r.Project.Sauce.Retries,
-		MaxAttempt:  r.Project.Sauce.MaxAttempt,
-		MinPass:     r.Project.Sauce.MinPass,
-		Visibility:  r.Project.Sauce.Visibility,
+		Experiments:   r.Project.Sauce.Experiments,
+		TestOptions:   s.TestOptions,
+		Attempt:       0,
+		Retries:       retries,
+		Visibility:    r.Project.Sauce.Visibility,
+		MaxAttempt:    s.Rerun.MaxAttempt,
+		PassThreshold: s.Rerun.PassThreshold,
 
 		// RDC Specific flags
 		RealDevice:        d.isRealDevice,

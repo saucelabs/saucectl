@@ -136,8 +136,6 @@ func Command() *cobra.Command {
 	sc.StringToString("experiment", "sauce::experiment", map[string]string{}, "Specifies a list of experimental flags and values")
 	sc.Bool("dry-run", "dryRun", false, "Simulate a test run without actually running any tests.")
 	sc.Int("retries", "sauce::retries", 0, "Retries specifies the number of times to retry a failed suite (sauce mode only)")
-	sc.Int("maxAttempt", "sauce::maxAttempt", 1, "Specifies the maximum number of attempts to run a suite (sauce mode only)")
-	sc.Int("minPass", "sauce::minPass", 1, "Specifies the threshold of passed attempts (sauce mode only)")
 	sc.String("launch-order", "sauce::launchOrder", "", `Launch jobs based on the failure rate. Jobs with the highest failure rate launch first. Supports values: ["fail rate"]`)
 
 	// Metadata

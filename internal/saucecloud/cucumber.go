@@ -105,6 +105,10 @@ func (r *CucumberRunner) runSuites(fileURI string) bool {
 	// Submit suites to work on
 	go func() {
 		for _, s := range suites {
+			retries := r.Project.Sauce.Retries
+			if s.Rerun.MaxAttempt > 0 {
+				retries = 0
+			}
 			jobOpts <- job.StartOptions{
 				ConfigFilePath:   r.Project.ConfigFilePath,
 				DisplayName:      s.Name,
@@ -126,10 +130,10 @@ func (r *CucumberRunner) runSuites(fileURI string) bool {
 				RunnerVersion:    r.Project.RunnerVersion,
 				Experiments:      r.Project.Sauce.Experiments,
 				Attempt:          0,
-				Retries:          r.Project.Sauce.Retries,
-				MaxAttempt:       r.Project.Sauce.MaxAttempt,
-				MinPass:          r.Project.Sauce.MinPass,
+				Retries:          retries,
 				Visibility:       r.Project.Sauce.Visibility,
+				MaxAttempt:       s.Rerun.MaxAttempt,
+				PassThreshold:    s.Rerun.PassThreshold,
 			}
 		}
 	}()

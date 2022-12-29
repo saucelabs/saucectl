@@ -109,6 +109,7 @@ type Suite struct {
 	Shard              string                 `yaml:"shard,omitempty" json:"-"`
 	Headless           bool                   `yaml:"headless,omitempty" json:"headless"`
 	TimeZone           string                 `yaml:"timeZone,omitempty" json:"timeZone"`
+	Rerun              config.Rerun           `yaml:"rerun,omitempty" json:"rerun,omitempty"`
 	// TypeScript compiling options
 	CompilerOptions CompilerOptions `yaml:"compilerOptions,omitempty" json:"compilerOptions"`
 	// Deprecated. Reserved for future use for actual devices.
@@ -234,10 +235,6 @@ func Validate(p *Project) error {
 	regio := region.FromString(p.Sauce.Region)
 	if regio == region.None {
 		return errors.New(msg.MissingRegion)
-	}
-
-	if !config.ValidateRetrySettings(p.Sauce) {
-		return errors.New(msg.InvalidRetriesAndAttempt)
 	}
 
 	if ok := config.ValidateVisibility(p.Sauce.Visibility); !ok {

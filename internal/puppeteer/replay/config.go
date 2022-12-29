@@ -51,7 +51,8 @@ type Suite struct {
 	BrowserVersion string        `yaml:"browserVersion,omitempty" json:"browserVersion,omitempty"`
 	Platform       string        `yaml:"platform,omitempty" json:"platform,omitempty"`
 
-	Recordings []string `yaml:"recordings,omitempty" json:"-"`
+	Recordings []string     `yaml:"recordings,omitempty" json:"-"`
+	Rerun      config.Rerun `yaml:"rerun,omitempty" json:"rerun,omitempty"`
 }
 
 // FromFile creates a new replay Project based on the filepath cfgPath.
@@ -115,10 +116,6 @@ func Validate(p *Project) error {
 		return errors.New(msg.MissingRegion)
 	}
 
-	if !config.ValidateRetrySettings(p.Sauce) {
-		return errors.New(msg.InvalidRetriesAndAttempt)
-	}
-
 	if ok := config.ValidateVisibility(p.Sauce.Visibility); !ok {
 		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
 	}
@@ -144,6 +141,9 @@ func Validate(p *Project) error {
 
 		if !rgx.MatchString(s.BrowserName) {
 			return fmt.Errorf("browser %s is not supported, please use chrome instead or leave empty for defaults", s.BrowserName)
+		}
+		if !config.ValidateRerun(s.Rerun) {
+			return fmt.Errorf(msg.InvalidRerun)
 		}
 	}
 

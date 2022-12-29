@@ -66,6 +66,7 @@ type Suite struct {
 	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
 	PreExec          []string          `yaml:"preExec,omitempty" json:"preExec"`
 	Options          Options           `yaml:"options,omitempty" json:"options"`
+	Rerun            config.Rerun      `yaml:"rerun,omitempty" json:"rerun,omitempty"`
 }
 
 // Options represents cucumber settings
@@ -165,10 +166,6 @@ func Validate(p *Project) error {
 		return errors.New(msg.MissingRegion)
 	}
 
-	if !config.ValidateRetrySettings(p.Sauce) {
-		return errors.New(msg.InvalidRetriesAndAttempt)
-	}
-
 	if ok := config.ValidateVisibility(p.Sauce.Visibility); !ok {
 		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
 	}
@@ -197,6 +194,10 @@ func Validate(p *Project) error {
 		}
 
 		p.Suites[i].Options.Paths = fpath.ExcludeFiles(files, excludedFiles)
+
+		if !config.ValidateRerun(v.Rerun) {
+			return fmt.Errorf(msg.InvalidRerun)
+		}
 	}
 
 	var err error

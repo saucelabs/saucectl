@@ -283,55 +283,40 @@ func TestShouldDownloadArtifact(t *testing.T) {
 	}
 }
 
-func TestValidateRetrySettings(t *testing.T) {
+func TestValidateRerunSettings(t *testing.T) {
 	testCases := []struct {
-		name string
-		cfg  SauceConfig
-		want bool
+		name  string
+		rerun Rerun
+		want  bool
 	}{
 		{
-			name: "should return error when setting retries and maxAttempt",
-			cfg: SauceConfig{
-				Retries:    1,
-				MaxAttempt: 3,
+			name: "should return error when setting passThreshold is greater than maxAttempt",
+			rerun: Rerun{
+				MaxAttempt:    3,
+				PassThreshold: 4,
 			},
 			want: false,
 		},
 		{
-			name: "should return error when setting minPass is greater than maxAttempt",
-			cfg: SauceConfig{
-				MaxAttempt: 3,
-				MinPass:    4,
+			name: "should return error when passThreshold is less than 1",
+			rerun: Rerun{
+				MaxAttempt:    3,
+				PassThreshold: 0,
 			},
 			want: false,
 		},
 		{
-			name: "should return error when minPass is less than 1",
-			cfg: SauceConfig{
-				MaxAttempt: 3,
-				MinPass:    0,
-			},
-			want: false,
-		},
-		{
-			name: "should not return error when only setting retries",
-			cfg: SauceConfig{
-				Retries: 2,
-			},
-			want: true,
-		},
-		{
-			name: "should not return error when setting valid maxAttempt and minPass",
-			cfg: SauceConfig{
-				MaxAttempt: 3,
-				MinPass:    2,
+			name: "should not return error when setting valid maxAttempt and passThreshold",
+			rerun: Rerun{
+				MaxAttempt:    3,
+				PassThreshold: 2,
 			},
 			want: true,
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := ValidateRetrySettings(tc.cfg)
+			got := ValidateRerun(tc.rerun)
 			assert2.Equal(t, tc.want, got)
 		})
 	}

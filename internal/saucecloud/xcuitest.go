@@ -117,6 +117,10 @@ func (r *XcuitestRunner) runSuites() bool {
 }
 
 func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, testAppFileID string, otherAppsIDs []string, s xcuitest.Suite, d config.Device) {
+	retries := r.Project.Sauce.Retries
+	if s.Rerun.MaxAttempt > 0 {
+		retries = 0
+	}
 	jobOpts <- job.StartOptions{
 		ConfigFilePath:   r.Project.ConfigFilePath,
 		CLIFlags:         r.Project.CLIFlags,
@@ -138,13 +142,13 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 			ID:     r.Project.Sauce.Tunnel.Name,
 			Parent: r.Project.Sauce.Tunnel.Owner,
 		},
-		Experiments: r.Project.Sauce.Experiments,
-		TestsToRun:  s.TestOptions.Class,
-		TestsToSkip: s.TestOptions.NotClass,
-		Attempt:     0,
-		Retries:     r.Project.Sauce.Retries,
-		MaxAttempt:  r.Project.Sauce.MaxAttempt,
-		MinPass:     r.Project.Sauce.MinPass,
+		Experiments:   r.Project.Sauce.Experiments,
+		TestsToRun:    s.TestOptions.Class,
+		TestsToSkip:   s.TestOptions.NotClass,
+		Attempt:       0,
+		Retries:       retries,
+		MaxAttempt:    s.Rerun.MaxAttempt,
+		PassThreshold: s.Rerun.PassThreshold,
 
 		// RDC Specific flags
 		RealDevice:        true,

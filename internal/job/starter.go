@@ -48,7 +48,7 @@ type StartOptions struct {
 	ScreenResolution  string                 `json:"screenResolution,omitempty"`
 	Retries           int                    `json:"-"`
 	MaxAttempt        int                    `json:"-"`
-	MinPass           int                    `json:"-"`
+	PassThreshold     int                    `json:"-"`
 	RunnerVersion     string                 `json:"runnerVersion,omitempty"`
 	Experiments       map[string]string      `json:"experiments,omitempty"`
 	TestOptions       map[string]interface{} `json:"testOptions,omitempty"`

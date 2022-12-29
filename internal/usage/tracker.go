@@ -84,8 +84,6 @@ func (p Properties) SetSauceConfig(c config.SauceConfig) Properties {
 	p["tunnel"] = c.Tunnel.Name
 	p["tunnel_owner"] = c.Tunnel.Owner
 	p["retries"] = c.Retries
-	p["max_attempt"] = c.MaxAttempt
-	p["min_pass"] = c.MinPass
 
 	return p
 }

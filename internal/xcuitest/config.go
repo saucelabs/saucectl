@@ -64,6 +64,7 @@ type Suite struct {
 	Devices            []config.Device    `yaml:"devices,omitempty" json:"devices"`
 	TestOptions        TestOptions        `yaml:"testOptions,omitempty" json:"testOptions"`
 	AppSettings        config.AppSettings `yaml:"appSettings,omitempty" json:"appSettings"`
+	Rerun              config.Rerun       `yaml:"rerun,omitempty" json:"rerun,omitempty"`
 }
 
 // IOS constant
@@ -131,10 +132,6 @@ func Validate(p Project) error {
 		return errors.New(msg.MissingRegion)
 	}
 
-	if !config.ValidateRetrySettings(p.Sauce) {
-		return errors.New(msg.InvalidRetriesAndAttempt)
-	}
-
 	if regio == region.USEast4 && p.Sauce.Tunnel.Name != "" {
 		return errors.New(msg.NoTunnelSupport)
 	}
@@ -180,6 +177,9 @@ func Validate(p Project) error {
 				return fmt.Errorf(msg.InvalidDeviceType,
 					device.Options.DeviceType, suite.Name, didx, strings.Join(config.SupportedDeviceTypes, ","))
 			}
+		}
+		if !config.ValidateRerun(suite.Rerun) {
+			return errors.New(msg.InvalidRerun)
 		}
 	}
 

@@ -116,6 +116,10 @@ func (r *PlaywrightRunner) runSuites(fileURI string) bool {
 			if s.PlaywrightVersion == "" {
 				s.PlaywrightVersion = r.Project.Playwright.Version
 			}
+			retries := r.Project.Sauce.Retries
+			if s.Rerun.MaxAttempt > 0 {
+				retries = 0
+			}
 			jobOpts <- job.StartOptions{
 				ConfigFilePath:   r.Project.ConfigFilePath,
 				CLIFlags:         r.Project.CLIFlags,
@@ -139,11 +143,11 @@ func (r *PlaywrightRunner) runSuites(fileURI string) bool {
 				RunnerVersion:    r.Project.RunnerVersion,
 				Experiments:      r.Project.Sauce.Experiments,
 				Attempt:          0,
-				Retries:          r.Project.Sauce.Retries,
-				MaxAttempt:       r.Project.Sauce.MaxAttempt,
-				MinPass:          r.Project.Sauce.MinPass,
+				Retries:          retries,
 				TimeZone:         s.TimeZone,
 				Visibility:       r.Project.Sauce.Visibility,
+				MaxAttempt:       s.Rerun.MaxAttempt,
+				PassThreshold:    s.Rerun.PassThreshold,
 			}
 		}
 	}()

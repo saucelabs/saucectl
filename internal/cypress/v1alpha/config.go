@@ -66,6 +66,7 @@ type Suite struct {
 	Headless         bool          `yaml:"headless,omitempty" json:"headless"`
 	PreExec          []string      `yaml:"preExec,omitempty" json:"preExec"`
 	TimeZone         string        `yaml:"timeZone,omitempty" json:"timeZone"`
+	Rerun            config.Rerun  `yaml:"rerun,omitempty" json:"rerun,omitempty"`
 }
 
 // SuiteConfig represents the cypress config overrides.
@@ -256,10 +257,6 @@ func (p *Project) Validate() error {
 		return errors.New(msg.MissingCypressVersion)
 	}
 
-	if !config.ValidateRetrySettings(p.GetSauceCfg()) {
-		return errors.New(msg.InvalidRetriesAndAttempt)
-	}
-
 	// Validate docker.
 	if p.Docker.FileTransfer != config.DockerFileMount && p.Docker.FileTransfer != config.DockerFileCopy {
 		return fmt.Errorf(msg.InvalidDockerFileTransferType,
@@ -318,6 +315,10 @@ func (p *Project) Validate() error {
 
 		if len(s.Config.TestFiles) == 0 {
 			return fmt.Errorf(msg.MissingTestFiles, s.Name)
+		}
+
+		if !config.ValidateRerun(s.Rerun) {
+			return fmt.Errorf(msg.InvalidRerun)
 		}
 	}
 

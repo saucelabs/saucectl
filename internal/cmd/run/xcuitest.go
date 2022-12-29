@@ -63,6 +63,8 @@ func NewXCUITestCmd() *cobra.Command {
 	sc.String("testApp", "xcuitest::testApp", "", "Specifies the test app")
 	sc.String("testAppDescription", "xcuitest::testAppDescription", "", "Specifies description for the testApp")
 	sc.StringSlice("otherApps", "xcuitest::otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
+	sc.Int("maxAttempt", "suite::rerun::maxAttempt", 1, "Specifies the maximum number of attempts to run a suite (sauce mode only)")
+	sc.Int("passThreshold", "suite::rerun::passThreshold", 1, "Specifies the threshold of passed attempts (sauce mode only)")
 
 	// Test Options
 	sc.StringSlice("testOptions.class", "suite::testOptions::class", []string{}, "Only run the specified classes. Requires --name to be set.")

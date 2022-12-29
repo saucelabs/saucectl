@@ -105,6 +105,10 @@ func (r *TestcafeRunner) runSuites(fileURI string) bool {
 	jobsCount := r.calcTestcafeJobsCount(r.Project.Suites)
 	go func() {
 		for _, s := range suites {
+			retries := r.Project.Sauce.Retries
+			if s.Rerun.MaxAttempt > 0 {
+				retries = 0
+			}
 			if len(s.Simulators) > 0 {
 				for _, d := range s.Simulators {
 					for _, pv := range d.PlatformVersions {
@@ -159,11 +163,11 @@ func (r *TestcafeRunner) runSuites(fileURI string) bool {
 					RunnerVersion:    r.Project.RunnerVersion,
 					Experiments:      r.Project.Sauce.Experiments,
 					Attempt:          0,
-					Retries:          r.Project.Sauce.Retries,
-					MaxAttempt:       r.Project.Sauce.MaxAttempt,
-					MinPass:          r.Project.Sauce.MinPass,
+					Retries:          retries,
 					TimeZone:         s.TimeZone,
 					Visibility:       r.Project.Sauce.Visibility,
+					MaxAttempt:       s.Rerun.MaxAttempt,
+					PassThreshold:    s.Rerun.PassThreshold,
 				}
 			}
 		}
