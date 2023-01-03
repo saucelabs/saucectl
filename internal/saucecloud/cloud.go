@@ -967,10 +967,10 @@ func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHi
 	return r.InsightsService.GetHistory(context.Background(), user, launchOrder)
 }
 
-func (r *CloudRunner) reportSuiteToInsights(res result) []insights.TestRun {
+func (r *CloudRunner) reportSuiteToInsights(res result) {
 	// Skip reporting if job is not completed
 	if !job.Done(res.job.Status) || res.skipped || res.job.ID == "" {
-		return []insights.TestRun{}
+		return
 	}
 
 	assets, err := r.JobService.GetJobAssetFileNames(context.Background(), res.job.ID, res.job.IsRDC)
@@ -985,12 +985,14 @@ func (r *CloudRunner) reportSuiteToInsights(res result) []insights.TestRun {
 		report, err := r.loadSauceTestReport(res.job.ID, res.job.IsRDC)
 		if err != nil {
 			log.Warn().Err(err).Str("action", "parsingJSON").Msg(msg.InsightsReportError)
+			return
 		}
 		testRuns = insights.FromSauceReport(report)
 	} else if arrayContains(assets, junit.JunitFileName) {
 		report, err := r.loadJUnitReport(res.job.ID, res.job.IsRDC)
 		if err != nil {
 			log.Warn().Err(err).Str("action", "parsingXML").Msg(msg.InsightsReportError)
+			return
 		}
 		testRuns = insights.FromJUnit(report)
 	}
@@ -1000,7 +1002,6 @@ func (r *CloudRunner) reportSuiteToInsights(res result) []insights.TestRun {
 			log.Warn().Err(err).Str("action", "posting").Msg(msg.InsightsReportError)
 		}
 	}
-	return testRuns
 }
 
 func (r *CloudRunner) loadSauceTestReport(jobID string, isRDC bool) (saucereport.SauceReport, error) {
