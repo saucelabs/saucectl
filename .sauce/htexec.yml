@@ -1,0 +1,19 @@
+apiVersion: v1alpha
+kind: htexec
+sauce:
+  region: us-west-1
+# defaults:
+suites:
+  - name: "pytest - 123"
+    image: "saucelabs/tests:v1"
+    entrypoint: "python -m pytest tests/integration"
+    files:
+      - src: "/path/to/local/conf.json"
+        dst: "/path/inside/container/conf.json"
+    artifacts:
+      - "/path/inside/container/file.log"
+    metadata: # Arbitrary Key-Value pairs
+      k1: v1
+      k2: v2
+    env: # Arbitrary Key-Value pairs
+      MY_FOO: bar

@@ -13,6 +13,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/apitest"
 	"github.com/saucelabs/saucectl/internal/apitesting"
 	"github.com/saucelabs/saucectl/internal/cucumber"
+	"github.com/saucelabs/saucectl/internal/htexec"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/webdriver"
@@ -72,6 +73,7 @@ var (
 	insightsClient   insights.Client
 	iamClient        iam.Client
 	apitestingClient apitesting.Client
+	htexecClient     htexec.Client
 
 	// ErrEmptySuiteName is thrown when a flag is specified that has a dependency on the --name flag.
 	ErrEmptySuiteName = errors.New(msg.EmptyAdhocSuiteName)
@@ -240,6 +242,8 @@ func preRun() error {
 
 	apitestingClient = apitesting.New("", creds.Username, creds.AccessKey, apitestingTimeout)
 
+	htexecClient = htexec.New("", creds, apitestingTimeout)
+
 	return nil
 }
 
@@ -271,6 +275,9 @@ func Run(cmd *cobra.Command) (int, error) {
 	}
 	if typeDef.Kind == cucumber.Kind {
 		return runCucumber(cmd)
+	}
+	if typeDef.Kind == htexec.Kind {
+		return runHTExec(cmd)
 	}
 
 	return 1, errors.New(msg.UnknownFrameworkConfig)
