@@ -76,7 +76,7 @@ type Suite struct {
 	TestOptions        map[string]interface{} `yaml:"testOptions,omitempty" json:"testOptions"`
 	Timeout            time.Duration          `yaml:"timeout,omitempty" json:"timeout"`
 	AppSettings        config.AppSettings     `yaml:"appSettings,omitempty" json:"appSettings"`
-	PassThreshold      config.PassThreshold   `yaml:"passThreshold,omitempty" json:"passThreshold,omitempty"`
+	PassThreshold      config.PassThreshold   `yaml:"passThreshold,omitempty" json:"-"`
 }
 
 // Android constant

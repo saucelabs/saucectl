@@ -65,7 +65,7 @@ type Suite struct {
 	Devices            []config.Device      `yaml:"devices,omitempty" json:"devices"`
 	TestOptions        TestOptions          `yaml:"testOptions,omitempty" json:"testOptions"`
 	AppSettings        config.AppSettings   `yaml:"appSettings,omitempty" json:"appSettings"`
-	PassThreshold      config.PassThreshold `yaml:"passThreshold,omitempty" json:"passThreshold,omitempty"`
+	PassThreshold      config.PassThreshold `yaml:"passThreshold,omitempty" json:"-"`
 }
 
 // IOS constant

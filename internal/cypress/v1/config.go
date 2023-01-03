@@ -66,7 +66,7 @@ type Suite struct {
 	Headless         bool                 `yaml:"headless,omitempty" json:"headless"`
 	PreExec          []string             `yaml:"preExec,omitempty" json:"preExec"`
 	TimeZone         string               `yaml:"timeZone,omitempty" json:"timeZone"`
-	PassThreshold    config.PassThreshold `yaml:"passThreshold,omitempty" json:"passThreshold,omitempty"`
+	PassThreshold    config.PassThreshold `yaml:"passThreshold,omitempty" json:"-"`
 }
 
 // SuiteConfig represents the cypress config overrides.

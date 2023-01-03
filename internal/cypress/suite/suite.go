@@ -21,7 +21,7 @@ type Suite struct {
 	PreExec          []string             `yaml:"preExec,omitempty" json:"preExec"`
 	TimeZone         string               `yaml:"timeZone,omitempty" json:"timeZone"`
 	Env              map[string]string    `yaml:"env,omitempty" json:"env"`
-	PassThreshold    config.PassThreshold `yaml:"passThreshold,omitempty" json:"passThreshold,omitempty"`
+	PassThreshold    config.PassThreshold `yaml:"passThreshold,omitempty" json:"-"`
 }
 
 // SortByHistory sorts the suites in the order of job history

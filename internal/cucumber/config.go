@@ -67,7 +67,7 @@ type Suite struct {
 	ScreenResolution string               `yaml:"screenResolution,omitempty" json:"screenResolution"`
 	PreExec          []string             `yaml:"preExec,omitempty" json:"preExec"`
 	Options          Options              `yaml:"options,omitempty" json:"options"`
-	PassThreshold    config.PassThreshold `yaml:"passThreshold,omitempty" json:"passThreshold,omitempty"`
+	PassThreshold    config.PassThreshold `yaml:"passThreshold,omitempty" json:"-"`
 }
 
 // Options represents cucumber settings

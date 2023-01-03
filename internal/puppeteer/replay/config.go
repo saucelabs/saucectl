@@ -52,7 +52,7 @@ type Suite struct {
 	Platform       string        `yaml:"platform,omitempty" json:"platform,omitempty"`
 
 	Recordings    []string             `yaml:"recordings,omitempty" json:"-"`
-	PassThreshold config.PassThreshold `yaml:"passThreshold,omitempty" json:"passThreshold,omitempty"`
+	PassThreshold config.PassThreshold `yaml:"passThreshold,omitempty" json:"-"`
 }
 
 // FromFile creates a new replay Project based on the filepath cfgPath.

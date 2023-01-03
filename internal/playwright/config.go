@@ -76,7 +76,7 @@ type Suite struct {
 	Shard             string               `yaml:"shard,omitempty" json:"-"`
 	PreExec           []string             `yaml:"preExec,omitempty" json:"preExec"`
 	TimeZone          string               `yaml:"timeZone,omitempty" json:"timeZone"`
-	PassThreshold     config.PassThreshold `yaml:"passThreshold,omitempty" json:"passThreshold,omitempty"`
+	PassThreshold     config.PassThreshold `yaml:"passThreshold,omitempty" json:"-"`
 }
 
 // SuiteConfig represents the configuration specific to a suite
