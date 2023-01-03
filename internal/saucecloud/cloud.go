@@ -975,8 +975,8 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 
 	assets, err := r.JobService.GetJobAssetFileNames(context.Background(), res.job.ID, res.job.IsRDC)
 	if err != nil {
-		// TODO: Update message
-		log.Warn().Err(err).Msg(msg.InsightsReportError)
+		log.Warn().Err(err).Str("action", "loadAssets").Msg(msg.InsightsReportError)
+		return
 	}
 
 	var testRuns []insights.TestRun
