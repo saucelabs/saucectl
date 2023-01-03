@@ -170,8 +170,8 @@
           "timeout": {
             "$ref": "../subschema/common.schema.json#/definitions/timeout"
           },
-          "rerun": {
-            "$ref": "../subschema/common.schema.json#/definitions/rerun"
+          "passThreshold": {
+            "$ref": "../subschema/common.schema.json#/definitions/passThreshold"
           }
         },
         "anyOf": [

@@ -117,7 +117,7 @@ func (r *PlaywrightRunner) runSuites(fileURI string) bool {
 				s.PlaywrightVersion = r.Project.Playwright.Version
 			}
 			retries := r.Project.Sauce.Retries
-			if s.Rerun.MaxAttempt > 0 {
+			if s.PassThreshold.MaxAttempts > 0 {
 				retries = 0
 			}
 			jobOpts <- job.StartOptions{
@@ -146,8 +146,8 @@ func (r *PlaywrightRunner) runSuites(fileURI string) bool {
 				Retries:          retries,
 				TimeZone:         s.TimeZone,
 				Visibility:       r.Project.Sauce.Visibility,
-				MaxAttempt:       s.Rerun.MaxAttempt,
-				PassThreshold:    s.Rerun.PassThreshold,
+				MaxAttempts:      s.PassThreshold.MaxAttempts,
+				PassCount:        s.PassThreshold.PassCount,
 			}
 		}
 	}()

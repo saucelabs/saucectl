@@ -283,40 +283,40 @@ func TestShouldDownloadArtifact(t *testing.T) {
 	}
 }
 
-func TestValidateRerunSettings(t *testing.T) {
+func TestValidatePassThresholdSettings(t *testing.T) {
 	testCases := []struct {
-		name  string
-		rerun Rerun
-		want  bool
+		name          string
+		passThreshold PassThreshold
+		want          bool
 	}{
 		{
-			name: "should return error when setting passThreshold is greater than maxAttempt",
-			rerun: Rerun{
-				MaxAttempt:    3,
-				PassThreshold: 4,
+			name: "should return error when setting passCount is greater than maxAttempts",
+			passThreshold: PassThreshold{
+				MaxAttempts: 3,
+				PassCount:   4,
 			},
 			want: false,
 		},
 		{
-			name: "should return error when passThreshold is less than 1",
-			rerun: Rerun{
-				MaxAttempt:    3,
-				PassThreshold: 0,
+			name: "should return error when passCount is less than 1",
+			passThreshold: PassThreshold{
+				MaxAttempts: 3,
+				PassCount:   0,
 			},
 			want: false,
 		},
 		{
-			name: "should not return error when setting valid maxAttempt and passThreshold",
-			rerun: Rerun{
-				MaxAttempt:    3,
-				PassThreshold: 2,
+			name: "should not return error when setting valid maxAttempts and passCount",
+			passThreshold: PassThreshold{
+				MaxAttempts: 3,
+				PassCount:   2,
 			},
 			want: true,
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := ValidateRerun(tc.rerun)
+			got := ValidatePassThreshold(tc.passThreshold)
 			assert2.Equal(t, tc.want, got)
 		})
 	}

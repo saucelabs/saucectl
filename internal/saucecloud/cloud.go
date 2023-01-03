@@ -329,7 +329,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 		jobData, skipped, err := r.runJob(opts)
 
 		if jobData.Passed {
-			opts.PassCount++
+			opts.CurrentPassCount++
 		}
 
 		if opts.Attempt < opts.Retries && !jobData.Passed && !skipped {
@@ -344,11 +344,11 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			continue
 		}
 
-		// Attempt starts from 0 while MaxAttempt starts from 1. So here is comparing Attempt with MaxAttempt-1
-		if opts.Attempt < opts.MaxAttempt-1 && opts.PassCount < opts.PassThreshold {
+		// Attempt starts from 0 while MaxAttempts starts from 1. So here is comparing Attempt with MaxAttempts-1
+		if opts.Attempt < opts.MaxAttempts-1 && opts.CurrentPassCount < opts.PassCount {
 			opts.Attempt++
 			jobOpts <- opts
-			log.Info().Str("suite", opts.DisplayName).Str("attempt", fmt.Sprintf("%d of %d", opts.Attempt+1, opts.MaxAttempt)).Msg("Retrying suite.")
+			log.Info().Str("suite", opts.DisplayName).Str("attempt", fmt.Sprintf("%d of %d", opts.Attempt+1, opts.MaxAttempts)).Msg("Retrying suite.")
 			continue
 		}
 

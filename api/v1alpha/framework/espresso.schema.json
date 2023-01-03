@@ -236,8 +236,8 @@
           "appSettings": {
             "$ref": "../subschema/common.schema.json#/definitions/appSettings"
           },
-          "rerun": {
-            "$ref": "../subschema/common.schema.json#/definitions/rerun"
+          "passThreshold": {
+            "$ref": "../subschema/common.schema.json#/definitions/passThreshold"
           }
         },
         "anyOf": [

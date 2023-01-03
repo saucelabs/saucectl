@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/fpath"
@@ -55,18 +56,18 @@ type Playwright struct {
 
 // Suite represents the playwright-cucumberjs test suite configuration.
 type Suite struct {
-	Name             string            `yaml:"name,omitempty" json:"name"`
-	BrowserName      string            `yaml:"browserName,omitempty" json:"browserName"`
-	BrowserVersion   string            `yaml:"browserVersion,omitempty" json:"browserVersion"`
-	PlatformName     string            `yaml:"platformName,omitempty" json:"platformName"`
-	Env              map[string]string `yaml:"env,omitempty" json:"env"`
-	Shard            string            `yaml:"shard,omitempty" json:"shard"`
-	Mode             string            `yaml:"mode,omitemty" json:"mode"`
-	Timeout          time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
-	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
-	PreExec          []string          `yaml:"preExec,omitempty" json:"preExec"`
-	Options          Options           `yaml:"options,omitempty" json:"options"`
-	Rerun            config.Rerun      `yaml:"rerun,omitempty" json:"rerun,omitempty"`
+	Name             string               `yaml:"name,omitempty" json:"name"`
+	BrowserName      string               `yaml:"browserName,omitempty" json:"browserName"`
+	BrowserVersion   string               `yaml:"browserVersion,omitempty" json:"browserVersion"`
+	PlatformName     string               `yaml:"platformName,omitempty" json:"platformName"`
+	Env              map[string]string    `yaml:"env,omitempty" json:"env"`
+	Shard            string               `yaml:"shard,omitempty" json:"shard"`
+	Mode             string               `yaml:"mode,omitemty" json:"mode"`
+	Timeout          time.Duration        `yaml:"timeout,omitempty" json:"timeout"`
+	ScreenResolution string               `yaml:"screenResolution,omitempty" json:"screenResolution"`
+	PreExec          []string             `yaml:"preExec,omitempty" json:"preExec"`
+	Options          Options              `yaml:"options,omitempty" json:"options"`
+	PassThreshold    config.PassThreshold `yaml:"passThreshold,omitempty" json:"passThreshold,omitempty"`
 }
 
 // Options represents cucumber settings
@@ -195,9 +196,12 @@ func Validate(p *Project) error {
 
 		p.Suites[i].Options.Paths = fpath.ExcludeFiles(files, excludedFiles)
 
-		if !config.ValidateRerun(v.Rerun) {
-			return fmt.Errorf(msg.InvalidRerun)
+		if !config.ValidatePassThreshold(v.PassThreshold) {
+			return fmt.Errorf(msg.InvalidPassThreshold)
 		}
+	}
+	if p.Sauce.Retries < 0 {
+		log.Warn().Int("retries", p.Sauce.Retries).Msg(msg.InvalidReries)
 	}
 
 	var err error

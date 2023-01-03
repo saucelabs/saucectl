@@ -318,8 +318,8 @@
           "timeZone": {
             "$ref": "../subschema/common.schema.json#/definitions/timeZone"
           },
-          "rerun": {
-            "$ref": "../subschema/common.schema.json#/definitions/rerun"
+          "passThreshold": {
+            "$ref": "../subschema/common.schema.json#/definitions/passThreshold"
           }
         },
         "required": [

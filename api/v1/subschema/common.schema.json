@@ -90,17 +90,17 @@
       "description": "Specifies the timeZone for the suite.",
       "type": "string"
     },
-    "rerun": {
-      "description": "Specifies rerun settings.",
+    "passThreshold": {
+      "description": "Specifies passThreshold settings.",
       "type": "object",
       "properties": {
-        "maxAttempt": {
+        "maxAttempts": {
           "description": "The maximum number of attempts to run a suite.",
           "type": "integer",
           "minimum": 1
         },
-        "passThreshold": {
-          "description": "The threshold of passed attempts.",
+        "passCount": {
+          "description": "The threshold of passed count.",
           "type": "integer",
           "minimum": 1
         }

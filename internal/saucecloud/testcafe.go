@@ -106,7 +106,7 @@ func (r *TestcafeRunner) runSuites(fileURI string) bool {
 	go func() {
 		for _, s := range suites {
 			retries := r.Project.Sauce.Retries
-			if s.Rerun.MaxAttempt > 0 {
+			if s.PassThreshold.MaxAttempts > 0 {
 				retries = 0
 			}
 			if len(s.Simulators) > 0 {
@@ -166,8 +166,8 @@ func (r *TestcafeRunner) runSuites(fileURI string) bool {
 					Retries:          retries,
 					TimeZone:         s.TimeZone,
 					Visibility:       r.Project.Sauce.Visibility,
-					MaxAttempt:       s.Rerun.MaxAttempt,
-					PassThreshold:    s.Rerun.PassThreshold,
+					MaxAttempts:      s.PassThreshold.MaxAttempts,
+					PassCount:        s.PassThreshold.PassCount,
 				}
 			}
 		}

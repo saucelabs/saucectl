@@ -481,17 +481,17 @@
                   "description": "Specifies the timeZone for the suite.",
                   "type": "string"
                 },
-                "rerun": {
-                  "description": "Specifies rerun settings.",
+                "passThreshold": {
+                  "description": "Specifies passThreshold settings.",
                   "type": "object",
                   "properties": {
-                    "maxAttempt": {
+                    "maxAttempts": {
                       "description": "The maximum number of attempts to run a suite.",
                       "type": "integer",
                       "minimum": 1
                     },
-                    "passThreshold": {
-                      "description": "The threshold of passed attempts.",
+                    "passCount": {
+                      "description": "The threshold of passed count.",
                       "type": "integer",
                       "minimum": 1
                     }
@@ -999,17 +999,17 @@
                   "description": "Specifies the timeZone for the suite.",
                   "type": "string"
                 },
-                "rerun": {
-                  "description": "Specifies rerun settings.",
+                "passThreshold": {
+                  "description": "Specifies passThreshold settings.",
                   "type": "object",
                   "properties": {
-                    "maxAttempt": {
+                    "maxAttempts": {
                       "description": "The maximum number of attempts to run a suite.",
                       "type": "integer",
                       "minimum": 1
                     },
-                    "passThreshold": {
-                      "description": "The threshold of passed attempts.",
+                    "passCount": {
+                      "description": "The threshold of passed count.",
                       "type": "integer",
                       "minimum": 1
                     }
@@ -1303,8 +1303,8 @@
                     }
                   }
                 },
-                "rerun": {
-                  "$ref": "#/allOf/0/then/properties/suites/items/properties/rerun"
+                "passThreshold": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
                 }
               },
               "anyOf": [
@@ -1551,8 +1551,8 @@
                 "timeZone": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/timeZone"
                 },
-                "rerun": {
-                  "$ref": "#/allOf/0/then/properties/suites/items/properties/rerun"
+                "passThreshold": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
                 }
               },
               "required": [
@@ -1799,8 +1799,8 @@
                 "timeout": {
                   "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
                 },
-                "rerun": {
-                  "$ref": "#/allOf/0/then/properties/suites/items/properties/rerun"
+                "passThreshold": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
                 }
               },
               "required": [
@@ -2147,8 +2147,8 @@
                 "timeZone": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/timeZone"
                 },
-                "rerun": {
-                  "$ref": "#/allOf/0/then/properties/suites/items/properties/rerun"
+                "passThreshold": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
                 }
               },
               "required": [
@@ -2349,8 +2349,8 @@
                 "timeout": {
                   "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
                 },
-                "rerun": {
-                  "$ref": "#/allOf/0/then/properties/suites/items/properties/rerun"
+                "passThreshold": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
                 }
               },
               "anyOf": [
@@ -2624,8 +2624,8 @@
                 "timeZone": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/timeZone"
                 },
-                "rerun": {
-                  "$ref": "#/allOf/0/then/properties/suites/items/properties/rerun"
+                "passThreshold": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
                 }
               },
               "required": [

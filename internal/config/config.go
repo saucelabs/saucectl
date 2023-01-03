@@ -182,10 +182,10 @@ type Defaults struct {
 	Timeout time.Duration `yaml:"timeout,omitempty" json:"timeout"`
 }
 
-// Rerun represents rerun settings
-type Rerun struct {
-	MaxAttempt    int `yaml:"maxAttempt,omitempty" json:"maxAttempt,omitempty"`
-	PassThreshold int `yaml:"passThreshold,omitempty" json:"passThreshold,omitempty"`
+// PassThreshold represents passThreshold settings
+type PassThreshold struct {
+	MaxAttempts int `yaml:"maxAttempts,omitempty" json:"maxAttempts,omitempty"`
+	PassCount   int `yaml:"passCount,omitempty" json:"passCount,omitempty"`
 }
 
 // AppSettings represents override settings.
@@ -441,14 +441,14 @@ func ValidateVisibility(visibility string) bool {
 	return false
 }
 
-// ValidateRerun checks the retries, maxAttempt and passThreshold settings
-func ValidateRerun(rerun Rerun) bool {
-	if rerun.MaxAttempt > 1 && rerun.PassThreshold < 1 {
-		log.Error().Int("maxAttempt", rerun.MaxAttempt).Int("passThreshold", rerun.PassThreshold).Msg(msg.InvalidPassThreshold)
+// ValidatePassThreshold checks the passThreshold settings
+func ValidatePassThreshold(passThreshold PassThreshold) bool {
+	if passThreshold.MaxAttempts > 1 && passThreshold.PassCount < 1 {
+		log.Error().Int("maxAttempts", passThreshold.MaxAttempts).Int("passCount", passThreshold.PassCount).Msg(msg.InvalidPassThreshold)
 		return false
 	}
-	if rerun.MaxAttempt < rerun.PassThreshold {
-		log.Error().Int("maxAttempt", rerun.MaxAttempt).Int("passThreshold", rerun.PassThreshold).Msg(msg.InvalidPassThresholdAndMaxAttempt)
+	if passThreshold.MaxAttempts < passThreshold.PassCount {
+		log.Error().Int("maxAttempts", passThreshold.MaxAttempts).Int("passCount", passThreshold.PassCount).Msg(msg.InvalidPassThresholdAndMaxAttempts)
 		return false
 	}
 

@@ -67,8 +67,8 @@ func NewCucumberCmd() *cobra.Command {
 	sc.StringSlice("scenario-tags", "suite::options::tags", []string{}, "Tag expression to filter which scenarios should be run")
 	sc.StringSlice("format", "suite::options::format", []string{}, "Name/path and (optionally) output file path of each formatter to use")
 	sc.Int("parallel", "suite::options::parallel", 0, "Run tests in parallel with the given number of worker processes, default: 0")
-	sc.Int("maxAttempt", "suite::rerun::maxAttempt", 1, "Specifies the maximum number of attempts to run a suite (sauce mode only)")
-	sc.Int("passThreshold", "suite::rerun::passThreshold", 1, "Specifies the threshold of passed attempts (sauce mode only)")
+	sc.Int("maxAttempts", "suite::passThreshold::maxAttempts", 1, "Specifies the maximum number of attempts to run a suite (sauce mode only)")
+	sc.Int("passCount", "suite::passThreshold::passCount", 1, "Specifies the threshold of passed count (sauce mode only)")
 
 	return cmd
 }

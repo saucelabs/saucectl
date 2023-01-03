@@ -54,19 +54,19 @@ type Project struct {
 
 // Suite represents the cypress test suite configuration.
 type Suite struct {
-	Name             string        `yaml:"name,omitempty" json:"name"`
-	Browser          string        `yaml:"browser,omitempty" json:"browser"`
-	BrowserVersion   string        `yaml:"browserVersion,omitempty" json:"browserVersion"`
-	PlatformName     string        `yaml:"platformName,omitempty" json:"platformName"`
-	Config           SuiteConfig   `yaml:"config,omitempty" json:"config"`
-	ScreenResolution string        `yaml:"screenResolution,omitempty" json:"screenResolution"`
-	Mode             string        `yaml:"mode,omitempty" json:"-"`
-	Timeout          time.Duration `yaml:"timeout,omitempty" json:"timeout"`
-	Shard            string        `yaml:"shard,omitempty" json:"-"`
-	Headless         bool          `yaml:"headless,omitempty" json:"headless"`
-	PreExec          []string      `yaml:"preExec,omitempty" json:"preExec"`
-	TimeZone         string        `yaml:"timeZone,omitempty" json:"timeZone"`
-	Rerun            config.Rerun  `yaml:"rerun,omitempty" json:"rerun,omitempty"`
+	Name             string               `yaml:"name,omitempty" json:"name"`
+	Browser          string               `yaml:"browser,omitempty" json:"browser"`
+	BrowserVersion   string               `yaml:"browserVersion,omitempty" json:"browserVersion"`
+	PlatformName     string               `yaml:"platformName,omitempty" json:"platformName"`
+	Config           SuiteConfig          `yaml:"config,omitempty" json:"config"`
+	ScreenResolution string               `yaml:"screenResolution,omitempty" json:"screenResolution"`
+	Mode             string               `yaml:"mode,omitempty" json:"-"`
+	Timeout          time.Duration        `yaml:"timeout,omitempty" json:"timeout"`
+	Shard            string               `yaml:"shard,omitempty" json:"-"`
+	Headless         bool                 `yaml:"headless,omitempty" json:"headless"`
+	PreExec          []string             `yaml:"preExec,omitempty" json:"preExec"`
+	TimeZone         string               `yaml:"timeZone,omitempty" json:"timeZone"`
+	PassThreshold    config.PassThreshold `yaml:"passThreshold,omitempty" json:"passThreshold,omitempty"`
 }
 
 // SuiteConfig represents the cypress config overrides.
@@ -317,9 +317,12 @@ func (p *Project) Validate() error {
 			return fmt.Errorf(msg.MissingTestFiles, s.Name)
 		}
 
-		if !config.ValidateRerun(s.Rerun) {
-			return fmt.Errorf(msg.InvalidRerun)
+		if !config.ValidatePassThreshold(s.PassThreshold) {
+			return fmt.Errorf(msg.InvalidPassThreshold)
 		}
+	}
+	if p.Sauce.Retries < 0 {
+		log.Warn().Int("retries", p.Sauce.Retries).Msg(msg.InvalidReries)
 	}
 
 	cfg, err := loadCypressConfiguration(p.RootDir, p.Cypress.ConfigFile, p.Sauce.Sauceignore)
@@ -526,6 +529,7 @@ func (p *Project) GetSuites() []suite.Suite {
 			PreExec:          s.PreExec,
 			TimeZone:         s.TimeZone,
 			Env:              s.Config.Env,
+			PassThreshold:    s.PassThreshold,
 		})
 	}
 	return suites

@@ -29,7 +29,7 @@ type StartOptions struct {
 	FrameworkVersion string `json:"frameworkVersion,omitempty"`
 
 	Attempt           int                    `json:"-"`
-	PassCount         int                    `json:"-"`
+	CurrentPassCount  int                    `json:"-"`
 	BrowserName       string                 `json:"browserName,omitempty"`
 	BrowserVersion    string                 `json:"browserVersion,omitempty"`
 	PlatformName      string                 `json:"platformName,omitempty"`
@@ -47,8 +47,8 @@ type StartOptions struct {
 	Tunnel            TunnelOptions          `json:"tunnel,omitempty"`
 	ScreenResolution  string                 `json:"screenResolution,omitempty"`
 	Retries           int                    `json:"-"`
-	MaxAttempt        int                    `json:"-"`
-	PassThreshold     int                    `json:"-"`
+	MaxAttempts       int                    `json:"-"`
+	PassCount         int                    `json:"-"`
 	RunnerVersion     string                 `json:"runnerVersion,omitempty"`
 	Experiments       map[string]string      `json:"experiments,omitempty"`
 	TestOptions       map[string]interface{} `json:"testOptions,omitempty"`
