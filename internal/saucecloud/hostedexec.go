@@ -33,6 +33,7 @@ func (r *HostedExecRunner) Run() (int, error) {
 		Metadata:   metadata,
 	})
 	if err != nil {
+		return 1, err
 	}
 
 	sigChan := r.registerInterruptOnSignal(runner.ID)
@@ -41,13 +42,14 @@ func (r *HostedExecRunner) Run() (int, error) {
 	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Msg("Started suite.")
 	run, err := r.PollRun(context.Background(), runner.ID)
 	if err != nil {
+		return 1, err
 	}
 	// TODO: What are the actual statuses?
 	if run.Status == "Completed" {
 		return 0, nil
 	}
 
-	return 0, nil
+	return 1, nil
 }
 
 func (r *HostedExecRunner) registerInterruptOnSignal(runID string) chan os.Signal {
