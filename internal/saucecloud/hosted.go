@@ -3,7 +3,6 @@ package saucecloud
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"os"
 	"os/signal"
 	"time"
@@ -36,10 +35,10 @@ func (r *HostedRunner) Run() (int, error) {
 	sigChan := r.registerInterruptOnSignal(runner.ID)
 	defer unregisterSignalCapture(sigChan)
 
-	fmt.Println("Started: ", runner.ID)
-	run, err := r.PollRun(context.Background(), "et")
+	run, err := r.PollRun(context.Background(), runner.ID)
 	if err != nil {
 	}
+	// TODO: What are the actual statuses?
 	if run.Status == "Completed" {
 		return 0, nil
 	}
@@ -70,12 +69,10 @@ func (r *HostedRunner) PollRun(ctx context.Context, id string) (htexec.RunnerDet
 	for {
 		select {
 		case <-ticker.C:
-			fmt.Println("Polling: ", id)
 			r, err := r.RunnerService.GetRun(ctx, id)
 			if err != nil {
 				return htexec.RunnerDetails{}, err
 			}
-			fmt.Println("Run status: ", r.Status)
 			if r.Status == "Completed" {
 				return r, nil
 			}
