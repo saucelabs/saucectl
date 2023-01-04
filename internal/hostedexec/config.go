@@ -1,4 +1,4 @@
-package htexec
+package hostedexec
 
 import "github.com/saucelabs/saucectl/internal/config"
 
