@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -246,7 +247,26 @@ func Validate(p *Project) error {
 		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchOrder, string(config.LaunchOrderFailRate))
 	}
 
+	if len(p.Suites) == 0 {
+		return errors.New(msg.EmptySuite)
+	}
+	suiteNames := make(map[string]bool)
 	for i, v := range p.Suites {
+		if _, seen := suiteNames[v.Name]; seen {
+			return fmt.Errorf(msg.DuplicateSuiteName, v.Name)
+		}
+		suiteNames[v.Name] = true
+
+		if len(v.Name) == 0 {
+			return fmt.Errorf(msg.MissingSuiteName, i)
+		}
+
+		for _, c := range v.Name {
+			if unicode.IsSymbol(c) {
+				return fmt.Errorf(msg.IllegalSymbol, c, v.Name)
+			}
+		}
+
 		// Force the user to migrate.
 		if len(v.Devices) != 0 {
 			return errors.New(msg.InvalidTestCafeDeviceSetting)
@@ -266,6 +286,10 @@ func Validate(p *Project) error {
 			}
 
 			p.Suites[i].Src = fpath.ExcludeFiles(files, excludedFiles)
+		}
+
+		if len(v.Simulators) == 0 && v.BrowserName == "" {
+			return fmt.Errorf(msg.MissingBrowserInSuite, v.Name)
 		}
 	}
 
