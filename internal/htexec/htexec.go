@@ -77,7 +77,7 @@ type Service interface {
 	TriggerRun(context.Context, RunnerSpec) (Runner, error)
 	// GetAllRuns(ctx context.Context, limit int, offset int) RunnerList
 	GetRun(ctx context.Context, id string) (RunnerDetails, error)
-	// StopRun(ctx context.Context, id string)
+	StopRun(ctx context.Context, id string) error
 	// GetEvents(ctx context.Context, id string) EventList
 	// GetStatus(ctx context.Context, id string) Status
 }
@@ -138,4 +138,22 @@ func (c *Client) GetRun(ctx context.Context, id string) (RunnerDetails, error) {
 	err = json.Unmarshal(body, &r)
 
 	return r, nil
+}
+
+func (c *Client) StopRun(ctx context.Context, runID string) error {
+	url := fmt.Sprintf("%s/hosted/image/runners/%s", c.URL, runID)
+
+	req, err := requesth.NewWithContext(ctx, http.MethodDelete, url, nil)
+	if err != nil {
+		return err
+	}
+
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return nil
 }

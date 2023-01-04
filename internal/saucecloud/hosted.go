@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"os/signal"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/htexec"
@@ -32,7 +33,10 @@ func (r *HostedRunner) Run() (int, error) {
 	if err != nil {
 	}
 
-	fmt.Println("Started %s", runner.ID)
+	sigChan := r.registerInterruptOnSignal(runner.ID)
+	defer unregisterSignalCapture(sigChan)
+
+	fmt.Println("Started: ", runner.ID)
 	run, err := r.PollRun(context.Background(), "et")
 	if err != nil {
 	}
@@ -41,6 +45,20 @@ func (r *HostedRunner) Run() (int, error) {
 	}
 
 	return 0, nil
+}
+
+func (r *HostedRunner) registerInterruptOnSignal(runID string) chan os.Signal {
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt)
+
+	go func(c <-chan os.Signal, runID string) {
+		sig := <-c
+		if sig == nil {
+			return
+		}
+		r.RunnerService.StopRun(context.Background(), runID)
+	}(sigChan, runID)
+	return sigChan
 }
 
 func (r *HostedRunner) PollRun(ctx context.Context, id string) (htexec.RunnerDetails, error) {
