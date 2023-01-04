@@ -117,7 +117,7 @@ func mapFiles(files []hostedexec.File) []hostedexec.FileData {
 func readFile(path string) string {
 	bytes, err := os.ReadFile(path)
 	if err != nil {
-		log.Warn().Str("file", path).Msg("Cannot read file.")
+		log.Warn().Str("file", path).Err(err).Msg("Cannot read file.")
 	}
 	return base64.StdEncoding.Strict().EncodeToString(bytes)
 }
