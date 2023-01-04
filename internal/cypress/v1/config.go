@@ -149,6 +149,7 @@ func (p *Project) SetDefaults() {
 		s := &p.Suites[k]
 		if s.PlatformName == "" {
 			s.PlatformName = "Windows 10"
+			log.Info().Msgf(msg.InfoUsingDefaultPlatform, s.PlatformName, s.Name)
 		}
 
 		if s.Timeout <= 0 {

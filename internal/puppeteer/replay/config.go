@@ -92,6 +92,7 @@ func SetDefaults(p *Project) {
 		s := &p.Suites[k]
 		if s.Platform == "" {
 			s.Platform = "Windows 10"
+			log.Info().Msgf(msg.InfoUsingDefaultPlatform, s.Platform, s.Name)
 		}
 
 		rgx := regexp.MustCompile(`^(?i)chrome$`)

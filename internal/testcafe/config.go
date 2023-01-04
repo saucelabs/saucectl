@@ -8,6 +8,8 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/fpath"
@@ -199,10 +201,10 @@ func SetDefaults(p *Project) {
 		// defaults on the suite level.
 		if suite.PlatformName == "" && len(suite.Simulators) == 0 {
 			suite.PlatformName = "Windows 10"
-
 			if strings.ToLower(suite.BrowserName) == "safari" {
 				suite.PlatformName = "macOS 11.00"
 			}
+			log.Info().Msgf(msg.InfoUsingDefaultPlatform, suite.PlatformName, suite.Name)
 		}
 
 		for j := range suite.Simulators {

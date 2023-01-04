@@ -66,6 +66,10 @@ const (
 	MissingRegion = "no sauce region set"
 	// EmptySuite indicates no suites in the config
 	EmptySuite = "no suites defined"
+	// MissingSuiteName indicates no suite name
+	MissingSuiteName = "suite name is not found for suite %d"
+	// DuplicateSuiteName indicates duplicate suite name
+	DuplicateSuiteName = "suite names must be unique, but found duplicate for '%s'"
 	// SuiteNameNotFound indicates it cannot find the specified suite by name
 	SuiteNameNotFound = "no suite named '%s' found"
 	// InvalidKeyValueInputFormat indicates wrong setting for key-value pairs
@@ -96,16 +100,14 @@ const (
 	NoEmulatorSupport = "emulators are currently not supported in your specified region"
 	// NoFrameworkSupport indicates lack of framework support for the specified region.
 	NoFrameworkSupport = "this framework is currently not supported in your specified region"
+	// InfoUsingDefaultPlatform indicates using the default value for platform.
+	InfoUsingDefaultPlatform = "using default platform '%s' for suite suite '%s'"
 )
 
 // cypress config settings
 const (
 	// MissingCypressVersion indicates no valid cypress version provided
 	MissingCypressVersion = "missing framework version. Check available versions here: https://docs.saucelabs.com/dev/cli/saucectl/#supported-frameworks-and-browsers"
-	// MissingSuiteName indicates no suite name
-	MissingSuiteName = "suite name is not found for suite %d"
-	// DuplicateSuiteName indicates duplicate suite name
-	DuplicateSuiteName = "suite names must be unique, but found duplicate for '%s'"
 	// IllegalSymbol indicates suitename contains illegal symbol
 	IllegalSymbol = "illegal symbol '%c' in suite name: '%s'"
 	// MissingBrowserInSuite indicates no browser specified

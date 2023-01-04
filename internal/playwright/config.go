@@ -8,6 +8,8 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/fpath"
@@ -156,6 +158,7 @@ func SetDefaults(p *Project) {
 		s := &p.Suites[k]
 		if s.PlatformName == "" {
 			s.PlatformName = "Windows 10"
+			log.Info().Msgf(msg.InfoUsingDefaultPlatform, s.PlatformName, s.Name)
 		}
 
 		if s.Timeout <= 0 {
