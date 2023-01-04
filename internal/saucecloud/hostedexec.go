@@ -44,7 +44,7 @@ func (r *HostedExecRunner) Run() (int, error) {
 		return 1, err
 	}
 
-	sigChan := r.registerInterruptOnSignal(runner.ID)
+	sigChan := r.registerInterruptOnSignal(runner.ID, suite.Name)
 	defer unregisterSignalCapture(sigChan)
 
 	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Msg("Started suite.")
@@ -60,7 +60,7 @@ func (r *HostedExecRunner) Run() (int, error) {
 	return 1, nil
 }
 
-func (r *HostedExecRunner) registerInterruptOnSignal(runID string) chan os.Signal {
+func (r *HostedExecRunner) registerInterruptOnSignal(runID string, suiteName string) chan os.Signal {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
@@ -72,8 +72,12 @@ func (r *HostedExecRunner) registerInterruptOnSignal(runID string) chan os.Signa
 			}
 			switch hr.state {
 			case running:
-				hr.RunnerService.StopRun(context.Background(), runID)
-				println("\nStopping run. Waiting for all in progress tests to be stopped... (press Ctrl-c again to exit without waiting)\n")
+				log.Info().Str("suite", suiteName).Msg("Stopping suite")
+				err := hr.RunnerService.StopRun(context.Background(), runID)
+				if err != nil {
+					log.Warn().Err(err).Str("suite", suiteName).Msg("Unable to stop suite.")
+				}
+				println("\nStopping run. Waiting for all tests in progress to be stopped... (press Ctrl-c again to exit without waiting)\n")
 				hr.state = stopping
 			case stopping:
 				os.Exit(1)
