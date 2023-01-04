@@ -277,7 +277,7 @@ func Run(cmd *cobra.Command) (int, error) {
 		return runCucumber(cmd)
 	}
 	if typeDef.Kind == hostedexec.Kind {
-		return runHTExec(cmd)
+		return runHostedExec(cmd)
 	}
 
 	return 1, errors.New(msg.UnknownFrameworkConfig)

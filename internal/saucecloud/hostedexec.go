@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/hostedexec"
 )
 
@@ -20,6 +21,8 @@ func (r *HostedExecRunner) Run() (int, error) {
 
 	metadata := make(map[string]string)
 	metadata["name"] = suite.Name
+
+	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Msg("Starting suite.")
 
 	runner, err := r.RunnerService.TriggerRun(context.Background(), hostedexec.RunnerSpec{
 		Image:      suite.Image,
@@ -35,6 +38,7 @@ func (r *HostedExecRunner) Run() (int, error) {
 	sigChan := r.registerInterruptOnSignal(runner.ID)
 	defer unregisterSignalCapture(sigChan)
 
+	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Msg("Started suite.")
 	run, err := r.PollRun(context.Background(), runner.ID)
 	if err != nil {
 	}
