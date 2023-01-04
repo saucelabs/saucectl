@@ -11,9 +11,17 @@ import (
 	"github.com/saucelabs/saucectl/internal/hostedexec"
 )
 
+type state uint8
+
+const (
+	running state = iota
+	stopping
+)
+
 type HostedExecRunner struct {
 	Project       hostedexec.Project
 	RunnerService hostedexec.Service
+	state         state
 }
 
 func (r *HostedExecRunner) Run() (int, error) {
@@ -56,13 +64,22 @@ func (r *HostedExecRunner) registerInterruptOnSignal(runID string) chan os.Signa
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
-	go func(c <-chan os.Signal, runID string) {
-		sig := <-c
-		if sig == nil {
-			return
+	go func(c <-chan os.Signal, runID string, hr *HostedExecRunner) {
+		for {
+			sig := <-c
+			if sig == nil {
+				return
+			}
+			switch hr.state {
+			case running:
+				hr.RunnerService.StopRun(context.Background(), runID)
+				println("\nStopping run. Waiting for all in progress tests to be stopped... (press Ctrl-c again to exit without waiting)\n")
+				hr.state = stopping
+			case stopping:
+				os.Exit(1)
+			}
 		}
-		r.RunnerService.StopRun(context.Background(), runID)
-	}(sigChan, runID)
+	}(sigChan, runID, r)
 	return sigChan
 }
 
