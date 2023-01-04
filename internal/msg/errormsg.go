@@ -102,6 +102,8 @@ const (
 const (
 	// MissingCypressVersion indicates no valid cypress version provided
 	MissingCypressVersion = "missing framework version. Check available versions here: https://docs.saucelabs.com/dev/cli/saucectl/#supported-frameworks-and-browsers"
+	// MissingSuiteName indicates no suite name
+	MissingSuiteName = "suite name is not found for suite %d"
 	// DuplicateSuiteName indicates duplicate suite name
 	DuplicateSuiteName = "suite names must be unique, but found duplicate for '%s'"
 	// IllegalSymbol indicates suitename contains illegal symbol

@@ -221,7 +221,11 @@ func (p *Project) Validate() error {
 		return errors.New(msg.EmptySuite)
 	}
 	suiteNames := make(map[string]bool)
-	for _, s := range p.Suites {
+	for idx, s := range p.Suites {
+		if len(s.Name) == 0 {
+			return fmt.Errorf(msg.MissingSuiteName, idx)
+		}
+
 		if _, seen := suiteNames[s.Name]; seen {
 			return fmt.Errorf(msg.DuplicateSuiteName, s.Name)
 		}
@@ -235,6 +239,10 @@ func (p *Project) Validate() error {
 
 		if s.Browser == "" {
 			return fmt.Errorf(msg.MissingBrowserInSuite, s.Name)
+		}
+
+		if s.PlatformName == "" {
+			return fmt.Errorf(msg.MissingPlatformName)
 		}
 
 		if s.Config.TestingType != "e2e" && s.Config.TestingType != "component" {
