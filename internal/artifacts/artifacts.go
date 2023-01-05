@@ -3,7 +3,6 @@ package artifacts
 // List represents artifact structure
 type List struct {
 	JobID string   `json:"jobID"`
-	IsRDC bool     `json:"realDevice"`
 	Items []string `json:"items"`
 }
 

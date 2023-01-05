@@ -125,10 +125,10 @@ func renderTable(lst artifacts.List) {
 	t.SetStyle(defaultTableStyle)
 	t.SuppressEmptyColumns()
 
-	t.AppendHeader(table.Row{"Name"})
+	t.AppendHeader(table.Row{"Items"})
 	t.SetColumnConfigs([]table.ColumnConfig{
 		{
-			Name: "Name",
+			Name: "Items",
 		},
 	})
 

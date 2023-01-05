@@ -32,6 +32,7 @@ func (s *ArtifactService) List(jobID string, isRDC bool) (artifacts.List, error)
 		return artifacts.List{}, err
 	}
 	return artifacts.List{
+		JobID: jobID,
 		Items: items,
 	}, nil
 }
