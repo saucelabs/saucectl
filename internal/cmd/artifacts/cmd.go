@@ -25,8 +25,6 @@ var (
 
 func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	var regio string
-	var isRDC bool
-	var jobID string
 
 	cmd := &cobra.Command{
 		Use:              "artifacts",
@@ -53,7 +51,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 				Credentials: creds,
 			}
 
-			artifactSvc = saucecloud.NewArtifactService(restoClient, rdcClient, testcompClient, jobID, isRDC)
+			artifactSvc = saucecloud.NewArtifactService(restoClient, rdcClient, testcompClient)
 
 			return nil
 		},
@@ -61,10 +59,6 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 
 	flags := cmd.PersistentFlags()
 	flags.StringVarP(&regio, "region", "r", "us-west-1", "The Sauce Labs region. Options: us-west-1, eu-central-1.")
-	flags.BoolVar(&isRDC, "rdc", false, "Get RDC job details")
-	flags.StringVarP(&jobID, "job", "j", "", "Target job id")
-
-	_ = cmd.MarkFlagRequired("job")
 
 	cmd.AddCommand(
 		DownloadCommand(),

@@ -19,6 +19,8 @@ import (
 func DownloadCommand() *cobra.Command {
 	var targetDir string
 	var out string
+	var jobID string
+	var isRDC bool
 
 	cmd := &cobra.Command{
 		Use:   "download artifacts",
@@ -42,19 +44,23 @@ func DownloadCommand() *cobra.Command {
 			}()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return download(args[0], targetDir, out)
+			return download(args[0], jobID, targetDir, out, isRDC)
 		},
 	}
 
 	flags := cmd.Flags()
+	flags.StringVar(&jobID, "job", "", "Specified job ID.")
 	flags.StringVar(&targetDir, "target-dir", "", "Optional target dir")
 	flags.StringVarP(&out, "out", "o", "text", "Output format to the console. Options: text, json.")
+	flags.BoolVar(&isRDC, "rdc", false, "Get RDC job details")
+
+	_ = cmd.MarkFlagRequired("job")
 
 	return cmd
 }
 
-func download(filePattern, targetDir, outputFormat string) error {
-	lst, err := artifactSvc.List()
+func download(filePattern, jobID, targetDir, outputFormat string, isRDC bool) error {
+	lst, err := artifactSvc.List(jobID, isRDC)
 	if err != nil {
 		return err
 	}
@@ -65,7 +71,7 @@ func download(filePattern, targetDir, outputFormat string) error {
 	bar := newDownloadProgressBar(outputFormat, len(files))
 	for _, f := range files {
 		_ = bar.Add(1)
-		body, err := artifactSvc.Download(f)
+		body, err := artifactSvc.Download(jobID, f, isRDC)
 		if err != nil {
 			return fmt.Errorf("failed to get file: %w", err)
 		}

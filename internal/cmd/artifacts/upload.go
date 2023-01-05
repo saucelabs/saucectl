@@ -16,6 +16,7 @@ import (
 
 func UploadCommand() *cobra.Command {
 	var out string
+	var jobID string
 
 	cmd := &cobra.Command{
 		Use:   "upload",
@@ -55,7 +56,7 @@ func UploadCommand() *cobra.Command {
 				return fmt.Errorf("failed to read file: %w", err)
 			}
 
-			err = artifactSvc.Upload(finfo.Name(), content)
+			err = artifactSvc.Upload(jobID, finfo.Name(), false, content)
 			if err != nil {
 				return fmt.Errorf("failed to upload file: %w", err)
 			}
@@ -78,6 +79,9 @@ func UploadCommand() *cobra.Command {
 
 	flags := cmd.Flags()
 	flags.StringVarP(&out, "out", "o", "text", "Output out to the console. Options: text, json.")
+	flags.StringVar(&jobID, "job", "", "Specified job ID.")
+
+	_ = cmd.MarkFlagRequired("job")
 
 	return cmd
 }

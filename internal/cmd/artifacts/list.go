@@ -58,6 +58,7 @@ var defaultTableStyle = table.Style{
 
 func ListCommand() *cobra.Command {
 	var out string
+	var isRDC bool
 
 	cmd := &cobra.Command{
 		Use: "list",
@@ -65,6 +66,13 @@ func ListCommand() *cobra.Command {
 			"ls",
 		},
 		Short: "Returns the list of artifacts for the specified job.",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 || args[0] == "" {
+				return errors.New("no job ID specified")
+			}
+
+			return nil
+		},
 		PreRun: func(cmd *cobra.Command, args []string) {
 			tracker := segment.DefaultTracker
 
@@ -77,17 +85,18 @@ func ListCommand() *cobra.Command {
 			}()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return list(out)
+			return list(args[0], out, isRDC)
 		},
 	}
 	flags := cmd.PersistentFlags()
 	flags.StringVarP(&out, "out", "o", "text", "Output format to the console. Options: text, json.")
+	flags.BoolVar(&isRDC, "rdc", false, "Get RDC job details")
 
 	return cmd
 }
 
-func list(outputFormat string) error {
-	lst, err := artifactSvc.List()
+func list(jobID, outputFormat string, isRDC bool) error {
+	lst, err := artifactSvc.List(jobID, isRDC)
 	if err != nil {
 		return fmt.Errorf("failed to get artifacts list: %w", err)
 	}
