@@ -60,7 +60,7 @@ var (
 	githubTimeout       = 2 * time.Second
 	insightsTimeout     = 10 * time.Second
 	iamTimeout          = 10 * time.Second
-	apitestingTimeout   = 10 * time.Second
+	apitestingTimeout   = 30 * time.Second
 
 	typeDef config.TypeDef
 

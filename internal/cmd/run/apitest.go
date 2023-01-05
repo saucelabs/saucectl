@@ -15,6 +15,9 @@ func runApitest() (int, error) {
 		return 1, err
 	}
 
+	if err := applyApitestFlags(&p); err != nil {
+		return 1, err
+	}
 	apitest.SetDefaults(&p)
 	if err := apitest.Validate(p); err != nil {
 		return 1, err
@@ -33,9 +36,18 @@ func runApitest() (int, error) {
 				Dst: os.Stdout,
 			},
 		},
-		Async: gFlags.async,
+		Async:         gFlags.async,
 		TunnelService: &restoClient,
 	}
 
 	return r.RunProject()
+}
+
+func applyApitestFlags(p *apitest.Project) error {
+	if gFlags.selectedSuite != "" {
+		if err := apitest.FilterSuites(p, gFlags.selectedSuite); err != nil {
+			return err
+		}
+	}
+	return nil
 }
