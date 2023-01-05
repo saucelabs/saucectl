@@ -25,7 +25,7 @@ func NewArtifactService(restoClient resto.Client, rdcClient rdc.Client, testcomp
 	}
 }
 
-// List returns a artifact list
+// List returns an artifact list
 func (s *ArtifactService) List(jobID string, isRDC bool) (artifacts.List, error) {
 	items, err := s.GetJobAssetFileNames(context.Background(), jobID, isRDC)
 	if err != nil {
