@@ -51,6 +51,7 @@ cypress-ci: build-linux
 schema:
 	$(eval INPUT_SCHEMA := $(shell pwd)/api/global.schema.json)
 	$(eval OUTPUT_SCHEMA := $(shell pwd)/api/saucectl.schema.json)
+	$(eval OUTPUT_EMBED_SCHEMA := $(shell pwd)/internal/config/saucectl.schema.json)
 	pushd scripts/json-schema-bundler/ && \
-	npm run bundle -- -s $(INPUT_SCHEMA) -o $(OUTPUT_SCHEMA) && \
+	npm run bundle -- -s $(INPUT_SCHEMA) -o $(OUTPUT_SCHEMA) -o $(OUTPUT_EMBED_SCHEMA) && \
 	popd
