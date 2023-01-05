@@ -6,6 +6,9 @@ import (
 	"os"
 	"strings"
 	"time"
+	"unicode"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -155,6 +158,7 @@ func SetDefaults(p *Project) {
 		s := &p.Suites[k]
 		if s.PlatformName == "" {
 			s.PlatformName = "Windows 10"
+			log.Info().Msgf(msg.InfoUsingDefaultPlatform, s.PlatformName, s.Name)
 		}
 
 		if s.Timeout <= 0 {
@@ -325,12 +329,30 @@ func Validate(p *Project) error {
 		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchOrder, string(config.LaunchOrderFailRate))
 	}
 
+	suiteNames := make(map[string]bool)
+	for idx, s := range p.Suites {
+		if len(s.Name) == 0 {
+			return fmt.Errorf(msg.MissingSuiteName, idx)
+		}
+
+		if _, seen := suiteNames[s.Name]; seen {
+			return fmt.Errorf(msg.DuplicateSuiteName, s.Name)
+		}
+		suiteNames[s.Name] = true
+
+		for _, c := range s.Name {
+			if unicode.IsSymbol(c) {
+				return fmt.Errorf(msg.IllegalSymbol, c, s.Name)
+			}
+		}
+	}
+
 	return nil
 }
 
 func checkSupportedBrowsers(p *Project) error {
 	for _, suite := range p.Suites {
-		if suite.Params.BrowserName != "" && !isSupportedBrowser(suite.Params.BrowserName) {
+		if suite.Params.BrowserName == "" || !isSupportedBrowser(suite.Params.BrowserName) {
 			return fmt.Errorf(msg.UnsupportedBrowser, suite.Params.BrowserName, strings.Join(supportedBrowsers, ", "))
 		}
 	}
