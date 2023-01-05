@@ -9,8 +9,6 @@ import (
 	"unicode"
 
 	"github.com/rs/zerolog/log"
-
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/fpath"

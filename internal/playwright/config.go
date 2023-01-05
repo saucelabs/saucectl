@@ -3,12 +3,11 @@ package playwright
 import (
 	"errors"
 	"fmt"
+
 	"os"
 	"strings"
 	"time"
 	"unicode"
-
-	"github.com/rs/zerolog/log"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/concurrency"
