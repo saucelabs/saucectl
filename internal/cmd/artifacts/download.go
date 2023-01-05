@@ -62,7 +62,7 @@ func download(filePattern, targetDir, outputFormat string) error {
 	files := fpath.MatchFiles(lst.Items, []string{filePattern})
 	lst.Items = files
 
-	bar := progressbar.Default(int64(len(files)))
+	bar := newDownloadProgressBar(outputFormat, len(files))
 	for _, f := range files {
 		bar.Add(1)
 		body, err := artifactSvc.Download(f)
@@ -103,4 +103,13 @@ func download(filePattern, targetDir, outputFormat string) error {
 	}
 
 	return nil
+}
+
+func newDownloadProgressBar(output string, count int) *progressbar.ProgressBar {
+	switch output {
+	case "json":
+		return progressbar.DefaultSilent(int64(count))
+	default:
+		return progressbar.Default(int64(count))
+	}
 }
