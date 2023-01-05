@@ -4,12 +4,15 @@ import (
 	"os"
 
 	"github.com/saucelabs/saucectl/internal/apitest"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/table"
 )
 
 func runApitest() (int, error) {
+	config.ValidateSchema(gFlags.cfgFilePath)
+
 	p, err := apitest.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err

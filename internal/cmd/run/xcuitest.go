@@ -13,6 +13,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
@@ -79,6 +80,8 @@ func NewXCUITestCmd() *cobra.Command {
 }
 
 func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags) (int, error) {
+	config.ValidateSchema(gFlags.cfgFilePath)
+
 	p, err := xcuitest.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err

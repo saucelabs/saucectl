@@ -104,6 +104,8 @@ func NewPlaywrightCmd() *cobra.Command {
 }
 
 func runPlaywright(cmd *cobra.Command) (int, error) {
+	config.ValidateSchema(gFlags.cfgFilePath)
+
 	p, err := playwright.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err

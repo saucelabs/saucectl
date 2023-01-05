@@ -2,7 +2,6 @@ package run
 
 import (
 	"errors"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"os"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
@@ -15,11 +14,13 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
@@ -92,6 +93,8 @@ func NewCypressCmd() *cobra.Command {
 }
 
 func runCypress(cmd *cobra.Command) (int, error) {
+	config.ValidateSchema(gFlags.cfgFilePath)
+
 	p, err := cypress.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err

@@ -7,6 +7,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cucumber"
 	"github.com/saucelabs/saucectl/internal/docker"
@@ -72,6 +73,8 @@ func NewCucumberCmd() *cobra.Command {
 }
 
 func runCucumber(cmd *cobra.Command) (int, error) {
+	config.ValidateSchema(gFlags.cfgFilePath)
+
 	p, err := cucumber.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err

@@ -2,30 +2,30 @@ package run
 
 import (
 	"errors"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"os"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 
-	"github.com/saucelabs/saucectl/internal/framework"
-	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
-	"github.com/saucelabs/saucectl/internal/viper"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
+	"github.com/saucelabs/saucectl/internal/viper"
 )
 
 // NewReplayCmd creates the 'run' command for replay.
@@ -70,6 +70,8 @@ func NewReplayCmd() *cobra.Command {
 }
 
 func runReplay(cmd *cobra.Command) (int, error) {
+	config.ValidateSchema(gFlags.cfgFilePath)
+
 	p, err := replay.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err

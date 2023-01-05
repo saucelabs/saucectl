@@ -13,6 +13,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
@@ -87,6 +88,8 @@ func NewEspressoCmd() *cobra.Command {
 }
 
 func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags) (int, error) {
+	config.ValidateSchema(gFlags.cfgFilePath)
+
 	p, err := espresso.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err

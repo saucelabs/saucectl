@@ -122,6 +122,8 @@ func NewTestcafeCmd() *cobra.Command {
 }
 
 func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags) (int, error) {
+	config.ValidateSchema(gFlags.cfgFilePath)
+
 	p, err := testcafe.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err

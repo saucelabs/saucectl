@@ -81,6 +81,8 @@ func NewPuppeteerCmd() *cobra.Command {
 }
 
 func runPuppeteer(cmd *cobra.Command) (int, error) {
+	config.ValidateSchema(gFlags.cfgFilePath)
+
 	p, err := puppeteer.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
