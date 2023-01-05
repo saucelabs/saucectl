@@ -64,7 +64,7 @@ func download(filePattern, targetDir, outputFormat string) error {
 
 	bar := newDownloadProgressBar(outputFormat, len(files))
 	for _, f := range files {
-		bar.Add(1)
+		_ = bar.Add(1)
 		body, err := artifactSvc.Download(f)
 		if err != nil {
 			return fmt.Errorf("failed to get file: %w", err)
