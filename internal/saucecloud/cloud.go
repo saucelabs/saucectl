@@ -22,6 +22,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
+	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
@@ -1032,6 +1033,10 @@ func arrayContains(list []string, want string) bool {
 }
 
 func enrichInsightTestRun(runs []insights.TestRun, jobID string, jobName string, details insightDetails, isRDC bool) {
+	var ciData ci.CI
+	provider := ci.GetProvider()
+	ciData = ci.GetCI(provider)
+
 	for idx := range runs {
 		runs[idx].Browser = details.Browser
 		runs[idx].BuildName = details.BuildName
@@ -1045,7 +1050,15 @@ func enrichInsightTestRun(runs []insights.TestRun, jobID string, jobName string,
 		}
 		runs[idx].Tags = details.Tags
 		runs[idx].Type = resolveType(details.Framework)
-		//FIXME: Resolve: runs[idx].CI
+
+		if ci.HasProvider(provider) {
+			runs[idx].CI = &insights.CI{
+				Branch:     ciData.RefName,
+				RefName:    ciData.RefName,
+				Repository: ciData.Repo,
+				CommitSha:  ciData.SHA,
+			}
+		}
 	}
 }
 
