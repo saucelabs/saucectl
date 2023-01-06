@@ -361,6 +361,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			if opts.CurrentPassCount >= opts.PassCount {
 				log.Info().Str("suite", opts.DisplayName).Msg("Passed threshold")
 				jobData.Status = job.StatePassed
+				jobData.Passed = true
 			} else {
 				log.Info().Str("suite", opts.DisplayName).Msg("Failed to pass threshold")
 				jobData.Status = job.StateFailed

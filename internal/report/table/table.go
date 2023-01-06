@@ -104,7 +104,6 @@ func (r *Reporter) Render() {
 			inProgress++
 		}
 		if ts.Status == job.StateFailed {
-			ts.Status = job.StateFailed
 			errors++
 		}
 		if ts.TimedOut {
