@@ -92,6 +92,7 @@ func SetDefaults(p *Project) {
 		s := &p.Suites[k]
 		if s.Platform == "" {
 			s.Platform = "Windows 10"
+			log.Info().Msgf(msg.InfoUsingDefaultPlatform, s.Platform, s.Name)
 		}
 
 		rgx := regexp.MustCompile(`^(?i)chrome$`)
@@ -122,8 +123,21 @@ func Validate(p *Project) error {
 		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchOrder, string(config.LaunchOrderFailRate))
 	}
 
+	if len(p.Suites) == 0 {
+		return errors.New(msg.EmptySuite)
+	}
+	suiteNames := make(map[string]bool)
 	rgx := regexp.MustCompile(`^(?i)(google)?chrome$`)
-	for _, s := range p.Suites {
+	for idx, s := range p.Suites {
+		if _, seen := suiteNames[s.Name]; seen {
+			return fmt.Errorf(msg.DuplicateSuiteName, s.Name)
+		}
+		suiteNames[s.Name] = true
+
+		if len(s.Name) == 0 {
+			return fmt.Errorf(msg.MissingSuiteName, idx)
+		}
+
 		if !rgx.MatchString(s.BrowserName) {
 			return fmt.Errorf("browser %s is not supported, please use chrome instead or leave empty for defaults", s.BrowserName)
 		}

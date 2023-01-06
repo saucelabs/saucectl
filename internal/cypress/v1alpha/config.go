@@ -148,6 +148,7 @@ func (p *Project) SetDefaults() {
 		s := &p.Suites[k]
 		if s.PlatformName == "" {
 			s.PlatformName = "Windows 10"
+			log.Info().Msgf(msg.InfoUsingDefaultPlatform, s.PlatformName, s.Name)
 		}
 
 		if s.Timeout <= 0 {
@@ -287,11 +288,15 @@ func (p *Project) Validate() error {
 		return errors.New(msg.EmptySuite)
 	}
 	suiteNames := make(map[string]bool)
-	for _, s := range p.Suites {
+	for idx, s := range p.Suites {
 		if _, seen := suiteNames[s.Name]; seen {
 			return fmt.Errorf(msg.DuplicateSuiteName, s.Name)
 		}
 		suiteNames[s.Name] = true
+
+		if len(s.Name) == 0 {
+			return fmt.Errorf(msg.MissingSuiteName, idx)
+		}
 
 		for _, c := range s.Name {
 			if unicode.IsSymbol(c) {
@@ -301,6 +306,10 @@ func (p *Project) Validate() error {
 
 		if s.Browser == "" {
 			return fmt.Errorf(msg.MissingBrowserInSuite, s.Name)
+		}
+
+		if s.PlatformName == "" {
+			return fmt.Errorf(msg.MissingPlatformName)
 		}
 
 		if len(s.Config.TestFiles) == 0 {
