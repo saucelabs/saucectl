@@ -1,6 +1,5 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
-  "$id": "https://raw.githubusercontent.com/saucelabs/saucectl/DEVX-2053-apply-jsonschema/api/v1alpha/framework/testcafe.schema.json",
   "title": "saucectl testcafe runner configuration",
   "description": "Configuration file for testcafe using saucectl",
   "type": "object",
