@@ -97,10 +97,7 @@ func GetProvider() Provider {
 
 // HasProvider returns true if a Provider is detected
 func HasProvider(provider Provider) bool {
-	if !reflect.DeepEqual(provider, None) {
-		return true
-	}
-	return false
+	return !reflect.DeepEqual(provider, None)
 }
 
 // GetCI returns the CI details if the code is executed in a known CI environment.
