@@ -103,7 +103,7 @@ func (r *Reporter) Render() {
 		if !job.Done(ts.Status) && !ts.TimedOut {
 			inProgress++
 		}
-		if ts.Status == job.StateFailed || !ts.PassThreshold {
+		if ts.Status == job.StateFailed {
 			ts.Status = job.StateFailed
 			errors++
 		}

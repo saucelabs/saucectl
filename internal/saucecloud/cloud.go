@@ -68,17 +68,16 @@ type CloudRunner struct {
 }
 
 type result struct {
-	name          string
-	browser       string
-	job           job.Job
-	skipped       bool
-	err           error
-	duration      time.Duration
-	startTime     time.Time
-	endTime       time.Time
-	attempts      int
-	retries       int
-	passThreshold bool
+	name      string
+	browser   string
+	job       job.Job
+	skipped   bool
+	err       error
+	duration  time.Duration
+	startTime time.Time
+	endTime   time.Time
+	attempts  int
+	retries   int
 }
 
 // ConsoleLogAsset represents job asset log file name.
@@ -176,21 +175,20 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				url = fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 			}
 			tr := report.TestResult{
-				Name:          res.name,
-				Duration:      res.duration,
-				StartTime:     res.startTime,
-				EndTime:       res.endTime,
-				Status:        res.job.TotalStatus(),
-				Browser:       browser,
-				Platform:      platform,
-				DeviceName:    res.job.BaseConfig.DeviceName,
-				URL:           url,
-				Artifacts:     artifacts,
-				Origin:        "sauce",
-				Attempts:      res.attempts,
-				RDC:           res.job.IsRDC,
-				TimedOut:      res.job.TimedOut,
-				PassThreshold: res.passThreshold,
+				Name:       res.name,
+				Duration:   res.duration,
+				StartTime:  res.startTime,
+				EndTime:    res.endTime,
+				Status:     res.job.TotalStatus(),
+				Browser:    browser,
+				Platform:   platform,
+				DeviceName: res.job.BaseConfig.DeviceName,
+				URL:        url,
+				Artifacts:  artifacts,
+				Origin:     "sauce",
+				Attempts:   res.attempts,
+				RDC:        res.job.IsRDC,
+				TimedOut:   res.job.TimedOut,
 			}
 
 			var files []string
@@ -359,24 +357,28 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			r.interrupted = true
 		}
 
-		var passThreshold = true
-		if opts.PassCount > 0 && opts.CurrentPassCount < opts.PassCount {
-			log.Info().Str("suite", opts.DisplayName).Msg("Passed threshold")
-			passThreshold = false
+		if opts.MaxAttempts != 0 {
+			if opts.CurrentPassCount >= opts.PassCount {
+				log.Info().Str("suite", opts.DisplayName).Msg("Passed threshold")
+				jobData.Status = job.StatePassed
+			} else {
+				log.Info().Str("suite", opts.DisplayName).Msg("Failed to pass threshold")
+				jobData.Status = job.StateFailed
+				jobData.Passed = false
+			}
 		}
 
 		results <- result{
-			name:          opts.DisplayName,
-			browser:       opts.BrowserName,
-			job:           jobData,
-			skipped:       skipped,
-			err:           err,
-			startTime:     opts.StartTime,
-			endTime:       time.Now(),
-			duration:      time.Since(start),
-			attempts:      opts.Attempt + 1,
-			retries:       opts.Retries,
-			passThreshold: passThreshold,
+			name:      opts.DisplayName,
+			browser:   opts.BrowserName,
+			job:       jobData,
+			skipped:   skipped,
+			err:       err,
+			startTime: opts.StartTime,
+			endTime:   time.Now(),
+			duration:  time.Since(start),
+			attempts:  opts.Attempt + 1,
+			retries:   opts.Retries,
 		}
 	}
 }
