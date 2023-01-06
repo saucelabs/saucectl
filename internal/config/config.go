@@ -13,6 +13,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/mitchellh/mapstructure"
 	"github.com/santhosh-tekuri/jsonschema/v5"
+
+	// httploader needs to be loaded to be able to fetch http-based schemas.
 	_ "github.com/santhosh-tekuri/jsonschema/v5/httploader"
 
 	"github.com/rs/zerolog/log"
