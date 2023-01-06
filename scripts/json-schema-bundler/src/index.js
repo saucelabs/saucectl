@@ -12,7 +12,7 @@ const args = yargs(hideBin(process.argv))
     })
     .option('out', {
         alias: 'o',
-        type: 'array',
+        type: 'string',
         description: 'The output schema filename.'
     })
     .demandOption(['schema', 'out'])
@@ -27,15 +27,13 @@ $RefParser.bundle(args.s, (err, schema) => {
         // including referenced files, combined into a single object.
         let schemaStr = JSON.stringify(schema, null, 2)
 
-        for (const outFile of args.o) {
-            fs.writeFile(outFile, schemaStr, function (err) {
-                if (err) {
-                    console.log(err);
-                    process.exit(1)
-                }
+        fs.writeFile(args.o, schemaStr, function (err) {
+            if (err) {
+                console.log(err);
+                process.exit(1)
+            }
 
-                console.log(`Successfully bundled schema: ${outFile}`)
-            });
-        }
+            console.log(`Successfully bundled schema: ${args.o}`)
+        });
     }
 });

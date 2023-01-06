@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://raw.githubusercontent.com/saucelabs/saucectl/DEVX-2053-apply-jsonschema/api/v1alpha/subschema/sauce.schema.json",
   "title": "saucectl sauce specific schema",
   "description": "Subschema for sauce specific settings",
   "type": "object",

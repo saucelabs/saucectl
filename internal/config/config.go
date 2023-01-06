@@ -1,7 +1,6 @@
 package config
 
 import (
-	_ "embed"
 	"errors"
 	"fmt"
 	"os"
@@ -14,6 +13,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/mitchellh/mapstructure"
 	"github.com/santhosh-tekuri/jsonschema/v5"
+	_ "github.com/santhosh-tekuri/jsonschema/v5/httploader"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -438,9 +438,6 @@ func ValidateVisibility(visibility string) bool {
 	return false
 }
 
-//go:embed saucectl.schema.json
-var schemaText string
-
 // ValidateSchema validates user config against the JSON Schema.
 // If validation fails for any reason, fail softly to avoid disturbing execution as this is not critical.
 func ValidateSchema(cfgFile string) {
@@ -460,11 +457,10 @@ func ValidateSchema(cfgFile string) {
 	}
 
 	compiler := jsonschema.NewCompiler()
-	if err = compiler.AddResource("schema.json", strings.NewReader(schemaText)); err != nil {
+	schema, err := compiler.Compile("https://raw.githubusercontent.com/saucelabs/saucectl/DEVX-2053-apply-jsonschema/api/saucectl.schema.json")
+	if err != nil {
 		return
 	}
-	schema := compiler.MustCompile("schema.json")
-
 	err = schema.Validate(m)
 	if err == nil {
 		return
