@@ -459,7 +459,7 @@ func ValidateSchema(cfgFile string) {
 	}
 
 	compiler := jsonschema.NewCompiler()
-	schema, err := compiler.Compile("https://raw.githubusercontent.com/saucelabs/saucectl/DEVX-2053-apply-jsonschema/api/saucectl.schema.json")
+	schema, err := compiler.Compile("https://raw.githubusercontent.com/saucelabs/saucectl/main/api/saucectl.schema.json")
 	if err != nil {
 		return
 	}
