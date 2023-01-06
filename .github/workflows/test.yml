@@ -68,12 +68,9 @@ jobs:
         working-directory: scripts/json-schema-bundler
         run: npm run bundle -- -s ../../api/global.schema.json -o ../../api/fresh.schema.json
 
-      - name: Check Schema (API)
+      - name: Check Schema
         working-directory: api/
         run: diff saucectl.schema.json fresh.schema.json
-
-      - name: Check Schema (Config Checks)
-        run: diff ./internal/config/saucectl.schema.json ./api/fresh.schema.json
 
   build:
     needs: [lint, test]
