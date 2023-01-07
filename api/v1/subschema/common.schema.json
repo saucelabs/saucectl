@@ -100,7 +100,7 @@
           "minimum": 1
         },
         "passCount": {
-          "description": "The threshold of passed count.",
+          "description": "The minimum number of successful attempts for a suite to be considered as 'passed'.",
           "type": "integer",
           "minimum": 1
         }
