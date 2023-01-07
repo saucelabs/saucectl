@@ -91,7 +91,7 @@
       "type": "string"
     },
     "passThreshold": {
-      "description": "Specifies passThreshold settings.",
+      "description": "Specifies retry/attempt thresholds for a suite to be considered as 'passed'.",
       "type": "object",
       "properties": {
         "maxAttempts": {
