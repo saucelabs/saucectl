@@ -19,14 +19,15 @@ import (
 func DownloadCommand() *cobra.Command {
 	var targetDir string
 	var out string
-	var jobID string
-	var isRDC bool
 
 	cmd := &cobra.Command{
 		Use:   "download artifacts",
 		Short: "Downloads specified artifact from sauce, supporting glob pattern.",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
+				return errors.New("no job ID specified")
+			}
+			if len(args) == 1 || args[1] == "" {
 				return errors.New("no file pattern specified")
 			}
 
@@ -44,23 +45,21 @@ func DownloadCommand() *cobra.Command {
 			}()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return download(args[0], jobID, targetDir, out, isRDC)
+			jobID := args[0]
+			filePattern := args[1]
+			return download(jobID, filePattern, targetDir, out)
 		},
 	}
 
 	flags := cmd.Flags()
-	flags.StringVar(&jobID, "job", "", "Specified job ID.")
 	flags.StringVar(&targetDir, "target-dir", "", "Optional target dir")
 	flags.StringVarP(&out, "out", "o", "text", "Output format to the console. Options: text, json.")
-	flags.BoolVar(&isRDC, "rdc", false, "Get RDC job details")
-
-	_ = cmd.MarkFlagRequired("job")
 
 	return cmd
 }
 
-func download(filePattern, jobID, targetDir, outputFormat string, isRDC bool) error {
-	lst, err := artifactSvc.List(jobID, isRDC)
+func download(jobID, filePattern, targetDir, outputFormat string) error {
+	lst, err := artifactSvc.List(jobID)
 	if err != nil {
 		return err
 	}
@@ -71,7 +70,7 @@ func download(filePattern, jobID, targetDir, outputFormat string, isRDC bool) er
 	bar := newDownloadProgressBar(outputFormat, len(files))
 	for _, f := range files {
 		_ = bar.Add(1)
-		body, err := artifactSvc.Download(jobID, f, isRDC)
+		body, err := artifactSvc.Download(jobID, f)
 		if err != nil {
 			return fmt.Errorf("failed to get file: %w", err)
 		}

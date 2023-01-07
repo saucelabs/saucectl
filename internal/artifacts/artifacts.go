@@ -8,7 +8,7 @@ type List struct {
 
 // Service is the interface for interacting with artifacts
 type Service interface {
-	List(jobID string, isRDC bool) (List, error)
-	Download(jobID, filename string, isRDC bool) ([]byte, error)
-	Upload(jobID, filename string, isRDC bool, content []byte) error
+	List(jobID string) (List, error)
+	Download(jobID, filename string) ([]byte, error)
+	Upload(jobID, filename string, content []byte) error
 }

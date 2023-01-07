@@ -16,14 +16,17 @@ import (
 
 func UploadCommand() *cobra.Command {
 	var out string
-	var jobID string
 
 	cmd := &cobra.Command{
 		Use:   "upload",
-		Short: "Uploads an artifacts for the job",
+		Short: "Uploads an artifacts for the job.",
+		Long:  "Uploads an artifacts for the job. Real Device job is not supported.",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
-				return errors.New("no filename specified")
+				return errors.New("no job ID specified")
+			}
+			if len(args) == 1 || args[1] == "" {
+				return errors.New("no file name specified")
 			}
 
 			return nil
@@ -40,7 +43,8 @@ func UploadCommand() *cobra.Command {
 			}()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			filePath := args[0]
+			jobID := args[0]
+			filePath := args[1]
 			file, err := os.Open(filePath)
 			if err != nil {
 				return fmt.Errorf("failed to open file [%s]: %w", filePath, err)
@@ -56,7 +60,7 @@ func UploadCommand() *cobra.Command {
 				return fmt.Errorf("failed to read file: %w", err)
 			}
 
-			err = artifactSvc.Upload(jobID, finfo.Name(), false, content)
+			err = artifactSvc.Upload(jobID, finfo.Name(), content)
 			if err != nil {
 				return fmt.Errorf("failed to upload file: %w", err)
 			}
@@ -79,9 +83,6 @@ func UploadCommand() *cobra.Command {
 
 	flags := cmd.Flags()
 	flags.StringVarP(&out, "out", "o", "text", "Output out to the console. Options: text, json.")
-	flags.StringVar(&jobID, "job", "", "Specified job ID.")
-
-	_ = cmd.MarkFlagRequired("job")
 
 	return cmd
 }
