@@ -491,7 +491,7 @@
                       "minimum": 1
                     },
                     "passCount": {
-                      "description": "The threshold of passed count.",
+                      "description": "The minimum number of successful attempts for a suite to be considered as 'passed'.",
                       "type": "integer",
                       "minimum": 1
                     }
@@ -1000,7 +1000,7 @@
                   "type": "string"
                 },
                 "passThreshold": {
-                  "description": "Specifies passThreshold settings.",
+                  "description": "Specifies retry/attempt thresholds for a suite to be considered as 'passed'.",
                   "type": "object",
                   "properties": {
                     "maxAttempts": {
@@ -1009,7 +1009,7 @@
                       "minimum": 1
                     },
                     "passCount": {
-                      "description": "The threshold of passed count.",
+                      "description": "The minimum number of successful attempts for a suite to be considered as 'passed'.",
                       "type": "integer",
                       "minimum": 1
                     }
