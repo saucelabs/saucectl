@@ -357,16 +357,14 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			r.interrupted = true
 		}
 
-		if opts.MaxAttempts != 0 {
-			if opts.CurrentPassCount >= opts.PassCount {
-				log.Info().Str("suite", opts.DisplayName).Msg("Passed threshold")
-				jobData.Status = job.StatePassed
-				jobData.Passed = true
-			} else {
-				log.Error().Str("suite", opts.DisplayName).Msg("Failed to pass threshold")
-				jobData.Status = job.StateFailed
-				jobData.Passed = false
-			}
+		if opts.CurrentPassCount >= opts.PassCount {
+			log.Info().Str("suite", opts.DisplayName).Msg("Passed threshold")
+			jobData.Status = job.StatePassed
+			jobData.Passed = true
+		} else {
+			log.Error().Str("suite", opts.DisplayName).Msg("Failed to pass threshold")
+			jobData.Status = job.StateFailed
+			jobData.Passed = false
 		}
 
 		results <- result{
