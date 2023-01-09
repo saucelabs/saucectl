@@ -479,7 +479,11 @@ func renderSchemaValidationIssues(cfgFile string, errors []*jsonschema.Validatio
 	fmt.Println()
 	color.Red("There is %d validation %s found in %s:\n", len(errors), errStr, cfgFile)
 	for _, d := range errors {
-		color.Red("- %s in %s\n", d.Message, d.InstanceLocation)
+		if d.InstanceLocation != "" {
+			color.Red("- %s in %s\n", d.Message, d.InstanceLocation)
+		} else {
+			color.Red("- %s\n", d.Message)
+		}
 	}
 	println()
 }
