@@ -91,20 +91,8 @@
       "type": "string"
     },
     "passThreshold": {
-      "description": "Specifies retry/attempt thresholds for a suite to be considered as 'passed'.",
-      "type": "object",
-      "properties": {
-        "maxAttempts": {
-          "description": "The maximum number of attempts to run a suite.",
-          "type": "integer",
-          "minimum": 1
-        },
-        "passCount": {
-          "description": "The minimum number of successful attempts for a suite to be considered as 'passed'.",
-          "type": "integer",
-          "minimum": 1
-        }
-      }
+      "description": "The minimum number of successful attempts for a suite to be considered as 'passed'.",
+      "type": "integer"
     }
   }
 }
