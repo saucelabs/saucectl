@@ -52,7 +52,7 @@ func DownloadCommand() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.StringVar(&targetDir, "target-dir", "", "Optional target dir")
+	flags.StringVar(&targetDir, "target-dir", "", "Save files to target directory. Defaults to current working directory.")
 	flags.StringVarP(&out, "out", "o", "text", "Output format to the console. Options: text, json.")
 
 	return cmd
