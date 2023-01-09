@@ -343,11 +343,6 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			}(opts)
 			continue
 		}
-		if opts.Attempt < 3 {
-			opts.CurrentPassCount = 0
-		} else {
-			opts.CurrentPassCount++
-		}
 
 		if opts.CurrentPassCount < opts.PassThreshold && opts.Attempt < opts.Retries {
 			opts.Attempt++
