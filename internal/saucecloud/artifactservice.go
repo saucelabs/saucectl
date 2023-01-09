@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/saucelabs/saucectl/internal/artifacts"
 	"github.com/saucelabs/saucectl/internal/rdc"
@@ -63,7 +64,7 @@ func (s *ArtifactService) Upload(jobID, filename string, content []byte) error {
 		return errors.New("uploading file to Real Device job is not supported")
 	}
 
-	return s.UploadAsset(jobID, false, filename, "text/plain", content)
+	return s.UploadAsset(jobID, false, filename, http.DetectContentType(content), content)
 }
 
 func (s *ArtifactService) isRDC(jobID string) (bool, error) {
