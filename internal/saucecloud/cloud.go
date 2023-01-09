@@ -1051,7 +1051,7 @@ func enrichInsightTestRun(runs []insights.TestRun, jobID string, jobName string,
 		runs[idx].Tags = details.Tags
 		runs[idx].Type = resolveType(details.Framework)
 
-		if ci.HasProvider(provider) {
+		if provider == ci.None {
 			runs[idx].CI = &insights.CI{
 				Branch:     ciData.RefName,
 				RefName:    ciData.RefName,
