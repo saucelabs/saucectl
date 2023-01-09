@@ -169,6 +169,9 @@ func SetDefaults(p *Project) {
 		if s.Params.Workers <= 0 {
 			s.Params.Workers = 1
 		}
+		if s.PassThreshold < 1 {
+			s.PassThreshold = 1
+		}
 	}
 
 	// Apply global env vars onto every suite.

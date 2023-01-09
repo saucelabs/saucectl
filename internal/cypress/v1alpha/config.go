@@ -165,6 +165,10 @@ func (p *Project) SetDefaults() {
 			s.Config.Env[k] = v
 		}
 
+		if s.PassThreshold < 1 {
+			s.PassThreshold = 1
+		}
+
 		// Update cypress related env vars.
 		for envK := range s.Config.Env {
 			// Add an entry without CYPRESS_ prefix as we directly pass it in Cypress.
@@ -315,10 +319,6 @@ func (p *Project) Validate() error {
 
 		if len(s.Config.TestFiles) == 0 {
 			return fmt.Errorf(msg.MissingTestFiles, s.Name)
-		}
-
-		if s.PassThreshold < 0 {
-			return fmt.Errorf(msg.InvalidPassThreshold)
 		}
 	}
 	if p.Sauce.Retries < 0 {

@@ -90,7 +90,7 @@ func NewPlaywrightCmd() *cobra.Command {
 	sc.String("rootDir", "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
 	sc.String("shard", "suite.shard", "", "Controls whether or not (and how) tests are sharded across multiple machines, supported value: spec|concurrency")
 	sc.String("timeZone", "suite::timeZone", "", "Specifies timeZone for this test")
-	sc.Int("passThreshold", "suite::passThreshold", 0, "Specifies the threshold of passed count (sauce mode only)")
+	sc.Int("passThreshold", "suite::passThreshold", 1, "Specifies the threshold of passed count (sauce mode only)")
 
 	// NPM
 	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")

@@ -133,6 +133,9 @@ func SetDefaults(p *Project) {
 			p.Suites[i].TestApp = p.Espresso.TestApp
 			p.Suites[i].TestAppDescription = p.Espresso.TestAppDescription
 		}
+		if suite.PassThreshold < 1 {
+			p.Suites[i].PassThreshold = 1
+		}
 	}
 }
 
@@ -193,9 +196,6 @@ func Validate(p Project) error {
 		}
 		if regio == region.USEast4 && len(suite.Emulators) > 0 {
 			return errors.New(msg.NoEmulatorSupport)
-		}
-		if suite.PassThreshold < 0 {
-			return fmt.Errorf(msg.InvalidPassThreshold)
 		}
 	}
 	if p.Sauce.Retries < 0 {

@@ -196,6 +196,9 @@ func SetDefaults(p *Project) {
 		if suite.Timeout <= 0 {
 			suite.Timeout = p.Defaults.Timeout
 		}
+		if suite.PassThreshold < 1 {
+			suite.PassThreshold = 1
+		}
 
 		// If this suite is targeting devices, then the platformName on the device takes precedence and we can skip the
 		// defaults on the suite level.

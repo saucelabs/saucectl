@@ -169,6 +169,9 @@ func (p *Project) SetDefaults() {
 		if s.Config.TestingType == "" {
 			s.Config.TestingType = "e2e"
 		}
+		if s.PassThreshold < 1 {
+			s.PassThreshold = 1
+		}
 
 		// Update cypress related env vars.
 		for envK := range s.Config.Env {
@@ -253,10 +256,6 @@ func (p *Project) Validate() error {
 
 		if len(s.Config.SpecPattern) == 0 {
 			return fmt.Errorf(msg.MissingTestFiles, s.Name)
-		}
-
-		if s.PassThreshold < 0 {
-			return fmt.Errorf(msg.InvalidPassThreshold)
 		}
 	}
 	if p.Sauce.Retries < 0 {

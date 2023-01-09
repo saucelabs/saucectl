@@ -144,6 +144,9 @@ func SetDefaults(p *Project) {
 				suite.PlatformName = "macOS 12"
 			}
 		}
+		if suite.PassThreshold < 1 {
+			suite.PassThreshold = 1
+		}
 	}
 
 	// Apply global env vars onto every suite.
@@ -195,10 +198,6 @@ func Validate(p *Project) error {
 		}
 
 		p.Suites[i].Options.Paths = fpath.ExcludeFiles(files, excludedFiles)
-
-		if v.PassThreshold < 0 {
-			return fmt.Errorf(msg.InvalidPassThreshold)
-		}
 	}
 	if p.Sauce.Retries < 0 {
 		log.Warn().Int("retries", p.Sauce.Retries).Msg(msg.InvalidReries)

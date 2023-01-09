@@ -121,6 +121,9 @@ func SetDefaults(p *Project) {
 			p.Suites[ks].TestApp = p.Xcuitest.TestApp
 			p.Suites[ks].TestAppDescription = p.Xcuitest.TestAppDescription
 		}
+		if suite.PassThreshold < 1 {
+			p.Suites[ks].PassThreshold = 1
+		}
 	}
 }
 
@@ -178,9 +181,6 @@ func Validate(p Project) error {
 				return fmt.Errorf(msg.InvalidDeviceType,
 					device.Options.DeviceType, suite.Name, didx, strings.Join(config.SupportedDeviceTypes, ","))
 			}
-		}
-		if suite.PassThreshold < 0 {
-			return errors.New(msg.InvalidPassThreshold)
 		}
 	}
 	if p.Sauce.Retries < 0 {
