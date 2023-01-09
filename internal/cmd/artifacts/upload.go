@@ -74,7 +74,7 @@ func UploadCommand() *cobra.Command {
 					return fmt.Errorf("failed to render output: %w", err)
 				}
 			default:
-				return errors.New("unknown output out")
+				return errors.New("unknown output format")
 			}
 
 			return nil
