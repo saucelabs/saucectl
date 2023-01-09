@@ -1,6 +1,7 @@
 package insights
 
 import (
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -10,6 +11,14 @@ import (
 )
 
 func Test_uniformizeJSONStatus(t *testing.T) {
+	// Unsetting Github env vars
+	os.Unsetenv("GITHUB_SERVER_URL")
+	os.Unsetenv("GITHUB_REPOSITORY")
+	os.Unsetenv("GITHUB_RUN_ID")
+	os.Unsetenv("GITHUB_REF_NAME")
+	os.Unsetenv("GITHUB_SHA")
+	os.Unsetenv("GITHUB_ACTOR")
+
 	type args struct {
 		status string
 	}
@@ -57,6 +66,14 @@ func Test_uniformizeJSONStatus(t *testing.T) {
 }
 
 func TestFromSauceReport(t *testing.T) {
+	// Unsetting Github env vars
+	os.Unsetenv("GITHUB_SERVER_URL")
+	os.Unsetenv("GITHUB_REPOSITORY")
+	os.Unsetenv("GITHUB_RUN_ID")
+	os.Unsetenv("GITHUB_REF_NAME")
+	os.Unsetenv("GITHUB_SHA")
+	os.Unsetenv("GITHUB_ACTOR")
+
 	type args struct {
 		report saucereport.SauceReport
 	}
