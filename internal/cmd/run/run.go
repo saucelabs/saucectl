@@ -246,31 +246,31 @@ func preRun() error {
 // Run runs the command
 func Run(cmd *cobra.Command) (int, error) {
 	if typeDef.Kind == cypress.Kind {
-		return runCypress(cmd)
+		return runCypress(cmd, false)
 	}
 	if typeDef.Kind == playwright.Kind {
-		return runPlaywright(cmd)
+		return runPlaywright(cmd, false)
 	}
 	if typeDef.Kind == testcafe.Kind {
-		return runTestcafe(cmd, testcafeFlags{})
+		return runTestcafe(cmd, testcafeFlags{}, false)
 	}
 	if typeDef.Kind == puppeteer.Kind {
-		return runPuppeteer(cmd)
+		return runPuppeteer(cmd, false)
 	}
 	if typeDef.Kind == replay.Kind {
-		return runReplay(cmd)
+		return runReplay(cmd, false)
 	}
 	if typeDef.Kind == espresso.Kind {
-		return runEspresso(cmd, espressoFlags{})
+		return runEspresso(cmd, espressoFlags{}, false)
 	}
 	if typeDef.Kind == xcuitest.Kind {
-		return runXcuitest(cmd, xcuitestFlags{})
+		return runXcuitest(cmd, xcuitestFlags{}, false)
 	}
 	if typeDef.Kind == apitest.Kind {
-		return runApitest()
+		return runApitest(false)
 	}
 	if typeDef.Kind == cucumber.Kind {
-		return runCucumber(cmd)
+		return runCucumber(cmd, false)
 	}
 
 	return 1, errors.New(msg.UnknownFrameworkConfig)

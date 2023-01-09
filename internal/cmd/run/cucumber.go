@@ -42,7 +42,7 @@ func NewCucumberCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::options::paths", args)
 
-			exitCode, err := runCucumber(cmd)
+			exitCode, err := runCucumber(cmd, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -72,8 +72,10 @@ func NewCucumberCmd() *cobra.Command {
 	return cmd
 }
 
-func runCucumber(cmd *cobra.Command) (int, error) {
-	config.ValidateSchema(gFlags.cfgFilePath)
+func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
+	if !isCLIDriven {
+		config.ValidateSchema(gFlags.cfgFilePath)
+	}
 
 	p, err := cucumber.FromFile(gFlags.cfgFilePath)
 	if err != nil {

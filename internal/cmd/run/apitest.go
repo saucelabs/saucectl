@@ -10,8 +10,10 @@ import (
 	"github.com/saucelabs/saucectl/internal/report/table"
 )
 
-func runApitest() (int, error) {
-	config.ValidateSchema(gFlags.cfgFilePath)
+func runApitest(isCLIDriven bool) (int, error) {
+	if !isCLIDriven {
+		config.ValidateSchema(gFlags.cfgFilePath)
+	}
 
 	p, err := apitest.FromFile(gFlags.cfgFilePath)
 	if err != nil {

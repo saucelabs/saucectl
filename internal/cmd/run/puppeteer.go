@@ -45,7 +45,7 @@ func NewPuppeteerCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::testMatch", args)
 
-			exitCode, err := runPuppeteer(cmd)
+			exitCode, err := runPuppeteer(cmd, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -80,8 +80,10 @@ func NewPuppeteerCmd() *cobra.Command {
 	return cmd
 }
 
-func runPuppeteer(cmd *cobra.Command) (int, error) {
-	config.ValidateSchema(gFlags.cfgFilePath)
+func runPuppeteer(cmd *cobra.Command, isCLIDriven bool) (int, error) {
+	if !isCLIDriven {
+		config.ValidateSchema(gFlags.cfgFilePath)
+	}
 
 	p, err := puppeteer.FromFile(gFlags.cfgFilePath)
 	if err != nil {

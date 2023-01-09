@@ -46,7 +46,7 @@ func NewReplayCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::recordings", args)
 
-			exitCode, err := runReplay(cmd)
+			exitCode, err := runReplay(cmd, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -69,8 +69,10 @@ func NewReplayCmd() *cobra.Command {
 	return cmd
 }
 
-func runReplay(cmd *cobra.Command) (int, error) {
-	config.ValidateSchema(gFlags.cfgFilePath)
+func runReplay(cmd *cobra.Command, isCLIDriven bool) (int, error) {
+	if !isCLIDriven {
+		config.ValidateSchema(gFlags.cfgFilePath)
+	}
 
 	p, err := replay.FromFile(gFlags.cfgFilePath)
 	if err != nil {

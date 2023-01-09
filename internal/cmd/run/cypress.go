@@ -46,7 +46,7 @@ func NewCypressCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::config::specPattern", args)
 
-			exitCode, err := runCypress(cmd)
+			exitCode, err := runCypress(cmd, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -92,8 +92,10 @@ func NewCypressCmd() *cobra.Command {
 	return cmd
 }
 
-func runCypress(cmd *cobra.Command) (int, error) {
-	config.ValidateSchema(gFlags.cfgFilePath)
+func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
+	if !isCLIDriven {
+		config.ValidateSchema(gFlags.cfgFilePath)
+	}
 
 	p, err := cypress.FromFile(gFlags.cfgFilePath)
 	if err != nil {

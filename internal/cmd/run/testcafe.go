@@ -53,7 +53,7 @@ func NewTestcafeCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::src", args)
 
-			exitCode, err := runTestcafe(cmd, lflags)
+			exitCode, err := runTestcafe(cmd, lflags, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -121,8 +121,10 @@ func NewTestcafeCmd() *cobra.Command {
 	return cmd
 }
 
-func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags) (int, error) {
-	config.ValidateSchema(gFlags.cfgFilePath)
+func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (int, error) {
+	if !isCLIDriven {
+		config.ValidateSchema(gFlags.cfgFilePath)
+	}
 
 	p, err := testcafe.FromFile(gFlags.cfgFilePath)
 	if err != nil {
