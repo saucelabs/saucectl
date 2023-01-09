@@ -47,7 +47,7 @@ func (s *ArtifactService) List(jobID string) (artifacts.List, error) {
 func (s *ArtifactService) Download(jobID, filename string) ([]byte, error) {
 	isRDC, err := s.isRDC(jobID)
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 
 	return s.GetJobAssetFileContent(context.Background(), jobID, filename, isRDC)
