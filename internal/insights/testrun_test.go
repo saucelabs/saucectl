@@ -100,6 +100,12 @@ func TestFromSauceReport(t *testing.T) {
 					EndTime:      time.Date(2022, 12, 13, 14, 15, 36, 17, time.UTC),
 					Duration:     20,
 					Status:       StatePassed,
+					SauceJob: &Job{
+						Name: "jobName",
+						ID:   "jobID",
+					},
+					Type:     TypeWeb,
+					Platform: PlatformVDC,
 				},
 				{
 					Name:         "Test #1.2",
@@ -113,6 +119,12 @@ func TestFromSauceReport(t *testing.T) {
 							Message: "my-dummy-failure",
 						},
 					},
+					SauceJob: &Job{
+						Name: "jobName",
+						ID:   "jobID",
+					},
+					Type:     TypeWeb,
+					Platform: PlatformVDC,
 				},
 			},
 		},
@@ -163,6 +175,12 @@ func TestFromSauceReport(t *testing.T) {
 					EndTime:      time.Date(2022, 12, 15, 14, 15, 36, 17, time.UTC),
 					Duration:     20,
 					Status:       StatePassed,
+					SauceJob: &Job{
+						Name: "jobName",
+						ID:   "jobID",
+					},
+					Type:     TypeWeb,
+					Platform: PlatformVDC,
 				},
 				{
 					Name:         "Test #1.1.1",
@@ -171,6 +189,12 @@ func TestFromSauceReport(t *testing.T) {
 					EndTime:      time.Date(2022, 12, 13, 14, 15, 36, 17, time.UTC),
 					Duration:     20,
 					Status:       StatePassed,
+					SauceJob: &Job{
+						Name: "jobName",
+						ID:   "jobID",
+					},
+					Type:     TypeWeb,
+					Platform: PlatformVDC,
 				},
 				{
 					Name:         "Test #1.1.2",
@@ -179,13 +203,19 @@ func TestFromSauceReport(t *testing.T) {
 					EndTime:      time.Date(2022, 12, 14, 14, 15, 36, 17, time.UTC),
 					Duration:     20,
 					Status:       StatePassed,
+					SauceJob: &Job{
+						Name: "jobName",
+						ID:   "jobID",
+					},
+					Type:     TypeWeb,
+					Platform: PlatformVDC,
 				},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := FromSauceReport(tt.args.report)
+			got := FromSauceReport(tt.args.report, "jobID", "jobName", Details{}, false)
 
 			// Replicate IDs as they are random
 			for idx := range got {
@@ -247,6 +277,12 @@ func TestFromJUnit(t *testing.T) {
 					StartTime:    time.Date(2022, 12, 12, 1, 1, 1, 0, time.UTC),
 					Duration:     5,
 					EndTime:      time.Date(2022, 12, 12, 1, 1, 6, 0, time.UTC),
+					SauceJob: &Job{
+						Name: "jobName",
+						ID:   "jobID",
+					},
+					Type:     TypeWeb,
+					Platform: PlatformVDC,
 				},
 				{
 					Name:         "ClassName.Test #1.2",
@@ -260,13 +296,19 @@ func TestFromJUnit(t *testing.T) {
 							Message: "dummy-error-message",
 						},
 					},
+					SauceJob: &Job{
+						Name: "jobName",
+						ID:   "jobID",
+					},
+					Type:     TypeWeb,
+					Platform: PlatformVDC,
 				},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := FromJUnit(tt.args.suites)
+			got := FromJUnit(tt.args.suites, "jobID", "jobName", Details{}, false)
 
 			// Replicate IDs as they are random
 			for idx := range got {

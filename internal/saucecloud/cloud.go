@@ -22,7 +22,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
-	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
@@ -42,7 +41,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/saucereport"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/saucelabs/saucectl/internal/tunnel"
-	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
 
 // CloudRunner represents the cloud runner for the Sauce Labs cloud.
@@ -69,18 +67,6 @@ type CloudRunner struct {
 	interrupted bool
 }
 
-type insightDetails struct {
-	AppName    string
-	Browser    string
-	BuildName  string
-	CI         string
-	DeviceID   string
-	DeviceName string
-	Framework  string
-	Platform   string
-	Tags       []string
-}
-
 type result struct {
 	name      string
 	browser   string
@@ -93,7 +79,7 @@ type result struct {
 	attempts  int
 	retries   int
 
-	details insightDetails
+	details insights.Details
 }
 
 // ConsoleLogAsset represents job asset log file name.
@@ -330,7 +316,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 	for opts := range jobOpts {
 		start := time.Now()
 
-		details := insightDetails{
+		details := insights.Details{
 			Framework:  opts.Framework,
 			Browser:    opts.BrowserName,
 			Tags:       opts.Tags,
@@ -988,16 +974,16 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 			log.Warn().Err(err).Str("action", "parsingJSON").Msg(msg.InsightsReportError)
 			return
 		}
-		testRuns = insights.FromSauceReport(report)
+		testRuns = insights.FromSauceReport(report, res.job.ID, res.name, res.details, res.job.IsRDC)
 	} else if arrayContains(assets, junit.JunitFileName) {
 		report, err := r.loadJUnitReport(res.job.ID, res.job.IsRDC)
 		if err != nil {
 			log.Warn().Err(err).Str("action", "parsingXML").Msg(msg.InsightsReportError)
 			return
 		}
-		testRuns = insights.FromJUnit(report)
+		testRuns = insights.FromJUnit(report, res.job.ID, res.name, res.details, res.job.IsRDC)
 	}
-	enrichInsightTestRun(testRuns, res.job.ID, res.name, res.details, res.job.IsRDC)
+
 	if len(testRuns) > 0 {
 		if err := r.InsightsService.PostTestRun(context.Background(), testRuns); err != nil {
 			log.Warn().Err(err).Str("action", "posting").Msg(msg.InsightsReportError)
@@ -1030,65 +1016,4 @@ func arrayContains(list []string, want string) bool {
 		}
 	}
 	return false
-}
-
-func enrichInsightTestRun(runs []insights.TestRun, jobID string, jobName string, details insightDetails, isRDC bool) {
-	var ciData ci.CI
-	provider := ci.GetProvider()
-	ciData = ci.GetCI(provider)
-
-	for idx := range runs {
-		runs[idx].Browser = details.Browser
-		runs[idx].BuildName = details.BuildName
-		runs[idx].Device = resolveDevice(details.DeviceName, details.DeviceID)
-		runs[idx].Framework = details.Framework
-		runs[idx].OS = resolveOS(details.Platform, details.Framework)
-		runs[idx].Platform = resolvePlatform(isRDC)
-		runs[idx].SauceJob = &insights.Job{
-			ID:   jobID,
-			Name: jobName,
-		}
-		runs[idx].Tags = details.Tags
-		runs[idx].Type = resolveType(details.Framework)
-
-		if provider == ci.None {
-			runs[idx].CI = &insights.CI{
-				Branch:     ciData.RefName,
-				RefName:    ciData.RefName,
-				Repository: ciData.Repo,
-				CommitSha:  ciData.SHA,
-			}
-		}
-	}
-}
-
-func resolveDevice(deviceName string, deviceID string) string {
-	if deviceName != "" {
-		return deviceName
-	}
-	return deviceID
-}
-
-func resolvePlatform(isRDC bool) string {
-	if isRDC {
-		return insights.PlatformRDC
-	}
-	return insights.PlatformVDC
-}
-
-func resolveType(framework string) string {
-	if framework == espresso.Kind || framework == xcuitest.Kind {
-		return insights.TypeMobile
-	}
-	return insights.TypeWeb
-}
-
-func resolveOS(platform string, framework string) string {
-	if framework == xcuitest.Kind {
-		return "iOS"
-	}
-	if framework == espresso.Kind {
-		return "Android"
-	}
-	return platform
 }

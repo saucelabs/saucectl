@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/xtgo/uuid"
 
+	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/saucereport"
 )
@@ -83,7 +84,19 @@ const (
 	PlatformOther = "other"
 )
 
-func FromJUnit(suites junit.TestSuites) []TestRun {
+type Details struct {
+	AppName    string
+	Browser    string
+	BuildName  string
+	CI         string
+	DeviceID   string
+	DeviceName string
+	Framework  string
+	Platform   string
+	Tags       []string
+}
+
+func FromJUnit(suites junit.TestSuites, jobID string, jobName string, details Details, isRDC bool) []TestRun {
 	var testRuns []TestRun
 
 	for _, s := range suites.TestSuites {
@@ -123,15 +136,16 @@ func FromJUnit(suites junit.TestSuites) []TestRun {
 			})
 		}
 	}
-
+	enrichInsightTestRun(testRuns, jobID, jobName, details, isRDC)
 	return testRuns
 }
 
-func FromSauceReport(report saucereport.SauceReport) []TestRun {
+func FromSauceReport(report saucereport.SauceReport, jobID string, jobName string, details Details, isRDC bool) []TestRun {
 	var testRuns []TestRun
 	for _, s := range report.Suites {
 		testRuns = append(testRuns, deepConvert(s)...)
 	}
+	enrichInsightTestRun(testRuns, jobID, jobName, details, isRDC)
 	return testRuns
 }
 
@@ -174,4 +188,65 @@ func uniformizeJSONStatus(status string) string {
 		return StateSkipped
 	}
 	return StatePassed
+}
+
+func enrichInsightTestRun(runs []TestRun, jobID string, jobName string, details Details, isRDC bool) {
+	var ciData ci.CI
+	provider := ci.GetProvider()
+	ciData = ci.GetCI(provider)
+
+	for idx := range runs {
+		runs[idx].Browser = details.Browser
+		runs[idx].BuildName = details.BuildName
+		runs[idx].Device = resolveDevice(details.DeviceName, details.DeviceID)
+		runs[idx].Framework = details.Framework
+		runs[idx].OS = resolveOS(details.Platform, details.Framework)
+		runs[idx].Platform = resolvePlatform(isRDC)
+		runs[idx].SauceJob = &Job{
+			ID:   jobID,
+			Name: jobName,
+		}
+		runs[idx].Tags = details.Tags
+		runs[idx].Type = resolveType(details.Framework)
+
+		if provider != ci.None {
+			runs[idx].CI = &CI{
+				Branch:     ciData.RefName,
+				RefName:    ciData.RefName,
+				Repository: ciData.Repo,
+				CommitSha:  ciData.SHA,
+			}
+		}
+	}
+}
+
+func resolveDevice(deviceName string, deviceID string) string {
+	if deviceName != "" {
+		return deviceName
+	}
+	return deviceID
+}
+
+func resolvePlatform(isRDC bool) string {
+	if isRDC {
+		return PlatformRDC
+	}
+	return PlatformVDC
+}
+
+func resolveType(framework string) string {
+	if framework == "espresso" || framework == "xcuitest" {
+		return TypeMobile
+	}
+	return TypeWeb
+}
+
+func resolveOS(platform string, framework string) string {
+	if framework == "xcuitest" {
+		return "iOS"
+	}
+	if framework == "espresso" {
+		return "Android"
+	}
+	return platform
 }
