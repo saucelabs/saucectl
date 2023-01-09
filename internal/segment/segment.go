@@ -87,6 +87,7 @@ func (t *Tracker) Collect(subject string, props usage.Properties) {
 			"All":       false,
 			"Mixpanel":  true,
 			"Snowflake": true,
+			"Pendo":     true,
 		},
 	}); err != nil {
 		// Usage is not crucial to the execution of saucectl, so proceed without notifying or blocking the user.
