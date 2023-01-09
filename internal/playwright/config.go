@@ -61,21 +61,21 @@ type Playwright struct {
 
 // Suite represents the playwright test suite configuration.
 type Suite struct {
-	Name              string               `yaml:"name,omitempty" json:"name"`
-	Mode              string               `yaml:"mode,omitempty" json:"-"`
-	Timeout           time.Duration        `yaml:"timeout,omitempty" json:"timeout"`
-	PlaywrightVersion string               `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
-	TestMatch         []string             `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
-	ExcludedTestFiles []string             `yaml:"excludedTestFiles,omitempty" json:"testIgnore"`
-	PlatformName      string               `yaml:"platformName,omitempty" json:"platformName,omitempty"`
-	Params            SuiteConfig          `yaml:"params,omitempty" json:"param,omitempty"`
-	ScreenResolution  string               `yaml:"screenResolution,omitempty" json:"screenResolution,omitempty"`
-	Env               map[string]string    `yaml:"env,omitempty" json:"env,omitempty"`
-	NumShards         int                  `yaml:"numShards,omitempty" json:"-"`
-	Shard             string               `yaml:"shard,omitempty" json:"-"`
-	PreExec           []string             `yaml:"preExec,omitempty" json:"preExec"`
-	TimeZone          string               `yaml:"timeZone,omitempty" json:"timeZone"`
-	PassThreshold     config.PassThreshold `yaml:"passThreshold,omitempty" json:"-"`
+	Name              string            `yaml:"name,omitempty" json:"name"`
+	Mode              string            `yaml:"mode,omitempty" json:"-"`
+	Timeout           time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
+	PlaywrightVersion string            `yaml:"playwrightVersion,omitempty" json:"playwrightVersion,omitempty"`
+	TestMatch         []string          `yaml:"testMatch,omitempty" json:"testMatch,omitempty"`
+	ExcludedTestFiles []string          `yaml:"excludedTestFiles,omitempty" json:"testIgnore"`
+	PlatformName      string            `yaml:"platformName,omitempty" json:"platformName,omitempty"`
+	Params            SuiteConfig       `yaml:"params,omitempty" json:"param,omitempty"`
+	ScreenResolution  string            `yaml:"screenResolution,omitempty" json:"screenResolution,omitempty"`
+	Env               map[string]string `yaml:"env,omitempty" json:"env,omitempty"`
+	NumShards         int               `yaml:"numShards,omitempty" json:"-"`
+	Shard             string            `yaml:"shard,omitempty" json:"-"`
+	PreExec           []string          `yaml:"preExec,omitempty" json:"preExec"`
+	TimeZone          string            `yaml:"timeZone,omitempty" json:"timeZone"`
+	PassThreshold     int               `yaml:"passThreshold,omitempty" json:"-"`
 }
 
 // SuiteConfig represents the configuration specific to a suite
@@ -347,6 +347,7 @@ func Validate(p *Project) error {
 			}
 		}
 	}
+
 	if p.Sauce.Retries < 0 {
 		log.Warn().Int("retries", p.Sauce.Retries).Msg(msg.InvalidReries)
 	}

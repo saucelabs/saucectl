@@ -102,10 +102,6 @@ func (r *CypressRunner) runSuites(fileURI string) bool {
 	// Submit suites to work on.
 	go func() {
 		for _, s := range suites {
-			retries := r.Project.GetSauceCfg().Retries
-			if s.PassThreshold.MaxAttempts > 0 {
-				retries = 0
-			}
 			jobOpts <- job.StartOptions{
 				ConfigFilePath:   r.Project.GetCfgPath(),
 				CLIFlags:         r.Project.GetCLIFlags(),
@@ -129,11 +125,10 @@ func (r *CypressRunner) runSuites(fileURI string) bool {
 				RunnerVersion:    r.Project.GetRunnerVersion(),
 				Experiments:      r.Project.GetSauceCfg().Experiments,
 				Attempt:          0,
-				Retries:          retries,
+				Retries:          r.Project.GetSauceCfg().Retries,
 				TimeZone:         s.TimeZone,
 				Visibility:       r.Project.GetSauceCfg().Visibility,
-				MaxAttempts:      s.PassThreshold.MaxAttempts,
-				PassCount:        s.PassThreshold.PassCount,
+				PassThreshold:    s.PassThreshold,
 			}
 		}
 	}()

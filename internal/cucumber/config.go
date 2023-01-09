@@ -56,18 +56,18 @@ type Playwright struct {
 
 // Suite represents the playwright-cucumberjs test suite configuration.
 type Suite struct {
-	Name             string               `yaml:"name,omitempty" json:"name"`
-	BrowserName      string               `yaml:"browserName,omitempty" json:"browserName"`
-	BrowserVersion   string               `yaml:"browserVersion,omitempty" json:"browserVersion"`
-	PlatformName     string               `yaml:"platformName,omitempty" json:"platformName"`
-	Env              map[string]string    `yaml:"env,omitempty" json:"env"`
-	Shard            string               `yaml:"shard,omitempty" json:"shard"`
-	Mode             string               `yaml:"mode,omitemty" json:"mode"`
-	Timeout          time.Duration        `yaml:"timeout,omitempty" json:"timeout"`
-	ScreenResolution string               `yaml:"screenResolution,omitempty" json:"screenResolution"`
-	PreExec          []string             `yaml:"preExec,omitempty" json:"preExec"`
-	Options          Options              `yaml:"options,omitempty" json:"options"`
-	PassThreshold    config.PassThreshold `yaml:"passThreshold,omitempty" json:"-"`
+	Name             string            `yaml:"name,omitempty" json:"name"`
+	BrowserName      string            `yaml:"browserName,omitempty" json:"browserName"`
+	BrowserVersion   string            `yaml:"browserVersion,omitempty" json:"browserVersion"`
+	PlatformName     string            `yaml:"platformName,omitempty" json:"platformName"`
+	Env              map[string]string `yaml:"env,omitempty" json:"env"`
+	Shard            string            `yaml:"shard,omitempty" json:"shard"`
+	Mode             string            `yaml:"mode,omitemty" json:"mode"`
+	Timeout          time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
+	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
+	PreExec          []string          `yaml:"preExec,omitempty" json:"preExec"`
+	Options          Options           `yaml:"options,omitempty" json:"options"`
+	PassThreshold    int               `yaml:"passThreshold,omitempty" json:"-"`
 }
 
 // Options represents cucumber settings
@@ -196,7 +196,7 @@ func Validate(p *Project) error {
 
 		p.Suites[i].Options.Paths = fpath.ExcludeFiles(files, excludedFiles)
 
-		if !config.ValidatePassThreshold(v.PassThreshold) {
+		if v.PassThreshold < 0 {
 			return fmt.Errorf(msg.InvalidPassThreshold)
 		}
 	}

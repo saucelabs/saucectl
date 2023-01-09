@@ -58,14 +58,14 @@ type TestOptions struct {
 
 // Suite represents the xcuitest test suite configuration.
 type Suite struct {
-	Name               string               `yaml:"name,omitempty" json:"name"`
-	TestApp            string               `yaml:"testApp,omitempty" json:"testApp"`
-	TestAppDescription string               `yaml:"testAppDescription,omitempty" json:"testAppDescription"`
-	Timeout            time.Duration        `yaml:"timeout,omitempty" json:"timeout"`
-	Devices            []config.Device      `yaml:"devices,omitempty" json:"devices"`
-	TestOptions        TestOptions          `yaml:"testOptions,omitempty" json:"testOptions"`
-	AppSettings        config.AppSettings   `yaml:"appSettings,omitempty" json:"appSettings"`
-	PassThreshold      config.PassThreshold `yaml:"passThreshold,omitempty" json:"-"`
+	Name               string             `yaml:"name,omitempty" json:"name"`
+	TestApp            string             `yaml:"testApp,omitempty" json:"testApp"`
+	TestAppDescription string             `yaml:"testAppDescription,omitempty" json:"testAppDescription"`
+	Timeout            time.Duration      `yaml:"timeout,omitempty" json:"timeout"`
+	Devices            []config.Device    `yaml:"devices,omitempty" json:"devices"`
+	TestOptions        TestOptions        `yaml:"testOptions,omitempty" json:"testOptions"`
+	AppSettings        config.AppSettings `yaml:"appSettings,omitempty" json:"appSettings"`
+	PassThreshold      int                `yaml:"passThreshold,omitempty" json:"-"`
 }
 
 // IOS constant
@@ -179,7 +179,7 @@ func Validate(p Project) error {
 					device.Options.DeviceType, suite.Name, didx, strings.Join(config.SupportedDeviceTypes, ","))
 			}
 		}
-		if !config.ValidatePassThreshold(suite.PassThreshold) {
+		if suite.PassThreshold < 0 {
 			return errors.New(msg.InvalidPassThreshold)
 		}
 	}

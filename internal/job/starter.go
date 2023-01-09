@@ -47,8 +47,7 @@ type StartOptions struct {
 	Tunnel            TunnelOptions          `json:"tunnel,omitempty"`
 	ScreenResolution  string                 `json:"screenResolution,omitempty"`
 	Retries           int                    `json:"-"`
-	MaxAttempts       int                    `json:"-"`
-	PassCount         int                    `json:"-"`
+	PassThreshold     int                    `json:"-"`
 	RunnerVersion     string                 `json:"runnerVersion,omitempty"`
 	Experiments       map[string]string      `json:"experiments,omitempty"`
 	TestOptions       map[string]interface{} `json:"testOptions,omitempty"`

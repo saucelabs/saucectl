@@ -61,8 +61,7 @@ func NewReplayCmd() *cobra.Command {
 	sc.Fset = cmd.Flags()
 
 	sc.String("name", "suite::name", "", "Set the name of the job as it will appear on Sauce Labs.")
-	sc.Int("maxAttempts", "suite::passThreshold::maxAttempts", 1, "Specifies the maximum number of attempts to run a suite (sauce mode only)")
-	sc.Int("passCount", "suite::passThreshold::passCount", 1, "Specifies the threshold of passed count (sauce mode only)")
+	sc.Int("passThreshold", "suite::passThreshold", 0, "Specifies the threshold of passed count (sauce mode only)")
 
 	// Browser & Platform
 	sc.String("browser", "suite::browserName", "chrome", "Set the browser to use. Only chrome is supported at this time.")

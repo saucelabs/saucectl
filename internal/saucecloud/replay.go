@@ -88,10 +88,6 @@ func (r *ReplayRunner) runSuites(fileURI string) bool {
 	// Submit suites to work on.
 	go func() {
 		for _, s := range suites {
-			retries := r.Project.Sauce.Retries
-			if s.PassThreshold.MaxAttempts > 0 {
-				retries = 0
-			}
 			jobOpts <- job.StartOptions{
 				ConfigFilePath:   r.Project.ConfigFilePath,
 				DisplayName:      s.Name,
@@ -111,12 +107,11 @@ func (r *ReplayRunner) runSuites(fileURI string) bool {
 					ID:     r.Project.Sauce.Tunnel.Name,
 					Parent: r.Project.Sauce.Tunnel.Owner,
 				},
-				Experiments: r.Project.Sauce.Experiments,
-				Attempt:     0,
-				Retries:     retries,
-				Visibility:  r.Project.Sauce.Visibility,
-				MaxAttempts: s.PassThreshold.MaxAttempts,
-				PassCount:   s.PassThreshold.PassCount,
+				Experiments:   r.Project.Sauce.Experiments,
+				Attempt:       0,
+				Retries:       r.Project.Sauce.Retries,
+				Visibility:    r.Project.Sauce.Visibility,
+				PassThreshold: s.PassThreshold,
 			}
 		}
 	}()

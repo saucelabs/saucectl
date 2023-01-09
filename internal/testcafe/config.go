@@ -108,7 +108,7 @@ type Suite struct {
 	Shard              string                 `yaml:"shard,omitempty" json:"-"`
 	Headless           bool                   `yaml:"headless,omitempty" json:"headless"`
 	TimeZone           string                 `yaml:"timeZone,omitempty" json:"timeZone"`
-	PassThreshold      config.PassThreshold   `yaml:"passThreshold,omitempty" json:"-"`
+	PassThreshold      int                    `yaml:"passThreshold,omitempty" json:"-"`
 	// TypeScript compiling options
 	CompilerOptions CompilerOptions `yaml:"compilerOptions,omitempty" json:"compilerOptions"`
 	// Deprecated. Reserved for future use for actual devices.

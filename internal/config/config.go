@@ -182,12 +182,6 @@ type Defaults struct {
 	Timeout time.Duration `yaml:"timeout,omitempty" json:"timeout"`
 }
 
-// PassThreshold represents passThreshold settings
-type PassThreshold struct {
-	MaxAttempts int `yaml:"maxAttempts,omitempty" json:"maxAttempts,omitempty"`
-	PassCount   int `yaml:"passCount,omitempty" json:"passCount,omitempty"`
-}
-
 // AppSettings represents override settings.
 type AppSettings struct {
 	AudioCapture    bool            `yaml:"audioCapture,omitempty" json:"audioCapture"`
@@ -439,18 +433,4 @@ func ValidateVisibility(visibility string) bool {
 	}
 
 	return false
-}
-
-// ValidatePassThreshold checks the passThreshold settings
-func ValidatePassThreshold(passThreshold PassThreshold) bool {
-	if passThreshold.MaxAttempts > 1 && passThreshold.PassCount < 1 {
-		log.Error().Int("maxAttempts", passThreshold.MaxAttempts).Int("passCount", passThreshold.PassCount).Msg(msg.InvalidPassThreshold)
-		return false
-	}
-	if passThreshold.MaxAttempts < passThreshold.PassCount {
-		log.Error().Int("maxAttempts", passThreshold.MaxAttempts).Int("passCount", passThreshold.PassCount).Msg(msg.InvalidPassThresholdAndMaxAttempts)
-		return false
-	}
-
-	return true
 }

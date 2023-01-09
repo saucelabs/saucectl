@@ -76,7 +76,7 @@ type Suite struct {
 	TestOptions        map[string]interface{} `yaml:"testOptions,omitempty" json:"testOptions"`
 	Timeout            time.Duration          `yaml:"timeout,omitempty" json:"timeout"`
 	AppSettings        config.AppSettings     `yaml:"appSettings,omitempty" json:"appSettings"`
-	PassThreshold      config.PassThreshold   `yaml:"passThreshold,omitempty" json:"-"`
+	PassThreshold      int                    `yaml:"passThreshold,omitempty" json:"-"`
 }
 
 // Android constant
@@ -194,7 +194,7 @@ func Validate(p Project) error {
 		if regio == region.USEast4 && len(suite.Emulators) > 0 {
 			return errors.New(msg.NoEmulatorSupport)
 		}
-		if !config.ValidatePassThreshold(suite.PassThreshold) {
+		if suite.PassThreshold < 0 {
 			return fmt.Errorf(msg.InvalidPassThreshold)
 		}
 	}

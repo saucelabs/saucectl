@@ -343,12 +343,16 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			}(opts)
 			continue
 		}
+		if opts.Attempt < 3 {
+			opts.CurrentPassCount = 0
+		} else {
+			opts.CurrentPassCount++
+		}
 
-		// Attempt starts from 0 while MaxAttempts starts from 1. So here is comparing Attempt with MaxAttempts-1
-		if opts.Attempt < opts.MaxAttempts-1 && opts.CurrentPassCount < opts.PassCount {
+		if opts.CurrentPassCount < opts.PassThreshold && opts.Attempt < opts.Retries {
 			opts.Attempt++
 			jobOpts <- opts
-			log.Info().Str("suite", opts.DisplayName).Str("attempt", fmt.Sprintf("%d of %d", opts.Attempt+1, opts.MaxAttempts)).Msg("Retrying suite.")
+			log.Info().Str("suite", opts.DisplayName).Str("attempt", fmt.Sprintf("%d of %d", opts.Attempt+1, opts.Retries+1)).Msg("Retrying suite.")
 			continue
 		}
 
@@ -357,14 +361,14 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			r.interrupted = true
 		}
 
-		if opts.CurrentPassCount >= opts.PassCount {
-			log.Info().Str("suite", opts.DisplayName).Msg("Passed threshold")
-			jobData.Status = job.StatePassed
-			jobData.Passed = true
-		} else {
+		if opts.CurrentPassCount < opts.PassThreshold {
 			log.Error().Str("suite", opts.DisplayName).Msg("Failed to pass threshold")
 			jobData.Status = job.StateFailed
 			jobData.Passed = false
+		} else {
+			log.Info().Str("suite", opts.DisplayName).Msg("Passed threshold")
+			jobData.Status = job.StatePassed
+			jobData.Passed = true
 		}
 
 		results <- result{
