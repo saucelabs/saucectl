@@ -324,7 +324,6 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			Platform:   opts.PlatformName,
 			DeviceID:   opts.DeviceID,
 			DeviceName: opts.DeviceName,
-			// FIXME: Support CI
 		}
 
 		if r.interrupted {
