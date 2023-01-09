@@ -2,6 +2,7 @@ package insights
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 	"time"
 
@@ -209,7 +210,7 @@ func enrichInsightTestRun(runs []TestRun, jobID string, jobName string, details 
 		runs[idx].Tags = details.Tags
 		runs[idx].Type = resolveType(details.Framework)
 
-		if provider != ci.None {
+		if !reflect.DeepEqual(provider, ci.None) {
 			runs[idx].CI = &CI{
 				Branch:     ciData.RefName,
 				RefName:    ciData.RefName,
