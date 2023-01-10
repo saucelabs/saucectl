@@ -320,7 +320,7 @@ func (p *Project) Validate() error {
 		if len(s.Config.TestFiles) == 0 {
 			return fmt.Errorf(msg.MissingTestFiles, s.Name)
 		}
-		if p.Sauce.Retries > 0 && s.PassThreshold > p.Sauce.Retries {
+		if p.Sauce.Retries < s.PassThreshold-1 {
 			return fmt.Errorf(msg.InvalidPassThreshold)
 		}
 	}

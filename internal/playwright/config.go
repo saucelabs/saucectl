@@ -349,7 +349,7 @@ func Validate(p *Project) error {
 				return fmt.Errorf(msg.IllegalSymbol, c, s.Name)
 			}
 		}
-		if p.Sauce.Retries > 0 && s.PassThreshold > p.Sauce.Retries {
+		if p.Sauce.Retries < s.PassThreshold-1 {
 			return fmt.Errorf(msg.InvalidPassThreshold)
 		}
 	}

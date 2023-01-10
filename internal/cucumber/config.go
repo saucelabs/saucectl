@@ -199,7 +199,7 @@ func Validate(p *Project) error {
 
 		p.Suites[i].Options.Paths = fpath.ExcludeFiles(files, excludedFiles)
 
-		if p.Sauce.Retries > 0 && v.PassThreshold > p.Sauce.Retries {
+		if p.Sauce.Retries < v.PassThreshold-1 {
 			return fmt.Errorf(msg.InvalidPassThreshold)
 		}
 	}
