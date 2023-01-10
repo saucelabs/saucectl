@@ -332,8 +332,10 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			opts.CurrentPassCount++
 		}
 
-		if opts.Attempt < opts.Retries && !jobData.Passed && !skipped {
-			log.Warn().Err(err).Msg("Suite errored.")
+		if opts.Attempt < opts.Retries && ((!jobData.Passed && !skipped) || (opts.CurrentPassCount < opts.PassThreshold)) {
+			if !jobData.Passed {
+				log.Warn().Err(err).Msg("Suite errored.")
+			}
 			go func(opt job.StartOptions) {
 				opt.Attempt++
 				log.Info().Str("suite", opt.DisplayName).
@@ -341,13 +343,6 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 					Msg("Retrying suite.")
 				jobOpts <- opt
 			}(opts)
-			continue
-		}
-
-		if opts.CurrentPassCount < opts.PassThreshold && opts.Attempt < opts.Retries {
-			opts.Attempt++
-			jobOpts <- opts
-			log.Info().Str("suite", opts.DisplayName).Str("attempt", fmt.Sprintf("%d of %d", opts.Attempt+1, opts.Retries+1)).Msg("Retrying suite.")
 			continue
 		}
 

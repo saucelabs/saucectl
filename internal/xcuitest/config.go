@@ -182,6 +182,9 @@ func Validate(p Project) error {
 					device.Options.DeviceType, suite.Name, didx, strings.Join(config.SupportedDeviceTypes, ","))
 			}
 		}
+		if suite.PassThreshold > p.Sauce.Retries {
+			return fmt.Errorf(msg.InvalidPassThreshold)
+		}
 	}
 	if p.Sauce.Retries < 0 {
 		log.Warn().Int("retries", p.Sauce.Retries).Msg(msg.InvalidReries)

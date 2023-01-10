@@ -257,6 +257,9 @@ func (p *Project) Validate() error {
 		if len(s.Config.SpecPattern) == 0 {
 			return fmt.Errorf(msg.MissingTestFiles, s.Name)
 		}
+		if s.PassThreshold > p.Sauce.Retries {
+			return fmt.Errorf(msg.InvalidPassThreshold)
+		}
 	}
 	if p.Sauce.Retries < 0 {
 		log.Warn().Int("retries", p.Sauce.Retries).Msg(msg.InvalidReries)

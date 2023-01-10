@@ -142,6 +142,9 @@ func Validate(p *Project) error {
 		if !rgx.MatchString(s.BrowserName) {
 			return fmt.Errorf("browser %s is not supported, please use chrome instead or leave empty for defaults", s.BrowserName)
 		}
+		if s.PassThreshold > p.Sauce.Retries {
+			return fmt.Errorf(msg.InvalidPassThreshold)
+		}
 	}
 
 	if p.Sauce.Retries < 0 {
