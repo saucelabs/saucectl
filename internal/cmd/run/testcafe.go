@@ -108,7 +108,7 @@ func NewTestcafeCmd() *cobra.Command {
 	sc.Bool("disablePageCaching", "suite::disablePageCaching", false, "Prevent the browser from caching page content")
 	sc.StringSlice("excludedTestFiles", "suite::excludedTestFiles", []string{}, "Exclude test files to skip the tests, using glob pattern")
 	sc.String("timeZone", "suite::timeZone", "", "Specifies timeZone for this test")
-	sc.Int("passThreshold", "suite::passThreshold", 1, "Specifies the threshold of passed count (sauce mode only)")
+	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'. (sauce mode only)")
 
 	// NPM
 	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")
