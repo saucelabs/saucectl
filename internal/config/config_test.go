@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
-	assert2 "gotest.tools/v3/assert"
 	"os"
 	"strings"
 	"testing"
+
+	assert2 "gotest.tools/v3/assert"
 
 	"github.com/stretchr/testify/assert"
 )

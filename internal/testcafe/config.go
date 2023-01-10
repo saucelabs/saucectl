@@ -9,7 +9,6 @@ import (
 	"unicode"
 
 	"github.com/rs/zerolog/log"
-
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/fpath"
@@ -109,6 +108,7 @@ type Suite struct {
 	Shard              string                 `yaml:"shard,omitempty" json:"-"`
 	Headless           bool                   `yaml:"headless,omitempty" json:"headless"`
 	TimeZone           string                 `yaml:"timeZone,omitempty" json:"timeZone"`
+	PassThreshold      int                    `yaml:"passThreshold,omitempty" json:"-"`
 	// TypeScript compiling options
 	CompilerOptions CompilerOptions `yaml:"compilerOptions,omitempty" json:"compilerOptions"`
 	// Deprecated. Reserved for future use for actual devices.
@@ -195,6 +195,9 @@ func SetDefaults(p *Project) {
 
 		if suite.Timeout <= 0 {
 			suite.Timeout = p.Defaults.Timeout
+		}
+		if suite.PassThreshold < 1 {
+			suite.PassThreshold = 1
 		}
 
 		// If this suite is targeting devices, then the platformName on the device takes precedence and we can skip the
@@ -293,6 +296,12 @@ func Validate(p *Project) error {
 		if len(v.Simulators) == 0 && v.BrowserName == "" {
 			return fmt.Errorf(msg.MissingBrowserInSuite, v.Name)
 		}
+		if p.Sauce.Retries < v.PassThreshold-1 {
+			return fmt.Errorf(msg.InvalidPassThreshold)
+		}
+	}
+	if p.Sauce.Retries < 0 {
+		log.Warn().Int("retries", p.Sauce.Retries).Msg(msg.InvalidReries)
 	}
 
 	var err error

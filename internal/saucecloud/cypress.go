@@ -128,6 +128,7 @@ func (r *CypressRunner) runSuites(fileURI string) bool {
 				Retries:          r.Project.GetSauceCfg().Retries,
 				TimeZone:         s.TimeZone,
 				Visibility:       r.Project.GetSauceCfg().Visibility,
+				PassThreshold:    s.PassThreshold,
 			}
 		}
 	}()

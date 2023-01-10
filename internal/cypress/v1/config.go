@@ -66,6 +66,7 @@ type Suite struct {
 	Headless         bool          `yaml:"headless,omitempty" json:"headless"`
 	PreExec          []string      `yaml:"preExec,omitempty" json:"preExec"`
 	TimeZone         string        `yaml:"timeZone,omitempty" json:"timeZone"`
+	PassThreshold    int           `yaml:"passThreshold,omitempty" json:"-"`
 }
 
 // SuiteConfig represents the cypress config overrides.
@@ -168,6 +169,9 @@ func (p *Project) SetDefaults() {
 		if s.Config.TestingType == "" {
 			s.Config.TestingType = "e2e"
 		}
+		if s.PassThreshold < 1 {
+			s.PassThreshold = 1
+		}
 
 		// Update cypress related env vars.
 		for envK := range s.Config.Env {
@@ -253,6 +257,12 @@ func (p *Project) Validate() error {
 		if len(s.Config.SpecPattern) == 0 {
 			return fmt.Errorf(msg.MissingTestFiles, s.Name)
 		}
+		if p.Sauce.Retries < s.PassThreshold-1 {
+			return fmt.Errorf(msg.InvalidPassThreshold)
+		}
+	}
+	if p.Sauce.Retries < 0 {
+		log.Warn().Int("retries", p.Sauce.Retries).Msg(msg.InvalidReries)
 	}
 
 	var err error
@@ -451,6 +461,7 @@ func (p *Project) GetSuites() []suite.Suite {
 			PreExec:          s.PreExec,
 			TimeZone:         s.TimeZone,
 			Env:              s.Config.Env,
+			PassThreshold:    s.PassThreshold,
 		})
 	}
 	return suites
@@ -509,6 +520,7 @@ func (p *Project) GetSuite() suite.Suite {
 		PreExec:          s.PreExec,
 		TimeZone:         s.TimeZone,
 		Env:              s.Config.Env,
+		PassThreshold:    s.PassThreshold,
 	}
 }
 

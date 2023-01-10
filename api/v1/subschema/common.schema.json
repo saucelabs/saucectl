@@ -88,6 +88,11 @@
     "timeZone": {
       "description": "Specifies the timeZone for the suite.",
       "type": "string"
+    },
+    "passThreshold": {
+      "description": "The minimum number of successful attempts for a suite to be considered as 'passed'.",
+      "type": "integer",
+      "minimum": 1
     }
   }
 }
