@@ -296,7 +296,7 @@ func Validate(p *Project) error {
 		if len(v.Simulators) == 0 && v.BrowserName == "" {
 			return fmt.Errorf(msg.MissingBrowserInSuite, v.Name)
 		}
-		if v.PassThreshold > p.Sauce.Retries {
+		if p.Sauce.Retries > 0 && v.PassThreshold > p.Sauce.Retries {
 			return fmt.Errorf(msg.InvalidPassThreshold)
 		}
 	}

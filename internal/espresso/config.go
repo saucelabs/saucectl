@@ -197,7 +197,7 @@ func Validate(p Project) error {
 		if regio == region.USEast4 && len(suite.Emulators) > 0 {
 			return errors.New(msg.NoEmulatorSupport)
 		}
-		if suite.PassThreshold > p.Sauce.Retries {
+		if p.Sauce.Retries > 0 && suite.PassThreshold > p.Sauce.Retries {
 			return fmt.Errorf(msg.InvalidPassThreshold)
 		}
 	}
