@@ -10,7 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/mitchellh/mapstructure"
+	"github.com/santhosh-tekuri/jsonschema/v5"
+
+	// httploader needs to be loaded to be able to fetch http-based schemas.
+	_ "github.com/santhosh-tekuri/jsonschema/v5/httploader"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -433,4 +438,98 @@ func ValidateVisibility(visibility string) bool {
 	}
 
 	return false
+}
+
+// ValidateSchema validates user config against the JSON Schema.
+// If validation fails for any reason, fail softly to avoid disturbing execution as this is not critical.
+func ValidateSchema(cfgFile string) {
+	yamlText, err := os.ReadFile(cfgFile)
+	if err != nil {
+		return
+	}
+
+	var m interface{}
+	err = yaml.Unmarshal(yamlText, &m)
+	if err != nil {
+		return
+	}
+	m, err = toStringKeys(m)
+	if err != nil {
+		return
+	}
+
+	compiler := jsonschema.NewCompiler()
+	schema, err := compiler.Compile("https://raw.githubusercontent.com/saucelabs/saucectl/main/api/saucectl.schema.json")
+	if err != nil {
+		return
+	}
+	err = schema.Validate(m)
+	if err == nil {
+		return
+	}
+	rootCause := findRootCauses(err.(*jsonschema.ValidationError))
+	renderSchemaValidationIssues(cfgFile, rootCause)
+}
+
+func renderSchemaValidationIssues(cfgFile string, errors []*jsonschema.ValidationError) {
+	errStr := "error"
+	if len(errors) > 1 {
+		errStr = "errors"
+	}
+	fmt.Println()
+	color.Red("There is %d validation %s found in %s:\n", len(errors), errStr, cfgFile)
+	for _, d := range errors {
+		if d.InstanceLocation != "" {
+			color.Red("- %s in %s\n", d.Message, d.InstanceLocation)
+		} else {
+			color.Red("- %s\n", d.Message)
+		}
+	}
+	println()
+}
+
+func findRootCauses(validationError *jsonschema.ValidationError) []*jsonschema.ValidationError {
+	if validationError == nil {
+		return []*jsonschema.ValidationError{}
+	}
+
+	if len(validationError.Causes) == 0 {
+		return []*jsonschema.ValidationError{validationError}
+	}
+
+	var errors []*jsonschema.ValidationError
+	for _, cause := range validationError.Causes {
+		errors = append(errors, findRootCauses(cause)...)
+	}
+	return errors
+}
+
+func toStringKeys(val interface{}) (interface{}, error) {
+	var err error
+	switch val := val.(type) {
+	case map[interface{}]interface{}:
+		m := make(map[string]interface{})
+		for k, v := range val {
+			k, ok := k.(string)
+			if !ok {
+				return nil, errors.New("found non-string key")
+			}
+			m[k], err = toStringKeys(v)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return m, nil
+	case []interface{}:
+		var l = make([]interface{}, len(val))
+		for i, v := range val {
+			l[i], err = toStringKeys(v)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return l, nil
+	default:
+		return val, nil
+	}
 }

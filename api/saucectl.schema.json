@@ -1,6 +1,5 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
-  "$id": "https://saucelabs.com/schema/saucectl.schema.json",
   "title": "SauceCTL Runner Configuration",
   "description": "Configuration file for saucectl.",
   "type": "object",
@@ -33,14 +32,12 @@
       },
       "then": {
         "$schema": "https://json-schema.org/draft-07/schema",
-        "$id": "https://saucelabs.com/schema/v1alpha/cypress.schema.json",
         "title": "saucectl cypress runner configuration",
         "description": "Configuration file for cypress using saucectl",
         "type": "object",
         "allOf": [
           {
             "$schema": "https://json-schema.org/draft-07/schema",
-            "$id": "https://saucelabs.com/schema/v1alpha/artifacts.schema.json",
             "title": "saucectl artifacts schema",
             "description": "Subschema for controlling artifacts",
             "type": "object",
@@ -90,7 +87,6 @@
           },
           {
             "$schema": "https://json-schema.org/draft-07/schema",
-            "$id": "https://saucelabs.com/schema/v1alpha/docker.schema.json",
             "title": "saucectl docker specific schema",
             "description": "Subschema for docker specific settings",
             "type": "object",
@@ -118,7 +114,6 @@
           },
           {
             "$schema": "https://json-schema.org/draft-07/schema",
-            "$id": "https://saucelabs.com/schema/v1alpha/npm.schema.json",
             "title": "saucectl npm specific schema",
             "description": "Subschema for npm specific settings",
             "type": "object",
@@ -151,7 +146,6 @@
           },
           {
             "$schema": "https://json-schema.org/draft-07/schema",
-            "$id": "https://saucelabs.com/schema/v1alpha/sauce.schema.json",
             "title": "saucectl sauce specific schema",
             "description": "Subschema for sauce specific settings",
             "type": "object",
@@ -249,7 +243,6 @@
           },
           {
             "$schema": "https://json-schema.org/draft-07/schema",
-            "$id": "https://saucelabs.com/schema/v1alpha/reporters.schema.json",
             "title": "saucectl reporters specific schema",
             "description": "Subschema for reporters specific settings",
             "type": "object",
@@ -513,14 +506,12 @@
       },
       "then": {
         "$schema": "https://json-schema.org/draft-07/schema",
-        "$id": "https://saucelabs.com/schema/v1/cypress.schema.json",
         "title": "saucectl cypress runner configuration",
         "description": "Configuration file for cypress using saucectl",
         "type": "object",
         "allOf": [
           {
             "$schema": "https://json-schema.org/draft-07/schema",
-            "$id": "https://saucelabs.com/schema/v1/artifacts.schema.json",
             "title": "saucectl artifacts schema",
             "description": "Subschema for controlling artifacts",
             "type": "object",
@@ -570,7 +561,6 @@
           },
           {
             "$schema": "https://json-schema.org/draft-07/schema",
-            "$id": "https://saucelabs.com/schema/v1/docker.schema.json",
             "title": "saucectl docker specific schema",
             "description": "Subschema for docker specific settings",
             "type": "object",
@@ -598,7 +588,6 @@
           },
           {
             "$schema": "https://json-schema.org/draft-07/schema",
-            "$id": "https://saucelabs.com/schema/v1/npm.schema.json",
             "title": "saucectl npm specific schema",
             "description": "Subschema for npm specific settings",
             "type": "object",
@@ -631,7 +620,6 @@
           },
           {
             "$schema": "https://json-schema.org/draft-07/schema",
-            "$id": "https://saucelabs.com/schema/v1/sauce.schema.json",
             "title": "saucectl sauce specific schema",
             "description": "Subschema for sauce specific settings",
             "type": "object",
@@ -738,7 +726,6 @@
           },
           {
             "$schema": "https://json-schema.org/draft-07/schema",
-            "$id": "https://saucelabs.com/schema/v1/reporters.schema.json",
             "title": "saucectl reporters specific schema",
             "description": "Subschema for reporters specific settings",
             "type": "object",
@@ -1012,7 +999,6 @@
       },
       "then": {
         "$schema": "https://json-schema.org/draft-07/schema",
-        "$id": "https://saucelabs.com/schema/v1alpha/espresso.schema.json",
         "title": "saucectl espresso runner configuration",
         "description": "Configuration file for espresso using saucectl",
         "type": "object",
@@ -1310,7 +1296,6 @@
       },
       "then": {
         "$schema": "https://json-schema.org/draft-07/schema",
-        "$id": "https://saucelabs.com/schema/v1alpha/playwright.schema.json",
         "title": "saucectl playwright runner configuration",
         "description": "Configuration file for playwright using saucectl",
         "type": "object",
@@ -1545,7 +1530,6 @@
       },
       "then": {
         "$schema": "https://json-schema.org/draft-07/schema",
-        "$id": "https://saucelabs.com/schema/v1alpha/puppeteer.schema.json",
         "title": "saucectl puppeteer runner configuration",
         "description": "Configuration file for puppeteer using saucectl",
         "type": "object",
@@ -1693,7 +1677,6 @@
       },
       "then": {
         "$schema": "https://json-schema.org/draft-07/schema",
-        "$id": "https://saucelabs.com/schema/v1alpha/replay.schema.json",
         "title": "saucectl puppeteer-replay runner configuration",
         "description": "Configuration file for puppeteer-replay using saucectl",
         "type": "object",
@@ -1788,7 +1771,6 @@
       },
       "then": {
         "$schema": "https://json-schema.org/draft-07/schema",
-        "$id": "https://saucelabs.com/schema/v1alpha/testcafe.schema.json",
         "title": "saucectl testcafe runner configuration",
         "description": "Configuration file for testcafe using saucectl",
         "type": "object",
@@ -2135,7 +2117,6 @@
       },
       "then": {
         "$schema": "https://json-schema.org/draft-07/schema",
-        "$id": "https://saucelabs.com/schema/v1alpha/xcuitest.schema.json",
         "title": "saucectl xcuitest runner configuration",
         "description": "Configuration file for xcuitest using saucectl",
         "type": "object",
@@ -2344,7 +2325,6 @@
       },
       "then": {
         "$schema": "https://json-schema.org/draft-07/schema",
-        "$id": "https://saucelabs.com/schema/v1alpha/apitest.schema.json",
         "title": "saucectl api testing runner configuration",
         "description": "Configuration file for api testing using saucectl",
         "type": "object",
@@ -2410,7 +2390,6 @@
       },
       "then": {
         "$schema": "https://json-schema.org/draft-07/schema",
-        "$id": "https://saucelabs.com/schema/v1alpha/playwright-cucumberjs.schema.json",
         "title": "saucectl playwright cucumberjs runner configuration",
         "description": "Configuration file for cucumber using saucectl",
         "type": "object",

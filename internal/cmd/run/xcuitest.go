@@ -13,6 +13,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
@@ -45,7 +46,7 @@ func NewXCUITestCmd() *cobra.Command {
 			return preRun()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			exitCode, err := runXcuitest(cmd, lflags)
+			exitCode, err := runXcuitest(cmd, lflags, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -78,7 +79,11 @@ func NewXCUITestCmd() *cobra.Command {
 	return cmd
 }
 
-func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags) (int, error) {
+func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) (int, error) {
+	if !isCLIDriven {
+		config.ValidateSchema(gFlags.cfgFilePath)
+	}
+
 	p, err := xcuitest.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err

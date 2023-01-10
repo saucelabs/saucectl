@@ -13,6 +13,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
@@ -46,7 +47,7 @@ func NewEspressoCmd() *cobra.Command {
 			return preRun()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			exitCode, err := runEspresso(cmd, lflags)
+			exitCode, err := runEspresso(cmd, lflags, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -86,7 +87,11 @@ func NewEspressoCmd() *cobra.Command {
 	return cmd
 }
 
-func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags) (int, error) {
+func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, isCLIDriven bool) (int, error) {
+	if !isCLIDriven {
+		config.ValidateSchema(gFlags.cfgFilePath)
+	}
+
 	p, err := espresso.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
