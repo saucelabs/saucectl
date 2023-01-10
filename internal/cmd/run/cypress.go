@@ -4,8 +4,6 @@ import (
 	"errors"
 	"os"
 
-	"github.com/saucelabs/saucectl/internal/msg"
-
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 
 	"github.com/rs/zerolog/log"
