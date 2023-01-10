@@ -47,7 +47,7 @@ func NewPlaywrightCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::testMatch", args)
 
-			exitCode, err := runPlaywright(cmd)
+			exitCode, err := runPlaywright(cmd, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -104,7 +104,11 @@ func NewPlaywrightCmd() *cobra.Command {
 	return cmd
 }
 
-func runPlaywright(cmd *cobra.Command) (int, error) {
+func runPlaywright(cmd *cobra.Command, isCLIDriven bool) (int, error) {
+	if !isCLIDriven {
+		config.ValidateSchema(gFlags.cfgFilePath)
+	}
+
 	p, err := playwright.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err

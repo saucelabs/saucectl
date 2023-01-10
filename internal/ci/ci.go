@@ -95,7 +95,8 @@ func GetProvider() Provider {
 	return None
 }
 
-func getCI(provider Provider) CI {
+// GetCI returns the CI details if the code is executed in a known CI environment.
+func GetCI(provider Provider) CI {
 	var ci CI
 	if reflect.DeepEqual(provider, AppVeyor) {
 		ci = CI{
@@ -259,7 +260,7 @@ func GetTags() []string {
 		return tags
 	}
 
-	ci := getCI(provider)
+	ci := GetCI(provider)
 	tags = append(tags, ci.Provider.Name)
 	if ci.OriginURL != "" {
 		tags = append(tags, fmt.Sprintf("%s:%s", "originURL", ci.OriginURL))

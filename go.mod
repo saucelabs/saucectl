@@ -20,6 +20,7 @@ require (
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/rs/zerolog v1.18.0
 	github.com/ryanuber/go-glob v1.0.0
+	github.com/santhosh-tekuri/jsonschema/v5 v5.1.1
 	github.com/schollz/progressbar/v3 v3.8.7
 	github.com/slack-go/slack v0.9.1
 	github.com/spf13/cobra v1.2.1
@@ -102,6 +103,6 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gopkg.in/yaml.v3 v3.0.1
 	gotest.tools v2.2.0+incompatible
 )

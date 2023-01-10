@@ -14,9 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/files"
-	"github.com/saucelabs/saucectl/internal/jsonio"
-
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
@@ -28,10 +25,12 @@ import (
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/files"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/node"
@@ -39,6 +38,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
+	"github.com/saucelabs/saucectl/internal/saucereport"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/saucelabs/saucectl/internal/tunnel"
 )
@@ -78,6 +78,8 @@ type result struct {
 	endTime   time.Time
 	attempts  int
 	retries   int
+
+	details insights.Details
 }
 
 // ConsoleLogAsset represents job asset log file name.
@@ -132,6 +134,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			}
 		}
 	}(r)
+
 	for i := 0; i < expected; i++ {
 		res := <-results
 		// in case one of test suites not passed
@@ -161,7 +164,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				jb, err := r.JobService.GetJobAssetFileContent(
 					context.Background(),
 					res.job.ID,
-					"junit.xml",
+					junit.JunitFileName,
 					res.job.IsRDC)
 				artifacts = append(artifacts, report.Artifact{
 					AssetType: report.JUnitArtifact,
@@ -209,6 +212,9 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 		}
 		// Since we don't know much about the state of the job in async mode, we'll just
 		r.logSuite(res)
+
+		// Report suite to Insights
+		r.reportSuiteToInsights(res)
 	}
 	close(done)
 
@@ -310,6 +316,16 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 	for opts := range jobOpts {
 		start := time.Now()
 
+		details := insights.Details{
+			Framework:  opts.Framework,
+			Browser:    opts.BrowserName,
+			Tags:       opts.Tags,
+			BuildName:  opts.Build,
+			Platform:   opts.PlatformName,
+			DeviceID:   opts.DeviceID,
+			DeviceName: opts.DeviceName,
+		}
+
 		if r.interrupted {
 			results <- result{
 				name:     opts.DisplayName,
@@ -318,6 +334,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 				err:      nil,
 				attempts: opts.Attempt + 1,
 				retries:  opts.Retries,
+				details:  details,
 			}
 			continue
 		}
@@ -372,6 +389,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			duration:  time.Since(start),
 			attempts:  opts.Attempt + 1,
 			retries:   opts.Retries,
+			details:   details,
 		}
 	}
 }
@@ -777,7 +795,7 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	}
 
 	// Some frameworks produce a junit.xml instead, check for that file if there's no console.log
-	assetContent, err = r.JobService.GetJobAssetFileContent(context.Background(), res.job.ID, "junit.xml", res.job.IsRDC)
+	assetContent, err = r.JobService.GetJobAssetFileContent(context.Background(), res.job.ID, junit.JunitFileName, res.job.IsRDC)
 	if err != nil {
 		log.Warn().Err(err).Str("suite", res.name).Msg("Failed to retrieve the console output.")
 		return
@@ -953,4 +971,68 @@ func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHi
 		return insights.JobHistory{}, err
 	}
 	return r.InsightsService.GetHistory(context.Background(), user, launchOrder)
+}
+
+func (r *CloudRunner) reportSuiteToInsights(res result) {
+	// Skip reporting if job is not completed
+	if !job.Done(res.job.Status) || res.skipped || res.job.ID == "" {
+		return
+	}
+
+	assets, err := r.JobService.GetJobAssetFileNames(context.Background(), res.job.ID, res.job.IsRDC)
+	if err != nil {
+		log.Warn().Err(err).Str("action", "loadAssets").Msg(msg.InsightsReportError)
+		return
+	}
+
+	var testRuns []insights.TestRun
+
+	if arrayContains(assets, saucereport.SauceReportFileName) {
+		report, err := r.loadSauceTestReport(res.job.ID, res.job.IsRDC)
+		if err != nil {
+			log.Warn().Err(err).Str("action", "parsingJSON").Msg(msg.InsightsReportError)
+			return
+		}
+		testRuns = insights.FromSauceReport(report, res.job.ID, res.name, res.details, res.job.IsRDC)
+	} else if arrayContains(assets, junit.JunitFileName) {
+		report, err := r.loadJUnitReport(res.job.ID, res.job.IsRDC)
+		if err != nil {
+			log.Warn().Err(err).Str("action", "parsingXML").Msg(msg.InsightsReportError)
+			return
+		}
+		testRuns = insights.FromJUnit(report, res.job.ID, res.name, res.details, res.job.IsRDC)
+	}
+
+	if len(testRuns) > 0 {
+		if err := r.InsightsService.PostTestRun(context.Background(), testRuns); err != nil {
+			log.Warn().Err(err).Str("action", "posting").Msg(msg.InsightsReportError)
+		}
+	}
+}
+
+func (r *CloudRunner) loadSauceTestReport(jobID string, isRDC bool) (saucereport.SauceReport, error) {
+	fileContent, err := r.JobService.GetJobAssetFileContent(context.Background(), jobID, saucereport.SauceReportFileName, isRDC)
+	if err != nil {
+		log.Warn().Err(err).Str("action", "loading-json-report").Msg(msg.InsightsReportError)
+		return saucereport.SauceReport{}, err
+	}
+	return saucereport.Parse(fileContent)
+}
+
+func (r *CloudRunner) loadJUnitReport(jobID string, isRDC bool) (junit.TestSuites, error) {
+	fileContent, err := r.JobService.GetJobAssetFileContent(context.Background(), jobID, junit.JunitFileName, isRDC)
+	if err != nil {
+		log.Warn().Err(err).Str("action", "loading-xml-report").Msg(msg.InsightsReportError)
+		return junit.TestSuites{}, err
+	}
+	return junit.Parse(fileContent)
+}
+
+func arrayContains(list []string, want string) bool {
+	for _, item := range list {
+		if item == want {
+			return true
+		}
+	}
+	return false
 }

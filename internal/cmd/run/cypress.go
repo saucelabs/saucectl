@@ -16,11 +16,13 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
@@ -46,7 +48,7 @@ func NewCypressCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::config::specPattern", args)
 
-			exitCode, err := runCypress(cmd)
+			exitCode, err := runCypress(cmd, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -93,7 +95,11 @@ func NewCypressCmd() *cobra.Command {
 	return cmd
 }
 
-func runCypress(cmd *cobra.Command) (int, error) {
+func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
+	if !isCLIDriven {
+		config.ValidateSchema(gFlags.cfgFilePath)
+	}
+
 	p, err := cypress.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
