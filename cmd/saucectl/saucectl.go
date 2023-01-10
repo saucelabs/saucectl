@@ -2,30 +2,26 @@ package main
 
 import (
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/cmd/storage"
-	"github.com/saucelabs/saucectl/internal/segment"
 	"os"
 	"time"
 
+	bt "github.com/backtrace-labs/backtrace-go"
 	"github.com/fatih/color"
-	"github.com/saucelabs/saucectl/internal/cmd/doctor"
-
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/cmd/artifacts"
 	"github.com/saucelabs/saucectl/internal/cmd/completion"
-
 	"github.com/saucelabs/saucectl/internal/cmd/configure"
+	"github.com/saucelabs/saucectl/internal/cmd/doctor"
 	"github.com/saucelabs/saucectl/internal/cmd/ini"
 	"github.com/saucelabs/saucectl/internal/cmd/new"
 	"github.com/saucelabs/saucectl/internal/cmd/run"
 	"github.com/saucelabs/saucectl/internal/cmd/signup"
+	"github.com/saucelabs/saucectl/internal/cmd/storage"
+	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/setup"
 	"github.com/saucelabs/saucectl/internal/version"
-
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-
 	"github.com/spf13/cobra"
-
-	bt "github.com/backtrace-labs/backtrace-go"
 )
 
 var (
@@ -72,6 +68,7 @@ func main() {
 		completion.Command(),
 		doctor.Command(),
 		storage.Command(cmd.PersistentPreRun),
+		artifacts.Command(cmd.PersistentPreRun),
 	)
 
 	if err := cmd.Execute(); err != nil {

@@ -170,4 +170,6 @@ const (
 	TunnelNotFound = "tunnel not found"
 	// RetrieveJobHistoryError indicates failed to retrieve job history
 	RetrieveJobHistoryError = "Unable to retrieve job history. Launching jobs in the default order."
+	// InsightsReportError indicates failed push to insights.
+	InsightsReportError = "unable to report result to insights"
 )
