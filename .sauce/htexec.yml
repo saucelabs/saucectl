@@ -4,16 +4,16 @@ sauce:
   region: us-west-1
 # defaults:
 suites:
-  - name: "pytest - 123"
-    image: "saucelabs/tests:v1"
-    entrypoint: "python -m pytest tests/integration"
+  - name: run sauce test
+    image: quay.io/mike_han/runsauce:dev-9d5f349
+    entrypoint: "/app/bin/runsauce.js -c staging --browser firefox -v latest -p 'windows 10' --verbose -t web"
     files:
-      - src: "/path/to/local/conf.json"
-        dst: "/path/inside/container/conf.json"
-    artifacts:
-      - "/path/inside/container/file.log"
-    metadata: # Arbitrary Key-Value pairs
-      k1: v1
-      k2: v2
-    env: # Arbitrary Key-Value pairs
-      MY_FOO: bar
+      - src: "runsauce.json"
+        dst: "/root/.runsauce.json"
+    # artifacts:
+    #   - "/path/inside/container/file.log"
+    # metadata: # Arbitrary Key-Value pairs
+    #   k1: v1
+    #   k2: v2
+    # env: # Arbitrary Key-Value pairs
+    #   MY_FOO: bar
