@@ -28,7 +28,7 @@ brews:
       name: homebrew-saucectl
     folder: Formula
     test: |
-      system "#{bin}/goreleaser -v"
+      system "#{bin}/goreleaser", "-v"
     name: saucectl
     homepage: "https://saucelabs.com/"
     description: "Test orchestration with Sauce Labs"
