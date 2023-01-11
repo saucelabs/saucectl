@@ -33,11 +33,12 @@ func (r *HostedExecRunner) Run() (int, error) {
 	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Msg("Starting suite.")
 
 	runner, err := r.RunnerService.TriggerRun(context.Background(), hostedexec.RunnerSpec{
-		Image:      suite.Image,
+		Container: hostedexec.Container{
+			Name: suite.Image,
+		},
 		EntryPoint: suite.EntryPoint,
 		Env:        mapEnv(suite.Env),
 		Files:      mapFiles(suite.Files),
-		Artifacts:  suite.Artifacts,
 		Metadata:   metadata,
 	})
 	if err != nil {
@@ -100,9 +101,10 @@ func (r *HostedExecRunner) PollRun(ctx context.Context, id string) (hostedexec.R
 			if err != nil {
 				return hostedexec.RunnerDetails{}, err
 			}
-			if r.Status == "Completed" {
+			if r.Status == "Succeeded" {
 				return r, nil
 			}
+			log.Info().Str("runID", r.ID).Str("status", r.Status).Msg("Waiting for run to complete.")
 		case <-deathclock.C:
 			r, err := r.RunnerService.GetRun(ctx, id)
 			if err != nil {
