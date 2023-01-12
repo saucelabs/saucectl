@@ -107,10 +107,11 @@ func (r *ReplayRunner) runSuites(fileURI string) bool {
 					ID:     r.Project.Sauce.Tunnel.Name,
 					Parent: r.Project.Sauce.Tunnel.Owner,
 				},
-				Experiments: r.Project.Sauce.Experiments,
-				Attempt:     0,
-				Retries:     r.Project.Sauce.Retries,
-				Visibility:  r.Project.Sauce.Visibility,
+				Experiments:   r.Project.Sauce.Experiments,
+				Attempt:       0,
+				Retries:       r.Project.Sauce.Retries,
+				Visibility:    r.Project.Sauce.Visibility,
+				PassThreshold: s.PassThreshold,
 			}
 		}
 	}()

@@ -203,6 +203,9 @@
           },
           "timeZone": {
             "$ref": "../subschema/common.schema.json#/definitions/timeZone"
+          },
+          "passThreshold": {
+            "$ref": "../subschema/common.schema.json#/definitions/passThreshold"
           }
         },
         "required": [

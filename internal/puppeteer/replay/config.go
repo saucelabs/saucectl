@@ -51,7 +51,8 @@ type Suite struct {
 	BrowserVersion string        `yaml:"browserVersion,omitempty" json:"browserVersion,omitempty"`
 	Platform       string        `yaml:"platform,omitempty" json:"platform,omitempty"`
 
-	Recordings []string `yaml:"recordings,omitempty" json:"-"`
+	Recordings    []string `yaml:"recordings,omitempty" json:"-"`
+	PassThreshold int      `yaml:"passThreshold,omitempty" json:"-"`
 }
 
 // FromFile creates a new replay Project based on the filepath cfgPath.
@@ -141,6 +142,13 @@ func Validate(p *Project) error {
 		if !rgx.MatchString(s.BrowserName) {
 			return fmt.Errorf("browser %s is not supported, please use chrome instead or leave empty for defaults", s.BrowserName)
 		}
+		if p.Sauce.Retries < s.PassThreshold-1 {
+			return fmt.Errorf(msg.InvalidPassThreshold)
+		}
+	}
+
+	if p.Sauce.Retries < 0 {
+		log.Warn().Int("retries", p.Sauce.Retries).Msg(msg.InvalidReries)
 	}
 
 	return nil

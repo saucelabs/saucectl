@@ -234,6 +234,9 @@
           },
           "appSettings": {
             "$ref": "../subschema/common.schema.json#/definitions/appSettings"
+          },
+          "passThreshold": {
+            "$ref": "../subschema/common.schema.json#/definitions/passThreshold"
           }
         },
         "anyOf": [

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/insights"
@@ -75,6 +76,7 @@ type Suite struct {
 	TestOptions        map[string]interface{} `yaml:"testOptions,omitempty" json:"testOptions"`
 	Timeout            time.Duration          `yaml:"timeout,omitempty" json:"timeout"`
 	AppSettings        config.AppSettings     `yaml:"appSettings,omitempty" json:"appSettings"`
+	PassThreshold      int                    `yaml:"passThreshold,omitempty" json:"-"`
 }
 
 // Android constant
@@ -130,6 +132,9 @@ func SetDefaults(p *Project) {
 		if suite.TestApp == "" {
 			p.Suites[i].TestApp = p.Espresso.TestApp
 			p.Suites[i].TestAppDescription = p.Espresso.TestAppDescription
+		}
+		if suite.PassThreshold < 1 {
+			p.Suites[i].PassThreshold = 1
 		}
 	}
 }
@@ -192,6 +197,12 @@ func Validate(p Project) error {
 		if regio == region.USEast4 && len(suite.Emulators) > 0 {
 			return errors.New(msg.NoEmulatorSupport)
 		}
+		if p.Sauce.Retries < suite.PassThreshold-1 {
+			return fmt.Errorf(msg.InvalidPassThreshold)
+		}
+	}
+	if p.Sauce.Retries < 0 {
+		log.Warn().Int("retries", p.Sauce.Retries).Msg(msg.InvalidReries)
 	}
 
 	return nil

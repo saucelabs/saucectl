@@ -345,8 +345,14 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 
 		jobData, skipped, err := r.runJob(opts)
 
-		if opts.Attempt < opts.Retries && !jobData.Passed && !skipped {
-			log.Warn().Err(err).Msg("Suite errored.")
+		if jobData.Passed {
+			opts.CurrentPassCount++
+		}
+
+		if opts.Attempt < opts.Retries && ((!jobData.Passed && !skipped) || (opts.CurrentPassCount < opts.PassThreshold)) {
+			if !jobData.Passed {
+				log.Warn().Err(err).Msg("Suite errored.")
+			}
 			go func(opt job.StartOptions) {
 				opt.Attempt++
 				log.Info().Str("suite", opt.DisplayName).
@@ -360,6 +366,16 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 		if r.FailFast && !jobData.Passed {
 			log.Warn().Err(err).Msg("FailFast mode enabled. Skipping upcoming suites.")
 			r.interrupted = true
+		}
+
+		if opts.CurrentPassCount < opts.PassThreshold {
+			log.Error().Str("suite", opts.DisplayName).Msg("Failed to pass threshold")
+			jobData.Status = job.StateFailed
+			jobData.Passed = false
+		} else {
+			log.Info().Str("suite", opts.DisplayName).Msg("Passed threshold")
+			jobData.Status = job.StatePassed
+			jobData.Passed = true
 		}
 
 		results <- result{

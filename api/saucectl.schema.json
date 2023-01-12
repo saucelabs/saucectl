@@ -473,6 +473,11 @@
                 "timeZone": {
                   "description": "Specifies the timeZone for the suite.",
                   "type": "string"
+                },
+                "passThreshold": {
+                  "description": "The minimum number of successful attempts for a suite to be considered as 'passed'.",
+                  "type": "integer",
+                  "minimum": 1
                 }
               },
               "required": [
@@ -969,6 +974,11 @@
                 "timeZone": {
                   "description": "Specifies the timeZone for the suite.",
                   "type": "string"
+                },
+                "passThreshold": {
+                  "description": "The minimum number of successful attempts for a suite to be considered as 'passed'.",
+                  "type": "integer",
+                  "minimum": 1
                 }
               },
               "required": [
@@ -1256,6 +1266,9 @@
                       }
                     }
                   }
+                },
+                "passThreshold": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
                 }
               },
               "anyOf": [
@@ -1500,6 +1513,9 @@
                 },
                 "timeZone": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/timeZone"
+                },
+                "passThreshold": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
                 }
               },
               "required": [
@@ -1743,6 +1759,9 @@
                 },
                 "timeout": {
                   "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
+                },
+                "passThreshold": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
                 }
               },
               "required": [
@@ -2087,6 +2106,9 @@
                 },
                 "timeZone": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/timeZone"
+                },
+                "passThreshold": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
                 }
               },
               "required": [
@@ -2285,6 +2307,9 @@
                 },
                 "timeout": {
                   "$ref": "#/allOf/0/then/properties/defaults/properties/timeout"
+                },
+                "passThreshold": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
                 }
               },
               "anyOf": [
@@ -2555,6 +2580,9 @@
                 },
                 "timeZone": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/timeZone"
+                },
+                "passThreshold": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
                 }
               },
               "required": [

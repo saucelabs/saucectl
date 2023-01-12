@@ -102,6 +102,10 @@ const (
 	NoFrameworkSupport = "this framework is currently not supported in your specified region"
 	// InfoUsingDefaultPlatform indicates using the default value for platform.
 	InfoUsingDefaultPlatform = "using default platform '%s' for suite suite '%s'"
+	// InvalidReries indicates retries is less than 0
+	InvalidReries = "retries should not be less than 0"
+	// InvalidPassThreshold indicates invalid pass threshold
+	InvalidPassThreshold = "passThreshold should not be greater than retries+1"
 )
 
 // cypress config settings

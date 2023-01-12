@@ -66,6 +66,9 @@
           },
           "timeout": {
             "$ref": "../subschema/common.schema.json#/definitions/timeout"
+          },
+          "passThreshold": {
+            "$ref": "../subschema/common.schema.json#/definitions/passThreshold"
           }
         },
         "required": [
