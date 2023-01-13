@@ -30,6 +30,12 @@ func (r *HostedExecRunner) Run() (int, error) {
 	metadata := make(map[string]string)
 	metadata["name"] = suite.Name
 
+	files, err := mapFiles(suite.Files)
+	if err != nil {
+		log.Err(err).Str("suite", suite.Name).Msg("Unable to read source files")
+		return 1, err
+	}
+
 	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Msg("Starting suite.")
 
 	runner, err := r.RunnerService.TriggerRun(context.Background(), hostedexec.RunnerSpec{
@@ -42,7 +48,7 @@ func (r *HostedExecRunner) Run() (int, error) {
 		},
 		EntryPoint: suite.EntryPoint,
 		Env:        mapEnv(suite.Env),
-		Files:      mapFiles(suite.Files),
+		Files:      files,
 		Metadata:   metadata,
 	})
 	if err != nil {
@@ -130,21 +136,25 @@ func mapEnv(env map[string]string) []hostedexec.EnvItem {
 	return items
 }
 
-func mapFiles(files []hostedexec.File) []hostedexec.FileData {
+func mapFiles(files []hostedexec.File) ([]hostedexec.FileData, error) {
 	var items []hostedexec.FileData
 	for _, f := range files {
+		data, err := readFile(f.Src)
+		if err != nil {
+			return items, err
+		}
 		items = append(items, hostedexec.FileData{
 			Path: f.Dst,
-			Data: readFile(f.Src),
+			Data: data,
 		})
 	}
-	return items
+	return items, nil
 }
 
-func readFile(path string) string {
+func readFile(path string) (string, error) {
 	bytes, err := os.ReadFile(path)
 	if err != nil {
-		log.Warn().Str("file", path).Err(err).Msg("Cannot read file.")
+		return "", err
 	}
-	return base64.StdEncoding.Strict().EncodeToString(bytes)
+	return base64.StdEncoding.Strict().EncodeToString(bytes), nil
 }
