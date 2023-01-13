@@ -848,6 +848,7 @@
               "version": {
                 "enum": [
                   "package.json",
+                  "12.3.0",
                   "11.2.0",
                   "10.10.0",
                   "10.7.0",
@@ -1368,6 +1369,7 @@
                 "$ref": "#/allOf/9/then/properties/playwright/properties/version",
                 "enum": [
                   "package.json",
+                  "1.29.2",
                   "1.28.1",
                   "1.27.1",
                   "1.25.1",
@@ -1846,6 +1848,7 @@
                 "$ref": "#/allOf/9/then/properties/playwright/properties/version",
                 "enum": [
                   "package.json",
+                  "2.2.0",
                   "2.1.0",
                   "2.0.1",
                   "2.0.0",
