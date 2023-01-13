@@ -16,12 +16,18 @@ type Project struct {
 }
 
 type Suite struct {
-	Name       string            `yaml:"name,omitempty" json:"name"`
-	Image      string            `yaml:"image,omitempty" json:"image"`
-	EntryPoint string            `yaml:"entrypoint,omitempty" json:"entrypoint"`
-	Files      []File            `yaml:"files,omitempty" json:"files"`
-	Artifacts  []string          `yaml:"artifacts,omitempty" json:"artifacts"`
-	Env        map[string]string `yaml:"env,omitempty" json:"env"`
+	Name          string            `yaml:"name,omitempty" json:"name"`
+	Image         string            `yaml:"image,omitempty" json:"image"`
+	ImagePullAuth ImagePullAuth     `yaml:"imagePullAuth,omitempty" json:"imagePullAuth"`
+	EntryPoint    string            `yaml:"entrypoint,omitempty" json:"entrypoint"`
+	Files         []File            `yaml:"files,omitempty" json:"files"`
+	Artifacts     []string          `yaml:"artifacts,omitempty" json:"artifacts"`
+	Env           map[string]string `yaml:"env,omitempty" json:"env"`
+}
+
+type ImagePullAuth struct {
+	User  string `yaml:"user,omitempty" json:"user"`
+	Token string `yaml:"token,omitempty" json:"token"`
 }
 
 type File struct {

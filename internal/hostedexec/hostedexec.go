@@ -31,6 +31,12 @@ type RunnerSpec struct {
 
 type Container struct {
 	Name string `json:"name,omitempty"`
+	Auth Auth   `json:"auth,omitempty"`
+}
+
+type Auth struct {
+	User  string `json:"user,omitempty"`
+	Token string `json:"token,omitempty"`
 }
 
 type EnvItem struct {
@@ -119,6 +125,7 @@ func (c *Client) TriggerRun(ctx context.Context, spec RunnerSpec) (Runner, error
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusCreated {
 		log.Error().Int("statusCode", resp.StatusCode).Msg("Invalid statusCode for Trigger")
+		// TODO needs actual error handling
 	}
 
 	body, err := io.ReadAll(resp.Body)

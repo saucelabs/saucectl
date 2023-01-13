@@ -5,7 +5,10 @@ sauce:
 # defaults:
 suites:
   - name: run sauce test
-    image: quay.io/mike_han/runsauce:dev-9d5f349
+    image: quay.io/saucelabs/runsauce:dev-9d5f349
+    imagePullAuth:
+      user: $SAUCE_IMAGE_USER
+      token: $SAUCE_IMAGE_TOKEN
     entrypoint: "/app/bin/runsauce.js -c staging --browser firefox -v latest -p 'windows 10' --verbose -t web"
     files:
       - src: "runsauce.json"

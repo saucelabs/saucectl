@@ -35,6 +35,10 @@ func (r *HostedExecRunner) Run() (int, error) {
 	runner, err := r.RunnerService.TriggerRun(context.Background(), hostedexec.RunnerSpec{
 		Container: hostedexec.Container{
 			Name: suite.Image,
+			Auth: hostedexec.Auth{
+				User:  suite.ImagePullAuth.User,
+				Token: suite.ImagePullAuth.Token,
+			},
 		},
 		EntryPoint: suite.EntryPoint,
 		Env:        mapEnv(suite.Env),
