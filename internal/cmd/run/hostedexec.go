@@ -22,8 +22,8 @@ func runHostedExec(cmd *cobra.Command) (int, error) {
 	// hostedExecClient.URL = "http://127.0.0.1:4010"
 
 	r := saucecloud.HostedExecRunner{
-		Project: p,
+		Project:       p,
 		RunnerService: &hostedExecClient,
 	}
-	return r.Run()
+	return r.RunProject()
 }

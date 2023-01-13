@@ -24,7 +24,7 @@ type HostedExecRunner struct {
 	state         state
 }
 
-func (r *HostedExecRunner) Run() (int, error) {
+func (r *HostedExecRunner) RunProject() (int, error) {
 	suite := r.Project.Suites[0]
 
 	metadata := make(map[string]string)
