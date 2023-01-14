@@ -3,6 +3,7 @@ package saucecloud
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"os"
 	"os/signal"
 	"time"
@@ -24,16 +25,68 @@ type HostedExecRunner struct {
 	state         state
 }
 
-func (r *HostedExecRunner) RunProject() (int, error) {
-	suite := r.Project.Suites[0]
+type execResult struct {
+	name      string
+	skipped   bool
+	err       error
+	duration  time.Duration
+	startTime time.Time
+	endTime   time.Time
+}
 
+func (r *HostedExecRunner) RunProject() (int, error) {
+	suites, results := r.createWorkerPool(1, 0)
+
+	// Submit suites to work on.
+	go func() {
+		for _, s := range r.Project.Suites {
+			suites <- s
+		}
+	}()
+
+	if passed := r.collectResults(results, len(r.Project.Suites)); !passed {
+		return 1, nil
+	}
+
+	return 0, nil
+}
+
+func (r *HostedExecRunner) createWorkerPool(ccy int, maxRetries int) (chan hostedexec.Suite, chan execResult) {
+	suites := make(chan hostedexec.Suite, maxRetries+1)
+	results := make(chan execResult, ccy)
+
+	log.Info().Int("concurrency", ccy).Msg("Launching workers.")
+	for i := 0; i < ccy; i++ {
+		go r.runSuites(suites, results)
+	}
+
+	return suites, results
+}
+
+func (r *HostedExecRunner) runSuites(suites chan hostedexec.Suite, results chan<- execResult) {
+	for suite := range suites {
+		startTime := time.Now()
+
+		err := r.runSuite(suite)
+
+		results <- execResult{
+			name:      suite.Name,
+			err:       err,
+			startTime: startTime,
+			endTime:   time.Now(),
+			duration:  time.Since(startTime),
+		}
+	}
+}
+
+func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) error {
 	metadata := make(map[string]string)
 	metadata["name"] = suite.Name
 
 	files, err := mapFiles(suite.Files)
 	if err != nil {
 		log.Err(err).Str("suite", suite.Name).Msg("Unable to read source files")
-		return 1, err
+		return err
 	}
 
 	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Msg("Starting suite.")
@@ -52,7 +105,7 @@ func (r *HostedExecRunner) RunProject() (int, error) {
 		Metadata:   metadata,
 	})
 	if err != nil {
-		return 1, err
+		return err
 	}
 
 	sigChan := r.registerInterruptOnSignal(runner.ID, suite.Name)
@@ -61,14 +114,47 @@ func (r *HostedExecRunner) RunProject() (int, error) {
 	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Msg("Started suite.")
 	run, err := r.PollRun(context.Background(), runner.ID)
 	if err != nil {
-		return 1, err
-	}
-	// TODO: What are the actual statuses?
-	if run.Status == "Completed" {
-		return 0, nil
+		return err
 	}
 
-	return 1, nil
+	// TODO: What's the failed status for a runner?
+	if run.Status != hostedexec.StateSucceeded {
+		return fmt.Errorf("suite '%s' failed", suite.Name)
+	}
+
+	return nil
+}
+
+func (r *HostedExecRunner) collectResults(results chan execResult, expected int) bool {
+	inProgress := expected
+	passed := true
+
+	done := make(chan interface{})
+	go func(r *HostedExecRunner) {
+		t := time.NewTicker(10 * time.Second)
+		defer t.Stop()
+		for {
+			select {
+			case <-done:
+				return
+			case <-t.C:
+				if r.state == running {
+					log.Info().Msgf("Suites in progress: %d", inProgress)
+				}
+			}
+		}
+	}(r)
+	for i := 0; i < expected; i++ {
+		res := <-results
+		inProgress--
+
+		if res.err != nil {
+			passed = false
+		}
+	}
+	close(done)
+
+	return passed
 }
 
 func (r *HostedExecRunner) registerInterruptOnSignal(runID string, suiteName string) chan os.Signal {
@@ -111,10 +197,9 @@ func (r *HostedExecRunner) PollRun(ctx context.Context, id string) (hostedexec.R
 			if err != nil {
 				return hostedexec.RunnerDetails{}, err
 			}
-			if r.Status == "Succeeded" {
+			if hostedexec.Done(r.Status) {
 				return r, nil
 			}
-			log.Info().Str("runID", r.ID).Str("status", r.Status).Msg("Waiting for run to complete.")
 		case <-deathclock.C:
 			r, err := r.RunnerService.GetRun(ctx, id)
 			if err != nil {

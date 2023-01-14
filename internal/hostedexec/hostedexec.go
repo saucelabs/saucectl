@@ -14,6 +14,19 @@ import (
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
+// TODO Caution: Final states are not confirmed yet.
+// The different states that a runner can be in.
+const (
+	StatePending   = "Pending"
+	StateRunning   = "Running"
+	StateSucceeded = "Succeeded"
+	StateCancelled = "Cancelled"
+)
+
+// DoneStates represents states that a runner doesn't transition out of, i.e. once the runner is in one of these states,
+// it's done.
+var DoneStates = []string{StateSucceeded, StateCancelled}
+
 type Client struct {
 	HTTPClient  *http.Client
 	URL         string
@@ -180,4 +193,15 @@ func (c *Client) StopRun(ctx context.Context, runID string) error {
 	defer resp.Body.Close()
 
 	return nil
+}
+
+// Done returns true if the runner status is one of DoneStates. False otherwise.
+func Done(status string) bool {
+	for _, s := range DoneStates {
+		if s == status {
+			return true
+		}
+	}
+
+	return false
 }
