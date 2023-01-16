@@ -13,13 +13,19 @@ import (
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
+const (
+	RDCSource = "rdc"
+	VDCSource = "vdc"
+	APISource = "api"
+)
+
 // ListJobResp represents list job response structure
 type ListJobResp struct {
 	Jobs  []JobResp `json:"jobs"`
 	Total int       `json:"total"`
 }
 
-// JobResp represents job response inside of ListJobResp
+// JobResp represents job response structure
 type JobResp struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
@@ -108,19 +114,29 @@ func buildJob(j JobResp) job.Job {
 }
 
 func (c *Client) ReadJob(ctx context.Context, jobID string) (job.Job, error) {
-	vdcJob, err := c.ReadVDCJob(ctx, jobID)
-	if err != nil {
-		rdcJob, err := c.ReadRDCJob(ctx, jobID)
-		if err != nil {
-			apiJob, err := c.ReadAPIJob(ctx, jobID)
-			if err != nil {
-				return job.Job{}, fmt.Errorf("failed to get job: %w", err)
-			}
-			return apiJob, nil
+	var source = VDCSource
+
+	switch source {
+	case VDCSource:
+		vdcJob, err := c.ReadVDCJob(ctx, jobID)
+		if err == nil {
+			return vdcJob, nil
 		}
-		return rdcJob, nil
+		fallthrough
+	case RDCSource:
+		rdcJob, err := c.ReadRDCJob(ctx, jobID)
+		if err == nil {
+			return rdcJob, nil
+		}
+		fallthrough
+	case APISource:
+		apiJob, err := c.ReadAPIJob(ctx, jobID)
+		if err != nil {
+			return job.Job{}, fmt.Errorf("failed to get job: %w", err)
+		}
+		return apiJob, nil
 	}
-	return vdcJob, nil
+	return job.Job{}, nil
 }
 
 func (c *Client) ReadVDCJob(ctx context.Context, jobID string) (job.Job, error) {
