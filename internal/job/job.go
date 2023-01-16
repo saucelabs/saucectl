@@ -23,22 +23,29 @@ var DoneStates = []string{StateComplete, StateError, StatePassed, StateFailed}
 // Job represents test details and metadata of a test run (aka Job), that is usually associated with a particular test
 // execution instance (e.g. VM).
 type Job struct {
-	ID                  string `json:"id"`
-	Passed              bool   `json:"passed"`
-	Status              string `json:"status"`
-	Error               string `json:"error"`
-	BrowserShortVersion string `json:"browser_short_version"`
-	BaseConfig          struct {
-		PlatformName    string `json:"platformName"`
-		PlatformVersion string `json:"platformVersion"`
-		DeviceName      string `json:"deviceName"`
-	} `json:"base_config"`
+	ID                  string     `json:"id"`
+	Name                string     `json:"name"`
+	Passed              bool       `json:"passed"`
+	Status              string     `json:"status"`
+	Error               string     `json:"error,omitempty"`
+	BrowserShortVersion string     `json:"browser_short_version,omitempty"`
+	BaseConfig          BaseConfig `json:"base_config,omitempty"`
+	Platform            string     `json:"platform,omitempty"`
+	Framework           string     `json:"framework,omitempty"`
+	Device              string     `json:"device,omitempty"`
+	BrowserName         string     `json:"browserName,omitempty"`
 
 	// IsRDC flags a job started as an RDC run.
 	IsRDC bool `json:"-"`
 
 	// TimedOut flags a job as an unfinished one.
 	TimedOut bool `json:"-"`
+}
+
+type BaseConfig struct {
+	PlatformName    string `json:"platformName,omitempty"`
+	PlatformVersion string `json:"platformVersion,omitempty"`
+	DeviceName      string `json:"deviceName,omitempty"`
 }
 
 // TotalStatus returns the total status of a job, combining the result of fields Status + Passed.

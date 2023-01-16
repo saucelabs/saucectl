@@ -2,8 +2,12 @@ package saucecloud
 
 import (
 	"context"
-	"github.com/saucelabs/saucectl/internal/job"
+	"fmt"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/iam"
+	"github.com/saucelabs/saucectl/internal/insights"
+	"github.com/saucelabs/saucectl/internal/job"
 )
 
 type JobService struct {
@@ -83,4 +87,21 @@ func (s JobService) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 	}
 
 	return s.VDCStarter.StartJob(ctx, opts)
+}
+
+type JobCommandService struct {
+	InsightsReader insights.Service
+	UserService    iam.Service
+}
+
+func (s JobCommandService) ListJobs(ctx context.Context, jobSource string, queryOption job.QueryOption) (job.List, error) {
+	user, err := s.UserService.GetUser(ctx)
+	if err != nil {
+		return job.List{}, fmt.Errorf("failed to get user: %w", err)
+	}
+	return s.InsightsReader.ListJobs(ctx, user.ID, jobSource, queryOption)
+}
+
+func (s JobCommandService) ReadJob(ctx context.Context, id string) (job.Job, error) {
+	return s.InsightsReader.ReadJob(ctx, id)
 }
