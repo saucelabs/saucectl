@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -19,8 +20,11 @@ import (
 )
 
 const (
-	RDC = "rdc"
-	VDC = "vdc"
+	RDC        = "rdc"
+	VDC        = "vdc"
+	API        = "api"
+	JSONOutput = "json"
+	TextOutput = "text"
 )
 
 var defaultTableStyle = table.Style{
@@ -87,6 +91,29 @@ func ListCommand() *cobra.Command {
 			}()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if page < 0 {
+				return errors.New("invalid page")
+			}
+			if size < 0 {
+				return errors.New("invalid size")
+			}
+			if out != JSONOutput && out != TextOutput {
+				return errors.New("unknown output format")
+			}
+			var isStatusValid bool
+			for _, s := range job.StatesAll {
+				if s == status {
+					isStatusValid = true
+					break
+				}
+			}
+			if status != "" && !isStatusValid {
+				return fmt.Errorf("unknown status. Options: %s", strings.Join(job.StatesAll, ", "))
+			}
+			if jobSource != "" && jobSource != RDC && jobSource != VDC && jobSource != API {
+				return errors.New("invalid job resource. Options: vdc, rdc, api")
+			}
+
 			return list(jobSource, out, buildQueryOpts(page, size, status))
 		},
 	}
@@ -121,8 +148,6 @@ func list(jobSource string, outputFormat string, queryOpts job.QueryOption) erro
 		}
 	case "text":
 		renderTable(lst)
-	default:
-		return errors.New("unknown output format")
 	}
 
 	return nil
@@ -139,7 +164,7 @@ func renderTable(lst job.List) {
 	t.SuppressEmptyColumns()
 
 	t.AppendHeader(table.Row{
-		"ID", "Name", "Status", "Platform", "Framework", "Browser", "Device",
+		"ID", "Name", "Source", "Status", "Platform", "Framework", "Browser", "Device",
 	})
 
 	for _, item := range lst.Jobs {
@@ -147,6 +172,7 @@ func renderTable(lst job.List) {
 		t.AppendRow(table.Row{
 			item.ID,
 			item.Name,
+			item.Source,
 			item.Status,
 			item.Platform,
 			item.Framework,
@@ -156,9 +182,9 @@ func renderTable(lst job.List) {
 	}
 	t.SuppressEmptyColumns()
 	t.AppendFooter(table.Row{
+		fmt.Sprintf("%d jobs in total", lst.Total),
 		fmt.Sprintf("Page: %d", lst.Page),
 		fmt.Sprintf("Size: %d", lst.Size),
-		fmt.Sprintf("%d jobs in total", lst.Total),
 	})
 
 	println(t.Render())

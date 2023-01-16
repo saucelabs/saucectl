@@ -16,6 +16,8 @@ const (
 	StateFailed = "failed"
 )
 
+var StatesAll = []string{StatePassed, StateComplete, StateFailed, StateError, StateInProgress, StateQueued}
+
 // DoneStates represents states that a job doesn't transition out of, i.e. once the job is in one of these states,
 // it's done.
 var DoneStates = []string{StateComplete, StateError, StatePassed, StateFailed}
@@ -34,6 +36,7 @@ type Job struct {
 	Framework           string     `json:"framework,omitempty"`
 	Device              string     `json:"device,omitempty"`
 	BrowserName         string     `json:"browserName,omitempty"`
+	Source              string     `json:"source,omitempty"`
 
 	// IsRDC flags a job started as an RDC run.
 	IsRDC bool `json:"-"`

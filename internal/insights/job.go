@@ -30,6 +30,7 @@ type JobResp struct {
 	BrowserName string `json:"browser_name"`
 	OS          string `json:"os"`
 	OSVersion   string `json:"os_version"`
+	Source      string `json:"source"`
 }
 
 const AutomaticRunMode = "automatic"
@@ -102,6 +103,7 @@ func buildJob(j JobResp) job.Job {
 		Framework:   j.Framework,
 		Device:      j.Device,
 		BrowserName: j.BrowserName,
+		Source:      j.Source,
 	}
 }
 

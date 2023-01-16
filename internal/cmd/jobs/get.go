@@ -39,6 +39,9 @@ func GetCommand() *cobra.Command {
 			}()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if out != JSONOutput && out != TextOutput {
+				return errors.New("unknown output format")
+			}
 			return get(args[0], out)
 		},
 	}
@@ -61,8 +64,6 @@ func get(jobID, outputFormat string) error {
 		}
 	case "text":
 		renderJobTable(job)
-	default:
-		return errors.New("unknown output format")
 	}
 
 	return nil
@@ -74,13 +75,14 @@ func renderJobTable(job job.Job) {
 	t.SuppressEmptyColumns()
 
 	t.AppendHeader(table.Row{
-		"ID", "Name", "Status", "Platform", "Framework", "Browser", "Device",
+		"ID", "Name", "Source", "Status", "Platform", "Framework", "Browser", "Device",
 	})
 
 	// the order of values must match the order of the header
 	t.AppendRow(table.Row{
 		job.ID,
 		job.Name,
+		job.Source,
 		job.Status,
 		job.Platform,
 		job.Framework,
