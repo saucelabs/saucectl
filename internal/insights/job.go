@@ -75,7 +75,7 @@ func (c *Client) ListJobs(ctx context.Context, userID, jobSource string, queryOp
 
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return jobList, fmt.Errorf("status: %s", resp.Status)
+		return jobList, fmt.Errorf("unexpected status: %s", resp.Status)
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
