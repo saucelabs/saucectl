@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	jobSvc          job.InsightsReader
+	jobSvc          job.Commander
 	insightsTimeout = 1 * time.Minute
 	iamTimeout      = 1 * time.Minute
 )
@@ -46,8 +46,8 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 			}
 
 			jobSvc = saucecloud.JobCommandService{
-				InsightsReader: &insightsClient,
-				UserService:    &iamClient,
+				Commander:   &insightsClient,
+				UserService: &iamClient,
 			}
 
 			return nil
