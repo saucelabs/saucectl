@@ -3,17 +3,17 @@ package mocks
 import (
 	"context"
 
+	cjob "github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/insights"
-	"github.com/saucelabs/saucectl/internal/job"
 )
 
 type FakeInsightService struct {
 	GetHistoryFn  func(context.Context, iam.User, config.LaunchOrder) (insights.JobHistory, error)
 	PostTestRunFn func(context.Context, []insights.TestRun) error
-	ListJobsFn    func(ctx context.Context, userID, jobType string, queryOption job.QueryOption) (job.List, error)
-	ReadJobFn     func(ctx context.Context, id string) (job.Job, error)
+	ListJobsFn    func(ctx context.Context, userID, jobType string, queryOption cjob.QueryOption) (cjob.List, error)
+	ReadJobFn     func(ctx context.Context, id string) (cjob.Job, error)
 }
 
 func (f FakeInsightService) GetHistory(ctx context.Context, user iam.User, cfg config.LaunchOrder) (insights.JobHistory, error) {
@@ -24,10 +24,10 @@ func (f FakeInsightService) PostTestRun(ctx context.Context, runs []insights.Tes
 	return f.PostTestRunFn(ctx, runs)
 }
 
-func (f FakeInsightService) ListJobs(ctx context.Context, userID, jobType string, queryOption job.QueryOption) (job.List, error) {
+func (f FakeInsightService) ListJobs(ctx context.Context, userID, jobType string, queryOption cjob.QueryOption) (cjob.List, error) {
 	return f.ListJobsFn(ctx, userID, jobType, queryOption)
 }
 
-func (f FakeInsightService) ReadJob(ctx context.Context, id string) (job.Job, error) {
+func (f FakeInsightService) ReadJob(ctx context.Context, id string) (cjob.Job, error) {
 	return f.ReadJobFn(ctx, id)
 }

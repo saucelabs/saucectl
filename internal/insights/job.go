@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	cjob "github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -90,18 +91,18 @@ func (s JobService) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 }
 
 type JobCommandService struct {
-	Commander   insights.Service
+	Reader      insights.Service
 	UserService iam.Service
 }
 
-func (s JobCommandService) ListJobs(ctx context.Context, jobSource string, queryOption job.QueryOption) (job.List, error) {
+func (s JobCommandService) ListJobs(ctx context.Context, jobSource string, queryOption cjob.QueryOption) (cjob.List, error) {
 	user, err := s.UserService.GetUser(ctx)
 	if err != nil {
-		return job.List{}, fmt.Errorf("failed to get user: %w", err)
+		return cjob.List{}, fmt.Errorf("failed to get user: %w", err)
 	}
-	return s.Commander.ListJobs(ctx, user.ID, jobSource, queryOption)
+	return s.Reader.ListJobs(ctx, user.ID, jobSource, queryOption)
 }
 
-func (s JobCommandService) ReadJob(ctx context.Context, id string) (job.Job, error) {
-	return s.Commander.ReadJob(ctx, id)
+func (s JobCommandService) ReadJob(ctx context.Context, id string) (cjob.Job, error) {
+	return s.Reader.ReadJob(ctx, id)
 }

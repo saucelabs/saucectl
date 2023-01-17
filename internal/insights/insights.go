@@ -3,9 +3,9 @@ package insights
 import (
 	"context"
 
+	"github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/iam"
-	"github.com/saucelabs/saucectl/internal/job"
 )
 
 type Service interface {

@@ -11,6 +11,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
+	cjob "github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
@@ -127,15 +128,15 @@ func ListCommand() *cobra.Command {
 	return cmd
 }
 
-func buildQueryOpts(page, size int, status string) job.QueryOption {
-	return job.QueryOption{
+func buildQueryOpts(page, size int, status string) cjob.QueryOption {
+	return cjob.QueryOption{
 		Page:   page,
 		Size:   size,
 		Status: status,
 	}
 }
 
-func list(jobSource string, outputFormat string, queryOpts job.QueryOption) error {
+func list(jobSource string, outputFormat string, queryOpts cjob.QueryOption) error {
 	lst, err := jobSvc.ListJobs(context.Background(), jobSource, queryOpts)
 	if err != nil {
 		return fmt.Errorf("failed to get job list: %w", err)
@@ -153,7 +154,7 @@ func list(jobSource string, outputFormat string, queryOpts job.QueryOption) erro
 	return nil
 }
 
-func renderTable(lst job.List) {
+func renderTable(lst cjob.List) {
 	if len(lst.Jobs) == 0 {
 		println("Cannot find any jobs")
 		return
