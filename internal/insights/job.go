@@ -139,18 +139,8 @@ func (c *Client) ReadJob(ctx context.Context, jobID string) (job.Job, error) {
 	return job.Job{}, nil
 }
 
-func (c *Client) ReadVDCJob(ctx context.Context, jobID string) (job.Job, error) {
-	url := fmt.Sprintf("%s/v2/archives/vdc/jobs/%s", c.URL, jobID)
-	return c.doRequest(ctx, url, jobID)
-}
-
-func (c *Client) ReadRDCJob(ctx context.Context, jobID string) (job.Job, error) {
-	url := fmt.Sprintf("%s/v2/archives/rdc/jobs/%s", c.URL, jobID)
-	return c.doRequest(ctx, url, jobID)
-}
-
-func (c *Client) ReadAPIJob(ctx context.Context, jobID string) (job.Job, error) {
-	url := fmt.Sprintf("%s/v2/archives/api/jobs/%s", c.URL, jobID)
+func (c *Client) readJob(ctx context.Context, jobID string, jobSource string) (job.Job, error) {
+	url := fmt.Sprintf("%s/v2/archives/%s/jobs/%s", c.URL, jobSource,  jobID)
 	return c.doRequest(ctx, url, jobID)
 }
 
