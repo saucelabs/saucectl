@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
@@ -136,18 +135,17 @@ func (c *Client) TriggerRun(ctx context.Context, spec RunnerSpec) (Runner, error
 		return runner, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusCreated {
-		log.Error().Int("statusCode", resp.StatusCode).Msg("Invalid statusCode for Trigger")
-		// TODO needs actual error handling
-	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return runner, err
 	}
-	err = json.Unmarshal(body, &runner)
 
-	return runner, nil
+	if resp.StatusCode != http.StatusCreated {
+		return runner, fmt.Errorf("runner start failed (%d): %s", resp.StatusCode, body)
+	}
+
+	return runner, json.Unmarshal(body, &runner)
 }
 
 func (c *Client) GetRun(ctx context.Context, id string) (RunnerDetails, error) {

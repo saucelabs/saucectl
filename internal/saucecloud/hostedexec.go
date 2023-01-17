@@ -68,6 +68,9 @@ func (r *HostedExecRunner) runSuites(suites chan hostedexec.Suite, results chan<
 		startTime := time.Now()
 
 		err := r.runSuite(suite)
+		if err != nil {
+			log.Warn().Err(err).Msgf("Suite errored.")
+		}
 
 		results <- execResult{
 			name:      suite.Name,
