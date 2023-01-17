@@ -1,6 +1,5 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
-  "$id": "https://saucelabs.com/schema/v1alpha/playwright-cucumberjs.schema.json",
   "title": "saucectl playwright cucumberjs runner configuration",
   "description": "Configuration file for cucumber using saucectl",
   "type": "object",
@@ -166,6 +165,9 @@
           },
           "timeZone": {
             "$ref": "../subschema/common.schema.json#/definitions/timeZone"
+          },
+          "passThreshold": {
+            "$ref": "../subschema/common.schema.json#/definitions/passThreshold"
           }
         },
         "required": [

@@ -6,7 +6,9 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/fpath"
@@ -106,6 +108,7 @@ type Suite struct {
 	Shard              string                 `yaml:"shard,omitempty" json:"-"`
 	Headless           bool                   `yaml:"headless,omitempty" json:"headless"`
 	TimeZone           string                 `yaml:"timeZone,omitempty" json:"timeZone"`
+	PassThreshold      int                    `yaml:"passThreshold,omitempty" json:"-"`
 	// TypeScript compiling options
 	CompilerOptions CompilerOptions `yaml:"compilerOptions,omitempty" json:"compilerOptions"`
 	// Deprecated. Reserved for future use for actual devices.
@@ -193,15 +196,18 @@ func SetDefaults(p *Project) {
 		if suite.Timeout <= 0 {
 			suite.Timeout = p.Defaults.Timeout
 		}
+		if suite.PassThreshold < 1 {
+			suite.PassThreshold = 1
+		}
 
 		// If this suite is targeting devices, then the platformName on the device takes precedence and we can skip the
 		// defaults on the suite level.
 		if suite.PlatformName == "" && len(suite.Simulators) == 0 {
 			suite.PlatformName = "Windows 10"
-
 			if strings.ToLower(suite.BrowserName) == "safari" {
 				suite.PlatformName = "macOS 11.00"
 			}
+			log.Info().Msgf(msg.InfoUsingDefaultPlatform, suite.PlatformName, suite.Name)
 		}
 
 		for j := range suite.Simulators {
@@ -246,7 +252,26 @@ func Validate(p *Project) error {
 		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchOrder, string(config.LaunchOrderFailRate))
 	}
 
+	if len(p.Suites) == 0 {
+		return errors.New(msg.EmptySuite)
+	}
+	suiteNames := make(map[string]bool)
 	for i, v := range p.Suites {
+		if _, seen := suiteNames[v.Name]; seen {
+			return fmt.Errorf(msg.DuplicateSuiteName, v.Name)
+		}
+		suiteNames[v.Name] = true
+
+		if len(v.Name) == 0 {
+			return fmt.Errorf(msg.MissingSuiteName, i)
+		}
+
+		for _, c := range v.Name {
+			if unicode.IsSymbol(c) {
+				return fmt.Errorf(msg.IllegalSymbol, c, v.Name)
+			}
+		}
+
 		// Force the user to migrate.
 		if len(v.Devices) != 0 {
 			return errors.New(msg.InvalidTestCafeDeviceSetting)
@@ -267,6 +292,16 @@ func Validate(p *Project) error {
 
 			p.Suites[i].Src = fpath.ExcludeFiles(files, excludedFiles)
 		}
+
+		if len(v.Simulators) == 0 && v.BrowserName == "" {
+			return fmt.Errorf(msg.MissingBrowserInSuite, v.Name)
+		}
+		if p.Sauce.Retries < v.PassThreshold-1 {
+			return fmt.Errorf(msg.InvalidPassThreshold)
+		}
+	}
+	if p.Sauce.Retries < 0 {
+		log.Warn().Int("retries", p.Sauce.Retries).Msg(msg.InvalidReries)
 	}
 
 	var err error

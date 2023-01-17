@@ -66,6 +66,7 @@ type Suite struct {
 	Headless         bool          `yaml:"headless,omitempty" json:"headless"`
 	PreExec          []string      `yaml:"preExec,omitempty" json:"preExec"`
 	TimeZone         string        `yaml:"timeZone,omitempty" json:"timeZone"`
+	PassThreshold    int           `yaml:"passThreshold,omitempty" json:"-"`
 }
 
 // SuiteConfig represents the cypress config overrides.
@@ -148,6 +149,7 @@ func (p *Project) SetDefaults() {
 		s := &p.Suites[k]
 		if s.PlatformName == "" {
 			s.PlatformName = "Windows 10"
+			log.Info().Msgf(msg.InfoUsingDefaultPlatform, s.PlatformName, s.Name)
 		}
 
 		if s.Timeout <= 0 {
@@ -161,6 +163,10 @@ func (p *Project) SetDefaults() {
 		// Apply global env vars onto suite.
 		for k, v := range p.Env {
 			s.Config.Env[k] = v
+		}
+
+		if s.PassThreshold < 1 {
+			s.PassThreshold = 1
 		}
 
 		// Update cypress related env vars.
@@ -287,11 +293,15 @@ func (p *Project) Validate() error {
 		return errors.New(msg.EmptySuite)
 	}
 	suiteNames := make(map[string]bool)
-	for _, s := range p.Suites {
+	for idx, s := range p.Suites {
 		if _, seen := suiteNames[s.Name]; seen {
 			return fmt.Errorf(msg.DuplicateSuiteName, s.Name)
 		}
 		suiteNames[s.Name] = true
+
+		if len(s.Name) == 0 {
+			return fmt.Errorf(msg.MissingSuiteName, idx)
+		}
 
 		for _, c := range s.Name {
 			if unicode.IsSymbol(c) {
@@ -303,9 +313,19 @@ func (p *Project) Validate() error {
 			return fmt.Errorf(msg.MissingBrowserInSuite, s.Name)
 		}
 
+		if s.PlatformName == "" {
+			return fmt.Errorf(msg.MissingPlatformName)
+		}
+
 		if len(s.Config.TestFiles) == 0 {
 			return fmt.Errorf(msg.MissingTestFiles, s.Name)
 		}
+		if p.Sauce.Retries < s.PassThreshold-1 {
+			return fmt.Errorf(msg.InvalidPassThreshold)
+		}
+	}
+	if p.Sauce.Retries < 0 {
+		log.Warn().Int("retries", p.Sauce.Retries).Msg(msg.InvalidReries)
 	}
 
 	cfg, err := loadCypressConfiguration(p.RootDir, p.Cypress.ConfigFile, p.Sauce.Sauceignore)
@@ -512,6 +532,7 @@ func (p *Project) GetSuites() []suite.Suite {
 			PreExec:          s.PreExec,
 			TimeZone:         s.TimeZone,
 			Env:              s.Config.Env,
+			PassThreshold:    s.PassThreshold,
 		})
 	}
 	return suites
@@ -538,6 +559,7 @@ func (p *Project) GetSuite() suite.Suite {
 		PreExec:          s.PreExec,
 		TimeZone:         s.TimeZone,
 		Env:              s.Config.Env,
+		PassThreshold:    s.PassThreshold,
 	}
 }
 

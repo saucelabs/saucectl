@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/insights"
@@ -64,6 +65,7 @@ type Suite struct {
 	Devices            []config.Device    `yaml:"devices,omitempty" json:"devices"`
 	TestOptions        TestOptions        `yaml:"testOptions,omitempty" json:"testOptions"`
 	AppSettings        config.AppSettings `yaml:"appSettings,omitempty" json:"appSettings"`
+	PassThreshold      int                `yaml:"passThreshold,omitempty" json:"-"`
 }
 
 // IOS constant
@@ -118,6 +120,9 @@ func SetDefaults(p *Project) {
 		if suite.TestApp == "" {
 			p.Suites[ks].TestApp = p.Xcuitest.TestApp
 			p.Suites[ks].TestAppDescription = p.Xcuitest.TestAppDescription
+		}
+		if suite.PassThreshold < 1 {
+			p.Suites[ks].PassThreshold = 1
 		}
 	}
 }
@@ -177,6 +182,12 @@ func Validate(p Project) error {
 					device.Options.DeviceType, suite.Name, didx, strings.Join(config.SupportedDeviceTypes, ","))
 			}
 		}
+		if p.Sauce.Retries < suite.PassThreshold-1 {
+			return fmt.Errorf(msg.InvalidPassThreshold)
+		}
+	}
+	if p.Sauce.Retries < 0 {
+		log.Warn().Int("retries", p.Sauce.Retries).Msg(msg.InvalidReries)
 	}
 
 	return nil

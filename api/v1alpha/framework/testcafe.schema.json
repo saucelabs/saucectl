@@ -1,6 +1,5 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
-  "$id": "https://saucelabs.com/schema/v1alpha/testcafe.schema.json",
   "title": "saucectl testcafe runner configuration",
   "description": "Configuration file for testcafe using saucectl",
   "type": "object",
@@ -317,6 +316,9 @@
           },
           "timeZone": {
             "$ref": "../subschema/common.schema.json#/definitions/timeZone"
+          },
+          "passThreshold": {
+            "$ref": "../subschema/common.schema.json#/definitions/passThreshold"
           }
         },
         "required": [

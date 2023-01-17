@@ -7,6 +7,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cucumber"
 	"github.com/saucelabs/saucectl/internal/docker"
@@ -41,7 +42,7 @@ func NewCucumberCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::options::paths", args)
 
-			exitCode, err := runCucumber(cmd)
+			exitCode, err := runCucumber(cmd, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -67,11 +68,16 @@ func NewCucumberCmd() *cobra.Command {
 	sc.StringSlice("scenario-tags", "suite::options::tags", []string{}, "Tag expression to filter which scenarios should be run")
 	sc.StringSlice("format", "suite::options::format", []string{}, "Name/path and (optionally) output file path of each formatter to use")
 	sc.Int("parallel", "suite::options::parallel", 0, "Run tests in parallel with the given number of worker processes, default: 0")
+	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'. (sauce mode only)")
 
 	return cmd
 }
 
-func runCucumber(cmd *cobra.Command) (int, error) {
+func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
+	if !isCLIDriven {
+		config.ValidateSchema(gFlags.cfgFilePath)
+	}
+
 	p, err := cucumber.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err

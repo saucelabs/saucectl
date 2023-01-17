@@ -217,11 +217,12 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 			ID:     r.Project.Sauce.Tunnel.Name,
 			Parent: r.Project.Sauce.Tunnel.Owner,
 		},
-		Experiments: r.Project.Sauce.Experiments,
-		TestOptions: s.TestOptions,
-		Attempt:     0,
-		Retries:     r.Project.Sauce.Retries,
-		Visibility:  r.Project.Sauce.Visibility,
+		Experiments:   r.Project.Sauce.Experiments,
+		TestOptions:   s.TestOptions,
+		Attempt:       0,
+		Retries:       r.Project.Sauce.Retries,
+		Visibility:    r.Project.Sauce.Visibility,
+		PassThreshold: s.PassThreshold,
 
 		// RDC Specific flags
 		RealDevice:        d.isRealDevice,

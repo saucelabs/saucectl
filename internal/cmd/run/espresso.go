@@ -13,6 +13,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
@@ -46,7 +47,7 @@ func NewEspressoCmd() *cobra.Command {
 			return preRun()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			exitCode, err := runEspresso(cmd, lflags)
+			exitCode, err := runEspresso(cmd, lflags, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -64,6 +65,7 @@ func NewEspressoCmd() *cobra.Command {
 	sc.String("testApp", "espresso::testApp", "", "Specifies the test app")
 	sc.String("testAppDescription", "espresso::testAppDescription", "", "Specifies description for the testApp")
 	sc.StringSlice("otherApps", "espresso::otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
+	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'. (sauce mode only)")
 
 	// Test Options
 	sc.StringSlice("testOptions.class", "suite::testOptions::class", []string{}, "Only run the specified classes. Requires --name to be set.")
@@ -86,7 +88,11 @@ func NewEspressoCmd() *cobra.Command {
 	return cmd
 }
 
-func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags) (int, error) {
+func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, isCLIDriven bool) (int, error) {
+	if !isCLIDriven {
+		config.ValidateSchema(gFlags.cfgFilePath)
+	}
+
 	p, err := espresso.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err

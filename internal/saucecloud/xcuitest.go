@@ -138,11 +138,12 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 			ID:     r.Project.Sauce.Tunnel.Name,
 			Parent: r.Project.Sauce.Tunnel.Owner,
 		},
-		Experiments: r.Project.Sauce.Experiments,
-		TestsToRun:  s.TestOptions.Class,
-		TestsToSkip: s.TestOptions.NotClass,
-		Attempt:     0,
-		Retries:     r.Project.Sauce.Retries,
+		Experiments:   r.Project.Sauce.Experiments,
+		TestsToRun:    s.TestOptions.Class,
+		TestsToSkip:   s.TestOptions.NotClass,
+		Attempt:       0,
+		Retries:       r.Project.Sauce.Retries,
+		PassThreshold: s.PassThreshold,
 
 		// RDC Specific flags
 		RealDevice:        true,

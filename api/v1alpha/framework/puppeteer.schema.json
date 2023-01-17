@@ -1,6 +1,5 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
-  "$id": "https://saucelabs.com/schema/v1alpha/puppeteer.schema.json",
   "title": "saucectl puppeteer runner configuration",
   "description": "Configuration file for puppeteer using saucectl",
   "type": "object",
