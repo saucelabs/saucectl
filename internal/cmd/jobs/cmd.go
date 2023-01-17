@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	cjob "github.com/saucelabs/saucectl/internal/cmd/jobs/job"
+	"github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/insights"
@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	jobSvc          cjob.Reader
+	jobSvc          job.Reader
 	insightsTimeout = 1 * time.Minute
 	iamTimeout      = 1 * time.Minute
 )
