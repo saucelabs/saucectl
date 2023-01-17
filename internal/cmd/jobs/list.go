@@ -101,14 +101,14 @@ func ListCommand() *cobra.Command {
 				return errors.New("unknown output format")
 			}
 			var isStatusValid bool
-			for _, s := range job.StatesAll {
+			for _, s := range job.AllStates {
 				if s == status {
 					isStatusValid = true
 					break
 				}
 			}
 			if status != "" && !isStatusValid {
-				return fmt.Errorf("unknown status. Options: %s", strings.Join(job.StatesAll, ", "))
+				return fmt.Errorf("unknown status. Options: %s", strings.Join(job.AllStates, ", "))
 			}
 			if jobSource != "" && jobSource != RDC && jobSource != VDC && jobSource != API {
 				return errors.New("invalid job resource. Options: vdc, rdc, api")

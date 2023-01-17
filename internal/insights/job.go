@@ -39,6 +39,7 @@ type JobResp struct {
 	Source      string `json:"source"`
 }
 
+// AutomaticRunMode indicates the job is automated
 const AutomaticRunMode = "automatic"
 
 // ListJobs returns job list
@@ -118,19 +119,19 @@ func (c *Client) ReadJob(ctx context.Context, jobID string) (job.Job, error) {
 
 	switch source {
 	case VDCSource:
-		vdcJob, err := c.ReadVDCJob(ctx, jobID)
+		vdcJob, err := c.readJob(ctx, jobID, VDCSource)
 		if err == nil {
 			return vdcJob, nil
 		}
 		fallthrough
 	case RDCSource:
-		rdcJob, err := c.ReadRDCJob(ctx, jobID)
+		rdcJob, err := c.readJob(ctx, jobID, RDCSource)
 		if err == nil {
 			return rdcJob, nil
 		}
 		fallthrough
 	case APISource:
-		apiJob, err := c.ReadAPIJob(ctx, jobID)
+		apiJob, err := c.readJob(ctx, jobID, APISource)
 		if err != nil {
 			return job.Job{}, fmt.Errorf("failed to get job: %w", err)
 		}
@@ -140,12 +141,9 @@ func (c *Client) ReadJob(ctx context.Context, jobID string) (job.Job, error) {
 }
 
 func (c *Client) readJob(ctx context.Context, jobID string, jobSource string) (job.Job, error) {
-	url := fmt.Sprintf("%s/v2/archives/%s/jobs/%s", c.URL, jobSource,  jobID)
-	return c.doRequest(ctx, url, jobID)
-}
-
-func (c *Client) doRequest(ctx context.Context, url, jobID string) (job.Job, error) {
 	var j job.Job
+
+	url := fmt.Sprintf("%s/v2/archives/%s/jobs/%s", c.URL, jobSource, jobID)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -158,7 +156,7 @@ func (c *Client) doRequest(ctx context.Context, url, jobID string) (job.Job, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return j, fmt.Errorf("status: %s", resp.Status)
+		return j, fmt.Errorf("unexpected status: %s", resp.Status)
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

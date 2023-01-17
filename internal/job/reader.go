@@ -35,8 +35,8 @@ type QueryOption struct {
 	Status string `json:"status"`
 }
 
-// CommandReader is the reader for saucectl jobs command interface
-type CommandReader interface {
+// InsightsReader is the reader for saucectl jobs command interface
+type InsightsReader interface {
 	// ReadJob returns the job details.
 	ReadJob(ctx context.Context, id string) (Job, error)
 	// ListJobs returns job list

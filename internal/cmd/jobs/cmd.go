@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	jobSvc          job.CommandReader
+	jobSvc          job.InsightsReader
 	insightsTimeout = 1 * time.Minute
 	iamTimeout      = 1 * time.Minute
 )
