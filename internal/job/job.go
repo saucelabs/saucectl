@@ -16,6 +16,8 @@ const (
 	StateFailed = "failed"
 )
 
+var AllStates = []string{StatePassed, StateComplete, StateFailed, StateError, StateInProgress, StateQueued}
+
 // DoneStates represents states that a job doesn't transition out of, i.e. once the job is in one of these states,
 // it's done.
 var DoneStates = []string{StateComplete, StateError, StatePassed, StateFailed}
