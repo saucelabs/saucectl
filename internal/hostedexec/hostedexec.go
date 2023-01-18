@@ -20,11 +20,12 @@ const (
 	StateRunning   = "Running"
 	StateSucceeded = "Succeeded"
 	StateCancelled = "Cancelled"
+	StateFailed    = "Failed"
 )
 
 // DoneStates represents states that a runner doesn't transition out of, i.e. once the runner is in one of these states,
 // it's done.
-var DoneStates = []string{StateSucceeded, StateCancelled}
+var DoneStates = []string{StateSucceeded, StateCancelled, StateFailed}
 
 type Client struct {
 	HTTPClient  *http.Client
