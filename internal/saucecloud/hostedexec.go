@@ -36,6 +36,7 @@ type execResult struct {
 	duration  time.Duration
 	startTime time.Time
 	endTime   time.Time
+	attempts  int
 }
 
 func (r *HostedExecRunner) RunProject() (int, error) {
@@ -83,6 +84,7 @@ func (r *HostedExecRunner) runSuites(suites chan hostedexec.Suite, results chan<
 			startTime: startTime,
 			endTime:   time.Now(),
 			duration:  time.Since(startTime),
+			attempts:  1,
 		}
 	}
 }
@@ -168,7 +170,7 @@ func (r *HostedExecRunner) collectResults(results chan execResult, expected int)
 				StartTime: res.startTime,
 				EndTime:   res.endTime,
 				Status:    res.status,
-				Attempts:  1,
+				Attempts:  res.attempts,
 			})
 		}
 	}
