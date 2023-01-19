@@ -3,8 +3,11 @@ package run
 import (
 	"github.com/saucelabs/saucectl/internal/hostedexec"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/saucelabs/saucectl/internal/report/table"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 func NewHtexecCmd() *cobra.Command {
@@ -24,6 +27,9 @@ func runHostedExec(cmd *cobra.Command) (int, error) {
 	r := saucecloud.HostedExecRunner{
 		Project:       p,
 		RunnerService: &hostedExecClient,
+		Reporters: []report.Reporter{&table.Reporter{
+			Dst: os.Stdout,
+		}},
 	}
 	return r.RunProject()
 }

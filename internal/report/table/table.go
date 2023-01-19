@@ -2,6 +2,7 @@ package table
 
 import (
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/hostedexec"
 	"io"
 	"sync"
 	"time"
@@ -100,10 +101,10 @@ func (r *Reporter) Render() {
 		totalDur   time.Duration
 	)
 	for _, ts := range r.TestResults {
-		if !job.Done(ts.Status) && !ts.TimedOut {
+		if !job.Done(ts.Status) && !hostedexec.Done(ts.Status) && !ts.TimedOut {
 			inProgress++
 		}
-		if ts.Status == job.StateFailed {
+		if ts.Status == job.StateFailed || ts.Status == hostedexec.StateFailed || ts.Status == hostedexec.StateCancelled {
 			errors++
 		}
 		if ts.TimedOut {
@@ -142,16 +143,16 @@ func footer(errors, inProgress, tests int, dur time.Duration) table.Row {
 		return table.Row{statusSymbol(job.StateError), fmt.Sprintf("%d of %d suites have failed (%.0f%%)", errors, tests, relative), dur.Truncate(1 * time.Second)}
 	}
 	if inProgress != 0 {
-		return table.Row{statusSymbol(job.StateInProgress), "All tests have launched", dur.Truncate(1 * time.Second)}
+		return table.Row{statusSymbol(job.StateInProgress), "All suites have launched", dur.Truncate(1 * time.Second)}
 	}
-	return table.Row{statusSymbol(job.StatePassed), "All tests have passed", dur.Truncate(1 * time.Second)}
+	return table.Row{statusSymbol(job.StatePassed), "All suites have passed", dur.Truncate(1 * time.Second)}
 }
 
 func statusText(status string) string {
 	switch status {
-	case job.StatePassed:
+	case job.StatePassed, hostedexec.StateSucceeded:
 		return color.GreenString(status)
-	case job.StateInProgress, job.StateQueued, job.StateNew:
+	case job.StateInProgress, job.StateQueued, job.StateNew, hostedexec.StateRunning, hostedexec.StatePending:
 		return color.BlueString(status)
 	default:
 		return color.RedString(status)
@@ -160,9 +161,9 @@ func statusText(status string) string {
 
 func statusSymbol(status string) string {
 	switch status {
-	case job.StatePassed:
+	case job.StatePassed, hostedexec.StateSucceeded:
 		return color.GreenString("✔")
-	case job.StateInProgress, job.StateQueued, job.StateNew:
+	case job.StateInProgress, job.StateQueued, job.StateNew, hostedexec.StateRunning, hostedexec.StatePending:
 		return color.BlueString("*")
 	default:
 		return color.RedString("✖")

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/report"
 	"os"
 	"os/signal"
 	"time"
@@ -23,11 +24,14 @@ type HostedExecRunner struct {
 	Project       hostedexec.Project
 	RunnerService hostedexec.Service
 	state         state
+
+	Reporters []report.Reporter
 }
 
 type execResult struct {
 	name      string
 	skipped   bool
+	status    string
 	err       error
 	duration  time.Duration
 	startTime time.Time
@@ -67,13 +71,14 @@ func (r *HostedExecRunner) runSuites(suites chan hostedexec.Suite, results chan<
 	for suite := range suites {
 		startTime := time.Now()
 
-		err := r.runSuite(suite)
+		run, err := r.runSuite(suite)
 		if err != nil {
 			log.Warn().Err(err).Msgf("Suite errored.")
 		}
 
 		results <- execResult{
 			name:      suite.Name,
+			status:    run.Status,
 			err:       err,
 			startTime: startTime,
 			endTime:   time.Now(),
@@ -82,14 +87,15 @@ func (r *HostedExecRunner) runSuites(suites chan hostedexec.Suite, results chan<
 	}
 }
 
-func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) error {
+func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerDetails, error) {
+	var run hostedexec.RunnerDetails
 	metadata := make(map[string]string)
 	metadata["name"] = suite.Name
 
 	files, err := mapFiles(suite.Files)
 	if err != nil {
 		log.Err(err).Str("suite", suite.Name).Msg("Unable to read source files")
-		return err
+		return run, err
 	}
 
 	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Msg("Starting suite.")
@@ -108,24 +114,24 @@ func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) error {
 		Metadata:   metadata,
 	})
 	if err != nil {
-		return err
+		return run, err
 	}
 
 	sigChan := r.registerInterruptOnSignal(runner.ID, suite.Name)
 	defer unregisterSignalCapture(sigChan)
 
 	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Msg("Started suite.")
-	run, err := r.PollRun(context.Background(), runner.ID)
+	run, err = r.PollRun(context.Background(), runner.ID)
 	if err != nil {
-		return err
+		return run, err
 	}
 
 	// TODO: What's the failed status for a runner?
 	if run.Status != hostedexec.StateSucceeded {
-		return fmt.Errorf("suite '%s' failed", suite.Name)
+		return run, fmt.Errorf("suite '%s' failed", suite.Name)
 	}
 
-	return nil
+	return run, nil
 }
 
 func (r *HostedExecRunner) collectResults(results chan execResult, expected int) bool {
@@ -154,8 +160,23 @@ func (r *HostedExecRunner) collectResults(results chan execResult, expected int)
 		if res.err != nil {
 			passed = false
 		}
+
+		for _, r := range r.Reporters {
+			r.Add(report.TestResult{
+				Name:      res.name,
+				Duration:  res.duration,
+				StartTime: res.startTime,
+				EndTime:   res.endTime,
+				Status:    res.status,
+				Attempts:  1,
+			})
+		}
 	}
 	close(done)
+
+	for _, r := range r.Reporters {
+		r.Render()
+	}
 
 	return passed
 }
