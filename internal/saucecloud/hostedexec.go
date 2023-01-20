@@ -219,18 +219,11 @@ func (r *HostedExecRunner) PollRun(ctx context.Context, id string) (hostedexec.R
 		select {
 		case <-ticker.C:
 			r, err := r.RunnerService.GetRun(ctx, id)
-			if err != nil {
-				return hostedexec.RunnerDetails{}, err
-			}
-			if hostedexec.Done(r.Status) {
-				return r, nil
+			if err != nil || hostedexec.Done(r.Status) {
+				return r, err
 			}
 		case <-deathclock.C:
-			r, err := r.RunnerService.GetRun(ctx, id)
-			if err != nil {
-				return hostedexec.RunnerDetails{}, err
-			}
-			return r, nil
+			return r.RunnerService.GetRun(ctx, id)
 		}
 	}
 }
