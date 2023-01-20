@@ -30,6 +30,7 @@ type HostedExecRunner struct {
 
 type execResult struct {
 	name      string
+	runID     string
 	skipped   bool
 	status    string
 	err       error
@@ -79,6 +80,7 @@ func (r *HostedExecRunner) runSuites(suites chan hostedexec.Suite, results chan<
 
 		results <- execResult{
 			name:      suite.Name,
+			runID:     run.ID,
 			status:    run.Status,
 			err:       err,
 			startTime: startTime,
@@ -122,7 +124,8 @@ func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerDe
 	sigChan := r.registerInterruptOnSignal(runner.ID, suite.Name)
 	defer unregisterSignalCapture(sigChan)
 
-	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Msg("Started suite.")
+	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Str("runID", runner.ID).
+		Msg("Started suite.")
 	run, err = r.PollRun(context.Background(), runner.ID)
 	if err != nil {
 		return run, err
@@ -161,6 +164,9 @@ func (r *HostedExecRunner) collectResults(results chan execResult, expected int)
 		if res.err != nil {
 			passed = false
 		}
+
+		log.Err(res.err).Str("suite", res.name).Bool("passed", res.err == nil).Str("runID", res.runID).
+			Msg("Suite finished.")
 
 		for _, r := range r.Reporters {
 			r.Add(report.TestResult{
