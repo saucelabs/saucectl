@@ -2,11 +2,11 @@ package table
 
 import (
 	"bytes"
-	"github.com/saucelabs/saucectl/internal/job"
 	"reflect"
 	"testing"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/report"
 )
 
@@ -25,24 +25,26 @@ func TestReporter_Render(t *testing.T) {
 			fields: fields{
 				TestResults: []report.TestResult{
 					{
-						Name:      "Firefox",
-						Duration:  34479 * time.Millisecond,
-						StartTime: startTime,
-						EndTime:   startTime.Add(34479 * time.Millisecond),
-						Status:    job.StatePassed,
-						Browser:   "Firefox",
-						Platform:  "Windows 10",
-						Attempts:  3,
+						Name:          "Firefox",
+						Duration:      34479 * time.Millisecond,
+						StartTime:     startTime,
+						EndTime:       startTime.Add(34479 * time.Millisecond),
+						Status:        job.StatePassed,
+						Browser:       "Firefox",
+						Platform:      "Windows 10",
+						Attempts:      3,
+						PassThreshold: true,
 					},
 					{
-						Name:      "Chrome",
-						Duration:  5123 * time.Millisecond,
-						StartTime: startTime,
-						EndTime:   startTime.Add(5123 * time.Millisecond),
-						Status:    job.StatePassed,
-						Browser:   "Chrome",
-						Platform:  "Windows 10",
-						Attempts:  1,
+						Name:          "Chrome",
+						Duration:      5123 * time.Millisecond,
+						StartTime:     startTime,
+						EndTime:       startTime.Add(5123 * time.Millisecond),
+						Status:        job.StatePassed,
+						Browser:       "Chrome",
+						Platform:      "Windows 10",
+						Attempts:      1,
+						PassThreshold: true,
 					},
 				},
 			},
@@ -64,7 +66,7 @@ func TestReporter_Render(t *testing.T) {
 						Duration:  34479 * time.Millisecond,
 						StartTime: startTime,
 						EndTime:   startTime.Add(34479 * time.Millisecond),
-						Status:   job.StatePassed,
+						Status:    job.StatePassed,
 						Browser:   "Firefox",
 						Platform:  "Windows 10",
 						Attempts:  1,
@@ -74,7 +76,7 @@ func TestReporter_Render(t *testing.T) {
 						Duration:  171452 * time.Millisecond,
 						StartTime: startTime,
 						EndTime:   startTime.Add(171452 * time.Millisecond),
-						Status:   job.StateFailed,
+						Status:    job.StateFailed,
 						Browser:   "Chrome",
 						Platform:  "Windows 10",
 						Attempts:  3,

@@ -47,7 +47,7 @@ func NewPlaywrightCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::testMatch", args)
 
-			exitCode, err := runPlaywright(cmd)
+			exitCode, err := runPlaywright(cmd, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -90,6 +90,7 @@ func NewPlaywrightCmd() *cobra.Command {
 	sc.String("rootDir", "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
 	sc.String("shard", "suite.shard", "", "Controls whether or not (and how) tests are sharded across multiple machines, supported value: spec|concurrency")
 	sc.String("timeZone", "suite::timeZone", "", "Specifies timeZone for this test")
+	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'. (sauce mode only)")
 
 	// NPM
 	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")
@@ -103,7 +104,11 @@ func NewPlaywrightCmd() *cobra.Command {
 	return cmd
 }
 
-func runPlaywright(cmd *cobra.Command) (int, error) {
+func runPlaywright(cmd *cobra.Command, isCLIDriven bool) (int, error) {
+	if !isCLIDriven {
+		config.ValidateSchema(gFlags.cfgFilePath)
+	}
+
 	p, err := playwright.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err

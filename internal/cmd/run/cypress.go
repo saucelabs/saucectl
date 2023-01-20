@@ -2,7 +2,6 @@ package run
 
 import (
 	"errors"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"os"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
@@ -15,11 +14,13 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
@@ -45,7 +46,7 @@ func NewCypressCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::config::specPattern", args)
 
-			exitCode, err := runCypress(cmd)
+			exitCode, err := runCypress(cmd, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -81,6 +82,7 @@ func NewCypressCmd() *cobra.Command {
 	sc.Bool("shardGrepEnabled", "suite::shardGrepEnabled", false, "When sharding is configured and the suite is configured to filter using cypress-grep, let saucectl filter tests before executing")
 	sc.String("headless", "suite::headless", "", "Controls whether or not tests are run in headless mode (default: false)")
 	sc.String("timeZone", "suite::timeZone", "", "Specifies timeZone for this test")
+	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'. (sauce mode only)")
 
 	// NPM
 	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")
@@ -91,7 +93,11 @@ func NewCypressCmd() *cobra.Command {
 	return cmd
 }
 
-func runCypress(cmd *cobra.Command) (int, error) {
+func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
+	if !isCLIDriven {
+		config.ValidateSchema(gFlags.cfgFilePath)
+	}
+
 	p, err := cypress.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err

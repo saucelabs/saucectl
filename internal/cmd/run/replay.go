@@ -2,30 +2,30 @@ package run
 
 import (
 	"errors"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"os"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 
-	"github.com/saucelabs/saucectl/internal/framework"
-	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
-	"github.com/saucelabs/saucectl/internal/viper"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
+	"github.com/saucelabs/saucectl/internal/viper"
 )
 
 // NewReplayCmd creates the 'run' command for replay.
@@ -46,7 +46,7 @@ func NewReplayCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::recordings", args)
 
-			exitCode, err := runReplay(cmd)
+			exitCode, err := runReplay(cmd, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -60,6 +60,7 @@ func NewReplayCmd() *cobra.Command {
 	sc.Fset = cmd.Flags()
 
 	sc.String("name", "suite::name", "", "Set the name of the job as it will appear on Sauce Labs.")
+	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'. (sauce mode only)")
 
 	// Browser & Platform
 	sc.String("browser", "suite::browserName", "chrome", "Set the browser to use. Only chrome is supported at this time.")
@@ -69,7 +70,11 @@ func NewReplayCmd() *cobra.Command {
 	return cmd
 }
 
-func runReplay(cmd *cobra.Command) (int, error) {
+func runReplay(cmd *cobra.Command, isCLIDriven bool) (int, error) {
+	if !isCLIDriven {
+		config.ValidateSchema(gFlags.cfgFilePath)
+	}
+
 	p, err := replay.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err

@@ -162,6 +162,7 @@ func (r *TestcafeRunner) runSuites(fileURI string) bool {
 					Retries:          r.Project.Sauce.Retries,
 					TimeZone:         s.TimeZone,
 					Visibility:       r.Project.Sauce.Visibility,
+					PassThreshold:    s.PassThreshold,
 				}
 			}
 		}

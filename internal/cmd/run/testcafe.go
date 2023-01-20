@@ -53,7 +53,7 @@ func NewTestcafeCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::src", args)
 
-			exitCode, err := runTestcafe(cmd, lflags)
+			exitCode, err := runTestcafe(cmd, lflags, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 				backtrace.Report(err, map[string]interface{}{
@@ -108,6 +108,7 @@ func NewTestcafeCmd() *cobra.Command {
 	sc.Bool("disablePageCaching", "suite::disablePageCaching", false, "Prevent the browser from caching page content")
 	sc.StringSlice("excludedTestFiles", "suite::excludedTestFiles", []string{}, "Exclude test files to skip the tests, using glob pattern")
 	sc.String("timeZone", "suite::timeZone", "", "Specifies timeZone for this test")
+	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'. (sauce mode only)")
 
 	// NPM
 	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")
@@ -121,7 +122,11 @@ func NewTestcafeCmd() *cobra.Command {
 	return cmd
 }
 
-func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags) (int, error) {
+func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (int, error) {
+	if !isCLIDriven {
+		config.ValidateSchema(gFlags.cfgFilePath)
+	}
+
 	p, err := testcafe.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err

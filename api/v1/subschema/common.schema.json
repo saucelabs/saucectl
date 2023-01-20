@@ -1,6 +1,5 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
-  "$id": "https://saucelabs.com/schema/v1/common.schema.json",
   "title": "saucectl common subschema",
   "description": "Subschema for common settings",
   "type": "object",
@@ -89,6 +88,11 @@
     "timeZone": {
       "description": "Specifies the timeZone for the suite.",
       "type": "string"
+    },
+    "passThreshold": {
+      "description": "The minimum number of successful attempts for a suite to be considered as 'passed'.",
+      "type": "integer",
+      "minimum": 1
     }
   }
 }

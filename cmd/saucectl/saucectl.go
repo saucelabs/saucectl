@@ -14,6 +14,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/cmd/configure"
 	"github.com/saucelabs/saucectl/internal/cmd/doctor"
 	"github.com/saucelabs/saucectl/internal/cmd/ini"
+	"github.com/saucelabs/saucectl/internal/cmd/jobs"
 	"github.com/saucelabs/saucectl/internal/cmd/new"
 	"github.com/saucelabs/saucectl/internal/cmd/run"
 	"github.com/saucelabs/saucectl/internal/cmd/signup"
@@ -69,6 +70,7 @@ func main() {
 		doctor.Command(),
 		storage.Command(cmd.PersistentPreRun),
 		artifacts.Command(cmd.PersistentPreRun),
+		jobs.Command(cmd.PersistentPreRun),
 	)
 
 	if err := cmd.Execute(); err != nil {

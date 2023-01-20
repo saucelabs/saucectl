@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/fpath"
@@ -66,6 +67,7 @@ type Suite struct {
 	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
 	PreExec          []string          `yaml:"preExec,omitempty" json:"preExec"`
 	Options          Options           `yaml:"options,omitempty" json:"options"`
+	PassThreshold    int               `yaml:"passThreshold,omitempty" json:"-"`
 }
 
 // Options represents cucumber settings
@@ -142,6 +144,9 @@ func SetDefaults(p *Project) {
 				suite.PlatformName = "macOS 12"
 			}
 		}
+		if suite.PassThreshold < 1 {
+			suite.PassThreshold = 1
+		}
 	}
 
 	// Apply global env vars onto every suite.
@@ -193,6 +198,13 @@ func Validate(p *Project) error {
 		}
 
 		p.Suites[i].Options.Paths = fpath.ExcludeFiles(files, excludedFiles)
+
+		if p.Sauce.Retries < v.PassThreshold-1 {
+			return fmt.Errorf(msg.InvalidPassThreshold)
+		}
+	}
+	if p.Sauce.Retries < 0 {
+		log.Warn().Int("retries", p.Sauce.Retries).Msg(msg.InvalidReries)
 	}
 
 	var err error

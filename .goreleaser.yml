@@ -28,10 +28,10 @@ brews:
       name: homebrew-saucectl
     folder: Formula
     test: |
-      system "#{bin}/goreleaser -v"
+      system "#{bin}/goreleaser", "-v"
     name: saucectl
     homepage: "https://saucelabs.com/"
-    description: "Saucectl is a command-line interface to run testrunner tests"
+    description: "Test orchestration with Sauce Labs"
     commit_author:
       name: devx-sauce-bot
       email: devx.bot@saucelabs.com

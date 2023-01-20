@@ -1,6 +1,5 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
-  "$id": "https://saucelabs.com/schema/v1/cypress.schema.json",
   "title": "saucectl cypress runner configuration",
   "description": "Configuration file for cypress using saucectl",
   "type": "object",
@@ -199,6 +198,9 @@
           },
           "timeZone": {
             "$ref": "../subschema/common.schema.json#/definitions/timeZone"
+          },
+          "passThreshold": {
+            "$ref": "../subschema/common.schema.json#/definitions/passThreshold"
           }
         },
         "required": [
