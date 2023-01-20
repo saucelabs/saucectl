@@ -2065,8 +2065,10 @@
                         "$ref": "#/allOf/2/then/properties/suites/items/properties/emulators/items/properties/orientation"
                       },
                       "platformName": {
-                        "$ref": "#/allOf/5/then/properties/suites/items/properties/platform",
-                        "type": "string"
+                        "description": "The name of the simulator platform.",
+                        "enum": [
+                          "iOS"
+                        ]
                       },
                       "platformVersions": {
                         "description": "Which platform versions (OS versions) should be used. Multiple values are treated as 'AND', thus tests run across multiple versions.",
