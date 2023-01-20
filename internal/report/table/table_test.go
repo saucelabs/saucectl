@@ -54,7 +54,7 @@ func TestReporter_Render(t *testing.T) {
   ✔    Firefox                                34s    passed    Firefox    Windows 10           3  
   ✔    Chrome                                  5s    passed    Chrome     Windows 10           1  
 ──────────────────────────────────────────────────────────────────────────────────────────────────
-  ✔    All tests have passed                  34s                                                 
+  ✔    All suites have passed                 34s                                                 
 `,
 		},
 		{
