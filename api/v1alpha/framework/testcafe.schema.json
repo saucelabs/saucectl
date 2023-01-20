@@ -273,8 +273,10 @@
                   "$ref": "../subschema/common.schema.json#/definitions/orientation"
                 },
                 "platformName": {
-                  "$ref": "../subschema/common.schema.json#/definitions/platformName",
-                  "type": "string"
+                  "description": "The name of the simulator platform.",
+                  "enum": [
+                    "iOS"
+                  ]
                 },
                 "platformVersions": {
                   "description": "Which platform versions (OS versions) should be used. Multiple values are treated as 'AND', thus tests run across multiple versions.",
