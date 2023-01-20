@@ -73,7 +73,10 @@ type Runner struct {
 
 type RunnerDetails struct {
 	Runner
-	Metadata map[string]string `json:"metadata,omitempty"`
+
+	// TODO Skipping Metadata field for now,  due to endpoint issues. Currently, the metadata in the response is a
+	// nested map that contains the original RunnerSpec fields and their contents.
+	//Metadata map[string]string `json:"metadata,omitempty"`
 }
 
 type Service interface {
@@ -145,9 +148,8 @@ func (c *Client) GetRun(ctx context.Context, id string) (RunnerDetails, error) {
 	if err != nil {
 		return r, err
 	}
-	err = json.Unmarshal(body, &r)
 
-	return r, nil
+	return r, json.Unmarshal(body, &r)
 }
 
 func (c *Client) StopRun(ctx context.Context, runID string) error {
