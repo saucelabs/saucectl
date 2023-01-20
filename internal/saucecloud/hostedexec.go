@@ -115,6 +115,7 @@ func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerDe
 		EntryPoint: suite.EntryPoint,
 		Env:        mapEnv(suite.Env),
 		Files:      files,
+		Artifacts:  suite.Artifacts,
 		Metadata:   metadata,
 	})
 	if err != nil {

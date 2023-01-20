@@ -39,7 +39,7 @@ type RunnerSpec struct {
 	Env        []EnvItem         `json:"env,omitempty"`
 	Files      []FileData        `json:"files,omitempty"`
 	Metadata   map[string]string `json:"metadata,omitempty"`
-	// Artifacts  []string
+	Artifacts  []string          `json:"artifacts,omitempty"`
 }
 
 type Container struct {
