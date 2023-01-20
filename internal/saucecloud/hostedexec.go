@@ -128,7 +128,6 @@ func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerDe
 		return run, err
 	}
 
-	// TODO: What's the failed status for a runner?
 	if run.Status != hostedexec.StateSucceeded {
 		return run, fmt.Errorf("suite '%s' failed", suite.Name)
 	}

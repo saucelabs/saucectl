@@ -76,35 +76,10 @@ type RunnerDetails struct {
 	Metadata map[string]string `json:"metadata,omitempty"`
 }
 
-type RunnerList struct {
-	Content []Runner `json:"content,omitempty"`
-}
-
-type EventList struct {
-	Content []Event `json:"content,omitempty"`
-}
-
-type Event struct {
-	CreationTime int64             `json:"creation_time,omitempty"`
-	Namespace    string            `json:"namespace,omitempty"`
-	Key          string            `json:"key,omitempty"`
-	Summary      string            `json:"summary,omitempty"`
-	Metadata     map[string]string `json:"metadata,omitempty"`
-}
-
-type Status struct {
-	Phase    string `json:"phase,omitempty"`
-	ExitCode int    `json:"exit_code,omitempty"`
-	Logs     string `json:"logs,omitempty"`
-}
-
 type Service interface {
 	TriggerRun(context.Context, RunnerSpec) (Runner, error)
-	// GetAllRuns(ctx context.Context, limit int, offset int) RunnerList
 	GetRun(ctx context.Context, id string) (RunnerDetails, error)
 	StopRun(ctx context.Context, id string) error
-	// GetEvents(ctx context.Context, id string) EventList
-	// GetStatus(ctx context.Context, id string) Status
 }
 
 func New(url string, creds credentials.Credentials, timeout time.Duration) Client {
