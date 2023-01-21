@@ -38,6 +38,7 @@ type execResult struct {
 	startTime time.Time
 	endTime   time.Time
 	attempts  int
+	timedOut  bool
 }
 
 func (r *HostedExecRunner) RunProject() (int, error) {
@@ -74,9 +75,6 @@ func (r *HostedExecRunner) runSuites(suites chan hostedexec.Suite, results chan<
 		startTime := time.Now()
 
 		run, err := r.runSuite(suite)
-		if err != nil {
-			log.Warn().Err(err).Msgf("Suite errored.")
-		}
 
 		results <- execResult{
 			name:      suite.Name,
@@ -87,6 +85,7 @@ func (r *HostedExecRunner) runSuites(suites chan hostedexec.Suite, results chan<
 			endTime:   time.Now(),
 			duration:  time.Since(startTime),
 			attempts:  1,
+			timedOut:  run.TimedOut,
 		}
 	}
 }
@@ -127,9 +126,14 @@ func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerDe
 
 	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Str("runID", runner.ID).
 		Msg("Started suite.")
-	run, err = r.PollRun(context.Background(), runner.ID)
+	run, err = r.PollRun(context.Background(), runner.ID, suite.Timeout)
 	if err != nil {
 		return run, err
+	}
+
+	if run.TimedOut {
+		_ = r.RunnerService.StopRun(context.Background(), runner.ID)
+		return run, fmt.Errorf("suite '%s' has reached timeout of %s", suite.Name, suite.Timeout)
 	}
 
 	if run.Status != hostedexec.StateSucceeded {
@@ -177,6 +181,7 @@ func (r *HostedExecRunner) collectResults(results chan execResult, expected int)
 				EndTime:   res.endTime,
 				Status:    res.status,
 				Attempts:  res.attempts,
+				TimedOut:  res.timedOut,
 			})
 		}
 	}
@@ -216,10 +221,14 @@ func (r *HostedExecRunner) registerInterruptOnSignal(runID string, suiteName str
 	return sigChan
 }
 
-func (r *HostedExecRunner) PollRun(ctx context.Context, id string) (hostedexec.RunnerDetails, error) {
+func (r *HostedExecRunner) PollRun(ctx context.Context, id string, timeout time.Duration) (hostedexec.RunnerDetails, error) {
 	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
-	deathclock := time.NewTimer(24 * time.Hour)
+
+	if timeout <= 0 {
+		timeout = 24 * time.Hour
+	}
+	deathclock := time.NewTimer(timeout)
 	defer deathclock.Stop()
 
 	for {
@@ -230,7 +239,9 @@ func (r *HostedExecRunner) PollRun(ctx context.Context, id string) (hostedexec.R
 				return r, err
 			}
 		case <-deathclock.C:
-			return r.RunnerService.GetRun(ctx, id)
+			r, err := r.RunnerService.GetRun(ctx, id)
+			r.TimedOut = true
+			return r, err
 		}
 	}
 }

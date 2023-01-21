@@ -74,9 +74,8 @@ type Runner struct {
 type RunnerDetails struct {
 	Runner
 
-	// TODO Skipping Metadata field for now,  due to endpoint issues. Currently, the metadata in the response is a
-	// nested map that contains the original RunnerSpec fields and their contents.
-	//Metadata map[string]string `json:"metadata,omitempty"`
+	// TimedOut is a client side timeout, indicating that a runner has ran longer than the client was willing to wait.
+	TimedOut bool `json:"-"`
 }
 
 type Service interface {

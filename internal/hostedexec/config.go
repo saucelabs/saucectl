@@ -1,6 +1,9 @@
 package hostedexec
 
-import "github.com/saucelabs/saucectl/internal/config"
+import (
+	"github.com/saucelabs/saucectl/internal/config"
+	"time"
+)
 
 var (
 	Kind       = "htexec"
@@ -23,6 +26,7 @@ type Suite struct {
 	Files         []File            `yaml:"files,omitempty" json:"files"`
 	Artifacts     []string          `yaml:"artifacts,omitempty" json:"artifacts"`
 	Env           map[string]string `yaml:"env,omitempty" json:"env"`
+	Timeout       time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
 }
 
 type ImagePullAuth struct {
