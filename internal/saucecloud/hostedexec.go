@@ -74,6 +74,17 @@ func (r *HostedExecRunner) runSuites(suites chan hostedexec.Suite, results chan<
 	for suite := range suites {
 		startTime := time.Now()
 
+		if r.state != running {
+			results <- execResult{
+				name:      suite.Name,
+				skipped:   true,
+				startTime: startTime,
+				endTime:   time.Now(),
+				duration:  time.Since(startTime),
+			}
+			continue
+		}
+
 		run, err := r.runSuite(suite)
 
 		results <- execResult{
@@ -170,6 +181,10 @@ func (r *HostedExecRunner) collectResults(results chan execResult, expected int)
 			passed = false
 		}
 
+		if r.state != running {
+			break
+		}
+
 		log.Err(res.err).Str("suite", res.name).Bool("passed", res.err == nil).Str("runID", res.runID).
 			Msg("Suite finished.")
 
@@ -186,6 +201,10 @@ func (r *HostedExecRunner) collectResults(results chan execResult, expected int)
 		}
 	}
 	close(done)
+
+	if r.state != running {
+		return false
+	}
 
 	for _, r := range r.Reporters {
 		r.Render()
