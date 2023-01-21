@@ -31,7 +31,7 @@ type HostedExecRunner struct {
 type execResult struct {
 	name      string
 	runID     string
-	skipped   bool // TODO implement skip status (e.g. when saucectl is interrupted, timeout etc.)
+	skipped   bool
 	status    string
 	err       error
 	duration  time.Duration
