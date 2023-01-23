@@ -14,17 +14,9 @@ import (
 	"github.com/saucelabs/saucectl/internal/hostedexec"
 )
 
-type state uint8
-
-const (
-	running state = iota
-	stopping
-)
-
 type HostedExecRunner struct {
 	Project       hostedexec.Project
 	RunnerService hostedexec.Service
-	state         state
 
 	Reporters []report.Reporter
 
@@ -35,7 +27,6 @@ type HostedExecRunner struct {
 type execResult struct {
 	name      string
 	runID     string
-	skipped   bool
 	status    string
 	err       error
 	duration  time.Duration
@@ -49,6 +40,9 @@ func (r *HostedExecRunner) RunProject() (int, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	r.ctx = ctx
 	r.cancel = cancel
+
+	sigChan := r.registerInterruptOnSignal()
+	defer unregisterSignalCapture(sigChan)
 
 	suites, results := r.createWorkerPool(1, 0)
 
@@ -82,13 +76,14 @@ func (r *HostedExecRunner) runSuites(suites chan hostedexec.Suite, results chan<
 	for suite := range suites {
 		startTime := time.Now()
 
-		if r.state != running {
+		if r.ctx.Err() != nil {
 			results <- execResult{
 				name:      suite.Name,
-				skipped:   true,
 				startTime: startTime,
 				endTime:   time.Now(),
 				duration:  time.Since(startTime),
+				status:    hostedexec.StateCancelled,
+				err:       errors.New("suite cancelled"),
 			}
 			continue
 		}
@@ -147,12 +142,13 @@ func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerDe
 		run.TimedOut = true
 		return run, fmt.Errorf("suite reached %s timeout", suite.Timeout)
 	}
+	if errors.Is(err, context.Canceled) && ctx.Err() != nil {
+		run.Status = hostedexec.StateCancelled
+		return run, errors.New("suite cancelled")
+	}
 	if err != nil {
 		return run, err
 	}
-
-	sigChan := r.registerInterruptOnSignal(runner.ID, suite.Name)
-	defer unregisterSignalCapture(sigChan)
 
 	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Str("runID", runner.ID).
 		Msg("Started suite.")
@@ -162,6 +158,12 @@ func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerDe
 		_ = r.RunnerService.StopRun(context.Background(), runner.ID)
 		run.TimedOut = true
 		return run, fmt.Errorf("suite reached %s timeout", suite.Timeout)
+	}
+	if errors.Is(err, context.Canceled) && ctx.Err() != nil {
+		// Use a new context, because saucectl is already interrupted, and we'd not be able to stop the run.
+		_ = r.RunnerService.StopRun(context.Background(), runner.ID)
+		run.Status = hostedexec.StateCancelled
+		return run, errors.New("suite cancelled")
 	}
 	if err != nil {
 		return run, err
@@ -186,10 +188,10 @@ func (r *HostedExecRunner) collectResults(results chan execResult, expected int)
 			select {
 			case <-done:
 				return
+			case <-r.ctx.Done():
+				return
 			case <-t.C:
-				if r.state == running {
-					log.Info().Msgf("Suites in progress: %d", inProgress)
-				}
+				log.Info().Msgf("Suites in progress: %d", inProgress)
 			}
 		}
 	}(r)
@@ -199,10 +201,6 @@ func (r *HostedExecRunner) collectResults(results chan execResult, expected int)
 
 		if res.err != nil {
 			passed = false
-		}
-
-		if r.state != running {
-			break
 		}
 
 		log.Err(res.err).Str("suite", res.name).Bool("passed", res.err == nil).Str("runID", res.runID).
@@ -222,10 +220,6 @@ func (r *HostedExecRunner) collectResults(results chan execResult, expected int)
 	}
 	close(done)
 
-	if r.state != running {
-		return false
-	}
-
 	for _, r := range r.Reporters {
 		r.Render()
 	}
@@ -233,30 +227,24 @@ func (r *HostedExecRunner) collectResults(results chan execResult, expected int)
 	return passed
 }
 
-func (r *HostedExecRunner) registerInterruptOnSignal(runID string, suiteName string) chan os.Signal {
+func (r *HostedExecRunner) registerInterruptOnSignal() chan os.Signal {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
-	go func(c <-chan os.Signal, runID string, hr *HostedExecRunner) {
+	go func(c <-chan os.Signal, hr *HostedExecRunner) {
 		for {
 			sig := <-c
 			if sig == nil {
 				return
 			}
-			switch hr.state {
-			case running:
-				log.Info().Str("suite", suiteName).Msg("Stopping suite")
-				err := hr.RunnerService.StopRun(context.Background(), runID)
-				if err != nil {
-					log.Warn().Err(err).Str("suite", suiteName).Msg("Unable to stop suite.")
-				}
-				println("\nStopping run. Waiting for all tests in progress to be stopped... (press Ctrl-c again to exit without waiting)\n")
-				hr.state = stopping
-			case stopping:
+			if r.ctx.Err() == nil {
+				r.cancel()
+				println("\nStopping run. Cancelling all suites in progress... (press Ctrl-c again to exit without waiting)\n")
+			} else {
 				os.Exit(1)
 			}
 		}
-	}(sigChan, runID, r)
+	}(sigChan, r)
 	return sigChan
 }
 
