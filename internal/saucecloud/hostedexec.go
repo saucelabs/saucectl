@@ -3,6 +3,7 @@ package saucecloud
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/report"
 	"os"
@@ -26,6 +27,9 @@ type HostedExecRunner struct {
 	state         state
 
 	Reporters []report.Reporter
+
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 type execResult struct {
@@ -42,6 +46,10 @@ type execResult struct {
 }
 
 func (r *HostedExecRunner) RunProject() (int, error) {
+	ctx, cancel := context.WithCancel(context.Background())
+	r.ctx = ctx
+	r.cancel = cancel
+
 	suites, results := r.createWorkerPool(1, 0)
 
 	// Submit suites to work on.
@@ -114,7 +122,14 @@ func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerDe
 
 	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Msg("Starting suite.")
 
-	runner, err := r.RunnerService.TriggerRun(context.Background(), hostedexec.RunnerSpec{
+	if suite.Timeout <= 0 {
+		suite.Timeout = 24 * time.Hour
+	}
+
+	ctx, cancel := context.WithTimeout(r.ctx, suite.Timeout)
+	defer cancel()
+
+	runner, err := r.RunnerService.TriggerRun(ctx, hostedexec.RunnerSpec{
 		Container: hostedexec.Container{
 			Name: suite.Image,
 			Auth: hostedexec.Auth{
@@ -128,6 +143,10 @@ func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerDe
 		Artifacts:  suite.Artifacts,
 		Metadata:   metadata,
 	})
+	if errors.Is(err, context.DeadlineExceeded) && ctx.Err() != nil {
+		run.TimedOut = true
+		return run, fmt.Errorf("suite reached %s timeout", suite.Timeout)
+	}
 	if err != nil {
 		return run, err
 	}
@@ -137,14 +156,15 @@ func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerDe
 
 	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Str("runID", runner.ID).
 		Msg("Started suite.")
-	run, err = r.PollRun(context.Background(), runner.ID, suite.Timeout)
+	run, err = r.PollRun(ctx, runner.ID)
+	if errors.Is(err, context.DeadlineExceeded) && ctx.Err() != nil {
+		// Use a new context, because the suite's already timed out, and we'd not be able to stop the run.
+		_ = r.RunnerService.StopRun(context.Background(), runner.ID)
+		run.TimedOut = true
+		return run, fmt.Errorf("suite reached %s timeout", suite.Timeout)
+	}
 	if err != nil {
 		return run, err
-	}
-
-	if run.TimedOut {
-		_ = r.RunnerService.StopRun(context.Background(), runner.ID)
-		return run, fmt.Errorf("suite '%s' has reached timeout of %s", suite.Name, suite.Timeout)
 	}
 
 	if run.Status != hostedexec.StateSucceeded {
@@ -240,27 +260,19 @@ func (r *HostedExecRunner) registerInterruptOnSignal(runID string, suiteName str
 	return sigChan
 }
 
-func (r *HostedExecRunner) PollRun(ctx context.Context, id string, timeout time.Duration) (hostedexec.RunnerDetails, error) {
+func (r *HostedExecRunner) PollRun(ctx context.Context, id string) (hostedexec.RunnerDetails, error) {
 	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
 
-	if timeout <= 0 {
-		timeout = 24 * time.Hour
-	}
-	deathclock := time.NewTimer(timeout)
-	defer deathclock.Stop()
-
 	for {
 		select {
+		case <-ctx.Done():
+			return hostedexec.RunnerDetails{}, ctx.Err()
 		case <-ticker.C:
 			r, err := r.RunnerService.GetRun(ctx, id)
 			if err != nil || hostedexec.Done(r.Status) {
 				return r, err
 			}
-		case <-deathclock.C:
-			r, err := r.RunnerService.GetRun(ctx, id)
-			r.TimedOut = true
-			return r, err
 		}
 	}
 }
