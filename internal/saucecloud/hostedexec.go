@@ -14,6 +14,16 @@ import (
 	"github.com/saucelabs/saucectl/internal/hostedexec"
 )
 
+type SuiteTimeoutError struct {
+	Timeout time.Duration
+}
+
+func (s SuiteTimeoutError) Error() string {
+	return fmt.Sprintf("suite timed out after %s", s.Timeout)
+}
+
+var ErrSuiteCancelled = errors.New("suite cancelled")
+
 type HostedExecRunner struct {
 	Project       hostedexec.Project
 	RunnerService hostedexec.Service
@@ -83,7 +93,7 @@ func (r *HostedExecRunner) runSuites(suites chan hostedexec.Suite, results chan<
 				endTime:   time.Now(),
 				duration:  time.Since(startTime),
 				status:    hostedexec.StateCancelled,
-				err:       errors.New("suite cancelled"),
+				err:       ErrSuiteCancelled,
 			}
 			continue
 		}
@@ -140,11 +150,11 @@ func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerDe
 	})
 	if errors.Is(err, context.DeadlineExceeded) && ctx.Err() != nil {
 		run.TimedOut = true
-		return run, fmt.Errorf("suite reached %s timeout", suite.Timeout)
+		return run, SuiteTimeoutError{Timeout: suite.Timeout}
 	}
 	if errors.Is(err, context.Canceled) && ctx.Err() != nil {
 		run.Status = hostedexec.StateCancelled
-		return run, errors.New("suite cancelled")
+		return run, ErrSuiteCancelled
 	}
 	if err != nil {
 		return run, err
@@ -157,13 +167,13 @@ func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerDe
 		// Use a new context, because the suite's already timed out, and we'd not be able to stop the run.
 		_ = r.RunnerService.StopRun(context.Background(), runner.ID)
 		run.TimedOut = true
-		return run, fmt.Errorf("suite reached %s timeout", suite.Timeout)
+		return run, SuiteTimeoutError{Timeout: suite.Timeout}
 	}
 	if errors.Is(err, context.Canceled) && ctx.Err() != nil {
 		// Use a new context, because saucectl is already interrupted, and we'd not be able to stop the run.
 		_ = r.RunnerService.StopRun(context.Background(), runner.ID)
 		run.Status = hostedexec.StateCancelled
-		return run, errors.New("suite cancelled")
+		return run, ErrSuiteCancelled
 	}
 	if err != nil {
 		return run, err
