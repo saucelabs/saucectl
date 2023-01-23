@@ -73,9 +73,6 @@ type Runner struct {
 
 type RunnerDetails struct {
 	Runner
-
-	// TimedOut is a client side timeout, indicating that a runner has run longer than the client was willing to wait.
-	TimedOut bool `json:"-"`
 }
 
 type Service interface {

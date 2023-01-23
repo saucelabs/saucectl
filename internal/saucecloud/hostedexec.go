@@ -43,7 +43,6 @@ type execResult struct {
 	startTime time.Time
 	endTime   time.Time
 	attempts  int
-	timedOut  bool
 }
 
 func (r *HostedExecRunner) RunProject() (int, error) {
@@ -109,7 +108,6 @@ func (r *HostedExecRunner) runSuites(suites chan hostedexec.Suite, results chan<
 			endTime:   time.Now(),
 			duration:  time.Since(startTime),
 			attempts:  1,
-			timedOut:  run.TimedOut,
 		}
 	}
 }
@@ -149,7 +147,7 @@ func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerDe
 		Metadata:   metadata,
 	})
 	if errors.Is(err, context.DeadlineExceeded) && ctx.Err() != nil {
-		run.TimedOut = true
+		run.Status = hostedexec.StateCancelled
 		return run, SuiteTimeoutError{Timeout: suite.Timeout}
 	}
 	if errors.Is(err, context.Canceled) && ctx.Err() != nil {
@@ -166,7 +164,7 @@ func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerDe
 	if errors.Is(err, context.DeadlineExceeded) && ctx.Err() != nil {
 		// Use a new context, because the suite's already timed out, and we'd not be able to stop the run.
 		_ = r.RunnerService.StopRun(context.Background(), runner.ID)
-		run.TimedOut = true
+		run.Status = hostedexec.StateCancelled
 		return run, SuiteTimeoutError{Timeout: suite.Timeout}
 	}
 	if errors.Is(err, context.Canceled) && ctx.Err() != nil {
@@ -224,7 +222,6 @@ func (r *HostedExecRunner) collectResults(results chan execResult, expected int)
 				EndTime:   res.endTime,
 				Status:    res.status,
 				Attempts:  res.attempts,
-				TimedOut:  res.timedOut,
 			})
 		}
 	}
