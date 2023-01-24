@@ -79,7 +79,7 @@ type RunnerStatus struct {
 	TerminationReason string `json:"termination_reason,omitempty"`
 }
 
-type Service interface {
+type ImageRunner interface {
 	TriggerRun(context.Context, RunnerSpec) (Runner, error)
 	GetStatus(ctx context.Context, id string) (RunnerStatus, error)
 	StopRun(ctx context.Context, id string) error

@@ -26,7 +26,7 @@ var ErrSuiteCancelled = errors.New("suite cancelled")
 
 type HostedExecRunner struct {
 	Project       hostedexec.Project
-	RunnerService hostedexec.Service
+	RunnerService hostedexec.ImageRunner
 
 	Reporters []report.Reporter
 
