@@ -188,21 +188,7 @@ func (r *HostedExecRunner) collectResults(results chan execResult, expected int)
 	inProgress := expected
 	passed := true
 
-	done := make(chan interface{})
-	go func(r *HostedExecRunner) {
-		t := time.NewTicker(10 * time.Second)
-		defer t.Stop()
-		for {
-			select {
-			case <-done:
-				return
-			case <-r.ctx.Done():
-				return
-			case <-t.C:
-				log.Info().Msgf("Suites in progress: %d", inProgress)
-			}
-		}
-	}(r)
+	stopProgress := startProgressTicker(r.ctx, &inProgress)
 	for i := 0; i < expected; i++ {
 		res := <-results
 		inProgress--
@@ -225,7 +211,7 @@ func (r *HostedExecRunner) collectResults(results chan execResult, expected int)
 			})
 		}
 	}
-	close(done)
+	stopProgress()
 
 	for _, r := range r.Reporters {
 		r.Render()
@@ -304,4 +290,23 @@ func readFile(path string) (string, error) {
 		return "", err
 	}
 	return base64.StdEncoding.Strict().EncodeToString(bytes), nil
+}
+
+func startProgressTicker(ctx context.Context, progress *int) (cancel context.CancelFunc) {
+	ctx, cancel = context.WithCancel(ctx)
+
+	go func() {
+		t := time.NewTicker(10 * time.Second)
+		defer t.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+				log.Info().Msgf("Suites in progress: %d", *progress)
+			}
+		}
+	}()
+
+	return
 }
