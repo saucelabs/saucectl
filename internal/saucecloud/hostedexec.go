@@ -112,8 +112,8 @@ func (r *HostedExecRunner) runSuites(suites chan hostedexec.Suite, results chan<
 	}
 }
 
-func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerDetails, error) {
-	var run hostedexec.RunnerDetails
+func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerStatus, error) {
+	var run hostedexec.RunnerStatus
 	metadata := make(map[string]string)
 	metadata["name"] = suite.Name
 
@@ -241,16 +241,16 @@ func (r *HostedExecRunner) registerInterruptOnSignal() chan os.Signal {
 	return sigChan
 }
 
-func (r *HostedExecRunner) PollRun(ctx context.Context, id string) (hostedexec.RunnerDetails, error) {
+func (r *HostedExecRunner) PollRun(ctx context.Context, id string) (hostedexec.RunnerStatus, error) {
 	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
-			return hostedexec.RunnerDetails{}, ctx.Err()
+			return hostedexec.RunnerStatus{}, ctx.Err()
 		case <-ticker.C:
-			r, err := r.RunnerService.GetRun(ctx, id)
+			r, err := r.RunnerService.GetStatus(ctx, id)
 			if err != nil || hostedexec.Done(r.Status) {
 				return r, err
 			}

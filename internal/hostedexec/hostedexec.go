@@ -71,13 +71,17 @@ type Runner struct {
 	TerminationReason string `json:"termination_reason,omitempty"`
 }
 
-type RunnerDetails struct {
-	Runner
+type RunnerStatus struct {
+	ID                string `json:"id,omitempty"`
+	Status            string `json:"status,omitempty"`
+	CreationTime      int64  `json:"creation_time,omitempty"`
+	TerminationTime   int64  `json:"termination_time,omitempty"`
+	TerminationReason string `json:"termination_reason,omitempty"`
 }
 
 type Service interface {
 	TriggerRun(context.Context, RunnerSpec) (Runner, error)
-	GetRun(ctx context.Context, id string) (RunnerDetails, error)
+	GetStatus(ctx context.Context, id string) (RunnerStatus, error)
 	StopRun(ctx context.Context, id string) error
 }
 
@@ -123,9 +127,9 @@ func (c *Client) TriggerRun(ctx context.Context, spec RunnerSpec) (Runner, error
 	return runner, json.Unmarshal(body, &runner)
 }
 
-func (c *Client) GetRun(ctx context.Context, id string) (RunnerDetails, error) {
-	var r RunnerDetails
-	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s", c.URL, id)
+func (c *Client) GetStatus(ctx context.Context, id string) (RunnerStatus, error) {
+	var r RunnerStatus
+	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/status", c.URL, id)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -140,12 +144,7 @@ func (c *Client) GetRun(ctx context.Context, id string) (RunnerDetails, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return r, err
-	}
-
-	return r, json.Unmarshal(body, &r)
+	return r, json.NewDecoder(resp.Body).Decode(&r)
 }
 
 func (c *Client) StopRun(ctx context.Context, runID string) error {
