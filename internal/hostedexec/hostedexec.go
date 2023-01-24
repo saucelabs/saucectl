@@ -79,12 +79,6 @@ type RunnerStatus struct {
 	TerminationReason string `json:"termination_reason,omitempty"`
 }
 
-type ImageRunner interface {
-	TriggerRun(context.Context, RunnerSpec) (Runner, error)
-	GetStatus(ctx context.Context, id string) (RunnerStatus, error)
-	StopRun(ctx context.Context, id string) error
-}
-
 func New(url string, creds credentials.Credentials, timeout time.Duration) Client {
 	return Client{
 		HTTPClient:  &http.Client{Timeout: timeout},

@@ -14,6 +14,12 @@ import (
 	"github.com/saucelabs/saucectl/internal/hostedexec"
 )
 
+type ImageRunner interface {
+	TriggerRun(context.Context, hostedexec.RunnerSpec) (hostedexec.Runner, error)
+	GetStatus(ctx context.Context, id string) (hostedexec.RunnerStatus, error)
+	StopRun(ctx context.Context, id string) error
+}
+
 type SuiteTimeoutError struct {
 	Timeout time.Duration
 }
@@ -26,7 +32,7 @@ var ErrSuiteCancelled = errors.New("suite cancelled")
 
 type HostedExecRunner struct {
 	Project       hostedexec.Project
-	RunnerService hostedexec.ImageRunner
+	RunnerService ImageRunner
 
 	Reporters []report.Reporter
 
