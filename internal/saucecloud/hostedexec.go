@@ -8,6 +8,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/report"
 	"os"
 	"os/signal"
+	"reflect"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -89,6 +90,26 @@ func (r *HostedExecRunner) createWorkerPool(ccy int, maxRetries int) (chan hoste
 
 func (r *HostedExecRunner) runSuites(suites chan hostedexec.Suite, results chan<- execResult) {
 	for suite := range suites {
+		// Apply defaults.
+		defaults := r.Project.Defaults
+		if defaults.Name != "" {
+			suite.Name = defaults.Name + " " + suite.Name
+		}
+
+		suite.Image = orDefault(suite.Image, defaults.Image)
+		suite.ImagePullAuth = orDefault(suite.ImagePullAuth, defaults.ImagePullAuth)
+		suite.EntryPoint = orDefault(suite.EntryPoint, defaults.EntryPoint)
+		suite.Timeout = orDefault(suite.Timeout, defaults.Timeout)
+		suite.Files = append(suite.Files, defaults.Files...)
+		suite.Artifacts = append(suite.Artifacts, defaults.Artifacts...)
+
+		if suite.Env == nil {
+			suite.Env = make(map[string]string)
+		}
+		for k, v := range defaults.Env {
+			suite.Env[k] = v
+		}
+
 		startTime := time.Now()
 
 		if r.ctx.Err() != nil {
@@ -315,4 +336,13 @@ func startProgressTicker(ctx context.Context, progress *int) (cancel context.Can
 	}()
 
 	return
+}
+
+// orDefault takes two values of type T and returns a if it's non-zero (not 0, "" etc.), b otherwise.
+func orDefault[T comparable](a T, b T) T {
+	if reflect.ValueOf(a).IsZero() {
+		return b
+	}
+
+	return a
 }
