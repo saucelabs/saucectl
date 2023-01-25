@@ -3,6 +3,7 @@ package run
 import (
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/http/imgexec"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -73,7 +74,7 @@ var (
 	insightsClient   insights.Client
 	iamClient        iam.Client
 	apitestingClient apitesting.Client
-	hostedExecClient     hostedexec.Client
+	hostedExecClient saucecloud.Client
 
 	// ErrEmptySuiteName is thrown when a flag is specified that has a dependency on the --name flag.
 	ErrEmptySuiteName = errors.New(msg.EmptyAdhocSuiteName)
@@ -242,7 +243,7 @@ func preRun() error {
 
 	apitestingClient = apitesting.New("", creds.Username, creds.AccessKey, apitestingTimeout)
 
-	hostedExecClient = hostedexec.New("", creds, apitestingTimeout)
+	hostedExecClient = saucecloud.New("", creds, apitestingTimeout)
 
 	return nil
 }
