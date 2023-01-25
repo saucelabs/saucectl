@@ -108,67 +108,55 @@ func (r *TestcafeRunner) runSuites(fileURI string) bool {
 			if len(s.Simulators) > 0 {
 				for _, d := range s.Simulators {
 					for _, pv := range d.PlatformVersions {
-						jobOpts <- job.StartOptions{
-							ConfigFilePath:   r.Project.ConfigFilePath,
-							CLIFlags:         r.Project.CLIFlags,
-							DisplayName:      s.Name,
-							Timeout:          s.Timeout,
-							App:              fileURI,
-							Suite:            s.Name,
-							Framework:        "testcafe",
-							FrameworkVersion: r.Project.Testcafe.Version,
-							BrowserName:      s.BrowserName,
-							BrowserVersion:   s.BrowserVersion,
-							PlatformName:     d.PlatformName,
-							PlatformVersion:  pv,
-							DeviceName:       d.Name,
-							Name:             s.Name,
-							Build:            r.Project.Sauce.Metadata.Build,
-							Tags:             r.Project.Sauce.Metadata.Tags,
-							Tunnel: job.TunnelOptions{
-								ID:     r.Project.Sauce.Tunnel.Name,
-								Parent: r.Project.Sauce.Tunnel.Owner,
-							},
-							ScreenResolution: s.ScreenResolution,
-							RunnerVersion:    r.Project.RunnerVersion,
-							Experiments:      r.Project.Sauce.Experiments,
-							TimeZone:         s.TimeZone,
-							Visibility:       r.Project.Sauce.Visibility,
-						}
+						opts := r.generateStartOpts(s)
+						opts.App = fileURI
+						opts.PlatformName = d.PlatformName
+						opts.DeviceName = d.Name
+						opts.PlatformVersion = pv
+
+						jobOpts <- opts
 					}
 				}
 			} else {
-				jobOpts <- job.StartOptions{
-					ConfigFilePath:   r.Project.ConfigFilePath,
-					DisplayName:      s.Name,
-					App:              fmt.Sprintf("storage:%s", fileURI),
-					Suite:            s.Name,
-					Framework:        "testcafe",
-					FrameworkVersion: r.Project.Testcafe.Version,
-					BrowserName:      s.BrowserName,
-					BrowserVersion:   s.BrowserVersion,
-					PlatformName:     s.PlatformName,
-					Name:             s.Name,
-					Build:            r.Project.Sauce.Metadata.Build,
-					Tags:             r.Project.Sauce.Metadata.Tags,
-					Tunnel: job.TunnelOptions{
-						ID:     r.Project.Sauce.Tunnel.Name,
-						Parent: r.Project.Sauce.Tunnel.Owner,
-					},
-					ScreenResolution: s.ScreenResolution,
-					RunnerVersion:    r.Project.RunnerVersion,
-					Experiments:      r.Project.Sauce.Experiments,
-					Attempt:          0,
-					Retries:          r.Project.Sauce.Retries,
-					TimeZone:         s.TimeZone,
-					Visibility:       r.Project.Sauce.Visibility,
-					PassThreshold:    s.PassThreshold,
-				}
+				opts := r.generateStartOpts(s)
+				opts.App = fmt.Sprintf("storage:%s", fileURI)
+				opts.PlatformName = s.PlatformName
+
+				jobOpts <- opts
 			}
 		}
 	}()
 
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
+}
+
+func (r *TestcafeRunner) generateStartOpts(s testcafe.Suite) job.StartOptions {
+	return job.StartOptions{
+		ConfigFilePath:   r.Project.ConfigFilePath,
+		CLIFlags:         r.Project.CLIFlags,
+		DisplayName:      s.Name,
+		Timeout:          s.Timeout,
+		Suite:            s.Name,
+		Framework:        "testcafe",
+		FrameworkVersion: r.Project.Testcafe.Version,
+		BrowserName:      s.BrowserName,
+		BrowserVersion:   s.BrowserVersion,
+		Name:             s.Name,
+		Build:            r.Project.Sauce.Metadata.Build,
+		Tags:             r.Project.Sauce.Metadata.Tags,
+		Tunnel: job.TunnelOptions{
+			ID:     r.Project.Sauce.Tunnel.Name,
+			Parent: r.Project.Sauce.Tunnel.Owner,
+		},
+		ScreenResolution: s.ScreenResolution,
+		RunnerVersion:    r.Project.RunnerVersion,
+		Experiments:      r.Project.Sauce.Experiments,
+		TimeZone:         s.TimeZone,
+		Visibility:       r.Project.Sauce.Visibility,
+		Retries:          r.Project.Sauce.Retries,
+		Attempt:          0,
+		PassThreshold:    s.PassThreshold,
+	}
 }
 
 func (r *TestcafeRunner) calcTestcafeJobsCount(suites []testcafe.Suite) int {
