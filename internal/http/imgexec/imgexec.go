@@ -78,7 +78,16 @@ func (c *Client) GetStatus(ctx context.Context, id string) (hostedexec.RunnerSta
 	}
 	defer resp.Body.Close()
 
-	return r, json.NewDecoder(resp.Body).Decode(&r)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return r, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return r, fmt.Errorf("runner status retrieval failed (%d): %s", resp.StatusCode, body)
+	}
+
+	return r, json.Unmarshal(body, &r)
 }
 
 func (c *Client) StopRun(ctx context.Context, runID string) error {
