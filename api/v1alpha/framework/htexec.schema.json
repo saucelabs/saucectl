@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "title": "saucectl image runner configuration",
+  "description": "Configuration file for running container images using saucectl",
+  "type": "object",
+  "definitions": {
+    "suite": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "The name of the test suite.",
+          "type": "string"
+        },
+        "image": {
+          "description": "The name of the container image.",
+          "type": "string"
+        },
+        "imagePullAuth": {
+          "description": "Container registry credentials for accessing the image.",
+          "type": "object",
+          "properties": {
+            "user": {
+              "description": "The username.",
+              "type": "string"
+            },
+            "token": {
+              "description": "The access token.",
+              "type": "string"
+            }
+          }
+        },
+        "entrypoint": {
+          "description": "The command line arguments to launch the image with.",
+          "type": "string"
+        },
+        "files": {
+          "description": "List of files that you'd like saucectl to upload and mount within the container.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "src": {
+                "description": "Path to the local file.",
+                "type": "string"
+              },
+              "dst": {
+                "description": "Path within the container that the file should be mounted at.",
+                "type": "string"
+              }
+            }
+          }
+        },
+        "artifacts": {
+          "description": "List of file paths within the container to be made available as downloadable artifacts.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "env": {
+          "description": "Set one or more environment variables.",
+          "type": "object"
+        },
+        "timeout": {
+          "$ref": "../subschema/common.schema.json#/definitions/timeout"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    }
+  },
+  "properties": {
+    "apiVersion": {
+      "const": "v1alpha"
+    },
+    "kind": {
+      "const": "htexec"
+    },
+    "defaults": {
+      "description": "Settings that are applied onto every suite as a default value.",
+      "$ref": "#/definitions/suite"
+    },
+    "suites": {
+      "description": "The set of properties providing details about the image to run.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/suite"
+      }
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "suites"
+  ],
+  "additionalProperties": true
+}
