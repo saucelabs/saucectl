@@ -28,7 +28,7 @@ type TestRun struct {
 	CreationTime time.Time      `json:"creation_time,omitempty"`
 	StartTime    time.Time      `json:"start_time,omitempty"`
 	EndTime      time.Time      `json:"end_time,omitempty"`
-	Duration     int            `json:"duration,omitempty"`
+	Duration     int            `json:"duration"`
 	Browser      string         `json:"browser,omitempty"`
 	Device       string         `json:"device,omitempty"`
 	OS           string         `json:"os,omitempty"`
