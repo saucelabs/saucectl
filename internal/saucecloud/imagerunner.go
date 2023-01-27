@@ -12,12 +12,12 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/hostedexec"
+	"github.com/saucelabs/saucectl/internal/imagerunner"
 )
 
 type ImageRunner interface {
-	TriggerRun(context.Context, hostedexec.RunnerSpec) (hostedexec.Runner, error)
-	GetStatus(ctx context.Context, id string) (hostedexec.RunnerStatus, error)
+	TriggerRun(context.Context, imagerunner.RunnerSpec) (imagerunner.Runner, error)
+	GetStatus(ctx context.Context, id string) (imagerunner.RunnerStatus, error)
 	StopRun(ctx context.Context, id string) error
 }
 
@@ -31,8 +31,8 @@ func (s SuiteTimeoutError) Error() string {
 
 var ErrSuiteCancelled = errors.New("suite cancelled")
 
-type HostedExecRunner struct {
-	Project       hostedexec.Project
+type ImgRunner struct {
+	Project       imagerunner.Project
 	RunnerService ImageRunner
 
 	Reporters []report.Reporter
@@ -52,7 +52,7 @@ type execResult struct {
 	attempts  int
 }
 
-func (r *HostedExecRunner) RunProject() (int, error) {
+func (r *ImgRunner) RunProject() (int, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	r.ctx = ctx
 	r.cancel = cancel
@@ -76,8 +76,8 @@ func (r *HostedExecRunner) RunProject() (int, error) {
 	return 0, nil
 }
 
-func (r *HostedExecRunner) createWorkerPool(ccy int, maxRetries int) (chan hostedexec.Suite, chan execResult) {
-	suites := make(chan hostedexec.Suite, maxRetries+1)
+func (r *ImgRunner) createWorkerPool(ccy int, maxRetries int) (chan imagerunner.Suite, chan execResult) {
+	suites := make(chan imagerunner.Suite, maxRetries+1)
 	results := make(chan execResult, ccy)
 
 	log.Info().Int("concurrency", ccy).Msg("Launching workers.")
@@ -88,7 +88,7 @@ func (r *HostedExecRunner) createWorkerPool(ccy int, maxRetries int) (chan hoste
 	return suites, results
 }
 
-func (r *HostedExecRunner) runSuites(suites chan hostedexec.Suite, results chan<- execResult) {
+func (r *ImgRunner) runSuites(suites chan imagerunner.Suite, results chan<- execResult) {
 	for suite := range suites {
 		// Apply defaults.
 		defaults := r.Project.Defaults
@@ -118,7 +118,7 @@ func (r *HostedExecRunner) runSuites(suites chan hostedexec.Suite, results chan<
 				startTime: startTime,
 				endTime:   time.Now(),
 				duration:  time.Since(startTime),
-				status:    hostedexec.StateCancelled,
+				status:    imagerunner.StateCancelled,
 				err:       ErrSuiteCancelled,
 			}
 			continue
@@ -139,8 +139,8 @@ func (r *HostedExecRunner) runSuites(suites chan hostedexec.Suite, results chan<
 	}
 }
 
-func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerStatus, error) {
-	var run hostedexec.RunnerStatus
+func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.RunnerStatus, error) {
+	var run imagerunner.RunnerStatus
 	metadata := make(map[string]string)
 	metadata["name"] = suite.Name
 
@@ -159,10 +159,10 @@ func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerSt
 	ctx, cancel := context.WithTimeout(r.ctx, suite.Timeout)
 	defer cancel()
 
-	runner, err := r.RunnerService.TriggerRun(ctx, hostedexec.RunnerSpec{
-		Container: hostedexec.Container{
+	runner, err := r.RunnerService.TriggerRun(ctx, imagerunner.RunnerSpec{
+		Container: imagerunner.Container{
 			Name: suite.Image,
-			Auth: hostedexec.Auth{
+			Auth: imagerunner.Auth{
 				User:  suite.ImagePullAuth.User,
 				Token: suite.ImagePullAuth.Token,
 			},
@@ -174,11 +174,11 @@ func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerSt
 		Metadata:   metadata,
 	})
 	if errors.Is(err, context.DeadlineExceeded) && ctx.Err() != nil {
-		run.Status = hostedexec.StateCancelled
+		run.Status = imagerunner.StateCancelled
 		return run, SuiteTimeoutError{Timeout: suite.Timeout}
 	}
 	if errors.Is(err, context.Canceled) && ctx.Err() != nil {
-		run.Status = hostedexec.StateCancelled
+		run.Status = imagerunner.StateCancelled
 		return run, ErrSuiteCancelled
 	}
 	if err != nil {
@@ -191,27 +191,27 @@ func (r *HostedExecRunner) runSuite(suite hostedexec.Suite) (hostedexec.RunnerSt
 	if errors.Is(err, context.DeadlineExceeded) && ctx.Err() != nil {
 		// Use a new context, because the suite's already timed out, and we'd not be able to stop the run.
 		_ = r.RunnerService.StopRun(context.Background(), runner.ID)
-		run.Status = hostedexec.StateCancelled
+		run.Status = imagerunner.StateCancelled
 		return run, SuiteTimeoutError{Timeout: suite.Timeout}
 	}
 	if errors.Is(err, context.Canceled) && ctx.Err() != nil {
 		// Use a new context, because saucectl is already interrupted, and we'd not be able to stop the run.
 		_ = r.RunnerService.StopRun(context.Background(), runner.ID)
-		run.Status = hostedexec.StateCancelled
+		run.Status = imagerunner.StateCancelled
 		return run, ErrSuiteCancelled
 	}
 	if err != nil {
 		return run, err
 	}
 
-	if run.Status != hostedexec.StateSucceeded {
+	if run.Status != imagerunner.StateSucceeded {
 		return run, fmt.Errorf("suite '%s' failed", suite.Name)
 	}
 
 	return run, nil
 }
 
-func (r *HostedExecRunner) collectResults(results chan execResult, expected int) bool {
+func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
 	inProgress := expected
 	passed := true
 
@@ -247,11 +247,11 @@ func (r *HostedExecRunner) collectResults(results chan execResult, expected int)
 	return passed
 }
 
-func (r *HostedExecRunner) registerInterruptOnSignal() chan os.Signal {
+func (r *ImgRunner) registerInterruptOnSignal() chan os.Signal {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
-	go func(c <-chan os.Signal, hr *HostedExecRunner) {
+	go func(c <-chan os.Signal, hr *ImgRunner) {
 		for {
 			sig := <-c
 			if sig == nil {
@@ -268,27 +268,27 @@ func (r *HostedExecRunner) registerInterruptOnSignal() chan os.Signal {
 	return sigChan
 }
 
-func (r *HostedExecRunner) PollRun(ctx context.Context, id string) (hostedexec.RunnerStatus, error) {
+func (r *ImgRunner) PollRun(ctx context.Context, id string) (imagerunner.RunnerStatus, error) {
 	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
-			return hostedexec.RunnerStatus{}, ctx.Err()
+			return imagerunner.RunnerStatus{}, ctx.Err()
 		case <-ticker.C:
 			r, err := r.RunnerService.GetStatus(ctx, id)
-			if err != nil || hostedexec.Done(r.Status) {
+			if err != nil || imagerunner.Done(r.Status) {
 				return r, err
 			}
 		}
 	}
 }
 
-func mapEnv(env map[string]string) []hostedexec.EnvItem {
-	var items []hostedexec.EnvItem
+func mapEnv(env map[string]string) []imagerunner.EnvItem {
+	var items []imagerunner.EnvItem
 	for key, val := range env {
-		items = append(items, hostedexec.EnvItem{
+		items = append(items, imagerunner.EnvItem{
 			Name:  key,
 			Value: val,
 		})
@@ -296,14 +296,14 @@ func mapEnv(env map[string]string) []hostedexec.EnvItem {
 	return items
 }
 
-func mapFiles(files []hostedexec.File) ([]hostedexec.FileData, error) {
-	var items []hostedexec.FileData
+func mapFiles(files []imagerunner.File) ([]imagerunner.FileData, error) {
+	var items []imagerunner.FileData
 	for _, f := range files {
 		data, err := readFile(f.Src)
 		if err != nil {
 			return items, err
 		}
-		items = append(items, hostedexec.FileData{
+		items = append(items, imagerunner.FileData{
 			Path: f.Dst,
 			Data: data,
 		})

@@ -1,7 +1,7 @@
 package run
 
 import (
-	"github.com/saucelabs/saucectl/internal/hostedexec"
+	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/table"
@@ -10,23 +10,18 @@ import (
 	"os"
 )
 
-func NewHtexecCmd() *cobra.Command {
-	return nil
-}
-
-func runHostedExec(cmd *cobra.Command) (int, error) {
-	p, err := hostedexec.FromFile(gFlags.cfgFilePath)
+func runImageRunner(cmd *cobra.Command) (int, error) {
+	p, err := imagerunner.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
 
 	regio := region.FromString(p.Sauce.Region)
-	hostedExecClient.URL = regio.APIBaseURL()
-	// hostedExecClient.URL = "http://127.0.0.1:4010"
+	imageRunnerClient.URL = regio.APIBaseURL()
 
-	r := saucecloud.HostedExecRunner{
+	r := saucecloud.ImgRunner{
 		Project:       p,
-		RunnerService: &hostedExecClient,
+		RunnerService: &imageRunnerClient,
 		Reporters: []report.Reporter{&table.Reporter{
 			Dst: os.Stdout,
 		}},

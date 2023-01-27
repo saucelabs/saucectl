@@ -1,4 +1,4 @@
-package saucecloud
+package imgexec
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/credentials"
-	"github.com/saucelabs/saucectl/internal/hostedexec"
+	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/requesth"
 	"io"
 	"net/http"
@@ -26,8 +26,8 @@ func New(url string, creds credentials.Credentials, timeout time.Duration) Clien
 		Credentials: creds,
 	}
 }
-func (c *Client) TriggerRun(ctx context.Context, spec hostedexec.RunnerSpec) (hostedexec.Runner, error) {
-	var runner hostedexec.Runner
+func (c *Client) TriggerRun(ctx context.Context, spec imagerunner.RunnerSpec) (imagerunner.Runner, error) {
+	var runner imagerunner.Runner
 	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners", c.URL)
 
 	var b bytes.Buffer
@@ -61,8 +61,8 @@ func (c *Client) TriggerRun(ctx context.Context, spec hostedexec.RunnerSpec) (ho
 	return runner, json.Unmarshal(body, &runner)
 }
 
-func (c *Client) GetStatus(ctx context.Context, id string) (hostedexec.RunnerStatus, error) {
-	var r hostedexec.RunnerStatus
+func (c *Client) GetStatus(ctx context.Context, id string) (imagerunner.RunnerStatus, error) {
+	var r imagerunner.RunnerStatus
 	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/status", c.URL, id)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)

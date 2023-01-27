@@ -3,7 +3,6 @@ package run
 import (
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/http/imgexec"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -11,11 +10,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/http/imgexec"
+
 	"github.com/saucelabs/saucectl/internal/apitest"
 	"github.com/saucelabs/saucectl/internal/apitesting"
 	"github.com/saucelabs/saucectl/internal/cucumber"
-	"github.com/saucelabs/saucectl/internal/hostedexec"
 	"github.com/saucelabs/saucectl/internal/iam"
+	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/webdriver"
 
@@ -66,15 +67,15 @@ var (
 
 	typeDef config.TypeDef
 
-	testcompClient   testcomposer.Client
-	webdriverClient  webdriver.Client
-	restoClient      resto.Client
-	appsClient       appstore.AppStore
-	rdcClient        rdc.Client
-	insightsClient   insights.Client
-	iamClient        iam.Client
-	apitestingClient apitesting.Client
-	hostedExecClient saucecloud.Client
+	testcompClient    testcomposer.Client
+	webdriverClient   webdriver.Client
+	restoClient       resto.Client
+	appsClient        appstore.AppStore
+	rdcClient         rdc.Client
+	insightsClient    insights.Client
+	iamClient         iam.Client
+	apitestingClient  apitesting.Client
+	imageRunnerClient imgexec.Client
 
 	// ErrEmptySuiteName is thrown when a flag is specified that has a dependency on the --name flag.
 	ErrEmptySuiteName = errors.New(msg.EmptyAdhocSuiteName)
@@ -243,7 +244,7 @@ func preRun() error {
 
 	apitestingClient = apitesting.New("", creds.Username, creds.AccessKey, apitestingTimeout)
 
-	hostedExecClient = saucecloud.New("", creds, apitestingTimeout)
+	imageRunnerClient = imgexec.New("", creds, apitestingTimeout)
 
 	return nil
 }
@@ -277,8 +278,8 @@ func Run(cmd *cobra.Command) (int, error) {
 	if typeDef.Kind == cucumber.Kind {
 		return runCucumber(cmd, false)
 	}
-	if typeDef.Kind == hostedexec.Kind {
-		return runHostedExec(cmd)
+	if typeDef.Kind == imagerunner.Kind {
+		return runImageRunner(cmd)
 	}
 
 	return 1, errors.New(msg.UnknownFrameworkConfig)

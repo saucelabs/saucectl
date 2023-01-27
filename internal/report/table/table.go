@@ -2,7 +2,7 @@ package table
 
 import (
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/hostedexec"
+	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"io"
 	"sync"
 	"time"
@@ -101,10 +101,10 @@ func (r *Reporter) Render() {
 		totalDur   time.Duration
 	)
 	for _, ts := range r.TestResults {
-		if !job.Done(ts.Status) && !hostedexec.Done(ts.Status) && !ts.TimedOut {
+		if !job.Done(ts.Status) && !imagerunner.Done(ts.Status) && !ts.TimedOut {
 			inProgress++
 		}
-		if ts.Status == job.StateFailed || ts.Status == hostedexec.StateFailed || ts.Status == hostedexec.StateCancelled {
+		if ts.Status == job.StateFailed || ts.Status == imagerunner.StateFailed || ts.Status == imagerunner.StateCancelled {
 			errors++
 		}
 		if ts.TimedOut {
@@ -150,9 +150,9 @@ func footer(errors, inProgress, tests int, dur time.Duration) table.Row {
 
 func statusText(status string) string {
 	switch status {
-	case job.StatePassed, hostedexec.StateSucceeded:
+	case job.StatePassed, imagerunner.StateSucceeded:
 		return color.GreenString(status)
-	case job.StateInProgress, job.StateQueued, job.StateNew, hostedexec.StateRunning, hostedexec.StatePending:
+	case job.StateInProgress, job.StateQueued, job.StateNew, imagerunner.StateRunning, imagerunner.StatePending:
 		return color.BlueString(status)
 	default:
 		return color.RedString(status)
@@ -161,9 +161,9 @@ func statusText(status string) string {
 
 func statusSymbol(status string) string {
 	switch status {
-	case job.StatePassed, hostedexec.StateSucceeded:
+	case job.StatePassed, imagerunner.StateSucceeded:
 		return color.GreenString("✔")
-	case job.StateInProgress, job.StateQueued, job.StateNew, hostedexec.StateRunning, hostedexec.StatePending:
+	case job.StateInProgress, job.StateQueued, job.StateNew, imagerunner.StateRunning, imagerunner.StatePending:
 		return color.BlueString("*")
 	default:
 		return color.RedString("✖")

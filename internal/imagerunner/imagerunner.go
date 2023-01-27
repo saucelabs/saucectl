@@ -1,4 +1,4 @@
-package hostedexec
+package imagerunner
 
 // TODO Caution: Final states are not confirmed yet.
 // The different states that a runner can be in.

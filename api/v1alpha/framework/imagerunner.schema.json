@@ -76,7 +76,7 @@
       "const": "v1alpha"
     },
     "kind": {
-      "const": "htexec"
+      "const": "imagerunner"
     },
     "defaults": {
       "description": "Settings that are applied onto every suite as a default value.",

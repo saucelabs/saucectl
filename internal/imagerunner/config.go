@@ -1,4 +1,4 @@
-package hostedexec
+package imagerunner
 
 import (
 	"github.com/saucelabs/saucectl/internal/config"
@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	Kind       = "htexec"
+	Kind       = "imagerunner"
 	APIVersion = "v1alpha"
 )
 
