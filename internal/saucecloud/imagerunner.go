@@ -288,7 +288,7 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (
 				return r, err
 			}
 			if r.Status != lastStatus {
-				log.Info().Str("id", r.ID).Str("old", lastStatus).Str("new", r.Status).Msg("Status change.")
+				log.Info().Str("runID", r.ID).Str("old", lastStatus).Str("new", r.Status).Msg("Status change.")
 				lastStatus = r.Status
 			}
 			if imagerunner.Done(r.Status) {
