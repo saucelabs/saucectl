@@ -17,7 +17,7 @@ import (
 
 type ImageRunner interface {
 	TriggerRun(context.Context, imagerunner.RunnerSpec) (imagerunner.Runner, error)
-	GetStatus(ctx context.Context, id string) (imagerunner.RunnerStatus, error)
+	GetStatus(ctx context.Context, id string) (imagerunner.Runner, error)
 	StopRun(ctx context.Context, id string) error
 }
 
@@ -139,8 +139,8 @@ func (r *ImgRunner) runSuites(suites chan imagerunner.Suite, results chan<- exec
 	}
 }
 
-func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.RunnerStatus, error) {
-	var run imagerunner.RunnerStatus
+func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error) {
+	var run imagerunner.Runner
 	metadata := make(map[string]string)
 	metadata["name"] = suite.Name
 
@@ -268,14 +268,14 @@ func (r *ImgRunner) registerInterruptOnSignal() chan os.Signal {
 	return sigChan
 }
 
-func (r *ImgRunner) PollRun(ctx context.Context, id string) (imagerunner.RunnerStatus, error) {
+func (r *ImgRunner) PollRun(ctx context.Context, id string) (imagerunner.Runner, error) {
 	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
-			return imagerunner.RunnerStatus{}, ctx.Err()
+			return imagerunner.Runner{}, ctx.Err()
 		case <-ticker.C:
 			r, err := r.RunnerService.GetStatus(ctx, id)
 			if err != nil || imagerunner.Done(r.Status) {

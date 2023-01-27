@@ -61,8 +61,8 @@ func (c *Client) TriggerRun(ctx context.Context, spec imagerunner.RunnerSpec) (i
 	return runner, json.Unmarshal(body, &runner)
 }
 
-func (c *Client) GetStatus(ctx context.Context, id string) (imagerunner.RunnerStatus, error) {
-	var r imagerunner.RunnerStatus
+func (c *Client) GetStatus(ctx context.Context, id string) (imagerunner.Runner, error) {
+	var r imagerunner.Runner
 	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/status", c.URL, id)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)

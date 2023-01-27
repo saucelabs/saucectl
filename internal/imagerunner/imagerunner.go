@@ -62,11 +62,3 @@ type Runner struct {
 	TerminationTime   int64  `json:"termination_time,omitempty"`
 	TerminationReason string `json:"termination_reason,omitempty"`
 }
-
-type RunnerStatus struct {
-	ID                string `json:"id,omitempty"`
-	Status            string `json:"status,omitempty"`
-	CreationTime      int64  `json:"creation_time,omitempty"`
-	TerminationTime   int64  `json:"termination_time,omitempty"`
-	TerminationReason string `json:"termination_reason,omitempty"`
-}
