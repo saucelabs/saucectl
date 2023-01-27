@@ -205,10 +205,16 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 	}
 
 	if run.Status != imagerunner.StateSucceeded {
-		return run, fmt.Errorf("suite '%s' failed", suite.Name)
+		// TerminationReason is currently _not_ implemented on the server side. Conditional can be removed once
+		// the server always sends back a response.
+		err = fmt.Errorf("suite '%s' failed", suite.Name)
+		if run.TerminationReason != "" {
+			err = fmt.Errorf("suite '%s' failed: %s", suite.Name, run.TerminationReason)
+		}
+		return run, err
 	}
 
-	return run, nil
+	return run, err
 }
 
 func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
