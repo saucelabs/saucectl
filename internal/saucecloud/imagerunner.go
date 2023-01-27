@@ -187,7 +187,7 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 
 	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Str("runID", runner.ID).
 		Msg("Started suite.")
-	run, err = r.PollRun(ctx, runner.ID)
+	run, err = r.PollRun(ctx, runner.ID, runner.Status)
 	if errors.Is(err, context.DeadlineExceeded) && ctx.Err() != nil {
 		// Use a new context, because the suite's already timed out, and we'd not be able to stop the run.
 		_ = r.RunnerService.StopRun(context.Background(), runner.ID)
@@ -274,7 +274,7 @@ func (r *ImgRunner) registerInterruptOnSignal() chan os.Signal {
 	return sigChan
 }
 
-func (r *ImgRunner) PollRun(ctx context.Context, id string) (imagerunner.Runner, error) {
+func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (imagerunner.Runner, error) {
 	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
 
@@ -284,7 +284,14 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string) (imagerunner.Runner,
 			return imagerunner.Runner{}, ctx.Err()
 		case <-ticker.C:
 			r, err := r.RunnerService.GetStatus(ctx, id)
-			if err != nil || imagerunner.Done(r.Status) {
+			if err != nil {
+				return r, err
+			}
+			if r.Status != lastStatus {
+				log.Info().Str("id", r.ID).Str("old", lastStatus).Str("new", r.Status).Msg("Status change.")
+				lastStatus = r.Status
+			}
+			if imagerunner.Done(r.Status) {
 				return r, err
 			}
 		}
