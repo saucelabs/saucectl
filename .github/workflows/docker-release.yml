@@ -1,4 +1,4 @@
-name: Best Practices Tests
+name: Docker release
 
 on:
   push:
@@ -42,6 +42,6 @@ jobs:
     needs: push_to_registry
     steps:
       - name: Pull Docker image
-        run: docker pull ${{ vars.DOCKER_USERNAME }}/saucectl:${{ needs.push_to_registry.outputs.tag }}
+        run: docker pull ${{ needs.push_to_registry.outputs.tag }}
       - name: Run Docker image
         run: docker run -it --entrypoint saucectl ${{ vars.DOCKER_USERNAME }}/saucectl:${{ needs.push_to_registry.outputs.tag }}
