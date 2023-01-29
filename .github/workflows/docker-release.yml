@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
+      - name: Check Docker Version
+        run: docker --version
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
