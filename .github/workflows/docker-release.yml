@@ -44,4 +44,4 @@ jobs:
       - name: Pull Docker image
         run: docker pull ${{ needs.push_to_registry.outputs.tag }}
       - name: Run Docker image
-        run: docker run -it --entrypoint saucectl ${{ vars.DOCKER_USERNAME }}/saucectl:${{ needs.push_to_registry.outputs.tag }}
+        run: docker run -it --entrypoint saucectl ${{ needs.push_to_registry.outputs.tag }}
