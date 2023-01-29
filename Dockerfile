@@ -1,5 +1,5 @@
 # Build the binary here
-FROM golang:1.16 as builder
+FROM golang:1.19 as builder
 WORKDIR /go/src/github.com/saucelabs/saucectl
 COPY . /go/src/github.com/saucelabs/saucectl
 RUN go install cmd/saucectl/saucectl.go
