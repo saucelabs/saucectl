@@ -1,11 +1,9 @@
 # Build the binary here
 FROM golang:1.16 as builder
 WORKDIR /go/src/github.com/saucelabs/saucectl
-RUN go get -d -v golang.org/x/net/html  
 COPY . /go/src/github.com/saucelabs/saucectl
-RUN go mod download github.com/sagikazarmark/crypt
 RUN go install cmd/saucectl/saucectl.go
-# TODO: Figure out how to set the version
+# TODO: Figure out how to set the version in the Go build
 RUN go build cmd/saucectl/saucectl.go
 
 # Release the binary here
