@@ -8,6 +8,5 @@ RUN go build cmd/saucectl/saucectl.go
 
 # Release the binary here
 FROM ubuntu:latest  
-#RUN apk --no-cache add ca-certificates
 WORKDIR /root/
-COPY --from=builder /go/src/github.com/saucelabs/saucectl/saucectl ./
+COPY --from=builder /go/src/github.com/saucelabs/saucectl/saucectl /usr/local/sbin/saucectl
