@@ -36,3 +36,12 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+  smoke_test_image:
+    name: Smoke test Docker image
+    runs-on: ubuntu-latest
+    needs: push_to_registry
+    steps:
+      - name: Pull Docker image
+        run: docker pull ${{ vars.DOCKER_USERNAME }}/saucectl:${{ needs.push_to_registry.outputs.tag }}
+      - name: Run Docker image
+        run: docker run -it --entrypoint ./saucectl ${{ vars.DOCKER_USERNAME }}/saucectl:${{ needs.push_to_registry.outputs.tag }}
