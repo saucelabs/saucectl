@@ -1,0 +1,126 @@
+package usage
+
+import (
+	"io"
+
+	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/spf13/pflag"
+)
+
+// Properties is a scoped data transfer object for usage reporting and contains usage event related data.
+type Properties map[string]interface{}
+
+// SetArtifacts reports artifact usage.
+func (p Properties) SetArtifacts(art config.Artifacts) Properties {
+	p["artifact_download_match"] = art.Download.Match
+	p["artifact_download_when"] = art.Download.When
+	return p
+}
+
+// SetDocker reports the docker container setup.
+func (p Properties) SetDocker(d config.Docker) Properties {
+	p["docker_img"] = d.Image
+	p["docker_transfer"] = d.FileTransfer
+	return p
+}
+
+// SetFramework reports the framework.
+func (p Properties) SetFramework(f string) Properties {
+	p["framework"] = f
+	return p
+}
+
+// SetFVersion reports the framework version.
+func (p Properties) SetFVersion(f string) Properties {
+	p["framework_version"] = f
+	return p
+}
+
+// SetFlags reports CLI flags.
+func (p Properties) SetFlags(flags *pflag.FlagSet) Properties {
+	var ff []string
+
+	flags.Visit(func(flag *pflag.Flag) {
+		ff = append(ff, flag.Name)
+	})
+
+	p["flags"] = ff
+
+	return p
+}
+
+// SetJobs reports job (aka test results).
+func (p Properties) SetJobs(jobs []report.TestResult) Properties {
+	p["jobs"] = jobs
+
+	return p
+}
+
+// SetNPM reports the npm usage.
+func (p Properties) SetNPM(npm config.Npm) Properties {
+	p["npm_registry"] = npm.Registry
+
+	var pkgs []string
+	for k := range npm.Packages {
+		pkgs = append(pkgs, k)
+	}
+	p["npm_packages"] = pkgs
+	p["npm_dependencies"] = npm.Dependencies
+
+	return p
+}
+
+// SetNumSuites reports the number of configured suites.
+func (p Properties) SetNumSuites(n int) Properties {
+	p["num_suites"] = n
+	return p
+}
+
+// SetSauceConfig reports key fields of the sauce config.
+func (p Properties) SetSauceConfig(c config.SauceConfig) Properties {
+	p["concurrency"] = c.Concurrency
+	p["region"] = c.Region
+	p["tunnel"] = c.Tunnel.Name
+	p["tunnel_owner"] = c.Tunnel.Owner
+	p["retries"] = c.Retries
+
+	return p
+}
+
+// SetSlack reports the info relative to slack notifications.
+func (p Properties) SetSlack(slack config.Slack) Properties {
+	p["slack_channels_count"] = len(slack.Channels)
+	p["slack_when"] = slack.Send
+	return p
+}
+
+// SetNotificationsCount reports the number of notifications.
+func (p Properties) SetNotificationsCount(sent, failed int) Properties {
+	p["slack_sent_notifications"] = sent
+	p["slack_failed_notifications"] = failed
+	return p
+}
+
+func (p Properties) SetSharding(sharded bool) Properties {
+	p["sharded"] = sharded
+	return p
+}
+
+// SetError reports an error.
+func (p Properties) SetError(errMessage string) Properties {
+	p["error"] = errMessage
+	return p
+}
+
+// SetLaunchOrder reports launch order of jobs
+func (p Properties) SetLaunchOrder(launchOrder config.LaunchOrder) Properties {
+	p["launch_order"] = string(launchOrder)
+	return p
+}
+
+// Tracker is an interface for providing usage tracking.
+type Tracker interface {
+	io.Closer
+	Collect(subject string, props Properties)
+}

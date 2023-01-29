@@ -36,7 +36,7 @@ func TestPullImage(t *testing.T) {
 	assert.Equal(t, err.Error(), "ImagePullFailure")
 }
 
-func ExampleGetJobID() {
+func Example_getJobID() {
 	fmt.Println(getJobID("https://app.saucelabs.com/tests/cb6741a1a119448a9760531024657967"))
 	// Output: cb6741a1a119448a9760531024657967
 }

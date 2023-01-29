@@ -13,6 +13,7 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+node_modules/
 
 # compiled files
 /saucectl*
@@ -22,3 +23,10 @@
 
 # macOS files
 .DS_Store
+
+# downloaded artifacts
+/artifacts
+
+# dry-run bundles
+/sauce-app-payload-*
+.idea

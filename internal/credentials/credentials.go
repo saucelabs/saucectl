@@ -96,20 +96,4 @@ func (c *Credentials) IsEmpty() bool {
 // IsValid validates that the credentials are valid.
 func (c *Credentials) IsValid() bool {
 	return !c.IsEmpty()
-	// FIXME this is wrong, since credentials can be region (or cluster) specific, e.g. staging
-	// FIXME nor should a simple struct be calling out to a webservice
-	//httpClient := http.Client{}
-	//ctx, _ := context.WithTimeout(context.Background(), 5 * time.Second)
-	//req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://saucelabs.com/rest/v1/users/" + c.Username, nil)
-	//if err != nil {
-	//	log.Error().Msgf("unable to check c")
-	//	return false
-	//}
-	//req.SetBasicAuth(c.Username, c.AccessKey)
-	//resp, err := httpClient.Do(req)
-	//if err != nil {
-	//	log.Error().Msgf("unable to check c")
-	//	return false
-	//}
-	//return resp.StatusCode == 200
 }

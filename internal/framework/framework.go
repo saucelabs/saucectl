@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"regexp"
+	"strings"
+
+	"github.com/saucelabs/saucectl/internal/msg"
 )
 
 // Framework represents a test framework (e.g. cypress).
@@ -15,6 +18,9 @@ type Framework struct {
 // MetadataService represents an interface for retrieving framework metadata.
 type MetadataService interface {
 	Search(ctx context.Context, opts SearchOptions) (Metadata, error)
+
+	Frameworks(ctx context.Context) ([]Framework, error)
+	Versions(ctx context.Context, frameworkName string) ([]Metadata, error)
 }
 
 // SearchOptions represents read query options for MetadataService.Search().
@@ -27,9 +33,18 @@ type SearchOptions struct {
 type Metadata struct {
 	FrameworkName      string
 	FrameworkVersion   string
-	CloudRunnerVersion string
+	Deprecated         bool
 	DockerImage        string
 	GitRelease         string
+	Platforms          []Platform
+	CloudRunnerVersion string
+	BrowserDefaults    map[string]string
+}
+
+// Platform represent a supported platform.
+type Platform struct {
+	PlatformName string
+	BrowserNames []string
 }
 
 // GitReleaseSegments segments GitRelease into separate parts of org, repo and tag.
@@ -37,12 +52,12 @@ type Metadata struct {
 // The expected GitRelease format is "org/repo:tag".
 func GitReleaseSegments(m *Metadata) (org, repo, tag string, err error) {
 	// :punct: is a bit more generous than what would actually appear, but was chosen for the sake for readability.
-	r := regexp.MustCompile("(?P<org>[[:punct:][:word:]]+)\\/(?P<repo>[[:punct:][:word:]]+):(?P<tag>[[:punct:][:word:]]+)")
+	r := regexp.MustCompile(`(?P<org>[[:punct:][:word:]]+)/(?P<repo>[[:punct:][:word:]]+):(?P<tag>[[:punct:][:word:]]+)`)
 	matches := r.FindStringSubmatch(m.GitRelease)
 
 	// We expect a full match, plus 3 subgroups (org, repo tag). Thus a total of 4.
 	if len(matches) != 4 {
-		return "", "", "", errors.New("malformed git release string in metadata")
+		return "", "", "", errors.New(msg.InvalidGitRelease)
 	}
 
 	orgIndex := r.SubexpIndex("org")
@@ -50,4 +65,25 @@ func GitReleaseSegments(m *Metadata) (org, repo, tag string, err error) {
 	tagIndex := r.SubexpIndex("tag")
 
 	return matches[orgIndex], matches[repoIndex], matches[tagIndex], nil
+}
+
+// HasPlatform returns true if the provided Metadata has a matching platform.
+func HasPlatform(m Metadata, platform string) bool {
+	for _, p := range m.Platforms {
+		if strings.EqualFold(platform, p.PlatformName) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// PlatformNames extracts platform names from the given platforms and returns them.
+func PlatformNames(platforms []Platform) []string {
+	var pp []string
+	for _, platform := range platforms {
+		pp = append(pp, platform.PlatformName)
+	}
+
+	return pp
 }

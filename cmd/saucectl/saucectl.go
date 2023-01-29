@@ -2,29 +2,43 @@ package main
 
 import (
 	"fmt"
-	"github.com/saucelabs/saucectl/cli/setup"
 	"os"
 	"time"
 
+	bt "github.com/backtrace-labs/backtrace-go"
+	"github.com/fatih/color"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-
+	"github.com/saucelabs/saucectl/internal/cmd/artifacts"
+	"github.com/saucelabs/saucectl/internal/cmd/completion"
+	"github.com/saucelabs/saucectl/internal/cmd/configure"
+	"github.com/saucelabs/saucectl/internal/cmd/doctor"
+	"github.com/saucelabs/saucectl/internal/cmd/ini"
+	"github.com/saucelabs/saucectl/internal/cmd/jobs"
+	"github.com/saucelabs/saucectl/internal/cmd/new"
+	"github.com/saucelabs/saucectl/internal/cmd/run"
+	"github.com/saucelabs/saucectl/internal/cmd/signup"
+	"github.com/saucelabs/saucectl/internal/cmd/storage"
+	"github.com/saucelabs/saucectl/internal/segment"
+	"github.com/saucelabs/saucectl/internal/setup"
+	"github.com/saucelabs/saucectl/internal/version"
 	"github.com/spf13/cobra"
-
-	"github.com/getsentry/sentry-go"
-	"github.com/saucelabs/saucectl/cli/command"
-	"github.com/saucelabs/saucectl/cli/command/commands"
-	"github.com/saucelabs/saucectl/cli/version"
 )
 
 var (
 	cmdUse   = "saucectl [OPTIONS] COMMAND [ARG...]"
 	cmdShort = "saucectl"
-	cmdLong  = "Some main description"
+	cmdLong  = `Please refer to our examples for how to setup saucectl for your project:
+
+- https://github.com/saucelabs/saucectl-cypress-example
+- https://github.com/saucelabs/saucectl-espresso-example
+- https://github.com/saucelabs/saucectl-playwright-example
+- https://github.com/saucelabs/saucectl-puppeteer-example
+- https://github.com/saucelabs/saucectl-testcafe-example
+- https://github.com/saucelabs/saucectl-xcuitest-example`
 )
 
 func main() {
-	cli := command.NewSauceCtlCli()
 	cmd := &cobra.Command{
 		Use:              cmdUse,
 		Short:            cmdShort,
@@ -37,19 +51,35 @@ func main() {
 	cmd.Flags().BoolP("version", "v", false, "print version")
 
 	verbosity := cmd.PersistentFlags().Bool("verbose", false, "turn on verbose logging")
-	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		setupLogging(*verbosity)
-		setupSentry()
-		return nil
+	noColor := cmd.PersistentFlags().Bool("no-color", false, "disable colorized output")
+	noTracking := cmd.PersistentFlags().Bool("disable-usage-metrics", false, "Disable usage metrics collection.")
+
+	cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		setupLogging(*verbosity, *noColor)
+		setupBacktrace()
+		segment.DefaultTracker.Enabled = !*noTracking
 	}
 
-	commands.AddCommands(cmd, cli)
+	cmd.AddCommand(
+		new.Command(),
+		run.Command(),
+		configure.Command(),
+		ini.Command(),
+		signup.Command(),
+		completion.Command(),
+		doctor.Command(),
+		storage.Command(cmd.PersistentPreRun),
+		artifacts.Command(cmd.PersistentPreRun),
+		jobs.Command(cmd.PersistentPreRun),
+	)
+
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
-func setupLogging(verbose bool) {
+func setupLogging(verbose bool, noColor bool) {
+	color.NoColor = noColor
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	zerolog.DurationFieldInteger = true
 	timeFormat := "15:04:05"
@@ -63,18 +93,10 @@ func setupLogging(verbose bool) {
 		return time.Now().In(time.Local)
 	}
 
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: timeFormat})
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: timeFormat, NoColor: noColor})
 }
 
-func setupSentry() {
-	err := sentry.Init(sentry.ClientOptions{
-		Dsn:         setup.SentryDSN,
-		Environment: "production",
-		Release:     fmt.Sprintf("saucectl@%s", version.Version),
-		Debug:       false,
-	})
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to setup sentry")
-		return
-	}
+func setupBacktrace() {
+	bt.Options.Endpoint = setup.BackTraceEndpoint
+	bt.Options.Token = setup.BackTraceToken
 }

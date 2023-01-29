@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "title": "SauceCTL Runner Configuration",
+  "description": "Configuration file for saucectl.",
+  "type": "object",
+  "properties": {
+    "kind": {
+      "enum": [
+        "apitest",
+        "cypress",
+        "espresso",
+        "playwright",
+        "puppeteer",
+        "puppeteer-replay",
+        "testcafe",
+        "xcuitest",
+        "playwright-cucumberjs"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "cypress"
+          },
+          "apiVersion": {
+            "const": "v1alpha"
+          }
+        }
+      },
+      "then": {
+        "$ref": "v1alpha/framework/cypress.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "cypress"
+          },
+          "apiVersion": {
+            "const": "v1"
+          }
+        }
+      },
+      "then": {
+        "$ref": "v1/framework/cypress.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "espresso"
+          }
+        }
+      },
+      "then": {
+        "$ref": "v1alpha/framework/espresso.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "playwright"
+          }
+        }
+      },
+      "then": {
+        "$ref": "v1alpha/framework/playwright.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "puppeteer"
+          }
+        }
+      },
+      "then": {
+        "$ref": "v1alpha/framework/puppeteer.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "puppeteer-replay"
+          }
+        }
+      },
+      "then": {
+        "$ref": "v1alpha/framework/replay.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "testcafe"
+          }
+        }
+      },
+      "then": {
+        "$ref": "v1alpha/framework/testcafe.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "xcuitest"
+          }
+        }
+      },
+      "then": {
+        "$ref": "v1alpha/framework/xcuitest.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "apitest"
+          }
+        }
+      },
+      "then": {
+        "$ref": "v1alpha/framework/apitest.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "playwright-cucumberjs"
+          }
+        }
+      },
+      "then": {
+        "$ref": "v1alpha/framework/playwright-cucumberjs.schema.json"
+      }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+apiVersion: v1alpha
+kind: playwright-cucumberjs
+sauce:
+  region: us-west-1
+  concurrency: 10
+  metadata:
+    tags:
+      - e2e
+    build: "$BUILD_ID"
+defaults:
+  timeout: 5m
+playwright:
+  version: 1.27.1
+rootDir: ./
+suites:
+  - name: My Cucumber Test
+    mode: sauce
+    browserName: chromium
+    options:
+      paths:
+        - "features/**/*.feature"
+      require:
+        - "features/support/*.js"
+      format:
+        - "json:my-cucumber.json"
+npm:
+  dependencies:
+    - "@cucumber/cucumber"
+    - "@saucelabs/cucumber-reporter"
+    - "typescript"
+    - "ts-node"

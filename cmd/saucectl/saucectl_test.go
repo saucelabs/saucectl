@@ -8,8 +8,8 @@ import (
 )
 
 func TestSetupLogging(t *testing.T) {
-	setupLogging(true)
+	setupLogging(true, true)
 	assert.Equal(t, zerolog.GlobalLevel(), zerolog.DebugLevel)
-	setupLogging(false)
+	setupLogging(false, true)
 	assert.Equal(t, zerolog.GlobalLevel(), zerolog.InfoLevel)
 }

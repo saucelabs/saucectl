@@ -11,8 +11,9 @@ import (
 	"testing"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
 	"github.com/saucelabs/saucectl/internal/cypress"
+	v1 "github.com/saucelabs/saucectl/internal/cypress/v1"
+	"github.com/saucelabs/saucectl/internal/cypress/v1alpha"
 	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/stretchr/testify/assert"
 )
@@ -94,37 +95,113 @@ func TestCreateMounts(t *testing.T) {
 }
 
 func TestStartContainer(t *testing.T) {
-	project := cypress.Project{
-		Cypress: cypress.Cypress{
-			ConfigFile:  "../../../tests/e2e/cypress.json",
-			ProjectPath: "../../../tests/e2e/",
+	v1Project := v1.Project{
+		Cypress: v1.Cypress{
+			ConfigFile: "../../../tests/e2e/cypress.js",
 		},
 	}
-	mockDocker := mocks.FakeClient{
-		ContainerCreateSuccess:     false,
-		ContainerStartSuccess:      true,
-		ContainerInspectSuccess:    true,
-		ImageInspectWithRawSuccess: true,
-		CopyToContainerFn: func(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error {
-			return nil
+	v1AlphaProject := v1alpha.Project{
+		Cypress: v1alpha.Cypress{
+			ConfigFile: "../../../tests/e2e/cypress.js",
 		},
 	}
-	handler := Handler{
-		client: &mockDocker,
+	testCases := []struct {
+		name        string
+		project     cypress.Project
+		startOption containerStartOptions
+		handler     Handler
+		expCont     bool
+		expErr      bool
+	}{
+		{
+			name:        "failed to start container",
+			project:     &v1Project,
+			startOption: containerStartOptions{RootDir: v1Project.RootDir},
+			handler: Handler{
+				client: &mocks.FakeClient{
+					ContainerCreateSuccess:     false,
+					ContainerStartSuccess:      true,
+					ContainerInspectSuccess:    true,
+					ImageInspectWithRawSuccess: true,
+					CopyToContainerFn: func(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error {
+						return nil
+					},
+				},
+			},
+			expCont: false,
+			expErr:  true,
+		},
+		{
+			name:        "succeeded to start container",
+			project:     &v1Project,
+			startOption: containerStartOptions{RootDir: v1Project.RootDir},
+			handler: Handler{
+				client: &mocks.FakeClient{
+					ContainerCreateSuccess:     true,
+					ContainerStartSuccess:      true,
+					ContainerInspectSuccess:    true,
+					ImageInspectWithRawSuccess: true,
+					CopyToContainerFn: func(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error {
+						return nil
+					},
+				},
+			},
+			expCont: true,
+			expErr:  false,
+		},
+		{
+			name:        "cypress v1alpha project",
+			project:     &v1AlphaProject,
+			startOption: containerStartOptions{RootDir: v1AlphaProject.RootDir},
+			handler: Handler{
+				client: &mocks.FakeClient{
+					ContainerCreateSuccess:     true,
+					ContainerStartSuccess:      true,
+					ContainerInspectSuccess:    true,
+					ImageInspectWithRawSuccess: true,
+					CopyToContainerFn: func(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error {
+						return nil
+					},
+				},
+			},
+
+			expCont: true,
+			expErr:  false,
+		},
+		{
+			name:        "cypress v1 project",
+			project:     &v1Project,
+			startOption: containerStartOptions{RootDir: v1Project.RootDir},
+			handler: Handler{
+				client: &mocks.FakeClient{
+					ContainerCreateSuccess:     true,
+					ContainerStartSuccess:      true,
+					ContainerInspectSuccess:    true,
+					ImageInspectWithRawSuccess: true,
+					CopyToContainerFn: func(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error {
+						return nil
+					},
+				},
+			},
+
+			expCont: true,
+			expErr:  false,
+		},
 	}
-
-	var cont *container.ContainerCreateCreatedBody
-	var err error
-
-	// Buggy container start
-	cont, err = handler.StartContainer(context.Background(), containerStartOptions{RootDir: project.RootDir})
-	assert.NotNil(t, err)
-
-	// Successfull container start
-	mockDocker.ContainerCreateSuccess = true
-	cont, err = handler.StartContainer(context.Background(), containerStartOptions{RootDir: project.RootDir})
-	assert.Nil(t, err)
-	assert.NotNil(t, cont)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cont, err := tc.handler.StartContainer(context.Background(), tc.startOption)
+			if err != nil {
+				assert.True(t, tc.expErr)
+				assert.False(t, tc.expCont)
+				assert.Nil(t, cont)
+			} else {
+				assert.False(t, tc.expErr)
+				assert.True(t, tc.expCont)
+				assert.NotNil(t, cont)
+			}
+		})
+	}
 }
 
 func TestExecuteInContainer(t *testing.T) {
@@ -136,7 +213,7 @@ func TestExecuteInContainer(t *testing.T) {
 		client: &mockDocker,
 	}
 
-	IDResponse, hijackedResponse, err := handler.Execute(context.Background(), "dummy-container-id", []string{"npm", "dummy-command"}, map[string]string{})
+	IDResponse, hijackedResponse, err := handler.Execute(context.Background(), "dummy-container-id", []string{"npm", "dummy-command"})
 	assert.Nil(t, err)
 	assert.NotNil(t, hijackedResponse)
 	assert.Equal(t, IDResponse.ID, "dummy-id")

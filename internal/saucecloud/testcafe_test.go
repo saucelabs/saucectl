@@ -1,18 +1,10 @@
 package saucecloud
 
 import (
-	"context"
-	"testing"
-	"time"
-
-	"github.com/jarcoal/httpmock"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/mocks"
-	"github.com/saucelabs/saucectl/internal/playwright"
-
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestTestcafe_GetSuiteNames(t *testing.T) {
@@ -27,43 +19,6 @@ func TestTestcafe_GetSuiteNames(t *testing.T) {
 	}
 
 	assert.Equal(t, "suite1, suite2, suite3", runner.getSuiteNames())
-}
-
-func TestRunSuites_TestCafe_NoConcurrency(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-
-	// Fake JobStarter
-	starter := mocks.FakeJobStarter{
-		StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
-			return "fake-job-id", nil
-		},
-	}
-	reader := mocks.FakeJobReader{
-		PollJobFn: func(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
-			return job.Job{ID: id, Passed: true}, nil
-		},
-	}
-	ccyReader := mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
-		return 0, nil
-	}}
-	runner := PlaywrightRunner{
-		CloudRunner: CloudRunner{
-			JobStarter: &starter,
-			JobReader:  &reader,
-			CCYReader:  ccyReader,
-		},
-		Project: playwright.Project{
-			Suites: []playwright.Suite{
-				{Name: "dummy-suite"},
-			},
-			Sauce: config.SauceConfig{
-				Concurrency: 1,
-			},
-		},
-	}
-	ret := runner.runSuites("dummy-file-id")
-	assert.False(t, ret)
 }
 
 func Test_calcTestcafeJobsCount(t *testing.T) {
@@ -94,7 +49,7 @@ func Test_calcTestcafeJobsCount(t *testing.T) {
 			expectedJobsCount: 2,
 		},
 		{
-			name: "suites with devices and platfrom versions",
+			name: "suites with simulators and platfrom versions",
 			suites: []testcafe.Suite{
 				{
 					Name: "first suite",
@@ -103,14 +58,14 @@ func Test_calcTestcafeJobsCount(t *testing.T) {
 					Name: "second suite",
 				},
 				{
-					Name: "suite with one device and two platforms",
-					Devices: []config.Device{
+					Name: "suite with one simulator and two platforms",
+					Simulators: []config.Simulator{
 						{PlatformVersions: []string{"12.0", "14.3"}},
 					},
 				},
 				{
-					Name: "suite with two device and two platforms",
-					Devices: []config.Device{
+					Name: "suite with two simulators and two platforms",
+					Simulators: []config.Simulator{
 						{PlatformVersions: []string{"12.0", "14.3"}},
 						{PlatformVersions: []string{"12.0", "14.3"}},
 					},

@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: cypress
+sauce:
+  region: us-west-1
+  concurrency: 10
+  metadata:
+    tags:
+      - e2e
+    build: "$BUILD_ID"
+rootDir: tests/e2e/cypress_10/e2e/
+defaults:
+  mode: sauce
+  timeout: 5m
+docker:
+  fileTransfer: mount
+cypress:
+  version: 10.3.1
+  configFile: "cypress.config.js"
+suites:
+  # - name: "(experimental) webkit test"
+  #   browser: "webkit"
+  #   platformName: "Windows 11"
+  #   config:
+  #     env:
+  #       hello: world
+  #     specPattern: [ "cypress/e2e/**/*.js" ]
+  #     testingType: "e2e"
+
+  - name: "chrome test"
+    browser: "chrome"
+    platformName: "macOS 11.00"
+    config:
+      env:
+        hello: world
+      specPattern: [ "cypress/e2e/**/*.js" ]
+      testingType: "e2e"
+
+  - name: "firefox test"
+    browser: "firefox"
+    browserVersion: "104" # FF 105 does not work with cypress
+    platformName: "macOS 11.00"
+    config:
+      env:
+        hello: world
+      specPattern: [ "cypress/e2e/**/*.js" ]
+      testingType: "e2e"
+
+artifacts:
+  download:
+    when: always
+    match:
+      - console.log
+    directory: ./artifacts/
+notifications:
+  slack:
+    channels: ["devx-slack-notifications"]
+    send: always # possible values [always,fail,never,pass]

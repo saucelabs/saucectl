@@ -4,34 +4,54 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
-	"gopkg.in/yaml.v2"
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/region"
+)
+
+// Config descriptors.
+var (
+	// Kind represents the type definition of this config.
+	Kind = "puppeteer"
+
+	// APIVersion represents the supported config version.
+	APIVersion = "v1alpha"
 )
 
 // Project represents the puppeteer project configuration.
 type Project struct {
-	config.TypeDef `yaml:",inline"`
-	ShowConsoleLog bool
-	ConfigFilePath string             `yaml:"-" json:"-"`
-	DryRun         bool               `yaml:"-" json:"-"`
-	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
-	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
-	BeforeExec     []string           `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker         config.Docker      `yaml:"docker,omitempty" json:"docker"`
-	Puppeteer      Puppeteer          `yaml:"puppeteer,omitempty" json:"puppeteer"`
-	Npm            config.Npm         `yaml:"npm,omitempty" json:"npm"`
-	RootDir        string             `yaml:"rootDir,omitempty" json:"rootDir"`
-	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
+	config.TypeDef `yaml:",inline" mapstructure:",squash"`
+	Defaults       config.Defaults        `yaml:"defaults,omitempty" json:"defaults"`
+	ShowConsoleLog bool                   `yaml:"showConsoleLog" json:"-"`
+	DryRun         bool                   `yaml:"-" json:"-"`
+	ConfigFilePath string                 `yaml:"-" json:"-"`
+	CLIFlags       map[string]interface{} `yaml:"-" json:"-"`
+	Sauce          config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
+	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
+	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
+	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`
+	BeforeExec    []string             `yaml:"beforeExec,omitempty" json:"beforeExec"`
+	Docker        config.Docker        `yaml:"docker,omitempty" json:"docker"`
+	Puppeteer     Puppeteer            `yaml:"puppeteer,omitempty" json:"puppeteer"`
+	Npm           config.Npm           `yaml:"npm,omitempty" json:"npm"`
+	RootDir       string               `yaml:"rootDir,omitempty" json:"rootDir"`
+	Artifacts     config.Artifacts     `yaml:"artifacts,omitempty" json:"artifacts"`
+	Reporters     config.Reporters     `yaml:"reporters,omitempty" json:"-"`
+	Env           map[string]string    `yaml:"env,omitempty" json:"env"`
+	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
 }
 
 // Suite represents the puppeteer test suite configuration.
 type Suite struct {
-	Name      string            `yaml:"name,omitempty" json:"name"`
-	Browser   string            `yaml:"browser,omitempty" json:"browser"`
-	TestMatch []string          `yaml:"testMatch,omitempty" json:"testMatch"`
-	Env       map[string]string `yaml:"env,omitempty" json:"env"`
+	Name        string            `yaml:"name,omitempty" json:"name"`
+	Browser     string            `yaml:"browser,omitempty" json:"browser"`
+	TestMatch   []string          `yaml:"testMatch,omitempty" json:"testMatch"`
+	Env         map[string]string `yaml:"env,omitempty" json:"env"`
+	BrowserArgs []string          `yaml:"browserArgs,omitempty" json:"browserArgs"`
+	Timeout     time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
+	Groups      []string          `yaml:"groups,omitempty" json:"groups"`
 }
 
 // Puppeteer represents the configuration for puppeteer.
@@ -44,24 +64,27 @@ type Puppeteer struct {
 func FromFile(cfgPath string) (Project, error) {
 	var p Project
 
-	f, err := os.Open(cfgPath)
-	if err != nil {
-		return p, fmt.Errorf("failed to locate project config: %v", err)
+	if err := config.Unmarshal(cfgPath, &p); err != nil {
+		return p, err
 	}
-	defer f.Close()
 
-	if err := yaml.NewDecoder(f).Decode(&p); err != nil {
-		return Project{}, fmt.Errorf("failed to parse project config: %v", err)
-	}
 	p.ConfigFilePath = cfgPath
 
-	if p.RootDir == "" {
-		return p, fmt.Errorf("could not find 'rootDir' in config yml, 'rootDir' must be set to specify project files")
+	return p, nil
+}
+
+// SetDefaults applies config defaults in case the user has left them blank.
+func SetDefaults(p *Project) {
+	if p.Kind == "" {
+		p.Kind = Kind
 	}
 
-	p.Puppeteer.Version = config.StandardizeVersionFormat(p.Puppeteer.Version)
-	if p.Puppeteer.Version == "" {
-		return p, errors.New("missing framework version. Check available versions here: https://docs.staging.saucelabs.net/testrunner-toolkit#supported-frameworks-and-browsers")
+	if p.APIVersion == "" {
+		p.APIVersion = APIVersion
+	}
+
+	if p.Sauce.Concurrency < 1 {
+		p.Sauce.Concurrency = 2
 	}
 
 	// Set default docker file transfer to mount
@@ -69,23 +92,68 @@ func FromFile(cfgPath string) (Project, error) {
 		p.Docker.FileTransfer = config.DockerFileMount
 	}
 
-	if p.Docker.Image != "" {
-		log.Info().Msgf(
-			"Ignoring framework version for Docker, using provided image %s (only applicable to docker mode)",
-			p.Docker.Image)
+	// Default rootDir to .
+	if p.RootDir == "" {
+		p.RootDir = "."
+		msg.LogRootDirWarning()
 	}
 
-	if p.Sauce.Concurrency < 1 {
-		// Default concurrency is 2
-		p.Sauce.Concurrency = 2
+	if p.Defaults.Timeout < 0 {
+		p.Defaults.Timeout = 0
 	}
 
-	for i, s := range p.Suites {
-		env := map[string]string{}
-		for k, v := range s.Env {
-			env[k] = os.ExpandEnv(v)
+	for k := range p.Suites {
+		s := &p.Suites[k]
+
+		if s.Timeout <= 0 {
+			s.Timeout = p.Defaults.Timeout
 		}
-		p.Suites[i].Env = env
 	}
-	return p, nil
+	p.Sauce.Metadata.SetDefaultBuild()
+
+	// Apply global env vars onto every suite.
+	for k, v := range p.Env {
+		for ks := range p.Suites {
+			s := &p.Suites[ks]
+			if s.Env == nil {
+				s.Env = map[string]string{}
+			}
+			s.Env[k] = v
+		}
+	}
+}
+
+// Validate validates basic configuration of the project and returns an error if any of the settings contain illegal
+// values. This is not an exhaustive operation and further validation should be performed both in the client and/or
+// server side depending on the workflow that is executed.
+func Validate(p *Project) error {
+	p.Puppeteer.Version = config.StandardizeVersionFormat(p.Puppeteer.Version)
+	if p.Puppeteer.Version == "" {
+		return errors.New(msg.MissingFrameworkVersionConfig)
+	}
+
+	// Check rootDir exists.
+	if p.RootDir != "" {
+		if _, err := os.Stat(p.RootDir); err != nil {
+			return fmt.Errorf(msg.UnableToLocateRootDir, p.RootDir)
+		}
+	}
+
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		return errors.New(msg.MissingRegion)
+	}
+
+	return nil
+}
+
+// FilterSuites filters out suites in the project that don't match the given suite name.
+func FilterSuites(p *Project, suiteName string) error {
+	for _, s := range p.Suites {
+		if s.Name == suiteName {
+			p.Suites = []Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
 }

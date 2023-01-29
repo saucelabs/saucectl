@@ -3,9 +3,9 @@ package docker
 import (
 	"context"
 
-	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 )
 
@@ -16,7 +16,7 @@ type TestcafeRunner struct {
 }
 
 // NewTestcafe creates a new TestcafeRunner instance.
-func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer, dl download.ArtifactDownloader) (*TestcafeRunner, error) {
+func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer, jr job.Reader, dl job.ArtifactDownloader, reps []report.Reporter) (*TestcafeRunner, error) {
 	r := TestcafeRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -26,12 +26,16 @@ func NewTestcafe(c testcafe.Project, ms framework.MetadataService, wr job.Writer
 				Name:    c.Kind,
 				Version: c.Testcafe.Version,
 			},
-			FrameworkMeta:     ms,
-			ShowConsoleLog:    c.ShowConsoleLog,
-			JobWriter:         wr,
-			ArtfactDownloader: dl,
+			FrameworkMeta:          ms,
+			ShowConsoleLog:         c.ShowConsoleLog,
+			JobWriter:              wr,
+			JobReader:              jr,
+			ArtfactDownloader:      dl,
+			Reporters:              reps,
+			MetadataSearchStrategy: framework.NewSearchStrategy(c.Testcafe.Version, c.RootDir),
 		},
 	}
+
 	var err error
 	r.docker, err = Create()
 	if err != nil {
@@ -61,11 +65,15 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 				Docker:         r.Project.Docker,
 				BeforeExec:     r.Project.BeforeExec,
 				Project:        r.Project,
+				Browser:        suite.BrowserName,
+				DisplayName:    suite.Name,
 				SuiteName:      suite.Name,
 				Environment:    suite.Env,
 				RootDir:        r.Project.RootDir,
 				Sauceignore:    r.Project.Sauce.Sauceignore,
 				ConfigFilePath: r.Project.ConfigFilePath,
+				CLIFlags:       r.Project.CLIFlags,
+				Timeout:        suite.Timeout,
 			}
 		}
 		close(containerOpts)

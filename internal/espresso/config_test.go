@@ -2,15 +2,22 @@ package espresso
 
 import (
 	"errors"
-	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/stretchr/testify/assert"
-	"gotest.tools/v3/fs"
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/insights"
+	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/fs"
 )
 
 func TestValidateThrowsErrors(t *testing.T) {
+	dir := fs.NewDir(t, "espresso",
+		fs.WithFile("test.apk", "", fs.WithMode(0655)))
+	defer dir.Remove()
+	appAPK := filepath.Join(dir.Path(), "test.apk")
+
 	testCases := []struct {
 		name        string
 		p           *Project
@@ -18,130 +25,138 @@ func TestValidateThrowsErrors(t *testing.T) {
 	}{
 		{
 			name:        "validating throws error on empty app",
-			p:           &Project{},
-			expectedErr: errors.New("missing path to app .apk"),
+			p:           &Project{Sauce: config.SauceConfig{Region: "us-west-1"}},
+			expectedErr: errors.New("missing path to app. Define a path to an .apk or .aab file in the espresso.app property of your config"),
 		},
 		{
-			name:        "validating throws error on app missing .apk",
-			p:           &Project{
+			name: "validating throws error on app missing .apk",
+			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
 					App: "/path/to/app",
 				},
 			},
-			expectedErr: errors.New("invaild application file: /path/to/app, make sure extension is .apk"),
+			expectedErr: errors.New("invalid application file: /path/to/app, make sure extension is one of the following: .apk, .aab"),
 		},
 		{
-			name:        "validating throws error on empty app",
-			p:           &Project{
+			name: "validating throws error on empty app",
+			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
-					App: "/path/to/app.apk",
+					App: appAPK,
 				},
 			},
-			expectedErr: errors.New("missing path to test app .apk"),
+			expectedErr: errors.New("missing path to test app. Define a path to an .apk or .aab file in the espresso.testApp property of your config"),
 		},
 		{
-			name:        "validating throws error on test app missing .apk",
-			p:           &Project{
+			name: "validating throws error on test app missing .apk",
+			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
-					App: "/path/to/app.apk",
+					App:     appAPK,
 					TestApp: "/path/to/testApp",
 				},
 			},
-			expectedErr: errors.New("invaild test application file: /path/to/testApp, make sure extension is .apk"),
+			expectedErr: errors.New("invalid test application file: /path/to/testApp, make sure extension is one of the following: .apk, .aab"),
 		},
 		{
-			name:        "validating throws error on missing suites",
-			p:           &Project{
+			name: "validating throws error on missing suites",
+			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
-					App: "/path/to/app.apk",
-					TestApp: "/path/to/testApp.apk",
+					App:     appAPK,
+					TestApp: appAPK,
 				},
 			},
 			expectedErr: errors.New("no suites defined"),
 		},
 		{
-			name:        "validating throws error on missing devices",
-			p:           &Project{
+			name: "validating throws error on missing devices",
+			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
-					App: "/path/to/app.apk",
-					TestApp: "/path/to/testApp.apk",
+					App:     appAPK,
+					TestApp: appAPK,
 				},
 				Suites: []Suite{
-					Suite{
-						Name: "no devices",
+					{
+						Name:    "no devices",
 						Devices: []config.Device{},
 					},
 				},
 			},
-			expectedErr: errors.New("missing devices configuration for suite: no devices"),
+			expectedErr: errors.New("missing devices or emulators configuration for suite: no devices"),
 		},
 		{
-			name:        "validating throws error on missing device name",
-			p:           &Project{
+			name: "validating throws error on missing device name",
+			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
-					App: "/path/to/app.apk",
-					TestApp: "/path/to/testApp.apk",
+					App:     appAPK,
+					TestApp: appAPK,
 				},
 				Suites: []Suite{
-					Suite{
-						Name: "empty device name",
-						Devices: []config.Device{
-							config.Device{
+					{
+						Name: "empty emulator name",
+						Emulators: []config.Emulator{
+							{
 								Name: "",
 							},
 						},
 					},
 				},
 			},
-			expectedErr: errors.New("missing device name for suite: empty device name. Devices index: 0"),
+			expectedErr: errors.New("missing emulator name for suite: empty emulator name. Emulators index: 0"),
 		},
 		{
-			name:        "validating throws error on missing Emulator suffix on device name",
-			p:           &Project{
+			name: "validating throws error on missing Emulator suffix on device name",
+			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
-					App: "/path/to/app.apk",
-					TestApp: "/path/to/testApp.apk",
+					App:     appAPK,
+					TestApp: appAPK,
 				},
 				Suites: []Suite{
-					Suite{
+					{
 						Name: "no emulator device name",
-						Devices: []config.Device{
-							config.Device{
+						Emulators: []config.Emulator{
+							{
 								Name: "Android GoogleApi something",
 							},
 						},
 					},
 				},
 			},
-			expectedErr: errors.New("missing `emulator` in device name: Android GoogleApi something, real device cloud is unsupported right now"),
+			expectedErr: errors.New("missing `emulator` in emulator name: Android GoogleApi something. Suite name: no emulator device name. Emulators index: 0"),
 		},
 		{
-			name:        "validating throws error on missing platform versions",
-			p:           &Project{
+			name: "validating throws error on missing platform versions",
+			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
 				Espresso: Espresso{
-					App: "/path/to/app.apk",
-					TestApp: "/path/to/testApp.apk",
+					App:     appAPK,
+					TestApp: appAPK,
 				},
 				Suites: []Suite{
-					Suite{
+					{
 						Name: "no emulator device name",
-						Devices: []config.Device{
-							config.Device{
-								Name: "Android GoogleApi Emulator",
+						Emulators: []config.Emulator{
+							{
+								Name:             "Android GoogleApi Emulator",
 								PlatformVersions: []string{},
 							},
 						},
 					},
 				},
 			},
-			expectedErr: errors.New("missing platform versions for device: Android GoogleApi Emulator"),
+			expectedErr: errors.New("missing platform versions for emulator: Android GoogleApi Emulator. Suite name: no emulator device name. Emulators index: 0"),
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := Validate(*tc.p)
 			assert.NotNil(t, err)
-			assert.Equal(t, err.Error(), tc.expectedErr.Error())
+			assert.Equal(t, tc.expectedErr.Error(), err.Error())
 		})
 	}
 }
@@ -156,6 +171,11 @@ espresso:
 suites:
   - name: "saucy barista"
     devices:
+      - name: "Device name"
+        platformVersion: 8.1
+        options:
+          deviceType: TABLET
+    emulators:
       - name: "Google Pixel C GoogleAPI Emulator"
         platformVersions:
           - "8.1"
@@ -167,8 +187,9 @@ suites:
 		t.Errorf("expected error: %v, got: %v", nil, err)
 	}
 	expected := Project{
+		ConfigFilePath: filepath.Join(dir.Path(), "config.yml"),
 		Espresso: Espresso{
-			App: "./tests/apps/calc.apk",
+			App:     "./tests/apps/calc.apk",
 			TestApp: "./tests/apps/calc-success.apk",
 		},
 		Suites: []Suite{
@@ -176,8 +197,16 @@ suites:
 				Name: "saucy barista",
 				Devices: []config.Device{
 					{
+						Name:            "Device name",
+						PlatformVersion: "8.1",
+						Options: config.DeviceOptions{
+							DeviceType: "TABLET",
+						},
+					},
+				},
+				Emulators: []config.Emulator{
+					{
 						Name: "Google Pixel C GoogleAPI Emulator",
-						PlatformName: Android,
 						PlatformVersions: []string{
 							"8.1",
 						},
@@ -186,11 +215,132 @@ suites:
 		},
 	}
 	if !reflect.DeepEqual(cfg.Espresso, expected.Espresso) {
-		t.Errorf("expected: %v, got: %v", expected, cfg)
+		t.Errorf("expected: %v, got: %v", expected.Espresso, cfg.Espresso)
 	}
 	if !reflect.DeepEqual(cfg.Suites, expected.Suites) {
-		t.Errorf("expected: %v, got: %v", expected, cfg)
+		t.Errorf("expected: %v, got: %v", expected.Suites, cfg.Suites)
 	}
 
+}
 
+func TestSetDefaults_TestApp(t *testing.T) {
+	testCase := []struct {
+		name      string
+		project   Project
+		expResult string
+	}{
+		{
+			name: "Set TestApp on suite level",
+			project: Project{
+				Espresso: Espresso{
+					TestApp: "test-app",
+				},
+				Suites: []Suite{
+					{
+						TestApp: "suite-test-app",
+					},
+				},
+			},
+			expResult: "suite-test-app",
+		},
+		{
+			name: "Set empty TestApp on suite level",
+			project: Project{
+				Espresso: Espresso{
+					TestApp: "test-app",
+				},
+				Suites: []Suite{
+					{},
+				},
+			},
+			expResult: "test-app",
+		},
+	}
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			SetDefaults(&tc.project)
+			assert.Equal(t, tc.expResult, tc.project.Suites[0].TestApp)
+		})
+	}
+}
+
+func TestEspresso_SortByHistory(t *testing.T) {
+	testCases := []struct {
+		name    string
+		suites  []Suite
+		history insights.JobHistory
+		expRes  []Suite
+	}{
+		{
+			name: "sort suites by job history",
+			suites: []Suite{
+				Suite{Name: "suite 1"},
+				Suite{Name: "suite 2"},
+				Suite{Name: "suite 3"},
+			},
+			history: insights.JobHistory{
+				TestCases: []insights.TestCase{
+					insights.TestCase{Name: "suite 2"},
+					insights.TestCase{Name: "suite 1"},
+					insights.TestCase{Name: "suite 3"},
+				},
+			},
+			expRes: []Suite{
+				Suite{Name: "suite 2"},
+				Suite{Name: "suite 1"},
+				Suite{Name: "suite 3"},
+			},
+		},
+		{
+			name: "suites is the subset of job history",
+			suites: []Suite{
+				Suite{Name: "suite 1"},
+				Suite{Name: "suite 2"},
+			},
+			history: insights.JobHistory{
+				TestCases: []insights.TestCase{
+					insights.TestCase{Name: "suite 2"},
+					insights.TestCase{Name: "suite 1"},
+					insights.TestCase{Name: "suite 3"},
+				},
+			},
+			expRes: []Suite{
+				Suite{Name: "suite 2"},
+				Suite{Name: "suite 1"},
+			},
+		},
+		{
+			name: "job history is the subset of suites",
+			suites: []Suite{
+				Suite{Name: "suite 1"},
+				Suite{Name: "suite 2"},
+				Suite{Name: "suite 3"},
+				Suite{Name: "suite 4"},
+				Suite{Name: "suite 5"},
+			},
+			history: insights.JobHistory{
+				TestCases: []insights.TestCase{
+					insights.TestCase{Name: "suite 2"},
+					insights.TestCase{Name: "suite 1"},
+					insights.TestCase{Name: "suite 3"},
+				},
+			},
+			expRes: []Suite{
+				Suite{Name: "suite 2"},
+				Suite{Name: "suite 1"},
+				Suite{Name: "suite 3"},
+				Suite{Name: "suite 4"},
+				Suite{Name: "suite 5"},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := SortByHistory(tc.suites, tc.history)
+			for i := 0; i < len(result); i++ {
+				assert.Equal(t, tc.expRes[i].Name, result[i].Name)
+			}
+		})
+	}
 }

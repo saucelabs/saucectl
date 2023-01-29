@@ -2,45 +2,73 @@ package job
 
 import (
 	"context"
+	"time"
 )
-
-// TestOptions represents the espresso test filter options configuration.
-type TestOptions struct {
-	NotClass   []string `yaml:"notClass,omitempty" json:"notClass"`
-	Class      []string `yaml:"class,omitempty" json:"class"`
-	Package    string   `yaml:"package,omitempty" json:"package"`
-	Size       string   `yaml:"size,omitempty" json:"size"`
-	Annotation string   `yaml:"annotation,omitempty" json:"annotation"`
-}
 
 // StartOptions represents the options for starting a job in the Sauce Labs cloud.
 type StartOptions struct {
-	User           string `json:"username"`
-	AccessKey      string `json:"accessKey"`
-	App            string `json:"app,omitempty"`
-	Suite          string `json:"suite,omitempty"`
-	Framework      string `json:"framework,omitempty"`
-	ConfigFilePath string `json:"-"`
+	// DisplayName is used for local logging purposes only (e.g. console).
+	DisplayName string `json:"-"`
+
+	// Timeout is used for local/per-suite timeout.
+	Timeout time.Duration `json:"-"`
+
+	User           string                 `json:"username"`
+	AccessKey      string                 `json:"accessKey"`
+	App            string                 `json:"app,omitempty"`
+	Suite          string                 `json:"suite,omitempty"`
+	OtherApps      []string               `json:"otherApps,omitempty"`
+	Framework      string                 `json:"framework,omitempty"`
+	ConfigFilePath string                 `json:"-"`
+	CLIFlags       map[string]interface{} `json:"-"`
 
 	// FrameworkVersion contains the targeted version of the framework
 	// It should not be confused with automation tool (like jest/folio).
-	// This is currenty supported only for frameworks available on Sauce Cloud:
+	// This is currently supported only for frameworks available on Sauce Cloud:
 	// Currently supported: Cypress.
 	FrameworkVersion string `json:"frameworkVersion,omitempty"`
 
-	BrowserName      string            `json:"browserName,omitempty"`
-	BrowserVersion   string            `json:"browserVersion,omitempty"`
-	PlatformName     string            `json:"platformName,omitempty"`
-	PlatformVersion  string            `json:"platformVersion,omitempty"`
-	DeviceName       string            `json:"deviceName,omitempty"`
-	Name             string            `json:"name,omitempty"`
-	Build            string            `json:"build,omitempty"`
-	Tags             []string          `json:"tags,omitempty"`
-	Tunnel           TunnelOptions     `json:"tunnel,omitempty"`
-	ScreenResolution string            `json:"screenResolution,omitempty"`
-	RunnerVersion    string            `json:"runnerVersion,omitempty"`
-	Experiments      map[string]string `json:"experiments,omitempty"`
-	TestOptions      TestOptions       `json:"testOptions,omitempty"`
+	Attempt           int                    `json:"-"`
+	CurrentPassCount  int                    `json:"-"`
+	BrowserName       string                 `json:"browserName,omitempty"`
+	BrowserVersion    string                 `json:"browserVersion,omitempty"`
+	PlatformName      string                 `json:"platformName,omitempty"`
+	PlatformVersion   string                 `json:"platformVersion,omitempty"`
+	DeviceID          string                 `json:"deviceId,omitempty"`
+	DeviceName        string                 `json:"deviceName,omitempty"`
+	DeviceOrientation string                 `json:"deviceOrientation"`
+	DevicePrivateOnly bool                   `json:"devicePrivateOnly,omitempty"`
+	DeviceType        string                 `json:"deviceType,omitempty"`
+	DeviceHasCarrier  bool                   `json:"deviceHasCarrier,omitempty"`
+	RealDevice        bool                   `json:"realDevice,omitempty"`
+	Name              string                 `json:"name,omitempty"`
+	Build             string                 `json:"build,omitempty"`
+	Tags              []string               `json:"tags,omitempty"`
+	Tunnel            TunnelOptions          `json:"tunnel,omitempty"`
+	ScreenResolution  string                 `json:"screenResolution,omitempty"`
+	Retries           int                    `json:"-"`
+	PassThreshold     int                    `json:"-"`
+	RunnerVersion     string                 `json:"runnerVersion,omitempty"`
+	Experiments       map[string]string      `json:"experiments,omitempty"`
+	TestOptions       map[string]interface{} `json:"testOptions,omitempty"`
+	TestsToRun        []string               `json:"testsToRun,omitempty"`
+	TestsToSkip       []string               `json:"testsToSkip,omitempty"`
+	StartTime         time.Time              `json:"startTime,omitempty"`
+	AppSettings       AppSettings            `json:"appSettings,omitempty"`
+	RealDeviceKind    string                 `json:"realDeviceKind,omitempty"`
+	TimeZone          string                 `json:"timeZone,omitempty"`
+	Visibility        string                 `json:"public,omitempty"`
+}
+
+// AppSettings represents app settings for real device
+type AppSettings struct {
+	AudioCapture    bool            `json:"audioCapture,omitempty"`
+	Instrumentation Instrumentation `json:"instrumentation,omitempty"`
+}
+
+// Instrumentation represents instrumentation settings for real device
+type Instrumentation struct {
+	NetworkCapture bool `json:"networkCapture,omitempty"`
 }
 
 // TunnelOptions represents the options that configure the usage of a tunnel when running tests in the Sauce Labs cloud.
@@ -51,5 +79,5 @@ type TunnelOptions struct {
 
 // Starter is the interface for starting jobs.
 type Starter interface {
-	StartJob(ctx context.Context, opts StartOptions) (jobID string, err error)
+	StartJob(ctx context.Context, opts StartOptions) (jobID string, isRDC bool, err error)
 }

@@ -1,47 +1,15 @@
 package testcafe
 
 import (
-	"github.com/stretchr/testify/assert"
+	"errors"
+	"os"
+	"reflect"
 	"testing"
+
+	"github.com/saucelabs/saucectl/internal/insights"
+	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/fs"
 )
-
-func TestSetDefaultValues(t *testing.T) {
-	s := Suite{
-		Speed:            0,
-		SelectorTimeout:  0,
-		AssertionTimeout: 0,
-		PageLoadTimeout:  0,
-	}
-	setDefaultValues(&s)
-	assert.Equal(t, s.Speed, float64(1))
-	assert.Equal(t, s.SelectorTimeout, 10000)
-	assert.Equal(t, s.AssertionTimeout, 3000)
-	assert.Equal(t, s.PageLoadTimeout, 3000)
-
-	s = Suite{
-		Speed: 2,
-	}
-	setDefaultValues(&s)
-	assert.Equal(t, s.Speed, float64(1))
-
-	s = Suite{
-		Speed: 0.5,
-	}
-	setDefaultValues(&s)
-	assert.Equal(t, s.Speed, 0.5)
-
-	s = Suite{
-		Speed:            0,
-		SelectorTimeout:  -1,
-		AssertionTimeout: -1,
-		PageLoadTimeout:  -1,
-	}
-	setDefaultValues(&s)
-	assert.Equal(t, s.Speed, float64(1))
-	assert.Equal(t, s.SelectorTimeout, 10000)
-	assert.Equal(t, s.AssertionTimeout, 3000)
-	assert.Equal(t, s.PageLoadTimeout, 3000)
-}
 
 func Test_appleDeviceRegex(t *testing.T) {
 	tests := []struct {
@@ -102,6 +70,279 @@ func Test_appleDeviceRegex(t *testing.T) {
 			got := appleDeviceRegex.MatchString(tt.deviceName)
 			if got != tt.want {
 				t.Errorf("appleDeviceRegex.MatchString() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFilterSuites(t *testing.T) {
+	testCase := []struct {
+		name      string
+		config    *Project
+		suiteName string
+		expConfig Project
+		expErr    string
+	}{
+		{
+			name: "filtered suite exists in config",
+			config: &Project{Suites: []Suite{
+				{
+					Name: "suite1",
+				},
+				{
+					Name: "suite2",
+				},
+			}},
+			suiteName: "suite1",
+			expConfig: Project{Suites: []Suite{
+				{
+					Name: "suite1",
+				},
+			}},
+		},
+		{
+			name: "filtered suite does not exist in config",
+			config: &Project{Suites: []Suite{
+				{
+					Name: "suite1",
+				},
+				{
+					Name: "suite2",
+				},
+			}},
+			suiteName: "suite3",
+			expConfig: Project{Suites: []Suite{
+				{
+					Name: "suite1",
+				},
+				{
+					Name: "suite2",
+				},
+			}},
+			expErr: "no suite named 'suite3' found",
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			err := FilterSuites(tc.config, tc.suiteName)
+			if err != nil {
+				assert.Equal(t, tc.expErr, err.Error())
+			}
+			assert.True(t, reflect.DeepEqual(*tc.config, tc.expConfig))
+		})
+	}
+}
+
+func Test_shardSuites_withSplit(t *testing.T) {
+	dir := fs.NewDir(t, "testcafe",
+		fs.WithDir("tests",
+			fs.WithMode(0755),
+			fs.WithDir("dir1",
+				fs.WithMode(0755),
+				fs.WithFile("example1.tests.js", "", fs.WithMode(0644)),
+			),
+			fs.WithDir("dir2",
+				fs.WithMode(0755),
+				fs.WithFile("example2.tests.js", "", fs.WithMode(0644)),
+			),
+			fs.WithDir("dir3",
+				fs.WithMode(0755),
+				fs.WithFile("example3.tests.js", "", fs.WithMode(0644)),
+			),
+		),
+	)
+	defer dir.Remove()
+
+	// Beginning state
+	rootDir := dir.Path()
+	origSuites := []Suite{
+		{
+			Name:  "Demo Suite",
+			Src:   []string{"tests/**/*.js"},
+			Shard: "spec",
+		},
+	}
+
+	expectedSuites := []Suite{
+		{
+			Name:  "Demo Suite - tests/dir1/example1.tests.js",
+			Src:   []string{"tests/dir1/example1.tests.js"},
+			Shard: "spec",
+		},
+		{
+			Name:  "Demo Suite - tests/dir2/example2.tests.js",
+			Src:   []string{"tests/dir2/example2.tests.js"},
+			Shard: "spec",
+		},
+		{
+			Name:  "Demo Suite - tests/dir3/example3.tests.js",
+			Src:   []string{"tests/dir3/example3.tests.js"},
+			Shard: "spec",
+		},
+	}
+	var err error
+	var suites []Suite
+
+	// Absolute path
+	suites, err = shardSuites(rootDir, origSuites, 1)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, expectedSuites, suites)
+
+	// Relative path
+	if err := os.Chdir(rootDir); err != nil {
+		t.Errorf("Unexpected error %s", err)
+	}
+	suites, err = shardSuites(".", origSuites, 1)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, expectedSuites, suites)
+}
+
+func Test_shardSuites_withoutSplit(t *testing.T) {
+	origSuites := []Suite{
+		{
+			Name: "Demo Suite",
+			Src:  []string{"tests/**/*.js"},
+		},
+	}
+	var err error
+	var suites []Suite
+
+	// Absolute path
+	suites, err = shardSuites("", origSuites, 1)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, origSuites, suites)
+}
+
+func Test_shardSuites_withSplitNoMatch(t *testing.T) {
+	dir := fs.NewDir(t, "testcafe",
+		fs.WithDir("tests",
+			fs.WithMode(0755),
+			fs.WithDir("dir1",
+				fs.WithMode(0755),
+				fs.WithFile("example1.tests.js", "", fs.WithMode(0644)),
+			),
+			fs.WithDir("dir2",
+				fs.WithMode(0755),
+				fs.WithFile("example2.tests.js", "", fs.WithMode(0644)),
+			),
+			fs.WithDir("dir3",
+				fs.WithMode(0755),
+				fs.WithFile("example3.tests.js", "", fs.WithMode(0644)),
+			),
+		),
+	)
+	defer dir.Remove()
+
+	// Beginning state
+	rootDir := dir.Path()
+	origSuites := []Suite{
+		{
+			Name:  "Demo Suite",
+			Src:   []string{"dummy/**/*.js"},
+			Shard: "spec",
+		},
+	}
+
+	expectedSuites := make([]Suite, 0)
+	var err error
+	var suites []Suite
+
+	// Absolute path
+	suites, err = shardSuites(rootDir, origSuites, 1)
+
+	assert.Equal(t, err, errors.New("suite 'Demo Suite' patterns have no matching files"))
+	assert.Equal(t, expectedSuites, suites)
+
+	// Relative path
+	if err := os.Chdir(rootDir); err != nil {
+		t.Errorf("Unexpected error %s", err)
+	}
+	suites, err = shardSuites(".", origSuites, 1)
+
+	assert.Equal(t, err, errors.New("suite 'Demo Suite' patterns have no matching files"))
+	assert.Equal(t, expectedSuites, suites)
+}
+
+func TestTestcafe_SortByHistory(t *testing.T) {
+	testCases := []struct {
+		name    string
+		suites  []Suite
+		history insights.JobHistory
+		expRes  []Suite
+	}{
+		{
+			name: "sort suites by job history",
+			suites: []Suite{
+				Suite{Name: "suite 1"},
+				Suite{Name: "suite 2"},
+				Suite{Name: "suite 3"},
+			},
+			history: insights.JobHistory{
+				TestCases: []insights.TestCase{
+					insights.TestCase{Name: "suite 2"},
+					insights.TestCase{Name: "suite 1"},
+					insights.TestCase{Name: "suite 3"},
+				},
+			},
+			expRes: []Suite{
+				Suite{Name: "suite 2"},
+				Suite{Name: "suite 1"},
+				Suite{Name: "suite 3"},
+			},
+		},
+		{
+			name: "suites is the subset of job history",
+			suites: []Suite{
+				Suite{Name: "suite 1"},
+				Suite{Name: "suite 2"},
+			},
+			history: insights.JobHistory{
+				TestCases: []insights.TestCase{
+					insights.TestCase{Name: "suite 2"},
+					insights.TestCase{Name: "suite 1"},
+					insights.TestCase{Name: "suite 3"},
+				},
+			},
+			expRes: []Suite{
+				Suite{Name: "suite 2"},
+				Suite{Name: "suite 1"},
+			},
+		},
+		{
+			name: "job history is the subset of suites",
+			suites: []Suite{
+				Suite{Name: "suite 1"},
+				Suite{Name: "suite 2"},
+				Suite{Name: "suite 3"},
+				Suite{Name: "suite 4"},
+				Suite{Name: "suite 5"},
+			},
+			history: insights.JobHistory{
+				TestCases: []insights.TestCase{
+					insights.TestCase{Name: "suite 2"},
+					insights.TestCase{Name: "suite 1"},
+					insights.TestCase{Name: "suite 3"},
+				},
+			},
+			expRes: []Suite{
+				Suite{Name: "suite 2"},
+				Suite{Name: "suite 1"},
+				Suite{Name: "suite 3"},
+				Suite{Name: "suite 4"},
+				Suite{Name: "suite 5"},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := SortByHistory(tc.suites, tc.history)
+			for i := 0; i < len(result); i++ {
+				assert.Equal(t, tc.expRes[i].Name, result[i].Name)
 			}
 		})
 	}

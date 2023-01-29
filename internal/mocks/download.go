@@ -1,11 +1,11 @@
 package mocks
 
-// FakeArifactDownloader defines a fake Downloader
-type FakeArifactDownloader struct {
-	DownloadArtifactFn func(jobID string)
+// FakeArtifactDownloader defines a fake Downloader
+type FakeArtifactDownloader struct {
+	DownloadArtifactFn func(jobID, suiteName string) []string
 }
 
 // DownloadArtifact defines a fake function for FakeDownloader
-func (f *FakeArifactDownloader) DownloadArtifact(jobID string) {
-	f.DownloadArtifactFn(jobID)
+func (f *FakeArtifactDownloader) DownloadArtifact(jobID, suiteName string, realDevice bool) []string {
+	return f.DownloadArtifactFn(jobID, suiteName)
 }

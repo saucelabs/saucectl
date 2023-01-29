@@ -13,42 +13,54 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/progress"
+	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 )
 
 // ContainerRunner represents the container runner for docker.
 type ContainerRunner struct {
-	Ctx               context.Context
-	docker            *Handler
-	containerConfig   *containerConfig
-	Framework         framework.Framework
-	FrameworkMeta     framework.MetadataService
-	JobWriter         job.Writer
-	ShowConsoleLog    bool
-	JobReader         job.Reader
-	ArtfactDownloader download.ArtifactDownloader
+	Ctx                    context.Context
+	docker                 *Handler
+	containerConfig        *containerConfig
+	Framework              framework.Framework
+	FrameworkMeta          framework.MetadataService
+	JobWriter              job.Writer
+	ShowConsoleLog         bool
+	JobReader              job.Reader
+	ArtfactDownloader      job.ArtifactDownloader
+	MetadataSearchStrategy framework.MetadataSearchStrategy
+
+	Reporters []report.Reporter
 
 	interrupted bool
 }
 
 // containerStartOptions represent data required to start a new container.
 type containerStartOptions struct {
+	// DisplayName is used for local logging purposes only (e.g. console).
+	DisplayName string
+
+	// Timeout is used for local/per-suite timeout.
+	Timeout time.Duration
+
 	Docker         config.Docker
 	BeforeExec     []string
 	Project        interface{}
 	SuiteName      string
+	Browser        string
 	Environment    map[string]string
 	RootDir        string
 	Sauceignore    string
 	ConfigFilePath string
+	CLIFlags       map[string]interface{}
 }
 
 // result represents the result of a local job
@@ -57,9 +69,14 @@ type result struct {
 	err           error
 	passed        bool
 	skipped       bool
+	timedOut      bool
 	consoleOutput string
-	suiteName     string
+	name          string
+	browser       string
+	duration      time.Duration
 	jobInfo       jobInfo
+	startTime     time.Time
+	endTime       time.Time
 }
 
 // jobInfo represents the info on the job given by the container
@@ -71,7 +88,7 @@ type jobInfo struct {
 func (r *ContainerRunner) pullImage(img string) error {
 	// Check docker image name property from the config file.
 	if img == "" {
-		return errors.New("no docker image specified")
+		return errors.New(msg.EmptyDockerImgName)
 	}
 
 	// Check if image exists.
@@ -107,20 +124,17 @@ func (r *ContainerRunner) fetchImage(docker *config.Docker) error {
 	}
 
 	if docker.Image == "" {
-		m, err := r.FrameworkMeta.Search(r.Ctx, framework.SearchOptions{
-			Name:             r.Framework.Name,
-			FrameworkVersion: r.Framework.Version,
-		})
+		m, err := r.MetadataSearchStrategy.Find(r.Ctx, r.FrameworkMeta, r.Framework.Name, r.Framework.Version)
+
 		if err != nil {
 			return fmt.Errorf("unable to determine which docker image to run: %w", err)
 		}
 		docker.Image = m.DockerImage
+	} else {
+		log.Info().Msgf("Ignoring framework version for Docker, using provided image %s", docker.Image)
 	}
 
-	if err := r.pullImage(docker.Image); err != nil {
-		return err
-	}
-	return nil
+	return r.pullImage(docker.Image)
 }
 
 func (r *ContainerRunner) startContainer(options containerStartOptions) (string, error) {
@@ -170,11 +184,34 @@ func (r *ContainerRunner) startContainer(options containerStartOptions) (string,
 	return containerID, nil
 }
 
-func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env map[string]string) (output string, jobInfo jobInfo, passed bool, err error) {
-	exitCode, output, err := r.docker.ExecuteAttach(r.Ctx, containerID, cmd, env)
+func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, timeout time.Duration) (output string, jobInfo jobInfo, passed bool, timedOut bool, err error) {
+	c := make(chan bool)
+
+	var exitCode int
+	go func(c chan bool) {
+		exitCode, output, err = r.docker.ExecuteAttach(r.Ctx, containerID, cmd)
+		c <- true
+	}(c)
+
+	if timeout <= 0 {
+		timeout = 24 * time.Hour
+	}
+	deathclock := time.NewTimer(timeout)
+	defer deathclock.Stop()
+
+	select {
+	case <-deathclock.C:
+		timedOut = true
+	case <-c:
+	}
 
 	if err != nil {
-		return "", jobInfo, false, err
+		return "", jobInfo, false, false, err
+	}
+
+	if timedOut {
+		color.Red("Suite '%s' has reached timeout", suiteName)
+		return "", jobInfo, false, true, fmt.Errorf("suite '%s' has reached timeout", suiteName)
 	}
 
 	passed = true
@@ -187,7 +224,7 @@ func (r *ContainerRunner) run(containerID, suiteName string, cmd []string, env m
 	if err != nil {
 		log.Warn().Msgf("unable to retrieve test result url: %s", err)
 	}
-	return output, jobInfo, passed, err
+	return output, jobInfo, passed, timedOut, err
 }
 
 // readJobInfo reads test url from inside the test runner container.
@@ -209,6 +246,9 @@ func (r *ContainerRunner) readJobInfo(containerID string) (jobInfo, error) {
 	fileName := filepath.Base(r.containerConfig.jobInfoFilePath)
 	filePath := filepath.Join(dir, fileName)
 	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return jobInfo{}, err
+	}
 
 	var info jobInfo
 	err = json.Unmarshal(content, &info)
@@ -221,7 +261,7 @@ func (r *ContainerRunner) readJobInfo(containerID string) (jobInfo, error) {
 func (r *ContainerRunner) beforeExec(containerID, suiteName string, tasks []string) error {
 	for _, task := range tasks {
 		log.Info().Str("task", task).Str("suite", suiteName).Msg("Running BeforeExec")
-		exitCode, _, err := r.docker.ExecuteAttach(r.Ctx, containerID, strings.Fields(task), nil)
+		exitCode, _, err := r.docker.ExecuteAttach(r.Ctx, containerID, strings.Fields(task))
 		if err != nil {
 			return err
 		}
@@ -249,30 +289,41 @@ func (r *ContainerRunner) runJobs(containerOpts <-chan containerStartOptions, re
 	for opts := range containerOpts {
 		if r.interrupted {
 			results <- result{
-				suiteName: opts.SuiteName,
-				skipped:   true,
+				name:    opts.DisplayName,
+				skipped: true,
 			}
 			continue
 		}
-		containerID, output, jobDetails, passed, skipped, err := r.runSuite(opts)
+		start := time.Now()
+		containerID, output, jobDetails, passed, skipped, timedOut, err := r.runSuite(opts)
+
+		browser := fmt.Sprintf("%s %s", opts.Browser, r.docker.GetBrowserVersion(r.Ctx, opts.Docker.Image, opts.Browser))
+
 		results <- result{
-			suiteName:     opts.SuiteName,
+			name:          opts.DisplayName,
 			containerID:   containerID,
+			browser:       browser,
 			jobInfo:       jobDetails,
 			passed:        passed,
 			skipped:       skipped,
 			consoleOutput: output,
+			duration:      time.Since(start),
+			startTime:     start,
+			endTime:       time.Now(),
 			err:           err,
+			timedOut:      timedOut,
 		}
 	}
 }
 
 func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int) bool {
 	// TODO find a better way to get the expected
-	errCount := 0
 	completed := 0
 	inProgress := expected
 	passed := true
+
+	junitRequired := report.IsArtifactRequired(r.Reporters, report.JUnitArtifact)
+	jsonResultRequired := report.IsArtifactRequired(r.Reporters, report.JSONArtifact)
 
 	done := make(chan interface{})
 	go func() {
@@ -293,25 +344,65 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 		inProgress--
 
 		jobID := getJobID(res.jobInfo.JobDetailsURL)
-		if download.ShouldDownloadArtifact(jobID, res.passed, artifactCfg) {
-			r.ArtfactDownloader.DownloadArtifact(jobID)
+
+		var files []string
+		if config.ShouldDownloadArtifact(jobID, res.passed, res.timedOut, false, artifactCfg) {
+			files = r.ArtfactDownloader.DownloadArtifact(jobID, res.name, false)
 		}
 
 		if !res.passed {
-			errCount++
 			passed = false
+		}
+
+		var artifacts []report.Artifact
+
+		if junitRequired {
+			jb, err := r.JobReader.GetJobAssetFileContent(context.Background(), jobID, "junit.xml", false)
+			artifacts = append(artifacts, report.Artifact{
+				AssetType: report.JUnitArtifact,
+				Body:      jb,
+				Error:     err,
+			})
+		}
+		if jsonResultRequired {
+			for _, f := range files {
+				artifacts = append(artifacts, report.Artifact{
+					FilePath: f,
+				})
+			}
+		}
+
+		status := job.StatePassed
+		if !res.passed {
+			status = job.StateFailed
+		}
+		if !res.skipped {
+			tr := report.TestResult{
+				Name:      res.name,
+				Duration:  res.duration,
+				StartTime: res.startTime,
+				EndTime:   res.endTime,
+				Status:    status,
+				Browser:   res.browser,
+				Platform:  "Docker",
+				URL:       res.jobInfo.JobDetailsURL,
+				Artifacts: artifacts,
+				Origin:    "docker",
+				TimedOut:  res.timedOut,
+			}
+
+			for _, rep := range r.Reporters {
+				rep.Add(tr)
+			}
 		}
 
 		r.logSuite(res)
 	}
 	close(done)
 
-	if errCount != 0 {
-		msg.LogTestFailure(errCount, expected)
-		return passed
+	for _, rep := range r.Reporters {
+		rep.Render()
 	}
-
-	msg.LogTestSuccess()
 
 	return passed
 }
@@ -323,31 +414,31 @@ func getJobID(jobURL string) string {
 
 func (r *ContainerRunner) logSuite(res result) {
 	if res.skipped {
-		log.Warn().Str("suite", res.suiteName).Msg("Suite skipped.")
+		log.Warn().Str("suite", res.name).Msg("Suite skipped.")
 		return
 	}
 	if res.containerID == "" {
-		log.Error().Err(res.err).Str("suite", res.suiteName).Msg("Failed to start suite.")
+		log.Error().Err(res.err).Str("suite", res.name).Msg("Failed to start suite.")
 		return
 	}
 
 	if res.passed {
-		log.Info().Bool("passed", res.passed).Str("url", res.jobInfo.JobDetailsURL).Str("suite", res.suiteName).Msg("Suite finished.")
+		log.Info().Bool("passed", res.passed).Str("url", res.jobInfo.JobDetailsURL).Str("suite", res.name).Msg("Suite finished.")
 		if !res.jobInfo.ReportingSucceeded {
-			log.Warn().Str("suite", res.suiteName).Msg("Reporting results to Sauce Labs failed.")
+			log.Warn().Str("suite", res.name).Msg("Reporting results to Sauce Labs failed.")
 		}
 	} else {
-		log.Error().Bool("passed", res.passed).Str("url", res.jobInfo.JobDetailsURL).Str("suite", res.suiteName).Msg("Suite finished.")
+		log.Error().Bool("passed", res.passed).Str("url", res.jobInfo.JobDetailsURL).Str("suite", res.name).Msg("Suite finished.")
 	}
 
 	if !res.passed || r.ShowConsoleLog {
-		log.Info().Str("suite", res.suiteName).Msgf("console.log output: \n%s", res.consoleOutput)
+		log.Info().Str("suite", res.name).Msgf("console.log output: \n%s", res.consoleOutput)
 	}
 }
 
 // runSuite runs the selected suite.
-func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobInfo jobInfo, passed bool, skipped bool, err error) {
-	log.Info().Str("suite", options.SuiteName).Msg("Setting up test environment")
+func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID string, output string, jobInfo jobInfo, passed bool, skipped bool, timedOut bool, err error) {
+	log.Info().Str("suite", options.DisplayName).Msg("Setting up test environment")
 	containerID, err = r.startContainer(options)
 	defer r.tearDown(containerID, options.SuiteName)
 
@@ -362,23 +453,29 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 	defer unregisterSignalCapture(sigC)
 
 	if err != nil {
-		log.Err(err).Str("suite", options.SuiteName).Msg("Failed to setup test environment")
+		log.Err(err).Str("suite", options.DisplayName).Msg("Failed to setup test environment")
 		return
 	}
 
-	output, jobInfo, passed, err = r.run(containerID, options.SuiteName,
+	output, jobInfo, passed, timedOut, err = r.run(containerID, options.SuiteName,
 		[]string{"npm", "test", "--", "-r", r.containerConfig.sauceRunnerConfigPath, "-s", options.SuiteName},
-		options.Environment)
+		options.Timeout)
 
 	jobID := jobIDFromURL(jobIDFromURL(jobInfo.JobDetailsURL))
 	if jobID != "" {
 		r.uploadSauceConfig(jobID, options.ConfigFilePath)
+		r.uploadCLIFlags(jobID, options.CLIFlags)
 	}
 	return
 }
 
 // uploadSauceConfig adds job configuration as an asset.
 func (r *ContainerRunner) uploadSauceConfig(jobID string, cfgFile string) {
+	// A config file is optional.
+	if cfgFile == "" {
+		return
+	}
+
 	f, err := os.Open(cfgFile)
 	if err != nil {
 		log.Warn().Msgf("failed to open configuration: %v", err)
@@ -389,8 +486,20 @@ func (r *ContainerRunner) uploadSauceConfig(jobID string, cfgFile string) {
 		log.Warn().Msgf("failed to read configuration: %v", err)
 		return
 	}
-	if err := r.JobWriter.UploadAsset(jobID, filepath.Base(cfgFile), "text/plain", content); err != nil {
+	if err := r.JobWriter.UploadAsset(jobID, false, filepath.Base(cfgFile), "text/plain", content); err != nil {
 		log.Warn().Msgf("failed to attach configuration: %v", err)
+	}
+}
+
+// uploadCLIFlags adds commandline parameters as an asset.
+func (r *ContainerRunner) uploadCLIFlags(jobID string, content interface{}) {
+	encoded, err := json.Marshal(content)
+	if err != nil {
+		log.Warn().Msgf("Failed to encode CLI flags: %v", err)
+		return
+	}
+	if err := r.JobWriter.UploadAsset(jobID, false, "flags.json", "text/plain", encoded); err != nil {
+		log.Warn().Msgf("Failed to report CLI flags: %v", err)
 	}
 }
 
@@ -406,7 +515,7 @@ func jobIDFromURL(URL string) string {
 
 // registerInterruptOnSignal runs tearDown on SIGINT / Interrupt.
 func (r *ContainerRunner) registerInterruptOnSignal(containerID, suiteName string, interrupted *bool) chan os.Signal {
-	sigChan := make(chan os.Signal)
+	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
 	go func(c <-chan os.Signal, interrupted *bool, containerID, suiteName string) {
@@ -423,7 +532,7 @@ func (r *ContainerRunner) registerInterruptOnSignal(containerID, suiteName strin
 
 // registerSkipSuitesOnSignal prevent new suites from being executed when a SIGINT is captured.
 func (r *ContainerRunner) registerSkipSuitesOnSignal() chan os.Signal {
-	sigChan := make(chan os.Signal)
+	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
 	go func(c <-chan os.Signal, cr *ContainerRunner) {

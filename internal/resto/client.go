@@ -1,41 +1,49 @@
 package resto
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
-	"net/textproto"
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog/log"
 	"github.com/ryanuber/go-glob"
-	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/requesth"
 
+	"github.com/saucelabs/saucectl/internal/build"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/requesth"
+	tunnels "github.com/saucelabs/saucectl/internal/tunnel"
+	"github.com/saucelabs/saucectl/internal/vmd"
 )
 
 var (
 	// ErrServerError is returned when the server was not able to correctly handle our request (status code >= 500).
-	ErrServerError = errors.New("internal server error")
+	ErrServerError = errors.New(msg.InternalServerError)
 	// ErrJobNotFound is returned when the requested job was not found.
-	ErrJobNotFound = errors.New("job was not found")
+	ErrJobNotFound = errors.New(msg.JobNotFound)
+	// ErrAssetNotFound is returned when the requested asset was not found.
+	ErrAssetNotFound = errors.New(msg.AssetNotFound)
 	// ErrTunnelNotFound is returned when the requested tunnel was not found.
-	ErrTunnelNotFound = errors.New("tunnel not found")
+	ErrTunnelNotFound = errors.New(msg.TunnelNotFound)
 )
+
+// retryMax is the total retry times when pulling job status
+const retryMax = 3
 
 // Client http client.
 type Client struct {
-	HTTPClient     *http.Client
+	HTTPClient     *retryablehttp.Client
 	URL            string
 	Username       string
 	AccessKey      string
@@ -54,19 +62,24 @@ type concurrencyResponse struct {
 	}
 }
 
-// availableTunnelsResponse is the response body as is returned by resto's rest/v1.1/users/{username}/available_tunnels endpoint.
+// availableTunnelsResponse is the response body as is returned by resto's rest/v1/users/{username}/tunnels endpoint.
 type availableTunnelsResponse map[string][]tunnel
 
 type tunnel struct {
 	ID       string `json:"id"`
+	Owner    string `json:"owner"`
 	Status   string `json:"status"` // 'new', 'booting', 'deploying', 'halting', 'running', 'terminated'
 	TunnelID string `json:"tunnel_identifier"`
 }
 
 // New creates a new client.
 func New(url, username, accessKey string, timeout time.Duration) Client {
+	httpClient := retryablehttp.NewClient()
+	httpClient.HTTPClient = &http.Client{Timeout: timeout}
+	httpClient.Logger = nil
+	httpClient.RetryMax = retryMax
 	return Client{
-		HTTPClient: &http.Client{Timeout: timeout},
+		HTTPClient: httpClient,
 		URL:        url,
 		Username:   username,
 		AccessKey:  accessKey,
@@ -74,7 +87,11 @@ func New(url, username, accessKey string, timeout time.Duration) Client {
 }
 
 // ReadJob returns the job details.
-func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
+func (c *Client) ReadJob(ctx context.Context, id string, realDevice bool) (job.Job, error) {
+	if realDevice {
+		return job.Job{}, errors.New("the VDC client does not support real device jobs")
+	}
+
 	request, err := createRequest(ctx, c.URL, c.Username, c.AccessKey, id)
 	if err != nil {
 		return job.Job{}, err
@@ -83,8 +100,12 @@ func (c *Client) ReadJob(ctx context.Context, id string) (job.Job, error) {
 	return doRequest(c.HTTPClient, request)
 }
 
-// PollJob polls job details at an interval, until the job has ended, whether successfully or due to an error.
-func (c *Client) PollJob(ctx context.Context, id string, interval time.Duration) (job.Job, error) {
+// PollJob polls job details at an interval, until timeout has been reached or until the job has ended, whether successfully or due to an error.
+func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.Duration, realDevice bool) (job.Job, error) {
+	if realDevice {
+		return job.Job{}, errors.New("the VDC client does not support real device jobs")
+	}
+
 	request, err := createRequest(ctx, c.URL, c.Username, c.AccessKey, id)
 	if err != nil {
 		return job.Job{}, err
@@ -93,22 +114,40 @@ func (c *Client) PollJob(ctx context.Context, id string, interval time.Duration)
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		j, err := doRequest(c.HTTPClient, request)
-		if err != nil {
-			return job.Job{}, err
-		}
+	if timeout <= 0 {
+		timeout = 24 * time.Hour
+	}
+	deathclock := time.NewTimer(timeout)
+	defer deathclock.Stop()
 
-		if job.Done(j.Status) {
+	for {
+		select {
+		case <-ticker.C:
+			j, err := doRequest(c.HTTPClient, request)
+			if err != nil {
+				return job.Job{}, err
+			}
+
+			if job.Done(j.Status) {
+				return j, nil
+			}
+		case <-deathclock.C:
+			j, err := doRequest(c.HTTPClient, request)
+			if err != nil {
+				return job.Job{}, err
+			}
+			j.TimedOut = true
 			return j, nil
 		}
 	}
-
-	return job.Job{}, nil
 }
 
 // GetJobAssetFileNames return the job assets list.
-func (c *Client) GetJobAssetFileNames(ctx context.Context, jobID string) ([]string, error) {
+func (c *Client) GetJobAssetFileNames(ctx context.Context, jobID string, realDevice bool) ([]string, error) {
+	if realDevice {
+		return nil, errors.New("the VDC client does not support real device jobs")
+	}
+
 	request, err := createListAssetsRequest(ctx, c.URL, c.Username, c.AccessKey, jobID)
 	if err != nil {
 		return nil, err
@@ -117,7 +156,11 @@ func (c *Client) GetJobAssetFileNames(ctx context.Context, jobID string) ([]stri
 }
 
 // GetJobAssetFileContent returns the job asset file content.
-func (c *Client) GetJobAssetFileContent(ctx context.Context, jobID, fileName string) ([]byte, error) {
+func (c *Client) GetJobAssetFileContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
+	if realDevice {
+		return nil, errors.New("the VDC client does not support real device jobs")
+	}
+
 	request, err := createAssetRequest(ctx, c.URL, c.Username, c.AccessKey, jobID, fileName)
 	if err != nil {
 		return nil, err
@@ -135,7 +178,12 @@ func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
 	}
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
-	resp, err := c.HTTPClient.Do(req)
+	r, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return 0, err
+	}
+
+	resp, err := c.HTTPClient.Do(r)
 	if err != nil {
 		return 0, err
 	}
@@ -151,11 +199,11 @@ func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
 
 // IsTunnelRunning checks whether tunnelID is running. If not, it will wait for the tunnel to become available or
 // timeout. Whichever comes first.
-func (c *Client) IsTunnelRunning(ctx context.Context, id string, wait time.Duration) error {
+func (c *Client) IsTunnelRunning(ctx context.Context, id, owner string, filter tunnels.Filter, wait time.Duration) error {
 	deathclock := time.Now().Add(wait)
 	var err error
 	for time.Now().Before(deathclock) {
-		if err = c.isTunnelRunning(ctx, id); err == nil {
+		if err = c.isTunnelRunning(ctx, id, owner, filter); err == nil {
 			return nil
 		}
 		time.Sleep(1 * time.Second)
@@ -164,9 +212,9 @@ func (c *Client) IsTunnelRunning(ctx context.Context, id string, wait time.Durat
 	return err
 }
 
-func (c *Client) isTunnelRunning(ctx context.Context, id string) error {
+func (c *Client) isTunnelRunning(ctx context.Context, id, owner string, filter tunnels.Filter) error {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
-		fmt.Sprintf("%s/rest/v1.1/%s/available_tunnels", c.URL, c.Username), nil)
+		fmt.Sprintf("%s/rest/v1/%s/tunnels", c.URL, c.Username), nil)
 	if err != nil {
 		return err
 	}
@@ -174,9 +222,19 @@ func (c *Client) isTunnelRunning(ctx context.Context, id string) error {
 
 	q := req.URL.Query()
 	q.Add("full", "true")
+	q.Add("all", "true")
+
+	if filter != "" {
+		q.Add("filter", string(filter))
+	}
 	req.URL.RawQuery = q.Encode()
 
-	res, err := c.HTTPClient.Do(req)
+	r, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return err
+	}
+
+	res, err := c.HTTPClient.Do(r)
 	if err != nil {
 		return err
 	}
@@ -191,10 +249,18 @@ func (c *Client) isTunnelRunning(ctx context.Context, id string) error {
 		return err
 	}
 
+	// Owner should be the current user or the defined parent if there is one.
+	if owner == "" {
+		owner = c.Username
+	}
+
 	for _, tt := range resp {
 		for _, t := range tt {
 			// User could be using tunnel name (aka tunnel_identifier) or the tunnel ID. Make sure we check both.
 			if t.TunnelID != id && t.ID != id {
+				continue
+			}
+			if t.Owner != owner {
 				continue
 			}
 			if t.Status == "running" {
@@ -206,8 +272,12 @@ func (c *Client) isTunnelRunning(ctx context.Context, id string) error {
 }
 
 // StopJob stops the job on the Sauce Cloud.
-func (c *Client) StopJob(ctx context.Context, id string) (job.Job, error) {
-	request, err := createStopRequest(ctx, c.URL, c.Username, c.AccessKey, id)
+func (c *Client) StopJob(ctx context.Context, jobID string, realDevice bool) (job.Job, error) {
+	if realDevice {
+		return job.Job{}, errors.New("the VDC client does not support real device jobs")
+	}
+
+	request, err := createStopRequest(ctx, c.URL, c.Username, c.AccessKey, jobID)
 	if err != nil {
 		return job.Job{}, err
 	}
@@ -218,18 +288,12 @@ func (c *Client) StopJob(ctx context.Context, id string) (job.Job, error) {
 	return j, nil
 }
 
-// UploadAsset uploads an asset to the specified jobID.
-func (c *Client) UploadAsset(jobID string, fileName string, contentType string, content []byte) error {
-	request, err := createUploadAssetRequest(context.Background(), c.URL, c.Username, c.AccessKey, jobID, fileName, contentType, content)
+func doListAssetsRequest(httpClient *retryablehttp.Client, request *http.Request) ([]string, error) {
+	req, err := retryablehttp.FromRequest(request)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	err = doRequestAsset(c.HTTPClient, request)
-	return err
-}
-
-func doListAssetsRequest(httpClient *http.Client, request *http.Request) ([]string, error) {
-	resp, err := httpClient.Do(request)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -271,8 +335,12 @@ func isSpecialFile(fileName string) bool {
 	return false
 }
 
-func doAssetRequest(httpClient *http.Client, request *http.Request) ([]byte, error) {
-	resp, err := httpClient.Do(request)
+func doAssetRequest(httpClient *retryablehttp.Client, request *http.Request) ([]byte, error) {
+	req, err := retryablehttp.FromRequest(request)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -283,7 +351,7 @@ func doAssetRequest(httpClient *http.Client, request *http.Request) ([]byte, err
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, ErrJobNotFound
+		return nil, ErrAssetNotFound
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -295,8 +363,12 @@ func doAssetRequest(httpClient *http.Client, request *http.Request) ([]byte, err
 	return io.ReadAll(resp.Body)
 }
 
-func doRequest(httpClient *http.Client, request *http.Request) (job.Job, error) {
-	resp, err := httpClient.Do(request)
+func doRequest(httpClient *retryablehttp.Client, request *http.Request) (job.Job, error) {
+	req, err := retryablehttp.FromRequest(request)
+	if err != nil {
+		return job.Job{}, err
+	}
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return job.Job{}, err
 	}
@@ -326,7 +398,7 @@ func doRequest(httpClient *http.Client, request *http.Request) (job.Job, error) 
 
 func createRequest(ctx context.Context, url, username, accessKey, jobID string) (*http.Request, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
-		fmt.Sprintf("%s/rest/v1/%s/jobs/%s", url, username, jobID), nil)
+		fmt.Sprintf("%s/rest/v1.1/%s/jobs/%s", url, username, jobID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -373,86 +445,27 @@ func createStopRequest(ctx context.Context, url, username, accessKey, jobID stri
 	return req, nil
 }
 
-// FIXME This has nothing to do with resto and belongs to the testcomposer package
-func createUploadAssetRequest(ctx context.Context, url, username, accessKey, jobID, fileName, contentType string, content []byte) (*http.Request, error) {
-	var b bytes.Buffer
-	w := multipart.NewWriter(&b)
-	h := make(textproto.MIMEHeader)
-	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", fileName))
-	h.Set("Content-Type", contentType)
-	wr, err := w.CreatePart(h)
+// DownloadArtifact downloads artifacts and returns a list of what was downloaded.
+func (c *Client) DownloadArtifact(jobID, suiteName string, realDevice bool) []string {
+	targetDir, err := config.GetSuiteArtifactFolder(suiteName, c.ArtifactConfig)
 	if err != nil {
-		return nil, err
+		log.Error().Msgf("Unable to create artifacts folder (%v)", err)
+		return []string{}
 	}
-	if _, err = wr.Write(content); err != nil {
-		return nil, err
-	}
-	if err = w.Close(); err != nil {
-		return nil, err
-	}
-
-	req, err := requesth.NewWithContext(ctx, http.MethodPut,
-		fmt.Sprintf("%s/v1/testcomposer/jobs/%s/assets", url, jobID), &b)
-	if err != nil {
-		return nil, err
-	}
-	req.SetBasicAuth(username, accessKey)
-	req.Header.Set("Content-Type", w.FormDataContentType())
-	return req, nil
-}
-
-type assetsUploadResponse struct {
-	Uploaded []string `json:"uploaded"`
-	Errors   []string `json:"errors,omitempty"`
-}
-
-func doRequestAsset(httpClient *http.Client, request *http.Request) error {
-	resp, err := httpClient.Do(request)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= http.StatusInternalServerError {
-		return ErrServerError
-	}
-
-	if resp.StatusCode == http.StatusNotFound {
-		return ErrJobNotFound
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		err := fmt.Errorf("assets upload request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
-		return err
-	}
-
-	var assetsResponse assetsUploadResponse
-	if err = json.NewDecoder(resp.Body).Decode(&assetsResponse); err != nil {
-		return err
-	}
-	if len(assetsResponse.Errors) > 0 {
-		return fmt.Errorf("upload failed: %v", strings.Join(assetsResponse.Errors, ","))
-	}
-	return nil
-}
-
-// DownloadArtifact does downloading artifacts
-func (c *Client) DownloadArtifact(jobID string) {
-	targetDir := filepath.Join(c.ArtifactConfig.Directory, jobID)
 	if err := os.MkdirAll(targetDir, 0755); err != nil {
 		log.Error().Msgf("Unable to create %s to fetch artifacts (%v)", targetDir, err)
-		return
+		return []string{}
 	}
-
-	files, err := c.GetJobAssetFileNames(context.Background(), jobID)
+	files, err := c.GetJobAssetFileNames(context.Background(), jobID, realDevice)
 	if err != nil {
 		log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
-		return
+		return []string{}
 	}
+	var artifacts []string
 	for _, f := range files {
 		for _, pattern := range c.ArtifactConfig.Match {
 			if glob.Glob(pattern, f) {
+				artifacts = append(artifacts, f)
 				if err := c.downloadArtifact(targetDir, jobID, f); err != nil {
 					log.Error().Err(err).Msgf("Failed to download file: %s", f)
 				}
@@ -460,13 +473,103 @@ func (c *Client) DownloadArtifact(jobID string) {
 			}
 		}
 	}
+	return artifacts
 }
 
 func (c *Client) downloadArtifact(targetDir, jobID, fileName string) error {
-	content, err := c.GetJobAssetFileContent(context.Background(), jobID, fileName)
+	content, err := c.GetJobAssetFileContent(context.Background(), jobID, fileName, false)
 	if err != nil {
 		return err
 	}
 	targetFile := filepath.Join(targetDir, fileName)
 	return os.WriteFile(targetFile, content, 0644)
+}
+
+type platformEntry struct {
+	LongName     string `json:"long_name"`
+	ShortVersion string `json:"short_version"`
+}
+
+// GetVirtualDevices returns the list of available virtual devices.
+func (c *Client) GetVirtualDevices(ctx context.Context, kind string) ([]vmd.VirtualDevice, error) {
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/rest/v1.1/info/platforms/all", c.URL), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	r, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return []vmd.VirtualDevice{}, err
+	}
+
+	res, err := c.HTTPClient.Do(r)
+	if err != nil {
+		return []vmd.VirtualDevice{}, err
+	}
+
+	var resp []platformEntry
+	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+		return []vmd.VirtualDevice{}, err
+	}
+
+	key := "Emulator"
+	if kind == vmd.IOSSimulator {
+		key = "Simulator"
+	}
+
+	devs := map[string]map[string]bool{}
+	for _, d := range resp {
+		if !strings.Contains(d.LongName, key) {
+			continue
+		}
+		if _, ok := devs[d.LongName]; !ok {
+			devs[d.LongName] = map[string]bool{}
+		}
+		devs[d.LongName][d.ShortVersion] = true
+	}
+
+	var dev []vmd.VirtualDevice
+	for vmdName, versions := range devs {
+		d := vmd.VirtualDevice{Name: vmdName}
+		for version := range versions {
+			d.OSVersion = append(d.OSVersion, version)
+		}
+		sort.Strings(d.OSVersion)
+		dev = append(dev, d)
+	}
+	sort.Slice(dev, func(i, j int) bool {
+		return dev[i].Name < dev[j].Name
+	})
+	return dev, nil
+}
+
+func (c *Client) GetBuildID(ctx context.Context, jobID string, buildSource build.Source) (string, error) {
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v2/builds/%s/jobs/%s/build/", c.URL, buildSource, jobID), nil)
+	if err != nil {
+		return "", err
+	}
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	r, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := c.HTTPClient.Do(r)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
+	}
+
+	var br build.Build
+	if err := json.NewDecoder(resp.Body).Decode(&br); err != nil {
+		return "", err
+	}
+
+	return br.ID, nil
 }

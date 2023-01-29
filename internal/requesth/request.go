@@ -2,7 +2,7 @@ package requesth
 
 import (
 	"context"
-	"github.com/saucelabs/saucectl/cli/version"
+	"github.com/saucelabs/saucectl/internal/version"
 	"io"
 	"net/http"
 )

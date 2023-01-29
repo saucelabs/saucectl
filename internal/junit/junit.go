@@ -2,43 +2,54 @@ package junit
 
 import "encoding/xml"
 
+// JunitFileName is the name of the JUnit report.
+const JunitFileName = "junit.xml"
+
 // TestCase maps to <testcase> element
 type TestCase struct {
 	Name       string `xml:"name,attr"`
-	Assertions string `xml:"assertions,attr"`
+	Assertions string `xml:"assertions,attr,omitempty"`
 	Time       string `xml:"time,attr"`
+	Timestamp  string `xml:"timestamp,attr"`
 	ClassName  string `xml:"classname,attr"`
-	Status     string `xml:"status,attr"`
-	SystemOut  string `xml:"system-out"`
-	Error      string `xml:"error"`
-	Failure    string `xml:"failure"`
+	Status     string `xml:"status,attr,omitempty"`
+	SystemOut  string `xml:"system-out,omitempty"`
+	Error      string `xml:"error,omitempty"`
+	Failure    string `xml:"failure,omitempty"`
 }
 
 // TestSuite maps to <testsuite> element
 type TestSuite struct {
-	Name      string     `xml:"name,attr"`
-	Tests     int        `xml:"tests,attr"`
-	Errors    int        `xml:"errors,attr,omitempty"`
-	Failures  int        `xml:"failures,attr,omitempty"`
-	Disabled  int        `xml:"disabled,attr,omitempty"`
-	Skipped   int        `xml:"skipped,attr,omitempty"`
-	Time      string     `xml:"time,attr,omitempty"`
-	Timestamp string     `xml:"timestamp,attr,omitempty"`
-	Package   string     `xml:"package,attr,omitempty"`
-	TestCase  []TestCase `xml:"testcase"`
-	SystemOut string     `xml:"system-out"`
+	Name       string     `xml:"name,attr"`
+	Tests      int        `xml:"tests,attr"`
+	Properties []Property `xml:"properties>property"`
+	Errors     int        `xml:"errors,attr,omitempty"`
+	Failures   int        `xml:"failures,attr,omitempty"`
+	Disabled   int        `xml:"disabled,attr,omitempty"`
+	Skipped    int        `xml:"skipped,attr,omitempty"`
+	Time       string     `xml:"time,attr,omitempty"`
+	Timestamp  string     `xml:"timestamp,attr,omitempty"`
+	Package    string     `xml:"package,attr,omitempty"`
+	TestCases  []TestCase `xml:"testcase"`
+	SystemOut  string     `xml:"system-out,omitempty"`
 }
 
 // TestSuites maps to root junit <testsuites> element
 type TestSuites struct {
-	XMLName   xml.Name    `xml:"testsuites"`
-	TestSuite []TestSuite `xml:"testsuite"`
-	Name      string      `xml:"name,attr,omitempty"`
-	Time      string      `xml:"time,attr,omitempty"`
-	Tests     int         `xml:"tests,attr,omitempty"`
-	Failures  int         `xml:"failures,attr,omitempty"`
-	Disabled  int         `xml:"disabled,attr,omitempty"`
-	Errors    int         `xml:"errors,attr,omitempty"`
+	XMLName    xml.Name    `xml:"testsuites"`
+	TestSuites []TestSuite `xml:"testsuite"`
+	Name       string      `xml:"name,attr,omitempty"`
+	Time       string      `xml:"time,attr,omitempty"`
+	Tests      int         `xml:"tests,attr,omitempty"`
+	Failures   int         `xml:"failures,attr,omitempty"`
+	Disabled   int         `xml:"disabled,attr,omitempty"`
+	Errors     int         `xml:"errors,attr,omitempty"`
+}
+
+// Property maps to a <property> element that's part of <properties>.
+type Property struct {
+	Name  string `xml:"name,attr"`
+	Value string `xml:"value,attr"`
 }
 
 // Parse parses an xml-encoded byte string and returns a `TestSuites` struct
@@ -54,7 +65,7 @@ func Parse(data []byte) (TestSuites, error) {
 			return tss, err
 		}
 
-		tss.TestSuite = []TestSuite{
+		tss.TestSuites = []TestSuite{
 			ts,
 		}
 	}

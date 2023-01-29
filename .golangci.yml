@@ -1,0 +1,9 @@
+linters:
+  enable:
+    - revive
+    - errname
+linters-settings:
+  staticcheck:
+    # https://staticcheck.io/docs/configuration/options/#checks
+    # Default: ["*"]
+    checks: [ "all", "-SA1019" ]

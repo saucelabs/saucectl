@@ -1,49 +1,44 @@
-# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
-
 name: saucectl tests pipeline
 
 on:
   pull_request:
   push:
     branches:
-      - master
+      - main
 
 env:
   SAUCE_USERNAME: ${{secrets.SAUCE_USERNAME}}
   SAUCE_ACCESS_KEY: ${{secrets.SAUCE_ACCESS_KEY}}
-
+  BUILD_ID: saucectl-run-${{ github.run_id }}
 
 jobs:
   lint:
     runs-on: ubuntu-latest
-    container:
-      image: golang:1.16-alpine
-
     steps:
-      - name: Install Dependencies
-        run: apk add --no-cache git gcc g++ curl
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
 
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Lint project
-        run: |
-          go get -u golang.org/x/lint/golint
-          golint -set_exit_status ./...
+      - name: Lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+
   test:
     runs-on: ubuntu-latest
-    container:
-      image: golang:1.16-alpine
-
     steps:
-      - name: Install Dependencies
-        run: apk add --no-cache git gcc g++ curl bash
-
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
         with:
-          fetch-depth: 50
+          go-version: 1.19
+          cache: true
 
       - name: Run tests
         run: |
@@ -51,195 +46,200 @@ jobs:
           coverage=$(go tool cover -func=coverage.txt | tail -n 1 | awk '{ print $3 }' | tr -d '%' | cut -d . -f 1)
           threshold=40
           if [ $coverage -lt $threshold ]; then echo 'Code coverage below threshold!' && exit 1; fi
-  build:
-    needs: lint
+
+  check-schema:
     runs-on: ubuntu-latest
-    container:
-      image: golang:1.16-alpine
-
     steps:
-      - name: Install Dependencies
-        run: apk add --no-cache git gcc g++ curl
-
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Build project
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: npm
+          cache-dependency-path: scripts/json-schema-bundler/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: scripts/json-schema-bundler
+        run: npm ci
+
+      - name: Generate Schema
+        working-directory: scripts/json-schema-bundler
+        run: npm run bundle -- -s ../../api/global.schema.json -o ../../api/fresh.schema.json
+
+      - name: Check Schema
+        working-directory: api/
+        run: diff saucectl.schema.json fresh.schema.json
+
+  build:
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+          cache: true
+
+      - name: Build Project
         run: |
+          SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-8)
+          LDFLAG_VERSION="github.com/saucelabs/saucectl/cli/version.Version=v0.0.0+$SHORT_SHA"
+          LDFLAG_SHA="github.com/saucelabs/saucectl/cli/version.GitCommit=$GITHUB_SHA"
           go install ./...
-          CGO_ENABLED=0 go build cmd/saucectl/saucectl.go
+          CGO_ENABLED=0 go build -ldflags="-X $LDFLAG_VERSION -X $LDFLAG_SHA" cmd/saucectl/saucectl.go
           GOOS=windows GOARCH=amd64 go build cmd/saucectl/saucectl.go
 
-      - name: Check GoReleaser config
-        uses: goreleaser/goreleaser-action@v1
+      - name: Check GoReleaser Config
+        uses: goreleaser/goreleaser-action@v3
         with:
           version: latest
           args: check
 
-      - name: Upload binary
-        uses: actions/upload-artifact@v2
+      - name: Upload Binary
+        uses: actions/upload-artifact@v3
         with:
           name: saucectlbin
           path: |
             saucectl
             saucectl.exe
-  puppeteer-from-template:
+
+  puppeteer:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Download saucectl binary
-        uses: actions/download-artifact@v2
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
         with:
           name: saucectlbin
 
-      - name: Set permissions
+      - name: Set Permissions
         run: chmod +x ./saucectl
 
-      - name: Create safe place
-        run: mkdir scratch
+      - name: Saucectl RUN - Config Driven
+        run: ./saucectl run -c .sauce/puppeteer.yml --timeout 10m
 
-      - name: Saucectl NEW
-        working-directory: scratch
-        run: |
-          ../saucectl new -f puppeteer
+      - name: Saucectl RUN - CLI Driven
+        run: ./saucectl run puppeteer "**/*.test.js" -c "" --name "CLI Driven" --browser chrome --puppeteer.version 9.1.1 --rootDir tests/e2e/puppeteer --timeout 10m
 
-      - name: Saucectl RUN Docker
-        working-directory: scratch
-        run: ../saucectl run --test-env docker --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
-  playwright-from-template:
+  puppeteer-replay:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Download saucectl binary
-        uses: actions/download-artifact@v2
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
         with:
           name: saucectlbin
 
-      - name: Set permissions
+      - name: Set Permissions
         run: chmod +x ./saucectl
 
-      - name: Create safe place
-        run: mkdir scratch
+      - name: Saucectl RUN - Config Driven
+        run: ./saucectl run -c .sauce/replay.yml --timeout 10m
 
-      - name: Saucectl NEW
-        working-directory: scratch
-        run: |
-          ../saucectl new -f playwright
+      - name: Saucectl RUN - CLI Driven
+        run: ./saucectl run replay "tests/e2e/replay/recording.json" -c "" --name "CLI Driven" --timeout 10m
 
-      - name: Saucectl RUN Docker
-        working-directory: scratch
-        run: ../saucectl run --test-env docker --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
-
-      - name: Saucectl RUN Sauce Cloud
-        working-directory: scratch
-        run: ../saucectl run --test-env sauce --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
-
-      - name: Saucectl RUN Docker and Sauce Cloud
-        working-directory: scratch
-        run: ../saucectl run --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
-
-  testcafe-from-template:
+  playwright:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Download saucectl binary
-        uses: actions/download-artifact@v2
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
         with:
           name: saucectlbin
 
-      - name: Set permissions
+      - name: Set Permissions
         run: chmod +x ./saucectl
 
-      - name: Create safe place
-        run: mkdir scratch
+      - name: Saucectl RUN - Config Driven
+        run: ./saucectl run -c .sauce/playwright.yml --timeout 10m
 
-      - name: Saucectl NEW
-        working-directory: scratch
-        run: |
-          ../saucectl new -f testcafe
+      - name: Saucectl RUN - CLI Driven
+        run: ./saucectl run playwright ".*.js" -c "" --name "CLI Driven" --browser chromium --rootDir tests/e2e/playwright/ --playwright.version 1.18.1 --timeout 10m
 
-      - name: Saucectl RUN Docker
-        working-directory: scratch
-        run: ../saucectl run --test-env docker --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
-
-      - name: Saucectl RUN Sauce Cloud
-        working-directory: scratch
-        run: ../saucectl run --test-env sauce --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
-
-      - name: Saucectl RUN Docker and Sauce Cloud
-        working-directory: scratch
-        run: ../saucectl run --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
-
-  cypress-from-template:
+  testcafe:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Download saucectl binary
-        uses: actions/download-artifact@v2
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
         with:
           name: saucectlbin
 
-      - name: Set permissions
+      - name: Set Permissions
         run: chmod +x ./saucectl
 
-      - name: Create safe place
-        run: mkdir scratch
+      - name: Saucectl RUN - Config Driven
+        run: ./saucectl run -c .sauce/testcafe.yml --timeout 10m
 
-      - name: Saucectl NEW
-        working-directory: scratch
-        run: |
-          ../saucectl new -f cypress
+      - name: Saucectl RUN - CLI Driven
+        run: ./saucectl run testcafe "*.test.js" -c "" --name "CLI Driven" --browser chrome --rootDir tests/e2e/testcafe/ --testcafe.version 1.18.3 --timeout 10m
 
-      - name: Saucectl RUN Docker
-        working-directory: scratch
-        run: |
-          ../saucectl run --test-env docker --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
+  cypress-v1alpha:
+    needs: build
+    runs-on: ubuntu-latest
 
-      - name: Saucectl RUN Sauce Cloud
-        working-directory: scratch
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
+        with:
+          name: saucectlbin
+
+      - name: Set Permissions
+        run: chmod +x ./saucectl
+
+      - name: Saucectl RUN - Config Driven
         run: |
-          ../saucectl run --test-env sauce --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
+          ./saucectl run -c .sauce/cypress.yml --timeout 10m
+
+  cypress-v1:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
+        with:
+          name: saucectlbin
+
+      - name: Set Permissions
+        run: chmod +x ./saucectl
+
+      - name: Saucectl RUN - Config Driven
+        run: |
+          ./saucectl run -c .sauce/cypress-10.yml --timeout 10m
+
+      - name: Saucectl RUN - CLI Driven
+        run: |
+          ./saucectl run cypress "cypress/e2e/**/*.js" -c "" --name "CLI Driven" --rootDir tests/e2e/cypress_10/e2e/ --browser chrome --cypress.version 10.3.1 --cypress.configFile "cypress.config.js" --timeout 10m
  
-      - name: Saucectl RUN Docker and Sauce Cloud
-        working-directory: scratch
-        run: |
-          ../saucectl run --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
   cypress-windows:
     needs: build
     runs-on: windows-latest
@@ -249,16 +249,17 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Download saucectl binary
-        uses: actions/download-artifact@v2
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
         with:
           name: saucectlbin
 
-      - name: Run Sauce Pipeline Test - Sauce Cloud
+      - name: Saucectl RUN
         run: |
-          ./saucectl.exe run -c .sauce/cypress_cloud.yml --test-env sauce --ccy 5
+          ./saucectl.exe run -c .sauce/cypress.yml --select-suite "saucy test in sauce" --timeout 10m
+
   espresso:
     needs: build
     runs-on: ubuntu-latest
@@ -268,18 +269,143 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Download saucectl binary
-        uses: actions/download-artifact@v2
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
+        with:
+          name: saucectlbin
+
+      - name: Set Permissions
+        run: chmod +x ./saucectl
+
+      - name: Saucectl RUN - Config Driven
+        run: |
+          ./saucectl run -c .sauce/espresso.yml
+
+      - name: Saucectl RUN - CLI Driven
+        run: |
+          ./saucectl run espresso -c "" --name "CLI Driven" --app ./tests/e2e/espresso/calc.apk --testApp ./tests/e2e/espresso/calc-success.apk --emulator name="Android GoogleApi Emulator",platformVersion=11.0 --testOptions.size small
+      - name: Saucectl RUN - env var file
+        env:
+          REGION: us-west-1
+          CONCURRENCY: 2
+          TAG: env-tag
+          APP: ./tests/e2e/espresso/calc.apk
+          TEST_APP: ./tests/e2e/espresso/calc-success.apk
+          SUITE_NAME: "Sauce test env var config file"
+          TEST_CLASS1: com.example.android.testing.androidjunitrunnersample.CalculatorAddParameterizedTest
+          TEST_CLASS2: com.example.android.testing.androidjunitrunnersample.CalculatorInstrumentationTest
+          EMULATOR_NAME: "Android GoogleApi Emulator"
+          PLATFORM_VERSION1: 11.0
+          PLATFORM_VERSION2: 10.0
+          GOOGLE_PIXEL_REAL_DEVICE: "Google Pixel C GoogleAPI Emulator"
+          PLATFORM_VERSION3: 8.1
+          ARTIFACTS_DOWNLOAD_WHEN: always
+          ARTIFACTS_MATCH1: junit.xml
+          ARTIFACTS_MATCH2: device.log
+          ARTIFACTS_DOWNLOAD_FOLDER: ./artifacts/
+          SLACK_CHANNEL: devx-slack-notifications
+          NOTIFICATION_SEND: always
+        run: |
+          ./saucectl run -c .sauce/espresso-env-var.yml
+
+  xcuitest:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      BUILD_ID: ${{ github.run_id }}
+      BUILD_ENV: GitHub Actions
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
+        with:
+          name: saucectlbin
+
+      - name: Set Permissions
+        run: chmod +x ./saucectl
+
+      - name: Saucectl RUN - Config Driven
+        run: |
+          ./saucectl run -c .sauce/xcuitest.yml --timeout 10m
+
+      - name: Saucectl RUN - CLI Driven
+        run: |
+          ./saucectl run xcuitest \
+          -c "" \
+          --name "cli driven" \
+          --retries 2 \
+          --app ./tests/e2e/xcuitest/SauceLabs.Mobile.Sample.XCUITest.App.ipa \
+          --testApp ./tests/e2e/xcuitest/SwagLabsMobileAppUITests-Runner.ipa \
+          --testOptions.class SwagLabsMobileAppUITests.LoginTests/testSuccessfulLogin \
+          --testOptions.notClass SwagLabsMobileAppUITests.SwagLabsFlow/testCompleteFlow \
+          --device name="iPhone.*" \
+          --timeout 10m
+
+  apitest:
+    needs: build
+    runs-on: ubuntu-latest
+    # apitest is not publicly released so let's be a bit lax during pre-release
+    continue-on-error: true
+    env:
+      BUILD_ID: ${{ github.run_id }}
+      BUILD_ENV: GitHub Actions
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
         with:
           name: saucectlbin
 
       - name: Set permissions
         run: chmod +x ./saucectl
 
-      - name: Run Sauce Pipeline Test - Sauce Cloud
+      - name: Saucectl RUN - Config Driven
         run: |
-          ./saucectl run -c .sauce/espresso.yml --test-env sauce --ccy 10
-        env:
-          BUILD_ID: ${{ github.run_id }}
+          ./saucectl run -c .sauce/apitest.yml
+
+  playwright-cucumberjs:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
+        with:
+          name: saucectlbin
+
+      - name: Set Permissions
+        run: chmod +x ./saucectl
+
+      - name: Saucectl RUN - Config Driven
+        working-directory: ./tests/e2e/playwright-cucumberjs
+        run: |
+          npm ci --production
+          ../../../saucectl run
+
+  windows-doctor:
+    needs: build
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Download saucectl binary
+        uses: actions/download-artifact@v3
+        with:
+          name: saucectlbin
+
+      - name: saucectl doctor
+        run: |
+          ./saucectl.exe doctor

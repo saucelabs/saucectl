@@ -15,7 +15,7 @@ build-%:
 
 #lint: @ Run the linter
 lint:
-	golint ./...
+	golangci-lint run
 
 #format: @ Format code with gofmt
 format:
@@ -28,7 +28,8 @@ test:
 #coverage: @ Run test and check coverage
 coverage:
 	go test -coverprofile=coverage.out ./...
-	goverreport -sort=block -order=desc -threshold=40
+	go tool cover -func=coverage.out
+	@rm coverage.out
 
 #playwright-ci: @ Run tests against playwright in CI mode
 playwright-ci: build-linux
@@ -45,3 +46,11 @@ testcafe-ci: build-linux
 #cypress-ci: @ Run tests against cypress in CI mode
 cypress-ci: build-linux
 	docker run --name cypress-ci -e "CI=true" -v $(shell pwd):/home/gitty/ -w "/home/gitty" --rm saucelabs/stt-cypress-mocha-node:latest "/home/gitty/saucectl" run -c ./.sauce/cypress.yml --verbose
+
+#schema: @ Build the json schema
+schema:
+	$(eval INPUT_SCHEMA := $(shell pwd)/api/global.schema.json)
+	$(eval OUTPUT_SCHEMA := $(shell pwd)/api/saucectl.schema.json)
+	pushd scripts/json-schema-bundler/ && \
+	npm run bundle -- -s $(INPUT_SCHEMA) -o $(OUTPUT_SCHEMA) && \
+	popd

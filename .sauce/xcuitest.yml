@@ -1,0 +1,51 @@
+apiVersion: v1alpha
+kind: xcuitest
+sauce:
+  region: us-west-1
+  concurrency: 1
+  retries: 2
+  metadata:
+    tags:
+      - e2e
+      - release team
+      - other tag
+    build: Release $CI_COMMIT_SHORT_SHA
+
+defaults:
+  timeout: 5m
+
+xcuitest:
+  app: ./tests/e2e/xcuitest/SauceLabs.Mobile.Sample.XCUITest.App.ipa
+  testApp: ./tests/e2e/xcuitest/SwagLabsMobileAppUITests-Runner.ipa
+
+suites:
+  - name: "saucy xcuitest"
+    testOptions:
+      class:
+        - "SwagLabsMobileAppUITests.LoginTests/testSuccessfulLogin"
+      notClass:
+        - "SwagLabsMobileAppUITests.SwagLabsFlow/testCompleteFlow"
+    devices:
+      # If set, only device by ID will be queried.
+      #- id: <rdc_device_id>
+      - name: "iPhone.*"
+        options:
+          # If set, only devices with a SIM card will be queried.
+          carrierConnectivity: false
+          # Possible values [ANY,PHONE,TABLET]
+          deviceType: PHONE
+          # If set, only private devices will be queried.
+          private: false
+
+artifacts:
+  download:
+    when: always
+    match:
+      - junit.xml
+      - xcuitest.log
+    directory: ./artifacts/
+
+notifications:
+  slack:
+    channels: ["devx-slack-notifications"]
+    send: always # possible values [always,fail,never,pass]

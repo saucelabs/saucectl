@@ -13,6 +13,10 @@ import (
 	"strings"
 	"time"
 
+	specs "github.com/opencontainers/image-spec/specs-go/v1"
+
+	"github.com/saucelabs/saucectl/internal/version"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -63,7 +67,7 @@ type CommonAPIClient interface {
 	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
 	ImageList(ctx context.Context, options types.ImageListOptions) ([]types.ImageSummary, error)
 	ImagePull(ctx context.Context, ref string, options types.ImagePullOptions) (io.ReadCloser, error)
-	ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (container.ContainerCreateCreatedBody, error)
+	ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, platform *specs.Platform, containerName string) (container.ContainerCreateCreatedBody, error)
 	ContainerStart(ctx context.Context, containerID string, options types.ContainerStartOptions) error
 	ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error)
 	CopyToContainer(ctx context.Context, container, path string, content io.Reader, options types.CopyToContainerOptions) error
@@ -108,6 +112,33 @@ func (handler *Handler) IsInstalled() bool {
 		log.Err(err).Msg("Unable to reach out to docker.")
 	}
 	return err == nil
+}
+
+// IsLaunchable checks if the given image is launchable by spawning a container and cleaning it up right after.
+func (handler *Handler) IsLaunchable(image string) error {
+	hostConfig := &container.HostConfig{}
+	networkConfig := &network.NetworkingConfig{}
+	containerConfig := &container.Config{
+		Image: image,
+	}
+
+	con, err := handler.client.ContainerCreate(context.Background(), containerConfig, hostConfig, networkConfig, nil, "")
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		if con.ID != "" {
+			_ = handler.ContainerStop(context.Background(), con.ID)
+			_ = handler.ContainerRemove(context.Background(), con.ID)
+		}
+	}()
+
+	if err := handler.client.ContainerStart(context.Background(), con.ID, types.ContainerStartOptions{}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // HasBaseImage checks if base image is installed
@@ -218,7 +249,7 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 			ReadOnly:    false,
 			Consistency: mount.ConsistencyDefault,
 		})
-		log.Info().Str("from", options.RootDir).Str("to", pDir).Str("suite", options.SuiteName).
+		log.Info().Str("from", options.RootDir).Str("to", pDir).Str("suite", options.DisplayName).
 			Msg("File mounted")
 	}
 
@@ -237,15 +268,20 @@ func (handler *Handler) StartContainer(ctx context.Context, options containerSta
 		Env: []string{
 			fmt.Sprintf("SAUCE_USERNAME=%s", username),
 			fmt.Sprintf("SAUCE_ACCESS_KEY=%s", accessKey),
+			fmt.Sprintf("SAUCE_SAUCECTL_VERSION=%s", version.Version),
 		},
 	}
 
-	container, err := handler.client.ContainerCreate(ctx, containerConfig, hostConfig, networkConfig, "")
+	for k, v := range options.Environment {
+		containerConfig.Env = append(containerConfig.Env, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	container, err := handler.client.ContainerCreate(ctx, containerConfig, hostConfig, networkConfig, nil, "")
 	if err != nil {
 		return nil, err
 	}
 
-	log.Info().Str("img", options.Docker.Image).Str("id", container.ID[:12]).Str("suite", options.SuiteName).Msg("Starting container")
+	log.Info().Str("img", options.Docker.Image).Str("id", container.ID[:12]).Str("suite", options.DisplayName).Msg("Starting container")
 	if err := handler.client.ContainerStart(ctx, container.ID, types.ContainerStartOptions{}); err != nil {
 		return nil, err
 	}
@@ -366,20 +402,11 @@ func (handler *Handler) CopyFromContainer(ctx context.Context, srcContainerID st
 }
 
 // Execute runs the test in the Docker container and attaches to its stdout
-func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd []string, env map[string]string) (*types.IDResponse, *types.HijackedResponse, error) {
+func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd []string) (*types.IDResponse, *types.HijackedResponse, error) {
 	execConfig := types.ExecConfig{
 		Cmd:          cmd,
 		AttachStdout: true,
 		AttachStderr: true,
-	}
-
-	// Set env vars for a particular suite
-	if len(env) > 0 {
-		envVars := []string{}
-		for k, v := range env {
-			envVars = append(envVars, k+"="+v)
-		}
-		execConfig.Env = envVars
 	}
 
 	createResp, err := handler.client.ContainerExecCreate(ctx, srcContainerID, execConfig)
@@ -395,11 +422,11 @@ func (handler *Handler) Execute(ctx context.Context, srcContainerID string, cmd 
 }
 
 // ExecuteAttach runs the cmd test in the Docker container and catch the given stream to a string.
-func (handler *Handler) ExecuteAttach(ctx context.Context, containerID string, cmd []string, env map[string]string) (int, string, error) {
+func (handler *Handler) ExecuteAttach(ctx context.Context, containerID string, cmd []string) (int, string, error) {
 	var in io.ReadCloser
 	var out bytes.Buffer
 
-	createResp, attachResp, err := handler.Execute(ctx, containerID, cmd, env)
+	createResp, attachResp, err := handler.Execute(ctx, containerID, cmd)
 	if err != nil {
 		return 1, "", err
 	}
@@ -451,19 +478,31 @@ func (handler *Handler) ContainerRemove(ctx context.Context, srcContainerID stri
 
 // ProjectDir returns the project directory as is configured for the given image.
 func (handler *Handler) ProjectDir(ctx context.Context, imageID string) (string, error) {
+	// The image can tell us via a label where saucectl should mount the project files.
+	// We default to the working dir of the container as the default mounting target.
+	return handler.getImageLabel(ctx, imageID, "com.saucelabs.project-dir")
+}
+
+func (handler *Handler) getImageLabel(ctx context.Context, imageID string, label string) (string, error) {
 	ii, _, err := handler.client.ImageInspectWithRaw(ctx, imageID)
 	if err != nil {
 		return "", err
 	}
 
-	// The image can tell us via a label where saucectl should mount the project files.
-	// We default to the working dir of the container as the default mounting target.
-	p := ii.Config.WorkingDir
-	if v := ii.Config.Labels["com.saucelabs.project-dir"]; v != "" {
-		p = v
+	return ii.Config.Labels[label], nil
+}
+
+// GetBrowserVersion gets the given browser's version from an image's labels
+func (handler *Handler) GetBrowserVersion(ctx context.Context, imageID string, browser string) string {
+	label := fmt.Sprintf("com.saucelabs.%s-version", browser)
+	val, _ := handler.getImageLabel(ctx, imageID, label)
+	if val == "" {
+		// fallback to old label
+		label = fmt.Sprintf("selenium_%s_version", browser)
+		val, _ = handler.getImageLabel(ctx, imageID, label)
 	}
 
-	return p, nil
+	return val
 }
 
 // JobInfoFile returns the file containing the job details url for the given image.

@@ -3,10 +3,10 @@ package docker
 import (
 	"context"
 
-	"github.com/saucelabs/saucectl/internal/download"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
+	"github.com/saucelabs/saucectl/internal/report"
 )
 
 // PuppeterRunner represents the docker implementation of a test runner.
@@ -16,7 +16,7 @@ type PuppeterRunner struct {
 }
 
 // NewPuppeteer creates a new PuppeterRunner instance.
-func NewPuppeteer(c puppeteer.Project, ms framework.MetadataService, wr job.Writer, dl download.ArtifactDownloader) (*PuppeterRunner, error) {
+func NewPuppeteer(c puppeteer.Project, ms framework.MetadataService, wr job.Writer, jr job.Reader, dl job.ArtifactDownloader, reps []report.Reporter) (*PuppeterRunner, error) {
 	r := PuppeterRunner{
 		Project: c,
 		ContainerRunner: ContainerRunner{
@@ -26,12 +26,16 @@ func NewPuppeteer(c puppeteer.Project, ms framework.MetadataService, wr job.Writ
 				Name:    c.Kind,
 				Version: c.Puppeteer.Version,
 			},
-			FrameworkMeta:     ms,
-			ShowConsoleLog:    c.ShowConsoleLog,
-			JobWriter:         wr,
-			ArtfactDownloader: dl,
+			FrameworkMeta:          ms,
+			ShowConsoleLog:         c.ShowConsoleLog,
+			JobWriter:              wr,
+			JobReader:              jr,
+			ArtfactDownloader:      dl,
+			Reporters:              reps,
+			MetadataSearchStrategy: framework.NewSearchStrategy(c.Puppeteer.Version, c.RootDir),
 		},
 	}
+
 	var err error
 	r.docker, err = Create()
 	if err != nil {
@@ -61,11 +65,15 @@ func (r *PuppeterRunner) RunProject() (int, error) {
 				Docker:         r.Project.Docker,
 				BeforeExec:     r.Project.BeforeExec,
 				Project:        r.Project,
+				Browser:        suite.Browser,
+				DisplayName:    suite.Name,
 				SuiteName:      suite.Name,
 				Environment:    suite.Env,
 				RootDir:        r.Project.RootDir,
 				Sauceignore:    r.Project.Sauce.Sauceignore,
 				ConfigFilePath: r.Project.ConfigFilePath,
+				CLIFlags:       r.Project.CLIFlags,
+				Timeout:        suite.Timeout,
 			}
 		}
 		close(containerOpts)

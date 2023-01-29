@@ -2,20 +2,23 @@ apiVersion: v1alpha
 kind: espresso
 sauce:
   region: us-west-1
-  concurrency: 10 # Controls how many suites are executed at the same time (sauce test env only).
+  concurrency: 10
   metadata:
-    name: Testing Espresso Support
     tags:
       - e2e
-      - release team
-      - other tag
-  build: Release $CI_COMMIT_SHORT_SHA
+    build: "$BUILD_ID"
+defaults:
+  timeout: 5m
 espresso:
-  app: ./tests/apps/calc.apk
-  testApp: ./tests/apps/calc-success.apk
+  app: ./tests/e2e/espresso/calc.apk
+  testApp: ./tests/e2e/espresso/calc-success.apk
 suites:
   - name: "saucy barista"
-    devices:
+    testOptions:
+      class:
+        - com.example.android.testing.androidjunitrunnersample.CalculatorAddParameterizedTest
+        - com.example.android.testing.androidjunitrunnersample.CalculatorInstrumentationTest
+    emulators:
       - name: "Android GoogleApi Emulator"
         orientation: portrait
         platformVersions:
@@ -24,13 +27,14 @@ suites:
       - name: "Google Pixel C GoogleAPI Emulator"
         platformVersions:
           - "8.1"
-        testOptions:
-          class:
-            - com.example.android.testing.androidjunitrunnersample.CalculatorAddParameterizedTest
-            - com.example.android.testing.androidjunitrunnersample.CalculatorInstrumentationTest
 artifacts:
   download:
     when: always
     match:
-      - console.log
+      - junit.xml
     directory: ./artifacts/
+
+notifications:
+  slack:
+    channels: ["devx-slack-notifications"]
+    send: always # possible values [always,fail,never,pass]

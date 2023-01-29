@@ -3,6 +3,7 @@ package mocks
 import (
 	"context"
 	"errors"
+	specs "github.com/opencontainers/image-spec/specs-go/v1"
 	"io"
 	"time"
 
@@ -83,7 +84,7 @@ func (fc *FakeClient) ImagePull(ctx context.Context, ref string, options types.I
 }
 
 // ContainerCreate mock function
-func (fc *FakeClient) ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, containerName string) (container.ContainerCreateCreatedBody, error) {
+func (fc *FakeClient) ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, platform *specs.Platform, containerName string) (container.ContainerCreateCreatedBody, error) {
 	if fc.ContainerCreateSuccess {
 		return container.ContainerCreateCreatedBody{
 			ID: "fake-container-id",

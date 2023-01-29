@@ -108,7 +108,7 @@ It is possible that the code base does not currently comply with these guideline
 The rules:
 
 1. All code should be formatted with `gofmt -s`.
-2. All code should pass the default levels of [`golint`](https://github.com/golang/lint).
+2. All code should pass the default levels of [`go vet`](https://pkg.go.dev/cmd/vet).
 3. All code should follow the guidelines covered in [Effective Go](http://golang.org/doc/effective_go.html) and [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments).
 4. Comment the code. Tell us the why, the history and the context.
 5. Document _all_ declarations and methods, even private ones. Declare expectations, caveats and anything else that may be important. If a type gets exported, having the comments already there will ensure it's ready.

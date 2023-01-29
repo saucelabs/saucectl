@@ -31,8 +31,9 @@ func TestZipper_Add(t *testing.T) {
 	defer os.Remove(sauceignoreOut.Name())
 
 	type fields struct {
-		W *zip.Writer
-		M sauceignore.Matcher
+		W       *zip.Writer
+		M       sauceignore.Matcher
+		ZipFile *os.File
 	}
 	type args struct {
 		src     string
@@ -45,13 +46,15 @@ func TestZipper_Add(t *testing.T) {
 		args      args
 		wantErr   bool
 		wantFiles []string
+		wantCount int
 	}{
 		{
 			name:      "zip it up",
-			fields:    fields{W: zip.NewWriter(out), M: sauceignore.NewMatcher([]sauceignore.Pattern{})},
+			fields:    fields{W: zip.NewWriter(out), M: sauceignore.NewMatcher([]sauceignore.Pattern{}), ZipFile: out},
 			args:      args{dir.Path(), "", out.Name()},
 			wantErr:   false,
 			wantFiles: []string{"/screenshot1.png", "/some.foo.js", "/some.other.bar.js"},
+			wantCount: 3,
 		},
 		{
 			name: "zip some.other.bar.js and skip some.foo.js file and screenshots folder",
@@ -60,19 +63,24 @@ func TestZipper_Add(t *testing.T) {
 				M: sauceignore.NewMatcher([]sauceignore.Pattern{
 					sauceignore.NewPattern("some.foo.js"),
 					sauceignore.NewPattern("screenshots/"),
-				})},
+				}),
+				ZipFile: sauceignoreOut,
+			},
 			args:      args{dir.Path(), "", sauceignoreOut.Name()},
 			wantErr:   false,
 			wantFiles: []string{"/some.other.bar.js"},
+			wantCount: 1,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			z := &Writer{
-				W: tt.fields.W,
-				M: tt.fields.M,
+				W:       tt.fields.W,
+				M:       tt.fields.M,
+				ZipFile: tt.fields.ZipFile,
 			}
-			if err := z.Add(tt.args.src, tt.args.dst); (err != nil) != tt.wantErr {
+			fileCount, err := z.Add(tt.args.src, tt.args.dst)
+			if (err != nil) != tt.wantErr {
 				t.Errorf("Add() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if err := z.Close(); err != nil {
@@ -89,6 +97,10 @@ func TestZipper_Add(t *testing.T) {
 					t.Errorf("got %v, want %v", f.Name, tt.wantFiles[i])
 				}
 			}
+			if tt.wantCount != fileCount {
+				t.Errorf("got %v, want %v", fileCount, tt.wantCount)
+			}
+
 		})
 	}
 }

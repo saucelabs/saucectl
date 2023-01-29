@@ -14,34 +14,43 @@ builds:
       - windows
       - darwin
     ldflags:
-      - -X github.com/saucelabs/saucectl/cli/version.Version={{.Version}}
-      - -X github.com/saucelabs/saucectl/cli/version.GitCommit={{.Commit}}
-      - -X github.com/saucelabs/saucectl/cli/setup.SentryDSN={{.Env.SENTRY_DSN}}
+      - -X github.com/saucelabs/saucectl/internal/version.Version={{.Version}}
+      - -X github.com/saucelabs/saucectl/internal/version.GitCommit={{.Commit}}
+      - -X github.com/saucelabs/saucectl/internal/setup.SegmentWriteKey={{.Env.SEGMENT_WRITE_KEY}}
+      - -X github.com/saucelabs/saucectl/internal/setup.BackTraceEndpoint={{.Env.BACKTRACE_ENDPOINT}}
+      - -X github.com/saucelabs/saucectl/internal/setup.BackTraceToken={{.Env.BACKTRACE_TOKEN}}
+    ignore:
+      - goos: windows
+        goarch: arm64
 brews:
   - tap:
       owner: saucelabs
       name: homebrew-saucectl
     folder: Formula
     test: |
-      system "#{bin}/goreleaser -v"
+      system "#{bin}/goreleaser", "-v"
     name: saucectl
     homepage: "https://saucelabs.com/"
-    description: "Saucectl is a command-line interface to run testrunner tests"
+    description: "Test orchestration with Sauce Labs"
     commit_author:
       name: devx-sauce-bot
       email: devx.bot@saucelabs.com
 archives:
-  - replacements:
-      darwin: mac
-      linux: linux
-      windows: win
-      amd64: 64-bit
-      386: 32-bit
+  - name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_
+      {{- if eq .Os "darwin"}}mac_
+      {{- else if eq .Os "linux" }}linux_
+      {{- else if eq .Os "windows" }}win_
+      {{- else }}{{ .Os }}_{{ end }}
+      {{- if eq .Arch "amd64" }}64-bit
+      {{- else if eq .Arch "386" }}32-bit
+      {{- else }}{{ .Arch }}{{ end }}
     format_overrides:
       - goos: windows
         format: zip
     files:
       - LICENSE
+    rlcp: true
 checksum:
   name_template: 'checksums.txt'
 snapshot:

@@ -2,20 +2,23 @@ package sauceignore
 
 import (
 	"bufio"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"os"
-	"path/filepath"
 	"strings"
+
+	"github.com/saucelabs/saucectl/internal/msg"
 
 	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
 )
 
 const commentPrefix = "#"
 
-// patternsFromFile reads .sauceignore file and creates ignore patters if .sauceignore file is exists.
-func patternsFromFile(path string) ([]Pattern, error) {
-	fPath := filepath.Join(path)
-	f, err := os.Open(fPath)
+// PatternsFromFile reads .sauceignore file and creates ignore patters if .sauceignore file is exists.
+func PatternsFromFile(path string) ([]Pattern, error) {
+	if path == "" {
+		return []Pattern{}, nil
+	}
+
+	f, err := os.Open(path)
 	if err != nil {
 		// In case .sauceignore file doesn't exists.
 		if os.IsNotExist(err) {
@@ -79,10 +82,23 @@ func NewMatcher(ps []Pattern) Matcher {
 
 // NewMatcherFromFile constructs a new matcher from file.
 func NewMatcherFromFile(path string) (Matcher, error) {
-	ps, err := patternsFromFile(path)
+	ps, err := PatternsFromFile(path)
 	if err != nil {
 		return nil, err
 	}
 
 	return NewMatcher(ps), nil
+}
+
+// Dedupe takes a list of patterns and returns them back sans any duplicates.
+func Dedupe(patterns []Pattern) []Pattern {
+	hash := make(map[Pattern]struct{})
+	var list []Pattern
+	for _, p := range patterns {
+		if _, ok := hash[p]; !ok {
+			hash[p] = struct{}{}
+			list = append(list, p)
+		}
+	}
+	return list
 }

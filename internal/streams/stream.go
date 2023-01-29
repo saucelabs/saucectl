@@ -7,7 +7,7 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 	"io"
 
-	"github.com/docker/docker/pkg/term"
+	"github.com/moby/term"
 )
 
 // Streams is an interface which exposes the standard input and output streams

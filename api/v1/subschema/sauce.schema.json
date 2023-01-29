@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "title": "saucectl sauce specific schema",
+  "description": "Subschema for sauce specific settings",
+  "type": "object",
+  "properties": {
+    "sauce": {
+      "description": "All settings related to how tests are run and identified in the Sauce Labs platform.",
+      "type": "object",
+      "properties": {
+        "concurrency": {
+          "description": "Sets the maximum number of suites to execute at the same time. Excess suites are queued and run in order as each suite completes.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "metadata": {
+          "description": "The set of properties that allows you to provide additional information about your project that helps you distinguish it in the various environments in which it is used and reviewed.",
+          "type": "object",
+          "properties": {
+            "build": {
+              "description": "Sauce Labs can aggregate all jobs under one view based on their association with a build.",
+              "type": "string"
+            },
+            "tags": {
+              "description": "Tag your jobs so you can find them easier in Sauce Labs.",
+              "type": "array"
+            }
+          },
+          "additionalProperties": false
+        },
+        "region": {
+          "description": "Which Sauce Labs data center to target.",
+          "enum": [
+            "us-west-1",
+            "eu-central-1"
+          ]
+        },
+        "sauceignore": {
+          "description": "Path to the .sauceignore file.",
+          "default": ".sauceignore"
+        },
+        "tunnel": {
+          "description": "SauceCTL supports using Sauce Connect to establish a secure connection when running your tests on Sauce Labs. To do so, launch a tunnel; then provide the identifier in this property.",
+          "properties": {
+            "name": {
+              "description": "The tunnel name.",
+              "type": "string"
+            },
+            "owner": {
+              "description": "The owner (username) of the tunnel. Must be specified if the user that created the tunnel differs from the user that is running the tests.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        "retries": {
+          "description": "The number of times to retry a failing suite.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "visibility": {
+          "description": "Set the visibility level of test results for suites run on Sauce Labs.",
+          "default": "team",
+          "type": "string",
+          "oneOf": [
+            { "const": "public", "title": "Accessible to everyone." },
+            { "const": "public restricted", "title": "Share your test's results page and video, but keeps the logs only for you." },
+            { "const": "share", "title": "Only accessible to people with a valid link." },
+            { "const": "team", "title": "Only accessible to people under the same root account as you." },
+            { "const": "private", "title": "Only you (the owner) will be able to view assets and test results page." }
+          ]
+        },
+        "launchOrder": {
+          "description": "Control starting order of suites. The default is the order in which suites are written in the config file.",
+          "type": "string",
+          "oneOf": [
+            { "const": "fail rate", "title": "Suites that historically have the highest failure rate start first."}
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

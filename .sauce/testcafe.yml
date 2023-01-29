@@ -1,52 +1,57 @@
 apiVersion: v1alpha
 kind: testcafe
-defaults:
-  mode: sauce
 sauce:
   region: us-west-1
-  concurrency: 1 # Controls how many suites are executed at the same time (sauce test env only).
+  concurrency: 10
   metadata:
-    name: Testing Testcafe Support
     tags:
       - e2e
-      - release team
-      - other tag
-    build: Release $CI_COMMIT_SHORT_SHA
-suites:
-  - name: "saucy test in docker"
-    mode: docker
-    browserName: "chrome" # Although Testcafe supports triggering one test in multiple browsers, it'd better here to split them into every suite to indicate each suite has its own test point.
-    src:
-      - "**/*.test.js" # test files glob
-    screenshots:
-      takeOnFails: true
-      fullPage: true
-    env:
-      hello: world
-    speed: 1
-  - name: "saucy test in sauce"
-    mode: sauce
-    browserName: "chrome" # Although Testcafe supports triggering one test in multiple browsers, it'd better here to split them into every suite to indicate each suite has its own test point.
-    src:
-      - "**/*.test.js" # test files glob
-    screenshots:
-      takeOnFails: true
-      fullPage: true
-    platformName: "Windows 10"
-    env:
-      hello: world
-    speed: 1
-
+    build: "$BUILD_ID"
+defaults:
+  timeout: 5m
 docker:
-  # fileTransfer controls how test files are transferred to the docker container before tests are run (choice: mount|copy).
-  # `mount` will mount files and folders into the container. Changes to these files and folders will be reflected on the
-  # host as well (and vice versa). However, you may run into permission issues depending on your docker or host settings.
-  # In this case the usage of `copy` is advised. `copy` will simply copy files and folders into the container.
-  fileTransfer: mount # Defaults to `mount`. Choose between mount|copy.
-# Docker image and tag are both determined automatically based on your configuration. However, it's possible to set your
-# own custom image or a different tag.
-#image: saucelabs/stt-testcafe-node:v0.3.0
-
+  fileTransfer: copy
 testcafe:
-  projectPath: tests/e2e/testcafe
-  version: 1.11.0
+  version: 1.18.5
+rootDir: tests/e2e/testcafe/
+suites:
+  - name: Firefox in docker
+    mode: docker
+    browserName: firefox
+    src:
+      - "*.test.js"
+
+  - name: Chrome in sauce
+    browserName: chrome
+    src:
+      - "*.test.js"
+    platformName: "macOS 11.00"
+    compilerOptions:
+      typescript:
+        options:
+          allowUnreachableCode: true
+
+  - name: Firefox in sauce
+    browserName: firefox
+    src:
+      - "*.test.js"
+    platformName: "Windows 10"
+
+  - name: iOS Test
+    browserName: safari
+    src:
+      - "*.test.js"
+    simulators:
+      - name: iPhone 12 Simulator
+        platformName: iOS
+        platformVersions:
+          - "14.3"
+      - name: iPad mini (5th generation) Simulator
+        platformName: iOS
+        platformVersions:
+          - "14.3"
+
+notifications:
+  slack:
+    channels: ["devx-slack-notifications"]
+    send: always # possible values [always,fail,never,pass]
