@@ -36,9 +36,14 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 	}
 
 	if m.IsDeprecated() {
-		deprecationMessage = r.deprecationMessage(testcafe.Kind, r.Project.Testcafe.Version)
+		deprecationMessage = r.deprecationMessage(testcafe.Kind, r.Project.Testcafe.Version, m.RemovalDate)
 		fmt.Print(deprecationMessage)
 	}
+	if m.IsFlaggedForRemoval() {
+		deprecationMessage = r.flaggedForRemovalMessage(testcafe.Kind, r.Project.Testcafe.Version)
+		fmt.Print(deprecationMessage)
+	}
+
 	for _, s := range r.Project.Suites {
 		if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
 			msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))

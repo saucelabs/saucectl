@@ -42,7 +42,11 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 	}
 
 	if m.IsDeprecated() {
-		deprecationMessage = r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version)
+		deprecationMessage = r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version, m.RemovalDate)
+		fmt.Print(deprecationMessage)
+	}
+	if m.IsFlaggedForRemoval() {
+		deprecationMessage = r.flaggedForRemovalMessage(playwright.Kind, r.Project.Playwright.Version)
 		fmt.Print(deprecationMessage)
 	}
 

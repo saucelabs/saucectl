@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/cypress/suite"
@@ -36,7 +35,11 @@ func (r *CypressRunner) RunProject() (int, error) {
 	}
 
 	if m.IsDeprecated() {
-		deprecationMessage = r.deprecationMessage(cypress.Kind, cyVersion)
+		deprecationMessage = r.deprecationMessage(cypress.Kind, cyVersion, m.RemovalDate)
+		fmt.Print(deprecationMessage)
+	}
+	if m.IsFlaggedForRemoval() {
+		deprecationMessage = r.flaggedForRemovalMessage(cypress.Kind, cyVersion)
 		fmt.Print(deprecationMessage)
 	}
 
