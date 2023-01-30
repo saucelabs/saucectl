@@ -957,7 +957,7 @@ func (r *CloudRunner) getAvailableVersionsMessage(frameworkName string) string {
 	}
 	m := fmt.Sprintf("Available versions of %s are:\n", frameworkName)
 	for _, v := range versions {
-		if !v.Deprecated {
+		if !v.IsDeprecated() {
 			m += fmt.Sprintf(" - %s\n", v.FrameworkVersion)
 		}
 	}

@@ -167,7 +167,7 @@ func (c *Client) Search(ctx context.Context, opts framework.SearchOptions) (fram
 		FrameworkName:      resp.Name,
 		FrameworkVersion:   resp.Version,
 		EOLDate:            resp.EOLDate,
-		RemovalDate:        resp.EOLDate,
+		RemovalDate:        resp.RemovalDate,
 		DockerImage:        resp.Runner.DockerImage,
 		GitRelease:         resp.Runner.GitRelease,
 		CloudRunnerVersion: resp.Runner.CloudRunnerVersion,
