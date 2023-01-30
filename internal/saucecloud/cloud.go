@@ -945,10 +945,12 @@ func (r *CloudRunner) deprecationMessage(frameworkName string, frameworkVersion 
 
 func (r *CloudRunner) flaggedForRemovalMessage(frameworkName string, frameworkVersion string) string {
 	return fmt.Sprintf(
-		"%s%s%s",
-		color.RedString(fmt.Sprintf("\nVersion %s for %s is UNSUPPORTED and can be removed at anytime !\n\n", frameworkVersion, frameworkName)),
-		color.RedString(fmt.Sprintf("You MUST update your version of %s to a more recent one.\n", frameworkName),
-			r.getAvailableVersionsMessage(frameworkName)),
+		"%s%s%s%s%s",
+		color.RedString("\n\n************************************* WARNING *************************************\n"),
+		color.RedString(fmt.Sprintf("\nVersion %s for %s is UNSUPPORTED and can be removed at anytime !\n", frameworkVersion, frameworkName)),
+		color.RedString(fmt.Sprintf("You MUST update your version of %s to a more recent one.\n", frameworkName)),
+		color.RedString("\n************************************* WARNING *************************************\n\n"),
+		r.getAvailableVersionsMessage(frameworkName),
 	)
 }
 
@@ -968,7 +970,7 @@ func (r *CloudRunner) getAvailableVersionsMessage(frameworkName string) string {
 	}
 	m := fmt.Sprintf("Available versions of %s are:\n", frameworkName)
 	for _, v := range versions {
-		if !v.IsDeprecated() {
+		if !v.IsDeprecated() && !v.IsFlaggedForRemoval() {
 			m += fmt.Sprintf(" - %s\n", v.FrameworkVersion)
 		}
 	}

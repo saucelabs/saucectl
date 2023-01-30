@@ -44,14 +44,14 @@ type Metadata struct {
 }
 
 func (m *Metadata) IsDeprecated() bool {
-	if time.Now().Before(m.EOLDate) && !m.IsFlaggedForRemoval() {
+	if time.Now().After(m.EOLDate) && !m.IsFlaggedForRemoval() {
 		return true
 	}
 	return false
 }
 
 func (m *Metadata) IsFlaggedForRemoval() bool {
-	return time.Now().Before(m.RemovalDate)
+	return time.Now().After(m.RemovalDate)
 }
 
 // Platform represent a supported platform.
