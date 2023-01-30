@@ -933,16 +933,23 @@ func (r *CloudRunner) uploadCLIFlags(jobID string, realDevice bool, content inte
 }
 
 func (r *CloudRunner) deprecationMessage(frameworkName string, frameworkVersion string, removalDate time.Time) string {
+	formattedDate := removalDate.Format("Jan 02, 2006")
+
 	return fmt.Sprintf(
 		"%s%s%s",
-		color.RedString(fmt.Sprintf("\nVersion %s for %s is deprecated and will be removed during our next framework release cycle !\n\n", frameworkVersion, frameworkName)),
+		color.RedString(fmt.Sprintf("\nVersion %s for %s is deprecated and will be removed on %s!\n\n", frameworkVersion, frameworkName, formattedDate)),
 		fmt.Sprintf("You should update your version of %s to a more recent one.\n", frameworkName),
 		r.getAvailableVersionsMessage(frameworkName),
 	)
 }
 
 func (r *CloudRunner) flaggedForRemovalMessage(frameworkName string, frameworkVersion string) string {
-	return ""
+	return fmt.Sprintf(
+		"%s%s%s",
+		color.RedString(fmt.Sprintf("\nVersion %s for %s is UNSUPPORTED and can be removed at anytime !\n\n", frameworkVersion, frameworkName)),
+		color.RedString(fmt.Sprintf("You MUST update your version of %s to a more recent one.\n", frameworkName),
+			r.getAvailableVersionsMessage(frameworkName)),
+	)
 }
 
 func (r *CloudRunner) logFrameworkError(err error) {
