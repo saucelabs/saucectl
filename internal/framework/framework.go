@@ -5,6 +5,7 @@ import (
 	"errors"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/saucelabs/saucectl/internal/msg"
 )
@@ -33,7 +34,8 @@ type SearchOptions struct {
 type Metadata struct {
 	FrameworkName      string
 	FrameworkVersion   string
-	Deprecated         bool
+	EOLDate            time.Time
+	RemovalDate        time.Time
 	DockerImage        string
 	GitRelease         string
 	Platforms          []Platform

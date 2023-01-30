@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -273,6 +274,8 @@ func TestClient_Search(t *testing.T) {
 			want: framework.Metadata{
 				FrameworkName:    "testycles",
 				FrameworkVersion: "1",
+				EOLDate:          time.Date(2023, 01, 01, 0, 0, 0, 0, time.UTC),
+				RemovalDate:      time.Date(2023, 04, 01, 0, 0, 0, 0, time.UTC),
 				DockerImage:      "sauce/testycles:v1+v0.1.0",
 				GitRelease:       "",
 			},
@@ -280,8 +283,10 @@ func TestClient_Search(t *testing.T) {
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(200)
 				err := json.NewEncoder(w).Encode(FrameworkResponse{
-					Name:    "testycles",
-					Version: "1",
+					Name:        "testycles",
+					Version:     "1",
+					EOLDate:     time.Date(2023, 01, 01, 0, 0, 0, 0, time.UTC),
+					RemovalDate: time.Date(2023, 04, 01, 0, 0, 0, 0, time.UTC),
 					Runner: runner{
 						DockerImage: "sauce/testycles:v1+v0.1.0",
 					},
@@ -486,7 +491,7 @@ func TestClient_Versions(t *testing.T) {
 		switch r.URL.Path {
 		case "/v1/testcomposer/frameworks/cypress/versions":
 			w.WriteHeader(http.StatusOK)
-			_, err = w.Write([]byte(`[{"name":"cypress","version":"7.3.0","deprecated":false,"runner":{"cloudRunnerVersion":"","dockerImage":"saucelabs/stt-cypress-mocha-node:v7.1.1","gitRelease":"saucelabs/sauce-cypress-runner:v7.1.1"},"platforms":[{"name":"windows 10","browsers":["googlechrome","firefox","microsoftedge"]}]},{"name":"cypress","version":"7.1.0","deprecated":true,"runner":{"cloudRunnerVersion":"","dockerImage":"saucelabs/stt-cypress-mocha-node:v7.0.6","gitRelease":"saucelabs/sauce-cypress-runner:v7.0.6"},"platforms":[{"name":"windows 10","browsers":["googlechrome","firefox","microsoftedge"]}]},{"name":"cypress","version":"6.6.0","deprecated":true,"runner":{"cloudRunnerVersion":"","dockerImage":"saucelabs/stt-cypress-mocha-node:v6.0.2","gitRelease":"saucelabs/sauce-cypress-runner:v6.0.2"},"platforms":[{"name":"windows 10","browsers":["googlechrome","firefox","microsoftedge"]}]}]`))
+			_, err = w.Write([]byte(`[{"name":"cypress","version":"7.3.0","eolDate":"2023-01-01T00:00:00Z","removalDate":"2023-04-01T00:00:00Z","runner":{"cloudRunnerVersion":"","dockerImage":"saucelabs/stt-cypress-mocha-node:v7.1.1","gitRelease":"saucelabs/sauce-cypress-runner:v7.1.1"},"platforms":[{"name":"windows 10","browsers":["googlechrome","firefox","microsoftedge"]}]},{"name":"cypress","version":"7.1.0","eolDate":"2023-01-01T00:00:00Z","removalDate":"2023-04-01T00:00:00Z","runner":{"cloudRunnerVersion":"","dockerImage":"saucelabs/stt-cypress-mocha-node:v7.0.6","gitRelease":"saucelabs/sauce-cypress-runner:v7.0.6"},"platforms":[{"name":"windows 10","browsers":["googlechrome","firefox","microsoftedge"]}]},{"name":"cypress","version":"6.6.0","eolDate":"2023-01-01T00:00:00Z","removalDate":"2023-04-01T00:00:00Z","runner":{"cloudRunnerVersion":"","dockerImage":"saucelabs/stt-cypress-mocha-node:v6.0.2","gitRelease":"saucelabs/sauce-cypress-runner:v6.0.2"},"platforms":[{"name":"windows 10","browsers":["googlechrome","firefox","microsoftedge"]}]}]`))
 		case "/v1/testcomposer/frameworks/non-existent/versions":
 			w.WriteHeader(http.StatusNotFound)
 		default:
@@ -521,7 +526,8 @@ func TestClient_Versions(t *testing.T) {
 				{
 					FrameworkName:    "cypress",
 					FrameworkVersion: "7.3.0",
-					Deprecated:       false,
+					EOLDate:          time.Date(2023, 01, 01, 0, 0, 0, 0, time.UTC),
+					RemovalDate:      time.Date(2023, 04, 01, 0, 0, 0, 0, time.UTC),
 					GitRelease:       "saucelabs/sauce-cypress-runner:v7.1.1",
 					DockerImage:      "saucelabs/stt-cypress-mocha-node:v7.1.1",
 					Platforms: []framework.Platform{
@@ -533,7 +539,8 @@ func TestClient_Versions(t *testing.T) {
 				}, {
 					FrameworkName:    "cypress",
 					FrameworkVersion: "7.1.0",
-					Deprecated:       true,
+					EOLDate:          time.Date(2023, 01, 01, 0, 0, 0, 0, time.UTC),
+					RemovalDate:      time.Date(2023, 04, 01, 0, 0, 0, 0, time.UTC),
 					GitRelease:       "saucelabs/sauce-cypress-runner:v7.0.6",
 					DockerImage:      "saucelabs/stt-cypress-mocha-node:v7.0.6",
 					Platforms: []framework.Platform{
@@ -545,7 +552,8 @@ func TestClient_Versions(t *testing.T) {
 				}, {
 					FrameworkName:    "cypress",
 					FrameworkVersion: "6.6.0",
-					Deprecated:       true,
+					EOLDate:          time.Date(2023, 01, 01, 0, 0, 0, 0, time.UTC),
+					RemovalDate:      time.Date(2023, 04, 01, 0, 0, 0, 0, time.UTC),
 					GitRelease:       "saucelabs/sauce-cypress-runner:v6.0.2",
 					DockerImage:      "saucelabs/stt-cypress-mocha-node:v6.0.2",
 					Platforms: []framework.Platform{
