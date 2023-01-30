@@ -936,9 +936,11 @@ func (r *CloudRunner) deprecationMessage(frameworkName string, frameworkVersion 
 	formattedDate := removalDate.Format("Jan 02, 2006")
 
 	return fmt.Sprintf(
-		"%s%s%s",
-		color.RedString(fmt.Sprintf("\nVersion %s for %s is deprecated and will be removed on %s!\n\n", frameworkVersion, frameworkName, formattedDate)),
+		"%s%s%s%s%s",
+		color.RedString("\n\n************************************* WARNING *************************************\n"),
+		color.RedString(fmt.Sprintf("\nVersion %s for %s is deprecated and will be removed on %s!\n", frameworkVersion, frameworkName, formattedDate)),
 		fmt.Sprintf("You should update your version of %s to a more recent one.\n", frameworkName),
+		color.RedString("\n************************************* WARNING *************************************\n\n"),
 		r.getAvailableVersionsMessage(frameworkName),
 	)
 }
