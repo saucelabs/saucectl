@@ -937,10 +937,10 @@ func (r *CloudRunner) deprecationMessage(frameworkName string, frameworkVersion 
 
 	return fmt.Sprintf(
 		"%s%s%s%s%s",
-		color.RedString("\n\n************************************* WARNING *************************************\n"),
+		color.RedString(fmt.Sprintf("\n\n%s\n", msg.WarningLine)),
 		color.RedString(fmt.Sprintf("\nVersion %s for %s is deprecated and will be removed on %s!\n", frameworkVersion, frameworkName, formattedDate)),
 		fmt.Sprintf("You should update your version of %s to a more recent one.\n", frameworkName),
-		color.RedString("\n************************************* WARNING *************************************\n\n"),
+		color.RedString(fmt.Sprintf("\n%s\n\n", msg.WarningLine)),
 		r.getAvailableVersionsMessage(frameworkName),
 	)
 }
@@ -948,10 +948,10 @@ func (r *CloudRunner) deprecationMessage(frameworkName string, frameworkVersion 
 func (r *CloudRunner) flaggedForRemovalMessage(frameworkName string, frameworkVersion string) string {
 	return fmt.Sprintf(
 		"%s%s%s%s%s",
-		color.RedString("\n\n************************************* WARNING *************************************\n"),
+		color.RedString(fmt.Sprintf("\n\n%s\n", msg.WarningLine)),
 		color.RedString(fmt.Sprintf("\nVersion %s for %s is UNSUPPORTED and can be removed at anytime !\n", frameworkVersion, frameworkName)),
 		color.RedString(fmt.Sprintf("You MUST update your version of %s to a more recent one.\n", frameworkName)),
-		color.RedString("\n************************************* WARNING *************************************\n\n"),
+		color.RedString(fmt.Sprintf("\n%s\n\n", msg.WarningLine)),
 		r.getAvailableVersionsMessage(frameworkName),
 	)
 }

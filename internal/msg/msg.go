@@ -90,6 +90,9 @@ or peruse some of our example repositories:
 // ArchiveFileCountWarning is a warning to the user that their project archive may be unintentionally large.
 const ArchiveFileCountWarning = "The project archive is unusually large which can cause delays in your test execution."
 
+// WarningLine is a line of starts highlighting the WARNING word.
+const WarningLine = "************************************* WARNING *************************************"
+
 // LogArchiveSizeWarning prints out a warning about the project archive size along with
 // suggestions on how to fix it.
 func LogArchiveSizeWarning() {
