@@ -64,6 +64,7 @@ var (
 	insightsTimeout     = 10 * time.Second
 	iamTimeout          = 10 * time.Second
 	apitestingTimeout   = 30 * time.Second
+	imgExecTimeout      = 30 * time.Second
 
 	typeDef config.TypeDef
 
@@ -244,7 +245,7 @@ func preRun() error {
 
 	apitestingClient = apitesting.New("", creds.Username, creds.AccessKey, apitestingTimeout)
 
-	imageRunnerClient = imgexec.New("", creds, apitestingTimeout)
+	imageRunnerClient = imgexec.New("", creds, imgExecTimeout)
 
 	return nil
 }
