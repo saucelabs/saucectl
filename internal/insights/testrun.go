@@ -28,7 +28,7 @@ type TestRun struct {
 	CreationTime time.Time      `json:"creation_time,omitempty"`
 	StartTime    time.Time      `json:"start_time,omitempty"`
 	EndTime      time.Time      `json:"end_time,omitempty"`
-	Duration     int            `json:"duration,omitempty"`
+	Duration     int            `json:"duration"`
 	Browser      string         `json:"browser,omitempty"`
 	Device       string         `json:"device,omitempty"`
 	OS           string         `json:"os,omitempty"`
@@ -110,9 +110,13 @@ func FromJUnit(suites junit.TestSuites, jobID string, jobName string, details De
 					log.Warn().Err(err).Msg("unable to parse date. using time.Now().")
 				}
 			}
-			duration, err := strconv.ParseFloat(ss.Time, 64)
-			if err != nil {
-				log.Warn().Err(err).Msg("unable to parse duration. using 0.")
+
+			duration := float64(0)
+			if ss.Time != "" {
+				duration, err = strconv.ParseFloat(ss.Time, 64)
+				if err != nil {
+					log.Warn().Err(err).Msg("unable to parse duration. using 0.")
+				}
 			}
 			endTime := startDate.Add(time.Duration(duration) * time.Second)
 			var failures []TestRunError
