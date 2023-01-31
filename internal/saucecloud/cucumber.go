@@ -36,7 +36,7 @@ func (r *CucumberRunner) RunProject() (int, error) {
 		r.Project.RunnerVersion = m.CloudRunnerVersion
 	}
 
-	if m.IsDeprecated() {
+	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
 		deprecationMessage = r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version, m.RemovalDate)
 		fmt.Print(deprecationMessage)
 	}

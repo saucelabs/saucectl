@@ -35,7 +35,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		r.Project.RunnerVersion = m.CloudRunnerVersion
 	}
 
-	if m.IsDeprecated() {
+	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
 		deprecationMessage = r.deprecationMessage(testcafe.Kind, r.Project.Testcafe.Version, m.RemovalDate)
 		fmt.Print(deprecationMessage)
 	}

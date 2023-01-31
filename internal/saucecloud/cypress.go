@@ -34,7 +34,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 		r.Project.SetRunnerVersion(m.CloudRunnerVersion)
 	}
 
-	if m.IsDeprecated() {
+	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
 		deprecationMessage = r.deprecationMessage(cypress.Kind, cyVersion, m.RemovalDate)
 		fmt.Print(deprecationMessage)
 	}
