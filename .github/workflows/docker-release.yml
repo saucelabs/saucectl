@@ -17,6 +17,9 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
+      - name: Set env
+        run: |
+          echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Check Docker Version
         run: docker --version
       - name: Log in to Docker Hub
@@ -32,7 +35,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         env:
-          LD_1: -X github.com/saucelabs/saucectl/internal/version.Version=${{ steps.meta.outputs.tags }}
+          LD_1: -X github.com/saucelabs/saucectl/internal/version.Version=${{ env.RELEASE_VERSION }}
           LD_2: -X github.com/saucelabs/saucectl/internal/version.GitCommit=${{ env.GITHUB_SHA }}
           LD_3: -X github.com/saucelabs/saucectl/internal/setup.SegmentWriteKey=${{ secrets.SEGMENT_WRITE_KEY }}
           LD_4: -X github.com/saucelabs/saucectl/internal/setup.BackTraceEndpoint=${{ secrets.BACKTRACE_ENDPOINT }}
@@ -51,4 +54,4 @@ jobs:
       - name: Pull Docker image
         run: docker pull ${{ needs.push_to_registry.outputs.tag }}
       - name: Run Docker image
-        run: docker run --entrypoint "saucectl --version" ${{ needs.push_to_registry.outputs.tag }}
+        run: docker run --entrypoint saucectl ${{ needs.push_to_registry.outputs.tag }}
