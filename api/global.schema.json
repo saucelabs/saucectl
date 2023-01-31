@@ -9,6 +9,7 @@
         "apitest",
         "cypress",
         "espresso",
+        "imagerunner",
         "playwright",
         "puppeteer",
         "puppeteer-replay",
@@ -143,6 +144,18 @@
       },
       "then": {
         "$ref": "v1alpha/framework/playwright-cucumberjs.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "imagerunner"
+          }
+        }
+      },
+      "then": {
+        "$ref": "v1alpha/framework/imagerunner.schema.json"
       }
     }
   ]
