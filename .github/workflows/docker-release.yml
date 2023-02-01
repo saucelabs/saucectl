@@ -48,7 +48,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: LD_FLAGS=${{ env.LD_FLAGS }}
+          build-args: LD_FLAGS="${{ env.LD_1 }} ${{ env.LD_2 }} ${{ env.LD_3 }} ${{ env.LD_4 }} ${{ env.LD_5 }}"
   smoke_test_image:
     name: Smoke test Docker image
     runs-on: ubuntu-latest
