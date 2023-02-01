@@ -37,17 +37,18 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         env:
-          LD_1: -X github.com/saucelabs/saucectl/internal/version.Version=${{ env.RELEASE_VERSION }}
-          LD_2: -X github.com/saucelabs/saucectl/internal/version.GitCommit=${{ env.GITHUB_SHA }}
-          LD_3: -X github.com/saucelabs/saucectl/internal/setup.SegmentWriteKey=${{ secrets.SEGMENT_WRITE_KEY }}
-          LD_4: -X github.com/saucelabs/saucectl/internal/setup.BackTraceEndpoint=${{ secrets.BACKTRACE_ENDPOINT }}
-          LD_5: -X github.com/saucelabs/saucectl/internal/setup.BackTraceToken=${{ secrets.BACKTRACE_TOKEN }}
+          LD_1: -X 'github.com/saucelabs/saucectl/internal/version.Version=${{ env.RELEASE_VERSION }}'
+          LD_2: -X 'github.com/saucelabs/saucectl/internal/version.GitCommit=${{ env.GITHUB_SHA }}'
+          LD_3: -X 'github.com/saucelabs/saucectl/internal/setup.SegmentWriteKey=${{ secrets.SEGMENT_WRITE_KEY }}'
+          LD_4: -X 'github.com/saucelabs/saucectl/internal/setup.BackTraceEndpoint=${{ secrets.BACKTRACE_ENDPOINT }}'
+          LD_5: -X 'github.com/saucelabs/saucectl/internal/setup.BackTraceToken=${{ secrets.BACKTRACE_TOKEN }}'
           LD_FLAGS: ${{ env.LD_1 }} ${{ env.LD_2 }} ${{ env.LD_3 }} ${{ env.LD_4 }} ${{ env.LD_5 }}
         with:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: LD_FLAGS=${{ env.LD_FLAGS }}
   smoke_test_image:
     name: Smoke test Docker image
     runs-on: ubuntu-latest
