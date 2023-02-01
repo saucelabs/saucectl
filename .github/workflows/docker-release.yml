@@ -58,4 +58,4 @@ jobs:
       - name: Run Docker image
         env:
           ENTRYPOINT: saucectl --version
-        run: docker run --entrypoint $ENTRYPOINT ${{ needs.push_to_registry.outputs.tag }}
+        run: docker run --entrypoint '$ENTRYPOINT' ${{ needs.push_to_registry.outputs.tag }}
