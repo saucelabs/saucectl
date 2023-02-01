@@ -932,11 +932,26 @@ func (r *CloudRunner) uploadCLIFlags(jobID string, realDevice bool, content inte
 	}
 }
 
-func (r *CloudRunner) deprecationMessage(frameworkName string, frameworkVersion string) string {
+func (r *CloudRunner) deprecationMessage(frameworkName string, frameworkVersion string, removalDate time.Time) string {
+	formattedDate := removalDate.Format("Jan 02, 2006")
+
 	return fmt.Sprintf(
-		"%s%s%s",
-		color.RedString(fmt.Sprintf("\nVersion %s for %s is deprecated and will be removed during our next framework release cycle !\n\n", frameworkVersion, frameworkName)),
+		"%s%s%s%s%s",
+		color.RedString(fmt.Sprintf("\n\n%s\n", msg.WarningLine)),
+		color.RedString(fmt.Sprintf("\nVersion %s for %s is deprecated and will be removed on %s!\n", frameworkVersion, frameworkName, formattedDate)),
 		fmt.Sprintf("You should update your version of %s to a more recent one.\n", frameworkName),
+		color.RedString(fmt.Sprintf("\n%s\n\n", msg.WarningLine)),
+		r.getAvailableVersionsMessage(frameworkName),
+	)
+}
+
+func (r *CloudRunner) flaggedForRemovalMessage(frameworkName string, frameworkVersion string) string {
+	return fmt.Sprintf(
+		"%s%s%s%s%s",
+		color.RedString(fmt.Sprintf("\n\n%s\n", msg.WarningLine)),
+		color.RedString(fmt.Sprintf("\nVersion %s for %s is UNSUPPORTED and can be removed at anytime !\n", frameworkVersion, frameworkName)),
+		color.RedString(fmt.Sprintf("You MUST update your version of %s to a more recent one.\n", frameworkName)),
+		color.RedString(fmt.Sprintf("\n%s\n\n", msg.WarningLine)),
 		r.getAvailableVersionsMessage(frameworkName),
 	)
 }
@@ -957,7 +972,7 @@ func (r *CloudRunner) getAvailableVersionsMessage(frameworkName string) string {
 	}
 	m := fmt.Sprintf("Available versions of %s are:\n", frameworkName)
 	for _, v := range versions {
-		if !v.Deprecated {
+		if !v.IsDeprecated() && !v.IsFlaggedForRemoval() {
 			m += fmt.Sprintf(" - %s\n", v.FrameworkVersion)
 		}
 	}

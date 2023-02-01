@@ -35,10 +35,15 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		r.Project.RunnerVersion = m.CloudRunnerVersion
 	}
 
-	if m.Deprecated {
-		deprecationMessage = r.deprecationMessage(testcafe.Kind, r.Project.Testcafe.Version)
+	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
+		deprecationMessage = r.deprecationMessage(testcafe.Kind, r.Project.Testcafe.Version, m.RemovalDate)
 		fmt.Print(deprecationMessage)
 	}
+	if m.IsFlaggedForRemoval() {
+		deprecationMessage = r.flaggedForRemovalMessage(testcafe.Kind, r.Project.Testcafe.Version)
+		fmt.Print(deprecationMessage)
+	}
+
 	for _, s := range r.Project.Suites {
 		if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
 			msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))

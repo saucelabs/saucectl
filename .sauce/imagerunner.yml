@@ -1,0 +1,21 @@
+apiVersion: v1alpha
+kind: imagerunner
+sauce:
+  region: us-west-1
+suites:
+  - name: busybox num 1
+    image: busybox:1.35.0
+    imagePullAuth:
+      user: $DOCKER_IMAGE_USER
+      token: $DOCKER_IMAGE_TOKEN
+    entrypoint: "echo meow"
+  #  files:
+  #    - src: "runsauce.json"
+  #      dst: "/root/.runsauce.json"
+  #  artifacts:
+  #   - "/path/inside/container/file.log"
+  #  metadata: # Arbitrary Key-Value pairs
+  #   k1: v1
+  #   k2: v2
+  #  env: # Arbitrary Key-Value pairs
+  #   MY_FOO: bar

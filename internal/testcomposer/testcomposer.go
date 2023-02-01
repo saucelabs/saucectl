@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/textproto"
 	"strings"
+	"time"
 
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/framework"
@@ -42,8 +43,9 @@ type Job struct {
 // FrameworkResponse represents the response body for framework information.
 type FrameworkResponse struct {
 	Name            string            `json:"name"`
-	Deprecated      bool              `json:"deprecated"`
 	Version         string            `json:"version"`
+	EOLDate         time.Time         `json:"eolDate"`
+	RemovalDate     time.Time         `json:"removalDate"`
 	Runner          runner            `json:"runner"`
 	Platforms       []platform        `json:"platforms"`
 	BrowserDefaults map[string]string `json:"browserDefaults"`
@@ -164,7 +166,8 @@ func (c *Client) Search(ctx context.Context, opts framework.SearchOptions) (fram
 	m := framework.Metadata{
 		FrameworkName:      resp.Name,
 		FrameworkVersion:   resp.Version,
-		Deprecated:         resp.Deprecated,
+		EOLDate:            resp.EOLDate,
+		RemovalDate:        resp.RemovalDate,
 		DockerImage:        resp.Runner.DockerImage,
 		GitRelease:         resp.Runner.GitRelease,
 		CloudRunnerVersion: resp.Runner.CloudRunnerVersion,
@@ -288,7 +291,8 @@ func (c *Client) Versions(ctx context.Context, frameworkName string) ([]framewor
 		frameworks = append(frameworks, framework.Metadata{
 			FrameworkName:      f.Name,
 			FrameworkVersion:   f.Version,
-			Deprecated:         f.Deprecated,
+			EOLDate:            f.EOLDate,
+			RemovalDate:        f.RemovalDate,
 			DockerImage:        f.Runner.DockerImage,
 			GitRelease:         f.Runner.GitRelease,
 			Platforms:          platforms,

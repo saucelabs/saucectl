@@ -5,6 +5,7 @@ import (
 	"errors"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/saucelabs/saucectl/internal/msg"
 )
@@ -33,12 +34,21 @@ type SearchOptions struct {
 type Metadata struct {
 	FrameworkName      string
 	FrameworkVersion   string
-	Deprecated         bool
+	EOLDate            time.Time
+	RemovalDate        time.Time
 	DockerImage        string
 	GitRelease         string
 	Platforms          []Platform
 	CloudRunnerVersion string
 	BrowserDefaults    map[string]string
+}
+
+func (m *Metadata) IsDeprecated() bool {
+	return time.Now().After(m.EOLDate)
+}
+
+func (m *Metadata) IsFlaggedForRemoval() bool {
+	return time.Now().After(m.RemovalDate)
 }
 
 // Platform represent a supported platform.

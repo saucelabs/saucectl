@@ -36,10 +36,15 @@ func (r *CucumberRunner) RunProject() (int, error) {
 		r.Project.RunnerVersion = m.CloudRunnerVersion
 	}
 
-	if m.Deprecated {
-		deprecationMessage = r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version)
+	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
+		deprecationMessage = r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version, m.RemovalDate)
 		fmt.Print(deprecationMessage)
 	}
+	if m.IsFlaggedForRemoval() {
+		deprecationMessage = r.flaggedForRemovalMessage(playwright.Kind, r.Project.Playwright.Version)
+		fmt.Print(deprecationMessage)
+	}
+
 	for _, s := range r.Project.Suites {
 		if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
 			msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
