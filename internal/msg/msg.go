@@ -164,3 +164,12 @@ func LogUnsupportedPlatform(platform string, supported []string) {
 	}
 	fmt.Println(msg)
 }
+
+func LogConsoleOut(name, logs string) {
+	fmt.Printf(`
+### CONSOLE OUT %q ###
+%s
+### CONSOLE END ###
+`,
+		name, logs)
+}
