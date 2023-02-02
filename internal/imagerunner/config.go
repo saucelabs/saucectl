@@ -12,7 +12,6 @@ var (
 
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
-	ConfigFilePath string             `yaml:"-" json:"-"` // TODO This field is irrelevant. Delete.
 	Defaults       Defaults           `yaml:"defaults" json:"defaults"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"` // The only field that's used within 'sauce' is region.
 	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
@@ -50,8 +49,6 @@ func FromFile(cfgPath string) (Project, error) {
 	if err := config.Unmarshal(cfgPath, &p); err != nil {
 		return p, err
 	}
-
-	p.ConfigFilePath = cfgPath
 
 	return p, nil
 }
