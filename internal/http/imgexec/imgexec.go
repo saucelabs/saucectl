@@ -134,7 +134,7 @@ func (c *Client) ListArtifacts(ctx context.Context, id string) ([]string, error)
 
 	// TODO response type is not confirmed yet
 	type response struct {
-		artifacts []string `json:"artifacts"`
+		Artifacts []string `json:"artifacts"`
 	}
 
 	var listResponse response
@@ -142,7 +142,7 @@ func (c *Client) ListArtifacts(ctx context.Context, id string) ([]string, error)
 		return []string{}, fmt.Errorf("failed to decode server response: %w", err)
 	}
 
-	return listResponse.artifacts, nil
+	return listResponse.Artifacts, nil
 }
 
 func (c *Client) DownloadArtifact(ctx context.Context, id, name, dir string) error {
