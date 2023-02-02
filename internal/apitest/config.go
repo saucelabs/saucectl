@@ -30,6 +30,7 @@ type Project struct {
 type Suite struct {
 	Timeout        time.Duration `yaml:"timeout,omitempty"`
 	Name           string        `yaml:"name,omitempty"`
+	ProjectName    string        `yaml:"projectName,omitempty"`
 	HookID         string        `yaml:"hookId,omitempty"`
 	UseRemoteTests bool          `yaml:"useRemoteTests,omitempty"`
 	Tests          []string      `yaml:"tests,omitempty"`
@@ -86,8 +87,12 @@ func Validate(p Project) error {
 }
 
 func validateSuite(suite Suite) error {
-	if suite.HookID == "" {
-		return errors.New("suites must have a hookId defined")
+	if suite.ProjectName == "" && suite.HookID == "" {
+		return errors.New("suites must have a projectName defined")
+	}
+
+	if suite.ProjectName != "" && suite.HookID != "" {
+		return errors.New("suites must not have a projectName and a hookId defined")
 	}
 	return nil
 }

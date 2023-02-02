@@ -61,8 +61,8 @@ func New(url string, username string, accessKey string, timeout time.Duration) C
 	}
 }
 
-// GetProject returns Project metadata for a given hookID.
-func (c *Client) GetProject(ctx context.Context, hookID string) (Project, error) {
+// GetProjectByHookID returns Project metadata for a given hookID.
+func (c *Client) GetProjectByHookID(ctx context.Context, hookID string) (Project, error) {
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s", c.URL, hookID)
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -183,4 +183,35 @@ func (c *Client) composeURL(path string, buildID string, format string, tunnel c
 	url.RawQuery = query.Encode()
 
 	return url.String()
+}
+
+// GetProjects returns the list of Project available.
+func (c *Client) GetProjects(ctx context.Context) ([]Project, error) {
+	url := fmt.Sprintf("%s/api-testing/api/project", c.URL)
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return []Project{}, err
+	}
+
+	req.SetBasicAuth(c.Username, c.AccessKey)
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return []Project{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return []Project{}, errors.New(msg.InternalServerError)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return []Project{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+	}
+
+	var projects []Project
+	if err := json.NewDecoder(resp.Body).Decode(&projects); err != nil {
+		return projects, err
+	}
+	return projects, nil
 }

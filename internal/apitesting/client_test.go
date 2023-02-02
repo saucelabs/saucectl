@@ -2,7 +2,9 @@ package apitesting
 
 import (
 	"context"
+	"fmt"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -157,7 +159,7 @@ func TestClient_GetProject(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := c.GetProject(tt.args.ctx, tt.args.hookID)
+			got, err := c.GetProjectByHookID(tt.args.ctx, tt.args.hookID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetProject() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -317,6 +319,55 @@ func TestClient_composeURL(t *testing.T) {
 			if got := c.composeURL(tt.args.path, tt.args.buildID, tt.args.format, tt.args.tunnel, tt.args.taskID); got != tt.want {
 				t.Errorf("composeURL() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestClient_GetProjects(t *testing.T) {
+	tests := []struct {
+		name    string
+		want    []Project
+		wantErr assert.ErrorAssertionFunc
+	}{
+		{
+			name: "Fetching Projects Test",
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				return err != nil
+			},
+			want: []Project{},
+		},
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
+		switch r.URL.Path {
+		case "/api-testing/api/project":
+			completeStatusResp := []byte(`[{"id":"63dbe9d6f48c8412fe79220d","name":"Demo Project","teamId":null,"description":"","tags":[],"notes":"","type":"project","emailNotifications":[],"connectorNotifications":[]}]`)
+			_, err = w.Write(completeStatusResp)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
+		}
+	}))
+	defer ts.Close()
+
+	c := &Client{
+		HTTPClient: ts.Client(),
+		URL:        ts.URL,
+		Username:   "dummy",
+		AccessKey:  "accesskey",
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := c.GetProjects(context.Background())
+			if !tt.wantErr(t, err, fmt.Sprintf("GetProjects(%v)", context.Background())) {
+				return
+			}
+			assert.Equalf(t, tt.want, got, "GetProjects(%v)", context.Background())
 		})
 	}
 }

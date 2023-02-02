@@ -279,7 +279,7 @@ func (r *Runner) runSuites() bool {
 }
 
 func (r *Runner) buildLocalTestDetails(hookID string, eventIDs []string, testNames []string, results chan []apitesting.TestResult) {
-	project, _ := r.Client.GetProject(context.Background(), hookID)
+	project, _ := r.Client.GetProjectByHookID(context.Background(), hookID)
 	for _, eventID := range eventIDs {
 		reportURL := fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)
 		log.Info().
@@ -301,7 +301,7 @@ func (r *Runner) buildLocalTestDetails(hookID string, eventIDs []string, testNam
 }
 
 func (r *Runner) fetchTestDetails(hookID string, eventIDs []string, testIDs []string, results chan []apitesting.TestResult) {
-	project, _ := r.Client.GetProject(context.Background(), hookID)
+	project, _ := r.Client.GetProjectByHookID(context.Background(), hookID)
 	for _, eventID := range eventIDs {
 		reportURL := fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)
 		log.Info().
@@ -324,7 +324,7 @@ func (r *Runner) fetchTestDetails(hookID string, eventIDs []string, testIDs []st
 }
 
 func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, results chan []apitesting.TestResult, pollMaximumWait time.Duration) {
-	project, _ := r.Client.GetProject(context.Background(), hookID)
+	project, _ := r.Client.GetProjectByHookID(context.Background(), hookID)
 
 	for _, eventID := range eventIDs {
 		go func(lEventID string) {
