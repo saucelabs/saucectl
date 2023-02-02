@@ -5,6 +5,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/ryanuber/go-glob"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/report"
 	"os"
 	"os/signal"
@@ -19,6 +21,8 @@ type ImageRunner interface {
 	TriggerRun(context.Context, imagerunner.RunnerSpec) (imagerunner.Runner, error)
 	GetStatus(ctx context.Context, id string) (imagerunner.Runner, error)
 	StopRun(ctx context.Context, id string) error
+	ListArtifacts(ctx context.Context, id string) ([]string, error)
+	DownloadArtifact(ctx context.Context, id, name, dir string) error
 }
 
 type SuiteTimeoutError struct {
@@ -233,6 +237,13 @@ func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
 		log.Err(res.err).Str("suite", res.name).Bool("passed", res.err == nil).Str("runID", res.runID).
 			Msg("Suite finished.")
 
+		// TODO Hack. config.ShouldDownloadArtifact needs a refactor. Artifact download check has too much job logic
+		// inside the config layer.
+		// Conditional: runID != "" && !cancelled && !timedOut && whatever-the-config-says
+		if config.ShouldDownloadArtifact(res.runID, passed, res.status != imagerunner.StateCancelled, false, r.Project.Artifacts.Download) {
+			r.DownloadArtifacts(res.runID, res.name)
+		}
+
 		for _, r := range r.Reporters {
 			r.Add(report.TestResult{
 				Name:      res.name,
@@ -293,6 +304,29 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (
 			}
 			if imagerunner.Done(r.Status) {
 				return r, err
+			}
+		}
+	}
+}
+
+func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName string) {
+	dir, err := config.GetSuiteArtifactFolder(suiteName, r.Project.Artifacts.Download)
+	if err != nil {
+		log.Err(err).Msg("Unable to create artifacts folder.")
+		return
+	}
+
+	files, err := r.RunnerService.ListArtifacts(r.ctx, runnerID)
+	if err != nil {
+		log.Err(err).Str("suite", suiteName).Msg("Failed to look up artifacts.")
+	}
+	for _, f := range files {
+		for _, pattern := range r.Project.Artifacts.Download.Match {
+			if glob.Glob(pattern, f) {
+				if err := r.RunnerService.DownloadArtifact(r.ctx, runnerID, f, dir); err != nil {
+					log.Err(err).Str("name", f).Msg("Failed to download an artifact.")
+				}
+				break
 			}
 		}
 	}

@@ -422,7 +422,9 @@ func GetSuiteArtifactFolder(suiteName string, cfg ArtifactDownload) (string, err
 	}
 	suiteName = fmt.Sprintf("%s.%d", suiteName, maxVersion+1)
 
-	return filepath.Join(cfg.Directory, suiteName), nil
+	target := filepath.Join(cfg.Directory, suiteName)
+
+	return target, os.MkdirAll(target, 0755)
 }
 
 // ValidateVisibility checks that the user specified job visibility is valid

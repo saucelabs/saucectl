@@ -3,6 +3,11 @@
   "title": "saucectl image runner configuration",
   "description": "Configuration file for running container images using saucectl",
   "type": "object",
+  "allOf": [
+    {
+      "$ref": "../subschema/artifacts.schema.json"
+    }
+  ],
   "definitions": {
     "suite": {
       "description": "The set of properties providing details about how to run the container.",

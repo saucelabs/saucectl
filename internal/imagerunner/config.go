@@ -16,6 +16,7 @@ type Project struct {
 	Defaults       Defaults           `yaml:"defaults" json:"defaults"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"` // The only field that's used within 'sauce' is region.
 	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
+	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
 }
 
 type Defaults struct {

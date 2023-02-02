@@ -10,6 +10,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/requesth"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -105,6 +107,71 @@ func (c *Client) StopRun(ctx context.Context, runID string) error {
 		return err
 	}
 	defer resp.Body.Close()
+
+	return nil
+}
+
+func (c *Client) ListArtifacts(ctx context.Context, id string) ([]string, error) {
+	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/artifacts", c.URL, id)
+
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return []string{}, err
+	}
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return []string{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		b, _ := io.ReadAll(resp.Body)
+		return []string{}, fmt.Errorf("unexpected server response (%d): %s", resp.StatusCode, b)
+	}
+
+	// TODO response type is not confirmed yet
+	type response struct {
+		artifacts []string `json:"artifacts"`
+	}
+
+	var listResponse response
+	if err := json.NewDecoder(resp.Body).Decode(&listResponse); err != nil {
+		return []string{}, fmt.Errorf("failed to decode server response: %w", err)
+	}
+
+	return listResponse.artifacts, nil
+}
+
+func (c *Client) DownloadArtifact(ctx context.Context, id, name, dir string) error {
+	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/artifacts/single/%s/download", c.URL, id, name)
+
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("unexpected server response (%d): %s", resp.StatusCode, b)
+	}
+
+	f, err := os.Create(filepath.Join(dir, name))
+	if err != nil {
+		return fmt.Errorf("failed to create local file: %w", err)
+	}
+	if _, err := f.ReadFrom(resp.Body); err != nil {
+		return fmt.Errorf("download failed: %w", err)
+	}
 
 	return nil
 }
