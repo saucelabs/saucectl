@@ -390,12 +390,13 @@ func GetSuiteArtifactFolder(suiteName string, cfg ArtifactDownload) (string, err
 	// If targetDir doesn't exist, no need to find maxVersion and return
 	targetDir := filepath.Join(cfg.Directory, suiteName)
 	if _, err := os.Open(targetDir); os.IsNotExist(err) {
-		return targetDir, nil
+		return targetDir, os.MkdirAll(targetDir, 0755)
 	}
+
 	// Find the maxVersion of downloaded artifacts in artifacts dir
 	f, err := os.Open(cfg.Directory)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 	files, err := f.ReadDir(0)
 	if err != nil {
