@@ -452,10 +452,6 @@ func (c *Client) DownloadArtifact(jobID, suiteName string, realDevice bool) []st
 		log.Error().Msgf("Unable to create artifacts folder (%v)", err)
 		return []string{}
 	}
-	if err := os.MkdirAll(targetDir, 0755); err != nil {
-		log.Error().Msgf("Unable to create %s to fetch artifacts (%v)", targetDir, err)
-		return []string{}
-	}
 	files, err := c.GetJobAssetFileNames(context.Background(), jobID, realDevice)
 	if err != nil {
 		log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
