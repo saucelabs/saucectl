@@ -1,0 +1,59 @@
+name: Docker release
+
+on:
+  push:
+    tags:
+      - v*
+  pull_request:
+
+jobs:
+  # Build the project as a Docker image and push it to Docker Hub
+  push_to_registry:
+    name: Push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.meta.outputs.tags }}
+      label: ${{ steps.meta.outputs.labels }}
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+      - name: Set env
+        run: |
+          echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Check Docker Version
+        run: docker --version
+      - name: Check Release Version
+        run: echo ${{ env.RELEASE_VERSION }}
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: saucelabs/saucectl
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        env:
+          LD_1: -X 'github.com/saucelabs/saucectl/internal/version.Version=${{ env.RELEASE_VERSION }}'
+          LD_2: -X 'github.com/saucelabs/saucectl/internal/version.GitCommit=${{ github.sha }}'
+          LD_3: -X 'github.com/saucelabs/saucectl/internal/setup.SegmentWriteKey=${{ secrets.SEGMENT_WRITE_KEY }}'
+          LD_4: -X 'github.com/saucelabs/saucectl/internal/setup.BackTraceEndpoint=${{ secrets.BACKTRACE_ENDPOINT }}'
+          LD_5: -X 'github.com/saucelabs/saucectl/internal/setup.BackTraceToken=${{ secrets.BACKTRACE_TOKEN }}'
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: LD_FLAGS=${{ env.LD_1 }} ${{ env.LD_2 }} ${{ env.LD_3 }} ${{ env.LD_4 }} ${{ env.LD_5 }}
+  smoke_test_image:
+    name: Smoke test Docker image
+    runs-on: ubuntu-latest
+    needs: push_to_registry
+    steps:
+      - name: Pull Docker image
+        run: docker pull ${{ needs.push_to_registry.outputs.tag }}
+      - name: Run Docker image
+        run: docker run --entrypoint saucectl ${{ needs.push_to_registry.outputs.tag }} --version
