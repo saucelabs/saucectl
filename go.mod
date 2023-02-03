@@ -41,7 +41,7 @@ require (
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
-	github.com/docker/distribution v2.7.1+incompatible // indirect
+	github.com/docker/distribution v2.8.0+incompatible // indirect
 	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.0
 	github.com/morikuni/aec v1.0.0 // indirect
