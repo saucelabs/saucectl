@@ -2379,6 +2379,14 @@
                   "description": "Your project's hook ID, which you can create and/or retrieve from your project's Webhooks tab.",
                   "type": "string"
                 },
+                "projectName": {
+                  "description": "Your project's name.",
+                  "type": "string"
+                },
+                "testMatch": {
+                  "description": "",
+                  "type": "array"
+                },
                 "tests": {
                   "description": "A list of test IDs to run for the project defined by hookId.",
                   "type": "array"
@@ -2388,9 +2396,20 @@
                   "type": "array"
                 }
               },
+              "oneOf": [
+                {
+                  "required": [
+                    "projectName"
+                  ]
+                },
+                {
+                  "required": [
+                    "hookId"
+                  ]
+                }
+              ],
               "required": [
-                "name",
-                "hookId"
+                "name"
               ],
               "additionalProperties": false
             }
