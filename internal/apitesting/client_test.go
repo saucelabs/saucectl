@@ -160,7 +160,7 @@ func TestClient_GetProject(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := c.GetProjectByHookID(tt.args.ctx, tt.args.hookID)
+			got, err := c.GetProject(tt.args.ctx, tt.args.hookID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetProject() error = %v, wantErr %v", err, tt.wantErr)
 				return

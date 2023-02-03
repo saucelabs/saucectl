@@ -67,8 +67,8 @@ func New(url string, username string, accessKey string, timeout time.Duration) C
 	}
 }
 
-// GetProjectByHookID returns Project metadata for a given hookID.
-func (c *Client) GetProjectByHookID(ctx context.Context, hookID string) (Project, error) {
+// GetProject returns Project metadata for a given hookID.
+func (c *Client) GetProject(ctx context.Context, hookID string) (Project, error) {
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s", c.URL, hookID)
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
