@@ -127,7 +127,7 @@ func (handler *Handler) IsLaunchable(image string) error {
 		return err
 	}
 
-	go func() {
+	defer func() {
 		if con.ID != "" {
 			_ = handler.ContainerStop(context.Background(), con.ID)
 			_ = handler.ContainerRemove(context.Background(), con.ID)
