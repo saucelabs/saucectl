@@ -212,7 +212,7 @@ func (c *Client) GetProjects(ctx context.Context) ([]Project, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return []Project{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		return []Project{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, body)
 	}
 
 	var projects []Project
@@ -243,7 +243,7 @@ func (c *Client) GetHooks(ctx context.Context, projectID string) ([]Hook, error)
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return []Hook{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		return []Hook{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, body)
 	}
 
 	var hooks []Hook

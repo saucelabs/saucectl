@@ -474,7 +474,7 @@ func (r *Runner) ResolveHookIDs() error {
 			hooks, err := r.Client.GetHooks(context.Background(), project.ID)
 
 			if err != nil {
-				log.Error().Str("suiteName", s.Name).Err(err).Msg(msg.HookQueryFailure)
+				log.Err(err).Str("suiteName", s.Name).Msg(msg.HookQueryFailure)
 				hasErrors = true
 				continue
 			}
