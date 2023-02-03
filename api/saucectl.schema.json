@@ -2394,6 +2394,10 @@
                 "tags": {
                   "description": "A test tag to run for the project defined by hookId.",
                   "type": "array"
+                },
+                "useRemoteTests": {
+                  "description": "Use tests stored in the cloud instead of the local ones.",
+                  "type": "boolean"
                 }
               },
               "oneOf": [
