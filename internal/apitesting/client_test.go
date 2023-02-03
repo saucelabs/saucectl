@@ -401,9 +401,11 @@ func TestClient_GetHooks(t *testing.T) {
 			want: []Hook{
 				{
 					Identifier: "e291c7c5-d091-4bae-8293-7315fc15cc4c",
+					Name:       "name1",
 				},
 				{
 					Identifier: "4d66f4d0-a29a-43a1-a787-94f7b8cc2e21",
+					Name:       "name2",
 				},
 			},
 		},

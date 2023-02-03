@@ -54,6 +54,7 @@ type Project struct {
 // Hook describes the metadata for a hook.
 type Hook struct {
 	Identifier string `json:"identifier,omitempty"`
+	Name       string `json:"name,omitempty"`
 }
 
 // New returns a apitesting.Client
