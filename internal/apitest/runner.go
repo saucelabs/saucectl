@@ -452,7 +452,7 @@ func (r *Runner) ResolveHookIDs() error {
 
 	projects, err := r.Client.GetProjects(context.Background())
 	if err != nil {
-		log.Error().Err(err).Msg("unable to list projects")
+		log.Error().Err(err).Msg(msg.ProjectListFailure)
 		return err
 	}
 
@@ -461,10 +461,9 @@ func (r *Runner) ResolveHookIDs() error {
 			continue
 		}
 
-		project, err := findMatchingProject(s.ProjectName, projects)
-		if err != nil {
-			log.Error().Str("projectName", s.ProjectName).Str("suiteName", s.Name).
-				Err(err).Msg("no project matching name")
+		project := findMatchingProject(s.ProjectName, projects)
+		if project.ID == "" {
+			log.Error().Str("suiteName", s.Name).Msgf(msg.ProjectNotFound, s.ProjectName)
 			hasErrors = true
 			continue
 		}
@@ -475,12 +474,12 @@ func (r *Runner) ResolveHookIDs() error {
 			hooks, err := r.Client.GetHooks(context.Background(), project.ID)
 
 			if err != nil {
-				log.Error().Str("suiteName", s.Name).Err(err).Msg("unable to query for hooks")
+				log.Error().Str("suiteName", s.Name).Err(err).Msg(msg.HookQueryFailure)
 				hasErrors = true
 				continue
 			}
 			if len(hooks) == 0 {
-				log.Error().Str("suiteName", s.Name).Str("projectName", s.ProjectName).Msg("No hooks found for project")
+				log.Error().Str("suiteName", s.Name).Msgf(msg.NoHookForProject, project.Name)
 				hasErrors = true
 				continue
 			}
@@ -489,21 +488,21 @@ func (r *Runner) ResolveHookIDs() error {
 			hookIdMappings[project.ID] = hooks[0]
 		}
 
-		log.Info().Str("suiteName", s.Name).Msgf(`Using hook "%s"`, hook.Identifier)
+		log.Info().Msgf(msg.HookUsedForSuite, hook.Identifier, s.Name)
 		r.Project.Suites[idx].HookID = hook.Identifier
 	}
 
 	if hasErrors {
-		return errors.New("failed to get some suites associated hookIDs")
+		return errors.New(msg.FailedToPrepareSuites)
 	}
 	return nil
 }
 
-func findMatchingProject(name string, projects []apitesting.Project) (apitesting.Project, error) {
+func findMatchingProject(name string, projects []apitesting.Project) apitesting.Project {
 	for _, p := range projects {
 		if p.Name == name {
-			return p, nil
+			return p
 		}
 	}
-	return apitesting.Project{}, fmt.Errorf(`no project found named %s`, name)
+	return apitesting.Project{}
 }

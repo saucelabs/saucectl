@@ -2,6 +2,7 @@ package apitest
 
 import (
 	"github.com/saucelabs/saucectl/internal/apitesting"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/tunnel"
@@ -448,7 +449,7 @@ func TestRunner_ResolveHookIDs(t *testing.T) {
 					},
 				},
 			},
-			wantErr: "failed to get some suites associated hookIDs",
+			wantErr: msg.FailedToPrepareSuites,
 		},
 		{
 			name: "Project with single Hooks",
@@ -518,7 +519,7 @@ func TestRunner_ResolveHookIDs(t *testing.T) {
 					},
 				},
 			},
-			wantErr: "failed to get some suites associated hookIDs",
+			wantErr: msg.FailedToPrepareSuites,
 		},
 	}
 	for _, tt := range tests {
