@@ -88,11 +88,11 @@ func Validate(p Project) error {
 
 func validateSuite(suite Suite) error {
 	if suite.ProjectName == "" && suite.HookID == "" {
-		return errors.New("suites must have a projectName defined")
+		return errors.New(msg.NoProjectName)
 	}
 
 	if suite.ProjectName != "" && suite.HookID != "" {
-		return errors.New("suites must not have a projectName and a hookId defined")
+		return errors.New(msg.ProjectNameHookIDConflict)
 	}
 	return nil
 }

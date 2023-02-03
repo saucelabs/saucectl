@@ -110,6 +110,10 @@ const (
 
 // apitesting config settings
 const (
+	// NoProjectName indicates the absence of a project name in a suite
+	NoProjectName = "suites must have a projectName defined"
+	// ProjectNameHookIDConflict indicates a conflict between project name and hookID
+	ProjectNameHookIDConflict = "suites must not have a projectName and a hookId defined"
 	// ProjectListFailure indicates failure to get the list of projects
 	ProjectListFailure = "unable to list projects"
 	// ProjectNotFound indicates the project was not found
