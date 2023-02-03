@@ -375,7 +375,7 @@ func TestClient_GetProjects(t *testing.T) {
 
 func TestClient_GetHooks(t *testing.T) {
 	type params struct {
-		projectId string
+		projectID string
 	}
 
 	tests := []struct {
@@ -387,7 +387,7 @@ func TestClient_GetHooks(t *testing.T) {
 		{
 			name: "Projects with no hooks",
 			params: params{
-				projectId: "noHooks",
+				projectID: "noHooks",
 			},
 			wantErr: nil,
 			want:    []Hook{},
@@ -395,7 +395,7 @@ func TestClient_GetHooks(t *testing.T) {
 		{
 			name: "Projects with multiple hooks",
 			params: params{
-				projectId: "multipleHooks",
+				projectID: "multipleHooks",
 			},
 			wantErr: nil,
 			want: []Hook{
@@ -412,7 +412,7 @@ func TestClient_GetHooks(t *testing.T) {
 		{
 			name: "Invalid Project",
 			params: params{
-				projectId: "invalidProject",
+				projectID: "invalidProject",
 			},
 			wantErr: errors.New(`request failed; unexpected response code:'404', msg:'{"status":"error","message":"Not Found"}'`),
 			want:    []Hook{},
@@ -451,12 +451,12 @@ func TestClient_GetHooks(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := c.GetHooks(context.Background(), tt.params.projectId)
+			got, err := c.GetHooks(context.Background(), tt.params.projectID)
 			if !reflect.DeepEqual(err, tt.wantErr) {
-				t.Errorf("GetHooks(%v, %s): got %v want %v", context.Background(), tt.params.projectId, err, tt.wantErr)
+				t.Errorf("GetHooks(%v, %s): got %v want %v", context.Background(), tt.params.projectID, err, tt.wantErr)
 				return
 			}
-			assert.Equalf(t, tt.want, got, "GetHooks(%v, %s)", context.Background(), tt.params.projectId)
+			assert.Equalf(t, tt.want, got, "GetHooks(%v, %s)", context.Background(), tt.params.projectID)
 		})
 	}
 }

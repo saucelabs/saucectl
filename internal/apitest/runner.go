@@ -447,7 +447,7 @@ func buildTestName(project apitesting.Project, test apitesting.Test) string {
 
 // ResolveHookIDs resolve, for each suite, the matching hookID.
 func (r *Runner) ResolveHookIDs() error {
-	hookIdMappings := map[string]apitesting.Hook{}
+	hookIDMappings := map[string]apitesting.Hook{}
 	hasErrors := false
 
 	projects, err := r.Client.GetProjects(context.Background())
@@ -468,7 +468,7 @@ func (r *Runner) ResolveHookIDs() error {
 			continue
 		}
 
-		hook := hookIdMappings[project.ID]
+		hook := hookIDMappings[project.ID]
 
 		if hook.Identifier == "" {
 			hooks, err := r.Client.GetHooks(context.Background(), project.ID)
@@ -485,7 +485,7 @@ func (r *Runner) ResolveHookIDs() error {
 			}
 
 			hook = hooks[0]
-			hookIdMappings[project.ID] = hooks[0]
+			hookIDMappings[project.ID] = hooks[0]
 		}
 
 		log.Info().Msgf(msg.HookUsedForSuite, hook.Identifier, s.Name)
