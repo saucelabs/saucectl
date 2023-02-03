@@ -2,6 +2,7 @@ package apitesting
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/stretchr/testify/assert"
@@ -368,6 +369,92 @@ func TestClient_GetProjects(t *testing.T) {
 				return
 			}
 			assert.Equalf(t, tt.want, got, "GetProjects(%v)", context.Background())
+		})
+	}
+}
+
+func TestClient_GetHooks(t *testing.T) {
+	type params struct {
+		projectId string
+	}
+
+	tests := []struct {
+		name    string
+		params  params
+		want    []Hook
+		wantErr error
+	}{
+		{
+			name: "Projects with no hooks",
+			params: params{
+				projectId: "noHooks",
+			},
+			wantErr: nil,
+			want:    []Hook{},
+		},
+		{
+			name: "Projects with multiple hooks",
+			params: params{
+				projectId: "multipleHooks",
+			},
+			wantErr: nil,
+			want: []Hook{
+				{
+					Identifier: "e291c7c5-d091-4bae-8293-7315fc15cc4c",
+				},
+				{
+					Identifier: "4d66f4d0-a29a-43a1-a787-94f7b8cc2e21",
+				},
+			},
+		},
+		{
+			name: "Invalid Project",
+			params: params{
+				projectId: "invalidProject",
+			},
+			wantErr: errors.New(`request failed; unexpected response code:'404', msg:'{"status":"error","message":"Not Found"}'`),
+			want:    []Hook{},
+		},
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
+		switch r.URL.Path {
+		case "/api-testing/api/project/noHooks/hook":
+			completeStatusResp := []byte(`[]`)
+			_, err = w.Write(completeStatusResp)
+		case "/api-testing/api/project/multipleHooks/hook":
+			completeStatusResp := []byte(`[{"id":"hook1","identifier":"e291c7c5-d091-4bae-8293-7315fc15cc4c","name":"name1","description":"description1"},{"id":"hook2","identifier":"4d66f4d0-a29a-43a1-a787-94f7b8cc2e21","name":"name2","description":"description2"}]`)
+			_, err = w.Write(completeStatusResp)
+		case "/api-testing/api/project/invalidProject/hook":
+			completeStatusResp := []byte(`{"status":"error","message":"Not Found"}`)
+			w.WriteHeader(http.StatusNotFound)
+			_, err = w.Write(completeStatusResp)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
+		}
+	}))
+	defer ts.Close()
+
+	c := &Client{
+		HTTPClient: ts.Client(),
+		URL:        ts.URL,
+		Username:   "dummy",
+		AccessKey:  "accesskey",
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := c.GetHooks(context.Background(), tt.params.projectId)
+			if !reflect.DeepEqual(err, tt.wantErr) {
+				t.Errorf("GetHooks(%v, %s): got %v want %v", context.Background(), tt.params.projectId, err, tt.wantErr)
+				return
+			}
+			assert.Equalf(t, tt.want, got, "GetHooks(%v, %s)", context.Background(), tt.params.projectId)
 		})
 	}
 }

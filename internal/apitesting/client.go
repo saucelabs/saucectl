@@ -51,6 +51,11 @@ type Project struct {
 	Name string `json:"name,omitempty"`
 }
 
+// Hook describes the metadata for a hook.
+type Hook struct {
+	Identifier string `json:"identifier,omitempty"`
+}
+
 // New returns a apitesting.Client
 func New(url string, username string, accessKey string, timeout time.Duration) Client {
 	return Client{
@@ -214,4 +219,35 @@ func (c *Client) GetProjects(ctx context.Context) ([]Project, error) {
 		return projects, err
 	}
 	return projects, nil
+}
+
+// GetHooks returns the list of hooks available.
+func (c *Client) GetHooks(ctx context.Context, projectID string) ([]Hook, error) {
+	url := fmt.Sprintf("%s/api-testing/api/project/%s/hook", c.URL, projectID)
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return []Hook{}, err
+	}
+
+	req.SetBasicAuth(c.Username, c.AccessKey)
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return []Hook{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return []Hook{}, errors.New(msg.InternalServerError)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return []Hook{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+	}
+
+	var hooks []Hook
+	if err := json.NewDecoder(resp.Body).Decode(&hooks); err != nil {
+		return hooks, err
+	}
+	return hooks, nil
 }
