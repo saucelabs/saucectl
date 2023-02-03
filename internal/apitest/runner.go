@@ -2,9 +2,8 @@ package apitest
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/xtgo/uuid"
 	"io/fs"
 	"os"
 	"path"
@@ -13,8 +12,11 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"github.com/xtgo/uuid"
+
 	"github.com/saucelabs/saucectl/internal/apitesting"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/tunnel"
@@ -441,4 +443,67 @@ func buildTestName(project apitesting.Project, test apitesting.Test) string {
 		return fmt.Sprintf("%s - %s", project.Name, test.Name)
 	}
 	return project.Name
+}
+
+// ResolveHookIDs resolve, for each suite, the matching hookID.
+func (r *Runner) ResolveHookIDs() error {
+	hookIdMappings := map[string]apitesting.Hook{}
+	hasErrors := false
+
+	projects, err := r.Client.GetProjects(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("unable to list projects")
+		return err
+	}
+
+	for idx, s := range r.Project.Suites {
+		if s.HookID != "" {
+			continue
+		}
+
+		project, err := findMatchingProject(s.ProjectName, projects)
+		if err != nil {
+			log.Error().Str("projectName", s.ProjectName).Str("suiteName", s.Name).
+				Err(err).Msg("no project matching name")
+			hasErrors = true
+			continue
+		}
+
+		hook := hookIdMappings[project.ID]
+
+		if hook.Identifier == "" {
+			hooks, err := r.Client.GetHooks(context.Background(), project.ID)
+
+			if err != nil {
+				log.Error().Str("suiteName", s.Name).Err(err).Msg("unable to query for hooks")
+				hasErrors = true
+				continue
+			}
+			if len(hooks) == 0 {
+				log.Error().Str("suiteName", s.Name).Str("projectName", s.ProjectName).Msg("No hooks found for project")
+				hasErrors = true
+				continue
+			}
+
+			hook = hooks[0]
+			hookIdMappings[project.ID] = hooks[0]
+		}
+
+		log.Info().Str("suiteName", s.Name).Msgf(`Using hook "%s"`, hook.Identifier)
+		r.Project.Suites[idx].HookID = hook.Identifier
+	}
+
+	if hasErrors {
+		return errors.New("failed to get some suites associated hookIDs")
+	}
+	return nil
+}
+
+func findMatchingProject(name string, projects []apitesting.Project) (apitesting.Project, error) {
+	for _, p := range projects {
+		if p.Name == name {
+			return p, nil
+		}
+	}
+	return apitesting.Project{}, fmt.Errorf(`no project found named %s`, name)
 }
