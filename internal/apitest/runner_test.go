@@ -2,6 +2,10 @@ package apitest
 
 import (
 	"github.com/saucelabs/saucectl/internal/apitesting"
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/saucelabs/saucectl/internal/tunnel"
 	"github.com/stretchr/testify/assert"
 	"gotest.tools/v3/fs"
 	"net/http"
@@ -386,4 +390,162 @@ func TestRunner_runLocalTests(t *testing.T) {
 			ExecutionTimeSeconds: 31,
 		},
 	}, results)
+}
+
+func TestRunner_ResolveHookIDs(t *testing.T) {
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
+		switch r.URL.Path {
+		case "/api-testing/api/project":
+			completeStatusResp := []byte(`[{"id":"noHooks","name":"Project NoHooks"},{"id":"single","name":"Project SingleHook"},{"id":"multiple","name":"Project MultipleHooks"},{"id":"buggy","name":"Project BuggyHooks"}]`)
+			_, err = w.Write(completeStatusResp)
+		case "/api-testing/api/project/noHooks/hook":
+			completeStatusResp := []byte(`[]`)
+			_, err = w.Write(completeStatusResp)
+		case "/api-testing/api/project/single/hook":
+			completeStatusResp := []byte(`[{"id":"hook1","identifier":"uuid1","name":"name1","description":"description1"}]`)
+			_, err = w.Write(completeStatusResp)
+		case "/api-testing/api/project/multiple/hook":
+			completeStatusResp := []byte(`[{"id":"hook1","identifier":"uuid1","name":"name1","description":"description1"},{"id":"hook2","identifier":"uuid2","name":"name2","description":"description2"}]`)
+			_, err = w.Write(completeStatusResp)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
+		}
+	}))
+	defer ts.Close()
+
+	type fields struct {
+		Project       Project
+		Client        apitesting.Client
+		Region        region.Region
+		Reporters     []report.Reporter
+		Async         bool
+		TunnelService tunnel.Service
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    Project
+		wantErr string
+	}{
+		{
+			name: "Project with no Hooks",
+			fields: fields{
+				Client: apitesting.Client{
+					HTTPClient: ts.Client(),
+					URL:        ts.URL,
+				},
+				Project: Project{
+					Suites: []Suite{
+						{
+							Name:        "Suite #1",
+							ProjectName: "Project NoHooks",
+						},
+					},
+				},
+			},
+			wantErr: msg.FailedToPrepareSuites,
+		},
+		{
+			name: "Project with single Hooks",
+			fields: fields{
+				Client: apitesting.Client{
+					HTTPClient: ts.Client(),
+					URL:        ts.URL,
+				},
+				Project: Project{
+					Suites: []Suite{
+						{
+							Name:        "Suite #1",
+							ProjectName: "Project SingleHook",
+						},
+					},
+				},
+			},
+			want: Project{
+				Suites: []Suite{
+					{
+						Name:        "Suite #1",
+						ProjectName: "Project SingleHook",
+						HookID:      "uuid1",
+					},
+				},
+			},
+		},
+		{
+			name: "Project with multiple Hooks",
+			fields: fields{
+				Client: apitesting.Client{
+					HTTPClient: ts.Client(),
+					URL:        ts.URL,
+				},
+				Project: Project{
+					Suites: []Suite{
+						{
+							Name:        "Suite #1",
+							ProjectName: "Project MultipleHooks",
+						},
+					},
+				},
+			},
+			want: Project{
+				Suites: []Suite{
+					{
+						Name:        "Suite #1",
+						ProjectName: "Project MultipleHooks",
+						HookID:      "uuid1",
+					},
+				},
+			},
+		},
+		{
+			name: "Project with Buggy Hooks",
+			fields: fields{
+				Client: apitesting.Client{
+					HTTPClient: ts.Client(),
+					URL:        ts.URL,
+				},
+				Project: Project{
+					Suites: []Suite{
+						{
+							Name:        "Suite #1",
+							ProjectName: "Project BuggyHooks",
+						},
+					},
+				},
+			},
+			wantErr: msg.FailedToPrepareSuites,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &Runner{
+				Project:       tt.fields.Project,
+				Client:        tt.fields.Client,
+				Region:        tt.fields.Region,
+				Reporters:     tt.fields.Reporters,
+				Async:         tt.fields.Async,
+				TunnelService: tt.fields.TunnelService,
+			}
+
+			err := r.ResolveHookIDs()
+			if tt.wantErr != "" {
+				assert.EqualError(t, err, tt.wantErr, "ResolveHookIDs(): got %v, want %v", err, tt.wantErr)
+				return
+			}
+			if err != nil {
+				t.Fatalf("ResolveHookIDs(): got err: %v", err)
+				return
+			}
+
+			if !reflect.DeepEqual(tt.want, tt.fields.Project) {
+				t.Errorf("ResolveHookIDs(): got %v, want %v", tt.fields.Project, tt.want)
+			}
+		})
+	}
 }

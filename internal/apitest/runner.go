@@ -2,9 +2,8 @@ package apitest
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/xtgo/uuid"
 	"io/fs"
 	"os"
 	"path"
@@ -13,8 +12,11 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"github.com/xtgo/uuid"
+
 	"github.com/saucelabs/saucectl/internal/apitesting"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/tunnel"
@@ -441,4 +443,66 @@ func buildTestName(project apitesting.Project, test apitesting.Test) string {
 		return fmt.Sprintf("%s - %s", project.Name, test.Name)
 	}
 	return project.Name
+}
+
+// ResolveHookIDs resolve, for each suite, the matching hookID.
+func (r *Runner) ResolveHookIDs() error {
+	hookIDMappings := map[string]apitesting.Hook{}
+	hasErrors := false
+
+	projects, err := r.Client.GetProjects(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg(msg.ProjectListFailure)
+		return err
+	}
+
+	for idx, s := range r.Project.Suites {
+		if s.HookID != "" {
+			continue
+		}
+
+		project := findMatchingProject(s.ProjectName, projects)
+		if project.ID == "" {
+			log.Error().Str("suiteName", s.Name).Msgf(msg.ProjectNotFound, s.ProjectName)
+			hasErrors = true
+			continue
+		}
+
+		hook := hookIDMappings[project.ID]
+
+		if hook.Identifier == "" {
+			hooks, err := r.Client.GetHooks(context.Background(), project.ID)
+
+			if err != nil {
+				log.Err(err).Str("suiteName", s.Name).Msg(msg.HookQueryFailure)
+				hasErrors = true
+				continue
+			}
+			if len(hooks) == 0 {
+				log.Error().Str("suiteName", s.Name).Msgf(msg.NoHookForProject, project.Name)
+				hasErrors = true
+				continue
+			}
+
+			hook = hooks[0]
+			hookIDMappings[project.ID] = hooks[0]
+		}
+
+		log.Info().Msgf(msg.HookUsedForSuite, hook.Identifier, s.Name)
+		r.Project.Suites[idx].HookID = hook.Identifier
+	}
+
+	if hasErrors {
+		return errors.New(msg.FailedToPrepareSuites)
+	}
+	return nil
+}
+
+func findMatchingProject(name string, projects []apitesting.Project) apitesting.Project {
+	for _, p := range projects {
+		if p.Name == name {
+			return p
+		}
+	}
+	return apitesting.Project{}
 }

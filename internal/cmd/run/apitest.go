@@ -45,6 +45,10 @@ func runApitest(isCLIDriven bool) (int, error) {
 		TunnelService: &restoClient,
 	}
 
+	if err := r.ResolveHookIDs(); err != nil {
+		return 1, err
+	}
+
 	return r.RunProject()
 }
 

@@ -30,6 +30,15 @@
             "description": "Your project's hook ID, which you can create and/or retrieve from your project's Webhooks tab.",
             "type": "string"
           },
+          "projectName": {
+            "description": "Your project's name.",
+            "type": "string"
+          },
+          "testMatch": {
+            "description": "Paths to the api-testing test folders. Regex values are supported to indicate all folders of a certain directories, etc.",
+            "description": "",
+            "type": "array"
+          },
           "tests": {
             "description": "A list of test IDs to run for the project defined by hookId.",
             "type": "array"
@@ -37,11 +46,26 @@
           "tags": {
             "description": "A test tag to run for the project defined by hookId.",
             "type": "array"
+          },
+          "useRemoteTests": {
+            "description": "Use tests stored in the cloud instead of the local ones.",
+            "type": "boolean"
           }
         },
+        "oneOf": [
+          {
+            "required": [
+              "projectName"
+            ]
+          },
+          {
+            "required": [
+              "hookId"
+            ]
+          }
+        ],
         "required": [
-          "name",
-          "hookId"
+          "name"
         ],
         "additionalProperties": false
       }
