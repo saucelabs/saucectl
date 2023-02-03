@@ -1,5 +1,7 @@
 package imagerunner
 
+import "errors"
+
 // TODO Caution: Final states are not confirmed yet.
 // The different states that a runner can be in.
 const (
@@ -24,6 +26,8 @@ func Done(status string) bool {
 
 	return false
 }
+
+var ErrResourceNotFound = errors.New("resource not found")
 
 type RunnerSpec struct {
 	Container  Container         `json:"container,omitempty"`

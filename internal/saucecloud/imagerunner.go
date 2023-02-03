@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/ryanuber/go-glob"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/report"
 	"os"
 	"os/signal"
@@ -23,6 +24,7 @@ type ImageRunner interface {
 	StopRun(ctx context.Context, id string) error
 	ListArtifacts(ctx context.Context, id string) ([]string, error)
 	DownloadArtifact(ctx context.Context, id, name, dir string) error
+	GetLogs(ctx context.Context, id string) (string, error)
 }
 
 type SuiteTimeoutError struct {
@@ -237,6 +239,8 @@ func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
 		log.Err(res.err).Str("suite", res.name).Bool("passed", res.err == nil).Str("runID", res.runID).
 			Msg("Suite finished.")
 
+		r.PrintLogs(res.runID, res.name)
+
 		// TODO Hack. config.ShouldDownloadArtifact needs a refactor. Artifact download check has too much job logic
 		// inside the config layer.
 		// Conditional: runID != "" && !cancelled && !timedOut && whatever-the-config-says
@@ -328,6 +332,42 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName string) {
 				}
 				break
 			}
+		}
+	}
+}
+
+func (r *ImgRunner) PrintLogs(runID, suiteName string) {
+	if runID == "" {
+		return
+	}
+
+	// Need a poll timeout, because artifacts may never exist.
+	ctx, cancel := context.WithTimeout(r.ctx, 45*time.Second)
+	defer cancel()
+
+	logs, err := r.PollLogs(ctx, runID)
+	if err != nil {
+		log.Err(err).Str("suite", suiteName).Msg("Unable to display logs.")
+	} else {
+		msg.LogConsoleOut(suiteName, logs)
+	}
+}
+
+func (r *ImgRunner) PollLogs(ctx context.Context, id string) (string, error) {
+	ticker := time.NewTicker(3 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return "", ctx.Err()
+		case <-ticker.C:
+			l, err := r.RunnerService.GetLogs(ctx, id)
+			if err == imagerunner.ErrResourceNotFound {
+				// Keep retrying on 404s. Might be available later.
+				continue
+			}
+			return l, err
 		}
 	}
 }

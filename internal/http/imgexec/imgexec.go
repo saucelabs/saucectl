@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -174,4 +175,63 @@ func (c *Client) DownloadArtifact(ctx context.Context, id, name, dir string) err
 	}
 
 	return nil
+}
+
+func (c *Client) GetLogs(ctx context.Context, id string) (string, error) {
+	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/logs/url", c.URL, id)
+
+	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		b, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("unexpected server response (%d): %s", resp.StatusCode, b)
+	}
+
+	var urlResponse struct {
+		URL string `json:"url"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&urlResponse); err != nil {
+		return "", fmt.Errorf("failed to decode server response: %w", err)
+	}
+
+	return c.doGetStr(ctx, urlResponse.URL)
+}
+
+func (c *Client) doGetStr(ctx context.Context, url string) (string, error) {
+	urlReq, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := c.HTTPClient.Do(urlReq)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return "", imagerunner.ErrResourceNotFound
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		b, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("unexpected server response (%d): %s", resp.StatusCode, b)
+	}
+
+	builder := &strings.Builder{}
+	if _, err := io.Copy(builder, resp.Body); err != nil {
+		return "", fmt.Errorf("download failed: %w", err)
+	}
+
+	return builder.String(), nil
 }
