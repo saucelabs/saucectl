@@ -51,9 +51,8 @@ jobs:
   smoke_test_image:
     name: Smoke test Docker image
     runs-on: ubuntu-latest
+    container: ${{ needs.push_to_registry.outputs.tag }}
     needs: push_to_registry
     steps:
-      - name: Pull Docker image
-        run: docker pull ${{ needs.push_to_registry.outputs.tag }}
-      - name: Run Docker image
-        run: docker run --entrypoint saucectl ${{ needs.push_to_registry.outputs.tag }} --version
+      - name: Verify saucectl
+        run: saucectl --version
