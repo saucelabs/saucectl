@@ -342,7 +342,7 @@ func (r *ImgRunner) PrintLogs(runID, suiteName string) {
 	}
 
 	// Need a poll timeout, because artifacts may never exist.
-	ctx, cancel := context.WithTimeout(r.ctx, 45*time.Second)
+	ctx, cancel := context.WithTimeout(r.ctx, 3*time.Minute)
 	defer cancel()
 
 	logs, err := r.PollLogs(ctx, runID)
@@ -354,7 +354,7 @@ func (r *ImgRunner) PrintLogs(runID, suiteName string) {
 }
 
 func (r *ImgRunner) PollLogs(ctx context.Context, id string) (string, error) {
-	ticker := time.NewTicker(3 * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
 	for {
@@ -363,8 +363,8 @@ func (r *ImgRunner) PollLogs(ctx context.Context, id string) (string, error) {
 			return "", ctx.Err()
 		case <-ticker.C:
 			l, err := r.RunnerService.GetLogs(ctx, id)
-			if err == imagerunner.ErrResourceNotFound {
-				// Keep retrying on 404s. Might be available later.
+			if err == imagerunner.ErrResourceNotFound || errors.Is(err, context.DeadlineExceeded) {
+				// Keep retrying on 404s or request timeouts. Might be available later.
 				continue
 			}
 			return l, err
