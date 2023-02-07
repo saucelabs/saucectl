@@ -9,6 +9,7 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 
+	j "github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/config"
 	v1 "github.com/saucelabs/saucectl/internal/cypress/v1"
 	"github.com/saucelabs/saucectl/internal/framework"
@@ -102,9 +103,14 @@ func TestRunSuites(t *testing.T) {
 			CCYReader: mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
 				return 1, nil
 			}},
-			InsightsService: mocks.FakeInsightService{PostTestRunFn: func(ctx context.Context, runs []insights.TestRun) error {
-				return nil
-			}},
+			InsightsService: mocks.FakeInsightService{
+				PostTestRunFn: func(ctx context.Context, runs []insights.TestRun) error {
+					return nil
+				},
+				ReadJobFn: func(ctx context.Context, id string) (j.Job, error) {
+					return j.Job{}, nil
+				},
+			},
 		},
 		Project: &v1.Project{
 			Suites: []v1.Suite{
@@ -194,6 +200,14 @@ func TestRunProject(t *testing.T) {
 					DownloadArtifactFn: func(jobID, suiteName string) []string {
 						return []string{}
 					},
+				},
+			},
+			InsightsService: mocks.FakeInsightService{
+				PostTestRunFn: func(ctx context.Context, runs []insights.TestRun) error {
+					return nil
+				},
+				ReadJobFn: func(ctx context.Context, id string) (j.Job, error) {
+					return j.Job{}, nil
 				},
 			},
 			CCYReader:              ccyReader,
