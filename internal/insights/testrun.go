@@ -84,11 +84,6 @@ const (
 	PlatformOther = "other"
 )
 
-const (
-	iOS     = "iOS"
-	Android = "Android"
-)
-
 type Details struct {
 	AppName   string
 	Browser   string
