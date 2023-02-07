@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - v*
-  pull_request:
 
 jobs:
   # Build the project as a Docker image and push it to Docker Hub
@@ -12,8 +11,9 @@ jobs:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
     outputs:
-      tag: ${{ steps.meta.outputs.tags }}
+      tags: ${{ steps.meta.outputs.tags }}
       label: ${{ steps.meta.outputs.labels }}
+      tag: ${{ steps.meta.outputs.raw }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
