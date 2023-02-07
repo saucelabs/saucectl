@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jarcoal/httpmock"
+	"github.com/saucelabs/saucectl/internal/build"
 	j "github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
@@ -150,6 +151,11 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 				},
 				VDCDownloader: &mocks.FakeArtifactDownloader{
 					DownloadArtifactFn: func(jobID, suiteName string) []string { return []string{} },
+				},
+			},
+			BuildService: &mocks.FakeBuildReader{
+				GetBuildIDFn: func(ctx context.Context, jobID string, buildSource build.Source) (string, error) {
+					return "build-id", nil
 				},
 			},
 			CCYReader:       ccyReader,

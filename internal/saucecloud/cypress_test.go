@@ -9,6 +9,7 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/saucelabs/saucectl/internal/build"
 	j "github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/config"
 	v1 "github.com/saucelabs/saucectl/internal/cypress/v1"
@@ -98,6 +99,11 @@ func TestRunSuites(t *testing.T) {
 					DownloadArtifactFn: func(jobID string, suiteName string) []string {
 						return []string{}
 					},
+				},
+			},
+			BuildService: &mocks.FakeBuildReader{
+				GetBuildIDFn: func(ctx context.Context, jobID string, buildSource build.Source) (string, error) {
+					return "build-id", nil
 				},
 			},
 			CCYReader: mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
@@ -200,6 +206,11 @@ func TestRunProject(t *testing.T) {
 					DownloadArtifactFn: func(jobID, suiteName string) []string {
 						return []string{}
 					},
+				},
+			},
+			BuildService: &mocks.FakeBuildReader{
+				GetBuildIDFn: func(ctx context.Context, jobID string, buildSource build.Source) (string, error) {
+					return "build-id", nil
 				},
 			},
 			InsightsService: mocks.FakeInsightService{

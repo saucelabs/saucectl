@@ -1003,7 +1003,7 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 	if res.details.BuildID == "" {
 		buildID, err := r.BuildService.GetBuildID(context.Background(), res.job.ID, getSource(res.job.IsRDC))
 		if err != nil {
-			log.Warn().Err(err).Str("action", "getBuild").Msg(msg.InsightsReportError)
+			log.Warn().Err(err).Str("action", "getBuild").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 			return
 		}
 		res.details.BuildID = buildID
