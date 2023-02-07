@@ -16,6 +16,7 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 
+	j "github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -34,9 +35,14 @@ func TestXcuitestRunner_RunProject(t *testing.T) {
 	uploader := &mocks.FakeProjectUploader{
 		UploadSuccess: true,
 	}
-	insightsSvc := mocks.FakeInsightService{PostTestRunFn: func(ctx context.Context, runs []insights.TestRun) error {
-		return nil
-	}}
+	insightsSvc := mocks.FakeInsightService{
+		PostTestRunFn: func(ctx context.Context, runs []insights.TestRun) error {
+			return nil
+		},
+		ReadJobFn: func(ctx context.Context, id string) (j.Job, error) {
+			return j.Job{}, nil
+		},
+	}
 
 	var startOpts job.StartOptions
 	runner := &XcuitestRunner{
