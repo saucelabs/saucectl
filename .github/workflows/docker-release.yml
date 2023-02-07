@@ -15,6 +15,7 @@ jobs:
       tags: ${{ steps.meta.outputs.tags }}
       label: ${{ steps.meta.outputs.labels }}
       version: v${{ steps.meta.outputs.version }}
+      raw: ${{ steps.meta.outputs.raw }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
@@ -52,7 +53,7 @@ jobs:
   smoke_test_image:
     name: Smoke test Docker image
     runs-on: ubuntu-latest
-    container: ${{ needs.push_to_registry.outputs.version }}
+    container: ${{ needs.push_to_registry.outputs.raw }}
     needs: push_to_registry
     steps:
       - name: Verify saucectl
