@@ -84,16 +84,20 @@ const (
 	PlatformOther = "other"
 )
 
+const (
+	iOS     = "iOS"
+	Android = "Android"
+)
+
 type Details struct {
-	AppName    string
-	Browser    string
-	BuildName  string
-	CI         string
-	DeviceID   string
-	DeviceName string
-	Framework  string
-	Platform   string
-	Tags       []string
+	AppName   string
+	Browser   string
+	BuildName string
+	CI        string
+	Device    string
+	Framework string
+	Platform  string
+	Tags      []string
 }
 
 func FromJUnit(suites junit.TestSuites, jobID string, jobName string, details Details, isRDC bool) []TestRun {
@@ -202,9 +206,9 @@ func enrichInsightTestRun(runs []TestRun, jobID string, jobName string, details 
 	for idx := range runs {
 		runs[idx].Browser = details.Browser
 		runs[idx].BuildName = details.BuildName
-		runs[idx].Device = resolveDevice(details.DeviceName, details.DeviceID)
+		runs[idx].Device = details.Device
 		runs[idx].Framework = details.Framework
-		runs[idx].OS = resolveOS(details.Platform, details.Framework)
+		runs[idx].OS = details.Platform
 		runs[idx].Platform = resolvePlatform(isRDC)
 		runs[idx].SauceJob = &Job{
 			ID:   jobID,
@@ -224,13 +228,6 @@ func enrichInsightTestRun(runs []TestRun, jobID string, jobName string, details 
 	}
 }
 
-func resolveDevice(deviceName string, deviceID string) string {
-	if deviceName != "" {
-		return deviceName
-	}
-	return deviceID
-}
-
 func resolvePlatform(isRDC bool) string {
 	if isRDC {
 		return PlatformRDC
@@ -243,14 +240,4 @@ func resolveType(framework string) string {
 		return TypeMobile
 	}
 	return TypeWeb
-}
-
-func resolveOS(platform string, framework string) string {
-	if framework == "xcuitest" {
-		return "iOS"
-	}
-	if framework == "espresso" {
-		return "Android"
-	}
-	return platform
 }

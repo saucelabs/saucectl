@@ -317,13 +317,10 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 		start := time.Now()
 
 		details := insights.Details{
-			Framework:  opts.Framework,
-			Browser:    opts.BrowserName,
-			Tags:       opts.Tags,
-			BuildName:  opts.Build,
-			Platform:   opts.PlatformName,
-			DeviceID:   opts.DeviceID,
-			DeviceName: opts.DeviceName,
+			Framework: opts.Framework,
+			Browser:   opts.BrowserName,
+			Tags:      opts.Tags,
+			BuildName: opts.Build,
 		}
 
 		if r.interrupted {
@@ -1000,8 +997,16 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 		return
 	}
 
-	var testRuns []insights.TestRun
+	// read job from insights to get accurate platform and device name
+	j, err := r.InsightsService.ReadJob(context.Background(), res.job.ID)
+	if err != nil {
+		log.Err(err).Msg(msg.FailedToReadJob)
+		return
+	}
+	res.details.Platform = j.Platform
+	res.details.Device = j.Device
 
+	var testRuns []insights.TestRun
 	if arrayContains(assets, saucereport.SauceReportFileName) {
 		report, err := r.loadSauceTestReport(res.job.ID, res.job.IsRDC)
 		if err != nil {
