@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - v*
-  pull_request:
 
 jobs:
   # Build the project as a Docker image and push it to Docker Hub
@@ -14,8 +13,7 @@ jobs:
     outputs:
       tags: ${{ steps.meta.outputs.tags }}
       label: ${{ steps.meta.outputs.labels }}
-      version: v${{ steps.meta.outputs.version }}
-      raw: ${{ steps.meta.outputs.raw }}
+      tag: ${{ steps.meta.outputs.raw }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
@@ -53,7 +51,7 @@ jobs:
   smoke_test_image:
     name: Smoke test Docker image
     runs-on: ubuntu-latest
-    container: ${{ needs.push_to_registry.outputs.raw }}
+    container: ${{ needs.push_to_registry.outputs.tag }}
     needs: push_to_registry
     steps:
       - name: Verify saucectl
