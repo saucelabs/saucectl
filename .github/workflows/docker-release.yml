@@ -12,8 +12,9 @@ jobs:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
     outputs:
-      tag: ${{ steps.meta.outputs.tags }}
+      tags: ${{ steps.meta.outputs.tags }}
       label: ${{ steps.meta.outputs.labels }}
+      version: v${{ steps.meta.outputs.version }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
@@ -51,7 +52,7 @@ jobs:
   smoke_test_image:
     name: Smoke test Docker image
     runs-on: ubuntu-latest
-    container: ${{ needs.push_to_registry.outputs.tag }}
+    container: ${{ needs.push_to_registry.outputs.version }}
     needs: push_to_registry
     steps:
       - name: Verify saucectl
