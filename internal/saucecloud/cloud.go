@@ -1000,7 +1000,7 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 	// read job from insights to get accurate platform and device name
 	j, err := r.InsightsService.ReadJob(context.Background(), res.job.ID)
 	if err != nil {
-		log.Err(err).Msg(msg.FailedToReadJob)
+		log.Err(err).Msgf(msg.FailedToReadJob, res.job.ID)
 		return
 	}
 	res.details.Platform = j.Platform

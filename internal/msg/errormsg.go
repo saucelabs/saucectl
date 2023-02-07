@@ -197,5 +197,5 @@ const (
 	// InsightsReportError indicates failed push to insights.
 	InsightsReportError = "unable to report result to insights"
 	// FailedToReadJob indicates failed to read the job details
-	FailedToReadJob = "unable to read the job"
+	FailedToReadJob = "unable to read the job %s"
 )
