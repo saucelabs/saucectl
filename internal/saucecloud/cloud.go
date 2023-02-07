@@ -993,14 +993,14 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 
 	assets, err := r.JobService.GetJobAssetFileNames(context.Background(), res.job.ID, res.job.IsRDC)
 	if err != nil {
-		log.Warn().Err(err).Str("action", "loadAssets").Msg(msg.InsightsReportError)
+		log.Warn().Err(err).Str("action", "loadAssets").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 		return
 	}
 
 	// read job from insights to get accurate platform and device name
 	j, err := r.InsightsService.ReadJob(context.Background(), res.job.ID)
 	if err != nil {
-		log.Err(err).Msgf(msg.FailedToReadJob, res.job.ID)
+		log.Warn().Err(err).Str("action", "readJob").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 		return
 	}
 	res.details.Platform = j.Platform
@@ -1010,14 +1010,14 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 	if arrayContains(assets, saucereport.SauceReportFileName) {
 		report, err := r.loadSauceTestReport(res.job.ID, res.job.IsRDC)
 		if err != nil {
-			log.Warn().Err(err).Str("action", "parsingJSON").Msg(msg.InsightsReportError)
+			log.Warn().Err(err).Str("action", "parsingJSON").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 			return
 		}
 		testRuns = insights.FromSauceReport(report, res.job.ID, res.name, res.details, res.job.IsRDC)
 	} else if arrayContains(assets, junit.JunitFileName) {
 		report, err := r.loadJUnitReport(res.job.ID, res.job.IsRDC)
 		if err != nil {
-			log.Warn().Err(err).Str("action", "parsingXML").Msg(msg.InsightsReportError)
+			log.Warn().Err(err).Str("action", "parsingXML").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 			return
 		}
 		testRuns = insights.FromJUnit(report, res.job.ID, res.name, res.details, res.job.IsRDC)
@@ -1025,7 +1025,7 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 
 	if len(testRuns) > 0 {
 		if err := r.InsightsService.PostTestRun(context.Background(), testRuns); err != nil {
-			log.Warn().Err(err).Str("action", "posting").Msg(msg.InsightsReportError)
+			log.Warn().Err(err).Str("action", "posting").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 		}
 	}
 }
