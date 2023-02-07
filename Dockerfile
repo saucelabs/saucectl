@@ -13,4 +13,7 @@ RUN go build -ldflags="${LD_FLAGS}" cmd/saucectl/saucectl.go
 
 # Release the binary here
 FROM ubuntu:latest
+
+RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates
+
 COPY --from=builder /app/saucectl /usr/local/bin/saucectl
