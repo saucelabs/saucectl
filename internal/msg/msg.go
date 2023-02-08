@@ -93,6 +93,9 @@ const ArchiveFileCountWarning = "The project archive is unusually large which ca
 // WarningLine is a line of starts highlighting the WARNING word.
 const WarningLine = "************************************* WARNING *************************************"
 
+// EmptyBuildID indicates it's using empty build ID
+const EmptyBuildID = "using empty build ID"
+
 // LogArchiveSizeWarning prints out a warning about the project archive size along with
 // suggestions on how to fix it.
 func LogArchiveSizeWarning() {
