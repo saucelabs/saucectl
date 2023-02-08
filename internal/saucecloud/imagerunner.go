@@ -241,12 +241,7 @@ func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
 
 		r.PrintLogs(res.runID, res.name)
 
-		// TODO Hack. config.ShouldDownloadArtifact needs a refactor. Artifact download check has too much job logic
-		// inside the config layer.
-		// Conditional: runID != "" && !cancelled && !timedOut && whatever-the-config-says
-		if config.ShouldDownloadArtifact(res.runID, passed, res.status != imagerunner.StateCancelled, false, r.Project.Artifacts.Download) {
-			r.DownloadArtifacts(res.runID, res.name)
-		}
+		r.DownloadArtifacts(res.runID, res.name, res.status, passed)
 
 		for _, r := range r.Reporters {
 			r.Add(report.TestResult{
@@ -313,7 +308,11 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (
 	}
 }
 
-func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName string) {
+func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed bool) {
+	if runnerID == "" || status == imagerunner.StateCancelled || !r.Project.Artifacts.Download.When.IsNow(passed) {
+		return
+	}
+
 	dir, err := config.GetSuiteArtifactFolder(suiteName, r.Project.Artifacts.Download)
 	if err != nil {
 		log.Err(err).Msg("Unable to create artifacts folder.")
