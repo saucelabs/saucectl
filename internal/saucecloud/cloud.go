@@ -194,10 +194,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				TimedOut:   res.job.TimedOut,
 			}
 
-			var files []string
-			if config.ShouldDownloadArtifact(res.job.ID, res.job.Passed, res.job.TimedOut, r.Async, artifactCfg) {
-				files = r.JobService.DownloadArtifact(res.job.ID, res.name, res.job.IsRDC)
-			}
+			files := r.downloadArtifacts(res.name, res.job, artifactCfg.When)
 			if jsonResultRequired {
 				for _, f := range files {
 					artifacts = append(artifacts, report.Artifact{
@@ -1041,6 +1038,14 @@ func (r *CloudRunner) loadJUnitReport(jobID string, isRDC bool) (junit.TestSuite
 		return junit.TestSuites{}, err
 	}
 	return junit.Parse(fileContent)
+}
+
+func (r *CloudRunner) downloadArtifacts(suiteName string, job job.Job, when config.When) []string {
+	if job.ID == "" || job.TimedOut || r.Async || !when.IsNow(job.Passed) {
+		return []string{}
+	}
+
+	return r.JobService.DownloadArtifact(job.ID, suiteName, job.IsRDC)
 }
 
 func arrayContains(list []string, want string) bool {
