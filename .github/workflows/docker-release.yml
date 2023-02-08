@@ -13,13 +13,15 @@ jobs:
     outputs:
       tags: ${{ steps.meta.outputs.tags }}
       label: ${{ steps.meta.outputs.labels }}
-      tag: ${{ steps.meta.outputs.raw }}
+      version: ${{ steps.set_version.outputs.version }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
-      - name: Set env
+      - name: Set Release Version
+        id: set_version
         run: |
           echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+          echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
       - name: Check Docker Version
         run: docker --version
       - name: Check Release Version
@@ -51,7 +53,7 @@ jobs:
   smoke_test_image:
     name: Smoke test Docker image
     runs-on: ubuntu-latest
-    container: ${{ needs.push_to_registry.outputs.tag }}
+    container: ${{ needs.push_to_registry.outputs.version }}
     needs: push_to_registry
     steps:
       - name: Verify saucectl
