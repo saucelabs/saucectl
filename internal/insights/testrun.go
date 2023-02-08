@@ -88,6 +88,7 @@ type Details struct {
 	AppName   string
 	Browser   string
 	BuildName string
+	BuildID   string
 	CI        string
 	Device    string
 	Framework string
@@ -202,6 +203,7 @@ func enrichInsightTestRun(runs []TestRun, jobID string, jobName string, details 
 		runs[idx].Browser = details.Browser
 		runs[idx].BuildName = details.BuildName
 		runs[idx].Device = details.Device
+		runs[idx].BuildID = details.BuildID
 		runs[idx].Framework = details.Framework
 		runs[idx].OS = details.Platform
 		runs[idx].Platform = resolvePlatform(isRDC)

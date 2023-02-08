@@ -165,6 +165,7 @@ func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
 			MetadataService: &testcompClient,
 			InsightsService: &insightsClient,
 			UserService:     &iamClient,
+			BuildService:    &restoClient,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
 			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,

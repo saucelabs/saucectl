@@ -191,6 +191,7 @@ func runCypressInSauce(p cypress.Project, regio region.Region) (int, error) {
 			TunnelService:   &restoClient,
 			InsightsService: &insightsClient,
 			UserService:     &iamClient,
+			BuildService:    &restoClient,
 			Region:          regio,
 			ShowConsoleLog:  p.IsShowConsoleLog(),
 			Reporters: createReporters(p.GetReporter(), p.GetNotifications(), p.GetSauceCfg().Metadata, &testcompClient, &restoClient,

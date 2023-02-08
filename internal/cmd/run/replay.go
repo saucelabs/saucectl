@@ -151,6 +151,7 @@ func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, erro
 			MetadataService: &testcompClient,
 			InsightsService: &insightsClient,
 			UserService:     &iamClient,
+			BuildService:    &restoClient,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
 			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,

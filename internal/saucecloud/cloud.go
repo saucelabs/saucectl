@@ -22,6 +22,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
+	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
@@ -56,6 +57,7 @@ type CloudRunner struct {
 	MetadataSearchStrategy framework.MetadataSearchStrategy
 	InsightsService        insights.Service
 	UserService            iam.Service
+	BuildService           build.Reader
 
 	Reporters []report.Reporter
 
@@ -982,10 +984,26 @@ func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHi
 	return r.InsightsService.GetHistory(context.Background(), user, launchOrder)
 }
 
+func getSource(isRDC bool) build.Source {
+	if isRDC {
+		return build.RDC
+	}
+	return build.VDC
+}
+
 func (r *CloudRunner) reportSuiteToInsights(res result) {
 	// Skip reporting if job is not completed
 	if !job.Done(res.job.Status) || res.skipped || res.job.ID == "" {
 		return
+	}
+
+	if res.details.BuildID == "" {
+		buildID, err := r.BuildService.GetBuildID(context.Background(), res.job.ID, getSource(res.job.IsRDC))
+		if err != nil {
+			// leave BuildID empty when it failed to get build info
+			log.Warn().Err(err).Str("action", "getBuild").Str("jobID", res.job.ID).Msg(msg.EmptyBuildID)
+		}
+		res.details.BuildID = buildID
 	}
 
 	assets, err := r.JobService.GetJobAssetFileNames(context.Background(), res.job.ID, res.job.IsRDC)

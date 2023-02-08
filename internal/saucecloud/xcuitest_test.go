@@ -16,6 +16,7 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/saucelabs/saucectl/internal/build"
 	j "github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/insights"
@@ -77,6 +78,11 @@ func TestXcuitestRunner_RunProject(t *testing.T) {
 					GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
 						return []string{}, nil
 					},
+				},
+			},
+			BuildService: &mocks.FakeBuildReader{
+				GetBuildIDFn: func(ctx context.Context, jobID string, buildSource build.Source) (string, error) {
+					return "build-id", nil
 				},
 			},
 			CCYReader:       ccyReader,
