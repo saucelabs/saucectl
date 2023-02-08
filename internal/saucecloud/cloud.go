@@ -1004,10 +1004,10 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 		buildID, err := r.BuildService.GetBuildID(context.Background(), res.job.ID, getSource(res.job.IsRDC))
 		if err != nil {
 			log.Warn().Err(err).Str("action", "getBuild").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
-			return
 		}
 		res.details.BuildID = buildID
 	}
+
 	assets, err := r.JobService.GetJobAssetFileNames(context.Background(), res.job.ID, res.job.IsRDC)
 	if err != nil {
 		log.Warn().Err(err).Str("action", "loadAssets").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
