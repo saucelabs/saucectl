@@ -102,6 +102,21 @@ const (
 	WhenAlways When = "always"
 )
 
+// IsNow returns true if When fulfills its own condition of 'passed'.
+func (w When) IsNow(passed bool) bool {
+	if w == WhenAlways {
+		return true
+	}
+	if w == WhenFail && !passed {
+		return true
+	}
+	if w == WhenPass && passed {
+		return true
+	}
+
+	return false
+}
+
 // ArtifactDownload represents the test artifacts configuration.
 type ArtifactDownload struct {
 	Match     []string `yaml:"match,omitempty" json:"match"`
@@ -361,24 +376,6 @@ func (t *Tunnel) SetDefaults() {
 		log.Warn().Msg("tunnel.parent has been deprecated, please use tunnel.owner instead")
 		t.Owner = t.Parent
 	}
-}
-
-// ShouldDownloadArtifact returns true if it should download artifacts, otherwise false
-func ShouldDownloadArtifact(jobID string, passed, timedOut, async bool, cfg ArtifactDownload) bool {
-	if jobID == "" || timedOut || async {
-		return false
-	}
-	if cfg.When == WhenAlways {
-		return true
-	}
-	if cfg.When == WhenFail && !passed {
-		return true
-	}
-	if cfg.When == WhenPass && passed {
-		return true
-	}
-
-	return false
 }
 
 // GetSuiteArtifactFolder returns a target folder that's based on a combination of suiteName and the configured artifact

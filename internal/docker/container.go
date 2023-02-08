@@ -344,11 +344,7 @@ func (r *ContainerRunner) collectResults(artifactCfg config.ArtifactDownload, re
 		inProgress--
 
 		jobID := getJobID(res.jobInfo.JobDetailsURL)
-
-		var files []string
-		if config.ShouldDownloadArtifact(jobID, res.passed, res.timedOut, false, artifactCfg) {
-			files = r.ArtfactDownloader.DownloadArtifact(jobID, res.name, false)
-		}
+		files := r.downloadArtifacts(res.name, jobID, res.passed, res.timedOut, artifactCfg.When)
 
 		if !res.passed {
 			passed = false
@@ -467,6 +463,14 @@ func (r *ContainerRunner) runSuite(options containerStartOptions) (containerID s
 		r.uploadCLIFlags(jobID, options.CLIFlags)
 	}
 	return
+}
+
+func (r *ContainerRunner) downloadArtifacts(suiteName string, jobID string, passed bool, timedOut bool, when config.When) []string {
+	if jobID == "" || timedOut || !when.IsNow(passed) {
+		return []string{}
+	}
+
+	return r.ArtfactDownloader.DownloadArtifact(jobID, suiteName, false)
 }
 
 // uploadSauceConfig adds job configuration as an asset.
