@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"github.com/jarcoal/httpmock"
+	j "github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
+	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/stretchr/testify/assert"
@@ -152,6 +154,14 @@ func TestEspressoRunner_RunProject(t *testing.T) {
 			},
 			CCYReader:       ccyReader,
 			ProjectUploader: uploader,
+			InsightsService: mocks.FakeInsightService{
+				PostTestRunFn: func(ctx context.Context, runs []insights.TestRun) error {
+					return nil
+				},
+				ReadJobFn: func(ctx context.Context, id string) (j.Job, error) {
+					return j.Job{}, nil
+				},
+			},
 		},
 		Project: espresso.Project{
 			Espresso: espresso.Espresso{
