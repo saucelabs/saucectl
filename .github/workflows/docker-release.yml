@@ -55,4 +55,5 @@ jobs:
     needs: push_to_registry
     steps:
       - name: Verify saucectl
-        run: saucectl --version
+        run: |
+          echo ${{ needs.push_to_registry.outputs.tag }}; saucectl --version
