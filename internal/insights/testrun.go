@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"github.com/xtgo/uuid"
 
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/junit"
@@ -130,7 +129,6 @@ func FromJUnit(suites junit.TestSuites, jobID string, jobName string, details De
 			}
 			testRuns = append(testRuns, TestRun{
 				Name:         fmt.Sprintf("%s.%s", ss.ClassName, ss.Name),
-				ID:           uuid.NewRandom().String(),
 				Status:       status,
 				CreationTime: startDate,
 				StartTime:    startDate,
@@ -159,7 +157,6 @@ func deepConvert(suite saucereport.Suite) []TestRun {
 	for _, test := range suite.Tests {
 		newRun := TestRun{
 			Name:         test.Name,
-			ID:           uuid.NewRandom().String(),
 			Status:       uniformizeJSONStatus(test.Status),
 			CreationTime: test.StartTime,
 			StartTime:    test.StartTime,
