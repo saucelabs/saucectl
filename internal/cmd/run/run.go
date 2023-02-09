@@ -82,6 +82,9 @@ var (
 	ErrEmptySuiteName = errors.New(msg.EmptyAdhocSuiteName)
 )
 
+// DockerMode constant
+const DockerMode = "docker"
+
 // gFlags contains all global flags that are set when 'run' is invoked.
 var gFlags = globalFlags{}
 
@@ -291,12 +294,8 @@ func printTestEnv(testEnv string) {
 		return
 	}
 
-	switch testEnv {
-	case "docker":
+	if testEnv == DockerMode {
 		fmt.Println(msg.DockerLogo)
-		fmt.Println()
-	case "sauce":
-		fmt.Println(msg.SauceLogo)
 		fmt.Println()
 	}
 }
