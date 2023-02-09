@@ -700,10 +700,15 @@ func (r *CloudRunner) uploadProject(filename, description string, pType uploadTy
 	if err != nil {
 		return "", nil
 	}
-	progress.Show("Uploading %s %s", pType, filename)
+	file, err := os.Open(filename)
+	if err != nil {
+		return "", fmt.Errorf("project upload: %w", err)
+	}
+	defer file.Close()
 
+	progress.Show("Uploading %s %s", pType, filename)
 	start := time.Now()
-	resp, err := r.ProjectUploader.Upload(filename, description)
+	resp, err := r.ProjectUploader.UploadStream(filepath.Base(filename), description, file)
 	progress.Stop()
 	if err != nil {
 		return "", err
