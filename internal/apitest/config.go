@@ -25,7 +25,7 @@ type Project struct {
 	Suites         []Suite            `yaml:"suites,omitempty"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty"`
 	RootDir        string             `yaml:"rootDir,omitempty"`
-	Params         map[string]string  `yaml:"params,omitempty"`
+	Env            map[string]string  `yaml:"env,omitempty"`
 }
 
 // Suite represents the apitest suite configuration.
@@ -38,7 +38,7 @@ type Suite struct {
 	Tests          []string          `yaml:"tests,omitempty"`
 	Tags           []string          `yaml:"tags,omitempty"`
 	TestMatch      []string          `yaml:"testMatch,omitempty"`
-	Params         map[string]string `yaml:"params,omitempty"`
+	Env            map[string]string `yaml:"env,omitempty"`
 }
 
 // FromFile creates a new apitest Project based on the filepath cfgPath.
@@ -73,14 +73,14 @@ func SetDefaults(p *Project) {
 		p.RootDir = "."
 	}
 
-	// Apply global params onto every suite.
-	for k, v := range p.Params {
+	// Apply global env var onto every suite.
+	for k, v := range p.Env {
 		for ks := range p.Suites {
 			s := &p.Suites[ks]
-			if s.Params == nil {
-				s.Params = map[string]string{}
+			if s.Env == nil {
+				s.Env = map[string]string{}
 			}
-			s.Params[k] = v
+			s.Env[k] = v
 		}
 	}
 }

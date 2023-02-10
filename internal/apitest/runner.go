@@ -116,7 +116,7 @@ func findTests(rootDir string, testMatch []string) ([]string, error) {
 	return tests, nil
 }
 
-func loadTest(unitPath string, inputPath string, suiteName string, testName string, tags []string, params map[string]string) (apitesting.TestRequest, error) {
+func loadTest(unitPath string, inputPath string, suiteName string, testName string, tags []string, env map[string]string) (apitesting.TestRequest, error) {
 	unitContent, err := os.ReadFile(unitPath)
 	if err != nil {
 		return apitesting.TestRequest{}, err
@@ -130,7 +130,7 @@ func loadTest(unitPath string, inputPath string, suiteName string, testName stri
 		Tags:   append([]string{}, tags...),
 		Input:  string(inputContent),
 		Unit:   string(unitContent),
-		Params: params,
+		Params: env,
 	}, nil
 }
 
@@ -144,7 +144,7 @@ func (r *Runner) loadTests(s Suite, tests []string) []apitesting.TestRequest {
 			s.Name,
 			test,
 			s.Tags,
-			s.Params,
+			s.Env,
 		)
 		if err != nil {
 			log.Warn().
@@ -213,7 +213,7 @@ func (r *Runner) runRemoteTests(s Suite, results chan []apitesting.TestResult) i
 	if len(s.Tags) == 0 && len(s.Tests) == 0 {
 		log.Info().Str("hookId", s.HookID).Msg("Running project.")
 
-		resp, err := r.Client.RunAllAsync(context.Background(), s.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, apitesting.TestRequest{Params: s.Params})
+		resp, err := r.Client.RunAllAsync(context.Background(), s.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, apitesting.TestRequest{Params: s.Env})
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to run project.")
 		}
@@ -230,7 +230,7 @@ func (r *Runner) runRemoteTests(s Suite, results chan []apitesting.TestResult) i
 		test := t
 		log.Info().Str("test", test).Str("hookId", s.HookID).Msg("Running test.")
 
-		resp, err := r.Client.RunTestAsync(context.Background(), s.HookID, test, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, apitesting.TestRequest{Params: s.Params})
+		resp, err := r.Client.RunTestAsync(context.Background(), s.HookID, test, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, apitesting.TestRequest{Params: s.Env})
 
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to run test.")
@@ -247,7 +247,7 @@ func (r *Runner) runRemoteTests(s Suite, results chan []apitesting.TestResult) i
 		tag := t
 		log.Info().Str("tag", tag).Str("hookId", s.HookID).Msg("Running tag.")
 
-		resp, err := r.Client.RunTagAsync(context.Background(), s.HookID, tag, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, apitesting.TestRequest{Params: s.Params})
+		resp, err := r.Client.RunTagAsync(context.Background(), s.HookID, tag, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, apitesting.TestRequest{Params: s.Env})
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to run tag.")
 		}
