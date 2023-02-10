@@ -2,24 +2,16 @@ package appstore
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/multipartext"
 
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/requesth"
 	"github.com/saucelabs/saucectl/internal/storage"
 )
@@ -77,11 +69,6 @@ func New(url, username, accessKey string, timeout time.Duration) *AppStore {
 		Username:   username,
 		AccessKey:  accessKey,
 	}
-}
-
-// isMobileAppPackage determines if a file is a mobile app package.
-func isMobileAppPackage(name string) bool {
-	return strings.HasSuffix(name, ".ipa") || strings.HasSuffix(name, ".apk") || strings.HasSuffix(name, ".aab")
 }
 
 // Download downloads a file with the given id. It's the caller's responsibility to close the reader.
@@ -148,123 +135,6 @@ func (s *AppStore) UploadStream(filename, description string, reader io.Reader) 
 	default:
 		return storage.Item{}, newServerError(resp)
 	}
-}
-
-// Upload uploads file to remote storage
-//
-// Deprecated: Use UploadStream.
-func (s *AppStore) Upload(filename string, description string) (storage.Item, error) {
-	body, contentType, err := readFile(filename, description)
-	if err != nil {
-		return storage.Item{}, err
-	}
-
-	request, err := createRequest(fmt.Sprintf("%s/v1/storage/upload", s.URL), s.Username, s.AccessKey, body, contentType)
-	if err != nil {
-		return storage.Item{}, err
-	}
-
-	resp, err := s.HTTPClient.Do(request)
-	if err != nil {
-		if err.(*url.Error).Timeout() {
-			msg.LogUploadTimeout()
-			if !isMobileAppPackage(filename) {
-				msg.LogUploadTimeoutSuggestion()
-			}
-			return storage.Item{}, errors.New(msg.FailedToUpload)
-		}
-		return storage.Item{}, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 201 {
-		b, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return storage.Item{}, err
-		}
-		log.Error().Msgf("%s. Invalid response %d, body: %v", msg.FailedToUpload, resp.StatusCode, string(b))
-		return storage.Item{}, errors.New(msg.FailedToUpload)
-	}
-
-	var ur UploadResponse
-
-	if err := json.NewDecoder(resp.Body).Decode(&ur); err != nil {
-		return storage.Item{}, err
-	}
-
-	return storage.Item{ID: ur.Item.ID}, err
-}
-
-func readFile(fileName, description string) (*bytes.Buffer, string, error) {
-	file, err := os.Open(fileName)
-	if err != nil {
-		return nil, "", err
-	}
-	defer file.Close()
-
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-	defer writer.Close()
-
-	part, err := writer.CreateFormFile("payload", filepath.Base(file.Name()))
-	if err != nil {
-		return nil, "", err
-	}
-
-	// FIXME This consumes quite a bit of memory (think of large mobile apps, node modules etc.).
-	_, err = io.Copy(part, file)
-	if err != nil {
-		return nil, "", err
-	}
-
-	if err := writer.WriteField("description", description); err != nil {
-		return nil, "", err
-	}
-
-	return body, writer.FormDataContentType(), nil
-}
-
-func createRequest(url, username, accesskey string, body io.Reader, contentType string) (*http.Request, error) {
-	req, err := requesth.New(http.MethodPost, url, body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Content-Type", contentType)
-	req.SetBasicAuth(username, accesskey)
-
-	return req, nil
-}
-
-// Find looks for a file having the same signature.
-//
-// Deprecated: Use List instead.
-func (s *AppStore) Find(filename string) (storage.Item, error) {
-	if filename == "" {
-		return storage.Item{}, nil
-	}
-
-	hash, err := calculateBundleHash(filename)
-	if err != nil {
-		return storage.Item{}, err
-	}
-	log.Info().Msgf("Checksum: %s", hash)
-
-	queryString := fmt.Sprintf("?sha256=%s", hash)
-	request, err := createLocateRequest(fmt.Sprintf("%s/v1/storage/files", s.URL), s.Username, s.AccessKey, queryString)
-	if err != nil {
-		return storage.Item{}, err
-	}
-
-	lr, err := s.executeLocateRequest(request)
-	if err != nil {
-		return storage.Item{}, err
-	}
-	if lr.TotalItems == 0 {
-		return storage.Item{}, nil
-	}
-
-	return storage.Item{ID: lr.Items[0].ID}, nil
 }
 
 // List returns a list of items stored in the Sauce app storage that match the search criteria specified by opts.
@@ -334,45 +204,6 @@ func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 	default:
 		return storage.List{}, newServerError(resp)
 	}
-}
-
-func calculateBundleHash(filename string) (string, error) {
-	fs, err := os.Open(filename)
-	if err != nil {
-		return "", err
-	}
-	defer fs.Close()
-	hsh := sha256.New()
-	if _, err := io.Copy(hsh, fs); err != nil {
-		return "", err
-	}
-	hash := fmt.Sprintf("%x", hsh.Sum(nil))
-	return hash, nil
-}
-
-func createLocateRequest(url, username, accesskey string, queryString string) (*http.Request, error) {
-	req, err := requesth.New(http.MethodGet, fmt.Sprintf("%s%s&per_page=1", url, queryString), nil)
-	if err != nil {
-		return nil, err
-	}
-	req.SetBasicAuth(username, accesskey)
-	return req, nil
-}
-
-func (s *AppStore) executeLocateRequest(request *http.Request) (ListResponse, error) {
-	resp, err := s.HTTPClient.Do(request)
-	if err != nil {
-		return ListResponse{}, err
-
-	}
-	defer resp.Body.Close()
-
-	var lr ListResponse
-	if err := json.NewDecoder(resp.Body).Decode(&lr); err != nil {
-		return ListResponse{}, err
-	}
-
-	return lr, nil
 }
 
 // newServerError inspects server error responses, trying to gather as much information as possible, especially if the body
