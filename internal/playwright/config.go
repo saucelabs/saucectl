@@ -99,15 +99,6 @@ type SuiteConfig struct {
 
 	// Shard is set by saucectl (not user) based on Suite.NumShards.
 	Shard string `yaml:"-" json:"shard,omitempty"`
-
-	// Deprecated fields in v1.12+
-	HeadFul             bool `yaml:"headful,omitempty" json:"headful,omitempty"`
-	ScreenshotOnFailure bool `yaml:"screenshotOnFailure,omitempty" json:"screenshotOnFailure,omitempty"`
-	SlowMo              int  `yaml:"slowMo,omitempty" json:"slowMo,omitempty"`
-	Video               bool `yaml:"video,omitempty" json:"video,omitempty"`
-
-	// Will be deprecated since `headless` is introduced
-	Headed bool `yaml:"headed,omitempty" json:"headed,omitempty"`
 }
 
 // FromFile creates a new playwright Project based on the filepath cfgPath.

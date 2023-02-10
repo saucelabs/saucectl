@@ -116,9 +116,21 @@ func TestShardSuites(t *testing.T) {
 			wantErr:        false,
 			expectedErrMsg: "",
 			expectedSuites: []Suite{
-				{Name: "suite #1 - tests/dir1/example1.tests.js", Mode: "", Timeout: 0, PlaywrightVersion: "", TestMatch: []string{"tests/dir1/example1.tests.js"}, PlatformName: "", Params: SuiteConfig{BrowserName: "", Headed: false, GlobalTimeout: 0, Timeout: 0, Grep: "", RepeatEach: 0, Retries: 0, MaxFailures: 0, Shard: "", HeadFul: false, ScreenshotOnFailure: false, SlowMo: 0, Video: false}, ScreenResolution: "", Env: map[string]string(nil), NumShards: 0, Shard: "spec"},
-				{Name: "suite #1 - tests/dir2/example2.tests.js", Mode: "", Timeout: 0, PlaywrightVersion: "", TestMatch: []string{"tests/dir2/example2.tests.js"}, PlatformName: "", Params: SuiteConfig{BrowserName: "", Headed: false, GlobalTimeout: 0, Timeout: 0, Grep: "", RepeatEach: 0, Retries: 0, MaxFailures: 0, Shard: "", HeadFul: false, ScreenshotOnFailure: false, SlowMo: 0, Video: false}, ScreenResolution: "", Env: map[string]string(nil), NumShards: 0, Shard: "spec"},
-				{Name: "suite #1 - tests/dir3/example3.tests.js", Mode: "", Timeout: 0, PlaywrightVersion: "", TestMatch: []string{"tests/dir3/example3.tests.js"}, PlatformName: "", Params: SuiteConfig{BrowserName: "", Headed: false, GlobalTimeout: 0, Timeout: 0, Grep: "", RepeatEach: 0, Retries: 0, MaxFailures: 0, Shard: "", HeadFul: false, ScreenshotOnFailure: false, SlowMo: 0, Video: false}, ScreenResolution: "", Env: map[string]string(nil), NumShards: 0, Shard: "spec"},
+				{
+					Name:      "suite #1 - tests/dir1/example1.tests.js",
+					TestMatch: []string{"tests/dir1/example1.tests.js"},
+					Shard:     "spec",
+				},
+				{
+					Name:      "suite #1 - tests/dir2/example2.tests.js",
+					TestMatch: []string{"tests/dir2/example2.tests.js"},
+					Shard:     "spec",
+				},
+				{
+					Name:      "suite #1 - tests/dir3/example3.tests.js",
+					TestMatch: []string{"tests/dir3/example3.tests.js"},
+					Shard:     "spec",
+				},
 			},
 		},
 		{
@@ -135,7 +147,11 @@ func TestShardSuites(t *testing.T) {
 			wantErr:        true,
 			expectedErrMsg: "suite 'suite #1' patterns have no matching files",
 			expectedSuites: []Suite{
-				{Name: "suite #1", Mode: "", Timeout: 0, PlaywrightVersion: "", TestMatch: []string{"tests/dir1/example1.tests.js"}, PlatformName: "", Params: SuiteConfig{BrowserName: "", Headed: false, GlobalTimeout: 0, Timeout: 0, Grep: "", RepeatEach: 0, Retries: 0, MaxFailures: 0, Shard: "", HeadFul: false, ScreenshotOnFailure: false, SlowMo: 0, Video: false}, ScreenResolution: "", Env: map[string]string(nil), NumShards: 0, Shard: "spec"},
+				{
+					Name:      "suite #1",
+					TestMatch: []string{"tests/dir1/example1.tests.js"},
+					Shard:     "spec",
+				},
 			},
 		},
 	}

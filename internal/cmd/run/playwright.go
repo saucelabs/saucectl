@@ -71,7 +71,6 @@ func NewPlaywrightCmd() *cobra.Command {
 	sc.String("playwright.configFile", "playwright::configFile", "", "The path to playwright config file")
 
 	// Playwright Test Options
-	sc.Bool("headed", "suite::params::headed", false, "Run tests in headed browsers")
 	sc.Bool("headless", "suite::params::headless", false, "Run tests in headless mode")
 	sc.Int("globalTimeout", "suite::params::globalTimeout", 0, "Total timeout for the whole test run in milliseconds")
 	sc.Int("testTimeout", "suite::params::timeout", 0, "Maximum timeout in milliseconds for each test")
@@ -97,9 +96,6 @@ func NewPlaywrightCmd() *cobra.Command {
 	sc.StringToString("npm.packages", "npm::packages", map[string]string{}, "Specify npm packages that are required to run tests")
 	sc.StringSlice("npm.dependencies", "npm::dependencies", []string{}, "Specify local npm dependencies for saucectl to upload. These dependencies must already be installed in the local node_modules directory.")
 	sc.Bool("npm.strictSSL", "npm::strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
-
-	// Deprecated flags
-	_ = sc.Fset.MarkDeprecated("headed", "please use --headless instead")
 
 	return cmd
 }
