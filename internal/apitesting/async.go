@@ -16,10 +16,11 @@ import (
 
 // TestRequest represent a test to be executed
 type TestRequest struct {
-	Name  string   `json:"name"`
-	Tags  []string `json:"tags"`
-	Input string   `json:"input"`
-	Unit  string   `json:"unit"`
+	Name   string            `json:"name"`
+	Tags   []string          `json:"tags"`
+	Input  string            `json:"input"`
+	Unit   string            `json:"unit"`
+	Params map[string]string `json:"params"`
 }
 
 // AsyncResponse describes the json response from the async api endpoints.
@@ -31,10 +32,16 @@ type AsyncResponse struct {
 }
 
 // RunAllAsync runs all the tests for the project described by hookID and returns without waiting for their results.
-func (c *Client) RunAllAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel) (AsyncResponse, error) {
+func (c *Client) RunAllAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
 	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_run-all", hookID), buildID, "", tunnel, "")
 
-	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
+	payload, err := json.Marshal(test)
+	if err != nil {
+		return AsyncResponse{}, err
+	}
+	payloadReader := bytes.NewReader(payload)
+
+	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, payloadReader)
 	if err != nil {
 		return AsyncResponse{}, err
 	}
@@ -73,10 +80,16 @@ func (c *Client) RunEphemeralAsync(ctx context.Context, hookID string, buildID s
 }
 
 // RunTestAsync runs a single test described by testID for the project described by hookID and returns without waiting for results.
-func (c *Client) RunTestAsync(ctx context.Context, hookID string, testID string, buildID string, tunnel config.Tunnel) (AsyncResponse, error) {
+func (c *Client) RunTestAsync(ctx context.Context, hookID string, testID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
 	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/%s/_run", hookID, testID), buildID, "", tunnel, "")
 
-	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
+	payload, err := json.Marshal(test)
+	if err != nil {
+		return AsyncResponse{}, err
+	}
+	payloadReader := bytes.NewReader(payload)
+
+	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, payloadReader)
 	if err != nil {
 		return AsyncResponse{}, err
 	}
@@ -92,10 +105,16 @@ func (c *Client) RunTestAsync(ctx context.Context, hookID string, testID string,
 }
 
 // RunTagAsync runs all the tests for a testTag for a project described by hookID and returns without waiting for results.
-func (c *Client) RunTagAsync(ctx context.Context, hookID string, testTag string, buildID string, tunnel config.Tunnel) (AsyncResponse, error) {
+func (c *Client) RunTagAsync(ctx context.Context, hookID string, testTag string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
 	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_tag/%s/_run", hookID, testTag), buildID, "", tunnel, "")
 
-	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, nil)
+	payload, err := json.Marshal(test)
+	if err != nil {
+		return AsyncResponse{}, err
+	}
+	payloadReader := bytes.NewReader(payload)
+
+	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, payloadReader)
 	if err != nil {
 		return AsyncResponse{}, err
 	}
