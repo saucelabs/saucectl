@@ -2,12 +2,13 @@ package apitesting
 
 import (
 	"context"
-	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestClient_RunAllAsync(t *testing.T) {
@@ -66,7 +67,7 @@ func TestClient_RunAllAsync(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := c.RunAllAsync(tt.args.ctx, tt.args.hookID, tt.args.buildID, tt.args.tunnel)
+			got, err := c.RunAllAsync(tt.args.ctx, tt.args.hookID, tt.args.buildID, tt.args.tunnel, TestRequest{})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RunAllAsync() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -212,7 +213,7 @@ func TestClient_RunTestAsync(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := c.RunTestAsync(tt.args.ctx, tt.args.hookID, tt.args.testID, tt.args.buildID, tt.args.tunnel)
+			got, err := c.RunTestAsync(tt.args.ctx, tt.args.hookID, tt.args.testID, tt.args.buildID, tt.args.tunnel, TestRequest{})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RunAllAsync() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -282,7 +283,7 @@ func TestClient_RunTagAsync(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := c.RunTagAsync(tt.args.ctx, tt.args.hookID, tt.args.tagID, tt.args.buildID, tt.args.tunnel)
+			got, err := c.RunTagAsync(tt.args.ctx, tt.args.hookID, tt.args.tagID, tt.args.buildID, tt.args.tunnel, TestRequest{})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RunAllAsync() error = %v, wantErr %v", err, tt.wantErr)
 				return

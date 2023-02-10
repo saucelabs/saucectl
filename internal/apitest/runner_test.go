@@ -1,6 +1,12 @@
 package apitest
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"path"
+	"reflect"
+	"testing"
+
 	"github.com/saucelabs/saucectl/internal/apitesting"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -8,11 +14,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/tunnel"
 	"github.com/stretchr/testify/assert"
 	"gotest.tools/v3/fs"
-	"net/http"
-	"net/http/httptest"
-	"path"
-	"reflect"
-	"testing"
 )
 
 func createTestDirs(t *testing.T) *fs.Dir {
@@ -226,7 +227,7 @@ func Test_loadTest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := loadTest(tt.args.unitPath, tt.args.inputPath, tt.args.suiteName, tt.args.testName, tt.args.tags)
+			got, err := loadTest(tt.args.unitPath, tt.args.inputPath, tt.args.suiteName, tt.args.testName, tt.args.tags, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("loadTest() error = %v, wantErr %v", err, tt.wantErr)
 				return
