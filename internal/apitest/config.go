@@ -2,10 +2,11 @@ package apitest
 
 import (
 	"errors"
+	"time"
+
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
-	"time"
 )
 
 // Config descriptors.
@@ -24,18 +25,20 @@ type Project struct {
 	Suites         []Suite            `yaml:"suites,omitempty"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty"`
 	RootDir        string             `yaml:"rootDir,omitempty"`
+	Env            map[string]string  `yaml:"env,omitempty"`
 }
 
 // Suite represents the apitest suite configuration.
 type Suite struct {
-	Timeout        time.Duration `yaml:"timeout,omitempty"`
-	Name           string        `yaml:"name,omitempty"`
-	ProjectName    string        `yaml:"projectName,omitempty"`
-	HookID         string        `yaml:"hookId,omitempty"`
-	UseRemoteTests bool          `yaml:"useRemoteTests,omitempty"`
-	Tests          []string      `yaml:"tests,omitempty"`
-	Tags           []string      `yaml:"tags,omitempty"`
-	TestMatch      []string      `yaml:"testMatch,omitempty"`
+	Timeout        time.Duration     `yaml:"timeout,omitempty"`
+	Name           string            `yaml:"name,omitempty"`
+	ProjectName    string            `yaml:"projectName,omitempty"`
+	HookID         string            `yaml:"hookId,omitempty"`
+	UseRemoteTests bool              `yaml:"useRemoteTests,omitempty"`
+	Tests          []string          `yaml:"tests,omitempty"`
+	Tags           []string          `yaml:"tags,omitempty"`
+	TestMatch      []string          `yaml:"testMatch,omitempty"`
+	Env            map[string]string `yaml:"env,omitempty"`
 }
 
 // FromFile creates a new apitest Project based on the filepath cfgPath.
@@ -68,6 +71,17 @@ func SetDefaults(p *Project) {
 
 	if p.RootDir == "" {
 		p.RootDir = "."
+	}
+
+	// Apply global env var onto every suite.
+	for k, v := range p.Env {
+		for ks := range p.Suites {
+			s := &p.Suites[ks]
+			if s.Env == nil {
+				s.Env = map[string]string{}
+			}
+			s.Env[k] = v
+		}
 	}
 }
 
