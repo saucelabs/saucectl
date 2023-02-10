@@ -2,19 +2,16 @@ package appstore
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/multipartext"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/requesth"
 	"github.com/saucelabs/saucectl/internal/storage"
 )
@@ -140,37 +137,6 @@ func (s *AppStore) UploadStream(filename, description string, reader io.Reader) 
 	}
 }
 
-// Find looks for a file having the same signature.
-//
-// Deprecated: Use List instead.
-func (s *AppStore) Find(filename string) (storage.Item, error) {
-	if filename == "" {
-		return storage.Item{}, nil
-	}
-
-	hash, err := calculateBundleHash(filename)
-	if err != nil {
-		return storage.Item{}, err
-	}
-	log.Info().Msgf("Checksum: %s", hash)
-
-	queryString := fmt.Sprintf("?sha256=%s", hash)
-	request, err := createLocateRequest(fmt.Sprintf("%s/v1/storage/files", s.URL), s.Username, s.AccessKey, queryString)
-	if err != nil {
-		return storage.Item{}, err
-	}
-
-	lr, err := s.executeLocateRequest(request)
-	if err != nil {
-		return storage.Item{}, err
-	}
-	if lr.TotalItems == 0 {
-		return storage.Item{}, nil
-	}
-
-	return storage.Item{ID: lr.Items[0].ID}, nil
-}
-
 // List returns a list of items stored in the Sauce app storage that match the search criteria specified by opts.
 func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 	uri, _ := url.Parse(s.URL)
@@ -238,45 +204,6 @@ func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 	default:
 		return storage.List{}, newServerError(resp)
 	}
-}
-
-func calculateBundleHash(filename string) (string, error) {
-	fs, err := os.Open(filename)
-	if err != nil {
-		return "", err
-	}
-	defer fs.Close()
-	hsh := sha256.New()
-	if _, err := io.Copy(hsh, fs); err != nil {
-		return "", err
-	}
-	hash := fmt.Sprintf("%x", hsh.Sum(nil))
-	return hash, nil
-}
-
-func createLocateRequest(url, username, accesskey string, queryString string) (*http.Request, error) {
-	req, err := requesth.New(http.MethodGet, fmt.Sprintf("%s%s&per_page=1", url, queryString), nil)
-	if err != nil {
-		return nil, err
-	}
-	req.SetBasicAuth(username, accesskey)
-	return req, nil
-}
-
-func (s *AppStore) executeLocateRequest(request *http.Request) (ListResponse, error) {
-	resp, err := s.HTTPClient.Do(request)
-	if err != nil {
-		return ListResponse{}, err
-
-	}
-	defer resp.Body.Close()
-
-	var lr ListResponse
-	if err := json.NewDecoder(resp.Body).Decode(&lr); err != nil {
-		return ListResponse{}, err
-	}
-
-	return lr, nil
 }
 
 // newServerError inspects server error responses, trying to gather as much information as possible, especially if the body
