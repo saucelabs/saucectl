@@ -59,6 +59,14 @@ type runner struct {
 	GitRelease         string `json:"gitRelease"`
 }
 
+func NewTestComposer(url string, creds credentials.Credentials, timeout time.Duration) TestComposer {
+	return TestComposer{
+		HTTPClient:  &http.Client{Timeout: timeout},
+		URL:         url,
+		Credentials: creds,
+	}
+}
+
 // GetSlackToken gets slack token.
 func (c *TestComposer) GetSlackToken(ctx context.Context) (string, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/users/%s/settings/slack", c.URL, c.Credentials.Username)

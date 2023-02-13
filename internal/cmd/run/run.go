@@ -208,11 +208,7 @@ func preRun() error {
 	}
 	typeDef = d
 
-	testcompClient = http2.TestComposer{
-		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
-		URL:         "", // updated later once region is determined
-		Credentials: creds,
-	}
+	testcompClient = http2.NewTestComposer("", creds, testComposerTimeout)
 
 	webdriverClient = webdriver.Client{
 		HTTPClient: &http.Client{
