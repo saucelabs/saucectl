@@ -168,11 +168,6 @@ func (c *TestComposer) Search(ctx context.Context, opts framework.SearchOptions)
 	return m, nil
 }
 
-type assetsUploadResponse struct {
-	Uploaded []string `json:"uploaded"`
-	Errors   []string `json:"errors,omitempty"`
-}
-
 // UploadAsset uploads an asset to the specified jobID.
 func (c *TestComposer) UploadAsset(jobID string, realDevice bool, fileName string, contentType string, content []byte) error {
 	var b bytes.Buffer
@@ -218,7 +213,10 @@ func (c *TestComposer) UploadAsset(jobID string, realDevice bool, fileName strin
 		return fmt.Errorf("assets upload request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 	}
 
-	var assetsResponse assetsUploadResponse
+	var assetsResponse struct {
+		Uploaded []string `json:"uploaded"`
+		Errors   []string `json:"errors,omitempty"`
+	}
 	if err = json.NewDecoder(resp.Body).Decode(&assetsResponse); err != nil {
 		return err
 	}
