@@ -22,37 +22,6 @@ type Client struct {
 	Credentials credentials.Credentials
 }
 
-// Job represents the sauce labs test job.
-type Job struct {
-	ID    string `json:"id"`
-	Owner string `json:"owner"`
-}
-
-// FrameworkResponse represents the response body for framework information.
-type FrameworkResponse struct {
-	Name       string     `json:"name"`
-	Deprecated bool       `json:"deprecated"`
-	Version    string     `json:"version"`
-	Runner     runner     `json:"runner"`
-	Platforms  []platform `json:"platforms"`
-}
-
-// TokenResponse represents the response body for slack token.
-type TokenResponse struct {
-	Token string `json:"token"`
-}
-
-type platform struct {
-	Name     string
-	Browsers []string
-}
-
-type runner struct {
-	CloudRunnerVersion string `json:"cloudRunnerVersion"`
-	DockerImage        string `json:"dockerImage"`
-	GitRelease         string `json:"gitRelease"`
-}
-
 // SessionRequest represents the webdriver session request.
 type SessionRequest struct {
 	Capabilities        Capabilities `json:"capabilities,omitempty"`
