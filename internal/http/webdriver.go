@@ -89,7 +89,7 @@ func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 
 	caps := Capabilities{AlwaysMatch: MatchingCaps{
 		App:             opts.App,
-		BrowserName:     normalizeBrowser(opts.Framework, opts.BrowserName),
+		BrowserName:     c.normalizeBrowser(opts.Framework, opts.BrowserName),
 		BrowserVersion:  opts.BrowserVersion,
 		PlatformName:    opts.PlatformName,
 		PlatformVersion: opts.PlatformVersion,
@@ -108,7 +108,7 @@ func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 				FrameworkVersion: opts.FrameworkVersion,
 				RunnerVersion:    opts.RunnerVersion,
 				TestFile:         opts.Suite,
-				Args:             formatEspressoArgs(opts.TestOptions),
+				Args:             c.formatEspressoArgs(opts.TestOptions),
 				VideoFPS:         25,
 			},
 			IdleTimeout: 9999,
@@ -163,7 +163,7 @@ func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 }
 
 // formatEspressoArgs adapts option shape to match chef expectations
-func formatEspressoArgs(options map[string]interface{}) []map[string]string {
+func (c *Webdriver) formatEspressoArgs(options map[string]interface{}) []map[string]string {
 	var mappedOptions []map[string]string
 	for k, v := range options {
 		if v == nil {
@@ -190,7 +190,7 @@ func formatEspressoArgs(options map[string]interface{}) []map[string]string {
 }
 
 // normalizeBrowser converts the user specified browsers into something Sauce Labs can understand better.
-func normalizeBrowser(framework, browser string) string {
+func (c *Webdriver) normalizeBrowser(framework, browser string) string {
 	switch framework {
 	case "cypress":
 		switch browser {
