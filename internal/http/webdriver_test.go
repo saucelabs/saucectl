@@ -1,4 +1,4 @@
-package webdriver
+package http
 
 import (
 	"context"
@@ -121,7 +121,7 @@ func TestClient_StartJob(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
+			c := &Webdriver{
 				HTTPClient: tt.fields.HTTPClient,
 				URL:        tt.fields.URL,
 			}

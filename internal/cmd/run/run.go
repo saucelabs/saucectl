@@ -17,8 +17,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/insights"
-	"github.com/saucelabs/saucectl/internal/webdriver"
-
 	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
 
 	"github.com/fatih/color"
@@ -67,7 +65,7 @@ var (
 	typeDef config.TypeDef
 
 	testcompClient    http2.TestComposer
-	webdriverClient   webdriver.Client
+	webdriverClient   http2.Webdriver
 	restoClient       resto.Client
 	appsClient        appstore.AppStore
 	rdcClient         rdc.Client
@@ -210,7 +208,7 @@ func preRun() error {
 
 	testcompClient = http2.NewTestComposer("", creds, testComposerTimeout)
 
-	webdriverClient = webdriver.Client{
+	webdriverClient = http2.Webdriver{
 		HTTPClient: &http.Client{
 			Timeout: testComposerTimeout,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {

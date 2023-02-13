@@ -1,4 +1,4 @@
-package webdriver
+package http
 
 import (
 	"bytes"
@@ -15,8 +15,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/version"
 )
 
-// Client service
-type Client struct {
+// Webdriver service
+type Webdriver struct {
 	HTTPClient  *http.Client
 	URL         string
 	Credentials credentials.Credentials
@@ -84,7 +84,7 @@ type sessionStartResponse struct {
 }
 
 // StartJob creates a new job in Sauce Labs.
-func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
 	url := fmt.Sprintf("%s/wd/hub/session", c.URL)
 
 	caps := Capabilities{AlwaysMatch: MatchingCaps{
