@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/job"
 	"net/http"
 	"net/http/httptest"
@@ -75,10 +74,10 @@ func TestClient_StartJob(t *testing.T) {
 			want:    "fake-job-id",
 			wantErr: nil,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				resp := sessionStartResponse{
+				w.WriteHeader(201)
+				json.NewEncoder(w).Encode(sessionStartResponse{
 					SessionID: "fake-job-id",
-				}
-				respondJSON(w, resp, 201)
+				})
 			},
 		},
 		{
@@ -137,20 +136,5 @@ func TestClient_StartJob(t *testing.T) {
 				t.Errorf("StartJob() got = %v, want %v", got, tt.want)
 			}
 		})
-	}
-}
-
-func respondJSON(w http.ResponseWriter, v interface{}, httpStatus int) {
-	w.WriteHeader(httpStatus)
-	b, err := json.Marshal(v)
-
-	if err != nil {
-		log.Err(err).Msg("failed to marshal job json")
-		http.Error(w, "failed to marshal job json", http.StatusInternalServerError)
-		return
-	}
-
-	if _, err := w.Write(b); err != nil {
-		log.Err(err).Msg("Failed to write out response")
 	}
 }

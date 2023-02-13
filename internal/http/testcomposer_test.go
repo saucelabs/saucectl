@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -33,21 +32,6 @@ func (r *Responder) Play(w http.ResponseWriter, req *http.Request) {
 
 	r.Records[r.Index](w, req)
 	r.Index++
-}
-
-func respondJSON(w http.ResponseWriter, v interface{}, httpStatus int) {
-	w.WriteHeader(httpStatus)
-	b, err := json.Marshal(v)
-
-	if err != nil {
-		log.Err(err).Msg("failed to marshal job json")
-		http.Error(w, "failed to marshal job json", http.StatusInternalServerError)
-		return
-	}
-
-	if _, err := w.Write(b); err != nil {
-		log.Err(err).Msg("Failed to write out response")
-	}
 }
 
 func TestTestComposer_StartJob(t *testing.T) {
@@ -94,11 +78,12 @@ func TestTestComposer_StartJob(t *testing.T) {
 			want:    "fake-job-id",
 			wantErr: nil,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				respondJSON(w, struct {
+				w.WriteHeader(201)
+				json.NewEncoder(w).Encode(struct {
 					JobID string `json:"jobID"`
 				}{
 					JobID: "fake-job-id",
-				}, 201)
+				})
 			},
 		},
 		{
