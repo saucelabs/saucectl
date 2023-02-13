@@ -1,4 +1,4 @@
-package testcomposer
+package http
 
 import (
 	"context"
@@ -140,7 +140,7 @@ func TestTestComposer_StartJob(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
+			c := &TestComposer{
 				HTTPClient: tt.fields.HTTPClient,
 				URL:        tt.fields.URL,
 			}
@@ -217,7 +217,7 @@ func TestClient_GetSlackToken(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
+			c := &TestComposer{
 				HTTPClient:  tt.fields.HTTPClient,
 				URL:         tt.fields.URL,
 				Credentials: tt.fields.Credentials,
@@ -312,7 +312,7 @@ func TestClient_Search(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
+			c := &TestComposer{
 				HTTPClient:  tt.fields.HTTPClient,
 				URL:         tt.fields.URL,
 				Credentials: tt.fields.Credentials,
@@ -362,14 +362,14 @@ func TestClient_UploadAsset(t *testing.T) {
 		content     []byte
 	}
 	tests := []struct {
-		client  Client
+		client  TestComposer
 		name    string
 		args    args
 		wantErr bool
 	}{
 		{
 			name: "Valid case",
-			client: Client{
+			client: TestComposer{
 				HTTPClient:  ts.Client(),
 				URL:         ts.URL,
 				Credentials: credentials.Credentials{Username: "test", AccessKey: "123"},
@@ -384,7 +384,7 @@ func TestClient_UploadAsset(t *testing.T) {
 		},
 		{
 			name: "invalid case - 400",
-			client: Client{
+			client: TestComposer{
 				HTTPClient:  ts.Client(),
 				URL:         ts.URL,
 				Credentials: credentials.Credentials{Username: "test", AccessKey: "123"},
@@ -399,7 +399,7 @@ func TestClient_UploadAsset(t *testing.T) {
 		},
 		{
 			name: "invalid 404",
-			client: Client{
+			client: TestComposer{
 				HTTPClient:  ts.Client(),
 				URL:         ts.URL,
 				Credentials: credentials.Credentials{Username: "test", AccessKey: "123"},
@@ -467,7 +467,7 @@ func TestClient_Frameworks(t *testing.T) {
 					t.Errorf("failed to respond: %v", err)
 				}
 			}))
-			c := &Client{
+			c := &TestComposer{
 				HTTPClient:  http.DefaultClient,
 				URL:         ts.URL,
 				Credentials: credentials.Credentials{Username: "test", AccessKey: "123"},
@@ -503,7 +503,7 @@ func TestClient_Versions(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
-	c := &Client{
+	c := &TestComposer{
 		HTTPClient:  ts.Client(),
 		URL:         ts.URL,
 		Credentials: credentials.Credentials{Username: "test", AccessKey: "123"},

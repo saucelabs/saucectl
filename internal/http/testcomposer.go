@@ -1,10 +1,9 @@
-package testcomposer
+package http
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -16,38 +15,27 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
-var (
-	// ErrServerError is returned when the server was not able to correctly handle our request (status code >= 500).
-	ErrServerError = errors.New(msg.InternalServerError)
-	// ErrJobNotFound is returned when the requested job was not found.
-	ErrJobNotFound = errors.New(msg.JobNotFound)
-)
-
-// Client service
-type Client struct {
+// TestComposer service
+type TestComposer struct {
 	HTTPClient  *http.Client
 	URL         string // e.g.) https://api.<region>.saucelabs.net
 	Credentials credentials.Credentials
 }
 
-// Job represents the sauce labs test job.
-type Job struct {
-	ID    string `json:"id"`
-	Owner string `json:"owner"`
-}
-
 // FrameworkResponse represents the response body for framework information.
 type FrameworkResponse struct {
-	Name            string            `json:"name"`
-	Version         string            `json:"version"`
-	EOLDate         time.Time         `json:"eolDate"`
-	RemovalDate     time.Time         `json:"removalDate"`
-	Runner          runner            `json:"runner"`
-	Platforms       []platform        `json:"platforms"`
+	Name        string    `json:"name"`
+	Version     string    `json:"version"`
+	EOLDate     time.Time `json:"eolDate"`
+	RemovalDate time.Time `json:"removalDate"`
+	Runner      runner    `json:"runner"`
+	Platforms   []struct {
+		Name     string
+		Browsers []string
+	} `json:"platforms"`
 	BrowserDefaults map[string]string `json:"browserDefaults"`
 }
 
@@ -56,19 +44,22 @@ type TokenResponse struct {
 	Token string `json:"token"`
 }
 
-type platform struct {
-	Name     string
-	Browsers []string
-}
-
 type runner struct {
 	CloudRunnerVersion string `json:"cloudRunnerVersion"`
 	DockerImage        string `json:"dockerImage"`
 	GitRelease         string `json:"gitRelease"`
 }
 
+func NewTestComposer(url string, creds credentials.Credentials, timeout time.Duration) TestComposer {
+	return TestComposer{
+		HTTPClient:  &http.Client{Timeout: timeout},
+		URL:         url,
+		Credentials: creds,
+	}
+}
+
 // GetSlackToken gets slack token.
-func (c *Client) GetSlackToken(ctx context.Context) (string, error) {
+func (c *TestComposer) GetSlackToken(ctx context.Context) (string, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/users/%s/settings/slack", c.URL, c.Credentials.Username)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
@@ -86,7 +77,7 @@ func (c *Client) GetSlackToken(ctx context.Context) (string, error) {
 }
 
 // StartJob creates a new job in Sauce Labs.
-func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+func (c *TestComposer) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/jobs", c.URL)
 
 	opts.User = c.Credentials.Username
@@ -130,7 +121,7 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 	return j.JobID, j.IsRDC, nil
 }
 
-func (c *Client) doJSONResponse(req *http.Request, expectStatus int, v interface{}) error {
+func (c *TestComposer) doJSONResponse(req *http.Request, expectStatus int, v interface{}) error {
 	res, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return err
@@ -146,7 +137,7 @@ func (c *Client) doJSONResponse(req *http.Request, expectStatus int, v interface
 }
 
 // Search returns metadata for the given search options opts.
-func (c *Client) Search(ctx context.Context, opts framework.SearchOptions) (framework.Metadata, error) {
+func (c *TestComposer) Search(ctx context.Context, opts framework.SearchOptions) (framework.Metadata, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/frameworks/%s", c.URL, opts.Name)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
@@ -176,7 +167,8 @@ func (c *Client) Search(ctx context.Context, opts framework.SearchOptions) (fram
 	return m, nil
 }
 
-func createUploadAssetRequest(ctx context.Context, url, username, accessKey, jobID, fileName, contentType string, content []byte) (*http.Request, error) {
+// UploadAsset uploads an asset to the specified jobID.
+func (c *TestComposer) UploadAsset(jobID string, realDevice bool, fileName string, contentType string, content []byte) error {
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
 	h := make(textproto.MIMEHeader)
@@ -184,32 +176,24 @@ func createUploadAssetRequest(ctx context.Context, url, username, accessKey, job
 	h.Set("Content-Type", contentType)
 	wr, err := w.CreatePart(h)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if _, err = wr.Write(content); err != nil {
-		return nil, err
+		return err
 	}
 	if err = w.Close(); err != nil {
-		return nil, err
+		return err
 	}
 
-	req, err := requesth.NewWithContext(ctx, http.MethodPut,
-		fmt.Sprintf("%s/v1/testcomposer/jobs/%s/assets", url, jobID), &b)
+	req, err := requesth.NewWithContext(context.Background(), http.MethodPut,
+		fmt.Sprintf("%s/v1/testcomposer/jobs/%s/assets", c.URL, jobID), &b)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	req.SetBasicAuth(username, accessKey)
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
 	req.Header.Set("Content-Type", w.FormDataContentType())
-	return req, nil
-}
 
-type assetsUploadResponse struct {
-	Uploaded []string `json:"uploaded"`
-	Errors   []string `json:"errors,omitempty"`
-}
-
-func doRequestAsset(httpClient *http.Client, request *http.Request) error {
-	resp, err := httpClient.Do(request)
+	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -228,7 +212,10 @@ func doRequestAsset(httpClient *http.Client, request *http.Request) error {
 		return fmt.Errorf("assets upload request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 	}
 
-	var assetsResponse assetsUploadResponse
+	var assetsResponse struct {
+		Uploaded []string `json:"uploaded"`
+		Errors   []string `json:"errors,omitempty"`
+	}
 	if err = json.NewDecoder(resp.Body).Decode(&assetsResponse); err != nil {
 		return err
 	}
@@ -238,17 +225,8 @@ func doRequestAsset(httpClient *http.Client, request *http.Request) error {
 	return nil
 }
 
-// UploadAsset uploads an asset to the specified jobID.
-func (c *Client) UploadAsset(jobID string, realDevice bool, fileName string, contentType string, content []byte) error {
-	request, err := createUploadAssetRequest(context.Background(), c.URL, c.Credentials.Username, c.Credentials.AccessKey, jobID, fileName, contentType, content)
-	if err != nil {
-		return err
-	}
-	return doRequestAsset(c.HTTPClient, request)
-}
-
 // Frameworks returns the list of available frameworks.
-func (c *Client) Frameworks(ctx context.Context) ([]framework.Framework, error) {
+func (c *TestComposer) Frameworks(ctx context.Context) ([]framework.Framework, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/frameworks", c.URL)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
@@ -265,7 +243,7 @@ func (c *Client) Frameworks(ctx context.Context) ([]framework.Framework, error) 
 }
 
 // Versions return the list of available versions for a specific framework and region.
-func (c *Client) Versions(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
+func (c *TestComposer) Versions(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/frameworks/%s/versions", c.URL, frameworkName)
 
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)

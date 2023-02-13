@@ -2,7 +2,7 @@ package artifacts
 
 import (
 	"errors"
-	"net/http"
+	http2 "github.com/saucelabs/saucectl/internal/http"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/artifacts"
@@ -12,7 +12,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
-	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/spf13/cobra"
 )
 
@@ -45,11 +44,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 			restoClient.URL = url
 			rdcClient := rdc.New("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 			rdcClient.URL = url
-			testcompClient := testcomposer.Client{
-				HTTPClient:  &http.Client{Timeout: testComposerTimeout},
-				URL:         url,
-				Credentials: creds,
-			}
+			testcompClient := http2.NewTestComposer("", creds, testComposerTimeout)
 
 			artifactSvc = saucecloud.NewArtifactService(restoClient, rdcClient, testcompClient)
 
