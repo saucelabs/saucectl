@@ -36,23 +36,21 @@ type TestComposer struct {
 
 // FrameworkResponse represents the response body for framework information.
 type FrameworkResponse struct {
-	Name            string            `json:"name"`
-	Version         string            `json:"version"`
-	EOLDate         time.Time         `json:"eolDate"`
-	RemovalDate     time.Time         `json:"removalDate"`
-	Runner          runner            `json:"runner"`
-	Platforms       []platform        `json:"platforms"`
+	Name        string    `json:"name"`
+	Version     string    `json:"version"`
+	EOLDate     time.Time `json:"eolDate"`
+	RemovalDate time.Time `json:"removalDate"`
+	Runner      runner    `json:"runner"`
+	Platforms   []struct {
+		Name     string
+		Browsers []string
+	} `json:"platforms"`
 	BrowserDefaults map[string]string `json:"browserDefaults"`
 }
 
 // TokenResponse represents the response body for slack token.
 type TokenResponse struct {
 	Token string `json:"token"`
-}
-
-type platform struct {
-	Name     string
-	Browsers []string
 }
 
 type runner struct {
