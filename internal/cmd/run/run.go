@@ -47,7 +47,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/report/json"
 	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/testcafe"
-	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/version"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
@@ -67,7 +66,7 @@ var (
 
 	typeDef config.TypeDef
 
-	testcompClient    testcomposer.Client
+	testcompClient    http2.TestComposer
 	webdriverClient   webdriver.Client
 	restoClient       resto.Client
 	appsClient        appstore.AppStore
@@ -209,7 +208,7 @@ func preRun() error {
 	}
 	typeDef = d
 
-	testcompClient = testcomposer.Client{
+	testcompClient = http2.TestComposer{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         "", // updated later once region is determined
 		Credentials: creds,

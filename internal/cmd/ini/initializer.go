@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	http2 "github.com/saucelabs/saucectl/internal/http"
 	"net/http"
 	"sort"
 	"strings"
@@ -28,7 +29,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/resto"
-	"github.com/saucelabs/saucectl/internal/testcomposer"
 	"github.com/saucelabs/saucectl/internal/vmd"
 )
 
@@ -54,7 +54,7 @@ type initializer struct {
 // newInitializer creates a new initializer instance.
 func newInitializer(stdio terminal.Stdio, creds credentials.Credentials, regio string) *initializer {
 	r := region.FromString(regio)
-	tc := testcomposer.Client{
+	tc := http2.TestComposer{
 		HTTPClient:  &http.Client{Timeout: testComposerTimeout},
 		URL:         r.APIBaseURL(),
 		Credentials: creds,

@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	http2 "github.com/saucelabs/saucectl/internal/http"
 	"net/http"
 
 	"github.com/saucelabs/saucectl/internal/artifacts"
 	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/resto"
-	"github.com/saucelabs/saucectl/internal/testcomposer"
 )
 
 // ArtifactService represents artifact service
@@ -18,7 +18,7 @@ type ArtifactService struct {
 }
 
 // NewArtifactService returns an artifact service
-func NewArtifactService(restoClient resto.Client, rdcClient rdc.Client, testcompClient testcomposer.Client) *ArtifactService {
+func NewArtifactService(restoClient resto.Client, rdcClient rdc.Client, testcompClient http2.TestComposer) *ArtifactService {
 	return &ArtifactService{
 		JobService: JobService{
 			VDCReader: &restoClient,
