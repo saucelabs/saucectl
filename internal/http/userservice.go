@@ -1,4 +1,4 @@
-package iam
+package http
 
 import (
 	"context"
@@ -9,29 +9,28 @@ import (
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
-// Client service
-type Client struct {
+type UserService struct {
 	HTTPClient  *http.Client
 	URL         string
 	Credentials credentials.Credentials
 }
 
-func New(url string, creds credentials.Credentials, timeout time.Duration) Client {
-	return Client{
+func NewUserService(url string, creds credentials.Credentials, timeout time.Duration) UserService {
+	return UserService{
 		HTTPClient:  &http.Client{Timeout: timeout},
 		URL:         url,
 		Credentials: creds,
 	}
 }
 
-// Get user data
-func (c *Client) GetUser(ctx context.Context) (User, error) {
+func (c *UserService) GetUser(ctx context.Context) (iam.User, error) {
 	url := fmt.Sprintf("%s/team-management/v1/users/me", c.URL)
 
-	var user User
+	var user iam.User
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return user, err
