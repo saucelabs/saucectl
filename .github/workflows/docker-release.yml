@@ -53,7 +53,7 @@ jobs:
   smoke_test_image:
     name: Smoke test Docker image
     runs-on: ubuntu-latest
-    container: ${{ needs.push_to_registry.outputs.version }}
+    container: saucelabs/saucectl:${{ needs.push_to_registry.outputs.version }}
     needs: push_to_registry
     steps:
       - name: Verify saucectl
