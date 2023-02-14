@@ -95,7 +95,7 @@ func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
 	case 429:
 		return nil, 0, storage.ErrTooManyRequest
 	default:
-		return nil, 0, newServerError(resp)
+		return nil, 0, s.newServerError(resp)
 	}
 }
 
@@ -133,7 +133,7 @@ func (s *AppStore) UploadStream(filename, description string, reader io.Reader) 
 	case 429:
 		return storage.Item{}, storage.ErrTooManyRequest
 	default:
-		return storage.Item{}, newServerError(resp)
+		return storage.Item{}, s.newServerError(resp)
 	}
 }
 
@@ -202,13 +202,13 @@ func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 	case 429:
 		return storage.List{}, storage.ErrTooManyRequest
 	default:
-		return storage.List{}, newServerError(resp)
+		return storage.List{}, s.newServerError(resp)
 	}
 }
 
 // newServerError inspects server error responses, trying to gather as much information as possible, especially if the body
 // conforms to the errorResponse format, and returns a storage.ServerError.
-func newServerError(resp *http.Response) *storage.ServerError {
+func (s *AppStore) newServerError(resp *http.Response) *storage.ServerError {
 	var errResp errorResponse
 	body, _ := io.ReadAll(resp.Body)
 	defer resp.Body.Close()
