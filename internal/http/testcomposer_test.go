@@ -15,32 +15,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 )
 
-type Responder struct {
-	Index   int
-	Records []func(w http.ResponseWriter, r *http.Request)
-	Test    *testing.T
-}
-
-func (r *Responder) Record(resFunc func(w http.ResponseWriter, req *http.Request)) {
-	r.Records = append(r.Records, resFunc)
-}
-
-func (r *Responder) Play(w http.ResponseWriter, req *http.Request) {
-	if r.Index >= len(r.Records) {
-		r.Test.Errorf("responder requested more times than it has available records")
-	}
-
-	r.Records[r.Index](w, req)
-	r.Index++
-}
-
 func TestTestComposer_StartJob(t *testing.T) {
-	respo := Responder{
-		Test: t,
-	}
-	mockTestComposerServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		respo.Play(w, r)
-	}))
 	type args struct {
 		ctx               context.Context
 		jobStarterPayload job.StartOptions
@@ -59,10 +34,6 @@ func TestTestComposer_StartJob(t *testing.T) {
 	}{
 		{
 			name: "Happy path",
-			fields: fields{
-				HTTPClient: mockTestComposerServer.Client(),
-				URL:        mockTestComposerServer.URL,
-			},
 			args: args{
 				ctx: context.TODO(),
 				jobStarterPayload: job.StartOptions{
@@ -79,7 +50,7 @@ func TestTestComposer_StartJob(t *testing.T) {
 			wantErr: nil,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(201)
-				json.NewEncoder(w).Encode(struct {
+				_ = json.NewEncoder(w).Encode(struct {
 					JobID string `json:"jobID"`
 				}{
 					JobID: "fake-job-id",
@@ -88,10 +59,6 @@ func TestTestComposer_StartJob(t *testing.T) {
 		},
 		{
 			name: "Non 2xx status code",
-			fields: fields{
-				HTTPClient: mockTestComposerServer.Client(),
-				URL:        mockTestComposerServer.URL,
-			},
 			args: args{
 				ctx:               context.TODO(),
 				jobStarterPayload: job.StartOptions{},
@@ -104,10 +71,6 @@ func TestTestComposer_StartJob(t *testing.T) {
 		},
 		{
 			name: "Unknown error",
-			fields: fields{
-				HTTPClient: mockTestComposerServer.Client(),
-				URL:        mockTestComposerServer.URL,
-			},
 			args: args{
 				ctx:               context.TODO(),
 				jobStarterPayload: job.StartOptions{},
@@ -125,12 +88,13 @@ func TestTestComposer_StartJob(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &TestComposer{
-				HTTPClient: tt.fields.HTTPClient,
-				URL:        tt.fields.URL,
-			}
+			server := httptest.NewServer(http.HandlerFunc(tt.serverFunc))
+			defer server.Close()
 
-			respo.Record(tt.serverFunc)
+			c := &TestComposer{
+				HTTPClient: server.Client(),
+				URL:        server.URL,
+			}
 
 			got, _, err := c.StartJob(tt.args.ctx, tt.args.jobStarterPayload)
 			if (err != nil) && !reflect.DeepEqual(err, tt.wantErr) {
@@ -145,15 +109,6 @@ func TestTestComposer_StartJob(t *testing.T) {
 }
 
 func TestClient_GetSlackToken(t *testing.T) {
-	respo := Responder{
-		Test: t,
-	}
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		respo.Play(w, r)
-	}))
-	defer server.Close()
-
 	type fields struct {
 		HTTPClient  *http.Client
 		URL         string
@@ -168,7 +123,6 @@ func TestClient_GetSlackToken(t *testing.T) {
 	}{
 		{
 			name:    "token exists",
-			fields:  fields{HTTPClient: server.Client(), URL: server.URL},
 			want:    "user token",
 			wantErr: false,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
@@ -183,7 +137,6 @@ func TestClient_GetSlackToken(t *testing.T) {
 		},
 		{
 			name:    "token validation error",
-			fields:  fields{HTTPClient: server.Client(), URL: server.URL},
 			want:    "",
 			wantErr: true,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
@@ -192,7 +145,6 @@ func TestClient_GetSlackToken(t *testing.T) {
 		},
 		{
 			name:    "token does not exists",
-			fields:  fields{HTTPClient: server.Client(), URL: server.URL},
 			want:    "",
 			wantErr: true,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
@@ -202,13 +154,14 @@ func TestClient_GetSlackToken(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(tt.serverFunc))
+			defer server.Close()
+
 			c := &TestComposer{
-				HTTPClient:  tt.fields.HTTPClient,
-				URL:         tt.fields.URL,
+				HTTPClient:  server.Client(),
+				URL:         server.URL,
 				Credentials: tt.fields.Credentials,
 			}
-
-			respo.Record(tt.serverFunc)
 
 			got, err := c.GetSlackToken(context.Background())
 			if (err != nil) != tt.wantErr {
@@ -223,15 +176,6 @@ func TestClient_GetSlackToken(t *testing.T) {
 }
 
 func TestClient_Search(t *testing.T) {
-	respo := Responder{
-		Test: t,
-	}
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		respo.Play(w, r)
-	}))
-	defer server.Close()
-
 	type fields struct {
 		HTTPClient  *http.Client
 		URL         string
@@ -250,8 +194,7 @@ func TestClient_Search(t *testing.T) {
 		serverFunc func(w http.ResponseWriter, r *http.Request)
 	}{
 		{
-			name:   "framework version available",
-			fields: fields{HTTPClient: server.Client(), URL: server.URL},
+			name: "framework version available",
 			args: args{context.Background(), framework.SearchOptions{
 				Name:             "testycles",
 				FrameworkVersion: "1",
@@ -282,8 +225,7 @@ func TestClient_Search(t *testing.T) {
 			},
 		},
 		{
-			name:   "unknown framework or version",
-			fields: fields{HTTPClient: server.Client(), URL: server.URL},
+			name: "unknown framework or version",
 			args: args{context.Background(), framework.SearchOptions{
 				Name:             "notestycles",
 				FrameworkVersion: "1",
@@ -297,13 +239,14 @@ func TestClient_Search(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(tt.serverFunc))
+			defer server.Close()
+
 			c := &TestComposer{
-				HTTPClient:  tt.fields.HTTPClient,
-				URL:         tt.fields.URL,
+				HTTPClient:  server.Client(),
+				URL:         server.URL,
 				Credentials: tt.fields.Credentials,
 			}
-
-			respo.Record(tt.serverFunc)
 
 			got, err := c.Search(tt.args.ctx, tt.args.opts)
 			if (err != nil) != tt.wantErr {
