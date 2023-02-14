@@ -33,12 +33,18 @@ type Suite struct {
 	Timeout        time.Duration     `yaml:"timeout,omitempty"`
 	Name           string            `yaml:"name,omitempty"`
 	ProjectName    string            `yaml:"projectName,omitempty"`
-	HookID         string            `yaml:"-"`
 	UseRemoteTests bool              `yaml:"useRemoteTests,omitempty"`
 	Tests          []string          `yaml:"tests,omitempty"`
 	Tags           []string          `yaml:"tags,omitempty"`
 	TestMatch      []string          `yaml:"testMatch,omitempty"`
 	Env            map[string]string `yaml:"env,omitempty"`
+
+	// HookID is the value used for invoking then endpoints.
+	// It is kept close to the config as it will be resolved prior to
+	// any execution. It's easier to keep it at the config level than
+	// create another struct. In the future, we may invoke execution
+	// through ProjectName only, and get rid of this field.
+	HookID string `yaml:"-"`
 }
 
 // FromFile creates a new apitest Project based on the filepath cfgPath.
