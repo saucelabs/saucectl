@@ -26,10 +26,6 @@
             "description": "The name of the test suite, which will be reflected in the test results in Sauce Labs.",
             "type": "string"
           },
-          "hookId": {
-            "description": "Your project's hook ID, which you can create and/or retrieve from your project's Webhooks tab.",
-            "type": "string"
-          },
           "projectName": {
             "description": "Your project's name.",
             "type": "string"
@@ -52,19 +48,8 @@
             "type": "boolean"
           }
         },
-        "oneOf": [
-          {
-            "required": [
-              "projectName"
-            ]
-          },
-          {
-            "required": [
-              "hookId"
-            ]
-          }
-        ],
-        "required": [
+       "required": [
+          "projectName",
           "name"
         ],
         "additionalProperties": false
