@@ -39,11 +39,8 @@ type Suite struct {
 	TestMatch      []string          `yaml:"testMatch,omitempty"`
 	Env            map[string]string `yaml:"env,omitempty"`
 
-	// HookID is the value used for invoking then endpoints.
-	// It is kept close to the config as it will be resolved prior to
-	// any execution. It's easier to keep it at the config level than
-	// create another struct. In the future, we may invoke execution
-	// through ProjectName only, and get rid of this field.
+	// HookID is a technical ID unique to a project that's required by the APIs that execute API tests.
+	// The HookID is retrieved dynamically before calling those endpoints.
 	HookID string `yaml:"-"`
 }
 
