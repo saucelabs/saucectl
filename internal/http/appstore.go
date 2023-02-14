@@ -30,13 +30,6 @@ type ListResponse struct {
 	TotalItems int    `json:"total_items"`
 }
 
-// errorResponse is a generic error response from the server.
-type errorResponse struct {
-	Code   int    `json:"code"`
-	Title  string `json:"title"`
-	Detail string `json:"detail"`
-}
-
 // Links represents the pagination information returned by the app store.
 type Links struct {
 	Self string `json:"self"`
@@ -209,7 +202,11 @@ func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 // newServerError inspects server error responses, trying to gather as much information as possible, especially if the body
 // conforms to the errorResponse format, and returns a storage.ServerError.
 func (s *AppStore) newServerError(resp *http.Response) *storage.ServerError {
-	var errResp errorResponse
+	var errResp struct {
+		Code   int    `json:"code"`
+		Title  string `json:"title"`
+		Detail string `json:"detail"`
+	}
 	body, _ := io.ReadAll(resp.Body)
 	defer resp.Body.Close()
 
