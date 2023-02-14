@@ -17,8 +17,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/insights"
-	"github.com/saucelabs/saucectl/internal/webdriver"
-
 	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
 
 	"github.com/fatih/color"
@@ -57,6 +55,7 @@ var (
 
 	// General Request Timeouts
 	testComposerTimeout = 15 * time.Minute
+	webdriverTimeout    = 15 * time.Minute
 	rdcTimeout          = 15 * time.Minute
 	githubTimeout       = 2 * time.Second
 	insightsTimeout     = 10 * time.Second
@@ -67,7 +66,7 @@ var (
 	typeDef config.TypeDef
 
 	testcompClient    http2.TestComposer
-	webdriverClient   webdriver.Client
+	webdriverClient   http2.Webdriver
 	restoClient       resto.Client
 	appsClient        appstore.AppStore
 	rdcClient         rdc.Client
@@ -210,23 +209,7 @@ func preRun() error {
 
 	testcompClient = http2.NewTestComposer("", creds, testComposerTimeout)
 
-	webdriverClient = webdriver.Client{
-		HTTPClient: &http.Client{
-			Timeout: testComposerTimeout,
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				// Sauce can queue up Job start requests for up to 10 minutes and sends redirects in the meantime to
-				// keep the connection alive. A redirect is sent every 45 seconds.
-				// 10m / 45s requires a minimum of 14 redirects.
-				if len(via) >= 20 {
-					return errors.New("stopped after 20 redirects")
-				}
-
-				return nil
-			},
-		},
-		URL:         "", // updated later once region is determined
-		Credentials: creds,
-	}
+	webdriverClient = http2.NewWebdriver("", creds, webdriverTimeout)
 
 	restoClient = resto.New("", creds.Username, creds.AccessKey, 0)
 
