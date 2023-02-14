@@ -1,0 +1,36 @@
+assertions: 
+  - id: set
+    var: idList
+    object: "[ 1, 2, 3, 15, 45 ]"
+  # We use each, to walktough an array, just like the dummy idList we declared above
+  - id: each
+    expression: idList
+    children:
+      # We use _1 to reference the item of the collection we're currently looping on
+      # Just for debugging purpose, we use a comment, to print on screen the value of the item we're looping on.
+      # Then we proceed by performing an HTTP request for each item contained in the list
+      - id: comment
+        text: "current ID: ${_1}"
+      - id: get
+        url: ${domain}${path}/${_1}
+        var: payload
+        mode: text
+        expect:
+          codes:
+            - 200
+            - 404
+          validity: VALID
+        children:
+          - id: header
+            name: key
+            value: ${key}
+      # We use IF to determine whether execute or not a collection of instruction,
+      # just we would do in a programming language
+      - id: if
+        expression: payload_response.statusCode == '404'
+        children:
+          - id: comment
+            text: "The product with ID: ${_1} does not exist"
+configs: []
+
+# See https://github.com/saucelabs/saucectl-apix-example/blob/main/docs/README.md#unit-unityaml for more details about the syntax used in this file.

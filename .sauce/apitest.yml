@@ -9,15 +9,23 @@ sauce:
   #   owner: tunnelowner
 
 suites:
-  - name: "run all tests for Devx test Project"
-    hookId: ffbc8b37-83d8-4e6a-83a7-50616c3b9498
+  - name: "Run all tests"
+    projectName: saucectl-example
+    useRemoteTests: true
 
-  - name: "run a tag for Felix Project"
-    hookId: 31f42020-0974-418c-9362-312d6535db97
+  - name: "Run a tag for saucectl-example"
+    projectName: saucectl-example
+    useRemoteTests: true
     tags:
-      - product
+      - flakey
 
-  - name: "run a single test for Felix Project"
-    hookId: 31f42020-0974-418c-9362-312d6535db97
+  - name: "Run a single test for saucectl-example"
+    projectName: saucectl-example
+    useRemoteTests: true
     tests:
-      - 6244d915ca28694aab2a77f3
+      - 6308e6d4c08b875edeee138e
+
+  - name: "Upload and Run tests for saucectl-example"
+    projectName: saucectl-example
+    testMatch:
+      - tests/api/**

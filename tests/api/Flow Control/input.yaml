@@ -1,0 +1,18 @@
+# See https://github.com/saucelabs/saucectl-apix-example/blob/main/docs/README.md#input-inputyaml for more details on the syntax used in this file.
+
+- id: global
+  children:
+    - id: variable
+      name: domain
+      value: https://m2-saucectl.load2.apifortress.com
+    - id: variable
+      name: path
+      value: /api/retail/product
+    - id: variable
+      name: key
+      value: ABC123
+- id: sets
+  children:
+    - id: set
+      children: []
+      name: default
