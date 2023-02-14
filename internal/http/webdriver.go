@@ -1,12 +1,14 @@
-package webdriver
+package http
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -15,42 +17,11 @@ import (
 	"github.com/saucelabs/saucectl/internal/version"
 )
 
-// Client service
-type Client struct {
+// Webdriver service
+type Webdriver struct {
 	HTTPClient  *http.Client
 	URL         string
 	Credentials credentials.Credentials
-}
-
-// Job represents the sauce labs test job.
-type Job struct {
-	ID    string `json:"id"`
-	Owner string `json:"owner"`
-}
-
-// FrameworkResponse represents the response body for framework information.
-type FrameworkResponse struct {
-	Name       string     `json:"name"`
-	Deprecated bool       `json:"deprecated"`
-	Version    string     `json:"version"`
-	Runner     runner     `json:"runner"`
-	Platforms  []platform `json:"platforms"`
-}
-
-// TokenResponse represents the response body for slack token.
-type TokenResponse struct {
-	Token string `json:"token"`
-}
-
-type platform struct {
-	Name     string
-	Browsers []string
-}
-
-type runner struct {
-	CloudRunnerVersion string `json:"cloudRunnerVersion"`
-	DockerImage        string `json:"dockerImage"`
-	GitRelease         string `json:"gitRelease"`
 }
 
 // SessionRequest represents the webdriver session request.
@@ -114,13 +85,33 @@ type sessionStartResponse struct {
 	} `json:"value,omitempty"`
 }
 
+func NewWebdriver(url string, creds credentials.Credentials, timeout time.Duration) Webdriver {
+	return Webdriver{
+		HTTPClient: &http.Client{
+			Timeout: timeout,
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				// Sauce can queue up Job start requests for up to 10 minutes and sends redirects in the meantime to
+				// keep the connection alive. A redirect is sent every 45 seconds.
+				// 10m / 45s requires a minimum of 14 redirects.
+				if len(via) >= 20 {
+					return errors.New("stopped after 20 redirects")
+				}
+
+				return nil
+			},
+		},
+		URL:         url,
+		Credentials: creds,
+	}
+}
+
 // StartJob creates a new job in Sauce Labs.
-func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
 	url := fmt.Sprintf("%s/wd/hub/session", c.URL)
 
 	caps := Capabilities{AlwaysMatch: MatchingCaps{
 		App:             opts.App,
-		BrowserName:     normalizeBrowser(opts.Framework, opts.BrowserName),
+		BrowserName:     c.normalizeBrowser(opts.Framework, opts.BrowserName),
 		BrowserVersion:  opts.BrowserVersion,
 		PlatformName:    opts.PlatformName,
 		PlatformVersion: opts.PlatformVersion,
@@ -139,7 +130,7 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 				FrameworkVersion: opts.FrameworkVersion,
 				RunnerVersion:    opts.RunnerVersion,
 				TestFile:         opts.Suite,
-				Args:             formatEspressoArgs(opts.TestOptions),
+				Args:             c.formatEspressoArgs(opts.TestOptions),
 				VideoFPS:         25,
 			},
 			IdleTimeout: 9999,
@@ -194,7 +185,7 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 }
 
 // formatEspressoArgs adapts option shape to match chef expectations
-func formatEspressoArgs(options map[string]interface{}) []map[string]string {
+func (c *Webdriver) formatEspressoArgs(options map[string]interface{}) []map[string]string {
 	var mappedOptions []map[string]string
 	for k, v := range options {
 		if v == nil {
@@ -221,7 +212,7 @@ func formatEspressoArgs(options map[string]interface{}) []map[string]string {
 }
 
 // normalizeBrowser converts the user specified browsers into something Sauce Labs can understand better.
-func normalizeBrowser(framework, browser string) string {
+func (c *Webdriver) normalizeBrowser(framework, browser string) string {
 	switch framework {
 	case "cypress":
 		switch browser {
