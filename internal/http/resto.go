@@ -1,4 +1,4 @@
-package resto
+package http
 
 import (
 	"context"
@@ -28,10 +28,6 @@ import (
 )
 
 var (
-	// ErrServerError is returned when the server was not able to correctly handle our request (status code >= 500).
-	ErrServerError = errors.New(msg.InternalServerError)
-	// ErrJobNotFound is returned when the requested job was not found.
-	ErrJobNotFound = errors.New(msg.JobNotFound)
 	// ErrAssetNotFound is returned when the requested asset was not found.
 	ErrAssetNotFound = errors.New(msg.AssetNotFound)
 	// ErrTunnelNotFound is returned when the requested tunnel was not found.
@@ -41,8 +37,8 @@ var (
 // retryMax is the total retry times when pulling job status
 const retryMax = 3
 
-// Client http client.
-type Client struct {
+// Resto http client.
+type Resto struct {
 	HTTPClient     *retryablehttp.Client
 	URL            string
 	Username       string
@@ -72,13 +68,13 @@ type tunnel struct {
 	TunnelID string `json:"tunnel_identifier"`
 }
 
-// New creates a new client.
-func New(url, username, accessKey string, timeout time.Duration) Client {
+// NewResto creates a new client.
+func NewResto(url, username, accessKey string, timeout time.Duration) Resto {
 	httpClient := retryablehttp.NewClient()
 	httpClient.HTTPClient = &http.Client{Timeout: timeout}
 	httpClient.Logger = nil
 	httpClient.RetryMax = retryMax
-	return Client{
+	return Resto{
 		HTTPClient: httpClient,
 		URL:        url,
 		Username:   username,
@@ -87,7 +83,7 @@ func New(url, username, accessKey string, timeout time.Duration) Client {
 }
 
 // ReadJob returns the job details.
-func (c *Client) ReadJob(ctx context.Context, id string, realDevice bool) (job.Job, error) {
+func (c *Resto) ReadJob(ctx context.Context, id string, realDevice bool) (job.Job, error) {
 	if realDevice {
 		return job.Job{}, errors.New("the VDC client does not support real device jobs")
 	}
@@ -101,7 +97,7 @@ func (c *Client) ReadJob(ctx context.Context, id string, realDevice bool) (job.J
 }
 
 // PollJob polls job details at an interval, until timeout has been reached or until the job has ended, whether successfully or due to an error.
-func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.Duration, realDevice bool) (job.Job, error) {
+func (c *Resto) PollJob(ctx context.Context, id string, interval, timeout time.Duration, realDevice bool) (job.Job, error) {
 	if realDevice {
 		return job.Job{}, errors.New("the VDC client does not support real device jobs")
 	}
@@ -143,7 +139,7 @@ func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.
 }
 
 // GetJobAssetFileNames return the job assets list.
-func (c *Client) GetJobAssetFileNames(ctx context.Context, jobID string, realDevice bool) ([]string, error) {
+func (c *Resto) GetJobAssetFileNames(ctx context.Context, jobID string, realDevice bool) ([]string, error) {
 	if realDevice {
 		return nil, errors.New("the VDC client does not support real device jobs")
 	}
@@ -156,7 +152,7 @@ func (c *Client) GetJobAssetFileNames(ctx context.Context, jobID string, realDev
 }
 
 // GetJobAssetFileContent returns the job asset file content.
-func (c *Client) GetJobAssetFileContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
+func (c *Resto) GetJobAssetFileContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
 	if realDevice {
 		return nil, errors.New("the VDC client does not support real device jobs")
 	}
@@ -170,7 +166,7 @@ func (c *Client) GetJobAssetFileContent(ctx context.Context, jobID, fileName str
 }
 
 // ReadAllowedCCY returns the allowed (max) concurrency for the current account.
-func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
+func (c *Resto) ReadAllowedCCY(ctx context.Context) (int, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/rest/v1.2/users/%s/concurrency", c.URL, c.Username), nil)
 	if err != nil {
@@ -199,7 +195,7 @@ func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
 
 // IsTunnelRunning checks whether tunnelID is running. If not, it will wait for the tunnel to become available or
 // timeout. Whichever comes first.
-func (c *Client) IsTunnelRunning(ctx context.Context, id, owner string, filter tunnels.Filter, wait time.Duration) error {
+func (c *Resto) IsTunnelRunning(ctx context.Context, id, owner string, filter tunnels.Filter, wait time.Duration) error {
 	deathclock := time.Now().Add(wait)
 	var err error
 	for time.Now().Before(deathclock) {
@@ -212,7 +208,7 @@ func (c *Client) IsTunnelRunning(ctx context.Context, id, owner string, filter t
 	return err
 }
 
-func (c *Client) isTunnelRunning(ctx context.Context, id, owner string, filter tunnels.Filter) error {
+func (c *Resto) isTunnelRunning(ctx context.Context, id, owner string, filter tunnels.Filter) error {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/rest/v1/%s/tunnels", c.URL, c.Username), nil)
 	if err != nil {
@@ -272,7 +268,7 @@ func (c *Client) isTunnelRunning(ctx context.Context, id, owner string, filter t
 }
 
 // StopJob stops the job on the Sauce Cloud.
-func (c *Client) StopJob(ctx context.Context, jobID string, realDevice bool) (job.Job, error) {
+func (c *Resto) StopJob(ctx context.Context, jobID string, realDevice bool) (job.Job, error) {
 	if realDevice {
 		return job.Job{}, errors.New("the VDC client does not support real device jobs")
 	}
@@ -446,7 +442,7 @@ func createStopRequest(ctx context.Context, url, username, accessKey, jobID stri
 }
 
 // DownloadArtifact downloads artifacts and returns a list of what was downloaded.
-func (c *Client) DownloadArtifact(jobID, suiteName string, realDevice bool) []string {
+func (c *Resto) DownloadArtifact(jobID, suiteName string, realDevice bool) []string {
 	targetDir, err := config.GetSuiteArtifactFolder(suiteName, c.ArtifactConfig)
 	if err != nil {
 		log.Error().Msgf("Unable to create artifacts folder (%v)", err)
@@ -472,7 +468,7 @@ func (c *Client) DownloadArtifact(jobID, suiteName string, realDevice bool) []st
 	return artifacts
 }
 
-func (c *Client) downloadArtifact(targetDir, jobID, fileName string) error {
+func (c *Resto) downloadArtifact(targetDir, jobID, fileName string) error {
 	content, err := c.GetJobAssetFileContent(context.Background(), jobID, fileName, false)
 	if err != nil {
 		return err
@@ -487,7 +483,7 @@ type platformEntry struct {
 }
 
 // GetVirtualDevices returns the list of available virtual devices.
-func (c *Client) GetVirtualDevices(ctx context.Context, kind string) ([]vmd.VirtualDevice, error) {
+func (c *Resto) GetVirtualDevices(ctx context.Context, kind string) ([]vmd.VirtualDevice, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/rest/v1.1/info/platforms/all", c.URL), nil)
 	if err != nil {
 		return nil, err
@@ -540,7 +536,7 @@ func (c *Client) GetVirtualDevices(ctx context.Context, kind string) ([]vmd.Virt
 	return dev, nil
 }
 
-func (c *Client) GetBuildID(ctx context.Context, jobID string, buildSource build.Source) (string, error) {
+func (c *Resto) GetBuildID(ctx context.Context, jobID string, buildSource build.Source) (string, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v2/builds/%s/jobs/%s/build/", c.URL, buildSource, jobID), nil)
 	if err != nil {
 		return "", err
