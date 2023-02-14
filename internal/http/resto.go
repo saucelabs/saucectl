@@ -21,17 +21,9 @@ import (
 	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/requesth"
 	tunnels "github.com/saucelabs/saucectl/internal/tunnel"
 	"github.com/saucelabs/saucectl/internal/vmd"
-)
-
-var (
-	// ErrAssetNotFound is returned when the requested asset was not found.
-	ErrAssetNotFound = errors.New(msg.AssetNotFound)
-	// ErrTunnelNotFound is returned when the requested tunnel was not found.
-	ErrTunnelNotFound = errors.New(msg.TunnelNotFound)
 )
 
 // retryMax is the total retry times when pulling job status
