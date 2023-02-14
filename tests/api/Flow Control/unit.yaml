@@ -25,7 +25,7 @@ assertions:
             name: key
             value: ${key}
       # We use IF to determine whether execute or not a collection of instruction,
-      # just we would do in a programming language
+      # just as we would do in a programming language
       - id: if
         expression: payload_response.statusCode == '404'
         children:
