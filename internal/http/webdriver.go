@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -81,6 +83,26 @@ type sessionStartResponse struct {
 	Value     struct {
 		Message string `json:"message,omitempty"`
 	} `json:"value,omitempty"`
+}
+
+func NewWebdriver(url string, creds credentials.Credentials, timeout time.Duration) Webdriver {
+	return Webdriver{
+		HTTPClient: &http.Client{
+			Timeout: timeout,
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				// Sauce can queue up Job start requests for up to 10 minutes and sends redirects in the meantime to
+				// keep the connection alive. A redirect is sent every 45 seconds.
+				// 10m / 45s requires a minimum of 14 redirects.
+				if len(via) >= 20 {
+					return errors.New("stopped after 20 redirects")
+				}
+
+				return nil
+			},
+		},
+		URL:         url,
+		Credentials: creds,
+	}
 }
 
 // StartJob creates a new job in Sauce Labs.
