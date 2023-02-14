@@ -178,7 +178,7 @@ func (r *Runner) runLocalTests(s Suite, results chan []apitesting.TestResult) in
 
 	for _, test := range tests {
 		log.Info().
-			Str("hookId", s.HookID).
+			Str("projectName", s.ProjectName).
 			Str("testName", test.Name).
 			Msg("Running test.")
 
@@ -211,7 +211,7 @@ func (r *Runner) runRemoteTests(s Suite, results chan []apitesting.TestResult) i
 	}
 
 	if len(s.Tags) == 0 && len(s.Tests) == 0 {
-		log.Info().Str("hookId", s.HookID).Msg("Running project.")
+		log.Info().Str("projectName", s.ProjectName).Msg("Running project.")
 
 		resp, err := r.Client.RunAllAsync(context.Background(), s.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, apitesting.TestRequest{Params: s.Env})
 		if err != nil {
@@ -228,7 +228,7 @@ func (r *Runner) runRemoteTests(s Suite, results chan []apitesting.TestResult) i
 
 	for _, t := range s.Tests {
 		test := t
-		log.Info().Str("test", test).Str("hookId", s.HookID).Msg("Running test.")
+		log.Info().Str("test", test).Str("projectName", s.ProjectName).Msg("Running test.")
 
 		resp, err := r.Client.RunTestAsync(context.Background(), s.HookID, test, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, apitesting.TestRequest{Params: s.Env})
 
@@ -245,7 +245,7 @@ func (r *Runner) runRemoteTests(s Suite, results chan []apitesting.TestResult) i
 
 	for _, t := range s.Tags {
 		tag := t
-		log.Info().Str("tag", tag).Str("hookId", s.HookID).Msg("Running tag.")
+		log.Info().Str("tag", tag).Str("projectName", s.ProjectName).Msg("Running tag.")
 
 		resp, err := r.Client.RunTagAsync(context.Background(), s.HookID, tag, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, apitesting.TestRequest{Params: s.Env})
 		if err != nil {
@@ -268,7 +268,7 @@ func (r *Runner) runSuites() bool {
 	for _, s := range r.Project.Suites {
 		suite := s
 		log.Info().
-			Str("hookId", suite.HookID).
+			Str("projectName", suite.ProjectName).
 			Str("suite", suite.Name).
 			Bool("parallel", true).
 			Msg("Starting suite")
@@ -340,7 +340,7 @@ func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, res
 
 				if err == nil {
 					log.Info().
-						Str("hookId", hookID).
+						Str("projectName", project.Name).
 						Str("testName", result.Test.Name).
 						Msg("Finished test.")
 					results <- []apitesting.TestResult{result}
