@@ -2,7 +2,7 @@ assertions:
   - id: set
     var: idList
     object: "[ 1, 2, 3, 15, 45 ]"
-  # We use each, to walktough an array, just like the dummy idList we declared above
+  # We use each, to walk through an array, just like the dummy idList we declared above
   - id: each
     expression: idList
     children:
