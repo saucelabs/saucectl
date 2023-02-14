@@ -92,6 +92,27 @@ func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
 	}
 }
 
+// DownloadURL downloads a file from the url. It's the caller's responsibility to close the reader.
+func (s *AppStore) DownloadURL(url string) (io.ReadCloser, int64, error) {
+	req, err := requesth.New(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	resp, err := s.HTTPClient.Do(req)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	switch resp.StatusCode {
+	case 200:
+		return resp.Body, resp.ContentLength, nil
+	default:
+		b, _ := io.ReadAll(resp.Body)
+		return nil, 0, fmt.Errorf("unexpected server response (%d): %s", resp.StatusCode, b)
+	}
+}
+
 // UploadStream uploads the contents of reader and stores them under the given filename.
 func (s *AppStore) UploadStream(filename, description string, reader io.Reader) (storage.Item, error) {
 	multipartReader, contentType, err := multipartext.NewMultipartReader(filename, description, reader)
