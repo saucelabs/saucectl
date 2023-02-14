@@ -19,6 +19,6 @@ type Organization struct {
 	ID string `json:"id"`
 }
 
-type Service interface {
+type UserService interface {
 	GetUser(context.Context) (User, error)
 }

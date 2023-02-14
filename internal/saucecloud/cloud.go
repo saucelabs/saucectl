@@ -56,7 +56,7 @@ type CloudRunner struct {
 	Framework              framework.Framework
 	MetadataSearchStrategy framework.MetadataSearchStrategy
 	InsightsService        insights.Service
-	UserService            iam.Service
+	UserService            iam.UserService
 	BuildService           build.Reader
 
 	Reporters []report.Reporter
