@@ -50,9 +50,6 @@ type concurrencyResponse struct {
 	}
 }
 
-// availableTunnelsResponse is the response body as is returned by resto's rest/v1/users/{username}/tunnels endpoint.
-type availableTunnelsResponse map[string][]tunnel
-
 type tunnel struct {
 	ID       string `json:"id"`
 	Owner    string `json:"owner"`
@@ -232,7 +229,7 @@ func (c *Resto) isTunnelRunning(ctx context.Context, id, owner string, filter tu
 		return err
 	}
 
-	var resp availableTunnelsResponse
+	var resp map[string][]tunnel
 	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
 		return err
 	}
