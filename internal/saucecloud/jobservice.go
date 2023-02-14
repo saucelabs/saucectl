@@ -92,7 +92,7 @@ func (s JobService) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 
 type JobCommandService struct {
 	Reader      insights.Service
-	UserService iam.Service
+	UserService iam.UserService
 }
 
 func (s JobCommandService) ListJobs(ctx context.Context, jobSource string, queryOption cjob.QueryOption) (cjob.List, error) {

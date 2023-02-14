@@ -14,7 +14,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/apitest"
 	"github.com/saucelabs/saucectl/internal/apitesting"
 	"github.com/saucelabs/saucectl/internal/cucumber"
-	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
@@ -71,7 +70,7 @@ var (
 	appsClient        appstore.AppStore
 	rdcClient         rdc.Client
 	insightsClient    insights.Client
-	iamClient         iam.Client
+	iamClient         http2.UserService
 	apitestingClient  apitesting.Client
 	imageRunnerClient http2.ImageRunner
 
@@ -219,7 +218,7 @@ func preRun() error {
 
 	insightsClient = insights.New("", creds, insightsTimeout)
 
-	iamClient = iam.New("", creds, iamTimeout)
+	iamClient = http2.NewUserService("", creds, iamTimeout)
 
 	apitestingClient = apitesting.New("", creds.Username, creds.AccessKey, apitestingTimeout)
 

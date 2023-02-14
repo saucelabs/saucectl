@@ -2,12 +2,12 @@ package jobs
 
 import (
 	"errors"
+	http2 "github.com/saucelabs/saucectl/internal/http"
 	"net/http"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/credentials"
-	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
@@ -39,7 +39,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 			creds := credentials.Get()
 			url := region.FromString(regio).APIBaseURL()
 			insightsClient := insights.New(url, creds, insightsTimeout)
-			iamClient := iam.Client{
+			iamClient := http2.UserService{
 				HTTPClient:  &http.Client{Timeout: iamTimeout},
 				URL:         url,
 				Credentials: creds,
