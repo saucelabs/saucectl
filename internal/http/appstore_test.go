@@ -1,4 +1,4 @@
-package appstore
+package http
 
 import (
 	"encoding/json"

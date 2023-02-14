@@ -1,4 +1,4 @@
-package appstore
+package http
 
 import (
 	"bytes"
@@ -30,13 +30,6 @@ type ListResponse struct {
 	TotalItems int    `json:"total_items"`
 }
 
-// errorResponse is a generic error response from the server.
-type errorResponse struct {
-	Code   int    `json:"code"`
-	Title  string `json:"title"`
-	Detail string `json:"detail"`
-}
-
 // Links represents the pagination information returned by the app store.
 type Links struct {
 	Self string `json:"self"`
@@ -61,8 +54,8 @@ type AppStore struct {
 	AccessKey  string
 }
 
-// New returns an implementation for AppStore
-func New(url, username, accessKey string, timeout time.Duration) *AppStore {
+// NewAppStore returns an implementation for AppStore
+func NewAppStore(url, username, accessKey string, timeout time.Duration) *AppStore {
 	return &AppStore{
 		HTTPClient: &http.Client{Timeout: timeout},
 		URL:        url,
@@ -95,7 +88,28 @@ func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
 	case 429:
 		return nil, 0, storage.ErrTooManyRequest
 	default:
-		return nil, 0, newServerError(resp)
+		return nil, 0, s.newServerError(resp)
+	}
+}
+
+// DownloadURL downloads a file from the url. It's the caller's responsibility to close the reader.
+func (s *AppStore) DownloadURL(url string) (io.ReadCloser, int64, error) {
+	req, err := requesth.New(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	resp, err := s.HTTPClient.Do(req)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	switch resp.StatusCode {
+	case 200:
+		return resp.Body, resp.ContentLength, nil
+	default:
+		b, _ := io.ReadAll(resp.Body)
+		return nil, 0, fmt.Errorf("unexpected server response (%d): %s", resp.StatusCode, b)
 	}
 }
 
@@ -133,7 +147,7 @@ func (s *AppStore) UploadStream(filename, description string, reader io.Reader) 
 	case 429:
 		return storage.Item{}, storage.ErrTooManyRequest
 	default:
-		return storage.Item{}, newServerError(resp)
+		return storage.Item{}, s.newServerError(resp)
 	}
 }
 
@@ -202,14 +216,18 @@ func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 	case 429:
 		return storage.List{}, storage.ErrTooManyRequest
 	default:
-		return storage.List{}, newServerError(resp)
+		return storage.List{}, s.newServerError(resp)
 	}
 }
 
 // newServerError inspects server error responses, trying to gather as much information as possible, especially if the body
 // conforms to the errorResponse format, and returns a storage.ServerError.
-func newServerError(resp *http.Response) *storage.ServerError {
-	var errResp errorResponse
+func (s *AppStore) newServerError(resp *http.Response) *storage.ServerError {
+	var errResp struct {
+		Code   int    `json:"code"`
+		Title  string `json:"title"`
+		Detail string `json:"detail"`
+	}
 	body, _ := io.ReadAll(resp.Body)
 	defer resp.Body.Close()
 
