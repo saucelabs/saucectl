@@ -1,4 +1,4 @@
-package appstore
+package http
 
 import (
 	"bytes"
@@ -61,8 +61,8 @@ type AppStore struct {
 	AccessKey  string
 }
 
-// New returns an implementation for AppStore
-func New(url, username, accessKey string, timeout time.Duration) *AppStore {
+// NewAppStore returns an implementation for AppStore
+func NewAppStore(url, username, accessKey string, timeout time.Duration) *AppStore {
 	return &AppStore{
 		HTTPClient: &http.Client{Timeout: timeout},
 		URL:        url,
