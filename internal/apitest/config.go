@@ -33,7 +33,7 @@ type Suite struct {
 	Timeout        time.Duration     `yaml:"timeout,omitempty"`
 	Name           string            `yaml:"name,omitempty"`
 	ProjectName    string            `yaml:"projectName,omitempty"`
-	HookID         string            `yaml:"hookId,omitempty"`
+	HookID         string            `yaml:"-"`
 	UseRemoteTests bool              `yaml:"useRemoteTests,omitempty"`
 	Tests          []string          `yaml:"tests,omitempty"`
 	Tags           []string          `yaml:"tags,omitempty"`
@@ -101,12 +101,8 @@ func Validate(p Project) error {
 }
 
 func validateSuite(suite Suite) error {
-	if suite.ProjectName == "" && suite.HookID == "" {
+	if suite.ProjectName == "" {
 		return errors.New(msg.NoProjectName)
-	}
-
-	if suite.ProjectName != "" && suite.HookID != "" {
-		return errors.New(msg.ProjectNameHookIDConflict)
 	}
 	return nil
 }

@@ -483,6 +483,9 @@ func (r *Runner) ResolveHookIDs() error {
 			}
 			if len(hooks) == 0 {
 				log.Error().Str("suiteName", s.Name).Msgf(msg.NoHookForProject, project.Name)
+				creationLink := fmt.Sprintf("%s/api-testing/project/%s/hook", r.Region.AppBaseURL(), project.ID)
+				fmt.Printf(msg.WebhookCreationLink, creationLink, project.Name)
+				fmt.Printf("\n\n")
 				hasErrors = true
 				continue
 			}
@@ -491,7 +494,6 @@ func (r *Runner) ResolveHookIDs() error {
 			hookIDMappings[project.ID] = hooks[0]
 		}
 
-		log.Info().Msgf(msg.HookUsedForSuite, hook.Identifier, s.Name)
 		r.Project.Suites[idx].HookID = hook.Identifier
 	}
 
