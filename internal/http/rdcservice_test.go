@@ -194,7 +194,7 @@ func TestRDCService_PollJob(t *testing.T) {
 				return
 			}
 
-			json.NewEncoder(w).Encode(RDCJob{
+			_ = json.NewEncoder(w).Encode(RDCJob{
 				ID:     "5",
 				Status: job.StatePassed,
 				Passed: true,
