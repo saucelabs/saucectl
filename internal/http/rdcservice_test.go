@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -168,50 +167,22 @@ func TestRDCService_ReadJob(t *testing.T) {
 }
 
 func TestRDCService_PollJob(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
-
-	randJobStatus := func(j *job.Job, isComplete bool) {
-		min := 1
-		max := 10
-		randNum := rand.Intn(max-min+1) + min
-
-		status := "error"
-		if isComplete {
-			status = "complete"
-		}
-
-		if randNum >= 5 {
-			j.Status = status
-		}
-	}
-
 	var retryCount int
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		switch r.URL.Path {
 		case "/v1/rdc/jobs/1":
-			details := &job.Job{
+			_ = json.NewEncoder(w).Encode(RDCJob{
 				ID:     "1",
-				Passed: false,
-				Status: "new",
-				Error:  "",
-			}
-			randJobStatus(details, true)
-
-			resp, _ := json.Marshal(details)
-			_, err = w.Write(resp)
+				Status: job.StateComplete,
+			})
 		case "/v1/rdc/jobs/2":
-			details := &job.Job{
+			_ = json.NewEncoder(w).Encode(RDCJob{
 				ID:     "2",
 				Passed: false,
-				Status: "in progress",
+				Status: job.StateError,
 				Error:  "User Abandoned Test -- User terminated",
-			}
-			randJobStatus(details, false)
-
-			resp, _ := json.Marshal(details)
-			_, err = w.Write(resp)
-			w.WriteHeader(200)
+			})
 		case "/v1/rdc/jobs/3":
 			w.WriteHeader(http.StatusNotFound)
 		case "/v1/rdc/jobs/4":
@@ -222,17 +193,13 @@ func TestRDCService_PollJob(t *testing.T) {
 				retryCount++
 				return
 			}
-			details := &job.Job{
-				ID:     "5",
-				Passed: false,
-				Status: "new",
-				Error:  "",
-			}
-			randJobStatus(details, true)
 
-			resp, _ := json.Marshal(details)
-			_, err = w.Write(resp)
-			w.WriteHeader(200)
+			json.NewEncoder(w).Encode(RDCJob{
+				ID:     "5",
+				Status: job.StatePassed,
+				Passed: true,
+				Error:  "",
+			})
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -278,7 +245,7 @@ func TestRDCService_PollJob(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			name:         "user not found error from external API",
+			name:         "job not found error from external API",
 			client:       NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:        "3",
 			expectedResp: job.Job{},
@@ -289,7 +256,7 @@ func TestRDCService_PollJob(t *testing.T) {
 			client:       NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:        "4",
 			expectedResp: job.Job{},
-			expectedErr:  errors.New("job status request failed; unexpected response code:'401', msg:''"),
+			expectedErr:  errors.New("unexpected statusCode: 401"),
 		},
 		{
 			name:         "unexpected status code from external API",
@@ -304,8 +271,8 @@ func TestRDCService_PollJob(t *testing.T) {
 			jobID:  "5",
 			expectedResp: job.Job{
 				ID:     "5",
-				Passed: false,
-				Status: "complete",
+				Passed: true,
+				Status: job.StatePassed,
 				Error:  "",
 				IsRDC:  true,
 			},

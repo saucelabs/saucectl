@@ -37,6 +37,7 @@ type RDCService struct {
 }
 
 type RDCJob struct {
+	ID                string
 	AutomationBackend string `json:"automation_backend,omitempty"`
 	FrameworkLogURL   string `json:"framework_log_url,omitempty"`
 	DeviceLogURL      string `json:"device_log_url,omitempty"`
@@ -46,6 +47,7 @@ type RDCJob struct {
 		ID string
 	} `json:"screenshots,omitempty"`
 	Status             string `json:"status,omitempty"`
+	Passed             bool
 	ConsolidatedStatus string `json:"consolidated_status,omitempty"`
 	Error              string `json:"error,omitempty"`
 }
@@ -237,6 +239,14 @@ func (c *RDCService) ReadJob(ctx context.Context, id string, realDevice bool) (j
 		return job.Job{}, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return job.Job{}, ErrServerError
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		return job.Job{}, ErrJobNotFound
+	}
 
 	if resp.StatusCode != 200 {
 		return job.Job{}, fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
