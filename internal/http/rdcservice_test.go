@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -43,7 +42,7 @@ func (r *ResponseRecord) Play(w http.ResponseWriter, req *http.Request) {
 	r.Index++
 }
 
-func TestClient_ReadAllowedCCY(t *testing.T) {
+func TestRDCService_ReadAllowedCCY(t *testing.T) {
 	testCases := []struct {
 		name         string
 		statusCode   int
@@ -101,7 +100,7 @@ func TestClient_ReadAllowedCCY(t *testing.T) {
 	}
 }
 
-func TestClient_ReadJob(t *testing.T) {
+func TestRDCService_ReadJob(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		switch r.URL.Path {
@@ -168,23 +167,23 @@ func TestClient_ReadJob(t *testing.T) {
 	}
 }
 
-func randJobStatus(j *job.Job, isComplete bool) {
-	min := 1
-	max := 10
-	randNum := rand.Intn(max-min+1) + min
-
-	status := "error"
-	if isComplete {
-		status = "complete"
-	}
-
-	if randNum >= 5 {
-		j.Status = status
-	}
-}
-
-func TestClient_GetJobStatus(t *testing.T) {
+func TestRDCService_GetJobStatus(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
+
+	randJobStatus := func(j *job.Job, isComplete bool) {
+		min := 1
+		max := 10
+		randNum := rand.Intn(max-min+1) + min
+
+		status := "error"
+		if isComplete {
+			status = "complete"
+		}
+
+		if randNum >= 5 {
+			j.Status = status
+		}
+	}
 
 	var retryCount int
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -326,7 +325,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 	}
 }
 
-func TestClient_GetJobAssetFileNames(t *testing.T) {
+func TestRDCService_GetJobAssetFileNames(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		switch r.URL.Path {
@@ -407,7 +406,7 @@ func TestClient_GetJobAssetFileNames(t *testing.T) {
 	}
 }
 
-func TestClient_GetJobAssetFileContent(t *testing.T) {
+func TestRDCService_GetJobAssetFileContent(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		switch r.URL.Path {
@@ -465,7 +464,7 @@ func TestClient_GetJobAssetFileContent(t *testing.T) {
 	}
 }
 
-func TestClient_DownloadArtifact(t *testing.T) {
+func TestRDCService_DownloadArtifact(t *testing.T) {
 	fileContent := "<xml>junit.xml</xml>"
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
@@ -509,7 +508,7 @@ func TestClient_DownloadArtifact(t *testing.T) {
 	}
 }
 
-func TestClient_GetDevices(t *testing.T) {
+func TestRDCService_GetDevices(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		completeQuery := fmt.Sprintf("%s?%s", r.URL.Path, r.URL.RawQuery)
@@ -587,7 +586,7 @@ func TestClient_GetDevices(t *testing.T) {
 	}
 }
 
-func TestClient_StartJob(t *testing.T) {
+func TestRDCService_StartJob(t *testing.T) {
 	rec := ResponseRecord{
 		Test: t,
 	}
@@ -631,12 +630,11 @@ func TestClient_StartJob(t *testing.T) {
 			want:    "fake-job-id",
 			wantErr: nil,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				resp := sessionStartResponse{
-					TestReport: struct {
-						ID string `json:"id"`
-					}{ID: "fake-job-id"},
+				resp := RDCJobStartResponse{
+					TestReport: RDCTestReport{ID: "fake-job-id"},
 				}
-				respondJSON(w, resp, 201)
+				w.WriteHeader(201)
+				_ = json.NewEncoder(w).Encode(resp)
 			},
 		},
 		{
@@ -694,20 +692,5 @@ func TestClient_StartJob(t *testing.T) {
 				t.Errorf("StartJob() got = %v, want %v", got, tt.want)
 			}
 		})
-	}
-}
-
-func respondJSON(w http.ResponseWriter, v interface{}, httpStatus int) {
-	w.WriteHeader(httpStatus)
-	b, err := json.Marshal(v)
-
-	if err != nil {
-		log.Err(err).Msg("failed to marshal job json")
-		http.Error(w, "failed to marshal job json", http.StatusInternalServerError)
-		return
-	}
-
-	if _, err := w.Write(b); err != nil {
-		log.Err(err).Msg("Failed to write out response")
 	}
 }
