@@ -115,7 +115,7 @@ const (
 	// ProjectListFailure indicates failure to get the list of projects
 	ProjectListFailure = "unable to list projects"
 	// ProjectNotFound indicates the project was not found
-	ProjectNotFound = `Project "%s" was not found`
+	ProjectNotFound = `Project "%s" was not found in region %s`
 	// HookQueryFailure indicates failure when fetching the hooks
 	HookQueryFailure = "unable to query for hooks"
 	// NoHookForProject indicates the absence of available hook
