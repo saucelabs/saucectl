@@ -469,7 +469,7 @@ func doAssetRequest(httpClient *retryablehttp.Client, request *http.Request) ([]
 	return io.ReadAll(resp.Body)
 }
 
-// DownloadArtifact does downloading artifacts and returns downloaded file list
+// DownloadArtifact downloads artifacts and returns a list of downloaded files.
 func (c *RDCService) DownloadArtifact(jobID, suiteName string, realDevice bool) []string {
 	targetDir, err := config.GetSuiteArtifactFolder(suiteName, c.ArtifactConfig)
 	if err != nil {
