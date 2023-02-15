@@ -36,28 +36,18 @@ type RDCService struct {
 	ArtifactConfig config.ArtifactDownload
 }
 
-type organizationResponse struct {
-	Maximum int `json:"maximum,omitempty"`
-}
-
-type rdcConcurrencyResponse struct {
-	Organization organizationResponse `json:"organization,omitempty"`
-}
-
-type readJobScreenshot struct {
-	ID string `json:"id,omitempty"`
-}
-
 type readJobResponse struct {
-	AutomationBackend  string              `json:"automation_backend,omitempty"`
-	FrameworkLogURL    string              `json:"framework_log_url,omitempty"`
-	DeviceLogURL       string              `json:"device_log_url,omitempty"`
-	TestCasesURL       string              `json:"test_cases_url,omitempty"`
-	VideoURL           string              `json:"video_url,omitempty"`
-	Screenshots        []readJobScreenshot `json:"screenshots,omitempty"`
-	Status             string              `json:"status,omitempty"`
-	ConsolidatedStatus string              `json:"consolidated_status,omitempty"`
-	Error              string              `json:"error,omitempty"`
+	AutomationBackend string `json:"automation_backend,omitempty"`
+	FrameworkLogURL   string `json:"framework_log_url,omitempty"`
+	DeviceLogURL      string `json:"device_log_url,omitempty"`
+	TestCasesURL      string `json:"test_cases_url,omitempty"`
+	VideoURL          string `json:"video_url,omitempty"`
+	Screenshots       []struct {
+		ID string
+	} `json:"screenshots,omitempty"`
+	Status             string `json:"status,omitempty"`
+	ConsolidatedStatus string `json:"consolidated_status,omitempty"`
+	Error              string `json:"error,omitempty"`
 }
 
 // RDCSessionRequest represents the RDC session request.
@@ -89,12 +79,6 @@ type DeviceQuery struct {
 	RequestedDeviceType          string `json:"requested_device_type,omitempty"`
 	DeviceName                   string `json:"device_name,omitempty"`
 	PlatformVersion              string `json:"platform_version,omitempty"`
-}
-
-type rdcSessionStartResponse struct {
-	TestReport struct {
-		ID string `json:"id"`
-	} `json:"test_report"`
 }
 
 // NewRDCService creates a new client.
@@ -139,7 +123,11 @@ func (c *RDCService) ReadAllowedCCY(ctx context.Context) (int, error) {
 		return 0, fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
 	}
 
-	var cr rdcConcurrencyResponse
+	var cr struct {
+		Organization struct {
+			Maximum int
+		}
+	}
 	if err := json.NewDecoder(resp.Body).Decode(&cr); err != nil {
 		return 0, err
 	}
@@ -210,7 +198,11 @@ func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (jobID
 		return "", true, err
 	}
 
-	var sessionStart rdcSessionStartResponse
+	var sessionStart struct {
+		TestReport struct {
+			ID string
+		} `json:"test_report"`
+	}
 	if err = json.Unmarshal(body, &sessionStart); err != nil {
 		return "", true, fmt.Errorf("job start status unknown: unable to parse server response: %w", err)
 	}
