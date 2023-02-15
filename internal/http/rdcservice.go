@@ -36,7 +36,7 @@ type RDCService struct {
 	ArtifactConfig config.ArtifactDownload
 }
 
-type readJobResponse struct {
+type RDCJob struct {
 	AutomationBackend string `json:"automation_backend,omitempty"`
 	FrameworkLogURL   string `json:"framework_log_url,omitempty"`
 	DeviceLogURL      string `json:"device_log_url,omitempty"`
@@ -238,7 +238,7 @@ func (c *RDCService) ReadJob(ctx context.Context, id string, realDevice bool) (j
 		return job.Job{}, fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
 	}
 
-	var jr readJobResponse
+	var jr RDCJob
 	if err := json.NewDecoder(resp.Body).Decode(&jr); err != nil {
 		return job.Job{}, err
 	}
@@ -247,6 +247,7 @@ func (c *RDCService) ReadJob(ctx context.Context, id string, realDevice bool) (j
 		Error:  jr.Error,
 		Status: jr.Status,
 		Passed: jr.Status == job.StatePassed,
+		IsRDC:  true,
 	}, nil
 }
 
@@ -362,7 +363,7 @@ func (c *RDCService) GetJobAssetFileNames(ctx context.Context, jobID string, rea
 		return []string{}, fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
 	}
 
-	var jr readJobResponse
+	var jr RDCJob
 	if err := json.NewDecoder(resp.Body).Decode(&jr); err != nil {
 		return []string{}, err
 	}
