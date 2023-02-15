@@ -466,7 +466,7 @@ func (r *Runner) ResolveHookIDs() error {
 
 		project := findMatchingProject(s.ProjectName, projects)
 		if project.ID == "" {
-			log.Error().Str("suiteName", s.Name).Msgf(msg.ProjectNotFound, s.ProjectName)
+			log.Error().Str("suiteName", s.Name).Msgf(msg.ProjectNotFound, s.ProjectName, r.Project.Sauce.Region)
 			hasErrors = true
 			continue
 		}
