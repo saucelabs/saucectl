@@ -156,10 +156,10 @@ func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (jobID
 		AppID:               opts.App,
 		TestAppID:           opts.Suite,
 		OtherApps:           opts.OtherApps,
-		TestOptions:         formatEspressoArgs(opts.TestOptions),
+		TestOptions:         c.formatEspressoArgs(opts.TestOptions),
 		TestsToRun:          opts.TestsToRun,
 		TestsToSkip:         opts.TestsToSkip,
-		DeviceQuery:         prepareDeviceQuery(opts),
+		DeviceQuery:         c.deviceQuery(opts),
 		TestFramework:       frameworkName,
 		TunnelName:          opts.Tunnel.ID,
 		TunnelOwner:         opts.Tunnel.Parent,
@@ -506,15 +506,6 @@ func (c *RDCService) downloadArtifact(targetDir, jobID, fileName string, realDev
 	return targetFile, os.WriteFile(targetFile, content, 0644)
 }
 
-type devicesResponse struct {
-	Entities []device `json:"entities"`
-}
-
-type device struct {
-	Name string `json:"name"`
-	OS   string `json:"os"`
-}
-
 // GetDevices returns the list of available devices using a specific operating system.
 func (c *RDCService) GetDevices(ctx context.Context, OS string) ([]devices.Device, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v1/rdc/devices/filtered", c.URL), nil)
@@ -537,7 +528,12 @@ func (c *RDCService) GetDevices(ctx context.Context, OS string) ([]devices.Devic
 		return []devices.Device{}, err
 	}
 
-	var resp devicesResponse
+	var resp struct {
+		Entities []struct {
+			Name string
+			OS   string
+		}
+	}
 	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
 		return []devices.Device{}, err
 	}
@@ -553,7 +549,7 @@ func (c *RDCService) GetDevices(ctx context.Context, OS string) ([]devices.Devic
 }
 
 // formatEspressoArgs adapts option shape to match RDC expectations
-func formatEspressoArgs(options map[string]interface{}) map[string]string {
+func (c *RDCService) formatEspressoArgs(options map[string]interface{}) map[string]string {
 	mappedOptions := map[string]string{}
 	for k, v := range options {
 		if v == nil {
@@ -580,8 +576,8 @@ func formatEspressoArgs(options map[string]interface{}) map[string]string {
 	return mappedOptions
 }
 
-// prepareDeviceQuery prepares the DeviceQuery according jobs requirements.
-func prepareDeviceQuery(opts job.StartOptions) DeviceQuery {
+// deviceQuery creates a DeviceQuery from opts.
+func (c *RDCService) deviceQuery(opts job.StartOptions) DeviceQuery {
 	if opts.DeviceID != "" {
 		return DeviceQuery{
 			Type:               "HardcodedDeviceQuery",
