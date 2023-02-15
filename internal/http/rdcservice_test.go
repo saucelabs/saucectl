@@ -167,7 +167,7 @@ func TestRDCService_ReadJob(t *testing.T) {
 	}
 }
 
-func TestRDCService_GetJobStatus(t *testing.T) {
+func TestRDCService_PollJob(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 
 	randJobStatus := func(j *job.Job, isComplete bool) {

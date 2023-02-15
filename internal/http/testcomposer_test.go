@@ -108,7 +108,7 @@ func TestTestComposer_StartJob(t *testing.T) {
 	}
 }
 
-func TestClient_GetSlackToken(t *testing.T) {
+func TestTestComposer_GetSlackToken(t *testing.T) {
 	type fields struct {
 		HTTPClient  *http.Client
 		URL         string
@@ -175,7 +175,7 @@ func TestClient_GetSlackToken(t *testing.T) {
 	}
 }
 
-func TestClient_Search(t *testing.T) {
+func TestTestComposer_Search(t *testing.T) {
 	type fields struct {
 		HTTPClient  *http.Client
 		URL         string
@@ -260,7 +260,7 @@ func TestClient_Search(t *testing.T) {
 	}
 }
 
-func TestClient_UploadAsset(t *testing.T) {
+func TestTestComposer_UploadAsset(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		switch r.URL.Path {
@@ -350,7 +350,7 @@ func TestClient_UploadAsset(t *testing.T) {
 	}
 }
 
-func TestClient_Frameworks(t *testing.T) {
+func TestTestComposer_Frameworks(t *testing.T) {
 	tests := []struct {
 		name     string
 		body     string
@@ -413,7 +413,7 @@ func TestClient_Frameworks(t *testing.T) {
 	}
 }
 
-func TestClient_Versions(t *testing.T) {
+func TestTestComposer_Versions(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		switch r.URL.Path {

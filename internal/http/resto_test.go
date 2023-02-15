@@ -22,7 +22,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/vmd"
 )
 
-func TestClient_GetJobDetails(t *testing.T) {
+func TestResto_GetJobDetails(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		switch r.URL.Path {
@@ -115,7 +115,7 @@ func TestClient_GetJobDetails(t *testing.T) {
 	}
 }
 
-func TestClient_GetJobStatus(t *testing.T) {
+func TestResto_GetJobStatus(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 
 	var retryCount int
@@ -253,7 +253,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 	}
 }
 
-func TestClient_GetJobAssetFileNames(t *testing.T) {
+func TestResto_GetJobAssetFileNames(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		switch r.URL.Path {
@@ -327,7 +327,7 @@ func TestClient_GetJobAssetFileNames(t *testing.T) {
 	}
 }
 
-func TestClient_GetJobAssetFileContent(t *testing.T) {
+func TestResto_GetJobAssetFileContent(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		switch r.URL.Path {
@@ -415,7 +415,7 @@ func randJobStatus(j *job.Job, isComplete bool) {
 	}
 }
 
-func TestClient_TestStop(t *testing.T) {
+func TestResto_TestStop(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		switch r.URL.Path {
@@ -495,7 +495,7 @@ func TestClient_TestStop(t *testing.T) {
 	}
 }
 
-func TestClient_GetVirtualDevices(t *testing.T) {
+func TestResto_GetVirtualDevices(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		switch r.URL.Path {
@@ -568,7 +568,7 @@ func TestClient_GetVirtualDevices(t *testing.T) {
 	}
 }
 
-func TestClient_isTunnelRunning(t *testing.T) {
+func TestResto_isTunnelRunning(t *testing.T) {
 	var responseBody string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
@@ -655,7 +655,7 @@ func TestClient_isTunnelRunning(t *testing.T) {
 	}
 }
 
-func TestClient_GetBuildID(t *testing.T) {
+func TestResto_GetBuildID(t *testing.T) {
 	testCases := []struct {
 		name         string
 		statusCode   int
