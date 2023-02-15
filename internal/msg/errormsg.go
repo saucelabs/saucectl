@@ -112,8 +112,6 @@ const (
 const (
 	// NoProjectName indicates the absence of a project name in a suite
 	NoProjectName = "suites must have a projectName defined"
-	// ProjectNameHookIDConflict indicates a conflict between project name and hookID
-	ProjectNameHookIDConflict = "suites must not have a projectName and a hookId defined"
 	// ProjectListFailure indicates failure to get the list of projects
 	ProjectListFailure = "unable to list projects"
 	// ProjectNotFound indicates the project was not found
@@ -122,8 +120,8 @@ const (
 	HookQueryFailure = "unable to query for hooks"
 	// NoHookForProject indicates the absence of available hook
 	NoHookForProject = `No hooks found for project "%s"`
-	// HookUsedForSuite indicates which hook will be used for a suite
-	HookUsedForSuite = `Using hook "%s" for suite "%s"`
+	// WebhookCreationLink indicates where to create a webhook.
+	WebhookCreationLink = `Go to %s to create a webhook for project "%s"`
 	// FailedToPrepareSuites indicates failure of preliminary steps for api-testing
 	FailedToPrepareSuites = "failed to get some suites associated hookIDs"
 )

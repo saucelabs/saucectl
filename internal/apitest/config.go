@@ -33,12 +33,15 @@ type Suite struct {
 	Timeout        time.Duration     `yaml:"timeout,omitempty"`
 	Name           string            `yaml:"name,omitempty"`
 	ProjectName    string            `yaml:"projectName,omitempty"`
-	HookID         string            `yaml:"hookId,omitempty"`
 	UseRemoteTests bool              `yaml:"useRemoteTests,omitempty"`
 	Tests          []string          `yaml:"tests,omitempty"`
 	Tags           []string          `yaml:"tags,omitempty"`
 	TestMatch      []string          `yaml:"testMatch,omitempty"`
 	Env            map[string]string `yaml:"env,omitempty"`
+
+	// HookID is a technical ID unique to a project that's required by the APIs that execute API tests.
+	// The HookID is retrieved dynamically before calling those endpoints.
+	HookID string `yaml:"-"`
 }
 
 // FromFile creates a new apitest Project based on the filepath cfgPath.
@@ -101,12 +104,8 @@ func Validate(p Project) error {
 }
 
 func validateSuite(suite Suite) error {
-	if suite.ProjectName == "" && suite.HookID == "" {
+	if suite.ProjectName == "" {
 		return errors.New(msg.NoProjectName)
-	}
-
-	if suite.ProjectName != "" && suite.HookID != "" {
-		return errors.New(msg.ProjectNameHookIDConflict)
 	}
 	return nil
 }
