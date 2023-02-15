@@ -1,4 +1,4 @@
-package rdc
+package http
 
 import (
 	"bytes"
@@ -22,25 +22,12 @@ import (
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/requesth"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
 
-var (
-	// ErrServerError is returned when the server was not able to correctly handle our request (status code >= 500).
-	ErrServerError = errors.New(msg.InternalServerError)
-	// ErrJobNotFound is returned when the requested job was not found.
-	ErrJobNotFound = errors.New(msg.JobNotFound)
-	// ErrAssetNotFound is returned when the requested asset is not found.
-	ErrAssetNotFound = errors.New(msg.AssetNotFound)
-)
-
-// getStatusMaxRetry is the total retry times when pulling job status
-const retryMax = 3
-
-// Client http client.
-type Client struct {
+// RDCService http client.
+type RDCService struct {
 	HTTPClient     *retryablehttp.Client
 	NativeClient   *http.Client
 	URL            string
@@ -53,7 +40,7 @@ type organizationResponse struct {
 	Maximum int `json:"maximum,omitempty"`
 }
 
-type concurrencyResponse struct {
+type rdcConcurrencyResponse struct {
 	Organization organizationResponse `json:"organization,omitempty"`
 }
 
@@ -73,8 +60,8 @@ type readJobResponse struct {
 	Error              string              `json:"error,omitempty"`
 }
 
-// SessionRequest represents the RDC session request.
-type SessionRequest struct {
+// RDCSessionRequest represents the RDC session request.
+type RDCSessionRequest struct {
 	TestFramework       string            `json:"test_framework,omitempty"`
 	AppID               string            `json:"app_id,omitempty"`
 	TestAppID           string            `json:"test_app_id,omitempty"`
@@ -104,21 +91,21 @@ type DeviceQuery struct {
 	PlatformVersion              string `json:"platform_version,omitempty"`
 }
 
-type sessionStartResponse struct {
+type rdcSessionStartResponse struct {
 	TestReport struct {
 		ID string `json:"id"`
 	} `json:"test_report"`
 }
 
-// New creates a new client.
-func New(url, username, accessKey string, timeout time.Duration, artifactConfig config.ArtifactDownload) Client {
+// NewRDCService creates a new client.
+func NewRDCService(url, username, accessKey string, timeout time.Duration, artifactConfig config.ArtifactDownload) RDCService {
 	nativeClient := &http.Client{Timeout: timeout}
 	httpClient := retryablehttp.NewClient()
 	httpClient.HTTPClient = nativeClient
 	httpClient.Logger = nil
 	httpClient.RetryMax = retryMax
 
-	return Client{
+	return RDCService{
 		HTTPClient:     httpClient,
 		NativeClient:   nativeClient,
 		URL:            url,
@@ -129,7 +116,7 @@ func New(url, username, accessKey string, timeout time.Duration, artifactConfig 
 }
 
 // ReadAllowedCCY returns the allowed (max) concurrency for the current account.
-func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
+func (c *RDCService) ReadAllowedCCY(ctx context.Context) (int, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/v1/rdc/concurrency", c.URL), nil)
 	if err != nil {
@@ -152,7 +139,7 @@ func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
 		return 0, fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
 	}
 
-	var cr concurrencyResponse
+	var cr rdcConcurrencyResponse
 	if err := json.NewDecoder(resp.Body).Decode(&cr); err != nil {
 		return 0, err
 	}
@@ -160,7 +147,7 @@ func (c *Client) ReadAllowedCCY(ctx context.Context) (int, error) {
 }
 
 // StartJob creates a new job in Sauce Labs.
-func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
 	url := fmt.Sprintf("%s/v1/rdc/native-composer/tests", c.URL)
 
 	var frameworkName string
@@ -176,7 +163,7 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 		useTestOrchestrator = fmt.Sprintf("%v", v) == "true"
 	}
 
-	jobReq := SessionRequest{
+	jobReq := RDCSessionRequest{
 		TestName:            opts.Name,
 		AppID:               opts.App,
 		TestAppID:           opts.Suite,
@@ -223,7 +210,7 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 		return "", true, err
 	}
 
-	var sessionStart sessionStartResponse
+	var sessionStart rdcSessionStartResponse
 	if err = json.Unmarshal(body, &sessionStart); err != nil {
 		return "", true, fmt.Errorf("job start status unknown: unable to parse server response: %w", err)
 	}
@@ -232,7 +219,7 @@ func (c *Client) StartJob(ctx context.Context, opts job.StartOptions) (jobID str
 }
 
 // ReadJob returns the job details.
-func (c *Client) ReadJob(ctx context.Context, id string, realDevice bool) (job.Job, error) {
+func (c *RDCService) ReadJob(ctx context.Context, id string, realDevice bool) (job.Job, error) {
 	if !realDevice {
 		return job.Job{}, errors.New("the RDC client does not support virtual device jobs")
 	}
@@ -272,7 +259,7 @@ func (c *Client) ReadJob(ctx context.Context, id string, realDevice bool) (job.J
 }
 
 // PollJob polls job details at an interval, until timeout has been reached or until the job has ended, whether successfully or due to an error.
-func (c *Client) PollJob(ctx context.Context, id string, interval, timeout time.Duration, realDevice bool) (job.Job, error) {
+func (c *RDCService) PollJob(ctx context.Context, id string, interval, timeout time.Duration, realDevice bool) (job.Job, error) {
 	if !realDevice {
 		return job.Job{}, errors.New("the RDC client does not support virtual device jobs")
 	}
@@ -356,7 +343,7 @@ func doRequestStatus(httpClient *retryablehttp.Client, request *http.Request) (j
 }
 
 // GetJobAssetFileNames returns all assets files available.
-func (c *Client) GetJobAssetFileNames(ctx context.Context, jobID string, realDevice bool) ([]string, error) {
+func (c *RDCService) GetJobAssetFileNames(ctx context.Context, jobID string, realDevice bool) ([]string, error) {
 	if !realDevice {
 		return nil, errors.New("the RDC client does not support virtual device jobs")
 	}
@@ -424,7 +411,7 @@ var jobURIMappings = map[string]string{
 }
 
 // GetJobAssetFileContent returns the job asset file content.
-func (c *Client) GetJobAssetFileContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
+func (c *RDCService) GetJobAssetFileContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
 	if !realDevice {
 		return nil, errors.New("the RDC client does not support virtual device jobs")
 	}
@@ -491,7 +478,7 @@ func doAssetRequest(httpClient *retryablehttp.Client, request *http.Request) ([]
 }
 
 // DownloadArtifact does downloading artifacts and returns downloaded file list
-func (c *Client) DownloadArtifact(jobID, suiteName string, realDevice bool) []string {
+func (c *RDCService) DownloadArtifact(jobID, suiteName string, realDevice bool) []string {
 	targetDir, err := config.GetSuiteArtifactFolder(suiteName, c.ArtifactConfig)
 	if err != nil {
 		log.Error().Msgf("Unable to create artifacts folder (%v)", err)
@@ -518,7 +505,7 @@ func (c *Client) DownloadArtifact(jobID, suiteName string, realDevice bool) []st
 	return artifacts
 }
 
-func (c *Client) downloadArtifact(targetDir, jobID, fileName string, realDevice bool) (string, error) {
+func (c *RDCService) downloadArtifact(targetDir, jobID, fileName string, realDevice bool) (string, error) {
 	content, err := c.GetJobAssetFileContent(context.Background(), jobID, fileName, realDevice)
 	if err != nil {
 		return "", err
@@ -537,7 +524,7 @@ type device struct {
 }
 
 // GetDevices returns the list of available devices using a specific operating system.
-func (c *Client) GetDevices(ctx context.Context, OS string) ([]devices.Device, error) {
+func (c *RDCService) GetDevices(ctx context.Context, OS string) ([]devices.Device, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v1/rdc/devices/filtered", c.URL), nil)
 	if err != nil {
 		return nil, err

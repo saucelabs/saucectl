@@ -1,4 +1,4 @@
-package rdc
+package http
 
 import (
 	"context"
@@ -89,7 +89,7 @@ func TestClient_ReadAllowedCCY(t *testing.T) {
 			}
 		}))
 
-		client := New(ts.URL, "test", "123", timeout, config.ArtifactDownload{})
+		client := NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{})
 		client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
 		ccy, err := client.ReadAllowedCCY(context.Background())
 		assert.Equal(t, ccy, tt.want)
@@ -125,7 +125,7 @@ func TestClient_ReadJob(t *testing.T) {
 	}))
 	defer ts.Close()
 	timeout := 3 * time.Second
-	client := New(ts.URL, "test-user", "test-key", timeout, config.ArtifactDownload{})
+	client := NewRDCService(ts.URL, "test-user", "test-key", timeout, config.ArtifactDownload{})
 
 	testCases := []struct {
 		name    string
@@ -247,14 +247,14 @@ func TestClient_GetJobStatus(t *testing.T) {
 
 	testCases := []struct {
 		name         string
-		client       Client
+		client       RDCService
 		jobID        string
 		expectedResp job.Job
 		expectedErr  error
 	}{
 		{
 			name:   "get job details with ID 1 and status 'complete'",
-			client: New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			client: NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:  "1",
 			expectedResp: job.Job{
 				ID:     "1",
@@ -267,7 +267,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 		},
 		{
 			name:   "get job details with ID 2 and status 'error'",
-			client: New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			client: NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:  "2",
 			expectedResp: job.Job{
 				ID:     "2",
@@ -280,28 +280,28 @@ func TestClient_GetJobStatus(t *testing.T) {
 		},
 		{
 			name:         "user not found error from external API",
-			client:       New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			client:       NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:        "3",
 			expectedResp: job.Job{},
 			expectedErr:  ErrJobNotFound,
 		},
 		{
 			name:         "http status is not 200, but 401 from external API",
-			client:       New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			client:       NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:        "4",
 			expectedResp: job.Job{},
 			expectedErr:  errors.New("job status request failed; unexpected response code:'401', msg:''"),
 		},
 		{
 			name:         "unexpected status code from external API",
-			client:       New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			client:       NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:        "333",
 			expectedResp: job.Job{},
 			expectedErr:  errors.New("giving up after 4 attempt(s)"),
 		},
 		{
 			name:   "get job details with ID 5. retry 2 times and succeed",
-			client: New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			client: NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:  "5",
 			expectedResp: job.Job{
 				ID:     "5",
@@ -353,7 +353,7 @@ func TestClient_GetJobAssetFileNames(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
-	client := New(ts.URL, "test-user", "test-password", 1*time.Second, config.ArtifactDownload{})
+	client := NewRDCService(ts.URL, "test-user", "test-password", 1*time.Second, config.ArtifactDownload{})
 
 	testCases := []struct {
 		name     string
@@ -426,7 +426,7 @@ func TestClient_GetJobAssetFileContent(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
-	client := New(ts.URL, "test-user", "test-password", 1*time.Second, config.ArtifactDownload{})
+	client := NewRDCService(ts.URL, "test-user", "test-password", 1*time.Second, config.ArtifactDownload{})
 
 	testCases := []struct {
 		name     string
@@ -492,7 +492,7 @@ func TestClient_DownloadArtifact(t *testing.T) {
 		_ = os.RemoveAll(tempDir)
 	}()
 
-	rc := New(ts.URL, "dummy-user", "dummy-key", 10*time.Second, config.ArtifactDownload{
+	rc := NewRDCService(ts.URL, "dummy-user", "dummy-key", 10*time.Second, config.ArtifactDownload{
 		Directory: tempDir,
 		Match:     []string{"junit.xml"},
 	})
@@ -530,7 +530,7 @@ func TestClient_GetDevices(t *testing.T) {
 	client := retryablehttp.NewClient()
 	client.HTTPClient = &http.Client{Timeout: 1 * time.Second}
 
-	cl := Client{
+	cl := RDCService{
 		HTTPClient: client,
 		URL:        ts.URL,
 		Username:   "dummy-user",
@@ -678,7 +678,7 @@ func TestClient_StartJob(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
+			c := &RDCService{
 				NativeClient: tt.fields.HTTPClient,
 				URL:          tt.fields.URL,
 			}
