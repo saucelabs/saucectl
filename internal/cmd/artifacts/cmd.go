@@ -10,7 +10,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/spf13/cobra"
 )
@@ -40,7 +39,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 
 			creds := credentials.Get()
 			url := region.FromString(regio).APIBaseURL()
-			restoClient := resto.New("", creds.Username, creds.AccessKey, restoTimeout)
+			restoClient := http2.NewResto("", creds.Username, creds.AccessKey, restoTimeout)
 			restoClient.URL = url
 			rdcClient := rdc.New("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 			rdcClient.URL = url
