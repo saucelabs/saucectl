@@ -41,7 +41,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/report/buildtable"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/report/json"
-	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/version"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
@@ -65,7 +64,7 @@ var (
 
 	testcompClient    http2.TestComposer
 	webdriverClient   http2.Webdriver
-	restoClient       resto.Client
+	restoClient       http2.Resto
 	appsClient        http2.AppStore
 	rdcClient         rdc.Client
 	insightsClient    insights.Client
@@ -209,7 +208,7 @@ func preRun() error {
 
 	webdriverClient = http2.NewWebdriver("", creds, webdriverTimeout)
 
-	restoClient = resto.New("", creds.Username, creds.AccessKey, 0)
+	restoClient = http2.NewResto("", creds.Username, creds.AccessKey, 0)
 
 	rdcClient = rdc.New("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 

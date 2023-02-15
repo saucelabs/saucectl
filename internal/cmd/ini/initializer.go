@@ -27,7 +27,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/saucelabs/saucectl/internal/resto"
 	"github.com/saucelabs/saucectl/internal/vmd"
 )
 
@@ -57,7 +56,7 @@ func newInitializer(stdio terminal.Stdio, creds credentials.Credentials, regio s
 
 	rc := rdc.New(r.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 
-	rs := resto.New(r.APIBaseURL(), creds.Username, creds.AccessKey, restoTimeout)
+	rs := http2.NewResto(r.APIBaseURL(), creds.Username, creds.AccessKey, restoTimeout)
 
 	return &initializer{
 		stdio:        stdio,
