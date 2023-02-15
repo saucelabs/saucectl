@@ -23,7 +23,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/saucelabs/saucectl/internal/appstore"
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -67,7 +66,7 @@ var (
 	testcompClient    http2.TestComposer
 	webdriverClient   http2.Webdriver
 	restoClient       resto.Client
-	appsClient        appstore.AppStore
+	appsClient        http2.AppStore
 	rdcClient         rdc.Client
 	insightsClient    insights.Client
 	iamClient         http2.UserService
@@ -214,7 +213,7 @@ func preRun() error {
 
 	rdcClient = rdc.New("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 
-	appsClient = *appstore.New("", creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
+	appsClient = *http2.NewAppStore("", creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
 
 	insightsClient = insights.New("", creds, insightsTimeout)
 

@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"os/signal"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -679,8 +680,11 @@ func (r *CloudRunner) uploadProject(filename, description string, pType uploadTy
 		log.Info().Msgf("Downloading from remote: %s", filename)
 
 		progress.Show("Downloading %s", filename)
-		dest, err := apps.Download(filename)
+		dest, err := r.download(filename)
 		progress.Stop()
+		if err != nil {
+			return "", fmt.Errorf("unable to download app from %s: %w", filename, err)
+		}
 
 		if err != nil {
 			return "", err
@@ -1083,4 +1087,30 @@ func arrayContains(list []string, want string) bool {
 		}
 	}
 	return false
+}
+
+// download downloads the resource the URL points to and returns its local path.
+func (r *CloudRunner) download(url string) (string, error) {
+	reader, _, err := r.ProjectUploader.DownloadURL(url)
+	if err != nil {
+		return "", err
+	}
+	defer reader.Close()
+
+	dir, err := os.MkdirTemp("", "tmp-app")
+	if err != nil {
+		return "", err
+	}
+
+	tmpFilePath := path.Join(dir, path.Base(url))
+
+	f, err := os.Create(tmpFilePath)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	_, err = io.Copy(f, reader)
+
+	return tmpFilePath, err
 }

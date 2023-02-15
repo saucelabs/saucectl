@@ -2,11 +2,8 @@ package apps
 
 import (
 	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 	"os"
-	"path"
 	"regexp"
 	"strings"
 
@@ -73,38 +70,4 @@ func Validate(kind, app string, validExt []string) error {
 		return nil
 	}
 	return fmt.Errorf(msg.FileNotFound, app)
-}
-
-// Download downloads a file from remoteURL to a temp directory and returns the path to the downloaded file
-func Download(remoteURL string) (string, error) {
-	resp, err := http.Get(remoteURL)
-
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("unable to download app from %s: %s", remoteURL, resp.Status)
-	}
-
-	dir, err := os.MkdirTemp("", "tmp-app")
-	if err != nil {
-		return "", err
-	}
-
-	tmpFilePath := path.Join(dir, path.Base(remoteURL))
-
-	f, err := os.Create(tmpFilePath)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-
-	_, err = io.Copy(f, resp.Body)
-	if err != nil {
-		return "", nil
-	}
-
-	return tmpFilePath, nil
 }
