@@ -257,13 +257,6 @@ func (c *RDCService) PollJob(ctx context.Context, id string, interval, timeout t
 		return job.Job{}, errors.New("the RDC client does not support virtual device jobs")
 	}
 
-	req, err := requesth.NewWithContext(ctx, http.MethodGet,
-		fmt.Sprintf("%s/v1/rdc/jobs/%s", c.URL, id), nil)
-	if err != nil {
-		return job.Job{}, err
-	}
-	req.SetBasicAuth(c.Username, c.AccessKey)
-
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
@@ -276,7 +269,7 @@ func (c *RDCService) PollJob(ctx context.Context, id string, interval, timeout t
 	for {
 		select {
 		case <-ticker.C:
-			j, err := doRequestStatus(c.HTTPClient, req)
+			j, err := c.ReadJob(ctx, id, realDevice)
 			if err != nil {
 				return job.Job{}, err
 			}
@@ -286,7 +279,7 @@ func (c *RDCService) PollJob(ctx context.Context, id string, interval, timeout t
 				return j, nil
 			}
 		case <-deathclock.C:
-			j, err := doRequestStatus(c.HTTPClient, req)
+			j, err := c.ReadJob(ctx, id, realDevice)
 			if err != nil {
 				return job.Job{}, err
 			}
@@ -294,45 +287,6 @@ func (c *RDCService) PollJob(ctx context.Context, id string, interval, timeout t
 			return j, nil
 		}
 	}
-}
-
-func doRequestStatus(httpClient *retryablehttp.Client, request *http.Request) (job.Job, error) {
-	retryRep, err := retryablehttp.FromRequest(request)
-	if err != nil {
-		return job.Job{}, err
-	}
-	resp, err := httpClient.Do(retryRep)
-	if err != nil {
-		return job.Job{}, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= http.StatusInternalServerError {
-		return job.Job{}, ErrServerError
-	}
-
-	if resp.StatusCode == http.StatusNotFound {
-		return job.Job{}, ErrJobNotFound
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		err := fmt.Errorf("job status request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
-		return job.Job{}, err
-	}
-
-	body, _ := io.ReadAll(resp.Body)
-	var jobDetails job.Job
-	if err := json.Unmarshal(body, &jobDetails); err != nil {
-		return job.Job{}, err
-	}
-
-	// Sanity check.
-	if jobDetails.ID == "" {
-		return job.Job{}, fmt.Errorf("job status request failed; unexpected response: %s", string(body))
-	}
-
-	return jobDetails, nil
 }
 
 // GetJobAssetFileNames returns all assets files available.
