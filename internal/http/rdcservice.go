@@ -366,11 +366,7 @@ func (c *RDCService) GetJobAssetFileNames(ctx context.Context, jobID string, rea
 	if err := json.NewDecoder(resp.Body).Decode(&jr); err != nil {
 		return []string{}, err
 	}
-	return extractAssetsFileNames(jr), nil
-}
 
-// extractAssetsFileNames infers available assets from an RDC job.
-func extractAssetsFileNames(jr readJobResponse) []string {
 	var files []string
 
 	if strings.HasSuffix(jr.DeviceLogURL, "/deviceLogs") {
@@ -392,20 +388,20 @@ func extractAssetsFileNames(jr readJobResponse) []string {
 	if jr.AutomationBackend == xcuitest.Kind || jr.AutomationBackend == espresso.Kind {
 		files = append(files, "junit.xml")
 	}
-	return files
-}
-
-// jobURIMappings contains the assets that don't get accessed by their filename.
-// Those items also requires to send "Accept: text/plain" header to get raw content instead of json.
-var jobURIMappings = map[string]string{
-	"device.log":   "deviceLogs",
-	"xcuitest.log": "xcuitestLogs",
+	return files, nil
 }
 
 // GetJobAssetFileContent returns the job asset file content.
 func (c *RDCService) GetJobAssetFileContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
 	if !realDevice {
 		return nil, errors.New("the RDC client does not support virtual device jobs")
+	}
+
+	// jobURIMappings contains the assets that don't get accessed by their filename.
+	// Those items also requires to send "Accept: text/plain" header to get raw content instead of json.
+	var jobURIMappings = map[string]string{
+		"device.log":   "deviceLogs",
+		"xcuitest.log": "xcuitestLogs",
 	}
 
 	acceptHeader := ""
@@ -415,38 +411,22 @@ func (c *RDCService) GetJobAssetFileContent(ctx context.Context, jobID, fileName
 		acceptHeader = "text/plain"
 	}
 
-	request, err := createAssetRequest(ctx, c.URL, c.Username, c.AccessKey, jobID, URIFileName, acceptHeader)
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := doAssetRequest(c.HTTPClient, request)
-	if err != nil {
-		return []byte{}, err
-	}
-	return data, err
-}
-
-func createAssetRequest(ctx context.Context, url, username, accessKey, jobID, fileName, acceptHeader string) (*http.Request, error) {
 	req, err := requesth.NewWithContext(ctx, http.MethodGet,
-		fmt.Sprintf("%s/v1/rdc/jobs/%s/%s", url, jobID, fileName), nil)
+		fmt.Sprintf("%s/v1/rdc/jobs/%s/%s", c.URL, jobID, URIFileName), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	req.SetBasicAuth(username, accessKey)
+	req.SetBasicAuth(c.Username, c.AccessKey)
 	if acceptHeader != "" {
 		req.Header.Set("Accept", acceptHeader)
 	}
-	return req, nil
-}
 
-func doAssetRequest(httpClient *retryablehttp.Client, request *http.Request) ([]byte, error) {
-	req, err := retryablehttp.FromRequest(request)
+	rreq, err := retryablehttp.FromRequest(req)
 	if err != nil {
 		return nil, err
 	}
-	resp, err := httpClient.Do(req)
+	resp, err := c.HTTPClient.Do(rreq)
 	if err != nil {
 		return nil, err
 	}
