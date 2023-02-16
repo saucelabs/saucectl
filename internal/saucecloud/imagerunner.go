@@ -165,13 +165,18 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 	ctx, cancel := context.WithTimeout(r.ctx, suite.Timeout)
 	defer cancel()
 
+	var auth *imagerunner.Auth
+	if suite.ImagePullAuth.User != "" && suite.ImagePullAuth.Token != "" {
+		auth = &imagerunner.Auth{
+			User:  suite.ImagePullAuth.User,
+			Token: suite.ImagePullAuth.Token,
+		}
+	}
+
 	runner, err := r.RunnerService.TriggerRun(ctx, imagerunner.RunnerSpec{
 		Container: imagerunner.Container{
 			Name: suite.Image,
-			Auth: imagerunner.Auth{
-				User:  suite.ImagePullAuth.User,
-				Token: suite.ImagePullAuth.Token,
-			},
+			Auth: auth,
 		},
 		EntryPoint: suite.EntryPoint,
 		Env:        mapEnv(suite.Env),
