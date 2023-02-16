@@ -15,8 +15,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
-// Client describes an interface to the api-testing rest endpoints.
-type Client struct {
+// APITester describes an interface to the api-testing rest endpoints.
+type APITester struct {
 	HTTPClient *http.Client
 	URL        string
 	Username   string
@@ -57,9 +57,9 @@ type Hook struct {
 	Name       string `json:"name,omitempty"`
 }
 
-// New returns a apitesting.Client
-func New(url string, username string, accessKey string, timeout time.Duration) Client {
-	return Client{
+// NewAPITester returns a apitesting.APITester
+func NewAPITester(url string, username string, accessKey string, timeout time.Duration) APITester {
+	return APITester{
 		HTTPClient: &http.Client{Timeout: timeout},
 		URL:        url,
 		Username:   username,
@@ -68,7 +68,7 @@ func New(url string, username string, accessKey string, timeout time.Duration) C
 }
 
 // GetProject returns Project metadata for a given hookID.
-func (c *Client) GetProject(ctx context.Context, hookID string) (Project, error) {
+func (c *APITester) GetProject(ctx context.Context, hookID string) (Project, error) {
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s", c.URL, hookID)
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -98,7 +98,7 @@ func (c *Client) GetProject(ctx context.Context, hookID string) (Project, error)
 	return project, nil
 }
 
-func (c *Client) GetEventResult(ctx context.Context, hookID string, eventID string) (TestResult, error) {
+func (c *APITester) GetEventResult(ctx context.Context, hookID string, eventID string) (TestResult, error) {
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/insights/events/%s", c.URL, hookID, eventID)
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -128,7 +128,7 @@ func (c *Client) GetEventResult(ctx context.Context, hookID string, eventID stri
 	return testResult, nil
 }
 
-func (c *Client) GetTest(ctx context.Context, hookID string, testID string) (Test, error) {
+func (c *APITester) GetTest(ctx context.Context, hookID string, testID string) (Test, error) {
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/%s", c.URL, hookID, testID)
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -158,7 +158,7 @@ func (c *Client) GetTest(ctx context.Context, hookID string, testID string) (Tes
 	return test.Published, nil
 }
 
-func (c *Client) composeURL(path string, buildID string, format string, tunnel config.Tunnel, taskID string) string {
+func (c *APITester) composeURL(path string, buildID string, format string, tunnel config.Tunnel, taskID string) string {
 	// NOTE: API url is not user provided so skip error check
 	url, _ := url.Parse(c.URL)
 	url.Path = path
@@ -192,7 +192,7 @@ func (c *Client) composeURL(path string, buildID string, format string, tunnel c
 }
 
 // GetProjects returns the list of Project available.
-func (c *Client) GetProjects(ctx context.Context) ([]Project, error) {
+func (c *APITester) GetProjects(ctx context.Context) ([]Project, error) {
 	url := fmt.Sprintf("%s/api-testing/api/project", c.URL)
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -223,7 +223,7 @@ func (c *Client) GetProjects(ctx context.Context) ([]Project, error) {
 }
 
 // GetHooks returns the list of hooks available.
-func (c *Client) GetHooks(ctx context.Context, projectID string) ([]Hook, error) {
+func (c *APITester) GetHooks(ctx context.Context, projectID string) ([]Hook, error) {
 	url := fmt.Sprintf("%s/api-testing/api/project/%s/hook", c.URL, projectID)
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {

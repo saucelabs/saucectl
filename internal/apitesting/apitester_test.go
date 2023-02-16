@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-func TestClient_GetEventResult(t *testing.T) {
+func TestAPITester_GetEventResult(t *testing.T) {
 	type args struct {
 		ctx     context.Context
 		hookID  string
@@ -88,7 +88,7 @@ func TestClient_GetEventResult(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	c := &Client{
+	c := &APITester{
 		HTTPClient: ts.Client(),
 		URL:        ts.URL,
 		Username:   "dummy",
@@ -108,7 +108,7 @@ func TestClient_GetEventResult(t *testing.T) {
 	}
 }
 
-func TestClient_GetProject(t *testing.T) {
+func TestAPITester_GetProject(t *testing.T) {
 	type args struct {
 		ctx    context.Context
 		hookID string
@@ -151,7 +151,7 @@ func TestClient_GetProject(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
-	c := &Client{
+	c := &APITester{
 		HTTPClient: ts.Client(),
 		URL:        ts.URL,
 		Username:   "dummy",
@@ -172,7 +172,7 @@ func TestClient_GetProject(t *testing.T) {
 	}
 }
 
-func TestClient_GetTest(t *testing.T) {
+func TestAPITester_GetTest(t *testing.T) {
 	type args struct {
 		ctx    context.Context
 		hookID string
@@ -216,7 +216,7 @@ func TestClient_GetTest(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
-	c := &Client{
+	c := &APITester{
 		HTTPClient: ts.Client(),
 		URL:        ts.URL,
 		Username:   "dummy",
@@ -237,7 +237,7 @@ func TestClient_GetTest(t *testing.T) {
 	}
 }
 
-func TestClient_composeURL(t *testing.T) {
+func TestAPITester_composeURL(t *testing.T) {
 	type args struct {
 		path    string
 		buildID string
@@ -312,7 +312,7 @@ func TestClient_composeURL(t *testing.T) {
 			want: "/dummy/path?taskId=taskId",
 		},
 	}
-	c := &Client{
+	c := &APITester{
 		Username: "dummyUsername",
 	}
 	for _, tt := range tests {
@@ -324,7 +324,7 @@ func TestClient_composeURL(t *testing.T) {
 	}
 }
 
-func TestClient_GetProjects(t *testing.T) {
+func TestAPITester_GetProjects(t *testing.T) {
 	tests := []struct {
 		name    string
 		want    []Project
@@ -355,7 +355,7 @@ func TestClient_GetProjects(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	c := &Client{
+	c := &APITester{
 		HTTPClient: ts.Client(),
 		URL:        ts.URL,
 		Username:   "dummy",
@@ -373,7 +373,7 @@ func TestClient_GetProjects(t *testing.T) {
 	}
 }
 
-func TestClient_GetHooks(t *testing.T) {
+func TestAPITester_GetHooks(t *testing.T) {
 	type params struct {
 		projectID string
 	}
@@ -442,7 +442,7 @@ func TestClient_GetHooks(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	c := &Client{
+	c := &APITester{
 		HTTPClient: ts.Client(),
 		URL:        ts.URL,
 		Username:   "dummy",

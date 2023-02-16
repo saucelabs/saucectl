@@ -356,7 +356,7 @@ func TestRunner_runLocalTests(t *testing.T) {
 	client := ts.Client()
 
 	r := Runner{
-		Client: apitesting.Client{
+		Client: apitesting.APITester{
 			HTTPClient: client,
 			URL:        ts.URL,
 		},
@@ -422,7 +422,7 @@ func TestRunner_ResolveHookIDs(t *testing.T) {
 
 	type fields struct {
 		Project       Project
-		Client        apitesting.Client
+		Client        apitesting.APITester
 		Region        region.Region
 		Reporters     []report.Reporter
 		Async         bool
@@ -437,7 +437,7 @@ func TestRunner_ResolveHookIDs(t *testing.T) {
 		{
 			name: "Project with no Hooks",
 			fields: fields{
-				Client: apitesting.Client{
+				Client: apitesting.APITester{
 					HTTPClient: ts.Client(),
 					URL:        ts.URL,
 				},
@@ -455,7 +455,7 @@ func TestRunner_ResolveHookIDs(t *testing.T) {
 		{
 			name: "Project with single Hooks",
 			fields: fields{
-				Client: apitesting.Client{
+				Client: apitesting.APITester{
 					HTTPClient: ts.Client(),
 					URL:        ts.URL,
 				},
@@ -481,7 +481,7 @@ func TestRunner_ResolveHookIDs(t *testing.T) {
 		{
 			name: "Project with multiple Hooks",
 			fields: fields{
-				Client: apitesting.Client{
+				Client: apitesting.APITester{
 					HTTPClient: ts.Client(),
 					URL:        ts.URL,
 				},
@@ -507,7 +507,7 @@ func TestRunner_ResolveHookIDs(t *testing.T) {
 		{
 			name: "Project with Buggy Hooks",
 			fields: fields{
-				Client: apitesting.Client{
+				Client: apitesting.APITester{
 					HTTPClient: ts.Client(),
 					URL:        ts.URL,
 				},

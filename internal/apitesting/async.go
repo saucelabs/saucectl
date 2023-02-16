@@ -32,7 +32,7 @@ type AsyncResponse struct {
 }
 
 // RunAllAsync runs all the tests for the project described by hookID and returns without waiting for their results.
-func (c *Client) RunAllAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
+func (c *APITester) RunAllAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
 	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_run-all", hookID), buildID, "", tunnel, "")
 
 	payload, err := json.Marshal(test)
@@ -56,7 +56,7 @@ func (c *Client) RunAllAsync(ctx context.Context, hookID string, buildID string,
 }
 
 // RunEphemeralAsync runs the tests for the project described by hookID and returns without waiting for their results.
-func (c *Client) RunEphemeralAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, taskID string, test TestRequest) (AsyncResponse, error) {
+func (c *APITester) RunEphemeralAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, taskID string, test TestRequest) (AsyncResponse, error) {
 	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_exec", hookID), buildID, "", tunnel, "")
 
 	payload, err := json.Marshal(test)
@@ -80,7 +80,7 @@ func (c *Client) RunEphemeralAsync(ctx context.Context, hookID string, buildID s
 }
 
 // RunTestAsync runs a single test described by testID for the project described by hookID and returns without waiting for results.
-func (c *Client) RunTestAsync(ctx context.Context, hookID string, testID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
+func (c *APITester) RunTestAsync(ctx context.Context, hookID string, testID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
 	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/%s/_run", hookID, testID), buildID, "", tunnel, "")
 
 	payload, err := json.Marshal(test)
@@ -105,7 +105,7 @@ func (c *Client) RunTestAsync(ctx context.Context, hookID string, testID string,
 }
 
 // RunTagAsync runs all the tests for a testTag for a project described by hookID and returns without waiting for results.
-func (c *Client) RunTagAsync(ctx context.Context, hookID string, testTag string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
+func (c *APITester) RunTagAsync(ctx context.Context, hookID string, testTag string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
 	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_tag/%s/_run", hookID, testTag), buildID, "", tunnel, "")
 
 	payload, err := json.Marshal(test)

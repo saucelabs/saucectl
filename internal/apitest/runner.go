@@ -31,7 +31,7 @@ var inputFileName = "input.yaml"
 // Runner represents an executor for api tests
 type Runner struct {
 	Project       Project
-	Client        apitesting.Client
+	Client        apitesting.APITester
 	Region        region.Region
 	Reporters     []report.Reporter
 	Async         bool

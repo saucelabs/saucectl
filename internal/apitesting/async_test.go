@@ -58,7 +58,7 @@ func TestClient_RunAllAsync(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
-	c := &Client{
+	c := &APITester{
 		HTTPClient: ts.Client(),
 		URL:        ts.URL,
 		Username:   "dummyUser",
@@ -136,7 +136,7 @@ func TestClient_RunEphemeralAsync(t *testing.T) {
 				}
 			}))
 			defer ts.Close()
-			c := &Client{
+			c := &APITester{
 				HTTPClient: ts.Client(),
 				URL:        ts.URL,
 				Username:   "dummyUser",
@@ -204,7 +204,7 @@ func TestClient_RunTestAsync(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
-	c := &Client{
+	c := &APITester{
 		HTTPClient: ts.Client(),
 		URL:        ts.URL,
 		Username:   "dummyUser",
@@ -274,7 +274,7 @@ func TestClient_RunTagAsync(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
-	c := &Client{
+	c := &APITester{
 		HTTPClient: ts.Client(),
 		URL:        ts.URL,
 		Username:   "dummyUser",
