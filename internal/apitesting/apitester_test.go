@@ -472,7 +472,7 @@ func TestAPITester_RunAllAsync(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    AsyncResponse
+		want    apitest.AsyncResponse
 		wantErr bool
 	}{
 		{
@@ -481,7 +481,7 @@ func TestAPITester_RunAllAsync(t *testing.T) {
 				ctx:    context.Background(),
 				hookID: "dummyHookId",
 			},
-			want: AsyncResponse{
+			want: apitest.AsyncResponse{
 				ContextIDs: []string{"221270ac-0229-49d1-9025-251a10e9133d"},
 				EventIDs:   []string{"c4ca4238a0b923820dcc509a"},
 				TaskID:     "6ddf80b7-9753-4802-992b-d42948cdb99f",
@@ -544,7 +544,7 @@ func TestAPITester_RunEphemeralAsync(t *testing.T) {
 		args          args
 		assertRequest func(t *testing.T, r *http.Request)
 		reply         []byte
-		want          AsyncResponse
+		want          apitest.AsyncResponse
 		wantErr       bool
 	}{
 		{
@@ -561,7 +561,7 @@ func TestAPITester_RunEphemeralAsync(t *testing.T) {
 				assert.Equal(t, "/api-testing/rest/v4/dummyHookId/tests/_exec?buildId=generatedBuildId&tunnelId=dummyUser%3AtunnelId", r.RequestURI)
 			},
 			reply: []byte(`{"contextIds":["221270ac-0229-49d1-9025-251a10e9133d"],"eventIds":["c4ca4238a0b923820dcc509a"],"taskId":"6ddf80b7-9753-4802-992b-d42948cdb99f","testIds":["c20ad4d76fe97759aa27a0c9"]}`),
-			want: AsyncResponse{
+			want: apitest.AsyncResponse{
 				ContextIDs: []string{"221270ac-0229-49d1-9025-251a10e9133d"},
 				EventIDs:   []string{"c4ca4238a0b923820dcc509a"},
 				TaskID:     "6ddf80b7-9753-4802-992b-d42948cdb99f",
@@ -617,7 +617,7 @@ func TestAPITester_RunTestAsync(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    AsyncResponse
+		want    apitest.AsyncResponse
 		wantErr bool
 	}{
 		{
@@ -627,7 +627,7 @@ func TestAPITester_RunTestAsync(t *testing.T) {
 				hookID: "dummyHookId",
 				testID: "c20ad4d76fe97759aa27a0c9",
 			},
-			want: AsyncResponse{
+			want: apitest.AsyncResponse{
 				ContextIDs: []string{"221270ac-0229-49d1-9025-251a10e9133d"},
 				EventIDs:   []string{"c4ca4238a0b923820dcc509a"},
 				TaskID:     "6ddf80b7-9753-4802-992b-d42948cdb99f",
@@ -687,7 +687,7 @@ func TestAPITester_RunTagAsync(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    AsyncResponse
+		want    apitest.AsyncResponse
 		wantErr bool
 	}{
 		{
@@ -697,7 +697,7 @@ func TestAPITester_RunTagAsync(t *testing.T) {
 				hookID: "dummyHookId",
 				tagID:  "dummyTag",
 			},
-			want: AsyncResponse{
+			want: apitest.AsyncResponse{
 				ContextIDs: []string{"221270ac-0229-49d1-9025-251a10e9133d"},
 				EventIDs:   []string{"c4ca4238a0b923820dcc509a"},
 				TaskID:     "6ddf80b7-9753-4802-992b-d42948cdb99f",

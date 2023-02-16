@@ -14,7 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/xtgo/uuid"
 
-	"github.com/saucelabs/saucectl/internal/apitesting"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -27,6 +27,18 @@ var pollWaitTime = time.Second * 5
 
 var unitFileName = "unit.yaml"
 var inputFileName = "input.yaml"
+
+type APITester interface {
+	GetProject(ctx context.Context, hookID string) (ProjectMeta, error)
+	GetEventResult(ctx context.Context, hookID string, eventID string) (TestResult, error)
+	GetTest(ctx context.Context, hookID string, testID string) (Test, error)
+	GetProjects(ctx context.Context) ([]ProjectMeta, error)
+	GetHooks(ctx context.Context, projectID string) ([]Hook, error)
+	RunAllAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error)
+	RunEphemeralAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, taskID string, test TestRequest) (AsyncResponse, error)
+	RunTestAsync(ctx context.Context, hookID string, testID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error)
+	RunTagAsync(ctx context.Context, hookID string, testTag string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error)
+}
 
 // TestResult describes the result from running an api test.
 type TestResult struct {
@@ -66,10 +78,18 @@ type TestRequest struct {
 	Params map[string]string `json:"params"`
 }
 
+// AsyncResponse describes the json response from the async api endpoints.
+type AsyncResponse struct {
+	ContextIDs []string `json:"contextIds,omitempty"`
+	EventIDs   []string `json:"eventIds,omitempty"`
+	TaskID     string   `json:"taskId,omitempty"`
+	TestIDs    []string `json:"testIds,omitempty"`
+}
+
 // Runner represents an executor for api tests
 type Runner struct {
 	Project       Project
-	Client        apitesting.APITester
+	Client        APITester
 	Region        region.Region
 	Reporters     []report.Reporter
 	Async         bool
