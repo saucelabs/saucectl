@@ -288,7 +288,7 @@ func (c *APITester) RunAllAsync(ctx context.Context, hookID string, buildID stri
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
-	resp, err := doAsyncRun(c.HTTPClient, req)
+	resp, err := c.doAsyncRun(c.HTTPClient, req)
 	if err != nil {
 		return AsyncResponse{}, err
 	}
@@ -312,7 +312,7 @@ func (c *APITester) RunEphemeralAsync(ctx context.Context, hookID string, buildI
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
-	resp, err := doAsyncRun(c.HTTPClient, req)
+	resp, err := c.doAsyncRun(c.HTTPClient, req)
 	if err != nil {
 		return AsyncResponse{}, err
 	}
@@ -336,7 +336,7 @@ func (c *APITester) RunTestAsync(ctx context.Context, hookID string, testID stri
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
-	resp, err := doAsyncRun(c.HTTPClient, req)
+	resp, err := c.doAsyncRun(c.HTTPClient, req)
 	if err != nil {
 		return AsyncResponse{}, err
 	}
@@ -361,14 +361,14 @@ func (c *APITester) RunTagAsync(ctx context.Context, hookID string, testTag stri
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
-	resp, err := doAsyncRun(c.HTTPClient, req)
+	resp, err := c.doAsyncRun(c.HTTPClient, req)
 	if err != nil {
 		return AsyncResponse{}, err
 	}
 	return resp, nil
 }
 
-func doAsyncRun(client *http.Client, request *http.Request) (AsyncResponse, error) {
+func (c *APITester) doAsyncRun(client *http.Client, request *http.Request) (AsyncResponse, error) {
 	request.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(request)
