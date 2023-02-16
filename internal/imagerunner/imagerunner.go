@@ -40,7 +40,7 @@ type RunnerSpec struct {
 
 type Container struct {
 	Name string `json:"name,omitempty"`
-	Auth Auth   `json:"auth,omitempty"`
+	Auth *Auth  `json:"auth,omitempty"`
 }
 
 type Auth struct {
