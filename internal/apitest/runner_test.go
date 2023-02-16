@@ -1,6 +1,8 @@
 package apitest
 
 import (
+	"context"
+	"github.com/saucelabs/saucectl/internal/config"
 	"net/http"
 	"net/http/httptest"
 	"path"
@@ -15,6 +17,54 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gotest.tools/v3/fs"
 )
+
+type MockAPITester struct {
+	GetProjectFn        func(ctx context.Context, hookID string) (ProjectMeta, error)
+	GetEventResultFn    func(ctx context.Context, hookID string, eventID string) (TestResult, error)
+	GetTestFn           func(ctx context.Context, hookID string, testID string) (Test, error)
+	GetProjectsFn       func(ctx context.Context) ([]ProjectMeta, error)
+	GetHooksFn          func(ctx context.Context, projectID string) ([]Hook, error)
+	RunAllAsyncFn       func(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error)
+	RunEphemeralAsyncFn func(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, taskID string, test TestRequest) (AsyncResponse, error)
+	RunTestAsyncFn      func(ctx context.Context, hookID string, testID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error)
+	RunTagAsyncFn       func(ctx context.Context, hookID string, testTag string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error)
+}
+
+func (c *MockAPITester) GetProject(ctx context.Context, hookID string) (ProjectMeta, error) {
+	return c.GetProjectFn(ctx, hookID)
+}
+
+func (c *MockAPITester) GetEventResult(ctx context.Context, hookID string, eventID string) (TestResult, error) {
+	return c.GetEventResultFn(ctx, hookID, eventID)
+}
+
+func (c *MockAPITester) GetTest(ctx context.Context, hookID string, testID string) (Test, error) {
+	return c.GetTestFn(ctx, hookID, testID)
+}
+
+func (c *MockAPITester) GetProjects(ctx context.Context) ([]ProjectMeta, error) {
+	return c.GetProjectsFn(ctx)
+}
+
+func (c *MockAPITester) GetHooks(ctx context.Context, projectID string) ([]Hook, error) {
+	return c.GetHooksFn(ctx, projectID)
+}
+
+func (c *MockAPITester) RunAllAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
+	return c.RunAllAsyncFn(ctx, hookID, buildID, tunnel, test)
+}
+
+func (c *MockAPITester) RunEphemeralAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, taskID string, test TestRequest) (AsyncResponse, error) {
+	return c.RunEphemeralAsyncFn(ctx, hookID, buildID, tunnel, taskID, test)
+}
+
+func (c *MockAPITester) RunTestAsync(ctx context.Context, hookID string, testID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
+	return c.RunTestAsyncFn(ctx, hookID, testID, buildID, tunnel, test)
+}
+
+func (c *MockAPITester) RunTagAsync(ctx context.Context, hookID string, testTag string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
+	return c.RunTestAsyncFn(ctx, hookID, testTag, buildID, tunnel, test)
+}
 
 func createTestDirs(t *testing.T) *fs.Dir {
 	return fs.NewDir(t, "tests",
