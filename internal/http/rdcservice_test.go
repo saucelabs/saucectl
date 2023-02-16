@@ -134,26 +134,26 @@ func TestRDCService_ReadJob(t *testing.T) {
 		{
 			name:    "passed job",
 			jobID:   "test1",
-			want:    job.Job{ID: "test1", Error: "", Status: "passed", Passed: true},
+			want:    job.Job{ID: "test1", Error: "", Status: "passed", Passed: true, IsRDC: true},
 			wantErr: nil,
 		},
 		{
 			name:    "failed job",
 			jobID:   "test2",
-			want:    job.Job{ID: "test2", Error: "no-device-found", Status: "failed", Passed: false},
+			want:    job.Job{ID: "test2", Error: "no-device-found", Status: "failed", Passed: false, IsRDC: true},
 			wantErr: nil,
 		},
 		{
 			name:    "in progress job",
 			jobID:   "test3",
-			want:    job.Job{ID: "test3", Error: "", Status: "in progress", Passed: false},
+			want:    job.Job{ID: "test3", Error: "", Status: "in progress", Passed: false, IsRDC: true},
 			wantErr: nil,
 		},
 		{
-			name:    "non-existant job",
+			name:    "non-existent job",
 			jobID:   "test4",
 			want:    job.Job{ID: "test4", Error: "", Status: "", Passed: false},
-			wantErr: errors.New("unexpected statusCode: 404"),
+			wantErr: ErrJobNotFound,
 		},
 	}
 
@@ -161,7 +161,7 @@ func TestRDCService_ReadJob(t *testing.T) {
 		job, err := client.ReadJob(context.Background(), tt.jobID, true)
 		assert.Equal(t, err, tt.wantErr)
 		if err == nil {
-			assert.True(t, reflect.DeepEqual(job, tt.want))
+			assert.Equal(t, tt.want, job)
 		}
 	}
 }
