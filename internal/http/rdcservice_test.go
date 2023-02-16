@@ -22,25 +22,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type ResponseRecord struct {
-	Index   int
-	Records []func(w http.ResponseWriter, r *http.Request)
-	Test    *testing.T
-}
-
-func (r *ResponseRecord) Record(resFunc func(w http.ResponseWriter, req *http.Request)) {
-	r.Records = append(r.Records, resFunc)
-}
-
-func (r *ResponseRecord) Play(w http.ResponseWriter, req *http.Request) {
-	if r.Index >= len(r.Records) {
-		r.Test.Errorf("responder requested more times than it has available records")
-	}
-
-	r.Records[r.Index](w, req)
-	r.Index++
-}
-
 func TestRDCService_ReadAllowedCCY(t *testing.T) {
 	testCases := []struct {
 		name         string
@@ -554,12 +535,6 @@ func TestRDCService_GetDevices(t *testing.T) {
 }
 
 func TestRDCService_StartJob(t *testing.T) {
-	rec := ResponseRecord{
-		Test: t,
-	}
-	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		rec.Play(w, r)
-	}))
 	type args struct {
 		ctx               context.Context
 		jobStarterPayload job.StartOptions
@@ -578,10 +553,6 @@ func TestRDCService_StartJob(t *testing.T) {
 	}{
 		{
 			name: "Happy path",
-			fields: fields{
-				HTTPClient: mockServer.Client(),
-				URL:        mockServer.URL,
-			},
 			args: args{
 				ctx: context.TODO(),
 				jobStarterPayload: job.StartOptions{
@@ -606,10 +577,6 @@ func TestRDCService_StartJob(t *testing.T) {
 		},
 		{
 			name: "Non 2xx status code",
-			fields: fields{
-				HTTPClient: mockServer.Client(),
-				URL:        mockServer.URL,
-			},
 			args: args{
 				ctx:               context.TODO(),
 				jobStarterPayload: job.StartOptions{},
@@ -622,10 +589,6 @@ func TestRDCService_StartJob(t *testing.T) {
 		},
 		{
 			name: "Unknown error",
-			fields: fields{
-				HTTPClient: mockServer.Client(),
-				URL:        mockServer.URL,
-			},
 			args: args{
 				ctx:               context.TODO(),
 				jobStarterPayload: job.StartOptions{},
@@ -643,12 +606,13 @@ func TestRDCService_StartJob(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &RDCService{
-				NativeClient: tt.fields.HTTPClient,
-				URL:          tt.fields.URL,
-			}
+			server := httptest.NewServer(http.HandlerFunc(tt.serverFunc))
+			defer server.Close()
 
-			rec.Record(tt.serverFunc)
+			c := &RDCService{
+				NativeClient: server.Client(),
+				URL:          server.URL,
+			}
 
 			got, _, err := c.StartJob(tt.args.ctx, tt.args.jobStarterPayload)
 			if (err != nil) && !reflect.DeepEqual(err, tt.wantErr) {
