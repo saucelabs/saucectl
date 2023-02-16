@@ -1,4 +1,4 @@
-package apitesting
+package http
 
 import (
 	"context"
