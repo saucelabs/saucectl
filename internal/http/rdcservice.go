@@ -83,14 +83,6 @@ type DeviceQuery struct {
 	PlatformVersion              string `json:"platform_version,omitempty"`
 }
 
-type RDCJobStartResponse struct {
-	TestReport RDCTestReport `json:"test_report"`
-}
-
-type RDCTestReport struct {
-	ID string
-}
-
 // NewRDCService creates a new client.
 func NewRDCService(url, username, accessKey string, timeout time.Duration, artifactConfig config.ArtifactDownload) RDCService {
 	nativeClient := &http.Client{Timeout: timeout}
@@ -208,7 +200,11 @@ func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (jobID
 		return "", true, err
 	}
 
-	var sessionStart RDCJobStartResponse
+	var sessionStart struct {
+		TestReport struct {
+			ID string
+		} `json:"test_report"`
+	}
 	if err = json.Unmarshal(body, &sessionStart); err != nil {
 		return "", true, fmt.Errorf("job start status unknown: unable to parse server response: %w", err)
 	}

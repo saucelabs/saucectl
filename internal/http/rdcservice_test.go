@@ -568,11 +568,8 @@ func TestRDCService_StartJob(t *testing.T) {
 			want:    "fake-job-id",
 			wantErr: nil,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				resp := RDCJobStartResponse{
-					TestReport: RDCTestReport{ID: "fake-job-id"},
-				}
 				w.WriteHeader(201)
-				_ = json.NewEncoder(w).Encode(resp)
+				_, _ = w.Write([]byte(`{ "test_report": { "id": "fake-job-id" }}`))
 			},
 		},
 		{
