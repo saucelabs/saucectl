@@ -295,7 +295,7 @@ func (r *Runner) buildLocalTestDetails(hookID string, eventIDs []string, testNam
 	}
 
 	for _, testName := range testNames {
-		go func(p apitesting.Project, testID string) {
+		go func(p apitesting.ProjectMeta, testID string) {
 			results <- []apitesting.TestResult{{
 				Test:    apitesting.Test{Name: testID},
 				Project: p,
@@ -317,7 +317,7 @@ func (r *Runner) fetchTestDetails(hookID string, eventIDs []string, testIDs []st
 	}
 
 	for _, testID := range testIDs {
-		go func(p apitesting.Project, testID string) {
+		go func(p apitesting.ProjectMeta, testID string) {
 			test, _ := r.Client.GetTest(context.Background(), hookID, testID)
 			results <- []apitesting.TestResult{{
 				Test:    test,
@@ -441,7 +441,7 @@ func (r *Runner) collectResults(expected int, results chan []apitesting.TestResu
 	return passed
 }
 
-func buildTestName(project apitesting.Project, test apitesting.Test) string {
+func buildTestName(project apitesting.ProjectMeta, test apitesting.Test) string {
 	if test.Name != "" {
 		return fmt.Sprintf("%s - %s", project.Name, test.Name)
 	}
@@ -503,11 +503,11 @@ func (r *Runner) ResolveHookIDs() error {
 	return nil
 }
 
-func findMatchingProject(name string, projects []apitesting.Project) apitesting.Project {
+func findMatchingProject(name string, projects []apitesting.ProjectMeta) apitesting.ProjectMeta {
 	for _, p := range projects {
 		if p.Name == name {
 			return p
 		}
 	}
-	return apitesting.Project{}
+	return apitesting.ProjectMeta{}
 }

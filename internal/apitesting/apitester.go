@@ -26,13 +26,13 @@ type APITester struct {
 
 // TestResult describes the result from running an api test.
 type TestResult struct {
-	EventID              string  `json:"_id,omitempty"`
-	FailuresCount        int     `json:"failuresCount,omitempty"`
-	Project              Project `json:"project,omitempty"`
-	Test                 Test    `json:"test,omitempty"`
-	ExecutionTimeSeconds int     `json:"executionTimeSeconds,omitempty"`
-	Async                bool    `json:"-"`
-	TimedOut             bool    `json:"-"`
+	EventID              string      `json:"_id,omitempty"`
+	FailuresCount        int         `json:"failuresCount,omitempty"`
+	Project              ProjectMeta `json:"project,omitempty"`
+	Test                 Test        `json:"test,omitempty"`
+	ExecutionTimeSeconds int         `json:"executionTimeSeconds,omitempty"`
+	Async                bool        `json:"-"`
+	TimedOut             bool        `json:"-"`
 }
 
 // PublishedTest describes a published test.
@@ -46,8 +46,8 @@ type Test struct {
 	Name string `json:"name,omitempty"`
 }
 
-// Project describes the metadata for an api testing project.
-type Project struct {
+// ProjectMeta describes the metadata for an api testing project.
+type ProjectMeta struct {
 	ID   string `json:"id,omitempty"`
 	Name string `json:"name,omitempty"`
 }
@@ -86,30 +86,30 @@ func NewAPITester(url string, username string, accessKey string, timeout time.Du
 }
 
 // GetProject returns Project metadata for a given hookID.
-func (c *APITester) GetProject(ctx context.Context, hookID string) (Project, error) {
+func (c *APITester) GetProject(ctx context.Context, hookID string) (ProjectMeta, error) {
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s", c.URL, hookID)
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return Project{}, err
+		return ProjectMeta{}, err
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return Project{}, err
+		return ProjectMeta{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= http.StatusInternalServerError {
-		return Project{}, errors.New(msg.InternalServerError)
+		return ProjectMeta{}, errors.New(msg.InternalServerError)
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return Project{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		return ProjectMeta{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 	}
 
-	var project Project
+	var project ProjectMeta
 	if err := json.NewDecoder(resp.Body).Decode(&project); err != nil {
 		return project, err
 	}
@@ -210,30 +210,30 @@ func (c *APITester) composeURL(path string, buildID string, format string, tunne
 }
 
 // GetProjects returns the list of Project available.
-func (c *APITester) GetProjects(ctx context.Context) ([]Project, error) {
+func (c *APITester) GetProjects(ctx context.Context) ([]ProjectMeta, error) {
 	url := fmt.Sprintf("%s/api-testing/api/project", c.URL)
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return []Project{}, err
+		return []ProjectMeta{}, err
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return []Project{}, err
+		return []ProjectMeta{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= http.StatusInternalServerError {
-		return []Project{}, errors.New(msg.InternalServerError)
+		return []ProjectMeta{}, errors.New(msg.InternalServerError)
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return []Project{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, body)
+		return []ProjectMeta{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, body)
 	}
 
-	var projects []Project
+	var projects []ProjectMeta
 	if err := json.NewDecoder(resp.Body).Decode(&projects); err != nil {
 		return projects, err
 	}

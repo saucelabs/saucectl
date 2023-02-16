@@ -36,7 +36,7 @@ func TestAPITester_GetEventResult(t *testing.T) {
 				ExecutionTimeSeconds: 31,
 				Async:                false,
 				FailuresCount:        0,
-				Project: Project{
+				Project: ProjectMeta{
 					ID:   "6244d915ca28694aab958bbe",
 					Name: "Test Project",
 				},
@@ -116,13 +116,13 @@ func TestAPITester_GetProject(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    Project
+		want    ProjectMeta
 		wantErr bool
 	}{
 		{
 			name: "Passing Project Fetch",
 			args: args{ctx: context.Background(), hookID: "dummyProject"},
-			want: Project{
+			want: ProjectMeta{
 				ID:   "6244d915ca28694aab000000",
 				Name: "Test Project",
 			},
@@ -327,7 +327,7 @@ func TestAPITester_composeURL(t *testing.T) {
 func TestAPITester_GetProjects(t *testing.T) {
 	tests := []struct {
 		name    string
-		want    []Project
+		want    []ProjectMeta
 		wantErr assert.ErrorAssertionFunc
 	}{
 		{
@@ -335,7 +335,7 @@ func TestAPITester_GetProjects(t *testing.T) {
 			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
 				return err != nil
 			},
-			want: []Project{},
+			want: []ProjectMeta{},
 		},
 	}
 

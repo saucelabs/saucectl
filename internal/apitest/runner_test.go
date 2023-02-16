@@ -241,7 +241,7 @@ func Test_loadTest(t *testing.T) {
 
 func Test_buildTestName(t *testing.T) {
 	type args struct {
-		project apitesting.Project
+		project apitesting.ProjectMeta
 		test    apitesting.Test
 	}
 	tests := []struct {
@@ -255,7 +255,7 @@ func Test_buildTestName(t *testing.T) {
 				test: apitesting.Test{
 					Name: "defaultName",
 				},
-				project: apitesting.Project{
+				project: apitesting.ProjectMeta{
 					Name: "projectName",
 				},
 			},
@@ -264,7 +264,7 @@ func Test_buildTestName(t *testing.T) {
 		{
 			name: "Only ProjectName",
 			args: args{
-				project: apitesting.Project{
+				project: apitesting.ProjectMeta{
 					Name: "projectName",
 				},
 			},
@@ -380,7 +380,7 @@ func TestRunner_runLocalTests(t *testing.T) {
 		{
 			EventID:       "c4ca4238a0b923820dcc509a",
 			FailuresCount: 0,
-			Project: apitesting.Project{
+			Project: apitesting.ProjectMeta{
 				ID:   "6244d915ca28694aab958bbe",
 				Name: "Test Project",
 			},
