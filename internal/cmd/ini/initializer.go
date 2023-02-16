@@ -25,7 +25,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/framework"
-	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/vmd"
 )
@@ -54,7 +53,7 @@ func newInitializer(stdio terminal.Stdio, creds credentials.Credentials, regio s
 	r := region.FromString(regio)
 	tc := http2.NewTestComposer(r.APIBaseURL(), creds, testComposerTimeout)
 
-	rc := rdc.New(r.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
+	rc := http2.NewRDCService(r.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 
 	rs := http2.NewResto(r.APIBaseURL(), creds.Username, creds.AccessKey, restoTimeout)
 

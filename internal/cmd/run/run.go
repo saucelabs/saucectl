@@ -36,7 +36,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
-	"github.com/saucelabs/saucectl/internal/rdc"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/buildtable"
 	"github.com/saucelabs/saucectl/internal/report/captor"
@@ -66,7 +65,7 @@ var (
 	webdriverClient   http2.Webdriver
 	restoClient       http2.Resto
 	appsClient        http2.AppStore
-	rdcClient         rdc.Client
+	rdcClient         http2.RDCService
 	insightsClient    insights.Client
 	iamClient         http2.UserService
 	apitestingClient  apitesting.Client
@@ -210,7 +209,7 @@ func preRun() error {
 
 	restoClient = http2.NewResto("", creds.Username, creds.AccessKey, 0)
 
-	rdcClient = rdc.New("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
+	rdcClient = http2.NewRDCService("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 
 	appsClient = *http2.NewAppStore("", creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
 

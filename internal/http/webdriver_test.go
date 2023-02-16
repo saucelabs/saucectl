@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestClient_StartJob(t *testing.T) {
+func TestWebdriver_StartJob(t *testing.T) {
 	type args struct {
 		ctx               context.Context
 		jobStarterPayload job.StartOptions
