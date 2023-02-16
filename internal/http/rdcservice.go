@@ -84,7 +84,7 @@ type DeviceQuery struct {
 }
 
 type RDCJobStartResponse struct {
-	TestReport RDCTestReport
+	TestReport RDCTestReport `json:"test_report"`
 }
 
 type RDCTestReport struct {
