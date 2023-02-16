@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/apitest"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -21,7 +22,7 @@ func TestAPITester_GetEventResult(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    TestResult
+		want    apitest.TestResult
 		wantErr bool
 	}{
 		{
@@ -31,16 +32,16 @@ func TestAPITester_GetEventResult(t *testing.T) {
 				eventID: "completedEvent",
 				ctx:     context.Background(),
 			},
-			want: TestResult{
+			want: apitest.TestResult{
 				EventID:              "638e1e14a1da1e511c776eea",
 				ExecutionTimeSeconds: 31,
 				Async:                false,
 				FailuresCount:        0,
-				Project: ProjectMeta{
+				Project: apitest.ProjectMeta{
 					ID:   "6244d915ca28694aab958bbe",
 					Name: "Test Project",
 				},
-				Test: Test{
+				Test: apitest.Test{
 					ID:   "638788b12d29c47170999eee",
 					Name: "test_demo",
 				},
@@ -116,13 +117,13 @@ func TestAPITester_GetProject(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    ProjectMeta
+		want    apitest.ProjectMeta
 		wantErr bool
 	}{
 		{
 			name: "Passing Project Fetch",
 			args: args{ctx: context.Background(), hookID: "dummyProject"},
-			want: ProjectMeta{
+			want: apitest.ProjectMeta{
 				ID:   "6244d915ca28694aab000000",
 				Name: "Test Project",
 			},
@@ -181,13 +182,13 @@ func TestAPITester_GetTest(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    Test
+		want    apitest.Test
 		wantErr bool
 	}{
 		{
 			name: "Passing Test Fetch",
 			args: args{ctx: context.Background(), hookID: "dummyProject", testID: "existingTest"},
-			want: Test{
+			want: apitest.Test{
 				ID:   "638788b12d29c47170d20db4",
 				Name: "test_cli",
 			},
@@ -327,7 +328,7 @@ func TestAPITester_composeURL(t *testing.T) {
 func TestAPITester_GetProjects(t *testing.T) {
 	tests := []struct {
 		name    string
-		want    []ProjectMeta
+		want    []apitest.ProjectMeta
 		wantErr assert.ErrorAssertionFunc
 	}{
 		{
@@ -335,7 +336,7 @@ func TestAPITester_GetProjects(t *testing.T) {
 			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
 				return err != nil
 			},
-			want: []ProjectMeta{},
+			want: []apitest.ProjectMeta{},
 		},
 	}
 
@@ -381,7 +382,7 @@ func TestAPITester_GetHooks(t *testing.T) {
 	tests := []struct {
 		name    string
 		params  params
-		want    []Hook
+		want    []apitest.Hook
 		wantErr error
 	}{
 		{
@@ -390,7 +391,7 @@ func TestAPITester_GetHooks(t *testing.T) {
 				projectID: "noHooks",
 			},
 			wantErr: nil,
-			want:    []Hook{},
+			want:    []apitest.Hook{},
 		},
 		{
 			name: "Projects with multiple hooks",
@@ -398,7 +399,7 @@ func TestAPITester_GetHooks(t *testing.T) {
 				projectID: "multipleHooks",
 			},
 			wantErr: nil,
-			want: []Hook{
+			want: []apitest.Hook{
 				{
 					Identifier: "e291c7c5-d091-4bae-8293-7315fc15cc4c",
 					Name:       "name1",
@@ -415,7 +416,7 @@ func TestAPITester_GetHooks(t *testing.T) {
 				projectID: "invalidProject",
 			},
 			wantErr: errors.New(`request failed; unexpected response code:'404', msg:'{"status":"error","message":"Not Found"}'`),
-			want:    []Hook{},
+			want:    []apitest.Hook{},
 		},
 	}
 
@@ -517,7 +518,7 @@ func TestAPITester_RunAllAsync(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := c.RunAllAsync(tt.args.ctx, tt.args.hookID, tt.args.buildID, tt.args.tunnel, TestRequest{})
+			got, err := c.RunAllAsync(tt.args.ctx, tt.args.hookID, tt.args.buildID, tt.args.tunnel, apitest.TestRequest{})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RunAllAsync() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -536,7 +537,7 @@ func TestAPITester_RunEphemeralAsync(t *testing.T) {
 		buildID string
 		tunnel  config.Tunnel
 		taskID  string
-		test    TestRequest
+		test    apitest.TestRequest
 	}
 	tests := []struct {
 		name          string
@@ -554,7 +555,7 @@ func TestAPITester_RunEphemeralAsync(t *testing.T) {
 				taskID:  "generatedUuid",
 				buildID: "generatedBuildId",
 				tunnel:  config.Tunnel{Name: "tunnelId"},
-				test:    TestRequest{},
+				test:    apitest.TestRequest{},
 			},
 			assertRequest: func(t *testing.T, r *http.Request) {
 				assert.Equal(t, "/api-testing/rest/v4/dummyHookId/tests/_exec?buildId=generatedBuildId&tunnelId=dummyUser%3AtunnelId", r.RequestURI)
@@ -663,7 +664,7 @@ func TestAPITester_RunTestAsync(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := c.RunTestAsync(tt.args.ctx, tt.args.hookID, tt.args.testID, tt.args.buildID, tt.args.tunnel, TestRequest{})
+			got, err := c.RunTestAsync(tt.args.ctx, tt.args.hookID, tt.args.testID, tt.args.buildID, tt.args.tunnel, apitest.TestRequest{})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RunAllAsync() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -733,7 +734,7 @@ func TestAPITester_RunTagAsync(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := c.RunTagAsync(tt.args.ctx, tt.args.hookID, tt.args.tagID, tt.args.buildID, tt.args.tunnel, TestRequest{})
+			got, err := c.RunTagAsync(tt.args.ctx, tt.args.hookID, tt.args.tagID, tt.args.buildID, tt.args.tunnel, apitest.TestRequest{})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RunAllAsync() error = %v, wantErr %v", err, tt.wantErr)
 				return

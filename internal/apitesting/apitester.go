@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/apitest"
 	"io"
 	"net/http"
 	"net/url"
@@ -24,47 +25,9 @@ type APITester struct {
 	AccessKey  string
 }
 
-// TestResult describes the result from running an api test.
-type TestResult struct {
-	EventID              string      `json:"_id,omitempty"`
-	FailuresCount        int         `json:"failuresCount,omitempty"`
-	Project              ProjectMeta `json:"project,omitempty"`
-	Test                 Test        `json:"test,omitempty"`
-	ExecutionTimeSeconds int         `json:"executionTimeSeconds,omitempty"`
-	Async                bool        `json:"-"`
-	TimedOut             bool        `json:"-"`
-}
-
 // PublishedTest describes a published test.
 type PublishedTest struct {
-	Published Test
-}
-
-// Test describes a single test.
-type Test struct {
-	ID   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-}
-
-// ProjectMeta describes the metadata for an api testing project.
-type ProjectMeta struct {
-	ID   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-}
-
-// Hook describes the metadata for a hook.
-type Hook struct {
-	Identifier string `json:"identifier,omitempty"`
-	Name       string `json:"name,omitempty"`
-}
-
-// TestRequest represent a test to be executed
-type TestRequest struct {
-	Name   string            `json:"name"`
-	Tags   []string          `json:"tags"`
-	Input  string            `json:"input"`
-	Unit   string            `json:"unit"`
-	Params map[string]string `json:"params"`
+	Published apitest.Test
 }
 
 // AsyncResponse describes the json response from the async api endpoints.
@@ -86,87 +49,87 @@ func NewAPITester(url string, username string, accessKey string, timeout time.Du
 }
 
 // GetProject returns Project metadata for a given hookID.
-func (c *APITester) GetProject(ctx context.Context, hookID string) (ProjectMeta, error) {
+func (c *APITester) GetProject(ctx context.Context, hookID string) (apitest.ProjectMeta, error) {
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s", c.URL, hookID)
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return ProjectMeta{}, err
+		return apitest.ProjectMeta{}, err
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return ProjectMeta{}, err
+		return apitest.ProjectMeta{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= http.StatusInternalServerError {
-		return ProjectMeta{}, errors.New(msg.InternalServerError)
+		return apitest.ProjectMeta{}, errors.New(msg.InternalServerError)
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return ProjectMeta{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		return apitest.ProjectMeta{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 	}
 
-	var project ProjectMeta
+	var project apitest.ProjectMeta
 	if err := json.NewDecoder(resp.Body).Decode(&project); err != nil {
 		return project, err
 	}
 	return project, nil
 }
 
-func (c *APITester) GetEventResult(ctx context.Context, hookID string, eventID string) (TestResult, error) {
+func (c *APITester) GetEventResult(ctx context.Context, hookID string, eventID string) (apitest.TestResult, error) {
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/insights/events/%s", c.URL, hookID, eventID)
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return TestResult{}, err
+		return apitest.TestResult{}, err
 	}
 	req.SetBasicAuth(c.Username, c.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return TestResult{}, err
+		return apitest.TestResult{}, err
 	}
 	if resp.StatusCode >= http.StatusInternalServerError {
-		return TestResult{}, errors.New(msg.InternalServerError)
+		return apitest.TestResult{}, errors.New(msg.InternalServerError)
 	}
 	// 404 needs to be treated differently to ensure calling parent is aware of the specific error.
 	// API replies 404 until the event is fully processed.
 	if resp.StatusCode == http.StatusNotFound {
-		return TestResult{}, errors.New("event not found")
+		return apitest.TestResult{}, errors.New("event not found")
 	}
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return TestResult{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		return apitest.TestResult{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 	}
-	var testResult TestResult
+	var testResult apitest.TestResult
 	if err := json.NewDecoder(resp.Body).Decode(&testResult); err != nil {
 		return testResult, err
 	}
 	return testResult, nil
 }
 
-func (c *APITester) GetTest(ctx context.Context, hookID string, testID string) (Test, error) {
+func (c *APITester) GetTest(ctx context.Context, hookID string, testID string) (apitest.Test, error) {
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/%s", c.URL, hookID, testID)
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return Test{}, err
+		return apitest.Test{}, err
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return Test{}, err
+		return apitest.Test{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= http.StatusInternalServerError {
-		return Test{}, errors.New(msg.InternalServerError)
+		return apitest.Test{}, errors.New(msg.InternalServerError)
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return Test{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+		return apitest.Test{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
 	}
 
 	var test PublishedTest
@@ -210,30 +173,30 @@ func (c *APITester) composeURL(path string, buildID string, format string, tunne
 }
 
 // GetProjects returns the list of Project available.
-func (c *APITester) GetProjects(ctx context.Context) ([]ProjectMeta, error) {
+func (c *APITester) GetProjects(ctx context.Context) ([]apitest.ProjectMeta, error) {
 	url := fmt.Sprintf("%s/api-testing/api/project", c.URL)
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return []ProjectMeta{}, err
+		return []apitest.ProjectMeta{}, err
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return []ProjectMeta{}, err
+		return []apitest.ProjectMeta{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= http.StatusInternalServerError {
-		return []ProjectMeta{}, errors.New(msg.InternalServerError)
+		return []apitest.ProjectMeta{}, errors.New(msg.InternalServerError)
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return []ProjectMeta{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, body)
+		return []apitest.ProjectMeta{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, body)
 	}
 
-	var projects []ProjectMeta
+	var projects []apitest.ProjectMeta
 	if err := json.NewDecoder(resp.Body).Decode(&projects); err != nil {
 		return projects, err
 	}
@@ -241,30 +204,30 @@ func (c *APITester) GetProjects(ctx context.Context) ([]ProjectMeta, error) {
 }
 
 // GetHooks returns the list of hooks available.
-func (c *APITester) GetHooks(ctx context.Context, projectID string) ([]Hook, error) {
+func (c *APITester) GetHooks(ctx context.Context, projectID string) ([]apitest.Hook, error) {
 	url := fmt.Sprintf("%s/api-testing/api/project/%s/hook", c.URL, projectID)
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return []Hook{}, err
+		return []apitest.Hook{}, err
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return []Hook{}, err
+		return []apitest.Hook{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= http.StatusInternalServerError {
-		return []Hook{}, errors.New(msg.InternalServerError)
+		return []apitest.Hook{}, errors.New(msg.InternalServerError)
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return []Hook{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, body)
+		return []apitest.Hook{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, body)
 	}
 
-	var hooks []Hook
+	var hooks []apitest.Hook
 	if err := json.NewDecoder(resp.Body).Decode(&hooks); err != nil {
 		return hooks, err
 	}
@@ -272,7 +235,7 @@ func (c *APITester) GetHooks(ctx context.Context, projectID string) ([]Hook, err
 }
 
 // RunAllAsync runs all the tests for the project described by hookID and returns without waiting for their results.
-func (c *APITester) RunAllAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
+func (c *APITester) RunAllAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, test apitest.TestRequest) (AsyncResponse, error) {
 	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_run-all", hookID), buildID, "", tunnel, "")
 
 	payload, err := json.Marshal(test)
@@ -296,7 +259,7 @@ func (c *APITester) RunAllAsync(ctx context.Context, hookID string, buildID stri
 }
 
 // RunEphemeralAsync runs the tests for the project described by hookID and returns without waiting for their results.
-func (c *APITester) RunEphemeralAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, taskID string, test TestRequest) (AsyncResponse, error) {
+func (c *APITester) RunEphemeralAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, taskID string, test apitest.TestRequest) (AsyncResponse, error) {
 	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_exec", hookID), buildID, "", tunnel, "")
 
 	payload, err := json.Marshal(test)
@@ -320,7 +283,7 @@ func (c *APITester) RunEphemeralAsync(ctx context.Context, hookID string, buildI
 }
 
 // RunTestAsync runs a single test described by testID for the project described by hookID and returns without waiting for results.
-func (c *APITester) RunTestAsync(ctx context.Context, hookID string, testID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
+func (c *APITester) RunTestAsync(ctx context.Context, hookID string, testID string, buildID string, tunnel config.Tunnel, test apitest.TestRequest) (AsyncResponse, error) {
 	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/%s/_run", hookID, testID), buildID, "", tunnel, "")
 
 	payload, err := json.Marshal(test)
@@ -345,7 +308,7 @@ func (c *APITester) RunTestAsync(ctx context.Context, hookID string, testID stri
 }
 
 // RunTagAsync runs all the tests for a testTag for a project described by hookID and returns without waiting for results.
-func (c *APITester) RunTagAsync(ctx context.Context, hookID string, testTag string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
+func (c *APITester) RunTagAsync(ctx context.Context, hookID string, testTag string, buildID string, tunnel config.Tunnel, test apitest.TestRequest) (AsyncResponse, error) {
 	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_tag/%s/_run", hookID, testTag), buildID, "", tunnel, "")
 
 	payload, err := json.Marshal(test)

@@ -182,7 +182,7 @@ func Test_loadTest(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    apitesting.TestRequest
+		want    TestRequest
 		wantErr bool
 	}{
 		{
@@ -195,7 +195,7 @@ func Test_loadTest(t *testing.T) {
 				unitPath:  path.Join(dir.Path(), "tests/01_basic_test/unit.yaml"),
 			},
 			wantErr: false,
-			want: apitesting.TestRequest{
+			want: TestRequest{
 				Name:  "suiteName - tests/01_basic_test",
 				Tags:  []string{},
 				Unit:  "yaml-unit-content",
@@ -241,8 +241,8 @@ func Test_loadTest(t *testing.T) {
 
 func Test_buildTestName(t *testing.T) {
 	type args struct {
-		project apitesting.ProjectMeta
-		test    apitesting.Test
+		project ProjectMeta
+		test    Test
 	}
 	tests := []struct {
 		name string
@@ -252,10 +252,10 @@ func Test_buildTestName(t *testing.T) {
 		{
 			name: "Basic Test",
 			args: args{
-				test: apitesting.Test{
+				test: Test{
 					Name: "defaultName",
 				},
-				project: apitesting.ProjectMeta{
+				project: ProjectMeta{
 					Name: "projectName",
 				},
 			},
@@ -264,7 +264,7 @@ func Test_buildTestName(t *testing.T) {
 		{
 			name: "Only ProjectName",
 			args: args{
-				project: apitesting.ProjectMeta{
+				project: ProjectMeta{
 					Name: "projectName",
 				},
 			},
@@ -273,7 +273,7 @@ func Test_buildTestName(t *testing.T) {
 		{
 			name: "Only TestName",
 			args: args{
-				test: apitesting.Test{
+				test: Test{
 					Name: "defaultName",
 				},
 			},
@@ -300,7 +300,7 @@ func TestRunner_loadTests(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want []apitesting.TestRequest
+		want []TestRequest
 	}{
 		{
 			name: "Complete tests",
@@ -312,7 +312,7 @@ func TestRunner_loadTests(t *testing.T) {
 					"tests/01_basic_test",
 				},
 			},
-			want: []apitesting.TestRequest{
+			want: []TestRequest{
 				{
 					Name:  "suiteName - tests/01_basic_test",
 					Unit:  "yaml-unit-content",
@@ -370,21 +370,21 @@ func TestRunner_runLocalTests(t *testing.T) {
 		TestMatch: []string{"01_basic_test"},
 		Tags:      []string{"canfail"},
 	}
-	c := make(chan []apitesting.TestResult)
+	c := make(chan []TestResult)
 
 	res := r.runLocalTests(s, c)
 	assert.Equal(t, 1, res)
 
 	results := <-c
-	assert.Equal(t, []apitesting.TestResult{
+	assert.Equal(t, []TestResult{
 		{
 			EventID:       "c4ca4238a0b923820dcc509a",
 			FailuresCount: 0,
-			Project: apitesting.ProjectMeta{
+			Project: ProjectMeta{
 				ID:   "6244d915ca28694aab958bbe",
 				Name: "Test Project",
 			},
-			Test: apitesting.Test{
+			Test: Test{
 				Name: "test_demo",
 				ID:   "638788b12d29c47170999eee",
 			},
