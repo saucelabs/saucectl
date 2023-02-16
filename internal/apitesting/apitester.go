@@ -30,7 +30,7 @@ type PublishedTest struct {
 	Published apitest.Test
 }
 
-// NewAPITester returns a apitesting.APITester
+// NewAPITester a new instance of APITester.
 func NewAPITester(url string, username string, accessKey string, timeout time.Duration) APITester {
 	return APITester{
 		HTTPClient: &http.Client{Timeout: timeout},
