@@ -1,12 +1,10 @@
-package rdc
+package http
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -24,26 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type ResponseRecord struct {
-	Index   int
-	Records []func(w http.ResponseWriter, r *http.Request)
-	Test    *testing.T
-}
-
-func (r *ResponseRecord) Record(resFunc func(w http.ResponseWriter, req *http.Request)) {
-	r.Records = append(r.Records, resFunc)
-}
-
-func (r *ResponseRecord) Play(w http.ResponseWriter, req *http.Request) {
-	if r.Index >= len(r.Records) {
-		r.Test.Errorf("responder requested more times than it has available records")
-	}
-
-	r.Records[r.Index](w, req)
-	r.Index++
-}
-
-func TestClient_ReadAllowedCCY(t *testing.T) {
+func TestRDCService_ReadAllowedCCY(t *testing.T) {
 	testCases := []struct {
 		name         string
 		statusCode   int
@@ -89,7 +68,7 @@ func TestClient_ReadAllowedCCY(t *testing.T) {
 			}
 		}))
 
-		client := New(ts.URL, "test", "123", timeout, config.ArtifactDownload{})
+		client := NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{})
 		client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
 		ccy, err := client.ReadAllowedCCY(context.Background())
 		assert.Equal(t, ccy, tt.want)
@@ -101,7 +80,7 @@ func TestClient_ReadAllowedCCY(t *testing.T) {
 	}
 }
 
-func TestClient_ReadJob(t *testing.T) {
+func TestRDCService_ReadJob(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		switch r.URL.Path {
@@ -125,7 +104,7 @@ func TestClient_ReadJob(t *testing.T) {
 	}))
 	defer ts.Close()
 	timeout := 3 * time.Second
-	client := New(ts.URL, "test-user", "test-key", timeout, config.ArtifactDownload{})
+	client := NewRDCService(ts.URL, "test-user", "test-key", timeout, config.ArtifactDownload{})
 
 	testCases := []struct {
 		name    string
@@ -136,26 +115,26 @@ func TestClient_ReadJob(t *testing.T) {
 		{
 			name:    "passed job",
 			jobID:   "test1",
-			want:    job.Job{ID: "test1", Error: "", Status: "passed", Passed: true},
+			want:    job.Job{ID: "test1", Error: "", Status: "passed", Passed: true, IsRDC: true},
 			wantErr: nil,
 		},
 		{
 			name:    "failed job",
 			jobID:   "test2",
-			want:    job.Job{ID: "test2", Error: "no-device-found", Status: "failed", Passed: false},
+			want:    job.Job{ID: "test2", Error: "no-device-found", Status: "failed", Passed: false, IsRDC: true},
 			wantErr: nil,
 		},
 		{
 			name:    "in progress job",
 			jobID:   "test3",
-			want:    job.Job{ID: "test3", Error: "", Status: "in progress", Passed: false},
+			want:    job.Job{ID: "test3", Error: "", Status: "in progress", Passed: false, IsRDC: true},
 			wantErr: nil,
 		},
 		{
-			name:    "non-existant job",
+			name:    "non-existent job",
 			jobID:   "test4",
 			want:    job.Job{ID: "test4", Error: "", Status: "", Passed: false},
-			wantErr: errors.New("unexpected statusCode: 404"),
+			wantErr: ErrJobNotFound,
 		},
 	}
 
@@ -163,56 +142,28 @@ func TestClient_ReadJob(t *testing.T) {
 		job, err := client.ReadJob(context.Background(), tt.jobID, true)
 		assert.Equal(t, err, tt.wantErr)
 		if err == nil {
-			assert.True(t, reflect.DeepEqual(job, tt.want))
+			assert.Equal(t, tt.want, job)
 		}
 	}
 }
 
-func randJobStatus(j *job.Job, isComplete bool) {
-	min := 1
-	max := 10
-	randNum := rand.Intn(max-min+1) + min
-
-	status := "error"
-	if isComplete {
-		status = "complete"
-	}
-
-	if randNum >= 5 {
-		j.Status = status
-	}
-}
-
-func TestClient_GetJobStatus(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
-
+func TestRDCService_PollJob(t *testing.T) {
 	var retryCount int
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		switch r.URL.Path {
 		case "/v1/rdc/jobs/1":
-			details := &job.Job{
+			_ = json.NewEncoder(w).Encode(RDCJob{
 				ID:     "1",
-				Passed: false,
-				Status: "new",
-				Error:  "",
-			}
-			randJobStatus(details, true)
-
-			resp, _ := json.Marshal(details)
-			_, err = w.Write(resp)
+				Status: job.StateComplete,
+			})
 		case "/v1/rdc/jobs/2":
-			details := &job.Job{
+			_ = json.NewEncoder(w).Encode(RDCJob{
 				ID:     "2",
 				Passed: false,
-				Status: "in progress",
+				Status: job.StateError,
 				Error:  "User Abandoned Test -- User terminated",
-			}
-			randJobStatus(details, false)
-
-			resp, _ := json.Marshal(details)
-			_, err = w.Write(resp)
-			w.WriteHeader(200)
+			})
 		case "/v1/rdc/jobs/3":
 			w.WriteHeader(http.StatusNotFound)
 		case "/v1/rdc/jobs/4":
@@ -223,17 +174,13 @@ func TestClient_GetJobStatus(t *testing.T) {
 				retryCount++
 				return
 			}
-			details := &job.Job{
-				ID:     "5",
-				Passed: false,
-				Status: "new",
-				Error:  "",
-			}
-			randJobStatus(details, true)
 
-			resp, _ := json.Marshal(details)
-			_, err = w.Write(resp)
-			w.WriteHeader(200)
+			_ = json.NewEncoder(w).Encode(RDCJob{
+				ID:     "5",
+				Status: job.StatePassed,
+				Passed: true,
+				Error:  "",
+			})
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -247,14 +194,14 @@ func TestClient_GetJobStatus(t *testing.T) {
 
 	testCases := []struct {
 		name         string
-		client       Client
+		client       RDCService
 		jobID        string
 		expectedResp job.Job
 		expectedErr  error
 	}{
 		{
 			name:   "get job details with ID 1 and status 'complete'",
-			client: New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			client: NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:  "1",
 			expectedResp: job.Job{
 				ID:     "1",
@@ -267,7 +214,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 		},
 		{
 			name:   "get job details with ID 2 and status 'error'",
-			client: New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			client: NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:  "2",
 			expectedResp: job.Job{
 				ID:     "2",
@@ -279,34 +226,34 @@ func TestClient_GetJobStatus(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			name:         "user not found error from external API",
-			client:       New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			name:         "job not found error from external API",
+			client:       NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:        "3",
 			expectedResp: job.Job{},
 			expectedErr:  ErrJobNotFound,
 		},
 		{
 			name:         "http status is not 200, but 401 from external API",
-			client:       New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			client:       NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:        "4",
 			expectedResp: job.Job{},
-			expectedErr:  errors.New("job status request failed; unexpected response code:'401', msg:''"),
+			expectedErr:  errors.New("unexpected statusCode: 401"),
 		},
 		{
 			name:         "unexpected status code from external API",
-			client:       New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			client:       NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:        "333",
 			expectedResp: job.Job{},
 			expectedErr:  errors.New("giving up after 4 attempt(s)"),
 		},
 		{
 			name:   "get job details with ID 5. retry 2 times and succeed",
-			client: New(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			client: NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:  "5",
 			expectedResp: job.Job{
 				ID:     "5",
-				Passed: false,
-				Status: "complete",
+				Passed: true,
+				Status: job.StatePassed,
 				Error:  "",
 				IsRDC:  true,
 			},
@@ -326,7 +273,7 @@ func TestClient_GetJobStatus(t *testing.T) {
 	}
 }
 
-func TestClient_GetJobAssetFileNames(t *testing.T) {
+func TestRDCService_GetJobAssetFileNames(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		switch r.URL.Path {
@@ -353,7 +300,7 @@ func TestClient_GetJobAssetFileNames(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
-	client := New(ts.URL, "test-user", "test-password", 1*time.Second, config.ArtifactDownload{})
+	client := NewRDCService(ts.URL, "test-user", "test-password", 1*time.Second, config.ArtifactDownload{})
 
 	testCases := []struct {
 		name     string
@@ -407,7 +354,7 @@ func TestClient_GetJobAssetFileNames(t *testing.T) {
 	}
 }
 
-func TestClient_GetJobAssetFileContent(t *testing.T) {
+func TestRDCService_GetJobAssetFileContent(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		switch r.URL.Path {
@@ -426,7 +373,7 @@ func TestClient_GetJobAssetFileContent(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
-	client := New(ts.URL, "test-user", "test-password", 1*time.Second, config.ArtifactDownload{})
+	client := NewRDCService(ts.URL, "test-user", "test-password", 1*time.Second, config.ArtifactDownload{})
 
 	testCases := []struct {
 		name     string
@@ -465,7 +412,7 @@ func TestClient_GetJobAssetFileContent(t *testing.T) {
 	}
 }
 
-func TestClient_DownloadArtifact(t *testing.T) {
+func TestRDCService_DownloadArtifact(t *testing.T) {
 	fileContent := "<xml>junit.xml</xml>"
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
@@ -492,7 +439,7 @@ func TestClient_DownloadArtifact(t *testing.T) {
 		_ = os.RemoveAll(tempDir)
 	}()
 
-	rc := New(ts.URL, "dummy-user", "dummy-key", 10*time.Second, config.ArtifactDownload{
+	rc := NewRDCService(ts.URL, "dummy-user", "dummy-key", 10*time.Second, config.ArtifactDownload{
 		Directory: tempDir,
 		Match:     []string{"junit.xml"},
 	})
@@ -509,7 +456,7 @@ func TestClient_DownloadArtifact(t *testing.T) {
 	}
 }
 
-func TestClient_GetDevices(t *testing.T) {
+func TestRDCService_GetDevices(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		completeQuery := fmt.Sprintf("%s?%s", r.URL.Path, r.URL.RawQuery)
@@ -530,7 +477,7 @@ func TestClient_GetDevices(t *testing.T) {
 	client := retryablehttp.NewClient()
 	client.HTTPClient = &http.Client{Timeout: 1 * time.Second}
 
-	cl := Client{
+	cl := RDCService{
 		HTTPClient: client,
 		URL:        ts.URL,
 		Username:   "dummy-user",
@@ -587,13 +534,7 @@ func TestClient_GetDevices(t *testing.T) {
 	}
 }
 
-func TestClient_StartJob(t *testing.T) {
-	rec := ResponseRecord{
-		Test: t,
-	}
-	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		rec.Play(w, r)
-	}))
+func TestRDCService_StartJob(t *testing.T) {
 	type args struct {
 		ctx               context.Context
 		jobStarterPayload job.StartOptions
@@ -612,10 +553,6 @@ func TestClient_StartJob(t *testing.T) {
 	}{
 		{
 			name: "Happy path",
-			fields: fields{
-				HTTPClient: mockServer.Client(),
-				URL:        mockServer.URL,
-			},
 			args: args{
 				ctx: context.TODO(),
 				jobStarterPayload: job.StartOptions{
@@ -631,20 +568,12 @@ func TestClient_StartJob(t *testing.T) {
 			want:    "fake-job-id",
 			wantErr: nil,
 			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				resp := sessionStartResponse{
-					TestReport: struct {
-						ID string `json:"id"`
-					}{ID: "fake-job-id"},
-				}
-				respondJSON(w, resp, 201)
+				w.WriteHeader(201)
+				_, _ = w.Write([]byte(`{ "test_report": { "id": "fake-job-id" }}`))
 			},
 		},
 		{
 			name: "Non 2xx status code",
-			fields: fields{
-				HTTPClient: mockServer.Client(),
-				URL:        mockServer.URL,
-			},
 			args: args{
 				ctx:               context.TODO(),
 				jobStarterPayload: job.StartOptions{},
@@ -657,10 +586,6 @@ func TestClient_StartJob(t *testing.T) {
 		},
 		{
 			name: "Unknown error",
-			fields: fields{
-				HTTPClient: mockServer.Client(),
-				URL:        mockServer.URL,
-			},
 			args: args{
 				ctx:               context.TODO(),
 				jobStarterPayload: job.StartOptions{},
@@ -678,12 +603,13 @@ func TestClient_StartJob(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
-				NativeClient: tt.fields.HTTPClient,
-				URL:          tt.fields.URL,
-			}
+			server := httptest.NewServer(http.HandlerFunc(tt.serverFunc))
+			defer server.Close()
 
-			rec.Record(tt.serverFunc)
+			c := &RDCService{
+				NativeClient: server.Client(),
+				URL:          server.URL,
+			}
 
 			got, _, err := c.StartJob(tt.args.ctx, tt.args.jobStarterPayload)
 			if (err != nil) && !reflect.DeepEqual(err, tt.wantErr) {
@@ -694,20 +620,5 @@ func TestClient_StartJob(t *testing.T) {
 				t.Errorf("StartJob() got = %v, want %v", got, tt.want)
 			}
 		})
-	}
-}
-
-func respondJSON(w http.ResponseWriter, v interface{}, httpStatus int) {
-	w.WriteHeader(httpStatus)
-	b, err := json.Marshal(v)
-
-	if err != nil {
-		log.Err(err).Msg("failed to marshal job json")
-		http.Error(w, "failed to marshal job json", http.StatusInternalServerError)
-		return
-	}
-
-	if _, err := w.Write(b); err != nil {
-		log.Err(err).Msg("Failed to write out response")
 	}
 }
