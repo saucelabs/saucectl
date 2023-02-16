@@ -3,13 +3,10 @@ package apitest
 import (
 	"context"
 	"github.com/saucelabs/saucectl/internal/config"
-	"net/http"
-	"net/http/httptest"
 	"path"
 	"reflect"
 	"testing"
 
-	"github.com/saucelabs/saucectl/internal/apitesting"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
@@ -391,25 +388,42 @@ func TestRunner_runLocalTests(t *testing.T) {
 	dir := createTestDirs(t)
 	defer dir.Remove()
 
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/api-testing/rest/v4/dummyHookId/tests/_exec":
-			_, _ = w.Write([]byte(`{"contextIds":["221270ac-0229-49d1-9025-251a10e9133d"],"eventIds":["c4ca4238a0b923820dcc509a"],"taskId":"6ddf80b7-9753-4802-992b-d42948cdb99f","testIds":["c20ad4d76fe97759aa27a0c9"]}`))
-		case "/api-testing/rest/v4/dummyHookId/insights/events/c4ca4238a0b923820dcc509a":
-			completeStatusResp := []byte(`{"_id":"c4ca4238a0b923820dcc509a","events":[],"tags":["canfail"],"criticalFailures":[],"httpFailures":[],"facts":{},"date":1670258196613,"test":{"name":"test_demo","id":"638788b12d29c47170999eee"},"failuresCount":0,"warningsCount":0,"compressed":false,"run":{"name":"","id":""},"company":{"name":"","id":"7fb25570b4064716b9b6daae1a997bba"},"project":{"name":"Test Project","id":"6244d915ca28694aab958bbe"},"temp":false,"expireAt":"2023-06-06T04:37:07Z","executionTimeSeconds":31,"taskId":"ad24fdd6-8e47-401c-81ce-866553194bdd","agent":"wstestjs","mode":"ondemand","buildId":"Test","clientname":"","initiator":{"name":"Incitator","id":"de8691a22ff343f08aa6fb63e485fe0d","teamid":"0205cb60678a4372193bac4052c048be"}}`)
-			_, _ = w.Write(completeStatusResp)
-		default:
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-	}))
-	defer ts.Close()
-	client := ts.Client()
+	mock := MockAPITester{
+		GetProjectFn: func(ctx context.Context, hookID string) (ProjectMeta, error) {
+			return ProjectMeta{
+				ID:   "test",
+				Name: "Testi",
+			}, nil
+		},
+		RunEphemeralAsyncFn: func(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, taskID string, test TestRequest) (AsyncResponse, error) {
+			return AsyncResponse{
+				ContextIDs: []string{"221270ac-0229-49d1-9025-251a10e9133d"},
+				EventIDs:   []string{"c4ca4238a0b923820dcc509a"},
+				TaskID:     "6ddf80b7-9753-4802-992b-d42948cdb99f",
+				TestIDs:    []string{"c20ad4d76fe97759aa27a0c9"},
+			}, nil
+		},
+		GetEventResultFn: func(ctx context.Context, hookID string, eventID string) (TestResult, error) {
+			return TestResult{
+				EventID:       "c4ca4238a0b923820dcc509a",
+				FailuresCount: 0,
+				Project: ProjectMeta{
+					Name: "Test Project",
+					ID:   "6244d915ca28694aab958bbe",
+				},
+				Test: Test{
+					Name: "test_demo",
+					ID:   "638788b12d29c47170999eee",
+				},
+				ExecutionTimeSeconds: 31,
+				Async:                false,
+				TimedOut:             false,
+			}, nil
+		},
+	}
 
 	r := Runner{
-		Client: apitesting.APITester{
-			HTTPClient: client,
-			URL:        ts.URL,
-		},
+		Client: &mock,
 		Project: Project{
 			RootDir: dir.Path(),
 		},
@@ -444,35 +458,56 @@ func TestRunner_runLocalTests(t *testing.T) {
 }
 
 func TestRunner_ResolveHookIDs(t *testing.T) {
+	mock := MockAPITester{
+		GetProjectsFn: func(ctx context.Context) ([]ProjectMeta, error) {
+			return []ProjectMeta{
+				{
+					ID:   "noHooks",
+					Name: "Project NoHooks",
+				},
+				{
+					ID:   "single",
+					Name: "Project SingleHook",
+				},
+				{
+					ID:   "multiple",
+					Name: "Project MultipleHooks",
+				},
+				{
+					ID:   "buggy",
+					Name: "Project BuggyHooks",
+				},
+			}, nil
+		},
+		GetHooksFn: func(ctx context.Context, projectID string) ([]Hook, error) {
+			switch projectID {
+			case "single":
+				return []Hook{
+					{
+						Identifier: "uuid1",
+						Name:       "name1",
+					},
+				}, nil
+			case "multiple":
+				return []Hook{
+					{
+						Identifier: "uuid1",
+						Name:       "name1",
+					},
+					{
+						Identifier: "uuid2",
+						Name:       "name2",
+					},
+				}, nil
+			}
 
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var err error
-		switch r.URL.Path {
-		case "/api-testing/api/project":
-			completeStatusResp := []byte(`[{"id":"noHooks","name":"Project NoHooks"},{"id":"single","name":"Project SingleHook"},{"id":"multiple","name":"Project MultipleHooks"},{"id":"buggy","name":"Project BuggyHooks"}]`)
-			_, err = w.Write(completeStatusResp)
-		case "/api-testing/api/project/noHooks/hook":
-			completeStatusResp := []byte(`[]`)
-			_, err = w.Write(completeStatusResp)
-		case "/api-testing/api/project/single/hook":
-			completeStatusResp := []byte(`[{"id":"hook1","identifier":"uuid1","name":"name1","description":"description1"}]`)
-			_, err = w.Write(completeStatusResp)
-		case "/api-testing/api/project/multiple/hook":
-			completeStatusResp := []byte(`[{"id":"hook1","identifier":"uuid1","name":"name1","description":"description1"},{"id":"hook2","identifier":"uuid2","name":"name2","description":"description2"}]`)
-			_, err = w.Write(completeStatusResp)
-		default:
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-
-		if err != nil {
-			t.Errorf("failed to respond: %v", err)
-		}
-	}))
-	defer ts.Close()
+			return []Hook{}, nil
+		},
+	}
 
 	type fields struct {
 		Project       Project
-		Client        apitesting.APITester
+		Client        APITester
 		Region        region.Region
 		Reporters     []report.Reporter
 		Async         bool
@@ -487,10 +522,7 @@ func TestRunner_ResolveHookIDs(t *testing.T) {
 		{
 			name: "Project with no Hooks",
 			fields: fields{
-				Client: apitesting.APITester{
-					HTTPClient: ts.Client(),
-					URL:        ts.URL,
-				},
+				Client: &mock,
 				Project: Project{
 					Suites: []Suite{
 						{
@@ -505,10 +537,7 @@ func TestRunner_ResolveHookIDs(t *testing.T) {
 		{
 			name: "Project with single Hooks",
 			fields: fields{
-				Client: apitesting.APITester{
-					HTTPClient: ts.Client(),
-					URL:        ts.URL,
-				},
+				Client: &mock,
 				Project: Project{
 					Suites: []Suite{
 						{
@@ -531,10 +560,7 @@ func TestRunner_ResolveHookIDs(t *testing.T) {
 		{
 			name: "Project with multiple Hooks",
 			fields: fields{
-				Client: apitesting.APITester{
-					HTTPClient: ts.Client(),
-					URL:        ts.URL,
-				},
+				Client: &mock,
 				Project: Project{
 					Suites: []Suite{
 						{
@@ -557,10 +583,7 @@ func TestRunner_ResolveHookIDs(t *testing.T) {
 		{
 			name: "Project with Buggy Hooks",
 			fields: fields{
-				Client: apitesting.APITester{
-					HTTPClient: ts.Client(),
-					URL:        ts.URL,
-				},
+				Client: &mock,
 				Project: Project{
 					Suites: []Suite{
 						{
