@@ -57,7 +57,7 @@ require (
 	github.com/Microsoft/hcsshim v0.9.1 // indirect
 	github.com/backtrace-labs/backtrace-go v0.0.0-20200519161839-4457930c4c2e
 	github.com/containerd/cgroups v1.0.3 // indirect
-	github.com/containerd/containerd v1.5.16 // indirect
+	github.com/containerd/containerd v1.5.18 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
