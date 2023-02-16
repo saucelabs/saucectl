@@ -34,7 +34,7 @@ func runApitest(isCLIDriven bool) (int, error) {
 
 	r := apitest.Runner{
 		Project: p,
-		Client:  apitestingClient,
+		Client:  &apitestingClient,
 		Region:  regio,
 		Reporters: []report.Reporter{
 			&table.Reporter{
