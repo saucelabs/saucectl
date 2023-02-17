@@ -8,7 +8,14 @@ import (
 	"golang.org/x/mod/semver"
 	"net/http"
 	"strings"
+	"time"
 )
+
+// DefaultGitHub is a preconfigured instance of GitHub.
+var DefaultGitHub = GitHub{
+	HTTPClient: &http.Client{Timeout: 2 * time.Second},
+	URL:        "https://api.github.com",
+}
 
 // GitHub represents the GitHub HTTP API client.
 type GitHub struct {

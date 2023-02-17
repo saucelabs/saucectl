@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	http2 "github.com/saucelabs/saucectl/internal/http"
-	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -51,7 +50,6 @@ var (
 	testComposerTimeout = 15 * time.Minute
 	webdriverTimeout    = 15 * time.Minute
 	rdcTimeout          = 15 * time.Minute
-	githubTimeout       = 2 * time.Second
 	insightsTimeout     = 10 * time.Second
 	iamTimeout          = 10 * time.Second
 	apitestingTimeout   = 30 * time.Second
@@ -299,12 +297,7 @@ func awaitGlobalTimeout() {
 
 // checkForUpdates check if there is a saucectl update available.
 func checkForUpdates() {
-	gh := github.GitHub{
-		HTTPClient: &http.Client{Timeout: githubTimeout},
-		URL:        "https://api.github.com",
-	}
-
-	v, err := gh.IsUpdateAvailable()
+	v, err := github.DefaultGitHub.IsUpdateAvailable()
 	if err != nil {
 		return
 	}
