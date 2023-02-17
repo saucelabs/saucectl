@@ -299,7 +299,7 @@ func awaitGlobalTimeout() {
 
 // checkForUpdates check if there is a saucectl update available.
 func checkForUpdates() {
-	gh := github.Client{
+	gh := github.GitHub{
 		HTTPClient: &http.Client{Timeout: githubTimeout},
 		URL:        "https://api.github.com",
 	}

@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func TestGithub_isUpdateRequired(t *testing.T) {
+func TestGitHub_isUpdateRequired(t *testing.T) {
 	testCases := []struct {
 		current string
 		remote  string
@@ -36,7 +36,7 @@ func TestGithub_isUpdateRequired(t *testing.T) {
 	}
 }
 
-func TestClient_HasUpdateAvailable(t *testing.T) {
+func TestGitHub_HasUpdateAvailable(t *testing.T) {
 	testCases := []struct {
 		body    []byte
 		current string
@@ -77,7 +77,7 @@ func TestClient_HasUpdateAvailable(t *testing.T) {
 				t.Errorf("%d: failed to respond: %v", idx, err)
 			}
 		}))
-		gh := Client{
+		gh := GitHub{
 			HTTPClient: &http.Client{Timeout: 1 * time.Second},
 			URL:        ts.URL,
 		}

@@ -10,8 +10,8 @@ import (
 	"strings"
 )
 
-// Client represents the Github HTTP API client.
-type Client struct {
+// GitHub represents the Github HTTP API client.
+type GitHub struct {
 	HTTPClient *http.Client
 	URL        string
 }
@@ -22,7 +22,7 @@ type release struct {
 }
 
 // HasUpdateAvailable returns the version number of latest available update if there is one.
-func (c *Client) HasUpdateAvailable() (string, error) {
+func (c *GitHub) HasUpdateAvailable() (string, error) {
 	req, err := requesth.New(http.MethodGet, fmt.Sprintf("%s/repos/saucelabs/saucectl/releases/latest", c.URL), nil)
 	if err != nil {
 		return "", err
@@ -39,7 +39,7 @@ func (c *Client) HasUpdateAvailable() (string, error) {
 	return "", nil
 }
 
-func (c *Client) executeRequest(req *http.Request) (release, error) {
+func (c *GitHub) executeRequest(req *http.Request) (release, error) {
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return release{}, nil
