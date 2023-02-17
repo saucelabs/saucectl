@@ -1,7 +1,6 @@
 package github
 
 import (
-	"github.com/saucelabs/saucectl/internal/version"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -83,8 +82,7 @@ func TestGitHub_HasUpdateAvailable(t *testing.T) {
 		}
 
 		// Forcing current version
-		version.Version = tt.current
-		got, err := gh.IsUpdateAvailable()
+		got, err := gh.IsUpdateAvailable(tt.current)
 
 		if err != tt.wantErr {
 			t.Errorf("Case %d (err): want: %v, got: %v", idx, tt.wantErr, err)

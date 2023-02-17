@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/requesth"
-	"github.com/saucelabs/saucectl/internal/version"
 	"golang.org/x/mod/semver"
 	"net/http"
 	"strings"
@@ -23,8 +22,8 @@ type GitHub struct {
 	URL        string
 }
 
-// IsUpdateAvailable returns the version number of the latest available update if there is one.
-func (c *GitHub) IsUpdateAvailable() (string, error) {
+// IsUpdateAvailable returns the latest version if it's semantically higher than the given one.
+func (c *GitHub) IsUpdateAvailable(version string) (string, error) {
 	req, err := requesth.New(http.MethodGet, fmt.Sprintf("%s/repos/saucelabs/saucectl/releases/latest", c.URL), nil)
 	if err != nil {
 		return "", err
@@ -44,7 +43,7 @@ func (c *GitHub) IsUpdateAvailable() (string, error) {
 		return "", nil
 	}
 
-	if isUpdateRequired(version.Version, r.TagName) {
+	if isUpdateRequired(version, r.TagName) {
 		return r.TagName, nil
 	}
 	return "", nil
