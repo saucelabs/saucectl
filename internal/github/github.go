@@ -43,13 +43,13 @@ func (c *GitHub) IsUpdateAvailable(version string) (string, error) {
 		return "", nil
 	}
 
-	if isUpdateRequired(version, r.TagName) {
+	if c.isUpdateRequired(version, r.TagName) {
 		return r.TagName, nil
 	}
 	return "", nil
 }
 
-func isUpdateRequired(currentVersion, githubVersion string) bool {
+func (c *GitHub) isUpdateRequired(currentVersion, githubVersion string) bool {
 	currentV := currentVersion
 	if !strings.HasPrefix(currentV, "v") {
 		currentV = fmt.Sprintf("v%s", currentV)

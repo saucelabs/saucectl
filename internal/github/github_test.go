@@ -8,6 +8,8 @@ import (
 )
 
 func TestGitHub_isUpdateRequired(t *testing.T) {
+	gh := GitHub{}
+
 	testCases := []struct {
 		current string
 		remote  string
@@ -28,7 +30,7 @@ func TestGitHub_isUpdateRequired(t *testing.T) {
 		{current: "v0.0.0+unknown", remote: "v0.1.0", want: true},
 	}
 	for _, tt := range testCases {
-		got := isUpdateRequired(tt.current, tt.remote)
+		got := gh.isUpdateRequired(tt.current, tt.remote)
 		if tt.want != got {
 			t.Errorf("%s <=> %s, want: %v, got: %v", tt.current, tt.remote, tt.want, got)
 		}
