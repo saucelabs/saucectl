@@ -27,7 +27,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
-	"github.com/saucelabs/saucectl/internal/github"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/notification/slack"
@@ -297,7 +296,7 @@ func awaitGlobalTimeout() {
 
 // checkForUpdates check if there is a saucectl update available.
 func checkForUpdates() {
-	v, err := github.DefaultGitHub.IsUpdateAvailable(version.Version)
+	v, err := http2.DefaultGitHub.IsUpdateAvailable(version.Version)
 	if err != nil {
 		return
 	}
