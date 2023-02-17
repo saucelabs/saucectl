@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestClient_PostTestRun(t *testing.T) {
+func TestInsightsService_PostTestRun(t *testing.T) {
 	tests := []struct {
 		name    string
 		runs    []TestRun
