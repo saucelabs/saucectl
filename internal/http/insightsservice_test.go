@@ -1,8 +1,9 @@
-package insights
+package http
 
 import (
 	"context"
 	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/insights"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,13 +12,13 @@ import (
 func TestInsightsService_PostTestRun(t *testing.T) {
 	tests := []struct {
 		name    string
-		runs    []TestRun
+		runs    []insights.TestRun
 		reply   func(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 		wantErr bool
 	}{
 		{
 			name: "Basic - empty - 204",
-			runs: []TestRun{},
+			runs: []insights.TestRun{},
 			reply: func(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 				return func(w http.ResponseWriter, r *http.Request) {
 					w.WriteHeader(204)
@@ -27,7 +28,7 @@ func TestInsightsService_PostTestRun(t *testing.T) {
 		},
 		{
 			name: "Basic - Erroring - 422",
-			runs: []TestRun{
+			runs: []insights.TestRun{
 				{
 					ID: "09a87dea-3923-43db-8743-ef1f3ff5d717",
 				},

@@ -1,4 +1,4 @@
-package insights
+package http
 
 import (
 	"bytes"
@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/saucelabs/saucectl/internal/cmd/jobs/job"
+	"github.com/saucelabs/saucectl/internal/insights"
 	"io"
 	"net/http"
 	"reflect"
@@ -66,11 +67,11 @@ func NewInsightsService(url string, creds credentials.Credentials, timeout time.
 }
 
 // GetHistory returns job history from insights
-func (c *InsightsService) GetHistory(ctx context.Context, user iam.User, launchOrder config.LaunchOrder) (JobHistory, error) {
+func (c *InsightsService) GetHistory(ctx context.Context, user iam.User, launchOrder config.LaunchOrder) (insights.JobHistory, error) {
 	start := time.Now().AddDate(0, 0, -7).Unix()
 	now := time.Now().Unix()
 
-	var jobHistory JobHistory
+	var jobHistory insights.JobHistory
 	url := fmt.Sprintf("%s/v2/insights/vdc/test-cases", c.URL)
 	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -113,7 +114,7 @@ func (c *InsightsService) GetHistory(ctx context.Context, user iam.User, launchO
 }
 
 type testRunsInput struct {
-	TestRuns []TestRun `json:"test_runs,omitempty"`
+	TestRuns []insights.TestRun `json:"test_runs,omitempty"`
 }
 
 type testRunError struct {
@@ -143,7 +144,7 @@ func concatenateLocation(loc []interface{}) string {
 }
 
 // PostTestRun publish test-run results to insights API.
-func (c *InsightsService) PostTestRun(ctx context.Context, runs []TestRun) error {
+func (c *InsightsService) PostTestRun(ctx context.Context, runs []insights.TestRun) error {
 	url := fmt.Sprintf("%s/test-runs/v1/", c.URL)
 
 	input := testRunsInput{
