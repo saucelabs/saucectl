@@ -65,7 +65,7 @@ var (
 	restoClient       http2.Resto
 	appsClient        http2.AppStore
 	rdcClient         http2.RDCService
-	insightsClient    insights.Client
+	insightsClient    insights.InsightsService
 	iamClient         http2.UserService
 	apitestingClient  http2.APITester
 	imageRunnerClient http2.ImageRunner
@@ -212,7 +212,7 @@ func preRun() error {
 
 	appsClient = *http2.NewAppStore("", creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
 
-	insightsClient = insights.New("", creds, insightsTimeout)
+	insightsClient = insights.NewInsightsService("", creds, insightsTimeout)
 
 	iamClient = http2.NewUserService("", creds, iamTimeout)
 

@@ -43,7 +43,7 @@ type JobResp struct {
 const AutomaticRunMode = "automatic"
 
 // ListJobs returns job list
-func (c *Client) ListJobs(ctx context.Context, userID, jobSource string, queryOpts job.QueryOption) (job.List, error) {
+func (c *InsightsService) ListJobs(ctx context.Context, userID, jobSource string, queryOpts job.QueryOption) (job.List, error) {
 	var jobList job.List
 
 	url := fmt.Sprintf("%s/v2/archives/jobs", c.URL)
@@ -114,7 +114,7 @@ func buildJob(j JobResp) job.Job {
 	}
 }
 
-func (c *Client) ReadJob(ctx context.Context, jobID string) (job.Job, error) {
+func (c *InsightsService) ReadJob(ctx context.Context, jobID string) (job.Job, error) {
 	var source = VDCSource
 
 	switch source {
@@ -140,7 +140,7 @@ func (c *Client) ReadJob(ctx context.Context, jobID string) (job.Job, error) {
 	return job.Job{}, nil
 }
 
-func (c *Client) readJob(ctx context.Context, jobID string, jobSource string) (job.Job, error) {
+func (c *InsightsService) readJob(ctx context.Context, jobID string, jobSource string) (job.Job, error) {
 	var j job.Job
 
 	url := fmt.Sprintf("%s/v2/archives/%s/jobs/%s", c.URL, jobSource, jobID)

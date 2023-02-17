@@ -38,7 +38,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 
 			creds := credentials.Get()
 			url := region.FromString(regio).APIBaseURL()
-			insightsClient := insights.New(url, creds, insightsTimeout)
+			insightsClient := insights.NewInsightsService(url, creds, insightsTimeout)
 			iamClient := http2.UserService{
 				HTTPClient:  &http.Client{Timeout: iamTimeout},
 				URL:         url,

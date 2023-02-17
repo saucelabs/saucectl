@@ -45,7 +45,7 @@ func TestClient_PostTestRun(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(tt.reply(t)))
 
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
+			c := &InsightsService{
 				HTTPClient:  ts.Client(),
 				URL:         ts.URL,
 				Credentials: credentials.Credentials{AccessKey: "accessKey", Username: "username"},

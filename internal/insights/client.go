@@ -17,8 +17,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
-// Client service
-type Client struct {
+// InsightsService service
+type InsightsService struct {
 	HTTPClient  *http.Client
 	URL         string
 	Credentials credentials.Credentials
@@ -28,8 +28,8 @@ var LaunchOptions = map[config.LaunchOrder]string{
 	config.LaunchOrderFailRate: "fail_rate",
 }
 
-func New(url string, creds credentials.Credentials, timeout time.Duration) Client {
-	return Client{
+func NewInsightsService(url string, creds credentials.Credentials, timeout time.Duration) InsightsService {
+	return InsightsService{
 		HTTPClient:  &http.Client{Timeout: timeout},
 		URL:         url,
 		Credentials: creds,
@@ -37,7 +37,7 @@ func New(url string, creds credentials.Credentials, timeout time.Duration) Clien
 }
 
 // GetHistory returns job history from insights
-func (c *Client) GetHistory(ctx context.Context, user iam.User, launchOrder config.LaunchOrder) (JobHistory, error) {
+func (c *InsightsService) GetHistory(ctx context.Context, user iam.User, launchOrder config.LaunchOrder) (JobHistory, error) {
 	start := time.Now().AddDate(0, 0, -7).Unix()
 	now := time.Now().Unix()
 
@@ -114,7 +114,7 @@ func concatenateLocation(loc []interface{}) string {
 }
 
 // PostTestRun publish test-run results to insights API.
-func (c *Client) PostTestRun(ctx context.Context, runs []TestRun) error {
+func (c *InsightsService) PostTestRun(ctx context.Context, runs []TestRun) error {
 	url := fmt.Sprintf("%s/test-runs/v1/", c.URL)
 
 	input := testRunsInput{
