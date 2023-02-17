@@ -1,14 +1,15 @@
-package github
+package http
 
 import (
-	"github.com/saucelabs/saucectl/internal/version"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 )
 
-func TestGithub_isUpdateRequired(t *testing.T) {
+func TestGitHub_isUpdateRequired(t *testing.T) {
+	gh := GitHub{}
+
 	testCases := []struct {
 		current string
 		remote  string
@@ -29,14 +30,14 @@ func TestGithub_isUpdateRequired(t *testing.T) {
 		{current: "v0.0.0+unknown", remote: "v0.1.0", want: true},
 	}
 	for _, tt := range testCases {
-		got := isUpdateRequired(tt.current, tt.remote)
+		got := gh.isUpdateRequired(tt.current, tt.remote)
 		if tt.want != got {
 			t.Errorf("%s <=> %s, want: %v, got: %v", tt.current, tt.remote, tt.want, got)
 		}
 	}
 }
 
-func TestClient_HasUpdateAvailable(t *testing.T) {
+func TestGitHub_IsUpdateAvailable(t *testing.T) {
 	testCases := []struct {
 		body    []byte
 		current string
@@ -77,14 +78,13 @@ func TestClient_HasUpdateAvailable(t *testing.T) {
 				t.Errorf("%d: failed to respond: %v", idx, err)
 			}
 		}))
-		gh := Client{
+		gh := GitHub{
 			HTTPClient: &http.Client{Timeout: 1 * time.Second},
 			URL:        ts.URL,
 		}
 
 		// Forcing current version
-		version.Version = tt.current
-		got, err := gh.HasUpdateAvailable()
+		got, err := gh.IsUpdateAvailable(tt.current)
 
 		if err != tt.wantErr {
 			t.Errorf("Case %d (err): want: %v, got: %v", idx, tt.wantErr, err)

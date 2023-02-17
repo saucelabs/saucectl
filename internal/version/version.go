@@ -9,5 +9,5 @@ var (
 
 // Checker represents an interface for checking saucectl updates.
 type Checker interface {
-	HasUpdateAvailable() (string, error)
+	IsUpdateAvailable(version string) (string, error)
 }
