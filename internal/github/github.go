@@ -10,15 +10,10 @@ import (
 	"strings"
 )
 
-// GitHub represents the Github HTTP API client.
+// GitHub represents the GitHub HTTP API client.
 type GitHub struct {
 	HTTPClient *http.Client
 	URL        string
-}
-
-type release struct {
-	Name    string `json:"name"`
-	TagName string `json:"tag_name"`
 }
 
 // HasUpdateAvailable returns the version number of latest available update if there is one.
@@ -28,29 +23,24 @@ func (c *GitHub) HasUpdateAvailable() (string, error) {
 		return "", err
 	}
 
-	r, err := c.executeRequest(req)
+	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return "", err
+		return "", nil
+	}
+	defer resp.Body.Close()
+
+	var r struct {
+		Name    string `json:"name"`
+		TagName string `json:"tag_name"`
+	}
+	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		return "", nil
 	}
 
 	if isUpdateRequired(version.Version, r.TagName) {
 		return r.TagName, nil
 	}
 	return "", nil
-}
-
-func (c *GitHub) executeRequest(req *http.Request) (release, error) {
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return release{}, nil
-	}
-	defer resp.Body.Close()
-
-	var r release
-	if err = json.NewDecoder(resp.Body).Decode(&r); err != nil {
-		return release{}, nil
-	}
-	return r, nil
 }
 
 func isUpdateRequired(currentVersion, githubVersion string) bool {
