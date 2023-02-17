@@ -14,7 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/xtgo/uuid"
 
-	"github.com/saucelabs/saucectl/internal/apitesting"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -28,10 +28,68 @@ var pollWaitTime = time.Second * 5
 var unitFileName = "unit.yaml"
 var inputFileName = "input.yaml"
 
+type APITester interface {
+	GetProject(ctx context.Context, hookID string) (ProjectMeta, error)
+	GetEventResult(ctx context.Context, hookID string, eventID string) (TestResult, error)
+	GetTest(ctx context.Context, hookID string, testID string) (Test, error)
+	GetProjects(ctx context.Context) ([]ProjectMeta, error)
+	GetHooks(ctx context.Context, projectID string) ([]Hook, error)
+	RunAllAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error)
+	RunEphemeralAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, taskID string, test TestRequest) (AsyncResponse, error)
+	RunTestAsync(ctx context.Context, hookID string, testID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error)
+	RunTagAsync(ctx context.Context, hookID string, testTag string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error)
+}
+
+// TestResult describes the result from running an api test.
+type TestResult struct {
+	EventID              string      `json:"_id,omitempty"`
+	FailuresCount        int         `json:"failuresCount,omitempty"`
+	Project              ProjectMeta `json:"project,omitempty"`
+	Test                 Test        `json:"test,omitempty"`
+	ExecutionTimeSeconds int         `json:"executionTimeSeconds,omitempty"`
+	Async                bool        `json:"-"`
+	TimedOut             bool        `json:"-"`
+}
+
+// ProjectMeta describes the metadata for an api testing project.
+type ProjectMeta struct {
+	ID   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+}
+
+// Hook describes the metadata for a hook.
+type Hook struct {
+	Identifier string `json:"identifier,omitempty"`
+	Name       string `json:"name,omitempty"`
+}
+
+// Test describes a single test.
+type Test struct {
+	ID   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+}
+
+// TestRequest represent a test to be executed
+type TestRequest struct {
+	Name   string            `json:"name"`
+	Tags   []string          `json:"tags"`
+	Input  string            `json:"input"`
+	Unit   string            `json:"unit"`
+	Params map[string]string `json:"params"`
+}
+
+// AsyncResponse describes the json response from the async api endpoints.
+type AsyncResponse struct {
+	ContextIDs []string `json:"contextIds,omitempty"`
+	EventIDs   []string `json:"eventIds,omitempty"`
+	TaskID     string   `json:"taskId,omitempty"`
+	TestIDs    []string `json:"testIds,omitempty"`
+}
+
 // Runner represents an executor for api tests
 type Runner struct {
 	Project       Project
-	Client        apitesting.Client
+	Client        APITester
 	Region        region.Region
 	Reporters     []report.Reporter
 	Async         bool
@@ -116,16 +174,16 @@ func findTests(rootDir string, testMatch []string) ([]string, error) {
 	return tests, nil
 }
 
-func loadTest(unitPath string, inputPath string, suiteName string, testName string, tags []string, env map[string]string) (apitesting.TestRequest, error) {
+func loadTest(unitPath string, inputPath string, suiteName string, testName string, tags []string, env map[string]string) (TestRequest, error) {
 	unitContent, err := os.ReadFile(unitPath)
 	if err != nil {
-		return apitesting.TestRequest{}, err
+		return TestRequest{}, err
 	}
 	inputContent, err := os.ReadFile(inputPath)
 	if err != nil {
-		return apitesting.TestRequest{}, err
+		return TestRequest{}, err
 	}
-	return apitesting.TestRequest{
+	return TestRequest{
 		Name:   fmt.Sprintf("%s - %s", suiteName, testName),
 		Tags:   append([]string{}, tags...),
 		Input:  string(inputContent),
@@ -134,8 +192,8 @@ func loadTest(unitPath string, inputPath string, suiteName string, testName stri
 	}, nil
 }
 
-func (r *Runner) loadTests(s Suite, tests []string) []apitesting.TestRequest {
-	var testRequests []apitesting.TestRequest
+func (r *Runner) loadTests(s Suite, tests []string) []TestRequest {
+	var testRequests []TestRequest
 
 	for _, test := range tests {
 		req, err := loadTest(
@@ -157,7 +215,7 @@ func (r *Runner) loadTests(s Suite, tests []string) []apitesting.TestRequest {
 	return testRequests
 }
 
-func (r *Runner) runLocalTests(s Suite, results chan []apitesting.TestResult) int {
+func (r *Runner) runLocalTests(s Suite, results chan []TestResult) int {
 	expected := 0
 	taskID := uuid.NewRandom().String()
 
@@ -203,7 +261,7 @@ func (r *Runner) runLocalTests(s Suite, results chan []apitesting.TestResult) in
 	return expected
 }
 
-func (r *Runner) runRemoteTests(s Suite, results chan []apitesting.TestResult) int {
+func (r *Runner) runRemoteTests(s Suite, results chan []TestResult) int {
 	expected := 0
 	maximumWaitTime := pollDefaultWait
 	if s.Timeout != 0 {
@@ -213,7 +271,7 @@ func (r *Runner) runRemoteTests(s Suite, results chan []apitesting.TestResult) i
 	if len(s.Tags) == 0 && len(s.Tests) == 0 {
 		log.Info().Str("projectName", s.ProjectName).Msg("Running project.")
 
-		resp, err := r.Client.RunAllAsync(context.Background(), s.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, apitesting.TestRequest{Params: s.Env})
+		resp, err := r.Client.RunAllAsync(context.Background(), s.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, TestRequest{Params: s.Env})
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to run project.")
 		}
@@ -230,7 +288,7 @@ func (r *Runner) runRemoteTests(s Suite, results chan []apitesting.TestResult) i
 		test := t
 		log.Info().Str("test", test).Str("projectName", s.ProjectName).Msg("Running test.")
 
-		resp, err := r.Client.RunTestAsync(context.Background(), s.HookID, test, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, apitesting.TestRequest{Params: s.Env})
+		resp, err := r.Client.RunTestAsync(context.Background(), s.HookID, test, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, TestRequest{Params: s.Env})
 
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to run test.")
@@ -247,7 +305,7 @@ func (r *Runner) runRemoteTests(s Suite, results chan []apitesting.TestResult) i
 		tag := t
 		log.Info().Str("tag", tag).Str("projectName", s.ProjectName).Msg("Running tag.")
 
-		resp, err := r.Client.RunTagAsync(context.Background(), s.HookID, tag, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, apitesting.TestRequest{Params: s.Env})
+		resp, err := r.Client.RunTagAsync(context.Background(), s.HookID, tag, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, TestRequest{Params: s.Env})
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to run tag.")
 		}
@@ -262,7 +320,7 @@ func (r *Runner) runRemoteTests(s Suite, results chan []apitesting.TestResult) i
 }
 
 func (r *Runner) runSuites() bool {
-	results := make(chan []apitesting.TestResult)
+	results := make(chan []TestResult)
 	expected := 0
 
 	for _, s := range r.Project.Suites {
@@ -283,7 +341,7 @@ func (r *Runner) runSuites() bool {
 	return r.collectResults(expected, results)
 }
 
-func (r *Runner) buildLocalTestDetails(hookID string, eventIDs []string, testNames []string, results chan []apitesting.TestResult) {
+func (r *Runner) buildLocalTestDetails(hookID string, eventIDs []string, testNames []string, results chan []TestResult) {
 	project, _ := r.Client.GetProject(context.Background(), hookID)
 	for _, eventID := range eventIDs {
 		reportURL := fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)
@@ -295,9 +353,9 @@ func (r *Runner) buildLocalTestDetails(hookID string, eventIDs []string, testNam
 	}
 
 	for _, testName := range testNames {
-		go func(p apitesting.Project, testID string) {
-			results <- []apitesting.TestResult{{
-				Test:    apitesting.Test{Name: testID},
+		go func(p ProjectMeta, testID string) {
+			results <- []TestResult{{
+				Test:    Test{Name: testID},
 				Project: p,
 				Async:   true,
 			}}
@@ -305,7 +363,7 @@ func (r *Runner) buildLocalTestDetails(hookID string, eventIDs []string, testNam
 	}
 }
 
-func (r *Runner) fetchTestDetails(hookID string, eventIDs []string, testIDs []string, results chan []apitesting.TestResult) {
+func (r *Runner) fetchTestDetails(hookID string, eventIDs []string, testIDs []string, results chan []TestResult) {
 	project, _ := r.Client.GetProject(context.Background(), hookID)
 	for _, eventID := range eventIDs {
 		reportURL := fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)
@@ -317,9 +375,9 @@ func (r *Runner) fetchTestDetails(hookID string, eventIDs []string, testIDs []st
 	}
 
 	for _, testID := range testIDs {
-		go func(p apitesting.Project, testID string) {
+		go func(p ProjectMeta, testID string) {
 			test, _ := r.Client.GetTest(context.Background(), hookID, testID)
-			results <- []apitesting.TestResult{{
+			results <- []TestResult{{
 				Test:    test,
 				Project: p,
 				Async:   true,
@@ -328,7 +386,7 @@ func (r *Runner) fetchTestDetails(hookID string, eventIDs []string, testIDs []st
 	}
 }
 
-func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, results chan []apitesting.TestResult, pollMaximumWait time.Duration) {
+func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, results chan []TestResult, pollMaximumWait time.Duration) {
 	project, _ := r.Client.GetProject(context.Background(), hookID)
 
 	for _, eventID := range eventIDs {
@@ -343,11 +401,11 @@ func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, res
 						Str("projectName", project.Name).
 						Str("testName", result.Test.Name).
 						Msg("Finished test.")
-					results <- []apitesting.TestResult{result}
+					results <- []TestResult{result}
 					break
 				}
 				if err.Error() != "event not found" {
-					results <- []apitesting.TestResult{{
+					results <- []TestResult{{
 						EventID:       lEventID,
 						FailuresCount: 1,
 					}}
@@ -360,7 +418,7 @@ func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, res
 						Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, lEventID)).
 						Str("report", reportURL).
 						Msg("Test did not finish before timeout.")
-					results <- []apitesting.TestResult{{
+					results <- []TestResult{{
 						Project:  project,
 						EventID:  lEventID,
 						Async:    true,
@@ -374,7 +432,7 @@ func (r *Runner) startPollingAsyncResponse(hookID string, eventIDs []string, res
 	}
 }
 
-func (r *Runner) collectResults(expected int, results chan []apitesting.TestResult) bool {
+func (r *Runner) collectResults(expected int, results chan []TestResult) bool {
 	inProgress := expected
 	passed := true
 
@@ -441,7 +499,7 @@ func (r *Runner) collectResults(expected int, results chan []apitesting.TestResu
 	return passed
 }
 
-func buildTestName(project apitesting.Project, test apitesting.Test) string {
+func buildTestName(project ProjectMeta, test Test) string {
 	if test.Name != "" {
 		return fmt.Sprintf("%s - %s", project.Name, test.Name)
 	}
@@ -450,7 +508,7 @@ func buildTestName(project apitesting.Project, test apitesting.Test) string {
 
 // ResolveHookIDs resolve, for each suite, the matching hookID.
 func (r *Runner) ResolveHookIDs() error {
-	hookIDMappings := map[string]apitesting.Hook{}
+	hookIDMappings := map[string]Hook{}
 	hasErrors := false
 
 	projects, err := r.Client.GetProjects(context.Background())
@@ -503,11 +561,11 @@ func (r *Runner) ResolveHookIDs() error {
 	return nil
 }
 
-func findMatchingProject(name string, projects []apitesting.Project) apitesting.Project {
+func findMatchingProject(name string, projects []ProjectMeta) ProjectMeta {
 	for _, p := range projects {
 		if p.Name == name {
 			return p
 		}
 	}
-	return apitesting.Project{}
+	return ProjectMeta{}
 }

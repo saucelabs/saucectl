@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/apitest"
-	"github.com/saucelabs/saucectl/internal/apitesting"
 	"github.com/saucelabs/saucectl/internal/cucumber"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/insights"
@@ -68,7 +67,7 @@ var (
 	rdcClient         http2.RDCService
 	insightsClient    insights.Client
 	iamClient         http2.UserService
-	apitestingClient  apitesting.Client
+	apitestingClient  http2.APITester
 	imageRunnerClient http2.ImageRunner
 
 	// ErrEmptySuiteName is thrown when a flag is specified that has a dependency on the --name flag.
@@ -217,7 +216,7 @@ func preRun() error {
 
 	iamClient = http2.NewUserService("", creds, iamTimeout)
 
-	apitestingClient = apitesting.New("", creds.Username, creds.AccessKey, apitestingTimeout)
+	apitestingClient = http2.NewAPITester("", creds.Username, creds.AccessKey, apitestingTimeout)
 
 	imageRunnerClient = http2.NewImageRunner("", creds, imgExecTimeout)
 
