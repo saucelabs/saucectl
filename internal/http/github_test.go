@@ -37,7 +37,7 @@ func TestGitHub_isUpdateRequired(t *testing.T) {
 	}
 }
 
-func TestGitHub_HasUpdateAvailable(t *testing.T) {
+func TestGitHub_IsUpdateAvailable(t *testing.T) {
 	testCases := []struct {
 		body    []byte
 		current string
