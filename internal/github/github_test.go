@@ -84,7 +84,7 @@ func TestGitHub_HasUpdateAvailable(t *testing.T) {
 
 		// Forcing current version
 		version.Version = tt.current
-		got, err := gh.HasUpdateAvailable()
+		got, err := gh.IsUpdateAvailable()
 
 		if err != tt.wantErr {
 			t.Errorf("Case %d (err): want: %v, got: %v", idx, tt.wantErr, err)

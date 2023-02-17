@@ -16,8 +16,8 @@ type GitHub struct {
 	URL        string
 }
 
-// HasUpdateAvailable returns the version number of latest available update if there is one.
-func (c *GitHub) HasUpdateAvailable() (string, error) {
+// IsUpdateAvailable returns the version number of the latest available update if there is one.
+func (c *GitHub) IsUpdateAvailable() (string, error) {
 	req, err := requesth.New(http.MethodGet, fmt.Sprintf("%s/repos/saucelabs/saucectl/releases/latest", c.URL), nil)
 	if err != nil {
 		return "", err

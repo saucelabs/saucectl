@@ -304,7 +304,7 @@ func checkForUpdates() {
 		URL:        "https://api.github.com",
 	}
 
-	v, err := gh.HasUpdateAvailable()
+	v, err := gh.IsUpdateAvailable()
 	if err != nil {
 		return
 	}
