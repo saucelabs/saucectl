@@ -29,8 +29,22 @@ func TestSignalDetection(t *testing.T) {
 
 	c <- syscall.SIGINT
 
-	time.Sleep(1 * time.Second)
-	assert.True(t, r.interrupted)
+	deadline := time.NewTimer(3 * time.Second)
+	defer deadline.Stop()
+
+	// Wait for interrupt to be processed, as it happens asynchronously.
+	for {
+		select {
+		case <-deadline.C:
+			assert.True(t, r.interrupted)
+			return
+		default:
+			if r.interrupted {
+				return
+			}
+			time.Sleep(1 * time.Nanosecond) // allow context switch
+		}
+	}
 }
 
 func TestSignalDetectionExit(t *testing.T) {
@@ -41,8 +55,29 @@ func TestSignalDetectionExit(t *testing.T) {
 		defer unregisterSignalCapture(c)
 
 		c <- syscall.SIGINT
-		time.Sleep(1 * time.Second)
+
+		deadline := time.NewTimer(3 * time.Second)
+		defer deadline.Stop()
+
+		// Wait for interrupt to be processed, as it happens asynchronously.
+	loop:
+		for {
+			select {
+			case <-deadline.C:
+				return
+			default:
+				if r.interrupted {
+					break loop
+				}
+				time.Sleep(1 * time.Nanosecond) // allow context switch
+			}
+		}
+
 		c <- syscall.SIGINT
+
+		// Process should get killed due to double interrupt. If this doesn't happen, the test will exit cleanly
+		// which will be caught by the original process of the test, which expects an exit code of 1.
+		time.Sleep(3 * time.Second)
 		return
 	}
 	cmd := exec.Command(os.Args[0], "-test.run=TestSignalDetectionExit")
