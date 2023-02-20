@@ -43,8 +43,6 @@ release:
   name_template: "v{{.Version}}"
 
   header: |
-    # Release {{ .Tag }}
-
     ## What's Changed
 
   footer: |
