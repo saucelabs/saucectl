@@ -42,7 +42,7 @@ release:
     owner: saucelabs
     name: saucectl
 
-  draft: true
+  draft: false
   prerelease: auto
   mode: append
 
