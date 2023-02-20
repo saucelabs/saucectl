@@ -22,19 +22,37 @@ builds:
     ignore:
       - goos: windows
         goarch: arm64
-brews:
-  - tap:
-      owner: saucelabs
-      name: homebrew-saucectl
-    folder: Formula
-    test: |
-      system "#{bin}/goreleaser", "-v"
+# brews:
+#   - tap:
+#       owner: saucelabs
+#       name: homebrew-saucectl
+#     folder: Formula
+#     test: |
+#       system "#{bin}/goreleaser", "-v"
+#     name: saucectl
+#     homepage: "https://saucelabs.com/"
+#     description: "Test orchestration with Sauce Labs"
+#     commit_author:
+#       name: devx-sauce-bot
+#       email: devx.bot@saucelabs.com
+release:
+  draft: true
+  prerelease: auto
+  mode: append
+
+  name_template: "v{{.Version}}"
+
+  header: |
+    # Release {{ .Tag }}
+
+    ## What's Changed
+
+  footer: |
+
+  github:
+    owner: FriggaHel
     name: saucectl
-    homepage: "https://saucelabs.com/"
-    description: "Test orchestration with Sauce Labs"
-    commit_author:
-      name: devx-sauce-bot
-      email: devx.bot@saucelabs.com
+
 archives:
   - name_template: >-
       {{ .ProjectName }}_{{ .Version }}_
