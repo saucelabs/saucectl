@@ -36,6 +36,10 @@ builds:
 #       name: devx-sauce-bot
 #       email: devx.bot@saucelabs.com
 release:
+  github:
+    owner: FriggaHel
+    name: saucectl
+
   draft: true
   prerelease: auto
   mode: append
@@ -47,9 +51,7 @@ release:
 
   footer: |
 
-  github:
-    owner: FriggaHel
-    name: saucectl
+    **Full Changelog**: https://github.com/saucelabs/saucectl/compare/{{.PreviousTag}}...{{.Tag}}
 
 archives:
   - name_template: >-
