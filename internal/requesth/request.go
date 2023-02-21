@@ -2,9 +2,10 @@ package requesth
 
 import (
 	"context"
-	"github.com/saucelabs/saucectl/internal/version"
 	"io"
 	"net/http"
+
+	"github.com/saucelabs/saucectl/internal/version"
 )
 
 // NewWithContext is a wrapper around http.NewRequestWithContext that modifies the request by adding additional
@@ -17,9 +18,4 @@ func NewWithContext(ctx context.Context, method, url string, body io.Reader) (*h
 	r.Header.Set("User-Agent", "saucectl/"+version.Version)
 
 	return r, err
-}
-
-// New is a wrapper around NewWithConext.
-func New(method, url string, body io.Reader) (*http.Request, error) {
-	return NewWithContext(context.Background(), method, url, body)
 }
