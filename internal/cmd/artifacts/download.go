@@ -87,12 +87,12 @@ func download(jobID, filePattern, targetDir, outputFormat string) error {
 		if err != nil {
 			return fmt.Errorf("failed to create file: %w", err)
 		}
-		defer file.Close()
 
 		_, err = file.Write(body)
 		if err != nil {
 			return fmt.Errorf("failed to write to the file: %w", err)
 		}
+		_ = file.Close()
 	}
 	bar.Close()
 
