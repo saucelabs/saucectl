@@ -44,7 +44,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 			rdcClient.URL = url
 			testcompClient := http2.NewTestComposer("", creds, testComposerTimeout)
 
-			artifactSvc = saucecloud.NewArtifactService(restoClient, rdcClient, testcompClient)
+			artifactSvc = saucecloud.NewArtifactService(&restoClient, &rdcClient, &testcompClient)
 
 			return nil
 		},
