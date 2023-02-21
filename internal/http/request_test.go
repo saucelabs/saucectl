@@ -1,4 +1,4 @@
-package requesth
+package http
 
 import (
 	"context"
@@ -34,9 +34,9 @@ func TestNewWithContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewWithContext(tt.args.ctx, tt.args.method, tt.args.url, tt.args.body)
+			got, err := NewRequestWithContext(tt.args.ctx, tt.args.method, tt.args.url, tt.args.body)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("NewWithContext() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("NewRequestWithContext() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got.Header, tt.wantHeaders) {

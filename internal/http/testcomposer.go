@@ -15,7 +15,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
 // TestComposer service
@@ -62,7 +61,7 @@ func NewTestComposer(url string, creds credentials.Credentials, timeout time.Dur
 func (c *TestComposer) GetSlackToken(ctx context.Context) (string, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/users/%s/settings/slack", c.URL, c.Credentials.Username)
 
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return "", err
 	}
@@ -88,7 +87,7 @@ func (c *TestComposer) StartJob(ctx context.Context, opts job.StartOptions) (job
 	if err != nil {
 		return
 	}
-	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, &b)
+	req, err := NewRequestWithContext(ctx, http.MethodPost, url, &b)
 	if err != nil {
 		return
 	}
@@ -140,7 +139,7 @@ func (c *TestComposer) doJSONResponse(req *http.Request, expectStatus int, v int
 func (c *TestComposer) Search(ctx context.Context, opts framework.SearchOptions) (framework.Metadata, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/frameworks/%s", c.URL, opts.Name)
 
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return framework.Metadata{}, err
 	}
@@ -185,7 +184,7 @@ func (c *TestComposer) UploadAsset(jobID string, realDevice bool, fileName strin
 		return err
 	}
 
-	req, err := requesth.NewWithContext(context.Background(), http.MethodPut,
+	req, err := NewRequestWithContext(context.Background(), http.MethodPut,
 		fmt.Sprintf("%s/v1/testcomposer/jobs/%s/assets", c.URL, jobID), &b)
 	if err != nil {
 		return err
@@ -229,7 +228,7 @@ func (c *TestComposer) UploadAsset(jobID string, realDevice bool, fileName strin
 func (c *TestComposer) Frameworks(ctx context.Context) ([]framework.Framework, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/frameworks", c.URL)
 
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return []framework.Framework{}, err
 	}
@@ -246,7 +245,7 @@ func (c *TestComposer) Frameworks(ctx context.Context) ([]framework.Framework, e
 func (c *TestComposer) Versions(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/frameworks/%s/versions", c.URL, frameworkName)
 
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return []framework.Metadata{}, err
 	}

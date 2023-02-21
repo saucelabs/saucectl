@@ -6,15 +6,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/apitest"
 	"io"
 	"net/http"
 	"net/url"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/apitest"
+
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
 // APITester describes an interface to the api-testing rest endpoints.
@@ -43,7 +43,7 @@ func NewAPITester(url string, username string, accessKey string, timeout time.Du
 // GetProject returns Project metadata for a given hookID.
 func (c *APITester) GetProject(ctx context.Context, hookID string) (apitest.ProjectMeta, error) {
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s", c.URL, hookID)
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return apitest.ProjectMeta{}, err
 	}
@@ -73,7 +73,7 @@ func (c *APITester) GetProject(ctx context.Context, hookID string) (apitest.Proj
 
 func (c *APITester) GetEventResult(ctx context.Context, hookID string, eventID string) (apitest.TestResult, error) {
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/insights/events/%s", c.URL, hookID, eventID)
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return apitest.TestResult{}, err
 	}
@@ -103,7 +103,7 @@ func (c *APITester) GetEventResult(ctx context.Context, hookID string, eventID s
 
 func (c *APITester) GetTest(ctx context.Context, hookID string, testID string) (apitest.Test, error) {
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/%s", c.URL, hookID, testID)
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return apitest.Test{}, err
 	}
@@ -167,7 +167,7 @@ func (c *APITester) composeURL(path string, buildID string, format string, tunne
 // GetProjects returns the list of Project available.
 func (c *APITester) GetProjects(ctx context.Context) ([]apitest.ProjectMeta, error) {
 	url := fmt.Sprintf("%s/api-testing/api/project", c.URL)
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return []apitest.ProjectMeta{}, err
 	}
@@ -198,7 +198,7 @@ func (c *APITester) GetProjects(ctx context.Context) ([]apitest.ProjectMeta, err
 // GetHooks returns the list of hooks available.
 func (c *APITester) GetHooks(ctx context.Context, projectID string) ([]apitest.Hook, error) {
 	url := fmt.Sprintf("%s/api-testing/api/project/%s/hook", c.URL, projectID)
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return []apitest.Hook{}, err
 	}
@@ -236,7 +236,7 @@ func (c *APITester) RunAllAsync(ctx context.Context, hookID string, buildID stri
 	}
 	payloadReader := bytes.NewReader(payload)
 
-	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, payloadReader)
+	req, err := NewRequestWithContext(ctx, http.MethodPost, url, payloadReader)
 	if err != nil {
 		return apitest.AsyncResponse{}, err
 	}
@@ -260,7 +260,7 @@ func (c *APITester) RunEphemeralAsync(ctx context.Context, hookID string, buildI
 	}
 	payloadReader := bytes.NewReader(payload)
 
-	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, payloadReader)
+	req, err := NewRequestWithContext(ctx, http.MethodPost, url, payloadReader)
 	if err != nil {
 		return apitest.AsyncResponse{}, err
 	}
@@ -284,7 +284,7 @@ func (c *APITester) RunTestAsync(ctx context.Context, hookID string, testID stri
 	}
 	payloadReader := bytes.NewReader(payload)
 
-	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, payloadReader)
+	req, err := NewRequestWithContext(ctx, http.MethodPost, url, payloadReader)
 	if err != nil {
 		return apitest.AsyncResponse{}, err
 	}
@@ -309,7 +309,7 @@ func (c *APITester) RunTagAsync(ctx context.Context, hookID string, testTag stri
 	}
 	payloadReader := bytes.NewReader(payload)
 
-	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, payloadReader)
+	req, err := NewRequestWithContext(ctx, http.MethodPost, url, payloadReader)
 	if err != nil {
 		return apitest.AsyncResponse{}, err
 	}

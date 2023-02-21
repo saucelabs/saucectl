@@ -5,18 +5,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/cmd/jobs/job"
-	"github.com/saucelabs/saucectl/internal/insights"
 	"io"
 	"net/http"
 	"reflect"
 	"strconv"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/cmd/jobs/job"
+	"github.com/saucelabs/saucectl/internal/insights"
+
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/iam"
-	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
 const (
@@ -73,7 +73,7 @@ func (c *InsightsService) GetHistory(ctx context.Context, user iam.User, launchO
 
 	var jobHistory insights.JobHistory
 	url := fmt.Sprintf("%s/v2/insights/vdc/test-cases", c.URL)
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return jobHistory, err
 	}
@@ -155,7 +155,7 @@ func (c *InsightsService) PostTestRun(ctx context.Context, runs []insights.TestR
 		return err
 	}
 	payloadReader := bytes.NewReader(payload)
-	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, payloadReader)
+	req, err := NewRequestWithContext(ctx, http.MethodPost, url, payloadReader)
 	if err != nil {
 		return err
 	}
@@ -189,7 +189,7 @@ func (c *InsightsService) ListJobs(ctx context.Context, userID, jobSource string
 	var jobList job.List
 
 	url := fmt.Sprintf("%s/v2/archives/jobs", c.URL)
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return jobList, err
 	}
@@ -287,7 +287,7 @@ func (c *InsightsService) readJob(ctx context.Context, jobID string, jobSource s
 
 	url := fmt.Sprintf("%s/v2/archives/%s/jobs/%s", c.URL, jobSource, jobID)
 
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return j, err
 	}

@@ -10,7 +10,6 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/iam"
-	"github.com/saucelabs/saucectl/internal/requesth"
 )
 
 type UserService struct {
@@ -31,7 +30,7 @@ func (c *UserService) GetUser(ctx context.Context) (iam.User, error) {
 	url := fmt.Sprintf("%s/team-management/v1/users/me", c.URL)
 
 	var user iam.User
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return user, err
 	}

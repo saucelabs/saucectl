@@ -6,13 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/slice"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/slice"
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog/log"
@@ -22,7 +23,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/requesth"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
 
@@ -103,7 +103,7 @@ func NewRDCService(url, username, accessKey string, timeout time.Duration, artif
 
 // ReadAllowedCCY returns the allowed (max) concurrency for the current account.
 func (c *RDCService) ReadAllowedCCY(ctx context.Context) (int, error) {
-	req, err := requesth.NewWithContext(ctx, http.MethodGet,
+	req, err := NewRequestWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/v1/rdc/concurrency", c.URL), nil)
 	if err != nil {
 		return 0, err
@@ -178,7 +178,7 @@ func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (jobID
 		return
 	}
 
-	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, &b)
+	req, err := NewRequestWithContext(ctx, http.MethodPost, url, &b)
 	if err != nil {
 		return
 	}
@@ -218,7 +218,7 @@ func (c *RDCService) ReadJob(ctx context.Context, id string, realDevice bool) (j
 		return job.Job{}, errors.New("the RDC client does not support virtual device jobs")
 	}
 
-	req, err := requesth.NewWithContext(ctx, http.MethodGet,
+	req, err := NewRequestWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/v1/rdc/jobs/%s", c.URL, id), nil)
 	if err != nil {
 		return job.Job{}, err
@@ -305,7 +305,7 @@ func (c *RDCService) GetJobAssetFileNames(ctx context.Context, jobID string, rea
 		return nil, errors.New("the RDC client does not support virtual device jobs")
 	}
 
-	req, err := requesth.NewWithContext(ctx, http.MethodGet,
+	req, err := NewRequestWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/v1/rdc/jobs/%s", c.URL, jobID), nil)
 	if err != nil {
 		return []string{}, err
@@ -376,7 +376,7 @@ func (c *RDCService) GetJobAssetFileContent(ctx context.Context, jobID, fileName
 		acceptHeader = "text/plain"
 	}
 
-	req, err := requesth.NewWithContext(ctx, http.MethodGet,
+	req, err := NewRequestWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/v1/rdc/jobs/%s/%s", c.URL, jobID, URIFileName), nil)
 	if err != nil {
 		return nil, err
@@ -453,7 +453,7 @@ func (c *RDCService) downloadArtifact(targetDir, jobID, fileName string, realDev
 
 // GetDevices returns the list of available devices using a specific operating system.
 func (c *RDCService) GetDevices(ctx context.Context, OS string) ([]devices.Device, error) {
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v1/rdc/devices/filtered", c.URL), nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v1/rdc/devices/filtered", c.URL), nil)
 	if err != nil {
 		return nil, err
 	}
