@@ -12,7 +12,6 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/requesth"
 	"github.com/saucelabs/saucectl/internal/slice"
 	"github.com/saucelabs/saucectl/internal/version"
 )
@@ -155,7 +154,7 @@ func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 		return
 	}
 
-	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, &b)
+	req, err := NewRequestWithContext(ctx, http.MethodPost, url, &b)
 	if err != nil {
 		return
 	}

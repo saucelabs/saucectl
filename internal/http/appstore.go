@@ -12,7 +12,6 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/multipartext"
 
-	"github.com/saucelabs/saucectl/internal/requesth"
 	"github.com/saucelabs/saucectl/internal/storage"
 )
 
@@ -66,7 +65,7 @@ func NewAppStore(url, username, accessKey string, timeout time.Duration) *AppSto
 
 // Download downloads a file with the given id. It's the caller's responsibility to close the reader.
 func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
-	req, err := requesth.New(http.MethodGet, fmt.Sprintf("%s/v1/storage/download/%s", s.URL, id), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/v1/storage/download/%s", s.URL, id), nil)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -94,7 +93,7 @@ func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
 
 // DownloadURL downloads a file from the url. It's the caller's responsibility to close the reader.
 func (s *AppStore) DownloadURL(url string) (io.ReadCloser, int64, error) {
-	req, err := requesth.New(http.MethodGet, url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -120,7 +119,7 @@ func (s *AppStore) UploadStream(filename, description string, reader io.Reader) 
 		return storage.Item{}, err
 	}
 
-	req, err := requesth.New(http.MethodPost, fmt.Sprintf("%s/v1/storage/upload", s.URL), multipartReader)
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/v1/storage/upload", s.URL), multipartReader)
 	if err != nil {
 		return storage.Item{}, err
 	}
@@ -178,7 +177,7 @@ func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 
 	uri.RawQuery = query.Encode()
 
-	req, err := requesth.New(http.MethodGet, uri.String(), nil)
+	req, err := http.NewRequest(http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return storage.List{}, err
 	}

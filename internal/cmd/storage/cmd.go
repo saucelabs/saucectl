@@ -2,16 +2,16 @@ package storage
 
 import (
 	"errors"
+	"time"
+
 	"github.com/saucelabs/saucectl/internal/credentials"
-	http2 "github.com/saucelabs/saucectl/internal/http"
+	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/spf13/cobra"
-	"net/http"
-	"time"
 )
 
 var (
-	appsClient http2.AppStore
+	appsClient http.AppStore
 )
 
 func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
@@ -30,12 +30,9 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 				return errors.New("invalid region")
 			}
 
-			appsClient = http2.AppStore{
-				HTTPClient: &http.Client{Timeout: 15 * time.Minute},
-				URL:        region.FromString(regio).APIBaseURL(),
-				Username:   credentials.Get().Username,
-				AccessKey:  credentials.Get().AccessKey,
-			}
+			appsClient = *http.NewAppStore(region.FromString(regio).APIBaseURL(),
+				credentials.Get().Username, credentials.Get().AccessKey,
+				15*time.Minute)
 
 			return nil
 		},

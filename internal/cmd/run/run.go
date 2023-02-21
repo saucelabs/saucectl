@@ -3,35 +3,34 @@ package run
 import (
 	"errors"
 	"fmt"
-	http2 "github.com/saucelabs/saucectl/internal/http"
 	"os"
 	"path/filepath"
 	"runtime"
 	"syscall"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/apitest"
-	"github.com/saucelabs/saucectl/internal/cucumber"
-	"github.com/saucelabs/saucectl/internal/imagerunner"
-	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
-
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"github.com/saucelabs/saucectl/internal/apitest"
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/cucumber"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/http"
+	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
+	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/buildtable"
 	"github.com/saucelabs/saucectl/internal/report/captor"
@@ -56,15 +55,15 @@ var (
 
 	typeDef config.TypeDef
 
-	testcompClient    http2.TestComposer
-	webdriverClient   http2.Webdriver
-	restoClient       http2.Resto
-	appsClient        http2.AppStore
-	rdcClient         http2.RDCService
-	insightsClient    http2.InsightsService
-	iamClient         http2.UserService
-	apitestingClient  http2.APITester
-	imageRunnerClient http2.ImageRunner
+	testcompClient    http.TestComposer
+	webdriverClient   http.Webdriver
+	restoClient       http.Resto
+	appsClient        http.AppStore
+	rdcClient         http.RDCService
+	insightsClient    http.InsightsService
+	iamClient         http.UserService
+	apitestingClient  http.APITester
+	imageRunnerClient http.ImageRunner
 
 	// ErrEmptySuiteName is thrown when a flag is specified that has a dependency on the --name flag.
 	ErrEmptySuiteName = errors.New(msg.EmptyAdhocSuiteName)
@@ -198,23 +197,15 @@ func preRun() error {
 	}
 	typeDef = d
 
-	testcompClient = http2.NewTestComposer("", creds, testComposerTimeout)
-
-	webdriverClient = http2.NewWebdriver("", creds, webdriverTimeout)
-
-	restoClient = http2.NewResto("", creds.Username, creds.AccessKey, 0)
-
-	rdcClient = http2.NewRDCService("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
-
-	appsClient = *http2.NewAppStore("", creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
-
-	insightsClient = http2.NewInsightsService("", creds, insightsTimeout)
-
-	iamClient = http2.NewUserService("", creds, iamTimeout)
-
-	apitestingClient = http2.NewAPITester("", creds.Username, creds.AccessKey, apitestingTimeout)
-
-	imageRunnerClient = http2.NewImageRunner("", creds, imgExecTimeout)
+	testcompClient = http.NewTestComposer("", creds, testComposerTimeout)
+	webdriverClient = http.NewWebdriver("", creds, webdriverTimeout)
+	restoClient = http.NewResto("", creds.Username, creds.AccessKey, 0)
+	rdcClient = http.NewRDCService("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
+	appsClient = *http.NewAppStore("", creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
+	insightsClient = http.NewInsightsService("", creds, insightsTimeout)
+	iamClient = http.NewUserService("", creds, iamTimeout)
+	apitestingClient = http.NewAPITester("", creds.Username, creds.AccessKey, apitestingTimeout)
+	imageRunnerClient = http.NewImageRunner("", creds, imgExecTimeout)
 
 	return nil
 }
@@ -296,7 +287,7 @@ func awaitGlobalTimeout() {
 
 // checkForUpdates check if there is a saucectl update available.
 func checkForUpdates() {
-	v, err := http2.DefaultGitHub.IsUpdateAvailable(version.Version)
+	v, err := http.DefaultGitHub.IsUpdateAvailable(version.Version)
 	if err != nil {
 		return
 	}

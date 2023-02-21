@@ -5,15 +5,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/credentials"
-	"github.com/saucelabs/saucectl/internal/imagerunner"
-	"github.com/saucelabs/saucectl/internal/requesth"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/imagerunner"
 )
 
 type ImageRunner struct {
@@ -38,7 +38,7 @@ func (c *ImageRunner) TriggerRun(ctx context.Context, spec imagerunner.RunnerSpe
 	if err != nil {
 		return runner, err
 	}
-	req, err := requesth.NewWithContext(ctx, http.MethodPost, url, &b)
+	req, err := NewRequestWithContext(ctx, http.MethodPost, url, &b)
 	if err != nil {
 		return runner, err
 	}
@@ -68,7 +68,7 @@ func (c *ImageRunner) GetStatus(ctx context.Context, id string) (imagerunner.Run
 	var r imagerunner.Runner
 	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/status", c.URL, id)
 
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return r, err
 	}
@@ -96,7 +96,7 @@ func (c *ImageRunner) GetStatus(ctx context.Context, id string) (imagerunner.Run
 func (c *ImageRunner) StopRun(ctx context.Context, runID string) error {
 	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s", c.URL, runID)
 
-	req, err := requesth.NewWithContext(ctx, http.MethodDelete, url, nil)
+	req, err := NewRequestWithContext(ctx, http.MethodDelete, url, nil)
 	if err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func (c *ImageRunner) StopRun(ctx context.Context, runID string) error {
 func (c *ImageRunner) ListArtifacts(ctx context.Context, id string) ([]string, error) {
 	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/artifacts", c.URL, id)
 
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return []string{}, err
 	}
@@ -149,7 +149,7 @@ func (c *ImageRunner) ListArtifacts(ctx context.Context, id string) ([]string, e
 func (c *ImageRunner) DownloadArtifact(ctx context.Context, id, name, dir string) error {
 	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/artifacts/single/%s/download", c.URL, id, name)
 
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return err
 	}
@@ -180,7 +180,7 @@ func (c *ImageRunner) DownloadArtifact(ctx context.Context, id, name, dir string
 func (c *ImageRunner) GetLogs(ctx context.Context, id string) (string, error) {
 	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/logs/url", c.URL, id)
 
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return "", err
 	}
@@ -208,7 +208,7 @@ func (c *ImageRunner) GetLogs(ctx context.Context, id string) (string, error) {
 }
 
 func (c *ImageRunner) doGetStr(ctx context.Context, url string) (string, error) {
-	urlReq, err := requesth.NewWithContext(ctx, http.MethodGet, url, nil)
+	urlReq, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return "", err
 	}

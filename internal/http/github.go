@@ -3,11 +3,11 @@ package http
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/requesth"
-	"golang.org/x/mod/semver"
 	"net/http"
 	"strings"
 	"time"
+
+	"golang.org/x/mod/semver"
 )
 
 // DefaultGitHub is a preconfigured instance of GitHub.
@@ -24,7 +24,7 @@ type GitHub struct {
 
 // IsUpdateAvailable returns the latest version if it's semantically higher than the given one.
 func (c *GitHub) IsUpdateAvailable(version string) (string, error) {
-	req, err := requesth.New(http.MethodGet, fmt.Sprintf("%s/repos/saucelabs/saucectl/releases/latest", c.URL), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/repos/saucelabs/saucectl/releases/latest", c.URL), nil)
 	if err != nil {
 		return "", err
 	}

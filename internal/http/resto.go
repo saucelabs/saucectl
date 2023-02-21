@@ -21,7 +21,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/requesth"
 	tunnels "github.com/saucelabs/saucectl/internal/tunnel"
 	"github.com/saucelabs/saucectl/internal/vmd"
 )
@@ -77,7 +76,7 @@ func (c *Resto) ReadJob(ctx context.Context, id string, realDevice bool) (job.Jo
 		return job.Job{}, errors.New("the VDC client does not support real device jobs")
 	}
 
-	req, err := requesth.NewWithContext(ctx, http.MethodGet,
+	req, err := NewRequestWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/rest/v1.1/%s/jobs/%s", c.URL, c.Username, id), nil)
 	if err != nil {
 		return job.Job{}, err
@@ -157,7 +156,7 @@ func (c *Resto) GetJobAssetFileNames(ctx context.Context, jobID string, realDevi
 		return nil, errors.New("the VDC client does not support real device jobs")
 	}
 
-	req, err := requesth.NewWithContext(ctx, http.MethodGet,
+	req, err := NewRequestWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/rest/v1/%s/jobs/%s/assets", c.URL, c.Username, jobID), nil)
 	if err != nil {
 		return nil, err
@@ -213,7 +212,7 @@ func (c *Resto) GetJobAssetFileContent(ctx context.Context, jobID, fileName stri
 		return nil, errors.New("the VDC client does not support real device jobs")
 	}
 
-	req, err := requesth.NewWithContext(ctx, http.MethodGet,
+	req, err := NewRequestWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/rest/v1/%s/jobs/%s/assets/%s", c.URL, c.Username, jobID, fileName), nil)
 	if err != nil {
 		return nil, err
@@ -250,7 +249,7 @@ func (c *Resto) GetJobAssetFileContent(ctx context.Context, jobID, fileName stri
 
 // ReadAllowedCCY returns the allowed (max) concurrency for the current account.
 func (c *Resto) ReadAllowedCCY(ctx context.Context) (int, error) {
-	req, err := requesth.NewWithContext(ctx, http.MethodGet,
+	req, err := NewRequestWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/rest/v1.2/users/%s/concurrency", c.URL, c.Username), nil)
 	if err != nil {
 		return 0, err
@@ -292,7 +291,7 @@ func (c *Resto) IsTunnelRunning(ctx context.Context, id, owner string, filter tu
 }
 
 func (c *Resto) isTunnelRunning(ctx context.Context, id, owner string, filter tunnels.Filter) error {
-	req, err := requesth.NewWithContext(ctx, http.MethodGet,
+	req, err := NewRequestWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/rest/v1/%s/tunnels", c.URL, c.Username), nil)
 	if err != nil {
 		return err
@@ -356,7 +355,7 @@ func (c *Resto) StopJob(ctx context.Context, jobID string, realDevice bool) (job
 		return job.Job{}, errors.New("the VDC client does not support real device jobs")
 	}
 
-	req, err := requesth.NewWithContext(ctx, http.MethodPut,
+	req, err := NewRequestWithContext(ctx, http.MethodPut,
 		fmt.Sprintf("%s/rest/v1/%s/jobs/%s/stop", c.URL, c.Username, jobID), nil)
 	if err != nil {
 		return job.Job{}, err
@@ -431,7 +430,7 @@ func (c *Resto) downloadArtifact(targetDir, jobID, fileName string) error {
 
 // GetVirtualDevices returns the list of available virtual devices.
 func (c *Resto) GetVirtualDevices(ctx context.Context, kind string) ([]vmd.VirtualDevice, error) {
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/rest/v1.1/info/platforms/all", c.URL), nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/rest/v1.1/info/platforms/all", c.URL), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -487,7 +486,7 @@ func (c *Resto) GetVirtualDevices(ctx context.Context, kind string) ([]vmd.Virtu
 }
 
 func (c *Resto) GetBuildID(ctx context.Context, jobID string, buildSource build.Source) (string, error) {
-	req, err := requesth.NewWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v2/builds/%s/jobs/%s/build/", c.URL, buildSource, jobID), nil)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v2/builds/%s/jobs/%s/build/", c.URL, buildSource, jobID), nil)
 	if err != nil {
 		return "", err
 	}
