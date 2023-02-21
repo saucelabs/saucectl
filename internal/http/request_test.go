@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestNewWithContext(t *testing.T) {
+func TestNewRequestWithContext(t *testing.T) {
 	type args struct {
 		ctx    context.Context
 		method string
