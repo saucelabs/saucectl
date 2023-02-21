@@ -87,8 +87,8 @@ func UploadCommand() *cobra.Command {
 	return cmd
 }
 
-func newProgressBar(outputout string, size int64, description ...string) *progressbar.ProgressBar {
-	switch outputout {
+func newProgressBar(outputFormat string, size int64, description ...string) *progressbar.ProgressBar {
+	switch outputFormat {
 	case "text":
 		return progressbar.DefaultBytes(size, description...)
 	default:
