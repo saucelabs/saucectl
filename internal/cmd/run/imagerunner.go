@@ -1,12 +1,17 @@
 package run
 
 import (
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/table"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
+	"github.com/saucelabs/saucectl/internal/segment"
+	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"os"
 )
 
@@ -18,6 +23,16 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 
 	regio := region.FromString(p.Sauce.Region)
 	imageRunnerClient.URL = regio.APIBaseURL()
+
+	tracker := segment.DefaultTracker
+
+	go func() {
+		props := usage.Properties{}
+		props.SetFramework("imagerunner").SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
+			SetArtifacts(p.Artifacts).SetNumSuites(len(p.Suites))
+		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
+		_ = tracker.Close()
+	}()
 
 	r := saucecloud.ImgRunner{
 		Project:       p,
