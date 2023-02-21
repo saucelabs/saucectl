@@ -21,7 +21,7 @@ func DownloadCommand() *cobra.Command {
 	var out string
 
 	cmd := &cobra.Command{
-		Use:   "download artifacts",
+		Use:   "download <jobID> <filename>",
 		Short: "Downloads the specified artifacts from the given job. Supports glob pattern.",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {

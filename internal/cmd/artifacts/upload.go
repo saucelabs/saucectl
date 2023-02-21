@@ -18,7 +18,7 @@ func UploadCommand() *cobra.Command {
 	var out string
 
 	cmd := &cobra.Command{
-		Use:   "upload",
+		Use:   "upload <jobID> <filename>",
 		Short: "Uploads an artifacts for the job.",
 		Long:  "Uploads an artifacts for the job. Real Device job is not supported.",
 		Args: func(cmd *cobra.Command, args []string) error {

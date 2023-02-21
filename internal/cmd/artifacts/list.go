@@ -60,7 +60,7 @@ func ListCommand() *cobra.Command {
 	var out string
 
 	cmd := &cobra.Command{
-		Use: "list",
+		Use: "list <jobID>",
 		Aliases: []string{
 			"ls",
 		},
