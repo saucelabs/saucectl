@@ -4,18 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	http2 "github.com/saucelabs/saucectl/internal/http"
 	"sort"
 	"strings"
-
-	"github.com/saucelabs/saucectl/internal/cypress"
-	"github.com/saucelabs/saucectl/internal/espresso"
-	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/playwright"
-	"github.com/saucelabs/saucectl/internal/puppeteer"
-	"github.com/saucelabs/saucectl/internal/testcafe"
-	"github.com/saucelabs/saucectl/internal/xcuitest"
-	"github.com/spf13/pflag"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
@@ -23,10 +13,19 @@ import (
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/devices"
+	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/http"
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/playwright"
+	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/vmd"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
+	"github.com/spf13/pflag"
 )
 
 var androidDevicesPatterns = []string{
@@ -51,11 +50,9 @@ type initializer struct {
 // newInitializer creates a new initializer instance.
 func newInitializer(stdio terminal.Stdio, creds credentials.Credentials, regio string) *initializer {
 	r := region.FromString(regio)
-	tc := http2.NewTestComposer(r.APIBaseURL(), creds, testComposerTimeout)
-
-	rc := http2.NewRDCService(r.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
-
-	rs := http2.NewResto(r.APIBaseURL(), creds.Username, creds.AccessKey, restoTimeout)
+	tc := http.NewTestComposer(r.APIBaseURL(), creds, testComposerTimeout)
+	rc := http.NewRDCService(r.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
+	rs := http.NewResto(r.APIBaseURL(), creds.Username, creds.AccessKey, restoTimeout)
 
 	return &initializer{
 		stdio:        stdio,
