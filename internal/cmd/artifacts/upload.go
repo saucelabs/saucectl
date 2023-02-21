@@ -18,9 +18,9 @@ func UploadCommand() *cobra.Command {
 	var out string
 
 	cmd := &cobra.Command{
-		Use:   "upload",
-		Short: "Uploads an artifacts for the job.",
-		Long:  "Uploads an artifacts for the job. Real Device job is not supported.",
+		Use:   "upload <jobID> <filename>",
+		Short: "Uploads an artifact for the job.",
+		Long:  "Uploads an artifact for the job. Real Device job is not supported.",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no job ID specified")
@@ -87,8 +87,8 @@ func UploadCommand() *cobra.Command {
 	return cmd
 }
 
-func newProgressBar(outputout string, size int64, description ...string) *progressbar.ProgressBar {
-	switch outputout {
+func newProgressBar(outputFormat string, size int64, description ...string) *progressbar.ProgressBar {
+	switch outputFormat {
 	case "text":
 		return progressbar.DefaultBytes(size, description...)
 	default:

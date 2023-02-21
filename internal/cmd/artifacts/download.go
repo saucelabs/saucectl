@@ -21,7 +21,7 @@ func DownloadCommand() *cobra.Command {
 	var out string
 
 	cmd := &cobra.Command{
-		Use:   "download artifacts",
+		Use:   "download <jobID> <filename>",
 		Short: "Downloads the specified artifacts from the given job. Supports glob pattern.",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
@@ -87,12 +87,12 @@ func download(jobID, filePattern, targetDir, outputFormat string) error {
 		if err != nil {
 			return fmt.Errorf("failed to create file: %w", err)
 		}
-		defer file.Close()
 
 		_, err = file.Write(body)
 		if err != nil {
 			return fmt.Errorf("failed to write to the file: %w", err)
 		}
+		_ = file.Close()
 	}
 	bar.Close()
 
