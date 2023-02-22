@@ -99,7 +99,7 @@ func TestResto_GetJobDetails(t *testing.T) {
 			client:       NewResto(ts.URL, "test", "123", timeout),
 			jobID:        "333",
 			expectedResp: job.Job{},
-			expectedErr:  errors.New("giving up after 4 attempt(s)"),
+			expectedErr:  errors.New("internal server error"),
 		},
 	}
 
@@ -109,7 +109,7 @@ func TestResto_GetJobDetails(t *testing.T) {
 			got, err := tc.client.ReadJob(context.Background(), tc.jobID, false)
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
-				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))
+				assert.Equal(t, tc.expectedErr, err)
 			}
 		})
 	}
@@ -225,7 +225,7 @@ func TestResto_GetJobStatus(t *testing.T) {
 			client:       NewResto(ts.URL, "test", "123", timeout),
 			jobID:        "333",
 			expectedResp: job.Job{},
-			expectedErr:  errors.New("giving up after 4 attempt(s)"),
+			expectedErr:  errors.New("internal server error"),
 		},
 		{
 			name:   "get job details with ID 5. retry 2 times and succeed",
@@ -247,7 +247,7 @@ func TestResto_GetJobStatus(t *testing.T) {
 			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond, 0, false)
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
-				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))
+				assert.Equal(t, tc.expectedErr, err)
 			}
 		})
 	}
@@ -310,7 +310,7 @@ func TestResto_GetJobAssetFileNames(t *testing.T) {
 			client:       NewResto(ts.URL, "test", "123", timeout),
 			jobID:        "4",
 			expectedResp: nil,
-			expectedErr:  errors.New("giving up after 4 attempt(s)"),
+			expectedErr:  errors.New("internal server error"),
 		},
 	}
 	for _, tc := range testCases {
@@ -321,7 +321,7 @@ func TestResto_GetJobAssetFileNames(t *testing.T) {
 			sort.Strings(got)
 			assert.Equal(t, tc.expectedResp, got)
 			if err != nil {
-				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))
+				assert.Equal(t, tc.expectedErr, err)
 			}
 		})
 	}
@@ -370,7 +370,7 @@ func TestResto_GetJobAssetFileContent(t *testing.T) {
 			client:       NewResto(ts.URL, "test", "123", timeout),
 			jobID:        "333",
 			expectedResp: nil,
-			expectedErr:  errors.New("giving up after 4 attempt(s)"),
+			expectedErr:  errors.New("internal server error"),
 		},
 		{
 			name:         "get job asset with ID 2",
@@ -394,7 +394,7 @@ func TestResto_GetJobAssetFileContent(t *testing.T) {
 			got, err := tc.client.GetJobAssetFileContent(context.Background(), tc.jobID, "console.log", false)
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
-				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))
+				assert.Equal(t, tc.expectedErr, err)
 			}
 		})
 	}
@@ -479,7 +479,7 @@ func TestResto_TestStop(t *testing.T) {
 			client:       NewResto(ts.URL, "test", "123", timeout),
 			jobID:        "333",
 			expectedResp: job.Job{},
-			expectedErr:  errors.New("giving up after 4 attempt(s)"),
+			expectedErr:  errors.New("internal server error"),
 		},
 	}
 
@@ -489,7 +489,7 @@ func TestResto_TestStop(t *testing.T) {
 			got, err := tc.client.StopJob(context.Background(), tc.jobID, false)
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
-				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))
+				assert.Equal(t, tc.expectedErr, err)
 			}
 		})
 	}

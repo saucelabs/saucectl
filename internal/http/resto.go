@@ -62,6 +62,7 @@ func NewResto(url, username, accessKey string, timeout time.Duration) Resto {
 	httpClient.HTTPClient = &http.Client{Timeout: timeout}
 	httpClient.Logger = nil
 	httpClient.RetryMax = retryMax
+	httpClient.ErrorHandler = retryablehttp.PassthroughErrorHandler
 	return Resto{
 		HTTPClient: httpClient,
 		URL:        url,

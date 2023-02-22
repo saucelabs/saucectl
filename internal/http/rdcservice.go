@@ -90,6 +90,7 @@ func NewRDCService(url, username, accessKey string, timeout time.Duration, artif
 	httpClient.HTTPClient = nativeClient
 	httpClient.Logger = nil
 	httpClient.RetryMax = retryMax
+	httpClient.ErrorHandler = retryablehttp.PassthroughErrorHandler
 
 	return RDCService{
 		HTTPClient:     httpClient,
