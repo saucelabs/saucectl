@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
-	"strings"
 	"testing"
 	"time"
 
@@ -54,7 +53,7 @@ func TestRDCService_ReadAllowedCCY(t *testing.T) {
 			name:       "error endpoint",
 			statusCode: http.StatusInternalServerError,
 			want:       0,
-			wantErr:    errors.New("giving up after 4 attempt(s)"),
+			wantErr:    errors.New("unexpected statusCode: 500"),
 		},
 	}
 
@@ -73,7 +72,7 @@ func TestRDCService_ReadAllowedCCY(t *testing.T) {
 		ccy, err := client.ReadAllowedCCY(context.Background())
 		assert.Equal(t, ccy, tt.want)
 		if err != nil {
-			assert.True(t, strings.Contains(err.Error(), tt.wantErr.Error()))
+			assert.Equal(t, tt.wantErr, err)
 		}
 
 		ts.Close()
@@ -244,7 +243,7 @@ func TestRDCService_PollJob(t *testing.T) {
 			client:       NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
 			jobID:        "333",
 			expectedResp: job.Job{},
-			expectedErr:  errors.New("giving up after 4 attempt(s)"),
+			expectedErr:  errors.New("internal server error"),
 		},
 		{
 			name:   "get job details with ID 5. retry 2 times and succeed",
@@ -267,7 +266,7 @@ func TestRDCService_PollJob(t *testing.T) {
 			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond, 0, true)
 			assert.Equal(t, tc.expectedResp, got)
 			if err != nil {
-				assert.True(t, strings.Contains(err.Error(), tc.expectedErr.Error()))
+				assert.Equal(t, tc.expectedErr, err)
 			}
 		})
 	}
