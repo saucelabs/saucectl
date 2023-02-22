@@ -2,16 +2,15 @@ package table
 
 import (
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"io"
 	"sync"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/job"
-
 	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
+	"github.com/saucelabs/saucectl/internal/imagerunner"
+	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/report"
 )
 
@@ -104,7 +103,8 @@ func (r *Reporter) Render() {
 		if !job.Done(ts.Status) && !imagerunner.Done(ts.Status) && !ts.TimedOut {
 			inProgress++
 		}
-		if ts.Status == job.StateFailed || ts.Status == imagerunner.StateFailed || ts.Status == imagerunner.StateCancelled {
+		if ts.Status == job.StateFailed || ts.Status == imagerunner.StateFailed ||
+			ts.Status == imagerunner.StateCancelled || ts.Status == imagerunner.StateTerminated {
 			errors++
 		}
 		if ts.TimedOut {
@@ -152,7 +152,8 @@ func statusText(status string) string {
 	switch status {
 	case job.StatePassed, imagerunner.StateSucceeded:
 		return color.GreenString(status)
-	case job.StateInProgress, job.StateQueued, job.StateNew, imagerunner.StateRunning, imagerunner.StatePending:
+	case job.StateInProgress, job.StateQueued, job.StateNew, imagerunner.StateRunning, imagerunner.StatePending,
+		imagerunner.StateUploading:
 		return color.BlueString(status)
 	default:
 		return color.RedString(status)
@@ -163,7 +164,8 @@ func statusSymbol(status string) string {
 	switch status {
 	case job.StatePassed, imagerunner.StateSucceeded:
 		return color.GreenString("✔")
-	case job.StateInProgress, job.StateQueued, job.StateNew, imagerunner.StateRunning, imagerunner.StatePending:
+	case job.StateInProgress, job.StateQueued, job.StateNew, imagerunner.StateRunning, imagerunner.StatePending,
+		imagerunner.StateUploading:
 		return color.BlueString("*")
 	default:
 		return color.RedString("✖")
