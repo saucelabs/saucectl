@@ -26,6 +26,33 @@ func NewUserService(url string, creds credentials.Credentials, timeout time.Dura
 	}
 }
 
+// GetConcurrency returns the concurrency settings for the current account.
+func (c *UserService) GetConcurrency(ctx context.Context) (iam.Concurrency, error) {
+	req, err := NewRequestWithContext(ctx, http.MethodGet,
+		fmt.Sprintf("%s/rest/v1.2/users/%s/concurrency", c.URL, c.Credentials.Username), nil)
+	if err != nil {
+		return iam.Concurrency{}, err
+	}
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return iam.Concurrency{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		b, _ := io.ReadAll(resp.Body)
+		return iam.Concurrency{}, fmt.Errorf("unexpected server response (%d): %s", resp.StatusCode, b)
+	}
+
+	var body struct {
+		Concurrency iam.Concurrency `json:"concurrency"`
+	}
+
+	return body.Concurrency, json.NewDecoder(resp.Body).Decode(&body)
+}
+
 func (c *UserService) GetUser(ctx context.Context) (iam.User, error) {
 	url := fmt.Sprintf("%s/team-management/v1/users/me", c.URL)
 

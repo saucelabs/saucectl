@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/spf13/pflag"
 
 	"github.com/AlecAivazis/survey/v2/terminal"
@@ -2011,8 +2012,14 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 				},
 			}, nil
 		}},
-		ccyReader: &mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
-			return 2, nil
+		userService: &mocks.UserService{GetConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
+			return iam.Concurrency{
+				Organization: iam.OrgConcurrency{
+					Allowed: iam.CloudConcurrency{
+						VMS: 2,
+					},
+				},
+			}, nil
 		}},
 	}
 	var emptyErr []error
@@ -2146,8 +2153,14 @@ func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 				},
 			}, nil
 		}},
-		ccyReader: &mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
-			return 2, nil
+		userService: &mocks.UserService{GetConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
+			return iam.Concurrency{
+				Organization: iam.OrgConcurrency{
+					Allowed: iam.CloudConcurrency{
+						VMS: 2,
+					},
+				},
+			}, nil
 		}},
 	}
 	var emptyErr []error
@@ -2270,8 +2283,14 @@ func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 				},
 			}, nil
 		}},
-		ccyReader: &mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
-			return 2, nil
+		userService: &mocks.UserService{GetConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
+			return iam.Concurrency{
+				Organization: iam.OrgConcurrency{
+					Allowed: iam.CloudConcurrency{
+						VMS: 2,
+					},
+				},
+			}, nil
 		}},
 	}
 	var emptyErr []error
@@ -2394,8 +2413,14 @@ func Test_initializer_initializeBatchPuppeteer(t *testing.T) {
 				},
 			}, nil
 		}},
-		ccyReader: &mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
-			return 2, nil
+		userService: &mocks.UserService{GetConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
+			return iam.Concurrency{
+				Organization: iam.OrgConcurrency{
+					Allowed: iam.CloudConcurrency{
+						VMS: 2,
+					},
+				},
+			}, nil
 		}},
 	}
 	var emptyErr []error

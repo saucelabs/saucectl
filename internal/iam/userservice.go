@@ -9,6 +9,21 @@ type User struct {
 	Organization Organization `json:"organization"`
 }
 
+type Concurrency struct {
+	Organization OrgConcurrency `json:"organization"`
+}
+
+// OrgConcurrency represents the concurrency for an organization.
+type OrgConcurrency struct {
+	Allowed CloudConcurrency `json:"allowed"`
+}
+
+// CloudConcurrency represents a concurrency per cloud environment.
+type CloudConcurrency struct {
+	VMS int `json:"vms"`
+	RDS int `json:"rds"`
+}
+
 // Group represents the group that the user belongs to
 type Group struct {
 	ID string `json:"id"`
@@ -21,4 +36,6 @@ type Organization struct {
 
 type UserService interface {
 	GetUser(context.Context) (User, error)
+	// GetConcurrency returns the concurrency settings for the current account.
+	GetConcurrency(context.Context) (Concurrency, error)
 }

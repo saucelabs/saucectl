@@ -141,14 +141,15 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 	}
 	initCfg.region = regio
 
-	initCfg.concurrency, err = ini.ccyReader.ReadAllowedCCY(context.Background())
+	ccy, err := ini.userService.GetConcurrency(context.Background())
 	if err != nil {
 		println()
 		color.HiRed("Unable to determine your exact allowed concurrency.\n")
 		color.HiBlue("Using 1 as default value.\n")
 		println()
-		initCfg.concurrency = 1
+		ccy.Organization.Allowed.VMS = 1
 	}
+	initCfg.concurrency = ccy.Organization.Allowed.VMS
 
 	files, err := saveConfigurationFiles(initCfg)
 	if err != nil {
@@ -196,18 +197,15 @@ func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 		return fmt.Errorf("%s: %d errors occured", initCfg.frameworkName, len(errs))
 	}
 
-	var err error
-	initCfg.concurrency, err = ini.ccyReader.ReadAllowedCCY(context.Background())
+	ccy, err := ini.userService.GetConcurrency(context.Background())
 	if err != nil {
 		println()
 		color.HiRed("Unable to determine your exact allowed concurrency.\n")
 		color.HiBlue("Using 1 as default value.\n")
 		println()
-		initCfg.concurrency = 1
+		ccy.Organization.Allowed.VMS = 1
 	}
-	if initCfg.concurrency == 0 {
-		initCfg.concurrency = 1
-	}
+	initCfg.concurrency = ccy.Organization.Allowed.VMS
 
 	files, err := saveConfigurationFiles(initCfg)
 	if err != nil {

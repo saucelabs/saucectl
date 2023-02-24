@@ -102,41 +102,6 @@ func NewRDCService(url, username, accessKey string, timeout time.Duration, artif
 	}
 }
 
-// ReadAllowedCCY returns the allowed (max) concurrency for the current account.
-func (c *RDCService) ReadAllowedCCY(ctx context.Context) (int, error) {
-	req, err := NewRequestWithContext(ctx, http.MethodGet,
-		fmt.Sprintf("%s/v1/rdc/concurrency", c.URL), nil)
-	if err != nil {
-		return 0, err
-	}
-	req.SetBasicAuth(c.Username, c.AccessKey)
-
-	r, err := retryablehttp.FromRequest(req)
-	if err != nil {
-		return 0, err
-	}
-
-	resp, err := c.HTTPClient.Do(r)
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return 0, fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
-	}
-
-	var cr struct {
-		Organization struct {
-			Maximum int
-		}
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&cr); err != nil {
-		return 0, err
-	}
-	return cr.Organization.Maximum, nil
-}
-
 // StartJob creates a new job in Sauce Labs.
 func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
 	url := fmt.Sprintf("%s/v1/rdc/native-composer/tests", c.URL)

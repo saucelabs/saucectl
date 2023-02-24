@@ -37,18 +37,6 @@ type Resto struct {
 	ArtifactConfig config.ArtifactDownload
 }
 
-// concurrencyResponse is the response body as is returned by resto's rest/v1.2/users/{username}/concurrency endpoint.
-type concurrencyResponse struct {
-	Concurrency struct {
-		Organization struct {
-			Allowed struct {
-				VMS int `json:"vms"`
-				RDS int `json:"rds"`
-			}
-		}
-	}
-}
-
 type tunnel struct {
 	ID       string `json:"id"`
 	Owner    string `json:"owner"`
@@ -246,34 +234,6 @@ func (c *Resto) GetJobAssetFileContent(ctx context.Context, jobID, fileName stri
 	}
 
 	return io.ReadAll(resp.Body)
-}
-
-// ReadAllowedCCY returns the allowed (max) concurrency for the current account.
-func (c *Resto) ReadAllowedCCY(ctx context.Context) (int, error) {
-	req, err := NewRequestWithContext(ctx, http.MethodGet,
-		fmt.Sprintf("%s/rest/v1.2/users/%s/concurrency", c.URL, c.Username), nil)
-	if err != nil {
-		return 0, err
-	}
-	req.SetBasicAuth(c.Username, c.AccessKey)
-
-	r, err := retryablehttp.FromRequest(req)
-	if err != nil {
-		return 0, err
-	}
-
-	resp, err := c.HTTPClient.Do(r)
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close()
-
-	var cr concurrencyResponse
-	if err := json.NewDecoder(resp.Body).Decode(&cr); err != nil {
-		return 0, err
-	}
-
-	return cr.Concurrency.Organization.Allowed.VMS, nil
 }
 
 // IsTunnelRunning checks whether tunnelID is running. If not, it will wait for the tunnel to become available or
