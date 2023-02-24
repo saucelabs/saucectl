@@ -96,7 +96,7 @@ type JobCommandService struct {
 }
 
 func (s JobCommandService) ListJobs(ctx context.Context, jobSource string, queryOption cjob.QueryOption) (cjob.List, error) {
-	user, err := s.UserService.GetUser(ctx)
+	user, err := s.UserService.User(ctx)
 	if err != nil {
 		return cjob.List{}, fmt.Errorf("failed to get user: %w", err)
 	}

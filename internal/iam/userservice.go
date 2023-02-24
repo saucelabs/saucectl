@@ -36,7 +36,7 @@ type Organization struct {
 }
 
 type UserService interface {
-	GetUser(context.Context) (User, error)
-	// GetConcurrency returns the concurrency settings for the current account.
-	GetConcurrency(context.Context) (Concurrency, error)
+	User(context.Context) (User, error)
+	// Concurrency returns the concurrency settings for the current account.
+	Concurrency(context.Context) (Concurrency, error)
 }

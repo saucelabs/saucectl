@@ -141,7 +141,7 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 	}
 	initCfg.region = regio
 
-	ccy, err := ini.userService.GetConcurrency(context.Background())
+	ccy, err := ini.userService.Concurrency(context.Background())
 	if err != nil {
 		println()
 		color.HiRed("Unable to determine your exact allowed concurrency.\n")
@@ -197,7 +197,7 @@ func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 		return fmt.Errorf("%s: %d errors occured", initCfg.frameworkName, len(errs))
 	}
 
-	ccy, err := ini.userService.GetConcurrency(context.Background())
+	ccy, err := ini.userService.Concurrency(context.Background())
 	if err != nil {
 		println()
 		color.HiRed("Unable to determine your exact allowed concurrency.\n")
