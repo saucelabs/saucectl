@@ -410,7 +410,7 @@ jobs:
         run: chmod +x ./saucectl
 
       - name: Saucectl RUN
-        run: saucectl run -c .sauce/imagerunner.yml
+        run: ./saucectl run -c .sauce/imagerunner.yml
 
   windows-doctor:
     needs: build
