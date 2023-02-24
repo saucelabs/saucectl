@@ -24,7 +24,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/build"
-	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/files"
@@ -49,7 +48,6 @@ import (
 type CloudRunner struct {
 	ProjectUploader        storage.AppService
 	JobService             job.Service
-	CCYReader              concurrency.Reader
 	TunnelService          tunnel.Service
 	Region                 region.Region
 	MetadataService        framework.MetadataService
@@ -986,7 +984,7 @@ func (r *CloudRunner) getAvailableVersionsMessage(frameworkName string) string {
 }
 
 func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHistory, error) {
-	user, err := r.UserService.GetUser(context.Background())
+	user, err := r.UserService.User(context.Background())
 	if err != nil {
 		return insights.JobHistory{}, err
 	}

@@ -201,7 +201,6 @@ func runPlaywrightInSauce(p playwright.Project, regio region.Region) (int, error
 				VDCStopper:    &restoClient,
 				VDCDownloader: &restoClient,
 			},
-			CCYReader:       &restoClient,
 			TunnelService:   &restoClient,
 			MetadataService: &testcompClient,
 			InsightsService: &insightsClient,

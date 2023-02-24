@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/fatih/color"
-	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
@@ -18,6 +18,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/http"
+	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
@@ -44,7 +45,7 @@ type initializer struct {
 	infoReader   framework.MetadataService
 	deviceReader devices.Reader
 	vmdReader    vmd.Reader
-	ccyReader    concurrency.Reader
+	userService  iam.UserService
 }
 
 // newInitializer creates a new initializer instance.
@@ -53,13 +54,14 @@ func newInitializer(stdio terminal.Stdio, creds credentials.Credentials, regio s
 	tc := http.NewTestComposer(r.APIBaseURL(), creds, testComposerTimeout)
 	rc := http.NewRDCService(r.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 	rs := http.NewResto(r.APIBaseURL(), creds.Username, creds.AccessKey, restoTimeout)
+	us := http.NewUserService(r.APIBaseURL(), creds, 5*time.Second)
 
 	return &initializer{
 		stdio:        stdio,
 		infoReader:   &tc,
 		deviceReader: &rc,
 		vmdReader:    &rs,
-		ccyReader:    &rs,
+		userService:  &us,
 	}
 }
 

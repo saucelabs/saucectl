@@ -21,64 +21,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRDCService_ReadAllowedCCY(t *testing.T) {
-	testCases := []struct {
-		name         string
-		statusCode   int
-		responseBody []byte
-		want         int
-		wantErr      error
-	}{
-		{
-			name:         "default case",
-			statusCode:   http.StatusOK,
-			responseBody: []byte(`{"organization": { "current": 0, "maximum": 2 }}`),
-			want:         2,
-			wantErr:      nil,
-		},
-		{
-			name:         "invalid parsing",
-			statusCode:   http.StatusOK,
-			responseBody: []byte(`{"organization": { "current": 0, "maximum": 2`),
-			want:         0,
-			wantErr:      errors.New("unexpected EOF"),
-		},
-		{
-			name:       "Forbidden endpoint",
-			statusCode: http.StatusForbidden,
-			want:       0,
-			wantErr:    errors.New("unexpected statusCode: 403"),
-		},
-		{
-			name:       "error endpoint",
-			statusCode: http.StatusInternalServerError,
-			want:       0,
-			wantErr:    errors.New("unexpected statusCode: 500"),
-		},
-	}
-
-	timeout := 3 * time.Second
-	for _, tt := range testCases {
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(tt.statusCode)
-			_, err := w.Write(tt.responseBody)
-			if err != nil {
-				t.Errorf("%s: failed to respond: %v", tt.name, err)
-			}
-		}))
-
-		client := NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{})
-		client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
-		ccy, err := client.ReadAllowedCCY(context.Background())
-		assert.Equal(t, ccy, tt.want)
-		if err != nil {
-			assert.Equal(t, tt.wantErr, err)
-		}
-
-		ts.Close()
-	}
-}
-
 func TestRDCService_ReadJob(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
