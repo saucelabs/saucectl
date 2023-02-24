@@ -147,9 +147,9 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 		color.HiRed("Unable to determine your exact allowed concurrency.\n")
 		color.HiBlue("Using 1 as default value.\n")
 		println()
-		ccy.Organization.Allowed.VMS = 1
+		ccy.Org.Allowed.VDC = 1
 	}
-	initCfg.concurrency = ccy.Organization.Allowed.VMS
+	initCfg.concurrency = ccy.Org.Allowed.VDC
 
 	files, err := saveConfigurationFiles(initCfg)
 	if err != nil {
@@ -203,9 +203,9 @@ func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 		color.HiRed("Unable to determine your exact allowed concurrency.\n")
 		color.HiBlue("Using 1 as default value.\n")
 		println()
-		ccy.Organization.Allowed.VMS = 1
+		ccy.Org.Allowed.VDC = 1
 	}
-	initCfg.concurrency = ccy.Organization.Allowed.VMS
+	initCfg.concurrency = ccy.Org.Allowed.VDC
 
 	files, err := saveConfigurationFiles(initCfg)
 	if err != nil {
