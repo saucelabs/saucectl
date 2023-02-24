@@ -26,7 +26,7 @@ func NewUserService(url string, creds credentials.Credentials, timeout time.Dura
 	}
 }
 
-// GetConcurrency returns the concurrency settings for the current account.
+// Concurrency returns the concurrency settings for the current account.
 func (c *UserService) Concurrency(ctx context.Context) (iam.Concurrency, error) {
 	req, err := NewRequestWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/rest/v1.2/users/%s/concurrency", c.URL, c.Credentials.Username), nil)

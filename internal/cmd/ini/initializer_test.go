@@ -2012,7 +2012,7 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 				},
 			}, nil
 		}},
-		userService: &mocks.UserService{GetConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
+		userService: &mocks.UserService{ConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
 			return iam.Concurrency{
 				Org: iam.OrgConcurrency{
 					Allowed: iam.CloudConcurrency{
@@ -2153,7 +2153,7 @@ func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 				},
 			}, nil
 		}},
-		userService: &mocks.UserService{GetConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
+		userService: &mocks.UserService{ConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
 			return iam.Concurrency{
 				Org: iam.OrgConcurrency{
 					Allowed: iam.CloudConcurrency{
@@ -2283,7 +2283,7 @@ func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 				},
 			}, nil
 		}},
-		userService: &mocks.UserService{GetConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
+		userService: &mocks.UserService{ConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
 			return iam.Concurrency{
 				Org: iam.OrgConcurrency{
 					Allowed: iam.CloudConcurrency{
@@ -2413,7 +2413,7 @@ func Test_initializer_initializeBatchPuppeteer(t *testing.T) {
 				},
 			}, nil
 		}},
-		userService: &mocks.UserService{GetConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
+		userService: &mocks.UserService{ConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
 			return iam.Concurrency{
 				Org: iam.OrgConcurrency{
 					Allowed: iam.CloudConcurrency{
