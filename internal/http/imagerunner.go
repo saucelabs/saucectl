@@ -18,16 +18,16 @@ import (
 )
 
 type ImageRunner struct {
-	Client      *retryablehttp.Client
-	URL         string
-	Credentials credentials.Credentials
+	Client *retryablehttp.Client
+	URL    string
+	Creds  credentials.Credentials
 }
 
 func NewImageRunner(url string, creds credentials.Credentials, timeout time.Duration) ImageRunner {
 	return ImageRunner{
-		Client:      NewRetryableClient(timeout),
-		URL:         url,
-		Credentials: creds,
+		Client: NewRetryableClient(timeout),
+		URL:    url,
+		Creds:  creds,
 	}
 }
 func (c *ImageRunner) TriggerRun(ctx context.Context, spec imagerunner.RunnerSpec) (imagerunner.Runner, error) {
@@ -45,7 +45,7 @@ func (c *ImageRunner) TriggerRun(ctx context.Context, spec imagerunner.RunnerSpe
 		return runner, err
 	}
 
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.Client.Do(req)
@@ -75,7 +75,7 @@ func (c *ImageRunner) GetStatus(ctx context.Context, id string) (imagerunner.Run
 		return r, err
 	}
 
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := c.Client.Do(req)
 	if err != nil {
@@ -103,7 +103,7 @@ func (c *ImageRunner) StopRun(ctx context.Context, runID string) error {
 		return err
 	}
 
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := c.Client.HTTPClient.Do(req)
 	if err != nil {
@@ -121,7 +121,7 @@ func (c *ImageRunner) ListArtifacts(ctx context.Context, id string) ([]string, e
 	if err != nil {
 		return []string{}, err
 	}
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.Client.Do(req)
@@ -155,7 +155,7 @@ func (c *ImageRunner) DownloadArtifact(ctx context.Context, id, name, dir string
 	if err != nil {
 		return err
 	}
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
 
 	resp, err := c.Client.Do(req)
 	if err != nil {
@@ -186,7 +186,7 @@ func (c *ImageRunner) GetLogs(ctx context.Context, id string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
 
 	resp, err := c.Client.Do(req)
 	if err != nil {
