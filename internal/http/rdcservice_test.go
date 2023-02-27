@@ -110,7 +110,7 @@ func TestRDCService_PollJob(t *testing.T) {
 		case "/v1/rdc/jobs/4":
 			w.WriteHeader(http.StatusUnauthorized)
 		case "/v1/rdc/jobs/5":
-			if retryCount < retryMax-1 {
+			if retryCount < 2 {
 				w.WriteHeader(http.StatusInternalServerError)
 				retryCount++
 				return
@@ -204,7 +204,7 @@ func TestRDCService_PollJob(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
+			tc.client.Client.RetryWaitMax = 1 * time.Millisecond
 			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond, 0, true)
 			assert.Equal(t, tc.expectedResp, got)
 			if err != nil {
@@ -419,10 +419,10 @@ func TestRDCService_GetDevices(t *testing.T) {
 	client.HTTPClient = &http.Client{Timeout: 1 * time.Second}
 
 	cl := RDCService{
-		HTTPClient: client,
-		URL:        ts.URL,
-		Username:   "dummy-user",
-		AccessKey:  "dummy-key",
+		Client:    client,
+		URL:       ts.URL,
+		Username:  "dummy-user",
+		AccessKey: "dummy-key",
 	}
 	type args struct {
 		ctx context.Context
@@ -548,8 +548,8 @@ func TestRDCService_StartJob(t *testing.T) {
 			defer server.Close()
 
 			c := &RDCService{
-				NativeClient: server.Client(),
-				URL:          server.URL,
+				Client: &retryablehttp.Client{HTTPClient: server.Client()},
+				URL:    server.URL,
 			}
 
 			got, _, err := c.StartJob(tt.args.ctx, tt.args.jobStarterPayload)
