@@ -11,6 +11,15 @@ import (
 	yamlbase "gopkg.in/yaml.v2"
 )
 
+func init() {
+	homeDir, _ := os.UserHomeDir()
+	DefaultCredsPath = filepath.Join(homeDir, ".sauce", "credentials.yml")
+}
+
+// DefaultCredsPath returns the default location of the credentials file.
+// It's under the user's home directory, if defined, otherwise under the current working directory.
+var DefaultCredsPath = ""
+
 // Get returns the configured credentials.
 // Effectively a convenience wrapper around FromEnv, followed by a call to FromFile.
 //
@@ -35,7 +44,7 @@ func FromEnv() iam.Credentials {
 
 // FromFile reads the credentials that stored in the default file location.
 func FromFile() iam.Credentials {
-	return fromFile(defaultFilepath())
+	return fromFile(DefaultCredsPath)
 }
 
 // fromFile reads the credentials from path.
@@ -63,7 +72,7 @@ func fromFile(path string) iam.Credentials {
 
 // ToFile stores the provided credentials in the default file location.
 func ToFile(c iam.Credentials) error {
-	return toFile(c, defaultFilepath())
+	return toFile(c, DefaultCredsPath)
 }
 
 // toFile stores the provided credentials into the file at path.
@@ -72,11 +81,4 @@ func toFile(c iam.Credentials, path string) error {
 		return fmt.Errorf("unable to create configuration folder")
 	}
 	return yaml.WriteFile(path, c, 0600)
-}
-
-// defaultFilepath returns the default location of the credentials file.
-// It will be based on the user home directory, if defined, or under the current working directory otherwise.
-func defaultFilepath() string {
-	homeDir, _ := os.UserHomeDir()
-	return filepath.Join(homeDir, ".sauce", "credentials.yml")
 }

@@ -172,7 +172,7 @@ func Test_defaultFilepath(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := defaultFilepath(); got != tt.want {
+			if got := DefaultCredsPath; got != tt.want {
 				t.Errorf("defaultFilepath() = %v, want %v", got, tt.want)
 			}
 		})
