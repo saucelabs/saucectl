@@ -2,18 +2,18 @@ package credentials
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/yaml"
 	yamlbase "gopkg.in/yaml.v2"
-	"os"
-	"path/filepath"
 )
 
 // Credentials contains a set of Username + AccessKey for SauceLabs.
 type Credentials struct {
 	Username  string `yaml:"username"`
 	AccessKey string `yaml:"accessKey"`
-	Source    string `yaml:"-"`
 }
 
 // Get returns the configured credentials.
@@ -35,7 +35,6 @@ func FromEnv() Credentials {
 	return Credentials{
 		Username:  os.Getenv("SAUCE_USERNAME"),
 		AccessKey: os.Getenv("SAUCE_ACCESS_KEY"),
-		Source:    "environment variables",
 	}
 }
 

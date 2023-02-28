@@ -22,7 +22,6 @@ func TestFromEnv(t *testing.T) {
 			want: Credentials{
 				Username:  "saucebot",
 				AccessKey: "123",
-				Source:    "environment variables",
 			},
 		},
 		{
@@ -31,9 +30,7 @@ func TestFromEnv(t *testing.T) {
 				_ = os.Unsetenv("SAUCE_USERNAME")
 				_ = os.Unsetenv("SAUCE_ACCESS_KEY")
 			},
-			want: Credentials{
-				Source: "environment variables",
-			},
+			want: Credentials{},
 		},
 	}
 	for _, tt := range tests {
@@ -50,7 +47,6 @@ func TestCredentials_IsValid(t *testing.T) {
 	type fields struct {
 		Username  string
 		AccessKey string
-		Source    string
 	}
 	tests := []struct {
 		name   string
@@ -92,7 +88,6 @@ func TestCredentials_IsValid(t *testing.T) {
 			c := &Credentials{
 				Username:  tt.fields.Username,
 				AccessKey: tt.fields.AccessKey,
-				Source:    tt.fields.Source,
 			}
 			if got := c.IsValid(); got != tt.want {
 				t.Errorf("IsValid() = %v, want %v", got, tt.want)
