@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/spf13/cobra"
@@ -54,7 +55,7 @@ func Command() *cobra.Command {
 	return cmd
 }
 
-func printCreds(creds credentials.Credentials) {
+func printCreds(creds iam.Credentials) {
 	println()
 
 	labelStyle := color.New(color.Bold)
@@ -69,13 +70,13 @@ func printCreds(creds credentials.Credentials) {
 }
 
 // interactiveConfiguration expect user to manually type-in its credentials
-func interactiveConfiguration() (credentials.Credentials, error) {
+func interactiveConfiguration() (iam.Credentials, error) {
 	overwrite := true
 	var err error
 
 	creds := credentials.Get()
 
-	if creds.IsValid() {
+	if creds.IsSet() {
 		printCreds(creds)
 
 		qs := &survey.Confirm{
@@ -88,7 +89,7 @@ func interactiveConfiguration() (credentials.Credentials, error) {
 	}
 
 	if overwrite {
-		if !creds.IsValid() {
+		if !creds.IsSet() {
 			fmt.Println(msg.SignupMessage)
 		}
 
@@ -143,13 +144,13 @@ func interactiveConfiguration() (credentials.Credentials, error) {
 
 // Run starts the configure command
 func Run() error {
-	var creds credentials.Credentials
+	var creds iam.Credentials
 	var err error
 
 	if cliUsername == "" && cliAccessKey == "" {
 		creds, err = interactiveConfiguration()
 	} else {
-		creds = credentials.Credentials{
+		creds = iam.Credentials{
 			Username:  cliUsername,
 			AccessKey: cliAccessKey,
 		}
@@ -158,7 +159,7 @@ func Run() error {
 		return err
 	}
 
-	if !creds.IsValid() {
+	if !creds.IsSet() {
 		log.Error().Msg("The provided credentials appear to be invalid and will NOT be saved.")
 		return fmt.Errorf(msg.InvalidCredentials)
 	}

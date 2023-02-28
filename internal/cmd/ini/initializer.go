@@ -12,7 +12,6 @@ import (
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/fatih/color"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/espresso"
@@ -49,7 +48,7 @@ type initializer struct {
 }
 
 // newInitializer creates a new initializer instance.
-func newInitializer(stdio terminal.Stdio, creds credentials.Credentials, regio string) *initializer {
+func newInitializer(stdio terminal.Stdio, creds iam.Credentials, regio string) *initializer {
 	r := region.FromString(regio)
 	tc := http.NewTestComposer(r.APIBaseURL(), creds, testComposerTimeout)
 	rc := http.NewRDCService(r.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
@@ -89,8 +88,8 @@ func (ini *initializer) configure() (*initConfig, error) {
 	}
 }
 
-func askCredentials(stdio terminal.Stdio) (credentials.Credentials, error) {
-	creds := credentials.Credentials{}
+func askCredentials(stdio terminal.Stdio) (iam.Credentials, error) {
+	creds := iam.Credentials{}
 	q := &survey.Input{Message: "SauceLabs username:"}
 
 	err := survey.AskOne(q, &creds.Username,

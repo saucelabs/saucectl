@@ -2,11 +2,12 @@ package http
 
 import (
 	"context"
-	"github.com/saucelabs/saucectl/internal/credentials"
-	"github.com/saucelabs/saucectl/internal/insights"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/saucelabs/saucectl/internal/iam"
+	"github.com/saucelabs/saucectl/internal/insights"
 )
 
 func TestInsightsService_PostTestRun(t *testing.T) {
@@ -49,7 +50,7 @@ func TestInsightsService_PostTestRun(t *testing.T) {
 			c := &InsightsService{
 				HTTPClient:  ts.Client(),
 				URL:         ts.URL,
-				Credentials: credentials.Credentials{AccessKey: "accessKey", Username: "username"},
+				Credentials: iam.Credentials{AccessKey: "accessKey", Username: "username"},
 			}
 			if err := c.PostTestRun(context.Background(), tt.runs); (err != nil) != tt.wantErr {
 				t.Errorf("PostTestRun() error = %v, wantErr %v", err, tt.wantErr)

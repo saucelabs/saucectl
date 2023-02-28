@@ -15,7 +15,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/insights"
 
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/iam"
 )
 
@@ -51,14 +50,14 @@ const AutomaticRunMode = "automatic"
 type InsightsService struct {
 	HTTPClient  *http.Client
 	URL         string
-	Credentials credentials.Credentials
+	Credentials iam.Credentials
 }
 
 var LaunchOptions = map[config.LaunchOrder]string{
 	config.LaunchOrderFailRate: "fail_rate",
 }
 
-func NewInsightsService(url string, creds credentials.Credentials, timeout time.Duration) InsightsService {
+func NewInsightsService(url string, creds iam.Credentials, timeout time.Duration) InsightsService {
 	return InsightsService{
 		HTTPClient:  &http.Client{Timeout: timeout},
 		URL:         url,

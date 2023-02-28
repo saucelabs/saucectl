@@ -5,13 +5,15 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/saucelabs/saucectl/internal/iam"
 )
 
 func TestFromEnv(t *testing.T) {
 	tests := []struct {
 		name       string
 		beforeTest func()
-		want       Credentials
+		want       iam.Credentials
 	}{
 		{
 			name: "env vars exist",
@@ -19,10 +21,9 @@ func TestFromEnv(t *testing.T) {
 				_ = os.Setenv("SAUCE_USERNAME", "saucebot")
 				_ = os.Setenv("SAUCE_ACCESS_KEY", "123")
 			},
-			want: Credentials{
+			want: iam.Credentials{
 				Username:  "saucebot",
 				AccessKey: "123",
-				Source:    "environment variables",
 			},
 		},
 		{
@@ -31,9 +32,7 @@ func TestFromEnv(t *testing.T) {
 				_ = os.Unsetenv("SAUCE_USERNAME")
 				_ = os.Unsetenv("SAUCE_ACCESS_KEY")
 			},
-			want: Credentials{
-				Source: "environment variables",
-			},
+			want: iam.Credentials{},
 		},
 	}
 	for _, tt := range tests {
@@ -50,7 +49,6 @@ func TestCredentials_IsValid(t *testing.T) {
 	type fields struct {
 		Username  string
 		AccessKey string
-		Source    string
 	}
 	tests := []struct {
 		name   string
@@ -89,13 +87,12 @@ func TestCredentials_IsValid(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Credentials{
+			c := &iam.Credentials{
 				Username:  tt.fields.Username,
 				AccessKey: tt.fields.AccessKey,
-				Source:    tt.fields.Source,
 			}
-			if got := c.IsValid(); got != tt.want {
-				t.Errorf("IsValid() = %v, want %v", got, tt.want)
+			if got := c.IsSet(); got != tt.want {
+				t.Errorf("IsSet() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -118,7 +115,7 @@ func TestFromFile(t *testing.T) {
 		name       string
 		args       args
 		beforeTest func()
-		want       Credentials
+		want       iam.Credentials
 	}{
 		{
 			name: "creds exist",
@@ -126,7 +123,7 @@ func TestFromFile(t *testing.T) {
 				path: filepath.Join(tempDir, "credilicious.yml"),
 			},
 			beforeTest: func() {
-				c := Credentials{
+				c := iam.Credentials{
 					Username:  "saucebot",
 					AccessKey: "123",
 				}
@@ -134,7 +131,7 @@ func TestFromFile(t *testing.T) {
 					t.Errorf("Failed to create credentials file: %v", err)
 				}
 			},
-			want: Credentials{
+			want: iam.Credentials{
 				Username:  "saucebot",
 				AccessKey: "123",
 			},
@@ -145,7 +142,7 @@ func TestFromFile(t *testing.T) {
 				path: filepath.Join(tempDir, "you-shall-not-find-me.yml"),
 			},
 			beforeTest: func() {},
-			want:       Credentials{},
+			want:       iam.Credentials{},
 		},
 	}
 	for _, tt := range tests {
@@ -175,7 +172,7 @@ func Test_defaultFilepath(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := defaultFilepath(); got != tt.want {
+			if got := DefaultCredsPath; got != tt.want {
 				t.Errorf("defaultFilepath() = %v, want %v", got, tt.want)
 			}
 		})

@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/job"
 )
 
@@ -21,7 +21,7 @@ import (
 type TestComposer struct {
 	HTTPClient  *http.Client
 	URL         string // e.g.) https://api.<region>.saucelabs.net
-	Credentials credentials.Credentials
+	Credentials iam.Credentials
 }
 
 // FrameworkResponse represents the response body for framework information.
@@ -49,7 +49,7 @@ type runner struct {
 	GitRelease         string `json:"gitRelease"`
 }
 
-func NewTestComposer(url string, creds credentials.Credentials, timeout time.Duration) TestComposer {
+func NewTestComposer(url string, creds iam.Credentials, timeout time.Duration) TestComposer {
 	return TestComposer{
 		HTTPClient:  &http.Client{Timeout: timeout},
 		URL:         url,

@@ -114,7 +114,7 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 	stdio := terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
 
 	creds := credentials.Get()
-	if !creds.IsValid() {
+	if !creds.IsSet() {
 		var err error
 		creds, err = askCredentials(stdio)
 		if err != nil {
@@ -162,7 +162,7 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 	stdio := terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
 	creds := credentials.Get()
-	if !creds.IsValid() {
+	if !creds.IsSet() {
 		return errors.New(msg.EmptyCredentials)
 	}
 

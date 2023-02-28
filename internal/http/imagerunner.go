@@ -13,17 +13,17 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 )
 
 type ImageRunner struct {
 	Client *retryablehttp.Client
 	URL    string
-	Creds  credentials.Credentials
+	Creds  iam.Credentials
 }
 
-func NewImageRunner(url string, creds credentials.Credentials, timeout time.Duration) ImageRunner {
+func NewImageRunner(url string, creds iam.Credentials, timeout time.Duration) ImageRunner {
 	return ImageRunner{
 		Client: NewRetryableClient(timeout),
 		URL:    url,

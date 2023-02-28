@@ -183,7 +183,7 @@ func preRun() error {
 	go awaitGlobalTimeout()
 
 	creds := credentials.Get()
-	if !creds.IsValid() {
+	if !creds.IsSet() {
 		color.Red("\nSauceCTL requires a valid Sauce Labs account!\n\n")
 		fmt.Println(`Set up your credentials by running:
 > saucectl configure`)
