@@ -91,8 +91,8 @@ func TestCredentials_IsValid(t *testing.T) {
 				Username:  tt.fields.Username,
 				AccessKey: tt.fields.AccessKey,
 			}
-			if got := c.IsValid(); got != tt.want {
-				t.Errorf("IsValid() = %v, want %v", got, tt.want)
+			if got := c.IsSet(); got != tt.want {
+				t.Errorf("IsSet() = %v, want %v", got, tt.want)
 			}
 		})
 	}

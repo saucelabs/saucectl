@@ -18,7 +18,7 @@ import (
 //  1. Environment variables (see FromEnv)
 //  2. Credentials file (see FromFile)
 func Get() iam.Credentials {
-	if c := FromEnv(); c.IsValid() {
+	if c := FromEnv(); c.IsSet() {
 		return c
 	}
 

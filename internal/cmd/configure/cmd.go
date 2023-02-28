@@ -76,7 +76,7 @@ func interactiveConfiguration() (iam.Credentials, error) {
 
 	creds := credentials.Get()
 
-	if creds.IsValid() {
+	if creds.IsSet() {
 		printCreds(creds)
 
 		qs := &survey.Confirm{
@@ -89,7 +89,7 @@ func interactiveConfiguration() (iam.Credentials, error) {
 	}
 
 	if overwrite {
-		if !creds.IsValid() {
+		if !creds.IsSet() {
 			fmt.Println(msg.SignupMessage)
 		}
 
@@ -159,7 +159,7 @@ func Run() error {
 		return err
 	}
 
-	if !creds.IsValid() {
+	if !creds.IsSet() {
 		log.Error().Msg("The provided credentials appear to be invalid and will NOT be saved.")
 		return fmt.Errorf(msg.InvalidCredentials)
 	}

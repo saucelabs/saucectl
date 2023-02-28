@@ -6,13 +6,8 @@ type Credentials struct {
 	AccessKey string `yaml:"accessKey"`
 }
 
-// IsEmpty checks whether the credentials, i.e. username and access key are not empty.
+// IsSet checks whether the credentials, i.e. username and access key are not empty.
 // Returns false if even one of the credentials is empty.
-func (c *Credentials) IsEmpty() bool {
-	return c.AccessKey == "" || c.Username == ""
-}
-
-// IsValid validates that the credentials are valid.
-func (c *Credentials) IsValid() bool {
-	return !c.IsEmpty()
+func (c *Credentials) IsSet() bool {
+	return c.AccessKey != "" && c.Username != ""
 }
