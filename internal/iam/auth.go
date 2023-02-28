@@ -1,6 +1,6 @@
 package iam
 
-// Credentials contains a set of Username + AccessKey for SauceLabs.
+// Credentials holds the credentials for accessing Sauce Labs.
 type Credentials struct {
 	Username  string `yaml:"username"`
 	AccessKey string `yaml:"accessKey"`

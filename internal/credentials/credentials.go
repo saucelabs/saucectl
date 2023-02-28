@@ -12,7 +12,7 @@ import (
 )
 
 // Get returns the configured credentials.
-// Effectively a covenience wrapper around FromEnv, followed by a call to FromFile.
+// Effectively a convenience wrapper around FromEnv, followed by a call to FromFile.
 //
 // The lookup order is:
 //  1. Environment variables (see FromEnv)
