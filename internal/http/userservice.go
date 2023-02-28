@@ -8,17 +8,16 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/iam"
 )
 
 type UserService struct {
 	HTTPClient  *http.Client
 	URL         string
-	Credentials credentials.Credentials
+	Credentials iam.Credentials
 }
 
-func NewUserService(url string, creds credentials.Credentials, timeout time.Duration) UserService {
+func NewUserService(url string, creds iam.Credentials, timeout time.Duration) UserService {
 	return UserService{
 		HTTPClient:  &http.Client{Timeout: timeout},
 		URL:         url,

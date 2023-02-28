@@ -22,7 +22,6 @@ import (
 	"gotest.tools/v3/fs"
 
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/espresso"
@@ -939,7 +938,7 @@ func TestAskCredentials(t *testing.T) {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
-				expect := &credentials.Credentials{Username: "dummy-user", AccessKey: "dummy-access-key"}
+				expect := &iam.Credentials{Username: "dummy-user", AccessKey: "dummy-access-key"}
 				if reflect.DeepEqual(creds, expect) {
 					t.Fatalf("got: %v, want: %v", creds, expect)
 				}

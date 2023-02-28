@@ -5,13 +5,15 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/saucelabs/saucectl/internal/iam"
 )
 
 func TestFromEnv(t *testing.T) {
 	tests := []struct {
 		name       string
 		beforeTest func()
-		want       Credentials
+		want       iam.Credentials
 	}{
 		{
 			name: "env vars exist",
@@ -19,7 +21,7 @@ func TestFromEnv(t *testing.T) {
 				_ = os.Setenv("SAUCE_USERNAME", "saucebot")
 				_ = os.Setenv("SAUCE_ACCESS_KEY", "123")
 			},
-			want: Credentials{
+			want: iam.Credentials{
 				Username:  "saucebot",
 				AccessKey: "123",
 			},
@@ -30,7 +32,7 @@ func TestFromEnv(t *testing.T) {
 				_ = os.Unsetenv("SAUCE_USERNAME")
 				_ = os.Unsetenv("SAUCE_ACCESS_KEY")
 			},
-			want: Credentials{},
+			want: iam.Credentials{},
 		},
 	}
 	for _, tt := range tests {
@@ -85,7 +87,7 @@ func TestCredentials_IsValid(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Credentials{
+			c := &iam.Credentials{
 				Username:  tt.fields.Username,
 				AccessKey: tt.fields.AccessKey,
 			}
@@ -113,7 +115,7 @@ func TestFromFile(t *testing.T) {
 		name       string
 		args       args
 		beforeTest func()
-		want       Credentials
+		want       iam.Credentials
 	}{
 		{
 			name: "creds exist",
@@ -121,7 +123,7 @@ func TestFromFile(t *testing.T) {
 				path: filepath.Join(tempDir, "credilicious.yml"),
 			},
 			beforeTest: func() {
-				c := Credentials{
+				c := iam.Credentials{
 					Username:  "saucebot",
 					AccessKey: "123",
 				}
@@ -129,7 +131,7 @@ func TestFromFile(t *testing.T) {
 					t.Errorf("Failed to create credentials file: %v", err)
 				}
 			},
-			want: Credentials{
+			want: iam.Credentials{
 				Username:  "saucebot",
 				AccessKey: "123",
 			},
@@ -140,7 +142,7 @@ func TestFromFile(t *testing.T) {
 				path: filepath.Join(tempDir, "you-shall-not-find-me.yml"),
 			},
 			beforeTest: func() {},
-			want:       Credentials{},
+			want:       iam.Credentials{},
 		},
 	}
 	for _, tt := range tests {

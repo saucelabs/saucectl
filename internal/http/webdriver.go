@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/slice"
 	"github.com/saucelabs/saucectl/internal/version"
@@ -20,7 +20,7 @@ import (
 type Webdriver struct {
 	HTTPClient  *http.Client
 	URL         string
-	Credentials credentials.Credentials
+	Credentials iam.Credentials
 }
 
 // SessionRequest represents the webdriver session request.
@@ -84,7 +84,7 @@ type sessionStartResponse struct {
 	} `json:"value,omitempty"`
 }
 
-func NewWebdriver(url string, creds credentials.Credentials, timeout time.Duration) Webdriver {
+func NewWebdriver(url string, creds iam.Credentials, timeout time.Duration) Webdriver {
 	return Webdriver{
 		HTTPClient: &http.Client{
 			Timeout: timeout,

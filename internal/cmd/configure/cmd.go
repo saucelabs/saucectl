@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/spf13/cobra"
@@ -54,7 +55,7 @@ func Command() *cobra.Command {
 	return cmd
 }
 
-func printCreds(creds credentials.Credentials) {
+func printCreds(creds iam.Credentials) {
 	println()
 
 	labelStyle := color.New(color.Bold)
@@ -69,7 +70,7 @@ func printCreds(creds credentials.Credentials) {
 }
 
 // interactiveConfiguration expect user to manually type-in its credentials
-func interactiveConfiguration() (credentials.Credentials, error) {
+func interactiveConfiguration() (iam.Credentials, error) {
 	overwrite := true
 	var err error
 
@@ -143,13 +144,13 @@ func interactiveConfiguration() (credentials.Credentials, error) {
 
 // Run starts the configure command
 func Run() error {
-	var creds credentials.Credentials
+	var creds iam.Credentials
 	var err error
 
 	if cliUsername == "" && cliAccessKey == "" {
 		creds, err = interactiveConfiguration()
 	} else {
-		creds = credentials.Credentials{
+		creds = iam.Credentials{
 			Username:  cliUsername,
 			AccessKey: cliAccessKey,
 		}
