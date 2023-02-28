@@ -25,12 +25,9 @@ import (
 	"github.com/saucelabs/saucectl/internal/vmd"
 )
 
-// retryMax is the total retry times when pulling job status
-const retryMax = 3
-
 // Resto http client.
 type Resto struct {
-	HTTPClient     *retryablehttp.Client
+	Client         *retryablehttp.Client
 	URL            string
 	Username       string
 	AccessKey      string
@@ -46,16 +43,11 @@ type tunnel struct {
 
 // NewResto creates a new client.
 func NewResto(url, username, accessKey string, timeout time.Duration) Resto {
-	httpClient := retryablehttp.NewClient()
-	httpClient.HTTPClient = &http.Client{Timeout: timeout}
-	httpClient.Logger = nil
-	httpClient.RetryMax = retryMax
-	httpClient.ErrorHandler = retryablehttp.PassthroughErrorHandler
 	return Resto{
-		HTTPClient: httpClient,
-		URL:        url,
-		Username:   username,
-		AccessKey:  accessKey,
+		Client:    NewRetryableClient(timeout),
+		URL:       url,
+		Username:  username,
+		AccessKey: accessKey,
 	}
 }
 
@@ -78,7 +70,7 @@ func (c *Resto) ReadJob(ctx context.Context, id string, realDevice bool) (job.Jo
 	if err != nil {
 		return job.Job{}, err
 	}
-	resp, err := c.HTTPClient.Do(rreq)
+	resp, err := c.Client.Do(rreq)
 	if err != nil {
 		return job.Job{}, err
 	}
@@ -157,7 +149,7 @@ func (c *Resto) GetJobAssetFileNames(ctx context.Context, jobID string, realDevi
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.HTTPClient.Do(rreq)
+	resp, err := c.Client.Do(rreq)
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +206,7 @@ func (c *Resto) GetJobAssetFileContent(ctx context.Context, jobID, fileName stri
 		return nil, err
 	}
 
-	resp, err := c.HTTPClient.Do(rreq)
+	resp, err := c.Client.Do(rreq)
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +265,7 @@ func (c *Resto) isTunnelRunning(ctx context.Context, id, owner string, filter tu
 		return err
 	}
 
-	res, err := c.HTTPClient.Do(r)
+	res, err := c.Client.Do(r)
 	if err != nil {
 		return err
 	}
@@ -329,7 +321,7 @@ func (c *Resto) StopJob(ctx context.Context, jobID string, realDevice bool) (job
 	if err != nil {
 		return job.Job{}, err
 	}
-	resp, err := c.HTTPClient.Do(rreq)
+	resp, err := c.Client.Do(rreq)
 	if err != nil {
 		return job.Job{}, err
 	}
@@ -402,7 +394,7 @@ func (c *Resto) GetVirtualDevices(ctx context.Context, kind string) ([]vmd.Virtu
 		return []vmd.VirtualDevice{}, err
 	}
 
-	res, err := c.HTTPClient.Do(r)
+	res, err := c.Client.Do(r)
 	if err != nil {
 		return []vmd.VirtualDevice{}, err
 	}
@@ -458,7 +450,7 @@ func (c *Resto) GetBuildID(ctx context.Context, jobID string, buildSource build.
 		return "", err
 	}
 
-	resp, err := c.HTTPClient.Do(r)
+	resp, err := c.Client.Do(r)
 	if err != nil {
 		return "", err
 	}

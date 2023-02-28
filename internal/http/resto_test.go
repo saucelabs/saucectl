@@ -105,7 +105,7 @@ func TestResto_GetJobDetails(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
+			tc.client.Client.RetryWaitMax = 1 * time.Millisecond
 			got, err := tc.client.ReadJob(context.Background(), tc.jobID, false)
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
@@ -149,7 +149,7 @@ func TestResto_GetJobStatus(t *testing.T) {
 		case "/rest/v1.1/test/jobs/4":
 			w.WriteHeader(http.StatusUnauthorized)
 		case "/rest/v1.1/test/jobs/5":
-			if retryCount < retryMax-1 {
+			if retryCount < 2 {
 				w.WriteHeader(http.StatusInternalServerError)
 				retryCount++
 				return
@@ -243,7 +243,7 @@ func TestResto_GetJobStatus(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
+			tc.client.Client.RetryWaitMax = 1 * time.Millisecond
 			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond, 0, false)
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
@@ -315,7 +315,7 @@ func TestResto_GetJobAssetFileNames(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
+			tc.client.Client.RetryWaitMax = 1 * time.Millisecond
 			got, err := tc.client.GetJobAssetFileNames(context.Background(), tc.jobID, false)
 			sort.Strings(tc.expectedResp)
 			sort.Strings(got)
@@ -390,7 +390,7 @@ func TestResto_GetJobAssetFileContent(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
+			tc.client.Client.RetryWaitMax = 1 * time.Millisecond
 			got, err := tc.client.GetJobAssetFileContent(context.Background(), tc.jobID, "console.log", false)
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
@@ -485,7 +485,7 @@ func TestResto_TestStop(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
+			tc.client.Client.RetryWaitMax = 1 * time.Millisecond
 			got, err := tc.client.StopJob(context.Background(), tc.jobID, false)
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
@@ -515,10 +515,10 @@ func TestResto_GetVirtualDevices(t *testing.T) {
 	client.HTTPClient = ts.Client()
 	client.RetryWaitMax = 1 * time.Millisecond
 	c := &Resto{
-		HTTPClient: client,
-		URL:        ts.URL,
-		Username:   "dummy-user",
-		AccessKey:  "dummy-key",
+		Client:    client,
+		URL:       ts.URL,
+		Username:  "dummy-user",
+		AccessKey: "dummy-key",
 	}
 
 	type args struct {
@@ -589,10 +589,10 @@ func TestResto_isTunnelRunning(t *testing.T) {
 	client.HTTPClient = ts.Client()
 	client.RetryWaitMax = 1 * time.Millisecond
 	c := Resto{
-		HTTPClient: client,
-		URL:        ts.URL,
-		Username:   "DummyUser",
-		AccessKey:  "DummyKey",
+		Client:    client,
+		URL:       ts.URL,
+		Username:  "DummyUser",
+		AccessKey: "DummyKey",
 	}
 
 	type args struct {
@@ -701,7 +701,7 @@ func TestResto_GetBuildID(t *testing.T) {
 		defer ts.Close()
 
 		client := NewResto(ts.URL, "user", "key", 3*time.Second)
-		client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
+		client.Client.RetryWaitMax = 1 * time.Millisecond
 
 		// act
 		bid, err := client.GetBuildID(context.Background(), "some-job-id", build.VDC)

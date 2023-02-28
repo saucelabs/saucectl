@@ -12,21 +12,22 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 )
 
 type ImageRunner struct {
-	HTTPClient  *http.Client
-	URL         string
-	Credentials credentials.Credentials
+	Client *retryablehttp.Client
+	URL    string
+	Creds  credentials.Credentials
 }
 
 func NewImageRunner(url string, creds credentials.Credentials, timeout time.Duration) ImageRunner {
 	return ImageRunner{
-		HTTPClient:  &http.Client{Timeout: timeout},
-		URL:         url,
-		Credentials: creds,
+		Client: NewRetryableClient(timeout),
+		URL:    url,
+		Creds:  creds,
 	}
 }
 func (c *ImageRunner) TriggerRun(ctx context.Context, spec imagerunner.RunnerSpec) (imagerunner.Runner, error) {
@@ -38,15 +39,16 @@ func (c *ImageRunner) TriggerRun(ctx context.Context, spec imagerunner.RunnerSpe
 	if err != nil {
 		return runner, err
 	}
-	req, err := NewRequestWithContext(ctx, http.MethodPost, url, &b)
+
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodPost, url, &b)
 	if err != nil {
 		return runner, err
 	}
 
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return runner, err
 	}
@@ -68,14 +70,14 @@ func (c *ImageRunner) GetStatus(ctx context.Context, id string) (imagerunner.Run
 	var r imagerunner.Runner
 	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/status", c.URL, id)
 
-	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return r, err
 	}
 
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return r, err
 	}
@@ -101,9 +103,9 @@ func (c *ImageRunner) StopRun(ctx context.Context, runID string) error {
 		return err
 	}
 
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.Client.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -115,14 +117,14 @@ func (c *ImageRunner) StopRun(ctx context.Context, runID string) error {
 func (c *ImageRunner) ListArtifacts(ctx context.Context, id string) ([]string, error) {
 	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/artifacts", c.URL, id)
 
-	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return []string{}, err
 	}
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return []string{}, err
 	}
@@ -149,13 +151,13 @@ func (c *ImageRunner) ListArtifacts(ctx context.Context, id string) ([]string, e
 func (c *ImageRunner) DownloadArtifact(ctx context.Context, id, name, dir string) error {
 	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/artifacts/single/%s/download", c.URL, id, name)
 
-	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return err
 	}
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
 
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -180,13 +182,13 @@ func (c *ImageRunner) DownloadArtifact(ctx context.Context, id, name, dir string
 func (c *ImageRunner) GetLogs(ctx context.Context, id string) (string, error) {
 	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/logs/url", c.URL, id)
 
-	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return "", err
 	}
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
 
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -208,12 +210,12 @@ func (c *ImageRunner) GetLogs(ctx context.Context, id string) (string, error) {
 }
 
 func (c *ImageRunner) doGetStr(ctx context.Context, url string) (string, error) {
-	urlReq, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	urlReq, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return "", err
 	}
 
-	resp, err := c.HTTPClient.Do(urlReq)
+	resp, err := c.Client.Do(urlReq)
 	if err != nil {
 		return "", err
 	}
