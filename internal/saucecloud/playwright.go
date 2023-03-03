@@ -62,7 +62,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	fileURI, err := r.remoteArchiveProject(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
+	filesURI, err := r.remoteArchiveProject(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
@@ -72,7 +72,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	passed := r.runSuites(fileURI)
+	passed := r.runSuites(filesURI)
 	if passed {
 		exitCode = 0
 	}
@@ -93,7 +93,7 @@ func (r *PlaywrightRunner) getSuiteNames() string {
 	return strings.Join(names, ", ")
 }
 
-func (r *PlaywrightRunner) runSuites(fileURI string) bool {
+func (r *PlaywrightRunner) runSuites(filesURI []string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
@@ -125,7 +125,8 @@ func (r *PlaywrightRunner) runSuites(fileURI string) bool {
 				CLIFlags:         r.Project.CLIFlags,
 				DisplayName:      s.Name,
 				Timeout:          s.Timeout,
-				App:              fileURI,
+				App:              filesURI[0],
+				OtherApps:        filesURI[1:],
 				Suite:            s.Name,
 				Framework:        "playwright",
 				FrameworkVersion: s.PlaywrightVersion,
