@@ -113,7 +113,7 @@ func (r *CucumberRunner) runSuites(filesURI []string) bool {
 			jobOpts <- job.StartOptions{
 				ConfigFilePath:   r.Project.ConfigFilePath,
 				DisplayName:      s.Name,
-				App:              fmt.Sprintf("storage:%s", filesURI[0]),
+				App:              filesURI[0],
 				OtherApps:        filesURI[1:],
 				Suite:            s.Name,
 				Framework:        "playwright",

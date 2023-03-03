@@ -125,8 +125,7 @@ func (r *TestcafeRunner) runSuites(filesURI []string) bool {
 				}
 			} else {
 				opts := r.generateStartOpts(s)
-				// FIXME: Investigate on this
-				opts.App = fmt.Sprintf("storage:%s", filesURI[0])
+				opts.App = filesURI[0]
 				opts.OtherApps = filesURI[1:]
 				opts.PlatformName = s.PlatformName
 
