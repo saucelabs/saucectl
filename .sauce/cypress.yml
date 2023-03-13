@@ -13,7 +13,7 @@ defaults:
 docker:
   fileTransfer: mount
 cypress:
-  version: 9.5.3
+  version: 12.6.0
   configFile: "cypress.json"
 suites:
   - name: "saucy test in docker"
