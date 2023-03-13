@@ -21,64 +21,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRDCService_ReadAllowedCCY(t *testing.T) {
-	testCases := []struct {
-		name         string
-		statusCode   int
-		responseBody []byte
-		want         int
-		wantErr      error
-	}{
-		{
-			name:         "default case",
-			statusCode:   http.StatusOK,
-			responseBody: []byte(`{"organization": { "current": 0, "maximum": 2 }}`),
-			want:         2,
-			wantErr:      nil,
-		},
-		{
-			name:         "invalid parsing",
-			statusCode:   http.StatusOK,
-			responseBody: []byte(`{"organization": { "current": 0, "maximum": 2`),
-			want:         0,
-			wantErr:      errors.New("unexpected EOF"),
-		},
-		{
-			name:       "Forbidden endpoint",
-			statusCode: http.StatusForbidden,
-			want:       0,
-			wantErr:    errors.New("unexpected statusCode: 403"),
-		},
-		{
-			name:       "error endpoint",
-			statusCode: http.StatusInternalServerError,
-			want:       0,
-			wantErr:    errors.New("unexpected statusCode: 500"),
-		},
-	}
-
-	timeout := 3 * time.Second
-	for _, tt := range testCases {
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(tt.statusCode)
-			_, err := w.Write(tt.responseBody)
-			if err != nil {
-				t.Errorf("%s: failed to respond: %v", tt.name, err)
-			}
-		}))
-
-		client := NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{})
-		client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
-		ccy, err := client.ReadAllowedCCY(context.Background())
-		assert.Equal(t, ccy, tt.want)
-		if err != nil {
-			assert.Equal(t, tt.wantErr, err)
-		}
-
-		ts.Close()
-	}
-}
-
 func TestRDCService_ReadJob(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
@@ -168,7 +110,7 @@ func TestRDCService_PollJob(t *testing.T) {
 		case "/v1/rdc/jobs/4":
 			w.WriteHeader(http.StatusUnauthorized)
 		case "/v1/rdc/jobs/5":
-			if retryCount < retryMax-1 {
+			if retryCount < 2 {
 				w.WriteHeader(http.StatusInternalServerError)
 				retryCount++
 				return
@@ -262,7 +204,7 @@ func TestRDCService_PollJob(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.client.HTTPClient.RetryWaitMax = 1 * time.Millisecond
+			tc.client.Client.RetryWaitMax = 1 * time.Millisecond
 			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond, 0, true)
 			assert.Equal(t, tc.expectedResp, got)
 			if err != nil {
@@ -477,10 +419,10 @@ func TestRDCService_GetDevices(t *testing.T) {
 	client.HTTPClient = &http.Client{Timeout: 1 * time.Second}
 
 	cl := RDCService{
-		HTTPClient: client,
-		URL:        ts.URL,
-		Username:   "dummy-user",
-		AccessKey:  "dummy-key",
+		Client:    client,
+		URL:       ts.URL,
+		Username:  "dummy-user",
+		AccessKey: "dummy-key",
 	}
 	type args struct {
 		ctx context.Context
@@ -606,8 +548,8 @@ func TestRDCService_StartJob(t *testing.T) {
 			defer server.Close()
 
 			c := &RDCService{
-				NativeClient: server.Client(),
-				URL:          server.URL,
+				Client: &retryablehttp.Client{HTTPClient: server.Client()},
+				URL:    server.URL,
 			}
 
 			got, _, err := c.StartJob(tt.args.ctx, tt.args.jobStarterPayload)

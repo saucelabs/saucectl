@@ -12,7 +12,7 @@ defaults:
 docker:
   fileTransfer: copy
 testcafe:
-  version: 1.18.5
+  version: 2.3.1
 rootDir: tests/e2e/testcafe/
 suites:
   - name: Firefox in docker

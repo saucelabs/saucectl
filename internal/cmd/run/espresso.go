@@ -160,7 +160,6 @@ func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
 				VDCDownloader: &restoClient,
 				RDCDownloader: &rdcClient,
 			},
-			CCYReader:       &restoClient,
 			TunnelService:   &restoClient,
 			MetadataService: &testcompClient,
 			InsightsService: &insightsClient,

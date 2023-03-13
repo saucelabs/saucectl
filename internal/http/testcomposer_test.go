@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/job"
 )
 
@@ -112,7 +112,7 @@ func TestTestComposer_GetSlackToken(t *testing.T) {
 	type fields struct {
 		HTTPClient  *http.Client
 		URL         string
-		Credentials credentials.Credentials
+		Credentials iam.Credentials
 	}
 	tests := []struct {
 		name       string
@@ -179,7 +179,7 @@ func TestTestComposer_Search(t *testing.T) {
 	type fields struct {
 		HTTPClient  *http.Client
 		URL         string
-		Credentials credentials.Credentials
+		Credentials iam.Credentials
 	}
 	type args struct {
 		ctx  context.Context
@@ -300,7 +300,7 @@ func TestTestComposer_UploadAsset(t *testing.T) {
 			client: TestComposer{
 				HTTPClient:  ts.Client(),
 				URL:         ts.URL,
-				Credentials: credentials.Credentials{Username: "test", AccessKey: "123"},
+				Credentials: iam.Credentials{Username: "test", AccessKey: "123"},
 			},
 			args: args{
 				jobID:       "1",
@@ -315,7 +315,7 @@ func TestTestComposer_UploadAsset(t *testing.T) {
 			client: TestComposer{
 				HTTPClient:  ts.Client(),
 				URL:         ts.URL,
-				Credentials: credentials.Credentials{Username: "test", AccessKey: "123"},
+				Credentials: iam.Credentials{Username: "test", AccessKey: "123"},
 			},
 			args: args{
 				jobID:       "2",
@@ -330,7 +330,7 @@ func TestTestComposer_UploadAsset(t *testing.T) {
 			client: TestComposer{
 				HTTPClient:  ts.Client(),
 				URL:         ts.URL,
-				Credentials: credentials.Credentials{Username: "test", AccessKey: "123"},
+				Credentials: iam.Credentials{Username: "test", AccessKey: "123"},
 			},
 			args: args{
 				jobID:       "3",
@@ -398,7 +398,7 @@ func TestTestComposer_Frameworks(t *testing.T) {
 			c := &TestComposer{
 				HTTPClient:  http.DefaultClient,
 				URL:         ts.URL,
-				Credentials: credentials.Credentials{Username: "test", AccessKey: "123"},
+				Credentials: iam.Credentials{Username: "test", AccessKey: "123"},
 			}
 			got, err := c.Frameworks(context.Background())
 			if (err != nil) != tt.wantErr {
@@ -434,7 +434,7 @@ func TestTestComposer_Versions(t *testing.T) {
 	c := &TestComposer{
 		HTTPClient:  ts.Client(),
 		URL:         ts.URL,
-		Credentials: credentials.Credentials{Username: "test", AccessKey: "123"},
+		Credentials: iam.Credentials{Username: "test", AccessKey: "123"},
 	}
 	type args struct {
 		frameworkName string

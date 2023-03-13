@@ -186,7 +186,6 @@ func runCypressInSauce(p cypress.Project, regio region.Region) (int, error) {
 				VDCStopper:    &restoClient,
 				VDCDownloader: &restoClient,
 			},
-			CCYReader:       &restoClient,
 			MetadataService: &testcompClient,
 			TunnelService:   &restoClient,
 			InsightsService: &insightsClient,

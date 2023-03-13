@@ -104,9 +104,6 @@ func TestRunSuites(t *testing.T) {
 					return "build-id", nil
 				},
 			},
-			CCYReader: mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
-				return 1, nil
-			}},
 			InsightsService: mocks.FakeInsightService{
 				PostTestRunFn: func(ctx context.Context, runs []insights.TestRun) error {
 					return nil

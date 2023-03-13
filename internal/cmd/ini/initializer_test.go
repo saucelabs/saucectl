@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/spf13/pflag"
 
 	"github.com/AlecAivazis/survey/v2/terminal"
@@ -21,7 +22,6 @@ import (
 	"gotest.tools/v3/fs"
 
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/espresso"
@@ -938,7 +938,7 @@ func TestAskCredentials(t *testing.T) {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
-				expect := &credentials.Credentials{Username: "dummy-user", AccessKey: "dummy-access-key"}
+				expect := &iam.Credentials{Username: "dummy-user", AccessKey: "dummy-access-key"}
 				if reflect.DeepEqual(creds, expect) {
 					t.Fatalf("got: %v, want: %v", creds, expect)
 				}
@@ -2011,8 +2011,14 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 				},
 			}, nil
 		}},
-		ccyReader: &mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
-			return 2, nil
+		userService: &mocks.UserService{ConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
+			return iam.Concurrency{
+				Org: iam.OrgConcurrency{
+					Allowed: iam.CloudConcurrency{
+						VDC: 2,
+					},
+				},
+			}, nil
 		}},
 	}
 	var emptyErr []error
@@ -2146,8 +2152,14 @@ func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 				},
 			}, nil
 		}},
-		ccyReader: &mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
-			return 2, nil
+		userService: &mocks.UserService{ConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
+			return iam.Concurrency{
+				Org: iam.OrgConcurrency{
+					Allowed: iam.CloudConcurrency{
+						VDC: 2,
+					},
+				},
+			}, nil
 		}},
 	}
 	var emptyErr []error
@@ -2270,8 +2282,14 @@ func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 				},
 			}, nil
 		}},
-		ccyReader: &mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
-			return 2, nil
+		userService: &mocks.UserService{ConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
+			return iam.Concurrency{
+				Org: iam.OrgConcurrency{
+					Allowed: iam.CloudConcurrency{
+						VDC: 2,
+					},
+				},
+			}, nil
 		}},
 	}
 	var emptyErr []error
@@ -2394,8 +2412,14 @@ func Test_initializer_initializeBatchPuppeteer(t *testing.T) {
 				},
 			}, nil
 		}},
-		ccyReader: &mocks.CCYReader{ReadAllowedCCYfn: func(ctx context.Context) (int, error) {
-			return 2, nil
+		userService: &mocks.UserService{ConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
+			return iam.Concurrency{
+				Org: iam.OrgConcurrency{
+					Allowed: iam.CloudConcurrency{
+						VDC: 2,
+					},
+				},
+			}, nil
 		}},
 	}
 	var emptyErr []error

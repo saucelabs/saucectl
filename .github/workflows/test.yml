@@ -18,7 +18,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.19
+          go-version: '1.20'
 
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -26,6 +26,7 @@ jobs:
       - name: Lint
         uses: golangci/golangci-lint-action@v3
         with:
+          args: --timeout 3m
           version: latest
 
   test:
@@ -37,7 +38,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.19
+          go-version: '1.20'
           cache: true
 
       - name: Run tests
@@ -82,7 +83,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.19
+          go-version: '1.20'
           cache: true
 
       - name: Build Project
@@ -392,6 +393,25 @@ jobs:
         run: |
           npm ci --production
           ../../../saucectl run
+
+  imagerunner:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
+        with:
+          name: saucectlbin
+
+      - name: Set Permissions
+        run: chmod +x ./saucectl
+
+      - name: Saucectl RUN
+        run: ./saucectl run -c .sauce/imagerunner.yml
 
   windows-doctor:
     needs: build

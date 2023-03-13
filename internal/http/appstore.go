@@ -140,6 +140,7 @@ func (s *AppStore) UploadStream(filename, description string, reader io.Reader) 
 			ID:       ur.Item.ID,
 			Name:     ur.Item.Name,
 			Uploaded: time.Unix(ur.Item.UploadTimestamp, 0),
+			Size:     ur.Item.Size,
 		}, err
 	case 401, 403:
 		return storage.Item{}, storage.ErrAccessDenied

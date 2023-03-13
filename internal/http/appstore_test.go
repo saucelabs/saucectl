@@ -72,13 +72,14 @@ func TestAppStore_UploadStream(t *testing.T) {
 			return
 		}
 
-		_, _ = io.Copy(io.Discard, p)
+		size, _ := io.Copy(io.Discard, p)
 
 		w.WriteHeader(201)
 		_ = json.NewEncoder(w).Encode(UploadResponse{Item{
 			ID:              itemID,
 			Name:            p.FileName(),
 			UploadTimestamp: uploadTimestamp.Unix(),
+			Size:            int(size),
 		}})
 	}))
 	defer server.Close()
@@ -112,6 +113,7 @@ func TestAppStore_UploadStream(t *testing.T) {
 				ID:       itemID,
 				Name:     "hello.txt",
 				Uploaded: uploadTimestamp,
+				Size:     6,
 			},
 			wantErr: false,
 		},

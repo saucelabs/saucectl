@@ -28,8 +28,7 @@ import (
 
 // RDCService http client.
 type RDCService struct {
-	HTTPClient     *retryablehttp.Client
-	NativeClient   *http.Client
+	Client         *retryablehttp.Client
 	URL            string
 	Username       string
 	AccessKey      string
@@ -85,56 +84,13 @@ type DeviceQuery struct {
 
 // NewRDCService creates a new client.
 func NewRDCService(url, username, accessKey string, timeout time.Duration, artifactConfig config.ArtifactDownload) RDCService {
-	nativeClient := &http.Client{Timeout: timeout}
-	httpClient := retryablehttp.NewClient()
-	httpClient.HTTPClient = nativeClient
-	httpClient.Logger = nil
-	httpClient.RetryMax = retryMax
-	httpClient.ErrorHandler = retryablehttp.PassthroughErrorHandler
-
 	return RDCService{
-		HTTPClient:     httpClient,
-		NativeClient:   nativeClient,
+		Client:         NewRetryableClient(timeout),
 		URL:            url,
 		Username:       username,
 		AccessKey:      accessKey,
 		ArtifactConfig: artifactConfig,
 	}
-}
-
-// ReadAllowedCCY returns the allowed (max) concurrency for the current account.
-func (c *RDCService) ReadAllowedCCY(ctx context.Context) (int, error) {
-	req, err := NewRequestWithContext(ctx, http.MethodGet,
-		fmt.Sprintf("%s/v1/rdc/concurrency", c.URL), nil)
-	if err != nil {
-		return 0, err
-	}
-	req.SetBasicAuth(c.Username, c.AccessKey)
-
-	r, err := retryablehttp.FromRequest(req)
-	if err != nil {
-		return 0, err
-	}
-
-	resp, err := c.HTTPClient.Do(r)
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return 0, fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
-	}
-
-	var cr struct {
-		Organization struct {
-			Maximum int
-		}
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&cr); err != nil {
-		return 0, err
-	}
-	return cr.Organization.Maximum, nil
 }
 
 // StartJob creates a new job in Sauce Labs.
@@ -186,7 +142,7 @@ func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (jobID
 	req.Header.Set("Content-Type", "application/json")
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
-	resp, err := c.NativeClient.Do(req)
+	resp, err := c.Client.HTTPClient.Do(req)
 	if err != nil {
 		return
 	}
@@ -231,7 +187,7 @@ func (c *RDCService) ReadJob(ctx context.Context, id string, realDevice bool) (j
 		return job.Job{}, err
 	}
 
-	resp, err := c.HTTPClient.Do(r)
+	resp, err := c.Client.Do(r)
 	if err != nil {
 		return job.Job{}, err
 	}
@@ -318,7 +274,7 @@ func (c *RDCService) GetJobAssetFileNames(ctx context.Context, jobID string, rea
 		return []string{}, err
 	}
 
-	resp, err := c.HTTPClient.Do(r)
+	resp, err := c.Client.Do(r)
 	if err != nil {
 		return []string{}, err
 	}
@@ -392,7 +348,7 @@ func (c *RDCService) GetJobAssetFileContent(ctx context.Context, jobID, fileName
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.HTTPClient.Do(rreq)
+	resp, err := c.Client.Do(rreq)
 	if err != nil {
 		return nil, err
 	}
@@ -469,7 +425,7 @@ func (c *RDCService) GetDevices(ctx context.Context, OS string) ([]devices.Devic
 		return nil, err
 	}
 
-	res, err := c.HTTPClient.Do(r)
+	res, err := c.Client.Do(r)
 	if err != nil {
 		return []devices.Device{}, err
 	}

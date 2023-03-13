@@ -2,19 +2,21 @@ package imagerunner
 
 import "errors"
 
-// TODO Caution: Final states are not confirmed yet.
 // The different states that a runner can be in.
 const (
-	StatePending   = "Pending"
-	StateRunning   = "Running"
-	StateSucceeded = "Succeeded"
-	StateCancelled = "Cancelled"
-	StateFailed    = "Failed"
+	StateUnknown    = "Unknown"
+	StatePending    = "Pending"
+	StateRunning    = "Running"
+	StateUploading  = "Uploading"
+	StateSucceeded  = "Succeeded"
+	StateCancelled  = "Cancelled"
+	StateFailed     = "Failed"
+	StateTerminated = "Terminated"
 )
 
 // DoneStates represents states that a runner doesn't transition out of, i.e. once the runner is in one of these states,
 // it's done.
-var DoneStates = []string{StateSucceeded, StateCancelled, StateFailed}
+var DoneStates = []string{StateSucceeded, StateCancelled, StateFailed, StateTerminated}
 
 // Done returns true if the runner status is one of DoneStates. False otherwise.
 func Done(status string) bool {
