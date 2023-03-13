@@ -56,7 +56,7 @@ func (r *CucumberRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	filesURI, err := r.remoteArchiveProject(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
+	fileURIs, err := r.remoteArchiveProject(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
@@ -66,7 +66,7 @@ func (r *CucumberRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	passed := r.runSuites(filesURI)
+	passed := r.runSuites(fileURIs)
 	if passed {
 		return 0, nil
 	}
@@ -87,7 +87,7 @@ func (r *CucumberRunner) getSuiteNames() string {
 	return strings.Join(names, ", ")
 }
 
-func (r *CucumberRunner) runSuites(filesURI []string) bool {
+func (r *CucumberRunner) runSuites(fileURIs []string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
@@ -113,8 +113,8 @@ func (r *CucumberRunner) runSuites(filesURI []string) bool {
 			jobOpts <- job.StartOptions{
 				ConfigFilePath:   r.Project.ConfigFilePath,
 				DisplayName:      s.Name,
-				App:              filesURI[0],
-				OtherApps:        filesURI[1:],
+				App:              fileURIs[0],
+				OtherApps:        fileURIs[1:],
 				Suite:            s.Name,
 				Framework:        "playwright",
 				FrameworkVersion: r.Project.Playwright.Version,

@@ -55,7 +55,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	filesURI, err := r.remoteArchiveProject(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
+	fileURIs, err := r.remoteArchiveProject(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
@@ -65,7 +65,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	passed := r.runSuites(filesURI)
+	passed := r.runSuites(fileURIs)
 	if passed {
 		return 0, nil
 	}
@@ -86,7 +86,7 @@ func (r *TestcafeRunner) getSuiteNames() string {
 	return strings.Join(names, ", ")
 }
 
-func (r *TestcafeRunner) runSuites(filesURI []string) bool {
+func (r *TestcafeRunner) runSuites(fileURIs []string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
@@ -114,8 +114,8 @@ func (r *TestcafeRunner) runSuites(filesURI []string) bool {
 				for _, d := range s.Simulators {
 					for _, pv := range d.PlatformVersions {
 						opts := r.generateStartOpts(s)
-						opts.App = filesURI[0]
-						opts.OtherApps = filesURI[1:]
+						opts.App = fileURIs[0]
+						opts.OtherApps = fileURIs[1:]
 						opts.PlatformName = d.PlatformName
 						opts.DeviceName = d.Name
 						opts.PlatformVersion = pv
@@ -125,8 +125,8 @@ func (r *TestcafeRunner) runSuites(filesURI []string) bool {
 				}
 			} else {
 				opts := r.generateStartOpts(s)
-				opts.App = filesURI[0]
-				opts.OtherApps = filesURI[1:]
+				opts.App = fileURIs[0]
+				opts.OtherApps = fileURIs[1:]
 				opts.PlatformName = s.PlatformName
 
 				jobOpts <- opts

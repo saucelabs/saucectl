@@ -54,7 +54,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	filesURI, err := r.remoteArchiveProject(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore, r.Project.IsDryRun())
+	fileURIs, err := r.remoteArchiveProject(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore, r.Project.IsDryRun())
 	if err != nil {
 		return exitCode, err
 	}
@@ -64,7 +64,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	passed := r.runSuites(filesURI)
+	passed := r.runSuites(fileURIs)
 	if passed {
 		exitCode = 0
 	}
@@ -84,7 +84,7 @@ func (r *CypressRunner) checkCypressVersion() error {
 	return nil
 }
 
-func (r *CypressRunner) runSuites(filesURI []string) bool {
+func (r *CypressRunner) runSuites(fileURIs []string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 	jobOpts, results, err := r.createWorkerPool(r.Project.GetSauceCfg().Concurrency, r.Project.GetSauceCfg().Retries)
@@ -110,8 +110,8 @@ func (r *CypressRunner) runSuites(filesURI []string) bool {
 				CLIFlags:         r.Project.GetCLIFlags(),
 				DisplayName:      s.Name,
 				Timeout:          s.Timeout,
-				App:              filesURI[0],
-				OtherApps:        filesURI[1:],
+				App:              fileURIs[0],
+				OtherApps:        fileURIs[1:],
 				Suite:            s.Name,
 				Framework:        "cypress",
 				FrameworkVersion: r.Project.GetVersion(),
