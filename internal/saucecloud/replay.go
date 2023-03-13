@@ -48,7 +48,7 @@ func (r *ReplayRunner) RunProject() (int, error) {
 		files = append(files, suite.Recording)
 	}
 
-	fileURI, err := r.remoteArchiveFiles(r.Project, files, "", r.Project.DryRun)
+	fileURIs, err := r.remoteArchiveFiles(r.Project, files, "", r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
@@ -58,7 +58,7 @@ func (r *ReplayRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	passed := r.runSuites(fileURI)
+	passed := r.runSuites(fileURIs)
 	if passed {
 		exitCode = 0
 	}
