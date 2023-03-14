@@ -390,10 +390,10 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 }
 
 // remoteArchiveProject archives the contents of the folder to a remote storage.
-func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, sauceignoreFile string, dryRun bool) (string, error) {
+func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, sauceignoreFile string, dryRun bool) ([]string, error) {
 	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
 	if err != nil {
-		return "", err
+		return []string{}, err
 	}
 	if !dryRun {
 		defer os.RemoveAll(tempDir)
@@ -403,7 +403,7 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 
 	contents, err := os.ReadDir(folder)
 	if err != nil {
-		return "", err
+		return []string{}, err
 	}
 
 	for _, file := range contents {
@@ -418,18 +418,18 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 
 	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
-		return "", err
+		return []string{}, err
 	}
 
 	appZip, err := r.archiveFiles("app", tempDir, folder, files, matcher)
 	if err != nil {
-		return "", err
+		return []string{}, err
 	}
 	archives[appZip] = projectUpload
 
 	modZip, err := r.archiveNodeModules(tempDir, folder, matcher)
 	if err != nil {
-		return "", err
+		return []string{}, err
 	}
 	if modZip != "" {
 		archives[modZip] = nodeModulesUpload
@@ -437,7 +437,7 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 
 	configZip, err := r.archiveRunnerConfig(project, tempDir)
 	if err != nil {
-		return "", err
+		return []string{}, err
 	}
 	archives[configZip] = runnerConfigUpload
 
@@ -445,12 +445,12 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 	for k, v := range archives {
 		uri, err := r.uploadProject(k, "", v, dryRun)
 		if err != nil {
-			return "", err
+			return []string{}, err
 		}
 		uris = append(uris, uri)
 	}
 
-	return strings.Join(uris, ","), nil
+	return uris, nil
 }
 
 // remoteArchiveFiles archives the files to a remote storage.

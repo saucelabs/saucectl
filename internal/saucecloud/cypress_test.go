@@ -122,6 +122,6 @@ func TestRunSuites(t *testing.T) {
 			},
 		},
 	}
-	ret := runner.runSuites("dummy-file-id")
+	ret := runner.runSuites([]string{"dummy-file-id"})
 	assert.True(t, ret)
 }
