@@ -1362,7 +1362,7 @@
                 "$ref": "#/allOf/9/then/properties/playwright/properties/version",
                 "enum": [
                   "package.json",
-                  "1.31.0",
+                  "1.31.1",
                   "1.29.2",
                   "1.28.1",
                   "1.27.1",
