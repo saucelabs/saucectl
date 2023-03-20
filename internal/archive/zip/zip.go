@@ -98,9 +98,5 @@ func (w *Writer) Close() error {
 	if err := w.W.Close(); err != nil {
 		return err
 	}
-	if err := w.ZipFile.Close(); err != nil {
-		return err
-	}
-
-	return nil
+	return w.ZipFile.Close()
 }

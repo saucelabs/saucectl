@@ -134,11 +134,7 @@ func (handler *Handler) IsLaunchable(image string) error {
 		}
 	}()
 
-	if err := handler.client.ContainerStart(context.Background(), con.ID, types.ContainerStartOptions{}); err != nil {
-		return err
-	}
-
-	return nil
+	return handler.client.ContainerStart(context.Background(), con.ID, types.ContainerStartOptions{})
 }
 
 // HasBaseImage checks if base image is installed
@@ -204,10 +200,7 @@ func (handler *Handler) PullImage(ctx context.Context, img string) error {
 	 * ToDo(Christian): handle stdout
 	 */
 	out := streams.NewOut(io.Discard)
-	if err := jsonmessage.DisplayJSONMessagesToStream(responseBody, out, nil); err != nil {
-		return err
-	}
-	return nil
+	return jsonmessage.DisplayJSONMessagesToStream(responseBody, out, nil)
 }
 
 // StartContainer starts the Docker testrunner container
@@ -548,9 +541,5 @@ func (handler *Handler) Teardown(ctx context.Context, containerID string) error 
 		return err
 	}
 
-	if err := handler.ContainerRemove(ctx, containerID); err != nil {
-		return err
-	}
-
-	return nil
+	return handler.ContainerRemove(ctx, containerID)
 }

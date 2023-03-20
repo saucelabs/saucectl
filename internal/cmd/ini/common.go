@@ -76,10 +76,7 @@ func saveSauceConfig(p interface{}) error {
 		return err
 	}
 	defer fd.Close()
-	if err = yaml.NewEncoder(fd).Encode(p); err != nil {
-		return err
-	}
-	return nil
+	return yaml.NewEncoder(fd).Encode(p)
 }
 
 func saveSauceIgnore(content string) error {
