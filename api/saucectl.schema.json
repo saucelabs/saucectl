@@ -415,6 +415,7 @@
                   "enum": [
                     "macOS 11.00",
                     "macOS 12",
+                    "macOS 13",
                     "Windows 10",
                     "Windows 11"
                   ]
@@ -904,6 +905,7 @@
                   "enum": [
                     "macOS 11.00",
                     "macOS 12",
+                    "macOS 13",
                     "Windows 10",
                     "Windows 11"
                   ],
@@ -1414,6 +1416,7 @@
                   "enum": [
                     "macOS 11.00",
                     "macOS 12",
+                    "macOS 13",
                     "Windows 10",
                     "Windows 11"
                   ]
@@ -1750,6 +1753,7 @@
                   "enum": [
                     "macOS 11.00",
                     "macOS 12",
+                    "macOS 13",
                     "Windows 10",
                     "Windows 11"
                   ],
@@ -1908,6 +1912,7 @@
                   "enum": [
                     "macOS 11.00",
                     "macOS 12",
+                    "macOS 13",
                     "Windows 10",
                     "Windows 11"
                   ]
@@ -2509,6 +2514,7 @@
                   "enum": [
                     "macOS 11.00",
                     "macOS 12",
+                    "macOS 13",
                     "Windows 10",
                     "Windows 11"
                   ]
