@@ -7,7 +7,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/msg"
-	"golang.org/x/exp/maps"
 	"strings"
 )
 
@@ -18,6 +17,17 @@ var TestOptionsToCopy = map[string][]string{
 type RDCRetrier struct {
 	Kind      string
 	RDCReader job.Reader
+}
+
+func getKeysFromMap(mp map[string]bool) []string {
+	keys := make([]string, len(mp))
+
+	i := 0
+	for k := range mp {
+		keys[i] = k
+		i++
+	}
+	return keys
 }
 
 func getFailedClasses(report junit.TestSuites) []string {
@@ -33,7 +43,7 @@ func getFailedClasses(report junit.TestSuites) []string {
 			}
 		}
 	}
-	return maps.Keys(classes)
+	return getKeysFromMap(classes)
 }
 
 func (b *RDCRetrier) keepOptions(testOptions map[string]interface{}) map[string]interface{} {
