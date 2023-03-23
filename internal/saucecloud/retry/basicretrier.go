@@ -9,8 +9,6 @@ import (
 type BasicRetrier struct{}
 
 func (b *BasicRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
-	opt.Attempt++
-
 	log.Info().Str("suite", opt.DisplayName).
 		Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1)).
 		Msg("Retrying suite.")

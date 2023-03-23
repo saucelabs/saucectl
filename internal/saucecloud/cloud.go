@@ -353,6 +353,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 				log.Warn().Err(err).Msg("Suite errored.")
 			}
 
+			opts.Attempt++
 			go r.Retrier.Retry(jobOpts, opts, jobData)
 			continue
 		}
