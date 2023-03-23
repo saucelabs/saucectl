@@ -10,7 +10,8 @@ import (
 	"strings"
 )
 
-var TestOptionsToCopy = map[string][]string{
+// testOptionsToCopy indicates, for each framework, which testOptions should be kept untouched
+var testOptionsToCopy = map[string][]string{
 	"espresso": {"numShards", "shardIndex", "clearPackageData", "useTestOrchestrator"},
 }
 
@@ -46,8 +47,8 @@ func getFailedClasses(report junit.TestSuites) []string {
 	return getKeysFromMap(classes)
 }
 
-func (b *RDCRetrier) keepOptions(testOptions map[string]interface{}) map[string]interface{} {
-	val, ok := TestOptionsToCopy[b.Kind]
+func (b *RDCRetrier) keepOnlyMandatoryOptions(testOptions map[string]interface{}) map[string]interface{} {
+	val, ok := testOptionsToCopy[b.Kind]
 	if !ok {
 		return testOptions
 	}
@@ -76,7 +77,7 @@ func (b *RDCRetrier) smartRDCRetry(jobOpts chan<- job.StartOptions, opt job.Star
 	classes := getFailedClasses(suites)
 	log.Info().Msgf(msg.RetryWithClasses, strings.Join(classes, ","))
 
-	opt.TestOptions = b.keepOptions(opt.TestOptions)
+	opt.TestOptions = b.keepOnlyMandatoryOptions(opt.TestOptions)
 
 	jobOpts <- opt
 }
