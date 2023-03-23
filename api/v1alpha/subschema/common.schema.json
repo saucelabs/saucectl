@@ -93,6 +93,11 @@
       "description": "The minimum number of successful attempts for a suite to be considered as 'passed'.",
       "type": "integer",
       "minimum": 1
+    },
+    "smartRetry": {
+      "description": "When a suite is retried, relaunch only the classes containing failed tests.",
+      "type": "boolean",
+      "default": false
     }
   }
 }
