@@ -2322,6 +2322,9 @@
                 },
                 "passThreshold": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
+                },
+                "smartRetry": {
+                  "$ref": "#/allOf/2/then/properties/suites/items/properties/smartRetry"
                 }
               },
               "anyOf": [

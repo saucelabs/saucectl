@@ -171,6 +171,9 @@
           },
           "passThreshold": {
             "$ref": "../subschema/common.schema.json#/definitions/passThreshold"
+          },
+          "smartRetry": {
+            "$ref": "../subschema/common.schema.json#/definitions/smartRetry"
           }
         },
         "anyOf": [
