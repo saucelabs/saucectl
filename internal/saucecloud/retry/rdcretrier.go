@@ -35,9 +35,6 @@ func getFailedClasses(report junit.TestSuites) []string {
 	classes := map[string]bool{}
 
 	for _, s := range report.TestSuites {
-		if s.Errors == 0 && s.Failures == 0 {
-			continue
-		}
 		for _, tc := range s.TestCases {
 			if tc.Error != "" || tc.Failure != "" {
 				classes[tc.ClassName] = true
@@ -50,12 +47,14 @@ func getFailedClasses(report junit.TestSuites) []string {
 func (b *RDCRetrier) keepOnlyMandatoryOptions(testOptions map[string]interface{}) map[string]interface{} {
 	val, ok := testOptionsToCopy[b.Kind]
 	if !ok {
-		return testOptions
+		return map[string]interface{}{}
 	}
 
 	newTestOpts := map[string]interface{}{}
 	for _, k := range val {
-		newTestOpts[k] = testOptions[k]
+		if testOptions[k] != nil {
+			newTestOpts[k] = testOptions[k]
+		}
 	}
 	return newTestOpts
 }
@@ -78,7 +77,7 @@ func (b *RDCRetrier) smartRDCRetry(jobOpts chan<- job.StartOptions, opt job.Star
 	log.Info().Msgf(msg.RetryWithClasses, strings.Join(classes, ","))
 
 	opt.TestOptions = b.keepOnlyMandatoryOptions(opt.TestOptions)
-
+	opt.TestOptions["class"] = classes
 	jobOpts <- opt
 }
 
