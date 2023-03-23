@@ -23,6 +23,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
+	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/viper"
@@ -158,6 +159,7 @@ func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, erro
 			Async:                  gFlags.async,
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.ExactStrategy{},
+			Retrier:                &retry.BasicRetrier{},
 		},
 	}
 

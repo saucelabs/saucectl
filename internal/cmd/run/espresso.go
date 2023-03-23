@@ -21,6 +21,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
+	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 )
@@ -172,6 +173,7 @@ func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
 			Framework: framework.Framework{Name: espresso.Kind},
 			Async:     gFlags.async,
 			FailFast:  gFlags.failFast,
+			Retrier:   &retry.BasicRetrier{},
 		},
 	}
 

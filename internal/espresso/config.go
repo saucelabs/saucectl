@@ -77,6 +77,7 @@ type Suite struct {
 	Timeout            time.Duration          `yaml:"timeout,omitempty" json:"timeout"`
 	AppSettings        config.AppSettings     `yaml:"appSettings,omitempty" json:"appSettings"`
 	PassThreshold      int                    `yaml:"passThreshold,omitempty" json:"-"`
+	SmartRetry         bool                   `yaml:"smartRetry,omitempty" json:"-"`
 }
 
 // Android constant
