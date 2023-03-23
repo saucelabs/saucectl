@@ -35,7 +35,6 @@ func getFailedClasses(report junit.TestSuites) []string {
 
 // FIXME: Correct error messages
 func (b *EspressoRetrier) smartRDCRetry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
-	// Fetch junit.xml
 	content, err := b.RDCReader.GetJobAssetFileContent(context.Background(), previous.ID, junit.JunitFileName, previous.IsRDC)
 	if err != nil {
 		log.Err(err).Msg("1- unable to determine which suites to restart. Retrying complete suite")
@@ -56,13 +55,9 @@ func (b *EspressoRetrier) smartRDCRetry(jobOpts chan<- job.StartOptions, opt job
 		testOpts[k] = opt.TestOptions[k]
 	}
 	opt.TestOptions = testOpts
-
-	// Set class to be used
 	opt.TestOptions["class"] = classes
 
-	// Schedule
 	jobOpts <- opt
-	return
 }
 
 func (b *EspressoRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
