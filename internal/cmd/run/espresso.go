@@ -173,7 +173,8 @@ func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
 			Framework: framework.Framework{Name: espresso.Kind},
 			Async:     gFlags.async,
 			FailFast:  gFlags.failFast,
-			Retrier: &retry.EspressoRetrier{
+			Retrier: &retry.RDCRetrier{
+				Kind:      "espresso",
 				RDCReader: &rdcClient,
 			},
 		},
