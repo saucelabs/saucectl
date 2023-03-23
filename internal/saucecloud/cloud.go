@@ -58,9 +58,7 @@ type CloudRunner struct {
 	InsightsService        insights.Service
 	UserService            iam.UserService
 	BuildService           build.Reader
-
-	// FIXME: Enhance name
-	Retrier retry.Retrier
+	Retrier                retry.Retrier
 
 	Reporters []report.Reporter
 
