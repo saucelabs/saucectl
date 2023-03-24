@@ -95,7 +95,7 @@
       "minimum": 1
     },
     "smartRetry": {
-      "description": "When a suite is retried, relaunch only the classes containing failed tests.",
+      "description": "Optimize suite retries by retrying failed test classes only.",
       "type": "boolean",
       "default": false
     }
