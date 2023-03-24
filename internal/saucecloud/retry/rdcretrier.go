@@ -38,7 +38,7 @@ func getFailedClasses(report junit.TestSuites) []string {
 	return getKeysFromMap(classes)
 }
 
-func (b *RDCRetrier) smartRDCRetry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
+func (b *RDCRetrier) retryOnlyFailedClasses(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
 	content, err := b.RDCReader.GetJobAssetFileContent(context.Background(), previous.ID, junit.JunitFileName, previous.IsRDC)
 	if err != nil {
 		log.Debug().Err(err).Msgf(msg.UnableToFetchFile, junit.JunitFileName)
@@ -60,8 +60,8 @@ func (b *RDCRetrier) smartRDCRetry(jobOpts chan<- job.StartOptions, opt job.Star
 }
 
 func (b *RDCRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
-	if previous.IsRDC && opt.SmartRetry {
-		b.smartRDCRetry(jobOpts, opt, previous)
+	if previous.IsRDC && opt.SmartRetry.RetryOnlyFailedClasses {
+		b.retryOnlyFailedClasses(jobOpts, opt, previous)
 		return
 	}
 

@@ -48,7 +48,7 @@ type StartOptions struct {
 	ScreenResolution  string                 `json:"screenResolution,omitempty"`
 	Retries           int                    `json:"-"`
 	PassThreshold     int                    `json:"-"`
-	SmartRetry        bool                   `json:"-"`
+	SmartRetry        SmartRetry             `json:"-"`
 	RunnerVersion     string                 `json:"runnerVersion,omitempty"`
 	Experiments       map[string]string      `json:"experiments,omitempty"`
 	TestOptions       map[string]interface{} `json:"testOptions,omitempty"`
@@ -76,6 +76,11 @@ type Instrumentation struct {
 type TunnelOptions struct {
 	ID     string `json:"id"`
 	Parent string `json:"parent,omitempty"`
+}
+
+// SmartRetry represents the retry strategy.
+type SmartRetry struct {
+	RetryOnlyFailedClasses bool `json:"-"`
 }
 
 // Starter is the interface for starting jobs.

@@ -52,7 +52,9 @@ func TestRDCRetrier_Retry(t *testing.T) {
 				jobOpts: make(chan job.StartOptions),
 				opt: job.StartOptions{
 					DisplayName: "Dummy Test",
-					SmartRetry:  false,
+					SmartRetry: job.SmartRetry{
+						RetryOnlyFailedClasses: false,
+					},
 					TestOptions: map[string]interface{}{
 						"class": []string{"present"},
 					},
@@ -87,7 +89,9 @@ func TestRDCRetrier_Retry(t *testing.T) {
 				jobOpts: make(chan job.StartOptions),
 				opt: job.StartOptions{
 					DisplayName: "Dummy Test",
-					SmartRetry:  true,
+					SmartRetry: job.SmartRetry{
+						RetryOnlyFailedClasses: true,
+					},
 					TestOptions: map[string]interface{}{
 						"class": []string{"Demo.Class1", "Demo.Class2", "Demo.Class3"},
 					},
@@ -102,7 +106,9 @@ func TestRDCRetrier_Retry(t *testing.T) {
 				TestOptions: map[string]interface{}{
 					"class": []string{"Demo.Class1"},
 				},
-				SmartRetry: true,
+				SmartRetry: job.SmartRetry{
+					RetryOnlyFailedClasses: true,
+				},
 			},
 		},
 	}

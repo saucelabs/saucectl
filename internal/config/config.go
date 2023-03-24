@@ -213,6 +213,11 @@ type Instrumentation struct {
 	NetworkCapture bool `yaml:"networkCapture,omitempty" json:"networkCapture"`
 }
 
+// SmartRetry represents the settings for retry strategy.
+type SmartRetry struct {
+	RetryOnlyFailedClasses bool `yaml:"retryOnlyFailedClasses" json:"-"`
+}
+
 func readYaml(cfgFilePath string) ([]byte, error) {
 	if cfgFilePath == "" {
 		return nil, errors.New(msg.MissingConfigFile)
