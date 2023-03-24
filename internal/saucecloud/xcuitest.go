@@ -144,6 +144,9 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		Attempt:       0,
 		Retries:       r.Project.Sauce.Retries,
 		PassThreshold: s.PassThreshold,
+		SmartRetry: job.SmartRetry{
+			FailedClassesOnly: s.SmartRetry.FailedClassesOnly,
+		},
 
 		// RDC Specific flags
 		RealDevice:        true,

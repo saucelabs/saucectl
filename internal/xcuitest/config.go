@@ -66,6 +66,7 @@ type Suite struct {
 	TestOptions        TestOptions        `yaml:"testOptions,omitempty" json:"testOptions"`
 	AppSettings        config.AppSettings `yaml:"appSettings,omitempty" json:"appSettings"`
 	PassThreshold      int                `yaml:"passThreshold,omitempty" json:"-"`
+	SmartRetry         config.SmartRetry  `yaml:"smartRetry,omitempty" json:"-"`
 }
 
 // IOS constant
