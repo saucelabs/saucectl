@@ -10,13 +10,7 @@ import (
 	"strings"
 )
 
-// testOptionsToCopy indicates, for each framework, which testOptions should be kept untouched
-var testOptionsToCopy = map[string][]string{
-	"espresso": {"numShards", "shardIndex", "clearPackageData", "useTestOrchestrator"},
-}
-
 type RDCRetrier struct {
-	Kind      string
 	RDCReader job.Reader
 }
 
@@ -44,21 +38,6 @@ func getFailedClasses(report junit.TestSuites) []string {
 	return getKeysFromMap(classes)
 }
 
-func (b *RDCRetrier) keepOnlyMandatoryOptions(testOptions map[string]interface{}) map[string]interface{} {
-	val, ok := testOptionsToCopy[b.Kind]
-	if !ok {
-		return map[string]interface{}{}
-	}
-
-	newTestOpts := map[string]interface{}{}
-	for _, k := range val {
-		if testOptions[k] != nil {
-			newTestOpts[k] = testOptions[k]
-		}
-	}
-	return newTestOpts
-}
-
 func (b *RDCRetrier) smartRDCRetry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
 	content, err := b.RDCReader.GetJobAssetFileContent(context.Background(), previous.ID, junit.JunitFileName, previous.IsRDC)
 	if err != nil {
@@ -76,7 +55,6 @@ func (b *RDCRetrier) smartRDCRetry(jobOpts chan<- job.StartOptions, opt job.Star
 	classes := getFailedClasses(suites)
 	log.Info().Msgf(msg.RetryWithClasses, strings.Join(classes, ","))
 
-	opt.TestOptions = b.keepOnlyMandatoryOptions(opt.TestOptions)
 	opt.TestOptions["class"] = classes
 	jobOpts <- opt
 }
