@@ -16,6 +16,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
+	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/viper"
@@ -177,6 +178,7 @@ func runCucumberInCloud(p cucumber.Project, regio region.Region) (int, error) {
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.NewSearchStrategy(p.Playwright.Version, p.RootDir),
 			NPMDependencies:        p.Npm.Dependencies,
+			Retrier:                &retry.BasicRetrier{},
 		},
 	}
 
