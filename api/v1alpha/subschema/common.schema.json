@@ -98,7 +98,7 @@
       "description": "Optimize suite retries by configuring the strategy.",
       "type": "object",
       "properties": {
-        "retryOnlyFailedClasses": {
+        "failedClassesOnly": {
           "description": "Optimize suite retries by retrying failed test classes only.",
           "type": "boolean",
           "default": false

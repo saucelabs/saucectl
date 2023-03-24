@@ -215,7 +215,7 @@ type Instrumentation struct {
 
 // SmartRetry represents the settings for retry strategy.
 type SmartRetry struct {
-	RetryOnlyFailedClasses bool `yaml:"retryOnlyFailedClasses" json:"-"`
+	FailedClassesOnly bool `yaml:"failedClassesOnly" json:"-"`
 }
 
 func readYaml(cfgFilePath string) ([]byte, error) {

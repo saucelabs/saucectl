@@ -60,7 +60,7 @@ func (b *RDCRetrier) retryOnlyFailedClasses(jobOpts chan<- job.StartOptions, opt
 }
 
 func (b *RDCRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
-	if previous.IsRDC && opt.SmartRetry.RetryOnlyFailedClasses {
+	if previous.IsRDC && opt.SmartRetry.FailedClassesOnly {
 		b.retryOnlyFailedClasses(jobOpts, opt, previous)
 		return
 	}
