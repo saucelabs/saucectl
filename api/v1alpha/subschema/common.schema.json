@@ -95,9 +95,15 @@
       "minimum": 1
     },
     "smartRetry": {
-      "description": "Optimize suite retries by retrying failed test classes only.",
-      "type": "boolean",
-      "default": false
+      "description": "Optimize suite retries by configuring the strategy.",
+      "type": "object",
+      "properties": {
+        "retryOnlyFailedClasses": {
+          "description": "Optimize suite retries by retrying failed test classes only.",
+          "type": "boolean",
+          "default": false
+        }
+      }
     }
   }
 }
