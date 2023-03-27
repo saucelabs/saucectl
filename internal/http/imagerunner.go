@@ -1,13 +1,13 @@
 package http
 
 import (
-	"archive/zip"
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -113,25 +113,24 @@ func (c *ImageRunner) StopRun(ctx context.Context, runID string) error {
 	return nil
 }
 
-func (c *ImageRunner) GetArtifacts(ctx context.Context, id string) ([]imagerunner.Artifact, error) {
+func (c *ImageRunner) DownloadArtifacts(ctx context.Context, id string) (string, error) {
 	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/artifacts/url", c.URL, id)
 
 	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return []imagerunner.Artifact{}, err
+		return "", err
 	}
 	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
-	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.Client.Do(req)
 	if err != nil {
-		return []imagerunner.Artifact{}, err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		b, _ := io.ReadAll(resp.Body)
-		return []imagerunner.Artifact{}, fmt.Errorf("unexpected server response (%d): %s", resp.StatusCode, b)
+		return "", fmt.Errorf("unexpected server response (%d): %s", resp.StatusCode, b)
 	}
 
 	type response struct {
@@ -139,46 +138,31 @@ func (c *ImageRunner) GetArtifacts(ctx context.Context, id string) ([]imagerunne
 	}
 
 	var urlLink response
-	if err := json.NewDecoder(resp.Body).Decode(&urlLink); err != nil {
-		return []imagerunner.Artifact{}, fmt.Errorf("failed to decode server response: %w", err)
+	if err = json.NewDecoder(resp.Body).Decode(&urlLink); err != nil {
+		return "", fmt.Errorf("failed to decode server response: %w", err)
 	}
 
-	return c.downloadAndUnpack(ctx, urlLink.URL)
-}
-
-func (c *ImageRunner) downloadAndUnpack(ctx context.Context, url string) ([]imagerunner.Artifact, error) {
-	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
+	fd, err := os.CreateTemp("", "artifacts")
 	if err != nil {
-		return []imagerunner.Artifact{}, err
+		return "", err
 	}
 
-	resp, err := c.Client.Do(req)
+	req, err = NewRetryableRequestWithContext(ctx, http.MethodGet, urlLink.URL, nil)
 	if err != nil {
-		return []imagerunner.Artifact{}, err
+		return "", err
 	}
 
-	buf, err := io.ReadAll(resp.Body)
+	resp, err = c.Client.Do(req)
 	if err != nil {
-		return []imagerunner.Artifact{}, err
+		return "", err
 	}
 
-	buff := bytes.NewBuffer(buf)
-	zp, err := zip.NewReader(bytes.NewReader(buff.Bytes()), int64(buff.Len()))
+	_, err = io.Copy(fd, resp.Body)
 	if err != nil {
-		return []imagerunner.Artifact{}, err
+		return "", err
 	}
-
-	var artifacts []imagerunner.Artifact
-	for _, f := range zp.File {
-		body, _ := f.Open()
-		content, _ := io.ReadAll(body)
-		artifacts = append(artifacts, imagerunner.Artifact{
-			Name:    f.Name,
-			Content: content,
-		})
-	}
-
-	return artifacts, nil
+	fd.Close()
+	return fd.Name(), nil
 }
 
 func (c *ImageRunner) GetLogs(ctx context.Context, id string) (string, error) {

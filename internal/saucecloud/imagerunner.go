@@ -1,7 +1,7 @@
 package saucecloud
 
 import (
-	"bytes"
+	"archive/zip"
 	"context"
 	"encoding/base64"
 	"errors"
@@ -25,7 +25,7 @@ type ImageRunner interface {
 	TriggerRun(context.Context, imagerunner.RunnerSpec) (imagerunner.Runner, error)
 	GetStatus(ctx context.Context, id string) (imagerunner.Runner, error)
 	StopRun(ctx context.Context, id string) error
-	GetArtifacts(ctx context.Context, id string) ([]imagerunner.Artifact, error)
+	DownloadArtifacts(ctx context.Context, id string) (string, error)
 	GetLogs(ctx context.Context, id string) (string, error)
 }
 
@@ -315,17 +315,20 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (
 	}
 }
 
-func extractFile(artifactFolder string, fPath string, content []byte) error {
-	fullPath := path.Join(artifactFolder, fPath)
+func extractFile(artifactFolder string, file *zip.File) error {
+	fullPath := path.Join(artifactFolder, file.Name)
 	folder := path.Dir(fullPath)
 	if err := os.MkdirAll(folder, 0755); err != nil {
 		return err
 	}
+
 	fd, err := os.Create(fullPath)
 	if err != nil {
 		return err
 	}
-	_, err = io.Copy(fd, bytes.NewReader(content))
+
+	rd, err := file.Open()
+	_, err = io.Copy(fd, rd)
 	if err != nil {
 		return err
 	}
@@ -343,15 +346,21 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 		return
 	}
 
-	files, err := r.RunnerService.GetArtifacts(r.ctx, runnerID)
+	log.Info().Msg("Downloading artifacts archive")
+	fileName, err := r.RunnerService.DownloadArtifacts(r.ctx, runnerID)
 	if err != nil {
-		log.Err(err).Str("suite", suiteName).Msg("Failed to look up artifacts.")
+		log.Err(err).Str("suite", suiteName).Msg("Failed to fetch up artifacts.")
 		return
 	}
-	for _, f := range files {
+
+	zf, err := zip.OpenReader(fileName)
+	if err != nil {
+		return
+	}
+	for _, f := range zf.File {
 		for _, pattern := range r.Project.Artifacts.Download.Match {
 			if glob.Glob(pattern, f.Name) {
-				if err = extractFile(dir, f.Name, f.Content); err != nil {
+				if err = extractFile(dir, f); err != nil {
 					log.Error().Msgf("Unable to extract file '%s': %s", f.Name, err)
 				}
 				break
