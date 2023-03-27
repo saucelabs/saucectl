@@ -325,7 +325,7 @@ func extractFile(artifactFolder string, file *zip.File) error {
 		return err
 	}
 	if strings.Contains(relPath, "..") {
-		return errors.New(fmt.Sprintf("file %s is relative to an outside folder", file.Name))
+		return fmt.Errorf("file %s is relative to an outside folder", file.Name)
 	}
 
 	folder := path.Dir(fullPath)
