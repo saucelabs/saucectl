@@ -346,6 +346,7 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 	files, err := r.RunnerService.GetArtifacts(r.ctx, runnerID)
 	if err != nil {
 		log.Err(err).Str("suite", suiteName).Msg("Failed to look up artifacts.")
+		return
 	}
 	for _, f := range files {
 		for _, pattern := range r.Project.Artifacts.Download.Match {
