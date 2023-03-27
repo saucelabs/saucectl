@@ -135,7 +135,7 @@ func (c *ImageRunner) GetArtifacts(ctx context.Context, id string) ([]imagerunne
 	}
 
 	type response struct {
-		Url string `json:"url"`
+		URL string `json:"url"`
 	}
 
 	var urlLink response
@@ -143,7 +143,7 @@ func (c *ImageRunner) GetArtifacts(ctx context.Context, id string) ([]imagerunne
 		return []imagerunner.Artifact{}, fmt.Errorf("failed to decode server response: %w", err)
 	}
 
-	return c.downloadAndUnpack(ctx, urlLink.Url)
+	return c.downloadAndUnpack(ctx, urlLink.URL)
 }
 
 func (c *ImageRunner) downloadAndUnpack(ctx context.Context, url string) ([]imagerunner.Artifact, error) {
