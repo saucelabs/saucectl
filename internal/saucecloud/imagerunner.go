@@ -22,8 +22,7 @@ type ImageRunner interface {
 	TriggerRun(context.Context, imagerunner.RunnerSpec) (imagerunner.Runner, error)
 	GetStatus(ctx context.Context, id string) (imagerunner.Runner, error)
 	StopRun(ctx context.Context, id string) error
-	ListArtifacts(ctx context.Context, id string) ([]string, error)
-	DownloadArtifact(ctx context.Context, id, name, dir string) error
+	GetArtifacts(ctx context.Context, id string) ([]imagerunner.Artifact, error)
 	GetLogs(ctx context.Context, id string) (string, error)
 }
 
@@ -324,16 +323,15 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 		return
 	}
 
-	files, err := r.RunnerService.ListArtifacts(r.ctx, runnerID)
+	files, err := r.RunnerService.GetArtifacts(r.ctx, runnerID)
 	if err != nil {
 		log.Err(err).Str("suite", suiteName).Msg("Failed to look up artifacts.")
 	}
 	for _, f := range files {
 		for _, pattern := range r.Project.Artifacts.Download.Match {
-			if glob.Glob(pattern, f) {
-				if err := r.RunnerService.DownloadArtifact(r.ctx, runnerID, f, dir); err != nil {
-					log.Err(err).Str("name", f).Msg("Failed to download an artifact.")
-				}
+			if glob.Glob(pattern, f.Name) {
+				// Save file to folder
+				dir = dir + ""
 				break
 			}
 		}
