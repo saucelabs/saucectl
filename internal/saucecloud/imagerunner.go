@@ -14,7 +14,9 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"path/filepath"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -317,6 +319,15 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (
 
 func extractFile(artifactFolder string, file *zip.File) error {
 	fullPath := path.Join(artifactFolder, file.Name)
+
+	relPath, err := filepath.Rel(artifactFolder, fullPath)
+	if err != nil {
+		return err
+	}
+	if strings.Contains(relPath, "..") {
+		return errors.New(fmt.Sprintf("file %s is relative to an outside folder", file.Name))
+	}
+
 	folder := path.Dir(fullPath)
 	if err := os.MkdirAll(folder, 0755); err != nil {
 		return err
