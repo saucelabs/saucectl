@@ -123,16 +123,12 @@ func (r *Runner) RunProject() (int, error) {
 
 func hasUnitInputFiles(dir string) bool {
 	_, err := findInputFile(dir)
-	if err != nil {
-		return false
-	}
+	hasInputFile := err == nil
 
 	_, err = findUnitFile(dir)
-	if err != nil {
-		return false
-	}
+	hasUnitFile := err == nil
 
-	return true
+	return hasInputFile && hasUnitFile
 }
 
 func findInputFile(dir string) (string, error) {
