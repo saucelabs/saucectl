@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/junit"
+	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/saucereport"
 	"gotest.tools/v3/fs"
@@ -200,6 +201,7 @@ func TestRunJobRetries(t *testing.T) {
 	}
 	for _, tt := range tests {
 		r := CloudRunner{
+			Retrier: &retry.BasicRetrier{},
 			JobService: JobService{
 				VDCStarter: &mocks.FakeJobStarter{
 					StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {

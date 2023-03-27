@@ -174,6 +174,18 @@ const (
 	MissingXcuitestDeviceConfig = "missing devices configuration for suite: %s"
 )
 
+// Smart Retries
+const (
+	// UnableToFetchFile indicates a failure when fetching a file
+	UnableToFetchFile = "Unable to fetch file '%s'"
+	// UnableToUnmarshallFile indicates a failure to unmarshall a file
+	UnableToUnmarshallFile = "Unable to unmarshall file '%s'"
+	// SkippingSmartRetries indicates that the full suite will be run
+	SkippingSmartRetries = "Skipping SmartRetry, retrying complete suite"
+	// RetryWithClasses indicates which classes will be run
+	RetryWithClasses = "Retrying with only classes: %s"
+)
+
 // container
 const (
 	// EmptyDockerImgName indicates no docker image name provided

@@ -38,6 +38,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/saucereport"
 	"github.com/saucelabs/saucectl/internal/storage"
@@ -57,6 +58,7 @@ type CloudRunner struct {
 	InsightsService        insights.Service
 	UserService            iam.UserService
 	BuildService           build.Reader
+	Retrier                retry.Retrier
 
 	Reporters []report.Reporter
 
@@ -348,13 +350,9 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			if !jobData.Passed {
 				log.Warn().Err(err).Msg("Suite errored.")
 			}
-			go func(opt job.StartOptions) {
-				opt.Attempt++
-				log.Info().Str("suite", opt.DisplayName).
-					Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1)).
-					Msg("Retrying suite.")
-				jobOpts <- opt
-			}(opts)
+
+			opts.Attempt++
+			go r.Retrier.Retry(jobOpts, opts, jobData)
 			continue
 		}
 
