@@ -122,13 +122,13 @@ func (r *Runner) RunProject() (int, error) {
 }
 
 func hasUnitInputFiles(dir string) bool {
-	_, err := findInputFile(dir)
-	hasInputFile := err == nil
-
-	_, err = findUnitFile(dir)
+	_, err := findUnitFile(dir)
 	hasUnitFile := err == nil
 
-	return hasInputFile && hasUnitFile
+	_, err = findInputFile(dir)
+	hasInputFile := err == nil
+
+	return hasUnitFile && hasInputFile
 }
 
 func findInputFile(dir string) (string, error) {
