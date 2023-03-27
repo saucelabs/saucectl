@@ -25,8 +25,8 @@ import (
 var pollDefaultWait = time.Second * 180
 var pollWaitTime = time.Second * 5
 
-var unitFileName = "unit.yaml"
-var inputFileName = "input.yaml"
+var unitFileNames = []string{"unit.yaml", "unit.yml"}
+var inputFileNames = []string{"input.yaml", "input.yml"}
 
 type APITester interface {
 	GetProject(ctx context.Context, hookID string) (ProjectMeta, error)
@@ -122,16 +122,43 @@ func (r *Runner) RunProject() (int, error) {
 }
 
 func hasUnitInputFiles(dir string) bool {
-	st, err := os.Stat(path.Join(dir, unitFileName))
-	if err != nil || st.IsDir() {
+	_, err := findInputFile(dir)
+	if err != nil {
 		return false
 	}
 
-	st, err = os.Stat(path.Join(dir, inputFileName))
-	if err != nil || st.IsDir() {
+	_, err = findUnitFile(dir)
+	if err != nil {
 		return false
 	}
+
 	return true
+}
+
+func findInputFile(dir string) (string, error) {
+	for _, n := range inputFileNames {
+		p := path.Join(dir, n)
+		st, err := os.Stat(p)
+
+		if err == nil && !st.IsDir() {
+			return p, nil
+		}
+	}
+
+	return "", fmt.Errorf("Failed to find any input file (%v) in dir (%s)", inputFileNames, dir)
+}
+
+func findUnitFile(dir string) (string, error) {
+	for _, n := range unitFileNames {
+		p := path.Join(dir, n)
+		st, err := os.Stat(p)
+
+		if err == nil && !st.IsDir() {
+			return p, nil
+		}
+	}
+
+	return "", fmt.Errorf("Failed to find any unit file (%v) in dir (%s)", unitFileNames, dir)
 }
 
 func matchPath(dir string, pathMatch []string) bool {
@@ -174,15 +201,25 @@ func findTests(rootDir string, testMatch []string) ([]string, error) {
 	return tests, nil
 }
 
-func loadTest(unitPath string, inputPath string, suiteName string, testName string, tags []string, env map[string]string) (TestRequest, error) {
-	unitContent, err := os.ReadFile(unitPath)
+func loadTest(testDir string, suiteName string, testName string, tags []string, env map[string]string) (TestRequest, error) {
+	unitFile, err := findUnitFile(testDir)
 	if err != nil {
 		return TestRequest{}, err
 	}
-	inputContent, err := os.ReadFile(inputPath)
+	unitContent, err := os.ReadFile(unitFile)
 	if err != nil {
 		return TestRequest{}, err
 	}
+
+	inputFile, err := findInputFile(testDir)
+	if err != nil {
+		return TestRequest{}, err
+	}
+	inputContent, err := os.ReadFile(inputFile)
+	if err != nil {
+		return TestRequest{}, err
+	}
+
 	return TestRequest{
 		Name:   fmt.Sprintf("%s - %s", suiteName, testName),
 		Tags:   append([]string{}, tags...),
@@ -197,8 +234,7 @@ func (r *Runner) loadTests(s Suite, tests []string) []TestRequest {
 
 	for _, test := range tests {
 		req, err := loadTest(
-			path.Join(r.Project.RootDir, test, unitFileName),
-			path.Join(r.Project.RootDir, test, inputFileName),
+			path.Join(r.Project.RootDir, test),
 			s.Name,
 			test,
 			s.Tags,

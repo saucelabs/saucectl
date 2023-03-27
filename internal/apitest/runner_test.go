@@ -71,8 +71,8 @@ func createTestDirs(t *testing.T) *fs.Dir {
 				fs.WithFile("input.yaml", "yaml-input-content", fs.WithMode(0644)),
 			),
 			fs.WithDir("02_extended_test", fs.WithMode(0755),
-				fs.WithFile("unit.yaml", "", fs.WithMode(0644)),
-				fs.WithFile("input.yaml", "", fs.WithMode(0644)),
+				fs.WithFile("unit.yml", "", fs.WithMode(0644)),
+				fs.WithFile("input.yml", "", fs.WithMode(0644)),
 			),
 			fs.WithDir("03_no_test", fs.WithMode(0755),
 				fs.WithFile("unit.yaml", "", fs.WithMode(0644)),
@@ -220,8 +220,7 @@ func Test_loadTest(t *testing.T) {
 	defer dir.Remove()
 
 	type args struct {
-		unitPath  string
-		inputPath string
+		testDir   string
 		suiteName string
 		testName  string
 		tags      []string
@@ -238,8 +237,7 @@ func Test_loadTest(t *testing.T) {
 				tags:      []string{},
 				testName:  "tests/01_basic_test",
 				suiteName: "suiteName",
-				inputPath: path.Join(dir.Path(), "tests/01_basic_test/input.yaml"),
-				unitPath:  path.Join(dir.Path(), "tests/01_basic_test/unit.yaml"),
+				testDir: path.Join(dir.Path(), "tests/01_basic_test"),
 			},
 			wantErr: false,
 			want: TestRequest{
@@ -255,8 +253,7 @@ func Test_loadTest(t *testing.T) {
 				tags:      []string{},
 				testName:  "tests/03_no_test",
 				suiteName: "suiteName",
-				inputPath: path.Join(dir.Path(), "tests/03_no_test/input.yaml"),
-				unitPath:  path.Join(dir.Path(), "tests/03_no_test/unit.yaml"),
+				testDir: path.Join(dir.Path(), "tests/03_no_test"),
 			},
 			wantErr: true,
 		},
@@ -266,15 +263,14 @@ func Test_loadTest(t *testing.T) {
 				tags:      []string{},
 				testName:  "tests/04_no_test",
 				suiteName: "suiteName",
-				inputPath: path.Join(dir.Path(), "tests/04_no_test/input.yaml"),
-				unitPath:  path.Join(dir.Path(), "tests/04_no_test/unit.yaml"),
+				testDir: path.Join(dir.Path(), "tests/04_no_test"),
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := loadTest(tt.args.unitPath, tt.args.inputPath, tt.args.suiteName, tt.args.testName, tt.args.tags, nil)
+			got, err := loadTest(tt.args.testDir, tt.args.suiteName, tt.args.testName, tt.args.tags, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("loadTest() error = %v, wantErr %v", err, tt.wantErr)
 				return
