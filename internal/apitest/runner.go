@@ -267,7 +267,7 @@ func (r *Runner) runLocalTests(s Suite, results chan []TestResult) int {
 	}
 	tests := r.loadTests(s, matchingTests)
 	if len(tests) == 0 {
-		log.Error().Msgf("Could not find local tests matching patterns (%v). See https://github.com/saucelabs/saucectl-apix-example/blob/main/docs/README.md for more details.", s.TestMatch)
+		log.Warn().Msgf("Could not find local tests matching patterns (%v). See https://github.com/saucelabs/saucectl-apix-example/blob/main/docs/README.md for more details.", s.TestMatch)
 		return 0
 	}
 
