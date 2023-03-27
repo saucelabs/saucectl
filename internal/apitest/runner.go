@@ -184,12 +184,13 @@ func findTests(rootDir string, testMatch []string) ([]string, error) {
 		if !d.IsDir() {
 			return nil
 		}
-		if !hasUnitInputFiles(path) {
-			return nil
-		}
 
 		relPath, _ := filepath.Rel(rootDir, path)
 		if matchPath(relPath, testMatch) {
+			if !hasUnitInputFiles(path) {
+				log.Warn().Msgf("Skipping matching path (%s): unit or input files missing.", path)
+				return nil
+			}
 			tests = append(tests, relPath)
 		}
 		return nil
@@ -269,6 +270,10 @@ func (r *Runner) runLocalTests(s Suite, results chan []TestResult) int {
 		return 0
 	}
 	tests := r.loadTests(s, matchingTests)
+	if len(tests) == 0 {
+		log.Error().Msgf("Could not find local tests matching patterns (%v). See https://github.com/saucelabs/saucectl-apix-example/blob/main/docs/README.md for more details.", s.TestMatch)
+		return 0
+	}
 
 	for _, test := range tests {
 		log.Info().
