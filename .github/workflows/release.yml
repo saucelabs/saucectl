@@ -10,10 +10,11 @@ env:
   SEGMENT_WRITE_KEY: ${{secrets.SEGMENT_WRITE_KEY}}
   BACKTRACE_ENDPOINT: ${{secrets.BACKTRACE_ENDPOINT}}
   BACKTRACE_TOKEN: ${{secrets.BACKTRACE_TOKEN}}
+  CHOCOLATEY_API_KEY: ${{secrets.CHOCOLATEY_API_KEY}}
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
