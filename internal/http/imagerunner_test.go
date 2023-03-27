@@ -40,7 +40,10 @@ func TestImageRunner_GetArtifacts(t *testing.T) {
 			want: func(t assert.TestingT, i interface{}, input ...interface{}) bool {
 				id := i.(string)
 				fd, err := os.Open(id)
-				defer fd.Close()
+				defer func(fd *os.File) {
+					err := fd.Close()
+					assert.Equal(t, err, nil)
+				}(fd)
 				if err != nil {
 					return false
 				}
@@ -48,10 +51,7 @@ func TestImageRunner_GetArtifacts(t *testing.T) {
 				return string(body) == "expected-run-1"
 			},
 			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
-				if err == nil {
-					return true
-				}
-				return false
+				return err == nil
 			},
 		},
 	}
@@ -77,7 +77,6 @@ func TestImageRunner_GetArtifacts(t *testing.T) {
 		case "/v1alpha1/hosted/image/runners/run-id-1/artifacts/url":
 			w.WriteHeader(200)
 			_, err = w.Write([]byte(fmt.Sprintf(`{"url":"%s/artifacts/run-id-1"}`, ta.URL)))
-			break
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -95,8 +94,6 @@ func TestImageRunner_GetArtifacts(t *testing.T) {
 				Creds:  tt.fields.Creds,
 			}
 			got, err := c.DownloadArtifacts(tt.args.ctx, tt.args.id)
-			if err != nil {
-			}
 			if !tt.wantErr(t, err, fmt.Sprintf("GetArtifacts(%v, %v)", tt.args.ctx, tt.args.id)) {
 				return
 			}
