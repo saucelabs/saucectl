@@ -1,6 +1,7 @@
 package http
 
 import (
+	"archive/zip"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -142,11 +143,42 @@ func (c *ImageRunner) GetArtifacts(ctx context.Context, id string) ([]imagerunne
 		return []imagerunner.Artifact{}, fmt.Errorf("failed to decode server response: %w", err)
 	}
 
-	return c.downloadAndUnpack(urlLink.Url)
+	return c.downloadAndUnpack(ctx, urlLink.Url)
 }
 
-func (c *ImageRunner) downloadAndUnpack(url string) ([]imagerunner.Artifact, error) {
-	return []imagerunner.Artifact{}, nil
+func (c *ImageRunner) downloadAndUnpack(ctx context.Context, url string) ([]imagerunner.Artifact, error) {
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return []imagerunner.Artifact{}, err
+	}
+
+	resp, err := c.Client.Do(req)
+	if err != nil {
+		return []imagerunner.Artifact{}, err
+	}
+
+	buf, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return []imagerunner.Artifact{}, err
+	}
+
+	buff := bytes.NewBuffer(buf)
+	zp, err := zip.NewReader(bytes.NewReader(buff.Bytes()), int64(buff.Len()))
+	if err != nil {
+		return []imagerunner.Artifact{}, err
+	}
+
+	var artifacts []imagerunner.Artifact
+	for _, f := range zp.File {
+		body, _ := f.Open()
+		content, _ := io.ReadAll(body)
+		artifacts = append(artifacts, imagerunner.Artifact{
+			Name:    f.Name,
+			Content: content,
+		})
+	}
+
+	return artifacts, nil
 }
 
 func (c *ImageRunner) GetLogs(ctx context.Context, id string) (string, error) {

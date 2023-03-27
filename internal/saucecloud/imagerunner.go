@@ -1,6 +1,7 @@
 package saucecloud
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"errors"
@@ -9,8 +10,10 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/report"
+	"io"
 	"os"
 	"os/signal"
+	"path"
 	"reflect"
 	"time"
 
@@ -312,6 +315,23 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (
 	}
 }
 
+func extractFile(artifactFolder string, fPath string, content []byte) error {
+	fullPath := path.Join(artifactFolder, fPath)
+	folder := path.Dir(fullPath)
+	if err := os.MkdirAll(folder, 0755); err != nil {
+		return err
+	}
+	fd, err := os.Create(fullPath)
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(fd, bytes.NewReader(content))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed bool) {
 	if runnerID == "" || status == imagerunner.StateCancelled || !r.Project.Artifacts.Download.When.IsNow(passed) {
 		return
@@ -330,8 +350,9 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 	for _, f := range files {
 		for _, pattern := range r.Project.Artifacts.Download.Match {
 			if glob.Glob(pattern, f.Name) {
-				// Save file to folder
-				dir = dir + ""
+				if err = extractFile(dir, f.Name, f.Content); err != nil {
+					log.Error().Msgf("Unable to extract file '%s': %s", f.Name, err)
+				}
 				break
 			}
 		}
