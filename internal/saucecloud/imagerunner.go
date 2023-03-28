@@ -337,6 +337,7 @@ func extractFile(artifactFolder string, file *zip.File) error {
 	if err != nil {
 		return err
 	}
+	defer fd.Close()
 
 	rd, err := file.Open()
 	if err != nil {
