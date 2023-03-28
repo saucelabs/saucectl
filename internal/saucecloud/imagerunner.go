@@ -390,11 +390,13 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 		log.Err(err).Str("suite", suiteName).Msg("Failed to download artifacts content.")
 		return
 	}
+	defer os.Remove(fileName)
 
 	zf, err := zip.OpenReader(fileName)
 	if err != nil {
 		return
 	}
+	defer zf.Close()
 	for _, f := range zf.File {
 		for _, pattern := range r.Project.Artifacts.Download.Match {
 			if glob.Glob(pattern, f.Name) {
