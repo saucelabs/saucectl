@@ -363,7 +363,7 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 	log.Info().Msg("Downloading artifacts archive")
 	fileName, err := r.RunnerService.DownloadArtifacts(r.ctx, runnerID)
 	if err != nil {
-		log.Err(err).Str("suite", suiteName).Msg("Failed to fetch up artifacts.")
+		log.Err(err).Str("suite", suiteName).Msg("Failed to fetch artifacts.")
 		return
 	}
 
