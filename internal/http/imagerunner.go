@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -113,24 +112,24 @@ func (c *ImageRunner) StopRun(ctx context.Context, runID string) error {
 	return nil
 }
 
-func (c *ImageRunner) DownloadArtifacts(ctx context.Context, id string) (string, error) {
+func (c *ImageRunner) DownloadArtifacts(ctx context.Context, id string) (io.ReadCloser, error) {
 	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/artifacts/url", c.URL, id)
 
 	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
 
 	resp, err := c.Client.Do(req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		b, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("unexpected server response (%d): %s", resp.StatusCode, b)
+		return nil, fmt.Errorf("unexpected server response (%d): %s", resp.StatusCode, b)
 	}
 
 	type response struct {
@@ -139,30 +138,20 @@ func (c *ImageRunner) DownloadArtifacts(ctx context.Context, id string) (string,
 
 	var urlLink response
 	if err = json.NewDecoder(resp.Body).Decode(&urlLink); err != nil {
-		return "", fmt.Errorf("failed to decode server response: %w", err)
-	}
-
-	fd, err := os.CreateTemp("", "artifacts")
-	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("failed to decode server response: %w", err)
 	}
 
 	req, err = NewRetryableRequestWithContext(ctx, http.MethodGet, urlLink.URL, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	resp, err = c.Client.Do(req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	_, err = io.Copy(fd, resp.Body)
-	if err != nil {
-		return "", err
-	}
-	fd.Close()
-	return fd.Name(), nil
+	return resp.Body, nil
 }
 
 func (c *ImageRunner) GetLogs(ctx context.Context, id string) (string, error) {

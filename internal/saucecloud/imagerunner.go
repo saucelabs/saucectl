@@ -27,7 +27,7 @@ type ImageRunner interface {
 	TriggerRun(context.Context, imagerunner.RunnerSpec) (imagerunner.Runner, error)
 	GetStatus(ctx context.Context, id string) (imagerunner.Runner, error)
 	StopRun(ctx context.Context, id string) error
-	DownloadArtifacts(ctx context.Context, id string) (string, error)
+	DownloadArtifacts(ctx context.Context, id string) (io.ReadCloser, error)
 	GetLogs(ctx context.Context, id string) (string, error)
 }
 
@@ -349,6 +349,23 @@ func extractFile(artifactFolder string, file *zip.File) error {
 	return nil
 }
 
+func saveToFile(closer io.ReadCloser) (string, error) {
+	fd, err := os.CreateTemp("", "")
+	if err != nil {
+		//log.Err(err).Str("suite", suiteName).Msg("Failed to fetch artifacts.")
+		return "", err
+	}
+	_, err = io.Copy(fd, closer)
+	if err != nil {
+		return "", err
+	}
+
+	if err = closer.Close(); err != nil {
+		return "", err
+	}
+	return fd.Name(), fd.Close()
+}
+
 func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed bool) {
 	if runnerID == "" || status == imagerunner.StateCancelled || !r.Project.Artifacts.Download.When.IsNow(passed) {
 		return
@@ -361,9 +378,14 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 	}
 
 	log.Info().Msg("Downloading artifacts archive")
-	fileName, err := r.RunnerService.DownloadArtifacts(r.ctx, runnerID)
+	reader, err := r.RunnerService.DownloadArtifacts(r.ctx, runnerID)
 	if err != nil {
 		log.Err(err).Str("suite", suiteName).Msg("Failed to fetch artifacts.")
+		return
+	}
+	fileName, err := saveToFile(reader)
+	if err != nil {
+		log.Err(err).Str("suite", suiteName).Msg("Failed to download artifacts content.")
 		return
 	}
 
