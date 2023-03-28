@@ -86,6 +86,10 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 
 	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
 
+	if err := applyCucumberFlags(&p); err != nil {
+		return 1, err
+	}
+
 	cucumber.SetDefaults(&p)
 
 	if err := cucumber.Validate(&p); err != nil {
@@ -132,6 +136,21 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	}
 
 	return 0, nil
+}
+
+func applyCucumberFlags(p *cucumber.Project) error {
+	if gFlags.selectedSuite != "" {
+		if err := cucumber.FilterSuites(p, gFlags.selectedSuite); err != nil {
+			return err
+		}
+	}
+
+	// Use the adhoc suite instead, if one is provided
+	if p.Suite.Name != "" {
+		p.Suites = []cucumber.Suite{p.Suite}
+	}
+
+	return nil
 }
 
 func runCucumberInDocker(p cucumber.Project) (int, error) {
