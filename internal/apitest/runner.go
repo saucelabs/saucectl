@@ -25,8 +25,8 @@ import (
 var pollDefaultWait = time.Second * 180
 var pollWaitTime = time.Second * 5
 
-var unitFileName = "unit.yaml"
-var inputFileName = "input.yaml"
+var unitFileNames = []string{"unit.yaml", "unit.yml"}
+var inputFileNames = []string{"input.yaml", "input.yml"}
 
 type APITester interface {
 	GetProject(ctx context.Context, hookID string) (ProjectMeta, error)
@@ -122,16 +122,39 @@ func (r *Runner) RunProject() (int, error) {
 }
 
 func hasUnitInputFiles(dir string) bool {
-	st, err := os.Stat(path.Join(dir, unitFileName))
-	if err != nil || st.IsDir() {
-		return false
+	_, err := findUnitFile(dir)
+	hasUnitFile := err == nil
+
+	_, err = findInputFile(dir)
+	hasInputFile := err == nil
+
+	return hasUnitFile && hasInputFile
+}
+
+func findInputFile(dir string) (string, error) {
+	for _, n := range inputFileNames {
+		p := path.Join(dir, n)
+		st, err := os.Stat(p)
+
+		if err == nil && !st.IsDir() {
+			return p, nil
+		}
 	}
 
-	st, err = os.Stat(path.Join(dir, inputFileName))
-	if err != nil || st.IsDir() {
-		return false
+	return "", fmt.Errorf("Failed to find any input file (%v) in dir (%s)", inputFileNames, dir)
+}
+
+func findUnitFile(dir string) (string, error) {
+	for _, n := range unitFileNames {
+		p := path.Join(dir, n)
+		st, err := os.Stat(p)
+
+		if err == nil && !st.IsDir() {
+			return p, nil
+		}
 	}
-	return true
+
+	return "", fmt.Errorf("Failed to find any unit file (%v) in dir (%s)", unitFileNames, dir)
 }
 
 func matchPath(dir string, pathMatch []string) bool {
@@ -157,12 +180,13 @@ func findTests(rootDir string, testMatch []string) ([]string, error) {
 		if !d.IsDir() {
 			return nil
 		}
-		if !hasUnitInputFiles(path) {
-			return nil
-		}
 
 		relPath, _ := filepath.Rel(rootDir, path)
 		if matchPath(relPath, testMatch) {
+			if !hasUnitInputFiles(path) {
+				log.Warn().Msgf("Skipping matching path (%s): unit or input files missing.", path)
+				return nil
+			}
 			tests = append(tests, relPath)
 		}
 		return nil
@@ -174,15 +198,25 @@ func findTests(rootDir string, testMatch []string) ([]string, error) {
 	return tests, nil
 }
 
-func loadTest(unitPath string, inputPath string, suiteName string, testName string, tags []string, env map[string]string) (TestRequest, error) {
-	unitContent, err := os.ReadFile(unitPath)
+func loadTest(testDir string, suiteName string, testName string, tags []string, env map[string]string) (TestRequest, error) {
+	unitFile, err := findUnitFile(testDir)
 	if err != nil {
 		return TestRequest{}, err
 	}
-	inputContent, err := os.ReadFile(inputPath)
+	unitContent, err := os.ReadFile(unitFile)
 	if err != nil {
 		return TestRequest{}, err
 	}
+
+	inputFile, err := findInputFile(testDir)
+	if err != nil {
+		return TestRequest{}, err
+	}
+	inputContent, err := os.ReadFile(inputFile)
+	if err != nil {
+		return TestRequest{}, err
+	}
+
 	return TestRequest{
 		Name:   fmt.Sprintf("%s - %s", suiteName, testName),
 		Tags:   append([]string{}, tags...),
@@ -197,8 +231,7 @@ func (r *Runner) loadTests(s Suite, tests []string) []TestRequest {
 
 	for _, test := range tests {
 		req, err := loadTest(
-			path.Join(r.Project.RootDir, test, unitFileName),
-			path.Join(r.Project.RootDir, test, inputFileName),
+			path.Join(r.Project.RootDir, test),
 			s.Name,
 			test,
 			s.Tags,
@@ -233,6 +266,10 @@ func (r *Runner) runLocalTests(s Suite, results chan []TestResult) int {
 		return 0
 	}
 	tests := r.loadTests(s, matchingTests)
+	if len(tests) == 0 {
+		log.Warn().Msgf("Could not find local tests matching patterns (%v). See https://github.com/saucelabs/saucectl-apix-example/blob/main/docs/README.md for more details.", s.TestMatch)
+		return 0
+	}
 
 	for _, test := range tests {
 		log.Info().
