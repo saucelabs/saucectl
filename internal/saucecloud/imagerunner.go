@@ -342,6 +342,8 @@ func extractFile(artifactFolder string, file *zip.File) error {
 	if err != nil {
 		return err
 	}
+	defer rd.Close()
+
 	_, err = io.Copy(fd, rd)
 	if err != nil {
 		return err
@@ -349,10 +351,9 @@ func extractFile(artifactFolder string, file *zip.File) error {
 	return nil
 }
 
-func saveToFile(closer io.ReadCloser) (string, error) {
+func saveToTempFile(closer io.ReadCloser) (string, error) {
 	fd, err := os.CreateTemp("", "")
 	if err != nil {
-		//log.Err(err).Str("suite", suiteName).Msg("Failed to fetch artifacts.")
 		return "", err
 	}
 	_, err = io.Copy(fd, closer)
@@ -383,7 +384,7 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 		log.Err(err).Str("suite", suiteName).Msg("Failed to fetch artifacts.")
 		return
 	}
-	fileName, err := saveToFile(reader)
+	fileName, err := saveToTempFile(reader)
 	if err != nil {
 		log.Err(err).Str("suite", suiteName).Msg("Failed to download artifacts content.")
 		return
