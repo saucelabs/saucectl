@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 )
 
@@ -38,17 +37,12 @@ func TestImageRunner_GetArtifacts(t *testing.T) {
 				id:  "run-id-1",
 			},
 			want: func(t assert.TestingT, i interface{}, input ...interface{}) bool {
-				id := i.(string)
-				fd, err := os.Open(id)
-				defer func(fd *os.File) {
-					err := fd.Close()
-					assert.Equal(t, err, nil)
-				}(fd)
+				rd := i.(io.ReadCloser)
+				buf, err := io.ReadAll(rd)
 				if err != nil {
 					return false
 				}
-				body, _ := io.ReadAll(fd)
-				return string(body) == "expected-run-1"
+				return string(buf) == "expected-run-1"
 			},
 			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
 				return err == nil
