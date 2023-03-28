@@ -28,4 +28,4 @@ suites:
   - name: "Upload and Run tests for saucectl-example"
     projectName: saucectl-example
     testMatch:
-      - tests/api/**
+      - tests/api/*
