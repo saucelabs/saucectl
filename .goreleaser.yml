@@ -82,3 +82,5 @@ changelog:
       - '^docs:'
       - '^test:'
 project_name: saucectl
+release:
+  prerelease: auto
