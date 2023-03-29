@@ -337,19 +337,20 @@ func extractFile(artifactFolder string, file *zip.File) error {
 	if err != nil {
 		return err
 	}
-	defer fd.Close()
 
 	rd, err := file.Open()
 	if err != nil {
+		fd.Close()
 		return err
 	}
 	defer rd.Close()
 
 	_, err = io.Copy(fd, rd)
 	if err != nil {
+		fd.Close()
 		return err
 	}
-	return nil
+	return fd.Close()
 }
 
 func saveToTempFile(closer io.ReadCloser) (string, error) {
