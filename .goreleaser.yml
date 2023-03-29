@@ -55,6 +55,7 @@ chocolateys:
     source_repo: "https://push.chocolatey.org/"
     skip_publish: false
     goamd64: v1
+    tags: "saucelabs saucectl"
 archives:
   - name_template: >-
       {{ .ProjectName }}_{{ .Version }}_
