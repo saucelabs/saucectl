@@ -14,7 +14,7 @@ env:
 
 jobs:
   release:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -49,9 +49,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: release
     steps:
-      - name: Echo version
-        run: |
-          echo $GITHUB_REF_NAME
       - name: Trigger node-saucectl Release
         # pre-release version contains `-` and should be skipped when publishing node-saucectl.
         if: ${{ !contains(github.ref, '-') }}
