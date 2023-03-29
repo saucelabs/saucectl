@@ -1,6 +1,7 @@
 package saucecloud
 
 import (
+	"archive/zip"
 	"context"
 	"encoding/base64"
 	"errors"
@@ -9,9 +10,13 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/report"
+	"io"
 	"os"
 	"os/signal"
+	"path"
+	"path/filepath"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -22,8 +27,7 @@ type ImageRunner interface {
 	TriggerRun(context.Context, imagerunner.RunnerSpec) (imagerunner.Runner, error)
 	GetStatus(ctx context.Context, id string) (imagerunner.Runner, error)
 	StopRun(ctx context.Context, id string) error
-	ListArtifacts(ctx context.Context, id string) ([]string, error)
-	DownloadArtifact(ctx context.Context, id, name, dir string) error
+	DownloadArtifacts(ctx context.Context, id string) (io.ReadCloser, error)
 	GetLogs(ctx context.Context, id string) (string, error)
 }
 
@@ -313,6 +317,56 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (
 	}
 }
 
+func extractFile(artifactFolder string, file *zip.File) error {
+	fullPath := path.Join(artifactFolder, file.Name)
+
+	relPath, err := filepath.Rel(artifactFolder, fullPath)
+	if err != nil {
+		return err
+	}
+	if strings.Contains(relPath, "..") {
+		return fmt.Errorf("file %s is relative to an outside folder", file.Name)
+	}
+
+	folder := path.Dir(fullPath)
+	if err := os.MkdirAll(folder, 0755); err != nil {
+		return err
+	}
+
+	fd, err := os.Create(fullPath)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+
+	rd, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer rd.Close()
+
+	_, err = io.Copy(fd, rd)
+	if err != nil {
+		return err
+	}
+	return fd.Close()
+}
+
+func saveToTempFile(closer io.ReadCloser) (string, error) {
+	defer closer.Close()
+	fd, err := os.CreateTemp("", "")
+	if err != nil {
+		return "", err
+	}
+	defer fd.Close()
+
+	_, err = io.Copy(fd, closer)
+	if err != nil {
+		return "", err
+	}
+	return fd.Name(), fd.Close()
+}
+
 func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed bool) {
 	if runnerID == "" || status == imagerunner.StateCancelled || !r.Project.Artifacts.Download.When.IsNow(passed) {
 		return
@@ -324,15 +378,29 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 		return
 	}
 
-	files, err := r.RunnerService.ListArtifacts(r.ctx, runnerID)
+	log.Info().Msg("Downloading artifacts archive")
+	reader, err := r.RunnerService.DownloadArtifacts(r.ctx, runnerID)
 	if err != nil {
-		log.Err(err).Str("suite", suiteName).Msg("Failed to look up artifacts.")
+		log.Err(err).Str("suite", suiteName).Msg("Failed to fetch artifacts.")
+		return
 	}
-	for _, f := range files {
+	fileName, err := saveToTempFile(reader)
+	if err != nil {
+		log.Err(err).Str("suite", suiteName).Msg("Failed to download artifacts content.")
+		return
+	}
+	defer os.Remove(fileName)
+
+	zf, err := zip.OpenReader(fileName)
+	if err != nil {
+		return
+	}
+	defer zf.Close()
+	for _, f := range zf.File {
 		for _, pattern := range r.Project.Artifacts.Download.Match {
-			if glob.Glob(pattern, f) {
-				if err := r.RunnerService.DownloadArtifact(r.ctx, runnerID, f, dir); err != nil {
-					log.Err(err).Str("name", f).Msg("Failed to download an artifact.")
+			if glob.Glob(pattern, f.Name) {
+				if err = extractFile(dir, f); err != nil {
+					log.Error().Msgf("Unable to extract file '%s': %s", f.Name, err)
 				}
 				break
 			}

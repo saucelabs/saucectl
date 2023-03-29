@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -114,69 +112,46 @@ func (c *ImageRunner) StopRun(ctx context.Context, runID string) error {
 	return nil
 }
 
-func (c *ImageRunner) ListArtifacts(ctx context.Context, id string) ([]string, error) {
-	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/artifacts", c.URL, id)
+func (c *ImageRunner) DownloadArtifacts(ctx context.Context, id string) (io.ReadCloser, error) {
+	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/artifacts/url", c.URL, id)
 
 	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
 	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
-	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.Client.Do(req)
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		b, _ := io.ReadAll(resp.Body)
-		return []string{}, fmt.Errorf("unexpected server response (%d): %s", resp.StatusCode, b)
+		return nil, fmt.Errorf("unexpected server response (%d): %s", resp.StatusCode, b)
 	}
 
-	// TODO response type is not confirmed yet
 	type response struct {
-		Artifacts []string `json:"artifacts"`
+		URL string `json:"url"`
 	}
 
-	var listResponse response
-	if err := json.NewDecoder(resp.Body).Decode(&listResponse); err != nil {
-		return []string{}, fmt.Errorf("failed to decode server response: %w", err)
+	var urlLink response
+	if err = json.NewDecoder(resp.Body).Decode(&urlLink); err != nil {
+		return nil, fmt.Errorf("failed to decode server response: %w", err)
 	}
 
-	return listResponse.Artifacts, nil
-}
-
-func (c *ImageRunner) DownloadArtifact(ctx context.Context, id, name, dir string) error {
-	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners/%s/artifacts/single/%s/download", c.URL, id, name)
-
-	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err = NewRetryableRequestWithContext(ctx, http.MethodGet, urlLink.URL, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
 
-	resp, err := c.Client.Do(req)
+	resp, err = c.Client.Do(req)
 	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		b, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("unexpected server response (%d): %s", resp.StatusCode, b)
+		return nil, err
 	}
 
-	f, err := os.Create(filepath.Join(dir, name))
-	if err != nil {
-		return fmt.Errorf("failed to create local file: %w", err)
-	}
-	if _, err := f.ReadFrom(resp.Body); err != nil {
-		return fmt.Errorf("download failed: %w", err)
-	}
-
-	return nil
+	return resp.Body, nil
 }
 
 func (c *ImageRunner) GetLogs(ctx context.Context, id string) (string, error) {
