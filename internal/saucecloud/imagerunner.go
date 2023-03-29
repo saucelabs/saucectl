@@ -358,12 +358,11 @@ func saveToTempFile(closer io.ReadCloser) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer closer.Close()
+
 	_, err = io.Copy(fd, closer)
 	if err != nil {
-		return "", err
-	}
-
-	if err = closer.Close(); err != nil {
+		fd.Close()
 		return "", err
 	}
 	return fd.Name(), fd.Close()
