@@ -10,14 +10,17 @@ import (
 	"testing"
 )
 
-func TestRDCRetrier_Retry(t *testing.T) {
+func TestAppsRetrier_Retry(t *testing.T) {
 	type args struct {
 		jobOpts  chan job.StartOptions
 		opt      job.StartOptions
 		previous job.Job
 	}
 	type init struct {
-		Reader job.Reader
+		RDCReader job.Reader
+		VDCReader job.Reader
+		RetryRDC  bool
+		RetryVDC  bool
 	}
 	tests := []struct {
 		name     string
@@ -73,7 +76,7 @@ func TestRDCRetrier_Retry(t *testing.T) {
 		{
 			name: "Job retrying only failed suites if RDC + SmartRetry",
 			init: init{
-				Reader: &mocks.FakeJobReader{
+				RDCReader: &mocks.FakeJobReader{
 					ReadJobFn:              nil,
 					PollJobFn:              nil,
 					GetJobAssetFileNamesFn: nil,
@@ -84,6 +87,7 @@ func TestRDCRetrier_Retry(t *testing.T) {
 						return []byte{}, errors.New("unknown file")
 					},
 				},
+				RetryRDC: true,
 			},
 			args: args{
 				jobOpts: make(chan job.StartOptions),
@@ -114,8 +118,11 @@ func TestRDCRetrier_Retry(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			b := &RDCRetrier{
-				RDCReader: tt.init.Reader,
+			b := &AppsRetrier{
+				RDCReader: tt.init.RDCReader,
+				VDCReader: tt.init.VDCReader,
+				RetryRDC:  tt.init.RetryRDC,
+				RetryVDC:  tt.init.RetryVDC,
 			}
 			go b.Retry(tt.args.jobOpts, tt.args.opt, tt.args.previous)
 			newOpt := <-tt.args.jobOpts

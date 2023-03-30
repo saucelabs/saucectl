@@ -164,8 +164,9 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
 			Framework: framework.Framework{Name: xcuitest.Kind},
 			Async:     gFlags.async,
 			FailFast:  gFlags.failFast,
-			Retrier: &retry.RDCRetrier{
+			Retrier: &retry.AppsRetrier{
 				RDCReader: &rdcClient,
+				RetryRDC:  true,
 			},
 		},
 	}
