@@ -10,8 +10,9 @@ import (
 	"strings"
 )
 
-type RDCRetrier struct {
+type JunitRetrier struct {
 	RDCReader job.Reader
+	VDCReader job.Reader
 }
 
 func getKeysFromMap(mp map[string]bool) []string {
@@ -38,30 +39,40 @@ func getFailedClasses(report junit.TestSuites) []string {
 	return getKeysFromMap(classes)
 }
 
-func (b *RDCRetrier) retryOnlyFailedClasses(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
-	content, err := b.RDCReader.GetJobAssetFileContent(context.Background(), previous.ID, junit.JunitFileName, previous.IsRDC)
+func (b *JunitRetrier) retryOnlyFailedClasses(reader job.Reader, jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
+	content, err := reader.GetJobAssetFileContent(context.Background(), previous.ID, junit.JunitFileName, previous.IsRDC)
 	if err != nil {
 		log.Debug().Err(err).Msgf(msg.UnableToFetchFile, junit.JunitFileName)
 		log.Info().Msg(msg.SkippingSmartRetries)
 		jobOpts <- opt
+		return
 	}
 	suites, err := junit.Parse(content)
 	if err != nil {
-		log.Debug().Err(err).Msg(msg.UnableToUnmarshallFile)
+		log.Debug().Err(err).Msgf(msg.UnableToUnmarshallFile, junit.JunitFileName)
 		log.Info().Msg(msg.SkippingSmartRetries)
 		jobOpts <- opt
+		return
 	}
 
 	classes := getFailedClasses(suites)
-	log.Info().Msgf(msg.RetryWithClasses, strings.Join(classes, ","))
+	log.Info().
+		Str("suite", opt.DisplayName).
+		Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1)).
+		Msgf(msg.RetryWithClasses, strings.Join(classes, ","))
 
 	opt.TestOptions["class"] = classes
 	jobOpts <- opt
 }
 
-func (b *RDCRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
-	if previous.IsRDC && opt.SmartRetry.FailedClassesOnly {
-		b.retryOnlyFailedClasses(jobOpts, opt, previous)
+func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
+	if b.RDCReader != nil && previous.IsRDC && opt.SmartRetry.FailedClassesOnly {
+		b.retryOnlyFailedClasses(b.RDCReader, jobOpts, opt, previous)
+		return
+	}
+
+	if b.VDCReader != nil && !previous.IsRDC && opt.SmartRetry.FailedClassesOnly {
+		b.retryOnlyFailedClasses(b.VDCReader, jobOpts, opt, previous)
 		return
 	}
 
