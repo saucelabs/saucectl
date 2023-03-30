@@ -48,12 +48,14 @@ func (b *AppsRetrier) retryOnlyFailedClasses(reader job.Reader, jobOpts chan<- j
 		log.Debug().Err(err).Msgf(msg.UnableToFetchFile, junit.JunitFileName)
 		log.Info().Msg(msg.SkippingSmartRetries)
 		jobOpts <- opt
+		return
 	}
 	suites, err := junit.Parse(content)
 	if err != nil {
-		log.Debug().Err(err).Msg(msg.UnableToUnmarshallFile)
+		log.Debug().Err(err).Msgf(msg.UnableToUnmarshallFile, junit.JunitFileName)
 		log.Info().Msg(msg.SkippingSmartRetries)
 		jobOpts <- opt
+		return
 	}
 
 	classes := getFailedClasses(suites)

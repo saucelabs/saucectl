@@ -188,6 +188,90 @@ func TestAppsRetrier_Retry(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Base Retry if junit is malformed",
+			init: init{
+				VDCReader: &mocks.FakeJobReader{
+					ReadJobFn:              nil,
+					PollJobFn:              nil,
+					GetJobAssetFileNamesFn: nil,
+					GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+						if jobID == "fake-job-id" && fileName == junit.JunitFileName {
+							return []byte("malformed"), nil
+						}
+						return []byte{}, errors.New("unknown file")
+					},
+				},
+				RetryVDC: true,
+			},
+			args: args{
+				jobOpts: make(chan job.StartOptions),
+				opt: job.StartOptions{
+					DisplayName: "Dummy Test",
+					SmartRetry: job.SmartRetry{
+						FailedClassesOnly: true,
+					},
+					TestOptions: map[string]interface{}{
+						"class": []string{"Demo.Class1", "Demo.Class2", "Demo.Class3"},
+					},
+				},
+				previous: job.Job{
+					ID:    "fake-job-id",
+					IsRDC: false,
+				},
+			},
+			expected: job.StartOptions{
+				DisplayName: "Dummy Test",
+				TestOptions: map[string]interface{}{
+					"class": []string{"Demo.Class1", "Demo.Class2", "Demo.Class3"},
+				},
+				SmartRetry: job.SmartRetry{
+					FailedClassesOnly: true,
+				},
+			},
+		},
+		{
+			name: "Base Retry if getting junit.xml is failing",
+			init: init{
+				VDCReader: &mocks.FakeJobReader{
+					ReadJobFn:              nil,
+					PollJobFn:              nil,
+					GetJobAssetFileNamesFn: nil,
+					GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+						if jobID == "fake-job-id" && fileName == junit.JunitFileName {
+							return []byte("malformed"), nil
+						}
+						return []byte{}, errors.New("unknown file")
+					},
+				},
+				RetryVDC: true,
+			},
+			args: args{
+				jobOpts: make(chan job.StartOptions),
+				opt: job.StartOptions{
+					DisplayName: "Dummy Test",
+					SmartRetry: job.SmartRetry{
+						FailedClassesOnly: true,
+					},
+					TestOptions: map[string]interface{}{
+						"class": []string{"Demo.Class1", "Demo.Class2", "Demo.Class3"},
+					},
+				},
+				previous: job.Job{
+					ID:    "fake-buggy-job-id",
+					IsRDC: false,
+				},
+			},
+			expected: job.StartOptions{
+				DisplayName: "Dummy Test",
+				TestOptions: map[string]interface{}{
+					"class": []string{"Demo.Class1", "Demo.Class2", "Demo.Class3"},
+				},
+				SmartRetry: job.SmartRetry{
+					FailedClassesOnly: true,
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
