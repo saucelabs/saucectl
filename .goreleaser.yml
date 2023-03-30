@@ -35,26 +35,6 @@ brews:
     commit_author:
       name: devx-sauce-bot
       email: devx.bot@saucelabs.com
-chocolateys:
-  -
-    name: saucectl
-    owners: Sauce Labs Inc
-    authors: devx-sauce-bot
-    project_url: https://github.com/saucelabs/saucectl
-    url_template: "https://github.com/saucelabs/saucectl/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
-    copyright: 2023 Sauce Labs Inc
-    license_url: https://github.com/saucelabs/saucectl/blob/main/LICENSE
-    require_license_acceptance: false
-    project_source_url: https://github.com/saucelabs/saucectl
-    docs_url: https://docs.saucelabs.com/dev/cli/saucectl/
-    bug_tracker_url: https://github.com/saucelabs/saucectl/issues
-    summary: "Test orchestration with Sauce Labs"
-    description: "Test orchestration with Sauce Labs"
-    release_notes: "https://github.com/saucelabs/saucectl/releases/tag/v{{ .Version }}"
-    api_key: '{{ .Env.CHOCOLATEY_API_KEY }}'
-    source_repo: "https://push.chocolatey.org/"
-    skip_publish: false
-    goamd64: v1
 archives:
   - name_template: >-
       {{ .ProjectName }}_{{ .Version }}_
