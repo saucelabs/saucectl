@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-type AppsRetrier struct {
+type JunitRetrier struct {
 	RDCReader job.Reader
 	VDCReader job.Reader
 
@@ -42,7 +42,7 @@ func getFailedClasses(report junit.TestSuites) []string {
 	return getKeysFromMap(classes)
 }
 
-func (b *AppsRetrier) retryOnlyFailedClasses(reader job.Reader, jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
+func (b *JunitRetrier) retryOnlyFailedClasses(reader job.Reader, jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
 	content, err := reader.GetJobAssetFileContent(context.Background(), previous.ID, junit.JunitFileName, previous.IsRDC)
 	if err != nil {
 		log.Debug().Err(err).Msgf(msg.UnableToFetchFile, junit.JunitFileName)
@@ -68,7 +68,7 @@ func (b *AppsRetrier) retryOnlyFailedClasses(reader job.Reader, jobOpts chan<- j
 	jobOpts <- opt
 }
 
-func (b *AppsRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
+func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
 	if b.RetryRDC && previous.IsRDC && opt.SmartRetry.FailedClassesOnly {
 		b.retryOnlyFailedClasses(b.RDCReader, jobOpts, opt, previous)
 		return

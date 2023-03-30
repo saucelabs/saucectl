@@ -275,7 +275,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			b := &AppsRetrier{
+			b := &JunitRetrier{
 				RDCReader: tt.init.RDCReader,
 				VDCReader: tt.init.VDCReader,
 				RetryRDC:  tt.init.RetryRDC,
