@@ -13,9 +13,6 @@ import (
 type JunitRetrier struct {
 	RDCReader job.Reader
 	VDCReader job.Reader
-
-	RetryRDC bool
-	RetryVDC bool
 }
 
 func getKeysFromMap(mp map[string]bool) []string {
@@ -69,12 +66,12 @@ func (b *JunitRetrier) retryOnlyFailedClasses(reader job.Reader, jobOpts chan<- 
 }
 
 func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
-	if b.RetryRDC && previous.IsRDC && opt.SmartRetry.FailedClassesOnly {
+	if b.RDCReader != nil && previous.IsRDC && opt.SmartRetry.FailedClassesOnly {
 		b.retryOnlyFailedClasses(b.RDCReader, jobOpts, opt, previous)
 		return
 	}
 
-	if b.RetryVDC && !previous.IsRDC && opt.SmartRetry.FailedClassesOnly {
+	if b.VDCReader != nil && !previous.IsRDC && opt.SmartRetry.FailedClassesOnly {
 		b.retryOnlyFailedClasses(b.VDCReader, jobOpts, opt, previous)
 		return
 	}

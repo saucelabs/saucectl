@@ -176,8 +176,6 @@ func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
 			Retrier: &retry.JunitRetrier{
 				RDCReader: &rdcClient,
 				VDCReader: &restoClient,
-				RetryRDC:  true,
-				RetryVDC:  true,
 			},
 		},
 	}

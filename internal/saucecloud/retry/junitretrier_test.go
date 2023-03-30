@@ -278,8 +278,6 @@ func TestAppsRetrier_Retry(t *testing.T) {
 			b := &JunitRetrier{
 				RDCReader: tt.init.RDCReader,
 				VDCReader: tt.init.VDCReader,
-				RetryRDC:  tt.init.RetryRDC,
-				RetryVDC:  tt.init.RetryVDC,
 			}
 			go b.Retry(tt.args.jobOpts, tt.args.opt, tt.args.previous)
 			newOpt := <-tt.args.jobOpts
