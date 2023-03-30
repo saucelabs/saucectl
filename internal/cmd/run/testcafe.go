@@ -92,6 +92,11 @@ func NewTestcafeCmd() *cobra.Command {
 	sc.Int("selectorTimeout", "suite::selectorTimeout", 10000, "Specify the time (in milliseconds) within which selectors attempt to return a node")
 	sc.Int("assertionTimeout", "suite::assertionTimeout", 3000, "Specify the time (in milliseconds) TestCafe attempts to successfully execute an assertion")
 	sc.Int("pageLoadTimeout", "suite::pageLoadTimeout", 3000, "Specify the time (in milliseconds) passed after the DOMContentLoaded event, within which TestCafe waits for the window.load event to fire")
+	sc.Int("ajaxRequestTimeout", "suite::ajaxRequestTimeout", 120000, "Specifies wait time (in milliseconds) for fetch/XHR requests")
+	sc.Int("pageRequestTimeout", "suite::pageRequestTimeout", 25000, "Specifies time (in milliseconds) to wait for HTML pages")
+	sc.Int("browserInitTimeout", "suite::browserInitTimeout", 120000, "Time (in milliseconds) for browsers to connect to TestCafe and report that they are ready to test")
+	sc.Int("testExecutionTimeout", "suite::testExecutionTimeout", 180000, "Maximum test execution time (in milliseconds)")
+	sc.Int("runExecutionTimeout", "suite::runExecutionTimeout", 1800000, "Maximum test run execution time (in milliseconds)")
 
 	// Filters
 	sc.String("filter.test", "suite::filter::test", "", "Runs a test with the specified name")

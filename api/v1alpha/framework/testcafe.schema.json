@@ -259,6 +259,31 @@
             "type": "integer",
             "minimum": 0
           },
+          "ajaxRequestTimeout": {
+            "description": "Specifies wait time (in milliseconds) for fetch/XHR requests.",
+            "type": "integer",
+            "minimum": 0
+          },
+          "pageRequestTimeout": {
+            "description": "Specifies time (in milliseconds) to wait for HTML pages.",
+            "type": "integer",
+            "minimum": 0
+          },
+          "browserInitTimeout": {
+            "description": "Time (in milliseconds) for browsers to connect to TestCafe and report that they are ready to test.",
+            "type": "integer",
+            "minimum": 0
+          },
+          "testExecutionTimeout": {
+            "description": "Maximum test execution time (in milliseconds).",
+            "type": "integer",
+            "minimum": 0
+          },
+          "runExecutionTimeout": {
+            "description": "Maximum test run execution time (in milliseconds).",
+            "type": "integer",
+            "minimum": 0
+          },
           "simulators": {
             "description": "Run tests against the simulators defined here.",
             "type": "array",
