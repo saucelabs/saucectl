@@ -1,8 +1,15 @@
 package artifacts
 
+const (
+	RDCSource = "rdc"
+	VDCSource = "vdc"
+	HTOSource = "hto"
+)
+
 // List represents artifact structure
 type List struct {
-	JobID string   `json:"jobID"`
+	JobID string   `json:"jobID,omitempty"`
+	RunID string   `json:"runID,omitempty"`
 	Items []string `json:"items"`
 }
 
@@ -11,5 +18,6 @@ type Service interface {
 	List(jobID string) (List, error)
 	Download(jobID, filename string) ([]byte, error)
 	Upload(jobID, filename string, content []byte) error
-	HtoDownload(runID, pattern, targetDir string) ([]string, error)
+	GetSource(ID string) (string, error)
+	HtoDownload(ID, pattern, targetDir string) (List, error)
 }

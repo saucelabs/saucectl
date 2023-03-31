@@ -1,9 +1,13 @@
 package artifacts
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"os"
 	"time"
 
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/saucelabs/saucectl/internal/artifacts"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -60,4 +64,49 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	)
 
 	return cmd
+}
+
+func renderResults(lst artifacts.List, outputFormat string) error {
+	switch outputFormat {
+	case "json":
+		if err := renderJSON(lst); err != nil {
+			return fmt.Errorf("failed to render output: %w", err)
+		}
+	case "text":
+		renderTable(lst)
+	default:
+		return errors.New("unknown output format")
+	}
+
+	return nil
+}
+
+func renderTable(lst artifacts.List) {
+	if len(lst.Items) == 0 {
+		println("No artifacts for this job.")
+		return
+	}
+
+	t := table.NewWriter()
+	t.SetStyle(defaultTableStyle)
+	t.SuppressEmptyColumns()
+
+	t.AppendHeader(table.Row{"Items"})
+	t.SetColumnConfigs([]table.ColumnConfig{
+		{
+			Name: "Items",
+		},
+	})
+
+	for _, item := range lst.Items {
+		// the order of values must match the order of the header
+		t.AppendRow(table.Row{item})
+	}
+	t.SuppressEmptyColumns()
+
+	println(t.Render())
+}
+
+func renderJSON(val any) error {
+	return json.NewEncoder(os.Stdout).Encode(val)
 }

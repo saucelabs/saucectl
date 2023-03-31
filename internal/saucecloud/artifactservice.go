@@ -35,11 +35,11 @@ func NewArtifactService(vdcReader job.Reader, rdcReader job.Reader, vdcWriter jo
 
 // List returns an artifact list
 func (s *ArtifactService) List(jobID string) (artifacts.List, error) {
-	isRDC, err := s.isRDC(jobID)
+	source, err := s.GetSource(jobID)
 	if err != nil {
 		return artifacts.List{}, err
 	}
-	items, err := s.GetJobAssetFileNames(context.Background(), jobID, isRDC)
+	items, err := s.GetJobAssetFileNames(context.Background(), jobID, source == artifacts.RDCSource)
 	if err != nil {
 		return artifacts.List{}, err
 	}
@@ -51,55 +51,68 @@ func (s *ArtifactService) List(jobID string) (artifacts.List, error) {
 
 // Download does download specified artifacts
 func (s *ArtifactService) Download(jobID, filename string) ([]byte, error) {
-	isRDC, err := s.isRDC(jobID)
+	source, err := s.GetSource(jobID)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.GetJobAssetFileContent(context.Background(), jobID, filename, isRDC)
+	return s.GetJobAssetFileContent(context.Background(), jobID, filename, source == artifacts.RDCSource)
 }
 
 // Upload does upload the specified artifact
 func (s *ArtifactService) Upload(jobID, filename string, content []byte) error {
-	isRDC, err := s.isRDC(jobID)
+	source, err := s.GetSource(jobID)
 	if err != nil {
 		return err
 	}
-	if isRDC {
+	if source == artifacts.RDCSource {
 		return errors.New("uploading file to Real Device job is not supported")
 	}
 
 	return s.UploadAsset(jobID, false, filename, http.DetectContentType(content), content)
 }
 
-func (s *ArtifactService) isRDC(jobID string) (bool, error) {
-	_, err := s.ReadJob(context.Background(), jobID, false)
-	if err != nil {
-		_, err = s.ReadJob(context.Background(), jobID, true)
-		if err != nil {
-			return false, fmt.Errorf("failed to get the job: %w", err)
+func (s *ArtifactService) GetSource(ID string) (string, error) {
+	var source = artifacts.VDCSource
+
+	switch source {
+	case artifacts.VDCSource:
+		_, err := s.ReadJob(context.Background(), ID, false)
+		if err == nil {
+			return artifacts.VDCSource, nil
 		}
-		return true, nil
+		fallthrough
+	case artifacts.RDCSource:
+		_, err := s.ReadJob(context.Background(), ID, true)
+		if err == nil {
+			return artifacts.RDCSource, nil
+		}
+		fallthrough
+	case artifacts.HTOSource:
+		_, err := s.RunnerService.GetStatus(context.Background(), ID)
+		if err == nil {
+			return artifacts.HTOSource, nil
+		}
 	}
 
-	return false, nil
+	return "", fmt.Errorf("job not found")
 }
 
-func (s *ArtifactService) HtoDownload(runnerID, pattern, targetDir string) ([]string, error) {
-	reader, err := s.RunnerService.DownloadArtifacts(context.Background(), runnerID)
+func (s *ArtifactService) HtoDownload(runID, pattern, targetDir string) (artifacts.List, error) {
+	reader, err := s.RunnerService.DownloadArtifacts(context.Background(), runID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch artifacts: %w", err)
+		return artifacts.List{}, fmt.Errorf("failed to fetch artifacts: %w", err)
 	}
 
 	fileName, err := files.SaveToTempFile(reader)
 	if err != nil {
-		return nil, fmt.Errorf("failed to download artifacts content: %w", err)
+		return artifacts.List{}, fmt.Errorf("failed to download artifacts content: %w", err)
 	}
 	defer os.Remove(fileName)
 
 	zf, err := zip.OpenReader(fileName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
+		return artifacts.List{}, fmt.Errorf("failed to open file: %w", err)
 	}
 	defer zf.Close()
 
@@ -108,9 +121,12 @@ func (s *ArtifactService) HtoDownload(runnerID, pattern, targetDir string) ([]st
 		if glob.Glob(pattern, f.Name) {
 			files = append(files, f.Name)
 			if err = szip.Extract(targetDir, f); err != nil {
-				return nil, fmt.Errorf("failed to extract file: %w", err)
+				return artifacts.List{}, fmt.Errorf("failed to extract file: %w", err)
 			}
 		}
 	}
-	return files, nil
+	return artifacts.List{
+		RunID: runID,
+		Items: files,
+	}, nil
 }

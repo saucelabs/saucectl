@@ -1,10 +1,8 @@
 package artifacts
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -98,46 +96,5 @@ func list(jobID, outputFormat string) error {
 		return fmt.Errorf("failed to get artifacts list: %w", err)
 	}
 
-	switch outputFormat {
-	case "json":
-		if err := renderJSON(lst); err != nil {
-			return fmt.Errorf("failed to render output: %w", err)
-		}
-	case "text":
-		renderTable(lst.Items)
-	default:
-		return errors.New("unknown output format")
-	}
-
-	return nil
-}
-
-func renderTable(lst []string) {
-	if len(lst) == 0 {
-		println("No artifacts for this job.")
-		return
-	}
-
-	t := table.NewWriter()
-	t.SetStyle(defaultTableStyle)
-	t.SuppressEmptyColumns()
-
-	t.AppendHeader(table.Row{"Items"})
-	t.SetColumnConfigs([]table.ColumnConfig{
-		{
-			Name: "Items",
-		},
-	})
-
-	for _, item := range lst {
-		// the order of values must match the order of the header
-		t.AppendRow(table.Row{item})
-	}
-	t.SuppressEmptyColumns()
-
-	println(t.Render())
-}
-
-func renderJSON(val any) error {
-	return json.NewEncoder(os.Stdout).Encode(val)
+	return renderResults(lst, outputFormat)
 }

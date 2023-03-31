@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/saucelabs/saucectl/internal/artifacts"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/segment"
@@ -19,7 +20,6 @@ import (
 func DownloadCommand() *cobra.Command {
 	var targetDir string
 	var out string
-	var hto bool
 
 	cmd := &cobra.Command{
 		Use:   "download <jobID/runID> <filename>",
@@ -48,9 +48,7 @@ func DownloadCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ID := args[0]
 			filePattern := args[1]
-			if hto {
-				return htoDownload(ID, filePattern, targetDir, out)
-			}
+
 			return download(ID, filePattern, targetDir, out)
 		},
 	}
@@ -58,32 +56,35 @@ func DownloadCommand() *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVar(&targetDir, "target-dir", "", "Save files to target directory. Defaults to current working directory.")
 	flags.StringVarP(&out, "out", "o", "text", "Output format to the console. Options: text, json.")
-	flags.BoolVar(&hto, "hto", false, "Download artifacts for image runner.")
 
 	return cmd
 }
 
-func htoDownload(runID, filePattern, targetDir, outputFormat string) error {
-	files, err := artifactSvc.HtoDownload(runID, filePattern, targetDir)
-	if err != nil {
-		return err
-	}
-	return renderResults(files, outputFormat)
-}
-
-func download(jobID, filePattern, targetDir, outputFormat string) error {
-	lst, err := artifactSvc.List(jobID)
+func download(ID, filePattern, targetDir, outputFormat string) error {
+	source, err := artifactSvc.GetSource(ID)
 	if err != nil {
 		return err
 	}
 
+	if source == artifacts.HTOSource {
+		lst, err := artifactSvc.HtoDownload(ID, filePattern, targetDir)
+		if err != nil {
+			return err
+		}
+		return renderResults(lst, outputFormat)
+	}
+
+	lst, err := artifactSvc.List(ID)
+	if err != nil {
+		return err
+	}
 	files := fpath.MatchFiles(lst.Items, []string{filePattern})
 	lst.Items = files
 
 	bar := newDownloadProgressBar(outputFormat, len(files))
 	for _, f := range files {
 		_ = bar.Add(1)
-		body, err := artifactSvc.Download(jobID, f)
+		body, err := artifactSvc.Download(ID, f)
 		if err != nil {
 			return fmt.Errorf("failed to get file: %w", err)
 		}
@@ -109,26 +110,7 @@ func download(jobID, filePattern, targetDir, outputFormat string) error {
 	}
 	bar.Close()
 
-	if err := renderResults(lst.Items, outputFormat); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func renderResults(lst []string, outputFormat string) error {
-	switch outputFormat {
-	case "json":
-		if err := renderJSON(lst); err != nil {
-			return fmt.Errorf("failed to render output: %w", err)
-		}
-	case "text":
-		renderTable(lst)
-	default:
-		return errors.New("unknown output format")
-	}
-
-	return nil
+	return renderResults(lst, outputFormat)
 }
 
 func newDownloadProgressBar(output string, count int) *progressbar.ProgressBar {
