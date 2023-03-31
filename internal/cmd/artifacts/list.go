@@ -8,7 +8,6 @@ import (
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
-	"github.com/saucelabs/saucectl/internal/artifacts"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
@@ -105,7 +104,7 @@ func list(jobID, outputFormat string) error {
 			return fmt.Errorf("failed to render output: %w", err)
 		}
 	case "text":
-		renderTable(lst)
+		renderTable(lst.Items)
 	default:
 		return errors.New("unknown output format")
 	}
@@ -113,8 +112,8 @@ func list(jobID, outputFormat string) error {
 	return nil
 }
 
-func renderTable(lst artifacts.List) {
-	if len(lst.Items) == 0 {
+func renderTable(lst []string) {
+	if len(lst) == 0 {
 		println("No artifacts for this job.")
 		return
 	}
@@ -130,7 +129,7 @@ func renderTable(lst artifacts.List) {
 		},
 	})
 
-	for _, item := range lst.Items {
+	for _, item := range lst {
 		// the order of values must match the order of the header
 		t.AppendRow(table.Row{item})
 	}

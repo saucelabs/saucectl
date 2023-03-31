@@ -338,8 +338,7 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 		log.Err(err).Str("suite", suiteName).Msg("Failed to download artifacts content.")
 		return
 	}
-	fmt.Println("fileName: ", fileName)
-	//defer os.Remove(fileName)
+	defer os.Remove(fileName)
 
 	zf, err := zip.OpenReader(fileName)
 	if err != nil {

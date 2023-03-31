@@ -63,8 +63,12 @@ func DownloadCommand() *cobra.Command {
 	return cmd
 }
 
-func htoDownload(runID, filePattern, targetDir, out string) error {
-	return artifactSvc.HtoDownload(runID, filePattern, targetDir)
+func htoDownload(runID, filePattern, targetDir, outputFormat string) error {
+	files, err := artifactSvc.HtoDownload(runID, filePattern, targetDir)
+	if err != nil {
+		return err
+	}
+	return renderResults(files, outputFormat)
 }
 
 func download(ID, filePattern, targetDir, outputFormat string) error {
@@ -105,6 +109,14 @@ func download(ID, filePattern, targetDir, outputFormat string) error {
 	}
 	bar.Close()
 
+	if err := renderResults(lst.Items, outputFormat); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func renderResults(lst []string, outputFormat string) error {
 	switch outputFormat {
 	case "json":
 		if err := renderJSON(lst); err != nil {

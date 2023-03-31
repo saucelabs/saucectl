@@ -85,32 +85,32 @@ func (s *ArtifactService) isRDC(jobID string) (bool, error) {
 	return false, nil
 }
 
-func (s *ArtifactService) HtoDownload(runnerID, pattern, targetDir string) error {
+func (s *ArtifactService) HtoDownload(runnerID, pattern, targetDir string) ([]string, error) {
 	reader, err := s.RunnerService.DownloadArtifacts(context.Background(), runnerID)
 	if err != nil {
-		return fmt.Errorf("failed to fetch artifacts: %w", err)
+		return nil, fmt.Errorf("failed to fetch artifacts: %w", err)
 	}
 
 	fileName, err := files.SaveToTempFile(reader)
 	if err != nil {
-		return fmt.Errorf("failed to download artifacts content: %w", err)
+		return nil, fmt.Errorf("failed to download artifacts content: %w", err)
 	}
 	defer os.Remove(fileName)
 
-	fmt.Println("fileName: ", fileName)
-
 	zf, err := zip.OpenReader(fileName)
 	if err != nil {
-		return fmt.Errorf("failed to open file: %w", err)
+		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 	defer zf.Close()
 
+	files := []string{}
 	for _, f := range zf.File {
 		if glob.Glob(pattern, f.Name) {
+			files = append(files, f.Name)
 			if err = szip.Extract(targetDir, f); err != nil {
-				return fmt.Errorf("failed to extract file: %w", err)
+				return nil, fmt.Errorf("failed to extract file: %w", err)
 			}
 		}
 	}
-	return nil
+	return files, nil
 }
