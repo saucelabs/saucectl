@@ -28,6 +28,7 @@ func NewImageRunner(url string, creds iam.Credentials, timeout time.Duration) Im
 		Creds:  creds,
 	}
 }
+
 func (c *ImageRunner) TriggerRun(ctx context.Context, spec imagerunner.RunnerSpec) (imagerunner.Runner, error) {
 	var runner imagerunner.Runner
 	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners", c.URL)

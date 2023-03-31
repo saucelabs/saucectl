@@ -19,3 +19,18 @@ func NewSHA256(filename string) (string, error) {
 	}
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
+
+func SaveToTempFile(closer io.ReadCloser) (string, error) {
+	defer closer.Close()
+	fd, err := os.CreateTemp("", "")
+	if err != nil {
+		return "", err
+	}
+	defer fd.Close()
+
+	_, err = io.Copy(fd, closer)
+	if err != nil {
+		return "", err
+	}
+	return fd.Name(), fd.Close()
+}

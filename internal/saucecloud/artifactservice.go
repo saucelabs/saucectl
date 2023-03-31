@@ -1,28 +1,35 @@
 package saucecloud
 
 import (
+	"archive/zip"
 	"context"
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 
+	"github.com/ryanuber/go-glob"
+	szip "github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/artifacts"
+	"github.com/saucelabs/saucectl/internal/files"
 	"github.com/saucelabs/saucectl/internal/job"
 )
 
 // ArtifactService represents artifact service
 type ArtifactService struct {
 	JobService
+	RunnerService ImageRunner
 }
 
 // NewArtifactService returns an artifact service
-func NewArtifactService(vdcReader job.Reader, rdcReader job.Reader, vdcWriter job.Writer) *ArtifactService {
+func NewArtifactService(vdcReader job.Reader, rdcReader job.Reader, vdcWriter job.Writer, imgRunner ImageRunner) *ArtifactService {
 	return &ArtifactService{
 		JobService: JobService{
 			VDCReader: vdcReader,
 			RDCReader: rdcReader,
 			VDCWriter: vdcWriter,
 		},
+		RunnerService: imgRunner,
 	}
 }
 
@@ -76,4 +83,34 @@ func (s *ArtifactService) isRDC(jobID string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (s *ArtifactService) HtoDownload(runnerID, pattern, targetDir string) error {
+	reader, err := s.RunnerService.DownloadArtifacts(context.Background(), runnerID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch artifacts: %w", err)
+	}
+
+	fileName, err := files.SaveToTempFile(reader)
+	if err != nil {
+		return fmt.Errorf("failed to download artifacts content: %w", err)
+	}
+	defer os.Remove(fileName)
+
+	fmt.Println("fileName: ", fileName)
+
+	zf, err := zip.OpenReader(fileName)
+	if err != nil {
+		return fmt.Errorf("failed to open file: %w", err)
+	}
+	defer zf.Close()
+
+	for _, f := range zf.File {
+		if glob.Glob(pattern, f.Name) {
+			if err = szip.Extract(targetDir, f); err != nil {
+				return fmt.Errorf("failed to extract file: %w", err)
+			}
+		}
+	}
+	return nil
 }

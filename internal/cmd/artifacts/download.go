@@ -19,6 +19,7 @@ import (
 func DownloadCommand() *cobra.Command {
 	var targetDir string
 	var out string
+	var hto bool
 
 	cmd := &cobra.Command{
 		Use:   "download <jobID> <filename>",
@@ -45,21 +46,29 @@ func DownloadCommand() *cobra.Command {
 			}()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			jobID := args[0]
+			ID := args[0]
 			filePattern := args[1]
-			return download(jobID, filePattern, targetDir, out)
+			if hto {
+				return htoDownload(ID, filePattern, targetDir, out)
+			}
+			return download(ID, filePattern, targetDir, out)
 		},
 	}
 
 	flags := cmd.Flags()
 	flags.StringVar(&targetDir, "target-dir", "", "Save files to target directory. Defaults to current working directory.")
 	flags.StringVarP(&out, "out", "o", "text", "Output format to the console. Options: text, json.")
+	flags.BoolVar(&hto, "hto", false, "Download hto type")
 
 	return cmd
 }
 
-func download(jobID, filePattern, targetDir, outputFormat string) error {
-	lst, err := artifactSvc.List(jobID)
+func htoDownload(runID, filePattern, targetDir, out string) error {
+	return artifactSvc.HtoDownload(runID, filePattern, targetDir)
+}
+
+func download(ID, filePattern, targetDir, outputFormat string) error {
+	lst, err := artifactSvc.List(ID)
 	if err != nil {
 		return err
 	}
@@ -70,7 +79,7 @@ func download(jobID, filePattern, targetDir, outputFormat string) error {
 	bar := newDownloadProgressBar(outputFormat, len(files))
 	for _, f := range files {
 		_ = bar.Add(1)
-		body, err := artifactSvc.Download(jobID, f)
+		body, err := artifactSvc.Download(ID, f)
 		if err != nil {
 			return fmt.Errorf("failed to get file: %w", err)
 		}

@@ -18,6 +18,7 @@ var (
 	rdcTimeout          = 1 * time.Minute
 	restoTimeout        = 1 * time.Minute
 	testComposerTimeout = 1 * time.Minute
+	imageRunnerTimeout  = 1 * time.Minute
 )
 
 func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
@@ -41,8 +42,9 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 			restoClient := http.NewResto(url, creds.Username, creds.AccessKey, restoTimeout)
 			rdcClient := http.NewRDCService(url, creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 			testcompClient := http.NewTestComposer(url, creds, testComposerTimeout)
+			runnerService := http.NewImageRunner(url, creds, imageRunnerTimeout)
 
-			artifactSvc = saucecloud.NewArtifactService(&restoClient, &rdcClient, &testcompClient)
+			artifactSvc = saucecloud.NewArtifactService(&restoClient, &rdcClient, &testcompClient, &runnerService)
 
 			return nil
 		},

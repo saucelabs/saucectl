@@ -11,4 +11,5 @@ type Service interface {
 	List(jobID string) (List, error)
 	Download(jobID, filename string) ([]byte, error)
 	Upload(jobID, filename string, content []byte) error
+	HtoDownload(runID, pattern, targetDir string) error
 }
