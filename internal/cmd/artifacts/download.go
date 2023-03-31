@@ -71,8 +71,8 @@ func htoDownload(runID, filePattern, targetDir, outputFormat string) error {
 	return renderResults(files, outputFormat)
 }
 
-func download(ID, filePattern, targetDir, outputFormat string) error {
-	lst, err := artifactSvc.List(ID)
+func download(jobID, filePattern, targetDir, outputFormat string) error {
+	lst, err := artifactSvc.List(jobID)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func download(ID, filePattern, targetDir, outputFormat string) error {
 	bar := newDownloadProgressBar(outputFormat, len(files))
 	for _, f := range files {
 		_ = bar.Add(1)
-		body, err := artifactSvc.Download(ID, f)
+		body, err := artifactSvc.Download(jobID, f)
 		if err != nil {
 			return fmt.Errorf("failed to get file: %w", err)
 		}
