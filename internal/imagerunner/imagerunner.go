@@ -1,6 +1,9 @@
 package imagerunner
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 // The different states that a runner can be in.
 const (
@@ -30,6 +33,14 @@ func Done(status string) bool {
 }
 
 var ErrResourceNotFound = errors.New("resource not found")
+
+type LogURLNotFoundError struct {
+	RunID string
+}
+
+func (e LogURLNotFoundError) Error() string {
+	return fmt.Sprintf("Could not find log URL for run with ID %s", e.RunID)
+}
 
 type RunnerSpec struct {
 	Container  Container         `json:"container,omitempty"`
