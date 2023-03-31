@@ -22,11 +22,11 @@ func DownloadCommand() *cobra.Command {
 	var hto bool
 
 	cmd := &cobra.Command{
-		Use:   "download <jobID> <filename>",
-		Short: "Downloads the specified artifacts from the given job. Supports glob pattern.",
+		Use:   "download <jobID/runID> <filename>",
+		Short: "Downloads the specified artifacts from the given job/run. Supports glob pattern.",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
-				return errors.New("no job ID specified")
+				return errors.New("no job or run ID specified")
 			}
 			if len(args) == 1 || args[1] == "" {
 				return errors.New("no file pattern specified")
@@ -58,7 +58,7 @@ func DownloadCommand() *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVar(&targetDir, "target-dir", "", "Save files to target directory. Defaults to current working directory.")
 	flags.StringVarP(&out, "out", "o", "text", "Output format to the console. Options: text, json.")
-	flags.BoolVar(&hto, "hto", false, "Download hto type")
+	flags.BoolVar(&hto, "hto", false, "Download artifacts for image runner.")
 
 	return cmd
 }
