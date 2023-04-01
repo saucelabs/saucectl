@@ -3,8 +3,6 @@ package artifacts
 import (
 	"errors"
 	"fmt"
-	"os"
-	"path"
 
 	"github.com/saucelabs/saucectl/internal/artifacts"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
@@ -84,29 +82,9 @@ func download(ID, filePattern, targetDir, outputFormat string) error {
 	bar := newDownloadProgressBar(outputFormat, len(files))
 	for _, f := range files {
 		_ = bar.Add(1)
-		body, err := artifactSvc.Download(ID, f)
-		if err != nil {
+		if err := artifactSvc.Download(ID, targetDir, f); err != nil {
 			return fmt.Errorf("failed to get file: %w", err)
 		}
-
-		filePath := f
-		if targetDir != "" {
-			if err := os.MkdirAll(targetDir, os.ModePerm); err != nil {
-				return fmt.Errorf("failed to create target dir: %w", err)
-			}
-			filePath = path.Join(targetDir, filePath)
-		}
-
-		file, err := os.Create(filePath)
-		if err != nil {
-			return fmt.Errorf("failed to create file: %w", err)
-		}
-
-		_, err = file.Write(body)
-		if err != nil {
-			return fmt.Errorf("failed to write to the file: %w", err)
-		}
-		_ = file.Close()
 	}
 	bar.Close()
 

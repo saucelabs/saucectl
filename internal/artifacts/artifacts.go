@@ -16,7 +16,7 @@ type List struct {
 // Service is the interface for interacting with artifacts
 type Service interface {
 	List(jobID string) (List, error)
-	Download(jobID, filename string) ([]byte, error)
+	Download(jobID, targetDir, filename string) error
 	Upload(jobID, filename string, content []byte) error
 	GetSource(ID string) (string, error)
 	HtoDownload(ID, pattern, targetDir string) (List, error)

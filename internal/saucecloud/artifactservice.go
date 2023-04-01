@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path"
 
 	"github.com/ryanuber/go-glob"
 	szip "github.com/saucelabs/saucectl/internal/archive/zip"
@@ -50,13 +51,34 @@ func (s *ArtifactService) List(jobID string) (artifacts.List, error) {
 }
 
 // Download does download specified artifacts
-func (s *ArtifactService) Download(jobID, filename string) ([]byte, error) {
+func (s *ArtifactService) Download(jobID, targetDir, filename string) error {
 	source, err := s.GetSource(jobID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return s.GetJobAssetFileContent(context.Background(), jobID, filename, source == artifacts.RDCSource)
+	body, err := s.GetJobAssetFileContent(context.Background(), jobID, filename, source == artifacts.RDCSource)
+	if err != nil {
+		return err
+	}
+	if targetDir != "" {
+		if err := os.MkdirAll(targetDir, os.ModePerm); err != nil {
+			return fmt.Errorf("failed to create target dir: %w", err)
+		}
+		filename = path.Join(targetDir, filename)
+	}
+
+	file, err := os.Create(filename)
+	if err != nil {
+		return fmt.Errorf("failed to create file: %w", err)
+	}
+
+	_, err = file.Write(body)
+	if err != nil {
+		return fmt.Errorf("failed to write to the file: %w", err)
+	}
+
+	return file.Close()
 }
 
 // Upload does upload the specified artifact
