@@ -13,6 +13,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/cmd/completion"
 	"github.com/saucelabs/saucectl/internal/cmd/configure"
 	"github.com/saucelabs/saucectl/internal/cmd/doctor"
+	"github.com/saucelabs/saucectl/internal/cmd/imagerunner"
 	"github.com/saucelabs/saucectl/internal/cmd/ini"
 	"github.com/saucelabs/saucectl/internal/cmd/jobs"
 	"github.com/saucelabs/saucectl/internal/cmd/new"
@@ -71,6 +72,7 @@ func main() {
 		storage.Command(cmd.PersistentPreRun),
 		artifacts.Command(cmd.PersistentPreRun),
 		jobs.Command(cmd.PersistentPreRun),
+		imagerunner.Command(cmd.PersistentPreRun),
 	)
 
 	if err := cmd.Execute(); err != nil {

@@ -169,6 +169,9 @@ func (c *ImageRunner) GetLogs(ctx context.Context, id string) (string, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusNotFound {
+		return "", imagerunner.ErrResourceNotFound
+	}
 	if resp.StatusCode != http.StatusOK {
 		b, _ := io.ReadAll(resp.Body)
 		return "", fmt.Errorf("unexpected server response (%d): %s", resp.StatusCode, b)

@@ -1,4 +1,4 @@
-package storage
+package imagerunner
 
 import (
 	"errors"
@@ -11,16 +11,15 @@ import (
 )
 
 var (
-	appsClient http.AppStore
+	imagerunnerClient http.ImageRunner
 )
 
 func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	var regio string
 
 	cmd := &cobra.Command{
-		Use:              "storage",
-		Short:            "Interact with Sauce Storage",
-		TraverseChildren: true,
+		Use:   "imagerunner",
+		Short: "Commands for interacting with imagerunner runs",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if preRun != nil {
 				preRun(cmd, args)
@@ -30,9 +29,10 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 				return errors.New("invalid region")
 			}
 
-			appsClient = *http.NewAppStore(region.FromString(regio).APIBaseURL(),
-				credentials.Get().Username, credentials.Get().AccessKey,
-				15*time.Minute)
+			creds := credentials.Get()
+			url := region.FromString(regio).APIBaseURL()
+
+			imagerunnerClient = http.NewImageRunner(url, creds, 15*time.Minute)
 
 			return nil
 		},
@@ -42,10 +42,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	flags.StringVarP(&regio, "region", "r", "us-west-1", "The Sauce Labs region. Options: us-west-1, eu-central-1.")
 
 	cmd.AddCommand(
-		ListCommand(),
-		UploadCommand(),
-		DownloadCommand(),
+		LogsCommand(),
 	)
-
 	return cmd
 }
