@@ -117,7 +117,7 @@ func (s *ArtifactService) GetSource(ID string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("job not found")
+	return "", fmt.Errorf("job or run is not found")
 }
 
 func (s *ArtifactService) HtoDownload(runID, pattern, targetDir string) (artifacts.List, error) {
