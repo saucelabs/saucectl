@@ -1,4 +1,4 @@
-package hto
+package imagerunner
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 func LogsCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "logs <runID>",
-		Short: "Fetch the logs for an HTO run",
+		Short: "Fetch the logs for an imagerunner run",
 		PreRun: func(cmd *cobra.Command, args []string) {
 			tracker := segment.DefaultTracker
 

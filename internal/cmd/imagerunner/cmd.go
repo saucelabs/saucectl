@@ -1,4 +1,4 @@
-package hto
+package imagerunner
 
 import (
 	"errors"
@@ -18,8 +18,8 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	var regio string
 
 	cmd := &cobra.Command{
-		Use:   "hto",
-		Short: "Commands for interacting with Hosted Test Orchestration (HTO) runs",
+		Use:   "imagerunner",
+		Short: "Commands for interacting with imagerunner runs",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if preRun != nil {
 				preRun(cmd, args)
