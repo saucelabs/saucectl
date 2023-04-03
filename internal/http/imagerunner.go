@@ -127,11 +127,6 @@ func (c *ImageRunner) DownloadArtifacts(ctx context.Context, id string) (io.Read
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusNotFound {
-		return nil, imagerunner.LogURLNotFoundError{
-			RunID: id,
-		}
-	}
 	if resp.StatusCode != http.StatusOK {
 		b, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("unexpected server response (%d): %s", resp.StatusCode, b)
@@ -175,9 +170,7 @@ func (c *ImageRunner) GetLogs(ctx context.Context, id string) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		return "", imagerunner.LogURLNotFoundError{
-			RunID: id,
-		}
+		return "", imagerunner.ErrResourceNotFound
 	}
 	if resp.StatusCode != http.StatusOK {
 		b, _ := io.ReadAll(resp.Body)
