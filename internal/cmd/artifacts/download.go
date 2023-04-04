@@ -3,8 +3,9 @@ package artifacts
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path"
 
-	"github.com/saucelabs/saucectl/internal/artifacts"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/segment"
@@ -20,11 +21,11 @@ func DownloadCommand() *cobra.Command {
 	var out string
 
 	cmd := &cobra.Command{
-		Use:   "download <jobID/runID> <filename>",
-		Short: "Downloads the specified artifacts from the given job/run. Supports glob pattern.",
+		Use:   "download <jobID> <filename>",
+		Short: "Downloads the specified artifacts from the given job. Supports glob pattern.",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
-				return errors.New("no job or run ID specified")
+				return errors.New("no job ID specified")
 			}
 			if len(args) == 1 || args[1] == "" {
 				return errors.New("no file pattern specified")
@@ -44,10 +45,9 @@ func DownloadCommand() *cobra.Command {
 			}()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ID := args[0]
+			jobID := args[0]
 			filePattern := args[1]
-
-			return download(ID, filePattern, targetDir, out)
+			return download(jobID, filePattern, targetDir, out)
 		},
 	}
 
@@ -58,37 +58,56 @@ func DownloadCommand() *cobra.Command {
 	return cmd
 }
 
-func download(ID, filePattern, targetDir, outputFormat string) error {
-	source, err := artifactSvc.GetSource(ID)
+func download(jobID, filePattern, targetDir, outputFormat string) error {
+	lst, err := artifactSvc.List(jobID)
 	if err != nil {
 		return err
 	}
 
-	if source == artifacts.HTOSource {
-		lst, err := artifactSvc.HtoDownload(ID, filePattern, targetDir)
-		if err != nil {
-			return err
-		}
-		return renderResults(lst, outputFormat)
-	}
-
-	lst, err := artifactSvc.List(ID)
-	if err != nil {
-		return err
-	}
 	files := fpath.MatchFiles(lst.Items, []string{filePattern})
 	lst.Items = files
 
 	bar := newDownloadProgressBar(outputFormat, len(files))
 	for _, f := range files {
 		_ = bar.Add(1)
-		if err := artifactSvc.Download(ID, targetDir, f); err != nil {
+		body, err := artifactSvc.Download(jobID, f)
+		if err != nil {
 			return fmt.Errorf("failed to get file: %w", err)
 		}
+
+		filePath := f
+		if targetDir != "" {
+			if err := os.MkdirAll(targetDir, os.ModePerm); err != nil {
+				return fmt.Errorf("failed to create target dir: %w", err)
+			}
+			filePath = path.Join(targetDir, filePath)
+		}
+
+		file, err := os.Create(filePath)
+		if err != nil {
+			return fmt.Errorf("failed to create file: %w", err)
+		}
+
+		_, err = file.Write(body)
+		if err != nil {
+			return fmt.Errorf("failed to write to the file: %w", err)
+		}
+		_ = file.Close()
 	}
 	bar.Close()
 
-	return renderResults(lst, outputFormat)
+	switch outputFormat {
+	case "json":
+		if err := renderJSON(lst); err != nil {
+			return fmt.Errorf("failed to render output: %w", err)
+		}
+	case "text":
+		renderTable(lst)
+	default:
+		return errors.New("unknown output format")
+	}
+
+	return nil
 }
 
 func newDownloadProgressBar(output string, count int) *progressbar.ProgressBar {

@@ -68,3 +68,8 @@ type Runner struct {
 	TerminationTime   int64  `json:"termination_time,omitempty"`
 	TerminationReason string `json:"termination_reason,omitempty"`
 }
+
+type ArtifactList struct {
+	ID    string   `json:"id"`
+	Items []string `json:"items"`
+}

@@ -46,9 +46,8 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 			restoClient := http.NewResto(url, creds.Username, creds.AccessKey, restoTimeout)
 			rdcClient := http.NewRDCService(url, creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 			testcompClient := http.NewTestComposer(url, creds, testComposerTimeout)
-			runnerService := http.NewImageRunner(url, creds, runnerSvcTimeout)
 
-			artifactSvc = saucecloud.NewArtifactService(&restoClient, &rdcClient, &testcompClient, &runnerService)
+			artifactSvc = saucecloud.NewArtifactService(&restoClient, &rdcClient, &testcompClient)
 
 			return nil
 		},
