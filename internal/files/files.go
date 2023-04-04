@@ -20,7 +20,8 @@ func NewSHA256(filename string) (string, error) {
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
-// SaveToTempFile saves file content from an io reader to a temp file
+// SaveToTempFile writes out the contents of the reader to a temp file.
+// It's the caller's responsibility to clean up the temp file.
 func SaveToTempFile(closer io.ReadCloser) (string, error) {
 	defer closer.Close()
 	fd, err := os.CreateTemp("", "")
