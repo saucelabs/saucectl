@@ -64,7 +64,7 @@ var defaultTableStyle = table.Style{
 func ArtifactsCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "artifacts",
-		Short: "Commands for interacting with artifacts imagerunner runs.",
+		Short: "Commands for interacting with artifacts produced by the imagerunner.",
 	}
 
 	cmd.AddCommand(
