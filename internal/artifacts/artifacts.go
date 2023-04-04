@@ -1,15 +1,8 @@
 package artifacts
 
-const (
-	RDCSource = "rdc"
-	VDCSource = "vdc"
-	HTOSource = "hto"
-)
-
 // List represents artifact structure
 type List struct {
-	JobID string   `json:"jobID,omitempty"`
-	RunID string   `json:"runID,omitempty"`
+	JobID string   `json:"jobID"`
 	Items []string `json:"items"`
 }
 
