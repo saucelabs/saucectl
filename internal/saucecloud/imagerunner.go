@@ -6,21 +6,20 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/ryanuber/go-glob"
-	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/report"
 	"io"
 	"os"
 	"os/signal"
-	"path"
-	"path/filepath"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"github.com/ryanuber/go-glob"
+	szip "github.com/saucelabs/saucectl/internal/archive/zip"
+	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/files"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/report"
 )
 
 type ImageRunner interface {
@@ -317,56 +316,6 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (
 	}
 }
 
-func extractFile(artifactFolder string, file *zip.File) error {
-	fullPath := path.Join(artifactFolder, file.Name)
-
-	relPath, err := filepath.Rel(artifactFolder, fullPath)
-	if err != nil {
-		return err
-	}
-	if strings.Contains(relPath, "..") {
-		return fmt.Errorf("file %s is relative to an outside folder", file.Name)
-	}
-
-	folder := path.Dir(fullPath)
-	if err := os.MkdirAll(folder, 0755); err != nil {
-		return err
-	}
-
-	fd, err := os.Create(fullPath)
-	if err != nil {
-		return err
-	}
-	defer fd.Close()
-
-	rd, err := file.Open()
-	if err != nil {
-		return err
-	}
-	defer rd.Close()
-
-	_, err = io.Copy(fd, rd)
-	if err != nil {
-		return err
-	}
-	return fd.Close()
-}
-
-func saveToTempFile(closer io.ReadCloser) (string, error) {
-	defer closer.Close()
-	fd, err := os.CreateTemp("", "")
-	if err != nil {
-		return "", err
-	}
-	defer fd.Close()
-
-	_, err = io.Copy(fd, closer)
-	if err != nil {
-		return "", err
-	}
-	return fd.Name(), fd.Close()
-}
-
 func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed bool) {
 	if runnerID == "" || status == imagerunner.StateCancelled || !r.Project.Artifacts.Download.When.IsNow(passed) {
 		return
@@ -384,7 +333,7 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 		log.Err(err).Str("suite", suiteName).Msg("Failed to fetch artifacts.")
 		return
 	}
-	fileName, err := saveToTempFile(reader)
+	fileName, err := files.SaveToTempFile(reader)
 	if err != nil {
 		log.Err(err).Str("suite", suiteName).Msg("Failed to download artifacts content.")
 		return
@@ -393,13 +342,14 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 
 	zf, err := zip.OpenReader(fileName)
 	if err != nil {
+		log.Error().Msgf("Unable to open zip file %s: %s", fileName, err)
 		return
 	}
 	defer zf.Close()
 	for _, f := range zf.File {
 		for _, pattern := range r.Project.Artifacts.Download.Match {
 			if glob.Glob(pattern, f.Name) {
-				if err = extractFile(dir, f); err != nil {
+				if err = szip.Extract(dir, f); err != nil {
 					log.Error().Msgf("Unable to extract file '%s': %s", f.Name, err)
 				}
 				break

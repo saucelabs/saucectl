@@ -2,6 +2,7 @@ package zip
 
 import (
 	"archive/zip"
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -99,4 +100,39 @@ func (w *Writer) Close() error {
 		return err
 	}
 	return w.ZipFile.Close()
+}
+
+func Extract(targetDir string, file *zip.File) error {
+	fullPath := path.Join(targetDir, file.Name)
+
+	relPath, err := filepath.Rel(targetDir, fullPath)
+	if err != nil {
+		return err
+	}
+	if strings.Contains(relPath, "..") {
+		return fmt.Errorf("file %s is relative to an outside folder", file.Name)
+	}
+
+	folder := path.Dir(fullPath)
+	if err := os.MkdirAll(folder, 0755); err != nil {
+		return err
+	}
+
+	fd, err := os.Create(fullPath)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+
+	rd, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer rd.Close()
+
+	_, err = io.Copy(fd, rd)
+	if err != nil {
+		return err
+	}
+	return fd.Close()
 }
