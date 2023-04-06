@@ -19,6 +19,10 @@ func configureImageRunner(cfg *initConfig) interface{} {
 			{
 				Name:  fmt.Sprintf("imagerunner - %s", cfg.dockerImage),
 				Image: cfg.dockerImage,
+				ImagePullAuth: imagerunner.ImagePullAuth{
+					User:  "${DOCKER_USERNAME}",
+					Token: "${DOCKER_PASSWORD}",
+				},
 			},
 		},
 		Artifacts: config.Artifacts{
