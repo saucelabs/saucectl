@@ -26,14 +26,14 @@ func CheckHTTPProxy() error {
 			println()
 			return fmt.Errorf("invalid HTTP_PROXY value")
 		}
-		displayUrl := proxyURL
+		displayURL := proxyURL
 		if url.User != nil {
 			pass, hasPass := url.User.Password()
 			if hasPass {
-				displayUrl = strings.Replace(displayUrl, pass, "***", -1)
+				displayURL = strings.Replace(displayURL, pass, "***", -1)
 			}
 		}
-		log.Info().Msgf(fmt.Sprintf("Using proxy: %s", displayUrl))
+		log.Info().Msgf(fmt.Sprintf("Using proxy: %s", displayURL))
 	}
 	return nil
 }
