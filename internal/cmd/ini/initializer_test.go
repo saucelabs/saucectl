@@ -13,6 +13,8 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/iam"
+	"github.com/saucelabs/saucectl/internal/imagerunner"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/spf13/pflag"
 
 	"github.com/AlecAivazis/survey/v2/terminal"
@@ -1015,6 +1017,12 @@ func Test_initializers(t *testing.T) {
 				Platforms:        []framework.Platform{},
 			},
 		},
+		imagerunner.Kind: {
+			{
+				FrameworkName:    imagerunner.Kind,
+				FrameworkVersion: "1.0.0",
+			},
+		},
 	}
 	ir := &mocks.FakeFrameworkInfoReader{
 		VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
@@ -1024,6 +1032,7 @@ func Test_initializers(t *testing.T) {
 			return []framework.Framework{
 				{Name: cypress.Kind},
 				{Name: espresso.Kind},
+				{Name: imagerunner.Kind},
 				{Name: playwright.Kind},
 				{Name: "puppeteer"},
 				{Name: testcafe.Kind},
@@ -1483,6 +1492,47 @@ func Test_initializers(t *testing.T) {
 				testApp:       dir.Join("android-app.apk"),
 				device:        config.Device{Name: "HTC .*"},
 				emulator:      config.Emulator{Name: "Samsung Galaxy Emulator", PlatformVersions: []string{"8.0"}},
+				artifactWhen:  config.WhenPass,
+			},
+		},
+		{
+			name: "ImageRunner - DockerImage",
+			procedure: func(c *expect.Console) error {
+				_, err := c.ExpectString("Docker Image to use:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("ubuntu:latest")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Download artifacts:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("when tests are passing")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectEOF()
+				if err != nil {
+					return err
+				}
+				return nil
+			},
+			ini: &initializer{infoReader: ir},
+			execution: func(i *initializer, cfg *initConfig) error {
+				newCfg, err := i.initializeImageRunner()
+				if err != nil {
+					return err
+				}
+				*cfg = *newCfg
+				return nil
+			},
+			startState: &initConfig{},
+			expectedState: &initConfig{
+				frameworkName: imagerunner.Kind,
+				dockerImage:   "ubuntu:latest",
 				artifactWhen:  config.WhenPass,
 			},
 		},
@@ -2823,6 +2873,102 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 			}
 			if !reflect.DeepEqual(errs, tt.wantErrs) {
 				t.Errorf("initializeBatchEspresso() got1 = %v, want %v", errs, tt.wantErrs)
+			}
+		})
+	}
+}
+
+func Test_initializer_initializeBatchImageRunner(t *testing.T) {
+	ini := &initializer{
+		infoReader: &mocks.FakeFrameworkInfoReader{VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
+			return []framework.Metadata{
+				{
+					FrameworkName:    "imagerunner",
+					FrameworkVersion: "",
+				},
+			}, nil
+		}},
+		userService: &mocks.UserService{ConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
+			return iam.Concurrency{
+				Org: iam.OrgConcurrency{
+					Allowed: iam.CloudConcurrency{
+						VDC: 2,
+					},
+				},
+			}, nil
+		}},
+	}
+	var emptyErr []error
+
+	type args struct {
+		initCfg *initConfig
+	}
+	tests := []struct {
+		name     string
+		args     args
+		want     *initConfig
+		wantErrs []error
+	}{
+		{
+			name: "Basic",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName: "imagerunner",
+					dockerImage:   "ubuntu:latest",
+					region:        "us-west-1",
+					artifactWhen:  "fail",
+				},
+			},
+			want: &initConfig{
+				frameworkName: "imagerunner",
+				dockerImage:   "ubuntu:latest",
+				region:        "us-west-1",
+				artifactWhen:  config.WhenFail,
+			},
+			wantErrs: emptyErr,
+		},
+		{
+			name: "invalid browser/platform",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName:   "imagerunner",
+					dockerImage:     "ubuntu::buggy",
+					artifactWhenStr: "dummy",
+				},
+			},
+			want: &initConfig{
+				frameworkName:   "imagerunner",
+				dockerImage:     "ubuntu::buggy",
+				artifactWhenStr: "dummy",
+			},
+			wantErrs: []error{
+				errors.New("dockerImage: ubuntu::buggy is not a valid docker image"),
+				errors.New("dummy: unknown download condition"),
+			},
+		},
+		{
+			name: "no flags",
+			args: args{
+				initCfg: &initConfig{
+					frameworkName: "imagerunner",
+				},
+			},
+			want: &initConfig{
+				frameworkName: "imagerunner",
+			},
+			wantErrs: []error{
+				errors.New(msg.MissingDockerImage),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, errs := ini.initializeBatchImageRunner(tt.args.initCfg)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("initializeBatchImageRunner() got = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(errs, tt.wantErrs) {
+				t.Errorf("initializeBatchImageRunner() got1 = %v, want %v", errs, tt.wantErrs)
 			}
 		})
 	}

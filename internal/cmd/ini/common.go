@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -19,12 +20,13 @@ import (
 )
 
 var configurators = map[string]func(cfg *initConfig) interface{}{
-	"cypress":    configureCypress,
-	"espresso":   configureEspresso,
-	"playwright": configurePlaywright,
-	"puppeteer":  configurePuppeteer,
-	"testcafe":   configureTestcafe,
-	"xcuitest":   configureXCUITest,
+	"cypress":     configureCypress,
+	"espresso":    configureEspresso,
+	"playwright":  configurePlaywright,
+	"puppeteer":   configurePuppeteer,
+	"testcafe":    configureTestcafe,
+	"xcuitest":    configureXCUITest,
+	"imagerunner": configureImageRunner,
 }
 
 var sauceignores = map[string]string{
@@ -133,6 +135,17 @@ func extValidator(framework, frameworkVersion string) survey.Validator {
 			return fmt.Errorf("%s: %v", val, err)
 		}
 		return nil
+	}
+}
+
+func dockerImageValidator() survey.Validator {
+	re := regexp.MustCompile("^([\\w.\\-_]+((:\\d+|)(/[a-z0-9._-]+/[a-z0-9._-]+))|)(/|)([a-z0-9.\\-_]+(/[a-z0-9.\\-_]+|))(:([\\w.\\-_]{1,127})|)$")
+	return func(s interface{}) error {
+		str := s.(string)
+		if re.MatchString(str) {
+			return nil
+		}
+		return fmt.Errorf("%s is not a valid docker image", str)
 	}
 }
 
