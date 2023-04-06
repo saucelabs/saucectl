@@ -139,7 +139,7 @@ func extValidator(framework, frameworkVersion string) survey.Validator {
 }
 
 func dockerImageValidator() survey.Validator {
-	re := regexp.MustCompile("^([\\w.\\-_]+((:\\d+|)(/[a-z0-9._-]+/[a-z0-9._-]+))|)(/|)([a-z0-9.\\-_]+(/[a-z0-9.\\-_]+|))(:([\\w.\\-_]{1,127})|)$")
+	re := regexp.MustCompile(`^([\w.\-_]+((:\d+|)(/[a-z0-9._-]+/[a-z0-9._-]+))|)(/|)([a-z0-9.\-_]+(/[a-z0-9.\-_]+|))(:([\w.\-_]{1,127})|)$`)
 	return func(s interface{}) error {
 		str := s.(string)
 		if re.MatchString(str) {
