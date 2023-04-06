@@ -12,7 +12,7 @@ func NewRetryableClient(timeout time.Duration) *retryablehttp.Client {
 	return &retryablehttp.Client{
 		HTTPClient: &http.Client{
 			Timeout:   timeout,
-			Transport: getProxifiedHTTPTransport(),
+			Transport: mustGetProxifiedHTTPTransport(),
 		},
 		RetryWaitMin: 1 * time.Second,
 		RetryWaitMax: 30 * time.Second,

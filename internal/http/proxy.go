@@ -25,7 +25,7 @@ func CheckHTTPProxy() error {
 	return nil
 }
 
-func getProxifiedHTTPTransport() http.RoundTripper {
+func mustGetProxifiedHTTPTransport() http.RoundTripper {
 	proxyURL := os.Getenv("HTTP_PROXY")
 	if proxyURL == "" {
 		return nil

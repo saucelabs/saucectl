@@ -53,7 +53,7 @@ func NewTestComposer(url string, creds iam.Credentials, timeout time.Duration) T
 	return TestComposer{
 		HTTPClient: &http.Client{
 			Timeout:   timeout,
-			Transport: getProxifiedHTTPTransport(),
+			Transport: mustGetProxifiedHTTPTransport(),
 		},
 		URL:         url,
 		Credentials: creds,

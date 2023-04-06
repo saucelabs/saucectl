@@ -21,7 +21,7 @@ func NewUserService(url string, creds iam.Credentials, timeout time.Duration) Us
 	return UserService{
 		HTTPClient: &http.Client{
 			Timeout:   timeout,
-			Transport: getProxifiedHTTPTransport(),
+			Transport: mustGetProxifiedHTTPTransport(),
 		},
 		URL:         url,
 		Credentials: creds,
