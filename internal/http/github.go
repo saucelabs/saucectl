@@ -3,17 +3,19 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/mod/semver"
 	"net/http"
 	"strings"
 	"time"
-
-	"golang.org/x/mod/semver"
 )
 
 // DefaultGitHub is a preconfigured instance of GitHub.
 var DefaultGitHub = GitHub{
-	HTTPClient: &http.Client{Timeout: 2 * time.Second},
-	URL:        "https://api.github.com",
+	HTTPClient: &http.Client{
+		Timeout:   2 * time.Second,
+		Transport: getProxifiedHttpTransport(),
+	},
+	URL: "https://api.github.com",
 }
 
 // GitHub represents the GitHub HTTP API client.

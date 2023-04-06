@@ -56,10 +56,13 @@ type AppStore struct {
 // NewAppStore returns an implementation for AppStore
 func NewAppStore(url, username, accessKey string, timeout time.Duration) *AppStore {
 	return &AppStore{
-		HTTPClient: &http.Client{Timeout: timeout},
-		URL:        url,
-		Username:   username,
-		AccessKey:  accessKey,
+		HTTPClient: &http.Client{
+			Timeout:   timeout,
+			Transport: getProxifiedHttpTransport(),
+		},
+		URL:       url,
+		Username:  username,
+		AccessKey: accessKey,
 	}
 }
 
