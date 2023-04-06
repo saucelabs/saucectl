@@ -178,6 +178,11 @@ func Command() *cobra.Command {
 
 // preRun is a pre-run step that is executed before the main 'run` step. All shared dependencies are initialized here.
 func preRun() error {
+	err := http.CheckHTTPProxy()
+	if err != nil {
+		return fmt.Errorf("invalid HTTP_PROXY value")
+	}
+
 	println("Running version", version.Version)
 	checkForUpdates()
 	go awaitGlobalTimeout()
@@ -189,11 +194,6 @@ func preRun() error {
 > saucectl configure`)
 		println()
 		return fmt.Errorf("no credentials set")
-	}
-
-	err := http.CheckHTTPProxy()
-	if err != nil {
-		return fmt.Errorf("invalid HTTP_PROXY value")
 	}
 
 	d, err := config.Describe(gFlags.cfgFilePath)
@@ -292,7 +292,8 @@ func awaitGlobalTimeout() {
 
 // checkForUpdates check if there is a saucectl update available.
 func checkForUpdates() {
-	v, err := http.DefaultGitHub.IsUpdateAvailable(version.Version)
+	gh := http.NewGitHub()
+	v, err := gh.IsUpdateAvailable(version.Version)
 	if err != nil {
 		return
 	}

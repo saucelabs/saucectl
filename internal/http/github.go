@@ -9,13 +9,15 @@ import (
 	"time"
 )
 
-// DefaultGitHub is a preconfigured instance of GitHub.
-var DefaultGitHub = GitHub{
-	HTTPClient: &http.Client{
-		Timeout:   2 * time.Second,
-		Transport: getProxifiedHTTPTransport(),
-	},
-	URL: "https://api.github.com",
+// NewGitHub returns a preconfigured instance of GitHub.
+func NewGitHub() GitHub {
+	return GitHub{
+		HTTPClient: &http.Client{
+			Timeout:   2 * time.Second,
+			Transport: getProxifiedHTTPTransport(),
+		},
+		URL: "https://api.github.com",
+	}
 }
 
 // GitHub represents the GitHub HTTP API client.
