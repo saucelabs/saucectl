@@ -2,6 +2,7 @@ package retry
 
 import (
 	"fmt"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/job"
 )

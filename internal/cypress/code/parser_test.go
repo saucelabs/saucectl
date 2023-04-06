@@ -25,14 +25,14 @@ context('Actions', () => {
   })
 })
 `,
-			want: []TestCase {
+			want: []TestCase{
 				{
 					Title: "Actions",
-					Tags: "",
+					Tags:  "",
 				},
 				{
 					Title: ".type() - type into a DOM element",
-					Tags: "",
+					Tags:  "",
 				},
 			},
 		},
@@ -50,14 +50,14 @@ context('Actions', () => {
   })
 })
 `,
-			want: []TestCase {
+			want: []TestCase{
 				{
 					Title: "Actions",
-					Tags: "",
+					Tags:  "",
 				},
 				{
 					Title: ".type() - type into a DOM element",
-					Tags: "@tag1 @tag2",
+					Tags:  "@tag1 @tag2",
 				},
 			},
 		},
@@ -75,14 +75,14 @@ context('Actions', () => {
   })
 })
 `,
-			want: []TestCase {
+			want: []TestCase{
 				{
 					Title: "Actions",
-					Tags: "",
+					Tags:  "",
 				},
 				{
 					Title: ".type() - type into a DOM element",
-					Tags: "@tag1",
+					Tags:  "@tag1",
 				},
 			},
 		},
@@ -105,14 +105,14 @@ context('Actions', () => {
   })
 })
 `,
-			want: []TestCase {
+			want: []TestCase{
 				{
 					Title: "Actions",
-					Tags: "",
+					Tags:  "",
 				},
 				{
 					Title: ".type() - type into a DOM element",
-					Tags: "@tag1 @tag2",
+					Tags:  "@tag1 @tag2",
 				},
 			},
 		},
@@ -176,18 +176,18 @@ context('Actions', function () {
     }
   );
 `,
-			want: []TestCase {
+			want: []TestCase{
 				{
 					Title: "Actions",
-					Tags: "",
+					Tags:  "",
 				},
 				{
 					Title: ".type() - type into a DOM element",
-					Tags: "@tag1 @tag2",
+					Tags:  "@tag1 @tag2",
 				},
 				{
 					Title: ".focus() - focus on a DOM element",
-					Tags: "@tag1",
+					Tags:  "@tag1",
 				},
 			},
 		},

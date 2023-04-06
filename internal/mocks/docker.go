@@ -3,9 +3,10 @@ package mocks
 import (
 	"context"
 	"errors"
-	specs "github.com/opencontainers/image-spec/specs-go/v1"
 	"io"
 	"time"
+
+	specs "github.com/opencontainers/image-spec/specs-go/v1"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"

@@ -2,9 +2,10 @@ package flags
 
 import (
 	"encoding/json"
-	"github.com/spf13/pflag"
 	"reflect"
 	"testing"
+
+	"github.com/spf13/pflag"
 )
 
 type mockedValue struct {
@@ -64,7 +65,6 @@ func Test_redactStringValue(t *testing.T) {
 		})
 	}
 }
-
 
 func Test_redactStringToStringValue(t *testing.T) {
 	tests := []struct {

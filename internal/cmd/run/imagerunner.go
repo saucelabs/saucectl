@@ -1,6 +1,8 @@
 package run
 
 import (
+	"os"
+
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -12,7 +14,6 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"os"
 )
 
 func runImageRunner(cmd *cobra.Command) (int, error) {

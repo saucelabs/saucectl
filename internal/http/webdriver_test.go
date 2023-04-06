@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/job"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/saucelabs/saucectl/internal/job"
 )
 
 func TestWebdriver_StartJob(t *testing.T) {

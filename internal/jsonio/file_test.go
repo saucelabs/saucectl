@@ -3,10 +3,11 @@ package jsonio
 import (
 	"bytes"
 	"encoding/json"
-	"gotest.tools/v3/fs"
 	"os"
 	"reflect"
 	"testing"
+
+	"gotest.tools/v3/fs"
 )
 
 func TestWriteFile(t *testing.T) {

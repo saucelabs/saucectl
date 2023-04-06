@@ -1,8 +1,9 @@
 package yaml
 
 import (
-	"gopkg.in/yaml.v2"
 	"os"
+
+	"gopkg.in/yaml.v2"
 )
 
 // WriteFile serializes v to a file with the given name.

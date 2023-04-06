@@ -2,6 +2,7 @@ linters:
   enable:
     - revive
     - errname
+    - goimports
 linters-settings:
   staticcheck:
     # https://staticcheck.io/docs/configuration/options/#checks

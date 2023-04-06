@@ -1,9 +1,10 @@
 package retry
 
 import (
+	"testing"
+
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestBasicRetrier_Retry(t *testing.T) {
