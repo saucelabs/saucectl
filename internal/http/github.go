@@ -13,7 +13,7 @@ import (
 var DefaultGitHub = GitHub{
 	HTTPClient: &http.Client{
 		Timeout:   2 * time.Second,
-		Transport: getProxifiedHttpTransport(),
+		Transport: getProxifiedHTTPTransport(),
 	},
 	URL: "https://api.github.com",
 }

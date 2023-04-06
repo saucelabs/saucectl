@@ -61,7 +61,7 @@ func NewInsightsService(url string, creds iam.Credentials, timeout time.Duration
 	return InsightsService{
 		HTTPClient: &http.Client{
 			Timeout:   timeout,
-			Transport: getProxifiedHttpTransport(),
+			Transport: getProxifiedHTTPTransport(),
 		},
 		URL:         url,
 		Credentials: creds,

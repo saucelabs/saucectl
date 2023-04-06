@@ -14,6 +14,7 @@ import (
 	szip "github.com/saucelabs/saucectl/internal/archive/zip"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/files"
+	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
@@ -91,7 +92,12 @@ func downloadCommand() *cobra.Command {
 
 			return nil
 		},
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			err := http.CheckHTTPProxy()
+			if err != nil {
+				return fmt.Errorf("invalid HTTP_PROXY value")
+			}
+
 			tracker := segment.DefaultTracker
 
 			go func() {
@@ -101,6 +107,7 @@ func downloadCommand() *cobra.Command {
 				)
 				_ = tracker.Close()
 			}()
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ID := args[0]

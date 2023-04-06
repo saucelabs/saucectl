@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
+	"github.com/saucelabs/saucectl/internal/http"
 	imgrunner "github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
@@ -17,7 +18,12 @@ func LogsCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "logs <runID>",
 		Short: "Fetch the logs for an imagerunner run",
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			err := http.CheckHTTPProxy()
+			if err != nil {
+				return fmt.Errorf("invalid HTTP_PROXY value")
+			}
+
 			tracker := segment.DefaultTracker
 
 			go func() {
@@ -27,6 +33,7 @@ func LogsCommand() *cobra.Command {
 				)
 				_ = tracker.Close()
 			}()
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return exec(args[0])

@@ -3,7 +3,6 @@ package run
 import (
 	"errors"
 	"fmt"
-	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -192,16 +191,9 @@ func preRun() error {
 		return fmt.Errorf("no credentials set")
 	}
 
-	proxyURL := os.Getenv("HTTP_PROXY")
-	if proxyURL != "" {
-		url, err := url.Parse(proxyURL)
-		if err != nil {
-			color.Red("\nA proxy has been set, but its url is invalid !\n\n")
-			fmt.Sprintf("%s: %s", proxyURL, err)
-			println()
-			return fmt.Errorf("invalid HTTP_PROXY value")
-		}
-		log.Info().Msgf(fmt.Sprintf("Using proxy: %s://%s:%s", url.Scheme, url.Hostname(), url.Port()))
+	err := http.CheckHTTPProxy()
+	if err != nil {
+		return fmt.Errorf("invalid HTTP_PROXY value")
 	}
 
 	d, err := config.Describe(gFlags.cfgFilePath)
