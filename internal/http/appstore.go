@@ -131,7 +131,7 @@ func (s *AppStore) UploadStream(filename, description string, reader io.Reader) 
 	req.SetBasicAuth(s.Username, s.AccessKey)
 
 	resp, err := s.HTTPClient.Do(req)
-	if err != nil && resp == nil {
+	if err != nil {
 		return storage.Item{}, err
 	}
 
