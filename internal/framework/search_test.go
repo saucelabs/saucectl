@@ -3,14 +3,14 @@ package framework
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/Masterminds/semver/v3"
 	"github.com/pkg/errors"
 	"github.com/saucelabs/saucectl/internal/node"
-	"testing"
 )
 
 type MockMetadataService struct {
-	MockSearch     func(context.Context, SearchOptions) (Metadata, error)
 	MockFrameworks func(ctx context.Context) ([]Framework, error)
 	MockVersions   func(ctx context.Context, frameworkName string) ([]Metadata, error)
 }

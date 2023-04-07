@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+
 	"github.com/saucelabs/saucectl/internal/framework"
 )
 
@@ -9,7 +10,6 @@ import (
 type FakeFrameworkInfoReader struct {
 	FrameworksFn func(ctx context.Context) ([]framework.Framework, error)
 	VersionsFn   func(ctx context.Context, frameworkName string) ([]framework.Metadata, error)
-	SearchFn     func(ctx context.Context, opts framework.SearchOptions) (framework.Metadata, error)
 }
 
 // Frameworks is a wrapper around FrameworksFn.
