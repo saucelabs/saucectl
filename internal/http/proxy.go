@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
-	"net/http"
 	"net/url"
 	"os"
 	"strings"
 )
 
-// Note: The verification logic is borrowed from golang.org/x/net/http/httpproxy
-//       Those useful functions are not exposed, but are required to allow us to warn
-//       the user upfront.
+// Note: The verification logic is borrowed from golang.org/x/net/http/httpproxy.
+// Those useful functions are not exposed, but are required to allow us to warn
+// the user upfront.
 func getEnvAny(names ...string) string {
 	for _, n := range names {
 		if val := os.Getenv(n); val != "" {
@@ -83,10 +82,4 @@ func CheckProxy() error {
 		return fmt.Errorf("proxy setup has %d error(s)", len(errs))
 	}
 	return nil
-}
-
-func mustGetProxifiedHTTPTransport() http.RoundTripper {
-	return &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-	}
 }

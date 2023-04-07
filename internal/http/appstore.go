@@ -58,7 +58,7 @@ func NewAppStore(url, username, accessKey string, timeout time.Duration) *AppSto
 	return &AppStore{
 		HTTPClient: &http.Client{
 			Timeout:   timeout,
-			Transport: mustGetProxifiedHTTPTransport(),
+			Transport: &http.Transport{Proxy: http.ProxyFromEnvironment},
 		},
 		URL:       url,
 		Username:  username,

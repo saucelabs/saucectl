@@ -14,7 +14,7 @@ func NewGitHub() GitHub {
 	return GitHub{
 		HTTPClient: &http.Client{
 			Timeout:   2 * time.Second,
-			Transport: mustGetProxifiedHTTPTransport(),
+			Transport: &http.Transport{Proxy: http.ProxyFromEnvironment},
 		},
 		URL: "https://api.github.com",
 	}

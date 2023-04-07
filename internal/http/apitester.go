@@ -35,7 +35,7 @@ func NewAPITester(url string, username string, accessKey string, timeout time.Du
 	return APITester{
 		HTTPClient: &http.Client{
 			Timeout:   timeout,
-			Transport: mustGetProxifiedHTTPTransport(),
+			Transport: &http.Transport{Proxy: http.ProxyFromEnvironment},
 		},
 		URL:       url,
 		Username:  username,
