@@ -18,16 +18,8 @@ type Framework struct {
 
 // MetadataService represents an interface for retrieving framework metadata.
 type MetadataService interface {
-	Search(ctx context.Context, opts SearchOptions) (Metadata, error)
-
 	Frameworks(ctx context.Context) ([]Framework, error)
 	Versions(ctx context.Context, frameworkName string) ([]Metadata, error)
-}
-
-// SearchOptions represents read query options for MetadataService.Search().
-type SearchOptions struct {
-	Name             string
-	FrameworkVersion string
 }
 
 // Metadata represents test runner metadata.

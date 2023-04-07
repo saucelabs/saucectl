@@ -135,37 +135,6 @@ func (c *TestComposer) doJSONResponse(req *http.Request, expectStatus int, v int
 	return json.NewDecoder(res.Body).Decode(v)
 }
 
-// Search returns metadata for the given search options opts.
-func (c *TestComposer) Search(ctx context.Context, opts framework.SearchOptions) (framework.Metadata, error) {
-	url := fmt.Sprintf("%s/v1/testcomposer/frameworks/%s", c.URL, opts.Name)
-
-	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return framework.Metadata{}, err
-	}
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
-	q := req.URL.Query()
-	q.Add("version", opts.FrameworkVersion)
-	req.URL.RawQuery = q.Encode()
-
-	var resp FrameworkResponse
-	if err := c.doJSONResponse(req, 200, &resp); err != nil {
-		return framework.Metadata{}, err
-	}
-
-	m := framework.Metadata{
-		FrameworkName:      resp.Name,
-		FrameworkVersion:   resp.Version,
-		EOLDate:            resp.EOLDate,
-		RemovalDate:        resp.RemovalDate,
-		DockerImage:        resp.Runner.DockerImage,
-		GitRelease:         resp.Runner.GitRelease,
-		CloudRunnerVersion: resp.Runner.CloudRunnerVersion,
-	}
-
-	return m, nil
-}
-
 // UploadAsset uploads an asset to the specified jobID.
 func (c *TestComposer) UploadAsset(jobID string, realDevice bool, fileName string, contentType string, content []byte) error {
 	var b bytes.Buffer

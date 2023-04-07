@@ -23,14 +23,6 @@ func (m *MockMetadataService) Frameworks(ctx context.Context) ([]Framework, erro
 	return nil, nil
 }
 
-func (m *MockMetadataService) Search(ctx context.Context, opts SearchOptions) (Metadata, error) {
-	if m.MockSearch != nil {
-		return m.MockSearch(ctx, opts)
-	}
-
-	return Metadata{}, nil
-}
-
 func (m *MockMetadataService) Versions(ctx context.Context, frameworkName string) ([]Metadata, error) {
 	if m.MockVersions != nil {
 		return m.MockVersions(ctx, frameworkName)
