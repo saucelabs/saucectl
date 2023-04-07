@@ -1,0 +1,15 @@
+name: Pull Request Linter
+
+on:
+  pull_request:
+    types:
+      - labeled
+      - unlabeled
+      - opened
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Label
+        run: if [ "[]" == "${{ toJson(github.event.pull_request.labels.*.name) }}" ]; then echo 'Please label your PR' && exit 1; fi
