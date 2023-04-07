@@ -73,6 +73,13 @@ jobs:
         working-directory: api/
         run: diff saucectl.schema.json fresh.schema.json
 
+  label:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Label
+        run: if [ -z "${{ github.event.pull_request.labels }}" ]; then echo 'Please label your PR' && exit 1; fi
+
   build:
     needs: [lint, test]
     runs-on: ubuntu-latest
