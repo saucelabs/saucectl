@@ -44,7 +44,7 @@ func parseProxy(proxy string) (*url.URL, error) {
 	return proxyURL, nil
 }
 
-func checkProxy(scheme string) error {
+func doCheckProxy(scheme string) error {
 	proxyScheme := fmt.Sprintf("%s_proxy", scheme)
 	rawProxyURL := getEnvAny(strings.ToUpper(proxyScheme), strings.ToLower(proxyScheme))
 	proxyURL, err := parseProxy(rawProxyURL)
@@ -72,10 +72,10 @@ func checkProxy(scheme string) error {
 // CheckProxy checks that the HTTP_PROXY is valid if it exists.
 func CheckProxy() error {
 	var errs []error
-	if err := checkProxy("http"); err != nil {
+	if err := doCheckProxy("http"); err != nil {
 		errs = append(errs, err)
 	}
-	if err := checkProxy("https"); err != nil {
+	if err := doCheckProxy("https"); err != nil {
 		errs = append(errs, err)
 	}
 	if len(errs) != 0 {
