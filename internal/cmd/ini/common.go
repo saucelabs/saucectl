@@ -29,6 +29,10 @@ var configurators = map[string]func(cfg *initConfig) interface{}{
 	"imagerunner": configureImageRunner,
 }
 
+var extraInfoDisplay = map[string]func(){
+	"imagerunner": displayExtraInfoImageRunner,
+}
+
 var sauceignores = map[string]string{
 	"cypress":    sauceignoreCypress,
 	"playwright": sauceignorePlaywright,
@@ -98,6 +102,14 @@ func displaySummary(files []string) {
 		color.Green("  %s", f)
 	}
 	println()
+}
+
+func displayExtraInfo(framework string) {
+	fn, present := extraInfoDisplay[framework]
+	if !present {
+		return
+	}
+	fn()
 }
 
 func completeBasic(toComplete string) []string {

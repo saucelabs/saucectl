@@ -159,6 +159,7 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 		return err
 	}
 	displaySummary(files)
+	displayExtraInfo(initCfg.frameworkName)
 	return nil
 }
 
@@ -217,5 +218,6 @@ func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 		return err
 	}
 	displaySummary(files)
+	displayExtraInfo(initCfg.frameworkName)
 	return nil
 }
