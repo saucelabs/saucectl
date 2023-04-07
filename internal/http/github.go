@@ -3,10 +3,11 @@ package http
 import (
 	"encoding/json"
 	"fmt"
-	"golang.org/x/mod/semver"
 	"net/http"
 	"strings"
 	"time"
+
+	"golang.org/x/mod/semver"
 )
 
 // DefaultGitHub is a preconfigured instance of GitHub.
