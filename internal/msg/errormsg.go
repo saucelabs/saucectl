@@ -36,6 +36,8 @@ const (
 	MissingPlatformName = "no platform name specified"
 	// MissingBrowserName indicates no browser name
 	MissingBrowserName = "no browser name specified"
+	// MissingDockerImage indicates no app
+	MissingDockerImage = "no image provided"
 	// MissingApp indicates no app
 	MissingApp = "no app provided"
 	// MissingTestApp indicates no testApp

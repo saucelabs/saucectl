@@ -13,6 +13,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
@@ -39,6 +40,7 @@ type initConfig struct {
 	frameworkName    string
 	frameworkVersion string
 	cypressJSON      string
+	dockerImage      string
 	app              string
 	testApp          string
 	otherApps        []string
@@ -95,6 +97,7 @@ func Command() *cobra.Command {
 	cmd.Flags().StringVarP(&initCfg.frameworkName, "framework", "f", "", "framework to configure")
 	cmd.Flags().StringVarP(&initCfg.frameworkVersion, "frameworkVersion", "v", "", "framework version to be used")
 	cmd.Flags().StringVar(&initCfg.cypressJSON, "cypress.config", "", "path to cypress.json file (cypress only)")
+	cmd.Flags().StringVar(&initCfg.dockerImage, "dockerImage", "", "docker image to use (imagerunner only)")
 	cmd.Flags().StringVar(&initCfg.app, "app", "", "path to application to test (espresso/xcuitest only)")
 	cmd.Flags().StringVarP(&initCfg.testApp, "testApp", "t", "", "path to test application (espresso/xcuitest only)")
 	cmd.Flags().StringSliceVarP(&initCfg.otherApps, "otherApps", "o", []string{}, "path to other applications (espresso/xcuitest only)")
@@ -156,6 +159,7 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 		return err
 	}
 	displaySummary(files)
+	displayExtraInfo(initCfg.frameworkName)
 	return nil
 }
 
@@ -183,6 +187,8 @@ func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 		initCfg, errs = ini.initializeBatchTestcafe(initCfg)
 	case xcuitest.Kind:
 		initCfg, errs = ini.initializeBatchXcuitest(cmd.Flags(), initCfg)
+	case imagerunner.Kind:
+		initCfg, errs = ini.initializeBatchImageRunner(initCfg)
 	default:
 		println()
 		color.HiRed("Invalid framework selected")
@@ -212,5 +218,6 @@ func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 		return err
 	}
 	displaySummary(files)
+	displayExtraInfo(initCfg.frameworkName)
 	return nil
 }
