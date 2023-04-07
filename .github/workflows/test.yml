@@ -78,7 +78,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check Label
-        run: if [ -z "${{ github.event.pull_request.labels }}" ]; then echo 'Please label your PR' && exit 1; fi
+        run: |
+          PR has the following labels: ${{ github.event.pull_request.labels }}
+          if [ -z "${{ github.event.pull_request.labels }}" ]; then echo 'Please label your PR' && exit 1; fi
 
   build:
     needs: [lint, test]
