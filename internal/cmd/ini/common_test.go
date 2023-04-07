@@ -624,3 +624,57 @@ func TestCommon_getMajorVersion(t *testing.T) {
 		})
 	}
 }
+
+func Test_dockerImageValidator(t *testing.T) {
+	tests := []struct {
+		image string
+		want  error
+	}{
+		{
+			image: "alpine",
+			want:  nil,
+		},
+		{
+			image: "alpine:latest",
+			want:  nil,
+		},
+		{
+			image: "_/alpine",
+			want:  nil,
+		},
+		{
+			image: "_/alpine:latest",
+			want:  nil,
+		},
+		{
+			image: "alpine:3.7",
+			want:  nil,
+		},
+		{
+			image: "docker.example.com/gmr/alpine:3.7",
+			want:  nil,
+		},
+		{
+			image: "docker.example.com:5000/gmr/alpine:latest",
+			want:  nil,
+		},
+		{
+			image: "pse/anabroker:latest",
+			want:  nil,
+		},
+		{
+			image: "buggy::latest",
+			want:  errors.New("buggy::latest is not a valid docker image"),
+		},
+		{
+			image: "buggy:",
+			want:  errors.New("buggy: is not a valid docker image"),
+		},
+	}
+	val := dockerImageValidator()
+	for _, tt := range tests {
+		t.Run(tt.image, func(t *testing.T) {
+			assert.Equalf(t, tt.want, val(tt.image), "dockerImageValidator()")
+		})
+	}
+}

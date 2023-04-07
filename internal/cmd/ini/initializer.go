@@ -18,6 +18,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/iam"
+	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer"
@@ -83,6 +84,8 @@ func (ini *initializer) configure() (*initConfig, error) {
 		return ini.initializeEspresso()
 	case xcuitest.Kind:
 		return ini.initializeXCUITest()
+	case imagerunner.Kind:
+		return ini.initializeImageRunner()
 	default:
 		return &initConfig{}, fmt.Errorf("unsupported framework %v", fName)
 	}
@@ -414,6 +417,18 @@ func (ini *initializer) askFile(message string, val survey.Validator, comp compl
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
 }
 
+func (ini *initializer) askDockerImage(message string, val survey.Validator, targetValue *string) error {
+	q := &survey.Input{
+		Message: message,
+	}
+
+	return survey.AskOne(q, targetValue,
+		survey.WithShowCursor(true),
+		survey.WithValidator(survey.Required),
+		survey.WithValidator(val),
+		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
+}
+
 func (ini *initializer) initializeCypress() (*initConfig, error) {
 	cfg := &initConfig{frameworkName: cypress.Kind}
 
@@ -573,6 +588,22 @@ func (ini *initializer) initializeXCUITest() (*initConfig, error) {
 	}
 
 	err = ini.askDevice(cfg, iOSDevicesPatterns)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = ini.askDownloadWhen(cfg)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	return cfg, nil
+}
+
+func (ini *initializer) initializeImageRunner() (*initConfig, error) {
+	cfg := &initConfig{frameworkName: imagerunner.Kind}
+
+	err := ini.askDockerImage("Docker Image to use:", dockerImageValidator(), &cfg.dockerImage)
 	if err != nil {
 		return &initConfig{}, err
 	}
@@ -924,6 +955,29 @@ func (ini *initializer) initializeBatchXcuitest(f *pflag.FlagSet, initCfg *initC
 	}
 	if f.Changed("device") {
 		initCfg.device = initCfg.deviceFlag.Device
+	}
+	return initCfg, errs
+}
+
+func (ini *initializer) initializeBatchImageRunner(initCfg *initConfig) (*initConfig, []error) {
+	initCfg.frameworkName = imagerunner.Kind
+	var errs []error
+	var err error
+
+	if initCfg.dockerImage == "" {
+		errs = append(errs, errors.New(msg.MissingDockerImage))
+	}
+	if initCfg.dockerImage != "" {
+		verifier := dockerImageValidator()
+		if err = verifier(initCfg.dockerImage); err != nil {
+			errs = append(errs, fmt.Errorf("dockerImage: %s", err))
+		}
+	}
+	if initCfg.artifactWhenStr != "" {
+		initCfg.artifactWhenStr = strings.ToLower(initCfg.artifactWhenStr)
+		if initCfg.artifactWhen, err = checkArtifactDownloadSetting(initCfg.artifactWhenStr); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	return initCfg, errs
 }
