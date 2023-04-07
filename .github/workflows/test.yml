@@ -79,8 +79,8 @@ jobs:
     steps:
       - name: Check Label
         run: |
-          echo PR has the following labels: ${{ github.event.pull_request.labels }}
-          if [ -z "${{ github.event.pull_request.labels }}" ]; then echo 'Please label your PR' && exit 1; fi
+          echo PR has the following labels: ${{ toJson(github.event.pull_request.labels.*.name) }}
+          if [ -z "${{ toJson(github.event.pull_request.labels.*.name) }}" ]; then echo 'Please label your PR' && exit 1; fi
 
   build:
     needs: [lint, test]
