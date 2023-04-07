@@ -2,11 +2,12 @@ package http
 
 import (
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/rs/zerolog/log"
 	"net/url"
 	"os"
 	"strings"
+
+	"github.com/fatih/color"
+	"github.com/rs/zerolog/log"
 )
 
 // Note: The verification logic is borrowed from golang.org/x/net/http/httpproxy.
