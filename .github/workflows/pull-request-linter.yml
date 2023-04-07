@@ -13,6 +13,6 @@ jobs:
     steps:
       - name: Check Label
         run: |
-          if [ "[]" == "${PR_LABELS}" ]; then
+          if [ "[]" == "${{ toJson(github.event.pull_request.labels.*.name) }}" ]; then
             echo 'Please label your PR' && exit 1;
           fi
