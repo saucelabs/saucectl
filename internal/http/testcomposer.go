@@ -14,7 +14,6 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/iam"
-	"github.com/saucelabs/saucectl/internal/job"
 )
 
 // TestComposer service
@@ -73,51 +72,6 @@ func (c *TestComposer) GetSlackToken(ctx context.Context) (string, error) {
 	}
 
 	return resp.Token, nil
-}
-
-// StartJob creates a new job in Sauce Labs.
-func (c *TestComposer) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
-	url := fmt.Sprintf("%s/v1/testcomposer/jobs", c.URL)
-
-	opts.User = c.Credentials.Username
-	opts.AccessKey = c.Credentials.AccessKey
-
-	var b bytes.Buffer
-	err = json.NewEncoder(&b).Encode(opts)
-	if err != nil {
-		return
-	}
-	req, err := NewRequestWithContext(ctx, http.MethodPost, url, &b)
-	if err != nil {
-		return
-	}
-	req.SetBasicAuth(opts.User, opts.AccessKey)
-
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return
-	}
-
-	if resp.StatusCode >= 300 {
-		err = fmt.Errorf("job start failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, strings.TrimSpace(string(body)))
-		return "", false, err
-	}
-
-	j := struct {
-		JobID string
-		IsRDC bool
-	}{}
-	err = json.Unmarshal(body, &j)
-	if err != nil {
-		return
-	}
-
-	return j.JobID, j.IsRDC, nil
 }
 
 func (c *TestComposer) doJSONResponse(req *http.Request, expectStatus int, v interface{}) error {
