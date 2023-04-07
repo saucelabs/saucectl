@@ -3,6 +3,9 @@ package storage
 import (
 	"errors"
 	"fmt"
+	"io"
+	"os"
+
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
@@ -10,8 +13,6 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"io"
-	"os"
 )
 
 func DownloadCommand() *cobra.Command {

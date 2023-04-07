@@ -1,9 +1,10 @@
 package doctor
 
 import (
+	"os"
+
 	"github.com/saucelabs/saucectl/internal/doctor"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 // Command creates the `doctor` command

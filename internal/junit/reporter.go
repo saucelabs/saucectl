@@ -3,11 +3,12 @@ package junit
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/report"
 	"os"
 	"strconv"
 	"sync"
+
+	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/report"
 )
 
 // Reporter is a junit implementation for report.Reporter.

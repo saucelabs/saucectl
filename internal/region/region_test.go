@@ -1,8 +1,9 @@
 package region
 
 import (
-	"gotest.tools/v3/assert"
 	"testing"
+
+	"gotest.tools/v3/assert"
 )
 
 func TestFromString(t *testing.T) {

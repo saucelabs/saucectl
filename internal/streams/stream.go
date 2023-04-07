@@ -3,9 +3,10 @@ package streams
 import (
 	"context"
 	"fmt"
+	"io"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/pkg/stdcopy"
-	"io"
 
 	"github.com/moby/term"
 )

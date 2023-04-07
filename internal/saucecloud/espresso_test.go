@@ -1,10 +1,11 @@
 package saucecloud
 
 import (
+	"testing"
+
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestEspresso_GetSuiteNames(t *testing.T) {

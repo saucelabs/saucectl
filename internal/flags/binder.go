@@ -11,11 +11,11 @@ import (
 // It's a convenience wrapper around cobra and viper, allowing the user to declare and bind flags at the same time.
 //
 // Example:
-//	sc := flags.SnakeCharmer{Fmap: map[string]*pflag.Flag{}}
-//	sc.Fset = cmd.Flags()
-//	sc.String("name", "suite.name", "", "Set the name of the job as it will appear on Sauce Labs")
-//  sc.BindAll()
 //
+//		sc := flags.SnakeCharmer{Fmap: map[string]*pflag.Flag{}}
+//		sc.Fset = cmd.Flags()
+//		sc.String("name", "suite.name", "", "Set the name of the job as it will appear on Sauce Labs")
+//	 sc.BindAll()
 type SnakeCharmer struct {
 	Fset *pflag.FlagSet
 	// Fmap maps field names (key) to flags (value).

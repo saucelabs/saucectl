@@ -1,8 +1,9 @@
 package imagerunner
 
 import (
-	"github.com/saucelabs/saucectl/internal/config"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/config"
 )
 
 var (

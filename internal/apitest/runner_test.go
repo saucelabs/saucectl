@@ -2,10 +2,11 @@ package apitest
 
 import (
 	"context"
-	"github.com/saucelabs/saucectl/internal/config"
 	"path"
 	"reflect"
 	"testing"
+
+	"github.com/saucelabs/saucectl/internal/config"
 
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -237,7 +238,7 @@ func Test_loadTest(t *testing.T) {
 				tags:      []string{},
 				testName:  "tests/01_basic_test",
 				suiteName: "suiteName",
-				testDir: path.Join(dir.Path(), "tests/01_basic_test"),
+				testDir:   path.Join(dir.Path(), "tests/01_basic_test"),
 			},
 			wantErr: false,
 			want: TestRequest{
@@ -253,7 +254,7 @@ func Test_loadTest(t *testing.T) {
 				tags:      []string{},
 				testName:  "tests/03_no_test",
 				suiteName: "suiteName",
-				testDir: path.Join(dir.Path(), "tests/03_no_test"),
+				testDir:   path.Join(dir.Path(), "tests/03_no_test"),
 			},
 			wantErr: true,
 		},
@@ -263,7 +264,7 @@ func Test_loadTest(t *testing.T) {
 				tags:      []string{},
 				testName:  "tests/04_no_test",
 				suiteName: "suiteName",
-				testDir: path.Join(dir.Path(), "tests/04_no_test"),
+				testDir:   path.Join(dir.Path(), "tests/04_no_test"),
 			},
 			wantErr: true,
 		},

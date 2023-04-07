@@ -2,8 +2,9 @@ package mocks
 
 import (
 	"context"
-	"github.com/saucelabs/saucectl/internal/job"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/job"
 )
 
 // FakeJobStarter resto mock

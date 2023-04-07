@@ -1,9 +1,10 @@
 package saucecloud
 
 import (
+	"testing"
+
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestPlaywright_GetSuiteNames(t *testing.T) {

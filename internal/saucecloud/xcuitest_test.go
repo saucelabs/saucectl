@@ -2,13 +2,14 @@ package saucecloud
 
 import (
 	"archive/zip"
-	"gotest.tools/v3/fs"
 	"io"
 	"os"
 	"path"
 	"reflect"
 	"regexp"
 	"testing"
+
+	"gotest.tools/v3/fs"
 
 	"github.com/stretchr/testify/assert"
 
