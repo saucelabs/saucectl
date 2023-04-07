@@ -12,4 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check Label
-        run: if [ "[]" == "${{ toJson(github.event.pull_request.labels.*.name) }}" ]; then echo 'Please label your PR' && exit 1; fi
+        run: |
+          if [ "[]" == "${PR_LABELS}" ]; then
+            echo 'Please label your PR' && exit 1;
+          fi
