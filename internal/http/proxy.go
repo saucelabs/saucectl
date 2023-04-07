@@ -10,45 +10,83 @@ import (
 	"strings"
 )
 
-// CheckHTTPProxy checks that the HTTP_PROXY is valid if it exists.
-func CheckHTTPProxy() error {
-	proxyURL := os.Getenv("HTTP_PROXY")
-	if proxyURL != "" {
-		if !strings.HasPrefix(proxyURL, "http://") && !strings.HasPrefix(proxyURL, "https://") {
-			color.Red("\nA proxy has been set, but its url is invalid !\n\n")
-			fmt.Printf("HTTP_PROXY must start by http:// or https:// ")
-			return fmt.Errorf("invalid HTTP_PROXY value")
+// Note: The verification logic is borrowed from golang.org/x/net/http/httpproxy
+//       Those useful functions are not exposed, but are required to allow us to warn
+//       the user upfront.
+func getEnvAny(names ...string) string {
+	for _, n := range names {
+		if val := os.Getenv(n); val != "" {
+			return val
 		}
-		url, err := url.Parse(proxyURL)
-		if err != nil {
-			color.Red("\nA proxy has been set, but its url is invalid !\n\n")
-			fmt.Printf("%s: %s\n", proxyURL, err)
-			println()
-			return fmt.Errorf("invalid HTTP_PROXY value")
+	}
+	return ""
+}
+
+func parseProxy(proxy string) (*url.URL, error) {
+	if proxy == "" {
+		return nil, nil
+	}
+
+	proxyURL, err := url.Parse(proxy)
+	if err != nil ||
+		(proxyURL.Scheme != "http" &&
+			proxyURL.Scheme != "https" &&
+			proxyURL.Scheme != "socks5") {
+		// proxy was bogus. Try prepending "http://" to it and
+		// see if that parses correctly. If not, we fall
+		// through and complain about the original one.
+		if proxyURL, err := url.Parse("http://" + proxy); err == nil {
+			return proxyURL, nil
 		}
-		displayURL := proxyURL
-		if url.User != nil {
-			pass, hasPass := url.User.Password()
-			if hasPass {
-				displayURL = strings.Replace(displayURL, pass, "***", -1)
-			}
+	}
+	if err != nil {
+		return nil, fmt.Errorf("invalid proxy address %q: %v", proxy, err)
+	}
+	return proxyURL, nil
+}
+
+func checkProxy(scheme string) error {
+	proxyScheme := fmt.Sprintf("%s_proxy", scheme)
+	rawProxyURL := getEnvAny(strings.ToUpper(proxyScheme), strings.ToLower(proxyScheme))
+	proxyURL, err := parseProxy(rawProxyURL)
+
+	if err != nil {
+		color.Red("\nA proxy has been set, but its url is invalid !\n\n")
+		fmt.Printf("%s: %s", rawProxyURL, err)
+		return fmt.Errorf("invalid %s value", strings.ToUpper(proxyScheme))
+	}
+	if proxyURL == nil {
+		return nil
+	}
+
+	// Hide login/password
+	if proxyURL.User != nil {
+		pass, hasPass := proxyURL.User.Password()
+		if hasPass {
+			rawProxyURL = strings.Replace(rawProxyURL, pass, "****", -1)
 		}
-		log.Info().Msgf(fmt.Sprintf("Using proxy: %s", displayURL))
+	}
+	log.Info().Msgf(fmt.Sprintf("Using %s proxy: %s", strings.ToUpper(scheme), rawProxyURL))
+	return nil
+}
+
+// CheckProxy checks that the HTTP_PROXY is valid if it exists.
+func CheckProxy() error {
+	var errs []error
+	if err := checkProxy("http"); err != nil {
+		errs = append(errs, err)
+	}
+	if err := checkProxy("https"); err != nil {
+		errs = append(errs, err)
+	}
+	if len(errs) != 0 {
+		return fmt.Errorf("proxy setup has %d error(s)", len(errs))
 	}
 	return nil
 }
 
 func mustGetProxifiedHTTPTransport() http.RoundTripper {
-	proxyURL := os.Getenv("HTTP_PROXY")
-	if proxyURL == "" {
-		return nil
-	}
-	parsedURL, err := url.Parse(proxyURL)
-	if err != nil {
-		// Note: panic() as it is checked right after startup.
-		panic("HTTP_PROXY parsing failure")
-	}
 	return &http.Transport{
-		Proxy: http.ProxyURL(parsedURL),
+		Proxy: http.ProxyFromEnvironment,
 	}
 }

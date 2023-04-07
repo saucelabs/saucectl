@@ -19,7 +19,7 @@ func LogsCommand() *cobra.Command {
 		Use:   "logs <runID>",
 		Short: "Fetch the logs for an imagerunner run",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			err := http.CheckHTTPProxy()
+			err := http.CheckProxy()
 			if err != nil {
 				return fmt.Errorf("invalid HTTP_PROXY value")
 			}

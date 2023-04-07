@@ -114,7 +114,7 @@ func Command() *cobra.Command {
 }
 
 func preRun() error {
-	err := http.CheckHTTPProxy()
+	err := http.CheckProxy()
 	if err != nil {
 		return fmt.Errorf("invalid HTTP_PROXY value")
 	}
