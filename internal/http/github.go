@@ -3,22 +3,19 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/mod/semver"
 	"net/http"
 	"strings"
 	"time"
-
-	"golang.org/x/mod/semver"
 )
 
-// NewGitHub returns a preconfigured instance of GitHub.
-func NewGitHub() GitHub {
-	return GitHub{
-		HTTPClient: &http.Client{
-			Timeout:   2 * time.Second,
-			Transport: &http.Transport{Proxy: http.ProxyFromEnvironment},
-		},
-		URL: "https://api.github.com",
-	}
+// DefaultGitHub is a preconfigured instance of GitHub.
+var DefaultGitHub = GitHub{
+	HTTPClient: &http.Client{
+		Timeout:   2 * time.Second,
+		Transport: &http.Transport{Proxy: http.ProxyFromEnvironment},
+	},
+	URL: "https://api.github.com",
 }
 
 // GitHub represents the GitHub HTTP API client.

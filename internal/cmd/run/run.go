@@ -292,8 +292,7 @@ func awaitGlobalTimeout() {
 
 // checkForUpdates check if there is a saucectl update available.
 func checkForUpdates() {
-	gh := http.NewGitHub()
-	v, err := gh.IsUpdateAvailable(version.Version)
+	v, err := http.DefaultGitHub.IsUpdateAvailable(version.Version)
 	if err != nil {
 		return
 	}
