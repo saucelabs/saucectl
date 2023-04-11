@@ -13,6 +13,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
+	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
@@ -74,6 +75,9 @@ func Command() *cobra.Command {
 		Short:   initShort,
 		Long:    initLong,
 		Example: initExample,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return preRun()
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			tracker := segment.DefaultTracker
 
@@ -107,6 +111,14 @@ func Command() *cobra.Command {
 	cmd.Flags().Var(&initCfg.emulatorFlag, "emulator", "Specifies the emulator to use for testing")
 	cmd.Flags().Var(&initCfg.deviceFlag, "device", "Specifies the device to use for testing")
 	return cmd
+}
+
+func preRun() error {
+	err := http.CheckProxy()
+	if err != nil {
+		return fmt.Errorf("invalid HTTP_PROXY value")
+	}
+	return nil
 }
 
 // Run runs the command

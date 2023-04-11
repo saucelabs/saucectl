@@ -12,8 +12,11 @@ import (
 
 // DefaultGitHub is a preconfigured instance of GitHub.
 var DefaultGitHub = GitHub{
-	HTTPClient: &http.Client{Timeout: 2 * time.Second},
-	URL:        "https://api.github.com",
+	HTTPClient: &http.Client{
+		Timeout:   4 * time.Second,
+		Transport: &http.Transport{Proxy: http.ProxyFromEnvironment},
+	},
+	URL: "https://api.github.com",
 }
 
 // GitHub represents the GitHub HTTP API client.

@@ -19,7 +19,10 @@ type UserService struct {
 
 func NewUserService(url string, creds iam.Credentials, timeout time.Duration) UserService {
 	return UserService{
-		HTTPClient:  &http.Client{Timeout: timeout},
+		HTTPClient: &http.Client{
+			Timeout:   timeout,
+			Transport: &http.Transport{Proxy: http.ProxyFromEnvironment},
+		},
 		URL:         url,
 		Credentials: creds,
 	}
