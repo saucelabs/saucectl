@@ -3,11 +3,12 @@ package retry
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestAppsRetrier_Retry(t *testing.T) {

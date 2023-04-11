@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/fatih/color"
 	"github.com/saucelabs/saucectl/internal/docker"
-	"strings"
 )
 
 var indent = "    "

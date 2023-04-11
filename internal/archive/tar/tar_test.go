@@ -79,7 +79,7 @@ func TestArchive(t *testing.T) {
 			if err != nil {
 				t.Errorf("unable to stat file %s: %v", tt.dirName, err)
 			}
-			
+
 			if fInfo.IsDir() {
 				err := os.Chdir(tt.dirName)
 				if err != nil {

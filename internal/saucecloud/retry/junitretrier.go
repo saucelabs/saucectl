@@ -3,11 +3,12 @@ package retry
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/msg"
-	"strings"
 )
 
 type JunitRetrier struct {

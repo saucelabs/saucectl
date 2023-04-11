@@ -3,13 +3,14 @@ package http
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/go-retryablehttp"
-	"github.com/saucelabs/saucectl/internal/iam"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/hashicorp/go-retryablehttp"
+	"github.com/saucelabs/saucectl/internal/iam"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestImageRunner_GetArtifacts(t *testing.T) {

@@ -3,12 +3,13 @@ package slack
 import (
 	"context"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/job"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/job"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	"github.com/saucelabs/saucectl/internal/report"
 

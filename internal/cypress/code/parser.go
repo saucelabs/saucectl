@@ -24,7 +24,7 @@ type TestCase struct {
 	Title string
 	// Tags is an optional list of tags. This is simply a space delimited
 	// concatenation of all tags defined for the testcase.
-	Tags  string
+	Tags string
 }
 
 // Parse takes the contents of a test file and parses testcases

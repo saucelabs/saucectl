@@ -316,19 +316,19 @@ func TestParseTitleGrepExp(t *testing.T) {
 			name: "Empty values",
 			testCases: []testCase{
 				{
-					exp: "",
+					exp:   "",
 					title: "",
-					want: true,
+					want:  true,
 				},
 				{
-					exp: "",
+					exp:   "",
 					title: "test title",
-					want: true,
+					want:  true,
 				},
 				{
-					exp: "some title to match",
+					exp:   "some title to match",
 					title: "",
-					want: false,
+					want:  false,
 				},
 			},
 		},

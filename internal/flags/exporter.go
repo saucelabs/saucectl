@@ -3,8 +3,9 @@ package flags
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/spf13/pflag"
 	"strings"
+
+	"github.com/spf13/pflag"
 )
 
 // redactedFlags contains the list of flags that needs to be redacted before upload.

@@ -2,9 +2,10 @@ package apps
 
 import (
 	"fmt"
-	"gotest.tools/v3/fs"
 	"path/filepath"
 	"testing"
+
+	"gotest.tools/v3/fs"
 )
 
 func TestValidate(t *testing.T) {

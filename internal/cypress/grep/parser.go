@@ -202,7 +202,7 @@ func ParseGrepTagsExp(expr string) Expression {
 }
 
 // normalize trims leading and trailing whitespace from a slice of strings
-// and filters out any strings that contain only whitespace.
+//  and filters out any strings that contain only whitespace.
 func normalize(strs []string) []string {
 	var all []string
 	for _, s := range strs {
