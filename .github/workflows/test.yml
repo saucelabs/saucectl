@@ -413,6 +413,26 @@ jobs:
       - name: Saucectl RUN
         run: ./saucectl run -c .sauce/imagerunner.yml
 
+  async-test:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      BUILD_ID: ${{ github.run_id }}
+      BUILD_ENV: GitHub Actions
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v3
+        with:
+          name: saucectlbin
+
+      - name: Saucectl RUN
+        run: |
+          ./saucectl run -c .sauce/espresso.yml --async --timeout 10m
+
   windows-doctor:
     needs: build
     runs-on: windows-latest

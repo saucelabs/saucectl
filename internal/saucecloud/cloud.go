@@ -213,6 +213,10 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 		// Since we don't know much about the state of the job in async mode, we'll just
 		r.logSuite(res)
 
+		// Skip reporting to Insights for async job
+		if r.Async {
+			continue
+		}
 		// Report suite to Insights
 		r.reportSuiteToInsights(res)
 	}
@@ -361,14 +365,16 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			r.interrupted = true
 		}
 
-		if opts.CurrentPassCount < opts.PassThreshold {
-			log.Error().Str("suite", opts.DisplayName).Msg("Failed to pass threshold")
-			jobData.Status = job.StateFailed
-			jobData.Passed = false
-		} else {
-			log.Info().Str("suite", opts.DisplayName).Msg("Passed threshold")
-			jobData.Status = job.StatePassed
-			jobData.Passed = true
+		if !r.Async {
+			if opts.CurrentPassCount < opts.PassThreshold {
+				log.Error().Str("suite", opts.DisplayName).Msg("Failed to pass threshold")
+				jobData.Status = job.StateFailed
+				jobData.Passed = false
+			} else {
+				log.Info().Str("suite", opts.DisplayName).Msg("Passed threshold")
+				jobData.Status = job.StatePassed
+				jobData.Passed = true
+			}
 		}
 
 		results <- result{
@@ -745,7 +751,7 @@ func (r *CloudRunner) isFileStored(filename string) (storageID string, err error
 // logSuite display the result of a suite
 func (r *CloudRunner) logSuite(res result) {
 	// Job isn't done, hence nothing more to log about it.
-	if !job.Done(res.job.Status) {
+	if !job.Done(res.job.Status) || r.Async {
 		return
 	}
 
