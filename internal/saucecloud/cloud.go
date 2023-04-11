@@ -210,7 +210,6 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				rep.Add(tr)
 			}
 		}
-		// Since we don't know much about the state of the job in async mode, we'll just
 		r.logSuite(res)
 
 		// Skip reporting to Insights for async job
