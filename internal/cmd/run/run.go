@@ -178,6 +178,11 @@ func Command() *cobra.Command {
 
 // preRun is a pre-run step that is executed before the main 'run` step. All shared dependencies are initialized here.
 func preRun() error {
+	err := http.CheckProxy()
+	if err != nil {
+		return fmt.Errorf("invalid HTTP_PROXY value")
+	}
+
 	println("Running version", version.Version)
 	checkForUpdates()
 	go awaitGlobalTimeout()

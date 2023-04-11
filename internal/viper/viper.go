@@ -17,9 +17,8 @@ func AddConfigPath(in string) { Default.AddConfigPath(in) }
 // BindPFlag binds a specific key to a pflag (as used by cobra).
 // Example (where serverCmd is a Cobra instance):
 //
-//	 serverCmd.Flags().Int("port", 1138, "Port to run Application server on")
-//	 Viper.BindPFlag("port", serverCmd.Flags().Lookup("port"))
-//
+//	serverCmd.Flags().Int("port", 1138, "Port to run Application server on")
+//	Viper.BindPFlag("port", serverCmd.Flags().Lookup("port"))
 func BindPFlag(key string, flag *pflag.Flag) error { return Default.BindPFlag(key, flag) }
 
 // ReadInConfig will discover and load the configuration file from disk

@@ -2,12 +2,13 @@ package mocks
 
 import (
 	"context"
+
 	"github.com/saucelabs/saucectl/internal/devices"
 )
 
 // FakeDevicesReader is a mock for the devices.Reader interface.
 type FakeDevicesReader struct {
-	GetDevicesFn func (context.Context, string) ([]devices.Device, error)
+	GetDevicesFn func(context.Context, string) ([]devices.Device, error)
 }
 
 // GetDevices is a wrapper around GetDevicesFn.

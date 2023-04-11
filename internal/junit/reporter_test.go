@@ -1,13 +1,14 @@
 package junit
 
 import (
-	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/report"
 	"io"
 	"os"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/report"
 )
 
 func TestReporter_Render(t *testing.T) {

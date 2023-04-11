@@ -8,6 +8,7 @@ import (
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/fpath"
+	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/schollz/progressbar/v3"
@@ -33,7 +34,12 @@ func DownloadCommand() *cobra.Command {
 
 			return nil
 		},
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			err := http.CheckProxy()
+			if err != nil {
+				return fmt.Errorf("invalid HTTP_PROXY value")
+			}
+
 			tracker := segment.DefaultTracker
 
 			go func() {
@@ -43,6 +49,7 @@ func DownloadCommand() *cobra.Command {
 				)
 				_ = tracker.Close()
 			}()
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			jobID := args[0]

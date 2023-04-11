@@ -56,10 +56,13 @@ type AppStore struct {
 // NewAppStore returns an implementation for AppStore
 func NewAppStore(url, username, accessKey string, timeout time.Duration) *AppStore {
 	return &AppStore{
-		HTTPClient: &http.Client{Timeout: timeout},
-		URL:        url,
-		Username:   username,
-		AccessKey:  accessKey,
+		HTTPClient: &http.Client{
+			Timeout:   timeout,
+			Transport: &http.Transport{Proxy: http.ProxyFromEnvironment},
+		},
+		URL:       url,
+		Username:  username,
+		AccessKey: accessKey,
 	}
 }
 
@@ -128,6 +131,9 @@ func (s *AppStore) UploadStream(filename, description string, reader io.Reader) 
 	req.SetBasicAuth(s.Username, s.AccessKey)
 
 	resp, err := s.HTTPClient.Do(req)
+	if err != nil {
+		return storage.Item{}, err
+	}
 
 	switch resp.StatusCode {
 	case 200, 201:

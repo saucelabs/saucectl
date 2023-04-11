@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+
 	"github.com/saucelabs/saucectl/internal/msg"
 )
 

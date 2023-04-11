@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 // FullName returns the full command name by concatenating the command names of any parents,

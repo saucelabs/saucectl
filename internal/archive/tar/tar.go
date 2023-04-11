@@ -3,12 +3,12 @@ package tar
 import (
 	"archive/tar"
 	"bytes"
-	"github.com/rs/zerolog/log"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 )
 

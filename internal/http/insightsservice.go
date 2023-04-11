@@ -59,7 +59,10 @@ var LaunchOptions = map[config.LaunchOrder]string{
 
 func NewInsightsService(url string, creds iam.Credentials, timeout time.Duration) InsightsService {
 	return InsightsService{
-		HTTPClient:  &http.Client{Timeout: timeout},
+		HTTPClient: &http.Client{
+			Timeout:   timeout,
+			Transport: &http.Transport{Proxy: http.ProxyFromEnvironment},
+		},
 		URL:         url,
 		Credentials: creds,
 	}

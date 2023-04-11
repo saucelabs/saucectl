@@ -10,7 +10,7 @@ func TestWriteFile(t *testing.T) {
 	type sample struct {
 		Msg string `yaml:"msg"`
 	}
-	
+
 	type args struct {
 		name string
 		v    interface{}

@@ -50,7 +50,10 @@ type runner struct {
 
 func NewTestComposer(url string, creds iam.Credentials, timeout time.Duration) TestComposer {
 	return TestComposer{
-		HTTPClient:  &http.Client{Timeout: timeout},
+		HTTPClient: &http.Client{
+			Timeout:   timeout,
+			Transport: &http.Transport{Proxy: http.ProxyFromEnvironment},
+		},
 		URL:         url,
 		Credentials: creds,
 	}

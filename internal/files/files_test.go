@@ -1,7 +1,10 @@
 package files
 
-import "testing"
-import "gotest.tools/v3/fs"
+import (
+	"testing"
+
+	"gotest.tools/v3/fs"
+)
 
 func TestNewSHA256(t *testing.T) {
 	dir := fs.NewDir(t, "checksums", fs.WithFile("hello.txt", "world!"))

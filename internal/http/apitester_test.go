@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/apitest"
-	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/saucelabs/saucectl/internal/apitest"
+	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAPITester_GetEventResult(t *testing.T) {

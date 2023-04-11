@@ -33,10 +33,13 @@ type PublishedTest struct {
 // NewAPITester a new instance of APITester.
 func NewAPITester(url string, username string, accessKey string, timeout time.Duration) APITester {
 	return APITester{
-		HTTPClient: &http.Client{Timeout: timeout},
-		URL:        url,
-		Username:   username,
-		AccessKey:  accessKey,
+		HTTPClient: &http.Client{
+			Timeout:   timeout,
+			Transport: &http.Transport{Proxy: http.ProxyFromEnvironment},
+		},
+		URL:       url,
+		Username:  username,
+		AccessKey: accessKey,
 	}
 }
 
