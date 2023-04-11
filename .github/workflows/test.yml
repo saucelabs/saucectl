@@ -416,9 +416,6 @@ jobs:
   async-test:
     needs: build
     runs-on: ubuntu-latest
-    env:
-      BUILD_ID: ${{ github.run_id }}
-      BUILD_ENV: GitHub Actions
 
     steps:
       - name: Checkout Code
@@ -428,6 +425,9 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: saucectlbin
+
+      - name: Set Permissions
+        run: chmod +x ./saucectl
 
       - name: Saucectl RUN
         run: |
