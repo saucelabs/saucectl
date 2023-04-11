@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -12,101 +11,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/iam"
-	"github.com/saucelabs/saucectl/internal/job"
 )
-
-func TestTestComposer_StartJob(t *testing.T) {
-	type args struct {
-		ctx               context.Context
-		jobStarterPayload job.StartOptions
-	}
-	type fields struct {
-		HTTPClient *http.Client
-		URL        string
-	}
-	tests := []struct {
-		name       string
-		fields     fields
-		args       args
-		want       string
-		wantErr    error
-		serverFunc func(w http.ResponseWriter, r *http.Request) // what shall the mock server respond with
-	}{
-		{
-			name: "Happy path",
-			args: args{
-				ctx: context.TODO(),
-				jobStarterPayload: job.StartOptions{
-					User:        "fake-user",
-					AccessKey:   "fake-access-key",
-					BrowserName: "fake-browser-name",
-					Name:        "fake-test-name",
-					Framework:   "fake-framework",
-					Build:       "fake-buildname",
-					Tags:        nil,
-				},
-			},
-			want:    "fake-job-id",
-			wantErr: nil,
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(201)
-				_ = json.NewEncoder(w).Encode(struct {
-					JobID string `json:"jobID"`
-				}{
-					JobID: "fake-job-id",
-				})
-			},
-		},
-		{
-			name: "Non 2xx status code",
-			args: args{
-				ctx:               context.TODO(),
-				jobStarterPayload: job.StartOptions{},
-			},
-			want:    "",
-			wantErr: fmt.Errorf("job start failed; unexpected response code:'300', msg:''"),
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(300)
-			},
-		},
-		{
-			name: "Unknown error",
-			args: args{
-				ctx:               context.TODO(),
-				jobStarterPayload: job.StartOptions{},
-			},
-			want:    "",
-			wantErr: fmt.Errorf("job start failed; unexpected response code:'500', msg:'Internal server error'"),
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(500)
-				_, err := w.Write([]byte("Internal server error"))
-				if err != nil {
-					t.Errorf("failed to write response: %v", err)
-				}
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(tt.serverFunc))
-			defer server.Close()
-
-			c := &TestComposer{
-				HTTPClient: server.Client(),
-				URL:        server.URL,
-			}
-
-			got, _, err := c.StartJob(tt.args.ctx, tt.args.jobStarterPayload)
-			if (err != nil) && !reflect.DeepEqual(err, tt.wantErr) {
-				t.Errorf("StartJob() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("StartJob() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
 func TestTestComposer_GetSlackToken(t *testing.T) {
 	type fields struct {
@@ -170,91 +75,6 @@ func TestTestComposer_GetSlackToken(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetSlackToken got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestTestComposer_Search(t *testing.T) {
-	type fields struct {
-		HTTPClient  *http.Client
-		URL         string
-		Credentials iam.Credentials
-	}
-	type args struct {
-		ctx  context.Context
-		opts framework.SearchOptions
-	}
-	tests := []struct {
-		name       string
-		fields     fields
-		args       args
-		want       framework.Metadata
-		wantErr    bool
-		serverFunc func(w http.ResponseWriter, r *http.Request)
-	}{
-		{
-			name: "framework version available",
-			args: args{context.Background(), framework.SearchOptions{
-				Name:             "testycles",
-				FrameworkVersion: "1",
-			}},
-			want: framework.Metadata{
-				FrameworkName:    "testycles",
-				FrameworkVersion: "1",
-				EOLDate:          time.Date(2023, 01, 01, 0, 0, 0, 0, time.UTC),
-				RemovalDate:      time.Date(2023, 04, 01, 0, 0, 0, 0, time.UTC),
-				DockerImage:      "sauce/testycles:v1+v0.1.0",
-				GitRelease:       "",
-			},
-			wantErr: false,
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(200)
-				err := json.NewEncoder(w).Encode(FrameworkResponse{
-					Name:        "testycles",
-					Version:     "1",
-					EOLDate:     time.Date(2023, 01, 01, 0, 0, 0, 0, time.UTC),
-					RemovalDate: time.Date(2023, 04, 01, 0, 0, 0, 0, time.UTC),
-					Runner: runner{
-						DockerImage: "sauce/testycles:v1+v0.1.0",
-					},
-				})
-				if err != nil {
-					t.Errorf("failed to encode json response: %v", err)
-				}
-			},
-		},
-		{
-			name: "unknown framework or version",
-			args: args{context.Background(), framework.SearchOptions{
-				Name:             "notestycles",
-				FrameworkVersion: "1",
-			}},
-			want:    framework.Metadata{},
-			wantErr: true,
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(400)
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(tt.serverFunc))
-			defer server.Close()
-
-			c := &TestComposer{
-				HTTPClient:  server.Client(),
-				URL:         server.URL,
-				Credentials: tt.fields.Credentials,
-			}
-
-			got, err := c.Search(tt.args.ctx, tt.args.opts)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetImage() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetImage() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -10,12 +10,6 @@ import (
 type FakeFrameworkInfoReader struct {
 	FrameworksFn func(ctx context.Context) ([]framework.Framework, error)
 	VersionsFn   func(ctx context.Context, frameworkName string) ([]framework.Metadata, error)
-	SearchFn     func(ctx context.Context, opts framework.SearchOptions) (framework.Metadata, error)
-}
-
-// Search is wrapper around SearchFn.
-func (fir *FakeFrameworkInfoReader) Search(ctx context.Context, opts framework.SearchOptions) (framework.Metadata, error) {
-	return fir.SearchFn(ctx, opts)
 }
 
 // Frameworks is a wrapper around FrameworksFn.

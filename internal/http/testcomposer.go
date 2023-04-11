@@ -14,7 +14,6 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/iam"
-	"github.com/saucelabs/saucectl/internal/job"
 )
 
 // TestComposer service
@@ -78,51 +77,6 @@ func (c *TestComposer) GetSlackToken(ctx context.Context) (string, error) {
 	return resp.Token, nil
 }
 
-// StartJob creates a new job in Sauce Labs.
-func (c *TestComposer) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
-	url := fmt.Sprintf("%s/v1/testcomposer/jobs", c.URL)
-
-	opts.User = c.Credentials.Username
-	opts.AccessKey = c.Credentials.AccessKey
-
-	var b bytes.Buffer
-	err = json.NewEncoder(&b).Encode(opts)
-	if err != nil {
-		return
-	}
-	req, err := NewRequestWithContext(ctx, http.MethodPost, url, &b)
-	if err != nil {
-		return
-	}
-	req.SetBasicAuth(opts.User, opts.AccessKey)
-
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return
-	}
-
-	if resp.StatusCode >= 300 {
-		err = fmt.Errorf("job start failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, strings.TrimSpace(string(body)))
-		return "", false, err
-	}
-
-	j := struct {
-		JobID string
-		IsRDC bool
-	}{}
-	err = json.Unmarshal(body, &j)
-	if err != nil {
-		return
-	}
-
-	return j.JobID, j.IsRDC, nil
-}
-
 func (c *TestComposer) doJSONResponse(req *http.Request, expectStatus int, v interface{}) error {
 	res, err := c.HTTPClient.Do(req)
 	if err != nil {
@@ -136,37 +90,6 @@ func (c *TestComposer) doJSONResponse(req *http.Request, expectStatus int, v int
 	}
 
 	return json.NewDecoder(res.Body).Decode(v)
-}
-
-// Search returns metadata for the given search options opts.
-func (c *TestComposer) Search(ctx context.Context, opts framework.SearchOptions) (framework.Metadata, error) {
-	url := fmt.Sprintf("%s/v1/testcomposer/frameworks/%s", c.URL, opts.Name)
-
-	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return framework.Metadata{}, err
-	}
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
-	q := req.URL.Query()
-	q.Add("version", opts.FrameworkVersion)
-	req.URL.RawQuery = q.Encode()
-
-	var resp FrameworkResponse
-	if err := c.doJSONResponse(req, 200, &resp); err != nil {
-		return framework.Metadata{}, err
-	}
-
-	m := framework.Metadata{
-		FrameworkName:      resp.Name,
-		FrameworkVersion:   resp.Version,
-		EOLDate:            resp.EOLDate,
-		RemovalDate:        resp.RemovalDate,
-		DockerImage:        resp.Runner.DockerImage,
-		GitRelease:         resp.Runner.GitRelease,
-		CloudRunnerVersion: resp.Runner.CloudRunnerVersion,
-	}
-
-	return m, nil
 }
 
 // UploadAsset uploads an asset to the specified jobID.

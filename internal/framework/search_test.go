@@ -11,7 +11,6 @@ import (
 )
 
 type MockMetadataService struct {
-	MockSearch     func(context.Context, SearchOptions) (Metadata, error)
 	MockFrameworks func(ctx context.Context) ([]Framework, error)
 	MockVersions   func(ctx context.Context, frameworkName string) ([]Metadata, error)
 }
@@ -22,14 +21,6 @@ func (m *MockMetadataService) Frameworks(ctx context.Context) ([]Framework, erro
 	}
 
 	return nil, nil
-}
-
-func (m *MockMetadataService) Search(ctx context.Context, opts SearchOptions) (Metadata, error) {
-	if m.MockSearch != nil {
-		return m.MockSearch(ctx, opts)
-	}
-
-	return Metadata{}, nil
 }
 
 func (m *MockMetadataService) Versions(ctx context.Context, frameworkName string) ([]Metadata, error) {
