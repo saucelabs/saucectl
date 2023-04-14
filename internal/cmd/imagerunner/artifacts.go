@@ -80,7 +80,7 @@ func downloadCommand() *cobra.Command {
 	var out string
 
 	cmd := &cobra.Command{
-		Use:   "download <jobID> <filename>",
+		Use:   "download <runID> <file-pattern>",
 		Short: "Downloads the specified artifacts from the given run. Supports glob pattern.",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
