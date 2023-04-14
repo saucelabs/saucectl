@@ -2,6 +2,7 @@ package imagerunner
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
@@ -18,6 +19,12 @@ func LogsCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "logs <runID>",
 		Short: "Fetch the logs for an imagerunner run",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 || args[0] == "" {
+				return errors.New("no run ID specified")
+			}
+			return nil
+		},
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			err := http.CheckProxy()
 			if err != nil {
