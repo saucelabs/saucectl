@@ -235,10 +235,6 @@
                         "title": "Only you (the owner) will be able to view assets and test results page."
                       }
                     ]
-                  },
-                  "workload": {
-                    "description": "Sets the kind of workload that is being executed",
-                    "type": "string"
                   }
                 },
                 "additionalProperties": false
@@ -2746,6 +2742,10 @@
                   "10m",
                   "90s"
                 ]
+              },
+              "workload": {
+                "description": "Sets the kind of workload that is being executed",
+                "type": "string"
               }
             },
             "required": [
