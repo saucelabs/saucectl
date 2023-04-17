@@ -46,7 +46,6 @@ type SauceConfig struct {
 	Retries     int               `yaml:"retries,omitempty" json:"-"`
 	Visibility  string            `yaml:"visibility,omitempty" json:"-"`
 	LaunchOrder LaunchOrder       `yaml:"launchOrder,omitempty" json:"launchOrder,omitempty"`
-	Workload    string            `yaml:"workload,omitempty" json:"workload,omitempty"`
 }
 
 // DeviceOptions represents the devices capabilities required from a real device.

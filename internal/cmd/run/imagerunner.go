@@ -21,6 +21,7 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 	if err != nil {
 		return 1, err
 	}
+	imagerunner.SetDefaults(&p)
 
 	regio := region.FromString(p.Sauce.Region)
 	imageRunnerClient.URL = regio.APIBaseURL()
