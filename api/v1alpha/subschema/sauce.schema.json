@@ -73,7 +73,7 @@
             { "const": "team", "title": "Only accessible to people under the same root account as you." },
             { "const": "private", "title": "Only you (the owner) will be able to view assets and test results page." }
           ]
-        },
+        }
       },
       "additionalProperties": false
     }
