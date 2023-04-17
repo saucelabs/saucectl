@@ -156,7 +156,7 @@ func (c *ImageRunner) DownloadArtifacts(ctx context.Context, id string) (io.Read
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= http.StatusInternalServerError {
-		return nil, errors.New(msg.InternalServerError)
+		return nil, ErrServerError
 	}
 
 	if resp.StatusCode != http.StatusOK {
