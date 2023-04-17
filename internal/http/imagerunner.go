@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
+	"github.com/saucelabs/saucectl/internal/msg"
 )
 
 type ImageRunner struct {
@@ -150,6 +152,16 @@ func (c *ImageRunner) DownloadArtifacts(ctx context.Context, id string) (io.Read
 	resp, err = c.Client.Do(req)
 	if err != nil {
 		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return nil, errors.New(msg.InternalServerError)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("request failed; unexpected response code: '%d', msg: '%v'", resp.StatusCode, string(body))
 	}
 
 	return resp.Body, nil
