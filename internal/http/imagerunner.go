@@ -152,6 +152,15 @@ func (c *ImageRunner) DownloadArtifacts(ctx context.Context, id string) (io.Read
 		return nil, err
 	}
 
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return nil, ErrServerError
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("request failed; unexpected response code: '%d', msg: '%v'", resp.StatusCode, string(body))
+	}
+
 	return resp.Body, nil
 }
 
