@@ -338,7 +338,6 @@ func TestTestComposer_Versions(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Versions() got = %v, want %v", got, tt.want)
 			}
-			ts.Close()
 		})
 	}
 }
