@@ -18,7 +18,7 @@ type Framework struct {
 
 // MetadataService represents an interface for retrieving framework metadata.
 type MetadataService interface {
-	Frameworks(ctx context.Context) ([]Framework, error)
+	Frameworks(ctx context.Context) ([]string, error)
 	Versions(ctx context.Context, frameworkName string) ([]Metadata, error)
 }
 
