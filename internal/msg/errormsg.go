@@ -155,7 +155,7 @@ const (
 	// MissingEmulatorName indicates empty emulator name
 	MissingEmulatorName = "missing emulator name for suite: %s. Emulators index: %d"
 	// InvalidEmulatorName indicates invalid emulator name
-	InvalidEmulatorName = "missing `emulator` in emulator name: %s. Suite name: %s. Emulators index: %d"
+	InvalidEmulatorName = `missing "emulator" in emulator name: %s. Suite name: %s. Emulators index: %d`
 	// MissingEmulatorPlatformVersion indicates no emulator platform version provided
 	MissingEmulatorPlatformVersion = "missing platform versions for emulator: %s. Suite name: %s. Emulators index: %d"
 )

@@ -127,7 +127,7 @@ func TestValidateThrowsErrors(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: errors.New("missing `emulator` in emulator name: Android GoogleApi something. Suite name: no emulator device name. Emulators index: 0"),
+			expectedErr: errors.New(`missing "emulator" in emulator name: Android GoogleApi something. Suite name: no emulator device name. Emulators index: 0`),
 		},
 		{
 			name: "validating throws error on missing platform versions",
