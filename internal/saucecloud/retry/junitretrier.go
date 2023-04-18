@@ -62,6 +62,9 @@ func (b *JunitRetrier) retryOnlyFailedClasses(reader job.Reader, jobOpts chan<- 
 		Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1)).
 		Msgf(msg.RetryWithClasses, strings.Join(classes, ","))
 
+	if opt.TestOptions == nil {
+		opt.TestOptions = map[string]interface{}{}
+	}
 	opt.TestOptions["class"] = classes
 	jobOpts <- opt
 }
