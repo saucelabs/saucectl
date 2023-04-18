@@ -151,20 +151,20 @@ func (c *TestComposer) UploadAsset(jobID string, realDevice bool, fileName strin
 }
 
 // Frameworks returns the list of available frameworks.
-func (c *TestComposer) Frameworks(ctx context.Context) ([]framework.Framework, error) {
+func (c *TestComposer) Frameworks(ctx context.Context) ([]string, error) {
 	url := fmt.Sprintf("%s/v2/testcomposer/frameworks", c.URL)
 
 	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return []framework.Framework{}, err
+		return []string{}, err
 	}
 	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
 
 	var resp []framework.Framework
 	if err = c.doJSONResponse(req, 200, &resp); err != nil {
-		return []framework.Framework{}, err
+		return []string{}, err
 	}
-	return uniqFrameworkSet(resp), nil
+	return uniqFrameworkNameSet(resp), nil
 }
 
 // Versions return the list of available versions for a specific framework and region.
@@ -206,8 +206,8 @@ func (c *TestComposer) Versions(ctx context.Context, frameworkName string) ([]fr
 	return frameworks, nil
 }
 
-func uniqFrameworkSet(frameworks []framework.Framework) []framework.Framework {
-	var fws []framework.Framework
+func uniqFrameworkNameSet(frameworks []framework.Framework) []string {
+	var fws []string
 	mp := map[string]bool{}
 
 	for _, fw := range frameworks {
@@ -215,9 +215,7 @@ func uniqFrameworkSet(frameworks []framework.Framework) []framework.Framework {
 
 		if !present {
 			mp[fw.Name] = true
-			fws = append(fws, framework.Framework{
-				Name: fw.Name,
-			})
+			fws = append(fws, fw.Name)
 		}
 	}
 	return fws

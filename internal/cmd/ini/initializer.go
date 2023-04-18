@@ -149,14 +149,9 @@ func (ini *initializer) checkCredentials(region string) error {
 }
 
 func (ini *initializer) askFramework() (string, error) {
-	values, err := ini.infoReader.Frameworks(context.Background())
+	frameworks, err := ini.infoReader.Frameworks(context.Background())
 	if err != nil {
 		return "", err
-	}
-
-	var frameworks []string
-	for _, f := range values {
-		frameworks = append(frameworks, f.Name)
 	}
 
 	p := &survey.Select{

@@ -175,19 +175,19 @@ func TestTestComposer_Frameworks(t *testing.T) {
 		name     string
 		body     string
 		httpCode int
-		want     []framework.Framework
+		want     []string
 		wantErr  bool
 	}{
 		{
 			name:     "HTTP - 200",
 			body:     `[{"name":"cypress","version":"12.6.0"},{"name":"cypress","version":"12.3.0"},{"name":"playwright","version":"1.31.1"},{"name":"playwright","version":"1.29.2"},{"name":"puppeteer","version":"10.4.0"},{"name":"puppeteer","version":"10.2.0"},{"name":"puppeteer-replay","version":"0.8.0"},{"name":"puppeteer-replay","version":"0.7.0"},{"name":"testcafe","version":"2.1.0"},{"name":"testcafe","version":"2.0.1"}]`,
 			httpCode: 200,
-			want: []framework.Framework{
-				{Name: "cypress"},
-				{Name: "playwright"},
-				{Name: "puppeteer"},
-				{Name: "puppeteer-replay"},
-				{Name: "testcafe"},
+			want: []string{
+				"cypress",
+				"playwright",
+				"puppeteer",
+				"puppeteer-replay",
+				"testcafe",
 			},
 			wantErr: false,
 		},
@@ -195,7 +195,7 @@ func TestTestComposer_Frameworks(t *testing.T) {
 			name:     "HTTP - 500",
 			body:     ``,
 			httpCode: 500,
-			want:     []framework.Framework{},
+			want:     []string{},
 			wantErr:  true,
 		},
 	}

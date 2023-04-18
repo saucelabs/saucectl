@@ -128,8 +128,8 @@ type questionTest struct {
 
 func TestAskFramework(t *testing.T) {
 	ir := &mocks.FakeFrameworkInfoReader{
-		FrameworksFn: func(ctx context.Context) ([]framework.Framework, error) {
-			return []framework.Framework{{Name: cypress.Kind}, {Name: espresso.Kind}, {Name: playwright.Kind}}, nil
+		FrameworksFn: func(ctx context.Context) ([]string, error) {
+			return []string{cypress.Kind, espresso.Kind, playwright.Kind}, nil
 		},
 	}
 	testCases := []questionTest{
@@ -716,8 +716,8 @@ func TestConfigure(t *testing.T) {
 		VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
 			return frameworkVersions, nil
 		},
-		FrameworksFn: func(ctx context.Context) ([]framework.Framework, error) {
-			return []framework.Framework{{Name: cypress.Kind}, {Name: espresso.Kind}}, nil
+		FrameworksFn: func(ctx context.Context) ([]string, error) {
+			return []string{cypress.Kind, espresso.Kind}, nil
 		},
 	}
 	dr := &mocks.FakeDevicesReader{
@@ -1028,15 +1028,15 @@ func Test_initializers(t *testing.T) {
 		VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
 			return frameworkVersions[frameworkName], nil
 		},
-		FrameworksFn: func(ctx context.Context) ([]framework.Framework, error) {
-			return []framework.Framework{
-				{Name: cypress.Kind},
-				{Name: espresso.Kind},
-				{Name: imagerunner.Kind},
-				{Name: playwright.Kind},
-				{Name: "puppeteer"},
-				{Name: testcafe.Kind},
-				{Name: xcuitest.Kind},
+		FrameworksFn: func(ctx context.Context) ([]string, error) {
+			return []string{
+				cypress.Kind,
+				espresso.Kind,
+				imagerunner.Kind,
+				playwright.Kind,
+				"puppeteer",
+				testcafe.Kind,
+				xcuitest.Kind,
 			}, nil
 		},
 	}
@@ -1717,30 +1717,28 @@ func Test_metaToBrowsers(t *testing.T) {
 func Test_checkCredentials(t *testing.T) {
 	tests := []struct {
 		name        string
-		frameworkFn func(ctx context.Context) ([]framework.Framework, error)
+		frameworkFn func(ctx context.Context) ([]string, error)
 		wantErr     error
 	}{
 		{
 			name: "Success",
-			frameworkFn: func(ctx context.Context) ([]framework.Framework, error) {
-				return []framework.Framework{
-					{Name: cypress.Kind},
-				}, nil
+			frameworkFn: func(ctx context.Context) ([]string, error) {
+				return []string{cypress.Kind}, nil
 			},
 			wantErr: nil,
 		},
 		{
 			name: "Invalid credentials",
-			frameworkFn: func(ctx context.Context) ([]framework.Framework, error) {
+			frameworkFn: func(ctx context.Context) ([]string, error) {
 				errMsg := "unexpected status '401' from test-composer: Unauthorized\n"
-				return []framework.Framework{}, fmt.Errorf(errMsg)
+				return []string{}, fmt.Errorf(errMsg)
 			},
 			wantErr: errors.New("invalid credentials provided"),
 		},
 		{
 			name: "Other error",
-			frameworkFn: func(ctx context.Context) ([]framework.Framework, error) {
-				return []framework.Framework{}, errors.New("other error")
+			frameworkFn: func(ctx context.Context) ([]string, error) {
+				return []string{}, errors.New("other error")
 			},
 			wantErr: errors.New("other error"),
 		},
