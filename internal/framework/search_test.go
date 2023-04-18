@@ -11,11 +11,11 @@ import (
 )
 
 type MockMetadataService struct {
-	MockFrameworks func(ctx context.Context) ([]Framework, error)
+	MockFrameworks func(ctx context.Context) ([]string, error)
 	MockVersions   func(ctx context.Context, frameworkName string) ([]Metadata, error)
 }
 
-func (m *MockMetadataService) Frameworks(ctx context.Context) ([]Framework, error) {
+func (m *MockMetadataService) Frameworks(ctx context.Context) ([]string, error) {
 	if m.MockFrameworks != nil {
 		return m.MockFrameworks(ctx)
 	}
