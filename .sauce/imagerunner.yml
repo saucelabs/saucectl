@@ -5,6 +5,7 @@ sauce:
 suites:
   - name: busybox num 1 # Describe your configuration
     image: busybox:1.35.0 # Name of the container image
+    workload: other # Kind of workload
     imagePullAuth: # Credentials used to pull the container image
       user: $DOCKER_USERNAME
       token: $DOCKER_PASSWORD

@@ -155,9 +155,19 @@ const (
 	// MissingEmulatorName indicates empty emulator name
 	MissingEmulatorName = "missing emulator name for suite: %s. Emulators index: %d"
 	// InvalidEmulatorName indicates invalid emulator name
-	InvalidEmulatorName = "missing `emulator` in emulator name: %s. Suite name: %s. Emulators index: %d"
+	InvalidEmulatorName = `missing "emulator" in emulator name: %s. Suite name: %s. Emulators index: %d`
 	// MissingEmulatorPlatformVersion indicates no emulator platform version provided
 	MissingEmulatorPlatformVersion = "missing platform versions for emulator: %s. Suite name: %s. Emulators index: %d"
+)
+
+// ImageRunner config settings
+const (
+	// MissingImageRunnerWorkloadType indicates no workload type provided
+	MissingImageRunnerWorkloadType = `missing "workload" value for suite: %s`
+	// InvalidImageRunnerWorkloadType indicates invalid workload type provided
+	InvalidImageRunnerWorkloadType = `%q is an invalid "workload" value for suite: %s`
+	// MissingImageRunnerImage indicates no docker image provided
+	MissingImageRunnerImage = `missing "image" for suite: %s`
 )
 
 // testcafe config settings
