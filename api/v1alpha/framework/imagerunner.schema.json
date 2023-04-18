@@ -72,7 +72,10 @@
         },
         "workload": {
           "description": "Sets the kind of workload that is being executed",
-          "type": "string"
+          "enum": [
+            "webdriver",
+            "other"
+          ]
         }
       },
       "required": [
