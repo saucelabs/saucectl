@@ -69,10 +69,18 @@
         },
         "timeout": {
           "$ref": "../subschema/common.schema.json#/definitions/timeout"
+        },
+        "workload": {
+          "description": "Sets the kind of workload that is being executed",
+          "enum": [
+            "webdriver",
+            "other"
+          ]
         }
       },
       "required": [
-        "name"
+        "name",
+        "workload"
       ]
     }
   },

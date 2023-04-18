@@ -2742,10 +2742,18 @@
                   "10m",
                   "90s"
                 ]
+              },
+              "workload": {
+                "description": "Sets the kind of workload that is being executed",
+                "enum": [
+                  "webdriver",
+                  "other"
+                ]
               }
             },
             "required": [
-              "name"
+              "name",
+              "workload"
             ]
           }
         },

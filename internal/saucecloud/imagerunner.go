@@ -181,11 +181,12 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 			Name: suite.Image,
 			Auth: auth,
 		},
-		EntryPoint: suite.EntryPoint,
-		Env:        mapEnv(suite.Env),
-		Files:      files,
-		Artifacts:  suite.Artifacts,
-		Metadata:   metadata,
+		EntryPoint:   suite.EntryPoint,
+		Env:          mapEnv(suite.Env),
+		Files:        files,
+		Artifacts:    suite.Artifacts,
+		Metadata:     metadata,
+		WorkloadType: suite.Workload,
 	})
 	if errors.Is(err, context.DeadlineExceeded) && ctx.Err() != nil {
 		run.Status = imagerunner.StateCancelled

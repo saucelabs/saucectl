@@ -1,14 +1,23 @@
 package imagerunner
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/region"
 )
 
 var (
 	Kind       = "imagerunner"
 	APIVersion = "v1alpha"
+
+	ValidWorkloadType = []string{
+		"webdriver",
+		"other",
+	}
 )
 
 type Project struct {
@@ -32,6 +41,7 @@ type Suite struct {
 	Artifacts     []string          `yaml:"artifacts,omitempty" json:"artifacts"`
 	Env           map[string]string `yaml:"env,omitempty" json:"env"`
 	Timeout       time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
+	Workload      string            `yaml:"workload,omitempty" json:"workload,omitempty"`
 }
 
 type ImagePullAuth struct {
@@ -52,4 +62,71 @@ func FromFile(cfgPath string) (Project, error) {
 	}
 
 	return p, nil
+}
+
+// SetDefaults applies config defaults in case the user has left them blank.
+func SetDefaults(p *Project) {
+	if p.Kind == "" {
+		p.Kind = Kind
+	}
+
+	if p.APIVersion == "" {
+		p.APIVersion = APIVersion
+	}
+
+	if p.Sauce.Concurrency < 1 {
+		p.Sauce.Concurrency = 2
+	}
+
+	if p.Defaults.Timeout < 0 {
+		p.Defaults.Timeout = 0
+	}
+
+	p.Sauce.Tunnel.SetDefaults()
+	p.Sauce.Metadata.SetDefaultBuild()
+
+	for i, suite := range p.Suites {
+		if suite.Timeout <= 0 {
+			p.Suites[i].Timeout = p.Defaults.Timeout
+		}
+
+		if suite.Workload == "" {
+			p.Suites[i].Workload = p.Defaults.Workload
+		}
+	}
+}
+
+func Validate(p Project) error {
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		return errors.New(msg.MissingRegion)
+	}
+
+	if len(p.Suites) == 0 {
+		return errors.New(msg.EmptySuite)
+	}
+
+	for _, suite := range p.Suites {
+		if suite.Workload == "" {
+			return fmt.Errorf(msg.MissingImageRunnerWorkloadType, suite.Name)
+		}
+
+		if !sliceContainsString(ValidWorkloadType, suite.Workload) {
+			return fmt.Errorf(msg.InvalidImageRunnerWorkloadType, suite.Workload, suite.Name)
+		}
+
+		if suite.Image == "" {
+			return fmt.Errorf(msg.MissingImageRunnerImage, suite.Name)
+		}
+	}
+	return nil
+}
+
+func sliceContainsString(slice []string, val string) bool {
+	for _, value := range slice {
+		if value == val {
+			return true
+		}
+	}
+	return false
 }
