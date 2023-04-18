@@ -160,6 +160,16 @@ const (
 	MissingEmulatorPlatformVersion = "missing platform versions for emulator: %s. Suite name: %s. Emulators index: %d"
 )
 
+// ImageRunner config settings
+const (
+	// MissingImageRunnerWorkloadType indicates no workload type provided
+	MissingImageRunnerWorkloadType = "missing `workload` value for suite: %s"
+	// InvalidImageRunnerWorkloadType indicates invalid workload type provided
+	InvalidImageRunnerWorkloadType = "`%s` is an invalid `workload` value for suite: %s"
+	// MissingImageRunnerImage indicates no docker image provided
+	MissingImageRunnerImage = "missing `image` for suite: %s"
+)
+
 // testcafe config settings
 const (
 	// InvalidTestCafeDeviceSetting indicates the unsupported device keyword in the config

@@ -1,14 +1,23 @@
 package imagerunner
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/region"
 )
 
 var (
 	Kind       = "imagerunner"
 	APIVersion = "v1alpha"
+
+	ValidWorkloadType = []string{
+		"webdriver",
+		"other",
+	}
 )
 
 type Project struct {
@@ -85,4 +94,39 @@ func SetDefaults(p *Project) {
 			p.Suites[i].Workload = p.Defaults.Workload
 		}
 	}
+}
+
+func Validate(p Project) error {
+	regio := region.FromString(p.Sauce.Region)
+	if regio == region.None {
+		return errors.New(msg.MissingRegion)
+	}
+
+	if len(p.Suites) == 0 {
+		return errors.New(msg.EmptySuite)
+	}
+
+	for _, suite := range p.Suites {
+		if suite.Workload == "" {
+			return fmt.Errorf(msg.MissingImageRunnerWorkloadType, suite.Name)
+		}
+
+		if !sliceContainsString(ValidWorkloadType, suite.Workload) {
+			return fmt.Errorf(msg.InvalidImageRunnerWorkloadType, suite.Workload, suite.Name)
+		}
+
+		if suite.Image == "" {
+			return fmt.Errorf(msg.MissingImageRunnerImage, suite.Name)
+		}
+	}
+	return nil
+}
+
+func sliceContainsString(slice []string, val string) bool {
+	for _, value := range slice {
+		if value == val {
+			return true
+		}
+	}
+	return false
 }
