@@ -163,11 +163,11 @@ const (
 // ImageRunner config settings
 const (
 	// MissingImageRunnerWorkloadType indicates no workload type provided
-	MissingImageRunnerWorkloadType = "missing `workload` value for suite: %s"
+	MissingImageRunnerWorkloadType = `missing "workload" value for suite: %s`
 	// InvalidImageRunnerWorkloadType indicates invalid workload type provided
-	InvalidImageRunnerWorkloadType = "`%s` is an invalid `workload` value for suite: %s"
+	InvalidImageRunnerWorkloadType = `%q is an invalid "workload" value for suite: %s`
 	// MissingImageRunnerImage indicates no docker image provided
-	MissingImageRunnerImage = "missing `image` for suite: %s"
+	MissingImageRunnerImage = `missing "image" for suite: %s`
 )
 
 // testcafe config settings

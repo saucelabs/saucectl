@@ -49,7 +49,7 @@ func TestValidate(t *testing.T) {
 					},
 				},
 			},
-			wantErr: "missing `image` for suite: Main Suite",
+			wantErr: `missing "image" for suite: Main Suite`,
 		},
 		{
 			name: "No Workload Type",
@@ -66,7 +66,7 @@ func TestValidate(t *testing.T) {
 					},
 				},
 			},
-			wantErr: "missing `workload` value for suite: Main Suite",
+			wantErr: `missing "workload" value for suite: Main Suite`,
 		},
 		{
 			name: "Invalid Workload Type",
@@ -84,7 +84,7 @@ func TestValidate(t *testing.T) {
 					},
 				},
 			},
-			wantErr: "`invalid-workload-type` is an invalid `workload` value for suite: Main Suite",
+			wantErr: `"invalid-workload-type" is an invalid "workload" value for suite: Main Suite`,
 		},
 	}
 	for _, tt := range tests {
