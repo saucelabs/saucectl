@@ -12,7 +12,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/cmd/artifacts"
 	"github.com/saucelabs/saucectl/internal/cmd/completion"
 	"github.com/saucelabs/saucectl/internal/cmd/configure"
-	"github.com/saucelabs/saucectl/internal/cmd/doctor"
 	"github.com/saucelabs/saucectl/internal/cmd/imagerunner"
 	"github.com/saucelabs/saucectl/internal/cmd/ini"
 	"github.com/saucelabs/saucectl/internal/cmd/jobs"
@@ -68,7 +67,6 @@ func main() {
 		ini.Command(),
 		signup.Command(),
 		completion.Command(),
-		doctor.Command(),
 		storage.Command(cmd.PersistentPreRun),
 		artifacts.Command(cmd.PersistentPreRun),
 		jobs.Command(cmd.PersistentPreRun),
