@@ -130,3 +130,14 @@ func sliceContainsString(slice []string, val string) bool {
 	}
 	return false
 }
+
+// FilterSuites filters out suites in the project that don't match the given suite name.
+func FilterSuites(p *Project, suiteName string) error {
+	for _, s := range p.Suites {
+		if s.Name == suiteName {
+			p.Suites = []Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
+}
