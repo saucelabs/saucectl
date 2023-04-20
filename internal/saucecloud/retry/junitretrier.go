@@ -68,7 +68,7 @@ func (b *JunitRetrier) retryOnlyFailedClasses(reader job.Reader, jobOpts chan<- 
 	jobOpts <- opt
 }
 
-// setClassesToRetry set the correct filtering flag when retrying.
+// setClassesToRetry sets the correct filtering flag when retrying.
 // RDC API does not provide different endpoints (or identical values) for Espresso
 // and XCUITest. Thus, we need set the classes at the correct position depending the
 // framework that is being executed.
