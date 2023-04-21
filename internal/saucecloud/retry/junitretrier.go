@@ -9,6 +9,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
 
 type JunitRetrier struct {
@@ -62,11 +63,24 @@ func (b *JunitRetrier) retryOnlyFailedClasses(reader job.Reader, jobOpts chan<- 
 		Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1)).
 		Msgf(msg.RetryWithClasses, strings.Join(classes, ","))
 
+	setClassesToRetry(&opt, classes)
+
+	jobOpts <- opt
+}
+
+// setClassesToRetry sets the correct filtering flag when retrying.
+// RDC API does not provide different endpoints (or identical values) for Espresso
+// and XCUITest. Thus, we need set the classes at the correct position depending the
+// framework that is being executed.
+func setClassesToRetry(opt *job.StartOptions, classes []string) {
+	if opt.Framework == xcuitest.Kind {
+		opt.TestsToRun = classes
+		return
+	}
 	if opt.TestOptions == nil {
 		opt.TestOptions = map[string]interface{}{}
 	}
 	opt.TestOptions["class"] = classes
-	jobOpts <- opt
 }
 
 func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
