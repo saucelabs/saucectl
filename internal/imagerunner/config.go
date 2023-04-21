@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -75,7 +76,12 @@ func SetDefaults(p *Project) {
 	}
 
 	if p.Sauce.Concurrency < 1 {
-		p.Sauce.Concurrency = 2
+		p.Sauce.Concurrency = 1
+	}
+
+	if p.Sauce.Concurrency > 5 {
+		log.Warn().Msgf("Maximum concurrency for imagerunner is 5. Replacing %d by 5.", p.Sauce.Concurrency)
+		p.Sauce.Concurrency = 5
 	}
 
 	if p.Defaults.Timeout < 0 {
