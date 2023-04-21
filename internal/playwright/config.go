@@ -76,6 +76,7 @@ type Suite struct {
 	PreExec           []string          `yaml:"preExec,omitempty" json:"preExec"`
 	TimeZone          string            `yaml:"timeZone,omitempty" json:"timeZone"`
 	PassThreshold     int               `yaml:"passThreshold,omitempty" json:"-"`
+	SmartRetry        config.SmartRetry `yaml:"smartRetry,omitempty" json:"-"`
 }
 
 // SuiteConfig represents the configuration specific to a suite

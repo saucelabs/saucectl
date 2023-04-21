@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -248,7 +247,6 @@ func TestCypressV1_Validate(t *testing.T) {
 	for _, tc := range testCase {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.project.Validate()
-			fmt.Println("err: ", err)
 			if err != nil {
 				assert.True(t, tc.expErr)
 			}
@@ -287,6 +285,53 @@ func TestCyress_CleanPackages(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.project.CleanPackages()
 			assert.Equal(t, tc.expResult, tc.project.Npm.Packages)
+		})
+	}
+}
+
+func TestCypress_SetTestGrep(t *testing.T) {
+	testCases := []struct {
+		name       string
+		project    Project
+		suiteIndex int
+		tests      []string
+		expResult  map[string]string
+	}{
+		{
+			name: "set TestGrep for the first suite in project",
+			project: Project{
+				Suites: []Suite{
+					{
+						Config: SuiteConfig{
+							Env: map[string]string{},
+						},
+					},
+				},
+			},
+			suiteIndex: 0,
+			tests:      []string{"failed test1", "failed test2"},
+			expResult: map[string]string{
+				"grep": "failed test1;failed test2",
+			},
+		},
+		{
+			name: "set TestGrep for the first suite in project w/ empty Env",
+			project: Project{
+				Suites: []Suite{
+					{},
+				},
+			},
+			suiteIndex: 0,
+			tests:      []string{"failed test1", "failed test2"},
+			expResult: map[string]string{
+				"grep": "failed test1;failed test2",
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.project.SetTestGrep(tc.suiteIndex, tc.tests)
+			assert.Equal(t, tc.expResult, tc.project.Suites[tc.suiteIndex].Config.Env)
 		})
 	}
 }

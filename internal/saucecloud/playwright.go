@@ -115,7 +115,7 @@ func (r *PlaywrightRunner) runSuites(fileURIs []string) bool {
 
 	// Submit suites to work on.
 	go func() {
-		for _, s := range suites {
+		for i, s := range suites {
 			// Define frameworkVersion if not set at suite level
 			if s.PlaywrightVersion == "" {
 				s.PlaywrightVersion = r.Project.Playwright.Version
@@ -124,6 +124,7 @@ func (r *PlaywrightRunner) runSuites(fileURIs []string) bool {
 				ConfigFilePath:   r.Project.ConfigFilePath,
 				CLIFlags:         r.Project.CLIFlags,
 				DisplayName:      s.Name,
+				SuiteIndex:       i,
 				Timeout:          s.Timeout,
 				App:              fileURIs[0],
 				OtherApps:        fileURIs[1:],
@@ -148,6 +149,9 @@ func (r *PlaywrightRunner) runSuites(fileURIs []string) bool {
 				TimeZone:         s.TimeZone,
 				Visibility:       r.Project.Sauce.Visibility,
 				PassThreshold:    s.PassThreshold,
+				SmartRetry: job.SmartRetry{
+					FailedTestsOnly: s.SmartRetry.FailedTestsOnly,
+				},
 			}
 		}
 	}()

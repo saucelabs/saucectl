@@ -13,6 +13,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
+	"github.com/saucelabs/saucectl/internal/saucecloud/zip"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/saucereport"
 	"gotest.tools/v3/fs"
@@ -499,7 +500,7 @@ func TestCloudRunner_archiveNodeModules(t *testing.T) {
 			r := &CloudRunner{
 				NPMDependencies: tt.fields.NPMDependencies,
 			}
-			got, err := r.archiveNodeModules(tt.args.tempDir, tt.args.rootDir, tt.args.matcher)
+			got, err := zip.ArchiveNodeModules(tt.args.tempDir, tt.args.rootDir, tt.args.matcher, r.NPMDependencies)
 			if !tt.wantErr(t, err, fmt.Sprintf("archiveNodeModules(%v, %v, %v)", tt.args.tempDir, tt.args.rootDir, tt.args.matcher)) {
 				return
 			}

@@ -9,6 +9,7 @@ import (
 type StartOptions struct {
 	// DisplayName is used for local logging purposes only (e.g. console).
 	DisplayName string `json:"-"`
+	SuiteIndex  int    `json:"-"`
 
 	// Timeout is used for local/per-suite timeout.
 	Timeout time.Duration `json:"-"`
@@ -81,6 +82,7 @@ type TunnelOptions struct {
 // SmartRetry represents the retry strategy.
 type SmartRetry struct {
 	FailedClassesOnly bool `json:"-"`
+	FailedTestsOnly   bool `json:"-"`
 }
 
 // Starter is the interface for starting jobs.

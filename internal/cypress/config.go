@@ -45,6 +45,8 @@ type Project interface {
 	SetRunnerVersion(string)
 	GetSuite() suite.Suite
 	GetAPIVersion() string
+	GetSmartRetry(suiteName string) config.SmartRetry
+	SetTestGrep(suiteIndex int, tests []string)
 }
 
 type project struct {

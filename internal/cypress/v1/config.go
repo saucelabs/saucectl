@@ -53,20 +53,21 @@ type Project struct {
 
 // Suite represents the cypress test suite configuration.
 type Suite struct {
-	Name             string        `yaml:"name,omitempty" json:"name"`
-	Browser          string        `yaml:"browser,omitempty" json:"browser"`
-	BrowserVersion   string        `yaml:"browserVersion,omitempty" json:"browserVersion"`
-	PlatformName     string        `yaml:"platformName,omitempty" json:"platformName"`
-	Config           SuiteConfig   `yaml:"config,omitempty" json:"config"`
-	ScreenResolution string        `yaml:"screenResolution,omitempty" json:"screenResolution"`
-	Mode             string        `yaml:"mode,omitempty" json:"-"`
-	Timeout          time.Duration `yaml:"timeout,omitempty" json:"timeout"`
-	Shard            string        `yaml:"shard,omitempty" json:"-"`
-	ShardGrepEnabled bool          `yaml:"shardGrepEnabled,omitempty" json:"-"`
-	Headless         bool          `yaml:"headless,omitempty" json:"headless"`
-	PreExec          []string      `yaml:"preExec,omitempty" json:"preExec"`
-	TimeZone         string        `yaml:"timeZone,omitempty" json:"timeZone"`
-	PassThreshold    int           `yaml:"passThreshold,omitempty" json:"-"`
+	Name             string            `yaml:"name,omitempty" json:"name"`
+	Browser          string            `yaml:"browser,omitempty" json:"browser"`
+	BrowserVersion   string            `yaml:"browserVersion,omitempty" json:"browserVersion"`
+	PlatformName     string            `yaml:"platformName,omitempty" json:"platformName"`
+	Config           SuiteConfig       `yaml:"config,omitempty" json:"config"`
+	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
+	Mode             string            `yaml:"mode,omitempty" json:"-"`
+	Timeout          time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
+	Shard            string            `yaml:"shard,omitempty" json:"-"`
+	ShardGrepEnabled bool              `yaml:"shardGrepEnabled,omitempty" json:"-"`
+	Headless         bool              `yaml:"headless,omitempty" json:"headless"`
+	PreExec          []string          `yaml:"preExec,omitempty" json:"preExec"`
+	TimeZone         string            `yaml:"timeZone,omitempty" json:"timeZone"`
+	PassThreshold    int               `yaml:"passThreshold,omitempty" json:"-"`
+	SmartRetry       config.SmartRetry `yaml:"smartRetry,omitempty" json:"-"`
 }
 
 // SuiteConfig represents the cypress config overrides.
@@ -537,4 +538,22 @@ func (p *Project) IsSharded() bool {
 // GetAPIVersion returns APIVersion
 func (p *Project) GetAPIVersion() string {
 	return p.APIVersion
+}
+
+// GetSmartRetry returns smartRetry config
+func (p *Project) GetSmartRetry(suiteName string) config.SmartRetry {
+	for _, s := range p.Suites {
+		if s.Name == suiteName {
+			return s.SmartRetry
+		}
+	}
+	return config.SmartRetry{}
+}
+
+// SetTestGrep set specified tests
+func (p *Project) SetTestGrep(suiteIndex int, tests []string) {
+	if p.Suites[suiteIndex].Config.Env == nil {
+		p.Suites[suiteIndex].Config.Env = map[string]string{}
+	}
+	p.Suites[suiteIndex].Config.Env["grep"] = strings.Join(tests, ";")
 }

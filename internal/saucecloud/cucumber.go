@@ -109,10 +109,11 @@ func (r *CucumberRunner) runSuites(fileURIs []string) bool {
 
 	// Submit suites to work on
 	go func() {
-		for _, s := range suites {
+		for i, s := range suites {
 			jobOpts <- job.StartOptions{
 				ConfigFilePath:   r.Project.ConfigFilePath,
 				DisplayName:      s.Name,
+				SuiteIndex:       i,
 				App:              fileURIs[0],
 				OtherApps:        fileURIs[1:],
 				Suite:            s.Name,
@@ -135,6 +136,9 @@ func (r *CucumberRunner) runSuites(fileURIs []string) bool {
 				Retries:          r.Project.Sauce.Retries,
 				Visibility:       r.Project.Sauce.Visibility,
 				PassThreshold:    s.PassThreshold,
+				SmartRetry: job.SmartRetry{
+					FailedTestsOnly: s.SmartRetry.FailedTestsOnly,
+				},
 			}
 		}
 	}()

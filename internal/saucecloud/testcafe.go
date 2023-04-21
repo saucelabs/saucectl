@@ -109,11 +109,11 @@ func (r *TestcafeRunner) runSuites(fileURIs []string) bool {
 	// Submit suites to work on
 	jobsCount := r.calcTestcafeJobsCount(r.Project.Suites)
 	go func() {
-		for _, s := range suites {
+		for i, s := range suites {
 			if len(s.Simulators) > 0 {
 				for _, d := range s.Simulators {
 					for _, pv := range d.PlatformVersions {
-						opts := r.generateStartOpts(s)
+						opts := r.generateStartOpts(s, i)
 						opts.App = fileURIs[0]
 						opts.OtherApps = fileURIs[1:]
 						opts.PlatformName = d.PlatformName
@@ -124,7 +124,7 @@ func (r *TestcafeRunner) runSuites(fileURIs []string) bool {
 					}
 				}
 			} else {
-				opts := r.generateStartOpts(s)
+				opts := r.generateStartOpts(s, i)
 				opts.App = fileURIs[0]
 				opts.OtherApps = fileURIs[1:]
 				opts.PlatformName = s.PlatformName
@@ -137,11 +137,12 @@ func (r *TestcafeRunner) runSuites(fileURIs []string) bool {
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
 }
 
-func (r *TestcafeRunner) generateStartOpts(s testcafe.Suite) job.StartOptions {
+func (r *TestcafeRunner) generateStartOpts(s testcafe.Suite, i int) job.StartOptions {
 	return job.StartOptions{
 		ConfigFilePath:   r.Project.ConfigFilePath,
 		CLIFlags:         r.Project.CLIFlags,
 		DisplayName:      s.Name,
+		SuiteIndex:       i,
 		Timeout:          s.Timeout,
 		Suite:            s.Name,
 		Framework:        "testcafe",
@@ -163,6 +164,9 @@ func (r *TestcafeRunner) generateStartOpts(s testcafe.Suite) job.StartOptions {
 		Retries:          r.Project.Sauce.Retries,
 		Attempt:          0,
 		PassThreshold:    s.PassThreshold,
+		SmartRetry: job.SmartRetry{
+			FailedTestsOnly: s.SmartRetry.FailedTestsOnly,
+		},
 	}
 }
 

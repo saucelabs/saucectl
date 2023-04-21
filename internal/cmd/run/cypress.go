@@ -200,7 +200,11 @@ func runCypressInSauce(p cypress.Project, regio region.Region) (int, error) {
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.NewSearchStrategy(p.GetVersion(), p.GetRootDir()),
 			NPMDependencies:        p.GetNpm().Dependencies,
-			Retrier:                &retry.BasicRetrier{},
+			Retrier: &retry.BasicRetrier{
+				VDCReader:       &restoClient,
+				ProjectUploader: &appsClient,
+				CypressProject:  p,
+			},
 		},
 	}
 

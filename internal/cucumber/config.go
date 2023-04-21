@@ -68,11 +68,13 @@ type Suite struct {
 	PreExec          []string          `yaml:"preExec,omitempty" json:"preExec"`
 	Options          Options           `yaml:"options,omitempty" json:"options"`
 	PassThreshold    int               `yaml:"passThreshold,omitempty" json:"-"`
+	SmartRetry       config.SmartRetry `yaml:"smartRetry,omitempty" json:"-"`
 }
 
 // Options represents cucumber settings
 type Options struct {
-	Config            string            `yaml:"config,omitempty" json:"config"`
+	Config string `yaml:"config,omitempty" json:"config"`
+	// specify a regular expression against which scenario names are tested to filter which should run
 	Name              string            `yaml:"name,omitempty" json:"name"`
 	Paths             []string          `yaml:"paths,omitempty" json:"paths"`
 	ExcludedTestFiles []string          `yaml:"excludedTestFiles,omitempty" json:"excludedTestFiles"`
