@@ -80,7 +80,7 @@ func SetDefaults(p *Project) {
 	}
 
 	if p.Sauce.Concurrency > 5 {
-		log.Warn().Msgf("Maximum concurrency for imagerunner is 5. Replacing %d by 5.", p.Sauce.Concurrency)
+		log.Warn().Msgf(msg.ImageRunnerMaxConcurrency, p.Sauce.Concurrency)
 		p.Sauce.Concurrency = 5
 	}
 
