@@ -37,6 +37,7 @@ func NewCypressCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:              "cypress",
 		Short:            "Run cypress tests",
+		SilenceUsage:     true,
 		Hidden:           true, // TODO reveal command once ready
 		TraverseChildren: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {

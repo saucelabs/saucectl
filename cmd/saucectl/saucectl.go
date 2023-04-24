@@ -43,6 +43,7 @@ func main() {
 		Use:              cmdUse,
 		Short:            cmdShort,
 		Long:             cmdLong,
+		SilenceUsage:     true,
 		TraverseChildren: true,
 		Version:          fmt.Sprintf("%s\n(build %s)", version.Version, version.GitCommit),
 	}

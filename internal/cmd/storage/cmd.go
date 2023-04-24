@@ -20,6 +20,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:              "storage",
 		Short:            "Interact with Sauce Storage",
+		SilenceUsage:     true,
 		TraverseChildren: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if preRun != nil {

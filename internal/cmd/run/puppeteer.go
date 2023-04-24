@@ -35,6 +35,7 @@ func NewPuppeteerCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:              "puppeteer",
 		Short:            "Run puppeteer tests",
+		SilenceUsage:     true,
 		Hidden:           true, // TODO reveal command once ready
 		TraverseChildren: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {

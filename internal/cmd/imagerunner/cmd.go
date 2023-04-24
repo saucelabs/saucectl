@@ -18,8 +18,9 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	var regio string
 
 	cmd := &cobra.Command{
-		Use:   "imagerunner",
-		Short: "Commands for interacting with imagerunner runs",
+		Use:          "imagerunner",
+		Short:        "Commands for interacting with imagerunner runs",
+		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if preRun != nil {
 				preRun(cmd, args)

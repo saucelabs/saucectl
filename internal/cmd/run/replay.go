@@ -38,6 +38,7 @@ func NewReplayCmd() *cobra.Command {
 		Short:            "Replay chrome devtools recordings",
 		Long:             "Unlike 'saucectl run', this command allows you to bypass the config file partially or entirely by configuring an adhoc suite (--name) via flags.",
 		Example:          `saucectl run replay recording.json -c "" --name "My Suite"`,
+		SilenceUsage:     true,
 		TraverseChildren: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			sc.BindAll()

@@ -29,10 +29,11 @@ var (
 // Command creates the `configure` command
 func Command() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     configureUse,
-		Short:   configureShort,
-		Long:    configureLong,
-		Example: configureExample,
+		Use:          configureUse,
+		Short:        configureShort,
+		Long:         configureLong,
+		Example:      configureExample,
+		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			tracker := segment.DefaultTracker
 

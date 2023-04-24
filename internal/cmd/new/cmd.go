@@ -22,11 +22,12 @@ var (
 // Command creates the `new` command
 func Command() *cobra.Command {
 	cmd := &cobra.Command{
-		Deprecated: deprecationMsg,
-		Use:        newUse,
-		Short:      newShort,
-		Long:       newLong,
-		Example:    newExample,
+		Deprecated:   deprecationMsg,
+		Use:          newUse,
+		Short:        newShort,
+		Long:         newLong,
+		Example:      newExample,
+		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
 		},
 	}

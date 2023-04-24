@@ -64,8 +64,9 @@ var defaultTableStyle = table.Style{
 
 func ArtifactsCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "artifacts",
-		Short: "Commands for interacting with artifacts produced by the imagerunner.",
+		Use:          "artifacts",
+		Short:        "Commands for interacting with artifacts produced by the imagerunner.",
+		SilenceUsage: true,
 	}
 
 	cmd.AddCommand(
@@ -80,8 +81,9 @@ func downloadCommand() *cobra.Command {
 	var out string
 
 	cmd := &cobra.Command{
-		Use:   "download <runID> <file-pattern>",
-		Short: "Downloads the specified artifacts from the given run. Supports glob pattern.",
+		Use:          "download <runID> <file-pattern>",
+		Short:        "Downloads the specified artifacts from the given run. Supports glob pattern.",
+		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no run ID specified")

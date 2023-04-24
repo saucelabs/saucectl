@@ -33,6 +33,7 @@ func NewCucumberCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:              "cucumberjs",
 		Short:            "Run Cucumber test",
+		SilenceUsage:     true,
 		Hidden:           true,
 		TraverseChildren: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {

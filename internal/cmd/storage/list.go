@@ -69,7 +69,8 @@ func ListCommand() *cobra.Command {
 		Aliases: []string{
 			"ls",
 		},
-		Short: "Returns the list of files that have been uploaded to Sauce Storage.",
+		Short:        "Returns the list of files that have been uploaded to Sauce Storage.",
+		SilenceUsage: true,
 		PreRun: func(cmd *cobra.Command, args []string) {
 			tracker := segment.DefaultTracker
 
