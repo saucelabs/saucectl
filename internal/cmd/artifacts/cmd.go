@@ -26,6 +26,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:              "artifacts",
 		Short:            "Interact with job artifacts",
+		SilenceUsage:     true,
 		TraverseChildren: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if preRun != nil {

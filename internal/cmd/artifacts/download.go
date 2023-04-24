@@ -22,8 +22,9 @@ func DownloadCommand() *cobra.Command {
 	var out string
 
 	cmd := &cobra.Command{
-		Use:   "download <jobID> <file-pattern>",
-		Short: "Downloads the specified artifacts from the given job. Supports glob pattern.",
+		Use:          "download <jobID> <file-pattern>",
+		Short:        "Downloads the specified artifacts from the given job. Supports glob pattern.",
+		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no job ID specified")

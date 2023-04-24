@@ -19,8 +19,9 @@ func GetCommand() *cobra.Command {
 	var out string
 
 	cmd := &cobra.Command{
-		Use:   "get",
-		Short: "Get job by id",
+		Use:          "get",
+		Short:        "Get job by id",
+		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no job ID specified")

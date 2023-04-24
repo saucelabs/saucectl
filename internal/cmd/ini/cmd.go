@@ -71,10 +71,11 @@ func Command() *cobra.Command {
 	initCfg := &initConfig{}
 
 	cmd := &cobra.Command{
-		Use:     initUse,
-		Short:   initShort,
-		Long:    initLong,
-		Example: initExample,
+		Use:          initUse,
+		Short:        initShort,
+		Long:         initLong,
+		Example:      initExample,
+		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return preRun()
 		},

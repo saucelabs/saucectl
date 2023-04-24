@@ -25,6 +25,7 @@ func UploadCommand() *cobra.Command {
 		Use: "upload filename",
 		Short: "Uploads an app file to Sauce Storage and returns a unique file ID assigned to the app. " +
 			"Sauce Storage supports app files in *.apk, *.aab, *.ipa, or *.zip format.",
+		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no filename specified")

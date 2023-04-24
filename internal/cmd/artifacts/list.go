@@ -65,7 +65,8 @@ func ListCommand() *cobra.Command {
 		Aliases: []string{
 			"ls",
 		},
-		Short: "Returns the list of artifacts for the specified job.",
+		Short:        "Returns the list of artifacts for the specified job.",
+		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no job ID specified")

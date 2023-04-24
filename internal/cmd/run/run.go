@@ -93,6 +93,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:              runUse,
 		Short:            runShort,
+		SilenceUsage:     true,
 		TraverseChildren: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return preRun()
