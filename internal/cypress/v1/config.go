@@ -540,7 +540,8 @@ func (p *Project) GetAPIVersion() string {
 	return p.APIVersion
 }
 
-// GetSmartRetry returns smartRetry config
+// GetSmartRetry returns the smartRetry config for the given suite.
+// Returns an empty config if the suite could not be found.
 func (p *Project) GetSmartRetry(suiteName string) config.SmartRetry {
 	for _, s := range p.Suites {
 		if s.Name == suiteName {
