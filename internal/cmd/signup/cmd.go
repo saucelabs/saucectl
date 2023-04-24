@@ -41,7 +41,7 @@ func Command() *cobra.Command {
 func Run() error {
 	saucebotSignup := `
                    (‾)
-                   ||                          Puppeteer,
+                   ||
            ##################             /(    Playwright,
          ##                  ##         ,..%(    TestCafe,
         (#                   ##     .,,.....%(    Cypress!

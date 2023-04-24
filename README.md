@@ -18,9 +18,6 @@ test history filtering, and analytics in Sauce Labs.
 - [Playwright](https://docs.saucelabs.com/web-apps/automated-testing/playwright/)
 // [Examples](https://github.com/saucelabs/saucectl-playwright-example)
 
-- [Puppeteer](https://docs.saucelabs.com/web-apps/automated-testing/puppeteer/)
-// [Examples](https://github.com/saucelabs/saucectl-puppeteer-example)
-
 - [Replay](https://docs.saucelabs.com/web-apps/automated-testing/replay/)
 // [Examples](https://github.com/saucelabs/saucectl-replay-example)
 

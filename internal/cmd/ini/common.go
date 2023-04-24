@@ -23,7 +23,6 @@ var configurators = map[string]func(cfg *initConfig) interface{}{
 	"cypress":     configureCypress,
 	"espresso":    configureEspresso,
 	"playwright":  configurePlaywright,
-	"puppeteer":   configurePuppeteer,
 	"testcafe":    configureTestcafe,
 	"xcuitest":    configureXCUITest,
 	"imagerunner": configureImageRunner,
@@ -36,7 +35,6 @@ var extraInfoDisplay = map[string]func(){
 var sauceignores = map[string]string{
 	"cypress":    sauceignoreCypress,
 	"playwright": sauceignorePlaywright,
-	"puppeteer":  sauceignorePuppeteer,
 	"testcafe":   sauceignoreTestcafe,
 }
 
