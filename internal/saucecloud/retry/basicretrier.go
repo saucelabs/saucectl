@@ -33,9 +33,9 @@ type BasicRetrier struct {
 	TestcafeProject   testcafe.Project
 }
 
-func (b *BasicRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
-	if b.VDCReader != nil && opt.SmartRetry.FailedTestsOnly {
-		b.RetryFailedTests(jobOpts, opt, previous)
+func (r *BasicRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
+	if r.VDCReader != nil && opt.SmartRetry.FailedTestsOnly {
+		r.RetryFailedTests(jobOpts, opt, previous)
 		return
 	}
 
