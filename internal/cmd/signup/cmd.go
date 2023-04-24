@@ -19,10 +19,11 @@ var (
 // Command creates the `run` command
 func Command() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     runUse,
-		Short:   runShort,
-		Long:    runLong,
-		Example: runExample,
+		Use:          runUse,
+		Short:        runShort,
+		Long:         runLong,
+		Example:      runExample,
+		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Info().Msg("Start Signup Command")
 			err := Run()

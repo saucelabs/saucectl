@@ -19,8 +19,9 @@ func DownloadCommand() *cobra.Command {
 	var filename string
 
 	cmd := &cobra.Command{
-		Use:   "download fileID",
-		Short: "Downloads an app file from Sauce Storage.",
+		Use:          "download fileID",
+		Short:        "Downloads an app file from Sauce Storage.",
+		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no ID specified")

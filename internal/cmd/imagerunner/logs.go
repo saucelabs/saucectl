@@ -17,8 +17,9 @@ import (
 
 func LogsCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "logs <runID>",
-		Short: "Fetch the logs for an imagerunner run",
+		Use:          "logs <runID>",
+		Short:        "Fetch the logs for an imagerunner run",
+		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no run ID specified")

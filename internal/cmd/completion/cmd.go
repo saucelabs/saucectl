@@ -51,6 +51,7 @@ PowerShell:
   PS> saucectl completion powershell > saucectl.ps1
 `,
 		DisableFlagsInUseLine: true,
+		SilenceUsage:          true,
 		ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
 		Args:                  cobra.ExactValidArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {

@@ -44,6 +44,7 @@ func NewTestcafeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:              "testcafe",
 		Short:            "Run testcafe tests",
+		SilenceUsage:     true,
 		Hidden:           true, // TODO reveal command once ready
 		TraverseChildren: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {

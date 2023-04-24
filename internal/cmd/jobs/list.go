@@ -79,7 +79,8 @@ func ListCommand() *cobra.Command {
 		Aliases: []string{
 			"ls",
 		},
-		Short: "Returns the list of jobs",
+		Short:        "Returns the list of jobs",
+		SilenceUsage: true,
 		PreRun: func(cmd *cobra.Command, args []string) {
 			tracker := segment.DefaultTracker
 
