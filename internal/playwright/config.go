@@ -16,6 +16,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/saucereport"
 )
 
 // Config descriptors.
@@ -412,4 +413,18 @@ func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
 		}
 	}
 	return res
+}
+
+// FilterFailedTests filteres failed tests and sets to specified suite
+func (p *Project) FilterFailedTests(suiteIndex int, report saucereport.SauceReport) error {
+	if suiteIndex < 0 || suiteIndex > len(p.Suites) {
+		return errors.New("invalid suite index")
+	}
+	failedTests := saucereport.GetFailedTests(report)
+	// if no failed tests found, just keep the original settings
+	if len(failedTests) == 0 {
+		return nil
+	}
+	p.Suites[suiteIndex].Params.Grep = strings.Join(failedTests, "|")
+	return nil
 }

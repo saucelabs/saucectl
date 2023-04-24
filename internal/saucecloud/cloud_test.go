@@ -202,7 +202,7 @@ func TestRunJobRetries(t *testing.T) {
 	}
 	for _, tt := range tests {
 		r := CloudRunner{
-			Retrier: &retry.BasicRetrier{},
+			Retrier: &retry.SauceReportRetrier{},
 			JobService: JobService{
 				VDCStarter: &mocks.FakeJobStarter{
 					StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {

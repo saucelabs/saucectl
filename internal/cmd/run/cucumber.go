@@ -198,7 +198,11 @@ func runCucumberInCloud(p cucumber.Project, regio region.Region) (int, error) {
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.NewSearchStrategy(p.Playwright.Version, p.RootDir),
 			NPMDependencies:        p.Npm.Dependencies,
-			Retrier:                &retry.BasicRetrier{},
+			Retrier: &retry.SauceReportRetrier{
+				VDCReader:       &restoClient,
+				ProjectUploader: &appsClient,
+				Project:         &p,
+			},
 		},
 	}
 

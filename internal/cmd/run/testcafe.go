@@ -239,10 +239,10 @@ func runTestcafeInCloud(p testcafe.Project, regio region.Region) (int, error) {
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.NewSearchStrategy(p.Testcafe.Version, p.RootDir),
 			NPMDependencies:        p.Npm.Dependencies,
-			Retrier: &retry.BasicRetrier{
+			Retrier: &retry.SauceReportRetrier{
 				VDCReader:       &restoClient,
 				ProjectUploader: &appsClient,
-				TestcafeProject: p,
+				Project:         &p,
 			},
 		},
 	}

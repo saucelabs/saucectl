@@ -2,6 +2,7 @@ package saucereport
 
 import (
 	"encoding/json"
+	"path/filepath"
 	"time"
 )
 
@@ -68,4 +69,74 @@ func Parse(fileContent []byte) (SauceReport, error) {
 		return SauceReport{}, err
 	}
 	return report, nil
+}
+
+// GetFailedTests get names from failed tests
+func GetFailedTests(report SauceReport) []string {
+	var failedTests []string
+	if report.Status == StatusPassed || report.Status == StatusSkipped {
+		return failedTests
+	}
+	for _, s := range report.Suites {
+		failedTests = append(failedTests, collectFailedTests(s)...)
+	}
+
+	return failedTests
+}
+
+func collectFailedTests(suite Suite) []string {
+	if len(suite.Suites) == 0 && len(suite.Tests) == 0 {
+		return []string{}
+	}
+	if suite.Status == StatusPassed || suite.Status == StatusSkipped {
+		return []string{}
+	}
+
+	var failedTests []string
+	for _, s := range suite.Suites {
+		if s.Status == StatusFailed {
+			failedTests = append(failedTests, collectFailedTests(s)...)
+		}
+	}
+	for _, t := range suite.Tests {
+		if t.Status == StatusFailed {
+			failedTests = append(failedTests, t.Name)
+		}
+	}
+
+	return failedTests
+}
+
+// GetFailedSpecFiles get files from failed tests
+func GetFailedSpecFiles(report SauceReport) []string {
+	var failedSpecs []string
+	if report.Status != StatusFailed {
+		return failedSpecs
+	}
+	for _, s := range report.Suites {
+		failedSpecs = append(failedSpecs, collectFailedSpecs(s)...)
+	}
+	var uniqMap = map[string]bool{}
+	for _, s := range failedSpecs {
+		uniqMap[s] = true
+	}
+	var result []string
+	for k, _ := range uniqMap {
+		result = append(result, filepath.Clean(k))
+	}
+
+	return result
+}
+
+func collectFailedSpecs(suite Suite) []string {
+	if len(suite.Suites) == 0 {
+		return []string{}
+	}
+	var failedSpecs []string
+	for _, s := range suite.Suites {
+		if s.Status == StatusFailed {
+			failedSpecs = append(failedSpecs, collectFailedSpecs(s)...)
+		}
+	}
+	return failedSpecs
 }

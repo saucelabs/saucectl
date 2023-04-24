@@ -5,6 +5,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/cypress/suite"
 	v1 "github.com/saucelabs/saucectl/internal/cypress/v1"
 	"github.com/saucelabs/saucectl/internal/cypress/v1alpha"
+	"github.com/saucelabs/saucectl/internal/saucereport"
 )
 
 // Config descriptors.
@@ -46,7 +47,7 @@ type Project interface {
 	GetSuite() suite.Suite
 	GetAPIVersion() string
 	GetSmartRetry(suiteName string) config.SmartRetry
-	SetTestGrep(suiteIndex int, tests []string)
+	FilterFailedTests(suiteIndex int, report saucereport.SauceReport) error
 }
 
 type project struct {

@@ -17,6 +17,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
+	"github.com/saucelabs/saucectl/internal/saucereport"
 )
 
 // Config descriptors.
@@ -600,10 +601,20 @@ func (p *Project) GetSmartRetry(suiteName string) config.SmartRetry {
 	return config.SmartRetry{}
 }
 
-// SetTestGrep set specified tests
-func (p *Project) SetTestGrep(suiteIndex int, tests []string) {
+// FilterFailedTests filteres failed tests and sets to specified suite
+func (p *Project) FilterFailedTests(suiteIndex int, report saucereport.SauceReport) error {
+	if suiteIndex < 0 || suiteIndex > len(p.Suites) {
+		return errors.New("invalid suite index")
+	}
+	failedTests := saucereport.GetFailedTests(report)
+	// if no failed tests found, just keep the original settings
+	if len(failedTests) == 0 {
+		return nil
+	}
 	if p.Suites[suiteIndex].Config.Env == nil {
 		p.Suites[suiteIndex].Config.Env = map[string]string{}
 	}
-	p.Suites[suiteIndex].Config.Env["grep"] = strings.Join(tests, ";")
+	p.Suites[suiteIndex].Config.Env["grep"] = strings.Join(failedTests, ";")
+
+	return nil
 }
