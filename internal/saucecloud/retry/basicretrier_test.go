@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type FakeProjectUploader struct {
+type StubProjectUploader struct {
 }
 
 func (f *FakeProjectUploader) UploadStream(filename, description string, reader io.Reader) (storage.Item, error) {
