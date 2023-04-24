@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/cucumber"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	v1 "github.com/saucelabs/saucectl/internal/cypress/v1"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -111,7 +110,6 @@ func TestBasicRetrier_Retry(t *testing.T) {
 		retrier              *BasicRetrier
 		args                 args
 		expected             job.StartOptions
-		expCucumberProject   cucumber.Project
 		expCypressProject    cypress.Project
 		expPlaywrightProject playwright.Project
 		expTestCafeProject   testcafe.Project
@@ -128,50 +126,6 @@ func TestBasicRetrier_Retry(t *testing.T) {
 			},
 			expected: job.StartOptions{
 				DisplayName: "Dummy Test",
-			},
-		},
-		{
-			name: "Cucumber Job is set as SmartRetry",
-			retrier: &BasicRetrier{
-				VDCReader:       &FakeVDCJobReader{SauceReport: failedReport},
-				ProjectUploader: &FakeProjectUploader{},
-				CucumberProject: cucumber.Project{
-					Suites: []cucumber.Suite{
-						{
-							Options: cucumber.Options{},
-						},
-					},
-				},
-			},
-			args: args{
-				jobOpts: make(chan job.StartOptions),
-				opt: job.StartOptions{
-					DisplayName: "Try failed tests",
-					SuiteIndex:  0,
-					Framework:   cucumber.Kind,
-					SmartRetry: job.SmartRetry{
-						FailedTestsOnly: true,
-					},
-				},
-				previous: job.Job{},
-			},
-			expected: job.StartOptions{
-				DisplayName: "Try failed tests",
-				SuiteIndex:  0,
-				Framework:   cucumber.Kind,
-				OtherApps:   []string{"storage:fakeid"},
-				SmartRetry: job.SmartRetry{
-					FailedTestsOnly: true,
-				},
-			},
-			expCucumberProject: cucumber.Project{
-				Suites: []cucumber.Suite{
-					{
-						Options: cucumber.Options{
-							Name: "failed test|failed test2",
-						},
-					},
-				},
 			},
 		},
 		{
@@ -315,7 +269,6 @@ func TestBasicRetrier_Retry(t *testing.T) {
 			go b.Retry(tt.args.jobOpts, tt.args.opt, tt.args.previous)
 			newOpt := <-tt.args.jobOpts
 			assert.Equal(t, tt.expected, newOpt)
-			assert.Equal(t, tt.expCucumberProject, tt.retrier.CucumberProject)
 			assert.Equal(t, tt.expCypressProject, tt.retrier.CypressProject)
 			assert.Equal(t, tt.expPlaywrightProject, tt.retrier.PlaywrightProject)
 			assert.Equal(t, tt.expTestCafeProject, tt.retrier.TestcafeProject)

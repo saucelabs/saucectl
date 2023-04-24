@@ -2671,17 +2671,6 @@
                 },
                 "passThreshold": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
-                },
-                "smartRetry": {
-                  "description": "Optimize suite retries by configuring the strategy.",
-                  "type": "object",
-                  "properties": {
-                    "failedTestsOnly": {
-                      "description": "Optimize suite retries by retrying failed tests only.",
-                      "type": "boolean",
-                      "default": false
-                    }
-                  }
                 }
               },
               "required": [

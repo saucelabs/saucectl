@@ -68,7 +68,6 @@ type Suite struct {
 	PreExec          []string          `yaml:"preExec,omitempty" json:"preExec"`
 	Options          Options           `yaml:"options,omitempty" json:"options"`
 	PassThreshold    int               `yaml:"passThreshold,omitempty" json:"-"`
-	SmartRetry       config.SmartRetry `yaml:"smartRetry,omitempty" json:"-"`
 }
 
 // Options represents cucumber settings

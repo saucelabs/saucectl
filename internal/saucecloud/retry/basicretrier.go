@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/cucumber"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -27,7 +26,6 @@ type BasicRetrier struct {
 	VDCReader       job.Reader
 	ProjectUploader storage.AppService
 
-	CucumberProject   cucumber.Project
 	CypressProject    cypress.Project
 	PlaywrightProject playwright.Project
 	TestcafeProject   testcafe.Project
@@ -64,9 +62,6 @@ func (r *BasicRetrier) RetryFailedTests(jobOpts chan<- job.StartOptions, opt job
 	var runnerFile string
 	var project interface{}
 	switch opt.Framework {
-	case cucumber.Kind:
-		r.CucumberProject.Suites[opt.SuiteIndex].Options.Name = strings.Join(failedTests, "|")
-		project = r.CucumberProject
 	case cypress.Kind:
 		r.CypressProject.SetTestGrep(opt.SuiteIndex, failedTests)
 		project = r.CypressProject

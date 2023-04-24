@@ -136,9 +136,6 @@ func (r *CucumberRunner) runSuites(fileURIs []string) bool {
 				Retries:          r.Project.Sauce.Retries,
 				Visibility:       r.Project.Sauce.Visibility,
 				PassThreshold:    s.PassThreshold,
-				SmartRetry: job.SmartRetry{
-					FailedTestsOnly: s.SmartRetry.FailedTestsOnly,
-				},
 			}
 		}
 	}()
