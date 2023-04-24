@@ -69,7 +69,7 @@ func (r *ImgRunner) RunProject() (int, error) {
 	sigChan := r.registerInterruptOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
-	suites, results := r.createWorkerPool(1, 0)
+	suites, results := r.createWorkerPool(r.Project.Sauce.Concurrency, 0)
 
 	// Submit suites to work on.
 	go func() {

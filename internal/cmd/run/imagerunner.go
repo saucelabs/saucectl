@@ -21,7 +21,12 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 	if err != nil {
 		return 1, err
 	}
+
+	if err := applyImageRunnerFlags(&p); err != nil {
+		return 1, err
+	}
 	imagerunner.SetDefaults(&p)
+
 	if err := imagerunner.Validate(p); err != nil {
 		return 1, err
 	}
@@ -47,4 +52,13 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 		}},
 	}
 	return r.RunProject()
+}
+
+func applyImageRunnerFlags(p *imagerunner.Project) error {
+	if gFlags.selectedSuite != "" {
+		if err := imagerunner.FilterSuites(p, gFlags.selectedSuite); err != nil {
+			return err
+		}
+	}
+	return nil
 }

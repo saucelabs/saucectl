@@ -168,6 +168,8 @@ const (
 	InvalidImageRunnerWorkloadType = `%q is an invalid "workload" value for suite: %s`
 	// MissingImageRunnerImage indicates no docker image provided
 	MissingImageRunnerImage = `missing "image" for suite: %s`
+	// ImageRunnerMaxConcurrency indicates that the concurrency value is too high.
+	ImageRunnerMaxConcurrency = "Maximum concurrency for imagerunner is 5. Replacing %d with 5."
 )
 
 // testcafe config settings
