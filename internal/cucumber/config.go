@@ -73,7 +73,7 @@ type Suite struct {
 // Options represents cucumber settings
 type Options struct {
 	Config string `yaml:"config,omitempty" json:"config"`
-	// Name specify a regular expression against which scenario names are tested to filter which should run
+	// Name is a regular expression for selecting scenario names.
 	Name              string            `yaml:"name,omitempty" json:"name"`
 	Paths             []string          `yaml:"paths,omitempty" json:"paths"`
 	ExcludedTestFiles []string          `yaml:"excludedTestFiles,omitempty" json:"excludedTestFiles"`
