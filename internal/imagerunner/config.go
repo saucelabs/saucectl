@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -75,7 +76,12 @@ func SetDefaults(p *Project) {
 	}
 
 	if p.Sauce.Concurrency < 1 {
-		p.Sauce.Concurrency = 2
+		p.Sauce.Concurrency = 1
+	}
+
+	if p.Sauce.Concurrency > 5 {
+		log.Warn().Msgf(msg.ImageRunnerMaxConcurrency, p.Sauce.Concurrency)
+		p.Sauce.Concurrency = 5
 	}
 
 	if p.Defaults.Timeout < 0 {
@@ -129,4 +135,15 @@ func sliceContainsString(slice []string, val string) bool {
 		}
 	}
 	return false
+}
+
+// FilterSuites filters out suites in the project that don't match the given suite name.
+func FilterSuites(p *Project, suiteName string) error {
+	for _, s := range p.Suites {
+		if s.Name == suiteName {
+			p.Suites = []Suite{s}
+			return nil
+		}
+	}
+	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
 }
