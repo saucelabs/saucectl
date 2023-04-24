@@ -478,6 +478,11 @@
                   "description": "Optimize suite retries by configuring the strategy.",
                   "type": "object",
                   "properties": {
+                    "failedClassesOnly": {
+                      "description": "Optimize suite retries by retrying failed test classes only.",
+                      "type": "boolean",
+                      "default": false
+                    },
                     "failedTestsOnly": {
                       "description": "Optimize suite retries by retrying failed tests only.",
                       "type": "boolean",
@@ -1280,15 +1285,7 @@
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
                 },
                 "smartRetry": {
-                  "description": "Optimize suite retries by configuring the strategy.",
-                  "type": "object",
-                  "properties": {
-                    "failedClassesOnly": {
-                      "description": "Optimize suite retries by retrying failed test classes only.",
-                      "type": "boolean",
-                      "default": false
-                    }
-                  }
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/smartRetry"
                 }
               },
               "anyOf": [
@@ -1541,15 +1538,7 @@
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
                 },
                 "smartRetry": {
-                  "description": "Optimize suite retries by configuring the strategy.",
-                  "type": "object",
-                  "properties": {
-                    "failedTestsOnly": {
-                      "description": "Optimize suite retries by retrying failed tests only.",
-                      "type": "boolean",
-                      "default": false
-                    }
-                  }
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/smartRetry"
                 }
               },
               "required": [
@@ -2176,15 +2165,7 @@
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
                 },
                 "smartRetry": {
-                  "description": "Optimize suite retries by configuring the strategy.",
-                  "type": "object",
-                  "properties": {
-                    "failedTestsOnly": {
-                      "description": "Optimize suite retries by retrying failed tests only.",
-                      "type": "boolean",
-                      "default": false
-                    }
-                  }
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/smartRetry"
                 }
               },
               "required": [
@@ -2388,7 +2369,7 @@
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
                 },
                 "smartRetry": {
-                  "$ref": "#/allOf/2/then/properties/suites/items/properties/smartRetry"
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/smartRetry"
                 }
               },
               "anyOf": [

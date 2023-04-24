@@ -102,6 +102,11 @@
           "description": "Optimize suite retries by retrying failed test classes only.",
           "type": "boolean",
           "default": false
+        },
+        "failedTestsOnly": {
+          "description": "Optimize suite retries by retrying failed tests only.",
+          "type": "boolean",
+          "default": false
         }
       }
     }

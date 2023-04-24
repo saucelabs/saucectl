@@ -211,15 +211,7 @@
             "$ref": "../subschema/common.schema.json#/definitions/passThreshold"
           },
           "smartRetry": {
-            "description": "Optimize suite retries by configuring the strategy.",
-            "type": "object",
-            "properties": {
-              "failedTestsOnly": {
-                "description": "Optimize suite retries by retrying failed tests only.",
-                "type": "boolean",
-                "default": false
-              }
-            }
+            "$ref": "../subschema/common.schema.json#/definitions/smartRetry"
           }
         },
         "required": [
