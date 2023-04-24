@@ -114,8 +114,7 @@ func (r *BasicRetrier) uploadConfig(filename string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Info().Dur("durationMs", time.Since(start)).Str("storageId", resp.ID).
-		Msgf("%s uploaded.", cases.Title(language.English).String("runner config"))
+	log.Info().Dur("durationMs", time.Since(start)).Str("storageId", resp.ID).Msg("Runner Config uploaded.")
 
 	return resp.ID, nil
 }
