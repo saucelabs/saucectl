@@ -93,7 +93,7 @@ func (r *PlaywrightRunner) getSuiteNames() string {
 	return strings.Join(names, ", ")
 }
 
-func (r *PlaywrightRunner) runSuites(fileURIs []string) bool {
+func (r *PlaywrightRunner) runSuites(fileURIs map[uploadType]string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
@@ -112,7 +112,13 @@ func (r *PlaywrightRunner) runSuites(fileURIs []string) bool {
 			suites = playwright.SortByHistory(suites, history)
 		}
 	}
-
+	var otherApps []string
+	if f, ok := fileURIs[runnerConfigUpload]; ok {
+		otherApps = append(otherApps, f)
+	}
+	if f, ok := fileURIs[nodeModulesUpload]; ok {
+		otherApps = append(otherApps, f)
+	}
 	// Submit suites to work on.
 	go func() {
 		for i, s := range suites {
@@ -126,8 +132,8 @@ func (r *PlaywrightRunner) runSuites(fileURIs []string) bool {
 				DisplayName:      s.Name,
 				SuiteIndex:       i,
 				Timeout:          s.Timeout,
-				App:              fileURIs[0],
-				OtherApps:        fileURIs[1:],
+				App:              fileURIs[projectUpload],
+				OtherApps:        otherApps,
 				Suite:            s.Name,
 				Framework:        "playwright",
 				FrameworkVersion: s.PlaywrightVersion,

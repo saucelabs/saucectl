@@ -87,7 +87,7 @@ func (r *CucumberRunner) getSuiteNames() string {
 	return strings.Join(names, ", ")
 }
 
-func (r *CucumberRunner) runSuites(fileURIs []string) bool {
+func (r *CucumberRunner) runSuites(fileURIs map[uploadType]string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
@@ -107,6 +107,14 @@ func (r *CucumberRunner) runSuites(fileURIs []string) bool {
 		}
 	}
 
+	var otherApps []string
+	if f, ok := fileURIs[runnerConfigUpload]; ok {
+		otherApps = append(otherApps, f)
+	}
+	if f, ok := fileURIs[nodeModulesUpload]; ok {
+		otherApps = append(otherApps, f)
+	}
+
 	// Submit suites to work on
 	go func() {
 		for i, s := range suites {
@@ -114,8 +122,8 @@ func (r *CucumberRunner) runSuites(fileURIs []string) bool {
 				ConfigFilePath:   r.Project.ConfigFilePath,
 				DisplayName:      s.Name,
 				SuiteIndex:       i,
-				App:              fileURIs[0],
-				OtherApps:        fileURIs[1:],
+				App:              fileURIs[projectUpload],
+				OtherApps:        otherApps,
 				Suite:            s.Name,
 				Framework:        "playwright",
 				FrameworkVersion: r.Project.Playwright.Version,

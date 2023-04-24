@@ -122,6 +122,6 @@ func TestRunSuites(t *testing.T) {
 			},
 		},
 	}
-	ret := runner.runSuites([]string{"dummy-file-id"})
+	ret := runner.runSuites(map[uploadType]string{projectUpload: "dummy-file-id"})
 	assert.True(t, ret)
 }

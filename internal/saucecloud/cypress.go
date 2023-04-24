@@ -85,7 +85,7 @@ func (r *CypressRunner) checkCypressVersion() error {
 	return nil
 }
 
-func (r *CypressRunner) runSuites(fileURIs []string) bool {
+func (r *CypressRunner) runSuites(fileURIs map[uploadType]string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 	jobOpts, results, err := r.createWorkerPool(r.Project.GetSauceCfg().Concurrency, r.Project.GetSauceCfg().Retries)
@@ -103,6 +103,13 @@ func (r *CypressRunner) runSuites(fileURIs []string) bool {
 			suites = suite.SortByHistory(suites, history)
 		}
 	}
+	var otherApps []string
+	if f, ok := fileURIs[runnerConfigUpload]; ok {
+		otherApps = append(otherApps, f)
+	}
+	if f, ok := fileURIs[nodeModulesUpload]; ok {
+		otherApps = append(otherApps, f)
+	}
 	// Submit suites to work on.
 	go func() {
 		for i, s := range suites {
@@ -112,8 +119,8 @@ func (r *CypressRunner) runSuites(fileURIs []string) bool {
 				DisplayName:      s.Name,
 				SuiteIndex:       i,
 				Timeout:          s.Timeout,
-				App:              fileURIs[0],
-				OtherApps:        fileURIs[1:],
+				App:              fileURIs[projectUpload],
+				OtherApps:        otherApps,
 				Suite:            s.Name,
 				Framework:        "cypress",
 				FrameworkVersion: r.Project.GetVersion(),

@@ -86,7 +86,7 @@ func (r *TestcafeRunner) getSuiteNames() string {
 	return strings.Join(names, ", ")
 }
 
-func (r *TestcafeRunner) runSuites(fileURIs []string) bool {
+func (r *TestcafeRunner) runSuites(fileURIs map[uploadType]string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
@@ -105,6 +105,13 @@ func (r *TestcafeRunner) runSuites(fileURIs []string) bool {
 			suites = testcafe.SortByHistory(suites, history)
 		}
 	}
+	var otherApps []string
+	if f, ok := fileURIs[runnerConfigUpload]; ok {
+		otherApps = append(otherApps, f)
+	}
+	if f, ok := fileURIs[nodeModulesUpload]; ok {
+		otherApps = append(otherApps, f)
+	}
 
 	// Submit suites to work on
 	jobsCount := r.calcTestcafeJobsCount(r.Project.Suites)
@@ -114,8 +121,8 @@ func (r *TestcafeRunner) runSuites(fileURIs []string) bool {
 				for _, d := range s.Simulators {
 					for _, pv := range d.PlatformVersions {
 						opts := r.generateStartOpts(s, i)
-						opts.App = fileURIs[0]
-						opts.OtherApps = fileURIs[1:]
+						opts.App = fileURIs[projectUpload]
+						opts.OtherApps = otherApps
 						opts.PlatformName = d.PlatformName
 						opts.DeviceName = d.Name
 						opts.PlatformVersion = pv
@@ -125,8 +132,8 @@ func (r *TestcafeRunner) runSuites(fileURIs []string) bool {
 				}
 			} else {
 				opts := r.generateStartOpts(s, i)
-				opts.App = fileURIs[0]
-				opts.OtherApps = fileURIs[1:]
+				opts.App = fileURIs[projectUpload]
+				opts.OtherApps = otherApps
 				opts.PlatformName = s.PlatformName
 
 				jobOpts <- opts

@@ -384,10 +384,10 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 }
 
 // remoteArchiveProject archives the contents of the folder to a remote storage.
-func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, sauceignoreFile string, dryRun bool) ([]string, error) {
+func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, sauceignoreFile string, dryRun bool) (map[uploadType]string, error) {
 	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
 	if !dryRun {
 		defer os.RemoveAll(tempDir)
@@ -397,7 +397,7 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 
 	contents, err := os.ReadDir(folder)
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
 
 	for _, file := range contents {
@@ -408,46 +408,40 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 		files = append(files, filepath.Join(folder, file.Name()))
 	}
 
-	archives := make(map[string]uploadType)
+	archives := make(map[uploadType]string)
 
 	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
 
 	appZip, err := zip.ArchiveFiles("app", tempDir, folder, files, matcher)
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
-	archives[appZip] = projectUpload
+	archives[projectUpload] = appZip
 
 	modZip, err := zip.ArchiveNodeModules(tempDir, folder, matcher, r.NPMDependencies)
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
 	if modZip != "" {
-		archives[modZip] = nodeModulesUpload
+		archives[nodeModulesUpload] = modZip
 	}
 
 	configZip, err := zip.ArchiveRunnerConfig(project, tempDir)
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
-	archives[configZip] = runnerConfigUpload
+	archives[runnerConfigUpload] = configZip
 
-	var uris []string
-	// keep uploaded file order
-	for _, t := range uploadTypes {
-		for k, v := range archives {
-			if t != v {
-				continue
-			}
-			uri, err := r.uploadProject(k, "", v, dryRun)
-			if err != nil {
-				return []string{}, err
-			}
-			uris = append(uris, uri)
+	uris := make(map[uploadType]string)
+	for k, v := range archives {
+		uri, err := r.uploadProject(v, "", k, dryRun)
+		if err != nil {
+			return nil, err
 		}
+		uris[k] = uri
 	}
 
 	return uris, nil
@@ -463,7 +457,7 @@ func (r *CloudRunner) remoteArchiveFiles(project interface{}, files []string, sa
 		defer os.RemoveAll(tempDir)
 	}
 
-	archives := make(map[string]uploadType)
+	archives := make(map[uploadType]string)
 
 	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
@@ -474,28 +468,22 @@ func (r *CloudRunner) remoteArchiveFiles(project interface{}, files []string, sa
 	if err != nil {
 		return "", err
 	}
-	archives[zipName] = projectUpload
+	archives[projectUpload] = zipName
 
 	configZip, err := zip.ArchiveRunnerConfig(project, tempDir)
 	if err != nil {
 		return "", err
 	}
-	archives[configZip] = runnerConfigUpload
+	archives[runnerConfigUpload] = configZip
 
 	var uris []string
-	// keep uploaded file order
-	for _, t := range uploadTypes {
-		for k, v := range archives {
-			if t != v {
-				continue
-			}
-			uri, err := r.uploadProject(k, "", v, dryRun)
-			if err != nil {
-				return "", err
-			}
-			uris = append(uris, uri)
-
+	for k, v := range archives {
+		uri, err := r.uploadProject(v, "", k, dryRun)
+		if err != nil {
+			return "", err
 		}
+		uris = append(uris, uri)
+
 	}
 
 	return strings.Join(uris, ","), nil
