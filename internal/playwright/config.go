@@ -42,7 +42,6 @@ type Project struct {
 	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
 	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`
 	BeforeExec    []string             `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker        config.Docker        `yaml:"docker,omitempty" json:"docker"`
 	Npm           config.Npm           `yaml:"npm,omitempty" json:"npm"`
 	RootDir       string               `yaml:"rootDir,omitempty" json:"rootDir"`
 	RunnerVersion string               `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
@@ -126,11 +125,6 @@ func SetDefaults(p *Project) {
 
 	if p.Sauce.Concurrency < 1 {
 		p.Sauce.Concurrency = 2
-	}
-
-	// Set default docker file transfer to mount
-	if p.Docker.FileTransfer == "" {
-		p.Docker.FileTransfer = config.DockerFileMount
 	}
 
 	// Default rootDir to .
@@ -269,26 +263,6 @@ func shardSuitesByNumShards(suites []Suite) []Suite {
 		}
 	}
 	return shardedSuites
-}
-
-// SplitSuites divided Suites to dockerSuites and sauceSuites
-func SplitSuites(p Project) (Project, Project) {
-	var dockerSuites []Suite
-	var sauceSuites []Suite
-	for _, s := range p.Suites {
-		if s.Mode == "docker" || (s.Mode == "" && p.Defaults.Mode == "docker") {
-			dockerSuites = append(dockerSuites, s)
-		} else {
-			sauceSuites = append(sauceSuites, s)
-		}
-	}
-
-	dockerProject := p
-	dockerProject.Suites = dockerSuites
-	sauceProject := p
-	sauceProject.Suites = sauceSuites
-
-	return dockerProject, sauceProject
 }
 
 // Validate validates basic configuration of the project and returns an error if any of the settings contain illegal

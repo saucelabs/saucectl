@@ -31,10 +31,6 @@ coverage:
 	go tool cover -func=coverage.out
 	@rm coverage.out
 
-#playwright-ci: @ Run tests against playwright in CI mode
-playwright-ci: build-linux
-	docker run --name playwright-ci -e "CI=true" -v $(shell pwd):/home/gitty/ -w "/home/gitty" --rm saucelabs/stt-playwright-node:latest "/home/gitty/saucectl" run -c ./.sauce/playwright.yml --verbose
-
 #testcafe-ci: @ Run tests against testcafe in CI mode
 testcafe-ci: build-linux
 	docker run --name testcafe-ci -e "CI=true" -v $(shell pwd):/home/gitty/ -w "/home/gitty" --rm saucelabs/stt-testcafe-node:latest "/home/gitty/saucectl" run -c ./.sauce/testcafe.yml --verbose
