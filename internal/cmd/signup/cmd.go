@@ -39,30 +39,12 @@ func Command() *cobra.Command {
 
 // Run runs the command
 func Run() error {
-	saucebotSignup := `
-                   (‾)
-                   ||
-           ##################             /(    Playwright,
-         ##                  ##         ,..%(    TestCafe,
-        (#                   ##     .,,.....%(    Cypress!
-       (##                   ##   ((((.......%(
-        (##                  ##   ####
-          ,##################    ## %##
-                  ###             /###
-           /################\    /##
-         (#####/ sSSSs \##########)
-       /######( sSSSSSs )#####
-     ##/ ######\ sSSSs /######
-  ####   #####################
-##   ##     (####     #####
-    ##      #####     #####
-            #####     #####
-
+	signupMessage := `
 Achieve digital confidence with the Sauce Labs Testrunner Toolkit
 
 View and analyze test results online with a free Sauce Labs account:
 https://bit.ly/saucectl-signup`
 
-	fmt.Println(saucebotSignup)
+	fmt.Println(signupMessage)
 	return nil
 }
