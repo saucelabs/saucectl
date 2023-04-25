@@ -10,7 +10,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cucumber"
-	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -124,19 +123,7 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	}()
 
 	cleanupArtifacts(p.Artifacts)
-
-	dockerProject, sauceProject := cucumber.SplitSuites(p)
-	if len(dockerProject.Suites) != 0 {
-		exitCode, err := runCucumberInDocker(dockerProject)
-		if err != nil || exitCode != 0 {
-			return exitCode, err
-		}
-	}
-	if len(sauceProject.Suites) != 0 {
-		return runCucumberInCloud(sauceProject, regio)
-	}
-
-	return 0, nil
+	return runCucumberInCloud(p, regio)
 }
 
 func applyCucumberFlags(p *cucumber.Project) error {
@@ -152,20 +139,6 @@ func applyCucumberFlags(p *cucumber.Project) error {
 	}
 
 	return nil
-}
-
-func runCucumberInDocker(p cucumber.Project) (int, error) {
-	log.Info().Msg("Running Playwright-Cucumberjs in Docker")
-	printTestEnv("docker")
-
-	cd, err := docker.NewCucumber(p, &testcompClient, &testcompClient, &restoClient, &restoClient, createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
-		"cucumber", "docker"))
-	if err != nil {
-		return 1, err
-	}
-
-	p.Npm.Packages = cleanPlaywrightPackages(p.Npm, p.Playwright.Version)
-	return cd.RunProject()
 }
 
 func runCucumberInCloud(p cucumber.Project, regio region.Region) (int, error) {
