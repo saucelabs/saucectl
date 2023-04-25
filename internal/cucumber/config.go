@@ -326,20 +326,29 @@ func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
 	return res
 }
 
-func (p *Project) FilterFailedTests(suiteIndex int, report saucereport.SauceReport) error {
-	if suiteIndex < 0 || suiteIndex >= len(p.Suites) {
-		return errors.New("invalid suite index")
-	}
+// FilterFailedTests takes the failed specs in the report and sets them as a test filter in the suite.
+// The test filter remains unchanged if the report does not contain any failed tests.
+func (p *Project) FilterFailedTests(suiteName string, report saucereport.SauceReport) error {
 	specs, err := getFailedSpecFiles(report)
 	if err != nil {
 		return err
 	}
-	// if no failed specs found, just keep the original settings
 	if len(specs) == 0 {
 		return nil
 	}
-	p.Suites[suiteIndex].Options.Paths = specs
 
+	var found bool
+	for i, s := range p.Suites {
+		if s.Name != suiteName {
+			continue
+		}
+		found = true
+		p.Suites[i].Options.Paths = specs
+	}
+
+	if !found {
+		return fmt.Errorf("suite(%s) not found", suiteName)
+	}
 	return nil
 }
 

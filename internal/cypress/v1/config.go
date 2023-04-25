@@ -554,19 +554,26 @@ func (p *Project) GetSmartRetry(suiteName string) config.SmartRetry {
 
 // FilterFailedTests takes the failed tests in the report and sets them as a test filter in the suite.
 // The test filter remains unchanged if the report does not contain any failed tests.
-func (p *Project) FilterFailedTests(suiteIndex int, report saucereport.SauceReport) error {
-	if suiteIndex < 0 || suiteIndex >= len(p.Suites) {
-		return errors.New("invalid suite index")
-	}
+func (p *Project) FilterFailedTests(suiteName string, report saucereport.SauceReport) error {
 	failedTests := saucereport.GetFailedTests(report)
-	// if no failed tests found, just keep the original settings
 	if len(failedTests) == 0 {
 		return nil
 	}
-	if p.Suites[suiteIndex].Config.Env == nil {
-		p.Suites[suiteIndex].Config.Env = map[string]string{}
-	}
-	p.Suites[suiteIndex].Config.Env["grep"] = strings.Join(failedTests, ";")
 
+	var found bool
+	for i, s := range p.Suites {
+		if s.Name != suiteName {
+			continue
+		}
+		found = true
+		if p.Suites[i].Config.Env == nil {
+			p.Suites[i].Config.Env = map[string]string{}
+		}
+		p.Suites[i].Config.Env["grep"] = strings.Join(failedTests, ";")
+
+	}
+	if !found {
+		return fmt.Errorf("suite(%s) not found", suiteName)
+	}
 	return nil
 }

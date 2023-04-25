@@ -416,15 +416,23 @@ func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
 }
 
 // FilterFailedTests filteres failed tests and sets to specified suite
-func (p *Project) FilterFailedTests(suiteIndex int, report saucereport.SauceReport) error {
-	if suiteIndex < 0 || suiteIndex > len(p.Suites) {
-		return errors.New("invalid suite index")
-	}
+func (p *Project) FilterFailedTests(suiteName string, report saucereport.SauceReport) error {
 	failedTests := saucereport.GetFailedTests(report)
 	// if no failed tests found, just keep the original settings
 	if len(failedTests) == 0 {
 		return nil
 	}
-	p.Suites[suiteIndex].Params.Grep = strings.Join(failedTests, "|")
+
+	var found bool
+	for i, s := range p.Suites {
+		if s.Name != suiteName {
+			continue
+		}
+		found = true
+		p.Suites[i].Params.Grep = strings.Join(failedTests, "|")
+	}
+	if !found {
+		return fmt.Errorf("suite(%s) not found", suiteName)
+	}
 	return nil
 }

@@ -81,8 +81,7 @@ type TunnelOptions struct {
 
 // SmartRetry represents the retry strategy.
 type SmartRetry struct {
-	FailedClassesOnly bool `json:"-"`
-	FailedTestsOnly   bool `json:"-"`
+	FailedOnly bool `json:"-"`
 }
 
 // Starter is the interface for starting jobs.

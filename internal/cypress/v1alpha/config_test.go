@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/saucelabs/saucectl/internal/saucereport"
 	"github.com/stretchr/testify/assert"
 	"gotest.tools/v3/fs"
 )
@@ -409,6 +410,121 @@ func Test_shardSuites(t *testing.T) {
 			got, err := shardSuites(tt.args.cfg, tt.args.suites, 1)
 			assert.Equal(t, tt.wantErr, err, "err for shardSuites(%v, %v)", tt.args.cfg, tt.args.suites)
 			assert.Equalf(t, tt.want, got, "shardSuites(%v, %v)", tt.args.cfg, tt.args.suites)
+		})
+	}
+}
+
+func TestCypressV1Alpha_FilterFailedTests(t *testing.T) {
+	testcases := []struct {
+		name      string
+		suiteName string
+		report    saucereport.SauceReport
+		project   *Project
+		expResult string
+		expErr    error
+	}{
+		{
+			name:      "suite exists and failed tests exist",
+			suiteName: "my suite",
+			report: saucereport.SauceReport{
+				Status: saucereport.StatusFailed,
+				Suites: []saucereport.Suite{
+					{
+						Name:   "my suite",
+						Status: saucereport.StatusFailed,
+						Tests: []saucereport.Test{
+							{
+								Status: saucereport.StatusFailed,
+								Name:   "failed test1",
+							},
+							{
+								Status: saucereport.StatusFailed,
+								Name:   "failed test2",
+							},
+						},
+					},
+				},
+			},
+			project: &Project{
+				Suites: []Suite{
+					{
+						Name: "my suite",
+					},
+				},
+			},
+			expResult: "failed test1;failed test2",
+			expErr:    nil,
+		},
+		{
+			name:      "suite desn't exist",
+			suiteName: "my suite2",
+			report: saucereport.SauceReport{
+				Status: saucereport.StatusFailed,
+				Suites: []saucereport.Suite{
+					{
+						Name:   "my suite",
+						Status: saucereport.StatusFailed,
+						Tests: []saucereport.Test{
+							{
+								Status: saucereport.StatusFailed,
+								Name:   "failed test1",
+							},
+							{
+								Status: saucereport.StatusFailed,
+								Name:   "failed test2",
+							},
+						},
+					},
+				},
+			},
+			project: &Project{
+				Suites: []Suite{
+					{
+						Name: "my suite",
+					},
+				},
+			},
+			expResult: "",
+			expErr:    errors.New("suite(my suite2) not found"),
+		},
+		{
+			name:      "no failed tests",
+			suiteName: "my suite",
+			report: saucereport.SauceReport{
+				Status: saucereport.StatusPassed,
+				Suites: []saucereport.Suite{
+					{
+						Name:   "my suite",
+						Status: saucereport.StatusPassed,
+						Tests: []saucereport.Test{
+							{
+								Status: saucereport.StatusPassed,
+								Name:   "passed test1",
+							},
+							{
+								Status: saucereport.StatusSkipped,
+								Name:   "skipped test2",
+							},
+						},
+					},
+				},
+			},
+			project: &Project{
+				Suites: []Suite{
+					{
+						Name: "my suite",
+					},
+				},
+			},
+			expResult: "",
+			expErr:    nil,
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.project.FilterFailedTests(tc.suiteName, tc.report)
+			assert.Equal(t, tc.expErr, err)
+			assert.Equal(t, tc.expResult, tc.project.Suites[0].Config.Env["grep"])
 		})
 	}
 }

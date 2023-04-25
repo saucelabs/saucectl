@@ -143,7 +143,7 @@ func (r *CypressRunner) runSuites(fileURIs map[uploadType]string) bool {
 				Visibility:       r.Project.GetSauceCfg().Visibility,
 				PassThreshold:    s.PassThreshold,
 				SmartRetry: job.SmartRetry{
-					FailedTestsOnly: r.Project.GetSmartRetry(s.Name).FailedTestsOnly,
+					FailedOnly: r.Project.GetSmartRetry(s.Name).FailedOnly,
 				},
 			}
 		}

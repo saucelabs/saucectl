@@ -143,7 +143,7 @@ func TestSauceReportRetrier_Retry(t *testing.T) {
 					SuiteIndex:  0,
 					Framework:   cypress.Kind,
 					SmartRetry: job.SmartRetry{
-						FailedTestsOnly: true,
+						FailedOnly: true,
 					},
 				},
 				previous: job.Job{},
@@ -154,7 +154,7 @@ func TestSauceReportRetrier_Retry(t *testing.T) {
 				Framework:   cypress.Kind,
 				OtherApps:   []string{"storage:fakeid"},
 				SmartRetry: job.SmartRetry{
-					FailedTestsOnly: true,
+					FailedOnly: true,
 				},
 			},
 		},

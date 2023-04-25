@@ -156,7 +156,7 @@ func (r *PlaywrightRunner) runSuites(fileURIs map[uploadType]string) bool {
 				Visibility:       r.Project.Sauce.Visibility,
 				PassThreshold:    s.PassThreshold,
 				SmartRetry: job.SmartRetry{
-					FailedTestsOnly: s.SmartRetry.FailedTestsOnly,
+					FailedOnly: s.SmartRetry.FailedOnly,
 				},
 			}
 		}

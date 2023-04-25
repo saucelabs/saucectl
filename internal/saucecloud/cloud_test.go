@@ -11,16 +11,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/junit"
+	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
 	"github.com/saucelabs/saucectl/internal/saucecloud/zip"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/saucereport"
-	"gotest.tools/v3/fs"
-
-	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/fs"
 )
 
 func TestSignalDetection(t *testing.T) {

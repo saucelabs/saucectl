@@ -24,7 +24,7 @@ type SauceReportRetrier struct {
 }
 
 func (r *SauceReportRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
-	if r.VDCReader != nil && opt.SmartRetry.FailedTestsOnly {
+	if r.VDCReader != nil && opt.SmartRetry.FailedOnly {
 		r.RetryFailedTests(jobOpts, opt, previous)
 		return
 	}
@@ -50,6 +50,7 @@ func (r *SauceReportRetrier) RetryFailedTests(jobOpts chan<- job.StartOptions, o
 		jobOpts <- opt
 		return
 	}
+	fmt.Println("job.Name: ", opt.Name)
 
 	if err := r.Project.FilterFailedTests(opt.SuiteIndex, report); err != nil {
 		log.Err(err).Msg(msg.UnableToFilterFailedTests)
