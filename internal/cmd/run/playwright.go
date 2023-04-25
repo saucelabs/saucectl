@@ -157,13 +157,7 @@ func runPlaywright(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 
 	cleanupArtifacts(p.Artifacts)
 
-	return runPlaywrightInSauce(p, regio)
-}
-
-func runPlaywrightInSauce(p playwright.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Running Playwright in Sauce Labs")
-	printTestEnv("sauce")
-
 	r := saucecloud.PlaywrightRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
