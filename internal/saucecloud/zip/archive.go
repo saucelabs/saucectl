@@ -22,7 +22,7 @@ import (
 // resulted in about 30s for download and extraction.
 const ArchiveFileCountSoftLimit = 32768
 
-// ArchiveRunnerConfig compresses runner config into `config.zip`
+// ArchiveRunnerConfig compresses runner config into `config.zip`.
 func ArchiveRunnerConfig(project interface{}, tempDir string) (string, error) {
 	zipName := filepath.Join(tempDir, "config.zip")
 	z, err := zip.NewFileWriter(zipName, sauceignore.NewMatcher([]sauceignore.Pattern{}))
