@@ -68,9 +68,6 @@ var (
 	ErrEmptySuiteName = errors.New(msg.EmptyAdhocSuiteName)
 )
 
-// DockerMode constant
-const DockerMode = "docker"
-
 // gFlags contains all global flags that are set when 'run' is invoked.
 var gFlags = globalFlags{}
 
@@ -245,17 +242,6 @@ func Run(cmd *cobra.Command) (int, error) {
 	}
 
 	return 1, errors.New(msg.UnknownFrameworkConfig)
-}
-
-func printTestEnv(testEnv string) {
-	if gFlags.testEnvSilent {
-		return
-	}
-
-	if testEnv == DockerMode {
-		fmt.Println(msg.DockerLogo)
-		fmt.Println()
-	}
 }
 
 // awaitGlobalTimeout waits for the global timeout event. In case of global timeout event, it attempts to interrupt the

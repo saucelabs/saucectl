@@ -133,7 +133,6 @@ func runReplay(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 
 func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Replaying chrome devtools recordings")
-	printTestEnv("sauce")
 
 	r := saucecloud.ReplayRunner{
 		Project: p,

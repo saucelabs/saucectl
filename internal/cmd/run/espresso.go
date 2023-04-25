@@ -146,7 +146,6 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, isCLIDriven bo
 
 func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Running Espresso in Sauce Labs")
-	printTestEnv("sauce")
 
 	r := saucecloud.EspressoRunner{
 		Project: p,
