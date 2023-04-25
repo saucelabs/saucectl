@@ -55,7 +55,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	fileURIs, err := r.remoteArchiveProject(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore, r.Project.IsDryRun())
+	app, otherApps, err := r.remoteArchiveProject(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore, r.Project.IsDryRun())
 	if err != nil {
 		return exitCode, err
 	}
@@ -65,7 +65,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	passed := r.runSuites(fileURIs)
+	passed := r.runSuites(app, otherApps)
 	if passed {
 		exitCode = 0
 	}
@@ -85,7 +85,7 @@ func (r *CypressRunner) checkCypressVersion() error {
 	return nil
 }
 
-func (r *CypressRunner) runSuites(fileURIs map[uploadType]string) bool {
+func (r *CypressRunner) runSuites(app string, otherApps []string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 	jobOpts, results, err := r.createWorkerPool(r.Project.GetSauceCfg().Concurrency, r.Project.GetSauceCfg().Retries)
@@ -103,13 +103,7 @@ func (r *CypressRunner) runSuites(fileURIs map[uploadType]string) bool {
 			suites = suite.SortByHistory(suites, history)
 		}
 	}
-	var otherApps []string
-	if f, ok := fileURIs[runnerConfigUpload]; ok {
-		otherApps = append(otherApps, f)
-	}
-	if f, ok := fileURIs[nodeModulesUpload]; ok {
-		otherApps = append(otherApps, f)
-	}
+
 	// Submit suites to work on.
 	go func() {
 		for _, s := range suites {
@@ -118,7 +112,7 @@ func (r *CypressRunner) runSuites(fileURIs map[uploadType]string) bool {
 				CLIFlags:         r.Project.GetCLIFlags(),
 				DisplayName:      s.Name,
 				Timeout:          s.Timeout,
-				App:              fileURIs[projectUpload],
+				App:              app,
 				OtherApps:        otherApps,
 				Suite:            s.Name,
 				Framework:        "cypress",

@@ -55,7 +55,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	fileURIs, err := r.remoteArchiveProject(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
+	app, otherApps, err := r.remoteArchiveProject(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
@@ -65,7 +65,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	passed := r.runSuites(fileURIs)
+	passed := r.runSuites(app, otherApps)
 	if passed {
 		return 0, nil
 	}
@@ -86,7 +86,7 @@ func (r *TestcafeRunner) getSuiteNames() string {
 	return strings.Join(names, ", ")
 }
 
-func (r *TestcafeRunner) runSuites(fileURIs map[uploadType]string) bool {
+func (r *TestcafeRunner) runSuites(app string, otherApps []string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
@@ -105,13 +105,6 @@ func (r *TestcafeRunner) runSuites(fileURIs map[uploadType]string) bool {
 			suites = testcafe.SortByHistory(suites, history)
 		}
 	}
-	var otherApps []string
-	if f, ok := fileURIs[runnerConfigUpload]; ok {
-		otherApps = append(otherApps, f)
-	}
-	if f, ok := fileURIs[nodeModulesUpload]; ok {
-		otherApps = append(otherApps, f)
-	}
 
 	// Submit suites to work on
 	jobsCount := r.calcTestcafeJobsCount(r.Project.Suites)
@@ -121,7 +114,7 @@ func (r *TestcafeRunner) runSuites(fileURIs map[uploadType]string) bool {
 				for _, d := range s.Simulators {
 					for _, pv := range d.PlatformVersions {
 						opts := r.generateStartOpts(s)
-						opts.App = fileURIs[projectUpload]
+						opts.App = app
 						opts.OtherApps = otherApps
 						opts.PlatformName = d.PlatformName
 						opts.DeviceName = d.Name
@@ -132,7 +125,7 @@ func (r *TestcafeRunner) runSuites(fileURIs map[uploadType]string) bool {
 				}
 			} else {
 				opts := r.generateStartOpts(s)
-				opts.App = fileURIs[projectUpload]
+				opts.App = app
 				opts.OtherApps = otherApps
 				opts.PlatformName = s.PlatformName
 
