@@ -334,7 +334,6 @@ func (p *Project) FilterFailedTests(suiteIndex int, report saucereport.SauceRepo
 	if err != nil {
 		return err
 	}
-	fmt.Println("specs: ", specs)
 	// if no failed specs found, just keep the original settings
 	if len(specs) == 0 {
 		return nil

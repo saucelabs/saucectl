@@ -558,7 +558,6 @@ func (p *Project) FilterFailedTests(suiteIndex int, report saucereport.SauceRepo
 		return errors.New("invalid suite index")
 	}
 	failedTests := saucereport.GetFailedTests(report)
-	fmt.Println("failedTests: ", failedTests)
 	// if no failed tests found, just keep the original settings
 	if len(failedTests) == 0 {
 		return nil
