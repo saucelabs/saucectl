@@ -34,7 +34,6 @@ type Project interface {
 	GetCLIFlags() map[string]interface{}
 	GetArtifactsCfg() config.Artifacts
 	IsShowConsoleLog() bool
-	GetDocker() config.Docker
 	GetBeforeExec() []string
 	GetReporter() config.Reporters
 	GetNotifications() config.Notifications
