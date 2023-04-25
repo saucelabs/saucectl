@@ -93,7 +93,7 @@ func ArchiveFiles(targetFileName string, targetDir string, sourceDir string, fil
 	return zipName, nil
 }
 
-// ArchiveNodeModules collects npm dependencies from sourceDir and compresses them into targetDir
+// ArchiveNodeModules collects npm dependencies from sourceDir and compresses them into targetDir.
 func ArchiveNodeModules(targetDir string, sourceDir string, matcher sauceignore.Matcher, dependencies []string) (string, error) {
 	modDir := filepath.Join(sourceDir, "node_modules")
 	ignored := matcher.Match(strings.Split(modDir, string(os.PathSeparator)), true)
