@@ -552,7 +552,8 @@ func (p *Project) GetSmartRetry(suiteName string) config.SmartRetry {
 	return config.SmartRetry{}
 }
 
-// FilterFailedTests filteres failed tests and sets to specified suite
+// FilterFailedTests takes the failed tests in the report and sets them as a test filter in the suite.
+// The test filter remains unchanged if the report does not contain any failed tests.
 func (p *Project) FilterFailedTests(suiteIndex int, report saucereport.SauceReport) error {
 	if suiteIndex < 0 || suiteIndex > len(p.Suites) {
 		return errors.New("invalid suite index")
