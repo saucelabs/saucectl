@@ -123,28 +123,8 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	}()
 
 	cleanupArtifacts(p.Artifacts)
-	return runCucumberInCloud(p, regio)
-}
 
-func applyCucumberFlags(p *cucumber.Project) error {
-	if gFlags.selectedSuite != "" {
-		if err := cucumber.FilterSuites(p, gFlags.selectedSuite); err != nil {
-			return err
-		}
-	}
-
-	// Use the adhoc suite instead, if one is provided
-	if p.Suite.Name != "" {
-		p.Suites = []cucumber.Suite{p.Suite}
-	}
-
-	return nil
-}
-
-func runCucumberInCloud(p cucumber.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Running Playwright-Cucumberjs in Sauce Labs")
-	printTestEnv("sauce")
-
 	r := saucecloud.CucumberRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
@@ -177,4 +157,19 @@ func runCucumberInCloud(p cucumber.Project, regio region.Region) (int, error) {
 
 	p.Npm.Packages = cleanPlaywrightPackages(p.Npm, p.Playwright.Version)
 	return r.RunProject()
+}
+
+func applyCucumberFlags(p *cucumber.Project) error {
+	if gFlags.selectedSuite != "" {
+		if err := cucumber.FilterSuites(p, gFlags.selectedSuite); err != nil {
+			return err
+		}
+	}
+
+	// Use the adhoc suite instead, if one is provided
+	if p.Suite.Name != "" {
+		p.Suites = []cucumber.Suite{p.Suite}
+	}
+
+	return nil
 }
