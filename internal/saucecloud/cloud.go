@@ -527,15 +527,6 @@ var (
 	otherAppsUpload    uploadType = "other applications"
 )
 
-var uploadTypes = []uploadType{
-	testAppUpload,
-	appUpload,
-	projectUpload,
-	runnerConfigUpload,
-	nodeModulesUpload,
-	otherAppsUpload,
-}
-
 func (r *CloudRunner) uploadProjects(filenames []string, pType uploadType, dryRun bool) ([]string, error) {
 	var IDs []string
 	for _, f := range filenames {

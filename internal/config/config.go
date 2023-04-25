@@ -217,7 +217,7 @@ type Instrumentation struct {
 type SmartRetry struct {
 	// FailedClassesOnly retries failed classes for Espresso and XCUITest
 	FailedClassesOnly bool `yaml:"failedClassesOnly" json:"-"`
-	// FailedTestsOnly retries only failed test or failed spec files for Cypress/Playwright/Cucumber/TestCafe
+	// FailedTestsOnly retries only failed tests or failed spec files for Cypress/Playwright/Cucumber/TestCafe
 	FailedTestsOnly bool `yaml:"failedTestsOnly" json:"-"`
 }
 
