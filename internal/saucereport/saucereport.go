@@ -2,7 +2,6 @@ package saucereport
 
 import (
 	"encoding/json"
-	"path/filepath"
 	"time"
 )
 
@@ -105,38 +104,4 @@ func collectFailedTests(suite Suite) []string {
 	}
 
 	return failedTests
-}
-
-// GetFailedSpecFiles get files from failed tests
-func GetFailedSpecFiles(report SauceReport) []string {
-	var failedSpecs []string
-	if report.Status != StatusFailed {
-		return failedSpecs
-	}
-	for _, s := range report.Suites {
-		failedSpecs = append(failedSpecs, collectFailedSpecs(s)...)
-	}
-	var uniqMap = map[string]bool{}
-	for _, s := range failedSpecs {
-		uniqMap[s] = true
-	}
-	var result []string
-	for k, _ := range uniqMap {
-		result = append(result, filepath.Clean(k))
-	}
-
-	return result
-}
-
-func collectFailedSpecs(suite Suite) []string {
-	if len(suite.Suites) == 0 {
-		return []string{}
-	}
-	var failedSpecs []string
-	for _, s := range suite.Suites {
-		if s.Status == StatusFailed {
-			failedSpecs = append(failedSpecs, collectFailedSpecs(s)...)
-		}
-	}
-	return failedSpecs
 }

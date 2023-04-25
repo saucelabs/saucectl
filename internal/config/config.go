@@ -215,8 +215,10 @@ type Instrumentation struct {
 
 // SmartRetry represents the settings for retry strategy.
 type SmartRetry struct {
+	// FailedClassesOnly retries failed classes for Espresso and XCUITest
 	FailedClassesOnly bool `yaml:"failedClassesOnly" json:"-"`
-	FailedTestsOnly   bool `yaml:"failedTestsOnly" json:"-"`
+	// FailedTestsOnly retries only failed test or failed spec files for Cypress/Playwright/Cucumber/TestCafe
+	FailedTestsOnly bool `yaml:"failedTestsOnly" json:"-"`
 }
 
 func readYaml(cfgFilePath string) ([]byte, error) {

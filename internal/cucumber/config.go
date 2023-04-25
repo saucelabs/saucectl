@@ -3,6 +3,8 @@ package cucumber
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -69,6 +71,7 @@ type Suite struct {
 	PreExec          []string          `yaml:"preExec,omitempty" json:"preExec"`
 	Options          Options           `yaml:"options,omitempty" json:"options"`
 	PassThreshold    int               `yaml:"passThreshold,omitempty" json:"-"`
+	SmartRetry       config.SmartRetry `yaml:"smartRetry,omitempty" json:"-"`
 }
 
 // Options represents cucumber settings
@@ -327,7 +330,11 @@ func (p *Project) FilterFailedTests(suiteIndex int, report saucereport.SauceRepo
 	if suiteIndex < 0 || suiteIndex > len(p.Suites) {
 		return errors.New("invalid suite index")
 	}
-	specs := saucereport.GetFailedSpecFiles(report)
+	specs, err := getFailedSpecFiles(report)
+	if err != nil {
+		return err
+	}
+	fmt.Println("specs: ", specs)
 	// if no failed specs found, just keep the original settings
 	if len(specs) == 0 {
 		return nil
@@ -335,4 +342,22 @@ func (p *Project) FilterFailedTests(suiteIndex int, report saucereport.SauceRepo
 	p.Suites[suiteIndex].Options.Paths = specs
 
 	return nil
+}
+
+func getFailedSpecFiles(report saucereport.SauceReport) ([]string, error) {
+	var failedSpecs []string
+	if report.Status != saucereport.StatusFailed {
+		return failedSpecs, nil
+	}
+	for _, s := range report.Suites {
+		re, err := regexp.Compile(".*.feature$")
+		if err != nil {
+			return failedSpecs, err
+		}
+		if s.Status == saucereport.StatusFailed && re.MatchString(s.Name) {
+			failedSpecs = append(failedSpecs, filepath.Clean(s.Name))
+		}
+	}
+
+	return failedSpecs, nil
 }
