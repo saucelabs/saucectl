@@ -2274,9 +2274,6 @@
             "$ref": "#/allOf/0/then/allOf/0"
           },
           {
-            "$ref": "#/allOf/5/then/allOf/1"
-          },
-          {
             "$ref": "#/allOf/0/then/allOf/1"
           },
           {
@@ -2300,9 +2297,6 @@
             "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
             "type": "object",
             "properties": {
-              "mode": {
-                "$ref": "#/allOf/5/then/properties/defaults/properties/mode"
-              },
               "timeout": {
                 "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
               }
@@ -2412,9 +2406,6 @@
                   "required": [
                     "paths"
                   ]
-                },
-                "mode": {
-                  "$ref": "#/allOf/5/then/properties/defaults/properties/mode"
                 },
                 "shard": {
                   "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec or concurrency) so that they can easily run in parallel.",
