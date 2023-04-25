@@ -58,8 +58,7 @@ func (r *SauceReportRetrier) RetryFailedTests(jobOpts chan<- job.StartOptions, o
 		return
 	}
 
-	var runnerFile string
-	runnerFile, err = zip.ArchiveRunnerConfig(r.Project, tempDir)
+	runnerFile, err := zip.ArchiveRunnerConfig(r.Project, tempDir)
 	if err != nil {
 		log.Err(err).Msg(msg.UnableToArchiveRunnerConfig)
 		log.Info().Msg(msg.SkippingSmartRetries)
