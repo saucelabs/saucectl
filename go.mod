@@ -40,7 +40,6 @@ require (
 )
 
 require (
-	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/opencontainers/image-spec v1.0.2
 	github.com/pkg/errors v0.9.1
@@ -71,7 +70,6 @@ require (
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
