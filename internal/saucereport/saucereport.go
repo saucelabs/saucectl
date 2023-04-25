@@ -70,7 +70,7 @@ func Parse(fileContent []byte) (SauceReport, error) {
 	return report, nil
 }
 
-// GetFailedTests get names from failed tests
+// GetFailedTests get names from failed tests.
 func GetFailedTests(report SauceReport) []string {
 	var failedTests []string
 	if report.Status == StatusPassed || report.Status == StatusSkipped {
