@@ -41,7 +41,6 @@ type Project struct {
 	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
 	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`
 	BeforeExec    []string             `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker        config.Docker        `yaml:"docker,omitempty" json:"docker"`
 	Testcafe      Testcafe             `yaml:"testcafe,omitempty" json:"testcafe"`
 	Npm           config.Npm           `yaml:"npm,omitempty" json:"npm"`
 	RootDir       string               `yaml:"rootDir,omitempty" json:"rootDir"`
@@ -163,11 +162,6 @@ func SetDefaults(p *Project) {
 
 	if p.Defaults.Timeout < 0 {
 		p.Defaults.Timeout = 0
-	}
-
-	// Set default docker file transfer to mount
-	if p.Docker.FileTransfer == "" {
-		p.Docker.FileTransfer = config.DockerFileMount
 	}
 
 	// Default rootDir to .
