@@ -116,11 +116,11 @@ func (r *TestcafeRunner) runSuites(fileURIs map[uploadType]string) bool {
 	// Submit suites to work on
 	jobsCount := r.calcTestcafeJobsCount(r.Project.Suites)
 	go func() {
-		for i, s := range suites {
+		for _, s := range suites {
 			if len(s.Simulators) > 0 {
 				for _, d := range s.Simulators {
 					for _, pv := range d.PlatformVersions {
-						opts := r.generateStartOpts(s, i)
+						opts := r.generateStartOpts(s)
 						opts.App = fileURIs[projectUpload]
 						opts.OtherApps = otherApps
 						opts.PlatformName = d.PlatformName
@@ -131,7 +131,7 @@ func (r *TestcafeRunner) runSuites(fileURIs map[uploadType]string) bool {
 					}
 				}
 			} else {
-				opts := r.generateStartOpts(s, i)
+				opts := r.generateStartOpts(s)
 				opts.App = fileURIs[projectUpload]
 				opts.OtherApps = otherApps
 				opts.PlatformName = s.PlatformName
@@ -144,12 +144,11 @@ func (r *TestcafeRunner) runSuites(fileURIs map[uploadType]string) bool {
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
 }
 
-func (r *TestcafeRunner) generateStartOpts(s testcafe.Suite, i int) job.StartOptions {
+func (r *TestcafeRunner) generateStartOpts(s testcafe.Suite) job.StartOptions {
 	return job.StartOptions{
 		ConfigFilePath:   r.Project.ConfigFilePath,
 		CLIFlags:         r.Project.CLIFlags,
 		DisplayName:      s.Name,
-		SuiteIndex:       i,
 		Timeout:          s.Timeout,
 		Suite:            s.Name,
 		Framework:        "testcafe",

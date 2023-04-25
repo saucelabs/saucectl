@@ -50,9 +50,8 @@ func (r *SauceReportRetrier) RetryFailedTests(jobOpts chan<- job.StartOptions, o
 		jobOpts <- opt
 		return
 	}
-	fmt.Println("job.Name: ", opt.Name)
 
-	if err := r.Project.FilterFailedTests(opt.SuiteIndex, report); err != nil {
+	if err := r.Project.FilterFailedTests(opt.Name, report); err != nil {
 		log.Err(err).Msg(msg.UnableToFilterFailedTests)
 		log.Info().Msg(msg.SkippingSmartRetries)
 		jobOpts <- opt

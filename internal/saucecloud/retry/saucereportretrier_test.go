@@ -60,7 +60,7 @@ func (f *StubVDCJobReader) GetJobAssetFileContent(ctx context.Context, jobID, fi
 type FakeProject struct {
 }
 
-func (p *FakeProject) FilterFailedTests(index int, report saucereport.SauceReport) error {
+func (p *FakeProject) FilterFailedTests(name string, report saucereport.SauceReport) error {
 	return nil
 }
 
@@ -140,7 +140,6 @@ func TestSauceReportRetrier_Retry(t *testing.T) {
 				jobOpts: make(chan job.StartOptions),
 				opt: job.StartOptions{
 					DisplayName: "Try failed tests",
-					SuiteIndex:  0,
 					Framework:   cypress.Kind,
 					SmartRetry: job.SmartRetry{
 						FailedOnly: true,
@@ -150,7 +149,6 @@ func TestSauceReportRetrier_Retry(t *testing.T) {
 			},
 			expected: job.StartOptions{
 				DisplayName: "Try failed tests",
-				SuiteIndex:  0,
 				Framework:   cypress.Kind,
 				OtherApps:   []string{"storage:fakeid"},
 				SmartRetry: job.SmartRetry{

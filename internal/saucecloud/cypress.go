@@ -112,12 +112,11 @@ func (r *CypressRunner) runSuites(fileURIs map[uploadType]string) bool {
 	}
 	// Submit suites to work on.
 	go func() {
-		for i, s := range suites {
+		for _, s := range suites {
 			jobOpts <- job.StartOptions{
 				ConfigFilePath:   r.Project.GetCfgPath(),
 				CLIFlags:         r.Project.GetCLIFlags(),
 				DisplayName:      s.Name,
-				SuiteIndex:       i,
 				Timeout:          s.Timeout,
 				App:              fileURIs[projectUpload],
 				OtherApps:        otherApps,

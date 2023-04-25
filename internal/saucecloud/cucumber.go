@@ -117,11 +117,10 @@ func (r *CucumberRunner) runSuites(fileURIs map[uploadType]string) bool {
 
 	// Submit suites to work on
 	go func() {
-		for i, s := range suites {
+		for _, s := range suites {
 			jobOpts <- job.StartOptions{
 				ConfigFilePath:   r.Project.ConfigFilePath,
 				DisplayName:      s.Name,
-				SuiteIndex:       i,
 				App:              fileURIs[projectUpload],
 				OtherApps:        otherApps,
 				Suite:            s.Name,

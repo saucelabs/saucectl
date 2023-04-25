@@ -121,7 +121,7 @@ func (r *PlaywrightRunner) runSuites(fileURIs map[uploadType]string) bool {
 	}
 	// Submit suites to work on.
 	go func() {
-		for i, s := range suites {
+		for _, s := range suites {
 			// Define frameworkVersion if not set at suite level
 			if s.PlaywrightVersion == "" {
 				s.PlaywrightVersion = r.Project.Playwright.Version
@@ -130,7 +130,6 @@ func (r *PlaywrightRunner) runSuites(fileURIs map[uploadType]string) bool {
 				ConfigFilePath:   r.Project.ConfigFilePath,
 				CLIFlags:         r.Project.CLIFlags,
 				DisplayName:      s.Name,
-				SuiteIndex:       i,
 				Timeout:          s.Timeout,
 				App:              fileURIs[projectUpload],
 				OtherApps:        otherApps,
