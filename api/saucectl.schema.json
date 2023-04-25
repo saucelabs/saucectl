@@ -87,33 +87,6 @@
           },
           {
             "$schema": "https://json-schema.org/draft-07/schema",
-            "title": "saucectl docker specific schema",
-            "description": "Subschema for docker specific settings",
-            "type": "object",
-            "properties": {
-              "docker": {
-                "description": "Properties specific to docker.",
-                "type": "object",
-                "properties": {
-                  "fileTransfer": {
-                    "description": "Control how files are made available to the docker image.",
-                    "enum": [
-                      "copy",
-                      "mount"
-                    ]
-                  },
-                  "image": {
-                    "description": "Override which docker image to use (in case you have a custom image).",
-                    "type": "string"
-                  }
-                },
-                "additionalProperties": false
-              }
-            },
-            "additionalProperties": true
-          },
-          {
-            "$schema": "https://json-schema.org/draft-07/schema",
             "title": "saucectl npm specific schema",
             "description": "Subschema for npm specific settings",
             "type": "object",
@@ -306,13 +279,6 @@
             "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
             "type": "object",
             "properties": {
-              "mode": {
-                "description": "Instructs saucectl run tests remotely through Sauce Labs (sauce) or locally on docker.",
-                "enum": [
-                  "docker",
-                  "sauce"
-                ]
-              },
               "timeout": {
                 "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
               }
@@ -442,9 +408,6 @@
                     "testFiles"
                   ]
                 },
-                "mode": {
-                  "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
-                },
                 "shard": {
                   "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec or concurrency) so that they can easily run in parallel.",
                   "enum": [
@@ -551,33 +514,6 @@
                       "directory"
                     ],
                     "additionalProperties": false
-                  }
-                },
-                "additionalProperties": false
-              }
-            },
-            "additionalProperties": true
-          },
-          {
-            "$schema": "https://json-schema.org/draft-07/schema",
-            "title": "saucectl docker specific schema",
-            "description": "Subschema for docker specific settings",
-            "type": "object",
-            "properties": {
-              "docker": {
-                "description": "Properties specific to docker.",
-                "type": "object",
-                "properties": {
-                  "fileTransfer": {
-                    "description": "Control how files are made available to the docker image.",
-                    "enum": [
-                      "copy",
-                      "mount"
-                    ]
-                  },
-                  "image": {
-                    "description": "Override which docker image to use (in case you have a custom image).",
-                    "type": "string"
                   }
                 },
                 "additionalProperties": false
@@ -788,13 +724,6 @@
             "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
             "type": "object",
             "properties": {
-              "mode": {
-                "description": "Instructs saucectl run tests remotely through Sauce Labs (sauce) or locally on docker.",
-                "enum": [
-                  "docker",
-                  "sauce"
-                ]
-              },
               "timeout": {
                 "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
                 "type": "string",
@@ -942,9 +871,6 @@
                     "specPattern"
                   ]
                 },
-                "mode": {
-                  "$ref": "#/allOf/1/then/properties/defaults/properties/mode"
-                },
                 "shard": {
                   "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec or concurrency) so that they can easily run in parallel.",
                   "enum": [
@@ -1011,13 +937,13 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/allOf/0/then/allOf/3"
+            "$ref": "#/allOf/0/then/allOf/2"
           },
           {
             "$ref": "#/allOf/0/then/allOf/0"
           },
           {
-            "$ref": "#/allOf/0/then/allOf/4"
+            "$ref": "#/allOf/0/then/allOf/3"
           }
         ],
         "properties": {
@@ -1325,6 +1251,33 @@
             "$ref": "#/allOf/0/then/allOf/0"
           },
           {
+            "$schema": "https://json-schema.org/draft-07/schema",
+            "title": "saucectl docker specific schema",
+            "description": "Subschema for docker specific settings",
+            "type": "object",
+            "properties": {
+              "docker": {
+                "description": "Properties specific to docker.",
+                "type": "object",
+                "properties": {
+                  "fileTransfer": {
+                    "description": "Control how files are made available to the docker image.",
+                    "enum": [
+                      "copy",
+                      "mount"
+                    ]
+                  },
+                  "image": {
+                    "description": "Override which docker image to use (in case you have a custom image).",
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": true
+          },
+          {
             "$ref": "#/allOf/0/then/allOf/1"
           },
           {
@@ -1332,9 +1285,6 @@
           },
           {
             "$ref": "#/allOf/0/then/allOf/3"
-          },
-          {
-            "$ref": "#/allOf/0/then/allOf/4"
           }
         ],
         "properties": {
@@ -1352,7 +1302,11 @@
             "type": "object",
             "properties": {
               "mode": {
-                "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
+                "description": "Instructs saucectl run tests remotely through Sauce Labs (sauce) or locally on docker.",
+                "enum": [
+                  "docker",
+                  "sauce"
+                ]
               },
               "timeout": {
                 "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
@@ -1408,7 +1362,7 @@
                   "type": "string"
                 },
                 "mode": {
-                  "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
+                  "$ref": "#/allOf/3/then/properties/defaults/properties/mode"
                 },
                 "playwrightVersion": {
                   "$ref": "#/allOf/8/then/properties/playwright/properties/version"
@@ -1565,7 +1519,7 @@
             "$ref": "#/allOf/0/then/allOf/0"
           },
           {
-            "$ref": "#/allOf/0/then/allOf/3"
+            "$ref": "#/allOf/0/then/allOf/2"
           }
         ],
         "properties": {
@@ -1663,6 +1617,9 @@
             "$ref": "#/allOf/0/then/allOf/0"
           },
           {
+            "$ref": "#/allOf/3/then/allOf/1"
+          },
+          {
             "$ref": "#/allOf/0/then/allOf/1"
           },
           {
@@ -1670,9 +1627,6 @@
           },
           {
             "$ref": "#/allOf/0/then/allOf/3"
-          },
-          {
-            "$ref": "#/allOf/0/then/allOf/4"
           }
         ],
         "properties": {
@@ -1690,7 +1644,7 @@
             "type": "object",
             "properties": {
               "mode": {
-                "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
+                "$ref": "#/allOf/3/then/properties/defaults/properties/mode"
               },
               "timeout": {
                 "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
@@ -1793,7 +1747,7 @@
                   "$ref": "#/allOf/0/then/properties/env"
                 },
                 "mode": {
-                  "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
+                  "$ref": "#/allOf/3/then/properties/defaults/properties/mode"
                 },
                 "shard": {
                   "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec or concurrency) so that they can easily run in parallel.",
@@ -2039,13 +1993,13 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/allOf/0/then/allOf/3"
+            "$ref": "#/allOf/0/then/allOf/2"
           },
           {
             "$ref": "#/allOf/0/then/allOf/0"
           },
           {
-            "$ref": "#/allOf/0/then/allOf/4"
+            "$ref": "#/allOf/0/then/allOf/3"
           }
         ],
         "properties": {
@@ -2253,7 +2207,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/allOf/0/then/allOf/3"
+            "$ref": "#/allOf/0/then/allOf/2"
           }
         ],
         "properties": {
@@ -2329,6 +2283,9 @@
             "$ref": "#/allOf/0/then/allOf/0"
           },
           {
+            "$ref": "#/allOf/3/then/allOf/1"
+          },
+          {
             "$ref": "#/allOf/0/then/allOf/1"
           },
           {
@@ -2336,9 +2293,6 @@
           },
           {
             "$ref": "#/allOf/0/then/allOf/3"
-          },
-          {
-            "$ref": "#/allOf/0/then/allOf/4"
           }
         ],
         "properties": {
@@ -2356,7 +2310,7 @@
             "type": "object",
             "properties": {
               "mode": {
-                "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
+                "$ref": "#/allOf/3/then/properties/defaults/properties/mode"
               },
               "timeout": {
                 "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
@@ -2469,7 +2423,7 @@
                   ]
                 },
                 "mode": {
-                  "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
+                  "$ref": "#/allOf/3/then/properties/defaults/properties/mode"
                 },
                 "shard": {
                   "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec or concurrency) so that they can easily run in parallel.",

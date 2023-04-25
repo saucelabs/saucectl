@@ -9,10 +9,7 @@ sauce:
     build: "$BUILD_ID"
 rootDir: tests/e2e/cypress_10/e2e/
 defaults:
-  mode: sauce
   timeout: 5m
-docker:
-  fileTransfer: mount
 cypress:
   version: 12.6.0
   configFile: "cypress.config.js"
