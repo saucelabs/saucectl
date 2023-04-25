@@ -17,7 +17,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
-	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -135,7 +134,7 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	go func() {
 		props := usage.Properties{}
 		props.SetFramework("cypress").SetFVersion(p.GetVersion()).SetFlags(cmd.Flags()).SetSauceConfig(p.GetSauceCfg()).
-			SetArtifacts(p.GetArtifactsCfg()).SetDocker(p.GetDocker()).SetNPM(p.GetNpm()).SetNumSuites(len(p.GetSuites())).SetJobs(captor.Default.TestResults).
+			SetArtifacts(p.GetArtifactsCfg()).SetNPM(p.GetNpm()).SetNumSuites(len(p.GetSuites())).SetJobs(captor.Default.TestResults).
 			SetSlack(p.GetNotifications().Slack).SetSharding(p.IsSharded()).SetLaunchOrder(p.GetSauceCfg().LaunchOrder)
 
 		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
@@ -143,38 +142,8 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	}()
 
 	cleanupArtifacts(p.GetArtifactsCfg())
-	dockerProject, sauceProject := cypress.SplitSuites(p)
-	if dockerProject.GetSuiteCount() != 0 {
-		exitCode, err := runCypressInDocker(dockerProject)
-		if err != nil || exitCode != 0 {
-			return exitCode, err
-		}
-	}
-	if sauceProject.GetSuiteCount() != 0 {
-		return runCypressInSauce(sauceProject, regio)
-	}
 
-	return 0, nil
-}
-
-func runCypressInDocker(p cypress.Project) (int, error) {
-	log.Info().Msg("Running Cypress in Docker")
-	printTestEnv("docker")
-
-	cd, err := docker.NewCypress(p, &testcompClient, &testcompClient, &restoClient, &restoClient, createReporters(p.GetReporter(), p.GetNotifications(), p.GetSauceCfg().Metadata, &testcompClient, &restoClient,
-		"cypress", "docker"))
-	if err != nil {
-		return 1, err
-	}
-
-	p.CleanPackages()
-	return cd.RunProject()
-}
-
-func runCypressInSauce(p cypress.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Running Cypress in Sauce Labs")
-	printTestEnv("sauce")
-
 	r := saucecloud.CypressRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{

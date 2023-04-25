@@ -42,7 +42,6 @@ type Project struct {
 	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
 	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`
 	BeforeExec    []string             `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker        config.Docker        `yaml:"docker,omitempty" json:"docker"`
 	Npm           config.Npm           `yaml:"npm,omitempty" json:"npm"`
 	RootDir       string               `yaml:"rootDir,omitempty" json:"rootDir"`
 	RunnerVersion string               `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
@@ -125,11 +124,6 @@ func (p *Project) SetDefaults() {
 
 	if p.Sauce.Concurrency < 1 {
 		p.Sauce.Concurrency = 2
-	}
-
-	// Default mode to Mount
-	if p.Docker.FileTransfer == "" {
-		p.Docker.FileTransfer = config.DockerFileMount
 	}
 
 	// Default rootDir to .
@@ -259,13 +253,6 @@ func (p *Project) Validate() error {
 
 	if p.Cypress.Version == "" {
 		return errors.New(msg.MissingCypressVersion)
-	}
-
-	// Validate docker.
-	if p.Docker.FileTransfer != config.DockerFileMount && p.Docker.FileTransfer != config.DockerFileCopy {
-		return fmt.Errorf(msg.InvalidDockerFileTransferType,
-			p.Docker.FileTransfer,
-			strings.Join([]string{string(config.DockerFileMount), string(config.DockerFileCopy)}, "|"))
 	}
 
 	// Check rootDir exists.
@@ -483,11 +470,6 @@ func (p *Project) GetArtifactsCfg() config.Artifacts {
 // IsShowConsoleLog returns ShowConsoleLog
 func (p *Project) IsShowConsoleLog() bool {
 	return p.ShowConsoleLog
-}
-
-// GetDocker returns config.Docker
-func (p *Project) GetDocker() config.Docker {
-	return p.Docker
 }
 
 // GetBeforeExec returns BeforeExec

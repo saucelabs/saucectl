@@ -10,21 +10,10 @@ sauce:
 rootDir: tests/e2e/
 defaults:
   timeout: 5m
-docker:
-  fileTransfer: mount
 cypress:
   version: 9.5.3
   configFile: "cypress.json"
 suites:
-  - name: "saucy test in docker"
-    mode: docker
-    browser: "chrome"
-    config:
-      env:
-        hello: world
-      testFiles: [ "**/*.*" ]
-      excludedTestFiles: []
-
   - name: "saucy test in sauce"
     browser: "chrome"
     platformName: "Windows 10"

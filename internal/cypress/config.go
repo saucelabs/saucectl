@@ -34,7 +34,6 @@ type Project interface {
 	GetCLIFlags() map[string]interface{}
 	GetArtifactsCfg() config.Artifacts
 	IsShowConsoleLog() bool
-	GetDocker() config.Docker
 	GetBeforeExec() []string
 	GetReporter() config.Reporters
 	GetNotifications() config.Notifications
@@ -68,45 +67,4 @@ func FromFile(cfgPath string) (Project, error) {
 		return v1alpha.FromFile(cfgPath)
 	}
 	return v1.FromFile(cfgPath)
-}
-
-// SplitSuites divided Suites to dockerSuites and sauceSuites
-func SplitSuites(project Project) (Project, Project) {
-	if project.GetAPIVersion() == v1alpha.APIVersion {
-		var dockerSuites []v1alpha.Suite
-		var sauceSuites []v1alpha.Suite
-		p := project.(*v1alpha.Project)
-		for _, s := range p.Suites {
-			if s.Mode == "docker" || (s.Mode == "" && p.Defaults.Mode == "docker") {
-				dockerSuites = append(dockerSuites, s)
-			} else {
-				sauceSuites = append(sauceSuites, s)
-			}
-		}
-
-		dockerProject := *p
-		dockerProject.Suites = dockerSuites
-		sauceProject := *p
-		sauceProject.Suites = sauceSuites
-
-		return &dockerProject, &sauceProject
-	}
-
-	var dockerSuites []v1.Suite
-	var sauceSuites []v1.Suite
-	p := project.(*v1.Project)
-	for _, s := range p.Suites {
-		if s.Mode == "docker" || (s.Mode == "" && p.Defaults.Mode == "docker") {
-			dockerSuites = append(dockerSuites, s)
-		} else {
-			sauceSuites = append(sauceSuites, s)
-		}
-	}
-
-	dockerProject := *p
-	dockerProject.Suites = dockerSuites
-	sauceProject := *p
-	sauceProject.Suites = sauceSuites
-
-	return &dockerProject, &sauceProject
 }
