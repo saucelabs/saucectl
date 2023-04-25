@@ -271,26 +271,6 @@ func shardSuitesByNumShards(suites []Suite) []Suite {
 	return shardedSuites
 }
 
-// SplitSuites divided Suites to dockerSuites and sauceSuites
-func SplitSuites(p Project) (Project, Project) {
-	var dockerSuites []Suite
-	var sauceSuites []Suite
-	for _, s := range p.Suites {
-		if s.Mode == "docker" || (s.Mode == "" && p.Defaults.Mode == "docker") {
-			dockerSuites = append(dockerSuites, s)
-		} else {
-			sauceSuites = append(sauceSuites, s)
-		}
-	}
-
-	dockerProject := p
-	dockerProject.Suites = dockerSuites
-	sauceProject := p
-	sauceProject.Suites = sauceSuites
-
-	return dockerProject, sauceProject
-}
-
 // Validate validates basic configuration of the project and returns an error if any of the settings contain illegal
 // values. This is not an exhaustive operation and further validation should be performed both in the client and/or
 // server side depending on the workflow that is executed.
