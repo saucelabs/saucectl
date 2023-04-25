@@ -9,18 +9,10 @@ sauce:
     build: "$BUILD_ID"
 defaults:
   timeout: 5m
-docker:
-  fileTransfer: copy
 testcafe:
   version: 2.3.1
 rootDir: tests/e2e/testcafe/
 suites:
-  - name: Firefox in docker
-    mode: docker
-    browserName: firefox
-    src:
-      - "*.test.js"
-
   - name: Chrome in sauce
     browserName: chrome
     src:
