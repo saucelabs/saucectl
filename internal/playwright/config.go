@@ -42,7 +42,6 @@ type Project struct {
 	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
 	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`
 	BeforeExec    []string             `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker        config.Docker        `yaml:"docker,omitempty" json:"docker"`
 	Npm           config.Npm           `yaml:"npm,omitempty" json:"npm"`
 	RootDir       string               `yaml:"rootDir,omitempty" json:"rootDir"`
 	RunnerVersion string               `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
@@ -126,11 +125,6 @@ func SetDefaults(p *Project) {
 
 	if p.Sauce.Concurrency < 1 {
 		p.Sauce.Concurrency = 2
-	}
-
-	// Set default docker file transfer to mount
-	if p.Docker.FileTransfer == "" {
-		p.Docker.FileTransfer = config.DockerFileMount
 	}
 
 	// Default rootDir to .
