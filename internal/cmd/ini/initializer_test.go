@@ -456,7 +456,7 @@ func TestAskPlatform(t *testing.T) {
 				return i.askPlatform(cfg, metas)
 			},
 			startState:    &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
-			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", browserName: "chrome", mode: "sauce", platformName: "Windows 10"},
+			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", browserName: "chrome", platformName: "Windows 10"},
 		},
 		{
 			name: "macOS",
@@ -488,39 +488,7 @@ func TestAskPlatform(t *testing.T) {
 				return i.askPlatform(cfg, metas)
 			},
 			startState:    &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
-			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", platformName: "macOS 11.00", browserName: "firefox", mode: "sauce"},
-		},
-		{
-			name: "docker",
-			procedure: func(c *expect.Console) error {
-				_, err := c.ExpectString("Select browser")
-				if err != nil {
-					return err
-				}
-				_, err = c.SendLine("chrome")
-				if err != nil {
-					return err
-				}
-				_, err = c.ExpectString("Select platform")
-				if err != nil {
-					return err
-				}
-				_, err = c.SendLine("docker")
-				if err != nil {
-					return err
-				}
-				_, err = c.ExpectEOF()
-				if err != nil {
-					return err
-				}
-				return nil
-			},
-			ini: &initializer{},
-			execution: func(i *initializer, cfg *initConfig) error {
-				return i.askPlatform(cfg, metas)
-			},
-			startState:    &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
-			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", platformName: "", browserName: "chrome", mode: "docker"},
+			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", platformName: "macOS 11.00", browserName: "firefox"},
 		},
 	}
 	for _, tt := range testCases {
@@ -894,7 +862,6 @@ func TestConfigure(t *testing.T) {
 				cypressJSON:      dir.Join("cypress.json"),
 				platformName:     "windows 10",
 				browserName:      "chrome",
-				mode:             "sauce",
 				artifactWhen:     config.WhenPass,
 			},
 		},
@@ -1106,7 +1073,6 @@ func Test_initializers(t *testing.T) {
 				cypressJSON:      dir.Join("cypress.json"),
 				platformName:     "windows 10",
 				browserName:      "chrome",
-				mode:             "sauce",
 				artifactWhen:     config.WhenPass,
 			},
 		},
@@ -1166,7 +1132,6 @@ func Test_initializers(t *testing.T) {
 				frameworkVersion: "1.11.0",
 				platformName:     "windows 10",
 				browserName:      "chromium",
-				mode:             "sauce",
 				artifactWhen:     config.WhenPass,
 			},
 		},
@@ -1226,7 +1191,6 @@ func Test_initializers(t *testing.T) {
 				frameworkVersion: "1.12.0",
 				platformName:     "macOS 11.00",
 				browserName:      "safari",
-				mode:             "sauce",
 				artifactWhen:     config.WhenPass,
 			},
 		},
@@ -1524,11 +1488,7 @@ func Test_metaToBrowsers(t *testing.T) {
 					},
 				},
 			},
-			wantBrowsers: []string{"chrome", "firefox"},
-			wantPlatforms: map[string][]string{
-				"chrome":  {"docker"},
-				"firefox": {"docker"},
-			},
+			wantPlatforms: map[string][]string{},
 		},
 		{
 			name: "1 version / 1 platform + docker",
@@ -1551,8 +1511,8 @@ func Test_metaToBrowsers(t *testing.T) {
 			},
 			wantBrowsers: []string{"chrome", "firefox", "microsoftedge"},
 			wantPlatforms: map[string][]string{
-				"chrome":        {"windows 10", "docker"},
-				"firefox":       {"windows 10", "docker"},
+				"chrome":        {"windows 10"},
+				"firefox":       {"windows 10"},
 				"microsoftedge": {"windows 10"},
 			},
 		},
@@ -1581,8 +1541,8 @@ func Test_metaToBrowsers(t *testing.T) {
 			},
 			wantBrowsers: []string{"chrome", "firefox", "microsoftedge", "safari"},
 			wantPlatforms: map[string][]string{
-				"chrome":        {"macOS 11.00", "windows 10", "docker"},
-				"firefox":       {"macOS 11.00", "windows 10", "docker"},
+				"chrome":        {"macOS 11.00", "windows 10"},
+				"firefox":       {"macOS 11.00", "windows 10"},
 				"microsoftedge": {"macOS 11.00", "windows 10"},
 				"safari":        {"macOS 11.00"},
 			},
@@ -1623,8 +1583,8 @@ func Test_metaToBrowsers(t *testing.T) {
 			},
 			wantBrowsers: []string{"chrome", "firefox", "microsoftedge", "safari"},
 			wantPlatforms: map[string][]string{
-				"chrome":        {"macOS 11.00", "windows 10", "docker"},
-				"firefox":       {"macOS 11.00", "windows 10", "docker"},
+				"chrome":        {"macOS 11.00", "windows 10"},
+				"firefox":       {"macOS 11.00", "windows 10"},
 				"microsoftedge": {"macOS 11.00", "windows 10"},
 				"safari":        {"macOS 11.00"},
 			},

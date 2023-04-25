@@ -38,10 +38,9 @@ func configureCypress(cfg *initConfig) interface{} {
 			},
 			Suites: []v1alpha.Suite{
 				{
-					Name:         fmt.Sprintf("cypress - %s - %s", firstNotEmpty(cfg.platformName, cfg.mode), cfg.browserName),
+					Name:         fmt.Sprintf("cypress - %s - %s", cfg.platformName, cfg.browserName),
 					PlatformName: cfg.platformName,
 					Browser:      cfg.browserName,
-					Mode:         cfg.mode,
 					Config: v1alpha.SuiteConfig{
 						TestFiles: []string{"**/*.*"},
 					},
@@ -74,10 +73,9 @@ func configureCypress(cfg *initConfig) interface{} {
 		},
 		Suites: []v1.Suite{
 			{
-				Name:         fmt.Sprintf("cypress - %s - %s", firstNotEmpty(cfg.platformName, cfg.mode), cfg.browserName),
+				Name:         fmt.Sprintf("cypress - %s - %s", cfg.platformName, cfg.browserName),
 				PlatformName: cfg.platformName,
 				Browser:      cfg.browserName,
-				Mode:         cfg.mode,
 				Config: v1.SuiteConfig{
 					TestingType: "e2e",
 					SpecPattern: []string{"**/*.*"},

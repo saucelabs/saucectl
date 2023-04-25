@@ -45,7 +45,6 @@ type initConfig struct {
 	testApp          string
 	otherApps        []string
 	platformName     string
-	mode             string
 	browserName      string
 	region           string
 	artifactWhen     config.When
