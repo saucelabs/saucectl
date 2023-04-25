@@ -327,7 +327,7 @@ func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
 }
 
 func (p *Project) FilterFailedTests(suiteIndex int, report saucereport.SauceReport) error {
-	if suiteIndex < 0 || suiteIndex > len(p.Suites) {
+	if suiteIndex < 0 || suiteIndex >= len(p.Suites) {
 		return errors.New("invalid suite index")
 	}
 	specs, err := getFailedSpecFiles(report)
