@@ -83,7 +83,7 @@ func NewCypressCmd() *cobra.Command {
 	sc.Bool("shardGrepEnabled", "suite::shardGrepEnabled", false, "When sharding is configured and the suite is configured to filter using cypress-grep, let saucectl filter tests before executing")
 	sc.String("headless", "suite::headless", "", "Controls whether or not tests are run in headless mode (default: false)")
 	sc.String("timeZone", "suite::timeZone", "", "Specifies timeZone for this test")
-	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'. (sauce mode only)")
+	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'.")
 
 	// NPM
 	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")

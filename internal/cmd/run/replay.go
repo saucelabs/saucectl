@@ -62,7 +62,7 @@ func NewReplayCmd() *cobra.Command {
 	sc.Fset = cmd.Flags()
 
 	sc.String("name", "suite::name", "", "Set the name of the job as it will appear on Sauce Labs.")
-	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'. (sauce mode only)")
+	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'.")
 
 	// Browser & Platform
 	sc.String("browser", "suite::browserName", "chrome", "Set the browser to use. Only chrome is supported at this time.")
