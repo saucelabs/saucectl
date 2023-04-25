@@ -17,7 +17,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
-	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -143,32 +142,7 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	}()
 
 	cleanupArtifacts(p.GetArtifactsCfg())
-	dockerProject, sauceProject := cypress.SplitSuites(p)
-	if dockerProject.GetSuiteCount() != 0 {
-		exitCode, err := runCypressInDocker(dockerProject)
-		if err != nil || exitCode != 0 {
-			return exitCode, err
-		}
-	}
-	if sauceProject.GetSuiteCount() != 0 {
-		return runCypressInSauce(sauceProject, regio)
-	}
-
-	return 0, nil
-}
-
-func runCypressInDocker(p cypress.Project) (int, error) {
-	log.Info().Msg("Running Cypress in Docker")
-	printTestEnv("docker")
-
-	cd, err := docker.NewCypress(p, &testcompClient, &testcompClient, &restoClient, &restoClient, createReporters(p.GetReporter(), p.GetNotifications(), p.GetSauceCfg().Metadata, &testcompClient, &restoClient,
-		"cypress", "docker"))
-	if err != nil {
-		return 1, err
-	}
-
-	p.CleanPackages()
-	return cd.RunProject()
+	return runCypressInSauce(p, regio)
 }
 
 func runCypressInSauce(p cypress.Project, regio region.Region) (int, error) {

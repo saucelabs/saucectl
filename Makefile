@@ -39,10 +39,6 @@ playwright-ci: build-linux
 testcafe-ci: build-linux
 	docker run --name testcafe-ci -e "CI=true" -v $(shell pwd):/home/gitty/ -w "/home/gitty" --rm saucelabs/stt-testcafe-node:latest "/home/gitty/saucectl" run -c ./.sauce/testcafe.yml --verbose
 
-#cypress-ci: @ Run tests against cypress in CI mode
-cypress-ci: build-linux
-	docker run --name cypress-ci -e "CI=true" -v $(shell pwd):/home/gitty/ -w "/home/gitty" --rm saucelabs/stt-cypress-mocha-node:latest "/home/gitty/saucectl" run -c ./.sauce/cypress.yml --verbose
-
 #schema: @ Build the json schema
 schema:
 	$(eval INPUT_SCHEMA := $(shell pwd)/api/global.schema.json)
