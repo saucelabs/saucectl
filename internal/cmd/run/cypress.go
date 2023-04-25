@@ -142,13 +142,8 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	}()
 
 	cleanupArtifacts(p.GetArtifactsCfg())
-	return runCypressInSauce(p, regio)
-}
 
-func runCypressInSauce(p cypress.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Running Cypress in Sauce Labs")
-	printTestEnv("sauce")
-
 	r := saucecloud.CypressRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
