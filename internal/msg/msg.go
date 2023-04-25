@@ -41,7 +41,6 @@ For more information, visit https://docs.saucelabs.com/dev/cli/saucectl/usage/us
 or peruse some of our example repositories:
   - https://github.com/saucelabs/saucectl-cypress-example
   - https://github.com/saucelabs/saucectl-playwright-example
-  - https://github.com/saucelabs/saucectl-puppeteer-example
   - https://github.com/saucelabs/saucectl-testcafe-example`
 
 // SauceIgnoreSuggestion is a recommendation to add unnecessary files to .sauceignore in the case that the bundled file is too big.
@@ -52,7 +51,6 @@ For more information, visit https://docs.saucelabs.com/dev/cli/saucectl/usage/us
 or peruse some of our example repositories:
   - https://github.com/saucelabs/saucectl-cypress-example
   - https://github.com/saucelabs/saucectl-playwright-example
-  - https://github.com/saucelabs/saucectl-puppeteer-example
   - https://github.com/saucelabs/saucectl-testcafe-example`
 
 // ArchiveFileCountWarning is a warning to the user that their project archive may be unintentionally large.

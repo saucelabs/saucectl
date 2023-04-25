@@ -17,7 +17,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
-	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
@@ -194,8 +193,6 @@ func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 		initCfg, errs = ini.initializeBatchEspresso(cmd.Flags(), initCfg)
 	case playwright.Kind:
 		initCfg, errs = ini.initializeBatchPlaywright(initCfg)
-	case puppeteer.Kind:
-		initCfg, errs = ini.initializeBatchPuppeteer(initCfg)
 	case testcafe.Kind:
 		initCfg, errs = ini.initializeBatchTestcafe(initCfg)
 	case xcuitest.Kind:

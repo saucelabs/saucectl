@@ -21,7 +21,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
-	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/vmd"
@@ -76,8 +75,6 @@ func (ini *initializer) configure() (*initConfig, error) {
 		return ini.initializeCypress()
 	case playwright.Kind:
 		return ini.initializePlaywright()
-	case puppeteer.Kind:
-		return ini.initializePuppeteer()
 	case testcafe.Kind:
 		return ini.initializeTestcafe()
 	case espresso.Kind:
@@ -504,31 +501,6 @@ func (ini *initializer) initializeTestcafe() (*initConfig, error) {
 	return cfg, nil
 }
 
-func (ini *initializer) initializePuppeteer() (*initConfig, error) {
-	cfg := &initConfig{frameworkName: puppeteer.Kind}
-
-	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), cfg.frameworkName)
-	if err != nil {
-		return &initConfig{}, err
-	}
-
-	err = ini.askVersion(cfg, frameworkMetadatas)
-	if err != nil {
-		return &initConfig{}, err
-	}
-
-	err = ini.askPlatform(cfg, frameworkMetadatas)
-	if err != nil {
-		return &initConfig{}, err
-	}
-
-	err = ini.askDownloadWhen(cfg)
-	if err != nil {
-		return &initConfig{}, err
-	}
-	return cfg, nil
-}
-
 func (ini *initializer) initializeEspresso() (*initConfig, error) {
 	cfg := &initConfig{frameworkName: espresso.Kind}
 
@@ -783,51 +755,6 @@ func (ini *initializer) initializeBatchEspresso(f *pflag.FlagSet, initCfg *initC
 
 func (ini *initializer) initializeBatchPlaywright(initCfg *initConfig) (*initConfig, []error) {
 	initCfg.frameworkName = playwright.Kind
-	var errs []error
-
-	if initCfg.frameworkVersion == "" {
-		errs = append(errs, fmt.Errorf(msg.MissingFrameworkVersion, initCfg.frameworkName))
-	}
-	if initCfg.platformName == "" {
-		errs = append(errs, errors.New(msg.MissingPlatformName))
-	}
-	if initCfg.browserName == "" {
-		errs = append(errs, errors.New(msg.MissingBrowserName))
-	}
-
-	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), initCfg.frameworkName)
-	if err != nil {
-		errs = append(errs, err)
-		return &initConfig{}, errs
-	}
-
-	frameworkVersionSupported := true
-	if initCfg.frameworkVersion != "" {
-		if err = checkFrameworkVersion(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion); err != nil {
-			errs = append(errs, err)
-			frameworkVersionSupported = false
-		}
-	}
-
-	if frameworkVersionSupported && initCfg.platformName != "" && initCfg.browserName != "" {
-		initCfg.platformName = strings.ToLower(initCfg.platformName)
-		initCfg.browserName = strings.ToLower(initCfg.browserName)
-		if err = checkBrowserAndPlatform(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion, initCfg.browserName, initCfg.platformName); err != nil {
-			errs = append(errs, err)
-		}
-	}
-
-	if initCfg.artifactWhenStr != "" {
-		initCfg.artifactWhenStr = strings.ToLower(initCfg.artifactWhenStr)
-		if initCfg.artifactWhen, err = checkArtifactDownloadSetting(initCfg.artifactWhenStr); err != nil {
-			errs = append(errs, err)
-		}
-	}
-	return initCfg, errs
-}
-
-func (ini *initializer) initializeBatchPuppeteer(initCfg *initConfig) (*initConfig, []error) {
-	initCfg.frameworkName = puppeteer.Kind
 	var errs []error
 
 	if initCfg.frameworkVersion == "" {

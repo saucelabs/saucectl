@@ -180,12 +180,11 @@ func TestTestComposer_Frameworks(t *testing.T) {
 	}{
 		{
 			name:     "HTTP - 200",
-			body:     `[{"name":"cypress","version":"12.6.0"},{"name":"cypress","version":"12.3.0"},{"name":"playwright","version":"1.31.1"},{"name":"playwright","version":"1.29.2"},{"name":"puppeteer","version":"10.4.0"},{"name":"puppeteer","version":"10.2.0"},{"name":"puppeteer-replay","version":"0.8.0"},{"name":"puppeteer-replay","version":"0.7.0"},{"name":"testcafe","version":"2.1.0"},{"name":"testcafe","version":"2.0.1"}]`,
+			body:     `[{"name":"cypress","version":"12.6.0"},{"name":"cypress","version":"12.3.0"},{"name":"playwright","version":"1.31.1"},{"name":"playwright","version":"1.29.2"},{"name":"puppeteer-replay","version":"0.8.0"},{"name":"puppeteer-replay","version":"0.7.0"},{"name":"testcafe","version":"2.1.0"},{"name":"testcafe","version":"2.0.1"}]`,
 			httpCode: 200,
 			want: []string{
 				"cypress",
 				"playwright",
-				"puppeteer",
 				"puppeteer-replay",
 				"testcafe",
 			},
