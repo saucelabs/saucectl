@@ -179,13 +179,8 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 	}()
 
 	cleanupArtifacts(p.Artifacts)
-	return runTestcafeInCloud(p, regio)
-}
 
-func runTestcafeInCloud(p testcafe.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Running Testcafe in Sauce Labs")
-	printTestEnv("sauce")
-
 	r := saucecloud.TestcafeRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
