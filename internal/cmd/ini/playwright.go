@@ -26,12 +26,11 @@ func configurePlaywright(cfg *initConfig) interface{} {
 		},
 		Suites: []playwright.Suite{
 			{
-				Name:         fmt.Sprintf("playwright - %s - %s", firstNotEmpty(cfg.platformName, cfg.mode), cfg.browserName),
+				Name:         fmt.Sprintf("playwright - %s - %s", cfg.platformName, cfg.browserName),
 				PlatformName: cfg.platformName,
 				Params: playwright.SuiteConfig{
 					BrowserName: cfg.browserName,
 				},
-				Mode: cfg.mode,
 			},
 		},
 		Artifacts: config.Artifacts{

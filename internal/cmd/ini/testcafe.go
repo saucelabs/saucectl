@@ -26,10 +26,9 @@ func configureTestcafe(cfg *initConfig) interface{} {
 		},
 		Suites: []testcafe.Suite{
 			{
-				Name:         fmt.Sprintf("testcafe - %s - %s", firstNotEmpty(cfg.platformName, cfg.mode), cfg.browserName),
+				Name:         fmt.Sprintf("testcafe - %s - %s", cfg.platformName, cfg.browserName),
 				PlatformName: cfg.platformName,
 				BrowserName:  cfg.browserName,
-				Mode:         cfg.mode,
 			},
 		},
 		Artifacts: config.Artifacts{

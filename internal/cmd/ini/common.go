@@ -182,15 +182,6 @@ func uniqSorted(ss []string) []string {
 	return out
 }
 
-func firstNotEmpty(args ...string) string {
-	for _, arg := range args {
-		if arg != "" {
-			return arg
-		}
-	}
-	return ""
-}
-
 func sortVersions(versions []string) {
 	sort.Slice(versions, func(i, j int) bool {
 		v1 := strings.Split(versions[i], ".")
