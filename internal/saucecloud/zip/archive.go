@@ -43,7 +43,7 @@ func ArchiveRunnerConfig(project interface{}, tempDir string) (string, error) {
 	return zipName, nil
 }
 
-// ArchiveFiles walkthroughs sourceDir, collects specified files, compresses them into target dir and returns the zip file path
+// ArchiveFiles walks through sourceDir, collects specified files, compresses them into target dir and returns the zip file path.
 func ArchiveFiles(targetFileName string, targetDir string, sourceDir string, files []string, matcher sauceignore.Matcher) (string, error) {
 	start := time.Now()
 
