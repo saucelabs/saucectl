@@ -484,7 +484,7 @@
                       "default": false
                     },
                     "failedTestsOnly": {
-                      "description": "Optimize suite retries by retrying failed tests only.",
+                      "description": "Optimize suite retries by retrying failed tests or spec files only.",
                       "type": "boolean",
                       "default": false
                     }
