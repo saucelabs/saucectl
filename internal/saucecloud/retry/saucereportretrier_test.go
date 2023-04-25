@@ -8,12 +8,9 @@ import (
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/cypress"
-	v1 "github.com/saucelabs/saucectl/internal/cypress/v1"
 	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/saucereport"
 	"github.com/saucelabs/saucectl/internal/storage"
-	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -58,6 +55,13 @@ func (f *StubVDCJobReader) GetJobAssetFileNames(ctx context.Context, jobID strin
 func (f *StubVDCJobReader) GetJobAssetFileContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
 	body, _ := json.Marshal(f.SauceReport)
 	return []byte(body), nil
+}
+
+type FakeProject struct {
+}
+
+func (p *FakeProject) FilterFailedTests(index int, report saucereport.SauceReport) error {
+	return nil
 }
 
 func TestSauceReportRetrier_Retry(t *testing.T) {
@@ -106,13 +110,10 @@ func TestSauceReportRetrier_Retry(t *testing.T) {
 		previous job.Job
 	}
 	tests := []struct {
-		name                 string
-		retrier              *SauceReportRetrier
-		args                 args
-		expected             job.StartOptions
-		expCypressProject    cypress.Project
-		expPlaywrightProject playwright.Project
-		expTestCafeProject   testcafe.Project
+		name     string
+		retrier  *SauceReportRetrier
+		args     args
+		expected job.StartOptions
 	}{
 		{
 			name:    "Job is resent as-it",
@@ -129,17 +130,11 @@ func TestSauceReportRetrier_Retry(t *testing.T) {
 			},
 		},
 		{
-			name: "Cypress Job is set as SmartRetry",
+			name: "Job is set as SmartRetry",
 			retrier: &SauceReportRetrier{
 				VDCReader:       &StubVDCJobReader{SauceReport: failedReport},
 				ProjectUploader: &StubProjectUploader{},
-				CypressProject: &v1.Project{
-					Suites: []v1.Suite{
-						{
-							Config: v1.SuiteConfig{},
-						},
-					},
-				},
+				Project:         &FakeProject{},
 			},
 			args: args{
 				jobOpts: make(chan job.StartOptions),
@@ -162,105 +157,6 @@ func TestSauceReportRetrier_Retry(t *testing.T) {
 					FailedTestsOnly: true,
 				},
 			},
-			expCypressProject: &v1.Project{
-				Suites: []v1.Suite{
-					{
-						Config: v1.SuiteConfig{
-							Env: map[string]string{
-								"grep": "failed test;failed test2",
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "Playwright Job is set as SmartRetry",
-			retrier: &SauceReportRetrier{
-				VDCReader:       &StubVDCJobReader{SauceReport: failedReport},
-				ProjectUploader: &StubProjectUploader{},
-				PlaywrightProject: playwright.Project{
-					Suites: []playwright.Suite{
-						{
-							Params: playwright.SuiteConfig{},
-						},
-					},
-				},
-			},
-			args: args{
-				jobOpts: make(chan job.StartOptions),
-				opt: job.StartOptions{
-					DisplayName: "Try failed tests",
-					SuiteIndex:  0,
-					Framework:   playwright.Kind,
-					SmartRetry: job.SmartRetry{
-						FailedTestsOnly: true,
-					},
-				},
-				previous: job.Job{},
-			},
-			expected: job.StartOptions{
-				DisplayName: "Try failed tests",
-				SuiteIndex:  0,
-				Framework:   playwright.Kind,
-				OtherApps:   []string{"storage:fakeid"},
-				SmartRetry: job.SmartRetry{
-					FailedTestsOnly: true,
-				},
-			},
-			expPlaywrightProject: playwright.Project{
-				Suites: []playwright.Suite{
-					{
-						Params: playwright.SuiteConfig{
-							Grep: "failed test|failed test2",
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "TestCafe Job is set as SmartRetry",
-			retrier: &SauceReportRetrier{
-				VDCReader:       &StubVDCJobReader{SauceReport: failedReport},
-				ProjectUploader: &StubProjectUploader{},
-				TestcafeProject: testcafe.Project{
-					Suites: []testcafe.Suite{
-						{
-							Filter: testcafe.Filter{},
-						},
-					},
-				},
-			},
-			args: args{
-				jobOpts: make(chan job.StartOptions),
-				opt: job.StartOptions{
-					DisplayName: "Try failed tests",
-					SuiteIndex:  0,
-					Framework:   testcafe.Kind,
-					SmartRetry: job.SmartRetry{
-						FailedTestsOnly: true,
-					},
-				},
-				previous: job.Job{},
-			},
-			expected: job.StartOptions{
-				DisplayName: "Try failed tests",
-				SuiteIndex:  0,
-				Framework:   testcafe.Kind,
-				OtherApps:   []string{"storage:fakeid"},
-				SmartRetry: job.SmartRetry{
-					FailedTestsOnly: true,
-				},
-			},
-			expTestCafeProject: testcafe.Project{
-				Suites: []testcafe.Suite{
-					{
-						Filter: testcafe.Filter{
-							TestGrep: "failed test|failed test2",
-						},
-					},
-				},
-			},
 		},
 	}
 	for _, tt := range tests {
@@ -269,9 +165,6 @@ func TestSauceReportRetrier_Retry(t *testing.T) {
 			go b.Retry(tt.args.jobOpts, tt.args.opt, tt.args.previous)
 			newOpt := <-tt.args.jobOpts
 			assert.Equal(t, tt.expected, newOpt)
-			assert.Equal(t, tt.expCypressProject, tt.retrier.CypressProject)
-			assert.Equal(t, tt.expPlaywrightProject, tt.retrier.PlaywrightProject)
-			assert.Equal(t, tt.expTestCafeProject, tt.retrier.TestcafeProject)
 		})
 	}
 }
