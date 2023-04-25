@@ -31,10 +31,6 @@ coverage:
 	go tool cover -func=coverage.out
 	@rm coverage.out
 
-#testcafe-ci: @ Run tests against testcafe in CI mode
-testcafe-ci: build-linux
-	docker run --name testcafe-ci -e "CI=true" -v $(shell pwd):/home/gitty/ -w "/home/gitty" --rm saucelabs/stt-testcafe-node:latest "/home/gitty/saucectl" run -c ./.sauce/testcafe.yml --verbose
-
 #schema: @ Build the json schema
 schema:
 	$(eval INPUT_SCHEMA := $(shell pwd)/api/global.schema.json)

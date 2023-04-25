@@ -17,7 +17,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
-	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -180,33 +179,7 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 	}()
 
 	cleanupArtifacts(p.Artifacts)
-
-	dockerProject, sauceProject := testcafe.SplitSuites(p)
-	if len(dockerProject.Suites) != 0 {
-		exitCode, err := runTestcafeInDocker(dockerProject)
-		if err != nil || exitCode != 0 {
-			return exitCode, err
-		}
-	}
-	if len(sauceProject.Suites) != 0 {
-		return runTestcafeInCloud(sauceProject, regio)
-	}
-
-	return 0, nil
-}
-
-func runTestcafeInDocker(p testcafe.Project) (int, error) {
-	log.Info().Msg("Running Testcafe in Docker")
-	printTestEnv("docker")
-
-	cd, err := docker.NewTestcafe(p, &testcompClient, &testcompClient, &restoClient, &restoClient, createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
-		"testcafe", "docker"))
-	if err != nil {
-		return 1, err
-	}
-
-	cleanTestCafePackages(&p)
-	return cd.RunProject()
+	return runTestcafeInCloud(p, regio)
 }
 
 func runTestcafeInCloud(p testcafe.Project, regio region.Region) (int, error) {

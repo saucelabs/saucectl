@@ -315,26 +315,6 @@ func Validate(p *Project) error {
 	return err
 }
 
-// SplitSuites divided Suites to dockerSuites and sauceSuites
-func SplitSuites(p Project) (Project, Project) {
-	var dockerSuites []Suite
-	var sauceSuites []Suite
-	for _, s := range p.Suites {
-		if s.Mode == "docker" || (s.Mode == "" && p.Defaults.Mode == "docker") {
-			dockerSuites = append(dockerSuites, s)
-		} else {
-			sauceSuites = append(sauceSuites, s)
-		}
-	}
-
-	dockerProject := p
-	dockerProject.Suites = dockerSuites
-	sauceProject := p
-	sauceProject.Suites = sauceSuites
-
-	return dockerProject, sauceProject
-}
-
 // shardSuites divides suites into shards based on the pattern.
 func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 	var shardedSuites []Suite
