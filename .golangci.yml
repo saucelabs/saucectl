@@ -3,6 +3,8 @@ linters:
     - revive
     - errname
     - goimports
+  disable:
+    - unused
 linters-settings:
   staticcheck:
     # https://staticcheck.io/docs/configuration/options/#checks

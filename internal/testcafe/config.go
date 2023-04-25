@@ -41,7 +41,6 @@ type Project struct {
 	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
 	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`
 	BeforeExec    []string             `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Docker        config.Docker        `yaml:"docker,omitempty" json:"docker"`
 	Testcafe      Testcafe             `yaml:"testcafe,omitempty" json:"testcafe"`
 	Npm           config.Npm           `yaml:"npm,omitempty" json:"npm"`
 	RootDir       string               `yaml:"rootDir,omitempty" json:"rootDir"`
@@ -163,11 +162,6 @@ func SetDefaults(p *Project) {
 
 	if p.Defaults.Timeout < 0 {
 		p.Defaults.Timeout = 0
-	}
-
-	// Set default docker file transfer to mount
-	if p.Docker.FileTransfer == "" {
-		p.Docker.FileTransfer = config.DockerFileMount
 	}
 
 	// Default rootDir to .
@@ -313,26 +307,6 @@ func Validate(p *Project) error {
 	p.Suites, err = shardSuites(p.RootDir, p.Suites, p.Sauce.Concurrency)
 
 	return err
-}
-
-// SplitSuites divided Suites to dockerSuites and sauceSuites
-func SplitSuites(p Project) (Project, Project) {
-	var dockerSuites []Suite
-	var sauceSuites []Suite
-	for _, s := range p.Suites {
-		if s.Mode == "docker" || (s.Mode == "" && p.Defaults.Mode == "docker") {
-			dockerSuites = append(dockerSuites, s)
-		} else {
-			sauceSuites = append(sauceSuites, s)
-		}
-	}
-
-	dockerProject := p
-	dockerProject.Suites = dockerSuites
-	sauceProject := p
-	sauceProject.Suites = sauceSuites
-
-	return dockerProject, sauceProject
 }
 
 // shardSuites divides suites into shards based on the pattern.
