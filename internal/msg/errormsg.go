@@ -205,7 +205,7 @@ const (
 	// UnableToArchiveRunnerConfig indicates a failure to archive the runner config file
 	UnableToArchiveRunnerConfig = "Unable to archive sauce runner config file"
 	// UnableToUploadConfig indicates a failure to upload config
-	UnableToUploadConfig = "Unable to upload sauce runner config file '%s'"
+	UnableToUploadConfig = "Unable to upload sauce runner config file %q"
 )
 
 // container
