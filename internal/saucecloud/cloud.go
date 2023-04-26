@@ -385,11 +385,9 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 
 // remoteArchiveProject archives the contents of the folder to a remote storage.
 func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, sauceignoreFile string, dryRun bool) (string, []string, error) {
-	var app string
-	var otherApps []string
 	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
 	if err != nil {
-		return app, otherApps, err
+		return "", []string{}, err
 	}
 	if !dryRun {
 		defer os.RemoveAll(tempDir)
@@ -399,7 +397,7 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 
 	contents, err := os.ReadDir(folder)
 	if err != nil {
-		return app, otherApps, err
+		return "", []string{}, err
 	}
 
 	for _, file := range contents {
@@ -414,18 +412,18 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 
 	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
-		return app, otherApps, err
+		return "", []string{}, err
 	}
 
 	appZip, err := zip.ArchiveFiles("app", tempDir, folder, files, matcher)
 	if err != nil {
-		return app, otherApps, err
+		return "", []string{}, err
 	}
 	archives[projectUpload] = appZip
 
 	modZip, err := zip.ArchiveNodeModules(tempDir, folder, matcher, r.NPMDependencies)
 	if err != nil {
-		return app, otherApps, err
+		return "", []string{}, err
 	}
 	if modZip != "" {
 		archives[nodeModulesUpload] = modZip
@@ -433,23 +431,20 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 
 	configZip, err := zip.ArchiveRunnerConfig(project, tempDir)
 	if err != nil {
-		return app, otherApps, err
+		return "", []string{}, err
 	}
 	archives[runnerConfigUpload] = configZip
 
+	var uris = map[uploadType]string{}
 	for k, v := range archives {
 		uri, err := r.uploadProject(v, "", k, dryRun)
 		if err != nil {
-			return app, otherApps, err
+			return "", []string{}, err
 		}
-		if k == projectUpload {
-			app = uri
-		} else {
-			otherApps = append(otherApps, uri)
-		}
+		uris[k] = uri
 	}
 
-	return app, otherApps, nil
+	return uris[projectUpload], []string{uris[runnerConfigUpload], uris[nodeModulesUpload]}, nil
 }
 
 // remoteArchiveFiles archives the files to a remote storage.

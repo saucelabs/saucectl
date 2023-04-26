@@ -148,7 +148,7 @@ func (r *PlaywrightRunner) runSuites(app string, otherApps []string) bool {
 				Visibility:       r.Project.Sauce.Visibility,
 				PassThreshold:    s.PassThreshold,
 				SmartRetry: job.SmartRetry{
-					FailedOnly: s.SmartRetry.FailedOnly,
+					FailedOnly: s.SmartRetry.ShouldRetryFailedOnly(),
 				},
 			}
 		}

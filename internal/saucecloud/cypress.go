@@ -107,6 +107,7 @@ func (r *CypressRunner) runSuites(app string, otherApps []string) bool {
 	// Submit suites to work on.
 	go func() {
 		for _, s := range suites {
+			smartRetry := r.Project.GetSmartRetry(s.Name)
 			jobOpts <- job.StartOptions{
 				ConfigFilePath:   r.Project.GetCfgPath(),
 				CLIFlags:         r.Project.GetCLIFlags(),
@@ -136,7 +137,7 @@ func (r *CypressRunner) runSuites(app string, otherApps []string) bool {
 				Visibility:       r.Project.GetSauceCfg().Visibility,
 				PassThreshold:    s.PassThreshold,
 				SmartRetry: job.SmartRetry{
-					FailedOnly: r.Project.GetSmartRetry(s.Name).FailedOnly,
+					FailedOnly: smartRetry.ShouldRetryFailedOnly(),
 				},
 			}
 		}
