@@ -456,7 +456,7 @@ func TestCypressV1Alpha_FilterFailedTests(t *testing.T) {
 			expErr:    nil,
 		},
 		{
-			name:      "suite desn't exist",
+			name:      "suite doesn't exist",
 			suiteName: "my suite2",
 			report: saucereport.SauceReport{
 				Status: saucereport.StatusFailed,
