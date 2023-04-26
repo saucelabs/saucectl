@@ -86,7 +86,6 @@ func TestCypressV1_Validate(t *testing.T) {
 			name: "empty invalid docker config",
 			project: &Project{
 				Cypress: Cypress{Version: "v1.1.1"},
-				Docker:  config.Docker{FileTransfer: "test"},
 			},
 			expErr: true,
 		},
@@ -95,7 +94,6 @@ func TestCypressV1_Validate(t *testing.T) {
 			project: &Project{
 				Cypress: Cypress{Version: "v1.1.1"},
 				RootDir: "./invalid_file",
-				Docker:  config.Docker{FileTransfer: "mount"},
 			},
 			expErr: true,
 		},
@@ -104,7 +102,6 @@ func TestCypressV1_Validate(t *testing.T) {
 			project: &Project{
 				Cypress: Cypress{Version: "v1.1.1"},
 				RootDir: "../",
-				Docker:  config.Docker{FileTransfer: "mount"},
 				Sauce:   config.SauceConfig{Region: ""},
 			},
 			expErr: true,
@@ -114,7 +111,6 @@ func TestCypressV1_Validate(t *testing.T) {
 			project: &Project{
 				Cypress: Cypress{Version: "v1.1.1"},
 				RootDir: "../",
-				Docker:  config.Docker{FileTransfer: "mount"},
 				Sauce:   config.SauceConfig{Region: "us-west-1"},
 				Suites:  []Suite{},
 			},
@@ -125,7 +121,6 @@ func TestCypressV1_Validate(t *testing.T) {
 			project: &Project{
 				Cypress: Cypress{Version: "v1.1.1"},
 				RootDir: "../",
-				Docker:  config.Docker{FileTransfer: "mount"},
 				Sauce:   config.SauceConfig{Region: "us-west-1"},
 				Suites: []Suite{
 					Suite{
@@ -151,7 +146,6 @@ func TestCypressV1_Validate(t *testing.T) {
 			project: &Project{
 				Cypress: Cypress{Version: "v1.1.1"},
 				RootDir: "../",
-				Docker:  config.Docker{FileTransfer: "mount"},
 				Sauce:   config.SauceConfig{Region: "us-west-1"},
 				Suites: []Suite{
 					Suite{
@@ -170,7 +164,6 @@ func TestCypressV1_Validate(t *testing.T) {
 			project: &Project{
 				Cypress: Cypress{Version: "v1.1.1"},
 				RootDir: "../",
-				Docker:  config.Docker{FileTransfer: "mount"},
 				Sauce:   config.SauceConfig{Region: "us-west-1"},
 				Suites: []Suite{
 					Suite{
@@ -194,7 +187,6 @@ func TestCypressV1_Validate(t *testing.T) {
 			project: &Project{
 				Cypress: Cypress{Version: "v1.1.1"},
 				RootDir: "../",
-				Docker:  config.Docker{FileTransfer: "mount"},
 				Sauce:   config.SauceConfig{Region: "us-west-1"},
 				Suites: []Suite{
 					Suite{
@@ -223,7 +215,6 @@ func TestCypressV1_Validate(t *testing.T) {
 			project: &Project{
 				Cypress: Cypress{Version: "v1.1.1"},
 				RootDir: "../",
-				Docker:  config.Docker{FileTransfer: "mount"},
 				Sauce:   config.SauceConfig{Region: "us-west-1"},
 				Suites: []Suite{
 					Suite{

@@ -17,7 +17,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
-	"github.com/saucelabs/saucectl/internal/docker"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -150,7 +149,7 @@ func runPlaywright(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	go func() {
 		props := usage.Properties{}
 		props.SetFramework("playwright").SetFVersion(p.Playwright.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
-			SetArtifacts(p.Artifacts).SetDocker(p.Docker).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).
+			SetArtifacts(p.Artifacts).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).
 			SetSlack(p.Notifications.Slack).SetSharding(playwright.IsSharded(p.Suites)).SetLaunchOrder(p.Sauce.LaunchOrder)
 		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
 		_ = tracker.Close()
@@ -158,38 +157,7 @@ func runPlaywright(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 
 	cleanupArtifacts(p.Artifacts)
 
-	dockerProject, sauceProject := playwright.SplitSuites(p)
-	if len(dockerProject.Suites) != 0 {
-		exitCode, err := runPlaywrightInDocker(dockerProject)
-		if err != nil || exitCode != 0 {
-			return exitCode, err
-		}
-	}
-	if len(sauceProject.Suites) != 0 {
-		return runPlaywrightInSauce(sauceProject, regio)
-	}
-
-	return 0, nil
-}
-
-func runPlaywrightInDocker(p playwright.Project) (int, error) {
-	log.Info().Msg("Running Playwright in Docker")
-	printTestEnv("docker")
-
-	cd, err := docker.NewPlaywright(p, &testcompClient, &testcompClient, &restoClient, &restoClient, createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
-		"playwright", "docker"))
-	if err != nil {
-		return 1, err
-	}
-
-	p.Npm.Packages = cleanPlaywrightPackages(p.Npm, p.Playwright.Version)
-	return cd.RunProject()
-}
-
-func runPlaywrightInSauce(p playwright.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Running Playwright in Sauce Labs")
-	printTestEnv("sauce")
-
 	r := saucecloud.PlaywrightRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{

@@ -9,20 +9,10 @@ sauce:
     build: "$BUILD_ID"
 defaults:
   timeout: 5m
-docker:
-  fileTransfer: mount
 rootDir: tests/e2e/playwright/
 playwright:
   version: 1.31.1
 suites:
-  - name: "firefox test in docker"
-    mode: docker
-    testMatch: ['.*.js']
-    env:
-      hello: world
-    params:
-      browserName: "firefox"
-
   - name: "chromium test in sauce"
     platformName: "Windows 10"
     testMatch: ['.*.js']

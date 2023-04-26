@@ -29,7 +29,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/playwright"
-	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/buildtable"
@@ -167,7 +166,6 @@ func Command() *cobra.Command {
 		NewCypressCmd(),
 		NewEspressoCmd(),
 		NewPlaywrightCmd(),
-		NewPuppeteerCmd(),
 		NewReplayCmd(),
 		NewTestcafeCmd(),
 		NewXCUITestCmd(),
@@ -226,9 +224,6 @@ func Run(cmd *cobra.Command) (int, error) {
 	}
 	if typeDef.Kind == testcafe.Kind {
 		return runTestcafe(cmd, testcafeFlags{}, false)
-	}
-	if typeDef.Kind == puppeteer.Kind {
-		return runPuppeteer(cmd, false)
 	}
 	if typeDef.Kind == replay.Kind {
 		return runReplay(cmd, false)

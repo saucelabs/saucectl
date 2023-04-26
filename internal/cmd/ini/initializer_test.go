@@ -30,7 +30,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/mocks"
 	"github.com/saucelabs/saucectl/internal/playwright"
-	"github.com/saucelabs/saucectl/internal/puppeteer"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/vmd"
@@ -457,7 +456,7 @@ func TestAskPlatform(t *testing.T) {
 				return i.askPlatform(cfg, metas)
 			},
 			startState:    &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
-			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", browserName: "chrome", mode: "sauce", platformName: "Windows 10"},
+			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", browserName: "chrome", platformName: "Windows 10"},
 		},
 		{
 			name: "macOS",
@@ -489,39 +488,7 @@ func TestAskPlatform(t *testing.T) {
 				return i.askPlatform(cfg, metas)
 			},
 			startState:    &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
-			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", platformName: "macOS 11.00", browserName: "firefox", mode: "sauce"},
-		},
-		{
-			name: "docker",
-			procedure: func(c *expect.Console) error {
-				_, err := c.ExpectString("Select browser")
-				if err != nil {
-					return err
-				}
-				_, err = c.SendLine("chrome")
-				if err != nil {
-					return err
-				}
-				_, err = c.ExpectString("Select platform")
-				if err != nil {
-					return err
-				}
-				_, err = c.SendLine("docker")
-				if err != nil {
-					return err
-				}
-				_, err = c.ExpectEOF()
-				if err != nil {
-					return err
-				}
-				return nil
-			},
-			ini: &initializer{},
-			execution: func(i *initializer, cfg *initConfig) error {
-				return i.askPlatform(cfg, metas)
-			},
-			startState:    &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
-			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", platformName: "", browserName: "chrome", mode: "docker"},
+			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", platformName: "macOS 11.00", browserName: "firefox"},
 		},
 	}
 	for _, tt := range testCases {
@@ -895,7 +862,6 @@ func TestConfigure(t *testing.T) {
 				cypressJSON:      dir.Join("cypress.json"),
 				platformName:     "windows 10",
 				browserName:      "chrome",
-				mode:             "sauce",
 				artifactWhen:     config.WhenPass,
 			},
 		},
@@ -1009,14 +975,6 @@ func Test_initializers(t *testing.T) {
 				},
 			},
 		},
-		"puppeteer": {
-			{
-				FrameworkName:    "puppeteer",
-				FrameworkVersion: "8.0.0",
-				DockerImage:      "dummy-docker-image",
-				Platforms:        []framework.Platform{},
-			},
-		},
 		imagerunner.Kind: {
 			{
 				FrameworkName:    imagerunner.Kind,
@@ -1034,7 +992,6 @@ func Test_initializers(t *testing.T) {
 				espresso.Kind,
 				imagerunner.Kind,
 				playwright.Kind,
-				"puppeteer",
 				testcafe.Kind,
 				xcuitest.Kind,
 			}, nil
@@ -1116,7 +1073,6 @@ func Test_initializers(t *testing.T) {
 				cypressJSON:      dir.Join("cypress.json"),
 				platformName:     "windows 10",
 				browserName:      "chrome",
-				mode:             "sauce",
 				artifactWhen:     config.WhenPass,
 			},
 		},
@@ -1176,68 +1132,6 @@ func Test_initializers(t *testing.T) {
 				frameworkVersion: "1.11.0",
 				platformName:     "windows 10",
 				browserName:      "chromium",
-				mode:             "sauce",
-				artifactWhen:     config.WhenPass,
-			},
-		},
-		{
-			name: "Puppeteer - docker - chrome",
-			procedure: func(c *expect.Console) error {
-
-				_, err := c.ExpectString("Select puppeteer version")
-				if err != nil {
-					return err
-				}
-				_, err = c.SendLine("8.0.0")
-				if err != nil {
-					return err
-				}
-				_, err = c.ExpectString("Select browser:")
-				if err != nil {
-					return err
-				}
-				_, err = c.SendLine("chrome")
-				if err != nil {
-					return err
-				}
-				_, err = c.ExpectString("Select platform:")
-				if err != nil {
-					return err
-				}
-				_, err = c.SendLine("docker")
-				if err != nil {
-					return err
-				}
-				_, err = c.ExpectString("Download artifacts:")
-				if err != nil {
-					return err
-				}
-				_, err = c.SendLine("when tests are passing")
-				if err != nil {
-					return err
-				}
-				_, err = c.ExpectEOF()
-				if err != nil {
-					return err
-				}
-				return nil
-			},
-			ini: &initializer{infoReader: ir},
-			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.initializePuppeteer()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
-			},
-			startState: &initConfig{},
-			expectedState: &initConfig{
-				frameworkName:    puppeteer.Kind,
-				frameworkVersion: "8.0.0",
-				platformName:     "",
-				browserName:      "chrome",
-				mode:             "docker",
 				artifactWhen:     config.WhenPass,
 			},
 		},
@@ -1297,7 +1191,6 @@ func Test_initializers(t *testing.T) {
 				frameworkVersion: "1.12.0",
 				platformName:     "macOS 11.00",
 				browserName:      "safari",
-				mode:             "sauce",
 				artifactWhen:     config.WhenPass,
 			},
 		},
@@ -1595,11 +1488,7 @@ func Test_metaToBrowsers(t *testing.T) {
 					},
 				},
 			},
-			wantBrowsers: []string{"chrome", "firefox"},
-			wantPlatforms: map[string][]string{
-				"chrome":  {"docker"},
-				"firefox": {"docker"},
-			},
+			wantPlatforms: map[string][]string{},
 		},
 		{
 			name: "1 version / 1 platform + docker",
@@ -1622,8 +1511,8 @@ func Test_metaToBrowsers(t *testing.T) {
 			},
 			wantBrowsers: []string{"chrome", "firefox", "microsoftedge"},
 			wantPlatforms: map[string][]string{
-				"chrome":        {"windows 10", "docker"},
-				"firefox":       {"windows 10", "docker"},
+				"chrome":        {"windows 10"},
+				"firefox":       {"windows 10"},
 				"microsoftedge": {"windows 10"},
 			},
 		},
@@ -1652,8 +1541,8 @@ func Test_metaToBrowsers(t *testing.T) {
 			},
 			wantBrowsers: []string{"chrome", "firefox", "microsoftedge", "safari"},
 			wantPlatforms: map[string][]string{
-				"chrome":        {"macOS 11.00", "windows 10", "docker"},
-				"firefox":       {"macOS 11.00", "windows 10", "docker"},
+				"chrome":        {"macOS 11.00", "windows 10"},
+				"firefox":       {"macOS 11.00", "windows 10"},
 				"microsoftedge": {"macOS 11.00", "windows 10"},
 				"safari":        {"macOS 11.00"},
 			},
@@ -1694,8 +1583,8 @@ func Test_metaToBrowsers(t *testing.T) {
 			},
 			wantBrowsers: []string{"chrome", "firefox", "microsoftedge", "safari"},
 			wantPlatforms: map[string][]string{
-				"chrome":        {"macOS 11.00", "windows 10", "docker"},
-				"firefox":       {"macOS 11.00", "windows 10", "docker"},
+				"chrome":        {"macOS 11.00", "windows 10"},
+				"firefox":       {"macOS 11.00", "windows 10"},
 				"microsoftedge": {"macOS 11.00", "windows 10"},
 				"safari":        {"macOS 11.00"},
 			},
@@ -2439,136 +2328,6 @@ func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 			}
 			if !reflect.DeepEqual(errs, tt.wantErrs) {
 				t.Errorf("initializeBatchPlaywright() got1 = %v, want %v", errs, tt.wantErrs)
-			}
-		})
-	}
-}
-
-func Test_initializer_initializeBatchPuppeteer(t *testing.T) {
-	ini := &initializer{
-		infoReader: &mocks.FakeFrameworkInfoReader{VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
-			return []framework.Metadata{
-				{
-					FrameworkName:    "puppeteer",
-					FrameworkVersion: "1.0.0",
-					Platforms: []framework.Platform{
-						{
-							PlatformName: "docker",
-							BrowserNames: []string{"chrome", "firefox"},
-						},
-					},
-				},
-			}, nil
-		}},
-		userService: &mocks.UserService{ConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
-			return iam.Concurrency{
-				Org: iam.OrgConcurrency{
-					Allowed: iam.CloudConcurrency{
-						VDC: 2,
-					},
-				},
-			}, nil
-		}},
-	}
-	var emptyErr []error
-
-	type args struct {
-		initCfg *initConfig
-	}
-	tests := []struct {
-		name     string
-		args     args
-		want     *initConfig
-		wantErrs []error
-	}{
-		{
-			name: "Basic",
-			args: args{
-				initCfg: &initConfig{
-					frameworkName:    "puppeteer",
-					frameworkVersion: "1.0.0",
-					browserName:      "chrome",
-					platformName:     "docker",
-					region:           "us-west-1",
-					artifactWhen:     "fail",
-				},
-			},
-			want: &initConfig{
-				frameworkName:    "puppeteer",
-				frameworkVersion: "1.0.0",
-				browserName:      "chrome",
-				platformName:     "docker",
-				region:           "us-west-1",
-				artifactWhen:     config.WhenFail,
-			},
-			wantErrs: emptyErr,
-		},
-		{
-			name: "invalid browser/platform",
-			args: args{
-				initCfg: &initConfig{
-					frameworkName:    "puppeteer",
-					frameworkVersion: "1.0.0",
-					browserName:      "dummy",
-					platformName:     "dummy",
-					artifactWhenStr:  "dummy",
-				},
-			},
-			want: &initConfig{
-				frameworkName:    "puppeteer",
-				frameworkVersion: "1.0.0",
-				browserName:      "dummy",
-				platformName:     "dummy",
-				artifactWhenStr:  "dummy",
-			},
-			wantErrs: []error{
-				errors.New("dummy: unsupported browser. Supported browsers are: chrome, firefox"),
-				errors.New("dummy: unknown download condition"),
-			},
-		},
-		{
-			name: "no flags",
-			args: args{
-				initCfg: &initConfig{
-					frameworkName: "puppeteer",
-				},
-			},
-			want: &initConfig{
-				frameworkName: "puppeteer",
-			},
-			wantErrs: []error{
-				errors.New("no puppeteer version specified"),
-				errors.New("no platform name specified"),
-				errors.New("no browser name specified"),
-			},
-		},
-		{
-			name: "invalid framework version / Invalid config file",
-			args: args{
-				initCfg: &initConfig{
-					frameworkName:    "puppeteer",
-					frameworkVersion: "8.0.0",
-				},
-			},
-			want: &initConfig{
-				frameworkName:    "puppeteer",
-				frameworkVersion: "8.0.0",
-			},
-			wantErrs: []error{
-				errors.New("no platform name specified"),
-				errors.New("no browser name specified"),
-				errors.New("puppeteer 8.0.0 is not supported. Supported versions are: 1.0.0"),
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, errs := ini.initializeBatchPuppeteer(tt.args.initCfg)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("initializeBatchPuppeteer() got = %v, want %v", got, tt.want)
-			}
-			if !reflect.DeepEqual(errs, tt.wantErrs) {
-				t.Errorf("initializeBatchPuppeteer() got1 = %v, want %v", errs, tt.wantErrs)
 			}
 		})
 	}

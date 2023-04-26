@@ -11,7 +11,6 @@
         "espresso",
         "imagerunner",
         "playwright",
-        "puppeteer",
         "puppeteer-replay",
         "testcafe",
         "xcuitest",
@@ -79,33 +78,6 @@
                       "directory"
                     ],
                     "additionalProperties": false
-                  }
-                },
-                "additionalProperties": false
-              }
-            },
-            "additionalProperties": true
-          },
-          {
-            "$schema": "https://json-schema.org/draft-07/schema",
-            "title": "saucectl docker specific schema",
-            "description": "Subschema for docker specific settings",
-            "type": "object",
-            "properties": {
-              "docker": {
-                "description": "Properties specific to docker.",
-                "type": "object",
-                "properties": {
-                  "fileTransfer": {
-                    "description": "Control how files are made available to the docker image.",
-                    "enum": [
-                      "copy",
-                      "mount"
-                    ]
-                  },
-                  "image": {
-                    "description": "Override which docker image to use (in case you have a custom image).",
-                    "type": "string"
                   }
                 },
                 "additionalProperties": false
@@ -307,15 +279,8 @@
             "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
             "type": "object",
             "properties": {
-              "mode": {
-                "description": "Instructs saucectl run tests remotely through Sauce Labs (sauce) or locally on docker.",
-                "enum": [
-                  "docker",
-                  "sauce"
-                ]
-              },
               "timeout": {
-                "$ref": "#/allOf/10/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -344,7 +309,7 @@
                 "type": "boolean"
               },
               "version": {
-                "$ref": "#/allOf/9/then/properties/playwright/properties/version",
+                "$ref": "#/allOf/8/then/properties/playwright/properties/version",
                 "enum": [
                   "package.json",
                   "9.7.0",
@@ -399,7 +364,7 @@
                   "type": "string"
                 },
                 "browser": {
-                  "$ref": "#/allOf/9/then/properties/suites/items/properties/browserName",
+                  "$ref": "#/allOf/8/then/properties/suites/items/properties/browserName",
                   "enum": [
                     "chrome",
                     "firefox",
@@ -411,7 +376,7 @@
                   "type": "string"
                 },
                 "platformName": {
-                  "$ref": "#/allOf/5/then/properties/suites/items/properties/platform",
+                  "$ref": "#/allOf/4/then/properties/suites/items/properties/platform",
                   "enum": [
                     "macOS 11.00",
                     "macOS 12",
@@ -443,9 +408,6 @@
                     "testFiles"
                   ]
                 },
-                "mode": {
-                  "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
-                },
                 "shard": {
                   "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec or concurrency) so that they can easily run in parallel.",
                   "enum": [
@@ -459,7 +421,7 @@
                   "type": "boolean"
                 },
                 "timeout": {
-                  "$ref": "#/allOf/10/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
                 },
                 "preExec": {
                   "description": "Specifies which commands to execute before starting the tests.",
@@ -563,33 +525,6 @@
                       "directory"
                     ],
                     "additionalProperties": false
-                  }
-                },
-                "additionalProperties": false
-              }
-            },
-            "additionalProperties": true
-          },
-          {
-            "$schema": "https://json-schema.org/draft-07/schema",
-            "title": "saucectl docker specific schema",
-            "description": "Subschema for docker specific settings",
-            "type": "object",
-            "properties": {
-              "docker": {
-                "description": "Properties specific to docker.",
-                "type": "object",
-                "properties": {
-                  "fileTransfer": {
-                    "description": "Control how files are made available to the docker image.",
-                    "enum": [
-                      "copy",
-                      "mount"
-                    ]
-                  },
-                  "image": {
-                    "description": "Override which docker image to use (in case you have a custom image).",
-                    "type": "string"
                   }
                 },
                 "additionalProperties": false
@@ -800,13 +735,6 @@
             "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
             "type": "object",
             "properties": {
-              "mode": {
-                "description": "Instructs saucectl run tests remotely through Sauce Labs (sauce) or locally on docker.",
-                "enum": [
-                  "docker",
-                  "sauce"
-                ]
-              },
               "timeout": {
                 "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
                 "type": "string",
@@ -954,9 +882,6 @@
                     "specPattern"
                   ]
                 },
-                "mode": {
-                  "$ref": "#/allOf/1/then/properties/defaults/properties/mode"
-                },
                 "shard": {
                   "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec or concurrency) so that they can easily run in parallel.",
                   "enum": [
@@ -1023,13 +948,13 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/allOf/0/then/allOf/3"
+            "$ref": "#/allOf/0/then/allOf/2"
           },
           {
             "$ref": "#/allOf/0/then/allOf/0"
           },
           {
-            "$ref": "#/allOf/0/then/allOf/4"
+            "$ref": "#/allOf/0/then/allOf/3"
           }
         ],
         "properties": {
@@ -1047,7 +972,7 @@
             "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/10/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -1254,7 +1179,7 @@
                   }
                 },
                 "timeout": {
-                  "$ref": "#/allOf/10/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
                 },
                 "appSettings": {
                   "description": "Overwrite real device settings.",
@@ -1336,9 +1261,6 @@
           },
           {
             "$ref": "#/allOf/0/then/allOf/3"
-          },
-          {
-            "$ref": "#/allOf/0/then/allOf/4"
           }
         ],
         "properties": {
@@ -1355,11 +1277,8 @@
             "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
             "type": "object",
             "properties": {
-              "mode": {
-                "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
-              },
               "timeout": {
-                "$ref": "#/allOf/10/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -1375,7 +1294,7 @@
             "type": "object",
             "properties": {
               "version": {
-                "$ref": "#/allOf/9/then/properties/playwright/properties/version",
+                "$ref": "#/allOf/8/then/properties/playwright/properties/version",
                 "enum": [
                   "package.json",
                   "1.31.1",
@@ -1411,11 +1330,8 @@
                   "description": "The name of the test suite, which will be reflected in the test results in Sauce Labs.",
                   "type": "string"
                 },
-                "mode": {
-                  "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
-                },
                 "playwrightVersion": {
-                  "$ref": "#/allOf/9/then/properties/playwright/properties/version"
+                  "$ref": "#/allOf/8/then/properties/playwright/properties/version"
                 },
                 "testMatch": {
                   "description": "Paths to the playwright test files. Regex values are supported to indicate all files of a certain type or in a certain directory, etc.",
@@ -1426,7 +1342,7 @@
                   "type": "array"
                 },
                 "platformName": {
-                  "$ref": "#/allOf/5/then/properties/suites/items/properties/platform",
+                  "$ref": "#/allOf/4/then/properties/suites/items/properties/platform",
                   "enum": [
                     "macOS 11.00",
                     "macOS 12",
@@ -1440,7 +1356,7 @@
                   "type": "object",
                   "properties": {
                     "browserName": {
-                      "$ref": "#/allOf/9/then/properties/suites/items/properties/browserName",
+                      "$ref": "#/allOf/8/then/properties/suites/items/properties/browserName",
                       "enum": [
                         "chromium",
                         "firefox",
@@ -1521,7 +1437,7 @@
                   ]
                 },
                 "timeout": {
-                  "$ref": "#/allOf/10/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
                 },
                 "preExec": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/preExec"
@@ -1558,153 +1474,6 @@
       "if": {
         "properties": {
           "kind": {
-            "const": "puppeteer"
-          }
-        }
-      },
-      "then": {
-        "$schema": "https://json-schema.org/draft-07/schema",
-        "title": "saucectl puppeteer runner configuration",
-        "description": "Configuration file for puppeteer using saucectl",
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/allOf/0/then/allOf/0"
-          },
-          {
-            "$ref": "#/allOf/0/then/allOf/1"
-          },
-          {
-            "$ref": "#/allOf/0/then/allOf/2"
-          },
-          {
-            "$ref": "#/allOf/0/then/allOf/3"
-          },
-          {
-            "$ref": "#/allOf/0/then/allOf/4"
-          }
-        ],
-        "properties": {
-          "apiVersion": {
-            "const": "v1alpha"
-          },
-          "kind": {
-            "const": "puppeteer"
-          },
-          "showConsoleLog": {
-            "$ref": "#/allOf/0/then/properties/showConsoleLog"
-          },
-          "defaults": {
-            "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
-            "type": "object",
-            "properties": {
-              "timeout": {
-                "$ref": "#/allOf/10/then/definitions/suite/properties/timeout"
-              }
-            },
-            "additionalProperties": false
-          },
-          "env": {
-            "$ref": "#/allOf/0/then/properties/env"
-          },
-          "rootDir": {
-            "$ref": "#/allOf/0/then/properties/rootDir"
-          },
-          "puppeteer": {
-            "description": "Contains details specific to the Puppeteer project.",
-            "type": "object",
-            "properties": {
-              "version": {
-                "$ref": "#/allOf/9/then/properties/playwright/properties/version",
-                "enum": [
-                  "package.json",
-                  "17.0.0",
-                  "15.5.0",
-                  "14.2.0",
-                  "13.1.3",
-                  "12.0.1",
-                  "10.4.0"
-                ]
-              }
-            },
-            "required": [
-              "version"
-            ],
-            "additionalProperties": false
-          },
-          "suites": {
-            "description": "The set of properties providing details about the test suites to run.",
-            "type": "array",
-            "minItems": 1,
-            "items": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "description": "The name of the test suite, which will be reflected in the test results in Sauce Labs.",
-                  "type": "string"
-                },
-                "browser": {
-                  "$ref": "#/allOf/9/then/properties/suites/items/properties/browserName",
-                  "enum": [
-                    "chrome",
-                    "firefox"
-                  ]
-                },
-                "testMatch": {
-                  "description": "The glob patterns Jest uses to detect test files.",
-                  "type": "array"
-                },
-                "env": {
-                  "$ref": "#/allOf/0/then/properties/env"
-                },
-                "browserArgs": {
-                  "description": "Browser specific arguments.",
-                  "type": "array",
-                  "examples": [
-                    [
-                      "--no-sandbox"
-                    ],
-                    [
-                      "--disable-features=site-per-process"
-                    ]
-                  ]
-                },
-                "timeout": {
-                  "$ref": "#/allOf/10/then/definitions/suite/properties/timeout"
-                },
-                "groups": {
-                  "description": "Specific groups of tests.",
-                  "type": "array",
-                  "examples": [
-                    [
-                      "group1",
-                      "group2"
-                    ]
-                  ]
-                }
-              },
-              "required": [
-                "name",
-                "browser",
-                "testMatch"
-              ],
-              "additionalProperties": false
-            }
-          }
-        },
-        "required": [
-          "apiVersion",
-          "kind",
-          "puppeteer",
-          "suites"
-        ],
-        "additionalProperties": true
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "kind": {
             "const": "puppeteer-replay"
           }
         }
@@ -1719,7 +1488,7 @@
             "$ref": "#/allOf/0/then/allOf/0"
           },
           {
-            "$ref": "#/allOf/0/then/allOf/3"
+            "$ref": "#/allOf/0/then/allOf/2"
           }
         ],
         "properties": {
@@ -1737,7 +1506,7 @@
             "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/10/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -1758,7 +1527,7 @@
                   "type": "array"
                 },
                 "browserName": {
-                  "$ref": "#/allOf/9/then/properties/suites/items/properties/browserName",
+                  "$ref": "#/allOf/8/then/properties/suites/items/properties/browserName",
                   "enum": [
                     "chrome"
                   ]
@@ -1777,7 +1546,7 @@
                   "description": "A specific operating system on which to run the tests. Sauce Labs will try to choose a reasonable default if not explicitly specified."
                 },
                 "timeout": {
-                  "$ref": "#/allOf/10/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
                 },
                 "passThreshold": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
@@ -1824,9 +1593,6 @@
           },
           {
             "$ref": "#/allOf/0/then/allOf/3"
-          },
-          {
-            "$ref": "#/allOf/0/then/allOf/4"
           }
         ],
         "properties": {
@@ -1843,11 +1609,8 @@
             "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
             "type": "object",
             "properties": {
-              "mode": {
-                "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
-              },
               "timeout": {
-                "$ref": "#/allOf/10/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -1863,7 +1626,7 @@
             "type": "object",
             "properties": {
               "version": {
-                "$ref": "#/allOf/9/then/properties/playwright/properties/version",
+                "$ref": "#/allOf/8/then/properties/playwright/properties/version",
                 "enum": [
                   "package.json",
                   "2.3.1",
@@ -1897,7 +1660,7 @@
                   "type": "string"
                 },
                 "browserName": {
-                  "$ref": "#/allOf/9/then/properties/suites/items/properties/browserName",
+                  "$ref": "#/allOf/8/then/properties/suites/items/properties/browserName",
                   "enum": [
                     "chrome",
                     "firefox",
@@ -1925,7 +1688,7 @@
                   "type": "boolean"
                 },
                 "platformName": {
-                  "$ref": "#/allOf/5/then/properties/suites/items/properties/platform",
+                  "$ref": "#/allOf/4/then/properties/suites/items/properties/platform",
                   "enum": [
                     "macOS 11.00",
                     "macOS 12",
@@ -1945,9 +1708,6 @@
                 },
                 "env": {
                   "$ref": "#/allOf/0/then/properties/env"
-                },
-                "mode": {
-                  "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
                 },
                 "shard": {
                   "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec or concurrency) so that they can easily run in parallel.",
@@ -2145,7 +1905,7 @@
                   "type": "boolean"
                 },
                 "timeout": {
-                  "$ref": "#/allOf/10/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
                 },
                 "preExec": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/preExec"
@@ -2196,13 +1956,13 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/allOf/0/then/allOf/3"
+            "$ref": "#/allOf/0/then/allOf/2"
           },
           {
             "$ref": "#/allOf/0/then/allOf/0"
           },
           {
-            "$ref": "#/allOf/0/then/allOf/4"
+            "$ref": "#/allOf/0/then/allOf/3"
           }
         ],
         "properties": {
@@ -2220,7 +1980,7 @@
             "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/10/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -2358,7 +2118,7 @@
                   }
                 },
                 "timeout": {
-                  "$ref": "#/allOf/10/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
                 },
                 "passThreshold": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
@@ -2410,7 +2170,7 @@
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/allOf/0/then/allOf/3"
+            "$ref": "#/allOf/0/then/allOf/2"
           }
         ],
         "properties": {
@@ -2493,9 +2253,6 @@
           },
           {
             "$ref": "#/allOf/0/then/allOf/3"
-          },
-          {
-            "$ref": "#/allOf/0/then/allOf/4"
           }
         ],
         "properties": {
@@ -2512,11 +2269,8 @@
             "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
             "type": "object",
             "properties": {
-              "mode": {
-                "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
-              },
               "timeout": {
-                "$ref": "#/allOf/10/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -2558,7 +2312,7 @@
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/browserVersion"
                 },
                 "platformName": {
-                  "$ref": "#/allOf/5/then/properties/suites/items/properties/platform",
+                  "$ref": "#/allOf/4/then/properties/suites/items/properties/platform",
                   "enum": [
                     "macOS 11.00",
                     "macOS 12",
@@ -2625,9 +2379,6 @@
                     "paths"
                   ]
                 },
-                "mode": {
-                  "$ref": "#/allOf/0/then/properties/defaults/properties/mode"
-                },
                 "shard": {
                   "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec or concurrency) so that they can easily run in parallel.",
                   "enum": [
@@ -2637,7 +2388,7 @@
                   ]
                 },
                 "timeout": {
-                  "$ref": "#/allOf/10/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
                 },
                 "preExec": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/preExec"
@@ -2775,14 +2526,14 @@
           },
           "defaults": {
             "description": "Settings that are applied onto every suite as a default value.",
-            "$ref": "#/allOf/10/then/definitions/suite"
+            "$ref": "#/allOf/9/then/definitions/suite"
           },
           "suites": {
             "description": "List of suites",
             "type": "array",
             "minItems": 1,
             "items": {
-              "$ref": "#/allOf/10/then/definitions/suite"
+              "$ref": "#/allOf/9/then/definitions/suite"
             }
           }
         },

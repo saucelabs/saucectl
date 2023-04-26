@@ -11,7 +11,6 @@
         "espresso",
         "imagerunner",
         "playwright",
-        "puppeteer",
         "puppeteer-replay",
         "testcafe",
         "xcuitest",
@@ -72,18 +71,6 @@
       },
       "then": {
         "$ref": "v1alpha/framework/playwright.schema.json"
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "kind": {
-            "const": "puppeteer"
-          }
-        }
-      },
-      "then": {
-        "$ref": "v1alpha/framework/puppeteer.schema.json"
       }
     },
     {

@@ -8,9 +8,6 @@
       "$ref": "../subschema/artifacts.schema.json"
     },
     {
-      "$ref": "../subschema/docker.schema.json"
-    },
-    {
       "$ref": "../subschema/npm.schema.json"
     },
     {
@@ -34,9 +31,6 @@
       "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
       "type": "object",
       "properties": {
-        "mode": {
-          "$ref": "../subschema/common.schema.json#/definitions/mode"
-        },
         "timeout": {
           "$ref": "../subschema/common.schema.json#/definitions/timeout"
         }
@@ -89,9 +83,6 @@
           "name": {
             "description": "The name of the test suite, which will be reflected in the test results in Sauce Labs.",
             "type": "string"
-          },
-          "mode": {
-            "$ref": "../subschema/common.schema.json#/definitions/mode"
           },
           "playwrightVersion": {
             "$ref": "../subschema/common.schema.json#/definitions/version"

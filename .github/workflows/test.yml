@@ -113,28 +113,6 @@ jobs:
             saucectl
             saucectl.exe
 
-  puppeteer:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Download saucectl Binary
-        uses: actions/download-artifact@v3
-        with:
-          name: saucectlbin
-
-      - name: Set Permissions
-        run: chmod +x ./saucectl
-
-      - name: Saucectl RUN - Config Driven
-        run: ./saucectl run -c .sauce/puppeteer.yml --timeout 10m
-
-      - name: Saucectl RUN - CLI Driven
-        run: ./saucectl run puppeteer "**/*.test.js" -c "" --name "CLI Driven" --browser chrome --puppeteer.version 9.1.1 --rootDir tests/e2e/puppeteer --timeout 10m
-
   puppeteer-replay:
     needs: build
     runs-on: ubuntu-latest

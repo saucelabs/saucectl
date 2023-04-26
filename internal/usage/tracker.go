@@ -18,13 +18,6 @@ func (p Properties) SetArtifacts(art config.Artifacts) Properties {
 	return p
 }
 
-// SetDocker reports the docker container setup.
-func (p Properties) SetDocker(d config.Docker) Properties {
-	p["docker_img"] = d.Image
-	p["docker_transfer"] = d.FileTransfer
-	return p
-}
-
 // SetFramework reports the framework.
 func (p Properties) SetFramework(f string) Properties {
 	p["framework"] = f
