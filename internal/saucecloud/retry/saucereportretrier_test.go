@@ -116,7 +116,7 @@ func TestSauceReportRetrier_Retry(t *testing.T) {
 		expected job.StartOptions
 	}{
 		{
-			name:    "Job is resent as-it",
+			name:    "Job is retried as-is",
 			retrier: &SauceReportRetrier{},
 			args: args{
 				jobOpts: make(chan job.StartOptions),
