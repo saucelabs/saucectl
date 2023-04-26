@@ -550,3 +550,9 @@ func toStringKeys(val interface{}) (interface{}, error) {
 		return val, nil
 	}
 }
+
+func ValidateSmartRetry(smartRetry SmartRetry) {
+	if smartRetry.FailedClassesOnly {
+		log.Warn().Msg("failedClassesOnly has been deprecated. Use FailedOnly instead.")
+	}
+}
