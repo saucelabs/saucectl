@@ -444,7 +444,14 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 		uris[k] = uri
 	}
 
-	return uris[projectUpload], []string{uris[runnerConfigUpload], uris[nodeModulesUpload]}, nil
+	var otherApps []string
+	for _, item := range []uploadType{runnerConfigUpload, nodeModulesUpload, otherAppsUpload} {
+		if val, ok := uris[item]; ok {
+			otherApps = append(otherApps, val)
+		}
+	}
+
+	return uris[projectUpload], otherApps, nil
 }
 
 // remoteArchiveFiles archives the files to a remote storage.
