@@ -389,10 +389,10 @@ func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
 	return res
 }
 
-// FilterFailedTests filteres failed tests and sets to specified suite
+// FilterFailedTests takes the failed tests in the report and sets them as a test filter in the suite.
+// The test filter remains unchanged if the report does not contain any failed tests.
 func (p *Project) FilterFailedTests(suiteName string, report saucereport.SauceReport) error {
 	failedTests := saucereport.GetFailedTests(report)
-	// if no failed tests found, just keep the original settings
 	if len(failedTests) == 0 {
 		return nil
 	}
