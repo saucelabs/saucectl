@@ -224,7 +224,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		Visibility:    r.Project.Sauce.Visibility,
 		PassThreshold: s.PassThreshold,
 		SmartRetry: job.SmartRetry{
-			FailedOnly: s.SmartRetry.ShouldRetryFailedOnly(),
+			FailedOnly: s.SmartRetry.IsRetryFailedOnly(),
 		},
 
 		// RDC Specific flags

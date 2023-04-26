@@ -137,7 +137,7 @@ func (r *CypressRunner) runSuites(app string, otherApps []string) bool {
 				Visibility:       r.Project.GetSauceCfg().Visibility,
 				PassThreshold:    s.PassThreshold,
 				SmartRetry: job.SmartRetry{
-					FailedOnly: smartRetry.ShouldRetryFailedOnly(),
+					FailedOnly: smartRetry.IsRetryFailedOnly(),
 				},
 			}
 		}

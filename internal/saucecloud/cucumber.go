@@ -136,7 +136,7 @@ func (r *CucumberRunner) runSuites(app string, otherApps []string) bool {
 				Visibility:       r.Project.Sauce.Visibility,
 				PassThreshold:    s.PassThreshold,
 				SmartRetry: job.SmartRetry{
-					FailedOnly: s.SmartRetry.ShouldRetryFailedOnly(),
+					FailedOnly: s.SmartRetry.IsRetryFailedOnly(),
 				},
 			}
 		}
