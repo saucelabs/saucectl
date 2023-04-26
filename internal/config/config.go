@@ -220,8 +220,8 @@ type SmartRetry struct {
 	FailedClassesOnly bool `yaml:"failedClassesOnly" json:"-"`
 }
 
-// ShouldRetryFailedOnly returns whether does smart retry
-func (s *SmartRetry) ShouldRetryFailedOnly() bool {
+// IsRetryFailedOnly indicates whether retries should selectively pick failed tests.
+func (s *SmartRetry) IsRetryFailedOnly() bool {
 	if s.FailedOnly || s.FailedClassesOnly {
 		return true
 	}
