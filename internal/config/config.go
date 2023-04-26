@@ -216,7 +216,9 @@ type Instrumentation struct {
 // SmartRetry represents the settings for retry strategy.
 type SmartRetry struct {
 	FailedOnly bool `yaml:"failedOnly" json:"-"`
-	// FailedClassesOnly has been deprecated, use FailedOnly
+	// FailedClassesOnly was introduced as the first iteration of smart retry
+	// and was applicable to mobile only.
+	// DEPRECATED. Use FailedOnly instead.
 	FailedClassesOnly bool `yaml:"failedClassesOnly" json:"-"`
 }
 
