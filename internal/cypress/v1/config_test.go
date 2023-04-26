@@ -292,7 +292,7 @@ func TestCypressV1_FilterFailedTests(t *testing.T) {
 		expErr    error
 	}{
 		{
-			name:      "suite exists and failed tests exist",
+			name:      "it should set failed tests to specified suite",
 			suiteName: "my suite",
 			report: saucereport.SauceReport{
 				Status: saucereport.StatusFailed,
@@ -324,7 +324,7 @@ func TestCypressV1_FilterFailedTests(t *testing.T) {
 			expErr:    nil,
 		},
 		{
-			name:      "suite doesn't exist",
+			name:      "it should keep the original settings when suiteName doesn't exist in the project",
 			suiteName: "my suite2",
 			report: saucereport.SauceReport{
 				Status: saucereport.StatusFailed,
@@ -356,7 +356,7 @@ func TestCypressV1_FilterFailedTests(t *testing.T) {
 			expErr:    errors.New("suite(my suite2) not found"),
 		},
 		{
-			name:      "no failed tests",
+			name:      "it should keep the original settings when no failed test in SauceReport",
 			suiteName: "my suite",
 			report: saucereport.SauceReport{
 				Status: saucereport.StatusPassed,

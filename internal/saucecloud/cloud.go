@@ -383,11 +383,12 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 	}
 }
 
-// remoteArchiveProject archives the contents of the folder to a remote storage.
-func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, sauceignoreFile string, dryRun bool) (string, []string, error) {
+// remoteArchiveProject archives the contents of the folder and uploads to remote storage.
+// It returns app uri as the uploaded project, otherApps as the collection of runner config and node_modules bundle.
+func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, sauceignoreFile string, dryRun bool) (app string, otherApps []string, err error) {
 	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
 	if err != nil {
-		return "", []string{}, err
+		return
 	}
 	if !dryRun {
 		defer os.RemoveAll(tempDir)
@@ -397,7 +398,7 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 
 	contents, err := os.ReadDir(folder)
 	if err != nil {
-		return "", []string{}, err
+		return
 	}
 
 	for _, file := range contents {
@@ -412,18 +413,18 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 
 	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
-		return "", []string{}, err
+		return
 	}
 
 	appZip, err := zip.ArchiveFiles("app", tempDir, folder, files, matcher)
 	if err != nil {
-		return "", []string{}, err
+		return
 	}
 	archives[projectUpload] = appZip
 
 	modZip, err := zip.ArchiveNodeModules(tempDir, folder, matcher, r.NPMDependencies)
 	if err != nil {
-		return "", []string{}, err
+		return
 	}
 	if modZip != "" {
 		archives[nodeModulesUpload] = modZip
@@ -431,7 +432,7 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 
 	configZip, err := zip.ArchiveRunnerConfig(project, tempDir)
 	if err != nil {
-		return "", []string{}, err
+		return
 	}
 	archives[runnerConfigUpload] = configZip
 
@@ -444,14 +445,14 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 		uris[k] = uri
 	}
 
-	var otherApps []string
+	app = uris[projectUpload]
 	for _, item := range []uploadType{runnerConfigUpload, nodeModulesUpload, otherAppsUpload} {
 		if val, ok := uris[item]; ok {
 			otherApps = append(otherApps, val)
 		}
 	}
 
-	return uris[projectUpload], otherApps, nil
+	return
 }
 
 // remoteArchiveFiles archives the files to a remote storage.

@@ -60,7 +60,7 @@ func (f *StubVDCJobReader) GetJobAssetFileContent(ctx context.Context, jobID, fi
 type StubProject struct {
 }
 
-func (p *FakeProject) FilterFailedTests(name string, report saucereport.SauceReport) error {
+func (p *StubProject) FilterFailedTests(name string, report saucereport.SauceReport) error {
 	return nil
 }
 
@@ -134,7 +134,7 @@ func TestSauceReportRetrier_Retry(t *testing.T) {
 			retrier: &SauceReportRetrier{
 				VDCReader:       &StubVDCJobReader{SauceReport: failedReport},
 				ProjectUploader: &StubProjectUploader{},
-				Project:         &FakeProject{},
+				Project:         &StubProject{},
 			},
 			args: args{
 				jobOpts: make(chan job.StartOptions),
