@@ -57,7 +57,7 @@ func (f *StubVDCJobReader) GetJobAssetFileContent(ctx context.Context, jobID, fi
 	return []byte(body), nil
 }
 
-type FakeProject struct {
+type StubProject struct {
 }
 
 func (p *FakeProject) FilterFailedTests(name string, report saucereport.SauceReport) error {
