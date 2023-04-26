@@ -130,7 +130,7 @@ func TestSauceReportRetrier_Retry(t *testing.T) {
 			},
 		},
 		{
-			name: "Job is set as SmartRetry",
+			name: "Job is retried via SmartRetry",
 			retrier: &SauceReportRetrier{
 				VDCReader:       &StubVDCJobReader{SauceReport: failedReport},
 				ProjectUploader: &StubProjectUploader{},
