@@ -58,7 +58,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 				opt: job.StartOptions{
 					DisplayName: "Dummy Test",
 					SmartRetry: job.SmartRetry{
-						FailedClassesOnly: false,
+						FailedOnly: false,
 					},
 					TestOptions: map[string]interface{}{
 						"class": []string{"present"},
@@ -96,7 +96,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 				opt: job.StartOptions{
 					DisplayName: "Dummy Test",
 					SmartRetry: job.SmartRetry{
-						FailedClassesOnly: true,
+						FailedOnly: true,
 					},
 					TestOptions: map[string]interface{}{
 						"class": []string{"Demo.Class1", "Demo.Class2", "Demo.Class3"},
@@ -113,7 +113,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 					"class": []string{"Demo.Class1"},
 				},
 				SmartRetry: job.SmartRetry{
-					FailedClassesOnly: true,
+					FailedOnly: true,
 				},
 			},
 		},
@@ -138,7 +138,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 				opt: job.StartOptions{
 					DisplayName: "Dummy Test",
 					SmartRetry: job.SmartRetry{
-						FailedClassesOnly: true,
+						FailedOnly: true,
 					},
 				},
 				previous: job.Job{
@@ -152,7 +152,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 					"class": []string{"Demo.Class1"},
 				},
 				SmartRetry: job.SmartRetry{
-					FailedClassesOnly: true,
+					FailedOnly: true,
 				},
 			},
 		},
@@ -178,7 +178,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 					Framework:   xcuitest.Kind,
 					DisplayName: "Dummy Test",
 					SmartRetry: job.SmartRetry{
-						FailedClassesOnly: true,
+						FailedOnly: true,
 					},
 				},
 				previous: job.Job{
@@ -191,7 +191,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 				DisplayName: "Dummy Test",
 				TestsToRun:  []string{"Demo.Class1"},
 				SmartRetry: job.SmartRetry{
-					FailedClassesOnly: true,
+					FailedOnly: true,
 				},
 			},
 		},
@@ -205,7 +205,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 				opt: job.StartOptions{
 					DisplayName: "Dummy Test",
 					SmartRetry: job.SmartRetry{
-						FailedClassesOnly: true,
+						FailedOnly: true,
 					},
 					TestOptions: map[string]interface{}{
 						"class": []string{"Demo.Class1", "Demo.Class2", "Demo.Class3"},
@@ -222,7 +222,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 					"class": []string{"Demo.Class1", "Demo.Class2", "Demo.Class3"},
 				},
 				SmartRetry: job.SmartRetry{
-					FailedClassesOnly: true,
+					FailedOnly: true,
 				},
 			},
 		},
@@ -247,7 +247,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 				opt: job.StartOptions{
 					DisplayName: "Dummy Test",
 					SmartRetry: job.SmartRetry{
-						FailedClassesOnly: true,
+						FailedOnly: true,
 					},
 					TestOptions: map[string]interface{}{
 						"class": []string{"Demo.Class1", "Demo.Class2", "Demo.Class3"},
@@ -264,7 +264,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 					"class": []string{"Demo.Class1"},
 				},
 				SmartRetry: job.SmartRetry{
-					FailedClassesOnly: true,
+					FailedOnly: true,
 				},
 			},
 		},
@@ -289,7 +289,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 				opt: job.StartOptions{
 					DisplayName: "Dummy Test",
 					SmartRetry: job.SmartRetry{
-						FailedClassesOnly: true,
+						FailedOnly: true,
 					},
 					TestOptions: map[string]interface{}{
 						"class": []string{"Demo.Class1", "Demo.Class2", "Demo.Class3"},
@@ -306,7 +306,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 					"class": []string{"Demo.Class1", "Demo.Class2", "Demo.Class3"},
 				},
 				SmartRetry: job.SmartRetry{
-					FailedClassesOnly: true,
+					FailedOnly: true,
 				},
 			},
 		},
@@ -331,7 +331,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 				opt: job.StartOptions{
 					DisplayName: "Dummy Test",
 					SmartRetry: job.SmartRetry{
-						FailedClassesOnly: true,
+						FailedOnly: true,
 					},
 					TestOptions: map[string]interface{}{
 						"class": []string{"Demo.Class1", "Demo.Class2", "Demo.Class3"},
@@ -348,7 +348,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 					"class": []string{"Demo.Class1", "Demo.Class2", "Demo.Class3"},
 				},
 				SmartRetry: job.SmartRetry{
-					FailedClassesOnly: true,
+					FailedOnly: true,
 				},
 			},
 		},

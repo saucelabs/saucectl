@@ -16,6 +16,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/saucereport"
 )
 
 // Config descriptors.
@@ -52,20 +53,21 @@ type Project struct {
 
 // Suite represents the cypress test suite configuration.
 type Suite struct {
-	Name             string        `yaml:"name,omitempty" json:"name"`
-	Browser          string        `yaml:"browser,omitempty" json:"browser"`
-	BrowserVersion   string        `yaml:"browserVersion,omitempty" json:"browserVersion"`
-	PlatformName     string        `yaml:"platformName,omitempty" json:"platformName"`
-	Config           SuiteConfig   `yaml:"config,omitempty" json:"config"`
-	ScreenResolution string        `yaml:"screenResolution,omitempty" json:"screenResolution"`
-	Mode             string        `yaml:"mode,omitempty" json:"-"`
-	Timeout          time.Duration `yaml:"timeout,omitempty" json:"timeout"`
-	Shard            string        `yaml:"shard,omitempty" json:"-"`
-	ShardGrepEnabled bool          `yaml:"shardGrepEnabled,omitempty" json:"-"`
-	Headless         bool          `yaml:"headless,omitempty" json:"headless"`
-	PreExec          []string      `yaml:"preExec,omitempty" json:"preExec"`
-	TimeZone         string        `yaml:"timeZone,omitempty" json:"timeZone"`
-	PassThreshold    int           `yaml:"passThreshold,omitempty" json:"-"`
+	Name             string            `yaml:"name,omitempty" json:"name"`
+	Browser          string            `yaml:"browser,omitempty" json:"browser"`
+	BrowserVersion   string            `yaml:"browserVersion,omitempty" json:"browserVersion"`
+	PlatformName     string            `yaml:"platformName,omitempty" json:"platformName"`
+	Config           SuiteConfig       `yaml:"config,omitempty" json:"config"`
+	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
+	Mode             string            `yaml:"mode,omitempty" json:"-"`
+	Timeout          time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
+	Shard            string            `yaml:"shard,omitempty" json:"-"`
+	ShardGrepEnabled bool              `yaml:"shardGrepEnabled,omitempty" json:"-"`
+	Headless         bool              `yaml:"headless,omitempty" json:"headless"`
+	PreExec          []string          `yaml:"preExec,omitempty" json:"preExec"`
+	TimeZone         string            `yaml:"timeZone,omitempty" json:"timeZone"`
+	PassThreshold    int               `yaml:"passThreshold,omitempty" json:"-"`
+	SmartRetry       config.SmartRetry `yaml:"smartRetry,omitempty" json:"-"`
 }
 
 // SuiteConfig represents the cypress config overrides.
@@ -519,4 +521,41 @@ func (p *Project) IsSharded() bool {
 // GetAPIVersion returns APIVersion
 func (p *Project) GetAPIVersion() string {
 	return p.APIVersion
+}
+
+// GetSmartRetry returns the smartRetry config for the given suite.
+// Returns an empty config if the suite could not be found.
+func (p *Project) GetSmartRetry(suiteName string) config.SmartRetry {
+	for _, s := range p.Suites {
+		if s.Name == suiteName {
+			return s.SmartRetry
+		}
+	}
+	return config.SmartRetry{}
+}
+
+// FilterFailedTests takes the failed tests in the report and sets them as a test filter in the suite.
+// The test filter remains unchanged if the report does not contain any failed tests.
+func (p *Project) FilterFailedTests(suiteName string, report saucereport.SauceReport) error {
+	failedTests := saucereport.GetFailedTests(report)
+	if len(failedTests) == 0 {
+		return nil
+	}
+
+	var found bool
+	for i, s := range p.Suites {
+		if s.Name != suiteName {
+			continue
+		}
+		found = true
+		if p.Suites[i].Config.Env == nil {
+			p.Suites[i].Config.Env = map[string]string{}
+		}
+		p.Suites[i].Config.Env["grep"] = strings.Join(failedTests, ";")
+
+	}
+	if !found {
+		return fmt.Errorf("suite(%s) not found", suiteName)
+	}
+	return nil
 }
