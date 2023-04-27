@@ -15,6 +15,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/saucereport"
 )
 
 // Config descriptors.
@@ -113,6 +114,7 @@ type Suite struct {
 	Headless             bool                   `yaml:"headless,omitempty" json:"headless"`
 	TimeZone             string                 `yaml:"timeZone,omitempty" json:"timeZone"`
 	PassThreshold        int                    `yaml:"passThreshold,omitempty" json:"-"`
+	SmartRetry           config.SmartRetry      `yaml:"smartRetry,omitempty" json:"-"`
 	// TypeScript compiling options
 	CompilerOptions CompilerOptions `yaml:"compilerOptions,omitempty" json:"compilerOptions"`
 	// Deprecated. Reserved for future use for actual devices.
@@ -394,4 +396,26 @@ func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
 		}
 	}
 	return res
+}
+
+// FilterFailedTests takes the failed tests in the report and sets them as a test filter in the suite.
+// The test filter remains unchanged if the report does not contain any failed tests.
+func (p *Project) FilterFailedTests(suiteName string, report saucereport.SauceReport) error {
+	failedTests := saucereport.GetFailedTests(report)
+	// if no failed tests found, just keep the original settings
+	if len(failedTests) == 0 {
+		return nil
+	}
+	var found bool
+	for i, s := range p.Suites {
+		if s.Name != suiteName {
+			continue
+		}
+		found = true
+		p.Suites[i].Filter.TestGrep = strings.Join(failedTests, "|")
+	}
+	if !found {
+		return fmt.Errorf("suite(%s) not found", suiteName)
+	}
+	return nil
 }

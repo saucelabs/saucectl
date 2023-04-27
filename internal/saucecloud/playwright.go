@@ -62,7 +62,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	fileURIs, err := r.remoteArchiveProject(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
+	app, otherApps, err := r.remoteArchiveProject(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
@@ -72,7 +72,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	passed := r.runSuites(fileURIs)
+	passed := r.runSuites(app, otherApps)
 	if passed {
 		exitCode = 0
 	}
@@ -93,7 +93,7 @@ func (r *PlaywrightRunner) getSuiteNames() string {
 	return strings.Join(names, ", ")
 }
 
-func (r *PlaywrightRunner) runSuites(fileURIs []string) bool {
+func (r *PlaywrightRunner) runSuites(app string, otherApps []string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
@@ -112,7 +112,6 @@ func (r *PlaywrightRunner) runSuites(fileURIs []string) bool {
 			suites = playwright.SortByHistory(suites, history)
 		}
 	}
-
 	// Submit suites to work on.
 	go func() {
 		for _, s := range suites {
@@ -125,8 +124,8 @@ func (r *PlaywrightRunner) runSuites(fileURIs []string) bool {
 				CLIFlags:         r.Project.CLIFlags,
 				DisplayName:      s.Name,
 				Timeout:          s.Timeout,
-				App:              fileURIs[0],
-				OtherApps:        fileURIs[1:],
+				App:              app,
+				OtherApps:        otherApps,
 				Suite:            s.Name,
 				Framework:        "playwright",
 				FrameworkVersion: s.PlaywrightVersion,
@@ -148,6 +147,9 @@ func (r *PlaywrightRunner) runSuites(fileURIs []string) bool {
 				TimeZone:         s.TimeZone,
 				Visibility:       r.Project.Sauce.Visibility,
 				PassThreshold:    s.PassThreshold,
+				SmartRetry: job.SmartRetry{
+					FailedOnly: s.SmartRetry.IsRetryFailedOnly(),
+				},
 			}
 		}
 	}()

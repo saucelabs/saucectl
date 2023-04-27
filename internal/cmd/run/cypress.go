@@ -170,7 +170,11 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.NewSearchStrategy(p.GetVersion(), p.GetRootDir()),
 			NPMDependencies:        p.GetNpm().Dependencies,
-			Retrier:                &retry.BasicRetrier{},
+			Retrier: &retry.SauceReportRetrier{
+				VDCReader:       &restoClient,
+				ProjectUploader: &appsClient,
+				Project:         p,
+			},
 		},
 	}
 

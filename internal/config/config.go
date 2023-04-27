@@ -200,7 +200,19 @@ type Instrumentation struct {
 
 // SmartRetry represents the settings for retry strategy.
 type SmartRetry struct {
+	FailedOnly bool `yaml:"failedOnly" json:"-"`
+	// FailedClassesOnly was introduced as the first iteration of smart retry
+	// and was applicable to mobile only.
+	// DEPRECATED. Use FailedOnly instead.
 	FailedClassesOnly bool `yaml:"failedClassesOnly" json:"-"`
+}
+
+// IsRetryFailedOnly indicates whether retries should selectively pick failed tests.
+func (s *SmartRetry) IsRetryFailedOnly() bool {
+	if s.FailedOnly || s.FailedClassesOnly {
+		return true
+	}
+	return false
 }
 
 func readYaml(cfgFilePath string) ([]byte, error) {
@@ -521,5 +533,11 @@ func toStringKeys(val interface{}) (interface{}, error) {
 		return l, nil
 	default:
 		return val, nil
+	}
+}
+
+func ValidateSmartRetry(smartRetry SmartRetry) {
+	if smartRetry.FailedClassesOnly {
+		log.Warn().Msg("failedClassesOnly has been deprecated. Use FailedOnly instead.")
 	}
 }

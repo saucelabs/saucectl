@@ -55,7 +55,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	fileURIs, err := r.remoteArchiveProject(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore, r.Project.IsDryRun())
+	app, otherApps, err := r.remoteArchiveProject(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore, r.Project.IsDryRun())
 	if err != nil {
 		return exitCode, err
 	}
@@ -65,7 +65,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	passed := r.runSuites(fileURIs)
+	passed := r.runSuites(app, otherApps)
 	if passed {
 		exitCode = 0
 	}
@@ -85,7 +85,7 @@ func (r *CypressRunner) checkCypressVersion() error {
 	return nil
 }
 
-func (r *CypressRunner) runSuites(fileURIs []string) bool {
+func (r *CypressRunner) runSuites(app string, otherApps []string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 	jobOpts, results, err := r.createWorkerPool(r.Project.GetSauceCfg().Concurrency, r.Project.GetSauceCfg().Retries)
@@ -103,16 +103,18 @@ func (r *CypressRunner) runSuites(fileURIs []string) bool {
 			suites = suite.SortByHistory(suites, history)
 		}
 	}
+
 	// Submit suites to work on.
 	go func() {
 		for _, s := range suites {
+			smartRetry := r.Project.GetSmartRetry(s.Name)
 			jobOpts <- job.StartOptions{
 				ConfigFilePath:   r.Project.GetCfgPath(),
 				CLIFlags:         r.Project.GetCLIFlags(),
 				DisplayName:      s.Name,
 				Timeout:          s.Timeout,
-				App:              fileURIs[0],
-				OtherApps:        fileURIs[1:],
+				App:              app,
+				OtherApps:        otherApps,
 				Suite:            s.Name,
 				Framework:        "cypress",
 				FrameworkVersion: r.Project.GetVersion(),
@@ -134,6 +136,9 @@ func (r *CypressRunner) runSuites(fileURIs []string) bool {
 				TimeZone:         s.TimeZone,
 				Visibility:       r.Project.GetSauceCfg().Visibility,
 				PassThreshold:    s.PassThreshold,
+				SmartRetry: job.SmartRetry{
+					FailedOnly: smartRetry.IsRetryFailedOnly(),
+				},
 			}
 		}
 	}()

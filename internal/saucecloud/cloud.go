@@ -11,7 +11,6 @@ import (
 	"os/signal"
 	"path"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
@@ -22,7 +21,6 @@ import (
 	ptable "github.com/jedib0t/go-pretty/v6/table"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/apps"
-	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
@@ -31,14 +29,13 @@ import (
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/node"
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
+	"github.com/saucelabs/saucectl/internal/saucecloud/zip"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/saucereport"
 	"github.com/saucelabs/saucectl/internal/storage"
@@ -94,12 +91,6 @@ const BaseFilepathLength = 53
 
 // MaxFilepathLength represents the maximum path length acceptable.
 const MaxFilepathLength = 255
-
-// ArchiveFileCountSoftLimit is the threshold count of files added to the archive
-// before a warning is printed.
-// The value here (2^15) is somewhat arbitrary. In testing, ~32K files in the archive
-// resulted in about 30s for download and extraction.
-const ArchiveFileCountSoftLimit = 32768
 
 func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartOptions, chan result, error) {
 	jobOpts := make(chan job.StartOptions, maxRetries+1)
@@ -392,11 +383,12 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 	}
 }
 
-// remoteArchiveProject archives the contents of the folder to a remote storage.
-func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, sauceignoreFile string, dryRun bool) ([]string, error) {
+// remoteArchiveProject archives the contents of the folder and uploads to remote storage.
+// It returns app uri as the uploaded project, otherApps as the collection of runner config and node_modules bundle.
+func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, sauceignoreFile string, dryRun bool) (app string, otherApps []string, err error) {
 	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
 	if err != nil {
-		return []string{}, err
+		return
 	}
 	if !dryRun {
 		defer os.RemoveAll(tempDir)
@@ -406,7 +398,7 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 
 	contents, err := os.ReadDir(folder)
 	if err != nil {
-		return []string{}, err
+		return
 	}
 
 	for _, file := range contents {
@@ -417,43 +409,50 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 		files = append(files, filepath.Join(folder, file.Name()))
 	}
 
-	archives := make(map[string]uploadType)
+	archives := make(map[uploadType]string)
 
 	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
-		return []string{}, err
+		return
 	}
 
-	appZip, err := r.archiveFiles("app", tempDir, folder, files, matcher)
+	appZip, err := zip.ArchiveFiles("app", tempDir, folder, files, matcher)
 	if err != nil {
-		return []string{}, err
+		return
 	}
-	archives[appZip] = projectUpload
+	archives[projectUpload] = appZip
 
-	modZip, err := r.archiveNodeModules(tempDir, folder, matcher)
+	modZip, err := zip.ArchiveNodeModules(tempDir, folder, matcher, r.NPMDependencies)
 	if err != nil {
-		return []string{}, err
+		return
 	}
 	if modZip != "" {
-		archives[modZip] = nodeModulesUpload
+		archives[nodeModulesUpload] = modZip
 	}
 
-	configZip, err := r.archiveRunnerConfig(project, tempDir)
+	configZip, err := zip.ArchiveRunnerConfig(project, tempDir)
 	if err != nil {
-		return []string{}, err
+		return
 	}
-	archives[configZip] = runnerConfigUpload
+	archives[runnerConfigUpload] = configZip
 
-	var uris []string
+	var uris = map[uploadType]string{}
 	for k, v := range archives {
-		uri, err := r.uploadProject(k, "", v, dryRun)
+		uri, err := r.uploadProject(v, "", k, dryRun)
 		if err != nil {
-			return []string{}, err
+			return "", []string{}, err
 		}
-		uris = append(uris, uri)
+		uris[k] = uri
 	}
 
-	return uris, nil
+	app = uris[projectUpload]
+	for _, item := range []uploadType{runnerConfigUpload, nodeModulesUpload, otherAppsUpload} {
+		if val, ok := uris[item]; ok {
+			otherApps = append(otherApps, val)
+		}
+	}
+
+	return
 }
 
 // remoteArchiveFiles archives the files to a remote storage.
@@ -466,32 +465,33 @@ func (r *CloudRunner) remoteArchiveFiles(project interface{}, files []string, sa
 		defer os.RemoveAll(tempDir)
 	}
 
-	archives := make(map[string]uploadType)
+	archives := make(map[uploadType]string)
 
 	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
 		return "", err
 	}
 
-	zipName, err := r.archiveFiles("app", tempDir, ".", files, matcher)
+	zipName, err := zip.ArchiveFiles("app", tempDir, ".", files, matcher)
 	if err != nil {
 		return "", err
 	}
-	archives[zipName] = projectUpload
+	archives[projectUpload] = zipName
 
-	configZip, err := r.archiveRunnerConfig(project, tempDir)
+	configZip, err := zip.ArchiveRunnerConfig(project, tempDir)
 	if err != nil {
 		return "", err
 	}
-	archives[configZip] = runnerConfigUpload
+	archives[runnerConfigUpload] = configZip
 
 	var uris []string
 	for k, v := range archives {
-		uri, err := r.uploadProject(k, "", v, dryRun)
+		uri, err := r.uploadProject(v, "", k, dryRun)
 		if err != nil {
 			return "", err
 		}
 		uris = append(uris, uri)
+
 	}
 
 	return strings.Join(uris, ","), nil
@@ -522,125 +522,6 @@ func checkPathLength(projectFolder string, matcher sauceignore.Matcher) (string,
 		return exampleName, errors.New("path too long")
 	}
 	return "", nil
-}
-
-// archiveNodeModules archives node_modules located under rootDir and returns the path to the zip file. Returns an empty
-// string if node_modules doesn't exist or is actively ignored.
-func (r *CloudRunner) archiveNodeModules(tempDir string, rootDir string, matcher sauceignore.Matcher) (string, error) {
-	modDir := filepath.Join(rootDir, "node_modules")
-	ignored := matcher.Match(strings.Split(modDir, string(os.PathSeparator)), true)
-
-	_, err := os.Stat(modDir)
-	hasMods := err == nil
-	wantMods := len(r.NPMDependencies) > 0
-
-	if !hasMods && wantMods {
-		return "", fmt.Errorf("unable to access 'node_modules' folder, but you have npm dependencies defined in your configuration; ensure that the folder exists and is accessible")
-	}
-
-	if ignored && wantMods {
-		return "", fmt.Errorf("'node_modules' is ignored by sauceignore, but you have npm dependencies defined in your project; please remove 'node_modules' from your sauceignore file")
-	}
-
-	if !hasMods || ignored {
-		return "", nil
-	}
-
-	var files []string
-
-	// does the user only want a subset of dependencies?
-	if hasMods && wantMods {
-		reqs := node.Requirements(filepath.Join(rootDir, "node_modules"), r.NPMDependencies...)
-		if len(reqs) == 0 {
-			return "", fmt.Errorf("unable to find required dependencies; please check 'node_modules' folder and make sure the dependencies exist")
-		}
-		log.Info().Msgf("Found a total of %d related npm dependencies", len(reqs))
-		for _, v := range reqs {
-			files = append(files, filepath.Join(rootDir, "node_modules", v))
-		}
-	}
-
-	// node_modules exists, has not been ignored and a subset has not been specified, so include the entire folder.
-	// This is the legacy behavior (backwards compatible) of saucectl.
-	if hasMods && !ignored && !wantMods {
-		log.Warn().Msg("Adding the entire node_modules folder to the payload. " +
-			"This behavior is deprecated, not recommended and will be removed in the future. " +
-			"Please address your dependency needs via https://docs.saucelabs.com/dev/cli/saucectl/usage/use-cases/#set-npm-packages-in-configyml")
-		files = append(files, filepath.Join(rootDir, "node_modules"))
-	}
-
-	return r.archiveFiles("node_modules", tempDir, rootDir, files, matcher)
-}
-
-func (r *CloudRunner) archiveRunnerConfig(project interface{}, tempDir string) (string, error) {
-	zipName := filepath.Join(tempDir, "config.zip")
-	z, err := zip.NewFileWriter(zipName, sauceignore.NewMatcher([]sauceignore.Pattern{}))
-	if err != nil {
-		return "", err
-	}
-	defer z.Close()
-
-	rcPath := filepath.Join(tempDir, "sauce-runner.json")
-	if err := jsonio.WriteFile(rcPath, project); err != nil {
-		return "", err
-	}
-
-	_, err = z.Add(rcPath, "")
-	if err != nil {
-		return "", err
-	}
-	return zipName, nil
-}
-
-// archiveFiles creates a zip file with the given name and files. Files added to the zip retain their paths relative to
-// the rootDir. Temporary files, as well as the zip itself, are created in the tempDir directory.
-func (r *CloudRunner) archiveFiles(name string, tempDir string, rootDir string, files []string, matcher sauceignore.Matcher) (string, error) {
-	start := time.Now()
-
-	zipName := filepath.Join(tempDir, name+".zip")
-	z, err := zip.NewFileWriter(zipName, matcher)
-	if err != nil {
-		return "", err
-	}
-	defer z.Close()
-
-	totalFileCount := 0
-
-	// Keep file order stable for consistent zip archives
-	sort.Strings(files)
-	for _, f := range files {
-		rel, err := filepath.Rel(rootDir, filepath.Dir(f))
-		if err != nil {
-			return "", err
-		}
-		fileCount, err := z.Add(f, rel)
-		if err != nil {
-			return "", err
-		}
-		totalFileCount += fileCount
-	}
-
-	err = z.Close()
-	if err != nil {
-		return "", err
-	}
-
-	f, err := os.Stat(zipName)
-	if err != nil {
-		return "", err
-	}
-
-	log.Info().
-		Dur("durationMs", time.Since(start)).
-		Int64("size", f.Size()).
-		Int("fileCount", totalFileCount).
-		Msg("Archive created.")
-
-	if totalFileCount >= ArchiveFileCountSoftLimit {
-		msg.LogArchiveSizeWarning()
-	}
-
-	return zipName, nil
 }
 
 type uploadType string
