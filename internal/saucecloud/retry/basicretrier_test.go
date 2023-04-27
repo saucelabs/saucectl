@@ -19,7 +19,7 @@ func TestBasicRetrier_Retry(t *testing.T) {
 		expected job.StartOptions
 	}{
 		{
-			name: "Job is resent as-it",
+			name: "Job is retried as-is",
 			args: args{
 				jobOpts: make(chan job.StartOptions),
 				opt: job.StartOptions{

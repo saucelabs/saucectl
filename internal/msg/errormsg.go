@@ -198,6 +198,14 @@ const (
 	SkippingSmartRetries = "Skipping SmartRetry, retrying complete suite"
 	// RetryWithClasses indicates which classes will be run
 	RetryWithClasses = "Retrying with only classes: %s"
+	// UnableToCreateRunnerConfig indicates a failure to create runner config file
+	UnableToCreateRunnerConfig = "Unable to create runner config file"
+	// UnableToFilterFailedTests indicates a failure to filter failed tests
+	UnableToFilterFailedTests = "Unable to filter failed tests"
+	// UnableToArchiveRunnerConfig indicates a failure to archive the runner config file
+	UnableToArchiveRunnerConfig = "Unable to archive sauce runner config file"
+	// UnableToUploadConfig indicates a failure to upload config
+	UnableToUploadConfig = "Unable to upload sauce runner config file %q"
 )
 
 // container

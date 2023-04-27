@@ -207,7 +207,11 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.NewSearchStrategy(p.Testcafe.Version, p.RootDir),
 			NPMDependencies:        p.Npm.Dependencies,
-			Retrier:                &retry.BasicRetrier{},
+			Retrier: &retry.SauceReportRetrier{
+				VDCReader:       &restoClient,
+				ProjectUploader: &appsClient,
+				Project:         &p,
+			},
 		},
 	}
 

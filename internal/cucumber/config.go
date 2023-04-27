@@ -3,6 +3,8 @@ package cucumber
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -13,6 +15,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/saucereport"
 )
 
 // Config descriptors.
@@ -67,11 +70,13 @@ type Suite struct {
 	PreExec          []string          `yaml:"preExec,omitempty" json:"preExec"`
 	Options          Options           `yaml:"options,omitempty" json:"options"`
 	PassThreshold    int               `yaml:"passThreshold,omitempty" json:"-"`
+	SmartRetry       config.SmartRetry `yaml:"smartRetry,omitempty" json:"-"`
 }
 
 // Options represents cucumber settings
 type Options struct {
-	Config            string            `yaml:"config,omitempty" json:"config"`
+	Config string `yaml:"config,omitempty" json:"config"`
+	// Name is a regular expression for selecting scenario names.
 	Name              string            `yaml:"name,omitempty" json:"name"`
 	Paths             []string          `yaml:"paths,omitempty" json:"paths"`
 	ExcludedTestFiles []string          `yaml:"excludedTestFiles,omitempty" json:"excludedTestFiles"`
@@ -293,4 +298,48 @@ func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
 		}
 	}
 	return res
+}
+
+// FilterFailedTests takes the failed specs in the report and sets them as a test filter in the suite.
+// The test filter remains unchanged if the report does not contain any failed tests.
+func (p *Project) FilterFailedTests(suiteName string, report saucereport.SauceReport) error {
+	specs, err := getFailedSpecFiles(report)
+	if err != nil {
+		return err
+	}
+	if len(specs) == 0 {
+		return nil
+	}
+
+	var found bool
+	for i, s := range p.Suites {
+		if s.Name != suiteName {
+			continue
+		}
+		found = true
+		p.Suites[i].Options.Paths = specs
+	}
+
+	if !found {
+		return fmt.Errorf("suite(%s) not found", suiteName)
+	}
+	return nil
+}
+
+func getFailedSpecFiles(report saucereport.SauceReport) ([]string, error) {
+	var failedSpecs []string
+	if report.Status != saucereport.StatusFailed {
+		return failedSpecs, nil
+	}
+	for _, s := range report.Suites {
+		re, err := regexp.Compile(".*.feature$")
+		if err != nil {
+			return failedSpecs, err
+		}
+		if s.Status == saucereport.StatusFailed && re.MatchString(s.Name) {
+			failedSpecs = append(failedSpecs, filepath.Clean(s.Name))
+		}
+	}
+
+	return failedSpecs, nil
 }

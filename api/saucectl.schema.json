@@ -445,6 +445,17 @@
                   "description": "The minimum number of successful attempts for a suite to be considered as 'passed'.",
                   "type": "integer",
                   "minimum": 1
+                },
+                "smartRetry": {
+                  "description": "Optimize suite retries by configuring the strategy.",
+                  "type": "object",
+                  "properties": {
+                    "failedOnly": {
+                      "description": "Optimize suite retries by retrying failed tests, classes or spec files only.",
+                      "type": "boolean",
+                      "default": false
+                    }
+                  }
                 }
               },
               "required": [
@@ -1204,15 +1215,7 @@
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
                 },
                 "smartRetry": {
-                  "description": "Optimize suite retries by configuring the strategy.",
-                  "type": "object",
-                  "properties": {
-                    "failedClassesOnly": {
-                      "description": "Optimize suite retries by retrying failed test classes only.",
-                      "type": "boolean",
-                      "default": false
-                    }
-                  }
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/smartRetry"
                 }
               },
               "anyOf": [
@@ -1454,6 +1457,9 @@
                 },
                 "passThreshold": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
+                },
+                "smartRetry": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/smartRetry"
                 }
               },
               "required": [
@@ -1922,6 +1928,9 @@
                 },
                 "passThreshold": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
+                },
+                "smartRetry": {
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/smartRetry"
                 }
               },
               "required": [
@@ -2125,7 +2134,7 @@
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/passThreshold"
                 },
                 "smartRetry": {
-                  "$ref": "#/allOf/2/then/properties/suites/items/properties/smartRetry"
+                  "$ref": "#/allOf/0/then/properties/suites/items/properties/smartRetry"
                 }
               },
               "anyOf": [
