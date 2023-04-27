@@ -216,7 +216,7 @@ func Test_findTests(t *testing.T) {
 	}
 }
 
-func Test_loadTest(t *testing.T) {
+func Test_newTestRequest(t *testing.T) {
 	dir := createTestDirs(t)
 	defer dir.Remove()
 
@@ -271,13 +271,13 @@ func Test_loadTest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := loadTest(tt.args.testDir, tt.args.suiteName, tt.args.testName, tt.args.tags, nil)
+			got, err := newTestRequest(tt.args.testDir, tt.args.suiteName, tt.args.testName, tt.args.tags, nil)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("loadTest() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("newTestRequest() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("loadTest() got = %v, want %v", got, tt.want)
+				t.Errorf("newTestRequest() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -333,7 +333,7 @@ func Test_buildTestName(t *testing.T) {
 	}
 }
 
-func TestRunner_loadTests(t *testing.T) {
+func TestRunner_newTestRequests(t *testing.T) {
 	dir := createTestDirs(t)
 	defer dir.Remove()
 
@@ -374,8 +374,8 @@ func TestRunner_loadTests(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := r.loadTests(tt.args.s, tt.args.tests); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("loadTests() = %v, want %v", got, tt.want)
+			if got := r.newTestRequests(tt.args.s, tt.args.tests); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("newTestRequests() = %v, want %v", got, tt.want)
 			}
 		})
 	}
