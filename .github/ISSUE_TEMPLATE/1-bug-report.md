@@ -18,4 +18,4 @@ assignees: ''
 <!-- Provide test code and/or include the config.yml that we can copy, paste, and run on our machine to see the issue. -->
 
 ### Versions
-<!-- Saucectl and Docker Image version, Browser and version, Operating System, CI Provider, etc. -->
+<!-- Saucectl version, Browser and version, Operating System, CI Provider, etc. -->

@@ -66,7 +66,7 @@ func NewXCUITestCmd() *cobra.Command {
 	sc.String("testApp", "xcuitest::testApp", "", "Specifies the test app")
 	sc.String("testAppDescription", "xcuitest::testAppDescription", "", "Specifies description for the testApp")
 	sc.StringSlice("otherApps", "xcuitest::otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
-	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'. (sauce mode only)")
+	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'.")
 
 	// Test Options
 	sc.StringSlice("testOptions.class", "suite::testOptions::class", []string{}, "Only run the specified classes. Requires --name to be set.")
@@ -137,7 +137,6 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 
 func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Running XCUITest in Sauce Labs")
-	printTestEnv("sauce")
 
 	r := saucecloud.XcuitestRunner{
 		Project: p,
