@@ -890,7 +890,7 @@ func mergeJobHistories(histories []insights.JobHistory) insights.JobHistory {
 	testCasesMap := map[string]insights.TestCase{}
 	for _, history := range histories {
 		for _, tc := range history.TestCases {
-			addTestCase(&testCasesMap, tc)
+			addOrReplaceTestCase(&testCasesMap, tc)
 		}
 	}
 	var testCases []insights.TestCase
@@ -905,9 +905,9 @@ func mergeJobHistories(histories []insights.JobHistory) insights.JobHistory {
 	}
 }
 
-// addTestCase adds the insights.TestCase in the map[string]insights.TestCase
+// addOrReplaceTestCase adds or replaces the insights.TestCase in the map[string]insights.TestCase
 // If there is already one with the same name, only the highest fail rate is kept.
-func addTestCase(mp *map[string]insights.TestCase, tc insights.TestCase) {
+func addOrReplaceTestCase(mp *map[string]insights.TestCase, tc insights.TestCase) {
 	tcRef, present := (*mp)[tc.Name]
 	if !present {
 		(*mp)[tc.Name] = tc
