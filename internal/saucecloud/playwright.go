@@ -8,6 +8,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/msg"
 
 	"github.com/saucelabs/saucectl/internal/job"
@@ -105,7 +106,7 @@ func (r *PlaywrightRunner) runSuites(app string, otherApps []string) bool {
 
 	suites := r.Project.Suites
 	if r.Project.Sauce.LaunchOrder != "" {
-		history, err := r.getHistory(r.Project.Sauce.LaunchOrder)
+		history, err := r.getHistory(r.Project.Sauce.LaunchOrder, []string{insights.PlatformVDC})
 		if err != nil {
 			log.Warn().Err(err).Msg(msg.RetrieveJobHistoryError)
 		} else {

@@ -9,6 +9,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/cypress/suite"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
 )
@@ -96,7 +97,7 @@ func (r *CypressRunner) runSuites(app string, otherApps []string) bool {
 
 	suites := r.Project.GetSuites()
 	if r.Project.GetSauceCfg().LaunchOrder != "" {
-		history, err := r.getHistory(r.Project.GetSauceCfg().LaunchOrder)
+		history, err := r.getHistory(r.Project.GetSauceCfg().LaunchOrder, []string{insights.PlatformVDC})
 		if err != nil {
 			log.Warn().Err(err).Msg(msg.RetrieveJobHistoryError)
 		} else {

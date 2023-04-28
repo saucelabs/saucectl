@@ -69,12 +69,12 @@ func NewInsightsService(url string, creds iam.Credentials, timeout time.Duration
 }
 
 // GetHistory returns job history from insights
-func (c *InsightsService) GetHistory(ctx context.Context, user iam.User, launchOrder config.LaunchOrder) (insights.JobHistory, error) {
+func (c *InsightsService) GetHistory(ctx context.Context, user iam.User, launchOrder config.LaunchOrder, source string) (insights.JobHistory, error) {
 	start := time.Now().AddDate(0, 0, -7).Unix()
 	now := time.Now().Unix()
 
 	var jobHistory insights.JobHistory
-	url := fmt.Sprintf("%s/v2/insights/vdc/test-cases", c.URL)
+	url := fmt.Sprintf("%s/v2/insights/%s/test-cases", c.URL, source)
 	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return jobHistory, err
