@@ -1,4 +1,4 @@
-package files
+package hashio
 
 import (
 	"crypto/sha256"
@@ -7,8 +7,9 @@ import (
 	"os"
 )
 
-// NewSHA256 hashes the given file using crypto.SHA256 and returns the resulting string.
-func NewSHA256(filename string) (string, error) {
+// SHA256 hashes the given file with crypto.SHA256 and returns the checksum as a
+// base-16 (hex) string.
+func SHA256(filename string) (string, error) {
 	h := sha256.New()
 	file, err := os.Open(filename)
 	if err != nil {

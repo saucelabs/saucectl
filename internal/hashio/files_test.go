@@ -1,4 +1,4 @@
-package files
+package hashio
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 	"gotest.tools/v3/fs"
 )
 
-func TestNewSHA256(t *testing.T) {
+func TestSHA256(t *testing.T) {
 	dir := fs.NewDir(t, "checksums", fs.WithFile("hello.txt", "world!"))
 	defer dir.Remove()
 
@@ -38,13 +38,13 @@ func TestNewSHA256(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewSHA256(tt.args.filename)
+			got, err := SHA256(tt.args.filename)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("NewSHA256() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("SHA256() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("NewSHA256() got = %v, want %v", got, tt.want)
+				t.Errorf("SHA256() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
