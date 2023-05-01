@@ -7,7 +7,7 @@ import (
 
 // CreateTemp writes out the contents of the reader to a temp file.
 // It's the caller's responsibility to clean up the temp file.
-func CreateTemp(r io.ReadCloser) (string, error) {
+func CreateTemp(r io.Reader) (string, error) {
 	fd, err := os.CreateTemp("", "")
 	if err != nil {
 		return "", err
