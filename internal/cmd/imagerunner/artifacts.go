@@ -13,7 +13,7 @@ import (
 	"github.com/ryanuber/go-glob"
 	szip "github.com/saucelabs/saucectl/internal/archive/zip"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
-	"github.com/saucelabs/saucectl/internal/files"
+	"github.com/saucelabs/saucectl/internal/fileio"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/segment"
@@ -131,8 +131,9 @@ func download(ID, filePattern, targetDir, outputFormat string) error {
 	if err != nil {
 		return fmt.Errorf("failed to fetch artifacts: %w", err)
 	}
+	defer reader.Close()
 
-	fileName, err := files.SaveToTempFile(reader)
+	fileName, err := fileio.CreateTemp(reader)
 	if err != nil {
 		return fmt.Errorf("failed to download artifacts content: %w", err)
 	}

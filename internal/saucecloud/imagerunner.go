@@ -16,7 +16,7 @@ import (
 	"github.com/ryanuber/go-glob"
 	szip "github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/files"
+	"github.com/saucelabs/saucectl/internal/fileio"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/report"
@@ -328,7 +328,9 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 		log.Err(err).Str("suite", suiteName).Msg("Failed to fetch artifacts.")
 		return
 	}
-	fileName, err := files.SaveToTempFile(reader)
+	defer reader.Close()
+
+	fileName, err := fileio.CreateTemp(reader)
 	if err != nil {
 		log.Err(err).Str("suite", suiteName).Msg("Failed to download artifacts content.")
 		return
