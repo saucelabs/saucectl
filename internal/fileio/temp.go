@@ -14,9 +14,9 @@ func CreateTemp(r io.Reader) (string, error) {
 	}
 	defer fd.Close()
 
-	_, err = io.Copy(fd, r)
-	if err != nil {
+	if _, err := io.Copy(fd, r); err != nil {
 		return "", err
 	}
+
 	return fd.Name(), fd.Close()
 }
