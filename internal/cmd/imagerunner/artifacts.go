@@ -131,6 +131,7 @@ func download(ID, filePattern, targetDir, outputFormat string) error {
 	if err != nil {
 		return fmt.Errorf("failed to fetch artifacts: %w", err)
 	}
+	defer reader.Close()
 
 	fileName, err := fileio.CreateTemp(reader)
 	if err != nil {

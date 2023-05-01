@@ -328,6 +328,8 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 		log.Err(err).Str("suite", suiteName).Msg("Failed to fetch artifacts.")
 		return
 	}
+	defer reader.Close()
+
 	fileName, err := fileio.CreateTemp(reader)
 	if err != nil {
 		log.Err(err).Str("suite", suiteName).Msg("Failed to download artifacts content.")
