@@ -2,11 +2,11 @@ package framework
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/pkg/errors"
 	"github.com/saucelabs/saucectl/internal/node"
 )
 
@@ -112,7 +112,7 @@ func TestFrameworkFind_PackageStrategy(t *testing.T) {
 			"nostromo",
 			"path/to/package.json",
 			func(filename string) (node.Package, error) {
-				return node.Package{}, errors.Errorf("unknown format")
+				return node.Package{}, errors.New("unknown format")
 			},
 			nil,
 		},
