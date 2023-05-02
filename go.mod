@@ -34,12 +34,12 @@ require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.3.4 // indirect
 )
 
 require (
 	github.com/hashicorp/go-retryablehttp v0.7.2
-	github.com/pkg/errors v0.9.1
 	github.com/segmentio/backo-go v0.0.0-20200129164019-23eae7c10bd3 // indirect
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c
 )
