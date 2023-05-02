@@ -198,7 +198,7 @@ func findTests(rootDir string, testMatch []string) ([]string, error) {
 	return tests, nil
 }
 
-func loadTest(testDir string, suiteName string, testName string, tags []string, env map[string]string) (TestRequest, error) {
+func newTestRequest(testDir string, suiteName string, testName string, tags []string, env map[string]string) (TestRequest, error) {
 	unitFile, err := findUnitFile(testDir)
 	if err != nil {
 		return TestRequest{}, err
@@ -226,11 +226,11 @@ func loadTest(testDir string, suiteName string, testName string, tags []string, 
 	}, nil
 }
 
-func (r *Runner) loadTests(s Suite, tests []string) []TestRequest {
+func (r *Runner) newTestRequests(s Suite, tests []string) []TestRequest {
 	var testRequests []TestRequest
 
 	for _, test := range tests {
-		req, err := loadTest(
+		req, err := newTestRequest(
 			path.Join(r.Project.RootDir, test),
 			s.Name,
 			test,
@@ -241,7 +241,7 @@ func (r *Runner) loadTests(s Suite, tests []string) []TestRequest {
 			log.Warn().
 				Str("testName", test).
 				Err(err).
-				Msg("Unable to load test.")
+				Msg("Unable to open test.")
 		}
 		testRequests = append(testRequests, req)
 	}
@@ -265,9 +265,9 @@ func (r *Runner) runLocalTests(s Suite, results chan []TestResult) int {
 		log.Error().Err(err).Str("rootDir", r.Project.RootDir).Msg("Unable to walk rootDir")
 		return 0
 	}
-	tests := r.loadTests(s, matchingTests)
+	tests := r.newTestRequests(s, matchingTests)
 	if len(tests) == 0 {
-		log.Warn().Msgf("Could not find local tests matching patterns (%v). See https://github.com/saucelabs/saucectl-apix-example/blob/main/docs/README.md for more details.", s.TestMatch)
+		log.Warn().Msgf("Could not open local tests matching patterns (%v). See https://github.com/saucelabs/saucectl-apix-example/blob/main/docs/README.md for more details.", s.TestMatch)
 		return 0
 	}
 
