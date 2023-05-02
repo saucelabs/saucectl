@@ -92,14 +92,6 @@ const BaseFilepathLength = 53
 // MaxFilepathLength represents the maximum path length acceptable.
 const MaxFilepathLength = 255
 
-// DeviceType represents the type of device that can be used.
-type DeviceType int
-
-const (
-	VirtualDevice DeviceType = iota
-	RealDevice
-)
-
 func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartOptions, chan result, error) {
 	jobOpts := make(chan job.StartOptions, maxRetries+1)
 	results := make(chan result, ccy)
