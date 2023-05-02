@@ -6,9 +6,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/insights"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestInsightsService_PostTestRun(t *testing.T) {
