@@ -9,7 +9,7 @@ import (
 )
 
 type Service interface {
-	GetHistory(ctx context.Context, user iam.User, order config.LaunchOrder) (JobHistory, error)
+	GetHistory(context.Context, iam.User, config.LaunchOrder) (JobHistory, error)
 	PostTestRun(ctx context.Context, runs []TestRun) error
 	ListJobs(ctx context.Context, userID, jobType string, queryOption job.QueryOption) (job.List, error)
 	ReadJob(ctx context.Context, jobID string) (job.Job, error)
