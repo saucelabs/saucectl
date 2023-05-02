@@ -207,6 +207,16 @@
                         "title": "Only you (the owner) will be able to view assets and test results page."
                       }
                     ]
+                  },
+                  "launchOrder": {
+                    "description": "Control starting order of suites. The default is the order in which suites are written in the config file.",
+                    "type": "string",
+                    "oneOf": [
+                      {
+                        "const": "fail rate",
+                        "title": "Suites that historically have the highest failure rate start first."
+                      }
+                    ]
                   }
                 },
                 "additionalProperties": false

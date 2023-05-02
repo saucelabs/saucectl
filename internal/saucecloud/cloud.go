@@ -24,8 +24,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
-	"github.com/saucelabs/saucectl/internal/files"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/hashio"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -607,7 +607,7 @@ func (r *CloudRunner) uploadProject(filename, description string, pType uploadTy
 // isFileStored calculates the checksum of the given file and looks up its existence in the Sauce Labs app storage.
 // Returns an empty string if no file was found.
 func (r *CloudRunner) isFileStored(filename string) (storageID string, err error) {
-	hash, err := files.NewSHA256(filename)
+	hash, err := hashio.SHA256(filename)
 	if err != nil {
 		return "", err
 	}

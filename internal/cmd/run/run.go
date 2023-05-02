@@ -68,9 +68,6 @@ var (
 	ErrEmptySuiteName = errors.New(msg.EmptyAdhocSuiteName)
 )
 
-// DockerMode constant
-const DockerMode = "docker"
-
 // gFlags contains all global flags that are set when 'run' is invoked.
 var gFlags = globalFlags{}
 
@@ -114,8 +111,8 @@ func Command() *cobra.Command {
 	defaultCfgPath := filepath.Join(".sauce", "config.yml")
 	cmd.PersistentFlags().StringVarP(&gFlags.cfgFilePath, "config", "c", defaultCfgPath, "Specifies which config file to use")
 	cmd.PersistentFlags().DurationVarP(&gFlags.globalTimeout, "timeout", "t", 0, "Global timeout that limits how long saucectl can run in total. Supports duration values like '10s', '30m' etc. (default: no timeout)")
-	cmd.PersistentFlags().BoolVar(&gFlags.async, "async", false, "Launches tests without waiting for test results (sauce mode only)")
-	cmd.PersistentFlags().BoolVar(&gFlags.failFast, "fail-fast", false, "Stops suites after the first failure (sauce mode only)")
+	cmd.PersistentFlags().BoolVar(&gFlags.async, "async", false, "Launches tests without waiting for test results")
+	cmd.PersistentFlags().BoolVar(&gFlags.failFast, "fail-fast", false, "Stops suites after the first failure")
 	cmd.PersistentFlags().DurationVar(&gFlags.appStoreTimeout, "uploadTimeout", 5*time.Minute, "Upload timeout that limits how long saucectl will wait for an upload to finish. Supports duration values like '10s' '30m' etc. (default: 5m)")
 	sc.StringP("region", "r", "sauce::region", "us-west-1", "The sauce labs region.")
 	sc.StringToStringP("env", "e", "env", map[string]string{}, "Set environment variables, e.g. -e foo=bar. Not supported when running espresso/xcuitest!")
@@ -129,7 +126,7 @@ func Command() *cobra.Command {
 	sc.String("root-dir", "rootDir", ".", "Specifies the project directory. Not applicable to mobile frameworks.")
 	sc.StringToString("experiment", "sauce::experiment", map[string]string{}, "Specifies a list of experimental flags and values")
 	sc.Bool("dry-run", "dryRun", false, "Simulate a test run without actually running any tests.")
-	sc.Int("retries", "sauce::retries", 0, "Retries specifies the number of times to retry a failed suite (sauce mode only)")
+	sc.Int("retries", "sauce::retries", 0, "Retries specifies the number of times to retry a failed suite")
 	sc.String("launch-order", "sauce::launchOrder", "", `Launch jobs based on the failure rate. Jobs with the highest failure rate launch first. Supports values: ["fail rate"]`)
 
 	// Metadata
@@ -245,17 +242,6 @@ func Run(cmd *cobra.Command) (int, error) {
 	}
 
 	return 1, errors.New(msg.UnknownFrameworkConfig)
-}
-
-func printTestEnv(testEnv string) {
-	if gFlags.testEnvSilent {
-		return
-	}
-
-	if testEnv == DockerMode {
-		fmt.Println(msg.DockerLogo)
-		fmt.Println()
-	}
 }
 
 // awaitGlobalTimeout waits for the global timeout event. In case of global timeout event, it attempts to interrupt the

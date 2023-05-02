@@ -3,11 +3,8 @@ package apps
 import (
 	"fmt"
 	"net/url"
-	"os"
 	"regexp"
 	"strings"
-
-	"github.com/saucelabs/saucectl/internal/msg"
 )
 
 var (
@@ -66,8 +63,5 @@ func Validate(kind, app string, validExt []string) error {
 		return fmt.Errorf("invalid %s file: %s, make sure extension is one of the following: %s", kind, app, strings.Join(validExt, ", "))
 	}
 
-	if _, err := os.Stat(app); err == nil {
-		return nil
-	}
-	return fmt.Errorf(msg.FileNotFound, app)
+	return nil
 }

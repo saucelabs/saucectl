@@ -1,6 +1,6 @@
 # Contributing to saucectl
 
-Want to hack on saucectl? Awesome! This page contains information about reporting issues as well as some tips and guidelines useful to experienced open source contributors. Finally, make sure you read our [community guidelines](#docker-community-guidelines) before you start participating.
+Want to hack on saucectl? Awesome! This page contains information about reporting issues as well as some tips and guidelines useful to experienced open source contributors.
 
 ## Topics
 
@@ -12,7 +12,6 @@ Want to hack on saucectl? Awesome! This page contains information about reportin
 * [Design and Cleanup Proposals](#design-and-cleanup-proposals)
 * [Reporting Issues](#reporting-other-issues)
 * [Quick Contribution Tips and Guidelines](#quick-contribution-tips-and-guidelines)
-* [Community Guidelines](#docker-community-guidelines)
 * [Releasing saucectl](#releasing-saucectl)
 
 ## Development Requirements
@@ -66,9 +65,9 @@ This section gives the experienced contributor some tips and guidelines.
 
 ### Pull requests are always welcome
 
-Not sure if that typo is worth a pull request? Found a bug and know how to fix it? Do it! We will appreciate it. Any significant improvement should be documented as [a GitHub issue](https://github.com/docker/cli/issues) before anybody starts working on it.
+Not sure if that typo is worth a pull request? Found a bug and know how to fix it? Do it! We will appreciate it. Any significant improvement should be documented as [a GitHub issue](https://github.com/saucelabs/saucectl/issues) before anybody starts working on it.
 
-We are always thrilled to receive pull requests. We do our best to process them quickly. If your pull request is not accepted on the first try, don't get discouraged! Our contributor's guide explains [the review process we use for simple changes](https://docs.docker.com/opensource/workflow/make-a-contribution/).
+We are always thrilled to receive pull requests. We do our best to process them quickly.
 
 ### Conventions
 
@@ -79,7 +78,7 @@ Fork the repository and make changes on your fork in a feature branch:
 
 Submit unit tests for your changes. Go has a great test framework built in; use it! Take a look at existing tests for inspiration. [Run the full test suite](README.md) on your branch before submitting a pull request.
 
-Update the documentation when creating or modifying features. Test your documentation changes for clarity, concision, and correctness, as well as a clean documentation build. See our contributors guide for [our style guide](https://docs.docker.com/opensource/doc-style) and instructions on [building the documentation](https://docs.docker.com/opensource/project/test-and-docs/#build-and-test-the-documentation).
+Update the documentation when creating or modifying features. Test your documentation changes for clarity, concision, and correctness, as well as a clean documentation build.
 
 Write clean code. Universally formatted code promotes ease of writing, reading, and maintenance. Always run `gofmt -s -w file.go` on each changed file before committing your changes. Most editors have plug-ins that do this automatically.
 

@@ -2,20 +2,12 @@ package apps
 
 import (
 	"fmt"
-	"path/filepath"
 	"testing"
-
-	"gotest.tools/v3/fs"
 )
 
 func TestValidate(t *testing.T) {
-	dir := fs.NewDir(t, "xcuitest-config",
-		fs.WithFile("test.ipa", "", fs.WithMode(0655)),
-		fs.WithFile("test.zip", "", fs.WithMode(0655)))
-	defer dir.Remove()
-	appIPA := filepath.Join(dir.Path(), "test.ipa")
-	appZIP := filepath.Join(dir.Path(), "test.zip")
-	badAppIPA := filepath.Join(dir.Path(), "bad-test.ipa")
+	appIPA := "test.ipa"
+	appZIP := "test.zip"
 
 	type args struct {
 		kind     string
@@ -53,15 +45,6 @@ func TestValidate(t *testing.T) {
 				validExt: []string{".ipa"},
 			},
 			wantErr: nil,
-		},
-		{
-			name: "Non-existing file",
-			args: args{
-				kind:     "application",
-				app:      badAppIPA,
-				validExt: []string{".ipa"},
-			},
-			wantErr: fmt.Errorf("%s: file not found", badAppIPA),
 		},
 		{
 			name: "Invalid file extension",

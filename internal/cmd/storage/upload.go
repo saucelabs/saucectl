@@ -6,7 +6,7 @@ import (
 	"os"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
-	"github.com/saucelabs/saucectl/internal/files"
+	"github.com/saucelabs/saucectl/internal/hashio"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/saucelabs/saucectl/internal/usage"
@@ -54,7 +54,7 @@ func UploadCommand() *cobra.Command {
 				return fmt.Errorf("failed to inspect file: %w", err)
 			}
 
-			hash, err := files.NewSHA256(args[0])
+			hash, err := hashio.SHA256(args[0])
 			if err != nil {
 				return fmt.Errorf("failed to compute checksum: %w", err)
 			}

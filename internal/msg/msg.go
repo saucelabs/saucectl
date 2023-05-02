@@ -7,24 +7,6 @@ import (
 	"github.com/fatih/color"
 )
 
-// DockerLogo is an eyecatcher message that indicates the user is running tests inside a docker container.
-const DockerLogo = `
-                                    ##        .
-                              ## ## ##       ==
-                           ## ## ## ##      ===
-                       /""""""""""""""""\___/ ===
-                  ~~~ {~~ ~~~~ ~~~ ~~~~ ~~ ~ /  ===- ~~~
-                       \______ o          __/
-                         \    \        __/
-                          \____\______/
-
-  _____   ____   _____ _  ________ _____    __  __  ____  _____  ______ 
- |  __ \ / __ \ / ____| |/ /  ____|  __ \  |  \/  |/ __ \|  __ \|  ____|
- | |  | | |  | | |    | ' /| |__  | |__) | | \  / | |  | | |  | | |__   
- | |  | | |  | | |    |  < |  __| |  _  /  | |\/| | |  | | |  | |  __|  
- | |__| | |__| | |____| . \| |____| | \ \  | |  | | |__| | |__| | |____ 
- |_____/ \____/ \_____|_|\_\______|_|  \_\ |_|  |_|\____/|_____/|______|`
-
 // SignupMessage explains how to obtain a Sauce Labs account and where to find the access key.
 const SignupMessage = `Don't have an account? Signup here:
 https://bit.ly/saucectl-signup
@@ -80,17 +62,6 @@ func LogGlobalTimeoutShutdown() {
 	color.Red(`┌───────────────────────────────────────────────────┐
 │ Global timeout reached. Shutting down saucectl... │
 └───────────────────────────────────────────────────┘`)
-}
-
-// LogUploadTimeout prints out a timeout warning.
-func LogUploadTimeout() {
-	red := color.New(color.FgRed).SprintFunc()
-	fmt.Printf("\n%s: %s\n\n", red("TIMEOUT"), UploadingTimeout)
-}
-
-// LogUploadTimeoutSuggestion prints out adding unnecessary files to .sauceignore
-func LogUploadTimeoutSuggestion() {
-	fmt.Printf("%s\n\n", SauceIgnoreSuggestion)
 }
 
 // LogRootDirWarning prints out a warning message regarding the lack of an explicit rootDir configuration.

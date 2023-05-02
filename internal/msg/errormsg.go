@@ -1,15 +1,5 @@
 package msg
 
-// appstore uploading
-const (
-	// FailedToUpload indicates the upload failure
-	FailedToUpload = "failed to upload project"
-	// FileNotFound indicates file not found
-	FileNotFound = "%s: file not found"
-	// UploadingTimeout is a the message to warn the user that its upload reach the timeout.
-	UploadingTimeout = `Failed to upload the project because it took too long. `
-)
-
 // cmd setting
 const (
 	// InvalidUsername indicates invalid username
@@ -90,8 +80,6 @@ const (
 	InvalidDeviceType = "deviceType: %s is unsupported for suite: %s. Devices index: %d. Supported device types: %s"
 	// MissingDeviceConfig indicates neither device name nor device ID is provided
 	MissingDeviceConfig = "missing device name or ID for suite: %s. Devices index: %d"
-	// InvalidDockerFileTransferType indicates illegal file transfer type
-	InvalidDockerFileTransferType = "illegal file transfer type '%s', must be one of '%s'"
 	// InvalidVisibility indicates that the configured visibility is invalid and has no effect on the test results
 	InvalidVisibility = "'%s' is not a valid visibility value. Must be one of [%s]"
 	// InvalidLaunchingOption indicates the launching option is invalid

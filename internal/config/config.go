@@ -173,21 +173,6 @@ type TypeDef struct {
 	Kind       string `yaml:"kind,omitempty"`
 }
 
-// DockerFileMode represent the file providing method
-type DockerFileMode string
-
-// DockerFile* represent the different modes
-const (
-	DockerFileMount DockerFileMode = "mount"
-	DockerFileCopy  DockerFileMode = "copy"
-)
-
-// Docker represents docker settings.
-type Docker struct {
-	FileTransfer DockerFileMode `yaml:"fileTransfer,omitempty" json:"fileTransfer,omitempty"`
-	Image        string         `yaml:"image,omitempty" json:"image,omitempty"`
-}
-
 // Npm represents the npm settings
 type Npm struct {
 	Registry     string            `yaml:"registry,omitempty" json:"registry,omitempty"`
