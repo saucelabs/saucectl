@@ -1,15 +1,5 @@
 package msg
 
-// appstore uploading
-const (
-	// FailedToUpload indicates the upload failure
-	FailedToUpload = "failed to upload project"
-	// FileNotFound indicates file not found
-	FileNotFound = "%s: file not found"
-	// UploadingTimeout is a the message to warn the user that its upload reach the timeout.
-	UploadingTimeout = `Failed to upload the project because it took too long. `
-)
-
 // cmd setting
 const (
 	// InvalidUsername indicates invalid username
