@@ -872,7 +872,6 @@ func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHi
 	if err != nil {
 		return insights.JobHistory{}, err
 	}
-
 	return r.InsightsService.GetHistory(context.Background(), user, launchOrder)
 }
 
