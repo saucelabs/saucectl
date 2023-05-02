@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
-	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
 )
@@ -91,7 +90,7 @@ func (r *EspressoRunner) runSuites() bool {
 
 	suites := r.Project.Suites
 	if r.Project.Sauce.LaunchOrder != "" {
-		history, err := r.getHistory(r.Project.Sauce.LaunchOrder, []string{insights.PlatformVDC, insights.PlatformRDC})
+		history, err := r.getHistory(r.Project.Sauce.LaunchOrder)
 		if err != nil {
 			log.Warn().Err(err).Msg(msg.RetrieveJobHistoryError)
 		} else {

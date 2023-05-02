@@ -7,8 +7,6 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/insights"
-
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -95,7 +93,7 @@ func (r *XcuitestRunner) runSuites() bool {
 
 	suites := r.Project.Suites
 	if r.Project.Sauce.LaunchOrder != "" {
-		history, err := r.getHistory(r.Project.Sauce.LaunchOrder, []string{insights.PlatformRDC})
+		history, err := r.getHistory(r.Project.Sauce.LaunchOrder)
 		if err != nil {
 			log.Warn().Err(err).Msg(msg.RetrieveJobHistoryError)
 		} else {

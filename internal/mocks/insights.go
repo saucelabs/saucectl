@@ -10,14 +10,14 @@ import (
 )
 
 type FakeInsightService struct {
-	GetHistoryFn  func(context.Context, iam.User, config.LaunchOrder, string) (insights.JobHistory, error)
+	GetHistoryFn  func(context.Context, iam.User, config.LaunchOrder) (insights.JobHistory, error)
 	PostTestRunFn func(context.Context, []insights.TestRun) error
 	ListJobsFn    func(ctx context.Context, userID, jobType string, queryOption job.QueryOption) (job.List, error)
 	ReadJobFn     func(ctx context.Context, id string) (job.Job, error)
 }
 
-func (f FakeInsightService) GetHistory(ctx context.Context, user iam.User, cfg config.LaunchOrder, source string) (insights.JobHistory, error) {
-	return f.GetHistoryFn(ctx, user, cfg, source)
+func (f FakeInsightService) GetHistory(ctx context.Context, user iam.User, cfg config.LaunchOrder) (insights.JobHistory, error) {
+	return f.GetHistoryFn(ctx, user, cfg)
 }
 
 func (f FakeInsightService) PostTestRun(ctx context.Context, runs []insights.TestRun) error {

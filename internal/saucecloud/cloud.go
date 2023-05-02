@@ -11,7 +11,6 @@ import (
 	"os/signal"
 	"path"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
@@ -92,6 +91,14 @@ const BaseFilepathLength = 53
 
 // MaxFilepathLength represents the maximum path length acceptable.
 const MaxFilepathLength = 255
+
+// DeviceType represents the type of device that can be used.
+type DeviceType int
+
+const (
+	VirtualDevice DeviceType = iota
+	RealDevice
+)
 
 func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartOptions, chan result, error) {
 	jobOpts := make(chan job.StartOptions, maxRetries+1)
@@ -868,54 +875,17 @@ func (r *CloudRunner) getAvailableVersionsMessage(frameworkName string) string {
 	return m
 }
 
-func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder, sources []string) (insights.JobHistory, error) {
+func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHistory, error) {
 	user, err := r.UserService.User(context.Background())
 	if err != nil {
 		return insights.JobHistory{}, err
 	}
 
-	var completeJobHistory []insights.JobHistory
-
-	for _, source := range sources {
-		jobHistory, err := r.InsightsService.GetHistory(context.Background(), user, launchOrder, source)
-		if err != nil {
-			return insights.JobHistory{}, err
-		}
-		completeJobHistory = append(completeJobHistory, jobHistory)
+	jobHistory, err := r.InsightsService.GetHistory(context.Background(), user, launchOrder)
+	if err != nil {
+		return insights.JobHistory{}, err
 	}
-	return mergeJobHistories(completeJobHistory), nil
-}
-
-func mergeJobHistories(histories []insights.JobHistory) insights.JobHistory {
-	testCasesMap := map[string]insights.TestCase{}
-	for _, history := range histories {
-		for _, tc := range history.TestCases {
-			addOrReplaceTestCase(&testCasesMap, tc)
-		}
-	}
-	var testCases []insights.TestCase
-	for _, tc := range testCasesMap {
-		testCases = append(testCases, tc)
-	}
-	sort.Slice(testCases, func(i, j int) bool {
-		return testCases[i].FailRate > testCases[j].FailRate
-	})
-	return insights.JobHistory{
-		TestCases: testCases,
-	}
-}
-
-// addOrReplaceTestCase adds or replaces the insights.TestCase in the map[string]insights.TestCase
-// If there is already one with the same name, only the highest fail rate is kept.
-func addOrReplaceTestCase(mp *map[string]insights.TestCase, tc insights.TestCase) {
-	tcRef, present := (*mp)[tc.Name]
-	if !present {
-		(*mp)[tc.Name] = tc
-		return
-	}
-	if tc.FailRate > tcRef.FailRate {
-		(*mp)[tc.Name] = tc
-	}
+	return jobHistory, nil
 }
 
 func getSource(isRDC bool) build.Source {
