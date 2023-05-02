@@ -1,11 +1,5 @@
 package msg
 
-// appstore uploading
-const (
-	// UploadingTimeout is a message to warn the user that the upload timed out.
-	UploadingTimeout = `Failed to upload the project because it took too long. `
-)
-
 // cmd setting
 const (
 	// InvalidUsername indicates invalid username

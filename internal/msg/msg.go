@@ -64,17 +64,6 @@ func LogGlobalTimeoutShutdown() {
 └───────────────────────────────────────────────────┘`)
 }
 
-// LogUploadTimeout prints out a timeout warning.
-func LogUploadTimeout() {
-	red := color.New(color.FgRed).SprintFunc()
-	fmt.Printf("\n%s: %s\n\n", red("TIMEOUT"), UploadingTimeout)
-}
-
-// LogUploadTimeoutSuggestion prints out adding unnecessary files to .sauceignore
-func LogUploadTimeoutSuggestion() {
-	fmt.Printf("%s\n\n", SauceIgnoreSuggestion)
-}
-
 // LogRootDirWarning prints out a warning message regarding the lack of an explicit rootDir configuration.
 func LogRootDirWarning() {
 	red := color.New(color.FgRed).SprintFunc()
