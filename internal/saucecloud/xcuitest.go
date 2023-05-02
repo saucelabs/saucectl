@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
