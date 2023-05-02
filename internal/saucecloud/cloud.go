@@ -873,11 +873,7 @@ func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHi
 		return insights.JobHistory{}, err
 	}
 
-	jobHistory, err := r.InsightsService.GetHistory(context.Background(), user, launchOrder)
-	if err != nil {
-		return insights.JobHistory{}, err
-	}
-	return jobHistory, nil
+	return r.InsightsService.GetHistory(context.Background(), user, launchOrder)
 }
 
 func getSource(isRDC bool) build.Source {
