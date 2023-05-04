@@ -133,7 +133,7 @@ func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 				RunnerVersion:    opts.RunnerVersion,
 				TestFile:         opts.Suite,
 				Args:             c.formatEspressoArgs(opts.TestOptions),
-				VideoFPS:         25,
+				VideoFPS:         13, // 13 is the sweet spot to minimize frame drops
 			},
 			IdleTimeout: 9999,
 			MaxDuration: 10800,
