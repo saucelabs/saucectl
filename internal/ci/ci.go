@@ -49,6 +49,7 @@ var (
 	GitHub = Provider{Name: "GitHub", Envar: "GITHUB_RUN_ID"}
 	// GitLab represents https://about.gitlab.com/
 	GitLab = Provider{Name: "GitLab", Envar: "CI_PIPELINE_ID"}
+	Gitpod = Provider{Name: "Gitpod", Envar: "GITPOD_WORKSPACE_ID"}
 	// Jenkins represents https://www.jenkins.io/
 	Jenkins = Provider{Name: "Jenkins", Envar: "BUILD_NUMBER"}
 	// Semaphore represents https://semaphoreci.com/
@@ -76,6 +77,7 @@ var Providers = []Provider{
 	Drone,
 	GitHub,
 	GitLab,
+	Gitpod,
 	Jenkins,
 	Semaphore,
 	Travis,
@@ -215,7 +217,13 @@ func GetCI(provider Provider) CI {
 			User:      os.Getenv("GITLAB_USER_LOGIN"),
 		}
 	}
-
+	if reflect.DeepEqual(provider, Gitpod) {
+		ci = CI{
+			Provider:  provider,
+			OriginURL: os.Getenv("GITPOD_WORKSPACE_URL"),
+			Repo:      os.Getenv("GITPOD_REPO_ROOT"),
+		}
+	}
 	if reflect.DeepEqual(provider, Jenkins) {
 		ci = CI{
 			Provider:  provider,
