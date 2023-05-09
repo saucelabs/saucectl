@@ -3,7 +3,6 @@ package ci
 import (
 	"fmt"
 	"os"
-	"reflect"
 )
 
 type CI struct {
@@ -248,7 +247,7 @@ func GetCI(provider Provider) CI {
 func GetTags() []string {
 	var tags []string
 	provider := GetProvider()
-	if reflect.DeepEqual(provider, None) {
+	if provider == None {
 		return tags
 	}
 
