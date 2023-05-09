@@ -351,3 +351,35 @@ func (c *APITester) doAsyncRun(client *http.Client, request *http.Request) (apit
 
 	return asyncResponse, nil
 }
+
+// GetVault returns the vault for the project identified by hookID
+func (c *APITester) GetVault(ctx context.Context, hookID string) (apitest.Vault, error) {
+	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/vault", c.URL, hookID)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return apitest.Vault{}, err
+	}
+
+	req.SetBasicAuth(c.Username, c.AccessKey)
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return apitest.Vault{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return apitest.Vault{}, errors.New(msg.InternalServerError)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return apitest.Vault{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, body)
+	}
+
+	var vaultResponse apitest.Vault
+	if err := json.NewDecoder(resp.Body).Decode(&vaultResponse); err != nil {
+		return apitest.Vault{}, err
+	}
+
+	return vaultResponse, nil
+}
