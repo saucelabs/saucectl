@@ -155,7 +155,7 @@ jobs:
         run: ./saucectl run -c .sauce/playwright.yml --timeout 10m
 
       - name: Saucectl RUN - CLI Driven
-        run: ./saucectl run playwright ".*.js" -c "" --name "CLI Driven" --browser chromium --rootDir tests/e2e/playwright/ --playwright.version 1.18.1 --timeout 10m
+        run: ./saucectl run playwright ".*.js" -c "" --name "CLI Driven" --browser chromium --rootDir tests/e2e/playwright/ --playwright.version 1.33.0 --timeout 10m
 
   testcafe:
     needs: build
@@ -177,7 +177,7 @@ jobs:
         run: ./saucectl run -c .sauce/testcafe.yml --timeout 10m
 
       - name: Saucectl RUN - CLI Driven
-        run: ./saucectl run testcafe "*.test.js" -c "" --name "CLI Driven" --browser chrome --rootDir tests/e2e/testcafe/ --testcafe.version 1.18.3 --timeout 10m
+        run: ./saucectl run testcafe "*.test.js" -c "" --name "CLI Driven" --browser chrome --rootDir tests/e2e/testcafe/ --testcafe.version 2.5.0 --timeout 10m
 
   cypress-v1alpha:
     needs: build
