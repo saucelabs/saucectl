@@ -187,6 +187,10 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 		Artifacts:    suite.Artifacts,
 		Metadata:     metadata,
 		WorkloadType: suite.Workload,
+		Tunnel: imagerunner.Tunnel{
+			Name:  r.Project.Sauce.Tunnel.Name,
+			Owner: r.Project.Sauce.Tunnel.Owner,
+		},
 	})
 	if errors.Is(err, context.DeadlineExceeded) && ctx.Err() != nil {
 		run.Status = imagerunner.StateCancelled
