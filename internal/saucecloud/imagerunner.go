@@ -193,11 +193,9 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 		Artifacts:    suite.Artifacts,
 		Metadata:     metadata,
 		WorkloadType: suite.Workload,
-		Tunnel: imagerunner.Tunnel{
-			Name:  r.Project.Sauce.Tunnel.Name,
-			Owner: r.Project.Sauce.Tunnel.Owner,
-		},
+		Tunnel:       r.getTunnel(),
 	})
+
 	if errors.Is(err, context.DeadlineExceeded) && ctx.Err() != nil {
 		run.Status = imagerunner.StateCancelled
 		return run, SuiteTimeoutError{Timeout: suite.Timeout}
@@ -234,6 +232,16 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 	}
 
 	return run, err
+}
+
+func (r *ImgRunner) getTunnel() *imagerunner.Tunnel {
+	if r.Project.Sauce.Tunnel.Name == "" && r.Project.Sauce.Tunnel.Owner == "" {
+		return nil
+	}
+	return &imagerunner.Tunnel{
+		Name:  r.Project.Sauce.Tunnel.Name,
+		Owner: r.Project.Sauce.Tunnel.Owner,
+	}
 }
 
 func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
