@@ -3,7 +3,6 @@ package ci
 import (
 	"fmt"
 	"os"
-	"reflect"
 )
 
 type CI struct {
@@ -49,6 +48,7 @@ var (
 	GitHub = Provider{Name: "GitHub", Envar: "GITHUB_RUN_ID"}
 	// GitLab represents https://about.gitlab.com/
 	GitLab = Provider{Name: "GitLab", Envar: "CI_PIPELINE_ID"}
+	Gitpod = Provider{Name: "Gitpod", Envar: "GITPOD_WORKSPACE_ID"}
 	// Jenkins represents https://www.jenkins.io/
 	Jenkins = Provider{Name: "Jenkins", Envar: "BUILD_NUMBER"}
 	// Semaphore represents https://semaphoreci.com/
@@ -76,6 +76,7 @@ var Providers = []Provider{
 	Drone,
 	GitHub,
 	GitLab,
+	Gitpod,
 	Jenkins,
 	Semaphore,
 	Travis,
@@ -97,18 +98,17 @@ func GetProvider() Provider {
 
 // GetCI returns the CI details if the code is executed in a known CI environment.
 func GetCI(provider Provider) CI {
-	var ci CI
-	if reflect.DeepEqual(provider, AppVeyor) {
-		ci = CI{
+	switch provider {
+	case AppVeyor:
+		return CI{
 			Provider:  provider,
 			OriginURL: fmt.Sprintf("%s/project/%s/%s/builds/%s", os.Getenv("APPVEYOR_URL"), os.Getenv("APPVEYOR_ACCOUNT_NAME"), os.Getenv("APPVEYOR_PROJECT_NAME"), os.Getenv("APPVEYOR_BUILD_ID")),
 			Repo:      os.Getenv("APPVEYOR_REPO_NAME"),
 			RefName:   os.Getenv("APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH"),
 			SHA:       os.Getenv("APPVEYOR_REPO_COMMIT"),
 		}
-	}
-	if reflect.DeepEqual(provider, AWS) {
-		ci = CI{
+	case AWS:
+		return CI{
 			Provider:  provider,
 			OriginURL: os.Getenv("CODEBUILD_PUBLIC_BUILD_URL"),
 			Repo:      os.Getenv("CODEBUILD_SOURCE_REPO_URL"),
@@ -116,9 +116,8 @@ func GetCI(provider Provider) CI {
 			SHA:       os.Getenv("CODEBUILD_RESOLVED_SOURCE_VERSION"),
 			User:      os.Getenv("CODEBUILD_WEBHOOK_ACTOR_ACCOUNT_ID"),
 		}
-	}
-	if reflect.DeepEqual(provider, Azure) {
-		ci = CI{
+	case Azure:
+		return CI{
 			Provider:  provider,
 			OriginURL: os.Getenv("Build_BuildUri"),
 			Repo:      os.Getenv("System_PullRequest_SourceRepositoryURI"),
@@ -126,9 +125,8 @@ func GetCI(provider Provider) CI {
 			SHA:       os.Getenv("Build_SourceVersion"),
 			User:      os.Getenv("Build_RequestedFor"),
 		}
-	}
-	if reflect.DeepEqual(provider, Bamboo) {
-		ci = CI{
+	case Bamboo:
+		return CI{
 			Provider:  provider,
 			OriginURL: os.Getenv("bamboo_buildResultsUrl"),
 			Repo:      os.Getenv("bamboo_planRepository_repositoryUrl"),
@@ -136,9 +134,8 @@ func GetCI(provider Provider) CI {
 			SHA:       os.Getenv("bamboo_planRepository_revision"),
 			User:      os.Getenv("bamboo_ManualBuildTriggerReason_userName"),
 		}
-	}
-	if reflect.DeepEqual(provider, Bitbucket) {
-		ci = CI{
+	case Bitbucket:
+		return CI{
 			Provider:  provider,
 			OriginURL: fmt.Sprintf("https://bitbucket.org/%s/addon/pipelines/home#!/results/%s", os.Getenv("BITBUCKET_REPO_FULL_NAME"), os.Getenv("BITBUCKET_BUILD_NUMBER")),
 			Repo:      os.Getenv("BITBUCKET_REPO_FULL_NAME"),
@@ -146,9 +143,8 @@ func GetCI(provider Provider) CI {
 			SHA:       os.Getenv("BITBUCKET_COMMIT"),
 			User:      os.Getenv("BITBUCKET_STEP_TRIGGERER_UUID"),
 		}
-	}
-	if reflect.DeepEqual(provider, Buildkite) {
-		ci = CI{
+	case Buildkite:
+		return CI{
 			Provider:  provider,
 			OriginURL: os.Getenv("BUILDKITE_BUILD_URL"),
 			Repo:      os.Getenv("BUILDKITE_REPO"),
@@ -156,9 +152,8 @@ func GetCI(provider Provider) CI {
 			SHA:       os.Getenv("BUILDKITE_COMMIT"),
 			User:      os.Getenv("BUILDKITE_BUILD_CREATOR"),
 		}
-	}
-	if reflect.DeepEqual(provider, Buddy) {
-		ci = CI{
+	case Buddy:
+		return CI{
 			Provider:  provider,
 			OriginURL: os.Getenv("BUDDY_PIPELINE_URL"),
 			Repo:      os.Getenv("BUDDY_PROJECT_URL"),
@@ -166,9 +161,8 @@ func GetCI(provider Provider) CI {
 			SHA:       os.Getenv("BUDDY_EXECUTION_REVISION"),
 			User:      os.Getenv("BUDDY_INVOKER_NAME"),
 		}
-	}
-	if reflect.DeepEqual(provider, Circle) {
-		ci = CI{
+	case Circle:
+		return CI{
 			Provider:  provider,
 			OriginURL: os.Getenv("CIRCLE_BUILD_URL"),
 			Repo:      os.Getenv("CIRCLE_REPOSITORY_URL"),
@@ -176,27 +170,24 @@ func GetCI(provider Provider) CI {
 			SHA:       os.Getenv("CIRCLE_SHA1"),
 			User:      os.Getenv("CIRCLE_USERNAME"),
 		}
-	}
-	if reflect.DeepEqual(provider, CodeShip) {
-		ci = CI{
+	case CodeShip:
+		return CI{
 			Provider:  provider,
 			OriginURL: os.Getenv("CI_BUILD_URL"),
 			Repo:      os.Getenv("CI_REPO_NAME"),
 			RefName:   os.Getenv("CI_BRANCH"),
 			SHA:       os.Getenv("CI_COMMIT_ID"),
 		}
-	}
-	if reflect.DeepEqual(provider, Drone) {
-		ci = CI{
+	case Drone:
+		return CI{
 			Provider:  provider,
 			OriginURL: os.Getenv("DRONE_BUILD_LINK"),
 			Repo:      os.Getenv("DRONE_REPO"),
 			RefName:   os.Getenv("DRONE_BRANCH"),
 			SHA:       os.Getenv("DRONE_COMMIT_SHA"),
 		}
-	}
-	if reflect.DeepEqual(provider, GitHub) {
-		ci = CI{
+	case GitHub:
+		return CI{
 			Provider:  provider,
 			OriginURL: fmt.Sprintf("%s/%s/actions/runs/%s", os.Getenv("GITHUB_SERVER_URL"), os.Getenv("GITHUB_REPOSITORY"), os.Getenv("GITHUB_RUN_ID")),
 			Repo:      os.Getenv("GITHUB_REPOSITORY"),
@@ -204,9 +195,8 @@ func GetCI(provider Provider) CI {
 			SHA:       os.Getenv("GITHUB_SHA"),
 			User:      os.Getenv("GITHUB_ACTOR"),
 		}
-	}
-	if reflect.DeepEqual(provider, GitLab) {
-		ci = CI{
+	case GitLab:
+		return CI{
 			Provider:  provider,
 			OriginURL: os.Getenv("CI_JOB_URL"),
 			Repo:      os.Getenv("CI_PROJECT_PATH"),
@@ -214,49 +204,50 @@ func GetCI(provider Provider) CI {
 			SHA:       os.Getenv("CI_COMMIT_SHA"),
 			User:      os.Getenv("GITLAB_USER_LOGIN"),
 		}
-	}
-
-	if reflect.DeepEqual(provider, Jenkins) {
-		ci = CI{
+	case Gitpod:
+		return CI{
+			Provider:  provider,
+			OriginURL: os.Getenv("GITPOD_WORKSPACE_URL"),
+			Repo:      os.Getenv("GITPOD_REPO_ROOT"),
+		}
+	case Jenkins:
+		return CI{
 			Provider:  provider,
 			OriginURL: os.Getenv("JOB_URL"),
 			Repo:      os.Getenv("GIT_URL"),
 			RefName:   os.Getenv("GIT_BRANCH"),
 			SHA:       os.Getenv("GIT_COMMIT"),
 		}
-	}
-	if reflect.DeepEqual(provider, Semaphore) {
-		ci = CI{
+	case Semaphore:
+		return CI{
 			Provider:  provider,
 			OriginURL: fmt.Sprintf("%s/workflows/%s?pipeline_id=%s", os.Getenv("SEMAPHORE_ORGANIZATION_URL"), os.Getenv("SEMAPHORE_PROJECT_ID"), os.Getenv("SEMAPHORE_JOB_ID")),
 			Repo:      os.Getenv("SEMAPHORE_GIT_URL"),
 			RefName:   os.Getenv("SEMAPHORE_GIT_BRANCH"),
 			SHA:       os.Getenv("SEMAPHORE_GIT_SHA"),
 		}
-	}
-	if reflect.DeepEqual(provider, Travis) {
-		ci = CI{
+	case Travis:
+		return CI{
 			Provider:  provider,
 			OriginURL: os.Getenv("TRAVIS_BUILD_WEB_URL"),
 			Repo:      os.Getenv("TRAVIS_REPO_SLUG"),
 			RefName:   os.Getenv("TRAVIS_BRANCH"),
 			SHA:       os.Getenv("TRAVIS_COMMIT"),
 		}
-	}
-	if reflect.DeepEqual(provider, TeamCity) {
-		ci = CI{
+	case TeamCity:
+		return CI{
 			Provider: provider,
 		}
 	}
 
-	return ci
+	return CI{}
 }
 
 // GetTags returns tag list containing CI info
 func GetTags() []string {
 	var tags []string
 	provider := GetProvider()
-	if reflect.DeepEqual(provider, None) {
+	if provider == None {
 		return tags
 	}
 
