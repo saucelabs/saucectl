@@ -39,7 +39,7 @@ type RunnerSpec struct {
 	Metadata     map[string]string `json:"metadata,omitempty"`
 	Artifacts    []string          `json:"artifacts,omitempty"`
 	WorkloadType string            `json:"workloadType,omitempty"`
-	Tunnel       Tunnel            `json:"tunnel,omitempty"`
+	Tunnel       *Tunnel           `json:"tunnel,omitempty"`
 }
 
 type Tunnel struct {
