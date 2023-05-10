@@ -20,6 +20,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/saucelabs/saucectl/internal/tunnel"
 )
 
 type ImageRunner interface {
@@ -43,6 +44,7 @@ var ErrSuiteCancelled = errors.New("suite cancelled")
 type ImgRunner struct {
 	Project       imagerunner.Project
 	RunnerService ImageRunner
+	TunnelService tunnel.Service
 
 	Reporters []report.Reporter
 
@@ -62,6 +64,10 @@ type execResult struct {
 }
 
 func (r *ImgRunner) RunProject() (int, error) {
+	if err := tunnel.ValidateTunnel(r.TunnelService, r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner, tunnel.NoneFilter, false); err != nil {
+		return 1, err
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	r.ctx = ctx
 	r.cancel = cancel
@@ -187,11 +193,9 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 		Artifacts:    suite.Artifacts,
 		Metadata:     metadata,
 		WorkloadType: suite.Workload,
-		Tunnel: imagerunner.Tunnel{
-			Name:  r.Project.Sauce.Tunnel.Name,
-			Owner: r.Project.Sauce.Tunnel.Owner,
-		},
+		Tunnel:       r.getTunnel(),
 	})
+
 	if errors.Is(err, context.DeadlineExceeded) && ctx.Err() != nil {
 		run.Status = imagerunner.StateCancelled
 		return run, SuiteTimeoutError{Timeout: suite.Timeout}
@@ -228,6 +232,16 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 	}
 
 	return run, err
+}
+
+func (r *ImgRunner) getTunnel() *imagerunner.Tunnel {
+	if r.Project.Sauce.Tunnel.Name == "" && r.Project.Sauce.Tunnel.Owner == "" {
+		return nil
+	}
+	return &imagerunner.Tunnel{
+		Name:  r.Project.Sauce.Tunnel.Name,
+		Owner: r.Project.Sauce.Tunnel.Owner,
+	}
 }
 
 func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {

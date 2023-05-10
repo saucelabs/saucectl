@@ -33,6 +33,7 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 
 	regio := region.FromString(p.Sauce.Region)
 	imageRunnerClient.URL = regio.APIBaseURL()
+	restoClient.URL = regio.APIBaseURL()
 
 	tracker := segment.DefaultTracker
 
@@ -47,6 +48,7 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 	r := saucecloud.ImgRunner{
 		Project:       p,
 		RunnerService: &imageRunnerClient,
+		TunnelService: &restoClient,
 		Reporters: []report.Reporter{&table.Reporter{
 			Dst: os.Stdout,
 		}},
