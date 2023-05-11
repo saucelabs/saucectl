@@ -2,8 +2,10 @@ package apit
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/spf13/cobra"
@@ -74,6 +76,6 @@ func exec(projectName string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(vault)
+	json.NewEncoder(os.Stdout).Encode(vault)
 	return nil
 }
