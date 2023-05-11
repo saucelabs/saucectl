@@ -9,6 +9,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/cmd/apit"
 	"github.com/saucelabs/saucectl/internal/cmd/artifacts"
 	"github.com/saucelabs/saucectl/internal/cmd/completion"
 	"github.com/saucelabs/saucectl/internal/cmd/configure"
@@ -71,6 +72,7 @@ func main() {
 		artifacts.Command(cmd.PersistentPreRun),
 		jobs.Command(cmd.PersistentPreRun),
 		imagerunner.Command(cmd.PersistentPreRun),
+		apit.Command(cmd.PersistentPreRun),
 	)
 
 	if err := cmd.Execute(); err != nil {
