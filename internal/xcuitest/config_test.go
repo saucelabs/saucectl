@@ -514,7 +514,7 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 			},
 		},
 		{
-			name: "should keep original test options when sharding w/o sharding config",
+			name: "should keep original test options when sharding w/o testClassesFile",
 			project: Project{
 				Sauce: config.SauceConfig{
 					Concurrency: 2,
@@ -541,7 +541,7 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 			expErr: true,
 		},
 		{
-			name: "should keep original test options when sharding w/ empty sharding config",
+			name: "should keep original test options when sharding w/ empty testClassesFile",
 			project: Project{
 				Sauce: config.SauceConfig{
 					Concurrency: 2,
