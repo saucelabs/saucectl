@@ -30,6 +30,20 @@ type PublishedTest struct {
 	Published apitest.Test
 }
 
+type VaultErrResponse struct {
+	Message struct {
+		Errors []VaultErr `json:"errors,omitempty"`
+	} `json:"message,omitempty"`
+	Status string `json:"status,omitempty"`
+}
+
+type VaultErr struct {
+	Field         string                  `json:"field,omitempty"`
+	Message       string                  `json:"message,omitempty"`
+	Object        string                  `json:"object,omitempty"`
+	RejectedValue []apitest.VaultVariable `json:"rejected-value,omitempty"`
+}
+
 // NewAPITester a new instance of APITester.
 func NewAPITester(url string, username string, accessKey string, timeout time.Duration) APITester {
 	return APITester{
@@ -382,4 +396,44 @@ func (c *APITester) GetVault(ctx context.Context, hookID string) (apitest.Vault,
 	}
 
 	return vaultResponse, nil
+}
+
+func (c *APITester) PutVault(ctx context.Context, hookID string, vault apitest.Vault) error {
+	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/vaults", c.URL, hookID)
+
+	var b bytes.Buffer
+	err := json.NewEncoder(&b).Encode(vault)
+	if err != nil {
+		return err
+	}
+
+	req, err := NewRequestWithContext(ctx, http.MethodPut, url, &b)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return errors.New(msg.InternalServerError)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		var errResp VaultErrResponse
+		err = json.Unmarshal(body, &errResp)
+		if err != nil {
+			return fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, body)
+		}
+		// TODO: Parse the error response for accurate feedback
+	}
+
+	return nil
 }
