@@ -238,7 +238,7 @@ func ShardSuites(p *Project) error {
 			suites = append(suites, s)
 			continue
 		}
-		splitedSuites, err := parseShardConfig(s, p.Sauce.Concurrency)
+		shardedSuites, err := parseShardConfig(s, p.Sauce.Concurrency)
 		if err != nil {
 			log.Warn().Err(err).Msgf("failed to get tests from %s, use default settings", s.ShardConfig)
 			suites = append(suites, s)
