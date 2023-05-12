@@ -239,7 +239,7 @@ func ShardSuites(p *Project) error {
 			suites = append(suites, s)
 			continue
 		}
-		shardedSuites, err := parseShardConfig(s, p.Sauce.Concurrency)
+		shardedSuites, err := parseTestClassesFile(s, p.Sauce.Concurrency)
 		if err != nil {
 			log.Warn().Err(err).Msgf("Failed to get tests from %q. Using default settings.", s.TestClassesFile)
 			suites = append(suites, s)
@@ -256,7 +256,7 @@ func ShardSuites(p *Project) error {
 	return nil
 }
 
-func parseShardConfig(suite Suite, ccy int) ([]Suite, error) {
+func parseTestClassesFile(suite Suite, ccy int) ([]Suite, error) {
 	data, err := os.ReadFile(suite.TestClassesFile)
 	if err != nil {
 		return nil, err
