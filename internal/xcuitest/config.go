@@ -262,7 +262,7 @@ func parseTestClassesFile(suite Suite, ccy int) ([]Suite, error) {
 		return nil, err
 	}
 	if len(data) == 0 {
-		return nil, fmt.Errorf("sharding config file is empty")
+		return nil, fmt.Errorf("testClassesFile is empty")
 	}
 
 	tests := strings.Split(strings.TrimSpace(string(data)), "\n")
