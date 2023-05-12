@@ -6,7 +6,7 @@ import (
 	"gotest.tools/v3/assert"
 )
 
-func Test_SplitTests(t *testing.T) {
+func Test_BinPack(t *testing.T) {
 	var testCases = []struct {
 		name      string
 		files     []string
