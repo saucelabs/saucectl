@@ -175,7 +175,7 @@
           "smartRetry": {
             "$ref": "../subschema/common.schema.json#/definitions/smartRetry"
           },
-          "shardConfig": {
+          "shard": {
             "description": "When sharding is configured, saucectl automatically splits the tests by concurrency so that they can easily run in parallel.",
             "type": "string"
           },

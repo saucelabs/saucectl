@@ -2132,7 +2132,7 @@
                 "smartRetry": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/smartRetry"
                 },
-                "shardConfig": {
+                "shard": {
                   "description": "When sharding is configured, saucectl automatically splits the tests by concurrency so that they can easily run in parallel.",
                   "type": "string"
                 },

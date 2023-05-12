@@ -573,7 +573,7 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var testClassesFile string
 			if tc.configEnabled {
-				testClassesFile = createShardConfig(t, tc.content)
+				testClassesFile = createTestClassesFile(t, tc.content)
 				tc.project.Suites[0].TestClassesFile = testClassesFile
 			}
 			err := ShardSuites(&tc.project)
@@ -594,7 +594,7 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 	}
 }
 
-func createShardConfig(t *testing.T, content string) string {
+func createTestClassesFile(t *testing.T, content string) string {
 	t.Helper()
 	tmpDir, _ := os.MkdirTemp("", "shard")
 	file := filepath.Join(tmpDir, "tests.txt")
