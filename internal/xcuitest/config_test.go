@@ -2,6 +2,8 @@ package xcuitest
 
 import (
 	"errors"
+	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -9,7 +11,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/insights"
 
-	"gotest.tools/assert"
+	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 	"gotest.tools/v3/fs"
 )
 
@@ -448,4 +451,153 @@ func TestXCUITest_SortByHistory(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestXCUITest_ShardSuites(t *testing.T) {
+	testCases := []struct {
+		name          string
+		project       Project
+		content       string
+		configEnabled bool
+		expSuites     []Suite
+		expErr        bool
+	}{
+		{
+			name: "should keep original test options when sharding is disabled",
+			project: Project{
+				Suites: []Suite{
+					{
+						Name: "no shard",
+						TestOptions: TestOptions{
+							Class: []string{"no update"},
+						},
+					},
+				},
+			},
+			expSuites: []Suite{
+				{
+					Name: "no shard",
+					TestOptions: TestOptions{
+						Class: []string{"no update"},
+					},
+				},
+			},
+		},
+		{
+			name: "should shard tests by ccy when sharding is enabled",
+			project: Project{
+				Sauce: config.SauceConfig{
+					Concurrency: 2,
+				},
+				Suites: []Suite{
+					{
+						Name: "sharding test",
+					},
+				},
+			},
+			content:       "test1\ntest2\n",
+			configEnabled: true,
+			expSuites: []Suite{
+				{
+					Name: "sharding test - 1/2",
+					TestOptions: TestOptions{
+						Class: []string{"test1"},
+					},
+				},
+				{
+					Name: "sharding test - 2/2",
+					TestOptions: TestOptions{
+						Class: []string{"test2"},
+					},
+				},
+			},
+		},
+		{
+			name: "should keep original test options when sharding w/o sharding config",
+			project: Project{
+				Sauce: config.SauceConfig{
+					Concurrency: 2,
+				},
+				Suites: []Suite{
+					{
+						Name: "sharding test",
+						TestOptions: TestOptions{
+							Class: []string{"test1"},
+						},
+					},
+				},
+			},
+			configEnabled: false,
+			expSuites: []Suite{
+				{
+					Name: "sharding test",
+					TestOptions: TestOptions{
+						Class: []string{"test1"},
+					},
+				},
+			},
+			expErr: true,
+		},
+		{
+			name: "should keep original test options when sharding w/ empty sharding config",
+			project: Project{
+				Sauce: config.SauceConfig{
+					Concurrency: 2,
+				},
+				Suites: []Suite{
+					{
+						Name: "sharding test",
+						TestOptions: TestOptions{
+							Class: []string{"test1"},
+						},
+					},
+				},
+			},
+			configEnabled: true,
+			content:       "",
+			expSuites: []Suite{
+				{
+					Name: "sharding test",
+					TestOptions: TestOptions{
+						Class: []string{"test1"},
+					},
+				},
+			},
+			expErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var shardConfig string
+			if tc.configEnabled {
+				shardConfig = createShardConfig(tc.content)
+				tc.project.Suites[0].ShardConfig = shardConfig
+			}
+			err := ShardSuites(&tc.project)
+			if err != nil {
+				assert.True(t, tc.expErr)
+			}
+			for i, s := range tc.project.Suites {
+				assert.True(t, cmp.Equal(s.TestOptions, tc.expSuites[i].TestOptions))
+				assert.True(t, cmp.Equal(s.Name, tc.expSuites[i].Name))
+			}
+
+			t.Cleanup(func() {
+				if shardConfig != "" {
+					os.RemoveAll(shardConfig)
+				}
+			})
+		})
+	}
+}
+
+func createShardConfig(content string) string {
+	tmpDir, _ := os.MkdirTemp("", "shard")
+	file := filepath.Join(tmpDir, "tests.txt")
+	if err := os.WriteFile(file, []byte(content), 0644); err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	return file
 }

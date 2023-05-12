@@ -102,6 +102,9 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 	if err := xcuitest.Validate(p); err != nil {
 		return 1, err
 	}
+	if err := xcuitest.ShardSuites(&p); err != nil {
+		return 1, err
+	}
 
 	regio := region.FromString(p.Sauce.Region)
 

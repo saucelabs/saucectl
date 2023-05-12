@@ -2131,6 +2131,10 @@
                 },
                 "smartRetry": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/smartRetry"
+                },
+                "shardConfig": {
+                  "description": "Path to the sharding configuration file which contains XCUITest tests",
+                  "type": "string"
                 }
               },
               "anyOf": [

@@ -309,7 +309,7 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			}
 		}
 		if s.Shard == "concurrency" {
-			fileGroups := concurrency.SplitTestFiles(testFiles, ccy)
+			fileGroups := concurrency.SplitTests(testFiles, ccy)
 			for i, group := range fileGroups {
 				replica := s
 				replica.Name = fmt.Sprintf("%s - %d/%d", s.Name, i+1, len(fileGroups))

@@ -3,11 +3,13 @@ package xcuitest
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/apps"
+	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -67,6 +69,7 @@ type Suite struct {
 	AppSettings        config.AppSettings `yaml:"appSettings,omitempty" json:"appSettings"`
 	PassThreshold      int                `yaml:"passThreshold,omitempty" json:"-"`
 	SmartRetry         config.SmartRetry  `yaml:"smartRetry,omitempty" json:"-"`
+	ShardConfig        string             `yaml:"shardConfig,omitempty" json:"-"`
 }
 
 // IOS constant
@@ -225,4 +228,50 @@ func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
 		}
 	}
 	return res
+}
+
+// ShardSuites applies sharding by provided shard config
+func ShardSuites(p *Project) error {
+	var suites []Suite
+	for _, s := range p.Suites {
+		if s.ShardConfig == "" {
+			suites = append(suites, s)
+			continue
+		}
+		splited, err := parseTests(s, p.Sauce.Concurrency)
+		if err != nil {
+			log.Warn().Err(err).Msgf("failed to test tests from %s", s.ShardConfig)
+			suites = append(suites, s)
+			continue
+		}
+		if len(splited) == 0 {
+			suites = append(suites, s)
+		} else {
+			suites = append(suites, splited...)
+		}
+	}
+	p.Suites = suites
+
+	return nil
+}
+
+func parseTests(suite Suite, ccy int) ([]Suite, error) {
+	data, err := os.ReadFile(suite.ShardConfig)
+	if err != nil {
+		return nil, err
+	}
+	if len(data) == 0 {
+		return nil, fmt.Errorf("sharding config file is empty")
+	}
+
+	tests := strings.Split(strings.TrimSpace(string(data)), "\n")
+	buckets := concurrency.SplitTests(tests, ccy)
+	var suites []Suite
+	for i, b := range buckets {
+		currSuite := suite
+		currSuite.Name = fmt.Sprintf("%s - %d/%d", suite.Name, i+1, ccy)
+		currSuite.TestOptions.Class = b
+		suites = append(suites, currSuite)
+	}
+	return suites, nil
 }
