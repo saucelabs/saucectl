@@ -2,7 +2,6 @@ package xcuitest
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -574,7 +573,7 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var testClassesFile string
 			if tc.configEnabled {
-				testClassesFile = createShardConfig(tc.content)
+				testClassesFile = createShardConfig(t, tc.content)
 				tc.project.Suites[0].TestClassesFile = testClassesFile
 			}
 			err := ShardSuites(&tc.project)
@@ -595,11 +594,12 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 	}
 }
 
-func createShardConfig(content string) string {
+func createShardConfig(t *testing.T, content string) string {
+	t.Helper()
 	tmpDir, _ := os.MkdirTemp("", "shard")
 	file := filepath.Join(tmpDir, "tests.txt")
 	if err := os.WriteFile(file, []byte(content), 0644); err != nil {
-		fmt.Println(err)
+		t.Fatalf("Setup failed: could not write tests.txt: %v", err)
 		return ""
 	}
 	return file
