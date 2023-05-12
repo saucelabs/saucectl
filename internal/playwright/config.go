@@ -234,7 +234,7 @@ func shardInSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			}
 		}
 		if s.Shard == "concurrency" {
-			groups := concurrency.SplitTests(testFiles, ccy)
+			groups := concurrency.BinPack(testFiles, ccy)
 			for i, group := range groups {
 				replica := s
 				replica.Name = fmt.Sprintf("%s - %d/%d", s.Name, i+1, len(groups))

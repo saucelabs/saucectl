@@ -1,7 +1,7 @@
 package concurrency
 
-// SplitTests splits tests into groups to match concurrency
-func SplitTests(items []string, concurrency int) [][]string {
+// BinPack splits tests into groups to match concurrency
+func BinPack(items []string, concurrency int) [][]string {
 	if concurrency == 1 {
 		return [][]string{items}
 	}

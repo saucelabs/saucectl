@@ -2133,7 +2133,11 @@
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/smartRetry"
                 },
                 "shardConfig": {
-                  "description": "Path to the sharding configuration file which contains XCUITest tests",
+                  "description": "When sharding is configured, saucectl automatically splits the tests by concurrency so that they can easily run in parallel.",
+                  "type": "string"
+                },
+                "testClassesFile": {
+                  "description": "A file contains test classes. This file will be used in sharding by concurrency.",
                   "type": "string"
                 }
               },

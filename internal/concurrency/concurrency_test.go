@@ -41,7 +41,7 @@ func Test_SplitTests(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := SplitTests(tc.files, tc.count)
+			result := BinPack(tc.files, tc.count)
 			assert.Equal(t, len(tc.expResult), len(result))
 			for i := 0; i < len(result); i++ {
 				for j := 0; j < len(result[i]); j++ {

@@ -69,7 +69,8 @@ type Suite struct {
 	AppSettings        config.AppSettings `yaml:"appSettings,omitempty" json:"appSettings"`
 	PassThreshold      int                `yaml:"passThreshold,omitempty" json:"-"`
 	SmartRetry         config.SmartRetry  `yaml:"smartRetry,omitempty" json:"-"`
-	ShardConfig        string             `yaml:"shardConfig,omitempty" json:"-"`
+	Shard              string             `yaml:"shard,omitempty" json:"-"`
+	TestClassesFile    string             `yaml:"testClassesFile,omitempty" json:"-"`
 }
 
 // IOS constant
@@ -230,24 +231,24 @@ func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
 	return res
 }
 
-// ShardSuites applies sharding by provided shard config
+// ShardSuites applies sharding by provided shard config.
 func ShardSuites(p *Project) error {
 	var suites []Suite
 	for _, s := range p.Suites {
-		if s.ShardConfig == "" {
+		if s.Shard != "concurrency" {
 			suites = append(suites, s)
 			continue
 		}
 		shardedSuites, err := parseShardConfig(s, p.Sauce.Concurrency)
 		if err != nil {
-			log.Warn().Err(err).Msgf("Failed to get tests from %q. Using default settings.", s.ShardConfig)
+			log.Warn().Err(err).Msgf("Failed to get tests from %q. Using default settings.", s.TestClassesFile)
 			suites = append(suites, s)
 			continue
 		}
-		if len(splitedSuites) == 0 {
+		if len(shardedSuites) == 0 {
 			suites = append(suites, s)
 		} else {
-			suites = append(suites, splitedSuites...)
+			suites = append(suites, shardedSuites...)
 		}
 	}
 	p.Suites = suites
@@ -256,7 +257,7 @@ func ShardSuites(p *Project) error {
 }
 
 func parseShardConfig(suite Suite, ccy int) ([]Suite, error) {
-	data, err := os.ReadFile(suite.ShardConfig)
+	data, err := os.ReadFile(suite.TestClassesFile)
 	if err != nil {
 		return nil, err
 	}
@@ -265,7 +266,7 @@ func parseShardConfig(suite Suite, ccy int) ([]Suite, error) {
 	}
 
 	tests := strings.Split(strings.TrimSpace(string(data)), "\n")
-	buckets := concurrency.SplitTests(tests, ccy)
+	buckets := concurrency.BinPack(tests, ccy)
 	var suites []Suite
 	for i, b := range buckets {
 		currSuite := suite
@@ -274,4 +275,13 @@ func parseShardConfig(suite Suite, ccy int) ([]Suite, error) {
 		suites = append(suites, currSuite)
 	}
 	return suites, nil
+}
+
+func IsSharded(suites []Suite) bool {
+	for _, s := range suites {
+		if s.Shard != "" {
+			return true
+		}
+	}
+	return false
 }

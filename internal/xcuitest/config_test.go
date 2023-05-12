@@ -491,7 +491,8 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 				},
 				Suites: []Suite{
 					{
-						Name: "sharding test",
+						Name:  "sharding test",
+						Shard: "concurrency",
 					},
 				},
 			},
@@ -520,7 +521,8 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 				},
 				Suites: []Suite{
 					{
-						Name: "sharding test",
+						Name:  "sharding test",
+						Shard: "concurrency",
 						TestOptions: TestOptions{
 							Class: []string{"test1"},
 						},
@@ -546,7 +548,8 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 				},
 				Suites: []Suite{
 					{
-						Name: "sharding test",
+						Name:  "sharding test",
+						Shard: "concurrency",
 						TestOptions: TestOptions{
 							Class: []string{"test1"},
 						},
@@ -569,10 +572,10 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			var shardConfig string
+			var testClassesFile string
 			if tc.configEnabled {
-				shardConfig = createShardConfig(tc.content)
-				tc.project.Suites[0].ShardConfig = shardConfig
+				testClassesFile = createShardConfig(tc.content)
+				tc.project.Suites[0].TestClassesFile = testClassesFile
 			}
 			err := ShardSuites(&tc.project)
 			if err != nil {
@@ -584,8 +587,8 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 			}
 
 			t.Cleanup(func() {
-				if shardConfig != "" {
-					os.RemoveAll(shardConfig)
+				if testClassesFile != "" {
+					os.RemoveAll(testClassesFile)
 				}
 			})
 		})
