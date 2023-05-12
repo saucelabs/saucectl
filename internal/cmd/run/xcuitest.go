@@ -68,7 +68,7 @@ func NewXCUITestCmd() *cobra.Command {
 	sc.StringSlice("otherApps", "xcuitest::otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
 	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'.")
 	sc.String("shard", "suite::shard", "", "When sharding is configured, saucectl automatically splits the tests by concurrency so that they can easily run in parallel.")
-	sc.String("testClassesFile", "suite::testClassesFile", "", "A file contains test classes. This file will be used in sharding by concurrency.")
+	sc.String("testClassesFile", "suite::testClassesFile", "", "This file containing test classes will be used in sharding by concurrency.")
 
 	// Test Options
 	sc.StringSlice("testOptions.class", "suite::testOptions::class", []string{}, "Only run the specified classes. Requires --name to be set.")
