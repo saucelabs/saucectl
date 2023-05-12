@@ -238,16 +238,16 @@ func ShardSuites(p *Project) error {
 			suites = append(suites, s)
 			continue
 		}
-		splited, err := splitTests(s, p.Sauce.Concurrency)
+		splitedSuites, err := parseShardConfig(s, p.Sauce.Concurrency)
 		if err != nil {
-			log.Warn().Err(err).Msgf("failed to test tests from %s", s.ShardConfig)
+			log.Warn().Err(err).Msgf("failed to get tests from %s, use default settings", s.ShardConfig)
 			suites = append(suites, s)
 			continue
 		}
-		if len(splited) == 0 {
+		if len(splitedSuites) == 0 {
 			suites = append(suites, s)
 		} else {
-			suites = append(suites, splited...)
+			suites = append(suites, splitedSuites...)
 		}
 	}
 	p.Suites = suites
@@ -255,7 +255,7 @@ func ShardSuites(p *Project) error {
 	return nil
 }
 
-func splitTests(suite Suite, ccy int) ([]Suite, error) {
+func parseShardConfig(suite Suite, ccy int) ([]Suite, error) {
 	data, err := os.ReadFile(suite.ShardConfig)
 	if err != nil {
 		return nil, err
