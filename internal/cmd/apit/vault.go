@@ -19,6 +19,7 @@ func VaultCommand() *cobra.Command {
 		SetVariableCommand(),
 		GetVariableCommand(),
 		GetSnippetCommand(),
+		SetSnippetCommand(),
 	)
 	return cmd
 }
