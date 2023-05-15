@@ -239,7 +239,7 @@ func ShardSuites(p *Project) error {
 			suites = append(suites, s)
 			continue
 		}
-		shardedSuites, err := parseTestClassesFile(s, p.Sauce.Concurrency)
+		shardedSuites, err := getShardedSuites(s, p.Sauce.Concurrency)
 		if err != nil {
 			return fmt.Errorf("failed to get tests from testClassesFile('%s'): %v", s.TestClassesFile, err)
 		}
@@ -254,7 +254,7 @@ func ShardSuites(p *Project) error {
 	return nil
 }
 
-func parseTestClassesFile(suite Suite, ccy int) ([]Suite, error) {
+func getShardedSuites(suite Suite, ccy int) ([]Suite, error) {
 	data, err := os.ReadFile(suite.TestClassesFile)
 	if err != nil {
 		return nil, err
