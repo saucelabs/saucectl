@@ -177,7 +177,10 @@
           },
           "shard": {
             "description": "When shard is configured as concurrency, saucectl automatically splits the tests by concurrency so that they can easily run in parallel.",
-            "type": "string"
+            "enum": [
+              "",
+              "concurrency"
+            ]
           },
           "testClassesFile": {
             "description": "This file containing test classes will be used in sharding by concurrency.",
