@@ -543,7 +543,7 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 			},
 		},
 		{
-			name: "should return error when sharding w/o testListFile",
+			name: "should return error when sharding w/o a testListFile",
 			project: Project{
 				Sauce: config.SauceConfig{
 					Concurrency: 2,
