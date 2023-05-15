@@ -256,6 +256,8 @@ func getShardedSuites(suite Suite, ccy int) ([]Suite, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer readFile.Close()
+
 	fileScanner := bufio.NewScanner(readFile)
 	fileScanner.Split(bufio.ScanLines)
 	var tests []string
@@ -266,7 +268,6 @@ func getShardedSuites(suite Suite, ccy int) ([]Suite, error) {
 		}
 		tests = append(tests, text)
 	}
-	readFile.Close()
 	if len(tests) == 0 {
 		return nil, errors.New("empty file")
 	}
