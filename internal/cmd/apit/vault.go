@@ -18,6 +18,7 @@ func VaultCommand() *cobra.Command {
 	cmd.AddCommand(
 		SetVariableCommand(),
 		GetVariableCommand(),
+		GetSnippetCommand(),
 	)
 	return cmd
 }

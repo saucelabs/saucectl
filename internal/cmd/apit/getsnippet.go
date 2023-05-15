@@ -9,9 +9,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func GetVariableCommand() *cobra.Command {
+func GetSnippetCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:          "get-variable <projectName> <name>",
+		Use:          "get-snippet <projectName> <name>",
 		Short:        "Get a vault variable",
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
@@ -39,15 +39,15 @@ func GetVariableCommand() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return getVariable(args[0], args[1])
+			return getSnippet(args[0], args[1])
 		},
 	}
 
 	return cmd
 }
 
-func getVariable(projectName string, name string) error {
-	hook, err := resolve(projectName)	
+func getSnippet(projectName string, name string) error {
+	hook, err := resolve(projectName)
 	if err != nil {
 		return err
 	}
@@ -57,12 +57,11 @@ func getVariable(projectName string, name string) error {
 		return err
 	}
 
-	for _, v := range vault.Variables {
-		if v.Name == name {
-			fmt.Printf("%s=%s", v.Name, v.Value)
+	for k, v := range vault.Snippets {
+		if k == name {
+			fmt.Printf("%s", v)
 			return nil
 		}
 	}
-
-	return fmt.Errorf("Project (%s) has no vault variable with name (%s)", projectName, name)
+	return fmt.Errorf("Project (%s) has no vault snippet with name (%s)", projectName, name)
 }
