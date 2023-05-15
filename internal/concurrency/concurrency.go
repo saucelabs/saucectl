@@ -1,16 +1,16 @@
 package concurrency
 
-// SplitTestFiles splits test files into groups to match concurrency
-func SplitTestFiles(files []string, concurrency int) [][]string {
+// BinPack splits items into groups to match concurrency
+func BinPack(items []string, concurrency int) [][]string {
 	if concurrency == 1 {
-		return [][]string{files}
+		return [][]string{items}
 	}
-	if concurrency > len(files) {
-		concurrency = len(files)
+	if concurrency > len(items) {
+		concurrency = len(items)
 	}
 	buckets := make([][]string, concurrency)
-	for i := 0; i < len(files); i++ {
-		buckets[i%concurrency] = append(buckets[i%concurrency], files[i])
+	for i := 0; i < len(items); i++ {
+		buckets[i%concurrency] = append(buckets[i%concurrency], items[i])
 	}
 
 	return buckets

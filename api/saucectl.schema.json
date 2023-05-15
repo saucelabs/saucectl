@@ -2131,6 +2131,17 @@
                 },
                 "smartRetry": {
                   "$ref": "#/allOf/0/then/properties/suites/items/properties/smartRetry"
+                },
+                "shard": {
+                  "description": "When shard is configured as concurrency, saucectl automatically splits the tests by concurrency so that they can easily run in parallel.",
+                  "enum": [
+                    "",
+                    "concurrency"
+                  ]
+                },
+                "testListFile": {
+                  "description": "This file containing tests will be used in sharding by concurrency.",
+                  "type": "string"
                 }
               },
               "anyOf": [

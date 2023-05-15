@@ -68,6 +68,9 @@ func NewXCUITestCmd() *cobra.Command {
 	sc.StringSlice("otherApps", "xcuitest::otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
 	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'.")
 
+	sc.String("shard", "suite::shard", "", "When shard is configured as concurrency, saucectl automatically splits the tests by concurrency so that they can easily run in parallel. Requires --name to be set.")
+	sc.String("testListFile", "suite::testListFile", "", "This file containing tests will be used in sharding by concurrency. Requires --name to be set.")
+
 	// Test Options
 	sc.StringSlice("testOptions.class", "suite::testOptions::class", []string{}, "Only run the specified classes. Requires --name to be set.")
 	sc.StringSlice("testOptions.notClass", "suite::testOptions::notClass", []string{}, "Run all classes except those specified here. Requires --name to be set.")
@@ -102,6 +105,9 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 	if err := xcuitest.Validate(p); err != nil {
 		return 1, err
 	}
+	if err := xcuitest.ShardSuites(&p); err != nil {
+		return 1, err
+	}
 
 	regio := region.FromString(p.Sauce.Region)
 
@@ -125,7 +131,8 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 	go func() {
 		props := usage.Properties{}
 		props.SetFramework("xcuitest").SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).SetArtifacts(p.Artifacts).
-			SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).SetSlack(p.Notifications.Slack).SetLaunchOrder(p.Sauce.LaunchOrder)
+			SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).SetSlack(p.Notifications.Slack).
+			SetSharding(xcuitest.IsSharded(p.Suites)).SetLaunchOrder(p.Sauce.LaunchOrder)
 		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
 		_ = tracker.Close()
 	}()

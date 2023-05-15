@@ -1,13 +1,16 @@
 package xcuitest
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/apps"
+	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -67,6 +70,8 @@ type Suite struct {
 	AppSettings        config.AppSettings `yaml:"appSettings,omitempty" json:"appSettings"`
 	PassThreshold      int                `yaml:"passThreshold,omitempty" json:"-"`
 	SmartRetry         config.SmartRetry  `yaml:"smartRetry,omitempty" json:"-"`
+	Shard              string             `yaml:"shard,omitempty" json:"-"`
+	TestListFile       string             `yaml:"testListFile,omitempty" json:"-"`
 }
 
 // IOS constant
@@ -225,4 +230,64 @@ func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
 		}
 	}
 	return res
+}
+
+// ShardSuites applies sharding by provided testListFile.
+func ShardSuites(p *Project) error {
+	var suites []Suite
+	for _, s := range p.Suites {
+		if s.Shard != "concurrency" {
+			suites = append(suites, s)
+			continue
+		}
+		shardedSuites, err := getShardedSuites(s, p.Sauce.Concurrency)
+		if err != nil {
+			return fmt.Errorf("failed to get tests from testListFile(%q): %v", s.TestListFile, err)
+		}
+		suites = append(suites, shardedSuites...)
+	}
+	p.Suites = suites
+
+	return nil
+}
+
+func getShardedSuites(suite Suite, ccy int) ([]Suite, error) {
+	readFile, err := os.Open(suite.TestListFile)
+	if err != nil {
+		return nil, err
+	}
+	defer readFile.Close()
+
+	fileScanner := bufio.NewScanner(readFile)
+	fileScanner.Split(bufio.ScanLines)
+	var tests []string
+	for fileScanner.Scan() {
+		text := strings.TrimSpace(fileScanner.Text())
+		if text == "" {
+			continue
+		}
+		tests = append(tests, text)
+	}
+	if len(tests) == 0 {
+		return nil, errors.New("empty file")
+	}
+
+	buckets := concurrency.BinPack(tests, ccy)
+	var suites []Suite
+	for i, b := range buckets {
+		currSuite := suite
+		currSuite.Name = fmt.Sprintf("%s - %d/%d", suite.Name, i+1, ccy)
+		currSuite.TestOptions.Class = b
+		suites = append(suites, currSuite)
+	}
+	return suites, nil
+}
+
+func IsSharded(suites []Suite) bool {
+	for _, s := range suites {
+		if s.Shard != "" {
+			return true
+		}
+	}
+	return false
 }
