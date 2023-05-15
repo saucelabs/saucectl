@@ -183,7 +183,7 @@
             ]
           },
           "testListFile": {
-            "description": "This file containing test classes will be used in sharding by concurrency.",
+            "description": "This file containing tests will be used in sharding by concurrency.",
             "type": "string"
           }
         },
