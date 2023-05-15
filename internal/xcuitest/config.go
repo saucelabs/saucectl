@@ -243,11 +243,7 @@ func ShardSuites(p *Project) error {
 		if err != nil {
 			return fmt.Errorf("failed to get tests from testClassesFile(%q): %v", s.TestClassesFile, err)
 		}
-		if len(shardedSuites) == 0 {
-			suites = append(suites, s)
-		} else {
-			suites = append(suites, shardedSuites...)
-		}
+		suites = append(suites, shardedSuites...)
 	}
 	p.Suites = suites
 
