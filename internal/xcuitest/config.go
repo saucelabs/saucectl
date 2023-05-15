@@ -232,7 +232,7 @@ func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
 	return res
 }
 
-// ShardSuites applies sharding by provided shard config.
+// ShardSuites applies sharding by provided testListFile.
 func ShardSuites(p *Project) error {
 	var suites []Suite
 	for _, s := range p.Suites {
