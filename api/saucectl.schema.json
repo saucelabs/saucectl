@@ -2139,7 +2139,7 @@
                     "concurrency"
                   ]
                 },
-                "testClassesFile": {
+                "testListFile": {
                   "description": "This file containing test classes will be used in sharding by concurrency.",
                   "type": "string"
                 }

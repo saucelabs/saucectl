@@ -1,6 +1,7 @@
 package xcuitest
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"os"
@@ -70,7 +71,7 @@ type Suite struct {
 	PassThreshold      int                `yaml:"passThreshold,omitempty" json:"-"`
 	SmartRetry         config.SmartRetry  `yaml:"smartRetry,omitempty" json:"-"`
 	Shard              string             `yaml:"shard,omitempty" json:"-"`
-	TestClassesFile    string             `yaml:"testClassesFile,omitempty" json:"-"`
+	TestListFile       string             `yaml:"testListFile,omitempty" json:"-"`
 }
 
 // IOS constant
@@ -241,7 +242,7 @@ func ShardSuites(p *Project) error {
 		}
 		shardedSuites, err := getShardedSuites(s, p.Sauce.Concurrency)
 		if err != nil {
-			return fmt.Errorf("failed to get tests from testClassesFile(%q): %v", s.TestClassesFile, err)
+			return fmt.Errorf("failed to get tests from testListFile(%q): %v", s.TestListFile, err)
 		}
 		suites = append(suites, shardedSuites...)
 	}
@@ -251,15 +252,22 @@ func ShardSuites(p *Project) error {
 }
 
 func getShardedSuites(suite Suite, ccy int) ([]Suite, error) {
-	data, err := os.ReadFile(suite.TestClassesFile)
+	readFile, err := os.Open(suite.TestListFile)
 	if err != nil {
 		return nil, err
 	}
-	if len(data) == 0 {
-		return nil, fmt.Errorf("testClassesFile is empty")
+	fileScanner := bufio.NewScanner(readFile)
+	fileScanner.Split(bufio.ScanLines)
+	var tests []string
+	for fileScanner.Scan() {
+		text := fileScanner.Text()
+		if strings.TrimSpace(text) == "" {
+			continue
+		}
+		tests = append(tests, text)
 	}
+	readFile.Close()
 
-	tests := strings.Split(strings.TrimSpace(string(data)), "\n")
 	buckets := concurrency.BinPack(tests, ccy)
 	var suites []Suite
 	for i, b := range buckets {
