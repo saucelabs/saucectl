@@ -267,6 +267,9 @@ func getShardedSuites(suite Suite, ccy int) ([]Suite, error) {
 		tests = append(tests, text)
 	}
 	readFile.Close()
+	if len(tests) == 0 {
+		return nil, errors.New("empty file")
+	}
 
 	buckets := concurrency.BinPack(tests, ccy)
 	var suites []Suite
