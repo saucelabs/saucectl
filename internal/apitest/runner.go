@@ -98,8 +98,8 @@ type Runner struct {
 
 // Vault represents a project's stored variables and snippets
 type Vault struct {
-	Variables []VaultVariable   `json:"variables,omitempty"`
-	Snippets  map[string]string `json:"snippets,omitempty"`
+	Variables []VaultVariable   `json:"variables"`
+	Snippets  map[string]string `json:"snippets"`
 }
 
 // VaultVariable represents a variable stored in a project vault

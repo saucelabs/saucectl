@@ -399,7 +399,7 @@ func (c *APITester) GetVault(ctx context.Context, hookID string) (apitest.Vault,
 }
 
 func (c *APITester) PutVault(ctx context.Context, hookID string, vault apitest.Vault) error {
-	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/vaults", c.URL, hookID)
+	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/vault", c.URL, hookID)
 
 	var b bytes.Buffer
 	err := json.NewEncoder(&b).Encode(vault)
@@ -425,14 +425,14 @@ func (c *APITester) PutVault(ctx context.Context, hookID string, vault apitest.V
 		return errors.New(msg.InternalServerError)
 	}
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode == http.StatusBadRequest {
 		body, _ := io.ReadAll(resp.Body)
 		var errResp VaultErrResponse
 		err = json.Unmarshal(body, &errResp)
-		if err != nil {
+		if err == nil {
+			// TODO: Cleaner error msg
 			return fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, body)
 		}
-		// TODO: Parse the error response for accurate feedback
 	}
 
 	return nil
