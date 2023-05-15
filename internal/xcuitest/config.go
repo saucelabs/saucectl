@@ -276,7 +276,7 @@ func getShardedSuites(suite Suite, ccy int) ([]Suite, error) {
 	var suites []Suite
 	for i, b := range buckets {
 		currSuite := suite
-		currSuite.Name = fmt.Sprintf("%s - %d/%d", suite.Name, i+1, ccy)
+		currSuite.Name = fmt.Sprintf("%s - %d/%d", suite.Name, i+1, len(buckets))
 		currSuite.TestOptions.Class = b
 		suites = append(suites, currSuite)
 	}
