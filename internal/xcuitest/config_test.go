@@ -513,7 +513,37 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 			},
 		},
 		{
-			name: "should keep original test options when sharding w/o testClassesFile",
+			name: "should ignore empty lines in testListFile when sharding is enabled",
+			project: Project{
+				Sauce: config.SauceConfig{
+					Concurrency: 2,
+				},
+				Suites: []Suite{
+					{
+						Name:  "sharding test",
+						Shard: "concurrency",
+					},
+				},
+			},
+			content:       "test1\n\ntest2\n\n",
+			configEnabled: true,
+			expSuites: []Suite{
+				{
+					Name: "sharding test - 1/2",
+					TestOptions: TestOptions{
+						Class: []string{"test1"},
+					},
+				},
+				{
+					Name: "sharding test - 2/2",
+					TestOptions: TestOptions{
+						Class: []string{"test2"},
+					},
+				},
+			},
+		},
+		{
+			name: "should keep original test options when sharding w/o testListFile",
 			project: Project{
 				Sauce: config.SauceConfig{
 					Concurrency: 2,
@@ -540,7 +570,7 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 			expErr: true,
 		},
 		{
-			name: "should keep original test options when sharding w/ empty testClassesFile",
+			name: "should keep original test options when sharding w/ empty testListFile",
 			project: Project{
 				Sauce: config.SauceConfig{
 					Concurrency: 2,
@@ -571,10 +601,10 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			var testClassesFile string
+			var testListFile string
 			if tc.configEnabled {
-				testClassesFile = createTestClassesFile(t, tc.content)
-				tc.project.Suites[0].TestClassesFile = testClassesFile
+				testListFile = createTestListFile(t, tc.content)
+				tc.project.Suites[0].TestListFile = testListFile
 			}
 			err := ShardSuites(&tc.project)
 			if err != nil {
@@ -588,7 +618,7 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 	}
 }
 
-func createTestClassesFile(t *testing.T, content string) string {
+func createTestListFile(t *testing.T, content string) string {
 	t.Helper()
 	tmpDir := t.TempDir()
 	file := filepath.Join(tmpDir, "tests.txt")
