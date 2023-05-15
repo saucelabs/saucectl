@@ -513,7 +513,7 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 			},
 		},
 		{
-			name: "should ignore empty lines in testListFile when sharding is enabled",
+			name: "should ignore empty lines and spaces in testListFile when sharding is enabled",
 			project: Project{
 				Sauce: config.SauceConfig{
 					Concurrency: 2,
@@ -525,7 +525,7 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 					},
 				},
 			},
-			content:       "test1\n\ntest2\n\n",
+			content:       "   test1\t\n\ntest2\t\n\n",
 			configEnabled: true,
 			expSuites: []Suite{
 				{

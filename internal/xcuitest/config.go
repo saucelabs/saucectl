@@ -260,8 +260,8 @@ func getShardedSuites(suite Suite, ccy int) ([]Suite, error) {
 	fileScanner.Split(bufio.ScanLines)
 	var tests []string
 	for fileScanner.Scan() {
-		text := fileScanner.Text()
-		if strings.TrimSpace(text) == "" {
+		text := strings.TrimSpace(fileScanner.Text())
+		if text == "" {
 			continue
 		}
 		tests = append(tests, text)
