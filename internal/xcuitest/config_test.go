@@ -582,7 +582,7 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 			}
 			for i, s := range tc.project.Suites {
 				assert.True(t, cmp.Equal(s.TestOptions, tc.expSuites[i].TestOptions))
-				assert.False(t, cmp.Equal(s.Name, tc.expSuites[i].Name))
+				assert.True(t, cmp.Equal(s.Name, tc.expSuites[i].Name))
 			}
 		})
 	}
