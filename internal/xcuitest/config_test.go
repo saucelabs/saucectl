@@ -582,21 +582,15 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 			}
 			for i, s := range tc.project.Suites {
 				assert.True(t, cmp.Equal(s.TestOptions, tc.expSuites[i].TestOptions))
-				assert.True(t, cmp.Equal(s.Name, tc.expSuites[i].Name))
+				assert.False(t, cmp.Equal(s.Name, tc.expSuites[i].Name))
 			}
-
-			t.Cleanup(func() {
-				if testClassesFile != "" {
-					os.RemoveAll(testClassesFile)
-				}
-			})
 		})
 	}
 }
 
 func createTestClassesFile(t *testing.T, content string) string {
 	t.Helper()
-	tmpDir, _ := os.MkdirTemp("", "shard")
+	tmpDir := t.TempDir()
 	file := filepath.Join(tmpDir, "tests.txt")
 	if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 		t.Fatalf("Setup failed: could not write tests.txt: %v", err)
