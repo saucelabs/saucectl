@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/saucelabs/saucectl/internal/apitest"
 	"github.com/saucelabs/saucectl/internal/http"
@@ -11,12 +13,14 @@ import (
 )
 
 func SetSnippetCommand() *cobra.Command {
+	var file string
+	var project string
 	cmd := &cobra.Command{
-		Use:          "set-snippet <projectName> <name> <value>",
+		Use:          "set-snippet <snippetName>",
 		Short:        "Set a vault snippet",
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 || (args[0] == "" || args[1] == "" || args[2] == "") {
+			if len(args) == 0 || (args[0] == "") {
 				// TODO: Give useful error message
 				return errors.New("no project name specified")
 			}
@@ -40,31 +44,47 @@ func SetSnippetCommand() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return setSnippet(args[0], args[1], args[2])
+			return setSnippet(project, args[0], file)
 		},
 	}
+	cmd.Flags().StringVar(&project, "project", "", "The name of the project.")
+	cmd.Flags().StringVar(&file, "file", "", "A file that defines a vault snippet. Use '-' to read from stdin.")
+	cmd.MarkFlagRequired("file")
+	cmd.MarkFlagRequired("project")
 
 	return cmd
 }
 
-func setSnippet(projectName string, name string, value string) error {
+func setSnippet(projectName string, name string, fileName string) error {
+	var r io.Reader
+	var err error
+	if fileName == "-" {
+		r = os.Stdin
+	} else {
+		r, err = os.Open(fileName)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	b, err := io.ReadAll(r)
+
 	hook, err := resolve(projectName)
 	if err != nil {
 		return err
 	}
 
-
 	updateVault := apitest.Vault{
 		Variables: []apitest.VaultVariable{},
 		Snippets: map[string]string{
-			name: value,
+			name: string(b),
 		},
 	}
 
-	fmt.Printf("%v", updateVault)
-	err = apitesterClient.PutVault(context.Background(), hook.Identifier, updateVault)
-	if err != nil {
-		return err
-	}
+    err = apitesterClient.PutVault(context.Background(), hook.Identifier, updateVault)
+    if err != nil {
+    	return err
+    }
 	return nil
 }

@@ -425,14 +425,15 @@ func (c *APITester) PutVault(ctx context.Context, hookID string, vault apitest.V
 		return errors.New(msg.InternalServerError)
 	}
 
-	if resp.StatusCode == http.StatusBadRequest {
+	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		var errResp VaultErrResponse
 		err = json.Unmarshal(body, &errResp)
 		if err == nil {
 			// TODO: Cleaner error msg
-			return fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, body)
+			return fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, errResp.Message)
 		}
+		return fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, body)
 	}
 
 	return nil
