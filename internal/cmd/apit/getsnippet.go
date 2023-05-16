@@ -47,12 +47,12 @@ func GetSnippetCommand() *cobra.Command {
 }
 
 func getSnippet(projectName string, name string) error {
-	hook, err := resolve(projectName)
+	project, err := resolve(projectName)
 	if err != nil {
 		return err
 	}
 
-	vault, err := apitesterClient.GetVault(context.Background(), hook.Identifier)
+	vault, err := apitesterClient.GetVault(context.Background(), project.Hooks[0].Identifier)
 	if err != nil {
 		return err
 	}

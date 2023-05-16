@@ -48,7 +48,7 @@ func SetVariableCommand() *cobra.Command {
 }
 
 func setVariable(projectName string, name string, val string) error {
-	hook, err := resolve(projectName)
+	project, err := resolve(projectName)
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func setVariable(projectName string, name string, val string) error {
 		Snippets: map[string]string{},
 	}
 
-	err = apitesterClient.PutVault(context.Background(), hook.Identifier, updateVault)
+	err = apitesterClient.PutVault(context.Background(), project.Hooks[0].Identifier, updateVault)
 	if err != nil {
 		return err
 	}

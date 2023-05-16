@@ -70,7 +70,7 @@ func setSnippet(projectName string, name string, fileName string) error {
 
 	b, err := io.ReadAll(r)
 
-	hook, err := resolve(projectName)
+	project, err := resolve(projectName)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func setSnippet(projectName string, name string, fileName string) error {
 		},
 	}
 
-    err = apitesterClient.PutVault(context.Background(), hook.Identifier, updateVault)
+    err = apitesterClient.PutVault(context.Background(), project.Hooks[0].Identifier, updateVault)
     if err != nil {
     	return err
     }

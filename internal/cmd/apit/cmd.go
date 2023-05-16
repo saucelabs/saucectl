@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/apitest"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -13,6 +14,11 @@ import (
 var (
 	apitesterClient http.APITester
 )
+
+type ResolvedProject struct {
+	apitest.ProjectMeta
+	Hooks   []apitest.Hook
+}
 
 func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	var regio string
