@@ -3,8 +3,10 @@ package apit
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/mattn/go-isatty"
 	"github.com/saucelabs/saucectl/internal/apitest"
 	"github.com/spf13/cobra"
 )
@@ -67,6 +69,9 @@ func projectSurvey(names []string) string {
 func resolve(projectName string) (ResolvedProject, error) {
 	projects, err := apitesterClient.GetProjects(context.Background())
 	if projectName == "" {
+		if !isatty.IsTerminal(os.Stdin.Fd()) && !isatty.IsCygwinTerminal(os.Stdin.Fd()) {
+			return ResolvedProject{}, fmt.Errorf("No project specified. Use --project to choose a project by name")
+		}
 		names := []string{}
 		for _, p := range projects {
 			names = append(names, p.Name)
