@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/apitest"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -14,11 +13,6 @@ import (
 var (
 	apitesterClient http.APITester
 )
-
-type ResolvedProject struct {
-	apitest.ProjectMeta
-	Hooks   []apitest.Hook
-}
 
 func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	var regio string
@@ -49,7 +43,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	flags.StringVarP(&regio, "region", "r", "us-west-1", "The Sauce Labs region. Options: us-west-1, eu-central-1.")
 
 	cmd.AddCommand(
-		VaultCommand(),
+		VaultCommand(cmd.PersistentPreRunE),
 	)
 	return cmd
 }
