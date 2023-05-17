@@ -14,8 +14,7 @@ func SetVariableCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-variable NAME VALUE [--project PROJECT_NAME]",
 		Short: "Set a vault variable",
-		Long: `
-Set/update a variable in a project's vault. If a variable NAME is already in the vault,
+		Long: `Set/update a variable in a project's vault. If a variable NAME is already in the vault,
 the value will be update otherwise a new variable will be added. Use [--project] to specify
 a project by its name or run without [--project] to choose from a list of projects
 `,

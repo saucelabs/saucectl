@@ -13,8 +13,7 @@ func GetVariableCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-variable NAME [--project PROJECT_NAME]",
 		Short: "Get a vault variable",
-		Long: `
-Get a variable value from a project's vault. Use [--project] to 
+		Long: `Get a variable value from a project's vault. Use [--project] to 
 specify the project by its name or run without [--project] to choose from a list
 of projects`,
 		SilenceUsage: true,
