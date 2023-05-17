@@ -106,6 +106,10 @@ func SetDefaults(p *Project) {
 		if suite.Workload == "" {
 			p.Suites[i].Workload = p.Defaults.Workload
 		}
+
+		if suite.ResourceProfile == "" {
+			p.Suites[i].ResourceProfile = "c1m1"
+		}
 	}
 }
 
