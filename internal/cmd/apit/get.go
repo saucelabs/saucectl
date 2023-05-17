@@ -18,12 +18,6 @@ func GetCommand() *cobra.Command {
 choose form a list of projects
 `,
 		SilenceUsage: true,
-		// Args: func(cmd *cobra.Command, args []string) error {
-		// 	if len(args) == 0 || args[0] == "" {
-		// 		return errors.New("no snippet name specified")
-		// 	}
-		// 	return nil
-		// },
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			err := http.CheckProxy()
 			if err != nil {
