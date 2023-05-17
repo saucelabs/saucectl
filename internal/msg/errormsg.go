@@ -158,6 +158,8 @@ const (
 	MissingImageRunnerImage = `missing "image" for suite: %s`
 	// ImageRunnerMaxConcurrency indicates that the concurrency value is too high.
 	ImageRunnerMaxConcurrency = "Maximum concurrency for imagerunner is 5. Replacing %d with 5."
+	// InvalidResourceProfile indicates the resourceProfile is not valid
+	InvalidResourceProfile = "invalid resourceProfile for suite: %s, resourceProfile should be in %v"
 )
 
 // testcafe config settings
