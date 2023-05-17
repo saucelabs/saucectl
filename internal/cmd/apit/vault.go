@@ -67,10 +67,14 @@ func projectSurvey(names []string) string {
 	return selection
 }
 
+func isTerm(fd uintptr) bool {
+	return isatty.IsTerminal(fd) || isatty.IsCygwinTerminal(fd)
+}
+
 func resolve(projectName string) (ResolvedProject, error) {
 	projects, err := apitesterClient.GetProjects(context.Background())
 	if projectName == "" {
-		if !isatty.IsTerminal(os.Stdin.Fd()) && !isatty.IsCygwinTerminal(os.Stdin.Fd()) {
+		if !isTerm(os.Stdin.Fd()) || !isTerm(os.Stdout.Fd()) {
 			return ResolvedProject{}, fmt.Errorf("No project specified. Use --project to choose a project by name")
 		}
 		names := []string{}
