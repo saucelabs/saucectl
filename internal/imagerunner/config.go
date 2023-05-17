@@ -19,6 +19,12 @@ var (
 		"webdriver",
 		"other",
 	}
+
+	ValidResourceProfiles = []string{
+		"c1m1",
+		"c2m2",
+		"c3m3",
+	}
 )
 
 type Project struct {
@@ -34,15 +40,16 @@ type Defaults struct {
 }
 
 type Suite struct {
-	Name          string            `yaml:"name,omitempty" json:"name"`
-	Image         string            `yaml:"image,omitempty" json:"image"`
-	ImagePullAuth ImagePullAuth     `yaml:"imagePullAuth,omitempty" json:"imagePullAuth"`
-	EntryPoint    string            `yaml:"entrypoint,omitempty" json:"entrypoint"`
-	Files         []File            `yaml:"files,omitempty" json:"files"`
-	Artifacts     []string          `yaml:"artifacts,omitempty" json:"artifacts"`
-	Env           map[string]string `yaml:"env,omitempty" json:"env"`
-	Timeout       time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
-	Workload      string            `yaml:"workload,omitempty" json:"workload,omitempty"`
+	Name            string            `yaml:"name,omitempty" json:"name"`
+	Image           string            `yaml:"image,omitempty" json:"image"`
+	ImagePullAuth   ImagePullAuth     `yaml:"imagePullAuth,omitempty" json:"imagePullAuth"`
+	EntryPoint      string            `yaml:"entrypoint,omitempty" json:"entrypoint"`
+	Files           []File            `yaml:"files,omitempty" json:"files"`
+	Artifacts       []string          `yaml:"artifacts,omitempty" json:"artifacts"`
+	Env             map[string]string `yaml:"env,omitempty" json:"env"`
+	Timeout         time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
+	Workload        string            `yaml:"workload,omitempty" json:"workload,omitempty"`
+	ResourceProfile string            `yaml:"resourceProfile,omitempty" json:"resourceProfile,omitempty"`
 }
 
 type ImagePullAuth struct {
@@ -99,6 +106,10 @@ func SetDefaults(p *Project) {
 		if suite.Workload == "" {
 			p.Suites[i].Workload = p.Defaults.Workload
 		}
+
+		if suite.ResourceProfile == "" {
+			p.Suites[i].ResourceProfile = "c1m1"
+		}
 	}
 }
 
@@ -123,6 +134,10 @@ func Validate(p Project) error {
 
 		if suite.Image == "" {
 			return fmt.Errorf(msg.MissingImageRunnerImage, suite.Name)
+		}
+
+		if suite.ResourceProfile != "" && !sliceContainsString(ValidResourceProfiles, suite.ResourceProfile) {
+			return fmt.Errorf(msg.InvalidResourceProfile, suite.Name, ValidResourceProfiles)
 		}
 	}
 	return nil
