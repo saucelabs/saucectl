@@ -11,10 +11,11 @@ import (
 
 func GetVariableCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:          "get-variable NAME [--project PROJECT_NAME]",
-		Short:        "Get a vault variable",
-		Long:         `Get a variable value from a project's vault. Use [--project] to 
-specify the project or run without [--project] to choose from a list
+		Use:   "get-variable NAME [--project PROJECT_NAME]",
+		Short: "Get a vault variable",
+		Long: `
+Get a variable value from a project's vault. Use [--project] to 
+specify the project by name or run without [--project] to choose from a list
 of projects.`,
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
