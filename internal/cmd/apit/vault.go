@@ -45,6 +45,7 @@ func VaultCommand(preRunE func(cmd *cobra.Command, args []string) error) *cobra.
 	cmd.PersistentFlags().StringVar(&projectName, "project", "", "The name of the project the vault belongs to.")
 
 	cmd.AddCommand(
+		GetCommand(),
 		SetVariableCommand(),
 		GetVariableCommand(),
 		GetSnippetCommand(),
