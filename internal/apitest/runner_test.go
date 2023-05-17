@@ -540,6 +540,7 @@ func TestRunner_ResolveHookIDs(t *testing.T) {
 						{
 							Name:        "Suite #1",
 							ProjectName: "Project SingleHook",
+							ProjectID:   "single",
 						},
 					},
 				},
@@ -549,6 +550,7 @@ func TestRunner_ResolveHookIDs(t *testing.T) {
 					{
 						Name:        "Suite #1",
 						ProjectName: "Project SingleHook",
+						ProjectID:   "single",
 						HookID:      "uuid1",
 					},
 				},
@@ -563,6 +565,7 @@ func TestRunner_ResolveHookIDs(t *testing.T) {
 						{
 							Name:        "Suite #1",
 							ProjectName: "Project MultipleHooks",
+							ProjectID:   "multiple",
 						},
 					},
 				},
@@ -572,6 +575,7 @@ func TestRunner_ResolveHookIDs(t *testing.T) {
 					{
 						Name:        "Suite #1",
 						ProjectName: "Project MultipleHooks",
+						ProjectID:   "multiple",
 						HookID:      "uuid1",
 					},
 				},

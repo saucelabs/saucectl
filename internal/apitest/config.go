@@ -39,9 +39,15 @@ type Suite struct {
 	TestMatch      []string          `yaml:"testMatch,omitempty"`
 	Env            map[string]string `yaml:"env,omitempty"`
 
-	// HookID is a technical ID unique to a project that's required by the APIs that execute API tests.
-	// The HookID is retrieved dynamically before calling those endpoints.
+	// HookID is a technical ID unique to a project that's required by the APIs
+	// that execute API tests. The HookID is retrieved dynamically based on
+	// ProjectName before calling those endpoints.
 	HookID string `yaml:"-"`
+
+	// ProjectID is a technical ID unique to a project that's required by the
+	// APIs that execute API tests. The ProjectID is retrieved dynamically based
+	// on ProjectName before calling those endpoints.
+	ProjectID string `yaml:"-"`
 }
 
 // FromFile creates a new apitest Project based on the filepath cfgPath.
