@@ -391,11 +391,9 @@ func (r *Runner) runSuites() bool {
 
 func (r *Runner) buildLocalTestDetails(project ProjectMeta, eventIDs []string, testNames []string, results chan []TestResult) {
 	for _, eventID := range eventIDs {
-		reportURL := fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)
 		log.Info().
 			Str("project", project.Name).
 			Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)).
-			Str("report", reportURL).
 			Msg("Async test started.")
 	}
 
@@ -412,11 +410,9 @@ func (r *Runner) buildLocalTestDetails(project ProjectMeta, eventIDs []string, t
 
 func (r *Runner) fetchTestDetails(project ProjectMeta, hookID string, eventIDs []string, testIDs []string, results chan []TestResult) {
 	for _, eventID := range eventIDs {
-		reportURL := fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)
 		log.Info().
 			Str("project", project.Name).
 			Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, eventID)).
-			Str("report", reportURL).
 			Msg("Async test started.")
 	}
 
