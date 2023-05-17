@@ -11,13 +11,16 @@ import (
 
 func GetSnippetCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:          "get-snippet <projectName> <name>",
-		Short:        "Get a vault variable",
+		Use:   "get-snippet NAME [--project PROJECT_NAME]",
+		Short: "Get a vault snippet",
+		Long: `
+Get a snippet from a project's vault. Use [--project] to specify the
+project by its name or run with [--project] to choose form a list of projects
+`,
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 || (args[0] == "" || args[1] == "") {
-				// TODO: Give useful error message
-				return errors.New("no project name specified")
+			if len(args) == 0 || args[0] == "" {
+				return errors.New("no snippet name specified")
 			}
 			return nil
 		},
@@ -39,29 +42,21 @@ func GetSnippetCommand() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return getSnippet(args[0], args[1])
-		},
-	}
+			name := args[0]
+			vault, err := apitesterClient.GetVault(context.Background(), selectedProject.Hooks[0].Identifier)
+			if err != nil {
+				return err
+			}
 
-	return cmd
-}
+			v, ok := vault.Snippets[name]
+			if !ok {
+				// TODO: Show available snippets?
+				return fmt.Errorf("Project (%s) has no vault snippet with name (%s)", selectedProject.ProjectMeta.Name, name)
+			}
 
-func getSnippet(projectName string, name string) error {
-	project, err := resolve(projectName)
-	if err != nil {
-		return err
-	}
-
-	vault, err := apitesterClient.GetVault(context.Background(), project.Hooks[0].Identifier)
-	if err != nil {
-		return err
-	}
-
-	for k, v := range vault.Snippets {
-		if k == name {
 			fmt.Printf("%s", v)
 			return nil
-		}
+		},
 	}
-	return fmt.Errorf("Project (%s) has no vault snippet with name (%s)", projectName, name)
+	return cmd
 }
