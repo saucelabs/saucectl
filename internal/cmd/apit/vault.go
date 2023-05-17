@@ -54,7 +54,7 @@ func VaultCommand(preRunE func(cmd *cobra.Command, args []string) error) *cobra.
 	return cmd
 }
 
-func projectSurvey(names []string) string {
+func projectSurvey(names []string) (string, error) {
 	var selection string
 	prompt := &survey.Select{
 		Help: "Select the project the vault belongs to. Use --project to define a project in your command and skip this selection",
@@ -62,9 +62,9 @@ func projectSurvey(names []string) string {
 		Options: names,
 	}
 
-	survey.AskOne(prompt, &selection)
+	err := survey.AskOne(prompt, &selection)
 
-	return selection
+	return selection, err
 }
 
 func isTerm(fd uintptr) bool {
@@ -81,7 +81,7 @@ func resolve(projectName string) (ResolvedProject, error) {
 		for _, p := range projects {
 			names = append(names, p.Name)
 		}
-		projectName = projectSurvey(names)
+		projectName, err = projectSurvey(names)
 	}
 	if err != nil {
 		return ResolvedProject{}, err
