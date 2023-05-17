@@ -12,11 +12,16 @@ import (
 
 func SetVariableCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:          "set-variable <projectName> <name> <value>",
-		Short:        "Set a vault variable",
+		Use:   "set-variable NAME VALUE [--project PROJECT_NAME]",
+		Short: "Set a vault variable",
+		Long: `
+Set/update a variable in a project's vault. If a variable NAME is already in the vault,
+the value will be update otherwise a new variable will be added. Use [--project] to specify
+a project by its name or run without [--project] to choose from a list of projects
+`,
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 || (args[0] == "" || args[1] == "" || args[2] == "") {
+			if len(args) == 0 || (args[0] == "" || args[1] == "") {
 				// TODO: Give useful error message
 				return errors.New("no project name specified")
 			}
@@ -40,33 +45,27 @@ func SetVariableCommand() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return setVariable(args[0], args[1], args[2])
+			name := args[0]
+			val := args[1]
+			updateVault := apitest.Vault{
+				Variables: []apitest.VaultVariable{
+					{
+						Name:  name,
+						Value: val,
+						Type:  "variable",
+					},
+				},
+				Snippets: map[string]string{},
+			}
+
+			err := apitesterClient.PutVault(context.Background(), selectedProject.Hooks[0].Identifier, updateVault)
+			if err != nil {
+				return err
+			}
+			// TODO: How to show success?
+			return nil
 		},
 	}
 
 	return cmd
-}
-
-func setVariable(projectName string, name string, val string) error {
-	project, err := resolve(projectName)
-	if err != nil {
-		return err
-	}
-
-	updateVault := apitest.Vault{
-		Variables: []apitest.VaultVariable{
-			{
-				Name:  name,
-				Value: val,
-				Type:  "variable",
-			},
-		},
-		Snippets: map[string]string{},
-	}
-
-	err = apitesterClient.PutVault(context.Background(), project.Hooks[0].Identifier, updateVault)
-	if err != nil {
-		return err
-	}
-	return nil
 }
