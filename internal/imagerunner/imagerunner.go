@@ -32,15 +32,14 @@ func Done(status string) bool {
 var ErrResourceNotFound = errors.New("resource not found")
 
 type RunnerSpec struct {
-	Container       Container         `json:"container,omitempty"`
-	EntryPoint      string            `json:"entrypoint,omitempty"`
-	Env             []EnvItem         `json:"env,omitempty"`
-	Files           []FileData        `json:"files,omitempty"`
-	Metadata        map[string]string `json:"metadata,omitempty"`
-	Artifacts       []string          `json:"artifacts,omitempty"`
-	WorkloadType    string            `json:"workloadType,omitempty"`
-	Tunnel          *Tunnel           `json:"tunnel,omitempty"`
-	ResourceProfile string            `json:"resourceProfile,omitempty"`
+	Container    Container         `json:"container,omitempty"`
+	EntryPoint   string            `json:"entrypoint,omitempty"`
+	Env          []EnvItem         `json:"env,omitempty"`
+	Files        []FileData        `json:"files,omitempty"`
+	Metadata     map[string]string `json:"metadata,omitempty"`
+	Artifacts    []string          `json:"artifacts,omitempty"`
+	WorkloadType string            `json:"workloadType,omitempty"`
+	Tunnel       *Tunnel           `json:"tunnel,omitempty"`
 }
 
 type Tunnel struct {
