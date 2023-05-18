@@ -3,14 +3,21 @@ package run
 import (
 	"os"
 
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
+	"github.com/saucelabs/saucectl/internal/usage"
+
 	"github.com/saucelabs/saucectl/internal/apitest"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/table"
+	"github.com/saucelabs/saucectl/internal/segment"
+	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
-func runApitest(isCLIDriven bool) (int, error) {
+func runApitest(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	if !isCLIDriven {
 		config.ValidateSchema(gFlags.cfgFilePath)
 	}
@@ -48,6 +55,15 @@ func runApitest(isCLIDriven bool) (int, error) {
 	if err := r.ResolveHookIDs(); err != nil {
 		return 1, err
 	}
+
+	tracker := segment.DefaultTracker
+
+	go func() {
+		props := usage.Properties{}
+		props.SetFramework("apit")
+		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), nil)
+		_ = tracker.Close()
+	}()
 
 	return r.RunProject()
 }

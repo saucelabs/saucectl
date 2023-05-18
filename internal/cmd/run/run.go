@@ -232,7 +232,7 @@ func Run(cmd *cobra.Command) (int, error) {
 		return runXcuitest(cmd, xcuitestFlags{}, false)
 	}
 	if typeDef.Kind == apitest.Kind {
-		return runApitest(false)
+		return runApitest(cmd, false)
 	}
 	if typeDef.Kind == cucumber.Kind {
 		return runCucumber(cmd, false)
