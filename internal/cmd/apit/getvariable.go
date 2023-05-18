@@ -50,7 +50,6 @@ Use [--project] to specify the project by its name or run without [--project] to
 
 			for _, v := range vault.Variables {
 				if v.Name == name {
-					// TODO: Print a table to allow for fetching multiple variables?
 					fmt.Println(v.Value)
 					return nil
 				}

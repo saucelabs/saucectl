@@ -21,9 +21,11 @@ Use [--project] to specify a project by its name or run without [--project] to c
 `,
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 || (args[0] == "" || args[1] == "") {
-				// TODO: Give useful error message
-				return errors.New("no project name specified")
+			if len(args) == 0 || args[0] == "" {
+				return errors.New("no variable name specified")
+			}
+			if len(args) == 1 || args[1] == "" {
+				return errors.New("no variable value specified")
 			}
 			return nil
 		},

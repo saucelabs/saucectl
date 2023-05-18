@@ -27,9 +27,11 @@ cat snippet2.xml | saucectl apit vault set-snippet snip2 - --project "smoke test
 `,
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 || (args[0] == "" || args[1] == "") {
-				// TODO: Give useful error message
-				return errors.New("no project name specified")
+			if len(args) == 0 || args[0] == "" {
+				return errors.New("no snippet name specified")
+			}
+			if len(args) == 1 || args[1] == "" {
+				return errors.New("no filename specified")
 			}
 			return nil
 		},

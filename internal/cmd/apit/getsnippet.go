@@ -50,7 +50,6 @@ Use [--project] to specify the project by its name or run without [--project] to
 
 			v, ok := vault.Snippets[name]
 			if !ok {
-				// TODO: Show available snippets?
 				return fmt.Errorf("project %q has no vault snippet with name %q", selectedProject.ProjectMeta.Name, name)
 			}
 
