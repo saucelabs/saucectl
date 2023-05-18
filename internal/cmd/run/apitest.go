@@ -61,7 +61,7 @@ func runApitest(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	go func() {
 		props := usage.Properties{}
 		props.SetFramework("apit")
-		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), nil)
+		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
 		_ = tracker.Close()
 	}()
 
