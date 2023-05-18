@@ -158,6 +158,7 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 	var run imagerunner.Runner
 	metadata := make(map[string]string)
 	metadata["name"] = suite.Name
+	metadata["resourceProfile"] = suite.ResourceProfile
 
 	files, err := mapFiles(suite.Files)
 	if err != nil {
@@ -181,12 +182,12 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 			Token: suite.ImagePullAuth.Token,
 		}
 	}
-
 	runner, err := r.RunnerService.TriggerRun(ctx, imagerunner.RunnerSpec{
 		Container: imagerunner.Container{
 			Name: suite.Image,
 			Auth: auth,
 		},
+
 		EntryPoint:   suite.EntryPoint,
 		Env:          mapEnv(suite.Env),
 		Files:        files,
