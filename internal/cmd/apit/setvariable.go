@@ -69,7 +69,6 @@ Use [--project] to specify a project by its name or run without [--project] to c
 			if err != nil {
 				return err
 			}
-			// TODO: How to show success?
 			return nil
 		},
 	}
