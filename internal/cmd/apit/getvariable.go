@@ -13,9 +13,9 @@ func GetVariableCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-variable NAME [--project PROJECT_NAME]",
 		Short: "Get a vault variable",
-		Long: `Get a variable value from a project's vault. Use [--project] to 
-specify the project by its name or run without [--project] to choose from a list
-of projects`,
+		Long: `Get a variable value from a project's vault. 
+	
+Use [--project] to specify the project by its name or run without [--project] to choose from a list of projects.`,
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
@@ -50,8 +50,8 @@ of projects`,
 
 			for _, v := range vault.Variables {
 				if v.Name == name {
-					// TODO: How to present the value?
-					fmt.Printf("%s=%s\n", v.Name, v.Value)
+					// TODO: Print a table to allow for fetching multiple variables?
+					fmt.Println(v.Value)
 					return nil
 				}
 			}

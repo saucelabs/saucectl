@@ -16,13 +16,14 @@ func SetSnippetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-snippet NAME FILE_NAME|- [--project PROJECT_NAME]",
 		Short: "Set a vault snippet",
-		Long: `
-Set/update a snippet in a project's vault. If a snippet NAME is already in the vault,
+		Long: `Set/update a snippet in a project's vault. If a snippet NAME is already in the vault,
 the value will be updated, otherwise a new snippet will be added. You can set a snippet's
 value by providing a path to a file defining the snippet or use "-" to read from stdin.
 
-Use [--project] to specify a project by its name or run without [--project] to choose from
-a list of projects
+Use [--project] to specify a project by its name or run without [--project] to choose from a list of projects.
+`,
+		Example: `saucectl apit vault set-snippet snip1 ./snippet1.xml --project "smoke tests"  # from a file
+cat snippet2.xml | saucectl apit vault set-snippet snip2 - --project "smoke tests"  # from stdin
 `,
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {

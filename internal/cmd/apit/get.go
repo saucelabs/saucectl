@@ -14,8 +14,9 @@ func GetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get [--project PROJECT_NAME]",
 		Short: "Get the entire vault contents",
-		Long: `Use [--project] to specify the project by its name or run with [--project] to 
-choose from a list of projects.
+		Long: `Print the vault contents as json to stdout. 
+
+Use [--project] to specify the project by its name or run without [--project] to choose from a list of projects.
 `,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
