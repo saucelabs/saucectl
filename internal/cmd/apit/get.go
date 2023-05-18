@@ -47,7 +47,11 @@ Use [--project] to specify the project by its name or run without [--project] to
 				return err
 			}
 
-			json.NewEncoder(os.Stdout).Encode(vault)
+			err = json.NewEncoder(os.Stdout).Encode(vault)
+			if err != nil {
+				return fmt.Errorf("failed to convert vault to json: %w", err)
+	
+			}
 
 			return nil
 		},
