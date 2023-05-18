@@ -56,7 +56,7 @@ of projects`,
 				}
 			}
 
-			return fmt.Errorf("Project (%s) has no vault variable with name (%s)", selectedProject.ProjectMeta.Name, name)
+			return fmt.Errorf("project %q has no vault variable with name %q", selectedProject.ProjectMeta.Name, name)
 		},
 	}
 

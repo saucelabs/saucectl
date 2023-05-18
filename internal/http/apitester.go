@@ -382,7 +382,7 @@ func (c *APITester) GetVault(ctx context.Context, hookID string) (apitest.Vault,
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= http.StatusInternalServerError {
-		return apitest.Vault{}, errors.New(msg.InternalServerError)
+		return apitest.Vault{}, ErrServerError
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -422,7 +422,7 @@ func (c *APITester) PutVault(ctx context.Context, hookID string, vault apitest.V
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= http.StatusInternalServerError {
-		return errors.New(msg.InternalServerError)
+		return ErrServerError
 	}
 
 	if resp.StatusCode != http.StatusOK {

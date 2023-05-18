@@ -50,7 +50,7 @@ project by its name or run with [--project] to choose form a list of projects
 			v, ok := vault.Snippets[name]
 			if !ok {
 				// TODO: Show available snippets?
-				return fmt.Errorf("Project (%s) has no vault snippet with name (%s)", selectedProject.ProjectMeta.Name, name)
+				return fmt.Errorf("project %q has no vault snippet with name %q", selectedProject.ProjectMeta.Name, name)
 			}
 
 			fmt.Printf("%s", v)

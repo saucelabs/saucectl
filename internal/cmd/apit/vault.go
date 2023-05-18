@@ -75,9 +75,9 @@ func resolve(projectName string) (ResolvedProject, error) {
 	projects, err := apitesterClient.GetProjects(context.Background())
 	if projectName == "" {
 		if !isTerm(os.Stdin.Fd()) || !isTerm(os.Stdout.Fd()) {
-			return ResolvedProject{}, fmt.Errorf("No project specified. Use --project to choose a project by name")
+			return ResolvedProject{}, fmt.Errorf("no project specified, use --project to choose a project by name")
 		}
-		names := []string{}
+		var names []string
 		for _, p := range projects {
 			names = append(names, p.Name)
 		}
@@ -94,7 +94,7 @@ func resolve(projectName string) (ResolvedProject, error) {
 		}
 	}
 	if project.ID == "" {
-		return ResolvedProject{}, fmt.Errorf("Could not find project named %s", projectName)
+		return ResolvedProject{}, fmt.Errorf("could not find project named %s", projectName)
 	}
 
 	hooks, err := apitesterClient.GetHooks(context.Background(), project.ID)
@@ -102,7 +102,7 @@ func resolve(projectName string) (ResolvedProject, error) {
 		return ResolvedProject{}, err
 	}
 	if len(hooks) == 0 {
-		return ResolvedProject{}, fmt.Errorf("Project named %s has no hooks configured", projectName)
+		return ResolvedProject{}, fmt.Errorf("project named %s has no hooks configured", projectName)
 	}
 
 	return ResolvedProject{

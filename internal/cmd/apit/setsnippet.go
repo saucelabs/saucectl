@@ -18,7 +18,7 @@ func SetSnippetCommand() *cobra.Command {
 		Short: "Set a vault snippet",
 		Long: `
 Set/update a snippet in a project's vault. If a snippet NAME is already in the vault,
-the value will be updated otherwise a new snippet will be added. You can set a snippet's
+the value will be updated, otherwise a new snippet will be added. You can set a snippet's
 value by providing a path to a file defining the snippet or use "-" to read from stdin.
 
 Use [--project] to specify a project by its name or run without [--project] to choose from
