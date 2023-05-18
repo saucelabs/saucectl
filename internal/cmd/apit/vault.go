@@ -57,7 +57,7 @@ func VaultCommand(preRunE func(cmd *cobra.Command, args []string) error) *cobra.
 func projectSurvey(names []string) (string, error) {
 	var selection string
 	prompt := &survey.Select{
-		Help: "Select the project the vault belongs to. Use --project to define a project in your command and skip this selection",
+		Help:    "Select the project the vault belongs to. Use --project to define a project in your command and skip this selection",
 		Message: "Select a vault by project name",
 		Options: names,
 	}
