@@ -30,14 +30,15 @@ type PublishedTest struct {
 	Published apitest.Test
 }
 
+// VaultErrResponse describes the response when a malformed Vault is unable to be parsed
 type VaultErrResponse struct {
 	Message struct {
-		Errors []VaultErr `json:"errors,omitempty"`
+		Errors []vaultErr `json:"errors,omitempty"`
 	} `json:"message,omitempty"`
 	Status string `json:"status,omitempty"`
 }
 
-type VaultErr struct {
+type vaultErr struct {
 	Field         string                  `json:"field,omitempty"`
 	Message       string                  `json:"message,omitempty"`
 	Object        string                  `json:"object,omitempty"`
