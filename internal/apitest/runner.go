@@ -444,13 +444,18 @@ func (r *Runner) startPollingAsyncResponse(project ProjectMeta, hookID string, e
 					results <- []TestResult{result}
 					break
 				}
-				if err.Error() != "event not found" {
+
+				// Events are not available when the test is still running.
+				// All other errors are likely final.
+				if err != nil && err != ErrEventNotFound {
 					results <- []TestResult{{
 						EventID:       lEventID,
+						Project:       project,
 						FailuresCount: 1,
 					}}
 					break
 				}
+
 				if timeout.Before(time.Now()) {
 					reportURL := fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, lEventID)
 					log.Warn().
