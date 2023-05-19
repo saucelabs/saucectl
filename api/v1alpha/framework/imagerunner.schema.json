@@ -5,6 +5,9 @@
   "type": "object",
   "allOf": [
     {
+      "$ref": "../subschema/sauce.schema.json"
+    },
+    {
       "$ref": "../subschema/artifacts.schema.json"
     }
   ],

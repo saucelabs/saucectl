@@ -2462,6 +2462,9 @@
         "type": "object",
         "allOf": [
           {
+            "$ref": "#/allOf/0/then/allOf/2"
+          },
+          {
             "$ref": "#/allOf/0/then/allOf/0"
           }
         ],
