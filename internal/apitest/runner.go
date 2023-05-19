@@ -49,6 +49,7 @@ type TestResult struct {
 	ExecutionTimeSeconds int         `json:"executionTimeSeconds,omitempty"`
 	Async                bool        `json:"-"`
 	TimedOut             bool        `json:"-"`
+	Error                error       `json:"-"`
 }
 
 // ProjectMeta describes the metadata for an api testing project.
@@ -448,6 +449,7 @@ func (r *Runner) startPollingAsyncResponse(project ProjectMeta, hookID string, e
 						EventID:       lEventID,
 						Project:       project,
 						FailuresCount: 1,
+						Error:         err,
 					}}
 					break
 				}
@@ -503,6 +505,7 @@ func (r *Runner) collectResults(expected int, results chan []TestResult) bool {
 					logMsg = "Test finished with errors."
 				}
 				logEvent.
+					Err(testResult.Error).
 					Int("failures", testResult.FailuresCount).
 					Str("project", testResult.Project.Name).
 					Str("report", reportURL).
