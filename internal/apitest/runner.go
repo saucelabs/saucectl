@@ -453,16 +453,9 @@ func (r *Runner) startPollingAsyncResponse(project ProjectMeta, hookID string, e
 				}
 
 				if timeout.Before(time.Now()) {
-					reportURL := fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, lEventID)
-					log.Warn().
-						Str("project", project.Name).
-						Str("report", fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), project.ID, lEventID)).
-						Str("report", reportURL).
-						Msg("Test did not finish before timeout.")
 					results <- []TestResult{{
 						Project:  project,
 						EventID:  lEventID,
-						Async:    true,
 						TimedOut: true,
 					}}
 					break
@@ -503,20 +496,30 @@ func (r *Runner) collectResults(expected int, results chan []TestResult) bool {
 			if !testResult.Async {
 				reportURL = fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)
 
-				log.Info().
+				logEvent := log.Info()
+				logMsg := "Test finished."
+				if testResult.FailuresCount > 0 || testResult.TimedOut {
+					logEvent = log.Error()
+					logMsg = "Test finished with errors."
+				}
+				logEvent.
 					Int("failures", testResult.FailuresCount).
 					Str("project", testResult.Project.Name).
 					Str("report", reportURL).
-					Str("test", testResult.Test.Name).
-					Msg("Finished test.")
+					Str("test", testResult.Test.Name)
+
+				logEvent.Msg(logMsg)
 			}
 
 			status := job.StatePassed
-			if testResult.FailuresCount > 0 || testResult.TimedOut {
+			if testResult.FailuresCount > 0 {
 				status = job.StateFailed
-				passed = false
 			} else if testResult.Async {
 				status = job.StateInProgress
+			}
+
+			if status == job.StateFailed || testResult.TimedOut {
+				passed = false
 			}
 
 			for _, rep := range r.Reporters {
@@ -527,6 +530,7 @@ func (r *Runner) collectResults(expected int, results chan []TestResult) bool {
 					Duration:  time.Second * time.Duration(testResult.ExecutionTimeSeconds),
 					StartTime: (time.Now()).Add(-time.Second * time.Duration(testResult.ExecutionTimeSeconds)),
 					Attempts:  1,
+					TimedOut:  testResult.TimedOut,
 				})
 			}
 		}
