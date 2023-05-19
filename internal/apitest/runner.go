@@ -437,10 +437,6 @@ func (r *Runner) startPollingAsyncResponse(project ProjectMeta, hookID string, e
 				result, err := r.Client.GetEventResult(context.Background(), hookID, lEventID)
 
 				if err == nil {
-					log.Info().
-						Str("projectName", project.Name).
-						Str("testName", result.Test.Name).
-						Msg("Finished test.")
 					results <- []TestResult{result}
 					break
 				}
