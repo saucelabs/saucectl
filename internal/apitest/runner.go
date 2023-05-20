@@ -432,37 +432,40 @@ func (r *Runner) fetchTestDetails(project ProjectMeta, hookID string, eventIDs [
 func (r *Runner) startPollingAsyncResponse(project ProjectMeta, hookID string, eventIDs []string, results chan []TestResult, pollMaximumWait time.Duration) {
 	for _, eventID := range eventIDs {
 		go func(lEventID string) {
-			timeout := (time.Now()).Add(pollMaximumWait)
+			deadline := time.NewTimer(pollMaximumWait)
+			ticker := time.NewTicker(pollWaitTime)
+			defer ticker.Stop()
 
 			for {
-				result, err := r.Client.GetEventResult(context.Background(), hookID, lEventID)
+				select {
+				case <-ticker.C:
+					result, err := r.Client.GetEventResult(context.Background(), hookID, lEventID)
 
-				if err == nil {
+					// Events are not available when the test is still running.
+					if err != ErrEventNotFound {
+						continue
+					}
+
+					if err != nil {
+						results <- []TestResult{{
+							EventID:       lEventID,
+							Project:       project,
+							FailuresCount: 1,
+							Error:         err,
+						}}
+						return
+					}
+
 					results <- []TestResult{result}
-					break
-				}
-
-				// Events are not available when the test is still running.
-				// All other errors are likely final.
-				if err != nil && err != ErrEventNotFound {
-					results <- []TestResult{{
-						EventID:       lEventID,
-						Project:       project,
-						FailuresCount: 1,
-						Error:         err,
-					}}
-					break
-				}
-
-				if timeout.Before(time.Now()) {
+					return
+				case <-deadline.C:
 					results <- []TestResult{{
 						Project:  project,
 						EventID:  lEventID,
 						TimedOut: true,
 					}}
-					break
+					return
 				}
-				time.Sleep(pollWaitTime)
 			}
 		}(eventID)
 	}
