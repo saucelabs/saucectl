@@ -5,6 +5,7 @@ import (
 	"path"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/saucelabs/saucectl/internal/config"
 
@@ -382,6 +383,7 @@ func TestRunner_newTestRequests(t *testing.T) {
 }
 
 func TestRunner_runLocalTests(t *testing.T) {
+	pollWaitTime = 1 * time.Millisecond
 	dir := createTestDirs(t)
 	defer dir.Remove()
 

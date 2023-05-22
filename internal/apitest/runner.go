@@ -442,7 +442,7 @@ func (r *Runner) startPollingAsyncResponse(project ProjectMeta, hookID string, e
 					result, err := r.Client.GetEventResult(context.Background(), hookID, lEventID)
 
 					// Events are not available when the test is still running.
-					if err != ErrEventNotFound {
+					if err == ErrEventNotFound {
 						continue
 					}
 
