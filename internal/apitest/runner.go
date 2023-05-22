@@ -249,7 +249,7 @@ func (r *Runner) newTestRequests(s Suite, tests []string) []TestRequest {
 	return testRequests
 }
 
-func (r *Runner) runLocalTests(s Suite, results chan []TestResult) int {
+func (r *Runner) runLocalTests(s Suite, results chan TestResult) int {
 	expected := 0
 	taskID := uuid.NewRandom().String()
 
@@ -304,7 +304,7 @@ func (r *Runner) runLocalTests(s Suite, results chan []TestResult) int {
 	return expected
 }
 
-func (r *Runner) runRemoteTests(s Suite, results chan []TestResult) int {
+func (r *Runner) runRemoteTests(s Suite, results chan TestResult) int {
 	expected := 0
 	maximumWaitTime := pollDefaultWait
 	if s.Timeout != 0 {
@@ -369,7 +369,7 @@ func (r *Runner) runRemoteTests(s Suite, results chan []TestResult) int {
 }
 
 func (r *Runner) runSuites() bool {
-	results := make(chan []TestResult)
+	results := make(chan TestResult)
 	expected := 0
 
 	for _, s := range r.Project.Suites {
@@ -390,7 +390,7 @@ func (r *Runner) runSuites() bool {
 	return r.collectResults(expected, results)
 }
 
-func (r *Runner) buildLocalTestDetails(project ProjectMeta, eventIDs []string, testNames []string, results chan []TestResult) {
+func (r *Runner) buildLocalTestDetails(project ProjectMeta, eventIDs []string, testNames []string, results chan TestResult) {
 	for _, eventID := range eventIDs {
 		log.Info().
 			Str("project", project.Name).
@@ -400,16 +400,16 @@ func (r *Runner) buildLocalTestDetails(project ProjectMeta, eventIDs []string, t
 
 	for _, testName := range testNames {
 		go func(p ProjectMeta, testID string) {
-			results <- []TestResult{{
+			results <- TestResult{
 				Test:    Test{Name: testID},
 				Project: p,
 				Async:   true,
-			}}
+			}
 		}(project, testName)
 	}
 }
 
-func (r *Runner) fetchTestDetails(project ProjectMeta, hookID string, eventIDs []string, testIDs []string, results chan []TestResult) {
+func (r *Runner) fetchTestDetails(project ProjectMeta, hookID string, eventIDs []string, testIDs []string, results chan TestResult) {
 	for _, eventID := range eventIDs {
 		log.Info().
 			Str("project", project.Name).
@@ -420,16 +420,16 @@ func (r *Runner) fetchTestDetails(project ProjectMeta, hookID string, eventIDs [
 	for _, testID := range testIDs {
 		go func(p ProjectMeta, testID string) {
 			test, _ := r.Client.GetTest(context.Background(), hookID, testID)
-			results <- []TestResult{{
+			results <- TestResult{
 				Test:    test,
 				Project: p,
 				Async:   true,
-			}}
+			}
 		}(project, testID)
 	}
 }
 
-func (r *Runner) startPollingAsyncResponse(project ProjectMeta, hookID string, eventIDs []string, results chan []TestResult, pollMaximumWait time.Duration) {
+func (r *Runner) startPollingAsyncResponse(project ProjectMeta, hookID string, eventIDs []string, results chan TestResult, pollMaximumWait time.Duration) {
 	for _, eventID := range eventIDs {
 		go func(lEventID string) {
 			deadline := time.NewTimer(pollMaximumWait)
@@ -447,23 +447,23 @@ func (r *Runner) startPollingAsyncResponse(project ProjectMeta, hookID string, e
 					}
 
 					if err != nil {
-						results <- []TestResult{{
+						results <- TestResult{
 							EventID:       lEventID,
 							Project:       project,
 							FailuresCount: 1,
 							Error:         err,
-						}}
+						}
 						return
 					}
 
-					results <- []TestResult{result}
+					results <- result
 					return
 				case <-deadline.C:
-					results <- []TestResult{{
+					results <- TestResult{
 						Project:  project,
 						EventID:  lEventID,
 						TimedOut: true,
-					}}
+					}
 					return
 				}
 			}
@@ -471,7 +471,7 @@ func (r *Runner) startPollingAsyncResponse(project ProjectMeta, hookID string, e
 	}
 }
 
-func (r *Runner) collectResults(expected int, results chan []TestResult) bool {
+func (r *Runner) collectResults(expected int, results chan TestResult) bool {
 	inProgress := expected
 	passed := true
 
@@ -490,55 +490,53 @@ func (r *Runner) collectResults(expected int, results chan []TestResult) bool {
 	}(r)
 
 	for i := 0; i < expected; i++ {
-		res := <-results
+		testResult := <-results
 
 		inProgress--
 
-		for _, testResult := range res {
-			var reportURL string
-			testName := buildTestName(testResult.Project, testResult.Test)
+		var reportURL string
+		testName := buildTestName(testResult.Project, testResult.Test)
 
-			if !testResult.Async {
-				reportURL = fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)
+		if !testResult.Async {
+			reportURL = fmt.Sprintf("%s/api-testing/project/%s/event/%s", r.Region.AppBaseURL(), testResult.Project.ID, testResult.EventID)
 
-				logEvent := log.Info()
-				logMsg := "Test finished."
-				if testResult.FailuresCount > 0 || testResult.TimedOut {
-					logEvent = log.Error()
-					logMsg = "Test finished with errors."
-				}
-				logEvent.
-					Err(testResult.Error).
-					Int("failures", testResult.FailuresCount).
-					Str("project", testResult.Project.Name).
-					Str("report", reportURL).
-					Str("test", testResult.Test.Name)
-
-				logEvent.Msg(logMsg)
+			logEvent := log.Info()
+			logMsg := "Test finished."
+			if testResult.FailuresCount > 0 || testResult.TimedOut {
+				logEvent = log.Error()
+				logMsg = "Test finished with errors."
 			}
+			logEvent.
+				Err(testResult.Error).
+				Int("failures", testResult.FailuresCount).
+				Str("project", testResult.Project.Name).
+				Str("report", reportURL).
+				Str("test", testResult.Test.Name)
 
-			status := job.StatePassed
-			if testResult.FailuresCount > 0 {
-				status = job.StateFailed
-			} else if testResult.Async {
-				status = job.StateInProgress
-			}
+			logEvent.Msg(logMsg)
+		}
 
-			if status == job.StateFailed || testResult.TimedOut {
-				passed = false
-			}
+		status := job.StatePassed
+		if testResult.FailuresCount > 0 {
+			status = job.StateFailed
+		} else if testResult.Async {
+			status = job.StateInProgress
+		}
 
-			for _, rep := range r.Reporters {
-				rep.Add(report.TestResult{
-					Name:      testName,
-					URL:       reportURL,
-					Status:    status,
-					Duration:  time.Second * time.Duration(testResult.ExecutionTimeSeconds),
-					StartTime: (time.Now()).Add(-time.Second * time.Duration(testResult.ExecutionTimeSeconds)),
-					Attempts:  1,
-					TimedOut:  testResult.TimedOut,
-				})
-			}
+		if status == job.StateFailed || testResult.TimedOut {
+			passed = false
+		}
+
+		for _, rep := range r.Reporters {
+			rep.Add(report.TestResult{
+				Name:      testName,
+				URL:       reportURL,
+				Status:    status,
+				Duration:  time.Second * time.Duration(testResult.ExecutionTimeSeconds),
+				StartTime: (time.Now()).Add(-time.Second * time.Duration(testResult.ExecutionTimeSeconds)),
+				Attempts:  1,
+				TimedOut:  testResult.TimedOut,
+			})
 		}
 	}
 	close(done)

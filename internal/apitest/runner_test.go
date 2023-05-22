@@ -433,26 +433,24 @@ func TestRunner_runLocalTests(t *testing.T) {
 		TestMatch: []string{"01_basic_test"},
 		Tags:      []string{"canfail"},
 	}
-	c := make(chan []TestResult)
+	c := make(chan TestResult)
 
 	res := r.runLocalTests(s, c)
 	assert.Equal(t, 1, res)
 
 	results := <-c
-	assert.Equal(t, []TestResult{
-		{
-			EventID:       "c4ca4238a0b923820dcc509a",
-			FailuresCount: 0,
-			Project: ProjectMeta{
-				ID:   "6244d915ca28694aab958bbe",
-				Name: "Test Project",
-			},
-			Test: Test{
-				Name: "test_demo",
-				ID:   "638788b12d29c47170999eee",
-			},
-			ExecutionTimeSeconds: 31,
+	assert.Equal(t, TestResult{
+		EventID:       "c4ca4238a0b923820dcc509a",
+		FailuresCount: 0,
+		Project: ProjectMeta{
+			ID:   "6244d915ca28694aab958bbe",
+			Name: "Test Project",
 		},
+		Test: Test{
+			Name: "test_demo",
+			ID:   "638788b12d29c47170999eee",
+		},
+		ExecutionTimeSeconds: 31,
 	}, results)
 }
 
