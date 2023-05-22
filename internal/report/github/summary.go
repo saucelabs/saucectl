@@ -30,14 +30,25 @@ func (r *Reporter) Add(t report.TestResult) {
 	r.results = append(r.results, t)
 }
 
+func hasSomeDevice(results []report.TestResult) bool {
+	for _, t := range results {
+		if t.DeviceName != "" {
+			return true
+		}
+	}
+	return false
+}
+
 func (r *Reporter) Render() {
 	if !r.isActive() {
 		return
 	}
 
-	content := renderHeader()
+	hasDevices := hasSomeDevice(r.results)
+
+	content := renderHeader(hasDevices)
 	for _, result := range r.results {
-		content += renderTestResult(result)
+		content += renderTestResult(result, hasDevices)
 	}
 
 	err := os.WriteFile(r.stepSummaryFile, []byte(content), 0x644)
@@ -56,13 +67,19 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 	return []report.ArtifactType{}
 }
 
-func renderHeader() string {
-	content := "| | Name | Duration | Status | Browser | Platform | Device |\n"
-	content += "| --- | --- | --- | --- | --- | --- | --- |\n"
+func renderHeader(hasDevices bool) string {
+	deviceTitle := ""
+	deviceSeparator := ""
+	if hasDevices {
+		deviceTitle = " Device |"
+		deviceSeparator = " --- |"
+	}
+	content := fmt.Sprintf("| | Name | Duration | Status | Browser | Platform |%s\n", deviceTitle)
+	content += fmt.Sprintf("| --- | --- | --- | --- | --- | --- |%s\n", deviceSeparator)
 	return content
 }
 
-func renderTestResult(t report.TestResult) string {
+func renderTestResult(t report.TestResult, hasDevices bool) string {
 	content := ""
 
 	var mark string
@@ -74,7 +91,13 @@ func renderTestResult(t report.TestResult) string {
 	default:
 		mark = ":x:"
 	}
-	content += fmt.Sprintf("| %s | [%s](%s) | %.0fs | %s | %s | %s | %s |\n",
-		mark, t.Name, t.URL, t.Duration.Seconds(), t.Status, t.Browser, t.Platform, t.DeviceName)
+
+	deviceValue := ""
+	if hasDevices {
+		deviceValue = fmt.Sprintf(" %s |", t.DeviceName)
+	}
+
+	content += fmt.Sprintf("| %s | [%s](%s) | %.0fs | %s | %s | %s |%s\n",
+		mark, t.Name, t.URL, t.Duration.Seconds(), t.Status, t.Browser, t.Platform, deviceValue)
 	return content
 }
