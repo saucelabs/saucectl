@@ -37,6 +37,7 @@ func (r *Reporter) Render() {
 	if err != nil {
 		return
 	}
+	defer fd.Close()
 	renderHeader(fd)
 	for _, result := range r.results {
 		renderTestResult(fd, result)
