@@ -3,11 +3,13 @@ package github
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/saucelabs/saucectl/internal/report"
 )
 
 type Reporter struct {
+	beginTime       time.Time
 	stepSummaryFile string
 	results         []report.TestResult
 }
@@ -15,6 +17,7 @@ type Reporter struct {
 func NewGithubSummary() Reporter {
 	fmt.Printf("GITHUB_STEP_SUMMARY: %s", os.Getenv("GITHUB_STEP_SUMMARY"))
 	return Reporter{
+		beginTime:       time.Now(),
 		stepSummaryFile: os.Getenv("GITHUB_STEP_SUMMARY"),
 	}
 }
@@ -44,12 +47,22 @@ func (r *Reporter) Render() {
 		return
 	}
 
+	endTime := time.Now()
 	hasDevices := hasSomeDevice(r.results)
+	errors := 0
+	inProgress := 0
 
 	content := renderHeader(hasDevices)
 	for _, result := range r.results {
+		if result.Status == "in progress" {
+			inProgress++
+		}
+		if result.Status == "failed" {
+			errors++
+		}
 		content += renderTestResult(result, hasDevices)
 	}
+	content += renderFooter(errors, inProgress, len(r.results), endTime.Sub(r.beginTime))
 
 	err := os.WriteFile(r.stepSummaryFile, []byte(content), 0x644)
 	if err != nil {
@@ -100,4 +113,15 @@ func renderTestResult(t report.TestResult, hasDevices bool) string {
 	content += fmt.Sprintf("| %s | [%s](%s) | %.0fs | %s | %s | %s |%s\n",
 		mark, t.Name, t.URL, t.Duration.Seconds(), t.Status, t.Browser, t.Platform, deviceValue)
 	return content
+}
+
+func renderFooter(errors, inProgress, tests int, dur time.Duration) string {
+	if errors != 0 {
+		relative := float64(errors) / float64(tests) * 100
+		return fmt.Sprintf("\n:x: %d of %d suites have failed (%.0f%%) in %s\n\n", errors, tests, relative, dur.Truncate(1*time.Second))
+	}
+	if inProgress != 0 {
+		return fmt.Sprintf("\n:clock10: All suites have launched in %s\n\n", dur.Truncate(1*time.Second))
+	}
+	return fmt.Sprintf("\n:white_check_mark: All suites have passed in %s\n\n", dur.Truncate(1*time.Second))
 }
