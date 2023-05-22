@@ -152,7 +152,7 @@ jobs:
         run: chmod +x ./saucectl
 
       - name: Saucectl RUN - Config Driven
-        run: ./saucectl run -c .sauce/playwright.yml --timeout 10m
+        run: echo $GITHUB_STEP_SUMMARY && ./saucectl run -c .sauce/playwright.yml --timeout 10m
 
       - name: Saucectl RUN - CLI Driven
         run: ./saucectl run playwright ".*.js" -c "" --name "CLI Driven" --browser chromium --rootDir tests/e2e/playwright/ --playwright.version 1.33.0 --timeout 10m
