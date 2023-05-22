@@ -69,10 +69,8 @@ func renderTestResult(t report.TestResult) string {
 	switch t.Status {
 	case "in progress":
 		mark = ":clock10:"
-		break
 	case "passed":
 		mark = ":white_check_mark:"
-		break
 	default:
 		mark = ":x:"
 	}
