@@ -13,6 +13,7 @@ type Reporter struct {
 }
 
 func NewGithubSummary() Reporter {
+	fmt.Printf("GITHUB_STEP_SUMMARY: %s", os.Getenv("GITHUB_STEP_SUMMARY"))
 	return Reporter{
 		stepSummaryFile: os.Getenv("GITHUB_STEP_SUMMARY"),
 	}
