@@ -3,6 +3,7 @@ package github
 import (
 	"fmt"
 	"os"
+	"syscall"
 
 	"github.com/saucelabs/saucectl/internal/report"
 )
@@ -34,11 +35,14 @@ func (r *Reporter) Render() {
 	if !r.isActive() {
 		return
 	}
-	fd, err := os.Open(r.stepSummaryFile)
+	fd, err := os.OpenFile(r.stepSummaryFile, syscall.O_APPEND, 0x644)
 	if err != nil {
 		return
 	}
-	defer fd.Close()
+	defer func() {
+		fd.Sync()
+		fd.Close()
+	}()
 	renderHeader(fd)
 	for _, result := range r.results {
 		renderTestResult(fd, result)
