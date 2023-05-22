@@ -65,9 +65,16 @@ func renderHeader() string {
 func renderTestResult(t report.TestResult) string {
 	content := ""
 
-	mark := ":x:"
-	if t.Status == "passed" {
+	var mark string
+	switch t.Status {
+	case "in progress":
+		mark = ":clock10:"
+		break
+	case "passed":
 		mark = ":white_check_mark:"
+		break
+	default:
+		mark = ":x:"
 	}
 	content += fmt.Sprintf("| %s | [%s](%s) | %.0fs | %s | %s | %s | %s |\n",
 		mark, t.Name, t.URL, t.Duration.Seconds(), t.Status, t.Browser, t.Platform, t.DeviceName)
