@@ -33,11 +33,10 @@ func (r *Reporter) Render() {
 	if !r.isActive() {
 		return
 	}
-	fd, err := os.Open("/dev/stdout")
+	fd, err := os.Open(r.stepSummaryFile)
 	if err != nil {
 		return
 	}
-	fmt.Println("Rendering")
 	renderHeader(fd)
 	for _, result := range r.results {
 		renderTestResult(fd, result)
