@@ -287,7 +287,7 @@ func checkForUpdates() {
 func createReporters(c config.Reporters, ntfs config.Notifications, metadata config.Metadata,
 	svc slack.Service, buildReader build.Reader, framework, env string) []report.Reporter {
 	buildReporter := buildtable.New(buildReader)
-	githubReporter := github.NewGithubSummary()
+	githubReporter := github.NewJobSummaryReporter()
 
 	reps := []report.Reporter{
 		&captor.Default,

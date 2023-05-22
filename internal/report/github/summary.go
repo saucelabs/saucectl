@@ -14,7 +14,7 @@ type Reporter struct {
 	results         []report.TestResult
 }
 
-func NewGithubSummary() Reporter {
+func NewJobSummaryReporter() Reporter {
 	fmt.Printf("GITHUB_STEP_SUMMARY: %s", os.Getenv("GITHUB_STEP_SUMMARY"))
 	return Reporter{
 		beginTime:       time.Now(),
