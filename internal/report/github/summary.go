@@ -65,11 +65,11 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 func renderHeader(f *os.File) {
 	_, err := fmt.Fprint(f, "| | Name | Duration | Status | Browser | Platform | Device |\n")
 	if err != nil {
-		fmt.Errorf("error while syncing: %v", err)
+		fmt.Printf("error while syncing: %v", err)
 	}
 	_, err = fmt.Fprint(f, "| --- | --- | --- | --- | --- | --- | --- |\n")
 	if err != nil {
-		fmt.Errorf("error while syncing: %v", err)
+		fmt.Printf("error while syncing: %v", err)
 	}
 }
 
@@ -81,6 +81,6 @@ func renderTestResult(f *os.File, t report.TestResult) {
 	_, err := fmt.Fprintf(f, "| %s | [%s](%s) | %.0fs | %s | %s | %s | %s |\n",
 		mark, t.Name, t.URL, t.Duration.Seconds(), t.Status, t.Browser, t.Platform, t.DeviceName)
 	if err != nil {
-		fmt.Errorf("error while syncing: %v", err)
+		fmt.Printf("error while syncing: %v", err)
 	}
 }
