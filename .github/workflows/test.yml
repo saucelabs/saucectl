@@ -152,22 +152,10 @@ jobs:
         run: chmod +x ./saucectl
 
       - name: Saucectl RUN - Config Driven
-        run: echo $GITHUB_STEP_SUMMARY && ./saucectl run -c .sauce/playwright.yml --timeout 10m
+        run: ./saucectl run -c .sauce/playwright.yml --timeout 10m
 
       - name: Saucectl RUN - CLI Driven
         run: ./saucectl run playwright ".*.js" -c "" --name "CLI Driven" --browser chromium --rootDir tests/e2e/playwright/ --playwright.version 1.33.0 --timeout 10m
-
-      - name: Add Third Summary
-        run: |
-          cat << EOF >> $GITHUB_STEP_SUMMARY
-          | | Name | Duration | Status| Browser| Platform| Device |
-          | --- | --- | --- | --- | --- | --- | --- |
-          | :white_check_mark: | [Firefox in sauce](https://app.saucelabs.com/tests/90517fbac7d14cdbb42742742e427bf5) | 35s | passed | firefox 112 | Windows 10 | |
-          | :white_check_mark: | [Chrome in sauce](https://app.saucelabs.com/tests/76b27eb63654448cabcc9263c50f0332) | 48s | passed | chrome 112 | macOS 11.00 | |
-          | :white_check_mark: | [iOS Test](https://app.saucelabs.com/tests/4bd4fbf0e2e34541bb53393f717ba308) | 1m9s | passed | safari 14.3 | iOS 14.3 | iPhone 12 Simulator |
-          | :white_check_mark: | [iOS Test](https://app.saucelabs.com/tests/c9b41088d57349eb842fe434345a5893) | 1m23s | passed | safari 14.3 | iOS 14.3 | iPad mini (5th generation) Simulator |
-          EOF
-
 
   testcafe:
     needs: build
