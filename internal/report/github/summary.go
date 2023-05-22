@@ -57,8 +57,8 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 }
 
 func renderHeader() string {
-	content := fmt.Sprint("| | Name | Duration | Status | Browser | Platform | Device |\n")
-	content += fmt.Sprint("| --- | --- | --- | --- | --- | --- | --- |\n")
+	content := "| | Name | Duration | Status | Browser | Platform | Device |\n"
+	content += "| --- | --- | --- | --- | --- | --- | --- |"
 	return content
 }
 
