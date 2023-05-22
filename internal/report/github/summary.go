@@ -42,7 +42,7 @@ func (r *Reporter) Render() {
 	defer func() {
 		err := fd.Sync()
 		if err != nil {
-			fmt.Errorf("error while syncing: %v", err)
+			fmt.Printf("error while syncing: %v", err)
 		}
 		fd.Close()
 	}()
