@@ -3,7 +3,6 @@ package github
 import (
 	"fmt"
 	"os"
-	"syscall"
 
 	"github.com/saucelabs/saucectl/internal/report"
 )
@@ -35,20 +34,15 @@ func (r *Reporter) Render() {
 	if !r.isActive() {
 		return
 	}
-	fd, err := os.OpenFile(r.stepSummaryFile, syscall.O_APPEND, 0x644)
-	if err != nil {
-		return
-	}
-	defer func() {
-		err := fd.Sync()
-		if err != nil {
-			fmt.Printf("error while syncing: %v", err)
-		}
-		fd.Close()
-	}()
-	renderHeader(fd)
+
+	content := renderHeader()
 	for _, result := range r.results {
-		renderTestResult(fd, result)
+		content += renderTestResult(result)
+	}
+
+	err := os.WriteFile(r.stepSummaryFile, []byte(content), 0x644)
+	if err != nil {
+		fmt.Sprintf("Unable to save summary: %v", err)
 	}
 }
 
@@ -62,25 +56,20 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 	return []report.ArtifactType{}
 }
 
-func renderHeader(f *os.File) {
-	_, err := fmt.Fprint(f, "| | Name | Duration | Status | Browser | Platform | Device |\n")
-	if err != nil {
-		fmt.Printf("error while syncing: %v", err)
-	}
-	_, err = fmt.Fprint(f, "| --- | --- | --- | --- | --- | --- | --- |\n")
-	if err != nil {
-		fmt.Printf("error while syncing: %v", err)
-	}
+func renderHeader() string {
+	content := fmt.Sprint("| | Name | Duration | Status | Browser | Platform | Device |\n")
+	content += fmt.Sprint("| --- | --- | --- | --- | --- | --- | --- |\n")
+	return content
 }
 
-func renderTestResult(f *os.File, t report.TestResult) {
+func renderTestResult(t report.TestResult) string {
+	content := ""
+
 	mark := ":x:"
 	if t.Status == "passed" {
 		mark = ":white_check_mark:"
 	}
-	_, err := fmt.Fprintf(f, "| %s | [%s](%s) | %.0fs | %s | %s | %s | %s |\n",
+	content += fmt.Sprintf("| %s | [%s](%s) | %.0fs | %s | %s | %s | %s |\n",
 		mark, t.Name, t.URL, t.Duration.Seconds(), t.Status, t.Browser, t.Platform, t.DeviceName)
-	if err != nil {
-		fmt.Printf("error while syncing: %v", err)
-	}
+	return content
 }
