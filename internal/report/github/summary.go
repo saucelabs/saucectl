@@ -40,7 +40,10 @@ func (r *Reporter) Render() {
 		return
 	}
 	defer func() {
-		fd.Sync()
+		err := fd.Sync()
+		if err != nil {
+			fmt.Errorf("error while syncing: %v", err)
+		}
 		fd.Close()
 	}()
 	renderHeader(fd)
@@ -60,8 +63,14 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 }
 
 func renderHeader(f *os.File) {
-	fmt.Fprint(f, "| | Name | Duration | Status | Browser | Platform | Device |\n")
-	fmt.Fprint(f, "| --- | --- | --- | --- | --- | --- | --- |\n")
+	_, err := fmt.Fprint(f, "| | Name | Duration | Status | Browser | Platform | Device |\n")
+	if err != nil {
+		fmt.Errorf("error while syncing: %v", err)
+	}
+	_, err = fmt.Fprint(f, "| --- | --- | --- | --- | --- | --- | --- |\n")
+	if err != nil {
+		fmt.Errorf("error while syncing: %v", err)
+	}
 }
 
 func renderTestResult(f *os.File, t report.TestResult) {
@@ -69,6 +78,9 @@ func renderTestResult(f *os.File, t report.TestResult) {
 	if t.Status == "passed" {
 		mark = ":white_check_mark:"
 	}
-	fmt.Fprintf(f, "| %s | [%s](%s) | %.0fs | %s | %s | %s | %s |\n",
+	_, err := fmt.Fprintf(f, "| %s | [%s](%s) | %.0fs | %s | %s | %s | %s |\n",
 		mark, t.Name, t.URL, t.Duration.Seconds(), t.Status, t.Browser, t.Platform, t.DeviceName)
+	if err != nil {
+		fmt.Errorf("error while syncing: %v", err)
+	}
 }
