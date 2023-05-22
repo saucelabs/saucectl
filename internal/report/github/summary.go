@@ -58,7 +58,7 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 
 func renderHeader() string {
 	content := "| | Name | Duration | Status | Browser | Platform | Device |\n"
-	content += "| --- | --- | --- | --- | --- | --- | --- |"
+	content += "| --- | --- | --- | --- | --- | --- | --- |\n"
 	return content
 }
 
