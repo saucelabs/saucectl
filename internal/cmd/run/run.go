@@ -33,6 +33,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/buildtable"
 	"github.com/saucelabs/saucectl/internal/report/captor"
+	"github.com/saucelabs/saucectl/internal/report/github"
 	"github.com/saucelabs/saucectl/internal/report/json"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/version"
@@ -286,10 +287,12 @@ func checkForUpdates() {
 func createReporters(c config.Reporters, ntfs config.Notifications, metadata config.Metadata,
 	svc slack.Service, buildReader build.Reader, framework, env string) []report.Reporter {
 	buildReporter := buildtable.New(buildReader)
+	githubReporter := github.NewGithubSummary()
 
 	reps := []report.Reporter{
 		&captor.Default,
 		&buildReporter,
+		&githubReporter,
 	}
 
 	if c.JUnit.Enabled {
