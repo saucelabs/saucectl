@@ -8,16 +8,17 @@ import (
 	"github.com/saucelabs/saucectl/internal/report"
 )
 
+// Reporter represent a Job Summary for GitHub.
+// https://github.blog/2022-05-09-supercharging-github-actions-with-job-summaries/
 type Reporter struct {
-	beginTime       time.Time
+	startTime       time.Time
 	stepSummaryFile string
 	results         []report.TestResult
 }
 
 func NewJobSummaryReporter() Reporter {
-	fmt.Printf("GITHUB_STEP_SUMMARY: %s", os.Getenv("GITHUB_STEP_SUMMARY"))
 	return Reporter{
-		beginTime:       time.Now(),
+		startTime:       time.Now(),
 		stepSummaryFile: os.Getenv("GITHUB_STEP_SUMMARY"),
 	}
 }
@@ -33,7 +34,7 @@ func (r *Reporter) Add(t report.TestResult) {
 	r.results = append(r.results, t)
 }
 
-func hasSomeDevice(results []report.TestResult) bool {
+func hasDevice(results []report.TestResult) bool {
 	for _, t := range results {
 		if t.DeviceName != "" {
 			return true
@@ -48,7 +49,7 @@ func (r *Reporter) Render() {
 	}
 
 	endTime := time.Now()
-	hasDevices := hasSomeDevice(r.results)
+	hasDevices := hasDevice(r.results)
 	errors := 0
 	inProgress := 0
 
@@ -62,7 +63,7 @@ func (r *Reporter) Render() {
 		}
 		content += renderTestResult(result, hasDevices)
 	}
-	content += renderFooter(errors, inProgress, len(r.results), endTime.Sub(r.beginTime))
+	content += renderFooter(errors, inProgress, len(r.results), endTime.Sub(r.startTime))
 
 	err := os.WriteFile(r.stepSummaryFile, []byte(content), 0x644)
 	if err != nil {
