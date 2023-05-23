@@ -241,6 +241,7 @@ func Run(cmd *cobra.Command) (int, error) {
 		return runImageRunner(cmd)
 	}
 
+	msg.LogUnsupportedFramework(typeDef.Kind)
 	return 1, errors.New(msg.UnknownFrameworkConfig)
 }
 
