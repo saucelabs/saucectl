@@ -2594,6 +2594,9 @@
           "kind": {
             "const": "imagerunner"
           },
+          "sauce": {
+            "$ref": "#/allOf/9/then/definitions/sauce"
+          },
           "defaults": {
             "description": "Settings that are applied onto every suite as a default value.",
             "$ref": "#/allOf/9/then/definitions/suite"

@@ -130,6 +130,9 @@
     "kind": {
       "const": "imagerunner"
     },
+    "sauce": {
+      "$ref": "#/definitions/sauce"
+    },
     "defaults": {
       "description": "Settings that are applied onto every suite as a default value.",
       "$ref": "#/definitions/suite"
