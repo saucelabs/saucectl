@@ -56,10 +56,10 @@ func (r *Reporter) Render() {
 
 	content := renderHeader(hasDevices)
 	for _, result := range r.results {
-		if result.Status == "in progress" {
+		if result.Status == job.StateInProgress || result.Status == job.StateNew {
 			inProgress++
 		}
-		if result.Status == "failed" {
+		if result.Status == job.StateFailed || result.Status == job.StateError {
 			errors++
 		}
 		content += renderTestResult(result, hasDevices)
