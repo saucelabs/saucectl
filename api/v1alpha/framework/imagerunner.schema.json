@@ -13,30 +13,30 @@
       "description": "All settings related to how tests are run and identified in the Sauce Labs platform.",
       "type": "object",
       "properties": {
-      },
-      "region": {
-        "description": "Which Sauce Labs data center to target.",
-        "enum": [
-          "us-west-1",
-          "eu-central-1"
-        ]
-      },
-      "tunnel": {
-        "description": "SauceCTL supports using Sauce Connect to establish a secure connection when running your tests on Sauce Labs. To do so, launch a tunnel; then provide the identifier in this property.",
-        "properties": {
-          "name": {
-            "description": "The tunnel name.",
-            "type": "string"
-          },
-          "owner": {
-            "description": "The owner (username) of the tunnel. Must be specified if the user that created the tunnel differs from the user that is running the tests.",
-            "type": "string"
-          }
+        "region": {
+          "description": "Which Sauce Labs data center to target.",
+          "enum": [
+            "us-west-1",
+            "eu-central-1"
+          ]
         },
-        "required": [
-          "name"
-        ],
-        "additionalProperties": false
+        "tunnel": {
+          "description": "SauceCTL supports using Sauce Connect to establish a secure connection when running your tests on Sauce Labs. To do so, launch a tunnel; then provide the identifier in this property.",
+          "properties": {
+            "name": {
+              "description": "The tunnel name.",
+              "type": "string"
+            },
+            "owner": {
+              "description": "The owner (username) of the tunnel. Must be specified if the user that created the tunnel differs from the user that is running the tests.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        }
       }
     },
     "suite": {
