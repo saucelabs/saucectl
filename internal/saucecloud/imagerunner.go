@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -66,6 +67,11 @@ type execResult struct {
 func (r *ImgRunner) RunProject() (int, error) {
 	if err := tunnel.ValidateTunnel(r.TunnelService, r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner, tunnel.NoneFilter, false); err != nil {
 		return 1, err
+	}
+
+	if r.Project.DryRun {
+		log.Info().Msgf("The following test suites would have run: [%s].", r.getSuiteNames())
+		return 0, nil
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -408,6 +414,15 @@ func (r *ImgRunner) PollLogs(ctx context.Context, id string) (string, error) {
 			return l, err
 		}
 	}
+}
+
+func (r *ImgRunner) getSuiteNames() string {
+	var names []string
+	for _, s := range r.Project.Suites {
+		names = append(names, s.Name)
+	}
+
+	return strings.Join(names, ", ")
 }
 
 func mapEnv(env map[string]string) []imagerunner.EnvItem {
