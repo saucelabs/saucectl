@@ -9,7 +9,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/report"
 )
 
-// Reporter represent a Job Summary for GitHub.
+// Reporter generates Job Summaries for GitHub.
 // https://github.blog/2022-05-09-supercharging-github-actions-with-job-summaries/
 type Reporter struct {
 	startTime       time.Time
