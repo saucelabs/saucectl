@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/spf13/cobra"
 )
 
@@ -29,7 +28,6 @@ func Command() *cobra.Command {
 			err := Run()
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
-				backtrace.Report(err, nil, "")
 				os.Exit(1)
 			}
 		},

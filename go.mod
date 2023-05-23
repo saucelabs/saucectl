@@ -46,7 +46,6 @@ require (
 
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
-	github.com/backtrace-labs/backtrace-go v0.0.0-20200519161839-4457930c4c2e
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
