@@ -67,7 +67,7 @@ func (r *Reporter) Render() {
 
 	err := os.WriteFile(r.stepSummaryFile, []byte(content), 0x644)
 	if err != nil {
-		fmt.Printf("Unable to save summary: %v", err)
+		fmt.Printf("Unable to save summary: %v\n", err)
 	}
 }
 
