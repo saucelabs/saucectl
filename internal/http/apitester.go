@@ -106,7 +106,7 @@ func (c *APITester) GetEventResult(ctx context.Context, hookID string, eventID s
 	// 404 needs to be treated differently to ensure calling parent is aware of the specific error.
 	// API replies 404 until the event is fully processed.
 	if resp.StatusCode == http.StatusNotFound {
-		return apitest.TestResult{}, errors.New("event not found")
+		return apitest.TestResult{}, apitest.ErrEventNotFound
 	}
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
