@@ -2474,7 +2474,6 @@
               "description": "Which Sauce Labs data center to target.",
               "enum": [
                 "us-west-1",
-                "us-east-4",
                 "eu-central-1"
               ]
             },
