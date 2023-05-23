@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/report"
 )
 
@@ -93,19 +94,25 @@ func renderHeader(hasDevices bool) string {
 	return content
 }
 
+func statusToEmoji(status string) string {
+	switch status {
+	case job.StateInProgress, job.StateNew:
+		return ":clock10:"
+	case job.StatePassed, job.StateComplete:
+		return ":white_check_mark:"
+	case job.StateUnknown:
+		return ":interrobang:"
+	case job.StateError, job.StateFailed:
+		return ":x:"
+	default:
+		return ":warning:"
+	}
+}
+
 func renderTestResult(t report.TestResult, hasDevices bool) string {
 	content := ""
 
-	var mark string
-	switch t.Status {
-	case "in progress":
-		mark = ":clock10:"
-	case "passed":
-		mark = ":white_check_mark:"
-	default:
-		mark = ":x:"
-	}
-
+	mark := statusToEmoji(t.Status)
 	deviceValue := ""
 	if hasDevices {
 		deviceValue = fmt.Sprintf(" %s |", t.DeviceName)
