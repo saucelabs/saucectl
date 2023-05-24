@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/saucelabs/saucectl/internal/apitest"
-	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -99,9 +98,6 @@ func Command() *cobra.Command {
 			exitCode, err := Run(cmd)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
-				backtrace.Report(err, map[string]interface{}{
-					"username": credentials.Get().Username,
-				}, gFlags.cfgFilePath)
 			}
 			os.Exit(exitCode)
 		},

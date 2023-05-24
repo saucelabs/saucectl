@@ -42,8 +42,6 @@ jobs:
           LD_1: -X 'github.com/saucelabs/saucectl/internal/version.Version=${{ env.RELEASE_VERSION }}'
           LD_2: -X 'github.com/saucelabs/saucectl/internal/version.GitCommit=${{ github.sha }}'
           LD_3: -X 'github.com/saucelabs/saucectl/internal/setup.SegmentWriteKey=${{ secrets.SEGMENT_WRITE_KEY }}'
-          LD_4: -X 'github.com/saucelabs/saucectl/internal/setup.BackTraceEndpoint=${{ secrets.BACKTRACE_ENDPOINT }}'
-          LD_5: -X 'github.com/saucelabs/saucectl/internal/setup.BackTraceToken=${{ secrets.BACKTRACE_TOKEN }}'
         with:
           context: .
           push: true
