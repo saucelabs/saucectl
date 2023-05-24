@@ -97,6 +97,19 @@ type Runner struct {
 	TunnelService tunnel.Service
 }
 
+// Vault represents a project's stored variables and snippets
+type Vault struct {
+	Variables []VaultVariable   `json:"variables"`
+	Snippets  map[string]string `json:"snippets"`
+}
+
+// VaultVariable represents a variable stored in a project vault
+type VaultVariable struct {
+	Name  string `json:"name,omitempty"`
+	Value string `json:"value,omitempty"`
+	Type  string `json:"type,omitempty"`
+}
+
 // FilterSuites filters out suites in the project that don't match the given suite name.
 func FilterSuites(p *Project, suiteName string) error {
 	for _, s := range p.Suites {
