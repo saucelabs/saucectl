@@ -87,8 +87,9 @@ func GetFailedTests(testCases []TestCase) []string {
 		if tc.Error != "" || tc.Failure != "" {
 			if tc.Name != "" {
 				classes[fmt.Sprintf("%s/%s", tc.ClassName, tc.Name)] = true
+			} else {
+				classes[tc.ClassName] = true
 			}
-			classes[tc.ClassName] = true
 		}
 	}
 	return getKeysFromMap(classes)
