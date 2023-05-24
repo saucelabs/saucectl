@@ -3,7 +3,6 @@ package retry
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/job"
