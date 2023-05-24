@@ -77,7 +77,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 			},
 		},
 		{
-			name: "Espresso job retrying only failed suites if RDC + SmartRetry",
+			name: "Espresso job retrying only failed classes if RDC + SmartRetry",
 			init: init{
 				RDCReader: &mocks.FakeJobReader{
 					ReadJobFn:              nil,
@@ -121,7 +121,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 			},
 		},
 		{
-			name: "Espresso job retrying only failed suites if RDC + SmartRetry with no orig filters",
+			name: "Espresso job retrying only failed classes if RDC + SmartRetry with no orig filters",
 			init: init{
 				RDCReader: &mocks.FakeJobReader{
 					ReadJobFn:              nil,
@@ -162,7 +162,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 			},
 		},
 		{
-			name: "XCUITest: Job retrying only failed suites if RDC + SmartRetry with no orig filters",
+			name: "XCUITest: Job retrying only failed tests if RDC + SmartRetry with no orig filters",
 			init: init{
 				RDCReader: &mocks.FakeJobReader{
 					ReadJobFn:              nil,
