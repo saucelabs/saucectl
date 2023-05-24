@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/signal"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -70,7 +69,7 @@ func (r *ImgRunner) RunProject() (int, error) {
 	}
 
 	if r.Project.DryRun {
-		log.Info().Msgf("The following test suites would have run: [%s].", r.getSuiteNames())
+		printDryRunSuiteNames(r.getSuiteNames())
 		return 0, nil
 	}
 
@@ -416,13 +415,12 @@ func (r *ImgRunner) PollLogs(ctx context.Context, id string) (string, error) {
 	}
 }
 
-func (r *ImgRunner) getSuiteNames() string {
+func (r *ImgRunner) getSuiteNames() []string {
 	var names []string
 	for _, s := range r.Project.Suites {
 		names = append(names, s.Name)
 	}
-
-	return strings.Join(names, ", ")
+	return names
 }
 
 func mapEnv(env map[string]string) []imagerunner.EnvItem {
