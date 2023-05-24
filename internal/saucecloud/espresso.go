@@ -130,7 +130,6 @@ func (r *EspressoRunner) runSuites() bool {
 }
 
 func (r *EspressoRunner) dryRun() {
-
 	fmt.Println("\nThe following test suites would have run:")
 	for _, s := range r.Project.Suites {
 		fmt.Printf("  - %s\n", s.Name)
