@@ -82,6 +82,10 @@ func GetFailedTests(report TestSuites) []string {
 	for _, s := range report.TestSuites {
 		for _, tc := range s.TestCases {
 			if tc.Error != "" || tc.Failure != "" {
+				// If the test method exists, add "<className>/<testMethodName>".
+				// Otherwise, only add "<className>".
+				// tc.Name: <testMethodName>
+				// tc.ClassName: <className>
 				if tc.Name != "" {
 					classes[fmt.Sprintf("%s/%s", tc.ClassName, tc.Name)] = true
 				} else {
@@ -96,7 +100,6 @@ func GetFailedTests(report TestSuites) []string {
 // GetFailedClasses get failed class list from the JUnit report.
 func GetFailedClasses(report TestSuites) []string {
 	classes := map[string]bool{}
-
 	for _, s := range report.TestSuites {
 		for _, tc := range s.TestCases {
 			if tc.Error != "" || tc.Failure != "" {
@@ -108,9 +111,11 @@ func GetFailedClasses(report TestSuites) []string {
 }
 
 func getKeysFromMap(mp map[string]bool) []string {
-	var keys []string
+	var keys = make([]string, len(mp))
+	var i int
 	for k := range mp {
-		keys = append(keys, k)
+		keys[i] = k
+		i++
 	}
 	return keys
 }

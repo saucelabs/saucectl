@@ -50,10 +50,11 @@ func setClassesToRetry(opt *job.StartOptions, suites junit.TestSuites) {
 		lg.Msgf(msg.RetryWithClasses, opt.TestsToRun)
 		return
 	}
+
 	if opt.TestOptions == nil {
 		opt.TestOptions = map[string]interface{}{}
 	}
-        classes := junit.GetFailedClasses(suites)
+	classes := junit.GetFailedClasses(suites)
 	opt.TestOptions["class"] = classes
 	lg.Msgf(msg.RetryWithClasses, classes)
 }
