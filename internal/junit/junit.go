@@ -82,7 +82,11 @@ func GetFailedTests(report TestSuites) []string {
 	for _, s := range report.TestSuites {
 		for _, tc := range s.TestCases {
 			if tc.Error != "" || tc.Failure != "" {
-				classes[fmt.Sprintf("%s/%s", tc.ClassName, tc.Name)] = true
+				if tc.Name != "" {
+					classes[fmt.Sprintf("%s/%s", tc.ClassName, tc.Name)] = true
+				} else {
+					classes[tc.ClassName] = true
+				}
 			}
 		}
 	}
