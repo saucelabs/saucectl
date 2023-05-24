@@ -19,7 +19,7 @@ func TestTestcafe_GetSuiteNames(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, "suite1, suite2, suite3", runner.getSuiteNames())
+	assert.Equal(t, []string{"suite1", "suite2", "suite3"}, runner.getSuiteNames())
 }
 
 func Test_calcTestcafeJobsCount(t *testing.T) {
