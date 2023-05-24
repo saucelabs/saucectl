@@ -7,7 +7,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cypress"
@@ -89,7 +88,6 @@ func Command() *cobra.Command {
 			err := Run(cmd, initCfg)
 			if err != nil {
 				log.Err(err).Msg("failed to execute init command")
-				backtrace.Report(err, nil, "")
 				os.Exit(1)
 			}
 		},

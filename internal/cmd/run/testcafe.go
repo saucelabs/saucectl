@@ -13,10 +13,8 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
-	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -57,9 +55,6 @@ func NewTestcafeCmd() *cobra.Command {
 			exitCode, err := runTestcafe(cmd, lflags, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
-				backtrace.Report(err, map[string]interface{}{
-					"username": credentials.Get().Username,
-				}, gFlags.cfgFilePath)
 			}
 			os.Exit(exitCode)
 		},

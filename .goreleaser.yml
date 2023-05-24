@@ -17,8 +17,6 @@ builds:
       - -X github.com/saucelabs/saucectl/internal/version.Version={{.Version}}
       - -X github.com/saucelabs/saucectl/internal/version.GitCommit={{.Commit}}
       - -X github.com/saucelabs/saucectl/internal/setup.SegmentWriteKey={{.Env.SEGMENT_WRITE_KEY}}
-      - -X github.com/saucelabs/saucectl/internal/setup.BackTraceEndpoint={{.Env.BACKTRACE_ENDPOINT}}
-      - -X github.com/saucelabs/saucectl/internal/setup.BackTraceToken={{.Env.BACKTRACE_TOKEN}}
     ignore:
       - goos: windows
         goarch: arm64
