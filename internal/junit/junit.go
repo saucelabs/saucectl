@@ -81,7 +81,7 @@ func GetFailedTests(testCases []TestCase) []string {
 	classes := map[string]bool{}
 	for _, tc := range testCases {
 		// If the test method exists, add "<className>/<testMethodName>".
-		// Otherwise, only add "<className>".
+		// Otherwise, if the test method somehow doesn't exist, only add "<className>".
 		// tc.Name: <testMethodName>
 		// tc.ClassName: <className>
 		if tc.Error != "" || tc.Failure != "" {
