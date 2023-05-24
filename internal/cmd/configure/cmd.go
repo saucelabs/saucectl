@@ -9,7 +9,6 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -44,9 +43,6 @@ func Command() *cobra.Command {
 
 			if err := Run(); err != nil {
 				log.Err(err).Msg("failed to execute configure command")
-				backtrace.Report(err, map[string]interface{}{
-					"username": cliUsername,
-				}, "")
 				os.Exit(1)
 			}
 		},

@@ -30,7 +30,7 @@ var (
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
 	Defaults       Defaults           `yaml:"defaults" json:"defaults"`
-	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"` // The only field that's used within 'sauce' is region.
+	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"` // Used fields are `region` and `tunnel`.
 	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
 	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
 }
