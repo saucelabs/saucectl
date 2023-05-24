@@ -18,5 +18,5 @@ func TestPlaywright_GetSuiteNames(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, "suite1, suite2, suite3", runner.getSuiteNames())
+	assert.Equal(t, []string{"suite1", "suite2", "suite3"}, runner.getSuiteNames())
 }

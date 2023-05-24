@@ -130,12 +130,14 @@ func (r *EspressoRunner) runSuites() bool {
 }
 
 func (r *EspressoRunner) dryRun() {
-	log.Warn().Msg("Running tests in dry run mode.")
+	fmt.Println("\nThe following test suites would have run:")
 	for _, s := range r.Project.Suites {
+		fmt.Printf("  - %s\n", s.Name)
 		for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
-			log.Info().Msgf("The [%s] suite would run on %s %s %s.", s.Name, c.name, c.platformName, c.platformVersion)
+			fmt.Printf("    - on %s %s %s\n", c.name, c.platformName, c.platformVersion)
 		}
 	}
+	fmt.Println()
 }
 
 // enumerateDevicesAndEmulators returns a list of emulators and devices targeted by the current suite.

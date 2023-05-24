@@ -68,6 +68,11 @@ func (r *ImgRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
+	if r.Project.DryRun {
+		printDryRunSuiteNames(r.getSuiteNames())
+		return 0, nil
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	r.ctx = ctx
 	r.cancel = cancel
@@ -408,6 +413,14 @@ func (r *ImgRunner) PollLogs(ctx context.Context, id string) (string, error) {
 			return l, err
 		}
 	}
+}
+
+func (r *ImgRunner) getSuiteNames() []string {
+	var names []string
+	for _, s := range r.Project.Suites {
+		names = append(names, s.Name)
+	}
+	return names
 }
 
 func mapEnv(env map[string]string) []imagerunner.EnvItem {

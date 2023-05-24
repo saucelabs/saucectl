@@ -74,12 +74,14 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 }
 
 func (r *XcuitestRunner) dryRun() {
-	log.Warn().Msg("Running tests in dry run mode.")
+	fmt.Println("\nThe following test suites would have run:")
 	for _, s := range r.Project.Suites {
+		fmt.Printf("  - %s\n", s.Name)
 		for _, d := range s.Devices {
-			log.Info().Msgf("The [%s] suite would run on %s %s %s", s.Name, d.Name, d.PlatformName, d.PlatformVersion)
+			fmt.Printf("    - on %s %s %s\n", d.Name, d.PlatformName, d.PlatformVersion)
 		}
 	}
+	fmt.Println()
 }
 
 func (r *XcuitestRunner) runSuites() bool {
