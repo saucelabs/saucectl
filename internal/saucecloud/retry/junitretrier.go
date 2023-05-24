@@ -53,8 +53,9 @@ func setClassesToRetry(opt *job.StartOptions, suites junit.TestSuites) {
 	if opt.TestOptions == nil {
 		opt.TestOptions = map[string]interface{}{}
 	}
-	opt.TestOptions["class"] = junit.GetFailedClasses(suites)
-	lg.Msgf(msg.RetryWithClasses, opt.TestOptions["class"].([]string))
+        classes := junit.GetFailedClasses(suites)
+	opt.TestOptions["class"] = classes
+	lg.Msgf(msg.RetryWithClasses, classes)
 }
 
 func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
