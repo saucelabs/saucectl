@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/mocks"
@@ -76,7 +77,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 			},
 		},
 		{
-			name: "Job retrying only failed suites if RDC + SmartRetry",
+			name: "Espresso job retrying only failed suites if RDC + SmartRetry",
 			init: init{
 				RDCReader: &mocks.FakeJobReader{
 					ReadJobFn:              nil,
@@ -94,6 +95,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 			args: args{
 				jobOpts: make(chan job.StartOptions),
 				opt: job.StartOptions{
+					Framework:   espresso.Kind,
 					DisplayName: "Dummy Test",
 					SmartRetry: job.SmartRetry{
 						FailedOnly: true,
@@ -108,6 +110,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 				},
 			},
 			expected: job.StartOptions{
+				Framework:   espresso.Kind,
 				DisplayName: "Dummy Test",
 				TestOptions: map[string]interface{}{
 					"class": []string{"Demo.Class1"},
@@ -118,7 +121,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 			},
 		},
 		{
-			name: "Job retrying only failed suites if RDC + SmartRetry with no orig filters",
+			name: "Espresso job retrying only failed suites if RDC + SmartRetry with no orig filters",
 			init: init{
 				RDCReader: &mocks.FakeJobReader{
 					ReadJobFn:              nil,
@@ -136,6 +139,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 			args: args{
 				jobOpts: make(chan job.StartOptions),
 				opt: job.StartOptions{
+					Framework:   espresso.Kind,
 					DisplayName: "Dummy Test",
 					SmartRetry: job.SmartRetry{
 						FailedOnly: true,
@@ -147,6 +151,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 				},
 			},
 			expected: job.StartOptions{
+				Framework:   espresso.Kind,
 				DisplayName: "Dummy Test",
 				TestOptions: map[string]interface{}{
 					"class": []string{"Demo.Class1"},
@@ -165,7 +170,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 					GetJobAssetFileNamesFn: nil,
 					GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
 						if jobID == "fake-job-id" && fileName == junit.JunitFileName {
-							return []byte("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<testsuite>\n    <testcase classname=\"Demo.Class1\">\n        <failure>ERROR</failure>\n    </testcase>\n    <testcase classname=\"Demo.Class1\"/>\n    <testcase classname=\"Demo.Class2\"/>\n    <testcase classname=\"Demo.Class3\"/>\n</testsuite>\n"), nil
+							return []byte("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<testsuite>\n    <testcase name=\"demoTest\" classname=\"Demo.Class1\">\n        <failure>ERROR</failure>\n    </testcase>\n    <testcase classname=\"Demo.Class1\"/>\n    <testcase classname=\"Demo.Class2\"/>\n    <testcase classname=\"Demo.Class3\"/>\n</testsuite>\n"), nil
 						}
 						return []byte{}, errors.New("unknown file")
 					},
@@ -189,7 +194,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 			expected: job.StartOptions{
 				Framework:   xcuitest.Kind,
 				DisplayName: "Dummy Test",
-				TestsToRun:  []string{"Demo.Class1"},
+				TestsToRun:  []string{"Demo.Class1/demoTest"},
 				SmartRetry: job.SmartRetry{
 					FailedOnly: true,
 				},

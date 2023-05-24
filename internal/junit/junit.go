@@ -1,6 +1,9 @@
 package junit
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+	"fmt"
+)
 
 // JunitFileName is the name of the JUnit report.
 const JunitFileName = "junit.xml"
@@ -71,4 +74,39 @@ func Parse(data []byte) (TestSuites, error) {
 	}
 
 	return tss, err
+}
+
+// GetFailedTests get failed test list from the JUnit report.
+func GetFailedTests(report TestSuites) []string {
+	classes := map[string]bool{}
+	for _, s := range report.TestSuites {
+		for _, tc := range s.TestCases {
+			if tc.Error != "" || tc.Failure != "" {
+				classes[fmt.Sprintf("%s/%s", tc.ClassName, tc.Name)] = true
+			}
+		}
+	}
+	return getKeysFromMap(classes)
+}
+
+// GetFailedClasses get failed class list from the JUnit report.
+func GetFailedClasses(report TestSuites) []string {
+	classes := map[string]bool{}
+
+	for _, s := range report.TestSuites {
+		for _, tc := range s.TestCases {
+			if tc.Error != "" || tc.Failure != "" {
+				classes[tc.ClassName] = true
+			}
+		}
+	}
+	return getKeysFromMap(classes)
+}
+
+func getKeysFromMap(mp map[string]bool) []string {
+	var keys []string
+	for k := range mp {
+		keys = append(keys, k)
+	}
+	return keys
 }
