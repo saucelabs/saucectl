@@ -76,52 +76,43 @@ func Parse(data []byte) (TestSuites, error) {
 	return tss, err
 }
 
-// GetFailedTests get failed test list from the JUnit report.
-func GetFailedTests(report TestSuites) []string {
+// GetFailedTests get failed test list from testcase list.
+func GetFailedTests(testCases []TestCase) []string {
 	classes := map[string]bool{}
-	for _, s := range report.TestSuites {
-		for _, tc := range s.TestCases {
-			if testName := getFailedTestName(tc); testName != "" {
-				classes[testName] = true
+	for _, tc := range testCases {
+		// getFailedTestsName returns failed test name
+		// If the test method exists, add "<className>/<testMethodName>".
+		// Otherwise, only add "<className>".
+		// tc.Name: <testMethodName>
+		// tc.ClassName: <className>
+		if tc.Error != "" || tc.Failure != "" {
+			if tc.Name != "" {
+				classes[fmt.Sprintf("%s/%s", tc.ClassName, tc.Name)] = true
 			}
+			classes[tc.ClassName] = true
 		}
 	}
 	return getKeysFromMap(classes)
 }
 
-// getFailedTestsName returns failed test name
-// If the test method exists, add "<className>/<testMethodName>".
-// Otherwise, only add "<className>".
-// tc.Name: <testMethodName>
-// tc.ClassName: <className>
-func getFailedTestName(testCase TestCase) string {
-	if testCase.Error != "" || testCase.Failure != "" {
-		if testCase.Name != "" {
-			return fmt.Sprintf("%s/%s", testCase.ClassName, testCase.Name)
-		}
-		return testCase.ClassName
-	}
-	return ""
-}
-
-// GetFailedClasses get failed class list from the JUnit report.
-func GetFailedClasses(report TestSuites) []string {
+// GetFailedClasses get failed class list from testcase list
+func GetFailedClasses(testCases []TestCase) []string {
 	classes := map[string]bool{}
-	for _, s := range report.TestSuites {
-		for _, tc := range s.TestCases {
-			if className := getFailedClassName(tc); className != "" {
-				classes[className] = true
-			}
+	for _, tc := range testCases {
+		if tc.Error != "" || tc.Failure != "" {
+			classes[tc.ClassName] = true
 		}
 	}
 	return getKeysFromMap(classes)
 }
 
-func getFailedClassName(testCase TestCase) string {
-	if testCase.Error != "" || testCase.Failure != "" {
-		return testCase.ClassName
+// CollectTestCases collects testcases from a report.
+func CollectTestCases(testsuites TestSuites) []TestCase {
+	var tc []TestCase
+	for _, s := range testsuites.TestSuites {
+		tc = append(tc, s.TestCases...)
 	}
-	return ""
+	return tc
 }
 
 func getKeysFromMap(mp map[string]bool) []string {

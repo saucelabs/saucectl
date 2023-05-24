@@ -32,7 +32,7 @@ func (b *JunitRetrier) retryFailedTests(reader job.Reader, jobOpts chan<- job.St
 		return
 	}
 
-	setClassesToRetry(&opt, suites)
+	setClassesToRetry(&opt, junit.CollectTestCases(suites))
 	jobOpts <- opt
 }
 
@@ -40,13 +40,13 @@ func (b *JunitRetrier) retryFailedTests(reader job.Reader, jobOpts chan<- job.St
 // RDC API does not provide different endpoints (or identical values) for Espresso
 // and XCUITest. Thus, we need set the classes at the correct position depending the
 // framework that is being executed.
-func setClassesToRetry(opt *job.StartOptions, suites junit.TestSuites) {
+func setClassesToRetry(opt *job.StartOptions, testcases []junit.TestCase) {
 	lg := log.Info().
 		Str("suite", opt.DisplayName).
 		Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1))
 
 	if opt.Framework == xcuitest.Kind {
-		opt.TestsToRun = junit.GetFailedTests(suites)
+		opt.TestsToRun = junit.GetFailedTests(testcases)
 		lg.Msgf(msg.RetryWithClasses, opt.TestsToRun)
 		return
 	}
@@ -54,7 +54,7 @@ func setClassesToRetry(opt *job.StartOptions, suites junit.TestSuites) {
 	if opt.TestOptions == nil {
 		opt.TestOptions = map[string]interface{}{}
 	}
-	classes := junit.GetFailedClasses(suites)
+	classes := junit.GetFailedClasses(testcases)
 	opt.TestOptions["class"] = classes
 	lg.Msgf(msg.RetryWithClasses, classes)
 }
