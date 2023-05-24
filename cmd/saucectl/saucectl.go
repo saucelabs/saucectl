@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
-	bt "github.com/backtrace-labs/backtrace-go"
 	"github.com/fatih/color"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/cmd/apit"
 	"github.com/saucelabs/saucectl/internal/cmd/artifacts"
 	"github.com/saucelabs/saucectl/internal/cmd/completion"
 	"github.com/saucelabs/saucectl/internal/cmd/configure"
@@ -20,7 +20,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/cmd/signup"
 	"github.com/saucelabs/saucectl/internal/cmd/storage"
 	"github.com/saucelabs/saucectl/internal/segment"
-	"github.com/saucelabs/saucectl/internal/setup"
 	"github.com/saucelabs/saucectl/internal/version"
 	"github.com/spf13/cobra"
 )
@@ -56,7 +55,6 @@ func main() {
 
 	cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		setupLogging(*verbosity, *noColor)
-		setupBacktrace()
 		segment.DefaultTracker.Enabled = !*noTracking
 	}
 
@@ -71,6 +69,7 @@ func main() {
 		artifacts.Command(cmd.PersistentPreRun),
 		jobs.Command(cmd.PersistentPreRun),
 		imagerunner.Command(cmd.PersistentPreRun),
+		apit.Command(cmd.PersistentPreRun),
 	)
 
 	if err := cmd.Execute(); err != nil {
@@ -94,9 +93,4 @@ func setupLogging(verbose bool, noColor bool) {
 	}
 
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: timeFormat, NoColor: noColor})
-}
-
-func setupBacktrace() {
-	bt.Options.Endpoint = setup.BackTraceEndpoint
-	bt.Options.Token = setup.BackTraceToken
 }

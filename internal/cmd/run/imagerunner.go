@@ -4,6 +4,7 @@ import (
 	"os"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
+	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
@@ -17,6 +18,7 @@ import (
 )
 
 func runImageRunner(cmd *cobra.Command) (int, error) {
+	config.ValidateSchema(gFlags.cfgFilePath)
 	p, err := imagerunner.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err

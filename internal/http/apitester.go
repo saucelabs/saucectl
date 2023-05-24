@@ -30,6 +30,21 @@ type PublishedTest struct {
 	Published apitest.Test
 }
 
+// VaultErrResponse describes the response when a malformed Vault is unable to be parsed
+type VaultErrResponse struct {
+	Message struct {
+		Errors []vaultErr `json:"errors,omitempty"`
+	} `json:"message,omitempty"`
+	Status string `json:"status,omitempty"`
+}
+
+type vaultErr struct {
+	Field         string                  `json:"field,omitempty"`
+	Message       string                  `json:"message,omitempty"`
+	Object        string                  `json:"object,omitempty"`
+	RejectedValue []apitest.VaultVariable `json:"rejected-value,omitempty"`
+}
+
 // NewAPITester a new instance of APITester.
 func NewAPITester(url string, username string, accessKey string, timeout time.Duration) APITester {
 	return APITester{
@@ -350,4 +365,76 @@ func (c *APITester) doAsyncRun(client *http.Client, request *http.Request) (apit
 	}
 
 	return asyncResponse, nil
+}
+
+// GetVault returns the vault for the project identified by hookID
+func (c *APITester) GetVault(ctx context.Context, hookID string) (apitest.Vault, error) {
+	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/vault", c.URL, hookID)
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return apitest.Vault{}, err
+	}
+
+	req.SetBasicAuth(c.Username, c.AccessKey)
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return apitest.Vault{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return apitest.Vault{}, ErrServerError
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return apitest.Vault{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, body)
+	}
+
+	var vaultResponse apitest.Vault
+	if err := json.NewDecoder(resp.Body).Decode(&vaultResponse); err != nil {
+		return apitest.Vault{}, err
+	}
+
+	return vaultResponse, nil
+}
+
+func (c *APITester) PutVault(ctx context.Context, hookID string, vault apitest.Vault) error {
+	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/vault", c.URL, hookID)
+
+	var b bytes.Buffer
+	err := json.NewEncoder(&b).Encode(vault)
+	if err != nil {
+		return err
+	}
+
+	req, err := NewRequestWithContext(ctx, http.MethodPut, url, &b)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return ErrServerError
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		var errResp VaultErrResponse
+		if err = json.Unmarshal(body, &errResp); err != nil {
+			return fmt.Errorf("request failed; unexpected response code:'%d'; body: %q", resp.StatusCode, body)
+		}
+
+		return fmt.Errorf("request failed; unexpected response code: '%d'; err: '%v'", resp.StatusCode, errResp)
+	}
+
+	return nil
 }

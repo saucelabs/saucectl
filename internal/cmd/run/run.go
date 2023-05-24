@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/saucelabs/saucectl/internal/apitest"
-	"github.com/saucelabs/saucectl/internal/backtrace"
 	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
@@ -33,6 +32,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/buildtable"
 	"github.com/saucelabs/saucectl/internal/report/captor"
+	"github.com/saucelabs/saucectl/internal/report/github"
 	"github.com/saucelabs/saucectl/internal/report/json"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/version"
@@ -98,9 +98,6 @@ func Command() *cobra.Command {
 			exitCode, err := Run(cmd)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
-				backtrace.Report(err, map[string]interface{}{
-					"username": credentials.Get().Username,
-				}, gFlags.cfgFilePath)
 			}
 			os.Exit(exitCode)
 		},
@@ -232,7 +229,7 @@ func Run(cmd *cobra.Command) (int, error) {
 		return runXcuitest(cmd, xcuitestFlags{}, false)
 	}
 	if typeDef.Kind == apitest.Kind {
-		return runApitest(false)
+		return runApitest(cmd, false)
 	}
 	if typeDef.Kind == cucumber.Kind {
 		return runCucumber(cmd, false)
@@ -241,6 +238,7 @@ func Run(cmd *cobra.Command) (int, error) {
 		return runImageRunner(cmd)
 	}
 
+	msg.LogUnsupportedFramework(typeDef.Kind)
 	return 1, errors.New(msg.UnknownFrameworkConfig)
 }
 
@@ -286,10 +284,12 @@ func checkForUpdates() {
 func createReporters(c config.Reporters, ntfs config.Notifications, metadata config.Metadata,
 	svc slack.Service, buildReader build.Reader, framework, env string) []report.Reporter {
 	buildReporter := buildtable.New(buildReader)
+	githubReporter := github.NewJobSummaryReporter()
 
 	reps := []report.Reporter{
 		&captor.Default,
 		&buildReporter,
+		&githubReporter,
 	}
 
 	if c.JUnit.Enabled {
