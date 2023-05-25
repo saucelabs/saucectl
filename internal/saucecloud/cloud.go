@@ -961,3 +961,11 @@ func (r *CloudRunner) download(url string) (string, error) {
 
 	return tmpFilePath, err
 }
+
+func printDryRunSuiteNames(suites []string) {
+	fmt.Println("\nThe following test suites would have run:")
+	for _, s := range suites {
+		fmt.Printf("  - %s\n", s)
+	}
+	fmt.Println()
+}

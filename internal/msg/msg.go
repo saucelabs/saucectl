@@ -123,3 +123,18 @@ func LogConsoleOut(name, logs string) {
 `,
 		name, logs)
 }
+
+// LogUnsupportedFramework prints out the unsupported framework message.
+func LogUnsupportedFramework(frameworkName string) {
+	size := len(frameworkName)
+	padding := ""
+	for i := 0; i < size; i++ {
+		padding += "─"
+	}
+	color.Red(fmt.Sprintf(`
+┌─%s───────────────────────────────┐
+│ Framework "%s" is not supported  │
+└─%s───────────────────────────────┘
+
+`, padding, frameworkName, padding))
+}

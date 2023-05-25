@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/cucumber"
@@ -62,7 +61,7 @@ func (r *CucumberRunner) RunProject() (int, error) {
 	}
 
 	if r.Project.DryRun {
-		log.Info().Msgf("The following test suites would have run: [%s].", r.getSuiteNames())
+		printDryRunSuiteNames(r.getSuiteNames())
 		return 0, nil
 	}
 
@@ -78,13 +77,12 @@ func (r *CucumberRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-func (r *CucumberRunner) getSuiteNames() string {
+func (r *CucumberRunner) getSuiteNames() []string {
 	var names []string
 	for _, s := range r.Project.Suites {
 		names = append(names, s.Name)
 	}
-
-	return strings.Join(names, ", ")
+	return names
 }
 
 func (r *CucumberRunner) runSuites(app string, otherApps []string) bool {

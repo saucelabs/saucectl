@@ -54,7 +54,7 @@ func (r *ReplayRunner) RunProject() (int, error) {
 	}
 
 	if r.Project.DryRun {
-		log.Info().Msgf("The following test suites would have run: %s.", suiteNames)
+		printDryRunSuiteNames(suiteNames)
 		return 0, nil
 	}
 
