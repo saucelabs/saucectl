@@ -80,8 +80,8 @@ func Parse(data []byte) (TestSuites, error) {
 func GetFailedTests(testCases []TestCase) []string {
 	classes := map[string]bool{}
 	for _, tc := range testCases {
-		// If the test method exists, add "<className>/<testMethodName>".
-		// Otherwise, if the test method somehow doesn't exist, only add "<className>".
+		// The format for the filtered test is "<className>/<testMethodName>".
+		// Occasionally, fallback to <className> if the test method name is empty.
 		// tc.Name: <testMethodName>
 		// tc.ClassName: <className>
 		if tc.Error != "" || tc.Failure != "" {
