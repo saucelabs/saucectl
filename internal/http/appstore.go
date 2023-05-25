@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/multipartext"
-
 	"github.com/saucelabs/saucectl/internal/storage"
 )
 
@@ -47,7 +47,7 @@ type Item struct {
 // AppStore implements a remote file storage for storage.AppService.
 // See https://wiki.saucelabs.com/display/DOCS/Application+Storage for more details.
 type AppStore struct {
-	HTTPClient *http.Client
+	HTTPClient *retryablehttp.Client
 	URL        string
 	Username   string
 	AccessKey  string
@@ -56,19 +56,16 @@ type AppStore struct {
 // NewAppStore returns an implementation for AppStore
 func NewAppStore(url, username, accessKey string, timeout time.Duration) *AppStore {
 	return &AppStore{
-		HTTPClient: &http.Client{
-			Timeout:   timeout,
-			Transport: &http.Transport{Proxy: http.ProxyFromEnvironment},
-		},
-		URL:       url,
-		Username:  username,
-		AccessKey: accessKey,
+		HTTPClient: NewRetryableClient(timeout),
+		URL:        url,
+		Username:   username,
+		AccessKey:  accessKey,
 	}
 }
 
 // Download downloads a file with the given id. It's the caller's responsibility to close the reader.
 func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/v1/storage/download/%s", s.URL, id), nil)
+	req, err := retryablehttp.NewRequest(http.MethodGet, fmt.Sprintf("%s/v1/storage/download/%s", s.URL, id), nil)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -96,7 +93,7 @@ func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
 
 // DownloadURL downloads a file from the url. It's the caller's responsibility to close the reader.
 func (s *AppStore) DownloadURL(url string) (io.ReadCloser, int64, error) {
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := retryablehttp.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -122,7 +119,7 @@ func (s *AppStore) UploadStream(filename, description string, reader io.Reader) 
 		return storage.Item{}, err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/v1/storage/upload", s.URL), multipartReader)
+	req, err := retryablehttp.NewRequest(http.MethodPost, fmt.Sprintf("%s/v1/storage/upload", s.URL), multipartReader)
 	if err != nil {
 		return storage.Item{}, err
 	}
@@ -184,7 +181,7 @@ func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 
 	uri.RawQuery = query.Encode()
 
-	req, err := http.NewRequest(http.MethodGet, uri.String(), nil)
+	req, err := retryablehttp.NewRequest(http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return storage.List{}, err
 	}
