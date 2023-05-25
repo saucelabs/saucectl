@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 	"os/signal"
 	"path"
@@ -84,13 +83,6 @@ type result struct {
 
 // ConsoleLogAsset represents job asset log file name.
 const ConsoleLogAsset = "console.log"
-
-// BaseFilepathLength represents the path length where project will be unpacked.
-// Example: "D:\sauce-playwright-runner\1.12.0\bundle\__project__\"
-const BaseFilepathLength = 53
-
-// MaxFilepathLength represents the maximum path length acceptable.
-const MaxFilepathLength = 255
 
 func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartOptions, chan result, error) {
 	jobOpts := make(chan job.StartOptions, maxRetries+1)
@@ -495,33 +487,6 @@ func (r *CloudRunner) remoteArchiveFiles(project interface{}, files []string, sa
 	}
 
 	return strings.Join(uris, ","), nil
-}
-
-func checkPathLength(projectFolder string, matcher sauceignore.Matcher) (string, error) {
-	exampleName := ""
-	maxLength := 0
-	if err := filepath.Walk(projectFolder, func(file string, info fs.FileInfo, err error) error {
-		if matcher.Match(strings.Split(file, string(os.PathSeparator)), info.IsDir()) {
-			if info.IsDir() {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-
-		if maxLength < len(file) {
-			exampleName = file
-			maxLength = len(file)
-		}
-		return nil
-	}); err != nil {
-		// When walk fails, we may not want to fail saucectl execution.
-		return "", nil
-	}
-
-	if BaseFilepathLength+maxLength > MaxFilepathLength {
-		return exampleName, errors.New("path too long")
-	}
-	return "", nil
 }
 
 type uploadType string

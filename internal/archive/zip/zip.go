@@ -39,59 +39,62 @@ func New(f io.Writer, matcher sauceignore.Matcher) (Writer, error) {
 }
 
 // Add adds the file at src to the destination dst in the archive and returns a count of
-// the files added to the archive.
-func (w *Writer) Add(src, dst string) (int, error) {
+// the files added to the archive, as well the length of the longest path.
+func (w *Writer) Add(src, dst string) (count int, length int, err error) {
 	finfo, err := os.Stat(src)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
 	// Only will be applied if we have .sauceignore file and have patterns to exclude files and folders
 	if w.M.Match(strings.Split(src, string(os.PathSeparator)), finfo.IsDir()) {
-		return 0, nil
+		return 0, 0, nil
 	}
 
 	if !finfo.IsDir() {
 		log.Debug().Str("name", src).Msg("Adding to archive")
-		w, err := w.W.Create(path.Join(dst, finfo.Name()))
+		target := path.Join(dst, finfo.Name())
+		w, err := w.W.Create(target)
 		if err != nil {
-			return 0, err
+			return 0, 0, err
 		}
 		f, err := os.Open(src)
 		if err != nil {
-			return 0, err
+			return 0, 0, err
 		}
 
 		if _, err := io.Copy(w, f); err != nil {
-			return 0, err
+			return 0, 0, err
 		}
 
 		if err := f.Close(); err != nil {
-			return 0, err
+			return 0, 0, err
 		}
 
-		return 1, err
+		return 1, len(target), err
 	}
 
 	files, err := os.ReadDir(src)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
-	totalFileCount := 0
 	for _, f := range files {
 		base := filepath.Base(src)
 		rebase := path.Join(dst, base)
 		fpath := filepath.Join(src, f.Name())
-		fileCount, err := w.Add(fpath, rebase)
+		fileCount, pathLength, err := w.Add(fpath, rebase)
 		if err != nil {
-			return 0, err
+			return 0, 0, err
 		}
 
-		totalFileCount += fileCount
+		count += fileCount
+		if pathLength > length {
+			length = pathLength
+		}
 	}
 
-	return totalFileCount, nil
+	return count, length, nil
 }
 
 // Close closes the archive. Adding more files to the archive is not possible after this.

@@ -219,7 +219,7 @@ func archiveAppToIpa(appPath string) (string, error) {
 	}
 	arch, _ := zip.New(tmpFile, sauceignore.NewMatcher([]sauceignore.Pattern{}))
 	defer arch.Close()
-	_, err = arch.Add(appPath, "Payload/")
+	_, _, err = arch.Add(appPath, "Payload/")
 	if err != nil {
 		return "", err
 	}
