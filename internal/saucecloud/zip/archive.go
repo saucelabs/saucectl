@@ -103,7 +103,7 @@ func ArchiveFiles(targetFileName string, targetDir string, sourceDir string, fil
 	}
 
 	if longestPathLength+BaseFilepathLength > MaxFilepathLength {
-		msg.LogArchivePathLengthWarning()
+		msg.LogArchivePathLengthWarning(MaxFilepathLength - BaseFilepathLength)
 	}
 
 	return zipName, nil

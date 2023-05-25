@@ -39,7 +39,7 @@ or peruse some of our example repositories:
 const ArchiveFileCountWarning = "The project archive is unusually large which can cause delays in your test execution."
 
 // ArchivePathLengthWarning is a warning to the user that their project archive may unintentionally contain long file paths.
-const ArchivePathLengthWarning = "The project archive contains paths that exceed the limit of 202 characters. This archive may not be usable on Windows."
+const ArchivePathLengthWarning = "The project archive contains paths that exceed the limit of %d characters. This archive may not be usable on Windows."
 
 // WarningLine is a line of starts highlighting the WARNING word.
 const WarningLine = "************************************* WARNING *************************************"
@@ -56,9 +56,9 @@ func LogArchiveSizeWarning() {
 
 // LogArchivePathLengthWarning prints out a warning about the project archive
 // path length along with suggestions on how to fix it.
-func LogArchivePathLengthWarning() {
+func LogArchivePathLengthWarning(limit int) {
 	warning := color.New(color.FgYellow)
-	fmt.Printf("\n%s\n\n%s\n\n", warning.Sprint(ArchivePathLengthWarning), SauceIgnoreSuggestion)
+	fmt.Printf("\n%s\n\n%s\n\n", warning.Sprintf(ArchivePathLengthWarning, limit), SauceIgnoreSuggestion)
 }
 
 // LogSauceIgnoreNotExist prints out a formatted and color coded version of SauceIgnoreNotExist.
