@@ -3,6 +3,7 @@ package zip
 import (
 	"archive/zip"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -17,6 +18,8 @@ func TestZipper_Add(t *testing.T) {
 		fs.WithFile("some.foo.js", "foo", fs.WithMode(0755)),
 		fs.WithFile("some.other.bar.js", "bar", fs.WithMode(0755)))
 	defer dir.Remove()
+
+	dirBase := filepath.Base(dir.Path())
 
 	out, err := os.CreateTemp("", "add_test.*.zip")
 	if err != nil {
@@ -41,20 +44,22 @@ func TestZipper_Add(t *testing.T) {
 		outName string
 	}
 	tests := []struct {
-		name      string
-		fields    fields
-		args      args
-		wantErr   bool
-		wantFiles []string
-		wantCount int
+		name       string
+		fields     fields
+		args       args
+		wantErr    bool
+		wantFiles  []string
+		wantCount  int
+		wantLength int
 	}{
 		{
-			name:      "zip it up",
-			fields:    fields{W: zip.NewWriter(out), M: sauceignore.NewMatcher([]sauceignore.Pattern{}), ZipFile: out},
-			args:      args{dir.Path(), "", out.Name()},
-			wantErr:   false,
-			wantFiles: []string{"/screenshot1.png", "/some.foo.js", "/some.other.bar.js"},
-			wantCount: 3,
+			name:       "zip it up",
+			fields:     fields{W: zip.NewWriter(out), M: sauceignore.NewMatcher([]sauceignore.Pattern{}), ZipFile: out},
+			args:       args{dir.Path(), "", out.Name()},
+			wantErr:    false,
+			wantFiles:  []string{"/screenshot1.png", "/some.foo.js", "/some.other.bar.js"},
+			wantCount:  3,
+			wantLength: len(dirBase) + len("/screenshots/screenshot1.png"),
 		},
 		{
 			name: "zip some.other.bar.js and skip some.foo.js file and screenshots folder",
@@ -66,10 +71,11 @@ func TestZipper_Add(t *testing.T) {
 				}),
 				ZipFile: sauceignoreOut,
 			},
-			args:      args{dir.Path(), "", sauceignoreOut.Name()},
-			wantErr:   false,
-			wantFiles: []string{"/some.other.bar.js"},
-			wantCount: 1,
+			args:       args{dir.Path(), "", sauceignoreOut.Name()},
+			wantErr:    false,
+			wantFiles:  []string{"/some.other.bar.js"},
+			wantCount:  1,
+			wantLength: len(dirBase) + len("/some.other.bar.js"),
 		},
 	}
 	for _, tt := range tests {
@@ -79,7 +85,7 @@ func TestZipper_Add(t *testing.T) {
 				M:       tt.fields.M,
 				ZipFile: tt.fields.ZipFile,
 			}
-			fileCount, err := z.Add(tt.args.src, tt.args.dst)
+			fileCount, pathLength, err := z.Add(tt.args.src, tt.args.dst)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Add() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -100,7 +106,9 @@ func TestZipper_Add(t *testing.T) {
 			if tt.wantCount != fileCount {
 				t.Errorf("got %v, want %v", fileCount, tt.wantCount)
 			}
-
+			if tt.wantLength != pathLength {
+				t.Errorf("got %v, want %v", pathLength, tt.wantLength)
+			}
 		})
 	}
 }
