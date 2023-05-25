@@ -80,11 +80,11 @@ func Parse(data []byte) (TestSuites, error) {
 func GetFailedTests(testCases []TestCase) []string {
 	classes := map[string]bool{}
 	for _, tc := range testCases {
-		// The format for the filtered test is "<className>/<testMethodName>".
-		// Occasionally, fallback to <className> if the test method name is empty.
-		// tc.Name: <testMethodName>
-		// tc.ClassName: <className>
 		if tc.Error != "" || tc.Failure != "" {
+			// The format of the filtered test is "<className>/<testMethodName>".
+			// Fallback to <className> if the test method name is unexpectly empty.
+			// tc.Name: <testMethodName>
+			// tc.ClassName: <className>
 			if tc.Name != "" {
 				classes[fmt.Sprintf("%s/%s", tc.ClassName, tc.Name)] = true
 			} else {
