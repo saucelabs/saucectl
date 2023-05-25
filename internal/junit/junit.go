@@ -1,6 +1,9 @@
 package junit
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+	"fmt"
+)
 
 // JunitFileName is the name of the JUnit report.
 const JunitFileName = "junit.xml"
@@ -71,4 +74,53 @@ func Parse(data []byte) (TestSuites, error) {
 	}
 
 	return tss, err
+}
+
+// GetFailedTests get failed test list from testcase list.
+func GetFailedTests(testCases []TestCase) []string {
+	classes := map[string]bool{}
+	for _, tc := range testCases {
+		if tc.Error != "" || tc.Failure != "" {
+			// The format of the filtered test is "<className>/<testMethodName>".
+			// Fallback to <className> if the test method name is unexpectedly empty.
+			// tc.Name: <testMethodName>
+			// tc.ClassName: <className>
+			if tc.Name != "" {
+				classes[fmt.Sprintf("%s/%s", tc.ClassName, tc.Name)] = true
+			} else {
+				classes[tc.ClassName] = true
+			}
+		}
+	}
+	return getKeysFromMap(classes)
+}
+
+// GetFailedClasses get failed class list from testcase list
+func GetFailedClasses(testCases []TestCase) []string {
+	classes := map[string]bool{}
+	for _, tc := range testCases {
+		if tc.Error != "" || tc.Failure != "" {
+			classes[tc.ClassName] = true
+		}
+	}
+	return getKeysFromMap(classes)
+}
+
+// CollectTestCases collects testcases from a report.
+func CollectTestCases(testsuites TestSuites) []TestCase {
+	var tc []TestCase
+	for _, s := range testsuites.TestSuites {
+		tc = append(tc, s.TestCases...)
+	}
+	return tc
+}
+
+func getKeysFromMap(mp map[string]bool) []string {
+	var keys = make([]string, len(mp))
+	var i int
+	for k := range mp {
+		keys[i] = k
+		i++
+	}
+	return keys
 }

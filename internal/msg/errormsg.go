@@ -187,7 +187,7 @@ const (
 	// SkippingSmartRetries indicates that the full suite will be run
 	SkippingSmartRetries = "Skipping SmartRetry, retrying complete suite"
 	// RetryWithClasses indicates which classes will be run
-	RetryWithClasses = "Retrying with only classes: %s"
+	RetryWithClasses = "Retrying with failed classes or tests: %q"
 	// UnableToCreateRunnerConfig indicates a failure to create runner config file
 	UnableToCreateRunnerConfig = "Unable to create runner config file"
 	// UnableToFilterFailedTests indicates a failure to filter failed tests

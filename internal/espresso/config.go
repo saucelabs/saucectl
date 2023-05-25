@@ -51,21 +51,6 @@ type Espresso struct {
 	OtherApps          []string `yaml:"otherApps,omitempty" json:"otherApps"`
 }
 
-// TestOptions represents the espresso test filter options configuration.
-type TestOptions struct {
-	NotClass            []string `yaml:"notClass,omitempty" json:"notClass"`
-	Class               []string `yaml:"class,omitempty" json:"class"`
-	Package             string   `yaml:"package,omitempty" json:"package"`
-	NotPackage          string   `yaml:"notPackage,omitempty" json:"notPackage"`
-	Size                string   `yaml:"size,omitempty" json:"size"`
-	Annotation          string   `yaml:"annotation,omitempty" json:"annotation"`
-	NotAnnotation       string   `yaml:"notAnnotation,omitempty" json:"notAnnotation"`
-	ShardIndex          int      `json:"shardIndex"`
-	NumShards           int      `yaml:"numShards,omitempty" json:"numShards"`
-	ClearPackageData    bool     `yaml:"clearPackageData,omitempty" json:"clearPackageData"`
-	UseTestOrchestrator bool     `yaml:"useTestOrchestrator,omitempty" json:"useTestOrchestrator"`
-}
-
 // Suite represents the espresso test suite configuration.
 type Suite struct {
 	Name               string                 `yaml:"name,omitempty" json:"name"`
