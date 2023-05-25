@@ -82,7 +82,7 @@ func GetFailedTests(testCases []TestCase) []string {
 	for _, tc := range testCases {
 		if tc.Error != "" || tc.Failure != "" {
 			// The format of the filtered test is "<className>/<testMethodName>".
-			// Fallback to <className> if the test method name is unexpectly empty.
+			// Fallback to <className> if the test method name is unexpectedly empty.
 			// tc.Name: <testMethodName>
 			// tc.ClassName: <className>
 			if tc.Name != "" {
