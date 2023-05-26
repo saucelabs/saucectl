@@ -89,7 +89,9 @@ func (c *APITester) GetProject(ctx context.Context, hookID string) (apitest.Proj
 }
 
 func (c *APITester) GetEventResult(ctx context.Context, rateLimiter *rate.Limiter, hookID string, eventID string) (apitest.TestResult, error) {
-	rateLimiter.Wait(context.Background())
+	if err := rateLimiter.Wait(context.Background()); err != nil {
+		return apitest.TestResult{}, err
+	}
 
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/insights/events/%s", c.URL, hookID, eventID)
 	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
