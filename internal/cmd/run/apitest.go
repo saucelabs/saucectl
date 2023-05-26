@@ -2,6 +2,7 @@ package run
 
 import (
 	"os"
+	"time"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/usage"
@@ -15,7 +16,12 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+	"golang.org/x/time/rate"
 )
+
+// Query rate is queryRequestRate per second.
+var queryRequestRate = 5
+var rateLimitTokenBucket = 20
 
 func runApitest(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	if !isCLIDriven {
@@ -48,8 +54,9 @@ func runApitest(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 				Dst: os.Stdout,
 			},
 		},
-		Async:         gFlags.async,
-		TunnelService: &restoClient,
+		Async:              gFlags.async,
+		TunnelService:      &restoClient,
+		RequestRateLimiter: rate.NewLimiter(rate.Every(time.Duration(1/queryRequestRate)*time.Second), rateLimitTokenBucket),
 	}
 
 	if err := r.ResolveHookIDs(); err != nil {

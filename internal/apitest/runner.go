@@ -13,6 +13,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/xtgo/uuid"
+	"golang.org/x/time/rate"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -30,7 +31,7 @@ var inputFileNames = []string{"input.yaml", "input.yml"}
 
 type APITester interface {
 	GetProject(ctx context.Context, hookID string) (ProjectMeta, error)
-	GetEventResult(ctx context.Context, hookID string, eventID string) (TestResult, error)
+	GetEventResult(ctx context.Context, rateLimiter *rate.Limiter, hookID string, eventID string) (TestResult, error)
 	GetTest(ctx context.Context, hookID string, testID string) (Test, error)
 	GetProjects(ctx context.Context) ([]ProjectMeta, error)
 	GetHooks(ctx context.Context, projectID string) ([]Hook, error)
@@ -89,12 +90,13 @@ type AsyncResponse struct {
 
 // Runner represents an executor for api tests
 type Runner struct {
-	Project       Project
-	Client        APITester
-	Region        region.Region
-	Reporters     []report.Reporter
-	Async         bool
-	TunnelService tunnel.Service
+	Project            Project
+	Client             APITester
+	Region             region.Region
+	Reporters          []report.Reporter
+	Async              bool
+	TunnelService      tunnel.Service
+	RequestRateLimiter *rate.Limiter
 }
 
 // Vault represents a project's stored variables and snippets
@@ -452,7 +454,7 @@ func (r *Runner) startPollingAsyncResponse(project ProjectMeta, hookID string, e
 			for {
 				select {
 				case <-ticker.C:
-					result, err := r.Client.GetEventResult(context.Background(), hookID, lEventID)
+					result, err := r.Client.GetEventResult(context.Background(), r.RequestRateLimiter, hookID, lEventID)
 
 					// Events are not available when the test is still running.
 					if err == ErrEventNotFound {
