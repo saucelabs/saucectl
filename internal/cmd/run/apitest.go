@@ -20,8 +20,8 @@ import (
 )
 
 // Query rate is queryRequestRate per second.
-var queryRequestRate = 5
-var rateLimitTokenBucket = 20
+var queryRequestRate = 1
+var rateLimitTokenBucket = 10
 
 func runApitest(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	if !isCLIDriven {
