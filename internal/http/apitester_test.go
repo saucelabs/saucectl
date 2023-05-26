@@ -100,7 +100,7 @@ func TestAPITester_GetEventResult(t *testing.T) {
 		URL:                ts.URL,
 		Username:           "dummy",
 		AccessKey:          "accesskey",
-		RequestRateLimiter: rate.NewLimiter(rate.Every(1*time.Second), 5),
+		RequestRateLimiter: rate.NewLimiter(rate.Inf, 0),
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
