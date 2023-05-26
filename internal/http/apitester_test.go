@@ -19,7 +19,6 @@ import (
 )
 
 func createTestRetryableHTTPClient(t *testing.T) *retryablehttp.Client {
-	t.Helper()
 	return &retryablehttp.Client{
 		HTTPClient: &http.Client{
 			Timeout:   10 * time.Second,
