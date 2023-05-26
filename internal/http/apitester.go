@@ -89,7 +89,7 @@ func (c *APITester) GetProject(ctx context.Context, hookID string) (apitest.Proj
 }
 
 func (c *APITester) GetEventResult(ctx context.Context, rateLimiter *rate.Limiter, hookID string, eventID string) (apitest.TestResult, error) {
-	if err := rateLimiter.Wait(context.Background()); err != nil {
+	if err := rateLimiter.Wait(ctx); err != nil {
 		return apitest.TestResult{}, err
 	}
 
