@@ -19,12 +19,17 @@ import (
 	"github.com/saucelabs/saucectl/internal/msg"
 )
 
+// Query rate is queryRequestRate per second.
+var queryRequestRate = 1
+var rateLimitTokenBucket = 10
+
 // APITester describes an interface to the api-testing rest endpoints.
 type APITester struct {
-	HTTPClient *retryablehttp.Client
-	URL        string
-	Username   string
-	AccessKey  string
+	HTTPClient         *retryablehttp.Client
+	URL                string
+	Username           string
+	AccessKey          string
+	RequestRateLimiter *rate.Limiter
 }
 
 // PublishedTest describes a published test.
@@ -50,10 +55,11 @@ type vaultErr struct {
 // NewAPITester a new instance of APITester.
 func NewAPITester(url string, username string, accessKey string, timeout time.Duration) APITester {
 	return APITester{
-		HTTPClient: NewRetryableClient(timeout),
-		URL:        url,
-		Username:   username,
-		AccessKey:  accessKey,
+		HTTPClient:         NewRetryableClient(timeout),
+		URL:                url,
+		Username:           username,
+		AccessKey:          accessKey,
+		RequestRateLimiter: rate.NewLimiter(rate.Every(time.Duration(1/queryRequestRate)*time.Second), rateLimitTokenBucket),
 	}
 }
 
@@ -88,8 +94,8 @@ func (c *APITester) GetProject(ctx context.Context, hookID string) (apitest.Proj
 	return project, nil
 }
 
-func (c *APITester) GetEventResult(ctx context.Context, rateLimiter *rate.Limiter, hookID string, eventID string) (apitest.TestResult, error) {
-	if err := rateLimiter.Wait(ctx); err != nil {
+func (c *APITester) GetEventResult(ctx context.Context, hookID string, eventID string) (apitest.TestResult, error) {
+	if err := c.RequestRateLimiter.Wait(ctx); err != nil {
 		return apitest.TestResult{}, err
 	}
 

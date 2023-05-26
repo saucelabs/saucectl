@@ -96,15 +96,15 @@ func TestAPITester_GetEventResult(t *testing.T) {
 	defer ts.Close()
 
 	c := &APITester{
-		HTTPClient: NewRetryableClient(TestClientTimedOut),
-		URL:        ts.URL,
-		Username:   "dummy",
-		AccessKey:  "accesskey",
+		HTTPClient:         NewRetryableClient(TestClientTimedOut),
+		URL:                ts.URL,
+		Username:           "dummy",
+		AccessKey:          "accesskey",
+		RequestRateLimiter: rate.NewLimiter(rate.Every(1*time.Second), 5),
 	}
-	limiter := rate.NewLimiter(rate.Every(1*time.Second), 5)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := c.GetEventResult(tt.args.ctx, limiter, tt.args.hookID, tt.args.eventID)
+			got, err := c.GetEventResult(tt.args.ctx, tt.args.hookID, tt.args.eventID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetEventResult() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/config"
-	"golang.org/x/time/rate"
 
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -20,7 +19,7 @@ import (
 
 type MockAPITester struct {
 	GetProjectFn        func(ctx context.Context, hookID string) (ProjectMeta, error)
-	GetEventResultFn    func(ctx context.Context, limiter *rate.Limiter, hookID string, eventID string) (TestResult, error)
+	GetEventResultFn    func(ctx context.Context, hookID string, eventID string) (TestResult, error)
 	GetTestFn           func(ctx context.Context, hookID string, testID string) (Test, error)
 	GetProjectsFn       func(ctx context.Context) ([]ProjectMeta, error)
 	GetHooksFn          func(ctx context.Context, projectID string) ([]Hook, error)
@@ -34,8 +33,8 @@ func (c *MockAPITester) GetProject(ctx context.Context, hookID string) (ProjectM
 	return c.GetProjectFn(ctx, hookID)
 }
 
-func (c *MockAPITester) GetEventResult(ctx context.Context, limiter *rate.Limiter, hookID string, eventID string) (TestResult, error) {
-	return c.GetEventResultFn(ctx, limiter, hookID, eventID)
+func (c *MockAPITester) GetEventResult(ctx context.Context, hookID string, eventID string) (TestResult, error) {
+	return c.GetEventResultFn(ctx, hookID, eventID)
 }
 
 func (c *MockAPITester) GetTest(ctx context.Context, hookID string, testID string) (Test, error) {
@@ -403,7 +402,7 @@ func TestRunner_runLocalTests(t *testing.T) {
 				TestIDs:    []string{"c20ad4d76fe97759aa27a0c9"},
 			}, nil
 		},
-		GetEventResultFn: func(ctx context.Context, limiter *rate.Limiter, hookID string, eventID string) (TestResult, error) {
+		GetEventResultFn: func(ctx context.Context, hookID string, eventID string) (TestResult, error) {
 			return TestResult{
 				EventID:       "c4ca4238a0b923820dcc509a",
 				FailuresCount: 0,
