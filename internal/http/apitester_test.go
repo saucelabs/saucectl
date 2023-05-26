@@ -17,6 +17,8 @@ import (
 	"golang.org/x/time/rate"
 )
 
+const TestClientTimedOut = 10 * time.Second
+
 func TestAPITester_GetEventResult(t *testing.T) {
 	type args struct {
 		ctx     context.Context
@@ -94,7 +96,7 @@ func TestAPITester_GetEventResult(t *testing.T) {
 	defer ts.Close()
 
 	c := &APITester{
-		HTTPClient: NewRetryableClient(10 * time.Second),
+		HTTPClient: NewRetryableClient(TestClientTimedOut),
 		URL:        ts.URL,
 		Username:   "dummy",
 		AccessKey:  "accesskey",
@@ -158,7 +160,7 @@ func TestAPITester_GetProject(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: NewRetryableClient(10 * time.Second),
+		HTTPClient: NewRetryableClient(TestClientTimedOut),
 		URL:        ts.URL,
 		Username:   "dummy",
 		AccessKey:  "accesskey",
@@ -223,7 +225,7 @@ func TestAPITester_GetTest(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: NewRetryableClient(10 * time.Second),
+		HTTPClient: NewRetryableClient(TestClientTimedOut),
 		URL:        ts.URL,
 		Username:   "dummy",
 		AccessKey:  "accesskey",
@@ -362,7 +364,7 @@ func TestAPITester_GetProjects(t *testing.T) {
 	defer ts.Close()
 
 	c := &APITester{
-		HTTPClient: NewRetryableClient(10 * time.Second),
+		HTTPClient: NewRetryableClient(TestClientTimedOut),
 		URL:        ts.URL,
 		Username:   "dummy",
 		AccessKey:  "accesskey",
@@ -449,7 +451,7 @@ func TestAPITester_GetHooks(t *testing.T) {
 	defer ts.Close()
 
 	c := &APITester{
-		HTTPClient: NewRetryableClient(10 * time.Second),
+		HTTPClient: NewRetryableClient(TestClientTimedOut),
 		URL:        ts.URL,
 		Username:   "dummy",
 		AccessKey:  "accesskey",
@@ -515,7 +517,7 @@ func TestAPITester_RunAllAsync(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: NewRetryableClient(10 * time.Second),
+		HTTPClient: NewRetryableClient(TestClientTimedOut),
 		URL:        ts.URL,
 		Username:   "dummyUser",
 		AccessKey:  "dummyAccesKey",
@@ -593,7 +595,7 @@ func TestAPITester_RunEphemeralAsync(t *testing.T) {
 			}))
 			defer ts.Close()
 			c := &APITester{
-				HTTPClient: NewRetryableClient(10 * time.Second),
+				HTTPClient: NewRetryableClient(TestClientTimedOut),
 				URL:        ts.URL,
 				Username:   "dummyUser",
 				AccessKey:  "dummyAccesKey",
@@ -661,7 +663,7 @@ func TestAPITester_RunTestAsync(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: NewRetryableClient(10 * time.Second),
+		HTTPClient: NewRetryableClient(TestClientTimedOut),
 		URL:        ts.URL,
 		Username:   "dummyUser",
 		AccessKey:  "dummyAccesKey",
@@ -731,7 +733,7 @@ func TestAPITester_RunTagAsync(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: NewRetryableClient(10 * time.Second),
+		HTTPClient: NewRetryableClient(TestClientTimedOut),
 		URL:        ts.URL,
 		Username:   "dummyUser",
 		AccessKey:  "dummyAccesKey",
