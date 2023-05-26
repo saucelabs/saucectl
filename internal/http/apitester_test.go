@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 	"time"
 
@@ -459,7 +460,7 @@ func TestAPITester_GetHooks(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := c.GetHooks(context.Background(), tt.params.projectID)
-			if !cmp.Equal(err, tt.wantErr) {
+			if !reflect.DeepEqual(err, tt.wantErr) {
 				t.Errorf("GetHooks(%v, %s): got %v want %v", context.Background(), tt.params.projectID, err, tt.wantErr)
 				return
 			}
