@@ -180,13 +180,13 @@ func (r *XcuitestRunner) calculateJobsCount(suites []xcuitest.Suite) int {
 func archiveAppsToIpaIfRequired(project *xcuitest.Project) error {
 	var err error
 	cache := map[string]string{}
-	project.Xcuitest.App, err = archiveAppToIpaIfRequired(project.Xcuitest.App, &cache)
+	project.Xcuitest.App, err = archiveAppToIpaIfRequired(project.Xcuitest.App, cache)
 	if err != nil {
 		return err
 	}
 
 	for i, s := range project.Suites {
-		project.Suites[i].TestApp, err = archiveAppToIpaIfRequired(s.TestApp, &cache)
+		project.Suites[i].TestApp, err = archiveAppToIpaIfRequired(s.TestApp, cache)
 		if err != nil {
 			return err
 		}
@@ -194,7 +194,7 @@ func archiveAppsToIpaIfRequired(project *xcuitest.Project) error {
 	return nil
 }
 
-func archiveAppToIpaIfRequired(appPath string, cache *map[string]string) (string, error) {
+func archiveAppToIpaIfRequired(appPath string, cache map[string]string) (string, error) {
 	if apps.IsStorageReference(appPath) {
 		return appPath, nil
 	}
@@ -203,7 +203,7 @@ func archiveAppToIpaIfRequired(appPath string, cache *map[string]string) (string
 		return appPath, nil
 	}
 
-	if cachedApp, ok := (*cache)[appPath]; ok {
+	if cachedApp, ok := cache[appPath]; ok {
 		return cachedApp, nil
 	}
 
@@ -214,7 +214,7 @@ func archiveAppToIpaIfRequired(appPath string, cache *map[string]string) (string
 		return "", err
 	}
 
-	(*cache)[appPath] = archivedApp
+	cache[appPath] = archivedApp
 	return archivedApp, nil
 }
 
