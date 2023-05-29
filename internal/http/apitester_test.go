@@ -8,11 +8,30 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"testing"
+	"time"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/apitest"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/time/rate"
 )
+
+func createTestRetryableHTTPClient(t *testing.T) *retryablehttp.Client {
+	return &retryablehttp.Client{
+		HTTPClient: &http.Client{
+			Timeout:   10 * time.Second,
+			Transport: &http.Transport{Proxy: http.ProxyFromEnvironment},
+		},
+		RetryWaitMin: 0 * time.Second,
+		RetryWaitMax: 0 * time.Second,
+		RetryMax:     1,
+		CheckRetry:   retryablehttp.DefaultRetryPolicy,
+		Backoff:      retryablehttp.DefaultBackoff,
+		ErrorHandler: retryablehttp.PassthroughErrorHandler,
+	}
+}
 
 func TestAPITester_GetEventResult(t *testing.T) {
 	type args struct {
@@ -91,10 +110,11 @@ func TestAPITester_GetEventResult(t *testing.T) {
 	defer ts.Close()
 
 	c := &APITester{
-		HTTPClient: ts.Client(),
-		URL:        ts.URL,
-		Username:   "dummy",
-		AccessKey:  "accesskey",
+		HTTPClient:         createTestRetryableHTTPClient(t),
+		URL:                ts.URL,
+		Username:           "dummy",
+		AccessKey:          "accesskey",
+		RequestRateLimiter: rate.NewLimiter(rate.Inf, 0),
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -103,7 +123,7 @@ func TestAPITester_GetEventResult(t *testing.T) {
 				t.Errorf("GetEventResult() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if !cmp.Equal(got, tt.want) {
 				t.Errorf("GetEventResult() got = %v, want %v", got, tt.want)
 			}
 		})
@@ -154,7 +174,7 @@ func TestAPITester_GetProject(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: ts.Client(),
+		HTTPClient: createTestRetryableHTTPClient(t),
 		URL:        ts.URL,
 		Username:   "dummy",
 		AccessKey:  "accesskey",
@@ -167,7 +187,7 @@ func TestAPITester_GetProject(t *testing.T) {
 				t.Errorf("GetProject() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if !cmp.Equal(got, tt.want) {
 				t.Errorf("GetProject() got = %v, want %v", got, tt.want)
 			}
 		})
@@ -219,7 +239,7 @@ func TestAPITester_GetTest(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: ts.Client(),
+		HTTPClient: createTestRetryableHTTPClient(t),
 		URL:        ts.URL,
 		Username:   "dummy",
 		AccessKey:  "accesskey",
@@ -232,7 +252,7 @@ func TestAPITester_GetTest(t *testing.T) {
 				t.Errorf("GetProject() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if !cmp.Equal(got, tt.want) {
 				t.Errorf("GetProject() got = %v, want %v", got, tt.want)
 			}
 		})
@@ -358,7 +378,7 @@ func TestAPITester_GetProjects(t *testing.T) {
 	defer ts.Close()
 
 	c := &APITester{
-		HTTPClient: ts.Client(),
+		HTTPClient: createTestRetryableHTTPClient(t),
 		URL:        ts.URL,
 		Username:   "dummy",
 		AccessKey:  "accesskey",
@@ -445,7 +465,7 @@ func TestAPITester_GetHooks(t *testing.T) {
 	defer ts.Close()
 
 	c := &APITester{
-		HTTPClient: ts.Client(),
+		HTTPClient: createTestRetryableHTTPClient(t),
 		URL:        ts.URL,
 		Username:   "dummy",
 		AccessKey:  "accesskey",
@@ -511,7 +531,7 @@ func TestAPITester_RunAllAsync(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: ts.Client(),
+		HTTPClient: createTestRetryableHTTPClient(t),
 		URL:        ts.URL,
 		Username:   "dummyUser",
 		AccessKey:  "dummyAccesKey",
@@ -524,7 +544,7 @@ func TestAPITester_RunAllAsync(t *testing.T) {
 				t.Errorf("RunAllAsync() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if !cmp.Equal(got, tt.want) {
 				t.Errorf("RunAllAsync() got = %v, want %v", got, tt.want)
 			}
 		})
@@ -589,7 +609,7 @@ func TestAPITester_RunEphemeralAsync(t *testing.T) {
 			}))
 			defer ts.Close()
 			c := &APITester{
-				HTTPClient: ts.Client(),
+				HTTPClient: createTestRetryableHTTPClient(t),
 				URL:        ts.URL,
 				Username:   "dummyUser",
 				AccessKey:  "dummyAccesKey",
@@ -600,7 +620,7 @@ func TestAPITester_RunEphemeralAsync(t *testing.T) {
 				t.Errorf("RunAllAsync() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if !cmp.Equal(got, tt.want) {
 				t.Errorf("RunAllAsync() got = %v, want %v", got, tt.want)
 			}
 		})
@@ -657,7 +677,7 @@ func TestAPITester_RunTestAsync(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: ts.Client(),
+		HTTPClient: createTestRetryableHTTPClient(t),
 		URL:        ts.URL,
 		Username:   "dummyUser",
 		AccessKey:  "dummyAccesKey",
@@ -670,7 +690,7 @@ func TestAPITester_RunTestAsync(t *testing.T) {
 				t.Errorf("RunAllAsync() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if !cmp.Equal(got, tt.want) {
 				t.Errorf("RunAllAsync() got = %v, want %v", got, tt.want)
 			}
 		})
@@ -727,7 +747,7 @@ func TestAPITester_RunTagAsync(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: ts.Client(),
+		HTTPClient: createTestRetryableHTTPClient(t),
 		URL:        ts.URL,
 		Username:   "dummyUser",
 		AccessKey:  "dummyAccesKey",
@@ -740,7 +760,7 @@ func TestAPITester_RunTagAsync(t *testing.T) {
 				t.Errorf("RunAllAsync() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if !cmp.Equal(got, tt.want) {
 				t.Errorf("RunAllAsync() got = %v, want %v", got, tt.want)
 			}
 		})
