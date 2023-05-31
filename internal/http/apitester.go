@@ -11,18 +11,25 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/apitest"
+	"golang.org/x/time/rate"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/msg"
 )
 
+// Query rate is queryRequestRate per second.
+var queryRequestRate = 1
+var rateLimitTokenBucket = 10
+
 // APITester describes an interface to the api-testing rest endpoints.
 type APITester struct {
-	HTTPClient *http.Client
-	URL        string
-	Username   string
-	AccessKey  string
+	HTTPClient         *retryablehttp.Client
+	URL                string
+	Username           string
+	AccessKey          string
+	RequestRateLimiter *rate.Limiter
 }
 
 // PublishedTest describes a published test.
@@ -48,20 +55,18 @@ type vaultErr struct {
 // NewAPITester a new instance of APITester.
 func NewAPITester(url string, username string, accessKey string, timeout time.Duration) APITester {
 	return APITester{
-		HTTPClient: &http.Client{
-			Timeout:   timeout,
-			Transport: &http.Transport{Proxy: http.ProxyFromEnvironment},
-		},
-		URL:       url,
-		Username:  username,
-		AccessKey: accessKey,
+		HTTPClient:         NewRetryableClient(timeout),
+		URL:                url,
+		Username:           username,
+		AccessKey:          accessKey,
+		RequestRateLimiter: rate.NewLimiter(rate.Every(time.Duration(1/queryRequestRate)*time.Second), rateLimitTokenBucket),
 	}
 }
 
 // GetProject returns Project metadata for a given hookID.
 func (c *APITester) GetProject(ctx context.Context, hookID string) (apitest.ProjectMeta, error) {
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s", c.URL, hookID)
-	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return apitest.ProjectMeta{}, err
 	}
@@ -90,8 +95,12 @@ func (c *APITester) GetProject(ctx context.Context, hookID string) (apitest.Proj
 }
 
 func (c *APITester) GetEventResult(ctx context.Context, hookID string, eventID string) (apitest.TestResult, error) {
+	if err := c.RequestRateLimiter.Wait(ctx); err != nil {
+		return apitest.TestResult{}, err
+	}
+
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/insights/events/%s", c.URL, hookID, eventID)
-	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return apitest.TestResult{}, err
 	}
@@ -121,7 +130,7 @@ func (c *APITester) GetEventResult(ctx context.Context, hookID string, eventID s
 
 func (c *APITester) GetTest(ctx context.Context, hookID string, testID string) (apitest.Test, error) {
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/tests/%s", c.URL, hookID, testID)
-	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return apitest.Test{}, err
 	}
@@ -185,7 +194,7 @@ func (c *APITester) composeURL(path string, buildID string, format string, tunne
 // GetProjects returns the list of Project available.
 func (c *APITester) GetProjects(ctx context.Context) ([]apitest.ProjectMeta, error) {
 	url := fmt.Sprintf("%s/api-testing/api/project", c.URL)
-	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return []apitest.ProjectMeta{}, err
 	}
@@ -216,7 +225,7 @@ func (c *APITester) GetProjects(ctx context.Context) ([]apitest.ProjectMeta, err
 // GetHooks returns the list of hooks available.
 func (c *APITester) GetHooks(ctx context.Context, projectID string) ([]apitest.Hook, error) {
 	url := fmt.Sprintf("%s/api-testing/api/project/%s/hook", c.URL, projectID)
-	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return []apitest.Hook{}, err
 	}
@@ -254,7 +263,7 @@ func (c *APITester) RunAllAsync(ctx context.Context, hookID string, buildID stri
 	}
 	payloadReader := bytes.NewReader(payload)
 
-	req, err := NewRequestWithContext(ctx, http.MethodPost, url, payloadReader)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodPost, url, payloadReader)
 	if err != nil {
 		return apitest.AsyncResponse{}, err
 	}
@@ -278,7 +287,7 @@ func (c *APITester) RunEphemeralAsync(ctx context.Context, hookID string, buildI
 	}
 	payloadReader := bytes.NewReader(payload)
 
-	req, err := NewRequestWithContext(ctx, http.MethodPost, url, payloadReader)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodPost, url, payloadReader)
 	if err != nil {
 		return apitest.AsyncResponse{}, err
 	}
@@ -302,7 +311,7 @@ func (c *APITester) RunTestAsync(ctx context.Context, hookID string, testID stri
 	}
 	payloadReader := bytes.NewReader(payload)
 
-	req, err := NewRequestWithContext(ctx, http.MethodPost, url, payloadReader)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodPost, url, payloadReader)
 	if err != nil {
 		return apitest.AsyncResponse{}, err
 	}
@@ -327,7 +336,7 @@ func (c *APITester) RunTagAsync(ctx context.Context, hookID string, testTag stri
 	}
 	payloadReader := bytes.NewReader(payload)
 
-	req, err := NewRequestWithContext(ctx, http.MethodPost, url, payloadReader)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodPost, url, payloadReader)
 	if err != nil {
 		return apitest.AsyncResponse{}, err
 	}
@@ -341,7 +350,7 @@ func (c *APITester) RunTagAsync(ctx context.Context, hookID string, testTag stri
 	return resp, nil
 }
 
-func (c *APITester) doAsyncRun(client *http.Client, request *http.Request) (apitest.AsyncResponse, error) {
+func (c *APITester) doAsyncRun(client *retryablehttp.Client, request *retryablehttp.Request) (apitest.AsyncResponse, error) {
 	request.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(request)
@@ -370,7 +379,7 @@ func (c *APITester) doAsyncRun(client *http.Client, request *http.Request) (apit
 // GetVault returns the vault for the project identified by hookID
 func (c *APITester) GetVault(ctx context.Context, hookID string) (apitest.Vault, error) {
 	url := fmt.Sprintf("%s/api-testing/rest/v4/%s/vault", c.URL, hookID)
-	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return apitest.Vault{}, err
 	}
@@ -408,7 +417,7 @@ func (c *APITester) PutVault(ctx context.Context, hookID string, vault apitest.V
 		return err
 	}
 
-	req, err := NewRequestWithContext(ctx, http.MethodPut, url, &b)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodPut, url, &b)
 	if err != nil {
 		return err
 	}

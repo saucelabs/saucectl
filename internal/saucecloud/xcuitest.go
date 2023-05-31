@@ -8,6 +8,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -176,37 +177,45 @@ func (r *XcuitestRunner) calculateJobsCount(suites []xcuitest.Suite) int {
 }
 
 // archiveAppsToIpaIfRequired checks if apps are a .ipa package. Otherwise, it generates one.
-func archiveAppsToIpaIfRequired(project *xcuitest.Project) (err error) {
-	appPath := project.Xcuitest.App
-	if !strings.HasSuffix(appPath, ".ipa") {
-		project.Xcuitest.App, err = archiveAppToIpa(appPath)
-		if err != nil {
-			log.Error().Msgf("Unable to archive %s to ipa: %v", appPath, err)
-			err = fmt.Errorf("unable to archive %s", appPath)
-			return
-		}
-	}
+func archiveAppsToIpaIfRequired(project *xcuitest.Project) error {
+	var err error
 	cache := map[string]string{}
-	for i, s := range project.Suites {
-		if strings.HasSuffix(s.TestApp, ".ipa") {
-			continue
-		}
-
-		if val, ok := cache[s.TestApp]; ok {
-			project.Suites[i].TestApp = val
-			continue
-		}
-
-		var testAppPath string
-		testAppPath, err = archiveAppToIpa(s.TestApp)
-		if err != nil {
-			log.Error().Msgf("Unable to archive %s to ipa: %v", s.TestApp, err)
-			return fmt.Errorf("unable to archive %s: %w", s.TestApp, err)
-		}
-		project.Suites[i].TestApp = testAppPath
-		cache[s.TestApp] = testAppPath
+	project.Xcuitest.App, err = archiveAppToIpaIfRequired(project.Xcuitest.App, cache)
+	if err != nil {
+		return err
 	}
-	return
+
+	for i, s := range project.Suites {
+		project.Suites[i].TestApp, err = archiveAppToIpaIfRequired(s.TestApp, cache)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func archiveAppToIpaIfRequired(appPath string, cache map[string]string) (string, error) {
+	if apps.IsStorageReference(appPath) {
+		return appPath, nil
+	}
+
+	if strings.HasSuffix(appPath, ".ipa") {
+		return appPath, nil
+	}
+
+	if cachedApp, ok := cache[appPath]; ok {
+		return cachedApp, nil
+	}
+
+	archivedApp, err := archiveAppToIpa(appPath)
+	if err != nil {
+		log.Error().Msgf("Unable to archive %s to ipa: %v", appPath, err)
+		err = fmt.Errorf("unable to archive %s", appPath)
+		return "", err
+	}
+
+	cache[appPath] = archivedApp
+	return archivedApp, nil
 }
 
 // archiveAppToIpa generates a valid IPA file from a .app folder.
@@ -219,7 +228,7 @@ func archiveAppToIpa(appPath string) (string, error) {
 	}
 	arch, _ := zip.New(tmpFile, sauceignore.NewMatcher([]sauceignore.Pattern{}))
 	defer arch.Close()
-	_, err = arch.Add(appPath, "Payload/")
+	_, _, err = arch.Add(appPath, "Payload/")
 	if err != nil {
 		return "", err
 	}

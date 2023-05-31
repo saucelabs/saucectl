@@ -22,6 +22,13 @@ import (
 // resulted in about 30s for download and extraction.
 const ArchiveFileCountSoftLimit = 32768
 
+// BaseFilepathLength represents the path length where project will be unpacked.
+// Example: "D:\sauce-playwright-runner\1.12.0\bundle\__project__\"
+const BaseFilepathLength = 53
+
+// MaxFilepathLength represents the maximum path length acceptable.
+const MaxFilepathLength = 255
+
 // ArchiveRunnerConfig compresses runner config into `config.zip`.
 func ArchiveRunnerConfig(project interface{}, tempDir string) (string, error) {
 	zipName := filepath.Join(tempDir, "config.zip")
@@ -36,7 +43,7 @@ func ArchiveRunnerConfig(project interface{}, tempDir string) (string, error) {
 		return "", err
 	}
 
-	_, err = z.Add(rcPath, "")
+	_, _, err = z.Add(rcPath, "")
 	if err != nil {
 		return "", err
 	}
@@ -55,6 +62,7 @@ func ArchiveFiles(targetFileName string, targetDir string, sourceDir string, fil
 	defer z.Close()
 
 	totalFileCount := 0
+	longestPathLength := 0
 
 	// Keep file order stable for consistent zip archives
 	sort.Strings(files)
@@ -63,11 +71,14 @@ func ArchiveFiles(targetFileName string, targetDir string, sourceDir string, fil
 		if err != nil {
 			return "", err
 		}
-		fileCount, err := z.Add(f, rel)
+		fileCount, length, err := z.Add(f, rel)
 		if err != nil {
 			return "", err
 		}
 		totalFileCount += fileCount
+		if length > longestPathLength {
+			longestPathLength = length
+		}
 	}
 
 	err = z.Close()
@@ -84,10 +95,15 @@ func ArchiveFiles(targetFileName string, targetDir string, sourceDir string, fil
 		Dur("durationMs", time.Since(start)).
 		Int64("size", f.Size()).
 		Int("fileCount", totalFileCount).
+		Int("longestPathLength", longestPathLength).
 		Msg("Archive created.")
 
 	if totalFileCount >= ArchiveFileCountSoftLimit {
 		msg.LogArchiveSizeWarning()
+	}
+
+	if longestPathLength+BaseFilepathLength > MaxFilepathLength {
+		msg.LogArchivePathLengthWarning(MaxFilepathLength - BaseFilepathLength)
 	}
 
 	return zipName, nil
