@@ -7,6 +7,7 @@ import (
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/hashio"
+	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/saucelabs/saucectl/internal/usage"
@@ -80,7 +81,7 @@ func UploadCommand() *cobra.Command {
 			// Upload the file if necessary.
 			if !skipUpload {
 				bar := newProgressBar(out, finfo.Size(), "Uploading")
-				reader := progressbar.NewReader(file, bar)
+				reader := progress.NewReaderSeeker(file, bar)
 
 				item, err = appsClient.UploadStream(finfo.Name(), description, &reader)
 				if err != nil {
