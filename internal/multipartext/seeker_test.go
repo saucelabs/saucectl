@@ -24,8 +24,8 @@ func Test_multiReadSeeker_WriteTo(t *testing.T) {
 			name: "read from the start",
 			fields: fields{
 				readers: []SizedReadSeeker{
-					{bytes.NewReader([]byte("hello")), 5},
-					{bytes.NewReader([]byte(" world")), 6},
+					{reader: bytes.NewReader([]byte("hello")), size: 5, offset: 0},
+					{reader: bytes.NewReader([]byte(" world")), size: 6, offset: 0},
 				},
 				size: 11,
 			},
@@ -38,9 +38,9 @@ func Test_multiReadSeeker_WriteTo(t *testing.T) {
 			name: "read from the middle",
 			fields: fields{
 				readers: []SizedReadSeeker{
-					{bytes.NewReader([]byte("hello")), 5},
-					{bytes.NewReader([]byte(" world")), 6},
-					{bytes.NewReader([]byte("!")), 1},
+					{reader: bytes.NewReader([]byte("hello")), size: 5, offset: 5},
+					{reader: bytes.NewReader([]byte(" world")), size: 6, offset: 1},
+					{reader: bytes.NewReader([]byte("!")), size: 1, offset: 0},
 				},
 				size: 12,
 			},
@@ -105,9 +105,9 @@ func Test_multiReadSeeker_Read(t *testing.T) {
 			name: "read all from the start",
 			fields: fields{
 				readers: []SizedReadSeeker{
-					{bytes.NewReader([]byte("hello")), 5},
-					{bytes.NewReader([]byte(" world")), 6},
-					{bytes.NewReader([]byte("!")), 1},
+					{reader: bytes.NewReader([]byte("hello")), size: 5, offset: 0},
+					{reader: bytes.NewReader([]byte(" world")), size: 6, offset: 0},
+					{reader: bytes.NewReader([]byte("!")), size: 1, offset: 0},
 				},
 				size: 12,
 			},
@@ -123,9 +123,9 @@ func Test_multiReadSeeker_Read(t *testing.T) {
 			name: "read from the middle",
 			fields: fields{
 				readers: []SizedReadSeeker{
-					{bytes.NewReader([]byte("hello")), 5},
-					{bytes.NewReader([]byte(" world")), 6},
-					{bytes.NewReader([]byte("!")), 1},
+					{reader: bytes.NewReader([]byte("hello")), size: 5, offset: 5},
+					{reader: bytes.NewReader([]byte(" world")), size: 6, offset: 1},
+					{reader: bytes.NewReader([]byte("!")), size: 1, offset: 0},
 				},
 				size: 12,
 			},
