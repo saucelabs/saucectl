@@ -9,7 +9,6 @@ import (
 func Test_multiReadSeeker_WriteTo(t *testing.T) {
 	type fields struct {
 		readers []SizedReadSeeker
-		index   int
 		size    int64
 	}
 	tests := []struct {
@@ -85,7 +84,6 @@ func Test_multiReadSeeker_WriteTo(t *testing.T) {
 func Test_multiReadSeeker_Read(t *testing.T) {
 	type fields struct {
 		readers []SizedReadSeeker
-		index   int
 		offset  int64
 		size    int64
 	}
