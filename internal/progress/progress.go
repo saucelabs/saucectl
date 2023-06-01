@@ -32,8 +32,8 @@ type ReadSeeker struct {
 	bar *progressbar.ProgressBar
 }
 
-// NewReaderSeeker returns a new ReadSeeker with the given bar.
-func NewReaderSeeker(r io.ReadSeeker, bar *progressbar.ProgressBar) ReadSeeker {
+// NewReadSeeker returns a new ReadSeeker with the given bar.
+func NewReadSeeker(r io.ReadSeeker, bar *progressbar.ProgressBar) ReadSeeker {
 	return ReadSeeker{
 		ReadSeeker: r,
 		bar:        bar,

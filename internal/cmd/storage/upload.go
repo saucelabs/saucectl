@@ -81,7 +81,7 @@ func UploadCommand() *cobra.Command {
 			// Upload the file if necessary.
 			if !skipUpload {
 				bar := newProgressBar(out, finfo.Size(), "Uploading")
-				reader := progress.NewReaderSeeker(file, bar)
+				reader := progress.NewReadSeeker(file, bar)
 
 				item, err = appsClient.UploadStream(finfo.Name(), description, &reader)
 				if err != nil {
