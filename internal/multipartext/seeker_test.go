@@ -54,7 +54,6 @@ func Test_multiReadSeeker_WriteTo(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mr := &multiReadSeeker{
 				readers: tt.fields.readers,
-				index:   tt.fields.index,
 				size:    tt.fields.size,
 			}
 
@@ -143,7 +142,6 @@ func Test_multiReadSeeker_Read(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mr := &multiReadSeeker{
 				readers: tt.fields.readers,
-				index:   tt.fields.index,
 				offset:  tt.fields.offset,
 				size:    tt.fields.size,
 			}

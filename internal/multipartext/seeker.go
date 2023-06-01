@@ -37,7 +37,6 @@ func MultiReadSeeker(readers ...io.ReadSeeker) (io.ReadSeeker, error) {
 // multiReadSeeker is a ReadSeeker that reads from multiple SizedReadSeekers.
 type multiReadSeeker struct {
 	readers []SizedReadSeeker
-	index   int
 	offset  int64
 	size    int64
 }
