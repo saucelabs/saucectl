@@ -38,6 +38,18 @@ func NewMultipartReader(filename, description string, src io.Reader) (io.Reader,
 		return nil, "", err
 	}
 
+	if srcReadSeeker, ok := src.(io.ReadSeeker); ok {
+		mrs, err := MultiReadSeeker(
+			bytes.NewReader(buffy.Bytes()[:headerSize]),
+			srcReadSeeker,
+			bytes.NewReader(buffy.Bytes()[headerSize:]),
+		)
+
+		return mrs,
+			writer.FormDataContentType(),
+			err
+	}
+
 	return io.MultiReader(
 			bytes.NewReader(buffy.Bytes()[:headerSize]),
 			src,

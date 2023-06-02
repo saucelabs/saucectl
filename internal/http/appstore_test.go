@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/xtgo/uuid"
 
@@ -85,7 +86,7 @@ func TestAppStore_UploadStream(t *testing.T) {
 	defer server.Close()
 
 	type fields struct {
-		HTTPClient *http.Client
+		HTTPClient *retryablehttp.Client
 		URL        string
 		Username   string
 		AccessKey  string
@@ -103,7 +104,7 @@ func TestAppStore_UploadStream(t *testing.T) {
 		{
 			name: "successfully upload file",
 			fields: fields{
-				HTTPClient: &http.Client{Timeout: 10 * time.Second},
+				HTTPClient: NewRetryableClient(10 * time.Second),
 				URL:        server.URL,
 				Username:   testUser,
 				AccessKey:  testPass,
@@ -120,7 +121,7 @@ func TestAppStore_UploadStream(t *testing.T) {
 		{
 			name: "wrong credentials",
 			fields: fields{
-				HTTPClient: &http.Client{Timeout: 10 * time.Second},
+				HTTPClient: NewRetryableClient(10 * time.Second),
 				URL:        server.URL,
 				Username:   testUser + "1",
 				AccessKey:  testPass + "1",
@@ -220,7 +221,7 @@ func TestAppStore_List(t *testing.T) {
 	defer server.Close()
 
 	type fields struct {
-		HTTPClient *http.Client
+		HTTPClient *retryablehttp.Client
 		URL        string
 		Username   string
 		AccessKey  string
@@ -238,7 +239,7 @@ func TestAppStore_List(t *testing.T) {
 		{
 			name: "query all",
 			fields: fields{
-				HTTPClient: &http.Client{Timeout: 10 * time.Second},
+				HTTPClient: NewRetryableClient(10 * time.Second),
 				URL:        server.URL,
 				Username:   testUser,
 				AccessKey:  testPass,
@@ -265,7 +266,7 @@ func TestAppStore_List(t *testing.T) {
 		{
 			name: "query subset",
 			fields: fields{
-				HTTPClient: &http.Client{Timeout: 10 * time.Second},
+				HTTPClient: NewRetryableClient(10 * time.Second),
 				URL:        server.URL,
 				Username:   testUser,
 				AccessKey:  testPass,
@@ -288,7 +289,7 @@ func TestAppStore_List(t *testing.T) {
 		{
 			name: "wrong credentials",
 			fields: fields{
-				HTTPClient: &http.Client{Timeout: 10 * time.Second},
+				HTTPClient: NewRetryableClient(10 * time.Second),
 				URL:        server.URL,
 				Username:   testUser + "1",
 				AccessKey:  testPass + "1",
