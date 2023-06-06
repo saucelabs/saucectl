@@ -1,0 +1,67 @@
+package apit
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
+	"github.com/saucelabs/saucectl/internal/http"
+	"github.com/saucelabs/saucectl/internal/segment"
+	"github.com/saucelabs/saucectl/internal/usage"
+)
+
+func PutFileCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "put-file [--project PROJECT_NAME]",
+		Short: "Put a file in vault",
+		Long: `Put a file in a project's vault.
+
+Use [--project] to specify the project by its name or run without [--project] to choose form a list of projects.
+`,
+		SilenceUsage: true,
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 || args[0] == "" {
+				return errors.New("no file name specified")
+			}
+			return nil
+		},
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			err := http.CheckProxy()
+			if err != nil {
+				return fmt.Errorf("invalid HTTP_PROXY value")
+			}
+
+			tracker := segment.DefaultTracker
+
+			go func() {
+				tracker.Collect(
+					cases.Title(language.English).String(cmds.FullName(cmd)),
+					usage.Properties{}.SetFlags(cmd.Flags()),
+				)
+				_ = tracker.Close()
+			}()
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+
+			fd, err := os.Open(name)
+			if err != nil {
+				return err
+			}
+			_, err = apitesterClient.PutVaultFile(context.Background(), selectedProject.ID, name, fd)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("File '%s' has been successfully stored.\n", name)
+			return nil
+		},
+	}
+	return cmd
+}
