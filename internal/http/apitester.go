@@ -513,6 +513,9 @@ func (c *APITester) GetVaultFileContent(ctx context.Context, projectID string, f
 // PutVaultFile stores the content of a file in the vault for the project identified by projectID
 func (c *APITester) PutVaultFile(ctx context.Context, projectID string, fileName string, fileBody io.ReadCloser) (apitest.VaultFile, error) {
 	multipartReader, contentType, err := multipartext.NewMultipartReader("file", fileName, "", fileBody)
+	if err != nil {
+		return nil
+	}
 
 	filesURL := fmt.Sprintf("%s/api-testing/api/project/%s/drive/files", c.URL, projectID)
 	req, err := NewRetryableRequestWithContext(ctx, http.MethodPost, filesURL, multipartReader)
@@ -556,6 +559,9 @@ func (c *APITester) DeleteVaultFile(ctx context.Context, projectID string, fileN
 	}
 
 	req, err := NewRetryableRequestWithContext(ctx, http.MethodPost, filesURL, bytes.NewReader(payload))
+	if err != nil {
+		return err
+	}
 	req.Header.Set("Content-Type", "application/json")
 	req.SetBasicAuth(c.Username, c.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
