@@ -141,11 +141,32 @@ func (r *Runner) RunProject() (int, error) {
 		return 1, err
 	}
 
+	if r.Project.DryRun {
+		printDryRunSuiteNames(r.getSuiteNames())
+		return 0, nil
+	}
+
 	passed := r.runSuites()
 	if passed {
 		exitCode = 0
 	}
 	return exitCode, nil
+}
+
+func (r *Runner) getSuiteNames() []string {
+	var names []string
+	for _, s := range r.Project.Suites {
+		names = append(names, s.Name)
+	}
+	return names
+}
+
+func printDryRunSuiteNames(suites []string) {
+	fmt.Println("\nThe following test suites would have run:")
+	for _, s := range suites {
+		fmt.Printf("  - %s\n", s)
+	}
+	fmt.Println()
 }
 
 func hasUnitInputFiles(dir string) bool {

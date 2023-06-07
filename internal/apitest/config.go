@@ -22,6 +22,7 @@ var (
 type Project struct {
 	config.TypeDef `yaml:",inline" mapstructure:",squash"`
 	ConfigFilePath string             `yaml:"-" json:"-"`
+	DryRun         bool               `yaml:"-" json:"-"`
 	Suites         []Suite            `yaml:"suites,omitempty"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty"`
 	RootDir        string             `yaml:"rootDir,omitempty"`
