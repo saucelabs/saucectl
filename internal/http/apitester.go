@@ -514,7 +514,7 @@ func (c *APITester) GetVaultFileContent(ctx context.Context, projectID string, f
 func (c *APITester) PutVaultFile(ctx context.Context, projectID string, fileName string, fileBody io.ReadCloser) (apitest.VaultFile, error) {
 	multipartReader, contentType, err := multipartext.NewMultipartReader("file", fileName, "", fileBody)
 	if err != nil {
-		return nil
+		return apitest.VaultFile{}, nil
 	}
 
 	filesURL := fmt.Sprintf("%s/api-testing/api/project/%s/drive/files", c.URL, projectID)
