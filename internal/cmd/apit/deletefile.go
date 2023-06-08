@@ -51,7 +51,7 @@ Use [--project] to specify the project by its name or run without [--project] to
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
 
-			confirmed, err := deleteConfirm(name)
+			confirmed, err := confirmDelete(name)
 			if err != nil {
 				return err
 			}
@@ -71,7 +71,7 @@ Use [--project] to specify the project by its name or run without [--project] to
 	return cmd
 }
 
-func deleteConfirm(fileName string) (bool, error) {
+func confirmDelete(fileName string) (bool, error) {
 	var selection bool
 	prompt := &survey.Confirm{
 		Message: fmt.Sprintf("Do you really want to delete '%s' ?", fileName),
