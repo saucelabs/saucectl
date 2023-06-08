@@ -20,7 +20,7 @@ func ListFilesCommand() *cobra.Command {
 		Short: "List vault files",
 		Long: `Get a list of files from a project's vault.
 
-Use [--project] to specify the project by its name or run without [--project] to choose form a list of projects.
+Use [--project] to specify the project by its name or run without [--project] to choose from a list of projects.
 `,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {

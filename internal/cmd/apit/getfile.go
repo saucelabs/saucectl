@@ -24,7 +24,7 @@ func GetFileCommand() *cobra.Command {
 		Short: "Get a vault file",
 		Long: `Get a file from a project's vault.
 
-Use [--project] to specify the project by its name or run without [--project] to choose form a list of projects.
+Use [--project] to specify the project by its name or run without [--project] to choose from a list of projects.
 `,
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {

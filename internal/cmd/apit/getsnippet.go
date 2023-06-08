@@ -20,7 +20,7 @@ func GetSnippetCommand() *cobra.Command {
 		Short: "Get a vault snippet",
 		Long: `Get a snippet from a project's vault. 
 
-Use [--project] to specify the project by its name or run without [--project] to choose form a list of projects.
+Use [--project] to specify the project by its name or run without [--project] to choose from a list of projects.
 `,
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
