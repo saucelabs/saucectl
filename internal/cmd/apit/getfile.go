@@ -20,7 +20,7 @@ import (
 
 func GetFileCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-file [--project PROJECT_NAME]",
+		Use:   "get-file filename [--project PROJECT_NAME]",
 		Short: "Get a vault file",
 		Long: `Get a file from a project's vault.
 

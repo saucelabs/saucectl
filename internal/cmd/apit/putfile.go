@@ -18,7 +18,7 @@ import (
 
 func PutFileCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "put-file [--project PROJECT_NAME]",
+		Use:   "put-file filename [--project PROJECT_NAME]",
 		Short: "Put a file in vault",
 		Long: `Put a file in a project's vault.
 
