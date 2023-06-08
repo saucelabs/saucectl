@@ -59,7 +59,7 @@ Use [--project] to specify the project by its name or run without [--project] to
 			if err != nil {
 				return err
 			}
-			fmt.Printf("File '%s' has been successfully stored.\n", name)
+			fmt.Printf("File %q has been successfully stored.\n", name)
 			return nil
 		},
 	}

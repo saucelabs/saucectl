@@ -71,7 +71,7 @@ Use [--project] to specify the project by its name or run without [--project] to
 			if err != nil {
 				return err
 			}
-			fmt.Printf("File '%s' has been successfully retrieved.\n", name)
+			fmt.Printf("File %q has been successfully retrieved.\n", name)
 			return nil
 		},
 	}
