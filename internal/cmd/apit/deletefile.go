@@ -18,7 +18,7 @@ import (
 
 func DeleteFileCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete-file [--project PROJECT_NAME]",
+		Use:   "delete-file FILENAME [--project PROJECT_NAME]",
 		Short: "Delete a file in vault",
 		Long: `Delete a file in a project's vault.
 
