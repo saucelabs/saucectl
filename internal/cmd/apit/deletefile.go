@@ -56,7 +56,7 @@ Use [--project] to specify the project by its name or run without [--project] to
 				return err
 			}
 			if !confirmed {
-				fmt.Printf("File '%s' has NOT been deleted.\n", name)
+				fmt.Printf("File %q has NOT been deleted.\n", name)
 				return nil
 			}
 
@@ -64,7 +64,7 @@ Use [--project] to specify the project by its name or run without [--project] to
 			if err != nil {
 				return err
 			}
-			fmt.Printf("File '%s' has been successfully deleted.\n", name)
+			fmt.Printf("File %q has been successfully deleted.\n", name)
 			return nil
 		},
 	}
@@ -74,7 +74,7 @@ Use [--project] to specify the project by its name or run without [--project] to
 func confirmDelete(fileName string) (bool, error) {
 	var selection bool
 	prompt := &survey.Confirm{
-		Message: fmt.Sprintf("Do you really want to delete '%s' ?", fileName),
+		Message: fmt.Sprintf("Do you really want to delete %q ?", fileName),
 	}
 	err := survey.AskOne(prompt, &selection)
 	return selection, err
