@@ -51,8 +51,8 @@ func VaultCommand(preRunE func(cmd *cobra.Command, args []string) error) *cobra.
 		GetSnippetCommand(),
 		SetSnippetCommand(),
 		ListFilesCommand(),
-		GetFileCommand(),
-		PutFileCommand(),
+		DownloadFileCommand(),
+		UploadFileCommand(),
 		DeleteFileCommand(),
 	)
 	return cmd

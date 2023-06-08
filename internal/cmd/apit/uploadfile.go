@@ -4,25 +4,23 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
-	"github.com/saucelabs/saucectl/internal/apitest"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 )
 
-func GetFileCommand() *cobra.Command {
+func UploadFileCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-file FILENAME [--project PROJECT_NAME]",
-		Short: "Get a vault file",
-		Long: `Get a file from a project's vault.
+		Use:   "upload-file FILENAME [--project PROJECT_NAME]",
+		Short: "Upload a file in vault",
+		Long: `Upload a file in a project's vault.
 
 Use [--project] to specify the project by its name or run without [--project] to choose from a list of projects.
 `,
@@ -52,50 +50,18 @@ Use [--project] to specify the project by its name or run without [--project] to
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
-			files, err := apitesterClient.ListVaultFiles(context.Background(), selectedProject.ID)
+
+			fd, err := os.Open(name)
 			if err != nil {
 				return err
 			}
-
-			file, err := findMatchingFile(name, files)
-			if err != nil {
-				return fmt.Errorf("project %q has no vault drive file with name %q", selectedProject.ProjectMeta.Name, name)
-			}
-
-			bodyReader, err := apitesterClient.GetVaultFileContent(context.Background(), selectedProject.ID, file.ID)
+			_, err = apitesterClient.PutVaultFile(context.Background(), selectedProject.ID, name, fd)
 			if err != nil {
 				return err
 			}
-
-			err = saveFileToDisk(bodyReader, name)
-			if err != nil {
-				return err
-			}
-			fmt.Printf("File %q has been successfully retrieved.\n", name)
+			fmt.Printf("File %q has been successfully stored.\n", name)
 			return nil
 		},
 	}
 	return cmd
-}
-
-func saveFileToDisk(rc io.ReadCloser, fileName string) error {
-	defer rc.Close()
-
-	fd, err := os.Create(fileName)
-	if err != nil {
-		return err
-	}
-	defer fd.Close()
-
-	_, err = io.Copy(fd, rc)
-	return err
-}
-
-func findMatchingFile(fileName string, files []apitest.VaultFile) (apitest.VaultFile, error) {
-	for _, file := range files {
-		if file.Name == fileName {
-			return file, nil
-		}
-	}
-	return apitest.VaultFile{}, fmt.Errorf("no file named %s found", fileName)
 }
