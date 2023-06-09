@@ -184,8 +184,8 @@ const (
 	UnableToFetchFile = "Unable to fetch file '%s'"
 	// UnableToUnmarshallFile indicates a failure to unmarshall a file
 	UnableToUnmarshallFile = "Unable to unmarshall file '%s'"
-	// SkippingSmartRetries indicates that the full suite will be run
-	SkippingSmartRetries = "Skipping SmartRetry, retrying complete suite"
+	// SkippingSmartRetries implies that all tests will be retried.
+	SkippingSmartRetries = "SmartRetry is being skipped, and all tests from the previous job are being retried."
 	// RetryWithClasses indicates which classes will be run
 	RetryWithClasses = "Retrying with failed classes or tests: %q"
 	// UnableToCreateRunnerConfig indicates a failure to create runner config file
