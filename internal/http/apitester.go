@@ -46,6 +46,12 @@ type VaultErrResponse struct {
 	Status string `json:"status,omitempty"`
 }
 
+// DriveErrResponse describes the response when drive API returns an error.
+type DriveErrResponse struct {
+	Error   string `json:"error"`
+	Message string `json:"message"`
+}
+
 type vaultErr struct {
 	Field         string                  `json:"field,omitempty"`
 	Message       string                  `json:"message,omitempty"`
@@ -473,8 +479,7 @@ func (c *APITester) ListVaultFiles(ctx context.Context, projectID string) ([]api
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return []apitest.VaultFile{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, body)
+		return []apitest.VaultFile{}, createError(resp.StatusCode, resp.Body)
 	}
 
 	var vaultResponse []apitest.VaultFile
@@ -504,8 +509,7 @@ func (c *APITester) GetVaultFileContent(ctx context.Context, projectID string, f
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, body)
+		return nil, createError(resp.StatusCode, resp.Body)
 	}
 	return resp.Body, nil
 }
@@ -535,8 +539,7 @@ func (c *APITester) PutVaultFile(ctx context.Context, projectID string, fileName
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return apitest.VaultFile{}, fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, body)
+		return apitest.VaultFile{}, createError(resp.StatusCode, resp.Body)
 	}
 
 	var vaultResponse apitest.VaultFile
@@ -574,8 +577,17 @@ func (c *APITester) DeleteVaultFile(ctx context.Context, projectID string, fileN
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", resp.StatusCode, body)
+		return createError(resp.StatusCode, resp.Body)
 	}
 	return nil
+}
+
+func createError(statusCode int, body io.Reader) error {
+	content, _ := io.ReadAll(body)
+
+	var errorDetails DriveErrResponse
+	if err := json.Unmarshal(content, &errorDetails); err != nil || errorDetails.Message == "" {
+		return fmt.Errorf("request failed; unexpected response code:'%d', body:'%s'", statusCode, content)
+	}
+	return fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", statusCode, errorDetails.Message)
 }
