@@ -38,6 +38,9 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 	restoClient.URL = regio.APIBaseURL()
 
 	tracker := segment.DefaultTracker
+	if regio == region.Staging {
+		tracker.Enabled = false
+	}
 
 	go func() {
 		props := usage.Properties{}

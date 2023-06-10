@@ -7,6 +7,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/spf13/cobra"
 )
 
@@ -26,12 +27,16 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 				preRun(cmd, args)
 			}
 
-			if region.FromString(regio) == region.None {
+			reg := region.FromString(regio)
+			if reg == region.None {
 				return errors.New("invalid region")
+			}
+			if reg == region.Staging {
+				segment.DefaultTracker.Enabled = false
 			}
 
 			creds := credentials.Get()
-			url := region.FromString(regio).APIBaseURL()
+			url := reg.APIBaseURL()
 
 			apitesterClient = http.NewAPITester(url, creds.Username, creds.AccessKey, 15*time.Minute)
 

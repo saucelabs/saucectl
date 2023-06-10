@@ -124,6 +124,9 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, isCLIDriven bo
 	}
 
 	tracker := segment.DefaultTracker
+	if regio == region.Staging {
+		tracker.Enabled = false
+	}
 
 	go func() {
 		props := usage.Properties{}

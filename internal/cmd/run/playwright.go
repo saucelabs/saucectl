@@ -140,6 +140,9 @@ func runPlaywright(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	}
 
 	tracker := segment.DefaultTracker
+	if regio == region.Staging {
+		tracker.Enabled = false
+	}
 
 	go func() {
 		props := usage.Properties{}
