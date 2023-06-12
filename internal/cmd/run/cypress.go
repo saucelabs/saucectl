@@ -125,6 +125,9 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	iamClient.URL = regio.APIBaseURL()
 	restoClient.ArtifactConfig = p.GetArtifactsCfg().Download
 	tracker := segment.DefaultTracker
+	if regio == region.Staging {
+		tracker.Enabled = false
+	}
 
 	go func() {
 		props := usage.Properties{}
