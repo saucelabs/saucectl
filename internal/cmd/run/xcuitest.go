@@ -122,6 +122,9 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 	}
 
 	tracker := segment.DefaultTracker
+	if regio == region.Staging {
+		tracker.Enabled = false
+	}
 
 	go func() {
 		props := usage.Properties{}

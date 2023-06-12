@@ -163,6 +163,9 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 	}
 
 	tracker := segment.DefaultTracker
+	if regio == region.Staging {
+		tracker.Enabled = false
+	}
 
 	go func() {
 		props := usage.Properties{}
