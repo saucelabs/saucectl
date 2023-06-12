@@ -5,27 +5,29 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/AlecAivazis/survey/v2"
+	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
-	"github.com/spf13/cobra"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
-func GetSnippetCommand() *cobra.Command {
+func DeleteFileCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-snippet NAME [--project PROJECT_NAME]",
-		Short: "Get a vault snippet",
-		Long: `Get a snippet from a project's vault. 
+		Use:   "delete-file FILENAME [--project PROJECT_NAME]",
+		Short: "Delete a file in vault",
+		Long: `Delete a file in a project's vault.
 
 Use [--project] to specify the project by its name or run without [--project] to choose from a list of projects.
 `,
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
-				return errors.New("no snippet name specified")
+				return errors.New("no file name specified")
 			}
 			return nil
 		},
@@ -48,19 +50,32 @@ Use [--project] to specify the project by its name or run without [--project] to
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
-			vault, err := apitesterClient.GetVault(context.Background(), selectedProject.Hooks[0].Identifier)
+
+			confirmed, err := confirmDelete(name)
 			if err != nil {
 				return err
 			}
-
-			v, ok := vault.Snippets[name]
-			if !ok {
-				return fmt.Errorf("project %q has no vault snippet with name %q", selectedProject.ProjectMeta.Name, name)
+			if !confirmed {
+				fmt.Printf("File %q has NOT been deleted.\n", name)
+				return nil
 			}
 
-			fmt.Printf("%s", v)
+			err = apitesterClient.DeleteVaultFile(context.Background(), selectedProject.ID, []string{name})
+			if err != nil {
+				return err
+			}
+			fmt.Printf("File %q has been successfully deleted.\n", name)
 			return nil
 		},
 	}
 	return cmd
+}
+
+func confirmDelete(fileName string) (bool, error) {
+	var selection bool
+	prompt := &survey.Confirm{
+		Message: fmt.Sprintf("Do you really want to delete %q ?", fileName),
+	}
+	err := survey.AskOne(prompt, &selection)
+	return selection, err
 }

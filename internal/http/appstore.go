@@ -114,7 +114,7 @@ func (s *AppStore) DownloadURL(url string) (io.ReadCloser, int64, error) {
 
 // UploadStream uploads the contents of reader and stores them under the given filename.
 func (s *AppStore) UploadStream(filename, description string, reader io.Reader) (storage.Item, error) {
-	multipartReader, contentType, err := multipartext.NewMultipartReader(filename, description, reader)
+	multipartReader, contentType, err := multipartext.NewMultipartReader("payload", filename, description, reader)
 	if err != nil {
 		return storage.Item{}, err
 	}

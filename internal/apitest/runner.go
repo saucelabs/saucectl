@@ -110,6 +110,19 @@ type VaultVariable struct {
 	Type  string `json:"type,omitempty"`
 }
 
+// VaultFile represents a file stored in a project vault
+type VaultFile struct {
+	ID        string `json:"id"`
+	CreatedAt int64  `json:"createdAt"`
+	UpdatedAt int64  `json:"updatedAt"`
+	CompanyID string `json:"companyId"`
+	ProjectID string `json:"projectId"`
+	Name      string `json:"name"`
+	Size      int    `json:"size"`
+	Source    string `json:"source"`
+	IsOpenAPI bool   `json:"isOpenAPI"`
+}
+
 // FilterSuites filters out suites in the project that don't match the given suite name.
 func FilterSuites(p *Project, suiteName string) error {
 	for _, s := range p.Suites {

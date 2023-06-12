@@ -13,6 +13,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/apitest"
+	"github.com/saucelabs/saucectl/internal/multipartext"
 	"golang.org/x/time/rate"
 
 	"github.com/saucelabs/saucectl/internal/config"
@@ -45,11 +46,21 @@ type VaultErrResponse struct {
 	Status string `json:"status,omitempty"`
 }
 
+// DriveErrResponse describes the response when drive API returns an error.
+type DriveErrResponse struct {
+	Error   string `json:"error"`
+	Message string `json:"message"`
+}
+
 type vaultErr struct {
 	Field         string                  `json:"field,omitempty"`
 	Message       string                  `json:"message,omitempty"`
 	Object        string                  `json:"object,omitempty"`
 	RejectedValue []apitest.VaultVariable `json:"rejected-value,omitempty"`
+}
+
+type vaultFileDeletion struct {
+	FileNames []string `json:"fileNames"`
 }
 
 // NewAPITester a new instance of APITester.
@@ -446,4 +457,137 @@ func (c *APITester) PutVault(ctx context.Context, hookID string, vault apitest.V
 	}
 
 	return nil
+}
+
+// ListVaultFiles returns the list of files in the vault for the project identified by projectID
+func (c *APITester) ListVaultFiles(ctx context.Context, projectID string) ([]apitest.VaultFile, error) {
+	filesURL := fmt.Sprintf("%s/api-testing/api/project/%s/drive/files", c.URL, projectID)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, filesURL, nil)
+	if err != nil {
+		return []apitest.VaultFile{}, err
+	}
+
+	req.SetBasicAuth(c.Username, c.AccessKey)
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return []apitest.VaultFile{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return []apitest.VaultFile{}, ErrServerError
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return []apitest.VaultFile{}, createError(resp.StatusCode, resp.Body)
+	}
+
+	var vaultResponse []apitest.VaultFile
+	if err := json.NewDecoder(resp.Body).Decode(&vaultResponse); err != nil {
+		return []apitest.VaultFile{}, err
+	}
+
+	return vaultResponse, nil
+}
+
+// GetVaultFileContent returns the content of a file in the vault for the project identified by projectID
+func (c *APITester) GetVaultFileContent(ctx context.Context, projectID string, fileID string) (io.ReadCloser, error) {
+	filesURL := fmt.Sprintf("%s/api-testing/api/project/%s/drive/files/%s", c.URL, projectID, fileID)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, filesURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.SetBasicAuth(c.Username, c.AccessKey)
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return nil, ErrServerError
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, createError(resp.StatusCode, resp.Body)
+	}
+	return resp.Body, nil
+}
+
+// PutVaultFile stores the content of a file in the vault for the project identified by projectID
+func (c *APITester) PutVaultFile(ctx context.Context, projectID string, fileName string, fileBody io.ReadCloser) (apitest.VaultFile, error) {
+	multipartReader, contentType, err := multipartext.NewMultipartReader("file", fileName, "", fileBody)
+	if err != nil {
+		return apitest.VaultFile{}, nil
+	}
+
+	filesURL := fmt.Sprintf("%s/api-testing/api/project/%s/drive/files", c.URL, projectID)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodPost, filesURL, multipartReader)
+	if err != nil {
+		return apitest.VaultFile{}, err
+	}
+
+	req.Header.Set("Content-Type", contentType)
+	req.SetBasicAuth(c.Username, c.AccessKey)
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return apitest.VaultFile{}, err
+	}
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return apitest.VaultFile{}, ErrServerError
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return apitest.VaultFile{}, createError(resp.StatusCode, resp.Body)
+	}
+
+	var vaultResponse apitest.VaultFile
+	if err := json.NewDecoder(resp.Body).Decode(&vaultResponse); err != nil {
+		return apitest.VaultFile{}, err
+	}
+
+	return vaultResponse, nil
+}
+
+// DeleteVaultFile delete the files in the vault for the project identified by projectID
+func (c *APITester) DeleteVaultFile(ctx context.Context, projectID string, fileNames []string) error {
+	filesURL := fmt.Sprintf("%s/api-testing/api/project/%s/drive/files/_delete", c.URL, projectID)
+
+	payload, err := json.Marshal(vaultFileDeletion{
+		FileNames: fileNames,
+	})
+	if err != nil {
+		return err
+	}
+
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodPost, filesURL, bytes.NewReader(payload))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(c.Username, c.AccessKey)
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return ErrServerError
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return createError(resp.StatusCode, resp.Body)
+	}
+	return nil
+}
+
+func createError(statusCode int, body io.Reader) error {
+	content, _ := io.ReadAll(body)
+
+	var errorDetails DriveErrResponse
+	if err := json.Unmarshal(content, &errorDetails); err != nil || errorDetails.Message == "" {
+		return fmt.Errorf("request failed; unexpected response code:'%d', body:'%s'", statusCode, content)
+	}
+	return fmt.Errorf("request failed; unexpected response code:'%d', msg:'%s'", statusCode, errorDetails.Message)
 }
