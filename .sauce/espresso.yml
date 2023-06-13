@@ -10,23 +10,17 @@ sauce:
 defaults:
   timeout: 5m
 espresso:
-  app: ./tests/e2e/espresso/calc.apk
-  testApp: ./tests/e2e/espresso/calc-success.apk
+  app: ./tests/e2e/espresso/mda-1.0.17-20.apk
+  testApp: ./tests/e2e/espresso/mda-androidTest-1.0.17-20.apk
 suites:
   - name: "saucy barista"
-    testOptions:
-      class:
-        - com.example.android.testing.androidjunitrunnersample.CalculatorAddParameterizedTest
-        - com.example.android.testing.androidjunitrunnersample.CalculatorInstrumentationTest
+    devices:
+      - name: "Google.*"
+        platformVersion: "14"
     emulators:
-      - name: "Android GoogleApi Emulator"
-        orientation: portrait
+      - name: "Android GoogleAPI Emulator"
         platformVersions:
-          - "11.0"
-          - "10.0"
-      - name: "Google Pixel C GoogleAPI Emulator"
-        platformVersions:
-          - "8.1"
+          - "13.0"
 artifacts:
   download:
     when: always
