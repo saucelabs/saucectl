@@ -76,7 +76,7 @@ func Parse(data []byte) (TestSuites, error) {
 	return tss, err
 }
 
-// GetFailedXCUITests get failed XCUITest test list from testcase list.
+// GetFailedXCUITests get failed XCUITest test list from testcases.
 func GetFailedXCUITests(testCases []TestCase) []string {
 	classes := map[string]bool{}
 	for _, tc := range testCases {
@@ -95,7 +95,7 @@ func GetFailedXCUITests(testCases []TestCase) []string {
 	return getKeysFromMap(classes)
 }
 
-// GetFailedEspressoTests get failed class list from testcase list
+// GetFailedEspressoTests get failed espresso test list from testcases.
 func GetFailedEspressoTests(testCases []TestCase) []string {
 	classes := map[string]bool{}
 	for _, tc := range testCases {
