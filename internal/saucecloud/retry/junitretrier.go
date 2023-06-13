@@ -46,17 +46,17 @@ func setClassesToRetry(opt *job.StartOptions, testcases []junit.TestCase) {
 		Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1))
 
 	if opt.Framework == xcuitest.Kind {
-		opt.TestsToRun = junit.GetFailedTests(testcases)
-		lg.Msgf(msg.RetryWithClasses, opt.TestsToRun)
+		opt.TestsToRun = junit.GetFailedXCUITests(testcases)
+		lg.Msgf(msg.RetryWithTests, opt.TestsToRun)
 		return
 	}
 
 	if opt.TestOptions == nil {
 		opt.TestOptions = map[string]interface{}{}
 	}
-	classes := junit.GetFailedClasses(testcases)
-	opt.TestOptions["class"] = classes
-	lg.Msgf(msg.RetryWithClasses, classes)
+	tests := junit.GetFailedEspressoTests(testcases)
+	opt.TestOptions["class"] = tests
+	lg.Msgf(msg.RetryWithTests, tests)
 }
 
 func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {

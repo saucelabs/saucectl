@@ -166,8 +166,8 @@ func TestFromFile(t *testing.T) {
 		fs.WithFile("config.yml", `apiVersion: v1alpha
 kind: espresso
 espresso:
-  app: ./tests/apps/calc.apk
-  testApp: ./tests/apps/calc-success.apk
+  app: ./tests/apps/mda-1.0.17-20.apk
+  testApp: ./tests/apps/mda-androidTest-1.0.17-20.apk
 suites:
   - name: "saucy barista"
     devices:
@@ -189,8 +189,8 @@ suites:
 	expected := Project{
 		ConfigFilePath: filepath.Join(dir.Path(), "config.yml"),
 		Espresso: Espresso{
-			App:     "./tests/apps/calc.apk",
-			TestApp: "./tests/apps/calc-success.apk",
+			App:     "./tests/apps/mda-1.0.17-20.apk",
+			TestApp: "./tests/apps/mda-androidTest-1.0.17-20.apk",
 		},
 		Suites: []Suite{
 			{

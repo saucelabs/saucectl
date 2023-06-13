@@ -76,8 +76,8 @@ func Parse(data []byte) (TestSuites, error) {
 	return tss, err
 }
 
-// GetFailedTests get failed test list from testcase list.
-func GetFailedTests(testCases []TestCase) []string {
+// GetFailedXCUITests get failed XCUITest test list from testcases.
+func GetFailedXCUITests(testCases []TestCase) []string {
 	classes := map[string]bool{}
 	for _, tc := range testCases {
 		if tc.Error != "" || tc.Failure != "" {
@@ -95,12 +95,20 @@ func GetFailedTests(testCases []TestCase) []string {
 	return getKeysFromMap(classes)
 }
 
-// GetFailedClasses get failed class list from testcase list
-func GetFailedClasses(testCases []TestCase) []string {
+// GetFailedEspressoTests get failed espresso test list from testcases.
+func GetFailedEspressoTests(testCases []TestCase) []string {
 	classes := map[string]bool{}
 	for _, tc := range testCases {
 		if tc.Error != "" || tc.Failure != "" {
-			classes[tc.ClassName] = true
+			// The format of the filtered test is "<className>#<testMethodName>".
+			// Fallback to <className> if the test method name is unexpectedly empty.
+			// tc.Name: <testMethodName>
+			// tc.ClassName: <className>
+			if tc.Name != "" {
+				classes[fmt.Sprintf("%s#%s", tc.ClassName, tc.Name)] = true
+			} else {
+				classes[tc.ClassName] = true
+			}
 		}
 	}
 	return getKeysFromMap(classes)

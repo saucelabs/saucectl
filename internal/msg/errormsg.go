@@ -186,8 +186,8 @@ const (
 	UnableToUnmarshallFile = "Unable to unmarshall file '%s'"
 	// SkippingSmartRetries implies that all tests will be retried.
 	SkippingSmartRetries = "Skipping SmartRetry. Retrying all tests from the previous job."
-	// RetryWithClasses indicates which classes will be run
-	RetryWithClasses = "Retrying with failed classes or tests: %q"
+	// RetryWithTests indicates which tests will be run
+	RetryWithTests = "Retrying with failed tests: %q"
 	// UnableToCreateRunnerConfig indicates a failure to create runner config file
 	UnableToCreateRunnerConfig = "Unable to create runner config file"
 	// UnableToFilterFailedTests indicates a failure to filter failed tests
