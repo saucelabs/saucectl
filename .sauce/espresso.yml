@@ -16,7 +16,7 @@ suites:
   - name: "saucy barista"
     devices:
       - name: "Google.*"
-        platformVersion: "14"
+        platformVersion: "13"
     emulators:
       - name: "Android GoogleAPI Emulator"
         platformVersions:
