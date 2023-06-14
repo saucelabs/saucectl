@@ -55,6 +55,7 @@ type initConfig struct {
 	concurrency      int
 	username         string
 	accessKey        string
+	workload         string
 }
 
 var (
@@ -99,6 +100,7 @@ func Command() *cobra.Command {
 	cmd.Flags().StringVarP(&initCfg.frameworkVersion, "frameworkVersion", "v", "", "framework version to be used")
 	cmd.Flags().StringVar(&initCfg.cypressJSON, "cypress.config", "", "path to cypress.json file (cypress only)")
 	cmd.Flags().StringVar(&initCfg.dockerImage, "dockerImage", "", "docker image to use (imagerunner only)")
+	cmd.Flags().StringVar(&initCfg.workload, "workload", "", "workload to use (imagerunner only)")
 	cmd.Flags().StringVar(&initCfg.app, "app", "", "path to application to test (espresso/xcuitest only)")
 	cmd.Flags().StringVarP(&initCfg.testApp, "testApp", "t", "", "path to test application (espresso/xcuitest only)")
 	cmd.Flags().StringSliceVarP(&initCfg.otherApps, "otherApps", "o", []string{}, "path to other applications (espresso/xcuitest only)")

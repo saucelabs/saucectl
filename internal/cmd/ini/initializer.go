@@ -390,6 +390,31 @@ func (ini *initializer) askDockerImage(message string, val survey.Validator, tar
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
 }
 
+var Workloads = []string{
+	"webdriver",
+	"other",
+}
+
+func (ini *initializer) askWorkload(cfg *initConfig) error {
+	q := &survey.Select{
+		Message: "Set workload:",
+		Default: Workloads[0],
+		Options: Workloads,
+	}
+	q.WithStdio(ini.stdio)
+
+	var workload string
+	err := survey.AskOne(q, &workload,
+		survey.WithShowCursor(true),
+		survey.WithValidator(survey.Required),
+		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
+	if err != nil {
+		return err
+	}
+	cfg.workload = workload
+	return nil
+}
+
 func (ini *initializer) initializeCypress() (*initConfig, error) {
 	cfg := &initConfig{frameworkName: cypress.Kind}
 
@@ -539,13 +564,15 @@ func (ini *initializer) initializeXCUITest() (*initConfig, error) {
 func (ini *initializer) initializeImageRunner() (*initConfig, error) {
 	cfg := &initConfig{frameworkName: imagerunner.Kind}
 
-	err := ini.askDockerImage("Docker Image to use:", dockerImageValidator(), &cfg.dockerImage)
-	if err != nil {
+	if err := ini.askDockerImage("Docker Image to use:", dockerImageValidator(), &cfg.dockerImage); err != nil {
 		return &initConfig{}, err
 	}
 
-	err = ini.askDownloadWhen(cfg)
-	if err != nil {
+	if err := ini.askWorkload(cfg); err != nil {
+		return &initConfig{}, err
+	}
+
+	if err := ini.askDownloadWhen(cfg); err != nil {
 		return &initConfig{}, err
 	}
 
