@@ -1399,6 +1399,14 @@ func Test_initializers(t *testing.T) {
 				if err != nil {
 					return err
 				}
+				_, err = c.ExpectString("Set workload:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("webdriver")
+				if err != nil {
+					return err
+				}
 				_, err = c.ExpectString("Download artifacts:")
 				if err != nil {
 					return err
@@ -1426,6 +1434,7 @@ func Test_initializers(t *testing.T) {
 			expectedState: &initConfig{
 				frameworkName: imagerunner.Kind,
 				dockerImage:   "ubuntu:latest",
+				workload:      "webdriver",
 				artifactWhen:  config.WhenPass,
 			},
 		},

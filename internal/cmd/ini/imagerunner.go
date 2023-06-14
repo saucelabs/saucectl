@@ -25,6 +25,7 @@ func configureImageRunner(cfg *initConfig) interface{} {
 					User:  "${DOCKER_USERNAME}",
 					Token: "${DOCKER_PASSWORD}",
 				},
+				Workload: cfg.workload,
 			},
 		},
 		Artifacts: config.Artifacts{
