@@ -112,6 +112,12 @@ func (p Properties) SetLaunchOrder(launchOrder config.LaunchOrder) Properties {
 	return p
 }
 
+// SetSmartRetry reports if the suites set as smartRetry
+func (p Properties) SetSmartRetry(isSmartRetried bool) Properties {
+	p["smart_retry_failed_only"] = isSmartRetried
+	return p
+}
+
 // Tracker is an interface for providing usage tracking.
 type Tracker interface {
 	io.Closer

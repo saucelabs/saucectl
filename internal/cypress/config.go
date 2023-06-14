@@ -47,6 +47,7 @@ type Project interface {
 	GetAPIVersion() string
 	GetSmartRetry(suiteName string) config.SmartRetry
 	FilterFailedTests(suiteName string, report saucereport.SauceReport) error
+	IsSmartRetried() bool
 }
 
 type project struct {

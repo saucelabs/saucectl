@@ -148,7 +148,8 @@ func runPlaywright(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		props := usage.Properties{}
 		props.SetFramework("playwright").SetFVersion(p.Playwright.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
 			SetArtifacts(p.Artifacts).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).
-			SetSlack(p.Notifications.Slack).SetSharding(playwright.IsSharded(p.Suites)).SetLaunchOrder(p.Sauce.LaunchOrder)
+			SetSlack(p.Notifications.Slack).SetSharding(playwright.IsSharded(p.Suites)).SetLaunchOrder(p.Sauce.LaunchOrder).
+			SetSmartRetry(p.IsSmartRetried())
 		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
 		_ = tracker.Close()
 	}()
