@@ -608,3 +608,13 @@ func (p *Project) FilterFailedTests(suiteName string, report saucereport.SauceRe
 	}
 	return nil
 }
+
+// IsSmartRetried checks if the suites contain a smartRetried suite
+func (p *Project) IsSmartRetried() bool {
+	for _, s := range p.Suites {
+		if s.SmartRetry.IsRetryFailedOnly() {
+			return true
+		}
+	}
+	return false
+}

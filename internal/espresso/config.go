@@ -264,3 +264,13 @@ func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
 	}
 	return res
 }
+
+// IsSmartRetried checks if the suites contain a smartRetried suite
+func (p *Project) IsSmartRetried() bool {
+	for _, s := range p.Suites {
+		if s.SmartRetry.IsRetryFailedOnly() {
+			return true
+		}
+	}
+	return false
+}
