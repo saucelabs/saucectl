@@ -51,6 +51,7 @@
           "$ref": "../subschema/common.schema.json#/definitions/version",
           "enum": [
             "package.json",
+            "1.35.1",
             "1.33.0",
             "1.31.1",
             "1.29.2",
