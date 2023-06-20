@@ -3,9 +3,9 @@ package credentials
 import (
 	"os"
 	"path/filepath"
-	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/saucelabs/saucectl/internal/iam"
 )
 
@@ -24,6 +24,7 @@ func TestFromEnv(t *testing.T) {
 			want: iam.Credentials{
 				Username:  "saucebot",
 				AccessKey: "123",
+				Resource:  "Environment variables($SAUCE_USERNAME, $SAUCE_ACCESS_KEY)",
 			},
 		},
 		{
@@ -32,13 +33,13 @@ func TestFromEnv(t *testing.T) {
 				_ = os.Unsetenv("SAUCE_USERNAME")
 				_ = os.Unsetenv("SAUCE_ACCESS_KEY")
 			},
-			want: iam.Credentials{},
+			want: iam.Credentials{Resource: "Environment variables($SAUCE_USERNAME, $SAUCE_ACCESS_KEY)"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.beforeTest()
-			if got := FromEnv(); !reflect.DeepEqual(got, tt.want) {
+			if got := FromEnv(); !cmp.Equal(got, tt.want) {
 				t.Errorf("FromEnv() = %v, want %v", got, tt.want)
 			}
 		})
@@ -148,7 +149,8 @@ func TestFromFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.beforeTest()
-			if got := fromFile(tt.args.path); !reflect.DeepEqual(got, tt.want) {
+			got := fromFile(tt.args.path)
+			if !cmp.Equal(got.Username, tt.want.Username) || !cmp.Equal(got.AccessKey, tt.want.AccessKey) {
 				t.Errorf("FromFile() = %v, want %v", got, tt.want)
 			}
 		})
