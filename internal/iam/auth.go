@@ -4,7 +4,7 @@ package iam
 type Credentials struct {
 	Username  string `yaml:"username"`
 	AccessKey string `yaml:"accessKey"`
-	Resource  string `yaml:"-"`
+	Source    string `yaml:"-"`
 }
 
 // IsSet checks whether the credentials, i.e. username and access key are not empty.

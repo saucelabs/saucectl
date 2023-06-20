@@ -24,7 +24,7 @@ func TestFromEnv(t *testing.T) {
 			want: iam.Credentials{
 				Username:  "saucebot",
 				AccessKey: "123",
-				Resource:  "Environment variables($SAUCE_USERNAME, $SAUCE_ACCESS_KEY)",
+				Source:    "Environment variables($SAUCE_USERNAME, $SAUCE_ACCESS_KEY)",
 			},
 		},
 		{
@@ -33,7 +33,7 @@ func TestFromEnv(t *testing.T) {
 				_ = os.Unsetenv("SAUCE_USERNAME")
 				_ = os.Unsetenv("SAUCE_ACCESS_KEY")
 			},
-			want: iam.Credentials{Resource: "Environment variables($SAUCE_USERNAME, $SAUCE_ACCESS_KEY)"},
+			want: iam.Credentials{Source: "Environment variables($SAUCE_USERNAME, $SAUCE_ACCESS_KEY)"},
 		},
 	}
 	for _, tt := range tests {

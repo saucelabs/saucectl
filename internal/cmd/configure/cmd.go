@@ -65,7 +65,7 @@ func printCreds(creds iam.Credentials) {
 	fmt.Println(labelStyle.Sprint("\tAccess key:"), valueStyle.Sprint(mask(creds.AccessKey)))
 
 	println()
-	fmt.Printf("Collected from: %s", creds.Resource)
+	fmt.Printf("Collected from: %s", creds.Source)
 
 	println()
 	println()
