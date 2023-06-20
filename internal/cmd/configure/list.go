@@ -11,7 +11,7 @@ func ListCommand() *cobra.Command {
 		Aliases: []string{
 			"ls",
 		},
-		Short: "Showing the current credentials and resources",
+		Short: "Shows the current credentials and their origin.",
 		Run: func(cmd *cobra.Command, args []string) {
 			creds := credentials.Get()
 			printCreds(creds)
