@@ -49,6 +49,8 @@ func Command() *cobra.Command {
 	}
 	cmd.Flags().StringVarP(&cliUsername, "username", "u", "", "username, available on your sauce labs account")
 	cmd.Flags().StringVarP(&cliAccessKey, "accessKey", "a", "", "accessKey, available on your sauce labs account")
+
+	cmd.AddCommand(ListCommand())
 	return cmd
 }
 
@@ -59,8 +61,11 @@ func printCreds(creds iam.Credentials) {
 	valueStyle := color.New(color.FgBlue)
 
 	fmt.Println("Currently configured credentials:")
-	fmt.Println(labelStyle.Sprint("      Username:"), valueStyle.Sprint(creds.Username))
-	fmt.Println(labelStyle.Sprint("    Access key:"), valueStyle.Sprint(mask(creds.AccessKey)))
+	fmt.Println(labelStyle.Sprint("\t  Username:"), valueStyle.Sprint(creds.Username))
+	fmt.Println(labelStyle.Sprint("\tAccess key:"), valueStyle.Sprint(mask(creds.AccessKey)))
+
+	println()
+	fmt.Printf("Collected from: %s", creds.Resource)
 
 	println()
 	println()

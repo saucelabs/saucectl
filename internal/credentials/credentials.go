@@ -20,6 +20,12 @@ func init() {
 // It's under the user's home directory, if defined, otherwise under the current working directory.
 var DefaultCredsPath = ""
 
+// EnvResource indicates the credentials are retrieved from environment variables.
+const EnvResource = "Environment variables"
+
+// ConfigFileResource indicates the credentials are retrieved from configuration file.
+const ConfigFileResource = "Configuration file"
+
 // Get returns the configured credentials.
 // Effectively a convenience wrapper around FromEnv, followed by a call to FromFile.
 //
@@ -39,6 +45,7 @@ func FromEnv() iam.Credentials {
 	return iam.Credentials{
 		Username:  os.Getenv("SAUCE_USERNAME"),
 		AccessKey: os.Getenv("SAUCE_ACCESS_KEY"),
+		Resource:  fmt.Sprintf("%s(%s)", EnvResource, "$SAUCE_USERNAME, $SAUCE_ACCESS_KEY"),
 	}
 }
 
@@ -66,6 +73,8 @@ func fromFile(path string) iam.Credentials {
 		log.Error().Msgf("failed to parse credentials: %v", err)
 		return iam.Credentials{}
 	}
+
+	c.Resource = fmt.Sprintf("%s(%s)", ConfigFileResource, path)
 
 	return c
 }
