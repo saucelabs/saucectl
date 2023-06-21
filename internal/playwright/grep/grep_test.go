@@ -11,7 +11,8 @@ import (
 func TestMatchFiles(t *testing.T) {
 	type testCase struct {
 		name          string
-		pattern       string
+		grep          string
+		grepInvert    string
 		wantMatched   []string
 		wantUnmatched []string
 	}
@@ -44,31 +45,31 @@ test.describe('New Step', () => {
 	testCases := []testCase{
 		{
 			name:          "Base",
-			pattern:       "New Todo",
+			grep:          "New Todo",
 			wantMatched:   []string{"demo-todo.spec.js"},
 			wantUnmatched: []string{"demo-step.spec.js"},
 		},
 		{
 			name:          "tag",
-			pattern:       "@fast",
+			grep:          "@fast",
 			wantMatched:   []string{"demo-step.spec.js"},
 			wantUnmatched: []string{"demo-todo.spec.js"},
 		},
 		{
 			name:          "filename",
-			pattern:       "demo-step",
+			grep:          "demo-step",
 			wantMatched:   []string{"demo-step.spec.js"},
 			wantUnmatched: []string{"demo-todo.spec.js"},
 		},
 		{
-			name:          "single tag",
-			pattern:       "@fast|@slow",
+			name:          "tags same spec",
+			grep:          "@fast|@slow",
 			wantMatched:   []string{"demo-step.spec.js"},
 			wantUnmatched: []string{"demo-todo.spec.js"},
 		},
 		{
-			name:          "single tag",
-			pattern:       "@fast|@save",
+			name:          "tags across specs",
+			grep:          "@fast|@save",
 			wantMatched:   []string{"demo-todo.spec.js", "demo-step.spec.js"},
 			wantUnmatched: []string(nil),
 		},
@@ -76,7 +77,7 @@ test.describe('New Step', () => {
 			name: "combined tag - not found",
 			// Note: example pattern should be "(?=.*@fast)(?=.*@slow)"
 			// But Go RegExp library does not support the Perl Look Around.
-			pattern:       "(.*@fast)(.*)(.*@slow)",
+			grep:          "(.*@fast)(.*)(.*@slow)",
 			wantMatched:   []string(nil),
 			wantUnmatched: []string{"demo-todo.spec.js", "demo-step.spec.js"},
 		},
@@ -84,15 +85,22 @@ test.describe('New Step', () => {
 			name: "combined tag",
 			// Note: example pattern should be "(?=.*@fast)(?=.*@unique)"
 			// But Go RegExp library does not support the Perl Look Around.
-			pattern:       "(.*@fast)(.*)(.*@unique)",
+			grep:          "(.*@fast)(.*)(.*@unique)",
 			wantMatched:   []string{"demo-step.spec.js"},
 			wantUnmatched: []string{"demo-todo.spec.js"},
+		},
+		{
+			name:          "grepInvert",
+			grep:          "New Todo",
+			grepInvert:    "demo-todo",
+			wantMatched:   []string(nil),
+			wantUnmatched: []string{"demo-todo.spec.js", "demo-step.spec.js"},
 		},
 	}
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			matched, unmatched := MatchFiles(mockFS, maps.Keys(mockFS), tt.pattern)
+			matched, unmatched := MatchFiles(mockFS, maps.Keys(mockFS), tt.grep, tt.grepInvert)
 
 			if len(mockFS) != len(unmatched)+len(matched) {
 				t.Errorf("MatchFiles: unexpected lenght of results. got: %d, want: %d", len(unmatched)+len(matched), len(mockFS))

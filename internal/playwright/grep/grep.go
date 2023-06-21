@@ -11,16 +11,18 @@ import (
 )
 
 // MatchFiles finds the files whose contents match the grep expression in the title parameter
-func MatchFiles(sys fs.FS, files []string, pattern string) (matched []string, unmatched []string) {
-	grepRe, err := regexp.Compile(pattern)
-	if err != nil {
-		// In case of non-parsable token by use, match all files
-		return files, []string{}
-	}
+func MatchFiles(sys fs.FS, files []string, grep string, grepInvert string) (matched []string, unmatched []string) {
+	grepRE, grepInvertRE := compileRE(grep, grepInvert)
 
 	for _, f := range files {
-		if grepRe.MatchString(f) {
+		if match(f, grepRE, grepInvertRE) {
 			matched = append(matched, f)
+			continue
+		}
+
+		// When there is a value in grepInvert, if filename matches the pattern, spec file will be skipped.
+		if grepInvertRE != nil {
+			unmatched = append(unmatched, f)
 			continue
 		}
 
@@ -33,7 +35,7 @@ func MatchFiles(sys fs.FS, files []string, pattern string) (matched []string, un
 
 		include := false
 		for _, tc := range testcases {
-			include = include || match(grepRe, tc.Title)
+			include = include || match(tc.Title, grepRE, grepInvertRE)
 			if include {
 				// As long as one testcase matched, we know the spec will need to be executed
 				matched = append(matched, f)
@@ -47,6 +49,30 @@ func MatchFiles(sys fs.FS, files []string, pattern string) (matched []string, un
 	return matched, unmatched
 }
 
-func match(titleExp *regexp.Regexp, title string) bool {
-	return title == "" || titleExp.MatchString(title)
+// compileRE compiles the regexp contained in grep/grepInvert.
+// No pattern specified generates nil value.
+func compileRE(grep, grepInvert string) (*regexp.Regexp, *regexp.Regexp) {
+	var grepRE *regexp.Regexp
+	var grepInvertRE *regexp.Regexp
+	if grep != "" {
+		grepRE, _ = regexp.Compile(grep)
+
+	}
+	if grepInvert != "" {
+		grepInvertRE, _ = regexp.Compile(grepInvert)
+	}
+	return grepRE, grepInvertRE
+}
+
+func match(title string, grepRe *regexp.Regexp, grepInvertRe *regexp.Regexp) bool {
+	if title == "" {
+		return true
+	}
+	if grepRe != nil && grepInvertRe == nil {
+		return grepRe.MatchString(title)
+	}
+	if grepRe == nil && grepInvertRe != nil {
+		return !grepInvertRe.MatchString(title)
+	}
+	return grepRe.MatchString(title) && !grepInvertRe.MatchString(title)
 }

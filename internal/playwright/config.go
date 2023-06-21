@@ -207,25 +207,6 @@ func checkShards(p *Project) error {
 func shardInSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 	var shardedSuites []Suite
 
-	/*
-		filteredSuites
-		if s.ShardGrepEnabled {
-			grepExp, grepExists := s.Config.Env["grep"]
-			grepTagsExp, grepTagsExists := s.Config.Env["grepTags"]
-
-			if grepExists || grepTagsExists {
-				var unmatched []string
-				files, unmatched = grep.MatchFiles(os.DirFS(rootDir), files, grepExp, grepTagsExp)
-
-				if len(files) == 0 {
-					log.Warn().Str("suiteName", s.Name).Str("grep", grepExp).Str("grepTags", grepTagsExp).Msg("No files match the configured grep and grepTags expressions")
-				} else if len(unmatched) > 0 {
-					log.Info().Str("suiteName", s.Name).Str("grep", grepExp).Str("grepTags", grepTagsExp).Msgf("Files filtered out by grep and grepTags: [%s]", unmatched)
-				}
-			}
-		}
-	*/
-
 	for _, s := range suites {
 		if s.Shard != "spec" && s.Shard != "concurrency" {
 			shardedSuites = append(shardedSuites, s)
@@ -246,9 +227,9 @@ func shardInSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 
 		testFiles := fpath.ExcludeFiles(files, excludedFiles)
 
-		if s.ShardGrepEnabled && s.Params.Grep != "" {
+		if s.ShardGrepEnabled && (s.Params.Grep != "" || s.Params.GrepInvert != "") {
 			var unmatched []string
-			testFiles, unmatched = grep.MatchFiles(os.DirFS(rootDir), testFiles, s.Params.Grep)
+			testFiles, unmatched = grep.MatchFiles(os.DirFS(rootDir), testFiles, s.Params.Grep, s.Params.GrepInvert)
 			if len(testFiles) == 0 {
 				log.Warn().Str("suiteName", s.Name).Str("grep", s.Params.Grep).Msg("No files match the configured grep expressions")
 				continue
