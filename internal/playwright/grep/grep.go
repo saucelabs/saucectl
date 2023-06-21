@@ -66,6 +66,12 @@ func compileRE(grep, grepInvert string) (*regexp.Regexp, *regexp.Regexp) {
 
 func match(title string, grepRe *regexp.Regexp, grepInvertRe *regexp.Regexp) bool {
 	if title == "" {
+		if grepRe != nil {
+			return false
+		}
+		if grepInvertRe != nil {
+			return true
+		}
 		return true
 	}
 	if grepRe != nil && grepInvertRe == nil {
