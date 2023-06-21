@@ -234,7 +234,7 @@ func shardInSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 				log.Warn().Str("suiteName", s.Name).Str("grep", s.Params.Grep).Msg("No files match the configured grep expressions")
 				continue
 			} else if len(unmatched) > 0 {
-				log.Info().Str("suiteName", s.Name).Str("grep", s.Params.Grep).Msgf("Files filtered out by grep: [%s]", unmatched)
+				log.Info().Str("suiteName", s.Name).Str("grep", s.Params.Grep).Msgf("Files filtered out by grep: %q", unmatched)
 			}
 		}
 
