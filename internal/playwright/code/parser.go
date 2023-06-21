@@ -10,8 +10,8 @@ import (
 // and subsequent passes extract the titles.
 
 var (
-	reTestCasePattern = regexp.MustCompile(`(?m)^ *test(?:\.describe)?(?:\.\w+)?(\([\s\S]*?,\s*(?:async)?\s*(?:function)?\s*\()`)
-	reTitlePattern    = regexp.MustCompile(`\(["'\x60](.*?)["'\x60],\s*?(?:function)?|[{(]`)
+	reTestCasePattern = regexp.MustCompile(`(?m)^ *test(?:\.describe)?(\([\s\S]*?,\s*(?:async)?\s*(?:function)?\s*\()`)
+	reTitlePattern    = regexp.MustCompile(`\(["'\x60](.*?)["'\x60],\s*?\s*(?:async)?(?:function)?|[{(]`)
 )
 
 // TestCase describes the metadata for a playwright test case parsed from a playwright spec file.
