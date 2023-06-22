@@ -1,6 +1,7 @@
 package grep
 
 import (
+	"sort"
 	"testing"
 	"testing/fstest"
 
@@ -101,6 +102,12 @@ test.describe('New Step', () => {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			matched, unmatched := MatchFiles(mockFS, maps.Keys(mockFS), tt.grep, tt.grepInvert)
+			sort.Slice(matched, func(i, j int) bool {
+				return matched[i] > matched[j]
+			})
+			sort.Slice(unmatched, func(i, j int) bool {
+				return unmatched[i] > unmatched[j]
+			})
 
 			if len(mockFS) != len(unmatched)+len(matched) {
 				t.Errorf("MatchFiles: unexpected lenght of results. got: %d, want: %d", len(unmatched)+len(matched), len(mockFS))
