@@ -19,6 +19,7 @@ type TestResult struct {
 	RDC           bool          `json:"-"`
 	TimedOut      bool          `json:"-"`
 	PassThreshold bool          `json:"passThreshold"`
+	Parents       []TestResult  `json:"-"`
 }
 
 // ArtifactType represents the type of assets (e.g. a junit report). Semantically similar to Content-Type.
@@ -51,6 +52,8 @@ type Reporter interface {
 	Reset()
 	// ArtifactRequirements returns a list of artifact types that this reporter requires to create a proper report.
 	ArtifactRequirements() []ArtifactType
+	// NeedParents returns if the reporter needs the parents jobData.
+	NeedParents() bool
 }
 
 // IsArtifactRequired traverses the list of reporters and validates their requirements against the given artifact type.

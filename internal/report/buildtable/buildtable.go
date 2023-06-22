@@ -100,6 +100,11 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 	return nil
 }
 
+// NeedParents
+func (r *Reporter) NeedParents() bool {
+	return false
+}
+
 func (r *Reporter) buildURLFromJobURL(jobURL string, buildSource build.Source) string {
 	pURL, err := url.Parse(jobURL)
 	if err != nil {

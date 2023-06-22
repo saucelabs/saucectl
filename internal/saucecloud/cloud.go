@@ -77,6 +77,7 @@ type result struct {
 	endTime   time.Time
 	attempts  int
 	retries   int
+	previous  []string
 
 	details insights.Details
 }
@@ -146,6 +147,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 
 			var artifacts []report.Artifact
 
+			log.Info().Strs("previous", res.previous).Msg("Previous Jobs to analyze")
 			if junitRequired {
 				jb, err := r.JobService.GetJobAssetFileContent(
 					context.Background(),
@@ -338,6 +340,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			}
 
 			opts.Attempt++
+			opts.PreviousRuns = append(opts.PreviousRuns, jobData.ID)
 			go r.Retrier.Retry(jobOpts, opts, jobData)
 			continue
 		}
@@ -371,6 +374,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			attempts:  opts.Attempt + 1,
 			retries:   opts.Retries,
 			details:   details,
+			previous:  opts.PreviousRuns,
 		}
 	}
 }

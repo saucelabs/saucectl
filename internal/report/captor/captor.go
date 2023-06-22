@@ -43,3 +43,8 @@ func (r *Reporter) Reset() {
 func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 	return nil
 }
+
+// NeedParents
+func (r *Reporter) NeedParents() bool {
+	return false
+}
