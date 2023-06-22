@@ -322,8 +322,13 @@ func (p *Project) Validate() error {
 		return err
 	}
 
-	p.Suites, err = shardSuites(cfg, p.Suites, p.Sauce.Concurrency)
-	return err
+	if p.Suites, err = shardSuites(cfg, p.Suites, p.Sauce.Concurrency); err != nil {
+		return err
+	}
+	if len(p.Suites) == 0 {
+		return errors.New(msg.EmptySuiteWithSharding)
+	}
+	return nil
 }
 
 func shardSuites(cfg Config, suites []Suite, ccy int) ([]Suite, error) {
