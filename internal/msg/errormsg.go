@@ -58,6 +58,8 @@ const (
 	MissingRegion = "no sauce region set"
 	// EmptySuite indicates no suites in the config
 	EmptySuite = "no suites defined"
+	// EmptySuiteWithSharding indicates no suites in the config after sharding processing
+	EmptySuiteWithSharding = "sharding configuration resulted in no suites defined"
 	// MissingSuiteName indicates no suite name
 	MissingSuiteName = "suite name is not found for suite %d"
 	// DuplicateSuiteName indicates duplicate suite name

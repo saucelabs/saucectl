@@ -189,6 +189,9 @@ func ShardSuites(p *Project) error {
 	}
 	p.Suites = shardedSuites
 
+	if len(p.Suites) == 0 {
+		return errors.New(msg.EmptySuiteWithSharding)
+	}
 	return nil
 }
 
