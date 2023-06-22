@@ -190,7 +190,7 @@ func ShardSuites(p *Project) error {
 	p.Suites = shardedSuites
 
 	if len(p.Suites) == 0 {
-		return errors.New(msg.ShardingConfigurationNoMatchingTests)
+		return errors.New(msg.EmptySuite)
 	}
 	return nil
 }
@@ -234,8 +234,8 @@ func shardInSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			var unmatched []string
 			testFiles, unmatched = grep.MatchFiles(os.DirFS(rootDir), testFiles, s.Params.Grep, s.Params.GrepInvert)
 			if len(testFiles) == 0 {
-				log.Warn().Str("suiteName", s.Name).Str("grep", s.Params.Grep).Msg("No files match the configured grep expressions")
-				continue
+				log.Error().Str("suiteName", s.Name).Str("grep", s.Params.Grep).Msg("No files match the configured grep expressions")
+				return []Suite{}, errors.New(msg.ShardingConfigurationNoMatchingTests)
 			} else if len(unmatched) > 0 {
 				log.Info().Str("suiteName", s.Name).Str("grep", s.Params.Grep).Msgf("Files filtered out by grep: %q", unmatched)
 			}
