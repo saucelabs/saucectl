@@ -326,7 +326,7 @@ func (p *Project) Validate() error {
 		return err
 	}
 	if len(p.Suites) == 0 {
-		return errors.New(msg.ShardingConfigurationNoMatchingTests)
+		return errors.New(msg.EmptySuite)
 	}
 	return nil
 }
