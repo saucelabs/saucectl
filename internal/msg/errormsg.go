@@ -58,8 +58,6 @@ const (
 	MissingRegion = "no sauce region set"
 	// EmptySuite indicates no suites in the config
 	EmptySuite = "no suites defined"
-	// EmptySuiteWithSharding indicates no suites in the config after sharding processing
-	EmptySuiteWithSharding = "sharding configuration resulted in no suites defined"
 	// MissingSuiteName indicates no suite name
 	MissingSuiteName = "suite name is not found for suite %d"
 	// DuplicateSuiteName indicates duplicate suite name
@@ -98,6 +96,8 @@ const (
 	InvalidReries = "retries should not be less than 0"
 	// InvalidPassThreshold indicates invalid pass threshold
 	InvalidPassThreshold = "passThreshold should not be greater than retries+1"
+	// ShardingConfigurationNoMatchingTests indicates no test matching sharding configuration
+	ShardingConfigurationNoMatchingTests = "sharding configuration resulted in no matching tests"
 )
 
 // apitesting config settings
