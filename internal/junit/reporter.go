@@ -44,8 +44,50 @@ func parseJunitFiles(junits []report.Artifact) ([]TestSuites, error) {
 	return parsed, nil
 }
 
+func reduceSuite(old TestSuite, new TestSuite) TestSuite {
+	testMap := map[string]int{}
+	for idx, tc := range old.TestCases {
+		key := fmt.Sprintf(`%s_%s`, tc.ClassName, tc.Name)
+		testMap[key] = idx
+	}
+
+	for _, tc := range new.TestCases {
+		key := fmt.Sprintf(`%s_%s`, tc.ClassName, tc.Name)
+		var idx int
+		var ok bool
+		if idx, ok = testMap[key]; !ok {
+			// FIXME: Print Warning
+			continue
+		}
+		old.TestCases[idx] = tc
+	}
+	return old
+}
+
 func reduceJunitFiles(junits []TestSuites) (TestSuites, error) {
+	suites := map[string]TestSuite{}
+
+	for _, junit := range junits {
+		for _, suite := range junit.TestSuites {
+			if _, ok := suites[suite.Name]; !ok {
+				suites[suite.Name] = suite
+				continue
+			}
+			suites[suite.Name] = reduceSuite(suites[suite.Name], suite)
+		}
+	}
+
 	return TestSuites{}, errors.New("to be implemented")
+}
+
+func pickJunitFile(artifacts []report.Artifact) []report.Artifact {
+	var junits []report.Artifact
+	for _, v := range artifacts {
+		if v.AssetType == report.JUnitArtifact {
+			junits = append(junits, v)
+		}
+	}
+	return junits
 }
 
 // Render renders out a test summary junit report to the destination of Reporter.Filename.
@@ -61,7 +103,9 @@ func (r *Reporter) Render() {
 		}
 		t.Properties = append(t.Properties, extractProperties(v)...)
 
+		mainJunits := pickJunitFile(v.Artifacts)
 		junitFiles := v.ParentJUnits
+		junitFiles = append(junitFiles, mainJunits...)
 
 		jsuites, err := parseJunitFiles(junitFiles)
 		if err != nil {
