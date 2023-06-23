@@ -19,7 +19,7 @@ type TestResult struct {
 	RDC           bool          `json:"-"`
 	TimedOut      bool          `json:"-"`
 	PassThreshold bool          `json:"passThreshold"`
-	Parents       []TestResult  `json:"-"`
+	ParentJUnits  []Artifact    `json:"-"`
 }
 
 // ArtifactType represents the type of assets (e.g. a junit report). Semantically similar to Content-Type.

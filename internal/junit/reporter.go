@@ -2,6 +2,7 @@ package junit
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -25,6 +26,28 @@ func (r *Reporter) Add(t report.TestResult) {
 	r.TestResults = append(r.TestResults, t)
 }
 
+func parseJunitFiles(junits []report.Artifact) ([]TestSuites, error) {
+	var parsed []TestSuites
+	for _, ju := range junits {
+		if ju.Error != nil {
+			// FIXME: Warn Message
+			continue
+		}
+		ts, err := Parse(ju.Body)
+		if err != nil {
+			// FIXME: Warn message
+			continue
+		}
+		parsed = append(parsed, ts)
+	}
+	// FIXME: Deal with errors
+	return parsed, nil
+}
+
+func reduceJunitFiles(junits []TestSuites) (TestSuites, error) {
+	return TestSuites{}, errors.New("to be implemented")
+}
+
 // Render renders out a test summary junit report to the destination of Reporter.Filename.
 func (r *Reporter) Render() {
 	r.lock.Lock()
@@ -36,33 +59,25 @@ func (r *Reporter) Render() {
 			Name: v.Name,
 			Time: strconv.Itoa(int(v.Duration.Seconds())),
 		}
-
 		t.Properties = append(t.Properties, extractProperties(v)...)
 
-		for _, a := range v.Artifacts {
-			if a.AssetType != report.JUnitArtifact {
-				continue
-			}
+		junitFiles := v.ParentJUnits
 
-			if a.Error != nil {
-				t.Errors++
-				log.Warn().Err(a.Error).Str("suite", v.Name).Msg("Failed to download junit report. Summary may be incorrect!")
-				continue
-			}
+		jsuites, err := parseJunitFiles(junitFiles)
+		if err != nil {
+			log.Warn().Err(err).Str("suite", v.Name).Msg("Failed to parse junit report. Summary may be incorrect!")
+			continue
+		}
+		reduced, err := reduceJunitFiles(jsuites)
+		if err != nil {
+			continue
+		}
 
-			jsuites, err := Parse(a.Body)
-			if err != nil {
-				t.Errors++
-				log.Warn().Err(err).Str("suite", v.Name).Msg("Failed to parse junit report. Summary may be incorrect!")
-				continue
-			}
-
-			for _, ts := range jsuites.TestSuites {
-				t.Tests += ts.Tests
-				t.Failures += ts.Failures
-				t.Errors += ts.Errors
-				t.TestCases = append(t.TestCases, ts.TestCases...)
-			}
+		for _, ts := range reduced.TestSuites {
+			t.Tests += ts.Tests
+			t.Failures += ts.Failures
+			t.Errors += ts.Errors
+			t.TestCases = append(t.TestCases, ts.TestCases...)
 		}
 
 		tt.Tests += t.Tests

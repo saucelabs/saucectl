@@ -146,6 +146,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			}
 
 			var artifacts []report.Artifact
+			var parentJUnits []report.Artifact
 
 			log.Info().Strs("previous", res.previous).Msg("Previous Jobs to analyze")
 			if junitRequired {
@@ -159,6 +160,19 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 					Body:      jb,
 					Error:     err,
 				})
+				for _, id := range res.previous {
+					jb, err := r.JobService.GetJobAssetFileContent(
+						context.Background(),
+						id,
+						junit.JunitFileName,
+						res.job.IsRDC,
+					)
+					parentJUnits = append(parentJUnits, report.Artifact{
+						AssetType: report.JUnitArtifact,
+						Body:      jb,
+						Error:     err,
+					})
+				}
 			}
 
 			var url string
@@ -166,20 +180,21 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				url = fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 			}
 			tr := report.TestResult{
-				Name:       res.name,
-				Duration:   res.duration,
-				StartTime:  res.startTime,
-				EndTime:    res.endTime,
-				Status:     res.job.TotalStatus(),
-				Browser:    browser,
-				Platform:   platform,
-				DeviceName: res.job.BaseConfig.DeviceName,
-				URL:        url,
-				Artifacts:  artifacts,
-				Origin:     "sauce",
-				Attempts:   res.attempts,
-				RDC:        res.job.IsRDC,
-				TimedOut:   res.job.TimedOut,
+				Name:         res.name,
+				Duration:     res.duration,
+				StartTime:    res.startTime,
+				EndTime:      res.endTime,
+				Status:       res.job.TotalStatus(),
+				Browser:      browser,
+				Platform:     platform,
+				DeviceName:   res.job.BaseConfig.DeviceName,
+				URL:          url,
+				Artifacts:    artifacts,
+				Origin:       "sauce",
+				Attempts:     res.attempts,
+				RDC:          res.job.IsRDC,
+				TimedOut:     res.job.TimedOut,
+				ParentJUnits: parentJUnits,
 			}
 
 			files := r.downloadArtifacts(res.name, res.job, artifactCfg.When)
