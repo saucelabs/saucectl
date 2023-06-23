@@ -96,6 +96,8 @@ const (
 	InvalidReries = "retries should not be less than 0"
 	// InvalidPassThreshold indicates invalid pass threshold
 	InvalidPassThreshold = "passThreshold should not be greater than retries+1"
+	// ShardingConfigurationNoMatchingTests indicates no test matching sharding configuration
+	ShardingConfigurationNoMatchingTests = "sharding configuration resulted in no matching tests"
 )
 
 // apitesting config settings
