@@ -110,7 +110,7 @@ func countSkipped(tcs []TestCase) int {
 	return count
 }
 
-func pickJunitFile(artifacts []report.Artifact) []report.Artifact {
+func filterJunitArtifacts(artifacts []report.Artifact) []report.Artifact {
 	var junits []report.Artifact
 	for _, v := range artifacts {
 		if v.AssetType == report.JUnitArtifact {
@@ -133,7 +133,7 @@ func (r *Reporter) Render() {
 		}
 		t.Properties = append(t.Properties, extractProperties(v)...)
 
-		mainJunits := pickJunitFile(v.Artifacts)
+		mainJunits := filterJunitArtifacts(v.Artifacts)
 		junitFiles := v.ParentJUnits
 		junitFiles = append(junitFiles, mainJunits...)
 
