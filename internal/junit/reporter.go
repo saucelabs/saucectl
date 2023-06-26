@@ -32,7 +32,7 @@ func parseJunitFiles(junits []report.Artifact) ([]TestSuites, error) {
 	var errs []error
 	for _, ju := range junits {
 		if ju.Error != nil {
-			errs = append(errs, errors.New("failed to retried junit file"))
+			errs = append(errs, errors.New("failed to retrieve junit file"))
 			continue
 		}
 		ts, err := Parse(ju.Body)
