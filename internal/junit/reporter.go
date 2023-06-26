@@ -65,6 +65,9 @@ func reduceSuite(old TestSuite, new TestSuite) TestSuite {
 		}
 		old.TestCases[idx] = tc
 	}
+	old.Tests = len(old.TestCases)
+	old.Errors = countErrors(old.TestCases)
+	old.Skipped = countSkipped(old.TestCases)
 	return old
 }
 
@@ -83,9 +86,6 @@ func reduceJunitFiles(junits []TestSuites) TestSuites {
 
 	output := TestSuites{}
 	for _, ts := range maps.Values(suites) {
-		ts.Tests = len(ts.TestCases)
-		ts.Errors = countErrors(ts.TestCases)
-		ts.Skipped = countSkipped(ts.TestCases)
 		output.TestSuites = append(output.TestSuites, ts)
 	}
 	return output
