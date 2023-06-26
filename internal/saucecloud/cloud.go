@@ -354,7 +354,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			}
 
 			opts.Attempt++
-			opts.PreviousRuns = append(opts.PreviousRuns, jobData.ID)
+			opts.PreviousJobIDs = append(opts.PreviousJobIDs, jobData.ID)
 			go r.Retrier.Retry(jobOpts, opts, jobData)
 			continue
 		}
@@ -388,7 +388,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			attempts:  opts.Attempt + 1,
 			retries:   opts.Retries,
 			details:   details,
-			previous:  opts.PreviousRuns,
+			previous:  opts.PreviousJobIDs,
 		}
 	}
 }

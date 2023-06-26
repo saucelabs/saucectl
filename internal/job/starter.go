@@ -10,8 +10,8 @@ type StartOptions struct {
 	// DisplayName is used for local logging purposes only (e.g. console).
 	DisplayName string `json:"-"`
 
-	// PreviousRuns is used to contains history in case of re-runs
-	PreviousRuns []string `json:"-"`
+	// PreviousJobIDs is contains the previous jobs IDs in the context of retries.
+	PreviousJobIDs []string `json:"-"`
 
 	// Timeout is used for local/per-suite timeout.
 	Timeout time.Duration `json:"-"`
