@@ -148,7 +148,6 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			var artifacts []report.Artifact
 			var parentJUnits []report.Artifact
 
-			log.Info().Strs("previous", res.previous).Msg("Previous Jobs to analyze")
 			if junitRequired {
 				jb, err := r.JobService.GetJobAssetFileContent(
 					context.Background(),
