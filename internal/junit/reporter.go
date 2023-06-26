@@ -2,6 +2,7 @@ package junit
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -28,35 +29,38 @@ func (r *Reporter) Add(t report.TestResult) {
 
 func parseJunitFiles(junits []report.Artifact) ([]TestSuites, error) {
 	var parsed []TestSuites
+	var errs []error
 	for _, ju := range junits {
 		if ju.Error != nil {
-			// FIXME: Warn Message
+			errs = append(errs, errors.New("failed to retried junit file"))
 			continue
 		}
 		ts, err := Parse(ju.Body)
 		if err != nil {
-			// FIXME: Warn message
+			errs = append(errs, errors.New("failed to parse junit file"))
 			continue
 		}
 		parsed = append(parsed, ts)
 	}
-	// FIXME: Deal with errors
+	if len(errs) > 0 {
+		return parsed, fmt.Errorf("%d errors occured while evaluating junit files", len(errs))
+	}
 	return parsed, nil
 }
 
 func reduceSuite(old TestSuite, new TestSuite) TestSuite {
 	testMap := map[string]int{}
 	for idx, tc := range old.TestCases {
-		key := fmt.Sprintf(`%s_%s`, tc.ClassName, tc.Name)
+		key := fmt.Sprintf(`%s.%s`, tc.ClassName, tc.Name)
 		testMap[key] = idx
 	}
 
 	for _, tc := range new.TestCases {
-		key := fmt.Sprintf(`%s_%s`, tc.ClassName, tc.Name)
+		key := fmt.Sprintf(`%s.%s`, tc.ClassName, tc.Name)
 		var idx int
 		var ok bool
 		if idx, ok = testMap[key]; !ok {
-			// FIXME: Print Warning
+			log.Warn().Str("test", key).Msg("Test has been found only in retries")
 			continue
 		}
 		old.TestCases[idx] = tc
