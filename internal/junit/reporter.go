@@ -32,18 +32,18 @@ func parseJunitFiles(junits []report.Artifact) ([]TestSuites, error) {
 	var errs []error
 	for _, ju := range junits {
 		if ju.Error != nil {
-			errs = append(errs, errors.New("failed to retrieve junit file"))
+			errs = append(errs, fmt.Errorf("failed to retrieve junit file: %w", ju.Error))
 			continue
 		}
 		ts, err := Parse(ju.Body)
 		if err != nil {
-			errs = append(errs, errors.New("failed to parse junit file"))
+			errs = append(errs, fmt.Errorf("failed to parse junit file: %w", err))
 			continue
 		}
 		parsed = append(parsed, ts)
 	}
 	if len(errs) > 0 {
-		return parsed, fmt.Errorf("%d errors occured while evaluating junit files", len(errs))
+		return parsed, fmt.Errorf("%d errors occured while evaluating junit files: %w", len(errs), errors.Join(errs...))
 	}
 	return parsed, nil
 }
