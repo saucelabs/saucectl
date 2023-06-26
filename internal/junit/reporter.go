@@ -86,9 +86,8 @@ func reduceJunitFiles(junits []TestSuites) TestSuites {
 	}
 
 	output := TestSuites{}
-	for _, ts := range maps.Values(suites) {
-		output.TestSuites = append(output.TestSuites, ts)
-	}
+
+	output.TestSuites = append(output.TestSuites, maps.Values(suites)...)
 	return output
 }
 
