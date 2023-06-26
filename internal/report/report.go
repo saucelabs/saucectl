@@ -52,8 +52,6 @@ type Reporter interface {
 	Reset()
 	// ArtifactRequirements returns a list of artifact types that this reporter requires to create a proper report.
 	ArtifactRequirements() []ArtifactType
-	// NeedParents returns if the reporter needs the parents jobData.
-	NeedParents() bool
 }
 
 // IsArtifactRequired traverses the list of reporters and validates their requirements against the given artifact type.

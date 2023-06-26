@@ -2,7 +2,6 @@ package junit
 
 import (
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/report"
+	"golang.org/x/exp/maps"
 )
 
 // Reporter is a junit implementation for report.Reporter.
@@ -64,7 +64,7 @@ func reduceSuite(old TestSuite, new TestSuite) TestSuite {
 	return old
 }
 
-func reduceJunitFiles(junits []TestSuites) (TestSuites, error) {
+func reduceJunitFiles(junits []TestSuites) TestSuites {
 	suites := map[string]TestSuite{}
 
 	for _, junit := range junits {
@@ -76,8 +76,9 @@ func reduceJunitFiles(junits []TestSuites) (TestSuites, error) {
 			suites[suite.Name] = reduceSuite(suites[suite.Name], suite)
 		}
 	}
-
-	return TestSuites{}, errors.New("to be implemented")
+	return TestSuites{
+		TestSuites: maps.Values(suites),
+	}
 }
 
 func pickJunitFile(artifacts []report.Artifact) []report.Artifact {
@@ -109,13 +110,10 @@ func (r *Reporter) Render() {
 
 		jsuites, err := parseJunitFiles(junitFiles)
 		if err != nil {
-			log.Warn().Err(err).Str("suite", v.Name).Msg("Failed to parse junit report. Summary may be incorrect!")
+			log.Warn().Err(err).Str("suite", v.Name).Msg("Failed to parse some junit report. Summary may be incorrect!")
 			continue
 		}
-		reduced, err := reduceJunitFiles(jsuites)
-		if err != nil {
-			continue
-		}
+		reduced := reduceJunitFiles(jsuites)
 
 		for _, ts := range reduced.TestSuites {
 			t.Tests += ts.Tests
@@ -190,9 +188,4 @@ func (r *Reporter) Reset() {
 // ArtifactRequirements returns a list of artifact types are this reporter requires to create a proper report.
 func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 	return []report.ArtifactType{report.JUnitArtifact}
-}
-
-// NeedParents
-func (r *Reporter) NeedParents() bool {
-	return true
 }

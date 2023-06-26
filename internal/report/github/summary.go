@@ -82,10 +82,6 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 	return []report.ArtifactType{}
 }
 
-func (r *Reporter) NeedParents() bool {
-	return false
-}
-
 func renderHeader(hasDevices bool) string {
 	deviceTitle := ""
 	deviceSeparator := ""

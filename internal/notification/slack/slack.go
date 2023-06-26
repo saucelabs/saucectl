@@ -86,11 +86,6 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 	return nil
 }
 
-// NeedParents
-func (r *Reporter) NeedParents() bool {
-	return false
-}
-
 // sendMessage sends notification message.
 func (r *Reporter) sendMessage(passed bool) {
 	if !r.shouldSendNotification(passed) {

@@ -137,11 +137,6 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 	return nil
 }
 
-// NeedParents
-func (r *Reporter) NeedParents() bool {
-	return false
-}
-
 func footer(errors, inProgress, tests int, dur time.Duration) table.Row {
 	if errors != 0 {
 		relative := float64(errors) / float64(tests) * 100

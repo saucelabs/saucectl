@@ -63,8 +63,3 @@ func (r *Reporter) Reset() {
 func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 	return []report.ArtifactType{report.JSONArtifact}
 }
-
-// NeedParents
-func (r *Reporter) NeedParents() bool {
-	return false
-}
