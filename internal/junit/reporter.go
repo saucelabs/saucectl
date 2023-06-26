@@ -48,6 +48,7 @@ func parseJunitFiles(junits []report.Artifact) ([]TestSuites, error) {
 	return parsed, nil
 }
 
+// reduceSuite updates "old" with values from "new".
 func reduceSuite(old TestSuite, new TestSuite) TestSuite {
 	testMap := map[string]int{}
 	for idx, tc := range old.TestCases {
