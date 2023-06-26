@@ -86,6 +86,7 @@ func NewPlaywrightCmd() *cobra.Command {
 	sc.String("shard", "suite.shard", "", "Controls whether or not (and how) tests are sharded across multiple machines, supported value: spec|concurrency")
 	sc.String("timeZone", "suite::timeZone", "", "Specifies timeZone for this test")
 	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'.")
+	sc.Bool("shardGrepEnabled", "suite::shardGrepEnabled", false, "When sharding is configured and the suite is configured to filter using a pattern, let saucectl filter tests before executing")
 
 	// NPM
 	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")

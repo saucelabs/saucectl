@@ -189,6 +189,10 @@
               "spec"
             ]
           },
+          "shardGrepEnabled": {
+            "description": "When sharding is configured and the suite is configured to filter using grep/grepInvert, let saucectl filter specs before executing.",
+            "type": "boolean"
+          },
           "timeout": {
             "$ref": "../subschema/common.schema.json#/definitions/timeout"
           },

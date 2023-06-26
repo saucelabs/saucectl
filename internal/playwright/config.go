@@ -15,6 +15,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/playwright/grep"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/saucereport"
 )
@@ -77,6 +78,7 @@ type Suite struct {
 	TimeZone          string            `yaml:"timeZone,omitempty" json:"timeZone"`
 	PassThreshold     int               `yaml:"passThreshold,omitempty" json:"-"`
 	SmartRetry        config.SmartRetry `yaml:"smartRetry,omitempty" json:"-"`
+	ShardGrepEnabled  bool              `yaml:"shardGrepEnabled,omitempty" json:"-"`
 }
 
 // SuiteConfig represents the configuration specific to a suite
@@ -187,6 +189,9 @@ func ShardSuites(p *Project) error {
 	}
 	p.Suites = shardedSuites
 
+	if len(p.Suites) == 0 {
+		return errors.New(msg.EmptySuite)
+	}
 	return nil
 }
 
@@ -224,6 +229,17 @@ func shardInSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 		}
 
 		testFiles := fpath.ExcludeFiles(files, excludedFiles)
+
+		if s.ShardGrepEnabled && (s.Params.Grep != "" || s.Params.GrepInvert != "") {
+			var unmatched []string
+			testFiles, unmatched = grep.MatchFiles(os.DirFS(rootDir), testFiles, s.Params.Grep, s.Params.GrepInvert)
+			if len(testFiles) == 0 {
+				log.Error().Str("suiteName", s.Name).Str("grep", s.Params.Grep).Msg("No files match the configured grep expressions")
+				return []Suite{}, errors.New(msg.ShardingConfigurationNoMatchingTests)
+			} else if len(unmatched) > 0 {
+				log.Info().Str("suiteName", s.Name).Str("grep", s.Params.Grep).Msgf("Files filtered out by grep: %q", unmatched)
+			}
+		}
 
 		if s.Shard == "spec" {
 			for _, f := range testFiles {
