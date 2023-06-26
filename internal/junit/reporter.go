@@ -76,9 +76,34 @@ func reduceJunitFiles(junits []TestSuites) TestSuites {
 			suites[suite.Name] = reduceSuite(suites[suite.Name], suite)
 		}
 	}
-	return TestSuites{
-		TestSuites: maps.Values(suites),
+
+	output := TestSuites{}
+	for _, ts := range maps.Values(suites) {
+		ts.Tests = len(ts.TestCases)
+		ts.Errors = countErrors(ts.TestCases)
+		ts.Skipped = countSkipped(ts.TestCases)
+		output.TestSuites = append(output.TestSuites, ts)
 	}
+	return output
+}
+
+func countErrors(tcs []TestCase) int {
+	count := 0
+	for _, tc := range tcs {
+		if tc.Status == "error" {
+			count++
+		}
+	}
+	return count
+}
+func countSkipped(tcs []TestCase) int {
+	count := 0
+	for _, tc := range tcs {
+		if tc.Status == "skipped" {
+			count++
+		}
+	}
+	return count
 }
 
 func pickJunitFile(artifacts []report.Artifact) []report.Artifact {

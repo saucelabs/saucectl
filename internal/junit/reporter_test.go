@@ -461,5 +461,4 @@ func TestReduceJunitFiles(t *testing.T) {
 	if !cmp.Equal(want, got) {
 		t.Error(cmp.Diff(want, got))
 	}
-
 }
