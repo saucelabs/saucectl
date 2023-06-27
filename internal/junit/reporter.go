@@ -61,7 +61,7 @@ func reduceSuite(old TestSuite, new TestSuite) TestSuite {
 		var idx int
 		var ok bool
 		if idx, ok = testMap[key]; !ok {
-			log.Warn().Str("test", key).Msg("Test has been found only in retries")
+			log.Warn().Str("test", key).Msg("Sanity check failed when merging related junit test suites. New test encountered without prior history.")
 			continue
 		}
 		old.TestCases[idx] = tc
