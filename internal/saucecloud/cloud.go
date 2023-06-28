@@ -77,6 +77,7 @@ type result struct {
 	endTime   time.Time
 	attempts  int
 	retries   int
+	previous  []string
 
 	details insights.Details
 }
@@ -145,6 +146,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			}
 
 			var artifacts []report.Artifact
+			var parentJUnits []report.Artifact
 
 			if junitRequired {
 				jb, err := r.JobService.GetJobAssetFileContent(
@@ -157,6 +159,19 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 					Body:      jb,
 					Error:     err,
 				})
+				for _, id := range res.previous {
+					jb, err := r.JobService.GetJobAssetFileContent(
+						context.Background(),
+						id,
+						junit.JunitFileName,
+						res.job.IsRDC,
+					)
+					parentJUnits = append(parentJUnits, report.Artifact{
+						AssetType: report.JUnitArtifact,
+						Body:      jb,
+						Error:     err,
+					})
+				}
 			}
 
 			var url string
@@ -164,20 +179,21 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				url = fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 			}
 			tr := report.TestResult{
-				Name:       res.name,
-				Duration:   res.duration,
-				StartTime:  res.startTime,
-				EndTime:    res.endTime,
-				Status:     res.job.TotalStatus(),
-				Browser:    browser,
-				Platform:   platform,
-				DeviceName: res.job.BaseConfig.DeviceName,
-				URL:        url,
-				Artifacts:  artifacts,
-				Origin:     "sauce",
-				Attempts:   res.attempts,
-				RDC:        res.job.IsRDC,
-				TimedOut:   res.job.TimedOut,
+				Name:         res.name,
+				Duration:     res.duration,
+				StartTime:    res.startTime,
+				EndTime:      res.endTime,
+				Status:       res.job.TotalStatus(),
+				Browser:      browser,
+				Platform:     platform,
+				DeviceName:   res.job.BaseConfig.DeviceName,
+				URL:          url,
+				Artifacts:    artifacts,
+				Origin:       "sauce",
+				Attempts:     res.attempts,
+				RDC:          res.job.IsRDC,
+				TimedOut:     res.job.TimedOut,
+				ParentJUnits: parentJUnits,
 			}
 
 			files := r.downloadArtifacts(res.name, res.job, artifactCfg.When)
@@ -338,6 +354,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			}
 
 			opts.Attempt++
+			opts.PreviousJobIDs = append(opts.PreviousJobIDs, jobData.ID)
 			go r.Retrier.Retry(jobOpts, opts, jobData)
 			continue
 		}
@@ -371,6 +388,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			attempts:  opts.Attempt + 1,
 			retries:   opts.Retries,
 			details:   details,
+			previous:  opts.PreviousJobIDs,
 		}
 	}
 }

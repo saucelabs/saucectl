@@ -2,6 +2,7 @@ package junit
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/report"
+	"golang.org/x/exp/maps"
 )
 
 // Reporter is a junit implementation for report.Reporter.
@@ -25,6 +27,99 @@ func (r *Reporter) Add(t report.TestResult) {
 	r.TestResults = append(r.TestResults, t)
 }
 
+func parseJunitFiles(junits []report.Artifact) ([]TestSuites, error) {
+	var parsed []TestSuites
+	var errs []error
+	for _, ju := range junits {
+		if ju.Error != nil {
+			errs = append(errs, fmt.Errorf("failed to retrieve junit file: %w", ju.Error))
+			continue
+		}
+		ts, err := Parse(ju.Body)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("failed to parse junit file: %w", err))
+			continue
+		}
+		parsed = append(parsed, ts)
+	}
+	if len(errs) > 0 {
+		return parsed, fmt.Errorf("%d errors occured while evaluating junit files: %w", len(errs), errors.Join(errs...))
+	}
+	return parsed, nil
+}
+
+// reduceSuite updates "old" with values from "new".
+func reduceSuite(old TestSuite, new TestSuite) TestSuite {
+	testMap := map[string]int{}
+	for idx, tc := range old.TestCases {
+		key := fmt.Sprintf(`%s.%s`, tc.ClassName, tc.Name)
+		testMap[key] = idx
+	}
+
+	for _, tc := range new.TestCases {
+		key := fmt.Sprintf(`%s.%s`, tc.ClassName, tc.Name)
+		var idx int
+		var ok bool
+		if idx, ok = testMap[key]; !ok {
+			log.Warn().Str("test", key).Msg("Sanity check failed when merging related junit test suites. New test encountered without prior history.")
+			continue
+		}
+		old.TestCases[idx] = tc
+	}
+	old.Tests = len(old.TestCases)
+	old.Errors = countErrors(old.TestCases)
+	old.Skipped = countSkipped(old.TestCases)
+	return old
+}
+
+func reduceJunitFiles(junits []TestSuites) TestSuites {
+	suites := map[string]TestSuite{}
+
+	for _, junit := range junits {
+		for _, suite := range junit.TestSuites {
+			if _, ok := suites[suite.Name]; !ok {
+				suites[suite.Name] = suite
+				continue
+			}
+			suites[suite.Name] = reduceSuite(suites[suite.Name], suite)
+		}
+	}
+
+	output := TestSuites{}
+
+	output.TestSuites = append(output.TestSuites, maps.Values(suites)...)
+	return output
+}
+
+func countErrors(tcs []TestCase) int {
+	count := 0
+	for _, tc := range tcs {
+		if tc.Status == "error" {
+			count++
+		}
+	}
+	return count
+}
+func countSkipped(tcs []TestCase) int {
+	count := 0
+	for _, tc := range tcs {
+		if tc.Status == "skipped" {
+			count++
+		}
+	}
+	return count
+}
+
+func filterJunitArtifacts(artifacts []report.Artifact) []report.Artifact {
+	var junits []report.Artifact
+	for _, v := range artifacts {
+		if v.AssetType == report.JUnitArtifact {
+			junits = append(junits, v)
+		}
+	}
+	return junits
+}
+
 // Render renders out a test summary junit report to the destination of Reporter.Filename.
 func (r *Reporter) Render() {
 	r.lock.Lock()
@@ -36,33 +131,24 @@ func (r *Reporter) Render() {
 			Name: v.Name,
 			Time: strconv.Itoa(int(v.Duration.Seconds())),
 		}
-
 		t.Properties = append(t.Properties, extractProperties(v)...)
 
-		for _, a := range v.Artifacts {
-			if a.AssetType != report.JUnitArtifact {
-				continue
-			}
+		mainJunits := filterJunitArtifacts(v.Artifacts)
+		junitFiles := v.ParentJUnits
+		junitFiles = append(junitFiles, mainJunits...)
 
-			if a.Error != nil {
-				t.Errors++
-				log.Warn().Err(a.Error).Str("suite", v.Name).Msg("Failed to download junit report. Summary may be incorrect!")
-				continue
-			}
+		jsuites, err := parseJunitFiles(junitFiles)
+		if err != nil {
+			log.Warn().Err(err).Str("suite", v.Name).Msg("Failed to parse some junit report. Summary may be incorrect!")
+			continue
+		}
+		reduced := reduceJunitFiles(jsuites)
 
-			jsuites, err := Parse(a.Body)
-			if err != nil {
-				t.Errors++
-				log.Warn().Err(err).Str("suite", v.Name).Msg("Failed to parse junit report. Summary may be incorrect!")
-				continue
-			}
-
-			for _, ts := range jsuites.TestSuites {
-				t.Tests += ts.Tests
-				t.Failures += ts.Failures
-				t.Errors += ts.Errors
-				t.TestCases = append(t.TestCases, ts.TestCases...)
-			}
+		for _, ts := range reduced.TestSuites {
+			t.Tests += ts.Tests
+			t.Failures += ts.Failures
+			t.Errors += ts.Errors
+			t.TestCases = append(t.TestCases, ts.TestCases...)
 		}
 
 		tt.Tests += t.Tests
