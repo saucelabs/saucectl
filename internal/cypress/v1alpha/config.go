@@ -322,7 +322,7 @@ func (p *Project) Validate() error {
 		return err
 	}
 
-	if p.Suites, err = shardSuites(cfg, p.Suites, p.Sauce.Concurrency); err != nil {
+	if p.Suites, err = shardSuites(cfg, p.Suites, p.Sauce.Concurrency, p.Sauce.Sauceignore); err != nil {
 		return err
 	}
 	if len(p.Suites) == 0 {
@@ -331,7 +331,25 @@ func (p *Project) Validate() error {
 	return nil
 }
 
-func shardSuites(cfg Config, suites []Suite, ccy int) ([]Suite, error) {
+// removeIgnoredFiles filter out files matching sauceignoreFile content.
+// If loading and parsing the sauceignore content fails, no filtering is applied.
+func removeIgnoredFiles(files []string, sauceignoreFile string) []string {
+	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
+	if err != nil {
+		log.Warn().Err(err).Msgf("an error occurred when filtering specs with %s. No filter will be applied", sauceignoreFile)
+		return files
+	}
+
+	var selectedFiles []string
+	for _, filename := range files {
+		if !matcher.Match(strings.Split(filename, string(filepath.Separator)), false) {
+			selectedFiles = append(selectedFiles, filename)
+		}
+	}
+	return selectedFiles
+}
+
+func shardSuites(cfg Config, suites []Suite, ccy int, sauceignoreFile string) ([]Suite, error) {
 	var shardedSuites []Suite
 	for _, s := range suites {
 		// Use the original suite if there is nothing to shard.
@@ -352,6 +370,7 @@ func shardSuites(cfg Config, suites []Suite, ccy int) ([]Suite, error) {
 			return shardedSuites, err
 		}
 
+		files = removeIgnoredFiles(files, sauceignoreFile)
 		testFiles := fpath.ExcludeFiles(files, excludedFiles)
 
 		if s.Shard == "spec" {

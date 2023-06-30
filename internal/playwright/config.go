@@ -3,6 +3,7 @@ package playwright
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 
 	"os"
 	"strings"
@@ -17,6 +18,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright/grep"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/saucereport"
 )
 
@@ -183,7 +185,7 @@ func ShardSuites(p *Project) error {
 
 	// either sharding by NumShards or by Shard will be applied
 	p.Suites = shardSuitesByNumShards(p.Suites)
-	shardedSuites, err := shardInSuites(p.RootDir, p.Suites, p.Sauce.Concurrency)
+	shardedSuites, err := shardInSuites(p.RootDir, p.Suites, p.Sauce.Concurrency, p.Sauce.Sauceignore)
 	if err != nil {
 		return err
 	}
@@ -206,8 +208,26 @@ func checkShards(p *Project) error {
 	return nil
 }
 
+// removeIgnoredFiles filter out files matching sauceignoreFile content.
+// If loading and parsing the sauceignore content fails, no filtering is applied.
+func removeIgnoredFiles(files []string, sauceignoreFile string) []string {
+	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
+	if err != nil {
+		log.Warn().Err(err).Msgf("an error occurred when filtering specs with %s. No filter will be applied", sauceignoreFile)
+		return files
+	}
+
+	var selectedFiles []string
+	for _, filename := range files {
+		if !matcher.Match(strings.Split(filename, string(filepath.Separator)), false) {
+			selectedFiles = append(selectedFiles, filename)
+		}
+	}
+	return selectedFiles
+}
+
 // shardInSuites divides suites into shards based on the pattern.
-func shardInSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
+func shardInSuites(rootDir string, suites []Suite, ccy int, sauceignoreFile string) ([]Suite, error) {
 	var shardedSuites []Suite
 
 	for _, s := range suites {
@@ -228,6 +248,7 @@ func shardInSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			return []Suite{}, err
 		}
 
+		files = removeIgnoredFiles(files, sauceignoreFile)
 		testFiles := fpath.ExcludeFiles(files, excludedFiles)
 
 		if s.ShardGrepEnabled && (s.Params.Grep != "" || s.Params.GrepInvert != "") {

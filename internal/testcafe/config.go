@@ -3,6 +3,7 @@ package testcafe
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/saucereport"
 )
 
@@ -306,13 +308,31 @@ func Validate(p *Project) error {
 	}
 
 	var err error
-	p.Suites, err = shardSuites(p.RootDir, p.Suites, p.Sauce.Concurrency)
+	p.Suites, err = shardSuites(p.RootDir, p.Suites, p.Sauce.Concurrency, p.Sauce.Sauceignore)
 
 	return err
 }
 
+// removeIgnoredFiles filter out files matching sauceignoreFile content.
+// If loading and parsing the sauceignore content fails, no filtering is applied.
+func removeIgnoredFiles(files []string, sauceignoreFile string) []string {
+	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
+	if err != nil {
+		log.Warn().Err(err).Msgf("an error occurred when filtering specs with %s. No filter will be applied", sauceignoreFile)
+		return files
+	}
+
+	var selectedFiles []string
+	for _, filename := range files {
+		if !matcher.Match(strings.Split(filename, string(filepath.Separator)), false) {
+			selectedFiles = append(selectedFiles, filename)
+		}
+	}
+	return selectedFiles
+}
+
 // shardSuites divides suites into shards based on the pattern.
-func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
+func shardSuites(rootDir string, suites []Suite, ccy int, sauceignoreFile string) ([]Suite, error) {
 	var shardedSuites []Suite
 
 	for _, s := range suites {
@@ -333,6 +353,7 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			return []Suite{}, err
 		}
 
+		files = removeIgnoredFiles(files, sauceignoreFile)
 		testFiles := fpath.ExcludeFiles(files, excludedFiles)
 
 		if s.Shard == "spec" {
