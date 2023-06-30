@@ -208,9 +208,9 @@ func checkShards(p *Project) error {
 	return nil
 }
 
-// removeIgnoredFiles filter out files matching sauceignoreFile content.
+// excludeSauceIgnorePatterns excludes any match with sauceignore content.
 // If loading and parsing the sauceignore content fails, no filtering is applied.
-func removeIgnoredFiles(files []string, sauceignoreFile string) []string {
+func excludeSauceIgnorePatterns(files []string, sauceignoreFile string) []string {
 	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
 		log.Warn().Err(err).Msgf("an error occurred when filtering specs with %s. No filter will be applied", sauceignoreFile)
@@ -248,7 +248,7 @@ func shardInSuites(rootDir string, suites []Suite, ccy int, sauceignoreFile stri
 			return []Suite{}, err
 		}
 
-		files = removeIgnoredFiles(files, sauceignoreFile)
+		files = excludeSauceIgnorePatterns(files, sauceignoreFile)
 		testFiles := fpath.ExcludeFiles(files, excludedFiles)
 
 		if s.ShardGrepEnabled && (s.Params.Grep != "" || s.Params.GrepInvert != "") {
