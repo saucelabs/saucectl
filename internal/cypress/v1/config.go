@@ -271,7 +271,7 @@ func (p *Project) Validate() error {
 func excludeSauceIgnorePatterns(files []string, sauceignoreFile string) []string {
 	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
-		log.Warn().Err(err).Msgf("an error occurred when filtering specs with %s. No filter will be applied", sauceignoreFile)
+		log.Warn().Err(err).Msgf("An error occurred when filtering specs with %s. No filter will be applied", sauceignoreFile)
 		return files
 	}
 
