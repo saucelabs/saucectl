@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 	"unicode"
@@ -266,24 +265,6 @@ func (p *Project) Validate() error {
 	return nil
 }
 
-// excludeSauceIgnorePatterns excludes any match with sauceignore content.
-// If loading and parsing the sauceignore content fails, no filtering is applied.
-func excludeSauceIgnorePatterns(files []string, sauceignoreFile string) []string {
-	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
-	if err != nil {
-		log.Warn().Err(err).Msgf("An error occurred when filtering specs with %s. No filter will be applied", sauceignoreFile)
-		return files
-	}
-
-	var selectedFiles []string
-	for _, filename := range files {
-		if !matcher.Match(strings.Split(filename, string(filepath.Separator)), false) {
-			selectedFiles = append(selectedFiles, filename)
-		}
-	}
-	return selectedFiles
-}
-
 func shardSuites(rootDir string, suites []Suite, ccy int, sauceignoreFile string) ([]Suite, error) {
 	var shardedSuites []Suite
 	for _, s := range suites {
@@ -297,7 +278,7 @@ func shardSuites(rootDir string, suites []Suite, ccy int, sauceignoreFile string
 			return shardedSuites, err
 		}
 
-		files = excludeSauceIgnorePatterns(files, sauceignoreFile)
+		files = sauceignore.ExcludeSauceIgnorePatterns(files, sauceignoreFile)
 
 		if len(files) == 0 {
 			msg.SuiteSplitNoMatch(s.Name, rootDir, s.Config.SpecPattern)

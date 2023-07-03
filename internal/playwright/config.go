@@ -3,8 +3,6 @@ package playwright
 import (
 	"errors"
 	"fmt"
-	"path/filepath"
-
 	"os"
 	"strings"
 	"time"
@@ -208,24 +206,6 @@ func checkShards(p *Project) error {
 	return nil
 }
 
-// excludeSauceIgnorePatterns excludes any match with sauceignore content.
-// If loading and parsing the sauceignore content fails, no filtering is applied.
-func excludeSauceIgnorePatterns(files []string, sauceignoreFile string) []string {
-	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
-	if err != nil {
-		log.Warn().Err(err).Msgf("an error occurred when filtering specs with %s. No filter will be applied", sauceignoreFile)
-		return files
-	}
-
-	var selectedFiles []string
-	for _, filename := range files {
-		if !matcher.Match(strings.Split(filename, string(filepath.Separator)), false) {
-			selectedFiles = append(selectedFiles, filename)
-		}
-	}
-	return selectedFiles
-}
-
 // shardInSuites divides suites into shards based on the pattern.
 func shardInSuites(rootDir string, suites []Suite, ccy int, sauceignoreFile string) ([]Suite, error) {
 	var shardedSuites []Suite
@@ -248,7 +228,7 @@ func shardInSuites(rootDir string, suites []Suite, ccy int, sauceignoreFile stri
 			return []Suite{}, err
 		}
 
-		files = excludeSauceIgnorePatterns(files, sauceignoreFile)
+		files = sauceignore.ExcludeSauceIgnorePatterns(files, sauceignoreFile)
 		testFiles := fpath.ExcludeFiles(files, excludedFiles)
 
 		if s.ShardGrepEnabled && (s.Params.Grep != "" || s.Params.GrepInvert != "") {
