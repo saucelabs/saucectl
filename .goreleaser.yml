@@ -21,7 +21,7 @@ builds:
       - goos: windows
         goarch: arm64
 brews:
-  - tap:
+  - repository:
       owner: saucelabs
       name: homebrew-saucectl
     folder: Formula
@@ -48,7 +48,6 @@ archives:
         format: zip
     files:
       - LICENSE
-    rlcp: true
 checksum:
   name_template: 'checksums.txt'
 snapshot:
