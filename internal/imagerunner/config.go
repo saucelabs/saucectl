@@ -34,6 +34,7 @@ type Project struct {
 	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
 	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
 	DryRun         bool               `yaml:"-" json:"-"`
+	Env            map[string]string  `yaml:"env,omitempty" json:"env"`
 }
 
 type Defaults struct {
@@ -110,6 +111,16 @@ func SetDefaults(p *Project) {
 
 		if suite.ResourceProfile == "" {
 			p.Suites[i].ResourceProfile = "c1m1"
+		}
+
+		if p.Suites[i].Env == nil {
+			p.Suites[i].Env = map[string]string{}
+		}
+		for k, v := range p.Defaults.Env {
+			p.Suites[i].Env[k] = v
+		}
+		for k, v := range p.Env {
+			p.Suites[i].Env[k] = v
 		}
 	}
 }
