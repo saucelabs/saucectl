@@ -322,7 +322,7 @@ func (p *Project) Validate() error {
 		return err
 	}
 
-	if p.Suites, err = shardSuites(cfg, p.Suites, p.Sauce.Concurrency); err != nil {
+	if p.Suites, err = shardSuites(cfg, p.Suites, p.Sauce.Concurrency, p.Sauce.Sauceignore); err != nil {
 		return err
 	}
 	if len(p.Suites) == 0 {
@@ -331,7 +331,7 @@ func (p *Project) Validate() error {
 	return nil
 }
 
-func shardSuites(cfg Config, suites []Suite, ccy int) ([]Suite, error) {
+func shardSuites(cfg Config, suites []Suite, ccy int, sauceignoreFile string) ([]Suite, error) {
 	var shardedSuites []Suite
 	for _, s := range suites {
 		// Use the original suite if there is nothing to shard.
@@ -352,6 +352,7 @@ func shardSuites(cfg Config, suites []Suite, ccy int) ([]Suite, error) {
 			return shardedSuites, err
 		}
 
+		files = sauceignore.ExcludeSauceIgnorePatterns(files, sauceignoreFile)
 		testFiles := fpath.ExcludeFiles(files, excludedFiles)
 
 		if s.Shard == "spec" {

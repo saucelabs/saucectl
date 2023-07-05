@@ -3,7 +3,6 @@ package playwright
 import (
 	"errors"
 	"fmt"
-
 	"os"
 	"strings"
 	"time"
@@ -17,6 +16,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright/grep"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/saucereport"
 )
 
@@ -183,7 +183,7 @@ func ShardSuites(p *Project) error {
 
 	// either sharding by NumShards or by Shard will be applied
 	p.Suites = shardSuitesByNumShards(p.Suites)
-	shardedSuites, err := shardInSuites(p.RootDir, p.Suites, p.Sauce.Concurrency)
+	shardedSuites, err := shardInSuites(p.RootDir, p.Suites, p.Sauce.Concurrency, p.Sauce.Sauceignore)
 	if err != nil {
 		return err
 	}
@@ -207,7 +207,7 @@ func checkShards(p *Project) error {
 }
 
 // shardInSuites divides suites into shards based on the pattern.
-func shardInSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
+func shardInSuites(rootDir string, suites []Suite, ccy int, sauceignoreFile string) ([]Suite, error) {
 	var shardedSuites []Suite
 
 	for _, s := range suites {
@@ -228,6 +228,7 @@ func shardInSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			return []Suite{}, err
 		}
 
+		files = sauceignore.ExcludeSauceIgnorePatterns(files, sauceignoreFile)
 		testFiles := fpath.ExcludeFiles(files, excludedFiles)
 
 		if s.ShardGrepEnabled && (s.Params.Grep != "" || s.Params.GrepInvert != "") {

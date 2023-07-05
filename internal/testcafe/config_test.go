@@ -137,6 +137,7 @@ func TestFilterSuites(t *testing.T) {
 
 func Test_shardSuites_withSplit(t *testing.T) {
 	dir := fs.NewDir(t, "testcafe",
+		fs.WithFile(".sauceignore", "", fs.WithMode(0644)),
 		fs.WithDir("tests",
 			fs.WithMode(0755),
 			fs.WithDir("dir1",
@@ -186,7 +187,7 @@ func Test_shardSuites_withSplit(t *testing.T) {
 	var suites []Suite
 
 	// Absolute path
-	suites, err = shardSuites(rootDir, origSuites, 1)
+	suites, err = shardSuites(rootDir, origSuites, 1, dir.Join(".sauceignore"))
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, expectedSuites, suites)
@@ -195,13 +196,17 @@ func Test_shardSuites_withSplit(t *testing.T) {
 	if err := os.Chdir(rootDir); err != nil {
 		t.Errorf("Unexpected error %s", err)
 	}
-	suites, err = shardSuites(".", origSuites, 1)
+	suites, err = shardSuites(".", origSuites, 1, dir.Join(".sauceignore"))
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, expectedSuites, suites)
 }
 
 func Test_shardSuites_withoutSplit(t *testing.T) {
+	dir := fs.NewDir(t, "testcafe",
+		fs.WithFile(".sauceignore", "", fs.WithMode(0644)),
+	)
+	defer dir.Remove()
 	origSuites := []Suite{
 		{
 			Name: "Demo Suite",
@@ -212,7 +217,7 @@ func Test_shardSuites_withoutSplit(t *testing.T) {
 	var suites []Suite
 
 	// Absolute path
-	suites, err = shardSuites("", origSuites, 1)
+	suites, err = shardSuites("", origSuites, 1, dir.Join(".sauceignore"))
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, origSuites, suites)
@@ -220,6 +225,7 @@ func Test_shardSuites_withoutSplit(t *testing.T) {
 
 func Test_shardSuites_withSplitNoMatch(t *testing.T) {
 	dir := fs.NewDir(t, "testcafe",
+		fs.WithFile(".sauceignore", "", fs.WithMode(0644)),
 		fs.WithDir("tests",
 			fs.WithMode(0755),
 			fs.WithDir("dir1",
@@ -253,7 +259,7 @@ func Test_shardSuites_withSplitNoMatch(t *testing.T) {
 	var suites []Suite
 
 	// Absolute path
-	suites, err = shardSuites(rootDir, origSuites, 1)
+	suites, err = shardSuites(rootDir, origSuites, 1, dir.Join(".sauceignore"))
 
 	assert.Equal(t, err, errors.New("suite 'Demo Suite' patterns have no matching files"))
 	assert.Equal(t, expectedSuites, suites)
@@ -262,7 +268,7 @@ func Test_shardSuites_withSplitNoMatch(t *testing.T) {
 	if err := os.Chdir(rootDir); err != nil {
 		t.Errorf("Unexpected error %s", err)
 	}
-	suites, err = shardSuites(".", origSuites, 1)
+	suites, err = shardSuites(".", origSuites, 1, dir.Join(".sauceignore"))
 
 	assert.Equal(t, err, errors.New("suite 'Demo Suite' patterns have no matching files"))
 	assert.Equal(t, expectedSuites, suites)

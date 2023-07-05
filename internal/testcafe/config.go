@@ -15,6 +15,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/saucereport"
 )
 
@@ -306,13 +307,13 @@ func Validate(p *Project) error {
 	}
 
 	var err error
-	p.Suites, err = shardSuites(p.RootDir, p.Suites, p.Sauce.Concurrency)
+	p.Suites, err = shardSuites(p.RootDir, p.Suites, p.Sauce.Concurrency, p.Sauce.Sauceignore)
 
 	return err
 }
 
 // shardSuites divides suites into shards based on the pattern.
-func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
+func shardSuites(rootDir string, suites []Suite, ccy int, sauceignoreFile string) ([]Suite, error) {
 	var shardedSuites []Suite
 
 	for _, s := range suites {
@@ -333,6 +334,7 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			return []Suite{}, err
 		}
 
+		files = sauceignore.ExcludeSauceIgnorePatterns(files, sauceignoreFile)
 		testFiles := fpath.ExcludeFiles(files, excludedFiles)
 
 		if s.Shard == "spec" {
