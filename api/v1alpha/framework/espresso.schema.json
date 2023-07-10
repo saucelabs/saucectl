@@ -97,6 +97,18 @@
                 "description": "Run all classes except those specified here.",
                 "type": "array"
               },
+              "func": {
+                "description": "Run all test classes that extend InstrumentationTestCase.",
+                "type": "boolean"
+              },
+              "unit": {
+                "description": "Run all test classes that do not extend either InstrumentationTestCase or PerformanceTestCase.",
+                "type": "boolean"
+              },
+              "perf": {
+                "description": "Run all test classes that extend PerformanceTestCase.",
+                "type": "boolean"
+              },
               "package": {
                 "description": "Only run tests in the specified package.",
                 "type": "string"
@@ -120,6 +132,40 @@
               "notAnnotation": {
                 "description": "Run all tests except those with this annotation.",
                 "type": "string"
+              },
+              "filter": {
+                "description": "Only run tests that pass all of the custom filters.",
+                "type": "array",
+                "examples": [
+                  [
+                    "com.android.foo.MyCustomFilter",
+                    "com.android.foo.MyOtherCustomFilter"
+                  ]
+                ]
+              },
+              "runnerBuilder": {
+                "description": "Use custom builders to run tests.",
+                "type": "array",
+                "examples": [
+                  [
+                    "com.android.foo.MyCustomBuilder",
+                    "com.android.foo.MyOtherCustomBuilder"
+                  ]
+                ]
+              },
+              "listener": {
+                "description": "Observe the test run with one or more RunListener.",
+                "type": "array",
+                "examples": [
+                  [
+                    "com.android.foo.MyRunListener",
+                    "com.android.foo.MyOtherRunListener"
+                  ]
+                ]
+              },
+              "newRunListenerMode": {
+                "description": "Use the new list of RunListeners during a test run.",
+                "type": "boolean"
               },
               "numShards": {
                 "description": "When sharding is configured, saucectl automatically creates the sharded jobs for each of the devices defined for the suite based on the number of shards you specify. For example, for a suite testing a single emulator version that specifies 2 shards, saucectl clones the suite and runs one shard index on the first suite, and the other shard index on the identical clone suite.",
