@@ -103,7 +103,7 @@ func TestValidate(t *testing.T) {
 					},
 				},
 			},
-			wantErr: `invalid resourceProfile for suite: Main Suite, resourceProfile should be one of [c1m1 c2m2 c3m3]`,
+			wantErr: `invalid resourceProfile for suite: Main Suite, resourceProfile should be of format cXmX`,
 		},
 	}
 	for _, tt := range tests {
