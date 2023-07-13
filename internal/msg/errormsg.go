@@ -221,3 +221,11 @@ const (
 	// InsightsReportError indicates failure push to insights.
 	InsightsReportError = "unable to report result to insights"
 )
+
+// npm related messages
+const (
+	// NpmEmptyScope indicates a missing scope value
+	NpmEmptyScope = "scope of scoped registry %d is empty"
+	// NpmEmptyURL indicates a missing URL value
+	NpmEmptyURL = "url of scoped registry %d is empty"
+)

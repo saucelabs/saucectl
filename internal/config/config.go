@@ -549,3 +549,21 @@ func ValidateSmartRetry(smartRetry SmartRetry) {
 		log.Warn().Msg("failedClassesOnly has been deprecated. Use FailedOnly instead.")
 	}
 }
+
+func ValidateScopedRegistries(registries []ScopedRegistry) error {
+	var errs []error
+
+	for idx, registry := range registries {
+		if registry.Scope == "" {
+			errs = append(errs, fmt.Errorf(msg.NpmEmptyScope, idx))
+		}
+		if registry.URL == "" {
+			errs = append(errs, fmt.Errorf(msg.NpmEmptyURL, idx))
+		}
+	}
+
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+	return nil
+}

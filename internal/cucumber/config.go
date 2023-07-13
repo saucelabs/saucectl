@@ -173,6 +173,11 @@ func Validate(p *Project) error {
 		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
 	}
 
+	err := config.ValidateScopedRegistries(p.Npm.ScopedRegistries)
+	if err != nil {
+		return err
+	}
+
 	p.Playwright.Version = config.StandardizeVersionFormat(p.Playwright.Version)
 	if p.Playwright.Version == "" {
 		return errors.New(msg.MissingFrameworkVersionConfig)
@@ -206,7 +211,6 @@ func Validate(p *Project) error {
 		log.Warn().Int("retries", p.Sauce.Retries).Msg(msg.InvalidReries)
 	}
 
-	var err error
 	p.Suites, err = shardSuites(p.RootDir, p.Suites, p.Sauce.Concurrency)
 
 	return err

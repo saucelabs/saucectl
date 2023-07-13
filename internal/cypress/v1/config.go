@@ -207,6 +207,11 @@ func (p *Project) Validate() error {
 		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
 	}
 
+	err := config.ValidateScopedRegistries(p.Npm.ScopedRegistries)
+	if err != nil {
+		return err
+	}
+
 	if p.Sauce.LaunchOrder != "" && p.Sauce.LaunchOrder != config.LaunchOrderFailRate {
 		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchOrder, string(config.LaunchOrderFailRate))
 	}
@@ -255,7 +260,6 @@ func (p *Project) Validate() error {
 		log.Warn().Int("retries", p.Sauce.Retries).Msg(msg.InvalidReries)
 	}
 
-	var err error
 	if p.Suites, err = shardSuites(p.RootDir, p.Suites, p.Sauce.Concurrency, p.Sauce.Sauceignore); err != nil {
 		return err
 	}
