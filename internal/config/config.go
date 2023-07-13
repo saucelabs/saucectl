@@ -176,7 +176,7 @@ type TypeDef struct {
 // ScopedRegistry represents the scoped registries for NPM
 type ScopedRegistry struct {
 	Scope     string `yaml:"scope,omitempty" json:"scope,omitempty"`
-	Registry  string `yaml:"registry,omitempty" json:"registry,omitempty"`
+	URL       string `yaml:"url,omitempty" json:"url,omitempty"`
 	AuthToken string `yaml:"authToken,omitempty" json:"authToken,omitempty"`
 }
 

@@ -23,6 +23,32 @@
         "strictSSL": {
           "description": "Whether or not to do SSL key validation when making requests to the registry via https.",
           "type": "boolean"
+        },
+        "scopedRegistries": {
+          "description": "Specify all the scoped registries you want to configure",
+          "type": "array",
+          "minimum": 0,
+          "items": {
+            "type": "object",
+            "properties": {
+              "scope": {
+                "description": "Scope for the registry entry",
+                "type": "string"
+              },
+              "url": {
+                "description": "URL for the registry entry",
+                "type": "string"
+              },
+              "authToken": {
+                "description": "authToken for the registry entry",
+                "type": "string"
+              }
+            },
+            "required": [
+              "scope",
+              "url"
+            ]
+          }
         }
       },
       "additionalProperties": false
