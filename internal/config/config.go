@@ -173,12 +173,20 @@ type TypeDef struct {
 	Kind       string `yaml:"kind,omitempty"`
 }
 
+// ScopedRegistry represents the scoped registries for NPM
+type ScopedRegistry struct {
+	Scope     string `yaml:"scope,omitempty" json:"scope,omitempty"`
+	Registry  string `yaml:"registry,omitempty" json:"registry,omitempty"`
+	AuthToken string `yaml:"authToken,omitempty" json:"authToken,omitempty"`
+}
+
 // Npm represents the npm settings
 type Npm struct {
-	Registry     string            `yaml:"registry,omitempty" json:"registry,omitempty"`
-	Packages     map[string]string `yaml:"packages,omitempty" json:"packages"`
-	Dependencies []string          `yaml:"dependencies,omitempty" json:"dependencies"`
-	StrictSSL    bool              `yaml:"strictSSL,omitempty" json:"strictSSL"`
+	Registry         string            `yaml:"registry,omitempty" json:"registry,omitempty"`
+	ScopedRegistries []ScopedRegistry  `yaml:"scopedRegistries" json:"scopedRegistries,omitempty"`
+	Packages         map[string]string `yaml:"packages,omitempty" json:"packages"`
+	Dependencies     []string          `yaml:"dependencies,omitempty" json:"dependencies"`
+	StrictSSL        bool              `yaml:"strictSSL,omitempty" json:"strictSSL"`
 }
 
 // Defaults represents default suite settings.
