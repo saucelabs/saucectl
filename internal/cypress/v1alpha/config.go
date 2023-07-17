@@ -140,6 +140,7 @@ func (p *Project) SetDefaults() {
 
 	p.Sauce.Tunnel.SetDefaults()
 	p.Sauce.Metadata.SetDefaultBuild()
+	p.Npm.SetDefaults()
 
 	for k := range p.Suites {
 		s := &p.Suites[k]
@@ -273,7 +274,7 @@ func (p *Project) Validate() error {
 		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
 	}
 
-	err := config.ValidateScopedRegistries(p.Npm.ScopedRegistries)
+	err := config.ValidateRegistries(p.Npm.Registries)
 	if err != nil {
 		return err
 	}

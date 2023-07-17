@@ -224,8 +224,8 @@ const (
 
 // npm related messages
 const (
-	// NpmEmptyScope indicates a missing scope value
-	NpmEmptyScope = "scope of scoped registry %d is empty"
-	// NpmEmptyURL indicates a missing URL value
-	NpmEmptyURL = "url of scoped registry %d is empty"
+	// NpmEmptyURLError indicates a missing URL value
+	NpmEmptyURLError = "url of scoped registry %d is empty"
+	// NpmMultipleDefaultRegistry indicates that there is multiple registry without scope
+	NpmMultipleDefaultRegistry = "multiple registries (%d) are without scope"
 )

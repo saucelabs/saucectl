@@ -173,8 +173,8 @@ type TypeDef struct {
 	Kind       string `yaml:"kind,omitempty"`
 }
 
-// ScopedRegistry represents the scoped registries for NPM
-type ScopedRegistry struct {
+// Registry represents a registry for NPM
+type Registry struct {
 	Scope     string `yaml:"scope,omitempty" json:"scope,omitempty"`
 	URL       string `yaml:"url,omitempty" json:"url,omitempty"`
 	AuthToken string `yaml:"authToken,omitempty" json:"authToken,omitempty"`
@@ -182,11 +182,12 @@ type ScopedRegistry struct {
 
 // Npm represents the npm settings
 type Npm struct {
-	Registry         string            `yaml:"registry,omitempty" json:"registry,omitempty"`
-	ScopedRegistries []ScopedRegistry  `yaml:"scopedRegistries" json:"scopedRegistries,omitempty"`
-	Packages         map[string]string `yaml:"packages,omitempty" json:"packages"`
-	Dependencies     []string          `yaml:"dependencies,omitempty" json:"dependencies"`
-	StrictSSL        bool              `yaml:"strictSSL,omitempty" json:"strictSSL"`
+	// Deprecated
+	Registry     string            `yaml:"registry,omitempty" json:"registry,omitempty"`
+	Registries   []Registry        `yaml:"registries" json:"registries,omitempty"`
+	Packages     map[string]string `yaml:"packages,omitempty" json:"packages"`
+	Dependencies []string          `yaml:"dependencies,omitempty" json:"dependencies"`
+	StrictSSL    bool              `yaml:"strictSSL,omitempty" json:"strictSSL"`
 }
 
 // Defaults represents default suite settings.
@@ -388,6 +389,14 @@ func (t *Tunnel) SetDefaults() {
 	}
 }
 
+// SetDefaults updates npm default values
+func (n *Npm) SetDefaults() {
+	if n.Registry != "" {
+		log.Warn().Msg("npm.registry has been deprecated, please use npm.registries instead")
+		n.Registries = append(n.Registries, Registry{URL: n.Registry})
+	}
+}
+
 // GetSuiteArtifactFolder returns a target folder that's based on a combination of suiteName and the configured artifact
 // download folder.
 // The suiteName is sanitized by undergoing character replacements that are safe to be used as a directory name.
@@ -550,18 +559,22 @@ func ValidateSmartRetry(smartRetry SmartRetry) {
 	}
 }
 
-func ValidateScopedRegistries(registries []ScopedRegistry) error {
+func ValidateRegistries(registries []Registry) error {
 	var errs []error
 
-	for idx, registry := range registries {
-		if registry.Scope == "" {
-			errs = append(errs, fmt.Errorf(msg.NpmEmptyScope, idx))
+	noScopeRegistry := 0
+	for idx, rg := range registries {
+		if rg.URL == "" {
+			errs = append(errs, fmt.Errorf(msg.NpmEmptyURLError, idx))
 		}
-		if registry.URL == "" {
-			errs = append(errs, fmt.Errorf(msg.NpmEmptyURL, idx))
+		if rg.Scope == "" {
+			noScopeRegistry++
 		}
 	}
 
+	if noScopeRegistry > 1 {
+		errs = append(errs, fmt.Errorf(msg.NpmMultipleDefaultRegistry, noScopeRegistry))
+	}
 	if len(errs) > 0 {
 		return errors.Join(errs...)
 	}

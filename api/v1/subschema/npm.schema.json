@@ -24,8 +24,8 @@
           "description": "Whether or not to do SSL key validation when making requests to the registry via https.",
           "type": "boolean"
         },
-        "scopedRegistries": {
-          "description": "Specify all the scoped registries you want to configure",
+        "registries": {
+          "description": "Specify all the registries you want to configure",
           "type": "array",
           "minimum": 0,
           "items": {
@@ -45,7 +45,6 @@
               }
             },
             "required": [
-              "scope",
               "url"
             ]
           }
