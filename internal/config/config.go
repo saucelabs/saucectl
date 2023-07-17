@@ -560,12 +560,10 @@ func ValidateSmartRetry(smartRetry SmartRetry) {
 }
 
 func ValidateRegistries(registries []Registry) error {
-	var errs []error
-
 	noScopeRegistry := 0
 	for idx, rg := range registries {
 		if rg.URL == "" {
-			errs = append(errs, fmt.Errorf(msg.NpmEmptyURLError, idx))
+			return fmt.Errorf(msg.NpmEmptyURLError, idx)
 		}
 		if rg.Scope == "" {
 			noScopeRegistry++
@@ -573,10 +571,7 @@ func ValidateRegistries(registries []Registry) error {
 	}
 
 	if noScopeRegistry > 1 {
-		errs = append(errs, fmt.Errorf(msg.NpmTooManyDefaultRegistry, noScopeRegistry))
-	}
-	if len(errs) > 0 {
-		return errors.Join(errs...)
+		return fmt.Errorf(msg.NpmTooManyDefaultRegistry, noScopeRegistry)
 	}
 	return nil
 }

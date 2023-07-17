@@ -1,14 +1,11 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -327,18 +324,24 @@ func TestNpm_SetDefaults(t *testing.T) {
 
 func TestValidateRegistries(t *testing.T) {
 	tests := []struct {
-		name string
-		args []Registry
-		want error
+		name    string
+		args    []Registry
+		wantErr assert.ErrorAssertionFunc
 	}{
 		{
 			name: "passing empty",
 			args: []Registry{},
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				return err == nil
+			},
 		},
 		{
 			name: "passing with registry",
 			args: []Registry{
 				{URL: "http://npmjs.org"},
+			},
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				return err == nil
 			},
 		},
 		{
@@ -347,6 +350,9 @@ func TestValidateRegistries(t *testing.T) {
 				{URL: "http://npmjs.org"},
 				{URL: "http://npmjs-2.org", Scope: "@scoped"},
 			},
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				return err == nil
+			},
 		},
 		{
 			name: "failing with multiple default",
@@ -354,21 +360,14 @@ func TestValidateRegistries(t *testing.T) {
 				{URL: "http://npmjs.org"},
 				{URL: "http://npmjs-2.org"},
 			},
-			want: errors.New("too many registries (2) are without scope"),
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				return err != nil && err.Error() == "too many registries (2) are without scope"
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			errs := ValidateRegistries(tt.args)
-			if errs == nil && tt.want == nil {
-				return
-			}
-			if (errs != nil && tt.want == nil) || (errs == nil && tt.want != nil) {
-				t.Errorf("ValidateRegistries(%v): want: %s got: %s", tt.args, tt.want, errs)
-			}
-			if !cmp.Equal(tt.want.Error(), errs.Error(), cmpopts.EquateErrors()) {
-				t.Errorf("ValidateRegistries(%v): want: %s got: %s", tt.args, tt.want, errs)
-			}
+			tt.wantErr(t, ValidateRegistries(tt.args), fmt.Sprintf("ValidateRegistries(%v)", tt.args))
 		})
 	}
 }
