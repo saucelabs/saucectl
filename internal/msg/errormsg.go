@@ -226,6 +226,6 @@ const (
 const (
 	// NpmEmptyURLError indicates a missing URL value
 	NpmEmptyURLError = "url of scoped registry %d is empty"
-	// NpmMultipleDefaultRegistry indicates that there is multiple registry without scope
-	NpmMultipleDefaultRegistry = "multiple registries (%d) are without scope"
+	// NpmTooManyDefaultRegistry indicates that there is multiple registry without scope
+	NpmTooManyDefaultRegistry = "too many registries (%d) are without scope"
 )

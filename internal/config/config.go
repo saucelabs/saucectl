@@ -573,7 +573,7 @@ func ValidateRegistries(registries []Registry) error {
 	}
 
 	if noScopeRegistry > 1 {
-		errs = append(errs, fmt.Errorf(msg.NpmMultipleDefaultRegistry, noScopeRegistry))
+		errs = append(errs, fmt.Errorf(msg.NpmTooManyDefaultRegistry, noScopeRegistry))
 	}
 	if len(errs) > 0 {
 		return errors.Join(errs...)

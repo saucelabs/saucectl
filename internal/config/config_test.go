@@ -1,11 +1,14 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -265,6 +268,107 @@ func TestWhen_IsNow(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equalf(t, tt.want, tt.w.IsNow(tt.args.passed), "IsNow(%v)", tt.args.passed)
+		})
+	}
+}
+
+func TestNpm_SetDefaults(t *testing.T) {
+	type fields struct {
+		Registry   string
+		Registries []Registry
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []Registry
+	}{
+		{
+			name: "Only one registry",
+			fields: fields{
+				Registries: []Registry{{URL: "http://npmjs.org"}},
+			},
+			want: []Registry{
+				{URL: "http://npmjs.org"},
+			},
+		},
+		{
+			name: "Only legacy registry",
+			fields: fields{
+				Registry: "http://npmjs.org",
+			},
+			want: []Registry{
+				{URL: "http://npmjs.org"},
+			},
+		},
+		{
+			name: "Legacy registry + Newer",
+			fields: fields{
+				Registry: "http://npmjs.org",
+				Registries: []Registry{
+					{URL: "http://npmjs-2.org"},
+				},
+			},
+			want: []Registry{
+				{URL: "http://npmjs-2.org"},
+				{URL: "http://npmjs.org"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := &Npm{
+				Registry:   tt.fields.Registry,
+				Registries: tt.fields.Registries,
+			}
+			n.SetDefaults()
+		})
+	}
+}
+
+func TestValidateRegistries(t *testing.T) {
+	tests := []struct {
+		name string
+		args []Registry
+		want error
+	}{
+		{
+			name: "passing empty",
+			args: []Registry{},
+		},
+		{
+			name: "passing with registry",
+			args: []Registry{
+				{URL: "http://npmjs.org"},
+			},
+		},
+		{
+			name: "passing with registry + scoped",
+			args: []Registry{
+				{URL: "http://npmjs.org"},
+				{URL: "http://npmjs-2.org", Scope: "@scoped"},
+			},
+		},
+		{
+			name: "failing with multiple default",
+			args: []Registry{
+				{URL: "http://npmjs.org"},
+				{URL: "http://npmjs-2.org"},
+			},
+			want: errors.New("too many registries (2) are without scope"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			errs := ValidateRegistries(tt.args)
+			if errs == nil && tt.want == nil {
+				return
+			}
+			if (errs != nil && tt.want == nil) || (errs == nil && tt.want != nil) {
+				t.Errorf("ValidateRegistries(%v): want: %s got: %s", tt.args, tt.want, errs)
+			}
+			if !cmp.Equal(tt.want.Error(), errs.Error(), cmpopts.EquateErrors()) {
+				t.Errorf("ValidateRegistries(%v): want: %s got: %s", tt.args, tt.want, errs)
+			}
 		})
 	}
 }
