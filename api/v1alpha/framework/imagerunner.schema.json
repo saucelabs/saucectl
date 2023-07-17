@@ -109,8 +109,8 @@
         },
         "resourceProfile": {
           "description": "Sets the CPU/memory limits of the container. Format is <CPU><level><mem><level>. Default to c1m1.",
-          "enum": [
-            "",
+          "pattern": "^c(\\d+)m(\\d+)$",
+          "examples": [
             "c1m1",
             "c2m2",
             "c3m3"
