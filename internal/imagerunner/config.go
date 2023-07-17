@@ -3,6 +3,7 @@ package imagerunner
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -20,11 +21,8 @@ var (
 		"other",
 	}
 
-	ValidResourceProfiles = []string{
-		"c1m1",
-		"c2m2",
-		"c3m3",
-	}
+	ValidResourceProfilesFormat    = "cXmX"
+	ValidResourceProfilesValidator = regexp.MustCompile("^c([0-9]+)m([0-9]+)$")
 )
 
 type Project struct {
@@ -148,8 +146,8 @@ func Validate(p Project) error {
 			return fmt.Errorf(msg.MissingImageRunnerImage, suite.Name)
 		}
 
-		if suite.ResourceProfile != "" && !sliceContainsString(ValidResourceProfiles, suite.ResourceProfile) {
-			return fmt.Errorf(msg.InvalidResourceProfile, suite.Name, ValidResourceProfiles)
+		if suite.ResourceProfile != "" && !ValidResourceProfilesValidator.MatchString(suite.ResourceProfile) {
+			return fmt.Errorf(msg.InvalidResourceProfile, suite.Name, ValidResourceProfilesFormat)
 		}
 	}
 	return nil
