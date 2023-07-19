@@ -103,8 +103,12 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	inProgress := expected
 	passed := true
 
-	junitRequired := report.IsArtifactRequired(r.Reporters, report.JUnitArtifact)
-	jsonResultRequired := report.IsArtifactRequired(r.Reporters, report.JSONArtifact)
+	var junitRequired bool
+	var jsonResultRequired bool
+	if !r.Async {
+		junitRequired = report.IsArtifactRequired(r.Reporters, report.JUnitArtifact)
+		jsonResultRequired = report.IsArtifactRequired(r.Reporters, report.JSONArtifact)
+	}
 
 	done := make(chan interface{})
 	go func(r *CloudRunner) {
