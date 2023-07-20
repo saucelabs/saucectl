@@ -179,7 +179,7 @@ func runPlaywright(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
 			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
-				"playwright", "sauce"),
+				"playwright", "sauce", gFlags.async),
 			Async:                  gFlags.async,
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.NewSearchStrategy(p.Playwright.Version, p.RootDir),
