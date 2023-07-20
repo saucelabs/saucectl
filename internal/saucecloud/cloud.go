@@ -170,8 +170,9 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 					})
 				}
 			}
+			files := r.downloadArtifacts(res.name, res.job, artifactCfg.When)
 			if report.IsArtifactRequired(r.Reporters, report.JSONArtifact) {
-				for _, f := range r.downloadArtifacts(res.name, res.job, artifactCfg.When) {
+				for _, f := range files {
 					artifacts = append(artifacts, report.Artifact{
 						FilePath: f,
 					})
