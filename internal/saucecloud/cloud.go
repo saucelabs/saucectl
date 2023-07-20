@@ -103,6 +103,9 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	inProgress := expected
 	passed := true
 
+	junitRequired := report.IsArtifactRequired(r.Reporters, report.JUnitArtifact)
+	jsonResultRequired := report.IsArtifactRequired(r.Reporters, report.JSONArtifact)
+
 	done := make(chan interface{})
 	go func(r *CloudRunner) {
 		t := time.NewTicker(10 * time.Second)
@@ -145,7 +148,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			var artifacts []report.Artifact
 			var parentJUnits []report.Artifact
 
-			if report.IsArtifactRequired(r.Reporters, report.JUnitArtifact) {
+			if junitRequired {
 				jb, err := r.JobService.GetJobAssetFileContent(
 					context.Background(),
 					res.job.ID,
@@ -167,14 +170,6 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 						AssetType: report.JUnitArtifact,
 						Body:      jb,
 						Error:     err,
-					})
-				}
-			}
-			files := r.downloadArtifacts(res.name, res.job, artifactCfg.When)
-			if report.IsArtifactRequired(r.Reporters, report.JSONArtifact) {
-				for _, f := range files {
-					artifacts = append(artifacts, report.Artifact{
-						FilePath: f,
 					})
 				}
 			}
@@ -201,11 +196,19 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				ParentJUnits: parentJUnits,
 			}
 
+			files := r.downloadArtifacts(res.name, res.job, artifactCfg.When)
+			if jsonResultRequired {
+				for _, f := range files {
+					artifacts = append(artifacts, report.Artifact{
+						FilePath: f,
+					})
+				}
+			}
+
 			for _, rep := range r.Reporters {
 				rep.Add(tr)
 			}
 		}
-
 		r.logSuite(res)
 
 		// Skip reporting to Insights for async job
