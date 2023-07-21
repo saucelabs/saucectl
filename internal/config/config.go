@@ -13,14 +13,15 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/fatih/color"
 	"github.com/mitchellh/mapstructure"
+	"github.com/rs/zerolog/log"
 	"github.com/santhosh-tekuri/jsonschema/v5"
+	"gopkg.in/yaml.v2"
+
 	// httploader needs to be loaded to be able to fetch http-based schemas.
 	_ "github.com/santhosh-tekuri/jsonschema/v5/httploader"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/viper"
-	"gopkg.in/yaml.v2"
 )
 
 // Metadata describes job metadata
