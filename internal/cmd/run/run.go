@@ -282,7 +282,7 @@ func checkForUpdates() {
 }
 
 func createReporters(c config.Reporters, ntfs config.Notifications, metadata config.Metadata,
-	svc slack.Service, buildReader build.Reader, framework, env string) []report.Reporter {
+	svc slack.Service, buildReader build.Reader, framework, env string, async bool) []report.Reporter {
 	buildReporter := buildtable.New(buildReader)
 	githubReporter := github.NewJobSummaryReporter()
 
@@ -292,13 +292,13 @@ func createReporters(c config.Reporters, ntfs config.Notifications, metadata con
 		&githubReporter,
 	}
 
-	if c.JUnit.Enabled {
+	if !async && c.JUnit.Enabled {
 		reps = append(reps, &junit.Reporter{
 			Filename: c.JUnit.Filename,
 		})
 	}
 
-	if c.JSON.Enabled {
+	if !async && c.JSON.Enabled {
 		reps = append(reps, &json.Reporter{
 			WebhookURL: c.JSON.WebhookURL,
 			Filename:   c.JSON.Filename,

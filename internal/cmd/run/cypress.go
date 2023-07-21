@@ -164,7 +164,7 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 			Region:          regio,
 			ShowConsoleLog:  p.IsShowConsoleLog(),
 			Reporters: createReporters(p.GetReporter(), p.GetNotifications(), p.GetSauceCfg().Metadata, &testcompClient, &restoClient,
-				"cypress", "sauce"),
+				"cypress", "sauce", gFlags.async),
 			Async:                  gFlags.async,
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.NewSearchStrategy(p.GetVersion(), p.GetRootDir()),

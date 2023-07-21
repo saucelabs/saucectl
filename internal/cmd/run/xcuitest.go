@@ -166,7 +166,7 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
 			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
-				"xcuitest", "sauce"),
+				"xcuitest", "sauce", gFlags.async),
 			Framework: framework.Framework{Name: xcuitest.Kind},
 			Async:     gFlags.async,
 			FailFast:  gFlags.failFast,
