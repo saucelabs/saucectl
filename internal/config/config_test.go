@@ -271,8 +271,10 @@ func TestWhen_IsNow(t *testing.T) {
 
 func TestNpm_SetDefaults(t *testing.T) {
 	type fields struct {
-		Registry   string
-		Registries []Registry
+		Registry         string
+		Registries       []Registry
+		Framework        string
+		FrameworkVersion string
 	}
 	tests := []struct {
 		name   string
@@ -282,7 +284,9 @@ func TestNpm_SetDefaults(t *testing.T) {
 		{
 			name: "Only one registry",
 			fields: fields{
-				Registries: []Registry{{URL: "http://npmjs.org"}},
+				Registries:       []Registry{{URL: "http://npmjs.org"}},
+				Framework:        "dummy",
+				FrameworkVersion: "",
 			},
 			want: []Registry{
 				{URL: "http://npmjs.org"},
@@ -291,7 +295,9 @@ func TestNpm_SetDefaults(t *testing.T) {
 		{
 			name: "Only legacy registry",
 			fields: fields{
-				Registry: "http://npmjs.org",
+				Registry:         "http://npmjs.org",
+				Framework:        "dummy",
+				FrameworkVersion: "",
 			},
 			want: []Registry{
 				{URL: "http://npmjs.org"},
@@ -304,11 +310,23 @@ func TestNpm_SetDefaults(t *testing.T) {
 				Registries: []Registry{
 					{URL: "http://npmjs-2.org"},
 				},
+				Framework:        "dummy",
+				FrameworkVersion: "",
 			},
 			want: []Registry{
 				{URL: "http://npmjs-2.org"},
 				{URL: "http://npmjs.org"},
 			},
+		},
+		{
+			name: "Do not migrate older versions",
+			fields: fields{
+				Registry:         "http://npmjs.org",
+				Registries:       []Registry{},
+				Framework:        "cypress",
+				FrameworkVersion: "12.14.0",
+			},
+			want: []Registry{},
 		},
 	}
 	for _, tt := range tests {
@@ -317,7 +335,7 @@ func TestNpm_SetDefaults(t *testing.T) {
 				Registry:   tt.fields.Registry,
 				Registries: tt.fields.Registries,
 			}
-			n.SetDefaults()
+			n.SetDefaults(tt.fields.Framework, tt.fields.FrameworkVersion)
 		})
 	}
 }

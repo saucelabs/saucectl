@@ -143,7 +143,7 @@ func SetDefaults(p *Project) {
 
 	p.Sauce.Tunnel.SetDefaults()
 	p.Sauce.Metadata.SetDefaultBuild()
-	p.Npm.SetDefaults()
+	p.Npm.SetDefaults(p.Kind, p.Playwright.Version)
 
 	for k := range p.Suites {
 		s := &p.Suites[k]

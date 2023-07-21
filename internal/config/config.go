@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/fatih/color"
 	"github.com/mitchellh/mapstructure"
 	"github.com/santhosh-tekuri/jsonschema/v5"
-
 	// httploader needs to be loaded to be able to fetch http-based schemas.
 	_ "github.com/santhosh-tekuri/jsonschema/v5/httploader"
 
@@ -389,9 +389,29 @@ func (t *Tunnel) SetDefaults() {
 	}
 }
 
+func npmHasOnlyRegistrySupport(framework, version string) bool {
+	maxVersions := map[string]string{
+		"cypress":               "12.14.0",
+		"playwright-cucumberjs": "1.35.1",
+		"playwright":            "1.35.1",
+		"testcafe":              "2.6.2",
+	}
+
+	v, ok := maxVersions[framework]
+	if !ok {
+		return false
+	}
+	maxVersion := semver.MustParse(v)
+	curVersion, err := semver.NewVersion(version)
+	if err != nil {
+		return false
+	}
+	return curVersion.Equal(maxVersion) || curVersion.LessThan(maxVersion)
+}
+
 // SetDefaults updates npm default values
-func (n *Npm) SetDefaults() {
-	if n.Registry != "" {
+func (n *Npm) SetDefaults(framework, version string) {
+	if n.Registry != "" && !npmHasOnlyRegistrySupport(framework, version) {
 		log.Warn().Msg("npm.registry has been deprecated, please use npm.registries instead")
 		n.Registries = append(n.Registries, Registry{URL: n.Registry})
 	}
