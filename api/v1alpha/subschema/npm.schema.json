@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft-07/schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "saucectl npm specific schema",
   "description": "Subschema for npm specific settings",
   "type": "object",
@@ -18,7 +18,8 @@
         },
         "registry": {
           "description": "Override the default and official NPM registry URL with a custom one.",
-          "type": "string"
+          "type": "string",
+          "deprecated": true
         },
         "strictSSL": {
           "description": "Whether or not to do SSL key validation when making requests to the registry via https.",
