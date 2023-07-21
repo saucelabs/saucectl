@@ -571,7 +571,7 @@ func ValidateRegistries(registries []Registry) error {
 	}
 
 	if noScopeRegistry > 1 {
-		return fmt.Errorf(msg.NpmTooManyDefaultRegistry, noScopeRegistry)
+		return fmt.Errorf(msg.NpmTooManyDefaultRegistry)
 	}
 	return nil
 }
