@@ -182,7 +182,7 @@ type Registry struct {
 
 // Npm represents the npm settings
 type Npm struct {
-	// Deprecated
+	// Deprecated. Use Registries instead.
 	Registry     string            `yaml:"registry,omitempty" json:"registry,omitempty"`
 	Registries   []Registry        `yaml:"registries" json:"registries,omitempty"`
 	Packages     map[string]string `yaml:"packages,omitempty" json:"packages"`
