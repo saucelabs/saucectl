@@ -55,7 +55,7 @@ func (r *Reporter) Render() {
 	}
 }
 
-// Remove or delete empty values from the data to clean it up.
+// Remove empty values from the data to clean it up.
 func (r *Reporter) cleanup() {
 	for _, r := range r.Results {
 		var artifacts []report.Artifact
