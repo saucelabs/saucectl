@@ -3,6 +3,7 @@ package json
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -57,15 +58,17 @@ func (r *Reporter) Render() {
 
 // Remove empty values from the data to clean it up.
 func (r *Reporter) cleanup() {
-	for _, r := range r.Results {
+	for i, result := range r.Results {
 		var artifacts []report.Artifact
-		for _, a := range r.Artifacts {
+		for _, a := range result.Artifacts {
+			fmt.Println("a: ", a.FilePath == "")
 			if a.FilePath == "" {
 				continue
 			}
 			artifacts = append(artifacts, a)
 		}
-		r.Artifacts = artifacts
+		fmt.Println("artifacts length: ", len(artifacts))
+		r.Results[i].Artifacts = artifacts
 	}
 }
 
