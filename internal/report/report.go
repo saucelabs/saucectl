@@ -18,7 +18,7 @@ type TestResult struct {
 	Attempts      int           `json:"attempts"`
 	RDC           bool          `json:"-"`
 	TimedOut      bool          `json:"-"`
-	PassThreshold bool          `json:"passThreshold"`
+	PassThreshold bool          `json:"-"`
 	ParentJUnits  []Artifact    `json:"-"`
 }
 

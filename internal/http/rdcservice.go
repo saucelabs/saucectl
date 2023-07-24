@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -393,7 +394,7 @@ func (c *RDCService) DownloadArtifact(jobID, suiteName string, realDevice bool) 
 			log.Err(err).Msg("Unable to download artifacts")
 			return artifacts
 		}
-		artifacts = append(artifacts, targetFile)
+		artifacts = append(artifacts, path.Join(targetDir, targetFile))
 	}
 
 	return artifacts
