@@ -503,7 +503,7 @@ func (r *CloudRunner) GetJUnitArtifacts(res result) (junits []report.Artifact, p
 }
 
 // GetJSONArtifacts creates a list of report artifacts from the provided artifacts.
-func (r *CloudRunner) GetJSONArtifacts(files []string) (artifacts []report.Artifact) {
+func (r *CloudRunner) ToJSONArtifacts(files []string) (artifacts []report.Artifact) {
 	if !report.IsArtifactRequired(r.Reporters, report.JSONArtifact) {
 		return
 	}
