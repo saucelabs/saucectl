@@ -512,20 +512,6 @@ func (r *CloudRunner) GetJUnitArtifacts(res result) (junitArifact report.Artifac
 	return
 }
 
-// GetJSONArtifacts creates a list of report artifacts from the provided artifacts.
-func (r *CloudRunner) ToJSONArtifacts(files []string) (artifacts []report.Artifact) {
-	if !report.IsArtifactRequired(r.Reporters, report.JSONArtifact) {
-		return
-	}
-	for _, f := range files {
-		artifacts = append(artifacts, report.Artifact{
-			FilePath:  f,
-			AssetType: report.JSONArtifact,
-		})
-	}
-	return
-}
-
 type uploadType string
 
 var (
