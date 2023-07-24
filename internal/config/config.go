@@ -390,29 +390,29 @@ func (t *Tunnel) SetDefaults() {
 	}
 }
 
-func npmHasOnlyRegistrySupport(framework, version string) bool {
-	maxVersions := map[string]string{
+func hasMultiRegistrySupport(framework, version string) bool {
+	minVersions := map[string]string{
 		"cypress":               "12.14.0",
 		"playwright-cucumberjs": "1.35.1",
 		"playwright":            "1.35.1",
 		"testcafe":              "2.6.2",
 	}
 
-	v, ok := maxVersions[framework]
+	v, ok := minVersions[framework]
 	if !ok {
-		return false
+		return true
 	}
 	maxVersion := semver.MustParse(v)
 	curVersion, err := semver.NewVersion(version)
 	if err != nil {
-		return false
+		return true
 	}
-	return curVersion.Equal(maxVersion) || curVersion.LessThan(maxVersion)
+	return curVersion.GreaterThan(maxVersion)
 }
 
 // SetDefaults updates npm default values
 func (n *Npm) SetDefaults(framework, version string) {
-	if n.Registry != "" && !npmHasOnlyRegistrySupport(framework, version) {
+	if n.Registry != "" && hasMultiRegistrySupport(framework, version) {
 		log.Warn().Msg("npm.registry has been deprecated, please use npm.registries instead")
 		n.Registries = append(n.Registries, Registry{URL: n.Registry})
 	}
