@@ -142,9 +142,19 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				browser = fmt.Sprintf("%s %s", browser, res.job.BrowserShortVersion)
 			}
 
-			artifacts, parentJUnitArtifacts := r.GetJUnitArtifacts(res)
+			var artifacts []report.Artifact
+			junitArifact, parentJUnits := r.GetJUnitArtifacts(res)
+			artifacts = append(artifacts, junitArifact)
+
 			files := r.downloadArtifacts(res.name, res.job, artifactCfg.When)
-			artifacts = append(artifacts, r.GetJSONArtifacts(files)...)
+			if report.IsArtifactRequired(r.Reporters, report.JSONArtifact) {
+				for _, f := range files {
+					artifacts = append(artifacts, report.Artifact{
+						FilePath:  f,
+						AssetType: report.JSONArtifact,
+					})
+				}
+			}
 
 			var url string
 			if res.job.ID != "" {
@@ -165,7 +175,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				Attempts:     res.attempts,
 				RDC:          res.job.IsRDC,
 				TimedOut:     res.job.TimedOut,
-				ParentJUnits: parentJUnitArtifacts,
+				ParentJUnits: parentJUnits,
 			}
 			for _, rep := range r.Reporters {
 				rep.Add(tr)
@@ -470,7 +480,7 @@ func (r *CloudRunner) remoteArchiveFiles(project interface{}, files []string, sa
 }
 
 // GetJUnitArtifacts retrieves the JUnit report and parent JUnit reports for the current job.
-func (r *CloudRunner) GetJUnitArtifacts(res result) (junits []report.Artifact, parentJUnits []report.Artifact) {
+func (r *CloudRunner) GetJUnitArtifacts(res result) (junitArifact report.Artifact, parentJUnits []report.Artifact) {
 	if !report.IsArtifactRequired(r.Reporters, report.JUnitArtifact) {
 		return
 	}
@@ -480,11 +490,11 @@ func (r *CloudRunner) GetJUnitArtifacts(res result) (junits []report.Artifact, p
 		res.job.ID,
 		junit.JunitFileName,
 		res.job.IsRDC)
-	junits = append(junits, report.Artifact{
+	junitArifact = report.Artifact{
 		AssetType: report.JUnitArtifact,
 		Body:      content,
 		Error:     err,
-	})
+	}
 
 	for _, id := range res.previous {
 		jb, err := r.JobService.GetJobAssetFileContent(
