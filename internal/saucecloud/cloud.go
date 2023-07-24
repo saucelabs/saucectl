@@ -143,8 +143,8 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			}
 
 			var artifacts []report.Artifact
-			junitArifact, parentJUnits := r.GetJUnitArtifacts(res)
-			artifacts = append(artifacts, junitArifact)
+			junitArtifact, parentJUnits := r.GetJUnitArtifacts(res)
+			artifacts = append(artifacts, junitArtifact)
 
 			files := r.downloadArtifacts(res.name, res.job, artifactCfg.When)
 			if report.IsArtifactRequired(r.Reporters, report.JSONArtifact) {
