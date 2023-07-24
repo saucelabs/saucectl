@@ -25,6 +25,7 @@ func (r *Reporter) Add(t report.TestResult) {
 
 // Render sends the result to specified webhook WebhookURL and log the result to the specified json file
 func (r *Reporter) Render() {
+	r.cleanup()
 	body, err := json.Marshal(r.Results)
 	if err != nil {
 		log.Error().Msgf("failed to generate test result (%v)", err)
@@ -51,6 +52,20 @@ func (r *Reporter) Render() {
 		if err != nil {
 			log.Error().Err(err).Msgf("failed to write test result to %s", r.Filename)
 		}
+	}
+}
+
+// Remove or delete empty values from the data to clean it up.
+func (r *Reporter) cleanup() {
+	for _, r := range r.Results {
+		var artifacts []report.Artifact
+		for _, a := range r.Artifacts {
+			if a.FilePath == "" {
+				continue
+			}
+			artifacts = append(artifacts, a)
+		}
+		r.Artifacts = artifacts
 	}
 }
 
