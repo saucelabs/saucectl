@@ -497,7 +497,7 @@ func (r *CloudRunner) GetJUnitArtifacts(res result) (junitArifact report.Artifac
 	}
 
 	for _, id := range res.previous {
-		jb, err := r.JobService.GetJobAssetFileContent(
+		content, err := r.JobService.GetJobAssetFileContent(
 			context.Background(),
 			id,
 			junit.JunitFileName,
@@ -505,7 +505,7 @@ func (r *CloudRunner) GetJUnitArtifacts(res result) (junitArifact report.Artifac
 		)
 		parentJUnits = append(parentJUnits, report.Artifact{
 			AssetType: report.JUnitArtifact,
-			Body:      jb,
+			Body:      content,
 			Error:     err,
 		})
 	}
