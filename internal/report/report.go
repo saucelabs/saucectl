@@ -9,11 +9,11 @@ type TestResult struct {
 	StartTime     time.Time     `json:"startTime"`
 	EndTime       time.Time     `json:"endTime"`
 	Status        string        `json:"status"`
-	Browser       string        `json:"browser"`
+	Browser       string        `json:"browser,omitempty"`
 	Platform      string        `json:"platform"`
-	DeviceName    string        `json:"deviceName"`
+	DeviceName    string        `json:"deviceName,omitempty"`
 	URL           string        `json:"url"`
-	Artifacts     []Artifact    `json:"artifacts"`
+	Artifacts     []Artifact    `json:"artifacts,omitempty"`
 	Origin        string        `json:"origin"`
 	Attempts      int           `json:"attempts"`
 	RDC           bool          `json:"-"`
