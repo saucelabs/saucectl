@@ -26,7 +26,7 @@ type TestResult struct {
 type ArtifactType int
 
 const (
-	// Unknown represents an asset with an unknown type.
+	// Unknown represents an asset with an unknown purpose that isn't further defined.
 	Unknown ArtifactType = iota
 	// JUnitArtifact represents the junit artifact type (https://llg.cubic.org/docs/junit/).
 	JUnitArtifact
