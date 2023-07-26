@@ -30,8 +30,6 @@ const (
 	Unknown ArtifactType = iota
 	// JUnitArtifact represents the junit artifact type (https://llg.cubic.org/docs/junit/).
 	JUnitArtifact
-	// JSONArtifact represents the json artifact type
-	JSONArtifact
 )
 
 // Artifact represents an artifact (aka asset) that was generated as part of a job.

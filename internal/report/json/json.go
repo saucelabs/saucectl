@@ -77,5 +77,5 @@ func (r *Reporter) Reset() {
 
 // ArtifactRequirements returns a list of artifact types this reporter requires to create a proper report.
 func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
-	return []report.ArtifactType{report.JSONArtifact}
+	return nil
 }
