@@ -147,12 +147,11 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			artifacts = append(artifacts, junitArtifact)
 
 			files := r.downloadArtifacts(res.name, res.job, artifactCfg.When)
-			if report.IsArtifactRequired(r.Reporters, report.JSONArtifact) {
-				for _, f := range files {
-					artifacts = append(artifacts, report.Artifact{
-						FilePath: f,
-					})
-				}
+		              for _, f := range files {
+			              artifacts = append(artifacts, report.Artifact{
+				              FilePath: f,
+			              })
+		              }
 			}
 
 			var url string
