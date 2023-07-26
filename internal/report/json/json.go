@@ -55,9 +55,8 @@ func (r *Reporter) Render() {
 	}
 }
 
-// Artifacts should exclusively contain downloaded artifacts.
-// Therefore, we need to sanitize and remove any intermediate data entries
-// prior to generating the final JSON report.
+// cleanup removes any information that isn't relevant in the rendered report. Particularly when it comes to
+// artifacts, this reporter is only interested in those that have been persisted to the file system.
 func (r *Reporter) cleanup() {
 	for i, result := range r.Results {
 		var artifacts []report.Artifact
