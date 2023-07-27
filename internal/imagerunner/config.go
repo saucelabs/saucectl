@@ -50,6 +50,7 @@ type Suite struct {
 	Timeout         time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
 	Workload        string            `yaml:"workload,omitempty" json:"workload,omitempty"`
 	ResourceProfile string            `yaml:"resourceProfile,omitempty" json:"resourceProfile,omitempty"`
+	Metadata        map[string]string `yaml:"metadata,omitempty" json:"metadata,omitempty"`
 }
 
 type ImagePullAuth struct {
@@ -98,27 +99,35 @@ func SetDefaults(p *Project) {
 	p.Sauce.Tunnel.SetDefaults()
 	p.Sauce.Metadata.SetDefaultBuild()
 
-	for i, suite := range p.Suites {
+	for i := range p.Suites {
+		suite := &p.Suites[i]
 		if suite.Timeout <= 0 {
-			p.Suites[i].Timeout = p.Defaults.Timeout
+			suite.Timeout = p.Defaults.Timeout
 		}
 
 		if suite.Workload == "" {
-			p.Suites[i].Workload = p.Defaults.Workload
+			suite.Workload = p.Defaults.Workload
 		}
 
 		if suite.ResourceProfile == "" {
-			p.Suites[i].ResourceProfile = "c1m1"
+			suite.ResourceProfile = "c1m1"
 		}
 
-		if p.Suites[i].Env == nil {
-			p.Suites[i].Env = map[string]string{}
+		if suite.Env == nil {
+			suite.Env = make(map[string]string)
 		}
+		if suite.Metadata == nil {
+			suite.Metadata = make(map[string]string)
+		}
+
+		suite.Metadata["name"] = suite.Name
+		suite.Metadata["resourceProfile"] = suite.ResourceProfile
+
 		for k, v := range p.Defaults.Env {
-			p.Suites[i].Env[k] = v
+			suite.Env[k] = v
 		}
 		for k, v := range p.Env {
-			p.Suites[i].Env[k] = v
+			suite.Env[k] = v
 		}
 	}
 }
