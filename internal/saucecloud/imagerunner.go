@@ -161,9 +161,6 @@ func (r *ImgRunner) runSuites(suites chan imagerunner.Suite, results chan<- exec
 
 func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error) {
 	var run imagerunner.Runner
-	metadata := make(map[string]string)
-	metadata["name"] = suite.Name
-	metadata["resourceProfile"] = suite.ResourceProfile
 
 	files, err := mapFiles(suite.Files)
 	if err != nil {
@@ -197,7 +194,7 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 		Env:          mapEnv(suite.Env),
 		Files:        files,
 		Artifacts:    suite.Artifacts,
-		Metadata:     metadata,
+		Metadata:     suite.Metadata,
 		WorkloadType: suite.Workload,
 		Tunnel:       r.getTunnel(),
 	})

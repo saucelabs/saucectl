@@ -2635,6 +2635,10 @@
                   "c2m2",
                   "c3m3"
                 ]
+              },
+              "metadata": {
+                "description": "Supply additional metadata to your runner.",
+                "type": "object"
               }
             },
             "required": [
