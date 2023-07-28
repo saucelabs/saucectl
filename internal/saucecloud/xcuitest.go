@@ -31,36 +31,70 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	err := archiveAppsToIpaIfRequired(&r.Project)
-	if err != nil {
-		return exitCode, err
-	}
+	// err := archiveAppsToIpaIfRequired(&r.Project)
+	// if err != nil {
+	// 	return exitCode, err
+	// }
 
-	r.Project.Xcuitest.App, err = r.uploadProject(r.Project.Xcuitest.App, r.Project.Xcuitest.AppDescription, appUpload, r.Project.DryRun)
-	if err != nil {
-		return exitCode, err
-	}
+	// r.Project.Xcuitest.App, err = r.uploadProject(r.Project.Xcuitest.App, r.Project.Xcuitest.AppDescription, appUpload, r.Project.DryRun)
+	// if err != nil {
+	// 	return exitCode, err
+	// }
 
-	r.Project.Xcuitest.OtherApps, err = r.uploadProjects(r.Project.Xcuitest.OtherApps, otherAppsUpload, r.Project.DryRun)
-	if err != nil {
-		return exitCode, err
-	}
+	// r.Project.Xcuitest.OtherApps, err = r.uploadProjects(r.Project.Xcuitest.OtherApps, otherAppsUpload, r.Project.DryRun)
+	// if err != nil {
+	// 	return exitCode, err
+	// }
 
 	cache := map[string]string{}
 	for i, s := range r.Project.Suites {
-		if val, ok := cache[s.TestApp]; ok {
-			r.Project.Suites[i].TestApp = val
-			continue
+		var val string
+		var ok bool
+		var err error
+		val, ok = cache[s.TestApp]
+		if !ok {
+			val, err = r.uploadProject(s.TestApp, s.TestAppDescription, testAppUpload, r.Project.DryRun)
+			if err != nil {
+				return exitCode, err
+			}
+			cache[s.TestApp] = val
 		}
+		r.Project.Suites[i].TestApp = val
 
-		testAppURL, err := r.uploadProject(s.TestApp, s.TestAppDescription, testAppUpload, r.Project.DryRun)
-		if err != nil {
-			return exitCode, err
+		val, ok = cache[s.App]
+		if !ok {
+			val, err = r.uploadProject(s.App, s.AppDescription, appUpload, r.Project.DryRun)
+			if err != nil {
+				return exitCode, err
+			}
+			cache[s.App] = val
 		}
-		r.Project.Suites[i].TestApp = testAppURL
-		cache[s.TestApp] = testAppURL
+		r.Project.Suites[i].App = val
+
+		// for _, o := range s.OtherApps {
+		// 	val, ok = cache[o]
+		// 	if !ok {
+		// 		val, err = r.uploadProject(o, s.AppDescription, appUpload, r.Project.DryRun)
+		// 		if err != nil {
+		// 			return exitCode, err
+		// 		}
+		// 		cache[s.App] = val
+		// 	}
+		// }
+		// 	if val, ok := cache[s.TestApp]; ok {
+		// 		r.Project.Suites[i].TestApp = val
+		// 		continue
+		// 	}
+
+		// 	testAppURL, err := r.uploadProject(s.TestApp, s.TestAppDescription, testAppUpload, r.Project.DryRun)
+		// 	if err != nil {
+		// 		return exitCode, err
+		// 	}
+		// 	r.Project.Suites[i].TestApp = testAppURL
+		// 	cache[s.TestApp] = testAppURL
 	}
 
+	fmt.Printf("%+v", r.Project)
 	if r.Project.DryRun {
 		r.dryRun()
 		return 0, nil
@@ -111,7 +145,8 @@ func (r *XcuitestRunner) runSuites() bool {
 		for _, s := range suites {
 			for _, d := range s.Devices {
 				log.Debug().Str("suite", s.Name).Str("deviceName", d.Name).Str("deviceID", d.ID).Str("platformVersion", d.PlatformVersion).Msg("Starting job")
-				r.startJob(jobOpts, r.Project.Xcuitest.App, s.TestApp, r.Project.Xcuitest.OtherApps, s, d)
+				// r.startJob(jobOpts, r.Project.Xcuitest.App, s.TestApp, r.Project.Xcuitest.OtherApps, s, d)
+				r.startJob(jobOpts, s.App, s.TestApp, s.OtherApps, s, d)
 			}
 		}
 	}()
@@ -180,12 +215,16 @@ func (r *XcuitestRunner) calculateJobsCount(suites []xcuitest.Suite) int {
 func archiveAppsToIpaIfRequired(project *xcuitest.Project) error {
 	var err error
 	cache := map[string]string{}
-	project.Xcuitest.App, err = archiveAppToIpaIfRequired(project.Xcuitest.App, cache)
-	if err != nil {
-		return err
-	}
+	// project.Xcuitest.App, err = archiveAppToIpaIfRequired(project.Xcuitest.App, cache)
+	// if err != nil {
+	// 	return err
+	// }
 
 	for i, s := range project.Suites {
+		project.Suites[i].App, err = archiveAppToIpaIfRequired(s.App, cache)
+		if err != nil {
+			return err
+		}
 		project.Suites[i].TestApp, err = archiveAppToIpaIfRequired(s.TestApp, cache)
 		if err != nil {
 			return err

@@ -62,8 +62,11 @@ type TestOptions struct {
 // Suite represents the xcuitest test suite configuration.
 type Suite struct {
 	Name               string             `yaml:"name,omitempty" json:"name"`
+	App                string             `yaml:"app,omitempty" json:"app"`
+	AppDescription     string             `yaml:"appDescription,omitempty" json:"appDescription"`
 	TestApp            string             `yaml:"testApp,omitempty" json:"testApp"`
 	TestAppDescription string             `yaml:"testAppDescription,omitempty" json:"testAppDescription"`
+	OtherApps          []string           `yaml:"otherApps,omitempty" json:"otherApps"`
 	Timeout            time.Duration      `yaml:"timeout,omitempty" json:"timeout"`
 	Devices            []config.Device    `yaml:"devices,omitempty" json:"devices"`
 	Simulators         []config.Simulator `yaml:"simulators,omitempty" json:"simulators"`
@@ -127,6 +130,15 @@ func SetDefaults(p *Project) {
 		if suite.TestApp == "" {
 			p.Suites[ks].TestApp = p.Xcuitest.TestApp
 			p.Suites[ks].TestAppDescription = p.Xcuitest.TestAppDescription
+		}
+		if suite.App == "" {
+			p.Suites[ks].App = p.Xcuitest.App
+			p.Suites[ks].AppDescription = p.Xcuitest.AppDescription
+		}
+		if len(suite.OtherApps) == 0 {
+			for _, o := range p.Xcuitest.OtherApps {
+				suite.OtherApps = append(suite.OtherApps, o)
+			}
 		}
 		if suite.PassThreshold < 1 {
 			p.Suites[ks].PassThreshold = 1
