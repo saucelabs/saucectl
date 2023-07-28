@@ -25,6 +25,7 @@ func (r *Reporter) Add(t report.TestResult) {
 
 // Render sends the result to specified webhook WebhookURL and log the result to the specified json file
 func (r *Reporter) Render() {
+	r.cleanup()
 	body, err := json.Marshal(r.Results)
 	if err != nil {
 		log.Error().Msgf("failed to generate test result (%v)", err)
@@ -54,6 +55,21 @@ func (r *Reporter) Render() {
 	}
 }
 
+// cleanup removes any information that isn't relevant in the rendered report. Particularly when it comes to
+// artifacts, this reporter is only interested in those that have been persisted to the file system.
+func (r *Reporter) cleanup() {
+	for i, result := range r.Results {
+		var artifacts []report.Artifact
+		for _, a := range result.Artifacts {
+			if a.FilePath == "" {
+				continue
+			}
+			artifacts = append(artifacts, a)
+		}
+		r.Results[i].Artifacts = artifacts
+	}
+}
+
 // Reset resets the reporter to its initial state. This action will delete all test results.
 func (r *Reporter) Reset() {
 	r.Results = make([]report.TestResult, 0)
@@ -61,5 +77,5 @@ func (r *Reporter) Reset() {
 
 // ArtifactRequirements returns a list of artifact types this reporter requires to create a proper report.
 func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
-	return []report.ArtifactType{report.JSONArtifact}
+	return nil
 }

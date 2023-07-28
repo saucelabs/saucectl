@@ -9,16 +9,16 @@ type TestResult struct {
 	StartTime     time.Time     `json:"startTime"`
 	EndTime       time.Time     `json:"endTime"`
 	Status        string        `json:"status"`
-	Browser       string        `json:"browser"`
+	Browser       string        `json:"browser,omitempty"`
 	Platform      string        `json:"platform"`
-	DeviceName    string        `json:"deviceName"`
+	DeviceName    string        `json:"deviceName,omitempty"`
 	URL           string        `json:"url"`
-	Artifacts     []Artifact    `json:"artifacts"`
+	Artifacts     []Artifact    `json:"artifacts,omitempty"`
 	Origin        string        `json:"origin"`
 	Attempts      int           `json:"attempts"`
 	RDC           bool          `json:"-"`
 	TimedOut      bool          `json:"-"`
-	PassThreshold bool          `json:"passThreshold"`
+	PassThreshold bool          `json:"-"`
 	ParentJUnits  []Artifact    `json:"-"`
 }
 
@@ -26,10 +26,10 @@ type TestResult struct {
 type ArtifactType int
 
 const (
+	// Unknown represents an asset with an unknown purpose that isn't further defined.
+	Unknown ArtifactType = iota
 	// JUnitArtifact represents the junit artifact type (https://llg.cubic.org/docs/junit/).
-	JUnitArtifact ArtifactType = iota
-	// JSONArtifact represents the json artifact type
-	JSONArtifact
+	JUnitArtifact
 )
 
 // Artifact represents an artifact (aka asset) that was generated as part of a job.

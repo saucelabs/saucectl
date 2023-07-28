@@ -103,9 +103,6 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	inProgress := expected
 	passed := true
 
-	junitRequired := report.IsArtifactRequired(r.Reporters, report.JUnitArtifact)
-	jsonResultRequired := report.IsArtifactRequired(r.Reporters, report.JSONArtifact)
-
 	done := make(chan interface{})
 	go func(r *CloudRunner) {
 		t := time.NewTicker(10 * time.Second)
@@ -146,32 +143,14 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			}
 
 			var artifacts []report.Artifact
-			var parentJUnits []report.Artifact
+			junitArtifact, parentJUnits := r.GetJUnitArtifacts(res)
+			artifacts = append(artifacts, junitArtifact)
 
-			if junitRequired {
-				jb, err := r.JobService.GetJobAssetFileContent(
-					context.Background(),
-					res.job.ID,
-					junit.JunitFileName,
-					res.job.IsRDC)
+			files := r.downloadArtifacts(res.name, res.job, artifactCfg.When)
+			for _, f := range files {
 				artifacts = append(artifacts, report.Artifact{
-					AssetType: report.JUnitArtifact,
-					Body:      jb,
-					Error:     err,
+					FilePath: f,
 				})
-				for _, id := range res.previous {
-					jb, err := r.JobService.GetJobAssetFileContent(
-						context.Background(),
-						id,
-						junit.JunitFileName,
-						res.job.IsRDC,
-					)
-					parentJUnits = append(parentJUnits, report.Artifact{
-						AssetType: report.JUnitArtifact,
-						Body:      jb,
-						Error:     err,
-					})
-				}
 			}
 
 			var url string
@@ -195,16 +174,6 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				TimedOut:     res.job.TimedOut,
 				ParentJUnits: parentJUnits,
 			}
-
-			files := r.downloadArtifacts(res.name, res.job, artifactCfg.When)
-			if jsonResultRequired {
-				for _, f := range files {
-					artifacts = append(artifacts, report.Artifact{
-						FilePath: f,
-					})
-				}
-			}
-
 			for _, rep := range r.Reporters {
 				rep.Add(tr)
 			}
@@ -505,6 +474,39 @@ func (r *CloudRunner) remoteArchiveFiles(project interface{}, files []string, sa
 	}
 
 	return strings.Join(uris, ","), nil
+}
+
+// GetJUnitArtifacts retrieves the JUnit report and parent JUnit reports for the current job.
+func (r *CloudRunner) GetJUnitArtifacts(res result) (junitArifact report.Artifact, parentJUnits []report.Artifact) {
+	if !report.IsArtifactRequired(r.Reporters, report.JUnitArtifact) {
+		return
+	}
+
+	content, err := r.JobService.GetJobAssetFileContent(
+		context.Background(),
+		res.job.ID,
+		junit.JunitFileName,
+		res.job.IsRDC)
+	junitArifact = report.Artifact{
+		AssetType: report.JUnitArtifact,
+		Body:      content,
+		Error:     err,
+	}
+
+	for _, id := range res.previous {
+		content, err := r.JobService.GetJobAssetFileContent(
+			context.Background(),
+			id,
+			junit.JunitFileName,
+			res.job.IsRDC,
+		)
+		parentJUnits = append(parentJUnits, report.Artifact{
+			AssetType: report.JUnitArtifact,
+			Body:      content,
+			Error:     err,
+		})
+	}
+	return
 }
 
 type uploadType string
