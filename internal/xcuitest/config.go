@@ -66,6 +66,7 @@ type Suite struct {
 	TestAppDescription string             `yaml:"testAppDescription,omitempty" json:"testAppDescription"`
 	Timeout            time.Duration      `yaml:"timeout,omitempty" json:"timeout"`
 	Devices            []config.Device    `yaml:"devices,omitempty" json:"devices"`
+	Simulators         []config.Simulator `yaml:"simulators,omitempty" json:"simulators"`
 	TestOptions        TestOptions        `yaml:"testOptions,omitempty" json:"testOptions"`
 	AppSettings        config.AppSettings `yaml:"appSettings,omitempty" json:"appSettings"`
 	PassThreshold      int                `yaml:"passThreshold,omitempty" json:"-"`
@@ -175,7 +176,7 @@ func Validate(p Project) error {
 	}
 
 	for _, suite := range p.Suites {
-		if len(suite.Devices) == 0 {
+		if len(suite.Devices) == 0 && len(suite.Simulators) == 0 {
 			return fmt.Errorf(msg.MissingXcuitestDeviceConfig, suite.Name)
 		}
 		for didx, device := range suite.Devices {
