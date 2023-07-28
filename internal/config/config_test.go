@@ -268,3 +268,124 @@ func TestWhen_IsNow(t *testing.T) {
 		})
 	}
 }
+
+func TestNpm_SetDefaults(t *testing.T) {
+	type fields struct {
+		Registry         string
+		Registries       []Registry
+		Framework        string
+		FrameworkVersion string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []Registry
+	}{
+		{
+			name: "Only one registry",
+			fields: fields{
+				Registries:       []Registry{{URL: "http://npmjs.org"}},
+				Framework:        "dummy",
+				FrameworkVersion: "",
+			},
+			want: []Registry{
+				{URL: "http://npmjs.org"},
+			},
+		},
+		{
+			name: "Only legacy registry",
+			fields: fields{
+				Registry:         "http://npmjs.org",
+				Framework:        "dummy",
+				FrameworkVersion: "",
+			},
+			want: []Registry{
+				{URL: "http://npmjs.org"},
+			},
+		},
+		{
+			name: "Legacy registry + Newer",
+			fields: fields{
+				Registry: "http://npmjs.org",
+				Registries: []Registry{
+					{URL: "http://npmjs-2.org"},
+				},
+				Framework:        "dummy",
+				FrameworkVersion: "",
+			},
+			want: []Registry{
+				{URL: "http://npmjs-2.org"},
+				{URL: "http://npmjs.org"},
+			},
+		},
+		{
+			name: "Do not migrate older versions",
+			fields: fields{
+				Registry:         "http://npmjs.org",
+				Registries:       []Registry{},
+				Framework:        "cypress",
+				FrameworkVersion: "12.14.0",
+			},
+			want: []Registry{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := &Npm{
+				Registry:   tt.fields.Registry,
+				Registries: tt.fields.Registries,
+			}
+			n.SetDefaults(tt.fields.Framework, tt.fields.FrameworkVersion)
+		})
+	}
+}
+
+func TestValidateRegistries(t *testing.T) {
+	tests := []struct {
+		name    string
+		args    []Registry
+		wantErr assert.ErrorAssertionFunc
+	}{
+		{
+			name: "passing empty",
+			args: []Registry{},
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				return err == nil
+			},
+		},
+		{
+			name: "passing with registry",
+			args: []Registry{
+				{URL: "http://npmjs.org"},
+			},
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				return err == nil
+			},
+		},
+		{
+			name: "passing with registry + scoped",
+			args: []Registry{
+				{URL: "http://npmjs.org"},
+				{URL: "http://npmjs-2.org", Scope: "@scoped"},
+			},
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				return err == nil
+			},
+		},
+		{
+			name: "failing with multiple default",
+			args: []Registry{
+				{URL: "http://npmjs.org"},
+				{URL: "http://npmjs-2.org"},
+			},
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				return err != nil && err.Error() == "too many registries (2) are without scope"
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.wantErr(t, ValidateRegistries(tt.args), fmt.Sprintf("ValidateRegistries(%v)", tt.args))
+		})
+	}
+}
