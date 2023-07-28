@@ -405,7 +405,10 @@ func hasMultiRegistrySupport(framework, version string) bool {
 	maxVersion := semver.MustParse(v)
 	curVersion, err := semver.NewVersion(version)
 	if err != nil {
-		return true
+		// if value is non-version (like "package.json"), we assume this is an older version
+		// as this is, at the moment of the change, the only option possible. This needs to
+		// be returning false in a future framework update.
+		return false
 	}
 	return curVersion.GreaterThan(maxVersion)
 }
