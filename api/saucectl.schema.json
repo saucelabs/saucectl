@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft-07/schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "SauceCTL Runner Configuration",
   "description": "Configuration file for saucectl.",
   "type": "object",
@@ -31,13 +31,13 @@
         }
       },
       "then": {
-        "$schema": "https://json-schema.org/draft-07/schema",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "title": "saucectl cypress runner configuration",
         "description": "Configuration file for cypress using saucectl",
         "type": "object",
         "allOf": [
           {
-            "$schema": "https://json-schema.org/draft-07/schema",
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
             "title": "saucectl artifacts schema",
             "description": "Subschema for controlling artifacts",
             "type": "object",
@@ -86,7 +86,7 @@
             "additionalProperties": true
           },
           {
-            "$schema": "https://json-schema.org/draft-07/schema",
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
             "title": "saucectl npm specific schema",
             "description": "Subschema for npm specific settings",
             "type": "object",
@@ -105,11 +105,37 @@
                   },
                   "registry": {
                     "description": "Override the default and official NPM registry URL with a custom one.",
-                    "type": "string"
+                    "type": "string",
+                    "deprecated": true
                   },
                   "strictSSL": {
                     "description": "Whether or not to do SSL key validation when making requests to the registry via https.",
                     "type": "boolean"
+                  },
+                  "registries": {
+                    "description": "Specify all the registries you want to configure",
+                    "type": "array",
+                    "minimum": 0,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "scope": {
+                          "description": "Scope for the registry entry",
+                          "type": "string"
+                        },
+                        "url": {
+                          "description": "URL for the registry entry",
+                          "type": "string"
+                        },
+                        "authToken": {
+                          "description": "authToken for the registry entry",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ]
+                    }
                   }
                 },
                 "additionalProperties": false
@@ -118,7 +144,7 @@
             "additionalProperties": true
           },
           {
-            "$schema": "https://json-schema.org/draft-07/schema",
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
             "title": "saucectl sauce specific schema",
             "description": "Subschema for sauce specific settings",
             "type": "object",
@@ -225,7 +251,7 @@
             "additionalProperties": true
           },
           {
-            "$schema": "https://json-schema.org/draft-07/schema",
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
             "title": "saucectl reporters specific schema",
             "description": "Subschema for reporters specific settings",
             "type": "object",
@@ -323,7 +349,6 @@
                 "enum": [
                   "package.json",
                   "9.7.0",
-                  "9.5.3",
                   "8.6.0"
                 ]
               },
@@ -486,13 +511,13 @@
         }
       },
       "then": {
-        "$schema": "https://json-schema.org/draft-07/schema",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "title": "saucectl cypress runner configuration",
         "description": "Configuration file for cypress using saucectl",
         "type": "object",
         "allOf": [
           {
-            "$schema": "https://json-schema.org/draft-07/schema",
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
             "title": "saucectl artifacts schema",
             "description": "Subschema for controlling artifacts",
             "type": "object",
@@ -541,7 +566,7 @@
             "additionalProperties": true
           },
           {
-            "$schema": "https://json-schema.org/draft-07/schema",
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
             "title": "saucectl npm specific schema",
             "description": "Subschema for npm specific settings",
             "type": "object",
@@ -560,11 +585,37 @@
                   },
                   "registry": {
                     "description": "Override the default and official NPM registry URL with a custom one.",
-                    "type": "string"
+                    "type": "string",
+                    "deprecated": true
                   },
                   "strictSSL": {
                     "description": "Whether or not to do SSL key validation when making requests to the registry via https.",
                     "type": "boolean"
+                  },
+                  "registries": {
+                    "description": "Specify all the registries you want to configure",
+                    "type": "array",
+                    "minimum": 0,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "scope": {
+                          "description": "Scope for the registry entry",
+                          "type": "string"
+                        },
+                        "url": {
+                          "description": "URL for the registry entry",
+                          "type": "string"
+                        },
+                        "authToken": {
+                          "description": "authToken for the registry entry",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ]
+                    }
                   }
                 },
                 "additionalProperties": false
@@ -573,7 +624,7 @@
             "additionalProperties": true
           },
           {
-            "$schema": "https://json-schema.org/draft-07/schema",
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
             "title": "saucectl sauce specific schema",
             "description": "Subschema for sauce specific settings",
             "type": "object",
@@ -679,7 +730,7 @@
             "additionalProperties": true
           },
           {
-            "$schema": "https://json-schema.org/draft-07/schema",
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
             "title": "saucectl reporters specific schema",
             "description": "Subschema for reporters specific settings",
             "type": "object",
@@ -782,6 +833,7 @@
               "version": {
                 "enum": [
                   "package.json",
+                  "12.17.2",
                   "12.14.0",
                   "12.11.0",
                   "12.6.0",
@@ -963,7 +1015,7 @@
         }
       },
       "then": {
-        "$schema": "https://json-schema.org/draft-07/schema",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "title": "saucectl espresso runner configuration",
         "description": "Configuration file for espresso using saucectl",
         "type": "object",
@@ -1312,7 +1364,7 @@
         }
       },
       "then": {
-        "$schema": "https://json-schema.org/draft-07/schema",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "title": "saucectl playwright runner configuration",
         "description": "Configuration file for playwright using saucectl",
         "type": "object",
@@ -1364,6 +1416,7 @@
                 "$ref": "#/allOf/8/then/properties/playwright/properties/version",
                 "enum": [
                   "package.json",
+                  "1.36.2",
                   "1.35.1",
                   "1.33.0",
                   "1.31.1",
@@ -1372,8 +1425,7 @@
                   "1.27.1",
                   "1.25.1",
                   "1.24.1",
-                  "1.22.2",
-                  "1.20.2"
+                  "1.22.2"
                 ]
               },
               "configFile": {
@@ -1550,7 +1602,7 @@
         }
       },
       "then": {
-        "$schema": "https://json-schema.org/draft-07/schema",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "title": "saucectl puppeteer-replay runner configuration",
         "description": "Configuration file for puppeteer-replay using saucectl",
         "type": "object",
@@ -1648,7 +1700,7 @@
         }
       },
       "then": {
-        "$schema": "https://json-schema.org/draft-07/schema",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "title": "saucectl testcafe runner configuration",
         "description": "Configuration file for testcafe using saucectl",
         "type": "object",
@@ -1700,6 +1752,7 @@
                 "$ref": "#/allOf/8/then/properties/playwright/properties/version",
                 "enum": [
                   "package.json",
+                  "3.0.1",
                   "2.6.2",
                   "2.5.0",
                   "2.3.1",
@@ -1708,8 +1761,7 @@
                   "2.0.1",
                   "2.0.0",
                   "1.20.0",
-                  "1.19.0",
-                  "1.18.5"
+                  "1.19.0"
                 ]
               }
             },
@@ -2020,7 +2072,7 @@
         }
       },
       "then": {
-        "$schema": "https://json-schema.org/draft-07/schema",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "title": "saucectl xcuitest runner configuration",
         "description": "Configuration file for xcuitest using saucectl",
         "type": "object",
@@ -2245,7 +2297,7 @@
         }
       },
       "then": {
-        "$schema": "https://json-schema.org/draft-07/schema",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "title": "saucectl api testing runner configuration",
         "description": "Configuration file for api testing using saucectl",
         "type": "object",
@@ -2318,7 +2370,7 @@
         }
       },
       "then": {
-        "$schema": "https://json-schema.org/draft-07/schema",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "title": "saucectl playwright cucumberjs runner configuration",
         "description": "Configuration file for cucumber using saucectl",
         "type": "object",
@@ -2509,7 +2561,7 @@
         }
       },
       "then": {
-        "$schema": "https://json-schema.org/draft-07/schema",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "title": "saucectl image runner configuration",
         "description": "Configuration file for running container images using saucectl",
         "type": "object",

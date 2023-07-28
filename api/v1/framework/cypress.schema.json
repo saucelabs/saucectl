@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft-07/schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "saucectl cypress runner configuration",
   "description": "Configuration file for cypress using saucectl",
   "type": "object",
@@ -63,6 +63,7 @@
           "$ref": "../subschema/common.schema.json#/definitions/version",
           "enum": [
             "package.json",
+            "12.17.2",
             "12.14.0",
             "12.11.0",
             "12.6.0",

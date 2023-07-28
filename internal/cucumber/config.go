@@ -129,6 +129,7 @@ func SetDefaults(p *Project) {
 
 	p.Sauce.Tunnel.SetDefaults()
 	p.Sauce.Metadata.SetDefaultBuild()
+	p.Npm.SetDefaults(p.Kind, p.Playwright.Version)
 
 	for k := range p.Suites {
 		suite := &p.Suites[k]
@@ -173,6 +174,11 @@ func Validate(p *Project) error {
 		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
 	}
 
+	err := config.ValidateRegistries(p.Npm.Registries)
+	if err != nil {
+		return err
+	}
+
 	p.Playwright.Version = config.StandardizeVersionFormat(p.Playwright.Version)
 	if p.Playwright.Version == "" {
 		return errors.New(msg.MissingFrameworkVersionConfig)
@@ -206,7 +212,6 @@ func Validate(p *Project) error {
 		log.Warn().Int("retries", p.Sauce.Retries).Msg(msg.InvalidReries)
 	}
 
-	var err error
 	p.Suites, err = shardSuites(p.RootDir, p.Suites, p.Sauce.Concurrency)
 
 	return err

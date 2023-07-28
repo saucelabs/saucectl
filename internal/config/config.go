@@ -10,17 +10,18 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/fatih/color"
 	"github.com/mitchellh/mapstructure"
+	"github.com/rs/zerolog/log"
 	"github.com/santhosh-tekuri/jsonschema/v5"
+	"gopkg.in/yaml.v2"
 
 	// httploader needs to be loaded to be able to fetch http-based schemas.
 	_ "github.com/santhosh-tekuri/jsonschema/v5/httploader"
 
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/viper"
-	"gopkg.in/yaml.v2"
 )
 
 // Metadata describes job metadata
@@ -173,9 +174,18 @@ type TypeDef struct {
 	Kind       string `yaml:"kind,omitempty"`
 }
 
+// Registry represents a registry for NPM
+type Registry struct {
+	Scope     string `yaml:"scope,omitempty" json:"scope,omitempty"`
+	URL       string `yaml:"url,omitempty" json:"url,omitempty"`
+	AuthToken string `yaml:"authToken,omitempty" json:"authToken,omitempty"`
+}
+
 // Npm represents the npm settings
 type Npm struct {
+	// Deprecated. Use Registries instead.
 	Registry     string            `yaml:"registry,omitempty" json:"registry,omitempty"`
+	Registries   []Registry        `yaml:"registries" json:"registries,omitempty"`
 	Packages     map[string]string `yaml:"packages,omitempty" json:"packages"`
 	Dependencies []string          `yaml:"dependencies,omitempty" json:"dependencies"`
 	StrictSSL    bool              `yaml:"strictSSL,omitempty" json:"strictSSL"`
@@ -380,6 +390,37 @@ func (t *Tunnel) SetDefaults() {
 	}
 }
 
+func hasMultiRegistrySupport(framework, version string) bool {
+	minVersions := map[string]string{
+		"cypress":               "12.14.0",
+		"playwright-cucumberjs": "1.35.1",
+		"playwright":            "1.35.1",
+		"testcafe":              "2.6.2",
+	}
+
+	v, ok := minVersions[framework]
+	if !ok {
+		return true
+	}
+	maxVersion := semver.MustParse(v)
+	curVersion, err := semver.NewVersion(version)
+	if err != nil {
+		// if value is non-version (like "package.json"), we assume this is an older version
+		// as this is, at the moment of the change, the only option possible. This needs to
+		// be returning false in a future framework update.
+		return false
+	}
+	return curVersion.GreaterThan(maxVersion)
+}
+
+// SetDefaults updates npm default values
+func (n *Npm) SetDefaults(framework, version string) {
+	if n.Registry != "" && hasMultiRegistrySupport(framework, version) {
+		log.Warn().Msg("npm.registry has been deprecated, please use npm.registries instead")
+		n.Registries = append(n.Registries, Registry{URL: n.Registry})
+	}
+}
+
 // GetSuiteArtifactFolder returns a target folder that's based on a combination of suiteName and the configured artifact
 // download folder.
 // The suiteName is sanitized by undergoing character replacements that are safe to be used as a directory name.
@@ -540,4 +581,21 @@ func ValidateSmartRetry(smartRetry SmartRetry) {
 	if smartRetry.FailedClassesOnly {
 		log.Warn().Msg("failedClassesOnly has been deprecated. Use FailedOnly instead.")
 	}
+}
+
+func ValidateRegistries(registries []Registry) error {
+	noScopeRegistry := 0
+	for idx, rg := range registries {
+		if rg.URL == "" {
+			return fmt.Errorf(msg.NpmEmptyURLError, idx)
+		}
+		if rg.Scope == "" {
+			noScopeRegistry++
+		}
+	}
+
+	if noScopeRegistry > 1 {
+		return fmt.Errorf(msg.NpmTooManyDefaultRegistry)
+	}
+	return nil
 }

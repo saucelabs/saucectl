@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft-07/schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "saucectl testcafe runner configuration",
   "description": "Configuration file for testcafe using saucectl",
   "type": "object",
@@ -51,6 +51,7 @@
           "$ref": "../subschema/common.schema.json#/definitions/version",
           "enum": [
             "package.json",
+            "3.0.1",
             "2.6.2",
             "2.5.0",
             "2.3.1",
@@ -59,8 +60,7 @@
             "2.0.1",
             "2.0.0",
             "1.20.0",
-            "1.19.0",
-            "1.18.5"
+            "1.19.0"
           ]
         }
       },
