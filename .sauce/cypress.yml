@@ -11,7 +11,7 @@ rootDir: tests/e2e/
 defaults:
   timeout: 5m
 cypress:
-  version: 9.5.3
+  version: 9.7.0
   configFile: "cypress.json"
 suites:
   - name: "saucy test in sauce"
