@@ -36,6 +36,11 @@ func TestValidate(t *testing.T) {
 			name: "validating throws error on empty app",
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
+				Suites: []Suite{
+					{
+						Name: "suite with missing app",
+					},
+				},
 			},
 			expectedErr: errors.New("missing path to app .ipa"),
 		},
@@ -43,13 +48,11 @@ func TestValidate(t *testing.T) {
 			name: "validating passing with .ipa",
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
-				Xcuitest: Xcuitest{
-					App:     appF,
-					TestApp: testAppF,
-				},
 				Suites: []Suite{
 					{
-						Name: "iphone",
+						Name:    "iphone",
+						App:     appF,
+						TestApp: testAppF,
 						Devices: []config.Device{
 							{Name: "iPhone.*"},
 						},
@@ -62,13 +65,11 @@ func TestValidate(t *testing.T) {
 			name: "validating passing with .app",
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
-				Xcuitest: Xcuitest{
-					App:     appD,
-					TestApp: testAppD,
-				},
 				Suites: []Suite{
 					{
-						Name: "iphone",
+						Name:    "iphone",
+						App:     appD,
+						TestApp: testAppD,
 						Devices: []config.Device{
 							{Name: "iPhone.*"},
 						},
@@ -81,9 +82,12 @@ func TestValidate(t *testing.T) {
 			name: "validating error with app other than .ipa / .app",
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
-				Xcuitest: Xcuitest{
-					App:     "/path/to/app.zip",
-					TestApp: testAppD,
+				Suites: []Suite{
+					{
+						Name:    "suite with invalid apps",
+						App:     "/path/to/app.zip",
+						TestApp: testAppD,
+					},
 				},
 			},
 			expectedErr: errors.New("invalid application file: /path/to/app.zip, make sure extension is one of the following: .ipa, .app"),
@@ -92,9 +96,11 @@ func TestValidate(t *testing.T) {
 			name: "validating error with test app other than .ipa / .app",
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
-				Xcuitest: Xcuitest{
-					App:     appF,
-					TestApp: "/path/to/app.zip",
+				Suites: []Suite{
+					{
+						App:     appF,
+						TestApp: "/path/to/app.zip",
+					},
 				},
 			},
 			expectedErr: errors.New("invalid test application file: /path/to/app.zip, make sure extension is one of the following: .ipa, .app"),
@@ -103,9 +109,12 @@ func TestValidate(t *testing.T) {
 			name: "validating throws error on empty testApp",
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
-				Xcuitest: Xcuitest{
-					App:     appF,
-					TestApp: "",
+				Suites: []Suite{
+					{
+						Name:    "missing test app",
+						App:     appF,
+						TestApp: "",
+					},
 				},
 			},
 			expectedErr: errors.New("missing path to test app .ipa"),
@@ -114,9 +123,11 @@ func TestValidate(t *testing.T) {
 			name: "validating throws error on not test app .ipa",
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
-				Xcuitest: Xcuitest{
-					App:     appF,
-					TestApp: "/path/to/bundle/tests",
+				Suites: []Suite{
+					{
+						App:     appF,
+						TestApp: "/path/to/bundle/tests",
+					},
 				},
 			},
 			expectedErr: errors.New("invalid test application file: /path/to/bundle/tests, make sure extension is one of the following: .ipa, .app"),
@@ -136,13 +147,11 @@ func TestValidate(t *testing.T) {
 			name: "validating throws error on missing devices",
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
-				Xcuitest: Xcuitest{
-					App:     appF,
-					TestApp: testAppF,
-				},
 				Suites: []Suite{
 					{
 						Name:    "no devices",
+						App:     appF,
+						TestApp: testAppF,
 						Devices: []config.Device{},
 					},
 				},
@@ -153,13 +162,11 @@ func TestValidate(t *testing.T) {
 			name: "validating throws error on missing device name",
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
-				Xcuitest: Xcuitest{
-					App:     appF,
-					TestApp: testAppF,
-				},
 				Suites: []Suite{
 					{
-						Name: "no device name",
+						Name:    "no device name",
+						App:     appF,
+						TestApp: testAppF,
 						Devices: []config.Device{
 							{
 								Name: "",
@@ -174,13 +181,11 @@ func TestValidate(t *testing.T) {
 			name: "validating throws error on unsupported device type",
 			p: &Project{
 				Sauce: config.SauceConfig{Region: "us-west-1"},
-				Xcuitest: Xcuitest{
-					App:     appF,
-					TestApp: testAppF,
-				},
 				Suites: []Suite{
 					{
-						Name: "unsupported device type",
+						Name:    "unsupported device type",
+						App:     appF,
+						TestApp: testAppF,
 						Devices: []config.Device{
 							{
 								Name:         "iPhone 11",
