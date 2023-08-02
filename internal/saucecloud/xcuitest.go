@@ -63,20 +63,21 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 	archiveCache := newCache()
 	uploadCache := newCache()
 
-	archiver := func(app string, archiveType archiveType) func() (string, error) {
-		return func() (string, error) {
+	cachedArchive := func(app string, archiveType archiveType) (string, error) {
+		key := fmt.Sprintf("%s-%s", app, archiveType)
+		return archiveCache.lookup(key, func() (string, error) {
 			if apps.IsStorageReference(app) {
 				return app, nil
 			}
 
-			switch archiveType {
-			case ipaArchive:
-				return archiveAppToIpa(app)
-			case zipArchive:
-				return archiveAppToZip(app)
-			}
-			return "", fmt.Errorf("unknown archive type: %s", archiveType)
-		}
+			return archive(app, archiveType)
+		})
+	}
+
+	cachedUpload := func(path string, description string, pType uploadType, dryRun bool) (string, error) {
+		return uploadCache.lookup(path, func() (string, error) {
+			return r.uploadProject(path, description, pType, dryRun)
+		})
 	}
 
 	for i, s := range r.Project.Suites {
@@ -85,25 +86,21 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 			archiveType = ipaArchive
 		}
 
-		archivePath, err := archiveCache.lookup(s.App, archiver(s.App, archiveType))
+		archivePath, err := cachedArchive(s.App, archiveType)
 		if err != nil {
 			return exitCode, err
 		}
-		storageUrl, err := uploadCache.lookup(archivePath, func() (string, error) {
-			return r.uploadProject(archivePath, s.AppDescription, appUpload, r.Project.DryRun)
-		})
+		storageUrl, err := cachedUpload(archivePath, s.AppDescription, appUpload, r.Project.DryRun)
 		if err != nil {
 			return exitCode, err
 		}
 		r.Project.Suites[i].App = storageUrl
 
-		archivePath, err = archiveCache.lookup(s.TestApp, archiver(s.TestApp, archiveType))
+		archivePath, err = cachedArchive(s.TestApp, archiveType)
 		if err != nil {
 			return exitCode, err
 		}
-		storageUrl, err = uploadCache.lookup(archivePath, func() (string, error) {
-			return r.uploadProject(archivePath, s.TestAppDescription, testAppUpload, r.Project.DryRun)
-		})
+		storageUrl, err = cachedUpload(archivePath, s.TestAppDescription, testAppUpload, r.Project.DryRun)
 		if err != nil {
 			return exitCode, err
 		}
@@ -111,13 +108,11 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 
 		var otherApps []string
 		for _, o := range s.OtherApps {
-			archivePath, err = archiveCache.lookup(o, archiver(o, archiveType))
+			archivePath, err = cachedArchive(o, archiveType)
 			if err != nil {
 				return exitCode, err
 			}
-			storageUrl, err = uploadCache.lookup(archivePath, func() (string, error) {
-				return r.uploadProject(archivePath, "", otherAppsUpload, r.Project.DryRun)
-			})
+			storageUrl, err = cachedUpload(archivePath, "", otherAppsUpload, r.Project.DryRun)
 			if err != nil {
 				return exitCode, err
 			}
@@ -240,6 +235,16 @@ func (r *XcuitestRunner) calculateJobsCount(suites []xcuitest.Suite) int {
 		jobsCount += len(s.Simulators)
 	}
 	return jobsCount
+}
+
+func archive(src string, archiveType archiveType) (string, error) {
+	switch archiveType {
+	case ipaArchive:
+		return archiveAppToIpa(src)
+	case zipArchive:
+		return archiveAppToZip(src)
+	}
+	return "", fmt.Errorf("unknown archive type: %s", archiveType)
 }
 
 func archiveAppToZip(appPath string) (string, error) {
