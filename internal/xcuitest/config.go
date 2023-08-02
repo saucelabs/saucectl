@@ -159,26 +159,6 @@ func Validate(p Project) error {
 		return errors.New(msg.NoTunnelSupport)
 	}
 
-	if p.Xcuitest.App == "" {
-		return errors.New(msg.MissingXcuitestAppPath)
-	}
-	if err := apps.Validate("application", p.Xcuitest.App, []string{".ipa", ".app"}); err != nil {
-		return err
-	}
-
-	if p.Xcuitest.TestApp == "" {
-		return errors.New(msg.MissingXcuitestTestAppPath)
-	}
-	if err := apps.Validate("test application", p.Xcuitest.TestApp, []string{".ipa", ".app"}); err != nil {
-		return err
-	}
-
-	for _, app := range p.Xcuitest.OtherApps {
-		if err := apps.Validate("other application", app, []string{".ipa", ".app"}); err != nil {
-			return err
-		}
-	}
-
 	if p.Sauce.LaunchOrder != "" && p.Sauce.LaunchOrder != config.LaunchOrderFailRate {
 		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchOrder, string(config.LaunchOrderFailRate))
 	}
@@ -188,8 +168,31 @@ func Validate(p Project) error {
 	}
 
 	for _, suite := range p.Suites {
+		if suite.App == "" {
+			return errors.New(msg.MissingXcuitestAppPath)
+		}
+		if err := apps.Validate("application", suite.App, []string{".ipa", ".app"}); err != nil {
+			return err
+		}
+
+		if suite.TestApp == "" {
+			return errors.New(msg.MissingXcuitestTestAppPath)
+		}
+		if err := apps.Validate("test application", suite.TestApp, []string{".ipa", ".app"}); err != nil {
+			return err
+		}
+
+		for _, app := range suite.OtherApps {
+			if err := apps.Validate("other application", app, []string{".ipa", ".app"}); err != nil {
+				return err
+			}
+		}
+
 		if len(suite.Devices) == 0 && len(suite.Simulators) == 0 {
 			return fmt.Errorf(msg.MissingXcuitestDeviceConfig, suite.Name)
+		}
+		if len(suite.Devices) > 0 && len(suite.Simulators) > 0 {
+			return fmt.Errorf("suite cannot have both simulators and devices")
 		}
 		for didx, device := range suite.Devices {
 			if device.ID == "" && device.Name == "" {
