@@ -136,9 +136,7 @@ func SetDefaults(p *Project) {
 			p.Suites[ks].AppDescription = p.Xcuitest.AppDescription
 		}
 		if len(suite.OtherApps) == 0 {
-			for _, o := range p.Xcuitest.OtherApps {
-				suite.OtherApps = append(suite.OtherApps, o)
-			}
+			suite.OtherApps = append(suite.OtherApps, p.Xcuitest.OtherApps...)
 		}
 		if suite.PassThreshold < 1 {
 			p.Suites[ks].PassThreshold = 1

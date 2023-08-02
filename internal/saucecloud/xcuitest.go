@@ -92,21 +92,21 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		if err != nil {
 			return exitCode, err
 		}
-		storageUrl, err := cachedUpload(archivePath, s.AppDescription, appUpload, r.Project.DryRun)
+		storageURL, err := cachedUpload(archivePath, s.AppDescription, appUpload, r.Project.DryRun)
 		if err != nil {
 			return exitCode, err
 		}
-		r.Project.Suites[i].App = storageUrl
+		r.Project.Suites[i].App = storageURL
 
 		archivePath, err = cachedArchive(s.TestApp, archiveType)
 		if err != nil {
 			return exitCode, err
 		}
-		storageUrl, err = cachedUpload(archivePath, s.TestAppDescription, testAppUpload, r.Project.DryRun)
+		storageURL, err = cachedUpload(archivePath, s.TestAppDescription, testAppUpload, r.Project.DryRun)
 		if err != nil {
 			return exitCode, err
 		}
-		r.Project.Suites[i].TestApp = storageUrl
+		r.Project.Suites[i].TestApp = storageURL
 
 		var otherApps []string
 		for _, o := range s.OtherApps {
@@ -114,11 +114,11 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 			if err != nil {
 				return exitCode, err
 			}
-			storageUrl, err = cachedUpload(archivePath, "", otherAppsUpload, r.Project.DryRun)
+			storageURL, err = cachedUpload(archivePath, "", otherAppsUpload, r.Project.DryRun)
 			if err != nil {
 				return exitCode, err
 			}
-			otherApps = append(otherApps, storageUrl)
+			otherApps = append(otherApps, storageURL)
 		}
 		r.Project.Suites[i].OtherApps = otherApps
 	}
