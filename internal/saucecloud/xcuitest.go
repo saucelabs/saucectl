@@ -10,7 +10,6 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
@@ -171,17 +170,20 @@ func (r *XcuitestRunner) runSuites() bool {
 	jobsCount := r.calculateJobsCount(suites)
 	go func() {
 		for _, s := range suites {
-			for _, d := range s.Devices {
-				log.Debug().Str("suite", s.Name).Str("deviceName", d.Name).Str("deviceID", d.ID).Str("platformVersion", d.PlatformVersion).Msg("Starting job")
-				r.startJob(jobOpts, s.App, s.TestApp, s.OtherApps, s, d)
+			for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Simulators) {
+				r.startJob(jobOpts, s.App, s.TestApp, s.OtherApps, s, c)
 			}
+			// for _, d := range s.Devices {
+			// 	log.Debug().Str("suite", s.Name).Str("deviceName", d.Name).Str("deviceID", d.ID).Str("platformVersion", d.PlatformVersion).Msg("Starting job")
+			// 	r.startJob(jobOpts, s.App, s.TestApp, s.OtherApps, s, d)
+			// }
 		}
 	}()
 
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
 }
 
-func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, testAppFileID string, otherAppsIDs []string, s xcuitest.Suite, d config.Device) {
+func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, testAppFileID string, otherAppsIDs []string, s xcuitest.Suite, d deviceConfig) {
 	jobOpts <- job.StartOptions{
 		ConfigFilePath:   r.Project.ConfigFilePath,
 		CLIFlags:         r.Project.CLIFlags,
@@ -192,9 +194,9 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		OtherApps:        otherAppsIDs,
 		Framework:        "xcuitest",
 		FrameworkVersion: "1.0.0-stable",
-		PlatformName:     d.PlatformName,
-		PlatformVersion:  d.PlatformVersion,
-		DeviceName:       d.Name,
+		PlatformName:     d.platformName,
+		PlatformVersion:  d.platformVersion,
+		DeviceName:       d.name,
 		DeviceID:         d.ID,
 		Name:             s.Name,
 		Build:            r.Project.Sauce.Metadata.Build,
@@ -212,12 +214,16 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		SmartRetry: job.SmartRetry{
 			FailedOnly: s.SmartRetry.IsRetryFailedOnly(),
 		},
+		TestOptions: map[string]interface{}{
+			"class":    s.TestOptions.Class,
+			"notClass": s.TestOptions.NotClass,
+		},
 
 		// RDC Specific flags
-		RealDevice:        true,
-		DeviceHasCarrier:  d.Options.CarrierConnectivity,
-		DeviceType:        d.Options.DeviceType,
-		DevicePrivateOnly: d.Options.Private,
+		RealDevice:        d.isRealDevice,
+		DeviceHasCarrier:  d.hasCarrier,
+		DeviceType:        d.deviceType,
+		DevicePrivateOnly: d.privateOnly,
 
 		// Overwrite device settings
 		RealDeviceKind: strings.ToLower(xcuitest.IOS),

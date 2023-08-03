@@ -69,7 +69,7 @@ type Suite struct {
 	OtherApps          []string           `yaml:"otherApps,omitempty" json:"otherApps"`
 	Timeout            time.Duration      `yaml:"timeout,omitempty" json:"timeout"`
 	Devices            []config.Device    `yaml:"devices,omitempty" json:"devices"`
-	Simulators         []config.Simulator `yaml:"simulators,omitempty" json:"simulators"`
+	Simulators         []config.Emulator  `yaml:"simulators,omitempty" json:"simulators"`
 	TestOptions        TestOptions        `yaml:"testOptions,omitempty" json:"testOptions"`
 	AppSettings        config.AppSettings `yaml:"appSettings,omitempty" json:"appSettings"`
 	PassThreshold      int                `yaml:"passThreshold,omitempty" json:"-"`
@@ -169,14 +169,14 @@ func Validate(p Project) error {
 		if suite.App == "" {
 			return errors.New(msg.MissingXcuitestAppPath)
 		}
-		if err := apps.Validate("application", suite.App, []string{".ipa", ".app"}); err != nil {
+		if err := apps.Validate("application", suite.App, []string{".ipa", ".app", ".zip"}); err != nil {
 			return err
 		}
 
 		if suite.TestApp == "" {
 			return errors.New(msg.MissingXcuitestTestAppPath)
 		}
-		if err := apps.Validate("test application", suite.TestApp, []string{".ipa", ".app"}); err != nil {
+		if err := apps.Validate("test application", suite.TestApp, []string{".ipa", ".app", ".zip"}); err != nil {
 			return err
 		}
 
