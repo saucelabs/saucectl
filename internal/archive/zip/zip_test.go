@@ -53,12 +53,18 @@ func TestZipper_Add(t *testing.T) {
 		wantLength int
 	}{
 		{
-			name:       "zip it up",
-			fields:     fields{W: zip.NewWriter(out), M: sauceignore.NewMatcher([]sauceignore.Pattern{}), ZipFile: out},
-			args:       args{dir.Path(), "", out.Name()},
-			wantErr:    false,
-			wantFiles:  []string{"/screenshot1.png", "/some.foo.js", "/some.other.bar.js"},
-			wantCount:  3,
+			name:    "zip it up",
+			fields:  fields{W: zip.NewWriter(out), M: sauceignore.NewMatcher([]sauceignore.Pattern{}), ZipFile: out},
+			args:    args{dir.Path(), "", out.Name()},
+			wantErr: false,
+			wantFiles: []string{
+				dirBase,
+				filepath.Join(dirBase, "screenshots"),
+				filepath.Join(dirBase, "screenshots", "/screenshot1.png"),
+				filepath.Join(dirBase, "/some.foo.js"),
+				filepath.Join(dirBase, "/some.other.bar.js"),
+			},
+			wantCount:  5,
 			wantLength: len(dirBase) + len("/screenshots/screenshot1.png"),
 		},
 		{
@@ -71,10 +77,13 @@ func TestZipper_Add(t *testing.T) {
 				}),
 				ZipFile: sauceignoreOut,
 			},
-			args:       args{dir.Path(), "", sauceignoreOut.Name()},
-			wantErr:    false,
-			wantFiles:  []string{"/some.other.bar.js"},
-			wantCount:  1,
+			args:    args{dir.Path(), "", sauceignoreOut.Name()},
+			wantErr: false,
+			wantFiles: []string{
+				dirBase,
+				filepath.Join(dirBase, "/some.other.bar.js"),
+			},
+			wantCount:  2,
 			wantLength: len(dirBase) + len("/some.other.bar.js"),
 		},
 	}
