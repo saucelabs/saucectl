@@ -85,6 +85,8 @@ func (w *Writer) Add(src, dst string) (count int, length int, err error) {
 	if err != nil {
 		return 0, 0, err
 	}
+	count++
+
 	for _, f := range files {
 		rebase := path.Join(dst, base)
 		fpath := filepath.Join(src, f.Name())
