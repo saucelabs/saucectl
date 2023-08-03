@@ -60,9 +60,9 @@ func TestZipper_Add(t *testing.T) {
 			wantFiles: []string{
 				dirBase,
 				filepath.Join(dirBase, "screenshots"),
-				"/screenshot1.png",
-				"/some.foo.js",
-				"/some.other.bar.js",
+				filepath.Join(dirBase, "screenshots", "/screenshot1.png"),
+				filepath.Join(dirBase, "/some.foo.js"),
+				filepath.Join(dirBase, "/some.other.bar.js"),
 			},
 			wantCount:  5,
 			wantLength: len(dirBase) + len("/screenshots/screenshot1.png"),
@@ -81,7 +81,7 @@ func TestZipper_Add(t *testing.T) {
 			wantErr: false,
 			wantFiles: []string{
 				dirBase,
-				"/some.other.bar.js",
+				filepath.Join(dirBase, "/some.other.bar.js"),
 			},
 			wantCount:  2,
 			wantLength: len(dirBase) + len("/some.other.bar.js"),
