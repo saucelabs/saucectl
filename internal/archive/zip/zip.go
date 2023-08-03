@@ -79,8 +79,13 @@ func (w *Writer) Add(src, dst string) (count int, length int, err error) {
 		return 0, 0, err
 	}
 
+	base := filepath.Base(src)
+	relBase := filepath.Join(dst, base)
+	_, err = w.W.Create(fmt.Sprintf("%s/", relBase))
+	if err != nil {
+		return 0, 0, err
+	}
 	for _, f := range files {
-		base := filepath.Base(src)
 		rebase := path.Join(dst, base)
 		fpath := filepath.Join(src, f.Name())
 		fileCount, pathLength, err := w.Add(fpath, rebase)
