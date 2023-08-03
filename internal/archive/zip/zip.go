@@ -51,8 +51,8 @@ func (w *Writer) Add(src, dst string) (count int, length int, err error) {
 		return 0, 0, nil
 	}
 
+	log.Debug().Str("name", src).Msg("Adding to archive")
 	if !finfo.IsDir() {
-		log.Debug().Str("name", src).Msg("Adding to archive")
 		target := path.Join(dst, finfo.Name())
 		w, err := w.W.Create(target)
 		if err != nil {
@@ -80,8 +80,8 @@ func (w *Writer) Add(src, dst string) (count int, length int, err error) {
 	}
 
 	base := filepath.Base(src)
-	relBase := filepath.Join(dst, base)
-	_, err = w.W.Create(fmt.Sprintf("%s/", relBase))
+	// Add the directory to the archive. The trailing slash denotes a directory entry.
+	_, err = w.W.Create(fmt.Sprintf("%s/", filepath.Join(dst, base)))
 	if err != nil {
 		return 0, 0, err
 	}
