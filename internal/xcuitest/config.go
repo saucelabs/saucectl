@@ -69,7 +69,7 @@ type Suite struct {
 	OtherApps          []string           `yaml:"otherApps,omitempty" json:"otherApps"`
 	Timeout            time.Duration      `yaml:"timeout,omitempty" json:"timeout"`
 	Devices            []config.Device    `yaml:"devices,omitempty" json:"devices"`
-	Simulators         []config.Emulator  `yaml:"simulators,omitempty" json:"simulators"`
+	Simulators         []config.Simulator `yaml:"simulators,omitempty" json:"simulators"`
 	TestOptions        TestOptions        `yaml:"testOptions,omitempty" json:"testOptions"`
 	AppSettings        config.AppSettings `yaml:"appSettings,omitempty" json:"appSettings"`
 	PassThreshold      int                `yaml:"passThreshold,omitempty" json:"-"`

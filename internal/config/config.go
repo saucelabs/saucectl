@@ -90,7 +90,7 @@ var ValidVisibilityValues = []string{
 }
 
 // Simulator represents the simulator configuration.
-type Simulator Emulator
+type Simulator = Emulator
 
 // When represents a conditional status for when artifacts should be downloaded.
 type When string
