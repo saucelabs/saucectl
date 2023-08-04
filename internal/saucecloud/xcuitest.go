@@ -171,12 +171,9 @@ func (r *XcuitestRunner) runSuites() bool {
 	go func() {
 		for _, s := range suites {
 			for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Simulators) {
+				log.Debug().Str("suite", s.Name).Str("deviceName", c.name).Str("deviceID", c.ID).Str("platformVersion", c.platformVersion).Msg("Starting job")
 				r.startJob(jobOpts, s.App, s.TestApp, s.OtherApps, s, c)
 			}
-			// for _, d := range s.Devices {
-			// 	log.Debug().Str("suite", s.Name).Str("deviceName", d.Name).Str("deviceID", d.ID).Str("platformVersion", d.PlatformVersion).Msg("Starting job")
-			// 	r.startJob(jobOpts, s.App, s.TestApp, s.OtherApps, s, d)
-			// }
 		}
 	}()
 
@@ -239,8 +236,7 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 func (r *XcuitestRunner) calculateJobsCount(suites []xcuitest.Suite) int {
 	jobsCount := 0
 	for _, s := range suites {
-		jobsCount += len(s.Devices)
-		jobsCount += len(s.Simulators)
+		jobsCount += len(enumerateDevicesAndEmulators(s.Devices, s.Simulators))
 	}
 	return jobsCount
 }
