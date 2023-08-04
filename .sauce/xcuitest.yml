@@ -2,7 +2,7 @@ apiVersion: v1alpha
 kind: xcuitest
 sauce:
   region: us-west-1
-  concurrency: 1
+  concurrency: 2
   retries: 2
   metadata:
     tags:
@@ -15,27 +15,33 @@ defaults:
   timeout: 5m
 
 xcuitest:
-  app: ./tests/e2e/xcuitest/SauceLabs.Mobile.Sample.XCUITest.App.ipa
-  testApp: ./tests/e2e/xcuitest/SwagLabsMobileAppUITests-Runner.ipa
+  app: ./tests/e2e/xcuitest/SauceLabs-Demo-App.XCUITest.ipa
+  testApp: ./tests/e2e/xcuitest/SauceLabs-Demo-App-Runner.XCUITest.ipa
 
 suites:
-  - name: "saucy xcuitest"
+  - name: saucy xcuitest - real
     testOptions:
       class:
-        - "SwagLabsMobileAppUITests.LoginTests/testSuccessfulLogin"
-      notClass:
-        - "SwagLabsMobileAppUITests.SwagLabsFlow/testCompleteFlow"
+        - MyDemoAppUITests.NavigationTest
     devices:
-      # If set, only device by ID will be queried.
-      #- id: <rdc_device_id>
       - name: "iPhone.*"
         options:
-          # If set, only devices with a SIM card will be queried.
           carrierConnectivity: false
-          # Possible values [ANY,PHONE,TABLET]
           deviceType: PHONE
-          # If set, only private devices will be queried.
           private: false
+
+  - name: "saucy xcuitest - sims"
+    timeout: 10m
+    app: ./tests/e2e/xcuitest/SauceLabs-Demo-App.Simulator.XCUITest.zip
+    testApp: ./tests/e2e/xcuitest/SauceLabs-Demo-App-Runner.Simulator.XCUITest.zip
+    testOptions:
+      class:
+        - MyDemoAppUITests/NavigationTest
+    simulators:
+      - name: "iPhone 11 Simulator"
+        platformName: iOS
+        platformVersions:
+          - "16.2"
 
 artifacts:
   download:
@@ -44,8 +50,3 @@ artifacts:
       - junit.xml
       - xcuitest.log
     directory: ./artifacts/
-
-notifications:
-  slack:
-    channels: ["devx-slack-notifications"]
-    send: always # possible values [always,fail,never,pass]
