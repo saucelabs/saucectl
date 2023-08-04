@@ -2132,10 +2132,6 @@
                 "type": "array"
               }
             },
-            "required": [
-              "app",
-              "testApp"
-            ],
             "additionalProperties": false
           },
           "suites": {
@@ -2149,6 +2145,14 @@
                   "description": "The name of the test suite, which will be reflected in the test results in Sauce Labs.",
                   "type": "string"
                 },
+                "app": {
+                  "description": "Local path or remote url to the application. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
+                  "type": "string"
+                },
+                "appDescription": {
+                  "description": "Description for the app",
+                  "type": "string"
+                },
                 "testApp": {
                   "description": "Local path or remote url to the test application. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
                   "type": "string"
@@ -2156,6 +2160,10 @@
                 "testAppDescription": {
                   "description": "Description for the testApp",
                   "type": "string"
+                },
+                "otherApps": {
+                  "description": "A list of applications to be installed alongside the main app. Applications can be defined as a local path or a remote url. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
+                  "type": "array"
                 },
                 "testOptions": {
                   "description": "Allows you to control various details on how tests are executed.",
