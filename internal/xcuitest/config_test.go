@@ -39,6 +39,9 @@ func TestValidate(t *testing.T) {
 				Suites: []Suite{
 					{
 						Name: "suite with missing app",
+						Devices: []config.Device{
+							{Name: "iPhone.*"},
+						},
 					},
 				},
 			},
@@ -87,10 +90,13 @@ func TestValidate(t *testing.T) {
 						Name:    "suite with invalid apps",
 						App:     "/path/to/app.zip",
 						TestApp: testAppD,
+						Devices: []config.Device{
+							{Name: "iPhone.*"},
+						},
 					},
 				},
 			},
-			expectedErr: errors.New("invalid application file: /path/to/app.zip, make sure extension is one of the following: .ipa, .app"),
+			expectedErr: errors.New("invalid application file: /path/to/app.zip, make sure extension is one of the following: .app, .ipa"),
 		},
 		{
 			name: "validating error with test app other than .ipa / .app",
@@ -100,10 +106,13 @@ func TestValidate(t *testing.T) {
 					{
 						App:     appF,
 						TestApp: "/path/to/app.zip",
+						Devices: []config.Device{
+							{Name: "iPhone.*"},
+						},
 					},
 				},
 			},
-			expectedErr: errors.New("invalid test application file: /path/to/app.zip, make sure extension is one of the following: .ipa, .app"),
+			expectedErr: errors.New("invalid test application file: /path/to/app.zip, make sure extension is one of the following: .app, .ipa"),
 		},
 		{
 			name: "validating throws error on empty testApp",
@@ -114,6 +123,9 @@ func TestValidate(t *testing.T) {
 						Name:    "missing test app",
 						App:     appF,
 						TestApp: "",
+						Devices: []config.Device{
+							{Name: "iPhone.*"},
+						},
 					},
 				},
 			},
@@ -127,10 +139,13 @@ func TestValidate(t *testing.T) {
 					{
 						App:     appF,
 						TestApp: "/path/to/bundle/tests",
+						Devices: []config.Device{
+							{Name: "iPhone.*"},
+						},
 					},
 				},
 			},
-			expectedErr: errors.New("invalid test application file: /path/to/bundle/tests, make sure extension is one of the following: .ipa, .app"),
+			expectedErr: errors.New("invalid test application file: /path/to/bundle/tests, make sure extension is one of the following: .app, .ipa"),
 		},
 		{
 			name: "validating throws error on missing suites",
@@ -199,6 +214,36 @@ func TestValidate(t *testing.T) {
 				},
 			},
 			expectedErr: errors.New("deviceType: some is unsupported for suite: unsupported device type. Devices index: 0. Supported device types: ANY,PHONE,TABLET"),
+		},
+		{
+			name: "throws error if devices and simulators are defined",
+			p: &Project{
+				Sauce: config.SauceConfig{Region: "us-west-1"},
+				Suites: []Suite{
+					{
+						Name:    "",
+						App:     appF,
+						TestApp: testAppF,
+						Simulators: []config.Simulator{
+							{
+								Name:             "iPhone 12 Simulator",
+								PlatformName:     "iOS",
+								PlatformVersions: []string{"16.2"},
+							},
+						},
+						Devices: []config.Device{
+							{
+								Name:         "iPhone 11",
+								PlatformName: "iOS",
+								Options: config.DeviceOptions{
+									DeviceType: "some",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("suite cannot have both simulators and devices"),
 		},
 	}
 	for _, tc := range testCases {

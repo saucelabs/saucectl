@@ -166,32 +166,39 @@ func Validate(p Project) error {
 	}
 
 	for _, suite := range p.Suites {
-		if suite.App == "" {
-			return errors.New(msg.MissingXcuitestAppPath)
-		}
-		if err := apps.Validate("application", suite.App, []string{".ipa", ".app", ".zip"}); err != nil {
-			return err
-		}
-
-		if suite.TestApp == "" {
-			return errors.New(msg.MissingXcuitestTestAppPath)
-		}
-		if err := apps.Validate("test application", suite.TestApp, []string{".ipa", ".app", ".zip"}); err != nil {
-			return err
-		}
-
-		for _, app := range suite.OtherApps {
-			if err := apps.Validate("other application", app, []string{".ipa", ".app"}); err != nil {
-				return err
-			}
-		}
-
 		if len(suite.Devices) == 0 && len(suite.Simulators) == 0 {
 			return fmt.Errorf(msg.MissingXcuitestDeviceConfig, suite.Name)
 		}
 		if len(suite.Devices) > 0 && len(suite.Simulators) > 0 {
 			return fmt.Errorf("suite cannot have both simulators and devices")
 		}
+
+		validAppExt := []string{".app"}
+		if len(suite.Devices) > 0 {
+			validAppExt = append(validAppExt, ".ipa")
+		} else if len(suite.Simulators) > 0 {
+			validAppExt = append(validAppExt, ".zip")
+		}
+		if suite.App == "" {
+			return errors.New(msg.MissingXcuitestAppPath)
+		}
+		if err := apps.Validate("application", suite.App, validAppExt); err != nil {
+			return err
+		}
+
+		if suite.TestApp == "" {
+			return errors.New(msg.MissingXcuitestTestAppPath)
+		}
+		if err := apps.Validate("test application", suite.TestApp, validAppExt); err != nil {
+			return err
+		}
+
+		for _, app := range suite.OtherApps {
+			if err := apps.Validate("other application", app, validAppExt); err != nil {
+				return err
+			}
+		}
+
 		for didx, device := range suite.Devices {
 			if device.ID == "" && device.Name == "" {
 				return fmt.Errorf(msg.MissingDeviceConfig, suite.Name, didx)
