@@ -65,8 +65,8 @@ type Device struct {
 	Options         DeviceOptions `yaml:"options,omitempty" json:"options,omitempty"`
 }
 
-// Emulator represents the emulator configuration.
-type Emulator struct {
+// VirtualDevice represents a virtual device configuration.
+type VirtualDevice struct {
 	Name             string   `yaml:"name,omitempty" json:"name,omitempty"`
 	PlatformName     string   `yaml:"platformName,omitempty" json:"platformName"`
 	Orientation      string   `yaml:"orientation,omitempty" json:"orientation,omitempty"`
@@ -89,8 +89,11 @@ var ValidVisibilityValues = []string{
 	VisibilityPrivate,
 }
 
-// Simulator represents the simulator configuration.
-type Simulator = Emulator
+// Simulator is an alias for a Virtual Device in the iOS nomeclature.
+type Simulator = VirtualDevice
+
+// Emulator is an alias for a Virtual Device in the Android nomeclature.
+type Emulator = VirtualDevice
 
 // When represents a conditional status for when artifacts should be downloaded.
 type When string

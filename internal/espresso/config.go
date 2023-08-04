@@ -57,7 +57,7 @@ type Suite struct {
 	TestApp            string                 `yaml:"testApp,omitempty" json:"testApp"`
 	TestAppDescription string                 `yaml:"testAppDescription,omitempty" json:"testAppDescription"`
 	Devices            []config.Device        `yaml:"devices,omitempty" json:"devices"`
-	Emulators          []config.Emulator      `yaml:"emulators,omitempty" json:"emulators"`
+	Emulators          []config.VirtualDevice `yaml:"emulators,omitempty" json:"emulators"`
 	TestOptions        map[string]interface{} `yaml:"testOptions,omitempty" json:"testOptions"`
 	Timeout            time.Duration          `yaml:"timeout,omitempty" json:"timeout"`
 	AppSettings        config.AppSettings     `yaml:"appSettings,omitempty" json:"appSettings"`

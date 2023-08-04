@@ -112,13 +112,13 @@ func (r *EspressoRunner) runSuites() bool {
 					}
 					s.TestOptions = testOptions
 					s.TestOptions["shardIndex"] = i
-					for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
+					for _, c := range enumerateDevices(s.Devices, s.Emulators) {
 						log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
 						r.startJob(jobOpts, s, r.Project.Espresso.App, s.TestApp, r.Project.Espresso.OtherApps, c)
 					}
 				}
 			} else {
-				for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
+				for _, c := range enumerateDevices(s.Devices, s.Emulators) {
 					log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
 					r.startJob(jobOpts, s, r.Project.Espresso.App, s.TestApp, r.Project.Espresso.OtherApps, c)
 				}
@@ -133,18 +133,18 @@ func (r *EspressoRunner) dryRun() {
 	fmt.Println("\nThe following test suites would have run:")
 	for _, s := range r.Project.Suites {
 		fmt.Printf("  - %s\n", s.Name)
-		for _, c := range enumerateDevicesAndEmulators(s.Devices, s.Emulators) {
+		for _, c := range enumerateDevices(s.Devices, s.Emulators) {
 			fmt.Printf("    - on %s %s %s\n", c.name, c.platformName, c.platformVersion)
 		}
 	}
 	fmt.Println()
 }
 
-// enumerateDevicesAndEmulators returns a list of emulators and devices targeted by the current suite.
-func enumerateDevicesAndEmulators(devices []config.Device, emulators []config.Emulator) []deviceConfig {
+// enumerateDevices returns a list of emulators and devices targeted by the current suite.
+func enumerateDevices(devices []config.Device, virtualDevices []config.VirtualDevice) []deviceConfig {
 	var configs []deviceConfig
 
-	for _, e := range emulators {
+	for _, e := range virtualDevices {
 		for _, p := range e.PlatformVersions {
 			configs = append(configs, deviceConfig{
 				name:            e.Name,
@@ -249,7 +249,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 func (r *EspressoRunner) calculateJobsCount(suites []espresso.Suite) int {
 	total := 0
 	for _, s := range suites {
-		jobs := len(enumerateDevicesAndEmulators(s.Devices, s.Emulators))
+		jobs := len(enumerateDevices(s.Devices, s.Emulators))
 		numShards, _ := getNumShardsAndShardIndex(s.TestOptions)
 		if numShards > 0 {
 			jobs *= numShards
