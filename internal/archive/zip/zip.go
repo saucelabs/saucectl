@@ -41,7 +41,7 @@ func New(f io.Writer, matcher sauceignore.Matcher) (Writer, error) {
 // Add adds the file at src to the destination dst in the archive and returns a count of
 // the files added to the archive, as well the length of the longest path.
 func (w *Writer) Add(src, dst string) (count int, length int, err error) {
-	finfo, err := os.Stat(src)
+	finfo, err := os.Lstat(src)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -52,12 +52,30 @@ func (w *Writer) Add(src, dst string) (count int, length int, err error) {
 	}
 
 	if !finfo.IsDir() {
-		log.Debug().Str("name", src).Msg("Adding to archive")
+		isLink := finfo.Mode()&os.ModeSymlink != 0
+		log.Debug().Str("name", src).Bool("symlink", isLink).Msg("Adding to archive")
 		target := path.Join(dst, finfo.Name())
-		w, err := w.W.Create(target)
+		header, err := zip.FileInfoHeader(finfo)
 		if err != nil {
 			return 0, 0, err
 		}
+		header.Name = target
+		w, err := w.W.CreateHeader(header)
+		//w, err := w.W.Create(target)
+		if err != nil {
+			return 0, 0, err
+		}
+
+		if isLink {
+			symlinkTarget, err := os.Readlink(src)
+			if err != nil {
+				return 0, 0, err
+			}
+			symlinkTarget = filepath.ToSlash(symlinkTarget)
+			n, err := w.Write([]byte(symlinkTarget))
+			return 1, n, err
+		}
+
 		f, err := os.Open(src)
 		if err != nil {
 			return 0, 0, err

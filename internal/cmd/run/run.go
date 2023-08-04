@@ -11,6 +11,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/vmrunner"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -236,6 +237,9 @@ func Run(cmd *cobra.Command) (int, error) {
 	}
 	if typeDef.Kind == imagerunner.Kind {
 		return runImageRunner(cmd)
+	}
+	if typeDef.Kind == vmrunner.Kind {
+		return runVMRunner(cmd)
 	}
 
 	msg.LogUnsupportedFramework(typeDef.Kind)

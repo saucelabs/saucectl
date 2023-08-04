@@ -38,6 +38,8 @@ const (
 
 // SauceConfig represents sauce labs related settings.
 type SauceConfig struct {
+	Username    string            `yaml:"username,omitempty" json:"username,omitempty"`
+	AccessKey   string            `yaml:"accessKey,omitempty" json:"accessKey,omitempty"`
 	Region      string            `yaml:"region,omitempty" json:"region"`
 	Metadata    Metadata          `yaml:"metadata,omitempty" json:"metadata"`
 	Tunnel      Tunnel            `yaml:"tunnel,omitempty" json:"tunnel,omitempty"`

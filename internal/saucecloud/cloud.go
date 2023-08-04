@@ -185,7 +185,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			continue
 		}
 		// Report suite to Insights
-		r.reportSuiteToInsights(res)
+		//r.reportSuiteToInsights(res) // FIXME
 	}
 	close(done)
 
@@ -210,7 +210,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	defer unregisterSignalCapture(sigChan)
 
 	r.uploadSauceConfig(id, opts.RealDevice, opts.ConfigFilePath)
-	r.uploadCLIFlags(id, opts.RealDevice, opts.CLIFlags)
+	//r.uploadCLIFlags(id, opts.RealDevice, opts.CLIFlags)
 
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
 	// if a soft exit is requested during startContainer phase, it gently exits.
@@ -382,9 +382,9 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 
 	for _, file := range contents {
 		// we never want mode_modules as part of the app payload
-		if file.Name() == "node_modules" {
-			continue
-		}
+		//if file.Name() == "node_modules" {
+		//	continue
+		//}
 		files = append(files, filepath.Join(folder, file.Name()))
 	}
 
@@ -401,13 +401,13 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 	}
 	archives[projectUpload] = appZip
 
-	modZip, err := zip.ArchiveNodeModules(tempDir, folder, matcher, r.NPMDependencies)
-	if err != nil {
-		return
-	}
-	if modZip != "" {
-		archives[nodeModulesUpload] = modZip
-	}
+	//modZip, err := zip.ArchiveNodeModules(tempDir, folder, matcher, r.NPMDependencies)
+	//if err != nil {
+	//	return
+	//}
+	//if modZip != "" {
+	//	archives[nodeModulesUpload] = modZip
+	//}
 
 	configZip, err := zip.ArchiveRunnerConfig(project, tempDir)
 	if err != nil {
