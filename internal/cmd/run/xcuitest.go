@@ -25,7 +25,7 @@ import (
 )
 
 type xcuitestFlags struct {
-	Device     flags.Device
+	Device    flags.Device
 	Simulator flags.Simulator
 }
 
