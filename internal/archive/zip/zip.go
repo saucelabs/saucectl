@@ -61,7 +61,15 @@ func (w *Writer) Add(src, dst string) (count int, length int, err error) {
 		// The trailing slash denotes a directory entry.
 		target = fmt.Sprintf("%s/", target)
 	}
-	fileWriter, err := w.W.Create(filepath.ToSlash(target))
+
+	finfoHeader, err := zip.FileInfoHeader(finfo)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	finfoHeader.Name = filepath.ToSlash(target)
+	finfoHeader.Method = zip.Deflate
+	fileWriter, err := w.W.CreateHeader(finfoHeader)
 	if err != nil {
 		return 0, 0, err
 	}
