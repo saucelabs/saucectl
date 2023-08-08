@@ -33,7 +33,7 @@ func newCache() cache {
 	}
 }
 
-// lookup attempts to find the value for a key in the cache and returns if there's a hit, otherwise it executes and returns the closure fn
+// lookup attempts to find the value for a key in the cache and returns if there's a hit, otherwise it executes the closure fn and returns its results.
 func (c cache) lookup(key string, fn func() (string, error)) (string, error) {
 	var err error
 	val, ok := c.store[key]
