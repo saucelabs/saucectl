@@ -322,10 +322,9 @@ jobs:
           -c "" \
           --name "cli driven" \
           --retries 2 \
-          --app ./tests/e2e/xcuitest/SauceLabs.Mobile.Sample.XCUITest.App.ipa \
-          --testApp ./tests/e2e/xcuitest/SwagLabsMobileAppUITests-Runner.ipa \
-          --testOptions.class SwagLabsMobileAppUITests.LoginTests/testSuccessfulLogin \
-          --testOptions.notClass SwagLabsMobileAppUITests.SwagLabsFlow/testCompleteFlow \
+          --app ./tests/e2e/xcuitest/SauceLabs-Demo-App.XCUITest.ipa \
+          --testApp ./tests/e2e/xcuitest/SauceLabs-Demo-App-Runner.XCUITest.ipa \
+          --testOptions.class MyDemoAppUITests.NavigationTest \
           --device name="iPhone.*" \
           --timeout 10m
 
