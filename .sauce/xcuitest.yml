@@ -22,7 +22,7 @@ suites:
   - name: saucy xcuitest - real
     testOptions:
       class:
-        - MyDemoAppUITests.NavigationTest
+        - MyDemoAppUITests.ProductListingPageTest
     devices:
       - name: "iPhone.*"
         options:
@@ -36,7 +36,7 @@ suites:
     testApp: ./tests/e2e/xcuitest/SauceLabs-Demo-App-Runner.Simulator.XCUITest.zip
     testOptions:
       class:
-        - MyDemoAppUITests/NavigationTest
+        - MyDemoAppUITests/ProductListingPageTest
     simulators:
       - name: "iPhone 11 Simulator"
         platformName: iOS
