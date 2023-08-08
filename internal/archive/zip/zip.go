@@ -40,6 +40,10 @@ func New(f io.Writer, matcher sauceignore.Matcher) (Writer, error) {
 
 // Add adds the file at src to the destination dst in the archive and returns a count of
 // the files added to the archive, as well the length of the longest path.
+// The added file names should not contain any backslashes according to the specification outlined in
+// https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT.
+// It's essential to adhere to this specification to ensure compatibility and
+// proper functioning of the files across different systems and platforms.
 func (w *Writer) Add(src, dst string) (count int, length int, err error) {
 	finfo, err := os.Stat(src)
 	if err != nil {
@@ -57,7 +61,15 @@ func (w *Writer) Add(src, dst string) (count int, length int, err error) {
 		// The trailing slash denotes a directory entry.
 		target = fmt.Sprintf("%s/", target)
 	}
-	fileWriter, err := w.W.Create(target)
+
+	finfoHeader, err := zip.FileInfoHeader(finfo)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	finfoHeader.Name = filepath.ToSlash(target)
+	finfoHeader.Method = zip.Deflate
+	fileWriter, err := w.W.CreateHeader(finfoHeader)
 	if err != nil {
 		return 0, 0, err
 	}
