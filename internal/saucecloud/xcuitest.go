@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -64,14 +65,14 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 	archiveCache := newCache()
 	uploadCache := newCache()
 
-	cachedArchive := func(app string, archiveType archiveType) (string, error) {
+	cachedArchive := func(app string, targetDir string, archiveType archiveType) (string, error) {
 		key := fmt.Sprintf("%s-%s", app, archiveType)
 		return archiveCache.lookup(key, func() (string, error) {
 			if apps.IsStorageReference(app) {
 				return app, nil
 			}
 
-			return archive(app, archiveType)
+			return archive(app, targetDir, archiveType)
 		})
 	}
 
@@ -81,13 +82,21 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		})
 	}
 
+	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
+	if !r.Project.DryRun {
+		defer os.RemoveAll(tempDir)
+	}
+	if err != nil {
+		return exitCode, err
+	}
+
 	for i, s := range r.Project.Suites {
 		archiveType := zipArchive
 		if len(s.Devices) > 0 {
 			archiveType = ipaArchive
 		}
 
-		archivePath, err := cachedArchive(s.App, archiveType)
+		archivePath, err := cachedArchive(s.App, tempDir, archiveType)
 		if err != nil {
 			return exitCode, err
 		}
@@ -97,7 +106,7 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		}
 		r.Project.Suites[i].App = storageURL
 
-		archivePath, err = cachedArchive(s.TestApp, archiveType)
+		archivePath, err = cachedArchive(s.TestApp, tempDir, archiveType)
 		if err != nil {
 			return exitCode, err
 		}
@@ -109,7 +118,7 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 
 		var otherApps []string
 		for _, o := range s.OtherApps {
-			archivePath, err = cachedArchive(o, archiveType)
+			archivePath, err = cachedArchive(o, tempDir, archiveType)
 			if err != nil {
 				return exitCode, err
 			}
@@ -241,53 +250,57 @@ func (r *XcuitestRunner) calculateJobsCount(suites []xcuitest.Suite) int {
 	return jobsCount
 }
 
-func archive(src string, archiveType archiveType) (string, error) {
+func archive(src string, targetDir string, archiveType archiveType) (string, error) {
 	switch archiveType {
 	case ipaArchive:
-		return archiveAppToIpa(src)
+		return archiveAppToIpa(src, targetDir)
 	case zipArchive:
-		return archiveAppToZip(src)
+		return archiveAppToZip(src, targetDir)
 	}
 	return "", fmt.Errorf("unknown archive type: %s", archiveType)
 }
 
-func archiveAppToZip(appPath string) (string, error) {
+func archiveAppToZip(appPath string, targetDir string) (string, error) {
 	if strings.HasSuffix(appPath, ".zip") {
 		return appPath, nil
 	}
 
 	log.Info().Msgf("Archiving %s to .zip", path.Base(appPath))
-	fileName := fmt.Sprintf("%s-*.zip", strings.TrimSuffix(path.Base(appPath), ".app"))
-	tmpFile, err := os.CreateTemp(os.TempDir(), fileName)
+
+	fileName := fmt.Sprintf("%s.zip", strings.TrimSuffix(path.Base(appPath), ".app"))
+	zipName := filepath.Join(targetDir, fileName)
+	arch, err := zip.NewFileWriter(zipName, sauceignore.NewMatcher([]sauceignore.Pattern{}))
 	if err != nil {
 		return "", err
 	}
-	arch, _ := zip.New(tmpFile, sauceignore.NewMatcher([]sauceignore.Pattern{}))
 	defer arch.Close()
+
 	_, _, err = arch.Add(appPath, "")
 	if err != nil {
 		return "", err
 	}
-	return tmpFile.Name(), nil
+	return zipName, nil
 }
 
 // archiveAppToIpa generates a valid IPA file from a .app folder.
-func archiveAppToIpa(appPath string) (string, error) {
+func archiveAppToIpa(appPath string, targetDir string) (string, error) {
 	if strings.HasSuffix(appPath, ".ipa") {
 		return appPath, nil
 	}
 
 	log.Info().Msgf("Archiving %s to .ipa", path.Base(appPath))
-	fileName := fmt.Sprintf("%s-*.ipa", strings.TrimSuffix(path.Base(appPath), ".app"))
-	tmpFile, err := os.CreateTemp(os.TempDir(), fileName)
+
+	fileName := fmt.Sprintf("%s.ipa", strings.TrimSuffix(path.Base(appPath), ".app"))
+	zipName := filepath.Join(targetDir, fileName)
+	arch, err := zip.NewFileWriter(zipName, sauceignore.NewMatcher([]sauceignore.Pattern{}))
 	if err != nil {
 		return "", err
 	}
-	arch, _ := zip.New(tmpFile, sauceignore.NewMatcher([]sauceignore.Pattern{}))
 	defer arch.Close()
+
 	_, _, err = arch.Add(appPath, "Payload/")
 	if err != nil {
 		return "", err
 	}
-	return tmpFile.Name(), nil
+	return zipName, nil
 }
