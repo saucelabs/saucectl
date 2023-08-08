@@ -25,7 +25,8 @@ import (
 )
 
 type xcuitestFlags struct {
-	Device flags.Device
+	Device    flags.Device
+	Simulator flags.Simulator
 }
 
 // NewXCUITestCmd creates the 'run' command for XCUITest.
@@ -70,8 +71,9 @@ func NewXCUITestCmd() *cobra.Command {
 	sc.StringSlice("testOptions.class", "suite::testOptions::class", []string{}, "Only run the specified classes. Requires --name to be set.")
 	sc.StringSlice("testOptions.notClass", "suite::testOptions::notClass", []string{}, "Run all classes except those specified here. Requires --name to be set.")
 
-	// Devices (no simulators)
+	// Devices
 	cmd.Flags().Var(&lflags.Device, "device", "Specifies the device to use for testing. Requires --name to be set.")
+	cmd.Flags().Var(&lflags.Simulator, "simulator", "Specifies the simulator to use for testing. Requires --name to be set.")
 
 	// Overwrite devices settings
 	sc.Bool("audioCapture", "suite::appSettings::audioCapture", false, "Overwrite app settings for real device to capture audio.")
@@ -188,7 +190,8 @@ func applyXCUITestFlags(p *xcuitest.Project, flags xcuitestFlags) error {
 	if p.Suite.Name == "" {
 		isErr := len(p.Suite.TestOptions.Class) != 0 ||
 			len(p.Suite.TestOptions.NotClass) != 0 ||
-			flags.Device.Changed
+			flags.Device.Changed ||
+			flags.Simulator.Changed
 
 		if isErr {
 			return ErrEmptySuiteName
@@ -199,6 +202,10 @@ func applyXCUITestFlags(p *xcuitest.Project, flags xcuitestFlags) error {
 
 	if flags.Device.Changed {
 		p.Suite.Devices = append(p.Suite.Devices, flags.Device.Device)
+	}
+
+	if flags.Simulator.Changed {
+		p.Suite.Simulators = append(p.Suite.Simulators, flags.Simulator.Simulator)
 	}
 
 	p.Suites = []xcuitest.Suite{p.Suite}

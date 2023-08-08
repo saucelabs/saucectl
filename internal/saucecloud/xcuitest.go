@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/rs/zerolog/log"
 
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
@@ -23,6 +23,37 @@ type XcuitestRunner struct {
 	Project xcuitest.Project
 }
 
+// cache represents a store that can be used to cache return values of functions.
+type cache struct {
+	store map[string]string
+}
+
+func newCache() cache {
+	return cache{
+		store: make(map[string]string),
+	}
+}
+
+// lookup attempts to find the value for a key in the cache and returns if there's a hit, otherwise it executes the closure fn and returns its results.
+func (c cache) lookup(key string, fn func() (string, error)) (string, error) {
+	var err error
+	val, ok := c.store[key]
+	if !ok {
+		val, err = fn()
+		if err == nil {
+			c.store[key] = val
+		}
+	}
+	return val, err
+}
+
+type archiveType string
+
+var (
+	ipaArchive archiveType = "ipa"
+	zipArchive archiveType = "zip"
+)
+
 // RunProject runs the tests defined in xcuitest.Project.
 func (r *XcuitestRunner) RunProject() (int, error) {
 	exitCode := 1
@@ -31,34 +62,73 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	err := archiveAppsToIpaIfRequired(&r.Project)
+	archiveCache := newCache()
+	uploadCache := newCache()
+
+	cachedArchive := func(app string, targetDir string, archiveType archiveType) (string, error) {
+		key := fmt.Sprintf("%s-%s", app, archiveType)
+		return archiveCache.lookup(key, func() (string, error) {
+			if apps.IsStorageReference(app) {
+				return app, nil
+			}
+
+			return archive(app, targetDir, archiveType)
+		})
+	}
+
+	cachedUpload := func(path string, description string, pType uploadType, dryRun bool) (string, error) {
+		return uploadCache.lookup(path, func() (string, error) {
+			return r.uploadProject(path, description, pType, dryRun)
+		})
+	}
+
+	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
+	if !r.Project.DryRun {
+		defer os.RemoveAll(tempDir)
+	}
 	if err != nil {
 		return exitCode, err
 	}
 
-	r.Project.Xcuitest.App, err = r.uploadProject(r.Project.Xcuitest.App, r.Project.Xcuitest.AppDescription, appUpload, r.Project.DryRun)
-	if err != nil {
-		return exitCode, err
-	}
-
-	r.Project.Xcuitest.OtherApps, err = r.uploadProjects(r.Project.Xcuitest.OtherApps, otherAppsUpload, r.Project.DryRun)
-	if err != nil {
-		return exitCode, err
-	}
-
-	cache := map[string]string{}
 	for i, s := range r.Project.Suites {
-		if val, ok := cache[s.TestApp]; ok {
-			r.Project.Suites[i].TestApp = val
-			continue
+		archiveType := zipArchive
+		if len(s.Devices) > 0 {
+			archiveType = ipaArchive
 		}
 
-		testAppURL, err := r.uploadProject(s.TestApp, s.TestAppDescription, testAppUpload, r.Project.DryRun)
+		archivePath, err := cachedArchive(s.App, tempDir, archiveType)
 		if err != nil {
 			return exitCode, err
 		}
-		r.Project.Suites[i].TestApp = testAppURL
-		cache[s.TestApp] = testAppURL
+		storageURL, err := cachedUpload(archivePath, s.AppDescription, appUpload, r.Project.DryRun)
+		if err != nil {
+			return exitCode, err
+		}
+		r.Project.Suites[i].App = storageURL
+
+		archivePath, err = cachedArchive(s.TestApp, tempDir, archiveType)
+		if err != nil {
+			return exitCode, err
+		}
+		storageURL, err = cachedUpload(archivePath, s.TestAppDescription, testAppUpload, r.Project.DryRun)
+		if err != nil {
+			return exitCode, err
+		}
+		r.Project.Suites[i].TestApp = storageURL
+
+		var otherApps []string
+		for _, o := range s.OtherApps {
+			archivePath, err = cachedArchive(o, tempDir, archiveType)
+			if err != nil {
+				return exitCode, err
+			}
+			storageURL, err = cachedUpload(archivePath, "", otherAppsUpload, r.Project.DryRun)
+			if err != nil {
+				return exitCode, err
+			}
+			otherApps = append(otherApps, storageURL)
+		}
+		r.Project.Suites[i].OtherApps = otherApps
 	}
 
 	if r.Project.DryRun {
@@ -109,9 +179,9 @@ func (r *XcuitestRunner) runSuites() bool {
 	jobsCount := r.calculateJobsCount(suites)
 	go func() {
 		for _, s := range suites {
-			for _, d := range s.Devices {
-				log.Debug().Str("suite", s.Name).Str("deviceName", d.Name).Str("deviceID", d.ID).Str("platformVersion", d.PlatformVersion).Msg("Starting job")
-				r.startJob(jobOpts, r.Project.Xcuitest.App, s.TestApp, r.Project.Xcuitest.OtherApps, s, d)
+			for _, d := range enumerateDevices(s.Devices, s.Simulators) {
+				log.Debug().Str("suite", s.Name).Str("deviceName", d.name).Str("deviceID", d.ID).Str("platformVersion", d.platformVersion).Msg("Starting job")
+				r.startJob(jobOpts, s.App, s.TestApp, s.OtherApps, s, d)
 			}
 		}
 	}()
@@ -119,7 +189,7 @@ func (r *XcuitestRunner) runSuites() bool {
 	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
 }
 
-func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, testAppFileID string, otherAppsIDs []string, s xcuitest.Suite, d config.Device) {
+func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, testAppFileID string, otherAppsIDs []string, s xcuitest.Suite, d deviceConfig) {
 	jobOpts <- job.StartOptions{
 		ConfigFilePath:   r.Project.ConfigFilePath,
 		CLIFlags:         r.Project.CLIFlags,
@@ -130,9 +200,9 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		OtherApps:        otherAppsIDs,
 		Framework:        "xcuitest",
 		FrameworkVersion: "1.0.0-stable",
-		PlatformName:     d.PlatformName,
-		PlatformVersion:  d.PlatformVersion,
-		DeviceName:       d.Name,
+		PlatformName:     d.platformName,
+		PlatformVersion:  d.platformVersion,
+		DeviceName:       d.name,
 		DeviceID:         d.ID,
 		Name:             s.Name,
 		Build:            r.Project.Sauce.Metadata.Build,
@@ -150,12 +220,16 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		SmartRetry: job.SmartRetry{
 			FailedOnly: s.SmartRetry.IsRetryFailedOnly(),
 		},
+		TestOptions: map[string]interface{}{
+			"class":    s.TestOptions.Class,
+			"notClass": s.TestOptions.NotClass,
+		},
 
 		// RDC Specific flags
-		RealDevice:        true,
-		DeviceHasCarrier:  d.Options.CarrierConnectivity,
-		DeviceType:        d.Options.DeviceType,
-		DevicePrivateOnly: d.Options.Private,
+		RealDevice:        d.isRealDevice,
+		DeviceHasCarrier:  d.hasCarrier,
+		DeviceType:        d.deviceType,
+		DevicePrivateOnly: d.privateOnly,
 
 		// Overwrite device settings
 		RealDeviceKind: strings.ToLower(xcuitest.IOS),
@@ -171,66 +245,62 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 func (r *XcuitestRunner) calculateJobsCount(suites []xcuitest.Suite) int {
 	jobsCount := 0
 	for _, s := range suites {
-		jobsCount += len(s.Devices)
+		jobsCount += len(enumerateDevices(s.Devices, s.Simulators))
 	}
 	return jobsCount
 }
 
-// archiveAppsToIpaIfRequired checks if apps are a .ipa package. Otherwise, it generates one.
-func archiveAppsToIpaIfRequired(project *xcuitest.Project) error {
-	var err error
-	cache := map[string]string{}
-	project.Xcuitest.App, err = archiveAppToIpaIfRequired(project.Xcuitest.App, cache)
-	if err != nil {
-		return err
+func archive(src string, targetDir string, archiveType archiveType) (string, error) {
+	switch archiveType {
+	case ipaArchive:
+		return archiveAppToIpa(src, targetDir)
+	case zipArchive:
+		return archiveAppToZip(src, targetDir)
 	}
-
-	for i, s := range project.Suites {
-		project.Suites[i].TestApp, err = archiveAppToIpaIfRequired(s.TestApp, cache)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return "", fmt.Errorf("unknown archive type: %s", archiveType)
 }
 
-func archiveAppToIpaIfRequired(appPath string, cache map[string]string) (string, error) {
-	if apps.IsStorageReference(appPath) {
+func archiveAppToZip(appPath string, targetDir string) (string, error) {
+	if strings.HasSuffix(appPath, ".zip") {
 		return appPath, nil
 	}
 
+	log.Info().Msgf("Archiving %s to .zip", path.Base(appPath))
+
+	fileName := fmt.Sprintf("%s.zip", strings.TrimSuffix(path.Base(appPath), ".app"))
+	zipName := filepath.Join(targetDir, fileName)
+	arch, err := zip.NewFileWriter(zipName, sauceignore.NewMatcher([]sauceignore.Pattern{}))
+	if err != nil {
+		return "", err
+	}
+	defer arch.Close()
+
+	_, _, err = arch.Add(appPath, "")
+	if err != nil {
+		return "", err
+	}
+	return zipName, nil
+}
+
+// archiveAppToIpa generates a valid IPA file from a .app folder.
+func archiveAppToIpa(appPath string, targetDir string) (string, error) {
 	if strings.HasSuffix(appPath, ".ipa") {
 		return appPath, nil
 	}
 
-	if cachedApp, ok := cache[appPath]; ok {
-		return cachedApp, nil
-	}
-
-	archivedApp, err := archiveAppToIpa(appPath)
-	if err != nil {
-		log.Error().Msgf("Unable to archive %s to ipa: %v", appPath, err)
-		err = fmt.Errorf("unable to archive %s", appPath)
-		return "", err
-	}
-
-	cache[appPath] = archivedApp
-	return archivedApp, nil
-}
-
-// archiveAppToIpa generates a valid IPA file from a .app folder.
-func archiveAppToIpa(appPath string) (string, error) {
 	log.Info().Msgf("Archiving %s to .ipa", path.Base(appPath))
-	fileName := fmt.Sprintf("%s-*.ipa", strings.TrimSuffix(path.Base(appPath), ".app"))
-	tmpFile, err := os.CreateTemp(os.TempDir(), fileName)
+
+	fileName := fmt.Sprintf("%s.ipa", strings.TrimSuffix(path.Base(appPath), ".app"))
+	zipName := filepath.Join(targetDir, fileName)
+	arch, err := zip.NewFileWriter(zipName, sauceignore.NewMatcher([]sauceignore.Pattern{}))
 	if err != nil {
 		return "", err
 	}
-	arch, _ := zip.New(tmpFile, sauceignore.NewMatcher([]sauceignore.Pattern{}))
 	defer arch.Close()
+
 	_, _, err = arch.Add(appPath, "Payload/")
 	if err != nil {
 		return "", err
 	}
-	return tmpFile.Name(), nil
+	return zipName, nil
 }

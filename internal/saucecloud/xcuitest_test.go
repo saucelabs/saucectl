@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"reflect"
-	"regexp"
 	"testing"
 
 	"gotest.tools/v3/fs"
@@ -56,37 +55,30 @@ func TestXcuitestRunner_ensureAppsAreIpa(t *testing.T) {
 				fs.WithMode(0644))))
 	defer dir.Remove()
 
+	tempDir := fs.NewDir(t, "tmp")
+	defer tempDir.Remove()
+
 	originalAppPath := path.Join(dir.Path(), "my-app.app")
 	originalTestAppPath := path.Join(dir.Path(), "my-test-app.app")
 
-	project := &xcuitest.Project{
-		Xcuitest: xcuitest.Xcuitest{
-			App: originalAppPath,
-		},
-		Suites: []xcuitest.Suite{
-			xcuitest.Suite{
-				TestApp: originalTestAppPath,
-			},
-		},
-	}
-	// Run it
-	err := archiveAppsToIpaIfRequired(project)
+	appPath, err := archive(originalAppPath, tempDir.Path(), ipaArchive)
 	if err != nil {
 		t.Errorf("got error: %v", err)
 	}
-	appPath := project.Xcuitest.App
-	testAppPath := project.Suites[0].TestApp
-
 	defer os.Remove(appPath)
+
+	testAppPath, err := archive(originalTestAppPath, tempDir.Path(), ipaArchive)
+	if err != nil {
+		t.Errorf("got error: %v", err)
+	}
 	defer os.Remove(testAppPath)
 
-	if !regexp.MustCompile(`my-app-([0-9]+)\.ipa$`).Match([]byte(appPath)) {
+	if path.Ext(appPath) != ".ipa" {
 		t.Errorf("%v: should be an .ipa file", appPath)
 	}
-	if !regexp.MustCompile(`my-test-app-([0-9]+)\.ipa$`).Match([]byte(testAppPath)) {
+	if path.Ext(testAppPath) != ".ipa" {
 		t.Errorf("%v: should be an .ipa file", testAppPath)
 	}
-
 	checkFileFound(t, appPath, "Payload/my-app.app/check-me.txt", "check-me")
 	checkFileFound(t, testAppPath, "Payload/my-test-app.app/test-check-me.txt", "test-check-me")
 }

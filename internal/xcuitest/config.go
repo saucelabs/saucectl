@@ -62,10 +62,14 @@ type TestOptions struct {
 // Suite represents the xcuitest test suite configuration.
 type Suite struct {
 	Name               string             `yaml:"name,omitempty" json:"name"`
+	App                string             `yaml:"app,omitempty" json:"app"`
+	AppDescription     string             `yaml:"appDescription,omitempty" json:"appDescription"`
 	TestApp            string             `yaml:"testApp,omitempty" json:"testApp"`
 	TestAppDescription string             `yaml:"testAppDescription,omitempty" json:"testAppDescription"`
+	OtherApps          []string           `yaml:"otherApps,omitempty" json:"otherApps"`
 	Timeout            time.Duration      `yaml:"timeout,omitempty" json:"timeout"`
 	Devices            []config.Device    `yaml:"devices,omitempty" json:"devices"`
+	Simulators         []config.Simulator `yaml:"simulators,omitempty" json:"simulators"`
 	TestOptions        TestOptions        `yaml:"testOptions,omitempty" json:"testOptions"`
 	AppSettings        config.AppSettings `yaml:"appSettings,omitempty" json:"appSettings"`
 	PassThreshold      int                `yaml:"passThreshold,omitempty" json:"-"`
@@ -127,6 +131,13 @@ func SetDefaults(p *Project) {
 			p.Suites[ks].TestApp = p.Xcuitest.TestApp
 			p.Suites[ks].TestAppDescription = p.Xcuitest.TestAppDescription
 		}
+		if suite.App == "" {
+			p.Suites[ks].App = p.Xcuitest.App
+			p.Suites[ks].AppDescription = p.Xcuitest.AppDescription
+		}
+		if len(suite.OtherApps) == 0 {
+			suite.OtherApps = append(suite.OtherApps, p.Xcuitest.OtherApps...)
+		}
 		if suite.PassThreshold < 1 {
 			p.Suites[ks].PassThreshold = 1
 		}
@@ -146,26 +157,6 @@ func Validate(p Project) error {
 		return errors.New(msg.NoTunnelSupport)
 	}
 
-	if p.Xcuitest.App == "" {
-		return errors.New(msg.MissingXcuitestAppPath)
-	}
-	if err := apps.Validate("application", p.Xcuitest.App, []string{".ipa", ".app"}); err != nil {
-		return err
-	}
-
-	if p.Xcuitest.TestApp == "" {
-		return errors.New(msg.MissingXcuitestTestAppPath)
-	}
-	if err := apps.Validate("test application", p.Xcuitest.TestApp, []string{".ipa", ".app"}); err != nil {
-		return err
-	}
-
-	for _, app := range p.Xcuitest.OtherApps {
-		if err := apps.Validate("other application", app, []string{".ipa", ".app"}); err != nil {
-			return err
-		}
-	}
-
 	if p.Sauce.LaunchOrder != "" && p.Sauce.LaunchOrder != config.LaunchOrderFailRate {
 		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchOrder, string(config.LaunchOrderFailRate))
 	}
@@ -175,9 +166,39 @@ func Validate(p Project) error {
 	}
 
 	for _, suite := range p.Suites {
-		if len(suite.Devices) == 0 {
+		if len(suite.Devices) == 0 && len(suite.Simulators) == 0 {
 			return fmt.Errorf(msg.MissingXcuitestDeviceConfig, suite.Name)
 		}
+		if len(suite.Devices) > 0 && len(suite.Simulators) > 0 {
+			return fmt.Errorf("suite cannot have both simulators and devices")
+		}
+
+		validAppExt := []string{".app"}
+		if len(suite.Devices) > 0 {
+			validAppExt = append(validAppExt, ".ipa")
+		} else if len(suite.Simulators) > 0 {
+			validAppExt = append(validAppExt, ".zip")
+		}
+		if suite.App == "" {
+			return errors.New(msg.MissingXcuitestAppPath)
+		}
+		if err := apps.Validate("application", suite.App, validAppExt); err != nil {
+			return err
+		}
+
+		if suite.TestApp == "" {
+			return errors.New(msg.MissingXcuitestTestAppPath)
+		}
+		if err := apps.Validate("test application", suite.TestApp, validAppExt); err != nil {
+			return err
+		}
+
+		for _, app := range suite.OtherApps {
+			if err := apps.Validate("other application", app, validAppExt); err != nil {
+				return err
+			}
+		}
+
 		for didx, device := range suite.Devices {
 			if device.ID == "" && device.Name == "" {
 				return fmt.Errorf(msg.MissingDeviceConfig, suite.Name, didx)

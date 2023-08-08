@@ -71,7 +71,7 @@ type Batch struct {
 	FrameworkVersion string              `json:"frameworkVersion,omitempty"`
 	RunnerVersion    string              `json:"runnerVersion,omitempty"`
 	TestFile         string              `json:"testFile,omitempty"`
-	Args             []map[string]string `json:"args"`
+	Args             []map[string]string `json:"args,omitempty"`
 	VideoFPS         int                 `json:"video_fps"`
 }
 
@@ -130,7 +130,7 @@ func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 				FrameworkVersion: opts.FrameworkVersion,
 				RunnerVersion:    opts.RunnerVersion,
 				TestFile:         opts.Suite,
-				Args:             c.formatEspressoArgs(opts.TestOptions),
+				Args:             c.formatTestOptions(opts.TestOptions),
 				VideoFPS:         13, // 13 is the sweet spot to minimize frame drops
 			},
 			IdleTimeout: 9999,
@@ -184,8 +184,8 @@ func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 	return sessionStart.SessionID, false, nil
 }
 
-// formatEspressoArgs adapts option shape to match chef expectations
-func (c *Webdriver) formatEspressoArgs(options map[string]interface{}) []map[string]string {
+// formatTestOptions adapts option shape to match chef expectations
+func (c *Webdriver) formatTestOptions(options map[string]interface{}) []map[string]string {
 	var mappedOptions []map[string]string
 	for k, v := range options {
 		if v == nil {
