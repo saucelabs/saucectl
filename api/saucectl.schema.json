@@ -2116,7 +2116,7 @@
                 "type": "string"
               },
               "appDescription": {
-                "description": "Description for the app",
+                "description": "Description for the app.",
                 "type": "string"
               },
               "testApp": {
@@ -2124,11 +2124,11 @@
                 "type": "string"
               },
               "testAppDescription": {
-                "description": "Description for the testApp",
+                "description": "Description for the testApp.",
                 "type": "string"
               },
               "otherApps": {
-                "description": "A list of applications to be installed alongside the main app. Applications can be defined as a local path or a remote url. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
+                "description": "A list of applications to be installed alongside the main app. Applications can be defined as a local path or a remote url. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values. When targeting simulators, a maximum of 2 otherApps is supported.",
                 "type": "array"
               }
             },
@@ -2150,7 +2150,7 @@
                   "type": "string"
                 },
                 "appDescription": {
-                  "description": "Description for the app",
+                  "description": "Description for the app.",
                   "type": "string"
                 },
                 "testApp": {
@@ -2158,11 +2158,11 @@
                   "type": "string"
                 },
                 "testAppDescription": {
-                  "description": "Description for the testApp",
+                  "description": "Description for the testApp.",
                   "type": "string"
                 },
                 "otherApps": {
-                  "description": "A list of applications to be installed alongside the main app. Applications can be defined as a local path or a remote url. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
+                  "description": "A list of applications to be installed alongside the main app. Applications can be defined as a local path or a remote url. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values. When targeting simulators, a maximum of 2 otherApps is supported.",
                   "type": "array"
                 },
                 "testOptions": {
