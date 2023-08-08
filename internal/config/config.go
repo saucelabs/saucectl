@@ -89,10 +89,10 @@ var ValidVisibilityValues = []string{
 	VisibilityPrivate,
 }
 
-// Simulator is an alias for a Virtual Device in the iOS nomeclature.
+// Simulator is an alias for a Virtual Device in the iOS nomenclature.
 type Simulator = VirtualDevice
 
-// Emulator is an alias for a Virtual Device in the Android nomeclature.
+// Emulator is an alias for a Virtual Device in the Android nomenclature.
 type Emulator = VirtualDevice
 
 // When represents a conditional status for when artifacts should be downloaded.
