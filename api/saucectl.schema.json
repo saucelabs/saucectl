@@ -2176,6 +2176,30 @@
                     "notClass": {
                       "description": "Run all classes except those specified here.",
                       "type": "array"
+                    },
+                    "testLanguage": {
+                      "description": "Specifies ISO 639-1 language during testing.",
+                      "type": "string"
+                    },
+                    "testRegion": {
+                      "description": "Specifies ISO 3166-1 region during testing.",
+                      "type": "string"
+                    },
+                    "testTimeoutsEnabled": {
+                      "description": "By default there is no timeout, if enabled, then the timeout is 600 seconds. This can be changed by adding the defaultTestExecutionTimeAllowance value.",
+                      "type": "string",
+                      "enum": [
+                        "Yes",
+                        "No"
+                      ]
+                    },
+                    "maximumTestExecutionTimeAllowance": {
+                      "description": "The maximum execution time an individual test is given to execute, regardless of the test's preferred allowance.",
+                      "type": "number"
+                    },
+                    "defaultTestExecutionTimeAllowance": {
+                      "description": "The default execution time an individual test is given to execute if test timeouts are enabled.",
+                      "type": "number"
                     }
                   },
                   "additionalProperties": false
