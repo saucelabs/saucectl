@@ -17,11 +17,11 @@ import (
 
 func TestToMap(t *testing.T) {
 	opts := TestOptions{
-		Class: []string{},
-		NotClass: []string{},
-		TestLanguage: "",
-		TestRegion: "",
-		TestTimeoutsEnabled: "",
+		Class:                             []string{},
+		NotClass:                          []string{},
+		TestLanguage:                      "",
+		TestRegion:                        "",
+		TestTimeoutsEnabled:               "",
 		MaximumTestExecutionTimeAllowance: 0,
 		DefaultTestExecutionTimeAllowance: 0,
 	}
