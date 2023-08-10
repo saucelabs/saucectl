@@ -39,8 +39,8 @@ func TestToMap(t *testing.T) {
 		t.Errorf("ints should be converted to strings when mapping, got (%v) want (%v)", vtype, reflect.String)
 	}
 
-	if m["defaultTestExecutionTimeAllowance"] != "" {
-		t.Errorf("0 values should be cast to empty strings, got (%v)", m["defaultTestExecutionTimeAllowance"])
+	if v := m["defaultTestExecutionTimeAllowance"]; v != "" {
+		t.Errorf("0 values should be cast to empty strings, got (%v)", v)
 	}
 }
 
