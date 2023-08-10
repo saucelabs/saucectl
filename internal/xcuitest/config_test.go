@@ -15,7 +15,7 @@ import (
 	"gotest.tools/v3/fs"
 )
 
-func TestToMap(t *testing.T) {
+func TestTestOptions_ToMap(t *testing.T) {
 	opts := TestOptions{
 		Class:                             []string{},
 		NotClass:                          []string{},
