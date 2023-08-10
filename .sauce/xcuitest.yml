@@ -39,7 +39,6 @@ suites:
         - MyDemoAppUITests/ProductListingPageTest
     simulators:
       - name: "iPhone 11 Simulator"
-        platformName: iOS
         platformVersions:
           - "16.2"
 
