@@ -82,7 +82,7 @@ func (t TestOptions) ToMap() map[string]interface{} {
 				switch ft.Kind() {
 				// Convert int to string to match chef expectation that all test option values are strings
 				case reflect.Int:
-					// Conventionally, when test options with value "" will be ignored.
+					// Conventionally, test options with value "" will be ignored.
 					if fv.(int) == 0 {
 						m[tname] = ""
 					} else {
