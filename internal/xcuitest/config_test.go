@@ -15,6 +15,25 @@ import (
 	"gotest.tools/v3/fs"
 )
 
+func TestToMap(t *testing.T) {
+	opts := TestOptions{
+		Class: []string{},
+		NotClass: []string{},
+		TestLanguage: "",
+		TestRegion: "",
+		TestTimeoutsEnabled: "",
+		MaximumTestExecutionTimeAllowance: 0,
+		DefaultTestExecutionTimeAllowance: 0,
+	}
+	wantLength := 7
+
+	m := opts.ToMap()
+
+	if len(m) != wantLength {
+		t.Errorf("Length of converted TestOptions should match original, got (%v) want (%v)", len(m), wantLength)
+	}
+}
+
 func TestValidate(t *testing.T) {
 	dir := fs.NewDir(t, "xcuitest-config",
 		fs.WithFile("test.ipa", "", fs.WithMode(0655)),

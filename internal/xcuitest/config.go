@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -55,8 +56,32 @@ type Xcuitest struct {
 
 // TestOptions represents the xcuitest test filter options configuration.
 type TestOptions struct {
-	NotClass []string `yaml:"notClass,omitempty" json:"notClass"`
-	Class    []string `yaml:"class,omitempty" json:"class"`
+	NotClass                          []string `yaml:"notClass,omitempty" json:"notClass"`
+	Class                             []string `yaml:"class,omitempty" json:"class"`
+	TestLanguage                      string   `yaml:"testLanguage,omitempty" json:"testLanguage"`
+	TestRegion                        string   `yaml:"testRegion,omitempty" json:"testRegion"`
+	TestTimeoutsEnabled               string   `yaml:"testTimeoutsEnabled,omitempty" json:"testTimeoutsEnabled"`
+	MaximumTestExecutionTimeAllowance int      `yaml:"maximumTestExecutionTimeAllowance,omitempty" json:"maximumTestExecutionTimeAllowance"`
+	DefaultTestExecutionTimeAllowance int      `yaml:"defaultTestExecutionTimeAllowance,omitempty" json:"defaultTestExecutionTimeAllowance"`
+}
+
+// ToMap converts the TestOptions to a map where the keys are dervied from json struct tag.
+func (t TestOptions) ToMap() map[string]interface{} {
+	m := make(map[string]interface{})
+	v := reflect.ValueOf(t)
+	tt := v.Type()
+
+	count := v.NumField()
+	for i := 0; i < count; i++ {
+		if v.Field(i).CanInterface() {
+			tag := tt.Field(i).Tag
+			tname, ok := tag.Lookup("json")
+			if ok && tname != "-" {
+				m[tname] = v.Field(i).Interface()
+			}
+		}
+	}
+	return m
 }
 
 // Suite represents the xcuitest test suite configuration.
