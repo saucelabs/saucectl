@@ -22,7 +22,7 @@ func TestToMap(t *testing.T) {
 		TestLanguage:                      "",
 		TestRegion:                        "",
 		TestTimeoutsEnabled:               "",
-		MaximumTestExecutionTimeAllowance: 0,
+		MaximumTestExecutionTimeAllowance: 20,
 		DefaultTestExecutionTimeAllowance: 0,
 	}
 	wantLength := 7
@@ -31,6 +31,16 @@ func TestToMap(t *testing.T) {
 
 	if len(m) != wantLength {
 		t.Errorf("Length of converted TestOptions should match original, got (%v) want (%v)", len(m), wantLength)
+	}
+
+	v := reflect.ValueOf(m["maximumTestExecutionTimeAllowance"])
+	vtype := v.Type()
+	if vtype.Kind() != reflect.String {
+		t.Errorf("ints should be converted to strings when mapping, got (%v) want (%v)", vtype, reflect.String)
+	}
+
+	if m["defaultTestExecutionTimeAllowance"] != "" {
+		t.Errorf("0 values should be cast to empty strings, got (%v)", m["defaultTestExecutionTimeAllowance"])
 	}
 }
 

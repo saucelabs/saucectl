@@ -77,7 +77,19 @@ func (t TestOptions) ToMap() map[string]interface{} {
 			tag := tt.Field(i).Tag
 			tname, ok := tag.Lookup("json")
 			if ok && tname != "-" {
-				m[tname] = v.Field(i).Interface()
+				fv := v.Field(i).Interface()
+				ft := v.Field(i).Type()
+				switch ft.Kind() {
+				case reflect.Int:
+					// Conventionally, when TestOptions are converted to match chef expectations, properties with value "" will be ignored.
+					if fv.(int) == 0 {
+						m[tname] = ""
+					} else {
+						m[tname] = fmt.Sprintf("%v", fv)
+					}
+				default:
+					m[tname] = fv
+				}
 			}
 		}
 	}
