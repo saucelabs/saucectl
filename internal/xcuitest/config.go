@@ -122,6 +122,9 @@ func SetDefaults(p *Project) {
 			// device type only supports uppercase values
 			suite.Devices[id].Options.DeviceType = strings.ToUpper(suite.Devices[id].Options.DeviceType)
 		}
+		for id := range suite.Simulators {
+			suite.Simulators[id].PlatformName = "iOS"
+		}
 
 		if suite.Timeout <= 0 {
 			p.Suites[ks].Timeout = p.Defaults.Timeout
