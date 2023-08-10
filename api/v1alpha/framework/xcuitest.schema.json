@@ -118,11 +118,11 @@
                 "enum": ["Yes", "No"]
               },
               "maximumTestExecutionTimeAllowance": {
-                "description": "The maximum execution time an individual test is given to execute, regardless of the test's preferred allowance. Supported on Simulators only.",
+                "description": "The maximum execution time, in seconds, an individual test is given to execute, regardless of the test's preferred allowance. Supported on Simulators only.",
                 "type": "number"
               },
               "defaultTestExecutionTimeAllowance": {
-                "description": "The default execution time an individual test is given to execute if test timeouts are enabled. Supported on Simulators only.",
+                "description": "The default execution time, in seconds, an individual test is given to execute if test timeouts are enabled. Supported on Simulators only.",
                 "type": "number"
               }
             },
