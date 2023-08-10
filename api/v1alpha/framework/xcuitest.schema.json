@@ -105,7 +105,7 @@
                 "type": "array"
               },
               "testLanguage": {
-                "description": "Specifies ISO 639-1 language during testing.",
+                "description": "Specifies ISO 639-1 language during testing. Supported on Simulators only.",
                 "type": "string"
               },
               "testRegion": {
@@ -113,16 +113,16 @@
                 "type": "string"
               },
               "testTimeoutsEnabled": {
-                "description": "By default there is no timeout, if enabled, then the timeout is 600 seconds. This can be changed by adding the defaultTestExecutionTimeAllowance value.",
+                "description": "By default there is no timeout, if enabled, then the timeout is 600 seconds. This can be changed by adding the defaultTestExecutionTimeAllowance value. Supported on Simulators only.",
                 "type": "string",
                 "enum": ["Yes", "No"]
               },
               "maximumTestExecutionTimeAllowance": {
-                "description": "The maximum execution time an individual test is given to execute, regardless of the test's preferred allowance.",
+                "description": "The maximum execution time an individual test is given to execute, regardless of the test's preferred allowance. Supported on Simulators only.",
                 "type": "number"
               },
               "defaultTestExecutionTimeAllowance": {
-                "description": "The default execution time an individual test is given to execute if test timeouts are enabled.",
+                "description": "The default execution time an individual test is given to execute if test timeouts are enabled. Supported on Simulators only.",
                 "type": "number"
               }
             },
