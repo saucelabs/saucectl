@@ -65,7 +65,7 @@ type TestOptions struct {
 	DefaultTestExecutionTimeAllowance int      `yaml:"defaultTestExecutionTimeAllowance,omitempty" json:"defaultTestExecutionTimeAllowance"`
 }
 
-// ToMap converts the TestOptions to a map where the keys are dervied from json struct tags.
+// ToMap converts the TestOptions to a map where the keys are derived from json struct tags.
 func (t TestOptions) ToMap() map[string]interface{} {
 	m := make(map[string]interface{})
 	v := reflect.ValueOf(t)
