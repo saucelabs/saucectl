@@ -220,10 +220,7 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		SmartRetry: job.SmartRetry{
 			FailedOnly: s.SmartRetry.IsRetryFailedOnly(),
 		},
-		TestOptions: map[string]interface{}{
-			"class":    s.TestOptions.Class,
-			"notClass": s.TestOptions.NotClass,
-		},
+		TestOptions: s.TestOptions.ToMap(),
 
 		// RDC Specific flags
 		RealDevice:        d.isRealDevice,

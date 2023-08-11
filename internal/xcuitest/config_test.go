@@ -15,6 +15,35 @@ import (
 	"gotest.tools/v3/fs"
 )
 
+func TestTestOptions_ToMap(t *testing.T) {
+	opts := TestOptions{
+		Class:                             []string{},
+		NotClass:                          []string{},
+		TestLanguage:                      "",
+		TestRegion:                        "",
+		TestTimeoutsEnabled:               "",
+		MaximumTestExecutionTimeAllowance: 20,
+		DefaultTestExecutionTimeAllowance: 0,
+	}
+	wantLength := 7
+
+	m := opts.ToMap()
+
+	if len(m) != wantLength {
+		t.Errorf("Length of converted TestOptions should match original, got (%v) want (%v)", len(m), wantLength)
+	}
+
+	v := reflect.ValueOf(m["maximumTestExecutionTimeAllowance"])
+	vtype := v.Type()
+	if vtype.Kind() != reflect.String {
+		t.Errorf("ints should be converted to strings when mapping, got (%v) want (%v)", vtype, reflect.String)
+	}
+
+	if v := m["defaultTestExecutionTimeAllowance"]; v != "" {
+		t.Errorf("0 values should be cast to empty strings, got (%v)", v)
+	}
+}
+
 func TestValidate(t *testing.T) {
 	dir := fs.NewDir(t, "xcuitest-config",
 		fs.WithFile("test.ipa", "", fs.WithMode(0655)),
