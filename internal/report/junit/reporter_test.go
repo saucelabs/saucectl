@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/report"
 )
 
@@ -125,15 +126,15 @@ func TestReporter_Render(t *testing.T) {
 }
 
 func TestReduceJunitFiles(t *testing.T) {
-	input := []TestSuites{
+	input := []junit.TestSuites{
 		{
-			TestSuites: []TestSuite{
+			TestSuites: []junit.TestSuite{
 				{
 					Tests:   24,
 					Errors:  2,
 					Time:    "47.917",
 					Package: "com.example.android.testing.espresso.BasicSample",
-					TestCases: []TestCase{
+					TestCases: []junit.TestCase{
 						{
 							Name:      "changeText_newActivity",
 							ClassName: "com.example.android.testing.espresso.BasicSample.Test10Test",
@@ -262,13 +263,13 @@ func TestReduceJunitFiles(t *testing.T) {
 			},
 		},
 		{
-			TestSuites: []TestSuite{
+			TestSuites: []junit.TestSuite{
 				{
 					Tests:   2,
 					Errors:  1,
 					Time:    "11.007",
 					Package: "com.example.android.testing.espresso.BasicSample",
-					TestCases: []TestCase{
+					TestCases: []junit.TestCase{
 						{
 							Name:      "changeText_sameActivity",
 							ClassName: "com.example.android.testing.espresso.BasicSample.Test2Test",
@@ -286,13 +287,13 @@ func TestReduceJunitFiles(t *testing.T) {
 			},
 		},
 		{
-			TestSuites: []TestSuite{
+			TestSuites: []junit.TestSuite{
 				{
 					Tests:   1,
 					Errors:  1,
 					Time:    "6.004",
 					Package: "com.example.android.testing.espresso.BasicSample",
-					TestCases: []TestCase{
+					TestCases: []junit.TestCase{
 						{
 							Name:      "changeText_sameActivity",
 							ClassName: "com.example.android.testing.espresso.BasicSample.Test12Test",
@@ -305,13 +306,13 @@ func TestReduceJunitFiles(t *testing.T) {
 			},
 		},
 		{
-			TestSuites: []TestSuite{
+			TestSuites: []junit.TestSuite{
 				{
 					Tests:   1,
 					Errors:  0,
 					Time:    "5.535",
 					Package: "com.example.android.testing.espresso.BasicSample",
-					TestCases: []TestCase{
+					TestCases: []junit.TestCase{
 						{
 							Name:      "changeText_sameActivity",
 							ClassName: "com.example.android.testing.espresso.BasicSample.Test12Test",
@@ -323,14 +324,14 @@ func TestReduceJunitFiles(t *testing.T) {
 			},
 		},
 	}
-	want := TestSuites{
-		TestSuites: []TestSuite{
+	want := junit.TestSuites{
+		TestSuites: []junit.TestSuite{
 			{
 				Tests:   24,
 				Errors:  0,
 				Time:    "47.917",
 				Package: "com.example.android.testing.espresso.BasicSample",
-				TestCases: []TestCase{
+				TestCases: []junit.TestCase{
 					{
 						Name:      "changeText_newActivity",
 						ClassName: "com.example.android.testing.espresso.BasicSample.Test10Test",
