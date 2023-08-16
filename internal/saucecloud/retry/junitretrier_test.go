@@ -84,7 +84,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 					PollJobFn:              nil,
 					GetJobAssetFileNamesFn: nil,
 					GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
-						if jobID == "fake-job-id" && fileName == junit.JunitFileName {
+						if jobID == "fake-job-id" && fileName == junit.FileName {
 							return []byte("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<testsuite>\n    <testcase classname=\"Demo.Class1\">\n        <failure>ERROR</failure>\n    </testcase>\n    <testcase classname=\"Demo.Class1\"/>\n    <testcase classname=\"Demo.Class2\"/>\n    <testcase classname=\"Demo.Class3\"/>\n</testsuite>\n"), nil
 						}
 						return []byte{}, errors.New("unknown file")
@@ -128,7 +128,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 					PollJobFn:              nil,
 					GetJobAssetFileNamesFn: nil,
 					GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
-						if jobID == "fake-job-id" && fileName == junit.JunitFileName {
+						if jobID == "fake-job-id" && fileName == junit.FileName {
 							return []byte("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<testsuite>\n    <testcase classname=\"Demo.Class1\">\n        <failure>ERROR</failure>\n    </testcase>\n    <testcase classname=\"Demo.Class1\"/>\n    <testcase classname=\"Demo.Class2\"/>\n    <testcase classname=\"Demo.Class3\"/>\n</testsuite>\n"), nil
 						}
 						return []byte{}, errors.New("unknown file")
@@ -169,7 +169,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 					PollJobFn:              nil,
 					GetJobAssetFileNamesFn: nil,
 					GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
-						if jobID == "fake-job-id" && fileName == junit.JunitFileName {
+						if jobID == "fake-job-id" && fileName == junit.FileName {
 							return []byte("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<testsuite>\n    <testcase name=\"demoTest\" classname=\"Demo.Class1\">\n        <failure>ERROR</failure>\n    </testcase>\n    <testcase classname=\"Demo.Class1\"/>\n    <testcase classname=\"Demo.Class2\"/>\n    <testcase classname=\"Demo.Class3\"/>\n</testsuite>\n"), nil
 						}
 						return []byte{}, errors.New("unknown file")
@@ -239,7 +239,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 					PollJobFn:              nil,
 					GetJobAssetFileNamesFn: nil,
 					GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
-						if jobID == "fake-job-id" && fileName == junit.JunitFileName {
+						if jobID == "fake-job-id" && fileName == junit.FileName {
 							return []byte("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<testsuite>\n    <testcase classname=\"Demo.Class1\">\n        <failure>ERROR</failure>\n    </testcase>\n    <testcase classname=\"Demo.Class1\"/>\n    <testcase classname=\"Demo.Class2\"/>\n    <testcase classname=\"Demo.Class3\"/>\n</testsuite>\n"), nil
 						}
 						return []byte{}, errors.New("unknown file")
@@ -281,7 +281,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 					PollJobFn:              nil,
 					GetJobAssetFileNamesFn: nil,
 					GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
-						if jobID == "fake-job-id" && fileName == junit.JunitFileName {
+						if jobID == "fake-job-id" && fileName == junit.FileName {
 							return []byte("malformed"), nil
 						}
 						return []byte{}, errors.New("unknown file")
@@ -323,7 +323,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 					PollJobFn:              nil,
 					GetJobAssetFileNamesFn: nil,
 					GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
-						if jobID == "fake-job-id" && fileName == junit.JunitFileName {
+						if jobID == "fake-job-id" && fileName == junit.FileName {
 							return []byte("malformed"), nil
 						}
 						return []byte{}, errors.New("unknown file")

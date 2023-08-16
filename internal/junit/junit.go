@@ -5,8 +5,8 @@ import (
 	"fmt"
 )
 
-// JunitFileName is the name of the JUnit report.
-const JunitFileName = "junit.xml"
+// FileName is the name of the JUnit report.
+const FileName = "junit.xml"
 
 // TestCase maps to <testcase> element
 type TestCase struct {

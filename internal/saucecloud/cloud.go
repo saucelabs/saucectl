@@ -485,7 +485,7 @@ func (r *CloudRunner) GetJUnitArtifacts(res result) (junitArifact report.Artifac
 	content, err := r.JobService.GetJobAssetFileContent(
 		context.Background(),
 		res.job.ID,
-		junit.JunitFileName,
+		junit.FileName,
 		res.job.IsRDC)
 	junitArifact = report.Artifact{
 		AssetType: report.JUnitArtifact,
@@ -497,7 +497,7 @@ func (r *CloudRunner) GetJUnitArtifacts(res result) (junitArifact report.Artifac
 		content, err := r.JobService.GetJobAssetFileContent(
 			context.Background(),
 			id,
-			junit.JunitFileName,
+			junit.FileName,
 			res.job.IsRDC,
 		)
 		parentJUnits = append(parentJUnits, report.Artifact{
@@ -667,7 +667,7 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	}
 
 	// Some frameworks produce a junit.xml instead, check for that file if there's no console.log
-	assetContent, err = r.JobService.GetJobAssetFileContent(context.Background(), res.job.ID, junit.JunitFileName, res.job.IsRDC)
+	assetContent, err = r.JobService.GetJobAssetFileContent(context.Background(), res.job.ID, junit.FileName, res.job.IsRDC)
 	if err != nil {
 		log.Warn().Err(err).Str("suite", res.name).Msg("Failed to retrieve the console output.")
 		return
@@ -905,7 +905,7 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 			return
 		}
 		testRuns = insights.FromSauceReport(report, res.job.ID, res.name, res.details, res.job.IsRDC)
-	} else if arrayContains(assets, junit.JunitFileName) {
+	} else if arrayContains(assets, junit.FileName) {
 		report, err := r.loadJUnitReport(res.job.ID, res.job.IsRDC)
 		if err != nil {
 			log.Warn().Err(err).Str("action", "parsingXML").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
@@ -931,7 +931,7 @@ func (r *CloudRunner) loadSauceTestReport(jobID string, isRDC bool) (saucereport
 }
 
 func (r *CloudRunner) loadJUnitReport(jobID string, isRDC bool) (junit.TestSuites, error) {
-	fileContent, err := r.JobService.GetJobAssetFileContent(context.Background(), jobID, junit.JunitFileName, isRDC)
+	fileContent, err := r.JobService.GetJobAssetFileContent(context.Background(), jobID, junit.FileName, isRDC)
 	if err != nil {
 		log.Warn().Err(err).Str("action", "loading-xml-report").Msg(msg.InsightsReportError)
 		return junit.TestSuites{}, err

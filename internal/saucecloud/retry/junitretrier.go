@@ -17,16 +17,16 @@ type JunitRetrier struct {
 }
 
 func (b *JunitRetrier) retryFailedTests(reader job.Reader, jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
-	content, err := reader.GetJobAssetFileContent(context.Background(), previous.ID, junit.JunitFileName, previous.IsRDC)
+	content, err := reader.GetJobAssetFileContent(context.Background(), previous.ID, junit.FileName, previous.IsRDC)
 	if err != nil {
-		log.Err(err).Msgf(msg.UnableToFetchFile, junit.JunitFileName)
+		log.Err(err).Msgf(msg.UnableToFetchFile, junit.FileName)
 		log.Info().Msg(msg.SkippingSmartRetries)
 		jobOpts <- opt
 		return
 	}
 	suites, err := junit.Parse(content)
 	if err != nil {
-		log.Err(err).Msgf(msg.UnableToUnmarshallFile, junit.JunitFileName)
+		log.Err(err).Msgf(msg.UnableToUnmarshallFile, junit.FileName)
 		log.Info().Msg(msg.SkippingSmartRetries)
 		jobOpts <- opt
 		return
