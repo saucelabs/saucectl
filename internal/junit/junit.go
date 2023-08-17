@@ -10,15 +10,47 @@ const FileName = "junit.xml"
 
 // TestCase maps to <testcase> element
 type TestCase struct {
-	Name       string `xml:"name,attr"`
-	Assertions string `xml:"assertions,attr,omitempty"`
-	Time       string `xml:"time,attr"`
-	Timestamp  string `xml:"timestamp,attr"`
-	ClassName  string `xml:"classname,attr"`
-	Status     string `xml:"status,attr,omitempty"`
-	SystemOut  string `xml:"system-out,omitempty"`
-	Error      string `xml:"error,omitempty"`
-	Failure    string `xml:"failure,omitempty"`
+	Name       string   `xml:"name,attr"`
+	Assertions string   `xml:"assertions,attr,omitempty"`
+	Time       string   `xml:"time,attr"`
+	Timestamp  string   `xml:"timestamp,attr"`
+	ClassName  string   `xml:"classname,attr"`
+	Status     string   `xml:"status,attr,omitempty"`
+	File       string   `xml:"file,attr,omitempty"`
+	SystemErr  string   `xml:"system-err,omitempty"`
+	SystemOut  string   `xml:"system-out,omitempty"`
+	Error      *Error   `xml:"error,omitempty"`
+	Failure    *Failure `xml:"failure,omitempty"`
+	Skipped    *Skipped `xml:"skipped,omitempty"`
+}
+
+// Failure maps to either a <failure> or <error> element. It usually indicates
+// assertion failures. Depending on the framework, this may also indicate an
+// unexpected error, much like Error does.
+type Failure struct {
+	// Message is a short description of the failure.
+	Message string `xml:"message,attr"`
+	// Type is the type of failure, e.g. "java.lang.AssertionError".
+	Type string `xml:"type,attr"`
+	// Text is a failure description or stack trace.
+	Text string `xml:",chardata"`
+}
+
+// Error maps to <error> element. It usually indicates unexpected errors.
+// Depending on the framework, Failure is used instead.
+type Error struct {
+	// Message is a short description of the error.
+	Message string `xml:"message,attr"`
+	// Type is the type of error, e.g. "java.lang.NullPointerException".
+	Type string `xml:"type,attr"`
+	// Text is an error description or stack trace.
+	Text string `xml:",chardata"`
+}
+
+// Skipped maps to <skipped> element. Indicates a skipped test.
+type Skipped struct {
+	// Message is a short description that explains why the test was skipped.
+	Message string `xml:"message,attr"`
 }
 
 // TestSuite maps to <testsuite> element
@@ -33,7 +65,9 @@ type TestSuite struct {
 	Time       string     `xml:"time,attr,omitempty"`
 	Timestamp  string     `xml:"timestamp,attr,omitempty"`
 	Package    string     `xml:"package,attr,omitempty"`
+	File       string     `xml:"file,attr,omitempty"`
 	TestCases  []TestCase `xml:"testcase"`
+	SystemErr  string     `xml:"system-err,omitempty"`
 	SystemOut  string     `xml:"system-out,omitempty"`
 }
 
@@ -80,7 +114,7 @@ func Parse(data []byte) (TestSuites, error) {
 func GetFailedXCUITests(testCases []TestCase) []string {
 	classes := map[string]bool{}
 	for _, tc := range testCases {
-		if tc.Error != "" || tc.Failure != "" {
+		if tc.Error != nil || tc.Failure != nil {
 			// The format of the filtered test is "<className>/<testMethodName>".
 			// Fallback to <className> if the test method name is unexpectedly empty.
 			// tc.Name: <testMethodName>
@@ -99,7 +133,7 @@ func GetFailedXCUITests(testCases []TestCase) []string {
 func GetFailedEspressoTests(testCases []TestCase) []string {
 	classes := map[string]bool{}
 	for _, tc := range testCases {
-		if tc.Error != "" || tc.Failure != "" {
+		if tc.Error != nil || tc.Failure != nil {
 			// The format of the filtered test is "<className>#<testMethodName>".
 			// Fallback to <className> if the test method name is unexpectedly empty.
 			// tc.Name: <testMethodName>

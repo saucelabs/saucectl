@@ -689,12 +689,12 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	failCount := 1
 	for _, ts := range testsuites.TestSuites {
 		for _, tc := range ts.TestCases {
-			if tc.Error != "" {
+			if tc.Error != nil {
 				fmt.Printf("\n\t%d) %s.%s\n\n", errCount, tc.ClassName, tc.Name)
 				headerColor.Println("\tError was:")
 				bodyColor.Printf("\t%s\n", tc.Error)
 				errCount++
-			} else if tc.Failure != "" {
+			} else if tc.Failure != nil {
 				fmt.Printf("\n\t%d) %s.%s\n\n", failCount, tc.ClassName, tc.Name)
 				headerColor.Println("\tFailure was:")
 				bodyColor.Printf("\t%s\n", tc.Failure)
