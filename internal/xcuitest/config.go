@@ -153,7 +153,9 @@ func SetDefaults(p *Project) {
 	p.Sauce.Tunnel.SetDefaults()
 	p.Sauce.Metadata.SetDefaultBuild()
 
-	for ks, suite := range p.Suites {
+	for i := range p.Suites {
+		suite := &p.Suites[i]
+
 		for id := range suite.Devices {
 			suite.Devices[id].PlatformName = "iOS"
 
@@ -165,22 +167,22 @@ func SetDefaults(p *Project) {
 		}
 
 		if suite.Timeout <= 0 {
-			p.Suites[ks].Timeout = p.Defaults.Timeout
+			suite.Timeout = p.Defaults.Timeout
 		}
 
 		if suite.TestApp == "" {
-			p.Suites[ks].TestApp = p.Xcuitest.TestApp
-			p.Suites[ks].TestAppDescription = p.Xcuitest.TestAppDescription
+			suite.TestApp = p.Xcuitest.TestApp
+			suite.TestAppDescription = p.Xcuitest.TestAppDescription
 		}
 		if suite.App == "" {
-			p.Suites[ks].App = p.Xcuitest.App
-			p.Suites[ks].AppDescription = p.Xcuitest.AppDescription
+			suite.App = p.Xcuitest.App
+			suite.AppDescription = p.Xcuitest.AppDescription
 		}
 		if len(suite.OtherApps) == 0 {
 			suite.OtherApps = append(suite.OtherApps, p.Xcuitest.OtherApps...)
 		}
 		if suite.PassThreshold < 1 {
-			p.Suites[ks].PassThreshold = 1
+			suite.PassThreshold = 1
 		}
 	}
 }
