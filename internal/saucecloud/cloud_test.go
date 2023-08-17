@@ -605,10 +605,10 @@ func TestCloudRunner_loadJUnitReport(t *testing.T) {
 			name: "Unmarshall XML",
 			fields: fields{
 				GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
-					return []string{junit.JunitFileName}, nil
+					return []string{junit.FileName}, nil
 				},
 				GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
-					if fileName == junit.JunitFileName {
+					if fileName == junit.FileName {
 						return []byte(`<?xml version="1.0" encoding="utf-8"?><testsuite package="com.saucelabs.mydemoapp.android" tests="7" time="52.056"><testcase classname="com.saucelabs.mydemoapp.android.view.activities.DashboardToCheckout" name="dashboardProductTest" status="success"/><testcase classname="com.saucelabs.mydemoapp.android.view.activities.LoginTest" name="succesfulLoginTest" status="success"/><testcase classname="com.saucelabs.mydemoapp.android.view.activities.LoginTest" name="noUsernameLoginTest" status="success"/><testcase classname="com.saucelabs.mydemoapp.android.view.activities.LoginTest" name="noPasswordLoginTest" status="success"/><testcase classname="com.saucelabs.mydemoapp.android.view.activities.LoginTest" name="noCredentialLoginTest" status="success"/><testcase classname="com.saucelabs.mydemoapp.android.view.activities.WebViewTest" name="webViewTest" status="success"/><testcase classname="com.saucelabs.mydemoapp.android.view.activities.WebViewTest" name="withoutUrlTest" status="success"/><system-out>INSTRUMENTATION_STATUS: class=com.saucelabs.mydemoapp.android.view.activities.DashboardToCheckout</system-out></testsuite>`), nil
 					}
 					return []byte{}, errors.New("not-found")

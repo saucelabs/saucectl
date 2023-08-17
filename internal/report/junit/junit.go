@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/report"
 	"golang.org/x/exp/maps"
 )
@@ -27,15 +28,15 @@ func (r *Reporter) Add(t report.TestResult) {
 	r.TestResults = append(r.TestResults, t)
 }
 
-func parseJunitFiles(junits []report.Artifact) ([]TestSuites, error) {
-	var parsed []TestSuites
+func parseJunitFiles(junits []report.Artifact) ([]junit.TestSuites, error) {
+	var parsed []junit.TestSuites
 	var errs []error
 	for _, ju := range junits {
 		if ju.Error != nil {
 			errs = append(errs, fmt.Errorf("failed to retrieve junit file: %w", ju.Error))
 			continue
 		}
-		ts, err := Parse(ju.Body)
+		ts, err := junit.Parse(ju.Body)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to parse junit file: %w", err))
 			continue
@@ -49,7 +50,7 @@ func parseJunitFiles(junits []report.Artifact) ([]TestSuites, error) {
 }
 
 // reduceSuite updates "old" with values from "new".
-func reduceSuite(old TestSuite, new TestSuite) TestSuite {
+func reduceSuite(old junit.TestSuite, new junit.TestSuite) junit.TestSuite {
 	testMap := map[string]int{}
 	for idx, tc := range old.TestCases {
 		key := fmt.Sprintf(`%s.%s`, tc.ClassName, tc.Name)
@@ -72,8 +73,8 @@ func reduceSuite(old TestSuite, new TestSuite) TestSuite {
 	return old
 }
 
-func reduceJunitFiles(junits []TestSuites) TestSuites {
-	suites := map[string]TestSuite{}
+func reduceJunitFiles(junits []junit.TestSuites) junit.TestSuites {
+	suites := map[string]junit.TestSuite{}
 
 	for _, junit := range junits {
 		for _, suite := range junit.TestSuites {
@@ -85,13 +86,13 @@ func reduceJunitFiles(junits []TestSuites) TestSuites {
 		}
 	}
 
-	output := TestSuites{}
+	output := junit.TestSuites{}
 
 	output.TestSuites = append(output.TestSuites, maps.Values(suites)...)
 	return output
 }
 
-func countErrors(tcs []TestCase) int {
+func countErrors(tcs []junit.TestCase) int {
 	count := 0
 	for _, tc := range tcs {
 		if tc.Status == "error" {
@@ -100,7 +101,7 @@ func countErrors(tcs []TestCase) int {
 	}
 	return count
 }
-func countSkipped(tcs []TestCase) int {
+func countSkipped(tcs []junit.TestCase) int {
 	count := 0
 	for _, tc := range tcs {
 		if tc.Status == "skipped" {
@@ -125,9 +126,9 @@ func (r *Reporter) Render() {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
-	tt := TestSuites{}
+	tt := junit.TestSuites{}
 	for _, v := range r.TestResults {
-		t := TestSuite{
+		t := junit.TestSuite{
 			Name: v.Name,
 			Time: strconv.Itoa(int(v.Duration.Seconds())),
 		}
@@ -174,8 +175,8 @@ func (r *Reporter) Render() {
 	_, _ = fmt.Fprint(f, "\n")
 }
 
-func extractProperties(r report.TestResult) []Property {
-	props := []Property{
+func extractProperties(r report.TestResult) []junit.Property {
+	props := []junit.Property{
 		{
 			Name:  "url",
 			Value: r.URL,
@@ -194,7 +195,7 @@ func extractProperties(r report.TestResult) []Property {
 		},
 	}
 
-	var filtered []Property
+	var filtered []junit.Property
 	for _, p := range props {
 		// we don't want to display properties with empty values
 		if p.Value == "" {
