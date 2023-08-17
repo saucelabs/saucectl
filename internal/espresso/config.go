@@ -101,26 +101,28 @@ func SetDefaults(p *Project) {
 	p.Sauce.Tunnel.SetDefaults()
 	p.Sauce.Metadata.SetDefaultBuild()
 
-	for i, suite := range p.Suites {
+	for i := range p.Suites {
+		suite := &p.Suites[i]
+
 		for j := range suite.Devices {
 			// Android is the only choice.
-			p.Suites[i].Devices[j].PlatformName = Android
-			p.Suites[i].Devices[j].Options.DeviceType = strings.ToUpper(p.Suites[i].Devices[j].Options.DeviceType)
+			suite.Devices[j].PlatformName = Android
+			suite.Devices[j].Options.DeviceType = strings.ToUpper(p.Suites[i].Devices[j].Options.DeviceType)
 		}
 		for j := range suite.Emulators {
-			p.Suites[i].Emulators[j].PlatformName = Android
+			suite.Emulators[j].PlatformName = Android
 		}
 
 		if suite.Timeout <= 0 {
-			p.Suites[i].Timeout = p.Defaults.Timeout
+			suite.Timeout = p.Defaults.Timeout
 		}
 
 		if suite.TestApp == "" {
-			p.Suites[i].TestApp = p.Espresso.TestApp
-			p.Suites[i].TestAppDescription = p.Espresso.TestAppDescription
+			suite.TestApp = p.Espresso.TestApp
+			suite.TestAppDescription = p.Espresso.TestAppDescription
 		}
 		if suite.PassThreshold < 1 {
-			p.Suites[i].PassThreshold = 1
+			suite.PassThreshold = 1
 		}
 	}
 }
