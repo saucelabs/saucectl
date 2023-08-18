@@ -9,6 +9,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
+	"golang.org/x/exp/maps"
 )
 
 type JunitRetrier struct {
@@ -92,7 +93,7 @@ func getFailedXCUITests(testCases []junit.TestCase) []string {
 			}
 		}
 	}
-	return getKeysFromMap(classes)
+	return maps.Keys(classes)
 }
 
 // getFailedEspressoTests get failed espresso test list from testcases.
@@ -111,15 +112,5 @@ func getFailedEspressoTests(testCases []junit.TestCase) []string {
 			}
 		}
 	}
-	return getKeysFromMap(classes)
-}
-
-func getKeysFromMap(mp map[string]bool) []string {
-	var keys = make([]string, len(mp))
-	var i int
-	for k := range mp {
-		keys[i] = k
-		i++
-	}
-	return keys
+	return maps.Keys(classes)
 }
