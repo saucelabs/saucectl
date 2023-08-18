@@ -2,7 +2,6 @@ package junit
 
 import (
 	"encoding/xml"
-	"fmt"
 )
 
 // FileName is the name of the JUnit report.
@@ -127,44 +126,6 @@ func Parse(data []byte) (TestSuites, error) {
 	return tss, err
 }
 
-// GetFailedXCUITests get failed XCUITest test list from testcases.
-func GetFailedXCUITests(testCases []TestCase) []string {
-	classes := map[string]bool{}
-	for _, tc := range testCases {
-		if tc.Error != nil || tc.Failure != nil {
-			// The format of the filtered test is "<className>/<testMethodName>".
-			// Fallback to <className> if the test method name is unexpectedly empty.
-			// tc.Name: <testMethodName>
-			// tc.ClassName: <className>
-			if tc.Name != "" {
-				classes[fmt.Sprintf("%s/%s", tc.ClassName, tc.Name)] = true
-			} else {
-				classes[tc.ClassName] = true
-			}
-		}
-	}
-	return getKeysFromMap(classes)
-}
-
-// GetFailedEspressoTests get failed espresso test list from testcases.
-func GetFailedEspressoTests(testCases []TestCase) []string {
-	classes := map[string]bool{}
-	for _, tc := range testCases {
-		if tc.Error != nil || tc.Failure != nil {
-			// The format of the filtered test is "<className>#<testMethodName>".
-			// Fallback to <className> if the test method name is unexpectedly empty.
-			// tc.Name: <testMethodName>
-			// tc.ClassName: <className>
-			if tc.Name != "" {
-				classes[fmt.Sprintf("%s#%s", tc.ClassName, tc.Name)] = true
-			} else {
-				classes[tc.ClassName] = true
-			}
-		}
-	}
-	return getKeysFromMap(classes)
-}
-
 // CollectTestCases collects testcases from a report.
 func CollectTestCases(testsuites TestSuites) []TestCase {
 	var tc []TestCase
@@ -172,14 +133,4 @@ func CollectTestCases(testsuites TestSuites) []TestCase {
 		tc = append(tc, s.TestCases...)
 	}
 	return tc
-}
-
-func getKeysFromMap(mp map[string]bool) []string {
-	var keys = make([]string, len(mp))
-	var i int
-	for k := range mp {
-		keys[i] = k
-		i++
-	}
-	return keys
 }

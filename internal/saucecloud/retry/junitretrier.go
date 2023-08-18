@@ -46,7 +46,7 @@ func setClassesToRetry(opt *job.StartOptions, testcases []junit.TestCase) {
 		Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1))
 
 	if opt.Framework == xcuitest.Kind {
-		opt.TestsToRun = junit.GetFailedXCUITests(testcases)
+		opt.TestsToRun = getFailedXCUITests(testcases)
 		lg.Msgf(msg.RetryWithTests, opt.TestsToRun)
 		return
 	}
@@ -54,7 +54,7 @@ func setClassesToRetry(opt *job.StartOptions, testcases []junit.TestCase) {
 	if opt.TestOptions == nil {
 		opt.TestOptions = map[string]interface{}{}
 	}
-	tests := junit.GetFailedEspressoTests(testcases)
+	tests := getFailedEspressoTests(testcases)
 	opt.TestOptions["class"] = tests
 	lg.Msgf(msg.RetryWithTests, tests)
 }
@@ -74,4 +74,52 @@ func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptio
 		Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1)).
 		Msg("Retrying suite.")
 	jobOpts <- opt
+}
+
+// getFailedXCUITests get failed XCUITest test list from testcases.
+func getFailedXCUITests(testCases []junit.TestCase) []string {
+	classes := map[string]bool{}
+	for _, tc := range testCases {
+		if tc.Error != nil || tc.Failure != nil {
+			// The format of the filtered test is "<className>/<testMethodName>".
+			// Fallback to <className> if the test method name is unexpectedly empty.
+			// tc.Name: <testMethodName>
+			// tc.ClassName: <className>
+			if tc.Name != "" {
+				classes[fmt.Sprintf("%s/%s", tc.ClassName, tc.Name)] = true
+			} else {
+				classes[tc.ClassName] = true
+			}
+		}
+	}
+	return getKeysFromMap(classes)
+}
+
+// getFailedEspressoTests get failed espresso test list from testcases.
+func getFailedEspressoTests(testCases []junit.TestCase) []string {
+	classes := map[string]bool{}
+	for _, tc := range testCases {
+		if tc.Error != nil || tc.Failure != nil {
+			// The format of the filtered test is "<className>#<testMethodName>".
+			// Fallback to <className> if the test method name is unexpectedly empty.
+			// tc.Name: <testMethodName>
+			// tc.ClassName: <className>
+			if tc.Name != "" {
+				classes[fmt.Sprintf("%s#%s", tc.ClassName, tc.Name)] = true
+			} else {
+				classes[tc.ClassName] = true
+			}
+		}
+	}
+	return getKeysFromMap(classes)
+}
+
+func getKeysFromMap(mp map[string]bool) []string {
+	var keys = make([]string, len(mp))
+	var i int
+	for k := range mp {
+		keys[i] = k
+		i++
+	}
+	return keys
 }
