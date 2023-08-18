@@ -39,6 +39,10 @@ var fallbackAndroidVirtualDevices = []vmd.VirtualDevice{
 	{Name: "Android GoogleAPI Emulator", OSVersion: []string{"11.0", "10.0"}},
 }
 
+var fallbackIOSVirtualDevices = []vmd.VirtualDevice{
+	{Name: "iPhone Simulator", OSVersion: []string{"16.2"}},
+}
+
 type initializer struct {
 	stdio        terminal.Stdio
 	infoReader   framework.MetadataService
@@ -224,6 +228,32 @@ func vmdToMaps(vmds []vmd.VirtualDevice) ([]string, map[string][]string) {
 		sortVersions(v)
 	}
 	return vmdNames, vmdOSVersions
+}
+
+func (ini *initializer) askSimulator(cfg *initConfig, vmds []vmd.VirtualDevice) error {
+	vmdNames, vmdOSVersions := vmdToMaps(vmds)
+
+	q := &survey.Select{
+		Message: "Select simulator:",
+		Options: vmdNames,
+	}
+	err := survey.AskOne(q, &cfg.simulator.Name,
+		survey.WithShowCursor(true),
+		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
+	if err != nil {
+		return err
+	}
+
+	q = &survey.Select{
+		Message: "Select platform version:",
+		Options: vmdOSVersions[cfg.simulator.Name],
+	}
+	var simulatorVersion string
+	err = survey.AskOne(q, &simulatorVersion,
+		survey.WithShowCursor(true),
+		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
+	cfg.simulator.PlatformVersions = []string{simulatorVersion}
+	return err
 }
 
 func (ini *initializer) askEmulator(cfg *initConfig, vmds []vmd.VirtualDevice) error {
@@ -549,6 +579,21 @@ func (ini *initializer) initializeXCUITest() (*initConfig, error) {
 	}
 
 	err = ini.askDevice(cfg, iOSDevicesPatterns)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	virtualDevices, err := ini.vmdReader.GetVirtualDevices(context.Background(), vmd.IOSSimulator)
+	if err != nil {
+		println()
+		color.HiRed("saucectl is unable to fetch the emulators list.")
+		fmt.Printf("You will be able to choose only in a subset of available simulators.\n")
+		fmt.Printf("To get the complete list, check your connection and try again.\n")
+		println()
+		virtualDevices = fallbackIOSVirtualDevices
+	}
+
+	err = ini.askSimulator(cfg, virtualDevices)
 	if err != nil {
 		return &initConfig{}, err
 	}

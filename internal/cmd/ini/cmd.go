@@ -50,8 +50,10 @@ type initConfig struct {
 	artifactWhenStr  string
 	device           config.Device
 	emulator         config.Emulator
+	simulator        config.Simulator
 	deviceFlag       flags.Device
 	emulatorFlag     flags.Emulator
+	simulatorFlag    flags.Simulator
 	concurrency      int
 	username         string
 	accessKey        string
