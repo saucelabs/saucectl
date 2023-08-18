@@ -33,7 +33,7 @@ func (b *JunitRetrier) retryFailedTests(reader job.Reader, jobOpts chan<- job.St
 		return
 	}
 
-	setClassesToRetry(&opt, junit.CollectTestCases(suites))
+	setClassesToRetry(&opt, suites.TestCases())
 	jobOpts <- opt
 }
 

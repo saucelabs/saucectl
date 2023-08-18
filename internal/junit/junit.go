@@ -98,6 +98,16 @@ type TestSuites struct {
 	Errors   int `xml:"errors,attr,omitempty"`
 }
 
+// TestCases returns all test cases from all test suites.
+func (ts TestSuites) TestCases() []TestCase {
+	var tcs []TestCase
+	for _, ts := range ts.TestSuites {
+		tcs = append(tcs, ts.TestCases...)
+	}
+
+	return tcs
+}
+
 // Property maps to a <property> element that's part of <properties>.
 type Property struct {
 	Name  string `xml:"name,attr"`
@@ -124,13 +134,4 @@ func Parse(data []byte) (TestSuites, error) {
 	}
 
 	return tss, err
-}
-
-// CollectTestCases collects testcases from a report.
-func CollectTestCases(testsuites TestSuites) []TestCase {
-	var tc []TestCase
-	for _, s := range testsuites.TestSuites {
-		tc = append(tc, s.TestCases...)
-	}
-	return tc
 }
