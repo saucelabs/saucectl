@@ -119,11 +119,11 @@ func FromJUnit(suites junit.TestSuites, jobID string, jobName string, details De
 			}
 			endTime := startDate.Add(time.Duration(duration) * time.Second)
 			var failures []TestRunError
-			if ss.Failure != "" {
+			if ss.Failure != nil {
 				status = StateFailed
 				failures = []TestRunError{
 					{
-						Message: ss.Failure,
+						Message: ss.Failure.Message,
 					},
 				}
 			}

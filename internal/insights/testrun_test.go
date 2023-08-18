@@ -279,7 +279,7 @@ func TestFromJUnit(t *testing.T) {
 									Time:      "5.05",
 									Timestamp: "2022-12-13T01:01:01Z",
 									ClassName: "ClassName",
-									Failure:   "dummy-error-message",
+									Failure:   &junit.Failure{Message: "dummy-error-message"},
 								},
 							},
 						},
