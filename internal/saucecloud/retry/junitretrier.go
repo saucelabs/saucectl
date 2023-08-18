@@ -9,6 +9,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
+	"golang.org/x/exp/maps"
 )
 
 type JunitRetrier struct {
@@ -32,7 +33,7 @@ func (b *JunitRetrier) retryFailedTests(reader job.Reader, jobOpts chan<- job.St
 		return
 	}
 
-	setClassesToRetry(&opt, junit.CollectTestCases(suites))
+	setClassesToRetry(&opt, suites.TestCases())
 	jobOpts <- opt
 }
 
@@ -46,7 +47,7 @@ func setClassesToRetry(opt *job.StartOptions, testcases []junit.TestCase) {
 		Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1))
 
 	if opt.Framework == xcuitest.Kind {
-		opt.TestsToRun = junit.GetFailedXCUITests(testcases)
+		opt.TestsToRun = getFailedXCUITests(testcases)
 		lg.Msgf(msg.RetryWithTests, opt.TestsToRun)
 		return
 	}
@@ -54,7 +55,7 @@ func setClassesToRetry(opt *job.StartOptions, testcases []junit.TestCase) {
 	if opt.TestOptions == nil {
 		opt.TestOptions = map[string]interface{}{}
 	}
-	tests := junit.GetFailedEspressoTests(testcases)
+	tests := getFailedEspressoTests(testcases)
 	opt.TestOptions["class"] = tests
 	lg.Msgf(msg.RetryWithTests, tests)
 }
@@ -74,4 +75,38 @@ func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptio
 		Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1)).
 		Msg("Retrying suite.")
 	jobOpts <- opt
+}
+
+// getFailedXCUITests returns a list of failed XCUITest tests from the given
+// test cases. The format is "<className>/<testMethodName>", with the test
+// method name being optional.
+func getFailedXCUITests(testCases []junit.TestCase) []string {
+	classes := map[string]bool{}
+	for _, tc := range testCases {
+		if tc.Error != nil || tc.Failure != nil {
+			if tc.Name != "" {
+				classes[fmt.Sprintf("%s/%s", tc.ClassName, tc.Name)] = true
+			} else {
+				classes[tc.ClassName] = true
+			}
+		}
+	}
+	return maps.Keys(classes)
+}
+
+// getFailedEspressoTests returns a list of failed Espresso tests from the given
+// test cases. The format is "<className>#<testMethodName>", with the test
+// method name being optional.
+func getFailedEspressoTests(testCases []junit.TestCase) []string {
+	classes := map[string]bool{}
+	for _, tc := range testCases {
+		if tc.Error != nil || tc.Failure != nil {
+			if tc.Name != "" {
+				classes[fmt.Sprintf("%s#%s", tc.ClassName, tc.Name)] = true
+			} else {
+				classes[tc.ClassName] = true
+			}
+		}
+	}
+	return maps.Keys(classes)
 }

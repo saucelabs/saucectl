@@ -2,11 +2,16 @@ package junit
 
 import (
 	"encoding/xml"
-	"fmt"
 )
 
 // FileName is the name of the JUnit report.
 const FileName = "junit.xml"
+
+// Property maps to a <property> element that's part of <properties>.
+type Property struct {
+	Name  string `xml:"name,attr"`
+	Value string `xml:"value,attr"`
+}
 
 // TestCase maps to <testcase> element
 type TestCase struct {
@@ -99,10 +104,14 @@ type TestSuites struct {
 	Errors   int `xml:"errors,attr,omitempty"`
 }
 
-// Property maps to a <property> element that's part of <properties>.
-type Property struct {
-	Name  string `xml:"name,attr"`
-	Value string `xml:"value,attr"`
+// TestCases returns all test cases from all test suites.
+func (ts TestSuites) TestCases() []TestCase {
+	var tcs []TestCase
+	for _, ts := range ts.TestSuites {
+		tcs = append(tcs, ts.TestCases...)
+	}
+
+	return tcs
 }
 
 // Parse a junit report from an XML encoded byte string. The root <testsuites>
@@ -125,61 +134,4 @@ func Parse(data []byte) (TestSuites, error) {
 	}
 
 	return tss, err
-}
-
-// GetFailedXCUITests get failed XCUITest test list from testcases.
-func GetFailedXCUITests(testCases []TestCase) []string {
-	classes := map[string]bool{}
-	for _, tc := range testCases {
-		if tc.Error != nil || tc.Failure != nil {
-			// The format of the filtered test is "<className>/<testMethodName>".
-			// Fallback to <className> if the test method name is unexpectedly empty.
-			// tc.Name: <testMethodName>
-			// tc.ClassName: <className>
-			if tc.Name != "" {
-				classes[fmt.Sprintf("%s/%s", tc.ClassName, tc.Name)] = true
-			} else {
-				classes[tc.ClassName] = true
-			}
-		}
-	}
-	return getKeysFromMap(classes)
-}
-
-// GetFailedEspressoTests get failed espresso test list from testcases.
-func GetFailedEspressoTests(testCases []TestCase) []string {
-	classes := map[string]bool{}
-	for _, tc := range testCases {
-		if tc.Error != nil || tc.Failure != nil {
-			// The format of the filtered test is "<className>#<testMethodName>".
-			// Fallback to <className> if the test method name is unexpectedly empty.
-			// tc.Name: <testMethodName>
-			// tc.ClassName: <className>
-			if tc.Name != "" {
-				classes[fmt.Sprintf("%s#%s", tc.ClassName, tc.Name)] = true
-			} else {
-				classes[tc.ClassName] = true
-			}
-		}
-	}
-	return getKeysFromMap(classes)
-}
-
-// CollectTestCases collects testcases from a report.
-func CollectTestCases(testsuites TestSuites) []TestCase {
-	var tc []TestCase
-	for _, s := range testsuites.TestSuites {
-		tc = append(tc, s.TestCases...)
-	}
-	return tc
-}
-
-func getKeysFromMap(mp map[string]bool) []string {
-	var keys = make([]string, len(mp))
-	var i int
-	for k := range mp {
-		keys[i] = k
-		i++
-	}
-	return keys
 }
