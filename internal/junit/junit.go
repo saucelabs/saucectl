@@ -7,6 +7,12 @@ import (
 // FileName is the name of the JUnit report.
 const FileName = "junit.xml"
 
+// Property maps to a <property> element that's part of <properties>.
+type Property struct {
+	Name  string `xml:"name,attr"`
+	Value string `xml:"value,attr"`
+}
+
 // TestCase maps to <testcase> element
 type TestCase struct {
 	Name string `xml:"name,attr"`
@@ -106,12 +112,6 @@ func (ts TestSuites) TestCases() []TestCase {
 	}
 
 	return tcs
-}
-
-// Property maps to a <property> element that's part of <properties>.
-type Property struct {
-	Name  string `xml:"name,attr"`
-	Value string `xml:"value,attr"`
 }
 
 // Parse a junit report from an XML encoded byte string. The root <testsuites>
