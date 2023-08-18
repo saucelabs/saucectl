@@ -77,15 +77,13 @@ func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptio
 	jobOpts <- opt
 }
 
-// getFailedXCUITests get failed XCUITest test list from testcases.
+// getFailedXCUITests returns a list of failed XCUITest tests from the given
+// test cases. The format is "<className>/<testMethodName>", with the test
+// method name being optional.
 func getFailedXCUITests(testCases []junit.TestCase) []string {
 	classes := map[string]bool{}
 	for _, tc := range testCases {
 		if tc.Error != nil || tc.Failure != nil {
-			// The format of the filtered test is "<className>/<testMethodName>".
-			// Fallback to <className> if the test method name is unexpectedly empty.
-			// tc.Name: <testMethodName>
-			// tc.ClassName: <className>
 			if tc.Name != "" {
 				classes[fmt.Sprintf("%s/%s", tc.ClassName, tc.Name)] = true
 			} else {
@@ -96,15 +94,13 @@ func getFailedXCUITests(testCases []junit.TestCase) []string {
 	return maps.Keys(classes)
 }
 
-// getFailedEspressoTests get failed espresso test list from testcases.
+// getFailedEspressoTests returns a list of failed Espresso tests from the given
+// test cases. The format is "<className>#<testMethodName>", with the test
+// method name being optional.
 func getFailedEspressoTests(testCases []junit.TestCase) []string {
 	classes := map[string]bool{}
 	for _, tc := range testCases {
 		if tc.Error != nil || tc.Failure != nil {
-			// The format of the filtered test is "<className>#<testMethodName>".
-			// Fallback to <className> if the test method name is unexpectedly empty.
-			// tc.Name: <testMethodName>
-			// tc.ClassName: <className>
 			if tc.Name != "" {
 				classes[fmt.Sprintf("%s#%s", tc.ClassName, tc.Name)] = true
 			} else {
