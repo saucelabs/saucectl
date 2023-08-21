@@ -983,9 +983,8 @@ func (ini *initializer) initializeBatchXcuitest(f *pflag.FlagSet, initCfg *initC
 	if initCfg.testApp == "" {
 		errs = append(errs, errors.New(msg.MissingTestApp))
 	}
-	// TODO: Add simualator check
-	if !f.Changed("device") {
-		errs = append(errs, errors.New(msg.MissingDevice))
+	if !(f.Changed("simulator") || f.Changed("device")) {
+		errs = append(errs, errors.New(msg.MissingDeviceOrSimulator))
 	}
 	if initCfg.artifactWhenStr != "" {
 		initCfg.artifactWhenStr = strings.ToLower(initCfg.artifactWhenStr)
@@ -994,19 +993,32 @@ func (ini *initializer) initializeBatchXcuitest(f *pflag.FlagSet, initCfg *initC
 		}
 	}
 	if initCfg.app != "" {
-		verifier := frameworkExtValidator(initCfg.frameworkName, "")
+		var verifier survey.Validator
+		if f.Changed("device") {
+			verifier = frameworkExtValidator(initCfg.frameworkName, "")
+		} else if f.Changed("simulator") {
+			verifier = extValidator([]string{".zip", ".app"})
+		}
 		if err = verifier(initCfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("app: %s", err))
 		}
 	}
 	if initCfg.testApp != "" {
-		verifier := frameworkExtValidator(initCfg.frameworkName, "")
+		var verifier survey.Validator
+		if f.Changed("device") {
+			verifier = frameworkExtValidator(initCfg.frameworkName, "")
+		} else if f.Changed("simulator") {
+			verifier = extValidator([]string{".zip", ".app"})
+		}
 		if err = verifier(initCfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("testApp: %s", err))
 		}
 	}
 	if f.Changed("device") {
 		initCfg.device = initCfg.deviceFlag.Device
+	}
+	if f.Changed("simulator") {
+		initCfg.simulator = initCfg.simulatorFlag.Simulator
 	}
 	return initCfg, errs
 }

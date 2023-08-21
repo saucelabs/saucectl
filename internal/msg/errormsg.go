@@ -34,6 +34,8 @@ const (
 	MissingTestApp = "no testApp provided"
 	// MissingDeviceOrEmulator indicates no device or emulator
 	MissingDeviceOrEmulator = "either device or emulator configuration needs to be provided"
+	// MissingDeviceOrEmulator indicates no device or emulator
+	MissingDeviceOrSimulator = "either device or simulator configuration needs to be provided"
 	// MissingDevice indicates no device provided
 	MissingDevice = "no device provided"
 	// EmptyAdhocSuiteName is thrown when a flag is specified that has a dependency on the --name flag.

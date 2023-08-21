@@ -36,7 +36,7 @@ func (e *Simulator) Set(s string) error {
 	}
 
 	// TODO consider defaulting this in a common place (between config and CLI flags)
-	e.PlatformName = "iOS"
+	// e.PlatformName = "iOS"
 
 	for _, v := range rec {
 		vs := strings.Split(v, "=")
