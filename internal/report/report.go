@@ -6,12 +6,19 @@ import (
 	"github.com/saucelabs/saucectl/internal/junit"
 )
 
+// Attempt represents a single attempt of a job.
 type Attempt struct {
-	ID         string           `json:"id"`
-	Duration   time.Duration    `json:"duration"`
-	StartTime  time.Time        `json:"startTime"`
-	EndTime    time.Time        `json:"endTime"`
-	Status     string           `json:"status"`
+	// ID is the unique identifier of the attempt. This is usually the job ID.
+	// Can also be the runner ID (imagerunner) or whatever is used to identify
+	// the attempt in the context of the job.
+	ID        string        `json:"id"`
+	Duration  time.Duration `json:"duration"`
+	StartTime time.Time     `json:"startTime"`
+	EndTime   time.Time     `json:"endTime"`
+	Status    string        `json:"status"`
+
+	// TestSuites contains the junit test suites that were generated as part of
+	// the attempt.
 	TestSuites junit.TestSuites `json:"-"`
 }
 
