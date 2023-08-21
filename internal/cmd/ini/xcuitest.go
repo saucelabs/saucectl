@@ -8,6 +8,25 @@ import (
 )
 
 func configureXCUITest(cfg *initConfig) interface{} {
+	suites := []xcuitest.Suite{}
+	if cfg.device.Name != "" {
+		suites = append(suites, xcuitest.Suite{
+			Name:      fmt.Sprintf("xcuitest - %s", cfg.device.Name),
+			Devices:   []config.Device{cfg.device},
+			App:       cfg.app,
+			TestApp:   cfg.testApp,
+			OtherApps: cfg.otherApps,
+		})
+	}
+	if cfg.simulator.Name != "" {
+		suites = append(suites, xcuitest.Suite{
+			Name:       fmt.Sprintf("xcuitest - %s", cfg.simulator.Name),
+			Simulators: []config.Simulator{cfg.simulator},
+			App:        cfg.app,
+			TestApp:    cfg.testApp,
+			OtherApps:  cfg.otherApps,
+		})
+	}
 	return xcuitest.Project{
 		TypeDef: config.TypeDef{
 			APIVersion: xcuitest.APIVersion,
@@ -18,16 +37,9 @@ func configureXCUITest(cfg *initConfig) interface{} {
 			Concurrency: cfg.concurrency,
 		},
 		Xcuitest: xcuitest.Xcuitest{
-			App:       cfg.app,
-			TestApp:   cfg.testApp,
 			OtherApps: cfg.otherApps,
 		},
-		Suites: []xcuitest.Suite{
-			{
-				Name:    fmt.Sprintf("xcuitest - %s", cfg.device.Name),
-				Devices: []config.Device{cfg.device},
-			},
-		},
+		Suites: suites,
 		Artifacts: config.Artifacts{
 			Download: config.ArtifactDownload{
 				When:      cfg.artifactWhen,

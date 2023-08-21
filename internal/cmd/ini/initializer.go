@@ -33,7 +33,10 @@ var androidDevicesPatterns = []string{
 	"LG .*", "Motorola .*", "OnePlus .*", "Samsung .*", "Sony .*",
 }
 
-var iOSDevicesPatterns = []string{"iPad .*", "iPhone .*"}
+var iOSDevicesPatterns = []string{
+	"iPad .*",
+	"iPhone .*",
+}
 
 var fallbackAndroidVirtualDevices = []vmd.VirtualDevice{
 	{Name: "Android GoogleAPI Emulator", OSVersion: []string{"11.0", "10.0"}},
@@ -211,7 +214,8 @@ func (ini *initializer) askDevice(cfg *initConfig, suggestions []string) error {
 	}
 	return survey.AskOne(q, &cfg.device.Name,
 		survey.WithShowCursor(true),
-		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
+		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err),
+	)
 }
 
 // vmdToMaps returns a list of virtual devices, and a map containing all supported platform versions.
@@ -458,7 +462,7 @@ func (ini *initializer) initializeCypress() (*initConfig, error) {
 		return &initConfig{}, err
 	}
 
-	err = ini.askFile("Cypress configuration file:", extValidator(cfg.frameworkName, cfg.frameworkVersion), completeBasic, &cfg.cypressJSON)
+	err = ini.askFile("Cypress configuration file:", frameworkExtValidator(cfg.frameworkName, cfg.frameworkVersion), completeBasic, &cfg.cypressJSON)
 	if err != nil {
 		return &initConfig{}, err
 	}
@@ -528,12 +532,12 @@ func (ini *initializer) initializeTestcafe() (*initConfig, error) {
 func (ini *initializer) initializeEspresso() (*initConfig, error) {
 	cfg := &initConfig{frameworkName: espresso.Kind}
 
-	err := ini.askFile("Application to test:", extValidator(cfg.frameworkName, ""), completeBasic, &cfg.app)
+	err := ini.askFile("Application to test:", frameworkExtValidator(cfg.frameworkName, ""), completeBasic, &cfg.app)
 	if err != nil {
 		return &initConfig{}, err
 	}
 
-	err = ini.askFile("Test application:", extValidator(cfg.frameworkName, ""), completeBasic, &cfg.testApp)
+	err = ini.askFile("Test application:", frameworkExtValidator(cfg.frameworkName, ""), completeBasic, &cfg.testApp)
 	if err != nil {
 		return &initConfig{}, err
 	}
@@ -568,35 +572,119 @@ func (ini *initializer) initializeEspresso() (*initConfig, error) {
 func (ini *initializer) initializeXCUITest() (*initConfig, error) {
 	cfg := &initConfig{frameworkName: xcuitest.Kind}
 
-	err := ini.askFile("Application to test:", extValidator(cfg.frameworkName, ""), completeBasic, &cfg.app)
+	// q := &survey.MultiSelect{
+	// 	Message: "Select targets:",
+	// 	Options: []string{
+	// 		"Real Devices",
+	// 		"Virtual Devices",
+	// 	},
+	// }
+	q := &survey.Select{
+		Message: "Select targets:",
+		Options: []string{
+			"Real Devices",
+			"Virtual Devices",
+		},
+	}
+
+	// targets := []string{}
+	// err := survey.AskOne(q, &targets,
+	// 	survey.WithShowCursor(true),
+	// 	survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err),
+	// 	survey.WithValidator(survey.Required),
+	// )
+	var target string
+	err := survey.AskOne(q, &target,
+		survey.WithShowCursor(true),
+		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err),
+		survey.WithValidator(survey.Required),
+	)
 	if err != nil {
 		return &initConfig{}, err
 	}
 
-	err = ini.askFile("Test application:", extValidator(cfg.frameworkName, ""), completeBasic, &cfg.testApp)
-	if err != nil {
-		return &initConfig{}, err
-	}
+	if target == "Real Devices" {
+		err = ini.askDevice(cfg, iOSDevicesPatterns)
+		if err != nil {
+			return &initConfig{}, err
+		}
+		err = ini.askFile("Application to test:", extValidator([]string{".ipa", ".app"}), completeBasic, &cfg.app)
+		if err != nil {
+			return &initConfig{}, err
+		}
 
-	err = ini.askDevice(cfg, iOSDevicesPatterns)
-	if err != nil {
-		return &initConfig{}, err
-	}
+		err = ini.askFile("Test application:", extValidator([]string{".ipa", ".app"}), completeBasic, &cfg.testApp)
+		if err != nil {
+			return &initConfig{}, err
+		}
+	} else if target == "Virtual Devices" {
+		virtualDevices, err := ini.vmdReader.GetVirtualDevices(context.Background(), vmd.IOSSimulator)
+		if err != nil {
+			println()
+			color.HiRed("saucectl is unable to fetch the simulators list.")
+			fmt.Printf("You will be able to choose only in a subset of available simulators.\n")
+			fmt.Printf("To get the complete list, check your connection and try again.\n")
+			println()
+			virtualDevices = fallbackIOSVirtualDevices
+		}
 
-	virtualDevices, err := ini.vmdReader.GetVirtualDevices(context.Background(), vmd.IOSSimulator)
-	if err != nil {
-		println()
-		color.HiRed("saucectl is unable to fetch the emulators list.")
-		fmt.Printf("You will be able to choose only in a subset of available simulators.\n")
-		fmt.Printf("To get the complete list, check your connection and try again.\n")
-		println()
-		virtualDevices = fallbackIOSVirtualDevices
-	}
+		err = ini.askSimulator(cfg, virtualDevices)
+		if err != nil {
+			return &initConfig{}, err
+		}
 
-	err = ini.askSimulator(cfg, virtualDevices)
-	if err != nil {
-		return &initConfig{}, err
+		err = ini.askFile("Application to test:", extValidator([]string{".zip", ".app"}), completeBasic, &cfg.app)
+		if err != nil {
+			return &initConfig{}, err
+		}
+
+		err = ini.askFile("Test application:", extValidator([]string{".zip", ".app"}), completeBasic, &cfg.testApp)
+		if err != nil {
+			return &initConfig{}, err
+		}
 	}
+	// for _, t := range targets {
+	// 	if t == "Real Devices" {
+	// 		err = ini.askDevice(cfg, iOSDevicesPatterns)
+	// 		if err != nil {
+	// 			return &initConfig{}, err
+	// 		}
+	// 		err = ini.askFile("Application to test:", extValidator([]string{".ipa", ".app"}), completeBasic, &cfg.app)
+	// 		if err != nil {
+	// 			return &initConfig{}, err
+	// 		}
+
+	// 		err = ini.askFile("Test application:", extValidator([]string{".ipa", ".app"}), completeBasic, &cfg.testApp)
+	// 		if err != nil {
+	// 			return &initConfig{}, err
+	// 		}
+	// 	} else if t == "Virtual Devices" {
+	// 		virtualDevices, err := ini.vmdReader.GetVirtualDevices(context.Background(), vmd.IOSSimulator)
+	// 		if err != nil {
+	// 			println()
+	// 			color.HiRed("saucectl is unable to fetch the simulators list.")
+	// 			fmt.Printf("You will be able to choose only in a subset of available simulators.\n")
+	// 			fmt.Printf("To get the complete list, check your connection and try again.\n")
+	// 			println()
+	// 			virtualDevices = fallbackIOSVirtualDevices
+	// 		}
+
+	// 		err = ini.askSimulator(cfg, virtualDevices)
+	// 		if err != nil {
+	// 			return &initConfig{}, err
+	// 		}
+
+	// 		err = ini.askFile("Application to test:", extValidator([]string{".zip", ".app"}), completeBasic, &cfg.app)
+	// 		if err != nil {
+	// 			return &initConfig{}, err
+	// 		}
+
+	// 		err = ini.askFile("Test application:", extValidator([]string{".zip", ".app"}), completeBasic, &cfg.testApp)
+	// 		if err != nil {
+	// 			return &initConfig{}, err
+	// 		}
+	// 	}
+	// }
 
 	err = ini.askDownloadWhen(cfg)
 	if err != nil {
@@ -722,7 +810,7 @@ func (ini *initializer) initializeBatchCypress(initCfg *initConfig) (*initConfig
 	}
 
 	if initCfg.cypressJSON != "" {
-		verifier := extValidator(initCfg.frameworkName, "")
+		verifier := frameworkExtValidator(initCfg.frameworkName, "")
 		if err := verifier(initCfg.cypressJSON); err != nil {
 			errs = append(errs, err)
 		}
@@ -767,13 +855,13 @@ func (ini *initializer) initializeBatchEspresso(f *pflag.FlagSet, initCfg *initC
 	}
 
 	if initCfg.app != "" {
-		verifier := extValidator(initCfg.frameworkName, "")
+		verifier := frameworkExtValidator(initCfg.frameworkName, "")
 		if err = verifier(initCfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("app: %s", err))
 		}
 	}
 	if initCfg.testApp != "" {
-		verifier := extValidator(initCfg.frameworkName, "")
+		verifier := frameworkExtValidator(initCfg.frameworkName, "")
 		if err = verifier(initCfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("testApp: %s", err))
 		}
@@ -895,6 +983,7 @@ func (ini *initializer) initializeBatchXcuitest(f *pflag.FlagSet, initCfg *initC
 	if initCfg.testApp == "" {
 		errs = append(errs, errors.New(msg.MissingTestApp))
 	}
+	// TODO: Add simualator check
 	if !f.Changed("device") {
 		errs = append(errs, errors.New(msg.MissingDevice))
 	}
@@ -905,13 +994,13 @@ func (ini *initializer) initializeBatchXcuitest(f *pflag.FlagSet, initCfg *initC
 		}
 	}
 	if initCfg.app != "" {
-		verifier := extValidator(initCfg.frameworkName, "")
+		verifier := frameworkExtValidator(initCfg.frameworkName, "")
 		if err = verifier(initCfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("app: %s", err))
 		}
 	}
 	if initCfg.testApp != "" {
-		verifier := extValidator(initCfg.frameworkName, "")
+		verifier := frameworkExtValidator(initCfg.frameworkName, "")
 		if err = verifier(initCfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("testApp: %s", err))
 		}
