@@ -235,7 +235,7 @@ func TestRunJobRetries(t *testing.T) {
 		res := <-results
 		close(opts)
 		close(results)
-		assert.Equal(t, res.attempts, tt.wantAttempts)
+		assert.Equal(t, len(res.attempts), tt.wantAttempts)
 	}
 }
 

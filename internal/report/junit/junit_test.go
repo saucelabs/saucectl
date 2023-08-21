@@ -474,7 +474,7 @@ func TestReduceJunitFiles(t *testing.T) {
 		},
 	}
 
-	got := reduceJunitFiles(input)
+	got := reduceTestSuites(input)
 	if !cmp.Equal(want, got) {
 		t.Error(cmp.Diff(want, got))
 	}

@@ -1,6 +1,19 @@
 package report
 
-import "time"
+import (
+	"time"
+
+	"github.com/saucelabs/saucectl/internal/junit"
+)
+
+type Attempt struct {
+	ID         string           `json:"id"`
+	Duration   time.Duration    `json:"duration"`
+	StartTime  time.Time        `json:"startTime"`
+	EndTime    time.Time        `json:"endTime"`
+	Status     string           `json:"status"`
+	TestSuites junit.TestSuites `json:"-"`
+}
 
 // TestResult represents the test result.
 type TestResult struct {
@@ -15,11 +28,10 @@ type TestResult struct {
 	URL           string        `json:"url"`
 	Artifacts     []Artifact    `json:"artifacts,omitempty"`
 	Origin        string        `json:"origin"`
-	Attempts      int           `json:"attempts"`
 	RDC           bool          `json:"-"`
 	TimedOut      bool          `json:"-"`
 	PassThreshold bool          `json:"-"`
-	ParentJUnits  []Artifact    `json:"-"`
+	Attempts      []Attempt     `json:"-"`
 }
 
 // ArtifactType represents the type of assets (e.g. a junit report). Semantically similar to Content-Type.

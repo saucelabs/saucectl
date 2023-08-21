@@ -32,8 +32,12 @@ func TestReporter_Render(t *testing.T) {
 						Status:        job.StatePassed,
 						Browser:       "Firefox",
 						Platform:      "Windows 10",
-						Attempts:      3,
 						PassThreshold: true,
+						Attempts: []report.Attempt{
+							{Status: job.StateFailed},
+							{Status: job.StateFailed},
+							{Status: job.StatePassed},
+						},
 					},
 					{
 						Name:          "Chrome",
@@ -43,8 +47,10 @@ func TestReporter_Render(t *testing.T) {
 						Status:        job.StatePassed,
 						Browser:       "Chrome",
 						Platform:      "Windows 10",
-						Attempts:      1,
 						PassThreshold: true,
+						Attempts: []report.Attempt{
+							{Status: job.StatePassed},
+						},
 					},
 				},
 			},
@@ -69,7 +75,9 @@ func TestReporter_Render(t *testing.T) {
 						Status:    job.StatePassed,
 						Browser:   "Firefox",
 						Platform:  "Windows 10",
-						Attempts:  1,
+						Attempts: []report.Attempt{
+							{Status: job.StatePassed},
+						},
 					},
 					{
 						Name:      "Chrome",
@@ -79,7 +87,11 @@ func TestReporter_Render(t *testing.T) {
 						Status:    job.StateFailed,
 						Browser:   "Chrome",
 						Platform:  "Windows 10",
-						Attempts:  3,
+						Attempts: []report.Attempt{
+							{Status: job.StateFailed},
+							{Status: job.StateFailed},
+							{Status: job.StateFailed},
+						},
 					},
 				},
 			},

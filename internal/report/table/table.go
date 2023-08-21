@@ -116,7 +116,7 @@ func (r *Reporter) Render() {
 
 		// the order of values must match the order of the header
 		t.AppendRow(table.Row{statusSymbol(ts.Status), ts.Name, ts.Duration.Truncate(1 * time.Second),
-			statusText(ts.Status), ts.Browser, ts.Platform, ts.DeviceName, ts.Attempts})
+			statusText(ts.Status), ts.Browser, ts.Platform, ts.DeviceName, len(ts.Attempts)})
 	}
 
 	t.AppendFooter(footer(errors, inProgress, len(r.TestResults), calDuration(r.TestResults)))

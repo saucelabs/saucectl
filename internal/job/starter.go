@@ -3,6 +3,8 @@ package job
 import (
 	"context"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/report"
 )
 
 // StartOptions represents the options for starting a job in the Sauce Labs cloud.
@@ -10,8 +12,8 @@ type StartOptions struct {
 	// DisplayName is used for local logging purposes only (e.g. console).
 	DisplayName string `json:"-"`
 
-	// PreviousJobIDs contains the previous jobs IDs in the context of retries.
-	PreviousJobIDs []string `json:"-"`
+	// PrevAttempts contains any previous attempts of the job.
+	PrevAttempts []report.Attempt `json:"-"`
 
 	// Timeout is used for local/per-suite timeout.
 	Timeout time.Duration `json:"-"`

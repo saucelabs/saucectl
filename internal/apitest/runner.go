@@ -574,15 +574,25 @@ func (r *Runner) collectResults(expected int, results chan TestResult) bool {
 			passed = false
 		}
 
+		duration := time.Duration(testResult.ExecutionTimeSeconds) * time.Second
+		startTime := time.Now().Add(-duration)
+		endTime := time.Now()
+
 		for _, rep := range r.Reporters {
 			rep.Add(report.TestResult{
 				Name:      testName,
 				URL:       reportURL,
 				Status:    status,
-				Duration:  time.Second * time.Duration(testResult.ExecutionTimeSeconds),
-				StartTime: (time.Now()).Add(-time.Second * time.Duration(testResult.ExecutionTimeSeconds)),
-				Attempts:  1,
-				TimedOut:  testResult.TimedOut,
+				Duration:  duration,
+				StartTime: startTime,
+				EndTime:   endTime,
+				Attempts: []report.Attempt{{
+					Duration:  duration,
+					StartTime: startTime,
+					EndTime:   endTime,
+					Status:    status,
+				}},
+				TimedOut: testResult.TimedOut,
 			})
 		}
 	}
