@@ -60,7 +60,7 @@ type execResult struct {
 	duration  time.Duration
 	startTime time.Time
 	endTime   time.Time
-	attempts  int
+	attempts  []report.Attempt
 }
 
 func (r *ImgRunner) RunProject() (int, error) {
@@ -146,15 +146,24 @@ func (r *ImgRunner) runSuites(suites chan imagerunner.Suite, results chan<- exec
 
 		run, err := r.runSuite(suite)
 
+		endTime := time.Now()
+		duration := time.Since(startTime)
+
 		results <- execResult{
 			name:      suite.Name,
 			runID:     run.ID,
 			status:    run.Status,
 			err:       err,
 			startTime: startTime,
-			endTime:   time.Now(),
-			duration:  time.Since(startTime),
-			attempts:  1,
+			endTime:   endTime,
+			duration:  duration,
+			attempts: []report.Attempt{{
+				ID:        run.ID,
+				Duration:  duration,
+				StartTime: startTime,
+				EndTime:   endTime,
+				Status:    run.Status,
+			}},
 		}
 	}
 }
@@ -274,7 +283,13 @@ func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
 				StartTime: res.startTime,
 				EndTime:   res.endTime,
 				Status:    res.status,
-				Attempts:  res.attempts,
+				Attempts: []report.Attempt{{
+					ID:        res.runID,
+					Duration:  res.duration,
+					StartTime: res.startTime,
+					EndTime:   res.endTime,
+					Status:    res.status,
+				}},
 			})
 		}
 	}

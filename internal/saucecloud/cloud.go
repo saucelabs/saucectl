@@ -75,9 +75,8 @@ type result struct {
 	duration  time.Duration
 	startTime time.Time
 	endTime   time.Time
-	attempts  int
 	retries   int
-	previous  []string
+	attempts  []report.Attempt
 
 	details insights.Details
 }
@@ -142,10 +141,9 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				browser = fmt.Sprintf("%s %s", browser, res.job.BrowserShortVersion)
 			}
 
-			var artifacts []report.Artifact
-			junitArtifact, parentJUnits := r.GetJUnitArtifacts(res)
-			artifacts = append(artifacts, junitArtifact)
+			r.FetchJUnitReports(&res)
 
+			var artifacts []report.Artifact
 			files := r.downloadArtifacts(res.name, res.job, artifactCfg.When)
 			for _, f := range files {
 				artifacts = append(artifacts, report.Artifact{
@@ -158,21 +156,20 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				url = fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 			}
 			tr := report.TestResult{
-				Name:         res.name,
-				Duration:     res.duration,
-				StartTime:    res.startTime,
-				EndTime:      res.endTime,
-				Status:       res.job.TotalStatus(),
-				Browser:      browser,
-				Platform:     platform,
-				DeviceName:   res.job.BaseConfig.DeviceName,
-				URL:          url,
-				Artifacts:    artifacts,
-				Origin:       "sauce",
-				Attempts:     res.attempts,
-				RDC:          res.job.IsRDC,
-				TimedOut:     res.job.TimedOut,
-				ParentJUnits: parentJUnits,
+				Name:       res.name,
+				Duration:   res.duration,
+				StartTime:  res.startTime,
+				EndTime:    res.endTime,
+				Status:     res.job.TotalStatus(),
+				Browser:    browser,
+				Platform:   platform,
+				DeviceName: res.job.BaseConfig.DeviceName,
+				URL:        url,
+				Artifacts:  artifacts,
+				Origin:     "sauce",
+				RDC:        res.job.IsRDC,
+				TimedOut:   res.job.TimedOut,
+				Attempts:   res.attempts,
 			}
 			for _, rep := range r.Reporters {
 				rep.Add(tr)
@@ -300,7 +297,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 				browser:  opts.BrowserName,
 				skipped:  true,
 				err:      nil,
-				attempts: opts.Attempt + 1,
+				attempts: opts.PrevAttempts,
 				retries:  opts.Retries,
 				details:  details,
 			}
@@ -323,7 +320,14 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			}
 
 			opts.Attempt++
-			opts.PreviousJobIDs = append(opts.PreviousJobIDs, jobData.ID)
+			opts.PrevAttempts = append(opts.PrevAttempts, report.Attempt{
+				ID:         jobData.ID,
+				Duration:   time.Since(start),
+				StartTime:  start,
+				EndTime:    time.Now(),
+				Status:     jobData.Status,
+				TestSuites: junit.TestSuites{},
+			})
 			go r.Retrier.Retry(jobOpts, opts, jobData)
 			continue
 		}
@@ -354,10 +358,15 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			startTime: opts.StartTime,
 			endTime:   time.Now(),
 			duration:  time.Since(start),
-			attempts:  opts.Attempt + 1,
 			retries:   opts.Retries,
 			details:   details,
-			previous:  opts.PreviousJobIDs,
+			attempts: append(opts.PrevAttempts, report.Attempt{
+				ID:        jobData.ID,
+				Duration:  time.Since(opts.StartTime),
+				StartTime: opts.StartTime,
+				EndTime:   time.Now(),
+				Status:    jobData.Status,
+			}),
 		}
 	}
 }
@@ -476,37 +485,33 @@ func (r *CloudRunner) remoteArchiveFiles(project interface{}, files []string, sa
 	return strings.Join(uris, ","), nil
 }
 
-// GetJUnitArtifacts retrieves the JUnit report and parent JUnit reports for the current job.
-func (r *CloudRunner) GetJUnitArtifacts(res result) (junitArifact report.Artifact, parentJUnits []report.Artifact) {
+// FetchJUnitReports retrieves junit reports for the given result and all of its
+// attempts.
+func (r *CloudRunner) FetchJUnitReports(res *result) {
 	if !report.IsArtifactRequired(r.Reporters, report.JUnitArtifact) {
 		return
 	}
 
-	content, err := r.JobService.GetJobAssetFileContent(
-		context.Background(),
-		res.job.ID,
-		junit.FileName,
-		res.job.IsRDC)
-	junitArifact = report.Artifact{
-		AssetType: report.JUnitArtifact,
-		Body:      content,
-		Error:     err,
-	}
+	for i := range res.attempts {
+		attempt := &res.attempts[i]
 
-	for _, id := range res.previous {
 		content, err := r.JobService.GetJobAssetFileContent(
 			context.Background(),
-			id,
+			attempt.ID,
 			junit.FileName,
 			res.job.IsRDC,
 		)
-		parentJUnits = append(parentJUnits, report.Artifact{
-			AssetType: report.JUnitArtifact,
-			Body:      content,
-			Error:     err,
-		})
+		if err != nil {
+			log.Warn().Err(err).Str("jobID", attempt.ID).Msg("Unable to retrieve JUnit report")
+			continue
+		}
+
+		attempt.TestSuites, err = junit.Parse(content)
+		if err != nil {
+			log.Warn().Err(err).Str("jobID", attempt.ID).Msg("Unable to parse JUnit report")
+			continue
+		}
 	}
-	return
 }
 
 type uploadType string

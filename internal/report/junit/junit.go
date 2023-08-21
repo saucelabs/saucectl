@@ -2,7 +2,6 @@ package junit
 
 import (
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -26,27 +25,6 @@ func (r *Reporter) Add(t report.TestResult) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	r.TestResults = append(r.TestResults, t)
-}
-
-func parseJunitFiles(junits []report.Artifact) ([]junit.TestSuites, error) {
-	var parsed []junit.TestSuites
-	var errs []error
-	for _, ju := range junits {
-		if ju.Error != nil {
-			errs = append(errs, fmt.Errorf("failed to retrieve junit file: %w", ju.Error))
-			continue
-		}
-		ts, err := junit.Parse(ju.Body)
-		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to parse junit file: %w", err))
-			continue
-		}
-		parsed = append(parsed, ts)
-	}
-	if len(errs) > 0 {
-		return parsed, fmt.Errorf("%d errors occured while evaluating junit files: %w", len(errs), errors.Join(errs...))
-	}
-	return parsed, nil
 }
 
 // reduceSuite updates "old" with values from "new".
@@ -73,7 +51,7 @@ func reduceSuite(old junit.TestSuite, new junit.TestSuite) junit.TestSuite {
 	return old
 }
 
-func reduceJunitFiles(junits []junit.TestSuites) junit.TestSuites {
+func reduceTestSuites(junits []junit.TestSuites) junit.TestSuites {
 	suites := map[string]junit.TestSuite{}
 
 	for _, junit := range junits {
@@ -111,16 +89,6 @@ func countSkipped(tcs []junit.TestCase) int {
 	return count
 }
 
-func filterJunitArtifacts(artifacts []report.Artifact) []report.Artifact {
-	var junits []report.Artifact
-	for _, v := range artifacts {
-		if v.AssetType == report.JUnitArtifact {
-			junits = append(junits, v)
-		}
-	}
-	return junits
-}
-
 // Render renders out a test summary junit report to the destination of Reporter.Filename.
 func (r *Reporter) Render() {
 	r.lock.Lock()
@@ -134,16 +102,12 @@ func (r *Reporter) Render() {
 		}
 		t.Properties = append(t.Properties, extractProperties(v)...)
 
-		mainJunits := filterJunitArtifacts(v.Artifacts)
-		junitFiles := v.ParentJUnits
-		junitFiles = append(junitFiles, mainJunits...)
-
-		jsuites, err := parseJunitFiles(junitFiles)
-		if err != nil {
-			log.Warn().Err(err).Str("suite", v.Name).Msg("Failed to parse some junit report. Summary may be incorrect!")
-			continue
+		var allTestSuites []junit.TestSuites
+		for _, attempt := range v.Attempts {
+			allTestSuites = append(allTestSuites, attempt.TestSuites)
 		}
-		reduced := reduceJunitFiles(jsuites)
+
+		reduced := reduceTestSuites(allTestSuites)
 
 		for _, ts := range reduced.TestSuites {
 			t.Tests += ts.Tests
