@@ -60,3 +60,64 @@ func TestParse(t *testing.T) {
 		})
 	}
 }
+
+func TestTestSuites_Compute(t *testing.T) {
+	report := TestSuites{
+		TestSuites: []TestSuite{{
+			TestCases: []TestCase{
+				{
+					Name: "I'm ok",
+				},
+				{
+					Name:  "I'm err",
+					Error: &Error{Message: "whoops!"},
+				},
+				{
+					Name:    "I'm fail",
+					Failure: &Failure{Message: "whoops!"},
+				},
+				{
+					Name:    "I didn't run",
+					Skipped: &Skipped{Message: "sad face"},
+				},
+			},
+		}},
+	}
+
+	report.Compute()
+
+	assert.Equal(t, 4, report.TestSuites[0].Tests)
+	assert.Equal(t, 4, report.Tests)
+	assert.Equal(t, 1, report.Errors)
+	assert.Equal(t, 1, report.Failures)
+	assert.Equal(t, 1, report.Skipped)
+}
+
+func TestTestSuite_Compute(t *testing.T) {
+	suite := TestSuite{
+		TestCases: []TestCase{
+			{
+				Name: "I'm ok",
+			},
+			{
+				Name:  "I'm err",
+				Error: &Error{Message: "whoops!"},
+			},
+			{
+				Name:    "I'm fail",
+				Failure: &Failure{Message: "whoops!"},
+			},
+			{
+				Name:    "I didn't run",
+				Skipped: &Skipped{Message: "sad face"},
+			},
+		},
+	}
+
+	suite.Compute()
+
+	assert.Equal(t, 4, suite.Tests)
+	assert.Equal(t, 1, suite.Errors)
+	assert.Equal(t, 1, suite.Failures)
+	assert.Equal(t, 1, suite.Skipped)
+}

@@ -35,6 +35,24 @@ type TestCase struct {
 	Skipped   *Skipped `xml:"skipped,omitempty"`
 }
 
+// IsError returns true if the test case errored. Multiple fields are taken
+// into account to determine this.
+func (tc TestCase) IsError() bool {
+	return tc.Error != nil || tc.Status == "error"
+}
+
+// IsFailure returns true if the test case failed. Multiple fields are taken
+// into account to determine this.
+func (tc TestCase) IsFailure() bool {
+	return tc.Failure != nil || tc.Status == "failure" || tc.Status == "failed"
+}
+
+// IsSkipped returns true if the test case was skipped. Multiple fields are
+// taken into account to determine this.
+func (tc TestCase) IsSkipped() bool {
+	return tc.Skipped != nil || tc.Status == "skipped"
+}
+
 // Failure maps to either a <failure> or <error> element. It usually indicates
 // assertion failures. Depending on the framework, this may also indicate an
 // unexpected error, much like Error does. Some frameworks use Error or the
@@ -88,6 +106,33 @@ type TestSuite struct {
 	SystemOut string     `xml:"system-out,omitempty"`
 }
 
+// Compute updates some statistics for the test suite based on the test cases it
+// contains.
+//
+//		Updates the following fields:
+//	 - Tests
+//	 - Errors
+//	 - Failures
+//	 - Skipped/Disabled
+func (ts *TestSuite) Compute() {
+	ts.Tests = len(ts.TestCases)
+	ts.Errors = 0
+	ts.Failures = 0
+	ts.Disabled = 0
+	ts.Skipped = 0
+
+	for _, tc := range ts.TestCases {
+		if tc.IsError() {
+			ts.Errors++
+		} else if tc.IsFailure() {
+			ts.Failures++
+		} else if tc.IsSkipped() {
+			ts.Skipped++
+		}
+		// we favor skipped over disabled, so ignore disabled
+	}
+}
+
 // TestSuites maps to root junit <testsuites> element
 type TestSuites struct {
 	XMLName    xml.Name    `xml:"testsuites"`
@@ -104,8 +149,36 @@ type TestSuites struct {
 	Errors   int `xml:"errors,attr,omitempty"`
 }
 
+// Compute updates _some_ statistics for the entire report based on the test
+// cases it contains. This is an expensive and destructive operation.
+// Use judiciously.
+//
+//		Updates the following fields:
+//	 - Tests
+//	 - Errors
+//	 - Failures
+//	 - Skipped/Disabled
+func (ts *TestSuites) Compute() {
+	ts.Tests = 0
+	ts.Errors = 0
+	ts.Failures = 0
+	ts.Disabled = 0
+	ts.Skipped = 0
+
+	for i := range ts.TestSuites {
+		suite := &ts.TestSuites[i]
+		suite.Compute()
+
+		ts.Tests += suite.Tests
+		ts.Errors += suite.Errors
+		ts.Failures += suite.Failures
+		ts.Disabled += suite.Disabled
+		ts.Skipped += suite.Skipped
+	}
+}
+
 // TestCases returns all test cases from all test suites.
-func (ts TestSuites) TestCases() []TestCase {
+func (ts *TestSuites) TestCases() []TestCase {
 	var tcs []TestCase
 	for _, ts := range ts.TestSuites {
 		tcs = append(tcs, ts.TestCases...)

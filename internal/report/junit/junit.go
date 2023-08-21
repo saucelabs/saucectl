@@ -45,9 +45,7 @@ func reduceSuite(old junit.TestSuite, new junit.TestSuite) junit.TestSuite {
 		}
 		old.TestCases[idx] = tc
 	}
-	old.Tests = len(old.TestCases)
-	old.Errors = countErrors(old.TestCases)
-	old.Skipped = countSkipped(old.TestCases)
+
 	return old
 }
 
@@ -68,25 +66,6 @@ func reduceTestSuites(junits []junit.TestSuites) junit.TestSuites {
 
 	output.TestSuites = append(output.TestSuites, maps.Values(suites)...)
 	return output
-}
-
-func countErrors(tcs []junit.TestCase) int {
-	count := 0
-	for _, tc := range tcs {
-		if tc.Status == "error" {
-			count++
-		}
-	}
-	return count
-}
-func countSkipped(tcs []junit.TestCase) int {
-	count := 0
-	for _, tc := range tcs {
-		if tc.Status == "skipped" {
-			count++
-		}
-	}
-	return count
 }
 
 // Render renders out a test summary junit report to the destination of Reporter.Filename.
@@ -110,17 +89,13 @@ func (r *Reporter) Render() {
 		reduced := reduceTestSuites(allTestSuites)
 
 		for _, ts := range reduced.TestSuites {
-			t.Tests += ts.Tests
-			t.Failures += ts.Failures
-			t.Errors += ts.Errors
 			t.TestCases = append(t.TestCases, ts.TestCases...)
 		}
 
-		tt.Tests += t.Tests
-		tt.Failures += t.Failures
-		tt.Errors += t.Errors
 		tt.TestSuites = append(tt.TestSuites, t)
 	}
+
+	tt.Compute()
 
 	b, err := xml.MarshalIndent(tt, "", "  ")
 	if err != nil {
