@@ -60,3 +60,118 @@ func TestParse(t *testing.T) {
 		})
 	}
 }
+
+func TestTestSuites_Compute(t *testing.T) {
+	report := TestSuites{
+		TestSuites: []TestSuite{{
+			TestCases: []TestCase{
+				{
+					Name: "I'm ok",
+				},
+				{
+					Name:  "I'm err",
+					Error: &Error{Message: "whoops!"},
+				},
+				{
+					Name:    "I'm fail",
+					Failure: &Failure{Message: "whoops!"},
+				},
+				{
+					Name:    "I didn't run",
+					Skipped: &Skipped{Message: "sad face"},
+				},
+			},
+		}},
+	}
+
+	report.Compute()
+
+	assert.Equal(t, 4, report.TestSuites[0].Tests)
+	assert.Equal(t, 4, report.Tests)
+	assert.Equal(t, 1, report.Errors)
+	assert.Equal(t, 1, report.Failures)
+	assert.Equal(t, 1, report.Skipped)
+}
+
+func TestTestSuite_Compute(t *testing.T) {
+	suite := TestSuite{
+		TestCases: []TestCase{
+			{
+				Name: "I'm ok",
+			},
+			{
+				Name:  "I'm err",
+				Error: &Error{Message: "whoops!"},
+			},
+			{
+				Name:    "I'm fail",
+				Failure: &Failure{Message: "whoops!"},
+			},
+			{
+				Name:    "I didn't run",
+				Skipped: &Skipped{Message: "sad face"},
+			},
+		},
+	}
+
+	suite.Compute()
+
+	assert.Equal(t, 4, suite.Tests)
+	assert.Equal(t, 1, suite.Errors)
+	assert.Equal(t, 1, suite.Failures)
+	assert.Equal(t, 1, suite.Skipped)
+}
+
+func TestMergeReports(t *testing.T) {
+	input := []TestSuites{
+		{
+			TestSuites: []TestSuite{
+				{
+					Name:    "BasicTests",
+					Package: "com.example.android.testing.espresso.BasicSample",
+					TestCases: []TestCase{
+						{
+							Name:      "TestCase1",
+							ClassName: "com.example.android.testing.espresso.BasicSample.Test1",
+							Status:    "success",
+						},
+						{
+							Name:      "TestCase2",
+							ClassName: "com.example.android.testing.espresso.BasicSample.Test2",
+							Status:    "success",
+						},
+					},
+				},
+			},
+		},
+		{
+			TestSuites: []TestSuite{
+				{
+					Name:    "BasicTests",
+					Package: "com.example.android.testing.espresso.BasicSample",
+					TestCases: []TestCase{
+						{
+							Name:      "TestCase2",
+							ClassName: "com.example.android.testing.espresso.BasicSample.Test2",
+							Status:    "error",
+							Error: &Error{
+								Message: "Whoops!",
+								Type:    "androidx.test.espresso.base.WTFException",
+								Text:    "A deeply philosophical error message.",
+							},
+						},
+						{
+							Name:      "TestCase3",
+							ClassName: "com.example.android.testing.espresso.BasicSample.Test3",
+							Status:    "success",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	got := MergeReports(input...)
+	assert.Equal(t, 1, len(got.TestSuites))
+	assert.Equal(t, 3, len(got.TestSuites[0].TestCases))
+}

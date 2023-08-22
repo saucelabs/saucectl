@@ -2,6 +2,9 @@ package junit
 
 import (
 	"encoding/xml"
+	"fmt"
+
+	"golang.org/x/exp/maps"
 )
 
 // FileName is the name of the JUnit report.
@@ -33,6 +36,24 @@ type TestCase struct {
 	Error     *Error   `xml:"error,omitempty"`
 	Failure   *Failure `xml:"failure,omitempty"`
 	Skipped   *Skipped `xml:"skipped,omitempty"`
+}
+
+// IsError returns true if the test case errored. Multiple fields are taken
+// into account to determine this.
+func (tc TestCase) IsError() bool {
+	return tc.Error != nil || tc.Status == "error"
+}
+
+// IsFailure returns true if the test case failed. Multiple fields are taken
+// into account to determine this.
+func (tc TestCase) IsFailure() bool {
+	return tc.Failure != nil || tc.Status == "failure" || tc.Status == "failed"
+}
+
+// IsSkipped returns true if the test case was skipped. Multiple fields are
+// taken into account to determine this.
+func (tc TestCase) IsSkipped() bool {
+	return tc.Skipped != nil || tc.Status == "skipped"
 }
 
 // Failure maps to either a <failure> or <error> element. It usually indicates
@@ -88,6 +109,58 @@ type TestSuite struct {
 	SystemOut string     `xml:"system-out,omitempty"`
 }
 
+// AddTestCases adds test cases to the test suite. If unique is true, existing
+// test cases with the same name will be replaced.
+func (ts *TestSuite) AddTestCases(unique bool, tcs ...TestCase) {
+	if !unique {
+		ts.TestCases = append(ts.TestCases, tcs...)
+		return
+	}
+
+	// index existing test cases by name
+	testMap := make(map[string]TestCase)
+	for _, tc := range ts.TestCases {
+		key := fmt.Sprintf("%s.%s", tc.ClassName, tc.Name)
+		testMap[key] = tc
+	}
+
+	// add new test cases
+	for _, tc := range tcs {
+		key := fmt.Sprintf("%s.%s", tc.ClassName, tc.Name)
+		testMap[key] = tc
+	}
+
+	// convert map back to slice
+	ts.TestCases = maps.Values(testMap)
+}
+
+// Compute updates some statistics for the test suite based on the test cases it
+// contains.
+//
+// Updates the following fields:
+//   - Tests
+//   - Errors
+//   - Failures
+//   - Skipped/Disabled
+func (ts *TestSuite) Compute() {
+	ts.Tests = len(ts.TestCases)
+	ts.Errors = 0
+	ts.Failures = 0
+	ts.Disabled = 0
+	ts.Skipped = 0
+
+	for _, tc := range ts.TestCases {
+		if tc.IsError() {
+			ts.Errors++
+		} else if tc.IsFailure() {
+			ts.Failures++
+		} else if tc.IsSkipped() {
+			ts.Skipped++
+		}
+		// we favor skipped over disabled, so ignore disabled
+	}
+}
+
 // TestSuites maps to root junit <testsuites> element
 type TestSuites struct {
 	XMLName    xml.Name    `xml:"testsuites"`
@@ -104,8 +177,36 @@ type TestSuites struct {
 	Errors   int `xml:"errors,attr,omitempty"`
 }
 
+// Compute updates _some_ statistics for the entire report based on the test
+// cases it contains. This is an expensive and destructive operation.
+// Use judiciously.
+//
+// Updates the following fields:
+//   - Tests
+//   - Errors
+//   - Failures
+//   - Skipped/Disabled
+func (ts *TestSuites) Compute() {
+	ts.Tests = 0
+	ts.Errors = 0
+	ts.Failures = 0
+	ts.Disabled = 0
+	ts.Skipped = 0
+
+	for i := range ts.TestSuites {
+		suite := &ts.TestSuites[i]
+		suite.Compute()
+
+		ts.Tests += suite.Tests
+		ts.Errors += suite.Errors
+		ts.Failures += suite.Failures
+		ts.Disabled += suite.Disabled
+		ts.Skipped += suite.Skipped
+	}
+}
+
 // TestCases returns all test cases from all test suites.
-func (ts TestSuites) TestCases() []TestCase {
+func (ts *TestSuites) TestCases() []TestCase {
 	var tcs []TestCase
 	for _, ts := range ts.TestSuites {
 		tcs = append(tcs, ts.TestCases...)
@@ -134,4 +235,26 @@ func Parse(data []byte) (TestSuites, error) {
 	}
 
 	return tss, err
+}
+
+// MergeReports merges multiple junit reports into a single report.
+func MergeReports(reports ...TestSuites) TestSuites {
+	suites := make(map[string]TestSuite)
+
+	for _, rep := range reports {
+		for _, suite := range rep.TestSuites {
+			indexedSuite, ok := suites[suite.Name]
+			if !ok {
+				suites[suite.Name] = suite
+				continue
+			}
+
+			indexedSuite.AddTestCases(true, suite.TestCases...)
+			suites[suite.Name] = indexedSuite
+		}
+	}
+
+	return TestSuites{
+		TestSuites: maps.Values(suites),
+	}
 }
