@@ -31,8 +31,3 @@ artifacts:
       - $ARTIFACTS_MATCH1
       - $ARTIFACTS_MATCH2
     directory: $ARTIFACTS_DOWNLOAD_FOLDER
-
-notifications:
-  slack:
-    channels: [$SLACK_CHANNEL]
-    send: $NOTIFICATION_SEND # possible values [always,fail,never,pass]
