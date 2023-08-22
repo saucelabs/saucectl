@@ -573,7 +573,7 @@ func (ini *initializer) initializeXCUITest() (*initConfig, error) {
 	cfg := &initConfig{frameworkName: xcuitest.Kind}
 
 	q := &survey.Select{
-		Message: "Select targets:",
+		Message: "Select target:",
 		Options: []string{
 			"Real Devices",
 			"Virtual Devices",
@@ -943,16 +943,17 @@ func (ini *initializer) initializeBatchXcuitest(f *pflag.FlagSet, initCfg *initC
 			verifier = extValidator([]string{".zip", ".app"})
 		} else {
 			verifier = frameworkExtValidator(initCfg.frameworkName, "")
+		}
 		if err = verifier(initCfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("app: %s", err))
 		}
 	}
 	if initCfg.testApp != "" {
 		var verifier survey.Validator
-		if f.Changed("device") {
-			verifier = frameworkExtValidator(initCfg.frameworkName, "")
-		} else if f.Changed("simulator") {
+		if f.Changed("simulator") {
 			verifier = extValidator([]string{".zip", ".app"})
+		} else {
+			verifier = frameworkExtValidator(initCfg.frameworkName, "")
 		}
 		if err = verifier(initCfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("testApp: %s", err))
