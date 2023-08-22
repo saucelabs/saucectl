@@ -115,7 +115,7 @@ func completeBasic(toComplete string) []string {
 	return files
 }
 
-func extValidator(framework, frameworkVersion string) survey.Validator {
+func frameworkExtValidator(framework, frameworkVersion string) survey.Validator {
 	var exts []string
 	switch framework {
 	case espresso.Kind:
@@ -129,16 +129,20 @@ func extValidator(framework, frameworkVersion string) survey.Validator {
 		}
 	}
 
+	return extValidator(exts)
+}
+
+func extValidator(validExts []string) survey.Validator {
 	return func(s interface{}) error {
 		val := s.(string)
 		found := false
-		for _, ext := range exts {
+		for _, ext := range validExts {
 			if strings.HasSuffix(val, ext) {
 				found = true
 			}
 		}
 		if !found {
-			return fmt.Errorf("invalid extension. must be one of the following: %s", strings.Join(exts, ", "))
+			return fmt.Errorf("invalid extension. must be one of the following: %s", strings.Join(validExts, ", "))
 		}
 		_, err := os.Stat(val)
 		if err != nil {

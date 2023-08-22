@@ -263,7 +263,6 @@
   "required": [
     "apiVersion",
     "kind",
-    "xcuitest",
     "suites"
   ],
   "additionalProperties": true

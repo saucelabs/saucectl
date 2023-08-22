@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_extValidator(t *testing.T) {
+func Test_frameworkExtValidator(t *testing.T) {
 	dir := fs.NewDir(t, "apps",
 		fs.WithFile("my.zip", "--", fs.WithMode(0644)),
 		fs.WithFile("my.json", "--", fs.WithMode(0644)),
@@ -119,7 +119,7 @@ func Test_extValidator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := (extValidator(tt.args.framework, tt.args.frameworkVersion))(tt.args.filename); !reflect.DeepEqual(got, tt.want) {
+			if got := (frameworkExtValidator(tt.args.framework, tt.args.frameworkVersion))(tt.args.filename); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("extValidator() = %v, want %v", got, tt.want)
 			}
 		})

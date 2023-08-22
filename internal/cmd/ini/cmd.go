@@ -50,8 +50,10 @@ type initConfig struct {
 	artifactWhenStr  string
 	device           config.Device
 	emulator         config.Emulator
+	simulator        config.Simulator
 	deviceFlag       flags.Device
 	emulatorFlag     flags.Emulator
+	simulatorFlag    flags.Simulator
 	concurrency      int
 	username         string
 	accessKey        string
@@ -107,7 +109,8 @@ func Command() *cobra.Command {
 	cmd.Flags().StringVarP(&initCfg.platformName, "platformName", "p", "", "Specified platform name")
 	cmd.Flags().StringVarP(&initCfg.browserName, "browserName", "b", "", "Specifies browser name")
 	cmd.Flags().StringVar(&initCfg.artifactWhenStr, "artifacts.download.when", "fail", "defines when to download artifacts")
-	cmd.Flags().Var(&initCfg.emulatorFlag, "emulator", "Specifies the emulator to use for testing")
+	cmd.Flags().Var(&initCfg.emulatorFlag, "emulator", "Specifies the Android emulator to use for testing")
+	cmd.Flags().Var(&initCfg.simulatorFlag, "simulator", "Specifies the iOS simulator to use for testing")
 	cmd.Flags().Var(&initCfg.deviceFlag, "device", "Specifies the device to use for testing")
 	return cmd
 }

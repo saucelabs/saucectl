@@ -1197,7 +1197,23 @@ func Test_initializers(t *testing.T) {
 		{
 			name: "XCUITest - .ipa",
 			procedure: func(c *expect.Console) error {
-				_, err := c.ExpectString("Application to test:")
+				_, err := c.ExpectString("Select target:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("Real Devices")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select device pattern:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("iPhone .*")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Application to test:")
 				if err != nil {
 					return err
 				}
@@ -1210,14 +1226,6 @@ func Test_initializers(t *testing.T) {
 					return err
 				}
 				_, err = c.SendLine(dir.Join("ios-app.ipa"))
-				if err != nil {
-					return err
-				}
-				_, err = c.ExpectString("Select device pattern:")
-				if err != nil {
-					return err
-				}
-				_, err = c.SendLine("iPhone .*")
 				if err != nil {
 					return err
 				}
@@ -1256,7 +1264,23 @@ func Test_initializers(t *testing.T) {
 		{
 			name: "XCUITest - .app",
 			procedure: func(c *expect.Console) error {
-				_, err := c.ExpectString("Application to test:")
+				_, err := c.ExpectString("Select target:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("Real Devices")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Select device pattern:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("iPad .*")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Application to test:")
 				if err != nil {
 					return err
 				}
@@ -1269,14 +1293,6 @@ func Test_initializers(t *testing.T) {
 					return err
 				}
 				_, err = c.SendLine(dir.Join("ios-folder-app.app"))
-				if err != nil {
-					return err
-				}
-				_, err = c.ExpectString("Select device pattern:")
-				if err != nil {
-					return err
-				}
-				_, err = c.SendLine("iPad .*")
 				if err != nil {
 					return err
 				}
@@ -2430,7 +2446,7 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 			wantErrs: []error{
 				errors.New("no app provided"),
 				errors.New("no testApp provided"),
-				errors.New("no device provided"),
+				errors.New("either device or simulator configuration needs to be provided"),
 				errors.New("dummy: unknown download condition"),
 			},
 		},
@@ -2453,7 +2469,7 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 			wantErrs: []error{
 				errors.New("no app provided"),
 				errors.New("no testApp provided"),
-				errors.New("no device provided"),
+				errors.New("either device or simulator configuration needs to be provided"),
 			},
 		},
 		{
@@ -2475,7 +2491,7 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 				testApp:       dir.Join("truc", "ios-app.ipa"),
 			},
 			wantErrs: []error{
-				errors.New("no device provided"),
+				errors.New("either device or simulator configuration needs to be provided"),
 				fmt.Errorf("app: %s: stat %s: no such file or directory", dir.Join("truc", "ios-app.ipa"), dir.Join("truc", "ios-app.ipa")),
 				fmt.Errorf("testApp: %s: stat %s: no such file or directory", dir.Join("truc", "ios-app.ipa"), dir.Join("truc", "ios-app.ipa")),
 			},
