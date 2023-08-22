@@ -137,11 +137,11 @@ func (ts *TestSuite) AddTestCases(unique bool, tcs ...TestCase) {
 // Compute updates some statistics for the test suite based on the test cases it
 // contains.
 //
-//	 Updates the following fields:
-//		 - Tests
-//		 - Errors
-//		 - Failures
-//		 - Skipped/Disabled
+// Updates the following fields:
+//   - Tests
+//   - Errors
+//   - Failures
+//   - Skipped/Disabled
 func (ts *TestSuite) Compute() {
 	ts.Tests = len(ts.TestCases)
 	ts.Errors = 0
@@ -181,11 +181,11 @@ type TestSuites struct {
 // cases it contains. This is an expensive and destructive operation.
 // Use judiciously.
 //
-//  Updates the following fields:
-//	 - Tests
-//	 - Errors
-//	 - Failures
-//	 - Skipped/Disabled
+// Updates the following fields:
+//   - Tests
+//   - Errors
+//   - Failures
+//   - Skipped/Disabled
 func (ts *TestSuites) Compute() {
 	ts.Tests = 0
 	ts.Errors = 0
