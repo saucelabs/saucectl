@@ -67,7 +67,10 @@ func (r *Reporter) Render() {
 	}
 	defer f.Close()
 
-	_, _ = f.Write(b)
+	if _, err = f.Write(b); err != nil {
+		log.Err(err).Msg("Failed to render junit report.")
+		return
+	}
 	_, _ = fmt.Fprint(f, "\n")
 }
 
