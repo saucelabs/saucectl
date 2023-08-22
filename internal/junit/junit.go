@@ -236,3 +236,25 @@ func Parse(data []byte) (TestSuites, error) {
 
 	return tss, err
 }
+
+// MergeReports merges multiple junit reports into a single report.
+func MergeReports(reports ...TestSuites) TestSuites {
+	suites := make(map[string]TestSuite)
+
+	for _, rep := range reports {
+		for _, suite := range rep.TestSuites {
+			indexedSuite, ok := suites[suite.Name]
+			if !ok {
+				suites[suite.Name] = suite
+				continue
+			}
+
+			indexedSuite.AddTestCases(true, suite.TestCases...)
+			suites[suite.Name] = indexedSuite
+		}
+	}
+
+	return TestSuites{
+		TestSuites: maps.Values(suites),
+	}
+}

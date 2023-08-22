@@ -8,9 +8,7 @@ import (
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/report"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestReporter_Render(t *testing.T) {
@@ -123,58 +121,4 @@ func TestReporter_Render(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestReduceJunitFiles(t *testing.T) {
-	input := []junit.TestSuites{
-		{
-			TestSuites: []junit.TestSuite{
-				{
-					Name:    "BasicTests",
-					Package: "com.example.android.testing.espresso.BasicSample",
-					TestCases: []junit.TestCase{
-						{
-							Name:      "TestCase1",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test1",
-							Status:    "success",
-						},
-						{
-							Name:      "TestCase2",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test2",
-							Status:    "success",
-						},
-					},
-				},
-			},
-		},
-		{
-			TestSuites: []junit.TestSuite{
-				{
-					Name:    "BasicTests",
-					Package: "com.example.android.testing.espresso.BasicSample",
-					TestCases: []junit.TestCase{
-						{
-							Name:      "TestCase2",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test2",
-							Status:    "error",
-							Error: &junit.Error{
-								Message: "Whoops!",
-								Type:    "androidx.test.espresso.base.WTFException",
-								Text:    "A deeply philosophical error message.",
-							},
-						},
-						{
-							Name:      "TestCase3",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test3",
-							Status:    "success",
-						},
-					},
-				},
-			},
-		},
-	}
-
-	got := reduceTestSuites(input)
-	assert.Equal(t, 1, len(got.TestSuites))
-	assert.Equal(t, 3, len(got.TestSuites[0].TestCases))
 }

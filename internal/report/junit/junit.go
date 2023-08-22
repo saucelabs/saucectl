@@ -10,7 +10,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/report"
-	"golang.org/x/exp/maps"
 )
 
 // Reporter is a junit implementation for report.Reporter.
@@ -25,27 +24,6 @@ func (r *Reporter) Add(t report.TestResult) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	r.TestResults = append(r.TestResults, t)
-}
-
-func reduceTestSuites(junits []junit.TestSuites) junit.TestSuites {
-	suites := make(map[string]junit.TestSuite)
-
-	for _, junit := range junits {
-		for _, suite := range junit.TestSuites {
-			indexedSuite, ok := suites[suite.Name]
-			if !ok {
-				suites[suite.Name] = suite
-				continue
-			}
-
-			indexedSuite.AddTestCases(true, suite.TestCases...)
-			suites[suite.Name] = indexedSuite
-		}
-	}
-
-	return junit.TestSuites{
-		TestSuites: maps.Values(suites),
-	}
 }
 
 // Render renders out a test summary junit report to the destination of Reporter.Filename.
@@ -66,9 +44,8 @@ func (r *Reporter) Render() {
 			allTestSuites = append(allTestSuites, attempt.TestSuites)
 		}
 
-		reduced := reduceTestSuites(allTestSuites)
-
-		for _, ts := range reduced.TestSuites {
+		combinedReports := junit.MergeReports(allTestSuites...)
+		for _, ts := range combinedReports.TestSuites {
 			t.TestCases = append(t.TestCases, ts.TestCases...)
 		}
 

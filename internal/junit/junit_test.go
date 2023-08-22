@@ -121,3 +121,57 @@ func TestTestSuite_Compute(t *testing.T) {
 	assert.Equal(t, 1, suite.Failures)
 	assert.Equal(t, 1, suite.Skipped)
 }
+
+func TestMergeReports(t *testing.T) {
+	input := []TestSuites{
+		{
+			TestSuites: []TestSuite{
+				{
+					Name:    "BasicTests",
+					Package: "com.example.android.testing.espresso.BasicSample",
+					TestCases: []TestCase{
+						{
+							Name:      "TestCase1",
+							ClassName: "com.example.android.testing.espresso.BasicSample.Test1",
+							Status:    "success",
+						},
+						{
+							Name:      "TestCase2",
+							ClassName: "com.example.android.testing.espresso.BasicSample.Test2",
+							Status:    "success",
+						},
+					},
+				},
+			},
+		},
+		{
+			TestSuites: []TestSuite{
+				{
+					Name:    "BasicTests",
+					Package: "com.example.android.testing.espresso.BasicSample",
+					TestCases: []TestCase{
+						{
+							Name:      "TestCase2",
+							ClassName: "com.example.android.testing.espresso.BasicSample.Test2",
+							Status:    "error",
+							Error: &Error{
+								Message: "Whoops!",
+								Type:    "androidx.test.espresso.base.WTFException",
+								Text:    "A deeply philosophical error message.",
+							},
+						},
+						{
+							Name:      "TestCase3",
+							ClassName: "com.example.android.testing.espresso.BasicSample.Test3",
+							Status:    "success",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	got := MergeReports(input...)
+	assert.Equal(t, 1, len(got.TestSuites))
+	assert.Equal(t, 3, len(got.TestSuites[0].TestCases))
+}
