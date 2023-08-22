@@ -142,7 +142,7 @@ func extValidator(validExts []string) survey.Validator {
 			}
 		}
 		if !found {
-			return fmt.Errorf("invalid extension. must be one of the following: %q", validExts)
+			return fmt.Errorf("invalid extension. must be one of the following: %s", strings.Join(validExts, ", "))
 		}
 		_, err := os.Stat(val)
 		if err != nil {
