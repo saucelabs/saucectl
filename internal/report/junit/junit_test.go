@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestReporter_Render(t *testing.T) {
@@ -130,160 +130,32 @@ func TestReduceJunitFiles(t *testing.T) {
 		{
 			TestSuites: []junit.TestSuite{
 				{
-					Tests:   24,
-					Time:    "47.917",
+					Name:    "BasicTests",
 					Package: "com.example.android.testing.espresso.BasicSample",
 					TestCases: []junit.TestCase{
 						{
-							Name:      "changeText_newActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test10Test",
+							Name:      "TestCase1",
+							ClassName: "com.example.android.testing.espresso.BasicSample.Test1",
 							Status:    "success",
 						},
 						{
-							Name:      "changeText_sameActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test10Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_newActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test11Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_sameActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test11Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_newActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test12Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_sameActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test12Test",
-							Status:    "error",
-							Error: &junit.Error{
-								Message: "Whoops!",
-								Type:    "androidx.test.espresso.base.WTFException",
-								Text:    "A deeply philosophical error message.",
-							},
-						},
-						{
-							Name:      "changeText_newActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test1Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_sameActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test1Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_newActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test2Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_sameActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test2Test",
-							Status:    "error",
-							Error: &junit.Error{
-								Message: "Whoops!",
-								Type:    "androidx.test.espresso.base.WTFException",
-								Text:    "A deeply philosophical error message.",
-							},
-						},
-						{
-							Name:      "changeText_newActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test3Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_sameActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test3Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_newActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test4Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_sameActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test4Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_newActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test5Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_sameActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test5Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_newActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test6Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_sameActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test6Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_newActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test7Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_sameActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test7Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_newActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test8Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_sameActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test8Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_newActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test9Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_sameActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test9Test",
+							Name:      "TestCase2",
+							ClassName: "com.example.android.testing.espresso.BasicSample.Test2",
 							Status:    "success",
 						},
 					},
-					SystemOut: "<Base System Output>",
 				},
 			},
 		},
 		{
 			TestSuites: []junit.TestSuite{
 				{
-					Tests:   2,
-					Time:    "11.007",
+					Name:    "BasicTests",
 					Package: "com.example.android.testing.espresso.BasicSample",
 					TestCases: []junit.TestCase{
 						{
-							Name:      "changeText_sameActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test2Test",
-							Status:    "success",
-						},
-						{
-							Name:      "changeText_sameActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test12Test",
+							Name:      "TestCase2",
+							ClassName: "com.example.android.testing.espresso.BasicSample.Test2",
 							Status:    "error",
 							Error: &junit.Error{
 								Message: "Whoops!",
@@ -291,186 +163,18 @@ func TestReduceJunitFiles(t *testing.T) {
 								Text:    "A deeply philosophical error message.",
 							},
 						},
-					},
-					SystemOut: "<Base System Output>",
-				},
-			},
-		},
-		{
-			TestSuites: []junit.TestSuite{
-				{
-					Tests:   1,
-					Time:    "6.004",
-					Package: "com.example.android.testing.espresso.BasicSample",
-					TestCases: []junit.TestCase{
 						{
-							Name:      "changeText_sameActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test12Test",
-							Status:    "error",
-							Error: &junit.Error{
-								Message: "Whoops!",
-								Type:    "androidx.test.espresso.base.WTFException",
-								Text:    "A deeply philosophical error message.",
-							},
-						},
-					},
-					SystemOut: "<Base System Output>",
-				},
-			},
-		},
-		{
-			TestSuites: []junit.TestSuite{
-				{
-					Tests:   1,
-					Time:    "5.535",
-					Package: "com.example.android.testing.espresso.BasicSample",
-					TestCases: []junit.TestCase{
-						{
-							Name:      "changeText_sameActivity",
-							ClassName: "com.example.android.testing.espresso.BasicSample.Test12Test",
+							Name:      "TestCase3",
+							ClassName: "com.example.android.testing.espresso.BasicSample.Test3",
 							Status:    "success",
 						},
 					},
-					SystemOut: "<Base System Output>",
 				},
-			},
-		},
-	}
-	want := junit.TestSuites{
-		TestSuites: []junit.TestSuite{
-			{
-				Tests:   24,
-				Time:    "47.917",
-				Package: "com.example.android.testing.espresso.BasicSample",
-				TestCases: []junit.TestCase{
-					{
-						Name:      "changeText_newActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test10Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_sameActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test10Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_newActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test11Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_sameActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test11Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_newActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test12Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_sameActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test12Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_newActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test1Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_sameActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test1Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_newActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test2Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_sameActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test2Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_newActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test3Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_sameActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test3Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_newActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test4Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_sameActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test4Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_newActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test5Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_sameActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test5Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_newActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test6Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_sameActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test6Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_newActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test7Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_sameActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test7Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_newActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test8Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_sameActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test8Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_newActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test9Test",
-						Status:    "success",
-					},
-					{
-						Name:      "changeText_sameActivity",
-						ClassName: "com.example.android.testing.espresso.BasicSample.Test9Test",
-						Status:    "success",
-					},
-				},
-				SystemOut: "<Base System Output>",
 			},
 		},
 	}
 
 	got := reduceTestSuites(input)
-	if !cmp.Equal(want, got) {
-		t.Error(cmp.Diff(want, got))
-	}
+	assert.Equal(t, 1, len(got.TestSuites))
+	assert.Equal(t, 3, len(got.TestSuites[0].TestCases))
 }

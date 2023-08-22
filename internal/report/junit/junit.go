@@ -27,45 +27,25 @@ func (r *Reporter) Add(t report.TestResult) {
 	r.TestResults = append(r.TestResults, t)
 }
 
-// reduceSuite updates "old" with values from "new".
-func reduceSuite(old junit.TestSuite, new junit.TestSuite) junit.TestSuite {
-	testMap := map[string]int{}
-	for idx, tc := range old.TestCases {
-		key := fmt.Sprintf(`%s.%s`, tc.ClassName, tc.Name)
-		testMap[key] = idx
-	}
-
-	for _, tc := range new.TestCases {
-		key := fmt.Sprintf(`%s.%s`, tc.ClassName, tc.Name)
-		var idx int
-		var ok bool
-		if idx, ok = testMap[key]; !ok {
-			log.Warn().Str("test", key).Msg("Sanity check failed when merging related junit test suites. New test encountered without prior history.")
-			continue
-		}
-		old.TestCases[idx] = tc
-	}
-
-	return old
-}
-
 func reduceTestSuites(junits []junit.TestSuites) junit.TestSuites {
-	suites := map[string]junit.TestSuite{}
+	suites := make(map[string]junit.TestSuite)
 
 	for _, junit := range junits {
 		for _, suite := range junit.TestSuites {
-			if _, ok := suites[suite.Name]; !ok {
+			indexedSuite, ok := suites[suite.Name]
+			if !ok {
 				suites[suite.Name] = suite
 				continue
 			}
-			suites[suite.Name] = reduceSuite(suites[suite.Name], suite)
+
+			indexedSuite.AddTestCases(true, suite.TestCases...)
+			suites[suite.Name] = indexedSuite
 		}
 	}
 
-	output := junit.TestSuites{}
-
-	output.TestSuites = append(output.TestSuites, maps.Values(suites)...)
-	return output
+	return junit.TestSuites{
+		TestSuites: maps.Values(suites),
+	}
 }
 
 // Render renders out a test summary junit report to the destination of Reporter.Filename.

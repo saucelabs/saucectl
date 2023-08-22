@@ -2,6 +2,9 @@ package junit
 
 import (
 	"encoding/xml"
+	"fmt"
+
+	"golang.org/x/exp/maps"
 )
 
 // FileName is the name of the JUnit report.
@@ -104,6 +107,31 @@ type TestSuite struct {
 	TestCases []TestCase `xml:"testcase"`
 	SystemErr string     `xml:"system-err,omitempty"`
 	SystemOut string     `xml:"system-out,omitempty"`
+}
+
+// AddTestCases adds test cases to the test suite. If unique is true, existing
+// test cases with the same name will be replaced.
+func (ts *TestSuite) AddTestCases(unique bool, tcs ...TestCase) {
+	if !unique {
+		ts.TestCases = append(ts.TestCases, tcs...)
+		return
+	}
+
+	// index existing test cases by name
+	testMap := make(map[string]TestCase)
+	for _, tc := range ts.TestCases {
+		key := fmt.Sprintf("%s.%s", tc.ClassName, tc.Name)
+		testMap[key] = tc
+	}
+
+	// add new test cases
+	for _, tc := range tcs {
+		key := fmt.Sprintf("%s.%s", tc.ClassName, tc.Name)
+		testMap[key] = tc
+	}
+
+	// convert map back to slice
+	ts.TestCases = maps.Values(testMap)
 }
 
 // Compute updates some statistics for the test suite based on the test cases it
