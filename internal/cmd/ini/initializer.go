@@ -572,13 +572,6 @@ func (ini *initializer) initializeEspresso() (*initConfig, error) {
 func (ini *initializer) initializeXCUITest() (*initConfig, error) {
 	cfg := &initConfig{frameworkName: xcuitest.Kind}
 
-	// q := &survey.MultiSelect{
-	// 	Message: "Select targets:",
-	// 	Options: []string{
-	// 		"Real Devices",
-	// 		"Virtual Devices",
-	// 	},
-	// }
 	q := &survey.Select{
 		Message: "Select targets:",
 		Options: []string{
@@ -587,12 +580,6 @@ func (ini *initializer) initializeXCUITest() (*initConfig, error) {
 		},
 	}
 
-	// targets := []string{}
-	// err := survey.AskOne(q, &targets,
-	// 	survey.WithShowCursor(true),
-	// 	survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err),
-	// 	survey.WithValidator(survey.Required),
-	// )
 	var target string
 	err := survey.AskOne(q, &target,
 		survey.WithShowCursor(true),
@@ -643,48 +630,6 @@ func (ini *initializer) initializeXCUITest() (*initConfig, error) {
 			return &initConfig{}, err
 		}
 	}
-	// for _, t := range targets {
-	// 	if t == "Real Devices" {
-	// 		err = ini.askDevice(cfg, iOSDevicesPatterns)
-	// 		if err != nil {
-	// 			return &initConfig{}, err
-	// 		}
-	// 		err = ini.askFile("Application to test:", extValidator([]string{".ipa", ".app"}), completeBasic, &cfg.app)
-	// 		if err != nil {
-	// 			return &initConfig{}, err
-	// 		}
-
-	// 		err = ini.askFile("Test application:", extValidator([]string{".ipa", ".app"}), completeBasic, &cfg.testApp)
-	// 		if err != nil {
-	// 			return &initConfig{}, err
-	// 		}
-	// 	} else if t == "Virtual Devices" {
-	// 		virtualDevices, err := ini.vmdReader.GetVirtualDevices(context.Background(), vmd.IOSSimulator)
-	// 		if err != nil {
-	// 			println()
-	// 			color.HiRed("saucectl is unable to fetch the simulators list.")
-	// 			fmt.Printf("You will be able to choose only in a subset of available simulators.\n")
-	// 			fmt.Printf("To get the complete list, check your connection and try again.\n")
-	// 			println()
-	// 			virtualDevices = fallbackIOSVirtualDevices
-	// 		}
-
-	// 		err = ini.askSimulator(cfg, virtualDevices)
-	// 		if err != nil {
-	// 			return &initConfig{}, err
-	// 		}
-
-	// 		err = ini.askFile("Application to test:", extValidator([]string{".zip", ".app"}), completeBasic, &cfg.app)
-	// 		if err != nil {
-	// 			return &initConfig{}, err
-	// 		}
-
-	// 		err = ini.askFile("Test application:", extValidator([]string{".zip", ".app"}), completeBasic, &cfg.testApp)
-	// 		if err != nil {
-	// 			return &initConfig{}, err
-	// 		}
-	// 	}
-	// }
 
 	err = ini.askDownloadWhen(cfg)
 	if err != nil {
