@@ -121,7 +121,7 @@ func frameworkExtValidator(framework, frameworkVersion string) survey.Validator 
 	case espresso.Kind:
 		exts = []string{".apk", ".aab"}
 	case xcuitest.Kind:
-		exts = []string{".ipa", ".zip", ".app"}
+		exts = []string{".ipa", ".app"}
 	case cypress.Kind:
 		exts = []string{".js", ".ts", ".mjs", ".cjs"}
 		if getMajorVersion(frameworkVersion) < 10 {
