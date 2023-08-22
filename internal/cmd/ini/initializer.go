@@ -609,8 +609,8 @@ func (ini *initializer) initializeXCUITest() (*initConfig, error) {
 		if err != nil {
 			println()
 			color.HiRed("saucectl is unable to fetch the simulators list.")
-			fmt.Printf("You will be able to choose only in a subset of available simulators.\n")
-			fmt.Printf("To get the complete list, check your connection and try again.\n")
+			fmt.Println("You will be able to choose only in a subset of available simulators.")
+			fmt.Println("To get the complete list, check your connection and try again.")
 			println()
 			virtualDevices = fallbackIOSVirtualDevices
 		}
