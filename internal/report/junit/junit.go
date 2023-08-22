@@ -10,7 +10,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/report"
-	"golang.org/x/exp/maps"
 )
 
 // Reporter is a junit implementation for report.Reporter.
@@ -25,68 +24,6 @@ func (r *Reporter) Add(t report.TestResult) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	r.TestResults = append(r.TestResults, t)
-}
-
-// reduceSuite updates "old" with values from "new".
-func reduceSuite(old junit.TestSuite, new junit.TestSuite) junit.TestSuite {
-	testMap := map[string]int{}
-	for idx, tc := range old.TestCases {
-		key := fmt.Sprintf(`%s.%s`, tc.ClassName, tc.Name)
-		testMap[key] = idx
-	}
-
-	for _, tc := range new.TestCases {
-		key := fmt.Sprintf(`%s.%s`, tc.ClassName, tc.Name)
-		var idx int
-		var ok bool
-		if idx, ok = testMap[key]; !ok {
-			log.Warn().Str("test", key).Msg("Sanity check failed when merging related junit test suites. New test encountered without prior history.")
-			continue
-		}
-		old.TestCases[idx] = tc
-	}
-	old.Tests = len(old.TestCases)
-	old.Errors = countErrors(old.TestCases)
-	old.Skipped = countSkipped(old.TestCases)
-	return old
-}
-
-func reduceTestSuites(junits []junit.TestSuites) junit.TestSuites {
-	suites := map[string]junit.TestSuite{}
-
-	for _, junit := range junits {
-		for _, suite := range junit.TestSuites {
-			if _, ok := suites[suite.Name]; !ok {
-				suites[suite.Name] = suite
-				continue
-			}
-			suites[suite.Name] = reduceSuite(suites[suite.Name], suite)
-		}
-	}
-
-	output := junit.TestSuites{}
-
-	output.TestSuites = append(output.TestSuites, maps.Values(suites)...)
-	return output
-}
-
-func countErrors(tcs []junit.TestCase) int {
-	count := 0
-	for _, tc := range tcs {
-		if tc.Status == "error" {
-			count++
-		}
-	}
-	return count
-}
-func countSkipped(tcs []junit.TestCase) int {
-	count := 0
-	for _, tc := range tcs {
-		if tc.Status == "skipped" {
-			count++
-		}
-	}
-	return count
 }
 
 // Render renders out a test summary junit report to the destination of Reporter.Filename.
@@ -107,20 +44,15 @@ func (r *Reporter) Render() {
 			allTestSuites = append(allTestSuites, attempt.TestSuites)
 		}
 
-		reduced := reduceTestSuites(allTestSuites)
-
-		for _, ts := range reduced.TestSuites {
-			t.Tests += ts.Tests
-			t.Failures += ts.Failures
-			t.Errors += ts.Errors
+		combinedReports := junit.MergeReports(allTestSuites...)
+		for _, ts := range combinedReports.TestSuites {
 			t.TestCases = append(t.TestCases, ts.TestCases...)
 		}
 
-		tt.Tests += t.Tests
-		tt.Failures += t.Failures
-		tt.Errors += t.Errors
 		tt.TestSuites = append(tt.TestSuites, t)
 	}
+
+	tt.Compute()
 
 	b, err := xml.MarshalIndent(tt, "", "  ")
 	if err != nil {
@@ -135,7 +67,10 @@ func (r *Reporter) Render() {
 	}
 	defer f.Close()
 
-	_, _ = f.Write(b)
+	if _, err = f.Write(b); err != nil {
+		log.Err(err).Msg("Failed to render junit report.")
+		return
+	}
 	_, _ = fmt.Fprint(f, "\n")
 }
 
