@@ -937,24 +937,20 @@ func (ini *initializer) initializeBatchXcuitest(f *pflag.FlagSet, initCfg *initC
 			errs = append(errs, err)
 		}
 	}
+	validExt := []string{".app"}
+	if f.Changed("simulator") {
+		validExt = append(validExt, ".zip")
+	} else {
+		validExt = append(validExt, ".ipa")
+	}
 	if initCfg.app != "" {
-		var verifier survey.Validator
-		if f.Changed("simulator") {
-			verifier = extValidator([]string{".zip", ".app"})
-		} else {
-			verifier = frameworkExtValidator(initCfg.frameworkName, "")
-		}
+		verifier := extValidator(validExt)
 		if err = verifier(initCfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("app: %s", err))
 		}
 	}
 	if initCfg.testApp != "" {
-		var verifier survey.Validator
-		if f.Changed("simulator") {
-			verifier = extValidator([]string{".zip", ".app"})
-		} else {
-			verifier = frameworkExtValidator(initCfg.frameworkName, "")
-		}
+		verifier := extValidator(validExt)
 		if err = verifier(initCfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("testApp: %s", err))
 		}
