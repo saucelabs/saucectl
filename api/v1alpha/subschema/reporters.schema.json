@@ -40,6 +40,16 @@
               "default": "saucectl-test-result.xml"
             }
           }
+        },
+        "spotlight": {
+          "type": "object",
+          "description": "The spotlight reporter prints a an overview of failed, or otherwise interesting, jobs.",
+          "properties": {
+            "enabled": {
+              "description": "Toggles the reporter on/off.",
+              "type": "boolean"
+            }
+          }
         }
       },
       "additionalProperties": false

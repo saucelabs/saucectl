@@ -147,6 +147,10 @@ type Artifacts struct {
 
 // Reporters represents the reporter configuration.
 type Reporters struct {
+	Spotlight struct {
+		Enabled bool `yaml:"enabled"`
+	}
+
 	JUnit struct {
 		Enabled  bool   `yaml:"enabled"`
 		Filename string `yaml:"filename"`

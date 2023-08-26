@@ -11,7 +11,10 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/report/buildtable"
+	"github.com/saucelabs/saucectl/internal/report/json"
 	"github.com/saucelabs/saucectl/internal/report/junit"
+	"github.com/saucelabs/saucectl/internal/report/spotlight"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -30,10 +33,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
 	"github.com/saucelabs/saucectl/internal/report"
-	"github.com/saucelabs/saucectl/internal/report/buildtable"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/report/github"
-	"github.com/saucelabs/saucectl/internal/report/json"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/version"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
@@ -283,27 +284,37 @@ func checkForUpdates() {
 
 func createReporters(c config.Reporters, ntfs config.Notifications, metadata config.Metadata,
 	svc slack.Service, buildReader build.Reader, framework, env string, async bool) []report.Reporter {
-	buildReporter := buildtable.New(buildReader)
 	githubReporter := github.NewJobSummaryReporter()
 
 	reps := []report.Reporter{
 		&captor.Default,
-		&buildReporter,
 		&githubReporter,
 	}
 
-	if !async && c.JUnit.Enabled {
-		reps = append(reps, &junit.Reporter{
-			Filename: c.JUnit.Filename,
-		})
+	// Running async means that jobs aren't done by the time reports are
+	// generated. Therefore, we disable all reporters that depend on the Job
+	// results.
+	if !async {
+		if c.JUnit.Enabled {
+			reps = append(reps, &junit.Reporter{
+				Filename: c.JUnit.Filename,
+			})
+		}
+		if c.JSON.Enabled {
+			reps = append(reps, &json.Reporter{
+				WebhookURL: c.JSON.WebhookURL,
+				Filename:   c.JSON.Filename,
+			})
+		}
+		if c.Spotlight.Enabled {
+			reps = append(reps, &spotlight.Reporter{
+				Dst: os.Stdout,
+			})
+		}
 	}
 
-	if !async && c.JSON.Enabled {
-		reps = append(reps, &json.Reporter{
-			WebhookURL: c.JSON.WebhookURL,
-			Filename:   c.JSON.Filename,
-		})
-	}
+	buildReporter := buildtable.New(buildReader)
+	reps = append(reps, &buildReporter)
 
 	reps = append(reps, &slack.Reporter{
 		Channels:    ntfs.Slack.Channels,
