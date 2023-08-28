@@ -133,7 +133,7 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 		props.SetFramework("xcuitest").SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).SetArtifacts(p.Artifacts).
 			SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).SetSlack(p.Notifications.Slack).
 			SetSharding(xcuitest.IsSharded(p.Suites)).SetLaunchOrder(p.Sauce.LaunchOrder).
-			SetSmartRetry(p.IsSmartRetried())
+			SetSmartRetry(p.IsSmartRetried()).SetReporters(p.Reporters)
 		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
 		_ = tracker.Close()
 	}()

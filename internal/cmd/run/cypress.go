@@ -134,7 +134,7 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		props.SetFramework("cypress").SetFVersion(p.GetVersion()).SetFlags(cmd.Flags()).SetSauceConfig(p.GetSauceCfg()).
 			SetArtifacts(p.GetArtifactsCfg()).SetNPM(p.GetNpm()).SetNumSuites(len(p.GetSuites())).SetJobs(captor.Default.TestResults).
 			SetSlack(p.GetNotifications().Slack).SetSharding(p.IsSharded()).SetLaunchOrder(p.GetSauceCfg().LaunchOrder).
-			SetSmartRetry(p.IsSmartRetried())
+			SetSmartRetry(p.IsSmartRetried()).SetReporters(p.GetReporters())
 
 		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
 		_ = tracker.Close()
@@ -163,7 +163,7 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 			BuildService:    &restoClient,
 			Region:          regio,
 			ShowConsoleLog:  p.IsShowConsoleLog(),
-			Reporters: createReporters(p.GetReporter(), p.GetNotifications(), p.GetSauceCfg().Metadata, &testcompClient, &restoClient,
+			Reporters: createReporters(p.GetReporters(), p.GetNotifications(), p.GetSauceCfg().Metadata, &testcompClient, &restoClient,
 				"cypress", "sauce", gFlags.async),
 			Async:                  gFlags.async,
 			FailFast:               gFlags.failFast,

@@ -36,7 +36,7 @@ type Project interface {
 	GetArtifactsCfg() config.Artifacts
 	IsShowConsoleLog() bool
 	GetBeforeExec() []string
-	GetReporter() config.Reporters
+	GetReporters() config.Reporters
 	GetNotifications() config.Notifications
 	GetNpm() config.Npm
 	SetCLIFlags(map[string]interface{})
