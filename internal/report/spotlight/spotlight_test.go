@@ -1,167 +1,75 @@
 package spotlight
 
 import (
-	"bytes"
-	"reflect"
+	"io"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/report"
 )
 
-func TestReporter_Render(t *testing.T) {
-	type fields struct {
-		TestResults []report.TestResult
-	}
+func ExampleReporter_Render() {
 	startTime := time.Now()
-	tests := []struct {
-		name   string
-		fields fields
-		want   string
-	}{
+	restResults := []report.TestResult{
 		{
-			name: "all pass",
-			fields: fields{
-				TestResults: []report.TestResult{
-					{
-						Name:          "Firefox",
-						Duration:      34479 * time.Millisecond,
-						StartTime:     startTime,
-						EndTime:       startTime.Add(34479 * time.Millisecond),
-						Status:        job.StatePassed,
-						Browser:       "Firefox",
-						Platform:      "Windows 10",
-						PassThreshold: true,
-						Attempts: []report.Attempt{
-							{Status: job.StateFailed},
-							{Status: job.StateFailed},
-							{Status: job.StatePassed},
-						},
-					},
-					{
-						Name:          "Chrome",
-						Duration:      5123 * time.Millisecond,
-						StartTime:     startTime,
-						EndTime:       startTime.Add(5123 * time.Millisecond),
-						Status:        job.StatePassed,
-						Browser:       "Chrome",
-						Platform:      "Windows 10",
-						PassThreshold: true,
-						Attempts: []report.Attempt{
-							{Status: job.StatePassed},
+			Name:      "Chrome",
+			Duration:  171452 * time.Millisecond,
+			StartTime: startTime,
+			EndTime:   startTime.Add(171452 * time.Millisecond),
+			Status:    job.StateFailed,
+			Browser:   "Chrome",
+			Platform:  "Windows 10",
+			URL:       "https://app.saucelabs.com/tests/1234567890abcdef",
+			Attempts: []report.Attempt{
+				{
+					Status: job.StateFailed,
+					TestSuites: junit.TestSuites{
+						TestSuites: []junit.TestSuite{
+							{
+								Name: "",
+								TestCases: []junit.TestCase{
+									{
+										Name:      "TestCase1",
+										ClassName: "com.saucelabs.examples.SauceTest",
+										Error: &junit.Error{
+											Message: "Whoops!",
+											Type:    "AssertionError",
+										},
+									},
+								},
+							},
 						},
 					},
 				},
 			},
-			want: `
-       Name                              Duration    Status    Browser    Platform      Attempts  
-──────────────────────────────────────────────────────────────────────────────────────────────────
-  ✔    Firefox                                34s    passed    Firefox    Windows 10           3  
-  ✔    Chrome                                  5s    passed    Chrome     Windows 10           1  
-──────────────────────────────────────────────────────────────────────────────────────────────────
-  ✔    All suites have passed                 34s                                                 
-`,
-		},
-		{
-			name: "with failure",
-			fields: fields{
-				TestResults: []report.TestResult{
-					{
-						Name:      "Firefox",
-						Duration:  34479 * time.Millisecond,
-						StartTime: startTime,
-						EndTime:   startTime.Add(34479 * time.Millisecond),
-						Status:    job.StatePassed,
-						Browser:   "Firefox",
-						Platform:  "Windows 10",
-						Attempts: []report.Attempt{
-							{Status: job.StatePassed},
-						},
-					},
-					{
-						Name:      "Chrome",
-						Duration:  171452 * time.Millisecond,
-						StartTime: startTime,
-						EndTime:   startTime.Add(171452 * time.Millisecond),
-						Status:    job.StateFailed,
-						Browser:   "Chrome",
-						Platform:  "Windows 10",
-						Attempts: []report.Attempt{
-							{Status: job.StateFailed},
-							{Status: job.StateFailed},
-							{Status: job.StateFailed},
-						},
-					},
-				},
-			},
-			want: `
-       Name                               Duration    Status    Browser    Platform      Attempts  
-───────────────────────────────────────────────────────────────────────────────────────────────────
-  ✔    Firefox                                 34s    passed    Firefox    Windows 10           1  
-  ✖    Chrome                                2m51s    failed    Chrome     Windows 10           3  
-───────────────────────────────────────────────────────────────────────────────────────────────────
-  ✖    1 of 2 suites have failed (50%)       2m51s                                                 
-`,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var buffy bytes.Buffer
 
-			r := &Reporter{
-				TestResults: tt.fields.TestResults,
-				Dst:         &buffy,
-			}
-			r.Render()
+	r := Reporter{
+		Dst: os.Stdout,
+	}
 
-			out := buffy.String()
-			if !reflect.DeepEqual(out, tt.want) {
-				t.Errorf("Render() got = \n%s, want = \n%s", out, tt.want)
-			}
-		})
+	for _, tr := range restResults {
+		r.Add(tr)
 	}
-}
 
-func TestReporter_Reset(t *testing.T) {
-	type fields struct {
-		TestResults []report.TestResult
-	}
-	tests := []struct {
-		name   string
-		fields fields
-	}{
-		{
-			name: "expect empty render",
-			fields: fields{
-				TestResults: []report.TestResult{
-					{
-						Name:     "Firefox",
-						Duration: 34479 * time.Millisecond,
-						Status:   job.StatePassed,
-						Browser:  "Firefox",
-						Platform: "Windows 10",
-					}},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := &Reporter{
-				TestResults: tt.fields.TestResults,
-			}
-			r.Reset()
-
-			if len(r.TestResults) != 0 {
-				t.Errorf("len(TestResults) got = %d, want = %d", len(r.TestResults), 0)
-			}
-		})
-	}
+	r.Render()
+	// Output:
+	//Spotlight:
+	//
+	//  ✖ Chrome
+	//    ● URL: https://app.saucelabs.com/tests/1234567890abcdef
+	//    ● Failed Tests: (showing max. 5)
+	//      ✖ com.saucelabs.examples.SauceTest › TestCase1
 }
 
 func TestReporter_Add(t *testing.T) {
 	type fields struct {
 		TestResults []report.TestResult
+		Dst         io.Writer
 	}
 	type args struct {
 		t report.TestResult
@@ -170,33 +78,60 @@ func TestReporter_Add(t *testing.T) {
 		name   string
 		fields fields
 		args   args
+		want   int
 	}{
 		{
-			name:   "just one",
-			fields: fields{},
+			name: "skip passed tests",
 			args: args{
 				t: report.TestResult{
-					Name:     "Firefox",
-					Duration: 34479 * time.Millisecond,
-					Status:   job.StatePassed,
-					Browser:  "Firefox",
-					Platform: "Windows 10",
+					Status: job.StatePassed,
 				},
 			},
+			want: 0,
+		},
+		{
+			name: "skipped in-progress tests",
+			args: args{
+				t: report.TestResult{
+					Status: job.StateInProgress,
+				},
+			},
+			want: 0,
+		},
+		{
+			name: "include failed tests",
+			args: args{
+				t: report.TestResult{
+					Status: job.StateFailed,
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "include errored tests",
+			args: args{
+				t: report.TestResult{
+					Status: job.StateError,
+				},
+			},
+			want: 1,
+		},
+		{
+			name: "include timed out tests",
+			args: args{
+				t: report.TestResult{
+					TimedOut: true,
+				},
+			},
+			want: 1,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &Reporter{
-				TestResults: tt.fields.TestResults,
-			}
+			r := &Reporter{}
 			r.Add(tt.args.t)
-
-			if len(r.TestResults) != 1 {
-				t.Errorf("len(TestResults) got = %d, want = %d", len(r.TestResults), 1)
-			}
-			if !reflect.DeepEqual(r.TestResults[0], tt.args.t) {
-				t.Errorf(" got = %v, want = %v", r.TestResults[0], tt.args.t)
+			if added := len(r.TestResults); added != tt.want {
+				t.Errorf("Reporter.Add() added %d results, want %d", added, tt.want)
 			}
 		})
 	}

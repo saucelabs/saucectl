@@ -24,6 +24,23 @@ type Reporter struct {
 func (r *Reporter) Add(t report.TestResult) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
+
+	// skip in-progress jobs
+	if !job.Done(t.Status) && !imagerunner.Done(t.Status) && !t.TimedOut {
+		return
+	}
+	// skip passed jobs
+	if t.Status == job.StatePassed || t.Status == imagerunner.StateSucceeded {
+		return
+	}
+
+	if t.Status == job.StateFailed || t.Status == imagerunner.StateFailed ||
+		t.Status == imagerunner.StateCancelled || t.Status == imagerunner.StateTerminated {
+	}
+	if t.TimedOut {
+		t.Status = job.StateUnknown
+	}
+
 	r.TestResults = append(r.TestResults, t)
 }
 
@@ -34,26 +51,16 @@ func (r *Reporter) Render() {
 
 	r.println()
 	rl := color.New(color.FgBlue, color.Underline, color.Bold).Sprintf("Spotlight:")
+
+	if len(r.TestResults) == 0 {
+		r.printf("  %s Nothing stands out!\n", rl)
+		return
+	}
+
 	r.printf("  %s\n", rl)
 	r.println()
 
 	for _, ts := range r.TestResults {
-		// skip in-progress jobs
-		if !job.Done(ts.Status) && !imagerunner.Done(ts.Status) && !ts.TimedOut {
-			continue
-		}
-		// skip passed jobs
-		if ts.Status == job.StatePassed || ts.Status == imagerunner.StateSucceeded {
-			continue
-		}
-		if ts.Status == job.StateFailed || ts.Status == imagerunner.StateFailed ||
-			ts.Status == imagerunner.StateCancelled || ts.Status == imagerunner.StateTerminated {
-		}
-		if ts.TimedOut {
-			ts.Status = job.StateUnknown
-		}
-
-		// the order of values must match the order of the header
 		r.println("", jobStatusSymbol(ts.Status), ts.Name)
 		r.println("   ● URL:", ts.URL)
 
@@ -77,7 +84,7 @@ func (r *Reporter) Render() {
 			}
 
 			if len(failedTests) > 0 {
-				r.println("   ● Failed Tests: (max 5)")
+				r.println("   ● Failed Tests: (showing max. 5)")
 				for _, test := range failedTests {
 					r.println("    ", test)
 				}
