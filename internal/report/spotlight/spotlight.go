@@ -34,9 +34,6 @@ func (r *Reporter) Add(t report.TestResult) {
 		return
 	}
 
-	if t.Status == job.StateFailed || t.Status == imagerunner.StateFailed ||
-		t.Status == imagerunner.StateCancelled || t.Status == imagerunner.StateTerminated {
-	}
 	if t.TimedOut {
 		t.Status = job.StateUnknown
 	}
