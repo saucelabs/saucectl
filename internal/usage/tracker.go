@@ -118,6 +118,13 @@ func (p Properties) SetSmartRetry(isSmartRetried bool) Properties {
 	return p
 }
 
+func (p Properties) SetReporters(reporters config.Reporters) Properties {
+	p["reporters_spotlight_enabled"] = reporters.Spotlight.Enabled
+	p["reporters_junit_enabled"] = reporters.JUnit.Enabled
+	p["reporters_json_enabled"] = reporters.JSON.Enabled
+	return p
+}
+
 // Tracker is an interface for providing usage tracking.
 type Tracker interface {
 	io.Closer

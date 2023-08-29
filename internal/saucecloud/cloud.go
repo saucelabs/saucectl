@@ -141,8 +141,6 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				browser = fmt.Sprintf("%s %s", browser, res.job.BrowserShortVersion)
 			}
 
-			r.FetchJUnitReports(&res)
-
 			var artifacts []report.Artifact
 			files := r.downloadArtifacts(res.name, res.job, artifactCfg.When)
 			for _, f := range files {
@@ -150,6 +148,8 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 					FilePath: f,
 				})
 			}
+
+			r.FetchJUnitReports(&res, artifacts)
 
 			var url string
 			if res.job.ID != "" {
@@ -486,21 +486,40 @@ func (r *CloudRunner) remoteArchiveFiles(project interface{}, files []string, sa
 }
 
 // FetchJUnitReports retrieves junit reports for the given result and all of its
-// attempts.
-func (r *CloudRunner) FetchJUnitReports(res *result) {
+// attempts. Can use the given artifacts to avoid unnecessary API calls.
+func (r *CloudRunner) FetchJUnitReports(res *result, artifacts []report.Artifact) {
 	if !report.IsArtifactRequired(r.Reporters, report.JUnitArtifact) {
 		return
+	}
+
+	var junitArtifact *report.Artifact
+	for _, artifact := range artifacts {
+		if strings.HasSuffix(artifact.FilePath, junit.FileName) {
+			junitArtifact = &artifact
+			break
+		}
 	}
 
 	for i := range res.attempts {
 		attempt := &res.attempts[i]
 
-		content, err := r.JobService.GetJobAssetFileContent(
-			context.Background(),
-			attempt.ID,
-			junit.FileName,
-			res.job.IsRDC,
-		)
+		var content []byte
+		var err error
+
+		// If this is the last attempt, we can use the given junit artifact to
+		// avoid unnecessary API calls.
+		if i == len(res.attempts)-1 && junitArtifact != nil {
+			content, err = os.ReadFile(junitArtifact.FilePath)
+			log.Debug().Msg("Using cached JUnit report")
+		} else {
+			content, err = r.JobService.GetJobAssetFileContent(
+				context.Background(),
+				attempt.ID,
+				junit.FileName,
+				res.job.IsRDC,
+			)
+		}
+
 		if err != nil {
 			log.Warn().Err(err).Str("jobID", attempt.ID).Msg("Unable to retrieve JUnit report")
 			continue

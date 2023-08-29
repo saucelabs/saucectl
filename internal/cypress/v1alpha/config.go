@@ -492,7 +492,7 @@ func (p *Project) GetBeforeExec() []string {
 }
 
 // GetReporter returns config.Reporters
-func (p *Project) GetReporter() config.Reporters {
+func (p *Project) GetReporters() config.Reporters {
 	return p.Reporters
 }
 
