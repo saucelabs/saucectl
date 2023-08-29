@@ -510,7 +510,7 @@ func (r *CloudRunner) FetchJUnitReports(res *result, artifacts []report.Artifact
 		// avoid unnecessary API calls.
 		if i == len(res.attempts)-1 && junitArtifact != nil {
 			content, err = os.ReadFile(junitArtifact.FilePath)
-			log.Info().Msg("Using local JUnit report") // TODO remove me
+			log.Debug().Msg("Using cached JUnit report")
 		} else {
 			content, err = r.JobService.GetJobAssetFileContent(
 				context.Background(),
