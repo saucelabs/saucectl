@@ -67,7 +67,7 @@ type RDCSessionRequest struct {
 	UseTestOrchestrator bool              `json:"use_test_orchestrator,omitempty"`
 	Tags                []string          `json:"tags,omitempty"`
 	Build               string            `json:"build,omitempty"`
-	AppSettings         job.AppSettings   `json:"settings,omitempty"`
+	AppSettings         job.AppSettings   `json:"settings_overwrite,omitempty"`
 	RealDeviceKind      string            `json:"kind,omitempty"`
 }
 
