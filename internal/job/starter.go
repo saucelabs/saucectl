@@ -68,13 +68,13 @@ type StartOptions struct {
 
 // AppSettings represents app settings for real device
 type AppSettings struct {
-	AudioCapture    bool            `json:"audioCapture,omitempty"`
+	AudioCapture    bool            `json:"audio_capture,omitempty"`
 	Instrumentation Instrumentation `json:"instrumentation,omitempty"`
 }
 
 // Instrumentation represents instrumentation settings for real device
 type Instrumentation struct {
-	NetworkCapture bool `json:"networkCapture,omitempty"`
+	NetworkCapture bool `json:"network_capture,omitempty"`
 }
 
 // TunnelOptions represents the options that configure the usage of a tunnel when running tests in the Sauce Labs cloud.
