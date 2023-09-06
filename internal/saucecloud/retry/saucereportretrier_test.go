@@ -36,6 +36,10 @@ func (f *StubProjectUploader) List(opts storage.ListOptions) (storage.List, erro
 	return storage.List{}, nil
 }
 
+func (f *StubProjectUploader) Delete(id string) error {
+	return nil
+}
+
 type StubVDCJobReader struct {
 	SauceReport saucereport.SauceReport
 }

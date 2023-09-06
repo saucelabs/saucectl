@@ -7,12 +7,15 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/storage"
+	"github.com/stretchr/testify/assert"
 	"github.com/xtgo/uuid"
 
 	"gotest.tools/v3/fs"
@@ -315,6 +318,103 @@ func TestAppStore_List(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("List() got = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestAppStore_Delete(t *testing.T) {
+	testUser := "test"
+	testPass := "test"
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		if !strings.HasPrefix(r.URL.Path, "/v1/storage/files/") {
+			w.WriteHeader(http.StatusNotImplemented)
+			_, _ = w.Write([]byte("incorrect path"))
+			return
+		}
+		println(path.Base(r.URL.Path))
+		if path.Base(r.URL.Path) == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte("missing file id"))
+			return
+		}
+
+		user, pass, _ := r.BasicAuth()
+		if user != testUser || pass != testPass {
+			w.WriteHeader(http.StatusForbidden)
+			_, _ = w.Write([]byte(http.StatusText(http.StatusForbidden)))
+			return
+		}
+
+		w.WriteHeader(200)
+		// The real server's response body contains a JSON that describes the
+		// deleted item. We don't need that for this test.
+	}))
+	defer server.Close()
+
+	type fields struct {
+		HTTPClient *retryablehttp.Client
+		URL        string
+		Username   string
+		AccessKey  string
+	}
+	type args struct {
+		id string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr assert.ErrorAssertionFunc
+	}{
+		{
+			name: "delete item successfully",
+			fields: fields{
+				HTTPClient: NewRetryableClient(10 * time.Second),
+				URL:        server.URL,
+				Username:   testUser,
+				AccessKey:  testPass,
+			},
+			args:    args{id: uuid.NewRandom().String()},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "fail on wrong credentials",
+			fields: fields{
+				HTTPClient: NewRetryableClient(10 * time.Second),
+				URL:        server.URL,
+				Username:   testUser + "1",
+				AccessKey:  testPass + "1",
+			},
+			args:    args{id: uuid.NewRandom().String()},
+			wantErr: assert.Error,
+		},
+		{
+			name: "fail when no ID was specified",
+			fields: fields{
+				HTTPClient: NewRetryableClient(10 * time.Second),
+				URL:        server.URL,
+				Username:   testUser,
+				AccessKey:  testPass,
+			},
+			args:    args{id: ""},
+			wantErr: assert.Error,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &AppStore{
+				HTTPClient: tt.fields.HTTPClient,
+				URL:        tt.fields.URL,
+				Username:   tt.fields.Username,
+				AccessKey:  tt.fields.AccessKey,
+			}
+			tt.wantErr(t, s.Delete(tt.args.id), fmt.Sprintf("Delete(%v)", tt.args.id))
 		})
 	}
 }

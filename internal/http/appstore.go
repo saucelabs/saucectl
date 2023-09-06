@@ -223,6 +223,37 @@ func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 	}
 }
 
+func (s *AppStore) Delete(id string) error {
+	if id == "" {
+		return fmt.Errorf("no id specified")
+	}
+
+	req, err := retryablehttp.NewRequest(http.MethodDelete, fmt.Sprintf("%s/v1/storage/files/%s", s.URL, id), nil)
+	if err != nil {
+		return err
+	}
+
+	req.SetBasicAuth(s.Username, s.AccessKey)
+
+	resp, err := s.HTTPClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	switch resp.StatusCode {
+	case 200:
+		return nil
+	case 401, 403:
+		return storage.ErrAccessDenied
+	case 404:
+		return storage.ErrFileNotFound
+	case 429:
+		return storage.ErrTooManyRequest
+	default:
+		return s.newServerError(resp)
+	}
+}
+
 // newServerError inspects server error responses, trying to gather as much information as possible, especially if the body
 // conforms to the errorResponse format, and returns a storage.ServerError.
 func (s *AppStore) newServerError(resp *http.Response) *storage.ServerError {

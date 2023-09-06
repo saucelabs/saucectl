@@ -60,6 +60,7 @@ type AppService interface {
 	// UploadStream uploads the contents of reader and stores them under the given filename.
 	UploadStream(filename, description string, reader io.Reader) (Item, error)
 	Download(id string) (io.ReadCloser, int64, error)
+	Delete(id string) error
 	DownloadURL(url string) (io.ReadCloser, int64, error)
 	List(opts ListOptions) (List, error)
 }
