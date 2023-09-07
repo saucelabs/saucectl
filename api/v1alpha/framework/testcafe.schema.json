@@ -63,6 +63,15 @@
             "2.0.1",
             "2.0.0"
           ]
+        },
+        "configFile": {
+          "description": "The designated TestCafe configuration file.",
+          "type": "string",
+          "examples": [
+            "testcaferc.json",
+            "testcaferc.js",
+            "testcaferc.cjs"
+          ]
         }
       },
       "required": [
@@ -325,6 +334,10 @@
           "stopOnFirstFail": {
             "description": "Stops a test run if a test fails.",
             "type": "boolean"
+          },
+          "reporters": {
+            "description": "Specifies reporters supported by TestCafe.",
+            "type": "array"
           },
           "timeout": {
             "$ref": "../subschema/common.schema.json#/definitions/timeout"

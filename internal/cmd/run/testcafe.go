@@ -65,6 +65,10 @@ func NewTestcafeCmd() *cobra.Command {
 	sc.Fset = cmd.Flags()
 	sc.String("name", "suite::name", "", "Set the name of the job as it will appear on Sauce Labs")
 
+	// TestCafe
+	sc.String("testcafe.version", "testcafe::version", "", "The TestCafe version to use")
+	sc.String("testcafe.configFile", "testcafe::configFile", "", "The path to TestCafe config file.")
+
 	// Browser & Platform
 	sc.String("browser", "suite::browserName", "", "Run tests against this browser")
 	sc.String("browserVersion", "suite::browserVersion", "", "The browser version (default: latest)")
@@ -104,13 +108,13 @@ func NewTestcafeCmd() *cobra.Command {
 
 	// Misc
 	sc.String("rootDir", "rootDir", ".", "Control what files are available in the context of a test run, unless explicitly excluded by .sauceignore")
-	sc.String("testcafe.version", "testcafe::version", "", "The TestCafe version to use")
 	sc.StringSlice("clientScripts", "suite::clientScripts", []string{}, "Inject scripts from the specified files into each page visited during the tests")
 	sc.Float64("speed", "suite::speed", 1, "Specify the test execution speed")
 	sc.Bool("disablePageCaching", "suite::disablePageCaching", false, "Prevent the browser from caching page content")
 	sc.StringSlice("excludedTestFiles", "suite::excludedTestFiles", []string{}, "Exclude test files to skip the tests, using glob pattern")
 	sc.String("timeZone", "suite::timeZone", "", "Specifies timeZone for this test")
 	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'.")
+	sc.StringSlice("reporters", "suite::reporters", []string{}, "Specifies reporters supported by TestCafe.")
 
 	// NPM
 	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")
