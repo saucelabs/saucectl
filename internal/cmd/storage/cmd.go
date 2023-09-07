@@ -51,6 +51,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 		ListCommand(),
 		UploadCommand(),
 		DownloadCommand(),
+		DeleteCommand(),
 	)
 
 	return cmd
