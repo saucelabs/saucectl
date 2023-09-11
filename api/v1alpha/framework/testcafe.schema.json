@@ -326,6 +326,14 @@
             "description": "Stops a test run if a test fails.",
             "type": "boolean"
           },
+          "esm": {
+            "description": "Enable ESM modules for TestCafe test.",
+            "type": "boolean"
+          },
+          "disableNativeAutomation": {
+            "description": "Disable Native browser automation protocols, e.g. CDP. For TestCafe v3.0.0 and above.",
+            "type": "boolean"
+          },
           "timeout": {
             "$ref": "../subschema/common.schema.json#/definitions/timeout"
           },

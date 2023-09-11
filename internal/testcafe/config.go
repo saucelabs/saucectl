@@ -91,31 +91,33 @@ type Suite struct {
 	PreExec           []string          `yaml:"preExec,omitempty" json:"preExec"`
 	ExcludedTestFiles []string          `yaml:"excludedTestFiles,omitempty" json:"-"`
 	// Deprecated as of TestCafe v1.10.0 https://testcafe.io/documentation/402638/reference/configuration-file#tsconfigpath
-	TsConfigPath         string                 `yaml:"tsConfigPath,omitempty" json:"tsConfigPath"`
-	ClientScripts        []string               `yaml:"clientScripts,omitempty" json:"clientScripts,omitempty"`
-	SkipJsErrors         bool                   `yaml:"skipJsErrors,omitempty" json:"skipJsErrors"`
-	QuarantineMode       map[string]interface{} `yaml:"quarantineMode,omitempty" json:"quarantineMode,omitempty"`
-	SkipUncaughtErrors   bool                   `yaml:"skipUncaughtErrors,omitempty" json:"skipUncaughtErrors"`
-	SelectorTimeout      int                    `yaml:"selectorTimeout,omitempty" json:"selectorTimeout"`
-	AssertionTimeout     int                    `yaml:"assertionTimeout,omitempty" json:"assertionTimeout"`
-	PageLoadTimeout      int                    `yaml:"pageLoadTimeout,omitempty" json:"pageLoadTimeout"`
-	AjaxRequestTimeout   int                    `yaml:"ajaxRequestTimeout,omitempty" json:"ajaxRequestTimeout"`
-	PageRequestTimeout   int                    `yaml:"pageRequestTimeout,omitempty" json:"pageRequestTimeout"`
-	BrowserInitTimeout   int                    `yaml:"browserInitTimeout,omitempty" json:"browserInitTimeout"`
-	TestExecutionTimeout int                    `yaml:"testExecutionTimeout,omitempty" json:"testExecutionTimeout"`
-	RunExecutionTimeout  int                    `yaml:"runExecutionTimeout,omitempty" json:"runExecutionTimeout"`
-	Speed                float64                `yaml:"speed,omitempty" json:"speed"`
-	StopOnFirstFail      bool                   `yaml:"stopOnFirstFail,omitempty" json:"stopOnFirstFail"`
-	DisablePageCaching   bool                   `yaml:"disablePageCaching,omitempty" json:"disablePageCaching"`
-	DisableScreenshots   bool                   `yaml:"disableScreenshots,omitempty" json:"disableScreenshots"`
-	Filter               Filter                 `yaml:"filter,omitempty" json:"filter,omitempty"`
-	DisableVideo         bool                   `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testcafe config.
-	Mode                 string                 `yaml:"mode,omitempty" json:"-"`
-	Shard                string                 `yaml:"shard,omitempty" json:"-"`
-	Headless             bool                   `yaml:"headless,omitempty" json:"headless"`
-	TimeZone             string                 `yaml:"timeZone,omitempty" json:"timeZone"`
-	PassThreshold        int                    `yaml:"passThreshold,omitempty" json:"-"`
-	SmartRetry           config.SmartRetry      `yaml:"smartRetry,omitempty" json:"-"`
+	TsConfigPath            string                 `yaml:"tsConfigPath,omitempty" json:"tsConfigPath"`
+	ClientScripts           []string               `yaml:"clientScripts,omitempty" json:"clientScripts,omitempty"`
+	SkipJsErrors            bool                   `yaml:"skipJsErrors,omitempty" json:"skipJsErrors"`
+	QuarantineMode          map[string]interface{} `yaml:"quarantineMode,omitempty" json:"quarantineMode,omitempty"`
+	SkipUncaughtErrors      bool                   `yaml:"skipUncaughtErrors,omitempty" json:"skipUncaughtErrors"`
+	SelectorTimeout         int                    `yaml:"selectorTimeout,omitempty" json:"selectorTimeout"`
+	AssertionTimeout        int                    `yaml:"assertionTimeout,omitempty" json:"assertionTimeout"`
+	PageLoadTimeout         int                    `yaml:"pageLoadTimeout,omitempty" json:"pageLoadTimeout"`
+	AjaxRequestTimeout      int                    `yaml:"ajaxRequestTimeout,omitempty" json:"ajaxRequestTimeout"`
+	PageRequestTimeout      int                    `yaml:"pageRequestTimeout,omitempty" json:"pageRequestTimeout"`
+	BrowserInitTimeout      int                    `yaml:"browserInitTimeout,omitempty" json:"browserInitTimeout"`
+	TestExecutionTimeout    int                    `yaml:"testExecutionTimeout,omitempty" json:"testExecutionTimeout"`
+	RunExecutionTimeout     int                    `yaml:"runExecutionTimeout,omitempty" json:"runExecutionTimeout"`
+	Speed                   float64                `yaml:"speed,omitempty" json:"speed"`
+	StopOnFirstFail         bool                   `yaml:"stopOnFirstFail,omitempty" json:"stopOnFirstFail"`
+	DisablePageCaching      bool                   `yaml:"disablePageCaching,omitempty" json:"disablePageCaching"`
+	DisableScreenshots      bool                   `yaml:"disableScreenshots,omitempty" json:"disableScreenshots"`
+	Filter                  Filter                 `yaml:"filter,omitempty" json:"filter,omitempty"`
+	DisableVideo            bool                   `yaml:"disableVideo,omitempty" json:"disableVideo"` // This field is for sauce, not for native testcafe config.
+	Mode                    string                 `yaml:"mode,omitempty" json:"-"`
+	Shard                   string                 `yaml:"shard,omitempty" json:"-"`
+	Headless                bool                   `yaml:"headless,omitempty" json:"headless"`
+	TimeZone                string                 `yaml:"timeZone,omitempty" json:"timeZone"`
+	PassThreshold           int                    `yaml:"passThreshold,omitempty" json:"-"`
+	SmartRetry              config.SmartRetry      `yaml:"smartRetry,omitempty" json:"-"`
+	ESM                     bool                   `yaml:"esm,omitempty" json:"esm"`
+	DisableNativeAutomation bool                   `yaml:"disableNativeAutomation,omitempty" json:"disableNativeAutomation"`
 	// TypeScript compiling options
 	CompilerOptions CompilerOptions `yaml:"compilerOptions,omitempty" json:"compilerOptions"`
 	// Deprecated. Reserved for future use for actual devices.
