@@ -111,7 +111,6 @@ func NewTestcafeCmd() *cobra.Command {
 	sc.String("timeZone", "suite::timeZone", "", "Specifies timeZone for this test")
 	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'.")
 	sc.Bool("esm", "suite::esm", false, "Enable ESM modules for TestCafe test.")
-	sc.Bool("disableNativeAutomation", "suite::disableNativeAutomation", false, "Disable Native browser automation protocols, e.g. CDP. For TestCafe v3.0.0 and above.")
 
 	// NPM
 	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")

@@ -2043,10 +2043,6 @@
                   "description": "Enable ESM modules for TestCafe test.",
                   "type": "boolean"
                 },
-                "disableNativeAutomation": {
-                  "description": "Disable Native browser automation protocols, e.g. CDP. For TestCafe v3.0.0 and above.",
-                  "type": "boolean"
-                },
                 "timeout": {
                   "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
                 },
