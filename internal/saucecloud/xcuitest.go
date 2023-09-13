@@ -228,6 +228,9 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		DeviceType:        d.deviceType,
 		DevicePrivateOnly: d.privateOnly,
 
+		// VMD specific settings
+		Env: s.Env,
+
 		// Overwrite device settings
 		RealDeviceKind: strings.ToLower(xcuitest.IOS),
 		AppSettings: job.AppSettings{

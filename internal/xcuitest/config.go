@@ -114,6 +114,7 @@ type Suite struct {
 	SmartRetry         config.SmartRetry  `yaml:"smartRetry,omitempty" json:"-"`
 	Shard              string             `yaml:"shard,omitempty" json:"-"`
 	TestListFile       string             `yaml:"testListFile,omitempty" json:"-"`
+	Env                map[string]string  `yaml:"env,omitempty" json:"-"`
 }
 
 // IOS constant
