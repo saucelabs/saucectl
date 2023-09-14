@@ -65,6 +65,11 @@ type SauceOpts struct {
 	Visibility       string   `json:"public,omitempty"`
 }
 
+type env struct {
+	Name  string `json:"name,omitempty"`
+	Value string `json:"value,omitempty"`
+}
+
 // Batch represents capabilities for batch frameworks.
 type Batch struct {
 	Framework        string              `json:"framework,omitempty"`
@@ -73,6 +78,7 @@ type Batch struct {
 	TestFile         string              `json:"testFile,omitempty"`
 	Args             []map[string]string `json:"args,omitempty"`
 	VideoFPS         int                 `json:"video_fps"`
+	Env              []env               `json:"env,omitempty"`
 }
 
 // sessionStartResponse represents the response body for starting a session.
@@ -132,6 +138,7 @@ func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 				TestFile:         opts.Suite,
 				Args:             c.formatTestOptions(opts.TestOptions),
 				VideoFPS:         13, // 13 is the sweet spot to minimize frame drops
+				Env:              formatEnv(opts.Env),
 			},
 			IdleTimeout: 9999,
 			MaxDuration: 10800,
@@ -182,6 +189,18 @@ func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 	}
 
 	return sessionStart.SessionID, false, nil
+}
+
+func formatEnv(e map[string]string) []env {
+	var envs []env
+
+	for k, v := range e {
+		envs = append(envs, env{
+			Name:  k,
+			Value: v,
+		})
+	}
+	return envs
 }
 
 // formatTestOptions adapts option shape to match chef expectations

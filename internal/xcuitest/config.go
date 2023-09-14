@@ -43,6 +43,7 @@ type Project struct {
 	Artifacts     config.Artifacts     `yaml:"artifacts,omitempty" json:"artifacts"`
 	Reporters     config.Reporters     `yaml:"reporters,omitempty" json:"-"`
 	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
+	Env           map[string]string    `yaml:"env,omitempty" json:"-"`
 }
 
 // Xcuitest represents xcuitest apps configuration.
@@ -114,6 +115,7 @@ type Suite struct {
 	SmartRetry         config.SmartRetry  `yaml:"smartRetry,omitempty" json:"-"`
 	Shard              string             `yaml:"shard,omitempty" json:"-"`
 	TestListFile       string             `yaml:"testListFile,omitempty" json:"-"`
+	Env                map[string]string  `yaml:"env,omitempty" json:"-"`
 }
 
 // IOS constant
@@ -183,6 +185,13 @@ func SetDefaults(p *Project) {
 		}
 		if suite.PassThreshold < 1 {
 			suite.PassThreshold = 1
+		}
+
+		for k, v := range p.Env {
+			if suite.Env == nil {
+				suite.Env = map[string]string{}
+			}
+			suite.Env[k] = v
 		}
 	}
 }

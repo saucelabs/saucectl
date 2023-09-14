@@ -2120,6 +2120,9 @@
             },
             "additionalProperties": false
           },
+          "env": {
+            "$ref": "#/allOf/0/then/properties/env"
+          },
           "xcuitest": {
             "description": "Contains details specific to the XCUITest project.",
             "type": "object",
@@ -2177,6 +2180,9 @@
                 "otherApps": {
                   "description": "A list of applications to be installed alongside the main app. Applications can be defined as a local path or a remote url. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values. When targeting simulators, a maximum of 2 otherApps is supported.",
                   "type": "array"
+                },
+                "env": {
+                  "$ref": "#/allOf/0/then/properties/env"
                 },
                 "testOptions": {
                   "description": "Allows you to control various details on how tests are executed.",
