@@ -43,6 +43,7 @@ type Project struct {
 	Artifacts     config.Artifacts     `yaml:"artifacts,omitempty" json:"artifacts"`
 	Reporters     config.Reporters     `yaml:"reporters,omitempty" json:"-"`
 	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
+	Env           map[string]string    `yaml:"env,omitempty" json:"-"`
 }
 
 // Xcuitest represents xcuitest apps configuration.
@@ -153,6 +154,17 @@ func SetDefaults(p *Project) {
 
 	p.Sauce.Tunnel.SetDefaults()
 	p.Sauce.Metadata.SetDefaultBuild()
+
+	// Apply global env vars onto every suite.
+	for k, v := range p.Env {
+		for ks := range p.Suites {
+			s := &p.Suites[ks]
+			if s.Env == nil {
+				s.Env = map[string]string{}
+			}
+			s.Env[k] = v
+		}
+	}
 
 	for i := range p.Suites {
 		suite := &p.Suites[i]
