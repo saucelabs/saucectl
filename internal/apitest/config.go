@@ -27,6 +27,7 @@ type Project struct {
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty"`
 	RootDir        string             `yaml:"rootDir,omitempty"`
 	Env            map[string]string  `yaml:"env,omitempty"`
+	EnvFlag        map[string]string  `yaml:"-"`
 }
 
 // Suite represents the apitest suite configuration.
@@ -84,13 +85,16 @@ func SetDefaults(p *Project) {
 	}
 
 	// Apply global env var onto every suite.
-	for k, v := range p.Env {
-		for ks := range p.Suites {
-			s := &p.Suites[ks]
-			if s.Env == nil {
-				s.Env = map[string]string{}
+	// Precedence: --env flag > root-level env vars > suite-level env vars.
+	for _, env := range []map[string]string{p.Env, p.EnvFlag} {
+		for k, v := range env {
+			for ks := range p.Suites {
+				s := &p.Suites[ks]
+				if s.Env == nil {
+					s.Env = map[string]string{}
+				}
+				s.Env[k] = v
 			}
-			s.Env[k] = v
 		}
 	}
 }

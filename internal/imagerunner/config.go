@@ -33,6 +33,7 @@ type Project struct {
 	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
 	DryRun         bool               `yaml:"-" json:"-"`
 	Env            map[string]string  `yaml:"env,omitempty" json:"env"`
+	EnvFlag        map[string]string  `yaml:"-" json:"-"`
 }
 
 type Defaults struct {
@@ -123,11 +124,11 @@ func SetDefaults(p *Project) {
 		suite.Metadata["name"] = suite.Name
 		suite.Metadata["resourceProfile"] = suite.ResourceProfile
 
-		for k, v := range p.Defaults.Env {
-			suite.Env[k] = v
-		}
-		for k, v := range p.Env {
-			suite.Env[k] = v
+		// Precedence: --env flag > root-level env vars > default env vars.
+		for _, env := range []map[string]string{p.Defaults.Env, p.Env, p.EnvFlag} {
+			for k, v := range env {
+				suite.Env[k] = v
+			}
 		}
 	}
 }

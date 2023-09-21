@@ -51,6 +51,7 @@ type Project struct {
 	Reporters     config.Reporters     `yaml:"reporters,omitempty" json:"-"`
 	Defaults      config.Defaults      `yaml:"defaults,omitempty" json:"defaults"`
 	Env           map[string]string    `yaml:"env,omitempty" json:"env"`
+	EnvFlag       map[string]string    `yaml:"-" json:"-"`
 	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
 }
 
@@ -222,13 +223,16 @@ func SetDefaults(p *Project) {
 	}
 
 	// Apply global env vars onto every suite.
-	for k, v := range p.Env {
-		for ks := range p.Suites {
-			s := &p.Suites[ks]
-			if s.Env == nil {
-				s.Env = map[string]string{}
+	// Precedence: --env flag > root-level env vars > suite-level env vars.
+	for _, env := range []map[string]string{p.Env, p.EnvFlag} {
+		for k, v := range env {
+			for ks := range p.Suites {
+				s := &p.Suites[ks]
+				if s.Env == nil {
+					s.Env = map[string]string{}
+				}
+				s.Env[k] = v
 			}
-			s.Env[k] = v
 		}
 	}
 }
