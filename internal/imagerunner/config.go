@@ -124,7 +124,7 @@ func SetDefaults(p *Project) {
 		suite.Metadata["name"] = suite.Name
 		suite.Metadata["resourceProfile"] = suite.ResourceProfile
 
-		// Precedence: --env flag > root-level env vars > default env vars.
+		// Precedence: --env flag > root-level env vars > default env vars > suite env vars.
 		for _, env := range []map[string]string{p.Defaults.Env, p.Env, p.EnvFlag} {
 			for k, v := range env {
 				suite.Env[k] = v
