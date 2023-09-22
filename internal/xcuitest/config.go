@@ -44,6 +44,7 @@ type Project struct {
 	Reporters     config.Reporters     `yaml:"reporters,omitempty" json:"-"`
 	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
 	Env           map[string]string    `yaml:"env,omitempty" json:"-"`
+	EnvFlag       map[string]string    `yaml:"-" json:"-"`
 }
 
 // Xcuitest represents xcuitest apps configuration.
@@ -187,11 +188,14 @@ func SetDefaults(p *Project) {
 			suite.PassThreshold = 1
 		}
 
-		for k, v := range p.Env {
-			if suite.Env == nil {
-				suite.Env = map[string]string{}
+		// Precedence: --env flag > root-level env vars > suite-level env vars.
+		for _, env := range []map[string]string{p.Env, p.EnvFlag} {
+			for k, v := range env {
+				if suite.Env == nil {
+					suite.Env = map[string]string{}
+				}
+				suite.Env[k] = v
 			}
-			suite.Env[k] = v
 		}
 	}
 }

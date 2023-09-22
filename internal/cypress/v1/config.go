@@ -49,6 +49,7 @@ type Project struct {
 	Artifacts     config.Artifacts     `yaml:"artifacts,omitempty" json:"artifacts"`
 	Reporters     config.Reporters     `yaml:"reporters,omitempty" json:"-"`
 	Env           map[string]string    `yaml:"env,omitempty" json:"env"`
+	EnvFlag       map[string]string    `yaml:"-" json:"-"`
 	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
 }
 
@@ -160,8 +161,11 @@ func (p *Project) SetDefaults() {
 		}
 
 		// Apply global env vars onto suite.
-		for k, v := range p.Env {
-			s.Config.Env[k] = v
+		// Precedence: --env flag > root-level env vars > suite-level env vars.
+		for _, env := range []map[string]string{p.Env, p.EnvFlag} {
+			for k, v := range env {
+				s.Config.Env[k] = v
+			}
 		}
 
 		if s.Config.TestingType == "" {
