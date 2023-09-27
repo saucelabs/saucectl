@@ -196,6 +196,7 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		DisplayName:      s.Name,
 		Timeout:          s.Timeout,
 		App:              appFileID,
+		TestApp:          testAppFileID,
 		Suite:            testAppFileID,
 		OtherApps:        otherAppsIDs,
 		Framework:        "xcuitest",

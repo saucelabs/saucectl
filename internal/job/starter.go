@@ -21,6 +21,7 @@ type StartOptions struct {
 	User           string                 `json:"username"`
 	AccessKey      string                 `json:"accessKey"`
 	App            string                 `json:"app,omitempty"`
+	TestApp        string                 `json:"testApp,omitempty"`
 	Suite          string                 `json:"suite,omitempty"`
 	OtherApps      []string               `json:"otherApps,omitempty"`
 	Framework      string                 `json:"framework,omitempty"`
