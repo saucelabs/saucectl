@@ -38,6 +38,7 @@ type Capabilities struct {
 // MatchingCaps are specific attributes that together form the capabilities that are used to match a session.
 type MatchingCaps struct {
 	App               string    `json:"app,omitempty"`
+	TestApp           string    `json:"testApp,omitempty"`
 	OtherApps         []string  `json:"otherApps,omitempty"`
 	BrowserName       string    `json:"browserName,omitempty"`
 	BrowserVersion    string    `json:"browserVersion,omitempty"`
@@ -117,6 +118,7 @@ func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 
 	caps := Capabilities{AlwaysMatch: MatchingCaps{
 		App:             opts.App,
+		TestApp:         opts.TestApp,
 		OtherApps:       opts.OtherApps,
 		BrowserName:     c.normalizeBrowser(opts.Framework, opts.BrowserName),
 		BrowserVersion:  opts.BrowserVersion,

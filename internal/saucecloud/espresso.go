@@ -203,6 +203,7 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 		ConfigFilePath:    r.Project.ConfigFilePath,
 		CLIFlags:          r.Project.CLIFlags,
 		App:               appFileURI,
+		TestApp:           testAppFileURI,
 		Suite:             testAppFileURI,
 		OtherApps:         otherAppsURIs,
 		Framework:         "espresso",
