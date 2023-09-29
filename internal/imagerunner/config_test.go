@@ -105,6 +105,77 @@ func TestValidate(t *testing.T) {
 			},
 			wantErr: `invalid resourceProfile for suite: Main Suite, resourceProfile should be of format cXmX`,
 		},
+		{
+			name: "Invalid serviceName",
+			args: args{
+				p: Project{
+					Sauce: config.SauceConfig{
+						Region: region.USWest1.String(),
+					},
+					Suites: []Suite{
+						{
+							Name:     "Main Suite",
+							Image:    "dummy/image",
+							Workload: "other",
+							Services: []SuiteService{
+								{
+									Image: "dummy/image",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: `missing "name" for service in suite: Main Suite`,
+		},
+		{
+			name: "Invalid serviceImage",
+			args: args{
+				p: Project{
+					Sauce: config.SauceConfig{
+						Region: region.USWest1.String(),
+					},
+					Suites: []Suite{
+						{
+							Name:     "Main Suite",
+							Image:    "dummy/image",
+							Workload: "other",
+							Services: []SuiteService{
+								{
+									Name: "myservice",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: `missing "image" for service: myservice in suite: Main Suite`,
+		},
+		{
+			name: "Invalid serviceResourceProfile",
+			args: args{
+				p: Project{
+					Sauce: config.SauceConfig{
+						Region: region.USWest1.String(),
+					},
+					Suites: []Suite{
+						{
+							Name:     "Main Suite",
+							Image:    "dummy/image",
+							Workload: "other",
+							Services: []SuiteService{
+								{
+									Name:            "myservice",
+									Image:           "dummy/image",
+									ResourceProfile: "test",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: `invalid resourceProfile for service: myservice in suite: Main Suite, resourceProfile should be of format cXmX`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

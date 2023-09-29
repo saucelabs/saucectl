@@ -168,9 +168,37 @@ func (r *ImgRunner) runSuites(suites chan imagerunner.Suite, results chan<- exec
 	}
 }
 
+func (r *ImgRunner) buildService(serviceIn imagerunner.SuiteService, suiteName string) (imagerunner.Service, error) {
+	var auth *imagerunner.Auth
+	if serviceIn.ImagePullAuth.User != "" && serviceIn.ImagePullAuth.Token != "" {
+		auth = &imagerunner.Auth{
+			User:  serviceIn.ImagePullAuth.User,
+			Token: serviceIn.ImagePullAuth.Token,
+		}
+	}
+
+	files, err := mapFiles(serviceIn.Files)
+	if err != nil {
+		log.Err(err).Str("suite", suiteName).Str("service", serviceIn.Name).Msg("Unable to read source files")
+		return imagerunner.Service{}, err
+	}
+
+	serviceOut := imagerunner.Service{
+		Name: serviceIn.Name,
+		Container: imagerunner.Container{
+			Name: serviceIn.Image,
+			Auth: auth,
+		},
+
+		EntryPoint: serviceIn.EntryPoint,
+		Env:        mapEnv(serviceIn.Env),
+		Files:      files,
+	}
+	return serviceOut, nil
+}
+
 func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error) {
 	var run imagerunner.Runner
-
 	files, err := mapFiles(suite.Files)
 	if err != nil {
 		log.Err(err).Str("suite", suite.Name).Msg("Unable to read source files")
@@ -193,6 +221,15 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 			Token: suite.ImagePullAuth.Token,
 		}
 	}
+
+	services := make([]imagerunner.Service, len(suite.Services))
+	for i, s := range suite.Services {
+		services[i], err = r.buildService(s, suite.Name)
+		if err != nil {
+			return run, err
+		}
+	}
+
 	runner, err := r.RunnerService.TriggerRun(ctx, imagerunner.RunnerSpec{
 		Container: imagerunner.Container{
 			Name: suite.Image,
@@ -206,6 +243,7 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 		Metadata:     suite.Metadata,
 		WorkloadType: suite.Workload,
 		Tunnel:       r.getTunnel(),
+		Services:     services,
 	})
 
 	if errors.Is(err, context.DeadlineExceeded) && ctx.Err() != nil {

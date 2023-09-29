@@ -52,6 +52,17 @@ type Suite struct {
 	Workload        string            `yaml:"workload,omitempty" json:"workload,omitempty"`
 	ResourceProfile string            `yaml:"resourceProfile,omitempty" json:"resourceProfile,omitempty"`
 	Metadata        map[string]string `yaml:"metadata,omitempty" json:"metadata,omitempty"`
+	Services        []SuiteService    `yaml:"services,omitempty" json:"services,omitempty"`
+}
+
+type SuiteService struct {
+	Name            string            `yaml:"name,omitempty" json:"name"`
+	Image           string            `yaml:"image,omitempty" json:"image"`
+	ImagePullAuth   ImagePullAuth     `yaml:"imagePullAuth,omitempty" json:"imagePullAuth"`
+	EntryPoint      string            `yaml:"entrypoint,omitempty" json:"entrypoint"`
+	Files           []File            `yaml:"files,omitempty" json:"files"`
+	Env             map[string]string `yaml:"env,omitempty" json:"env"`
+	ResourceProfile string            `yaml:"resourceProfile,omitempty" json:"resourceProfile,omitempty"`
 }
 
 type ImagePullAuth struct {
@@ -130,6 +141,23 @@ func SetDefaults(p *Project) {
 				suite.Env[k] = v
 			}
 		}
+
+		for j := range suite.Services {
+			service := &suite.Services[j]
+			if service.ResourceProfile == "" {
+				service.ResourceProfile = "c1m1"
+			}
+			suite.Metadata[fmt.Sprintf("resourceProfile-%s", GetCanonicalServiceName(service.Name))] = suite.ResourceProfile
+			if service.Env == nil {
+				service.Env = make(map[string]string)
+			}
+			// Precedence: --env flag > root-level env vars > default env vars > service env vars.
+			for _, env := range []map[string]string{p.Defaults.Env, p.Env, p.EnvFlag} {
+				for k, v := range env {
+					service.Env[k] = v
+				}
+			}
+		}
 	}
 }
 
@@ -158,6 +186,24 @@ func Validate(p Project) error {
 
 		if suite.ResourceProfile != "" && !ValidResourceProfilesValidator.MatchString(suite.ResourceProfile) {
 			return fmt.Errorf(msg.InvalidResourceProfile, suite.Name, ValidResourceProfilesFormat)
+		}
+		if err := ValidateServices(suite.Services, suite.Name); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func ValidateServices(service []SuiteService, suiteName string) error {
+	for _, service := range service {
+		if service.Name == "" {
+			return fmt.Errorf(msg.MissingServiceName, suiteName)
+		}
+		if service.Image == "" {
+			return fmt.Errorf(msg.MissingServiceImage, service.Name, suiteName)
+		}
+		if service.ResourceProfile != "" && !ValidResourceProfilesValidator.MatchString(service.ResourceProfile) {
+			return fmt.Errorf(msg.InvalidServiceResourceProfile, service.Name, suiteName, ValidResourceProfilesFormat)
 		}
 	}
 	return nil
