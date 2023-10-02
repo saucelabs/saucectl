@@ -15,3 +15,15 @@ suites:
         dst: "hello.txt"
     env: # Arbitrary Key-Value pairs set as environment variables inside the container.
      MY_FOO: bar
+    services:
+      - name: "service1"
+        image: "busybox:1.35.0"
+        imagePullAuth: # Credentials used to pull the container image
+          user: $DOCKER_USERNAME
+          token: $DOCKER_PASSWORD
+        entrypoint: "cat hello.txt" # What command to start the container with
+        files: # Which files should be uploaded and mounted within the container
+          - src: "tests/e2e/imagerunner/hello.txt"
+            dst: "hello.txt"
+        env: # Arbitrary Key-Value pairs set as environment variables inside the container.
+          MY_FOO: bar
