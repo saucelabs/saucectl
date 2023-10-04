@@ -164,6 +164,12 @@ const (
 	ImageRunnerMaxConcurrency = "Maximum concurrency for imagerunner is 5. Replacing %d with 5."
 	// InvalidResourceProfile indicates the resourceProfile is not valid
 	InvalidResourceProfile = "invalid resourceProfile for suite: %s, resourceProfile should be of format %v"
+	// MissingServiceName indicates no service name provided
+	MissingServiceName = `missing "name" for service in suite: %s`
+	// MissingServiceImage indicates no docker image provided
+	MissingServiceImage = `missing "image" for service: %s in suite: %s`
+	// InvalidServiceResourceProfile indicates the service resourceProfile is not valid
+	InvalidServiceResourceProfile = "invalid resourceProfile for service: %s in suite: %s, resourceProfile should be of format %v"
 )
 
 // testcafe config settings

@@ -2763,11 +2763,83 @@
               "metadata": {
                 "description": "Supply additional metadata to your runner.",
                 "type": "object"
+              },
+              "services": {
+                "description": "List of services to run with the suite.",
+                "type": "array",
+                "items": {
+                  "$ref": "#/allOf/9/then/definitions/service"
+                }
               }
             },
             "required": [
               "name",
               "workload"
+            ]
+          },
+          "service": {
+            "description": "The set of properties providing details about how to run the service container.",
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "The name of the service.",
+                "type": "string"
+              },
+              "image": {
+                "description": "The name of the service image.",
+                "type": "string"
+              },
+              "imagePullAuth": {
+                "description": "Container registry credentials for accessing the service image.",
+                "type": "object",
+                "properties": {
+                  "user": {
+                    "description": "The username.",
+                    "type": "string"
+                  },
+                  "token": {
+                    "description": "The access token.",
+                    "type": "string"
+                  }
+                }
+              },
+              "entrypoint": {
+                "description": "The command line arguments to launch the service image with.",
+                "type": "string"
+              },
+              "files": {
+                "description": "List of files that you'd like saucectl to upload and mount within the service container.",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "src": {
+                      "description": "Path to the local file.",
+                      "type": "string"
+                    },
+                    "dst": {
+                      "description": "Path within the container that the file should be mounted at.",
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "env": {
+                "description": "Set one or more environment variables for the service.",
+                "type": "object"
+              },
+              "resourceProfile": {
+                "description": "Sets the CPU/memory limits of the service container. Format is <CPU><level><mem><level>. Default to c1m1.",
+                "enum": [
+                  "",
+                  "c1m1",
+                  "c2m2",
+                  "c3m3"
+                ]
+              }
+            },
+            "required": [
+              "name"
             ]
           }
         },

@@ -40,6 +40,15 @@ type RunnerSpec struct {
 	Artifacts    []string          `json:"artifacts,omitempty"`
 	WorkloadType string            `json:"workload_type,omitempty"`
 	Tunnel       *Tunnel           `json:"tunnel,omitempty"`
+	Services     []Service         `json:"services,omitempty"`
+}
+
+type Service struct {
+	Name       string     `json:"name,omitempty"`
+	Container  Container  `json:"container,omitempty"`
+	EntryPoint string     `json:"entrypoint,omitempty"`
+	Env        []EnvItem  `json:"env,omitempty"`
+	Files      []FileData `json:"files,omitempty"`
 }
 
 type Tunnel struct {
