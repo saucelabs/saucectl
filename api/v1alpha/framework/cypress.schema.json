@@ -63,8 +63,7 @@
           "$ref": "../subschema/common.schema.json#/definitions/version",
           "enum": [
             "package.json",
-            "9.7.0",
-            "8.6.0"
+            "9.7.0"
           ]
         },
         "reporters": {
