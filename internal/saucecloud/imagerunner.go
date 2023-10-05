@@ -48,6 +48,8 @@ type ImgRunner struct {
 
 	Reporters []report.Reporter
 
+	Async bool
+
 	ctx    context.Context
 	cancel context.CancelFunc
 }
@@ -260,6 +262,12 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 
 	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Str("runID", runner.ID).
 		Msg("Started suite.")
+
+	if r.Async {
+		// Async mode means we don't wait for the suite to finish.
+		return runner, nil
+	}
+
 	run, err = r.PollRun(ctx, runner.ID, runner.Status)
 	if errors.Is(err, context.DeadlineExceeded) && ctx.Err() != nil {
 		// Use a new context, because the suite's already timed out, and we'd not be able to stop the run.
@@ -307,12 +315,14 @@ func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
 			passed = false
 		}
 
-		log.Err(res.err).Str("suite", res.name).Bool("passed", res.err == nil).Str("runID", res.runID).
-			Msg("Suite finished.")
+		if imagerunner.Done(res.status) {
+			log.Err(res.err).Str("suite", res.name).Bool("passed", res.err == nil).Str("runID", res.runID).
+				Msg("Suite finished.")
 
-		r.PrintLogs(res.runID, res.name)
+			r.PrintLogs(res.runID, res.name)
 
-		r.DownloadArtifacts(res.runID, res.name, res.status, passed)
+			r.DownloadArtifacts(res.runID, res.name, res.status, passed)
+		}
 
 		for _, r := range r.Reporters {
 			r.Add(report.TestResult{
