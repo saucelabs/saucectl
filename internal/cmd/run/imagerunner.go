@@ -57,6 +57,7 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 		Reporters: []report.Reporter{&table.Reporter{
 			Dst: os.Stdout,
 		}},
+		Async: gFlags.async,
 	}
 	return r.RunProject()
 }
