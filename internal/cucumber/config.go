@@ -65,7 +65,6 @@ type Suite struct {
 	PlatformName     string            `yaml:"platformName,omitempty" json:"platformName"`
 	Env              map[string]string `yaml:"env,omitempty" json:"env"`
 	Shard            string            `yaml:"shard,omitempty" json:"shard"`
-	Mode             string            `yaml:"mode,omitemty" json:"mode"`
 	Timeout          time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
 	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
 	PreExec          []string          `yaml:"preExec,omitempty" json:"preExec"`
