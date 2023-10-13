@@ -13,7 +13,6 @@ type Suite struct {
 	BrowserVersion   string            `yaml:"browserVersion,omitempty" json:"browserVersion"`
 	PlatformName     string            `yaml:"platformName,omitempty" json:"platformName"`
 	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
-	Mode             string            `yaml:"mode,omitempty" json:"-"`
 	Timeout          time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
 	Shard            string            `yaml:"shard,omitempty" json:"-"`
 	Headless         bool              `yaml:"headless,omitempty" json:"headless"`

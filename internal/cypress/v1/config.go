@@ -61,7 +61,6 @@ type Suite struct {
 	PlatformName     string            `yaml:"platformName,omitempty" json:"platformName"`
 	Config           SuiteConfig       `yaml:"config,omitempty" json:"config"`
 	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
-	Mode             string            `yaml:"mode,omitempty" json:"-"`
 	Timeout          time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
 	Shard            string            `yaml:"shard,omitempty" json:"-"`
 	ShardGrepEnabled bool              `yaml:"shardGrepEnabled,omitempty" json:"-"`
@@ -456,7 +455,6 @@ func (p *Project) GetSuites() []suite.Suite {
 			BrowserVersion:   s.BrowserVersion,
 			PlatformName:     s.PlatformName,
 			ScreenResolution: s.ScreenResolution,
-			Mode:             s.Mode,
 			Timeout:          s.Timeout,
 			Shard:            s.Shard,
 			Headless:         s.Headless,
@@ -515,7 +513,6 @@ func (p *Project) GetSuite() suite.Suite {
 		BrowserVersion:   s.BrowserVersion,
 		PlatformName:     s.PlatformName,
 		ScreenResolution: s.ScreenResolution,
-		Mode:             s.Mode,
 		Timeout:          s.Timeout,
 		Shard:            s.Shard,
 		Headless:         s.Headless,
