@@ -200,11 +200,10 @@ func (r *ImgRunner) buildService(serviceIn imagerunner.SuiteService, suiteName s
 }
 
 func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error) {
-	var run imagerunner.Runner
 	files, err := mapFiles(suite.Files)
 	if err != nil {
 		log.Err(err).Str("suite", suite.Name).Msg("Unable to read source files")
-		return run, err
+		return imagerunner.Runner{}, err
 	}
 
 	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Msg("Starting suite.")
@@ -228,7 +227,7 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 	for i, s := range suite.Services {
 		services[i], err = r.buildService(s, suite.Name)
 		if err != nil {
-			return run, err
+			return imagerunner.Runner{}, err
 		}
 	}
 
@@ -249,15 +248,16 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 	})
 
 	if errors.Is(err, context.DeadlineExceeded) && ctx.Err() != nil {
-		run.Status = imagerunner.StateCancelled
-		return run, SuiteTimeoutError{Timeout: suite.Timeout}
+		runner.Status = imagerunner.StateCancelled
+		return runner, SuiteTimeoutError{Timeout: suite.Timeout}
 	}
 	if errors.Is(err, context.Canceled) && ctx.Err() != nil {
-		run.Status = imagerunner.StateCancelled
-		return run, ErrSuiteCancelled
+		runner.Status = imagerunner.StateCancelled
+		return runner, ErrSuiteCancelled
 	}
 	if err != nil {
-		return run, err
+		runner.Status = imagerunner.StateFailed
+		return runner, err
 	}
 
 	log.Info().Str("image", suite.Image).Str("suite", suite.Name).Str("runID", runner.ID).
@@ -268,6 +268,7 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 		return runner, nil
 	}
 
+	var run imagerunner.Runner
 	run, err = r.PollRun(ctx, runner.ID, runner.Status)
 	if errors.Is(err, context.DeadlineExceeded) && ctx.Err() != nil {
 		// Use a new context, because the suite's already timed out, and we'd not be able to stop the run.
@@ -315,14 +316,9 @@ func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
 			passed = false
 		}
 
-		if imagerunner.Done(res.status) {
-			log.Err(res.err).Str("suite", res.name).Bool("passed", res.err == nil).Str("runID", res.runID).
-				Msg("Suite finished.")
-
-			r.PrintLogs(res.runID, res.name)
-
-			r.DownloadArtifacts(res.runID, res.name, res.status, passed)
-		}
+		r.PrintResult(res)
+		r.PrintLogs(res.runID, res.name)
+		r.DownloadArtifacts(res.runID, res.name, res.status, res.err != nil)
 
 		for _, r := range r.Reporters {
 			r.Add(report.TestResult{
@@ -396,7 +392,10 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (
 }
 
 func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed bool) {
-	if runnerID == "" || status == imagerunner.StateCancelled || !r.Project.Artifacts.Download.When.IsNow(passed) {
+	if r.Async ||
+		runnerID == "" ||
+		status == imagerunner.StateCancelled ||
+		!r.Project.Artifacts.Download.When.IsNow(passed) {
 		return
 	}
 
@@ -439,8 +438,26 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 	}
 }
 
+func (r *ImgRunner) PrintResult(res execResult) {
+	if r.Async {
+		return
+	}
+
+	logEvent := log.Err(res.err).
+		Str("suite", res.name).
+		Bool("passed", res.err == nil).
+		Str("runID", res.runID)
+
+	if res.err != nil {
+		logEvent.Msg("Suite failed.")
+		return
+	}
+
+	logEvent.Msg("Suite finished.")
+}
+
 func (r *ImgRunner) PrintLogs(runID, suiteName string) {
-	if runID == "" {
+	if r.Async || runID == "" {
 		return
 	}
 

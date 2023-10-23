@@ -58,11 +58,12 @@ func (c *ImageRunner) TriggerRun(ctx context.Context, spec imagerunner.RunnerSpe
 		return runner, err
 	}
 
-	if resp.StatusCode != http.StatusCreated {
-		return runner, fmt.Errorf("runner start failed (%d): %s", resp.StatusCode, body)
+	switch resp.StatusCode {
+	case http.StatusCreated:
+		return runner, json.Unmarshal(body, &runner)
+	default:
+		return runner, c.newServerError(resp.StatusCode, "runner start", body)
 	}
-
-	return runner, json.Unmarshal(body, &runner)
 }
 
 func (c *ImageRunner) GetStatus(ctx context.Context, id string) (imagerunner.Runner, error) {
@@ -224,4 +225,19 @@ func (c *ImageRunner) doGetStr(ctx context.Context, url string) (string, error) 
 	}
 
 	return builder.String(), nil
+}
+
+func (c *ImageRunner) newServerError(status int, short string, body []byte) error {
+	var se imagerunner.ServerError
+	err := json.Unmarshal(body, &se)
+	if err != nil || (se.Code == "" && se.Msg == "") {
+		// If the body doesn't conform to the server error format, just return
+		// the raw body.
+		se.Code = "ERR_SERVER_ERROR"
+		se.Msg = string(body)
+	}
+	se.HTTPStatus = status
+	se.Short = short
+
+	return &se
 }

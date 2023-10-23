@@ -1,6 +1,9 @@
 package imagerunner
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 // The different states that a runner can be in.
 const (
@@ -88,4 +91,22 @@ type Runner struct {
 type ArtifactList struct {
 	ID    string   `json:"id"`
 	Items []string `json:"items"`
+}
+
+type ServerError struct {
+	// HTTPStatus is the HTTP status code as returned by the server.
+	HTTPStatus int `json:"-"`
+
+	// Short is a short error prefix saying what failed, e.g. "failed to do x".
+	Short string `json:"-"`
+
+	// Code is the error code, such as 'ERR_IMAGE_NOT_ACCESSIBLE'.
+	Code string `json:"code"`
+
+	// Msg describes the error in more detail.
+	Msg string `json:"message"`
+}
+
+func (s *ServerError) Error() string {
+	return fmt.Sprintf("%s (%d): %s: %s", s.Short, s.HTTPStatus, s.Code, s.Msg)
 }
