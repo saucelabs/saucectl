@@ -94,8 +94,14 @@ type sessionStartResponse struct {
 func NewWebdriver(url string, creds iam.Credentials, timeout time.Duration) Webdriver {
 	return Webdriver{
 		HTTPClient: &http.Client{
-			Timeout:   timeout,
-			Transport: &http.Transport{Proxy: http.ProxyFromEnvironment},
+			Timeout: timeout,
+			Transport: &http.Transport{
+				Proxy: http.ProxyFromEnvironment,
+				// The server seems to terminate idle connections within 10 minutes,
+				// without any Keep-Alive information. We need to stay ahead of
+				// the server side disconnect.
+				IdleConnTimeout: 3 * time.Minute,
+			},
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				// Sauce can queue up Job start requests for up to 10 minutes and sends redirects in the meantime to
 				// keep the connection alive. A redirect is sent every 45 seconds.
