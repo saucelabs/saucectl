@@ -6,7 +6,9 @@ import (
 	"path/filepath"
 
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/clientconfig"
 	"github.com/saucelabs/saucectl/internal/iam"
+	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/yaml"
 	yamlbase "gopkg.in/yaml.v2"
 )
@@ -36,7 +38,34 @@ func Get() iam.Credentials {
 	if c := FromEnv(); c.IsSet() {
 		return c
 	}
+	/*clientConf, err := clientconfig.Get()
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to read client config")
+	}
+	*/
+	return FromFile()
+}
 
+// Get returns the configured credentials.
+// Effectively a convenience wrapper around FromEnv, followed by a call to FromFile.
+//
+// The lookup order is:
+//  1. Environment variables (see FromEnv)
+//  2. Per region Credentials
+//  3. Credentials file (see FromFile)
+func GetV2(region region.Region) iam.Credentials {
+	if c := FromEnv(); c.IsSet() {
+		return c
+	}
+	clientConf, err := clientconfig.Get()
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to read client config")
+	}
+	if clientConf != nil {
+		if creds, ok := clientConf.Credentials[region.String()]; ok {
+			return creds
+		}
+	}
 	return FromFile()
 }
 
