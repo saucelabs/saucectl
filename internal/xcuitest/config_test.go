@@ -24,8 +24,9 @@ func TestTestOptions_ToMap(t *testing.T) {
 		TestTimeoutsEnabled:               "",
 		MaximumTestExecutionTimeAllowance: 20,
 		DefaultTestExecutionTimeAllowance: 0,
+		StatusBarOverrideTime:             "",
 	}
-	wantLength := 7
+	wantLength := 8
 
 	m := opts.ToMap()
 

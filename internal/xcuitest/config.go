@@ -65,6 +65,7 @@ type TestOptions struct {
 	TestTimeoutsEnabled               string   `yaml:"testTimeoutsEnabled,omitempty" json:"testTimeoutsEnabled"`
 	MaximumTestExecutionTimeAllowance int      `yaml:"maximumTestExecutionTimeAllowance,omitempty" json:"maximumTestExecutionTimeAllowance"`
 	DefaultTestExecutionTimeAllowance int      `yaml:"defaultTestExecutionTimeAllowance,omitempty" json:"defaultTestExecutionTimeAllowance"`
+	StatusBarOverrideTime             string   `yaml:"statusBarOverrideTime,omitempty" json:"statusBarOverrideTime"`
 }
 
 // ToMap converts the TestOptions to a map where the keys are derived from json struct tags.
