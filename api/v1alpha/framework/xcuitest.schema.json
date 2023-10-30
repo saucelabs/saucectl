@@ -130,6 +130,10 @@
               "defaultTestExecutionTimeAllowance": {
                 "description": "The default execution time, in seconds, an individual test is given to execute if test timeouts are enabled. Supported on Simulators only.",
                 "type": "number"
+              },
+              "statusBarOverrideTime": {
+                "description": "Modify the time displayed on the status bar. Supported on Simulators only.",
+                "type": "string"
               }
             },
             "additionalProperties": false
