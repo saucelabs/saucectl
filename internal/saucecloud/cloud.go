@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/url"
 	"os"
 	"os/signal"
 	"path"
@@ -156,7 +155,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			if res.job.ID != "" {
 				url = fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 			}
-			buildURL := r.getBuildURL(url, res.job.IsRDC)
+			buildURL := r.getBuildURL(res.job.ID, res.job.IsRDC)
 			tr := report.TestResult{
 				Name:       res.name,
 				Duration:   res.duration,
@@ -198,26 +197,18 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	return passed
 }
 
-func (r *CloudRunner) getBuildURL(jobURL string, isRDC bool) string {
-	pURL, err := url.Parse(jobURL)
-	if err != nil {
-		log.Debug().Err(err).Msgf("Failed to parse job url (%s)", jobURL)
-		return ""
-	}
-	p := strings.Split(pURL.Path, "/")
-	jID := p[len(p)-1]
-
+func (r *CloudRunner) getBuildURL(jobID string, isRDC bool) string {
 	buildSource := build.RDC
 	if !isRDC {
 		buildSource = build.VDC
 	}
-	bID, err := r.BuildService.GetBuildID(context.Background(), jID, buildSource)
+	bID, err := r.BuildService.GetBuildID(context.Background(), jobID, buildSource)
 	if err != nil {
-		log.Debug().Err(err).Msgf("Failed to retrieve build id for job (%s)", jID)
+		log.Debug().Err(err).Msgf("Failed to retrieve build id for job (%s)", jobID)
 		return ""
 	}
 
-	return fmt.Sprintf("%s://%s/builds/%s/%s", pURL.Scheme, pURL.Host, buildSource, bID)
+	return fmt.Sprintf("%s/builds/%s/%s", r.Region.AppBaseURL(), buildSource, bID)
 }
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {
