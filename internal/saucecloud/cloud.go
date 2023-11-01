@@ -64,6 +64,8 @@ type CloudRunner struct {
 	NPMDependencies []string
 
 	interrupted bool
+	VDCBuildURL string
+	RDCBuildURL string
 }
 
 type result struct {
@@ -198,17 +200,32 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 }
 
 func (r *CloudRunner) getBuildURL(jobID string, isRDC bool) string {
-	buildSource := build.RDC
+	var buildSource build.Source
 	if !isRDC {
+		if r.VDCBuildURL != "" {
+			return r.VDCBuildURL
+		}
 		buildSource = build.VDC
+	} else {
+		if r.RDCBuildURL != "" {
+			return r.RDCBuildURL
+		}
+		buildSource = build.RDC
 	}
+
 	bID, err := r.BuildService.GetBuildID(context.Background(), jobID, buildSource)
 	if err != nil {
 		log.Debug().Err(err).Msgf("Failed to retrieve build id for job (%s)", jobID)
 		return ""
 	}
 
-	return fmt.Sprintf("%s/builds/%s/%s", r.Region.AppBaseURL(), buildSource, bID)
+	bURL := fmt.Sprintf("%s/builds/%s/%s", r.Region.AppBaseURL(), buildSource, bID)
+	if !isRDC {
+		r.VDCBuildURL = bURL
+	} else {
+		r.RDCBuildURL = bURL
+	}
+	return bURL
 }
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {
