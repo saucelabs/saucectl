@@ -219,7 +219,7 @@ func (r *CloudRunner) getBuildURL(jobID string, isRDC bool) string {
 
 	bID, err := r.BuildService.GetBuildID(context.Background(), jobID, buildSource)
 	if err != nil {
-		log.Debug().Err(err).Msgf("Failed to retrieve build id for job (%s)", jobID)
+		log.Warn().Err(err).Msgf("Failed to retrieve build id for job (%s)", jobID)
 		return ""
 	}
 
