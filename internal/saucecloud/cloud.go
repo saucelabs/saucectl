@@ -64,10 +64,10 @@ type CloudRunner struct {
 	NPMDependencies []string
 
 	interrupted bool
-	CachedData  CachedData
+	Cache  Cache
 }
 
-type CachedData struct {
+type Cache struct {
 	VDCBuildURL string
 	RDCBuildURL string
 }
