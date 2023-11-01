@@ -35,6 +35,7 @@ type TestResult struct {
 	URL           string        `json:"url"`
 	Artifacts     []Artifact    `json:"artifacts,omitempty"`
 	Origin        string        `json:"origin"`
+	BuildURL      string        `json:"buildURL"`
 	RDC           bool          `json:"-"`
 	TimedOut      bool          `json:"-"`
 	PassThreshold bool          `json:"-"`

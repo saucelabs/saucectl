@@ -2,17 +2,23 @@ package json
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/report"
 )
 
 // Reporter represents struct to report in json format
 type Reporter struct {
+	Service    build.Reader
 	WebhookURL string
 	Filename   string
 	Results    []report.TestResult
@@ -26,6 +32,7 @@ func (r *Reporter) Add(t report.TestResult) {
 // Render sends the result to specified webhook WebhookURL and log the result to the specified json file
 func (r *Reporter) Render() {
 	r.cleanup()
+	r.buildData()
 	body, err := json.Marshal(r.Results)
 	if err != nil {
 		log.Error().Msgf("failed to generate test result (%v)", err)
@@ -78,4 +85,53 @@ func (r *Reporter) Reset() {
 // ArtifactRequirements returns a list of artifact types this reporter requires to create a proper report.
 func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 	return nil
+}
+
+func (r *Reporter) buildData() {
+	if len(r.Results) < 1 {
+		return
+	}
+
+	var vdcJobURL string
+	var rdcJobURL string
+	for _, result := range r.Results {
+		if !result.RDC && result.URL != "" {
+			vdcJobURL = result.URL
+			break
+		}
+	}
+	for _, result := range r.Results {
+		if result.RDC && result.URL != "" {
+			rdcJobURL = result.URL
+			break
+		}
+	}
+	vdcBuildURL := r.getBuildURL(vdcJobURL, build.VDC)
+	rdcBuildURL := r.getBuildURL(rdcJobURL, build.RDC)
+	for i, result := range r.Results {
+		if !result.RDC {
+			result.BuildURL = vdcBuildURL
+		} else {
+			result.BuildURL = rdcBuildURL
+		}
+		r.Results[i] = result
+	}
+}
+
+func (r *Reporter) getBuildURL(jobURL string, buildSource build.Source) string {
+	pURL, err := url.Parse(jobURL)
+	if err != nil {
+		log.Debug().Err(err).Msgf("Failed to parse job url (%s)", jobURL)
+		return ""
+	}
+	p := strings.Split(pURL.Path, "/")
+	jID := p[len(p)-1]
+
+	bID, err := r.Service.GetBuildID(context.Background(), jID, buildSource)
+	if err != nil {
+		log.Debug().Err(err).Msgf("Failed to retrieve build id for job (%s)", jID)
+		return ""
+	}
+
+	return fmt.Sprintf("%s://%s/builds/%s/%s", pURL.Scheme, pURL.Host, buildSource, bID)
 }

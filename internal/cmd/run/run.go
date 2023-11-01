@@ -302,6 +302,7 @@ func createReporters(c config.Reporters, ntfs config.Notifications, metadata con
 		}
 		if c.JSON.Enabled {
 			reps = append(reps, &json.Reporter{
+				Service:    buildReader,
 				WebhookURL: c.JSON.WebhookURL,
 				Filename:   c.JSON.Filename,
 			})
