@@ -64,7 +64,7 @@ type CloudRunner struct {
 	NPMDependencies []string
 
 	interrupted bool
-	Cache  Cache
+	Cache       Cache
 }
 
 type Cache struct {
@@ -206,13 +206,13 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 func (r *CloudRunner) getBuildURL(jobID string, isRDC bool) string {
 	var buildSource build.Source
 	if !isRDC {
-		if r.CachedData.VDCBuildURL != "" {
-			return r.CachedData.VDCBuildURL
+		if r.Cache.VDCBuildURL != "" {
+			return r.Cache.VDCBuildURL
 		}
 		buildSource = build.VDC
 	} else {
-		if r.CachedData.RDCBuildURL != "" {
-			return r.CachedData.RDCBuildURL
+		if r.Cache.RDCBuildURL != "" {
+			return r.Cache.RDCBuildURL
 		}
 		buildSource = build.RDC
 	}
@@ -225,9 +225,9 @@ func (r *CloudRunner) getBuildURL(jobID string, isRDC bool) string {
 
 	bURL := fmt.Sprintf("%s/builds/%s/%s", r.Region.AppBaseURL(), buildSource, bID)
 	if !isRDC {
-		r.CachedData.VDCBuildURL = bURL
+		r.Cache.VDCBuildURL = bURL
 	} else {
-		r.CachedData.RDCBuildURL = bURL
+		r.Cache.RDCBuildURL = bURL
 	}
 	return bURL
 }
