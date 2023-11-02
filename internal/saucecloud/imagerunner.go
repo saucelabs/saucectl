@@ -429,7 +429,7 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 
 	zf, err := zip.OpenReader(fileName)
 	if err != nil {
-		log.Error().Err(err).Msgf("Unable to open zip file '%s'", fileName)
+		log.Err(err).Msgf("Unable to open zip file '%s'", fileName)
 		return nil
 	}
 	defer zf.Close()
