@@ -64,6 +64,12 @@ type CloudRunner struct {
 	NPMDependencies []string
 
 	interrupted bool
+	Cache       Cache
+}
+
+type Cache struct {
+	VDCBuildURL string
+	RDCBuildURL string
 }
 
 type result struct {
@@ -155,6 +161,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			if res.job.ID != "" {
 				url = fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 			}
+			buildURL := r.getBuildURL(res.job.ID, res.job.IsRDC)
 			tr := report.TestResult{
 				Name:       res.name,
 				Duration:   res.duration,
@@ -170,6 +177,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				RDC:        res.job.IsRDC,
 				TimedOut:   res.job.TimedOut,
 				Attempts:   res.attempts,
+				BuildURL:   buildURL,
 			}
 			for _, rep := range r.Reporters {
 				rep.Add(tr)
@@ -193,6 +201,35 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 	}
 
 	return passed
+}
+
+func (r *CloudRunner) getBuildURL(jobID string, isRDC bool) string {
+	var buildSource build.Source
+	if !isRDC {
+		if r.Cache.VDCBuildURL != "" {
+			return r.Cache.VDCBuildURL
+		}
+		buildSource = build.VDC
+	} else {
+		if r.Cache.RDCBuildURL != "" {
+			return r.Cache.RDCBuildURL
+		}
+		buildSource = build.RDC
+	}
+
+	bID, err := r.BuildService.GetBuildID(context.Background(), jobID, buildSource)
+	if err != nil {
+		log.Warn().Err(err).Msgf("Failed to retrieve build id for job (%s)", jobID)
+		return ""
+	}
+
+	bURL := fmt.Sprintf("%s/builds/%s/%s", r.Region.AppBaseURL(), buildSource, bID)
+	if !isRDC {
+		r.Cache.VDCBuildURL = bURL
+	} else {
+		r.Cache.RDCBuildURL = bURL
+	}
+	return bURL
 }
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {

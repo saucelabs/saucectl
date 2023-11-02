@@ -1,15 +1,11 @@
 package buildtable
 
 import (
-	"context"
 	"fmt"
-	"net/url"
 	"os"
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/rs/zerolog/log"
-	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/table"
 )
@@ -17,14 +13,12 @@ import (
 // Reporter is an implementation of report.Reporter
 // It wraps a table reporter and decorates it with additional metadata
 type Reporter struct {
-	Service        build.Reader
 	VDCTableReport table.Reporter
 	RDCTableReport table.Reporter
 }
 
-func New(svc build.Reader) Reporter {
+func New() Reporter {
 	return Reporter{
-		Service: svc,
 		VDCTableReport: table.Reporter{
 			Dst: os.Stdout,
 		},
@@ -49,18 +43,16 @@ func (r *Reporter) Render() {
 	printTitle()
 	printPadding(2)
 
-	var jURL string
-	var bURL string
 	if len(r.VDCTableReport.TestResults) > 0 {
 		r.VDCTableReport.Render()
 
-		for _, tr := range r.VDCTableReport.TestResults {
-			if tr.URL != "" {
-				jURL = tr.URL
+		var bURL string
+		for _, result := range r.VDCTableReport.TestResults {
+			if result.BuildURL != "" {
+				bURL = result.BuildURL
 				break
 			}
 		}
-		bURL = r.buildURLFromJobURL(jURL, build.VDC)
 
 		if bURL == "" {
 			bURL = "N/A"
@@ -72,13 +64,13 @@ func (r *Reporter) Render() {
 	if len(r.RDCTableReport.TestResults) > 0 {
 		r.RDCTableReport.Render()
 
-		for _, tr := range r.RDCTableReport.TestResults {
-			if tr.URL != "" {
-				jURL = tr.URL
+		var bURL string
+		for _, result := range r.RDCTableReport.TestResults {
+			if result.BuildURL != "" {
+				bURL = result.BuildURL
 				break
 			}
 		}
-		bURL = r.buildURLFromJobURL(jURL, build.RDC)
 
 		if bURL == "" {
 			bURL = "N/A"
@@ -98,24 +90,6 @@ func (r *Reporter) Reset() {
 // ArtifactRequirements returns a list of artifact types are this reporter requires to create a proper report.
 func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 	return nil
-}
-
-func (r *Reporter) buildURLFromJobURL(jobURL string, buildSource build.Source) string {
-	pURL, err := url.Parse(jobURL)
-	if err != nil {
-		log.Debug().Err(err).Msgf("Failed to parse job url (%s)", jobURL)
-		return ""
-	}
-	p := strings.Split(pURL.Path, "/")
-	jID := p[len(p)-1]
-
-	bID, err := r.Service.GetBuildID(context.Background(), jID, buildSource)
-	if err != nil {
-		log.Debug().Err(err).Msgf("Failed to retrieve build id for job (%s)", jID)
-		return ""
-	}
-
-	return fmt.Sprintf("%s://%s/builds/%s/%s", pURL.Scheme, pURL.Host, buildSource, bID)
 }
 
 func printPadding(repeat int) {

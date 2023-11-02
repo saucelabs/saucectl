@@ -313,7 +313,7 @@ func createReporters(c config.Reporters, ntfs config.Notifications, metadata con
 		}
 	}
 
-	buildReporter := buildtable.New(buildReader)
+	buildReporter := buildtable.New()
 	reps = append(reps, &buildReporter)
 
 	reps = append(reps, &slack.Reporter{
