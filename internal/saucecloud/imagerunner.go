@@ -397,6 +397,7 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (
 	}
 }
 
+// DownloadArtifact downloads artifacts and returns a list of what was downloaded.
 func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed bool) []string {
 	if r.Async ||
 		runnerID == "" ||
