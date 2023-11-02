@@ -8,6 +8,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
+	"github.com/saucelabs/saucectl/internal/report/json"
 	"github.com/saucelabs/saucectl/internal/report/table"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/segment"
@@ -50,14 +51,27 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 		_ = tracker.Close()
 	}()
 
+	reporters := []report.Reporter{
+		&table.Reporter{
+			Dst: os.Stdout,
+		},
+	}
+	if !gFlags.async {
+		if p.Reporters.JSON.Enabled {
+			reporters = append(reporters, &json.Reporter{
+				WebhookURL: p.Reporters.JSON.WebhookURL,
+				Filename:   p.Reporters.JSON.Filename,
+			})
+		}
+	}
+
+	cleanupArtifacts(p.Artifacts)
 	r := saucecloud.ImgRunner{
 		Project:       p,
 		RunnerService: &imageRunnerClient,
 		TunnelService: &restoClient,
-		Reporters: []report.Reporter{&table.Reporter{
-			Dst: os.Stdout,
-		}},
-		Async: gFlags.async,
+		Reporters:     reporters,
+		Async:         gFlags.async,
 	}
 	return r.RunProject()
 }

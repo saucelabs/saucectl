@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"reflect"
 	"time"
 
@@ -318,7 +319,11 @@ func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
 
 		r.PrintResult(res)
 		r.PrintLogs(res.runID, res.name)
-		r.DownloadArtifacts(res.runID, res.name, res.status, res.err != nil)
+		files := r.DownloadArtifacts(res.runID, res.name, res.status, res.err != nil)
+		var artifacts []report.Artifact
+		for _, f := range files {
+			artifacts = append(artifacts, report.Artifact{FilePath: f})
+		}
 
 		for _, r := range r.Reporters {
 			r.Add(report.TestResult{
@@ -327,6 +332,7 @@ func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
 				StartTime: res.startTime,
 				EndTime:   res.endTime,
 				Status:    res.status,
+				Artifacts: artifacts,
 				Attempts: []report.Attempt{{
 					ID:        res.runID,
 					Duration:  res.duration,
@@ -391,44 +397,46 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (
 	}
 }
 
-func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed bool) {
+func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed bool) []string {
 	if r.Async ||
 		runnerID == "" ||
 		status == imagerunner.StateCancelled ||
 		!r.Project.Artifacts.Download.When.IsNow(passed) {
-		return
+		return nil
 	}
 
 	dir, err := config.GetSuiteArtifactFolder(suiteName, r.Project.Artifacts.Download)
 	if err != nil {
 		log.Err(err).Msg("Unable to create artifacts folder.")
-		return
+		return nil
 	}
 
 	log.Info().Msg("Downloading artifacts archive")
 	reader, err := r.RunnerService.DownloadArtifacts(r.ctx, runnerID)
 	if err != nil {
 		log.Err(err).Str("suite", suiteName).Msg("Failed to fetch artifacts.")
-		return
+		return nil
 	}
 	defer reader.Close()
 
 	fileName, err := fileio.CreateTemp(reader)
 	if err != nil {
 		log.Err(err).Str("suite", suiteName).Msg("Failed to download artifacts content.")
-		return
+		return nil
 	}
 	defer os.Remove(fileName)
 
 	zf, err := zip.OpenReader(fileName)
 	if err != nil {
 		log.Error().Msgf("Unable to open zip file %s: %s", fileName, err)
-		return
+		return nil
 	}
 	defer zf.Close()
+	var artifacts []string
 	for _, f := range zf.File {
 		for _, pattern := range r.Project.Artifacts.Download.Match {
 			if glob.Glob(pattern, f.Name) {
+				artifacts = append(artifacts, filepath.Join(dir, f.Name))
 				if err = szip.Extract(dir, f); err != nil {
 					log.Error().Msgf("Unable to extract file '%s': %s", f.Name, err)
 				}
@@ -436,6 +444,7 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 			}
 		}
 	}
+	return artifacts
 }
 
 func (r *ImgRunner) PrintResult(res execResult) {
