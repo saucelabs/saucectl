@@ -437,10 +437,10 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 	for _, f := range zf.File {
 		for _, pattern := range r.Project.Artifacts.Download.Match {
 			if glob.Glob(pattern, f.Name) {
-				artifacts = append(artifacts, filepath.Join(dir, f.Name))
 				if err = szip.Extract(dir, f); err != nil {
 					log.Error().Msgf("Unable to extract file '%s': %s", f.Name, err)
 				}
+				artifacts = append(artifacts, filepath.Join(dir, f.Name))
 				break
 			}
 		}
