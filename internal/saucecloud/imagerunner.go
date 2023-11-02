@@ -429,7 +429,7 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 
 	zf, err := zip.OpenReader(fileName)
 	if err != nil {
-		log.Error().Msgf("Unable to open zip file %s: %s", fileName, err)
+		log.Error().Err(err).Msgf("Unable to open zip file '%s'", fileName)
 		return nil
 	}
 	defer zf.Close()
@@ -438,9 +438,10 @@ func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed
 		for _, pattern := range r.Project.Artifacts.Download.Match {
 			if glob.Glob(pattern, f.Name) {
 				if err = szip.Extract(dir, f); err != nil {
-					log.Error().Msgf("Unable to extract file '%s': %s", f.Name, err)
+					log.Error().Err(err).Msgf("Unable to extract file '%s'", f.Name)
+				} else {
+					artifacts = append(artifacts, filepath.Join(dir, f.Name))
 				}
-				artifacts = append(artifacts, filepath.Join(dir, f.Name))
 				break
 			}
 		}

@@ -363,8 +363,9 @@ func (c *Resto) DownloadArtifact(jobID, suiteName string, realDevice bool) []str
 			if glob.Glob(pattern, f) {
 				if err := c.downloadArtifact(targetDir, jobID, f); err != nil {
 					log.Error().Err(err).Msgf("Failed to download file: %s", f)
+				} else {
+					artifacts = append(artifacts, filepath.Join(targetDir, f))
 				}
-				artifacts = append(artifacts, filepath.Join(targetDir, f))
 				break
 			}
 		}
