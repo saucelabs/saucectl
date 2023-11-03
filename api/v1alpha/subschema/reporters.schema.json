@@ -37,7 +37,7 @@
             "filename": {
               "description": "Filename for the generated JSON report.",
               "type": "string",
-              "default": "saucectl-test-result.xml"
+              "default": "saucectl-report.json"
             }
           }
         },

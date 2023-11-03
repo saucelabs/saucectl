@@ -289,7 +289,7 @@
                       "filename": {
                         "description": "Filename for the generated JSON report.",
                         "type": "string",
-                        "default": "saucectl-test-result.xml"
+                        "default": "saucectl-report.json"
                       }
                     }
                   },
@@ -2845,6 +2845,32 @@
             "required": [
               "name"
             ]
+          },
+          "reporters": {
+            "description": "Supported saucectl reporters.",
+            "type": "object",
+            "properties": {
+              "json": {
+                "type": "object",
+                "description": "The JSON reporter creates single report of all executed saucectl suites.",
+                "properties": {
+                  "enabled": {
+                    "description": "Toggles the reporter on/off.",
+                    "type": "boolean"
+                  },
+                  "webhookURL": {
+                    "description": "Webhook URL to pass JSON report.",
+                    "type": "string"
+                  },
+                  "filename": {
+                    "description": "Filename for the generated JSON report.",
+                    "type": "string",
+                    "default": "saucectl-report.json"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
           }
         },
         "properties": {
@@ -2868,6 +2894,9 @@
             "items": {
               "$ref": "#/allOf/9/then/definitions/suite"
             }
+          },
+          "reporters": {
+            "$ref": "#/allOf/9/then/definitions/reporters"
           }
         },
         "required": [

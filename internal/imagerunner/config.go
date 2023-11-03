@@ -34,6 +34,7 @@ type Project struct {
 	DryRun         bool               `yaml:"-" json:"-"`
 	Env            map[string]string  `yaml:"env,omitempty" json:"env"`
 	EnvFlag        map[string]string  `yaml:"-" json:"-"`
+	Reporters      config.Reporters   `yaml:"reporters,omitempty" json:"-"`
 }
 
 type Defaults struct {
