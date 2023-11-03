@@ -2852,7 +2852,7 @@
             "properties": {
               "json": {
                 "type": "object",
-                "description": "The JSON reporter merges test results from all jobs in the JSON format into a single report.",
+                "description": "The JSON reporter merges test results from all suites in the JSON format into a single report.",
                 "properties": {
                   "enabled": {
                     "description": "Toggles the reporter on/off.",
