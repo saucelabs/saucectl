@@ -10,7 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 )
@@ -202,6 +204,40 @@ func (c *ImageRunner) GetLogs(ctx context.Context, id string) (string, error) {
 	}
 
 	return c.doGetStr(ctx, urlResponse.URL)
+}
+
+func (c *ImageRunner) getWebsocketUrl() string {
+
+	wsUrl := c.URL
+	wsUrl = strings.Replace(wsUrl, "https://", "wss://", 1)
+	wsUrl = strings.Replace(wsUrl, "http://", "ws://", 1)
+	return wsUrl
+}
+
+func (c *ImageRunner) OpenAsyncEventsWebsocket(ctx context.Context, id string) (*websocket.Conn, error) {
+	// dummy request so that we build basic auth header consistently
+	dummy_url := fmt.Sprintf("%s/v1alpha1/hosted/async/image/runners/%s/events", c.URL, id)
+	req, err := http.NewRequest("GET", dummy_url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
+	log.Info().Str("c.Creds.Username", c.Creds.Username).Str("c.Creds.AccessKey", c.Creds.AccessKey).Msg("AKAK1 OpenAsyncEventsWebsocket")
+
+	url := fmt.Sprintf("%s/v1alpha1/hosted/async/image/runners/%s/events", c.getWebsocketUrl(), id)
+	headers := http.Header{}
+	headers.Add("Authorization", req.Header.Get("Authorization"))
+	ws, resp, err := websocket.DefaultDialer.Dial(
+		url, headers)
+	if err != nil {
+		if resp != nil {
+			log.Error().Err(err).Int("http status", resp.StatusCode).Msg("Could not open async events websocket")
+		} else {
+			log.Error().Err(err).Msg("Could not open async events websocket")
+		}
+		return nil, err
+	}
+	return ws, nil
 }
 
 func (c *ImageRunner) doGetStr(ctx context.Context, url string) (string, error) {
