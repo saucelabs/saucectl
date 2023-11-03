@@ -69,13 +69,14 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 	imageRunnerClient := http.NewImageRunner(regio.APIBaseURL(), creds, imgExecTimeout)
 	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 
-	r := saucecloud.ImgRunner{
-		Project:       p,
-		RunnerService: &imageRunnerClient,
-		TunnelService: &restoClient,
-		Reporters:     reporters,
-		Async:         gFlags.async,
+	asyncEventManager, err := imagerunner.NewAsyncEventManager()
+	if err != nil {
+		return 1, err
 	}
+
+	r := saucecloud.NewImgRunner(p, &imageRunnerClient, &restoClient, reporters,
+		asyncEventManager, gFlags.async)
+
 	return r.RunProject()
 }
 
