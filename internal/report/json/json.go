@@ -25,24 +25,23 @@ func (r *Reporter) Add(t report.TestResult) {
 
 // Render sends the result to specified webhook WebhookURL and log the result to the specified json file
 func (r *Reporter) Render() {
-	r.cleanup()
 	body, err := json.Marshal(r.Results)
 	if err != nil {
-		log.Error().Msgf("failed to generate test result (%v)", err)
+		log.Err(err).Msg("failed to generate test result.")
 		return
 	}
 
 	if r.WebhookURL != "" {
 		resp, err := http.Post(r.WebhookURL, "application/json", bytes.NewBuffer(body))
 		if err != nil {
-			log.Error().Err(err).Str("webhook", r.WebhookURL).Msg("failed to send test result to webhook.")
+			log.Err(err).Str("webhook", r.WebhookURL).Msg("failed to send test result to webhook.")
 		} else {
 			webhookBody, _ := io.ReadAll(resp.Body)
 			if resp.StatusCode >= http.StatusBadRequest {
-				log.Error().Str("webhook", r.WebhookURL).Msgf("failed to send test result to webhook, status: '%d', msg:'%v'", resp.StatusCode, string(webhookBody))
+				log.Error().Str("webhook", r.WebhookURL).Msgf("failed to send test result to webhook, status: %d, msg: %q.", resp.StatusCode, string(webhookBody))
 			}
 			if resp.StatusCode%100 == 2 {
-				log.Info().Str("webhook", r.WebhookURL).Msgf("test result has been sent successfully to webhook, msg: '%v'.", string(webhookBody))
+				log.Info().Str("webhook", r.WebhookURL).Msgf("test result has been sent successfully to webhook, msg: %q.", string(webhookBody))
 			}
 		}
 	}
@@ -50,23 +49,8 @@ func (r *Reporter) Render() {
 	if r.Filename != "" {
 		err = os.WriteFile(r.Filename, body, 0666)
 		if err != nil {
-			log.Error().Err(err).Msgf("failed to write test result to %s", r.Filename)
+			log.Err(err).Msgf("failed to write test result to %s.", r.Filename)
 		}
-	}
-}
-
-// cleanup removes any information that isn't relevant in the rendered report. Particularly when it comes to
-// artifacts, this reporter is only interested in those that have been persisted to the file system.
-func (r *Reporter) cleanup() {
-	for i, result := range r.Results {
-		var artifacts []report.Artifact
-		for _, a := range result.Artifacts {
-			if a.FilePath == "" {
-				continue
-			}
-			artifacts = append(artifacts, a)
-		}
-		r.Results[i].Artifacts = artifacts
 	}
 }
 

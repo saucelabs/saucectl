@@ -32,10 +32,11 @@ type TestResult struct {
 	Browser       string        `json:"browser,omitempty"`
 	Platform      string        `json:"platform"`
 	DeviceName    string        `json:"deviceName,omitempty"`
-	URL           string        `json:"url"`
+	URL           string        `json:"url,omitempty"`
 	Artifacts     []Artifact    `json:"artifacts,omitempty"`
-	Origin        string        `json:"origin"`
+	Origin        string        `json:"origin,omitempty"`
 	BuildURL      string        `json:"buildURL,omitempty"`
+	RunID         string        `json:"runID,omitempty"`
 	RDC           bool          `json:"-"`
 	TimedOut      bool          `json:"-"`
 	PassThreshold bool          `json:"-"`

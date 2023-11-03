@@ -333,6 +333,8 @@ func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
 				EndTime:   res.endTime,
 				Status:    res.status,
 				Artifacts: artifacts,
+				Platform:  "Linux",
+				RunID:     res.runID,
 				Attempts: []report.Attempt{{
 					ID:        res.runID,
 					Duration:  res.duration,
