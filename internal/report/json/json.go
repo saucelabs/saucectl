@@ -49,7 +49,7 @@ func (r *Reporter) Render() {
 	if r.Filename != "" {
 		err = os.WriteFile(r.Filename, body, 0666)
 		if err != nil {
-			log.Err(err).Msgf("failed to write test result to %s.", r.Filename)
+			log.Err(err).Msgf("failed to write test result to %q.", r.Filename)
 		}
 	}
 }
