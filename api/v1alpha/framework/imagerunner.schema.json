@@ -204,7 +204,7 @@
       "properties": {
         "json": {
           "type": "object",
-          "description": "The JSON reporter merges test results from all suites in the JSON format into a single report.",
+          "description": "The JSON reporter creates single report of all executed saucectl suites.",
           "properties": {
             "enabled": {
               "description": "Toggles the reporter on/off.",
