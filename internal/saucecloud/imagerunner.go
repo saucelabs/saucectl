@@ -30,6 +30,7 @@ type ImageRunner interface {
 	StopRun(ctx context.Context, id string) error
 	DownloadArtifacts(ctx context.Context, id string) (io.ReadCloser, error)
 	GetLogs(ctx context.Context, id string) (string, error)
+	OpenAsyncEventsTransport(ctx context.Context, id string) (imagerunner.AsyncEventTransportI, error)
 }
 
 type SuiteTimeoutError struct {
@@ -49,10 +50,23 @@ type ImgRunner struct {
 
 	Reporters []report.Reporter
 
-	Async bool
+	asyncEventManager imagerunner.AsyncEventManagerI
+	Async             bool
 
 	ctx    context.Context
 	cancel context.CancelFunc
+}
+
+func NewImgRunner(project imagerunner.Project, runnerService ImageRunner, tunnelService tunnel.Service,
+	reporters []report.Reporter, asyncEventManager imagerunner.AsyncEventManagerI, async bool) *ImgRunner {
+	return &ImgRunner{
+		Project:           project,
+		RunnerService:     runnerService,
+		TunnelService:     tunnelService,
+		Reporters:         reporters,
+		asyncEventManager: asyncEventManager,
+		Async:             async,
+	}
 }
 
 type execResult struct {
@@ -273,6 +287,13 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 		return runner, nil
 	}
 
+	go func() {
+		err := r.HandleAsyncEvents(ctx, runner.ID)
+		if err != nil {
+			log.Err(err).Msg("Async event handler failed.")
+		}
+	}()
+
 	var run imagerunner.Runner
 	run, err = r.PollRun(ctx, runner.ID, runner.Status)
 	if errors.Is(err, context.DeadlineExceeded) && ctx.Err() != nil {
@@ -398,6 +419,51 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (
 			}
 			if imagerunner.Done(r.Status) {
 				return r, err
+			}
+		}
+	}
+}
+
+func (r *ImgRunner) HandleAsyncEvents(ctx context.Context, id string) error {
+	if !r.Project.LiveLogs {
+		return nil
+	}
+
+	transport, err := r.RunnerService.OpenAsyncEventsTransport(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	if transport == nil {
+		return nil
+	}
+
+	defer transport.Close()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			msg, err := transport.ReadMessage()
+			if err != nil {
+				return err
+			}
+			if msg == "" {
+				continue
+			}
+			event, err := r.asyncEventManager.ParseEvent(msg)
+			if err != nil {
+				return err
+			}
+			if event.GetKind() == "log" {
+				logEvent := event.(*imagerunner.LogEvent)
+				for _, line := range logEvent.Lines {
+					log.Info().Msgf("[%s] %s", line.ContainerName, line.Message)
+				}
+			} else if event.GetKind() == "notice" {
+				noticeEvent := event.(*imagerunner.NoticeEvent)
+				log.Info().Msgf("[%s] %s", noticeEvent.Severity, noticeEvent.Message)
 			}
 		}
 	}
