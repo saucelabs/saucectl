@@ -152,8 +152,6 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 		return 1, errors.New(msg.NoFrameworkSupport)
 	}
 
-	iamClient.URL = regio.APIBaseURL()
-
 	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 	restoClient.ArtifactConfig = p.Artifacts.Download
 
@@ -166,6 +164,8 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 	rdcClient := http.NewRDCService("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 
 	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
+
+	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
 
 	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)

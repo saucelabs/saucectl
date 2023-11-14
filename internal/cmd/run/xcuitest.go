@@ -110,8 +110,6 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 
 	regio := region.FromString(p.Sauce.Region)
 
-	iamClient.URL = regio.APIBaseURL()
-
 	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
@@ -153,6 +151,8 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
 	rdcClient := http.NewRDCService(regio.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, p.Artifacts.Download)
 
 	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
+
+	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
 
 	r := saucecloud.XcuitestRunner{
 		Project: p,

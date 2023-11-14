@@ -120,7 +120,6 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		return 1, errors.New(msg.NoFrameworkSupport)
 	}
 
-	iamClient.URL = regio.APIBaseURL()
 	tracker := segment.DefaultTracker
 	if regio == region.Staging {
 		tracker.Enabled = false
@@ -138,6 +137,8 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	rdcClient := http.NewRDCService("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 
 	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
+
+	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
 
 	go func() {
 		props := usage.Properties{}

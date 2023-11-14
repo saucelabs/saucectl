@@ -99,8 +99,6 @@ func runReplay(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		return 1, errors.New(msg.NoFrameworkSupport)
 	}
 
-	iamClient.URL = regio.APIBaseURL()
-
 	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
@@ -140,6 +138,8 @@ func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, erro
 	rdcClient := http.NewRDCService("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 
 	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
+
+	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
 
 	r := saucecloud.ReplayRunner{
 		Project: p,

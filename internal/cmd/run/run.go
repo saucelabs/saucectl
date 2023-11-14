@@ -55,7 +55,6 @@ var (
 
 	typeDef config.TypeDef
 
-	iamClient         http.UserService
 	imageRunnerClient http.ImageRunner
 
 	// ErrEmptySuiteName is thrown when a flag is specified that has a dependency on the --name flag.
@@ -189,7 +188,6 @@ func preRun() error {
 	}
 	typeDef = d
 
-	iamClient = http.NewUserService("", creds, iamTimeout)
 	imageRunnerClient = http.NewImageRunner("", creds, imgExecTimeout)
 
 	return nil
