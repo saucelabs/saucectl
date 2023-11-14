@@ -5,6 +5,8 @@ import (
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
@@ -35,8 +37,10 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 	}
 
 	regio := region.FromString(p.Sauce.Region)
+	creds := credentials.Get()
 	imageRunnerClient.URL = regio.APIBaseURL()
-	restoClient.URL = regio.APIBaseURL()
+
+	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 
 	tracker := segment.DefaultTracker
 	if regio == region.Staging {

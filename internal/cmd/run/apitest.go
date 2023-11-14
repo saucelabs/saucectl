@@ -41,7 +41,7 @@ func runApitest(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	creds := credentials.Get()
 
 	apitestingClient := http.NewAPITester(regio.APIBaseURL(), creds.Username, creds.AccessKey, imgExecTimeout)
-	restoClient.URL = regio.APIBaseURL()
+	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 
 	r := apitest.Runner{
 		Project: p,

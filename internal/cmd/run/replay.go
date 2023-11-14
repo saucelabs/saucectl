@@ -5,6 +5,8 @@ import (
 	"os"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
+	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/http"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -99,12 +101,9 @@ func runReplay(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 
 	webdriverClient.URL = regio.WebDriverBaseURL()
 	testcompClient.URL = regio.APIBaseURL()
-	restoClient.URL = regio.APIBaseURL()
 	appsClient.URL = regio.APIBaseURL()
 	insightsClient.URL = regio.APIBaseURL()
 	iamClient.URL = regio.APIBaseURL()
-
-	restoClient.ArtifactConfig = p.Artifacts.Download
 
 	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
@@ -131,6 +130,10 @@ func runReplay(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 
 func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Replaying chrome devtools recordings")
+
+	creds := credentials.Get()
+	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
+	restoClient.ArtifactConfig = p.Artifacts.Download
 
 	r := saucecloud.ReplayRunner{
 		Project: p,

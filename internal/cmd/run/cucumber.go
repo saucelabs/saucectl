@@ -7,9 +7,11 @@ import (
 	"github.com/saucelabs/saucectl/internal/ci"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cucumber"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
@@ -92,14 +94,15 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	}
 
 	regio := region.FromString(p.Sauce.Region)
+	creds := credentials.Get()
 
 	webdriverClient.URL = regio.WebDriverBaseURL()
 	testcompClient.URL = regio.APIBaseURL()
-	restoClient.URL = regio.APIBaseURL()
 	appsClient.URL = regio.APIBaseURL()
 	insightsClient.URL = regio.APIBaseURL()
 	iamClient.URL = regio.APIBaseURL()
 
+	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 	restoClient.ArtifactConfig = p.Artifacts.Download
 
 	if !gFlags.noAutoTagging {
