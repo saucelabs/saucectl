@@ -55,7 +55,6 @@ var (
 
 	typeDef config.TypeDef
 
-	insightsClient    http.InsightsService
 	iamClient         http.UserService
 	imageRunnerClient http.ImageRunner
 
@@ -190,7 +189,6 @@ func preRun() error {
 	}
 	typeDef = d
 
-	insightsClient = http.NewInsightsService("", creds, insightsTimeout)
 	iamClient = http.NewUserService("", creds, iamTimeout)
 	imageRunnerClient = http.NewImageRunner("", creds, imgExecTimeout)
 

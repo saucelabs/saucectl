@@ -96,7 +96,6 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	regio := region.FromString(p.Sauce.Region)
 	creds := credentials.Get()
 
-	insightsClient.URL = regio.APIBaseURL()
 	iamClient.URL = regio.APIBaseURL()
 
 	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
@@ -109,6 +108,8 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	appsClient := *http.NewAppStore(regio.APIBaseURL(), creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
 
 	rdcClient := http.NewRDCService("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
+
+	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
 
 	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
