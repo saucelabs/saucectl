@@ -55,7 +55,6 @@ var (
 
 	typeDef config.TypeDef
 
-	appsClient        http.AppStore
 	rdcClient         http.RDCService
 	insightsClient    http.InsightsService
 	iamClient         http.UserService
@@ -193,7 +192,6 @@ func preRun() error {
 	typeDef = d
 
 	rdcClient = http.NewRDCService("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
-	appsClient = *http.NewAppStore("", creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
 	insightsClient = http.NewInsightsService("", creds, insightsTimeout)
 	iamClient = http.NewUserService("", creds, iamTimeout)
 	imageRunnerClient = http.NewImageRunner("", creds, imgExecTimeout)

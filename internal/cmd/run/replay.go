@@ -99,7 +99,6 @@ func runReplay(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		return 1, errors.New(msg.NoFrameworkSupport)
 	}
 
-	appsClient.URL = regio.APIBaseURL()
 	insightsClient.URL = regio.APIBaseURL()
 	iamClient.URL = regio.APIBaseURL()
 
@@ -136,6 +135,8 @@ func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, erro
 	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)
 
 	webdriverClient := http.NewWebdriver(regio.WebDriverBaseURL(), creds, webdriverTimeout)
+
+	appsClient := *http.NewAppStore(regio.APIBaseURL(), creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
 
 	r := saucecloud.ReplayRunner{
 		Project: p,

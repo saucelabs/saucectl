@@ -120,7 +120,6 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		return 1, errors.New(msg.NoFrameworkSupport)
 	}
 
-	appsClient.URL = regio.APIBaseURL()
 	insightsClient.URL = regio.APIBaseURL()
 	iamClient.URL = regio.APIBaseURL()
 	tracker := segment.DefaultTracker
@@ -134,6 +133,8 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)
 
 	webdriverClient := http.NewWebdriver(regio.WebDriverBaseURL(), creds, webdriverTimeout)
+
+	appsClient := *http.NewAppStore(regio.APIBaseURL(), creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
 
 	go func() {
 		props := usage.Properties{}

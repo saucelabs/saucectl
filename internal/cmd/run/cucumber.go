@@ -96,7 +96,6 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	regio := region.FromString(p.Sauce.Region)
 	creds := credentials.Get()
 
-	appsClient.URL = regio.APIBaseURL()
 	insightsClient.URL = regio.APIBaseURL()
 	iamClient.URL = regio.APIBaseURL()
 
@@ -106,6 +105,8 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)
 
 	webdriverClient := http.NewWebdriver(regio.WebDriverBaseURL(), creds, webdriverTimeout)
+
+	appsClient := *http.NewAppStore(regio.APIBaseURL(), creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
 
 	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
