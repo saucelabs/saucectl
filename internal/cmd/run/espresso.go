@@ -110,7 +110,6 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, isCLIDriven bo
 
 	regio := region.FromString(p.Sauce.Region)
 
-	webdriverClient.URL = regio.WebDriverBaseURL()
 	appsClient.URL = regio.APIBaseURL()
 	rdcClient.URL = regio.APIBaseURL()
 	insightsClient.URL = regio.APIBaseURL()
@@ -150,6 +149,8 @@ func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
 	restoClient.ArtifactConfig = p.Artifacts.Download
 
 	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)
+
+	webdriverClient := http.NewWebdriver(regio.WebDriverBaseURL(), creds, webdriverTimeout)
 
 	r := saucecloud.EspressoRunner{
 		Project: p,

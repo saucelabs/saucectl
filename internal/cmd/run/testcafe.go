@@ -152,7 +152,6 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 		return 1, errors.New(msg.NoFrameworkSupport)
 	}
 
-	webdriverClient.URL = regio.WebDriverBaseURL()
 	appsClient.URL = regio.APIBaseURL()
 	insightsClient.URL = regio.APIBaseURL()
 	iamClient.URL = regio.APIBaseURL()
@@ -161,6 +160,8 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 	restoClient.ArtifactConfig = p.Artifacts.Download
 
 	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)
+
+	webdriverClient := http.NewWebdriver(regio.WebDriverBaseURL(), creds, webdriverTimeout)
 
 	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)

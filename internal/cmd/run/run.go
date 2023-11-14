@@ -55,7 +55,6 @@ var (
 
 	typeDef config.TypeDef
 
-	webdriverClient   http.Webdriver
 	appsClient        http.AppStore
 	rdcClient         http.RDCService
 	insightsClient    http.InsightsService
@@ -193,7 +192,6 @@ func preRun() error {
 	}
 	typeDef = d
 
-	webdriverClient = http.NewWebdriver("", creds, webdriverTimeout)
 	rdcClient = http.NewRDCService("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 	appsClient = *http.NewAppStore("", creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
 	insightsClient = http.NewInsightsService("", creds, insightsTimeout)
