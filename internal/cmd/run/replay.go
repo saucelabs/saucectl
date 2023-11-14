@@ -138,6 +138,8 @@ func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, erro
 
 	appsClient := *http.NewAppStore(regio.APIBaseURL(), creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
 
+	rdcClient := http.NewRDCService("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
+
 	r := saucecloud.ReplayRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{

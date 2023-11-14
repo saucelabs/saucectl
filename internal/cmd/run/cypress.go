@@ -136,6 +136,8 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 
 	appsClient := *http.NewAppStore(regio.APIBaseURL(), creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
 
+	rdcClient := http.NewRDCService("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
+
 	go func() {
 		props := usage.Properties{}
 		props.SetFramework("cypress").SetFVersion(p.GetVersion()).SetFlags(cmd.Flags()).SetSauceConfig(p.GetSauceCfg()).
