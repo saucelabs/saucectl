@@ -140,17 +140,11 @@ func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
 	creds := credentials.Get()
 	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 	restoClient.ArtifactConfig = p.Artifacts.Download
-
 	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)
-
 	webdriverClient := http.NewWebdriver(regio.WebDriverBaseURL(), creds, webdriverTimeout)
-
 	appsClient := *http.NewAppStore(regio.APIBaseURL(), creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
-
 	rdcClient := http.NewRDCService(regio.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, p.Artifacts.Download)
-
 	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
-
 	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
 
 	r := saucecloud.EspressoRunner{

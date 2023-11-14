@@ -94,23 +94,6 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	}
 
 	regio := region.FromString(p.Sauce.Region)
-	creds := credentials.Get()
-
-	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
-	restoClient.ArtifactConfig = p.Artifacts.Download
-
-	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)
-
-	webdriverClient := http.NewWebdriver(regio.WebDriverBaseURL(), creds, webdriverTimeout)
-
-	appsClient := *http.NewAppStore(regio.APIBaseURL(), creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
-
-	rdcClient := http.NewRDCService("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
-
-	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
-
-	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
-
 	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
@@ -131,6 +114,17 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	}()
 
 	cleanupArtifacts(p.Artifacts)
+
+	creds := credentials.Get()
+
+	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
+	restoClient.ArtifactConfig = p.Artifacts.Download
+	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)
+	webdriverClient := http.NewWebdriver(regio.WebDriverBaseURL(), creds, webdriverTimeout)
+	appsClient := *http.NewAppStore(regio.APIBaseURL(), creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
+	rdcClient := http.NewRDCService(regio.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
+	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
+	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
 
 	log.Info().Msg("Running Playwright-Cucumberjs in Sauce Labs")
 	r := saucecloud.CucumberRunner{

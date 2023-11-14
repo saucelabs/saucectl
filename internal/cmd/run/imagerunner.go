@@ -37,11 +37,6 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 	}
 
 	regio := region.FromString(p.Sauce.Region)
-	creds := credentials.Get()
-	imageRunnerClient := http.NewImageRunner(regio.APIBaseURL(), creds, imgExecTimeout)
-
-	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
-
 	tracker := segment.DefaultTracker
 	if regio == region.Staging {
 		tracker.Enabled = false
@@ -70,6 +65,11 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 	}
 
 	cleanupArtifacts(p.Artifacts)
+
+	creds := credentials.Get()
+	imageRunnerClient := http.NewImageRunner(regio.APIBaseURL(), creds, imgExecTimeout)
+	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
+
 	r := saucecloud.ImgRunner{
 		Project:       p,
 		RunnerService: &imageRunnerClient,

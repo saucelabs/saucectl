@@ -128,17 +128,11 @@ func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, erro
 	creds := credentials.Get()
 	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 	restoClient.ArtifactConfig = p.Artifacts.Download
-
 	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)
-
 	webdriverClient := http.NewWebdriver(regio.WebDriverBaseURL(), creds, webdriverTimeout)
-
 	appsClient := *http.NewAppStore(regio.APIBaseURL(), creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
-
-	rdcClient := http.NewRDCService("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
-
+	rdcClient := http.NewRDCService(regio.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
-
 	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
 
 	r := saucecloud.ReplayRunner{

@@ -115,7 +115,6 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	}
 
 	regio := region.FromString(p.GetSauceCfg().Region)
-	creds := credentials.Get()
 	if regio == region.USEast4 {
 		return 1, errors.New(msg.NoFrameworkSupport)
 	}
@@ -124,21 +123,6 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	if regio == region.Staging {
 		tracker.Enabled = false
 	}
-
-	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
-	restoClient.ArtifactConfig = p.GetArtifactsCfg().Download
-
-	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)
-
-	webdriverClient := http.NewWebdriver(regio.WebDriverBaseURL(), creds, webdriverTimeout)
-
-	appsClient := *http.NewAppStore(regio.APIBaseURL(), creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
-
-	rdcClient := http.NewRDCService("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
-
-	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
-
-	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
 
 	go func() {
 		props := usage.Properties{}
@@ -152,6 +136,17 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	}()
 
 	cleanupArtifacts(p.GetArtifactsCfg())
+
+	creds := credentials.Get()
+
+	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
+	restoClient.ArtifactConfig = p.GetArtifactsCfg().Download
+	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)
+	webdriverClient := http.NewWebdriver(regio.WebDriverBaseURL(), creds, webdriverTimeout)
+	appsClient := *http.NewAppStore(regio.APIBaseURL(), creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
+	rdcClient := http.NewRDCService(regio.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
+	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
+	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
 
 	log.Info().Msg("Running Cypress in Sauce Labs")
 	r := saucecloud.CypressRunner{
