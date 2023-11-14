@@ -62,7 +62,6 @@ var (
 	rdcClient         http.RDCService
 	insightsClient    http.InsightsService
 	iamClient         http.UserService
-	apitestingClient  http.APITester
 	imageRunnerClient http.ImageRunner
 
 	// ErrEmptySuiteName is thrown when a flag is specified that has a dependency on the --name flag.
@@ -203,7 +202,6 @@ func preRun() error {
 	appsClient = *http.NewAppStore("", creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
 	insightsClient = http.NewInsightsService("", creds, insightsTimeout)
 	iamClient = http.NewUserService("", creds, iamTimeout)
-	apitestingClient = http.NewAPITester("", creds.Username, creds.AccessKey, apitestingTimeout)
 	imageRunnerClient = http.NewImageRunner("", creds, imgExecTimeout)
 
 	return nil

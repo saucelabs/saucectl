@@ -4,6 +4,8 @@ import (
 	"os"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
+	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/usage"
 
 	"github.com/saucelabs/saucectl/internal/apitest"
@@ -36,8 +38,10 @@ func runApitest(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	}
 
 	regio := region.FromString(p.Sauce.Region)
+	creds := credentials.Get()
+
+	apitestingClient := http.NewAPITester(regio.APIBaseURL(), creds.Username, creds.AccessKey, imgExecTimeout)
 	restoClient.URL = regio.APIBaseURL()
-	apitestingClient.URL = regio.APIBaseURL()
 
 	r := apitest.Runner{
 		Project: p,
