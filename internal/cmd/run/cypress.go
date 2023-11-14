@@ -120,7 +120,6 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		return 1, errors.New(msg.NoFrameworkSupport)
 	}
 
-	testcompClient.URL = regio.APIBaseURL()
 	webdriverClient.URL = regio.WebDriverBaseURL()
 	appsClient.URL = regio.APIBaseURL()
 	insightsClient.URL = regio.APIBaseURL()
@@ -132,6 +131,8 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 
 	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 	restoClient.ArtifactConfig = p.GetArtifactsCfg().Download
+
+	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)
 
 	go func() {
 		props := usage.Properties{}

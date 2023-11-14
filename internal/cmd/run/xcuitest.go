@@ -111,7 +111,6 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 	regio := region.FromString(p.Sauce.Region)
 
 	webdriverClient.URL = regio.WebDriverBaseURL()
-	testcompClient.URL = regio.APIBaseURL()
 	appsClient.URL = regio.APIBaseURL()
 	rdcClient.URL = regio.APIBaseURL()
 	insightsClient.URL = regio.APIBaseURL()
@@ -150,6 +149,8 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
 
 	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 	restoClient.ArtifactConfig = p.Artifacts.Download
+
+	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)
 
 	r := saucecloud.XcuitestRunner{
 		Project: p,

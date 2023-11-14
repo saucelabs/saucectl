@@ -55,7 +55,6 @@ var (
 
 	typeDef config.TypeDef
 
-	testcompClient    http.TestComposer
 	webdriverClient   http.Webdriver
 	appsClient        http.AppStore
 	rdcClient         http.RDCService
@@ -194,7 +193,6 @@ func preRun() error {
 	}
 	typeDef = d
 
-	testcompClient = http.NewTestComposer("", creds, testComposerTimeout)
 	webdriverClient = http.NewWebdriver("", creds, webdriverTimeout)
 	rdcClient = http.NewRDCService("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 	appsClient = *http.NewAppStore("", creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
