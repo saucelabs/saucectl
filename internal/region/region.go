@@ -48,6 +48,12 @@ const Staging Region = "staging"
 
 var sauceRegionMetas = []regionMeta{
 	{
+		None.String(),
+		"",
+		"",
+		"",
+	},
+	{
 		USWest1.String(),
 		"https://api.us-west-1.saucelabs.com",
 		"https://app.saucelabs.com",
