@@ -16,7 +16,7 @@ func init() {
 	}
 	defer file.Close()
 
-	if err = yaml.NewDecoder(file).Decode(&userRegions); err != nil {
+	if err = yaml.NewDecoder(file).Decode(&userRegionMetas); err != nil {
 		return
 	}
 }
@@ -46,7 +46,7 @@ const EUCentral1 Region = "eu-central-1"
 // Staging is a sauce labs internal pre-production environment.
 const Staging Region = "staging"
 
-var sauceRegions = []regionMeta{
+var sauceRegionMetas = []regionMeta{
 	{
 		USWest1.String(),
 		"https://api.us-west-1.saucelabs.com",
@@ -73,14 +73,14 @@ var sauceRegions = []regionMeta{
 	},
 }
 
-// userRegions is a list of user defined regions that is loaded
+// userRegionMetas is a list of user defined regions that is loaded
 // from the user's ~/.sauce directory.
-var userRegions = []regionMeta{}
+var userRegionMetas = []regionMeta{}
 
-// allRegionMeta concats the list of known Sauce region metadata and the user's
+// allRegionMetas concats the list of known Sauce region metadata and the user's
 // list of region metadata.
-func allRegionMeta() []regionMeta {
-	return append(sauceRegions, userRegions...)
+func allRegionMetas() []regionMeta {
+	return append(sauceRegionMetas, userRegionMetas...)
 }
 
 func (r Region) String() string {
@@ -90,7 +90,7 @@ func (r Region) String() string {
 // FromString converts the given string to the corresponding Region.
 // Returns None if the string did not match any Region.
 func FromString(s string) Region {
-	for _, m := range allRegionMeta() {
+	for _, m := range allRegionMetas() {
 		if s == m.Name {
 			return Region(m.Name)
 		}
@@ -100,7 +100,7 @@ func FromString(s string) Region {
 
 func lookupMeta(r Region) regionMeta {
 	var found = regionMeta{}
-	for _, m := range allRegionMeta() {
+	for _, m := range allRegionMetas() {
 		if m.Name == string(r) {
 			found = m
 		}
