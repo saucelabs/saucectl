@@ -33,12 +33,16 @@ type regionMeta struct {
 
 // None is an undefined sauce labs region.
 const None Region = ""
+
 // USWest1 is a sauce labs region in western US, aka us-west-1.
 const USWest1 Region = "us-west-1"
+
 // USEast4 is a sauce labs region in eastern US, aka us-east-4.
 const USEast4 Region = "us-east-4"
+
 // EUCentral1 is a sauce labs region in the EU, aka eu-central-1.
 const EUCentral1 Region = "eu-central-1"
+
 // Staging is a sauce labs internal pre-production environment.
 const Staging Region = "staging"
 
