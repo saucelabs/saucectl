@@ -73,9 +73,9 @@ var sauceRegions = []regionMeta{
 // from the user's ~/.sauce directory.
 var userRegions = []regionMeta{}
 
-// allRegions concats the list of known Sauce regions and the user's
-// list of regions.
-func allRegions() []regionMeta {
+// allRegionMeta concats the list of known Sauce region metadata and the user's
+// list of region metadata.
+func allRegionMeta() []regionMeta {
 	return append(sauceRegions, userRegions...)
 }
 
@@ -86,7 +86,7 @@ func (r Region) String() string {
 // FromString converts the given string to the corresponding Region.
 // Returns None if the string did not match any Region.
 func FromString(s string) Region {
-	for _, m := range allRegions() {
+	for _, m := range allRegionMeta() {
 		if s == m.Name {
 			return Region(m.Name)
 		}
@@ -94,32 +94,30 @@ func FromString(s string) Region {
 	return Region(None)
 }
 
-// APIBaseURL returns the API base URL for the region.
-func (r Region) APIBaseURL() string {
-	for _, m := range allRegions() {
+func lookupMeta(r Region) regionMeta {
+	var found = regionMeta{}
+	for _, m := range allRegionMeta() {
 		if m.Name == string(r) {
-			return m.APIBaseURL
+			found = m
 		}
 	}
-	return ""
+	return found
+}
+
+// APIBaseURL returns the API base URL for the region.
+func (r Region) APIBaseURL() string {
+	meta := lookupMeta(r)
+	return meta.APIBaseURL
 }
 
 // AppBaseURL returns the Aapp base URL for the region.
 func (r Region) AppBaseURL() string {
-	for _, m := range allRegions() {
-		if m.Name == string(r) {
-			return m.AppBaseURL
-		}
-	}
-	return ""
+	meta := lookupMeta(r)
+	return meta.AppBaseURL
 }
 
 // WebDriverBaseURL returns the webdriver base URL for the region.
 func (r Region) WebDriverBaseURL() string {
-	for _, m := range allRegions() {
-		if m.Name == string(r) {
-			return m.WebdriverBaseURL
-		}
-	}
-	return ""
+	meta := lookupMeta(r)
+	return meta.WebdriverBaseURL
 }
