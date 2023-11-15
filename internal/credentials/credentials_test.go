@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/saucelabs/saucectl/internal/iam"
+	"github.com/saucelabs/saucectl/internal/region"
 )
 
 func TestFromEnv(t *testing.T) {
@@ -115,6 +116,7 @@ func TestFromFile(t *testing.T) {
 	tests := []struct {
 		name       string
 		args       args
+		region     region.Region
 		beforeTest func()
 		want       iam.Credentials
 	}{
@@ -123,6 +125,7 @@ func TestFromFile(t *testing.T) {
 			args: args{
 				path: filepath.Join(tempDir, "credilicious.yml"),
 			},
+			region: region.None,
 			beforeTest: func() {
 				c := iam.Credentials{
 					Username:  "saucebot",
@@ -145,11 +148,65 @@ func TestFromFile(t *testing.T) {
 			beforeTest: func() {},
 			want:       iam.Credentials{},
 		},
+		{
+			name: "multiple creds exist, selected by specified region",
+			args: args{
+				path: filepath.Join(tempDir, "credilicious.yml"),
+			},
+			region: region.Staging,
+			beforeTest: func() {
+				c := iam.Credentials{
+					Username:  "saucebot",
+					AccessKey: "123",
+					Regional: []iam.Credentials{
+						{
+							Username:  "saucebot-staging",
+							AccessKey: "123-staging",
+							Region:    "staging",
+						},
+					},
+				}
+				if err := toFile(c, filepath.Join(tempDir, "credilicious.yml")); err != nil {
+					t.Errorf("Failed to create credentials file: %v", err)
+				}
+			},
+			want: iam.Credentials{
+				Username:  "saucebot-staging",
+				AccessKey: "123-staging",
+			},
+		},
+		{
+			name: "multiple creds exist, return default when no region set",
+			args: args{
+				path: filepath.Join(tempDir, "credilicious.yml"),
+			},
+			region: region.None,
+			beforeTest: func() {
+				c := iam.Credentials{
+					Username:  "saucebot",
+					AccessKey: "123",
+					Regional: []iam.Credentials{
+						{
+							Username:  "saucebot-staging",
+							AccessKey: "123-staging",
+							Region:    "staging",
+						},
+					},
+				}
+				if err := toFile(c, filepath.Join(tempDir, "credilicious.yml")); err != nil {
+					t.Errorf("Failed to create credentials file: %v", err)
+				}
+			},
+			want: iam.Credentials{
+				Username:  "saucebot",
+				AccessKey: "123",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.beforeTest()
-			got := fromFile(tt.args.path)
+			got := fromFile(tt.args.path, tt.region)
 			if !cmp.Equal(got.Username, tt.want.Username) || !cmp.Equal(got.AccessKey, tt.want.AccessKey) {
 				t.Errorf("FromFile() = %v, want %v", got, tt.want)
 			}
