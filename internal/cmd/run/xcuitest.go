@@ -4,6 +4,8 @@ import (
 	"os"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
+	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/http"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -108,17 +110,6 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 
 	regio := region.FromString(p.Sauce.Region)
 
-	webdriverClient.URL = regio.WebDriverBaseURL()
-	testcompClient.URL = regio.APIBaseURL()
-	restoClient.URL = regio.APIBaseURL()
-	appsClient.URL = regio.APIBaseURL()
-	rdcClient.URL = regio.APIBaseURL()
-	insightsClient.URL = regio.APIBaseURL()
-	iamClient.URL = regio.APIBaseURL()
-
-	restoClient.ArtifactConfig = p.Artifacts.Download
-	rdcClient.ArtifactConfig = p.Artifacts.Download
-
 	if !gFlags.noAutoTagging {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
@@ -145,6 +136,17 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 
 func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Running XCUITest in Sauce Labs")
+
+	creds := credentials.Get()
+
+	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
+	restoClient.ArtifactConfig = p.Artifacts.Download
+	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)
+	webdriverClient := http.NewWebdriver(regio.WebDriverBaseURL(), creds, webdriverTimeout)
+	appsClient := *http.NewAppStore(regio.APIBaseURL(), creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
+	rdcClient := http.NewRDCService(regio.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, p.Artifacts.Download)
+	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
+	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
 
 	r := saucecloud.XcuitestRunner{
 		Project: p,

@@ -55,16 +55,6 @@ var (
 
 	typeDef config.TypeDef
 
-	testcompClient    http.TestComposer
-	webdriverClient   http.Webdriver
-	restoClient       http.Resto
-	appsClient        http.AppStore
-	rdcClient         http.RDCService
-	insightsClient    http.InsightsService
-	iamClient         http.UserService
-	apitestingClient  http.APITester
-	imageRunnerClient http.ImageRunner
-
 	// ErrEmptySuiteName is thrown when a flag is specified that has a dependency on the --name flag.
 	ErrEmptySuiteName = errors.New(msg.EmptyAdhocSuiteName)
 )
@@ -195,16 +185,6 @@ func preRun() error {
 		return err
 	}
 	typeDef = d
-
-	testcompClient = http.NewTestComposer("", creds, testComposerTimeout)
-	webdriverClient = http.NewWebdriver("", creds, webdriverTimeout)
-	restoClient = http.NewResto("", creds.Username, creds.AccessKey, 0)
-	rdcClient = http.NewRDCService("", creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
-	appsClient = *http.NewAppStore("", creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
-	insightsClient = http.NewInsightsService("", creds, insightsTimeout)
-	iamClient = http.NewUserService("", creds, iamTimeout)
-	apitestingClient = http.NewAPITester("", creds.Username, creds.AccessKey, apitestingTimeout)
-	imageRunnerClient = http.NewImageRunner("", creds, imgExecTimeout)
 
 	return nil
 }
