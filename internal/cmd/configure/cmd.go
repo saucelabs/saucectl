@@ -12,6 +12,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/spf13/cobra"
 )
@@ -60,10 +61,19 @@ func printCreds(creds iam.Credentials) {
 	labelStyle := color.New(color.Bold)
 	valueStyle := color.New(color.FgBlue)
 
-	fmt.Println("Currently configured credentials:")
+	fmt.Println("Currently configured default credentials:")
 	fmt.Println(labelStyle.Sprint("\t  Username:"), valueStyle.Sprint(creds.Username))
 	fmt.Println(labelStyle.Sprint("\tAccess key:"), valueStyle.Sprint(mask(creds.AccessKey)))
-
+	if len(creds.Regional) > 0 {
+		println()
+		fmt.Println("Regional settings:")
+		for _, r := range creds.Regional {
+			fmt.Println(labelStyle.Sprint("\t    Region:"), valueStyle.Sprint(r.Region))
+			fmt.Println(labelStyle.Sprint("\t  Username:"), valueStyle.Sprint(r.Username))
+			fmt.Println(labelStyle.Sprint("\tAccess key:"), valueStyle.Sprint(mask(r.AccessKey)))
+			println()
+		}
+	}
 	println()
 	fmt.Printf("Collected from: %s", creds.Source)
 
@@ -76,7 +86,7 @@ func interactiveConfiguration() (iam.Credentials, error) {
 	overwrite := true
 	var err error
 
-	creds := credentials.Get()
+	creds := credentials.Get(region.None)
 
 	if creds.IsSet() {
 		printCreds(creds)

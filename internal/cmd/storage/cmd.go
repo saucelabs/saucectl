@@ -36,8 +36,9 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 				segment.DefaultTracker.Enabled = false
 			}
 
+			creds := credentials.Get(reg)
 			appsClient = *http.NewAppStore(reg.APIBaseURL(),
-				credentials.Get().Username, credentials.Get().AccessKey,
+				creds.Username, creds.AccessKey,
 				15*time.Minute)
 
 			return nil

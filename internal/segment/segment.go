@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/setup"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/version"
@@ -73,7 +74,11 @@ func (t *Tracker) Collect(subject string, props usage.Properties) {
 		p[k] = v
 	}
 
-	userID := credentials.Get().Username
+	regio := region.None
+	if v, ok := props["region"]; ok {
+		regio = region.FromString(v.(string))
+	}
+	userID := credentials.Get(regio).Username
 	if userID == "" {
 		userID = "saucectlanon"
 	}

@@ -125,7 +125,7 @@ func runReplay(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Replaying chrome devtools recordings")
 
-	creds := credentials.Get()
+	creds := credentials.Get(regio)
 	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 	restoClient.ArtifactConfig = p.Artifacts.Download
 	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)

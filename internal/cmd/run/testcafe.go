@@ -172,7 +172,7 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 
 	cleanupArtifacts(p.Artifacts)
 
-	creds := credentials.Get()
+	creds := credentials.Get(regio)
 
 	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 	restoClient.ArtifactConfig = p.Artifacts.Download

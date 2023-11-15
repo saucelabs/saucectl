@@ -11,6 +11,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report/buildtable"
 	"github.com/saucelabs/saucectl/internal/report/json"
 	"github.com/saucelabs/saucectl/internal/report/junit"
@@ -171,7 +172,7 @@ func preRun() error {
 	checkForUpdates()
 	go awaitGlobalTimeout()
 
-	creds := credentials.Get()
+	creds := credentials.Get(region.None)
 	if !creds.IsSet() {
 		color.Red("\nSauceCTL requires a valid Sauce Labs account!\n\n")
 		fmt.Println(`Set up your credentials by running:

@@ -35,7 +35,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 				segment.DefaultTracker.Enabled = false
 			}
 
-			creds := credentials.Get()
+			creds := credentials.Get(reg)
 			url := region.FromString(regio).APIBaseURL()
 
 			imagerunnerClient = http.NewImageRunner(url, creds, 15*time.Minute)

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/region"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
@@ -139,7 +140,7 @@ func (r *Reporter) shouldSendNotification(passed bool) bool {
 }
 
 func (r *Reporter) createBlocks() []slack.Block {
-	contextText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("%s | *Build ID*: %s | %s | %s", r.getFrameworkName(), r.Metadata.Build, credentials.Get().Username, time.Now().Format("2006-01-02 15:04:05")), false, false)
+	contextText := slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("%s | *Build ID*: %s | %s | %s", r.getFrameworkName(), r.Metadata.Build, credentials.Get(region.None).Username, time.Now().Format("2006-01-02 15:04:05")), false, false)
 	contextSection := slack.NewSectionBlock(contextText, nil, nil)
 
 	resultText := slack.NewTextBlockObject("mrkdwn", r.GetRenderedResult(), false, false)

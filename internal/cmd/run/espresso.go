@@ -137,7 +137,7 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, isCLIDriven bo
 func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Running Espresso in Sauce Labs")
 
-	creds := credentials.Get()
+	creds := credentials.Get(regio)
 	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 	restoClient.ArtifactConfig = p.Artifacts.Download
 	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)

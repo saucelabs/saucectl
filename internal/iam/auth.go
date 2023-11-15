@@ -2,9 +2,11 @@ package iam
 
 // Credentials holds the credentials for accessing Sauce Labs.
 type Credentials struct {
-	Username  string `yaml:"username"`
-	AccessKey string `yaml:"accessKey"`
-	Source    string `yaml:"-"`
+	Username  string        `yaml:"username"`
+	AccessKey string        `yaml:"accessKey"`
+	Region    string        `yaml:"region,omitempty"`
+	Regional  []Credentials `yaml:"regional,omitempty"`
+	Source    string        `yaml:"-"`
 }
 
 // IsSet checks whether the credentials, i.e. username and access key are not empty.

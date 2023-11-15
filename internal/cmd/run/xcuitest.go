@@ -137,7 +137,7 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Running XCUITest in Sauce Labs")
 
-	creds := credentials.Get()
+	creds := credentials.Get(regio)
 
 	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 	restoClient.ArtifactConfig = p.Artifacts.Download

@@ -42,7 +42,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 				segment.DefaultTracker.Enabled = false
 			}
 
-			creds := credentials.Get()
+			creds := credentials.Get(reg)
 			url := reg.APIBaseURL()
 			restoClient := http.NewResto(url, creds.Username, creds.AccessKey, restoTimeout)
 			rdcClient := http.NewRDCService(url, creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})

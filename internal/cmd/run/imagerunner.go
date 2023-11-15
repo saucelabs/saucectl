@@ -66,7 +66,7 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 
 	cleanupArtifacts(p.Artifacts)
 
-	creds := credentials.Get()
+	creds := credentials.Get(regio)
 	imageRunnerClient := http.NewImageRunner(regio.APIBaseURL(), creds, imgExecTimeout)
 	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 

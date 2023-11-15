@@ -40,7 +40,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 				segment.DefaultTracker.Enabled = false
 			}
 
-			creds := credentials.Get()
+			creds := credentials.Get(reg)
 			url := reg.APIBaseURL()
 			insightsClient := http.NewInsightsService(url, creds, insightsTimeout)
 			iamClient := http.NewUserService(url, creds, iamTimeout)

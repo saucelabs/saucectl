@@ -137,7 +137,7 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 
 	cleanupArtifacts(p.GetArtifactsCfg())
 
-	creds := credentials.Get()
+	creds := credentials.Get(regio)
 
 	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 	restoClient.ArtifactConfig = p.GetArtifactsCfg().Download

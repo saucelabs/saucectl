@@ -7,6 +7,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/iam"
+	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/yaml"
 	yamlbase "gopkg.in/yaml.v2"
 )
@@ -32,12 +33,12 @@ const ConfigFileSource = "Configuration file"
 // The lookup order is:
 //  1. Environment variables (see FromEnv)
 //  2. Credentials file (see FromFile)
-func Get() iam.Credentials {
+func Get(regio region.Region) iam.Credentials {
 	if c := FromEnv(); c.IsSet() {
 		return c
 	}
 
-	return FromFile()
+	return FromFile(regio)
 }
 
 // FromEnv reads the credentials from the user environment.
@@ -50,12 +51,14 @@ func FromEnv() iam.Credentials {
 }
 
 // FromFile reads the credentials that stored in the default file location.
-func FromFile() iam.Credentials {
-	return fromFile(DefaultCredsPath)
+// When provided with a region, it returns the corresponding credentials for that region.
+// If no region is specified, it defaults to returning the root-level credentials.
+func FromFile(regio region.Region) iam.Credentials {
+	return fromFile(DefaultCredsPath, regio)
 }
 
 // fromFile reads the credentials from path.
-func fromFile(path string) iam.Credentials {
+func fromFile(path string, regio region.Region) iam.Credentials {
 	yamlFile, err := os.Open(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -63,15 +66,22 @@ func fromFile(path string) iam.Credentials {
 			return iam.Credentials{}
 		}
 
-		log.Error().Msgf("failed to read credentials: %v", err)
+		log.Err(err).Msgf("failed to read credentials")
 		return iam.Credentials{}
 	}
 	defer yamlFile.Close()
 
 	var c iam.Credentials
 	if err = yamlbase.NewDecoder(yamlFile).Decode(&c); err != nil {
-		log.Error().Msgf("failed to parse credentials: %v", err)
+		log.Err(err).Msgf("failed to parse credentials")
 		return iam.Credentials{}
+	}
+
+	for _, r := range c.Regional {
+		if region.FromString(r.Region) == regio {
+			r.Source = fmt.Sprintf("%s(%s)", ConfigFileSource, path)
+			return r
+		}
 	}
 
 	c.Source = fmt.Sprintf("%s(%s)", ConfigFileSource, path)

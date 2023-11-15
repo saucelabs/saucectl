@@ -16,6 +16,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
+	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
@@ -130,7 +131,7 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 	}
 	stdio := terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
 
-	creds := credentials.Get()
+	creds := credentials.Get(region.FromString(initCfg.region))
 	if !creds.IsSet() {
 		var err error
 		creds, err = askCredentials(stdio)
@@ -179,7 +180,7 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 
 func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 	stdio := terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
-	creds := credentials.Get()
+	creds := credentials.Get(region.FromString(initCfg.region))
 	if !creds.IsSet() {
 		return errors.New(msg.EmptyCredentials)
 	}
