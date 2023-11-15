@@ -1,91 +1,125 @@
 package region
 
-// Region represents the sauce labs region.
-type Region uint
+import (
+	"os"
+	"path/filepath"
 
-const (
-	// None is an undefined sauce labs region.
-	None Region = iota
-	// USWest1 is a sauce labs region in western US, aka us-west-1.
-	USWest1
-	// USEast4 is a sauce labs region in eastern US, aka us-east-4.
-	USEast4
-	// EUCentral1 is a sauce labs region in the EU, aka eu-central-1.
-	EUCentral1
-	// Staging is a sauce labs internal pre-production environment.
-	Staging
+	"gopkg.in/yaml.v2"
 )
 
-var meta = []struct {
-	Name             string
-	APIBaseURL       string
-	AppBaseURL       string
-	WebDriverBaseURL string
-}{
-	// None
+func init() {
+	homeDir, _ := os.UserHomeDir()
+	path := filepath.Join(homeDir, ".sauce", "regions.yml")
+	file, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	if err = yaml.NewDecoder(file).Decode(&userRegions); err != nil {
+		return
+	}
+}
+
+// Region represents the sauce labs region.
+type Region string
+
+type regionMeta struct {
+	Name             string `yaml:"name"`
+	APIBaseURL       string `yaml:"apiBaseURL"`
+	AppBaseURL       string `yaml:"appBaseURL"`
+	WebdriverBaseURL string `yaml:"webdriverBaseURL"`
+}
+
+// None is an undefined sauce labs region.
+const None Region = ""
+// USWest1 is a sauce labs region in western US, aka us-west-1.
+const USWest1 Region = "us-west-1"
+// USEast4 is a sauce labs region in eastern US, aka us-east-4.
+const USEast4 Region = "us-east-4"
+// EUCentral1 is a sauce labs region in the EU, aka eu-central-1.
+const EUCentral1 Region = "eu-central-1"
+// Staging is a sauce labs internal pre-production environment.
+const Staging Region = "staging"
+
+var sauceRegions = []regionMeta{
 	{
-		"",
-		"",
-		"",
-		"",
-	},
-	// USWest1
-	{
-		"us-west-1",
+		USWest1.String(),
 		"https://api.us-west-1.saucelabs.com",
 		"https://app.saucelabs.com",
 		"https://ondemand.us-west-1.saucelabs.com",
 	},
-	// USEast4
 	{
-		"us-east-4",
+		USEast4.String(),
 		"https://api.us-east-4.saucelabs.com",
 		"https://app.us-east-4.saucelabs.com",
 		"https://ondemand.us-east-4.saucelabs.com",
 	},
-	// EUCentral1
 	{
-		"eu-central-1",
+		EUCentral1.String(),
 		"https://api.eu-central-1.saucelabs.com",
 		"https://app.eu-central-1.saucelabs.com",
 		"https://ondemand.eu-central-1.saucelabs.com",
 	},
-	// Staging
 	{
-		"staging",
+		Staging.String(),
 		"https://api.staging.saucelabs.net",
 		"https://app.staging.saucelabs.net",
 		"https://ondemand.staging.saucelabs.net",
 	},
 }
 
+// userRegions is a list of user defined regions that is loaded
+// from the user's ~/.sauce directory.
+var userRegions = []regionMeta{}
+
+// allRegions concats the list of known Sauce regions and the user's
+// list of regions.
+func allRegions() []regionMeta {
+	return append(sauceRegions, userRegions...)
+}
+
 func (r Region) String() string {
-	return meta[r].Name
+	return string(r)
 }
 
 // FromString converts the given string to the corresponding Region.
 // Returns None if the string did not match any Region.
 func FromString(s string) Region {
-	for i, m := range meta {
-		if m.Name == s {
-			return Region(i)
+	for _, m := range allRegions() {
+		if s == m.Name {
+			return Region(m.Name)
 		}
 	}
-
-	return None
+	return Region(None)
 }
 
 // APIBaseURL returns the API base URL for the region.
 func (r Region) APIBaseURL() string {
-	return meta[r].APIBaseURL
+	for _, m := range allRegions() {
+		if m.Name == string(r) {
+			return m.APIBaseURL
+		}
+	}
+	return ""
 }
 
 // AppBaseURL returns the Aapp base URL for the region.
 func (r Region) AppBaseURL() string {
-	return meta[r].AppBaseURL
+	for _, m := range allRegions() {
+		if m.Name == string(r) {
+			return m.AppBaseURL
+		}
+	}
+	return ""
 }
 
 // WebDriverBaseURL returns the webdriver base URL for the region.
 func (r Region) WebDriverBaseURL() string {
-	return meta[r].WebDriverBaseURL
+	for _, m := range allRegions() {
+		if m.Name == string(r) {
+			return m.WebdriverBaseURL
+		}
+	}
+	return ""
 }
