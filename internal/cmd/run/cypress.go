@@ -5,6 +5,8 @@ import (
 	"os"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
+	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/http"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -117,13 +119,6 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		return 1, errors.New(msg.NoFrameworkSupport)
 	}
 
-	testcompClient.URL = regio.APIBaseURL()
-	webdriverClient.URL = regio.WebDriverBaseURL()
-	restoClient.URL = regio.APIBaseURL()
-	appsClient.URL = regio.APIBaseURL()
-	insightsClient.URL = regio.APIBaseURL()
-	iamClient.URL = regio.APIBaseURL()
-	restoClient.ArtifactConfig = p.GetArtifactsCfg().Download
 	tracker := segment.DefaultTracker
 	if regio == region.Staging {
 		tracker.Enabled = false
@@ -141,6 +136,17 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	}()
 
 	cleanupArtifacts(p.GetArtifactsCfg())
+
+	creds := credentials.Get()
+
+	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
+	restoClient.ArtifactConfig = p.GetArtifactsCfg().Download
+	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)
+	webdriverClient := http.NewWebdriver(regio.WebDriverBaseURL(), creds, webdriverTimeout)
+	appsClient := *http.NewAppStore(regio.APIBaseURL(), creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
+	rdcClient := http.NewRDCService(regio.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
+	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
+	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
 
 	log.Info().Msg("Running Cypress in Sauce Labs")
 	r := saucecloud.CypressRunner{
