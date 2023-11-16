@@ -109,6 +109,7 @@ func lookupMeta(r Region) regionMeta {
 	for _, m := range allRegionMetas() {
 		if m.Name == string(r) {
 			found = m
+			break
 		}
 	}
 	return found
