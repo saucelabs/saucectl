@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v2"
 )
 
@@ -17,6 +18,7 @@ func init() {
 	defer file.Close()
 
 	if err = yaml.NewDecoder(file).Decode(&userRegionMetas); err != nil {
+		log.Error().Msgf("failed to parse regions file (%s): %v", path, err)
 		return
 	}
 }
