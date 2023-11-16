@@ -81,7 +81,7 @@ var sauceRegionMetas = []regionMeta{
 
 // userRegionMetas is a list of user defined regions that is loaded
 // from the user's ~/.sauce directory.
-var userRegionMetas = []regionMeta{}
+var userRegionMetas []regionMeta
 
 // allRegionMetas concats the list of known Sauce region metadata and the user's
 // list of region metadata.
@@ -101,11 +101,11 @@ func FromString(s string) Region {
 			return Region(m.Name)
 		}
 	}
-	return Region(None)
+	return None
 }
 
 func lookupMeta(r Region) regionMeta {
-	var found = regionMeta{}
+	var found regionMeta
 	for _, m := range allRegionMetas() {
 		if m.Name == string(r) {
 			found = m
