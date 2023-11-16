@@ -245,7 +245,10 @@
                     ]
                   }
                 },
-                "additionalProperties": false
+                "additionalProperties": false,
+                "required": [
+                  "region"
+                ]
               }
             },
             "additionalProperties": true
@@ -733,7 +736,10 @@
                     ]
                   }
                 },
-                "additionalProperties": false
+                "additionalProperties": false,
+                "required": [
+                  "region"
+                ]
               }
             },
             "additionalProperties": true
@@ -2678,7 +2684,10 @@
                 ],
                 "additionalProperties": false
               }
-            }
+            },
+            "required": [
+              "region"
+            ]
           },
           "suite": {
             "description": "The set of properties providing details about how to run the container.",

@@ -81,7 +81,10 @@
           ]
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "required": [
+        "region"
+      ]
     }
   },
   "additionalProperties": true

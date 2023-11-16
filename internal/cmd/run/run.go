@@ -102,7 +102,7 @@ func Command() *cobra.Command {
 	cmd.PersistentFlags().BoolVar(&gFlags.async, "async", false, "Launches tests without waiting for test results")
 	cmd.PersistentFlags().BoolVar(&gFlags.failFast, "fail-fast", false, "Stops suites after the first failure")
 	cmd.PersistentFlags().DurationVar(&gFlags.appStoreTimeout, "uploadTimeout", 5*time.Minute, "Upload timeout that limits how long saucectl will wait for an upload to finish. Supports duration values like '10s' '30m' etc. (default: 5m)")
-	sc.StringP("region", "r", "sauce::region", "us-west-1", "The sauce labs region.")
+	sc.StringP("region", "r", "sauce::region", "", "The sauce labs region.")
 	sc.StringToStringP("env", "e", "envFlag", map[string]string{}, "Set environment variables, e.g. -e foo=bar. Not supported for RDC or Espresso on virtual devices!")
 	sc.Bool("show-console-log", "showConsoleLog", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
 	sc.Int("ccy", "sauce::concurrency", 2, "Concurrency specifies how many suites are run at the same time.")
