@@ -5,7 +5,7 @@ type Credentials struct {
 	Username  string        `yaml:"username"`
 	AccessKey string        `yaml:"accessKey"`
 	Region    string        `yaml:"region,omitempty"`
-	Regional  []Credentials `yaml:"regional,omitempty"`
+	Regions   []Credentials `yaml:"regions,omitempty"`
 	Source    string        `yaml:"-"`
 }
 

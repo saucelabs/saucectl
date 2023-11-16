@@ -158,7 +158,7 @@ func TestFromFile(t *testing.T) {
 				c := iam.Credentials{
 					Username:  "saucebot",
 					AccessKey: "123",
-					Regional: []iam.Credentials{
+					Regions: []iam.Credentials{
 						{
 							Username:  "saucebot-staging",
 							AccessKey: "123-staging",
@@ -185,7 +185,7 @@ func TestFromFile(t *testing.T) {
 				c := iam.Credentials{
 					Username:  "saucebot",
 					AccessKey: "123",
-					Regional: []iam.Credentials{
+					Regions: []iam.Credentials{
 						{
 							Username:  "saucebot-staging",
 							AccessKey: "123-staging",

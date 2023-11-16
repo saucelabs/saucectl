@@ -64,10 +64,10 @@ func printCreds(creds iam.Credentials) {
 	fmt.Println("Currently configured default credentials:")
 	fmt.Println(labelStyle.Sprint("\t  Username:"), valueStyle.Sprint(creds.Username))
 	fmt.Println(labelStyle.Sprint("\tAccess key:"), valueStyle.Sprint(mask(creds.AccessKey)))
-	if len(creds.Regional) > 0 {
+	if len(creds.Regions) > 0 {
 		println()
-		fmt.Println("Regional settings:")
-		for _, r := range creds.Regional {
+		fmt.Println("Regions settings:")
+		for _, r := range creds.Regions {
 			fmt.Println(labelStyle.Sprint("\t    Region:"), valueStyle.Sprint(r.Region))
 			fmt.Println(labelStyle.Sprint("\t  Username:"), valueStyle.Sprint(r.Username))
 			fmt.Println(labelStyle.Sprint("\tAccess key:"), valueStyle.Sprint(mask(r.AccessKey)))
