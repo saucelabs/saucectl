@@ -10,6 +10,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/insights"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/saucereport"
 )
 
@@ -204,7 +205,7 @@ func TestValidate(t *testing.T) {
 			errMsg:  "browserName: ie is not supported. List of supported browsers: chromium, firefox, webkit, chrome",
 		},
 		{
-			name: "empty region",
+			name: msg.MissingRegion,
 			p: Project{
 				Sauce:      config.SauceConfig{Region: ""},
 				Playwright: Playwright{Version: "v1.1.1"},

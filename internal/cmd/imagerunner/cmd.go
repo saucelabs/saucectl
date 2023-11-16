@@ -6,6 +6,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/http"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/spf13/cobra"
@@ -27,7 +28,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 				preRun(cmd, args)
 			}
 			if regio == "" {
-				return errors.New("empty region")
+				return errors.New(msg.MissingRegion)
 			}
 			reg := region.FromString(regio)
 			if reg == region.None {
