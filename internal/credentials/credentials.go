@@ -79,8 +79,9 @@ func fromFile(path string, regio region.Region) iam.Credentials {
 
 	for _, r := range c.Regions {
 		if region.FromString(r.Region) == regio {
-			r.Source = fmt.Sprintf("%s(%s)", ConfigFileSource, path)
-			return r
+			c.Username = r.Username
+			c.AccessKey = r.AccessKey
+			break
 		}
 	}
 
