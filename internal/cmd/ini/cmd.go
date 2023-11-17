@@ -97,7 +97,7 @@ func Command() *cobra.Command {
 	}
 	cmd.Flags().StringVarP(&initCfg.username, "username", "u", "", "username to use")
 	cmd.Flags().StringVarP(&initCfg.accessKey, "accessKey", "a", "", "access key for the Sauce Labs account making the request")
-	cmd.Flags().StringVarP(&initCfg.region, "region", "r", "", "region to use")
+	cmd.Flags().StringVarP(&initCfg.region, "region", "r", "us-west-1", "region to use")
 	cmd.Flags().StringVarP(&initCfg.frameworkName, "framework", "f", "", "framework to configure")
 	cmd.Flags().StringVarP(&initCfg.frameworkVersion, "frameworkVersion", "v", "", "framework version to be used")
 	cmd.Flags().StringVar(&initCfg.cypressJSON, "cypress.config", "", "path to cypress.json file (cypress only)")

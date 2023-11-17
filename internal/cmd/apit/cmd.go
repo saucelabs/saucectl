@@ -6,7 +6,6 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/http"
-	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/spf13/cobra"
@@ -28,9 +27,6 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 				preRun(cmd, args)
 			}
 
-			if regio == "" {
-				return errors.New(msg.MissingRegion)
-			}
 			reg := region.FromString(regio)
 			if reg == region.None {
 				return errors.New("invalid region")
@@ -49,7 +45,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	}
 
 	flags := cmd.PersistentFlags()
-	flags.StringVarP(&regio, "region", "r", "", "The Sauce Labs region. Options: us-west-1, eu-central-1.")
+	flags.StringVarP(&regio, "region", "r", "us-west-1", "The Sauce Labs region. Options: us-west-1, eu-central-1.")
 
 	cmd.AddCommand(
 		VaultCommand(cmd.PersistentPreRunE),
