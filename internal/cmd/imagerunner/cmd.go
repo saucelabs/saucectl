@@ -26,7 +26,6 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 			if preRun != nil {
 				preRun(cmd, args)
 			}
-
 			reg := region.FromString(regio)
 			if reg == region.None {
 				return errors.New("invalid region")
