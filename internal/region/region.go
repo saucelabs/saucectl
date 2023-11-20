@@ -1,5 +1,10 @@
 package region
 
+import (
+	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/clientconfig"
+)
+
 // Region represents the sauce labs region.
 type Region uint
 
@@ -16,12 +21,14 @@ const (
 	Staging
 )
 
-var meta = []struct {
-	Name             string
-	APIBaseURL       string
-	AppBaseURL       string
-	WebDriverBaseURL string
-}{
+type Data struct {
+	Name             string `json:"name"`
+	APIBaseURL       string `json:"apiBaseURL,omitempty"`
+	AppBaseURL       string `json:"appBaseURL,omitempty"`
+	WebDriverBaseURL string `json:"webdriverBaseURL,omitempty"`
+}
+
+var meta = []Data{
 	// None
 	{
 		"",
@@ -59,19 +66,62 @@ var meta = []struct {
 	},
 }
 
+var initialized = false
+
+func Init() {
+	if initialized {
+		return
+	}
+	clientConf, err := clientconfig.Get()
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to read client config")
+		return
+	}
+	if clientConf != nil {
+		for _, r := range clientConf.Regions {
+			found := false
+			for i, m := range meta {
+				if m.Name == r.Name {
+					found = true
+					if r.APIBaseURL != "" {
+						meta[i].APIBaseURL = r.APIBaseURL
+					}
+					if r.AppBaseURL != "" {
+						meta[i].AppBaseURL = r.AppBaseURL
+					}
+					if r.WebDriverBaseURL != "" {
+						meta[i].WebDriverBaseURL = r.WebDriverBaseURL
+					}
+					break
+				}
+			}
+			if !found {
+				meta = append(meta, Data{
+					Name:             r.Name,
+					APIBaseURL:       r.APIBaseURL,
+					AppBaseURL:       r.AppBaseURL,
+					WebDriverBaseURL: r.WebDriverBaseURL,
+				})
+			}
+		}
+	}
+	initialized = true
+}
+
 func (r Region) String() string {
+	Init()
 	return meta[r].Name
 }
 
 // FromString converts the given string to the corresponding Region.
 // Returns None if the string did not match any Region.
 func FromString(s string) Region {
+	Init()
 	for i, m := range meta {
 		if m.Name == s {
 			return Region(i)
 		}
 	}
-
 	return None
 }
 

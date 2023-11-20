@@ -43,7 +43,6 @@ func (c *ImageRunner) TriggerRun(ctx context.Context, spec imagerunner.RunnerSpe
 	if err != nil {
 		return runner, err
 	}
-
 	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
 	req.Header.Set("Content-Type", "application/json")
 
