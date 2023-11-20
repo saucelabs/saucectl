@@ -696,7 +696,7 @@ func (r *CloudRunner) logSuite(res result) {
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 
 	if res.job.TimedOut {
-		log.Warn().Str("suite", res.name).Str("url", jobDetailsPage).Msg("Suite timed out.")
+		log.Error().Str("suite", res.name).Str("url", jobDetailsPage).Msg("Suite timed out.")
 		return
 	}
 
