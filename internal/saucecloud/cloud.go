@@ -190,8 +190,8 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 		// * Timed out jobs will be requested to stop, but stopping a job
 		//   is either not possible (rdc) or async (vdc) so its actual status is not known now.
 		//   Skip reporting to be safe.
-		maybeInProgress := r.Async || res.job.TimedOut
-		if !maybeInProgress {
+		isFinished := !r.Async && !res.job.TimedOut
+		if isFinished {
 			r.reportSuiteToInsights(res)
 		}
 	}
