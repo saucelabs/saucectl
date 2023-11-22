@@ -185,12 +185,15 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 		}
 		r.logSuite(res)
 
-		// Skip reporting to Insights for async job
-		if r.Async {
-			continue
+		// NOTE: Jobs must be finished in order to be reported to Insights.
+		// * Async jobs have an unknown status by definition, so should always be excluded from reporting.
+		// * Timed out jobs will be requested to stop, but stopping a job
+		//   is either not possible (rdc) or async (vdc) so its actual status is not known now.
+		//   Skip reporting to be safe.
+		isFinished := !r.Async && !res.job.TimedOut
+		if isFinished {
+			r.reportSuiteToInsights(res)
 		}
-		// Report suite to Insights
-		r.reportSuiteToInsights(res)
 	}
 	close(done)
 
@@ -691,6 +694,12 @@ func (r *CloudRunner) logSuite(res result) {
 	}
 
 	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
+
+	if res.job.TimedOut {
+		log.Error().Str("suite", res.name).Str("url", jobDetailsPage).Msg("Suite timed out.")
+		return
+	}
+
 	msg := "Suite finished."
 	if res.job.Passed {
 		log.Info().Str("suite", res.name).Bool("passed", res.job.Passed).Str("url", jobDetailsPage).

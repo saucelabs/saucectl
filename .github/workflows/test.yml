@@ -133,7 +133,7 @@ jobs:
         run: ./saucectl run -c .sauce/replay.yml --timeout 10m
 
       - name: Saucectl RUN - CLI Driven
-        run: ./saucectl run replay "tests/e2e/replay/recording.json" -c "" --name "CLI Driven" --timeout 10m
+        run: ./saucectl run replay "tests/e2e/replay/recording.json" -c "" --name "CLI Driven" --timeout 10m -r us-west-1
 
   playwright:
     needs: build
@@ -155,7 +155,7 @@ jobs:
         run: ./saucectl run -c .sauce/playwright.yml --timeout 10m
 
       - name: Saucectl RUN - CLI Driven
-        run: ./saucectl run playwright ".*.js" -c "" --name "CLI Driven" --browser chromium --rootDir tests/e2e/playwright/ --playwright.version 1.33.0 --timeout 10m
+        run: ./saucectl run playwright ".*.js" -c "" --name "CLI Driven" --browser chromium --rootDir tests/e2e/playwright/ --playwright.version 1.33.0 --timeout 10m -r us-west-1
 
   testcafe:
     needs: build
@@ -177,7 +177,7 @@ jobs:
         run: ./saucectl run -c .sauce/testcafe.yml --timeout 10m
 
       - name: Saucectl RUN - CLI Driven
-        run: ./saucectl run testcafe "*.test.js" -c "" --name "CLI Driven" --browser chrome --rootDir tests/e2e/testcafe/ --testcafe.version 2.5.0 --timeout 10m
+        run: ./saucectl run testcafe "*.test.js" -c "" --name "CLI Driven" --browser chrome --rootDir tests/e2e/testcafe/ --testcafe.version 2.5.0 --timeout 10m -r us-west-1
 
   cypress-v1alpha:
     needs: build
@@ -221,7 +221,14 @@ jobs:
 
       - name: Saucectl RUN - CLI Driven
         run: |
-          ./saucectl run cypress "cypress/e2e/**/*.js" -c "" --name "CLI Driven" --rootDir tests/e2e/cypress_10/e2e/ --browser chrome --cypress.version 12.11.0 --cypress.configFile "cypress.config.js" --timeout 10m
+          ./saucectl run cypress "cypress/e2e/**/*.js" \
+          -c "" --name "CLI Driven" \
+          --rootDir tests/e2e/cypress_10/e2e/ \
+          --browser chrome \
+          --cypress.version 12.11.0 \
+          --cypress.configFile "cypress.config.js" \
+          --timeout 10m \
+          -r us-west-1
  
   cypress-windows:
     needs: build
@@ -268,7 +275,13 @@ jobs:
 
       - name: Saucectl RUN - CLI Driven
         run: |
-          ./saucectl run espresso -c "" --name "CLI Driven" --app ./tests/e2e/espresso/mda-1.0.17-20.apk --testApp ./tests/e2e/espresso/mda-androidTest-1.0.17-20.apk --emulator name="Android GoogleApi Emulator",platformVersion=11.0 --testOptions.size small
+          ./saucectl run espresso -c "" \
+          --name "CLI Driven" \
+          --app ./tests/e2e/espresso/mda-1.0.17-20.apk \
+          --testApp ./tests/e2e/espresso/mda-androidTest-1.0.17-20.apk \
+          --emulator name="Android GoogleApi Emulator",platformVersion=11.0 \
+          --testOptions.size small \
+          -r us-west-1
 
   xcuitest:
     needs: build
@@ -303,7 +316,8 @@ jobs:
           --testApp ./tests/e2e/xcuitest/SauceLabs-Demo-App-Runner.XCUITest.ipa \
           --testOptions.class MyDemoAppUITests.ProductListingPageTest \
           --device name="iPhone.*" \
-          --timeout 10m
+          --timeout 10m \
+          -r us-west-1
 
   apitest:
     needs: build
@@ -328,7 +342,7 @@ jobs:
 
       - name: Saucectl RUN - Config Driven
         run: |
-          ./saucectl run -c .sauce/apitest.yml
+          ./saucectl run -c .sauce/apitest.yml -r us-west-1
 
   playwright-cucumberjs:
     needs: build
