@@ -4,7 +4,6 @@ import (
 	"os"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
-	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/http"
 
 	"github.com/rs/zerolog/log"
@@ -137,7 +136,7 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, isCLIDriven bo
 func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Running Espresso in Sauce Labs")
 
-	creds := credentials.Get()
+	creds := regio.Credentials()
 	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 	restoClient.ArtifactConfig = p.Artifacts.Download
 	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)

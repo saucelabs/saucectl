@@ -4,7 +4,6 @@ import (
 	"os"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
-	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/http"
 
 	"github.com/rs/zerolog/log"
@@ -137,7 +136,7 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
 	log.Info().Msg("Running XCUITest in Sauce Labs")
 
-	creds := credentials.Get()
+	creds := regio.Credentials()
 
 	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 	restoClient.ArtifactConfig = p.Artifacts.Download

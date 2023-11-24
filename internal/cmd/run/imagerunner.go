@@ -5,7 +5,6 @@ import (
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -66,7 +65,7 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 
 	cleanupArtifacts(p.Artifacts)
 
-	creds := credentials.Get()
+	creds := regio.Credentials()
 	imageRunnerClient := http.NewImageRunner(regio.APIBaseURL(), creds, imgExecTimeout)
 	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 
