@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/credentials"
+	"github.com/saucelabs/saucectl/internal/iam"
 	"gopkg.in/yaml.v2"
 )
 
@@ -27,10 +29,11 @@ func init() {
 type Region string
 
 type regionMeta struct {
-	Name             string `yaml:"name"`
-	APIBaseURL       string `yaml:"apiBaseURL"`
-	AppBaseURL       string `yaml:"appBaseURL"`
-	WebdriverBaseURL string `yaml:"webdriverBaseURL"`
+	Name             string          `yaml:"name"`
+	APIBaseURL       string          `yaml:"apiBaseURL"`
+	AppBaseURL       string          `yaml:"appBaseURL"`
+	WebdriverBaseURL string          `yaml:"webdriverBaseURL"`
+	Credentials      iam.Credentials `yaml:"credentials"`
 }
 
 // None is an undefined sauce labs region.
@@ -48,36 +51,43 @@ const EUCentral1 Region = "eu-central-1"
 // Staging is a sauce labs internal pre-production environment.
 const Staging Region = "staging"
 
+var defaultCreds = credentials.Get()
+
 var sauceRegionMetas = []regionMeta{
 	{
 		None.String(),
 		"",
 		"",
 		"",
+		iam.Credentials{},
 	},
 	{
 		USWest1.String(),
 		"https://api.us-west-1.saucelabs.com",
 		"https://app.saucelabs.com",
 		"https://ondemand.us-west-1.saucelabs.com",
+		defaultCreds,
 	},
 	{
 		USEast4.String(),
 		"https://api.us-east-4.saucelabs.com",
 		"https://app.us-east-4.saucelabs.com",
 		"https://ondemand.us-east-4.saucelabs.com",
+		defaultCreds,
 	},
 	{
 		EUCentral1.String(),
 		"https://api.eu-central-1.saucelabs.com",
 		"https://app.eu-central-1.saucelabs.com",
 		"https://ondemand.eu-central-1.saucelabs.com",
+		defaultCreds,
 	},
 	{
 		Staging.String(),
 		"https://api.staging.saucelabs.net",
 		"https://app.staging.saucelabs.net",
 		"https://ondemand.staging.saucelabs.net",
+		defaultCreds,
 	},
 }
 
@@ -85,10 +95,47 @@ var sauceRegionMetas = []regionMeta{
 // from the user's ~/.sauce directory.
 var userRegionMetas []regionMeta
 
+func mergeRegionMetas(base regionMeta, overlay regionMeta) regionMeta {
+	merged := base
+	if overlay.Name != "" {
+		merged.Name = overlay.Name
+	}
+	if overlay.APIBaseURL != "" {
+		merged.APIBaseURL = overlay.APIBaseURL
+	}
+	if overlay.AppBaseURL != "" {
+		merged.AppBaseURL = overlay.AppBaseURL
+	}
+	if overlay.WebdriverBaseURL != "" {
+		merged.WebdriverBaseURL = overlay.WebdriverBaseURL
+	}
+	if overlay.Credentials.IsSet() {
+		merged.Credentials = overlay.Credentials
+	}
+
+	return merged
+}
+
 // allRegionMetas concats the list of known Sauce region metadata and the user's
 // list of region metadata.
-func allRegionMetas() []regionMeta {
-	return append(sauceRegionMetas, userRegionMetas...)
+func allRegionMetas(sauce []regionMeta, user []regionMeta) map[Region]regionMeta {
+	mappedRegions := make(map[Region]regionMeta)
+	for _, m := range sauce {
+		mappedRegions[Region(m.Name)] = m
+	}
+
+	for _, userMeta := range user {
+		userRegion := Region(userMeta.Name)
+
+		curr, ok := mappedRegions[userRegion]
+		if !ok {
+			mappedRegions[userRegion] = userMeta
+			continue
+		}
+		mappedRegions[userRegion] = mergeRegionMetas(curr, userMeta)
+	}
+
+	return mappedRegions
 }
 
 func (r Region) String() string {
@@ -98,23 +145,19 @@ func (r Region) String() string {
 // FromString converts the given string to the corresponding Region.
 // Returns None if the string did not match any Region.
 func FromString(s string) Region {
-	for _, m := range allRegionMetas() {
-		if s == m.Name {
-			return Region(m.Name)
-		}
+	_, ok := allRegionMetas(sauceRegionMetas, userRegionMetas)[Region(s)]
+	if ok {
+		return Region(s)
 	}
 	return None
 }
 
 func lookupMeta(r Region) regionMeta {
-	var found regionMeta
-	for _, m := range allRegionMetas() {
-		if m.Name == string(r) {
-			found = m
-			break
-		}
+	m, ok := allRegionMetas(sauceRegionMetas, userRegionMetas)[r]
+	if ok {
+		return m
 	}
-	return found
+	return regionMeta{}
 }
 
 // APIBaseURL returns the API base URL for the region.
@@ -133,4 +176,14 @@ func (r Region) AppBaseURL() string {
 func (r Region) WebDriverBaseURL() string {
 	meta := lookupMeta(r)
 	return meta.WebdriverBaseURL
+}
+
+func (r Region) Credentials() iam.Credentials {
+	meta := lookupMeta(r)
+
+	if meta.Credentials.IsSet() {
+		return meta.Credentials
+	}
+
+	return defaultCreds
 }
