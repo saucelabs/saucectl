@@ -3,9 +3,10 @@ package region
 import (
 	"testing"
 
-	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/google/go-cmp/cmp"
 	"gotest.tools/v3/assert"
+
+	"github.com/saucelabs/saucectl/internal/iam"
 )
 
 func TestFromString(t *testing.T) {
