@@ -7,7 +7,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/ci"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cucumber"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
@@ -115,7 +114,7 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 
 	cleanupArtifacts(p.Artifacts)
 
-	creds := credentials.Get()
+	creds := regio.Credentials()
 
 	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
 	restoClient.ArtifactConfig = p.Artifacts.Download
