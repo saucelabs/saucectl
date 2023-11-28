@@ -180,7 +180,7 @@ func (r Region) WebDriverBaseURL() string {
 
 func (r Region) Credentials() iam.Credentials {
 	meta := lookupMeta(r)
-
+        // check if there are any region specific credentials first
 	if meta.Credentials.IsSet() {
 		return meta.Credentials
 	}
