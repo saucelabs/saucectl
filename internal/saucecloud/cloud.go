@@ -604,7 +604,7 @@ func (r *CloudRunner) uploadProject(filename, description string, pType uploadTy
 	}
 
 	if apps.IsStorageReference(filename) {
-		return apps.StandardizeReferenceLink(filename), nil
+		return apps.NormalizeStorageReference(filename), nil
 	}
 
 	if apps.IsRemote(filename) {

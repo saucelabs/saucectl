@@ -36,17 +36,17 @@ func IsStorageReference(link string) bool {
 	return reFileID.MatchString(link) || reFilePattern.MatchString(link)
 }
 
-// StandardizeReferenceLink standardize the provided storageID reference to make it work for VMD and RDC.
-func StandardizeReferenceLink(storageRef string) string {
-	if reFileID.MatchString(storageRef) {
-		if !strings.HasPrefix(storageRef, "storage:") {
-			return fmt.Sprintf("storage:%s", storageRef)
+// NormalizeStorageReference normalizes ref to work across VMD and RDC.
+func NormalizeStorageReference(ref string) string {
+	if reFileID.MatchString(ref) {
+		if !strings.HasPrefix(ref, "storage:") {
+			return fmt.Sprintf("storage:%s", ref)
 		}
-		if strings.HasPrefix(storageRef, "storage://") {
-			return strings.Replace(storageRef, "storage://", "storage:", 1)
+		if strings.HasPrefix(ref, "storage://") {
+			return strings.Replace(ref, "storage://", "storage:", 1)
 		}
 	}
-	return storageRef
+	return ref
 }
 
 // Validate validates that the apps is valid (storageID / File / URL).
