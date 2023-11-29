@@ -49,7 +49,7 @@ func NormalizeStorageReference(ref string) string {
 	return ref
 }
 
-// Validate validates that the apps is valid (storageID / File / URL).
+// Validate validates that app is valid (storageID / File / URL).
 func Validate(kind, app string, validExt []string) error {
 	if IsStorageReference(app) {
 		return nil
