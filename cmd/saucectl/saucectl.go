@@ -12,6 +12,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/cmd/artifacts"
 	"github.com/saucelabs/saucectl/internal/cmd/completion"
 	"github.com/saucelabs/saucectl/internal/cmd/configure"
+	"github.com/saucelabs/saucectl/internal/cmd/docker"
 	"github.com/saucelabs/saucectl/internal/cmd/imagerunner"
 	"github.com/saucelabs/saucectl/internal/cmd/ini"
 	"github.com/saucelabs/saucectl/internal/cmd/jobs"
@@ -70,6 +71,7 @@ func main() {
 		jobs.Command(cmd.PersistentPreRun),
 		imagerunner.Command(cmd.PersistentPreRun),
 		apit.Command(cmd.PersistentPreRun),
+		docker.Command(cmd.PersistentPreRun),
 	)
 
 	if err := cmd.Execute(); err != nil {
