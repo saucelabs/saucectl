@@ -209,7 +209,7 @@ func TestIsStorageReference(t *testing.T) {
 			args: args{
 				link: "storage:filename=dummyfilename.zip",
 			},
-			want: false,
+			want: true,
 		},
 		{
 			name: "Bad Reference",
@@ -257,8 +257,8 @@ func TestStandardizeReferenceLink(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := StandardizeReferenceLink(tt.storageRef); got != tt.want {
-				t.Errorf("StandardizeReferenceLink() = %v, want %v", got, tt.want)
+			if got := NormalizeStorageReference(tt.storageRef); got != tt.want {
+				t.Errorf("NormalizeStorageReference() = %v, want %v", got, tt.want)
 			}
 		})
 	}
