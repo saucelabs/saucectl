@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	registryClient    http.DockerRegistry
-	dockerPushTimeout = 1 * time.Minute
+	registryClient              http.DockerRegistry
+	registryAuthenticateTimeout = 1 * time.Minute
+	registryPushTimeout         = 1 * time.Minute
 )
 
 func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
@@ -20,7 +21,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:              "docker",
-		Short:            "Interact with docker registry",
+		Short:            "Interact with Sauce Container Registry",
 		SilenceUsage:     true,
 		TraverseChildren: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
@@ -35,7 +36,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 
 			creds := credentials.Get()
 			url := reg.APIBaseURL()
-			registryClient = http.NewDockerRegistry(url, creds.Username, creds.AccessKey, dockerPushTimeout)
+			registryClient = http.NewDockerRegistry(url, creds.Username, creds.AccessKey, registryAuthenticateTimeout)
 
 			return nil
 		},

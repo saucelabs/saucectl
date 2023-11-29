@@ -23,7 +23,7 @@ import (
 func PushCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "push",
-		Short:        "push docker image to Sauce Labs container registry",
+		Short:        "Push a Docker image to the Sauce Labs Container Registry.",
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
@@ -56,7 +56,7 @@ func PushCommand() *cobra.Command {
 }
 
 func pushDockerImage(imageName, username, password string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), dockerPushTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), registryPushTimeout)
 	defer cancel()
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
@@ -86,7 +86,7 @@ func pushDockerImage(imageName, username, password string) error {
 	// Print the push output
 	_, err = io.Copy(os.Stdout, out)
 	if err != nil {
-		return fmt.Errorf("failed to copy push output: %v", err)
+		return fmt.Errorf("failed to print the output: %v", err)
 	}
 
 	return nil
