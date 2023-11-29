@@ -45,7 +45,6 @@ func PushCommand() *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			auth, err := registryClient.Login(context.Background())
-			fmt.Println("auth: ", auth)
 			if err != nil {
 				return fmt.Errorf("failed to fetch auth token: %v", err)
 			}

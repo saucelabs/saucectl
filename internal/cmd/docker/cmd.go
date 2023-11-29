@@ -30,7 +30,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 
 			reg := region.FromString(regio)
 			if reg == region.None {
-				return errors.New("empty region. Options: us-west-1, eu-central-1")
+				return errors.New("invalid region. Options: us-west-1, eu-central-1")
 			}
 
 			creds := credentials.Get()
