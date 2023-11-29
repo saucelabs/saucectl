@@ -209,7 +209,7 @@ func TestIsStorageReference(t *testing.T) {
 			args: args{
 				link: "storage:filename=dummyfilename.zip",
 			},
-			want: false,
+			want: true,
 		},
 		{
 			name: "Bad Reference",
