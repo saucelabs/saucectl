@@ -18,8 +18,9 @@ type DockerRegistry struct {
 }
 
 type AuthToken struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	ExpiresAt time.Time `json:"expires_at"`
+	Username  string    `json:"username"`
+	Password  string    `json:"password"`
 }
 
 func NewDockerRegistry(url, username, accessKey string, timeout time.Duration) DockerRegistry {
@@ -31,8 +32,8 @@ func NewDockerRegistry(url, username, accessKey string, timeout time.Duration) D
 	}
 }
 
-func (c *DockerRegistry) Login(ctx context.Context) (AuthToken, error) {
-	url := fmt.Sprintf("%s/v1alpha1/hosted/container-registry/authorization-token", c.URL)
+func (c *DockerRegistry) Login(ctx context.Context, repo string) (AuthToken, error) {
+	url := fmt.Sprintf("%s/v1alpha1/hosted/container-registry/%s/authorization-token", c.URL, repo)
 
 	var authToken AuthToken
 	req, err := NewRequestWithContext(ctx, http.MethodPost, url, nil)

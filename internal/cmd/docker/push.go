@@ -27,6 +27,9 @@ func PushCommand() *cobra.Command {
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
+				return errors.New("no Sauce Labs repo specified")
+			}
+			if len(args) == 1 || args[1] == "" {
 				return errors.New("no docker image specified")
 			}
 
@@ -44,11 +47,13 @@ func PushCommand() *cobra.Command {
 			}()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			auth, err := registryClient.Login(context.Background())
+			repo := args[0]
+			image := args[1]
+			auth, err := registryClient.Login(context.Background(), repo)
 			if err != nil {
 				return fmt.Errorf("failed to fetch auth token: %v", err)
 			}
-			return pushDockerImage(args[0], auth.Username, auth.Password)
+			return pushDockerImage(image, auth.Username, auth.Password)
 		},
 	}
 
