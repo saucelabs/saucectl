@@ -798,7 +798,6 @@ func (ini *initializer) initializeBatchCypress(initCfg *initConfig) (*initConfig
 	}
 
 	if frameworkVersionSupported && initCfg.platformName != "" && initCfg.browserName != "" {
-		//initCfg.platformName = strings.ToLower(initCfg.platformName)
 		initCfg.browserName = strings.ToLower(initCfg.browserName)
 		if err = checkBrowserAndPlatform(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion, initCfg.browserName, initCfg.platformName); err != nil {
 			errs = append(errs, err)
@@ -892,7 +891,6 @@ func (ini *initializer) initializeBatchPlaywright(initCfg *initConfig) (*initCon
 	}
 
 	if frameworkVersionSupported && initCfg.platformName != "" && initCfg.browserName != "" {
-		//initCfg.platformName = strings.ToLower(initCfg.platformName)
 		initCfg.browserName = strings.ToLower(initCfg.browserName)
 		if err = checkBrowserAndPlatform(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion, initCfg.browserName, initCfg.platformName); err != nil {
 			errs = append(errs, err)
@@ -937,7 +935,6 @@ func (ini *initializer) initializeBatchTestcafe(initCfg *initConfig) (*initConfi
 	}
 
 	if frameworkVersionSupported && initCfg.platformName != "" && initCfg.browserName != "" {
-		//initCfg.platformName = strings.ToLower(initCfg.platformName)
 		initCfg.browserName = strings.ToLower(initCfg.browserName)
 		if err = checkBrowserAndPlatform(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion, initCfg.browserName, initCfg.platformName); err != nil {
 			errs = append(errs, err)
