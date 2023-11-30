@@ -43,7 +43,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	}
 
 	flags := cmd.PersistentFlags()
-	flags.StringVarP(&regio, "region", "r", "us-west-1", "The Sauce Labs region. Options: us-west-1, eu-central-1.")
+	flags.StringVarP(&regio, "login-region", "r", "us-west-1", "The Sauce Labs region to login. Options: us-west-1, eu-central-1.")
 
 	cmd.AddCommand(
 		PushCommand(),
