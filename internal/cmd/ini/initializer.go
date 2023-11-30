@@ -308,6 +308,8 @@ func metaToBrowsers(metadatas []framework.Metadata, frameworkName, frameworkVers
 	}
 
 	for _, p := range platformsToMap {
+		p.PlatformName = normalizePlatform(p.PlatformName)
+
 		if frameworkName == testcafe.Kind && p.PlatformName == "ios" {
 			continue
 		}
@@ -326,6 +328,11 @@ func metaToBrowsers(metadatas []framework.Metadata, frameworkName, frameworkVers
 
 	sort.Strings(browsers)
 	return browsers, platforms
+}
+
+func normalizePlatform(platform string) string {
+	r := strings.NewReplacer("macos", "macOS", "windows", "Windows")
+	return r.Replace(platform)
 }
 
 func correctBrowsers(browsers []string) []string {
@@ -493,6 +500,35 @@ func (ini *initializer) initializePlaywright() (*initConfig, error) {
 	}
 
 	err = ini.askPlatform(cfg, frameworkMetadatas)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = survey.AskOne(
+		&survey.Input{
+			Message: "Playwright project name. " +
+				"Leave empty if your configuration does not contain projects:",
+			Default: "",
+			Help:    "See https://playwright.dev/docs/test-projects",
+		},
+		&cfg.playwrightProject,
+		survey.WithShowCursor(true),
+		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err),
+	)
+	if err != nil {
+		return &initConfig{}, err
+	}
+
+	err = survey.AskOne(
+		&survey.Input{
+			Message: "Test file pattern to match against:",
+			Default: ".*.spec.js",
+			Help:    "See https://playwright.dev/docs/test-projects",
+		},
+		&cfg.testMatch,
+		survey.WithShowCursor(true),
+		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err),
+	)
 	if err != nil {
 		return &initConfig{}, err
 	}
@@ -762,7 +798,7 @@ func (ini *initializer) initializeBatchCypress(initCfg *initConfig) (*initConfig
 	}
 
 	if frameworkVersionSupported && initCfg.platformName != "" && initCfg.browserName != "" {
-		initCfg.platformName = strings.ToLower(initCfg.platformName)
+		//initCfg.platformName = strings.ToLower(initCfg.platformName)
 		initCfg.browserName = strings.ToLower(initCfg.browserName)
 		if err = checkBrowserAndPlatform(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion, initCfg.browserName, initCfg.platformName); err != nil {
 			errs = append(errs, err)
@@ -856,7 +892,7 @@ func (ini *initializer) initializeBatchPlaywright(initCfg *initConfig) (*initCon
 	}
 
 	if frameworkVersionSupported && initCfg.platformName != "" && initCfg.browserName != "" {
-		initCfg.platformName = strings.ToLower(initCfg.platformName)
+		//initCfg.platformName = strings.ToLower(initCfg.platformName)
 		initCfg.browserName = strings.ToLower(initCfg.browserName)
 		if err = checkBrowserAndPlatform(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion, initCfg.browserName, initCfg.platformName); err != nil {
 			errs = append(errs, err)
@@ -901,7 +937,7 @@ func (ini *initializer) initializeBatchTestcafe(initCfg *initConfig) (*initConfi
 	}
 
 	if frameworkVersionSupported && initCfg.platformName != "" && initCfg.browserName != "" {
-		initCfg.platformName = strings.ToLower(initCfg.platformName)
+		//initCfg.platformName = strings.ToLower(initCfg.platformName)
 		initCfg.browserName = strings.ToLower(initCfg.browserName)
 		if err = checkBrowserAndPlatform(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion, initCfg.browserName, initCfg.platformName); err != nil {
 			errs = append(errs, err)
