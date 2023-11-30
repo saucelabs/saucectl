@@ -11,9 +11,9 @@ import (
 )
 
 var (
-	registryClient              http.DockerRegistry
-	registryAuthenticateTimeout = 1 * time.Minute
-	registryPushTimeout         = 1 * time.Minute
+	registryClient        http.DockerRegistry
+	registryClientTimeout = 1 * time.Minute
+	registryPushTimeout   = 1 * time.Minute
 )
 
 func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
@@ -36,7 +36,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 
 			creds := credentials.Get()
 			url := reg.APIBaseURL()
-			registryClient = http.NewDockerRegistry(url, creds.Username, creds.AccessKey, registryAuthenticateTimeout)
+			registryClient = http.NewDockerRegistry(url, creds.Username, creds.AccessKey, registryClientTimeout)
 
 			return nil
 		},
