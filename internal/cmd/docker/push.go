@@ -62,7 +62,7 @@ func PushCommand() *cobra.Command {
 	}
 
 	flags := cmd.PersistentFlags()
-	flags.DurationVar(&timeout, "timeout", 5*time.Minute, "Configure the timeout duration for docker push. Default: 5 minutes.")
+	flags.DurationVar(&timeout, "timeout", 5*time.Minute, "Configure the timeout duration for docker push.")
 	flags.BoolVar(&quiet, "quiet", false, "Run silently, suppressing output messages.")
 
 	return cmd
