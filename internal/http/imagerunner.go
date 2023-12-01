@@ -21,6 +21,12 @@ type ImageRunner struct {
 	Creds  iam.Credentials
 }
 
+type AuthToken struct {
+	ExpiresAt time.Time `json:"expires_at"`
+	Username  string    `json:"username"`
+	Password  string    `json:"password"`
+}
+
 func NewImageRunner(url string, creds iam.Credentials, timeout time.Duration) ImageRunner {
 	return ImageRunner{
 		Client: NewRetryableClient(timeout),
@@ -240,4 +246,37 @@ func (c *ImageRunner) newServerError(status int, short string, body []byte) erro
 	se.Short = short
 
 	return &se
+}
+
+func (c *ImageRunner) RegistryLogin(ctx context.Context, repo string) (AuthToken, error) {
+	url := fmt.Sprintf("%s/v1alpha1/hosted/container-registry/%s/authorization-token", c.URL, repo)
+
+	var authToken AuthToken
+	req, err := NewRequestWithContext(ctx, http.MethodPost, url, nil)
+	if err != nil {
+		return authToken, err
+	}
+	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
+
+	r, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return authToken, err
+	}
+
+	resp, err := c.Client.Do(r)
+	if err != nil {
+		return authToken, err
+	}
+	defer resp.Body.Close()
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return authToken, err
+	}
+	if resp.StatusCode != 200 {
+		return authToken, fmt.Errorf("unexpected status code: %d, response: %s", resp.StatusCode, string(data))
+	}
+
+	err = json.Unmarshal(data, &authToken)
+	return authToken, err
 }
