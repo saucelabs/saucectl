@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	imageRunnerService    http.ImageRunner
-	registryClientTimeout = 1 * time.Minute
+	imageRunnerService        http.ImageRunner
+	imageRunnerServiceTimeout = 1 * time.Minute
 )
 
 func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
@@ -34,7 +34,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 
 			creds := reg.Credentials()
 			url := reg.APIBaseURL()
-			imageRunnerService = http.NewImageRunner(url, creds, registryClientTimeout)
+			imageRunnerService = http.NewImageRunner(url, creds, imageRunnerServiceTimeout)
 
 			return nil
 		},
