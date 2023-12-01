@@ -31,6 +31,9 @@ func PushCommand() *cobra.Command {
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
+				return errors.New("no repo name specified")
+			}
+			if len(args) == 1 || args[1] == "" {
 				return errors.New("no docker image specified")
 			}
 
