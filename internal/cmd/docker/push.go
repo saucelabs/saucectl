@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -26,14 +27,11 @@ func PushCommand() *cobra.Command {
 	var quiet bool
 
 	cmd := &cobra.Command{
-		Use:          "push <repo> <image_name>",
+		Use:          "push <image_name>",
 		Short:        "Push a Docker image to the Sauce Labs Container Registry.",
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
-				return errors.New("no repo name specified")
-			}
-			if len(args) == 1 || args[1] == "" {
 				return errors.New("no docker image specified")
 			}
 
@@ -51,8 +49,12 @@ func PushCommand() *cobra.Command {
 			}()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			repo := args[0]
-			image := args[1]
+			image := args[0]
+			repo, err := extractRepo(image)
+			fmt.Println("repo: ", repo)
+			if err != nil {
+				return err
+			}
 			auth, err := imageRunnerService.RegistryLogin(context.Background(), repo)
 			if err != nil {
 				return fmt.Errorf("failed to fetch auth token: %v", err)
@@ -107,4 +109,13 @@ func pushDockerImage(imageName, username, password string, timeout time.Duration
 	}
 
 	return nil
+}
+
+func extractRepo(input string) (string, error) {
+	// Example: us-west4-docker.pkg.dev/sauce-hto-p-jy6b/sauce-devx-team-sauce/ubuntu:experiment
+	items := strings.Split(input, "/")
+	if len(items) >= 3 {
+		return items[2], nil
+	}
+	return "", fmt.Errorf("unable to extract repo name from the input")
 }

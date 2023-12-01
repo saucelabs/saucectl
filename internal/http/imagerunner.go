@@ -250,6 +250,7 @@ func (c *ImageRunner) newServerError(status int, short string, body []byte) erro
 
 func (c *ImageRunner) RegistryLogin(ctx context.Context, repo string) (AuthToken, error) {
 	url := fmt.Sprintf("%s/v1alpha1/hosted/container-registry/%s/authorization-token", c.URL, repo)
+	fmt.Println("url: ", url)
 
 	var authToken AuthToken
 	req, err := NewRequestWithContext(ctx, http.MethodPost, url, nil)
