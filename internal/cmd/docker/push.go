@@ -91,7 +91,7 @@ func pushDockerImage(imageName, username, password string) error {
 	// Print the push output
 	_, err = io.Copy(os.Stdout, out)
 	if err != nil {
-		return fmt.Errorf("failed to print the output: %v", err)
+		return fmt.Errorf("docker output: %v", err)
 	}
 
 	return nil
