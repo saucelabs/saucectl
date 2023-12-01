@@ -24,8 +24,3 @@ suites:
     useRemoteTests: true
     tests:
       - 6308e6d4c08b875edeee138e
-
-  - name: "Upload and Run tests for saucectl-example"
-    projectName: saucectl-example
-    testMatch:
-      - tests/api/*
