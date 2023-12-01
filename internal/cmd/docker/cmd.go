@@ -34,7 +34,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 				return errors.New("invalid region: must be one of [us-west-1, eu-central-1]")
 			}
 
-			creds := credentials.Get()
+			creds := reg.Credentials()
 			url := reg.APIBaseURL()
 			registryClient = http.NewDockerRegistry(url, creds.Username, creds.AccessKey, registryClientTimeout)
 
