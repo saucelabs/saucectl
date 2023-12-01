@@ -36,28 +36,30 @@ var (
 type initConfig struct {
 	batchMode bool
 
-	frameworkName    string
-	frameworkVersion string
-	cypressJSON      string
-	dockerImage      string
-	app              string
-	testApp          string
-	otherApps        []string
-	platformName     string
-	browserName      string
-	region           string
-	artifactWhen     config.When
-	artifactWhenStr  string
-	device           config.Device
-	emulator         config.Emulator
-	simulator        config.Simulator
-	deviceFlag       flags.Device
-	emulatorFlag     flags.Emulator
-	simulatorFlag    flags.Simulator
-	concurrency      int
-	username         string
-	accessKey        string
-	workload         string
+	frameworkName     string
+	frameworkVersion  string
+	cypressJSON       string
+	dockerImage       string
+	app               string
+	testApp           string
+	otherApps         []string
+	platformName      string
+	browserName       string
+	region            string
+	artifactWhen      config.When
+	artifactWhenStr   string
+	device            config.Device
+	emulator          config.Emulator
+	simulator         config.Simulator
+	deviceFlag        flags.Device
+	emulatorFlag      flags.Emulator
+	simulatorFlag     flags.Simulator
+	concurrency       int
+	username          string
+	accessKey         string
+	workload          string
+	playwrightProject string
+	testMatch         string
 }
 
 var (
