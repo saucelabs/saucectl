@@ -57,8 +57,6 @@ func (c *DockerRegistry) Login(ctx context.Context, repo string) (AuthToken, err
 		return authToken, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(&authToken); err != nil {
-		return authToken, err
-	}
-	return authToken, nil
+	err = json.NewDecoder(resp.Body).Decode(&authToken)
+	return authToken, err
 }
