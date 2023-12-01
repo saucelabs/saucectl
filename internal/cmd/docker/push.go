@@ -52,7 +52,7 @@ func PushCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			repo := args[0]
 			image := args[1]
-			auth, err := registryClient.Login(context.Background(), repo)
+			auth, err := imageRunnerService.RegistryLogin(context.Background(), repo)
 			if err != nil {
 				return fmt.Errorf("failed to fetch auth token: %v", err)
 			}
@@ -61,7 +61,7 @@ func PushCommand() *cobra.Command {
 	}
 
 	flags := cmd.PersistentFlags()
-	flags.DurationVar(&registryPushTimeout, "registry-push-timeout", 1*time.Minute, "Set timeout for docker push. Default: 1 minute.")
+	flags.DurationVar(&registryPushTimeout, "registry-push-timeout", 1*time.Minute, "Configure the timeout duration for docker push . Default: 1 minute.")
 
 	return cmd
 }
