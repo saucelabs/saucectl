@@ -30,7 +30,9 @@ func configurePlaywright(cfg *initConfig) interface{} {
 				PlatformName: cfg.platformName,
 				Params: playwright.SuiteConfig{
 					BrowserName: cfg.browserName,
+					Project:     cfg.playwrightProject,
 				},
+				TestMatch: []string{cfg.testMatch},
 			},
 		},
 		Artifacts: config.Artifacts{

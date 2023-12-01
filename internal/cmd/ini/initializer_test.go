@@ -860,7 +860,7 @@ func TestConfigure(t *testing.T) {
 				frameworkName:    cypress.Kind,
 				frameworkVersion: "7.5.0",
 				cypressJSON:      dir.Join("cypress.json"),
-				platformName:     "windows 10",
+				platformName:     "Windows 10",
 				browserName:      "chrome",
 				artifactWhen:     config.WhenPass,
 			},
@@ -1039,7 +1039,7 @@ func Test_initializers(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				_, err = c.SendLine("windows 10")
+				_, err = c.SendLine("Windows 10")
 				if err != nil {
 					return err
 				}
@@ -1071,7 +1071,7 @@ func Test_initializers(t *testing.T) {
 				frameworkName:    cypress.Kind,
 				frameworkVersion: "7.5.0",
 				cypressJSON:      dir.Join("cypress.json"),
-				platformName:     "windows 10",
+				platformName:     "Windows 10",
 				browserName:      "chrome",
 				artifactWhen:     config.WhenPass,
 			},
@@ -1099,7 +1099,23 @@ func Test_initializers(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				_, err = c.SendLine("windows 10")
+				_, err = c.SendLine("Windows 10")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Playwright project name. Leave empty if your configuration does not contain projects:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("")
+				if err != nil {
+					return err
+				}
+				_, err = c.ExpectString("Test file pattern to match against:")
+				if err != nil {
+					return err
+				}
+				_, err = c.SendLine("")
 				if err != nil {
 					return err
 				}
@@ -1130,9 +1146,10 @@ func Test_initializers(t *testing.T) {
 			expectedState: &initConfig{
 				frameworkName:    playwright.Kind,
 				frameworkVersion: "1.11.0",
-				platformName:     "windows 10",
+				platformName:     "Windows 10",
 				browserName:      "chromium",
 				artifactWhen:     config.WhenPass,
+				testMatch:        ".*.spec.js",
 			},
 		},
 		{
@@ -1494,9 +1511,9 @@ func Test_metaToBrowsers(t *testing.T) {
 			},
 			wantBrowsers: []string{"chrome", "firefox", "microsoftedge"},
 			wantPlatforms: map[string][]string{
-				"chrome":        {"windows 10"},
-				"firefox":       {"windows 10"},
-				"microsoftedge": {"windows 10"},
+				"chrome":        {"Windows 10"},
+				"firefox":       {"Windows 10"},
+				"microsoftedge": {"Windows 10"},
 			},
 		},
 		{
@@ -1527,7 +1544,7 @@ func Test_metaToBrowsers(t *testing.T) {
 						FrameworkVersion: "1.1.0",
 						Platforms: []framework.Platform{
 							{
-								PlatformName: "windows 10",
+								PlatformName: "Windows 10",
 								BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
 							},
 						},
@@ -1536,9 +1553,9 @@ func Test_metaToBrowsers(t *testing.T) {
 			},
 			wantBrowsers: []string{"chrome", "firefox", "microsoftedge"},
 			wantPlatforms: map[string][]string{
-				"chrome":        {"windows 10"},
-				"firefox":       {"windows 10"},
-				"microsoftedge": {"windows 10"},
+				"chrome":        {"Windows 10"},
+				"firefox":       {"Windows 10"},
+				"microsoftedge": {"Windows 10"},
 			},
 		},
 		{
@@ -1553,7 +1570,7 @@ func Test_metaToBrowsers(t *testing.T) {
 						FrameworkVersion: "1.1.0",
 						Platforms: []framework.Platform{
 							{
-								PlatformName: "windows 10",
+								PlatformName: "Windows 10",
 								BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
 							},
 							{
@@ -1566,9 +1583,9 @@ func Test_metaToBrowsers(t *testing.T) {
 			},
 			wantBrowsers: []string{"chrome", "firefox", "microsoftedge", "safari"},
 			wantPlatforms: map[string][]string{
-				"chrome":        {"macOS 11.00", "windows 10"},
-				"firefox":       {"macOS 11.00", "windows 10"},
-				"microsoftedge": {"macOS 11.00", "windows 10"},
+				"chrome":        {"Windows 10", "macOS 11.00"},
+				"firefox":       {"Windows 10", "macOS 11.00"},
+				"microsoftedge": {"Windows 10", "macOS 11.00"},
 				"safari":        {"macOS 11.00"},
 			},
 		},
@@ -1584,7 +1601,7 @@ func Test_metaToBrowsers(t *testing.T) {
 						FrameworkVersion: "1.2.0",
 						Platforms: []framework.Platform{
 							{
-								PlatformName: "windows 10",
+								PlatformName: "Windows 10",
 								BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
 							},
 						},
@@ -1595,7 +1612,7 @@ func Test_metaToBrowsers(t *testing.T) {
 						FrameworkVersion: "1.1.0",
 						Platforms: []framework.Platform{
 							{
-								PlatformName: "windows 10",
+								PlatformName: "Windows 10",
 								BrowserNames: []string{"googlechrome", "firefox", "microsoftedge"},
 							},
 							{
@@ -1608,9 +1625,9 @@ func Test_metaToBrowsers(t *testing.T) {
 			},
 			wantBrowsers: []string{"chrome", "firefox", "microsoftedge", "safari"},
 			wantPlatforms: map[string][]string{
-				"chrome":        {"macOS 11.00", "windows 10"},
-				"firefox":       {"macOS 11.00", "windows 10"},
-				"microsoftedge": {"macOS 11.00", "windows 10"},
+				"chrome":        {"Windows 10", "macOS 11.00"},
+				"firefox":       {"Windows 10", "macOS 11.00"},
+				"microsoftedge": {"Windows 10", "macOS 11.00"},
 				"safari":        {"macOS 11.00"},
 			},
 		},
@@ -1769,7 +1786,7 @@ func Test_checkBrowserAndPlatform(t *testing.T) {
 			args: args{
 				frameworkName:    testcafe.Kind,
 				frameworkVersion: "1.0.0",
-				platformName:     "windows 10",
+				platformName:     "Windows 10",
 				browserName:      "chrome",
 			},
 			wantErr: nil,
@@ -1779,7 +1796,7 @@ func Test_checkBrowserAndPlatform(t *testing.T) {
 			args: args{
 				frameworkName:    testcafe.Kind,
 				frameworkVersion: "1.0.0",
-				platformName:     "windows 10",
+				platformName:     "Windows 10",
 				browserName:      "webkit",
 			},
 			wantErr: errors.New("webkit: unsupported browser. Supported browsers are: chrome, firefox, safari"),
@@ -1789,10 +1806,10 @@ func Test_checkBrowserAndPlatform(t *testing.T) {
 			args: args{
 				frameworkName:    testcafe.Kind,
 				frameworkVersion: "1.0.0",
-				platformName:     "windows 10",
+				platformName:     "Windows 10",
 				browserName:      "safari",
 			},
-			wantErr: errors.New("safari: unsupported browser on windows 10"),
+			wantErr: errors.New("safari: unsupported browser on Windows 10"),
 		},
 	}
 	for _, tt := range tests {
@@ -2001,7 +2018,7 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 					frameworkName:    cypress.Kind,
 					frameworkVersion: "7.0.0",
 					browserName:      "chrome",
-					platformName:     "windows 10",
+					platformName:     "Windows 10",
 					cypressJSON:      dir.Join("cypress.json"),
 					region:           "us-west-1",
 					artifactWhen:     "fail",
@@ -2011,7 +2028,7 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 				frameworkName:    cypress.Kind,
 				frameworkVersion: "7.0.0",
 				browserName:      "chrome",
-				platformName:     "windows 10",
+				platformName:     "Windows 10",
 				cypressJSON:      dir.Join("cypress.json"),
 				region:           "us-west-1",
 				artifactWhen:     config.WhenFail,
@@ -2142,7 +2159,7 @@ func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 					frameworkName:    testcafe.Kind,
 					frameworkVersion: "1.0.0",
 					browserName:      "chrome",
-					platformName:     "windows 10",
+					platformName:     "Windows 10",
 					region:           "us-west-1",
 					artifactWhen:     "fail",
 				},
@@ -2151,7 +2168,7 @@ func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 				frameworkName:    testcafe.Kind,
 				frameworkVersion: "1.0.0",
 				browserName:      "chrome",
-				platformName:     "windows 10",
+				platformName:     "Windows 10",
 				region:           "us-west-1",
 				artifactWhen:     config.WhenFail,
 			},
@@ -2272,7 +2289,7 @@ func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 					frameworkName:    playwright.Kind,
 					frameworkVersion: "1.0.0",
 					browserName:      "chromium",
-					platformName:     "windows 10",
+					platformName:     "Windows 10",
 					region:           "us-west-1",
 					artifactWhen:     "fail",
 				},
@@ -2281,7 +2298,7 @@ func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 				frameworkName:    playwright.Kind,
 				frameworkVersion: "1.0.0",
 				browserName:      "chromium",
-				platformName:     "windows 10",
+				platformName:     "Windows 10",
 				region:           "us-west-1",
 				artifactWhen:     config.WhenFail,
 			},
