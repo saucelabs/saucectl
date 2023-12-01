@@ -116,5 +116,5 @@ func extractRepo(input string) (string, error) {
 	if len(items) >= 3 {
 		return items[2], nil
 	}
-	return "", fmt.Errorf("unable to extract repo name from the input")
+	return "", fmt.Errorf("unable to extract repo name from docker image")
 }
