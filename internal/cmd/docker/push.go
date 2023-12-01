@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/registry"
@@ -21,8 +22,10 @@ import (
 )
 
 func PushCommand() *cobra.Command {
+	var registryPushTimeout time.Duration
+
 	cmd := &cobra.Command{
-		Use:          "push",
+		Use:          "push <REPO> <IMAGE_NAME>",
 		Short:        "Push a Docker image to the Sauce Labs Container Registry.",
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
@@ -53,14 +56,17 @@ func PushCommand() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to fetch auth token: %v", err)
 			}
-			return pushDockerImage(image, auth.Username, auth.Password)
+			return pushDockerImage(image, auth.Username, auth.Password, registryPushTimeout)
 		},
 	}
+
+	flags := cmd.PersistentFlags()
+	flags.DurationVar(&registryPushTimeout, "registry-push-timeout", 1*time.Minute, "Set timeout for docker push. Default: 1 minute.")
 
 	return cmd
 }
 
-func pushDockerImage(imageName, username, password string) error {
+func pushDockerImage(imageName, username, password string, registryPushTimeout time.Duration) error {
 	ctx, cancel := context.WithTimeout(context.Background(), registryPushTimeout)
 	defer cancel()
 

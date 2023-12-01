@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/spf13/cobra"
@@ -13,7 +12,6 @@ import (
 var (
 	registryClient        http.DockerRegistry
 	registryClientTimeout = 1 * time.Minute
-	registryPushTimeout   = 1 * time.Minute
 )
 
 func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
@@ -43,7 +41,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	}
 
 	flags := cmd.PersistentFlags()
-	flags.StringVarP(&regio, "login-region", "r", "us-west-1", "The Sauce Labs region to login. Options: us-west-1, eu-central-1.")
+	flags.StringVarP(&regio, "region", "r", "us-west-1", "The Sauce Labs region to login. Options: us-west-1, eu-central-1.")
 
 	cmd.AddCommand(
 		PushCommand(),
