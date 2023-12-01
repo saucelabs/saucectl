@@ -51,7 +51,6 @@ func PushCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			image := args[0]
 			repo, err := extractRepo(image)
-			fmt.Println("repo: ", repo)
 			if err != nil {
 				return err
 			}
