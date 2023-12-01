@@ -72,7 +72,7 @@ func pushDockerImage(imageName, username, password string, registryPushTimeout t
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return fmt.Errorf("failed to create Docker client: %v", err)
+		return fmt.Errorf("failed to create docker client: %v", err)
 	}
 
 	authConfig := registry.AuthConfig{
