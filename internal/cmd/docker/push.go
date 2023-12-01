@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"regexp"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -23,11 +22,11 @@ import (
 )
 
 func PushCommand() *cobra.Command {
-	var registryPushTimeout time.Duration
+	var timeout time.Duration
 	var quiet bool
 
 	cmd := &cobra.Command{
-		Use:          "push <IMAGE_NAME>",
+		Use:          "push <repo> <image_name>",
 		Short:        "Push a Docker image to the Sauce Labs Container Registry.",
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
@@ -49,28 +48,25 @@ func PushCommand() *cobra.Command {
 			}()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			image := args[0]
-			repo, err := extractRepo(image)
-			if err != nil {
-				return err
-			}
+			repo := args[0]
+			image := args[1]
 			auth, err := imageRunnerService.RegistryLogin(context.Background(), repo)
 			if err != nil {
 				return fmt.Errorf("failed to fetch auth token: %v", err)
 			}
-			return pushDockerImage(image, auth.Username, auth.Password, registryPushTimeout, quiet)
+			return pushDockerImage(image, auth.Username, auth.Password, timeout, quiet)
 		},
 	}
 
 	flags := cmd.PersistentFlags()
-	flags.DurationVar(&registryPushTimeout, "registry-push-timeout", 5*time.Minute, "Configure the timeout duration for docker push. Default: 5 minutes.")
+	flags.DurationVar(&timeout, "timeout", 5*time.Minute, "Configure the timeout duration for docker push. Default: 5 minutes.")
 	flags.BoolVar(&quiet, "quiet", false, "Run silently, suppressing output messages.")
 
 	return cmd
 }
 
-func pushDockerImage(imageName, username, password string, registryPushTimeout time.Duration, quiet bool) error {
-	ctx, cancel := context.WithTimeout(context.Background(), registryPushTimeout)
+func pushDockerImage(imageName, username, password string, timeout time.Duration, quiet bool) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
@@ -108,22 +104,4 @@ func pushDockerImage(imageName, username, password string, registryPushTimeout t
 	}
 
 	return nil
-}
-
-func extractRepo(input string) (string, error) {
-	// Example: us-west4-docker.pkg.dev/sauce-hto-p-jy6b/repo-name/sub-folder/../ubuntu:experiment
-	regexPattern := `^us-west4-docker\.pkg\.dev/sauce-hto-p-jy6b/([^/]+)/.*$`
-
-	re := regexp.MustCompile(regexPattern)
-	if !re.MatchString(input) {
-		return "", fmt.Errorf("invalid docker image name")
-	}
-
-	matches := re.FindStringSubmatch(input)
-
-	if len(matches) >= 2 {
-		return matches[1], nil
-	}
-
-	return "", fmt.Errorf("unable to extract repo name from the image")
 }
