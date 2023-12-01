@@ -16,7 +16,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/cmd/imagerunner"
 	"github.com/saucelabs/saucectl/internal/cmd/ini"
 	"github.com/saucelabs/saucectl/internal/cmd/jobs"
-	"github.com/saucelabs/saucectl/internal/cmd/new"
 	"github.com/saucelabs/saucectl/internal/cmd/run"
 	"github.com/saucelabs/saucectl/internal/cmd/signup"
 	"github.com/saucelabs/saucectl/internal/cmd/storage"
@@ -60,7 +59,6 @@ func main() {
 	}
 
 	cmd.AddCommand(
-		new.Command(),
 		run.Command(),
 		configure.Command(),
 		ini.Command(),
