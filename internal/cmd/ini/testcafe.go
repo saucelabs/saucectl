@@ -45,9 +45,9 @@ func TestCafeCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&cfg.frameworkVersion, "framework-version", "v", "", "Framework version.")
-	cmd.Flags().StringVarP(&cfg.platformName, "platform", "p", "", "Platform name.")
-	cmd.Flags().StringVarP(&cfg.browserName, "browser", "b", "", "Browser name.")
+	cmd.Flags().StringVar(&cfg.frameworkVersion, "framework-version", "", "Framework version.")
+	cmd.Flags().StringVar(&cfg.platformName, "platform", "", "Platform name.")
+	cmd.Flags().StringVar(&cfg.browserName, "browser", "", "Browser name.")
 	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts.download.when", "fail", "When to download artifacts.")
 
 	return cmd
