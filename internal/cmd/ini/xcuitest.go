@@ -2,10 +2,58 @@ package ini
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/rs/zerolog/log"
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/segment"
+	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
+	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
+
+func XCUITestCmd() *cobra.Command {
+	cfg := &initConfig{
+		frameworkName: xcuitest.Kind,
+	}
+
+	cmd := &cobra.Command{
+		Use:          "xcuitest",
+		Short:        "Bootstrap an XCUITest project.",
+		SilenceUsage: true,
+		Run: func(cmd *cobra.Command, args []string) {
+			tracker := segment.DefaultTracker
+
+			go func() {
+				tracker.Collect(
+					cases.Title(language.English).String(cmds.FullName(cmd)),
+					usage.Properties{}.SetFlags(cmd.Flags()),
+				)
+				_ = tracker.Close()
+			}()
+
+			err := Run(cmd, cfg)
+			if err != nil {
+				log.Err(err).Msg("failed to execute init command")
+				os.Exit(1)
+			}
+		},
+	}
+
+	cmd.Flags().StringVarP(&cfg.username, "username", "u", "", "Sauce Labs username.")
+	cmd.Flags().StringVarP(&cfg.accessKey, "accessKey", "a", "", "Sauce Labs access key.")
+	cmd.Flags().StringVarP(&cfg.region, "region", "r", "us-west-1", "Sauce Labs region. Options: us-west-1, eu-central-1.")
+	cmd.Flags().StringVar(&cfg.app, "app", "", "Path to application under test")
+	cmd.Flags().StringVarP(&cfg.testApp, "testApp", "t", "", "Path to test application")
+	cmd.Flags().StringSliceVarP(&cfg.otherApps, "otherApps", "o", []string{}, "Path to other applications")
+	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts.download.when", "fail", "Defines when to download artifacts")
+	cmd.Flags().Var(&cfg.simulatorFlag, "simulator", "Specifies the iOS simulator to use for testing")
+	cmd.Flags().Var(&cfg.deviceFlag, "device", "Specifies the device to use for testing")
+	return cmd
+}
 
 func configureXCUITest(cfg *initConfig) interface{} {
 	suites := []xcuitest.Suite{}

@@ -4,15 +4,61 @@ import (
 	// imports embed to load .sauceignore
 	_ "embed"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	v1 "github.com/saucelabs/saucectl/internal/cypress/v1"
 	"github.com/saucelabs/saucectl/internal/cypress/v1alpha"
+	"github.com/saucelabs/saucectl/internal/segment"
+	"github.com/saucelabs/saucectl/internal/usage"
+	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
+
+func CypressCmd() *cobra.Command {
+	cfg := &initConfig{
+		frameworkName: cypress.Kind,
+	}
+
+	cmd := &cobra.Command{
+		Use:          "cypress",
+		Short:        "Bootstrap a Cypress project.",
+		SilenceUsage: true,
+		Run: func(cmd *cobra.Command, args []string) {
+			tracker := segment.DefaultTracker
+
+			go func() {
+				tracker.Collect(
+					cases.Title(language.English).String(cmds.FullName(cmd)),
+					usage.Properties{}.SetFlags(cmd.Flags()),
+				)
+				_ = tracker.Close()
+			}()
+
+			err := Run(cmd, cfg)
+			if err != nil {
+				log.Err(err).Msg("failed to execute init command")
+				os.Exit(1)
+			}
+		},
+	}
+
+	cmd.Flags().StringVarP(&cfg.username, "username", "u", "", "Sauce Labs username.")
+	cmd.Flags().StringVarP(&cfg.accessKey, "accessKey", "a", "", "Sauce Labs access key.")
+	cmd.Flags().StringVarP(&cfg.region, "region", "r", "us-west-1", "Sauce Labs region. Options: us-west-1, eu-central-1.")
+	cmd.Flags().StringVarP(&cfg.frameworkVersion, "frameworkVersion", "v", "", "framework version to be used")
+	cmd.Flags().StringVar(&cfg.cypressJSON, "cypress.config", "", "path to cypress.json file (cypress only)")
+	cmd.Flags().StringVarP(&cfg.platformName, "platformName", "p", "", "Platform name")
+	cmd.Flags().StringVarP(&cfg.browserName, "browserName", "b", "", "Browser name")
+	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts.download.when", "fail", "defines when to download artifacts")
+	return cmd
+}
 
 func configureCypress(cfg *initConfig) interface{} {
 	versions := strings.Split(cfg.frameworkVersion, ".")

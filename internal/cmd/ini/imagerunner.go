@@ -2,11 +2,56 @@ package ini
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/fatih/color"
+	"github.com/rs/zerolog/log"
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
+	"github.com/saucelabs/saucectl/internal/segment"
+	"github.com/saucelabs/saucectl/internal/usage"
+	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
+
+func ImageRunnerCmd() *cobra.Command {
+	cfg := &initConfig{
+		frameworkName: imagerunner.Kind,
+	}
+
+	cmd := &cobra.Command{
+		Use:          "imagerunner",
+		Short:        "Bootstrap an Image Runner (Sauce Orchestrate) project.",
+		SilenceUsage: true,
+		Run: func(cmd *cobra.Command, args []string) {
+			tracker := segment.DefaultTracker
+
+			go func() {
+				tracker.Collect(
+					cases.Title(language.English).String(cmds.FullName(cmd)),
+					usage.Properties{}.SetFlags(cmd.Flags()),
+				)
+				_ = tracker.Close()
+			}()
+
+			err := Run(cmd, cfg)
+			if err != nil {
+				log.Err(err).Msg("failed to execute init command")
+				os.Exit(1)
+			}
+		},
+	}
+
+	cmd.Flags().StringVarP(&cfg.username, "username", "u", "", "Sauce Labs username.")
+	cmd.Flags().StringVarP(&cfg.accessKey, "accessKey", "a", "", "Sauce Labs access key.")
+	cmd.Flags().StringVarP(&cfg.region, "region", "r", "us-west-1", "Sauce Labs region. Options: us-west-1, eu-central-1.")
+	cmd.Flags().StringVar(&cfg.dockerImage, "dockerImage", "", "Docker image to use.")
+	cmd.Flags().StringVar(&cfg.workload, "workload", "", "Workload to use.")
+	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts.download.when", "fail", "defines when to download artifacts")
+	return cmd
+}
 
 func configureImageRunner(cfg *initConfig) interface{} {
 	return imagerunner.Project{

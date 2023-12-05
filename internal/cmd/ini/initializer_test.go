@@ -770,14 +770,9 @@ func TestConfigure(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{infoReader: ir, deviceReader: dr, vmdReader: er},
+			ini: &initializer{infoReader: ir, deviceReader: dr, vmdReader: er, cfg: &initConfig{}},
 			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.configure()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
+				return i.configure()
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
@@ -846,14 +841,9 @@ func TestConfigure(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{infoReader: ir, deviceReader: dr, vmdReader: er},
+			ini: &initializer{infoReader: ir, deviceReader: dr, vmdReader: er, cfg: &initConfig{}},
 			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.configure()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
+				return i.configure()
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
@@ -1057,14 +1047,9 @@ func Test_initializers(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{infoReader: ir},
+			ini: &initializer{infoReader: ir, cfg: &initConfig{}},
 			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.initializeCypress()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
+				return i.initializeCypress()
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
@@ -1133,14 +1118,9 @@ func Test_initializers(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{infoReader: ir},
+			ini: &initializer{infoReader: ir, cfg: &initConfig{}},
 			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.initializePlaywright()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
+				return i.initializePlaywright()
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
@@ -1193,14 +1173,9 @@ func Test_initializers(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{infoReader: ir},
+			ini: &initializer{infoReader: ir, cfg: &initConfig{}},
 			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.initializeTestcafe()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
+				return i.initializeTestcafe()
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
@@ -1260,14 +1235,9 @@ func Test_initializers(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{infoReader: ir},
+			ini: &initializer{infoReader: ir, cfg: &initConfig{}},
 			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.initializeXCUITest()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
+				return i.initializeXCUITest()
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
@@ -1327,14 +1297,9 @@ func Test_initializers(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{infoReader: ir},
+			ini: &initializer{infoReader: ir, cfg: &initConfig{}},
 			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.initializeXCUITest()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
+				return i.initializeXCUITest()
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
@@ -1402,14 +1367,9 @@ func Test_initializers(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{infoReader: ir, vmdReader: er},
+			ini: &initializer{infoReader: ir, vmdReader: er, cfg: &initConfig{}},
 			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.initializeEspresso()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
+				return i.initializeEspresso()
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{
@@ -1454,14 +1414,9 @@ func Test_initializers(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{infoReader: ir},
+			ini: &initializer{infoReader: ir, cfg: &initConfig{}},
 			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.initializeImageRunner()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
+				return i.initializeImageRunner()
 			},
 			startState: &initConfig{},
 			expectedState: &initConfig{

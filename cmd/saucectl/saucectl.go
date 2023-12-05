@@ -61,7 +61,7 @@ func main() {
 	cmd.AddCommand(
 		run.Command(),
 		configure.Command(),
-		ini.Command(),
+		ini.Command(cmd.PersistentPreRun),
 		signup.Command(),
 		completion.Command(),
 		storage.Command(cmd.PersistentPreRun),
