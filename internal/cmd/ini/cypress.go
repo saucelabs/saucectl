@@ -62,7 +62,7 @@ func configureCypress(cfg *initConfig) interface{} {
 	versions := strings.Split(cfg.frameworkVersion, ".")
 	version, err := strconv.Atoi(versions[0])
 	if err != nil {
-		log.Err(err).Msg("failed to parse frameworkVersion")
+		log.Err(err).Msg("failed to parse framework version")
 	}
 	if version < 10 {
 		return v1alpha.Project{
