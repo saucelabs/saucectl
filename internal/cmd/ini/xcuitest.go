@@ -43,12 +43,13 @@ func XCUITestCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&cfg.app, "app", "", "Path to application under test")
-	cmd.Flags().StringVarP(&cfg.testApp, "testApp", "t", "", "Path to test application")
-	cmd.Flags().StringSliceVarP(&cfg.otherApps, "otherApps", "o", []string{}, "Path to other applications")
-	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts.download.when", "fail", "Defines when to download artifacts")
-	cmd.Flags().Var(&cfg.simulatorFlag, "simulator", "Specifies the iOS simulator to use for testing")
-	cmd.Flags().Var(&cfg.deviceFlag, "device", "Specifies the device to use for testing")
+	cmd.Flags().StringVar(&cfg.app, "app", "", "Path to application under test.")
+	cmd.Flags().StringVarP(&cfg.testApp, "test-app", "t", "", "Path to test application.")
+	cmd.Flags().StringSliceVarP(&cfg.otherApps, "other-apps", "o", []string{}, "Path to additional applications.")
+	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts.download.when", "fail", "When to download artifacts.")
+	cmd.Flags().Var(&cfg.simulatorFlag, "simulator", "The iOS simulator to use for testing.")
+	cmd.Flags().Var(&cfg.deviceFlag, "device", "The device to use for testing.")
+
 	return cmd
 }
 

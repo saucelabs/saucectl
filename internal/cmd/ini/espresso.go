@@ -43,12 +43,12 @@ func EspressoCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&cfg.app, "app", "", "path to application to test (espresso/xcuitest only)")
-	cmd.Flags().StringVarP(&cfg.testApp, "testApp", "t", "", "path to test application (espresso/xcuitest only)")
-	cmd.Flags().StringSliceVarP(&cfg.otherApps, "otherApps", "o", []string{}, "path to other applications (espresso/xcuitest only)")
-	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts.download.when", "fail", "defines when to download artifacts")
-	cmd.Flags().Var(&cfg.emulatorFlag, "emulator", "Specifies the Android emulator to use for testing")
-	cmd.Flags().Var(&cfg.deviceFlag, "device", "Specifies the device to use for testing")
+	cmd.Flags().StringVar(&cfg.app, "app", "", "Path to application under test.")
+	cmd.Flags().StringVarP(&cfg.testApp, "test-app", "t", "", "Path to test application.")
+	cmd.Flags().StringSliceVarP(&cfg.otherApps, "other-apps", "o", []string{}, "Path to additional applications.")
+	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts.download.when", "fail", "When to download artifacts.")
+	cmd.Flags().Var(&cfg.emulatorFlag, "emulator", "Android emulator to use for testing.")
+	cmd.Flags().Var(&cfg.deviceFlag, "device", "Real device to use for testing.")
 	return cmd
 }
 

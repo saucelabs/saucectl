@@ -45,11 +45,11 @@ func PlaywrightCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&cfg.frameworkVersion, "frameworkVersion", "v", "", "framework version to be used")
-	cmd.Flags().StringSliceVarP(&cfg.otherApps, "otherApps", "o", []string{}, "path to other applications (espresso/xcuitest only)")
-	cmd.Flags().StringVarP(&cfg.platformName, "platformName", "p", "", "Specified platform name")
-	cmd.Flags().StringVarP(&cfg.browserName, "browserName", "b", "", "Specifies browser name")
-	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts.download.when", "fail", "defines when to download artifacts")
+	cmd.Flags().StringVarP(&cfg.frameworkVersion, "framework-version", "v", "", "Framework version.")
+	cmd.Flags().StringVarP(&cfg.platformName, "platform", "p", "", "Platform name.")
+	cmd.Flags().StringVarP(&cfg.browserName, "browser", "b", "", "Browser name.")
+	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts.download.when", "fail", "When to download artifacts.")
+
 	return cmd
 }
 

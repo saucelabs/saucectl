@@ -44,9 +44,10 @@ func ImageRunnerCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&cfg.dockerImage, "dockerImage", "", "Docker image to use.")
-	cmd.Flags().StringVar(&cfg.workload, "workload", "", "Workload to use.")
-	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts.download.when", "fail", "defines when to download artifacts")
+	cmd.Flags().StringVar(&cfg.dockerImage, "image", "", "Docker image to use.")
+	cmd.Flags().StringVar(&cfg.workload, "workload", "", "Type of work performed. Options: 'webdriver', 'other'.")
+	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts.download.when", "fail", "When to download artifacts.")
+
 	return cmd
 }
 
