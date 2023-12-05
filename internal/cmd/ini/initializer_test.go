@@ -1617,7 +1617,7 @@ func Test_metaToBrowsers(t *testing.T) {
 				t.Errorf("metaToBrowsers() got = %v, want %v", gotBrowsers, tt.wantBrowsers)
 			}
 			if !reflect.DeepEqual(gotPlatforms, tt.wantPlatforms) {
-				t.Errorf("metaToBrowsers() got1 = %v, want %v", gotPlatforms, tt.wantPlatforms)
+				t.Errorf("metaToBrowsers() got = %v, want %v", gotPlatforms, tt.wantPlatforms)
 			}
 		})
 	}
@@ -1942,7 +1942,7 @@ func Test_checkEmulators(t *testing.T) {
 				t.Errorf("checkEmulators() got = %v, want %v", got, tt.want)
 			}
 			if !reflect.DeepEqual(errs, tt.wantErrs) {
-				t.Errorf("checkEmulators() got1 = %v, want %v", errs, tt.wantErrs)
+				t.Errorf("checkEmulators() got = %v, want %v", errs, tt.wantErrs)
 			}
 		})
 	}
@@ -2085,7 +2085,7 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 				t.Errorf("initializeBatchCypress() got = %v, want %v", ini.cfg, tt.want)
 			}
 			if !reflect.DeepEqual(errs, tt.wantErrs) {
-				t.Errorf("initializeBatchCypress() got1 = %v, want %v", errs, tt.wantErrs)
+				t.Errorf("initializeBatchCypress() got = %v, want %v", errs, tt.wantErrs)
 			}
 		})
 	}
@@ -2221,7 +2221,7 @@ func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 				t.Errorf("initializeBatchTestcafe() got = %v, want %v", ini.cfg, tt.want)
 			}
 			if !reflect.DeepEqual(errs, tt.wantErrs) {
-				t.Errorf("initializeBatchTestcafe() got1 = %v, want %v", errs, tt.wantErrs)
+				t.Errorf("initializeBatchTestcafe() got = %v, want %v", errs, tt.wantErrs)
 			}
 		})
 	}
@@ -2353,7 +2353,7 @@ func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 				t.Errorf("initializeBatchPlaywright() got = %v, want %v", ini.cfg, tt.want)
 			}
 			if !reflect.DeepEqual(errs, tt.wantErrs) {
-				t.Errorf("initializeBatchPlaywright() got1 = %v, want %v", errs, tt.wantErrs)
+				t.Errorf("initializeBatchPlaywright() got = %v, want %v", errs, tt.wantErrs)
 			}
 		})
 	}
@@ -2508,7 +2508,7 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 				t.Errorf("initializeBatchXcuitest() got = %v, want %v", ini.cfg, tt.want)
 			}
 			if !reflect.DeepEqual(errs, tt.wantErrs) {
-				t.Errorf("initializeBatchXcuitest() got1 = %v, want %v", errs, tt.wantErrs)
+				t.Errorf("initializeBatchXcuitest() got = %v, want %v", errs, tt.wantErrs)
 			}
 		})
 	}
@@ -2661,7 +2661,7 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 				t.Errorf("initializeBatchEspresso() got = %v, want %v", ini.cfg, tt.want)
 			}
 			if !reflect.DeepEqual(errs, tt.wantErrs) {
-				t.Errorf("initializeBatchEspresso() got1 = %v, want %v", errs, tt.wantErrs)
+				t.Errorf("initializeBatchEspresso() got = %v, want %v", errs, tt.wantErrs)
 			}
 		})
 	}
@@ -2759,7 +2759,7 @@ func Test_initializer_initializeBatchImageRunner(t *testing.T) {
 				t.Errorf("initializeBatchImageRunner() got = %v, want %v", ini.cfg, tt.want)
 			}
 			if !reflect.DeepEqual(errs, tt.wantErrs) {
-				t.Errorf("initializeBatchImageRunner() got1 = %v, want %v", errs, tt.wantErrs)
+				t.Errorf("initializeBatchImageRunner() got = %v, want %v", errs, tt.wantErrs)
 			}
 		})
 	}
