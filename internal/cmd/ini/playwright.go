@@ -48,6 +48,8 @@ func PlaywrightCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&cfg.frameworkVersion, "framework-version", "v", "", "Framework version.")
 	cmd.Flags().StringVarP(&cfg.platformName, "platform", "p", "", "Platform name.")
 	cmd.Flags().StringVarP(&cfg.browserName, "browser", "b", "", "Browser name.")
+	cmd.Flags().StringVar(&cfg.playwrightProject, "project", "", "Playwright project name.")
+	cmd.Flags().StringSliceVar(&cfg.testMatch, "test-match", []string{".*.spec.js"}, "Test file pattern to match against.")
 	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts.download.when", "fail", "When to download artifacts.")
 
 	return cmd
@@ -76,7 +78,7 @@ func configurePlaywright(cfg *initConfig) interface{} {
 					BrowserName: cfg.browserName,
 					Project:     cfg.playwrightProject,
 				},
-				TestMatch: []string{cfg.testMatch},
+				TestMatch: cfg.testMatch,
 			},
 		},
 		Artifacts: config.Artifacts{

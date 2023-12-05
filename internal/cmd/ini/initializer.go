@@ -494,19 +494,21 @@ func (ini *initializer) initializePlaywright() error {
 		return err
 	}
 
+	var pattern string
 	err = survey.AskOne(
 		&survey.Input{
 			Message: "Test file pattern to match against:",
 			Default: ".*.spec.js",
 			Help:    "See https://playwright.dev/docs/test-projects",
 		},
-		&ini.cfg.testMatch,
+		&pattern,
 		survey.WithShowCursor(true),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err),
 	)
 	if err != nil {
 		return err
 	}
+	ini.cfg.testMatch = []string{pattern}
 
 	return ini.askDownloadWhen()
 }

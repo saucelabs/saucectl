@@ -56,7 +56,7 @@ type initConfig struct {
 	concurrency       int
 	workload          string
 	playwrightProject string
-	testMatch         string
+	testMatch         []string
 }
 
 var (
