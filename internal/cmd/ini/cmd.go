@@ -32,6 +32,7 @@ var (
 )
 
 var noPrompt = false
+var regionName = "us-west-1"
 
 type initConfig struct {
 	frameworkName     string
@@ -97,12 +98,15 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	flags := cmd.PersistentFlags()
 
 	flags.BoolVar(&noPrompt, "no-prompt", false, "Disable interactive prompts.")
+	flags.StringVarP(&regionName, "region", "r", "us-west-1", "Sauce Labs region. Options: us-west-1, eu-central-1.")
 
 	return cmd
 }
 
 // Run runs the command
 func Run(cmd *cobra.Command, cfg *initConfig) error {
+	cfg.region = regionName
+
 	if noPrompt {
 		return noPromptMode(cmd, cfg)
 	}

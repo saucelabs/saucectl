@@ -49,7 +49,6 @@ func CypressCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&cfg.region, "region", "r", "us-west-1", "Sauce Labs region. Options: us-west-1, eu-central-1.")
 	cmd.Flags().StringVarP(&cfg.frameworkVersion, "frameworkVersion", "v", "", "framework version to be used")
 	cmd.Flags().StringVar(&cfg.cypressJSON, "cypress.config", "", "path to cypress.json file (cypress only)")
 	cmd.Flags().StringVarP(&cfg.platformName, "platformName", "p", "", "Platform name")

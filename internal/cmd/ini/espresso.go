@@ -43,7 +43,6 @@ func EspressoCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&cfg.region, "region", "r", "us-west-1", "Sauce Labs region. Options: us-west-1, eu-central-1.")
 	cmd.Flags().StringVar(&cfg.app, "app", "", "path to application to test (espresso/xcuitest only)")
 	cmd.Flags().StringVarP(&cfg.testApp, "testApp", "t", "", "path to test application (espresso/xcuitest only)")
 	cmd.Flags().StringSliceVarP(&cfg.otherApps, "otherApps", "o", []string{}, "path to other applications (espresso/xcuitest only)")

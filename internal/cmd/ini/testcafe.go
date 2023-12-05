@@ -45,7 +45,6 @@ func TestCafeCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&cfg.region, "region", "r", "us-west-1", "Sauce Labs region. Options: us-west-1, eu-central-1.")
 	cmd.Flags().StringVarP(&cfg.frameworkVersion, "frameworkVersion", "v", "", "framework version to be used")
 	cmd.Flags().StringVarP(&cfg.platformName, "platformName", "p", "", "Specified platform name")
 	cmd.Flags().StringVarP(&cfg.browserName, "browserName", "b", "", "Specifies browser name")
