@@ -124,14 +124,17 @@ func Run(cmd *cobra.Command, cfg *initConfig) error {
 		}
 	}
 
-	regio, err := askRegion(stdio)
-	if err != nil {
-		return err
+	var err error
+	if cfg.region == "" {
+		cfg.region, err = askRegion(stdio)
+		if err != nil {
+			return err
+		}
 	}
 
-	ini := newInitializer(stdio, creds, regio, cfg)
+	ini := newInitializer(stdio, creds, cfg)
 
-	err = ini.checkCredentials(regio)
+	err = ini.checkCredentials(regionName)
 	if err != nil {
 		return err
 	}
@@ -140,8 +143,6 @@ func Run(cmd *cobra.Command, cfg *initConfig) error {
 	if err != nil {
 		return err
 	}
-
-	cfg.region = regio
 
 	ccy, err := ini.userService.Concurrency(context.Background())
 	if err != nil {
@@ -169,7 +170,7 @@ func noPromptMode(cmd *cobra.Command, cfg *initConfig) error {
 		return errors.New(msg.EmptyCredentials)
 	}
 
-	ini := newInitializer(stdio, creds, cfg.region, cfg)
+	ini := newInitializer(stdio, creds, cfg)
 
 	var errs []error
 	switch cfg.frameworkName {

@@ -56,8 +56,8 @@ type initializer struct {
 }
 
 // newInitializer creates a new initializer instance.
-func newInitializer(stdio terminal.Stdio, creds iam.Credentials, regio string, cfg *initConfig) *initializer {
-	r := region.FromString(regio)
+func newInitializer(stdio terminal.Stdio, creds iam.Credentials, cfg *initConfig) *initializer {
+	r := region.FromString(cfg.region)
 	tc := http.NewTestComposer(r.APIBaseURL(), creds, testComposerTimeout)
 	rc := http.NewRDCService(r.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 	rs := http.NewResto(r.APIBaseURL(), creds.Username, creds.AccessKey, restoTimeout)
