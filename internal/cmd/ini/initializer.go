@@ -149,25 +149,6 @@ func (ini *initializer) checkCredentials(region string) error {
 	return err
 }
 
-func (ini *initializer) askFramework() (string, error) {
-	frameworks, err := ini.infoReader.Frameworks(context.Background())
-	if err != nil {
-		return "", err
-	}
-
-	p := &survey.Select{
-		Message: "Select framework:",
-		Options: frameworks,
-	}
-
-	var selectedFramework string
-	err = survey.AskOne(p, &selectedFramework, survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
-	if selectedFramework == "" {
-		return "", errors.New("interrupting configuration")
-	}
-	return strings.ToLower(selectedFramework), err
-}
-
 type completor func(string) []string
 
 /* When translation */
