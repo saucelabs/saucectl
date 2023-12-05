@@ -94,7 +94,7 @@ func (ini *initializer) configure() error {
 
 func askCredentials(stdio terminal.Stdio) (iam.Credentials, error) {
 	creds := iam.Credentials{}
-	q := &survey.Input{Message: "SauceLabs username:"}
+	q := &survey.Input{Message: "Sauce Labs username:"}
 
 	err := survey.AskOne(q, &creds.Username,
 		survey.WithValidator(survey.Required),
@@ -104,7 +104,7 @@ func askCredentials(stdio terminal.Stdio) (iam.Credentials, error) {
 		return creds, err
 	}
 
-	q = &survey.Input{Message: "SauceLabs access key:"}
+	q = &survey.Input{Message: "Sauce Labs access key:"}
 	err = survey.AskOne(q, &creds.AccessKey,
 		survey.WithValidator(survey.Required),
 		survey.WithShowCursor(true),

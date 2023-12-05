@@ -884,7 +884,7 @@ func TestAskCredentials(t *testing.T) {
 		{
 			name: "Default",
 			procedure: func(c *expect.Console) error {
-				_, err := c.ExpectString("SauceLabs username:")
+				_, err := c.ExpectString("Sauce Labs username:")
 				if err != nil {
 					return err
 				}
@@ -892,7 +892,7 @@ func TestAskCredentials(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				_, err = c.ExpectString("SauceLabs access key:")
+				_, err = c.ExpectString("Sauce Labs access key:")
 				if err != nil {
 					return err
 				}
