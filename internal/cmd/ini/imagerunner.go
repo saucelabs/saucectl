@@ -44,8 +44,6 @@ func ImageRunnerCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&cfg.username, "username", "u", "", "Sauce Labs username.")
-	cmd.Flags().StringVarP(&cfg.accessKey, "accessKey", "a", "", "Sauce Labs access key.")
 	cmd.Flags().StringVarP(&cfg.region, "region", "r", "us-west-1", "Sauce Labs region. Options: us-west-1, eu-central-1.")
 	cmd.Flags().StringVar(&cfg.dockerImage, "dockerImage", "", "Docker image to use.")
 	cmd.Flags().StringVar(&cfg.workload, "workload", "", "Workload to use.")

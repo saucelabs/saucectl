@@ -53,8 +53,6 @@ type initConfig struct {
 	emulatorFlag      flags.Emulator
 	simulatorFlag     flags.Simulator
 	concurrency       int
-	username          string
-	accessKey         string
 	workload          string
 	playwrightProject string
 	testMatch         string

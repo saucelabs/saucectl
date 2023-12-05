@@ -45,8 +45,6 @@ func PlaywrightCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&cfg.username, "username", "u", "", "Sauce Labs username.")
-	cmd.Flags().StringVarP(&cfg.accessKey, "accessKey", "a", "", "Sauce Labs access key.")
 	cmd.Flags().StringVarP(&cfg.region, "region", "r", "us-west-1", "Sauce Labs region. Options: us-west-1, eu-central-1.")
 	cmd.Flags().StringVarP(&cfg.frameworkVersion, "frameworkVersion", "v", "", "framework version to be used")
 	cmd.Flags().StringSliceVarP(&cfg.otherApps, "otherApps", "o", []string{}, "path to other applications (espresso/xcuitest only)")
