@@ -172,17 +172,17 @@ func noPromptMode(cmd *cobra.Command, cfg *initConfig) error {
 	var errs []error
 	switch cfg.frameworkName {
 	case cypress.Kind:
-		cfg, errs = ini.initializeBatchCypress(cfg)
+		errs = ini.initializeBatchCypress()
 	case espresso.Kind:
-		cfg, errs = ini.initializeBatchEspresso(cmd.Flags(), cfg)
+		errs = ini.initializeBatchEspresso(cmd.Flags())
 	case playwright.Kind:
-		cfg, errs = ini.initializeBatchPlaywright(cfg)
+		errs = ini.initializeBatchPlaywright()
 	case testcafe.Kind:
-		cfg, errs = ini.initializeBatchTestcafe(cfg)
+		errs = ini.initializeBatchTestcafe()
 	case xcuitest.Kind:
-		cfg, errs = ini.initializeBatchXcuitest(cmd.Flags(), cfg)
+		errs = ini.initializeBatchXcuitest(cmd.Flags())
 	case imagerunner.Kind:
-		cfg, errs = ini.initializeBatchImageRunner(cfg)
+		errs = ini.initializeBatchImageRunner()
 	default:
 		println()
 		color.HiRed("Invalid framework selected")
