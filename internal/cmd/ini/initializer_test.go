@@ -79,7 +79,7 @@ func executeQuestionTest(t *testing.T, test questionTest) {
 	require.Nil(t, err)
 
 	if !reflect.DeepEqual(test.ini.cfg, test.expectedState) {
-		t.Errorf("got: %v, want: %v", test.startState, test.expectedState)
+		t.Errorf("got: %v, want: %v", test.ini.cfg, test.expectedState)
 	}
 
 	// Close the slave end of the pty, and read the remaining bytes from the master end.
@@ -121,7 +121,6 @@ type questionTest struct {
 	ini           *initializer
 	execution     func(*initializer, *initConfig) error
 	procedure     func(*expect.Console) error
-	startState    *initConfig
 	expectedState *initConfig
 }
 
@@ -138,7 +137,6 @@ func TestAskRegion(t *testing.T) {
 				cfg.region = regio
 				return err
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{region: region.USWest1.String()},
 		},
 		{
@@ -152,7 +150,6 @@ func TestAskRegion(t *testing.T) {
 				cfg.region = regio
 				return err
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{region: region.USWest1.String()},
 		},
 		{
@@ -167,7 +164,6 @@ func TestAskRegion(t *testing.T) {
 				cfg.region = regio
 				return err
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{region: region.EUCentral1.String()},
 		},
 		{
@@ -182,7 +178,6 @@ func TestAskRegion(t *testing.T) {
 				cfg.region = regio
 				return err
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{region: region.EUCentral1.String()},
 		},
 	}
@@ -204,7 +199,6 @@ func TestAskDownloadWhen(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askDownloadWhen()
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{artifactWhen: config.WhenFail},
 		},
 		{
@@ -217,7 +211,6 @@ func TestAskDownloadWhen(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askDownloadWhen()
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{artifactWhen: config.WhenPass},
 		},
 		{
@@ -230,7 +223,6 @@ func TestAskDownloadWhen(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askDownloadWhen()
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{artifactWhen: config.WhenAlways},
 		},
 	}
@@ -253,7 +245,6 @@ func TestAskDevice(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askDevice(devs)
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{device: config.Device{Name: "Google Pixel 3"}},
 		},
 		{
@@ -266,7 +257,6 @@ func TestAskDevice(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askDevice(devs)
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{device: config.Device{Name: "Google Pixel 4"}},
 		},
 	}
@@ -314,7 +304,6 @@ func TestAskEmulator(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askEmulator(vmds)
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{emulator: config.Emulator{Name: "Google Pixel 3 Emulator", PlatformVersions: []string{"9.0"}}},
 		},
 		{
@@ -349,7 +338,6 @@ func TestAskEmulator(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askEmulator(vmds)
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{emulator: config.Emulator{Name: "Google Pixel 4 Emulator", PlatformVersions: []string{"7.0"}}},
 		},
 	}
@@ -428,8 +416,12 @@ func TestAskPlatform(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askPlatform(metas)
 			},
-			startState:    &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
-			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", browserName: "chrome", platformName: "Windows 10"},
+			expectedState: &initConfig{
+				frameworkName:    testcafe.Kind,
+				frameworkVersion: "1.5.0",
+				browserName:      "chrome",
+				platformName:     "Windows 10",
+			},
 		},
 		{
 			name: "macOS",
@@ -465,8 +457,12 @@ func TestAskPlatform(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askPlatform(metas)
 			},
-			startState:    &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
-			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", platformName: "macOS 11.00", browserName: "firefox"},
+			expectedState: &initConfig{
+				frameworkName:    testcafe.Kind,
+				frameworkVersion: "1.5.0",
+				platformName:     "macOS 11.00",
+				browserName:      "firefox",
+			},
 		},
 	}
 	for _, tt := range testCases {
@@ -535,8 +531,10 @@ func TestAskVersion(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askVersion(metas)
 			},
-			startState:    &initConfig{frameworkName: testcafe.Kind},
-			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
+			expectedState: &initConfig{
+				frameworkName:    testcafe.Kind,
+				frameworkVersion: "1.5.0",
+			},
 		},
 		{
 			name: "Second",
@@ -568,8 +566,10 @@ func TestAskVersion(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askVersion(metas)
 			},
-			startState:    &initConfig{frameworkName: testcafe.Kind},
-			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.3.0"},
+			expectedState: &initConfig{
+				frameworkName:    testcafe.Kind,
+				frameworkVersion: "1.3.0",
+			},
 		},
 	}
 	for _, tt := range testCases {
@@ -632,8 +632,9 @@ func TestAskFile(t *testing.T) {
 					return nil
 				}, nil, &cfg.app)
 			},
-			startState:    &initConfig{},
-			expectedState: &initConfig{app: dir.Join("android-app.apk")},
+			expectedState: &initConfig{
+				app: dir.Join("android-app.apk"),
+			},
 		},
 	}
 	for _, tt := range testCases {
@@ -758,7 +759,6 @@ func TestConfigure(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.configure()
 			},
-			startState: &initConfig{},
 			expectedState: &initConfig{
 				frameworkName: espresso.Kind,
 				app:           dir.Join("android-app.apk"),
@@ -828,7 +828,6 @@ func TestConfigure(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.configure()
 			},
-			startState: &initConfig{},
 			expectedState: &initConfig{
 				frameworkName:    cypress.Kind,
 				frameworkVersion: "7.5.0",
@@ -887,7 +886,6 @@ func TestAskCredentials(t *testing.T) {
 				}
 				return nil
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{},
 		},
 	}
@@ -1041,9 +1039,6 @@ func Test_initializers(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.initializeCypress()
 			},
-			startState: &initConfig{
-				frameworkName: cypress.Kind,
-			},
 			expectedState: &initConfig{
 				frameworkName:    cypress.Kind,
 				frameworkVersion: "7.5.0",
@@ -1119,7 +1114,6 @@ func Test_initializers(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.initializePlaywright()
 			},
-			startState: &initConfig{},
 			expectedState: &initConfig{
 				frameworkName:    playwright.Kind,
 				frameworkVersion: "1.11.0",
@@ -1179,7 +1173,6 @@ func Test_initializers(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.initializeTestcafe()
 			},
-			startState: &initConfig{},
 			expectedState: &initConfig{
 				frameworkName:    testcafe.Kind,
 				frameworkVersion: "1.12.0",
@@ -1246,7 +1239,6 @@ func Test_initializers(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.initializeXCUITest()
 			},
-			startState: &initConfig{},
 			expectedState: &initConfig{
 				frameworkName: xcuitest.Kind,
 				app:           dir.Join("ios-app.ipa"),
@@ -1313,7 +1305,6 @@ func Test_initializers(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.initializeXCUITest()
 			},
-			startState: &initConfig{},
 			expectedState: &initConfig{
 				frameworkName: xcuitest.Kind,
 				app:           dir.Join("ios-folder-app.app"),
@@ -1389,7 +1380,6 @@ func Test_initializers(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.initializeEspresso()
 			},
-			startState: &initConfig{},
 			expectedState: &initConfig{
 				frameworkName: espresso.Kind,
 				app:           dir.Join("android-app.apk"),
@@ -1441,7 +1431,6 @@ func Test_initializers(t *testing.T) {
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.initializeImageRunner()
 			},
-			startState: &initConfig{},
 			expectedState: &initConfig{
 				frameworkName: imagerunner.Kind,
 				dockerImage:   "ubuntu:latest",
