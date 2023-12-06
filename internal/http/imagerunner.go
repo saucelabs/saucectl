@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -206,25 +207,24 @@ func (c *ImageRunner) GetLogs(ctx context.Context, id string) (string, error) {
 	return c.doGetStr(ctx, urlResponse.URL)
 }
 
-func (c *ImageRunner) getWebsocketUrl() string {
+func (c *ImageRunner) getWebsocketURL() string {
 
-	wsUrl := c.URL
-	wsUrl = strings.Replace(wsUrl, "https://", "wss://", 1)
-	wsUrl = strings.Replace(wsUrl, "http://", "ws://", 1)
-	return wsUrl
+	wsURL := c.URL
+	wsURL = strings.Replace(wsURL, "https://", "wss://", 1)
+	wsURL = strings.Replace(wsURL, "http://", "ws://", 1)
+	return wsURL
 }
 
 func (c *ImageRunner) OpenAsyncEventsWebsocket(ctx context.Context, id string) (*websocket.Conn, error) {
 	// dummy request so that we build basic auth header consistently
-	dummy_url := fmt.Sprintf("%s/v1alpha1/hosted/async/image/runners/%s/events", c.URL, id)
-	req, err := http.NewRequest("GET", dummy_url, nil)
+	dummyURL := fmt.Sprintf("%s/v1alpha1/hosted/async/image/runners/%s/events", c.URL, id)
+	req, err := http.NewRequest("GET", dummyURL, nil)
 	if err != nil {
 		panic(err)
 	}
 	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
-	log.Info().Str("c.Creds.Username", c.Creds.Username).Str("c.Creds.AccessKey", c.Creds.AccessKey).Msg("AKAK1 OpenAsyncEventsWebsocket")
 
-	url := fmt.Sprintf("%s/v1alpha1/hosted/async/image/runners/%s/events", c.getWebsocketUrl(), id)
+	url := fmt.Sprintf("%s/v1alpha1/hosted/async/image/runners/%s/events", c.getWebsocketURL(), id)
 	headers := http.Header{}
 	headers.Add("Authorization", req.Header.Get("Authorization"))
 	ws, resp, err := websocket.DefaultDialer.Dial(
@@ -238,6 +238,42 @@ func (c *ImageRunner) OpenAsyncEventsWebsocket(ctx context.Context, id string) (
 		return nil, err
 	}
 	return ws, nil
+}
+
+func (c *ImageRunner) OpenAsyncEventsSSE(ctx context.Context, id string) (*http.Response, error) {
+	url := fmt.Sprintf("%s/v1alpha1/hosted/async/image/runners/%s/events", c.URL, id)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Accept", "text/event-stream")
+	req.Header.Set("Connection", "keep-alive")
+	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
+
+	client := http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected server response (%d)", resp.StatusCode)
+	}
+	return resp, nil
+}
+
+func (c *ImageRunner) OpenAsyncEventsTransport(ctx context.Context, id string) (imagerunner.AsyncEventTransportI, error) {
+	transport := os.Getenv("LIVELOGS")
+	if transport == "websocket" {
+		ws, err := c.OpenAsyncEventsWebsocket(ctx, id)
+		return imagerunner.NewWebsocketAsyncEventTransport(ws), err
+	}
+	if transport == "sse" {
+		resp, err := c.OpenAsyncEventsSSE(ctx, id)
+		return imagerunner.NewSseAsyncEventTransport(resp), err
+	}
+	return nil, nil
 }
 
 func (c *ImageRunner) doGetStr(ctx context.Context, url string) (string, error) {

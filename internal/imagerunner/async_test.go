@@ -30,7 +30,7 @@ func TestLogEvent(t *testing.T) {
 	logEvent, ok := event.(*LogEvent)
 	assert.True(t, ok)
 	assert.Len(t, logEvent.Lines, 1)
-	assert.Equal(t, "1", logEvent.Lines[0].Id)
+	assert.Equal(t, "1", logEvent.Lines[0].ID)
 	assert.Equal(t, "hello", logEvent.Lines[0].Message)
 	assert.Equal(t, "mycontainer", logEvent.Lines[0].ContainerName)
 }

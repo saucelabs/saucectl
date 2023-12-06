@@ -13,7 +13,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog/log"
 	"github.com/ryanuber/go-glob"
 	szip "github.com/saucelabs/saucectl/internal/archive/zip"
@@ -31,7 +30,7 @@ type ImageRunner interface {
 	StopRun(ctx context.Context, id string) error
 	DownloadArtifacts(ctx context.Context, id string) (io.ReadCloser, error)
 	GetLogs(ctx context.Context, id string) (string, error)
-	OpenAsyncEventsWebsocket(ctx context.Context, id string) (*websocket.Conn, error)
+	OpenAsyncEventsTransport(ctx context.Context, id string) (imagerunner.AsyncEventTransportI, error)
 }
 
 type SuiteTimeoutError struct {
@@ -286,8 +285,9 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 
 	go func() {
 		err := r.HandleAsyncEvents(ctx, runner.ID)
-		// TODO: handle error better
-		log.Err(err).Msg("Async event handler failed.")
+		if err != nil {
+			log.Err(err).Msg("Async event handler failed.")
+		}
 	}()
 
 	var run imagerunner.Runner
@@ -421,29 +421,37 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (
 }
 
 func (r *ImgRunner) HandleAsyncEvents(ctx context.Context, id string) error {
-	conn, err := r.RunnerService.OpenAsyncEventsWebsocket(ctx, id)
+	transport, err := r.RunnerService.OpenAsyncEventsTransport(ctx, id)
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+
+	if transport == nil {
+		return nil
+	}
+
+	defer transport.Close()
 
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			_, msg, err := conn.ReadMessage()
+			msg, err := transport.ReadMessage()
 			if err != nil {
 				return err
 			}
-			event, err := r.asyncEventManager.ParseEvent(string(msg))
+			if msg == "" {
+				continue
+			}
+			event, err := r.asyncEventManager.ParseEvent(msg)
 			if err != nil {
 				return err
 			}
 			if event.GetKind() == "log" {
 				logEvent := event.(*imagerunner.LogEvent)
 				for _, line := range logEvent.Lines {
-					log.Info().Msgf("[%s, %s] %s", line.ContainerName, line.Id, line.Message)
+					log.Info().Msgf("[%s, %s] %s", line.ContainerName, line.ID, line.Message)
 				}
 			} else if event.GetKind() == "notice" {
 				noticeEvent := event.(*imagerunner.NoticeEvent)

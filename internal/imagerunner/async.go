@@ -1,10 +1,13 @@
 package imagerunner
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 
+	"github.com/gorilla/websocket"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 )
 
@@ -126,7 +129,7 @@ func (a *AsyncEvent) GetRunnerID() string {
 }
 
 type LogLine struct {
-	Id            string `json:"id"`
+	ID            string `json:"id"`
 	ContainerName string `json:"containerName"`
 	Message       string `json:"message"`
 }
@@ -145,6 +148,56 @@ type NoticeEvent struct {
 	AsyncEvent
 	Severity string `json:"severity"`
 	Message  string `json:"message"`
+}
+
+type AsyncEventTransportI interface {
+	ReadMessage() (string, error)
+	Close() error
+}
+
+type WebsocketAsyncEventTransport struct {
+	ws *websocket.Conn
+}
+
+func NewWebsocketAsyncEventTransport(ws *websocket.Conn) *WebsocketAsyncEventTransport {
+	return &WebsocketAsyncEventTransport{
+		ws: ws,
+	}
+}
+
+func (aet *WebsocketAsyncEventTransport) ReadMessage() (string, error) {
+	_, msg, err := aet.ws.ReadMessage()
+	return string(msg), err
+}
+
+func (aet *WebsocketAsyncEventTransport) Close() error {
+	return aet.ws.Close()
+}
+
+type SseAsyncEventTransport struct {
+	httpResponse *http.Response
+	scanner      *bufio.Scanner
+}
+
+func NewSseAsyncEventTransport(httpResponse *http.Response) *SseAsyncEventTransport {
+	scanner := bufio.NewScanner(httpResponse.Body)
+	scanner.Split(bufio.ScanLines)
+	return &SseAsyncEventTransport{
+		httpResponse: httpResponse,
+		scanner:      scanner,
+	}
+}
+
+func (aet *SseAsyncEventTransport) ReadMessage() (string, error) {
+	if aet.scanner.Scan() {
+		msg := aet.scanner.Bytes()
+		return string(msg), nil
+	}
+	return "", aet.scanner.Err()
+}
+
+func (aet *SseAsyncEventTransport) Close() error {
+	return aet.httpResponse.Body.Close()
 }
 
 type AsyncEventManagerI interface {
