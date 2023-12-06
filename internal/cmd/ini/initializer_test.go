@@ -1120,7 +1120,7 @@ func Test_initializers(t *testing.T) {
 				platformName:     "Windows 10",
 				browserName:      "chromium",
 				artifactWhen:     config.WhenPass,
-				testMatch:        ".*.spec.js",
+				testMatch:        []string{".*.spec.js"},
 			},
 		},
 		{
