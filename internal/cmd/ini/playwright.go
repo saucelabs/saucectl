@@ -45,7 +45,7 @@ func PlaywrightCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&cfg.frameworkVersion, "framework-version", "", "Framework version.")
+	cmd.Flags().StringVar(&cfg.frameworkVersion, "version", "", "Playwright version.")
 	cmd.Flags().StringVar(&cfg.platformName, "platform", "", "Platform name.")
 	cmd.Flags().StringVar(&cfg.browserName, "browser", "", "Browser name.")
 	cmd.Flags().StringVar(&cfg.playwrightProject, "project", "", "Playwright project name.")
