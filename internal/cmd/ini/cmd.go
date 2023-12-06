@@ -37,7 +37,7 @@ var regionName = "us-west-1"
 type initConfig struct {
 	frameworkName     string
 	frameworkVersion  string
-	cypressJSON       string
+	cypressConfigFile string
 	dockerImage       string
 	app               string
 	testApp           string

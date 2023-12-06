@@ -449,7 +449,7 @@ func (ini *initializer) initializeCypress() error {
 		"Cypress configuration file:",
 		frameworkExtValidator(ini.cfg.frameworkName, ini.cfg.frameworkVersion),
 		completeBasic,
-		&ini.cfg.cypressJSON,
+		&ini.cfg.cypressConfigFile,
 	)
 	if err != nil {
 		return err
@@ -740,7 +740,7 @@ func (ini *initializer) initializeBatchCypress() []error {
 	if ini.cfg.frameworkVersion == "" {
 		errs = append(errs, fmt.Errorf(msg.MissingFrameworkVersion, ini.cfg.frameworkName))
 	}
-	if ini.cfg.cypressJSON == "" {
+	if ini.cfg.cypressConfigFile == "" {
 		errs = append(errs, errors.New(msg.MissingCypressConfig))
 	}
 	if ini.cfg.platformName == "" {
@@ -764,9 +764,9 @@ func (ini *initializer) initializeBatchCypress() []error {
 		}
 	}
 
-	if ini.cfg.cypressJSON != "" {
+	if ini.cfg.cypressConfigFile != "" {
 		verifier := frameworkExtValidator(ini.cfg.frameworkName, "")
-		if err := verifier(ini.cfg.cypressJSON); err != nil {
+		if err := verifier(ini.cfg.cypressConfigFile); err != nil {
 			errs = append(errs, err)
 		}
 	}
