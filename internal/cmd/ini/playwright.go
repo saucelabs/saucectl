@@ -50,7 +50,7 @@ func PlaywrightCmd() *cobra.Command {
 	cmd.Flags().StringVar(&cfg.browserName, "browser", "", "Browser name.")
 	cmd.Flags().StringVar(&cfg.playwrightProject, "project", "", "Playwright project name.")
 	cmd.Flags().StringSliceVar(&cfg.testMatch, "test-match", []string{".*.spec.js"}, "Test file pattern to match against.")
-	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts.download.when", "fail", "When to download artifacts.")
+	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts-download-when", "fail", "When to download artifacts.")
 
 	return cmd
 }

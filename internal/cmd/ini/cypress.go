@@ -50,10 +50,10 @@ func CypressCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&cfg.frameworkVersion, "framework-version", "", "Framework version.")
-	cmd.Flags().StringVar(&cfg.cypressJSON, "cypress.config", "", "Path to cypress.json.")
+	cmd.Flags().StringVar(&cfg.cypressJSON, "cypress-config", "", "Path to cypress.json.")
 	cmd.Flags().StringVar(&cfg.platformName, "platform", "", "Platform name.")
 	cmd.Flags().StringVar(&cfg.browserName, "browser", "", "Browser name.")
-	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts.download.when", "fail", "When to download artifacts.")
+	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts-download-when", "fail", "When to download artifacts.")
 
 	return cmd
 }
