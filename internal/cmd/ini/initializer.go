@@ -52,11 +52,12 @@ type initializer struct {
 	deviceReader devices.Reader
 	vmdReader    vmd.Reader
 	userService  iam.UserService
+	cfg          *initConfig
 }
 
 // newInitializer creates a new initializer instance.
-func newInitializer(stdio terminal.Stdio, creds iam.Credentials, regio string) *initializer {
-	r := region.FromString(regio)
+func newInitializer(stdio terminal.Stdio, creds iam.Credentials, cfg *initConfig) *initializer {
+	r := region.FromString(cfg.region)
 	tc := http.NewTestComposer(r.APIBaseURL(), creds, testComposerTimeout)
 	rc := http.NewRDCService(r.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
 	rs := http.NewResto(r.APIBaseURL(), creds.Username, creds.AccessKey, restoTimeout)
@@ -68,16 +69,12 @@ func newInitializer(stdio terminal.Stdio, creds iam.Credentials, regio string) *
 		deviceReader: &rc,
 		vmdReader:    &rs,
 		userService:  &us,
+		cfg:          cfg,
 	}
 }
 
-func (ini *initializer) configure() (*initConfig, error) {
-	fName, err := ini.askFramework()
-	if err != nil {
-		return &initConfig{}, fmt.Errorf(msg.UnableToFetchFrameworkList)
-	}
-
-	switch fName {
+func (ini *initializer) configure() error {
+	switch ini.cfg.frameworkName {
 	case cypress.Kind:
 		return ini.initializeCypress()
 	case playwright.Kind:
@@ -91,13 +88,13 @@ func (ini *initializer) configure() (*initConfig, error) {
 	case imagerunner.Kind:
 		return ini.initializeImageRunner()
 	default:
-		return &initConfig{}, fmt.Errorf("unsupported framework %v", fName)
+		return fmt.Errorf("unsupported framework %q", ini.cfg.frameworkName)
 	}
 }
 
 func askCredentials(stdio terminal.Stdio) (iam.Credentials, error) {
 	creds := iam.Credentials{}
-	q := &survey.Input{Message: "SauceLabs username:"}
+	q := &survey.Input{Message: "Sauce Labs username:"}
 
 	err := survey.AskOne(q, &creds.Username,
 		survey.WithValidator(survey.Required),
@@ -107,7 +104,7 @@ func askCredentials(stdio terminal.Stdio) (iam.Credentials, error) {
 		return creds, err
 	}
 
-	q = &survey.Input{Message: "SauceLabs access key:"}
+	q = &survey.Input{Message: "Sauce Labs access key:"}
 	err = survey.AskOne(q, &creds.AccessKey,
 		survey.WithValidator(survey.Required),
 		survey.WithShowCursor(true),
@@ -152,25 +149,6 @@ func (ini *initializer) checkCredentials(region string) error {
 	return err
 }
 
-func (ini *initializer) askFramework() (string, error) {
-	frameworks, err := ini.infoReader.Frameworks(context.Background())
-	if err != nil {
-		return "", err
-	}
-
-	p := &survey.Select{
-		Message: "Select framework:",
-		Options: frameworks,
-	}
-
-	var selectedFramework string
-	err = survey.AskOne(p, &selectedFramework, survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
-	if selectedFramework == "" {
-		return "", errors.New("interrupting configuration")
-	}
-	return strings.ToLower(selectedFramework), err
-}
-
 type completor func(string) []string
 
 /* When translation */
@@ -187,7 +165,7 @@ var mapWhen = map[string]config.When{
 	"always":                 config.WhenAlways,
 }
 
-func (ini *initializer) askDownloadWhen(cfg *initConfig) error {
+func (ini *initializer) askDownloadWhen() error {
 	q := &survey.Select{
 		Message: "Download artifacts:",
 		Default: whenStrings[0],
@@ -203,16 +181,16 @@ func (ini *initializer) askDownloadWhen(cfg *initConfig) error {
 	if err != nil {
 		return err
 	}
-	cfg.artifactWhen = mapWhen[when]
+	ini.cfg.artifactWhen = mapWhen[when]
 	return nil
 }
 
-func (ini *initializer) askDevice(cfg *initConfig, suggestions []string) error {
+func (ini *initializer) askDevice(suggestions []string) error {
 	q := &survey.Select{
 		Message: "Select device pattern:",
 		Options: suggestions,
 	}
-	return survey.AskOne(q, &cfg.device.Name,
+	return survey.AskOne(q, &ini.cfg.device.Name,
 		survey.WithShowCursor(true),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err),
 	)
@@ -234,14 +212,14 @@ func vmdToMaps(vmds []vmd.VirtualDevice) ([]string, map[string][]string) {
 	return vmdNames, vmdOSVersions
 }
 
-func (ini *initializer) askSimulator(cfg *initConfig, vmds []vmd.VirtualDevice) error {
+func (ini *initializer) askSimulator(vmds []vmd.VirtualDevice) error {
 	vmdNames, vmdOSVersions := vmdToMaps(vmds)
 
 	q := &survey.Select{
 		Message: "Select simulator:",
 		Options: vmdNames,
 	}
-	err := survey.AskOne(q, &cfg.simulator.Name,
+	err := survey.AskOne(q, &ini.cfg.simulator.Name,
 		survey.WithShowCursor(true),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
 	if err != nil {
@@ -250,24 +228,24 @@ func (ini *initializer) askSimulator(cfg *initConfig, vmds []vmd.VirtualDevice) 
 
 	q = &survey.Select{
 		Message: "Select platform version:",
-		Options: vmdOSVersions[cfg.simulator.Name],
+		Options: vmdOSVersions[ini.cfg.simulator.Name],
 	}
 	var simulatorVersion string
 	err = survey.AskOne(q, &simulatorVersion,
 		survey.WithShowCursor(true),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
-	cfg.simulator.PlatformVersions = []string{simulatorVersion}
+	ini.cfg.simulator.PlatformVersions = []string{simulatorVersion}
 	return err
 }
 
-func (ini *initializer) askEmulator(cfg *initConfig, vmds []vmd.VirtualDevice) error {
+func (ini *initializer) askEmulator(vmds []vmd.VirtualDevice) error {
 	vmdNames, vmdOSVersions := vmdToMaps(vmds)
 
 	q := &survey.Select{
 		Message: "Select emulator:",
 		Options: vmdNames,
 	}
-	err := survey.AskOne(q, &cfg.emulator.Name,
+	err := survey.AskOne(q, &ini.cfg.emulator.Name,
 		survey.WithShowCursor(true),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
 	if err != nil {
@@ -276,13 +254,13 @@ func (ini *initializer) askEmulator(cfg *initConfig, vmds []vmd.VirtualDevice) e
 
 	q = &survey.Select{
 		Message: "Select platform version:",
-		Options: vmdOSVersions[cfg.emulator.Name],
+		Options: vmdOSVersions[ini.cfg.emulator.Name],
 	}
 	var emulatorVersion string
 	err = survey.AskOne(q, &emulatorVersion,
 		survey.WithShowCursor(true),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
-	cfg.emulator.PlatformVersions = []string{emulatorVersion}
+	ini.cfg.emulator.PlatformVersions = []string{emulatorVersion}
 	return err
 }
 
@@ -358,15 +336,15 @@ func correctBrowser(browserName string) string {
 	}
 }
 
-func (ini *initializer) askPlatform(cfg *initConfig, metadatas []framework.Metadata) error {
-	browsers, platforms := metaToBrowsers(metadatas, cfg.frameworkName, cfg.frameworkVersion)
+func (ini *initializer) askPlatform(metadatas []framework.Metadata) error {
+	browsers, platforms := metaToBrowsers(metadatas, ini.cfg.frameworkName, ini.cfg.frameworkVersion)
 
 	// Select browser
 	q := &survey.Select{
 		Message: "Select browser:",
 		Options: browsers,
 	}
-	err := survey.AskOne(q, &cfg.browserName,
+	err := survey.AskOne(q, &ini.cfg.browserName,
 		survey.WithShowCursor(true),
 		survey.WithValidator(survey.Required),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
@@ -376,9 +354,9 @@ func (ini *initializer) askPlatform(cfg *initConfig, metadatas []framework.Metad
 
 	q = &survey.Select{
 		Message: "Select platform:",
-		Options: platforms[cfg.browserName],
+		Options: platforms[ini.cfg.browserName],
 	}
-	err = survey.AskOne(q, &cfg.platformName,
+	err = survey.AskOne(q, &ini.cfg.platformName,
 		survey.WithShowCursor(true),
 		survey.WithValidator(survey.Required),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
@@ -388,15 +366,15 @@ func (ini *initializer) askPlatform(cfg *initConfig, metadatas []framework.Metad
 	return nil
 }
 
-func (ini *initializer) askVersion(cfg *initConfig, metadatas []framework.Metadata) error {
+func (ini *initializer) askVersion(metadatas []framework.Metadata) error {
 	versions := metaToVersions(metadatas)
 
 	q := &survey.Select{
-		Message: fmt.Sprintf("Select %s version:", cfg.frameworkName),
+		Message: fmt.Sprintf("Select %s version:", ini.cfg.frameworkName),
 		Options: versions,
 	}
 
-	err := survey.AskOne(q, &cfg.frameworkVersion,
+	err := survey.AskOne(q, &ini.cfg.frameworkVersion,
 		survey.WithShowCursor(true),
 		survey.WithValidator(survey.Required),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
@@ -436,7 +414,7 @@ var Workloads = []string{
 	"other",
 }
 
-func (ini *initializer) askWorkload(cfg *initConfig) error {
+func (ini *initializer) askWorkload() error {
 	q := &survey.Select{
 		Message: "Set workload:",
 		Default: Workloads[0],
@@ -452,56 +430,53 @@ func (ini *initializer) askWorkload(cfg *initConfig) error {
 	if err != nil {
 		return err
 	}
-	cfg.workload = workload
+	ini.cfg.workload = workload
 	return nil
 }
 
-func (ini *initializer) initializeCypress() (*initConfig, error) {
-	cfg := &initConfig{frameworkName: cypress.Kind}
-
-	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), cfg.frameworkName)
+func (ini *initializer) initializeCypress() error {
+	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), ini.cfg.frameworkName)
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
 
-	err = ini.askVersion(cfg, frameworkMetadatas)
+	err = ini.askVersion(frameworkMetadatas)
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
 
-	err = ini.askFile("Cypress configuration file:", frameworkExtValidator(cfg.frameworkName, cfg.frameworkVersion), completeBasic, &cfg.cypressJSON)
+	err = ini.askFile(
+		"Cypress configuration file:",
+		frameworkExtValidator(ini.cfg.frameworkName, ini.cfg.frameworkVersion),
+		completeBasic,
+		&ini.cfg.cypressConfigFile,
+	)
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
 
-	err = ini.askPlatform(cfg, frameworkMetadatas)
+	err = ini.askPlatform(frameworkMetadatas)
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
 
-	err = ini.askDownloadWhen(cfg)
-	if err != nil {
-		return &initConfig{}, err
-	}
-	return cfg, nil
+	return ini.askDownloadWhen()
 }
 
-func (ini *initializer) initializePlaywright() (*initConfig, error) {
-	cfg := &initConfig{frameworkName: playwright.Kind}
-
-	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), cfg.frameworkName)
+func (ini *initializer) initializePlaywright() error {
+	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), ini.cfg.frameworkName)
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
 
-	err = ini.askVersion(cfg, frameworkMetadatas)
+	err = ini.askVersion(frameworkMetadatas)
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
 
-	err = ini.askPlatform(cfg, frameworkMetadatas)
+	err = ini.askPlatform(frameworkMetadatas)
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
 
 	err = survey.AskOne(
@@ -511,76 +486,80 @@ func (ini *initializer) initializePlaywright() (*initConfig, error) {
 			Default: "",
 			Help:    "See https://playwright.dev/docs/test-projects",
 		},
-		&cfg.playwrightProject,
+		&ini.cfg.playwrightProject,
 		survey.WithShowCursor(true),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err),
 	)
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
 
+	var pattern string
 	err = survey.AskOne(
 		&survey.Input{
 			Message: "Test file pattern to match against:",
 			Default: ".*.spec.js",
 			Help:    "See https://playwright.dev/docs/test-projects",
 		},
-		&cfg.testMatch,
+		&pattern,
 		survey.WithShowCursor(true),
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err),
 	)
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
+	ini.cfg.testMatch = []string{pattern}
 
-	err = ini.askDownloadWhen(cfg)
-	if err != nil {
-		return &initConfig{}, err
-	}
-	return cfg, nil
+	return ini.askDownloadWhen()
 }
 
-func (ini *initializer) initializeTestcafe() (*initConfig, error) {
-	cfg := &initConfig{frameworkName: testcafe.Kind}
-
-	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), cfg.frameworkName)
+func (ini *initializer) initializeTestcafe() error {
+	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), ini.cfg.frameworkName)
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
 
-	err = ini.askVersion(cfg, frameworkMetadatas)
+	err = ini.askVersion(frameworkMetadatas)
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
 
-	err = ini.askPlatform(cfg, frameworkMetadatas)
+	err = ini.askPlatform(frameworkMetadatas)
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
 
-	err = ini.askDownloadWhen(cfg)
+	err = ini.askDownloadWhen()
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
-	return cfg, nil
+	return nil
 }
 
-func (ini *initializer) initializeEspresso() (*initConfig, error) {
-	cfg := &initConfig{frameworkName: espresso.Kind}
-
-	err := ini.askFile("Application to test:", frameworkExtValidator(cfg.frameworkName, ""), completeBasic, &cfg.app)
+func (ini *initializer) initializeEspresso() error {
+	err := ini.askFile(
+		"Application to test:",
+		frameworkExtValidator(ini.cfg.frameworkName, ""),
+		completeBasic,
+		&ini.cfg.app,
+	)
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
 
-	err = ini.askFile("Test application:", frameworkExtValidator(cfg.frameworkName, ""), completeBasic, &cfg.testApp)
+	err = ini.askFile(
+		"Test application:",
+		frameworkExtValidator(ini.cfg.frameworkName, ""),
+		completeBasic,
+		&ini.cfg.testApp,
+	)
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
 
-	err = ini.askDevice(cfg, androidDevicesPatterns)
+	err = ini.askDevice(androidDevicesPatterns)
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
 
 	virtualDevices, err := ini.vmdReader.GetVirtualDevices(context.Background(), vmd.AndroidEmulator)
@@ -593,21 +572,19 @@ func (ini *initializer) initializeEspresso() (*initConfig, error) {
 		virtualDevices = fallbackAndroidVirtualDevices
 	}
 
-	err = ini.askEmulator(cfg, virtualDevices)
+	err = ini.askEmulator(virtualDevices)
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
 
-	err = ini.askDownloadWhen(cfg)
+	err = ini.askDownloadWhen()
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
-	return cfg, nil
+	return nil
 }
 
-func (ini *initializer) initializeXCUITest() (*initConfig, error) {
-	cfg := &initConfig{frameworkName: xcuitest.Kind}
-
+func (ini *initializer) initializeXCUITest() error {
 	q := &survey.Select{
 		Message: "Select target:",
 		Options: []string{
@@ -623,22 +600,22 @@ func (ini *initializer) initializeXCUITest() (*initConfig, error) {
 		survey.WithValidator(survey.Required),
 	)
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
 
 	if target == "Real Devices" {
-		err = ini.askDevice(cfg, iOSDevicesPatterns)
+		err = ini.askDevice(iOSDevicesPatterns)
 		if err != nil {
-			return &initConfig{}, err
+			return err
 		}
-		err = ini.askFile("Application to test:", extValidator([]string{".ipa", ".app"}), completeBasic, &cfg.app)
+		err = ini.askFile("Application to test:", extValidator([]string{".ipa", ".app"}), completeBasic, &ini.cfg.app)
 		if err != nil {
-			return &initConfig{}, err
+			return err
 		}
 
-		err = ini.askFile("Test application:", extValidator([]string{".ipa", ".app"}), completeBasic, &cfg.testApp)
+		err = ini.askFile("Test application:", extValidator([]string{".ipa", ".app"}), completeBasic, &ini.cfg.testApp)
 		if err != nil {
-			return &initConfig{}, err
+			return err
 		}
 	} else if target == "Virtual Devices" {
 		virtualDevices, err := ini.vmdReader.GetVirtualDevices(context.Background(), vmd.IOSSimulator)
@@ -651,46 +628,44 @@ func (ini *initializer) initializeXCUITest() (*initConfig, error) {
 			virtualDevices = fallbackIOSVirtualDevices
 		}
 
-		err = ini.askSimulator(cfg, virtualDevices)
+		err = ini.askSimulator(virtualDevices)
 		if err != nil {
-			return &initConfig{}, err
+			return err
 		}
 
-		err = ini.askFile("Application to test:", extValidator([]string{".zip", ".app"}), completeBasic, &cfg.app)
+		err = ini.askFile("Application to test:", extValidator([]string{".zip", ".app"}), completeBasic, &ini.cfg.app)
 		if err != nil {
-			return &initConfig{}, err
+			return err
 		}
 
-		err = ini.askFile("Test application:", extValidator([]string{".zip", ".app"}), completeBasic, &cfg.testApp)
+		err = ini.askFile("Test application:", extValidator([]string{".zip", ".app"}), completeBasic, &ini.cfg.testApp)
 		if err != nil {
-			return &initConfig{}, err
+			return err
 		}
 	}
 
-	err = ini.askDownloadWhen(cfg)
+	err = ini.askDownloadWhen()
 	if err != nil {
-		return &initConfig{}, err
+		return err
 	}
 
-	return cfg, nil
+	return nil
 }
 
-func (ini *initializer) initializeImageRunner() (*initConfig, error) {
-	cfg := &initConfig{frameworkName: imagerunner.Kind}
-
-	if err := ini.askDockerImage("Docker Image to use:", dockerImageValidator(), &cfg.dockerImage); err != nil {
-		return &initConfig{}, err
+func (ini *initializer) initializeImageRunner() error {
+	if err := ini.askDockerImage(
+		"Docker Image to use:",
+		dockerImageValidator(),
+		&ini.cfg.dockerImage,
+	); err != nil {
+		return err
 	}
 
-	if err := ini.askWorkload(cfg); err != nil {
-		return &initConfig{}, err
+	if err := ini.askWorkload(); err != nil {
+		return err
 	}
 
-	if err := ini.askDownloadWhen(cfg); err != nil {
-		return &initConfig{}, err
-	}
-
-	return cfg, nil
+	return ini.askDownloadWhen()
 }
 
 func checkFrameworkVersion(metadatas []framework.Metadata, frameworkName, frameworkVersion string) error {
@@ -759,90 +734,94 @@ func checkEmulators(vmds []vmd.VirtualDevice, emulator config.Emulator) (config.
 	}, []error{}
 }
 
-func (ini *initializer) initializeBatchCypress(initCfg *initConfig) (*initConfig, []error) {
-	initCfg.frameworkName = cypress.Kind
+func (ini *initializer) initializeBatchCypress() []error {
 	var errs []error
 
-	if initCfg.frameworkVersion == "" {
-		errs = append(errs, fmt.Errorf(msg.MissingFrameworkVersion, initCfg.frameworkName))
+	if ini.cfg.frameworkVersion == "" {
+		errs = append(errs, fmt.Errorf(msg.MissingFrameworkVersion, ini.cfg.frameworkName))
 	}
-	if initCfg.cypressJSON == "" {
+	if ini.cfg.cypressConfigFile == "" {
 		errs = append(errs, errors.New(msg.MissingCypressConfig))
 	}
-	if initCfg.platformName == "" {
+	if ini.cfg.platformName == "" {
 		errs = append(errs, errors.New(msg.MissingPlatformName))
 	}
-	if initCfg.browserName == "" {
+	if ini.cfg.browserName == "" {
 		errs = append(errs, errors.New(msg.MissingBrowserName))
 	}
 
-	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), initCfg.frameworkName)
+	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), ini.cfg.frameworkName)
 	if err != nil {
 		errs = append(errs, err)
-		return &initConfig{}, errs
+		return errs
 	}
 
 	frameworkVersionSupported := true
-	if initCfg.frameworkVersion != "" {
-		if err = checkFrameworkVersion(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion); err != nil {
+	if ini.cfg.frameworkVersion != "" {
+		if err = checkFrameworkVersion(frameworkMetadatas, ini.cfg.frameworkName, ini.cfg.frameworkVersion); err != nil {
 			errs = append(errs, err)
 			frameworkVersionSupported = false
 		}
 	}
 
-	if initCfg.cypressJSON != "" {
-		verifier := frameworkExtValidator(initCfg.frameworkName, "")
-		if err := verifier(initCfg.cypressJSON); err != nil {
+	if ini.cfg.cypressConfigFile != "" {
+		verifier := frameworkExtValidator(ini.cfg.frameworkName, "")
+		if err := verifier(ini.cfg.cypressConfigFile); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
-	if frameworkVersionSupported && initCfg.platformName != "" && initCfg.browserName != "" {
-		initCfg.browserName = strings.ToLower(initCfg.browserName)
-		if err = checkBrowserAndPlatform(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion, initCfg.browserName, initCfg.platformName); err != nil {
+	if frameworkVersionSupported && ini.cfg.platformName != "" && ini.cfg.browserName != "" {
+		ini.cfg.browserName = strings.ToLower(ini.cfg.browserName)
+		if err = checkBrowserAndPlatform(
+			frameworkMetadatas,
+			ini.cfg.frameworkName,
+			ini.cfg.frameworkVersion,
+			ini.cfg.browserName,
+			ini.cfg.platformName,
+		); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
-	if initCfg.artifactWhenStr != "" {
-		initCfg.artifactWhenStr = strings.ToLower(initCfg.artifactWhenStr)
-		if initCfg.artifactWhen, err = checkArtifactDownloadSetting(initCfg.artifactWhenStr); err != nil {
+	if ini.cfg.artifactWhenStr != "" {
+		ini.cfg.artifactWhenStr = strings.ToLower(ini.cfg.artifactWhenStr)
+		if ini.cfg.artifactWhen, err = checkArtifactDownloadSetting(ini.cfg.artifactWhenStr); err != nil {
 			errs = append(errs, err)
 		}
 	}
-	return initCfg, errs
+	return errs
 }
 
-func (ini *initializer) initializeBatchEspresso(f *pflag.FlagSet, initCfg *initConfig) (*initConfig, []error) {
-	initCfg.frameworkName = espresso.Kind
+func (ini *initializer) initializeBatchEspresso(f *pflag.FlagSet) []error {
 	var errs []error
 	var err error
 
-	if initCfg.app == "" {
+	if ini.cfg.app == "" {
 		errs = append(errs, errors.New(msg.MissingApp))
 	}
-	if initCfg.testApp == "" {
+	if ini.cfg.testApp == "" {
 		errs = append(errs, errors.New(msg.MissingTestApp))
 	}
 	if !f.Changed("device") && !f.Changed("emulator") {
 		errs = append(errs, errors.New(msg.MissingDeviceOrEmulator))
 	}
-	if initCfg.artifactWhenStr != "" {
-		initCfg.artifactWhenStr = strings.ToLower(initCfg.artifactWhenStr)
-		if initCfg.artifactWhen, err = checkArtifactDownloadSetting(initCfg.artifactWhenStr); err != nil {
+	if ini.cfg.artifactWhenStr != "" {
+		ini.cfg.artifactWhenStr = strings.ToLower(ini.cfg.artifactWhenStr)
+		if ini.cfg.artifactWhen, err = checkArtifactDownloadSetting(ini.cfg.artifactWhenStr); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
-	if initCfg.app != "" {
-		verifier := frameworkExtValidator(initCfg.frameworkName, "")
-		if err = verifier(initCfg.app); err != nil {
+	if ini.cfg.app != "" {
+		verifier := frameworkExtValidator(ini.cfg.frameworkName, "")
+		if err = verifier(ini.cfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("app: %s", err))
 		}
 	}
-	if initCfg.testApp != "" {
-		verifier := frameworkExtValidator(initCfg.frameworkName, "")
-		if err = verifier(initCfg.app); err != nil {
+	if ini.cfg.testApp != "" {
+		verifier := frameworkExtValidator(ini.cfg.frameworkName, "")
+		if err = verifier(ini.cfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("testApp: %s", err))
 		}
 	}
@@ -852,121 +831,130 @@ func (ini *initializer) initializeBatchEspresso(f *pflag.FlagSet, initCfg *initC
 			errs = append(errs, fmt.Errorf(""))
 		}
 		var lerrs []error
-		if initCfg.emulator, lerrs = checkEmulators(emulators, initCfg.emulatorFlag.Emulator); len(lerrs) > 0 {
+		if ini.cfg.emulator, lerrs = checkEmulators(emulators, ini.cfg.emulatorFlag.Emulator); len(lerrs) > 0 {
 			errs = append(errs, lerrs...)
 		}
 	}
 	if f.Changed("device") {
-		initCfg.device = initCfg.deviceFlag.Device
+		ini.cfg.device = ini.cfg.deviceFlag.Device
 	}
-	return initCfg, errs
+	return errs
 }
 
-func (ini *initializer) initializeBatchPlaywright(initCfg *initConfig) (*initConfig, []error) {
-	initCfg.frameworkName = playwright.Kind
+func (ini *initializer) initializeBatchPlaywright() []error {
 	var errs []error
 
-	if initCfg.frameworkVersion == "" {
-		errs = append(errs, fmt.Errorf(msg.MissingFrameworkVersion, initCfg.frameworkName))
+	if ini.cfg.frameworkVersion == "" {
+		errs = append(errs, fmt.Errorf(msg.MissingFrameworkVersion, ini.cfg.frameworkName))
 	}
-	if initCfg.platformName == "" {
+	if ini.cfg.platformName == "" {
 		errs = append(errs, errors.New(msg.MissingPlatformName))
 	}
-	if initCfg.browserName == "" {
+	if ini.cfg.browserName == "" {
 		errs = append(errs, errors.New(msg.MissingBrowserName))
 	}
 
-	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), initCfg.frameworkName)
+	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), ini.cfg.frameworkName)
 	if err != nil {
 		errs = append(errs, err)
-		return &initConfig{}, errs
+		return errs
 	}
 
 	frameworkVersionSupported := true
-	if initCfg.frameworkVersion != "" {
-		if err = checkFrameworkVersion(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion); err != nil {
+	if ini.cfg.frameworkVersion != "" {
+		if err = checkFrameworkVersion(frameworkMetadatas, ini.cfg.frameworkName, ini.cfg.frameworkVersion); err != nil {
 			errs = append(errs, err)
 			frameworkVersionSupported = false
 		}
 	}
 
-	if frameworkVersionSupported && initCfg.platformName != "" && initCfg.browserName != "" {
-		initCfg.browserName = strings.ToLower(initCfg.browserName)
-		if err = checkBrowserAndPlatform(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion, initCfg.browserName, initCfg.platformName); err != nil {
+	if frameworkVersionSupported && ini.cfg.platformName != "" && ini.cfg.browserName != "" {
+		ini.cfg.browserName = strings.ToLower(ini.cfg.browserName)
+		if err = checkBrowserAndPlatform(
+			frameworkMetadatas,
+			ini.cfg.frameworkName,
+			ini.cfg.frameworkVersion,
+			ini.cfg.browserName,
+			ini.cfg.platformName,
+		); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
-	if initCfg.artifactWhenStr != "" {
-		initCfg.artifactWhenStr = strings.ToLower(initCfg.artifactWhenStr)
-		if initCfg.artifactWhen, err = checkArtifactDownloadSetting(initCfg.artifactWhenStr); err != nil {
+	if ini.cfg.artifactWhenStr != "" {
+		ini.cfg.artifactWhenStr = strings.ToLower(ini.cfg.artifactWhenStr)
+		if ini.cfg.artifactWhen, err = checkArtifactDownloadSetting(ini.cfg.artifactWhenStr); err != nil {
 			errs = append(errs, err)
 		}
 	}
-	return initCfg, errs
+	return errs
 }
 
-func (ini *initializer) initializeBatchTestcafe(initCfg *initConfig) (*initConfig, []error) {
-	initCfg.frameworkName = testcafe.Kind
+func (ini *initializer) initializeBatchTestcafe() []error {
 	var errs []error
 
-	if initCfg.frameworkVersion == "" {
-		errs = append(errs, fmt.Errorf(msg.MissingFrameworkVersion, initCfg.frameworkName))
+	if ini.cfg.frameworkVersion == "" {
+		errs = append(errs, fmt.Errorf(msg.MissingFrameworkVersion, ini.cfg.frameworkName))
 	}
-	if initCfg.platformName == "" {
+	if ini.cfg.platformName == "" {
 		errs = append(errs, errors.New(msg.MissingPlatformName))
 	}
-	if initCfg.browserName == "" {
+	if ini.cfg.browserName == "" {
 		errs = append(errs, errors.New(msg.MissingBrowserName))
 	}
 
-	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), initCfg.frameworkName)
+	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), ini.cfg.frameworkName)
 	if err != nil {
 		errs = append(errs, err)
-		return &initConfig{}, errs
+		return errs
 	}
 
 	frameworkVersionSupported := true
-	if initCfg.frameworkVersion != "" {
-		if err = checkFrameworkVersion(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion); err != nil {
+	if ini.cfg.frameworkVersion != "" {
+		if err = checkFrameworkVersion(frameworkMetadatas, ini.cfg.frameworkName, ini.cfg.frameworkVersion); err != nil {
 			errs = append(errs, err)
 			frameworkVersionSupported = false
 		}
 	}
 
-	if frameworkVersionSupported && initCfg.platformName != "" && initCfg.browserName != "" {
-		initCfg.browserName = strings.ToLower(initCfg.browserName)
-		if err = checkBrowserAndPlatform(frameworkMetadatas, initCfg.frameworkName, initCfg.frameworkVersion, initCfg.browserName, initCfg.platformName); err != nil {
+	if frameworkVersionSupported && ini.cfg.platformName != "" && ini.cfg.browserName != "" {
+		ini.cfg.browserName = strings.ToLower(ini.cfg.browserName)
+		if err = checkBrowserAndPlatform(
+			frameworkMetadatas,
+			ini.cfg.frameworkName,
+			ini.cfg.frameworkVersion,
+			ini.cfg.browserName,
+			ini.cfg.platformName,
+		); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
-	if initCfg.artifactWhenStr != "" {
-		initCfg.artifactWhenStr = strings.ToLower(initCfg.artifactWhenStr)
-		if initCfg.artifactWhen, err = checkArtifactDownloadSetting(initCfg.artifactWhenStr); err != nil {
+	if ini.cfg.artifactWhenStr != "" {
+		ini.cfg.artifactWhenStr = strings.ToLower(ini.cfg.artifactWhenStr)
+		if ini.cfg.artifactWhen, err = checkArtifactDownloadSetting(ini.cfg.artifactWhenStr); err != nil {
 			errs = append(errs, err)
 		}
 	}
-	return initCfg, errs
+	return errs
 }
 
-func (ini *initializer) initializeBatchXcuitest(f *pflag.FlagSet, initCfg *initConfig) (*initConfig, []error) {
-	initCfg.frameworkName = xcuitest.Kind
+func (ini *initializer) initializeBatchXcuitest(f *pflag.FlagSet) []error {
 	var errs []error
 	var err error
 
-	if initCfg.app == "" {
+	if ini.cfg.app == "" {
 		errs = append(errs, errors.New(msg.MissingApp))
 	}
-	if initCfg.testApp == "" {
+	if ini.cfg.testApp == "" {
 		errs = append(errs, errors.New(msg.MissingTestApp))
 	}
 	if !(f.Changed("simulator") || f.Changed("device")) {
 		errs = append(errs, errors.New(msg.MissingDeviceOrSimulator))
 	}
-	if initCfg.artifactWhenStr != "" {
-		initCfg.artifactWhenStr = strings.ToLower(initCfg.artifactWhenStr)
-		if initCfg.artifactWhen, err = checkArtifactDownloadSetting(initCfg.artifactWhenStr); err != nil {
+	if ini.cfg.artifactWhenStr != "" {
+		ini.cfg.artifactWhenStr = strings.ToLower(ini.cfg.artifactWhenStr)
+		if ini.cfg.artifactWhen, err = checkArtifactDownloadSetting(ini.cfg.artifactWhenStr); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -976,46 +964,45 @@ func (ini *initializer) initializeBatchXcuitest(f *pflag.FlagSet, initCfg *initC
 	} else {
 		validExt = append(validExt, ".ipa")
 	}
-	if initCfg.app != "" {
+	if ini.cfg.app != "" {
 		verifier := extValidator(validExt)
-		if err = verifier(initCfg.app); err != nil {
+		if err = verifier(ini.cfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("app: %s", err))
 		}
 	}
-	if initCfg.testApp != "" {
+	if ini.cfg.testApp != "" {
 		verifier := extValidator(validExt)
-		if err = verifier(initCfg.app); err != nil {
+		if err = verifier(ini.cfg.app); err != nil {
 			errs = append(errs, fmt.Errorf("testApp: %s", err))
 		}
 	}
 	if f.Changed("device") {
-		initCfg.device = initCfg.deviceFlag.Device
+		ini.cfg.device = ini.cfg.deviceFlag.Device
 	}
 	if f.Changed("simulator") {
-		initCfg.simulator = initCfg.simulatorFlag.Simulator
+		ini.cfg.simulator = ini.cfg.simulatorFlag.Simulator
 	}
-	return initCfg, errs
+	return errs
 }
 
-func (ini *initializer) initializeBatchImageRunner(initCfg *initConfig) (*initConfig, []error) {
-	initCfg.frameworkName = imagerunner.Kind
+func (ini *initializer) initializeBatchImageRunner() []error {
 	var errs []error
 	var err error
 
-	if initCfg.dockerImage == "" {
+	if ini.cfg.dockerImage == "" {
 		errs = append(errs, errors.New(msg.MissingDockerImage))
 	}
-	if initCfg.dockerImage != "" {
+	if ini.cfg.dockerImage != "" {
 		verifier := dockerImageValidator()
-		if err = verifier(initCfg.dockerImage); err != nil {
+		if err = verifier(ini.cfg.dockerImage); err != nil {
 			errs = append(errs, fmt.Errorf("dockerImage: %s", err))
 		}
 	}
-	if initCfg.artifactWhenStr != "" {
-		initCfg.artifactWhenStr = strings.ToLower(initCfg.artifactWhenStr)
-		if initCfg.artifactWhen, err = checkArtifactDownloadSetting(initCfg.artifactWhenStr); err != nil {
+	if ini.cfg.artifactWhenStr != "" {
+		ini.cfg.artifactWhenStr = strings.ToLower(ini.cfg.artifactWhenStr)
+		if ini.cfg.artifactWhen, err = checkArtifactDownloadSetting(ini.cfg.artifactWhenStr); err != nil {
 			errs = append(errs, err)
 		}
 	}
-	return initCfg, errs
+	return errs
 }

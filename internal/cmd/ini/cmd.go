@@ -16,13 +16,11 @@ import (
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
-	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/fatih/color"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -33,12 +31,13 @@ var (
 	initExample = "saucectl init"
 )
 
-type initConfig struct {
-	batchMode bool
+var noPrompt = false
+var regionName = "us-west-1"
 
+type initConfig struct {
 	frameworkName     string
 	frameworkVersion  string
-	cypressJSON       string
+	cypressConfigFile string
 	dockerImage       string
 	app               string
 	testApp           string
@@ -55,11 +54,9 @@ type initConfig struct {
 	emulatorFlag      flags.Emulator
 	simulatorFlag     flags.Simulator
 	concurrency       int
-	username          string
-	accessKey         string
 	workload          string
 	playwrightProject string
-	testMatch         string
+	testMatch         []string
 }
 
 var (
@@ -68,67 +65,50 @@ var (
 	restoTimeout        = 5 * time.Second
 )
 
-// Command creates the `init` command
-func Command() *cobra.Command {
-	initCfg := &initConfig{}
-
+func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:          initUse,
-		Short:        initShort,
-		Long:         initLong,
-		Example:      initExample,
-		SilenceUsage: true,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return preRun()
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			tracker := segment.DefaultTracker
-
-			go func() {
-				tracker.Collect("Init", nil)
-				_ = tracker.Close()
-			}()
-
-			log.Info().Msg("Start Init Command")
-			err := Run(cmd, initCfg)
-			if err != nil {
-				log.Err(err).Msg("failed to execute init command")
-				os.Exit(1)
+		Use:              initUse,
+		Short:            initShort,
+		Long:             initLong,
+		Example:          initExample,
+		SilenceUsage:     true,
+		TraverseChildren: true,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if preRun != nil {
+				preRun(cmd, args)
 			}
+
+			err := http.CheckProxy()
+			if err != nil {
+				return fmt.Errorf("invalid HTTP_PROXY value")
+			}
+			return nil
 		},
 	}
-	cmd.Flags().StringVarP(&initCfg.username, "username", "u", "", "username to use")
-	cmd.Flags().StringVarP(&initCfg.accessKey, "accessKey", "a", "", "access key for the Sauce Labs account making the request")
-	cmd.Flags().StringVarP(&initCfg.region, "region", "r", "us-west-1", "region to use")
-	cmd.Flags().StringVarP(&initCfg.frameworkName, "framework", "f", "", "framework to configure")
-	cmd.Flags().StringVarP(&initCfg.frameworkVersion, "frameworkVersion", "v", "", "framework version to be used")
-	cmd.Flags().StringVar(&initCfg.cypressJSON, "cypress.config", "", "path to cypress.json file (cypress only)")
-	cmd.Flags().StringVar(&initCfg.dockerImage, "dockerImage", "", "docker image to use (imagerunner only)")
-	cmd.Flags().StringVar(&initCfg.workload, "workload", "", "workload to use (imagerunner only)")
-	cmd.Flags().StringVar(&initCfg.app, "app", "", "path to application to test (espresso/xcuitest only)")
-	cmd.Flags().StringVarP(&initCfg.testApp, "testApp", "t", "", "path to test application (espresso/xcuitest only)")
-	cmd.Flags().StringSliceVarP(&initCfg.otherApps, "otherApps", "o", []string{}, "path to other applications (espresso/xcuitest only)")
-	cmd.Flags().StringVarP(&initCfg.platformName, "platformName", "p", "", "Specified platform name")
-	cmd.Flags().StringVarP(&initCfg.browserName, "browserName", "b", "", "Specifies browser name")
-	cmd.Flags().StringVar(&initCfg.artifactWhenStr, "artifacts.download.when", "fail", "defines when to download artifacts")
-	cmd.Flags().Var(&initCfg.emulatorFlag, "emulator", "Specifies the Android emulator to use for testing")
-	cmd.Flags().Var(&initCfg.simulatorFlag, "simulator", "Specifies the iOS simulator to use for testing")
-	cmd.Flags().Var(&initCfg.deviceFlag, "device", "Specifies the device to use for testing")
+
+	cmd.AddCommand(
+		CypressCmd(),
+		EspressoCmd(),
+		ImageRunnerCmd(),
+		PlaywrightCmd(),
+		TestCafeCmd(),
+		XCUITestCmd(),
+	)
+
+	flags := cmd.PersistentFlags()
+
+	flags.BoolVar(&noPrompt, "no-prompt", false, "Disable interactive prompts.")
+	flags.StringVarP(&regionName, "region", "r", "", "Sauce Labs region. Options: us-west-1, eu-central-1.")
+
 	return cmd
 }
 
-func preRun() error {
-	err := http.CheckProxy()
-	if err != nil {
-		return fmt.Errorf("invalid HTTP_PROXY value")
-	}
-	return nil
-}
-
 // Run runs the command
-func Run(cmd *cobra.Command, initCfg *initConfig) error {
-	if cmd.Flags().Changed("framework") {
-		return batchMode(cmd, initCfg)
+func Run(cmd *cobra.Command, cfg *initConfig) error {
+	cfg.region = regionName
+
+	if noPrompt {
+		return noPromptMode(cmd, cfg)
 	}
 	stdio := terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
 
@@ -144,21 +124,25 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 		}
 	}
 
-	regio, err := askRegion(stdio)
+	var err error
+	if cfg.region == "" {
+		cfg.region, err = askRegion(stdio)
+		if err != nil {
+			return err
+		}
+	}
+
+	ini := newInitializer(stdio, creds, cfg)
+
+	err = ini.checkCredentials(regionName)
 	if err != nil {
 		return err
 	}
 
-	ini := newInitializer(stdio, creds, regio)
-	err = ini.checkCredentials(regio)
+	err = ini.configure()
 	if err != nil {
 		return err
 	}
-	initCfg, err = ini.configure()
-	if err != nil {
-		return err
-	}
-	initCfg.region = regio
 
 	ccy, err := ini.userService.Concurrency(context.Background())
 	if err != nil {
@@ -168,41 +152,40 @@ func Run(cmd *cobra.Command, initCfg *initConfig) error {
 		println()
 		ccy.Org.Allowed.VDC = 1
 	}
-	initCfg.concurrency = ccy.Org.Allowed.VDC
+	cfg.concurrency = ccy.Org.Allowed.VDC
 
-	files, err := saveConfigurationFiles(initCfg)
+	files, err := saveConfigurationFiles(cfg)
 	if err != nil {
 		return err
 	}
 	displaySummary(files)
-	displayExtraInfo(initCfg.frameworkName)
+	displayExtraInfo(cfg.frameworkName)
 	return nil
 }
 
-func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
+func noPromptMode(cmd *cobra.Command, cfg *initConfig) error {
 	stdio := terminal.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}
 	creds := credentials.Get()
 	if !creds.IsSet() {
 		return errors.New(msg.EmptyCredentials)
 	}
 
-	ini := newInitializer(stdio, creds, initCfg.region)
-	initCfg.batchMode = true
+	ini := newInitializer(stdio, creds, cfg)
 
 	var errs []error
-	switch initCfg.frameworkName {
+	switch cfg.frameworkName {
 	case cypress.Kind:
-		initCfg, errs = ini.initializeBatchCypress(initCfg)
+		errs = ini.initializeBatchCypress()
 	case espresso.Kind:
-		initCfg, errs = ini.initializeBatchEspresso(cmd.Flags(), initCfg)
+		errs = ini.initializeBatchEspresso(cmd.Flags())
 	case playwright.Kind:
-		initCfg, errs = ini.initializeBatchPlaywright(initCfg)
+		errs = ini.initializeBatchPlaywright()
 	case testcafe.Kind:
-		initCfg, errs = ini.initializeBatchTestcafe(initCfg)
+		errs = ini.initializeBatchTestcafe()
 	case xcuitest.Kind:
-		initCfg, errs = ini.initializeBatchXcuitest(cmd.Flags(), initCfg)
+		errs = ini.initializeBatchXcuitest(cmd.Flags())
 	case imagerunner.Kind:
-		initCfg, errs = ini.initializeBatchImageRunner(initCfg)
+		errs = ini.initializeBatchImageRunner()
 	default:
 		println()
 		color.HiRed("Invalid framework selected")
@@ -214,7 +197,7 @@ func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 		for _, err := range errs {
 			fmt.Printf("- %v\n", err)
 		}
-		return fmt.Errorf("%s: %d errors occured", initCfg.frameworkName, len(errs))
+		return fmt.Errorf("%s: %d errors occured", cfg.frameworkName, len(errs))
 	}
 
 	ccy, err := ini.userService.Concurrency(context.Background())
@@ -225,13 +208,13 @@ func batchMode(cmd *cobra.Command, initCfg *initConfig) error {
 		println()
 		ccy.Org.Allowed.VDC = 1
 	}
-	initCfg.concurrency = ccy.Org.Allowed.VDC
+	cfg.concurrency = ccy.Org.Allowed.VDC
 
-	files, err := saveConfigurationFiles(initCfg)
+	files, err := saveConfigurationFiles(cfg)
 	if err != nil {
 		return err
 	}
 	displaySummary(files)
-	displayExtraInfo(initCfg.frameworkName)
+	displayExtraInfo(cfg.frameworkName)
 	return nil
 }

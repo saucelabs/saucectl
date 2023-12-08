@@ -75,11 +75,11 @@ func executeQuestionTest(t *testing.T, test questionTest) {
 	}()
 
 	test.ini.stdio = terminal.Stdio{In: c.Tty(), Out: c.Tty(), Err: c.Tty()}
-	err = test.execution(test.ini, test.startState)
+	err = test.execution(test.ini, test.ini.cfg)
 	require.Nil(t, err)
 
-	if !reflect.DeepEqual(test.startState, test.expectedState) {
-		t.Errorf("got: %v, want: %v", test.startState, test.expectedState)
+	if !reflect.DeepEqual(test.ini.cfg, test.expectedState) {
+		t.Errorf("got: %v, want: %v", test.ini.cfg, test.expectedState)
 	}
 
 	// Close the slave end of the pty, and read the remaining bytes from the master end.
@@ -121,56 +121,7 @@ type questionTest struct {
 	ini           *initializer
 	execution     func(*initializer, *initConfig) error
 	procedure     func(*expect.Console) error
-	startState    *initConfig
 	expectedState *initConfig
-}
-
-func TestAskFramework(t *testing.T) {
-	ir := &mocks.FakeFrameworkInfoReader{
-		FrameworksFn: func(ctx context.Context) ([]string, error) {
-			return []string{cypress.Kind, espresso.Kind, playwright.Kind}, nil
-		},
-	}
-	testCases := []questionTest{
-		{
-			name:      "Default",
-			procedure: stringToProcedure("✓🔚"),
-			ini:       &initializer{infoReader: ir},
-			execution: func(i *initializer, cfg *initConfig) error {
-				cfg.frameworkName, _ = i.askFramework()
-				return nil
-			},
-			startState:    &initConfig{},
-			expectedState: &initConfig{frameworkName: cypress.Kind},
-		},
-		{
-			name:      "Type In",
-			procedure: stringToProcedure("esp✓🔚"),
-			ini:       &initializer{infoReader: ir},
-			execution: func(i *initializer, cfg *initConfig) error {
-				cfg.frameworkName, _ = i.askFramework()
-				return nil
-			},
-			startState:    &initConfig{},
-			expectedState: &initConfig{frameworkName: espresso.Kind},
-		},
-		{
-			name:      "Arrow In",
-			procedure: stringToProcedure("↓✓🔚"),
-			ini:       &initializer{infoReader: ir},
-			execution: func(i *initializer, cfg *initConfig) error {
-				cfg.frameworkName, _ = i.askFramework()
-				return nil
-			},
-			startState:    &initConfig{},
-			expectedState: &initConfig{frameworkName: espresso.Kind},
-		},
-	}
-	for _, tt := range testCases {
-		t.Run(tt.name, func(lt *testing.T) {
-			executeQuestionTest(lt, tt)
-		})
-	}
 }
 
 func TestAskRegion(t *testing.T) {
@@ -178,25 +129,27 @@ func TestAskRegion(t *testing.T) {
 		{
 			name:      "Default",
 			procedure: stringToProcedure("✓🔚"),
-			ini:       &initializer{},
+			ini: &initializer{
+				cfg: &initConfig{},
+			},
 			execution: func(i *initializer, cfg *initConfig) error {
 				regio, err := askRegion(i.stdio)
 				cfg.region = regio
 				return err
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{region: region.USWest1.String()},
 		},
 		{
 			name:      "Type US",
 			procedure: stringToProcedure("us-✓🔚"),
-			ini:       &initializer{},
+			ini: &initializer{
+				cfg: &initConfig{},
+			},
 			execution: func(i *initializer, cfg *initConfig) error {
 				regio, err := askRegion(i.stdio)
 				cfg.region = regio
 				return err
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{region: region.USWest1.String()},
 		},
 		{
@@ -204,13 +157,13 @@ func TestAskRegion(t *testing.T) {
 			procedure: stringToProcedure("eu-✓🔚"),
 			ini: &initializer{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
+				cfg:        &initConfig{},
 			},
 			execution: func(i *initializer, cfg *initConfig) error {
 				regio, err := askRegion(i.stdio)
 				cfg.region = regio
 				return err
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{region: region.EUCentral1.String()},
 		},
 		{
@@ -218,13 +171,13 @@ func TestAskRegion(t *testing.T) {
 			procedure: stringToProcedure("↓✓🔚"),
 			ini: &initializer{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
+				cfg:        &initConfig{},
 			},
 			execution: func(i *initializer, cfg *initConfig) error {
 				regio, err := askRegion(i.stdio)
 				cfg.region = regio
 				return err
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{region: region.EUCentral1.String()},
 		},
 	}
@@ -240,11 +193,12 @@ func TestAskDownloadWhen(t *testing.T) {
 		{
 			name:      "Defaults to Fail",
 			procedure: stringToProcedure("✓🔚"),
-			ini:       &initializer{},
-			execution: func(i *initializer, cfg *initConfig) error {
-				return i.askDownloadWhen(cfg)
+			ini: &initializer{
+				cfg: &initConfig{},
 			},
-			startState:    &initConfig{},
+			execution: func(i *initializer, cfg *initConfig) error {
+				return i.askDownloadWhen()
+			},
 			expectedState: &initConfig{artifactWhen: config.WhenFail},
 		},
 		{
@@ -252,11 +206,11 @@ func TestAskDownloadWhen(t *testing.T) {
 			procedure: stringToProcedure("↓✓🔚"),
 			ini: &initializer{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
+				cfg:        &initConfig{},
 			},
 			execution: func(i *initializer, cfg *initConfig) error {
-				return i.askDownloadWhen(cfg)
+				return i.askDownloadWhen()
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{artifactWhen: config.WhenPass},
 		},
 		{
@@ -264,11 +218,11 @@ func TestAskDownloadWhen(t *testing.T) {
 			procedure: stringToProcedure("alw✓🔚"),
 			ini: &initializer{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
+				cfg:        &initConfig{},
 			},
 			execution: func(i *initializer, cfg *initConfig) error {
-				return i.askDownloadWhen(cfg)
+				return i.askDownloadWhen()
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{artifactWhen: config.WhenAlways},
 		},
 	}
@@ -285,11 +239,12 @@ func TestAskDevice(t *testing.T) {
 		{
 			name:      "Default Device",
 			procedure: stringToProcedure("✓🔚"),
-			ini:       &initializer{},
-			execution: func(i *initializer, cfg *initConfig) error {
-				return i.askDevice(cfg, devs)
+			ini: &initializer{
+				cfg: &initConfig{},
 			},
-			startState:    &initConfig{},
+			execution: func(i *initializer, cfg *initConfig) error {
+				return i.askDevice(devs)
+			},
 			expectedState: &initConfig{device: config.Device{Name: "Google Pixel 3"}},
 		},
 		{
@@ -297,11 +252,11 @@ func TestAskDevice(t *testing.T) {
 			procedure: stringToProcedure("Pixel 4✓🔚"),
 			ini: &initializer{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
+				cfg:        &initConfig{},
 			},
 			execution: func(i *initializer, cfg *initConfig) error {
-				return i.askDevice(cfg, devs)
+				return i.askDevice(devs)
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{device: config.Device{Name: "Google Pixel 4"}},
 		},
 	}
@@ -343,11 +298,12 @@ func TestAskEmulator(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{},
-			execution: func(i *initializer, cfg *initConfig) error {
-				return i.askEmulator(cfg, vmds)
+			ini: &initializer{
+				cfg: &initConfig{},
 			},
-			startState:    &initConfig{},
+			execution: func(i *initializer, cfg *initConfig) error {
+				return i.askEmulator(vmds)
+			},
 			expectedState: &initConfig{emulator: config.Emulator{Name: "Google Pixel 3 Emulator", PlatformVersions: []string{"9.0"}}},
 		},
 		{
@@ -377,11 +333,11 @@ func TestAskEmulator(t *testing.T) {
 			},
 			ini: &initializer{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
+				cfg:        &initConfig{},
 			},
 			execution: func(i *initializer, cfg *initConfig) error {
-				return i.askEmulator(cfg, vmds)
+				return i.askEmulator(vmds)
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{emulator: config.Emulator{Name: "Google Pixel 4 Emulator", PlatformVersions: []string{"7.0"}}},
 		},
 	}
@@ -451,12 +407,21 @@ func TestAskPlatform(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{},
-			execution: func(i *initializer, cfg *initConfig) error {
-				return i.askPlatform(cfg, metas)
+			ini: &initializer{
+				cfg: &initConfig{
+					frameworkName:    testcafe.Kind,
+					frameworkVersion: "1.5.0",
+				},
 			},
-			startState:    &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
-			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", browserName: "chrome", platformName: "Windows 10"},
+			execution: func(i *initializer, cfg *initConfig) error {
+				return i.askPlatform(metas)
+			},
+			expectedState: &initConfig{
+				frameworkName:    testcafe.Kind,
+				frameworkVersion: "1.5.0",
+				browserName:      "chrome",
+				platformName:     "Windows 10",
+			},
 		},
 		{
 			name: "macOS",
@@ -483,12 +448,21 @@ func TestAskPlatform(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{},
-			execution: func(i *initializer, cfg *initConfig) error {
-				return i.askPlatform(cfg, metas)
+			ini: &initializer{
+				cfg: &initConfig{
+					frameworkName:    testcafe.Kind,
+					frameworkVersion: "1.5.0",
+				},
 			},
-			startState:    &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
-			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0", platformName: "macOS 11.00", browserName: "firefox"},
+			execution: func(i *initializer, cfg *initConfig) error {
+				return i.askPlatform(metas)
+			},
+			expectedState: &initConfig{
+				frameworkName:    testcafe.Kind,
+				frameworkVersion: "1.5.0",
+				platformName:     "macOS 11.00",
+				browserName:      "firefox",
+			},
 		},
 	}
 	for _, tt := range testCases {
@@ -550,12 +524,17 @@ func TestAskVersion(t *testing.T) {
 			},
 			ini: &initializer{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
+				cfg: &initConfig{
+					frameworkName: testcafe.Kind,
+				},
 			},
 			execution: func(i *initializer, cfg *initConfig) error {
-				return i.askVersion(cfg, metas)
+				return i.askVersion(metas)
 			},
-			startState:    &initConfig{frameworkName: testcafe.Kind},
-			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.5.0"},
+			expectedState: &initConfig{
+				frameworkName:    testcafe.Kind,
+				frameworkVersion: "1.5.0",
+			},
 		},
 		{
 			name: "Second",
@@ -580,12 +559,17 @@ func TestAskVersion(t *testing.T) {
 			},
 			ini: &initializer{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
+				cfg: &initConfig{
+					frameworkName: testcafe.Kind,
+				},
 			},
 			execution: func(i *initializer, cfg *initConfig) error {
-				return i.askVersion(cfg, metas)
+				return i.askVersion(metas)
 			},
-			startState:    &initConfig{frameworkName: testcafe.Kind},
-			expectedState: &initConfig{frameworkName: testcafe.Kind, frameworkVersion: "1.3.0"},
+			expectedState: &initConfig{
+				frameworkName:    testcafe.Kind,
+				frameworkVersion: "1.3.0",
+			},
 		},
 	}
 	for _, tt := range testCases {
@@ -630,6 +614,7 @@ func TestAskFile(t *testing.T) {
 			},
 			ini: &initializer{
 				infoReader: &mocks.FakeFrameworkInfoReader{},
+				cfg:        &initConfig{},
 			},
 			execution: func(i *initializer, cfg *initConfig) error {
 				return i.askFile("Filename", func(ans interface{}) error {
@@ -647,8 +632,9 @@ func TestAskFile(t *testing.T) {
 					return nil
 				}, nil, &cfg.app)
 			},
-			startState:    &initConfig{},
-			expectedState: &initConfig{app: dir.Join("android-app.apk")},
+			expectedState: &initConfig{
+				app: dir.Join("android-app.apk"),
+			},
 		},
 	}
 	for _, tt := range testCases {
@@ -708,15 +694,7 @@ func TestConfigure(t *testing.T) {
 		{
 			name: "Complete Configuration (espresso)",
 			procedure: func(c *expect.Console) error {
-				_, err := c.ExpectString("Select framework")
-				if err != nil {
-					return err
-				}
-				_, err = c.SendLine(espresso.Kind)
-				if err != nil {
-					return err
-				}
-				_, err = c.ExpectString("Application to test")
+				_, err := c.ExpectString("Application to test")
 				if err != nil {
 					return err
 				}
@@ -770,16 +748,17 @@ func TestConfigure(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{infoReader: ir, deviceReader: dr, vmdReader: er},
-			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.configure()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
+			ini: &initializer{
+				infoReader:   ir,
+				deviceReader: dr,
+				vmdReader:    er,
+				cfg: &initConfig{
+					frameworkName: espresso.Kind,
+				},
 			},
-			startState: &initConfig{},
+			execution: func(i *initializer, cfg *initConfig) error {
+				return i.configure()
+			},
 			expectedState: &initConfig{
 				frameworkName: espresso.Kind,
 				app:           dir.Join("android-app.apk"),
@@ -792,15 +771,7 @@ func TestConfigure(t *testing.T) {
 		{
 			name: "Complete Configuration (cypress)",
 			procedure: func(c *expect.Console) error {
-				_, err := c.ExpectString("Select framework")
-				if err != nil {
-					return err
-				}
-				_, err = c.SendLine(cypress.Kind)
-				if err != nil {
-					return err
-				}
-				_, err = c.ExpectString("Select cypress version")
+				_, err := c.ExpectString("Select cypress version")
 				if err != nil {
 					return err
 				}
@@ -846,23 +817,24 @@ func TestConfigure(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{infoReader: ir, deviceReader: dr, vmdReader: er},
-			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.configure()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
+			ini: &initializer{
+				infoReader:   ir,
+				deviceReader: dr,
+				vmdReader:    er,
+				cfg: &initConfig{
+					frameworkName: cypress.Kind,
+				},
 			},
-			startState: &initConfig{},
+			execution: func(i *initializer, cfg *initConfig) error {
+				return i.configure()
+			},
 			expectedState: &initConfig{
-				frameworkName:    cypress.Kind,
-				frameworkVersion: "7.5.0",
-				cypressJSON:      dir.Join("cypress.json"),
-				platformName:     "Windows 10",
-				browserName:      "chrome",
-				artifactWhen:     config.WhenPass,
+				frameworkName:     cypress.Kind,
+				frameworkVersion:  "7.5.0",
+				cypressConfigFile: dir.Join("cypress.json"),
+				platformName:      "Windows 10",
+				browserName:       "chrome",
+				artifactWhen:      config.WhenPass,
 			},
 		},
 	}
@@ -878,7 +850,7 @@ func TestAskCredentials(t *testing.T) {
 		{
 			name: "Default",
 			procedure: func(c *expect.Console) error {
-				_, err := c.ExpectString("SauceLabs username:")
+				_, err := c.ExpectString("Sauce Labs username:")
 				if err != nil {
 					return err
 				}
@@ -886,7 +858,7 @@ func TestAskCredentials(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				_, err = c.ExpectString("SauceLabs access key:")
+				_, err = c.ExpectString("Sauce Labs access key:")
 				if err != nil {
 					return err
 				}
@@ -900,7 +872,9 @@ func TestAskCredentials(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{},
+			ini: &initializer{
+				cfg: &initConfig{},
+			},
 			execution: func(i *initializer, cfg *initConfig) error {
 				creds, err := askCredentials(i.stdio)
 				if err != nil {
@@ -912,7 +886,6 @@ func TestAskCredentials(t *testing.T) {
 				}
 				return nil
 			},
-			startState:    &initConfig{},
 			expectedState: &initConfig{},
 		},
 	}
@@ -1057,23 +1030,22 @@ func Test_initializers(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{infoReader: ir},
-			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.initializeCypress()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
+			ini: &initializer{
+				infoReader: ir,
+				cfg: &initConfig{
+					frameworkName: cypress.Kind,
+				},
 			},
-			startState: &initConfig{},
+			execution: func(i *initializer, cfg *initConfig) error {
+				return i.initializeCypress()
+			},
 			expectedState: &initConfig{
-				frameworkName:    cypress.Kind,
-				frameworkVersion: "7.5.0",
-				cypressJSON:      dir.Join("cypress.json"),
-				platformName:     "Windows 10",
-				browserName:      "chrome",
-				artifactWhen:     config.WhenPass,
+				frameworkName:     cypress.Kind,
+				frameworkVersion:  "7.5.0",
+				cypressConfigFile: dir.Join("cypress.json"),
+				platformName:      "Windows 10",
+				browserName:       "chrome",
+				artifactWhen:      config.WhenPass,
 			},
 		},
 		{
@@ -1133,23 +1105,22 @@ func Test_initializers(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{infoReader: ir},
-			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.initializePlaywright()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
+			ini: &initializer{
+				infoReader: ir,
+				cfg: &initConfig{
+					frameworkName: playwright.Kind,
+				},
 			},
-			startState: &initConfig{},
+			execution: func(i *initializer, cfg *initConfig) error {
+				return i.initializePlaywright()
+			},
 			expectedState: &initConfig{
 				frameworkName:    playwright.Kind,
 				frameworkVersion: "1.11.0",
 				platformName:     "Windows 10",
 				browserName:      "chromium",
 				artifactWhen:     config.WhenPass,
-				testMatch:        ".*.spec.js",
+				testMatch:        []string{".*.spec.js"},
 			},
 		},
 		{
@@ -1193,16 +1164,15 @@ func Test_initializers(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{infoReader: ir},
-			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.initializeTestcafe()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
+			ini: &initializer{
+				infoReader: ir,
+				cfg: &initConfig{
+					frameworkName: testcafe.Kind,
+				},
 			},
-			startState: &initConfig{},
+			execution: func(i *initializer, cfg *initConfig) error {
+				return i.initializeTestcafe()
+			},
 			expectedState: &initConfig{
 				frameworkName:    testcafe.Kind,
 				frameworkVersion: "1.12.0",
@@ -1260,16 +1230,15 @@ func Test_initializers(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{infoReader: ir},
-			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.initializeXCUITest()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
+			ini: &initializer{
+				infoReader: ir,
+				cfg: &initConfig{
+					frameworkName: xcuitest.Kind,
+				},
 			},
-			startState: &initConfig{},
+			execution: func(i *initializer, cfg *initConfig) error {
+				return i.initializeXCUITest()
+			},
 			expectedState: &initConfig{
 				frameworkName: xcuitest.Kind,
 				app:           dir.Join("ios-app.ipa"),
@@ -1327,16 +1296,15 @@ func Test_initializers(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{infoReader: ir},
-			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.initializeXCUITest()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
+			ini: &initializer{
+				infoReader: ir,
+				cfg: &initConfig{
+					frameworkName: xcuitest.Kind,
+				},
 			},
-			startState: &initConfig{},
+			execution: func(i *initializer, cfg *initConfig) error {
+				return i.initializeXCUITest()
+			},
 			expectedState: &initConfig{
 				frameworkName: xcuitest.Kind,
 				app:           dir.Join("ios-folder-app.app"),
@@ -1402,16 +1370,16 @@ func Test_initializers(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{infoReader: ir, vmdReader: er},
-			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.initializeEspresso()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
+			ini: &initializer{
+				infoReader: ir,
+				vmdReader:  er,
+				cfg: &initConfig{
+					frameworkName: espresso.Kind,
+				},
 			},
-			startState: &initConfig{},
+			execution: func(i *initializer, cfg *initConfig) error {
+				return i.initializeEspresso()
+			},
 			expectedState: &initConfig{
 				frameworkName: espresso.Kind,
 				app:           dir.Join("android-app.apk"),
@@ -1454,16 +1422,15 @@ func Test_initializers(t *testing.T) {
 				}
 				return nil
 			},
-			ini: &initializer{infoReader: ir},
-			execution: func(i *initializer, cfg *initConfig) error {
-				newCfg, err := i.initializeImageRunner()
-				if err != nil {
-					return err
-				}
-				*cfg = *newCfg
-				return nil
+			ini: &initializer{
+				infoReader: ir,
+				cfg: &initConfig{
+					frameworkName: imagerunner.Kind,
+				},
 			},
-			startState: &initConfig{},
+			execution: func(i *initializer, cfg *initConfig) error {
+				return i.initializeImageRunner()
+			},
 			expectedState: &initConfig{
 				frameworkName: imagerunner.Kind,
 				dockerImage:   "ubuntu:latest",
@@ -1639,7 +1606,7 @@ func Test_metaToBrowsers(t *testing.T) {
 				t.Errorf("metaToBrowsers() got = %v, want %v", gotBrowsers, tt.wantBrowsers)
 			}
 			if !reflect.DeepEqual(gotPlatforms, tt.wantPlatforms) {
-				t.Errorf("metaToBrowsers() got1 = %v, want %v", gotPlatforms, tt.wantPlatforms)
+				t.Errorf("metaToBrowsers() got = %v, want %v", gotPlatforms, tt.wantPlatforms)
 			}
 		})
 	}
@@ -1964,7 +1931,7 @@ func Test_checkEmulators(t *testing.T) {
 				t.Errorf("checkEmulators() got = %v, want %v", got, tt.want)
 			}
 			if !reflect.DeepEqual(errs, tt.wantErrs) {
-				t.Errorf("checkEmulators() got1 = %v, want %v", errs, tt.wantErrs)
+				t.Errorf("checkEmulators() got = %v, want %v", errs, tt.wantErrs)
 			}
 		})
 	}
@@ -1999,6 +1966,7 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 				},
 			}, nil
 		}},
+		cfg: &initConfig{},
 	}
 	var emptyErr []error
 
@@ -2015,23 +1983,23 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 			name: "Basic",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName:    cypress.Kind,
-					frameworkVersion: "7.0.0",
-					browserName:      "chrome",
-					platformName:     "Windows 10",
-					cypressJSON:      dir.Join("cypress.json"),
-					region:           "us-west-1",
-					artifactWhen:     "fail",
+					frameworkName:     cypress.Kind,
+					frameworkVersion:  "7.0.0",
+					browserName:       "chrome",
+					platformName:      "Windows 10",
+					cypressConfigFile: dir.Join("cypress.json"),
+					region:            "us-west-1",
+					artifactWhen:      "fail",
 				},
 			},
 			want: &initConfig{
-				frameworkName:    cypress.Kind,
-				frameworkVersion: "7.0.0",
-				browserName:      "chrome",
-				platformName:     "Windows 10",
-				cypressJSON:      dir.Join("cypress.json"),
-				region:           "us-west-1",
-				artifactWhen:     config.WhenFail,
+				frameworkName:     cypress.Kind,
+				frameworkVersion:  "7.0.0",
+				browserName:       "chrome",
+				platformName:      "Windows 10",
+				cypressConfigFile: dir.Join("cypress.json"),
+				region:            "us-west-1",
+				artifactWhen:      config.WhenFail,
 			},
 			wantErrs: emptyErr,
 		},
@@ -2080,15 +2048,15 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 			name: "invalid framework version / Invalid config file",
 			args: args{
 				initCfg: &initConfig{
-					frameworkName:    cypress.Kind,
-					frameworkVersion: "8.0.0",
-					cypressJSON:      "/my/fake/cypress.json",
+					frameworkName:     cypress.Kind,
+					frameworkVersion:  "8.0.0",
+					cypressConfigFile: "/my/fake/cypress.json",
 				},
 			},
 			want: &initConfig{
-				frameworkName:    cypress.Kind,
-				frameworkVersion: "8.0.0",
-				cypressJSON:      "/my/fake/cypress.json",
+				frameworkName:     cypress.Kind,
+				frameworkVersion:  "8.0.0",
+				cypressConfigFile: "/my/fake/cypress.json",
 			},
 			wantErrs: []error{
 				errors.New("no platform name specified"),
@@ -2100,12 +2068,13 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, errs := ini.initializeBatchCypress(tt.args.initCfg)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("initializeBatchCypress() got = %v, want %v", got, tt.want)
+			ini.cfg = tt.args.initCfg
+			errs := ini.initializeBatchCypress()
+			if !reflect.DeepEqual(ini.cfg, tt.want) {
+				t.Errorf("initializeBatchCypress() got = %v, want %v", ini.cfg, tt.want)
 			}
 			if !reflect.DeepEqual(errs, tt.wantErrs) {
-				t.Errorf("initializeBatchCypress() got1 = %v, want %v", errs, tt.wantErrs)
+				t.Errorf("initializeBatchCypress() got = %v, want %v", errs, tt.wantErrs)
 			}
 		})
 	}
@@ -2140,6 +2109,7 @@ func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 				},
 			}, nil
 		}},
+		cfg: &initConfig{},
 	}
 	var emptyErr []error
 
@@ -2234,12 +2204,13 @@ func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, errs := ini.initializeBatchTestcafe(tt.args.initCfg)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("initializeBatchTestcafe() got = %v, want %v", got, tt.want)
+			ini.cfg = tt.args.initCfg
+			errs := ini.initializeBatchTestcafe()
+			if !reflect.DeepEqual(ini.cfg, tt.want) {
+				t.Errorf("initializeBatchTestcafe() got = %v, want %v", ini.cfg, tt.want)
 			}
 			if !reflect.DeepEqual(errs, tt.wantErrs) {
-				t.Errorf("initializeBatchTestcafe() got1 = %v, want %v", errs, tt.wantErrs)
+				t.Errorf("initializeBatchTestcafe() got = %v, want %v", errs, tt.wantErrs)
 			}
 		})
 	}
@@ -2270,6 +2241,7 @@ func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 				},
 			}, nil
 		}},
+		cfg: &initConfig{},
 	}
 	var emptyErr []error
 
@@ -2364,12 +2336,13 @@ func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, errs := ini.initializeBatchPlaywright(tt.args.initCfg)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("initializeBatchPlaywright() got = %v, want %v", got, tt.want)
+			ini.cfg = tt.args.initCfg
+			errs := ini.initializeBatchPlaywright()
+			if !reflect.DeepEqual(ini.cfg, tt.want) {
+				t.Errorf("initializeBatchPlaywright() got = %v, want %v", ini.cfg, tt.want)
 			}
 			if !reflect.DeepEqual(errs, tt.wantErrs) {
-				t.Errorf("initializeBatchPlaywright() got1 = %v, want %v", errs, tt.wantErrs)
+				t.Errorf("initializeBatchPlaywright() got = %v, want %v", errs, tt.wantErrs)
 			}
 		})
 	}
@@ -2381,7 +2354,9 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 		fs.WithDir("ios-folder-app.app", fs.WithMode(0755)))
 	defer dir.Remove()
 
-	ini := &initializer{}
+	ini := &initializer{
+		cfg: &initConfig{},
+	}
 	var emptyErr []error
 
 	type args struct {
@@ -2516,12 +2491,13 @@ func Test_initializer_initializeBatchXcuitest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, errs := ini.initializeBatchXcuitest(tt.args.flags(), tt.args.initCfg)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("initializeBatchXcuitest() got = %v, want %v", got, tt.want)
+			ini.cfg = tt.args.initCfg
+			errs := ini.initializeBatchXcuitest(tt.args.flags())
+			if !reflect.DeepEqual(ini.cfg, tt.want) {
+				t.Errorf("initializeBatchXcuitest() got = %v, want %v", ini.cfg, tt.want)
 			}
 			if !reflect.DeepEqual(errs, tt.wantErrs) {
-				t.Errorf("initializeBatchXcuitest() got1 = %v, want %v", errs, tt.wantErrs)
+				t.Errorf("initializeBatchXcuitest() got = %v, want %v", errs, tt.wantErrs)
 			}
 		})
 	}
@@ -2532,7 +2508,9 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 		fs.WithFile("android-app.apk", "myAppContent", fs.WithMode(0644)))
 	defer dir.Remove()
 
-	ini := &initializer{}
+	ini := &initializer{
+		cfg: &initConfig{},
+	}
 	var emptyErr []error
 
 	type args struct {
@@ -2666,12 +2644,13 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, errs := ini.initializeBatchEspresso(tt.args.flags(), tt.args.initCfg)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("initializeBatchEspresso() got = %v, want %v", got, tt.want)
+			ini.cfg = tt.args.initCfg
+			errs := ini.initializeBatchEspresso(tt.args.flags())
+			if !reflect.DeepEqual(ini.cfg, tt.want) {
+				t.Errorf("initializeBatchEspresso() got = %v, want %v", ini.cfg, tt.want)
 			}
 			if !reflect.DeepEqual(errs, tt.wantErrs) {
-				t.Errorf("initializeBatchEspresso() got1 = %v, want %v", errs, tt.wantErrs)
+				t.Errorf("initializeBatchEspresso() got = %v, want %v", errs, tt.wantErrs)
 			}
 		})
 	}
@@ -2696,6 +2675,7 @@ func Test_initializer_initializeBatchImageRunner(t *testing.T) {
 				},
 			}, nil
 		}},
+		cfg: &initConfig{},
 	}
 	var emptyErr []error
 
@@ -2762,12 +2742,13 @@ func Test_initializer_initializeBatchImageRunner(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, errs := ini.initializeBatchImageRunner(tt.args.initCfg)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("initializeBatchImageRunner() got = %v, want %v", got, tt.want)
+			ini.cfg = tt.args.initCfg
+			errs := ini.initializeBatchImageRunner()
+			if !reflect.DeepEqual(ini.cfg, tt.want) {
+				t.Errorf("initializeBatchImageRunner() got = %v, want %v", ini.cfg, tt.want)
 			}
 			if !reflect.DeepEqual(errs, tt.wantErrs) {
-				t.Errorf("initializeBatchImageRunner() got1 = %v, want %v", errs, tt.wantErrs)
+				t.Errorf("initializeBatchImageRunner() got = %v, want %v", errs, tt.wantErrs)
 			}
 		})
 	}
