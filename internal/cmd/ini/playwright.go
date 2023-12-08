@@ -46,7 +46,7 @@ func PlaywrightCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&cfg.frameworkVersion, "version", "", "Playwright version.")
-	cmd.Flags().StringVar(&cfg.platformName, "platform", "", "Platform name.")
+	cmd.Flags().StringVar(&cfg.platformName, "platform", "", "OS name and version, such as 'Windows 11' or 'macOS 13'.")
 	cmd.Flags().StringVar(&cfg.browserName, "browser", "", "Browser name.")
 	cmd.Flags().StringVar(&cfg.playwrightProject, "project", "", "Playwright project name.")
 	cmd.Flags().StringSliceVar(&cfg.testMatch, "test-match", []string{".*.spec.js"}, "Test file pattern to match against.")

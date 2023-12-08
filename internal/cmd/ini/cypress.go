@@ -51,7 +51,7 @@ func CypressCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&cfg.frameworkVersion, "version", "", "Cypress version.")
 	cmd.Flags().StringVar(&cfg.cypressConfigFile, "cypress-config", "", "Path to the cypress config file.")
-	cmd.Flags().StringVar(&cfg.platformName, "platform", "", "Platform name.")
+	cmd.Flags().StringVar(&cfg.platformName, "platform", "", "OS name and version, such as 'Windows 11' or 'macOS 13'.")
 	cmd.Flags().StringVar(&cfg.browserName, "browser", "", "Browser name.")
 	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts-when", "fail", "When to download artifacts.")
 

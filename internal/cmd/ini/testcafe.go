@@ -46,7 +46,7 @@ func TestCafeCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&cfg.frameworkVersion, "version", "", "TestCafe version.")
-	cmd.Flags().StringVar(&cfg.platformName, "platform", "", "Platform name.")
+	cmd.Flags().StringVar(&cfg.platformName, "platform", "", "OS name and version, such as 'Windows 11' or 'macOS 13'.")
 	cmd.Flags().StringVar(&cfg.browserName, "browser", "", "Browser name.")
 	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts-when", "fail", "When to download artifacts.")
 
