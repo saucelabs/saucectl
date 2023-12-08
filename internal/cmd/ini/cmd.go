@@ -169,6 +169,9 @@ func noPromptMode(cmd *cobra.Command, cfg *initConfig) error {
 	if !creds.IsSet() {
 		return errors.New(msg.EmptyCredentials)
 	}
+	if cfg.region == "" {
+		return errors.New(msg.MissingRegion)
+	}
 
 	ini := newInitializer(stdio, creds, cfg)
 
