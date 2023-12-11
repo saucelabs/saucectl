@@ -249,7 +249,7 @@ func (a *AsyncEventManager) ParseEvent(event string) (AsyncEventI, error) {
 			log.Fatal(err)
 		}
 		return &pingEvent, nil
-	} else {
-		return nil, fmt.Errorf("unknown event type: %s", v.GetKind())
 	}
+
+	return nil, fmt.Errorf("unknown event type: %s", v.GetKind())
 }
