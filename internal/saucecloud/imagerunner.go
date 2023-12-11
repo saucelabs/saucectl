@@ -421,6 +421,10 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (
 }
 
 func (r *ImgRunner) HandleAsyncEvents(ctx context.Context, id string) error {
+	if !r.Project.LiveLogs {
+		return nil
+	}
+
 	transport, err := r.RunnerService.OpenAsyncEventsTransport(ctx, id)
 	if err != nil {
 		return err

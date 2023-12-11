@@ -264,16 +264,13 @@ func (c *ImageRunner) OpenAsyncEventsSSE(ctx context.Context, id string) (*http.
 }
 
 func (c *ImageRunner) OpenAsyncEventsTransport(ctx context.Context, id string) (imagerunner.AsyncEventTransportI, error) {
-	transport := os.Getenv("LIVELOGS")
-	if transport == "websocket" {
-		ws, err := c.OpenAsyncEventsWebsocket(ctx, id)
-		return imagerunner.NewWebsocketAsyncEventTransport(ws), err
-	}
-	if transport == "sse" {
+	if os.Getenv("LIVELOGS") == "sse" {
 		resp, err := c.OpenAsyncEventsSSE(ctx, id)
 		return imagerunner.NewSseAsyncEventTransport(resp), err
 	}
-	return nil, nil
+
+	ws, err := c.OpenAsyncEventsWebsocket(ctx, id)
+	return imagerunner.NewWebsocketAsyncEventTransport(ws), err
 }
 
 func (c *ImageRunner) doGetStr(ctx context.Context, url string) (string, error) {
