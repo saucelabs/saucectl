@@ -455,7 +455,7 @@ func (r *ImgRunner) HandleAsyncEvents(ctx context.Context, id string) error {
 			if event.GetKind() == "log" {
 				logEvent := event.(*imagerunner.LogEvent)
 				for _, line := range logEvent.Lines {
-					log.Info().Msgf("[%s, %s] %s", line.ContainerName, line.ID, line.Message)
+					log.Info().Msgf("[%s] %s", line.ContainerName, line.Message)
 				}
 			} else if event.GetKind() == "notice" {
 				noticeEvent := event.(*imagerunner.NoticeEvent)
