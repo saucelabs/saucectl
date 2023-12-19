@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -214,6 +215,19 @@ func (r *ImgRunner) buildService(serviceIn imagerunner.SuiteService, suiteName s
 	return serviceOut, nil
 }
 
+func ignoreError(err error) bool {
+	if err == nil {
+		return true
+	}
+	if !errors.Is(err, context.Canceled) {
+		return true
+	}
+	if strings.Contains(err.Error(), "websocket: close") {
+		return true
+	}
+	return false
+}
+
 func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error) {
 	files, err := mapFiles(suite.Files)
 	if err != nil {
@@ -289,7 +303,7 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 
 	go func() {
 		err := r.HandleAsyncEvents(ctx, runner.ID)
-		if !errors.Is(err, context.Canceled) {
+		if !ignoreError(err) {
 			log.Err(err).Msg("Async event handler failed.")
 		}
 	}()
