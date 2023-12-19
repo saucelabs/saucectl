@@ -645,7 +645,7 @@ func startProgressTicker(ctx context.Context, progress *int) (cancel context.Can
 			case <-ctx.Done():
 				return
 			case <-t.C:
-				log.Info().Msgf("Suites in progress: %d", *progress)
+				log.Info().Msgf("[notice] Suites in progress: %d", *progress)
 			}
 		}
 	}()
