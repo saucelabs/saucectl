@@ -289,7 +289,7 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 
 	go func() {
 		err := r.HandleAsyncEvents(ctx, runner.ID)
-		if err != nil {
+		if !errors.Is(err, context.Canceled) {
 			log.Err(err).Msg("Async event handler failed.")
 		}
 	}()
@@ -343,7 +343,10 @@ func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
 		}
 
 		r.PrintResult(res)
-		r.PrintLogs(res.runID, res.name)
+		if !r.Project.LiveLogs {
+			// only print logs if live logs are disabled
+			r.PrintLogs(res.runID, res.name)
+		}
 		files := r.DownloadArtifacts(res.runID, res.name, res.status, res.err != nil)
 		var artifacts []report.Artifact
 		for _, f := range files {
