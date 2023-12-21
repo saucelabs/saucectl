@@ -13,7 +13,6 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 )
@@ -212,10 +211,11 @@ func (c *ImageRunner) getWebsocketURL() string {
 	wsURL := c.URL
 	wsURL = strings.Replace(wsURL, "https://", "wss://", 1)
 	wsURL = strings.Replace(wsURL, "http://", "ws://", 1)
+	wsURL = strings.Replace(wsURL, "9091", "9095", 1)
 	return wsURL
 }
 
-func (c *ImageRunner) OpenAsyncEventsWebsocket(ctx context.Context, id string) (*websocket.Conn, error) {
+func (c *ImageRunner) OpenAsyncEventsWebsocket(ctx context.Context, id string, lastseq string) (*websocket.Conn, error) {
 	// dummy request so that we build basic auth header consistently
 	dummyURL := fmt.Sprintf("%s/v1alpha1/hosted/async/image/runners/%s/events", c.URL, id)
 	req, err := http.NewRequest("GET", dummyURL, nil)
@@ -224,24 +224,27 @@ func (c *ImageRunner) OpenAsyncEventsWebsocket(ctx context.Context, id string) (
 	}
 	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
 
-	url := fmt.Sprintf("%s/v1alpha1/hosted/async/image/runners/%s/events", c.getWebsocketURL(), id)
+	query := ""
+	if lastseq != "" {
+		query = fmt.Sprintf("?lastseq=%s", lastseq)
+	}
+	url := fmt.Sprintf("%s/v1alpha1/hosted/async/image/runners/%s/events%s", c.getWebsocketURL(), id, query)
 	headers := http.Header{}
 	headers.Add("Authorization", req.Header.Get("Authorization"))
-	ws, resp, err := websocket.DefaultDialer.Dial(
+	ws, _, err := websocket.DefaultDialer.Dial(
 		url, headers)
 	if err != nil {
-		if resp != nil {
-			log.Error().Err(err).Int("http status", resp.StatusCode).Msg("Could not open async events websocket")
-		} else {
-			log.Error().Err(err).Msg("Could not open async events websocket")
-		}
 		return nil, err
 	}
 	return ws, nil
 }
 
-func (c *ImageRunner) OpenAsyncEventsSSE(ctx context.Context, id string) (*http.Response, error) {
-	url := fmt.Sprintf("%s/v1alpha1/hosted/async/image/runners/%s/events", c.URL, id)
+func (c *ImageRunner) OpenAsyncEventsSSE(ctx context.Context, id string, lastseq string) (*http.Response, error) {
+	query := ""
+	if lastseq != "" {
+		query = fmt.Sprintf("?lastseq=%s", lastseq)
+	}
+	url := fmt.Sprintf("%s/v1alpha1/hosted/async/image/runners/%s/events%s", c.URL, id, query)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -263,13 +266,13 @@ func (c *ImageRunner) OpenAsyncEventsSSE(ctx context.Context, id string) (*http.
 	return resp, nil
 }
 
-func (c *ImageRunner) OpenAsyncEventsTransport(ctx context.Context, id string) (imagerunner.AsyncEventTransportI, error) {
+func (c *ImageRunner) OpenAsyncEventsTransport(ctx context.Context, id string, lastseq string) (imagerunner.AsyncEventTransportI, error) {
 	if os.Getenv("LIVELOGS") == "sse" {
-		resp, err := c.OpenAsyncEventsSSE(ctx, id)
+		resp, err := c.OpenAsyncEventsSSE(ctx, id, lastseq)
 		return imagerunner.NewSseAsyncEventTransport(resp), err
 	}
 
-	ws, err := c.OpenAsyncEventsWebsocket(ctx, id)
+	ws, err := c.OpenAsyncEventsWebsocket(ctx, id, lastseq)
 	return imagerunner.NewWebsocketAsyncEventTransport(ws), err
 }
 
