@@ -31,7 +31,7 @@ type ImageRunner interface {
 	StopRun(ctx context.Context, id string) error
 	DownloadArtifacts(ctx context.Context, id string) (io.ReadCloser, error)
 	GetLogs(ctx context.Context, id string) (string, error)
-	OpenAsyncEventsTransport(ctx context.Context, id string) (imagerunner.AsyncEventTransportI, error)
+	OpenAsyncEventsTransport(ctx context.Context, id string, lastseq string) (imagerunner.AsyncEventTransportI, error)
 }
 
 type SuiteTimeoutError struct {
@@ -442,17 +442,30 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (
 }
 
 func (r *ImgRunner) HandleAsyncEvents(ctx context.Context, id string) error {
+	delay := 3 * time.Second
 	if !r.Project.LiveLogs {
 		return nil
 	}
+	var lastseq = ""
+	var err error
+	for {
+		lastseq, err = r.handleAsyncEventsOneshot(ctx, id, lastseq)
+		if errors.Is(err, context.Canceled) {
+			return err
+		}
+		log.Info().Err(err).Str("lastseq", lastseq).Msg(fmt.Sprintf("Streaming issue. Reconnecting in %s...", delay))
+		time.Sleep(delay)
+	}
+}
 
-	transport, err := r.RunnerService.OpenAsyncEventsTransport(ctx, id)
+func (r *ImgRunner) handleAsyncEventsOneshot(ctx context.Context, id string, lastseq string) (string, error) {
+	transport, err := r.RunnerService.OpenAsyncEventsTransport(ctx, id, lastseq)
 	if err != nil {
-		return err
+		return lastseq, err
 	}
 
 	if transport == nil {
-		return nil
+		return lastseq, nil
 	}
 
 	defer transport.Close()
@@ -460,22 +473,23 @@ func (r *ImgRunner) HandleAsyncEvents(ctx context.Context, id string) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return lastseq, ctx.Err()
 		default:
 			msg, err := transport.ReadMessage()
 			if err != nil {
-				return err
+				return lastseq, err
 			}
 			if msg == "" {
 				continue
 			}
 			event, err := r.asyncEventManager.ParseEvent(msg)
 			if err != nil {
-				return err
+				return lastseq, err
 			}
 			if event.GetKind() == "log" {
 				logEvent := event.(*imagerunner.LogEvent)
 				for _, line := range logEvent.Lines {
+					lastseq = line.ID
 					log.Info().Msgf("[%s] %s", line.ContainerName, line.Message)
 				}
 			} else if event.GetKind() == "notice" {
