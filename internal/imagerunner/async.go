@@ -193,7 +193,11 @@ func (aet *SseAsyncEventTransport) ReadMessage() (string, error) {
 		msg := aet.scanner.Bytes()
 		return string(msg), nil
 	}
-	return "", aet.scanner.Err()
+	err := aet.scanner.Err()
+	if err == nil {
+		err = fmt.Errorf("no more messages")
+	}
+	return "", err
 }
 
 func (aet *SseAsyncEventTransport) Close() error {

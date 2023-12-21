@@ -480,8 +480,9 @@ func (r *ImgRunner) handleAsyncEventsOneshot(ctx context.Context, id string, las
 				return lastseq, err
 			}
 			if msg == "" {
-				continue
+				return lastseq, errors.New("empty message")
 			}
+
 			event, err := r.asyncEventManager.ParseEvent(msg)
 			if err != nil {
 				return lastseq, err
