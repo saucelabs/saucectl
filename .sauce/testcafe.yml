@@ -29,16 +29,18 @@ suites:
       - "*.test.js"
     platformName: "Windows 10"
 
-  - name: iOS Test
-    browserName: safari
-    src:
-      - "*.test.js"
-    simulators:
-      - name: iPhone 12 Simulator
-        platformName: iOS
-        platformVersions:
-          - "14.3"
-      - name: iPad mini (5th generation) Simulator
-        platformName: iOS
-        platformVersions:
-          - "14.3"
+# TODO: Temporarily disable iOS tests. They will be re-enabled once devx-2711 is resolved.
+#  - name: iOS Test
+#    browserName: safari
+#    src:
+#      - "*.test.js"
+#    simulators:
+#      - name: iPhone 12 Simulator
+#        platformName: iOS
+#        platformVersions:
+#          - "14.3"
+#      - name: iPad mini (5th generation) Simulator
+#        platformName: iOS
+#        platformVersions:
+#          - "14.3"
+#
