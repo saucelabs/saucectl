@@ -63,6 +63,15 @@
             "2.0.1",
             "2.0.0"
           ]
+        },
+        "configFile": {
+          "description": "The TestCafe configuration file.",
+          "type": "string",
+          "examples": [
+            "testcaferc.json",
+            "testcaferc.js",
+            "testcaferc.cjs"
+          ]
         }
       },
       "required": [

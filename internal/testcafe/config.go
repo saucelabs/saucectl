@@ -134,6 +134,8 @@ type Screenshots struct {
 type Testcafe struct {
 	// Version represents the testcafe framework version.
 	Version string `yaml:"version,omitempty" json:"version"`
+	// ConfigFile represents the testcafe config file
+	ConfigFile string `yaml:"configFile,omitempty" json:"configFile"`
 }
 
 // FromFile creates a new testcafe project based on the filepath.
