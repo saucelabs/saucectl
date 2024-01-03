@@ -2050,10 +2050,6 @@
                   "description": "Stops a test run if a test fails.",
                   "type": "boolean"
                 },
-                "reporters": {
-                  "description": "Specifies reporters supported by TestCafe.",
-                  "type": "array"
-                },
                 "timeout": {
                   "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
                 },
