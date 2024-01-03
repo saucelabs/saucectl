@@ -67,7 +67,7 @@ func NewTestcafeCmd() *cobra.Command {
 
 	// TestCafe
 	sc.String("testcafe.version", "testcafe::version", "", "The TestCafe version to use")
-	sc.String("testcafe.configFile", "testcafe::configFile", "", "The path to TestCafe config file.")
+	sc.String("testcafe.configFile", "testcafe::configFile", "", "The path to TestCafe config file")
 
 	// Browser & Platform
 	sc.String("browser", "suite::browserName", "", "Run tests against this browser")
