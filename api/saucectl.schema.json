@@ -1780,7 +1780,7 @@
                 ]
               },
               "configFile": {
-                "description": "The designated TestCafe configuration file.",
+                "description": "The TestCafe configuration file.",
                 "type": "string",
                 "examples": [
                   "testcaferc.json",
