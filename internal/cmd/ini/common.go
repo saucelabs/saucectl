@@ -173,19 +173,6 @@ func getMajorVersion(frameworkVersion string) int {
 	return v
 }
 
-func uniqSorted(ss []string) []string {
-	var out []string
-	idx := make(map[string]bool)
-	for _, s := range ss {
-		if _, ok := idx[s]; !ok {
-			idx[s] = true
-			out = append(out, s)
-		}
-	}
-	sort.Strings(out)
-	return out
-}
-
 func sortVersions(versions []string) {
 	sort.Slice(versions, func(i, j int) bool {
 		v1 := strings.Split(versions[i], ".")

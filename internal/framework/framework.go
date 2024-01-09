@@ -2,12 +2,8 @@ package framework
 
 import (
 	"context"
-	"errors"
-	"regexp"
 	"strings"
 	"time"
-
-	"github.com/saucelabs/saucectl/internal/msg"
 )
 
 // Framework represents a test framework (e.g. cypress).
@@ -47,26 +43,6 @@ func (m *Metadata) IsFlaggedForRemoval() bool {
 type Platform struct {
 	PlatformName string
 	BrowserNames []string
-}
-
-// GitReleaseSegments segments GitRelease into separate parts of org, repo and tag.
-// Returns an error if GitRelease is malformed.
-// The expected GitRelease format is "org/repo:tag".
-func GitReleaseSegments(m *Metadata) (org, repo, tag string, err error) {
-	// :punct: is a bit more generous than what would actually appear, but was chosen for the sake for readability.
-	r := regexp.MustCompile(`(?P<org>[[:punct:][:word:]]+)/(?P<repo>[[:punct:][:word:]]+):(?P<tag>[[:punct:][:word:]]+)`)
-	matches := r.FindStringSubmatch(m.GitRelease)
-
-	// We expect a full match, plus 3 subgroups (org, repo tag). Thus a total of 4.
-	if len(matches) != 4 {
-		return "", "", "", errors.New(msg.InvalidGitRelease)
-	}
-
-	orgIndex := r.SubexpIndex("org")
-	repoIndex := r.SubexpIndex("repo")
-	tagIndex := r.SubexpIndex("tag")
-
-	return matches[orgIndex], matches[repoIndex], matches[tagIndex], nil
 }
 
 // HasPlatform returns true if the provided Metadata has a matching platform.
