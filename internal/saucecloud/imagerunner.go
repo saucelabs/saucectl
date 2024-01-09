@@ -453,7 +453,7 @@ func (r *ImgRunner) HandleAsyncEvents(ctx context.Context, id string) error {
 		if errors.Is(err, context.Canceled) {
 			return err
 		}
-		log.Info().Err(err).Str("lastseq", lastseq).Msg(fmt.Sprintf("Streaming issue. Reconnecting in %s...", delay))
+		log.Info().Err(err).Str("lastseq", lastseq).Msgf("Streaming issue. Reconnecting in %s...", delay)
 		time.Sleep(delay)
 	}
 }
