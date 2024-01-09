@@ -259,12 +259,3 @@ func (r *EspressoRunner) calculateJobsCount(suites []espresso.Suite) int {
 	}
 	return total
 }
-
-func (r *EspressoRunner) getSuiteNames() string {
-	var names []string
-	for _, s := range r.Project.Suites {
-		names = append(names, s.Name)
-	}
-
-	return strings.Join(names, ", ")
-}

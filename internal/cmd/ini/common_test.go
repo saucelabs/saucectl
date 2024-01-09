@@ -314,53 +314,6 @@ func Test_saveSauceConfig(t *testing.T) {
 	}
 }
 
-func Test_uniqSorted(t *testing.T) {
-	type args struct {
-		ss []string
-	}
-	tests := []struct {
-		name string
-		args args
-		want []string
-	}{
-		{
-			name: "Sorted and unique",
-			args: args{
-				ss: []string{"aaa", "bbb", "ccc"},
-			},
-			want: []string{"aaa", "bbb", "ccc"},
-		},
-		{
-			name: "Not sorted and unique",
-			args: args{
-				ss: []string{"ccc", "aaa", "bbb"},
-			},
-			want: []string{"aaa", "bbb", "ccc"},
-		},
-		{
-			name: "Not sorted and not unique",
-			args: args{
-				ss: []string{"ccc", "bbb", "aaa", "bbb", "aaa", "ccc"},
-			},
-			want: []string{"aaa", "bbb", "ccc"},
-		},
-		{
-			name: "Sorted and not unique",
-			args: args{
-				ss: []string{"aaa", "aaa", "bbb", "bbb", "ccc"},
-			},
-			want: []string{"aaa", "bbb", "ccc"},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := uniqSorted(tt.args.ss); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("uniqSorted() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func Test_saveConfigurationFiles(t *testing.T) {
 	dir := fs.NewDir(t, "workdir")
 	defer dir.Remove()

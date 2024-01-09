@@ -92,13 +92,6 @@ func IgnoredNpmPackagesMsg(framework string, installedVersion string, ignoredPac
 	return fmt.Sprintf("%s.version (%s) already defined in your config. Ignoring installation of npm packages: %s", framework, installedVersion, strings.Join(ignoredPackages, ", "))
 }
 
-// PathTooLongForArchive prints the error message due to some filepath being too long.
-func PathTooLongForArchive(path string) {
-	color.Red("\nSome of your filepaths are too long (200 char limit) !\n\n")
-	fmt.Printf("Example: %s\n\n", path)
-	fmt.Printf("If you didn't mean to include those files, exclude them via the .sauceignore file.\nIf you need to include those files, then you have to shorten the filepath, for example, by renaming files, folders or avoid nesting files too deeply.\n\n")
-}
-
 // SuiteSplitNoMatch prints the error message due to no files matching pattern found.
 func SuiteSplitNoMatch(suiteName, path string, pattern []string) {
 	color.Red(fmt.Sprintf("\nNo matching files found for suite '%s'\n", suiteName))

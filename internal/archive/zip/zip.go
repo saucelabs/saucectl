@@ -32,12 +32,6 @@ func NewFileWriter(name string, matcher sauceignore.Matcher) (Writer, error) {
 	return w, nil
 }
 
-// New returns a new Writer that archives files to the specified io.Writer.
-func New(f io.Writer, matcher sauceignore.Matcher) (Writer, error) {
-	w := Writer{W: zip.NewWriter(f), M: matcher}
-	return w, nil
-}
-
 // Add adds the file at src to the destination dst in the archive and returns a count of
 // the files added to the archive, as well the length of the longest path.
 // The added file names should not contain any backslashes according to the specification outlined in

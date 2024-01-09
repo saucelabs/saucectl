@@ -77,14 +77,6 @@ func (r *CypressRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-// checkCypressVersion do several checks before running Cypress tests.
-func (r *CypressRunner) checkCypressVersion() error {
-	if r.Project.GetVersion() == "" {
-		return fmt.Errorf("missing cypress version. Check available versions here: https://docs.saucelabs.com/dev/cli/saucectl/#supported-frameworks-and-browsers")
-	}
-	return nil
-}
-
 func (r *CypressRunner) runSuites(app string, otherApps []string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)

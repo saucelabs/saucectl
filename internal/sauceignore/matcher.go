@@ -89,16 +89,3 @@ func NewMatcherFromFile(path string) (Matcher, error) {
 
 	return NewMatcher(ps), nil
 }
-
-// Dedupe takes a list of patterns and returns them back sans any duplicates.
-func Dedupe(patterns []Pattern) []Pattern {
-	hash := make(map[Pattern]struct{})
-	var list []Pattern
-	for _, p := range patterns {
-		if _, ok := hash[p]; !ok {
-			hash[p] = struct{}{}
-			list = append(list, p)
-		}
-	}
-	return list
-}
