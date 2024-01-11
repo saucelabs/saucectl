@@ -236,7 +236,11 @@ func (r *CloudRunner) getBuildURL(jobID string, isRDC bool) string {
 }
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {
-	log.Info().Str("suite", opts.DisplayName).Str("region", r.Region.String()).Msg("Starting suite.")
+	log.Info().
+		Str("suite", opts.DisplayName).
+		Str("region", r.Region.String()).
+		Str("tunnelName", opts.Tunnel.ID).
+		Msg("Starting suite.")
 
 	id, _, err := r.JobService.StartJob(context.Background(), opts)
 	if err != nil {
