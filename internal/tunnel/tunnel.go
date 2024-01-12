@@ -37,11 +37,11 @@ func ValidateTunnel(service Service, name string, owner string, filter Filter, d
 
 	// This wait value is deliberately not configurable.
 	wait := 30 * time.Second
-	log.Info().Str("timeout", wait.String()).Str("tunnelName", name).Msg("Performing tunnel readiness check...")
+	log.Info().Str("timeout", wait.String()).Str("tunnel", name).Msg("Performing tunnel readiness check...")
 	if err := service.IsTunnelRunning(context.Background(), name, owner, filter, wait); err != nil {
 		return err
 	}
 
-	log.Info().Str("tunnelName", name).Msg("Tunnel is ready!")
+	log.Info().Str("tunnel", name).Msg("Tunnel is ready!")
 	return nil
 }
