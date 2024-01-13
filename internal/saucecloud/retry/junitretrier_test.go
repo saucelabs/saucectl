@@ -185,6 +185,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 					SmartRetry: job.SmartRetry{
 						FailedOnly: true,
 					},
+					RealDevice: true,
 				},
 				previous: job.Job{
 					ID:    "fake-job-id",
@@ -194,10 +195,12 @@ func TestAppsRetrier_Retry(t *testing.T) {
 			expected: job.StartOptions{
 				Framework:   xcuitest.Kind,
 				DisplayName: "Dummy Test",
-				TestsToRun:  []string{"Demo.Class1/demoTest"},
+				TestOptions: map[string]interface{}{},
+				TestsToRun:  []string{"Demo/Class1/demoTest"},
 				SmartRetry: job.SmartRetry{
 					FailedOnly: true,
 				},
+				RealDevice: true,
 			},
 		},
 		{

@@ -3,6 +3,7 @@ package retry
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -46,15 +47,22 @@ func setClassesToRetry(opt *job.StartOptions, testcases []junit.TestCase) {
 		Str("suite", opt.DisplayName).
 		Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1))
 
-	if opt.Framework == xcuitest.Kind {
-		opt.TestsToRun = getFailedXCUITests(testcases)
-		lg.Msgf(msg.RetryWithTests, opt.TestsToRun)
-		return
-	}
-
 	if opt.TestOptions == nil {
 		opt.TestOptions = map[string]interface{}{}
 	}
+
+	if opt.Framework == xcuitest.Kind {
+		tests := getFailedXCUITests(testcases)
+		if opt.RealDevice {
+			opt.TestsToRun = tests
+		} else {
+			// Simulator test filter should be set in TestOptions
+			opt.TestOptions["class"] = tests
+		}
+		lg.Msgf(msg.RetryWithTests, tests)
+		return
+	}
+
 	tests := getFailedEspressoTests(testcases)
 	opt.TestOptions["class"] = tests
 	lg.Msgf(msg.RetryWithTests, tests)
@@ -84,14 +92,23 @@ func getFailedXCUITests(testCases []junit.TestCase) []string {
 	classes := map[string]bool{}
 	for _, tc := range testCases {
 		if tc.Error != nil || tc.Failure != nil {
+			className := unifiedXCUITestClassName(tc.ClassName)
 			if tc.Name != "" {
-				classes[fmt.Sprintf("%s/%s", tc.ClassName, tc.Name)] = true
+				classes[fmt.Sprintf("%s/%s", className, tc.Name)] = true
 			} else {
-				classes[tc.ClassName] = true
+				classes[className] = true
 			}
 		}
 	}
 	return maps.Keys(classes)
+}
+
+func unifiedXCUITestClassName(name string) string {
+	items := strings.Split(name, ".")
+	if len(items) == 1 {
+		return name
+	}
+	return strings.Join(items, "/")
 }
 
 // getFailedEspressoTests returns a list of failed Espresso tests from the given
