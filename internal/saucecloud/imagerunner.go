@@ -475,27 +475,28 @@ func (r *ImgRunner) handleAsyncEventsOneshot(ctx context.Context, id string, las
 		case <-ctx.Done():
 			return lastseq, ctx.Err()
 		default:
-			msg, err := transport.ReadMessage()
+			readMessage, err := transport.ReadMessage()
 			if err != nil {
 				return lastseq, err
 			}
-			if msg == "" {
+			if readMessage == "" {
 				return lastseq, errors.New("empty message")
 			}
 
-			event, err := r.asyncEventManager.ParseEvent(msg)
+			event, err := r.asyncEventManager.ParseEvent(readMessage)
 			if err != nil {
 				return lastseq, err
 			}
-			if event.GetKind() == "log" {
-				logEvent := event.(*imagerunner.LogEvent)
-				for _, line := range logEvent.Lines {
-					lastseq = line.ID
-					log.Info().Msgf("[%s] %s", line.ContainerName, line.Message)
+			switch event.Type {
+			case "com.saucelabs.so.v1.ping":
+			case "com.saucelabs.so.v1.log":
+				if event.LineSequence != "" {
+					lastseq = event.LineSequence
 				}
-			} else if event.GetKind() == "notice" {
-				noticeEvent := event.(*imagerunner.NoticeEvent)
-				log.Info().Msgf("[%s] %s", noticeEvent.Severity, noticeEvent.Message)
+				log.Info().Msgf("[%s] %s", event.Data["containerName"], event.Data["line"])
+			default:
+				err := errors.New("unknown event type")
+				log.Err(err).Msgf("unknown even type: %s", event.Type)
 			}
 		}
 	}
