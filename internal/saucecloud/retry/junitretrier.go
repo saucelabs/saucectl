@@ -40,8 +40,8 @@ func (b *JunitRetrier) retryFailedTests(reader job.Reader, jobOpts chan<- job.St
 
 // setClassesToRetry sets the correct filtering flag when retrying.
 // RDC API does not provide different endpoints (or identical values) for Espresso
-// and XCUITest. Thus, we need set the classes at the correct position depending the
-// framework that is being executed.
+// and XCUITest. Thus, we need set the classes at the correct position depending
+// on the framework that is being executed.
 func setClassesToRetry(opt *job.StartOptions, testcases []junit.TestCase) {
 	lg := log.Info().
 		Str("suite", opt.DisplayName).
@@ -53,10 +53,11 @@ func setClassesToRetry(opt *job.StartOptions, testcases []junit.TestCase) {
 
 	if opt.Framework == xcuitest.Kind {
 		tests := getFailedXCUITests(testcases)
+
+		// RDC and VDC API filter use different fields for test filtering.
 		if opt.RealDevice {
 			opt.TestsToRun = tests
 		} else {
-			// Simulator test filter should be set in TestOptions
 			opt.TestOptions["class"] = tests
 		}
 		lg.Msgf(msg.RetryWithTests, tests)
