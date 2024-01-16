@@ -92,7 +92,7 @@ func getFailedXCUITests(testCases []junit.TestCase) []string {
 	classes := map[string]bool{}
 	for _, tc := range testCases {
 		if tc.Error != nil || tc.Failure != nil {
-			className := unifiedXCUITestClassName(tc.ClassName)
+			className := normalizeXCUITestClassName(tc.ClassName)
 			if tc.Name != "" {
 				classes[fmt.Sprintf("%s/%s", className, tc.Name)] = true
 			} else {
@@ -103,7 +103,12 @@ func getFailedXCUITests(testCases []junit.TestCase) []string {
 	return maps.Keys(classes)
 }
 
-func unifiedXCUITestClassName(name string) string {
+// normalizeXCUITestClassName normalizes the class name of an XCUITest. The
+// class name within the platform generated JUnit XML file can be dot-separated,
+// but our platform API expects a slash-separated class name. The platform is
+// unfortunately not consistent in this regard and is not in full control of the
+// generated JUnit XML file, hence we reconcile the two here.
+func normalizeXCUITestClassName(name string) string {
 	items := strings.Split(name, ".")
 	if len(items) == 1 {
 		return name
