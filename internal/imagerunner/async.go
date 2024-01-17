@@ -4,150 +4,16 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/gorilla/websocket"
-	"github.com/santhosh-tekuri/jsonschema/v5"
 )
-
-var SCHEMA = `
-{
-  "properties": {
-    "kind": {
-      "enum": [
-        "notice",
-        "log",
-        "ping"
-      ]
-    },
-    "runnerID": {
-      "type": "string"
-    }
-  },
-  "allOf": [
-    {
-      "if": {
-        "properties": {
-          "kind": {
-            "const": "log"
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "lines": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "containerName": {
-                  "type": "string"
-                },
-                "message": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        },
-        "additionalProperties": true
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "kind": {
-            "const": "notice"
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "severity": {
-            "enum": [
-              "info",
-              "warning",
-              "error"
-            ]
-          },
-          "message": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": true
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "kind": {
-            "const": "ping"
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "message": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": true
-      }
-    }
-
-  ],
-  "additionalProperties": true
-}
-`
-
-const (
-	NOTICE = "notice"
-	LOG    = "log"
-	PING   = "ping"
-)
-
-type AsyncEventI interface {
-	GetKind() string
-	GetRunnerID() string
-}
 
 type AsyncEvent struct {
-	Kind     string `json:"kind"`
-	RunnerID string `json:"runnerID"`
-}
-
-func (a *AsyncEvent) GetKind() string {
-	return a.Kind
-}
-
-func (a *AsyncEvent) GetRunnerID() string {
-	return a.RunnerID
-}
-
-type LogLine struct {
-	ID            string `json:"id"`
-	ContainerName string `json:"containerName"`
-	Message       string `json:"message"`
-}
-
-type LogEvent struct {
-	AsyncEvent
-	Lines []LogLine `json:"lines"`
-}
-
-type PingEvent struct {
-	AsyncEvent
-	Message string `json:"message"`
-}
-
-type NoticeEvent struct {
-	AsyncEvent
-	Severity string `json:"severity"`
-	Message  string `json:"message"`
+	Type         string
+	LineSequence string
+	Data         map[string]string
 }
 
 type AsyncEventTransportI interface {
@@ -205,55 +71,52 @@ func (aet *SseAsyncEventTransport) Close() error {
 }
 
 type AsyncEventManagerI interface {
-	ParseEvent(event string) (AsyncEventI, error)
+	ParseEvent(event string) (*AsyncEvent, error)
 }
 
 type AsyncEventManager struct {
-	schema *jsonschema.Schema
 }
 
 func NewAsyncEventManager() (*AsyncEventManager, error) {
-	schema, err := jsonschema.CompileString("schema.json", SCHEMA)
-	if err != nil {
-		return nil, err
-	}
-
-	asyncEventManager := AsyncEventManager{
-		schema: schema,
-	}
+	asyncEventManager := AsyncEventManager{}
 
 	return &asyncEventManager, nil
 }
 
-func (a *AsyncEventManager) ParseEvent(event string) (AsyncEventI, error) {
-	err := a.schema.Validate(event)
+func parseLineSequence(cloudEvent *cloudevents.Event) (string, error) {
+	// The extension is not necessarily present, so ignore errors.
+	_lineseq, _ := cloudEvent.Context.GetExtension("linesequence")
+	lineseq, ok := _lineseq.(string)
+	if !ok {
+		return "", fmt.Errorf("linesequence is not a string")
+	}
+	return lineseq, nil
+}
+
+func (a *AsyncEventManager) ParseEvent(event string) (*AsyncEvent, error) {
+	readEvent := cloudevents.NewEvent()
+	err := json.Unmarshal([]byte(event), &readEvent)
 	if err != nil {
 		return nil, err
 	}
-	v := AsyncEvent{}
-	if err := json.Unmarshal([]byte(event), &v); err != nil {
-		log.Fatal(err)
+
+	data := map[string]string{}
+	err = readEvent.DataAs(&data)
+	if err != nil {
+		return nil, err
 	}
 
-	if v.GetKind() == LOG {
-		logEvent := LogEvent{}
-		if err := json.Unmarshal([]byte(event), &logEvent); err != nil {
-			log.Fatal(err)
-		}
-		return &logEvent, nil
-	} else if v.GetKind() == NOTICE {
-		noticeEvent := NoticeEvent{}
-		if err := json.Unmarshal([]byte(event), &noticeEvent); err != nil {
-			log.Fatal(err)
-		}
-		return &noticeEvent, nil
-	} else if v.GetKind() == PING {
-		pingEvent := PingEvent{}
-		if err := json.Unmarshal([]byte(event), &pingEvent); err != nil {
-			log.Fatal(err)
-		}
-		return &pingEvent, nil
+	asyncEvent := AsyncEvent{
+		Type: readEvent.Type(),
+		Data: data,
 	}
 
-	return nil, fmt.Errorf("unknown event type: %s", v.GetKind())
+	if asyncEvent.Type == "com.saucelabs.so.v1.log" {
+		asyncEvent.LineSequence, err = parseLineSequence(&readEvent)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &asyncEvent, nil
 }
