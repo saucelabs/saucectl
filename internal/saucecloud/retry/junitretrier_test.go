@@ -185,6 +185,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 					SmartRetry: job.SmartRetry{
 						FailedOnly: true,
 					},
+					RealDevice: true,
 				},
 				previous: job.Job{
 					ID:    "fake-job-id",
@@ -194,10 +195,12 @@ func TestAppsRetrier_Retry(t *testing.T) {
 			expected: job.StartOptions{
 				Framework:   xcuitest.Kind,
 				DisplayName: "Dummy Test",
-				TestsToRun:  []string{"Demo.Class1/demoTest"},
+				TestOptions: map[string]interface{}{},
+				TestsToRun:  []string{"Demo/Class1/demoTest"},
 				SmartRetry: job.SmartRetry{
 					FailedOnly: true,
 				},
+				RealDevice: true,
 			},
 		},
 		{
@@ -367,6 +370,38 @@ func TestAppsRetrier_Retry(t *testing.T) {
 			go b.Retry(tt.args.jobOpts, tt.args.opt, tt.args.previous)
 			newOpt := <-tt.args.jobOpts
 			assert.Equal(t, tt.expected, newOpt)
+		})
+	}
+}
+
+func Test_normalizeXCUITestClassName(t *testing.T) {
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "needs normalization",
+			args: args{name: "DemoAppTests.ClassyTest"},
+			want: "DemoAppTests/ClassyTest",
+		},
+		{
+			name: "already normalized",
+			args: args{name: "DemoAppTests/ClassyTest"},
+			want: "DemoAppTests/ClassyTest",
+		},
+		{
+			name: "nothing to normalize",
+			args: args{name: "DemoAppTests"},
+			want: "DemoAppTests",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, normalizeXCUITestClassName(tt.args.name), "normalizeXCUITestClassName(%v)", tt.args.name)
 		})
 	}
 }
