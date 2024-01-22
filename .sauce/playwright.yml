@@ -11,10 +11,10 @@ defaults:
   timeout: 5m
 rootDir: tests/e2e/playwright/
 playwright:
-  version: 1.40.1
+  version: 1.41.0
 suites:
   - name: "chromium test in sauce"
-    platformName: "Windows 10"
+    platformName: "Windows 11"
     testMatch: ['.*.js']
     env:
       hello: world
@@ -22,7 +22,7 @@ suites:
       browserName: "chromium"
 
   - name: "webkit test in sauce"
-    platformName: "Windows 10"
+    platformName: "Windows 11"
     testMatch: ['.*.js']
     params:
       browserName: "webkit"
