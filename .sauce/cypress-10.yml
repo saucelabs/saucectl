@@ -11,7 +11,7 @@ rootDir: tests/e2e/cypress_10/e2e/
 defaults:
   timeout: 5m
 cypress:
-  version: 13.6.0
+  version: 13.6.3
   configFile: "cypress.config.js"
 suites:
   # - name: "(experimental) webkit test"
@@ -25,7 +25,7 @@ suites:
 
   - name: "chrome test"
     browser: "chrome"
-    platformName: "macOS 11.00"
+    platformName: "macOS 12"
     config:
       env:
         hello: world
@@ -35,7 +35,7 @@ suites:
   - name: "firefox test"
     browser: "firefox"
     browserVersion: "104" # FF 105 does not work with cypress
-    platformName: "macOS 11.00"
+    platformName: "macOS 12"
     config:
       env:
         hello: world

@@ -10,14 +10,14 @@ sauce:
 defaults:
   timeout: 5m
 testcafe:
-  version: 3.4.0
+  version: 3.5.0
 rootDir: tests/e2e/testcafe/
 suites:
   - name: Chrome in sauce
     browserName: chrome
     src:
       - "*.test.js"
-    platformName: "macOS 11.00"
+    platformName: "macOS 12"
     compilerOptions:
       typescript:
         options:
@@ -27,7 +27,7 @@ suites:
     browserName: firefox
     src:
       - "*.test.js"
-    platformName: "Windows 10"
+    platformName: "Windows 11"
 
   - name: iOS Test
     browserName: safari
