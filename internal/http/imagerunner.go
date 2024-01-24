@@ -254,63 +254,14 @@ func (c *ImageRunner) OpenAsyncEventsWebsocket(ctx context.Context, id string, l
 	return ws, nil
 }
 
-func (c *ImageRunner) getSseURL() (string, error) {
-
-	sseURL, err := url.Parse(c.URL)
-	if err != nil {
-		return "", err
-	}
-	if os.Getenv("SO_ASYNCEVENT_PORT") != "" {
-		sseURL.Host = fmt.Sprintf("%s:%s", sseURL.Hostname(), os.Getenv("SO_ASYNCEVENT_PORT"))
-	}
-	return sseURL.String(), nil
-}
-
-func (c *ImageRunner) OpenAsyncEventsSSE(ctx context.Context, id string, lastseq string) (*http.Response, error) {
-	sseURL, err := c.getSseURL()
-	if err != nil {
-		return nil, err
-	}
-	query := ""
-	if lastseq != "" {
-		query = fmt.Sprintf("?lastseq=%s", lastseq)
-	}
-	url := fmt.Sprintf("%s/v1alpha1/hosted/async/image/runners/%s/events%s", sseURL, id, query)
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Cache-Control", "no-cache")
-	req.Header.Set("Accept", "text/event-stream")
-	req.Header.Set("Connection", "keep-alive")
-	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
-
-	client := http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected server response (%d)", resp.StatusCode)
-	}
-	return resp, nil
-}
-
 func (c *ImageRunner) OpenAsyncEventsTransport(ctx context.Context, id string, lastseq string) (imagerunner.AsyncEventTransportI, error) {
-	if os.Getenv("LIVELOGS") == "sse" {
-		resp, err := c.OpenAsyncEventsSSE(ctx, id, lastseq)
-		if err != nil {
-			return nil, err
-		}
-		return imagerunner.NewSseAsyncEventTransport(resp), err
-	}
-
 	ws, err := c.OpenAsyncEventsWebsocket(ctx, id, lastseq)
 	if err != nil {
-		return nil, err
+		return nil, imagerunner.AsyncEventSetupError{
+			Err: err,
+		}
 	}
-	return imagerunner.NewWebsocketAsyncEventTransport(ws), err
+	return imagerunner.NewWebsocketAsyncEventTransport(ws), nil
 }
 
 func (c *ImageRunner) doGetStr(ctx context.Context, url string) (string, error) {

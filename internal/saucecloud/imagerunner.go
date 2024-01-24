@@ -448,12 +448,24 @@ func (r *ImgRunner) HandleAsyncEvents(ctx context.Context, id string) error {
 	}
 	var lastseq = ""
 	var err error
+	setupErrorCount := 0
+	maxSetupErrors := 3
 	for {
+		if setupErrorCount >= maxSetupErrors {
+			log.Info().Msgf("Could not setup Log streaming after %d attempts, disabling it.", maxSetupErrors)
+			return imagerunner.AsyncEventSetupError{}
+		}
 		lastseq, err = r.handleAsyncEventsOneshot(ctx, id, lastseq)
 		if errors.Is(err, context.Canceled) {
 			return err
 		}
-		log.Info().Err(err).Str("lastseq", lastseq).Msgf("Streaming issue. Reconnecting in %s...", delay)
+		if wrappedErr, ok := err.(imagerunner.AsyncEventSetupError); ok {
+			setupErrorCount++
+			err = wrappedErr.Err
+		} else {
+			setupErrorCount = 0
+		}
+		log.Info().Err(err).Msgf("Log streaming issue. Retrying in %s...", delay)
 		time.Sleep(delay)
 	}
 }
@@ -463,12 +475,29 @@ func (r *ImgRunner) handleAsyncEventsOneshot(ctx context.Context, id string, las
 	if err != nil {
 		return lastseq, err
 	}
-
 	if transport == nil {
 		return lastseq, nil
 	}
 
 	defer transport.Close()
+
+	// the first message is expected to be a ping
+	readMessage, err := transport.ReadMessage()
+	if err != nil {
+		return lastseq, err
+	}
+	if readMessage == "" {
+		return lastseq, errors.New("empty message")
+	}
+	event, err := r.asyncEventManager.ParseEvent(readMessage)
+	if err != nil {
+		return lastseq, err
+	}
+	if event.Type == "com.saucelabs.so.v1.ping" {
+		log.Info().Msg("Streaming logs...")
+	} else {
+		return lastseq, errors.New("first message is not a ping")
+	}
 
 	for {
 		select {
