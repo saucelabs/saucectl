@@ -51,20 +51,22 @@ type ImgRunner struct {
 
 	Reporters []report.Reporter
 
-	Async bool
+	Async             bool
+	AsyncEventManager imagerunner.AsyncEventManagerI
 
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
 func NewImgRunner(project imagerunner.Project, runnerService ImageRunner, tunnelService tunnel.Service,
-	reporters []report.Reporter, async bool) *ImgRunner {
+	asyncEventManager imagerunner.AsyncEventManagerI, reporters []report.Reporter, async bool) *ImgRunner {
 	return &ImgRunner{
-		Project:       project,
-		RunnerService: runnerService,
-		TunnelService: tunnelService,
-		Reporters:     reporters,
-		Async:         async,
+		Project:           project,
+		RunnerService:     runnerService,
+		TunnelService:     tunnelService,
+		Reporters:         reporters,
+		Async:             async,
+		AsyncEventManager: asyncEventManager,
 	}
 }
 
@@ -348,7 +350,7 @@ func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
 	inProgress := expected
 	passed := true
 
-	stopProgress := startProgressTicker(r.ctx, &inProgress)
+	stopProgress := r.startProgressTicker(r.ctx, &inProgress)
 	for i := 0; i < expected; i++ {
 		res := <-results
 		inProgress--
@@ -590,7 +592,7 @@ func readFile(path string) (string, error) {
 	return base64.StdEncoding.Strict().EncodeToString(bytes), nil
 }
 
-func startProgressTicker(ctx context.Context, progress *int) (cancel context.CancelFunc) {
+func (r *ImgRunner) startProgressTicker(ctx context.Context, progress *int) (cancel context.CancelFunc) {
 	ctx, cancel = context.WithCancel(ctx)
 
 	go func() {
@@ -601,7 +603,9 @@ func startProgressTicker(ctx context.Context, progress *int) (cancel context.Can
 			case <-ctx.Done():
 				return
 			case <-t.C:
-				log.Info().Msgf("[notice] Suites in progress: %d", *progress)
+				if r.AsyncEventManager.IsLogIdle() {
+					log.Info().Msgf("Suites in progress: %d", *progress)
+				}
 			}
 		}
 	}()

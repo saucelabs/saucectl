@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/gorilla/websocket"
@@ -72,13 +73,18 @@ func (aet *SseAsyncEventTransport) Close() error {
 
 type AsyncEventManagerI interface {
 	ParseEvent(event string) (*AsyncEvent, error)
+	TrackLog()
+	IsLogIdle() bool
 }
 
 type AsyncEventManager struct {
+	logTimestamps time.Time
 }
 
 func NewAsyncEventManager() (*AsyncEventManager, error) {
-	asyncEventManager := AsyncEventManager{}
+	asyncEventManager := AsyncEventManager{
+		logTimestamps: time.Now(),
+	}
 
 	return &asyncEventManager, nil
 }
@@ -119,4 +125,12 @@ func (a *AsyncEventManager) ParseEvent(event string) (*AsyncEvent, error) {
 	}
 
 	return &asyncEvent, nil
+}
+
+func (a *AsyncEventManager) TrackLog() {
+	a.logTimestamps = time.Now()
+}
+
+func (a *AsyncEventManager) IsLogIdle() bool {
+	return time.Since(a.logTimestamps) > 30*time.Second
 }
