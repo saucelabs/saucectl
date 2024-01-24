@@ -10,9 +10,10 @@ func (e AsyncEventSetupError) Error() string {
 	return fmt.Sprintf("streaming setup failed with: %v", e.Err)
 }
 
-type NotAuthorizedError struct {
+type AsyncEventFatalError struct {
+	Err error
 }
 
-func (e NotAuthorizedError) Error() string {
-	return "not authorized"
+func (e AsyncEventFatalError) Error() string {
+	return e.Err.Error()
 }
