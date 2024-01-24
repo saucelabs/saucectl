@@ -260,8 +260,12 @@ func (c *ImageRunner) OpenAsyncEventsWebsocket(ctx context.Context, id string, l
 	url := fmt.Sprintf("%s/v1alpha1/hosted/async/image/runners/%s/events%s", websocketURL, id, query)
 	headers := http.Header{}
 	headers.Add("Authorization", req.Header.Get("Authorization"))
-	ws, _, err := websocket.DefaultDialer.Dial(
-		url, headers)
+	dialer := websocket.Dialer{
+		Proxy:             http.ProxyFromEnvironment,
+		HandshakeTimeout:  45 * time.Second,
+		EnableCompression: true,
+	}
+	ws, _, err := dialer.Dial(url, headers)
 	if err != nil {
 		return nil, err
 	}
