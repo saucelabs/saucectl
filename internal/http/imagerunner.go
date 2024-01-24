@@ -265,7 +265,10 @@ func (c *ImageRunner) OpenAsyncEventsWebsocket(ctx context.Context, id string, l
 		HandshakeTimeout:  45 * time.Second,
 		EnableCompression: true,
 	}
-	ws, _, err := dialer.Dial(url, headers)
+	ws, resp, err := dialer.Dial(url, headers)
+	if resp.StatusCode == http.StatusUnauthorized {
+		return nil, imagerunner.NotAuthorizedError{}
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -275,6 +278,9 @@ func (c *ImageRunner) OpenAsyncEventsWebsocket(ctx context.Context, id string, l
 func (c *ImageRunner) OpenAsyncEventsTransport(ctx context.Context, id string, lastseq string, nowait bool) (imagerunner.AsyncEventTransportI, error) {
 	ws, err := c.OpenAsyncEventsWebsocket(ctx, id, lastseq, nowait)
 	if err != nil {
+		if _, ok := err.(imagerunner.NotAuthorizedError); ok {
+			return nil, err
+		}
 		return nil, imagerunner.AsyncEventSetupError{
 			Err: err,
 		}
@@ -296,6 +302,9 @@ func (c *ImageRunner) HandleAsyncEvents(ctx context.Context, id string, nowait b
 		}
 		hasMoreLines, lastseq, err = c.handleAsyncEventsOneshot(ctx, id, lastseq, nowait)
 		if errors.Is(err, context.Canceled) {
+			return err
+		}
+		if _, ok := err.(imagerunner.NotAuthorizedError); ok {
 			return err
 		}
 		if !hasMoreLines {
