@@ -17,7 +17,7 @@ import (
 
 func LogsCommand(liveLogs *bool) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:          "logs <runID> --",
+		Use:          "logs <runID>",
 		Short:        "Fetch the logs for an imagerunner run",
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
