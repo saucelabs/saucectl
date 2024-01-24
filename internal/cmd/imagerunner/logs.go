@@ -15,9 +15,9 @@ import (
 	"golang.org/x/text/language"
 )
 
-func LogsCommand() *cobra.Command {
+func LogsCommand(liveLogs *bool) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:          "logs <runID>",
+		Use:          "logs <runID> --",
 		Short:        "Fetch the logs for an imagerunner run",
 		SilenceUsage: true,
 		Args: func(cmd *cobra.Command, args []string) error {
@@ -44,21 +44,31 @@ func LogsCommand() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return exec(args[0])
+			return exec(args[0], *liveLogs)
 		},
 	}
 
 	return cmd
 }
 
-func exec(runID string) error {
-	log, err := imagerunnerClient.GetLogs(context.Background(), runID)
-	if err != nil {
-		if err == imgrunner.ErrResourceNotFound {
-			return fmt.Errorf("could not find log URL for run with ID (%s): %w", runID, err)
+func exec(runID string, liveLogs bool) error {
+	if liveLogs {
+		err := imagerunnerClient.FetchLiveLogs(context.Background(), runID)
+		if err != nil {
+			if err == imgrunner.ErrResourceNotFound {
+				return fmt.Errorf("could not find log URL for run with ID (%s): %w", runID, err)
+			}
+			return err
 		}
-		return err
+	} else {
+		log, err := imagerunnerClient.GetLogs(context.Background(), runID)
+		if err != nil {
+			if err == imgrunner.ErrResourceNotFound {
+				return fmt.Errorf("could not find log URL for run with ID (%s): %w", runID, err)
+			}
+			return err
+		}
+		fmt.Println(log)
 	}
-	fmt.Println(log)
 	return nil
 }

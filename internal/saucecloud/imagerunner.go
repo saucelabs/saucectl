@@ -31,7 +31,7 @@ type ImageRunner interface {
 	StopRun(ctx context.Context, id string) error
 	DownloadArtifacts(ctx context.Context, id string) (io.ReadCloser, error)
 	GetLogs(ctx context.Context, id string) (string, error)
-	OpenAsyncEventsTransport(ctx context.Context, id string, lastseq string) (imagerunner.AsyncEventTransportI, error)
+	HandleAsyncEvents(ctx context.Context, id string, nowait bool) error
 }
 
 type SuiteTimeoutError struct {
@@ -51,22 +51,20 @@ type ImgRunner struct {
 
 	Reporters []report.Reporter
 
-	asyncEventManager imagerunner.AsyncEventManagerI
-	Async             bool
+	Async bool
 
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
 func NewImgRunner(project imagerunner.Project, runnerService ImageRunner, tunnelService tunnel.Service,
-	reporters []report.Reporter, asyncEventManager imagerunner.AsyncEventManagerI, async bool) *ImgRunner {
+	reporters []report.Reporter, async bool) *ImgRunner {
 	return &ImgRunner{
-		Project:           project,
-		RunnerService:     runnerService,
-		TunnelService:     tunnelService,
-		Reporters:         reporters,
-		asyncEventManager: asyncEventManager,
-		Async:             async,
+		Project:       project,
+		RunnerService: runnerService,
+		TunnelService: tunnelService,
+		Reporters:     reporters,
+		Async:         async,
 	}
 }
 
@@ -302,7 +300,10 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 	}
 
 	go func() {
-		err := r.HandleAsyncEvents(ctx, runner.ID)
+		if !r.Project.LiveLogs {
+			return
+		}
+		err := r.RunnerService.HandleAsyncEvents(ctx, runner.ID, false)
 		if !ignoreError(err) {
 			log.Err(err).Msg("Async event handler failed.")
 		}
@@ -436,96 +437,6 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (
 			}
 			if imagerunner.Done(r.Status) {
 				return r, err
-			}
-		}
-	}
-}
-
-func (r *ImgRunner) HandleAsyncEvents(ctx context.Context, id string) error {
-	delay := 3 * time.Second
-	if !r.Project.LiveLogs {
-		return nil
-	}
-	var lastseq = ""
-	var err error
-	setupErrorCount := 0
-	maxSetupErrors := 3
-	for {
-		if setupErrorCount >= maxSetupErrors {
-			log.Info().Msgf("Could not setup Log streaming after %d attempts, disabling it.", maxSetupErrors)
-			return imagerunner.AsyncEventSetupError{}
-		}
-		lastseq, err = r.handleAsyncEventsOneshot(ctx, id, lastseq)
-		if errors.Is(err, context.Canceled) {
-			return err
-		}
-		if wrappedErr, ok := err.(imagerunner.AsyncEventSetupError); ok {
-			setupErrorCount++
-			err = wrappedErr.Err
-		} else {
-			setupErrorCount = 0
-		}
-		log.Info().Err(err).Msgf("Log streaming issue. Retrying in %s...", delay)
-		time.Sleep(delay)
-	}
-}
-
-func (r *ImgRunner) handleAsyncEventsOneshot(ctx context.Context, id string, lastseq string) (string, error) {
-	transport, err := r.RunnerService.OpenAsyncEventsTransport(ctx, id, lastseq)
-	if err != nil {
-		return lastseq, err
-	}
-	if transport == nil {
-		return lastseq, nil
-	}
-
-	defer transport.Close()
-
-	// the first message is expected to be a ping
-	readMessage, err := transport.ReadMessage()
-	if err != nil {
-		return lastseq, err
-	}
-	if readMessage == "" {
-		return lastseq, errors.New("empty message")
-	}
-	event, err := r.asyncEventManager.ParseEvent(readMessage)
-	if err != nil {
-		return lastseq, err
-	}
-	if event.Type == "com.saucelabs.so.v1.ping" {
-		log.Info().Msg("Streaming logs...")
-	} else {
-		return lastseq, errors.New("first message is not a ping")
-	}
-
-	for {
-		select {
-		case <-ctx.Done():
-			return lastseq, ctx.Err()
-		default:
-			readMessage, err := transport.ReadMessage()
-			if err != nil {
-				return lastseq, err
-			}
-			if readMessage == "" {
-				return lastseq, errors.New("empty message")
-			}
-
-			event, err := r.asyncEventManager.ParseEvent(readMessage)
-			if err != nil {
-				return lastseq, err
-			}
-			switch event.Type {
-			case "com.saucelabs.so.v1.ping":
-			case "com.saucelabs.so.v1.log":
-				if event.LineSequence != "" {
-					lastseq = event.LineSequence
-				}
-				log.Info().Msgf("[%s] %s", event.Data["containerName"], event.Data["line"])
-			default:
-				err := errors.New("unknown event type")
-				log.Err(err).Msgf("unknown even type: %s", event.Type)
 			}
 		}
 	}
