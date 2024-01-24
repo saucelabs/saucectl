@@ -13,8 +13,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/gorilla/websocket"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
@@ -25,6 +27,7 @@ type ImageRunner struct {
 	URL               string
 	Creds             iam.Credentials
 	AsyncEventManager imagerunner.AsyncEventManagerI
+	eventLogger       zerolog.Logger
 }
 
 type AuthToken struct {
@@ -35,11 +38,21 @@ type AuthToken struct {
 
 func NewImageRunner(url string, creds iam.Credentials, timeout time.Duration,
 	asyncEventManager imagerunner.AsyncEventManagerI) ImageRunner {
+	eventLogger := zerolog.New(zerolog.ConsoleWriter{
+		Out: os.Stdout,
+		PartsOrder: []string{
+			zerolog.MessageFieldName,
+		},
+		FormatLevel: func(i interface{}) string {
+			return color.New(color.FgGreen).Sprint("[LOGS]")
+		},
+	})
 	return ImageRunner{
 		Client:            NewRetryableClient(timeout),
 		URL:               url,
 		Creds:             creds,
 		AsyncEventManager: asyncEventManager,
+		eventLogger:       eventLogger,
 	}
 }
 
@@ -376,7 +389,9 @@ func (c *ImageRunner) handleAsyncEventsOneshot(ctx context.Context, id string, l
 				if event.LineSequence != "" {
 					lastseq = event.LineSequence
 				}
-				log.Info().Msgf("[%s] %s", event.Data["containerName"], event.Data["line"])
+				c.eventLogger.Info().Msgf("%s %s",
+					color.New(color.FgCyan).Sprint(event.Data["containerName"]),
+					event.Data["line"])
 				c.AsyncEventManager.TrackLog()
 			default:
 				err := errors.New("unknown event type")
