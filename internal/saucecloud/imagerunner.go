@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -30,6 +31,7 @@ type ImageRunner interface {
 	StopRun(ctx context.Context, id string) error
 	DownloadArtifacts(ctx context.Context, id string) (io.ReadCloser, error)
 	GetLogs(ctx context.Context, id string) (string, error)
+	HandleAsyncEvents(ctx context.Context, id string, nowait bool) error
 }
 
 type SuiteTimeoutError struct {
@@ -49,10 +51,23 @@ type ImgRunner struct {
 
 	Reporters []report.Reporter
 
-	Async bool
+	Async             bool
+	AsyncEventManager imagerunner.AsyncEventManagerI
 
 	ctx    context.Context
 	cancel context.CancelFunc
+}
+
+func NewImgRunner(project imagerunner.Project, runnerService ImageRunner, tunnelService tunnel.Service,
+	asyncEventManager imagerunner.AsyncEventManagerI, reporters []report.Reporter, async bool) *ImgRunner {
+	return &ImgRunner{
+		Project:           project,
+		RunnerService:     runnerService,
+		TunnelService:     tunnelService,
+		Reporters:         reporters,
+		Async:             async,
+		AsyncEventManager: asyncEventManager,
+	}
 }
 
 type execResult struct {
@@ -200,6 +215,19 @@ func (r *ImgRunner) buildService(serviceIn imagerunner.SuiteService, suiteName s
 	return serviceOut, nil
 }
 
+func ignoreError(err error) bool {
+	if err == nil {
+		return true
+	}
+	if !errors.Is(err, context.Canceled) {
+		return true
+	}
+	if strings.Contains(err.Error(), "websocket: close") {
+		return true
+	}
+	return false
+}
+
 func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error) {
 	files, err := mapFiles(suite.Files)
 	if err != nil {
@@ -273,6 +301,16 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 		return runner, nil
 	}
 
+	go func() {
+		if !r.Project.LiveLogs {
+			return
+		}
+		err := r.RunnerService.HandleAsyncEvents(ctx, runner.ID, false)
+		if !ignoreError(err) {
+			log.Err(err).Msg("Async event handler failed.")
+		}
+	}()
+
 	var run imagerunner.Runner
 	run, err = r.PollRun(ctx, runner.ID, runner.Status)
 	if errors.Is(err, context.DeadlineExceeded) && ctx.Err() != nil {
@@ -312,7 +350,7 @@ func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
 	inProgress := expected
 	passed := true
 
-	stopProgress := startProgressTicker(r.ctx, &inProgress)
+	stopProgress := r.startProgressTicker(r.ctx, &inProgress)
 	for i := 0; i < expected; i++ {
 		res := <-results
 		inProgress--
@@ -322,7 +360,10 @@ func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
 		}
 
 		r.PrintResult(res)
-		r.PrintLogs(res.runID, res.name)
+		if !r.Project.LiveLogs {
+			// only print logs if live logs are disabled
+			r.PrintLogs(res.runID, res.name)
+		}
 		files := r.DownloadArtifacts(res.runID, res.name, res.status, res.err != nil)
 		var artifacts []report.Artifact
 		for _, f := range files {
@@ -551,7 +592,7 @@ func readFile(path string) (string, error) {
 	return base64.StdEncoding.Strict().EncodeToString(bytes), nil
 }
 
-func startProgressTicker(ctx context.Context, progress *int) (cancel context.CancelFunc) {
+func (r *ImgRunner) startProgressTicker(ctx context.Context, progress *int) (cancel context.CancelFunc) {
 	ctx, cancel = context.WithCancel(ctx)
 
 	go func() {
@@ -562,7 +603,9 @@ func startProgressTicker(ctx context.Context, progress *int) (cancel context.Can
 			case <-ctx.Done():
 				return
 			case <-t.C:
-				log.Info().Msgf("Suites in progress: %d", *progress)
+				if r.AsyncEventManager.IsLogIdle() {
+					log.Info().Msgf("Suites in progress: %d", *progress)
+				}
 			}
 		}
 	}()

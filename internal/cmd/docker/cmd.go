@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/http"
+	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/spf13/cobra"
 )
@@ -34,7 +35,13 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 
 			creds := reg.Credentials()
 			url := reg.APIBaseURL()
-			imageRunnerService = http.NewImageRunner(url, creds, imageRunnerServiceTimeout)
+
+			asyncEventManager, err := imagerunner.NewAsyncEventManager()
+			if err != nil {
+				return err
+			}
+
+			imageRunnerService = http.NewImageRunner(url, creds, imageRunnerServiceTimeout, asyncEventManager)
 
 			return nil
 		},

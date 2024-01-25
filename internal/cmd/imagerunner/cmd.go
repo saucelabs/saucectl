@@ -6,6 +6,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/http"
+	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/spf13/cobra"
@@ -13,6 +14,7 @@ import (
 
 var (
 	imagerunnerClient http.ImageRunner
+	liveLogs          bool
 )
 
 func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
@@ -37,7 +39,12 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 			creds := credentials.Get()
 			url := region.FromString(regio).APIBaseURL()
 
-			imagerunnerClient = http.NewImageRunner(url, creds, 15*time.Minute)
+			asyncEventManager, err := imagerunner.NewAsyncEventManager()
+			if err != nil {
+				return err
+			}
+
+			imagerunnerClient = http.NewImageRunner(url, creds, 15*time.Minute, asyncEventManager)
 
 			return nil
 		},
@@ -45,9 +52,10 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 
 	flags := cmd.PersistentFlags()
 	flags.StringVarP(&regio, "region", "r", "us-west-1", "The Sauce Labs region. Options: us-west-1, eu-central-1.")
+	flags.BoolVarP(&liveLogs, "live-logs", "", false, "Retrieve logs from temporary livelogs storage.")
 
 	cmd.AddCommand(
-		LogsCommand(),
+		LogsCommand(&liveLogs),
 		ArtifactsCommand(),
 	)
 	return cmd

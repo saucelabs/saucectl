@@ -32,6 +32,7 @@ type Project struct {
 	Suites         []Suite            `yaml:"suites,omitempty" json:"suites"`
 	Artifacts      config.Artifacts   `yaml:"artifacts,omitempty" json:"artifacts"`
 	DryRun         bool               `yaml:"-" json:"-"`
+	LiveLogs       bool               `yaml:"-" json:"-"`
 	Env            map[string]string  `yaml:"env,omitempty" json:"env"`
 	EnvFlag        map[string]string  `yaml:"-" json:"-"`
 	Reporters      config.Reporters   `yaml:"reporters,omitempty" json:"-"`
