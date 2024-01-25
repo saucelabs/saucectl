@@ -1,10 +1,8 @@
-name: saucectl tests pipeline
+name: Test
 
 on:
+  workflow_dispatch:
   pull_request:
-  push:
-    branches:
-      - main
 
 env:
   SAUCE_USERNAME: ${{secrets.SAUCE_USERNAME}}
@@ -22,7 +20,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'
+          go-version: "1.21"
 
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -42,7 +40,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'
+          go-version: "1.21"
           cache: true
 
       - name: Run tests
@@ -87,7 +85,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'
+          go-version: "1.21"
           cache: true
 
       - name: Build Project
@@ -229,7 +227,7 @@ jobs:
           --cypress.configFile "cypress.config.js" \
           --timeout 10m \
           -r us-west-1
- 
+
   cypress-windows:
     needs: build
     runs-on: windows-latest
