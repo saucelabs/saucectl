@@ -327,60 +327,70 @@ func (c *ImageRunner) HandleAsyncEvents(ctx context.Context, id string, nowait b
 	return imagerunner.AsyncEventSetupError{}
 }
 
-func (c *ImageRunner) handleAsyncEvents(ctx context.Context, id string, lastseq string, nowait bool) (bool, string, error) {
-	transport, err := c.OpenAsyncEventsTransport(id, lastseq, nowait)
+func (c *ImageRunner) handleAsyncEvents(ctx context.Context, id string, lastSeq string, nowait bool) (bool, string, error) {
+	transport, err := c.OpenAsyncEventsTransport(id, lastSeq, nowait)
 	if err != nil {
-		return true, lastseq, err
+		return true, lastSeq, err
 	}
-	if transport == nil {
-		return true, lastseq, nil
-	}
-
 	defer transport.Close()
 
 	// the first message is expected to be a ping
-	readMessage, err := transport.ReadMessage()
-	if err != nil {
-		return true, lastseq, err
-	}
-	if readMessage == "" {
-		return true, lastseq, errors.New("empty message")
-	}
-	event, err := c.AsyncEventManager.ParseEvent(readMessage)
-	if err != nil {
-		return true, lastseq, err
-	}
-	if event.Type == "com.saucelabs.so.v1.ping" {
-		log.Info().Msg("Streaming logs...")
-	} else {
-		return true, lastseq, errors.New("first message is not a ping")
+	if err := c.processFirstMessage(transport); err != nil {
+		return true, lastSeq, err
 	}
 
+	return c.processRemainingMessages(ctx, transport, lastSeq, nowait)
+}
+
+// processFirstMessage reads the first message from the transport and checks if
+// it is a ping event. If it is not, an error is returned. Calling this method
+// more than once per transport will therefore always result in an error.
+func (c *ImageRunner) processFirstMessage(transport imagerunner.AsyncEventTransporter) error {
+	msg, err := transport.ReadMessage()
+	if err != nil {
+		return err
+	}
+	if msg == "" {
+		return errors.New("empty message")
+	}
+	event, err := c.AsyncEventManager.ParseEvent(msg)
+	if err != nil {
+		return err
+	}
+	if event.Type == "com.saucelabs.so.v1.ping" {
+		return errors.New("first message is not a ping")
+	}
+	log.Info().Msg("Streaming logs...")
+	return nil
+}
+
+func (c *ImageRunner) processRemainingMessages(ctx context.Context, transport imagerunner.AsyncEventTransporter, lastSeq string, nowait bool) (bool, string, error) {
 	for {
 		select {
 		case <-ctx.Done():
-			return false, lastseq, ctx.Err()
+			return false, lastSeq, ctx.Err()
 		default:
 			msg, err := transport.ReadMessage()
 			if err != nil {
 				if nowait && strings.Contains(err.Error(), "close") {
-					return false, lastseq, nil
+					return false, lastSeq, nil
 				}
-				return true, lastseq, err
+				return true, lastSeq, err
 			}
 			if msg == "" {
-				return true, lastseq, errors.New("empty message")
+				return true, lastSeq, errors.New("empty message")
 			}
 
 			event, err := c.AsyncEventManager.ParseEvent(msg)
 			if err != nil {
-				return true, lastseq, err
+				return true, lastSeq, err
 			}
+
 			switch event.Type {
 			case "com.saucelabs.so.v1.ping":
 			case "com.saucelabs.so.v1.log":
 				if event.LineSequence != "" {
-					lastseq = event.LineSequence
+					lastSeq = event.LineSequence
 				}
 				c.eventLogger.Info().Msgf("%s %s",
 					color.New(color.FgCyan).Sprint(event.Data["containerName"]),
