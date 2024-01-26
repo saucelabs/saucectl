@@ -64,7 +64,6 @@ func (aet *SseAsyncEventTransport) Close() error {
 
 type AsyncEventManager interface {
 	ParseEvent(event string) (*AsyncEvent, error)
-	TrackLog()
 	IsLogIdle() bool
 }
 
@@ -113,13 +112,10 @@ func (a *AsyncEventMgr) ParseEvent(event string) (*AsyncEvent, error) {
 		if err != nil {
 			return nil, err
 		}
+		a.lastLogTime = time.Now()
 	}
 
 	return &asyncEvent, nil
-}
-
-func (a *AsyncEventMgr) TrackLog() {
-	a.lastLogTime = time.Now()
 }
 
 func (a *AsyncEventMgr) IsLogIdle() bool {

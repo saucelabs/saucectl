@@ -395,7 +395,6 @@ func (c *ImageRunner) handleAsyncEventsOneshot(ctx context.Context, id string, l
 				c.eventLogger.Info().Msgf("%s %s",
 					color.New(color.FgCyan).Sprint(event.Data["containerName"]),
 					event.Data["line"])
-				c.AsyncEventManager.TrackLog()
 			default:
 				err := errors.New("unknown event type")
 				log.Err(err).Msgf("unknown even type: %s", event.Type)
