@@ -338,10 +338,9 @@ func (c *ImageRunner) handleAsyncEvents(ctx context.Context, id string, lastSeq 
 }
 
 // processAsyncEventMessages reads all messages from the transport and logs them
-// to stdout. If the context is canceled, the method returns immediately.
-// If nowait is true, the method returns when the transport is closed.
-// Otherwise, the method returns when the transport is closed and all messages
-// have been read.
+// out. If the context is canceled, the method returns immediately. If nowait is
+// true, the method returns when the transport is closed. Otherwise, the method
+// returns when the transport is closed and all messages have been read.
 func (c *ImageRunner) processAsyncEventMessages(ctx context.Context, transport imagerunner.AsyncEventTransporter, lastSeq string, nowait bool) (bool, string, error) {
 	var initialPingProcessed bool
 	for {
