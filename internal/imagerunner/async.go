@@ -46,15 +46,6 @@ type SseAsyncEventTransport struct {
 	scanner      *bufio.Scanner
 }
 
-func NewSseAsyncEventTransport(httpResponse *http.Response) *SseAsyncEventTransport {
-	scanner := bufio.NewScanner(httpResponse.Body)
-	scanner.Split(bufio.ScanLines)
-	return &SseAsyncEventTransport{
-		httpResponse: httpResponse,
-		scanner:      scanner,
-	}
-}
-
 func (aet *SseAsyncEventTransport) ReadMessage() (string, error) {
 	if aet.scanner.Scan() {
 		msg := aet.scanner.Bytes()
