@@ -242,7 +242,7 @@ func (c *ImageRunner) getWebSocketURL() (string, error) {
 	return wsURL.String(), nil
 }
 
-func (c *ImageRunner) OpenAsyncEventsWebSocket(id string, lastSeq string, nowait bool) (*websocket.Conn, error) {
+func (c *ImageRunner) OpenAsyncEventsWebSocket(id string, lastSeq string, wait bool) (*websocket.Conn, error) {
 	// dummy request so that we build basic auth header consistently
 	dummyURL := fmt.Sprintf("%s/v1alpha1/hosted/async/image/runners/%s/events", c.URL, id)
 	req, err := http.NewRequest("GET", dummyURL, nil)
@@ -261,7 +261,7 @@ func (c *ImageRunner) OpenAsyncEventsWebSocket(id string, lastSeq string, nowait
 	if lastSeq != "" {
 		queryParts = append(queryParts, fmt.Sprintf("lastseq=%s", lastSeq))
 	}
-	if nowait {
+	if !wait {
 		queryParts = append(queryParts, "nowait=true")
 	}
 	query := ""
@@ -291,8 +291,8 @@ func (c *ImageRunner) OpenAsyncEventsWebSocket(id string, lastSeq string, nowait
 	return ws, nil
 }
 
-func (c *ImageRunner) OpenAsyncEventsTransport(id string, lastSeq string, nowait bool) (imagerunner.AsyncEventTransporter, error) {
-	ws, err := c.OpenAsyncEventsWebSocket(id, lastSeq, nowait)
+func (c *ImageRunner) OpenAsyncEventsTransport(id string, lastSeq string, wait bool) (imagerunner.AsyncEventTransporter, error) {
+	ws, err := c.OpenAsyncEventsWebSocket(id, lastSeq, wait)
 	if err != nil {
 		var fatalErr imagerunner.AsyncEventFatalError
 		if errors.As(err, &fatalErr) {
@@ -305,12 +305,12 @@ func (c *ImageRunner) OpenAsyncEventsTransport(id string, lastSeq string, nowait
 	return imagerunner.NewWebSocketAsyncEventTransport(ws), nil
 }
 
-func (c *ImageRunner) HandleAsyncEvents(ctx context.Context, id string, nowait bool) error {
+func (c *ImageRunner) HandleAsyncEvents(ctx context.Context, id string, wait bool) error {
 	var lastSeq string
 	var hasMoreLines bool
 	var err error
 	for i := 0; i < 3; i++ {
-		hasMoreLines, lastSeq, err = c.handleAsyncEvents(ctx, id, lastSeq, nowait)
+		hasMoreLines, lastSeq, err = c.handleAsyncEvents(ctx, id, lastSeq, wait)
 		if err != nil {
 			var fatalErr imagerunner.AsyncEventFatalError
 			if errors.Is(err, context.Canceled) || errors.As(err, &fatalErr) {
@@ -328,21 +328,21 @@ func (c *ImageRunner) HandleAsyncEvents(ctx context.Context, id string, nowait b
 	return imagerunner.AsyncEventSetupError{}
 }
 
-func (c *ImageRunner) handleAsyncEvents(ctx context.Context, id string, lastSeq string, nowait bool) (bool, string, error) {
-	transport, err := c.OpenAsyncEventsTransport(id, lastSeq, nowait)
+func (c *ImageRunner) handleAsyncEvents(ctx context.Context, id string, lastSeq string, wait bool) (bool, string, error) {
+	transport, err := c.OpenAsyncEventsTransport(id, lastSeq, wait)
 	if err != nil {
 		return true, lastSeq, err
 	}
 	defer transport.Close()
 
-	return c.processAsyncEventMessages(ctx, transport, lastSeq, nowait)
+	return c.processAsyncEventMessages(ctx, transport, lastSeq, wait)
 }
 
 // processAsyncEventMessages reads all messages from the transport and logs them
 // out. If the context is canceled, the method returns immediately. If nowait is
 // true, the method returns when the transport is closed. Otherwise, the method
 // returns when the transport is closed and all messages have been read.
-func (c *ImageRunner) processAsyncEventMessages(ctx context.Context, transport imagerunner.AsyncEventTransporter, lastSeq string, nowait bool) (bool, string, error) {
+func (c *ImageRunner) processAsyncEventMessages(ctx context.Context, transport imagerunner.AsyncEventTransporter, lastSeq string, wait bool) (bool, string, error) {
 	var initialPingProcessed bool
 	for {
 		select {
@@ -351,7 +351,7 @@ func (c *ImageRunner) processAsyncEventMessages(ctx context.Context, transport i
 		default:
 			msg, err := transport.ReadMessage()
 			if err != nil {
-				if nowait && strings.Contains(err.Error(), "close") {
+				if !wait && strings.Contains(err.Error(), "close") {
 					return false, lastSeq, nil
 				}
 				return true, lastSeq, err
@@ -389,7 +389,7 @@ func (c *ImageRunner) processAsyncEventMessages(ctx context.Context, transport i
 }
 
 func (c *ImageRunner) FetchLiveLogs(ctx context.Context, id string) error {
-	return c.HandleAsyncEvents(ctx, id, true)
+	return c.HandleAsyncEvents(ctx, id, false)
 }
 
 func (c *ImageRunner) doGetStr(ctx context.Context, url string) (string, error) {
