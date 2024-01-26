@@ -26,7 +26,7 @@ type ImageRunner struct {
 	Client            *retryablehttp.Client
 	URL               string
 	Creds             iam.Credentials
-	AsyncEventManager imagerunner.AsyncEventManagerI
+	AsyncEventManager imagerunner.AsyncEventManager
 	eventLogger       zerolog.Logger
 }
 
@@ -37,7 +37,7 @@ type AuthToken struct {
 }
 
 func NewImageRunner(url string, creds iam.Credentials, timeout time.Duration,
-	asyncEventManager imagerunner.AsyncEventManagerI) ImageRunner {
+	asyncEventManager imagerunner.AsyncEventManager) ImageRunner {
 	eventLogger := zerolog.New(zerolog.ConsoleWriter{
 		Out: os.Stdout,
 		PartsOrder: []string{

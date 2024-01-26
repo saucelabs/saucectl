@@ -62,18 +62,18 @@ func (aet *SseAsyncEventTransport) Close() error {
 	return aet.httpResponse.Body.Close()
 }
 
-type AsyncEventManagerI interface {
+type AsyncEventManager interface {
 	ParseEvent(event string) (*AsyncEvent, error)
 	TrackLog()
 	IsLogIdle() bool
 }
 
-type AsyncEventManager struct {
+type AsyncEventMgr struct {
 	logTimestamps time.Time
 }
 
-func NewAsyncEventManager() (*AsyncEventManager, error) {
-	asyncEventManager := AsyncEventManager{
+func NewAsyncEventMgr() (*AsyncEventMgr, error) {
+	asyncEventManager := AsyncEventMgr{
 		logTimestamps: time.Now(),
 	}
 
@@ -90,7 +90,7 @@ func parseLineSequence(cloudEvent *cloudevents.Event) (string, error) {
 	return lineseq, nil
 }
 
-func (a *AsyncEventManager) ParseEvent(event string) (*AsyncEvent, error) {
+func (a *AsyncEventMgr) ParseEvent(event string) (*AsyncEvent, error) {
 	readEvent := cloudevents.NewEvent()
 	err := json.Unmarshal([]byte(event), &readEvent)
 	if err != nil {
@@ -118,10 +118,10 @@ func (a *AsyncEventManager) ParseEvent(event string) (*AsyncEvent, error) {
 	return &asyncEvent, nil
 }
 
-func (a *AsyncEventManager) TrackLog() {
+func (a *AsyncEventMgr) TrackLog() {
 	a.logTimestamps = time.Now()
 }
 
-func (a *AsyncEventManager) IsLogIdle() bool {
+func (a *AsyncEventMgr) IsLogIdle() bool {
 	return time.Since(a.logTimestamps) > 30*time.Second
 }

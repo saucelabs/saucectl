@@ -52,14 +52,14 @@ type ImgRunner struct {
 	Reporters []report.Reporter
 
 	Async             bool
-	AsyncEventManager imagerunner.AsyncEventManagerI
+	AsyncEventManager imagerunner.AsyncEventManager
 
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
 func NewImgRunner(project imagerunner.Project, runnerService ImageRunner, tunnelService tunnel.Service,
-	asyncEventManager imagerunner.AsyncEventManagerI, reporters []report.Reporter, async bool) *ImgRunner {
+	asyncEventManager imagerunner.AsyncEventManager, reporters []report.Reporter, async bool) *ImgRunner {
 	return &ImgRunner{
 		Project:           project,
 		RunnerService:     runnerService,
