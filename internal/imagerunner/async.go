@@ -22,22 +22,22 @@ type AsyncEventTransportI interface {
 	Close() error
 }
 
-type WebsocketAsyncEventTransport struct {
+type WebSocketAsyncEventTransport struct {
 	ws *websocket.Conn
 }
 
-func NewWebsocketAsyncEventTransport(ws *websocket.Conn) *WebsocketAsyncEventTransport {
-	return &WebsocketAsyncEventTransport{
+func NewWebSocketAsyncEventTransport(ws *websocket.Conn) *WebSocketAsyncEventTransport {
+	return &WebSocketAsyncEventTransport{
 		ws: ws,
 	}
 }
 
-func (aet *WebsocketAsyncEventTransport) ReadMessage() (string, error) {
+func (aet *WebSocketAsyncEventTransport) ReadMessage() (string, error) {
 	_, msg, err := aet.ws.ReadMessage()
 	return string(msg), err
 }
 
-func (aet *WebsocketAsyncEventTransport) Close() error {
+func (aet *WebSocketAsyncEventTransport) Close() error {
 	return aet.ws.Close()
 }
 
