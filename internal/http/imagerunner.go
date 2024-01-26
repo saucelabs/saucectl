@@ -328,6 +328,9 @@ func (c *ImageRunner) StreamLogs(ctx context.Context, id string, wait bool) erro
 	return imagerunner.AsyncEventSetupError{}
 }
 
+// handleAsyncEvents manages the process of handling asynchronous events.
+// It returns a boolean indicating whether there are more lines to process,
+// the last sequence string, and an error if one occurred.
 func (c *ImageRunner) handleAsyncEvents(ctx context.Context, id string, lastSeq string, wait bool) (bool, string, error) {
 	transport, err := c.OpenAsyncEventsTransport(id, lastSeq, wait)
 	if err != nil {
@@ -335,14 +338,6 @@ func (c *ImageRunner) handleAsyncEvents(ctx context.Context, id string, lastSeq 
 	}
 	defer transport.Close()
 
-	return c.processAsyncEventMessages(ctx, transport, lastSeq, wait)
-}
-
-// processAsyncEventMessages reads all messages from the transport and logs them
-// out. If the context is canceled, the method returns immediately. If nowait is
-// true, the method returns when the transport is closed. Otherwise, the method
-// returns when the transport is closed and all messages have been read.
-func (c *ImageRunner) processAsyncEventMessages(ctx context.Context, transport imagerunner.AsyncEventTransporter, lastSeq string, wait bool) (bool, string, error) {
 	var initialPingProcessed bool
 	for {
 		select {
