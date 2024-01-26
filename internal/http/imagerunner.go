@@ -242,7 +242,7 @@ func (c *ImageRunner) getWebSocketURL() (string, error) {
 	return wsURL.String(), nil
 }
 
-func (c *ImageRunner) OpenAsyncEventsWebSocket(id string, lastseq string, nowait bool) (*websocket.Conn, error) {
+func (c *ImageRunner) OpenAsyncEventsWebSocket(id string, lastSeq string, nowait bool) (*websocket.Conn, error) {
 	// dummy request so that we build basic auth header consistently
 	dummyURL := fmt.Sprintf("%s/v1alpha1/hosted/async/image/runners/%s/events", c.URL, id)
 	req, err := http.NewRequest("GET", dummyURL, nil)
@@ -258,8 +258,8 @@ func (c *ImageRunner) OpenAsyncEventsWebSocket(id string, lastseq string, nowait
 
 	// build query string
 	var queryParts []string
-	if lastseq != "" {
-		queryParts = append(queryParts, fmt.Sprintf("lastseq=%s", lastseq))
+	if lastSeq != "" {
+		queryParts = append(queryParts, fmt.Sprintf("lastseq=%s", lastSeq))
 	}
 	if nowait {
 		queryParts = append(queryParts, "nowait=true")
@@ -291,8 +291,8 @@ func (c *ImageRunner) OpenAsyncEventsWebSocket(id string, lastseq string, nowait
 	return ws, nil
 }
 
-func (c *ImageRunner) OpenAsyncEventsTransport(id string, lastseq string, nowait bool) (imagerunner.AsyncEventTransporter, error) {
-	ws, err := c.OpenAsyncEventsWebSocket(id, lastseq, nowait)
+func (c *ImageRunner) OpenAsyncEventsTransport(id string, lastSeq string, nowait bool) (imagerunner.AsyncEventTransporter, error) {
+	ws, err := c.OpenAsyncEventsWebSocket(id, lastSeq, nowait)
 	if err != nil {
 		var fatalErr imagerunner.AsyncEventFatalError
 		if errors.As(err, &fatalErr) {
