@@ -31,7 +31,7 @@ type ImageRunner interface {
 	StopRun(ctx context.Context, id string) error
 	DownloadArtifacts(ctx context.Context, id string) (io.ReadCloser, error)
 	GetLogs(ctx context.Context, id string) (string, error)
-	HandleAsyncEvents(ctx context.Context, id string, wait bool) error
+	StreamLogs(ctx context.Context, id string, wait bool) error
 }
 
 type SuiteTimeoutError struct {
@@ -333,7 +333,7 @@ func (r *ImgRunner) pollLiveLogs(ctx context.Context, runner imagerunner.Runner)
 		return false
 	}
 
-	err := r.RunnerService.HandleAsyncEvents(ctx, runner.ID, true)
+	err := r.RunnerService.StreamLogs(ctx, runner.ID, true)
 	if !ignoreError(err) {
 		log.Err(err).Msg("Async event handler failed.")
 	}
