@@ -288,29 +288,7 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 		return runner, nil
 	}
 
-	go func() {
-		if !r.Project.LiveLogs {
-			return
-		}
-
-		ignoreError := func(err error) bool {
-			if err == nil {
-				return true
-			}
-			if !errors.Is(err, context.Canceled) {
-				return true
-			}
-			if strings.Contains(err.Error(), "websocket: close") {
-				return true
-			}
-			return false
-		}
-
-		err := r.RunnerService.HandleAsyncEvents(ctx, runner.ID, false)
-		if !ignoreError(err) {
-			log.Err(err).Msg("Async event handler failed.")
-		}
-	}()
+	go r.pollLiveLogs(ctx, runner)
 
 	var run imagerunner.Runner
 	run, err = r.PollRun(ctx, runner.ID, runner.Status)
@@ -335,6 +313,30 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 	}
 
 	return run, err
+}
+
+func (r *ImgRunner) pollLiveLogs(ctx context.Context, runner imagerunner.Runner) {
+	if !r.Project.LiveLogs {
+		return
+	}
+
+	ignoreError := func(err error) bool {
+		if err == nil {
+			return true
+		}
+		if !errors.Is(err, context.Canceled) {
+			return true
+		}
+		if strings.Contains(err.Error(), "websocket: close") {
+			return true
+		}
+		return false
+	}
+
+	err := r.RunnerService.HandleAsyncEvents(ctx, runner.ID, false)
+	if !ignoreError(err) {
+		log.Err(err).Msg("Async event handler failed.")
+	}
 }
 
 func (r *ImgRunner) getTunnel() *imagerunner.Tunnel {
