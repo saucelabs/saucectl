@@ -225,8 +225,7 @@ func (c *ImageRunner) GetLogs(ctx context.Context, id string) (string, error) {
 	return c.doGetStr(ctx, urlResponse.URL)
 }
 
-func (c *ImageRunner) getWebsocketURL() (string, error) {
-
+func (c *ImageRunner) getWebSocketURL() (string, error) {
 	wsURL, err := url.Parse(c.URL)
 	if err != nil {
 		return "", err
@@ -252,7 +251,7 @@ func (c *ImageRunner) OpenAsyncEventsWebsocket(ctx context.Context, id string, l
 	}
 	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
 
-	websocketURL, err := c.getWebsocketURL()
+	websocketURL, err := c.getWebSocketURL()
 	if err != nil {
 		return nil, err
 	}
