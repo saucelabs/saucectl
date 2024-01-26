@@ -17,7 +17,7 @@ type AsyncEvent struct {
 	Data         map[string]string
 }
 
-type AsyncEventTransportI interface {
+type AsyncEventTransporter interface {
 	ReadMessage() (string, error)
 	Close() error
 }
