@@ -258,7 +258,7 @@ func (c *ImageRunner) OpenAsyncEventsWebsocket(ctx context.Context, id string, l
 	}
 
 	// build query string
-	queryParts := []string{}
+	var queryParts []string
 	if lastseq != "" {
 		queryParts = append(queryParts, fmt.Sprintf("lastseq=%s", lastseq))
 	}
