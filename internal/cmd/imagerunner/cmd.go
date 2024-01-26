@@ -14,7 +14,6 @@ import (
 
 var (
 	imagerunnerClient http.ImageRunner
-	liveLogs          bool
 )
 
 func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
@@ -52,10 +51,9 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 
 	flags := cmd.PersistentFlags()
 	flags.StringVarP(&regio, "region", "r", "us-west-1", "The Sauce Labs region. Options: us-west-1, eu-central-1.")
-	flags.BoolVarP(&liveLogs, "live-logs", "", false, "Retrieve logs from temporary livelogs storage.")
 
 	cmd.AddCommand(
-		LogsCommand(&liveLogs),
+		LogsCommand(),
 		ArtifactsCommand(),
 	)
 	return cmd
