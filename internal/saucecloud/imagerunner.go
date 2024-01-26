@@ -215,19 +215,6 @@ func (r *ImgRunner) buildService(serviceIn imagerunner.SuiteService, suiteName s
 	return serviceOut, nil
 }
 
-func ignoreError(err error) bool {
-	if err == nil {
-		return true
-	}
-	if !errors.Is(err, context.Canceled) {
-		return true
-	}
-	if strings.Contains(err.Error(), "websocket: close") {
-		return true
-	}
-	return false
-}
-
 func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error) {
 	files, err := mapFiles(suite.Files)
 	if err != nil {
@@ -305,6 +292,20 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 		if !r.Project.LiveLogs {
 			return
 		}
+
+		ignoreError := func(err error) bool {
+			if err == nil {
+				return true
+			}
+			if !errors.Is(err, context.Canceled) {
+				return true
+			}
+			if strings.Contains(err.Error(), "websocket: close") {
+				return true
+			}
+			return false
+		}
+
 		err := r.RunnerService.HandleAsyncEvents(ctx, runner.ID, false)
 		if !ignoreError(err) {
 			log.Err(err).Msg("Async event handler failed.")
