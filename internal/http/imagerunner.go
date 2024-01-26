@@ -334,42 +334,16 @@ func (c *ImageRunner) handleAsyncEvents(ctx context.Context, id string, lastSeq 
 	}
 	defer transport.Close()
 
-	// Fhe first message is expected to be a ping, though more pings may follow.
-	if err := c.processFirstMessage(transport); err != nil {
-		return true, lastSeq, err
-	}
-
-	return c.processRemainingMessages(ctx, transport, lastSeq, nowait)
+	return c.processAsyncEventMessages(ctx, transport, lastSeq, nowait)
 }
 
-// processFirstMessage reads the first message from the transport and checks if
-// it is a ping event. If it is not, an error is returned. Calling this method
-// more than once per transport will therefore always result in an error.
-func (c *ImageRunner) processFirstMessage(transport imagerunner.AsyncEventTransporter) error {
-	msg, err := transport.ReadMessage()
-	if err != nil {
-		return err
-	}
-	if msg == "" {
-		return errors.New("empty message")
-	}
-	event, err := c.AsyncEventManager.ParseEvent(msg)
-	if err != nil {
-		return err
-	}
-	if event.Type == "com.saucelabs.so.v1.ping" {
-		return errors.New("first message is not a ping")
-	}
-	log.Info().Msg("Streaming logs...")
-	return nil
-}
-
-// processRemainingMessages reads all messages from the transport and logs them
+// processAsyncEventMessages reads all messages from the transport and logs them
 // to stdout. If the context is canceled, the method returns immediately.
 // If nowait is true, the method returns when the transport is closed.
 // Otherwise, the method returns when the transport is closed and all messages
 // have been read.
-func (c *ImageRunner) processRemainingMessages(ctx context.Context, transport imagerunner.AsyncEventTransporter, lastSeq string, nowait bool) (bool, string, error) {
+func (c *ImageRunner) processAsyncEventMessages(ctx context.Context, transport imagerunner.AsyncEventTransporter, lastSeq string, nowait bool) (bool, string, error) {
+	var initialPingProcessed bool
 	for {
 		select {
 		case <-ctx.Done():
@@ -393,7 +367,14 @@ func (c *ImageRunner) processRemainingMessages(ctx context.Context, transport im
 
 			switch event.Type {
 			case "com.saucelabs.so.v1.ping":
+				if !initialPingProcessed {
+					log.Info().Msg("Streaming logs...")
+				}
+				initialPingProcessed = true
 			case "com.saucelabs.so.v1.log":
+				if !initialPingProcessed {
+					return true, lastSeq, errors.New("first message is not a ping")
+				}
 				if event.LineSequence != "" {
 					lastSeq = event.LineSequence
 				}
