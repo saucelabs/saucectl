@@ -305,36 +305,26 @@ func (c *ImageRunner) OpenAsyncEventsTransport(id string, lastseq string, nowait
 }
 
 func (c *ImageRunner) HandleAsyncEvents(ctx context.Context, id string, nowait bool) error {
-	delay := 3 * time.Second
-	var lastseq = ""
+	var lastSeq string
 	var hasMoreLines bool
 	var err error
-	setupErrorCount := 0
-	maxSetupErrors := 3
-	for {
-		if setupErrorCount >= maxSetupErrors {
-			log.Warn().Msgf("Could not setup Log streaming after %d attempts, disabling it.", maxSetupErrors)
-			return imagerunner.AsyncEventSetupError{}
-		}
-		hasMoreLines, lastseq, err = c.handleAsyncEvents(ctx, id, lastseq, nowait)
-		if errors.Is(err, context.Canceled) {
-			return err
-		}
-		if _, ok := err.(imagerunner.AsyncEventFatalError); ok {
-			return err
+	for i := 0; i < 3; i++ {
+		hasMoreLines, lastSeq, err = c.handleAsyncEvents(ctx, id, lastSeq, nowait)
+		if err != nil {
+			var fatalErr imagerunner.AsyncEventFatalError
+			if errors.Is(err, context.Canceled) || errors.As(err, &fatalErr) {
+				return err
+			}
+			log.Warn().Err(err).Msgf("Log streaming issue. Retrying in 3 seconds...")
+			time.Sleep(3 * time.Second)
+			continue
 		}
 		if !hasMoreLines {
 			return nil
 		}
-		if wrappedErr, ok := err.(imagerunner.AsyncEventSetupError); ok {
-			setupErrorCount++
-			err = wrappedErr.Err
-		} else {
-			setupErrorCount = 0
-		}
-		log.Warn().Err(err).Msgf("Log streaming issue. Retrying in %s...", delay)
-		time.Sleep(delay)
 	}
+	log.Warn().Msgf("Could not setup Log streaming after 3 attempts, disabling it.")
+	return imagerunner.AsyncEventSetupError{}
 }
 
 func (c *ImageRunner) handleAsyncEvents(ctx context.Context, id string, lastseq string, nowait bool) (bool, string, error) {
