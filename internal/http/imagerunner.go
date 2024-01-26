@@ -403,8 +403,7 @@ func (c *ImageRunner) handleAsyncEvents(ctx context.Context, id string, lastseq 
 }
 
 func (c *ImageRunner) FetchLiveLogs(ctx context.Context, id string) error {
-	err := c.HandleAsyncEvents(ctx, id, true)
-	return err
+	return c.HandleAsyncEvents(ctx, id, true)
 }
 
 func (c *ImageRunner) doGetStr(ctx context.Context, url string) (string, error) {
