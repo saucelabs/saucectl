@@ -313,7 +313,7 @@ func (c *ImageRunner) HandleAsyncEvents(ctx context.Context, id string, nowait b
 	maxSetupErrors := 3
 	for {
 		if setupErrorCount >= maxSetupErrors {
-			log.Info().Msgf("Could not setup Log streaming after %d attempts, disabling it.", maxSetupErrors)
+			log.Warn().Msgf("Could not setup Log streaming after %d attempts, disabling it.", maxSetupErrors)
 			return imagerunner.AsyncEventSetupError{}
 		}
 		hasMoreLines, lastseq, err = c.handleAsyncEvents(ctx, id, lastseq, nowait)
@@ -332,7 +332,7 @@ func (c *ImageRunner) HandleAsyncEvents(ctx context.Context, id string, nowait b
 		} else {
 			setupErrorCount = 0
 		}
-		log.Info().Err(err).Msgf("Log streaming issue. Retrying in %s...", delay)
+		log.Warn().Err(err).Msgf("Log streaming issue. Retrying in %s...", delay)
 		time.Sleep(delay)
 	}
 }
