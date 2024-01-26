@@ -69,12 +69,12 @@ type AsyncEventManager interface {
 }
 
 type AsyncEventMgr struct {
-	logTimestamps time.Time
+	lastLogTime time.Time
 }
 
 func NewAsyncEventMgr() (*AsyncEventMgr, error) {
 	asyncEventManager := AsyncEventMgr{
-		logTimestamps: time.Now(),
+		lastLogTime: time.Now(),
 	}
 
 	return &asyncEventManager, nil
@@ -119,9 +119,9 @@ func (a *AsyncEventMgr) ParseEvent(event string) (*AsyncEvent, error) {
 }
 
 func (a *AsyncEventMgr) TrackLog() {
-	a.logTimestamps = time.Now()
+	a.lastLogTime = time.Now()
 }
 
 func (a *AsyncEventMgr) IsLogIdle() bool {
-	return time.Since(a.logTimestamps) > 30*time.Second
+	return time.Since(a.lastLogTime) > 30*time.Second
 }
