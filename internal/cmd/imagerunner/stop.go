@@ -44,11 +44,10 @@ func StopCommand() *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ID := args[0]
+			fmt.Printf("Stopping container %s...\n", ID)
 			if err := imagerunnerClient.StopRun(context.Background(), ID); err != nil {
 				return fmt.Errorf("failed to stop the container: %v", err)
 			}
-
-			fmt.Printf("Stopping container %s...\n", ID)
 			return nil
 		},
 	}
