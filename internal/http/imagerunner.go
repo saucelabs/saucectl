@@ -294,7 +294,8 @@ func (c *ImageRunner) OpenAsyncEventsWebSocket(id string, lastseq string, nowait
 func (c *ImageRunner) OpenAsyncEventsTransport(id string, lastseq string, nowait bool) (imagerunner.AsyncEventTransporter, error) {
 	ws, err := c.OpenAsyncEventsWebSocket(id, lastseq, nowait)
 	if err != nil {
-		if _, ok := err.(imagerunner.AsyncEventFatalError); ok {
+		var fatalErr imagerunner.AsyncEventFatalError
+		if errors.As(err, &fatalErr) {
 			return nil, err
 		}
 		return nil, imagerunner.AsyncEventSetupError{
