@@ -324,7 +324,7 @@ func (r *ImgRunner) pollLiveLogs(ctx context.Context, runner imagerunner.Runner)
 		if err == nil {
 			return true
 		}
-		if !errors.Is(err, context.Canceled) {
+		if errors.Is(err, context.Canceled) {
 			return true
 		}
 		if strings.Contains(err.Error(), "websocket: close") {
