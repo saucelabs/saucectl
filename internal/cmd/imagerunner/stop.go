@@ -48,7 +48,7 @@ func StopCommand() *cobra.Command {
 				return fmt.Errorf("failed to stop the container: %v", err)
 			}
 
-			fmt.Printf("Stopping container %q...\n", ID)
+			fmt.Printf("Stopping container %s...\n", ID)
 			return nil
 		},
 	}
