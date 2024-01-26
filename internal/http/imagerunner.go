@@ -371,18 +371,18 @@ func (c *ImageRunner) handleAsyncEventsOneshot(ctx context.Context, id string, l
 		case <-ctx.Done():
 			return false, lastseq, ctx.Err()
 		default:
-			readMessage, err := transport.ReadMessage()
+			msg, err := transport.ReadMessage()
 			if err != nil {
 				if nowait && strings.Contains(err.Error(), "close") {
 					return false, lastseq, nil
 				}
 				return true, lastseq, err
 			}
-			if readMessage == "" {
+			if msg == "" {
 				return true, lastseq, errors.New("empty message")
 			}
 
-			event, err := c.AsyncEventManager.ParseEvent(readMessage)
+			event, err := c.AsyncEventManager.ParseEvent(msg)
 			if err != nil {
 				return true, lastseq, err
 			}
