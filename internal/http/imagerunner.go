@@ -334,7 +334,7 @@ func (c *ImageRunner) handleAsyncEvents(ctx context.Context, id string, lastSeq 
 	}
 	defer transport.Close()
 
-	// the first message is expected to be a ping
+	// Fhe first message is expected to be a ping, though more pings may follow.
 	if err := c.processFirstMessage(transport); err != nil {
 		return true, lastSeq, err
 	}
@@ -364,6 +364,11 @@ func (c *ImageRunner) processFirstMessage(transport imagerunner.AsyncEventTransp
 	return nil
 }
 
+// processRemainingMessages reads all messages from the transport and logs them
+// to stdout. If the context is canceled, the method returns immediately.
+// If nowait is true, the method returns when the transport is closed.
+// Otherwise, the method returns when the transport is closed and all messages
+// have been read.
 func (c *ImageRunner) processRemainingMessages(ctx context.Context, transport imagerunner.AsyncEventTransporter, lastSeq string, nowait bool) (bool, string, error) {
 	for {
 		select {
