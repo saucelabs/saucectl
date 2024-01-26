@@ -1,10 +1,8 @@
 package imagerunner
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -39,27 +37,6 @@ func (aet *WebSocketAsyncEventTransport) ReadMessage() (string, error) {
 
 func (aet *WebSocketAsyncEventTransport) Close() error {
 	return aet.ws.Close()
-}
-
-type SseAsyncEventTransport struct {
-	httpResponse *http.Response
-	scanner      *bufio.Scanner
-}
-
-func (aet *SseAsyncEventTransport) ReadMessage() (string, error) {
-	if aet.scanner.Scan() {
-		msg := aet.scanner.Bytes()
-		return string(msg), nil
-	}
-	err := aet.scanner.Err()
-	if err == nil {
-		err = fmt.Errorf("no more messages")
-	}
-	return "", err
-}
-
-func (aet *SseAsyncEventTransport) Close() error {
-	return aet.httpResponse.Body.Close()
 }
 
 type AsyncEventManager interface {
