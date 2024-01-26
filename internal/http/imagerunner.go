@@ -305,7 +305,7 @@ func (c *ImageRunner) OpenAsyncEventsTransport(id string, lastSeq string, wait b
 	return imagerunner.NewWebSocketAsyncEventTransport(ws), nil
 }
 
-func (c *ImageRunner) StreamLogs(ctx context.Context, id string, wait bool) error {
+func (c *ImageRunner) StreamLiveLogs(ctx context.Context, id string, wait bool) error {
 	var lastSeq string
 	var hasMoreLines bool
 	var err error
@@ -383,8 +383,8 @@ func (c *ImageRunner) handleAsyncEvents(ctx context.Context, id string, lastSeq 
 	}
 }
 
-func (c *ImageRunner) FetchLiveLogs(ctx context.Context, id string) error {
-	return c.StreamLogs(ctx, id, false)
+func (c *ImageRunner) GetLiveLogs(ctx context.Context, id string) error {
+	return c.StreamLiveLogs(ctx, id, false)
 }
 
 func (c *ImageRunner) doGetStr(ctx context.Context, url string) (string, error) {
