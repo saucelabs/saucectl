@@ -90,5 +90,5 @@ func renderContainersTable(containers http.ContainersResp) {
 			time.Unix(c.TerminationTime, 0).Format(time.RFC3339),
 		})
 	}
-	println(t.Render())
+	fmt.Println(t.Render())
 }
