@@ -40,7 +40,7 @@ func DeleteCommand() *cobra.Command {
 				return fmt.Errorf("failed to delete file: %v", err)
 			}
 
-			println("File deleted successfully!")
+			fmt.Println("File deleted successfully!")
 
 			return nil
 		},

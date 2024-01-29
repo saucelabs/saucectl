@@ -92,5 +92,5 @@ func renderJobTable(job job.Job) {
 	})
 	t.SuppressEmptyColumns()
 
-	println(t.Render())
+	fmt.Println(t.Render())
 }

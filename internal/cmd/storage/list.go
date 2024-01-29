@@ -166,7 +166,7 @@ func renderTable(list storage.List) {
 		t.AppendRow(table.Row{item.Size, item.Uploaded, item.ID, item.Name})
 	}
 
-	println(t.Render())
+	fmt.Println(t.Render())
 
 	if list.Truncated {
 		println("\nYour query returned more files than we can display. Please refine your query.")
