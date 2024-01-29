@@ -82,9 +82,9 @@ func configureImageRunner(cfg *initConfig) interface{} {
 }
 
 func displayExtraInfoImageRunner() {
-	println()
+	fmt.Println()
 	color.HiGreen("Before running your tests, you need to set the following environment variables:")
 	color.Green("  - DOCKER_USERNAME")
 	color.Green("  - DOCKER_PASSWORD")
-	println()
+	fmt.Println()
 }

@@ -194,9 +194,8 @@ func renderTable(lst imagerunner.ArtifactList) {
 		// the order of values must match the order of the header
 		t.AppendRow(table.Row{item})
 	}
-	t.SuppressEmptyColumns()
 
-	println(t.Render())
+	fmt.Println(t.Render())
 }
 
 func renderJSON(val any) error {

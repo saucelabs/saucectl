@@ -76,7 +76,7 @@ func UploadCommand() *cobra.Command {
 
 			switch out {
 			case "text":
-				println("Success!")
+				fmt.Println("Success!")
 			case "json":
 				if err := renderJSON(filePath); err != nil {
 					return fmt.Errorf("failed to render output: %w", err)

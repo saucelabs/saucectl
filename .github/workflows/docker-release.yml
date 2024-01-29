@@ -15,7 +15,7 @@ jobs:
       label: ${{ steps.meta.outputs.labels }}
       version: ${{ steps.set_version.outputs.version }}
     steps:
-      - name: Check out the repo
+      - name: Checkout
         uses: actions/checkout@v4
       - name: Set Release Version
         id: set_version

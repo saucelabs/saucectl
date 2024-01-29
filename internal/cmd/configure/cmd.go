@@ -55,7 +55,7 @@ func Command() *cobra.Command {
 }
 
 func printCreds(creds iam.Credentials) {
-	println()
+	fmt.Println()
 
 	labelStyle := color.New(color.Bold)
 	valueStyle := color.New(color.FgBlue)
@@ -64,11 +64,11 @@ func printCreds(creds iam.Credentials) {
 	fmt.Println(labelStyle.Sprint("\t  Username:"), valueStyle.Sprint(creds.Username))
 	fmt.Println(labelStyle.Sprint("\tAccess key:"), valueStyle.Sprint(mask(creds.AccessKey)))
 
-	println()
+	fmt.Println()
 	fmt.Printf("Collected from: %s", creds.Source)
 
-	println()
-	println()
+	fmt.Println()
+	fmt.Println()
 }
 
 // interactiveConfiguration expect user to manually type-in its credentials
@@ -134,11 +134,11 @@ func interactiveConfiguration() (iam.Credentials, error) {
 			},
 		}
 
-		println() // visual paragraph break
+		fmt.Println() // visual paragraph break
 		if err = survey.Ask(qs, &creds); err != nil {
 			return creds, err
 		}
-		println() // visual paragraph break
+		fmt.Println() // visual paragraph break
 	}
 
 	return creds, nil
@@ -168,7 +168,7 @@ func Run() error {
 	if err := credentials.ToFile(creds); err != nil {
 		return fmt.Errorf("unable to save credentials: %s", err)
 	}
-	println("You're all set!")
+	fmt.Println("You're all set!")
 	return nil
 }
 
