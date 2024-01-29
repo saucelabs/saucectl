@@ -42,25 +42,25 @@ func NewAsyncEventMgr() (*AsyncEventParser, error) {
 }
 
 func (a *AsyncEventParser) ParseEvent(event string) (*imagerunner.AsyncEvent, error) {
-	readEvent := cloudevents.NewEvent()
-	err := json.Unmarshal([]byte(event), &readEvent)
+	e := cloudevents.NewEvent()
+	err := json.Unmarshal([]byte(event), &e)
 	if err != nil {
 		return nil, err
 	}
 
 	data := map[string]string{}
-	err = readEvent.DataAs(&data)
+	err = e.DataAs(&data)
 	if err != nil {
 		return nil, err
 	}
 
 	asyncEvent := imagerunner.AsyncEvent{
-		Type: readEvent.Type(),
+		Type: e.Type(),
 		Data: data,
 	}
 
 	if asyncEvent.Type == "com.saucelabs.so.v1.log" {
-		asyncEvent.LineSequence, err = parseLineSequence(&readEvent)
+		asyncEvent.LineSequence, err = parseLineSequence(&e)
 		if err != nil {
 			return nil, err
 		}
