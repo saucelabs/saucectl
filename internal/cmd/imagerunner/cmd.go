@@ -38,7 +38,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 			creds := credentials.Get()
 			url := region.FromString(regio).APIBaseURL()
 
-			asyncEventManager, err := imagerunner.NewAsyncEventManager()
+			asyncEventManager, err := imagerunner.NewAsyncEventMgr()
 			if err != nil {
 				return err
 			}
