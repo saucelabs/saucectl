@@ -289,7 +289,7 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 		return runner, nil
 	}
 
-	go r.pollLiveLogs(ctx, runner)
+	go r.streamLiveLogs(ctx, runner)
 
 	var run imagerunner.Runner
 	run, err = r.PollRun(ctx, runner.ID, runner.Status)
@@ -316,7 +316,7 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 	return run, err
 }
 
-func (r *ImgRunner) pollLiveLogs(ctx context.Context, runner imagerunner.Runner) {
+func (r *ImgRunner) streamLiveLogs(ctx context.Context, runner imagerunner.Runner) {
 	if !r.Project.LiveLogs {
 		return
 	}
