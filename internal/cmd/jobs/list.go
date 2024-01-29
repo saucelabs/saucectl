@@ -189,7 +189,7 @@ func renderTable(lst cjob.List) {
 		fmt.Sprintf("Size: %d", lst.Size),
 	})
 
-	println(t.Render())
+	fmt.Println(t.Render())
 }
 
 func renderJSON(val any) error {

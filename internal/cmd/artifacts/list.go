@@ -144,7 +144,7 @@ func renderTable(lst artifacts.List) {
 	}
 	t.SuppressEmptyColumns()
 
-	println(t.Render())
+	fmt.Println(t.Render())
 }
 
 func renderJSON(val any) error {

@@ -94,12 +94,12 @@ func saveSauceIgnore(content string) error {
 }
 
 func displaySummary(files []string) {
-	println()
+	fmt.Println()
 	color.HiGreen("The following files have been created:")
 	for _, f := range files {
 		color.Green("  %s", f)
 	}
-	println()
+	fmt.Println()
 }
 
 func displayExtraInfo(framework string) {

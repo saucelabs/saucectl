@@ -18,11 +18,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: "1.21"
+          cache: true
 
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Lint
@@ -34,11 +35,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: "1.21"
           cache: true
@@ -53,7 +54,7 @@ jobs:
   check-schema:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -83,7 +84,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: "1.21"
           cache: true
@@ -98,13 +99,13 @@ jobs:
           GOOS=windows GOARCH=amd64 go build cmd/saucectl/saucectl.go
 
       - name: Check GoReleaser Config
-        uses: goreleaser/goreleaser-action@v3
+        uses: goreleaser/goreleaser-action@v5
         with:
           version: latest
           args: check
 
       - name: Upload Binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: saucectlbin
           path: |
@@ -120,7 +121,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: saucectlbin
 
@@ -138,11 +139,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: saucectlbin
 
@@ -160,11 +161,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: saucectlbin
 
@@ -182,11 +183,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: saucectlbin
 
@@ -206,7 +207,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: saucectlbin
 
@@ -240,7 +241,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: saucectlbin
 
@@ -256,11 +257,11 @@ jobs:
       BUILD_ENV: GitHub Actions
 
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: saucectlbin
 
@@ -293,7 +294,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: saucectlbin
 
@@ -327,11 +328,11 @@ jobs:
       BUILD_ENV: GitHub Actions
 
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: saucectlbin
 
@@ -347,11 +348,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: saucectlbin
 
@@ -369,11 +370,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: saucectlbin
 
@@ -388,11 +389,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Download saucectl Binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: saucectlbin
 
