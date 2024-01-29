@@ -245,7 +245,7 @@ func (c *ImageRunner) getWebSocketURL() (string, error) {
 func (c *ImageRunner) OpenAsyncEventsWebSocket(id string, lastSeq string, wait bool) (*websocket.Conn, error) {
 	// dummy request so that we build basic auth header consistently
 	dummyURL := fmt.Sprintf("%s/v1alpha1/hosted/async/image/runners/%s/events", c.URL, id)
-	req, err := http.NewRequest("GET", dummyURL, nil)
+	req, err := http.NewRequest(http.MethodGet, dummyURL, nil)
 	if err != nil {
 		return nil, err
 	}
