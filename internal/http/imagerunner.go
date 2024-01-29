@@ -324,7 +324,7 @@ func (c *ImageRunner) StreamLiveLogs(ctx context.Context, id string, wait bool) 
 			return nil
 		}
 	}
-	log.Warn().Msgf("Could not setup Log streaming after 3 attempts, disabling it.")
+	log.Warn().Msg("Could not setup Log streaming after 3 attempts, disabling it.")
 	return imagerunner.AsyncEventSetupError{}
 }
 
