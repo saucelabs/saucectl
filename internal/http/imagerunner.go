@@ -316,7 +316,7 @@ func (c *ImageRunner) StreamLiveLogs(ctx context.Context, id string, wait bool) 
 			if errors.Is(err, context.Canceled) || errors.As(err, &fatalErr) {
 				return err
 			}
-			log.Warn().Err(err).Msgf("Log streaming issue. Retrying in 3 seconds...")
+			log.Warn().Err(err).Msg("Log streaming issue. Retrying in 3 seconds...")
 			time.Sleep(3 * time.Second)
 			continue
 		}
