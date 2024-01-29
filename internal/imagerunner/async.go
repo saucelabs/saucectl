@@ -6,7 +6,6 @@ import (
 	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
-	"github.com/gorilla/websocket"
 )
 
 type AsyncEvent struct {
@@ -18,25 +17,6 @@ type AsyncEvent struct {
 type AsyncEventTransporter interface {
 	ReadMessage() (string, error)
 	Close() error
-}
-
-type WebSocketAsyncEventTransport struct {
-	ws *websocket.Conn
-}
-
-func NewWebSocketAsyncEventTransport(ws *websocket.Conn) *WebSocketAsyncEventTransport {
-	return &WebSocketAsyncEventTransport{
-		ws: ws,
-	}
-}
-
-func (aet *WebSocketAsyncEventTransport) ReadMessage() (string, error) {
-	_, msg, err := aet.ws.ReadMessage()
-	return string(msg), err
-}
-
-func (aet *WebSocketAsyncEventTransport) Close() error {
-	return aet.ws.Close()
 }
 
 type AsyncEventManager interface {

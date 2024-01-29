@@ -302,7 +302,7 @@ func (c *ImageRunner) OpenAsyncEventsTransport(id string, lastSeq string, wait b
 			Err: err,
 		}
 	}
-	return imagerunner.NewWebSocketAsyncEventTransport(ws), nil
+	return NewWebSocketAsyncEventTransport(ws), nil
 }
 
 func (c *ImageRunner) StreamLiveLogs(ctx context.Context, id string, wait bool) error {
