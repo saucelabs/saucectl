@@ -1,10 +1,8 @@
 package imagerunner
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -17,73 +15,42 @@ type AsyncEvent struct {
 	Data         map[string]string
 }
 
-type AsyncEventTransportI interface {
+type AsyncEventTransporter interface {
 	ReadMessage() (string, error)
 	Close() error
 }
 
-type WebsocketAsyncEventTransport struct {
+type WebSocketAsyncEventTransport struct {
 	ws *websocket.Conn
 }
 
-func NewWebsocketAsyncEventTransport(ws *websocket.Conn) *WebsocketAsyncEventTransport {
-	return &WebsocketAsyncEventTransport{
+func NewWebSocketAsyncEventTransport(ws *websocket.Conn) *WebSocketAsyncEventTransport {
+	return &WebSocketAsyncEventTransport{
 		ws: ws,
 	}
 }
 
-func (aet *WebsocketAsyncEventTransport) ReadMessage() (string, error) {
+func (aet *WebSocketAsyncEventTransport) ReadMessage() (string, error) {
 	_, msg, err := aet.ws.ReadMessage()
 	return string(msg), err
 }
 
-func (aet *WebsocketAsyncEventTransport) Close() error {
+func (aet *WebSocketAsyncEventTransport) Close() error {
 	return aet.ws.Close()
 }
 
-type SseAsyncEventTransport struct {
-	httpResponse *http.Response
-	scanner      *bufio.Scanner
-}
-
-func NewSseAsyncEventTransport(httpResponse *http.Response) *SseAsyncEventTransport {
-	scanner := bufio.NewScanner(httpResponse.Body)
-	scanner.Split(bufio.ScanLines)
-	return &SseAsyncEventTransport{
-		httpResponse: httpResponse,
-		scanner:      scanner,
-	}
-}
-
-func (aet *SseAsyncEventTransport) ReadMessage() (string, error) {
-	if aet.scanner.Scan() {
-		msg := aet.scanner.Bytes()
-		return string(msg), nil
-	}
-	err := aet.scanner.Err()
-	if err == nil {
-		err = fmt.Errorf("no more messages")
-	}
-	return "", err
-}
-
-func (aet *SseAsyncEventTransport) Close() error {
-	return aet.httpResponse.Body.Close()
-}
-
-type AsyncEventManagerI interface {
+type AsyncEventManager interface {
 	ParseEvent(event string) (*AsyncEvent, error)
-	TrackLog()
 	IsLogIdle() bool
 }
 
-type AsyncEventManager struct {
-	logTimestamps time.Time
+type AsyncEventMgr struct {
+	lastLogTime time.Time
 }
 
-func NewAsyncEventManager() (*AsyncEventManager, error) {
-	asyncEventManager := AsyncEventManager{
-		logTimestamps: time.Now(),
+func NewAsyncEventMgr() (*AsyncEventMgr, error) {
+	asyncEventManager := AsyncEventMgr{
+		lastLogTime: time.Now(),
 	}
 
 	return &asyncEventManager, nil
@@ -99,7 +66,7 @@ func parseLineSequence(cloudEvent *cloudevents.Event) (string, error) {
 	return lineseq, nil
 }
 
-func (a *AsyncEventManager) ParseEvent(event string) (*AsyncEvent, error) {
+func (a *AsyncEventMgr) ParseEvent(event string) (*AsyncEvent, error) {
 	readEvent := cloudevents.NewEvent()
 	err := json.Unmarshal([]byte(event), &readEvent)
 	if err != nil {
@@ -122,15 +89,12 @@ func (a *AsyncEventManager) ParseEvent(event string) (*AsyncEvent, error) {
 		if err != nil {
 			return nil, err
 		}
+		a.lastLogTime = time.Now()
 	}
 
 	return &asyncEvent, nil
 }
 
-func (a *AsyncEventManager) TrackLog() {
-	a.logTimestamps = time.Now()
-}
-
-func (a *AsyncEventManager) IsLogIdle() bool {
-	return time.Since(a.logTimestamps) > 30*time.Second
+func (a *AsyncEventMgr) IsLogIdle() bool {
+	return time.Since(a.lastLogTime) > 30*time.Second
 }

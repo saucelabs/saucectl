@@ -31,7 +31,8 @@ type ImageRunner interface {
 	StopRun(ctx context.Context, id string) error
 	DownloadArtifacts(ctx context.Context, id string) (io.ReadCloser, error)
 	GetLogs(ctx context.Context, id string) (string, error)
-	HandleAsyncEvents(ctx context.Context, id string, nowait bool) error
+	StreamLiveLogs(ctx context.Context, id string, wait bool) error
+	GetLiveLogs(ctx context.Context, id string) error
 }
 
 type SuiteTimeoutError struct {
@@ -52,14 +53,14 @@ type ImgRunner struct {
 	Reporters []report.Reporter
 
 	Async             bool
-	AsyncEventManager imagerunner.AsyncEventManagerI
+	AsyncEventManager imagerunner.AsyncEventManager
 
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
 func NewImgRunner(project imagerunner.Project, runnerService ImageRunner, tunnelService tunnel.Service,
-	asyncEventManager imagerunner.AsyncEventManagerI, reporters []report.Reporter, async bool) *ImgRunner {
+	asyncEventManager imagerunner.AsyncEventManager, reporters []report.Reporter, async bool) *ImgRunner {
 	return &ImgRunner{
 		Project:           project,
 		RunnerService:     runnerService,
@@ -215,19 +216,6 @@ func (r *ImgRunner) buildService(serviceIn imagerunner.SuiteService, suiteName s
 	return serviceOut, nil
 }
 
-func ignoreError(err error) bool {
-	if err == nil {
-		return true
-	}
-	if !errors.Is(err, context.Canceled) {
-		return true
-	}
-	if strings.Contains(err.Error(), "websocket: close") {
-		return true
-	}
-	return false
-}
-
 func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error) {
 	files, err := mapFiles(suite.Files)
 	if err != nil {
@@ -301,15 +289,7 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 		return runner, nil
 	}
 
-	go func() {
-		if !r.Project.LiveLogs {
-			return
-		}
-		err := r.RunnerService.HandleAsyncEvents(ctx, runner.ID, false)
-		if !ignoreError(err) {
-			log.Err(err).Msg("Async event handler failed.")
-		}
-	}()
+	go r.pollLiveLogs(ctx, runner)
 
 	var run imagerunner.Runner
 	run, err = r.PollRun(ctx, runner.ID, runner.Status)
@@ -334,6 +314,30 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 	}
 
 	return run, err
+}
+
+func (r *ImgRunner) pollLiveLogs(ctx context.Context, runner imagerunner.Runner) {
+	if !r.Project.LiveLogs {
+		return
+	}
+
+	ignoreError := func(err error) bool {
+		if err == nil {
+			return true
+		}
+		if errors.Is(err, context.Canceled) {
+			return true
+		}
+		if strings.Contains(err.Error(), "websocket: close") {
+			return true
+		}
+		return false
+	}
+
+	err := r.RunnerService.StreamLiveLogs(ctx, runner.ID, true)
+	if !ignoreError(err) {
+		log.Err(err).Msg("Async event handler failed.")
+	}
 }
 
 func (r *ImgRunner) getTunnel() *imagerunner.Tunnel {
@@ -444,7 +448,8 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (
 	}
 }
 
-// DownloadArtifact downloads a zipped archive of artifacts and extracts the required files.
+// DownloadArtifacts downloads a zipped archive of artifacts
+// and extracts the required files.
 func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed bool) []string {
 	if r.Async ||
 		runnerID == "" ||
