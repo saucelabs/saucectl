@@ -67,7 +67,7 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 
 	creds := regio.Credentials()
 
-	asyncEventManager, err := imagerunner.NewAsyncEventMgr()
+	asyncEventManager, err := http.NewAsyncEventMgr()
 	if err != nil {
 		return 1, err
 	}
