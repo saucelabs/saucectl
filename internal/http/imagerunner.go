@@ -36,6 +36,10 @@ type AuthToken struct {
 	Password  string    `json:"password"`
 }
 
+type ContainersResp struct {
+	Items []imagerunner.Runner `json:"content"`
+}
+
 func NewImageRunner(url string, creds iam.Credentials, timeout time.Duration,
 	asyncEventManager imagerunner.AsyncEventManager) ImageRunner {
 	eventLogger := zerolog.New(zerolog.ConsoleWriter{
@@ -462,4 +466,32 @@ func (c *ImageRunner) RegistryLogin(ctx context.Context, repo string) (AuthToken
 
 	err = json.Unmarshal(data, &authToken)
 	return authToken, err
+}
+
+func (c *ImageRunner) ListContainers(ctx context.Context) (ContainersResp, error) {
+	url := fmt.Sprintf("%s/v1alpha1/hosted/image/runners", c.URL)
+
+	var containers ContainersResp
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return containers, err
+	}
+	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
+
+	resp, err := c.Client.Do(req)
+	if err != nil {
+		return containers, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		b, _ := io.ReadAll(resp.Body)
+		return containers, fmt.Errorf("unexpected server response (%d): %s", resp.StatusCode, b)
+	}
+
+	if err = json.NewDecoder(resp.Body).Decode(&containers); err != nil {
+		return containers, fmt.Errorf("failed to decode server response: %v", err)
+	}
+
+	return containers, nil
 }
