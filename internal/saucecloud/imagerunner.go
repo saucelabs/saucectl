@@ -448,7 +448,7 @@ func (r *ImgRunner) PollRun(ctx context.Context, id string, lastStatus string) (
 	}
 }
 
-// DownloadArtifacts DownloadArtifact downloads a zipped archive of artifacts
+// DownloadArtifacts downloads a zipped archive of artifacts
 // and extracts the required files.
 func (r *ImgRunner) DownloadArtifacts(runnerID, suiteName, status string, passed bool) []string {
 	if r.Async ||
