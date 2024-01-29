@@ -26,7 +26,7 @@ type ImageRunner struct {
 	Client            *retryablehttp.Client
 	URL               string
 	Creds             iam.Credentials
-	AsyncEventManager imagerunner.AsyncEventManagerI
+	AsyncEventManager imagerunner.AsyncEventManager
 	eventLogger       zerolog.Logger
 }
 
@@ -37,7 +37,7 @@ type AuthToken struct {
 }
 
 func NewImageRunner(url string, creds iam.Credentials, timeout time.Duration,
-	asyncEventManager imagerunner.AsyncEventManagerI) ImageRunner {
+	asyncEventManager imagerunner.AsyncEventManager) ImageRunner {
 	eventLogger := zerolog.New(zerolog.ConsoleWriter{
 		Out: os.Stdout,
 		PartsOrder: []string{
@@ -225,8 +225,7 @@ func (c *ImageRunner) GetLogs(ctx context.Context, id string) (string, error) {
 	return c.doGetStr(ctx, urlResponse.URL)
 }
 
-func (c *ImageRunner) getWebsocketURL() (string, error) {
-
+func (c *ImageRunner) getWebSocketURL() (string, error) {
 	wsURL, err := url.Parse(c.URL)
 	if err != nil {
 		return "", err
@@ -243,26 +242,26 @@ func (c *ImageRunner) getWebsocketURL() (string, error) {
 	return wsURL.String(), nil
 }
 
-func (c *ImageRunner) OpenAsyncEventsWebsocket(ctx context.Context, id string, lastseq string, nowait bool) (*websocket.Conn, error) {
+func (c *ImageRunner) OpenAsyncEventsWebSocket(id string, lastSeq string, wait bool) (*websocket.Conn, error) {
 	// dummy request so that we build basic auth header consistently
 	dummyURL := fmt.Sprintf("%s/v1alpha1/hosted/async/image/runners/%s/events", c.URL, id)
-	req, err := http.NewRequest("GET", dummyURL, nil)
+	req, err := http.NewRequest(http.MethodGet, dummyURL, nil)
 	if err != nil {
 		return nil, err
 	}
 	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
 
-	websocketURL, err := c.getWebsocketURL()
+	websocketURL, err := c.getWebSocketURL()
 	if err != nil {
 		return nil, err
 	}
 
 	// build query string
-	queryParts := []string{}
-	if lastseq != "" {
-		queryParts = append(queryParts, fmt.Sprintf("lastseq=%s", lastseq))
+	var queryParts []string
+	if lastSeq != "" {
+		queryParts = append(queryParts, fmt.Sprintf("lastseq=%s", lastSeq))
 	}
-	if nowait {
+	if !wait {
 		queryParts = append(queryParts, "nowait=true")
 	}
 	query := ""
@@ -292,122 +291,100 @@ func (c *ImageRunner) OpenAsyncEventsWebsocket(ctx context.Context, id string, l
 	return ws, nil
 }
 
-func (c *ImageRunner) OpenAsyncEventsTransport(ctx context.Context, id string, lastseq string, nowait bool) (imagerunner.AsyncEventTransportI, error) {
-	ws, err := c.OpenAsyncEventsWebsocket(ctx, id, lastseq, nowait)
+func (c *ImageRunner) OpenAsyncEventsTransport(id string, lastSeq string, wait bool) (imagerunner.AsyncEventTransporter, error) {
+	ws, err := c.OpenAsyncEventsWebSocket(id, lastSeq, wait)
 	if err != nil {
-		if _, ok := err.(imagerunner.AsyncEventFatalError); ok {
+		var fatalErr imagerunner.AsyncEventFatalError
+		if errors.As(err, &fatalErr) {
 			return nil, err
 		}
 		return nil, imagerunner.AsyncEventSetupError{
 			Err: err,
 		}
 	}
-	return imagerunner.NewWebsocketAsyncEventTransport(ws), nil
+	return imagerunner.NewWebSocketAsyncEventTransport(ws), nil
 }
 
-func (c *ImageRunner) HandleAsyncEvents(ctx context.Context, id string, nowait bool) error {
-	delay := 3 * time.Second
-	var lastseq = ""
+func (c *ImageRunner) StreamLiveLogs(ctx context.Context, id string, wait bool) error {
+	var lastSeq string
 	var hasMoreLines bool
 	var err error
-	setupErrorCount := 0
-	maxSetupErrors := 3
-	for {
-		if setupErrorCount >= maxSetupErrors {
-			log.Info().Msgf("Could not setup Log streaming after %d attempts, disabling it.", maxSetupErrors)
-			return imagerunner.AsyncEventSetupError{}
-		}
-		hasMoreLines, lastseq, err = c.handleAsyncEventsOneshot(ctx, id, lastseq, nowait)
-		if errors.Is(err, context.Canceled) {
-			return err
-		}
-		if _, ok := err.(imagerunner.AsyncEventFatalError); ok {
-			return err
+	for i := 0; i < 3; i++ {
+		hasMoreLines, lastSeq, err = c.handleAsyncEvents(ctx, id, lastSeq, wait)
+		if err != nil {
+			var fatalErr imagerunner.AsyncEventFatalError
+			if errors.Is(err, context.Canceled) || errors.As(err, &fatalErr) {
+				return err
+			}
+			log.Warn().Err(err).Msg("Log streaming issue. Retrying in 3 seconds...")
+			time.Sleep(3 * time.Second)
+			continue
 		}
 		if !hasMoreLines {
 			return nil
 		}
-		if wrappedErr, ok := err.(imagerunner.AsyncEventSetupError); ok {
-			setupErrorCount++
-			err = wrappedErr.Err
-		} else {
-			setupErrorCount = 0
-		}
-		log.Info().Err(err).Msgf("Log streaming issue. Retrying in %s...", delay)
-		time.Sleep(delay)
 	}
+	log.Warn().Msg("Could not setup Log streaming after 3 attempts, disabling it.")
+	return imagerunner.AsyncEventSetupError{}
 }
 
-func (c *ImageRunner) handleAsyncEventsOneshot(ctx context.Context, id string, lastseq string, nowait bool) (bool, string, error) {
-	transport, err := c.OpenAsyncEventsTransport(ctx, id, lastseq, nowait)
+// handleAsyncEvents manages the process of handling asynchronous events.
+// It returns a boolean indicating whether there are more lines to process,
+// the last sequence string, and an error if one occurred.
+func (c *ImageRunner) handleAsyncEvents(ctx context.Context, id string, lastSeq string, wait bool) (bool, string, error) {
+	transport, err := c.OpenAsyncEventsTransport(id, lastSeq, wait)
 	if err != nil {
-		return true, lastseq, err
+		return true, lastSeq, err
 	}
-	if transport == nil {
-		return true, lastseq, nil
-	}
-
 	defer transport.Close()
 
-	// the first message is expected to be a ping
-	readMessage, err := transport.ReadMessage()
-	if err != nil {
-		return true, lastseq, err
-	}
-	if readMessage == "" {
-		return true, lastseq, errors.New("empty message")
-	}
-	event, err := c.AsyncEventManager.ParseEvent(readMessage)
-	if err != nil {
-		return true, lastseq, err
-	}
-	if event.Type == "com.saucelabs.so.v1.ping" {
-		log.Info().Msg("Streaming logs...")
-	} else {
-		return true, lastseq, errors.New("first message is not a ping")
-	}
-
+	var initialPingProcessed bool
 	for {
 		select {
 		case <-ctx.Done():
-			return false, lastseq, ctx.Err()
+			return false, lastSeq, ctx.Err()
 		default:
-			readMessage, err := transport.ReadMessage()
+			msg, err := transport.ReadMessage()
 			if err != nil {
-				if nowait && strings.Contains(err.Error(), "close") {
-					return false, lastseq, nil
+				if !wait && strings.Contains(err.Error(), "close") {
+					return false, lastSeq, nil
 				}
-				return true, lastseq, err
+				return true, lastSeq, err
 			}
-			if readMessage == "" {
-				return true, lastseq, errors.New("empty message")
+			if msg == "" {
+				return true, lastSeq, errors.New("empty message")
 			}
 
-			event, err := c.AsyncEventManager.ParseEvent(readMessage)
+			event, err := c.AsyncEventManager.ParseEvent(msg)
 			if err != nil {
-				return true, lastseq, err
+				return true, lastSeq, err
 			}
+
 			switch event.Type {
 			case "com.saucelabs.so.v1.ping":
+				if !initialPingProcessed {
+					log.Info().Msg("Streaming logs...")
+				}
+				initialPingProcessed = true
 			case "com.saucelabs.so.v1.log":
+				if !initialPingProcessed {
+					return true, lastSeq, errors.New("first message is not a ping")
+				}
 				if event.LineSequence != "" {
-					lastseq = event.LineSequence
+					lastSeq = event.LineSequence
 				}
 				c.eventLogger.Info().Msgf("%s %s",
 					color.New(color.FgCyan).Sprint(event.Data["containerName"]),
 					event.Data["line"])
-				c.AsyncEventManager.TrackLog()
 			default:
-				err := errors.New("unknown event type")
-				log.Err(err).Msgf("unknown even type: %s", event.Type)
+				log.Error().Msgf("unknown event type: %s", event.Type)
 			}
 		}
 	}
 }
 
-func (c *ImageRunner) FetchLiveLogs(ctx context.Context, id string) error {
-	err := c.HandleAsyncEvents(ctx, id, true)
-	return err
+func (c *ImageRunner) GetLiveLogs(ctx context.Context, id string) error {
+	return c.StreamLiveLogs(ctx, id, false)
 }
 
 func (c *ImageRunner) doGetStr(ctx context.Context, url string) (string, error) {

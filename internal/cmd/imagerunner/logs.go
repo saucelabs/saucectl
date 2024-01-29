@@ -58,22 +58,23 @@ func LogsCommand() *cobra.Command {
 
 func exec(runID string, liveLogs bool) error {
 	if liveLogs {
-		err := imagerunnerClient.FetchLiveLogs(context.Background(), runID)
+		err := imagerunnerClient.GetLiveLogs(context.Background(), runID)
 		if err != nil {
 			if errors.Is(err, imgrunner.ErrResourceNotFound) {
 				return fmt.Errorf("could not find log URL for run with ID (%s): %w", runID, err)
 			}
-			return err
 		}
-	} else {
-		log, err := imagerunnerClient.GetLogs(context.Background(), runID)
-		if err != nil {
-			if errors.Is(err, imgrunner.ErrResourceNotFound) {
-				return fmt.Errorf("could not find log URL for run with ID (%s): %w", runID, err)
-			}
-			return err
-		}
-		fmt.Println(log)
+		return err
 	}
+
+	log, err := imagerunnerClient.GetLogs(context.Background(), runID)
+	if err != nil {
+		if errors.Is(err, imgrunner.ErrResourceNotFound) {
+			return fmt.Errorf("could not find log URL for run with ID (%s): %w", runID, err)
+		}
+		return err
+	}
+	fmt.Println(log)
+
 	return nil
 }

@@ -36,7 +36,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 			creds := reg.Credentials()
 			url := reg.APIBaseURL()
 
-			asyncEventManager, err := imagerunner.NewAsyncEventManager()
+			asyncEventManager, err := imagerunner.NewAsyncEventMgr()
 			if err != nil {
 				return err
 			}
