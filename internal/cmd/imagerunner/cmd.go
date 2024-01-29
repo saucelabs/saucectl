@@ -56,6 +56,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 		LogsCommand(),
 		ArtifactsCommand(),
 		StopCommand(),
+		ListCommand(),
 	)
 	return cmd
 }
