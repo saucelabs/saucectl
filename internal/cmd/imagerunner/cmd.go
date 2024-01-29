@@ -6,7 +6,6 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/http"
-	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/spf13/cobra"
@@ -38,7 +37,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 			creds := credentials.Get()
 			url := region.FromString(regio).APIBaseURL()
 
-			asyncEventManager, err := imagerunner.NewAsyncEventMgr()
+			asyncEventManager, err := http.NewAsyncEventMgr()
 			if err != nil {
 				return err
 			}

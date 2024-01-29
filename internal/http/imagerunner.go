@@ -295,7 +295,7 @@ func (c *ImageRunner) OpenAsyncEventsWebSocket(id string, lastSeq string, wait b
 	return ws, nil
 }
 
-func (c *ImageRunner) OpenAsyncEventsTransport(id string, lastSeq string, wait bool) (imagerunner.AsyncEventTransporter, error) {
+func (c *ImageRunner) openAsyncEventsTransport(id string, lastSeq string, wait bool) (imagerunner.AsyncEventTransporter, error) {
 	ws, err := c.OpenAsyncEventsWebSocket(id, lastSeq, wait)
 	if err != nil {
 		var fatalErr imagerunner.AsyncEventFatalError
@@ -306,7 +306,7 @@ func (c *ImageRunner) OpenAsyncEventsTransport(id string, lastSeq string, wait b
 			Err: err,
 		}
 	}
-	return imagerunner.NewWebSocketAsyncEventTransport(ws), nil
+	return NewWebSocketAsyncEventTransport(ws), nil
 }
 
 func (c *ImageRunner) StreamLiveLogs(ctx context.Context, id string, wait bool) error {
@@ -336,7 +336,7 @@ func (c *ImageRunner) StreamLiveLogs(ctx context.Context, id string, wait bool) 
 // It returns a boolean indicating whether there are more lines to process,
 // the last sequence string, and an error if one occurred.
 func (c *ImageRunner) handleAsyncEvents(ctx context.Context, id string, lastSeq string, wait bool) (bool, string, error) {
-	transport, err := c.OpenAsyncEventsTransport(id, lastSeq, wait)
+	transport, err := c.openAsyncEventsTransport(id, lastSeq, wait)
 	if err != nil {
 		return true, lastSeq, err
 	}
