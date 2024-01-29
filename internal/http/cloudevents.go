@@ -77,7 +77,7 @@ func (a *AsyncEventParser) IsLogIdle() bool {
 func parseLineSequence(cloudEvent *cloudevents.Event) (string, error) {
 	// The extension is not necessarily present, so ignore errors.
 	ls, _ := cloudEvent.Context.GetExtension("linesequence")
-	lineseq, ok := _lineseq.(string)
+	lineseq, ok := ls.(string)
 	if !ok {
 		return "", fmt.Errorf("linesequence is not a string")
 	}
