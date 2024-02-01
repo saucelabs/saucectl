@@ -291,19 +291,22 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 
 	// Check timeout
 	if j.TimedOut {
-		color.Red("Suite '%s' has reached timeout of %s", opts.DisplayName, opts.Timeout)
-		j, err = r.JobService.StopJob(context.Background(), id, opts.RealDevice)
-		if err != nil {
-			color.HiRedString("Failed to stop suite '%s': %v", opts.DisplayName, err)
-		}
+		log.Error().
+			Str("suite", opts.DisplayName).
+			Str("timeout", opts.Timeout.String()).
+			Msg("Suite timed out.")
+
+		r.stopSuiteExecution(id, opts.RealDevice, opts.DisplayName)
+
 		j.Passed = false
 		j.TimedOut = true
-		return j, false, fmt.Errorf("suite '%s' has reached timeout", opts.DisplayName)
+
+		return j, false, fmt.Errorf("suite %q has timed out", opts.DisplayName)
 	}
 
 	if !j.Passed {
 		// We may need to differentiate when a job has crashed vs. when there is errors.
-		return j, r.interrupted, fmt.Errorf("suite '%s' has test failures", opts.DisplayName)
+		return j, r.interrupted, fmt.Errorf("suite %q has test failures", opts.DisplayName)
 	}
 
 	return j, false, nil
@@ -795,11 +798,11 @@ func (r *CloudRunner) validateTunnel(name, owner string, dryRun bool) error {
 
 // stopSuiteExecution stops the current execution on Sauce Cloud
 func (r *CloudRunner) stopSuiteExecution(jobID string, realDevice bool, suiteName string) {
-	log.Info().Str("suite", suiteName).Msg("Stopping suite")
-	_, err := r.JobService.StopJob(context.Background(), jobID, realDevice)
-	if err != nil {
-		log.Warn().Err(err).Str("suite", suiteName).Msg("Unable to stop suite.")
-	}
+	log.Info().Str("suite", suiteName).Msg("Attempting to stop job...")
+
+	// Ignore errors when stopping a job, as it may have already ended or is in
+	// a state where it cannot be stopped. Either way, there's nothing we can do.
+	_, _ = r.JobService.StopJob(context.Background(), jobID, realDevice)
 }
 
 // registerInterruptOnSignal stops execution on Sauce Cloud when a SIGINT is captured.
