@@ -21,6 +21,7 @@ type JobService struct {
 	VDCWriter job.Writer
 
 	VDCStopper job.Stopper
+	RDCStopper job.Stopper
 
 	VDCDownloader job.ArtifactDownloader
 	RDCDownloader job.ArtifactDownloader
@@ -36,7 +37,7 @@ func (s JobService) DownloadArtifact(jobID, suiteName string, realDevice bool) [
 
 func (s JobService) StopJob(ctx context.Context, jobID string, realDevice bool) (job.Job, error) {
 	if realDevice {
-		return job.Job{ID: jobID}, nil
+		return s.RDCStopper.StopJob(ctx, jobID, realDevice)
 	}
 
 	return s.VDCStopper.StopJob(ctx, jobID, realDevice)

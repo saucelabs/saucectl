@@ -169,6 +169,47 @@ func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (jobID
 	return sessionStart.TestReport.ID, true, nil
 }
 
+func (c *RDCService) StopJob(ctx context.Context, id string, realDevice bool) (job.Job, error) {
+	if !realDevice {
+		return job.Job{}, errors.New("the RDC client does not support virtual device jobs")
+	}
+
+	req, err := NewRequestWithContext(ctx, http.MethodPut,
+		fmt.Sprintf("%s/v1/rdc/jobs/%s/stop", c.URL, id), nil)
+	if err != nil {
+		return job.Job{}, err
+	}
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	r, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return job.Job{}, err
+	}
+
+	resp, err := c.Client.Do(r)
+	if err != nil {
+		return job.Job{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusInternalServerError {
+		return job.Job{}, ErrServerError
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		return job.Job{}, ErrJobNotFound
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		err := fmt.Errorf("unable to stop job: %d - %s", resp.StatusCode, string(body))
+		return job.Job{}, err
+	}
+
+	var j job.Job
+	return j, json.NewDecoder(resp.Body).Decode(&j)
+}
+
 // ReadJob returns the job details.
 func (c *RDCService) ReadJob(ctx context.Context, id string, realDevice bool) (job.Job, error) {
 	if !realDevice {

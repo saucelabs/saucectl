@@ -158,6 +158,7 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
 				RDCReader:     &rdcClient,
 				VDCWriter:     &testcompClient,
 				VDCStopper:    &restoClient,
+				RDCStopper:    &rdcClient,
 				VDCDownloader: &restoClient,
 				RDCDownloader: &rdcClient,
 			},

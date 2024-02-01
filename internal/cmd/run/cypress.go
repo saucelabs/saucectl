@@ -159,6 +159,7 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 				RDCReader:     &rdcClient,
 				VDCWriter:     &testcompClient,
 				VDCStopper:    &restoClient,
+				RDCStopper:    &rdcClient,
 				VDCDownloader: &restoClient,
 			},
 			MetadataService: &testcompClient,

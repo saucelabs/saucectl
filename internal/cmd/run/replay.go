@@ -145,6 +145,7 @@ func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, erro
 				RDCReader:     &rdcClient,
 				VDCWriter:     &testcompClient,
 				VDCStopper:    &restoClient,
+				RDCStopper:    &rdcClient,
 				VDCDownloader: &restoClient,
 			},
 			TunnelService:   &restoClient,

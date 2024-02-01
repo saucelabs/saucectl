@@ -252,6 +252,11 @@ func TestRunJobTimeoutRDC(t *testing.T) {
 					return job.Job{ID: id, TimedOut: true}, nil
 				},
 			},
+			RDCStopper: &mocks.FakeJobStopper{
+				StopJobFn: func(ctx context.Context, id string) (job.Job, error) {
+					return job.Job{ID: id, TimedOut: true}, nil
+				},
+			},
 		},
 	}
 
@@ -266,7 +271,7 @@ func TestRunJobTimeoutRDC(t *testing.T) {
 	}
 	close(opts)
 	res := <-results
-	assert.Error(t, res.err, "suite 'dummy' has reached timeout")
+	assert.Error(t, res.err)
 	assert.True(t, res.job.TimedOut)
 }
 

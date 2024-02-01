@@ -197,6 +197,7 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 				RDCReader:     &rdcClient,
 				VDCWriter:     &testcompClient,
 				VDCStopper:    &restoClient,
+				RDCStopper:    &rdcClient,
 				VDCDownloader: &restoClient,
 			},
 			TunnelService:   &restoClient,
