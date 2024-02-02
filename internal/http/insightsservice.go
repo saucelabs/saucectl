@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"time"
 
-	ij "github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
 
@@ -235,7 +234,7 @@ func (c *InsightsService) PostTestRun(ctx context.Context, runs []insights.TestR
 }
 
 // ListJobs returns job list
-func (c *InsightsService) ListJobs(ctx context.Context, userID, jobSource string, queryOpts ij.QueryOption) ([]job.Job, error) {
+func (c *InsightsService) ListJobs(ctx context.Context, userID, jobSource string, queryOpts insights.ListJobsOptions) ([]job.Job, error) {
 	url := fmt.Sprintf("%s/v2/archives/jobs", c.URL)
 	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {

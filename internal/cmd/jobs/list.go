@@ -11,7 +11,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
-	cjob "github.com/saucelabs/saucectl/internal/cmd/jobs/job"
+	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
@@ -116,7 +116,15 @@ func ListCommand() *cobra.Command {
 				return errors.New("invalid job resource. Options: vdc, rdc, api")
 			}
 
-			return list(jobSource, out, buildQueryOpts(page, size, status))
+			return list(
+				jobSource,
+				out,
+				insights.ListJobsOptions{
+					Page:   page,
+					Size:   size,
+					Status: status,
+				},
+			)
 		},
 	}
 	flags := cmd.PersistentFlags()
@@ -129,27 +137,24 @@ func ListCommand() *cobra.Command {
 	return cmd
 }
 
-func buildQueryOpts(page, size int, status string) cjob.QueryOption {
-	return cjob.QueryOption{
-		Page:   page,
-		Size:   size,
-		Status: status,
-	}
-}
-
-func list(jobSource string, outputFormat string, queryOpts cjob.QueryOption) error {
-	lst, err := jobSvc.ListJobs(context.Background(), jobSource, queryOpts)
+func list(jobSource string, outputFormat string, queryOpts insights.ListJobsOptions) error {
+	user, err := userService.User(context.Background())
 	if err != nil {
-		return fmt.Errorf("failed to get job list: %w", err)
+		return fmt.Errorf("failed to get user: %w", err)
+	}
+
+	jobs, err := jobService.ListJobs(context.Background(), user.ID, jobSource, queryOpts)
+	if err != nil {
+		return fmt.Errorf("failed to get jobs: %w", err)
 	}
 
 	switch outputFormat {
 	case "json":
-		if err := renderJSON(lst); err != nil {
+		if err := renderJSON(jobs); err != nil {
 			return fmt.Errorf("failed to render output: %w", err)
 		}
 	case "text":
-		renderTable(lst)
+		renderTable(jobs)
 	}
 
 	return nil

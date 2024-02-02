@@ -3,7 +3,6 @@ package mocks
 import (
 	"context"
 
-	ij "github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/insights"
@@ -13,7 +12,7 @@ import (
 type FakeInsightService struct {
 	GetHistoryFn  func(context.Context, iam.User, config.LaunchOrder) (insights.JobHistory, error)
 	PostTestRunFn func(context.Context, []insights.TestRun) error
-	ListJobsFn    func(ctx context.Context, userID, jobType string, queryOption ij.QueryOption) ([]job.Job, error)
+	ListJobsFn    func(ctx context.Context, userID, jobType string, queryOption insights.ListJobsOptions) ([]job.Job, error)
 	ReadJobFn     func(ctx context.Context, id string) (job.Job, error)
 }
 
@@ -25,7 +24,7 @@ func (f FakeInsightService) PostTestRun(ctx context.Context, runs []insights.Tes
 	return f.PostTestRunFn(ctx, runs)
 }
 
-func (f FakeInsightService) ListJobs(ctx context.Context, userID, jobType string, queryOption ij.QueryOption) ([]job.Job, error) {
+func (f FakeInsightService) ListJobs(ctx context.Context, userID, jobType string, queryOption insights.ListJobsOptions) ([]job.Job, error) {
 	return f.ListJobsFn(ctx, userID, jobType, queryOption)
 }
 

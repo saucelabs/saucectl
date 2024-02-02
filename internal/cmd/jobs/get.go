@@ -53,18 +53,18 @@ func GetCommand() *cobra.Command {
 }
 
 func get(jobID, outputFormat string) error {
-	job, err := jobSvc.ReadJob(context.Background(), jobID)
+	j, err := jobService.ReadJob(context.Background(), jobID)
 	if err != nil {
 		return fmt.Errorf("failed to get job: %w", err)
 	}
 
 	switch outputFormat {
 	case "json":
-		if err := renderJSON(job); err != nil {
+		if err := renderJSON(j); err != nil {
 			return fmt.Errorf("failed to render output: %w", err)
 		}
 	case "text":
-		renderJobTable(job)
+		renderJobTable(j)
 	}
 
 	return nil

@@ -2,12 +2,8 @@ package saucecloud
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	cjob "github.com/saucelabs/saucectl/internal/cmd/jobs/job"
-	"github.com/saucelabs/saucectl/internal/iam"
-	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
 )
 
@@ -89,21 +85,4 @@ func (s JobService) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 	}
 
 	return s.VDCStarter.StartJob(ctx, opts)
-}
-
-type JobCommandService struct {
-	Reader      insights.Service
-	UserService iam.UserService
-}
-
-func (s JobCommandService) ListJobs(ctx context.Context, jobSource string, queryOption cjob.QueryOption) ([]job.Job, error) {
-	user, err := s.UserService.User(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user: %w", err)
-	}
-	return s.Reader.ListJobs(ctx, user.ID, jobSource, queryOption)
-}
-
-func (s JobCommandService) ReadJob(ctx context.Context, id string) (job.Job, error) {
-	return s.Reader.ReadJob(ctx, id)
 }

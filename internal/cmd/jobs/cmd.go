@@ -4,17 +4,18 @@ import (
 	"errors"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/http"
+	"github.com/saucelabs/saucectl/internal/iam"
+	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/spf13/cobra"
 )
 
 var (
-	jobSvc          job.Reader
+	jobService      insights.Service
+	userService     iam.UserService
 	insightsTimeout = 1 * time.Minute
 	iamTimeout      = 1 * time.Minute
 )
@@ -45,10 +46,8 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 			insightsClient := http.NewInsightsService(url, creds, insightsTimeout)
 			iamClient := http.NewUserService(url, creds, iamTimeout)
 
-			jobSvc = saucecloud.JobCommandService{
-				Reader:      &insightsClient,
-				UserService: &iamClient,
-			}
+			jobService = &insightsClient
+			userService = &iamClient
 
 			return nil
 		},
