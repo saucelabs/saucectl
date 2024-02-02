@@ -19,12 +19,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/iam"
 )
 
-const (
-	RDCSource = "rdc"
-	VDCSource = "vdc"
-	APISource = "api"
-)
-
 // archivesJobList represents list job response structure
 type archivesJobList struct {
 	Jobs  []archivesJob `json:"jobs"`
@@ -52,10 +46,6 @@ type InsightsService struct {
 	HTTPClient  *http.Client
 	URL         string
 	Credentials iam.Credentials
-}
-
-var LaunchOptions = map[config.LaunchOrder]string{
-	config.LaunchOrderFailRate: "fail_rate",
 }
 
 func NewInsightsService(url string, creds iam.Credentials, timeout time.Duration) InsightsService {
