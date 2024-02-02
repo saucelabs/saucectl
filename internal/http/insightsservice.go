@@ -272,52 +272,23 @@ func (c *InsightsService) ListJobs(ctx context.Context, opts insights.ListJobsOp
 	return c.parseJobs(resp.Body)
 }
 
-func (c *InsightsService) ReadJob(ctx context.Context, jobID string) (job.Job, error) {
-	var source = VDCSource
-
-	// FIXME we can now do it without having to specify a source
-
-	switch source {
-	case VDCSource:
-		vdcJob, err := c.readJob(ctx, jobID, VDCSource)
-		if err == nil {
-			return vdcJob, nil
-		}
-		fallthrough
-	case RDCSource:
-		rdcJob, err := c.readJob(ctx, jobID, RDCSource)
-		if err == nil {
-			return rdcJob, nil
-		}
-		fallthrough
-	case APISource:
-		apiJob, err := c.readJob(ctx, jobID, APISource)
-		if err != nil {
-			return job.Job{}, fmt.Errorf("failed to get job: %w", err)
-		}
-		return apiJob, nil
-	}
-	return job.Job{}, nil
-}
-
-func (c *InsightsService) readJob(ctx context.Context, jobID string, jobSource string) (job.Job, error) {
-	var j job.Job
-	url := fmt.Sprintf("%s/v2/archives/%s/jobs/%s", c.URL, jobSource, jobID)
+func (c *InsightsService) ReadJob(ctx context.Context, id string) (job.Job, error) {
+	url := fmt.Sprintf("%s/v2/archives/jobs/%s", c.URL, id)
 
 	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return j, err
+		return job.Job{}, err
 	}
 
 	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return j, err
+		return job.Job{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return j, fmt.Errorf("unexpected status: %s", resp.Status)
+		return job.Job{}, fmt.Errorf("unexpected status: %s", resp.Status)
 	}
 
 	return c.parseJob(resp.Body)
