@@ -314,14 +314,14 @@ func (c *InsightsService) parseJobs(body io.ReadCloser) ([]job.Job, error) {
 // parseJob converts archivesJob to job.Job.
 func (c *InsightsService) convertJob(j archivesJob) job.Job {
 	return job.Job{
-		ID:              j.ID,
-		Name:            j.Name,
-		Status:          j.Status,
-		Error:           j.Error,
-		PlatformName:    j.OS,
-		PlatformVersion: j.OSVersion,
-		Framework:       j.Framework,
-		DeviceName:      j.Device,
-		BrowserName:     j.BrowserName,
+		ID:          j.ID,
+		Name:        j.Name,
+		Status:      j.Status,
+		Error:       j.Error,
+		OS:          j.OS,
+		OSVersion:   j.OSVersion,
+		Framework:   j.Framework,
+		DeviceName:  j.Device,
+		BrowserName: j.BrowserName,
 	}
 }

@@ -136,9 +136,9 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 		inProgress--
 
 		if !res.skipped {
-			platform := res.job.PlatformName
-			if res.job.PlatformVersion != "" {
-				platform = fmt.Sprintf("%s %s", platform, res.job.PlatformVersion)
+			platform := res.job.OS
+			if res.job.OSVersion != "" {
+				platform = fmt.Sprintf("%s %s", platform, res.job.OSVersion)
 			}
 
 			browser := res.browser
@@ -316,14 +316,14 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 func enrichRDCReport(j *job.Job, opts job.StartOptions) {
 	switch opts.Framework {
 	case "espresso":
-		j.PlatformName = espresso.Android
+		j.OS = espresso.Android
 	}
 
 	if opts.DeviceID != "" {
 		j.DeviceName = opts.DeviceID
 	} else {
 		j.DeviceName = opts.DeviceName
-		j.PlatformVersion = opts.PlatformVersion
+		j.OSVersion = opts.PlatformVersion
 	}
 }
 

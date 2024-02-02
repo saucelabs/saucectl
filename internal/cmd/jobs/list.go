@@ -180,7 +180,7 @@ func renderTable(jobs []job.Job) {
 			item.ID,
 			item.Name,
 			item.Status,
-			item.PlatformName,
+			item.OS,
 			item.Framework,
 			item.BrowserName,
 			item.DeviceName,

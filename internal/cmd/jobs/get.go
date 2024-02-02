@@ -84,7 +84,7 @@ func renderJobTable(job job.Job) {
 		job.ID,
 		job.Name,
 		job.Status,
-		job.PlatformName,
+		job.OS,
 		job.Framework,
 		job.BrowserName,
 		job.DeviceName,

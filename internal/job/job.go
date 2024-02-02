@@ -38,8 +38,8 @@ type Job struct {
 
 	Framework string
 
-	PlatformName    string
-	PlatformVersion string
+	OS        string
+	OSVersion string
 
 	// IsRDC flags a job started as an RDC run.
 	IsRDC bool

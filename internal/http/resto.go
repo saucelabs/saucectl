@@ -498,16 +498,16 @@ func (c *Resto) parseJob(body io.ReadCloser) (job.Job, error) {
 	}
 
 	return job.Job{
-		ID:              j.ID,
-		Name:            j.Name,
-		Passed:          j.Passed,
-		Status:          j.Status,
-		Error:           j.Error,
-		BrowserName:     j.Browser,
-		BrowserVersion:  j.BrowserShortVersion,
-		DeviceName:      j.BaseConfig.DeviceName,
-		Framework:       j.AutomationBackend,
-		PlatformName:    osName,
-		PlatformVersion: osVersion,
+		ID:             j.ID,
+		Name:           j.Name,
+		Passed:         j.Passed,
+		Status:         j.Status,
+		Error:          j.Error,
+		BrowserName:    j.Browser,
+		BrowserVersion: j.BrowserShortVersion,
+		DeviceName:     j.BaseConfig.DeviceName,
+		Framework:      j.AutomationBackend,
+		OS:             osName,
+		OSVersion:      osVersion,
 	}, nil
 }
