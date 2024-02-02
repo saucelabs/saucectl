@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"reflect"
-	"sort"
 	"strconv"
 	"time"
 
@@ -59,63 +58,17 @@ func NewInsightsService(url string, creds iam.Credentials, timeout time.Duration
 	}
 }
 
-// GetHistory returns job history from insights
 func (c *InsightsService) GetHistory(ctx context.Context, user iam.User, launchOrder config.LaunchOrder) (insights.JobHistory, error) {
-	vdc, err := c.doGetHistory(ctx, user, launchOrder, "vdc")
-	if err != nil {
-		return insights.JobHistory{}, err
-	}
-	rdc, err := c.doGetHistory(ctx, user, launchOrder, "rdc")
-	if err != nil {
-		return insights.JobHistory{}, err
-	}
-
-	jobHistory := mergeJobHistories([]insights.JobHistory{vdc, rdc})
-	return jobHistory, nil
-}
-
-func mergeJobHistories(histories []insights.JobHistory) insights.JobHistory {
-	testCasesMap := map[string]insights.TestCase{}
-	for _, history := range histories {
-		for _, tc := range history.TestCases {
-			addOrReplaceTestCase(testCasesMap, tc)
-		}
-	}
-	var testCases []insights.TestCase
-	for _, tc := range testCasesMap {
-		testCases = append(testCases, tc)
-	}
-	sort.Slice(testCases, func(i, j int) bool {
-		return testCases[i].FailRate > testCases[j].FailRate
-	})
-	return insights.JobHistory{
-		TestCases: testCases,
-	}
-}
-
-// addOrReplaceTestCase adds or replaces the insights.TestCase in the map[string]insights.TestCase
-// If there is already one with the same name, only the highest fail rate is kept.
-func addOrReplaceTestCase(mp map[string]insights.TestCase, tc insights.TestCase) {
-	tcRef, present := mp[tc.Name]
-	if !present {
-		mp[tc.Name] = tc
-		return
-	}
-	if tc.FailRate > tcRef.FailRate {
-		mp[tc.Name] = tc
-	}
-}
-
-func (c *InsightsService) doGetHistory(ctx context.Context, user iam.User, launchOrder config.LaunchOrder, source string) (insights.JobHistory, error) {
 	start := time.Now().AddDate(0, 0, -7).Unix()
 	now := time.Now().Unix()
 
 	var jobHistory insights.JobHistory
-	url := fmt.Sprintf("%s/v2/insights/%s/test-cases", c.URL, source)
+	url := fmt.Sprintf("%s/insights/v2/test-cases", c.URL)
 	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return jobHistory, err
 	}
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
 
 	q := req.URL.Query()
 	queries := map[string]string{
@@ -134,22 +87,15 @@ func (c *InsightsService) doGetHistory(ctx context.Context, user iam.User, launc
 	}
 	req.URL.RawQuery = q.Encode()
 
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return jobHistory, err
 	}
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return jobHistory, err
-	}
 
-	err = json.Unmarshal(body, &jobHistory)
-	if err != nil {
-		return jobHistory, err
-	}
-	return jobHistory, nil
+	// FIXME error handling!
+
+	return jobHistory, json.NewDecoder(resp.Body).Decode(&jobHistory)
 }
 
 type testRunsInput struct {
