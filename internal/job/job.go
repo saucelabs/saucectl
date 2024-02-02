@@ -42,10 +42,10 @@ type Job struct {
 	PlatformVersion string
 
 	// IsRDC flags a job started as an RDC run.
-	IsRDC bool `json:"-"`
+	IsRDC bool
 
 	// TimedOut flags a job as an unfinished one.
-	TimedOut bool `json:"-"`
+	TimedOut bool
 }
 
 // TotalStatus returns the total status of a job, combining the result of fields Status + Passed.
