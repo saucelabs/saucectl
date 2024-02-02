@@ -17,7 +17,7 @@ type Service interface {
 
 // ListJobsOptions represents the query option for listing jobs
 type ListJobsOptions struct {
-	Page   int    `json:"page"`
-	Size   int    `json:"size"`
-	Status string `json:"status"`
+	Page   int
+	Size   int
+	Status string
 }
