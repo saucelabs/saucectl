@@ -96,14 +96,14 @@ type JobCommandService struct {
 	UserService iam.UserService
 }
 
-func (s JobCommandService) ListJobs(ctx context.Context, jobSource string, queryOption cjob.QueryOption) (cjob.List, error) {
+func (s JobCommandService) ListJobs(ctx context.Context, jobSource string, queryOption cjob.QueryOption) ([]job.Job, error) {
 	user, err := s.UserService.User(ctx)
 	if err != nil {
-		return cjob.List{}, fmt.Errorf("failed to get user: %w", err)
+		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 	return s.Reader.ListJobs(ctx, user.ID, jobSource, queryOption)
 }
 
-func (s JobCommandService) ReadJob(ctx context.Context, id string) (cjob.Job, error) {
+func (s JobCommandService) ReadJob(ctx context.Context, id string) (job.Job, error) {
 	return s.Reader.ReadJob(ctx, id)
 }

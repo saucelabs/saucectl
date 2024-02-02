@@ -7,7 +7,7 @@ import (
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
-	"github.com/saucelabs/saucectl/internal/cmd/jobs/job"
+	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
@@ -76,19 +76,18 @@ func renderJobTable(job job.Job) {
 	t.SuppressEmptyColumns()
 
 	t.AppendHeader(table.Row{
-		"ID", "Name", "Source", "Status", "Platform", "Framework", "Browser", "Device",
+		"ID", "Name", "Status", "Platform", "Framework", "Browser", "Device",
 	})
 
 	// the order of values must match the order of the header
 	t.AppendRow(table.Row{
 		job.ID,
 		job.Name,
-		job.Source,
 		job.Status,
-		job.Platform,
+		job.PlatformName,
 		job.Framework,
 		job.BrowserName,
-		job.Device,
+		job.DeviceName,
 	})
 	t.SuppressEmptyColumns()
 

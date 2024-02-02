@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/saucelabs/saucectl/internal/build"
-	j "github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/config"
 	v1 "github.com/saucelabs/saucectl/internal/cypress/v1"
 	"github.com/saucelabs/saucectl/internal/insights"
@@ -93,8 +92,8 @@ func TestRunSuites(t *testing.T) {
 				PostTestRunFn: func(ctx context.Context, runs []insights.TestRun) error {
 					return nil
 				},
-				ReadJobFn: func(ctx context.Context, id string) (j.Job, error) {
-					return j.Job{}, nil
+				ReadJobFn: func(ctx context.Context, id string) (job.Job, error) {
+					return job.Job{}, nil
 				},
 			},
 		},

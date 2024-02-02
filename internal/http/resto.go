@@ -25,6 +25,22 @@ import (
 	"github.com/saucelabs/saucectl/internal/vmd"
 )
 
+type restoJob struct {
+	ID                  string `json:"id"`
+	Name                string `json:"name"`
+	Passed              bool   `json:"passed"`
+	Status              string `json:"status"`
+	Error               string `json:"error"`
+	Browser             string `json:"browser"`
+	BrowserShortVersion string `json:"browser_short_version"`
+	BaseConfig          struct {
+		PlatformName    string `json:"platformName"`
+		PlatformVersion string `json:"platformVersion"`
+		DeviceName      string `json:"deviceName"`
+	} `json:"base_config"`
+	AutomationBackend string `json:"automation_backend"`
+}
+
 // Resto http client.
 type Resto struct {
 	Client         *retryablehttp.Client
@@ -90,8 +106,7 @@ func (c *Resto) ReadJob(ctx context.Context, id string, realDevice bool) (job.Jo
 		return job.Job{}, err
 	}
 
-	var job job.Job
-	return job, json.NewDecoder(resp.Body).Decode(&job)
+	return c.parseJob(resp.Body)
 }
 
 // PollJob polls job details at an interval, until timeout has been reached or until the job has ended, whether successfully or due to an error.
@@ -341,8 +356,7 @@ func (c *Resto) StopJob(ctx context.Context, jobID string, realDevice bool) (job
 		return job.Job{}, err
 	}
 
-	var job job.Job
-	return job, json.NewDecoder(resp.Body).Decode(&job)
+	return c.parseJob(resp.Body)
 }
 
 // DownloadArtifact downloads artifacts and returns a list of what was downloaded.
@@ -467,4 +481,23 @@ func (c *Resto) GetBuildID(ctx context.Context, jobID string, buildSource build.
 	}
 
 	return br.ID, nil
+}
+
+// parseJob parses the body into restoJob and converts it to job.Job.
+func (c *Resto) parseJob(body io.ReadCloser) (job.Job, error) {
+	var j restoJob
+	err := json.NewDecoder(body).Decode(&j)
+	return job.Job{
+		ID:              j.ID,
+		Name:            j.Name,
+		Passed:          j.Passed,
+		Status:          j.Status,
+		Error:           j.Error,
+		BrowserName:     j.Browser,
+		BrowserVersion:  j.BrowserShortVersion,
+		DeviceName:      j.BaseConfig.DeviceName,
+		Framework:       j.AutomationBackend,
+		PlatformName:    j.BaseConfig.PlatformName,
+		PlatformVersion: j.BaseConfig.PlatformVersion,
+	}, err
 }

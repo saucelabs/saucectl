@@ -22,19 +22,24 @@ var AllStates = []string{StatePassed, StateComplete, StateFailed, StateError, St
 // it's done.
 var DoneStates = []string{StateComplete, StateError, StatePassed, StateFailed}
 
-// Job represents test details and metadata of a test run (aka Job), that is usually associated with a particular test
-// execution instance (e.g. VM).
+// Job represents test details and metadata of a test run (aka Job), that is
+// usually associated with a particular test execution instance (e.g. VM).
 type Job struct {
-	ID                  string `json:"id"`
-	Passed              bool   `json:"passed"`
-	Status              string `json:"status"`
-	Error               string `json:"error"`
-	BrowserShortVersion string `json:"browser_short_version"`
-	BaseConfig          struct {
-		PlatformName    string `json:"platformName"`
-		PlatformVersion string `json:"platformVersion"`
-		DeviceName      string `json:"deviceName"`
-	} `json:"base_config"`
+	ID     string
+	Name   string
+	Passed bool
+	Status string
+	Error  string
+
+	BrowserName    string
+	BrowserVersion string
+
+	DeviceName string
+
+	Framework string
+
+	PlatformName    string
+	PlatformVersion string
 
 	// IsRDC flags a job started as an RDC run.
 	IsRDC bool `json:"-"`

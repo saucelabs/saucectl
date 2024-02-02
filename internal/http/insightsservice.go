@@ -12,8 +12,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/cmd/jobs/job"
+	ij "github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/insights"
+	"github.com/saucelabs/saucectl/internal/job"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/iam"
@@ -25,14 +26,14 @@ const (
 	APISource = "api"
 )
 
-// ListJobResp represents list job response structure
-type ListJobResp struct {
-	Jobs  []JobResp `json:"jobs"`
-	Total int       `json:"total"`
+// archivesJobList represents list job response structure
+type archivesJobList struct {
+	Jobs  []archivesJob `json:"jobs"`
+	Total int           `json:"total"`
 }
 
-// JobResp represents job response structure
-type JobResp struct {
+// archivesJob represents job response structure
+type archivesJob struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Status      string `json:"status"`
@@ -234,14 +235,14 @@ func (c *InsightsService) PostTestRun(ctx context.Context, runs []insights.TestR
 }
 
 // ListJobs returns job list
-func (c *InsightsService) ListJobs(ctx context.Context, userID, jobSource string, queryOpts job.QueryOption) (job.List, error) {
-	var jobList job.List
-
+func (c *InsightsService) ListJobs(ctx context.Context, userID, jobSource string, queryOpts ij.QueryOption) ([]job.Job, error) {
 	url := fmt.Sprintf("%s/v2/archives/jobs", c.URL)
 	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return jobList, err
+		return nil, err
 	}
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+
 	q := req.URL.Query()
 	queries := map[string]string{
 		"ts":       strconv.FormatInt(time.Now().UTC().UnixMilli(), 10),
@@ -259,54 +260,23 @@ func (c *InsightsService) ListJobs(ctx context.Context, userID, jobSource string
 	}
 	req.URL.RawQuery = q.Encode()
 
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return jobList, err
+		return nil, err
 	}
-
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return jobList, fmt.Errorf("unexpected status: %s", resp.Status)
-	}
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return jobList, err
-	}
-	var listResp ListJobResp
-	err = json.Unmarshal(body, &listResp)
-	if err != nil {
-		return jobList, err
-	}
-	for _, j := range listResp.Jobs {
-		jobList.Jobs = append(jobList.Jobs, buildJob(j))
-	}
-	jobList.Total = listResp.Total
-	jobList.Page = queryOpts.Page
-	jobList.Size = queryOpts.Size
-	return jobList, nil
-}
 
-func buildJob(j JobResp) job.Job {
-	var platform string
-	if j.OS != "" && j.OSVersion != "" {
-		platform = fmt.Sprintf("%s %s", j.OS, j.OSVersion)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status: %s", resp.Status)
 	}
-	return job.Job{
-		ID:          j.ID,
-		Name:        j.Name,
-		Status:      j.Status,
-		Error:       j.Error,
-		Platform:    platform,
-		Framework:   j.Framework,
-		Device:      j.Device,
-		BrowserName: j.BrowserName,
-		Source:      j.Source,
-	}
+
+	return c.parseJobs(resp.Body)
 }
 
 func (c *InsightsService) ReadJob(ctx context.Context, jobID string) (job.Job, error) {
 	var source = VDCSource
+
+	// FIXME we can now do it without having to specify a source
 
 	switch source {
 	case VDCSource:
@@ -333,31 +303,69 @@ func (c *InsightsService) ReadJob(ctx context.Context, jobID string) (job.Job, e
 
 func (c *InsightsService) readJob(ctx context.Context, jobID string, jobSource string) (job.Job, error) {
 	var j job.Job
-
 	url := fmt.Sprintf("%s/v2/archives/%s/jobs/%s", c.URL, jobSource, jobID)
 
 	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return j, err
 	}
+
 	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return j, err
 	}
 	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		return j, fmt.Errorf("unexpected status: %s", resp.Status)
 	}
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return j, err
-	}
-	var jobResp JobResp
-	err = json.Unmarshal(body, &jobResp)
-	if err != nil {
-		return j, err
+
+	return c.parseJob(resp.Body)
+}
+
+// parseJob parses the body into archivesJob and converts it to job.Job.
+func (c *InsightsService) parseJob(body io.ReadCloser) (job.Job, error) {
+	var j archivesJob
+
+	if err := json.NewDecoder(body).Decode(&j); err != nil {
+		return job.Job{}, err
 	}
 
-	return buildJob(jobResp), nil
+	return c.convertJob(j), nil
+}
+
+// parseJob parses the body into archivesJobList and converts it to []job.Job.
+func (c *InsightsService) parseJobs(body io.ReadCloser) ([]job.Job, error) {
+	var l archivesJobList
+
+	if err := json.NewDecoder(body).Decode(&l); err != nil {
+		return nil, err
+	}
+
+	jobs := make([]job.Job, len(l.Jobs))
+	for i, j := range l.Jobs {
+		jobs[i] = c.convertJob(j)
+	}
+
+	return jobs, nil
+}
+
+// parseJob converts archivesJob to job.Job.
+func (c *InsightsService) convertJob(j archivesJob) job.Job {
+	//var platform string
+	//if j.OS != "" && j.OSVersion != "" {
+	//	platform = fmt.Sprintf("%s %s", j.OS, j.OSVersion)
+	//}
+
+	return job.Job{
+		ID:     j.ID,
+		Name:   j.Name,
+		Status: j.Status,
+		Error:  j.Error,
+		//Platform:    platform,
+		Framework:   j.Framework,
+		DeviceName:  j.Device,
+		BrowserName: j.BrowserName,
+	}
 }

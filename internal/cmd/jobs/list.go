@@ -155,8 +155,8 @@ func list(jobSource string, outputFormat string, queryOpts cjob.QueryOption) err
 	return nil
 }
 
-func renderTable(lst cjob.List) {
-	if len(lst.Jobs) == 0 {
+func renderTable(jobs []job.Job) {
+	if len(jobs) == 0 {
 		println("Cannot find any jobs")
 		return
 	}
@@ -166,27 +166,24 @@ func renderTable(lst cjob.List) {
 	t.SuppressEmptyColumns()
 
 	t.AppendHeader(table.Row{
-		"ID", "Name", "Source", "Status", "Platform", "Framework", "Browser", "Device",
+		"ID", "Name", "Status", "Platform", "Framework", "Browser", "Device",
 	})
 
-	for _, item := range lst.Jobs {
+	for _, item := range jobs {
 		// the order of values must match the order of the header
 		t.AppendRow(table.Row{
 			item.ID,
 			item.Name,
-			item.Source,
 			item.Status,
-			item.Platform,
+			item.PlatformName,
 			item.Framework,
 			item.BrowserName,
-			item.Device,
+			item.DeviceName,
 		})
 	}
 	t.SuppressEmptyColumns()
 	t.AppendFooter(table.Row{
-		fmt.Sprintf("%d jobs in total", lst.Total),
-		fmt.Sprintf("Page: %d", lst.Page),
-		fmt.Sprintf("Size: %d", lst.Size),
+		fmt.Sprintf("%d jobs in total", len(jobs)),
 	})
 
 	fmt.Println(t.Render())

@@ -59,11 +59,13 @@ func TestResto_GetJobDetails(t *testing.T) {
 			client: NewResto(ts.URL, "test", "123", timeout),
 			jobID:  "1",
 			expectedResp: job.Job{
-				ID:                  "1",
-				Passed:              false,
-				Status:              "complete",
-				Error:               "",
-				BrowserShortVersion: "85",
+				ID:             "1",
+				Passed:         false,
+				Status:         "complete",
+				Error:          "",
+				BrowserName:    "googlechrome",
+				BrowserVersion: "85",
+				Framework:      "webdriver",
 			},
 			expectedErr: nil,
 		},
@@ -72,11 +74,13 @@ func TestResto_GetJobDetails(t *testing.T) {
 			client: NewResto(ts.URL, "test", "123", timeout),
 			jobID:  "2",
 			expectedResp: job.Job{
-				ID:                  "2",
-				Passed:              false,
-				Status:              "error",
-				Error:               "User Abandoned Test -- User terminated",
-				BrowserShortVersion: "85",
+				ID:             "2",
+				Passed:         false,
+				Status:         "error",
+				Error:          "User Abandoned Test -- User terminated",
+				BrowserName:    "googlechrome",
+				BrowserVersion: "85",
+				Framework:      "webdriver",
 			},
 			expectedErr: nil,
 		},
@@ -107,7 +111,7 @@ func TestResto_GetJobDetails(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.client.Client.RetryWaitMax = 1 * time.Millisecond
 			got, err := tc.client.ReadJob(context.Background(), tc.jobID, false)
-			assert.Equal(t, got, tc.expectedResp)
+			assert.Equal(t, tc.expectedResp, got)
 			if err != nil {
 				assert.Equal(t, tc.expectedErr, err)
 			}
@@ -123,7 +127,7 @@ func TestResto_GetJobStatus(t *testing.T) {
 		var err error
 		switch r.URL.Path {
 		case "/rest/v1.1/test/jobs/1":
-			details := &job.Job{
+			details := &restoJob{
 				ID:     "1",
 				Passed: false,
 				Status: "new",
@@ -134,7 +138,7 @@ func TestResto_GetJobStatus(t *testing.T) {
 			resp, _ := json.Marshal(details)
 			_, err = w.Write(resp)
 		case "/rest/v1.1/test/jobs/2":
-			details := &job.Job{
+			details := &restoJob{
 				ID:     "2",
 				Passed: false,
 				Status: "in progress",
@@ -154,7 +158,7 @@ func TestResto_GetJobStatus(t *testing.T) {
 				retryCount++
 				return
 			}
-			details := &job.Job{
+			details := &restoJob{
 				ID:     "5",
 				Passed: false,
 				Status: "new",
@@ -400,7 +404,7 @@ func TestResto_GetJobAssetFileContent(t *testing.T) {
 	}
 }
 
-func randJobStatus(j *job.Job, isComplete bool) {
+func randJobStatus(j *restoJob, isComplete bool) {
 	min := 1
 	max := 10
 	randNum := rand.Intn(max-min+1) + min
@@ -452,11 +456,13 @@ func TestResto_TestStop(t *testing.T) {
 			client: NewResto(ts.URL, "test", "123", timeout),
 			jobID:  "2",
 			expectedResp: job.Job{
-				ID:                  "2",
-				Passed:              false,
-				Status:              "error",
-				Error:               "User Abandoned Test -- User terminated",
-				BrowserShortVersion: "85",
+				ID:             "2",
+				Passed:         false,
+				Status:         "error",
+				Error:          "User Abandoned Test -- User terminated",
+				BrowserName:    "googlechrome",
+				BrowserVersion: "85",
+				Framework:      "webdriver",
 			},
 			expectedErr: nil,
 		},
@@ -487,7 +493,7 @@ func TestResto_TestStop(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.client.Client.RetryWaitMax = 1 * time.Millisecond
 			got, err := tc.client.StopJob(context.Background(), tc.jobID, false)
-			assert.Equal(t, got, tc.expectedResp)
+			assert.Equal(t, tc.expectedResp, got)
 			if err != nil {
 				assert.Equal(t, tc.expectedErr, err)
 			}
