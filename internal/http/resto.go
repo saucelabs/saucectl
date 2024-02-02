@@ -34,11 +34,10 @@ type restoJob struct {
 	Browser             string `json:"browser"`
 	BrowserShortVersion string `json:"browser_short_version"`
 	BaseConfig          struct {
-		PlatformName    string `json:"platformName"`
-		PlatformVersion string `json:"platformVersion"`
-		DeviceName      string `json:"deviceName"`
+		DeviceName string `json:"deviceName"`
 	} `json:"base_config"`
 	AutomationBackend string `json:"automation_backend"`
+	OS                string `json:"os"`
 }
 
 // Resto http client.
@@ -486,7 +485,18 @@ func (c *Resto) GetBuildID(ctx context.Context, jobID string, buildSource build.
 // parseJob parses the body into restoJob and converts it to job.Job.
 func (c *Resto) parseJob(body io.ReadCloser) (job.Job, error) {
 	var j restoJob
-	err := json.NewDecoder(body).Decode(&j)
+	if err := json.NewDecoder(body).Decode(&j); err != nil {
+		return job.Job{}, err
+	}
+
+	// The OS in resto is a combination of the OS name and version.
+	var osName, osVersion string
+	segments := strings.Split(j.OS, " ")
+	osName = segments[0]
+	if len(segments) > 1 {
+		osVersion = segments[1]
+	}
+
 	return job.Job{
 		ID:              j.ID,
 		Name:            j.Name,
@@ -497,7 +507,7 @@ func (c *Resto) parseJob(body io.ReadCloser) (job.Job, error) {
 		BrowserVersion:  j.BrowserShortVersion,
 		DeviceName:      j.BaseConfig.DeviceName,
 		Framework:       j.AutomationBackend,
-		PlatformName:    j.BaseConfig.PlatformName,
-		PlatformVersion: j.BaseConfig.PlatformVersion,
-	}, err
+		PlatformName:    osName,
+		PlatformVersion: osVersion,
+	}, nil
 }

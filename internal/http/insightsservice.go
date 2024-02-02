@@ -353,19 +353,15 @@ func (c *InsightsService) parseJobs(body io.ReadCloser) ([]job.Job, error) {
 
 // parseJob converts archivesJob to job.Job.
 func (c *InsightsService) convertJob(j archivesJob) job.Job {
-	//var platform string
-	//if j.OS != "" && j.OSVersion != "" {
-	//	platform = fmt.Sprintf("%s %s", j.OS, j.OSVersion)
-	//}
-
 	return job.Job{
-		ID:     j.ID,
-		Name:   j.Name,
-		Status: j.Status,
-		Error:  j.Error,
-		//Platform:    platform,
-		Framework:   j.Framework,
-		DeviceName:  j.Device,
-		BrowserName: j.BrowserName,
+		ID:              j.ID,
+		Name:            j.Name,
+		Status:          j.Status,
+		Error:           j.Error,
+		PlatformName:    j.OS,
+		PlatformVersion: j.OSVersion,
+		Framework:       j.Framework,
+		DeviceName:      j.Device,
+		BrowserName:     j.BrowserName,
 	}
 }
