@@ -234,7 +234,7 @@ func (c *InsightsService) PostTestRun(ctx context.Context, runs []insights.TestR
 }
 
 // ListJobs returns job list
-func (c *InsightsService) ListJobs(ctx context.Context, userID, jobSource string, queryOpts insights.ListJobsOptions) ([]job.Job, error) {
+func (c *InsightsService) ListJobs(ctx context.Context, opts insights.ListJobsOptions) ([]job.Job, error) {
 	url := fmt.Sprintf("%s/v2/archives/jobs", c.URL)
 	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -245,12 +245,12 @@ func (c *InsightsService) ListJobs(ctx context.Context, userID, jobSource string
 	q := req.URL.Query()
 	queries := map[string]string{
 		"ts":       strconv.FormatInt(time.Now().UTC().UnixMilli(), 10),
-		"page":     strconv.Itoa(queryOpts.Page),
-		"size":     strconv.Itoa(queryOpts.Size),
-		"status":   queryOpts.Status,
-		"owner_id": userID,
+		"page":     strconv.Itoa(opts.Page),
+		"size":     strconv.Itoa(opts.Size),
+		"status":   opts.Status,
+		"owner_id": opts.UserID,
 		"run_mode": AutomaticRunMode,
-		"source":   jobSource,
+		"source":   opts.Source,
 	}
 	for k, v := range queries {
 		if v != "" {

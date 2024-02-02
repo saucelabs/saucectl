@@ -12,7 +12,7 @@ import (
 type FakeInsightService struct {
 	GetHistoryFn  func(context.Context, iam.User, config.LaunchOrder) (insights.JobHistory, error)
 	PostTestRunFn func(context.Context, []insights.TestRun) error
-	ListJobsFn    func(ctx context.Context, userID, jobType string, queryOption insights.ListJobsOptions) ([]job.Job, error)
+	ListJobsFn    func(ctx context.Context, opts insights.ListJobsOptions) ([]job.Job, error)
 	ReadJobFn     func(ctx context.Context, id string) (job.Job, error)
 }
 
@@ -24,8 +24,8 @@ func (f FakeInsightService) PostTestRun(ctx context.Context, runs []insights.Tes
 	return f.PostTestRunFn(ctx, runs)
 }
 
-func (f FakeInsightService) ListJobs(ctx context.Context, userID, jobType string, queryOption insights.ListJobsOptions) ([]job.Job, error) {
-	return f.ListJobsFn(ctx, userID, jobType, queryOption)
+func (f FakeInsightService) ListJobs(ctx context.Context, opts insights.ListJobsOptions) ([]job.Job, error) {
+	return f.ListJobsFn(ctx, opts)
 }
 
 func (f FakeInsightService) ReadJob(ctx context.Context, id string) (job.Job, error) {

@@ -11,13 +11,15 @@ import (
 type Service interface {
 	GetHistory(context.Context, iam.User, config.LaunchOrder) (JobHistory, error)
 	PostTestRun(ctx context.Context, runs []TestRun) error
-	ListJobs(ctx context.Context, userID, source string, opts ListJobsOptions) ([]job.Job, error)
+	ListJobs(ctx context.Context, opts ListJobsOptions) ([]job.Job, error)
 	ReadJob(ctx context.Context, id string) (job.Job, error)
 }
 
 // ListJobsOptions represents the query option for listing jobs
 type ListJobsOptions struct {
+	UserID string
 	Page   int
 	Size   int
 	Status string
+	Source string
 }

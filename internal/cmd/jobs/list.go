@@ -116,15 +116,7 @@ func ListCommand() *cobra.Command {
 				return errors.New("invalid job resource. Options: vdc, rdc, api")
 			}
 
-			return list(
-				jobSource,
-				out,
-				insights.ListJobsOptions{
-					Page:   page,
-					Size:   size,
-					Status: status,
-				},
-			)
+			return list(out, page, size, status, jobSource)
 		},
 	}
 	flags := cmd.PersistentFlags()
@@ -137,18 +129,26 @@ func ListCommand() *cobra.Command {
 	return cmd
 }
 
-func list(jobSource string, outputFormat string, queryOpts insights.ListJobsOptions) error {
+func list(format string, page int, size int, status string, source string) error {
 	user, err := userService.User(context.Background())
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
 	}
 
-	jobs, err := jobService.ListJobs(context.Background(), user.ID, jobSource, queryOpts)
+	opts := insights.ListJobsOptions{
+		UserID: user.ID,
+		Page:   page,
+		Size:   size,
+		Status: status,
+		Source: source,
+	}
+
+	jobs, err := jobService.ListJobs(context.Background(), opts)
 	if err != nil {
 		return fmt.Errorf("failed to get jobs: %w", err)
 	}
 
-	switch outputFormat {
+	switch format {
 	case "json":
 		if err := renderJSON(jobs); err != nil {
 			return fmt.Errorf("failed to render output: %w", err)
