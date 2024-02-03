@@ -14,7 +14,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
 
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/iam"
 )
 
@@ -58,7 +57,7 @@ func NewInsightsService(url string, creds iam.Credentials, timeout time.Duration
 	}
 }
 
-func (c *InsightsService) GetHistory(ctx context.Context, user iam.User, launchOrder config.LaunchOrder) (insights.JobHistory, error) {
+func (c *InsightsService) GetHistory(ctx context.Context, user iam.User, sortBy string) (insights.JobHistory, error) {
 	start := time.Now().AddDate(0, 0, -7).Unix()
 	now := time.Now().Unix()
 
@@ -80,7 +79,7 @@ func (c *InsightsService) GetHistory(ctx context.Context, user iam.User, launchO
 		"until":   strconv.FormatInt(now, 10),
 		"limit":   "200",
 		"offset":  "0",
-		"sort_by": string(launchOrder),
+		"sort_by": sortBy,
 	}
 	for k, v := range queries {
 		q.Add(k, v)
@@ -93,7 +92,9 @@ func (c *InsightsService) GetHistory(ctx context.Context, user iam.User, launchO
 	}
 	defer resp.Body.Close()
 
-	// FIXME error handling!
+	if resp.StatusCode != http.StatusOK {
+		return jobHistory, fmt.Errorf("unexpected status: %s", resp.Status)
+	}
 
 	return jobHistory, json.NewDecoder(resp.Body).Decode(&jobHistory)
 }

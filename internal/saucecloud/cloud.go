@@ -934,7 +934,11 @@ func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHi
 	if err != nil {
 		return insights.JobHistory{}, err
 	}
-	return r.InsightsService.GetHistory(context.Background(), user, launchOrder)
+
+	// The config uses spaces, but the API requires underscores.
+	sortBy := strings.ReplaceAll(string(launchOrder), " ", "_")
+
+	return r.InsightsService.GetHistory(context.Background(), user, sortBy)
 }
 
 func getSource(isRDC bool) build.Source {
