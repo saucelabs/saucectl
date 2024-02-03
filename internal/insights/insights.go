@@ -20,5 +20,5 @@ type ListJobsOptions struct {
 	Page   int
 	Size   int
 	Status string
-	Source string
+	Source job.Source
 }

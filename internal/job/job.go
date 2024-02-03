@@ -1,5 +1,14 @@
 package job
 
+type Source string
+
+const (
+	SourceAny Source = ""    // Unknown origin.
+	SourceVDC Source = "vdc" // Virtual Device Cloud
+	SourceRDC Source = "rdc" // Real Device Cloud
+	SourceAPI Source = "api" // API Fortress
+)
+
 // The different states that a job can be in.
 const (
 	StateNew        = "new"

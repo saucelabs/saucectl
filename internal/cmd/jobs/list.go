@@ -21,9 +21,6 @@ import (
 )
 
 const (
-	RDC        = "rdc"
-	VDC        = "vdc"
-	API        = "api"
 	JSONOutput = "json"
 	TextOutput = "text"
 )
@@ -112,11 +109,13 @@ func ListCommand() *cobra.Command {
 			if status != "" && !isStatusValid {
 				return fmt.Errorf("unknown status. Options: %s", strings.Join(job.AllStates, ", "))
 			}
-			if jobSource != "" && jobSource != RDC && jobSource != VDC && jobSource != API {
+
+			src := job.Source(jobSource)
+			if src != job.SourceAny && src != job.SourceRDC && src != job.SourceVDC && src != job.SourceAPI {
 				return errors.New("invalid job resource. Options: vdc, rdc, api")
 			}
 
-			return list(out, page, size, status, jobSource)
+			return list(out, page, size, status, job.Source(jobSource))
 		},
 	}
 	flags := cmd.PersistentFlags()
@@ -129,7 +128,7 @@ func ListCommand() *cobra.Command {
 	return cmd
 }
 
-func list(format string, page int, size int, status string, source string) error {
+func list(format string, page int, size int, status string, source job.Source) error {
 	user, err := userService.User(context.Background())
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)

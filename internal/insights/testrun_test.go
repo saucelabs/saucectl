@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/saucereport"
 )
@@ -122,7 +123,7 @@ func TestFromSauceReport(t *testing.T) {
 						ID:   "jobID",
 					},
 					Type:     TypeWeb,
-					Platform: PlatformVDC,
+					Platform: job.SourceVDC,
 				},
 				{
 					Name:         "Test #1.2",
@@ -141,7 +142,7 @@ func TestFromSauceReport(t *testing.T) {
 						ID:   "jobID",
 					},
 					Type:     TypeWeb,
-					Platform: PlatformVDC,
+					Platform: job.SourceVDC,
 				},
 			},
 		},
@@ -197,7 +198,7 @@ func TestFromSauceReport(t *testing.T) {
 						ID:   "jobID",
 					},
 					Type:     TypeWeb,
-					Platform: PlatformVDC,
+					Platform: job.SourceVDC,
 				},
 				{
 					Name:         "Test #1.1.1",
@@ -211,7 +212,7 @@ func TestFromSauceReport(t *testing.T) {
 						ID:   "jobID",
 					},
 					Type:     TypeWeb,
-					Platform: PlatformVDC,
+					Platform: job.SourceVDC,
 				},
 				{
 					Name:         "Test #1.1.2",
@@ -225,7 +226,7 @@ func TestFromSauceReport(t *testing.T) {
 						ID:   "jobID",
 					},
 					Type:     TypeWeb,
-					Platform: PlatformVDC,
+					Platform: job.SourceVDC,
 				},
 			},
 		},
@@ -299,7 +300,7 @@ func TestFromJUnit(t *testing.T) {
 						ID:   "jobID",
 					},
 					Type:     TypeWeb,
-					Platform: PlatformVDC,
+					Platform: job.SourceVDC,
 				},
 				{
 					Name:         "ClassName.Test #1.2",
@@ -318,7 +319,7 @@ func TestFromJUnit(t *testing.T) {
 						ID:   "jobID",
 					},
 					Type:     TypeWeb,
-					Platform: PlatformVDC,
+					Platform: job.SourceVDC,
 				},
 			},
 		},

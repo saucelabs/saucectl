@@ -187,7 +187,7 @@ func (c *InsightsService) ListJobs(ctx context.Context, opts insights.ListJobsOp
 		"status":   opts.Status,
 		"owner_id": opts.UserID,
 		"run_mode": AutomaticRunMode,
-		"source":   opts.Source,
+		"source":   string(opts.Source),
 	}
 	for k, v := range queries {
 		if v != "" {
