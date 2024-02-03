@@ -13,7 +13,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/saucereport"
 )
 
-// TestRun represents a
+// TestRun represents a single test run.
 type TestRun struct {
 	ID           string         `json:"id,omitempty"`
 	Name         string         `json:"name,omitempty"`
