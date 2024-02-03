@@ -1,5 +1,6 @@
 package job
 
+// Source represents the origin of a job.
 type Source string
 
 const (
