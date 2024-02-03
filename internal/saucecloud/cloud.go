@@ -975,7 +975,7 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 		log.Warn().Err(err).Str("action", "readJob").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 		return
 	}
-	//res.details.Platform = j.Platform // FIXME where did platform come from? Archive API does not return this. Seems to be a mix of OS and OS Version.
+	res.details.Platform = strings.TrimSpace(fmt.Sprintf("%s %s", j.OS, j.OSVersion))
 	res.details.Device = j.DeviceName
 
 	var testRuns []insights.TestRun
