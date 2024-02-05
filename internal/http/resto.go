@@ -35,9 +35,21 @@ type restoJob struct {
 	BrowserShortVersion string `json:"browser_short_version"`
 	BaseConfig          struct {
 		DeviceName string `json:"deviceName"`
+		// PlatformName is a complex field that requires judicious treatment.
+		//  Observed cases:
+		//  - Simulators (iOS): "iOS"
+		//  - Emulators (Android): "Linux"
+		//  - VMs (Windows/Mac): "Windows 11" or "mac 12"
+		PlatformName string `json:"platformName"`
+
+		// PlatformVersion refers to the OS version and is only populated for
+		// simulators.
+		PlatformVersion string `json:"platformVersion"`
 	} `json:"base_config"`
 	AutomationBackend string `json:"automation_backend"`
-	OS                string `json:"os"`
+
+	// OS is a combination of the VM's OS name and version. Version is optional.
+	OS string `json:"os"`
 }
 
 // Resto http client.
@@ -489,12 +501,17 @@ func (c *Resto) parseJob(body io.ReadCloser) (job.Job, error) {
 		return job.Job{}, err
 	}
 
-	// The OS in resto is a combination of the OS name and version.
-	var osName, osVersion string
-	segments := strings.Split(j.OS, " ")
-	osName = segments[0]
-	if len(segments) > 1 {
-		osVersion = segments[1]
+	osName := j.BaseConfig.PlatformName
+	osVersion := j.BaseConfig.PlatformVersion
+
+	// PlatformVersion is only populated for simulators. For emulators and VMs,
+	// we shall parse the OS field.
+	if osVersion == "" {
+		segments := strings.Split(j.OS, " ")
+		osName = segments[0]
+		if len(segments) > 1 {
+			osVersion = segments[1]
+		}
 	}
 
 	return job.Job{
