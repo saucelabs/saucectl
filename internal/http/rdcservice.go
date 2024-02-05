@@ -52,6 +52,7 @@ type rdcJob struct {
 	Error              string `json:"error,omitempty"`
 	OS                 string `json:"os,omitempty"`
 	OSVersion          string `json:"os_version,omitempty"`
+	DeviceName         string `json:"device_name,omitempty"`
 }
 
 // RDCSessionRequest represents the RDC session request.
@@ -535,14 +536,15 @@ func (c *RDCService) parseJob(body io.ReadCloser) (job.Job, error) {
 	var j rdcJob
 	err := json.NewDecoder(body).Decode(&j)
 	return job.Job{
-		ID:        j.ID,
-		Name:      j.Name,
-		Error:     j.Error,
-		Status:    j.Status,
-		Passed:    j.Status == job.StatePassed,
-		Framework: j.AutomationBackend,
-		OS:        j.OS,
-		OSVersion: j.OSVersion,
-		IsRDC:     true,
+		ID:         j.ID,
+		Name:       j.Name,
+		Error:      j.Error,
+		Status:     j.Status,
+		Passed:     j.Status == job.StatePassed,
+		DeviceName: j.DeviceName,
+		Framework:  j.AutomationBackend,
+		OS:         j.OS,
+		OSVersion:  j.OSVersion,
+		IsRDC:      true,
 	}, err
 }
