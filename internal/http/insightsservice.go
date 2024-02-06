@@ -8,31 +8,23 @@ import (
 	"io"
 	"net/http"
 	"reflect"
-	"sort"
 	"strconv"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/cmd/jobs/job"
 	"github.com/saucelabs/saucectl/internal/insights"
+	"github.com/saucelabs/saucectl/internal/job"
 
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/iam"
 )
 
-const (
-	RDCSource = "rdc"
-	VDCSource = "vdc"
-	APISource = "api"
-)
-
-// ListJobResp represents list job response structure
-type ListJobResp struct {
-	Jobs  []JobResp `json:"jobs"`
-	Total int       `json:"total"`
+// archivesJobList represents list job response structure
+type archivesJobList struct {
+	Jobs  []archivesJob `json:"jobs"`
+	Total int           `json:"total"`
 }
 
-// JobResp represents job response structure
-type JobResp struct {
+// archivesJob represents job response structure
+type archivesJob struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Status      string `json:"status"`
@@ -54,10 +46,6 @@ type InsightsService struct {
 	Credentials iam.Credentials
 }
 
-var LaunchOptions = map[config.LaunchOrder]string{
-	config.LaunchOrderFailRate: "fail_rate",
-}
-
 func NewInsightsService(url string, creds iam.Credentials, timeout time.Duration) InsightsService {
 	return InsightsService{
 		HTTPClient: &http.Client{
@@ -69,63 +57,17 @@ func NewInsightsService(url string, creds iam.Credentials, timeout time.Duration
 	}
 }
 
-// GetHistory returns job history from insights
-func (c *InsightsService) GetHistory(ctx context.Context, user iam.User, launchOrder config.LaunchOrder) (insights.JobHistory, error) {
-	vdc, err := c.doGetHistory(ctx, user, launchOrder, "vdc")
-	if err != nil {
-		return insights.JobHistory{}, err
-	}
-	rdc, err := c.doGetHistory(ctx, user, launchOrder, "rdc")
-	if err != nil {
-		return insights.JobHistory{}, err
-	}
-
-	jobHistory := mergeJobHistories([]insights.JobHistory{vdc, rdc})
-	return jobHistory, nil
-}
-
-func mergeJobHistories(histories []insights.JobHistory) insights.JobHistory {
-	testCasesMap := map[string]insights.TestCase{}
-	for _, history := range histories {
-		for _, tc := range history.TestCases {
-			addOrReplaceTestCase(testCasesMap, tc)
-		}
-	}
-	var testCases []insights.TestCase
-	for _, tc := range testCasesMap {
-		testCases = append(testCases, tc)
-	}
-	sort.Slice(testCases, func(i, j int) bool {
-		return testCases[i].FailRate > testCases[j].FailRate
-	})
-	return insights.JobHistory{
-		TestCases: testCases,
-	}
-}
-
-// addOrReplaceTestCase adds or replaces the insights.TestCase in the map[string]insights.TestCase
-// If there is already one with the same name, only the highest fail rate is kept.
-func addOrReplaceTestCase(mp map[string]insights.TestCase, tc insights.TestCase) {
-	tcRef, present := mp[tc.Name]
-	if !present {
-		mp[tc.Name] = tc
-		return
-	}
-	if tc.FailRate > tcRef.FailRate {
-		mp[tc.Name] = tc
-	}
-}
-
-func (c *InsightsService) doGetHistory(ctx context.Context, user iam.User, launchOrder config.LaunchOrder, source string) (insights.JobHistory, error) {
+func (c *InsightsService) GetHistory(ctx context.Context, user iam.User, sortBy string) (insights.JobHistory, error) {
 	start := time.Now().AddDate(0, 0, -7).Unix()
 	now := time.Now().Unix()
 
 	var jobHistory insights.JobHistory
-	url := fmt.Sprintf("%s/v2/insights/%s/test-cases", c.URL, source)
+	url := fmt.Sprintf("%s/insights/v2/test-cases", c.URL)
 	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return jobHistory, err
 	}
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
 
 	q := req.URL.Query()
 	queries := map[string]string{
@@ -137,29 +79,24 @@ func (c *InsightsService) doGetHistory(ctx context.Context, user iam.User, launc
 		"until":   strconv.FormatInt(now, 10),
 		"limit":   "200",
 		"offset":  "0",
-		"sort_by": string(launchOrder),
+		"sort_by": sortBy,
 	}
 	for k, v := range queries {
 		q.Add(k, v)
 	}
 	req.URL.RawQuery = q.Encode()
 
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return jobHistory, err
 	}
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return jobHistory, err
+
+	if resp.StatusCode != http.StatusOK {
+		return jobHistory, fmt.Errorf("unexpected status: %s", resp.Status)
 	}
 
-	err = json.Unmarshal(body, &jobHistory)
-	if err != nil {
-		return jobHistory, err
-	}
-	return jobHistory, nil
+	return jobHistory, json.NewDecoder(resp.Body).Decode(&jobHistory)
 }
 
 type testRunsInput struct {
@@ -234,23 +171,23 @@ func (c *InsightsService) PostTestRun(ctx context.Context, runs []insights.TestR
 }
 
 // ListJobs returns job list
-func (c *InsightsService) ListJobs(ctx context.Context, userID, jobSource string, queryOpts job.QueryOption) (job.List, error) {
-	var jobList job.List
-
+func (c *InsightsService) ListJobs(ctx context.Context, opts insights.ListJobsOptions) ([]job.Job, error) {
 	url := fmt.Sprintf("%s/v2/archives/jobs", c.URL)
 	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return jobList, err
+		return nil, err
 	}
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+
 	q := req.URL.Query()
 	queries := map[string]string{
 		"ts":       strconv.FormatInt(time.Now().UTC().UnixMilli(), 10),
-		"page":     strconv.Itoa(queryOpts.Page),
-		"size":     strconv.Itoa(queryOpts.Size),
-		"status":   queryOpts.Status,
-		"owner_id": userID,
+		"page":     strconv.Itoa(opts.Page),
+		"size":     strconv.Itoa(opts.Size),
+		"status":   opts.Status,
+		"owner_id": opts.UserID,
 		"run_mode": AutomaticRunMode,
-		"source":   jobSource,
+		"source":   string(opts.Source),
 	}
 	for k, v := range queries {
 		if v != "" {
@@ -259,105 +196,79 @@ func (c *InsightsService) ListJobs(ctx context.Context, userID, jobSource string
 	}
 	req.URL.RawQuery = q.Encode()
 
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status: %s", resp.Status)
+	}
+
+	return c.parseJobs(resp.Body)
+}
+
+func (c *InsightsService) ReadJob(ctx context.Context, id string) (job.Job, error) {
+	url := fmt.Sprintf("%s/v2/archives/jobs/%s", c.URL, id)
+
+	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return job.Job{}, err
+	}
+
 	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return jobList, err
+		return job.Job{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return job.Job{}, fmt.Errorf("unexpected status: %s", resp.Status)
 	}
 
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return jobList, fmt.Errorf("unexpected status: %s", resp.Status)
-	}
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return jobList, err
-	}
-	var listResp ListJobResp
-	err = json.Unmarshal(body, &listResp)
-	if err != nil {
-		return jobList, err
-	}
-	for _, j := range listResp.Jobs {
-		jobList.Jobs = append(jobList.Jobs, buildJob(j))
-	}
-	jobList.Total = listResp.Total
-	jobList.Page = queryOpts.Page
-	jobList.Size = queryOpts.Size
-	return jobList, nil
+	return c.parseJob(resp.Body)
 }
 
-func buildJob(j JobResp) job.Job {
-	var platform string
-	if j.OS != "" && j.OSVersion != "" {
-		platform = fmt.Sprintf("%s %s", j.OS, j.OSVersion)
+// parseJob parses the body into archivesJob and converts it to job.Job.
+func (c *InsightsService) parseJob(body io.ReadCloser) (job.Job, error) {
+	var j archivesJob
+
+	if err := json.NewDecoder(body).Decode(&j); err != nil {
+		return job.Job{}, err
 	}
+
+	return c.convertJob(j), nil
+}
+
+// parseJob parses the body into archivesJobList and converts it to []job.Job.
+func (c *InsightsService) parseJobs(body io.ReadCloser) ([]job.Job, error) {
+	var l archivesJobList
+
+	if err := json.NewDecoder(body).Decode(&l); err != nil {
+		return nil, err
+	}
+
+	jobs := make([]job.Job, len(l.Jobs))
+	for i, j := range l.Jobs {
+		jobs[i] = c.convertJob(j)
+	}
+
+	return jobs, nil
+}
+
+// parseJob converts archivesJob to job.Job.
+func (c *InsightsService) convertJob(j archivesJob) job.Job {
 	return job.Job{
 		ID:          j.ID,
 		Name:        j.Name,
 		Status:      j.Status,
 		Error:       j.Error,
-		Platform:    platform,
+		OS:          j.OS,
+		OSVersion:   j.OSVersion,
 		Framework:   j.Framework,
-		Device:      j.Device,
+		DeviceName:  j.Device,
 		BrowserName: j.BrowserName,
-		Source:      j.Source,
 	}
-}
-
-func (c *InsightsService) ReadJob(ctx context.Context, jobID string) (job.Job, error) {
-	var source = VDCSource
-
-	switch source {
-	case VDCSource:
-		vdcJob, err := c.readJob(ctx, jobID, VDCSource)
-		if err == nil {
-			return vdcJob, nil
-		}
-		fallthrough
-	case RDCSource:
-		rdcJob, err := c.readJob(ctx, jobID, RDCSource)
-		if err == nil {
-			return rdcJob, nil
-		}
-		fallthrough
-	case APISource:
-		apiJob, err := c.readJob(ctx, jobID, APISource)
-		if err != nil {
-			return job.Job{}, fmt.Errorf("failed to get job: %w", err)
-		}
-		return apiJob, nil
-	}
-	return job.Job{}, nil
-}
-
-func (c *InsightsService) readJob(ctx context.Context, jobID string, jobSource string) (job.Job, error) {
-	var j job.Job
-
-	url := fmt.Sprintf("%s/v2/archives/%s/jobs/%s", c.URL, jobSource, jobID)
-
-	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return j, err
-	}
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return j, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return j, fmt.Errorf("unexpected status: %s", resp.Status)
-	}
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return j, err
-	}
-	var jobResp JobResp
-	err = json.Unmarshal(body, &jobResp)
-	if err != nil {
-		return j, err
-	}
-
-	return buildJob(jobResp), nil
 }

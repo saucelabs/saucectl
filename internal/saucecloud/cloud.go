@@ -136,15 +136,15 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 		inProgress--
 
 		if !res.skipped {
-			platform := res.job.BaseConfig.PlatformName
-			if res.job.BaseConfig.PlatformVersion != "" {
-				platform = fmt.Sprintf("%s %s", platform, res.job.BaseConfig.PlatformVersion)
+			platform := res.job.OS
+			if res.job.OSVersion != "" {
+				platform = fmt.Sprintf("%s %s", platform, res.job.OSVersion)
 			}
 
 			browser := res.browser
 			// browser is empty for mobile tests
 			if browser != "" {
-				browser = fmt.Sprintf("%s %s", browser, res.job.BrowserShortVersion)
+				browser = fmt.Sprintf("%s %s", browser, res.job.BrowserVersion)
 			}
 
 			var artifacts []report.Artifact
@@ -170,7 +170,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				Status:     res.job.TotalStatus(),
 				Browser:    browser,
 				Platform:   platform,
-				DeviceName: res.job.BaseConfig.DeviceName,
+				DeviceName: res.job.DeviceName,
 				URL:        url,
 				Artifacts:  artifacts,
 				Origin:     "sauce",
@@ -316,14 +316,14 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 func enrichRDCReport(j *job.Job, opts job.StartOptions) {
 	switch opts.Framework {
 	case "espresso":
-		j.BaseConfig.PlatformName = espresso.Android
+		j.OS = espresso.Android
 	}
 
 	if opts.DeviceID != "" {
-		j.BaseConfig.DeviceName = opts.DeviceID
+		j.DeviceName = opts.DeviceID
 	} else {
-		j.BaseConfig.DeviceName = opts.DeviceName
-		j.BaseConfig.PlatformVersion = opts.PlatformVersion
+		j.DeviceName = opts.DeviceName
+		j.OSVersion = opts.PlatformVersion
 	}
 }
 
@@ -934,7 +934,11 @@ func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHi
 	if err != nil {
 		return insights.JobHistory{}, err
 	}
-	return r.InsightsService.GetHistory(context.Background(), user, launchOrder)
+
+	// The config uses spaces, but the API requires underscores.
+	sortBy := strings.ReplaceAll(string(launchOrder), " ", "_")
+
+	return r.InsightsService.GetHistory(context.Background(), user, sortBy)
 }
 
 func getSource(isRDC bool) build.Source {
@@ -971,8 +975,8 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 		log.Warn().Err(err).Str("action", "readJob").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 		return
 	}
-	res.details.Platform = j.Platform
-	res.details.Device = j.Device
+	res.details.Platform = strings.TrimSpace(fmt.Sprintf("%s %s", j.OS, j.OSVersion))
+	res.details.Device = j.DeviceName
 
 	var testRuns []insights.TestRun
 	if arrayContains(assets, saucereport.SauceReportFileName) {

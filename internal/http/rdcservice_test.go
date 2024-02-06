@@ -27,13 +27,13 @@ func TestRDCService_ReadJob(t *testing.T) {
 		switch r.URL.Path {
 		case "/v1/rdc/jobs/test1":
 			w.WriteHeader(http.StatusOK)
-			_, err = w.Write([]byte(`{"error": null, "status": "passed", "consolidated_status": "passed"}`))
+			_, err = w.Write([]byte(`{"id": "test1", "error": null, "status": "passed", "consolidated_status": "passed"}`))
 		case "/v1/rdc/jobs/test2":
 			w.WriteHeader(http.StatusOK)
-			_, err = w.Write([]byte(`{"error": "no-device-found", "status": "failed", "consolidated_status": "failed"}`))
+			_, err = w.Write([]byte(`{"id": "test2", "error": "no-device-found", "status": "failed", "consolidated_status": "failed"}`))
 		case "/v1/rdc/jobs/test3":
 			w.WriteHeader(http.StatusOK)
-			_, err = w.Write([]byte(`{"error": null, "status": "in progress", "consolidated_status": "in progress"}`))
+			_, err = w.Write([]byte(`{"id": "test3", "error": null, "status": "in progress", "consolidated_status": "in progress"}`))
 		case "/v1/rdc/jobs/test4":
 			w.WriteHeader(http.StatusNotFound)
 		default:
@@ -80,10 +80,10 @@ func TestRDCService_ReadJob(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		job, err := client.ReadJob(context.Background(), tt.jobID, true)
+		j, err := client.ReadJob(context.Background(), tt.jobID, true)
 		assert.Equal(t, err, tt.wantErr)
 		if err == nil {
-			assert.Equal(t, tt.want, job)
+			assert.Equal(t, tt.want, j)
 		}
 	}
 }
@@ -94,12 +94,12 @@ func TestRDCService_PollJob(t *testing.T) {
 		var err error
 		switch r.URL.Path {
 		case "/v1/rdc/jobs/1":
-			_ = json.NewEncoder(w).Encode(RDCJob{
+			_ = json.NewEncoder(w).Encode(rdcJob{
 				ID:     "1",
 				Status: job.StateComplete,
 			})
 		case "/v1/rdc/jobs/2":
-			_ = json.NewEncoder(w).Encode(RDCJob{
+			_ = json.NewEncoder(w).Encode(rdcJob{
 				ID:     "2",
 				Passed: false,
 				Status: job.StateError,
@@ -116,7 +116,7 @@ func TestRDCService_PollJob(t *testing.T) {
 				return
 			}
 
-			_ = json.NewEncoder(w).Encode(RDCJob{
+			_ = json.NewEncoder(w).Encode(rdcJob{
 				ID:     "5",
 				Status: job.StatePassed,
 				Passed: true,

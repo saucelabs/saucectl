@@ -11,7 +11,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
-	cjob "github.com/saucelabs/saucectl/internal/cmd/jobs/job"
+	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
@@ -21,9 +21,6 @@ import (
 )
 
 const (
-	RDC        = "rdc"
-	VDC        = "vdc"
-	API        = "api"
 	JSONOutput = "json"
 	TextOutput = "text"
 )
@@ -112,11 +109,13 @@ func ListCommand() *cobra.Command {
 			if status != "" && !isStatusValid {
 				return fmt.Errorf("unknown status. Options: %s", strings.Join(job.AllStates, ", "))
 			}
-			if jobSource != "" && jobSource != RDC && jobSource != VDC && jobSource != API {
+
+			src := job.Source(jobSource)
+			if src != job.SourceAny && src != job.SourceRDC && src != job.SourceVDC && src != job.SourceAPI {
 				return errors.New("invalid job resource. Options: vdc, rdc, api")
 			}
 
-			return list(jobSource, out, buildQueryOpts(page, size, status))
+			return list(out, page, size, status, job.Source(jobSource))
 		},
 	}
 	flags := cmd.PersistentFlags()
@@ -129,34 +128,39 @@ func ListCommand() *cobra.Command {
 	return cmd
 }
 
-func buildQueryOpts(page, size int, status string) cjob.QueryOption {
-	return cjob.QueryOption{
+func list(format string, page int, size int, status string, source job.Source) error {
+	user, err := userService.User(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to get user: %w", err)
+	}
+
+	opts := insights.ListJobsOptions{
+		UserID: user.ID,
 		Page:   page,
 		Size:   size,
 		Status: status,
+		Source: source,
 	}
-}
 
-func list(jobSource string, outputFormat string, queryOpts cjob.QueryOption) error {
-	lst, err := jobSvc.ListJobs(context.Background(), jobSource, queryOpts)
+	jobs, err := jobService.ListJobs(context.Background(), opts)
 	if err != nil {
-		return fmt.Errorf("failed to get job list: %w", err)
+		return fmt.Errorf("failed to get jobs: %w", err)
 	}
 
-	switch outputFormat {
+	switch format {
 	case "json":
-		if err := renderJSON(lst); err != nil {
+		if err := renderJSON(jobs); err != nil {
 			return fmt.Errorf("failed to render output: %w", err)
 		}
 	case "text":
-		renderTable(lst)
+		renderTable(jobs)
 	}
 
 	return nil
 }
 
-func renderTable(lst cjob.List) {
-	if len(lst.Jobs) == 0 {
+func renderTable(jobs []job.Job) {
+	if len(jobs) == 0 {
 		println("Cannot find any jobs")
 		return
 	}
@@ -166,27 +170,24 @@ func renderTable(lst cjob.List) {
 	t.SuppressEmptyColumns()
 
 	t.AppendHeader(table.Row{
-		"ID", "Name", "Source", "Status", "Platform", "Framework", "Browser", "Device",
+		"ID", "Name", "Status", "Platform", "Framework", "Browser", "Device",
 	})
 
-	for _, item := range lst.Jobs {
+	for _, item := range jobs {
 		// the order of values must match the order of the header
 		t.AppendRow(table.Row{
 			item.ID,
 			item.Name,
-			item.Source,
 			item.Status,
-			item.Platform,
+			item.OS,
 			item.Framework,
 			item.BrowserName,
-			item.Device,
+			item.DeviceName,
 		})
 	}
 	t.SuppressEmptyColumns()
 	t.AppendFooter(table.Row{
-		fmt.Sprintf("%d jobs in total", lst.Total),
-		fmt.Sprintf("Page: %d", lst.Page),
-		fmt.Sprintf("Size: %d", lst.Size),
+		fmt.Sprintf("%d jobs in total", len(jobs)),
 	})
 
 	fmt.Println(t.Render())

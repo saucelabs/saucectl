@@ -1,5 +1,15 @@
 package job
 
+// Source represents the origin of a job.
+type Source string
+
+const (
+	SourceAny Source = ""    // Unknown origin.
+	SourceVDC Source = "vdc" // Virtual Device Cloud
+	SourceRDC Source = "rdc" // Real Device Cloud
+	SourceAPI Source = "api" // API Fortress
+)
+
 // The different states that a job can be in.
 const (
 	StateNew        = "new"
@@ -22,25 +32,30 @@ var AllStates = []string{StatePassed, StateComplete, StateFailed, StateError, St
 // it's done.
 var DoneStates = []string{StateComplete, StateError, StatePassed, StateFailed}
 
-// Job represents test details and metadata of a test run (aka Job), that is usually associated with a particular test
-// execution instance (e.g. VM).
+// Job represents test details and metadata of a test run (aka Job), that is
+// usually associated with a particular test execution instance (e.g. VM).
 type Job struct {
-	ID                  string `json:"id"`
-	Passed              bool   `json:"passed"`
-	Status              string `json:"status"`
-	Error               string `json:"error"`
-	BrowserShortVersion string `json:"browser_short_version"`
-	BaseConfig          struct {
-		PlatformName    string `json:"platformName"`
-		PlatformVersion string `json:"platformVersion"`
-		DeviceName      string `json:"deviceName"`
-	} `json:"base_config"`
+	ID     string
+	Name   string
+	Passed bool
+	Status string
+	Error  string
+
+	BrowserName    string
+	BrowserVersion string
+
+	DeviceName string
+
+	Framework string
+
+	OS        string
+	OSVersion string
 
 	// IsRDC flags a job started as an RDC run.
-	IsRDC bool `json:"-"`
+	IsRDC bool
 
 	// TimedOut flags a job as an unfinished one.
-	TimedOut bool `json:"-"`
+	TimedOut bool
 }
 
 // TotalStatus returns the total status of a job, combining the result of fields Status + Passed.

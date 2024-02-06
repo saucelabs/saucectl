@@ -7,7 +7,7 @@ import (
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
-	"github.com/saucelabs/saucectl/internal/cmd/jobs/job"
+	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
@@ -53,18 +53,18 @@ func GetCommand() *cobra.Command {
 }
 
 func get(jobID, outputFormat string) error {
-	job, err := jobSvc.ReadJob(context.Background(), jobID)
+	j, err := jobService.ReadJob(context.Background(), jobID)
 	if err != nil {
 		return fmt.Errorf("failed to get job: %w", err)
 	}
 
 	switch outputFormat {
 	case "json":
-		if err := renderJSON(job); err != nil {
+		if err := renderJSON(j); err != nil {
 			return fmt.Errorf("failed to render output: %w", err)
 		}
 	case "text":
-		renderJobTable(job)
+		renderJobTable(j)
 	}
 
 	return nil
@@ -76,19 +76,18 @@ func renderJobTable(job job.Job) {
 	t.SuppressEmptyColumns()
 
 	t.AppendHeader(table.Row{
-		"ID", "Name", "Source", "Status", "Platform", "Framework", "Browser", "Device",
+		"ID", "Name", "Status", "Platform", "Framework", "Browser", "Device",
 	})
 
 	// the order of values must match the order of the header
 	t.AppendRow(table.Row{
 		job.ID,
 		job.Name,
-		job.Source,
 		job.Status,
-		job.Platform,
+		job.OS,
 		job.Framework,
 		job.BrowserName,
-		job.Device,
+		job.DeviceName,
 	})
 	t.SuppressEmptyColumns()
 

@@ -6,13 +6,14 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/job"
 
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/saucereport"
 )
 
-// TestRun represents a
+// TestRun represents a single test run.
 type TestRun struct {
 	ID           string         `json:"id,omitempty"`
 	Name         string         `json:"name,omitempty"`
@@ -33,7 +34,7 @@ type TestRun struct {
 	OS           string         `json:"os,omitempty"`
 	AppName      string         `json:"app_name,omitempty"`
 	Status       string         `json:"status,omitempty"`
-	Platform     string         `json:"platform,omitempty"`
+	Platform     job.Source     `json:"platform,omitempty"`
 	Type         string         `json:"type,omitempty"`
 	Framework    string         `json:"framework,omitempty"`
 	CI           *CI            `json:"ci,omitempty"`
@@ -71,16 +72,6 @@ const (
 const (
 	TypeWeb    = "web"
 	TypeMobile = "mobile"
-	TypeAPI    = "api"
-	TypeOther  = "other"
-)
-
-// The different platform that a run can be executed on.
-const (
-	PlatformVDC   = "vdc"
-	PlatformRDC   = "rdc"
-	PlatformAPI   = "api"
-	PlatformOther = "other"
 )
 
 type Details struct {
@@ -222,11 +213,11 @@ func enrichInsightTestRun(runs []TestRun, jobID string, jobName string, details 
 	}
 }
 
-func resolvePlatform(isRDC bool) string {
+func resolvePlatform(isRDC bool) job.Source {
 	if isRDC {
-		return PlatformRDC
+		return job.SourceRDC
 	}
-	return PlatformVDC
+	return job.SourceVDC
 }
 
 func resolveType(framework string) string {

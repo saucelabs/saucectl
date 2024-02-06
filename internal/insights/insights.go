@@ -3,14 +3,22 @@ package insights
 import (
 	"context"
 
-	"github.com/saucelabs/saucectl/internal/cmd/jobs/job"
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/iam"
+	"github.com/saucelabs/saucectl/internal/job"
 )
 
 type Service interface {
-	GetHistory(context.Context, iam.User, config.LaunchOrder) (JobHistory, error)
+	GetHistory(ctx context.Context, user iam.User, sortBy string) (JobHistory, error)
 	PostTestRun(ctx context.Context, runs []TestRun) error
-	ListJobs(ctx context.Context, userID, jobType string, queryOption job.QueryOption) (job.List, error)
-	ReadJob(ctx context.Context, jobID string) (job.Job, error)
+	ListJobs(ctx context.Context, opts ListJobsOptions) ([]job.Job, error)
+	ReadJob(ctx context.Context, id string) (job.Job, error)
+}
+
+// ListJobsOptions represents the query option for listing jobs
+type ListJobsOptions struct {
+	UserID string
+	Page   int
+	Size   int
+	Status string
+	Source job.Source
 }

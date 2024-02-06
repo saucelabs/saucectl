@@ -35,8 +35,9 @@ type RDCService struct {
 	ArtifactConfig config.ArtifactDownload
 }
 
-type RDCJob struct {
-	ID                string
+type rdcJob struct {
+	ID                string `json:"id"`
+	Name              string `json:"name"`
 	AutomationBackend string `json:"automation_backend,omitempty"`
 	FrameworkLogURL   string `json:"framework_log_url,omitempty"`
 	DeviceLogURL      string `json:"device_log_url,omitempty"`
@@ -46,9 +47,12 @@ type RDCJob struct {
 		ID string
 	} `json:"screenshots,omitempty"`
 	Status             string `json:"status,omitempty"`
-	Passed             bool
+	Passed             bool   `json:"passed,omitempty"`
 	ConsolidatedStatus string `json:"consolidated_status,omitempty"`
 	Error              string `json:"error,omitempty"`
+	OS                 string `json:"os,omitempty"`
+	OSVersion          string `json:"os_version,omitempty"`
+	DeviceName         string `json:"device_name,omitempty"`
 }
 
 // RDCSessionRequest represents the RDC session request.
@@ -206,8 +210,8 @@ func (c *RDCService) StopJob(ctx context.Context, id string, realDevice bool) (j
 		return job.Job{}, err
 	}
 
-	var j job.Job
-	return j, json.NewDecoder(resp.Body).Decode(&j)
+	// RDC does not return any job details in the response.
+	return job.Job{}, nil
 }
 
 // ReadJob returns the job details.
@@ -246,17 +250,7 @@ func (c *RDCService) ReadJob(ctx context.Context, id string, realDevice bool) (j
 		return job.Job{}, fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
 	}
 
-	var jr RDCJob
-	if err := json.NewDecoder(resp.Body).Decode(&jr); err != nil {
-		return job.Job{}, err
-	}
-	return job.Job{
-		ID:     id,
-		Error:  jr.Error,
-		Status: jr.Status,
-		Passed: jr.Status == job.StatePassed,
-		IsRDC:  true,
-	}, nil
+	return c.parseJob(resp.Body)
 }
 
 // PollJob polls job details at an interval, until timeout has been reached or until the job has ended, whether successfully or due to an error.
@@ -325,7 +319,7 @@ func (c *RDCService) GetJobAssetFileNames(ctx context.Context, jobID string, rea
 		return []string{}, fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
 	}
 
-	var jr RDCJob
+	var jr rdcJob
 	if err := json.NewDecoder(resp.Body).Decode(&jr); err != nil {
 		return []string{}, err
 	}
@@ -535,4 +529,22 @@ func (c *RDCService) deviceQuery(opts job.StartOptions) DeviceQuery {
 		PrivateDevicesOnly:           opts.DevicePrivateOnly,
 		RequestedDeviceType:          opts.DeviceType,
 	}
+}
+
+// parseJob parses the body into rdcJob and converts it to job.Job.
+func (c *RDCService) parseJob(body io.ReadCloser) (job.Job, error) {
+	var j rdcJob
+	err := json.NewDecoder(body).Decode(&j)
+	return job.Job{
+		ID:         j.ID,
+		Name:       j.Name,
+		Error:      j.Error,
+		Status:     j.Status,
+		Passed:     j.Status == job.StatePassed,
+		DeviceName: j.DeviceName,
+		Framework:  j.AutomationBackend,
+		OS:         j.OS,
+		OSVersion:  j.OSVersion,
+		IsRDC:      true,
+	}, err
 }
