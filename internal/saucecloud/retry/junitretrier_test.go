@@ -196,7 +196,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 				Framework:   xcuitest.Kind,
 				DisplayName: "Dummy Test",
 				TestOptions: map[string]interface{}{},
-				TestsToRun:  []string{"Demo/Class1/demoTest"},
+				TestsToRun:  []string{"Demo.Class1/demoTest"},
 				SmartRetry: job.SmartRetry{
 					FailedOnly: true,
 				},
@@ -377,6 +377,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 func Test_normalizeXCUITestClassName(t *testing.T) {
 	type args struct {
 		name string
+		rdc  bool
 	}
 	tests := []struct {
 		name string
@@ -384,24 +385,41 @@ func Test_normalizeXCUITestClassName(t *testing.T) {
 		want string
 	}{
 		{
-			name: "needs normalization",
-			args: args{name: "DemoAppTests.ClassyTest"},
+			name: "dot separated is not VMD conform",
+			args: args{
+				name: "DemoAppTests.ClassyTest",
+				rdc:  false,
+			},
 			want: "DemoAppTests/ClassyTest",
 		},
 		{
-			name: "already normalized",
-			args: args{name: "DemoAppTests/ClassyTest"},
+			name: "already VMD conform with slashes",
+			args: args{
+				name: "DemoAppTests/ClassyTest",
+				rdc:  false,
+			},
 			want: "DemoAppTests/ClassyTest",
 		},
 		{
-			name: "nothing to normalize",
-			args: args{name: "DemoAppTests"},
+			name: "already VMD conform without separators",
+			args: args{
+				name: "DemoAppTests",
+				rdc:  false,
+			},
 			want: "DemoAppTests",
+		},
+		{
+			name: "already RDC conform",
+			args: args{
+				name: "DemoAppTests.ClassyTest",
+				rdc:  true,
+			},
+			want: "DemoAppTests.ClassyTest",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, normalizeXCUITestClassName(tt.args.name), "normalizeXCUITestClassName(%v)", tt.args.name)
+			assert.Equalf(t, tt.want, conformXCUITestClassName(tt.args.name, tt.args.rdc), "conformXCUITestClassName(%v)", tt.args.name)
 		})
 	}
 }
