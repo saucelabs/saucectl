@@ -38,6 +38,8 @@ jobs:
             --jq '.[] | select(.isLatest == true) | .name')
 
           echo "version=$LATEST" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get next version 
         id: next
