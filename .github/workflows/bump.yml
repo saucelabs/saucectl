@@ -1,0 +1,47 @@
+name: Bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      releaseType:
+        description: 'Release type'
+        type: choice
+        required: true
+        default: patch
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          depth: 0 # Need all tags
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: lts
+
+      - name: Get latest version
+        id: latest
+        run: |
+          LATEST=$(git describe --tags)
+
+          echo "version=$LATEST" >> "$GITHUB_OUTPUT"
+
+      - name: Get next version 
+        id: next
+        run: |
+          NEXT=$(npx --yes semver -i ${{ github.event.inputs.releaseType }} ${{ steps.latest.outputs.version }})
+
+          echo "version=$NEXT" >> "$GITHUB_OUTPUT"
+
+      - name: Generate release
+        run: echo "gh release create ${{ steps.next.outputs.version }} --generate-notes"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
