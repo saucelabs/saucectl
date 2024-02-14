@@ -52,7 +52,7 @@ func setClassesToRetry(opt *job.StartOptions, testcases []junit.TestCase) {
 	}
 
 	if opt.Framework == xcuitest.Kind {
-		tests := getFailedXCUITests(testcases)
+		tests := getFailedXCUITests(testcases, opt.RealDevice)
 
 		// RDC and VDC API filter use different fields for test filtering.
 		if opt.RealDevice {
@@ -89,11 +89,11 @@ func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptio
 // getFailedXCUITests returns a list of failed XCUITest tests from the given
 // test cases. The format is "<className>/<testMethodName>", with the test
 // method name being optional.
-func getFailedXCUITests(testCases []junit.TestCase) []string {
+func getFailedXCUITests(testCases []junit.TestCase, rdc bool) []string {
 	classes := map[string]bool{}
 	for _, tc := range testCases {
 		if tc.Error != nil || tc.Failure != nil {
-			className := normalizeXCUITestClassName(tc.ClassName)
+			className := conformXCUITestClassName(tc.ClassName, rdc)
 			if tc.Name != "" {
 				classes[fmt.Sprintf("%s/%s", className, tc.Name)] = true
 			} else {
@@ -104,12 +104,18 @@ func getFailedXCUITests(testCases []junit.TestCase) []string {
 	return maps.Keys(classes)
 }
 
-// normalizeXCUITestClassName normalizes the class name of an XCUITest. The
-// class name within the platform generated JUnit XML file can be dot-separated,
-// but our platform API expects a slash-separated class name. The platform is
-// unfortunately not consistent in this regard and is not in full control of the
-// generated JUnit XML file, hence we reconcile the two here.
-func normalizeXCUITestClassName(name string) string {
+// conformXCUITestClassName conforms the class name of an XCUITest to either
+// RDC or VMD. The class name within the platform generated JUnit XML file can
+// be dot-separated, but unlike RDC, VMD expects a slash-separated class name.
+// The platform is unfortunately not consistent in this regard and is not in
+// full control of the generated JUnit XML file.
+// If the test is run on RDC, the class name is not modified and returned as is.
+// If the test is run on VMD, the class name is converted to a slash-separated.
+func conformXCUITestClassName(name string, rdc bool) string {
+	if rdc {
+		return name
+	}
+
 	items := strings.Split(name, ".")
 	if len(items) == 1 {
 		return name
