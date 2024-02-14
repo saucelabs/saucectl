@@ -1,7 +1,6 @@
 name: Bump
 
 on:
-  pull_request:
   workflow_dispatch:
     inputs:
       releaseType:
@@ -21,7 +20,7 @@ jobs:
     steps:
       - name: Validate input
         run: |
-          if [[ "<Choose one>" == "<Choose one>" ]]; then
+          if [[ "${{ github.event.inputs.releaseType }}" == "<Choose one>" ]]; then
             printf "You must choose a release type (patch, minor, or major)" >&2
             exit 1
           fi
@@ -54,8 +53,8 @@ jobs:
 
           echo "version=$NEXT" >> "$GITHUB_OUTPUT"
 
-      # - name: Generate release
-      #   if: ${{ steps.next.outputs.version != '' }}
-      #   run: gh release create v${{ steps.next.outputs.version }} --generate-notes
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate release
+        if: ${{ steps.next.outputs.version != '' }}
+        run: gh release create v${{ steps.next.outputs.version }} --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
