@@ -46,7 +46,7 @@ jobs:
           echo "version=$NEXT" >> "$GITHUB_OUTPUT"
 
       - name: Generate release
-         if: ${{ steps.next.outputs.version != '' }}
+        if: ${{ steps.next.outputs.version != '' }}
         run: gh release create v${{ steps.next.outputs.version }} --generate-notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
