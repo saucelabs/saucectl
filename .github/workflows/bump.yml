@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Validate input
         run: |
-          if [[ "${{ github.event.inputs.releaseType }}" == "<Choose one>" ]]; then
+          if [[ "<Choose one>" == "<Choose one>" ]]; then
             printf "You must choose a release type (patch, minor, or major)" >&2
             exit 1
           fi
@@ -54,8 +54,8 @@ jobs:
 
           echo "version=$NEXT" >> "$GITHUB_OUTPUT"
 
-      - name: Generate release
-        if: ${{ steps.next.outputs.version != '' }}
-        run: gh release create v${{ steps.next.outputs.version }} --generate-notes
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Generate release
+      #   if: ${{ steps.next.outputs.version != '' }}
+      #   run: gh release create v${{ steps.next.outputs.version }} --generate-notes
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
