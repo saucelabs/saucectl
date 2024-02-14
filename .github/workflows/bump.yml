@@ -46,6 +46,6 @@ jobs:
           echo "version=$NEXT" >> "$GITHUB_OUTPUT"
 
       - name: Generate release
-        run: echo "gh release create v${{ steps.next.outputs.version }} --generate-notes"
+        run: gh release create v${{ steps.next.outputs.version }} --generate-notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
