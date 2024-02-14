@@ -1,9 +1,9 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - v*
+  release:
+    types:
+      - released
 
 env:
   GH_TOKEN: ${{secrets.GH_TOKEN}}
