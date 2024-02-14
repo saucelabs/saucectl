@@ -1,14 +1,16 @@
 name: Bump
 
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       releaseType:
         description: 'Release type'
         type: choice
         required: true
-        default: patch
+        default: '<Choose one>'
         options:
+          - <Choose one>
           - patch
           - minor
           - major
@@ -17,6 +19,13 @@ jobs:
   bump:
     runs-on: ubuntu-latest
     steps:
+      - name: Validate input
+        run: |
+          if [[ "${{ github.event.inputs.releaseType }}" == "<Choose one>" ]]; then
+            printf "You must choose a release type (patch, minor, or major)" >&2
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v4
 
