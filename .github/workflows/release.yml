@@ -23,7 +23,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: "./go.mod"
+          go-version-file: ${{ github.workspace }}/go.mod
 
       - uses: actions/cache@v3
         with:
