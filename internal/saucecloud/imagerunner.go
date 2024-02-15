@@ -72,14 +72,15 @@ func NewImgRunner(project imagerunner.Project, runnerService ImageRunner, tunnel
 }
 
 type execResult struct {
-	name      string
-	runID     string
-	status    string
-	err       error
-	duration  time.Duration
-	startTime time.Time
-	endTime   time.Time
-	attempts  []report.Attempt
+	name         string
+	runID        string
+	status       string
+	assetsStatus string
+	err          error
+	duration     time.Duration
+	startTime    time.Time
+	endTime      time.Time
+	attempts     []report.Attempt
 }
 
 func (r *ImgRunner) RunProject() (int, error) {
@@ -169,13 +170,14 @@ func (r *ImgRunner) runSuites(suites chan imagerunner.Suite, results chan<- exec
 		duration := time.Since(startTime)
 
 		results <- execResult{
-			name:      suite.Name,
-			runID:     run.ID,
-			status:    run.Status,
-			err:       err,
-			startTime: startTime,
-			endTime:   endTime,
-			duration:  duration,
+			name:         suite.Name,
+			runID:        run.ID,
+			status:       run.Status,
+			assetsStatus: run.Assets.Status,
+			err:          err,
+			startTime:    startTime,
+			endTime:      endTime,
+			duration:     duration,
 			attempts: []report.Attempt{{
 				ID:        run.ID,
 				Duration:  duration,
