@@ -366,14 +366,19 @@ func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
 		}
 
 		r.PrintResult(res)
-		if !r.Project.LiveLogs {
-			// only print logs if live logs are disabled
-			r.PrintLogs(res.runID, res.name)
-		}
-		files := r.DownloadArtifacts(res.runID, res.name, res.status, res.err != nil)
+
 		var artifacts []report.Artifact
-		for _, f := range files {
-			artifacts = append(artifacts, report.Artifact{FilePath: f})
+		if res.assetsStatus == imagerunner.RunnerAssetStateErrored {
+			log.Warn().Msg("Logs and artifacts could not be uploaded due to an error, skipping download")
+		} else {
+			if !r.Project.LiveLogs {
+				// only print logs if live logs are disabled
+				r.PrintLogs(res.runID, res.name)
+			}
+			files := r.DownloadArtifacts(res.runID, res.name, res.status, res.err != nil)
+			for _, f := range files {
+				artifacts = append(artifacts, report.Artifact{FilePath: f})
+			}
 		}
 
 		for _, r := range r.Reporters {
