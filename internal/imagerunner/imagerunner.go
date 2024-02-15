@@ -79,15 +79,13 @@ type FileData struct {
 	Data string `json:"data,omitempty"`
 }
 
-type RunnerAssetStatus string
-
 const (
-	Waiting RunnerAssetStatus = "Waiting"
-	Errored RunnerAssetStatus = "Errored"
+	RunnerAssetStateWaiting = "Waiting"
+	RunnerAssetStateErrored = "Errored"
 )
 
 type RunnerAssets struct {
-	Status RunnerAssetStatus `json:"status,omitempty"`
+	Status string `json:"status,omitempty"`
 }
 
 type Runner struct {
