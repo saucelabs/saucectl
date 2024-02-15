@@ -44,7 +44,7 @@ jobs:
 
           echo "version=$LATEST" >> "$GITHUB_OUTPUT"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Get next version 
         id: next
@@ -57,4 +57,4 @@ jobs:
         if: ${{ steps.next.outputs.version != '' }}
         run: gh release create v${{ steps.next.outputs.version }} --generate-notes
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
