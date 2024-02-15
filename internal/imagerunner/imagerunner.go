@@ -79,13 +79,25 @@ type FileData struct {
 	Data string `json:"data,omitempty"`
 }
 
+type RunnerAssetStatus string
+
+const (
+	Waiting RunnerAssetStatus = "Waiting"
+	Errored RunnerAssetStatus = "Errored"
+)
+
+type RunnerAssets struct {
+	Status RunnerAssetStatus `json:"status,omitempty"`
+}
+
 type Runner struct {
-	ID                string `json:"id,omitempty"`
-	Status            string `json:"status,omitempty"`
-	Image             string `json:"image,omitempty"`
-	CreationTime      int64  `json:"creation_time,omitempty"`
-	TerminationTime   int64  `json:"termination_time,omitempty"`
-	TerminationReason string `json:"termination_reason,omitempty"`
+	ID                string       `json:"id,omitempty"`
+	Status            string       `json:"status,omitempty"`
+	Image             string       `json:"image,omitempty"`
+	CreationTime      int64        `json:"creation_time,omitempty"`
+	TerminationTime   int64        `json:"termination_time,omitempty"`
+	TerminationReason string       `json:"termination_reason,omitempty"`
+	Assets            RunnerAssets `json:"assets,omitempty"`
 }
 
 type ArtifactList struct {
