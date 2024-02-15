@@ -1,0 +1,60 @@
+name: Bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      releaseType:
+        description: 'Release type'
+        type: choice
+        required: true
+        default: '<Choose one>'
+        options:
+          - <Choose one>
+          - patch
+          - minor
+          - major
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate input
+        run: |
+          if [[ "${{ github.event.inputs.releaseType }}" == "<Choose one>" ]]; then
+            printf "You must choose a release type (patch, minor, or major)" >&2
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: v20
+
+      - name: Get latest version
+        id: latest
+        run: |
+          LATEST=$(gh release list \
+            --exclude-drafts \
+            --exclude-pre-releases \
+            --json name,isLatest \
+            --jq '.[] | select(.isLatest == true) | .name')
+
+          echo "version=$LATEST" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Get next version 
+        id: next
+        run: |
+          NEXT=$(npx --yes semver -i ${{ github.event.inputs.releaseType }} ${{ steps.latest.outputs.version }})
+
+          echo "version=$NEXT" >> "$GITHUB_OUTPUT"
+
+      - name: Generate release
+        if: ${{ steps.next.outputs.version != '' }}
+        run: gh release create v${{ steps.next.outputs.version }} --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
