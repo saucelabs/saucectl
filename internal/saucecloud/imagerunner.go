@@ -72,14 +72,15 @@ func NewImgRunner(project imagerunner.Project, runnerService ImageRunner, tunnel
 }
 
 type execResult struct {
-	name      string
-	runID     string
-	status    string
-	err       error
-	duration  time.Duration
-	startTime time.Time
-	endTime   time.Time
-	attempts  []report.Attempt
+	name         string
+	runID        string
+	status       string
+	assetsStatus string
+	err          error
+	duration     time.Duration
+	startTime    time.Time
+	endTime      time.Time
+	attempts     []report.Attempt
 }
 
 func (r *ImgRunner) RunProject() (int, error) {
@@ -169,13 +170,14 @@ func (r *ImgRunner) runSuites(suites chan imagerunner.Suite, results chan<- exec
 		duration := time.Since(startTime)
 
 		results <- execResult{
-			name:      suite.Name,
-			runID:     run.ID,
-			status:    run.Status,
-			err:       err,
-			startTime: startTime,
-			endTime:   endTime,
-			duration:  duration,
+			name:         suite.Name,
+			runID:        run.ID,
+			status:       run.Status,
+			assetsStatus: run.Assets.Status,
+			err:          err,
+			startTime:    startTime,
+			endTime:      endTime,
+			duration:     duration,
 			attempts: []report.Attempt{{
 				ID:        run.ID,
 				Duration:  duration,
@@ -364,14 +366,19 @@ func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
 		}
 
 		r.PrintResult(res)
-		if !r.Project.LiveLogs {
-			// only print logs if live logs are disabled
-			r.PrintLogs(res.runID, res.name)
-		}
-		files := r.DownloadArtifacts(res.runID, res.name, res.status, res.err != nil)
+
 		var artifacts []report.Artifact
-		for _, f := range files {
-			artifacts = append(artifacts, report.Artifact{FilePath: f})
+		if res.assetsStatus == imagerunner.RunnerAssetStateErrored {
+			log.Warn().Msg("Logs and artifacts are not available due to an error.")
+		} else {
+			if !r.Project.LiveLogs {
+				// only print logs if live logs are disabled
+				r.PrintLogs(res.runID, res.name)
+			}
+			files := r.DownloadArtifacts(res.runID, res.name, res.status, res.err != nil)
+			for _, f := range files {
+				artifacts = append(artifacts, report.Artifact{FilePath: f})
+			}
 		}
 
 		for _, r := range r.Reporters {
