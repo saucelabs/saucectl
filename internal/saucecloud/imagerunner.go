@@ -369,7 +369,7 @@ func (r *ImgRunner) collectResults(results chan execResult, expected int) bool {
 
 		var artifacts []report.Artifact
 		if res.assetsStatus == imagerunner.RunnerAssetStateErrored {
-			log.Warn().Msg("Logs and artifacts could not be uploaded due to an error, skipping download")
+			log.Warn().Msg("Logs and artifacts are not available due to an error.")
 		} else {
 			if !r.Project.LiveLogs {
 				// only print logs if live logs are disabled
