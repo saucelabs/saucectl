@@ -63,6 +63,7 @@
           "$ref": "../subschema/common.schema.json#/definitions/version",
           "enum": [
             "package.json",
+            "13.6.6",
             "13.6.3",
             "13.6.0",
             "13.4.0",
@@ -72,8 +73,7 @@
             "12.14.0",
             "12.11.0",
             "12.6.0",
-            "12.3.0",
-            "11.2.0"
+            "12.3.0"
           ]
         },
         "reporters": {
