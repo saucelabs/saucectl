@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -50,11 +49,7 @@ func PushCommand() *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			image := args[0]
-			repo, err := extractRepo(image)
-			if err != nil {
-				return err
-			}
-			auth, err := imageRunnerService.RegistryLogin(context.Background(), repo)
+			auth, err := imageRunnerService.RegistryLogin(context.Background(), image)
 			if err != nil {
 				return fmt.Errorf("failed to fetch auth token: %v", err)
 			}
@@ -108,13 +103,4 @@ func pushDockerImage(imageName, username, password string, timeout time.Duration
 	}
 
 	return nil
-}
-
-func extractRepo(input string) (string, error) {
-	// Example: us-west4-docker.pkg.dev/sauce-hto-p-jy6b/sauce-devx-team-sauce/ubuntu:experiment
-	items := strings.Split(input, "/")
-	if len(items) >= 3 {
-		return items[2], nil
-	}
-	return "", fmt.Errorf("unable to extract repo name from docker image")
 }

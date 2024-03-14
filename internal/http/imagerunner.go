@@ -36,6 +36,10 @@ type AuthToken struct {
 	Password  string    `json:"password"`
 }
 
+type AuthRequest struct {
+	RegistryURL string `json:"registry_url"`
+}
+
 type ContainersResp struct {
 	Items []imagerunner.Runner `json:"content"`
 }
@@ -436,21 +440,21 @@ func (c *ImageRunner) newServerError(status int, short string, body []byte) erro
 }
 
 func (c *ImageRunner) RegistryLogin(ctx context.Context, repo string) (AuthToken, error) {
-	url := fmt.Sprintf("%s/v1alpha1/hosted/container-registry/%s/authorization-token", c.URL, repo)
+	url := fmt.Sprintf("%s/v1alpha1/hosted/container-registry/authorization-token", c.URL)
 
 	var authToken AuthToken
-	req, err := NewRequestWithContext(ctx, http.MethodPost, url, nil)
+	var b bytes.Buffer
+	if err := json.NewEncoder(&b).Encode(AuthRequest{RegistryURL: repo}); err != nil {
+		return AuthToken{}, err
+	}
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodPost, url, &b)
 	if err != nil {
 		return authToken, err
 	}
 	req.SetBasicAuth(c.Creds.Username, c.Creds.AccessKey)
+	req.Header.Set("Content-Type", "application/json")
 
-	r, err := retryablehttp.FromRequest(req)
-	if err != nil {
-		return authToken, err
-	}
-
-	resp, err := c.Client.Do(r)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return authToken, err
 	}
