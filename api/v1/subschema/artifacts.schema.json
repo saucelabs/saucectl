@@ -40,6 +40,13 @@
             "directory"
           ],
           "additionalProperties": false
+        },
+        "retain": {
+          "description": "Compress folders into zip files, which can then be downloaded as artifacts.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "additionalProperties": false

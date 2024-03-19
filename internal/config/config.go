@@ -141,8 +141,9 @@ type Slack struct {
 
 // Artifacts represents the test artifacts configuration.
 type Artifacts struct {
-	Download ArtifactDownload `yaml:"download,omitempty" json:"download"`
-	Cleanup  bool             `yaml:"cleanup,omitempty" json:"cleanup"`
+	Retain   map[string]string `yaml:"retain,omitempty" json:"retain"`
+	Download ArtifactDownload  `yaml:"download,omitempty" json:"download"`
+	Cleanup  bool              `yaml:"cleanup,omitempty" json:"cleanup"`
 }
 
 // Reporters represents the reporter configuration.
