@@ -609,7 +609,10 @@ func ValidateRegistries(registries []Registry) error {
 }
 
 func ValidateArtifacts(artifacts Artifacts) error {
-	for _, dest := range artifacts.Retain {
+	for source, dest := range artifacts.Retain {
+		if filepath.IsAbs(source) {
+			return fmt.Errorf("invalid source path %q: absolute path is not allowed", source)
+		}
 		if !strings.HasSuffix(dest, ".zip") {
 			return fmt.Errorf("invalid zip filename %q: only .zip file is permitted", dest)
 		}
