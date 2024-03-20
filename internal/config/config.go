@@ -616,6 +616,13 @@ func ValidateArtifacts(artifacts Artifacts) error {
 		if !strings.HasSuffix(dest, ".zip") {
 			return fmt.Errorf("invalid zip filename %q: only .zip file is permitted", dest)
 		}
+
+		// Automatically convert the path to use slashes.
+		newSource := strings.ReplaceAll(source, "\\", "/")
+		if newSource != source {
+			artifacts.Retain[newSource] = dest
+			delete(artifacts.Retain, source)
+		}
 	}
 	return nil
 }
