@@ -323,6 +323,10 @@ func Validate(p *Project) error {
 		return err
 	}
 
+	if err := config.ValidateArtifacts(p.Artifacts); err != nil {
+		return err
+	}
+
 	if p.Sauce.LaunchOrder != "" && p.Sauce.LaunchOrder != config.LaunchOrderFailRate {
 		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchOrder, string(config.LaunchOrderFailRate))
 	}

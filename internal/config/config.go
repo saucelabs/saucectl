@@ -607,3 +607,12 @@ func ValidateRegistries(registries []Registry) error {
 	}
 	return nil
 }
+
+func ValidateArtifacts(artifacts Artifacts) error {
+	for _, dest := range artifacts.Retain {
+		if !strings.HasSuffix(dest, ".zip") {
+			return fmt.Errorf("invalid zip filename %q: only .zip file is permitted", dest)
+		}
+	}
+	return nil
+}
