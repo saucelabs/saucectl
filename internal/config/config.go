@@ -141,8 +141,9 @@ type Slack struct {
 
 // Artifacts represents the test artifacts configuration.
 type Artifacts struct {
-	Download ArtifactDownload `yaml:"download,omitempty" json:"download"`
-	Cleanup  bool             `yaml:"cleanup,omitempty" json:"cleanup"`
+	Retain   map[string]string `yaml:"retain,omitempty" json:"retain"`
+	Download ArtifactDownload  `yaml:"download,omitempty" json:"download"`
+	Cleanup  bool              `yaml:"cleanup,omitempty" json:"cleanup"`
 }
 
 // Reporters represents the reporter configuration.
@@ -603,6 +604,25 @@ func ValidateRegistries(registries []Registry) error {
 
 	if noScopeRegistry > 1 {
 		return fmt.Errorf(msg.NpmTooManyDefaultRegistry)
+	}
+	return nil
+}
+
+func ValidateArtifacts(artifacts Artifacts) error {
+	for source, dest := range artifacts.Retain {
+		if filepath.IsAbs(source) {
+			return fmt.Errorf("invalid source path %q: absolute path is not allowed", source)
+		}
+		if !strings.HasSuffix(dest, ".zip") {
+			return fmt.Errorf("invalid zip filename %q: only .zip file is permitted", dest)
+		}
+
+		// Automatically convert the path to use slashes.
+		newSource := strings.ReplaceAll(source, "\\", "/")
+		if newSource != source {
+			artifacts.Retain[newSource] = dest
+			delete(artifacts.Retain, source)
+		}
 	}
 	return nil
 }

@@ -181,6 +181,9 @@ func Validate(p *Project) error {
 	if err != nil {
 		return err
 	}
+	if err := config.ValidateArtifacts(p.Artifacts); err != nil {
+		return err
+	}
 
 	p.Playwright.Version = config.StandardizeVersionFormat(p.Playwright.Version)
 	if p.Playwright.Version == "" {

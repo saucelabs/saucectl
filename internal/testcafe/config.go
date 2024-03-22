@@ -257,6 +257,10 @@ func Validate(p *Project) error {
 		return err
 	}
 
+	if err := config.ValidateArtifacts(p.Artifacts); err != nil {
+		return err
+	}
+
 	p.Testcafe.Version = config.StandardizeVersionFormat(p.Testcafe.Version)
 	if p.Testcafe.Version == "" {
 		return errors.New(msg.MissingFrameworkVersionConfig)

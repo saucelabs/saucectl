@@ -78,6 +78,13 @@
                       "directory"
                     ],
                     "additionalProperties": false
+                  },
+                  "retain": {
+                    "description": "Compress folders into zip files, which can then be downloaded as artifacts.",
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
                   }
                 },
                 "additionalProperties": false
@@ -567,6 +574,13 @@
                       "directory"
                     ],
                     "additionalProperties": false
+                  },
+                  "retain": {
+                    "description": "Compress folders into zip files, which can then be downloaded as artifacts.",
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
                   }
                 },
                 "additionalProperties": false
@@ -2651,11 +2665,6 @@
         "title": "saucectl image runner configuration",
         "description": "Configuration file for running container images using saucectl",
         "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/allOf/0/then/allOf/0"
-          }
-        ],
         "definitions": {
           "sauce": {
             "description": "All settings related to how tests are run and identified in the Sauce Labs platform.",
@@ -2875,6 +2884,46 @@
                     "default": "saucectl-report.json"
                   }
                 }
+              },
+              "additionalProperties": false
+            }
+          },
+          "artifacts": {
+            "description": "Manage test output, such as logs, videos, and screenshots.",
+            "type": "object",
+            "properties": {
+              "cleanup": {
+                "description": "Whether to remove all contents of artifacts directory",
+                "type": "boolean"
+              },
+              "download": {
+                "description": "Settings related to downloading test artifacts from Sauce Labs.",
+                "type": "object",
+                "properties": {
+                  "match": {
+                    "description": "Specifies which artifacts to download based on whether they match the file pattern provided. Supports the wildcard character '*'.",
+                    "type": "array"
+                  },
+                  "when": {
+                    "description": "Specifies when and under what circumstances to download artifacts.",
+                    "enum": [
+                      "always",
+                      "fail",
+                      "never",
+                      "pass"
+                    ]
+                  },
+                  "directory": {
+                    "description": "Specifies the path to the folder in which to download artifacts. A separate subdirectory is generated in this location for each suite.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "when",
+                  "match",
+                  "directory"
+                ],
+                "additionalProperties": false
               },
               "additionalProperties": false
             }
