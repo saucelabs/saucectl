@@ -72,7 +72,6 @@ type globalFlags struct {
 
 	globalTimeout   time.Duration
 	appStoreTimeout time.Duration
-	tunnelTimeout   time.Duration
 }
 
 // Command creates the `run` command
