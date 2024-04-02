@@ -58,7 +58,12 @@ var (
 func (r *XcuitestRunner) RunProject() (int, error) {
 	exitCode := 1
 
-	if err := r.validateTunnel(r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner, r.Project.DryRun); err != nil {
+	if err := r.validateTunnel(
+		r.Project.Sauce.Tunnel.Name,
+		r.Project.Sauce.Tunnel.Owner,
+		r.Project.DryRun,
+		r.Project.Sauce.Tunnel.Timeout,
+	); err != nil {
 		return exitCode, err
 	}
 

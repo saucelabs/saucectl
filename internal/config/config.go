@@ -174,6 +174,8 @@ type Tunnel struct {
 	// Deprecated. Use Owner instead.
 	Parent string `yaml:"parent,omitempty" json:"parent,omitempty"`
 	Owner  string `yaml:"owner,omitempty" json:"owner,omitempty"`
+	// Timeout represents the time to wait for the tunnel to be ready.
+	Timeout time.Duration `yaml:"timeout,omitempty" json:"timeout,omitempty"`
 }
 
 // TypeDef represents the type definition of the config.

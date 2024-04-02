@@ -51,7 +51,12 @@ func (r *CypressRunner) RunProject() (int, error) {
 		}
 	}
 
-	if err := r.validateTunnel(r.Project.GetSauceCfg().Tunnel.Name, r.Project.GetSauceCfg().Tunnel.Owner, r.Project.IsDryRun()); err != nil {
+	if err := r.validateTunnel(
+		r.Project.GetSauceCfg().Tunnel.Name,
+		r.Project.GetSauceCfg().Tunnel.Owner,
+		r.Project.IsDryRun(),
+		r.Project.GetSauceCfg().Tunnel.Timeout,
+	); err != nil {
 		return 1, err
 	}
 
