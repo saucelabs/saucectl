@@ -84,7 +84,14 @@ type execResult struct {
 }
 
 func (r *ImgRunner) RunProject() (int, error) {
-	if err := tunnel.ValidateTunnel(r.TunnelService, r.Project.Sauce.Tunnel.Name, r.Project.Sauce.Tunnel.Owner, tunnel.NoneFilter, false); err != nil {
+	if err := tunnel.Validate(
+		r.TunnelService,
+		r.Project.Sauce.Tunnel.Name,
+		r.Project.Sauce.Tunnel.Owner,
+		tunnel.NoneFilter,
+		false,
+		r.Project.Sauce.Tunnel.Timeout,
+	); err != nil {
 		return 1, err
 	}
 

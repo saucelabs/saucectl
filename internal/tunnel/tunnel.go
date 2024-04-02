@@ -2,6 +2,7 @@ package tunnel
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -25,7 +26,7 @@ type Service interface {
 	IsTunnelRunning(ctx context.Context, id, parent string, filter Filter, wait time.Duration) error
 }
 
-func ValidateTunnel(service Service, name string, owner string, filter Filter, dryRun bool) error {
+func Validate(service Service, name string, owner string, filter Filter, dryRun bool, timeout time.Duration) error {
 	if name == "" {
 		return nil
 	}
@@ -35,10 +36,12 @@ func ValidateTunnel(service Service, name string, owner string, filter Filter, d
 		return nil
 	}
 
-	// This wait value is deliberately not configurable.
-	wait := 30 * time.Second
-	log.Info().Str("timeout", wait.String()).Str("tunnel", name).Msg("Performing tunnel readiness check...")
-	if err := service.IsTunnelRunning(context.Background(), name, owner, filter, wait); err != nil {
+	if timeout <= 0 {
+		return errors.New("tunnel timeout must be greater than 0")
+	}
+
+	log.Info().Str("timeout", timeout.String()).Str("tunnel", name).Msg("Performing tunnel readiness check...")
+	if err := service.IsTunnelRunning(context.Background(), name, owner, filter, timeout); err != nil {
 		return err
 	}
 

@@ -63,14 +63,15 @@ var (
 var gFlags = globalFlags{}
 
 type globalFlags struct {
-	cfgFilePath     string
+	cfgFilePath   string
+	selectedSuite string
+	testEnvSilent bool
+	async         bool
+	failFast      bool
+	noAutoTagging bool
+
 	globalTimeout   time.Duration
-	selectedSuite   string
-	testEnvSilent   bool
-	async           bool
-	failFast        bool
 	appStoreTimeout time.Duration
-	noAutoTagging   bool
 }
 
 // Command creates the `run` command
@@ -101,14 +102,15 @@ func Command() *cobra.Command {
 	cmd.PersistentFlags().DurationVarP(&gFlags.globalTimeout, "timeout", "t", 0, "Global timeout that limits how long saucectl can run in total. Supports duration values like '10s', '30m' etc. (default: no timeout)")
 	cmd.PersistentFlags().BoolVar(&gFlags.async, "async", false, "Launches tests without waiting for test results")
 	cmd.PersistentFlags().BoolVar(&gFlags.failFast, "fail-fast", false, "Stops suites after the first failure")
-	cmd.PersistentFlags().DurationVar(&gFlags.appStoreTimeout, "uploadTimeout", 5*time.Minute, "Upload timeout that limits how long saucectl will wait for an upload to finish. Supports duration values like '10s' '30m' etc. (default: 5m)")
-	cmd.PersistentFlags().DurationVar(&gFlags.appStoreTimeout, "upload-timeout", 5*time.Minute, "Upload timeout that limits how long saucectl will wait for an upload to finish. Supports duration values like '10s' '30m' etc. (default: 5m)")
+	cmd.PersistentFlags().DurationVar(&gFlags.appStoreTimeout, "uploadTimeout", 5*time.Minute, "Upload timeout that limits how long saucectl will wait for an upload to finish. Supports duration values like '10s', '30m' etc.")
+	cmd.PersistentFlags().DurationVar(&gFlags.appStoreTimeout, "upload-timeout", 5*time.Minute, "Upload timeout that limits how long saucectl will wait for an upload to finish. Supports duration values like '10s', '30m' etc.")
 	sc.StringP("region", "r", "sauce::region", "", "The sauce labs region. Options: us-west-1, eu-central-1.")
 	sc.StringToStringP("env", "e", "envFlag", map[string]string{}, "Set environment variables, e.g. -e foo=bar. Not supported for RDC or Espresso on virtual devices!")
 	sc.Bool("show-console-log", "showConsoleLog", false, "Shows suites console.log locally. By default console.log is only shown on failures.")
 	sc.Int("ccy", "sauce::concurrency", 2, "Concurrency specifies how many suites are run at the same time.")
 	sc.String("tunnel-name", "sauce::tunnel::name", "", "Sets the sauce-connect tunnel name to be used for the run.")
 	sc.String("tunnel-owner", "sauce::tunnel::owner", "", "Sets the sauce-connect tunnel owner to be used for the run.")
+	sc.Duration("tunnel-timeout", "sauce::tunnel::timeout", 30*time.Second, "How long to wait for the specified tunnel to be ready. Supports duration values like '10s', '30m' etc.")
 	sc.String("runner-version", "runnerVersion", "", "Overrides the automatically determined runner version.")
 	sc.String("sauceignore", "sauce::sauceignore", ".sauceignore", "Specifies the path to the .sauceignore file.")
 	sc.String("root-dir", "rootDir", ".", "Specifies the project directory. Not applicable to mobile frameworks.")

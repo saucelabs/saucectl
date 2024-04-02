@@ -1,6 +1,8 @@
 package flags
 
 import (
+	"time"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/pflag"
 
@@ -40,6 +42,12 @@ func (s *SnakeCharmer) Bool(flagName, fieldName string, value bool, usage string
 // BoolP is like Bool(), but accepts a shorthand letter.
 func (s *SnakeCharmer) BoolP(flagName, shorthand, fieldName string, value bool, usage string) {
 	s.Fset.BoolP(flagName, shorthand, value, usage)
+	s.addBind(flagName, fieldName)
+}
+
+// Duration defines a duration flag with specified flagName, default value, usage string and then binds it to fieldName.
+func (s *SnakeCharmer) Duration(flagName string, fieldName string, value time.Duration, usage string) {
+	s.Fset.Duration(flagName, value, usage)
 	s.addBind(flagName, fieldName)
 }
 
