@@ -50,6 +50,15 @@
             "owner": {
               "description": "The owner (username) of the tunnel. Must be specified if the user that created the tunnel differs from the user that is running the tests.",
               "type": "string"
+            },
+            "timeout": {
+              "description": "How long to wait for the specified tunnel to be ready. Supports duration values like '10s', '30m' etc.",
+              "type": "string",
+              "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$",
+              "examples": [
+                "1m",
+                "30s"
+              ]
             }
           },
           "required": [
