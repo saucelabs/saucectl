@@ -793,7 +793,7 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 }
 
 func (r *CloudRunner) validateTunnel(name, owner string, dryRun bool, timeout time.Duration) error {
-	return tunnel.ValidateTunnel(r.TunnelService, name, owner, tunnel.NoneFilter, dryRun, timeout)
+	return tunnel.Validate(r.TunnelService, name, owner, tunnel.NoneFilter, dryRun, timeout)
 }
 
 // stopSuiteExecution stops the current execution on Sauce Cloud

@@ -26,7 +26,7 @@ type Service interface {
 	IsTunnelRunning(ctx context.Context, id, parent string, filter Filter, wait time.Duration) error
 }
 
-func ValidateTunnel(service Service, name string, owner string, filter Filter, dryRun bool, timeout time.Duration) error {
+func Validate(service Service, name string, owner string, filter Filter, dryRun bool, timeout time.Duration) error {
 	if name == "" {
 		return nil
 	}

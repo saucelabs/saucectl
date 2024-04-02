@@ -84,7 +84,7 @@ type execResult struct {
 }
 
 func (r *ImgRunner) RunProject() (int, error) {
-	if err := tunnel.ValidateTunnel(
+	if err := tunnel.Validate(
 		r.TunnelService,
 		r.Project.Sauce.Tunnel.Name,
 		r.Project.Sauce.Tunnel.Owner,
