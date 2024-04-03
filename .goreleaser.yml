@@ -24,7 +24,7 @@ brews:
   - repository:
       owner: saucelabs
       name: homebrew-saucectl
-    folder: Formula
+    directory: Formula
     test: |
       system "#{bin}/goreleaser", "-v"
     name: saucectl
