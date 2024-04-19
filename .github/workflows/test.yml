@@ -154,7 +154,7 @@ jobs:
         run: ./saucectl run -c .sauce/playwright.yml --timeout 10m
 
       - name: Saucectl RUN - CLI Driven
-        run: ./saucectl run playwright ".*.js" -c "" --name "CLI Driven" --browser chromium --rootDir tests/e2e/playwright/ --playwright.version 1.33.0 --timeout 10m -r us-west-1
+        run: ./saucectl run playwright ".*.js" -c "" --name "CLI Driven" --browser chromium --rootDir tests/e2e/playwright/ --playwright.version 1.43.1 --timeout 10m -r us-west-1
 
   testcafe:
     needs: build
@@ -176,29 +176,9 @@ jobs:
         run: ./saucectl run -c .sauce/testcafe.yml --timeout 10m
 
       - name: Saucectl RUN - CLI Driven
-        run: ./saucectl run testcafe "*.test.js" -c "" --name "CLI Driven" --browser chrome --rootDir tests/e2e/testcafe/ --testcafe.version 2.5.0 --timeout 10m -r us-west-1
+        run: ./saucectl run testcafe "*.test.js" -c "" --name "CLI Driven" --browser chrome --rootDir tests/e2e/testcafe/ --testcafe.version 3.5.0 --timeout 10m -r us-west-1
 
-  cypress-v1alpha:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download saucectl Binary
-        uses: actions/download-artifact@v4
-        with:
-          name: saucectlbin
-
-      - name: Set Permissions
-        run: chmod +x ./saucectl
-
-      - name: Saucectl RUN - Config Driven
-        run: |
-          ./saucectl run -c .sauce/cypress.yml --timeout 10m
-
-  cypress-v1:
+  cypress:
     needs: build
     runs-on: ubuntu-latest
 
@@ -224,30 +204,10 @@ jobs:
           -c "" --name "CLI Driven" \
           --rootDir tests/e2e/cypress_10/e2e/ \
           --browser chrome \
-          --cypress.version 12.11.0 \
+          --cypress.version 13.7.3 \
           --cypress.configFile "cypress.config.js" \
           --timeout 10m \
           -r us-west-1
-
-  cypress-windows:
-    needs: build
-    runs-on: windows-latest
-    env:
-      BUILD_ID: ${{ github.run_id }}
-      BUILD_ENV: GitHub Actions
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Download saucectl Binary
-        uses: actions/download-artifact@v4
-        with:
-          name: saucectlbin
-
-      - name: Saucectl RUN
-        run: |
-          ./saucectl.exe run -c .sauce/cypress.yml --select-suite "saucy test in sauce" --timeout 10m
 
   espresso:
     needs: build

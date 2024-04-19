@@ -11,7 +11,7 @@ rootDir: tests/e2e/cypress_10/e2e/
 defaults:
   timeout: 5m
 cypress:
-  version: 13.6.3
+  version: 13.7.3
   configFile: "cypress.config.js"
 suites:
   # - name: "(experimental) webkit test"
