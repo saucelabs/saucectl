@@ -227,7 +227,7 @@ jobs:
 
       - name: Saucectl RUN
         run: |
-          ./saucectl.exe run -c .sauce/cypress-10.yml --select-suite "saucy test in sauce" --timeout 10m
+          ./saucectl.exe run -c .sauce/cypress-10.yml --select-suite "chrome test" --timeout 10m
 
   espresso:
     needs: build
