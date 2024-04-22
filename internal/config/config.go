@@ -188,7 +188,11 @@ type TypeDef struct {
 type Registry struct {
 	Scope     string `yaml:"scope,omitempty" json:"scope,omitempty"`
 	URL       string `yaml:"url,omitempty" json:"url,omitempty"`
+	Auth      string `yaml:"auth,omitempty" json:"auth,omitempty"`
 	AuthToken string `yaml:"authToken,omitempty" json:"authToken,omitempty"`
+	Username  string `yaml:"username,omitempty" json:"username,omitempty"`
+	Password  string `yaml:"password,omitempty" json:"password,omitempty"`
+	Email     string `yaml:"email,omitempty" json:"email,omitempty"`
 }
 
 // Npm represents the npm settings
