@@ -135,7 +135,23 @@
                           "type": "string"
                         },
                         "authToken": {
-                          "description": "authToken for the registry entry",
+                          "description": "Authentication token for the registry entry",
+                          "type": "string"
+                        },
+                        "auth": {
+                          "description": "Base64-encoded authentication string for the registry entry",
+                          "type": "string"
+                        },
+                        "username": {
+                          "description": "Username for authentication with the registry",
+                          "type": "string"
+                        },
+                        "password": {
+                          "description": "Password for authentication with the registry",
+                          "type": "string"
+                        },
+                        "email": {
+                          "description": "Email for authentication with the registry",
                           "type": "string"
                         }
                       },
@@ -640,7 +656,23 @@
                           "type": "string"
                         },
                         "authToken": {
-                          "description": "authToken for the registry entry",
+                          "description": "Authentication token for the registry entry",
+                          "type": "string"
+                        },
+                        "auth": {
+                          "description": "Base64-encoded authentication string for the registry entry",
+                          "type": "string"
+                        },
+                        "username": {
+                          "description": "Username for authentication with the registry",
+                          "type": "string"
+                        },
+                        "password": {
+                          "description": "Password for authentication with the registry",
+                          "type": "string"
+                        },
+                        "email": {
+                          "description": "Email for authentication with the registry",
                           "type": "string"
                         }
                       },
