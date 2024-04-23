@@ -45,7 +45,7 @@
                 "type": "string"
               },
               "auth": {
-                "description": "Base64-encoded authentication token for the registry entry",
+                "description": "Base64-encoded authentication string for the registry entry",
                 "type": "string"
               },
               "username": {
