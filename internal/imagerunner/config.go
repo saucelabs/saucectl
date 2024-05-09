@@ -149,7 +149,7 @@ func SetDefaults(p *Project) {
 			if service.ResourceProfile == "" {
 				service.ResourceProfile = "c1m1"
 			}
-			suite.Metadata[fmt.Sprintf("resourceProfile-%s", GetCanonicalServiceName(service.Name))] = suite.ResourceProfile
+			suite.Metadata[fmt.Sprintf("resourceProfile-%s", GetCanonicalServiceName(service.Name))] = service.ResourceProfile
 			if service.Env == nil {
 				service.Env = make(map[string]string)
 			}
