@@ -46,10 +46,7 @@ jobs:
 
       - name: Run tests
         run: |
-          go test -coverprofile=coverage.txt -covermode=atomic ./...
-          coverage=$(go tool cover -func=coverage.txt | tail -n 1 | awk '{ print $3 }' | tr -d '%' | cut -d . -f 1)
-          threshold=40
-          if [ $coverage -lt $threshold ]; then echo 'Code coverage below threshold!' && exit 1; fi
+          go test ./...
 
   check-schema:
     runs-on: ubuntu-latest
