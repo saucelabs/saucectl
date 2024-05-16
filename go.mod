@@ -1,6 +1,6 @@
 module github.com/saucelabs/saucectl
 
-go 1.21
+go 1.22
 
 replace github.com/spf13/viper v1.14.0 => github.com/saucelabs/viper v1.14.0
 
