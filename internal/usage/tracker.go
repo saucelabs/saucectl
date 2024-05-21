@@ -4,7 +4,6 @@ import (
 	"io"
 
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/spf13/pflag"
 )
 
@@ -39,13 +38,6 @@ func (p Properties) SetFlags(flags *pflag.FlagSet) Properties {
 	})
 
 	p["flags"] = ff
-
-	return p
-}
-
-// SetJobs reports job (aka test results).
-func (p Properties) SetJobs(jobs []report.TestResult) Properties {
-	p["jobs"] = jobs
 
 	return p
 }

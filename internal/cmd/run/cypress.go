@@ -20,7 +20,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
 	"github.com/saucelabs/saucectl/internal/segment"
@@ -126,7 +125,7 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	go func() {
 		props := usage.Properties{}
 		props.SetFramework("cypress").SetFVersion(p.GetVersion()).SetFlags(cmd.Flags()).SetSauceConfig(p.GetSauceCfg()).
-			SetArtifacts(p.GetArtifactsCfg()).SetNPM(p.GetNpm()).SetNumSuites(len(p.GetSuites())).SetJobs(captor.Default.TestResults).
+			SetArtifacts(p.GetArtifactsCfg()).SetNPM(p.GetNpm()).SetNumSuites(len(p.GetSuites())).
 			SetSlack(p.GetNotifications().Slack).SetSharding(p.IsSharded()).SetLaunchOrder(p.GetSauceCfg().LaunchOrder).
 			SetSmartRetry(p.IsSmartRetried()).SetReporters(p.GetReporters())
 

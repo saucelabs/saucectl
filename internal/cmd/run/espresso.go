@@ -18,7 +18,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
 	"github.com/saucelabs/saucectl/internal/segment"
@@ -121,7 +120,7 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, isCLIDriven bo
 	go func() {
 		props := usage.Properties{}
 		props.SetFramework("espresso").SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).SetArtifacts(p.Artifacts).
-			SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).SetSlack(p.Notifications.Slack).
+			SetNumSuites(len(p.Suites)).SetSlack(p.Notifications.Slack).
 			SetSharding(espresso.IsSharded(p.Suites)).SetLaunchOrder(p.Sauce.LaunchOrder).
 			SetSmartRetry(p.IsSmartRetried()).SetReporters(p.Reporters)
 		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
