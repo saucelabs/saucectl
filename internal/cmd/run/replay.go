@@ -20,7 +20,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
 	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
 	"github.com/saucelabs/saucectl/internal/segment"
@@ -110,7 +109,7 @@ func runReplay(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	go func() {
 		props := usage.Properties{}
 		props.SetFramework("puppeteer-replay").SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
-			SetArtifacts(p.Artifacts).SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).
+			SetArtifacts(p.Artifacts).SetNumSuites(len(p.Suites)).
 			SetSlack(p.Notifications.Slack).SetLaunchOrder(p.Sauce.LaunchOrder)
 		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
 		_ = tracker.Close()

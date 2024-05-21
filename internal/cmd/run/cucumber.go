@@ -12,7 +12,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/saucelabs/saucectl/internal/report/captor"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
 	"github.com/saucelabs/saucectl/internal/segment"
@@ -105,7 +104,7 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	go func() {
 		props := usage.Properties{}
 		props.SetFramework("playwright-cucumberjs").SetFVersion(p.Playwright.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
-			SetArtifacts(p.Artifacts).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).SetJobs(captor.Default.TestResults).
+			SetArtifacts(p.Artifacts).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).
 			SetSlack(p.Notifications.Slack).SetSharding(cucumber.IsSharded(p.Suites)).SetLaunchOrder(p.Sauce.LaunchOrder).
 			SetSmartRetry(p.IsSmartRetried()).SetReporters(p.Reporters)
 		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
