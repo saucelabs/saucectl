@@ -133,12 +133,16 @@ func logPushProgress(reader io.ReadCloser) error {
 
 		// Update current progress based on msg.Progress.Total when in 'pushing' status.
 		if bar != nil && msg.Progress != nil && msg.Progress.Current > 0 {
-			bar.Set64(msg.Progress.Current)
+			if err := bar.Set64(msg.Progress.Current); err != nil {
+				return err
+			}
 		}
 	}
 
 	if bar != nil {
-		bar.Finish()
+		if err := bar.Finish(); err != nil {
+			return err
+		}
 	}
 	fmt.Println("\nSuccessfully pushed the Docker image!")
 	return nil
