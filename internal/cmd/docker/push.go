@@ -7,12 +7,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/client"
-	dockerMsg "github.com/moby/moby/pkg/jsonmessage"
+	dockermsg "github.com/moby/moby/pkg/jsonmessage"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
@@ -102,7 +103,7 @@ func pushDockerImage(imageName, username, password string, timeout time.Duration
 
 func logPushProgress(reader io.ReadCloser) error {
 	var status string
-	var msg dockerMsg.JSONMessage
+	var msg dockermsg.JSONMessage
 	var bar *progressbar.ProgressBar
 
 	decoder := json.NewDecoder(reader)
@@ -122,18 +123,19 @@ func logPushProgress(reader io.ReadCloser) error {
 		// Create a new progress bar to display progress whenever the Docker push status changes.
 		if status != msg.Status {
 			status = msg.Status
-			// Create a spinner-based progress bar for statuses other than 'pushing', like 'prepare'.
-			if msg.Progress == nil || msg.Progress.Total == 0 {
-				bar = progressbar.Default(-1, status)
-				continue
+			if bar != nil {
+				// Finish the previous progress bar.
+				if err := bar.Finish(); err != nil {
+					return err
+				}
 			}
-			// Create a new progress bar for 'pushing' status with total bytes.
-			bar = progressbar.Default(msg.Progress.Total, status)
+			// Set an arbitrary maximum value as the number of steps per status is unknown.
+			bar = createBar(100, status)
+			continue
 		}
 
-		// Update current progress based on msg.Progress.Total when in 'pushing' status.
-		if bar != nil && msg.Progress != nil && msg.Progress.Current > 0 {
-			if err := bar.Set64(msg.Progress.Current); err != nil {
+		if bar != nil {
+			if err := bar.Add(1); err != nil {
 				return err
 			}
 		}
@@ -144,6 +146,26 @@ func logPushProgress(reader io.ReadCloser) error {
 			return err
 		}
 	}
-	fmt.Println("\nSuccessfully pushed the Docker image!")
+	fmt.Println("Successfully pushed the Docker image!")
 	return nil
+}
+
+func createBar(max int64, desc string) *progressbar.ProgressBar {
+	return progressbar.NewOptions64(
+		max,
+		progressbar.OptionSetDescription(desc),
+		progressbar.OptionSetWriter(os.Stderr),
+		progressbar.OptionOnCompletion(func() {
+			fmt.Fprint(os.Stderr, "\n")
+		}),
+		progressbar.OptionFullWidth(),
+		progressbar.OptionSetRenderBlankState(true),
+		progressbar.OptionSetTheme(progressbar.Theme{
+			Saucer:        "=",
+			SaucerHead:    ">",
+			SaucerPadding: " ",
+			BarStart:      "[",
+			BarEnd:        ">]",
+		}),
+	)
 }
