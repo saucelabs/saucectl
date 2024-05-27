@@ -180,13 +180,14 @@ func clearProgress(bar *progressbar.ProgressBar) error {
 	// Stop the progress spinner.
 	progress.Stop()
 
-	// Finish the progress bar by setting it to 100%.
 	if bar == nil {
 		return nil
 	}
+	// Finish the progress bar by setting it to 100%.
 	if err := bar.Finish(); err != nil {
 		return err
 	}
+	// Restore progress bar to nil.
 	bar = nil
 	return nil
 }
