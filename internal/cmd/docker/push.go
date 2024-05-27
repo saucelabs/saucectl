@@ -123,33 +123,29 @@ func logPushProgress(reader io.ReadCloser) error {
 		// Create a new progress bar to display progress whenever the Docker push status changes.
 		if status != msg.Status {
 			status = msg.Status
-			if bar != nil {
-				// Finish the previous progress bar.
-				if err := bar.Finish(); err != nil {
-					return err
-				}
+			// Finish the previous progress bar.
+			if err := finishBar(bar); err != nil {
+				return err
 			}
 			// Set an arbitrary maximum value as the number of steps per status is unknown.
 			bar = createBar(100, status)
 			continue
 		}
 
-		if bar != nil {
-			if err := bar.Add(1); err != nil {
-				return err
-			}
-		}
-	}
-
-	if bar != nil {
-		if err := bar.Finish(); err != nil {
+		if err := addToBar(bar, 1); err != nil {
 			return err
 		}
 	}
+
+	if err := finishBar(bar); err != nil {
+		return err
+	}
+
 	fmt.Println("Successfully pushed the Docker image!")
 	return nil
 }
 
+// createBar returns a customized progress bar for Docker image pushes.
 func createBar(max int64, desc string) *progressbar.ProgressBar {
 	return progressbar.NewOptions64(
 		max,
@@ -168,4 +164,20 @@ func createBar(max int64, desc string) *progressbar.ProgressBar {
 			BarEnd:        ">]",
 		}),
 	)
+}
+
+// finishBar completes a progress bar by setting its progress to 100%.
+func finishBar(bar *progressbar.ProgressBar) error {
+	if bar == nil {
+		return nil
+	}
+	return bar.Finish()
+}
+
+// addToBar increments the progress on the progress bar by a specified amount.
+func addToBar(bar *progressbar.ProgressBar, inc int) error {
+	if bar == nil {
+		return nil // Skip increment if the progress bar is not initialized
+	}
+	return bar.Add(inc)
 }
