@@ -141,7 +141,7 @@ func logPushProgress(reader io.ReadCloser) error {
 		// Update current progress based on msg.Progress.Total when in 'pushing' status.
 		// Note: The Docker API may return a current value greater than total. To prevent breaking the progress bar,
 		// only update when the current is less than the total.
-		if bar != nil && msg.Progress != nil && msg.Progress.Current > 0 && msg.Progress.Current < msg.Progress.Total {
+		if bar != nil && msg.Progress != nil && msg.Progress.Current > 0 && msg.Progress.Current <= msg.Progress.Total {
 			_ = bar.Set64(msg.Progress.Current)
 		}
 	}
