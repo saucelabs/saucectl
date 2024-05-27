@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -15,9 +14,9 @@ import (
 	"github.com/docker/docker/client"
 	dockermsg "github.com/moby/moby/pkg/jsonmessage"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
+	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
-	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -104,7 +103,6 @@ func pushDockerImage(imageName, username, password string, timeout time.Duration
 func logPushProgress(reader io.ReadCloser) error {
 	var status string
 	var msg dockermsg.JSONMessage
-	var bar *progressbar.ProgressBar
 
 	decoder := json.NewDecoder(reader)
 	for {
@@ -120,64 +118,15 @@ func logPushProgress(reader io.ReadCloser) error {
 			return fmt.Errorf("server error during Docker image push: %s", msg.Error.Message)
 		}
 
-		// Create a new progress bar to display progress whenever the Docker push status changes.
+		// Create a new progress spinner to display progress whenever the Docker push status changes.
 		if status != msg.Status {
 			status = msg.Status
-			// Finish the previous progress bar.
-			if err := finishBar(bar); err != nil {
-				return err
-			}
-			// Set an arbitrary maximum value as the number of steps per status is unknown.
-			bar = createBar(100, status)
+			progress.Show(status)
 			continue
 		}
 
-		if err := addToBar(bar, 1); err != nil {
-			return err
-		}
-	}
-
-	if err := finishBar(bar); err != nil {
-		return err
 	}
 
 	fmt.Println("Successfully pushed the Docker image!")
 	return nil
-}
-
-// createBar returns a customized progress bar for Docker image pushes.
-func createBar(max int64, desc string) *progressbar.ProgressBar {
-	return progressbar.NewOptions64(
-		max,
-		progressbar.OptionSetDescription(desc),
-		progressbar.OptionSetWriter(os.Stderr),
-		progressbar.OptionOnCompletion(func() {
-			fmt.Fprint(os.Stderr, "\n")
-		}),
-		progressbar.OptionFullWidth(),
-		progressbar.OptionSetRenderBlankState(true),
-		progressbar.OptionSetTheme(progressbar.Theme{
-			Saucer:        "=",
-			SaucerHead:    ">",
-			SaucerPadding: " ",
-			BarStart:      "[",
-			BarEnd:        ">]",
-		}),
-	)
-}
-
-// finishBar completes a progress bar by setting its progress to 100%.
-func finishBar(bar *progressbar.ProgressBar) error {
-	if bar == nil {
-		return nil
-	}
-	return bar.Finish()
-}
-
-// addToBar increments the progress on the progress bar by a specified amount.
-func addToBar(bar *progressbar.ProgressBar, inc int) error {
-	if bar == nil {
-		return nil // Skip increment if the progress bar is not initialized
-	}
-	return bar.Add(inc)
 }
