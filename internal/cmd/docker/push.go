@@ -122,9 +122,7 @@ func logPushProgress(reader io.ReadCloser) error {
 		if status != msg.Status {
 			status = msg.Status
 			progress.Show(status)
-			continue
 		}
-
 	}
 
 	fmt.Println("Successfully pushed the Docker image!")
