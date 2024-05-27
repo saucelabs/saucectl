@@ -103,7 +103,7 @@ func pushDockerImage(imageName, username, password string, timeout time.Duration
 }
 
 func logPushProgress(reader io.ReadCloser) error {
-	var status string
+	var stepID string
 	var bar *progressbar.ProgressBar
 
 	decoder := json.NewDecoder(reader)
@@ -121,26 +121,27 @@ func logPushProgress(reader io.ReadCloser) error {
 			return fmt.Errorf("server error during Docker image push: %s", msg.Error.Message)
 		}
 
-		// Create a new progress spinner or bar to display progress whenever the Docker push status changes.
-		if status != msg.Status {
+		// Create a new progress spinner or bar to display progress whenever the Docker push ID changes.
+		// Each ID represents a push step.
+		if stepID != msg.ID {
+			stepID = msg.ID
 			if err := clearProgress(bar); err != nil {
 				return err
 			}
 
-			status = msg.Status
 			// Create a progress spinner for statuses other than 'Pushing', like 'Preparing'.
 			if msg.Progress == nil || msg.Progress.Total == 0 {
-				progress.Show(status)
+				progress.Show(msg.Status)
 				continue
 			}
 
 			// Create a progress bar for 'Pushing' status with total bytes.
-			bar = createBar(msg.Progress.Total, status)
+			bar = createBar(msg.Progress.Total, msg.Status)
 		}
 
 		// Update current progress based on msg.Progress.Total when in 'pushing' status.
 		// Note: The Docker API may return a current value greater than total. To prevent breaking the progress bar,
-		// only update when the current is less than the total.
+		// only update when the current is less than msg.Progress.Total.
 		if bar != nil && msg.Progress != nil && msg.Progress.Current > 0 && msg.Progress.Current < msg.Progress.Total {
 			_ = bar.Set64(msg.Progress.Current)
 		}
@@ -184,10 +185,5 @@ func clearProgress(bar *progressbar.ProgressBar) error {
 		return nil
 	}
 	// Finish the progress bar by setting it to 100%.
-	if err := bar.Finish(); err != nil {
-		return err
-	}
-	// Restore progress bar to nil.
-	bar = nil
-	return nil
+	return bar.Finish()
 }
