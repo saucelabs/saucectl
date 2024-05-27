@@ -184,5 +184,9 @@ func clearProgress(bar *progressbar.ProgressBar) error {
 	if bar == nil {
 		return nil
 	}
-	return bar.Finish()
+	if err := bar.Finish(); err != nil {
+		return err
+	}
+	bar = nil
+	return nil
 }
