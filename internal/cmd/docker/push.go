@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -17,6 +18,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/progress"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
+	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -102,11 +104,12 @@ func pushDockerImage(imageName, username, password string, timeout time.Duration
 
 func logPushProgress(reader io.ReadCloser) error {
 	var status string
-	var msg dockermsg.JSONMessage
+	var bar *progressbar.ProgressBar
 
 	decoder := json.NewDecoder(reader)
 	for {
 		// Decode the message from the Docker API output.
+		var msg dockermsg.JSONMessage
 		err := decoder.Decode(&msg)
 		if err != nil {
 			if err == io.EOF {
@@ -118,13 +121,68 @@ func logPushProgress(reader io.ReadCloser) error {
 			return fmt.Errorf("server error during Docker image push: %s", msg.Error.Message)
 		}
 
-		// Create a new progress spinner to display progress whenever the Docker push status changes.
+		// Create a new progress spinner or bar to display progress whenever the Docker push status changes.
 		if status != msg.Status {
+			if err := clearProgress(bar); err != nil {
+				return err
+			}
+
 			status = msg.Status
-			progress.Show(status)
+			// Create a progress spinner for statuses other than 'Pushing', like 'Preparing'.
+			if msg.Progress == nil || msg.Progress.Total == 0 {
+				progress.Show(status)
+				continue
+			}
+
+			// Create a progress bar for 'Pushing' status with total bytes.
+			bar = createBar(msg.Progress.Total, status)
 		}
+
+		// Update current progress based on msg.Progress.Total when in 'pushing' status.
+		// Note: The Docker API may return a current value greater than total. To prevent breaking the progress bar,
+		// only update when the current is less than the total.
+		if bar != nil && msg.Progress != nil && msg.Progress.Current > 0 && msg.Progress.Current < msg.Progress.Total {
+			_ = bar.Set64(msg.Progress.Current)
+		}
+	}
+	if err := clearProgress(bar); err != nil {
+		return err
 	}
 
 	fmt.Println("Successfully pushed the Docker image!")
 	return nil
+}
+
+// createBar returns a customized progress bar for Docker image pushes.
+func createBar(max int64, desc string) *progressbar.ProgressBar {
+	return progressbar.NewOptions64(
+		max,
+		progressbar.OptionSetDescription(desc),
+		progressbar.OptionSetWriter(os.Stderr),
+		progressbar.OptionShowBytes(true),
+		progressbar.OptionOnCompletion(func() {
+			fmt.Fprint(os.Stderr, "\n")
+		}),
+		progressbar.OptionFullWidth(),
+		progressbar.OptionSetRenderBlankState(true),
+		progressbar.OptionSetTheme(progressbar.Theme{
+			Saucer:        "=",
+			SaucerHead:    ">",
+			SaucerPadding: " ",
+			BarStart:      "[",
+			BarEnd:        ">]",
+		}),
+	)
+}
+
+// clearProgress stops the previous progress spinner or bar.
+func clearProgress(bar *progressbar.ProgressBar) error {
+	// Stop the progress spinner.
+	progress.Stop()
+
+	// Finish the progress bar by setting it to 100%.
+	if bar == nil {
+		return nil
+	}
+	return bar.Finish()
 }
