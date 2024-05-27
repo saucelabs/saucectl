@@ -104,8 +104,7 @@ func pushDockerImage(imageName, username, password string, timeout time.Duration
 
 func logPushProgress(reader io.ReadCloser) error {
 	var stepID string
-	var bar *progressbar.ProgressBar
-
+	bars := map[string]*progressbar.ProgressBar{}
 	decoder := json.NewDecoder(reader)
 	for {
 		// Decode the message from the Docker API output.
@@ -126,28 +125,30 @@ func logPushProgress(reader io.ReadCloser) error {
 		// Note: Outputs are in parallel; identical IDs indicate outputs from the same thread.
 		if stepID != msg.ID {
 			stepID = msg.ID
-			if err := clearProgress(bar); err != nil {
-				return err
-			}
+			progress.Stop()
 
-			// Create a progress spinner for statuses other than 'Pushing', like 'Preparing'.
+			// Create a progress spinner for statuses don't have progress details, like 'Preparing'.
 			if msg.Progress == nil || msg.Progress.Total == 0 {
 				progress.Show(msg.Status)
 				continue
 			}
 
-			// Create a progress bar for 'Pushing' status with total bytes.
-			bar = createBar(msg.Progress.Total, msg.Status)
+			// Init a progress bar for 'Pushing' status with total bytes and add it to bar group.
+			if _, ok := bars[msg.ID]; !ok {
+				bars[msg.ID] = createBar(msg.Progress.Total, fmt.Sprintf("%s %s", msg.Status, msg.ID))
+			}
 		}
 
 		// Update current progress based on msg.Progress.Total when in 'Pushing' status.
 		// Note: The Docker API may return a current value greater than total. To prevent breaking the progress bar,
 		// only update when the current is less than total.
-		if bar != nil && msg.Progress != nil && msg.Progress.Current > 0 && msg.Progress.Current < bar.GetMax64() {
-			_ = bar.Set64(msg.Progress.Current)
+		if bar, ok := bars[msg.ID]; ok {
+			if msg.Progress != nil && msg.Progress.Current > 0 && msg.Progress.Current < bar.GetMax64() {
+				_ = bar.Set64(msg.Progress.Current)
+			}
 		}
 	}
-	if err := clearProgress(bar); err != nil {
+	if err := closeProgress(bars); err != nil {
 		return err
 	}
 
@@ -161,6 +162,7 @@ func createBar(max int64, desc string) *progressbar.ProgressBar {
 		max,
 		progressbar.OptionSetDescription(desc),
 		progressbar.OptionSetWriter(os.Stderr),
+		progressbar.OptionShowBytes(true),
 		progressbar.OptionOnCompletion(func() {
 			fmt.Fprint(os.Stderr, "\n")
 		}),
@@ -176,14 +178,13 @@ func createBar(max int64, desc string) *progressbar.ProgressBar {
 	)
 }
 
-// clearProgress stops the previous progress spinner or bar.
-func clearProgress(bar *progressbar.ProgressBar) error {
-	// Stop the progress spinner.
+// closeProgress closes all progress spinners and bars.
+func closeProgress(bars map[string]*progressbar.ProgressBar) error {
 	progress.Stop()
-
-	if bar == nil {
-		return nil
+	for _, bar := range bars {
+		if err := bar.Finish(); err != nil {
+			return err
+		}
 	}
-	// Finish the progress bar by setting it to 100%.
-	return bar.Finish()
+	return nil
 }
