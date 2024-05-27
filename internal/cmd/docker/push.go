@@ -121,8 +121,9 @@ func logPushProgress(reader io.ReadCloser) error {
 			return fmt.Errorf("server error during Docker image push: %s", msg.Error.Message)
 		}
 
-		// Create a new progress spinner or bar to display progress whenever the Docker push ID changes.
-		// Each ID represents a push step.
+		// Create a new progress spinner or bar when the Docker push ID changes.
+		// Each ID corresponds to a distinct step in the push process.
+		// Note: Outputs are in parallel; identical IDs indicate outputs from the same thread.
 		if stepID != msg.ID {
 			stepID = msg.ID
 			if err := clearProgress(bar); err != nil {
@@ -160,7 +161,6 @@ func createBar(max int64, desc string) *progressbar.ProgressBar {
 		max,
 		progressbar.OptionSetDescription(desc),
 		progressbar.OptionSetWriter(os.Stderr),
-		progressbar.OptionShowBytes(true),
 		progressbar.OptionOnCompletion(func() {
 			fmt.Fprint(os.Stderr, "\n")
 		}),
