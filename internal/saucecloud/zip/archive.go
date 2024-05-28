@@ -133,7 +133,7 @@ func ArchiveNodeModules(targetDir string, sourceDir string, matcher sauceignore.
 	var files []string
 
 	// does the user only want a subset of dependencies?
-	if hasMods && wantMods {
+	if wantMods {
 		reqs := node.Requirements(filepath.Join(sourceDir, "node_modules"), dependencies...)
 		if len(reqs) == 0 {
 			return "", fmt.Errorf("unable to find required dependencies; please check 'node_modules' folder and make sure the dependencies exist")
@@ -146,7 +146,7 @@ func ArchiveNodeModules(targetDir string, sourceDir string, matcher sauceignore.
 
 	// node_modules exists, has not been ignored and a subset has not been specified, so include the entire folder.
 	// This is the legacy behavior (backwards compatible) of saucectl.
-	if hasMods && !ignored && !wantMods {
+	if !wantMods {
 		log.Warn().Msg("Adding the entire node_modules folder to the payload. " +
 			"This behavior is deprecated, not recommended and will be removed in the future. " +
 			"Please address your dependency needs via https://docs.saucelabs.com/dev/cli/saucectl/usage/use-cases/#set-npm-packages-in-configyml")
