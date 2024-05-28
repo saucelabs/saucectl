@@ -130,6 +130,11 @@ func ArchiveNodeModules(targetDir string, sourceDir string, matcher sauceignore.
 		return "", nil
 	}
 
+	dependencies, err = ExpandDependencies(sourceDir, dependencies)
+	if err != nil {
+		return "", err
+	}
+
 	var files []string
 
 	// does the user only want a subset of dependencies?
@@ -154,4 +159,30 @@ func ArchiveNodeModules(targetDir string, sourceDir string, matcher sauceignore.
 	}
 
 	return ArchiveFiles("node_modules", targetDir, sourceDir, files, matcher)
+}
+
+// ExpandDependencies looks for "package.json" files inside dependencies and
+// expands them into a list of dependencies.
+func ExpandDependencies(sourceDir string, dependencies []string) ([]string, error) {
+	var expanded []string
+	for _, dep := range dependencies {
+		if strings.HasSuffix(dep, "package.json") {
+			p, err := node.PackageFromFile(filepath.Join(sourceDir, dep))
+			if err != nil {
+				return nil, fmt.Errorf("failed to read dependencies from %s: %w", dep, err)
+			}
+
+			for k := range p.Dependencies {
+				expanded = append(expanded, k)
+			}
+			for k := range p.DevDependencies {
+				expanded = append(expanded, k)
+			}
+			continue
+		}
+
+		expanded = append(expanded, dep)
+	}
+
+	return expanded, nil
 }
