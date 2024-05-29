@@ -10,6 +10,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
+	"github.com/saucelabs/saucectl/internal/human"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/node"
@@ -92,8 +93,8 @@ func ArchiveFiles(targetFileName string, targetDir string, sourceDir string, fil
 	}
 
 	log.Info().
-		Dur("durationMs", time.Since(start)).
-		Int64("size", f.Size()).
+		Str("duration", time.Since(start).Round(time.Second).String()).
+		Str("size", human.Bytes(f.Size())).
 		Int("fileCount", totalFileCount).
 		Int("longestPathLength", longestPathLength).
 		Msg("Archive created.")
@@ -130,10 +131,15 @@ func ArchiveNodeModules(targetDir string, sourceDir string, matcher sauceignore.
 		return "", nil
 	}
 
+	dependencies, err = ExpandDependencies(sourceDir, dependencies)
+	if err != nil {
+		return "", err
+	}
+
 	var files []string
 
 	// does the user only want a subset of dependencies?
-	if hasMods && wantMods {
+	if wantMods {
 		reqs := node.Requirements(filepath.Join(sourceDir, "node_modules"), dependencies...)
 		if len(reqs) == 0 {
 			return "", fmt.Errorf("unable to find required dependencies; please check 'node_modules' folder and make sure the dependencies exist")
@@ -146,7 +152,7 @@ func ArchiveNodeModules(targetDir string, sourceDir string, matcher sauceignore.
 
 	// node_modules exists, has not been ignored and a subset has not been specified, so include the entire folder.
 	// This is the legacy behavior (backwards compatible) of saucectl.
-	if hasMods && !ignored && !wantMods {
+	if !wantMods {
 		log.Warn().Msg("Adding the entire node_modules folder to the payload. " +
 			"This behavior is deprecated, not recommended and will be removed in the future. " +
 			"Please address your dependency needs via https://docs.saucelabs.com/dev/cli/saucectl/usage/use-cases/#set-npm-packages-in-configyml")
@@ -154,4 +160,30 @@ func ArchiveNodeModules(targetDir string, sourceDir string, matcher sauceignore.
 	}
 
 	return ArchiveFiles("node_modules", targetDir, sourceDir, files, matcher)
+}
+
+// ExpandDependencies looks for "package.json" files inside dependencies and
+// expands them into a list of dependencies.
+func ExpandDependencies(sourceDir string, dependencies []string) ([]string, error) {
+	var expanded []string
+	for _, dep := range dependencies {
+		if strings.HasSuffix(dep, "package.json") {
+			p, err := node.PackageFromFile(filepath.Join(sourceDir, dep))
+			if err != nil {
+				return nil, fmt.Errorf("failed to read dependencies from %s: %w", dep, err)
+			}
+
+			for k := range p.Dependencies {
+				expanded = append(expanded, k)
+			}
+			for k := range p.DevDependencies {
+				expanded = append(expanded, k)
+			}
+			continue
+		}
+
+		expanded = append(expanded, dep)
+	}
+
+	return expanded, nil
 }
