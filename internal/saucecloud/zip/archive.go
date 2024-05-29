@@ -10,6 +10,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/archive/zip"
+	"github.com/saucelabs/saucectl/internal/human"
 	"github.com/saucelabs/saucectl/internal/jsonio"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/node"
@@ -92,8 +93,8 @@ func ArchiveFiles(targetFileName string, targetDir string, sourceDir string, fil
 	}
 
 	log.Info().
-		Dur("durationMs", time.Since(start)).
-		Int64("size", f.Size()).
+		Str("duration", time.Since(start).Round(time.Second).String()).
+		Str("size", human.Bytes(f.Size())).
 		Int("fileCount", totalFileCount).
 		Int("longestPathLength", longestPathLength).
 		Msg("Archive created.")
