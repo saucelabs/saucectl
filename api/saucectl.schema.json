@@ -832,7 +832,17 @@
                       "filename": {
                         "description": "Filename for the generated JSON report.",
                         "type": "string",
-                        "default": "saucectl-test-result.xml"
+                        "default": "saucectl-report.json"
+                      }
+                    }
+                  },
+                  "spotlight": {
+                    "type": "object",
+                    "description": "The spotlight reporter prints an overview of failed, or otherwise interesting, jobs.",
+                    "properties": {
+                      "enabled": {
+                        "description": "Toggles the reporter on/off.",
+                        "type": "boolean"
                       }
                     }
                   }
