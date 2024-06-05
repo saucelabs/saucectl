@@ -51,6 +51,7 @@ type MatchingCaps struct {
 
 // SauceOpts represents the Sauce Labs specific capabilities.
 type SauceOpts struct {
+	ArmRequired      bool     `json:"armRequired,omitempty"`
 	TestName         string   `json:"name,omitempty"`
 	Tags             []string `json:"tags,omitempty"`
 	BuildName        string   `json:"build,omitempty"`
@@ -135,7 +136,7 @@ func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 			TunnelIdentifier: opts.Tunnel.ID,
 			TunnelParent:     opts.Tunnel.Parent,
 			ScreenResolution: opts.ScreenResolution,
-			SauceCloudNode:   opts.Experiments["_sauceCloudNode"],
+			ArmRequired:      true,
 			TestName:         opts.Name,
 			BuildName:        opts.Build,
 			Tags:             opts.Tags,
