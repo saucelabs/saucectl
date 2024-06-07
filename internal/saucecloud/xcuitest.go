@@ -185,7 +185,10 @@ func (r *XcuitestRunner) runSuites() bool {
 	go func() {
 		for _, s := range suites {
 			for _, d := range enumerateDevices(s.Devices, s.Simulators) {
-				log.Debug().Str("suite", s.Name).Str("deviceName", d.name).Str("deviceID", d.ID).Str("platformVersion", d.platformVersion).Msg("Starting job")
+				log.Debug().Str("suite", s.Name).
+					Str("deviceName", d.name).Str("deviceID", d.ID).
+					Str("platformVersion", d.platformVersion).
+					Msg("Starting job")
 				r.startJob(jobOpts, s.App, s.TestApp, s.OtherApps, s, d)
 			}
 		}
@@ -235,7 +238,8 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		DevicePrivateOnly: d.privateOnly,
 
 		// VMD specific settings
-		Env: s.Env,
+		Env:         s.Env,
+		ARMRequired: d.armRequired,
 
 		// Overwrite device settings
 		RealDeviceKind: strings.ToLower(xcuitest.IOS),

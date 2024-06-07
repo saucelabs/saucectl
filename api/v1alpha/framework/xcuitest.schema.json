@@ -157,6 +157,10 @@
                   "description": "The set of one or more versions of the device platform on which to run the test suite.",
                   "type": "array",
                   "minItems": 1
+                },
+                "armRequired": {
+                  "description": "If set to true, the simulator will run on an ARM-based Mac. If set to false, the simulator will run on an Intel-based Mac.",
+                  "type": "boolean"
                 }
               },
               "required": [

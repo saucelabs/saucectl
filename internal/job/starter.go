@@ -66,6 +66,10 @@ type StartOptions struct {
 	TimeZone          string                 `json:"timeZone,omitempty"`
 	Visibility        string                 `json:"public,omitempty"`
 	Env               map[string]string      `json:"-"`
+
+	// VMD specific settings.
+
+	ARMRequired bool `json:"armRequired,omitempty"`
 }
 
 // AppSettings represents app settings for real device

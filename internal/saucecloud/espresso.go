@@ -23,6 +23,7 @@ type deviceConfig struct {
 	hasCarrier      bool
 	deviceType      string
 	privateOnly     bool
+	armRequired     bool
 }
 
 // EspressoRunner represents the Sauce Labs cloud implementation for cypress.
@@ -156,6 +157,7 @@ func enumerateDevices(devices []config.Device, virtualDevices []config.VirtualDe
 				platformName:    e.PlatformName,
 				platformVersion: p,
 				orientation:     e.Orientation,
+				armRequired:     e.ARMRequired,
 			})
 		}
 	}

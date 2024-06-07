@@ -64,6 +64,10 @@ type SauceOpts struct {
 	UserAgent        string   `json:"user_agent,omitempty"`
 	TimeZone         string   `json:"timeZone,omitempty"`
 	Visibility       string   `json:"public,omitempty"`
+
+	// VMD specific settings.
+
+	ARMRequired bool `json:"armRequired,omitempty"`
 }
 
 type env struct {
@@ -152,6 +156,7 @@ func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 			MaxDuration: 10800,
 			TimeZone:    opts.TimeZone,
 			Visibility:  opts.Visibility,
+			ARMRequired: opts.ARMRequired,
 		},
 		DeviceName:        opts.DeviceName,
 		DeviceOrientation: opts.DeviceOrientation,
