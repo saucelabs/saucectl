@@ -60,7 +60,6 @@ type SauceOpts struct {
 	TunnelIdentifier string   `json:"tunnelIdentifier,omitempty"`
 	TunnelParent     string   `json:"parentTunnel,omitempty"` // note that 'parentTunnel` is backwards, because that's the way sauce likes it
 	ScreenResolution string   `json:"screen_resolution,omitempty"`
-	SauceCloudNode   string   `json:"_sauceCloudNode,omitempty"`
 	UserAgent        string   `json:"user_agent,omitempty"`
 	TimeZone         string   `json:"timeZone,omitempty"`
 	Visibility       string   `json:"public,omitempty"`
@@ -139,7 +138,6 @@ func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 			TunnelIdentifier: opts.Tunnel.ID,
 			TunnelParent:     opts.Tunnel.Parent,
 			ScreenResolution: opts.ScreenResolution,
-			SauceCloudNode:   opts.Experiments["_sauceCloudNode"],
 			TestName:         opts.Name,
 			BuildName:        opts.Build,
 			Tags:             opts.Tags,
