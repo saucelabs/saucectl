@@ -16,60 +16,85 @@ type StartOptions struct {
 	PrevAttempts []report.Attempt `json:"-"`
 
 	// Timeout is used for local/per-suite timeout.
-	Timeout time.Duration `json:"-"`
+	Timeout   time.Duration `json:"-"`
+	StartTime time.Time     `json:"startTime,omitempty"`
 
-	User           string                 `json:"username"`
-	AccessKey      string                 `json:"accessKey"`
-	App            string                 `json:"app,omitempty"`
-	TestApp        string                 `json:"testApp,omitempty"`
-	Suite          string                 `json:"suite,omitempty"`
-	OtherApps      []string               `json:"otherApps,omitempty"`
-	Framework      string                 `json:"framework,omitempty"`
-	ConfigFilePath string                 `json:"-"`
-	CLIFlags       map[string]interface{} `json:"-"`
+	User      string `json:"username"`
+	AccessKey string `json:"accessKey"`
 
-	// FrameworkVersion contains the targeted version of the framework
-	// It should not be confused with automation tool (like jest/folio).
-	// This is currently supported only for frameworks available on Sauce Cloud:
-	// Currently supported: Cypress.
+	App       string   `json:"app,omitempty"`
+	OtherApps []string `json:"otherApps,omitempty"`
+
+	Suite string `json:"suite,omitempty"`
+
+	Framework string `json:"framework,omitempty"`
+
+	// FrameworkVersion contains the targeted version of the framework.
+	// It should not be confused with RunnerVersion.
 	FrameworkVersion string `json:"frameworkVersion,omitempty"`
 
-	Attempt           int                    `json:"-"`
-	CurrentPassCount  int                    `json:"-"`
-	BrowserName       string                 `json:"browserName,omitempty"`
-	BrowserVersion    string                 `json:"browserVersion,omitempty"`
-	PlatformName      string                 `json:"platformName,omitempty"`
-	PlatformVersion   string                 `json:"platformVersion,omitempty"`
-	DeviceID          string                 `json:"deviceId,omitempty"`
+	PlatformName    string `json:"platformName,omitempty"`
+	PlatformVersion string `json:"platformVersion,omitempty"`
+
+	Tunnel TunnelOptions `json:"tunnel,omitempty"`
+
+	Experiments map[string]string `json:"experiments,omitempty"`
+
+	// Job Metadata.
+
+	Name  string   `json:"name,omitempty"`
+	Build string   `json:"build,omitempty"`
+	Tags  []string `json:"tags,omitempty"`
+
+	// Job Access Control.
+
+	Visibility string `json:"public,omitempty"`
+
+	// Thresholds & Retries.
+
+	Attempt          int `json:"-"`
+	CurrentPassCount int `json:"-"`
+	PassThreshold    int `json:"-"`
+
+	Retries    int        `json:"-"`
+	SmartRetry SmartRetry `json:"-"`
+
+	// Cypress & Playwright & TestCafe only.
+
+	BrowserName      string `json:"browserName,omitempty"`
+	BrowserVersion   string `json:"browserVersion,omitempty"`
+	TimeZone         string `json:"timeZone,omitempty"`
+	RunnerVersion    string `json:"runnerVersion,omitempty"`
+	ScreenResolution string `json:"screenResolution,omitempty"`
+
+	// RDC & VMD only.
+
+	TestApp           string                 `json:"testApp,omitempty"`
 	DeviceName        string                 `json:"deviceName,omitempty"`
 	DeviceOrientation string                 `json:"deviceOrientation"`
-	DevicePrivateOnly bool                   `json:"devicePrivateOnly,omitempty"`
-	DeviceType        string                 `json:"deviceType,omitempty"`
-	DeviceHasCarrier  bool                   `json:"deviceHasCarrier,omitempty"`
-	RealDevice        bool                   `json:"realDevice,omitempty"`
-	Name              string                 `json:"name,omitempty"`
-	Build             string                 `json:"build,omitempty"`
-	Tags              []string               `json:"tags,omitempty"`
-	Tunnel            TunnelOptions          `json:"tunnel,omitempty"`
-	ScreenResolution  string                 `json:"screenResolution,omitempty"`
-	Retries           int                    `json:"-"`
-	PassThreshold     int                    `json:"-"`
-	SmartRetry        SmartRetry             `json:"-"`
-	RunnerVersion     string                 `json:"runnerVersion,omitempty"`
-	Experiments       map[string]string      `json:"experiments,omitempty"`
 	TestOptions       map[string]interface{} `json:"testOptions,omitempty"`
-	TestsToRun        []string               `json:"testsToRun,omitempty"`
-	TestsToSkip       []string               `json:"testsToSkip,omitempty"`
-	StartTime         time.Time              `json:"startTime,omitempty"`
-	AppSettings       AppSettings            `json:"appSettings,omitempty"`
-	RealDeviceKind    string                 `json:"realDeviceKind,omitempty"`
-	TimeZone          string                 `json:"timeZone,omitempty"`
-	Visibility        string                 `json:"public,omitempty"`
-	Env               map[string]string      `json:"-"`
+
+	// RDC only.
+
+	AppSettings       AppSettings `json:"appSettings,omitempty"`
+	DeviceID          string      `json:"deviceId,omitempty"`
+	DeviceHasCarrier  bool        `json:"deviceHasCarrier,omitempty"`
+	DevicePrivateOnly bool        `json:"devicePrivateOnly,omitempty"`
+	DeviceType        string      `json:"deviceType,omitempty"`
+	RealDevice        bool        `json:"realDevice,omitempty"`
+	TestsToRun        []string    `json:"testsToRun,omitempty"`
+	TestsToSkip       []string    `json:"testsToSkip,omitempty"`
+	RealDeviceKind    string      `json:"realDeviceKind,omitempty"`
 
 	// VMD specific settings.
 
-	ARMRequired bool `json:"armRequired,omitempty"`
+	ARMRequired bool              `json:"armRequired,omitempty"`
+	Env         map[string]string `json:"-"`
+
+	// CLI.
+
+	ConfigFilePath string                 `json:"-"`
+	CLIFlags       map[string]interface{} `json:"-"`
 }
 
 // AppSettings represents app settings for real device
