@@ -27,11 +27,10 @@ type StartOptions struct {
 
 	Suite string `json:"suite,omitempty"`
 
-	Framework string `json:"framework,omitempty"`
-
 	// FrameworkVersion contains the targeted version of the framework.
 	// It should not be confused with RunnerVersion.
 	FrameworkVersion string `json:"frameworkVersion,omitempty"`
+	Framework        string `json:"framework,omitempty"`
 
 	PlatformName    string `json:"platformName,omitempty"`
 	PlatformVersion string `json:"platformVersion,omitempty"`
