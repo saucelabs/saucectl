@@ -18,7 +18,7 @@ type Simulator struct {
 }
 
 // String returns a string representation of the simulator.
-func (e Simulator) String() string {
+func (e *Simulator) String() string {
 	if !e.Changed {
 		return ""
 	}
@@ -67,6 +67,6 @@ func (e *Simulator) Set(s string) error {
 }
 
 // Type returns the value type.
-func (e Simulator) Type() string {
+func (e *Simulator) Type() string {
 	return "simulator"
 }
