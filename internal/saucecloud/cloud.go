@@ -22,7 +22,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/apps"
 	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/hashio"
 	"github.com/saucelabs/saucectl/internal/iam"
@@ -284,11 +283,6 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 		return job.Job{}, r.interrupted, fmt.Errorf("failed to retrieve job status for suite %s: %s", opts.DisplayName, err.Error())
 	}
 
-	// Enrich RDC data
-	if opts.RealDevice {
-		enrichRDCReport(&j, opts)
-	}
-
 	// Check timeout
 	if j.TimedOut {
 		log.Error().
@@ -310,21 +304,6 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	}
 
 	return j, false, nil
-}
-
-// enrichRDCReport added the fields from the opts as the API does not provides it.
-func enrichRDCReport(j *job.Job, opts job.StartOptions) {
-	switch opts.Framework {
-	case "espresso":
-		j.OS = espresso.Android
-	}
-
-	if opts.DeviceID != "" {
-		j.DeviceName = opts.DeviceID
-	} else {
-		j.DeviceName = opts.DeviceName
-		j.OSVersion = opts.PlatformVersion
-	}
 }
 
 func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- result) {
