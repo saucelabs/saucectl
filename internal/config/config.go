@@ -71,6 +71,7 @@ type VirtualDevice struct {
 	PlatformName     string   `yaml:"platformName,omitempty" json:"platformName"`
 	Orientation      string   `yaml:"orientation,omitempty" json:"orientation,omitempty"`
 	PlatformVersions []string `yaml:"platformVersions,omitempty" json:"platformVersions,omitempty"`
+	ARMRequired      bool     `yaml:"armRequired,omitempty" json:"armRequired,omitempty"`
 }
 
 const (

@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/saucelabs/saucectl/internal/config"
@@ -16,8 +17,8 @@ type Simulator struct {
 	Changed bool
 }
 
-// String returns a string represenation of the simulator.
-func (e Simulator) String() string {
+// String returns a string representation of the simulator.
+func (e *Simulator) String() string {
 	if !e.Changed {
 		return ""
 	}
@@ -54,6 +55,11 @@ func (e *Simulator) Set(s string) error {
 			e.Orientation = val
 		case "platformVersion":
 			e.PlatformVersions = []string{val}
+		case "armRequired":
+			e.ARMRequired, err = strconv.ParseBool(val)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -61,6 +67,6 @@ func (e *Simulator) Set(s string) error {
 }
 
 // Type returns the value type.
-func (e Simulator) Type() string {
+func (e *Simulator) Type() string {
 	return "simulator"
 }
