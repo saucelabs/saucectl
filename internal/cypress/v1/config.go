@@ -285,6 +285,7 @@ func shardSuites(rootDir string, suites []Suite, ccy int, sauceignoreFile string
 			continue
 		}
 		files, err := fpath.FindFiles(rootDir, s.Config.SpecPattern, fpath.FindByShellPattern)
+		fmt.Println("files: ", files)
 		if err != nil {
 			return shardedSuites, err
 		}
