@@ -11,11 +11,12 @@ require (
 	github.com/briandowns/spinner v1.11.1
 	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/dustin/go-humanize v1.0.0
-	github.com/fatih/color v1.13.0
+	github.com/fatih/color v1.16.0
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/hinshun/vt10x v0.0.0-20180616224451-1954e6464174
 	github.com/jarcoal/httpmock v1.0.6
 	github.com/jedib0t/go-pretty/v6 v6.2.1
+	github.com/moby/moby v26.1.3+incompatible
 	github.com/rs/zerolog v1.18.0
 	github.com/ryanuber/go-glob v1.0.0
 	github.com/santhosh-tekuri/jsonschema/v5 v5.1.1
@@ -44,7 +45,6 @@ require (
 	github.com/google/uuid v1.1.2 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
-	github.com/moby/moby v26.1.3+incompatible // indirect
 	github.com/moby/term v0.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -61,7 +61,7 @@ require (
 )
 
 require (
-	github.com/hashicorp/go-retryablehttp v0.7.2
+	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/segmentio/backo-go v0.0.0-20200129164019-23eae7c10bd3 // indirect
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c
 )
@@ -82,7 +82,7 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kr/pty v1.1.5 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
-	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
