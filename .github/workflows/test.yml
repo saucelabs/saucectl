@@ -121,4 +121,4 @@ jobs:
 
       - name: Saucectl RUN - Config Driven
         run: |
-          ./saucectl.exe run -c .sauce/cypress-cucumber.yml --timeout 10m
+          ./saucectl run -c .sauce/cypress-cucumber.yml --timeout 10m
