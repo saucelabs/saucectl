@@ -2,6 +2,7 @@ apiVersion: v1
 kind: cypress
 # https://docs.saucelabs.com/web-apps/automated-testing/cypress/yaml/v1/
 sauce:
+  sauceignore: .sauceignore
   region: us-west-1
   concurrency: 2 # Controls how many suites are executed at the same time.
   metadata:

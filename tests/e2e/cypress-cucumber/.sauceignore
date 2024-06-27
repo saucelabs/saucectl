@@ -1,0 +1,35 @@
+# Ignore all files by default.
+
+/*
+
+ 
+
+# Re-include files we selectively want as part of the payload by prefixing the lines with '!'.
+
+!/.sauce
+
+!/cypress
+
+!cypress.config.js
+
+!package.json
+
+!jsconfig.json
+
+!eslintrc.json
+
+ 
+
+# Since the whole '/cypress' folder is now included, this would also include any
+
+# subdirectories that potentially contain auto-generated test artifacts from
+
+# the local dev environment.
+
+# It'd be wasteful to include them in the payload, so let's ignore those subfolders.
+
+/cypress/videos/
+
+/cypress/results/
+
+/cypress/screenshots/
