@@ -108,7 +108,7 @@ jobs:
 
   cypress:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Checkout Code
@@ -121,5 +121,4 @@ jobs:
 
       - name: Saucectl RUN - Config Driven
         run: |
-          chmod +x saucectl
-          ./saucectl run -c .sauce/cypress-cucumber.yml --timeout 10m
+          ./saucectl.exe run -c .sauce/cypress-cucumber.yml --timeout 10m
