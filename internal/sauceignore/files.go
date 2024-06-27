@@ -21,7 +21,7 @@ func ExcludeSauceIgnorePatterns(files []string, sauceignoreFile string) []string
 	var selectedFiles []string
 	for _, filename := range files {
 		if !matcher.Match(strings.Split(filename, string(filepath.Separator)), false) {
-			fmt.Println(fmt.Sprintf("file %s should not be ignored", strings.Split(filename, string(filepath.Separator))))
+			fmt.Printf("file %s should not be ignored \n", strings.Split(filename, string(filepath.Separator)))
 			selectedFiles = append(selectedFiles, filename)
 		}
 	}
