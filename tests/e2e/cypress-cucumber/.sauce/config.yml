@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: cypress
+# https://docs.saucelabs.com/web-apps/automated-testing/cypress/yaml/v1/
+sauce:
+  region: us-west-1
+  concurrency: 2 # Controls how many suites are executed at the same time.
+  metadata:
+    tags:
+      - cucumber
+      - example repo
+    # build: Github Run $GITHUB_RUN_ID
+cypress:
+  version: 13.7.3 # See https://docs.saucelabs.com/web-apps/automated-testing/cypress/#supported-testing-platforms for a list of supported versions.
+  configFile: "cypress.config.js" # We determine related files based on the location of the config file.
+# Controls what files are available in the context of a test run (unless explicitly excluded by .sauceignore).
+rootDir: ./
+suites:
+  - name: "Chrome - Windows"
+    browser: "chrome"
+    platformName: "Windows 11"
+    shard: spec
+    config:
+      specPattern: ["cypress/e2e/**/*.feature"] # Cypress native glob support.
+
+# https://docs.saucelabs.com/web-apps/automated-testing/cypress/advanced/#including-node-dependencies
+# Any additional dependencies need to be configured here so that they are packaged on demand.
+# These dependencies are picked up from the node_modules folder, so they need to be already installed locally.
+# Select only what you truly need to get your tests running, as installing dependencies takes time.
+npm:
+  packages:
+    "@badeball/cypress-cucumber-preprocessor": "^17.2.0"
+    "@shelex/cypress-allure-plugin": "^2.28.5" # allure-plugin dependency
+    "@bahmutov/cypress-esbuild-preprocessor": "^2.2.0"
+    "esbuild": "0.17.18"
+
+reporters:
+  spotlight: # Prints an overview of failed or otherwise interesting jobs.
+    enabled: true

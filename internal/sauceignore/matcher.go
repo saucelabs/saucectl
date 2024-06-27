@@ -2,6 +2,7 @@ package sauceignore
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strings"
 
@@ -54,6 +55,7 @@ func NewPattern(p string) Pattern {
 func convPtrnsToGitignorePtrns(pp []Pattern) []gitignore.Pattern {
 	res := make([]gitignore.Pattern, len(pp))
 	for i := 0; i < len(pp); i++ {
+		fmt.Println("pattern: ", pp[i].P)
 		res[i] = gitignore.ParsePattern(pp[i].P, nil)
 	}
 
