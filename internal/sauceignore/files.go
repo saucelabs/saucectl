@@ -1,6 +1,7 @@
 package sauceignore
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -10,6 +11,7 @@ import (
 // ExcludeSauceIgnorePatterns excludes any match with sauceignore content.
 // If loading and parsing the sauceignore content fails, no filtering is applied.
 func ExcludeSauceIgnorePatterns(files []string, sauceignoreFile string) []string {
+	fmt.Println("files: ", files)
 	matcher, err := NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
 		log.Warn().Err(err).Msgf("An error occurred when filtering specs with %s. No filter will be applied", sauceignoreFile)
@@ -19,6 +21,7 @@ func ExcludeSauceIgnorePatterns(files []string, sauceignoreFile string) []string
 	var selectedFiles []string
 	for _, filename := range files {
 		if !matcher.Match(strings.Split(filename, string(filepath.Separator)), false) {
+			fmt.Println(fmt.Sprintf("file %s should not be ignored", strings.Split(filename, string(filepath.Separator))))
 			selectedFiles = append(selectedFiles, filename)
 		}
 	}
