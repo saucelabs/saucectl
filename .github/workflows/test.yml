@@ -93,9 +93,9 @@ jobs:
           GOOS=windows GOARCH=amd64 go build cmd/saucectl/saucectl.go
 
       - name: Check GoReleaser Config
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
-          version: latest
+          version: '~> v2'
           args: check
 
       - name: Upload Binary
