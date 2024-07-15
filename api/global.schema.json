@@ -26,21 +26,6 @@
             "const": "cypress"
           },
           "apiVersion": {
-            "const": "v1alpha"
-          }
-        }
-      },
-      "then": {
-        "$ref": "v1alpha/framework/cypress.schema.json"
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "kind": {
-            "const": "cypress"
-          },
-          "apiVersion": {
             "const": "v1"
           }
         }

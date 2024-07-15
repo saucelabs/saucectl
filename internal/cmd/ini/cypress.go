@@ -5,15 +5,12 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
-	"strconv"
-	"strings"
 
 	"github.com/rs/zerolog/log"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
 	v1 "github.com/saucelabs/saucectl/internal/cypress/v1"
-	"github.com/saucelabs/saucectl/internal/cypress/v1alpha"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
@@ -59,47 +56,6 @@ func CypressCmd() *cobra.Command {
 }
 
 func configureCypress(cfg *initConfig) interface{} {
-	versions := strings.Split(cfg.frameworkVersion, ".")
-	version, err := strconv.Atoi(versions[0])
-	if err != nil {
-		log.Err(err).Msg("failed to parse framework version")
-	}
-	if version < 10 {
-		return v1alpha.Project{
-			TypeDef: config.TypeDef{
-				APIVersion: v1alpha.APIVersion,
-				Kind:       cypress.Kind,
-			},
-			Sauce: config.SauceConfig{
-				Region:      cfg.region,
-				Sauceignore: ".sauceignore",
-				Concurrency: cfg.concurrency,
-			},
-			RootDir: ".",
-			Cypress: v1alpha.Cypress{
-				Version:    cfg.frameworkVersion,
-				ConfigFile: cfg.cypressConfigFile,
-			},
-			Suites: []v1alpha.Suite{
-				{
-					Name:         fmt.Sprintf("cypress - %s - %s", cfg.platformName, cfg.browserName),
-					PlatformName: cfg.platformName,
-					Browser:      cfg.browserName,
-					Config: v1alpha.SuiteConfig{
-						TestFiles: []string{"**/*.*"},
-					},
-				},
-			},
-			Artifacts: config.Artifacts{
-				Download: config.ArtifactDownload{
-					When:      cfg.artifactWhen,
-					Directory: "./artifacts",
-					Match:     []string{"*"},
-				},
-			},
-		}
-	}
-
 	return v1.Project{
 		TypeDef: config.TypeDef{
 			APIVersion: v1.APIVersion,
