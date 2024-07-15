@@ -12,13 +12,17 @@ import (
 func ExcludeSauceIgnorePatterns(files []string, sauceignoreFile string) []string {
 	matcher, err := NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
-		log.Warn().Err(err).Msgf("An error occurred when filtering specs with %s. No filter will be applied", sauceignoreFile)
+		log.Warn().Err(err).Msgf(
+			"An error occurred when filtering specs with %s. No filter will be applied",
+			sauceignoreFile,
+		)
 		return files
 	}
 
 	var selectedFiles []string
 	for _, filename := range files {
-		if !matcher.Match(strings.Split(filename, string(filepath.Separator)), false) {
+		normalized := filepath.ToSlash(filename)
+		if !matcher.Match(strings.Split(normalized, "/"), false) {
 			selectedFiles = append(selectedFiles, filename)
 		}
 	}
