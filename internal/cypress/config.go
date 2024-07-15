@@ -1,10 +1,11 @@
 package cypress
 
 import (
+	"errors"
+
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress/suite"
 	v1 "github.com/saucelabs/saucectl/internal/cypress/v1"
-	"github.com/saucelabs/saucectl/internal/cypress/v1alpha"
 	"github.com/saucelabs/saucectl/internal/saucereport"
 )
 
@@ -67,8 +68,8 @@ func FromFile(cfgPath string) (Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	if version == v1alpha.APIVersion {
-		return v1alpha.FromFile(cfgPath)
+	if version == "v1alpha" {
+		return nil, errors.New("cypress v1alpha is no longer supported")
 	}
 	return v1.FromFile(cfgPath)
 }
