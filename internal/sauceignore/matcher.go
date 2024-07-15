@@ -51,15 +51,6 @@ func NewPattern(p string) Pattern {
 	return Pattern{P: p}
 }
 
-func convPtrnsToGitignorePtrns(pp []Pattern) []gitignore.Pattern {
-	res := make([]gitignore.Pattern, len(pp))
-	for i := 0; i < len(pp); i++ {
-		res[i] = gitignore.ParsePattern(pp[i].P, nil)
-	}
-
-	return res
-}
-
 // Matcher defines matcher for sauceignore patterns.
 type Matcher interface {
 	Match(path []string, isDir bool) bool
@@ -75,9 +66,13 @@ func (m *matcher) Match(path []string, isDir bool) bool {
 }
 
 // NewMatcher constructs a new matcher.
-func NewMatcher(ps []Pattern) Matcher {
-	gps := convPtrnsToGitignorePtrns(ps)
-	return &matcher{matcher: gitignore.NewMatcher(gps)}
+func NewMatcher(patterns []Pattern) Matcher {
+	pp := make([]gitignore.Pattern, len(patterns))
+	for i, p := range patterns {
+		pp[i] = gitignore.ParsePattern(p.P, nil)
+	}
+
+	return &matcher{matcher: gitignore.NewMatcher(pp)}
 }
 
 // NewMatcherFromFile constructs a new matcher from file.
