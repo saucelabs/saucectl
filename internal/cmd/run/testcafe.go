@@ -113,7 +113,7 @@ func NewTestcafeCmd() *cobra.Command {
 	sc.StringSlice("excludedTestFiles", "suite::excludedTestFiles", []string{}, "Exclude test files to skip the tests, using glob pattern")
 	sc.String("timeZone", "suite::timeZone", "", "Specifies timeZone for this test")
 	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'.")
-	sc.Bool("esm", "suite::esm", false, "Import modules that do not support CommonJS")
+	sc.Bool("esm", "suite::esm", false, "Enables importing ECMAScript Modules (ESM) that don't support CommonJS.")
 
 	// NPM
 	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")
