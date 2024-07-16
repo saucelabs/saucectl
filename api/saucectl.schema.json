@@ -1913,6 +1913,10 @@
                 },
                 "smartRetry": {
                   "$ref": "#/allOf/1/then/properties/suites/items/properties/smartRetry"
+                },
+                "esm": {
+                  "description": "Enables importing ECMAScript Modules (ESM) that don't support CommonJS.",
+                  "type": "boolean"
                 }
               },
               "required": [
