@@ -117,6 +117,7 @@ type Suite struct {
 	TimeZone             string                 `yaml:"timeZone,omitempty" json:"timeZone"`
 	PassThreshold        int                    `yaml:"passThreshold,omitempty" json:"-"`
 	SmartRetry           config.SmartRetry      `yaml:"smartRetry,omitempty" json:"-"`
+	ESM                  bool                   `yaml:"esm,omitempty" json:"esm"`
 	// TypeScript compiling options
 	CompilerOptions CompilerOptions `yaml:"compilerOptions,omitempty" json:"compilerOptions"`
 	// Deprecated. Reserved for future use for actual devices.

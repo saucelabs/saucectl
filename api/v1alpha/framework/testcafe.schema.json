@@ -348,6 +348,10 @@
           },
           "smartRetry": {
             "$ref": "../subschema/common.schema.json#/definitions/smartRetry"
+          },
+          "esm": {
+            "description": "Imports modules that do not support CommonJS",
+            "type": "boolean"
           }
         },
         "required": [
