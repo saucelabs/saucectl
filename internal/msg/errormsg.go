@@ -86,8 +86,6 @@ const (
 	InvalidVisibility = "'%s' is not a valid visibility value. Must be one of [%s]"
 	// InvalidLaunchingOption indicates the launching option is invalid
 	InvalidLaunchingOption = "illegal launching option '%s', must be %s"
-	// NoTunnelSupport indicates lack of tunnel support for the specified region.
-	NoTunnelSupport = "tunnels are currently not supported in your specified region"
 	// NoEmulatorSupport indicates lack of emulator support for the specified region.
 	NoEmulatorSupport = "emulators are currently not supported in your specified region"
 	// NoFrameworkSupport indicates lack of framework support for the specified region.
