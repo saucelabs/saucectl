@@ -136,10 +136,6 @@ func Validate(p Project) error {
 		return errors.New(msg.MissingRegion)
 	}
 
-	if regio == region.USEast4 && p.Sauce.Tunnel.Name != "" {
-		return errors.New(msg.NoTunnelSupport)
-	}
-
 	if ok := config.ValidateVisibility(p.Sauce.Visibility); !ok {
 		return fmt.Errorf(msg.InvalidVisibility, p.Sauce.Visibility, strings.Join(config.ValidVisibilityValues, ","))
 	}
