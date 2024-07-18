@@ -223,6 +223,10 @@ func (p *Project) Validate() error {
 		return fmt.Errorf(msg.InvalidLaunchingOption, p.Sauce.LaunchOrder, string(config.LaunchOrderFailRate))
 	}
 
+	if len(p.Cypress.Reporters) > 0 {
+		log.Warn().Msg("cypress.reporters has been deprecated. Migrate your reporting configuration to your cypress config file.")
+	}
+
 	// Validate suites.
 	if len(p.Suites) == 0 {
 		return errors.New(msg.EmptySuite)
