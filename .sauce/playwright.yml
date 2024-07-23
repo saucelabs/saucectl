@@ -11,7 +11,7 @@ defaults:
   timeout: 5m
 rootDir: tests/e2e/playwright/
 playwright:
-  version: 1.45.0
+  version: 1.45.2
 suites:
   - name: "chromium test in sauce"
     platformName: "Windows 11"
