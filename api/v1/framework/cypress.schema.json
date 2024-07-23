@@ -63,6 +63,7 @@
           "$ref": "../subschema/common.schema.json#/definitions/version",
           "enum": [
             "package.json",
+            "13.13.1",
             "13.12.0",
             "13.10.0",
             "13.7.3",
