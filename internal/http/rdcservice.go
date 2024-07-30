@@ -178,19 +178,14 @@ func (c *RDCService) StopJob(ctx context.Context, id string, realDevice bool) (j
 		return job.Job{}, errors.New("the RDC client does not support virtual device jobs")
 	}
 
-	req, err := NewRequestWithContext(ctx, http.MethodPut,
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodPut,
 		fmt.Sprintf("%s/v1/rdc/jobs/%s/stop", c.URL, id), nil)
 	if err != nil {
 		return job.Job{}, err
 	}
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
-	r, err := retryablehttp.FromRequest(req)
-	if err != nil {
-		return job.Job{}, err
-	}
-
-	resp, err := c.Client.Do(r)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return job.Job{}, err
 	}
@@ -220,19 +215,14 @@ func (c *RDCService) ReadJob(ctx context.Context, id string, realDevice bool) (j
 		return job.Job{}, errors.New("the RDC client does not support virtual device jobs")
 	}
 
-	req, err := NewRequestWithContext(ctx, http.MethodGet,
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/v1/rdc/jobs/%s", c.URL, id), nil)
 	if err != nil {
 		return job.Job{}, err
 	}
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
-	r, err := retryablehttp.FromRequest(req)
-	if err != nil {
-		return job.Job{}, err
-	}
-
-	resp, err := c.Client.Do(r)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return job.Job{}, err
 	}
@@ -297,19 +287,14 @@ func (c *RDCService) GetJobAssetFileNames(ctx context.Context, jobID string, rea
 		return nil, errors.New("the RDC client does not support virtual device jobs")
 	}
 
-	req, err := NewRequestWithContext(ctx, http.MethodGet,
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/v1/rdc/jobs/%s", c.URL, jobID), nil)
 	if err != nil {
 		return []string{}, err
 	}
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
-	r, err := retryablehttp.FromRequest(req)
-	if err != nil {
-		return []string{}, err
-	}
-
-	resp, err := c.Client.Do(r)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return []string{}, err
 	}
@@ -368,7 +353,7 @@ func (c *RDCService) GetJobAssetFileContent(ctx context.Context, jobID, fileName
 		acceptHeader = "text/plain"
 	}
 
-	req, err := NewRequestWithContext(ctx, http.MethodGet,
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/v1/rdc/jobs/%s/%s", c.URL, jobID, URIFileName), nil)
 	if err != nil {
 		return nil, err
@@ -378,12 +363,7 @@ func (c *RDCService) GetJobAssetFileContent(ctx context.Context, jobID, fileName
 	if acceptHeader != "" {
 		req.Header.Set("Accept", acceptHeader)
 	}
-
-	rreq, err := retryablehttp.FromRequest(req)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := c.Client.Do(rreq)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -445,7 +425,7 @@ func (c *RDCService) downloadArtifact(targetDir, jobID, fileName string, realDev
 
 // GetDevices returns the list of available devices using a specific operating system.
 func (c *RDCService) GetDevices(ctx context.Context, OS string) ([]devices.Device, error) {
-	req, err := NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v1/rdc/devices/filtered", c.URL), nil)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v1/rdc/devices/filtered", c.URL), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -455,12 +435,7 @@ func (c *RDCService) GetDevices(ctx context.Context, OS string) ([]devices.Devic
 	req.URL.RawQuery = q.Encode()
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
-	r, err := retryablehttp.FromRequest(req)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := c.Client.Do(r)
+	res, err := c.Client.Do(req)
 	if err != nil {
 		return []devices.Device{}, err
 	}
