@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -17,7 +18,13 @@ func NewRetryableClient(timeout time.Duration) *retryablehttp.Client {
 		RetryWaitMin: 1 * time.Second,
 		RetryWaitMax: 30 * time.Second,
 		RetryMax:     3,
-		CheckRetry:   retryablehttp.DefaultRetryPolicy,
+		CheckRetry: func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+			ok, e := retryablehttp.DefaultRetryPolicy(ctx, resp, err)
+			if !ok && resp.StatusCode == http.StatusNotFound {
+				return true, nil
+			}
+			return ok, e
+		},
 		Backoff:      retryablehttp.DefaultBackoff,
 		ErrorHandler: retryablehttp.PassthroughErrorHandler,
 	}
