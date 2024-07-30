@@ -20,6 +20,9 @@ func NewRetryableClient(timeout time.Duration) *retryablehttp.Client {
 		RetryMax:     3,
 		CheckRetry: func(ctx context.Context, resp *http.Response, err error) (bool, error) {
 			ok, e := retryablehttp.DefaultRetryPolicy(ctx, resp, err)
+			if e != nil {
+				return ok, e
+			}
 			if !ok && resp.StatusCode == http.StatusNotFound {
 				return true, nil
 			}
