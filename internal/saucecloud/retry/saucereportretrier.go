@@ -25,7 +25,9 @@ type SauceReportRetrier struct {
 
 func (r *SauceReportRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
 	if opt.SmartRetry.FailedOnly {
-		r.retryFailedTests(&opt, previous)
+		if ok := r.retryFailedTests(&opt, previous); !ok {
+			log.Info().Msg(msg.SkippingSmartRetries)
+		}
 	}
 
 	log.Info().Str("suite", opt.DisplayName).
@@ -34,44 +36,38 @@ func (r *SauceReportRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.Star
 	jobOpts <- opt
 }
 
-func (r *SauceReportRetrier) retryFailedTests(opt *job.StartOptions, previous job.Job) {
+func (r *SauceReportRetrier) retryFailedTests(opt *job.StartOptions, previous job.Job) bool {
 	if previous.Status == job.StateError {
 		log.Warn().Msg(msg.UnreliableReport)
-		log.Info().Msg(msg.SkippingSmartRetries)
-		return
+		return false
 	}
 
 	report, err := r.getSauceReport(previous)
 	if err != nil {
 		log.Err(err).Msgf(msg.UnableToFetchFile, saucereport.SauceReportFileName)
-		log.Info().Msg(msg.SkippingSmartRetries)
-		return
+		return false
 	}
 	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
 	if err != nil {
 		log.Err(err).Msg(msg.UnableToCreateRunnerConfig)
-		log.Info().Msg(msg.SkippingSmartRetries)
-		return
+		return false
 	}
 
 	if err := r.Project.FilterFailedTests(opt.Name, report); err != nil {
 		log.Err(err).Msg(msg.UnableToFilterFailedTests)
-		log.Info().Msg(msg.SkippingSmartRetries)
-		return
+		return false
 	}
 
 	runnerFile, err := zip.ArchiveRunnerConfig(r.Project, tempDir)
 	if err != nil {
 		log.Err(err).Msg(msg.UnableToArchiveRunnerConfig)
-		log.Info().Msg(msg.SkippingSmartRetries)
-		return
+		return false
 	}
 
 	fileURL, err := r.uploadConfig(runnerFile)
 	if err != nil {
 		log.Err(err).Msgf(msg.UnableToUploadConfig, runnerFile)
-		log.Info().Msg(msg.SkippingSmartRetries)
-		return
+		return false
 	}
 
 	if len(opt.OtherApps) == 0 {
@@ -79,6 +75,8 @@ func (r *SauceReportRetrier) retryFailedTests(opt *job.StartOptions, previous jo
 	} else {
 		opt.OtherApps[0] = fmt.Sprintf("storage:%s", fileURL)
 	}
+
+	return true
 }
 
 func (r *SauceReportRetrier) uploadConfig(filename string) (string, error) {
