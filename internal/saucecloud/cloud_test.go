@@ -491,10 +491,10 @@ func TestCloudRunner_loadSauceTestReport(t *testing.T) {
 			},
 			fields: fields{
 				GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
-					return []string{saucereport.SauceReportFileName}, nil
+					return []string{saucereport.FileName}, nil
 				},
 				GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
-					if fileName == saucereport.SauceReportFileName {
+					if fileName == saucereport.FileName {
 						return []byte(`{"status":"failed","attachments":[],"suites":[{"name":"cypress/e2e/examples/actions.cy.js","status":"failed","metadata":{},"suites":[{"name":"Actions","status":"failed","metadata":{},"suites":[],"attachments":[],"tests":[{"name":".type() - type into a DOM element","status":"passed","startTime":"2022-12-22T10:10:11.083Z","duration":1802,"metadata":{},"output":null,"attachments":[],"code":{"lines":["() => {","    // https://on.cypress.io/type","    cy.get('.action-email').type('fake@email.com').should('have.value', 'fake@email.com');","  }"]},"videoTimestamp":26.083},{"name":".type() - type into a wrong DOM element","status":"failed","startTime":"2022-12-22T10:10:12.907Z","duration":5010,"metadata":{},"output":"AssertionError: Timed out retrying after 4000ms: expected '<input#email1.form-control.action-email>' to have value 'wrongy@email.com', but the value was 'fake@email.com'\n\n  11 |     // https://on.cypress.io/type\n  12 |     cy.get('.action-email')\n> 13 |         .type('fake@email.com').should('have.value', 'wrongy@email.com')\n     |                                 ^\n  14 |   })\n  15 | })\n  16 | ","attachments":[{"name":"screenshot","path":"Actions -- .type() - type into a wrong DOM element (failed).png","contentType":"image/png"}],"code":{"lines":["() => {","    // https://on.cypress.io/type","    cy.get('.action-email').type('fake@email.com').should('have.value', 'wrongy@email.com');","  }"]},"videoTimestamp":27.907}]}],"attachments":[],"tests":[]}],"metadata":{}}`), nil
 					}
 					return []byte{}, errors.New("not-found")

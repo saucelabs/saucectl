@@ -44,7 +44,7 @@ func (r *SauceReportRetrier) retryFailedTests(opt *job.StartOptions, previous jo
 
 	report, err := r.getSauceReport(previous)
 	if err != nil {
-		log.Err(err).Msgf(msg.UnableToFetchFile, saucereport.SauceReportFileName)
+		log.Err(err).Msgf(msg.UnableToFetchFile, saucereport.FileName)
 		return false
 	}
 
@@ -104,7 +104,7 @@ func (r *SauceReportRetrier) uploadConfig(filename string) (string, error) {
 }
 
 func (r *SauceReportRetrier) getSauceReport(job job.Job) (saucereport.SauceReport, error) {
-	content, err := r.VDCReader.GetJobAssetFileContent(context.Background(), job.ID, saucereport.SauceReportFileName, false)
+	content, err := r.VDCReader.GetJobAssetFileContent(context.Background(), job.ID, saucereport.FileName, false)
 	if err != nil {
 		return saucereport.SauceReport{}, err
 	}
