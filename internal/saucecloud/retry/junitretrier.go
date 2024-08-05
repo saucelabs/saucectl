@@ -19,58 +19,56 @@ type JunitRetrier struct {
 }
 
 func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
+	var tests []string
+
 	if opt.SmartRetry.FailedOnly {
 		jobReader := b.VDCReader
 		if previous.IsRDC {
 			jobReader = b.RDCReader
 		}
 
-		b.retryFailedTests(jobReader, jobOpts, opt, previous)
-		return
+		tests = b.retryFailedTests(jobReader, &opt, previous)
 	}
 
-	log.Info().Str("suite", opt.DisplayName).
-		Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1)).
-		Msg("Retrying suite.")
+	lg := log.Info().
+		Str("suite", opt.DisplayName).
+		Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1))
+
+	if len(tests) > 0 {
+		lg.Msgf(msg.RetryWithTests, tests)
+	} else {
+		lg.Msg("Retrying suite.")
+	}
+
 	jobOpts <- opt
 }
 
-func (b *JunitRetrier) retryFailedTests(reader job.Reader, jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
+func (b *JunitRetrier) retryFailedTests(reader job.Reader, opt *job.StartOptions, previous job.Job) []string {
 	if previous.Status == job.StateError {
 		log.Warn().Msg(msg.UnreliableReport)
-		log.Info().Msg(msg.SkippingSmartRetries)
-		jobOpts <- opt
-		return
+		return nil
 	}
 
 	content, err := reader.GetJobAssetFileContent(context.Background(), previous.ID, junit.FileName, previous.IsRDC)
 	if err != nil {
 		log.Err(err).Msgf(msg.UnableToFetchFile, junit.FileName)
-		log.Info().Msg(msg.SkippingSmartRetries)
-		jobOpts <- opt
-		return
+		return nil
 	}
+
 	suites, err := junit.Parse(content)
 	if err != nil {
 		log.Err(err).Msgf(msg.UnableToUnmarshallFile, junit.FileName)
-		log.Info().Msg(msg.SkippingSmartRetries)
-		jobOpts <- opt
-		return
+		return nil
 	}
 
-	setClassesToRetry(&opt, suites.TestCases())
-	jobOpts <- opt
+	return setClassesToRetry(opt, suites.TestCases())
 }
 
 // setClassesToRetry sets the correct filtering flag when retrying.
 // RDC API does not provide different endpoints (or identical values) for Espresso
 // and XCUITest. Thus, we need set the classes at the correct position depending
 // on the framework that is being executed.
-func setClassesToRetry(opt *job.StartOptions, testcases []junit.TestCase) {
-	lg := log.Info().
-		Str("suite", opt.DisplayName).
-		Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1))
-
+func setClassesToRetry(opt *job.StartOptions, testcases []junit.TestCase) []string {
 	if opt.TestOptions == nil {
 		opt.TestOptions = map[string]interface{}{}
 	}
@@ -84,13 +82,14 @@ func setClassesToRetry(opt *job.StartOptions, testcases []junit.TestCase) {
 		} else {
 			opt.TestOptions["class"] = tests
 		}
-		lg.Msgf(msg.RetryWithTests, tests)
-		return
+
+		return tests
 	}
 
 	tests := getFailedEspressoTests(testcases)
 	opt.TestOptions["class"] = tests
-	lg.Msgf(msg.RetryWithTests, tests)
+
+	return tests
 }
 
 // getFailedXCUITests returns a list of failed XCUITest tests from the given
