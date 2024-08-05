@@ -74,6 +74,10 @@ func (r *SauceReportRetrier) retryFailedTests(opt *job.StartOptions, previous jo
 	if len(opt.OtherApps) == 0 {
 		opt.OtherApps = []string{fmt.Sprintf("storage:%s", storageID)}
 	} else {
+		// FIXME(AlexP): Code smell! The order of elements in OtherApps is
+		// defined by CloudRunner. While the order itself is not important, the
+		// type of app is. We should not rely on the order of elements in the
+		// slice. If we need to know the type, we should use a map.
 		opt.OtherApps[0] = fmt.Sprintf("storage:%s", storageID)
 	}
 
