@@ -24,7 +24,7 @@ type SauceReportRetrier struct {
 }
 
 func (r *SauceReportRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
-	if r.VDCReader != nil && opt.SmartRetry.FailedOnly {
+	if opt.SmartRetry.FailedOnly {
 		r.RetryFailedTests(&opt, previous)
 	}
 
