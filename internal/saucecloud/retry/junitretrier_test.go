@@ -204,37 +204,6 @@ func TestAppsRetrier_Retry(t *testing.T) {
 			},
 		},
 		{
-			name: "Job not retrying if RDC and config is VDC + SmartRetry",
-			init: init{
-				RetryVDC: true,
-			},
-			args: args{
-				jobOpts: make(chan job.StartOptions),
-				opt: job.StartOptions{
-					DisplayName: "Dummy Test",
-					SmartRetry: job.SmartRetry{
-						FailedOnly: true,
-					},
-					TestOptions: map[string]interface{}{
-						"class": []string{"Demo.Class1", "Demo.Class2", "Demo.Class3"},
-					},
-				},
-				previous: job.Job{
-					ID:    "fake-job-id",
-					IsRDC: true,
-				},
-			},
-			expected: job.StartOptions{
-				DisplayName: "Dummy Test",
-				TestOptions: map[string]interface{}{
-					"class": []string{"Demo.Class1", "Demo.Class2", "Demo.Class3"},
-				},
-				SmartRetry: job.SmartRetry{
-					FailedOnly: true,
-				},
-			},
-		},
-		{
 			name: "Job is retrying when VDC + SmartRetry",
 			init: init{
 				VDCReader: &mocks.FakeJobReader{

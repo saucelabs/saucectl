@@ -70,13 +70,13 @@ func setClassesToRetry(opt *job.StartOptions, testcases []junit.TestCase) {
 }
 
 func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
-	if b.RDCReader != nil && previous.IsRDC && opt.SmartRetry.FailedOnly {
-		b.retryFailedTests(b.RDCReader, jobOpts, opt, previous)
-		return
-	}
+	if opt.SmartRetry.FailedOnly {
+		jobReader := b.VDCReader
+		if previous.IsRDC {
+			jobReader = b.RDCReader
+		}
 
-	if b.VDCReader != nil && !previous.IsRDC && opt.SmartRetry.FailedOnly {
-		b.retryFailedTests(b.VDCReader, jobOpts, opt, previous)
+		b.retryFailedTests(jobReader, jobOpts, opt, previous)
 		return
 	}
 
