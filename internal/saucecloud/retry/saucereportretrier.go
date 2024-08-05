@@ -25,7 +25,7 @@ type SauceReportRetrier struct {
 
 func (r *SauceReportRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
 	if opt.SmartRetry.FailedOnly {
-		r.RetryFailedTests(&opt, previous)
+		r.retryFailedTests(&opt, previous)
 	}
 
 	log.Info().Str("suite", opt.DisplayName).
@@ -34,7 +34,7 @@ func (r *SauceReportRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.Star
 	jobOpts <- opt
 }
 
-func (r *SauceReportRetrier) RetryFailedTests(opt *job.StartOptions, previous job.Job) {
+func (r *SauceReportRetrier) retryFailedTests(opt *job.StartOptions, previous job.Job) {
 	if previous.Status == job.StateError {
 		log.Warn().Msg(msg.UnreliableReport)
 		log.Info().Msg(msg.SkippingSmartRetries)
