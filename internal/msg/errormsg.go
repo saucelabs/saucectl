@@ -204,6 +204,9 @@ const (
 	UnableToArchiveRunnerConfig = "Unable to archive sauce runner config file"
 	// UnableToUploadConfig indicates a failure to upload config
 	UnableToUploadConfig = "Unable to upload sauce runner config file %q"
+	// UnreliableReport indicates that the job is not smart-retryable due to its
+	// status.
+	UnreliableReport = "Test reports from errored jobs are not a reliable source to correctly determine failed tests."
 )
 
 // container

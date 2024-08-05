@@ -36,6 +36,13 @@ func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptio
 }
 
 func (b *JunitRetrier) retryFailedTests(reader job.Reader, jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
+	if previous.Status == job.StateError {
+		log.Warn().Msg(msg.UnreliableReport)
+		log.Info().Msg(msg.SkippingSmartRetries)
+		jobOpts <- opt
+		return
+	}
+
 	content, err := reader.GetJobAssetFileContent(context.Background(), previous.ID, junit.FileName, previous.IsRDC)
 	if err != nil {
 		log.Err(err).Msgf(msg.UnableToFetchFile, junit.FileName)

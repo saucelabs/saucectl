@@ -36,6 +36,13 @@ func (r *SauceReportRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.Star
 }
 
 func (r *SauceReportRetrier) RetryFailedTests(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
+	if previous.Status == job.StateError {
+		log.Warn().Msg(msg.UnreliableReport)
+		log.Info().Msg(msg.SkippingSmartRetries)
+		jobOpts <- opt
+		return
+	}
+
 	report, err := r.getSauceReport(previous)
 	if err != nil {
 		log.Err(err).Msgf(msg.UnableToFetchFile, saucereport.SauceReportFileName)
