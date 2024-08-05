@@ -47,14 +47,15 @@ func (r *SauceReportRetrier) retryFailedTests(opt *job.StartOptions, previous jo
 		log.Err(err).Msgf(msg.UnableToFetchFile, saucereport.SauceReportFileName)
 		return false
 	}
-	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
-	if err != nil {
-		log.Err(err).Msg(msg.UnableToCreateRunnerConfig)
-		return false
-	}
 
 	if err := r.Project.FilterFailedTests(opt.Name, report); err != nil {
 		log.Err(err).Msg(msg.UnableToFilterFailedTests)
+		return false
+	}
+
+	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
+	if err != nil {
+		log.Err(err).Msg(msg.UnableToCreateRunnerConfig)
 		return false
 	}
 
