@@ -18,6 +18,23 @@ type JunitRetrier struct {
 	VDCReader job.Reader
 }
 
+func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
+	if opt.SmartRetry.FailedOnly {
+		jobReader := b.VDCReader
+		if previous.IsRDC {
+			jobReader = b.RDCReader
+		}
+
+		b.retryFailedTests(jobReader, jobOpts, opt, previous)
+		return
+	}
+
+	log.Info().Str("suite", opt.DisplayName).
+		Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1)).
+		Msg("Retrying suite.")
+	jobOpts <- opt
+}
+
 func (b *JunitRetrier) retryFailedTests(reader job.Reader, jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
 	content, err := reader.GetJobAssetFileContent(context.Background(), previous.ID, junit.FileName, previous.IsRDC)
 	if err != nil {
@@ -67,23 +84,6 @@ func setClassesToRetry(opt *job.StartOptions, testcases []junit.TestCase) {
 	tests := getFailedEspressoTests(testcases)
 	opt.TestOptions["class"] = tests
 	lg.Msgf(msg.RetryWithTests, tests)
-}
-
-func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
-	if opt.SmartRetry.FailedOnly {
-		jobReader := b.VDCReader
-		if previous.IsRDC {
-			jobReader = b.RDCReader
-		}
-
-		b.retryFailedTests(jobReader, jobOpts, opt, previous)
-		return
-	}
-
-	log.Info().Str("suite", opt.DisplayName).
-		Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1)).
-		Msg("Retrying suite.")
-	jobOpts <- opt
 }
 
 // getFailedXCUITests returns a list of failed XCUITest tests from the given
