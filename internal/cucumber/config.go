@@ -342,11 +342,13 @@ func getFailedSpecFiles(report saucereport.SauceReport) ([]string, error) {
 	if report.Status != saucereport.StatusFailed {
 		return failedSpecs, nil
 	}
+
+	re, err := regexp.Compile(".*.feature$")
+	if err != nil {
+		return failedSpecs, err
+	}
+
 	for _, s := range report.Suites {
-		re, err := regexp.Compile(".*.feature$")
-		if err != nil {
-			return failedSpecs, err
-		}
 		if s.Status == saucereport.StatusFailed && re.MatchString(s.Name) {
 			failedSpecs = append(failedSpecs, filepath.Clean(s.Name))
 		}
