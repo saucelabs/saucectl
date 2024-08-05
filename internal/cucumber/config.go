@@ -327,8 +327,9 @@ func (p *Project) FilterFailedTests(suiteName string, report saucereport.SauceRe
 		if s.Name != suiteName {
 			continue
 		}
-		found = true
 		p.Suites[i].Options.Paths = specs
+		found = true
+		break
 	}
 
 	if !found {

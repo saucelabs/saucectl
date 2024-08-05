@@ -569,12 +569,12 @@ func (p *Project) FilterFailedTests(suiteName string, report saucereport.SauceRe
 		if s.Name != suiteName {
 			continue
 		}
-		found = true
 		if p.Suites[i].Config.Env == nil {
 			p.Suites[i].Config.Env = map[string]string{}
 		}
 		p.Suites[i].Config.Env["grep"] = strings.Join(failedTests, ";")
-
+		found = true
+		break
 	}
 	if !found {
 		return fmt.Errorf("suite(%s) not found", suiteName)
