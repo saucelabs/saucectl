@@ -65,16 +65,16 @@ func (r *SauceReportRetrier) retryFailedTests(opt *job.StartOptions, previous jo
 		return false
 	}
 
-	fileURL, err := r.uploadConfig(runnerFile)
+	storageID, err := r.uploadConfig(runnerFile)
 	if err != nil {
 		log.Err(err).Msgf(msg.UnableToUploadConfig, runnerFile)
 		return false
 	}
 
 	if len(opt.OtherApps) == 0 {
-		opt.OtherApps = []string{fmt.Sprintf("storage:%s", fileURL)}
+		opt.OtherApps = []string{fmt.Sprintf("storage:%s", storageID)}
 	} else {
-		opt.OtherApps[0] = fmt.Sprintf("storage:%s", fileURL)
+		opt.OtherApps[0] = fmt.Sprintf("storage:%s", storageID)
 	}
 
 	return true
