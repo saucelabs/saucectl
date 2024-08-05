@@ -25,8 +25,7 @@ type SauceReportRetrier struct {
 
 func (r *SauceReportRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
 	if r.VDCReader != nil && opt.SmartRetry.FailedOnly {
-		r.RetryFailedTests(jobOpts, opt, previous)
-		return
+		r.RetryFailedTests(&opt, previous)
 	}
 
 	log.Info().Str("suite", opt.DisplayName).
@@ -35,11 +34,10 @@ func (r *SauceReportRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.Star
 	jobOpts <- opt
 }
 
-func (r *SauceReportRetrier) RetryFailedTests(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
+func (r *SauceReportRetrier) RetryFailedTests(opt *job.StartOptions, previous job.Job) {
 	if previous.Status == job.StateError {
 		log.Warn().Msg(msg.UnreliableReport)
 		log.Info().Msg(msg.SkippingSmartRetries)
-		jobOpts <- opt
 		return
 	}
 
@@ -47,21 +45,18 @@ func (r *SauceReportRetrier) RetryFailedTests(jobOpts chan<- job.StartOptions, o
 	if err != nil {
 		log.Err(err).Msgf(msg.UnableToFetchFile, saucereport.SauceReportFileName)
 		log.Info().Msg(msg.SkippingSmartRetries)
-		jobOpts <- opt
 		return
 	}
 	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
 	if err != nil {
 		log.Err(err).Msg(msg.UnableToCreateRunnerConfig)
 		log.Info().Msg(msg.SkippingSmartRetries)
-		jobOpts <- opt
 		return
 	}
 
 	if err := r.Project.FilterFailedTests(opt.Name, report); err != nil {
 		log.Err(err).Msg(msg.UnableToFilterFailedTests)
 		log.Info().Msg(msg.SkippingSmartRetries)
-		jobOpts <- opt
 		return
 	}
 
@@ -69,7 +64,6 @@ func (r *SauceReportRetrier) RetryFailedTests(jobOpts chan<- job.StartOptions, o
 	if err != nil {
 		log.Err(err).Msg(msg.UnableToArchiveRunnerConfig)
 		log.Info().Msg(msg.SkippingSmartRetries)
-		jobOpts <- opt
 		return
 	}
 
@@ -77,7 +71,6 @@ func (r *SauceReportRetrier) RetryFailedTests(jobOpts chan<- job.StartOptions, o
 	if err != nil {
 		log.Err(err).Msgf(msg.UnableToUploadConfig, runnerFile)
 		log.Info().Msg(msg.SkippingSmartRetries)
-		jobOpts <- opt
 		return
 	}
 
@@ -86,10 +79,6 @@ func (r *SauceReportRetrier) RetryFailedTests(jobOpts chan<- job.StartOptions, o
 	} else {
 		opt.OtherApps[0] = fmt.Sprintf("storage:%s", fileURL)
 	}
-	log.Info().Str("suite", opt.DisplayName).
-		Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1)).
-		Msg("Retrying suite.")
-	jobOpts <- opt
 }
 
 func (r *SauceReportRetrier) uploadConfig(filename string) (string, error) {
