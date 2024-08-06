@@ -28,6 +28,9 @@ func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptio
 		}
 
 		tests = b.retryFailedTests(jobReader, &opt, previous)
+		if len(tests) == 0 {
+			log.Info().Msg(msg.SkippingSmartRetries)
+		}
 	}
 
 	lg := log.Info().
