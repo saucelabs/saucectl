@@ -58,6 +58,7 @@ func (r *SauceReportRetrier) retryFailedTests(opt *job.StartOptions, previous jo
 		log.Err(err).Msg(msg.UnableToCreateRunnerConfig)
 		return false
 	}
+	defer os.RemoveAll(tempDir)
 
 	runnerFile, err := zip.ArchiveRunnerConfig(r.Project, tempDir)
 	if err != nil {
