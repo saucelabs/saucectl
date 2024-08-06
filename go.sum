@@ -90,6 +90,8 @@ github.com/cucumber/gherkin/go/v28 v28.0.0 h1:SBqwscPOhe83JF0ukpEj+4QZ2ScOpPQByC
 github.com/cucumber/gherkin/go/v28 v28.0.0/go.mod h1:HVwDrzWvtsVbkxHw6KVZFA79x5uSLb+ajzS0BXuHiE8=
 github.com/cucumber/messages/go/v24 v24.0.1 h1:jajAQDk3fPa4RhIANE+NOxGdCKQdi7RYjd8wdKXnOu4=
 github.com/cucumber/messages/go/v24 v24.0.1/go.mod h1:ns4Befq4c4n9/B5APpTlBu5kXL1DVE4+5bbe0vSV4fc=
+github.com/cucumber/tag-expressions/go/v6 v6.1.0 h1:YOhnlISh/lyPZrLojFbJVzocv7TGhzOhB9aULN8A7Sg=
+github.com/cucumber/tag-expressions/go/v6 v6.1.0/go.mod h1:6scGHUy3RLnbNq8un7XNoopF2qR/0RMgqolQH/TkycY=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
