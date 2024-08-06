@@ -24,9 +24,10 @@ type SauceReportRetrier struct {
 }
 
 func (r *SauceReportRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
-	if r.VDCReader != nil && opt.SmartRetry.FailedOnly {
-		r.RetryFailedTests(jobOpts, opt, previous)
-		return
+	if opt.SmartRetry.FailedOnly {
+		if ok := r.retryFailedTests(&opt, previous); !ok {
+			log.Info().Msg(msg.SkippingSmartRetries)
+		}
 	}
 
 	log.Info().Str("suite", opt.DisplayName).
@@ -35,54 +36,53 @@ func (r *SauceReportRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.Star
 	jobOpts <- opt
 }
 
-func (r *SauceReportRetrier) RetryFailedTests(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
+func (r *SauceReportRetrier) retryFailedTests(opt *job.StartOptions, previous job.Job) bool {
+	if previous.Status == job.StateError {
+		log.Warn().Msg(msg.UnreliableReport)
+		return false
+	}
+
 	report, err := r.getSauceReport(previous)
 	if err != nil {
-		log.Err(err).Msgf(msg.UnableToFetchFile, saucereport.SauceReportFileName)
-		log.Info().Msg(msg.SkippingSmartRetries)
-		jobOpts <- opt
-		return
-	}
-	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
-	if err != nil {
-		log.Err(err).Msg(msg.UnableToCreateRunnerConfig)
-		log.Info().Msg(msg.SkippingSmartRetries)
-		jobOpts <- opt
-		return
+		log.Err(err).Msgf(msg.UnableToFetchFile, saucereport.FileName)
+		return false
 	}
 
 	if err := r.Project.FilterFailedTests(opt.Name, report); err != nil {
 		log.Err(err).Msg(msg.UnableToFilterFailedTests)
-		log.Info().Msg(msg.SkippingSmartRetries)
-		jobOpts <- opt
-		return
+		return false
 	}
+
+	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
+	if err != nil {
+		log.Err(err).Msg(msg.UnableToCreateRunnerConfig)
+		return false
+	}
+	defer os.RemoveAll(tempDir)
 
 	runnerFile, err := zip.ArchiveRunnerConfig(r.Project, tempDir)
 	if err != nil {
 		log.Err(err).Msg(msg.UnableToArchiveRunnerConfig)
-		log.Info().Msg(msg.SkippingSmartRetries)
-		jobOpts <- opt
-		return
+		return false
 	}
 
-	fileURL, err := r.uploadConfig(runnerFile)
+	storageID, err := r.uploadConfig(runnerFile)
 	if err != nil {
 		log.Err(err).Msgf(msg.UnableToUploadConfig, runnerFile)
-		log.Info().Msg(msg.SkippingSmartRetries)
-		jobOpts <- opt
-		return
+		return false
 	}
 
 	if len(opt.OtherApps) == 0 {
-		opt.OtherApps = []string{fmt.Sprintf("storage:%s", fileURL)}
+		opt.OtherApps = []string{fmt.Sprintf("storage:%s", storageID)}
 	} else {
-		opt.OtherApps[0] = fmt.Sprintf("storage:%s", fileURL)
+		// FIXME(AlexP): Code smell! The order of elements in OtherApps is
+		// defined by CloudRunner. While the order itself is not important, the
+		// type of app is. We should not rely on the order of elements in the
+		// slice. If we need to know the type, we should use a map.
+		opt.OtherApps[0] = fmt.Sprintf("storage:%s", storageID)
 	}
-	log.Info().Str("suite", opt.DisplayName).
-		Str("attempt", fmt.Sprintf("%d of %d", opt.Attempt+1, opt.Retries+1)).
-		Msg("Retrying suite.")
-	jobOpts <- opt
+
+	return true
 }
 
 func (r *SauceReportRetrier) uploadConfig(filename string) (string, error) {
@@ -109,7 +109,7 @@ func (r *SauceReportRetrier) uploadConfig(filename string) (string, error) {
 }
 
 func (r *SauceReportRetrier) getSauceReport(job job.Job) (saucereport.SauceReport, error) {
-	content, err := r.VDCReader.GetJobAssetFileContent(context.Background(), job.ID, saucereport.SauceReportFileName, false)
+	content, err := r.VDCReader.GetJobAssetFileContent(context.Background(), job.ID, saucereport.FileName, false)
 	if err != nil {
 		return saucereport.SauceReport{}, err
 	}

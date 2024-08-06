@@ -958,7 +958,7 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 	res.details.Device = j.DeviceName
 
 	var testRuns []insights.TestRun
-	if arrayContains(assets, saucereport.SauceReportFileName) {
+	if arrayContains(assets, saucereport.FileName) {
 		report, err := r.loadSauceTestReport(res.job.ID, res.job.IsRDC)
 		if err != nil {
 			log.Warn().Err(err).Str("action", "parsingJSON").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
@@ -982,7 +982,7 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 }
 
 func (r *CloudRunner) loadSauceTestReport(jobID string, isRDC bool) (saucereport.SauceReport, error) {
-	fileContent, err := r.JobService.GetJobAssetFileContent(context.Background(), jobID, saucereport.SauceReportFileName, isRDC)
+	fileContent, err := r.JobService.GetJobAssetFileContent(context.Background(), jobID, saucereport.FileName, isRDC)
 	if err != nil {
 		log.Warn().Err(err).Str("action", "loading-json-report").Msg(msg.InsightsReportError)
 		return saucereport.SauceReport{}, err

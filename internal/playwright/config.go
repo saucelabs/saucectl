@@ -433,8 +433,9 @@ func (p *Project) FilterFailedTests(suiteName string, report saucereport.SauceRe
 		if s.Name != suiteName {
 			continue
 		}
-		found = true
 		p.Suites[i].Params.Grep = strings.Join(failedTests, "|")
+		found = true
+		break
 	}
 	if !found {
 		return fmt.Errorf("suite(%s) not found", suiteName)
