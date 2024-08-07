@@ -244,17 +244,20 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			return []Suite{}, fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
 		}
 
-		if s.ShardGrepEnabled {
-			tagExp, tagExpExists := s.Env["CUCUMBER_FILTER_TAGS"]
-			if tagExpExists {
-				var unmatched []string
-				files, unmatched = grep.MatchFiles(os.DirFS(rootDir), files, tagExp)
+		if s.ShardGrepEnabled && len(s.Options.Tags) > 0 {
+			tags := make([]string, len(s.Options.Tags))
+			for i, t := range s.Options.Tags {
+				tags[i] = fmt.Sprintf("(%s)", t)
+			}
+			tagExp := strings.Join(tags, " and ")
 
-				if len(files) == 0 {
-					log.Error().Str("suiteName", s.Name).Str("tagExpression", tagExp).Msg("No files match the configured tagExpressions")
-				} else if len(unmatched) > 0 {
-					log.Info().Str("suiteName", s.Name).Str("tagExpression", tagExp).Msgf("Files filtered out by tagExpression: [%s]", unmatched)
-				}
+			var unmatched []string
+			files, unmatched = grep.MatchFiles(os.DirFS(rootDir), files, tagExp)
+
+			if len(files) == 0 {
+				log.Error().Str("suiteName", s.Name).Str("tagExpression", tagExp).Msg("No files match the configured tagExpressions")
+			} else if len(unmatched) > 0 {
+				log.Info().Str("suiteName", s.Name).Str("tagExpression", tagExp).Msgf("Files filtered out by tagExpression: [%s]", unmatched)
 			}
 		}
 
