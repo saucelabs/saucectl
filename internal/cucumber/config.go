@@ -67,7 +67,7 @@ type Suite struct {
 	PlatformName     string            `yaml:"platformName,omitempty" json:"platformName"`
 	Env              map[string]string `yaml:"env,omitempty" json:"env"`
 	Shard            string            `yaml:"shard,omitempty" json:"shard"`
-	ShardGrepEnabled bool              `yaml:"shardGrepEnabled,omitempty" json:"-"`
+	ShardTagsEnabled bool              `yaml:"shardTagsEnabled,omitempty" json:"-"`
 	Timeout          time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
 	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
 	PreExec          []string          `yaml:"preExec,omitempty" json:"preExec"`
@@ -244,7 +244,7 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			return []Suite{}, fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
 		}
 
-		if s.ShardGrepEnabled && len(s.Options.Tags) > 0 {
+		if s.ShardTagsEnabled && len(s.Options.Tags) > 0 {
 			tags := make([]string, len(s.Options.Tags))
 			for i, t := range s.Options.Tags {
 				tags[i] = fmt.Sprintf("(%s)", t)
