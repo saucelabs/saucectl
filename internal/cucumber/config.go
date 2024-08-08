@@ -255,9 +255,15 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			files, unmatched = tag.MatchFiles(os.DirFS(rootDir), files, tagExp)
 
 			if len(files) == 0 {
-				log.Error().Str("suiteName", s.Name).Str("tagExpression", tagExp).Msg("No files match the configured tagExpressions")
+				log.Error().
+					Str("suiteName", s.Name).
+					Str("tagExpression", tagExp).
+					Msg("No files match the configured tagExpressions")
 			} else if len(unmatched) > 0 {
-				log.Info().Str("suiteName", s.Name).Str("tagExpression", tagExp).Msgf("Files filtered out by tagExpression: [%s]", unmatched)
+				log.Info().
+					Str("suiteName", s.Name).
+					Str("tagExpression", tagExp).
+					Msgf("Files filtered out by tagExpression: [%s]", unmatched)
 			}
 		}
 
