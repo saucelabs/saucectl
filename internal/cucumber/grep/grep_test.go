@@ -13,7 +13,7 @@ func TestMatchFiles(t *testing.T) {
 @act1
 Feature: Scenario 1
 
-        @interior
+        @interior @nomatch
         Scenario: Dinner scene
                 When Turkey is served
                 Then I say "bon appetit!"
@@ -24,12 +24,12 @@ Feature: Scenario 1
 @act3
 Feature: Scenario 2
 
-        @exterior
+        @exterior @nomatch
         Scenario: Exterior scene
                 When The character exits the house
                 Then The camera pans out to show the exterior
 
-        @interior
+        @interior @nomatch
         Scenario: Interior scene
                 When The character enters the house
                 Then The character's leitmotif starts
@@ -40,10 +40,12 @@ Feature: Scenario 2
 @act3 @credits
 Feature: Scenario 3
 
+	@nomatch
         Scenario: Epilogue
                 When The credits reach mid point
                 Then Start the first mid-credit scene
 
+	@nomatch
         Scenario: Last Bonus Scene
                 When The credits reach the end
                 Then Start the end-credit scene
@@ -109,6 +111,17 @@ Feature: Scenario 3
 			},
 			wantUnmatched: []string {
 				"scenario1.feature",
+				"scenario3.feature",
+			},
+		},
+		{
+			name: "no matches with negation",
+			files: files,
+			tagExpression: "not @nomatch",
+			wantMatched: []string(nil),
+			wantUnmatched: []string {
+				"scenario1.feature",
+				"scenario2.feature",
 				"scenario3.feature",
 			},
 		},
