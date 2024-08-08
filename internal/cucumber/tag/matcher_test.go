@@ -79,8 +79,8 @@ Feature: Scenario 3
 			},
 		},
 		{
-			name: "matches scenario tag",
-			files: files,
+			name:          "matches scenario tag",
+			files:         files,
 			tagExpression: "@interior",
 			wantMatched: []string{
 				"scenario1.feature",
@@ -91,35 +91,35 @@ Feature: Scenario 3
 			},
 		},
 		{
-			name: "matches multiple tags",
-			files: files,
+			name:          "matches multiple tags",
+			files:         files,
 			tagExpression: "@act3 and @credits",
-			wantMatched: []string {
+			wantMatched: []string{
 				"scenario3.feature",
 			},
-			wantUnmatched: []string {
+			wantUnmatched: []string{
 				"scenario1.feature",
 				"scenario2.feature",
 			},
 		},
 		{
-			name: "matches multiple tags with negation",
-			files: files,
+			name:          "matches multiple tags with negation",
+			files:         files,
 			tagExpression: "@act3 and not @credits",
-			wantMatched: []string {
+			wantMatched: []string{
 				"scenario2.feature",
 			},
-			wantUnmatched: []string {
+			wantUnmatched: []string{
 				"scenario1.feature",
 				"scenario3.feature",
 			},
 		},
 		{
-			name: "no matches with negation",
-			files: files,
+			name:          "no matches with negation",
+			files:         files,
 			tagExpression: "not @nomatch",
-			wantMatched: []string(nil),
-			wantUnmatched: []string {
+			wantMatched:   []string(nil),
+			wantUnmatched: []string{
 				"scenario1.feature",
 				"scenario2.feature",
 				"scenario3.feature",
