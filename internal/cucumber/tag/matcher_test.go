@@ -1,9 +1,10 @@
 package tag
 
 import (
-	"reflect"
 	"testing"
 	"testing/fstest"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestMatchFiles(t *testing.T) {
@@ -130,11 +131,11 @@ Feature: Scenario 3
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			matched, unmatched := MatchFiles(mockFS, tt.files, tt.tagExpression)
-			if !reflect.DeepEqual(matched, tt.wantMatched) {
-				t.Errorf("MatchFiles() got matched %v, want %v", matched, tt.wantMatched)
+			if diff := cmp.Diff(tt.wantMatched, matched); diff != "" {
+				t.Errorf("MatchFiles() returned unexpected matched files (-want +got):\n%s", diff)
 			}
-			if !reflect.DeepEqual(unmatched, tt.wantUnmatched) {
-				t.Errorf("MatchFiles() got unmatched %v, want %v", unmatched, tt.wantUnmatched)
+			if diff := cmp.Diff(tt.wantUnmatched, unmatched); diff != "" {
+				t.Errorf("MatchFiles() returned unexpected unmatched files (-want +got):\n%s", diff)
 			}
 		})
 	}
