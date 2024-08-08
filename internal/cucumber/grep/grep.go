@@ -20,20 +20,18 @@ func MatchFiles(sys fs.FS, files []string, tag string) (matched []string, unmatc
 		if err != nil {
 			continue
 		}
+		defer g.Close()
+
 		uuid := &messages.UUID{}
 		doc, err := gherkin.ParseGherkinDocument(g, uuid.NewId)
 		if err != nil {
 			continue
 		}
-
-		if match(doc.Feature.Tags, tagMatcher) {
-			matched = append(matched, f)
-			continue
-		}
+		pickles := gherkin.Pickles(*doc, f, uuid.NewId)
 
 		hasMatch := false
-		for _, c := range doc.Feature.Children {
-			if match(c.Scenario.Tags, tagMatcher) {
+		for _, p := range pickles {
+			if match(p.Tags, tagMatcher) {
 				matched = append(matched, f)
 				hasMatch = true
 				break
@@ -47,7 +45,7 @@ func MatchFiles(sys fs.FS, files []string, tag string) (matched []string, unmatc
 	return matched, unmatched
 }
 
-func match(tags []*messages.Tag, matcher tagexpressions.Evaluatable) bool {
+func match(tags []*messages.PickleTag, matcher tagexpressions.Evaluatable) bool {
 	tagNames := make([]string, len(tags))
 	for i, t := range tags {
 		tagNames[i] = t.Name
