@@ -149,7 +149,7 @@
               "spec"
             ]
           },
-          "shardGrepEnabled": {
+          "shardTagsEnabled": {
             "description": "When sharding is configured and the suite is configured to filter scenarios by tag expression, let saucectl filter test files before executing.",
             "type": "boolean"
           },
