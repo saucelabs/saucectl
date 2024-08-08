@@ -29,7 +29,9 @@ func MatchFiles(sys fs.FS, files []string, tagExpression string) (matched []stri
 		uuid := &messages.UUID{}
 		doc, err := gherkin.ParseGherkinDocument(f, uuid.NewId)
 		if err != nil {
-			log.Warn().Str("filename", filename).Msg("Could not parse file. It will be excluded from sharded execution.")
+			log.Warn().
+				Str("filename", filename).
+				Msg("Could not parse file. It will be excluded from sharded execution.")
 			continue
 		}
 		scenarios := gherkin.Pickles(*doc, filename, uuid.NewId)
