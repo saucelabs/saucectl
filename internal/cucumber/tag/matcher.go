@@ -1,3 +1,4 @@
+// Package tag defines functions to parse cucumber feature files and filter them by cucumber tag expressions
 package tag
 
 import (
@@ -8,8 +9,10 @@ import (
 	messages "github.com/cucumber/messages/go/v24"
 )
 
-func MatchFiles(sys fs.FS, files []string, tag string) (matched []string, unmatched []string) {
-	tagMatcher, err := tagexpressions.Parse(tag)
+// MatchFiles finds feature files that include scenarios with tags that match the given tag expression.
+// A tag expression is a simple boolean expression including the logical operators "and", "or", "not".
+func MatchFiles(sys fs.FS, files []string, tagExpression string) (matched []string, unmatched []string) {
+	tagMatcher, err := tagexpressions.Parse(tagExpression)
 
 	if err != nil {
 		return matched, unmatched
