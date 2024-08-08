@@ -15,31 +15,31 @@ func MatchFiles(sys fs.FS, files []string, tag string) (matched []string, unmatc
 		return matched, unmatched
 
 	}
-	for _, f := range files {
-		g, err := sys.Open(f)
+	for _, filename := range files {
+		f, err := sys.Open(filename)
 		if err != nil {
 			continue
 		}
-		defer g.Close()
+		defer f.Close()
 
 		uuid := &messages.UUID{}
-		doc, err := gherkin.ParseGherkinDocument(g, uuid.NewId)
+		doc, err := gherkin.ParseGherkinDocument(f, uuid.NewId)
 		if err != nil {
 			continue
 		}
-		pickles := gherkin.Pickles(*doc, f, uuid.NewId)
+		scenarios := gherkin.Pickles(*doc, filename, uuid.NewId)
 
 		hasMatch := false
-		for _, p := range pickles {
-			if match(p.Tags, tagMatcher) {
-				matched = append(matched, f)
+		for _, s := range scenarios {
+			if match(s.Tags, tagMatcher) {
+				matched = append(matched, filename)
 				hasMatch = true
 				break
 			}
 		}
 
 		if !hasMatch {
-			unmatched = append(unmatched, f)
+			unmatched = append(unmatched, filename)
 		}
 	}
 	return matched, unmatched
