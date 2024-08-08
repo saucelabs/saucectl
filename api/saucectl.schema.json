@@ -2467,6 +2467,10 @@
                     "spec"
                   ]
                 },
+                "shardGrepEnabled": {
+                  "description": "When sharding is configured and the suite is configured to filter scenarios by tag expression, let saucectl filter test files before executing.",
+                  "type": "boolean"
+                },
                 "timeout": {
                   "$ref": "#/allOf/8/then/definitions/suite/properties/timeout"
                 },
