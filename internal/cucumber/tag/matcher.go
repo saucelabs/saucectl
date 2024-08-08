@@ -2,11 +2,11 @@
 package tag
 
 import (
-	"github.com/cucumber/tag-expressions/go/v6"
 	"io/fs"
 
 	gherkin "github.com/cucumber/gherkin/go/v28"
 	messages "github.com/cucumber/messages/go/v24"
+	tagexpressions "github.com/cucumber/tag-expressions/go/v6"
 )
 
 // MatchFiles finds feature files that include scenarios with tags that match the given tag expression.
