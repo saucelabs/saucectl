@@ -1,4 +1,4 @@
-package grep
+package tag
 
 import (
 	"github.com/cucumber/tag-expressions/go/v6"

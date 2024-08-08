@@ -12,7 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/cucumber/grep"
+	"github.com/saucelabs/saucectl/internal/cucumber/tag"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -252,7 +252,7 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			tagExp := strings.Join(tags, " and ")
 
 			var unmatched []string
-			files, unmatched = grep.MatchFiles(os.DirFS(rootDir), files, tagExp)
+			files, unmatched = tag.MatchFiles(os.DirFS(rootDir), files, tagExp)
 
 			if len(files) == 0 {
 				log.Error().Str("suiteName", s.Name).Str("tagExpression", tagExp).Msg("No files match the configured tagExpressions")
