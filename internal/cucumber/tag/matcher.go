@@ -19,6 +19,9 @@ func MatchFiles(sys fs.FS, files []string, tagExpression string) (matched []stri
 		return matched, unmatched
 
 	}
+
+	uuid := &messages.UUID{}
+
 	for _, filename := range files {
 		f, err := sys.Open(filename)
 		if err != nil {
@@ -26,7 +29,6 @@ func MatchFiles(sys fs.FS, files []string, tagExpression string) (matched []stri
 		}
 		defer f.Close()
 
-		uuid := &messages.UUID{}
 		doc, err := gherkin.ParseGherkinDocument(f, uuid.NewId)
 		if err != nil {
 			log.Warn().
