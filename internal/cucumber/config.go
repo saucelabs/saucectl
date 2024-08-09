@@ -3,6 +3,7 @@ package cucumber
 import (
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/cucumber/tag"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -65,6 +67,7 @@ type Suite struct {
 	PlatformName     string            `yaml:"platformName,omitempty" json:"platformName"`
 	Env              map[string]string `yaml:"env,omitempty" json:"env"`
 	Shard            string            `yaml:"shard,omitempty" json:"shard"`
+	ShardTagsEnabled bool              `yaml:"shardTagsEnabled,omitempty" json:"-"`
 	Timeout          time.Duration     `yaml:"timeout,omitempty" json:"timeout"`
 	ScreenResolution string            `yaml:"screenResolution,omitempty" json:"screenResolution"`
 	PreExec          []string          `yaml:"preExec,omitempty" json:"preExec"`
@@ -240,6 +243,30 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 			msg.SuiteSplitNoMatch(s.Name, rootDir, s.Options.Paths)
 			return []Suite{}, fmt.Errorf("suite '%s' patterns have no matching files", s.Name)
 		}
+
+		if s.ShardTagsEnabled && len(s.Options.Tags) > 0 {
+			tags := make([]string, len(s.Options.Tags))
+			for i, t := range s.Options.Tags {
+				tags[i] = fmt.Sprintf("(%s)", t)
+			}
+			tagExp := strings.Join(tags, " and ")
+
+			var unmatched []string
+			files, unmatched = tag.MatchFiles(os.DirFS(rootDir), files, tagExp)
+
+			if len(files) == 0 {
+				log.Error().
+					Str("suiteName", s.Name).
+					Str("tagExpression", tagExp).
+					Msg("No files match the configured tagExpressions")
+			} else if len(unmatched) > 0 {
+				log.Info().
+					Str("suiteName", s.Name).
+					Str("tagExpression", tagExp).
+					Msgf("Files filtered out by tagExpression: [%s]", unmatched)
+			}
+		}
+
 		excludedFiles, err := fpath.FindFiles(rootDir, s.Options.ExcludedTestFiles, fpath.FindByShellPattern)
 		if err != nil {
 			return []Suite{}, err
