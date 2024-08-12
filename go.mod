@@ -10,6 +10,9 @@ require (
 	github.com/bmatcuk/doublestar/v4 v4.0.2
 	github.com/briandowns/spinner v1.11.1
 	github.com/cloudevents/sdk-go/v2 v2.15.2
+	github.com/cucumber/gherkin/go/v28 v28.0.0
+	github.com/cucumber/messages/go/v24 v24.0.1
+	github.com/cucumber/tag-expressions/go/v6 v6.1.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.16.0
 	github.com/go-git/go-git/v5 v5.11.0
@@ -38,9 +41,6 @@ require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/containerd/log v0.1.0 // indirect
-	github.com/cucumber/gherkin/go/v28 v28.0.0 // indirect
-	github.com/cucumber/messages/go/v24 v24.0.1 // indirect
-	github.com/cucumber/tag-expressions/go/v6 v6.1.0 // indirect
 	github.com/distribution/reference v0.5.0 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -84,7 +84,7 @@ require (
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/docker/docker v26.1.4+incompatible
+	github.com/docker/docker v26.1.5+incompatible
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
