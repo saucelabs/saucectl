@@ -125,7 +125,7 @@ func NewTestcafeCmd() *cobra.Command {
 	f.Var(&lflags.Simulator, "simulator", "Specifies the simulator to use for testing")
 
 	// Deprecated flags
-	_ = sc.Fset.MarkDeprecated("npm.registry", "please set the npm registries field in the Sauce configuration")
+	_ = sc.Fset.MarkDeprecated("npm.registry", "please set the npm registries field in the Sauce configuration file")
 
 	return cmd
 }

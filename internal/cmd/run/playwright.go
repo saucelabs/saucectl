@@ -95,7 +95,7 @@ func NewPlaywrightCmd() *cobra.Command {
 	sc.Bool("npm.strictSSL", "npm::strictSSL", false, "Whether or not to do SSL key validation when making requests to the registry via https (default: false)")
 
 	// Deprecated flags
-	_ = sc.Fset.MarkDeprecated("npm.registry", "please set the npm registries field in the Sauce configuration")
+	_ = sc.Fset.MarkDeprecated("npm.registry", "please set the npm registries field in the Sauce configuration file")
 	return cmd
 }
 
