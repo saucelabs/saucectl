@@ -7,19 +7,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/rs/zerolog/log"
-	"github.com/ryanuber/go-glob"
-
 	"github.com/saucelabs/saucectl/internal/build"
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
 	tunnels "github.com/saucelabs/saucectl/internal/tunnel"
 	"github.com/saucelabs/saucectl/internal/vmd"
@@ -54,11 +48,10 @@ type restoJob struct {
 
 // Resto http client.
 type Resto struct {
-	Client         *retryablehttp.Client
-	URL            string
-	Username       string
-	AccessKey      string
-	ArtifactConfig config.ArtifactDownload
+	Client    *retryablehttp.Client
+	URL       string
+	Username  string
+	AccessKey string
 }
 
 type tunnel struct {
@@ -346,43 +339,6 @@ func (c *Resto) StopJob(ctx context.Context, jobID string, realDevice bool) (job
 	}
 
 	return c.parseJob(resp.Body)
-}
-
-// DownloadArtifact downloads artifacts and returns a list of what was downloaded.
-func (c *Resto) DownloadArtifact(jobID, suiteName string, realDevice bool) []string {
-	targetDir, err := config.GetSuiteArtifactFolder(suiteName, c.ArtifactConfig)
-	if err != nil {
-		log.Error().Msgf("Unable to create artifacts folder (%v)", err)
-		return []string{}
-	}
-	files, err := c.GetJobAssetFileNames(context.Background(), jobID, realDevice)
-	if err != nil {
-		log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
-		return []string{}
-	}
-	var artifacts []string
-	for _, f := range files {
-		for _, pattern := range c.ArtifactConfig.Match {
-			if glob.Glob(pattern, f) {
-				if err := c.downloadArtifact(targetDir, jobID, f); err != nil {
-					log.Error().Err(err).Msgf("Failed to download file: %s", f)
-				} else {
-					artifacts = append(artifacts, filepath.Join(targetDir, f))
-				}
-				break
-			}
-		}
-	}
-	return artifacts
-}
-
-func (c *Resto) downloadArtifact(targetDir, jobID, fileName string) error {
-	content, err := c.GetJobAssetFileContent(context.Background(), jobID, fileName, false)
-	if err != nil {
-		return err
-	}
-	targetFile := filepath.Join(targetDir, fileName)
-	return os.WriteFile(targetFile, content, 0644)
 }
 
 // GetVirtualDevices returns the list of available virtual devices.

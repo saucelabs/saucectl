@@ -8,31 +8,25 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/slice"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/rs/zerolog/log"
 
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/espresso"
-	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
 
 // RDCService http client.
 type RDCService struct {
-	Client         *retryablehttp.Client
-	URL            string
-	Username       string
-	AccessKey      string
-	ArtifactConfig config.ArtifactDownload
+	Client    *retryablehttp.Client
+	URL       string
+	Username  string
+	AccessKey string
 }
 
 type rdcJob struct {
@@ -87,13 +81,12 @@ type DeviceQuery struct {
 }
 
 // NewRDCService creates a new client.
-func NewRDCService(url, username, accessKey string, timeout time.Duration, artifactConfig config.ArtifactDownload) RDCService {
+func NewRDCService(url, username, accessKey string, timeout time.Duration) RDCService {
 	return RDCService{
-		Client:         NewRetryableClient(timeout),
-		URL:            url,
-		Username:       username,
-		AccessKey:      accessKey,
-		ArtifactConfig: artifactConfig,
+		Client:    NewRetryableClient(timeout),
+		URL:       url,
+		Username:  username,
+		AccessKey: accessKey,
 	}
 }
 
@@ -384,43 +377,6 @@ func (c *RDCService) GetJobAssetFileContent(ctx context.Context, jobID, fileName
 	}
 
 	return io.ReadAll(resp.Body)
-}
-
-// DownloadArtifact downloads artifacts and returns a list of downloaded files.
-func (c *RDCService) DownloadArtifact(jobID, suiteName string, realDevice bool) []string {
-	targetDir, err := config.GetSuiteArtifactFolder(suiteName, c.ArtifactConfig)
-	if err != nil {
-		log.Error().Msgf("Unable to create artifacts folder (%v)", err)
-		return []string{}
-	}
-
-	files, err := c.GetJobAssetFileNames(context.Background(), jobID, realDevice)
-	if err != nil {
-		log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
-		return []string{}
-	}
-
-	filepaths := fpath.MatchFiles(files, c.ArtifactConfig.Match)
-	var artifacts []string
-	for _, f := range filepaths {
-		targetFile, err := c.downloadArtifact(targetDir, jobID, f, realDevice)
-		if err != nil {
-			log.Err(err).Msg("Unable to download artifacts")
-			return artifacts
-		}
-		artifacts = append(artifacts, targetFile)
-	}
-
-	return artifacts
-}
-
-func (c *RDCService) downloadArtifact(targetDir, jobID, fileName string, realDevice bool) (string, error) {
-	content, err := c.GetJobAssetFileContent(context.Background(), jobID, fileName, realDevice)
-	if err != nil {
-		return "", err
-	}
-	targetFile := filepath.Join(targetDir, fileName)
-	return targetFile, os.WriteFile(targetFile, content, 0644)
 }
 
 // GetDevices returns the list of available devices using a specific operating system.
