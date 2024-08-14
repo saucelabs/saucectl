@@ -1629,7 +1629,7 @@ func Test_checkCredentials(t *testing.T) {
 			name: "Invalid credentials",
 			frameworkFn: func(ctx context.Context) ([]string, error) {
 				errMsg := "unexpected status '401' from test-composer: Unauthorized\n"
-				return []string{}, fmt.Errorf(errMsg)
+				return []string{}, errors.New(errMsg)
 			},
 			wantErr: errors.New("invalid credentials provided"),
 		},
