@@ -84,7 +84,7 @@ func NewCypressCmd() *cobra.Command {
 	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")
 	sc.StringToString("npm.packages", "npm::packages", map[string]string{}, "Specify npm packages that are required to run tests")
 	sc.StringSlice("npm.dependencies", "npm::dependencies", []string{}, "Specify local npm dependencies for saucectl to upload. These dependencies must already be installed in the local node_modules directory.")
-	sc.Bool("npm.strictSSL", "npm::strictSSL", false, "Whether or not to do SSL key validation when making requests to the registry via https.")
+	sc.Bool("npm.strictSSL", "npm::strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https.")
 
 	// Deprecated flags
 	_ = sc.Fset.MarkDeprecated("npm.registry", "please set the npm registries field in the Sauce configuration file")
