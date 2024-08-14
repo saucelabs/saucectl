@@ -147,7 +147,8 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			}
 
 			var artifacts []report.Artifact
-			files := r.downloadArtifacts(res.name, res.job, artifactCfg.When)
+			lastAttempt := res.attempts[len(res.attempts)-1]
+			files := r.downloadArtifacts(res.name, lastAttempt, artifactCfg.When)
 			for _, f := range files {
 				artifacts = append(artifacts, report.Artifact{
 					FilePath: f,
@@ -353,6 +354,8 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 				EndTime:    time.Now(),
 				Status:     jobData.Status,
 				TestSuites: junit.TestSuites{},
+				TimedOut:   jobData.TimedOut,
+				IsRDC:      jobData.IsRDC,
 			})
 			go r.Retrier.Retry(jobOpts, opts, jobData)
 			continue
@@ -392,6 +395,8 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 				StartTime: opts.StartTime,
 				EndTime:   time.Now(),
 				Status:    jobData.Status,
+				TimedOut:  jobData.TimedOut,
+				IsRDC:     jobData.IsRDC,
 			}),
 		}
 	}
@@ -999,12 +1004,12 @@ func (r *CloudRunner) loadJUnitReport(jobID string, isRDC bool) (junit.TestSuite
 	return junit.Parse(fileContent)
 }
 
-func (r *CloudRunner) downloadArtifacts(suiteName string, job job.Job, when config.When) []string {
-	if job.ID == "" || job.TimedOut || r.Async || !when.IsNow(job.Passed) {
+func (r *CloudRunner) downloadArtifacts(suiteName string, attempt report.Attempt, when config.When) []string {
+	if attempt.ID == "" || attempt.TimedOut || r.Async || !when.IsNow(attempt.Status == job.StatePassed) {
 		return []string{}
 	}
 
-	return r.JobService.DownloadArtifact(job.ID, suiteName, job.IsRDC)
+	return r.JobService.DownloadArtifact(attempt.ID, suiteName, attempt.IsRDC)
 }
 
 func arrayContains(list []string, want string) bool {
