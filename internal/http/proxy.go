@@ -66,7 +66,7 @@ func doCheckProxy(scheme string) error {
 			rawProxyURL = strings.Replace(rawProxyURL, pass, "****", -1)
 		}
 	}
-	log.Info().Msg(fmt.Sprintf("Using %s proxy: %s", strings.ToUpper(scheme), rawProxyURL))
+	log.Info().Msgf("Using %s proxy: %s", strings.ToUpper(scheme), rawProxyURL)
 	return nil
 }
 
