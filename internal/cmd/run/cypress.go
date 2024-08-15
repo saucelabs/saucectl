@@ -27,9 +27,14 @@ import (
 	"github.com/saucelabs/saucectl/internal/viper"
 )
 
+type cypressFlags struct {
+	npmStrictSSL bool
+}
+
 // NewCypressCmd creates the 'run' command for Cypress.
 func NewCypressCmd() *cobra.Command {
 	sc := flags.SnakeCharmer{Fmap: map[string]*pflag.Flag{}}
+	var cflags cypressFlags
 
 	cmd := &cobra.Command{
 		Use:              "cypress",
@@ -45,7 +50,7 @@ func NewCypressCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::config::specPattern", args)
 
-			exitCode, err := runCypress(cmd, true)
+			exitCode, err := runCypress(cmd, cflags, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 			}
@@ -84,12 +89,15 @@ func NewCypressCmd() *cobra.Command {
 	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")
 	sc.StringToString("npm.packages", "npm::packages", map[string]string{}, "Specify npm packages that are required to run tests")
 	sc.StringSlice("npm.dependencies", "npm::dependencies", []string{}, "Specify local npm dependencies for saucectl to upload. These dependencies must already be installed in the local node_modules directory.")
-	sc.Bool("npm.strictSSL", "npm::strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https")
+	cmd.Flags().BoolVar(&cflags.npmStrictSSL, "npm.strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https.")
+
+	// Deprecated flags
+	_ = sc.Fset.MarkDeprecated("npm.registry", "please set the npm registries field in the Sauce configuration file")
 
 	return cmd
 }
 
-func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
+func runCypress(cmd *cobra.Command, cflags cypressFlags, isCLIDriven bool) (int, error) {
 	if !isCLIDriven {
 		config.ValidateSchema(gFlags.cfgFilePath)
 	}
@@ -103,6 +111,11 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	if err := p.ApplyFlags(gFlags.selectedSuite); err != nil {
 		return 1, err
 	}
+
+	if cmd.Flags().Changed("npm.strictSSL") {
+		p.SetNpmStrictSSL(&cflags.npmStrictSSL)
+	}
+
 	p.SetDefaults()
 	if !gFlags.noAutoTagging {
 		p.AppendTags(ci.GetTags())

@@ -129,7 +129,7 @@ func logPushProgress(reader io.ReadCloser) error {
 
 			// Create a progress spinner for statuses that don't have progress details, like 'Preparing'.
 			if msg.Progress == nil || msg.Progress.Total == 0 {
-				progress.Show(msg.Status)
+				progress.Show(msg.Status, nil)
 				continue
 			}
 

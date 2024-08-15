@@ -203,7 +203,7 @@ type Npm struct {
 	Registries   []Registry        `yaml:"registries" json:"registries,omitempty"`
 	Packages     map[string]string `yaml:"packages,omitempty" json:"packages"`
 	Dependencies []string          `yaml:"dependencies,omitempty" json:"dependencies"`
-	StrictSSL    bool              `yaml:"strictSSL,omitempty" json:"strictSSL"`
+	StrictSSL    *bool             `yaml:"strictSSL,omitempty" json:"strictSSL"`
 }
 
 // Defaults represents default suite settings.
