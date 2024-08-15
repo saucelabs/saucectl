@@ -93,5 +93,7 @@ type Service interface {
 // ArtifactDownloader represents the interface for downloading artifacts.
 type ArtifactDownloader interface {
 	// DownloadArtifact downloads artifacts and returns a list of what was downloaded.
-	DownloadArtifact(jobID, suiteName string, realDevice bool) []string
+	// DownloadArtifact(jobID, suiteName string, realDevice bool, attempt int) []string
+	// DownloadArtifact(jobID string, destDir string, realDevice bool) []string
+	DownloadArtifact(jobID string, suiteName string, realDevice bool, attemptNumber int, timedOut bool, status string) []string
 }

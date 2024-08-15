@@ -147,13 +147,13 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 			}
 
 			var artifacts []report.Artifact
-			lastAttempt := res.attempts[len(res.attempts)-1]
-			files := r.downloadArtifacts(res.name, lastAttempt, artifactCfg.When)
-			for _, f := range files {
-				artifacts = append(artifacts, report.Artifact{
-					FilePath: f,
-				})
-			}
+			// lastAttempt := res.attempts[len(res.attempts)-1]
+			// files := r.downloadArtifacts(res.name, lastAttempt, artifactCfg, 0)
+			// for _, f := range files {
+			// 	artifacts = append(artifacts, report.Artifact{
+			// 		FilePath: f,
+			// 	})
+			// }
 
 			r.FetchJUnitReports(&res, artifacts)
 
@@ -358,6 +358,8 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 				IsRDC:      jobData.IsRDC,
 			})
 			go r.Retrier.Retry(jobOpts, opts, jobData)
+
+			r.JobService.DownloadArtifact(jobData.ID, jobData.Name, jobData.IsRDC, opts.Attempt, jobData.TimedOut, jobData.Status)
 			continue
 		}
 
@@ -377,6 +379,9 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 				jobData.Passed = true
 			}
 		}
+
+		// TODO: Attach files to result
+		r.JobService.DownloadArtifact(jobData.ID, jobData.Name, jobData.IsRDC, opts.Attempt, jobData.TimedOut, jobData.Status)
 
 		results <- result{
 			name:      opts.DisplayName,
@@ -1004,13 +1009,13 @@ func (r *CloudRunner) loadJUnitReport(jobID string, isRDC bool) (junit.TestSuite
 	return junit.Parse(fileContent)
 }
 
-func (r *CloudRunner) downloadArtifacts(suiteName string, attempt report.Attempt, when config.When) []string {
-	if attempt.ID == "" || attempt.TimedOut || r.Async || !when.IsNow(attempt.Status == job.StatePassed) {
-		return []string{}
-	}
-
-	return r.JobService.DownloadArtifact(attempt.ID, suiteName, attempt.IsRDC)
-}
+// func (r *CloudRunner) downloadArtifacts(suiteName string, attempt report.Attempt, artifactConfig config.ArtifactDownload, attemptNumber int) []string {
+// 	// if attempt.ID == "" || attempt.TimedOut || r.Async || !artifactConfig.When.IsNow(attempt.Status == job.StatePassed) {
+// 	// 	return []string{}
+// 	// }
+//
+// 	return r.JobService.DownloadArtifact(attempt.ID, destDir, attempt.IsRDC)
+// }
 
 func arrayContains(list []string, want string) bool {
 	for _, item := range list {
