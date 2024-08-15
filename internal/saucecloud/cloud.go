@@ -83,7 +83,8 @@ type result struct {
 	retries   int
 	attempts  []report.Attempt
 
-	details insights.Details
+	details   insights.Details
+	artifacts []report.Artifact
 }
 
 // ConsoleLogAsset represents job asset log file name.
@@ -146,16 +147,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				browser = fmt.Sprintf("%s %s", browser, res.job.BrowserVersion)
 			}
 
-			var artifacts []report.Artifact
-			// lastAttempt := res.attempts[len(res.attempts)-1]
-			// files := r.downloadArtifacts(res.name, lastAttempt, artifactCfg, 0)
-			// for _, f := range files {
-			// 	artifacts = append(artifacts, report.Artifact{
-			// 		FilePath: f,
-			// 	})
-			// }
-
-			r.FetchJUnitReports(&res, artifacts)
+			r.FetchJUnitReports(&res, res.artifacts)
 
 			var url string
 			if res.job.ID != "" {
@@ -172,7 +164,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				Platform:   platform,
 				DeviceName: res.job.DeviceName,
 				URL:        url,
-				Artifacts:  artifacts,
+				Artifacts:  res.artifacts,
 				Origin:     "sauce",
 				RDC:        res.job.IsRDC,
 				TimedOut:   res.job.TimedOut,
@@ -378,8 +370,13 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			}
 		}
 
-		// TODO: Attach files to result
-		r.JobService.DownloadArtifact(jobData.ID, jobData.Name, jobData.IsRDC, opts.Attempt, jobData.TimedOut, jobData.Status)
+		files := r.JobService.DownloadArtifact(jobData.ID, jobData.Name, jobData.IsRDC, opts.Attempt, jobData.TimedOut, jobData.Status)
+		var artifacts []report.Artifact
+		for _, f := range files {
+			artifacts = append(artifacts, report.Artifact{
+				FilePath: f,
+			})
+		}
 
 		results <- result{
 			name:      opts.DisplayName,
@@ -399,6 +396,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 				EndTime:   time.Now(),
 				Status:    jobData.Status,
 			}),
+			artifacts: artifacts,
 		}
 	}
 }
