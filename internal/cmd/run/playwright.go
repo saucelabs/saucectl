@@ -28,9 +28,14 @@ import (
 	"github.com/saucelabs/saucectl/internal/viper"
 )
 
+type playwrightFlags struct {
+	npmStrictSSL bool
+}
+
 // NewPlaywrightCmd creates the 'run' command for Playwright.
 func NewPlaywrightCmd() *cobra.Command {
 	sc := flags.SnakeCharmer{Fmap: map[string]*pflag.Flag{}}
+	var pf playwrightFlags
 
 	cmd := &cobra.Command{
 		Use:              "playwright",
@@ -46,7 +51,7 @@ func NewPlaywrightCmd() *cobra.Command {
 			// Test patterns are passed in via positional args.
 			viper.Set("suite::testMatch", args)
 
-			exitCode, err := runPlaywright(cmd, true)
+			exitCode, err := runPlaywright(cmd, pf, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 			}
@@ -92,14 +97,14 @@ func NewPlaywrightCmd() *cobra.Command {
 	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")
 	sc.StringToString("npm.packages", "npm::packages", map[string]string{}, "Specify npm packages that are required to run tests")
 	sc.StringSlice("npm.dependencies", "npm::dependencies", []string{}, "Specify local npm dependencies for saucectl to upload. These dependencies must already be installed in the local node_modules directory.")
-	sc.Bool("npm.strictSSL", "npm::strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https.")
+	cmd.PersistentFlags().BoolVar(&pf.npmStrictSSL, "npm.strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https.")
 
 	// Deprecated flags
 	_ = sc.Fset.MarkDeprecated("npm.registry", "please set the npm registries field in the Sauce configuration file")
 	return cmd
 }
 
-func runPlaywright(cmd *cobra.Command, isCLIDriven bool) (int, error) {
+func runPlaywright(cmd *cobra.Command, pf playwrightFlags, isCLIDriven bool) (int, error) {
 	if !isCLIDriven {
 		config.ValidateSchema(gFlags.cfgFilePath)
 	}
@@ -111,10 +116,8 @@ func runPlaywright(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 
 	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
 
-	// If npm.strictSSL is not explicitly set via the flag and not configured via the config file,
-	// `StrictSSL` should remain unset, which means it should be nil.
-	if !cmd.Flags().Changed("npm.strictSSL") && gFlags.cfgFilePath == "" {
-		p.Npm.StrictSSL = nil
+	if cmd.Flags().Changed("npm.strictSSL") {
+		p.Npm.StrictSSL = &pf.npmStrictSSL
 	}
 
 	if err := applyPlaywrightFlags(&p); err != nil {

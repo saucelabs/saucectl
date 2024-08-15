@@ -31,6 +31,7 @@ import (
 type testcafeFlags struct {
 	QuarantineMode flags.QuarantineMode
 	Simulator      flags.Simulator
+	npmStrictSSL   bool
 }
 
 // NewTestcafeCmd creates the 'run' command for TestCafe.
@@ -119,7 +120,7 @@ func NewTestcafeCmd() *cobra.Command {
 	sc.String("npm.registry", "npm::registry", "", "Specify the npm registry URL")
 	sc.StringToString("npm.packages", "npm::packages", map[string]string{}, "Specify npm packages that are required to run tests")
 	sc.StringSlice("npm.dependencies", "npm::dependencies", []string{}, "Specify local npm dependencies for saucectl to upload. These dependencies must already be installed in the local node_modules directory.")
-	sc.Bool("npm.strictSSL", "npm::strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https.")
+	cmd.PersistentFlags().BoolVar(&lflags.npmStrictSSL, "npm.strictSSL", true, "Whether or not to do SSL key validation when making requests to the registry via https.")
 
 	// Simulators
 	f.Var(&lflags.Simulator, "simulator", "Specifies the simulator to use for testing")
@@ -142,10 +143,8 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 
 	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
 
-	// If npm.strictSSL is not explicitly set via the flag and not configured via the config file,
-	// `StrictSSL` should remain unset, which means it should be nil.
-	if !cmd.Flags().Changed("npm.strictSSL") && gFlags.cfgFilePath == "" {
-		p.Npm.StrictSSL = nil
+	if cmd.Flags().Changed("npm.strictSSL") {
+		p.Npm.StrictSSL = &tcFlags.npmStrictSSL
 	}
 
 	if err := applyTestcafeFlags(&p, tcFlags); err != nil {

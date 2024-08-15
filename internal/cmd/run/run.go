@@ -195,10 +195,10 @@ func preRun() error {
 // Run runs the command
 func Run(cmd *cobra.Command) (int, error) {
 	if typeDef.Kind == cypress.Kind {
-		return runCypress(cmd, false)
+		return runCypress(cmd, cypressFlags{}, false)
 	}
 	if typeDef.Kind == playwright.Kind {
-		return runPlaywright(cmd, false)
+		return runPlaywright(cmd, playwrightFlags{}, false)
 	}
 	if typeDef.Kind == testcafe.Kind {
 		return runTestcafe(cmd, testcafeFlags{}, false)
