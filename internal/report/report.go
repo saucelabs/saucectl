@@ -20,8 +20,6 @@ type Attempt struct {
 	// TestSuites contains the junit test suites that were generated as part of
 	// the attempt.
 	TestSuites junit.TestSuites `json:"-"`
-	TimedOut   bool             `json:"-"`
-	IsRDC      bool             `json:"-"`
 }
 
 // TestResult represents the test result.

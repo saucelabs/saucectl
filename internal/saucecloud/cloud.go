@@ -354,8 +354,6 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 				EndTime:    time.Now(),
 				Status:     jobData.Status,
 				TestSuites: junit.TestSuites{},
-				TimedOut:   jobData.TimedOut,
-				IsRDC:      jobData.IsRDC,
 			})
 			go r.Retrier.Retry(jobOpts, opts, jobData)
 
@@ -400,8 +398,6 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 				StartTime: opts.StartTime,
 				EndTime:   time.Now(),
 				Status:    jobData.Status,
-				TimedOut:  jobData.TimedOut,
-				IsRDC:     jobData.IsRDC,
 			}),
 		}
 	}
