@@ -35,7 +35,7 @@ brews:
       name: devx-sauce-bot
       email: devx.bot@saucelabs.com
 archives:
-  - version_template: >-
+  - name_template: >-
       {{ .ProjectName }}_{{ .Version }}_
       {{- if eq .Os "darwin"}}mac_
       {{- else if eq .Os "linux" }}linux_
@@ -50,7 +50,7 @@ archives:
     files:
       - LICENSE
 checksum:
-  version_template: 'checksums.txt'
+  name_template: 'checksums.txt'
 snapshot:
   version_template: "{{ .Tag }}-next"
 changelog:
