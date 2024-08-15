@@ -447,6 +447,10 @@ func (p *Project) GetNpm() config.Npm {
 	return p.Npm
 }
 
+func (p *Project) SetNpmStrictSSL(strictSSL *bool) {
+	p.Npm.StrictSSL = strictSSL
+}
+
 // SetCLIFlags sets cli flags
 func (p *Project) SetCLIFlags(flags map[string]interface{}) {
 	p.CLIFlags = flags

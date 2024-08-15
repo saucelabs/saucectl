@@ -106,6 +106,13 @@ func runCypress(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	if err := p.ApplyFlags(gFlags.selectedSuite); err != nil {
 		return 1, err
 	}
+
+	// If npm.strictSSL is not explicitly set via the flag and not configured via the config file,
+	// `StrictSSL` should remain unset, which means it should be nil.
+	if !cmd.Flags().Changed("npm.strictSSL") && gFlags.cfgFilePath == "" {
+		p.SetNpmStrictSSL(nil)
+	}
+
 	p.SetDefaults()
 	if !gFlags.noAutoTagging {
 		p.AppendTags(ci.GetTags())

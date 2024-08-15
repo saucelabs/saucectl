@@ -142,6 +142,12 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 
 	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
 
+	// If npm.strictSSL is not explicitly set via the flag and not configured via the config file,
+	// `StrictSSL` should remain unset, which means it should be nil.
+	if !cmd.Flags().Changed("npm.strictSSL") && gFlags.cfgFilePath == "" {
+		p.Npm.StrictSSL = nil
+	}
+
 	if err := applyTestcafeFlags(&p, tcFlags); err != nil {
 		return 1, err
 	}
