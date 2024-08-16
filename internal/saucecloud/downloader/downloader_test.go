@@ -49,9 +49,9 @@ func TestArtifactDownloader_DownloadArtifact(t *testing.T) {
 	downloader := NewArtifactDownloader(&rc, artifactCfg)
 	downloader.DownloadArtifact(
 		job.Job{
-			ID:    "test-123",
-			Name:  "suite name",
-			IsRDC: true,
+			ID:     "test-123",
+			Name:   "suite name",
+			IsRDC:  true,
 			Status: job.StateComplete,
 		}, 0, 0,
 	)
