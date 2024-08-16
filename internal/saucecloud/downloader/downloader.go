@@ -48,7 +48,7 @@ func (d *ArtifactDownloader) DownloadArtifact(jobID string, suiteName string, re
 
 	return artifacts
 }
-	
+
 func (d *ArtifactDownloader) downloadArtifact(targetDir, jobID, fileName string, realDevice bool) (string, error) {
 	content, err := d.reader.GetJobAssetFileContent(context.Background(), jobID, fileName, realDevice)
 	if err != nil {
@@ -57,5 +57,3 @@ func (d *ArtifactDownloader) downloadArtifact(targetDir, jobID, fileName string,
 	targetFile := filepath.Join(targetDir, fileName)
 	return targetFile, os.WriteFile(targetFile, content, 0644)
 }
-
-
