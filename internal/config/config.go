@@ -124,9 +124,10 @@ func (w When) IsNow(passed bool) bool {
 
 // ArtifactDownload represents the test artifacts configuration.
 type ArtifactDownload struct {
-	Match     []string `yaml:"match,omitempty" json:"match"`
-	When      When     `yaml:"when,omitempty" json:"when"`
-	Directory string   `yaml:"directory,omitempty" json:"directory"`
+	Match       []string `yaml:"match,omitempty" json:"match"`
+	When        When     `yaml:"when,omitempty" json:"when"`
+	Directory   string   `yaml:"directory,omitempty" json:"directory"`
+	AllAttempts bool     `yaml:"allAttempts,omitempty" json:"allAttempts"`
 }
 
 // Notifications represents the test notifications configuration.

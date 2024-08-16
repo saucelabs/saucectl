@@ -334,6 +334,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 		}
 
 		if opts.Attempt < opts.Retries && ((!jobData.Passed && !skipped) || (opts.CurrentPassCount < opts.PassThreshold)) {
+			go r.JobService.DownloadArtifact(jobData.ID, jobData.Name, jobData.IsRDC, opts.Attempt, opts.Retries, jobData.TimedOut, jobData.Status)
 			if !jobData.Passed {
 				log.Warn().Err(err).Msg("Suite errored.")
 			}
@@ -349,7 +350,6 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			})
 			go r.Retrier.Retry(jobOpts, opts, jobData)
 
-			r.JobService.DownloadArtifact(jobData.ID, jobData.Name, jobData.IsRDC, opts.Attempt, jobData.TimedOut, jobData.Status)
 			continue
 		}
 
@@ -370,7 +370,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			}
 		}
 
-		files := r.JobService.DownloadArtifact(jobData.ID, jobData.Name, jobData.IsRDC, opts.Attempt, jobData.TimedOut, jobData.Status)
+		files := r.JobService.DownloadArtifact(jobData.ID, jobData.Name, jobData.IsRDC, opts.Attempt, opts.Retries, jobData.TimedOut, jobData.Status)
 		var artifacts []report.Artifact
 		for _, f := range files {
 			artifacts = append(artifacts, report.Artifact{

@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
@@ -24,25 +23,35 @@ func NewArtifactDownloader(reader job.Reader, artifactConfig config.ArtifactDown
 	}
 }
 
-func (d *ArtifactDownloader) DownloadArtifact(jobID string, suiteName string, realDevice bool, attemptNumber int, timedOut bool, status string) []string {
-	if jobID == "" || timedOut || !d.config.When.IsNow(status == job.StatePassed) || status == job.StateInProgress {
+func (d *ArtifactDownloader) DownloadArtifact(jobID string, suiteName string, realDevice bool, attemptNumber int, retries int, timedOut bool, status string) []string {
+	if jobID == "" || timedOut || !d.config.When.IsNow(status == job.StatePassed) || status == job.StateInProgress || (d.config.AllAttempts == false && attemptNumber < retries){
 		return []string{}
 	}
 
+	log.Info().Bool("allAttempts", d.config.AllAttempts).Int("attemptNumber", attemptNumber).Int("retries", retries).Msg("Download eligible")
+	// var destDir string
+	// var err error
+	// if d.config.AllAttempts == true {
+	// 	// // FIXME: No magic numbers
+	// 	// if attemptNumber != 0 {
+	// 	// 	destDir = filepath.Join(destDir, strconv.Itoa(attemptNumber))
+	// 	// 	err = os.Mkdir(destDir, 0755)
+	// 	// 	if err != nil {
+	// 	// 		log.Error().Msgf("Unable to create aritfacts folder (%v)", err)
+	// 	// 		return []string{}
+	// 	// 	}
+	// 	// }
+	// } else {
+	// 	destDir, err = config.GetSuiteArtifactFolder(suiteName, d.config)
+	// 	if err != nil {
+	// 		log.Error().Msgf("Unable to create artifacts folder (%v)", err)
+	// 		return []string{}
+	// 	}
+	// }
 	destDir, err := config.GetSuiteArtifactFolder(suiteName, d.config)
 	if err != nil {
 		log.Error().Msgf("Unable to create artifacts folder (%v)", err)
 		return []string{}
-	}
-
-	// FIXME: No magic numbers
-	if attemptNumber != 0 {
-		destDir = filepath.Join(destDir, strconv.Itoa(attemptNumber))
-		err = os.Mkdir(destDir, 0755)
-		if err != nil {
-			log.Error().Msgf("Unable to create aritfacts folder (%v)", err)
-			return []string{}
-		}
 	}
 
 	files, err := d.reader.GetJobAssetFileNames(context.Background(), jobID, realDevice)
