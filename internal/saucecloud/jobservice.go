@@ -23,12 +23,12 @@ type JobService struct {
 	RDCDownloader job.ArtifactDownloader
 }
 
-func (s JobService) DownloadArtifact(jobID, suiteName string, realDevice bool) []string {
-	if realDevice {
-		return s.RDCDownloader.DownloadArtifact(jobID, suiteName, realDevice)
+func (s JobService) DownloadArtifact(jobData job.Job, attemptNumber int, retries int) []string {
+	if jobData.IsRDC {
+		return s.RDCDownloader.DownloadArtifact(jobData, attemptNumber, retries)
 	}
 
-	return s.VDCDownloader.DownloadArtifact(jobID, suiteName, realDevice)
+	return s.VDCDownloader.DownloadArtifact(jobData, attemptNumber, retries)
 }
 
 func (s JobService) StopJob(ctx context.Context, jobID string, realDevice bool) (job.Job, error) {

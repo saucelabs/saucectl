@@ -166,6 +166,12 @@ func TestRunJobTimeout(t *testing.T) {
 			VDCWriter: &mocks.FakeJobWriter{UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
 				return nil
 			}},
+			VDCDownloader: &mocks.FakeArtifactDownloader{DownloadArtifactFn: func(jobData job.Job, attempt int, retries int) []string {
+				return []string{}
+			}},
+			RDCDownloader: &mocks.FakeArtifactDownloader{DownloadArtifactFn: func(jobData job.Job, attempt int, retries int) []string {
+				return []string{}
+			}},
 		},
 	}
 
@@ -221,6 +227,12 @@ func TestRunJobRetries(t *testing.T) {
 				VDCWriter: &mocks.FakeJobWriter{UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
 					return nil
 				}},
+				VDCDownloader: &mocks.FakeArtifactDownloader{DownloadArtifactFn: func(jobData job.Job, attempt int, retries int) []string {
+					return []string{}
+				}},
+				RDCDownloader: &mocks.FakeArtifactDownloader{DownloadArtifactFn: func(jobData job.Job, attempt int, retries int) []string {
+					return []string{}
+				}},
 			},
 		}
 
@@ -257,6 +269,12 @@ func TestRunJobTimeoutRDC(t *testing.T) {
 					return job.Job{ID: id, TimedOut: true}, nil
 				},
 			},
+			VDCDownloader: &mocks.FakeArtifactDownloader{DownloadArtifactFn: func(jobData job.Job, attempt int, retries int) []string {
+				return []string{}
+			}},
+			RDCDownloader: &mocks.FakeArtifactDownloader{DownloadArtifactFn: func(jobData job.Job, attempt int, retries int) []string {
+				return []string{}
+			}},
 		},
 	}
 

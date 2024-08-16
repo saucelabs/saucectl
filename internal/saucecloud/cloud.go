@@ -83,7 +83,8 @@ type result struct {
 	retries   int
 	attempts  []report.Attempt
 
-	details insights.Details
+	details   insights.Details
+	artifacts []report.Artifact
 }
 
 // ConsoleLogAsset represents job asset log file name.
@@ -146,15 +147,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				browser = fmt.Sprintf("%s %s", browser, res.job.BrowserVersion)
 			}
 
-			var artifacts []report.Artifact
-			files := r.downloadArtifacts(res.name, res.job, artifactCfg.When)
-			for _, f := range files {
-				artifacts = append(artifacts, report.Artifact{
-					FilePath: f,
-				})
-			}
-
-			r.FetchJUnitReports(&res, artifacts)
+			r.FetchJUnitReports(&res, res.artifacts)
 
 			var url string
 			if res.job.ID != "" {
@@ -171,7 +164,7 @@ func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, result
 				Platform:   platform,
 				DeviceName: res.job.DeviceName,
 				URL:        url,
-				Artifacts:  artifacts,
+				Artifacts:  res.artifacts,
 				Origin:     "sauce",
 				RDC:        res.job.IsRDC,
 				TimedOut:   res.job.TimedOut,
@@ -341,6 +334,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 		}
 
 		if opts.Attempt < opts.Retries && ((!jobData.Passed && !skipped) || (opts.CurrentPassCount < opts.PassThreshold)) {
+			go r.JobService.DownloadArtifact(jobData, opts.Attempt, opts.Retries)
 			if !jobData.Passed {
 				log.Warn().Err(err).Msg("Suite errored.")
 			}
@@ -355,6 +349,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 				TestSuites: junit.TestSuites{},
 			})
 			go r.Retrier.Retry(jobOpts, opts, jobData)
+
 			continue
 		}
 
@@ -375,6 +370,14 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			}
 		}
 
+		files := r.JobService.DownloadArtifact(jobData, opts.Attempt, opts.Retries)
+		var artifacts []report.Artifact
+		for _, f := range files {
+			artifacts = append(artifacts, report.Artifact{
+				FilePath: f,
+			})
+		}
+
 		results <- result{
 			name:      opts.DisplayName,
 			browser:   opts.BrowserName,
@@ -393,6 +396,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 				EndTime:   time.Now(),
 				Status:    jobData.Status,
 			}),
+			artifacts: artifacts,
 		}
 	}
 }
@@ -997,14 +1001,6 @@ func (r *CloudRunner) loadJUnitReport(jobID string, isRDC bool) (junit.TestSuite
 		return junit.TestSuites{}, err
 	}
 	return junit.Parse(fileContent)
-}
-
-func (r *CloudRunner) downloadArtifacts(suiteName string, job job.Job, when config.When) []string {
-	if job.ID == "" || job.TimedOut || r.Async || !when.IsNow(job.Passed) {
-		return []string{}
-	}
-
-	return r.JobService.DownloadArtifact(job.ID, suiteName, job.IsRDC)
 }
 
 func arrayContains(list []string, want string) bool {

@@ -23,13 +23,21 @@ func NewArtifactDownloader(reader job.Reader, artifactConfig config.ArtifactDown
 	}
 }
 
-func (d *ArtifactDownloader) DownloadArtifact(jobID string, suiteName string, realDevice bool) []string {
-	targetDir, err := config.GetSuiteArtifactFolder(suiteName, d.config)
+func (d *ArtifactDownloader) DownloadArtifact(jobData job.Job, attemptNumber int, retries int) []string {
+	if jobData.ID == "" ||
+		jobData.TimedOut || !job.Done(jobData.Status) ||
+		!d.config.When.IsNow(jobData.Passed) ||
+		(!d.config.AllAttempts && attemptNumber < retries) {
+		return []string{}
+	}
+
+	destDir, err := config.GetSuiteArtifactFolder(jobData.Name, d.config)
 	if err != nil {
 		log.Error().Msgf("Unable to create artifacts folder (%v)", err)
 		return []string{}
 	}
-	files, err := d.reader.GetJobAssetFileNames(context.Background(), jobID, realDevice)
+
+	files, err := d.reader.GetJobAssetFileNames(context.Background(), jobData.ID, jobData.IsRDC)
 	if err != nil {
 		log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
 		return []string{}
@@ -37,8 +45,9 @@ func (d *ArtifactDownloader) DownloadArtifact(jobID string, suiteName string, re
 
 	filepaths := fpath.MatchFiles(files, d.config.Match)
 	var artifacts []string
+
 	for _, f := range filepaths {
-		targetFile, err := d.downloadArtifact(targetDir, jobID, f, realDevice)
+		targetFile, err := d.downloadArtifact(destDir, jobData.ID, f, jobData.IsRDC)
 		if err != nil {
 			log.Err(err).Msg("Unable to download artifacts")
 			return artifacts

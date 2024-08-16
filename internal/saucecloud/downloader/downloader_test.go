@@ -10,6 +10,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/config"
 	httpServices "github.com/saucelabs/saucectl/internal/http"
+	"github.com/saucelabs/saucectl/internal/job"
 )
 
 func TestArtifactDownloader_DownloadArtifact(t *testing.T) {
@@ -43,10 +44,17 @@ func TestArtifactDownloader_DownloadArtifact(t *testing.T) {
 	artifactCfg := config.ArtifactDownload{
 		Directory: tempDir,
 		Match:     []string{"junit.xml"},
+		When:      config.WhenAlways,
 	}
-
 	downloader := NewArtifactDownloader(&rc, artifactCfg)
-	downloader.DownloadArtifact("test-123", "suite name", true)
+	downloader.DownloadArtifact(
+		job.Job{
+			ID:     "test-123",
+			Name:   "suite name",
+			IsRDC:  true,
+			Status: job.StateComplete,
+		}, 0, 0,
+	)
 
 	fileName := filepath.Join(tempDir, "suite_name", "junit.xml")
 	d, err := os.ReadFile(fileName)

@@ -70,6 +70,10 @@
                       "directory": {
                         "description": "Specifies the path to the folder in which to download artifacts. A separate subdirectory is generated in this location for each suite.",
                         "type": "string"
+                      },
+                      "allAttempts": {
+                        "description": "If true and a test is retried, artifacts for every attempt will be downloaded. Otherwise, only artifacts for the final attempt will be downloaded.",
+                        "type": "boolean"
                       }
                     },
                     "required": [
@@ -725,6 +729,10 @@
                       "directory": {
                         "description": "Specifies the path to the folder in which to download artifacts. A separate subdirectory is generated in this location for each suite.",
                         "type": "string"
+                      },
+                      "allAttempts": {
+                        "description": "If true and a test is retried, artifacts for every attempt will be downloaded. Otherwise, only artifacts for the final attempt will be downloaded.",
+                        "type": "boolean"
                       }
                     },
                     "required": [
