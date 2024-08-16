@@ -52,6 +52,7 @@ func TestArtifactDownloader_DownloadArtifact(t *testing.T) {
 			ID:    "test-123",
 			Name:  "suite name",
 			IsRDC: true,
+			Status: job.StateComplete,
 		}, 0, 0,
 	)
 
