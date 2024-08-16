@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/artifacts"
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -45,7 +44,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 			creds := credentials.Get()
 			url := reg.APIBaseURL()
 			restoClient := http.NewResto(url, creds.Username, creds.AccessKey, restoTimeout)
-			rdcClient := http.NewRDCService(url, creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
+			rdcClient := http.NewRDCService(url, creds.Username, creds.AccessKey, rdcTimeout)
 			testcompClient := http.NewTestComposer(url, creds, testComposerTimeout)
 
 			artifactSvc = saucecloud.NewArtifactService(&restoClient, &rdcClient, &testcompClient)

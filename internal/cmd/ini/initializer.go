@@ -59,7 +59,7 @@ type initializer struct {
 func newInitializer(stdio terminal.Stdio, creds iam.Credentials, cfg *initConfig) *initializer {
 	r := region.FromString(cfg.region)
 	tc := http.NewTestComposer(r.APIBaseURL(), creds, testComposerTimeout)
-	rc := http.NewRDCService(r.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
+	rc := http.NewRDCService(r.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout)
 	rs := http.NewResto(r.APIBaseURL(), creds.Username, creds.AccessKey, restoTimeout)
 	us := http.NewUserService(r.APIBaseURL(), creds, 5*time.Second)
 

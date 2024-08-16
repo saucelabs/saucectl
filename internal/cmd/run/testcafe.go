@@ -21,6 +21,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
+	"github.com/saucelabs/saucectl/internal/saucecloud/downloader"
 	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/testcafe"
@@ -185,13 +186,14 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 	creds := regio.Credentials()
 
 	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
-	restoClient.ArtifactConfig = p.Artifacts.Download
 	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)
 	webdriverClient := http.NewWebdriver(regio.WebDriverBaseURL(), creds, webdriverTimeout)
 	appsClient := *http.NewAppStore(regio.APIBaseURL(), creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
-	rdcClient := http.NewRDCService(regio.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout, config.ArtifactDownload{})
+	rdcClient := http.NewRDCService(regio.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout)
 	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
 	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
+
+	vdcDownloader := downloader.NewArtifactDownloader(&restoClient, p.Artifacts.Download)
 
 	log.Info().Msg("Running Testcafe in Sauce Labs")
 	r := saucecloud.TestcafeRunner{
@@ -206,7 +208,7 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 				VDCWriter:     &testcompClient,
 				VDCStopper:    &restoClient,
 				RDCStopper:    &rdcClient,
-				VDCDownloader: &restoClient,
+				VDCDownloader: &vdcDownloader,
 			},
 			TunnelService:   &restoClient,
 			MetadataService: &testcompClient,

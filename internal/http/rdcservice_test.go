@@ -7,15 +7,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
 	"reflect"
 	"sort"
 	"testing"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/stretchr/testify/assert"
@@ -45,7 +42,7 @@ func TestRDCService_ReadJob(t *testing.T) {
 	}))
 	defer ts.Close()
 	timeout := 3 * time.Second
-	client := NewRDCService(ts.URL, "test-user", "test-key", timeout, config.ArtifactDownload{})
+	client := NewRDCService(ts.URL, "test-user", "test-key", timeout)
 
 	testCases := []struct {
 		name    string
@@ -142,7 +139,7 @@ func TestRDCService_PollJob(t *testing.T) {
 	}{
 		{
 			name:   "get job details with ID 1 and status 'complete'",
-			client: NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			client: NewRDCService(ts.URL, "test", "123", timeout),
 			jobID:  "1",
 			expectedResp: job.Job{
 				ID:     "1",
@@ -155,7 +152,7 @@ func TestRDCService_PollJob(t *testing.T) {
 		},
 		{
 			name:   "get job details with ID 2 and status 'error'",
-			client: NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			client: NewRDCService(ts.URL, "test", "123", timeout),
 			jobID:  "2",
 			expectedResp: job.Job{
 				ID:     "2",
@@ -168,28 +165,28 @@ func TestRDCService_PollJob(t *testing.T) {
 		},
 		{
 			name:         "job not found error from external API",
-			client:       NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			client:       NewRDCService(ts.URL, "test", "123", timeout),
 			jobID:        "3",
 			expectedResp: job.Job{},
 			expectedErr:  ErrJobNotFound,
 		},
 		{
 			name:         "http status is not 200, but 401 from external API",
-			client:       NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			client:       NewRDCService(ts.URL, "test", "123", timeout),
 			jobID:        "4",
 			expectedResp: job.Job{},
 			expectedErr:  errors.New("unexpected statusCode: 401"),
 		},
 		{
 			name:         "unexpected status code from external API",
-			client:       NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			client:       NewRDCService(ts.URL, "test", "123", timeout),
 			jobID:        "333",
 			expectedResp: job.Job{},
 			expectedErr:  errors.New("internal server error"),
 		},
 		{
 			name:   "get job details with ID 5. retry 2 times and succeed",
-			client: NewRDCService(ts.URL, "test", "123", timeout, config.ArtifactDownload{}),
+			client: NewRDCService(ts.URL, "test", "123", timeout),
 			jobID:  "5",
 			expectedResp: job.Job{
 				ID:     "5",
@@ -241,7 +238,7 @@ func TestRDCService_GetJobAssetFileNames(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
-	client := NewRDCService(ts.URL, "test-user", "test-password", 1*time.Second, config.ArtifactDownload{})
+	client := NewRDCService(ts.URL, "test-user", "test-password", 1*time.Second)
 
 	testCases := []struct {
 		name     string
@@ -314,7 +311,7 @@ func TestRDCService_GetJobAssetFileContent(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
-	client := NewRDCService(ts.URL, "test-user", "test-password", 1*time.Second, config.ArtifactDownload{})
+	client := NewRDCService(ts.URL, "test-user", "test-password", 1*time.Second)
 
 	testCases := []struct {
 		name     string
@@ -350,50 +347,6 @@ func TestRDCService_GetJobAssetFileContent(t *testing.T) {
 		if err == nil {
 			assert.Equal(t, tt.want, data)
 		}
-	}
-}
-
-func TestRDCService_DownloadArtifact(t *testing.T) {
-	fileContent := "<xml>junit.xml</xml>"
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var err error
-		switch r.URL.Path {
-		case "/v1/rdc/jobs/test-123":
-			_, err = w.Write([]byte(`{"automation_backend":"espresso"}`))
-		case "/v1/rdc/jobs/test-123/junit.xml":
-			_, err = w.Write([]byte(fileContent))
-		default:
-			w.WriteHeader(http.StatusNotFound)
-		}
-
-		if err != nil {
-			t.Errorf("failed to respond: %v", err)
-		}
-	}))
-	defer ts.Close()
-
-	tempDir, err := os.MkdirTemp("", "saucectl-download-artifact")
-	if err != nil {
-		t.Errorf("Failed to create temp dir: %v", err)
-	}
-	defer func() {
-		_ = os.RemoveAll(tempDir)
-	}()
-
-	rc := NewRDCService(ts.URL, "dummy-user", "dummy-key", 10*time.Second, config.ArtifactDownload{
-		Directory: tempDir,
-		Match:     []string{"junit.xml"},
-	})
-	rc.DownloadArtifact("test-123", "suite name", true)
-
-	fileName := filepath.Join(tempDir, "suite_name", "junit.xml")
-	d, err := os.ReadFile(fileName)
-	if err != nil {
-		t.Errorf("file '%s' not found: %v", fileName, err)
-	}
-
-	if string(d) != fileContent {
-		t.Errorf("file content mismatch: got '%v', expects: '%v'", d, fileContent)
 	}
 }
 
