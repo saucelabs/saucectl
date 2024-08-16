@@ -1003,14 +1003,6 @@ func (r *CloudRunner) loadJUnitReport(jobID string, isRDC bool) (junit.TestSuite
 	return junit.Parse(fileContent)
 }
 
-// func (r *CloudRunner) downloadArtifacts(suiteName string, attempt report.Attempt, artifactConfig config.ArtifactDownload, attemptNumber int) []string {
-// 	// if attempt.ID == "" || attempt.TimedOut || r.Async || !artifactConfig.When.IsNow(attempt.Status == job.StatePassed) {
-// 	// 	return []string{}
-// 	// }
-//
-// 	return r.JobService.DownloadArtifact(attempt.ID, destDir, attempt.IsRDC)
-// }
-
 func arrayContains(list []string, want string) bool {
 	for _, item := range list {
 		if item == want {
