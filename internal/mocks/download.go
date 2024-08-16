@@ -1,11 +1,13 @@
 package mocks
 
+import "github.com/saucelabs/saucectl/internal/job"
+
 // FakeArtifactDownloader defines a fake Downloader
 type FakeArtifactDownloader struct {
-	DownloadArtifactFn func(jobID, suiteName string) []string
+	DownloadArtifactFn func(jobData job.Job, attempt int, retries int) []string
 }
 
 // DownloadArtifact defines a fake function for FakeDownloader
-func (f *FakeArtifactDownloader) DownloadArtifact(jobID, suiteName string, realDevice bool) []string {
-	return f.DownloadArtifactFn(jobID, suiteName)
+func (f *FakeArtifactDownloader) DownloadArtifact(jobData job.Job, attempt int, retries int) []string {
+	return f.DownloadArtifactFn(jobData, attempt, retries)
 }
