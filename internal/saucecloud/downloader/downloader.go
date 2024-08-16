@@ -24,7 +24,10 @@ func NewArtifactDownloader(reader job.Reader, artifactConfig config.ArtifactDown
 }
 
 func (d *ArtifactDownloader) DownloadArtifact(jobData job.Job, attemptNumber int, retries int) []string {
-	if jobData.ID == "" || jobData.TimedOut || !d.config.When.IsNow(jobData.Passed) || jobData.Status == job.StateInProgress || (d.config.AllAttempts == false && attemptNumber < retries) {
+	if jobData.ID == "" ||
+		jobData.TimedOut ||
+		!d.config.When.IsNow(jobData.Passed) || jobData.Status == job.StateInProgress ||
+		(!d.config.AllAttempts && attemptNumber < retries) {
 		return []string{}
 	}
 
