@@ -37,12 +37,14 @@ func List(sys fs.FS, files []string) []*messages.Pickle {
 func GetUniqueNames(scenarios []*messages.Pickle) []string {
 	uniqueMap := make(map[string]bool)
 
-	var names []string
 	for _, s := range scenarios {
-		if uniqueMap[s.Name] {
-			names = append(names, s.Name)
-		}
 		uniqueMap[s.Name] = true
 	}
+
+	var names []string
+	for name := range uniqueMap {
+		names = append(names, name)
+	}
+
 	return names
 }
