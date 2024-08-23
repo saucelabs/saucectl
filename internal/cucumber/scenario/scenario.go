@@ -16,6 +16,7 @@ func List(sys fs.FS, files []string) []*messages.Pickle {
 	for _, filename := range files {
 		f, err := sys.Open(filename)
 		if err != nil {
+			log.Warn().Str("filename", filename).Msgf("Failed to open the file: %v", err)
 			continue
 		}
 		defer f.Close()
