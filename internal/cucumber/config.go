@@ -232,7 +232,7 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 	var shardedSuites []Suite
 
 	for _, s := range suites {
-		if s.Shard != "spec" && s.Shard != "concurrency" && s.Shard != "scenario" {
+		if s.Shard == "" {
 			shardedSuites = append(shardedSuites, s)
 			continue
 		}
