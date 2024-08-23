@@ -146,7 +146,8 @@
             "enum": [
               "",
               "concurrency",
-              "spec"
+              "spec",
+              "scenario"
             ]
           },
           "shardTagsEnabled": {
