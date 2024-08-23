@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// List parses the provided files and returns a list of scenarios.
 func List(sys fs.FS, files []string) []*messages.Pickle {
 	uuid := &messages.UUID{}
 
@@ -29,4 +30,18 @@ func List(sys fs.FS, files []string) []*messages.Pickle {
 		scenarios = append(scenarios, gherkin.Pickles(*doc, filename, uuid.NewId)...)
 	}
 	return scenarios
+}
+
+// GetUniqueNames extracts and returns unique scenario names.
+func GetUniqueNames(scenarios []*messages.Pickle) []string {
+	uniqueMap := make(map[string]bool)
+
+	var names []string
+	for _, s := range scenarios {
+		if uniqueMap[s.Name] {
+			names = append(names, s.Name)
+		}
+		uniqueMap[s.Name] = true
+	}
+	return names
 }

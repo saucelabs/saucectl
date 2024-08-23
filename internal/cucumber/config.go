@@ -294,10 +294,10 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 		}
 		if s.Shard == "scenario" {
 			scenarios := scenario.List(os.DirFS(rootDir), testFiles)
-			for _, scenario := range scenarios {
+			for _, name := range scenario.GetUniqueNames(scenarios) {
 				replica := s
-				replica.Name = fmt.Sprintf("%s - %s", s.Name, scenario.Name)
-				replica.Options.Name = fmt.Sprintf("^%s$", scenario.Name)
+				replica.Name = fmt.Sprintf("%s - %s", s.Name, name)
+				replica.Options.Name = fmt.Sprintf("^%s$", name)
 				shardedSuites = append(shardedSuites, replica)
 			}
 		}
