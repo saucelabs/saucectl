@@ -14,23 +14,28 @@ func List(sys fs.FS, files []string) []*messages.Pickle {
 
 	var scenarios []*messages.Pickle
 	for _, filename := range files {
-		f, err := sys.Open(filename)
-		if err != nil {
-			log.Warn().Str("filename", filename).Msgf("Failed to open the file: %v", err)
-			continue
-		}
-		defer f.Close()
-
-		doc, err := gherkin.ParseGherkinDocument(f, uuid.NewId)
-		if err != nil {
-			log.Warn().
-				Str("filename", filename).
-				Msg("Could not parse file. It will be excluded from sharded execution.")
-			continue
-		}
-		scenarios = append(scenarios, gherkin.Pickles(*doc, filename, uuid.NewId)...)
+		scenarios = append(scenarios, ReadFile(sys, filename, uuid)...)
 	}
 	return scenarios
+}
+
+// ReadFile reads a feature file and returns the parsed list of scenarios.
+func ReadFile(sys fs.FS, filename string, uuid *messages.UUID) []*messages.Pickle {
+	f, err := sys.Open(filename)
+	if err != nil {
+		log.Warn().Str("filename", filename).Msgf("Failed to open the file: %v", err)
+		return nil
+	}
+	defer f.Close()
+
+	doc, err := gherkin.ParseGherkinDocument(f, uuid.NewId)
+	if err != nil {
+		log.Warn().
+			Str("filename", filename).
+			Msg("Could not parse file. It will be excluded from sharded execution.")
+		return nil
+	}
+	return gherkin.Pickles(*doc, filename, uuid.NewId)
 }
 
 // GetUniqueNames extracts and returns unique scenario names.
