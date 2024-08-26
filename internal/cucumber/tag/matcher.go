@@ -4,10 +4,9 @@ package tag
 import (
 	"io/fs"
 
-	gherkin "github.com/cucumber/gherkin/go/v28"
 	messages "github.com/cucumber/messages/go/v24"
 	tagexpressions "github.com/cucumber/tag-expressions/go/v6"
-	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/cucumber/scenario"
 )
 
 // MatchFiles finds feature files that include scenarios with tags that match the given tag expression.
@@ -23,21 +22,7 @@ func MatchFiles(sys fs.FS, files []string, tagExpression string) (matched []stri
 	uuid := &messages.UUID{}
 
 	for _, filename := range files {
-		f, err := sys.Open(filename)
-		if err != nil {
-			continue
-		}
-		defer f.Close()
-
-		doc, err := gherkin.ParseGherkinDocument(f, uuid.NewId)
-		if err != nil {
-			log.Warn().
-				Str("filename", filename).
-				Msg("Could not parse file. It will be excluded from sharded execution.")
-			continue
-		}
-		scenarios := gherkin.Pickles(*doc, filename, uuid.NewId)
-
+		scenarios := scenario.ReadFile(sys, filename, uuid)
 		hasMatch := false
 		for _, s := range scenarios {
 			if match(s.Tags, tagMatcher) {

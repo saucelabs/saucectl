@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/concurrency"
 	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/cucumber/scenario"
 	"github.com/saucelabs/saucectl/internal/cucumber/tag"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/insights"
@@ -231,7 +232,7 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 	var shardedSuites []Suite
 
 	for _, s := range suites {
-		if s.Shard != "spec" && s.Shard != "concurrency" {
+		if s.Shard == "" {
 			shardedSuites = append(shardedSuites, s)
 			continue
 		}
@@ -288,6 +289,15 @@ func shardSuites(rootDir string, suites []Suite, ccy int) ([]Suite, error) {
 				replica := s
 				replica.Name = fmt.Sprintf("%s - %d/%d", s.Name, i+1, len(groups))
 				replica.Options.Paths = group
+				shardedSuites = append(shardedSuites, replica)
+			}
+		}
+		if s.Shard == "scenario" {
+			scenarios := scenario.List(os.DirFS(rootDir), testFiles)
+			for _, name := range scenario.GetUniqueNames(scenarios) {
+				replica := s
+				replica.Name = fmt.Sprintf("%s - %s", s.Name, name)
+				replica.Options.Name = fmt.Sprintf("^%s$", name)
 				shardedSuites = append(shardedSuites, replica)
 			}
 		}
