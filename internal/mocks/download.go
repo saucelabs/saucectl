@@ -8,6 +8,6 @@ type FakeArtifactDownloader struct {
 }
 
 // DownloadArtifact defines a fake function for FakeDownloader
-func (f *FakeArtifactDownloader) DownloadArtifact(jobData job.Job, attempt int, retries int) []string {
+func (f *FakeArtifactDownloader) DownloadArtifact(jobData job.Job, attempt int, retries int, isRetriedJob bool) []string {
 	return f.DownloadArtifactFn(jobData, attempt, retries)
 }

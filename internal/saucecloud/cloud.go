@@ -299,6 +299,17 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	return j, false, nil
 }
 
+// shouldRetry determines whether a job should be retried based on
+// the given options, job data, and whether the job was skipped.
+//
+// The job should be retried if:
+// - The current attempt is less than the allowed retries, and either:
+//   - The job did not pass and was not skipped, or
+//   - The current pass count is below the required threshold.
+func shouldRetry(opts job.StartOptions, jobData job.Job, skipped bool) bool {
+	return opts.Attempt < opts.Retries && ((!jobData.Passed && !skipped) || (opts.CurrentPassCount < opts.PassThreshold))
+}
+
 func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- result) {
 	for opts := range jobOpts {
 		start := time.Now()
@@ -333,8 +344,8 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			opts.CurrentPassCount++
 		}
 
-		if opts.Attempt < opts.Retries && ((!jobData.Passed && !skipped) || (opts.CurrentPassCount < opts.PassThreshold)) {
-			go r.JobService.DownloadArtifact(jobData, opts.Attempt, opts.Retries)
+		if shouldRetry(opts, jobData, skipped) {
+			go r.JobService.DownloadArtifact(jobData, opts.Attempt, opts.Retries, true)
 			if !jobData.Passed {
 				log.Warn().Err(err).Msg("Suite errored.")
 			}
@@ -370,7 +381,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			}
 		}
 
-		files := r.JobService.DownloadArtifact(jobData, opts.Attempt, opts.Retries)
+		files := r.JobService.DownloadArtifact(jobData, opts.Attempt, opts.Retries, false)
 		var artifacts []report.Artifact
 		for _, f := range files {
 			artifacts = append(artifacts, report.Artifact{

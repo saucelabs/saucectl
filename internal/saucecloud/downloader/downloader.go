@@ -23,11 +23,11 @@ func NewArtifactDownloader(reader job.Reader, artifactConfig config.ArtifactDown
 	}
 }
 
-func (d *ArtifactDownloader) DownloadArtifact(jobData job.Job, attemptNumber int, retries int) []string {
+func (d *ArtifactDownloader) DownloadArtifact(jobData job.Job, attemptNumber int, retries int, isRetriedJob bool) []string {
 	if jobData.ID == "" ||
 		jobData.TimedOut || !job.Done(jobData.Status) ||
 		!d.config.When.IsNow(jobData.Passed) ||
-		(!d.config.AllAttempts && attemptNumber < retries) {
+		(isRetriedJob && !d.config.AllAttempts) {
 		return []string{}
 	}
 
