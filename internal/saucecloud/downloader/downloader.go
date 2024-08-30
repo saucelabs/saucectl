@@ -27,7 +27,7 @@ func (d *ArtifactDownloader) DownloadArtifact(jobData job.Job, attemptNumber int
 	if jobData.ID == "" ||
 		jobData.TimedOut || !job.Done(jobData.Status) ||
 		!d.config.When.IsNow(jobData.Passed) ||
-		(isRetriedJob && !d.config.AllAttempts) {
+		(isRetriedJob && !d.config.AllAttempts && attemptNumber < retries) {
 		return []string{}
 	}
 
