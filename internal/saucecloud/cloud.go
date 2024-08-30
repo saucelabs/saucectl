@@ -299,13 +299,24 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	return j, false, nil
 }
 
+func belowRetryLimit(opts job.StartOptions) bool {
+	return opts.Attempt < opts.Retries
+}
+
+func belowThreshold(opts job.StartOptions) bool {
+	return opts.CurrentPassCount < opts.PassThreshold
+}
+
+// shouldRetryJob checks if the job should be retried,
+// based on whether it passed and if it was skipped.
+func shouldRetryJob(jobData job.Job, skipped bool) bool {
+	return !jobData.Passed && !skipped
+}
+
 // shouldRetry determines whether a job should be retried.
-//
-// The job should be retried if both of the following conditions are met:
-// - The current attempt is less than the allowed retries.
-// - The job was not passed nor skipped, or the pass count is below the threshold.
 func shouldRetry(opts job.StartOptions, jobData job.Job, skipped bool) bool {
-	return opts.Attempt < opts.Retries && ((!jobData.Passed && !skipped) || (opts.CurrentPassCount < opts.PassThreshold))
+	return belowRetryLimit(opts) &&
+		(shouldRetryJob(jobData, skipped) || belowThreshold(opts))
 }
 
 func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- result) {
