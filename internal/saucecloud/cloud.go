@@ -299,13 +299,11 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	return j, false, nil
 }
 
-// shouldRetry determines whether a job should be retried based on
-// the given options, job data, and whether the job was skipped.
+// shouldRetry determines whether a job should be retried.
 //
-// The job should be retried if:
-// - The current attempt is less than the allowed retries, and either:
-//   - The job did not pass and was not skipped, or
-//   - The current pass count is below the required threshold.
+// The job should be retried if both of the following conditions are met:
+// - The current attempt is less than the allowed retries.
+// - The job was not passed nor skipped, or the pass count is below the threshold.
 func shouldRetry(opts job.StartOptions, jobData job.Job, skipped bool) bool {
 	return opts.Attempt < opts.Retries && ((!jobData.Passed && !skipped) || (opts.CurrentPassCount < opts.PassThreshold))
 }
