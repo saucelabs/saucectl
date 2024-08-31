@@ -78,7 +78,7 @@ func TestRunSuites(t *testing.T) {
 					},
 				},
 				VDCDownloader: &mocks.FakeArtifactDownloader{
-					DownloadArtifactFn: func(jobData job.Job, attempt int, retries int) []string {
+					DownloadArtifactFn: func(jobData job.Job, islastAttempt bool) []string {
 						return []string{}
 					},
 				},

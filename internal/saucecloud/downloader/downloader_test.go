@@ -53,7 +53,7 @@ func TestArtifactDownloader_DownloadArtifact(t *testing.T) {
 			Name:   "suite name",
 			IsRDC:  true,
 			Status: job.StateComplete,
-		}, false,
+		}, true,
 	)
 
 	fileName := filepath.Join(tempDir, "suite_name", "junit.xml")
