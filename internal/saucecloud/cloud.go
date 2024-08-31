@@ -354,7 +354,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 		}
 
 		if shouldRetry(opts, jobData, skipped) {
-			go r.JobService.DownloadArtifact(jobData, opts.Attempt, opts.Retries, true)
+			go r.JobService.DownloadArtifact(jobData, false)
 			if !jobData.Passed {
 				log.Warn().Err(err).Msg("Suite errored.")
 			}
@@ -390,7 +390,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 			}
 		}
 
-		files := r.JobService.DownloadArtifact(jobData, opts.Attempt, opts.Retries, false)
+		files := r.JobService.DownloadArtifact(jobData, true)
 		var artifacts []report.Artifact
 		for _, f := range files {
 			artifacts = append(artifacts, report.Artifact{
