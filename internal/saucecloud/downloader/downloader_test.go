@@ -11,6 +11,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 	httpServices "github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/job"
+	"gotest.tools/v3/assert"
 )
 
 func TestArtifactDownloader_DownloadArtifact(t *testing.T) {
@@ -65,4 +66,73 @@ func TestArtifactDownloader_DownloadArtifact(t *testing.T) {
 	if string(d) != fileContent {
 		t.Errorf("file content mismatch: got '%v', expects: '%v'", d, fileContent)
 	}
+}
+
+func TestSkipDownload(t *testing.T) {
+	testcases := []struct {
+		name          string
+		config        config.ArtifactDownload
+		jobData       job.Job
+		isLastAttempt bool
+		expResult     bool
+	}{
+		{
+			name:          "Should not skip download",
+			config:        config.ArtifactDownload{When: config.WhenAlways},
+			jobData:       job.Job{ID: "fake-id", Status: job.StatePassed, Passed: true},
+			isLastAttempt: true,
+			expResult:     false,
+		},
+		{
+			name:          "Should skip download when job ID is empty",
+			config:        config.ArtifactDownload{When: config.WhenAlways},
+			jobData:       job.Job{Status: job.StatePassed, Passed: true},
+			isLastAttempt: true,
+			expResult:     true,
+		},
+		{
+			name:          "Should skip download when job is timeout",
+			config:        config.ArtifactDownload{When: config.WhenAlways},
+			jobData:       job.Job{ID: "fake-id", TimedOut: true},
+			isLastAttempt: true,
+			expResult:     true,
+		},
+		{
+			name:          "Should skip download when job is not done",
+			config:        config.ArtifactDownload{When: config.WhenAlways},
+			jobData:       job.Job{ID: "fake-id", TimedOut: true, Status: job.StateInProgress},
+			isLastAttempt: true,
+			expResult:     true,
+		},
+		{
+			name:          "Should skip download when artifact config is not set to download",
+			config:        config.ArtifactDownload{When: config.WhenNever},
+			jobData:       job.Job{ID: "fake-id", Status: job.StatePassed, Passed: true},
+			isLastAttempt: true,
+			expResult:     true,
+		},
+		{
+			name:          "Should skip download when it's not last attempt and not set download all attempts",
+			config:        config.ArtifactDownload{When: config.WhenAlways, AllAttempts: false},
+			jobData:       job.Job{ID: "fake-id", Status: job.StatePassed, Passed: true},
+			isLastAttempt: false,
+			expResult:     true,
+		},
+		{
+			name:          "Should download when it's the last attempt and not set download all attempts",
+			config:        config.ArtifactDownload{When: config.WhenAlways, AllAttempts: false},
+			jobData:       job.Job{ID: "fake-id", Status: job.StatePassed, Passed: true},
+			isLastAttempt: true,
+			expResult:     false,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			downloader := &ArtifactDownloader{config: tc.config}
+			got := downloader.skipDownload(tc.jobData, tc.isLastAttempt)
+			assert.Equal(t, tc.expResult, got)
+		})
+	}
+
 }
