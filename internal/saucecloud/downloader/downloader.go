@@ -23,11 +23,15 @@ func NewArtifactDownloader(reader job.Reader, artifactConfig config.ArtifactDown
 	}
 }
 
-func (d *ArtifactDownloader) DownloadArtifact(jobData job.Job, attemptNumber int, retries int) []string {
-	if jobData.ID == "" ||
+func (d *ArtifactDownloader) skipDownload(jobData job.Job, isLastAttempt bool) bool {
+	return jobData.ID == "" ||
 		jobData.TimedOut || !job.Done(jobData.Status) ||
 		!d.config.When.IsNow(jobData.Passed) ||
-		(!d.config.AllAttempts && attemptNumber < retries) {
+		(!isLastAttempt && !d.config.AllAttempts)
+}
+
+func (d *ArtifactDownloader) DownloadArtifact(jobData job.Job, isLastAttempt bool) []string {
+	if d.skipDownload(jobData, isLastAttempt) {
 		return []string{}
 	}
 
