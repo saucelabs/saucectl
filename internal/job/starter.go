@@ -35,6 +35,9 @@ type StartOptions struct {
 	PlatformName    string `json:"platformName,omitempty"`
 	PlatformVersion string `json:"platformVersion,omitempty"`
 
+	RuntimeName    string `json:"runtime,omitempty"`
+	RuntimeVersion string `json:"runtimeVersion,omitempty"`
+
 	Tunnel TunnelOptions `json:"tunnel,omitempty"`
 
 	Experiments map[string]string `json:"experiments,omitempty"`

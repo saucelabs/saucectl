@@ -2,6 +2,8 @@ package framework
 
 import (
 	"context"
+	"fmt"
+	"sort"
 	"strings"
 	"time"
 )
@@ -16,6 +18,7 @@ type Framework struct {
 type MetadataService interface {
 	Frameworks(ctx context.Context) ([]string, error)
 	Versions(ctx context.Context, frameworkName string) ([]Metadata, error)
+	Runtimes(ctx context.Context) ([]Runtime, error)
 }
 
 // Metadata represents test runner metadata.
@@ -29,7 +32,18 @@ type Metadata struct {
 	Platforms          []Platform
 	CloudRunnerVersion string
 	BrowserDefaults    map[string]string
+	Runtimes           []string
 }
+
+type Runtime struct {
+	RuntimeName    string
+	RuntimeVersion string
+	EOLDate        time.Time
+	Default        bool
+	Extra          map[string]string
+}
+
+const NodeRuntime = "nodejs"
 
 func (m *Metadata) IsDeprecated() bool {
 	return time.Now().After(m.EOLDate)
@@ -64,4 +78,54 @@ func PlatformNames(platforms []Platform) []string {
 	}
 
 	return pp
+}
+
+func (m *Metadata) SupportGlobalNode() bool {
+	return len(m.Runtimes) > 0
+}
+
+func SelectNodeVersion(runtimes []Runtime, version string) (string, error) {
+	version = strings.ReplaceAll(version, "v", "")
+	items := strings.Split(version, ".")
+	var filtered []string
+	for _, r := range runtimes {
+		if r.RuntimeName == NodeRuntime {
+			if len(items) < 3 && strings.HasPrefix(r.RuntimeVersion, version+".") {
+				filtered = append(filtered, r.RuntimeVersion)
+			} else if len(items) == 3 {
+				filtered = append(filtered, r.RuntimeVersion)
+			}
+		}
+	}
+
+	if len(filtered) == 0 {
+		return "", fmt.Errorf("no versions found for node version %q", version)
+	}
+
+	sort.Slice(filtered, func(a, b int) bool {
+		return filtered[a] > filtered[b]
+	})
+
+	return filtered[0], nil
+}
+
+func ValidateNodeVersion(runtimes []Runtime, version string) error {
+	version = strings.ReplaceAll(version, "v", "")
+	items := strings.Split(version, ".")
+	if len(items) < 3 {
+		return nil
+	}
+
+	var found bool
+	for _, r := range runtimes {
+		if r.RuntimeName == NodeRuntime && r.RuntimeVersion == version {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return fmt.Errorf("no matching version found for node version %q", version)
+	}
+
+	return nil
 }

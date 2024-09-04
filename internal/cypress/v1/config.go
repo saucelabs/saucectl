@@ -51,6 +51,7 @@ type Project struct {
 	Env           map[string]string    `yaml:"env,omitempty" json:"env"`
 	EnvFlag       map[string]string    `yaml:"-" json:"-"`
 	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
+	NodeVersion   string               `yaml:"nodeVersion,omitempty" json:"nodeVersion"`
 }
 
 // Suite represents the cypress test suite configuration.
@@ -594,4 +595,12 @@ func (p *Project) IsSmartRetried() bool {
 		}
 	}
 	return false
+}
+
+func (p *Project) GetNodeVersion() string {
+	return p.NodeVersion
+}
+
+func (p *Project) SetNodeVersion(version string) {
+	p.NodeVersion = version
 }

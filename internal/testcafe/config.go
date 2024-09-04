@@ -53,6 +53,7 @@ type Project struct {
 	Env           map[string]string    `yaml:"env,omitempty" json:"env"`
 	EnvFlag       map[string]string    `yaml:"-" json:"-"`
 	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
+	NodeVersion   string               `yaml:"nodeVersion,omitempty" json:"nodeVersion"`
 }
 
 // Filter represents the testcafe filters configuration

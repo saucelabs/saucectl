@@ -23,11 +23,10 @@ type CypressRunner struct {
 func (r *CypressRunner) RunProject() (int, error) {
 	exitCode := 1
 
-	cyVersion := r.Project.GetVersion()
-	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, cypress.Kind, cyVersion)
+	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, cypress.Kind, r.Project.GetVersion())
 	if err != nil {
 		r.logFrameworkError(err)
-		return exitCode, err
+		return 1, err
 	}
 	if err := r.validateFramework(m); err != nil {
 		return 1, err

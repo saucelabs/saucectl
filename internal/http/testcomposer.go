@@ -36,6 +36,7 @@ type FrameworkResponse struct {
 		Browsers []string
 	} `json:"platforms"`
 	BrowserDefaults map[string]string `json:"browserDefaults"`
+	Runtimes        []string          `json:"runtimes"`
 }
 
 // TokenResponse represents the response body for slack token.
@@ -47,6 +48,20 @@ type runner struct {
 	CloudRunnerVersion string `json:"cloudRunnerVersion"`
 	DockerImage        string `json:"dockerImage"`
 	GitRelease         string `json:"gitRelease"`
+}
+
+type RuntimeResponse struct {
+	Name     string    `json:"name"`
+	Releases []Release `json:"releases"`
+}
+
+type Release struct {
+	Version string    `json:"version"`
+	Aliases []string  `json:"aliases"`
+	EOLDate time.Time `json:"eolDate"`
+	Default bool      `json:"default"`
+
+	Extra map[string]string `json:"extra"`
 }
 
 func NewTestComposer(url string, creds iam.Credentials, timeout time.Duration) TestComposer {
@@ -199,6 +214,7 @@ func (c *TestComposer) Versions(ctx context.Context, frameworkName string) ([]fr
 			Platforms:          platforms,
 			CloudRunnerVersion: f.Runner.CloudRunnerVersion,
 			BrowserDefaults:    f.BrowserDefaults,
+			Runtimes:           f.Runtimes,
 		})
 	}
 	return frameworks, nil
@@ -216,5 +232,36 @@ func uniqFrameworkNameSet(frameworks []framework.Framework) []string {
 			fws = append(fws, fw.Name)
 		}
 	}
+	fmt.Println("frameworks: ", fws)
 	return fws
+}
+
+func (c *TestComposer) Runtimes(ctx context.Context) ([]framework.Runtime, error) {
+	url := fmt.Sprintf("%s/v1/testcomposer/runtimes", c.URL)
+
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+
+	var resp []RuntimeResponse
+	if err = c.doJSONResponse(req, 200, &resp); err != nil {
+		return nil, err
+	}
+
+	var runtimes []framework.Runtime
+	for _, rt := range resp {
+		name := rt.Name
+		for _, r := range rt.Releases {
+			runtimes = append(runtimes, framework.Runtime{
+				RuntimeName:    name,
+				RuntimeVersion: r.Version,
+				EOLDate:        r.EOLDate,
+				Extra:          r.Extra,
+			})
+		}
+	}
+
+	return runtimes, nil
 }
