@@ -53,7 +53,7 @@ type Project struct {
 	Env           map[string]string    `yaml:"env,omitempty" json:"env"`
 	EnvFlag       map[string]string    `yaml:"-" json:"-"`
 	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
-	NodeVersion   string               `yaml:"nodeVersion,omitempty" json:"nodeVersion"`
+	NodeVersion   string               `yaml:"nodeVersion,omitempty" json:"nodeVersion,omitempty"`
 }
 
 // Playwright represents crucial playwright configuration that is required for setting up a project.

@@ -3,6 +3,8 @@ package framework
 import (
 	"reflect"
 	"testing"
+
+	"gotest.tools/v3/assert"
 )
 
 func TestHasPlatform(t *testing.T) {
@@ -84,6 +86,123 @@ func TestPlatformNames(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := PlatformNames(tt.args.platforms); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("PlatformNames() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSelectNode(t *testing.T) {
+	runtimes := []Runtime{
+		{
+			RuntimeName:    "nodejs",
+			RuntimeVersion: "20.14.0",
+			RuntimeAlias:   []string{"iron", "lts"},
+		},
+		{
+			RuntimeName:    "nodejs",
+			RuntimeVersion: "18.20.4",
+			RuntimeAlias:   []string{"Hydrogen"},
+		},
+	}
+	testcases := []struct {
+		name     string
+		runtimes []Runtime
+		version  string
+		want     string
+		wantErr  string
+	}{
+		{
+			name:     "version is invalid",
+			runtimes: runtimes,
+			version:  "vfake-version",
+			want:     "",
+			wantErr:  "invalid node version vfake-version",
+		},
+		{
+			name:     "version alias is invalid",
+			runtimes: runtimes,
+			version:  "my-alias",
+			want:     "",
+			wantErr:  "invalid node version my-alias",
+		},
+		{
+			name:     "version alias is valid",
+			runtimes: runtimes,
+			version:  "iron",
+			want:     "20.14.0",
+			wantErr:  "",
+		},
+		{
+			name:     "valid version contains major, minor and patch",
+			runtimes: runtimes,
+			version:  "v20.14.0",
+			want:     "20.14.0",
+			wantErr:  "",
+		},
+		{
+			name:     "valid version starts with v",
+			runtimes: runtimes,
+			version:  "v20.14.0",
+			want:     "20.14.0",
+			wantErr:  "",
+		},
+		{
+			name:     "invalid version contains major, minor and patch",
+			runtimes: runtimes,
+			version:  "v20.14.2",
+			want:     "",
+			wantErr:  "no matching node version found for v20.14.2",
+		},
+		{
+			name:     "valid version only contains major and minor",
+			runtimes: runtimes,
+			version:  "v20.14",
+			want:     "20.14.0",
+			wantErr:  "",
+		},
+		{
+			name:     "valid version only contains major",
+			runtimes: runtimes,
+			version:  "v18",
+			want:     "18.20.4",
+			wantErr:  "",
+		},
+		{
+			name:     "invalid version only contains major and minor",
+			runtimes: runtimes,
+			version:  "20.16",
+			want:     "",
+			wantErr:  "invalid node version 20.16",
+		},
+		{
+			name:     "invalid version only contains major",
+			runtimes: runtimes,
+			version:  "v22",
+			want:     "",
+			wantErr:  "no matching node version found for v22",
+		},
+		{
+			name:     "should precisely match complete major and minor version",
+			runtimes: runtimes,
+			version:  "v20.1",
+			want:     "",
+			wantErr:  "no matching node version found for v20.1",
+		},
+		{
+			name:     "should precisely match complete major version",
+			runtimes: runtimes,
+			version:  "v2",
+			want:     "",
+			wantErr:  "no matching node version found for v2",
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := SelectNode(tc.runtimes, tc.version)
+			assert.Equal(t, tc.want, got.RuntimeVersion)
+			if err != nil {
+				assert.Equal(t, tc.wantErr, err.Error())
 			}
 		})
 	}

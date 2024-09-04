@@ -257,6 +257,7 @@ func (c *TestComposer) Runtimes(ctx context.Context) ([]framework.Runtime, error
 			runtimes = append(runtimes, framework.Runtime{
 				RuntimeName:    name,
 				RuntimeVersion: r.Version,
+				RuntimeAlias:   r.Aliases,
 				EOLDate:        r.EOLDate,
 				Extra:          r.Extra,
 			})

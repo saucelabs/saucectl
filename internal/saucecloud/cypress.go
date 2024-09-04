@@ -33,6 +33,21 @@ func (r *CypressRunner) RunProject() (int, error) {
 	}
 	r.setVersions(m)
 
+	if m.SupportGlobalNode() {
+		runtimes, err := r.MetadataService.Runtimes(context.Background())
+		if err != nil {
+			return 1, err
+		}
+		runtime, err := framework.SelectNode(runtimes, r.Project.GetNodeVersion())
+		if err != nil {
+			return 1, err
+		}
+		if err := framework.ValidateRuntime(runtime); err != nil {
+			return 1, err
+		}
+		r.Project.SetNodeVersion(runtime.RuntimeVersion)
+	}
+
 	if err := r.validateTunnel(
 		r.Project.GetSauceCfg().Tunnel.Name,
 		r.Project.GetSauceCfg().Tunnel.Owner,

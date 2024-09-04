@@ -34,6 +34,21 @@ func (r *CucumberRunner) RunProject() (int, error) {
 	}
 	r.setVersions(m)
 
+	if m.SupportGlobalNode() {
+		runtimes, err := r.MetadataService.Runtimes(context.Background())
+		if err != nil {
+			return 1, err
+		}
+		runtime, err := framework.SelectNode(runtimes, r.Project.NodeVersion)
+		if err != nil {
+			return 1, err
+		}
+		if err := framework.ValidateRuntime(runtime); err != nil {
+			return 1, err
+		}
+		r.Project.NodeVersion = runtime.RuntimeVersion
+	}
+
 	if err := r.validateTunnel(
 		r.Project.Sauce.Tunnel.Name,
 		r.Project.Sauce.Tunnel.Owner,

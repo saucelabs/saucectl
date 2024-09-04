@@ -3,9 +3,10 @@ package framework
 import (
 	"context"
 	"fmt"
-	"sort"
 	"strings"
 	"time"
+
+	"golang.org/x/mod/semver"
 )
 
 // Framework represents a test framework (e.g. cypress).
@@ -35,8 +36,10 @@ type Metadata struct {
 	Runtimes           []string
 }
 
+// Runtime represents runtime details on the VM.
 type Runtime struct {
 	RuntimeName    string
+	RuntimeAlias   []string
 	RuntimeVersion string
 	EOLDate        time.Time
 	Default        bool
@@ -81,51 +84,106 @@ func PlatformNames(platforms []Platform) []string {
 }
 
 func (m *Metadata) SupportGlobalNode() bool {
-	return len(m.Runtimes) > 0
+	if len(m.Runtimes) == 0 {
+		return false
+	}
+	for _, r := range m.Runtimes {
+		if r == NodeRuntime {
+			return true
+		}
+	}
+
+	return false
 }
 
-func SelectNodeVersion(runtimes []Runtime, version string) (string, error) {
-	version = strings.ReplaceAll(version, "v", "")
-	items := strings.Split(version, ".")
-	var filtered []string
+func findRuntimeByAlias(runtimes []Runtime, alias string) Runtime {
 	for _, r := range runtimes {
-		if r.RuntimeName == NodeRuntime {
-			if len(items) < 3 && strings.HasPrefix(r.RuntimeVersion, version+".") {
-				filtered = append(filtered, r.RuntimeVersion)
-			} else if len(items) == 3 {
-				filtered = append(filtered, r.RuntimeVersion)
+		for _, a := range r.RuntimeAlias {
+			if alias == a {
+				return r
 			}
 		}
 	}
 
-	if len(filtered) == 0 {
-		return "", fmt.Errorf("no versions found for node version %q", version)
-	}
-
-	sort.Slice(filtered, func(a, b int) bool {
-		return filtered[a] > filtered[b]
-	})
-
-	return filtered[0], nil
+	return Runtime{}
 }
 
-func ValidateNodeVersion(runtimes []Runtime, version string) error {
-	version = strings.ReplaceAll(version, "v", "")
-	items := strings.Split(version, ".")
-	if len(items) < 3 {
-		return nil
-	}
-
-	var found bool
+func filterNodeRuntimes(runtimes []Runtime) []Runtime {
+	var nodeRuntimes []Runtime
 	for _, r := range runtimes {
-		if r.RuntimeName == NodeRuntime && r.RuntimeVersion == version {
-			found = true
-			break
+		if r.RuntimeName == NodeRuntime {
+			nodeRuntimes = append(nodeRuntimes, r)
 		}
 	}
-	if !found {
-		return fmt.Errorf("no matching version found for node version %q", version)
+	return nodeRuntimes
+}
+
+func onlyHasMajor(version string) bool {
+	return len(strings.Split(version, ".")) == 1
+}
+
+func onlyHasMajorMinor(version string) bool {
+	return len(strings.Split(version, ".")) == 2
+}
+
+// isCompleteVersion checks if it contains major, minor and patch.
+func isCompleteVersion(version string) bool {
+	return len(strings.Split(version, ".")) == 3
+}
+
+// SelectNode selects the appropriate Node.js runtime from a list of runtimes.
+// It supports full SemVer matching, alias resolution, and fuzzy matching for major or major.minor versions.
+// `version` is expected to always start with "v".
+func SelectNode(runtimes []Runtime, version string) (Runtime, error) {
+	rts := filterNodeRuntimes(runtimes)
+	if !semver.IsValid(version) {
+		// If version is not a valid SemVer, check if it's using an alias (e.g., "lts" or code name).
+		res := findRuntimeByAlias(rts, version)
+		if res.RuntimeName != "" {
+			return res, nil
+		}
+		return Runtime{}, fmt.Errorf("invalid node version %s", version)
 	}
 
+	// If the version is a full SemVer (i.e., major.minor.patch), attempt exact match.
+	if isCompleteVersion(version) {
+		for _, r := range rts {
+			if "v"+r.RuntimeVersion == version {
+				return r, nil
+			}
+		}
+		return Runtime{}, fmt.Errorf("no matching node version found for %s", version)
+	}
+
+	// Fuzzy matching:
+	// Try to match on major.minor.
+	if onlyHasMajorMinor(version) {
+		majorMinor := semver.MajorMinor(version)
+		for _, r := range rts {
+			if strings.HasPrefix("v"+r.RuntimeVersion, majorMinor+".") {
+				return r, nil
+			}
+		}
+		return Runtime{}, fmt.Errorf("no matching node version found for %s", version)
+	}
+
+	// If no match for major.minor, try to match on major version only.
+	if onlyHasMajor(version) {
+		major := semver.Major(version)
+		for _, r := range rts {
+			if strings.HasPrefix("v"+r.RuntimeVersion, major+".") {
+				return r, nil
+			}
+		}
+	}
+
+	return Runtime{}, fmt.Errorf("no matching node version found for %s", version)
+}
+
+func ValidateRuntime(runtime Runtime) error {
+	now := time.Now()
+	if now.After(runtime.EOLDate) {
+		return fmt.Errorf("node version %s has reached its EOL. Please upgrade to a newer version", runtime.RuntimeVersion)
+	}
 	return nil
 }
