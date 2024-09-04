@@ -83,6 +83,7 @@ func PlatformNames(platforms []Platform) []string {
 	return pp
 }
 
+// SupportGlobalNode checks if the current runner supports the global node.
 func (m *Metadata) SupportGlobalNode() bool {
 	if len(m.Runtimes) == 0 {
 		return false
@@ -126,8 +127,8 @@ func onlyHasMajorMinor(version string) bool {
 	return len(strings.Split(version, ".")) == 2
 }
 
-// isCompleteVersion checks if it contains major, minor and patch.
-func isCompleteVersion(version string) bool {
+// isFullVersion checks if it contains major, minor and patch.
+func isFullVersion(version string) bool {
 	return len(strings.Split(version, ".")) == 3
 }
 
@@ -146,7 +147,7 @@ func SelectNode(runtimes []Runtime, version string) (Runtime, error) {
 	}
 
 	// If the version is a full SemVer (i.e., major.minor.patch), attempt exact match.
-	if isCompleteVersion(version) {
+	if isFullVersion(version) {
 		for _, r := range rts {
 			if "v"+r.RuntimeVersion == version {
 				return r, nil
