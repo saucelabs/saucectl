@@ -232,7 +232,6 @@ func uniqFrameworkNameSet(frameworks []framework.Framework) []string {
 			fws = append(fws, fw.Name)
 		}
 	}
-	fmt.Println("frameworks: ", fws)
 	return fws
 }
 

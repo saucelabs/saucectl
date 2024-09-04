@@ -55,7 +55,7 @@ func (r *CucumberRunner) RunProject() (int, error) {
 		r.Project.DryRun,
 		r.Project.Sauce.Tunnel.Timeout,
 	); err != nil {
-		return exitCode, err
+		return 1, err
 	}
 
 	app, otherApps, err := r.remoteArchiveProject(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
