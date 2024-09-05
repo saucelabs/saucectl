@@ -12,14 +12,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/iam"
 )
 
 // TestComposer service
 type TestComposer struct {
-	HTTPClient  *http.Client
-	URL         string // e.g.) https://api.<region>.saucelabs.net
+	HTTPClient  *retryablehttp.Client
+	URL         string // e.g. https://api.<region>.saucelabs.com
 	Credentials iam.Credentials
 }
 
@@ -50,10 +51,7 @@ type runner struct {
 
 func NewTestComposer(url string, creds iam.Credentials, timeout time.Duration) TestComposer {
 	return TestComposer{
-		HTTPClient: &http.Client{
-			Timeout:   timeout,
-			Transport: &http.Transport{Proxy: http.ProxyFromEnvironment},
-		},
+		HTTPClient:  NewRetryableClient(timeout),
 		URL:         url,
 		Credentials: creds,
 	}
@@ -63,7 +61,7 @@ func NewTestComposer(url string, creds iam.Credentials, timeout time.Duration) T
 func (c *TestComposer) GetSlackToken(ctx context.Context) (string, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/users/%s/settings/slack", c.URL, c.Credentials.Username)
 
-	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return "", err
 	}
@@ -77,7 +75,7 @@ func (c *TestComposer) GetSlackToken(ctx context.Context) (string, error) {
 	return resp.Token, nil
 }
 
-func (c *TestComposer) doJSONResponse(req *http.Request, expectStatus int, v interface{}) error {
+func (c *TestComposer) doJSONResponse(req *retryablehttp.Request, expectStatus int, v interface{}) error {
 	res, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return err
@@ -110,7 +108,7 @@ func (c *TestComposer) UploadAsset(jobID string, realDevice bool, fileName strin
 		return err
 	}
 
-	req, err := NewRequestWithContext(context.Background(), http.MethodPut,
+	req, err := NewRetryableRequestWithContext(context.Background(), http.MethodPut,
 		fmt.Sprintf("%s/v1/testcomposer/jobs/%s/assets", c.URL, jobID), &b)
 	if err != nil {
 		return err
@@ -154,7 +152,7 @@ func (c *TestComposer) UploadAsset(jobID string, realDevice bool, fileName strin
 func (c *TestComposer) Frameworks(ctx context.Context) ([]string, error) {
 	url := fmt.Sprintf("%s/v2/testcomposer/frameworks", c.URL)
 
-	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return []string{}, err
 	}
@@ -171,7 +169,7 @@ func (c *TestComposer) Frameworks(ctx context.Context) ([]string, error) {
 func (c *TestComposer) Versions(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
 	url := fmt.Sprintf("%s/v2/testcomposer/frameworks?frameworkName=%s", c.URL, frameworkName)
 
-	req, err := NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return []framework.Metadata{}, err
 	}

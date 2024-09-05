@@ -9,13 +9,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/iam"
 )
 
 func TestTestComposer_GetSlackToken(t *testing.T) {
 	type fields struct {
-		HTTPClient  *http.Client
+		HTTPClient  *retryablehttp.Client
 		URL         string
 		Credentials iam.Credentials
 	}
@@ -63,7 +64,7 @@ func TestTestComposer_GetSlackToken(t *testing.T) {
 			defer server.Close()
 
 			c := &TestComposer{
-				HTTPClient:  server.Client(),
+				HTTPClient:  NewRetryableClient(3 * time.Second),
 				URL:         server.URL,
 				Credentials: tt.fields.Credentials,
 			}
@@ -101,7 +102,6 @@ func TestTestComposer_UploadAsset(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
-	// timeout := 3 * time.Second
 
 	type args struct {
 		jobID       string
@@ -118,7 +118,7 @@ func TestTestComposer_UploadAsset(t *testing.T) {
 		{
 			name: "Valid case",
 			client: TestComposer{
-				HTTPClient:  ts.Client(),
+				HTTPClient:  NewRetryableClient(3 * time.Second),
 				URL:         ts.URL,
 				Credentials: iam.Credentials{Username: "test", AccessKey: "123"},
 			},
@@ -133,7 +133,7 @@ func TestTestComposer_UploadAsset(t *testing.T) {
 		{
 			name: "invalid case - 400",
 			client: TestComposer{
-				HTTPClient:  ts.Client(),
+				HTTPClient:  NewRetryableClient(3 * time.Second),
 				URL:         ts.URL,
 				Credentials: iam.Credentials{Username: "test", AccessKey: "123"},
 			},
@@ -148,7 +148,7 @@ func TestTestComposer_UploadAsset(t *testing.T) {
 		{
 			name: "invalid 404",
 			client: TestComposer{
-				HTTPClient:  ts.Client(),
+				HTTPClient:  NewRetryableClient(3 * time.Second),
 				URL:         ts.URL,
 				Credentials: iam.Credentials{Username: "test", AccessKey: "123"},
 			},
@@ -214,7 +214,7 @@ func TestTestComposer_Frameworks(t *testing.T) {
 				}
 			}))
 			c := &TestComposer{
-				HTTPClient:  http.DefaultClient,
+				HTTPClient:  NewRetryableClient(3 * time.Second),
 				URL:         ts.URL,
 				Credentials: iam.Credentials{Username: "test", AccessKey: "123"},
 			}
@@ -251,7 +251,7 @@ func TestTestComposer_Versions(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &TestComposer{
-		HTTPClient:  ts.Client(),
+		HTTPClient:  NewRetryableClient(3 * time.Second),
 		URL:         ts.URL,
 		Credentials: iam.Credentials{Username: "test", AccessKey: "123"},
 	}
