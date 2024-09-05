@@ -27,7 +27,6 @@ var PlaywrightBrowserMap = map[string]string{
 
 // RunProject runs the tests defined in cypress.Project.
 func (r *PlaywrightRunner) RunProject() (int, error) {
-	var deprecationMessage string
 	exitCode := 1
 
 	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, playwright.Kind, r.Project.Playwright.Version)
@@ -35,26 +34,10 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		r.logFrameworkError(err)
 		return exitCode, err
 	}
-	r.Project.Playwright.Version = m.FrameworkVersion
-	if r.Project.RunnerVersion == "" {
-		r.Project.RunnerVersion = m.CloudRunnerVersion
-	}
 
-	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
-		deprecationMessage = r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version, m.RemovalDate)
-		fmt.Print(deprecationMessage)
-	}
-	if m.IsFlaggedForRemoval() {
-		deprecationMessage = r.flaggedForRemovalMessage(playwright.Kind, r.Project.Playwright.Version)
-		fmt.Print(deprecationMessage)
-	}
-
-	for i, s := range r.Project.Suites {
-		if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
-			msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
-			return 1, errors.New("unsupported platform")
-		}
-		r.Project.Suites[i].Params.BrowserVersion = m.BrowserDefaults[PlaywrightBrowserMap[s.Params.BrowserName]]
+	deprecationMessage, err := r.validateFramework(m)
+	if err != nil {
+		return 1, err
 	}
 
 	if err := r.validateTunnel(
@@ -86,6 +69,32 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 	}
 
 	return exitCode, nil
+}
+
+func (r *PlaywrightRunner) validateFramework(m framework.Metadata) (string, error) {
+	r.Project.Playwright.Version = m.FrameworkVersion
+	if r.Project.RunnerVersion == "" {
+		r.Project.RunnerVersion = m.CloudRunnerVersion
+	}
+
+	var deprecationMessage string
+	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
+		deprecationMessage = r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version, m.RemovalDate)
+		fmt.Print(deprecationMessage)
+	}
+	if m.IsFlaggedForRemoval() {
+		deprecationMessage = r.flaggedForRemovalMessage(playwright.Kind, r.Project.Playwright.Version)
+		fmt.Print(deprecationMessage)
+	}
+
+	for i, s := range r.Project.Suites {
+		if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
+			msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
+			return deprecationMessage, errors.New("unsupported platform")
+		}
+		r.Project.Suites[i].Params.BrowserVersion = m.BrowserDefaults[PlaywrightBrowserMap[s.Params.BrowserName]]
+	}
+	return deprecationMessage, nil
 }
 
 func (r *PlaywrightRunner) getSuiteNames() []string {

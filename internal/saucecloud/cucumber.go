@@ -22,7 +22,6 @@ type CucumberRunner struct {
 
 // RunProject runs the defined tests on sauce cloud
 func (r *CucumberRunner) RunProject() (int, error) {
-	var deprecationMessage string
 	exitCode := 1
 
 	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, playwright.Kind, r.Project.Playwright.Version)
@@ -30,25 +29,10 @@ func (r *CucumberRunner) RunProject() (int, error) {
 		r.logFrameworkError(err)
 		return exitCode, err
 	}
-	r.Project.Playwright.Version = m.FrameworkVersion
-	if r.Project.RunnerVersion == "" {
-		r.Project.RunnerVersion = m.CloudRunnerVersion
-	}
 
-	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
-		deprecationMessage = r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version, m.RemovalDate)
-		fmt.Print(deprecationMessage)
-	}
-	if m.IsFlaggedForRemoval() {
-		deprecationMessage = r.flaggedForRemovalMessage(playwright.Kind, r.Project.Playwright.Version)
-		fmt.Print(deprecationMessage)
-	}
-
-	for _, s := range r.Project.Suites {
-		if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
-			msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
-			return 1, errors.New("unsupported platform")
-		}
+	deprecationMessage, err := r.validateFramework(m)
+	if err != nil {
+		return exitCode, err
 	}
 
 	if err := r.validateTunnel(
@@ -80,6 +64,31 @@ func (r *CucumberRunner) RunProject() (int, error) {
 	}
 
 	return exitCode, nil
+}
+
+func (r *CucumberRunner) validateFramework(m framework.Metadata) (string, error) {
+	r.Project.Playwright.Version = m.FrameworkVersion
+	if r.Project.RunnerVersion == "" {
+		r.Project.RunnerVersion = m.CloudRunnerVersion
+	}
+
+	var deprecationMessage string
+	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
+		deprecationMessage = r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version, m.RemovalDate)
+		fmt.Print(deprecationMessage)
+	}
+	if m.IsFlaggedForRemoval() {
+		deprecationMessage = r.flaggedForRemovalMessage(playwright.Kind, r.Project.Playwright.Version)
+		fmt.Print(deprecationMessage)
+	}
+
+	for _, s := range r.Project.Suites {
+		if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
+			msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
+			return deprecationMessage, errors.New("unsupported platform")
+		}
+	}
+	return deprecationMessage, nil
 }
 
 func (r *CucumberRunner) getSuiteNames() []string {
