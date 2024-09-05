@@ -53,7 +53,12 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		}
 		r.Project.NodeVersion = runtime.RuntimeVersion
 	}
+	// If the runner doesn't support the global node, set nodeVersion to empty.
+	if !m.SupportGlobalNode() {
+		r.Project.NodeVersion = ""
+	}
 
+	fmt.Println("r.Project.NodeVersion: ", r.Project.NodeVersion)
 	if err := r.validateTunnel(
 		r.Project.Sauce.Tunnel.Name,
 		r.Project.Sauce.Tunnel.Owner,

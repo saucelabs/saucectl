@@ -33,7 +33,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 	}
 	r.setVersions(m)
 
-	if m.SupportGlobalNode() {
+	if m.SupportGlobalNode() && r.Project.NodeVersion != "" {
 		runtimes, err := r.MetadataService.Runtimes(context.Background())
 		if err != nil {
 			return 1, err
@@ -46,6 +46,10 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 			return 1, err
 		}
 		r.Project.NodeVersion = runtime.RuntimeVersion
+	}
+	// If the runner doesn't support the global node, set nodeVersion to empty.
+	if !m.SupportGlobalNode() {
+		r.Project.NodeVersion = ""
 	}
 
 	if err := r.validateTunnel(

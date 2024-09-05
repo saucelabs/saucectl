@@ -33,7 +33,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 	}
 	r.setVersions(m)
 
-	if m.SupportGlobalNode() {
+	if m.SupportGlobalNode() && r.Project.GetNodeVersion() != "" {
 		runtimes, err := r.MetadataService.Runtimes(context.Background())
 		if err != nil {
 			return 1, err
@@ -46,6 +46,10 @@ func (r *CypressRunner) RunProject() (int, error) {
 			return 1, err
 		}
 		r.Project.SetNodeVersion(runtime.RuntimeVersion)
+	}
+	// If the runner doesn't support the global node, set nodeVersion to empty.
+	if !m.SupportGlobalNode() {
+		r.Project.SetNodeVersion("")
 	}
 
 	if err := r.validateTunnel(
