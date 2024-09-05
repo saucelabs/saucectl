@@ -51,6 +51,7 @@ type runner struct {
 	GitRelease         string `json:"gitRelease"`
 }
 
+// RuntimeResponse represents the response body for getting runtimes.
 type RuntimeResponse struct {
 	Name     string    `json:"name"`
 	Releases []Release `json:"releases"`
