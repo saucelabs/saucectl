@@ -22,19 +22,17 @@ type TestcafeRunner struct {
 
 // RunProject runs the defined tests on sauce cloud
 func (r *TestcafeRunner) RunProject() (int, error) {
-	exitCode := 1
-
 	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, testcafe.Kind, r.Project.Testcafe.Version)
 	if err != nil {
 		r.logFrameworkError(err)
-		return exitCode, err
+		return 1, err
 	}
 	r.setVersions(m)
 	if err := r.validateFramework(m); err != nil {
 		return 1, err
 	}
 
-	if err := r.setupRuntime(m); err != nil {
+	if err := r.setRuntime(m); err != nil {
 		return 1, err
 	}
 
@@ -49,7 +47,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 
 	app, otherApps, err := r.remoteArchiveProject(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
 	if err != nil {
-		return exitCode, err
+		return 1, err
 	}
 
 	if r.Project.DryRun {
@@ -58,14 +56,14 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 	}
 
 	passed := r.runSuites(app, otherApps)
-	if passed {
-		return 0, nil
+	if !passed {
+		return 1, nil
 	}
 
-	return exitCode, nil
+	return 0, nil
 }
 
-func (r *TestcafeRunner) setupRuntime(m framework.Metadata) error {
+func (r *TestcafeRunner) setRuntime(m framework.Metadata) error {
 	if !m.SupportGlobalNode() {
 		r.Project.NodeVersion = ""
 		return nil
@@ -82,9 +80,7 @@ func (r *TestcafeRunner) setupRuntime(m framework.Metadata) error {
 	if err != nil {
 		return err
 	}
-	if err := rt.Validate(); err != nil {
-		return err
-	}
+	rt.Validate()
 	r.Project.NodeVersion = rt.RuntimeVersion
 
 	return nil

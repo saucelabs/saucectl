@@ -23,19 +23,17 @@ type CucumberRunner struct {
 
 // RunProject runs the defined tests on sauce cloud
 func (r *CucumberRunner) RunProject() (int, error) {
-	exitCode := 1
-
 	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, playwright.Kind, r.Project.Playwright.Version)
 	if err != nil {
 		r.logFrameworkError(err)
-		return exitCode, err
+		return 1, err
 	}
 	r.setVersions(m)
 	if err := r.validateFramework(m); err != nil {
-		return exitCode, err
+		return 1, err
 	}
 
-	if err := r.setupRuntime(m); err != nil {
+	if err := r.setRuntime(m); err != nil {
 		return 1, err
 	}
 
@@ -50,7 +48,7 @@ func (r *CucumberRunner) RunProject() (int, error) {
 
 	app, otherApps, err := r.remoteArchiveProject(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
 	if err != nil {
-		return exitCode, err
+		return 1, err
 	}
 
 	if r.Project.DryRun {
@@ -59,11 +57,11 @@ func (r *CucumberRunner) RunProject() (int, error) {
 	}
 
 	passed := r.runSuites(app, otherApps)
-	if passed {
-		return 0, nil
+	if !passed {
+		return 1, nil
 	}
 
-	return exitCode, nil
+	return 0, nil
 }
 
 // setVersions sets the framework and runner versions based on the fetched framework metadata.
@@ -90,7 +88,7 @@ func (r *CucumberRunner) validateFramework(m framework.Metadata) error {
 	return nil
 }
 
-func (r *CucumberRunner) setupRuntime(metadata framework.Metadata) error {
+func (r *CucumberRunner) setRuntime(metadata framework.Metadata) error {
 	if !metadata.SupportGlobalNode() {
 		r.Project.NodeVersion = ""
 		return nil
@@ -107,9 +105,7 @@ func (r *CucumberRunner) setupRuntime(metadata framework.Metadata) error {
 	if err != nil {
 		return err
 	}
-	if err := rt.Validate(); err != nil {
-		return err
-	}
+	rt.Validate()
 	r.Project.NodeVersion = rt.RuntimeVersion
 
 	return nil

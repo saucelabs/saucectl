@@ -22,8 +22,6 @@ type CypressRunner struct {
 
 // RunProject runs the tests defined in cypress.Project.
 func (r *CypressRunner) RunProject() (int, error) {
-	exitCode := 1
-
 	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, cypress.Kind, r.Project.GetVersion())
 	if err != nil {
 		r.logFrameworkError(err)
@@ -34,7 +32,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	if err := r.setupRuntime(m); err != nil {
+	if err := r.setRuntime(m); err != nil {
 		return 1, err
 	}
 
@@ -49,7 +47,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 
 	app, otherApps, err := r.remoteArchiveProject(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore, r.Project.IsDryRun())
 	if err != nil {
-		return exitCode, err
+		return 1, err
 	}
 
 	if r.Project.IsDryRun() {
@@ -58,14 +56,14 @@ func (r *CypressRunner) RunProject() (int, error) {
 	}
 
 	passed := r.runSuites(app, otherApps)
-	if passed {
-		exitCode = 0
+	if !passed {
+		return 1, nil
 	}
 
-	return exitCode, nil
+	return 0, nil
 }
 
-func (r *CypressRunner) setupRuntime(m framework.Metadata) error {
+func (r *CypressRunner) setRuntime(m framework.Metadata) error {
 	if !m.SupportGlobalNode() {
 		r.Project.SetNodeVersion("")
 		return nil
@@ -82,9 +80,7 @@ func (r *CypressRunner) setupRuntime(m framework.Metadata) error {
 	if err != nil {
 		return err
 	}
-	if err := rt.Validate(); err != nil {
-		return err
-	}
+	rt.Validate()
 	r.Project.SetNodeVersion(rt.RuntimeVersion)
 
 	return nil
