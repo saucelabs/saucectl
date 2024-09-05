@@ -20,41 +20,6 @@ type Runtime struct {
 	Extra          map[string]string
 }
 
-func findRuntimeByAlias(runtimes []Runtime, alias string) Runtime {
-	for _, r := range runtimes {
-		for _, a := range r.RuntimeAlias {
-			if alias == a {
-				return r
-			}
-		}
-	}
-
-	return Runtime{}
-}
-
-func filterNodeRuntimes(runtimes []Runtime) []Runtime {
-	var nodeRuntimes []Runtime
-	for _, r := range runtimes {
-		if r.RuntimeName == NodeRuntime {
-			nodeRuntimes = append(nodeRuntimes, r)
-		}
-	}
-	return nodeRuntimes
-}
-
-func onlyHasMajor(version string) bool {
-	return len(strings.Split(version, ".")) == 1
-}
-
-func onlyHasMajorMinor(version string) bool {
-	return len(strings.Split(version, ".")) == 2
-}
-
-// isFullVersion checks if it contains major, minor and patch.
-func isFullVersion(version string) bool {
-	return len(strings.Split(version, ".")) == 3
-}
-
 // SelectNode selects the appropriate Node.js runtime from a list of runtimes.
 // It supports full SemVer matching, alias resolution, and fuzzy matching for major or major.minor versions.
 // `version` is expected to always start with "v".
@@ -102,6 +67,41 @@ func SelectNode(runtimes []Runtime, version string) (Runtime, error) {
 	}
 
 	return Runtime{}, fmt.Errorf("no matching node version found for %s", version)
+}
+
+func findRuntimeByAlias(runtimes []Runtime, alias string) Runtime {
+	for _, r := range runtimes {
+		for _, a := range r.RuntimeAlias {
+			if alias == a {
+				return r
+			}
+		}
+	}
+
+	return Runtime{}
+}
+
+func filterNodeRuntimes(runtimes []Runtime) []Runtime {
+	var nodeRuntimes []Runtime
+	for _, r := range runtimes {
+		if r.RuntimeName == NodeRuntime {
+			nodeRuntimes = append(nodeRuntimes, r)
+		}
+	}
+	return nodeRuntimes
+}
+
+func onlyHasMajor(version string) bool {
+	return len(strings.Split(version, ".")) == 0
+}
+
+func onlyHasMajorMinor(version string) bool {
+	return len(strings.Split(version, ".")) == 1
+}
+
+// isFullVersion checks if it contains major, minor and patch.
+func isFullVersion(version string) bool {
+	return len(strings.Split(version, ".")) == 2
 }
 
 func (r *Runtime) Validate() error {
