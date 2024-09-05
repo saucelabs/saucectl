@@ -92,16 +92,16 @@ func filterNodeRuntimes(runtimes []Runtime) []Runtime {
 }
 
 func onlyHasMajor(version string) bool {
-	return len(strings.Split(version, ".")) == 0
+	return len(strings.Split(version, ".")) == 1
 }
 
 func onlyHasMajorMinor(version string) bool {
-	return len(strings.Split(version, ".")) == 1
+	return len(strings.Split(version, ".")) == 2
 }
 
 // isFullVersion checks if it contains major, minor and patch.
 func isFullVersion(version string) bool {
-	return len(strings.Split(version, ".")) == 2
+	return len(strings.Split(version, ".")) == 3
 }
 
 func (r *Runtime) Validate() error {
