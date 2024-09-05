@@ -184,7 +184,7 @@ func SelectNode(runtimes []Runtime, version string) (Runtime, error) {
 func ValidateRuntime(runtime Runtime) error {
 	now := time.Now()
 	if now.After(runtime.EOLDate) {
-		return fmt.Errorf("node version %s has reached its EOL. Please upgrade to a newer version", runtime.RuntimeVersion)
+		return fmt.Errorf("%s version %s has reached its EOL. Please upgrade to a newer version", runtime.RuntimeName, runtime.RuntimeVersion)
 	}
 	return nil
 }
