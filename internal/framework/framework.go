@@ -168,7 +168,7 @@ func SelectNode(runtimes []Runtime, version string) (Runtime, error) {
 		return Runtime{}, fmt.Errorf("no matching node version found for %s", version)
 	}
 
-	// If no match for major.minor, try to match on major version only.
+	// Try to match on major version only.
 	if onlyHasMajor(version) {
 		major := semver.Major(version)
 		for _, r := range rts {
