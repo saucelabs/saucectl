@@ -7,10 +7,10 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/framework"
-	"github.com/saucelabs/saucectl/internal/msg"
-
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
+	"github.com/saucelabs/saucectl/internal/runtime"
 )
 
 // PlaywrightRunner represents the Sauce Labs cloud implementation for playwright.
@@ -44,21 +44,20 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		if err != nil {
 			return 1, err
 		}
-		runtime, err := framework.SelectNode(runtimes, r.Project.NodeVersion)
+		rt, err := runtime.SelectNode(runtimes, r.Project.NodeVersion)
 		if err != nil {
 			return 1, err
 		}
-		if err := framework.ValidateRuntime(runtime); err != nil {
+		if err := rt.Validate(); err != nil {
 			return 1, err
 		}
-		r.Project.NodeVersion = runtime.RuntimeVersion
+		r.Project.NodeVersion = rt.RuntimeVersion
 	}
 	// If the runner doesn't support the global node, set nodeVersion to empty.
 	if !m.SupportGlobalNode() {
 		r.Project.NodeVersion = ""
 	}
 
-	fmt.Println("r.Project.NodeVersion: ", r.Project.NodeVersion)
 	if err := r.validateTunnel(
 		r.Project.Sauce.Tunnel.Name,
 		r.Project.Sauce.Tunnel.Owner,

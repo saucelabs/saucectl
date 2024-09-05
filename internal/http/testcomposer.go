@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/iam"
+	"github.com/saucelabs/saucectl/internal/runtime"
 )
 
 // TestComposer service
@@ -235,7 +236,7 @@ func uniqFrameworkNameSet(frameworks []framework.Framework) []string {
 	return fws
 }
 
-func (c *TestComposer) Runtimes(ctx context.Context) ([]framework.Runtime, error) {
+func (c *TestComposer) Runtimes(ctx context.Context) ([]runtime.Runtime, error) {
 	url := fmt.Sprintf("%s/v1/testcomposer/runtimes", c.URL)
 
 	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -249,11 +250,11 @@ func (c *TestComposer) Runtimes(ctx context.Context) ([]framework.Runtime, error
 		return nil, err
 	}
 
-	var runtimes []framework.Runtime
+	var runtimes []runtime.Runtime
 	for _, rt := range resp {
 		name := rt.Name
 		for _, r := range rt.Releases {
-			runtimes = append(runtimes, framework.Runtime{
+			runtimes = append(runtimes, runtime.Runtime{
 				RuntimeName:    name,
 				RuntimeVersion: r.Version,
 				RuntimeAlias:   r.Aliases,

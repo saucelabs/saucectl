@@ -11,6 +11,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/runtime"
 )
 
 // CypressRunner represents the Sauce Labs cloud implementation for cypress.
@@ -38,14 +39,14 @@ func (r *CypressRunner) RunProject() (int, error) {
 		if err != nil {
 			return 1, err
 		}
-		runtime, err := framework.SelectNode(runtimes, r.Project.GetNodeVersion())
+		rt, err := runtime.SelectNode(runtimes, r.Project.GetNodeVersion())
 		if err != nil {
 			return 1, err
 		}
-		if err := framework.ValidateRuntime(runtime); err != nil {
+		if err := rt.Validate(); err != nil {
 			return 1, err
 		}
-		r.Project.SetNodeVersion(runtime.RuntimeVersion)
+		r.Project.SetNodeVersion(rt.RuntimeVersion)
 	}
 	// If the runner doesn't support the global node, set nodeVersion to empty.
 	if !m.SupportGlobalNode() {
