@@ -29,8 +29,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	deprecationMessage, err := r.validateFramework(m)
-	if err != nil {
+	if err := r.validateFramework(m); err != nil {
 		return 1, err
 	}
 
@@ -58,37 +57,30 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	if deprecationMessage != "" {
-		fmt.Print(deprecationMessage)
-	}
-
 	return exitCode, nil
 }
 
-func (r *TestcafeRunner) validateFramework(m framework.Metadata) (string, error) {
+func (r *TestcafeRunner) validateFramework(m framework.Metadata) error {
 	r.Project.Testcafe.Version = m.FrameworkVersion
 	if r.Project.RunnerVersion == "" {
 		r.Project.RunnerVersion = m.CloudRunnerVersion
 	}
 
-	var deprecationMessage string
 	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
-		deprecationMessage = r.deprecationMessage(testcafe.Kind, r.Project.Testcafe.Version, m.RemovalDate)
-		fmt.Print(deprecationMessage)
+		fmt.Print(r.deprecationMessage(testcafe.Kind, r.Project.Testcafe.Version, m.RemovalDate))
 	}
 	if m.IsFlaggedForRemoval() {
-		deprecationMessage = r.flaggedForRemovalMessage(testcafe.Kind, r.Project.Testcafe.Version)
-		fmt.Print(deprecationMessage)
+		fmt.Print(r.flaggedForRemovalMessage(testcafe.Kind, r.Project.Testcafe.Version))
 	}
 
 	for _, s := range r.Project.Suites {
 		if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
 			msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
-			return deprecationMessage, errors.New("unsupported platform")
+			return errors.New("unsupported platform")
 		}
 	}
 
-	return deprecationMessage, nil
+	return nil
 }
 
 func (r *TestcafeRunner) getSuiteNames() []string {

@@ -35,8 +35,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	deprecationMessage, err := r.validateFramework(m)
-	if err != nil {
+	if err := r.validateFramework(m); err != nil {
 		return 1, err
 	}
 
@@ -64,37 +63,30 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		exitCode = 0
 	}
 
-	if deprecationMessage != "" {
-		fmt.Print(deprecationMessage)
-	}
-
 	return exitCode, nil
 }
 
-func (r *PlaywrightRunner) validateFramework(m framework.Metadata) (string, error) {
+func (r *PlaywrightRunner) validateFramework(m framework.Metadata) error {
 	r.Project.Playwright.Version = m.FrameworkVersion
 	if r.Project.RunnerVersion == "" {
 		r.Project.RunnerVersion = m.CloudRunnerVersion
 	}
 
-	var deprecationMessage string
 	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
-		deprecationMessage = r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version, m.RemovalDate)
-		fmt.Print(deprecationMessage)
+		fmt.Print(r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version, m.RemovalDate))
 	}
 	if m.IsFlaggedForRemoval() {
-		deprecationMessage = r.flaggedForRemovalMessage(playwright.Kind, r.Project.Playwright.Version)
-		fmt.Print(deprecationMessage)
+		fmt.Print(r.flaggedForRemovalMessage(playwright.Kind, r.Project.Playwright.Version))
 	}
 
 	for i, s := range r.Project.Suites {
 		if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
 			msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
-			return deprecationMessage, errors.New("unsupported platform")
+			return errors.New("unsupported platform")
 		}
 		r.Project.Suites[i].Params.BrowserVersion = m.BrowserDefaults[PlaywrightBrowserMap[s.Params.BrowserName]]
 	}
-	return deprecationMessage, nil
+	return nil
 }
 
 func (r *PlaywrightRunner) getSuiteNames() []string {
