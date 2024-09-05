@@ -33,7 +33,7 @@ func (r *CucumberRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	if err := r.setRuntime(m); err != nil {
+	if err := r.setNodeRuntime(m); err != nil {
 		return 1, err
 	}
 
@@ -88,7 +88,7 @@ func (r *CucumberRunner) validateFramework(m framework.Metadata) error {
 	return nil
 }
 
-func (r *CucumberRunner) setRuntime(metadata framework.Metadata) error {
+func (r *CucumberRunner) setNodeRuntime(metadata framework.Metadata) error {
 	if !metadata.SupportGlobalNode() {
 		r.Project.NodeVersion = ""
 		return nil

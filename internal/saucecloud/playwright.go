@@ -37,7 +37,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	if err := r.setRuntime(m); err != nil {
+	if err := r.setNodeRuntime(m); err != nil {
 		return 1, err
 	}
 
@@ -68,7 +68,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 	return 0, nil
 }
 
-func (r *PlaywrightRunner) setRuntime(m framework.Metadata) error {
+func (r *PlaywrightRunner) setNodeRuntime(m framework.Metadata) error {
 	if !m.SupportGlobalNode() {
 		r.Project.NodeVersion = ""
 		return nil
