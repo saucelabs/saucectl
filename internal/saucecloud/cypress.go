@@ -21,7 +21,6 @@ type CypressRunner struct {
 
 // RunProject runs the tests defined in cypress.Project.
 func (r *CypressRunner) RunProject() (int, error) {
-	var deprecationMessage string
 	exitCode := 1
 
 	cyVersion := r.Project.GetVersion()
@@ -30,26 +29,10 @@ func (r *CypressRunner) RunProject() (int, error) {
 		r.logFrameworkError(err)
 		return exitCode, err
 	}
-	r.Project.SetVersion(m.FrameworkVersion)
-	if r.Project.GetRunnerVersion() == "" {
-		r.Project.SetRunnerVersion(m.CloudRunnerVersion)
+	if err := r.validateFramework(m); err != nil {
+		return 1, err
 	}
-
-	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
-		deprecationMessage = r.deprecationMessage(cypress.Kind, cyVersion, m.RemovalDate)
-		fmt.Print(deprecationMessage)
-	}
-	if m.IsFlaggedForRemoval() {
-		deprecationMessage = r.flaggedForRemovalMessage(cypress.Kind, cyVersion)
-		fmt.Print(deprecationMessage)
-	}
-
-	for _, s := range r.Project.GetSuites() {
-		if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
-			msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
-			return 1, errors.New("unsupported platform")
-		}
-	}
+	r.setVersions(m)
 
 	if err := r.validateTunnel(
 		r.Project.GetSauceCfg().Tunnel.Name,
@@ -75,11 +58,32 @@ func (r *CypressRunner) RunProject() (int, error) {
 		exitCode = 0
 	}
 
-	if deprecationMessage != "" {
-		fmt.Print(deprecationMessage)
+	return exitCode, nil
+}
+
+// setVersions sets the framework and runner versions based on the fetched framework metadata.
+// The framework version might be set to `package.json`.
+func (r *CypressRunner) setVersions(m framework.Metadata) {
+	r.Project.SetVersion(m.FrameworkVersion)
+	r.Project.SetRunnerVersion(m.CloudRunnerVersion)
+}
+
+func (r *CypressRunner) validateFramework(m framework.Metadata) error {
+	cyVersion := r.Project.GetVersion()
+	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
+		fmt.Print(r.deprecationMessage(cypress.Kind, cyVersion, m.RemovalDate))
+	}
+	if m.IsFlaggedForRemoval() {
+		fmt.Print(r.flaggedForRemovalMessage(cypress.Kind, cyVersion))
 	}
 
-	return exitCode, nil
+	for _, s := range r.Project.GetSuites() {
+		if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
+			msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
+			return errors.New("unsupported platform")
+		}
+	}
+	return nil
 }
 
 func (r *CypressRunner) runSuites(app string, otherApps []string) bool {
