@@ -150,6 +150,7 @@ func (r *PlaywrightRunner) runSuites(app string, otherApps []string) bool {
 				Suite:            s.Name,
 				Framework:        "playwright",
 				FrameworkVersion: s.PlaywrightVersion,
+				NodeVersion:      r.Project.NodeVersion,
 				BrowserName:      s.Params.BrowserName,
 				BrowserVersion:   s.Params.BrowserVersion,
 				PlatformName:     s.PlatformName,

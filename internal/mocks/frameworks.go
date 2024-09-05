@@ -10,6 +10,7 @@ import (
 type FakeFrameworkInfoReader struct {
 	FrameworksFn func(ctx context.Context) ([]string, error)
 	VersionsFn   func(ctx context.Context, frameworkName string) ([]framework.Metadata, error)
+	RuntimeFn    func(ctx context.Context) ([]framework.Runtime, error)
 }
 
 // Frameworks is a wrapper around FrameworksFn.
@@ -20,4 +21,9 @@ func (fir *FakeFrameworkInfoReader) Frameworks(ctx context.Context) ([]string, e
 // Versions is a wrapper around VersionsFn.
 func (fir *FakeFrameworkInfoReader) Versions(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
 	return fir.VersionsFn(ctx, frameworkName)
+}
+
+// Runtimes is a wrapper around RuntimesFn.
+func (fir *FakeFrameworkInfoReader) Runtimes(ctx context.Context) ([]framework.Runtime, error) {
+	return fir.RuntimeFn(ctx)
 }

@@ -140,11 +140,11 @@ func TestSelectNode(t *testing.T) {
 			wantErr:  "",
 		},
 		{
-			name:     "valid version starts with v",
+			name:     "invalid version not starts with v",
 			runtimes: runtimes,
-			version:  "v20.14.0",
-			want:     "20.14.0",
-			wantErr:  "",
+			version:  "20.14.0",
+			want:     "",
+			wantErr:  "invalid node version 20.14.0",
 		},
 		{
 			name:     "invalid version contains major, minor and patch",
@@ -166,13 +166,6 @@ func TestSelectNode(t *testing.T) {
 			version:  "v18",
 			want:     "18.20.4",
 			wantErr:  "",
-		},
-		{
-			name:     "invalid version only contains major and minor",
-			runtimes: runtimes,
-			version:  "20.16",
-			want:     "",
-			wantErr:  "invalid node version 20.16",
 		},
 		{
 			name:     "invalid version only contains major",
