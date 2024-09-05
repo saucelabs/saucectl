@@ -110,7 +110,7 @@ func isFullVersion(version string) bool {
 	return len(strings.Split(version, ".")) == 3
 }
 
-func (r *Runtime) Validate() error {
+func (r *Runtime) Validate() {
 	now := time.Now()
 	if now.After(r.EOLDate) {
 		fmt.Printf(
@@ -124,5 +124,4 @@ func (r *Runtime) Validate() error {
 			color.RedString(fmt.Sprintf("\n%s\n\n", msg.WarningLine)),
 		)
 	}
-	return nil
 }
