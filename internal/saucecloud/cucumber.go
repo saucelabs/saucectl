@@ -30,10 +30,10 @@ func (r *CucumberRunner) RunProject() (int, error) {
 		r.logFrameworkError(err)
 		return exitCode, err
 	}
+	r.setVersions(m)
 	if err := r.validateFramework(m); err != nil {
 		return exitCode, err
 	}
-	r.setVersions(m)
 
 	if err := r.setupRuntime(m); err != nil {
 		return 1, err

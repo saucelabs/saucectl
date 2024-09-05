@@ -34,10 +34,10 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		r.logFrameworkError(err)
 		return 1, err
 	}
+	r.setVersions(m)
 	if err := r.validateFramework(m); err != nil {
 		return 1, err
 	}
-	r.setVersions(m)
 
 	if err := r.setupRuntime(m); err != nil {
 		return 1, err

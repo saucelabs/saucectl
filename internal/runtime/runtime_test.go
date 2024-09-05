@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"testing"
-	"time"
 
 	"gotest.tools/assert"
 )
@@ -119,33 +118,6 @@ func TestSelectNode(t *testing.T) {
 			assert.Equal(t, tc.want, got.RuntimeVersion)
 			if err != nil {
 				assert.Equal(t, tc.wantErr, err.Error())
-			}
-		})
-	}
-}
-
-func TestValidate(t *testing.T) {
-	testcases := []struct {
-		name    string
-		runtime Runtime
-		want    string
-	}{
-		{
-			name:    "The runtime has not reached EOL",
-			runtime: Runtime{RuntimeName: "my-runtime", RuntimeVersion: "v2.3.4", EOLDate: time.Now().AddDate(1, 0, 0)},
-			want:    "",
-		},
-		{
-			name:    "The runtime has reached EOL",
-			runtime: Runtime{RuntimeName: "my-runtime", RuntimeVersion: "v2.3.4", EOLDate: time.Now().AddDate(-1, 0, 0)},
-			want:    "my-runtime version v2.3.4 has reached its EOL. Please upgrade to a newer version",
-		},
-	}
-	for _, tc := range testcases {
-		t.Run(tc.name, func(t *testing.T) {
-			got := tc.runtime.Validate()
-			if got != nil {
-				assert.Equal(t, tc.want, got.Error())
 			}
 		})
 	}

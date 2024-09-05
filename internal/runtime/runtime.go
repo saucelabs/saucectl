@@ -5,10 +5,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
+	"github.com/saucelabs/saucectl/internal/msg"
 	"golang.org/x/mod/semver"
 )
 
 const NodeRuntime = "nodejs"
+
+var namingMap = map[string]string{
+	NodeRuntime: "Node.js",
+}
 
 // Runtime represents runtime details on the VM.
 type Runtime struct {
@@ -107,7 +113,16 @@ func isFullVersion(version string) bool {
 func (r *Runtime) Validate() error {
 	now := time.Now()
 	if now.After(r.EOLDate) {
-		return fmt.Errorf("%s version %s has reached its EOL. Please upgrade to a newer version", r.RuntimeName, r.RuntimeVersion)
+		fmt.Printf(
+			"%s%s%s",
+			color.RedString(fmt.Sprintf("\n\n%s\n", msg.WarningLine)),
+			color.RedString(fmt.Sprintf(
+				"\nThe specified %s(%s) has reached its EOL. Please upgrade to a newer version.\n",
+				namingMap[r.RuntimeName],
+				r.RuntimeVersion,
+			)),
+			color.RedString(fmt.Sprintf("\n%s\n\n", msg.WarningLine)),
+		)
 	}
 	return nil
 }
