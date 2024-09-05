@@ -69,6 +69,13 @@ func TestSelectNode(t *testing.T) {
 			wantErr:  "no matching node version found for v20.14.2",
 		},
 		{
+			name:     "invalid version contains non-numeric major, minor and patch",
+			runtimes: runtimes,
+			version:  "va.b.c",
+			want:     "",
+			wantErr:  "invalid node version va.b.c",
+		},
+		{
 			name:     "valid version only contains major and minor",
 			runtimes: runtimes,
 			version:  "v20.14",

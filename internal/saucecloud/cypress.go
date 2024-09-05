@@ -34,23 +34,8 @@ func (r *CypressRunner) RunProject() (int, error) {
 	}
 	r.setVersions(m)
 
-	if m.SupportGlobalNode() && r.Project.GetNodeVersion() != "" {
-		runtimes, err := r.MetadataService.Runtimes(context.Background())
-		if err != nil {
-			return 1, err
-		}
-		rt, err := runtime.SelectNode(runtimes, r.Project.GetNodeVersion())
-		if err != nil {
-			return 1, err
-		}
-		if err := rt.Validate(); err != nil {
-			return 1, err
-		}
-		r.Project.SetNodeVersion(rt.RuntimeVersion)
-	}
-	// If the runner doesn't support the global node, set nodeVersion to empty.
-	if !m.SupportGlobalNode() {
-		r.Project.SetNodeVersion("")
+	if err := r.setupRuntime(m); err != nil {
+		return 1, err
 	}
 
 	if err := r.validateTunnel(
@@ -78,6 +63,30 @@ func (r *CypressRunner) RunProject() (int, error) {
 	}
 
 	return exitCode, nil
+}
+
+func (r *CypressRunner) setupRuntime(m framework.Metadata) error {
+	if !m.SupportGlobalNode() {
+		r.Project.SetNodeVersion("")
+		return nil
+	}
+
+	if r.Project.GetNodeVersion() != "" {
+		runtimes, err := r.MetadataService.Runtimes(context.Background())
+		if err != nil {
+			return err
+		}
+		rt, err := runtime.SelectNode(runtimes, r.Project.GetNodeVersion())
+		if err != nil {
+			return err
+		}
+		if err := rt.Validate(); err != nil {
+			return err
+		}
+		r.Project.SetNodeVersion(rt.RuntimeVersion)
+	}
+
+	return nil
 }
 
 // setVersions sets the framework and runner versions based on the fetched framework metadata.

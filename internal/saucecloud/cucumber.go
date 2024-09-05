@@ -35,23 +35,8 @@ func (r *CucumberRunner) RunProject() (int, error) {
 	}
 	r.setVersions(m)
 
-	if m.SupportGlobalNode() && r.Project.NodeVersion != "" {
-		runtimes, err := r.MetadataService.Runtimes(context.Background())
-		if err != nil {
-			return 1, err
-		}
-		rt, err := runtime.SelectNode(runtimes, r.Project.NodeVersion)
-		if err != nil {
-			return 1, err
-		}
-		if err := rt.Validate(); err != nil {
-			return 1, err
-		}
-		r.Project.NodeVersion = rt.RuntimeVersion
-	}
-	// If the runner doesn't support the global node, set nodeVersion to empty.
-	if !m.SupportGlobalNode() {
-		r.Project.NodeVersion = ""
+	if err := r.setupRuntime(m); err != nil {
+		return 1, err
 	}
 
 	if err := r.validateTunnel(
@@ -102,6 +87,30 @@ func (r *CucumberRunner) validateFramework(m framework.Metadata) error {
 			return errors.New("unsupported platform")
 		}
 	}
+	return nil
+}
+
+func (r *CucumberRunner) setupRuntime(metadata framework.Metadata) error {
+	if !metadata.SupportGlobalNode() {
+		r.Project.NodeVersion = ""
+		return nil
+	}
+
+	if r.Project.NodeVersion != "" {
+		runtimes, err := r.MetadataService.Runtimes(context.Background())
+		if err != nil {
+			return err
+		}
+		rt, err := runtime.SelectNode(runtimes, r.Project.NodeVersion)
+		if err != nil {
+			return err
+		}
+		if err := rt.Validate(); err != nil {
+			return err
+		}
+		r.Project.NodeVersion = rt.RuntimeVersion
+	}
+
 	return nil
 }
 
