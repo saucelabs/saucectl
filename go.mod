@@ -1,8 +1,6 @@
 module github.com/saucelabs/saucectl
 
-go 1.22.0
-
-toolchain go1.22.6
+go 1.22
 
 replace github.com/spf13/viper v1.14.0 => github.com/saucelabs/viper v1.14.0
 
@@ -32,7 +30,7 @@ require (
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
-	golang.org/x/mod v0.21.0
+	golang.org/x/mod v0.17.0
 	gopkg.in/segmentio/analytics-go.v3 v3.1.0
 	gopkg.in/yaml.v2 v2.4.0
 	gotest.tools/v3 v3.0.3
