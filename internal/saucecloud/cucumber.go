@@ -61,6 +61,8 @@ func (r *CucumberRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
+// setVersions sets the framework and runner versions based on the fetched framework metadata.
+// The framework version might be set to `package.json`.
 func (r *CucumberRunner) setVersions(m framework.Metadata) {
 	r.Project.Playwright.Version = m.FrameworkVersion
 	r.Project.RunnerVersion = m.CloudRunnerVersion

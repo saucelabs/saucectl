@@ -66,6 +66,8 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
+// setVersions sets the framework and runner versions based on the fetched framework metadata.
+// The framework version might be set to `package.json`.
 func (r *PlaywrightRunner) setVersions(m framework.Metadata) {
 	r.Project.Playwright.Version = m.FrameworkVersion
 	r.Project.RunnerVersion = m.CloudRunnerVersion

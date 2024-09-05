@@ -61,6 +61,8 @@ func (r *CypressRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
+// setVersions sets the framework and runner versions based on the fetched framework metadata.
+// The framework version might be set to `package.json`.
 func (r *CypressRunner) setVersions(m framework.Metadata) {
 	r.Project.SetVersion(m.FrameworkVersion)
 	r.Project.SetRunnerVersion(m.CloudRunnerVersion)
