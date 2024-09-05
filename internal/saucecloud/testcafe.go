@@ -28,10 +28,10 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		r.logFrameworkError(err)
 		return exitCode, err
 	}
-
 	if err := r.validateFramework(m); err != nil {
 		return 1, err
 	}
+	r.setVersions(m)
 
 	if err := r.validateTunnel(
 		r.Project.Sauce.Tunnel.Name,
@@ -60,12 +60,12 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-func (r *TestcafeRunner) validateFramework(m framework.Metadata) error {
+func (r *TestcafeRunner) setVersions(m framework.Metadata) {
 	r.Project.Testcafe.Version = m.FrameworkVersion
-	if r.Project.RunnerVersion == "" {
-		r.Project.RunnerVersion = m.CloudRunnerVersion
-	}
+	r.Project.RunnerVersion = m.CloudRunnerVersion
+}
 
+func (r *TestcafeRunner) validateFramework(m framework.Metadata) error {
 	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
 		fmt.Print(r.deprecationMessage(testcafe.Kind, r.Project.Testcafe.Version, m.RemovalDate))
 	}

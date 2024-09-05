@@ -29,10 +29,10 @@ func (r *CucumberRunner) RunProject() (int, error) {
 		r.logFrameworkError(err)
 		return exitCode, err
 	}
-
 	if err := r.validateFramework(m); err != nil {
 		return exitCode, err
 	}
+	r.setVersions(m)
 
 	if err := r.validateTunnel(
 		r.Project.Sauce.Tunnel.Name,
@@ -61,12 +61,12 @@ func (r *CucumberRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-func (r *CucumberRunner) validateFramework(m framework.Metadata) error {
+func (r *CucumberRunner) setVersions(m framework.Metadata) {
 	r.Project.Playwright.Version = m.FrameworkVersion
-	if r.Project.RunnerVersion == "" {
-		r.Project.RunnerVersion = m.CloudRunnerVersion
-	}
+	r.Project.RunnerVersion = m.CloudRunnerVersion
+}
 
+func (r *CucumberRunner) validateFramework(m framework.Metadata) error {
 	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
 		fmt.Print(r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version, m.RemovalDate))
 	}

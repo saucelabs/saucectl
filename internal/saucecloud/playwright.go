@@ -34,10 +34,10 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		r.logFrameworkError(err)
 		return exitCode, err
 	}
-
 	if err := r.validateFramework(m); err != nil {
 		return 1, err
 	}
+	r.setVersions(m)
 
 	if err := r.validateTunnel(
 		r.Project.Sauce.Tunnel.Name,
@@ -66,12 +66,12 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-func (r *PlaywrightRunner) validateFramework(m framework.Metadata) error {
+func (r *PlaywrightRunner) setVersions(m framework.Metadata) {
 	r.Project.Playwright.Version = m.FrameworkVersion
-	if r.Project.RunnerVersion == "" {
-		r.Project.RunnerVersion = m.CloudRunnerVersion
-	}
+	r.Project.RunnerVersion = m.CloudRunnerVersion
+}
 
+func (r *PlaywrightRunner) validateFramework(m framework.Metadata) error {
 	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
 		fmt.Print(r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version, m.RemovalDate))
 	}

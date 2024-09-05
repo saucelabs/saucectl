@@ -32,6 +32,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 	if err := r.validateFramework(m); err != nil {
 		return 1, err
 	}
+	r.setVersions(m)
 
 	if err := r.validateTunnel(
 		r.Project.GetSauceCfg().Tunnel.Name,
@@ -60,12 +61,12 @@ func (r *CypressRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-func (r *CypressRunner) validateFramework(m framework.Metadata) error {
+func (r *CypressRunner) setVersions(m framework.Metadata) {
 	r.Project.SetVersion(m.FrameworkVersion)
-	if r.Project.GetRunnerVersion() == "" {
-		r.Project.SetRunnerVersion(m.CloudRunnerVersion)
-	}
+	r.Project.SetRunnerVersion(m.CloudRunnerVersion)
+}
 
+func (r *CypressRunner) validateFramework(m framework.Metadata) error {
 	cyVersion := r.Project.GetVersion()
 	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
 		fmt.Print(r.deprecationMessage(cypress.Kind, cyVersion, m.RemovalDate))
