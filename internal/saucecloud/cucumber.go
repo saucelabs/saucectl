@@ -139,6 +139,7 @@ func (r *CucumberRunner) runSuites(app string, otherApps []string) bool {
 				Suite:            s.Name,
 				Framework:        "playwright",
 				FrameworkVersion: r.Project.Playwright.Version,
+				NodeVersion:      r.Project.NodeVersion,
 				BrowserName:      s.BrowserName,
 				BrowserVersion:   s.BrowserVersion,
 				PlatformName:     s.PlatformName,

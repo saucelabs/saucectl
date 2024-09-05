@@ -168,6 +168,7 @@ func (r *TestcafeRunner) generateStartOpts(s testcafe.Suite) job.StartOptions {
 		Suite:            s.Name,
 		Framework:        "testcafe",
 		FrameworkVersion: r.Project.Testcafe.Version,
+		NodeVersion:      r.Project.NodeVersion,
 		BrowserName:      s.BrowserName,
 		BrowserVersion:   s.BrowserVersion,
 		Name:             s.Name,

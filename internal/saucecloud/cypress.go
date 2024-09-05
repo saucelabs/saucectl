@@ -133,6 +133,7 @@ func (r *CypressRunner) runSuites(app string, otherApps []string) bool {
 				Suite:            s.Name,
 				Framework:        "cypress",
 				FrameworkVersion: r.Project.GetVersion(),
+				NodeVersion:      r.Project.GetNodeVersion(),
 				BrowserName:      s.Browser,
 				BrowserVersion:   s.BrowserVersion,
 				PlatformName:     s.PlatformName,
