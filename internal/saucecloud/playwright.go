@@ -75,20 +75,22 @@ func (r *PlaywrightRunner) setupRuntime(m framework.Metadata) error {
 		r.Project.NodeVersion = ""
 		return nil
 	}
-	if r.Project.NodeVersion != "" {
-		runtimes, err := r.MetadataService.Runtimes(context.Background())
-		if err != nil {
-			return err
-		}
-		rt, err := runtime.SelectNode(runtimes, r.Project.NodeVersion)
-		if err != nil {
-			return err
-		}
-		if err := rt.Validate(); err != nil {
-			return err
-		}
-		r.Project.NodeVersion = rt.RuntimeVersion
+	if r.Project.NodeVersion == "" {
+		return nil
 	}
+
+	runtimes, err := r.MetadataService.Runtimes(context.Background())
+	if err != nil {
+		return err
+	}
+	rt, err := runtime.SelectNode(runtimes, r.Project.NodeVersion)
+	if err != nil {
+		return err
+	}
+	if err := rt.Validate(); err != nil {
+		return err
+	}
+	r.Project.NodeVersion = rt.RuntimeVersion
 
 	return nil
 }

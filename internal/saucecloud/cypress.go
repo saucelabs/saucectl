@@ -70,21 +70,22 @@ func (r *CypressRunner) setupRuntime(m framework.Metadata) error {
 		r.Project.SetNodeVersion("")
 		return nil
 	}
-
-	if r.Project.GetNodeVersion() != "" {
-		runtimes, err := r.MetadataService.Runtimes(context.Background())
-		if err != nil {
-			return err
-		}
-		rt, err := runtime.SelectNode(runtimes, r.Project.GetNodeVersion())
-		if err != nil {
-			return err
-		}
-		if err := rt.Validate(); err != nil {
-			return err
-		}
-		r.Project.SetNodeVersion(rt.RuntimeVersion)
+	if r.Project.GetNodeVersion() == "" {
+		return nil
 	}
+
+	runtimes, err := r.MetadataService.Runtimes(context.Background())
+	if err != nil {
+		return err
+	}
+	rt, err := runtime.SelectNode(runtimes, r.Project.GetNodeVersion())
+	if err != nil {
+		return err
+	}
+	if err := rt.Validate(); err != nil {
+		return err
+	}
+	r.Project.SetNodeVersion(rt.RuntimeVersion)
 
 	return nil
 }
