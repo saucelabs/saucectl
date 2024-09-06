@@ -345,9 +345,10 @@
           },
           "nodeVersion": {
             "description": "Specifies the Node.js version for Sauce Cloud. Supports SemVer notation and aliases.",
-            "enum": [
+            "examples": [
               "v20",
-              "iron"
+              "iron",
+              "lts"
             ]
           },
           "showConsoleLog": {
@@ -1265,9 +1266,10 @@
           },
           "nodeVersion": {
             "description": "Specifies the Node.js version for Sauce Cloud. Supports SemVer notation and aliases.",
-            "enum": [
+            "examples": [
               "v20",
-              "iron"
+              "iron",
+              "lts"
             ]
           },
           "showConsoleLog": {
