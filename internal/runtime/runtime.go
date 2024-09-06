@@ -116,27 +116,35 @@ func isFullVersion(version string) bool {
 func (r *Runtime) Validate() error {
 	now := time.Now()
 	if !r.RemovalDate.IsZero() && now.After(r.RemovalDate) {
-		fmt.Printf(
-			"%s%s%s%s",
-			color.RedString(fmt.Sprintf("\n\n%s\n", msg.WarningLine)),
-			color.RedString(fmt.Sprintf("\nThe specified %s(%s) is UNSUPPORTED and can be removed at anytime!\n", runtimeDisplayNames[r.Name], r.Version)),
-			color.RedString(fmt.Sprintf("You MUST update your version of %s to a newer one.\n", runtimeDisplayNames[r.Name])),
-			color.RedString(fmt.Sprintf("\n%s\n\n", msg.WarningLine)),
-		)
+		fmt.Print(r.removalMsg())
 		return fmt.Errorf("unsupported runtime %s(%s)", runtimeDisplayNames[r.Name], r.Version)
 	}
 
 	if now.After(r.EOLDate) {
-		fmt.Printf(
-			"%s%s%s",
-			color.RedString(fmt.Sprintf("\n\n%s\n", msg.WarningLine)),
-			color.RedString(fmt.Sprintf(
-				"\nThe specified %s(%s) has reached its EOL. Please upgrade to a newer version.\n",
-				runtimeDisplayNames[r.Name],
-				r.Version,
-			)),
-			color.RedString(fmt.Sprintf("\n%s\n\n", msg.WarningLine)),
-		)
+		fmt.Print(r.EOLMsg())
 	}
 	return nil
+}
+
+func (r *Runtime) removalMsg() string {
+	return fmt.Sprintf(
+		"%s%s%s%s",
+		color.RedString(fmt.Sprintf("\n\n%s\n", msg.WarningLine)),
+		color.RedString(fmt.Sprintf("\nThe specified %s(%s) is UNSUPPORTED!\n", runtimeDisplayNames[r.Name], r.Version)),
+		color.RedString(fmt.Sprintf("You MUST update your version of %s to a newer one.\n", runtimeDisplayNames[r.Name])),
+		color.RedString(fmt.Sprintf("\n%s\n\n", msg.WarningLine)),
+	)
+}
+
+func (r *Runtime) EOLMsg() string {
+	return fmt.Sprintf(
+		"%s%s%s",
+		color.RedString(fmt.Sprintf("\n\n%s\n", msg.WarningLine)),
+		color.RedString(fmt.Sprintf(
+			"\nThe specified %s(%s) has reached its EOL. Please upgrade to a newer version.\n",
+			runtimeDisplayNames[r.Name],
+			r.Version,
+		)),
+		color.RedString(fmt.Sprintf("\n%s\n\n", msg.WarningLine)),
+	)
 }
