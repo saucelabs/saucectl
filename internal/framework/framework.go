@@ -70,7 +70,7 @@ func PlatformNames(platforms []Platform) []string {
 	return pp
 }
 
-// SupportsRuntime checks if the current runner supports the global node.
+// SupportsRuntime checks if the current runner supports the specified runtime.
 func (m *Metadata) SupportsRuntime(runtimeName string) bool {
 	if len(m.Runtimes) == 0 {
 		return false
