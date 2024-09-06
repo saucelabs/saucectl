@@ -19,12 +19,12 @@ var runtimeDisplayNames = map[string]string{
 
 // Runtime represents runtime details on the VM.
 type Runtime struct {
-	RuntimeName    string
-	RuntimeAlias   []string
-	RuntimeVersion string
-	EOLDate        time.Time
-	Default        bool
-	Extra          map[string]string
+	Name    string
+	Alias   []string
+	Version string
+	EOLDate time.Time
+	Default bool
+	Extra   map[string]string
 }
 
 // SelectNode selects the appropriate Node.js runtime from a list of runtimes.
@@ -35,7 +35,7 @@ func SelectNode(runtimes []Runtime, version string) (Runtime, error) {
 	if !semver.IsValid(version) {
 		// If version is not a valid SemVer, check if it's using an alias (e.g., "lts" or code name).
 		res := findRuntimeByAlias(rts, version)
-		if res.RuntimeName != "" {
+		if res.Name != "" {
 			return res, nil
 		}
 		return Runtime{}, fmt.Errorf("invalid node version %s", version)
@@ -44,7 +44,7 @@ func SelectNode(runtimes []Runtime, version string) (Runtime, error) {
 	// If the version is a full SemVer (i.e., major.minor.patch), attempt exact match.
 	if isFullVersion(version) {
 		for _, r := range rts {
-			if "v"+r.RuntimeVersion == version {
+			if "v"+r.Version == version {
 				return r, nil
 			}
 		}
@@ -56,7 +56,7 @@ func SelectNode(runtimes []Runtime, version string) (Runtime, error) {
 	if onlyHasMajorMinor(version) {
 		majorMinor := semver.MajorMinor(version)
 		for _, r := range rts {
-			if strings.HasPrefix("v"+r.RuntimeVersion, majorMinor+".") {
+			if strings.HasPrefix("v"+r.Version, majorMinor+".") {
 				return r, nil
 			}
 		}
@@ -67,7 +67,7 @@ func SelectNode(runtimes []Runtime, version string) (Runtime, error) {
 	if onlyHasMajor(version) {
 		major := semver.Major(version)
 		for _, r := range rts {
-			if strings.HasPrefix("v"+r.RuntimeVersion, major+".") {
+			if strings.HasPrefix("v"+r.Version, major+".") {
 				return r, nil
 			}
 		}
@@ -78,7 +78,7 @@ func SelectNode(runtimes []Runtime, version string) (Runtime, error) {
 
 func findRuntimeByAlias(runtimes []Runtime, alias string) Runtime {
 	for _, r := range runtimes {
-		for _, a := range r.RuntimeAlias {
+		for _, a := range r.Alias {
 			if alias == a {
 				return r
 			}
@@ -91,7 +91,7 @@ func findRuntimeByAlias(runtimes []Runtime, alias string) Runtime {
 func filterNodeRuntimes(runtimes []Runtime) []Runtime {
 	var nodeRuntimes []Runtime
 	for _, r := range runtimes {
-		if r.RuntimeName == NodeRuntime {
+		if r.Name == NodeRuntime {
 			nodeRuntimes = append(nodeRuntimes, r)
 		}
 	}
@@ -119,8 +119,8 @@ func (r *Runtime) Validate() {
 			color.RedString(fmt.Sprintf("\n\n%s\n", msg.WarningLine)),
 			color.RedString(fmt.Sprintf(
 				"\nThe specified %s(%s) has reached its EOL. Please upgrade to a newer version.\n",
-				runtimeDisplayNames[r.RuntimeName],
-				r.RuntimeVersion,
+				runtimeDisplayNames[r.Name],
+				r.Version,
 			)),
 			color.RedString(fmt.Sprintf("\n%s\n\n", msg.WarningLine)),
 		)

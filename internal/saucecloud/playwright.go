@@ -86,7 +86,7 @@ func (r *PlaywrightRunner) setNodeRuntime(m framework.Metadata) error {
 		return err
 	}
 	rt.Validate()
-	r.Project.NodeVersion = rt.RuntimeVersion
+	r.Project.NodeVersion = rt.Version
 
 	return nil
 }

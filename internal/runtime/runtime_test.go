@@ -9,14 +9,14 @@ import (
 func TestSelectNode(t *testing.T) {
 	runtimes := []Runtime{
 		{
-			RuntimeName:    "nodejs",
-			RuntimeVersion: "20.14.0",
-			RuntimeAlias:   []string{"iron", "lts"},
+			Name:    "nodejs",
+			Version: "20.14.0",
+			Alias:   []string{"iron", "lts"},
 		},
 		{
-			RuntimeName:    "nodejs",
-			RuntimeVersion: "18.20.4",
-			RuntimeAlias:   []string{"Hydrogen"},
+			Name:    "nodejs",
+			Version: "18.20.4",
+			Alias:   []string{"Hydrogen"},
 		},
 	}
 	testcases := []struct {
@@ -115,7 +115,7 @@ func TestSelectNode(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := SelectNode(tc.runtimes, tc.version)
-			assert.Equal(t, tc.want, got.RuntimeVersion)
+			assert.Equal(t, tc.want, got.Version)
 			if err != nil {
 				assert.Equal(t, tc.wantErr, err.Error())
 			}

@@ -255,11 +255,11 @@ func (c *TestComposer) Runtimes(ctx context.Context) ([]runtime.Runtime, error) 
 	for _, rt := range resp {
 		for _, r := range rt.Releases {
 			runtimes = append(runtimes, runtime.Runtime{
-				RuntimeName:    rt.Name,
-				RuntimeVersion: r.Version,
-				RuntimeAlias:   r.Aliases,
-				EOLDate:        r.EOLDate,
-				Extra:          r.Extra,
+				Name:    rt.Name,
+				Version: r.Version,
+				Alias:   r.Aliases,
+				EOLDate: r.EOLDate,
+				Extra:   r.Extra,
 			})
 		}
 	}

@@ -106,7 +106,7 @@ func (r *CucumberRunner) setNodeRuntime(metadata framework.Metadata) error {
 		return err
 	}
 	rt.Validate()
-	r.Project.NodeVersion = rt.RuntimeVersion
+	r.Project.NodeVersion = rt.Version
 
 	return nil
 }
