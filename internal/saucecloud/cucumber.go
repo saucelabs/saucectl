@@ -70,10 +70,10 @@ func (r *CucumberRunner) setVersions(m framework.Metadata) {
 
 func (r *CucumberRunner) validateFramework(m framework.Metadata) error {
 	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
-		fmt.Print(r.deprecationMessage(playwright.Kind, r.Project.Playwright.Version, m.RemovalDate))
+		fmt.Print(msg.EOLNotice(playwright.Kind, r.Project.Playwright.Version, m.RemovalDate, r.getAvailableVersions(playwright.Kind)))
 	}
 	if m.IsFlaggedForRemoval() {
-		fmt.Print(r.flaggedForRemovalMessage(playwright.Kind, r.Project.Playwright.Version))
+		fmt.Print(msg.RemovalNotice(playwright.Kind, r.Project.Playwright.Version, r.getAvailableVersions(playwright.Kind)))
 	}
 
 	for _, s := range r.Project.Suites {

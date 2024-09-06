@@ -884,52 +884,28 @@ func (r *CloudRunner) uploadCLIFlags(jobID string, realDevice bool, content inte
 	}
 }
 
-func (r *CloudRunner) deprecationMessage(frameworkName string, frameworkVersion string, removalDate time.Time) string {
-	formattedDate := removalDate.Format("Jan 02, 2006")
-
-	return fmt.Sprintf(
-		"%s%s%s%s%s",
-		color.RedString(fmt.Sprintf("\n\n%s\n", msg.WarningLine)),
-		color.RedString(fmt.Sprintf("\nVersion %s for %s is deprecated and will be removed on %s!\n", frameworkVersion, frameworkName, formattedDate)),
-		fmt.Sprintf("You should update your version of %s to a more recent one.\n", frameworkName),
-		color.RedString(fmt.Sprintf("\n%s\n\n", msg.WarningLine)),
-		r.getAvailableVersionsMessage(frameworkName),
-	)
-}
-
-func (r *CloudRunner) flaggedForRemovalMessage(frameworkName string, frameworkVersion string) string {
-	return fmt.Sprintf(
-		"%s%s%s%s%s",
-		color.RedString(fmt.Sprintf("\n\n%s\n", msg.WarningLine)),
-		color.RedString(fmt.Sprintf("\nVersion %s for %s is UNSUPPORTED and can be removed at anytime !\n", frameworkVersion, frameworkName)),
-		color.RedString(fmt.Sprintf("You MUST update your version of %s to a more recent one.\n", frameworkName)),
-		color.RedString(fmt.Sprintf("\n%s\n\n", msg.WarningLine)),
-		r.getAvailableVersionsMessage(frameworkName),
-	)
-}
-
 func (r *CloudRunner) logFrameworkError(err error) {
 	var unavailableErr *framework.UnavailableError
 	if errors.As(err, &unavailableErr) {
 		color.Red(fmt.Sprintf("\n%s\n\n", err.Error()))
-		fmt.Print(r.getAvailableVersionsMessage(unavailableErr.Name))
+		fmt.Print(msg.FormatAvailableVersions(unavailableErr.Name, r.getAvailableVersions(unavailableErr.Name)))
 	}
 }
 
-// logAvailableVersions displays the available cloud version for the framework.
-func (r *CloudRunner) getAvailableVersionsMessage(frameworkName string) string {
+// getAvailableVersions gets the available cloud version for the framework.
+func (r *CloudRunner) getAvailableVersions(frameworkName string) []string {
 	versions, err := r.MetadataService.Versions(context.Background(), frameworkName)
 	if err != nil {
-		return ""
+		return nil
 	}
-	m := fmt.Sprintf("Available versions of %s are:\n", frameworkName)
+
+	var available []string
 	for _, v := range versions {
 		if !v.IsDeprecated() && !v.IsFlaggedForRemoval() {
-			m += fmt.Sprintf(" - %s\n", v.FrameworkVersion)
+			available = append(available, v.FrameworkVersion)
 		}
 	}
-	m += "\n"
-	return m
+	return available
 }
 
 func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHistory, error) {

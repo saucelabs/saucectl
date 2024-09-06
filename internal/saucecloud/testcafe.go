@@ -69,10 +69,10 @@ func (r *TestcafeRunner) setVersions(m framework.Metadata) {
 
 func (r *TestcafeRunner) validateFramework(m framework.Metadata) error {
 	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
-		fmt.Print(r.deprecationMessage(testcafe.Kind, r.Project.Testcafe.Version, m.RemovalDate))
+		fmt.Print(msg.EOLNotice(testcafe.Kind, r.Project.Testcafe.Version, m.RemovalDate, r.getAvailableVersions(testcafe.Kind)))
 	}
 	if m.IsFlaggedForRemoval() {
-		fmt.Print(r.flaggedForRemovalMessage(testcafe.Kind, r.Project.Testcafe.Version))
+		fmt.Print(msg.RemovalNotice(testcafe.Kind, r.Project.Testcafe.Version, r.getAvailableVersions(testcafe.Kind)))
 	}
 
 	for _, s := range r.Project.Suites {

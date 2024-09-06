@@ -71,10 +71,10 @@ func (r *CypressRunner) setVersions(m framework.Metadata) {
 func (r *CypressRunner) validateFramework(m framework.Metadata) error {
 	cyVersion := r.Project.GetVersion()
 	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
-		fmt.Print(r.deprecationMessage(cypress.Kind, cyVersion, m.RemovalDate))
+		fmt.Print(msg.EOLNotice(cypress.Kind, cyVersion, m.RemovalDate, r.getAvailableVersions(cypress.Kind)))
 	}
 	if m.IsFlaggedForRemoval() {
-		fmt.Print(r.flaggedForRemovalMessage(cypress.Kind, cyVersion))
+		fmt.Print(msg.RemovalNotice(cypress.Kind, cyVersion, r.getAvailableVersions(cypress.Kind)))
 	}
 
 	for _, s := range r.Project.GetSuites() {

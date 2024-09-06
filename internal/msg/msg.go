@@ -3,6 +3,7 @@ package msg
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 )
@@ -130,4 +131,40 @@ func LogUnsupportedFramework(frameworkName string) {
 └─%s───────────────────────────────┘
 
 `, padding, frameworkName, padding))
+}
+
+// EOLNotice generates an EOL message for a given version.
+func EOLNotice(name, version string, removalDate time.Time, availableVersions []string) string {
+	formattedDate := removalDate.Format("Jan 02, 2006")
+
+	return fmt.Sprintf(
+		"%s%s%s%s%s",
+		color.RedString(fmt.Sprintf("\n\n%s\n", WarningLine)),
+		color.RedString(fmt.Sprintf("\nVersion %s of %s is deprecated and will be removed on %s!\n", version, name, formattedDate)),
+		fmt.Sprintf("You should update %s to a more recent version.\n", name),
+		color.RedString(fmt.Sprintf("\n%s\n\n", WarningLine)),
+		FormatAvailableVersions(name, availableVersions),
+	)
+}
+
+// RemovalNotice generates a removal message for a given version.
+func RemovalNotice(name, version string, availableVersions []string) string {
+	return fmt.Sprintf(
+		"%s%s%s%s%s",
+		color.RedString(fmt.Sprintf("\n\n%s\n", WarningLine)),
+		color.RedString(fmt.Sprintf("\nVersion %s of %s is UNSUPPORTED and may be removed at any time!\n", version, name)),
+		color.RedString(fmt.Sprintf("You MUST update %s to a more recent version.\n", name)),
+		color.RedString(fmt.Sprintf("\n%s\n\n", WarningLine)),
+		FormatAvailableVersions(name, availableVersions),
+	)
+}
+
+// FormatAvailableVersions formats a message listing the available versions.
+func FormatAvailableVersions(name string, versions []string) string {
+	m := fmt.Sprintf("Available versions of %s are:\n", name)
+	for _, v := range versions {
+		m += fmt.Sprintf(" - %s\n", v)
+	}
+	m += "\n"
+	return m
 }
