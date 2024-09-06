@@ -58,10 +58,11 @@ type RuntimeResponse struct {
 }
 
 type Release struct {
-	Version string    `json:"version"`
-	Aliases []string  `json:"aliases"`
-	EOLDate time.Time `json:"eolDate"`
-	Default bool      `json:"default"`
+	Version     string    `json:"version"`
+	Aliases     []string  `json:"aliases"`
+	EOLDate     time.Time `json:"eolDate"`
+	RemovalDate time.Time `json:"removalDate"`
+	Default     bool      `json:"default"`
 
 	Extra map[string]string `json:"extra"`
 }
@@ -255,11 +256,12 @@ func (c *TestComposer) Runtimes(ctx context.Context) ([]runtime.Runtime, error) 
 	for _, rt := range resp {
 		for _, r := range rt.Releases {
 			runtimes = append(runtimes, runtime.Runtime{
-				Name:    rt.Name,
-				Version: r.Version,
-				Alias:   r.Aliases,
-				EOLDate: r.EOLDate,
-				Extra:   r.Extra,
+				Name:        rt.Name,
+				Version:     r.Version,
+				Alias:       r.Aliases,
+				EOLDate:     r.EOLDate,
+				RemovalDate: r.RemovalDate,
+				Extra:       r.Extra,
 			})
 		}
 	}

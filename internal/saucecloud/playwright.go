@@ -81,11 +81,13 @@ func (r *PlaywrightRunner) setNodeRuntime(m framework.Metadata) error {
 	if err != nil {
 		return err
 	}
-	rt, err := runtime.Find(runtimes, r.Project.NodeVersion)
+	rt, err := runtime.Find(runtimes, runtime.NodeRuntime, r.Project.NodeVersion)
 	if err != nil {
 		return err
 	}
-	rt.Validate()
+	if err := rt.Validate(); err != nil {
+		return err
+	}
 	r.Project.NodeVersion = rt.Version
 
 	return nil

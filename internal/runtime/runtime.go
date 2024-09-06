@@ -19,12 +19,13 @@ var runtimeDisplayNames = map[string]string{
 
 // Runtime represents runtime details on the VM.
 type Runtime struct {
-	Name    string
-	Alias   []string
-	Version string
-	EOLDate time.Time
-	Default bool
-	Extra   map[string]string
+	Name        string
+	Alias       []string
+	Version     string
+	EOLDate     time.Time
+	RemovalDate time.Time
+	Default     bool
+	Extra       map[string]string
 }
 
 // Find selects the appropriate runtime from a list of runtimes.
@@ -91,7 +92,7 @@ func findRuntimeByAlias(runtimes []Runtime, alias string) (Runtime, error) {
 func filterByName(runtimes []Runtime, name string) []Runtime {
 	var rts []Runtime
 	for _, r := range runtimes {
-		if r.Name == NodeRuntime {
+		if r.Name == name {
 			rts = append(rts, r)
 		}
 	}
@@ -111,8 +112,19 @@ func isFullVersion(version string) bool {
 	return len(strings.Split(version, ".")) == 3
 }
 
-func (r *Runtime) Validate() {
+func (r *Runtime) Validate() error {
 	now := time.Now()
+	if !r.RemovalDate.IsZero() && now.After(r.RemovalDate) {
+		fmt.Printf(
+			"%s%s%s%s",
+			color.RedString(fmt.Sprintf("\n\n%s\n", msg.WarningLine)),
+			color.RedString(fmt.Sprintf("\nThe specified %s(%s) is UNSUPPORTED and can be removed at anytime!\n", runtimeDisplayNames[r.Name], r.Version)),
+			color.RedString(fmt.Sprintf("You MUST update your version of %s to a newer one.\n", runtimeDisplayNames[r.Name])),
+			color.RedString(fmt.Sprintf("\n%s\n\n", msg.WarningLine)),
+		)
+		return fmt.Errorf("unsupported runtime %s(%s)", runtimeDisplayNames[r.Name], r.Version)
+	}
+
 	if now.After(r.EOLDate) {
 		fmt.Printf(
 			"%s%s%s",
@@ -125,4 +137,5 @@ func (r *Runtime) Validate() {
 			color.RedString(fmt.Sprintf("\n%s\n\n", msg.WarningLine)),
 		)
 	}
+	return nil
 }
