@@ -69,7 +69,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 }
 
 func (r *PlaywrightRunner) setNodeRuntime(m framework.Metadata) error {
-	if !m.SupportsRuntime() {
+	if !m.SupportsRuntime(runtime.NodeRuntime) {
 		r.Project.NodeVersion = ""
 		return nil
 	}

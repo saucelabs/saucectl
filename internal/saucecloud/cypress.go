@@ -64,7 +64,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 }
 
 func (r *CypressRunner) setNodeRuntime(m framework.Metadata) error {
-	if !m.SupportsRuntime() {
+	if !m.SupportsRuntime(runtime.NodeRuntime) {
 		r.Project.SetNodeVersion("")
 		return nil
 	}

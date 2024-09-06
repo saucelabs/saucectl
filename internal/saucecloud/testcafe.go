@@ -64,7 +64,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 }
 
 func (r *TestcafeRunner) setNodeRuntime(m framework.Metadata) error {
-	if !m.SupportsRuntime() {
+	if !m.SupportsRuntime(runtime.NodeRuntime) {
 		r.Project.NodeVersion = ""
 		return nil
 	}
