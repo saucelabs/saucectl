@@ -97,6 +97,13 @@
           "default": false
         }
       }
+    },
+    "nodeVersion": {
+      "description": "Specifies the Node.js version for Sauce Cloud. Supports SemVer notation and aliases.",
+      "enum": [
+        "v20",
+        "iron"
+      ]
     }
   }
 }

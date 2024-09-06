@@ -24,6 +24,9 @@
     "kind": {
       "const": "cypress"
     },
+    "nodeVersion": {
+      "$ref": "../subschema/common.schema.json#/definitions/nodeVersion"
+    },
     "showConsoleLog": {
       "$ref": "../subschema/common.schema.json#/definitions/showConsoleLog"
     },
