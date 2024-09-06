@@ -34,7 +34,7 @@ func Find(runtimes []Runtime, name, version string) (Runtime, error) {
 	rts := filterByName(runtimes, name)
 	if !semver.IsValid(version) {
 		// If version is not a valid SemVer, check if it's using an alias (e.g., "lts" or code name).
-		res, err := findRuntimeByAlias(rts, version)
+		res, err := findByAlias(rts, version)
 		if err == nil {
 			return res, nil
 		}
@@ -87,7 +87,7 @@ func GetDefault(runtimes []Runtime, name string) (Runtime, error) {
 	return Runtime{}, fmt.Errorf("no default version found for %s", runtimeDisplayNames[name])
 }
 
-func findRuntimeByAlias(runtimes []Runtime, alias string) (Runtime, error) {
+func findByAlias(runtimes []Runtime, alias string) (Runtime, error) {
 	als := strings.ToLower(alias)
 	for _, r := range runtimes {
 		for _, a := range r.Alias {
