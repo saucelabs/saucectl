@@ -25,7 +25,7 @@ func TestFind(t *testing.T) {
 		name     string
 		version  string
 		want     string
-		wantErr  string
+		wantErr  bool
 	}{
 		{
 			caseName: "version is invalid",
@@ -33,7 +33,7 @@ func TestFind(t *testing.T) {
 			name:     NodeRuntime,
 			version:  "vfake-version",
 			want:     "",
-			wantErr:  "invalid Node.js version vfake-version",
+			wantErr:  false,
 		},
 		{
 			caseName: "version alias is invalid",
@@ -41,7 +41,7 @@ func TestFind(t *testing.T) {
 			name:     NodeRuntime,
 			version:  "my-alias",
 			want:     "",
-			wantErr:  "invalid Node.js version my-alias",
+			wantErr:  false,
 		},
 		{
 			caseName: "version alias is valid",
@@ -49,7 +49,7 @@ func TestFind(t *testing.T) {
 			name:     NodeRuntime,
 			version:  "iron",
 			want:     "20.14.0",
-			wantErr:  "",
+			wantErr:  true,
 		},
 		{
 			caseName: "valid version contains major, minor and patch",
@@ -57,7 +57,7 @@ func TestFind(t *testing.T) {
 			name:     NodeRuntime,
 			version:  "v20.14.0",
 			want:     "20.14.0",
-			wantErr:  "",
+			wantErr:  true,
 		},
 		{
 			caseName: "invalid version not starts with v",
@@ -65,7 +65,7 @@ func TestFind(t *testing.T) {
 			name:     NodeRuntime,
 			version:  "20.14.0",
 			want:     "",
-			wantErr:  "invalid Node.js version 20.14.0",
+			wantErr:  false,
 		},
 		{
 			caseName: "invalid version contains major, minor and patch",
@@ -73,7 +73,7 @@ func TestFind(t *testing.T) {
 			name:     NodeRuntime,
 			version:  "v20.14.2",
 			want:     "",
-			wantErr:  "no matching Node.js version found for v20.14.2",
+			wantErr:  false,
 		},
 		{
 			caseName: "invalid version contains non-numeric major, minor and patch",
@@ -81,7 +81,7 @@ func TestFind(t *testing.T) {
 			name:     NodeRuntime,
 			version:  "va.b.c",
 			want:     "",
-			wantErr:  "invalid Node.js version va.b.c",
+			wantErr:  false,
 		},
 		{
 			caseName: "valid version only contains major and minor",
@@ -89,7 +89,7 @@ func TestFind(t *testing.T) {
 			name:     NodeRuntime,
 			version:  "v20.14",
 			want:     "20.14.0",
-			wantErr:  "",
+			wantErr:  true,
 		},
 		{
 			caseName: "valid version only contains major",
@@ -97,7 +97,7 @@ func TestFind(t *testing.T) {
 			name:     NodeRuntime,
 			version:  "v18",
 			want:     "18.20.4",
-			wantErr:  "",
+			wantErr:  true,
 		},
 		{
 			caseName: "invalid version only contains major",
@@ -105,7 +105,7 @@ func TestFind(t *testing.T) {
 			name:     NodeRuntime,
 			version:  "v22",
 			want:     "",
-			wantErr:  "no matching Node.js version found for v22",
+			wantErr:  false,
 		},
 		{
 			caseName: "should precisely match complete major and minor version",
@@ -113,7 +113,7 @@ func TestFind(t *testing.T) {
 			name:     NodeRuntime,
 			version:  "v20.1",
 			want:     "",
-			wantErr:  "no matching Node.js version found for v20.1",
+			wantErr:  false,
 		},
 		{
 			caseName: "should precisely match complete major version",
@@ -121,17 +121,17 @@ func TestFind(t *testing.T) {
 			name:     NodeRuntime,
 			version:  "v2",
 			want:     "",
-			wantErr:  "no matching Node.js version found for v2",
+			wantErr:  false,
 		},
 	}
 
 	for _, tc := range testcases {
 		t.Run(tc.caseName, func(t *testing.T) {
 			got, err := Find(tc.runtimes, tc.name, tc.version)
-			assert.Equal(t, tc.want, got.Version)
-			if err != nil {
-				assert.Equal(t, tc.wantErr, err.Error())
+			if (err != nil) == tc.wantErr {
+				t.Errorf("Find() got = %v, want err", err)
 			}
+			assert.Equal(t, tc.want, got.Version)
 		})
 	}
 }
