@@ -107,7 +107,7 @@ func onlyHasMajorMinor(version string) bool {
 	return len(strings.Split(version, ".")) == 2
 }
 
-// isFullVersion checks if it contains major, minor and patch.
+// isFullVersion checks if version follows the full semver format of `{major}.{minor}.{patch}`.
 func isFullVersion(version string) bool {
 	return len(strings.Split(version, ".")) == 3
 }
