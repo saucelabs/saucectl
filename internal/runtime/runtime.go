@@ -78,10 +78,10 @@ func Find(runtimes []Runtime, name, version string) (Runtime, error) {
 }
 
 func findRuntimeByAlias(runtimes []Runtime, alias string) (Runtime, error) {
-	alias = strings.ToLower(alias)
+	als := strings.ToLower(alias)
 	for _, r := range runtimes {
 		for _, a := range r.Alias {
-			if alias == a {
+			if als == a {
 				return r, nil
 			}
 		}
