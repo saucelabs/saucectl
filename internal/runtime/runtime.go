@@ -27,18 +27,18 @@ type Runtime struct {
 	Extra   map[string]string
 }
 
-// SelectNode selects the appropriate Node.js runtime from a list of runtimes.
+// Find selects the appropriate runtime from a list of runtimes.
 // It supports full SemVer matching, alias resolution, and fuzzy matching for major or major.minor versions.
 // `version` is expected to always start with "v".
-func SelectNode(runtimes []Runtime, version string) (Runtime, error) {
-	rts := filterNodeRuntimes(runtimes)
+func Find(runtimes []Runtime, name, version string) (Runtime, error) {
+	rts := filterByName(runtimes, name)
 	if !semver.IsValid(version) {
 		// If version is not a valid SemVer, check if it's using an alias (e.g., "lts" or code name).
-		res := findRuntimeByAlias(rts, version)
-		if res.Name != "" {
+		res, err := findRuntimeByAlias(rts, version)
+		if err != nil {
 			return res, nil
 		}
-		return Runtime{}, fmt.Errorf("invalid node version %s", version)
+		return Runtime{}, fmt.Errorf("invalid %s version %s", runtimeDisplayNames[name], version)
 	}
 
 	// If the version is a full SemVer (i.e., major.minor.patch), attempt exact match.
@@ -48,7 +48,7 @@ func SelectNode(runtimes []Runtime, version string) (Runtime, error) {
 				return r, nil
 			}
 		}
-		return Runtime{}, fmt.Errorf("no matching node version found for %s", version)
+		return Runtime{}, fmt.Errorf("no matching %s version found for %s", runtimeDisplayNames[name], version)
 	}
 
 	// Fuzzy matching:
@@ -60,7 +60,7 @@ func SelectNode(runtimes []Runtime, version string) (Runtime, error) {
 				return r, nil
 			}
 		}
-		return Runtime{}, fmt.Errorf("no matching node version found for %s", version)
+		return Runtime{}, fmt.Errorf("no matching %s version found for %s", runtimeDisplayNames[name], version)
 	}
 
 	// Try to match on major version only.
@@ -73,29 +73,29 @@ func SelectNode(runtimes []Runtime, version string) (Runtime, error) {
 		}
 	}
 
-	return Runtime{}, fmt.Errorf("no matching node version found for %s", version)
+	return Runtime{}, fmt.Errorf("no matching %s version found for %s", runtimeDisplayNames[name], version)
 }
 
-func findRuntimeByAlias(runtimes []Runtime, alias string) Runtime {
+func findRuntimeByAlias(runtimes []Runtime, alias string) (Runtime, error) {
 	for _, r := range runtimes {
 		for _, a := range r.Alias {
 			if alias == a {
-				return r
+				return r, nil
 			}
 		}
 	}
 
-	return Runtime{}
+	return Runtime{}, fmt.Errorf("alias %q not found", alias)
 }
 
-func filterNodeRuntimes(runtimes []Runtime) []Runtime {
-	var nodeRuntimes []Runtime
+func filterByName(runtimes []Runtime, name string) []Runtime {
+	var rts []Runtime
 	for _, r := range runtimes {
 		if r.Name == NodeRuntime {
-			nodeRuntimes = append(nodeRuntimes, r)
+			rts = append(rts, r)
 		}
 	}
-	return nodeRuntimes
+	return rts
 }
 
 func onlyHasMajor(version string) bool {

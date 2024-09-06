@@ -76,7 +76,7 @@ func (r *TestcafeRunner) setNodeRuntime(m framework.Metadata) error {
 	if err != nil {
 		return err
 	}
-	rt, err := runtime.SelectNode(runtimes, r.Project.NodeVersion)
+	rt, err := runtime.Find(runtimes, r.Project.NodeVersion)
 	if err != nil {
 		return err
 	}

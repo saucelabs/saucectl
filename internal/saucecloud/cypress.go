@@ -76,7 +76,7 @@ func (r *CypressRunner) setNodeRuntime(m framework.Metadata) error {
 	if err != nil {
 		return err
 	}
-	rt, err := runtime.SelectNode(runtimes, r.Project.GetNodeVersion())
+	rt, err := runtime.Find(runtimes, r.Project.GetNodeVersion())
 	if err != nil {
 		return err
 	}
