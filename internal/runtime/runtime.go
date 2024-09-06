@@ -12,7 +12,8 @@ import (
 
 const NodeRuntime = "nodejs"
 
-var namingMap = map[string]string{
+// runtimeDisplayNames maps runtime identifiers to their human-readable display names.
+var runtimeDisplayNames = map[string]string{
 	NodeRuntime: "Node.js",
 }
 
@@ -118,7 +119,7 @@ func (r *Runtime) Validate() {
 			color.RedString(fmt.Sprintf("\n\n%s\n", msg.WarningLine)),
 			color.RedString(fmt.Sprintf(
 				"\nThe specified %s(%s) has reached its EOL. Please upgrade to a newer version.\n",
-				namingMap[r.RuntimeName],
+				runtimeDisplayNames[r.RuntimeName],
 				r.RuntimeVersion,
 			)),
 			color.RedString(fmt.Sprintf("\n%s\n\n", msg.WarningLine)),
