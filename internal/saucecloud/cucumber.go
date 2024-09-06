@@ -93,14 +93,22 @@ func (r *CucumberRunner) setNodeRuntime(metadata framework.Metadata) error {
 		r.Project.NodeVersion = ""
 		return nil
 	}
-	if r.Project.NodeVersion == "" {
-		return nil
-	}
 
 	runtimes, err := r.MetadataService.Runtimes(context.Background())
 	if err != nil {
 		return err
 	}
+	// Set the default version if the runner supports global Node.js
+	// but no version is specified by user.
+	if r.Project.NodeVersion == "" {
+		d, err := runtime.GetDefault(runtimes, runtime.NodeRuntime)
+		if err != nil {
+			return err
+		}
+		r.Project.NodeVersion = d.Version
+		return nil
+	}
+
 	rt, err := runtime.Find(runtimes, runtime.NodeRuntime, r.Project.NodeVersion)
 	if err != nil {
 		return err

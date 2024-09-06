@@ -68,14 +68,22 @@ func (r *CypressRunner) setNodeRuntime(m framework.Metadata) error {
 		r.Project.SetNodeVersion("")
 		return nil
 	}
-	if r.Project.GetNodeVersion() == "" {
-		return nil
-	}
 
 	runtimes, err := r.MetadataService.Runtimes(context.Background())
 	if err != nil {
 		return err
 	}
+	// Set the default version if the runner supports global Node.js
+	// but no version is specified by user.
+	if r.Project.GetNodeVersion() == "" {
+		d, err := runtime.GetDefault(runtimes, runtime.NodeRuntime)
+		if err != nil {
+			return err
+		}
+		r.Project.SetNodeVersion(d.Version)
+		return nil
+	}
+
 	rt, err := runtime.Find(runtimes, runtime.NodeRuntime, r.Project.GetNodeVersion())
 	if err != nil {
 		return err

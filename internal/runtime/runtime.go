@@ -77,6 +77,18 @@ func Find(runtimes []Runtime, name, version string) (Runtime, error) {
 	return Runtime{}, fmt.Errorf("no matching %s version found for %s", runtimeDisplayNames[name], version)
 }
 
+// GetDefault returns the default version for the specified runtime.
+func GetDefault(runtimes []Runtime, name string) (Runtime, error) {
+	rts := filterByName(runtimes, name)
+	for _, r := range rts {
+		if r.Default {
+			return r, nil
+		}
+	}
+
+	return Runtime{}, fmt.Errorf("no default version found for %s", runtimeDisplayNames[name])
+}
+
 func findRuntimeByAlias(runtimes []Runtime, alias string) (Runtime, error) {
 	als := strings.ToLower(alias)
 	for _, r := range runtimes {
@@ -115,7 +127,7 @@ func isFullVersion(version string) bool {
 
 func (r *Runtime) Validate() error {
 	now := time.Now()
-	if !r.RemovalDate.IsZero() && now.After(r.RemovalDate) {
+	if now.After(r.RemovalDate) {
 		fmt.Print(r.removalMsg())
 		return fmt.Errorf("unsupported runtime %s(%s)", runtimeDisplayNames[r.Name], r.Version)
 	}

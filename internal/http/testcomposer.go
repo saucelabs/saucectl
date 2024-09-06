@@ -259,6 +259,7 @@ func (c *TestComposer) Runtimes(ctx context.Context) ([]runtime.Runtime, error) 
 				Name:        rt.Name,
 				Version:     r.Version,
 				Alias:       r.Aliases,
+				Default:     r.Default,
 				EOLDate:     r.EOLDate,
 				RemovalDate: r.RemovalDate,
 				Extra:       r.Extra,
