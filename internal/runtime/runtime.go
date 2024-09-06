@@ -35,7 +35,7 @@ func Find(runtimes []Runtime, name, version string) (Runtime, error) {
 	rts := filterByName(runtimes, name)
 	if !semver.IsValid(version) {
 		// If version is not a valid SemVer, check if it's using an alias (e.g., "lts" or code name).
-		res, err := findRuntimeByAlias(rts, strings.ToLower(version))
+		res, err := findRuntimeByAlias(rts, version)
 		if err == nil {
 			return res, nil
 		}
@@ -78,6 +78,7 @@ func Find(runtimes []Runtime, name, version string) (Runtime, error) {
 }
 
 func findRuntimeByAlias(runtimes []Runtime, alias string) (Runtime, error) {
+	alias = strings.ToLower(alias)
 	for _, r := range runtimes {
 		for _, a := range r.Alias {
 			if alias == a {
