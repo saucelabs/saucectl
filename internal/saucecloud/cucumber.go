@@ -89,7 +89,7 @@ func (r *CucumberRunner) validateFramework(m framework.Metadata) error {
 }
 
 func (r *CucumberRunner) setNodeRuntime(metadata framework.Metadata) error {
-	if !metadata.SupportGlobalNode() {
+	if !metadata.SupportsRuntime() {
 		r.Project.NodeVersion = ""
 		return nil
 	}
