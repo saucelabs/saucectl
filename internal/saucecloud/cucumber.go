@@ -10,6 +10,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
+	"github.com/saucelabs/saucectl/internal/runtime"
 
 	"github.com/saucelabs/saucectl/internal/job"
 )
@@ -22,17 +23,19 @@ type CucumberRunner struct {
 
 // RunProject runs the defined tests on sauce cloud
 func (r *CucumberRunner) RunProject() (int, error) {
-	exitCode := 1
-
 	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, playwright.Kind, r.Project.Playwright.Version)
 	if err != nil {
 		r.logFrameworkError(err)
-		return exitCode, err
-	}
-	if err := r.validateFramework(m); err != nil {
-		return exitCode, err
+		return 1, err
 	}
 	r.setVersions(m)
+	if err := r.validateFramework(m); err != nil {
+		return 1, err
+	}
+
+	if err := r.setNodeRuntime(m); err != nil {
+		return 1, err
+	}
 
 	if err := r.validateTunnel(
 		r.Project.Sauce.Tunnel.Name,
@@ -45,7 +48,7 @@ func (r *CucumberRunner) RunProject() (int, error) {
 
 	app, otherApps, err := r.remoteArchiveProject(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
 	if err != nil {
-		return exitCode, err
+		return 1, err
 	}
 
 	if r.Project.DryRun {
@@ -54,11 +57,11 @@ func (r *CucumberRunner) RunProject() (int, error) {
 	}
 
 	passed := r.runSuites(app, otherApps)
-	if passed {
-		return 0, nil
+	if !passed {
+		return 1, nil
 	}
 
-	return exitCode, nil
+	return 0, nil
 }
 
 // setVersions sets the framework and runner versions based on the fetched framework metadata.
@@ -82,6 +85,39 @@ func (r *CucumberRunner) validateFramework(m framework.Metadata) error {
 			return errors.New("unsupported platform")
 		}
 	}
+	return nil
+}
+
+func (r *CucumberRunner) setNodeRuntime(metadata framework.Metadata) error {
+	if !metadata.SupportsRuntime(runtime.NodeRuntime) {
+		r.Project.NodeVersion = ""
+		return nil
+	}
+
+	runtimes, err := r.MetadataService.Runtimes(context.Background())
+	if err != nil {
+		return err
+	}
+	// Set the default version if the runner supports global Node.js
+	// but no version is specified by user.
+	if r.Project.NodeVersion == "" {
+		d, err := runtime.GetDefault(runtimes, runtime.NodeRuntime)
+		if err != nil {
+			return err
+		}
+		r.Project.NodeVersion = d.Version
+		return nil
+	}
+
+	rt, err := runtime.Find(runtimes, runtime.NodeRuntime, r.Project.NodeVersion)
+	if err != nil {
+		return err
+	}
+	if err := rt.Validate(runtimes); err != nil {
+		return err
+	}
+	r.Project.NodeVersion = rt.Version
+
 	return nil
 }
 
@@ -124,6 +160,7 @@ func (r *CucumberRunner) runSuites(app string, otherApps []string) bool {
 				Suite:            s.Name,
 				Framework:        "playwright",
 				FrameworkVersion: r.Project.Playwright.Version,
+				NodeVersion:      r.Project.NodeVersion,
 				BrowserName:      s.BrowserName,
 				BrowserVersion:   s.BrowserVersion,
 				PlatformName:     s.PlatformName,

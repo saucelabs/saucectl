@@ -107,7 +107,7 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		props.SetFramework("playwright-cucumberjs").SetFVersion(p.Playwright.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
 			SetArtifacts(p.Artifacts).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).
 			SetSlack(p.Notifications.Slack).SetSharding(cucumber.IsSharded(p.Suites)).SetLaunchOrder(p.Sauce.LaunchOrder).
-			SetSmartRetry(p.IsSmartRetried()).SetReporters(p.Reporters)
+			SetSmartRetry(p.IsSmartRetried()).SetReporters(p.Reporters).SetNodeVersion(p.NodeVersion)
 		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
 		_ = tracker.Close()
 	}()

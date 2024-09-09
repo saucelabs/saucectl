@@ -8,11 +8,13 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/saucelabs/saucectl/internal/node"
+	"github.com/saucelabs/saucectl/internal/runtime"
 )
 
 type MockMetadataService struct {
 	MockFrameworks func(ctx context.Context) ([]string, error)
 	MockVersions   func(ctx context.Context, frameworkName string) ([]Metadata, error)
+	MockRuntimes   func(ctx context.Context) ([]runtime.Runtime, error)
 }
 
 func (m *MockMetadataService) Frameworks(ctx context.Context) ([]string, error) {
@@ -26,6 +28,14 @@ func (m *MockMetadataService) Frameworks(ctx context.Context) ([]string, error) 
 func (m *MockMetadataService) Versions(ctx context.Context, frameworkName string) ([]Metadata, error) {
 	if m.MockVersions != nil {
 		return m.MockVersions(ctx, frameworkName)
+	}
+
+	return nil, nil
+}
+
+func (m *MockMetadataService) Runtimes(ctx context.Context) ([]runtime.Runtime, error) {
+	if m.MockRuntimes != nil {
+		return m.MockRuntimes(ctx)
 	}
 
 	return nil, nil

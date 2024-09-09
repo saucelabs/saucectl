@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/iam"
+	"github.com/saucelabs/saucectl/internal/runtime"
 )
 
 // TestComposer service
@@ -36,6 +37,7 @@ type FrameworkResponse struct {
 		Browsers []string
 	} `json:"platforms"`
 	BrowserDefaults map[string]string `json:"browserDefaults"`
+	Runtimes        []string          `json:"runtimes"`
 }
 
 // TokenResponse represents the response body for slack token.
@@ -47,6 +49,22 @@ type runner struct {
 	CloudRunnerVersion string `json:"cloudRunnerVersion"`
 	DockerImage        string `json:"dockerImage"`
 	GitRelease         string `json:"gitRelease"`
+}
+
+// RuntimeResponse represents the response body for getting runtimes.
+type RuntimeResponse struct {
+	Name     string    `json:"name"`
+	Releases []Release `json:"releases"`
+}
+
+type Release struct {
+	Version     string    `json:"version"`
+	Aliases     []string  `json:"aliases"`
+	EOLDate     time.Time `json:"eolDate"`
+	RemovalDate time.Time `json:"removalDate"`
+	Default     bool      `json:"default"`
+
+	Extra map[string]string `json:"extra"`
 }
 
 func NewTestComposer(url string, creds iam.Credentials, timeout time.Duration) TestComposer {
@@ -199,6 +217,7 @@ func (c *TestComposer) Versions(ctx context.Context, frameworkName string) ([]fr
 			Platforms:          platforms,
 			CloudRunnerVersion: f.Runner.CloudRunnerVersion,
 			BrowserDefaults:    f.BrowserDefaults,
+			Runtimes:           f.Runtimes,
 		})
 	}
 	return frameworks, nil
@@ -217,4 +236,36 @@ func uniqFrameworkNameSet(frameworks []framework.Framework) []string {
 		}
 	}
 	return fws
+}
+
+func (c *TestComposer) Runtimes(ctx context.Context) ([]runtime.Runtime, error) {
+	url := fmt.Sprintf("%s/v1/testcomposer/runtimes", c.URL)
+
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
+
+	var resp []RuntimeResponse
+	if err = c.doJSONResponse(req, 200, &resp); err != nil {
+		return nil, err
+	}
+
+	var runtimes []runtime.Runtime
+	for _, rt := range resp {
+		for _, r := range rt.Releases {
+			runtimes = append(runtimes, runtime.Runtime{
+				Name:        rt.Name,
+				Version:     r.Version,
+				Alias:       r.Aliases,
+				Default:     r.Default,
+				EOLDate:     r.EOLDate,
+				RemovalDate: r.RemovalDate,
+				Extra:       r.Extra,
+			})
+		}
+	}
+
+	return runtimes, nil
 }

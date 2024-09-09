@@ -104,6 +104,11 @@ func (p Properties) SetReporters(reporters config.Reporters) Properties {
 	return p
 }
 
+func (p Properties) SetNodeVersion(version string) Properties {
+	p["node_version"] = version
+	return p
+}
+
 // Tracker is an interface for providing usage tracking.
 type Tracker interface {
 	io.Closer

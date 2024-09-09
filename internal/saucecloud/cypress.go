@@ -11,6 +11,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/runtime"
 )
 
 // CypressRunner represents the Sauce Labs cloud implementation for cypress.
@@ -21,18 +22,19 @@ type CypressRunner struct {
 
 // RunProject runs the tests defined in cypress.Project.
 func (r *CypressRunner) RunProject() (int, error) {
-	exitCode := 1
-
-	cyVersion := r.Project.GetVersion()
-	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, cypress.Kind, cyVersion)
+	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, cypress.Kind, r.Project.GetVersion())
 	if err != nil {
 		r.logFrameworkError(err)
-		return exitCode, err
-	}
-	if err := r.validateFramework(m); err != nil {
 		return 1, err
 	}
 	r.setVersions(m)
+	if err := r.validateFramework(m); err != nil {
+		return 1, err
+	}
+
+	if err := r.setNodeRuntime(m); err != nil {
+		return 1, err
+	}
 
 	if err := r.validateTunnel(
 		r.Project.GetSauceCfg().Tunnel.Name,
@@ -45,7 +47,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 
 	app, otherApps, err := r.remoteArchiveProject(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore, r.Project.IsDryRun())
 	if err != nil {
-		return exitCode, err
+		return 1, err
 	}
 
 	if r.Project.IsDryRun() {
@@ -54,11 +56,44 @@ func (r *CypressRunner) RunProject() (int, error) {
 	}
 
 	passed := r.runSuites(app, otherApps)
-	if passed {
-		exitCode = 0
+	if !passed {
+		return 1, nil
 	}
 
-	return exitCode, nil
+	return 0, nil
+}
+
+func (r *CypressRunner) setNodeRuntime(m framework.Metadata) error {
+	if !m.SupportsRuntime(runtime.NodeRuntime) {
+		r.Project.SetNodeVersion("")
+		return nil
+	}
+
+	runtimes, err := r.MetadataService.Runtimes(context.Background())
+	if err != nil {
+		return err
+	}
+	// Set the default version if the runner supports global Node.js
+	// but no version is specified by user.
+	if r.Project.GetNodeVersion() == "" {
+		d, err := runtime.GetDefault(runtimes, runtime.NodeRuntime)
+		if err != nil {
+			return err
+		}
+		r.Project.SetNodeVersion(d.Version)
+		return nil
+	}
+
+	rt, err := runtime.Find(runtimes, runtime.NodeRuntime, r.Project.GetNodeVersion())
+	if err != nil {
+		return err
+	}
+	if err := rt.Validate(runtimes); err != nil {
+		return err
+	}
+	r.Project.SetNodeVersion(rt.Version)
+
+	return nil
 }
 
 // setVersions sets the framework and runner versions based on the fetched framework metadata.
@@ -119,6 +154,7 @@ func (r *CypressRunner) runSuites(app string, otherApps []string) bool {
 				Suite:            s.Name,
 				Framework:        "cypress",
 				FrameworkVersion: r.Project.GetVersion(),
+				NodeVersion:      r.Project.GetNodeVersion(),
 				BrowserName:      s.Browser,
 				BrowserVersion:   s.BrowserVersion,
 				PlatformName:     s.PlatformName,

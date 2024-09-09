@@ -50,6 +50,8 @@ type Project interface {
 	GetSmartRetry(suiteName string) config.SmartRetry
 	FilterFailedTests(suiteName string, report saucereport.SauceReport) error
 	IsSmartRetried() bool
+	GetNodeVersion() string
+	SetNodeVersion(string)
 }
 
 type project struct {

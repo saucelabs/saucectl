@@ -343,6 +343,14 @@
           "kind": {
             "const": "cypress"
           },
+          "nodeVersion": {
+            "description": "Specifies the Node.js version for Sauce Cloud. Supports SemVer notation and aliases.",
+            "examples": [
+              "v20",
+              "iron",
+              "lts"
+            ]
+          },
           "showConsoleLog": {
             "description": "Shows suites console.log locally. By default console.log is only shown on failures.",
             "type": "boolean"
@@ -1256,6 +1264,14 @@
           "kind": {
             "const": "playwright"
           },
+          "nodeVersion": {
+            "description": "Specifies the Node.js version for Sauce Cloud. Supports SemVer notation and aliases.",
+            "examples": [
+              "v20",
+              "iron",
+              "lts"
+            ]
+          },
           "showConsoleLog": {
             "$ref": "#/allOf/1/then/properties/showConsoleLog"
           },
@@ -1598,6 +1614,9 @@
           },
           "kind": {
             "const": "testcafe"
+          },
+          "nodeVersion": {
+            "$ref": "#/allOf/2/then/properties/nodeVersion"
           },
           "showConsoleLog": {
             "$ref": "#/allOf/1/then/properties/showConsoleLog"
@@ -2348,6 +2367,9 @@
           },
           "kind": {
             "const": "playwright-cucumberjs"
+          },
+          "nodeVersion": {
+            "$ref": "#/allOf/2/then/properties/nodeVersion"
           },
           "showConsoleLog": {
             "$ref": "#/allOf/1/then/properties/showConsoleLog"

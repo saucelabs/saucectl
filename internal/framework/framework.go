@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/runtime"
 )
 
 // Framework represents a test framework (e.g. cypress).
@@ -16,6 +18,7 @@ type Framework struct {
 type MetadataService interface {
 	Frameworks(ctx context.Context) ([]string, error)
 	Versions(ctx context.Context, frameworkName string) ([]Metadata, error)
+	Runtimes(ctx context.Context) ([]runtime.Runtime, error)
 }
 
 // Metadata represents test runner metadata.
@@ -29,6 +32,7 @@ type Metadata struct {
 	Platforms          []Platform
 	CloudRunnerVersion string
 	BrowserDefaults    map[string]string
+	Runtimes           []string
 }
 
 func (m *Metadata) IsDeprecated() bool {
@@ -64,4 +68,15 @@ func PlatformNames(platforms []Platform) []string {
 	}
 
 	return pp
+}
+
+// SupportsRuntime checks if the current runner supports the specified runtime.
+func (m *Metadata) SupportsRuntime(runtimeName string) bool {
+	for _, r := range m.Runtimes {
+		if r == runtimeName {
+			return true
+		}
+	}
+
+	return false
 }
