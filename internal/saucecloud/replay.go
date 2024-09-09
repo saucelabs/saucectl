@@ -109,8 +109,8 @@ func (r *ReplayRunner) runSuites(fileURI string) bool {
 				Build:            r.Project.Sauce.Metadata.Build,
 				Tags:             r.Project.Sauce.Metadata.Tags,
 				Tunnel: job.TunnelOptions{
-					ID:     r.Project.Sauce.Tunnel.Name,
-					Parent: r.Project.Sauce.Tunnel.Owner,
+					Name:  r.Project.Sauce.Tunnel.Name,
+					Owner: r.Project.Sauce.Tunnel.Owner,
 				},
 				Experiments:   r.Project.Sauce.Experiments,
 				Attempt:       0,

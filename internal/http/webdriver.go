@@ -57,8 +57,8 @@ type SauceOpts struct {
 	Batch            Batch    `json:"_batch,omitempty"`
 	IdleTimeout      int      `json:"idleTimeout,omitempty"`
 	MaxDuration      int      `json:"maxDuration,omitempty"`
-	TunnelIdentifier string   `json:"tunnelIdentifier,omitempty"`
-	TunnelParent     string   `json:"parentTunnel,omitempty"` // note that 'parentTunnel` is backwards, because that's the way sauce likes it
+	TunnelName       string   `json:"tunnelName,omitempty"`
+	TunnelOwner      string   `json:"tunnelOwner,omitempty"`
 	ScreenResolution string   `json:"screen_resolution,omitempty"`
 	UserAgent        string   `json:"user_agent,omitempty"`
 	TimeZone         string   `json:"timeZone,omitempty"`
@@ -136,8 +136,8 @@ func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 		PlatformVersion: opts.PlatformVersion,
 		SauceOptions: SauceOpts{
 			UserAgent:        "saucectl/" + version.Version,
-			TunnelIdentifier: opts.Tunnel.ID,
-			TunnelParent:     opts.Tunnel.Parent,
+			TunnelName:       opts.Tunnel.Name,
+			TunnelOwner:      opts.Tunnel.Owner,
 			ScreenResolution: opts.ScreenResolution,
 			TestName:         opts.Name,
 			BuildName:        opts.Build,
