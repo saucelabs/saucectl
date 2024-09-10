@@ -111,8 +111,8 @@ type Instrumentation struct {
 
 // TunnelOptions represents the options that configure the usage of a tunnel when running tests in the Sauce Labs cloud.
 type TunnelOptions struct {
-	ID     string `json:"id"`
-	Parent string `json:"parent,omitempty"`
+	Name  string `json:"name"`
+	Owner string `json:"owner,omitempty"`
 }
 
 // SmartRetry represents the retry strategy.

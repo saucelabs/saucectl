@@ -162,8 +162,8 @@ func (r *CypressRunner) runSuites(app string, otherApps []string) bool {
 				Build:            r.Project.GetSauceCfg().Metadata.Build,
 				Tags:             r.Project.GetSauceCfg().Metadata.Tags,
 				Tunnel: job.TunnelOptions{
-					ID:     r.Project.GetSauceCfg().Tunnel.Name,
-					Parent: r.Project.GetSauceCfg().Tunnel.Owner,
+					Name:  r.Project.GetSauceCfg().Tunnel.Name,
+					Owner: r.Project.GetSauceCfg().Tunnel.Owner,
 				},
 				ScreenResolution: s.ScreenResolution,
 				RunnerVersion:    r.Project.GetRunnerVersion(),
