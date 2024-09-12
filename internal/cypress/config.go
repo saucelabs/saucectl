@@ -21,7 +21,8 @@ type Project interface {
 	ApplyFlags(selectedSuite string) error
 	AppendTags([]string)
 	Validate() error
-	IsSharded() bool
+	GetShardValues() []string
+	GetShardOpts() map[string]bool
 
 	SetDefaults()
 	GetSuiteCount() int

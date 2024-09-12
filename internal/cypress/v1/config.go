@@ -535,14 +535,29 @@ func (p *Project) GetSuite() suite.Suite {
 	}
 }
 
-// IsSharded returns is it's sharded
-func (p *Project) IsSharded() bool {
+// GetShardValues returns the shard values.
+func (p *Project) GetShardValues() []string {
+	var set = map[string]bool{}
 	for _, s := range p.Suites {
 		if s.Shard != "" {
-			return true
+			set[s.Shard] = true
 		}
 	}
-	return false
+	var values []string
+	for k := range set {
+		values = append(values, k)
+	}
+	return values
+}
+
+func (p *Project) GetShardOpts() map[string]bool {
+	var opts = map[string]bool{}
+	for _, s := range p.Suites {
+		if s.ShardGrepEnabled {
+			opts["shard_by_grep"] = true
+		}
+	}
+	return opts
 }
 
 // GetAPIVersion returns APIVersion

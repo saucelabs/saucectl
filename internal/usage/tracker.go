@@ -80,8 +80,12 @@ func (p Properties) SetSlack(slack config.Slack) Properties {
 	return p
 }
 
-func (p Properties) SetSharding(sharded bool) Properties {
-	p["sharded"] = sharded
+func (p Properties) SetSharding(shardValues []string, shardOpts map[string]bool) Properties {
+	p["sharded"] = len(shardValues) > 0
+	p["shard_values"] = shardValues
+	for k, v := range shardOpts {
+		p[k] = v
+	}
 	return p
 }
 

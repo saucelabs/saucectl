@@ -387,13 +387,18 @@ func FilterSuites(p *Project, suiteName string) error {
 	return fmt.Errorf("no suite named '%s' found", suiteName)
 }
 
-func IsSharded(suites []Suite) bool {
+func GetShardValues(suites []Suite) []string {
+	var set = map[string]bool{}
 	for _, s := range suites {
 		if s.Shard != "" {
-			return true
+			set[s.Shard] = true
 		}
 	}
-	return false
+	var values []string
+	for k := range set {
+		values = append(values, k)
+	}
+	return values
 }
 
 // SortByHistory sorts the suites in the order of job history
