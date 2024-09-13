@@ -178,8 +178,8 @@ func (r *PlaywrightRunner) runSuites(app string, otherApps []string) bool {
 				Build:            r.Project.Sauce.Metadata.Build,
 				Tags:             r.Project.Sauce.Metadata.Tags,
 				Tunnel: job.TunnelOptions{
-					ID:     r.Project.Sauce.Tunnel.Name,
-					Parent: r.Project.Sauce.Tunnel.Owner,
+					Name:  r.Project.Sauce.Tunnel.Name,
+					Owner: r.Project.Sauce.Tunnel.Owner,
 				},
 				ScreenResolution: s.ScreenResolution,
 				RunnerVersion:    r.Project.RunnerVersion,

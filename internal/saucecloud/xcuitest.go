@@ -217,8 +217,8 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		Build:            r.Project.Sauce.Metadata.Build,
 		Tags:             r.Project.Sauce.Metadata.Tags,
 		Tunnel: job.TunnelOptions{
-			ID:     r.Project.Sauce.Tunnel.Name,
-			Parent: r.Project.Sauce.Tunnel.Owner,
+			Name:  r.Project.Sauce.Tunnel.Name,
+			Owner: r.Project.Sauce.Tunnel.Owner,
 		},
 		Experiments:   r.Project.Sauce.Experiments,
 		TestsToRun:    s.TestOptions.Class,
