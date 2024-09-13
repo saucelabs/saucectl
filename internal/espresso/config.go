@@ -241,8 +241,9 @@ func FilterSuites(p *Project, suiteName string) error {
 func GetShardValues(suites []Suite) []string {
 	var set = map[string]bool{}
 	for _, suite := range suites {
-		if _, ok := suite.TestOptions["numShards"]; ok {
-			set["numShards"] = true
+		if v, ok := suite.TestOptions["numShards"]; ok {
+			num, _ := strconv.Atoi(fmt.Sprintf("%v", v))
+			set["numShards"] = num > 1
 		}
 	}
 	var values []string
