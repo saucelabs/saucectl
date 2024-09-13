@@ -391,7 +391,7 @@ func FilterSuites(p *Project, suiteName string) error {
 	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
 }
 
-func GetShardValues(suites []Suite) []string {
+func GetShardTypes(suites []Suite) []string {
 	var set = map[string]bool{}
 	for _, s := range suites {
 		if s.NumShards > 1 {

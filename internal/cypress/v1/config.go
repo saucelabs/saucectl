@@ -535,8 +535,8 @@ func (p *Project) GetSuite() suite.Suite {
 	}
 }
 
-// GetShardValues returns the shard values.
-func (p *Project) GetShardValues() []string {
+// GetShardTypes returns the shard types in a project.
+func (p *Project) GetShardTypes() []string {
 	var set = map[string]bool{}
 	for _, s := range p.Suites {
 		if s.Shard != "" {

@@ -140,7 +140,7 @@ func runCypress(cmd *cobra.Command, cflags cypressFlags, isCLIDriven bool) (int,
 		props := usage.Properties{}
 		props.SetFramework("cypress").SetFVersion(p.GetVersion()).SetFlags(cmd.Flags()).SetSauceConfig(p.GetSauceCfg()).
 			SetArtifacts(p.GetArtifactsCfg()).SetNPM(p.GetNpm()).SetNumSuites(len(p.GetSuites())).
-			SetSlack(p.GetNotifications().Slack).SetSharding(p.GetShardValues(), p.GetShardOpts()).SetLaunchOrder(p.GetSauceCfg().LaunchOrder).
+			SetSlack(p.GetNotifications().Slack).SetSharding(p.GetShardTypes(), p.GetShardOpts()).SetLaunchOrder(p.GetSauceCfg().LaunchOrder).
 			SetSmartRetry(p.IsSmartRetried()).SetReporters(p.GetReporters()).SetNodeVersion(p.GetNodeVersion())
 
 		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)

@@ -387,7 +387,7 @@ func FilterSuites(p *Project, suiteName string) error {
 	return fmt.Errorf("no suite named '%s' found", suiteName)
 }
 
-func GetShardValues(suites []Suite) []string {
+func GetShardTypes(suites []Suite) []string {
 	var set = map[string]bool{}
 	for _, s := range suites {
 		if s.Shard != "" {

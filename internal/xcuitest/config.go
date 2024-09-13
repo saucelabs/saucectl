@@ -357,7 +357,7 @@ func getShardedSuites(suite Suite, ccy int) ([]Suite, error) {
 	return suites, nil
 }
 
-func GetShardValues(suites []Suite) []string {
+func GetShardTypes(suites []Suite) []string {
 	var set = map[string]bool{}
 	for _, s := range suites {
 		if s.Shard != "" {
