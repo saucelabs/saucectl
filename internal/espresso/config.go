@@ -185,6 +185,12 @@ func Validate(p Project) error {
 			return fmt.Errorf(msg.InvalidPassThreshold)
 		}
 		config.ValidateSmartRetry(suite.SmartRetry)
+		if v, ok := suite.TestOptions["numShards"]; ok {
+			_, err := strconv.Atoi(fmt.Sprintf("%v", v))
+			if err != nil {
+				return fmt.Errorf("invalid numShards in test option: %v", err)
+			}
+		}
 	}
 	if p.Sauce.Retries < 0 {
 		log.Warn().Int("retries", p.Sauce.Retries).Msg(msg.InvalidReries)
@@ -232,14 +238,19 @@ func FilterSuites(p *Project, suiteName string) error {
 	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
 }
 
-func IsSharded(suites []Suite) bool {
+func GetShardTypes(suites []Suite) []string {
+	var set = map[string]bool{}
 	for _, suite := range suites {
 		if v, ok := suite.TestOptions["numShards"]; ok {
-			val, err := strconv.Atoi(fmt.Sprintf("%v", v))
-			return err == nil && val > 0
+			num, _ := strconv.Atoi(fmt.Sprintf("%v", v))
+			set["numShards"] = num > 0
 		}
 	}
-	return false
+	var values []string
+	for k := range set {
+		values = append(values, k)
+	}
+	return values
 }
 
 // SortByHistory sorts the suites in the order of job history

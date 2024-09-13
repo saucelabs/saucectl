@@ -357,13 +357,18 @@ func getShardedSuites(suite Suite, ccy int) ([]Suite, error) {
 	return suites, nil
 }
 
-func IsSharded(suites []Suite) bool {
+func GetShardTypes(suites []Suite) []string {
+	var set = map[string]bool{}
 	for _, s := range suites {
 		if s.Shard != "" {
-			return true
+			set[s.Shard] = true
 		}
 	}
-	return false
+	var values []string
+	for k := range set {
+		values = append(values, k)
+	}
+	return values
 }
 
 // IsSmartRetried checks if the suites contain a smartRetried suite

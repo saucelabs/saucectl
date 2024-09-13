@@ -391,13 +391,32 @@ func FilterSuites(p *Project, suiteName string) error {
 	return fmt.Errorf(msg.SuiteNameNotFound, suiteName)
 }
 
-func IsSharded(suites []Suite) bool {
+func GetShardTypes(suites []Suite) []string {
+	var set = map[string]bool{}
 	for _, s := range suites {
-		if s.NumShards > 1 || s.Shard != "" {
-			return true
+		if s.NumShards > 1 {
+			set["numShards"] = true
+		}
+		if s.Shard != "" {
+			set[s.Shard] = true
 		}
 	}
-	return false
+	var values []string
+	for k := range set {
+		values = append(values, k)
+	}
+	return values
+}
+
+// GetShardOpts returns additional shard options.
+func GetShardOpts(suites []Suite) map[string]bool {
+	var opts = map[string]bool{}
+	for _, s := range suites {
+		if s.ShardGrepEnabled {
+			opts["shard_by_grep"] = true
+		}
+	}
+	return opts
 }
 
 // SortByHistory sorts the suites in the order of job history

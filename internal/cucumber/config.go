@@ -318,14 +318,30 @@ func FilterSuites(p *Project, suiteName string) error {
 	return fmt.Errorf("no suite named '%s' found", suiteName)
 }
 
-// IsSharded checks if the suite is sharded
-func IsSharded(suites []Suite) bool {
+// GetShardTypes returns the shard types in a project.
+func GetShardTypes(suites []Suite) []string {
+	var set = map[string]bool{}
 	for _, s := range suites {
 		if s.Shard != "" {
-			return true
+			set[s.Shard] = true
 		}
 	}
-	return false
+	var values []string
+	for k := range set {
+		values = append(values, k)
+	}
+	return values
+}
+
+// GetShardOpts returns additional shard options.
+func GetShardOpts(suites []Suite) map[string]bool {
+	var opts = map[string]bool{}
+	for _, s := range suites {
+		if s.ShardTagsEnabled {
+			opts["shard_tags_enabled"] = true
+		}
+	}
+	return opts
 }
 
 // SortByHistory sorts the suites in the order of job history
