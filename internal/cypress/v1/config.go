@@ -550,6 +550,7 @@ func (p *Project) GetShardValues() []string {
 	return values
 }
 
+// GetShardOpts returns additional shard options.
 func (p *Project) GetShardOpts() map[string]bool {
 	var opts = map[string]bool{}
 	for _, s := range p.Suites {

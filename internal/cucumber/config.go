@@ -333,6 +333,7 @@ func GetShardValues(suites []Suite) []string {
 	return values
 }
 
+// GetShardOpts returns additional shard options.
 func GetShardOpts(suites []Suite) map[string]bool {
 	var opts = map[string]bool{}
 	for _, s := range suites {
