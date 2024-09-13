@@ -243,7 +243,7 @@ func GetShardTypes(suites []Suite) []string {
 	for _, suite := range suites {
 		if v, ok := suite.TestOptions["numShards"]; ok {
 			num, _ := strconv.Atoi(fmt.Sprintf("%v", v))
-			set["numShards"] = num > 1
+			set["numShards"] = num > 0
 		}
 	}
 	var values []string
