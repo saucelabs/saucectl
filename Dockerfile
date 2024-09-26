@@ -1,5 +1,5 @@
-# Build the binary here
-FROM golang:1.22 as builder
+# Build the binary.
+FROM golang:1.23 as builder
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ ARG LD_FLAGS
 COPY . .
 RUN go build -ldflags="${LD_FLAGS}" cmd/saucectl/saucectl.go
 
-# Release the binary here
+# Bundle the binary.
 FROM ubuntu:latest
 
 RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates
