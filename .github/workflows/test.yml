@@ -272,31 +272,6 @@ jobs:
           --timeout 10m \
           -r us-west-1
 
-  apitest:
-    needs: build
-    runs-on: ubuntu-latest
-    # apitest is not publicly released so let's be a bit lax during pre-release
-    continue-on-error: true
-    env:
-      BUILD_ID: ${{ github.run_id }}
-      BUILD_ENV: GitHub Actions
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download saucectl Binary
-        uses: actions/download-artifact@v4
-        with:
-          name: saucectlbin
-
-      - name: Set permissions
-        run: chmod +x ./saucectl
-
-      - name: Saucectl RUN - Config Driven
-        run: |
-          ./saucectl run -c .sauce/apitest.yml -r us-west-1
-
   playwright-cucumberjs:
     needs: build
     runs-on: ubuntu-latest
