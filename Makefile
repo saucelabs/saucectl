@@ -4,7 +4,7 @@ default:
 #install: @ Install the CLI
 .PHONY: install
 install:
-	GOBIN=/usr/local/bin/ go install cmd/saucectl/saucectl.go
+	go install cmd/saucectl/saucectl.go
 
 #build: @ Build the CLI
 build:
