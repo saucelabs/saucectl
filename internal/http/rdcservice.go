@@ -37,6 +37,8 @@ type rdcJob struct {
 	DeviceLogURL      string `json:"device_log_url,omitempty"`
 	TestCasesURL      string `json:"test_cases_url,omitempty"`
 	VideoURL          string `json:"video_url,omitempty"`
+	NetworkLogURL     string `json:"network_log_url,omitempty"`
+	CrashLogURL       string `json:"crash_log_url,omitempty"`
 	Screenshots       []struct {
 		ID string
 	} `json:"screenshots,omitempty"`
@@ -309,6 +311,12 @@ func (c *RDCService) GetJobAssetFileNames(ctx context.Context, jobID string, rea
 	}
 	if strings.HasSuffix(jr.VideoURL, "/video.mp4") {
 		files = append(files, "video.mp4")
+	}
+	if strings.HasSuffix(jr.NetworkLogURL, "/network.har") {
+		files = append(files, "network.har")
+	}
+	if strings.HasSuffix(jr.CrashLogURL, "/crash.json") {
+		files = append(files, "crash.json")
 	}
 	if len(jr.Screenshots) > 0 {
 		files = append(files, "screenshots.zip")
