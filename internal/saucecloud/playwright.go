@@ -105,7 +105,11 @@ func (r *PlaywrightRunner) setNodeRuntime(m framework.Metadata) error {
 // The framework version might be set to `package.json`.
 func (r *PlaywrightRunner) setVersions(m framework.Metadata) {
 	r.Project.Playwright.Version = m.FrameworkVersion
-	r.Project.RunnerVersion = m.CloudRunnerVersion
+	// RunnerVersion can be set via `--runner-version`.
+	// If not provided, it uses the fetched framework runner version.
+	if r.Project.RunnerVersion == "" {
+		r.Project.RunnerVersion = m.CloudRunnerVersion
+	}
 }
 
 func (r *PlaywrightRunner) validateFramework(m framework.Metadata) error {
