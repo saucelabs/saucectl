@@ -100,7 +100,11 @@ func (r *TestcafeRunner) setNodeRuntime(m framework.Metadata) error {
 // The framework version might be set to `package.json`.
 func (r *TestcafeRunner) setVersions(m framework.Metadata) {
 	r.Project.Testcafe.Version = m.FrameworkVersion
-	r.Project.RunnerVersion = m.CloudRunnerVersion
+	// RunnerVersion can be set via `--runner-version`.
+	// If not provided, it uses the fetched framework runner version.
+	if r.Project.RunnerVersion == "" {
+		r.Project.RunnerVersion = m.CloudRunnerVersion
+	}
 }
 
 func (r *TestcafeRunner) validateFramework(m framework.Metadata) error {

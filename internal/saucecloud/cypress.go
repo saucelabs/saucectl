@@ -100,7 +100,11 @@ func (r *CypressRunner) setNodeRuntime(m framework.Metadata) error {
 // The framework version might be set to `package.json`.
 func (r *CypressRunner) setVersions(m framework.Metadata) {
 	r.Project.SetVersion(m.FrameworkVersion)
-	r.Project.SetRunnerVersion(m.CloudRunnerVersion)
+	// RunnerVersion can be set via `--runner-version`.
+	// If not provided, it uses the fetched framework runner version.
+	if r.Project.GetRunnerVersion() == "" {
+		r.Project.SetRunnerVersion(m.CloudRunnerVersion)
+	}
 }
 
 func (r *CypressRunner) validateFramework(m framework.Metadata) error {
