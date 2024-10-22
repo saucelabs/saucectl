@@ -51,6 +51,13 @@ type Espresso struct {
 	OtherApps          []string `yaml:"otherApps,omitempty" json:"otherApps"`
 }
 
+// ShardConfig represents the configuration for sharding. The config values come
+// from Suite.TestOptions.
+type ShardConfig struct {
+	Shards int
+	Index  int
+}
+
 // Suite represents the espresso test suite configuration.
 type Suite struct {
 	Name               string                 `yaml:"name,omitempty" json:"name"`
@@ -63,6 +70,28 @@ type Suite struct {
 	AppSettings        config.AppSettings     `yaml:"appSettings,omitempty" json:"appSettings"`
 	PassThreshold      int                    `yaml:"passThreshold,omitempty" json:"-"`
 	SmartRetry         config.SmartRetry      `yaml:"smartRetry,omitempty" json:"-"`
+}
+
+func (s *Suite) ShardConfig() ShardConfig {
+	shards := 0
+	index := 0
+
+	if numShards, ok := s.TestOptions["numShards"]; ok {
+		if v, err := strconv.Atoi(fmt.Sprintf("%v", numShards)); err == nil {
+			shards = v
+		}
+	}
+
+	if shardIndex, ok := s.TestOptions["shardIndex"]; ok {
+		if v, err := strconv.Atoi(fmt.Sprintf("%v", shardIndex)); err == nil {
+			index = v
+		}
+	}
+
+	return ShardConfig{
+		Shards: shards,
+		Index:  index,
+	}
 }
 
 // Android constant
