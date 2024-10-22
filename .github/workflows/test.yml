@@ -170,7 +170,7 @@ jobs:
         run: ./saucectl run -c .sauce/testcafe.yml --timeout 10m
 
       - name: Saucectl RUN - CLI Driven
-        run: ./saucectl run testcafe "*.test.js" -c "" --name "CLI Driven" --browser chrome --rootDir tests/e2e/testcafe/ --testcafe.version 3.5.0 --timeout 10m -r us-west-1
+        run: ./saucectl run testcafe "*.test.js" -c "" --name "CLI Driven" --browser chrome --browserVersion 128 --rootDir tests/e2e/testcafe/ --testcafe.version 3.5.0 --timeout 10m -r us-west-1
 
   cypress:
     needs: build
