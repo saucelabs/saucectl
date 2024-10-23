@@ -421,9 +421,9 @@ func (r *ImgRunner) registerInterruptOnSignal() chan os.Signal {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
-	go func(c <-chan os.Signal, hr *ImgRunner) {
+	go func() {
 		for {
-			sig := <-c
+			sig := <-sigChan
 			if sig == nil {
 				return
 			}
@@ -434,7 +434,8 @@ func (r *ImgRunner) registerInterruptOnSignal() chan os.Signal {
 				os.Exit(1)
 			}
 		}
-	}(sigChan, r)
+	}()
+
 	return sigChan
 }
 

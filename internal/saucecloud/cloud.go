@@ -813,13 +813,14 @@ func (r *CloudRunner) registerInterruptOnSignal(jobID string, realDevice bool, s
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
-	go func(c <-chan os.Signal, jobID, suiteName string) {
-		sig := <-c
+	go func() {
+		sig := <-sigChan
 		if sig == nil {
 			return
 		}
 		r.stopSuiteExecution(jobID, realDevice, suiteName)
-	}(sigChan, jobID, suiteName)
+	}()
+
 	return sigChan
 }
 
