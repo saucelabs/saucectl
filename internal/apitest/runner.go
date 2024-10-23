@@ -230,6 +230,10 @@ func findTests(rootDir string, testMatch []string) ([]string, error) {
 	var tests []string
 
 	walker := func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
 		if !d.IsDir() {
 			return nil
 		}
