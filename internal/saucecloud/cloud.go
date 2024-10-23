@@ -102,7 +102,7 @@ func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartO
 	return jobOpts, results, nil
 }
 
-func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int) bool {
+func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 	// TODO find a better way to get the expected
 	completed := 0
 	inProgress := expected

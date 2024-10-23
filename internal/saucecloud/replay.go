@@ -121,5 +121,5 @@ func (r *ReplayRunner) runSuites(fileURI string) bool {
 		}
 	}()
 
-	return r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites))
+	return r.collectResults(results, len(r.Project.Suites))
 }

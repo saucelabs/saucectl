@@ -181,7 +181,7 @@ func (r *TestcafeRunner) runSuites(app string, otherApps []string) bool {
 		}
 	}()
 
-	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
+	return r.collectResults(results, jobsCount)
 }
 
 func (r *TestcafeRunner) generateStartOpts(s testcafe.Suite) job.StartOptions {

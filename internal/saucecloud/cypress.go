@@ -184,5 +184,5 @@ func (r *CypressRunner) runSuites(app string, otherApps []string) bool {
 		}
 	}()
 
-	return r.collectResults(r.Project.GetArtifactsCfg().Download, results, r.Project.GetSuiteCount())
+	return r.collectResults(results, r.Project.GetSuiteCount())
 }
