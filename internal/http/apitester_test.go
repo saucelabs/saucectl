@@ -557,7 +557,6 @@ func TestAPITester_RunEphemeralAsync(t *testing.T) {
 		hookID  string
 		buildID string
 		tunnel  config.Tunnel
-		taskID  string
 		test    apitest.TestRequest
 	}
 	tests := []struct {
@@ -573,7 +572,6 @@ func TestAPITester_RunEphemeralAsync(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				hookID:  "dummyHookId",
-				taskID:  "generatedUuid",
 				buildID: "generatedBuildId",
 				tunnel:  config.Tunnel{Name: "tunnelId"},
 				test:    apitest.TestRequest{},
@@ -615,7 +613,7 @@ func TestAPITester_RunEphemeralAsync(t *testing.T) {
 				AccessKey:  "dummyAccesKey",
 			}
 
-			got, err := c.RunEphemeralAsync(tt.args.ctx, tt.args.hookID, tt.args.buildID, tt.args.tunnel, tt.args.taskID, tt.args.test)
+			got, err := c.RunEphemeralAsync(tt.args.ctx, tt.args.hookID, tt.args.buildID, tt.args.tunnel, tt.args.test)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RunAllAsync() error = %v, wantErr %v", err, tt.wantErr)
 				return

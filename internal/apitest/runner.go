@@ -12,8 +12,6 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"github.com/xtgo/uuid"
-
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -35,7 +33,7 @@ type APITester interface {
 	GetProjects(ctx context.Context) ([]ProjectMeta, error)
 	GetHooks(ctx context.Context, projectID string) ([]Hook, error)
 	RunAllAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error)
-	RunEphemeralAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, taskID string, test TestRequest) (AsyncResponse, error)
+	RunEphemeralAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error)
 	RunTestAsync(ctx context.Context, hookID string, testID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error)
 	RunTagAsync(ctx context.Context, hookID string, testTag string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error)
 }
@@ -305,7 +303,6 @@ func (r *Runner) newTestRequests(s Suite, tests []string) []TestRequest {
 
 func (r *Runner) runLocalTests(s Suite, results chan TestResult) int {
 	expected := 0
-	taskID := uuid.NewRandom().String()
 
 	maximumWaitTime := pollDefaultWait
 	if s.Timeout != 0 {
@@ -332,7 +329,7 @@ func (r *Runner) runLocalTests(s Suite, results chan TestResult) int {
 			Str("testName", test.Name).
 			Msg("Running test.")
 
-		resp, err := r.Client.RunEphemeralAsync(context.Background(), s.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, taskID, test)
+		resp, err := r.Client.RunEphemeralAsync(context.Background(), s.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, test)
 		if err != nil {
 			log.Error().
 				Err(err).

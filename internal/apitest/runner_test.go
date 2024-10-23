@@ -24,7 +24,7 @@ type MockAPITester struct {
 	GetProjectsFn       func(ctx context.Context) ([]ProjectMeta, error)
 	GetHooksFn          func(ctx context.Context, projectID string) ([]Hook, error)
 	RunAllAsyncFn       func(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error)
-	RunEphemeralAsyncFn func(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, taskID string, test TestRequest) (AsyncResponse, error)
+	RunEphemeralAsyncFn func(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error)
 	RunTestAsyncFn      func(ctx context.Context, hookID string, testID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error)
 	RunTagAsyncFn       func(ctx context.Context, hookID string, testTag string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error)
 }
@@ -53,8 +53,8 @@ func (c *MockAPITester) RunAllAsync(ctx context.Context, hookID string, buildID 
 	return c.RunAllAsyncFn(ctx, hookID, buildID, tunnel, test)
 }
 
-func (c *MockAPITester) RunEphemeralAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, taskID string, test TestRequest) (AsyncResponse, error) {
-	return c.RunEphemeralAsyncFn(ctx, hookID, buildID, tunnel, taskID, test)
+func (c *MockAPITester) RunEphemeralAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
+	return c.RunEphemeralAsyncFn(ctx, hookID, buildID, tunnel, test)
 }
 
 func (c *MockAPITester) RunTestAsync(ctx context.Context, hookID string, testID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
@@ -394,7 +394,7 @@ func TestRunner_runLocalTests(t *testing.T) {
 				Name: "Testi",
 			}, nil
 		},
-		RunEphemeralAsyncFn: func(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, taskID string, test TestRequest) (AsyncResponse, error) {
+		RunEphemeralAsyncFn: func(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
 			return AsyncResponse{
 				ContextIDs: []string{"221270ac-0229-49d1-9025-251a10e9133d"},
 				EventIDs:   []string{"c4ca4238a0b923820dcc509a"},
