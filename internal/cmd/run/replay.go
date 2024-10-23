@@ -39,7 +39,7 @@ func NewReplayCmd() *cobra.Command {
 		Example:          `saucectl run replay recording.json -c "" --name "My Suite"`,
 		SilenceUsage:     true,
 		TraverseChildren: true,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(_ *cobra.Command, _ []string) error {
 			sc.BindAll()
 			return preRun()
 		},

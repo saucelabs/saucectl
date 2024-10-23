@@ -24,7 +24,7 @@ func EspressoCmd() *cobra.Command {
 		Use:          "espresso",
 		Short:        "Bootstrap an Espresso project.",
 		SilenceUsage: true,
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, _ []string) {
 			tracker := segment.DefaultTracker
 
 			go func() {

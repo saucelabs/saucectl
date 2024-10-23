@@ -25,13 +25,13 @@ func UploadFileCommand() *cobra.Command {
 Use [--project] to specify the project by its name or run without [--project] to choose from a list of projects.
 `,
 		SilenceUsage: true,
-		Args: func(cmd *cobra.Command, args []string) error {
+		Args: func(_ *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no file name specified")
 			}
 			return nil
 		},
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			err := http.CheckProxy()
 			if err != nil {
 				return fmt.Errorf("invalid HTTP_PROXY value")
@@ -48,7 +48,7 @@ Use [--project] to specify the project by its name or run without [--project] to
 			}()
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			name := args[0]
 
 			fd, err := os.Open(name)

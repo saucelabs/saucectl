@@ -46,7 +46,7 @@ func NewTestcafeCmd() *cobra.Command {
 		SilenceUsage:     true,
 		Hidden:           true, // TODO reveal command once ready
 		TraverseChildren: true,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(_ *cobra.Command, _ []string) error {
 			sc.BindAll()
 			return preRun()
 		},

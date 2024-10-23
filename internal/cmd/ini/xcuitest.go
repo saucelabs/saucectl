@@ -24,7 +24,7 @@ func XCUITestCmd() *cobra.Command {
 		Use:          "xcuitest",
 		Short:        "Bootstrap an XCUITest project.",
 		SilenceUsage: true,
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, _ []string) {
 			tracker := segment.DefaultTracker
 
 			go func() {

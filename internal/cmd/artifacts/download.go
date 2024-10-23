@@ -25,7 +25,7 @@ func DownloadCommand() *cobra.Command {
 		Use:          "download <jobID> <file-pattern>",
 		Short:        "Downloads the specified artifacts from the given job. Supports glob pattern.",
 		SilenceUsage: true,
-		Args: func(cmd *cobra.Command, args []string) error {
+		Args: func(_ *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no job ID specified")
 			}
@@ -52,7 +52,7 @@ func DownloadCommand() *cobra.Command {
 			}()
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			jobID := args[0]
 			filePattern := args[1]
 			return download(jobID, filePattern, targetDir, out)

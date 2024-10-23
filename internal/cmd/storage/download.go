@@ -22,14 +22,14 @@ func DownloadCommand() *cobra.Command {
 		Use:          "download fileID",
 		Short:        "Downloads an app file from Sauce Storage.",
 		SilenceUsage: true,
-		Args: func(cmd *cobra.Command, args []string) error {
+		Args: func(_ *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no ID specified")
 			}
 
 			return nil
 		},
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRun: func(cmd *cobra.Command, _ []string) {
 			tracker := segment.DefaultTracker
 
 			go func() {
@@ -40,7 +40,7 @@ func DownloadCommand() *cobra.Command {
 				_ = tracker.Close()
 			}()
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			reader, size, err := appsClient.Download(args[0])
 			if err != nil {
 				return fmt.Errorf("download failed: %w", err)

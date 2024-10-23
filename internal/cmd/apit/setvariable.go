@@ -25,7 +25,7 @@ the value will be updated, otherwise a new variable will be added.
 Use [--project] to specify a project by its name or run without [--project] to choose from a list of projects.
 `,
 		SilenceUsage: true,
-		Args: func(cmd *cobra.Command, args []string) error {
+		Args: func(_ *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no variable name specified")
 			}
@@ -34,7 +34,7 @@ Use [--project] to specify a project by its name or run without [--project] to c
 			}
 			return nil
 		},
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			err := http.CheckProxy()
 			if err != nil {
 				return fmt.Errorf("invalid HTTP_PROXY value")
@@ -51,7 +51,7 @@ Use [--project] to specify a project by its name or run without [--project] to c
 			}()
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			name := args[0]
 			val := args[1]
 			updateVault := apitest.Vault{

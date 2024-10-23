@@ -50,7 +50,7 @@ type Literal struct {
 	value bool
 }
 
-func (l Literal) Eval(input string) bool {
+func (l Literal) Eval(string) bool {
 	return l.value
 }
 

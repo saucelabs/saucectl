@@ -31,7 +31,7 @@ Use [--project] to specify a project by its name or run without [--project] to c
 cat snippet2.xml | saucectl apit vault set-snippet snip2 - --project "smoke tests"  # from stdin
 `,
 		SilenceUsage: true,
-		Args: func(cmd *cobra.Command, args []string) error {
+		Args: func(_ *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no snippet name specified")
 			}
@@ -40,7 +40,7 @@ cat snippet2.xml | saucectl apit vault set-snippet snip2 - --project "smoke test
 			}
 			return nil
 		},
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			err := http.CheckProxy()
 			if err != nil {
 				return fmt.Errorf("invalid HTTP_PROXY value")
@@ -57,7 +57,7 @@ cat snippet2.xml | saucectl apit vault set-snippet snip2 - --project "smoke test
 			}()
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			name := args[0]
 			fileName := args[1]
 

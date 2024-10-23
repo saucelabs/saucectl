@@ -82,7 +82,7 @@ func ListCommand() *cobra.Command {
 				_ = tracker.Close()
 			}()
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			list, err := appsClient.List(storage.ListOptions{
 				Q:      query,
 				Name:   name,

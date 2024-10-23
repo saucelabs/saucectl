@@ -84,7 +84,7 @@ func downloadCommand() *cobra.Command {
 		Use:          "download <runID> <file-pattern>",
 		Short:        "Downloads the specified artifacts from the given run. Supports glob pattern.",
 		SilenceUsage: true,
-		Args: func(cmd *cobra.Command, args []string) error {
+		Args: func(_ *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no run ID specified")
 			}
@@ -94,7 +94,7 @@ func downloadCommand() *cobra.Command {
 
 			return nil
 		},
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			err := http.CheckProxy()
 			if err != nil {
 				return fmt.Errorf("invalid HTTP_PROXY value")
@@ -111,7 +111,7 @@ func downloadCommand() *cobra.Command {
 			}()
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			ID := args[0]
 			filePattern := args[1]
 

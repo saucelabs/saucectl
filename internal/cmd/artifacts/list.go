@@ -67,7 +67,7 @@ func ListCommand() *cobra.Command {
 		},
 		Short:        "Returns the list of artifacts for the specified job.",
 		SilenceUsage: true,
-		Args: func(cmd *cobra.Command, args []string) error {
+		Args: func(_ *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no job ID specified")
 			}
@@ -91,7 +91,7 @@ func ListCommand() *cobra.Command {
 			}()
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			return list(args[0], out)
 		},
 	}

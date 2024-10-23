@@ -14,7 +14,7 @@ func ListCommand() *cobra.Command {
 			"ls",
 		},
 		Short: "Shows the current credentials and their origin.",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			creds := credentials.Get()
 			if creds.Username == "" || creds.AccessKey == "" {
 				fmt.Println(`Credentials have not been set. Please use "saucectl configure" to set your credentials.`)
