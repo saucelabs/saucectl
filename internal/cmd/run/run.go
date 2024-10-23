@@ -19,7 +19,6 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/saucelabs/saucectl/internal/apitest"
-	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/cucumber"
@@ -267,7 +266,7 @@ func checkForUpdates() {
 }
 
 func createReporters(c config.Reporters, ntfs config.Notifications, metadata config.Metadata,
-	svc slack.Service, buildReader build.Reader, framework, env string, async bool) []report.Reporter {
+	svc slack.Service, framework, env string, async bool) []report.Reporter {
 	githubReporter := github.NewJobSummaryReporter()
 
 	reps := []report.Reporter{

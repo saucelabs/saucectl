@@ -170,8 +170,10 @@ func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
 			BuildService:    &restoClient,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
-			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
-				"espresso", "sauce", gFlags.async),
+			Reporters: createReporters(
+				p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient,
+				"espresso", "sauce", gFlags.async,
+			),
 			Framework: framework.Framework{Name: espresso.Kind},
 			Async:     gFlags.async,
 			FailFast:  gFlags.failFast,

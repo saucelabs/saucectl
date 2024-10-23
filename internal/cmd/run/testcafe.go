@@ -217,8 +217,10 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 			BuildService:    &restoClient,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
-			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
-				"testcafe", "sauce", gFlags.async),
+			Reporters: createReporters(
+				p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient,
+				"testcafe", "sauce", gFlags.async,
+			),
 			Async:                  gFlags.async,
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.NewSearchStrategy(p.Testcafe.Version, p.RootDir),

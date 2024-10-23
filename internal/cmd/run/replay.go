@@ -156,8 +156,10 @@ func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, erro
 			BuildService:    &restoClient,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
-			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
-				"puppeteer-replay", "sauce", gFlags.async),
+			Reporters: createReporters(
+				p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient,
+				"puppeteer-replay", "sauce", gFlags.async,
+			),
 			Async:                  gFlags.async,
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.ExactStrategy{},

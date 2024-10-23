@@ -170,8 +170,10 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
 			BuildService:    &restoClient,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
-			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
-				"xcuitest", "sauce", gFlags.async),
+			Reporters: createReporters(
+				p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient,
+				"xcuitest", "sauce", gFlags.async,
+			),
 			Framework: framework.Framework{Name: xcuitest.Kind},
 			Async:     gFlags.async,
 			FailFast:  gFlags.failFast,
