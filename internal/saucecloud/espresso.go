@@ -87,7 +87,9 @@ func (r *EspressoRunner) runSuites() bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
-	jobOpts, results, err := r.createWorkerPool(r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
+	jobOpts, results, err := r.createWorkerPool(
+		r.Project.Sauce.Concurrency, r.Project.Sauce.Retries,
+	)
 	if err != nil {
 		return false
 	}
@@ -102,36 +104,52 @@ func (r *EspressoRunner) runSuites() bool {
 			suites = espresso.SortByHistory(suites, history)
 		}
 	}
-	// Submit suites to work on.
-	jobsCount := r.calculateJobsCount(suites)
-	go func() {
-		for _, s := range suites {
-			shardCfg := s.ShardConfig()
-			// Automatically apply ShardIndex if numShards is defined
-			if shardCfg.Shards > 0 {
-				for i := 0; i < shardCfg.Shards; i++ {
-					// Enforce copy of the map to ensure it is not shared.
-					testOptions := map[string]interface{}{}
-					for k, v := range s.TestOptions {
-						testOptions[k] = v
-					}
-					s.TestOptions = testOptions
-					s.TestOptions["shardIndex"] = i
-					for _, c := range enumerateDevices(s.Devices, s.Emulators) {
-						log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
-						r.startJob(jobOpts, s, r.Project.Espresso.App, s.TestApp, r.Project.Espresso.OtherApps, c)
-					}
+
+	var startOptions []job.StartOptions
+	for _, s := range suites {
+		shardCfg := s.ShardConfig()
+		// Automatically apply ShardIndex if numShards is defined
+		if shardCfg.Shards > 0 {
+			for i := 0; i < shardCfg.Shards; i++ {
+				// Enforce copy of the map to ensure it is not shared.
+				testOptions := map[string]interface{}{}
+				for k, v := range s.TestOptions {
+					testOptions[k] = v
 				}
-			} else {
-				for _, c := range enumerateDevices(s.Devices, s.Emulators) {
-					log.Debug().Str("suite", s.Name).Str("device", fmt.Sprintf("%v", c)).Msg("Starting job")
-					r.startJob(jobOpts, s, r.Project.Espresso.App, s.TestApp, r.Project.Espresso.OtherApps, c)
+				s.TestOptions = testOptions
+				s.TestOptions["shardIndex"] = i
+				for _, deviceCfg := range enumerateDevices(
+					s.Devices, s.Emulators,
+				) {
+					startOptions = append(
+						startOptions, r.newStartOptions(
+							s, r.Project.Espresso.App, s.TestApp,
+							r.Project.Espresso.OtherApps, deviceCfg,
+						),
+					)
 				}
 			}
+		} else {
+			for _, deviceCfg := range enumerateDevices(s.Devices, s.Emulators) {
+				startOptions = append(
+					startOptions, r.newStartOptions(
+						s, r.Project.Espresso.App, s.TestApp,
+						r.Project.Espresso.OtherApps, deviceCfg,
+					),
+				)
+			}
+		}
+	}
+
+	go func() {
+		for _, opt := range startOptions {
+			jobOpts <- opt
 		}
 	}()
 
-	return r.collectResults(r.Project.Artifacts.Download, results, jobsCount)
+	return r.collectResults(
+		r.Project.Artifacts.Download, results, len(startOptions),
+	)
 }
 
 func (r *EspressoRunner) dryRun() {
@@ -176,15 +194,20 @@ func enumerateDevices(devices []config.Device, virtualDevices []config.VirtualDe
 	return configs
 }
 
-// startJob add the job to the list for the workers.
-func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Suite, appFileURI, testAppFileURI string, otherAppsURIs []string, d deviceConfig) {
+// newStartOptions add the job to the list for the workers.
+func (r *EspressoRunner) newStartOptions(
+	s espresso.Suite, appFileURI, testAppFileURI string, otherAppsURIs []string,
+	d deviceConfig,
+) job.StartOptions {
 	displayName := s.Name
 	shardCfg := s.ShardConfig()
 	if shardCfg.Shards > 0 {
-		displayName = fmt.Sprintf("%s (shard %d/%d)", displayName, shardCfg.Index+1, shardCfg.Shards)
+		displayName = fmt.Sprintf(
+			"%s (shard %d/%d)", displayName, shardCfg.Index+1, shardCfg.Shards,
+		)
 	}
 
-	jobOpts <- job.StartOptions{
+	return job.StartOptions{
 		DisplayName:       displayName,
 		Timeout:           s.Timeout,
 		ConfigFilePath:    r.Project.ConfigFilePath,
@@ -232,17 +255,4 @@ func (r *EspressoRunner) startJob(jobOpts chan<- job.StartOptions, s espresso.Su
 			},
 		},
 	}
-}
-
-func (r *EspressoRunner) calculateJobsCount(suites []espresso.Suite) int {
-	total := 0
-	for _, s := range suites {
-		jobs := len(enumerateDevices(s.Devices, s.Emulators))
-		shardCfg := s.ShardConfig()
-		if shardCfg.Shards > 0 {
-			jobs *= shardCfg.Shards
-		}
-		total += jobs
-	}
-	return total
 }
