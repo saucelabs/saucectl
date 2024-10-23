@@ -51,7 +51,7 @@ func NewImageRunner(url string, creds iam.Credentials, timeout time.Duration,
 		PartsOrder: []string{
 			zerolog.MessageFieldName,
 		},
-		FormatLevel: func(i interface{}) string {
+		FormatLevel: func(any) string {
 			return color.New(color.FgGreen).Sprint("[LOGS]")
 		},
 	})

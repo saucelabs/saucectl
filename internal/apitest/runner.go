@@ -528,7 +528,7 @@ func (r *Runner) collectResults(expected int, results chan TestResult) bool {
 	passed := true
 
 	done := make(chan interface{})
-	go func(r *Runner) {
+	go func() {
 		t := time.NewTicker(10 * time.Second)
 		defer t.Stop()
 		for {
@@ -539,7 +539,7 @@ func (r *Runner) collectResults(expected int, results chan TestResult) bool {
 				log.Info().Msgf("Tests in progress: %d", inProgress)
 			}
 		}
-	}(r)
+	}()
 
 	for i := 0; i < expected; i++ {
 		testResult := <-results
