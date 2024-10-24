@@ -45,7 +45,7 @@ func TestWebdriver_StartJob(t *testing.T) {
 			},
 			want:    "fake-job-id",
 			wantErr: nil,
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(201)
 				_ = json.NewEncoder(w).Encode(sessionStartResponse{
 					SessionID: "fake-job-id",
@@ -60,7 +60,7 @@ func TestWebdriver_StartJob(t *testing.T) {
 			},
 			want:    "",
 			wantErr: fmt.Errorf("job start failed (401): go away"),
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(401)
 				_, _ = w.Write([]byte("go away"))
 			},
@@ -73,7 +73,7 @@ func TestWebdriver_StartJob(t *testing.T) {
 			},
 			want:    "",
 			wantErr: fmt.Errorf("job start failed (500): internal server error"),
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(500)
 				_, err := w.Write([]byte("internal server error"))
 				if err != nil {

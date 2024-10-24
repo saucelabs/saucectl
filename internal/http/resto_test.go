@@ -706,7 +706,7 @@ func TestResto_GetBuildID(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		// arrange
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(tt.statusCode)
 			_, _ = w.Write(tt.responseBody)
 		}))

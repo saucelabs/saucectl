@@ -20,8 +20,8 @@ func TestInsightsService_PostTestRun(t *testing.T) {
 		{
 			name: "Basic - empty - 204",
 			runs: []insights.TestRun{},
-			reply: func(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-				return func(w http.ResponseWriter, r *http.Request) {
+			reply: func(*testing.T) func(w http.ResponseWriter, r *http.Request) {
+				return func(w http.ResponseWriter, _ *http.Request) {
 					w.WriteHeader(204)
 				}
 			},
@@ -34,8 +34,8 @@ func TestInsightsService_PostTestRun(t *testing.T) {
 					ID: "09a87dea-3923-43db-8743-ef1f3ff5d717",
 				},
 			},
-			reply: func(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-				return func(w http.ResponseWriter, r *http.Request) {
+			reply: func(*testing.T) func(w http.ResponseWriter, r *http.Request) {
+				return func(w http.ResponseWriter, _ *http.Request) {
 					w.WriteHeader(204)
 				}
 			},

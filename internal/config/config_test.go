@@ -330,7 +330,7 @@ func TestNpm_SetDefaults(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.name, func(*testing.T) {
 			n := &Npm{
 				Registry:   tt.fields.Registry,
 				Registries: tt.fields.Registries,
@@ -349,7 +349,7 @@ func TestValidateRegistries(t *testing.T) {
 		{
 			name: "passing empty",
 			args: []Registry{},
-			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+			wantErr: func(_ assert.TestingT, err error, _ ...interface{}) bool {
 				return err == nil
 			},
 		},
@@ -358,7 +358,7 @@ func TestValidateRegistries(t *testing.T) {
 			args: []Registry{
 				{URL: "http://npmjs.org"},
 			},
-			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+			wantErr: func(_ assert.TestingT, err error, _ ...interface{}) bool {
 				return err == nil
 			},
 		},
@@ -368,7 +368,7 @@ func TestValidateRegistries(t *testing.T) {
 				{URL: "http://npmjs.org"},
 				{URL: "http://npmjs-2.org", Scope: "@scoped"},
 			},
-			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+			wantErr: func(_ assert.TestingT, err error, _ ...interface{}) bool {
 				return err == nil
 			},
 		},
@@ -378,7 +378,7 @@ func TestValidateRegistries(t *testing.T) {
 				{URL: "http://npmjs.org"},
 				{URL: "http://npmjs-2.org"},
 			},
-			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+			wantErr: func(_ assert.TestingT, err error, _ ...interface{}) bool {
 				return err != nil && err.Error() == "too many registries (2) are without scope"
 			},
 		},

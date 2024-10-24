@@ -332,11 +332,11 @@ func Test_saveConfigurationFiles(t *testing.T) {
 
 	oldCypressConfig := configurators["cypress"]
 	oldXcuitestConfig := configurators["xcuitest"]
-	configurators["cypress"] = func(cfg *initConfig) interface{} {
+	configurators["cypress"] = func(*initConfig) interface{} {
 		calledConfig = true
 		return map[string]string{}
 	}
-	configurators["xcuitest"] = func(cfg *initConfig) interface{} {
+	configurators["xcuitest"] = func(*initConfig) interface{} {
 		calledConfig = true
 		return map[string]string{}
 	}

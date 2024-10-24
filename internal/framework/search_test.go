@@ -71,7 +71,7 @@ func TestFrameworkFind_ExactStrategy(t *testing.T) {
 			"unable to determine available versions for framework: framework not supported",
 			nil,
 			&MockMetadataService{
-				MockVersions: func(ctx context.Context, frameworkName string) ([]Metadata, error) {
+				MockVersions: func(context.Context, string) ([]Metadata, error) {
 					return []Metadata{}, fmt.Errorf("framework not supported")
 				},
 			},
@@ -83,7 +83,7 @@ func TestFrameworkFind_ExactStrategy(t *testing.T) {
 			"",
 			nil,
 			&MockMetadataService{
-				MockVersions: func(ctx context.Context, frameworkName string) ([]Metadata, error) {
+				MockVersions: func(context.Context, string) ([]Metadata, error) {
 					return []Metadata{{FrameworkName: "buster-final", FrameworkVersion: "3.0"}}, nil
 				},
 			},
@@ -121,7 +121,7 @@ func TestFrameworkFind_PackageStrategy(t *testing.T) {
 			nil,
 			"nostromo",
 			"path/to/package.json",
-			func(filename string) (node.Package, error) {
+			func(string) (node.Package, error) {
 				return node.Package{}, errors.New("unknown format")
 			},
 			nil,
@@ -133,7 +133,7 @@ func TestFrameworkFind_PackageStrategy(t *testing.T) {
 			nil,
 			"nostromo",
 			"path/to/package.json",
-			func(filename string) (node.Package, error) {
+			func(string) (node.Package, error) {
 				return node.Package{
 					Dependencies:    map[string]string{"dallas": "1.0.0"},
 					DevDependencies: map[string]string{"bishop": "1.0.0"},
@@ -152,7 +152,7 @@ func TestFrameworkFind_PackageStrategy(t *testing.T) {
 			},
 			"nostromo",
 			"path/to/package.json",
-			func(filename string) (node.Package, error) {
+			func(string) (node.Package, error) {
 				return node.Package{
 					Dependencies:    map[string]string{"nostromo": "1.0.0"},
 					DevDependencies: map[string]string{"nostromo": "1.0.0"},
@@ -171,13 +171,13 @@ func TestFrameworkFind_PackageStrategy(t *testing.T) {
 			},
 			"nostromo",
 			"path/to/package.json",
-			func(filename string) (node.Package, error) {
+			func(string) (node.Package, error) {
 				return node.Package{
 					Dependencies:    map[string]string{"nostromo": "1.0.0"},
 					DevDependencies: map[string]string{"nostromo": "1.0.0"},
 				}, nil
 			},
-			func(c string) (*semver.Constraints, error) {
+			func(string) (*semver.Constraints, error) {
 				return nil, errors.New("package not found")
 			},
 		},

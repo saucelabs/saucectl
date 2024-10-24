@@ -18,7 +18,7 @@ import (
 	"golang.org/x/time/rate"
 )
 
-func createTestRetryableHTTPClient(t *testing.T) *retryablehttp.Client {
+func createTestRetryableHTTPClient() *retryablehttp.Client {
 	return &retryablehttp.Client{
 		HTTPClient: &http.Client{
 			Timeout:   10 * time.Second,
@@ -110,7 +110,7 @@ func TestAPITester_GetEventResult(t *testing.T) {
 	defer ts.Close()
 
 	c := &APITester{
-		HTTPClient:         createTestRetryableHTTPClient(t),
+		HTTPClient:         createTestRetryableHTTPClient(),
 		URL:                ts.URL,
 		Username:           "dummy",
 		AccessKey:          "accesskey",
@@ -174,7 +174,7 @@ func TestAPITester_GetProject(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: createTestRetryableHTTPClient(t),
+		HTTPClient: createTestRetryableHTTPClient(),
 		URL:        ts.URL,
 		Username:   "dummy",
 		AccessKey:  "accesskey",
@@ -239,7 +239,7 @@ func TestAPITester_GetTest(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: createTestRetryableHTTPClient(t),
+		HTTPClient: createTestRetryableHTTPClient(),
 		URL:        ts.URL,
 		Username:   "dummy",
 		AccessKey:  "accesskey",
@@ -354,7 +354,7 @@ func TestAPITester_GetProjects(t *testing.T) {
 	}{
 		{
 			name: "Fetching Projects Test",
-			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+			wantErr: func(_ assert.TestingT, err error, _ ...interface{}) bool {
 				return err != nil
 			},
 			want: []apitest.ProjectMeta{},
@@ -378,7 +378,7 @@ func TestAPITester_GetProjects(t *testing.T) {
 	defer ts.Close()
 
 	c := &APITester{
-		HTTPClient: createTestRetryableHTTPClient(t),
+		HTTPClient: createTestRetryableHTTPClient(),
 		URL:        ts.URL,
 		Username:   "dummy",
 		AccessKey:  "accesskey",
@@ -465,7 +465,7 @@ func TestAPITester_GetHooks(t *testing.T) {
 	defer ts.Close()
 
 	c := &APITester{
-		HTTPClient: createTestRetryableHTTPClient(t),
+		HTTPClient: createTestRetryableHTTPClient(),
 		URL:        ts.URL,
 		Username:   "dummy",
 		AccessKey:  "accesskey",
@@ -531,7 +531,7 @@ func TestAPITester_RunAllAsync(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: createTestRetryableHTTPClient(t),
+		HTTPClient: createTestRetryableHTTPClient(),
 		URL:        ts.URL,
 		Username:   "dummyUser",
 		AccessKey:  "dummyAccesKey",
@@ -607,7 +607,7 @@ func TestAPITester_RunEphemeralAsync(t *testing.T) {
 			}))
 			defer ts.Close()
 			c := &APITester{
-				HTTPClient: createTestRetryableHTTPClient(t),
+				HTTPClient: createTestRetryableHTTPClient(),
 				URL:        ts.URL,
 				Username:   "dummyUser",
 				AccessKey:  "dummyAccesKey",
@@ -675,7 +675,7 @@ func TestAPITester_RunTestAsync(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: createTestRetryableHTTPClient(t),
+		HTTPClient: createTestRetryableHTTPClient(),
 		URL:        ts.URL,
 		Username:   "dummyUser",
 		AccessKey:  "dummyAccesKey",
@@ -745,7 +745,7 @@ func TestAPITester_RunTagAsync(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: createTestRetryableHTTPClient(t),
+		HTTPClient: createTestRetryableHTTPClient(),
 		URL:        ts.URL,
 		Username:   "dummyUser",
 		AccessKey:  "dummyAccesKey",

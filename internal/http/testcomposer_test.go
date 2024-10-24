@@ -31,7 +31,7 @@ func TestTestComposer_GetSlackToken(t *testing.T) {
 			name:    "token exists",
 			want:    "user token",
 			wantErr: false,
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(200)
 				err := json.NewEncoder(w).Encode(TokenResponse{
 					Token: "user token",
@@ -45,7 +45,7 @@ func TestTestComposer_GetSlackToken(t *testing.T) {
 			name:    "token validation error",
 			want:    "",
 			wantErr: true,
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(422)
 			},
 		},
@@ -53,7 +53,7 @@ func TestTestComposer_GetSlackToken(t *testing.T) {
 			name:    "token does not exists",
 			want:    "",
 			wantErr: true,
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(404)
 			},
 		},

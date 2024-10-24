@@ -388,13 +388,13 @@ func TestRunner_runLocalTests(t *testing.T) {
 	defer dir.Remove()
 
 	mock := MockAPITester{
-		GetProjectFn: func(ctx context.Context, hookID string) (ProjectMeta, error) {
+		GetProjectFn: func(context.Context, string) (ProjectMeta, error) {
 			return ProjectMeta{
 				ID:   "test",
 				Name: "Testi",
 			}, nil
 		},
-		RunEphemeralAsyncFn: func(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, test TestRequest) (AsyncResponse, error) {
+		RunEphemeralAsyncFn: func(context.Context, string, string, config.Tunnel, TestRequest) (AsyncResponse, error) {
 			return AsyncResponse{
 				ContextIDs: []string{"221270ac-0229-49d1-9025-251a10e9133d"},
 				EventIDs:   []string{"c4ca4238a0b923820dcc509a"},
@@ -402,7 +402,7 @@ func TestRunner_runLocalTests(t *testing.T) {
 				TestIDs:    []string{"c20ad4d76fe97759aa27a0c9"},
 			}, nil
 		},
-		GetEventResultFn: func(ctx context.Context, hookID string, eventID string) (TestResult, error) {
+		GetEventResultFn: func(context.Context, string, string) (TestResult, error) {
 			return TestResult{
 				EventID:       "c4ca4238a0b923820dcc509a",
 				FailuresCount: 0,
@@ -456,7 +456,7 @@ func TestRunner_runLocalTests(t *testing.T) {
 
 func TestRunner_ResolveHookIDs(t *testing.T) {
 	mock := MockAPITester{
-		GetProjectsFn: func(ctx context.Context) ([]ProjectMeta, error) {
+		GetProjectsFn: func(context.Context) ([]ProjectMeta, error) {
 			return []ProjectMeta{
 				{
 					ID:   "noHooks",
@@ -476,7 +476,7 @@ func TestRunner_ResolveHookIDs(t *testing.T) {
 				},
 			}, nil
 		},
-		GetHooksFn: func(ctx context.Context, projectID string) ([]Hook, error) {
+		GetHooksFn: func(_ context.Context, projectID string) ([]Hook, error) {
 			switch projectID {
 			case "single":
 				return []Hook{

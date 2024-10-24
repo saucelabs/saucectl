@@ -94,19 +94,19 @@ func TestSkippedRunJobs(t *testing.T) {
 	sut := CloudRunner{
 		JobService: JobService{
 			VDCStarter: &mocks.FakeJobStarter{
-				StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+				StartJobFn: func(context.Context, job.StartOptions) (jobID string, isRDC bool, err error) {
 					return "fake-id", false, nil
 				},
 			},
 			VDCStopper: &mocks.FakeJobStopper{
-				StopJobFn: func(ctx context.Context, id string) (job.Job, error) {
+				StopJobFn: func(context.Context, string) (job.Job, error) {
 					return job.Job{
 						ID: "fake-id",
 					}, nil
 				},
 			},
 			VDCReader: &mocks.FakeJobReader{
-				PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+				PollJobFn: func(context.Context, string, time.Duration, time.Duration) (job.Job, error) {
 					return job.Job{
 						ID:     "fake-id",
 						Passed: true,
@@ -116,7 +116,7 @@ func TestSkippedRunJobs(t *testing.T) {
 				},
 			},
 			VDCWriter: &mocks.FakeJobWriter{
-				UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+				UploadAssetFn: func(string, string, string, []byte) error {
 					return nil
 				},
 			},
@@ -149,27 +149,27 @@ func TestRunJobTimeout(t *testing.T) {
 	r := CloudRunner{
 		JobService: JobService{
 			VDCStarter: &mocks.FakeJobStarter{
-				StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+				StartJobFn: func(context.Context, job.StartOptions) (jobID string, isRDC bool, err error) {
 					return "1", false, nil
 				},
 			},
 			VDCReader: &mocks.FakeJobReader{
-				PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+				PollJobFn: func(_ context.Context, id string, _ time.Duration, _ time.Duration) (job.Job, error) {
 					return job.Job{ID: id, TimedOut: true}, nil
 				},
 			},
 			VDCStopper: &mocks.FakeJobStopper{
-				StopJobFn: func(ctx context.Context, jobID string) (job.Job, error) {
+				StopJobFn: func(_ context.Context, jobID string) (job.Job, error) {
 					return job.Job{ID: jobID}, nil
 				},
 			},
-			VDCWriter: &mocks.FakeJobWriter{UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+			VDCWriter: &mocks.FakeJobWriter{UploadAssetFn: func(string, string, string, []byte) error {
 				return nil
 			}},
-			VDCDownloader: &mocks.FakeArtifactDownloader{DownloadArtifactFn: func(jobData job.Job, isLastAttempt bool) []string {
+			VDCDownloader: &mocks.FakeArtifactDownloader{DownloadArtifactFn: func(job.Job, bool) []string {
 				return []string{}
 			}},
-			RDCDownloader: &mocks.FakeArtifactDownloader{DownloadArtifactFn: func(jobData job.Job, isLastAttempt bool) []string {
+			RDCDownloader: &mocks.FakeArtifactDownloader{DownloadArtifactFn: func(job.Job, bool) []string {
 				return []string{}
 			}},
 		},
@@ -210,27 +210,27 @@ func TestRunJobRetries(t *testing.T) {
 			Retrier: &retry.SauceReportRetrier{},
 			JobService: JobService{
 				VDCStarter: &mocks.FakeJobStarter{
-					StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+					StartJobFn: func(context.Context, job.StartOptions) (jobID string, isRDC bool, err error) {
 						return "1", false, nil
 					},
 				},
 				VDCReader: &mocks.FakeJobReader{
-					PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+					PollJobFn: func(_ context.Context, id string, _ time.Duration, _ time.Duration) (job.Job, error) {
 						return job.Job{ID: id, Passed: false}, nil
 					},
 				},
 				VDCStopper: &mocks.FakeJobStopper{
-					StopJobFn: func(ctx context.Context, jobID string) (job.Job, error) {
+					StopJobFn: func(_ context.Context, jobID string) (job.Job, error) {
 						return job.Job{ID: jobID}, nil
 					},
 				},
-				VDCWriter: &mocks.FakeJobWriter{UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+				VDCWriter: &mocks.FakeJobWriter{UploadAssetFn: func(string, string, string, []byte) error {
 					return nil
 				}},
-				VDCDownloader: &mocks.FakeArtifactDownloader{DownloadArtifactFn: func(jobData job.Job, islastAttempt bool) []string {
+				VDCDownloader: &mocks.FakeArtifactDownloader{DownloadArtifactFn: func(job.Job, bool) []string {
 					return []string{}
 				}},
-				RDCDownloader: &mocks.FakeArtifactDownloader{DownloadArtifactFn: func(jobData job.Job, islastAttempt bool) []string {
+				RDCDownloader: &mocks.FakeArtifactDownloader{DownloadArtifactFn: func(job.Job, bool) []string {
 					return []string{}
 				}},
 			},
@@ -255,24 +255,24 @@ func TestRunJobTimeoutRDC(t *testing.T) {
 	r := CloudRunner{
 		JobService: JobService{
 			RDCStarter: &mocks.FakeJobStarter{
-				StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+				StartJobFn: func(context.Context, job.StartOptions) (jobID string, isRDC bool, err error) {
 					return "1", true, nil
 				},
 			},
 			RDCReader: &mocks.FakeJobReader{
-				PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+				PollJobFn: func(_ context.Context, id string, _ time.Duration, _ time.Duration) (job.Job, error) {
 					return job.Job{ID: id, TimedOut: true}, nil
 				},
 			},
 			RDCStopper: &mocks.FakeJobStopper{
-				StopJobFn: func(ctx context.Context, id string) (job.Job, error) {
+				StopJobFn: func(_ context.Context, id string) (job.Job, error) {
 					return job.Job{ID: id, TimedOut: true}, nil
 				},
 			},
-			VDCDownloader: &mocks.FakeArtifactDownloader{DownloadArtifactFn: func(jobData job.Job, islastAttempt bool) []string {
+			VDCDownloader: &mocks.FakeArtifactDownloader{DownloadArtifactFn: func(job.Job, bool) []string {
 				return []string{}
 			}},
-			RDCDownloader: &mocks.FakeArtifactDownloader{DownloadArtifactFn: func(jobData job.Job, islastAttempt bool) []string {
+			RDCDownloader: &mocks.FakeArtifactDownloader{DownloadArtifactFn: func(job.Job, bool) []string {
 				return []string{}
 			}},
 		},
@@ -508,17 +508,17 @@ func TestCloudRunner_loadSauceTestReport(t *testing.T) {
 				isRDC: false,
 			},
 			fields: fields{
-				GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
+				GetJobAssetFileNamesFn: func(context.Context, string) ([]string, error) {
 					return []string{saucereport.FileName}, nil
 				},
-				GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+				GetJobAssetFileContentFn: func(_ context.Context, _, fileName string) ([]byte, error) {
 					if fileName == saucereport.FileName {
 						return []byte(`{"status":"failed","attachments":[],"suites":[{"name":"cypress/e2e/examples/actions.cy.js","status":"failed","metadata":{},"suites":[{"name":"Actions","status":"failed","metadata":{},"suites":[],"attachments":[],"tests":[{"name":".type() - type into a DOM element","status":"passed","startTime":"2022-12-22T10:10:11.083Z","duration":1802,"metadata":{},"output":null,"attachments":[],"code":{"lines":["() => {","    // https://on.cypress.io/type","    cy.get('.action-email').type('fake@email.com').should('have.value', 'fake@email.com');","  }"]},"videoTimestamp":26.083},{"name":".type() - type into a wrong DOM element","status":"failed","startTime":"2022-12-22T10:10:12.907Z","duration":5010,"metadata":{},"output":"AssertionError: Timed out retrying after 4000ms: expected '<input#email1.form-control.action-email>' to have value 'wrongy@email.com', but the value was 'fake@email.com'\n\n  11 |     // https://on.cypress.io/type\n  12 |     cy.get('.action-email')\n> 13 |         .type('fake@email.com').should('have.value', 'wrongy@email.com')\n     |                                 ^\n  14 |   })\n  15 | })\n  16 | ","attachments":[{"name":"screenshot","path":"Actions -- .type() - type into a wrong DOM element (failed).png","contentType":"image/png"}],"code":{"lines":["() => {","    // https://on.cypress.io/type","    cy.get('.action-email').type('fake@email.com').should('have.value', 'wrongy@email.com');","  }"]},"videoTimestamp":27.907}]}],"attachments":[],"tests":[]}],"metadata":{}}`), nil
 					}
 					return []byte{}, errors.New("not-found")
 				},
 			},
-			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+			wantErr: func(_ assert.TestingT, err error, _ ...interface{}) bool {
 				return err == nil
 			},
 			want: saucereport.SauceReport{
@@ -627,10 +627,10 @@ func TestCloudRunner_loadJUnitReport(t *testing.T) {
 		{
 			name: "Unmarshall XML",
 			fields: fields{
-				GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
+				GetJobAssetFileNamesFn: func(context.Context, string) ([]string, error) {
 					return []string{junit.FileName}, nil
 				},
-				GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+				GetJobAssetFileContentFn: func(_ context.Context, _, fileName string) ([]byte, error) {
 					if fileName == junit.FileName {
 						return []byte(`<?xml version="1.0" encoding="utf-8"?><testsuite package="com.saucelabs.mydemoapp.android" tests="7" time="52.056"><testcase classname="com.saucelabs.mydemoapp.android.view.activities.DashboardToCheckout" name="dashboardProductTest" status="success"/><testcase classname="com.saucelabs.mydemoapp.android.view.activities.LoginTest" name="succesfulLoginTest" status="success"/><testcase classname="com.saucelabs.mydemoapp.android.view.activities.LoginTest" name="noUsernameLoginTest" status="success"/><testcase classname="com.saucelabs.mydemoapp.android.view.activities.LoginTest" name="noPasswordLoginTest" status="success"/><testcase classname="com.saucelabs.mydemoapp.android.view.activities.LoginTest" name="noCredentialLoginTest" status="success"/><testcase classname="com.saucelabs.mydemoapp.android.view.activities.WebViewTest" name="webViewTest" status="success"/><testcase classname="com.saucelabs.mydemoapp.android.view.activities.WebViewTest" name="withoutUrlTest" status="success"/><system-out>INSTRUMENTATION_STATUS: class=com.saucelabs.mydemoapp.android.view.activities.DashboardToCheckout</system-out></testsuite>`), nil
 					}
@@ -688,7 +688,7 @@ func TestCloudRunner_loadJUnitReport(t *testing.T) {
 					},
 				},
 			},
-			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+			wantErr: func(_ assert.TestingT, err error, _ ...interface{}) bool {
 				return err == nil
 			},
 		},

@@ -24,17 +24,17 @@ func TestRunSuite(t *testing.T) {
 		CloudRunner: CloudRunner{
 			JobService: JobService{
 				VDCStarter: &mocks.FakeJobStarter{
-					StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+					StartJobFn: func(context.Context, job.StartOptions) (jobID string, isRDC bool, err error) {
 						return "fake-job-id", false, nil
 					},
 				},
 				VDCReader: &mocks.FakeJobReader{
-					PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+					PollJobFn: func(_ context.Context, id string, _ time.Duration, _ time.Duration) (job.Job, error) {
 						return job.Job{ID: id, Passed: true}, nil
 					},
 				},
 				VDCWriter: &mocks.FakeJobWriter{
-					UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+					UploadAssetFn: func(string, string, string, []byte) error {
 						return nil
 					},
 				},
@@ -57,42 +57,42 @@ func TestRunSuites(t *testing.T) {
 		CloudRunner: CloudRunner{
 			JobService: JobService{
 				VDCStarter: &mocks.FakeJobStarter{
-					StartJobFn: func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+					StartJobFn: func(context.Context, job.StartOptions) (jobID string, isRDC bool, err error) {
 						return "fake-job-id", false, nil
 					},
 				},
 				VDCReader: &mocks.FakeJobReader{
-					PollJobFn: func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error) {
+					PollJobFn: func(_ context.Context, id string, _ time.Duration, _ time.Duration) (job.Job, error) {
 						return job.Job{ID: id, Passed: true, Status: job.StatePassed}, nil
 					},
-					GetJobAssetFileNamesFn: func(ctx context.Context, jobID string) ([]string, error) {
+					GetJobAssetFileNamesFn: func(context.Context, string) ([]string, error) {
 						return []string{"file1", "file2"}, nil
 					},
-					GetJobAssetFileContentFn: func(ctx context.Context, jobID, fileName string) ([]byte, error) {
+					GetJobAssetFileContentFn: func(context.Context, string, string) ([]byte, error) {
 						return []byte("file content"), nil
 					},
 				},
 				VDCWriter: &mocks.FakeJobWriter{
-					UploadAssetFn: func(jobID string, fileName string, contentType string, content []byte) error {
+					UploadAssetFn: func(string, string, string, []byte) error {
 						return nil
 					},
 				},
 				VDCDownloader: &mocks.FakeArtifactDownloader{
-					DownloadArtifactFn: func(jobData job.Job, islastAttempt bool) []string {
+					DownloadArtifactFn: func(job.Job, bool) []string {
 						return []string{}
 					},
 				},
 			},
 			BuildService: &mocks.FakeBuildReader{
-				GetBuildIDFn: func(ctx context.Context, jobID string, buildSource build.Source) (string, error) {
+				GetBuildIDFn: func(context.Context, string, build.Source) (string, error) {
 					return "build-id", nil
 				},
 			},
 			InsightsService: mocks.FakeInsightService{
-				PostTestRunFn: func(ctx context.Context, runs []insights.TestRun) error {
+				PostTestRunFn: func(context.Context, []insights.TestRun) error {
 					return nil
 				},
-				ReadJobFn: func(ctx context.Context, id string) (job.Job, error) {
+				ReadJobFn: func(context.Context, string) (job.Job, error) {
 					return job.Job{}, nil
 				},
 			},
