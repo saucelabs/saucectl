@@ -27,7 +27,7 @@ func CypressCmd() *cobra.Command {
 		Use:          "cypress",
 		Short:        "Bootstrap a Cypress project.",
 		SilenceUsage: true,
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, _ []string) {
 			tracker := segment.DefaultTracker
 
 			go func() {

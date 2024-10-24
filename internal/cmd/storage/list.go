@@ -71,7 +71,7 @@ func ListCommand() *cobra.Command {
 		},
 		Short:        "Returns the list of files that have been uploaded to Sauce Storage.",
 		SilenceUsage: true,
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRun: func(cmd *cobra.Command, _ []string) {
 			tracker := segment.DefaultTracker
 
 			go func() {
@@ -82,7 +82,7 @@ func ListCommand() *cobra.Command {
 				_ = tracker.Close()
 			}()
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			list, err := appsClient.List(storage.ListOptions{
 				Q:      query,
 				Name:   name,

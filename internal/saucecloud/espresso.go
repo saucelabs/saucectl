@@ -147,9 +147,7 @@ func (r *EspressoRunner) runSuites() bool {
 		}
 	}()
 
-	return r.collectResults(
-		r.Project.Artifacts.Download, results, len(startOptions),
-	)
+	return r.collectResults(results, len(startOptions))
 }
 
 func (r *EspressoRunner) dryRun() {

@@ -22,7 +22,7 @@ func ListCommand() *cobra.Command {
 		Use:          "list",
 		Short:        "Returns the list of containers",
 		SilenceUsage: true,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			err := http.CheckProxy()
 			if err != nil {
 				return fmt.Errorf("invalid HTTP_PROXY value")
@@ -39,7 +39,7 @@ func ListCommand() *cobra.Command {
 			}()
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			return list(out)
 		},
 	}

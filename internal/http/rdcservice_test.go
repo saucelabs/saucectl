@@ -461,7 +461,7 @@ func TestRDCService_StartJob(t *testing.T) {
 			},
 			want:    "fake-job-id",
 			wantErr: nil,
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(201)
 				_, _ = w.Write([]byte(`{ "test_report": { "id": "fake-job-id" }}`))
 			},
@@ -474,7 +474,7 @@ func TestRDCService_StartJob(t *testing.T) {
 			},
 			want:    "",
 			wantErr: fmt.Errorf("job start failed; unexpected response code:'300', msg:''"),
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(300)
 			},
 		},
@@ -486,7 +486,7 @@ func TestRDCService_StartJob(t *testing.T) {
 			},
 			want:    "",
 			wantErr: fmt.Errorf("job start failed; unexpected response code:'500', msg:'Internal server error'"),
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
+			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(500)
 				_, err := w.Write([]byte("Internal server error"))
 				if err != nil {

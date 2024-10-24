@@ -18,7 +18,7 @@ import (
 	"golang.org/x/time/rate"
 )
 
-func createTestRetryableHTTPClient(t *testing.T) *retryablehttp.Client {
+func createTestRetryableHTTPClient() *retryablehttp.Client {
 	return &retryablehttp.Client{
 		HTTPClient: &http.Client{
 			Timeout:   10 * time.Second,
@@ -110,7 +110,7 @@ func TestAPITester_GetEventResult(t *testing.T) {
 	defer ts.Close()
 
 	c := &APITester{
-		HTTPClient:         createTestRetryableHTTPClient(t),
+		HTTPClient:         createTestRetryableHTTPClient(),
 		URL:                ts.URL,
 		Username:           "dummy",
 		AccessKey:          "accesskey",
@@ -174,7 +174,7 @@ func TestAPITester_GetProject(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: createTestRetryableHTTPClient(t),
+		HTTPClient: createTestRetryableHTTPClient(),
 		URL:        ts.URL,
 		Username:   "dummy",
 		AccessKey:  "accesskey",
@@ -239,7 +239,7 @@ func TestAPITester_GetTest(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: createTestRetryableHTTPClient(t),
+		HTTPClient: createTestRetryableHTTPClient(),
 		URL:        ts.URL,
 		Username:   "dummy",
 		AccessKey:  "accesskey",
@@ -354,7 +354,7 @@ func TestAPITester_GetProjects(t *testing.T) {
 	}{
 		{
 			name: "Fetching Projects Test",
-			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+			wantErr: func(_ assert.TestingT, err error, _ ...interface{}) bool {
 				return err != nil
 			},
 			want: []apitest.ProjectMeta{},
@@ -378,7 +378,7 @@ func TestAPITester_GetProjects(t *testing.T) {
 	defer ts.Close()
 
 	c := &APITester{
-		HTTPClient: createTestRetryableHTTPClient(t),
+		HTTPClient: createTestRetryableHTTPClient(),
 		URL:        ts.URL,
 		Username:   "dummy",
 		AccessKey:  "accesskey",
@@ -465,7 +465,7 @@ func TestAPITester_GetHooks(t *testing.T) {
 	defer ts.Close()
 
 	c := &APITester{
-		HTTPClient: createTestRetryableHTTPClient(t),
+		HTTPClient: createTestRetryableHTTPClient(),
 		URL:        ts.URL,
 		Username:   "dummy",
 		AccessKey:  "accesskey",
@@ -531,7 +531,7 @@ func TestAPITester_RunAllAsync(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: createTestRetryableHTTPClient(t),
+		HTTPClient: createTestRetryableHTTPClient(),
 		URL:        ts.URL,
 		Username:   "dummyUser",
 		AccessKey:  "dummyAccesKey",
@@ -557,7 +557,6 @@ func TestAPITester_RunEphemeralAsync(t *testing.T) {
 		hookID  string
 		buildID string
 		tunnel  config.Tunnel
-		taskID  string
 		test    apitest.TestRequest
 	}
 	tests := []struct {
@@ -573,7 +572,6 @@ func TestAPITester_RunEphemeralAsync(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				hookID:  "dummyHookId",
-				taskID:  "generatedUuid",
 				buildID: "generatedBuildId",
 				tunnel:  config.Tunnel{Name: "tunnelId"},
 				test:    apitest.TestRequest{},
@@ -609,13 +607,13 @@ func TestAPITester_RunEphemeralAsync(t *testing.T) {
 			}))
 			defer ts.Close()
 			c := &APITester{
-				HTTPClient: createTestRetryableHTTPClient(t),
+				HTTPClient: createTestRetryableHTTPClient(),
 				URL:        ts.URL,
 				Username:   "dummyUser",
 				AccessKey:  "dummyAccesKey",
 			}
 
-			got, err := c.RunEphemeralAsync(tt.args.ctx, tt.args.hookID, tt.args.buildID, tt.args.tunnel, tt.args.taskID, tt.args.test)
+			got, err := c.RunEphemeralAsync(tt.args.ctx, tt.args.hookID, tt.args.buildID, tt.args.tunnel, tt.args.test)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RunAllAsync() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -677,7 +675,7 @@ func TestAPITester_RunTestAsync(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: createTestRetryableHTTPClient(t),
+		HTTPClient: createTestRetryableHTTPClient(),
 		URL:        ts.URL,
 		Username:   "dummyUser",
 		AccessKey:  "dummyAccesKey",
@@ -747,7 +745,7 @@ func TestAPITester_RunTagAsync(t *testing.T) {
 	}))
 	defer ts.Close()
 	c := &APITester{
-		HTTPClient: createTestRetryableHTTPClient(t),
+		HTTPClient: createTestRetryableHTTPClient(),
 		URL:        ts.URL,
 		Username:   "dummyUser",
 		AccessKey:  "dummyAccesKey",

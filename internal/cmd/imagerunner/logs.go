@@ -22,13 +22,13 @@ func LogsCommand() *cobra.Command {
 		Use:          "logs <runID>",
 		Short:        "Fetch the logs for an imagerunner run",
 		SilenceUsage: true,
-		Args: func(cmd *cobra.Command, args []string) error {
+		Args: func(_ *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no run ID specified")
 			}
 			return nil
 		},
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			err := http.CheckProxy()
 			if err != nil {
 				return fmt.Errorf("invalid HTTP_PROXY value")
@@ -45,7 +45,7 @@ func LogsCommand() *cobra.Command {
 			}()
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			return exec(args[0], liveLogs)
 		},
 	}

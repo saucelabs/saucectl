@@ -102,7 +102,7 @@ func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartO
 	return jobOpts, results, nil
 }
 
-func (r *CloudRunner) collectResults(artifactCfg config.ArtifactDownload, results chan result, expected int) bool {
+func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 	// TODO find a better way to get the expected
 	completed := 0
 	inProgress := expected
@@ -813,13 +813,14 @@ func (r *CloudRunner) registerInterruptOnSignal(jobID string, realDevice bool, s
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 
-	go func(c <-chan os.Signal, jobID, suiteName string) {
-		sig := <-c
+	go func() {
+		sig := <-sigChan
 		if sig == nil {
 			return
 		}
 		r.stopSuiteExecution(jobID, realDevice, suiteName)
-	}(sigChan, jobID, suiteName)
+	}()
+
 	return sigChan
 }
 

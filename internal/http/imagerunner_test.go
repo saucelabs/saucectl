@@ -37,7 +37,7 @@ func TestImageRunner_GetArtifacts(t *testing.T) {
 				ctx: context.Background(),
 				id:  "run-id-1",
 			},
-			want: func(t assert.TestingT, i interface{}, input ...interface{}) bool {
+			want: func(_ assert.TestingT, i interface{}, _ ...interface{}) bool {
 				rd := i.(io.ReadCloser)
 				buf, err := io.ReadAll(rd)
 				if err != nil {
@@ -45,7 +45,7 @@ func TestImageRunner_GetArtifacts(t *testing.T) {
 				}
 				return string(buf) == "expected-run-1"
 			},
-			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+			wantErr: func(_ assert.TestingT, err error, _ ...interface{}) bool {
 				return err == nil
 			},
 		},

@@ -24,7 +24,7 @@ func GetCommand() *cobra.Command {
 Use [--project] to specify the project by its name or run without [--project] to choose from a list of projects.
 `,
 		SilenceUsage: true,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			err := http.CheckProxy()
 			if err != nil {
 				return fmt.Errorf("invalid HTTP_PROXY value")
@@ -41,7 +41,7 @@ Use [--project] to specify the project by its name or run without [--project] to
 			}()
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			vault, err := apitesterClient.GetVault(context.Background(), selectedProject.Hooks[0].Identifier)
 			if err != nil {
 				return err

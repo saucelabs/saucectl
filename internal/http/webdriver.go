@@ -106,7 +106,7 @@ func NewWebdriver(url string, creds iam.Credentials, timeout time.Duration) Webd
 				// the server side disconnect.
 				IdleConnTimeout: 3 * time.Minute,
 			},
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			CheckRedirect: func(_ *http.Request, via []*http.Request) error {
 				// Sauce can queue up Job start requests for up to 10 minutes and sends redirects in the meantime to
 				// keep the connection alive. A redirect is sent every 45 seconds.
 				// 10m / 45s requires a minimum of 14 redirects.

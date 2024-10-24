@@ -200,5 +200,5 @@ func (r *PlaywrightRunner) runSuites(app string, otherApps []string) bool {
 		}
 	}()
 
-	return r.collectResults(r.Project.Artifacts.Download, results, len(r.Project.Suites))
+	return r.collectResults(results, len(r.Project.Suites))
 }

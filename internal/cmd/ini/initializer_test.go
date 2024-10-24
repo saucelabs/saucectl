@@ -196,7 +196,7 @@ func TestAskDownloadWhen(t *testing.T) {
 			ini: &initializer{
 				cfg: &initConfig{},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.askDownloadWhen()
 			},
 			expectedState: &initConfig{artifactWhen: config.WhenFail},
@@ -208,7 +208,7 @@ func TestAskDownloadWhen(t *testing.T) {
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 				cfg:        &initConfig{},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.askDownloadWhen()
 			},
 			expectedState: &initConfig{artifactWhen: config.WhenPass},
@@ -220,7 +220,7 @@ func TestAskDownloadWhen(t *testing.T) {
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 				cfg:        &initConfig{},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.askDownloadWhen()
 			},
 			expectedState: &initConfig{artifactWhen: config.WhenAlways},
@@ -242,7 +242,7 @@ func TestAskDevice(t *testing.T) {
 			ini: &initializer{
 				cfg: &initConfig{},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.askDevice(devs)
 			},
 			expectedState: &initConfig{device: config.Device{Name: "Google Pixel 3"}},
@@ -254,7 +254,7 @@ func TestAskDevice(t *testing.T) {
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 				cfg:        &initConfig{},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.askDevice(devs)
 			},
 			expectedState: &initConfig{device: config.Device{Name: "Google Pixel 4"}},
@@ -301,7 +301,7 @@ func TestAskEmulator(t *testing.T) {
 			ini: &initializer{
 				cfg: &initConfig{},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.askEmulator(vmds)
 			},
 			expectedState: &initConfig{emulator: config.Emulator{Name: "Google Pixel 3 Emulator", PlatformVersions: []string{"9.0"}}},
@@ -335,7 +335,7 @@ func TestAskEmulator(t *testing.T) {
 				infoReader: &mocks.FakeFrameworkInfoReader{},
 				cfg:        &initConfig{},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.askEmulator(vmds)
 			},
 			expectedState: &initConfig{emulator: config.Emulator{Name: "Google Pixel 4 Emulator", PlatformVersions: []string{"7.0"}}},
@@ -413,7 +413,7 @@ func TestAskPlatform(t *testing.T) {
 					frameworkVersion: "1.5.0",
 				},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.askPlatform(metas)
 			},
 			expectedState: &initConfig{
@@ -454,7 +454,7 @@ func TestAskPlatform(t *testing.T) {
 					frameworkVersion: "1.5.0",
 				},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.askPlatform(metas)
 			},
 			expectedState: &initConfig{
@@ -528,7 +528,7 @@ func TestAskVersion(t *testing.T) {
 					frameworkName: testcafe.Kind,
 				},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.askVersion(metas)
 			},
 			expectedState: &initConfig{
@@ -563,7 +563,7 @@ func TestAskVersion(t *testing.T) {
 					frameworkName: testcafe.Kind,
 				},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.askVersion(metas)
 			},
 			expectedState: &initConfig{
@@ -666,15 +666,15 @@ func TestConfigure(t *testing.T) {
 		},
 	}
 	ir := &mocks.FakeFrameworkInfoReader{
-		VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
+		VersionsFn: func(context.Context, string) ([]framework.Metadata, error) {
 			return frameworkVersions, nil
 		},
-		FrameworksFn: func(ctx context.Context) ([]string, error) {
+		FrameworksFn: func(context.Context) ([]string, error) {
 			return []string{cypress.Kind, espresso.Kind}, nil
 		},
 	}
 	dr := &mocks.FakeDevicesReader{
-		GetDevicesFn: func(ctx context.Context, s string) ([]devices.Device, error) {
+		GetDevicesFn: func(context.Context, string) ([]devices.Device, error) {
 			return []devices.Device{
 				{Name: "Google Pixel 3"},
 				{Name: "Google Pixel 4"},
@@ -682,7 +682,7 @@ func TestConfigure(t *testing.T) {
 		},
 	}
 	er := &mocks.FakeEmulatorsReader{
-		GetVirtualDevicesFn: func(ctx context.Context, s string) ([]vmd.VirtualDevice, error) {
+		GetVirtualDevicesFn: func(context.Context, string) ([]vmd.VirtualDevice, error) {
 			return []vmd.VirtualDevice{
 				{Name: "Google Pixel Emulator", OSVersion: []string{"9.0", "8.0", "7.0"}},
 				{Name: "Samsung Galaxy Emulator", OSVersion: []string{"9.0", "8.0", "7.0"}},
@@ -756,7 +756,7 @@ func TestConfigure(t *testing.T) {
 					frameworkName: espresso.Kind,
 				},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.configure()
 			},
 			expectedState: &initConfig{
@@ -825,7 +825,7 @@ func TestConfigure(t *testing.T) {
 					frameworkName: cypress.Kind,
 				},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.configure()
 			},
 			expectedState: &initConfig{
@@ -875,7 +875,7 @@ func TestAskCredentials(t *testing.T) {
 			ini: &initializer{
 				cfg: &initConfig{},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				creds, err := askCredentials(i.stdio)
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
@@ -956,10 +956,10 @@ func Test_initializers(t *testing.T) {
 		},
 	}
 	ir := &mocks.FakeFrameworkInfoReader{
-		VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
+		VersionsFn: func(_ context.Context, frameworkName string) ([]framework.Metadata, error) {
 			return frameworkVersions[frameworkName], nil
 		},
-		FrameworksFn: func(ctx context.Context) ([]string, error) {
+		FrameworksFn: func(context.Context) ([]string, error) {
 			return []string{
 				cypress.Kind,
 				espresso.Kind,
@@ -972,7 +972,7 @@ func Test_initializers(t *testing.T) {
 	}
 
 	er := &mocks.FakeEmulatorsReader{
-		GetVirtualDevicesFn: func(ctx context.Context, s string) ([]vmd.VirtualDevice, error) {
+		GetVirtualDevicesFn: func(context.Context, string) ([]vmd.VirtualDevice, error) {
 			return []vmd.VirtualDevice{
 				{Name: "Google Pixel Emulator", OSVersion: []string{"9.0", "8.0", "7.0"}},
 				{Name: "Samsung Galaxy Emulator", OSVersion: []string{"9.0", "8.0", "7.0"}},
@@ -1036,7 +1036,7 @@ func Test_initializers(t *testing.T) {
 					frameworkName: cypress.Kind,
 				},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.initializeCypress()
 			},
 			expectedState: &initConfig{
@@ -1111,7 +1111,7 @@ func Test_initializers(t *testing.T) {
 					frameworkName: playwright.Kind,
 				},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.initializePlaywright()
 			},
 			expectedState: &initConfig{
@@ -1170,7 +1170,7 @@ func Test_initializers(t *testing.T) {
 					frameworkName: testcafe.Kind,
 				},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.initializeTestcafe()
 			},
 			expectedState: &initConfig{
@@ -1236,7 +1236,7 @@ func Test_initializers(t *testing.T) {
 					frameworkName: xcuitest.Kind,
 				},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.initializeXCUITest()
 			},
 			expectedState: &initConfig{
@@ -1302,7 +1302,7 @@ func Test_initializers(t *testing.T) {
 					frameworkName: xcuitest.Kind,
 				},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.initializeXCUITest()
 			},
 			expectedState: &initConfig{
@@ -1377,7 +1377,7 @@ func Test_initializers(t *testing.T) {
 					frameworkName: espresso.Kind,
 				},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.initializeEspresso()
 			},
 			expectedState: &initConfig{
@@ -1428,7 +1428,7 @@ func Test_initializers(t *testing.T) {
 					frameworkName: imagerunner.Kind,
 				},
 			},
-			execution: func(i *initializer, cfg *initConfig) error {
+			execution: func(i *initializer, _ *initConfig) error {
 				return i.initializeImageRunner()
 			},
 			expectedState: &initConfig{
@@ -1620,14 +1620,14 @@ func Test_checkCredentials(t *testing.T) {
 	}{
 		{
 			name: "Success",
-			frameworkFn: func(ctx context.Context) ([]string, error) {
+			frameworkFn: func(context.Context) ([]string, error) {
 				return []string{cypress.Kind}, nil
 			},
 			wantErr: nil,
 		},
 		{
 			name: "Invalid credentials",
-			frameworkFn: func(ctx context.Context) ([]string, error) {
+			frameworkFn: func(context.Context) ([]string, error) {
 				errMsg := "unexpected status '401' from test-composer: Unauthorized\n"
 				return []string{}, errors.New(errMsg)
 			},
@@ -1635,7 +1635,7 @@ func Test_checkCredentials(t *testing.T) {
 		},
 		{
 			name: "Other error",
-			frameworkFn: func(ctx context.Context) ([]string, error) {
+			frameworkFn: func(context.Context) ([]string, error) {
 				return []string{}, errors.New("other error")
 			},
 			wantErr: errors.New("other error"),
@@ -1943,7 +1943,7 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 	defer dir.Remove()
 
 	ini := &initializer{
-		infoReader: &mocks.FakeFrameworkInfoReader{VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
+		infoReader: &mocks.FakeFrameworkInfoReader{VersionsFn: func(context.Context, string) ([]framework.Metadata, error) {
 			return []framework.Metadata{
 				{
 					FrameworkName:    cypress.Kind,
@@ -1957,7 +1957,7 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 				},
 			}, nil
 		}},
-		userService: &mocks.UserService{ConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
+		userService: &mocks.UserService{ConcurrencyFn: func(context.Context) (iam.Concurrency, error) {
 			return iam.Concurrency{
 				Org: iam.OrgConcurrency{
 					Allowed: iam.CloudConcurrency{
@@ -2082,7 +2082,7 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 
 func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 	ini := &initializer{
-		infoReader: &mocks.FakeFrameworkInfoReader{VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
+		infoReader: &mocks.FakeFrameworkInfoReader{VersionsFn: func(context.Context, string) ([]framework.Metadata, error) {
 			return []framework.Metadata{
 				{
 					FrameworkName:    testcafe.Kind,
@@ -2100,7 +2100,7 @@ func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 				},
 			}, nil
 		}},
-		userService: &mocks.UserService{ConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
+		userService: &mocks.UserService{ConcurrencyFn: func(context.Context) (iam.Concurrency, error) {
 			return iam.Concurrency{
 				Org: iam.OrgConcurrency{
 					Allowed: iam.CloudConcurrency{
@@ -2218,7 +2218,7 @@ func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 
 func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 	ini := &initializer{
-		infoReader: &mocks.FakeFrameworkInfoReader{VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
+		infoReader: &mocks.FakeFrameworkInfoReader{VersionsFn: func(context.Context, string) ([]framework.Metadata, error) {
 			return []framework.Metadata{
 				{
 					FrameworkName:    playwright.Kind,
@@ -2232,7 +2232,7 @@ func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 				},
 			}, nil
 		}},
-		userService: &mocks.UserService{ConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
+		userService: &mocks.UserService{ConcurrencyFn: func(context.Context) (iam.Concurrency, error) {
 			return iam.Concurrency{
 				Org: iam.OrgConcurrency{
 					Allowed: iam.CloudConcurrency{
@@ -2658,7 +2658,7 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 
 func Test_initializer_initializeBatchImageRunner(t *testing.T) {
 	ini := &initializer{
-		infoReader: &mocks.FakeFrameworkInfoReader{VersionsFn: func(ctx context.Context, frameworkName string) ([]framework.Metadata, error) {
+		infoReader: &mocks.FakeFrameworkInfoReader{VersionsFn: func(context.Context, string) ([]framework.Metadata, error) {
 			return []framework.Metadata{
 				{
 					FrameworkName:    "imagerunner",
@@ -2666,7 +2666,7 @@ func Test_initializer_initializeBatchImageRunner(t *testing.T) {
 				},
 			}, nil
 		}},
-		userService: &mocks.UserService{ConcurrencyFn: func(ctx context.Context) (iam.Concurrency, error) {
+		userService: &mocks.UserService{ConcurrencyFn: func(context.Context) (iam.Concurrency, error) {
 			return iam.Concurrency{
 				Org: iam.OrgConcurrency{
 					Allowed: iam.CloudConcurrency{

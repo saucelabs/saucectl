@@ -23,7 +23,7 @@ func Command() *cobra.Command {
 		Long:         runLong,
 		Example:      runExample,
 		SilenceUsage: true,
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			log.Info().Msg("Start Signup Command")
 			err := Run()
 			if err != nil {

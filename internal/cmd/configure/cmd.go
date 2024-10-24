@@ -33,7 +33,7 @@ func Command() *cobra.Command {
 		Long:         configureLong,
 		Example:      configureExample,
 		SilenceUsage: true,
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			tracker := segment.DefaultTracker
 
 			go func() {

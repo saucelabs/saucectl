@@ -289,7 +289,7 @@ func (c *APITester) RunAllAsync(ctx context.Context, hookID string, buildID stri
 }
 
 // RunEphemeralAsync runs the tests for the project described by hookID and returns without waiting for their results.
-func (c *APITester) RunEphemeralAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, taskID string, test apitest.TestRequest) (apitest.AsyncResponse, error) {
+func (c *APITester) RunEphemeralAsync(ctx context.Context, hookID string, buildID string, tunnel config.Tunnel, test apitest.TestRequest) (apitest.AsyncResponse, error) {
 	url := c.composeURL(fmt.Sprintf("/api-testing/rest/v4/%s/tests/_exec", hookID), buildID, "", tunnel, "")
 
 	payload, err := json.Marshal(test)

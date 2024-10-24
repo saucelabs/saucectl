@@ -43,7 +43,7 @@ func NewCypressCmd() *cobra.Command {
 		SilenceUsage:     true,
 		Hidden:           true, // TODO reveal command once ready
 		TraverseChildren: true,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(_ *cobra.Command, _ []string) error {
 			sc.BindAll()
 			return preRun()
 		},
@@ -183,8 +183,11 @@ func runCypress(cmd *cobra.Command, cflags cypressFlags, isCLIDriven bool) (int,
 			BuildService:    &restoClient,
 			Region:          regio,
 			ShowConsoleLog:  p.IsShowConsoleLog(),
-			Reporters: createReporters(p.GetReporters(), p.GetNotifications(), p.GetSauceCfg().Metadata, &testcompClient, &restoClient,
-				"cypress", "sauce", gFlags.async),
+			Reporters: createReporters(
+				p.GetReporters(), p.GetNotifications(),
+				p.GetSauceCfg().Metadata, &testcompClient,
+				"cypress", "sauce", gFlags.async,
+			),
 			Async:                  gFlags.async,
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.NewSearchStrategy(p.GetVersion(), p.GetRootDir()),

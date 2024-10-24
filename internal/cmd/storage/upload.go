@@ -27,14 +27,14 @@ func UploadCommand() *cobra.Command {
 		Short: "Uploads an app file to Sauce Storage and returns a unique file ID assigned to the app. " +
 			"Sauce Storage supports app files in *.apk, *.aab, *.ipa, or *.zip format.",
 		SilenceUsage: true,
-		Args: func(cmd *cobra.Command, args []string) error {
+		Args: func(_ *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no filename specified")
 			}
 
 			return nil
 		},
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRun: func(cmd *cobra.Command, _ []string) {
 			tracker := segment.DefaultTracker
 
 			go func() {
@@ -45,7 +45,7 @@ func UploadCommand() *cobra.Command {
 				_ = tracker.Close()
 			}()
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			file, err := os.Open(args[0])
 			if err != nil {
 				return fmt.Errorf("failed to open file: %w", err)

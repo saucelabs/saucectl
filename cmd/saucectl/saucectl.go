@@ -53,7 +53,7 @@ func main() {
 	noColor := cmd.PersistentFlags().Bool("no-color", false, "disable colorized output")
 	noTracking := cmd.PersistentFlags().Bool("disable-usage-metrics", false, "Disable usage metrics collection.")
 
-	cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+	cmd.PersistentPreRun = func(_ *cobra.Command, _ []string) {
 		setupLogging(*verbosity, *noColor)
 		segment.DefaultTracker.Enabled = !*noTracking
 	}

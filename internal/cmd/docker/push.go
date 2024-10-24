@@ -32,14 +32,14 @@ func PushCommand() *cobra.Command {
 		Use:          "push <image_name>",
 		Short:        "Push a Docker image to the Sauce Labs Container Registry.",
 		SilenceUsage: true,
-		Args: func(cmd *cobra.Command, args []string) error {
+		Args: func(_ *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no docker image specified")
 			}
 
 			return nil
 		},
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRun: func(cmd *cobra.Command, _ []string) {
 			tracker := segment.DefaultTracker
 
 			go func() {
@@ -50,7 +50,7 @@ func PushCommand() *cobra.Command {
 				_ = tracker.Close()
 			}()
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			image := args[0]
 			auth, err := imageRunnerService.RegistryLogin(context.Background(), image)
 			if err != nil {

@@ -87,7 +87,7 @@ var (
 	NewConstraint   = semver.NewConstraint
 )
 
-func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, frameworkName string, frameworkVersion string) (Metadata, error) {
+func (s PackageStrategy) Find(ctx context.Context, svc MetadataService, frameworkName string, _ string) (Metadata, error) {
 	p, err := PackageFromFile(s.packageJSONFilePath)
 
 	if err != nil {

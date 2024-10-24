@@ -19,13 +19,13 @@ func StopCommand() *cobra.Command {
 		Use:          "stop <runID>",
 		Short:        "Stop the running container",
 		SilenceUsage: true,
-		Args: func(cmd *cobra.Command, args []string) error {
+		Args: func(_ *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no run ID specified")
 			}
 			return nil
 		},
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			err := http.CheckProxy()
 			if err != nil {
 				return fmt.Errorf("invalid HTTP_PROXY value")
@@ -42,7 +42,7 @@ func StopCommand() *cobra.Command {
 			}()
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			ID := args[0]
 			fmt.Printf("Stopping container %s...\n", ID)
 			if err := imagerunnerClient.StopRun(context.Background(), ID); err != nil {

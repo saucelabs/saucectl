@@ -342,7 +342,7 @@ func Unmarshal(cfgPath string, project interface{}) error {
 		decodeCfg.DecodeHook = mapstructure.ComposeDecodeHookFunc(
 			mapstructure.StringToTimeDurationHookFunc(),
 			mapstructure.StringToSliceHookFunc(","),
-			func(in reflect.Kind, out reflect.Kind, v interface{}) (interface{}, error) {
+			func(_ reflect.Kind, _ reflect.Kind, v interface{}) (interface{}, error) {
 				return expandEnv(v), nil
 			},
 		)

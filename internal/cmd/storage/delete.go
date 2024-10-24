@@ -17,14 +17,14 @@ func DeleteCommand() *cobra.Command {
 		Use:          "delete <fileID>",
 		Short:        "Delete a file from Sauce Storage.",
 		SilenceUsage: true,
-		Args: func(cmd *cobra.Command, args []string) error {
+		Args: func(_ *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no ID specified")
 			}
 
 			return nil
 		},
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRun: func(cmd *cobra.Command, _ []string) {
 			tracker := segment.DefaultTracker
 
 			go func() {
@@ -35,7 +35,7 @@ func DeleteCommand() *cobra.Command {
 				_ = tracker.Close()
 			}()
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			if err := appsClient.Delete(args[0]); err != nil {
 				return fmt.Errorf("failed to delete file: %v", err)
 			}

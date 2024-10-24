@@ -22,13 +22,13 @@ func GetCommand() *cobra.Command {
 		Use:          "get",
 		Short:        "Get job by id",
 		SilenceUsage: true,
-		Args: func(cmd *cobra.Command, args []string) error {
+		Args: func(_ *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" {
 				return errors.New("no job ID specified")
 			}
 			return nil
 		},
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRun: func(cmd *cobra.Command, _ []string) {
 			tracker := segment.DefaultTracker
 
 			go func() {
@@ -39,7 +39,7 @@ func GetCommand() *cobra.Command {
 				_ = tracker.Close()
 			}()
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			if out != JSONOutput && out != TextOutput {
 				return errors.New("unknown output format")
 			}

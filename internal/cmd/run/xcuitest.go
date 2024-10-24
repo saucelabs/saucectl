@@ -43,11 +43,11 @@ func NewXCUITestCmd() *cobra.Command {
 		SilenceUsage:     true,
 		Hidden:           true, // TODO reveal command once ready
 		TraverseChildren: true,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(_ *cobra.Command, _ []string) error {
 			sc.BindAll()
 			return preRun()
 		},
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, _ []string) {
 			exitCode, err := runXcuitest(cmd, lflags, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
@@ -170,8 +170,10 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
 			BuildService:    &restoClient,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
-			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
-				"xcuitest", "sauce", gFlags.async),
+			Reporters: createReporters(
+				p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient,
+				"xcuitest", "sauce", gFlags.async,
+			),
 			Framework: framework.Framework{Name: xcuitest.Kind},
 			Async:     gFlags.async,
 			FailFast:  gFlags.failFast,

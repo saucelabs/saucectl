@@ -26,7 +26,7 @@ func PlaywrightCmd() *cobra.Command {
 		Use:          "playwright",
 		Short:        "Bootstrap a Playwright project.",
 		SilenceUsage: true,
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, _ []string) {
 			tracker := segment.DefaultTracker
 
 			go func() {

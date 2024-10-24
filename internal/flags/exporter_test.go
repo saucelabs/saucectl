@@ -13,7 +13,7 @@ type mockedValue struct {
 	contentType string
 }
 
-func (m *mockedValue) Set(s string) error {
+func (m *mockedValue) Set(string) error {
 	return nil
 }
 

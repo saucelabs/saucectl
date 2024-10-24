@@ -109,7 +109,7 @@ func (c *TestComposer) doJSONResponse(req *retryablehttp.Request, expectStatus i
 }
 
 // UploadAsset uploads an asset to the specified jobID.
-func (c *TestComposer) UploadAsset(jobID string, realDevice bool, fileName string, contentType string, content []byte) error {
+func (c *TestComposer) UploadAsset(jobID string, _ bool, fileName string, contentType string, content []byte) error {
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
 	h := make(textproto.MIMEHeader)

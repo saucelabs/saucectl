@@ -17,26 +17,26 @@ import (
 type StubProjectUploader struct {
 }
 
-func (f *StubProjectUploader) UploadStream(filename, description string, reader io.Reader) (storage.Item, error) {
+func (f *StubProjectUploader) UploadStream(_, _ string, _ io.Reader) (storage.Item, error) {
 	return storage.Item{
 		ID:   "fakeid",
 		Name: "fake name",
 	}, nil
 }
 
-func (f *StubProjectUploader) Download(id string) (io.ReadCloser, int64, error) {
+func (f *StubProjectUploader) Download(string) (io.ReadCloser, int64, error) {
 	return nil, 0, nil
 }
 
-func (f *StubProjectUploader) DownloadURL(url string) (io.ReadCloser, int64, error) {
+func (f *StubProjectUploader) DownloadURL(string) (io.ReadCloser, int64, error) {
 	return nil, 0, nil
 }
 
-func (f *StubProjectUploader) List(opts storage.ListOptions) (storage.List, error) {
+func (f *StubProjectUploader) List(storage.ListOptions) (storage.List, error) {
 	return storage.List{}, nil
 }
 
-func (f *StubProjectUploader) Delete(id string) error {
+func (f *StubProjectUploader) Delete(string) error {
 	return nil
 }
 
@@ -44,19 +44,19 @@ type StubVDCJobReader struct {
 	SauceReport saucereport.SauceReport
 }
 
-func (f *StubVDCJobReader) ReadJob(ctx context.Context, id string, realDevice bool) (job.Job, error) {
+func (f *StubVDCJobReader) ReadJob(context.Context, string, bool) (job.Job, error) {
 	return job.Job{}, nil
 }
 
-func (f *StubVDCJobReader) PollJob(ctx context.Context, id string, interval, timeout time.Duration, realDevice bool) (job.Job, error) {
+func (f *StubVDCJobReader) PollJob(_ context.Context, _ string, _, _ time.Duration, _ bool) (job.Job, error) {
 	return job.Job{}, nil
 }
 
-func (f *StubVDCJobReader) GetJobAssetFileNames(ctx context.Context, jobID string, realDevice bool) ([]string, error) {
+func (f *StubVDCJobReader) GetJobAssetFileNames(context.Context, string, bool) ([]string, error) {
 	return []string{}, nil
 }
 
-func (f *StubVDCJobReader) GetJobAssetFileContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
+func (f *StubVDCJobReader) GetJobAssetFileContent(_ context.Context, _, _ string, _ bool) ([]byte, error) {
 	body, _ := json.Marshal(f.SauceReport)
 	return []byte(body), nil
 }
@@ -64,7 +64,7 @@ func (f *StubVDCJobReader) GetJobAssetFileContent(ctx context.Context, jobID, fi
 type StubProject struct {
 }
 
-func (p *StubProject) FilterFailedTests(name string, report saucereport.SauceReport) error {
+func (p *StubProject) FilterFailedTests(string, saucereport.SauceReport) error {
 	return nil
 }
 

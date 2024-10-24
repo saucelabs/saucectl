@@ -44,7 +44,7 @@ func NewPlaywrightCmd() *cobra.Command {
 		SilenceUsage:     true,
 		Hidden:           true, // TODO reveal command once ready
 		TraverseChildren: true,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(_ *cobra.Command, _ []string) error {
 			sc.BindAll()
 			return preRun()
 		},
@@ -194,8 +194,10 @@ func runPlaywright(cmd *cobra.Command, pf playwrightFlags, isCLIDriven bool) (in
 			BuildService:    &restoClient,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
-			Reporters: createReporters(p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient, &restoClient,
-				"playwright", "sauce", gFlags.async),
+			Reporters: createReporters(
+				p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient,
+				"playwright", "sauce", gFlags.async,
+			),
 			Async:                  gFlags.async,
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.NewSearchStrategy(p.Playwright.Version, p.RootDir),
