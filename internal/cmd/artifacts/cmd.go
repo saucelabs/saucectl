@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/artifacts"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -14,7 +13,7 @@ import (
 )
 
 var (
-	artifactSvc         artifacts.Service
+	artifactSvc         ArtifactService
 	rdcTimeout          = 1 * time.Minute
 	restoTimeout        = 1 * time.Minute
 	testComposerTimeout = 1 * time.Minute
@@ -43,11 +42,20 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 
 			creds := credentials.Get()
 			url := reg.APIBaseURL()
-			restoClient := http.NewResto(url, creds.Username, creds.AccessKey, restoTimeout)
-			rdcClient := http.NewRDCService(url, creds.Username, creds.AccessKey, rdcTimeout)
-			testcompClient := http.NewTestComposer(url, creds, testComposerTimeout)
 
-			artifactSvc = saucecloud.NewArtifactService(&restoClient, &rdcClient, &testcompClient)
+			artifactSvc = ArtifactService{
+				JobService: saucecloud.JobService{
+					Resto: http.NewResto(
+						url, creds.Username, creds.AccessKey, restoTimeout,
+					),
+					RDC: http.NewRDCService(
+						url, creds.Username, creds.AccessKey, rdcTimeout,
+					),
+					TestComposer: http.NewTestComposer(
+						url, creds, testComposerTimeout,
+					),
+				},
+			}
 
 			return nil
 		},
