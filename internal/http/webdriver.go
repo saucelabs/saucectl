@@ -123,7 +123,7 @@ func NewWebdriver(url string, creds iam.Credentials, timeout time.Duration) Webd
 }
 
 // StartJob creates a new job in Sauce Labs.
-func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
 	url := fmt.Sprintf("%s/wd/hub/session", c.URL)
 
 	caps := Capabilities{AlwaysMatch: MatchingCaps{
@@ -193,15 +193,15 @@ func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 
 	var sessionStart sessionStartResponse
 	if err = json.Unmarshal(body, &sessionStart); err != nil {
-		return "", false, fmt.Errorf("job start failed (%d): %s", resp.StatusCode, body)
+		return "", fmt.Errorf("job start failed (%d): %s", resp.StatusCode, body)
 	}
 
 	if sessionStart.SessionID == "" {
 		err = fmt.Errorf("job start failed (%d): %s", resp.StatusCode, sessionStart.Value.Message)
-		return "", false, err
+		return "", err
 	}
 
-	return sessionStart.SessionID, false, nil
+	return sessionStart.SessionID, nil
 }
 
 func formatEnv(e map[string]string) []env {

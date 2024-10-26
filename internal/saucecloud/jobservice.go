@@ -110,7 +110,7 @@ func (s JobService) GetJobAssetFileContent(ctx context.Context, jobID, fileName 
 	return s.Resto.GetJobAssetFileContent(ctx, jobID, fileName, realDevice)
 }
 
-func (s JobService) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+func (s JobService) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
 	if opts.RealDevice {
 		return s.RDC.StartJob(ctx, opts)
 	}
