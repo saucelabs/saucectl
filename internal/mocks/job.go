@@ -7,16 +7,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 )
 
-// FakeJobStarter resto mock
-type FakeJobStarter struct {
-	StartJobFn func(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error)
-}
-
-// StartJob mock function
-func (fjs *FakeJobStarter) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
-	return fjs.StartJobFn(ctx, opts)
-}
-
 // FakeJobReader resto mock
 type FakeJobReader struct {
 	ReadJobFn                func(ctx context.Context, id string) (job.Job, error)
@@ -43,24 +33,4 @@ func (fjr *FakeJobReader) GetJobAssetFileContent(ctx context.Context, jobID, fil
 // GetJobAssetFileNames mock function
 func (fjr *FakeJobReader) GetJobAssetFileNames(ctx context.Context, jobID string, _ bool) ([]string, error) {
 	return fjr.GetJobAssetFileNamesFn(ctx, jobID)
-}
-
-// FakeJobStopper resto mock
-type FakeJobStopper struct {
-	StopJobFn func(ctx context.Context, jobID string) (job.Job, error)
-}
-
-// StopJob mock function
-func (fjs *FakeJobStopper) StopJob(ctx context.Context, jobID string, _ bool) (job.Job, error) {
-	return fjs.StopJobFn(ctx, jobID)
-}
-
-// FakeJobWriter resto mock
-type FakeJobWriter struct {
-	UploadAssetFn func(jobID string, fileName string, contentType string, content []byte) error
-}
-
-// UploadAsset mock function
-func (fjw *FakeJobWriter) UploadAsset(jobID string, _ bool, fileName string, contentType string, content []byte) error {
-	return fjw.UploadAssetFn(jobID, fileName, contentType, content)
 }

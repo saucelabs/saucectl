@@ -8,7 +8,6 @@ import (
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
-	"github.com/saucelabs/saucectl/internal/artifacts"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/segment"
@@ -55,6 +54,12 @@ var defaultTableStyle = table.Style{
 		SeparateRows:    false,
 	},
 	Title: table.TitleOptionsDefault,
+}
+
+// List represents artifact structure
+type List struct {
+	JobID string   `json:"jobID"`
+	Items []string `json:"items"`
 }
 
 func ListCommand() *cobra.Command {
@@ -121,7 +126,7 @@ func list(jobID, outputFormat string) error {
 	return nil
 }
 
-func renderTable(lst artifacts.List) {
+func renderTable(lst List) {
 	if len(lst.Items) == 0 {
 		println("No artifacts for this job.")
 		return

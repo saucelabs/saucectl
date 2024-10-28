@@ -122,5 +122,5 @@ type SmartRetry struct {
 
 // Starter is the interface for starting jobs.
 type Starter interface {
-	StartJob(ctx context.Context, opts StartOptions) (jobID string, isRDC bool, err error)
+	StartJob(ctx context.Context, opts StartOptions) (jobID string, err error)
 }

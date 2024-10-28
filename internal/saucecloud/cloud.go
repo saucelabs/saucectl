@@ -234,7 +234,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 		Str("tunnel", opts.Tunnel.Name).
 		Msg("Starting suite.")
 
-	id, _, err := r.JobService.StartJob(context.Background(), opts)
+	id, err := r.JobService.StartJob(context.Background(), opts)
 	if err != nil {
 		return job.Job{Status: job.StateError}, false, err
 	}

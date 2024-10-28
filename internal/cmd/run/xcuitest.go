@@ -18,7 +18,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
-	"github.com/saucelabs/saucectl/internal/saucecloud/downloader"
 	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
@@ -146,22 +145,16 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
 	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
 	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
 
-	vdcDownloader := downloader.NewArtifactDownloader(&restoClient, p.Artifacts.Download)
-	rdcDownloader := downloader.NewArtifactDownloader(&rdcClient, p.Artifacts.Download)
 	r := saucecloud.XcuitestRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader: &appsClient,
 			JobService: saucecloud.JobService{
-				VDCStarter:    &webdriverClient,
-				RDCStarter:    &rdcClient,
-				VDCReader:     &restoClient,
-				RDCReader:     &rdcClient,
-				VDCWriter:     &testcompClient,
-				VDCStopper:    &restoClient,
-				RDCStopper:    &rdcClient,
-				VDCDownloader: &vdcDownloader,
-				RDCDownloader: &rdcDownloader,
+				RDC:                    rdcClient,
+				Resto:                  restoClient,
+				Webdriver:              webdriverClient,
+				TestComposer:           testcompClient,
+				ArtifactDownloadConfig: p.Artifacts.Download,
 			},
 			TunnelService:   &restoClient,
 			MetadataService: &testcompClient,

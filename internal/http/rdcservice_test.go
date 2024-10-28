@@ -505,7 +505,7 @@ func TestRDCService_StartJob(t *testing.T) {
 				URL:    server.URL,
 			}
 
-			got, _, err := c.StartJob(tt.args.ctx, tt.args.jobStarterPayload)
+			got, err := c.StartJob(tt.args.ctx, tt.args.jobStarterPayload)
 			if (err != nil) && !reflect.DeepEqual(err, tt.wantErr) {
 				t.Errorf("StartJob() error = %v, wantErr %v", err, tt.wantErr)
 				return

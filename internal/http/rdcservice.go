@@ -93,7 +93,7 @@ func NewRDCService(url, username, accessKey string, timeout time.Duration) RDCSe
 }
 
 // StartJob creates a new job in Sauce Labs.
-func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
 	url := fmt.Sprintf("%s/v1/rdc/native-composer/tests", c.URL)
 
 	var frameworkName string
@@ -153,7 +153,7 @@ func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (jobID
 
 	if resp.StatusCode >= 300 {
 		err = fmt.Errorf("job start failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, strings.TrimSpace(string(body)))
-		return "", true, err
+		return "", err
 	}
 
 	var sessionStart struct {
@@ -162,10 +162,10 @@ func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (jobID
 		} `json:"test_report"`
 	}
 	if err = json.Unmarshal(body, &sessionStart); err != nil {
-		return "", true, fmt.Errorf("job start status unknown: unable to parse server response: %w", err)
+		return "", fmt.Errorf("job start status unknown: unable to parse server response: %w", err)
 	}
 
-	return sessionStart.TestReport.ID, true, nil
+	return sessionStart.TestReport.ID, nil
 }
 
 func (c *RDCService) StopJob(ctx context.Context, id string, realDevice bool) (job.Job, error) {

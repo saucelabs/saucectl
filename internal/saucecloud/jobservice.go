@@ -2,41 +2,72 @@ package saucecloud
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"time"
 
+	"github.com/rs/zerolog/log"
+	"github.com/saucelabs/saucectl/internal/config"
+	"github.com/saucelabs/saucectl/internal/fpath"
+	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/job"
 )
 
 type JobService struct {
-	VDCStarter job.Starter
-	RDCStarter job.Starter
+	RDC          http.RDCService
+	Resto        http.Resto
+	Webdriver    http.Webdriver
+	TestComposer http.TestComposer
 
-	VDCReader job.Reader
-	RDCReader job.Reader
-
-	VDCWriter job.Writer
-
-	VDCStopper job.Stopper
-	RDCStopper job.Stopper
-
-	VDCDownloader job.ArtifactDownloader
-	RDCDownloader job.ArtifactDownloader
+	ArtifactDownloadConfig config.ArtifactDownload
 }
 
-func (s JobService) DownloadArtifact(jobData job.Job, isLastAttempt bool) []string {
-	if jobData.IsRDC {
-		return s.RDCDownloader.DownloadArtifact(jobData, isLastAttempt)
+func (s JobService) DownloadArtifact(
+	jobData job.Job, isLastAttempt bool,
+) []string {
+	if s.skipDownload(jobData, isLastAttempt) {
+		return []string{}
 	}
 
-	return s.VDCDownloader.DownloadArtifact(jobData, isLastAttempt)
+	destDir, err := config.GetSuiteArtifactFolder(
+		jobData.Name, s.ArtifactDownloadConfig,
+	)
+	if err != nil {
+		log.Error().Msgf("Unable to create artifacts folder (%v)", err)
+		return []string{}
+	}
+
+	files, err := s.GetJobAssetFileNames(
+		context.Background(), jobData.ID, jobData.IsRDC,
+	)
+	if err != nil {
+		log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
+		return []string{}
+	}
+
+	filepaths := fpath.MatchFiles(files, s.ArtifactDownloadConfig.Match)
+	var artifacts []string
+
+	for _, f := range filepaths {
+		targetFile, err := s.downloadArtifact(
+			destDir, jobData.ID, f, jobData.IsRDC,
+		)
+		if err != nil {
+			log.Err(err).Msg("Unable to download artifacts")
+			return artifacts
+		}
+		artifacts = append(artifacts, targetFile)
+	}
+
+	return artifacts
 }
 
 func (s JobService) StopJob(ctx context.Context, jobID string, realDevice bool) (job.Job, error) {
 	if realDevice {
-		return s.RDCStopper.StopJob(ctx, jobID, realDevice)
+		return s.RDC.StopJob(ctx, jobID, realDevice)
 	}
 
-	return s.VDCStopper.StopJob(ctx, jobID, realDevice)
+	return s.Resto.StopJob(ctx, jobID, realDevice)
 }
 
 func (s JobService) UploadAsset(jobID string, realDevice bool, fileName string, contentType string, content []byte) error {
@@ -44,45 +75,65 @@ func (s JobService) UploadAsset(jobID string, realDevice bool, fileName string, 
 		return nil
 	}
 
-	return s.VDCWriter.UploadAsset(jobID, realDevice, fileName, contentType, content)
+	return s.TestComposer.UploadAsset(jobID, realDevice, fileName, contentType, content)
 }
 
 func (s JobService) ReadJob(ctx context.Context, id string, realDevice bool) (job.Job, error) {
 	if realDevice {
-		return s.RDCReader.ReadJob(ctx, id, realDevice)
+		return s.RDC.ReadJob(ctx, id, realDevice)
 	}
 
-	return s.VDCReader.ReadJob(ctx, id, realDevice)
+	return s.Resto.ReadJob(ctx, id, realDevice)
 }
 
 func (s JobService) PollJob(ctx context.Context, id string, interval, timeout time.Duration, realDevice bool) (job.Job, error) {
 	if realDevice {
-		return s.RDCReader.PollJob(ctx, id, interval, timeout, realDevice)
+		return s.RDC.PollJob(ctx, id, interval, timeout, realDevice)
 	}
 
-	return s.VDCReader.PollJob(ctx, id, interval, timeout, realDevice)
+	return s.Resto.PollJob(ctx, id, interval, timeout, realDevice)
 }
 
 func (s JobService) GetJobAssetFileNames(ctx context.Context, jobID string, realDevice bool) ([]string, error) {
 	if realDevice {
-		return s.RDCReader.GetJobAssetFileNames(ctx, jobID, realDevice)
+		return s.RDC.GetJobAssetFileNames(ctx, jobID, realDevice)
 	}
 
-	return s.VDCReader.GetJobAssetFileNames(ctx, jobID, realDevice)
+	return s.Resto.GetJobAssetFileNames(ctx, jobID, realDevice)
 }
 
 func (s JobService) GetJobAssetFileContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
 	if realDevice {
-		return s.RDCReader.GetJobAssetFileContent(ctx, jobID, fileName, realDevice)
+		return s.RDC.GetJobAssetFileContent(ctx, jobID, fileName, realDevice)
 	}
 
-	return s.VDCReader.GetJobAssetFileContent(ctx, jobID, fileName, realDevice)
+	return s.Resto.GetJobAssetFileContent(ctx, jobID, fileName, realDevice)
 }
 
-func (s JobService) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, isRDC bool, err error) {
+func (s JobService) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
 	if opts.RealDevice {
-		return s.RDCStarter.StartJob(ctx, opts)
+		return s.RDC.StartJob(ctx, opts)
 	}
 
-	return s.VDCStarter.StartJob(ctx, opts)
+	return s.Webdriver.StartJob(ctx, opts)
+}
+
+func (s JobService) downloadArtifact(
+	targetDir, jobID, fileName string, realDevice bool,
+) (string, error) {
+	content, err := s.GetJobAssetFileContent(
+		context.Background(), jobID, fileName, realDevice,
+	)
+	if err != nil {
+		return "", err
+	}
+	targetFile := filepath.Join(targetDir, fileName)
+	return targetFile, os.WriteFile(targetFile, content, 0644)
+}
+
+func (s JobService) skipDownload(jobData job.Job, isLastAttempt bool) bool {
+	return jobData.ID == "" ||
+		jobData.TimedOut || !job.Done(jobData.Status) ||
+		!s.ArtifactDownloadConfig.When.IsNow(jobData.Passed) ||
+		(!isLastAttempt && !s.ArtifactDownloadConfig.AllAttempts)
 }

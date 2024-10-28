@@ -21,7 +21,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
-	"github.com/saucelabs/saucectl/internal/saucecloud/downloader"
 	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
@@ -159,22 +158,17 @@ func runCypress(cmd *cobra.Command, cflags cypressFlags, isCLIDriven bool) (int,
 	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
 	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
 
-	vdcDownloader := downloader.NewArtifactDownloader(&restoClient, p.GetArtifactsCfg().Download)
-
 	log.Info().Msg("Running Cypress in Sauce Labs")
 	r := saucecloud.CypressRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader: &appsClient,
 			JobService: saucecloud.JobService{
-				VDCStarter:    &webdriverClient,
-				RDCStarter:    &rdcClient,
-				VDCReader:     &restoClient,
-				RDCReader:     &rdcClient,
-				VDCWriter:     &testcompClient,
-				VDCStopper:    &restoClient,
-				RDCStopper:    &rdcClient,
-				VDCDownloader: &vdcDownloader,
+				RDC:                    rdcClient,
+				Resto:                  restoClient,
+				Webdriver:              webdriverClient,
+				TestComposer:           testcompClient,
+				ArtifactDownloadConfig: p.GetArtifactsCfg().Download,
 			},
 			MetadataService: &testcompClient,
 			TunnelService:   &restoClient,

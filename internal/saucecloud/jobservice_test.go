@@ -1,4 +1,4 @@
-package downloader
+package saucecloud
 
 import (
 	"net/http"
@@ -14,7 +14,7 @@ import (
 	"gotest.tools/v3/assert"
 )
 
-func TestArtifactDownloader_DownloadArtifact(t *testing.T) {
+func TestJobService_DownloadArtifact(t *testing.T) {
 	fileContent := "<xml>junit.xml</xml>"
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
@@ -47,7 +47,10 @@ func TestArtifactDownloader_DownloadArtifact(t *testing.T) {
 		Match:     []string{"junit.xml"},
 		When:      config.WhenAlways,
 	}
-	downloader := NewArtifactDownloader(&rc, artifactCfg)
+	downloader := JobService{
+		RDC:                    rc,
+		ArtifactDownloadConfig: artifactCfg,
+	}
 	downloader.DownloadArtifact(
 		job.Job{
 			ID:     "test-123",
@@ -68,7 +71,7 @@ func TestArtifactDownloader_DownloadArtifact(t *testing.T) {
 	}
 }
 
-func TestSkipDownload(t *testing.T) {
+func TestJobService_skipDownload(t *testing.T) {
 	testcases := []struct {
 		name          string
 		config        config.ArtifactDownload
@@ -129,7 +132,9 @@ func TestSkipDownload(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			downloader := &ArtifactDownloader{config: tc.config}
+			downloader := &JobService{
+				ArtifactDownloadConfig: tc.config,
+			}
 			got := downloader.skipDownload(tc.jobData, tc.isLastAttempt)
 			assert.Equal(t, tc.expResult, got)
 		})
