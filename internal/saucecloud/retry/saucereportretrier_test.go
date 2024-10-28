@@ -62,7 +62,7 @@ func (f *JobServiceStub) StopJob(context.Context, string, bool) (
 	panic("implement me")
 }
 
-func (f *JobServiceStub) DownloadArtifact(job.Job, bool) []string {
+func (f *JobServiceStub) DownloadArtifacts(job.Job, bool) []string {
 	panic("implement me")
 }
 

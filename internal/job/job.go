@@ -106,5 +106,5 @@ type Service interface {
 
 	StopJob(ctx context.Context, jobID string, realDevice bool) (Job, error)
 
-	DownloadArtifact(job Job, isLastAttempt bool) []string
+	DownloadArtifacts(job Job, isLastAttempt bool) []string
 }

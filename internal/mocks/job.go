@@ -53,7 +53,7 @@ func (s *FakeJobService) StopJob(
 	return s.StopJobFn(ctx, jobID, realDevice)
 }
 
-func (s *FakeJobService) DownloadArtifact(
+func (s *FakeJobService) DownloadArtifacts(
 	job job.Job, isLastAttempt bool,
 ) []string {
 	return s.DownloadArtifactFn(job, isLastAttempt)

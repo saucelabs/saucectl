@@ -22,7 +22,7 @@ type JobService struct {
 	ArtifactDownloadConfig config.ArtifactDownload
 }
 
-func (s JobService) DownloadArtifact(
+func (s JobService) DownloadArtifacts(
 	jobData job.Job, isLastAttempt bool,
 ) []string {
 	if s.skipDownload(jobData, isLastAttempt) {

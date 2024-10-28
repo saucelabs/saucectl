@@ -51,7 +51,7 @@ func TestJobService_DownloadArtifact(t *testing.T) {
 		RDC:                    rc,
 		ArtifactDownloadConfig: artifactCfg,
 	}
-	downloader.DownloadArtifact(
+	downloader.DownloadArtifacts(
 		job.Job{
 			ID:     "test-123",
 			Name:   "suite name",
