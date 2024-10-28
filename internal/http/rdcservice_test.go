@@ -78,7 +78,7 @@ func TestRDCService_ReadJob(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		j, err := client.ReadJob(context.Background(), tt.jobID, true)
+		j, err := client.Job(context.Background(), tt.jobID, true)
 		assert.Equal(t, err, tt.wantErr)
 		if err == nil {
 			assert.Equal(t, tt.want, j)
@@ -274,7 +274,7 @@ func TestRDCService_GetJobAssetFileNames(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			files, err := client.GetJobAssetFileNames(context.Background(), tt.jobID, true)
+			files, err := client.ArtifactNames(context.Background(), tt.jobID, true)
 			if err != nil {
 				if !reflect.DeepEqual(err, tt.wantErr) {
 					t.Errorf("ArtifactNames(): got: %v, want: %v", err, tt.wantErr)
@@ -344,7 +344,7 @@ func TestRDCService_GetJobAssetFileContent(t *testing.T) {
 		},
 	}
 	for _, tt := range testCases {
-		data, err := client.GetJobAssetFileContent(context.Background(), tt.jobID, tt.fileName, true)
+		data, err := client.Artifact(context.Background(), tt.jobID, tt.fileName, true)
 		assert.Equal(t, err, tt.wantErr)
 		if err == nil {
 			assert.Equal(t, tt.want, data)

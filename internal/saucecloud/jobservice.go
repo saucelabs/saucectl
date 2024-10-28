@@ -80,10 +80,10 @@ func (s JobService) UploadArtifact(jobID string, realDevice bool, fileName strin
 
 func (s JobService) Job(ctx context.Context, id string, realDevice bool) (job.Job, error) {
 	if realDevice {
-		return s.RDC.ReadJob(ctx, id, realDevice)
+		return s.RDC.Job(ctx, id, realDevice)
 	}
 
-	return s.Resto.ReadJob(ctx, id, realDevice)
+	return s.Resto.Job(ctx, id, realDevice)
 }
 
 func (s JobService) PollJob(ctx context.Context, id string, interval, timeout time.Duration, realDevice bool) (job.Job, error) {
@@ -96,18 +96,18 @@ func (s JobService) PollJob(ctx context.Context, id string, interval, timeout ti
 
 func (s JobService) ArtifactNames(ctx context.Context, jobID string, realDevice bool) ([]string, error) {
 	if realDevice {
-		return s.RDC.GetJobAssetFileNames(ctx, jobID, realDevice)
+		return s.RDC.ArtifactNames(ctx, jobID, realDevice)
 	}
 
-	return s.Resto.GetJobAssetFileNames(ctx, jobID, realDevice)
+	return s.Resto.ArtifactNames(ctx, jobID, realDevice)
 }
 
 func (s JobService) Artifact(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
 	if realDevice {
-		return s.RDC.GetJobAssetFileContent(ctx, jobID, fileName, realDevice)
+		return s.RDC.Artifact(ctx, jobID, fileName, realDevice)
 	}
 
-	return s.Resto.GetJobAssetFileContent(ctx, jobID, fileName, realDevice)
+	return s.Resto.Artifact(ctx, jobID, fileName, realDevice)
 }
 
 func (s JobService) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, err error) {

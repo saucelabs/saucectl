@@ -59,7 +59,7 @@ func (s *FakeJobService) DownloadArtifacts(
 	return s.DownloadArtifactFn(job, isLastAttempt)
 }
 
-// ReadJob mock function
+// Job mock function
 func (s *FakeJobService) Job(
 	ctx context.Context, id string, _ bool,
 ) (job.Job, error) {
@@ -73,14 +73,14 @@ func (s *FakeJobService) PollJob(
 	return s.PollJobFn(ctx, id, interval, timeout)
 }
 
-// GetJobAssetFileContent mock function
+// Artifact mock function
 func (s *FakeJobService) Artifact(
 	ctx context.Context, jobID, fileName string, _ bool,
 ) ([]byte, error) {
 	return s.GetJobAssetFileContentFn(ctx, jobID, fileName)
 }
 
-// GetJobAssetFileNames mock function
+// ArtifactNames mock function
 func (s *FakeJobService) ArtifactNames(
 	ctx context.Context, jobID string, _ bool,
 ) ([]string, error) {
