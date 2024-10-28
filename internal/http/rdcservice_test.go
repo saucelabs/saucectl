@@ -43,6 +43,7 @@ func TestRDCService_ReadJob(t *testing.T) {
 	defer ts.Close()
 	timeout := 3 * time.Second
 	client := NewRDCService(ts.URL, "test-user", "test-key", timeout)
+	client.Client.RetryMax = 0
 
 	testCases := []struct {
 		name    string
@@ -312,6 +313,7 @@ func TestRDCService_GetJobAssetFileContent(t *testing.T) {
 	}))
 	defer ts.Close()
 	client := NewRDCService(ts.URL, "test-user", "test-password", 1*time.Second)
+	client.Client.RetryMax = 0
 
 	testCases := []struct {
 		name     string

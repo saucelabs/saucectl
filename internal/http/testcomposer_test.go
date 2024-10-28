@@ -63,8 +63,11 @@ func TestTestComposer_GetSlackToken(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(tt.serverFunc))
 			defer server.Close()
 
+			client := NewRetryableClient(3 * time.Second)
+			client.RetryMax = 0
+
 			c := &TestComposer{
-				HTTPClient:  NewRetryableClient(3 * time.Second),
+				HTTPClient:  client,
 				URL:         server.URL,
 				Credentials: tt.fields.Credentials,
 			}
@@ -103,6 +106,10 @@ func TestTestComposer_UploadAsset(t *testing.T) {
 	}))
 	defer ts.Close()
 
+
+	client := NewRetryableClient(3 * time.Second)
+	client.RetryMax = 0
+
 	type args struct {
 		jobID       string
 		fileName    string
@@ -118,7 +125,7 @@ func TestTestComposer_UploadAsset(t *testing.T) {
 		{
 			name: "Valid case",
 			client: TestComposer{
-				HTTPClient:  NewRetryableClient(3 * time.Second),
+				HTTPClient:  client,
 				URL:         ts.URL,
 				Credentials: iam.Credentials{Username: "test", AccessKey: "123"},
 			},
@@ -133,7 +140,7 @@ func TestTestComposer_UploadAsset(t *testing.T) {
 		{
 			name: "invalid case - 400",
 			client: TestComposer{
-				HTTPClient:  NewRetryableClient(3 * time.Second),
+				HTTPClient:  client,
 				URL:         ts.URL,
 				Credentials: iam.Credentials{Username: "test", AccessKey: "123"},
 			},
@@ -148,7 +155,7 @@ func TestTestComposer_UploadAsset(t *testing.T) {
 		{
 			name: "invalid 404",
 			client: TestComposer{
-				HTTPClient:  NewRetryableClient(3 * time.Second),
+				HTTPClient:  client,
 				URL:         ts.URL,
 				Credentials: iam.Credentials{Username: "test", AccessKey: "123"},
 			},
@@ -171,6 +178,9 @@ func TestTestComposer_UploadAsset(t *testing.T) {
 }
 
 func TestTestComposer_Frameworks(t *testing.T) {
+	client := NewRetryableClient(3 * time.Second)
+	client.RetryMax = 0
+
 	tests := []struct {
 		name     string
 		body     string
@@ -214,7 +224,7 @@ func TestTestComposer_Frameworks(t *testing.T) {
 				}
 			}))
 			c := &TestComposer{
-				HTTPClient:  NewRetryableClient(3 * time.Second),
+				HTTPClient:  client,
 				URL:         ts.URL,
 				Credentials: iam.Credentials{Username: "test", AccessKey: "123"},
 			}
@@ -232,6 +242,9 @@ func TestTestComposer_Frameworks(t *testing.T) {
 }
 
 func TestTestComposer_Versions(t *testing.T) {
+	client := NewRetryableClient(3 * time.Second)
+	client.RetryMax = 0
+
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		switch r.RequestURI {
@@ -250,8 +263,9 @@ func TestTestComposer_Versions(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
+
 	c := &TestComposer{
-		HTTPClient:  NewRetryableClient(3 * time.Second),
+		HTTPClient:  client,
 		URL:         ts.URL,
 		Credentials: iam.Credentials{Username: "test", AccessKey: "123"},
 	}
