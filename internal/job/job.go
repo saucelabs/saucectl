@@ -1,5 +1,10 @@
 package job
 
+import (
+	"context"
+	"time"
+)
+
 // Source represents the origin of a job.
 type Source string
 
@@ -83,15 +88,23 @@ func Done(status string) bool {
 
 // Service represents the interface for Job interactions.
 type Service interface {
-	Starter
-	Reader
-	Writer
-	Stopper
-	ArtifactDownloader
-}
+	StartJob(ctx context.Context, opts StartOptions) (jobID string, err error)
 
-// ArtifactDownloader represents the interface for downloading artifacts.
-type ArtifactDownloader interface {
-	// DownloadArtifact downloads artifacts and returns a list of what was downloaded.
+	// ReadJob returns the job details.
+	ReadJob(ctx context.Context, id string, realDevice bool) (Job, error)
+
+	// PollJob polls job details at an interval, until timeout has been reached or until the job has ended, whether successfully or due to an error.
+	PollJob(ctx context.Context, id string, interval, timeout time.Duration, realDevice bool) (Job, error)
+
+	// GetJobAssetFileNames returns all assets files available.
+	GetJobAssetFileNames(ctx context.Context, jobID string, realDevice bool) ([]string, error)
+
+	// GetJobAssetFileContent returns the job asset file content.
+	GetJobAssetFileContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error)
+
+	UploadAsset(jobID string, realDevice bool, fileName string, contentType string, content []byte) error
+
+	StopJob(ctx context.Context, jobID string, realDevice bool) (Job, error)
+
 	DownloadArtifact(job Job, isLastAttempt bool) []string
 }

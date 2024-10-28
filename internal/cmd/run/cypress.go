@@ -157,19 +157,20 @@ func runCypress(cmd *cobra.Command, cflags cypressFlags, isCLIDriven bool) (int,
 	rdcClient := http.NewRDCService(regio.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout)
 	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
 	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
+	jobService := saucecloud.JobService{
+		RDC:                    rdcClient,
+		Resto:                  restoClient,
+		Webdriver:              webdriverClient,
+		TestComposer:           testcompClient,
+		ArtifactDownloadConfig: p.GetArtifactsCfg().Download,
+	}
 
 	log.Info().Msg("Running Cypress in Sauce Labs")
 	r := saucecloud.CypressRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader: &appsClient,
-			JobService: saucecloud.JobService{
-				RDC:                    rdcClient,
-				Resto:                  restoClient,
-				Webdriver:              webdriverClient,
-				TestComposer:           testcompClient,
-				ArtifactDownloadConfig: p.GetArtifactsCfg().Download,
-			},
+			JobService:      jobService,
 			MetadataService: &testcompClient,
 			TunnelService:   &restoClient,
 			InsightsService: &insightsClient,
@@ -187,7 +188,7 @@ func runCypress(cmd *cobra.Command, cflags cypressFlags, isCLIDriven bool) (int,
 			MetadataSearchStrategy: framework.NewSearchStrategy(p.GetVersion(), p.GetRootDir()),
 			NPMDependencies:        p.GetNpm().Dependencies,
 			Retrier: &retry.SauceReportRetrier{
-				VDCReader:       &restoClient,
+				JobService:      jobService,
 				ProjectUploader: &appsClient,
 				Project:         p,
 			},

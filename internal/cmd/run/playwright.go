@@ -168,19 +168,20 @@ func runPlaywright(cmd *cobra.Command, pf playwrightFlags, isCLIDriven bool) (in
 	rdcClient := http.NewRDCService(regio.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout)
 	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
 	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
+	jobService := saucecloud.JobService{
+		RDC:                    rdcClient,
+		Resto:                  restoClient,
+		Webdriver:              webdriverClient,
+		TestComposer:           testcompClient,
+		ArtifactDownloadConfig: p.Artifacts.Download,
+	}
 
 	log.Info().Msg("Running Playwright in Sauce Labs")
 	r := saucecloud.PlaywrightRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader: &appsClient,
-			JobService: saucecloud.JobService{
-				RDC:                    rdcClient,
-				Resto:                  restoClient,
-				Webdriver:              webdriverClient,
-				TestComposer:           testcompClient,
-				ArtifactDownloadConfig: p.Artifacts.Download,
-			},
+			JobService:      jobService,
 			TunnelService:   &restoClient,
 			MetadataService: &testcompClient,
 			InsightsService: &insightsClient,
@@ -197,7 +198,7 @@ func runPlaywright(cmd *cobra.Command, pf playwrightFlags, isCLIDriven bool) (in
 			MetadataSearchStrategy: framework.NewSearchStrategy(p.Playwright.Version, p.RootDir),
 			NPMDependencies:        p.Npm.Dependencies,
 			Retrier: &retry.SauceReportRetrier{
-				VDCReader:       &restoClient,
+				JobService:      jobService,
 				ProjectUploader: &appsClient,
 				Project:         &p,
 			},

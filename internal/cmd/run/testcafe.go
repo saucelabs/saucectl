@@ -191,19 +191,20 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 	rdcClient := http.NewRDCService(regio.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout)
 	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
 	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
+	jobService := saucecloud.JobService{
+		RDC:                    rdcClient,
+		Resto:                  restoClient,
+		Webdriver:              webdriverClient,
+		TestComposer:           testcompClient,
+		ArtifactDownloadConfig: p.Artifacts.Download,
+	}
 
 	log.Info().Msg("Running Testcafe in Sauce Labs")
 	r := saucecloud.TestcafeRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader: &appsClient,
-			JobService: saucecloud.JobService{
-				RDC:                    rdcClient,
-				Resto:                  restoClient,
-				Webdriver:              webdriverClient,
-				TestComposer:           testcompClient,
-				ArtifactDownloadConfig: p.Artifacts.Download,
-			},
+			JobService:      jobService,
 			TunnelService:   &restoClient,
 			MetadataService: &testcompClient,
 			InsightsService: &insightsClient,
@@ -220,7 +221,7 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 			MetadataSearchStrategy: framework.NewSearchStrategy(p.Testcafe.Version, p.RootDir),
 			NPMDependencies:        p.Npm.Dependencies,
 			Retrier: &retry.SauceReportRetrier{
-				VDCReader:       &restoClient,
+				JobService:      jobService,
 				ProjectUploader: &appsClient,
 				Project:         &p,
 			},

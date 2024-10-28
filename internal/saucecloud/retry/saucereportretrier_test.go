@@ -40,25 +40,54 @@ func (f *StubProjectUploader) Delete(string) error {
 	return nil
 }
 
-type StubVDCJobReader struct {
+type JobServiceStub struct {
 	SauceReport saucereport.SauceReport
 }
 
-func (f *StubVDCJobReader) ReadJob(context.Context, string, bool) (job.Job, error) {
+func (f *JobServiceStub) StartJob(
+	context.Context, job.StartOptions,
+) (jobID string, err error) {
+	panic("implement me")
+}
+
+func (f *JobServiceStub) UploadAsset(
+	string, bool, string, string, []byte,
+) error {
+	panic("implement me")
+}
+
+func (f *JobServiceStub) StopJob(context.Context, string, bool) (
+	job.Job, error,
+) {
+	panic("implement me")
+}
+
+func (f *JobServiceStub) DownloadArtifact(job.Job, bool) []string {
+	panic("implement me")
+}
+
+func (f *JobServiceStub) ReadJob(context.Context, string, bool) (
+	job.Job, error,
+) {
 	return job.Job{}, nil
 }
 
-func (f *StubVDCJobReader) PollJob(_ context.Context, _ string, _, _ time.Duration, _ bool) (job.Job, error) {
+func (f *JobServiceStub) PollJob(
+	_ context.Context, _ string, _, _ time.Duration, _ bool,
+) (job.Job, error) {
 	return job.Job{}, nil
 }
 
-func (f *StubVDCJobReader) GetJobAssetFileNames(context.Context, string, bool) ([]string, error) {
+func (f *JobServiceStub) GetJobAssetFileNames(
+	context.Context, string, bool,
+) ([]string, error) {
 	return []string{}, nil
 }
 
-func (f *StubVDCJobReader) GetJobAssetFileContent(_ context.Context, _, _ string, _ bool) ([]byte, error) {
-	body, _ := json.Marshal(f.SauceReport)
-	return []byte(body), nil
+func (f *JobServiceStub) GetJobAssetFileContent(
+	_ context.Context, _, _ string, _ bool,
+) ([]byte, error) {
+	return json.Marshal(f.SauceReport)
 }
 
 type StubProject struct {
@@ -136,7 +165,7 @@ func TestSauceReportRetrier_Retry(t *testing.T) {
 		{
 			name: "Job is retried via SmartRetry",
 			retrier: &SauceReportRetrier{
-				VDCReader:       &StubVDCJobReader{SauceReport: failedReport},
+				JobService:      &JobServiceStub{SauceReport: failedReport},
 				ProjectUploader: &StubProjectUploader{},
 				Project:         &StubProject{},
 			},

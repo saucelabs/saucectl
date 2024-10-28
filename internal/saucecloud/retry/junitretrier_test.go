@@ -20,10 +20,9 @@ func TestAppsRetrier_Retry(t *testing.T) {
 		previous job.Job
 	}
 	type init struct {
-		RDCReader job.Reader
-		VDCReader job.Reader
-		RetryRDC  bool
-		RetryVDC  bool
+		JobService job.Service
+		RetryRDC   bool
+		RetryVDC   bool
 	}
 	tests := []struct {
 		name     string
@@ -79,7 +78,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 		{
 			name: "Espresso job retrying only failed classes if RDC + SmartRetry",
 			init: init{
-				RDCReader: &mocks.FakeJobReader{
+				JobService: &mocks.FakeJobService{
 					ReadJobFn:              nil,
 					PollJobFn:              nil,
 					GetJobAssetFileNamesFn: nil,
@@ -123,7 +122,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 		{
 			name: "Espresso job retrying only failed classes if RDC + SmartRetry with no orig filters",
 			init: init{
-				RDCReader: &mocks.FakeJobReader{
+				JobService: &mocks.FakeJobService{
 					ReadJobFn:              nil,
 					PollJobFn:              nil,
 					GetJobAssetFileNamesFn: nil,
@@ -164,7 +163,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 		{
 			name: "XCUITest: Job retrying only failed tests if RDC + SmartRetry with no orig filters",
 			init: init{
-				RDCReader: &mocks.FakeJobReader{
+				JobService: &mocks.FakeJobService{
 					ReadJobFn:              nil,
 					PollJobFn:              nil,
 					GetJobAssetFileNamesFn: nil,
@@ -206,7 +205,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 		{
 			name: "Job is retrying when VDC + SmartRetry",
 			init: init{
-				VDCReader: &mocks.FakeJobReader{
+				JobService: &mocks.FakeJobService{
 					ReadJobFn:              nil,
 					PollJobFn:              nil,
 					GetJobAssetFileNamesFn: nil,
@@ -248,7 +247,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 		{
 			name: "Base Retry if junit is malformed",
 			init: init{
-				VDCReader: &mocks.FakeJobReader{
+				JobService: &mocks.FakeJobService{
 					ReadJobFn:              nil,
 					PollJobFn:              nil,
 					GetJobAssetFileNamesFn: nil,
@@ -290,7 +289,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 		{
 			name: "Base Retry if getting junit.xml is failing",
 			init: init{
-				VDCReader: &mocks.FakeJobReader{
+				JobService: &mocks.FakeJobService{
 					ReadJobFn:              nil,
 					PollJobFn:              nil,
 					GetJobAssetFileNamesFn: nil,
@@ -333,8 +332,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			b := &JunitRetrier{
-				RDCReader: tt.init.RDCReader,
-				VDCReader: tt.init.VDCReader,
+				JobService: tt.init.JobService,
 			}
 			go b.Retry(tt.args.jobOpts, tt.args.opt, tt.args.previous)
 			newOpt := <-tt.args.jobOpts
