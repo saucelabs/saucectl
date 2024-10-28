@@ -175,6 +175,9 @@ func runPlaywright(cmd *cobra.Command, pf playwrightFlags, isCLIDriven bool) (in
 		TestComposer:           testcompClient,
 		ArtifactDownloadConfig: p.Artifacts.Download,
 	}
+	buildService := http.NewBuildService(
+		regio.APIBaseURL(), creds.Username, creds.AccessKey, buildTimeout,
+	)
 
 	log.Info().Msg("Running Playwright in Sauce Labs")
 	r := saucecloud.PlaywrightRunner{
@@ -186,7 +189,7 @@ func runPlaywright(cmd *cobra.Command, pf playwrightFlags, isCLIDriven bool) (in
 			MetadataService: &testcompClient,
 			InsightsService: &insightsClient,
 			UserService:     &iamClient,
-			BuildService:    &restoClient,
+			BuildService:    &buildService,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
 			Reporters: createReporters(

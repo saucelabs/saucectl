@@ -151,6 +151,9 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
 		TestComposer:           testcompClient,
 		ArtifactDownloadConfig: p.Artifacts.Download,
 	}
+	buildService := http.NewBuildService(
+		regio.APIBaseURL(), creds.Username, creds.AccessKey, buildTimeout,
+	)
 
 	r := saucecloud.XcuitestRunner{
 		Project: p,
@@ -161,7 +164,7 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
 			MetadataService: &testcompClient,
 			InsightsService: &insightsClient,
 			UserService:     &iamClient,
-			BuildService:    &restoClient,
+			BuildService:    &buildService,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
 			Reporters: createReporters(
