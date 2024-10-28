@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/saucelabs/saucectl/internal/saucecloud"
+	"github.com/saucelabs/saucectl/internal/job"
 )
 
 // ArtifactService represents artifact service
 type ArtifactService struct {
-	JobService saucecloud.JobService
+	JobService job.Service
 }
 
 // List returns an artifact list
