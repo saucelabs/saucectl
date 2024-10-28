@@ -106,7 +106,6 @@ func TestTestComposer_UploadAsset(t *testing.T) {
 	}))
 	defer ts.Close()
 
-
 	client := NewRetryableClient(3 * time.Second)
 	client.RetryMax = 0
 
