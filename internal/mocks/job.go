@@ -74,7 +74,7 @@ func (s *FakeJobService) PollJob(
 }
 
 // GetJobAssetFileContent mock function
-func (s *FakeJobService) ArtifactContent(
+func (s *FakeJobService) Artifact(
 	ctx context.Context, jobID, fileName string, _ bool,
 ) ([]byte, error) {
 	return s.GetJobAssetFileContentFn(ctx, jobID, fileName)

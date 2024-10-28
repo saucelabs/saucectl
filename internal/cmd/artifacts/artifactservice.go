@@ -39,7 +39,7 @@ func (s *ArtifactService) Download(jobID, filename string) ([]byte, error) {
 		return nil, err
 	}
 
-	return s.JobService.ArtifactContent(
+	return s.JobService.Artifact(
 		context.Background(), jobID, filename, isRDC,
 	)
 }

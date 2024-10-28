@@ -109,7 +109,7 @@ func (r *SauceReportRetrier) uploadConfig(filename string) (string, error) {
 }
 
 func (r *SauceReportRetrier) getSauceReport(job job.Job) (saucereport.SauceReport, error) {
-	content, err := r.JobService.ArtifactContent(context.Background(), job.ID, saucereport.FileName, false)
+	content, err := r.JobService.Artifact(context.Background(), job.ID, saucereport.FileName, false)
 	if err != nil {
 		return saucereport.SauceReport{}, err
 	}

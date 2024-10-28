@@ -102,7 +102,7 @@ func (s JobService) ArtifactNames(ctx context.Context, jobID string, realDevice 
 	return s.Resto.GetJobAssetFileNames(ctx, jobID, realDevice)
 }
 
-func (s JobService) ArtifactContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
+func (s JobService) Artifact(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
 	if realDevice {
 		return s.RDC.GetJobAssetFileContent(ctx, jobID, fileName, realDevice)
 	}
@@ -121,7 +121,7 @@ func (s JobService) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 func (s JobService) downloadArtifact(
 	targetDir, jobID, fileName string, realDevice bool,
 ) (string, error) {
-	content, err := s.ArtifactContent(
+	content, err := s.Artifact(
 		context.Background(), jobID, fileName, realDevice,
 	)
 	if err != nil {

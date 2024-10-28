@@ -101,12 +101,12 @@ type Service interface {
 	// has ended, whichever occurs first.
 	PollJob(ctx context.Context, id string, interval, timeout time.Duration, realDevice bool) (Job, error)
 
+	// Artifact returns the content of the artifact.
+	Artifact(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error)
+
 	// ArtifactNames returns the names of the artifact files associated with a
 	// job.
 	ArtifactNames(ctx context.Context, jobID string, realDevice bool) ([]string, error)
-
-	// ArtifactContent returns the content of the artifact.
-	ArtifactContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error)
 
 	// UploadArtifact uploads an artifact to the Job that matches the given jobID.
 	UploadArtifact(jobID string, realDevice bool, fileName string, contentType string, content []byte) error

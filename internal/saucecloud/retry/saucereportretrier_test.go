@@ -84,7 +84,7 @@ func (f *JobServiceStub) ArtifactNames(
 	return []string{}, nil
 }
 
-func (f *JobServiceStub) ArtifactContent(
+func (f *JobServiceStub) Artifact(
 	_ context.Context, _, _ string, _ bool,
 ) ([]byte, error) {
 	return json.Marshal(f.SauceReport)
