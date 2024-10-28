@@ -88,7 +88,11 @@ func Done(status string) bool {
 
 // Service represents the interface for Job interactions.
 type Service interface {
+	// StartJob starts a new Job.
 	StartJob(ctx context.Context, opts StartOptions) (jobID string, err error)
+
+	// StopJob stops a running Job.
+	StopJob(ctx context.Context, jobID string, realDevice bool) (Job, error)
 
 	// ReadJob returns the job details.
 	ReadJob(ctx context.Context, id string, realDevice bool) (Job, error)
@@ -102,9 +106,10 @@ type Service interface {
 	// GetJobAssetFileContent returns the job asset file content.
 	GetJobAssetFileContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error)
 
+	// UploadAsset uploads an asset to the job that matches the given jobID.
 	UploadAsset(jobID string, realDevice bool, fileName string, contentType string, content []byte) error
 
-	StopJob(ctx context.Context, jobID string, realDevice bool) (Job, error)
-
+	// DownloadArtifacts downloads artifacts from a job. Returns a list of
+	// file paths.
 	DownloadArtifacts(job Job, isLastAttempt bool) []string
 }
