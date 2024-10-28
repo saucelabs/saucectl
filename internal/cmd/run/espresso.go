@@ -143,18 +143,19 @@ func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
 	rdcClient := http.NewRDCService(regio.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout)
 	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
 	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
+	jobService := saucecloud.JobService{
+		RDC:                    rdcClient,
+		Resto:                  restoClient,
+		Webdriver:              webdriverClient,
+		TestComposer:           testcompClient,
+		ArtifactDownloadConfig: p.Artifacts.Download,
+	}
 
 	r := saucecloud.EspressoRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader: &appsClient,
-			JobService: saucecloud.JobService{
-				RDC:                    rdcClient,
-				Resto:                  restoClient,
-				Webdriver:              webdriverClient,
-				TestComposer:           testcompClient,
-				ArtifactDownloadConfig: p.Artifacts.Download,
-			},
+			JobService:      jobService,
 			TunnelService:   &restoClient,
 			MetadataService: &testcompClient,
 			InsightsService: &insightsClient,
@@ -170,8 +171,7 @@ func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
 			Async:     gFlags.async,
 			FailFast:  gFlags.failFast,
 			Retrier: &retry.JunitRetrier{
-				RDCReader: &rdcClient,
-				VDCReader: &restoClient,
+				JobService: jobService,
 			},
 		},
 	}

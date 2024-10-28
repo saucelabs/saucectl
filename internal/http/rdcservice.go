@@ -204,8 +204,8 @@ func (c *RDCService) StopJob(ctx context.Context, id string, realDevice bool) (j
 	return job.Job{}, nil
 }
 
-// ReadJob returns the job details.
-func (c *RDCService) ReadJob(ctx context.Context, id string, realDevice bool) (job.Job, error) {
+// Job returns the job details.
+func (c *RDCService) Job(ctx context.Context, id string, realDevice bool) (job.Job, error) {
 	if !realDevice {
 		return job.Job{}, errors.New("the RDC client does not support virtual device jobs")
 	}
@@ -256,7 +256,7 @@ func (c *RDCService) PollJob(ctx context.Context, id string, interval, timeout t
 	for {
 		select {
 		case <-ticker.C:
-			j, err := c.ReadJob(ctx, id, realDevice)
+			j, err := c.Job(ctx, id, realDevice)
 			if err != nil {
 				return job.Job{}, err
 			}
@@ -266,7 +266,7 @@ func (c *RDCService) PollJob(ctx context.Context, id string, interval, timeout t
 				return j, nil
 			}
 		case <-deathclock.C:
-			j, err := c.ReadJob(ctx, id, realDevice)
+			j, err := c.Job(ctx, id, realDevice)
 			if err != nil {
 				return job.Job{}, err
 			}
@@ -276,8 +276,8 @@ func (c *RDCService) PollJob(ctx context.Context, id string, interval, timeout t
 	}
 }
 
-// GetJobAssetFileNames returns all assets files available.
-func (c *RDCService) GetJobAssetFileNames(ctx context.Context, jobID string, realDevice bool) ([]string, error) {
+// ArtifactNames returns all assets files available.
+func (c *RDCService) ArtifactNames(ctx context.Context, jobID string, realDevice bool) ([]string, error) {
 	if !realDevice {
 		return nil, errors.New("the RDC client does not support virtual device jobs")
 	}
@@ -334,8 +334,8 @@ func (c *RDCService) GetJobAssetFileNames(ctx context.Context, jobID string, rea
 	return files, nil
 }
 
-// GetJobAssetFileContent returns the job asset file content.
-func (c *RDCService) GetJobAssetFileContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
+// Artifact returns the job asset file content.
+func (c *RDCService) Artifact(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
 	if !realDevice {
 		return nil, errors.New("the RDC client does not support virtual device jobs")
 	}

@@ -71,8 +71,8 @@ func NewResto(url, username, accessKey string, timeout time.Duration) Resto {
 	}
 }
 
-// ReadJob returns the job details.
-func (c *Resto) ReadJob(ctx context.Context, id string, realDevice bool) (job.Job, error) {
+// Job returns the job details.
+func (c *Resto) Job(ctx context.Context, id string, realDevice bool) (job.Job, error) {
 	if realDevice {
 		return job.Job{}, errors.New("the VDC client does not support real device jobs")
 	}
@@ -127,7 +127,7 @@ func (c *Resto) PollJob(ctx context.Context, id string, interval, timeout time.D
 	for {
 		select {
 		case <-ticker.C:
-			j, err := c.ReadJob(ctx, id, realDevice)
+			j, err := c.Job(ctx, id, realDevice)
 			if err != nil {
 				return job.Job{}, err
 			}
@@ -136,7 +136,7 @@ func (c *Resto) PollJob(ctx context.Context, id string, interval, timeout time.D
 				return j, nil
 			}
 		case <-deathclock.C:
-			j, err := c.ReadJob(ctx, id, realDevice)
+			j, err := c.Job(ctx, id, realDevice)
 			if err != nil {
 				return job.Job{}, err
 			}
@@ -146,8 +146,8 @@ func (c *Resto) PollJob(ctx context.Context, id string, interval, timeout time.D
 	}
 }
 
-// GetJobAssetFileNames return the job assets list.
-func (c *Resto) GetJobAssetFileNames(ctx context.Context, jobID string, realDevice bool) ([]string, error) {
+// ArtifactNames return the job assets list.
+func (c *Resto) ArtifactNames(ctx context.Context, jobID string, realDevice bool) ([]string, error) {
 	if realDevice {
 		return nil, errors.New("the VDC client does not support real device jobs")
 	}
@@ -198,8 +198,8 @@ func (c *Resto) GetJobAssetFileNames(ctx context.Context, jobID string, realDevi
 	return filesList, nil
 }
 
-// GetJobAssetFileContent returns the job asset file content.
-func (c *Resto) GetJobAssetFileContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
+// Artifact returns the job asset file content.
+func (c *Resto) Artifact(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
 	if realDevice {
 		return nil, errors.New("the VDC client does not support real device jobs")
 	}

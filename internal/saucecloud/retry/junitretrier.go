@@ -14,20 +14,14 @@ import (
 )
 
 type JunitRetrier struct {
-	RDCReader job.Reader
-	VDCReader job.Reader
+	JobService job.Service
 }
 
 func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
 	var tests []string
 
 	if opt.SmartRetry.FailedOnly {
-		jobReader := b.VDCReader
-		if previous.IsRDC {
-			jobReader = b.RDCReader
-		}
-
-		tests = b.retryFailedTests(jobReader, &opt, previous)
+		tests = b.retryFailedTests(&opt, previous)
 		if len(tests) == 0 {
 			log.Info().Msg(msg.SkippingSmartRetries)
 		}
@@ -46,13 +40,15 @@ func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptio
 	jobOpts <- opt
 }
 
-func (b *JunitRetrier) retryFailedTests(reader job.Reader, opt *job.StartOptions, previous job.Job) []string {
+func (b *JunitRetrier) retryFailedTests(opt *job.StartOptions, previous job.Job) []string {
 	if previous.Status == job.StateError {
 		log.Warn().Msg(msg.UnreliableReport)
 		return nil
 	}
 
-	content, err := reader.GetJobAssetFileContent(context.Background(), previous.ID, junit.FileName, previous.IsRDC)
+	content, err := b.JobService.Artifact(
+		context.Background(), previous.ID, junit.FileName, previous.IsRDC,
+	)
 	if err != nil {
 		log.Err(err).Msgf(msg.UnableToFetchFile, junit.FileName)
 		return nil

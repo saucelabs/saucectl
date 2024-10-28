@@ -1,7 +1,6 @@
 package job
 
 import (
-	"context"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/report"
@@ -118,9 +117,4 @@ type TunnelOptions struct {
 // SmartRetry represents the retry strategy.
 type SmartRetry struct {
 	FailedOnly bool `json:"-"`
-}
-
-// Starter is the interface for starting jobs.
-type Starter interface {
-	StartJob(ctx context.Context, opts StartOptions) (jobID string, err error)
 }

@@ -114,7 +114,7 @@ func TestResto_GetJobDetails(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.client.Client.RetryWaitMax = 1 * time.Millisecond
-			got, err := tc.client.ReadJob(context.Background(), tc.jobID, false)
+			got, err := tc.client.Job(context.Background(), tc.jobID, false)
 			assert.Equal(t, tc.expectedResp, got)
 			if err != nil {
 				assert.Equal(t, tc.expectedErr, err)
@@ -324,7 +324,7 @@ func TestResto_GetJobAssetFileNames(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.client.Client.RetryWaitMax = 1 * time.Millisecond
-			got, err := tc.client.GetJobAssetFileNames(context.Background(), tc.jobID, false)
+			got, err := tc.client.ArtifactNames(context.Background(), tc.jobID, false)
 			sort.Strings(tc.expectedResp)
 			sort.Strings(got)
 			assert.Equal(t, tc.expectedResp, got)
@@ -399,7 +399,7 @@ func TestResto_GetJobAssetFileContent(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.client.Client.RetryWaitMax = 1 * time.Millisecond
-			got, err := tc.client.GetJobAssetFileContent(context.Background(), tc.jobID, "console.log", false)
+			got, err := tc.client.Artifact(context.Background(), tc.jobID, "console.log", false)
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
 				assert.Equal(t, tc.expectedErr, err)
