@@ -277,17 +277,17 @@ func TestRDCService_GetJobAssetFileNames(t *testing.T) {
 			files, err := client.GetJobAssetFileNames(context.Background(), tt.jobID, true)
 			if err != nil {
 				if !reflect.DeepEqual(err, tt.wantErr) {
-					t.Errorf("GetJobAssetFileNames(): got: %v, want: %v", err, tt.wantErr)
+					t.Errorf("ArtifactNames(): got: %v, want: %v", err, tt.wantErr)
 				}
 				return
 			}
 			if tt.wantErr != nil {
-				t.Errorf("GetJobAssetFileNames(): got: %v, want: %v", err, tt.wantErr)
+				t.Errorf("ArtifactNames(): got: %v, want: %v", err, tt.wantErr)
 			}
 			sort.Strings(files)
 			sort.Strings(tt.expected)
 			if !reflect.DeepEqual(files, tt.expected) {
-				t.Errorf("GetJobAssetFileNames(): got: %v, want: %v", files, tt.expected)
+				t.Errorf("ArtifactNames(): got: %v, want: %v", files, tt.expected)
 			}
 		})
 	}

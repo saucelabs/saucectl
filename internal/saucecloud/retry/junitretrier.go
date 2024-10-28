@@ -46,7 +46,7 @@ func (b *JunitRetrier) retryFailedTests(opt *job.StartOptions, previous job.Job)
 		return nil
 	}
 
-	content, err := b.JobService.GetJobAssetFileContent(
+	content, err := b.JobService.ArtifactContent(
 		context.Background(), previous.ID, junit.FileName, previous.IsRDC,
 	)
 	if err != nil {

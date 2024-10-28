@@ -40,7 +40,7 @@ func (s *FakeJobService) StartJob(
 	return s.StartJobFn(ctx, opts)
 }
 
-func (s *FakeJobService) UploadAsset(
+func (s *FakeJobService) UploadArtifact(
 	jobID string, realDevice bool, fileName string, contentType string,
 	content []byte,
 ) error {
@@ -60,7 +60,7 @@ func (s *FakeJobService) DownloadArtifacts(
 }
 
 // ReadJob mock function
-func (s *FakeJobService) ReadJob(
+func (s *FakeJobService) Job(
 	ctx context.Context, id string, _ bool,
 ) (job.Job, error) {
 	return s.ReadJobFn(ctx, id)
@@ -74,14 +74,14 @@ func (s *FakeJobService) PollJob(
 }
 
 // GetJobAssetFileContent mock function
-func (s *FakeJobService) GetJobAssetFileContent(
+func (s *FakeJobService) ArtifactContent(
 	ctx context.Context, jobID, fileName string, _ bool,
 ) ([]byte, error) {
 	return s.GetJobAssetFileContentFn(ctx, jobID, fileName)
 }
 
 // GetJobAssetFileNames mock function
-func (s *FakeJobService) GetJobAssetFileNames(
+func (s *FakeJobService) ArtifactNames(
 	ctx context.Context, jobID string, _ bool,
 ) ([]string, error) {
 	return s.GetJobAssetFileNamesFn(ctx, jobID)

@@ -94,22 +94,24 @@ type Service interface {
 	// StopJob stops a running Job.
 	StopJob(ctx context.Context, jobID string, realDevice bool) (Job, error)
 
-	// ReadJob returns the job details.
-	ReadJob(ctx context.Context, id string, realDevice bool) (Job, error)
+	// Job returns the Job details.
+	Job(ctx context.Context, id string, realDevice bool) (Job, error)
 
-	// PollJob polls job details at an interval, until timeout has been reached or until the job has ended, whether successfully or due to an error.
+	// PollJob polls Job details at an interval, until timeout or until the Job
+	// has ended, whichever occurs first.
 	PollJob(ctx context.Context, id string, interval, timeout time.Duration, realDevice bool) (Job, error)
 
-	// GetJobAssetFileNames returns all assets files available.
-	GetJobAssetFileNames(ctx context.Context, jobID string, realDevice bool) ([]string, error)
+	// ArtifactNames returns the names of the artifact files associated with a
+	// job.
+	ArtifactNames(ctx context.Context, jobID string, realDevice bool) ([]string, error)
 
-	// GetJobAssetFileContent returns the job asset file content.
-	GetJobAssetFileContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error)
+	// ArtifactContent returns the content of the artifact.
+	ArtifactContent(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error)
 
-	// UploadAsset uploads an asset to the job that matches the given jobID.
-	UploadAsset(jobID string, realDevice bool, fileName string, contentType string, content []byte) error
+	// UploadArtifact uploads an artifact to the Job that matches the given jobID.
+	UploadArtifact(jobID string, realDevice bool, fileName string, contentType string, content []byte) error
 
-	// DownloadArtifacts downloads artifacts from a job. Returns a list of
+	// DownloadArtifacts downloads artifacts from a Job. Returns a list of
 	// file paths.
 	DownloadArtifacts(job Job, isLastAttempt bool) []string
 }

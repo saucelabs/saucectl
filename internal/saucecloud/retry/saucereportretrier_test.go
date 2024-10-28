@@ -50,7 +50,7 @@ func (f *JobServiceStub) StartJob(
 	panic("implement me")
 }
 
-func (f *JobServiceStub) UploadAsset(
+func (f *JobServiceStub) UploadArtifact(
 	string, bool, string, string, []byte,
 ) error {
 	panic("implement me")
@@ -66,7 +66,7 @@ func (f *JobServiceStub) DownloadArtifacts(job.Job, bool) []string {
 	panic("implement me")
 }
 
-func (f *JobServiceStub) ReadJob(context.Context, string, bool) (
+func (f *JobServiceStub) Job(context.Context, string, bool) (
 	job.Job, error,
 ) {
 	return job.Job{}, nil
@@ -78,13 +78,13 @@ func (f *JobServiceStub) PollJob(
 	return job.Job{}, nil
 }
 
-func (f *JobServiceStub) GetJobAssetFileNames(
+func (f *JobServiceStub) ArtifactNames(
 	context.Context, string, bool,
 ) ([]string, error) {
 	return []string{}, nil
 }
 
-func (f *JobServiceStub) GetJobAssetFileContent(
+func (f *JobServiceStub) ArtifactContent(
 	_ context.Context, _, _ string, _ bool,
 ) ([]byte, error) {
 	return json.Marshal(f.SauceReport)

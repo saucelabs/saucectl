@@ -562,7 +562,7 @@ func (r *CloudRunner) FetchJUnitReports(res *result, artifacts []report.Artifact
 			content, err = os.ReadFile(junitArtifact.FilePath)
 			log.Debug().Msg("Using cached JUnit report")
 		} else {
-			content, err = r.JobService.GetJobAssetFileContent(
+			content, err = r.JobService.ArtifactContent(
 				context.Background(),
 				attempt.ID,
 				junit.FileName,
@@ -741,13 +741,13 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	var err error
 
 	// Display log only when at least it has started
-	if assetContent, err = r.JobService.GetJobAssetFileContent(context.Background(), res.job.ID, ConsoleLogAsset, res.job.IsRDC); err == nil {
+	if assetContent, err = r.JobService.ArtifactContent(context.Background(), res.job.ID, ConsoleLogAsset, res.job.IsRDC); err == nil {
 		log.Info().Str("suite", res.name).Msgf("console.log output: \n%s", assetContent)
 		return
 	}
 
 	// Some frameworks produce a junit.xml instead, check for that file if there's no console.log
-	assetContent, err = r.JobService.GetJobAssetFileContent(context.Background(), res.job.ID, junit.FileName, res.job.IsRDC)
+	assetContent, err = r.JobService.ArtifactContent(context.Background(), res.job.ID, junit.FileName, res.job.IsRDC)
 	if err != nil {
 		log.Warn().Err(err).Str("suite", res.name).Msg("Failed to retrieve the console output.")
 		return
@@ -868,7 +868,7 @@ func (r *CloudRunner) uploadSauceConfig(jobID string, realDevice bool, cfgFile s
 		log.Warn().Msgf("failed to read configuration: %v", err)
 		return
 	}
-	if err := r.JobService.UploadAsset(jobID, realDevice, filepath.Base(cfgFile), "text/plain", content); err != nil {
+	if err := r.JobService.UploadArtifact(jobID, realDevice, filepath.Base(cfgFile), "text/plain", content); err != nil {
 		log.Warn().Msgf("failed to attach configuration: %v", err)
 	}
 }
@@ -880,7 +880,7 @@ func (r *CloudRunner) uploadCLIFlags(jobID string, realDevice bool, content inte
 		log.Warn().Msgf("Failed to encode CLI flags: %v", err)
 		return
 	}
-	if err := r.JobService.UploadAsset(jobID, realDevice, "flags.json", "text/plain", encoded); err != nil {
+	if err := r.JobService.UploadArtifact(jobID, realDevice, "flags.json", "text/plain", encoded); err != nil {
 		log.Warn().Msgf("Failed to report CLI flags: %v", err)
 	}
 }
@@ -943,7 +943,7 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 		res.details.BuildID = buildID
 	}
 
-	assets, err := r.JobService.GetJobAssetFileNames(context.Background(), res.job.ID, res.job.IsRDC)
+	assets, err := r.JobService.ArtifactNames(context.Background(), res.job.ID, res.job.IsRDC)
 	if err != nil {
 		log.Warn().Err(err).Str("action", "loadAssets").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 		return
@@ -983,7 +983,7 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 }
 
 func (r *CloudRunner) loadSauceTestReport(jobID string, isRDC bool) (saucereport.SauceReport, error) {
-	fileContent, err := r.JobService.GetJobAssetFileContent(context.Background(), jobID, saucereport.FileName, isRDC)
+	fileContent, err := r.JobService.ArtifactContent(context.Background(), jobID, saucereport.FileName, isRDC)
 	if err != nil {
 		log.Warn().Err(err).Str("action", "loading-json-report").Msg(msg.InsightsReportError)
 		return saucereport.SauceReport{}, err
@@ -992,7 +992,7 @@ func (r *CloudRunner) loadSauceTestReport(jobID string, isRDC bool) (saucereport
 }
 
 func (r *CloudRunner) loadJUnitReport(jobID string, isRDC bool) (junit.TestSuites, error) {
-	fileContent, err := r.JobService.GetJobAssetFileContent(context.Background(), jobID, junit.FileName, isRDC)
+	fileContent, err := r.JobService.ArtifactContent(context.Background(), jobID, junit.FileName, isRDC)
 	if err != nil {
 		log.Warn().Err(err).Str("action", "loading-xml-report").Msg(msg.InsightsReportError)
 		return junit.TestSuites{}, err
