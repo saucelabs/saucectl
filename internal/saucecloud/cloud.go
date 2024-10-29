@@ -67,8 +67,8 @@ type CloudRunner struct {
 }
 
 type Cache struct {
-	VDCBuildURL string
-	RDCBuildURL string
+	VDCBuild *build.Build
+	RDCBuild *build.Build
 }
 
 type result struct {
@@ -153,7 +153,6 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 			if res.job.ID != "" {
 				url = fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 			}
-			buildURL := r.getBuildURL(res.job.ID, res.job.IsRDC)
 			tr := report.TestResult{
 				Name:       res.name,
 				Duration:   res.duration,
@@ -169,7 +168,7 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 				RDC:        res.job.IsRDC,
 				TimedOut:   res.job.TimedOut,
 				Attempts:   res.attempts,
-				BuildURL:   buildURL,
+				BuildURL:   r.findBuild(res.job.ID, res.job.IsRDC).URL,
 			}
 			for _, rep := range r.Reporters {
 				rep.Add(tr)
@@ -190,30 +189,30 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 	return passed
 }
 
-func (r *CloudRunner) getBuildURL(jobID string, isRDC bool) string {
+func (r *CloudRunner) findBuild(jobID string, isRDC bool) build.Build {
 	if isRDC {
-		if r.Cache.RDCBuildURL != "" {
-			return r.Cache.RDCBuildURL
+		if r.Cache.RDCBuild != nil {
+			return *r.Cache.RDCBuild
 		}
 	} else {
-		if r.Cache.VDCBuildURL != "" {
-			return r.Cache.VDCBuildURL
+		if r.Cache.VDCBuild != nil {
+			return *r.Cache.VDCBuild
 		}
 	}
 
 	b, err := r.BuildService.FindBuild(context.Background(), jobID, isRDC)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Failed to retrieve build id for job (%s)", jobID)
-		return ""
+		return build.Build{}
 	}
 
 	if isRDC {
-		r.Cache.RDCBuildURL = b.URL
+		r.Cache.RDCBuild = &b
 	} else {
-		r.Cache.VDCBuildURL = b.URL
+		r.Cache.VDCBuild = &b
 	}
 
-	return b.URL
+	return b
 }
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {
@@ -920,16 +919,7 @@ func (r *CloudRunner) reportInsights(res result) {
 		return
 	}
 
-	if res.details.BuildID == "" {
-		b, err := r.BuildService.FindBuild(
-			context.Background(), res.job.ID, res.job.IsRDC,
-		)
-		if err != nil {
-			// leave BuildID empty when it failed to get build info
-			log.Warn().Err(err).Str("action", "getBuild").Str("jobID", res.job.ID).Msg(msg.EmptyBuildID)
-		}
-		res.details.BuildID = b.ID
-	}
+	res.details.BuildID = r.findBuild(res.job.ID, res.job.IsRDC).ID
 
 	assets, err := r.JobService.ArtifactNames(context.Background(), res.job.ID, res.job.IsRDC)
 	if err != nil {
