@@ -177,15 +177,7 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 		}
 		r.logSuite(res)
 
-		// NOTE: Jobs must be finished in order to be reported to Insights.
-		// * Async jobs have an unknown status by definition, so should always be excluded from reporting.
-		// * Timed out jobs will be requested to stop, but stopping a job
-		//   is either not possible (rdc) or async (vdc) so its actual status is not known now.
-		//   Skip reporting to be safe.
-		isFinished := !r.Async && !res.job.TimedOut
-		if isFinished {
-			r.reportSuiteToInsights(res)
-		}
+		r.reportInsights(res)
 	}
 	close(done)
 
@@ -918,9 +910,13 @@ func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHi
 	return r.InsightsService.GetHistory(context.Background(), user, sortBy)
 }
 
-func (r *CloudRunner) reportSuiteToInsights(res result) {
-	// Skip reporting if job is not completed
-	if !job.Done(res.job.Status) || res.skipped || res.job.ID == "" {
+func (r *CloudRunner) reportInsights(res result) {
+	// NOTE: Jobs must be finished in order to be reported to Insights.
+	// * Async jobs have an unknown status by definition, so should always be excluded from reporting.
+	// * Timed out jobs will be requested to stop, but stopping a job
+	//   is either not possible (rdc) or async (vdc) so its actual status is not known now.
+	//   Skip reporting to be safe.
+	if r.Async || !job.Done(res.job.Status) || res.job.TimedOut || res.skipped || res.job.ID == "" {
 		return
 	}
 

@@ -30,7 +30,7 @@ func TestBuildService_GetBuildID(t *testing.T) {
 				ID:  "happy-build-id",
 				URL: "https://app.saucelabs.com/builds/vdc/happy-build-id",
 			},
-			wantErr:      nil,
+			wantErr: nil,
 		},
 		{
 			name:         "job not found",
