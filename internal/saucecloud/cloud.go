@@ -52,7 +52,7 @@ type CloudRunner struct {
 	MetadataSearchStrategy framework.MetadataSearchStrategy
 	InsightsService        insights.Service
 	UserService            iam.UserService
-	BuildService           build.Reader
+	BuildService           build.Service
 	Retrier                retry.Retrier
 
 	Reporters []report.Reporter
@@ -212,7 +212,7 @@ func (r *CloudRunner) getBuildURL(jobID string, isRDC bool) string {
 		buildSource = build.RDC
 	}
 
-	bID, err := r.BuildService.GetBuildID(context.Background(), jobID, buildSource)
+	bID, err := r.BuildService.FindBuild(context.Background(), jobID, buildSource)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Failed to retrieve build id for job (%s)", jobID)
 		return ""
@@ -935,7 +935,7 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 	}
 
 	if res.details.BuildID == "" {
-		buildID, err := r.BuildService.GetBuildID(context.Background(), res.job.ID, getSource(res.job.IsRDC))
+		buildID, err := r.BuildService.FindBuild(context.Background(), res.job.ID, getSource(res.job.IsRDC))
 		if err != nil {
 			// leave BuildID empty when it failed to get build info
 			log.Warn().Err(err).Str("action", "getBuild").Str("jobID", res.job.ID).Msg(msg.EmptyBuildID)

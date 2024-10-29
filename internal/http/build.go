@@ -29,7 +29,7 @@ type BuildService struct {
 	AccessKey string
 }
 
-func (c *BuildService) GetBuildID(
+func (c *BuildService) FindBuild(
 	ctx context.Context, jobID string, buildSource build.Source,
 ) (string, error) {
 	req, err := NewRetryableRequestWithContext(

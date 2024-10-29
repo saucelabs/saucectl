@@ -16,8 +16,7 @@ const (
 	RDC Source = "rdc"
 )
 
-// Reader is the interface for requesting build information.
-type Reader interface {
-	// GetBuildID returns the build id for a given job id.
-	GetBuildID(ctx context.Context, jobID string, buildSource Source) (string, error)
+// Service is the interface for requesting build information.
+type Service interface {
+	FindBuild(ctx context.Context, jobID string, buildSource Source) (string, error)
 }
