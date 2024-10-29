@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/build"
+	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -51,6 +52,8 @@ func TestBuildService_GetBuildID(t *testing.T) {
 		},
 	}
 	for _, tt := range testCases {
+		// FIXME must be wrapped in t.Run(tt.name, func(t *testing.T) { ... }) !
+
 		// arrange
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(tt.statusCode)
@@ -58,7 +61,8 @@ func TestBuildService_GetBuildID(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		client := NewBuildService(ts.URL, "user", "key", 3*time.Second)
+		client := NewBuildService(region.None, "user", "key", 3*time.Second)
+		client.URL = ts.URL
 		client.Client.RetryWaitMax = 1 * time.Millisecond
 
 		// act
@@ -67,8 +71,9 @@ func TestBuildService_GetBuildID(t *testing.T) {
 		)
 
 		// assert
-		assert.Equal(t, bid, tt.want)
+		assert.Equal(t, tt.want, bid)
 		if err != nil {
+			println(tt.name)
 			assert.True(t, strings.Contains(err.Error(), tt.wantErr.Error()))
 		}
 	}

@@ -130,7 +130,7 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		ArtifactDownloadConfig: p.Artifacts.Download,
 	}
 	buildService := http.NewBuildService(
-		regio.APIBaseURL(), creds.Username, creds.AccessKey, buildTimeout,
+		regio, creds.Username, creds.AccessKey, buildTimeout,
 	)
 
 	log.Info().Msg("Running Playwright-Cucumberjs in Sauce Labs")

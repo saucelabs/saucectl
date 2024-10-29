@@ -165,7 +165,7 @@ func runCypress(cmd *cobra.Command, cflags cypressFlags, isCLIDriven bool) (int,
 		ArtifactDownloadConfig: p.GetArtifactsCfg().Download,
 	}
 	buildService := http.NewBuildService(
-		regio.APIBaseURL(), creds.Username, creds.AccessKey, buildTimeout,
+		regio, creds.Username, creds.AccessKey, buildTimeout,
 	)
 
 	log.Info().Msg("Running Cypress in Sauce Labs")

@@ -199,17 +199,14 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 }
 
 func (r *CloudRunner) getBuildURL(jobID string, isRDC bool) string {
-	var buildSource build.Source
-	if !isRDC {
-		if r.Cache.VDCBuildURL != "" {
-			return r.Cache.VDCBuildURL
-		}
-		buildSource = build.VDC
-	} else {
+	if isRDC {
 		if r.Cache.RDCBuildURL != "" {
 			return r.Cache.RDCBuildURL
 		}
-		buildSource = build.RDC
+	} else {
+		if r.Cache.VDCBuildURL != "" {
+			return r.Cache.VDCBuildURL
+		}
 	}
 
 	b, err := r.BuildService.FindBuild(context.Background(), jobID, isRDC)
@@ -218,16 +215,13 @@ func (r *CloudRunner) getBuildURL(jobID string, isRDC bool) string {
 		return ""
 	}
 
-	bURL := fmt.Sprintf(
-		"%s/builds/%s/%s", r.Region.AppBaseURL(), buildSource,
-		b.ID,
-	)
-	if !isRDC {
-		r.Cache.VDCBuildURL = bURL
+	if isRDC {
+		r.Cache.RDCBuildURL = b.URL
 	} else {
-		r.Cache.RDCBuildURL = bURL
+		r.Cache.VDCBuildURL = b.URL
 	}
-	return bURL
+
+	return b.URL
 }
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {

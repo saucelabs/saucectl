@@ -152,7 +152,7 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
 		ArtifactDownloadConfig: p.Artifacts.Download,
 	}
 	buildService := http.NewBuildService(
-		regio.APIBaseURL(), creds.Username, creds.AccessKey, buildTimeout,
+		regio, creds.Username, creds.AccessKey, buildTimeout,
 	)
 
 	r := saucecloud.XcuitestRunner{

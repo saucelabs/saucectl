@@ -132,7 +132,7 @@ func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, erro
 	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
 	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
 	buildService := http.NewBuildService(
-		regio.APIBaseURL(), creds.Username, creds.AccessKey, buildTimeout,
+		regio, creds.Username, creds.AccessKey, buildTimeout,
 	)
 
 	r := saucecloud.ReplayRunner{

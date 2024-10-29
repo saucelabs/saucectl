@@ -9,14 +9,16 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/build"
+	"github.com/saucelabs/saucectl/internal/region"
 )
 
 func NewBuildService(
-	url, username, accessKey string, timeout time.Duration,
+	r region.Region, username, accessKey string, timeout time.Duration,
 ) BuildService {
 	return BuildService{
 		Client:    NewRetryableClient(timeout),
-		URL:       url,
+		URL:       r.APIBaseURL(),
+		AppURL:    r.AppBaseURL(),
 		Username:  username,
 		AccessKey: accessKey,
 	}
@@ -24,6 +26,7 @@ func NewBuildService(
 
 type BuildService struct {
 	Client    *retryablehttp.Client
+	AppURL    string
 	URL       string
 	Username  string
 	AccessKey string
@@ -59,6 +62,15 @@ func (c *BuildService) FindBuild(
 		)
 	}
 
-	var br build.Build
-	return br, json.NewDecoder(resp.Body).Decode(&br)
+	var b build.Build
+	if err = json.NewDecoder(resp.Body).Decode(&b); err != nil {
+		return build.Build{}, err
+	}
+
+	b.URL = fmt.Sprintf(
+		"%s/builds/%s/%s", c.AppURL, src,
+		b.ID,
+	)
+
+	return b, err
 }

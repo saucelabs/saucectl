@@ -199,7 +199,7 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 		ArtifactDownloadConfig: p.Artifacts.Download,
 	}
 	buildService := http.NewBuildService(
-		regio.APIBaseURL(), creds.Username, creds.AccessKey, buildTimeout,
+		regio, creds.Username, creds.AccessKey, buildTimeout,
 	)
 
 	log.Info().Msg("Running Testcafe in Sauce Labs")
