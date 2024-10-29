@@ -31,31 +31,29 @@ type BuildService struct {
 
 func (c *BuildService) FindBuild(
 	ctx context.Context, jobID string, buildSource build.Source,
-) (string, error) {
+) (build.Build, error) {
 	req, err := NewRetryableRequestWithContext(
 		ctx, http.MethodGet, fmt.Sprintf(
 			"%s/v2/builds/%s/jobs/%s/build/", c.URL, buildSource, jobID,
 		), nil,
 	)
 	if err != nil {
-		return "", err
+		return build.Build{}, err
 	}
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
 	resp, err := c.Client.Do(req)
 	if err != nil {
-		return "", err
+		return build.Build{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
+		return build.Build{}, fmt.Errorf(
+			"unexpected statusCode: %v", resp.StatusCode,
+		)
 	}
 
 	var br build.Build
-	if err := json.NewDecoder(resp.Body).Decode(&br); err != nil {
-		return "", err
-	}
-
-	return br.ID, nil
+	return br, json.NewDecoder(resp.Body).Decode(&br)
 }

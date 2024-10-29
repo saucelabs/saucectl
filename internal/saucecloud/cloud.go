@@ -212,13 +212,16 @@ func (r *CloudRunner) getBuildURL(jobID string, isRDC bool) string {
 		buildSource = build.RDC
 	}
 
-	bID, err := r.BuildService.FindBuild(context.Background(), jobID, buildSource)
+	b, err := r.BuildService.FindBuild(context.Background(), jobID, buildSource)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Failed to retrieve build id for job (%s)", jobID)
 		return ""
 	}
 
-	bURL := fmt.Sprintf("%s/builds/%s/%s", r.Region.AppBaseURL(), buildSource, bID)
+	bURL := fmt.Sprintf(
+		"%s/builds/%s/%s", r.Region.AppBaseURL(), buildSource,
+		b.ID,
+	)
 	if !isRDC {
 		r.Cache.VDCBuildURL = bURL
 	} else {
@@ -935,12 +938,12 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 	}
 
 	if res.details.BuildID == "" {
-		buildID, err := r.BuildService.FindBuild(context.Background(), res.job.ID, getSource(res.job.IsRDC))
+		b, err := r.BuildService.FindBuild(context.Background(), res.job.ID, getSource(res.job.IsRDC))
 		if err != nil {
 			// leave BuildID empty when it failed to get build info
 			log.Warn().Err(err).Str("action", "getBuild").Str("jobID", res.job.ID).Msg(msg.EmptyBuildID)
 		}
-		res.details.BuildID = buildID
+		res.details.BuildID = b.ID
 	}
 
 	assets, err := r.JobService.ArtifactNames(context.Background(), res.job.ID, res.job.IsRDC)

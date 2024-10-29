@@ -18,5 +18,7 @@ const (
 
 // Service is the interface for requesting build information.
 type Service interface {
-	FindBuild(ctx context.Context, jobID string, buildSource Source) (string, error)
+	FindBuild(ctx context.Context, jobID string, buildSource Source) (
+		Build, error,
+	)
 }
