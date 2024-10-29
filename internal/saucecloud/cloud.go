@@ -212,7 +212,7 @@ func (r *CloudRunner) getBuildURL(jobID string, isRDC bool) string {
 		buildSource = build.RDC
 	}
 
-	b, err := r.BuildService.FindBuild(context.Background(), jobID, buildSource)
+	b, err := r.BuildService.FindBuild(context.Background(), jobID, isRDC)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Failed to retrieve build id for job (%s)", jobID)
 		return ""
@@ -924,13 +924,6 @@ func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHi
 	return r.InsightsService.GetHistory(context.Background(), user, sortBy)
 }
 
-func getSource(isRDC bool) build.Source {
-	if isRDC {
-		return build.RDC
-	}
-	return build.VDC
-}
-
 func (r *CloudRunner) reportSuiteToInsights(res result) {
 	// Skip reporting if job is not completed
 	if !job.Done(res.job.Status) || res.skipped || res.job.ID == "" {
@@ -938,7 +931,9 @@ func (r *CloudRunner) reportSuiteToInsights(res result) {
 	}
 
 	if res.details.BuildID == "" {
-		b, err := r.BuildService.FindBuild(context.Background(), res.job.ID, getSource(res.job.IsRDC))
+		b, err := r.BuildService.FindBuild(
+			context.Background(), res.job.ID, res.job.IsRDC,
+		)
 		if err != nil {
 			// leave BuildID empty when it failed to get build info
 			log.Warn().Err(err).Str("action", "getBuild").Str("jobID", res.job.ID).Msg(msg.EmptyBuildID)

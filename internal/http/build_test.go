@@ -18,35 +18,35 @@ func TestBuildService_GetBuildID(t *testing.T) {
 		name         string
 		statusCode   int
 		responseBody []byte
-		want         string
+		want         build.Build
 		wantErr      error
 	}{
 		{
 			name:         "happy case",
 			statusCode:   http.StatusOK,
 			responseBody: []byte(`{"id": "happy-build-id"}`),
-			want:         "happy-build-id",
+			want:         build.Build{ID: "happy-build-id"},
 			wantErr:      nil,
 		},
 		{
 			name:         "job not found",
 			statusCode:   http.StatusNotFound,
 			responseBody: nil,
-			want:         "",
+			want:         build.Build{},
 			wantErr:      errors.New("unexpected statusCode: 404"),
 		},
 		{
 			name:         "validation error",
 			statusCode:   http.StatusUnprocessableEntity,
 			responseBody: nil,
-			want:         "",
+			want:         build.Build{},
 			wantErr:      errors.New("unexpected statusCode: 422"),
 		},
 		{
 			name:         "unparseable response",
 			statusCode:   http.StatusOK,
 			responseBody: []byte(`{"id": "bad-json-response"`),
-			want:         "",
+			want:         build.Build{},
 			wantErr:      errors.New("unexpected EOF"),
 		},
 	}
@@ -62,7 +62,9 @@ func TestBuildService_GetBuildID(t *testing.T) {
 		client.Client.RetryWaitMax = 1 * time.Millisecond
 
 		// act
-		bid, err := client.FindBuild(context.Background(), "some-job-id", build.VDC)
+		bid, err := client.FindBuild(
+			context.Background(), "some-job-id", false,
+		)
 
 		// assert
 		assert.Equal(t, bid, tt.want)

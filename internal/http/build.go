@@ -30,11 +30,16 @@ type BuildService struct {
 }
 
 func (c *BuildService) FindBuild(
-	ctx context.Context, jobID string, buildSource build.Source,
+	ctx context.Context, jobID string, realDevice bool,
 ) (build.Build, error) {
+	src := "vdc"
+	if realDevice {
+		src = "rdc"
+	}
+
 	req, err := NewRetryableRequestWithContext(
 		ctx, http.MethodGet, fmt.Sprintf(
-			"%s/v2/builds/%s/jobs/%s/build/", c.URL, buildSource, jobID,
+			"%s/v2/builds/%s/jobs/%s/build/", c.URL, src, jobID,
 		), nil,
 	)
 	if err != nil {
