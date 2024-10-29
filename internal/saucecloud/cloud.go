@@ -52,7 +52,7 @@ type CloudRunner struct {
 	MetadataSearchStrategy framework.MetadataSearchStrategy
 	InsightsService        insights.Service
 	UserService            iam.UserService
-	BuildService           build.Reader
+	BuildService           build.Service
 	Retrier                retry.Retrier
 
 	Reporters []report.Reporter
@@ -67,8 +67,8 @@ type CloudRunner struct {
 }
 
 type Cache struct {
-	VDCBuildURL string
-	RDCBuildURL string
+	VDCBuild *build.Build
+	RDCBuild *build.Build
 }
 
 type result struct {
@@ -153,7 +153,6 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 			if res.job.ID != "" {
 				url = fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
 			}
-			buildURL := r.getBuildURL(res.job.ID, res.job.IsRDC)
 			tr := report.TestResult{
 				Name:       res.name,
 				Duration:   res.duration,
@@ -169,7 +168,7 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 				RDC:        res.job.IsRDC,
 				TimedOut:   res.job.TimedOut,
 				Attempts:   res.attempts,
-				BuildURL:   buildURL,
+				BuildURL:   r.findBuild(res.job.ID, res.job.IsRDC).URL,
 			}
 			for _, rep := range r.Reporters {
 				rep.Add(tr)
@@ -177,15 +176,7 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 		}
 		r.logSuite(res)
 
-		// NOTE: Jobs must be finished in order to be reported to Insights.
-		// * Async jobs have an unknown status by definition, so should always be excluded from reporting.
-		// * Timed out jobs will be requested to stop, but stopping a job
-		//   is either not possible (rdc) or async (vdc) so its actual status is not known now.
-		//   Skip reporting to be safe.
-		isFinished := !r.Async && !res.job.TimedOut
-		if isFinished {
-			r.reportSuiteToInsights(res)
-		}
+		r.reportInsights(res)
 	}
 	close(done)
 
@@ -198,33 +189,30 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 	return passed
 }
 
-func (r *CloudRunner) getBuildURL(jobID string, isRDC bool) string {
-	var buildSource build.Source
-	if !isRDC {
-		if r.Cache.VDCBuildURL != "" {
-			return r.Cache.VDCBuildURL
+func (r *CloudRunner) findBuild(jobID string, isRDC bool) build.Build {
+	if isRDC {
+		if r.Cache.RDCBuild != nil {
+			return *r.Cache.RDCBuild
 		}
-		buildSource = build.VDC
 	} else {
-		if r.Cache.RDCBuildURL != "" {
-			return r.Cache.RDCBuildURL
+		if r.Cache.VDCBuild != nil {
+			return *r.Cache.VDCBuild
 		}
-		buildSource = build.RDC
 	}
 
-	bID, err := r.BuildService.GetBuildID(context.Background(), jobID, buildSource)
+	b, err := r.BuildService.FindBuild(context.Background(), jobID, isRDC)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Failed to retrieve build id for job (%s)", jobID)
-		return ""
+		return build.Build{}
 	}
 
-	bURL := fmt.Sprintf("%s/builds/%s/%s", r.Region.AppBaseURL(), buildSource, bID)
-	if !isRDC {
-		r.Cache.VDCBuildURL = bURL
+	if isRDC {
+		r.Cache.RDCBuild = &b
 	} else {
-		r.Cache.RDCBuildURL = bURL
+		r.Cache.VDCBuild = &b
 	}
-	return bURL
+
+	return b
 }
 
 func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {
@@ -921,27 +909,17 @@ func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHi
 	return r.InsightsService.GetHistory(context.Background(), user, sortBy)
 }
 
-func getSource(isRDC bool) build.Source {
-	if isRDC {
-		return build.RDC
-	}
-	return build.VDC
-}
-
-func (r *CloudRunner) reportSuiteToInsights(res result) {
-	// Skip reporting if job is not completed
-	if !job.Done(res.job.Status) || res.skipped || res.job.ID == "" {
+func (r *CloudRunner) reportInsights(res result) {
+	// NOTE: Jobs must be finished in order to be reported to Insights.
+	// * Async jobs have an unknown status by definition, so should always be excluded from reporting.
+	// * Timed out jobs will be requested to stop, but stopping a job
+	//   is either not possible (rdc) or async (vdc) so its actual status is not known now.
+	//   Skip reporting to be safe.
+	if r.Async || !job.Done(res.job.Status) || res.job.TimedOut || res.skipped || res.job.ID == "" {
 		return
 	}
 
-	if res.details.BuildID == "" {
-		buildID, err := r.BuildService.GetBuildID(context.Background(), res.job.ID, getSource(res.job.IsRDC))
-		if err != nil {
-			// leave BuildID empty when it failed to get build info
-			log.Warn().Err(err).Str("action", "getBuild").Str("jobID", res.job.ID).Msg(msg.EmptyBuildID)
-		}
-		res.details.BuildID = buildID
-	}
+	res.details.BuildID = r.findBuild(res.job.ID, res.job.IsRDC).ID
 
 	assets, err := r.JobService.ArtifactNames(context.Background(), res.job.ID, res.job.IsRDC)
 	if err != nil {

@@ -129,6 +129,9 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		TestComposer:           testcompClient,
 		ArtifactDownloadConfig: p.Artifacts.Download,
 	}
+	buildService := http.NewBuildService(
+		regio, creds.Username, creds.AccessKey, buildTimeout,
+	)
 
 	log.Info().Msg("Running Playwright-Cucumberjs in Sauce Labs")
 	r := saucecloud.CucumberRunner{
@@ -140,7 +143,7 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 			MetadataService: &testcompClient,
 			InsightsService: &insightsClient,
 			UserService:     &iamClient,
-			BuildService:    &restoClient,
+			BuildService:    &buildService,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
 			Reporters: createReporters(

@@ -198,6 +198,9 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 		TestComposer:           testcompClient,
 		ArtifactDownloadConfig: p.Artifacts.Download,
 	}
+	buildService := http.NewBuildService(
+		regio, creds.Username, creds.AccessKey, buildTimeout,
+	)
 
 	log.Info().Msg("Running Testcafe in Sauce Labs")
 	r := saucecloud.TestcafeRunner{
@@ -209,7 +212,7 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 			MetadataService: &testcompClient,
 			InsightsService: &insightsClient,
 			UserService:     &iamClient,
-			BuildService:    &restoClient,
+			BuildService:    &buildService,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
 			Reporters: createReporters(

@@ -164,6 +164,9 @@ func runCypress(cmd *cobra.Command, cflags cypressFlags, isCLIDriven bool) (int,
 		TestComposer:           testcompClient,
 		ArtifactDownloadConfig: p.GetArtifactsCfg().Download,
 	}
+	buildService := http.NewBuildService(
+		regio, creds.Username, creds.AccessKey, buildTimeout,
+	)
 
 	log.Info().Msg("Running Cypress in Sauce Labs")
 	r := saucecloud.CypressRunner{
@@ -175,7 +178,7 @@ func runCypress(cmd *cobra.Command, cflags cypressFlags, isCLIDriven bool) (int,
 			TunnelService:   &restoClient,
 			InsightsService: &insightsClient,
 			UserService:     &iamClient,
-			BuildService:    &restoClient,
+			BuildService:    &buildService,
 			Region:          regio,
 			ShowConsoleLog:  p.IsShowConsoleLog(),
 			Reporters: createReporters(

@@ -48,6 +48,7 @@ var (
 	webdriverTimeout    = 15 * time.Minute
 	rdcTimeout          = 15 * time.Minute
 	insightsTimeout     = 10 * time.Second
+	buildTimeout        = 10 * time.Second
 	iamTimeout          = 10 * time.Second
 	apitestingTimeout   = 30 * time.Second
 	imgExecTimeout      = 30 * time.Second

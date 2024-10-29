@@ -131,6 +131,9 @@ func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, erro
 	rdcClient := http.NewRDCService(regio.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout)
 	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
 	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
+	buildService := http.NewBuildService(
+		regio, creds.Username, creds.AccessKey, buildTimeout,
+	)
 
 	r := saucecloud.ReplayRunner{
 		Project: p,
@@ -147,7 +150,7 @@ func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, erro
 			MetadataService: &testcompClient,
 			InsightsService: &insightsClient,
 			UserService:     &iamClient,
-			BuildService:    &restoClient,
+			BuildService:    &buildService,
 			Region:          regio,
 			ShowConsoleLog:  p.ShowConsoleLog,
 			Reporters: createReporters(

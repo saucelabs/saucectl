@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/job"
 	tunnels "github.com/saucelabs/saucectl/internal/tunnel"
 	"github.com/saucelabs/saucectl/internal/vmd"
@@ -391,31 +390,6 @@ func (c *Resto) GetVirtualDevices(ctx context.Context, kind string) ([]vmd.Virtu
 		return dev[i].Name < dev[j].Name
 	})
 	return dev, nil
-}
-
-func (c *Resto) GetBuildID(ctx context.Context, jobID string, buildSource build.Source) (string, error) {
-	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v2/builds/%s/jobs/%s/build/", c.URL, buildSource, jobID), nil)
-	if err != nil {
-		return "", err
-	}
-	req.SetBasicAuth(c.Username, c.AccessKey)
-
-	resp, err := c.Client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("unexpected statusCode: %v", resp.StatusCode)
-	}
-
-	var br build.Build
-	if err := json.NewDecoder(resp.Body).Decode(&br); err != nil {
-		return "", err
-	}
-
-	return br.ID, nil
 }
 
 // parseJob parses the body into restoJob and converts it to job.Job.
