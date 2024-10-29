@@ -26,7 +26,10 @@ func TestBuildService_GetBuildID(t *testing.T) {
 			name:         "happy case",
 			statusCode:   http.StatusOK,
 			responseBody: []byte(`{"id": "happy-build-id"}`),
-			want:         build.Build{ID: "happy-build-id"},
+			want: build.Build{
+				ID:  "happy-build-id",
+				URL: "https://app.saucelabs.com/builds/vdc/happy-build-id",
+			},
 			wantErr:      nil,
 		},
 		{
@@ -52,29 +55,39 @@ func TestBuildService_GetBuildID(t *testing.T) {
 		},
 	}
 	for _, tt := range testCases {
-		// FIXME must be wrapped in t.Run(tt.name, func(t *testing.T) { ... }) !
+		t.Run(
+			tt.name, func(t *testing.T) {
+				// arrange
+				ts := httptest.NewServer(
+					http.HandlerFunc(
+						func(w http.ResponseWriter, _ *http.Request) {
+							w.WriteHeader(tt.statusCode)
+							_, _ = w.Write(tt.responseBody)
+						},
+					),
+				)
+				defer ts.Close()
 
-		// arrange
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-			w.WriteHeader(tt.statusCode)
-			_, _ = w.Write(tt.responseBody)
-		}))
-		defer ts.Close()
+				client := NewBuildService(
+					region.None, "user", "key", 3*time.Second,
+				)
+				client.URL = ts.URL
+				client.AppURL = "https://app.saucelabs.com"
+				client.Client.RetryWaitMax = 1 * time.Millisecond
 
-		client := NewBuildService(region.None, "user", "key", 3*time.Second)
-		client.URL = ts.URL
-		client.Client.RetryWaitMax = 1 * time.Millisecond
+				// act
+				bid, err := client.FindBuild(
+					context.Background(), "some-job-id", false,
+				)
 
-		// act
-		bid, err := client.FindBuild(
-			context.Background(), "some-job-id", false,
+				// assert
+				assert.Equal(t, tt.want, bid)
+				if err != nil {
+					assert.True(
+						t, strings.Contains(err.Error(), tt.wantErr.Error()),
+					)
+				}
+			},
 		)
-
-		// assert
-		assert.Equal(t, tt.want, bid)
-		if err != nil {
-			println(tt.name)
-			assert.True(t, strings.Contains(err.Error(), tt.wantErr.Error()))
-		}
 	}
 }
