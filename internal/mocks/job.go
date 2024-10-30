@@ -9,34 +9,18 @@ import (
 
 // FakeJobService resto mock
 type FakeJobService struct {
-	StartJobFn func(ctx context.Context, opts job.StartOptions) (string, error)
-	StopJobFn  func(
-		ctx context.Context, jobID string, realDevice bool,
-	) (job.Job, error)
-	ReadJobFn func(ctx context.Context, id string) (
-		job.Job, error,
-	)
-	PollJobFn func(
-		ctx context.Context, id string, interval time.Duration,
-		timeout time.Duration,
-	) (job.Job, error)
+	StartJobFn func(ctx context.Context, opts job.StartOptions) (job.Job, error)
+	StopJobFn  func(ctx context.Context, jobID string, realDevice bool) (job.Job, error)
+	ReadJobFn  func(ctx context.Context, id string) (job.Job, error)
+	PollJobFn  func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error)
 
-	UploadAssetFn func(
-		jobID string, realDevice bool, fileName string, contentType string,
-		content []byte,
-	) error
-	DownloadArtifactFn     func(job job.Job, isLastAttempt bool) []string
-	GetJobAssetFileNamesFn func(ctx context.Context, jobID string) (
-		[]string, error,
-	)
-	GetJobAssetFileContentFn func(
-		ctx context.Context, jobID, fileName string,
-	) ([]byte, error)
+	UploadAssetFn            func(jobID string, realDevice bool, fileName string, contentType string, content []byte) error
+	DownloadArtifactFn       func(job job.Job, isLastAttempt bool) []string
+	GetJobAssetFileNamesFn   func(ctx context.Context, jobID string) ([]string, error)
+	GetJobAssetFileContentFn func(ctx context.Context, jobID, fileName string) ([]byte, error)
 }
 
-func (s *FakeJobService) StartJob(
-	ctx context.Context, opts job.StartOptions,
-) (jobID string, err error) {
+func (s *FakeJobService) StartJob(ctx context.Context, opts job.StartOptions) (job.Job, error) {
 	return s.StartJobFn(ctx, opts)
 }
 

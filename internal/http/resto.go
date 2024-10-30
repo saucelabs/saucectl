@@ -14,6 +14,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/region"
 	tunnels "github.com/saucelabs/saucectl/internal/tunnel"
 	"github.com/saucelabs/saucectl/internal/vmd"
 )
@@ -48,6 +49,7 @@ type restoJob struct {
 // Resto http client.
 type Resto struct {
 	Client    *retryablehttp.Client
+	AppURL    string
 	URL       string
 	Username  string
 	AccessKey string
@@ -61,10 +63,11 @@ type tunnel struct {
 }
 
 // NewResto creates a new client.
-func NewResto(url, username, accessKey string, timeout time.Duration) Resto {
+func NewResto(r region.Region, username, accessKey string, timeout time.Duration) Resto {
 	return Resto{
 		Client:    NewRetryableClient(timeout),
-		URL:       url,
+		AppURL:    r.AppBaseURL(),
+		URL:       r.APIBaseURL(),
 		Username:  username,
 		AccessKey: accessKey,
 	}
@@ -424,5 +427,6 @@ func (c *Resto) parseJob(body io.ReadCloser) (job.Job, error) {
 		Framework:      j.AutomationBackend,
 		OS:             osName,
 		OSVersion:      osVersion,
+		URL:            fmt.Sprintf("%s/tests/%s", c.AppURL, j.ID),
 	}, nil
 }

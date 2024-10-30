@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/slice"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -24,6 +25,7 @@ import (
 // RDCService http client.
 type RDCService struct {
 	Client    *retryablehttp.Client
+	AppURL    string
 	URL       string
 	Username  string
 	AccessKey string
@@ -83,17 +85,18 @@ type DeviceQuery struct {
 }
 
 // NewRDCService creates a new client.
-func NewRDCService(url, username, accessKey string, timeout time.Duration) RDCService {
+func NewRDCService(r region.Region, username, accessKey string, timeout time.Duration) RDCService {
 	return RDCService{
 		Client:    NewRetryableClient(timeout),
-		URL:       url,
+		AppURL:    r.AppBaseURL(),
+		URL:       r.APIBaseURL(),
 		Username:  username,
 		AccessKey: accessKey,
 	}
 }
 
 // StartJob creates a new job in Sauce Labs.
-func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
+func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (job.Job, error) {
 	url := fmt.Sprintf("%s/v1/rdc/native-composer/tests", c.URL)
 
 	var frameworkName string
@@ -129,31 +132,31 @@ func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (jobID
 	}
 
 	var b bytes.Buffer
-	err = json.NewEncoder(&b).Encode(jobReq)
+	err := json.NewEncoder(&b).Encode(jobReq)
 	if err != nil {
-		return
+		return job.Job{}, err
 	}
 
 	req, err := NewRequestWithContext(ctx, http.MethodPost, url, &b)
 	if err != nil {
-		return
+		return job.Job{}, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.SetBasicAuth(c.Username, c.AccessKey)
 
 	resp, err := c.Client.HTTPClient.Do(req)
 	if err != nil {
-		return
+		return job.Job{}, err
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return
+		return job.Job{}, err
 	}
 
 	if resp.StatusCode >= 300 {
 		err = fmt.Errorf("job start failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, strings.TrimSpace(string(body)))
-		return "", err
+		return job.Job{}, err
 	}
 
 	var sessionStart struct {
@@ -162,10 +165,15 @@ func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (jobID
 		} `json:"test_report"`
 	}
 	if err = json.Unmarshal(body, &sessionStart); err != nil {
-		return "", fmt.Errorf("job start status unknown: unable to parse server response: %w", err)
+		return job.Job{}, fmt.Errorf("job start status unknown: unable to parse server response: %w", err)
 	}
 
-	return sessionStart.TestReport.ID, nil
+	return job.Job{
+		ID:     sessionStart.TestReport.ID,
+		IsRDC:  true,
+		Status: job.StateQueued,
+		URL:    fmt.Sprintf("%s/tests/%s", c.AppURL, sessionStart.TestReport.ID),
+	}, nil
 }
 
 func (c *RDCService) StopJob(ctx context.Context, id string, realDevice bool) (job.Job, error) {
@@ -201,7 +209,11 @@ func (c *RDCService) StopJob(ctx context.Context, id string, realDevice bool) (j
 	}
 
 	// RDC does not return any job details in the response.
-	return job.Job{}, nil
+	return job.Job{
+		ID:     id,
+		Status: job.StateInProgress,
+		URL:    fmt.Sprintf("%s/tests/%s", c.AppURL, id),
+	}, nil
 }
 
 // Job returns the job details.
@@ -485,5 +497,6 @@ func (c *RDCService) parseJob(body io.ReadCloser) (job.Job, error) {
 		OS:         j.OS,
 		OSVersion:  j.OSVersion,
 		IsRDC:      true,
+		URL:        fmt.Sprintf("%s/tests/%s", c.AppURL, j.ID),
 	}, err
 }

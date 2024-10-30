@@ -23,7 +23,7 @@ func NewRetryableClient(timeout time.Duration) *retryablehttp.Client {
 			if e != nil {
 				return ok, e
 			}
-			if !ok && resp.StatusCode == http.StatusNotFound {
+			if !ok && resp != nil && resp.StatusCode == http.StatusNotFound {
 				return true, nil
 			}
 			return ok, e

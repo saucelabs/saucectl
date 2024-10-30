@@ -11,6 +11,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/config"
 	httpServices "github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/region"
 	"gotest.tools/v3/assert"
 )
 
@@ -41,14 +42,21 @@ func TestJobService_DownloadArtifact(t *testing.T) {
 		_ = os.RemoveAll(tempDir)
 	}()
 
-	rc := httpServices.NewRDCService(ts.URL, "dummy-user", "dummy-key", 10*time.Second)
+	rdc := httpServices.NewRDCService(
+		region.None,
+		"dummy-user",
+		"dummy-key",
+		10*time.Second,
+	)
+	rdc.URL = ts.URL
+
 	artifactCfg := config.ArtifactDownload{
 		Directory: tempDir,
 		Match:     []string{"junit.xml"},
 		When:      config.WhenAlways,
 	}
 	downloader := JobService{
-		RDC:                    rc,
+		RDC:                    rdc,
 		ArtifactDownloadConfig: artifactCfg,
 	}
 	downloader.DownloadArtifacts(

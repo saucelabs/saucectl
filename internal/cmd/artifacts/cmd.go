@@ -46,10 +46,10 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 			artifactSvc = ArtifactService{
 				JobService: saucecloud.JobService{
 					Resto: http.NewResto(
-						url, creds.Username, creds.AccessKey, restoTimeout,
+						reg, creds.Username, creds.AccessKey, restoTimeout,
 					),
 					RDC: http.NewRDCService(
-						url, creds.Username, creds.AccessKey, rdcTimeout,
+						reg, creds.Username, creds.AccessKey, rdcTimeout,
 					),
 					TestComposer: http.NewTestComposer(
 						url, creds, testComposerTimeout,

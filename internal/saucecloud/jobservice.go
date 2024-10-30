@@ -110,7 +110,7 @@ func (s JobService) Artifact(ctx context.Context, jobID, fileName string, realDe
 	return s.Resto.Artifact(ctx, jobID, fileName, realDevice)
 }
 
-func (s JobService) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
+func (s JobService) StartJob(ctx context.Context, opts job.StartOptions) (job.Job, error) {
 	if opts.RealDevice {
 		return s.RDC.StartJob(ctx, opts)
 	}

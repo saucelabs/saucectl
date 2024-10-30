@@ -149,10 +149,6 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 
 			r.FetchJUnitReports(&res, res.artifacts)
 
-			var url string
-			if res.job.ID != "" {
-				url = fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
-			}
 			tr := report.TestResult{
 				Name:       res.name,
 				Duration:   res.duration,
@@ -162,7 +158,7 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 				Browser:    browser,
 				Platform:   platform,
 				DeviceName: res.job.DeviceName,
-				URL:        url,
+				URL:        res.job.URL,
 				Artifacts:  res.artifacts,
 				Origin:     "sauce",
 				RDC:        res.job.IsRDC,
@@ -222,27 +218,26 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 		Str("tunnel", opts.Tunnel.Name).
 		Msg("Starting suite.")
 
-	id, err := r.JobService.StartJob(context.Background(), opts)
+	j, err = r.JobService.StartJob(context.Background(), opts)
 	if err != nil {
 		return job.Job{Status: job.StateError}, false, err
 	}
 
-	sigChan := r.registerInterruptOnSignal(id, opts.RealDevice, opts.DisplayName)
+	sigChan := r.registerInterruptOnSignal(j.ID, opts.RealDevice, opts.DisplayName)
 	defer unregisterSignalCapture(sigChan)
 
-	r.uploadSauceConfig(id, opts.RealDevice, opts.ConfigFilePath)
-	r.uploadCLIFlags(id, opts.RealDevice, opts.CLIFlags)
+	r.uploadSauceConfig(j.ID, opts.RealDevice, opts.ConfigFilePath)
+	r.uploadCLIFlags(j.ID, opts.RealDevice, opts.CLIFlags)
 
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
 	// if a soft exit is requested during startContainer phase, it gently exits.
 	if r.interrupted {
-		r.stopSuiteExecution(id, opts.RealDevice, opts.DisplayName)
-		j, err = r.JobService.PollJob(context.Background(), id, 15*time.Second, opts.Timeout, opts.RealDevice)
+		r.stopSuiteExecution(j.ID, opts.RealDevice, opts.DisplayName)
+		j, err = r.JobService.PollJob(context.Background(), j.ID, 15*time.Second, opts.Timeout, opts.RealDevice)
 		return j, true, err
 	}
 
-	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), id)
-	l := log.Info().Str("url", jobDetailsPage).Str("suite", opts.DisplayName).Str("platform", opts.PlatformName)
+	l := log.Info().Str("url", j.URL).Str("suite", opts.DisplayName).Str("platform", opts.PlatformName)
 
 	if opts.RealDevice {
 		l.Str("deviceName", opts.DeviceName).Str("platformVersion", opts.PlatformVersion).Str("deviceId", opts.DeviceID)
@@ -253,13 +248,13 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 
 	l.Msg("Suite started.")
 
-	// Async mode. Mark the job as started without waiting for the result.
+	// Async mode. Return the current status without waiting for the final result.
 	if r.Async {
-		return job.Job{ID: id, IsRDC: opts.RealDevice, Status: job.StateInProgress}, false, nil
+		return j, false, nil
 	}
 
 	// High interval poll to not oversaturate the job reader with requests
-	j, err = r.JobService.PollJob(context.Background(), id, 15*time.Second, opts.Timeout, opts.RealDevice)
+	j, err = r.JobService.PollJob(context.Background(), j.ID, 15*time.Second, opts.Timeout, opts.RealDevice)
 	if err != nil {
 		return job.Job{}, r.interrupted, fmt.Errorf("failed to retrieve job status for suite %s: %s", opts.DisplayName, err.Error())
 	}
@@ -271,7 +266,7 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 			Str("timeout", opts.Timeout.String()).
 			Msg("Suite timed out.")
 
-		r.stopSuiteExecution(id, opts.RealDevice, opts.DisplayName)
+		r.stopSuiteExecution(j.ID, opts.RealDevice, opts.DisplayName)
 
 		j.Passed = false
 		j.TimedOut = true

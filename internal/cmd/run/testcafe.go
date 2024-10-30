@@ -184,11 +184,11 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 
 	creds := regio.Credentials()
 
-	restoClient := http.NewResto(regio.APIBaseURL(), creds.Username, creds.AccessKey, 0)
+	restoClient := http.NewResto(regio, creds.Username, creds.AccessKey, 0)
 	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)
-	webdriverClient := http.NewWebdriver(regio.WebDriverBaseURL(), creds, webdriverTimeout)
+	webdriverClient := http.NewWebdriver(regio, creds, webdriverTimeout)
 	appsClient := *http.NewAppStore(regio.APIBaseURL(), creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
-	rdcClient := http.NewRDCService(regio.APIBaseURL(), creds.Username, creds.AccessKey, rdcTimeout)
+	rdcClient := http.NewRDCService(regio, creds.Username, creds.AccessKey, rdcTimeout)
 	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
 	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
 	jobService := saucecloud.JobService{

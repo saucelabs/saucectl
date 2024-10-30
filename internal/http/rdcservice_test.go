@@ -12,9 +12,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -42,7 +45,8 @@ func TestRDCService_ReadJob(t *testing.T) {
 	}))
 	defer ts.Close()
 	timeout := 3 * time.Second
-	client := NewRDCService(ts.URL, "test-user", "test-key", timeout)
+	client := NewRDCService(region.None, "test-user", "test-key", timeout)
+	client.URL = ts.URL
 	client.Client.RetryMax = 0
 
 	testCases := []struct {
@@ -52,37 +56,68 @@ func TestRDCService_ReadJob(t *testing.T) {
 		wantErr error
 	}{
 		{
-			name:    "passed job",
-			jobID:   "test1",
-			want:    job.Job{ID: "test1", Error: "", Status: "passed", Passed: true, IsRDC: true},
+			name:  "passed job",
+			jobID: "test1",
+			want: job.Job{
+				ID:     "test1",
+				Error:  "",
+				Status: "passed",
+				Passed: true,
+				IsRDC:  true,
+				URL:    "/tests/test1",
+			},
 			wantErr: nil,
 		},
 		{
-			name:    "failed job",
-			jobID:   "test2",
-			want:    job.Job{ID: "test2", Error: "no-device-found", Status: "failed", Passed: false, IsRDC: true},
+			name:  "failed job",
+			jobID: "test2",
+			want: job.Job{
+				ID:     "test2",
+				Error:  "no-device-found",
+				Status: "failed",
+				Passed: false,
+				IsRDC:  true,
+				URL:    "/tests/test2",
+			},
 			wantErr: nil,
 		},
 		{
-			name:    "in progress job",
-			jobID:   "test3",
-			want:    job.Job{ID: "test3", Error: "", Status: "in progress", Passed: false, IsRDC: true},
+			name:  "in progress job",
+			jobID: "test3",
+			want: job.Job{
+				ID:     "test3",
+				Error:  "",
+				Status: "in progress",
+				Passed: false,
+				IsRDC:  true,
+				URL:    "/tests/test3",
+			},
 			wantErr: nil,
 		},
 		{
-			name:    "non-existent job",
-			jobID:   "test4",
-			want:    job.Job{ID: "test4", Error: "", Status: "", Passed: false},
+			name:  "non-existent job",
+			jobID: "test4",
+			want: job.Job{
+				ID:     "test4",
+				Error:  "",
+				Status: "",
+				Passed: false,
+				URL:    "/tests/test4",
+			},
 			wantErr: ErrJobNotFound,
 		},
 	}
 
 	for _, tt := range testCases {
-		j, err := client.Job(context.Background(), tt.jobID, true)
-		assert.Equal(t, err, tt.wantErr)
-		if err == nil {
-			assert.Equal(t, tt.want, j)
-		}
+		t.Run(
+			tt.name, func(t *testing.T) {
+				j, err := client.Job(context.Background(), tt.jobID, true)
+				assert.Equal(t, err, tt.wantErr)
+				if err == nil {
+					assert.Equal(t, tt.want, j)
+				}
+			},
+		)
 	}
 }
 
@@ -131,6 +166,9 @@ func TestRDCService_PollJob(t *testing.T) {
 	defer ts.Close()
 	timeout := 3 * time.Second
 
+	rdc := NewRDCService(region.None, "test", "123", timeout)
+	rdc.URL = ts.URL
+
 	testCases := []struct {
 		name         string
 		client       RDCService
@@ -140,7 +178,7 @@ func TestRDCService_PollJob(t *testing.T) {
 	}{
 		{
 			name:   "get job details with ID 1 and status 'complete'",
-			client: NewRDCService(ts.URL, "test", "123", timeout),
+			client: rdc,
 			jobID:  "1",
 			expectedResp: job.Job{
 				ID:     "1",
@@ -148,12 +186,13 @@ func TestRDCService_PollJob(t *testing.T) {
 				Status: "complete",
 				Error:  "",
 				IsRDC:  true,
+				URL:    "/tests/1",
 			},
 			expectedErr: nil,
 		},
 		{
 			name:   "get job details with ID 2 and status 'error'",
-			client: NewRDCService(ts.URL, "test", "123", timeout),
+			client: rdc,
 			jobID:  "2",
 			expectedResp: job.Job{
 				ID:     "2",
@@ -161,33 +200,34 @@ func TestRDCService_PollJob(t *testing.T) {
 				Status: "error",
 				Error:  "User Abandoned Test -- User terminated",
 				IsRDC:  true,
+				URL:    "/tests/2",
 			},
 			expectedErr: nil,
 		},
 		{
 			name:         "job not found error from external API",
-			client:       NewRDCService(ts.URL, "test", "123", timeout),
+			client:       rdc,
 			jobID:        "3",
 			expectedResp: job.Job{},
 			expectedErr:  ErrJobNotFound,
 		},
 		{
 			name:         "http status is not 200, but 401 from external API",
-			client:       NewRDCService(ts.URL, "test", "123", timeout),
+			client:       rdc,
 			jobID:        "4",
 			expectedResp: job.Job{},
 			expectedErr:  errors.New("unexpected statusCode: 401"),
 		},
 		{
 			name:         "unexpected status code from external API",
-			client:       NewRDCService(ts.URL, "test", "123", timeout),
+			client:       rdc,
 			jobID:        "333",
 			expectedResp: job.Job{},
 			expectedErr:  errors.New("internal server error"),
 		},
 		{
 			name:   "get job details with ID 5. retry 2 times and succeed",
-			client: NewRDCService(ts.URL, "test", "123", timeout),
+			client: rdc,
 			jobID:  "5",
 			expectedResp: job.Job{
 				ID:     "5",
@@ -195,6 +235,7 @@ func TestRDCService_PollJob(t *testing.T) {
 				Status: job.StatePassed,
 				Error:  "",
 				IsRDC:  true,
+				URL:    "/tests/5",
 			},
 			expectedErr: nil,
 		},
@@ -239,7 +280,8 @@ func TestRDCService_GetJobAssetFileNames(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
-	client := NewRDCService(ts.URL, "test-user", "test-password", 1*time.Second)
+	client := NewRDCService(region.None, "test-user", "test-password", 1*time.Second)
+	client.URL = ts.URL
 
 	testCases := []struct {
 		name     string
@@ -312,7 +354,8 @@ func TestRDCService_GetJobAssetFileContent(t *testing.T) {
 		}
 	}))
 	defer ts.Close()
-	client := NewRDCService(ts.URL, "test-user", "test-password", 1*time.Second)
+	client := NewRDCService(region.None, "test-user", "test-password", 1*time.Second)
+	client.URL = ts.URL
 	client.Client.RetryMax = 0
 
 	testCases := []struct {
@@ -443,7 +486,7 @@ func TestRDCService_StartJob(t *testing.T) {
 		name       string
 		fields     fields
 		args       args
-		want       string
+		want       job.Job
 		wantErr    error
 		serverFunc func(w http.ResponseWriter, r *http.Request) // what shall the mock server respond with
 	}{
@@ -461,7 +504,12 @@ func TestRDCService_StartJob(t *testing.T) {
 					Tags:        nil,
 				},
 			},
-			want:    "fake-job-id",
+			want: job.Job{
+				ID:     "fake-job-id",
+				Status: job.StateQueued,
+				IsRDC:  true,
+				URL:    "/tests/fake-job-id",
+			},
 			wantErr: nil,
 			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(201)
@@ -474,7 +522,7 @@ func TestRDCService_StartJob(t *testing.T) {
 				ctx:               context.TODO(),
 				jobStarterPayload: job.StartOptions{},
 			},
-			want:    "",
+			want:    job.Job{},
 			wantErr: fmt.Errorf("job start failed; unexpected response code:'300', msg:''"),
 			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(300)
@@ -486,7 +534,7 @@ func TestRDCService_StartJob(t *testing.T) {
 				ctx:               context.TODO(),
 				jobStarterPayload: job.StartOptions{},
 			},
-			want:    "",
+			want:    job.Job{},
 			wantErr: fmt.Errorf("job start failed; unexpected response code:'500', msg:'Internal server error'"),
 			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(500)
@@ -512,8 +560,8 @@ func TestRDCService_StartJob(t *testing.T) {
 				t.Errorf("StartJob() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("StartJob() got = %v, want %v", got, tt.want)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("StartJob() (-want +got): \n%s", diff)
 			}
 		})
 	}

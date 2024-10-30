@@ -44,9 +44,7 @@ type JobServiceStub struct {
 	SauceReport saucereport.SauceReport
 }
 
-func (f *JobServiceStub) StartJob(
-	context.Context, job.StartOptions,
-) (jobID string, err error) {
+func (f *JobServiceStub) StartJob(context.Context, job.StartOptions) (job.Job, error) {
 	panic("implement me")
 }
 
