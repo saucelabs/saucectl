@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -645,15 +646,26 @@ func ValidatePackageLock() error {
 	return nil
 }
 
-func ValidatePackage(p node.Package, frameworkName string, expectedVersion string) error {
+var reExactVersion = regexp.MustCompile(`^\d`)
+
+func ValidatePackage(packages node.Package, frameworkName string, expectedVersion string) error {
 	var ver string
 	var ok bool
-	ver, ok = p.Dependencies[frameworkName]
+	ver, ok = packages.Dependencies[frameworkName]
 	if !ok {
-		ver, ok = p.DevDependencies[frameworkName]
+		ver, ok = packages.DevDependencies[frameworkName]
 	}
-	if !ok || (expectedVersion != "package.json" && expectedVersion != ver) {
+
+	if !ok {
+		return fmt.Errorf("missing framework version. The framework version in your config file (%s) must exactly match the framework version in your package.json", expectedVersion)
+	}
+
+	if !reExactVersion.MatchString(ver) {
+		return fmt.Errorf("invalid framework version. The framework version in your package.json (%s) must be exact", ver)
+	}
+	if expectedVersion != "package.json" && expectedVersion != ver {
 		return fmt.Errorf("framework version mismatch. The framework version in your config file (%s) must exactly match the framework version in your package.json (%s)", expectedVersion, ver)
 	}
+
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/saucelabs/saucectl/internal/node"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -386,6 +387,102 @@ func TestValidateRegistries(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.wantErr(t, ValidateRegistries(tt.args), fmt.Sprintf("ValidateRegistries(%v)", tt.args))
+		})
+	}
+}
+
+func TestValidatePackage(t *testing.T) {
+	type args struct {
+		parsedPackages  node.Package
+		framework       string
+		expectedVersion string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "passes with all requirements met in Dependencies",
+			args: args{
+				parsedPackages: node.Package{
+					Dependencies: map[string]string{
+						"framework": "1.2.3",
+					},
+				},
+				framework:       "framework",
+				expectedVersion: "1.2.3",
+			},
+			wantErr: false,
+		},
+		{
+			name: "passes with all requirements met in DevDependencies",
+			args: args{
+				parsedPackages: node.Package{
+					Dependencies: map[string]string{
+						"framework": "1.2.3",
+					},
+				},
+				framework:       "framework",
+				expectedVersion: "1.2.3",
+			},
+			wantErr: false,
+		},
+		{
+			name: "passes with all requirements met using package.json",
+			args: args{
+				parsedPackages: node.Package{
+					Dependencies: map[string]string{
+						"framework": "1.2.3",
+					},
+				},
+				framework:       "framework",
+				expectedVersion: "package.json",
+			},
+			wantErr: false,
+		},
+		{
+			name: "fails when framework missing in packages",
+			args: args{
+				parsedPackages:  node.Package{},
+				framework:       "framework",
+				expectedVersion: "1.2.3",
+			},
+			wantErr: true,
+		},
+		{
+			name: "fails when using semver range",
+			args: args{
+				parsedPackages: node.Package{
+					Dependencies: map[string]string{
+						"framework": "~1.2.0",
+					},
+				},
+				framework:       "framework",
+				expectedVersion: "1.2.3",
+			},
+			wantErr: true,
+		},
+		{
+			name: "fails when versions don't match",
+			args: args{
+				parsedPackages: node.Package{
+					Dependencies: map[string]string{
+						"framework": "1.2.3",
+					},
+				},
+				framework:       "framework",
+				expectedVersion: "2.0.0",
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidatePackage(tt.args.parsedPackages, tt.args.framework, tt.args.expectedVersion)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValidatePackage() error = %v, wantErr %v", err, tt.wantErr)
+			}
 		})
 	}
 }
