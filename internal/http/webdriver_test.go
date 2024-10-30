@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/saucelabs/saucectl/internal/job"
 )
 
@@ -25,7 +27,7 @@ func TestWebdriver_StartJob(t *testing.T) {
 		name       string
 		fields     fields
 		args       args
-		want       string
+		want       job.Job
 		wantErr    error
 		serverFunc func(w http.ResponseWriter, r *http.Request) // what shall the mock server respond with
 	}{
@@ -43,7 +45,11 @@ func TestWebdriver_StartJob(t *testing.T) {
 					Tags:        nil,
 				},
 			},
-			want:    "fake-job-id",
+			want: job.Job{
+				ID:     "fake-job-id",
+				Status: job.StateInProgress,
+				URL:    "/tests/fake-job-id",
+			},
 			wantErr: nil,
 			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(201)
@@ -58,7 +64,7 @@ func TestWebdriver_StartJob(t *testing.T) {
 				ctx:               context.TODO(),
 				jobStarterPayload: job.StartOptions{},
 			},
-			want:    "",
+			want:    job.Job{},
 			wantErr: fmt.Errorf("job start failed (401): go away"),
 			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(401)
@@ -71,7 +77,7 @@ func TestWebdriver_StartJob(t *testing.T) {
 				ctx:               context.TODO(),
 				jobStarterPayload: job.StartOptions{},
 			},
-			want:    "",
+			want:    job.Job{},
 			wantErr: fmt.Errorf("job start failed (500): internal server error"),
 			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(500)
@@ -97,8 +103,8 @@ func TestWebdriver_StartJob(t *testing.T) {
 				t.Errorf("StartJob() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("StartJob() got = %v, want %v", got, tt.want)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("StartJob() (-want +got): \n%s", diff)
 			}
 		})
 	}

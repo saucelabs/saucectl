@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/job"
@@ -484,7 +486,7 @@ func TestRDCService_StartJob(t *testing.T) {
 		name       string
 		fields     fields
 		args       args
-		want       string
+		want       job.Job
 		wantErr    error
 		serverFunc func(w http.ResponseWriter, r *http.Request) // what shall the mock server respond with
 	}{
@@ -502,7 +504,12 @@ func TestRDCService_StartJob(t *testing.T) {
 					Tags:        nil,
 				},
 			},
-			want:    "fake-job-id",
+			want: job.Job{
+				ID:     "fake-job-id",
+				Status: job.StateQueued,
+				IsRDC:  true,
+				URL:    "/tests/fake-job-id",
+			},
 			wantErr: nil,
 			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(201)
@@ -515,7 +522,7 @@ func TestRDCService_StartJob(t *testing.T) {
 				ctx:               context.TODO(),
 				jobStarterPayload: job.StartOptions{},
 			},
-			want:    "",
+			want:    job.Job{},
 			wantErr: fmt.Errorf("job start failed; unexpected response code:'300', msg:''"),
 			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(300)
@@ -527,7 +534,7 @@ func TestRDCService_StartJob(t *testing.T) {
 				ctx:               context.TODO(),
 				jobStarterPayload: job.StartOptions{},
 			},
-			want:    "",
+			want:    job.Job{},
 			wantErr: fmt.Errorf("job start failed; unexpected response code:'500', msg:'Internal server error'"),
 			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(500)
@@ -553,8 +560,8 @@ func TestRDCService_StartJob(t *testing.T) {
 				t.Errorf("StartJob() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("StartJob() got = %v, want %v", got, tt.want)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("StartJob() (-want +got): \n%s", diff)
 			}
 		})
 	}
