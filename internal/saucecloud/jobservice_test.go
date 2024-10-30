@@ -43,7 +43,10 @@ func TestJobService_DownloadArtifact(t *testing.T) {
 	}()
 
 	rdc := httpServices.NewRDCService(
-		region.None, "dummy-user", "dummy-key", 10*time.Second,
+		region.None,
+		"dummy-user",
+		"dummy-key",
+		10*time.Second,
 	)
 	rdc.URL = ts.URL
 
