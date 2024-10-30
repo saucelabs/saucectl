@@ -659,7 +659,6 @@ func ValidatePackage(packages node.Package, frameworkName string, expectedVersio
 	if !ok {
 		return fmt.Errorf("missing framework version. The framework version in your config file (%s) must exactly match the framework version in your package.json", expectedVersion)
 	}
-
 	if !reExactVersion.MatchString(ver) {
 		return fmt.Errorf("invalid framework version. The framework version in your package.json (%s) must be exact", ver)
 	}
