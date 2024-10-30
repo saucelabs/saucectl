@@ -21,6 +21,7 @@ import (
 	_ "github.com/santhosh-tekuri/jsonschema/v5/httploader"
 
 	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/node"
 	"github.com/saucelabs/saucectl/internal/viper"
 )
 
@@ -200,11 +201,12 @@ type Registry struct {
 // Npm represents the npm settings
 type Npm struct {
 	// Deprecated. Use Registries instead.
-	Registry     string            `yaml:"registry,omitempty" json:"registry,omitempty"`
-	Registries   []Registry        `yaml:"registries" json:"registries,omitempty"`
-	Packages     map[string]string `yaml:"packages,omitempty" json:"packages"`
-	Dependencies []string          `yaml:"dependencies,omitempty" json:"dependencies"`
-	StrictSSL    *bool             `yaml:"strictSSL,omitempty" json:"strictSSL"`
+	Registry       string            `yaml:"registry,omitempty" json:"registry,omitempty"`
+	Registries     []Registry        `yaml:"registries" json:"registries,omitempty"`
+	Packages       map[string]string `yaml:"packages,omitempty" json:"packages"`
+	Dependencies   []string          `yaml:"dependencies,omitempty" json:"dependencies"`
+	StrictSSL      *bool             `yaml:"strictSSL,omitempty" json:"strictSSL"`
+	UsePackageLock bool              `yaml:"usePackageLock,omitempty" json:"usePackageLock"`
 }
 
 // Defaults represents default suite settings.
@@ -631,6 +633,27 @@ func ValidateArtifacts(artifacts Artifacts) error {
 			artifacts.Retain[newSource] = dest
 			delete(artifacts.Retain, source)
 		}
+	}
+	return nil
+}
+
+func ValidatePackageLock() error {
+	_, err := os.Stat("package-lock.json")
+	if err != nil {
+		return fmt.Errorf("missing package-lock.json")
+	}
+	return nil
+}
+
+func ValidatePackage(p node.Package, frameworkName string, expectedVersion string) error {
+	var ver string
+	var ok bool
+	ver, ok = p.Dependencies[frameworkName]
+	if !ok {
+		ver, ok = p.DevDependencies[frameworkName]
+	}
+	if !ok || (expectedVersion != "package.json" && expectedVersion != ver) {
+		return fmt.Errorf("framework version mismatch. The framework version in your config file (%s) must exactly match the framework version in your package.json (%s)", expectedVersion, ver)
 	}
 	return nil
 }

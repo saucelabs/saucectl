@@ -14,6 +14,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/node"
 	"github.com/saucelabs/saucectl/internal/playwright/grep"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
@@ -326,6 +327,19 @@ func Validate(p *Project) error {
 
 	if err := config.ValidateArtifacts(p.Artifacts); err != nil {
 		return err
+	}
+
+	if p.Npm.UsePackageLock {
+		if err := config.ValidatePackageLock(); err != nil {
+			return fmt.Errorf("invalid use of usePackageLock: %w", err)
+		}
+		packages, err := node.PackageFromFile("package.json")
+		if err != nil {
+			return fmt.Errorf("invalid use of usePackageLock. Failed to read package.json: %w", err)
+		}
+		if err := config.ValidatePackage(packages, "@playwright/test", p.Playwright.Version); err != nil {
+			return fmt.Errorf("invalid use of usePackageLock: %w", err)
+		}
 	}
 
 	if p.Sauce.LaunchOrder != "" && p.Sauce.LaunchOrder != config.LaunchOrderFailRate {
