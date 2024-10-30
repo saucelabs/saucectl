@@ -169,9 +169,10 @@ func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (job.J
 	}
 
 	return job.Job{
-		ID:  sessionStart.TestReport.ID,
-		IsRDC: true,
-		URL: fmt.Sprintf("%s/tests/%s", c.AppURL, sessionStart.TestReport.ID),
+		ID:     sessionStart.TestReport.ID,
+		IsRDC:  true,
+		Status: job.StateQueued,
+		URL:    fmt.Sprintf("%s/tests/%s", c.AppURL, sessionStart.TestReport.ID),
 	}, nil
 }
 
