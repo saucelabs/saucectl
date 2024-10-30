@@ -250,7 +250,6 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 
 	// Async mode. Return the current status without waiting for the final result.
 	if r.Async {
-		// FIXME can we use the job from before now?
 		return j, false, nil
 	}
 
