@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/saucelabs/saucectl/internal/job"
@@ -45,6 +46,9 @@ func TestResto_GetJobDetails(t *testing.T) {
 	defer ts.Close()
 	timeout := 3 * time.Second
 
+	resto := NewResto(region.None, "test", "123", timeout)
+	resto.URL = ts.URL
+
 	testCases := []struct {
 		name         string
 		client       Resto
@@ -54,7 +58,7 @@ func TestResto_GetJobDetails(t *testing.T) {
 	}{
 		{
 			name:   "get job details with ID 1 and status 'complete'",
-			client: NewResto(ts.URL, "test", "123", timeout),
+			client: resto,
 			jobID:  "1",
 			expectedResp: job.Job{
 				ID:             "1",
@@ -66,12 +70,13 @@ func TestResto_GetJobDetails(t *testing.T) {
 				Framework:      "webdriver",
 				OS:             "Windows",
 				OSVersion:      "10",
+				URL:            "/tests/1",
 			},
 			expectedErr: nil,
 		},
 		{
 			name:   "get job details with ID 2 and status 'error'",
-			client: NewResto(ts.URL, "test", "123", timeout),
+			client: resto,
 			jobID:  "2",
 			expectedResp: job.Job{
 				ID:             "2",
@@ -83,26 +88,27 @@ func TestResto_GetJobDetails(t *testing.T) {
 				Framework:      "webdriver",
 				OS:             "Windows",
 				OSVersion:      "10",
+				URL:            "/tests/2",
 			},
 			expectedErr: nil,
 		},
 		{
 			name:         "job not found error from external API",
-			client:       NewResto(ts.URL, "test", "123", timeout),
+			client:       resto,
 			jobID:        "3",
 			expectedResp: job.Job{},
 			expectedErr:  ErrJobNotFound,
 		},
 		{
 			name:         "http status is not 200, but 401 from external API",
-			client:       NewResto(ts.URL, "test", "123", timeout),
+			client:       resto,
 			jobID:        "4",
 			expectedResp: job.Job{},
 			expectedErr:  errors.New("job status request failed; unexpected response code:'401', msg:''"),
 		},
 		{
 			name:         "internal server error from external API",
-			client:       NewResto(ts.URL, "test", "123", timeout),
+			client:       resto,
 			jobID:        "333",
 			expectedResp: job.Job{},
 			expectedErr:  errors.New("internal server error"),
@@ -122,8 +128,6 @@ func TestResto_GetJobDetails(t *testing.T) {
 }
 
 func TestResto_GetJobStatus(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
-
 	var retryCount int
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
@@ -181,6 +185,10 @@ func TestResto_GetJobStatus(t *testing.T) {
 	defer ts.Close()
 	timeout := 3 * time.Second
 
+	resto := NewResto(region.None, "test", "123", timeout)
+	resto.URL = ts.URL
+	resto.Client.RetryWaitMax = 1 * time.Millisecond
+
 	testCases := []struct {
 		name         string
 		client       Resto
@@ -190,58 +198,61 @@ func TestResto_GetJobStatus(t *testing.T) {
 	}{
 		{
 			name:   "get job details with ID 1 and status 'complete'",
-			client: NewResto(ts.URL, "test", "123", timeout),
+			client: resto,
 			jobID:  "1",
 			expectedResp: job.Job{
 				ID:     "1",
 				Passed: false,
 				Status: "complete",
 				Error:  "",
+				URL:    "/tests/1",
 			},
 			expectedErr: nil,
 		},
 		{
 			name:   "get job details with ID 2 and status 'error'",
-			client: NewResto(ts.URL, "test", "123", timeout),
+			client: resto,
 			jobID:  "2",
 			expectedResp: job.Job{
 				ID:     "2",
 				Passed: false,
 				Status: "error",
 				Error:  "User Abandoned Test -- User terminated",
+				URL:    "/tests/2",
 			},
 			expectedErr: nil,
 		},
 		{
 			name:         "user not found error from external API",
-			client:       NewResto(ts.URL, "test", "123", timeout),
+			client:       resto,
 			jobID:        "3",
 			expectedResp: job.Job{},
 			expectedErr:  ErrJobNotFound,
 		},
 		{
 			name:         "http status is not 200, but 401 from external API",
-			client:       NewResto(ts.URL, "test", "123", timeout),
+			client:       resto,
 			jobID:        "4",
 			expectedResp: job.Job{},
 			expectedErr:  errors.New("job status request failed; unexpected response code:'401', msg:''"),
 		},
 		{
 			name:         "unexpected status code from external API",
-			client:       NewResto(ts.URL, "test", "123", timeout),
+			client:       resto,
 			jobID:        "333",
 			expectedResp: job.Job{},
 			expectedErr:  errors.New("internal server error"),
 		},
 		{
 			name:   "get job details with ID 5. retry 2 times and succeed",
-			client: NewResto(ts.URL, "test", "123", timeout),
+			client: resto,
 			jobID:  "5",
 			expectedResp: job.Job{
 				ID:     "5",
 				Passed: false,
 				Status: "complete",
 				Error:  "",
+				URL:    "/tests/5",
 			},
 			expectedErr: nil,
 		},
@@ -249,9 +260,8 @@ func TestResto_GetJobStatus(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.client.Client.RetryWaitMax = 1 * time.Millisecond
 			got, err := tc.client.PollJob(context.Background(), tc.jobID, 10*time.Millisecond, 0, false)
-			assert.Equal(t, got, tc.expectedResp)
+			assert.Equal(t, tc.expectedResp, got)
 			if err != nil {
 				assert.Equal(t, tc.expectedErr, err)
 			}
@@ -283,6 +293,9 @@ func TestResto_GetJobAssetFileNames(t *testing.T) {
 	defer ts.Close()
 	timeout := 3 * time.Second
 
+	resto := NewResto(region.None, "test", "123", timeout)
+	resto.URL = ts.URL
+
 	testCases := []struct {
 		name         string
 		client       Resto
@@ -292,28 +305,28 @@ func TestResto_GetJobAssetFileNames(t *testing.T) {
 	}{
 		{
 			name:         "get job asset with ID 1",
-			client:       NewResto(ts.URL, "test", "123", timeout),
+			client:       resto,
 			jobID:        "1",
 			expectedResp: []string{"console.log", "examples__actions.spec.js.mp4", "examples__actions.spec.js.json", "video.mp4", "examples__actions.spec.js.xml"},
 			expectedErr:  nil,
 		},
 		{
 			name:         "get job asset with ID 2",
-			client:       NewResto(ts.URL, "test", "123", timeout),
+			client:       resto,
 			jobID:        "2",
 			expectedResp: nil,
 			expectedErr:  ErrJobNotFound,
 		},
 		{
 			name:         "get job asset with ID 3",
-			client:       NewResto(ts.URL, "test", "123", timeout),
+			client:       resto,
 			jobID:        "3",
 			expectedResp: nil,
 			expectedErr:  errors.New("job assets list request failed; unexpected response code:'401', msg:''"),
 		},
 		{
 			name:         "get job asset with ID 4",
-			client:       NewResto(ts.URL, "test", "123", timeout),
+			client:       resto,
 			jobID:        "4",
 			expectedResp: nil,
 			expectedErr:  errors.New("internal server error"),
@@ -357,6 +370,9 @@ func TestResto_GetJobAssetFileContent(t *testing.T) {
 	defer ts.Close()
 	timeout := 3 * time.Second
 
+	resto := NewResto(region.None, "test", "123", timeout)
+	resto.URL = ts.URL
+
 	testCases := []struct {
 		name         string
 		client       Resto
@@ -366,28 +382,28 @@ func TestResto_GetJobAssetFileContent(t *testing.T) {
 	}{
 		{
 			name:         "get job asset with ID 1",
-			client:       NewResto(ts.URL, "test", "123", timeout),
+			client:       resto,
 			jobID:        "1",
 			expectedResp: []byte(`Sauce Cypress Runner 0.2.3`),
 			expectedErr:  nil,
 		},
 		{
 			name:         "get job asset with ID 333 and Internal Server Error ",
-			client:       NewResto(ts.URL, "test", "123", timeout),
+			client:       resto,
 			jobID:        "333",
 			expectedResp: nil,
 			expectedErr:  errors.New("internal server error"),
 		},
 		{
 			name:         "get job asset with ID 2",
-			client:       NewResto(ts.URL, "test", "123", timeout),
+			client:       resto,
 			jobID:        "2",
 			expectedResp: nil,
 			expectedErr:  ErrAssetNotFound,
 		},
 		{
 			name:         "get job asset with ID 3",
-			client:       NewResto(ts.URL, "test", "123", timeout),
+			client:       resto,
 			jobID:        "3",
 			expectedResp: nil,
 			expectedErr:  errors.New("job status request failed; unexpected response code:'401', msg:'unauthorized'"),
@@ -446,6 +462,10 @@ func TestResto_TestStop(t *testing.T) {
 	defer ts.Close()
 	timeout := 3 * time.Second
 
+	resto := NewResto(region.None, "test", "123", timeout)
+	resto.URL = ts.URL
+	resto.Client.RetryWaitMax = 1 * time.Millisecond
+
 	testCases := []struct {
 		name         string
 		client       Resto
@@ -455,7 +475,7 @@ func TestResto_TestStop(t *testing.T) {
 	}{
 		{
 			name:   "get job details with ID 2 and status 'error'",
-			client: NewResto(ts.URL, "test", "123", timeout),
+			client: resto,
 			jobID:  "2",
 			expectedResp: job.Job{
 				ID:             "2",
@@ -467,26 +487,27 @@ func TestResto_TestStop(t *testing.T) {
 				Framework:      "webdriver",
 				OS:             "Windows",
 				OSVersion:      "10",
+				URL:            "/tests/2",
 			},
 			expectedErr: nil,
 		},
 		{
 			name:         "job not found error from external API",
-			client:       NewResto(ts.URL, "test", "123", timeout),
+			client:       resto,
 			jobID:        "3",
 			expectedResp: job.Job{},
 			expectedErr:  ErrJobNotFound,
 		},
 		{
 			name:         "http status is not 200, but 401 from external API",
-			client:       NewResto(ts.URL, "test", "123", timeout),
+			client:       resto,
 			jobID:        "4",
 			expectedResp: job.Job{},
 			expectedErr:  errors.New("job status request failed; unexpected response code:'401', msg:''"),
 		},
 		{
 			name:         "internal server error from external API",
-			client:       NewResto(ts.URL, "test", "123", timeout),
+			client:       resto,
 			jobID:        "333",
 			expectedResp: job.Job{},
 			expectedErr:  errors.New("internal server error"),
@@ -495,7 +516,6 @@ func TestResto_TestStop(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.client.Client.RetryWaitMax = 1 * time.Millisecond
 			got, err := tc.client.StopJob(context.Background(), tc.jobID, false)
 			assert.Equal(t, tc.expectedResp, got)
 			if err != nil {

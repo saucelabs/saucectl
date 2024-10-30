@@ -12,6 +12,7 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/job"
+	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/slice"
 	"github.com/saucelabs/saucectl/internal/version"
 )
@@ -19,6 +20,7 @@ import (
 // Webdriver service
 type Webdriver struct {
 	HTTPClient  *http.Client
+	AppURL      string
 	URL         string
 	Credentials iam.Credentials
 }
@@ -95,7 +97,7 @@ type sessionStartResponse struct {
 	} `json:"value,omitempty"`
 }
 
-func NewWebdriver(url string, creds iam.Credentials, timeout time.Duration) Webdriver {
+func NewWebdriver(r region.Region, creds iam.Credentials, timeout time.Duration) Webdriver {
 	return Webdriver{
 		HTTPClient: &http.Client{
 			Timeout: timeout,
@@ -117,13 +119,14 @@ func NewWebdriver(url string, creds iam.Credentials, timeout time.Duration) Webd
 				return nil
 			},
 		},
-		URL:         url,
+		AppURL:      r.AppBaseURL(),
+		URL:         r.WebDriverBaseURL(),
 		Credentials: creds,
 	}
 }
 
 // StartJob creates a new job in Sauce Labs.
-func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID string, err error) {
+func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (job.Job, error) {
 	url := fmt.Sprintf("%s/wd/hub/session", c.URL)
 
 	caps := Capabilities{AlwaysMatch: MatchingCaps{
@@ -170,38 +173,43 @@ func (c *Webdriver) StartJob(ctx context.Context, opts job.StartOptions) (jobID 
 	}
 
 	var b bytes.Buffer
-	err = json.NewEncoder(&b).Encode(session)
+	err := json.NewEncoder(&b).Encode(session)
 	if err != nil {
-		return
+		return job.Job{}, err
 	}
 
 	req, err := NewRequestWithContext(ctx, http.MethodPost, url, &b)
 	if err != nil {
-		return
+		return job.Job{}, err
 	}
 	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return
+		return job.Job{}, err
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return
+		return job.Job{}, err
 	}
 
 	var sessionStart sessionStartResponse
 	if err = json.Unmarshal(body, &sessionStart); err != nil {
-		return "", fmt.Errorf("job start failed (%d): %s", resp.StatusCode, body)
+		return job.Job{}, fmt.Errorf("job start failed (%d): %s", resp.StatusCode, body)
 	}
 
 	if sessionStart.SessionID == "" {
 		err = fmt.Errorf("job start failed (%d): %s", resp.StatusCode, sessionStart.Value.Message)
-		return "", err
+		return job.Job{}, err
 	}
 
-	return sessionStart.SessionID, nil
+	return job.Job{
+		ID:     sessionStart.SessionID,
+		IsRDC:  false,
+		Status: job.StateInProgress,
+		URL:    fmt.Sprintf("%s/tests/%s", c.AppURL, sessionStart.SessionID),
+	}, nil
 }
 
 func formatEnv(e map[string]string) []env {

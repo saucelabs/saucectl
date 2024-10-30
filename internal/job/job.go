@@ -61,6 +61,8 @@ type Job struct {
 
 	// TimedOut flags a job as an unfinished one.
 	TimedOut bool
+
+	URL string
 }
 
 // TotalStatus returns the total status of a job, combining the result of fields Status + Passed.
@@ -89,7 +91,7 @@ func Done(status string) bool {
 // Service represents the interface for Job interactions.
 type Service interface {
 	// StartJob starts a new Job.
-	StartJob(ctx context.Context, opts StartOptions) (jobID string, err error)
+	StartJob(ctx context.Context, opts StartOptions) (Job, error)
 
 	// StopJob stops a running Job.
 	StopJob(ctx context.Context, jobID string, realDevice bool) (Job, error)
