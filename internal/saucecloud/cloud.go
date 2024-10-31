@@ -686,19 +686,17 @@ func (r *CloudRunner) logSuite(res result) {
 		return
 	}
 
-	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
-
 	if res.job.TimedOut {
-		log.Error().Str("suite", res.name).Str("url", jobDetailsPage).Msg("Suite timed out.")
+		log.Error().Str("suite", res.name).Str("url", res.job.URL).Msg("Suite timed out.")
 		return
 	}
 
 	msg := "Suite finished."
 	if res.job.Passed {
-		log.Info().Str("suite", res.name).Bool("passed", res.job.Passed).Str("url", jobDetailsPage).
+		log.Info().Str("suite", res.name).Bool("passed", res.job.Passed).Str("url", res.job.URL).
 			Msg(msg)
 	} else {
-		l := log.Error().Str("suite", res.name).Bool("passed", res.job.Passed).Str("url", jobDetailsPage)
+		l := log.Error().Str("suite", res.name).Bool("passed", res.job.Passed).Str("url", res.job.URL)
 		if res.job.Error != "" {
 			l.Str("error", res.job.Error)
 			msg = "Suite finished with error."
