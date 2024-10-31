@@ -271,12 +271,12 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 		j.Passed = false
 		j.TimedOut = true
 
-		return j, false, fmt.Errorf("suite %q has timed out", opts.DisplayName)
+		return j, false, errors.New("suite timed out")
 	}
 
 	if !j.Passed {
 		// We may need to differentiate when a job has crashed vs. when there is errors.
-		return j, r.interrupted, fmt.Errorf("suite %q has test failures", opts.DisplayName)
+		return j, r.interrupted, errors.New("suite has test failures")
 	}
 
 	return j, false, nil
@@ -339,7 +339,11 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 		if r.shouldRetry(opts, jobData, skipped) {
 			go r.JobService.DownloadArtifacts(jobData, false)
 			if !jobData.Passed {
-				log.Warn().Err(err).Msg("Suite errored.")
+				log.Warn().Err(err).
+					Str("attempt",
+						fmt.Sprintf("%d of %d", opts.Attempt+1, opts.Retries+1),
+					).
+					Msg("Suite attempt failed.")
 			}
 
 			opts.Attempt++
@@ -677,34 +681,35 @@ func (r *CloudRunner) logSuite(res result) {
 		return
 	}
 
+	logger := log.With().
+		Str("suite", res.name).
+		Bool("passed", res.job.Passed).
+		Str("url", res.job.URL).
+		Logger()
+
 	if res.skipped {
-		log.Error().Err(res.err).Str("suite", res.name).Msg("Suite skipped.")
+		logger.Error().Err(res.err).Msg("Suite skipped.")
 		return
 	}
 	if res.job.ID == "" {
-		log.Error().Err(res.err).Str("suite", res.name).Msg("Failed to start suite.")
+		logger.Error().Err(res.err).Msg("Suite failed to start.")
 		return
 	}
-
-	jobDetailsPage := fmt.Sprintf("%s/tests/%s", r.Region.AppBaseURL(), res.job.ID)
-
 	if res.job.TimedOut {
-		log.Error().Str("suite", res.name).Str("url", jobDetailsPage).Msg("Suite timed out.")
+		logger.Error().Msg("Suite timed out.")
 		return
 	}
 
-	msg := "Suite finished."
 	if res.job.Passed {
-		log.Info().Str("suite", res.name).Bool("passed", res.job.Passed).Str("url", jobDetailsPage).
-			Msg(msg)
+		logger.Info().Msg("Suite passed.")
 	} else {
-		l := log.Error().Str("suite", res.name).Bool("passed", res.job.Passed).Str("url", jobDetailsPage)
+		l := logger.Error()
 		if res.job.Error != "" {
 			l.Str("error", res.job.Error)
-			msg = "Suite finished with error."
 		}
-		l.Msg(msg)
+		l.Msg("Suite failed.")
 	}
+
 	r.logSuiteConsole(res)
 }
 
