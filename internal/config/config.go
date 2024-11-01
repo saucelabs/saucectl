@@ -406,7 +406,7 @@ func (t *Tunnel) SetDefaults() {
 }
 
 // SetDefaults updates npm default values
-func (n *Npm) SetDefaults(framework, version string) {
+func (n *Npm) SetDefaults() {
 	if n.Registry != "" {
 		log.Warn().Msg("npm.registry has been deprecated, please use npm.registries instead")
 		n.Registries = append(n.Registries, Registry{URL: n.Registry})
