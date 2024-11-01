@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Masterminds/semver/v3"
 	"github.com/fatih/color"
 	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog/log"
@@ -406,32 +405,9 @@ func (t *Tunnel) SetDefaults() {
 	}
 }
 
-func hasMultiRegistrySupport(framework, version string) bool {
-	minVersions := map[string]string{
-		"cypress":               "12.14.0",
-		"playwright-cucumberjs": "1.35.1",
-		"playwright":            "1.35.1",
-		"testcafe":              "2.6.2",
-	}
-
-	v, ok := minVersions[framework]
-	if !ok {
-		return true
-	}
-	maxVersion := semver.MustParse(v)
-	curVersion, err := semver.NewVersion(version)
-	if err != nil {
-		// if value is non-version (like "package.json"), we assume this is an older version
-		// as this is, at the moment of the change, the only option possible. This needs to
-		// be returning false in a future framework update.
-		return false
-	}
-	return curVersion.GreaterThan(maxVersion)
-}
-
 // SetDefaults updates npm default values
 func (n *Npm) SetDefaults(framework, version string) {
-	if n.Registry != "" && hasMultiRegistrySupport(framework, version) {
+	if n.Registry != "" {
 		log.Warn().Msg("npm.registry has been deprecated, please use npm.registries instead")
 		n.Registries = append(n.Registries, Registry{URL: n.Registry})
 	}
