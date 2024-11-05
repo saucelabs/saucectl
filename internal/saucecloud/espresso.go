@@ -87,12 +87,9 @@ func (r *EspressoRunner) runSuites() bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
-	jobOpts, results, err := r.createWorkerPool(
+	jobOpts, results := r.createWorkerPool(
 		r.Project.Sauce.Concurrency, r.Project.Sauce.Retries,
 	)
-	if err != nil {
-		return false
-	}
 	defer close(results)
 
 	suites := r.Project.Suites

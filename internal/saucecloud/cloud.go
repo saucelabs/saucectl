@@ -90,7 +90,7 @@ type result struct {
 // ConsoleLogAsset represents job asset log file name.
 const ConsoleLogAsset = "console.log"
 
-func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartOptions, chan result, error) {
+func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartOptions, chan result) {
 	jobOpts := make(chan job.StartOptions, maxRetries+1)
 	results := make(chan result, ccy)
 
@@ -99,7 +99,7 @@ func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartO
 		go r.runJobs(jobOpts, results)
 	}
 
-	return jobOpts, results, nil
+	return jobOpts, results
 }
 
 func (r *CloudRunner) collectResults(results chan result, expected int) bool {
