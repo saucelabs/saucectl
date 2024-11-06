@@ -106,6 +106,10 @@
                 "description": "Settings specific to npm.",
                 "type": "object",
                 "properties": {
+                  "usePackageLock": {
+                    "type": "boolean",
+                    "description": "Specifies whether to use the project's package-lock.json when installing npm dependencies. If true, package-lock.json will be used during installation which will improve the speed of installation."
+                  },
                   "packages": {
                     "description": "Specifies any npm packages that are required to run tests.",
                     "type": "object"

@@ -15,6 +15,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/cypress/suite"
 	"github.com/saucelabs/saucectl/internal/fpath"
 	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/node"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/saucelabs/saucectl/internal/saucereport"
@@ -218,6 +219,18 @@ func (p *Project) Validate() error {
 	}
 	if err := config.ValidateArtifacts(p.Artifacts); err != nil {
 		return err
+	}
+	if p.Npm.UsePackageLock {
+		if err := config.ValidatePackageLock(); err != nil {
+			return fmt.Errorf("invalid use of usePackageLock: %w", err)
+		}
+		packages, err := node.PackageFromFile("package.json")
+		if err != nil {
+			return fmt.Errorf("invalid use of usePackageLock. Failed to read package.json: %w", err)
+		}
+		if err := config.ValidatePackage(packages, "cypress", p.Cypress.Version); err != nil {
+			return fmt.Errorf("invalid use of usePackageLock: %w", err)
+		}
 	}
 
 	if p.Sauce.LaunchOrder != "" && p.Sauce.LaunchOrder != config.LaunchOrderFailRate {
