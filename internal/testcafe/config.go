@@ -181,7 +181,7 @@ func SetDefaults(p *Project) {
 
 	p.Sauce.Tunnel.SetDefaults()
 	p.Sauce.Metadata.SetDefaultBuild()
-	p.Npm.SetDefaults(p.Kind, p.Testcafe.Version)
+	p.Npm.SetDefaults()
 
 	for k := range p.Suites {
 		suite := &p.Suites[k]

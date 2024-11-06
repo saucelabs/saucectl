@@ -144,7 +144,7 @@ func (p *Project) SetDefaults() {
 
 	p.Sauce.Tunnel.SetDefaults()
 	p.Sauce.Metadata.SetDefaultBuild()
-	p.Npm.SetDefaults(p.Kind, p.Cypress.Version)
+	p.Npm.SetDefaults()
 
 	for k := range p.Suites {
 		s := &p.Suites[k]

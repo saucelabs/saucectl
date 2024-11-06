@@ -304,31 +304,6 @@ func TestNpm_SetDefaults(t *testing.T) {
 				{URL: "http://npmjs.org"},
 			},
 		},
-		{
-			name: "Legacy registry + Newer",
-			fields: fields{
-				Registry: "http://npmjs.org",
-				Registries: []Registry{
-					{URL: "http://npmjs-2.org"},
-				},
-				Framework:        "dummy",
-				FrameworkVersion: "",
-			},
-			want: []Registry{
-				{URL: "http://npmjs-2.org"},
-				{URL: "http://npmjs.org"},
-			},
-		},
-		{
-			name: "Do not migrate older versions",
-			fields: fields{
-				Registry:         "http://npmjs.org",
-				Registries:       []Registry{},
-				Framework:        "cypress",
-				FrameworkVersion: "12.14.0",
-			},
-			want: []Registry{},
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(*testing.T) {
@@ -336,7 +311,7 @@ func TestNpm_SetDefaults(t *testing.T) {
 				Registry:   tt.fields.Registry,
 				Registries: tt.fields.Registries,
 			}
-			n.SetDefaults(tt.fields.Framework, tt.fields.FrameworkVersion)
+			n.SetDefaults()
 		})
 	}
 }
