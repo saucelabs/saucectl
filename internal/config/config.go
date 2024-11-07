@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -20,6 +21,7 @@ import (
 	_ "github.com/santhosh-tekuri/jsonschema/v5/httploader"
 
 	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/node"
 	"github.com/saucelabs/saucectl/internal/viper"
 )
 
@@ -199,11 +201,12 @@ type Registry struct {
 // Npm represents the npm settings
 type Npm struct {
 	// Deprecated. Use Registries instead.
-	Registry     string            `yaml:"registry,omitempty" json:"registry,omitempty"`
-	Registries   []Registry        `yaml:"registries" json:"registries,omitempty"`
-	Packages     map[string]string `yaml:"packages,omitempty" json:"packages"`
-	Dependencies []string          `yaml:"dependencies,omitempty" json:"dependencies"`
-	StrictSSL    *bool             `yaml:"strictSSL,omitempty" json:"strictSSL"`
+	Registry       string            `yaml:"registry,omitempty" json:"registry,omitempty"`
+	Registries     []Registry        `yaml:"registries" json:"registries,omitempty"`
+	Packages       map[string]string `yaml:"packages,omitempty" json:"packages"`
+	Dependencies   []string          `yaml:"dependencies,omitempty" json:"dependencies"`
+	StrictSSL      *bool             `yaml:"strictSSL,omitempty" json:"strictSSL"`
+	UsePackageLock bool              `yaml:"usePackageLock,omitempty" json:"usePackageLock"`
 }
 
 // Defaults represents default suite settings.
@@ -608,5 +611,36 @@ func ValidateArtifacts(artifacts Artifacts) error {
 			delete(artifacts.Retain, source)
 		}
 	}
+	return nil
+}
+
+func ValidatePackageLock() error {
+	_, err := os.Stat("package-lock.json")
+	if err != nil {
+		return fmt.Errorf("missing package-lock.json")
+	}
+	return nil
+}
+
+var reExactVersion = regexp.MustCompile(`^\d`)
+
+func ValidatePackage(packages node.Package, frameworkName string, expectedVersion string) error {
+	var ver string
+	var ok bool
+	ver, ok = packages.Dependencies[frameworkName]
+	if !ok {
+		ver, ok = packages.DevDependencies[frameworkName]
+	}
+
+	if !ok {
+		return fmt.Errorf("missing framework version. The framework version in your config file (%s) must exactly match the framework version in your package.json", expectedVersion)
+	}
+	if !reExactVersion.MatchString(ver) {
+		return fmt.Errorf("invalid framework version. The framework version in your package.json (%s) must be exact", ver)
+	}
+	if expectedVersion != "package.json" && expectedVersion != ver {
+		return fmt.Errorf("framework version mismatch. The framework version in your config file (%s) must exactly match the framework version in your package.json (%s)", expectedVersion, ver)
+	}
+
 	return nil
 }
