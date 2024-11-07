@@ -441,11 +441,15 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, projectDir strin
 		return
 	}
 
-	nodeModulesURI, err := r.handleNodeModules(tempDir, projectDir, matcher, dryRun)
-	if err != nil {
-		return
+	if len(r.NPMDependencies) > 0 {
+		nodeModulesURI, err := r.handleNodeModules(tempDir, projectDir, matcher, dryRun)
+		if err != nil {
+			return "", nil, err
+		}
+		if nodeModulesURI != "" {
+			uris[nodeModulesUpload] = nodeModulesURI
+		}
 	}
-	uris[nodeModulesUpload] = nodeModulesURI
 
 	return uris[projectUpload], r.refineURIs(uris), nil
 }
@@ -490,12 +494,14 @@ func (r *CloudRunner) createArchives(tempDir, projectDir string, project interfa
 // Otherwise, it creates a new archive, uploads it and returns the storage ID.
 func (r *CloudRunner) handleNodeModules(tempDir, projectDir string, matcher sauceignore.Matcher, dryRun bool) (string, error) {
 	var tags []string
+
 	if taggableModules(projectDir, r.NPMDependencies) {
 		tag, err := hashio.HashContent(filepath.Join(projectDir, "package-lock.json"), r.NPMDependencies...)
 		if err != nil {
 			return "", err
 		}
 		tags = append(tags, tag)
+
 		log.Info().Msgf("Searching remote node_modules archive by tag %s", tag)
 		existingURI := r.findTaggedArchives(tag)
 		if existingURI != "" {
@@ -507,6 +513,9 @@ func (r *CloudRunner) handleNodeModules(tempDir, projectDir string, matcher sauc
 	archive, err := zip.ArchiveNodeModules(tempDir, projectDir, matcher, r.NPMDependencies)
 	if err != nil {
 		return "", fmt.Errorf("failed to archive node_modules: %w", err)
+	}
+	if archive == "" {
+		return "", nil
 	}
 
 	return r.uploadArchive(storage.FileInfo{Name: archive, Tags: tags}, nodeModulesUpload, dryRun)
