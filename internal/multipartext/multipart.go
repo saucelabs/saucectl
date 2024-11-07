@@ -40,8 +40,10 @@ func NewMultipartReader(field string, fileInfo storage.FileInfo, src io.Reader) 
 		return nil, "", err
 	}
 
-	if err := writer.WriteField("tags", strings.Join(fileInfo.Tags, ",")); err != nil {
-		return nil, "", err
+	if len(fileInfo.Tags) > 0 {
+		if err := writer.WriteField("tags", strings.Join(fileInfo.Tags, ",")); err != nil {
+			return nil, "", err
+		}
 	}
 
 	// Finish the multipart message.
