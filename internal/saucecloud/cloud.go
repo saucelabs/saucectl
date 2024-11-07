@@ -409,8 +409,9 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 }
 
 // remoteArchiveProject archives the contents of the folder and uploads to remote storage.
-// It returns app uri as the uploaded project, otherApps as the collection of runner config and node_modules bundle.
-func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, sauceignoreFile string, dryRun bool) (app string, otherApps []string, err error) {
+// Returns the app URI for the uploaded project and additional URIs for the
+// runner config, node_modules, and other resources.
+func (r *CloudRunner) remoteArchiveProject(project interface{}, projectDir string, sauceignoreFile string, dryRun bool) (app string, otherApps []string, err error) {
 	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
 	if err != nil {
 		return
@@ -419,65 +420,140 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 		defer os.RemoveAll(tempDir)
 	}
 
-	var files []string
-
-	contents, err := os.ReadDir(folder)
+	files, err := collectFiles(projectDir)
 	if err != nil {
-		return
+		return "", nil, fmt.Errorf("failed to retrieve project files: %w", err)
 	}
-
-	for _, file := range contents {
-		// we never want mode_modules as part of the app payload
-		if file.Name() == "node_modules" {
-			continue
-		}
-		files = append(files, filepath.Join(folder, file.Name()))
-	}
-
-	archives := make(map[uploadType]string)
 
 	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
 	if err != nil {
 		return
 	}
 
-	appZip, err := zip.ArchiveFiles("app", tempDir, folder, files, matcher)
+	archives, err := r.createArchives(tempDir, projectDir, project, files, matcher)
 	if err != nil {
 		return
 	}
-	archives[projectUpload] = appZip
 
-	modZip, err := zip.ArchiveNodeModules(tempDir, folder, matcher, r.NPMDependencies)
+	uris, err := r.uploadFiles(archives, dryRun)
 	if err != nil {
 		return
 	}
-	if modZip != "" {
-		archives[nodeModulesUpload] = modZip
-	}
 
-	configZip, err := zip.ArchiveRunnerConfig(project, tempDir)
+	nodeModulesURI, err := r.handleNodeModules(tempDir, projectDir, matcher)
 	if err != nil {
 		return
 	}
-	archives[runnerConfigUpload] = configZip
+	uris[nodeModulesUpload] = nodeModulesURI
 
-	var uris = map[uploadType]string{}
-	for k, v := range archives {
-		uri, err := r.uploadArchive(storage.FileInfo{Name: v}, k, dryRun)
+	appURI := uris[projectUpload]
+	extraURIs := r.sortExtraURIs(uris)
+	return appURI, extraURIs, nil
+}
+
+// collectFiles retrieves all relevant files in the project directory, excluding "node_modules".
+func collectFiles(dir string) ([]string, error) {
+	var files []string
+	contents, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read project directory: %w", err)
+	}
+
+	for _, file := range contents {
+		if file.Name() != "node_modules" {
+			files = append(files, filepath.Join(dir, file.Name()))
+		}
+	}
+	return files, nil
+}
+
+// createArchives creates archives for the project's main files and runner configuration.
+func (r *CloudRunner) createArchives(tempDir, projectDir string, project interface{}, files []string, matcher sauceignore.Matcher) (map[uploadType]string, error) {
+	archives := make(map[uploadType]string)
+
+	projectArchive, err := zip.ArchiveFiles("app", tempDir, projectDir, files, matcher)
+	if err != nil {
+		return nil, fmt.Errorf("failed to archive project files: %w", err)
+	}
+	archives[projectUpload] = projectArchive
+
+	configArchive, err := zip.ArchiveRunnerConfig(project, tempDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to archive runner configuration: %w", err)
+	}
+	archives[runnerConfigUpload] = configArchive
+
+	return archives, nil
+}
+
+// handleNodeModules archives the node_modules directory and uploads it to remote storage.
+// If tagging is enabled and a tagged version of node_modules already exists in storage,
+// it returns the URI of the existing archive.
+// Otherwise, it creates a new archive and uploads it.
+func (r *CloudRunner) handleNodeModules(tempDir, projectDir string, matcher sauceignore.Matcher) (string, error) {
+	var tag string
+	var err error
+	if taggableModules(projectDir, r.NPMDependencies) {
+		tag, err = hashio.HashContent(filepath.Join(projectDir, "package-lock.json"), r.NPMDependencies...)
 		if err != nil {
-			return "", []string{}, err
+			return "", err
 		}
-		uris[k] = uri
-	}
-
-	app = uris[projectUpload]
-	for _, item := range []uploadType{runnerConfigUpload, nodeModulesUpload, otherAppsUpload} {
-		if val, ok := uris[item]; ok {
-			otherApps = append(otherApps, val)
+		existingURI := r.findTaggedArchives(tag)
+		if existingURI != "" {
+			return existingURI, nil
 		}
 	}
 
-	return
+	archive, err := zip.ArchiveNodeModules(tempDir, projectDir, matcher, r.NPMDependencies)
+	if err != nil {
+		return "", fmt.Errorf("failed to archive node_modules: %w", err)
+	}
+
+	return r.uploadArchive(storage.FileInfo{Name: archive, Tags: []string{tag}}, nodeModulesUpload, false)
+}
+
+// taggableModules checks if tagging should be applied based on the presence of package-lock.json and dependencies.
+func taggableModules(dir string, npmDependencies []string) bool {
+	return len(npmDependencies) > 0 && fileExists(filepath.Join(dir, "package-lock.json"))
+}
+
+// findTaggedArchives searches storage for a tagged archive with a matching hash.
+func (r *CloudRunner) findTaggedArchives(tag string) string {
+	list, err := r.ProjectUploader.List(storage.ListOptions{Tags: []string{tag}})
+	if err != nil || len(list.Items) == 0 {
+		return ""
+	}
+
+	return fmt.Sprintf("storage:%s", list.Items[0].ID)
+}
+
+// uploadFiles uploads each archive and returns a map of URIs.
+func (r *CloudRunner) uploadFiles(archives map[uploadType]string, dryRun bool) (map[uploadType]string, error) {
+	uris := make(map[uploadType]string)
+	for uploadType, path := range archives {
+		uri, err := r.uploadArchive(storage.FileInfo{Name: path}, uploadType, dryRun)
+		if err != nil {
+			return nil, fmt.Errorf("failed to upload %s archive: %w", uploadType, err)
+		}
+		uris[uploadType] = uri
+	}
+	return uris, nil
+}
+
+func (r *CloudRunner) sortExtraURIs(uris map[uploadType]string) []string {
+	var extraURIs []string
+	for _, t := range []uploadType{runnerConfigUpload, nodeModulesUpload, otherAppsUpload} {
+		if uri, exists := uris[t]; exists {
+			extraURIs = append(extraURIs, uri)
+		}
+	}
+	return extraURIs
+}
+
+// fileExists verifies if a file exists at the specified path.
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return !os.IsNotExist(err)
 }
 
 // remoteArchiveFiles archives the files to a remote storage.
@@ -614,6 +690,7 @@ func (r *CloudRunner) uploadArchive(fileInfo storage.FileInfo, pType uploadType,
 		if err != nil {
 			return "", fmt.Errorf("unable to download app from %s: %w", filename, err)
 		}
+
 		defer os.RemoveAll(dest)
 
 		filename = dest
