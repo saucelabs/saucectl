@@ -274,7 +274,7 @@ jobs:
 
   playwright-cucumberjs:
     needs: build
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -285,11 +285,14 @@ jobs:
         with:
           name: saucectlbin
 
+      - name: Set Permissions
+        run: chmod +x ./saucectl
+
       - name: Saucectl RUN - Config Driven
         working-directory: ./tests/e2e/playwright-cucumberjs
         run: |
           npm ci --production
-          ..\..\..\saucectl.exe run
+          ../../../saucectl run
 
   imagerunner:
     needs: build
