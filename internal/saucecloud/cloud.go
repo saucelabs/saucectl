@@ -487,15 +487,15 @@ func (r *CloudRunner) createArchives(tempDir, projectDir string, project interfa
 // handleNodeModules archives the node_modules directory and uploads it to remote storage.
 // If tagging is enabled and a tagged version of node_modules already exists in storage,
 // it returns the URI of the existing archive.
-// Otherwise, it creates a new archive and uploads it.
+// Otherwise, it creates a new archive, uploads it and returns the storage ID.
 func (r *CloudRunner) handleNodeModules(tempDir, projectDir string, matcher sauceignore.Matcher, dryRun bool) (string, error) {
-	var tag string
-	var err error
+	var tags []string
 	if taggableModules(projectDir, r.NPMDependencies) {
-		tag, err = hashio.HashContent(filepath.Join(projectDir, "package-lock.json"), r.NPMDependencies...)
+		tag, err := hashio.HashContent(filepath.Join(projectDir, "package-lock.json"), r.NPMDependencies...)
 		if err != nil {
 			return "", err
 		}
+		tags = append(tags, tag)
 		log.Info().Msgf("Searching remote node_modules archive by tag %s", tag)
 		existingURI := r.findTaggedArchives(tag)
 		if existingURI != "" {
@@ -509,7 +509,7 @@ func (r *CloudRunner) handleNodeModules(tempDir, projectDir string, matcher sauc
 		return "", fmt.Errorf("failed to archive node_modules: %w", err)
 	}
 
-	return r.uploadArchive(storage.FileInfo{Name: archive, Tags: []string{tag}}, nodeModulesUpload, dryRun)
+	return r.uploadArchive(storage.FileInfo{Name: archive, Tags: tags}, nodeModulesUpload, dryRun)
 }
 
 // taggableModules checks if tagging should be applied based on the presence of package-lock.json and dependencies.
