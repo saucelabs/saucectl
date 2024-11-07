@@ -463,7 +463,7 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, folder string, s
 
 	var uris = map[uploadType]string{}
 	for k, v := range archives {
-		uri, err := r.uploadProject(v, "", k, dryRun)
+		uri, err := r.uploadArchive(storage.FileInfo{Name: v}, k, dryRun)
 		if err != nil {
 			return "", []string{}, err
 		}
@@ -511,7 +511,7 @@ func (r *CloudRunner) remoteArchiveFiles(project interface{}, files []string, sa
 
 	var uris []string
 	for k, v := range archives {
-		uri, err := r.uploadProject(v, "", k, dryRun)
+		uri, err := r.uploadArchive(storage.FileInfo{Name: v}, k, dryRun)
 		if err != nil {
 			return "", err
 		}
@@ -581,10 +581,10 @@ var (
 	otherAppsUpload    uploadType = "other applications"
 )
 
-func (r *CloudRunner) uploadProjects(filenames []string, pType uploadType, dryRun bool) ([]string, error) {
+func (r *CloudRunner) uploadArchives(filenames []string, pType uploadType, dryRun bool) ([]string, error) {
 	var IDs []string
 	for _, f := range filenames {
-		ID, err := r.uploadProject(f, "", pType, dryRun)
+		ID, err := r.uploadArchive(storage.FileInfo{Name: f}, pType, dryRun)
 		if err != nil {
 			return []string{}, err
 		}
@@ -594,7 +594,8 @@ func (r *CloudRunner) uploadProjects(filenames []string, pType uploadType, dryRu
 	return IDs, nil
 }
 
-func (r *CloudRunner) uploadProject(filename, description string, pType uploadType, dryRun bool) (string, error) {
+func (r *CloudRunner) uploadArchive(fileInfo storage.FileInfo, pType uploadType, dryRun bool) (string, error) {
+	filename := fileInfo.Name
 	if dryRun {
 		log.Info().Str("file", filename).Msgf("Skipping upload in dry run.")
 		return "", nil
@@ -636,7 +637,15 @@ func (r *CloudRunner) uploadProject(filename, description string, pType uploadTy
 
 	progress.Show("Uploading %s %s", pType, filename)
 	start := time.Now()
-	resp, err := r.ProjectUploader.UploadStream(context.TODO(), filepath.Base(filename), description, file)
+	resp, err := r.ProjectUploader.UploadStream(
+		context.TODO(),
+		storage.FileInfo{
+			Name:        filepath.Base(filename),
+			Description: fileInfo.Description,
+			Tags:        fileInfo.Tags,
+		},
+		file,
+	)
 	progress.Stop()
 	if err != nil {
 		return "", err

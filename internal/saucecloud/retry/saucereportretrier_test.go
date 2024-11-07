@@ -17,7 +17,7 @@ import (
 type StubProjectUploader struct {
 }
 
-func (f *StubProjectUploader) UploadStream(context.Context, string, string, io.Reader) (storage.Item, error) {
+func (f *StubProjectUploader) UploadStream(context.Context, storage.FileInfo, io.Reader) (storage.Item, error) {
 	return storage.Item{
 		ID:   "fakeid",
 		Name: "fake name",

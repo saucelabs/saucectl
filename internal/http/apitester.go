@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/apitest"
 	"github.com/saucelabs/saucectl/internal/multipartext"
+	"github.com/saucelabs/saucectl/internal/storage"
 	"golang.org/x/time/rate"
 
 	"github.com/saucelabs/saucectl/internal/config"
@@ -516,7 +517,7 @@ func (c *APITester) GetVaultFileContent(ctx context.Context, projectID string, f
 
 // PutVaultFile stores the content of a file in the vault for the project identified by projectID
 func (c *APITester) PutVaultFile(ctx context.Context, projectID string, fileName string, fileBody io.ReadCloser) (apitest.VaultFile, error) {
-	multipartReader, contentType, err := multipartext.NewMultipartReader("file", fileName, "", fileBody)
+	multipartReader, contentType, err := multipartext.NewMultipartReader("file", storage.FileInfo{Name: fileName}, fileBody)
 	if err != nil {
 		return apitest.VaultFile{}, nil
 	}

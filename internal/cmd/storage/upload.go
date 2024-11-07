@@ -85,7 +85,14 @@ func UploadCommand() *cobra.Command {
 				bar := newProgressBar(out, finfo.Size(), "Uploading")
 				reader := progress.NewReadSeeker(file, bar)
 
-				item, err = appsClient.UploadStream(cmd.Context(), finfo.Name(), description, &reader)
+				item, err = appsClient.UploadStream(
+					cmd.Context(),
+					storage.FileInfo{
+						Name:        finfo.Name(),
+						Description: description,
+					},
+					&reader,
+				)
 				if err != nil {
 					return fmt.Errorf("failed to upload file: %w", err)
 				}

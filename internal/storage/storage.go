@@ -21,6 +21,8 @@ type ListOptions struct {
 
 	// Limits the number of results returned.
 	MaxResults int
+
+	Tags []string
 }
 
 type List struct {
@@ -34,6 +36,7 @@ type Item struct {
 	Name     string    `json:"name"`
 	Size     int       `json:"size"`
 	Uploaded time.Time `json:"uploaded"`
+	Tags     []string
 }
 
 // ErrFileNotFound is returned when the requested file does not exist.
@@ -52,14 +55,20 @@ type ServerError struct {
 	Msg   string
 }
 
+type FileInfo struct {
+	Name        string
+	Description string
+	Tags        []string
+}
+
 func (s *ServerError) Error() string {
 	return fmt.Sprintf("server error with status '%d'; title '%s'; msg '%s'", s.Code, s.Title, s.Msg)
 }
 
 // AppService is the interface for interacting with the Sauce application storage.
 type AppService interface {
-	// UploadStream uploads the contents of reader and stores them under the given filename.
-	UploadStream(ctx context.Context, filename, description string, reader io.Reader) (Item, error)
+	// UploadStream uploads the contents of reader and stores them under the given file info.
+	UploadStream(ctx context.Context, fileInfo FileInfo, reader io.Reader) (Item, error)
 	Download(ctx context.Context, id string) (io.ReadCloser, int64, error)
 	Delete(ctx context.Context, id string) error
 	DownloadURL(ctx context.Context, url string) (io.ReadCloser, int64, error)
