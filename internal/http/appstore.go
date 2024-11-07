@@ -113,8 +113,8 @@ func (s *AppStore) DownloadURL(url string) (io.ReadCloser, int64, error) {
 }
 
 // UploadStream uploads the contents of reader and stores them under the given filename.
-func (s *AppStore) UploadStream(filename, description string, reader io.Reader) (storage.Item, error) {
-	multipartReader, contentType, err := multipartext.NewMultipartReader("payload", filename, description, reader)
+func (s *AppStore) UploadStream(fileInfo storage.FileInfo, reader io.Reader) (storage.Item, error) {
+	multipartReader, contentType, err := multipartext.NewMultipartReader("payload", fileInfo, reader)
 	if err != nil {
 		return storage.Item{}, err
 	}
@@ -177,6 +177,9 @@ func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 	}
 	if opts.SHA256 != "" {
 		query.Set("sha256", opts.SHA256)
+	}
+	for _, t := range opts.Tags {
+		query.Add("tags", t)
 	}
 
 	uri.RawQuery = query.Encode()
