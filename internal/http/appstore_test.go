@@ -151,7 +151,7 @@ func TestAppStore_UploadStream(t *testing.T) {
 				_ = f.Close()
 			}(f)
 
-			got, err := s.UploadStream(tt.args.filename, "", f)
+			got, err := s.UploadStream(storage.FileInfo{Name: tt.args.filename}, f)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UploadStream() error = %v, wantErr %v", err, tt.wantErr)
 				return

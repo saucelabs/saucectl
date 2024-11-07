@@ -14,6 +14,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/sauceignore"
+	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
 
@@ -83,7 +84,7 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 
 	cachedUpload := func(path string, description string, pType uploadType, dryRun bool) (string, error) {
 		return uploadCache.lookup(path, func() (string, error) {
-			return r.uploadProject(path, description, pType, dryRun)
+			return r.uploadArchive(storage.FileInfo{Name: path, Description: description}, pType, dryRun)
 		})
 	}
 

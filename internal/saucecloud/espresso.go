@@ -9,6 +9,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
+	"github.com/saucelabs/saucectl/internal/storage"
 )
 
 // deviceConfig represent the configuration for a specific device.
@@ -45,12 +46,16 @@ func (r *EspressoRunner) RunProject() (int, error) {
 	}
 
 	var err error
-	r.Project.Espresso.App, err = r.uploadProject(r.Project.Espresso.App, r.Project.Espresso.AppDescription, appUpload, r.Project.DryRun)
+	r.Project.Espresso.App, err = r.uploadArchive(
+		storage.FileInfo{Name: r.Project.Espresso.App, Description: r.Project.Espresso.AppDescription},
+		appUpload,
+		r.Project.DryRun,
+	)
 	if err != nil {
 		return exitCode, err
 	}
 
-	r.Project.Espresso.OtherApps, err = r.uploadProjects(r.Project.Espresso.OtherApps, otherAppsUpload, r.Project.DryRun)
+	r.Project.Espresso.OtherApps, err = r.uploadArchives(r.Project.Espresso.OtherApps, otherAppsUpload, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
@@ -62,7 +67,11 @@ func (r *EspressoRunner) RunProject() (int, error) {
 			continue
 		}
 
-		testAppURL, err := r.uploadProject(suite.TestApp, suite.TestAppDescription, testAppUpload, r.Project.DryRun)
+		testAppURL, err := r.uploadArchive(
+			storage.FileInfo{Name: suite.TestApp, Description: suite.TestAppDescription},
+			testAppUpload,
+			r.Project.DryRun,
+		)
 		if err != nil {
 			return exitCode, err
 		}
