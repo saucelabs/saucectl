@@ -35,8 +35,8 @@ func DeleteCommand() *cobra.Command {
 				_ = tracker.Close()
 			}()
 		},
-		RunE: func(_ *cobra.Command, args []string) error {
-			if err := appsClient.Delete(args[0]); err != nil {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := appsClient.Delete(cmd.Context(), args[0]); err != nil {
 				return fmt.Errorf("failed to delete file: %v", err)
 			}
 

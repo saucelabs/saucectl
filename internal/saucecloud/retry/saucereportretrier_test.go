@@ -17,26 +17,26 @@ import (
 type StubProjectUploader struct {
 }
 
-func (f *StubProjectUploader) UploadStream(_, _ string, _ io.Reader) (storage.Item, error) {
+func (f *StubProjectUploader) UploadStream(context.Context, string, string, io.Reader) (storage.Item, error) {
 	return storage.Item{
 		ID:   "fakeid",
 		Name: "fake name",
 	}, nil
 }
 
-func (f *StubProjectUploader) Download(string) (io.ReadCloser, int64, error) {
+func (f *StubProjectUploader) Download(context.Context, string) (io.ReadCloser, int64, error) {
 	return nil, 0, nil
 }
 
-func (f *StubProjectUploader) DownloadURL(string) (io.ReadCloser, int64, error) {
+func (f *StubProjectUploader) DownloadURL(context.Context, string) (io.ReadCloser, int64, error) {
 	return nil, 0, nil
 }
 
-func (f *StubProjectUploader) List(storage.ListOptions) (storage.List, error) {
+func (f *StubProjectUploader) List(context.Context, storage.ListOptions) (storage.List, error) {
 	return storage.List{}, nil
 }
 
-func (f *StubProjectUploader) Delete(string) error {
+func (f *StubProjectUploader) Delete(context.Context, string) error {
 	return nil
 }
 

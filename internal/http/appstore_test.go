@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -151,7 +152,7 @@ func TestAppStore_UploadStream(t *testing.T) {
 				_ = f.Close()
 			}(f)
 
-			got, err := s.UploadStream(tt.args.filename, "", f)
+			got, err := s.UploadStream(context.Background(), tt.args.filename, "", f)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UploadStream() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -310,7 +311,7 @@ func TestAppStore_List(t *testing.T) {
 				Username:   tt.fields.Username,
 				AccessKey:  tt.fields.AccessKey,
 			}
-			got, err := s.List(tt.args.opts)
+			got, err := s.List(context.Background(), tt.args.opts)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("List() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -414,7 +415,7 @@ func TestAppStore_Delete(t *testing.T) {
 				Username:   tt.fields.Username,
 				AccessKey:  tt.fields.AccessKey,
 			}
-			tt.wantErr(t, s.Delete(tt.args.id), fmt.Sprintf("Delete(%v)", tt.args.id))
+			tt.wantErr(t, s.Delete(context.Background(), tt.args.id), fmt.Sprintf("Delete(%v)", tt.args.id))
 		})
 	}
 }

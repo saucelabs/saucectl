@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -64,8 +65,13 @@ func NewAppStore(url, username, accessKey string, timeout time.Duration) *AppSto
 }
 
 // Download downloads a file with the given id. It's the caller's responsibility to close the reader.
-func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
-	req, err := retryablehttp.NewRequest(http.MethodGet, fmt.Sprintf("%s/v1/storage/download/%s", s.URL, id), nil)
+func (s *AppStore) Download(ctx context.Context, id string) (io.ReadCloser, int64, error) {
+	req, err := retryablehttp.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		fmt.Sprintf("%s/v1/storage/download/%s", s.URL, id),
+		nil,
+	)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -92,8 +98,8 @@ func (s *AppStore) Download(id string) (io.ReadCloser, int64, error) {
 }
 
 // DownloadURL downloads a file from the url. It's the caller's responsibility to close the reader.
-func (s *AppStore) DownloadURL(url string) (io.ReadCloser, int64, error) {
-	req, err := retryablehttp.NewRequest(http.MethodGet, url, nil)
+func (s *AppStore) DownloadURL(ctx context.Context, url string) (io.ReadCloser, int64, error) {
+	req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -113,13 +119,18 @@ func (s *AppStore) DownloadURL(url string) (io.ReadCloser, int64, error) {
 }
 
 // UploadStream uploads the contents of reader and stores them under the given filename.
-func (s *AppStore) UploadStream(filename, description string, reader io.Reader) (storage.Item, error) {
+func (s *AppStore) UploadStream(ctx context.Context, filename, description string, reader io.Reader) (storage.Item, error) {
 	multipartReader, contentType, err := multipartext.NewMultipartReader("payload", filename, description, reader)
 	if err != nil {
 		return storage.Item{}, err
 	}
 
-	req, err := retryablehttp.NewRequest(http.MethodPost, fmt.Sprintf("%s/v1/storage/upload", s.URL), multipartReader)
+	req, err := retryablehttp.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		fmt.Sprintf("%s/v1/storage/upload", s.URL),
+		multipartReader,
+	)
 	if err != nil {
 		return storage.Item{}, err
 	}
@@ -155,7 +166,7 @@ func (s *AppStore) UploadStream(filename, description string, reader io.Reader) 
 }
 
 // List returns a list of items stored in the Sauce app storage that match the search criteria specified by opts.
-func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
+func (s *AppStore) List(ctx context.Context, opts storage.ListOptions) (storage.List, error) {
 	uri, _ := url.Parse(s.URL)
 	uri.Path = "/v1/storage/files"
 
@@ -181,7 +192,7 @@ func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 
 	uri.RawQuery = query.Encode()
 
-	req, err := retryablehttp.NewRequest(http.MethodGet, uri.String(), nil)
+	req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return storage.List{}, err
 	}
@@ -223,12 +234,17 @@ func (s *AppStore) List(opts storage.ListOptions) (storage.List, error) {
 	}
 }
 
-func (s *AppStore) Delete(id string) error {
+func (s *AppStore) Delete(ctx context.Context, id string) error {
 	if id == "" {
 		return fmt.Errorf("no id specified")
 	}
 
-	req, err := retryablehttp.NewRequest(http.MethodDelete, fmt.Sprintf("%s/v1/storage/files/%s", s.URL, id), nil)
+	req, err := retryablehttp.NewRequestWithContext(
+		ctx,
+		http.MethodDelete,
+		fmt.Sprintf("%s/v1/storage/files/%s", s.URL, id),
+		nil,
+	)
 	if err != nil {
 		return err
 	}

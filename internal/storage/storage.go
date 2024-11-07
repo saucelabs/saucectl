@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -58,9 +59,9 @@ func (s *ServerError) Error() string {
 // AppService is the interface for interacting with the Sauce application storage.
 type AppService interface {
 	// UploadStream uploads the contents of reader and stores them under the given filename.
-	UploadStream(filename, description string, reader io.Reader) (Item, error)
-	Download(id string) (io.ReadCloser, int64, error)
-	Delete(id string) error
-	DownloadURL(url string) (io.ReadCloser, int64, error)
-	List(opts ListOptions) (List, error)
+	UploadStream(ctx context.Context, filename, description string, reader io.Reader) (Item, error)
+	Download(ctx context.Context, id string) (io.ReadCloser, int64, error)
+	Delete(ctx context.Context, id string) error
+	DownloadURL(ctx context.Context, url string) (io.ReadCloser, int64, error)
+	List(ctx context.Context, opts ListOptions) (List, error)
 }

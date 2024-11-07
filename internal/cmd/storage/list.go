@@ -82,12 +82,14 @@ func ListCommand() *cobra.Command {
 				_ = tracker.Close()
 			}()
 		},
-		RunE: func(_ *cobra.Command, _ []string) error {
-			list, err := appsClient.List(storage.ListOptions{
-				Q:      query,
-				Name:   name,
-				SHA256: sha256,
-			})
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			list, err := appsClient.List(
+				cmd.Context(),
+				storage.ListOptions{
+					Q:      query,
+					Name:   name,
+					SHA256: sha256,
+				})
 			if err != nil {
 				return fmt.Errorf("failed to retrieve list: %w", err)
 			}
