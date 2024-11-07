@@ -544,7 +544,7 @@ func (r *CloudRunner) uploadFiles(archives map[uploadType]string, dryRun bool) (
 	return uris, nil
 }
 
-// refineURIs filters out extra URIs and sorts the remaining ones.
+// refineURIs picks extra URIs and sorts them.
 func (r *CloudRunner) refineURIs(uriMap map[uploadType]string) []string {
 	var uris []string
 	for _, t := range []uploadType{runnerConfigUpload, nodeModulesUpload, otherAppsUpload} {
