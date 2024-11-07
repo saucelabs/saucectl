@@ -150,25 +150,6 @@ jobs:
       - name: Saucectl RUN - CLI Driven
         run: ./saucectl run playwright ".*.js" -c "" --name "CLI Driven" --browser chromium --rootDir tests/e2e/playwright/ --playwright.version 1.43.1 --timeout 10m -r us-west-1
 
-  playwright-windows:
-    needs: build
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download saucectl Binary
-        uses: actions/download-artifact@v4
-        with:
-          name: saucectlbin
-
-      - name: Saucectl RUN - Config Driven
-        run: .\saucectl.exe run -c .sauce/playwright.yml --timeout 10m
-
-      - name: Saucectl RUN - CLI Driven
-        run: .\saucectl.exe run playwright ".*.js" -c "" --name "CLI Driven" --browser chromium --rootDir tests/e2e/playwright/ --playwright.version 1.43.1 --timeout 10m -r us-west-1
-
   testcafe:
     needs: build
     runs-on: ubuntu-latest
@@ -293,7 +274,7 @@ jobs:
 
   playwright-cucumberjs:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Checkout
@@ -304,14 +285,11 @@ jobs:
         with:
           name: saucectlbin
 
-      - name: Set Permissions
-        run: chmod +x ./saucectl
-
       - name: Saucectl RUN - Config Driven
         working-directory: ./tests/e2e/playwright-cucumberjs
         run: |
           npm ci --production
-          ../../../saucectl run
+          ..\..\..\saucectl.exe run
 
   imagerunner:
     needs: build
