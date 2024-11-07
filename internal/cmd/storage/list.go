@@ -7,10 +7,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/dustin/go-humanize"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
+	"github.com/saucelabs/saucectl/internal/human"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/saucelabs/saucectl/internal/usage"
@@ -143,7 +143,7 @@ func renderTable(list storage.List) {
 			AlignFooter: text.AlignRight,
 			Transformer: func(val interface{}) string {
 				t, _ := val.(int)
-				return humanize.Bytes(uint64(t))
+				return human.Bytes(int64(t))
 			},
 		},
 		{
