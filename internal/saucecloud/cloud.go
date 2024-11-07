@@ -430,6 +430,7 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, projectDir strin
 		return
 	}
 
+	// Create archives for the project's main files and runner configuration.
 	archives, err := r.createArchives(tempDir, projectDir, project, files, matcher)
 	if err != nil {
 		return
@@ -440,15 +441,13 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, projectDir strin
 		return
 	}
 
-	nodeModulesURI, err := r.handleNodeModules(tempDir, projectDir, matcher)
+	nodeModulesURI, err := r.handleNodeModules(tempDir, projectDir, matcher, dryRun)
 	if err != nil {
 		return
 	}
 	uris[nodeModulesUpload] = nodeModulesURI
 
-	appURI := uris[projectUpload]
-	extraURIs := r.sortExtraURIs(uris)
-	return appURI, extraURIs, nil
+	return uris[projectUpload], r.refineURIs(uris), nil
 }
 
 // collectFiles retrieves all relevant files in the project directory, excluding "node_modules".
@@ -467,7 +466,6 @@ func collectFiles(dir string) ([]string, error) {
 	return files, nil
 }
 
-// createArchives creates archives for the project's main files and runner configuration.
 func (r *CloudRunner) createArchives(tempDir, projectDir string, project interface{}, files []string, matcher sauceignore.Matcher) (map[uploadType]string, error) {
 	archives := make(map[uploadType]string)
 
@@ -490,7 +488,7 @@ func (r *CloudRunner) createArchives(tempDir, projectDir string, project interfa
 // If tagging is enabled and a tagged version of node_modules already exists in storage,
 // it returns the URI of the existing archive.
 // Otherwise, it creates a new archive and uploads it.
-func (r *CloudRunner) handleNodeModules(tempDir, projectDir string, matcher sauceignore.Matcher) (string, error) {
+func (r *CloudRunner) handleNodeModules(tempDir, projectDir string, matcher sauceignore.Matcher, dryRun bool) (string, error) {
 	var tag string
 	var err error
 	if taggableModules(projectDir, r.NPMDependencies) {
@@ -498,8 +496,10 @@ func (r *CloudRunner) handleNodeModules(tempDir, projectDir string, matcher sauc
 		if err != nil {
 			return "", err
 		}
+		log.Info().Msgf("Searching remote node_modules archive by tag %s", tag)
 		existingURI := r.findTaggedArchives(tag)
 		if existingURI != "" {
+			log.Info().Msgf("Skipping archive and upload node_modules, use %s", existingURI)
 			return existingURI, nil
 		}
 	}
@@ -509,17 +509,21 @@ func (r *CloudRunner) handleNodeModules(tempDir, projectDir string, matcher sauc
 		return "", fmt.Errorf("failed to archive node_modules: %w", err)
 	}
 
-	return r.uploadArchive(storage.FileInfo{Name: archive, Tags: []string{tag}}, nodeModulesUpload, false)
+	return r.uploadArchive(storage.FileInfo{Name: archive, Tags: []string{tag}}, nodeModulesUpload, dryRun)
 }
 
 // taggableModules checks if tagging should be applied based on the presence of package-lock.json and dependencies.
 func taggableModules(dir string, npmDependencies []string) bool {
-	return len(npmDependencies) > 0 && fileExists(filepath.Join(dir, "package-lock.json"))
+	if len(npmDependencies) == 0 {
+		return false
+	}
+	_, err := os.Stat(filepath.Join(dir, "package-lock.json"))
+	return err == nil
 }
 
-// findTaggedArchives searches storage for a tagged archive with a matching hash.
+// findTaggedArchives searches storage for a tagged archive with a matching tag.
 func (r *CloudRunner) findTaggedArchives(tag string) string {
-	list, err := r.ProjectUploader.List(storage.ListOptions{Tags: []string{tag}})
+	list, err := r.ProjectUploader.List(storage.ListOptions{Tags: []string{tag}, MaxResults: 1})
 	if err != nil || len(list.Items) == 0 {
 		return ""
 	}
@@ -540,20 +544,15 @@ func (r *CloudRunner) uploadFiles(archives map[uploadType]string, dryRun bool) (
 	return uris, nil
 }
 
-func (r *CloudRunner) sortExtraURIs(uris map[uploadType]string) []string {
-	var extraURIs []string
+// refineURIs filters out extra URIs and sorts the remaining ones.
+func (r *CloudRunner) refineURIs(uriMap map[uploadType]string) []string {
+	var uris []string
 	for _, t := range []uploadType{runnerConfigUpload, nodeModulesUpload, otherAppsUpload} {
-		if uri, exists := uris[t]; exists {
-			extraURIs = append(extraURIs, uri)
+		if uri, ok := uriMap[t]; ok {
+			uris = append(uris, uri)
 		}
 	}
-	return extraURIs
-}
-
-// fileExists verifies if a file exists at the specified path.
-func fileExists(path string) bool {
-	_, err := os.Stat(path)
-	return !os.IsNotExist(err)
+	return uris
 }
 
 // remoteArchiveFiles archives the files to a remote storage.
