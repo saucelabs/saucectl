@@ -99,7 +99,7 @@ type MockMatcher struct {
 	ignoreNodeModules bool
 }
 
-func (m *MockMatcher) Match(path []string, isDir bool) bool {
+func (m *MockMatcher) Match(path []string, _ bool) bool {
 	return m.ignoreNodeModules && strings.Contains(filepath.Join(path...), "node_modules")
 }
 
