@@ -27,7 +27,7 @@ func SHA256(filename string) (string, error) {
 func HashContent(filename string, extra ...string) (string, error) {
 	h := sha256.New()
 
-	file, err := os.Open(filePath)
+	file, err := os.Open(filename)
 	if err != nil {
 		return "", fmt.Errorf("failed to open file: %w", err)
 	}
@@ -37,7 +37,7 @@ func HashContent(filename string, extra ...string) (string, error) {
 		return "", fmt.Errorf("failed to read file: %w", err)
 	}
 
-	h.Write([]byte(strings.Join(extraContent, "")))
+	h.Write([]byte(strings.Join(extra, "")))
 
 	return fmt.Sprintf("%x", h.Sum(nil))[:16], nil
 }
