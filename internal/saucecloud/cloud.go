@@ -532,7 +532,7 @@ func taggableModules(dir string, npmDependencies []string) bool {
 
 // findTaggedArchives searches storage for a tagged archive with a matching tag.
 func (r *CloudRunner) findTaggedArchives(tag string) string {
-	list, err := r.ProjectUploader.List(storage.ListOptions{Tags: []string{tag}, MaxResults: 1})
+	list, err := r.ProjectUploader.List(context.TODO(), storage.ListOptions{Tags: []string{tag}, MaxResults: 1})
 	if err != nil || len(list.Items) == 0 {
 		return ""
 	}
