@@ -422,7 +422,7 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, projectDir strin
 
 	files, err := collectFiles(projectDir)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to retrieve project files: %w", err)
+		return "", nil, fmt.Errorf("failed to collect project files: %w", err)
 	}
 
 	matcher, err := sauceignore.NewMatcherFromFile(sauceignoreFile)
@@ -698,7 +698,6 @@ func (r *CloudRunner) uploadArchive(fileInfo storage.FileInfo, pType uploadType,
 		if err != nil {
 			return "", fmt.Errorf("unable to download app from %s: %w", filename, err)
 		}
-
 		defer os.RemoveAll(dest)
 
 		filename = dest
