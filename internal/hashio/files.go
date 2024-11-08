@@ -24,7 +24,7 @@ func SHA256(filename string) (string, error) {
 
 // HashContent computes a SHA-256 hash of the file content combined with extra content,
 // and returns the first 16 characters of the hex-encoded hash.
-func HashContent(filePath string, extraContent ...string) (string, error) {
+func HashContent(filename string, extra ...string) (string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return "", fmt.Errorf("failed to open file: %w", err)
