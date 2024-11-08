@@ -516,7 +516,7 @@ func (r *CloudRunner) handleNodeModules(tempDir, projectDir string, matcher sauc
 		log.Info().Msgf("Searching remote node_modules archive by tag %s", tag)
 		existingURI := r.findTaggedArchives(tag)
 		if existingURI != "" {
-			log.Info().Msgf("Skipping archive and upload node_modules, use %s", existingURI)
+			log.Info().Msgf("Skipping upload, using %s", existingURI)
 			return existingURI, nil
 		}
 	}
