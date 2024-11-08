@@ -45,7 +45,7 @@ func UploadCommand() *cobra.Command {
 				_ = tracker.Close()
 			}()
 		},
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			file, err := os.Open(args[0])
 			if err != nil {
 				return fmt.Errorf("failed to open file: %w", err)
@@ -65,10 +65,12 @@ func UploadCommand() *cobra.Command {
 
 			// Look up the file first.
 			if !force {
-				list, err := appsClient.List(storage.ListOptions{
-					SHA256:     hash,
-					MaxResults: 1,
-				})
+				list, err := appsClient.List(
+					cmd.Context(),
+					storage.ListOptions{
+						SHA256:     hash,
+						MaxResults: 1,
+					})
 				if err != nil {
 					return fmt.Errorf("storage lookup failed: %w", err)
 				}
@@ -83,10 +85,12 @@ func UploadCommand() *cobra.Command {
 				bar := newProgressBar(out, finfo.Size(), "Uploading")
 				reader := progress.NewReadSeeker(file, bar)
 
-				item, err = appsClient.UploadStream(storage.FileInfo{
-					Name:        finfo.Name(),
-					Description: description,
-				},
+				item, err = appsClient.UploadStream(
+					cmd.Context(),
+					storage.FileInfo{
+						Name:        finfo.Name(),
+						Description: description,
+					},
 					&reader,
 				)
 				if err != nil {

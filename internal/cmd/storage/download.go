@@ -7,6 +7,7 @@ import (
 	"os"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
+	"github.com/saucelabs/saucectl/internal/ioctx"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/schollz/progressbar/v3"
@@ -40,12 +41,16 @@ func DownloadCommand() *cobra.Command {
 				_ = tracker.Close()
 			}()
 		},
-		RunE: func(_ *cobra.Command, args []string) error {
-			reader, size, err := appsClient.Download(args[0])
+		RunE: func(cmd *cobra.Command, args []string) error {
+			reader, size, err := appsClient.Download(cmd.Context(), args[0])
 			if err != nil {
 				return fmt.Errorf("download failed: %w", err)
 			}
-			defer reader.Close()
+			ctxReader := ioctx.ContextualReadCloser{
+				Ctx:    cmd.Context(),
+				Reader: reader,
+			}
+			defer ctxReader.Close()
 
 			file, err := os.Create(filename)
 			if err != nil {
@@ -54,7 +59,7 @@ func DownloadCommand() *cobra.Command {
 			defer file.Close()
 
 			bar := progressbar.DefaultBytes(size, "Downloading")
-			_, err = io.Copy(io.MultiWriter(file, bar), reader)
+			_, err = io.Copy(io.MultiWriter(file, bar), ctxReader)
 			_ = bar.Close()
 			if err != nil {
 				return fmt.Errorf("failed to write to file: %w", err)

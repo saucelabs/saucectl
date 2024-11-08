@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"os/signal"
 	"time"
 
 	"github.com/fatih/color"
@@ -72,7 +74,7 @@ func main() {
 		docker.Command(cmd.PersistentPreRun),
 	)
 
-	if err := cmd.Execute(); err != nil {
+	if err := cmd.ExecuteContext(newContext()); err != nil {
 		os.Exit(1)
 	}
 }
@@ -93,4 +95,24 @@ func setupLogging(verbose bool, noColor bool) {
 	}
 
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: timeFormat, NoColor: noColor})
+}
+
+// newContext returns a new context that is canceled when a SIGINT is received.
+func newContext() context.Context {
+	ctx, cancel := context.WithCancel(context.Background())
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+
+	go func() {
+		for range signals {
+			if ctx.Err() != nil {
+				os.Exit(1)
+			}
+
+			println("\nWaiting for any in-progress actions to stop... (press Ctrl-c again to exit without waiting)\n")
+			cancel()
+		}
+	}()
+
+	return ctx
 }

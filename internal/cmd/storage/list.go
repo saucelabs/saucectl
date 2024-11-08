@@ -7,10 +7,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/dustin/go-humanize"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
+	"github.com/saucelabs/saucectl/internal/human"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/saucelabs/saucectl/internal/usage"
@@ -82,12 +82,14 @@ func ListCommand() *cobra.Command {
 				_ = tracker.Close()
 			}()
 		},
-		RunE: func(_ *cobra.Command, _ []string) error {
-			list, err := appsClient.List(storage.ListOptions{
-				Q:      query,
-				Name:   name,
-				SHA256: sha256,
-			})
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			list, err := appsClient.List(
+				cmd.Context(),
+				storage.ListOptions{
+					Q:      query,
+					Name:   name,
+					SHA256: sha256,
+				})
 			if err != nil {
 				return fmt.Errorf("failed to retrieve list: %w", err)
 			}
@@ -141,7 +143,7 @@ func renderTable(list storage.List) {
 			AlignFooter: text.AlignRight,
 			Transformer: func(val interface{}) string {
 				t, _ := val.(int)
-				return humanize.Bytes(uint64(t))
+				return human.Bytes(int64(t))
 			},
 		},
 		{

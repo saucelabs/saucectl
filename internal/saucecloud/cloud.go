@@ -614,10 +614,6 @@ func (r *CloudRunner) uploadArchive(fileInfo storage.FileInfo, pType uploadType,
 		if err != nil {
 			return "", fmt.Errorf("unable to download app from %s: %w", filename, err)
 		}
-
-		if err != nil {
-			return "", err
-		}
 		defer os.RemoveAll(dest)
 
 		filename = dest
@@ -642,6 +638,7 @@ func (r *CloudRunner) uploadArchive(fileInfo storage.FileInfo, pType uploadType,
 	progress.Show("Uploading %s %s", pType, filename)
 	start := time.Now()
 	resp, err := r.ProjectUploader.UploadStream(
+		context.TODO(),
 		storage.FileInfo{
 			Name:        filepath.Base(filename),
 			Description: fileInfo.Description,
@@ -668,7 +665,7 @@ func (r *CloudRunner) isFileStored(filename string) (storageID string, err error
 
 	log.Info().Msgf("Checksum: %s", hash)
 
-	l, err := r.ProjectUploader.List(storage.ListOptions{
+	l, err := r.ProjectUploader.List(context.TODO(), storage.ListOptions{
 		SHA256:     hash,
 		MaxResults: 1,
 	})
@@ -997,7 +994,7 @@ func arrayContains(list []string, want string) bool {
 
 // download downloads the resource the URL points to and returns its local path.
 func (r *CloudRunner) download(url string) (string, error) {
-	reader, _, err := r.ProjectUploader.DownloadURL(url)
+	reader, _, err := r.ProjectUploader.DownloadURL(context.TODO(), url)
 	if err != nil {
 		return "", err
 	}

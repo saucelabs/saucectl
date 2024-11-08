@@ -98,7 +98,7 @@ func (r *SauceReportRetrier) uploadConfig(filename string) (string, error) {
 
 	progress.Show("Uploading runner config %s", filename)
 	start := time.Now()
-	resp, err := r.ProjectUploader.UploadStream(storage.FileInfo{Name: filepath.Base(filename)}, file)
+	resp, err := r.ProjectUploader.UploadStream(context.TODO(), storage.FileInfo{Name: filepath.Base(filename)}, file)
 	progress.Stop()
 	if err != nil {
 		return "", err
