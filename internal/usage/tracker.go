@@ -52,6 +52,7 @@ func (p Properties) SetNPM(npm config.Npm) Properties {
 	}
 	p["npm_packages"] = pkgs
 	p["npm_dependencies"] = npm.Dependencies
+	p["npm_use_package_lock"] = npm.UsePackageLock
 
 	return p
 }
