@@ -500,9 +500,9 @@ func (r *CloudRunner) createArchives(tempDir, projectDir string, project interfa
 }
 
 // handleNodeModules archives the node_modules directory and uploads it to remote storage.
-// If tagging is enabled and a tagged version of node_modules already exists in storage,
-// it returns the URI of the existing archive.
-// Otherwise, it creates a new archive, uploads it and returns the storage ID.
+// Checks if npm dependencies are taggable and if a tagged version of node_modules already exists in storage.
+// If an existing archive is found, it returns the URI of that archive.
+// If not, it creates a new archive, uploads it, and returns the storage ID.
 func (r *CloudRunner) handleNodeModules(tempDir, projectDir string, matcher sauceignore.Matcher, dryRun bool) (string, error) {
 	var tags []string
 
