@@ -451,7 +451,14 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, projectDir strin
 		}
 	}
 
-	return uris[projectUpload], r.refineURIs(uris), nil
+	var extraURIs []string
+	for _, t := range []uploadType{runnerConfigUpload, nodeModulesUpload, otherAppsUpload} {
+		if uri, ok := uris[t]; ok {
+			extraURIs = append(extraURIs, uri)
+		}
+	}
+
+	return uris[projectUpload], extraURIs, nil
 }
 
 // collectFiles retrieves all relevant files in the project directory, excluding "node_modules".
@@ -533,7 +540,11 @@ func taggableModules(dir string, npmDependencies []string) bool {
 // findTaggedArchives searches storage for a tagged archive with a matching tag.
 func (r *CloudRunner) findTaggedArchives(tag string) string {
 	list, err := r.ProjectUploader.List(context.TODO(), storage.ListOptions{Tags: []string{tag}, MaxResults: 1})
-	if err != nil || len(list.Items) == 0 {
+	if err != nil {
+		log.Err(err).Msgf("Failed to retrieve file with tag %q from storage", tag)
+		return ""
+	}
+	if len(list.Items) == 0 {
 		return ""
 	}
 
@@ -551,17 +562,6 @@ func (r *CloudRunner) uploadFiles(archives map[uploadType]string, dryRun bool) (
 		uris[uploadType] = uri
 	}
 	return uris, nil
-}
-
-// refineURIs selects non-main URIs and sorts them.
-func (r *CloudRunner) refineURIs(uriMap map[uploadType]string) []string {
-	var uris []string
-	for _, t := range []uploadType{runnerConfigUpload, nodeModulesUpload, otherAppsUpload} {
-		if uri, ok := uriMap[t]; ok {
-			uris = append(uris, uri)
-		}
-	}
-	return uris
 }
 
 // remoteArchiveFiles archives the files to a remote storage.
