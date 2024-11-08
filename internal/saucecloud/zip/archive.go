@@ -112,32 +112,13 @@ func ArchiveFiles(targetFileName string, targetDir string, sourceDir string, fil
 
 // ArchiveNodeModules collects npm dependencies from sourceDir and compresses them into targetDir.
 func ArchiveNodeModules(targetDir string, sourceDir string, matcher sauceignore.Matcher, dependencies []string) (string, error) {
-	modDir := filepath.Join(sourceDir, "node_modules")
-	ignored := matcher.Match(strings.Split(modDir, string(os.PathSeparator)), true)
-
-	_, err := os.Stat(modDir)
-	hasMods := err == nil
-	wantMods := len(dependencies) > 0
-
-	if !hasMods && wantMods {
-		return "", fmt.Errorf("unable to access 'node_modules' folder, but you have npm dependencies defined in your configuration; ensure that the folder exists and is accessible")
-	}
-
-	if ignored && wantMods {
-		return "", fmt.Errorf("'node_modules' is ignored by sauceignore, but you have npm dependencies defined in your project; please remove 'node_modules' from your sauceignore file")
-	}
-
-	if !hasMods || ignored {
-		return "", nil
-	}
-
-	dependencies, err = ExpandDependencies(sourceDir, dependencies)
+	dependencies, err := ExpandDependencies(sourceDir, dependencies)
 	if err != nil {
 		return "", err
 	}
 
 	var files []string
-
+	wantMods := len(dependencies) > 0
 	// does the user only want a subset of dependencies?
 	if wantMods {
 		reqs := node.Requirements(filepath.Join(sourceDir, "node_modules"), dependencies...)
@@ -155,7 +136,7 @@ func ArchiveNodeModules(targetDir string, sourceDir string, matcher sauceignore.
 	if !wantMods {
 		log.Warn().Msg("Adding the entire node_modules folder to the payload. " +
 			"This behavior is deprecated, not recommended and will be removed in the future. " +
-			"Please address your dependency needs via https://docs.saucelabs.com/dev/cli/saucectl/usage/use-cases/#set-npm-packages-in-configyml")
+			"Please address your dependency needs via https://docs.saucelabs.com/dev/cli/saucectl/usage/use-cases/#including-node-dependencies")
 		files = append(files, filepath.Join(sourceDir, "node_modules"))
 	}
 

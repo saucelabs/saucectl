@@ -36,7 +36,6 @@ type Item struct {
 	Name     string    `json:"name"`
 	Size     int       `json:"size"`
 	Uploaded time.Time `json:"uploaded"`
-	Tags     []string
 }
 
 // ErrFileNotFound is returned when the requested file does not exist.

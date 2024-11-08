@@ -1,18 +1,15 @@
 package saucecloud
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
 
 	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/saucecloud/zip"
-	"github.com/saucelabs/saucectl/internal/sauceignore"
 	"github.com/stretchr/testify/assert"
-	"gotest.tools/v3/fs"
 )
 
 func TestSignalDetection(t *testing.T) {
@@ -56,156 +53,6 @@ func TestRunJobsSkipped(t *testing.T) {
 	assert.True(t, res.skipped)
 }
 
-func TestCloudRunner_archiveNodeModules(t *testing.T) {
-	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
-	if err != nil {
-		t.Error(err)
-	}
-	defer os.RemoveAll(tempDir)
-
-	projectsDir := fs.NewDir(t, "project",
-		fs.WithDir("has-mods",
-			fs.WithDir("node_modules",
-				fs.WithDir("mod1",
-					fs.WithFile("package.json", "{}"),
-				),
-			),
-		),
-		fs.WithDir("no-mods"),
-		fs.WithDir("empty-mods",
-			fs.WithDir("node_modules"),
-		),
-	)
-	defer projectsDir.Remove()
-
-	wd, err := os.Getwd()
-	if err != nil {
-		t.Errorf("Failed to get the current working dir: %v", err)
-	}
-
-	if err := os.Chdir(projectsDir.Path()); err != nil {
-		t.Errorf("Failed to change the current working dir: %v", err)
-	}
-	defer func() {
-		if err := os.Chdir(wd); err != nil {
-			t.Errorf("Failed to change the current working dir back to original: %v", err)
-		}
-	}()
-
-	type fields struct {
-		NPMDependencies []string
-	}
-	type args struct {
-		tempDir string
-		rootDir string
-		matcher sauceignore.Matcher
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    string
-		wantErr assert.ErrorAssertionFunc
-	}{
-		{
-			"want to include mods, but node_modules does not exist",
-			fields{
-				NPMDependencies: []string{"mod1"},
-			},
-			args{
-				tempDir: tempDir,
-				rootDir: "no-mods",
-				matcher: sauceignore.NewMatcher([]sauceignore.Pattern{}),
-			},
-			"",
-			func(t assert.TestingT, err error, args ...interface{}) bool {
-				return assert.EqualError(t, err, "unable to access 'node_modules' folder, but you have npm dependencies defined in your configuration; ensure that the folder exists and is accessible", args)
-			},
-		},
-		{
-			"have and want mods, but mods are ignored",
-			fields{
-				NPMDependencies: []string{"mod1"},
-			},
-			args{
-				tempDir: tempDir,
-				rootDir: "has-mods",
-				matcher: sauceignore.NewMatcher([]sauceignore.Pattern{sauceignore.NewPattern("/has-mods/node_modules")}),
-			},
-			"",
-			func(t assert.TestingT, err error, args ...interface{}) bool {
-				return assert.EqualError(t, err, "'node_modules' is ignored by sauceignore, but you have npm dependencies defined in your project; please remove 'node_modules' from your sauceignore file", args)
-			},
-		},
-		{
-			"have mods, don't want them and they are ignored",
-			fields{
-				NPMDependencies: []string{}, // no mods selected, because we don't want any
-			},
-			args{
-				tempDir: tempDir,
-				rootDir: "has-mods",
-				matcher: sauceignore.NewMatcher([]sauceignore.Pattern{sauceignore.NewPattern("/has-mods/node_modules")}),
-			},
-			"",
-			assert.NoError,
-		},
-		{
-			"no mods wanted and no mods exist",
-			fields{
-				NPMDependencies: []string{},
-			},
-			args{
-				tempDir: tempDir,
-				rootDir: "no-mods",
-				matcher: sauceignore.NewMatcher([]sauceignore.Pattern{}),
-			},
-			"",
-			assert.NoError,
-		},
-		{
-			"has and wants mods (happy path)",
-			fields{
-				NPMDependencies: []string{"mod1"},
-			},
-			args{
-				tempDir: tempDir,
-				rootDir: "has-mods",
-				matcher: sauceignore.NewMatcher([]sauceignore.Pattern{}),
-			},
-			filepath.Join(tempDir, "node_modules.zip"),
-			assert.NoError,
-		},
-		{
-			"want mods, but node_modules folder is empty",
-			fields{
-				NPMDependencies: []string{"mod1"},
-			},
-			args{
-				tempDir: tempDir,
-				rootDir: "empty-mods",
-				matcher: sauceignore.NewMatcher([]sauceignore.Pattern{}),
-			},
-			"",
-			func(t assert.TestingT, err error, args ...interface{}) bool {
-				return assert.EqualError(t, err, "unable to find required dependencies; please check 'node_modules' folder and make sure the dependencies exist", args)
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := &CloudRunner{
-				NPMDependencies: tt.fields.NPMDependencies,
-			}
-			got, err := zip.ArchiveNodeModules(tt.args.tempDir, tt.args.rootDir, tt.args.matcher, r.NPMDependencies)
-			if !tt.wantErr(t, err, fmt.Sprintf("archiveNodeModules(%v, %v, %v)", tt.args.tempDir, tt.args.rootDir, tt.args.matcher)) {
-				return
-			}
-			assert.Equalf(t, tt.want, got, "archiveNodeModules(%v, %v, %v)", tt.args.tempDir, tt.args.rootDir, tt.args.matcher)
-		})
-	}
-}
-
 func Test_arrayContains(t *testing.T) {
 	type args struct {
 		list []string
@@ -244,6 +91,106 @@ func Test_arrayContains(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equalf(t, tt.want, arrayContains(tt.args.list, tt.args.want), "arrayContains(%v, %v)", tt.args.list, tt.args.want)
+		})
+	}
+}
+
+type MockMatcher struct {
+	ignoreNodeModules bool
+}
+
+func (m *MockMatcher) Match(path []string, _ bool) bool {
+	return m.ignoreNodeModules && strings.Contains(filepath.Join(path...), "node_modules")
+}
+
+func TestCloudRunner_needsNodeModules(t *testing.T) {
+	tempDir := t.TempDir()
+	modDir := filepath.Join(tempDir, "node_modules")
+	dependencies := []string{"chalk", "lodash"}
+
+	createNodeModules := func() {
+		if err := os.Mkdir(modDir, 0755); err != nil {
+			t.Fatalf("failed to create node_modules directory: %v", err)
+		}
+	}
+
+	tests := []struct {
+		name          string
+		setup         func()
+		ignoreModules bool
+		dependencies  []string
+		want          bool
+		expectErr     bool
+	}{
+		{
+			name:          "No dependencies, no node_modules",
+			setup:         func() {},
+			ignoreModules: false,
+			dependencies:  []string{},
+			want:          false,
+			expectErr:     false,
+		},
+		{
+			name:          "Dependencies defined, no node_modules",
+			setup:         func() {},
+			ignoreModules: false,
+			dependencies:  dependencies,
+			want:          false,
+			expectErr:     true,
+		},
+		{
+			name:          "Dependencies defined, node_modules present",
+			setup:         createNodeModules,
+			ignoreModules: false,
+			dependencies:  dependencies,
+			want:          true,
+			expectErr:     false,
+		},
+		{
+			name:          "Dependencies defined, node_modules ignored",
+			setup:         createNodeModules,
+			ignoreModules: true,
+			dependencies:  dependencies,
+			want:          false,
+			expectErr:     true,
+		},
+		{
+			name:          "No dependencies, node_modules ignored",
+			setup:         createNodeModules,
+			ignoreModules: true,
+			dependencies:  []string{},
+			want:          false,
+			expectErr:     false,
+		},
+		{
+			name:          "No dependencies, node_modules present",
+			setup:         createNodeModules,
+			ignoreModules: false,
+			dependencies:  []string{},
+			want:          true,
+			expectErr:     false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			t.Cleanup(func() {
+				if err := os.RemoveAll(modDir); err != nil {
+					t.Fatalf("failed to clean up node_modules directory: %v", err)
+				}
+			})
+
+			matcher := &MockMatcher{ignoreNodeModules: tt.ignoreModules}
+			got, err := needsNodeModules(tempDir, matcher, tt.dependencies)
+
+			if (err != nil) != tt.expectErr {
+				t.Fatalf("expected error: %v, got error: %v", tt.expectErr, err)
+			}
+
+			if got != tt.want {
+				t.Errorf("expected result: %v, got result: %v", tt.want, got)
+			}
 		})
 	}
 }
