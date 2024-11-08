@@ -441,7 +441,11 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, projectDir strin
 		return
 	}
 
-	if len(r.NPMDependencies) > 0 {
+	need, err := needsNodeModules(projectDir, matcher, r.NPMDependencies)
+	if err != nil {
+		return
+	}
+	if need {
 		nodeModulesURI, err := r.handleNodeModules(tempDir, projectDir, matcher, dryRun)
 		if err != nil {
 			return "", nil, err
@@ -451,14 +455,14 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, projectDir strin
 		}
 	}
 
-	var extraURIs []string
+	var sortedURIs []string
 	for _, t := range []uploadType{runnerConfigUpload, nodeModulesUpload, otherAppsUpload} {
 		if uri, ok := uris[t]; ok {
-			extraURIs = append(extraURIs, uri)
+			sortedURIs = append(sortedURIs, uri)
 		}
 	}
 
-	return uris[projectUpload], extraURIs, nil
+	return uris[projectUpload], sortedURIs, nil
 }
 
 // collectFiles retrieves all relevant files in the project directory, excluding "node_modules".
@@ -521,20 +525,34 @@ func (r *CloudRunner) handleNodeModules(tempDir, projectDir string, matcher sauc
 	if err != nil {
 		return "", fmt.Errorf("failed to archive node_modules: %w", err)
 	}
-	if archive == "" {
-		return "", nil
-	}
 
 	return r.uploadArchive(storage.FileInfo{Name: archive, Tags: tags}, nodeModulesUpload, dryRun)
 }
 
+func needsNodeModules(projectDir string, matcher sauceignore.Matcher, dependencies []string) (bool, error) {
+	modDir := filepath.Join(projectDir, "node_modules")
+	ignored := matcher.Match(strings.Split(modDir, string(os.PathSeparator)), true)
+	hasMods := fileExists(modDir)
+	wantMods := len(dependencies) > 0
+
+	if wantMods && !hasMods {
+		return false, fmt.Errorf("unable to access 'node_modules' folder, but you have npm dependencies defined in your configuration; ensure that the folder exists and is accessible")
+	}
+
+	if ignored && wantMods {
+		return false, fmt.Errorf("'node_modules' is ignored by sauceignore, but you have npm dependencies defined in your project; please remove 'node_modules' from your sauceignore file")
+	}
+
+	if !hasMods || ignored {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 // taggableModules checks if tagging should be applied based on the presence of package-lock.json and dependencies.
 func taggableModules(dir string, npmDependencies []string) bool {
-	if len(npmDependencies) == 0 {
-		return false
-	}
-	_, err := os.Stat(filepath.Join(dir, "package-lock.json"))
-	return err == nil
+	return len(npmDependencies) > 0 && fileExists(filepath.Join(dir, "package-lock.json"))
 }
 
 // findTaggedArchives searches storage for a tagged archive with a matching tag.
@@ -562,6 +580,11 @@ func (r *CloudRunner) uploadFiles(archives map[uploadType]string, dryRun bool) (
 		uris[uploadType] = uri
 	}
 	return uris, nil
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }
 
 // remoteArchiveFiles archives the files to a remote storage.
