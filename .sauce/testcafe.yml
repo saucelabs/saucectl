@@ -10,7 +10,7 @@ sauce:
 defaults:
   timeout: 5m
 testcafe:
-  version: 3.6.2
+  version: 3.7.0
 rootDir: tests/e2e/testcafe/
 suites:
   - name: Chrome in sauce
