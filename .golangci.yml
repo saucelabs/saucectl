@@ -8,3 +8,5 @@ linters-settings:
     # https://staticcheck.io/docs/configuration/options/#checks
     # Default: ["*"]
     checks: [ "all", "-SA1019" ]
+  revive:
+    redefines-builtin-id: false
