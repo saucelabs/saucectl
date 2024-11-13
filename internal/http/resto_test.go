@@ -423,8 +423,8 @@ func TestResto_GetJobAssetFileContent(t *testing.T) {
 }
 
 func randJobStatus(j *restoJob, isComplete bool) {
-	min := 1
-	max := 10
+	min := 1  //nolint:revive
+	max := 10 //nolint:revive
 	randNum := rand.Intn(max-min+1) + min
 
 	status := "error"

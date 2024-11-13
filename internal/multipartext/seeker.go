@@ -126,7 +126,7 @@ func (mr *multiReadSeeker) WriteTo(w io.Writer) (sum int64, err error) {
 	return sum, nil
 }
 
-func min[T constraints.Ordered](a, b T) T {
+func min[T constraints.Ordered](a, b T) T { //nolint:revive
 	if a < b {
 		return a
 	}
