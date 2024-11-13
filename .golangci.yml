@@ -7,7 +7,7 @@ linters-settings:
   revive:
     rules:
       - name: redefines-builtin-id
-        severity: off 
+        severity: warning 
   staticcheck:
     # https://staticcheck.io/docs/configuration/options/#checks
     # Default: ["*"]
