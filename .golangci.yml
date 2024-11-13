@@ -4,10 +4,6 @@ linters:
     - errname
     - goimports
 linters-settings:
-  revive:
-    rules:
-      - name: redefines-builtin-id
-        severity: warning 
   staticcheck:
     # https://staticcheck.io/docs/configuration/options/#checks
     # Default: ["*"]
