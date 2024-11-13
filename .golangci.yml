@@ -9,4 +9,6 @@ linters-settings:
     # Default: ["*"]
     checks: [ "all", "-SA1019" ]
   revive:
-    redefines-builtin-id: false
+    rules:
+      - name: redefines-builtin-id
+        severity: "off" 
