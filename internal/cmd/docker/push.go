@@ -157,9 +157,9 @@ func logPushProgress(reader io.ReadCloser) error {
 }
 
 // createBar returns a customized progress bar for Docker image pushes.
-func createBar(max int64, desc string) *progressbar.ProgressBar { //nolint:revive
+func createBar(limit int64, desc string) *progressbar.ProgressBar {
 	return progressbar.NewOptions64(
-		max,
+		limit,
 		progressbar.OptionSetDescription(desc),
 		progressbar.OptionSetWriter(os.Stderr),
 		progressbar.OptionShowBytes(true),
