@@ -19,8 +19,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/viper"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 // NewCucumberCmd creates the 'run' command for cucumber.
@@ -112,7 +110,6 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 			usage.NumSuites(len(p.Suites)),
 			usage.Slack(p.Notifications.Slack),
 			usage.Sharding(cucumber.GetShardTypes(p.Suites), cucumber.GetShardOpts(p.Suites)),
-			usage.LaunchOrder(p.Sauce.LaunchOrder),
 			usage.SmartRetry(p.IsSmartRetried()),
 			usage.Reporters(p.Reporters),
 			usage.Node(p.NodeVersion),

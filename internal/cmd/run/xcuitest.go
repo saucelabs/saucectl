@@ -124,7 +124,6 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 			usage.NumSuites(len(p.Suites)),
 			usage.Slack(p.Notifications.Slack),
 			usage.Sharding(xcuitest.GetShardTypes(p.Suites), nil),
-			usage.LaunchOrder(p.Sauce.LaunchOrder),
 			usage.SmartRetry(p.IsSmartRetried()),
 			usage.Reporters(p.Reporters),
 		)

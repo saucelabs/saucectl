@@ -7,11 +7,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/http"
 
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/espresso"
@@ -22,6 +17,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 type espressoFlags struct {
@@ -127,7 +124,6 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, isCLIDriven bo
 			usage.NumSuites(len(p.Suites)),
 			usage.Slack(p.Notifications.Slack),
 			usage.Sharding(espresso.GetShardTypes(p.Suites), nil),
-			usage.LaunchOrder(p.Sauce.LaunchOrder),
 			usage.SmartRetry(p.IsSmartRetried()),
 			usage.Reporters(p.Reporters),
 		)

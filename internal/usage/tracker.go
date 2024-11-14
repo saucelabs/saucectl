@@ -67,6 +67,7 @@ func SauceConfig(c config.SauceConfig) Option {
 		p["tunnel"] = c.Tunnel.Name
 		p["tunnel_owner"] = c.Tunnel.Owner
 		p["retries"] = c.Retries
+		p["launch_order"] = string(c.LaunchOrder)
 	}
 }
 
@@ -84,12 +85,6 @@ func Sharding(shardTypes []string, shardOpts map[string]bool) Option {
 		for k, v := range shardOpts {
 			p[k] = v
 		}
-	}
-}
-
-func LaunchOrder(launchOrder config.LaunchOrder) Option {
-	return func(p Properties) {
-		p["launch_order"] = string(launchOrder)
 	}
 }
 

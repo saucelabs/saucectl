@@ -8,11 +8,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/http"
 
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
@@ -25,6 +20,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/viper"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 type cypressFlags struct {
@@ -146,7 +143,6 @@ func runCypress(cmd *cobra.Command, cflags cypressFlags, isCLIDriven bool) (int,
 			usage.NumSuites(len(p.GetSuites())),
 			usage.Slack(p.GetNotifications().Slack),
 			usage.Sharding(p.GetShardTypes(), p.GetShardOpts()),
-			usage.LaunchOrder(p.GetSauceCfg().LaunchOrder),
 			usage.SmartRetry(p.IsSmartRetried()),
 			usage.Reporters(p.GetReporters()),
 			usage.Node(p.GetNodeVersion()),

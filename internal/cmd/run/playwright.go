@@ -9,11 +9,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/http"
 
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/flags"
@@ -26,6 +21,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/viper"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 type playwrightFlags struct {
@@ -158,7 +155,6 @@ func runPlaywright(cmd *cobra.Command, pf playwrightFlags, isCLIDriven bool) (in
 			usage.NumSuites(len(p.Suites)),
 			usage.Slack(p.Notifications.Slack),
 			usage.Sharding(playwright.GetShardTypes(p.Suites), playwright.GetShardOpts(p.Suites)),
-			usage.LaunchOrder(p.Sauce.LaunchOrder),
 			usage.SmartRetry(p.IsSmartRetried()),
 			usage.Reporters(p.Reporters),
 			usage.Node(p.NodeVersion),
