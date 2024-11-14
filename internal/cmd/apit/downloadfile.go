@@ -8,8 +8,6 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 
 	"github.com/saucelabs/saucectl/internal/apitest"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"

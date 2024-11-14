@@ -12,8 +12,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 func DownloadCommand() *cobra.Command {

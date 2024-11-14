@@ -6,13 +6,10 @@ import (
 	"os"
 	"strings"
 
-	cmds "github.com/saucelabs/saucectl/internal/cmd"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/msg"

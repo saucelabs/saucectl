@@ -1,13 +1,14 @@
 package segment
 
 import (
+	"github.com/saucelabs/saucectl/internal/credentials"
+	"runtime"
+
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"runtime"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/ci"
-	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/setup"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/version"

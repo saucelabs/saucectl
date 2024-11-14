@@ -14,8 +14,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/report/table"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/spf13/cobra"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 func runApitest(cmd *cobra.Command, isCLIDriven bool) (int, error) {
