@@ -38,7 +38,7 @@ Use [--project] to specify a project by its name or run without [--project] to c
 				return fmt.Errorf("invalid HTTP_PROXY value")
 			}
 
-			tracker := segment.DefaultTracker
+			tracker := segment.DefaultClient
 
 			go func() {
 				tracker.Collect(

@@ -35,7 +35,7 @@ func Command() *cobra.Command {
 		Example:      configureExample,
 		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, _ []string) {
-			tracker := segment.DefaultTracker
+			tracker := segment.DefaultClient
 
 			go func() {
 				tracker.Collect(

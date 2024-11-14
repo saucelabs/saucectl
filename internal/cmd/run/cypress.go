@@ -127,7 +127,7 @@ func runCypress(cmd *cobra.Command, cflags cypressFlags, isCLIDriven bool) (int,
 		return 1, errors.New(msg.NoFrameworkSupport)
 	}
 
-	tracker := segment.DefaultTracker
+	tracker := segment.DefaultClient
 	if regio == region.Staging {
 		tracker.Enabled = false
 	}

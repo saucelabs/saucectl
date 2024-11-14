@@ -70,7 +70,7 @@ func ListCommand() *cobra.Command {
 		Short:        "Returns the list of files that have been uploaded to Sauce Storage.",
 		SilenceUsage: true,
 		PreRun: func(cmd *cobra.Command, _ []string) {
-			tracker := segment.DefaultTracker
+			tracker := segment.DefaultClient
 
 			go func() {
 				tracker.Collect(

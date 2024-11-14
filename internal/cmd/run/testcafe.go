@@ -162,7 +162,7 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
 
-	tracker := segment.DefaultTracker
+	tracker := segment.DefaultClient
 	if regio == region.Staging {
 		tracker.Enabled = false
 	}

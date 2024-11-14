@@ -57,7 +57,7 @@ func runApitest(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		return 1, err
 	}
 
-	tracker := segment.DefaultTracker
+	tracker := segment.DefaultClient
 	if regio == region.Staging {
 		tracker.Enabled = false
 	}

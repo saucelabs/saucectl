@@ -77,7 +77,7 @@ func ListCommand() *cobra.Command {
 		Short:        "Returns the list of jobs",
 		SilenceUsage: true,
 		PreRun: func(cmd *cobra.Command, _ []string) {
-			tracker := segment.DefaultTracker
+			tracker := segment.DefaultClient
 
 			go func() {
 				tracker.Collect(

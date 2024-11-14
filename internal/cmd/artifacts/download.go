@@ -39,7 +39,7 @@ func DownloadCommand() *cobra.Command {
 				return fmt.Errorf("invalid HTTP_PROXY value")
 			}
 
-			tracker := segment.DefaultTracker
+			tracker := segment.DefaultClient
 
 			go func() {
 				tracker.Collect(

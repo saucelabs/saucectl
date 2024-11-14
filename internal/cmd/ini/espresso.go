@@ -23,7 +23,7 @@ func EspressoCmd() *cobra.Command {
 		Short:        "Bootstrap an Espresso project.",
 		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, _ []string) {
-			tracker := segment.DefaultTracker
+			tracker := segment.DefaultClient
 
 			go func() {
 				tracker.Collect(

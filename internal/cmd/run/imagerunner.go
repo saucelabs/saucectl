@@ -34,7 +34,7 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 	}
 
 	regio := region.FromString(p.Sauce.Region)
-	tracker := segment.DefaultTracker
+	tracker := segment.DefaultClient
 	if regio == region.Staging {
 		tracker.Enabled = false
 	}

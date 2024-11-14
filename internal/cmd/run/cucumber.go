@@ -94,7 +94,7 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
 
-	tracker := segment.DefaultTracker
+	tracker := segment.DefaultClient
 	if regio == region.Staging {
 		tracker.Enabled = false
 	}

@@ -24,7 +24,7 @@ func ImageRunnerCmd() *cobra.Command {
 		Short:        "Bootstrap an Image Runner (Sauce Orchestrate) project.",
 		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, _ []string) {
-			tracker := segment.DefaultTracker
+			tracker := segment.DefaultClient
 
 			go func() {
 				tracker.Collect(

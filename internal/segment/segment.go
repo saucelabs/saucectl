@@ -16,11 +16,11 @@ import (
 	"gopkg.in/segmentio/analytics-go.v3"
 )
 
-// DefaultTracker is the default Tracker.
-var DefaultTracker = New(true)
+// DefaultClient is the default preconfigured instance of Client.
+var DefaultClient = New(true)
 
-// Tracker is the segment implementation for usage.Tracker.
-type Tracker struct {
+// Client is a thin wrapper around analytics.Client.
+type Client struct {
 	client  analytics.Client
 	Enabled bool
 }
@@ -36,8 +36,8 @@ func (l debugLogger) Errorf(format string, args ...interface{}) {
 	log.Debug().Msgf(format, args...)
 }
 
-// New creates a new instance of Tracker.
-func New(enabled bool) *Tracker {
+// New creates a new instance of Client.
+func New(enabled bool) *Client {
 	client, err := analytics.NewWithConfig(setup.SegmentWriteKey, analytics.Config{
 		BatchSize: 1,
 		DefaultContext: &analytics.Context{
@@ -54,18 +54,18 @@ func New(enabled bool) *Tracker {
 	if err != nil {
 		// Usage is not crucial to the execution of saucectl, so proceed without notifying or blocking the user.
 		log.Debug().Err(err).Msg("Failed to create segment client")
-		return &Tracker{}
+		return &Client{}
 	}
 
-	return &Tracker{client: client, Enabled: enabled}
+	return &Client{client: client, Enabled: enabled}
 }
 
 // Collect reports the usage of subject along with its attached metadata that is props.
-func (t *Tracker) Collect(subject string, opts ...usage.Option) {
-	if !t.Enabled {
+func (c *Client) Collect(subject string, opts ...usage.Option) {
+	if !c.Enabled {
 		return
 	}
-	if t.client == nil {
+	if c.client == nil {
 		return
 	}
 
@@ -84,7 +84,7 @@ func (t *Tracker) Collect(subject string, opts ...usage.Option) {
 		userID = "saucectlanon"
 	}
 
-	if err := t.client.Enqueue(analytics.Track{
+	if err := c.client.Enqueue(analytics.Track{
 		UserId:     userID,
 		Event:      "Command Executed",
 		Properties: p,
@@ -102,6 +102,6 @@ func (t *Tracker) Collect(subject string, opts ...usage.Option) {
 }
 
 // Close closes the underlying client.
-func (t *Tracker) Close() error {
-	return t.client.Close()
+func (c *Client) Close() error {
+	return c.client.Close()
 }

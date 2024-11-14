@@ -25,7 +25,7 @@ func TestCafeCmd() *cobra.Command {
 		Short:        "Bootstrap a TestCafe project.",
 		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, _ []string) {
-			tracker := segment.DefaultTracker
+			tracker := segment.DefaultClient
 
 			go func() {
 				tracker.Collect(
