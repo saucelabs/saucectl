@@ -1,8 +1,6 @@
 package usage
 
 import (
-	"io"
-
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/spf13/pflag"
 	"gopkg.in/segmentio/analytics-go.v3"
@@ -106,10 +104,4 @@ func Node(version string) Option {
 	return func(p Properties) {
 		p["node_version"] = version
 	}
-}
-
-// Tracker is an interface for providing usage tracking.
-type Tracker interface {
-	io.Closer
-	Collect(subject string, opts ...Option)
 }

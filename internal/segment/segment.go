@@ -1,8 +1,9 @@
 package segment
 
 import (
-	"github.com/saucelabs/saucectl/internal/credentials"
 	"runtime"
+
+	"github.com/saucelabs/saucectl/internal/credentials"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
