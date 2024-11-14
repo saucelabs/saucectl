@@ -103,7 +103,7 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 
 	go func() {
 		tracker.Collect(
-			cases.Title(language.English).String(cmds.FullName(cmd)),
+			cmds.FullName(cmd),
 			usage.Framework("playwright-cucumberjs", p.Playwright.Version),
 			usage.Flags(cmd.Flags()),
 			usage.SauceConfig(p.Sauce),

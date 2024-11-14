@@ -7,11 +7,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/http"
 
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/flags"
@@ -22,6 +17,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 type xcuitestFlags struct {
@@ -119,7 +116,7 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 
 	go func() {
 		tracker.Collect(
-			cases.Title(language.English).String(cmds.FullName(cmd)),
+			cmds.FullName(cmd),
 			usage.Framework("xcuitest", ""),
 			usage.Flags(cmd.Flags()),
 			usage.SauceConfig(p.Sauce),

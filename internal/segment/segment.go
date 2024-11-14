@@ -1,6 +1,8 @@
 package segment
 
 import (
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"runtime"
 
 	"github.com/rs/zerolog/log"
@@ -66,7 +68,7 @@ func (t *Tracker) Collect(subject string, opts ...usage.Option) {
 	}
 
 	p := analytics.NewProperties()
-	p.Set("subject_name", subject).
+	p.Set("subject_name", cases.Title(language.English).String(subject)).
 		Set("product_area", "DevX").
 		Set("product_sub_area", "SauceCTL").
 		Set("ci", ci.GetProvider().Name)

@@ -149,7 +149,7 @@ func runPlaywright(cmd *cobra.Command, pf playwrightFlags, isCLIDriven bool) (in
 
 	go func() {
 		tracker.Collect(
-			cases.Title(language.English).String(cmds.FullName(cmd)),
+			cmds.FullName(cmd),
 			usage.Framework("playwright", p.Playwright.Version),
 			usage.Flags(cmd.Flags()),
 			usage.SauceConfig(p.Sauce),

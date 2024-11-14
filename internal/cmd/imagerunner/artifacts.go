@@ -104,7 +104,7 @@ func downloadCommand() *cobra.Command {
 
 			go func() {
 				tracker.Collect(
-					cases.Title(language.English).String(cmds.FullName(cmd)),
+					cmds.FullName(cmd),
 					usage.Flags(cmd.Flags()),
 				)
 				_ = tracker.Close()

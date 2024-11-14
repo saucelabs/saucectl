@@ -172,7 +172,7 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 
 	go func() {
 		tracker.Collect(
-			cases.Title(language.English).String(cmds.FullName(cmd)),
+			cmds.FullName(cmd),
 			usage.Framework("testcafe", p.Testcafe.Version),
 			usage.Flags(cmd.Flags()),
 			usage.SauceConfig(p.Sauce),

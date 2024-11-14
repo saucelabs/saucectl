@@ -119,7 +119,7 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, isCLIDriven bo
 
 	go func() {
 		tracker.Collect(
-			cases.Title(language.English).String(cmds.FullName(cmd)),
+			cmds.FullName(cmd),
 			usage.Framework("espresso", ""),
 			usage.Flags(cmd.Flags()),
 			usage.SauceConfig(p.Sauce),

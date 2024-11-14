@@ -44,7 +44,7 @@ Use [--project] to specify a project by its name or run without [--project] to c
 
 			go func() {
 				tracker.Collect(
-					cases.Title(language.English).String(cmds.FullName(cmd)),
+					cmds.FullName(cmd),
 					usage.Flags(cmd.Flags()),
 				)
 				_ = tracker.Close()
