@@ -10,12 +10,11 @@ sauce:
 defaults:
   timeout: 5m
 testcafe:
-  version: 3.6.2
+  version: 3.7.0
 rootDir: tests/e2e/testcafe/
 suites:
   - name: Chrome in sauce
     browserName: chrome
-    browserVersion: "128" # TODO(AlexP): Pinned due to TestCafe <= 3.6.2 not working with Chrome 130+.
     src:
       - "*.test.js"
     platformName: "macOS 12"

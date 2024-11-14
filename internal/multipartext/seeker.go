@@ -3,8 +3,6 @@ package multipartext
 import (
 	"fmt"
 	"io"
-
-	"golang.org/x/exp/constraints"
 )
 
 // SizedReadSeeker is a ReadSeeker that also knows its size.
@@ -124,11 +122,4 @@ func (mr *multiReadSeeker) WriteTo(w io.Writer) (sum int64, err error) {
 		}
 	}
 	return sum, nil
-}
-
-func min[T constraints.Ordered](a, b T) T {
-	if a < b {
-		return a
-	}
-	return b
 }
