@@ -10,7 +10,6 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/http"
-	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
 )
@@ -83,7 +82,7 @@ func ListCommand() *cobra.Command {
 				return fmt.Errorf("invalid HTTP_PROXY value")
 			}
 
-			tracker := segment.DefaultClient
+			tracker := usage.DefaultClient
 
 			go func() {
 				tracker.Collect(

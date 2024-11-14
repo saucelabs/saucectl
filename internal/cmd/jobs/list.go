@@ -13,7 +13,6 @@ import (
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
 )
@@ -77,7 +76,7 @@ func ListCommand() *cobra.Command {
 		Short:        "Returns the list of jobs",
 		SilenceUsage: true,
 		PreRun: func(cmd *cobra.Command, _ []string) {
-			tracker := segment.DefaultClient
+			tracker := usage.DefaultClient
 
 			go func() {
 				tracker.Collect(

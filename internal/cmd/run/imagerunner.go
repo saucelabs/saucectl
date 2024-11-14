@@ -12,7 +12,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/report/json"
 	"github.com/saucelabs/saucectl/internal/report/table"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
-	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
 )
@@ -34,7 +33,7 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 	}
 
 	regio := region.FromString(p.Sauce.Region)
-	tracker := segment.DefaultClient
+	tracker := usage.DefaultClient
 	if regio == region.Staging {
 		tracker.Enabled = false
 	}

@@ -12,7 +12,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/report"
 	"github.com/saucelabs/saucectl/internal/report/table"
-	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/spf13/cobra"
 )
 
@@ -57,7 +56,7 @@ func runApitest(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		return 1, err
 	}
 
-	tracker := segment.DefaultClient
+	tracker := usage.DefaultClient
 	if regio == region.Staging {
 		tracker.Enabled = false
 	}

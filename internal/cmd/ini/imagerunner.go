@@ -9,7 +9,6 @@ import (
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
-	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
 )
@@ -24,7 +23,7 @@ func ImageRunnerCmd() *cobra.Command {
 		Short:        "Bootstrap an Image Runner (Sauce Orchestrate) project.",
 		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, _ []string) {
-			tracker := segment.DefaultClient
+			tracker := usage.DefaultClient
 
 			go func() {
 				tracker.Collect(

@@ -16,7 +16,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/fileio"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
-	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
 )
@@ -98,7 +97,7 @@ func downloadCommand() *cobra.Command {
 				return fmt.Errorf("invalid HTTP_PROXY value")
 			}
 
-			tracker := segment.DefaultClient
+			tracker := usage.DefaultClient
 
 			go func() {
 				tracker.Collect(

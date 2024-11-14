@@ -9,7 +9,6 @@ import (
 	"github.com/rs/zerolog/log"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/config"
-	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
@@ -25,7 +24,7 @@ func TestCafeCmd() *cobra.Command {
 		Short:        "Bootstrap a TestCafe project.",
 		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, _ []string) {
-			tracker := segment.DefaultClient
+			tracker := usage.DefaultClient
 
 			go func() {
 				tracker.Collect(

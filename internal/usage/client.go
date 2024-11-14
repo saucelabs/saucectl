@@ -1,23 +1,20 @@
-package segment
+package usage
 
 import (
 	"runtime"
 
-	"github.com/saucelabs/saucectl/internal/credentials"
-
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/ci"
+	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/setup"
-	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/version"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"gopkg.in/segmentio/analytics-go.v3"
 )
 
 // DefaultClient is the default preconfigured instance of Client.
-var DefaultClient = New(true)
+var DefaultClient = NewClient(true)
 
 // Client is a thin wrapper around analytics.Client.
 type Client struct {
@@ -36,8 +33,8 @@ func (l debugLogger) Errorf(format string, args ...interface{}) {
 	log.Debug().Msgf(format, args...)
 }
 
-// New creates a new instance of Client.
-func New(enabled bool) *Client {
+// NewClient creates a new instance of Client.
+func NewClient(enabled bool) *Client {
 	client, err := analytics.NewWithConfig(setup.SegmentWriteKey, analytics.Config{
 		BatchSize: 1,
 		DefaultContext: &analytics.Context{
@@ -61,7 +58,7 @@ func New(enabled bool) *Client {
 }
 
 // Collect reports the usage of subject along with its attached metadata that is props.
-func (c *Client) Collect(subject string, opts ...usage.Option) {
+func (c *Client) Collect(subject string, opts ...Option) {
 	if !c.Enabled {
 		return
 	}

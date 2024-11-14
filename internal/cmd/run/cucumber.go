@@ -14,7 +14,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
-	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/viper"
 	"github.com/spf13/cobra"
@@ -94,7 +93,7 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
 
-	tracker := segment.DefaultClient
+	tracker := usage.DefaultClient
 	if regio == region.Staging {
 		tracker.Enabled = false
 	}

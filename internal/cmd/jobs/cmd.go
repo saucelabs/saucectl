@@ -4,12 +4,13 @@ import (
 	"errors"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/usage"
+
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/insights"
 	"github.com/saucelabs/saucectl/internal/region"
-	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +39,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 				return errors.New("invalid region")
 			}
 			if reg == region.Staging {
-				segment.DefaultClient.Enabled = false
+				usage.DefaultClient.Enabled = false
 			}
 
 			creds := credentials.Get()

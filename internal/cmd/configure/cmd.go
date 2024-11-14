@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/saucelabs/saucectl/internal/usage"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
@@ -13,7 +15,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +36,7 @@ func Command() *cobra.Command {
 		Example:      configureExample,
 		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, _ []string) {
-			tracker := segment.DefaultClient
+			tracker := usage.DefaultClient
 
 			go func() {
 				tracker.Collect(

@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/usage"
+
 	"github.com/fatih/color"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -21,7 +23,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/cmd/run"
 	"github.com/saucelabs/saucectl/internal/cmd/signup"
 	"github.com/saucelabs/saucectl/internal/cmd/storage"
-	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/version"
 	"github.com/spf13/cobra"
 )
@@ -57,7 +58,7 @@ func main() {
 
 	cmd.PersistentPreRun = func(_ *cobra.Command, _ []string) {
 		setupLogging(*verbosity, *noColor)
-		segment.DefaultClient.Enabled = !*noTracking
+		usage.DefaultClient.Enabled = !*noTracking
 	}
 
 	cmd.AddCommand(
