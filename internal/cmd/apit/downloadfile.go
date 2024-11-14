@@ -12,7 +12,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/apitest"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/http"
-	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 )
 
@@ -37,7 +36,7 @@ Use [--project] to specify the project by its name or run without [--project] to
 				return fmt.Errorf("invalid HTTP_PROXY value")
 			}
 
-			tracker := segment.DefaultClient
+			tracker := usage.DefaultClient
 
 			go func() {
 				tracker.Collect(

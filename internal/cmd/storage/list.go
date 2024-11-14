@@ -11,7 +11,6 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/human"
-	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
@@ -70,7 +69,7 @@ func ListCommand() *cobra.Command {
 		Short:        "Returns the list of files that have been uploaded to Sauce Storage.",
 		SilenceUsage: true,
 		PreRun: func(cmd *cobra.Command, _ []string) {
-			tracker := segment.DefaultClient
+			tracker := usage.DefaultClient
 
 			go func() {
 				tracker.Collect(

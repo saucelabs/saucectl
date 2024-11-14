@@ -16,7 +16,6 @@ import (
 	dockermsg "github.com/moby/moby/pkg/jsonmessage"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/progress"
-	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
@@ -38,7 +37,7 @@ func PushCommand() *cobra.Command {
 			return nil
 		},
 		PreRun: func(cmd *cobra.Command, _ []string) {
-			tracker := segment.DefaultClient
+			tracker := usage.DefaultClient
 
 			go func() {
 				tracker.Collect(

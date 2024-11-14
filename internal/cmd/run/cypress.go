@@ -17,7 +17,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
-	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/viper"
 	"github.com/spf13/cobra"
@@ -127,7 +126,7 @@ func runCypress(cmd *cobra.Command, cflags cypressFlags, isCLIDriven bool) (int,
 		return 1, errors.New(msg.NoFrameworkSupport)
 	}
 
-	tracker := segment.DefaultClient
+	tracker := usage.DefaultClient
 	if regio == region.Staging {
 		tracker.Enabled = false
 	}
