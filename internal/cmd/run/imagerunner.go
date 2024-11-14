@@ -42,10 +42,14 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 	}
 
 	go func() {
-		props := usage.Properties{}
-		props.SetFramework("imagerunner").SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
-			SetArtifacts(p.Artifacts).SetNumSuites(len(p.Suites))
-		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
+		tracker.Collect(
+			cases.Title(language.English).String(cmds.FullName(cmd)),
+			usage.Framework("imagerunner", ""),
+			usage.Flags(cmd.Flags()),
+			usage.SauceConfig(p.Sauce),
+			usage.Artifacts(p.Artifacts),
+			usage.NumSuites(len(p.Suites)),
+		)
 		_ = tracker.Close()
 	}()
 

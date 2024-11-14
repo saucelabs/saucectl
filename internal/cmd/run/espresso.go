@@ -118,12 +118,19 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, isCLIDriven bo
 	}
 
 	go func() {
-		props := usage.Properties{}
-		props.SetFramework("espresso").SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).SetArtifacts(p.Artifacts).
-			SetNumSuites(len(p.Suites)).SetSlack(p.Notifications.Slack).
-			SetSharding(espresso.GetShardTypes(p.Suites), nil).SetLaunchOrder(p.Sauce.LaunchOrder).
-			SetSmartRetry(p.IsSmartRetried()).SetReporters(p.Reporters)
-		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
+		tracker.Collect(
+			cases.Title(language.English).String(cmds.FullName(cmd)),
+			usage.Framework("espresso", ""),
+			usage.Flags(cmd.Flags()),
+			usage.SauceConfig(p.Sauce),
+			usage.Artifacts(p.Artifacts),
+			usage.NumSuites(len(p.Suites)),
+			usage.Slack(p.Notifications.Slack),
+			usage.Sharding(espresso.GetShardTypes(p.Suites), nil),
+			usage.LaunchOrder(p.Sauce.LaunchOrder),
+			usage.SmartRetry(p.IsSmartRetried()),
+			usage.Reporters(p.Reporters),
+		)
 		_ = tracker.Close()
 	}()
 

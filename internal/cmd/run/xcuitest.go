@@ -118,12 +118,19 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 	}
 
 	go func() {
-		props := usage.Properties{}
-		props.SetFramework("xcuitest").SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).SetArtifacts(p.Artifacts).
-			SetNumSuites(len(p.Suites)).SetSlack(p.Notifications.Slack).
-			SetSharding(xcuitest.GetShardTypes(p.Suites), nil).SetLaunchOrder(p.Sauce.LaunchOrder).
-			SetSmartRetry(p.IsSmartRetried()).SetReporters(p.Reporters)
-		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
+		tracker.Collect(
+			cases.Title(language.English).String(cmds.FullName(cmd)),
+			usage.Framework("xcuitest", ""),
+			usage.Flags(cmd.Flags()),
+			usage.SauceConfig(p.Sauce),
+			usage.Artifacts(p.Artifacts),
+			usage.NumSuites(len(p.Suites)),
+			usage.Slack(p.Notifications.Slack),
+			usage.Sharding(xcuitest.GetShardTypes(p.Suites), nil),
+			usage.LaunchOrder(p.Sauce.LaunchOrder),
+			usage.SmartRetry(p.IsSmartRetried()),
+			usage.Reporters(p.Reporters),
+		)
 		_ = tracker.Close()
 	}()
 

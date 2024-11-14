@@ -6,6 +6,10 @@ import (
 	"os"
 	"strings"
 
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
@@ -33,11 +37,14 @@ func Command() *cobra.Command {
 		Long:         configureLong,
 		Example:      configureExample,
 		SilenceUsage: true,
-		Run: func(_ *cobra.Command, _ []string) {
+		Run: func(cmd *cobra.Command, _ []string) {
 			tracker := segment.DefaultTracker
 
 			go func() {
-				tracker.Collect("Configure", nil)
+				tracker.Collect(
+					cases.Title(language.English).String(cmds.FullName(cmd)),
+					nil,
+				)
 				_ = tracker.Close()
 			}()
 

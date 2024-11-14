@@ -5,117 +5,116 @@ import (
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/spf13/pflag"
+	"gopkg.in/segmentio/analytics-go.v3"
 )
 
 // Properties is a scoped data transfer object for usage reporting and contains usage event related data.
-type Properties map[string]interface{}
+type Properties = analytics.Properties
 
-// SetArtifacts reports artifact usage.
-func (p Properties) SetArtifacts(art config.Artifacts) Properties {
-	p["artifact_download_match"] = art.Download.Match
-	p["artifact_download_when"] = art.Download.When
-	return p
-}
+// Option is a function that configures a Properties instance.
+type Option func(Properties)
 
-// SetFramework reports the framework.
-func (p Properties) SetFramework(f string) Properties {
-	p["framework"] = f
-	return p
-}
-
-// SetFVersion reports the framework version.
-func (p Properties) SetFVersion(f string) Properties {
-	p["framework_version"] = f
-	return p
-}
-
-// SetFlags reports CLI flags.
-func (p Properties) SetFlags(flags *pflag.FlagSet) Properties {
-	var ff []string
-
-	flags.Visit(func(flag *pflag.Flag) {
-		ff = append(ff, flag.Name)
-	})
-
-	p["flags"] = ff
-
-	return p
-}
-
-// SetNPM reports the npm usage.
-func (p Properties) SetNPM(npm config.Npm) Properties {
-	p["npm_registry"] = npm.Registry
-
-	var pkgs []string
-	for k := range npm.Packages {
-		pkgs = append(pkgs, k)
+func Artifacts(art config.Artifacts) Option {
+	return func(p Properties) {
+		p["artifact_download_match"] = art.Download.Match
+		p["artifact_download_when"] = art.Download.When
 	}
-	p["npm_packages"] = pkgs
-	p["npm_dependencies"] = npm.Dependencies
-	p["npm_use_package_lock"] = npm.UsePackageLock
-
-	return p
 }
 
-// SetNumSuites reports the number of configured suites.
-func (p Properties) SetNumSuites(n int) Properties {
-	p["num_suites"] = n
-	return p
-}
-
-// SetSauceConfig reports key fields of the sauce config.
-func (p Properties) SetSauceConfig(c config.SauceConfig) Properties {
-	p["concurrency"] = c.Concurrency
-	p["region"] = c.Region
-	p["tunnel"] = c.Tunnel.Name
-	p["tunnel_owner"] = c.Tunnel.Owner
-	p["retries"] = c.Retries
-
-	return p
-}
-
-// SetSlack reports Slack related settings.
-func (p Properties) SetSlack(slack config.Slack) Properties {
-	p["slack_channels_count"] = len(slack.Channels)
-	p["slack_when"] = slack.Send
-	return p
-}
-
-func (p Properties) SetSharding(shardTypes []string, shardOpts map[string]bool) Properties {
-	p["sharded"] = len(shardTypes) > 0
-	p["shard_types"] = shardTypes
-	for k, v := range shardOpts {
-		p[k] = v
+func Framework(name, version string) Option {
+	return func(p Properties) {
+		p["framework"] = name
+		if version != "" {
+			p["framework_version"] = version
+		}
 	}
-	return p
 }
 
-// SetLaunchOrder reports launch order of jobs
-func (p Properties) SetLaunchOrder(launchOrder config.LaunchOrder) Properties {
-	p["launch_order"] = string(launchOrder)
-	return p
+func Flags(flags *pflag.FlagSet) Option {
+	return func(p Properties) {
+		var ff []string
+		flags.Visit(func(flag *pflag.Flag) {
+			ff = append(ff, flag.Name)
+		})
+		p["flags"] = ff
+	}
 }
 
-// SetSmartRetry reports if the suites set as smartRetry
-func (p Properties) SetSmartRetry(isSmartRetried bool) Properties {
-	p["smart_retry_failed_only"] = isSmartRetried
-	return p
+func NPM(npm config.Npm) Option {
+	return func(p Properties) {
+		p["npm_registry"] = npm.Registry
+
+		var pkgs []string
+		for k := range npm.Packages {
+			pkgs = append(pkgs, k)
+		}
+		p["npm_packages"] = pkgs
+		p["npm_dependencies"] = npm.Dependencies
+		p["npm_use_package_lock"] = npm.UsePackageLock
+	}
 }
 
-func (p Properties) SetReporters(reporters config.Reporters) Properties {
-	p["reporters_spotlight_enabled"] = reporters.Spotlight.Enabled
-	p["reporters_junit_enabled"] = reporters.JUnit.Enabled
-	p["reporters_json_enabled"] = reporters.JSON.Enabled
-	return p
+func NumSuites(n int) Option {
+	return func(p Properties) {
+		p["num_suites"] = n
+	}
 }
 
-func (p Properties) SetNodeVersion(version string) Properties {
-	p["node_version"] = version
-	return p
+func SauceConfig(c config.SauceConfig) Option {
+	return func(p Properties) {
+		p["concurrency"] = c.Concurrency
+		p["region"] = c.Region
+		p["tunnel"] = c.Tunnel.Name
+		p["tunnel_owner"] = c.Tunnel.Owner
+		p["retries"] = c.Retries
+	}
+}
+
+func Slack(slack config.Slack) Option {
+	return func(p Properties) {
+		p["slack_channels_count"] = len(slack.Channels)
+		p["slack_when"] = slack.Send
+	}
+}
+
+func Sharding(shardTypes []string, shardOpts map[string]bool) Option {
+	return func(p Properties) {
+		p["sharded"] = len(shardTypes) > 0
+		p["shard_types"] = shardTypes
+		for k, v := range shardOpts {
+			p[k] = v
+		}
+	}
+}
+
+func LaunchOrder(launchOrder config.LaunchOrder) Option {
+	return func(p Properties) {
+		p["launch_order"] = string(launchOrder)
+	}
+}
+
+func SmartRetry(isSmartRetried bool) Option {
+	return func(p Properties) {
+		p["smart_retry_failed_only"] = isSmartRetried
+	}
+}
+
+func Reporters(reporters config.Reporters) Option {
+	return func(p Properties) {
+		p["reporters_spotlight_enabled"] = reporters.Spotlight.Enabled
+		p["reporters_junit_enabled"] = reporters.JUnit.Enabled
+		p["reporters_json_enabled"] = reporters.JSON.Enabled
+	}
+}
+
+func Node(version string) Option {
+	return func(p Properties) {
+		p["node_version"] = version
+	}
 }
 
 // Tracker is an interface for providing usage tracking.
 type Tracker interface {
 	io.Closer
-	Collect(subject string, props Properties)
+	Collect(subject string, opts ...Option)
 }

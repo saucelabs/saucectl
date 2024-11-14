@@ -57,7 +57,7 @@ func New(enabled bool) *Tracker {
 }
 
 // Collect reports the usage of subject along with its attached metadata that is props.
-func (t *Tracker) Collect(subject string, props usage.Properties) {
+func (t *Tracker) Collect(subject string, opts ...usage.Option) {
 	if !t.Enabled {
 		return
 	}
@@ -66,12 +66,19 @@ func (t *Tracker) Collect(subject string, props usage.Properties) {
 	}
 
 	p := analytics.NewProperties()
-	p.Set("subject_name", subject).Set("product_area", "DevX").
-		Set("product_sub_area", "SauceCTL").Set("ci", ci.GetProvider().Name)
+	p.Set("subject_name", subject).
+		Set("product_area", "DevX").
+		Set("product_sub_area", "SauceCTL").
+		Set("ci", ci.GetProvider().Name)
 
-	for k, v := range props {
-		p[k] = v
+	//props := usage.Properties{}
+	for _, opt := range opts {
+		opt(p)
 	}
+
+	//for k, v := range props {
+	//	p[k] = v
+	//}
 
 	userID := credentials.Get().Username
 	if userID == "" {

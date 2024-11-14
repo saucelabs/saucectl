@@ -171,12 +171,21 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 	}
 
 	go func() {
-		props := usage.Properties{}
-		props.SetFramework("testcafe").SetFVersion(p.Testcafe.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
-			SetArtifacts(p.Artifacts).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).
-			SetSlack(p.Notifications.Slack).SetSharding(testcafe.GetShardTypes(p.Suites), nil).SetLaunchOrder(p.Sauce.LaunchOrder).
-			SetSmartRetry(p.IsSmartRetried()).SetReporters(p.Reporters).SetNodeVersion(p.NodeVersion)
-		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
+		tracker.Collect(
+			cases.Title(language.English).String(cmds.FullName(cmd)),
+			usage.Framework("testcafe", p.Testcafe.Version),
+			usage.Flags(cmd.Flags()),
+			usage.SauceConfig(p.Sauce),
+			usage.Artifacts(p.Artifacts),
+			usage.NPM(p.Npm),
+			usage.NumSuites(len(p.Suites)),
+			usage.Slack(p.Notifications.Slack),
+			usage.Sharding(testcafe.GetShardTypes(p.Suites), nil),
+			usage.LaunchOrder(p.Sauce.LaunchOrder),
+			usage.SmartRetry(p.IsSmartRetried()),
+			usage.Reporters(p.Reporters),
+			usage.Node(p.NodeVersion),
+		)
 		_ = tracker.Close()
 	}()
 

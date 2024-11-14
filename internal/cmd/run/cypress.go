@@ -136,13 +136,21 @@ func runCypress(cmd *cobra.Command, cflags cypressFlags, isCLIDriven bool) (int,
 	}
 
 	go func() {
-		props := usage.Properties{}
-		props.SetFramework("cypress").SetFVersion(p.GetVersion()).SetFlags(cmd.Flags()).SetSauceConfig(p.GetSauceCfg()).
-			SetArtifacts(p.GetArtifactsCfg()).SetNPM(p.GetNpm()).SetNumSuites(len(p.GetSuites())).
-			SetSlack(p.GetNotifications().Slack).SetSharding(p.GetShardTypes(), p.GetShardOpts()).SetLaunchOrder(p.GetSauceCfg().LaunchOrder).
-			SetSmartRetry(p.IsSmartRetried()).SetReporters(p.GetReporters()).SetNodeVersion(p.GetNodeVersion())
-
-		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
+		tracker.Collect(
+			cases.Title(language.English).String(cmds.FullName(cmd)),
+			usage.Framework("cypress", p.GetVersion()),
+			usage.Flags(cmd.Flags()),
+			usage.SauceConfig(p.GetSauceCfg()),
+			usage.Artifacts(p.GetArtifactsCfg()),
+			usage.NPM(p.GetNpm()),
+			usage.NumSuites(len(p.GetSuites())),
+			usage.Slack(p.GetNotifications().Slack),
+			usage.Sharding(p.GetShardTypes(), p.GetShardOpts()),
+			usage.LaunchOrder(p.GetSauceCfg().LaunchOrder),
+			usage.SmartRetry(p.IsSmartRetried()),
+			usage.Reporters(p.GetReporters()),
+			usage.Node(p.GetNodeVersion()),
+		)
 		_ = tracker.Close()
 	}()
 

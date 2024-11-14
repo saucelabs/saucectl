@@ -36,7 +36,7 @@ func StopCommand() *cobra.Command {
 			go func() {
 				tracker.Collect(
 					cases.Title(language.English).String(cmds.FullName(cmd)),
-					usage.Properties{}.SetFlags(cmd.Flags()),
+					usage.Flags(cmd.Flags()),
 				)
 				_ = tracker.Close()
 			}()

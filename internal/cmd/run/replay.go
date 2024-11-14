@@ -107,11 +107,16 @@ func runReplay(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	}
 
 	go func() {
-		props := usage.Properties{}
-		props.SetFramework("puppeteer-replay").SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
-			SetArtifacts(p.Artifacts).SetNumSuites(len(p.Suites)).
-			SetSlack(p.Notifications.Slack).SetLaunchOrder(p.Sauce.LaunchOrder)
-		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
+		tracker.Collect(
+			cases.Title(language.English).String(cmds.FullName(cmd)),
+			usage.Framework("puppeteer-replay", ""),
+			usage.Flags(cmd.Flags()),
+			usage.SauceConfig(p.Sauce),
+			usage.Artifacts(p.Artifacts),
+			usage.NumSuites(len(p.Suites)),
+			usage.Slack(p.Notifications.Slack),
+			usage.LaunchOrder(p.Sauce.LaunchOrder),
+		)
 		_ = tracker.Close()
 	}()
 
