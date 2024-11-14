@@ -31,7 +31,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 				return errors.New("invalid region")
 			}
 			if reg == region.Staging {
-				segment.DefaultTracker.Enabled = false
+				segment.DefaultClient.Enabled = false
 			}
 
 			creds := credentials.Get()

@@ -14,8 +14,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/report/table"
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/spf13/cobra"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 func runApitest(cmd *cobra.Command, isCLIDriven bool) (int, error) {
@@ -59,15 +57,16 @@ func runApitest(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		return 1, err
 	}
 
-	tracker := segment.DefaultTracker
+	tracker := segment.DefaultClient
 	if regio == region.Staging {
 		tracker.Enabled = false
 	}
 
 	go func() {
-		props := usage.Properties{}
-		props.SetFramework("apit")
-		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
+		tracker.Collect(
+			cmds.FullName(cmd),
+			usage.Framework("apit", ""),
+		)
 		_ = tracker.Close()
 	}()
 

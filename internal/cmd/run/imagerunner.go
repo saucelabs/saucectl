@@ -15,8 +15,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 func runImageRunner(cmd *cobra.Command) (int, error) {
@@ -36,16 +34,20 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 	}
 
 	regio := region.FromString(p.Sauce.Region)
-	tracker := segment.DefaultTracker
+	tracker := segment.DefaultClient
 	if regio == region.Staging {
 		tracker.Enabled = false
 	}
 
 	go func() {
-		props := usage.Properties{}
-		props.SetFramework("imagerunner").SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
-			SetArtifacts(p.Artifacts).SetNumSuites(len(p.Suites))
-		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
+		tracker.Collect(
+			cmds.FullName(cmd),
+			usage.Framework("imagerunner", ""),
+			usage.Flags(cmd.Flags()),
+			usage.SauceConfig(p.Sauce),
+			usage.Artifacts(p.Artifacts),
+			usage.NumSuites(len(p.Suites)),
+		)
 		_ = tracker.Close()
 	}()
 

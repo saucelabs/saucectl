@@ -9,11 +9,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/http"
 
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/flags"
@@ -26,6 +21,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/viper"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 type playwrightFlags struct {
@@ -142,18 +139,26 @@ func runPlaywright(cmd *cobra.Command, pf playwrightFlags, isCLIDriven bool) (in
 		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
 	}
 
-	tracker := segment.DefaultTracker
+	tracker := segment.DefaultClient
 	if regio == region.Staging {
 		tracker.Enabled = false
 	}
 
 	go func() {
-		props := usage.Properties{}
-		props.SetFramework("playwright").SetFVersion(p.Playwright.Version).SetFlags(cmd.Flags()).SetSauceConfig(p.Sauce).
-			SetArtifacts(p.Artifacts).SetNPM(p.Npm).SetNumSuites(len(p.Suites)).
-			SetSlack(p.Notifications.Slack).SetSharding(playwright.GetShardTypes(p.Suites), playwright.GetShardOpts(p.Suites)).SetLaunchOrder(p.Sauce.LaunchOrder).
-			SetSmartRetry(p.IsSmartRetried()).SetReporters(p.Reporters).SetNodeVersion(p.NodeVersion)
-		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
+		tracker.Collect(
+			cmds.FullName(cmd),
+			usage.Framework("playwright", p.Playwright.Version),
+			usage.Flags(cmd.Flags()),
+			usage.SauceConfig(p.Sauce),
+			usage.Artifacts(p.Artifacts),
+			usage.NPM(p.Npm),
+			usage.NumSuites(len(p.Suites)),
+			usage.Slack(p.Notifications.Slack),
+			usage.Sharding(playwright.GetShardTypes(p.Suites), playwright.GetShardOpts(p.Suites)),
+			usage.SmartRetry(p.IsSmartRetried()),
+			usage.Reporters(p.Reporters),
+			usage.Node(p.NodeVersion),
+		)
 		_ = tracker.Close()
 	}()
 

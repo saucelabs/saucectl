@@ -13,8 +13,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 func TestCafeCmd() *cobra.Command {
@@ -27,12 +25,12 @@ func TestCafeCmd() *cobra.Command {
 		Short:        "Bootstrap a TestCafe project.",
 		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, _ []string) {
-			tracker := segment.DefaultTracker
+			tracker := segment.DefaultClient
 
 			go func() {
 				tracker.Collect(
-					cases.Title(language.English).String(cmds.FullName(cmd)),
-					usage.Properties{}.SetFlags(cmd.Flags()),
+					cmds.FullName(cmd),
+					usage.Flags(cmd.Flags()),
 				)
 				_ = tracker.Close()
 			}()

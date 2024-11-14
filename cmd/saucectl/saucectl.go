@@ -57,7 +57,7 @@ func main() {
 
 	cmd.PersistentPreRun = func(_ *cobra.Command, _ []string) {
 		setupLogging(*verbosity, *noColor)
-		segment.DefaultTracker.Enabled = !*noTracking
+		segment.DefaultClient.Enabled = !*noTracking
 	}
 
 	cmd.AddCommand(

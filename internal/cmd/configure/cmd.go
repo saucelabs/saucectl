@@ -9,6 +9,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -33,11 +34,14 @@ func Command() *cobra.Command {
 		Long:         configureLong,
 		Example:      configureExample,
 		SilenceUsage: true,
-		Run: func(_ *cobra.Command, _ []string) {
-			tracker := segment.DefaultTracker
+		Run: func(cmd *cobra.Command, _ []string) {
+			tracker := segment.DefaultClient
 
 			go func() {
-				tracker.Collect("Configure", nil)
+				tracker.Collect(
+					cmds.FullName(cmd),
+					nil,
+				)
 				_ = tracker.Close()
 			}()
 

@@ -10,8 +10,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 func StopCommand() *cobra.Command {
@@ -31,12 +29,12 @@ func StopCommand() *cobra.Command {
 				return fmt.Errorf("invalid HTTP_PROXY value")
 			}
 
-			tracker := segment.DefaultTracker
+			tracker := segment.DefaultClient
 
 			go func() {
 				tracker.Collect(
-					cases.Title(language.English).String(cmds.FullName(cmd)),
-					usage.Properties{}.SetFlags(cmd.Flags()),
+					cmds.FullName(cmd),
+					usage.Flags(cmd.Flags()),
 				)
 				_ = tracker.Close()
 			}()

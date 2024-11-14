@@ -8,11 +8,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/http"
 
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-
 	"github.com/saucelabs/saucectl/internal/ci"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/cypress"
@@ -25,6 +20,8 @@ import (
 	"github.com/saucelabs/saucectl/internal/segment"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/viper"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 type cypressFlags struct {
@@ -130,19 +127,26 @@ func runCypress(cmd *cobra.Command, cflags cypressFlags, isCLIDriven bool) (int,
 		return 1, errors.New(msg.NoFrameworkSupport)
 	}
 
-	tracker := segment.DefaultTracker
+	tracker := segment.DefaultClient
 	if regio == region.Staging {
 		tracker.Enabled = false
 	}
 
 	go func() {
-		props := usage.Properties{}
-		props.SetFramework("cypress").SetFVersion(p.GetVersion()).SetFlags(cmd.Flags()).SetSauceConfig(p.GetSauceCfg()).
-			SetArtifacts(p.GetArtifactsCfg()).SetNPM(p.GetNpm()).SetNumSuites(len(p.GetSuites())).
-			SetSlack(p.GetNotifications().Slack).SetSharding(p.GetShardTypes(), p.GetShardOpts()).SetLaunchOrder(p.GetSauceCfg().LaunchOrder).
-			SetSmartRetry(p.IsSmartRetried()).SetReporters(p.GetReporters()).SetNodeVersion(p.GetNodeVersion())
-
-		tracker.Collect(cases.Title(language.English).String(cmds.FullName(cmd)), props)
+		tracker.Collect(
+			cmds.FullName(cmd),
+			usage.Framework("cypress", p.GetVersion()),
+			usage.Flags(cmd.Flags()),
+			usage.SauceConfig(p.GetSauceCfg()),
+			usage.Artifacts(p.GetArtifactsCfg()),
+			usage.NPM(p.GetNpm()),
+			usage.NumSuites(len(p.GetSuites())),
+			usage.Slack(p.GetNotifications().Slack),
+			usage.Sharding(p.GetShardTypes(), p.GetShardOpts()),
+			usage.SmartRetry(p.IsSmartRetried()),
+			usage.Reporters(p.GetReporters()),
+			usage.Node(p.GetNodeVersion()),
+		)
 		_ = tracker.Close()
 	}()
 

@@ -7,8 +7,6 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/http"
@@ -37,12 +35,12 @@ Use [--project] to specify the project by its name or run without [--project] to
 				return fmt.Errorf("invalid HTTP_PROXY value")
 			}
 
-			tracker := segment.DefaultTracker
+			tracker := segment.DefaultClient
 
 			go func() {
 				tracker.Collect(
-					cases.Title(language.English).String(cmds.FullName(cmd)),
-					usage.Properties{}.SetFlags(cmd.Flags()),
+					cmds.FullName(cmd),
+					usage.Flags(cmd.Flags()),
 				)
 				_ = tracker.Close()
 			}()

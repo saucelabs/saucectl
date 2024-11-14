@@ -3,20 +3,24 @@ package segment
 import (
 	"runtime"
 
+	"github.com/saucelabs/saucectl/internal/credentials"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/ci"
-	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/setup"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/saucelabs/saucectl/internal/version"
 	"gopkg.in/segmentio/analytics-go.v3"
 )
 
-// DefaultTracker is the default Tracker.
-var DefaultTracker = New(true)
+// DefaultClient is the default preconfigured instance of Client.
+var DefaultClient = New(true)
 
-// Tracker is the segment implementation for usage.Tracker.
-type Tracker struct {
+// Client is a thin wrapper around analytics.Client.
+type Client struct {
 	client  analytics.Client
 	Enabled bool
 }
@@ -32,8 +36,8 @@ func (l debugLogger) Errorf(format string, args ...interface{}) {
 	log.Debug().Msgf(format, args...)
 }
 
-// New creates a new instance of Tracker.
-func New(enabled bool) *Tracker {
+// New creates a new instance of Client.
+func New(enabled bool) *Client {
 	client, err := analytics.NewWithConfig(setup.SegmentWriteKey, analytics.Config{
 		BatchSize: 1,
 		DefaultContext: &analytics.Context{
@@ -50,27 +54,29 @@ func New(enabled bool) *Tracker {
 	if err != nil {
 		// Usage is not crucial to the execution of saucectl, so proceed without notifying or blocking the user.
 		log.Debug().Err(err).Msg("Failed to create segment client")
-		return &Tracker{}
+		return &Client{}
 	}
 
-	return &Tracker{client: client, Enabled: enabled}
+	return &Client{client: client, Enabled: enabled}
 }
 
 // Collect reports the usage of subject along with its attached metadata that is props.
-func (t *Tracker) Collect(subject string, props usage.Properties) {
-	if !t.Enabled {
+func (c *Client) Collect(subject string, opts ...usage.Option) {
+	if !c.Enabled {
 		return
 	}
-	if t.client == nil {
+	if c.client == nil {
 		return
 	}
 
 	p := analytics.NewProperties()
-	p.Set("subject_name", subject).Set("product_area", "DevX").
-		Set("product_sub_area", "SauceCTL").Set("ci", ci.GetProvider().Name)
+	p.Set("subject_name", cases.Title(language.English).String(subject)).
+		Set("product_area", "DevX").
+		Set("product_sub_area", "SauceCTL").
+		Set("ci", ci.GetProvider().Name)
 
-	for k, v := range props {
-		p[k] = v
+	for _, opt := range opts {
+		opt(p)
 	}
 
 	userID := credentials.Get().Username
@@ -78,7 +84,7 @@ func (t *Tracker) Collect(subject string, props usage.Properties) {
 		userID = "saucectlanon"
 	}
 
-	if err := t.client.Enqueue(analytics.Track{
+	if err := c.client.Enqueue(analytics.Track{
 		UserId:     userID,
 		Event:      "Command Executed",
 		Properties: p,
@@ -96,6 +102,6 @@ func (t *Tracker) Collect(subject string, props usage.Properties) {
 }
 
 // Close closes the underlying client.
-func (t *Tracker) Close() error {
-	return t.client.Close()
+func (c *Client) Close() error {
+	return c.client.Close()
 }
