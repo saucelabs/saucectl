@@ -73,14 +73,9 @@ func (t *Tracker) Collect(subject string, opts ...usage.Option) {
 		Set("product_sub_area", "SauceCTL").
 		Set("ci", ci.GetProvider().Name)
 
-	//props := usage.Properties{}
 	for _, opt := range opts {
 		opt(p)
 	}
-
-	//for k, v := range props {
-	//	p[k] = v
-	//}
 
 	userID := credentials.Get().Username
 	if userID == "" {
