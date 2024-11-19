@@ -2,87 +2,15 @@ package http
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/iam"
 )
-
-func TestTestComposer_GetSlackToken(t *testing.T) {
-	type fields struct {
-		HTTPClient  *retryablehttp.Client
-		URL         string
-		Credentials iam.Credentials
-	}
-	tests := []struct {
-		name       string
-		fields     fields
-		want       string
-		wantErr    bool
-		serverFunc func(w http.ResponseWriter, r *http.Request)
-	}{
-		{
-			name:    "token exists",
-			want:    "user token",
-			wantErr: false,
-			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(200)
-				err := json.NewEncoder(w).Encode(TokenResponse{
-					Token: "user token",
-				})
-				if err != nil {
-					t.Errorf("failed to encode json response: %v", err)
-				}
-			},
-		},
-		{
-			name:    "token validation error",
-			want:    "",
-			wantErr: true,
-			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(422)
-			},
-		},
-		{
-			name:    "token does not exists",
-			want:    "",
-			wantErr: true,
-			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(404)
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(tt.serverFunc))
-			defer server.Close()
-
-			client := NewRetryableClient(3 * time.Second)
-			client.RetryMax = 0
-
-			c := &TestComposer{
-				HTTPClient:  client,
-				URL:         server.URL,
-				Credentials: tt.fields.Credentials,
-			}
-
-			got, err := c.GetSlackToken(context.Background())
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetSlackToken error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetSlackToken got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
 func TestTestComposer_UploadAsset(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

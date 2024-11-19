@@ -110,7 +110,6 @@ func runReplay(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 			usage.SauceConfig(p.Sauce),
 			usage.Artifacts(p.Artifacts),
 			usage.NumSuites(len(p.Suites)),
-			usage.Slack(p.Notifications.Slack),
 		)
 		_ = tracker.Close()
 	}()
@@ -146,17 +145,14 @@ func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, erro
 				TestComposer:           testcompClient,
 				ArtifactDownloadConfig: p.Artifacts.Download,
 			},
-			TunnelService:   &restoClient,
-			MetadataService: &testcompClient,
-			InsightsService: &insightsClient,
-			UserService:     &iamClient,
-			BuildService:    &buildService,
-			Region:          regio,
-			ShowConsoleLog:  p.ShowConsoleLog,
-			Reporters: createReporters(
-				p.Reporters, p.Notifications, p.Sauce.Metadata, &testcompClient,
-				"puppeteer-replay", "sauce", gFlags.async,
-			),
+			TunnelService:          &restoClient,
+			MetadataService:        &testcompClient,
+			InsightsService:        &insightsClient,
+			UserService:            &iamClient,
+			BuildService:           &buildService,
+			Region:                 regio,
+			ShowConsoleLog:         p.ShowConsoleLog,
+			Reporters:              createReporters(p.Reporters, gFlags.async),
 			Async:                  gFlags.async,
 			FailFast:               gFlags.failFast,
 			MetadataSearchStrategy: framework.ExactStrategy{},

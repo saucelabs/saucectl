@@ -28,7 +28,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/msg"
-	"github.com/saucelabs/saucectl/internal/notification/slack"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
 	"github.com/saucelabs/saucectl/internal/report"
@@ -266,8 +265,7 @@ func checkForUpdates() {
 	}
 }
 
-func createReporters(c config.Reporters, ntfs config.Notifications, metadata config.Metadata,
-	svc slack.Service, framework, env string, async bool) []report.Reporter {
+func createReporters(c config.Reporters, async bool) []report.Reporter {
 	githubReporter := github.NewJobSummaryReporter()
 
 	reps := []report.Reporter{
@@ -299,16 +297,6 @@ func createReporters(c config.Reporters, ntfs config.Notifications, metadata con
 
 	buildReporter := buildtable.New()
 	reps = append(reps, &buildReporter)
-
-	reps = append(reps, &slack.Reporter{
-		Channels:    ntfs.Slack.Channels,
-		Framework:   framework,
-		Metadata:    metadata,
-		TestEnv:     env,
-		TestResults: []report.TestResult{},
-		Config:      ntfs,
-		Service:     svc,
-	})
 
 	return reps
 }
