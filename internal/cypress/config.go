@@ -39,7 +39,6 @@ type Project interface {
 	IsShowConsoleLog() bool
 	GetBeforeExec() []string
 	GetReporters() config.Reporters
-	GetNotifications() config.Notifications
 	GetNpm() config.Npm
 	SetNpmStrictSSL(strictSSL *bool)
 	SetCLIFlags(map[string]interface{})

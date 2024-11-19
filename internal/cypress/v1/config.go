@@ -41,18 +41,17 @@ type Project struct {
 	Sauce          config.SauceConfig     `yaml:"sauce,omitempty" json:"sauce"`
 	Cypress        Cypress                `yaml:"cypress,omitempty" json:"cypress"`
 	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
-	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
-	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`
-	BeforeExec    []string             `yaml:"beforeExec,omitempty" json:"beforeExec"`
-	Npm           config.Npm           `yaml:"npm,omitempty" json:"npm"`
-	RootDir       string               `yaml:"rootDir,omitempty" json:"rootDir"`
-	RunnerVersion string               `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
-	Artifacts     config.Artifacts     `yaml:"artifacts,omitempty" json:"artifacts"`
-	Reporters     config.Reporters     `yaml:"reporters,omitempty" json:"-"`
-	Env           map[string]string    `yaml:"env,omitempty" json:"env"`
-	EnvFlag       map[string]string    `yaml:"-" json:"-"`
-	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
-	NodeVersion   string               `yaml:"nodeVersion,omitempty" json:"nodeVersion,omitempty"`
+	Suite         Suite             `yaml:"suite,omitempty" json:"-"`
+	Suites        []Suite           `yaml:"suites,omitempty" json:"suites"`
+	BeforeExec    []string          `yaml:"beforeExec,omitempty" json:"beforeExec"`
+	Npm           config.Npm        `yaml:"npm,omitempty" json:"npm"`
+	RootDir       string            `yaml:"rootDir,omitempty" json:"rootDir"`
+	RunnerVersion string            `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
+	Artifacts     config.Artifacts  `yaml:"artifacts,omitempty" json:"artifacts"`
+	Reporters     config.Reporters  `yaml:"reporters,omitempty" json:"-"`
+	Env           map[string]string `yaml:"env,omitempty" json:"env"`
+	EnvFlag       map[string]string `yaml:"-" json:"-"`
+	NodeVersion   string            `yaml:"nodeVersion,omitempty" json:"nodeVersion,omitempty"`
 }
 
 // Suite represents the cypress test suite configuration.
@@ -449,11 +448,6 @@ func (p *Project) GetBeforeExec() []string {
 // GetReporter returns config.Reporters
 func (p *Project) GetReporters() config.Reporters {
 	return p.Reporters
-}
-
-// GetNotifications returns config.Notifications
-func (p *Project) GetNotifications() config.Notifications {
-	return p.Notifications
 }
 
 // GetNpm returns config.Npm

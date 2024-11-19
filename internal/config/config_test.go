@@ -38,27 +38,24 @@ func TestCleanNpmPackages(t *testing.T) {
 
 func TestConfig_ExpandEnv(t *testing.T) {
 	envMap := map[string]string{
-		"REGION":                      "us-west-1",
-		"TAG1":                        "my_tag1",
-		"TAG2":                        "my_tag2",
-		"BUILD":                       "my_build",
-		"TUNNEL_ID":                   "my_tunnel_id",
-		"APP":                         "espresso_app",
-		"OTHER_APP1":                  "espresso_other_app1",
-		"NOT_CLASS1":                  "not_class1",
-		"NOT_CLASS2":                  "not_class2",
-		"CLASS1":                      "test_class1",
-		"CLASS2":                      "test_class2",
-		"PACKAGE":                     "my_package",
-		"SUITE_NAME":                  "my_suite_name",
-		"TIMEOUT":                     "10s",
-		"DEVICE_ID":                   "my_device_id",
-		"ARTIFACT_MATCH1":             "artifact_match1",
-		"ARTIFACT_MATCH2":             "artifact_match2",
-		"ARTIFACT_WHEN":               "always",
-		"NOTIFICATION_SLACK_CHANNEL1": "channel1",
-		"NOTIFICATION_SLACK_CHANNEL2": "channel2",
-		"NOTIFICATION_SLACK_SEND":     "always",
+		"REGION":          "us-west-1",
+		"TAG1":            "my_tag1",
+		"TAG2":            "my_tag2",
+		"BUILD":           "my_build",
+		"TUNNEL_ID":       "my_tunnel_id",
+		"APP":             "espresso_app",
+		"OTHER_APP1":      "espresso_other_app1",
+		"NOT_CLASS1":      "not_class1",
+		"NOT_CLASS2":      "not_class2",
+		"CLASS1":          "test_class1",
+		"CLASS2":          "test_class2",
+		"PACKAGE":         "my_package",
+		"SUITE_NAME":      "my_suite_name",
+		"TIMEOUT":         "10s",
+		"DEVICE_ID":       "my_device_id",
+		"ARTIFACT_MATCH1": "artifact_match1",
+		"ARTIFACT_MATCH2": "artifact_match2",
+		"ARTIFACT_WHEN":   "always",
 	}
 
 	for key, val := range envMap {
@@ -99,12 +96,6 @@ func TestConfig_ExpandEnv(t *testing.T) {
 				"when":  "$ARTIFACT_WHEN",
 			},
 		},
-		"notifications": map[string]interface{}{
-			"slack": map[string]interface{}{
-				"channels": []interface{}{"$NOTIFICATION_SLACK_CHANNEL1", "$NOTIFICATION_SLACK_CHANNEL2"},
-				"send":     "$NOTIFICATION_SLACK_SEND",
-			},
-		},
 	}
 
 	expectObj := map[string]interface{}{
@@ -139,12 +130,6 @@ func TestConfig_ExpandEnv(t *testing.T) {
 			"download": map[string]interface{}{
 				"match": []interface{}{"artifact_match1", "artifact_match2"},
 				"when":  "always",
-			},
-		},
-		"notifications": map[string]interface{}{
-			"slack": map[string]interface{}{
-				"channels": []interface{}{"channel1", "channel2"},
-				"send":     "always",
 			},
 		},
 	}
