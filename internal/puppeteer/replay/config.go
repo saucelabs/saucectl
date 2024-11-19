@@ -34,12 +34,11 @@ type Project struct {
 	Defaults       config.Defaults    `yaml:"defaults,omitempty" json:"defaults"`
 	Sauce          config.SauceConfig `yaml:"sauce,omitempty" json:"sauce"`
 	// Suite is only used as a workaround to parse adhoc suites that are created via CLI args.
-	Suite         Suite                `yaml:"suite,omitempty" json:"-"`
-	Suites        []Suite              `yaml:"suites,omitempty" json:"suites"`
-	Artifacts     config.Artifacts     `yaml:"artifacts,omitempty" json:"artifacts"`
-	Reporters     config.Reporters     `yaml:"reporters,omitempty" json:"-"`
-	Notifications config.Notifications `yaml:"notifications,omitempty" json:"-"`
-	RunnerVersion string               `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
+	Suite         Suite            `yaml:"suite,omitempty" json:"-"`
+	Suites        []Suite          `yaml:"suites,omitempty" json:"suites"`
+	Artifacts     config.Artifacts `yaml:"artifacts,omitempty" json:"artifacts"`
+	Reporters     config.Reporters `yaml:"reporters,omitempty" json:"-"`
+	RunnerVersion string           `yaml:"runnerVersion,omitempty" json:"runnerVersion"`
 }
 
 // Suite represents the playwright test suite configuration.

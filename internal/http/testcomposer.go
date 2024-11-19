@@ -40,11 +40,6 @@ type FrameworkResponse struct {
 	Runtimes        []string          `json:"runtimes"`
 }
 
-// TokenResponse represents the response body for slack token.
-type TokenResponse struct {
-	Token string `json:"token"`
-}
-
 type runner struct {
 	CloudRunnerVersion string `json:"cloudRunnerVersion"`
 	DockerImage        string `json:"dockerImage"`
@@ -73,24 +68,6 @@ func NewTestComposer(url string, creds iam.Credentials, timeout time.Duration) T
 		URL:         url,
 		Credentials: creds,
 	}
-}
-
-// GetSlackToken gets slack token.
-func (c *TestComposer) GetSlackToken(ctx context.Context) (string, error) {
-	url := fmt.Sprintf("%s/v1/testcomposer/users/%s/settings/slack", c.URL, c.Credentials.Username)
-
-	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return "", err
-	}
-	req.SetBasicAuth(c.Credentials.Username, c.Credentials.AccessKey)
-
-	var resp TokenResponse
-	if err := c.doJSONResponse(req, 200, &resp); err != nil {
-		return "", err
-	}
-
-	return resp.Token, nil
 }
 
 func (c *TestComposer) doJSONResponse(req *retryablehttp.Request, expectStatus int, v interface{}) error {

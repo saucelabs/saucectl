@@ -131,17 +131,6 @@ type ArtifactDownload struct {
 	AllAttempts bool     `yaml:"allAttempts,omitempty" json:"allAttempts"`
 }
 
-// Notifications represents the test notifications configuration.
-type Notifications struct {
-	Slack Slack `yaml:"slack,omitempty" json:"slack"`
-}
-
-// Slack represents slack configuration.
-type Slack struct {
-	Channels []string `yaml:"channels,omitempty" json:"channels"`
-	Send     When     `yaml:"send,omitempty" json:"send"`
-}
-
 // Artifacts represents the test artifacts configuration.
 type Artifacts struct {
 	Retain   map[string]string `yaml:"retain,omitempty" json:"retain"`

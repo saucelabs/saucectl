@@ -69,13 +69,6 @@ func SauceConfig(c config.SauceConfig) Option {
 	}
 }
 
-func Slack(slack config.Slack) Option {
-	return func(p Properties) {
-		p["slack_channels_count"] = len(slack.Channels)
-		p["slack_when"] = slack.Send
-	}
-}
-
 func Sharding(shardTypes []string, shardOpts map[string]bool) Option {
 	return func(p Properties) {
 		p["sharded"] = len(shardTypes) > 0
