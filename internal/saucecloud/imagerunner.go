@@ -235,7 +235,6 @@ func (r *ImgRunner) runSuite(suite imagerunner.Suite) (imagerunner.Runner, error
 	log.Info().
 		Str("image", suite.Image).
 		Str("suite", suite.Name).
-		Str("tunnel", r.Project.Sauce.Tunnel.Name).
 		Msg("Starting suite.")
 
 	if suite.Timeout <= 0 {
