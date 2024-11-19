@@ -103,7 +103,10 @@ func (r *SauceReportRetrier) uploadConfig(filename string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Info().Dur("durationMs", time.Since(start)).Str("storageId", resp.ID).Msg("Runner Config uploaded.")
+	log.Info().
+		Str("duration", time.Since(start).Round(time.Second).String()).
+		Str("storageId", resp.ID).
+		Msg("Runner Config uploaded.")
 
 	return resp.ID, nil
 }
