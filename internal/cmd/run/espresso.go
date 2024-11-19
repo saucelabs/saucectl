@@ -134,7 +134,10 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, isCLIDriven bo
 }
 
 func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
-	log.Info().Msg("Running Espresso in Sauce Labs")
+	log.Info().
+		Str("region", regio.String()).
+		Str("tunnel", p.Sauce.Tunnel.Name).
+		Msg("Running Espresso in Sauce Labs.")
 
 	creds := regio.Credentials()
 	restoClient := http.NewResto(regio, creds.Username, creds.AccessKey, 0)

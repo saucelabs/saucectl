@@ -134,7 +134,10 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 }
 
 func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
-	log.Info().Msg("Running XCUITest in Sauce Labs")
+	log.Info().
+		Str("region", regio.String()).
+		Str("tunnel", p.Sauce.Tunnel.Name).
+		Msg("Running XCUITest in Sauce Labs.")
 
 	creds := regio.Credentials()
 

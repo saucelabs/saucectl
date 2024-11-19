@@ -182,7 +182,10 @@ func runPlaywright(cmd *cobra.Command, pf playwrightFlags, isCLIDriven bool) (in
 		regio, creds.Username, creds.AccessKey, buildTimeout,
 	)
 
-	log.Info().Msg("Running Playwright in Sauce Labs")
+	log.Info().
+		Str("region", regio.String()).
+		Str("tunnel", p.Sauce.Tunnel.Name).
+		Msg("Running Playwright in Sauce Labs.")
 	r := saucecloud.PlaywrightRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{

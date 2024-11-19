@@ -137,7 +137,10 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		regio, creds.Username, creds.AccessKey, buildTimeout,
 	)
 
-	log.Info().Msg("Running Playwright-Cucumberjs in Sauce Labs")
+	log.Info().
+		Str("region", regio.String()).
+		Str("tunnel", p.Sauce.Tunnel.Name).
+		Msg("Running Playwright-Cucumberjs in Sauce Labs.")
 	r := saucecloud.CucumberRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
