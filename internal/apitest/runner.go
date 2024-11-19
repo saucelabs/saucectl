@@ -433,7 +433,6 @@ func (r *Runner) runSuites() bool {
 			Str("projectName", suite.ProjectName).
 			Str("suite", suite.Name).
 			Bool("parallel", true).
-			Str("tunnel", r.Project.Sauce.Tunnel.Name).
 			Msg("Starting suite")
 
 		if s.UseRemoteTests {
