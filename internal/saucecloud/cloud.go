@@ -755,7 +755,9 @@ func (r *CloudRunner) uploadArchive(fileInfo storage.FileInfo, pType uploadType,
 	if err != nil {
 		return "", err
 	}
-	log.Info().Dur("durationMs", time.Since(start)).Str("storageId", resp.ID).
+	log.Info().
+		Str("duration", time.Since(start).Round(time.Second).String()).
+		Str("storageId", resp.ID).
 		Msgf("%s uploaded.", cases.Title(language.English).String(string(pType)))
 	return fmt.Sprintf("storage:%s", resp.ID), nil
 }
