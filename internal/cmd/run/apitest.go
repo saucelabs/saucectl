@@ -3,6 +3,7 @@ package run
 import (
 	"os"
 
+	"github.com/rs/zerolog/log"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/usage"
@@ -69,6 +70,10 @@ func runApitest(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		_ = tracker.Close()
 	}()
 
+	log.Info().
+		Str("region", regio.String()).
+		Str("tunnel", r.Project.Sauce.Tunnel.Name).
+		Msg("Running API Test in Sauce Labs.")
 	return r.RunProject()
 }
 

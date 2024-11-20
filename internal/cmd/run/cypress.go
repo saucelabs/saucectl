@@ -170,7 +170,10 @@ func runCypress(cmd *cobra.Command, cflags cypressFlags, isCLIDriven bool) (int,
 		regio, creds.Username, creds.AccessKey, buildTimeout,
 	)
 
-	log.Info().Msg("Running Cypress in Sauce Labs")
+	log.Info().
+		Str("region", regio.String()).
+		Str("tunnel", p.GetSauceCfg().Tunnel.Name).
+		Msg("Running Cypress in Sauce Labs.")
 	r := saucecloud.CypressRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{

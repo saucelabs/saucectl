@@ -3,6 +3,7 @@ package run
 import (
 	"os"
 
+	"github.com/rs/zerolog/log"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/http"
@@ -79,6 +80,10 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 	r := saucecloud.NewImgRunner(p, &imageRunnerClient, &restoClient, asyncEventManager,
 		reporters, gFlags.async)
 
+	log.Info().
+		Str("region", regio.String()).
+		Str("tunnel", r.Project.Sauce.Tunnel.Name).
+		Msg("Running in Sauce Labs.")
 	return r.RunProject()
 }
 

@@ -120,7 +120,10 @@ func runReplay(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 }
 
 func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, error) {
-	log.Info().Msg("Replaying chrome devtools recordings")
+	log.Info().
+		Str("region", regio.String()).
+		Str("tunnel", p.Sauce.Tunnel.Name).
+		Msg("Replaying chrome devtools recordings.")
 
 	creds := regio.Credentials()
 	restoClient := http.NewResto(regio, creds.Username, creds.AccessKey, 0)

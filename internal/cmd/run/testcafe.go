@@ -205,7 +205,10 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 		regio, creds.Username, creds.AccessKey, buildTimeout,
 	)
 
-	log.Info().Msg("Running Testcafe in Sauce Labs")
+	log.Info().
+		Str("region", regio.String()).
+		Str("tunnel", p.Sauce.Tunnel.Name).
+		Msg("Running Testcafe in Sauce Labs.")
 	r := saucecloud.TestcafeRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
