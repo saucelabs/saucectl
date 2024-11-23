@@ -51,9 +51,7 @@
           "$ref": "../subschema/common.schema.json#/definitions/version"
         }
       },
-      "required": [
-        "version"
-      ],
+      "required": ["version"],
       "additionalProperties": false
     },
     "env": {
@@ -110,7 +108,7 @@
               },
               "excludedTestFiles": {
                 "$ref": "../subschema/common.schema.json#/definitions/excludedTestFiles"
-              }, 
+              },
               "backtrace": {
                 "description": "Show the full backtrace for errors.",
                 "type": "boolean"
@@ -126,32 +124,25 @@
               "tags": {
                 "description": "Tag expression to filter which scenarios should be run.",
                 "type": "array"
-              }, 
+              },
               "format": {
                 "description": "Name/path and (optionally) output file path of each formatter to use.",
                 "type": "array"
-              }, 
+              },
               "formatOptions": {
                 "description": "Options to be provided to cucumber formatters.",
-                "type": "array"
+                "type": "object"
               },
               "parallel": {
                 "description": "Run tests in parallel with the given number of worker processes.",
                 "type": "integer"
               }
             },
-            "required": [
-              "paths"
-            ]
+            "required": ["paths"]
           },
           "shard": {
             "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by spec, concurrency or scenario) so that they can easily run in parallel.",
-            "enum": [
-              "",
-              "concurrency",
-              "spec",
-              "scenario"
-            ]
+            "enum": ["", "concurrency", "spec", "scenario"]
           },
           "shardTagsEnabled": {
             "description": "When sharding is configured and the suite is configured to filter scenarios by tag expression, let saucectl filter test files before executing.",
@@ -173,18 +164,11 @@
             "$ref": "../subschema/common.schema.json#/definitions/smartRetry"
           }
         },
-        "required": [
-          "name"
-        ],
+        "required": ["name"],
         "additionalProperties": false
       }
     }
   },
-  "required": [
-    "apiVersion",
-    "kind",
-    "playwright",
-    "suites"
-  ],
+  "required": ["apiVersion", "kind", "playwright", "suites"],
   "additionalProperties": true
 }
