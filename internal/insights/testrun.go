@@ -204,10 +204,10 @@ func enrichInsightTestRun(runs []TestRun, jobID string, jobName string, details 
 
 		if provider != ci.None {
 			runs[idx].CI = &CI{
-				Branch:     ciData.RefName,
-				RefName:    ciData.RefName,
+				Branch:     ciData.Ref,
+				RefName:    ciData.Ref,
 				Repository: ciData.Repo,
-				CommitSha:  ciData.SHA,
+				CommitSha:  ciData.ShortSHA,
 			}
 		}
 	}
