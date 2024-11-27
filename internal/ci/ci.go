@@ -117,19 +117,18 @@ func GetCI(provider Provider) CI {
 	case Azure:
 		return CI{
 			Provider: provider,
-			URL:      os.Getenv("Build.Repository.Uri"),
-			Repo:     os.Getenv("System.PullRequest.SourceRepositoryURI"),
-			Ref:      os.Getenv("Build.SourceBranchName"),
-			ShortSHA: ShortenSHA(os.Getenv("Build.SourceVersion")),
+			URL:      os.Getenv("BUILD_REPOSITORY_URI"),
+			Repo:     os.Getenv("SYSTEM_PULLREQUEST_SOURCEREPOSITORYURI"),
+			Ref:      os.Getenv("BUILD_SOURCEBRANCHNAME"),
+			ShortSHA: ShortenSHA(os.Getenv("BUILD_SOURCEVERSION")),
 		}
 	case Bamboo:
 		return CI{
 			Provider: provider,
-			URL:      os.Getenv("bamboo.resultsUrl"),
-			Repo:     os.Getenv("bamboo.repository.git.repositoryUrl"), // bamboo.planRepository.<position>.name
-			Ref:      os.Getenv("bamboo.planRepository.branchDisplayName"),
-			ShortSHA: os.Getenv("bamboo_planRepository_revision"), // bamboo.planRepository.<position>.revision
-			// Do we still need Bamboo????
+			URL:      os.Getenv("bamboo_resultsUrl"),
+			//Repo:     os.Getenv("bamboo.planRepository.name"), // bamboo.planRepository.<position>.name
+			Ref: os.Getenv("bamboo_planRepository_branchDisplayName"),
+			//ShortSHA: os.Getenv("bamboo_planRepository_revision"), // bamboo.planRepository.<position>.revision
 		}
 	case Bitbucket:
 		return CI{
