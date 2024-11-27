@@ -207,7 +207,7 @@ func enrichInsightTestRun(runs []TestRun, jobID string, jobName string, details 
 				Branch:     ciData.Ref,
 				RefName:    ciData.Ref,
 				Repository: ciData.Repo,
-				CommitSha:  ciData.ShortSHA,
+				CommitSha:  ciData.SHA,
 			}
 		}
 	}
