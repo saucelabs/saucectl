@@ -258,7 +258,7 @@ func GetTags() []string {
 }
 
 // shortenSHA truncates a given SHA string to 7 characters.
-// If the input SHA is already shorter than 8 characters, it is returned as-is without modification.
+// If the input SHA is already shorter than 8 characters, it is returned as-is.
 func shortenSHA(sha string) string {
 	if len(sha) < 8 {
 		return sha
