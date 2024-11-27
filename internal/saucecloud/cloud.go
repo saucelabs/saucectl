@@ -788,25 +788,30 @@ func (r *CloudRunner) isFileStored(filename string) (storageID string, err error
 
 // logSuite display the result of a suite
 func (r *CloudRunner) logSuite(res result) {
-	// Job isn't done, hence nothing more to log about it.
-	if !job.Done(res.job.Status) || r.Async {
-		return
-	}
-
 	logger := log.With().
 		Str("suite", res.name).
 		Bool("passed", res.job.Passed).
 		Str("url", res.job.URL).
 		Logger()
 
-	if res.skipped {
-		logger.Error().Err(res.err).Msg("Suite skipped.")
+	if res.err != nil {
+		if res.skipped {
+			logger.Error().Err(res.err).Msg("Suite skipped.")
+			return
+		}
+		if res.job.ID == "" {
+			logger.Error().Err(res.err).Msg("Suite failed to start.")
+			return
+		}
+		logger.Error().Err(res.err).Msg("Suite failed unexpectedly.")
 		return
 	}
-	if res.job.ID == "" {
-		logger.Error().Err(res.err).Msg("Suite failed to start.")
+
+	// Job isn't done, hence nothing more to log about it.
+	if !job.Done(res.job.Status) || r.Async {
 		return
 	}
+
 	if res.job.TimedOut {
 		logger.Error().Msg("Suite timed out.")
 		return
