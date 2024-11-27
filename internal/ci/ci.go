@@ -174,7 +174,7 @@ func GetCI(provider Provider) CI {
 			URL:      os.Getenv("DRONE_BUILD_LINK"),
 			Repo:     os.Getenv("DRONE_REPO"),
 			Ref:      os.Getenv("DRONE_BRANCH"),
-			SHA:      (os.Getenv("DRONE_COMMIT_SHA")),
+			SHA:      os.Getenv("DRONE_COMMIT_SHA"),
 		}
 	case GitHub:
 		return CI{
@@ -182,7 +182,7 @@ func GetCI(provider Provider) CI {
 			URL:      fmt.Sprintf("%s/%s/actions/runs/%s", os.Getenv("GITHUB_SERVER_URL"), os.Getenv("GITHUB_REPOSITORY"), os.Getenv("GITHUB_RUN_ID")),
 			Repo:     os.Getenv("GITHUB_REPOSITORY"),
 			Ref:      os.Getenv("GITHUB_REF_NAME"),
-			SHA:      (os.Getenv("GITHUB_SHA")),
+			SHA:      os.Getenv("GITHUB_SHA"),
 		}
 	case GitLab:
 		return CI{
