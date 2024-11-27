@@ -30,7 +30,7 @@ var (
 	// Azure represents https://azure.microsoft.com/en-us/services/devops/
 	Azure = Provider{Name: "Azure DevOps", Envar: "AGENT_ID"}
 	// Bamboo represents https://www.atlassian.com/software/bamboo
-	Bamboo = Provider{Name: "Bamboo", Envar: "bamboo_buildNumber"}
+	Bamboo = Provider{Name: "Bamboo", Envar: "bamboo_agentId"}
 	// Bitbucket represents https://bitbucket.org/product/features/pipelines
 	Bitbucket = Provider{Name: "Bitbucket", Envar: "BITBUCKET_BUILD_NUMBER"}
 	// Buildkite represents https://buildkite.com/
