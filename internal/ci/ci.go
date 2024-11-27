@@ -257,9 +257,8 @@ func GetTags() []string {
 	return tags
 }
 
-// shortenSHA truncates a given SHA string to 7 characters, the standard length for
-// short SHAs used in Git. If the input SHA is already shorter than 8 characters,
-// it is returned as-is without modification.
+// shortenSHA truncates a given SHA string to 7 characters.
+// If the input SHA is already shorter than 8 characters, it is returned as-is without modification.
 func shortenSHA(sha string) string {
 	if len(sha) < 8 {
 		return sha
