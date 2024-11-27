@@ -104,7 +104,7 @@ func GetCI(provider Provider) CI {
 			URL:      fmt.Sprintf("%s/project/%s/%s/builds/%s", os.Getenv("APPVEYOR_URL"), os.Getenv("APPVEYOR_ACCOUNT_NAME"), os.Getenv("APPVEYOR_PROJECT_NAME"), os.Getenv("APPVEYOR_BUILD_ID")),
 			Repo:     os.Getenv("APPVEYOR_REPO_NAME"),
 			Ref:      os.Getenv("APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH"),
-			ShortSHA: ShortenSHA(os.Getenv("APPVEYOR_REPO_COMMIT")),
+			ShortSHA: shortenSHA(os.Getenv("APPVEYOR_REPO_COMMIT")),
 		}
 	case AWS:
 		return CI{
@@ -112,7 +112,7 @@ func GetCI(provider Provider) CI {
 			URL:      os.Getenv("CODEBUILD_PUBLIC_BUILD_URL"),
 			Repo:     os.Getenv("CODEBUILD_SOURCE_REPO_URL"),
 			Ref:      os.Getenv("CODEBUILD_SOURCE_VERSION"),
-			ShortSHA: ShortenSHA(os.Getenv("CODEBUILD_RESOLVED_SOURCE_VERSION")),
+			ShortSHA: shortenSHA(os.Getenv("CODEBUILD_RESOLVED_SOURCE_VERSION")),
 		}
 	case Azure:
 		return CI{
@@ -120,15 +120,13 @@ func GetCI(provider Provider) CI {
 			URL:      os.Getenv("BUILD_REPOSITORY_URI"),
 			Repo:     os.Getenv("SYSTEM_PULLREQUEST_SOURCEREPOSITORYURI"),
 			Ref:      os.Getenv("BUILD_SOURCEBRANCHNAME"),
-			ShortSHA: ShortenSHA(os.Getenv("BUILD_SOURCEVERSION")),
+			ShortSHA: shortenSHA(os.Getenv("BUILD_SOURCEVERSION")),
 		}
 	case Bamboo:
 		return CI{
 			Provider: provider,
 			URL:      os.Getenv("bamboo_resultsUrl"),
-			//Repo:     os.Getenv("bamboo.planRepository.name"), // bamboo.planRepository.<position>.name
-			Ref: os.Getenv("bamboo_planRepository_branchDisplayName"),
-			//ShortSHA: os.Getenv("bamboo_planRepository_revision"), // bamboo.planRepository.<position>.revision
+			Ref:      os.Getenv("bamboo_planRepository_branchDisplayName"),
 		}
 	case Bitbucket:
 		return CI{
@@ -136,7 +134,7 @@ func GetCI(provider Provider) CI {
 			URL:      fmt.Sprintf("https://bitbucket.org/%s/addon/pipelines/home#!/results/%s", os.Getenv("BITBUCKET_REPO_FULL_NAME"), os.Getenv("BITBUCKET_BUILD_NUMBER")),
 			Repo:     os.Getenv("BITBUCKET_REPO_FULL_NAME"),
 			Ref:      os.Getenv("BITBUCKET_BRANCH"),
-			ShortSHA: ShortenSHA(os.Getenv("BITBUCKET_COMMIT")),
+			ShortSHA: shortenSHA(os.Getenv("BITBUCKET_COMMIT")),
 		}
 	case Buildkite:
 		return CI{
@@ -144,7 +142,7 @@ func GetCI(provider Provider) CI {
 			URL:      os.Getenv("BUILDKITE_BUILD_URL"),
 			Repo:     os.Getenv("BUILDKITE_REPO"),
 			Ref:      os.Getenv("BUILDKITE_BRANCH"),
-			ShortSHA: ShortenSHA(os.Getenv("BUILDKITE_COMMIT")),
+			ShortSHA: shortenSHA(os.Getenv("BUILDKITE_COMMIT")),
 		}
 	case Buddy:
 		return CI{
@@ -160,7 +158,7 @@ func GetCI(provider Provider) CI {
 			URL:      os.Getenv("CIRCLE_BUILD_URL"),
 			Repo:     os.Getenv("CIRCLE_REPOSITORY_URL"),
 			Ref:      os.Getenv("CIRCLE_BRANCH"),
-			ShortSHA: ShortenSHA(os.Getenv("CIRCLE_SHA1")),
+			ShortSHA: shortenSHA(os.Getenv("CIRCLE_SHA1")),
 		}
 	case CodeShip:
 		return CI{
@@ -168,7 +166,7 @@ func GetCI(provider Provider) CI {
 			URL:      os.Getenv("CI_BUILD_URL"),
 			Repo:     os.Getenv("CI_REPO_NAME"),
 			Ref:      os.Getenv("CI_BRANCH"),
-			ShortSHA: ShortenSHA(os.Getenv("CI_COMMIT_ID")),
+			ShortSHA: shortenSHA(os.Getenv("CI_COMMIT_ID")),
 		}
 	case Drone:
 		return CI{
@@ -176,7 +174,7 @@ func GetCI(provider Provider) CI {
 			URL:      os.Getenv("DRONE_BUILD_LINK"),
 			Repo:     os.Getenv("DRONE_REPO"),
 			Ref:      os.Getenv("DRONE_BRANCH"),
-			ShortSHA: ShortenSHA(os.Getenv("DRONE_COMMIT_SHA")),
+			ShortSHA: shortenSHA(os.Getenv("DRONE_COMMIT_SHA")),
 		}
 	case GitHub:
 		return CI{
@@ -184,7 +182,7 @@ func GetCI(provider Provider) CI {
 			URL:      fmt.Sprintf("%s/%s/actions/runs/%s", os.Getenv("GITHUB_SERVER_URL"), os.Getenv("GITHUB_REPOSITORY"), os.Getenv("GITHUB_RUN_ID")),
 			Repo:     os.Getenv("GITHUB_REPOSITORY"),
 			Ref:      os.Getenv("GITHUB_REF_NAME"),
-			ShortSHA: ShortenSHA(os.Getenv("GITHUB_SHA")),
+			ShortSHA: shortenSHA(os.Getenv("GITHUB_SHA")),
 		}
 	case GitLab:
 		return CI{
@@ -206,7 +204,7 @@ func GetCI(provider Provider) CI {
 			URL:      os.Getenv("JOB_URL"),
 			Repo:     os.Getenv("GIT_URL"),
 			Ref:      os.Getenv("GIT_BRANCH"),
-			ShortSHA: ShortenSHA(os.Getenv("GIT_COMMIT")),
+			ShortSHA: shortenSHA(os.Getenv("GIT_COMMIT")),
 		}
 	case Semaphore:
 		return CI{
@@ -214,7 +212,7 @@ func GetCI(provider Provider) CI {
 			URL:      fmt.Sprintf("%s/workflows/%s?pipeline_id=%s", os.Getenv("SEMAPHORE_ORGANIZATION_URL"), os.Getenv("SEMAPHORE_PROJECT_ID"), os.Getenv("SEMAPHORE_JOB_ID")),
 			Repo:     os.Getenv("SEMAPHORE_GIT_URL"),
 			Ref:      os.Getenv("SEMAPHORE_GIT_WORKING_BRANCH"),
-			ShortSHA: ShortenSHA(os.Getenv("SEMAPHORE_GIT_SHA")),
+			ShortSHA: shortenSHA(os.Getenv("SEMAPHORE_GIT_SHA")),
 		}
 	case Travis:
 		return CI{
@@ -222,7 +220,7 @@ func GetCI(provider Provider) CI {
 			URL:      os.Getenv("TRAVIS_BUILD_WEB_URL"),
 			Repo:     os.Getenv("TRAVIS_REPO_SLUG"),
 			Ref:      os.Getenv("TRAVIS_BRANCH"),
-			ShortSHA: ShortenSHA(os.Getenv("TRAVIS_COMMIT")),
+			ShortSHA: shortenSHA(os.Getenv("TRAVIS_COMMIT")),
 		}
 	case TeamCity:
 		return CI{
@@ -259,10 +257,10 @@ func GetTags() []string {
 	return tags
 }
 
-// ShortenSHA truncates a given SHA string to 7 characters, the standard length for
+// shortenSHA truncates a given SHA string to 7 characters, the standard length for
 // short SHAs used in Git. If the input SHA is already shorter than 8 characters,
 // it is returned as-is without modification.
-func ShortenSHA(sha string) string {
+func shortenSHA(sha string) string {
 	if len(sha) < 8 {
 		return sha
 	}
