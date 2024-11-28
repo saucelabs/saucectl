@@ -6,12 +6,11 @@ import (
 )
 
 type CI struct {
-	Provider  Provider
-	OriginURL string
-	Repo      string
-	RefName   string // branch or tag
-	SHA       string
-	User      string
+	Provider Provider
+	URL      string
+	Repo     string
+	Ref      string // branch or tag
+	SHA      string
 }
 
 // Provider represents a CI Provider.
@@ -29,9 +28,9 @@ var (
 	// AWS represents https://aws.amazon.com/codebuild/
 	AWS = Provider{Name: "AWS CodeBuild", Envar: "CODEBUILD_INITIATOR"}
 	// Azure represents https://azure.microsoft.com/en-us/services/devops/
-	Azure = Provider{Name: "Azure DevOps", Envar: "Agent_BuildDirectory"}
+	Azure = Provider{Name: "Azure DevOps", Envar: "TF_BUILD"}
 	// Bamboo represents https://www.atlassian.com/software/bamboo
-	Bamboo = Provider{Name: "Bamboo", Envar: "bamboo_buildNumber"}
+	Bamboo = Provider{Name: "Bamboo", Envar: "bamboo_agentId"}
 	// Bitbucket represents https://bitbucket.org/product/features/pipelines
 	Bitbucket = Provider{Name: "Bitbucket", Envar: "BITBUCKET_BUILD_NUMBER"}
 	// Buildkite represents https://buildkite.com/
@@ -101,138 +100,127 @@ func GetCI(provider Provider) CI {
 	switch provider {
 	case AppVeyor:
 		return CI{
-			Provider:  provider,
-			OriginURL: fmt.Sprintf("%s/project/%s/%s/builds/%s", os.Getenv("APPVEYOR_URL"), os.Getenv("APPVEYOR_ACCOUNT_NAME"), os.Getenv("APPVEYOR_PROJECT_NAME"), os.Getenv("APPVEYOR_BUILD_ID")),
-			Repo:      os.Getenv("APPVEYOR_REPO_NAME"),
-			RefName:   os.Getenv("APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH"),
-			SHA:       os.Getenv("APPVEYOR_REPO_COMMIT"),
+			Provider: provider,
+			URL:      fmt.Sprintf("%s/project/%s/%s/builds/%s", os.Getenv("APPVEYOR_URL"), os.Getenv("APPVEYOR_ACCOUNT_NAME"), os.Getenv("APPVEYOR_PROJECT_NAME"), os.Getenv("APPVEYOR_BUILD_ID")),
+			Repo:     os.Getenv("APPVEYOR_REPO_NAME"),
+			Ref:      os.Getenv("APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH"),
+			SHA:      os.Getenv("APPVEYOR_REPO_COMMIT"),
 		}
 	case AWS:
 		return CI{
-			Provider:  provider,
-			OriginURL: os.Getenv("CODEBUILD_PUBLIC_BUILD_URL"),
-			Repo:      os.Getenv("CODEBUILD_SOURCE_REPO_URL"),
-			RefName:   os.Getenv("CODEBUILD_SOURCE_VERSION"),
-			SHA:       os.Getenv("CODEBUILD_RESOLVED_SOURCE_VERSION"),
-			User:      os.Getenv("CODEBUILD_WEBHOOK_ACTOR_ACCOUNT_ID"),
+			Provider: provider,
+			URL:      os.Getenv("CODEBUILD_PUBLIC_BUILD_URL"),
+			Repo:     os.Getenv("CODEBUILD_SOURCE_REPO_URL"),
+			Ref:      os.Getenv("CODEBUILD_SOURCE_VERSION"),
+			SHA:      os.Getenv("CODEBUILD_RESOLVED_SOURCE_VERSION"),
 		}
 	case Azure:
 		return CI{
-			Provider:  provider,
-			OriginURL: os.Getenv("Build_BuildUri"),
-			Repo:      os.Getenv("System_PullRequest_SourceRepositoryURI"),
-			RefName:   os.Getenv("Build_SourceBranchName"),
-			SHA:       os.Getenv("Build_SourceVersion"),
-			User:      os.Getenv("Build_RequestedFor"),
+			Provider: provider,
+			URL:      os.Getenv("BUILD_REPOSITORY_URI"),
+			Repo:     os.Getenv("SYSTEM_PULLREQUEST_SOURCEREPOSITORYURI"),
+			Ref:      os.Getenv("BUILD_SOURCEBRANCHNAME"),
+			SHA:      os.Getenv("BUILD_SOURCEVERSION"),
 		}
 	case Bamboo:
 		return CI{
-			Provider:  provider,
-			OriginURL: os.Getenv("bamboo_buildResultsUrl"),
-			Repo:      os.Getenv("bamboo_planRepository_repositoryUrl"),
-			RefName:   os.Getenv("bamboo_planRepository_branch"),
-			SHA:       os.Getenv("bamboo_planRepository_revision"),
-			User:      os.Getenv("bamboo_ManualBuildTriggerReason_userName"),
+			Provider: provider,
+			URL:      os.Getenv("bamboo_resultsUrl"),
+			Ref:      os.Getenv("bamboo_planRepository_branchDisplayName"),
 		}
 	case Bitbucket:
 		return CI{
-			Provider:  provider,
-			OriginURL: fmt.Sprintf("https://bitbucket.org/%s/addon/pipelines/home#!/results/%s", os.Getenv("BITBUCKET_REPO_FULL_NAME"), os.Getenv("BITBUCKET_BUILD_NUMBER")),
-			Repo:      os.Getenv("BITBUCKET_REPO_FULL_NAME"),
-			RefName:   os.Getenv("BITBUCKET_BRANCH"),
-			SHA:       os.Getenv("BITBUCKET_COMMIT"),
-			User:      os.Getenv("BITBUCKET_STEP_TRIGGERER_UUID"),
+			Provider: provider,
+			URL:      fmt.Sprintf("https://bitbucket.org/%s/addon/pipelines/home#!/results/%s", os.Getenv("BITBUCKET_REPO_FULL_NAME"), os.Getenv("BITBUCKET_BUILD_NUMBER")),
+			Repo:     os.Getenv("BITBUCKET_REPO_FULL_NAME"),
+			Ref:      os.Getenv("BITBUCKET_BRANCH"),
+			SHA:      os.Getenv("BITBUCKET_COMMIT"),
 		}
 	case Buildkite:
 		return CI{
-			Provider:  provider,
-			OriginURL: os.Getenv("BUILDKITE_BUILD_URL"),
-			Repo:      os.Getenv("BUILDKITE_REPO"),
-			RefName:   os.Getenv("BUILDKITE_BRANCH"),
-			SHA:       os.Getenv("BUILDKITE_COMMIT"),
-			User:      os.Getenv("BUILDKITE_BUILD_CREATOR"),
+			Provider: provider,
+			URL:      os.Getenv("BUILDKITE_BUILD_URL"),
+			Repo:     os.Getenv("BUILDKITE_REPO"),
+			Ref:      os.Getenv("BUILDKITE_BRANCH"),
+			SHA:      os.Getenv("BUILDKITE_COMMIT"),
 		}
 	case Buddy:
 		return CI{
-			Provider:  provider,
-			OriginURL: os.Getenv("BUDDY_PIPELINE_URL"),
-			Repo:      os.Getenv("BUDDY_PROJECT_URL"),
-			RefName:   os.Getenv("BUDDY_EXECUTION_BRANCH"),
-			SHA:       os.Getenv("BUDDY_EXECUTION_REVISION"),
-			User:      os.Getenv("BUDDY_INVOKER_NAME"),
+			Provider: provider,
+			URL:      os.Getenv("BUDDY_PIPELINE_URL"),
+			Repo:     os.Getenv("BUDDY_PROJECT_URL"),
+			Ref:      os.Getenv("BUDDY_RUN_BRANCH"),
+			SHA:      os.Getenv("BUDDY_RUN_COMMIT"),
 		}
 	case Circle:
 		return CI{
-			Provider:  provider,
-			OriginURL: os.Getenv("CIRCLE_BUILD_URL"),
-			Repo:      os.Getenv("CIRCLE_REPOSITORY_URL"),
-			RefName:   os.Getenv("CIRCLE_BRANCH"),
-			SHA:       os.Getenv("CIRCLE_SHA1"),
-			User:      os.Getenv("CIRCLE_USERNAME"),
+			Provider: provider,
+			URL:      os.Getenv("CIRCLE_BUILD_URL"),
+			Repo:     os.Getenv("CIRCLE_REPOSITORY_URL"),
+			Ref:      os.Getenv("CIRCLE_BRANCH"),
+			SHA:      os.Getenv("CIRCLE_SHA1"),
 		}
 	case CodeShip:
 		return CI{
-			Provider:  provider,
-			OriginURL: os.Getenv("CI_BUILD_URL"),
-			Repo:      os.Getenv("CI_REPO_NAME"),
-			RefName:   os.Getenv("CI_BRANCH"),
-			SHA:       os.Getenv("CI_COMMIT_ID"),
+			Provider: provider,
+			URL:      os.Getenv("CI_BUILD_URL"),
+			Repo:     os.Getenv("CI_REPO_NAME"),
+			Ref:      os.Getenv("CI_BRANCH"),
+			SHA:      os.Getenv("CI_COMMIT_ID"),
 		}
 	case Drone:
 		return CI{
-			Provider:  provider,
-			OriginURL: os.Getenv("DRONE_BUILD_LINK"),
-			Repo:      os.Getenv("DRONE_REPO"),
-			RefName:   os.Getenv("DRONE_BRANCH"),
-			SHA:       os.Getenv("DRONE_COMMIT_SHA"),
+			Provider: provider,
+			URL:      os.Getenv("DRONE_BUILD_LINK"),
+			Repo:     os.Getenv("DRONE_REPO"),
+			Ref:      os.Getenv("DRONE_BRANCH"),
+			SHA:      os.Getenv("DRONE_COMMIT_SHA"),
 		}
 	case GitHub:
 		return CI{
-			Provider:  provider,
-			OriginURL: fmt.Sprintf("%s/%s/actions/runs/%s", os.Getenv("GITHUB_SERVER_URL"), os.Getenv("GITHUB_REPOSITORY"), os.Getenv("GITHUB_RUN_ID")),
-			Repo:      os.Getenv("GITHUB_REPOSITORY"),
-			RefName:   os.Getenv("GITHUB_REF_NAME"),
-			SHA:       os.Getenv("GITHUB_SHA"),
-			User:      os.Getenv("GITHUB_ACTOR"),
+			Provider: provider,
+			URL:      fmt.Sprintf("%s/%s/actions/runs/%s", os.Getenv("GITHUB_SERVER_URL"), os.Getenv("GITHUB_REPOSITORY"), os.Getenv("GITHUB_RUN_ID")),
+			Repo:     os.Getenv("GITHUB_REPOSITORY"),
+			Ref:      os.Getenv("GITHUB_REF_NAME"),
+			SHA:      os.Getenv("GITHUB_SHA"),
 		}
 	case GitLab:
 		return CI{
-			Provider:  provider,
-			OriginURL: os.Getenv("CI_JOB_URL"),
-			Repo:      os.Getenv("CI_PROJECT_PATH"),
-			RefName:   os.Getenv("CI_COMMIT_REF_NAME"),
-			SHA:       os.Getenv("CI_COMMIT_SHA"),
-			User:      os.Getenv("GITLAB_USER_LOGIN"),
+			Provider: provider,
+			URL:      os.Getenv("CI_JOB_URL"),
+			Repo:     os.Getenv("CI_PROJECT_PATH"),
+			Ref:      os.Getenv("CI_COMMIT_REF_NAME"),
+			SHA:      os.Getenv("CI_COMMIT_SHA"),
 		}
 	case Gitpod:
 		return CI{
-			Provider:  provider,
-			OriginURL: os.Getenv("GITPOD_WORKSPACE_URL"),
-			Repo:      os.Getenv("GITPOD_REPO_ROOT"),
+			Provider: provider,
+			URL:      os.Getenv("GITPOD_WORKSPACE_URL"),
+			Repo:     os.Getenv("GITPOD_REPO_ROOT"),
 		}
 	case Jenkins:
 		return CI{
-			Provider:  provider,
-			OriginURL: os.Getenv("JOB_URL"),
-			Repo:      os.Getenv("GIT_URL"),
-			RefName:   os.Getenv("GIT_BRANCH"),
-			SHA:       os.Getenv("GIT_COMMIT"),
+			Provider: provider,
+			URL:      os.Getenv("JOB_URL"),
+			Repo:     os.Getenv("GIT_URL"),
+			Ref:      os.Getenv("GIT_BRANCH"),
+			SHA:      os.Getenv("GIT_COMMIT"),
 		}
 	case Semaphore:
 		return CI{
-			Provider:  provider,
-			OriginURL: fmt.Sprintf("%s/workflows/%s?pipeline_id=%s", os.Getenv("SEMAPHORE_ORGANIZATION_URL"), os.Getenv("SEMAPHORE_PROJECT_ID"), os.Getenv("SEMAPHORE_JOB_ID")),
-			Repo:      os.Getenv("SEMAPHORE_GIT_URL"),
-			RefName:   os.Getenv("SEMAPHORE_GIT_BRANCH"),
-			SHA:       os.Getenv("SEMAPHORE_GIT_SHA"),
+			Provider: provider,
+			URL:      fmt.Sprintf("%s/workflows/%s?pipeline_id=%s", os.Getenv("SEMAPHORE_ORGANIZATION_URL"), os.Getenv("SEMAPHORE_PROJECT_ID"), os.Getenv("SEMAPHORE_JOB_ID")),
+			Repo:     os.Getenv("SEMAPHORE_GIT_URL"),
+			Ref:      os.Getenv("SEMAPHORE_GIT_WORKING_BRANCH"),
+			SHA:      os.Getenv("SEMAPHORE_GIT_SHA"),
 		}
 	case Travis:
 		return CI{
-			Provider:  provider,
-			OriginURL: os.Getenv("TRAVIS_BUILD_WEB_URL"),
-			Repo:      os.Getenv("TRAVIS_REPO_SLUG"),
-			RefName:   os.Getenv("TRAVIS_BRANCH"),
-			SHA:       os.Getenv("TRAVIS_COMMIT"),
+			Provider: provider,
+			URL:      os.Getenv("TRAVIS_BUILD_WEB_URL"),
+			Repo:     os.Getenv("TRAVIS_REPO_SLUG"),
+			Ref:      os.Getenv("TRAVIS_BRANCH"),
+			SHA:      os.Getenv("TRAVIS_COMMIT"),
 		}
 	case TeamCity:
 		return CI{
@@ -243,7 +231,7 @@ func GetCI(provider Provider) CI {
 	return CI{}
 }
 
-// GetTags returns tag list containing CI info
+// GetTags returns tag list containing CI info.
 func GetTags() []string {
 	var tags []string
 	provider := GetProvider()
@@ -253,21 +241,28 @@ func GetTags() []string {
 
 	ci := GetCI(provider)
 	tags = append(tags, ci.Provider.Name)
-	if ci.OriginURL != "" {
-		tags = append(tags, fmt.Sprintf("%s:%s", "originURL", ci.OriginURL))
+	if ci.URL != "" {
+		tags = append(tags, fmt.Sprintf("%s:%s", "ci:url", ci.URL))
 	}
 	if ci.Repo != "" {
-		tags = append(tags, fmt.Sprintf("%s:%s", "repo", ci.Repo))
+		tags = append(tags, fmt.Sprintf("%s:%s", "ci:repo", ci.Repo))
 	}
-	if ci.RefName != "" {
-		tags = append(tags, fmt.Sprintf("%s:%s", "refName", ci.RefName))
+	if ci.Ref != "" {
+		tags = append(tags, fmt.Sprintf("%s:%s", "ci:ref", ci.Ref))
 	}
 	if ci.SHA != "" {
-		tags = append(tags, fmt.Sprintf("%s:%s", "SHA", ci.SHA))
-	}
-	if ci.User != "" {
-		tags = append(tags, fmt.Sprintf("%s:%s", "user", ci.User))
+		tags = append(tags, fmt.Sprintf("%s:%s", "ci:ssha", shortenSHA(ci.SHA)))
 	}
 
 	return tags
+}
+
+// shortenSHA truncates a given SHA string to 7 characters.
+// If the input SHA is already shorter than 8 characters, it is returned as-is.
+func shortenSHA(sha string) string {
+	if len(sha) < 8 {
+		return sha
+	}
+
+	return sha[:7]
 }
