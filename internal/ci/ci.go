@@ -28,7 +28,7 @@ var (
 	// AWS represents https://aws.amazon.com/codebuild/
 	AWS = Provider{Name: "AWS CodeBuild", Envar: "CODEBUILD_INITIATOR"}
 	// Azure represents https://azure.microsoft.com/en-us/services/devops/
-	Azure = Provider{Name: "Azure DevOps", Envar: "AGENT_ID"}
+	Azure = Provider{Name: "Azure DevOps", Envar: "TF_BUILD"}
 	// Bamboo represents https://www.atlassian.com/software/bamboo
 	Bamboo = Provider{Name: "Bamboo", Envar: "bamboo_agentId"}
 	// Bitbucket represents https://bitbucket.org/product/features/pipelines
