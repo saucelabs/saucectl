@@ -106,6 +106,25 @@ jobs:
             saucectl
             saucectl.exe
 
+  test-configure:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v4
+        with:
+          name: saucectlbin
+
+      - name: Set Permissions
+        run: chmod +x ./saucectl
+
+      - name: Saucectl Configure
+        run: ./saucectl configure -u $SAUCE_USERNAME -a $SAUCE_ACCESS_KEY
+
   puppeteer-replay:
     needs: build
     runs-on: ubuntu-latest
