@@ -41,7 +41,6 @@ func Command() *cobra.Command {
 			go func() {
 				tracker.Collect(
 					cmds.FullName(cmd),
-					nil,
 				)
 				_ = tracker.Close()
 			}()

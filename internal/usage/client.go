@@ -73,7 +73,9 @@ func (c *Client) Collect(subject string, opts ...Option) {
 		Set("ci", ci.GetProvider().Name)
 
 	for _, opt := range opts {
-		opt(p)
+		if opt != nil {
+			opt(p)
+		}
 	}
 
 	userID := credentials.Get().Username
