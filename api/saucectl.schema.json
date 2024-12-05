@@ -402,6 +402,7 @@
               "version": {
                 "enum": [
                   "package.json",
+                  "13.16.0",
                   "13.15.2",
                   "13.15.1",
                   "13.14.2",
@@ -1310,6 +1311,7 @@
                 "$ref": "#/allOf/7/then/properties/playwright/properties/version",
                 "enum": [
                   "package.json",
+                  "1.49.0",
                   "1.48.2",
                   "1.47.2",
                   "1.46.1",
