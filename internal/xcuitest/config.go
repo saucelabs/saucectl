@@ -316,7 +316,7 @@ func ShardSuites(p *Project) error {
 			}
 			suites = append(suites, shardedSuites...)
 		} else if s.Shard == "testList" {
-			shardedSuites, err := shardByTestFile(s)
+			shardedSuites, err := shardByTestList(s)
 			if err != nil {
 				return fmt.Errorf("failed to get tests from testListFile(%q): %v", s.TestListFile, err)
 			}
@@ -362,7 +362,7 @@ func shardByConcurrency(suite Suite, ccy int) ([]Suite, error) {
 	return suites, nil
 }
 
-func shardByTestFile(suite Suite) ([]Suite, error) {
+func shardByTestList(suite Suite) ([]Suite, error) {
 	readFile, err := os.Open(suite.TestListFile)
 	if err != nil {
 		return nil, err
