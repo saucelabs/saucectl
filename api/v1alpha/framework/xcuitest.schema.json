@@ -247,7 +247,8 @@
             "description": "When shard is configured as concurrency, saucectl automatically splits the tests by concurrency so that they can easily run in parallel.",
             "enum": [
               "",
-              "concurrency"
+              "concurrency",
+              "testList"
             ]
           },
           "testListFile": {
