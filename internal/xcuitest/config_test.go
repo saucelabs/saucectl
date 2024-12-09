@@ -593,6 +593,36 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 			},
 		},
 		{
+			name: "shards suite by testList",
+			project: Project{
+				Sauce: config.SauceConfig{
+					Concurrency: 1,
+				},
+				Suites: []Suite{
+					{
+						Name:  "sharding test",
+						Shard: "testList",
+					},
+				},
+			},
+			content:       "test1\ntest2\n",
+			configEnabled: true,
+			expSuites: []Suite{
+				{
+					Name: "sharding test - test1",
+					TestOptions: TestOptions{
+						Class: []string{"test1"},
+					},
+				},
+				{
+					Name: "sharding test - test2",
+					TestOptions: TestOptions{
+						Class: []string{"test2"},
+					},
+				},
+			},
+		},
+		{
 			name: "should ignore empty lines and spaces in testListFile when sharding is enabled",
 			project: Project{
 				Sauce: config.SauceConfig{
@@ -691,8 +721,10 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 				assert.True(t, tc.expErr)
 			}
 			for i, s := range tc.project.Suites {
-				assert.True(t, cmp.Equal(s.TestOptions, tc.expSuites[i].TestOptions))
-				assert.True(t, cmp.Equal(s.Name, tc.expSuites[i].Name))
+				if diff := cmp.Diff(tc.expSuites[i].TestOptions, s.TestOptions); diff != "" {
+					t.Errorf("shard by testList error (-want +got): %s", diff)
+				}
+				assert.Equal(t, s.Name, tc.expSuites[i].Name)
 			}
 		})
 	}
