@@ -534,12 +534,12 @@ func TestXCUITest_SortByHistory(t *testing.T) {
 
 func TestXCUITest_ShardSuites(t *testing.T) {
 	testCases := []struct {
-		name          string
-		project       Project
-		content       string
-		configEnabled bool
-		expSuites     []Suite
-		expErr        bool
+		name              string
+		project           Project
+		testListContent   string
+		needsTestListFile bool
+		expSuites         []Suite
+		expErr            bool
 	}{
 		{
 			name: "should keep original test options when sharding is disabled",
@@ -575,8 +575,8 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 					},
 				},
 			},
-			content:       "test1\ntest2\n",
-			configEnabled: true,
+			testListContent:   "test1\ntest2\n",
+			needsTestListFile: true,
 			expSuites: []Suite{
 				{
 					Name: "sharding test - 1/2",
@@ -605,8 +605,8 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 					},
 				},
 			},
-			content:       "test1\ntest2\n",
-			configEnabled: true,
+			testListContent:   "test1\ntest2\n",
+			needsTestListFile: true,
 			expSuites: []Suite{
 				{
 					Name: "sharding test - test1",
@@ -635,8 +635,8 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 					},
 				},
 			},
-			content:       "   test1\t\n\ntest2\t\n\n",
-			configEnabled: true,
+			testListContent:   "   test1\t\n\ntest2\t\n\n",
+			needsTestListFile: true,
 			expSuites: []Suite{
 				{
 					Name: "sharding test - 1/2",
@@ -668,7 +668,7 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 					},
 				},
 			},
-			configEnabled: false,
+			needsTestListFile: false,
 			expSuites: []Suite{
 				{
 					Name: "sharding test",
@@ -695,8 +695,8 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 					},
 				},
 			},
-			configEnabled: true,
-			content:       "",
+			needsTestListFile: true,
+			testListContent:   "",
 			expSuites: []Suite{
 				{
 					Name: "sharding test",
@@ -712,8 +712,8 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			var testListFile string
-			if tc.configEnabled {
-				testListFile = createTestListFile(t, tc.content)
+			if tc.needsTestListFile {
+				testListFile = createTestListFile(t, tc.testListContent)
 				tc.project.Suites[0].TestListFile = testListFile
 			}
 			err := ShardSuites(&tc.project)
