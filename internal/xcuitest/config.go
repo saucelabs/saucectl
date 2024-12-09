@@ -309,22 +309,28 @@ func SortByHistory(suites []Suite, history insights.JobHistory) []Suite {
 func ShardSuites(p *Project) error {
 	var suites []Suite
 	for _, s := range p.Suites {
-		if s.Shard != "concurrency" {
+		if s.Shard == "concurrency" {
+			shardedSuites, err := shardByConcurrency(s, p.Sauce.Concurrency)
+			if err != nil {
+				return fmt.Errorf("failed to get tests from testListFile(%q): %v", s.TestListFile, err)
+			}
+			suites = append(suites, shardedSuites...)
+		} else if s.Shard == "testList" {
+			shardedSuites, err := shardByTestFile(s)
+			if err != nil {
+				return fmt.Errorf("failed to get tests from testListFile(%q): %v", s.TestListFile, err)
+			}
+			suites = append(suites, shardedSuites...)
+		} else {
 			suites = append(suites, s)
-			continue
 		}
-		shardedSuites, err := getShardedSuites(s, p.Sauce.Concurrency)
-		if err != nil {
-			return fmt.Errorf("failed to get tests from testListFile(%q): %v", s.TestListFile, err)
-		}
-		suites = append(suites, shardedSuites...)
 	}
 	p.Suites = suites
 
 	return nil
 }
 
-func getShardedSuites(suite Suite, ccy int) ([]Suite, error) {
+func shardByConcurrency(suite Suite, ccy int) ([]Suite, error) {
 	readFile, err := os.Open(suite.TestListFile)
 	if err != nil {
 		return nil, err
@@ -351,6 +357,36 @@ func getShardedSuites(suite Suite, ccy int) ([]Suite, error) {
 		currSuite := suite
 		currSuite.Name = fmt.Sprintf("%s - %d/%d", suite.Name, i+1, len(buckets))
 		currSuite.TestOptions.Class = b
+		suites = append(suites, currSuite)
+	}
+	return suites, nil
+}
+
+func shardByTestFile(suite Suite) ([]Suite, error) {
+	readFile, err := os.Open(suite.TestListFile)
+	if err != nil {
+		return nil, err
+	}
+	defer readFile.Close()
+
+	fileScanner := bufio.NewScanner(readFile)
+	fileScanner.Split(bufio.ScanLines)
+	var tests []string
+	for fileScanner.Scan() {
+		text := strings.TrimSpace(fileScanner.Text())
+		if text == "" {
+			continue
+		}
+		tests = append(tests, text)
+	}
+	if len(tests) == 0 {
+		return nil, errors.New("empty file")
+	}
+	var suites []Suite
+	for _, t := range tests {
+		currSuite := suite
+		currSuite.Name = fmt.Sprintf("%s - %s", suite.Name, t)
+		currSuite.TestOptions.Class = []string{t}
 		suites = append(suites, currSuite)
 	}
 	return suites, nil
