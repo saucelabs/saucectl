@@ -244,7 +244,7 @@
             "$ref": "../subschema/common.schema.json#/definitions/smartRetry"
           },
           "shard": {
-            "description": "When shard is configured as concurrency, saucectl automatically splits the tests by concurrency so that they can easily run in parallel.",
+            "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by testList or concurrency) so that they can easily run in parallel.",
             "enum": [
               "",
               "concurrency",
