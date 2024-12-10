@@ -86,7 +86,7 @@ func ListCommand() *cobra.Command {
 				_ = tracker.Close()
 			}()
 		},
-		RunE: func(_ *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			if page < 0 {
 				return errors.New("invalid page")
 			}
@@ -112,7 +112,7 @@ func ListCommand() *cobra.Command {
 				return errors.New("invalid job resource. Options: vdc, rdc, api")
 			}
 
-			return list(out, page, size, status, job.Source(jobSource))
+			return list(cmd.Context(), out, page, size, status, job.Source(jobSource))
 		},
 	}
 	flags := cmd.PersistentFlags()
@@ -125,8 +125,8 @@ func ListCommand() *cobra.Command {
 	return cmd
 }
 
-func list(format string, page int, size int, status string, source job.Source) error {
-	user, err := userService.User(context.Background())
+func list(ctx context.Context, format string, page int, size int, status string, source job.Source) error {
+	user, err := userService.User(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
 	}
@@ -139,7 +139,7 @@ func list(format string, page int, size int, status string, source job.Source) e
 		Source: source,
 	}
 
-	jobs, err := jobService.ListJobs(context.Background(), opts)
+	jobs, err := jobService.ListJobs(ctx, opts)
 	if err != nil {
 		return fmt.Errorf("failed to get jobs: %w", err)
 	}
