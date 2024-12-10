@@ -17,11 +17,11 @@ type JunitRetrier struct {
 	JobService job.Service
 }
 
-func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
+func (b *JunitRetrier) Retry(ctx context.Context, jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
 	var tests []string
 
 	if opt.SmartRetry.FailedOnly {
-		tests = b.retryFailedTests(&opt, previous)
+		tests = b.retryFailedTests(ctx, &opt, previous)
 		if len(tests) == 0 {
 			log.Info().Msg(msg.SkippingSmartRetries)
 		}
@@ -40,14 +40,14 @@ func (b *JunitRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptio
 	jobOpts <- opt
 }
 
-func (b *JunitRetrier) retryFailedTests(opt *job.StartOptions, previous job.Job) []string {
+func (b *JunitRetrier) retryFailedTests(ctx context.Context, opt *job.StartOptions, previous job.Job) []string {
 	if previous.Status == job.StateError {
 		log.Warn().Msg(msg.UnreliableReport)
 		return nil
 	}
 
 	content, err := b.JobService.Artifact(
-		context.Background(), previous.ID, junit.FileName, previous.IsRDC,
+		ctx, previous.ID, junit.FileName, previous.IsRDC,
 	)
 	if err != nil {
 		log.Err(err).Msgf(msg.UnableToFetchFile, junit.FileName)

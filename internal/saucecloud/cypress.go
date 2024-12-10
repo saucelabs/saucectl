@@ -21,7 +21,7 @@ type CypressRunner struct {
 }
 
 // RunProject runs the tests defined in cypress.Project.
-func (r *CypressRunner) RunProject() (int, error) {
+func (r *CypressRunner) RunProject(ctx context.Context) (int, error) {
 	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, cypress.Kind, r.Project.GetVersion())
 	if err != nil {
 		r.logFrameworkError(err)
@@ -45,7 +45,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	app, otherApps, err := r.remoteArchiveProject(r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore, r.Project.IsDryRun())
+	app, otherApps, err := r.remoteArchiveProject(ctx, r.Project, r.Project.GetRootDir(), r.Project.GetSauceCfg().Sauceignore, r.Project.IsDryRun())
 	if err != nil {
 		return 1, err
 	}
@@ -55,7 +55,7 @@ func (r *CypressRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	passed := r.runSuites(app, otherApps)
+	passed := r.runSuites(ctx, app, otherApps)
 	if !passed {
 		return 1, nil
 	}
@@ -125,10 +125,10 @@ func (r *CypressRunner) validateFramework(m framework.Metadata) error {
 	return nil
 }
 
-func (r *CypressRunner) runSuites(app string, otherApps []string) bool {
+func (r *CypressRunner) runSuites(ctx context.Context, app string, otherApps []string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
-	jobOpts, results := r.createWorkerPool(r.Project.GetSauceCfg().Concurrency, r.Project.GetSauceCfg().Retries)
+	jobOpts, results := r.createWorkerPool(ctx, r.Project.GetSauceCfg().Concurrency, r.Project.GetSauceCfg().Retries)
 	defer close(results)
 
 	suites := r.Project.GetSuites()

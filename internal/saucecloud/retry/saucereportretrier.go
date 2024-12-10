@@ -23,9 +23,9 @@ type SauceReportRetrier struct {
 	Project Project
 }
 
-func (r *SauceReportRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
+func (r *SauceReportRetrier) Retry(ctx context.Context, jobOpts chan<- job.StartOptions, opt job.StartOptions, previous job.Job) {
 	if opt.SmartRetry.FailedOnly {
-		if ok := r.retryFailedTests(&opt, previous); !ok {
+		if ok := r.retryFailedTests(ctx, &opt, previous); !ok {
 			log.Info().Msg(msg.SkippingSmartRetries)
 		}
 	}
@@ -36,7 +36,7 @@ func (r *SauceReportRetrier) Retry(jobOpts chan<- job.StartOptions, opt job.Star
 	jobOpts <- opt
 }
 
-func (r *SauceReportRetrier) retryFailedTests(opt *job.StartOptions, previous job.Job) bool {
+func (r *SauceReportRetrier) retryFailedTests(ctx context.Context, opt *job.StartOptions, previous job.Job) bool {
 	if previous.Status == job.StateError {
 		log.Warn().Msg(msg.UnreliableReport)
 		return false
@@ -66,7 +66,7 @@ func (r *SauceReportRetrier) retryFailedTests(opt *job.StartOptions, previous jo
 		return false
 	}
 
-	storageID, err := r.uploadConfig(runnerFile)
+	storageID, err := r.uploadConfig(ctx, runnerFile)
 	if err != nil {
 		log.Err(err).Msgf(msg.UnableToUploadConfig, runnerFile)
 		return false
@@ -85,7 +85,7 @@ func (r *SauceReportRetrier) retryFailedTests(opt *job.StartOptions, previous jo
 	return true
 }
 
-func (r *SauceReportRetrier) uploadConfig(filename string) (string, error) {
+func (r *SauceReportRetrier) uploadConfig(ctx context.Context, filename string) (string, error) {
 	filename, err := filepath.Abs(filename)
 	if err != nil {
 		return "", err
@@ -98,7 +98,7 @@ func (r *SauceReportRetrier) uploadConfig(filename string) (string, error) {
 
 	progress.Show("Uploading runner config %s", filename)
 	start := time.Now()
-	resp, err := r.ProjectUploader.UploadStream(context.TODO(), storage.FileInfo{Name: filepath.Base(filename)}, file)
+	resp, err := r.ProjectUploader.UploadStream(ctx, storage.FileInfo{Name: filepath.Base(filename)}, file)
 	progress.Stop()
 	if err != nil {
 		return "", err

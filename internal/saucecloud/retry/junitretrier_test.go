@@ -334,7 +334,7 @@ func TestAppsRetrier_Retry(t *testing.T) {
 			b := &JunitRetrier{
 				JobService: tt.init.JobService,
 			}
-			go b.Retry(tt.args.jobOpts, tt.args.opt, tt.args.previous)
+			go b.Retry(context.Background(), tt.args.jobOpts, tt.args.opt, tt.args.previous)
 			newOpt := <-tt.args.jobOpts
 			assert.Equal(t, tt.expected, newOpt)
 		})

@@ -167,7 +167,7 @@ func runCucumber(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 	}
 
 	p.Npm.Packages = cleanPlaywrightPackages(p.Npm, p.Playwright.Version)
-	return r.RunProject()
+	return r.RunProject(cmd.Context())
 }
 
 func applyCucumberFlags(p *cucumber.Project) error {

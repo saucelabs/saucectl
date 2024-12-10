@@ -1,6 +1,7 @@
 package run
 
 import (
+	"context"
 	"errors"
 	"os"
 
@@ -116,10 +117,10 @@ func runReplay(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 
 	cleanupArtifacts(p.Artifacts)
 
-	return runPuppeteerReplayInSauce(p, regio)
+	return runPuppeteerReplayInSauce(cmd.Context(), p, regio)
 }
 
-func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, error) {
+func runPuppeteerReplayInSauce(ctx context.Context, p replay.Project, regio region.Region) (int, error) {
 	log.Info().
 		Str("region", regio.String()).
 		Str("tunnel", p.Sauce.Tunnel.Name).
@@ -163,7 +164,7 @@ func runPuppeteerReplayInSauce(p replay.Project, regio region.Region) (int, erro
 		},
 	}
 
-	return r.RunProject()
+	return r.RunProject(ctx)
 }
 
 func applyPuppeteerReplayFlags(p *replay.Project) error {

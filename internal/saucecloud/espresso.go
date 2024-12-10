@@ -1,6 +1,7 @@
 package saucecloud
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -33,7 +34,7 @@ type EspressoRunner struct {
 }
 
 // RunProject runs the tests defined in cypress.Project.
-func (r *EspressoRunner) RunProject() (int, error) {
+func (r *EspressoRunner) RunProject(ctx context.Context) (int, error) {
 	exitCode := 1
 
 	if err := r.validateTunnel(
@@ -47,6 +48,7 @@ func (r *EspressoRunner) RunProject() (int, error) {
 
 	var err error
 	r.Project.Espresso.App, err = r.uploadArchive(
+		ctx,
 		storage.FileInfo{Name: r.Project.Espresso.App, Description: r.Project.Espresso.AppDescription},
 		appUpload,
 		r.Project.DryRun,
@@ -55,7 +57,7 @@ func (r *EspressoRunner) RunProject() (int, error) {
 		return exitCode, err
 	}
 
-	r.Project.Espresso.OtherApps, err = r.uploadArchives(r.Project.Espresso.OtherApps, otherAppsUpload, r.Project.DryRun)
+	r.Project.Espresso.OtherApps, err = r.uploadArchives(ctx, r.Project.Espresso.OtherApps, otherAppsUpload, r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
@@ -68,6 +70,7 @@ func (r *EspressoRunner) RunProject() (int, error) {
 		}
 
 		testAppURL, err := r.uploadArchive(
+			ctx,
 			storage.FileInfo{Name: suite.TestApp, Description: suite.TestAppDescription},
 			testAppUpload,
 			r.Project.DryRun,
@@ -84,7 +87,7 @@ func (r *EspressoRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	passed := r.runSuites()
+	passed := r.runSuites(ctx)
 	if passed {
 		exitCode = 0
 	}
@@ -92,12 +95,12 @@ func (r *EspressoRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-func (r *EspressoRunner) runSuites() bool {
+func (r *EspressoRunner) runSuites(ctx context.Context) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
 	jobOpts, results := r.createWorkerPool(
-		r.Project.Sauce.Concurrency, r.Project.Sauce.Retries,
+		ctx, r.Project.Sauce.Concurrency, r.Project.Sauce.Retries,
 	)
 	defer close(results)
 
