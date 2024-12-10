@@ -18,7 +18,7 @@ type ReplayRunner struct {
 }
 
 // RunProject runs the tests defined in cypress.Project.
-func (r *ReplayRunner) RunProject() (int, error) {
+func (r *ReplayRunner) RunProject(ctx context.Context) (int, error) {
 	exitCode := 1
 
 	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, replay.Kind, "latest")
@@ -53,7 +53,7 @@ func (r *ReplayRunner) RunProject() (int, error) {
 		files = append(files, suite.Recording)
 	}
 
-	fileURIs, err := r.remoteArchiveFiles(r.Project, files, "", r.Project.DryRun)
+	fileURIs, err := r.remoteArchiveFiles(ctx, r.Project, files, "", r.Project.DryRun)
 	if err != nil {
 		return exitCode, err
 	}
@@ -63,7 +63,7 @@ func (r *ReplayRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	passed := r.runSuites(fileURIs)
+	passed := r.runSuites(ctx, fileURIs)
 	if passed {
 		exitCode = 0
 	}
@@ -71,11 +71,11 @@ func (r *ReplayRunner) RunProject() (int, error) {
 	return exitCode, nil
 }
 
-func (r *ReplayRunner) runSuites(fileURI string) bool {
+func (r *ReplayRunner) runSuites(ctx context.Context, fileURI string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
-	jobOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
+	jobOpts, results := r.createWorkerPool(ctx, r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
 	defer close(results)
 
 	suites := r.Project.Suites

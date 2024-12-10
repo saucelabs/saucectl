@@ -200,5 +200,5 @@ func runCypress(cmd *cobra.Command, cflags cypressFlags, isCLIDriven bool) (int,
 	}
 
 	p.CleanPackages()
-	return r.RunProject()
+	return r.RunProject(cmd.Context())
 }

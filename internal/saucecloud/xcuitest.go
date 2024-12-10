@@ -1,6 +1,7 @@
 package saucecloud
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path"
@@ -56,7 +57,7 @@ var (
 )
 
 // RunProject runs the tests defined in xcuitest.Project.
-func (r *XcuitestRunner) RunProject() (int, error) {
+func (r *XcuitestRunner) RunProject(ctx context.Context) (int, error) {
 	exitCode := 1
 
 	if err := r.validateTunnel(
@@ -84,7 +85,7 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 
 	cachedUpload := func(path string, description string, pType uploadType, dryRun bool) (string, error) {
 		return uploadCache.lookup(path, func() (string, error) {
-			return r.uploadArchive(storage.FileInfo{Name: path, Description: description}, pType, dryRun)
+			return r.uploadArchive(ctx, storage.FileInfo{Name: path, Description: description}, pType, dryRun)
 		})
 	}
 
@@ -142,7 +143,7 @@ func (r *XcuitestRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	passed := r.runSuites()
+	passed := r.runSuites(ctx)
 	if passed {
 		exitCode = 0
 	}
@@ -161,11 +162,11 @@ func (r *XcuitestRunner) dryRun() {
 	fmt.Println()
 }
 
-func (r *XcuitestRunner) runSuites() bool {
+func (r *XcuitestRunner) runSuites(ctx context.Context) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
-	jobOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
+	jobOpts, results := r.createWorkerPool(ctx, r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
 	defer close(results)
 
 	suites := r.Project.Suites

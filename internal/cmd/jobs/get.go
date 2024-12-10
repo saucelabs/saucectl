@@ -36,11 +36,11 @@ func GetCommand() *cobra.Command {
 				_ = tracker.Close()
 			}()
 		},
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			if out != JSONOutput && out != TextOutput {
 				return errors.New("unknown output format")
 			}
-			return get(args[0], out)
+			return get(cmd.Context(), args[0], out)
 		},
 	}
 	flags := cmd.PersistentFlags()
@@ -49,8 +49,8 @@ func GetCommand() *cobra.Command {
 	return cmd
 }
 
-func get(jobID, outputFormat string) error {
-	j, err := jobService.ReadJob(context.Background(), jobID)
+func get(ctx context.Context, jobID, outputFormat string) error {
+	j, err := jobService.ReadJob(ctx, jobID)
 	if err != nil {
 		return fmt.Errorf("failed to get job: %w", err)
 	}

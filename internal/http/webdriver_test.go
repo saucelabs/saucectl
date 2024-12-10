@@ -34,7 +34,7 @@ func TestWebdriver_StartJob(t *testing.T) {
 		{
 			name: "Happy path",
 			args: args{
-				ctx: context.TODO(),
+				ctx: context.Background(),
 				jobStarterPayload: job.StartOptions{
 					User:        "fake-user",
 					AccessKey:   "fake-access-key",
@@ -61,7 +61,7 @@ func TestWebdriver_StartJob(t *testing.T) {
 		{
 			name: "Non 2xx status code",
 			args: args{
-				ctx:               context.TODO(),
+				ctx:               context.Background(),
 				jobStarterPayload: job.StartOptions{},
 			},
 			want:    job.Job{},
@@ -74,7 +74,7 @@ func TestWebdriver_StartJob(t *testing.T) {
 		{
 			name: "Unknown error",
 			args: args{
-				ctx:               context.TODO(),
+				ctx:               context.Background(),
 				jobStarterPayload: job.StartOptions{},
 			},
 			want:    job.Job{},

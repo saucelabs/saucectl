@@ -1,6 +1,7 @@
 package retry
 
 import (
+	"context"
 	"testing"
 
 	"github.com/saucelabs/saucectl/internal/job"
@@ -35,7 +36,7 @@ func TestBasicRetrier_Retry(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			b := &BasicRetrier{}
-			go b.Retry(tt.args.jobOpts, tt.args.opt, tt.args.previous)
+			go b.Retry(context.Background(), tt.args.jobOpts, tt.args.opt, tt.args.previous)
 			newOpt := <-tt.args.jobOpts
 			assert.Equal(t, tt.expected, newOpt)
 		})

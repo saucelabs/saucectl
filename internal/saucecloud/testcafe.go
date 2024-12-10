@@ -21,7 +21,7 @@ type TestcafeRunner struct {
 }
 
 // RunProject runs the defined tests on sauce cloud
-func (r *TestcafeRunner) RunProject() (int, error) {
+func (r *TestcafeRunner) RunProject(ctx context.Context) (int, error) {
 	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, testcafe.Kind, r.Project.Testcafe.Version)
 	if err != nil {
 		r.logFrameworkError(err)
@@ -45,7 +45,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	app, otherApps, err := r.remoteArchiveProject(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
+	app, otherApps, err := r.remoteArchiveProject(ctx, r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
 	if err != nil {
 		return 1, err
 	}
@@ -55,7 +55,7 @@ func (r *TestcafeRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	passed := r.runSuites(app, otherApps)
+	passed := r.runSuites(ctx, app, otherApps)
 	if !passed {
 		return 1, nil
 	}
@@ -133,11 +133,11 @@ func (r *TestcafeRunner) getSuiteNames() []string {
 	return names
 }
 
-func (r *TestcafeRunner) runSuites(app string, otherApps []string) bool {
+func (r *TestcafeRunner) runSuites(ctx context.Context, app string, otherApps []string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
-	jobOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
+	jobOpts, results := r.createWorkerPool(ctx, r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
 	defer close(results)
 
 	suites := r.Project.Suites

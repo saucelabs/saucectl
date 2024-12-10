@@ -235,7 +235,7 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 	}
 
 	cleanTestCafePackages(&p)
-	return r.RunProject()
+	return r.RunProject(cmd.Context())
 }
 
 func applyTestcafeFlags(p *testcafe.Project, flags testcafeFlags) error {

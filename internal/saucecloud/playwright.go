@@ -26,7 +26,7 @@ var PlaywrightBrowserMap = map[string]string{
 }
 
 // RunProject runs the tests defined in cypress.Project.
-func (r *PlaywrightRunner) RunProject() (int, error) {
+func (r *PlaywrightRunner) RunProject(ctx context.Context) (int, error) {
 	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, playwright.Kind, r.Project.Playwright.Version)
 	if err != nil {
 		r.logFrameworkError(err)
@@ -50,7 +50,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		return 1, err
 	}
 
-	app, otherApps, err := r.remoteArchiveProject(r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
+	app, otherApps, err := r.remoteArchiveProject(ctx, r.Project, r.Project.RootDir, r.Project.Sauce.Sauceignore, r.Project.DryRun)
 	if err != nil {
 		return 1, err
 	}
@@ -60,7 +60,7 @@ func (r *PlaywrightRunner) RunProject() (int, error) {
 		return 0, nil
 	}
 
-	passed := r.runSuites(app, otherApps)
+	passed := r.runSuites(ctx, app, otherApps)
 	if !passed {
 		return 1, nil
 	}
@@ -138,11 +138,11 @@ func (r *PlaywrightRunner) getSuiteNames() []string {
 	return names
 }
 
-func (r *PlaywrightRunner) runSuites(app string, otherApps []string) bool {
+func (r *PlaywrightRunner) runSuites(ctx context.Context, app string, otherApps []string) bool {
 	sigChan := r.registerSkipSuitesOnSignal()
 	defer unregisterSignalCapture(sigChan)
 
-	jobOpts, results := r.createWorkerPool(r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
+	jobOpts, results := r.createWorkerPool(ctx, r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
 	defer close(results)
 
 	suites := r.Project.Suites

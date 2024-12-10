@@ -1,6 +1,7 @@
 package saucecloud
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,7 +46,7 @@ func TestRunJobsSkipped(t *testing.T) {
 	opts := make(chan job.StartOptions)
 	results := make(chan result)
 
-	go r.runJobs(opts, results)
+	go r.runJobs(context.Background(), opts, results)
 	opts <- job.StartOptions{}
 	close(opts)
 	res := <-results
