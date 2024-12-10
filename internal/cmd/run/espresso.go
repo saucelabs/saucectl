@@ -1,6 +1,7 @@
 package run
 
 import (
+	"context"
 	"os"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
@@ -130,10 +131,10 @@ func runEspresso(cmd *cobra.Command, espressoFlags espressoFlags, isCLIDriven bo
 
 	cleanupArtifacts(p.Artifacts)
 
-	return runEspressoInCloud(p, regio)
+	return runEspressoInCloud(cmd.Context(), p, regio)
 }
 
-func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
+func runEspressoInCloud(ctx context.Context, p espresso.Project, regio region.Region) (int, error) {
 	log.Info().
 		Str("region", regio.String()).
 		Str("tunnel", p.Sauce.Tunnel.Name).
@@ -180,7 +181,7 @@ func runEspressoInCloud(p espresso.Project, regio region.Region) (int, error) {
 		},
 	}
 
-	return r.RunProject()
+	return r.RunProject(ctx)
 }
 
 func hasKey(testOptions map[string]interface{}, key string) bool {

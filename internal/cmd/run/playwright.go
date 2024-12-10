@@ -212,7 +212,7 @@ func runPlaywright(cmd *cobra.Command, pf playwrightFlags, isCLIDriven bool) (in
 	}
 
 	p.Npm.Packages = cleanPlaywrightPackages(p.Npm, p.Playwright.Version)
-	return r.RunProject()
+	return r.RunProject(cmd.Context())
 }
 
 func applyPlaywrightFlags(p *playwright.Project) error {

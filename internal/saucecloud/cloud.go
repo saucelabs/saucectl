@@ -90,13 +90,13 @@ type result struct {
 // ConsoleLogAsset represents job asset log file name.
 const ConsoleLogAsset = "console.log"
 
-func (r *CloudRunner) createWorkerPool(ccy int, maxRetries int) (chan job.StartOptions, chan result) {
+func (r *CloudRunner) createWorkerPool(ctx context.Context, ccy int, maxRetries int) (chan job.StartOptions, chan result) {
 	jobOpts := make(chan job.StartOptions, maxRetries+1)
 	results := make(chan result, ccy)
 
 	log.Info().Int("concurrency", ccy).Msg("Launching workers.")
 	for i := 0; i < ccy; i++ {
-		go r.runJobs(jobOpts, results)
+		go r.runJobs(ctx, jobOpts, results)
 	}
 
 	return jobOpts, results
@@ -300,7 +300,7 @@ func (r *CloudRunner) shouldRetry(opts job.StartOptions, jobData job.Job, skippe
 		(shouldRetryJob(jobData, skipped) || belowThreshold(opts))
 }
 
-func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- result) {
+func (r *CloudRunner) runJobs(ctx context.Context, jobOpts chan job.StartOptions, results chan<- result) {
 	for opts := range jobOpts {
 		start := time.Now()
 
@@ -353,7 +353,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 				Status:     jobData.Status,
 				TestSuites: junit.TestSuites{},
 			})
-			go r.Retrier.Retry(jobOpts, opts, jobData)
+			go r.Retrier.Retry(ctx, jobOpts, opts, jobData)
 
 			continue
 		}
@@ -409,7 +409,7 @@ func (r *CloudRunner) runJobs(jobOpts chan job.StartOptions, results chan<- resu
 // remoteArchiveProject archives the contents of the folder and uploads to remote storage.
 // Returns the app URI for the uploaded project and additional URIs for the
 // runner config, node_modules, and other resources.
-func (r *CloudRunner) remoteArchiveProject(project interface{}, projectDir string, sauceignoreFile string, dryRun bool) (app string, otherApps []string, err error) {
+func (r *CloudRunner) remoteArchiveProject(ctx context.Context, project interface{}, projectDir string, sauceignoreFile string, dryRun bool) (app string, otherApps []string, err error) {
 	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
 	if err != nil {
 		return
@@ -434,7 +434,7 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, projectDir strin
 		return
 	}
 
-	uris, err := r.uploadFiles(archives, dryRun)
+	uris, err := r.uploadFiles(ctx, archives, dryRun)
 	if err != nil {
 		return
 	}
@@ -444,7 +444,7 @@ func (r *CloudRunner) remoteArchiveProject(project interface{}, projectDir strin
 		return
 	}
 	if need {
-		nodeModulesURI, err := r.handleNodeModules(tempDir, projectDir, matcher, dryRun)
+		nodeModulesURI, err := r.handleNodeModules(ctx, tempDir, projectDir, matcher, dryRun)
 		if err != nil {
 			return "", nil, err
 		}
@@ -501,7 +501,7 @@ func (r *CloudRunner) createArchives(tempDir, projectDir string, project interfa
 // Checks if npm dependencies are taggable and if a tagged version of node_modules already exists in storage.
 // If an existing archive is found, it returns the URI of that archive.
 // If not, it creates a new archive, uploads it, and returns the storage ID.
-func (r *CloudRunner) handleNodeModules(tempDir, projectDir string, matcher sauceignore.Matcher, dryRun bool) (string, error) {
+func (r *CloudRunner) handleNodeModules(ctx context.Context, tempDir, projectDir string, matcher sauceignore.Matcher, dryRun bool) (string, error) {
 	var tags []string
 
 	if taggableModules(projectDir, r.NPMDependencies) {
@@ -512,7 +512,7 @@ func (r *CloudRunner) handleNodeModules(tempDir, projectDir string, matcher sauc
 		tags = append(tags, tag)
 
 		log.Info().Msgf("Searching remote node_modules archive by tag %s", tag)
-		existingURI := r.findTaggedArchives(tag)
+		existingURI := r.findTaggedArchives(ctx, tag)
 		if existingURI != "" {
 			log.Info().Msgf("Skipping upload, using %s", existingURI)
 			return existingURI, nil
@@ -524,7 +524,7 @@ func (r *CloudRunner) handleNodeModules(tempDir, projectDir string, matcher sauc
 		return "", fmt.Errorf("failed to archive node_modules: %w", err)
 	}
 
-	return r.uploadArchive(storage.FileInfo{Name: archive, Tags: tags}, nodeModulesUpload, dryRun)
+	return r.uploadArchive(ctx, storage.FileInfo{Name: archive, Tags: tags}, nodeModulesUpload, dryRun)
 }
 
 func needsNodeModules(projectDir string, matcher sauceignore.Matcher, dependencies []string) (bool, error) {
@@ -554,8 +554,8 @@ func taggableModules(dir string, npmDependencies []string) bool {
 }
 
 // findTaggedArchives searches storage for a tagged archive with a matching tag.
-func (r *CloudRunner) findTaggedArchives(tag string) string {
-	list, err := r.ProjectUploader.List(context.TODO(), storage.ListOptions{Tags: []string{tag}, MaxResults: 1})
+func (r *CloudRunner) findTaggedArchives(ctx context.Context, tag string) string {
+	list, err := r.ProjectUploader.List(ctx, storage.ListOptions{Tags: []string{tag}, MaxResults: 1})
 	if err != nil {
 		log.Err(err).Msgf("Failed to retrieve file with tag %q from storage", tag)
 		return ""
@@ -568,10 +568,10 @@ func (r *CloudRunner) findTaggedArchives(tag string) string {
 }
 
 // uploadFiles uploads each archive and returns a map of URIs.
-func (r *CloudRunner) uploadFiles(archives map[uploadType]string, dryRun bool) (map[uploadType]string, error) {
+func (r *CloudRunner) uploadFiles(ctx context.Context, archives map[uploadType]string, dryRun bool) (map[uploadType]string, error) {
 	uris := make(map[uploadType]string)
 	for uploadType, path := range archives {
-		uri, err := r.uploadArchive(storage.FileInfo{Name: path}, uploadType, dryRun)
+		uri, err := r.uploadArchive(ctx, storage.FileInfo{Name: path}, uploadType, dryRun)
 		if err != nil {
 			return nil, fmt.Errorf("failed to upload %s archive: %w", uploadType, err)
 		}
@@ -586,7 +586,7 @@ func fileExists(path string) bool {
 }
 
 // remoteArchiveFiles archives the files to a remote storage.
-func (r *CloudRunner) remoteArchiveFiles(project interface{}, files []string, sauceignoreFile string, dryRun bool) (string, error) {
+func (r *CloudRunner) remoteArchiveFiles(ctx context.Context, project interface{}, files []string, sauceignoreFile string, dryRun bool) (string, error) {
 	tempDir, err := os.MkdirTemp(os.TempDir(), "saucectl-app-payload-")
 	if err != nil {
 		return "", err
@@ -616,7 +616,7 @@ func (r *CloudRunner) remoteArchiveFiles(project interface{}, files []string, sa
 
 	var uris []string
 	for k, v := range archives {
-		uri, err := r.uploadArchive(storage.FileInfo{Name: v}, k, dryRun)
+		uri, err := r.uploadArchive(ctx, storage.FileInfo{Name: v}, k, dryRun)
 		if err != nil {
 			return "", err
 		}
@@ -686,10 +686,10 @@ var (
 	otherAppsUpload    uploadType = "other applications"
 )
 
-func (r *CloudRunner) uploadArchives(filenames []string, pType uploadType, dryRun bool) ([]string, error) {
+func (r *CloudRunner) uploadArchives(ctx context.Context, filenames []string, pType uploadType, dryRun bool) ([]string, error) {
 	var IDs []string
 	for _, f := range filenames {
-		ID, err := r.uploadArchive(storage.FileInfo{Name: f}, pType, dryRun)
+		ID, err := r.uploadArchive(ctx, storage.FileInfo{Name: f}, pType, dryRun)
 		if err != nil {
 			return []string{}, err
 		}
@@ -699,7 +699,7 @@ func (r *CloudRunner) uploadArchives(filenames []string, pType uploadType, dryRu
 	return IDs, nil
 }
 
-func (r *CloudRunner) uploadArchive(fileInfo storage.FileInfo, pType uploadType, dryRun bool) (string, error) {
+func (r *CloudRunner) uploadArchive(ctx context.Context, fileInfo storage.FileInfo, pType uploadType, dryRun bool) (string, error) {
 	filename := fileInfo.Name
 	if dryRun {
 		log.Info().Str("file", filename).Msgf("Skipping upload in dry run.")
@@ -714,7 +714,7 @@ func (r *CloudRunner) uploadArchive(fileInfo storage.FileInfo, pType uploadType,
 		log.Info().Msgf("Downloading from remote: %s", filename)
 
 		progress.Show("Downloading %s", filename)
-		dest, err := r.download(filename)
+		dest, err := r.download(ctx, filename)
 		progress.Stop()
 		if err != nil {
 			return "", fmt.Errorf("unable to download app from %s: %w", filename, err)
@@ -725,7 +725,7 @@ func (r *CloudRunner) uploadArchive(fileInfo storage.FileInfo, pType uploadType,
 	}
 
 	log.Info().Msgf("Checking if %s has already been uploaded previously", filename)
-	if storageID, _ := r.isFileStored(filename); storageID != "" {
+	if storageID, _ := r.isFileStored(ctx, filename); storageID != "" {
 		log.Info().Msgf("Skipping upload, using storage:%s", storageID)
 		return fmt.Sprintf("storage:%s", storageID), nil
 	}
@@ -743,7 +743,7 @@ func (r *CloudRunner) uploadArchive(fileInfo storage.FileInfo, pType uploadType,
 	progress.Show("Uploading %s %s", pType, filename)
 	start := time.Now()
 	resp, err := r.ProjectUploader.UploadStream(
-		context.TODO(),
+		ctx,
 		storage.FileInfo{
 			Name:        filepath.Base(filename),
 			Description: fileInfo.Description,
@@ -764,7 +764,7 @@ func (r *CloudRunner) uploadArchive(fileInfo storage.FileInfo, pType uploadType,
 
 // isFileStored calculates the checksum of the given file and looks up its existence in the Sauce Labs app storage.
 // Returns an empty string if no file was found.
-func (r *CloudRunner) isFileStored(filename string) (storageID string, err error) {
+func (r *CloudRunner) isFileStored(ctx context.Context, filename string) (storageID string, err error) {
 	hash, err := hashio.SHA256(filename)
 	if err != nil {
 		return "", err
@@ -772,7 +772,7 @@ func (r *CloudRunner) isFileStored(filename string) (storageID string, err error
 
 	log.Info().Msgf("Checksum: %s", hash)
 
-	l, err := r.ProjectUploader.List(context.TODO(), storage.ListOptions{
+	l, err := r.ProjectUploader.List(ctx, storage.ListOptions{
 		SHA256:     hash,
 		MaxResults: 1,
 	})
@@ -1105,8 +1105,8 @@ func arrayContains(list []string, want string) bool {
 }
 
 // download downloads the resource the URL points to and returns its local path.
-func (r *CloudRunner) download(url string) (string, error) {
-	reader, _, err := r.ProjectUploader.DownloadURL(context.TODO(), url)
+func (r *CloudRunner) download(ctx context.Context, url string) (string, error) {
+	reader, _, err := r.ProjectUploader.DownloadURL(ctx, url)
 	if err != nil {
 		return "", err
 	}

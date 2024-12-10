@@ -1,6 +1,7 @@
 package run
 
 import (
+	"context"
 	"os"
 
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
@@ -130,10 +131,10 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 
 	cleanupArtifacts(p.Artifacts)
 
-	return runXcuitestInCloud(p, regio)
+	return runXcuitestInCloud(cmd.Context(), p, regio)
 }
 
-func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
+func runXcuitestInCloud(ctx context.Context, p xcuitest.Project, regio region.Region) (int, error) {
 	log.Info().
 		Str("region", regio.String()).
 		Str("tunnel", p.Sauce.Tunnel.Name).
@@ -180,7 +181,7 @@ func runXcuitestInCloud(p xcuitest.Project, regio region.Region) (int, error) {
 			},
 		},
 	}
-	return r.RunProject()
+	return r.RunProject(ctx)
 }
 
 func applyXCUITestFlags(p *xcuitest.Project, flags xcuitestFlags) error {
