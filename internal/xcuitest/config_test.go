@@ -534,12 +534,12 @@ func TestXCUITest_SortByHistory(t *testing.T) {
 
 func TestXCUITest_ShardSuites(t *testing.T) {
 	testCases := []struct {
-		name          string
-		project       Project
-		content       string
-		configEnabled bool
-		expSuites     []Suite
-		expErr        bool
+		name              string
+		project           Project
+		testListContent   string
+		needsTestListFile bool
+		expSuites         []Suite
+		expErr            bool
 	}{
 		{
 			name: "should keep original test options when sharding is disabled",
@@ -575,8 +575,8 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 					},
 				},
 			},
-			content:       "test1\ntest2\n",
-			configEnabled: true,
+			testListContent:   "test1\ntest2\n",
+			needsTestListFile: true,
 			expSuites: []Suite{
 				{
 					Name: "sharding test - 1/2",
@@ -586,6 +586,36 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 				},
 				{
 					Name: "sharding test - 2/2",
+					TestOptions: TestOptions{
+						Class: []string{"test2"},
+					},
+				},
+			},
+		},
+		{
+			name: "shards suite by testList",
+			project: Project{
+				Sauce: config.SauceConfig{
+					Concurrency: 1,
+				},
+				Suites: []Suite{
+					{
+						Name:  "sharding test",
+						Shard: "testList",
+					},
+				},
+			},
+			testListContent:   "test1\ntest2\n",
+			needsTestListFile: true,
+			expSuites: []Suite{
+				{
+					Name: "sharding test - test1",
+					TestOptions: TestOptions{
+						Class: []string{"test1"},
+					},
+				},
+				{
+					Name: "sharding test - test2",
 					TestOptions: TestOptions{
 						Class: []string{"test2"},
 					},
@@ -605,8 +635,8 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 					},
 				},
 			},
-			content:       "   test1\t\n\ntest2\t\n\n",
-			configEnabled: true,
+			testListContent:   "   test1\t\n\ntest2\t\n\n",
+			needsTestListFile: true,
 			expSuites: []Suite{
 				{
 					Name: "sharding test - 1/2",
@@ -638,7 +668,7 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 					},
 				},
 			},
-			configEnabled: false,
+			needsTestListFile: false,
 			expSuites: []Suite{
 				{
 					Name: "sharding test",
@@ -665,8 +695,8 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 					},
 				},
 			},
-			configEnabled: true,
-			content:       "",
+			needsTestListFile: true,
+			testListContent:   "",
 			expSuites: []Suite{
 				{
 					Name: "sharding test",
@@ -682,8 +712,8 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			var testListFile string
-			if tc.configEnabled {
-				testListFile = createTestListFile(t, tc.content)
+			if tc.needsTestListFile {
+				testListFile = createTestListFile(t, tc.testListContent)
 				tc.project.Suites[0].TestListFile = testListFile
 			}
 			err := ShardSuites(&tc.project)
@@ -691,8 +721,10 @@ func TestXCUITest_ShardSuites(t *testing.T) {
 				assert.True(t, tc.expErr)
 			}
 			for i, s := range tc.project.Suites {
-				assert.True(t, cmp.Equal(s.TestOptions, tc.expSuites[i].TestOptions))
-				assert.True(t, cmp.Equal(s.Name, tc.expSuites[i].Name))
+				if diff := cmp.Diff(tc.expSuites[i].TestOptions, s.TestOptions); diff != "" {
+					t.Errorf("shard by testList error (-want +got): %s", diff)
+				}
+				assert.Equal(t, s.Name, tc.expSuites[i].Name)
 			}
 		})
 	}
