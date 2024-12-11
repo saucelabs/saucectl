@@ -1,7 +1,6 @@
 package apit
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
@@ -42,10 +41,10 @@ Use [--project] to specify the project by its name or run without [--project] to
 			}()
 			return nil
 		},
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
 
-			vault, err := apitesterClient.GetVault(context.Background(), selectedProject.Hooks[0].Identifier)
+			vault, err := apitesterClient.GetVault(cmd.Context(), selectedProject.Hooks[0].Identifier)
 			if err != nil {
 				return err
 			}

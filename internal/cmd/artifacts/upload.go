@@ -47,7 +47,7 @@ func UploadCommand() *cobra.Command {
 			}()
 			return nil
 		},
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			jobID := args[0]
 			filePath := args[1]
 			file, err := os.Open(filePath)
@@ -65,7 +65,7 @@ func UploadCommand() *cobra.Command {
 				return fmt.Errorf("failed to read file: %w", err)
 			}
 
-			err = artifactSvc.Upload(jobID, finfo.Name(), content)
+			err = artifactSvc.Upload(cmd.Context(), jobID, finfo.Name(), content)
 			if err != nil {
 				return fmt.Errorf("failed to upload file: %w", err)
 			}

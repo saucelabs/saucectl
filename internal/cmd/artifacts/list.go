@@ -1,6 +1,7 @@
 package artifacts
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -93,8 +94,8 @@ func ListCommand() *cobra.Command {
 			}()
 			return nil
 		},
-		RunE: func(_ *cobra.Command, args []string) error {
-			return list(args[0], out)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return list(cmd.Context(), args[0], out)
 		},
 	}
 	flags := cmd.PersistentFlags()
@@ -103,8 +104,8 @@ func ListCommand() *cobra.Command {
 	return cmd
 }
 
-func list(jobID, outputFormat string) error {
-	lst, err := artifactSvc.List(jobID)
+func list(ctx context.Context, jobID, outputFormat string) error {
+	lst, err := artifactSvc.List(ctx, jobID)
 	if err != nil {
 		return fmt.Errorf("failed to get artifacts list: %w", err)
 	}

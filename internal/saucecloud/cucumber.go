@@ -23,21 +23,22 @@ type CucumberRunner struct {
 
 // RunProject runs the defined tests on sauce cloud
 func (r *CucumberRunner) RunProject(ctx context.Context) (int, error) {
-	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, playwright.Kind, r.Project.Playwright.Version)
+	m, err := r.MetadataSearchStrategy.Find(ctx, r.MetadataService, playwright.Kind, r.Project.Playwright.Version)
 	if err != nil {
-		r.logFrameworkError(err)
+		r.logFrameworkError(ctx, err)
 		return 1, err
 	}
 	r.setVersions(m)
-	if err := r.validateFramework(m); err != nil {
+	if err := r.validateFramework(ctx, m); err != nil {
 		return 1, err
 	}
 
-	if err := r.setNodeRuntime(m); err != nil {
+	if err := r.setNodeRuntime(ctx, m); err != nil {
 		return 1, err
 	}
 
 	if err := r.validateTunnel(
+		ctx,
 		r.Project.Sauce.Tunnel.Name,
 		r.Project.Sauce.Tunnel.Owner,
 		r.Project.DryRun,
@@ -75,12 +76,12 @@ func (r *CucumberRunner) setVersions(m framework.Metadata) {
 	}
 }
 
-func (r *CucumberRunner) validateFramework(m framework.Metadata) error {
+func (r *CucumberRunner) validateFramework(ctx context.Context, m framework.Metadata) error {
 	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
-		fmt.Print(msg.EOLNotice(playwright.Kind, r.Project.Playwright.Version, m.RemovalDate, r.getAvailableVersions(playwright.Kind)))
+		fmt.Print(msg.EOLNotice(playwright.Kind, r.Project.Playwright.Version, m.RemovalDate, r.getAvailableVersions(ctx, playwright.Kind)))
 	}
 	if m.IsFlaggedForRemoval() {
-		fmt.Print(msg.RemovalNotice(playwright.Kind, r.Project.Playwright.Version, r.getAvailableVersions(playwright.Kind)))
+		fmt.Print(msg.RemovalNotice(playwright.Kind, r.Project.Playwright.Version, r.getAvailableVersions(ctx, playwright.Kind)))
 	}
 
 	for _, s := range r.Project.Suites {
@@ -92,13 +93,13 @@ func (r *CucumberRunner) validateFramework(m framework.Metadata) error {
 	return nil
 }
 
-func (r *CucumberRunner) setNodeRuntime(metadata framework.Metadata) error {
+func (r *CucumberRunner) setNodeRuntime(ctx context.Context, metadata framework.Metadata) error {
 	if !metadata.SupportsRuntime(runtime.NodeRuntime) {
 		r.Project.NodeVersion = ""
 		return nil
 	}
 
-	runtimes, err := r.MetadataService.Runtimes(context.Background())
+	runtimes, err := r.MetadataService.Runtimes(ctx)
 	if err != nil {
 		return err
 	}

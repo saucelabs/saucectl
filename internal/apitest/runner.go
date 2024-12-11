@@ -133,9 +133,10 @@ func FilterSuites(p *Project, suiteName string) error {
 }
 
 // RunProject runs the tests defined in apitest.Project
-func (r *Runner) RunProject() (int, error) {
+func (r *Runner) RunProject(ctx context.Context) (int, error) {
 	exitCode := 1
 	if err := tunnel.Validate(
+		ctx,
 		r.TunnelService,
 		r.Project.Sauce.Tunnel.Name,
 		r.Project.Sauce.Tunnel.Owner,

@@ -14,7 +14,7 @@ type FakeJobService struct {
 	ReadJobFn  func(ctx context.Context, id string) (job.Job, error)
 	PollJobFn  func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error)
 
-	UploadAssetFn            func(jobID string, realDevice bool, fileName string, contentType string, content []byte) error
+	UploadAssetFn            func(ctx context.Context, jobID string, realDevice bool, fileName string, contentType string, content []byte) error
 	DownloadArtifactFn       func(job job.Job, isLastAttempt bool) []string
 	GetJobAssetFileNamesFn   func(ctx context.Context, jobID string) ([]string, error)
 	GetJobAssetFileContentFn func(ctx context.Context, jobID, fileName string) ([]byte, error)
@@ -24,11 +24,8 @@ func (s *FakeJobService) StartJob(ctx context.Context, opts job.StartOptions) (j
 	return s.StartJobFn(ctx, opts)
 }
 
-func (s *FakeJobService) UploadArtifact(
-	jobID string, realDevice bool, fileName string, contentType string,
-	content []byte,
-) error {
-	return s.UploadAssetFn(jobID, realDevice, fileName, contentType, content)
+func (s *FakeJobService) UploadArtifact(ctx context.Context, jobID string, realDevice bool, fileName string, contentType string, content []byte) error {
+	return s.UploadAssetFn(ctx, jobID, realDevice, fileName, contentType, content)
 }
 
 func (s *FakeJobService) StopJob(

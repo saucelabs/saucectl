@@ -22,21 +22,22 @@ type TestcafeRunner struct {
 
 // RunProject runs the defined tests on sauce cloud
 func (r *TestcafeRunner) RunProject(ctx context.Context) (int, error) {
-	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, testcafe.Kind, r.Project.Testcafe.Version)
+	m, err := r.MetadataSearchStrategy.Find(ctx, r.MetadataService, testcafe.Kind, r.Project.Testcafe.Version)
 	if err != nil {
-		r.logFrameworkError(err)
+		r.logFrameworkError(ctx, err)
 		return 1, err
 	}
 	r.setVersions(m)
-	if err := r.validateFramework(m); err != nil {
+	if err := r.validateFramework(ctx, m); err != nil {
 		return 1, err
 	}
 
-	if err := r.setNodeRuntime(m); err != nil {
+	if err := r.setNodeRuntime(ctx, m); err != nil {
 		return 1, err
 	}
 
 	if err := r.validateTunnel(
+		ctx,
 		r.Project.Sauce.Tunnel.Name,
 		r.Project.Sauce.Tunnel.Owner,
 		r.Project.DryRun,
@@ -63,13 +64,13 @@ func (r *TestcafeRunner) RunProject(ctx context.Context) (int, error) {
 	return 0, nil
 }
 
-func (r *TestcafeRunner) setNodeRuntime(m framework.Metadata) error {
+func (r *TestcafeRunner) setNodeRuntime(ctx context.Context, m framework.Metadata) error {
 	if !m.SupportsRuntime(runtime.NodeRuntime) {
 		r.Project.NodeVersion = ""
 		return nil
 	}
 
-	runtimes, err := r.MetadataService.Runtimes(context.Background())
+	runtimes, err := r.MetadataService.Runtimes(ctx)
 	if err != nil {
 		return err
 	}
@@ -107,12 +108,12 @@ func (r *TestcafeRunner) setVersions(m framework.Metadata) {
 	}
 }
 
-func (r *TestcafeRunner) validateFramework(m framework.Metadata) error {
+func (r *TestcafeRunner) validateFramework(ctx context.Context, m framework.Metadata) error {
 	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
-		fmt.Print(msg.EOLNotice(testcafe.Kind, r.Project.Testcafe.Version, m.RemovalDate, r.getAvailableVersions(testcafe.Kind)))
+		fmt.Print(msg.EOLNotice(testcafe.Kind, r.Project.Testcafe.Version, m.RemovalDate, r.getAvailableVersions(ctx, testcafe.Kind)))
 	}
 	if m.IsFlaggedForRemoval() {
-		fmt.Print(msg.RemovalNotice(testcafe.Kind, r.Project.Testcafe.Version, r.getAvailableVersions(testcafe.Kind)))
+		fmt.Print(msg.RemovalNotice(testcafe.Kind, r.Project.Testcafe.Version, r.getAvailableVersions(ctx, testcafe.Kind)))
 	}
 
 	for _, s := range r.Project.Suites {

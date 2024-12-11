@@ -1,7 +1,6 @@
 package imagerunner
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
@@ -39,10 +38,10 @@ func StopCommand() *cobra.Command {
 			}()
 			return nil
 		},
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			ID := args[0]
 			fmt.Printf("Stopping container %s...\n", ID)
-			if err := imagerunnerClient.StopRun(context.Background(), ID); err != nil {
+			if err := imagerunnerClient.StopRun(cmd.Context(), ID); err != nil {
 				return fmt.Errorf("failed to stop the container: %v", err)
 			}
 			return nil

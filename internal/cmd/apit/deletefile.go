@@ -1,7 +1,6 @@
 package apit
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
@@ -45,7 +44,7 @@ Use [--project] to specify the project by its name or run without [--project] to
 			}()
 			return nil
 		},
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
 
 			confirmed, err := confirmDelete(name)
@@ -57,7 +56,7 @@ Use [--project] to specify the project by its name or run without [--project] to
 				return nil
 			}
 
-			err = apitesterClient.DeleteVaultFile(context.Background(), selectedProject.ID, []string{name})
+			err = apitesterClient.DeleteVaultFile(cmd.Context(), selectedProject.ID, []string{name})
 			if err != nil {
 				return err
 			}

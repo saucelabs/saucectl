@@ -36,8 +36,8 @@ func ListCommand() *cobra.Command {
 			}()
 			return nil
 		},
-		RunE: func(_ *cobra.Command, _ []string) error {
-			return list(out)
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return list(cmd.Context(), out)
 		},
 	}
 	flags := cmd.PersistentFlags()
@@ -46,8 +46,8 @@ func ListCommand() *cobra.Command {
 	return cmd
 }
 
-func list(outputFormat string) error {
-	containers, err := imagerunnerClient.ListContainers(context.Background())
+func list(ctx context.Context, outputFormat string) error {
+	containers, err := imagerunnerClient.ListContainers(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get container list: %v", err)
 	}

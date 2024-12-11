@@ -26,7 +26,7 @@ type Service interface {
 	IsTunnelRunning(ctx context.Context, id, parent string, filter Filter, wait time.Duration) error
 }
 
-func Validate(service Service, name string, owner string, filter Filter, dryRun bool, timeout time.Duration) error {
+func Validate(ctx context.Context, service Service, name string, owner string, filter Filter, dryRun bool, timeout time.Duration) error {
 	if name == "" {
 		return nil
 	}
@@ -41,7 +41,7 @@ func Validate(service Service, name string, owner string, filter Filter, dryRun 
 	}
 
 	log.Info().Str("timeout", timeout.String()).Str("tunnel", name).Msg("Performing tunnel readiness check...")
-	if err := service.IsTunnelRunning(context.Background(), name, owner, filter, timeout); err != nil {
+	if err := service.IsTunnelRunning(ctx, name, owner, filter, timeout); err != nil {
 		return err
 	}
 

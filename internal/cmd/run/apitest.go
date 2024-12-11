@@ -74,7 +74,7 @@ func runApitest(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		Str("region", regio.String()).
 		Str("tunnel", r.Project.Sauce.Tunnel.Name).
 		Msg("Running API Test in Sauce Labs.")
-	return r.RunProject()
+	return r.RunProject(cmd.Context())
 }
 
 func applyApitestFlags(p *apitest.Project) error {

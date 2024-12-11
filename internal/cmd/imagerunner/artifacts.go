@@ -108,11 +108,11 @@ func downloadCommand() *cobra.Command {
 			}()
 			return nil
 		},
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			ID := args[0]
 			filePattern := args[1]
 
-			return download(ID, filePattern, targetDir, out)
+			return download(cmd.Context(), ID, filePattern, targetDir, out)
 		},
 	}
 
@@ -123,8 +123,8 @@ func downloadCommand() *cobra.Command {
 	return cmd
 }
 
-func download(ID, filePattern, targetDir, outputFormat string) error {
-	reader, err := imagerunnerClient.DownloadArtifacts(context.Background(), ID)
+func download(ctx context.Context, ID, filePattern, targetDir, outputFormat string) error {
+	reader, err := imagerunnerClient.DownloadArtifacts(ctx, ID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch artifacts: %w", err)
 	}
