@@ -37,6 +37,7 @@ func (r *TestcafeRunner) RunProject(ctx context.Context) (int, error) {
 	}
 
 	if err := r.validateTunnel(
+		ctx,
 		r.Project.Sauce.Tunnel.Name,
 		r.Project.Sauce.Tunnel.Owner,
 		r.Project.DryRun,

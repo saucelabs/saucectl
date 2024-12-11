@@ -37,6 +37,7 @@ func (r *CypressRunner) RunProject(ctx context.Context) (int, error) {
 	}
 
 	if err := r.validateTunnel(
+		ctx,
 		r.Project.GetSauceCfg().Tunnel.Name,
 		r.Project.GetSauceCfg().Tunnel.Owner,
 		r.Project.IsDryRun(),

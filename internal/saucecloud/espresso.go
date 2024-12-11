@@ -38,6 +38,7 @@ func (r *EspressoRunner) RunProject(ctx context.Context) (int, error) {
 	exitCode := 1
 
 	if err := r.validateTunnel(
+		ctx,
 		r.Project.Sauce.Tunnel.Name,
 		r.Project.Sauce.Tunnel.Owner,
 		r.Project.DryRun,

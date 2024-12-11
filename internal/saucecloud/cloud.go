@@ -900,8 +900,8 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	fmt.Println()
 }
 
-func (r *CloudRunner) validateTunnel(name, owner string, dryRun bool, timeout time.Duration) error {
-	return tunnel.Validate(r.TunnelService, name, owner, tunnel.NoneFilter, dryRun, timeout)
+func (r *CloudRunner) validateTunnel(ctx context.Context, name, owner string, dryRun bool, timeout time.Duration) error {
+	return tunnel.Validate(ctx, r.TunnelService, name, owner, tunnel.NoneFilter, dryRun, timeout)
 }
 
 // stopSuiteExecution stops the current execution on Sauce Cloud
