@@ -21,9 +21,9 @@ type ReplayRunner struct {
 func (r *ReplayRunner) RunProject(ctx context.Context) (int, error) {
 	exitCode := 1
 
-	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, replay.Kind, "latest")
+	m, err := r.MetadataSearchStrategy.Find(ctx, r.MetadataService, replay.Kind, "latest")
 	if err != nil {
-		r.logFrameworkError(err)
+		r.logFrameworkError(ctx, err)
 		return exitCode, err
 	}
 	if r.Project.RunnerVersion == "" {

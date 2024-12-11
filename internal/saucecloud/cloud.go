@@ -990,17 +990,17 @@ func (r *CloudRunner) uploadCLIFlags(ctx context.Context, jobID string, realDevi
 	}
 }
 
-func (r *CloudRunner) logFrameworkError(err error) {
+func (r *CloudRunner) logFrameworkError(ctx context.Context, err error) {
 	var unavailableErr *framework.UnavailableError
 	if errors.As(err, &unavailableErr) {
 		color.Red(fmt.Sprintf("\n%s\n\n", err.Error()))
-		fmt.Print(msg.FormatAvailableVersions(unavailableErr.Name, r.getAvailableVersions(unavailableErr.Name)))
+		fmt.Print(msg.FormatAvailableVersions(unavailableErr.Name, r.getAvailableVersions(ctx, unavailableErr.Name)))
 	}
 }
 
 // getAvailableVersions gets the available cloud version for the framework.
-func (r *CloudRunner) getAvailableVersions(frameworkName string) []string {
-	versions, err := r.MetadataService.Versions(context.Background(), frameworkName)
+func (r *CloudRunner) getAvailableVersions(ctx context.Context, frameworkName string) []string {
+	versions, err := r.MetadataService.Versions(ctx, frameworkName)
 	if err != nil {
 		return nil
 	}

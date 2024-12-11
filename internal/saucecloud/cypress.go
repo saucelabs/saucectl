@@ -22,17 +22,17 @@ type CypressRunner struct {
 
 // RunProject runs the tests defined in cypress.Project.
 func (r *CypressRunner) RunProject(ctx context.Context) (int, error) {
-	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, cypress.Kind, r.Project.GetVersion())
+	m, err := r.MetadataSearchStrategy.Find(ctx, r.MetadataService, cypress.Kind, r.Project.GetVersion())
 	if err != nil {
-		r.logFrameworkError(err)
+		r.logFrameworkError(ctx, err)
 		return 1, err
 	}
 	r.setVersions(m)
-	if err := r.validateFramework(m); err != nil {
+	if err := r.validateFramework(ctx, m); err != nil {
 		return 1, err
 	}
 
-	if err := r.setNodeRuntime(m); err != nil {
+	if err := r.setNodeRuntime(ctx, m); err != nil {
 		return 1, err
 	}
 
@@ -64,13 +64,13 @@ func (r *CypressRunner) RunProject(ctx context.Context) (int, error) {
 	return 0, nil
 }
 
-func (r *CypressRunner) setNodeRuntime(m framework.Metadata) error {
+func (r *CypressRunner) setNodeRuntime(ctx context.Context, m framework.Metadata) error {
 	if !m.SupportsRuntime(runtime.NodeRuntime) {
 		r.Project.SetNodeVersion("")
 		return nil
 	}
 
-	runtimes, err := r.MetadataService.Runtimes(context.Background())
+	runtimes, err := r.MetadataService.Runtimes(ctx)
 	if err != nil {
 		return err
 	}
@@ -108,13 +108,13 @@ func (r *CypressRunner) setVersions(m framework.Metadata) {
 	}
 }
 
-func (r *CypressRunner) validateFramework(m framework.Metadata) error {
+func (r *CypressRunner) validateFramework(ctx context.Context, m framework.Metadata) error {
 	cyVersion := r.Project.GetVersion()
 	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
-		fmt.Print(msg.EOLNotice(cypress.Kind, cyVersion, m.RemovalDate, r.getAvailableVersions(cypress.Kind)))
+		fmt.Print(msg.EOLNotice(cypress.Kind, cyVersion, m.RemovalDate, r.getAvailableVersions(ctx, cypress.Kind)))
 	}
 	if m.IsFlaggedForRemoval() {
-		fmt.Print(msg.RemovalNotice(cypress.Kind, cyVersion, r.getAvailableVersions(cypress.Kind)))
+		fmt.Print(msg.RemovalNotice(cypress.Kind, cyVersion, r.getAvailableVersions(ctx, cypress.Kind)))
 	}
 
 	for _, s := range r.Project.GetSuites() {
