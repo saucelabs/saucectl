@@ -8,4 +8,7 @@ linters-settings:
     # https://staticcheck.io/docs/configuration/options/#checks
     # Default: ["*"]
     checks: [ "all", "-SA1019" ]
-  
+  revive:
+    rules:
+      - name: unused-parameter # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unused-parameter
+        disabled: true
