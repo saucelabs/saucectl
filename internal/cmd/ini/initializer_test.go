@@ -757,7 +757,7 @@ func TestConfigure(t *testing.T) {
 				},
 			},
 			execution: func(i *initializer, _ *initConfig) error {
-				return i.configure()
+				return i.configure(context.Background())
 			},
 			expectedState: &initConfig{
 				frameworkName: espresso.Kind,
@@ -826,7 +826,7 @@ func TestConfigure(t *testing.T) {
 				},
 			},
 			execution: func(i *initializer, _ *initConfig) error {
-				return i.configure()
+				return i.configure(context.Background())
 			},
 			expectedState: &initConfig{
 				frameworkName:     cypress.Kind,
@@ -1037,7 +1037,7 @@ func Test_initializers(t *testing.T) {
 				},
 			},
 			execution: func(i *initializer, _ *initConfig) error {
-				return i.initializeCypress()
+				return i.initializeCypress(context.Background())
 			},
 			expectedState: &initConfig{
 				frameworkName:     cypress.Kind,
@@ -1112,7 +1112,7 @@ func Test_initializers(t *testing.T) {
 				},
 			},
 			execution: func(i *initializer, _ *initConfig) error {
-				return i.initializePlaywright()
+				return i.initializePlaywright(context.Background())
 			},
 			expectedState: &initConfig{
 				frameworkName:    playwright.Kind,
@@ -1171,7 +1171,7 @@ func Test_initializers(t *testing.T) {
 				},
 			},
 			execution: func(i *initializer, _ *initConfig) error {
-				return i.initializeTestcafe()
+				return i.initializeTestcafe(context.Background())
 			},
 			expectedState: &initConfig{
 				frameworkName:    testcafe.Kind,
@@ -1237,7 +1237,7 @@ func Test_initializers(t *testing.T) {
 				},
 			},
 			execution: func(i *initializer, _ *initConfig) error {
-				return i.initializeXCUITest()
+				return i.initializeXCUITest(context.Background())
 			},
 			expectedState: &initConfig{
 				frameworkName: xcuitest.Kind,
@@ -1303,7 +1303,7 @@ func Test_initializers(t *testing.T) {
 				},
 			},
 			execution: func(i *initializer, _ *initConfig) error {
-				return i.initializeXCUITest()
+				return i.initializeXCUITest(context.Background())
 			},
 			expectedState: &initConfig{
 				frameworkName: xcuitest.Kind,
@@ -1378,7 +1378,7 @@ func Test_initializers(t *testing.T) {
 				},
 			},
 			execution: func(i *initializer, _ *initConfig) error {
-				return i.initializeEspresso()
+				return i.initializeEspresso(context.Background())
 			},
 			expectedState: &initConfig{
 				frameworkName: espresso.Kind,
@@ -1648,7 +1648,7 @@ func Test_checkCredentials(t *testing.T) {
 					FrameworksFn: tt.frameworkFn,
 				},
 			}
-			if err := ini.checkCredentials("us-west-1"); !reflect.DeepEqual(err, tt.wantErr) {
+			if err := ini.checkCredentials(context.Background(), "us-west-1"); !reflect.DeepEqual(err, tt.wantErr) {
 				t.Errorf("checkCredentials() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -2069,7 +2069,7 @@ func Test_initializer_initializeBatchCypress(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ini.cfg = tt.args.initCfg
-			errs := ini.initializeBatchCypress()
+			errs := ini.initializeBatchCypress(context.Background())
 			if !reflect.DeepEqual(ini.cfg, tt.want) {
 				t.Errorf("initializeBatchCypress() got = %v, want %v", ini.cfg, tt.want)
 			}
@@ -2205,7 +2205,7 @@ func Test_initializer_initializeBatchTestcafe(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ini.cfg = tt.args.initCfg
-			errs := ini.initializeBatchTestcafe()
+			errs := ini.initializeBatchTestcafe(context.Background())
 			if !reflect.DeepEqual(ini.cfg, tt.want) {
 				t.Errorf("initializeBatchTestcafe() got = %v, want %v", ini.cfg, tt.want)
 			}
@@ -2337,7 +2337,7 @@ func Test_initializer_initializeBatchPlaywright(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ini.cfg = tt.args.initCfg
-			errs := ini.initializeBatchPlaywright()
+			errs := ini.initializeBatchPlaywright(context.Background())
 			if !reflect.DeepEqual(ini.cfg, tt.want) {
 				t.Errorf("initializeBatchPlaywright() got = %v, want %v", ini.cfg, tt.want)
 			}
@@ -2645,7 +2645,7 @@ func Test_initializer_initializeBatchEspresso(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ini.cfg = tt.args.initCfg
-			errs := ini.initializeBatchEspresso(tt.args.flags())
+			errs := ini.initializeBatchEspresso(context.Background(), tt.args.flags())
 			if !reflect.DeepEqual(ini.cfg, tt.want) {
 				t.Errorf("initializeBatchEspresso() got = %v, want %v", ini.cfg, tt.want)
 			}

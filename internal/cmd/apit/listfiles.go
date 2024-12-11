@@ -1,7 +1,6 @@
 package apit
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -37,8 +36,8 @@ Use [--project] to specify the project by its name or run without [--project] to
 			}()
 			return nil
 		},
-		RunE: func(_ *cobra.Command, _ []string) error {
-			files, err := apitesterClient.ListVaultFiles(context.Background(), selectedProject.ID)
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := apitesterClient.ListVaultFiles(cmd.Context(), selectedProject.ID)
 			if err != nil {
 				return err
 			}

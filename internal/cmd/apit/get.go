@@ -1,7 +1,6 @@
 package apit
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -38,8 +37,8 @@ Use [--project] to specify the project by its name or run without [--project] to
 			}()
 			return nil
 		},
-		RunE: func(_ *cobra.Command, _ []string) error {
-			vault, err := apitesterClient.GetVault(context.Background(), selectedProject.Hooks[0].Identifier)
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			vault, err := apitesterClient.GetVault(cmd.Context(), selectedProject.Hooks[0].Identifier)
 			if err != nil {
 				return err
 			}

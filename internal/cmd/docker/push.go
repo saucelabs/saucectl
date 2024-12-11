@@ -47,13 +47,13 @@ func PushCommand() *cobra.Command {
 				_ = tracker.Close()
 			}()
 		},
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			image := args[0]
-			auth, err := imageRunnerService.RegistryLogin(context.Background(), image)
+			auth, err := imageRunnerService.RegistryLogin(cmd.Context(), image)
 			if err != nil {
 				return fmt.Errorf("failed to fetch auth token: %v", err)
 			}
-			return pushDockerImage(image, auth.Username, auth.Password, timeout, quiet)
+			return pushDockerImage(cmd.Context(), image, auth.Username, auth.Password, timeout, quiet)
 		},
 	}
 
@@ -64,8 +64,8 @@ func PushCommand() *cobra.Command {
 	return cmd
 }
 
-func pushDockerImage(imageName, username, password string, timeout time.Duration, quiet bool) error {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+func pushDockerImage(ctx context.Context, imageName, username, password string, timeout time.Duration, quiet bool) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)

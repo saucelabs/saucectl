@@ -73,18 +73,18 @@ func newInitializer(stdio terminal.Stdio, creds iam.Credentials, cfg *initConfig
 	}
 }
 
-func (ini *initializer) configure() error {
+func (ini *initializer) configure(ctx context.Context) error {
 	switch ini.cfg.frameworkName {
 	case cypress.Kind:
-		return ini.initializeCypress()
+		return ini.initializeCypress(ctx)
 	case playwright.Kind:
-		return ini.initializePlaywright()
+		return ini.initializePlaywright(ctx)
 	case testcafe.Kind:
-		return ini.initializeTestcafe()
+		return ini.initializeTestcafe(ctx)
 	case espresso.Kind:
-		return ini.initializeEspresso()
+		return ini.initializeEspresso(ctx)
 	case xcuitest.Kind:
-		return ini.initializeXCUITest()
+		return ini.initializeXCUITest(ctx)
 	case imagerunner.Kind:
 		return ini.initializeImageRunner()
 	default:
@@ -130,8 +130,8 @@ func askRegion(stdio terminal.Stdio) (string, error) {
 	return r, nil
 }
 
-func (ini *initializer) checkCredentials(region string) error {
-	_, err := ini.infoReader.Frameworks(context.Background())
+func (ini *initializer) checkCredentials(ctx context.Context, region string) error {
+	_, err := ini.infoReader.Frameworks(ctx)
 	if err != nil && err.Error() == "unexpected status '401' from test-composer: Unauthorized\n" {
 		println()
 		color.HiRed("It appears that your credentials are incorrect.")
@@ -434,8 +434,8 @@ func (ini *initializer) askWorkload() error {
 	return nil
 }
 
-func (ini *initializer) initializeCypress() error {
-	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), ini.cfg.frameworkName)
+func (ini *initializer) initializeCypress(ctx context.Context) error {
+	frameworkMetadatas, err := ini.infoReader.Versions(ctx, ini.cfg.frameworkName)
 	if err != nil {
 		return err
 	}
@@ -463,8 +463,8 @@ func (ini *initializer) initializeCypress() error {
 	return ini.askDownloadWhen()
 }
 
-func (ini *initializer) initializePlaywright() error {
-	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), ini.cfg.frameworkName)
+func (ini *initializer) initializePlaywright(ctx context.Context) error {
+	frameworkMetadatas, err := ini.infoReader.Versions(ctx, ini.cfg.frameworkName)
 	if err != nil {
 		return err
 	}
@@ -513,8 +513,8 @@ func (ini *initializer) initializePlaywright() error {
 	return ini.askDownloadWhen()
 }
 
-func (ini *initializer) initializeTestcafe() error {
-	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), ini.cfg.frameworkName)
+func (ini *initializer) initializeTestcafe(ctx context.Context) error {
+	frameworkMetadatas, err := ini.infoReader.Versions(ctx, ini.cfg.frameworkName)
 	if err != nil {
 		return err
 	}
@@ -536,7 +536,7 @@ func (ini *initializer) initializeTestcafe() error {
 	return nil
 }
 
-func (ini *initializer) initializeEspresso() error {
+func (ini *initializer) initializeEspresso(ctx context.Context) error {
 	err := ini.askFile(
 		"Application to test:",
 		frameworkExtValidator(ini.cfg.frameworkName, ""),
@@ -562,7 +562,7 @@ func (ini *initializer) initializeEspresso() error {
 		return err
 	}
 
-	virtualDevices, err := ini.vmdReader.GetVirtualDevices(context.Background(), vmd.AndroidEmulator)
+	virtualDevices, err := ini.vmdReader.GetVirtualDevices(ctx, vmd.AndroidEmulator)
 	if err != nil {
 		println()
 		color.HiRed("saucectl is unable to fetch the emulators list.")
@@ -584,7 +584,7 @@ func (ini *initializer) initializeEspresso() error {
 	return nil
 }
 
-func (ini *initializer) initializeXCUITest() error {
+func (ini *initializer) initializeXCUITest(ctx context.Context) error {
 	q := &survey.Select{
 		Message: "Select target:",
 		Options: []string{
@@ -618,7 +618,7 @@ func (ini *initializer) initializeXCUITest() error {
 			return err
 		}
 	} else if target == "Virtual Devices" {
-		virtualDevices, err := ini.vmdReader.GetVirtualDevices(context.Background(), vmd.IOSSimulator)
+		virtualDevices, err := ini.vmdReader.GetVirtualDevices(ctx, vmd.IOSSimulator)
 		if err != nil {
 			println()
 			color.HiRed("saucectl is unable to fetch the simulators list.")
@@ -734,7 +734,7 @@ func checkEmulators(vmds []vmd.VirtualDevice, emulator config.Emulator) (config.
 	}, []error{}
 }
 
-func (ini *initializer) initializeBatchCypress() []error {
+func (ini *initializer) initializeBatchCypress(ctx context.Context) []error {
 	var errs []error
 
 	if ini.cfg.frameworkVersion == "" {
@@ -750,7 +750,7 @@ func (ini *initializer) initializeBatchCypress() []error {
 		errs = append(errs, errors.New(msg.MissingBrowserName))
 	}
 
-	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), ini.cfg.frameworkName)
+	frameworkMetadatas, err := ini.infoReader.Versions(ctx, ini.cfg.frameworkName)
 	if err != nil {
 		errs = append(errs, err)
 		return errs
@@ -793,7 +793,7 @@ func (ini *initializer) initializeBatchCypress() []error {
 	return errs
 }
 
-func (ini *initializer) initializeBatchEspresso(f *pflag.FlagSet) []error {
+func (ini *initializer) initializeBatchEspresso(ctx context.Context, f *pflag.FlagSet) []error {
 	var errs []error
 	var err error
 
@@ -826,7 +826,7 @@ func (ini *initializer) initializeBatchEspresso(f *pflag.FlagSet) []error {
 		}
 	}
 	if f.Changed("emulator") {
-		emulators, err := ini.vmdReader.GetVirtualDevices(context.Background(), vmd.AndroidEmulator)
+		emulators, err := ini.vmdReader.GetVirtualDevices(ctx, vmd.AndroidEmulator)
 		if err != nil {
 			errs = append(errs, fmt.Errorf(""))
 		}
@@ -841,7 +841,7 @@ func (ini *initializer) initializeBatchEspresso(f *pflag.FlagSet) []error {
 	return errs
 }
 
-func (ini *initializer) initializeBatchPlaywright() []error {
+func (ini *initializer) initializeBatchPlaywright(ctx context.Context) []error {
 	var errs []error
 
 	if ini.cfg.frameworkVersion == "" {
@@ -854,7 +854,7 @@ func (ini *initializer) initializeBatchPlaywright() []error {
 		errs = append(errs, errors.New(msg.MissingBrowserName))
 	}
 
-	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), ini.cfg.frameworkName)
+	frameworkMetadatas, err := ini.infoReader.Versions(ctx, ini.cfg.frameworkName)
 	if err != nil {
 		errs = append(errs, err)
 		return errs
@@ -890,7 +890,7 @@ func (ini *initializer) initializeBatchPlaywright() []error {
 	return errs
 }
 
-func (ini *initializer) initializeBatchTestcafe() []error {
+func (ini *initializer) initializeBatchTestcafe(ctx context.Context) []error {
 	var errs []error
 
 	if ini.cfg.frameworkVersion == "" {
@@ -903,7 +903,7 @@ func (ini *initializer) initializeBatchTestcafe() []error {
 		errs = append(errs, errors.New(msg.MissingBrowserName))
 	}
 
-	frameworkMetadatas, err := ini.infoReader.Versions(context.Background(), ini.cfg.frameworkName)
+	frameworkMetadatas, err := ini.infoReader.Versions(ctx, ini.cfg.frameworkName)
 	if err != nil {
 		errs = append(errs, err)
 		return errs

@@ -1,7 +1,6 @@
 package ini
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -134,17 +133,17 @@ func Run(cmd *cobra.Command, cfg *initConfig) error {
 
 	ini := newInitializer(stdio, creds, cfg)
 
-	err = ini.checkCredentials(regionName)
+	err = ini.checkCredentials(cmd.Context(), regionName)
 	if err != nil {
 		return err
 	}
 
-	err = ini.configure()
+	err = ini.configure(cmd.Context())
 	if err != nil {
 		return err
 	}
 
-	ccy, err := ini.userService.Concurrency(context.Background())
+	ccy, err := ini.userService.Concurrency(cmd.Context())
 	if err != nil {
 		println()
 		color.HiRed("Unable to determine your exact allowed concurrency.\n")
@@ -178,13 +177,13 @@ func noPromptMode(cmd *cobra.Command, cfg *initConfig) error {
 	var errs []error
 	switch cfg.frameworkName {
 	case cypress.Kind:
-		errs = ini.initializeBatchCypress()
+		errs = ini.initializeBatchCypress(cmd.Context())
 	case espresso.Kind:
-		errs = ini.initializeBatchEspresso(cmd.Flags())
+		errs = ini.initializeBatchEspresso(cmd.Context(), cmd.Flags())
 	case playwright.Kind:
-		errs = ini.initializeBatchPlaywright()
+		errs = ini.initializeBatchPlaywright(cmd.Context())
 	case testcafe.Kind:
-		errs = ini.initializeBatchTestcafe()
+		errs = ini.initializeBatchTestcafe(cmd.Context())
 	case xcuitest.Kind:
 		errs = ini.initializeBatchXcuitest(cmd.Flags())
 	case imagerunner.Kind:
@@ -203,7 +202,7 @@ func noPromptMode(cmd *cobra.Command, cfg *initConfig) error {
 		return fmt.Errorf("%s: %d errors occured", cfg.frameworkName, len(errs))
 	}
 
-	ccy, err := ini.userService.Concurrency(context.Background())
+	ccy, err := ini.userService.Concurrency(cmd.Context())
 	if err != nil {
 		println()
 		color.HiRed("Unable to determine your exact allowed concurrency.\n")
