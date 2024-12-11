@@ -211,7 +211,7 @@ func (r *CloudRunner) findBuild(jobID string, isRDC bool) build.Build {
 	return b
 }
 
-func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {
+func (r *CloudRunner) runJob(ctx context.Context, opts job.StartOptions) (j job.Job, skipped bool, err error) {
 	log.Info().
 		Str("suite", opts.DisplayName).
 		Msg("Starting suite.")
@@ -224,8 +224,8 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	sigChan := r.registerInterruptOnSignal(j.ID, opts.RealDevice, opts.DisplayName)
 	defer unregisterSignalCapture(sigChan)
 
-	r.uploadSauceConfig(j.ID, opts.RealDevice, opts.ConfigFilePath)
-	r.uploadCLIFlags(j.ID, opts.RealDevice, opts.CLIFlags)
+	r.uploadSauceConfig(ctx, j.ID, opts.RealDevice, opts.ConfigFilePath)
+	r.uploadCLIFlags(ctx, j.ID, opts.RealDevice, opts.CLIFlags)
 
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
 	// if a soft exit is requested during startContainer phase, it gently exits.
@@ -328,7 +328,7 @@ func (r *CloudRunner) runJobs(ctx context.Context, jobOpts chan job.StartOptions
 			opts.StartTime = start
 		}
 
-		jobData, skipped, err := r.runJob(opts)
+		jobData, skipped, err := r.runJob(ctx, opts)
 
 		if jobData.Passed {
 			opts.CurrentPassCount++
@@ -900,8 +900,8 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	fmt.Println()
 }
 
-func (r *CloudRunner) validateTunnel(name, owner string, dryRun bool, timeout time.Duration) error {
-	return tunnel.Validate(r.TunnelService, name, owner, tunnel.NoneFilter, dryRun, timeout)
+func (r *CloudRunner) validateTunnel(ctx context.Context, name, owner string, dryRun bool, timeout time.Duration) error {
+	return tunnel.Validate(ctx, r.TunnelService, name, owner, tunnel.NoneFilter, dryRun, timeout)
 }
 
 // stopSuiteExecution stops the current execution on Sauce Cloud
@@ -957,7 +957,7 @@ func unregisterSignalCapture(c chan os.Signal) {
 }
 
 // uploadSauceConfig adds job configuration as an asset.
-func (r *CloudRunner) uploadSauceConfig(jobID string, realDevice bool, cfgFile string) {
+func (r *CloudRunner) uploadSauceConfig(ctx context.Context, jobID string, realDevice bool, cfgFile string) {
 	// A config file is optional.
 	if cfgFile == "" {
 		return
@@ -973,34 +973,34 @@ func (r *CloudRunner) uploadSauceConfig(jobID string, realDevice bool, cfgFile s
 		log.Warn().Msgf("failed to read configuration: %v", err)
 		return
 	}
-	if err := r.JobService.UploadArtifact(jobID, realDevice, filepath.Base(cfgFile), "text/plain", content); err != nil {
+	if err := r.JobService.UploadArtifact(ctx, jobID, realDevice, filepath.Base(cfgFile), "text/plain", content); err != nil {
 		log.Warn().Msgf("failed to attach configuration: %v", err)
 	}
 }
 
 // uploadCLIFlags adds commandline parameters as an asset.
-func (r *CloudRunner) uploadCLIFlags(jobID string, realDevice bool, content interface{}) {
+func (r *CloudRunner) uploadCLIFlags(ctx context.Context, jobID string, realDevice bool, content interface{}) {
 	encoded, err := json.Marshal(content)
 	if err != nil {
 		log.Warn().Msgf("Failed to encode CLI flags: %v", err)
 		return
 	}
-	if err := r.JobService.UploadArtifact(jobID, realDevice, "flags.json", "text/plain", encoded); err != nil {
+	if err := r.JobService.UploadArtifact(ctx, jobID, realDevice, "flags.json", "text/plain", encoded); err != nil {
 		log.Warn().Msgf("Failed to report CLI flags: %v", err)
 	}
 }
 
-func (r *CloudRunner) logFrameworkError(err error) {
+func (r *CloudRunner) logFrameworkError(ctx context.Context, err error) {
 	var unavailableErr *framework.UnavailableError
 	if errors.As(err, &unavailableErr) {
 		color.Red(fmt.Sprintf("\n%s\n\n", err.Error()))
-		fmt.Print(msg.FormatAvailableVersions(unavailableErr.Name, r.getAvailableVersions(unavailableErr.Name)))
+		fmt.Print(msg.FormatAvailableVersions(unavailableErr.Name, r.getAvailableVersions(ctx, unavailableErr.Name)))
 	}
 }
 
 // getAvailableVersions gets the available cloud version for the framework.
-func (r *CloudRunner) getAvailableVersions(frameworkName string) []string {
-	versions, err := r.MetadataService.Versions(context.Background(), frameworkName)
+func (r *CloudRunner) getAvailableVersions(ctx context.Context, frameworkName string) []string {
+	versions, err := r.MetadataService.Versions(ctx, frameworkName)
 	if err != nil {
 		return nil
 	}

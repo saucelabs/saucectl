@@ -1,6 +1,7 @@
 package artifacts
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -49,10 +50,10 @@ func DownloadCommand() *cobra.Command {
 			}()
 			return nil
 		},
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			jobID := args[0]
 			filePattern := args[1]
-			return download(jobID, filePattern, targetDir, out)
+			return download(cmd.Context(), jobID, filePattern, targetDir, out)
 		},
 	}
 
@@ -63,8 +64,8 @@ func DownloadCommand() *cobra.Command {
 	return cmd
 }
 
-func download(jobID, filePattern, targetDir, outputFormat string) error {
-	lst, err := artifactSvc.List(jobID)
+func download(ctx context.Context, jobID, filePattern, targetDir, outputFormat string) error {
+	lst, err := artifactSvc.List(ctx, jobID)
 	if err != nil {
 		return err
 	}
@@ -75,7 +76,7 @@ func download(jobID, filePattern, targetDir, outputFormat string) error {
 	bar := newDownloadProgressBar(outputFormat, len(files))
 	for _, f := range files {
 		_ = bar.Add(1)
-		body, err := artifactSvc.Download(jobID, f)
+		body, err := artifactSvc.Download(ctx, jobID, f)
 		if err != nil {
 			return fmt.Errorf("failed to get file: %w", err)
 		}

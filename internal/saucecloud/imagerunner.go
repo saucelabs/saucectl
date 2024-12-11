@@ -83,8 +83,9 @@ type execResult struct {
 	attempts     []report.Attempt
 }
 
-func (r *ImgRunner) RunProject() (int, error) {
+func (r *ImgRunner) RunProject(ctx context.Context) (int, error) {
 	if err := tunnel.Validate(
+		ctx,
 		r.TunnelService,
 		r.Project.Sauce.Tunnel.Name,
 		r.Project.Sauce.Tunnel.Owner,

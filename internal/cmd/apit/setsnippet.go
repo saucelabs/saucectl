@@ -1,7 +1,6 @@
 package apit
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -54,7 +53,7 @@ cat snippet2.xml | saucectl apit vault set-snippet snip2 - --project "smoke test
 			}()
 			return nil
 		},
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
 			fileName := args[1]
 
@@ -70,7 +69,7 @@ cat snippet2.xml | saucectl apit vault set-snippet snip2 - --project "smoke test
 				},
 			}
 
-			err = apitesterClient.PutVault(context.Background(), selectedProject.Hooks[0].Identifier, updateVault)
+			err = apitesterClient.PutVault(cmd.Context(), selectedProject.Hooks[0].Identifier, updateVault)
 			if err != nil {
 				return err
 			}

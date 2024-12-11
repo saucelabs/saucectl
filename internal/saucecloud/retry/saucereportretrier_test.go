@@ -48,9 +48,7 @@ func (f *JobServiceStub) StartJob(context.Context, job.StartOptions) (job.Job, e
 	panic("implement me")
 }
 
-func (f *JobServiceStub) UploadArtifact(
-	string, bool, string, string, []byte,
-) error {
+func (f *JobServiceStub) UploadArtifact(context.Context, string, bool, string, string, []byte) error {
 	panic("implement me")
 }
 

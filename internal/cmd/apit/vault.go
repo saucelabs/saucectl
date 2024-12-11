@@ -34,7 +34,7 @@ func VaultCommand(preRunE func(cmd *cobra.Command, args []string) error) *cobra.
 					return err
 				}
 			}
-			selectedProject, err = resolve(projectName)
+			selectedProject, err = resolve(cmd.Context(), projectName)
 			if err != nil {
 				return err
 			}
@@ -75,8 +75,8 @@ func isTerm(fd uintptr) bool {
 	return isatty.IsTerminal(fd) || isatty.IsCygwinTerminal(fd)
 }
 
-func resolve(projectName string) (ResolvedProject, error) {
-	projects, err := apitesterClient.GetProjects(context.Background())
+func resolve(ctx context.Context, projectName string) (ResolvedProject, error) {
+	projects, err := apitesterClient.GetProjects(ctx)
 	if projectName == "" {
 		if !isTerm(os.Stdin.Fd()) || !isTerm(os.Stdout.Fd()) {
 			return ResolvedProject{}, fmt.Errorf("no project specified, use --project to choose a project by name")
@@ -101,7 +101,7 @@ func resolve(projectName string) (ResolvedProject, error) {
 		return ResolvedProject{}, fmt.Errorf("could not find project named %s", projectName)
 	}
 
-	hooks, err := apitesterClient.GetHooks(context.Background(), project.ID)
+	hooks, err := apitesterClient.GetHooks(ctx, project.ID)
 	if err != nil {
 		return ResolvedProject{}, err
 	}

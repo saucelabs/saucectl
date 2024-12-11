@@ -27,21 +27,22 @@ var PlaywrightBrowserMap = map[string]string{
 
 // RunProject runs the tests defined in cypress.Project.
 func (r *PlaywrightRunner) RunProject(ctx context.Context) (int, error) {
-	m, err := r.MetadataSearchStrategy.Find(context.Background(), r.MetadataService, playwright.Kind, r.Project.Playwright.Version)
+	m, err := r.MetadataSearchStrategy.Find(ctx, r.MetadataService, playwright.Kind, r.Project.Playwright.Version)
 	if err != nil {
-		r.logFrameworkError(err)
+		r.logFrameworkError(ctx, err)
 		return 1, err
 	}
 	r.setVersions(m)
-	if err := r.validateFramework(m); err != nil {
+	if err := r.validateFramework(ctx, m); err != nil {
 		return 1, err
 	}
 
-	if err := r.setNodeRuntime(m); err != nil {
+	if err := r.setNodeRuntime(ctx, m); err != nil {
 		return 1, err
 	}
 
 	if err := r.validateTunnel(
+		ctx,
 		r.Project.Sauce.Tunnel.Name,
 		r.Project.Sauce.Tunnel.Owner,
 		r.Project.DryRun,
@@ -68,13 +69,13 @@ func (r *PlaywrightRunner) RunProject(ctx context.Context) (int, error) {
 	return 0, nil
 }
 
-func (r *PlaywrightRunner) setNodeRuntime(m framework.Metadata) error {
+func (r *PlaywrightRunner) setNodeRuntime(ctx context.Context, m framework.Metadata) error {
 	if !m.SupportsRuntime(runtime.NodeRuntime) {
 		r.Project.NodeVersion = ""
 		return nil
 	}
 
-	runtimes, err := r.MetadataService.Runtimes(context.Background())
+	runtimes, err := r.MetadataService.Runtimes(ctx)
 	if err != nil {
 		return err
 	}
@@ -112,12 +113,12 @@ func (r *PlaywrightRunner) setVersions(m framework.Metadata) {
 	}
 }
 
-func (r *PlaywrightRunner) validateFramework(m framework.Metadata) error {
+func (r *PlaywrightRunner) validateFramework(ctx context.Context, m framework.Metadata) error {
 	if m.IsDeprecated() && !m.IsFlaggedForRemoval() {
-		fmt.Print(msg.EOLNotice(playwright.Kind, r.Project.Playwright.Version, m.RemovalDate, r.getAvailableVersions(playwright.Kind)))
+		fmt.Print(msg.EOLNotice(playwright.Kind, r.Project.Playwright.Version, m.RemovalDate, r.getAvailableVersions(ctx, playwright.Kind)))
 	}
 	if m.IsFlaggedForRemoval() {
-		fmt.Print(msg.RemovalNotice(playwright.Kind, r.Project.Playwright.Version, r.getAvailableVersions(playwright.Kind)))
+		fmt.Print(msg.RemovalNotice(playwright.Kind, r.Project.Playwright.Version, r.getAvailableVersions(ctx, playwright.Kind)))
 	}
 
 	for i, s := range r.Project.Suites {

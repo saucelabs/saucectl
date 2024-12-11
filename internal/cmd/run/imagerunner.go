@@ -84,7 +84,7 @@ func runImageRunner(cmd *cobra.Command) (int, error) {
 		Str("region", regio.String()).
 		Str("tunnel", r.Project.Sauce.Tunnel.Name).
 		Msg("Running in Sauce Labs.")
-	return r.RunProject()
+	return r.RunProject(cmd.Context())
 }
 
 func applyImageRunnerFlags(p *imagerunner.Project) error {

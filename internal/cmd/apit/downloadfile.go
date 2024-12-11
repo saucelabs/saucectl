@@ -1,7 +1,6 @@
 package apit
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -47,9 +46,9 @@ Use [--project] to specify the project by its name or run without [--project] to
 			}()
 			return nil
 		},
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
-			files, err := apitesterClient.ListVaultFiles(context.Background(), selectedProject.ID)
+			files, err := apitesterClient.ListVaultFiles(cmd.Context(), selectedProject.ID)
 			if err != nil {
 				return err
 			}
@@ -59,7 +58,7 @@ Use [--project] to specify the project by its name or run without [--project] to
 				return fmt.Errorf("project %q has no vault drive file with name %q", selectedProject.ProjectMeta.Name, name)
 			}
 
-			bodyReader, err := apitesterClient.GetVaultFileContent(context.Background(), selectedProject.ID, file.ID)
+			bodyReader, err := apitesterClient.GetVaultFileContent(cmd.Context(), selectedProject.ID, file.ID)
 			if err != nil {
 				return err
 			}
