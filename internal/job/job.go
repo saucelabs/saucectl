@@ -111,7 +111,7 @@ type Service interface {
 	ArtifactNames(ctx context.Context, jobID string, realDevice bool) ([]string, error)
 
 	// UploadArtifact uploads an artifact to the Job that matches the given jobID.
-	UploadArtifact(jobID string, realDevice bool, fileName string, contentType string, content []byte) error
+	UploadArtifact(ctx context.Context, jobID string, realDevice bool, fileName string, contentType string, content []byte) error
 
 	// DownloadArtifacts downloads artifacts from a Job. Returns a list of
 	// file paths.

@@ -85,8 +85,9 @@ func (c *TestComposer) doJSONResponse(req *retryablehttp.Request, expectStatus i
 	return json.NewDecoder(res.Body).Decode(v)
 }
 
+// FIXME: Remove unused boolean arg.
 // UploadAsset uploads an asset to the specified jobID.
-func (c *TestComposer) UploadAsset(jobID string, _ bool, fileName string, contentType string, content []byte) error {
+func (c *TestComposer) UploadAsset(ctx context.Context, jobID string, _ bool, fileName string, contentType string, content []byte) error {
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
 	h := make(textproto.MIMEHeader)
@@ -103,7 +104,7 @@ func (c *TestComposer) UploadAsset(jobID string, _ bool, fileName string, conten
 		return err
 	}
 
-	req, err := NewRetryableRequestWithContext(context.Background(), http.MethodPut,
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodPut,
 		fmt.Sprintf("%s/v1/testcomposer/jobs/%s/assets", c.URL, jobID), &b)
 	if err != nil {
 		return err

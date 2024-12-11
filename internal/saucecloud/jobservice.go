@@ -70,12 +70,12 @@ func (s JobService) StopJob(ctx context.Context, jobID string, realDevice bool) 
 	return s.Resto.StopJob(ctx, jobID, realDevice)
 }
 
-func (s JobService) UploadArtifact(jobID string, realDevice bool, fileName string, contentType string, content []byte) error {
+func (s JobService) UploadArtifact(ctx context.Context, jobID string, realDevice bool, fileName string, contentType string, content []byte) error {
 	if realDevice {
 		return nil
 	}
 
-	return s.TestComposer.UploadAsset(jobID, realDevice, fileName, contentType, content)
+	return s.TestComposer.UploadAsset(ctx, jobID, realDevice, fileName, contentType, content)
 }
 
 func (s JobService) Job(ctx context.Context, id string, realDevice bool) (job.Job, error) {

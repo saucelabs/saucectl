@@ -211,7 +211,7 @@ func (r *CloudRunner) findBuild(jobID string, isRDC bool) build.Build {
 	return b
 }
 
-func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, err error) {
+func (r *CloudRunner) runJob(ctx context.Context, opts job.StartOptions) (j job.Job, skipped bool, err error) {
 	log.Info().
 		Str("suite", opts.DisplayName).
 		Msg("Starting suite.")
@@ -224,8 +224,8 @@ func (r *CloudRunner) runJob(opts job.StartOptions) (j job.Job, skipped bool, er
 	sigChan := r.registerInterruptOnSignal(j.ID, opts.RealDevice, opts.DisplayName)
 	defer unregisterSignalCapture(sigChan)
 
-	r.uploadSauceConfig(j.ID, opts.RealDevice, opts.ConfigFilePath)
-	r.uploadCLIFlags(j.ID, opts.RealDevice, opts.CLIFlags)
+	r.uploadSauceConfig(ctx, j.ID, opts.RealDevice, opts.ConfigFilePath)
+	r.uploadCLIFlags(ctx, j.ID, opts.RealDevice, opts.CLIFlags)
 
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
 	// if a soft exit is requested during startContainer phase, it gently exits.
@@ -328,7 +328,7 @@ func (r *CloudRunner) runJobs(ctx context.Context, jobOpts chan job.StartOptions
 			opts.StartTime = start
 		}
 
-		jobData, skipped, err := r.runJob(opts)
+		jobData, skipped, err := r.runJob(ctx, opts)
 
 		if jobData.Passed {
 			opts.CurrentPassCount++
@@ -957,7 +957,7 @@ func unregisterSignalCapture(c chan os.Signal) {
 }
 
 // uploadSauceConfig adds job configuration as an asset.
-func (r *CloudRunner) uploadSauceConfig(jobID string, realDevice bool, cfgFile string) {
+func (r *CloudRunner) uploadSauceConfig(ctx context.Context, jobID string, realDevice bool, cfgFile string) {
 	// A config file is optional.
 	if cfgFile == "" {
 		return
@@ -973,19 +973,19 @@ func (r *CloudRunner) uploadSauceConfig(jobID string, realDevice bool, cfgFile s
 		log.Warn().Msgf("failed to read configuration: %v", err)
 		return
 	}
-	if err := r.JobService.UploadArtifact(jobID, realDevice, filepath.Base(cfgFile), "text/plain", content); err != nil {
+	if err := r.JobService.UploadArtifact(ctx, jobID, realDevice, filepath.Base(cfgFile), "text/plain", content); err != nil {
 		log.Warn().Msgf("failed to attach configuration: %v", err)
 	}
 }
 
 // uploadCLIFlags adds commandline parameters as an asset.
-func (r *CloudRunner) uploadCLIFlags(jobID string, realDevice bool, content interface{}) {
+func (r *CloudRunner) uploadCLIFlags(ctx context.Context, jobID string, realDevice bool, content interface{}) {
 	encoded, err := json.Marshal(content)
 	if err != nil {
 		log.Warn().Msgf("Failed to encode CLI flags: %v", err)
 		return
 	}
-	if err := r.JobService.UploadArtifact(jobID, realDevice, "flags.json", "text/plain", encoded); err != nil {
+	if err := r.JobService.UploadArtifact(ctx, jobID, realDevice, "flags.json", "text/plain", encoded); err != nil {
 		log.Warn().Msgf("Failed to report CLI flags: %v", err)
 	}
 }
