@@ -75,7 +75,7 @@ func (s JobService) UploadArtifact(ctx context.Context, jobID string, realDevice
 		return nil
 	}
 
-	return s.TestComposer.UploadAsset(ctx, jobID, realDevice, fileName, contentType, content)
+	return s.TestComposer.UploadAsset(ctx, jobID, fileName, contentType, content)
 }
 
 func (s JobService) Job(ctx context.Context, id string, realDevice bool) (job.Job, error) {

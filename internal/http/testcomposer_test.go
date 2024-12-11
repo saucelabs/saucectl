@@ -97,7 +97,7 @@ func TestTestComposer_UploadAsset(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.client.UploadAsset(context.Background(), tt.args.jobID, false, tt.args.fileName, tt.args.contentType, tt.args.content); (err != nil) != tt.wantErr {
+			if err := tt.client.UploadAsset(context.Background(), tt.args.jobID, tt.args.fileName, tt.args.contentType, tt.args.content); (err != nil) != tt.wantErr {
 				t.Errorf("UploadArtifact() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
