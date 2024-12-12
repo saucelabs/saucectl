@@ -435,7 +435,7 @@ func TestRunner_runLocalTests(t *testing.T) {
 	}
 	c := make(chan TestResult)
 
-	res := r.runLocalTests(s, c)
+	res := r.runLocalTests(context.Background(), s, c)
 	assert.Equal(t, 1, res)
 
 	results := <-c
@@ -608,7 +608,7 @@ func TestRunner_ResolveHookIDs(t *testing.T) {
 				TunnelService: tt.fields.TunnelService,
 			}
 
-			err := r.ResolveHookIDs()
+			err := r.ResolveHookIDs(context.Background())
 			if tt.wantErr != "" {
 				assert.EqualError(t, err, tt.wantErr, "ResolveHookIDs(): got %v, want %v", err, tt.wantErr)
 				return
