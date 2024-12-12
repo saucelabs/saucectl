@@ -53,7 +53,7 @@ func runApitest(cmd *cobra.Command, isCLIDriven bool) (int, error) {
 		TunnelService: &restoClient,
 	}
 
-	if err := r.ResolveHookIDs(); err != nil {
+	if err := r.ResolveHookIDs(cmd.Context()); err != nil {
 		return 1, err
 	}
 

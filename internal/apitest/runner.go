@@ -152,7 +152,7 @@ func (r *Runner) RunProject(ctx context.Context) (int, error) {
 		return 0, nil
 	}
 
-	passed := r.runSuites()
+	passed := r.runSuites(ctx)
 	if passed {
 		exitCode = 0
 	}
@@ -306,7 +306,7 @@ func (r *Runner) newTestRequests(s Suite, tests []string) []TestRequest {
 	return testRequests
 }
 
-func (r *Runner) runLocalTests(s Suite, results chan TestResult) int {
+func (r *Runner) runLocalTests(ctx context.Context, s Suite, results chan TestResult) int {
 	expected := 0
 
 	maximumWaitTime := pollDefaultWait
@@ -334,7 +334,7 @@ func (r *Runner) runLocalTests(s Suite, results chan TestResult) int {
 			Str("testName", test.Name).
 			Msg("Running test.")
 
-		resp, err := r.Client.RunEphemeralAsync(context.Background(), s.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, test)
+		resp, err := r.Client.RunEphemeralAsync(ctx, s.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, test)
 		if err != nil {
 			log.Error().
 				Err(err).
@@ -355,12 +355,12 @@ func (r *Runner) runLocalTests(s Suite, results chan TestResult) int {
 	if r.Async {
 		r.buildLocalTestDetails(projectMeta, eventIDs, testNames, results)
 	} else {
-		r.startPollingAsyncResponse(projectMeta, s.HookID, eventIDs, results, maximumWaitTime)
+		r.startPollingAsyncResponse(ctx, projectMeta, s.HookID, eventIDs, results, maximumWaitTime)
 	}
 	return expected
 }
 
-func (r *Runner) runRemoteTests(s Suite, results chan TestResult) int {
+func (r *Runner) runRemoteTests(ctx context.Context, s Suite, results chan TestResult) int {
 	expected := 0
 	maximumWaitTime := pollDefaultWait
 	if s.Timeout != 0 {
@@ -375,15 +375,15 @@ func (r *Runner) runRemoteTests(s Suite, results chan TestResult) int {
 	if len(s.Tags) == 0 && len(s.Tests) == 0 {
 		log.Info().Str("projectName", s.ProjectName).Msg("Running project.")
 
-		resp, err := r.Client.RunAllAsync(context.Background(), s.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, TestRequest{Params: s.Env})
+		resp, err := r.Client.RunAllAsync(ctx, s.HookID, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, TestRequest{Params: s.Env})
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to run project.")
 		}
 
 		if r.Async {
-			r.fetchTestDetails(projectMeta, s.HookID, resp.EventIDs, resp.TestIDs, results)
+			r.fetchTestDetails(ctx, projectMeta, s.HookID, resp.EventIDs, resp.TestIDs, results)
 		} else {
-			r.startPollingAsyncResponse(projectMeta, s.HookID, resp.EventIDs, results, maximumWaitTime)
+			r.startPollingAsyncResponse(ctx, projectMeta, s.HookID, resp.EventIDs, results, maximumWaitTime)
 		}
 		return len(resp.EventIDs)
 	}
@@ -392,16 +392,16 @@ func (r *Runner) runRemoteTests(s Suite, results chan TestResult) int {
 		test := t
 		log.Info().Str("test", test).Str("projectName", s.ProjectName).Msg("Running test.")
 
-		resp, err := r.Client.RunTestAsync(context.Background(), s.HookID, test, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, TestRequest{Params: s.Env})
+		resp, err := r.Client.RunTestAsync(ctx, s.HookID, test, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, TestRequest{Params: s.Env})
 
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to run test.")
 		}
 
 		if r.Async {
-			r.fetchTestDetails(projectMeta, s.HookID, resp.EventIDs, resp.TestIDs, results)
+			r.fetchTestDetails(ctx, projectMeta, s.HookID, resp.EventIDs, resp.TestIDs, results)
 		} else {
-			r.startPollingAsyncResponse(projectMeta, s.HookID, resp.EventIDs, results, maximumWaitTime)
+			r.startPollingAsyncResponse(ctx, projectMeta, s.HookID, resp.EventIDs, results, maximumWaitTime)
 		}
 		expected += len(resp.EventIDs)
 	}
@@ -410,21 +410,21 @@ func (r *Runner) runRemoteTests(s Suite, results chan TestResult) int {
 		tag := t
 		log.Info().Str("tag", tag).Str("projectName", s.ProjectName).Msg("Running tag.")
 
-		resp, err := r.Client.RunTagAsync(context.Background(), s.HookID, tag, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, TestRequest{Params: s.Env})
+		resp, err := r.Client.RunTagAsync(ctx, s.HookID, tag, r.Project.Sauce.Metadata.Build, r.Project.Sauce.Tunnel, TestRequest{Params: s.Env})
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to run tag.")
 		}
 		if r.Async {
-			r.fetchTestDetails(projectMeta, s.HookID, resp.EventIDs, resp.TestIDs, results)
+			r.fetchTestDetails(ctx, projectMeta, s.HookID, resp.EventIDs, resp.TestIDs, results)
 		} else {
-			r.startPollingAsyncResponse(projectMeta, s.HookID, resp.EventIDs, results, maximumWaitTime)
+			r.startPollingAsyncResponse(ctx, projectMeta, s.HookID, resp.EventIDs, results, maximumWaitTime)
 		}
 		expected += len(resp.EventIDs)
 	}
 	return expected
 }
 
-func (r *Runner) runSuites() bool {
+func (r *Runner) runSuites(ctx context.Context) bool {
 	results := make(chan TestResult)
 	expected := 0
 
@@ -437,9 +437,9 @@ func (r *Runner) runSuites() bool {
 			Msg("Starting suite")
 
 		if s.UseRemoteTests {
-			expected += r.runRemoteTests(s, results)
+			expected += r.runRemoteTests(ctx, s, results)
 		} else {
-			expected += r.runLocalTests(s, results)
+			expected += r.runLocalTests(ctx, s, results)
 		}
 
 	}
@@ -465,7 +465,7 @@ func (r *Runner) buildLocalTestDetails(project ProjectMeta, eventIDs []string, t
 	}
 }
 
-func (r *Runner) fetchTestDetails(project ProjectMeta, hookID string, eventIDs []string, testIDs []string, results chan TestResult) {
+func (r *Runner) fetchTestDetails(ctx context.Context, project ProjectMeta, hookID string, eventIDs []string, testIDs []string, results chan TestResult) {
 	for _, eventID := range eventIDs {
 		log.Info().
 			Str("project", project.Name).
@@ -475,7 +475,7 @@ func (r *Runner) fetchTestDetails(project ProjectMeta, hookID string, eventIDs [
 
 	for _, testID := range testIDs {
 		go func(p ProjectMeta, testID string) {
-			test, _ := r.Client.GetTest(context.Background(), hookID, testID)
+			test, _ := r.Client.GetTest(ctx, hookID, testID)
 			results <- TestResult{
 				Test:    test,
 				Project: p,
@@ -485,7 +485,7 @@ func (r *Runner) fetchTestDetails(project ProjectMeta, hookID string, eventIDs [
 	}
 }
 
-func (r *Runner) startPollingAsyncResponse(project ProjectMeta, hookID string, eventIDs []string, results chan TestResult, pollMaximumWait time.Duration) {
+func (r *Runner) startPollingAsyncResponse(ctx context.Context, project ProjectMeta, hookID string, eventIDs []string, results chan TestResult, pollMaximumWait time.Duration) {
 	for _, eventID := range eventIDs {
 		go func(lEventID string) {
 			deadline := time.NewTimer(pollMaximumWait)
@@ -495,10 +495,10 @@ func (r *Runner) startPollingAsyncResponse(project ProjectMeta, hookID string, e
 			for {
 				select {
 				case <-ticker.C:
-					result, err := r.Client.GetEventResult(context.Background(), hookID, lEventID)
+					result, err := r.Client.GetEventResult(ctx, hookID, lEventID)
 
 					// Events are not available when the test is still running.
-					if err == ErrEventNotFound {
+					if errors.Is(err, ErrEventNotFound) {
 						continue
 					}
 
@@ -622,11 +622,11 @@ func buildTestName(project ProjectMeta, test Test) string {
 }
 
 // ResolveHookIDs resolve, for each suite, the matching hookID.
-func (r *Runner) ResolveHookIDs() error {
+func (r *Runner) ResolveHookIDs(ctx context.Context) error {
 	hookIDMappings := map[string]Hook{}
 	hasErrors := false
 
-	projects, err := r.Client.GetProjects(context.Background())
+	projects, err := r.Client.GetProjects(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg(msg.ProjectListFailure)
 		return err
@@ -647,7 +647,7 @@ func (r *Runner) ResolveHookIDs() error {
 		hook := hookIDMappings[project.ID]
 
 		if hook.Identifier == "" {
-			hooks, err := r.Client.GetHooks(context.Background(), project.ID)
+			hooks, err := r.Client.GetHooks(ctx, project.ID)
 
 			if err != nil {
 				log.Err(err).Str("suiteName", s.Name).Msg(msg.HookQueryFailure)
