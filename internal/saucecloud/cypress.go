@@ -134,7 +134,7 @@ func (r *CypressRunner) runSuites(ctx context.Context, app string, otherApps []s
 
 	suites := r.Project.GetSuites()
 	if r.Project.GetSauceCfg().LaunchOrder != "" {
-		history, err := r.getHistory(r.Project.GetSauceCfg().LaunchOrder)
+		history, err := r.getHistory(ctx, r.Project.GetSauceCfg().LaunchOrder)
 		if err != nil {
 			log.Warn().Err(err).Msg(msg.RetrieveJobHistoryError)
 		} else {
@@ -182,5 +182,5 @@ func (r *CypressRunner) runSuites(ctx context.Context, app string, otherApps []s
 		}
 	}()
 
-	return r.collectResults(results, r.Project.GetSuiteCount())
+	return r.collectResults(ctx, results, r.Project.GetSuiteCount())
 }

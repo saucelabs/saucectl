@@ -42,7 +42,7 @@ func (r *SauceReportRetrier) retryFailedTests(ctx context.Context, opt *job.Star
 		return false
 	}
 
-	report, err := r.getSauceReport(previous)
+	report, err := r.getSauceReport(ctx, previous)
 	if err != nil {
 		log.Err(err).Msgf(msg.UnableToFetchFile, saucereport.FileName)
 		return false
@@ -111,8 +111,8 @@ func (r *SauceReportRetrier) uploadConfig(ctx context.Context, filename string) 
 	return resp.ID, nil
 }
 
-func (r *SauceReportRetrier) getSauceReport(job job.Job) (saucereport.SauceReport, error) {
-	content, err := r.JobService.Artifact(context.Background(), job.ID, saucereport.FileName, false)
+func (r *SauceReportRetrier) getSauceReport(ctx context.Context, job job.Job) (saucereport.SauceReport, error) {
+	content, err := r.JobService.Artifact(ctx, job.ID, saucereport.FileName, false)
 	if err != nil {
 		return saucereport.SauceReport{}, err
 	}

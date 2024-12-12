@@ -1,58 +1,12 @@
 package saucecloud
 
 import (
-	"context"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"testing"
-	"time"
-
-	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/stretchr/testify/assert"
 )
-
-func TestSignalDetection(t *testing.T) {
-	r := CloudRunner{JobService: JobService{}}
-	assert.False(t, r.interrupted)
-	c := r.registerSkipSuitesOnSignal()
-	defer unregisterSignalCapture(c)
-
-	c <- syscall.SIGINT
-
-	deadline := time.NewTimer(3 * time.Second)
-	defer deadline.Stop()
-
-	// Wait for interrupt to be processed, as it happens asynchronously.
-	for {
-		select {
-		case <-deadline.C:
-			assert.True(t, r.interrupted)
-			return
-		default:
-			if r.interrupted {
-				return
-			}
-			time.Sleep(1 * time.Nanosecond) // allow context switch
-		}
-	}
-}
-
-func TestRunJobsSkipped(t *testing.T) {
-	r := CloudRunner{}
-	r.interrupted = true
-
-	opts := make(chan job.StartOptions)
-	results := make(chan result)
-
-	go r.runJobs(context.Background(), opts, results)
-	opts <- job.StartOptions{}
-	close(opts)
-	res := <-results
-	assert.Nil(t, res.err)
-	assert.True(t, res.skipped)
-}
 
 func Test_arrayContains(t *testing.T) {
 	type args struct {

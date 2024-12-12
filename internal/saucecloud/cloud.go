@@ -102,27 +102,27 @@ func (r *CloudRunner) createWorkerPool(ctx context.Context, ccy int, maxRetries 
 	return jobOpts, results
 }
 
-func (r *CloudRunner) collectResults(results chan result, expected int) bool {
+func (r *CloudRunner) collectResults(ctx context.Context, results chan result, expected int) bool {
 	// TODO find a better way to get the expected
 	completed := 0
 	inProgress := expected
 	passed := true
 
 	done := make(chan interface{})
-	go func(r *CloudRunner) {
+	go func() {
 		t := time.NewTicker(10 * time.Second)
 		defer t.Stop()
 		for {
 			select {
+			case <-ctx.Done():
+				return
 			case <-done:
 				return
 			case <-t.C:
-				if !r.interrupted {
-					log.Info().Msgf("Suites in progress: %d", inProgress)
-				}
+				log.Info().Msgf("Suites in progress: %d", inProgress)
 			}
 		}
-	}(r)
+	}()
 
 	for i := 0; i < expected; i++ {
 		res := <-results
@@ -147,7 +147,7 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 				browser = fmt.Sprintf("%s %s", browser, res.job.BrowserVersion)
 			}
 
-			r.FetchJUnitReports(&res, res.artifacts)
+			r.FetchJUnitReports(ctx, &res, res.artifacts)
 
 			tr := report.TestResult{
 				Name:       res.name,
@@ -164,19 +164,19 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 				RDC:        res.job.IsRDC,
 				TimedOut:   res.job.TimedOut,
 				Attempts:   res.attempts,
-				BuildURL:   r.findBuild(res.job.ID, res.job.IsRDC).URL,
+				BuildURL:   r.findBuild(ctx, res.job.ID, res.job.IsRDC).URL,
 			}
 			for _, rep := range r.Reporters {
 				rep.Add(tr)
 			}
 		}
-		r.logSuite(res)
+		r.logSuite(ctx, res)
 
-		r.reportInsights(res)
+		r.reportInsights(ctx, res)
 	}
 	close(done)
 
-	if !r.interrupted {
+	if ctx.Err() == nil {
 		for _, rep := range r.Reporters {
 			rep.Render()
 		}
@@ -185,7 +185,7 @@ func (r *CloudRunner) collectResults(results chan result, expected int) bool {
 	return passed
 }
 
-func (r *CloudRunner) findBuild(jobID string, isRDC bool) build.Build {
+func (r *CloudRunner) findBuild(ctx context.Context, jobID string, isRDC bool) build.Build {
 	if isRDC {
 		if r.Cache.RDCBuild != nil {
 			return *r.Cache.RDCBuild
@@ -196,7 +196,7 @@ func (r *CloudRunner) findBuild(jobID string, isRDC bool) build.Build {
 		}
 	}
 
-	b, err := r.BuildService.FindBuild(context.Background(), jobID, isRDC)
+	b, err := r.BuildService.FindBuild(ctx, jobID, isRDC)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Failed to retrieve build id for job (%s)", jobID)
 		return build.Build{}
@@ -216,7 +216,11 @@ func (r *CloudRunner) runJob(ctx context.Context, opts job.StartOptions) (j job.
 		Str("suite", opts.DisplayName).
 		Msg("Starting suite.")
 
-	j, err = r.JobService.StartJob(context.Background(), opts)
+	// Use this context for operations that should not be interrupted by the CLI,
+	// ensuring jobs are not left abandoned.
+	localCtx := context.Background()
+
+	j, err = r.JobService.StartJob(localCtx, opts)
 	if err != nil {
 		return job.Job{Status: job.StateError}, false, err
 	}
@@ -229,9 +233,9 @@ func (r *CloudRunner) runJob(ctx context.Context, opts job.StartOptions) (j job.
 
 	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
 	// if a soft exit is requested during startContainer phase, it gently exits.
-	if r.interrupted {
-		r.stopSuiteExecution(j.ID, opts.RealDevice, opts.DisplayName)
-		j, err = r.JobService.PollJob(context.Background(), j.ID, 15*time.Second, opts.Timeout, opts.RealDevice)
+	if ctx.Err() != nil {
+		r.stopSuiteExecution(localCtx, j.ID, opts.RealDevice, opts.DisplayName)
+		j, err = r.JobService.PollJob(localCtx, j.ID, 15*time.Second, opts.Timeout, opts.RealDevice)
 		return j, true, err
 	}
 
@@ -252,7 +256,7 @@ func (r *CloudRunner) runJob(ctx context.Context, opts job.StartOptions) (j job.
 	}
 
 	// High interval poll to not oversaturate the job reader with requests
-	j, err = r.JobService.PollJob(context.Background(), j.ID, 15*time.Second, opts.Timeout, opts.RealDevice)
+	j, err = r.JobService.PollJob(localCtx, j.ID, 15*time.Second, opts.Timeout, opts.RealDevice)
 	if err != nil {
 		return job.Job{}, r.interrupted, fmt.Errorf("failed to retrieve job status for suite %s: %s", opts.DisplayName, err.Error())
 	}
@@ -264,7 +268,7 @@ func (r *CloudRunner) runJob(ctx context.Context, opts job.StartOptions) (j job.
 			Str("timeout", opts.Timeout.String()).
 			Msg("Suite timed out.")
 
-		r.stopSuiteExecution(j.ID, opts.RealDevice, opts.DisplayName)
+		r.stopSuiteExecution(localCtx, j.ID, opts.RealDevice, opts.DisplayName)
 
 		j.Passed = false
 		j.TimedOut = true
@@ -311,7 +315,7 @@ func (r *CloudRunner) runJobs(ctx context.Context, jobOpts chan job.StartOptions
 			BuildName: opts.Build,
 		}
 
-		if r.interrupted {
+		if ctx.Err() != nil {
 			results <- result{
 				name:     opts.DisplayName,
 				browser:  opts.BrowserName,
@@ -335,7 +339,7 @@ func (r *CloudRunner) runJobs(ctx context.Context, jobOpts chan job.StartOptions
 		}
 
 		if r.shouldRetry(opts, jobData, skipped) {
-			go r.JobService.DownloadArtifacts(jobData, false)
+			go r.JobService.DownloadArtifacts(ctx, jobData, false)
 			if !jobData.Passed {
 				log.Warn().Err(err).
 					Str("attempt",
@@ -375,7 +379,7 @@ func (r *CloudRunner) runJobs(ctx context.Context, jobOpts chan job.StartOptions
 			}
 		}
 
-		files := r.JobService.DownloadArtifacts(jobData, true)
+		files := r.JobService.DownloadArtifacts(ctx, jobData, true)
 		var artifacts []report.Artifact
 		for _, f := range files {
 			artifacts = append(artifacts, report.Artifact{
@@ -629,7 +633,7 @@ func (r *CloudRunner) remoteArchiveFiles(ctx context.Context, project interface{
 
 // FetchJUnitReports retrieves junit reports for the given result and all of its
 // attempts. Can use the given artifacts to avoid unnecessary API calls.
-func (r *CloudRunner) FetchJUnitReports(res *result, artifacts []report.Artifact) {
+func (r *CloudRunner) FetchJUnitReports(ctx context.Context, res *result, artifacts []report.Artifact) {
 	if !report.IsArtifactRequired(r.Reporters, report.JUnitArtifact) {
 		return
 	}
@@ -655,7 +659,7 @@ func (r *CloudRunner) FetchJUnitReports(res *result, artifacts []report.Artifact
 			log.Debug().Msg("Using cached JUnit report")
 		} else {
 			content, err = r.JobService.Artifact(
-				context.Background(),
+				ctx,
 				attempt.ID,
 				junit.FileName,
 				res.job.IsRDC,
@@ -787,7 +791,7 @@ func (r *CloudRunner) isFileStored(ctx context.Context, filename string) (storag
 }
 
 // logSuite display the result of a suite
-func (r *CloudRunner) logSuite(res result) {
+func (r *CloudRunner) logSuite(ctx context.Context, res result) {
 	logger := log.With().
 		Str("suite", res.name).
 		Bool("passed", res.job.Passed).
@@ -827,11 +831,11 @@ func (r *CloudRunner) logSuite(res result) {
 		l.Msg("Suite failed.")
 	}
 
-	r.logSuiteConsole(res)
+	r.logSuiteConsole(ctx, res)
 }
 
 // logSuiteError display the console output when tests from a suite are failing
-func (r *CloudRunner) logSuiteConsole(res result) {
+func (r *CloudRunner) logSuiteConsole(ctx context.Context, res result) {
 	// To avoid clutter, we don't show the console on job passes.
 	if res.job.Passed && !r.ShowConsoleLog {
 		return
@@ -846,13 +850,13 @@ func (r *CloudRunner) logSuiteConsole(res result) {
 	var err error
 
 	// Display log only when at least it has started
-	if assetContent, err = r.JobService.Artifact(context.Background(), res.job.ID, ConsoleLogAsset, res.job.IsRDC); err == nil {
+	if assetContent, err = r.JobService.Artifact(ctx, res.job.ID, ConsoleLogAsset, res.job.IsRDC); err == nil {
 		log.Info().Str("suite", res.name).Msgf("console.log output: \n%s", assetContent)
 		return
 	}
 
 	// Some frameworks produce a junit.xml instead, check for that file if there's no console.log
-	assetContent, err = r.JobService.Artifact(context.Background(), res.job.ID, junit.FileName, res.job.IsRDC)
+	assetContent, err = r.JobService.Artifact(ctx, res.job.ID, junit.FileName, res.job.IsRDC)
 	if err != nil {
 		log.Warn().Err(err).Str("suite", res.name).Msg("Failed to retrieve the console output.")
 		return
@@ -905,12 +909,12 @@ func (r *CloudRunner) validateTunnel(ctx context.Context, name, owner string, dr
 }
 
 // stopSuiteExecution stops the current execution on Sauce Cloud
-func (r *CloudRunner) stopSuiteExecution(jobID string, realDevice bool, suiteName string) {
+func (r *CloudRunner) stopSuiteExecution(ctx context.Context, jobID string, realDevice bool, suiteName string) {
 	log.Info().Str("suite", suiteName).Msg("Attempting to stop job...")
 
 	// Ignore errors when stopping a job, as it may have already ended or is in
 	// a state where it cannot be stopped. Either way, there's nothing we can do.
-	_, _ = r.JobService.StopJob(context.Background(), jobID, realDevice)
+	_, _ = r.JobService.StopJob(ctx, jobID, realDevice)
 }
 
 // registerInterruptOnSignal stops execution on Sauce Cloud when a SIGINT is captured.
@@ -923,7 +927,7 @@ func (r *CloudRunner) registerInterruptOnSignal(jobID string, realDevice bool, s
 		if sig == nil {
 			return
 		}
-		r.stopSuiteExecution(jobID, realDevice, suiteName)
+		r.stopSuiteExecution(context.Background(), jobID, realDevice, suiteName)
 	}()
 
 	return sigChan
@@ -1014,8 +1018,8 @@ func (r *CloudRunner) getAvailableVersions(ctx context.Context, frameworkName st
 	return available
 }
 
-func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHistory, error) {
-	user, err := r.UserService.User(context.Background())
+func (r *CloudRunner) getHistory(ctx context.Context, launchOrder config.LaunchOrder) (insights.JobHistory, error) {
+	user, err := r.UserService.User(ctx)
 	if err != nil {
 		return insights.JobHistory{}, err
 	}
@@ -1023,29 +1027,29 @@ func (r *CloudRunner) getHistory(launchOrder config.LaunchOrder) (insights.JobHi
 	// The config uses spaces, but the API requires underscores.
 	sortBy := strings.ReplaceAll(string(launchOrder), " ", "_")
 
-	return r.InsightsService.GetHistory(context.Background(), user, sortBy)
+	return r.InsightsService.GetHistory(ctx, user, sortBy)
 }
 
-func (r *CloudRunner) reportInsights(res result) {
+func (r *CloudRunner) reportInsights(ctx context.Context, res result) {
 	// NOTE: Jobs must be finished in order to be reported to Insights.
 	// * Async jobs have an unknown status by definition, so should always be excluded from reporting.
 	// * Timed out jobs will be requested to stop, but stopping a job
 	//   is either not possible (rdc) or async (vdc) so its actual status is not known now.
 	//   Skip reporting to be safe.
-	if r.Async || !job.Done(res.job.Status) || res.job.TimedOut || res.skipped || res.job.ID == "" {
+	if ctx.Err() != nil || r.Async || !job.Done(res.job.Status) || res.job.TimedOut || res.skipped || res.job.ID == "" {
 		return
 	}
 
-	res.details.BuildID = r.findBuild(res.job.ID, res.job.IsRDC).ID
+	res.details.BuildID = r.findBuild(ctx, res.job.ID, res.job.IsRDC).ID
 
-	assets, err := r.JobService.ArtifactNames(context.Background(), res.job.ID, res.job.IsRDC)
+	assets, err := r.JobService.ArtifactNames(ctx, res.job.ID, res.job.IsRDC)
 	if err != nil {
 		log.Warn().Err(err).Str("action", "loadAssets").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 		return
 	}
 
 	// read job from insights to get accurate platform and device name
-	j, err := r.InsightsService.ReadJob(context.Background(), res.job.ID)
+	j, err := r.InsightsService.ReadJob(ctx, res.job.ID)
 	if err != nil {
 		log.Warn().Err(err).Str("action", "readJob").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 		return
@@ -1055,14 +1059,14 @@ func (r *CloudRunner) reportInsights(res result) {
 
 	var testRuns []insights.TestRun
 	if arrayContains(assets, saucereport.FileName) {
-		report, err := r.loadSauceTestReport(res.job.ID, res.job.IsRDC)
+		report, err := r.loadSauceTestReport(ctx, res.job.ID, res.job.IsRDC)
 		if err != nil {
 			log.Warn().Err(err).Str("action", "parsingJSON").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 			return
 		}
 		testRuns = insights.FromSauceReport(report, res.job.ID, res.name, res.details, res.job.IsRDC)
 	} else if arrayContains(assets, junit.FileName) {
-		report, err := r.loadJUnitReport(res.job.ID, res.job.IsRDC)
+		report, err := r.loadJUnitReport(ctx, res.job.ID, res.job.IsRDC)
 		if err != nil {
 			log.Warn().Err(err).Str("action", "parsingXML").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 			return
@@ -1071,14 +1075,14 @@ func (r *CloudRunner) reportInsights(res result) {
 	}
 
 	if len(testRuns) > 0 {
-		if err := r.InsightsService.PostTestRun(context.Background(), testRuns); err != nil {
+		if err := r.InsightsService.PostTestRun(ctx, testRuns); err != nil {
 			log.Warn().Err(err).Str("action", "posting").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 		}
 	}
 }
 
-func (r *CloudRunner) loadSauceTestReport(jobID string, isRDC bool) (saucereport.SauceReport, error) {
-	fileContent, err := r.JobService.Artifact(context.Background(), jobID, saucereport.FileName, isRDC)
+func (r *CloudRunner) loadSauceTestReport(ctx context.Context, jobID string, isRDC bool) (saucereport.SauceReport, error) {
+	fileContent, err := r.JobService.Artifact(ctx, jobID, saucereport.FileName, isRDC)
 	if err != nil {
 		log.Warn().Err(err).Str("action", "loading-json-report").Msg(msg.InsightsReportError)
 		return saucereport.SauceReport{}, err
@@ -1086,8 +1090,8 @@ func (r *CloudRunner) loadSauceTestReport(jobID string, isRDC bool) (saucereport
 	return saucereport.Parse(fileContent)
 }
 
-func (r *CloudRunner) loadJUnitReport(jobID string, isRDC bool) (junit.TestSuites, error) {
-	fileContent, err := r.JobService.Artifact(context.Background(), jobID, junit.FileName, isRDC)
+func (r *CloudRunner) loadJUnitReport(ctx context.Context, jobID string, isRDC bool) (junit.TestSuites, error) {
+	fileContent, err := r.JobService.Artifact(ctx, jobID, junit.FileName, isRDC)
 	if err != nil {
 		log.Warn().Err(err).Str("action", "loading-xml-report").Msg(msg.InsightsReportError)
 		return junit.TestSuites{}, err

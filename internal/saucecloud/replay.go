@@ -81,7 +81,7 @@ func (r *ReplayRunner) runSuites(ctx context.Context, fileURI string) bool {
 
 	suites := r.Project.Suites
 	if r.Project.Sauce.LaunchOrder != "" {
-		history, err := r.getHistory(r.Project.Sauce.LaunchOrder)
+		history, err := r.getHistory(ctx, r.Project.Sauce.LaunchOrder)
 		if err != nil {
 			log.Warn().Err(err).Msg(msg.RetrieveJobHistoryError)
 		} else {
@@ -119,5 +119,5 @@ func (r *ReplayRunner) runSuites(ctx context.Context, fileURI string) bool {
 		}
 	}()
 
-	return r.collectResults(results, len(r.Project.Suites))
+	return r.collectResults(ctx, results, len(r.Project.Suites))
 }

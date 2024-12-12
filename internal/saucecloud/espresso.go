@@ -107,7 +107,7 @@ func (r *EspressoRunner) runSuites(ctx context.Context) bool {
 
 	suites := r.Project.Suites
 	if r.Project.Sauce.LaunchOrder != "" {
-		history, err := r.getHistory(r.Project.Sauce.LaunchOrder)
+		history, err := r.getHistory(ctx, r.Project.Sauce.LaunchOrder)
 		if err != nil {
 			log.Warn().Err(err).Msg(msg.RetrieveJobHistoryError)
 		} else {
@@ -157,7 +157,7 @@ func (r *EspressoRunner) runSuites(ctx context.Context) bool {
 		}
 	}()
 
-	return r.collectResults(results, len(startOptions))
+	return r.collectResults(ctx, results, len(startOptions))
 }
 
 func (r *EspressoRunner) dryRun() {

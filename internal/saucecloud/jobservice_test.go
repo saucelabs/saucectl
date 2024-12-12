@@ -1,6 +1,7 @@
 package saucecloud
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -59,14 +60,12 @@ func TestJobService_DownloadArtifact(t *testing.T) {
 		RDC:                    rdc,
 		ArtifactDownloadConfig: artifactCfg,
 	}
-	downloader.DownloadArtifacts(
-		job.Job{
-			ID:     "test-123",
-			Name:   "suite name",
-			IsRDC:  true,
-			Status: job.StateComplete,
-		}, true,
-	)
+	downloader.DownloadArtifacts(context.Background(), job.Job{
+		ID:     "test-123",
+		Name:   "suite name",
+		IsRDC:  true,
+		Status: job.StateComplete,
+	}, true)
 
 	fileName := filepath.Join(tempDir, "suite_name", "junit.xml")
 	d, err := os.ReadFile(fileName)

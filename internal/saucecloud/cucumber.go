@@ -143,7 +143,7 @@ func (r *CucumberRunner) runSuites(ctx context.Context, app string, otherApps []
 
 	suites := r.Project.Suites
 	if r.Project.Sauce.LaunchOrder != "" {
-		history, err := r.getHistory(r.Project.Sauce.LaunchOrder)
+		history, err := r.getHistory(ctx, r.Project.Sauce.LaunchOrder)
 		if err != nil {
 			log.Warn().Err(err).Msg(msg.RetrieveJobHistoryError)
 		} else {
@@ -187,5 +187,5 @@ func (r *CucumberRunner) runSuites(ctx context.Context, app string, otherApps []
 		}
 	}()
 
-	return r.collectResults(results, len(r.Project.Suites))
+	return r.collectResults(ctx, results, len(r.Project.Suites))
 }
