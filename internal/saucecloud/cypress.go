@@ -127,14 +127,12 @@ func (r *CypressRunner) validateFramework(ctx context.Context, m framework.Metad
 }
 
 func (r *CypressRunner) runSuites(ctx context.Context, app string, otherApps []string) bool {
-	sigChan := r.registerSkipSuitesOnSignal()
-	defer unregisterSignalCapture(sigChan)
 	jobOpts, results := r.createWorkerPool(ctx, r.Project.GetSauceCfg().Concurrency, r.Project.GetSauceCfg().Retries)
 	defer close(results)
 
 	suites := r.Project.GetSuites()
 	if r.Project.GetSauceCfg().LaunchOrder != "" {
-		history, err := r.getHistory(r.Project.GetSauceCfg().LaunchOrder)
+		history, err := r.getHistory(ctx, r.Project.GetSauceCfg().LaunchOrder)
 		if err != nil {
 			log.Warn().Err(err).Msg(msg.RetrieveJobHistoryError)
 		} else {
@@ -182,5 +180,5 @@ func (r *CypressRunner) runSuites(ctx context.Context, app string, otherApps []s
 		}
 	}()
 
-	return r.collectResults(results, r.Project.GetSuiteCount())
+	return r.collectResults(ctx, results, r.Project.GetSuiteCount())
 }

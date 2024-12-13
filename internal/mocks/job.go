@@ -15,7 +15,7 @@ type FakeJobService struct {
 	PollJobFn  func(ctx context.Context, id string, interval time.Duration, timeout time.Duration) (job.Job, error)
 
 	UploadAssetFn            func(ctx context.Context, jobID string, realDevice bool, fileName string, contentType string, content []byte) error
-	DownloadArtifactFn       func(job job.Job, isLastAttempt bool) []string
+	DownloadArtifactFn       func(ctx context.Context, job job.Job, isLastAttempt bool) []string
 	GetJobAssetFileNamesFn   func(ctx context.Context, jobID string) ([]string, error)
 	GetJobAssetFileContentFn func(ctx context.Context, jobID, fileName string) ([]byte, error)
 }
@@ -34,10 +34,8 @@ func (s *FakeJobService) StopJob(
 	return s.StopJobFn(ctx, jobID, realDevice)
 }
 
-func (s *FakeJobService) DownloadArtifacts(
-	job job.Job, isLastAttempt bool,
-) []string {
-	return s.DownloadArtifactFn(job, isLastAttempt)
+func (s *FakeJobService) DownloadArtifacts(ctx context.Context, job job.Job, isLastAttempt bool) []string {
+	return s.DownloadArtifactFn(ctx, job, isLastAttempt)
 }
 
 // Job mock function

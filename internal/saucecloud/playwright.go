@@ -140,15 +140,12 @@ func (r *PlaywrightRunner) getSuiteNames() []string {
 }
 
 func (r *PlaywrightRunner) runSuites(ctx context.Context, app string, otherApps []string) bool {
-	sigChan := r.registerSkipSuitesOnSignal()
-	defer unregisterSignalCapture(sigChan)
-
 	jobOpts, results := r.createWorkerPool(ctx, r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
 	defer close(results)
 
 	suites := r.Project.Suites
 	if r.Project.Sauce.LaunchOrder != "" {
-		history, err := r.getHistory(r.Project.Sauce.LaunchOrder)
+		history, err := r.getHistory(ctx, r.Project.Sauce.LaunchOrder)
 		if err != nil {
 			log.Warn().Err(err).Msg(msg.RetrieveJobHistoryError)
 		} else {
@@ -198,5 +195,5 @@ func (r *PlaywrightRunner) runSuites(ctx context.Context, app string, otherApps 
 		}
 	}()
 
-	return r.collectResults(results, len(r.Project.Suites))
+	return r.collectResults(ctx, results, len(r.Project.Suites))
 }
