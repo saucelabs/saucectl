@@ -1,11 +1,12 @@
 package saucecloud
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_arrayContains(t *testing.T) {

@@ -61,8 +61,7 @@ type CloudRunner struct {
 
 	NPMDependencies []string
 
-	interrupted bool
-	Cache       Cache
+	Cache Cache
 }
 
 type Cache struct {
