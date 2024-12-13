@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"reflect"
 	"sort"
 	"strings"
 	"time"
@@ -189,12 +188,24 @@ func (c *Resto) ArtifactNames(ctx context.Context, jobID string, realDevice bool
 
 	var filesList []string
 	for k, v := range filesMap {
-		if k == "video" || k == "screenshots" {
+		if v == nil || k == "video" {
 			continue
 		}
 
-		if v != nil && reflect.TypeOf(v).Name() == "string" {
-			filesList = append(filesList, v.(string))
+		if val, ok := v.(string); ok {
+			filesList = append(filesList, val)
+		}
+
+		if k == "screenshots" {
+			screenshots, ok := v.([]interface{})
+			if !ok {
+				continue
+			}
+			for _, s := range screenshots {
+				if screenshot, ok := s.(string); ok {
+					filesList = append(filesList, screenshot)
+				}
+			}
 		}
 	}
 	return filesList, nil
