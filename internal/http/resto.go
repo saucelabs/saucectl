@@ -194,6 +194,7 @@ func (c *Resto) ArtifactNames(ctx context.Context, jobID string, realDevice bool
 
 		if val, ok := v.(string); ok {
 			filesList = append(filesList, val)
+			continue
 		}
 
 		if k == "screenshots" {
