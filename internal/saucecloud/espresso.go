@@ -97,9 +97,6 @@ func (r *EspressoRunner) RunProject(ctx context.Context) (int, error) {
 }
 
 func (r *EspressoRunner) runSuites(ctx context.Context) bool {
-	sigChan := r.registerSkipSuitesOnSignal()
-	defer unregisterSignalCapture(sigChan)
-
 	jobOpts, results := r.createWorkerPool(
 		ctx, r.Project.Sauce.Concurrency, r.Project.Sauce.Retries,
 	)

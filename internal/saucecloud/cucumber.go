@@ -135,9 +135,6 @@ func (r *CucumberRunner) getSuiteNames() []string {
 }
 
 func (r *CucumberRunner) runSuites(ctx context.Context, app string, otherApps []string) bool {
-	sigChan := r.registerSkipSuitesOnSignal()
-	defer unregisterSignalCapture(sigChan)
-
 	jobOpts, results := r.createWorkerPool(ctx, r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
 	defer close(results)
 

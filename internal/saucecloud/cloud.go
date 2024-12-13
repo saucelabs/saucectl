@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/signal"
 	"path"
 	"path/filepath"
 	"strings"
@@ -225,19 +224,8 @@ func (r *CloudRunner) runJob(ctx context.Context, opts job.StartOptions) (j job.
 		return job.Job{Status: job.StateError}, false, err
 	}
 
-	sigChan := r.registerInterruptOnSignal(j.ID, opts.RealDevice, opts.DisplayName)
-	defer unregisterSignalCapture(sigChan)
-
 	r.uploadSauceConfig(ctx, j.ID, opts.RealDevice, opts.ConfigFilePath)
 	r.uploadCLIFlags(ctx, j.ID, opts.RealDevice, opts.CLIFlags)
-
-	// os.Interrupt can arrive before the signal.Notify() is registered. In that case,
-	// if a soft exit is requested during startContainer phase, it gently exits.
-	if ctx.Err() != nil {
-		r.stopSuiteExecution(localCtx, j.ID, opts.RealDevice, opts.DisplayName)
-		j, err = r.JobService.PollJob(localCtx, j.ID, 15*time.Second, opts.Timeout, opts.RealDevice)
-		return j, true, err
-	}
 
 	l := log.Info().Str("url", j.URL).Str("suite", opts.DisplayName).Str("platform", opts.PlatformName)
 
@@ -256,9 +244,13 @@ func (r *CloudRunner) runJob(ctx context.Context, opts job.StartOptions) (j job.
 	}
 
 	// High interval poll to not oversaturate the job reader with requests
-	j, err = r.JobService.PollJob(localCtx, j.ID, 15*time.Second, opts.Timeout, opts.RealDevice)
+	j, err = r.JobService.PollJob(ctx, j.ID, 15*time.Second, opts.Timeout, opts.RealDevice)
+	if ctx.Err() != nil {
+		r.stopSuiteExecution(localCtx, j.ID, opts.RealDevice, opts.DisplayName)
+		return j, true, nil
+	}
 	if err != nil {
-		return job.Job{}, r.interrupted, fmt.Errorf("failed to retrieve job status for suite %s: %s", opts.DisplayName, err.Error())
+		return job.Job{}, false, fmt.Errorf("failed to retrieve job status for suite %s: %s", opts.DisplayName, err.Error())
 	}
 
 	// Check timeout
@@ -278,7 +270,7 @@ func (r *CloudRunner) runJob(ctx context.Context, opts job.StartOptions) (j job.
 
 	if !j.Passed {
 		// We may need to differentiate when a job has crashed vs. when there is errors.
-		return j, r.interrupted, errors.New("suite has test failures")
+		return j, false, errors.New("suite has test failures")
 	}
 
 	return j, false, nil
@@ -305,6 +297,8 @@ func (r *CloudRunner) shouldRetry(opts job.StartOptions, jobData job.Job, skippe
 }
 
 func (r *CloudRunner) runJobs(ctx context.Context, jobOpts chan job.StartOptions, results chan<- result) {
+	skipStart := false
+
 	for opts := range jobOpts {
 		start := time.Now()
 
@@ -315,7 +309,7 @@ func (r *CloudRunner) runJobs(ctx context.Context, jobOpts chan job.StartOptions
 			BuildName: opts.Build,
 		}
 
-		if ctx.Err() != nil {
+		if ctx.Err() != nil || skipStart {
 			results <- result{
 				name:     opts.DisplayName,
 				browser:  opts.BrowserName,
@@ -364,10 +358,10 @@ func (r *CloudRunner) runJobs(ctx context.Context, jobOpts chan job.StartOptions
 
 		if r.FailFast && !jobData.Passed {
 			log.Warn().Err(err).Msg("FailFast mode enabled. Skipping upcoming suites.")
-			r.interrupted = true
+			skipStart = true
 		}
 
-		if !r.Async {
+		if !r.Async && !skipped {
 			if opts.CurrentPassCount < opts.PassThreshold {
 				log.Error().Str("suite", opts.DisplayName).Msg("Failed to pass threshold")
 				jobData.Status = job.StateFailed
@@ -379,12 +373,15 @@ func (r *CloudRunner) runJobs(ctx context.Context, jobOpts chan job.StartOptions
 			}
 		}
 
-		files := r.JobService.DownloadArtifacts(ctx, jobData, true)
 		var artifacts []report.Artifact
-		for _, f := range files {
-			artifacts = append(artifacts, report.Artifact{
-				FilePath: f,
-			})
+
+		if !skipped {
+			files := r.JobService.DownloadArtifacts(ctx, jobData, true)
+			for _, f := range files {
+				artifacts = append(artifacts, report.Artifact{
+					FilePath: f,
+				})
+			}
 		}
 
 		results <- result{
@@ -836,6 +833,10 @@ func (r *CloudRunner) logSuite(ctx context.Context, res result) {
 
 // logSuiteError display the console output when tests from a suite are failing
 func (r *CloudRunner) logSuiteConsole(ctx context.Context, res result) {
+	if ctx.Err() != nil {
+		return
+	}
+
 	// To avoid clutter, we don't show the console on job passes.
 	if res.job.Passed && !r.ShowConsoleLog {
 		return
@@ -910,54 +911,14 @@ func (r *CloudRunner) validateTunnel(ctx context.Context, name, owner string, dr
 
 // stopSuiteExecution stops the current execution on Sauce Cloud
 func (r *CloudRunner) stopSuiteExecution(ctx context.Context, jobID string, realDevice bool, suiteName string) {
-	log.Info().Str("suite", suiteName).Msg("Attempting to stop job...")
+	log.Info().
+		Str("suite", suiteName).
+		Str("id", jobID).
+		Msg("Attempting to stop job...")
 
 	// Ignore errors when stopping a job, as it may have already ended or is in
 	// a state where it cannot be stopped. Either way, there's nothing we can do.
 	_, _ = r.JobService.StopJob(ctx, jobID, realDevice)
-}
-
-// registerInterruptOnSignal stops execution on Sauce Cloud when a SIGINT is captured.
-func (r *CloudRunner) registerInterruptOnSignal(jobID string, realDevice bool, suiteName string) chan os.Signal {
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt)
-
-	go func() {
-		sig := <-sigChan
-		if sig == nil {
-			return
-		}
-		r.stopSuiteExecution(context.Background(), jobID, realDevice, suiteName)
-	}()
-
-	return sigChan
-}
-
-// registerSkipSuitesOnSignal prevent new suites from being executed when a SIGINT is captured.
-func (r *CloudRunner) registerSkipSuitesOnSignal() chan os.Signal {
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt)
-
-	go func(c <-chan os.Signal, cr *CloudRunner) {
-		for {
-			sig := <-c
-			if sig == nil {
-				return
-			}
-			if cr.interrupted {
-				os.Exit(1)
-			}
-			println("\nStopping run. Waiting for all in progress tests to be stopped... (press Ctrl-c again to exit without waiting)\n")
-			cr.interrupted = true
-		}
-	}(sigChan, r)
-	return sigChan
-}
-
-// unregisterSignalCapture remove the signal hook associated to the chan c.
-func unregisterSignalCapture(c chan os.Signal) {
-	signal.Stop(c)
-	close(c)
 }
 
 // uploadSauceConfig adds job configuration as an asset.

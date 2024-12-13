@@ -127,8 +127,6 @@ func (r *CypressRunner) validateFramework(ctx context.Context, m framework.Metad
 }
 
 func (r *CypressRunner) runSuites(ctx context.Context, app string, otherApps []string) bool {
-	sigChan := r.registerSkipSuitesOnSignal()
-	defer unregisterSignalCapture(sigChan)
 	jobOpts, results := r.createWorkerPool(ctx, r.Project.GetSauceCfg().Concurrency, r.Project.GetSauceCfg().Retries)
 	defer close(results)
 

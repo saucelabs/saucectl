@@ -164,9 +164,6 @@ func (r *XcuitestRunner) dryRun() {
 }
 
 func (r *XcuitestRunner) runSuites(ctx context.Context) bool {
-	sigChan := r.registerSkipSuitesOnSignal()
-	defer unregisterSignalCapture(sigChan)
-
 	jobOpts, results := r.createWorkerPool(ctx, r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
 	defer close(results)
 

@@ -73,9 +73,6 @@ func (r *ReplayRunner) RunProject(ctx context.Context) (int, error) {
 }
 
 func (r *ReplayRunner) runSuites(ctx context.Context, fileURI string) bool {
-	sigChan := r.registerSkipSuitesOnSignal()
-	defer unregisterSignalCapture(sigChan)
-
 	jobOpts, results := r.createWorkerPool(ctx, r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
 	defer close(results)
 
