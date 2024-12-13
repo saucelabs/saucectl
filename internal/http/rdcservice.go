@@ -267,10 +267,12 @@ func (c *RDCService) PollJob(ctx context.Context, id string, interval, timeout t
 
 	for {
 		select {
+		case <-ctx.Done():
+			return job.Job{ID: id}, ctx.Err()
 		case <-ticker.C:
 			j, err := c.Job(ctx, id, realDevice)
 			if err != nil {
-				return job.Job{}, err
+				return job.Job{ID: id}, err
 			}
 
 			if job.Done(j.Status) {
@@ -280,7 +282,7 @@ func (c *RDCService) PollJob(ctx context.Context, id string, interval, timeout t
 		case <-deathclock.C:
 			j, err := c.Job(ctx, id, realDevice)
 			if err != nil {
-				return job.Job{}, err
+				return job.Job{ID: id}, err
 			}
 			j.TimedOut = true
 			return j, nil
