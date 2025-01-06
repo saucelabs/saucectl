@@ -241,9 +241,17 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		// Overwrite device settings
 		RealDeviceKind: strings.ToLower(xcuitest.IOS),
 		AppSettings: job.AppSettings{
-			AudioCapture: s.AppSettings.AudioCapture,
+			ResigningEnabled: s.AppSettings.ResigningEnabled,
+			AudioCapture:     s.AppSettings.AudioCapture,
 			Instrumentation: job.Instrumentation{
-				NetworkCapture: s.AppSettings.Instrumentation.NetworkCapture,
+				ImageInjection:              s.AppSettings.Instrumentation.ImageInjection,
+				BypassScreenshotRestriction: s.AppSettings.Instrumentation.BypassScreenshotRestriction,
+				SetupDeviceLock:             s.AppSettings.Instrumentation.SetupDeviceLock,
+				GroupFolderRedirect:         s.AppSettings.Instrumentation.GroupFolderRedirect,
+				SystemAlertsDelay:           s.AppSettings.Instrumentation.SystemAlertsDelay,
+				BiometricsInterception:      s.AppSettings.Instrumentation.BiometricsInterception,
+				Vitals:                      s.AppSettings.Instrumentation.Vitals,
+				NetworkCapture:              s.AppSettings.Instrumentation.NetworkCapture,
 			},
 		},
 	}

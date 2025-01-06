@@ -1104,6 +1104,10 @@
                   "description": "Overwrite real device settings.",
                   "type": "object",
                   "properties": {
+                    "resigningEnabled": {
+                      "description": "Overwrite app settings for real device to enable app resigning.",
+                      "type": "boolean"
+                    },
                     "audioCapture": {
                       "description": "Overwrite app settings for real device to capture audio.",
                       "type": "boolean"
@@ -1112,8 +1116,36 @@
                       "description": "Overwrite app settings for real device instrumentation.",
                       "type": "object",
                       "properties": {
+                        "imageInjection": {
+                          "description": "Overwrite app settings for real device to inject provided images in the user app.",
+                          "type": "boolean"
+                        },
+                        "bypassScreenshotRestriction": {
+                          "description": "Overwrite app settings for real device to enable screenshot restriction.",
+                          "type": "boolean"
+                        },
+                        "setupDeviceLock": {
+                          "description": "Overwrite app settings for real device to setup device lock.",
+                          "type": "boolean"
+                        },
+                        "groupFolderRedirect": {
+                          "description": "Overwrite app settings for real device to redirect group folder.",
+                          "type": "boolean"
+                        },
+                        "systemAlertsDelay": {
+                          "description": "Overwrite app settings for real device to delay system alerts.",
+                          "type": "boolean"
+                        },
+                        "vitals": {
+                          "description": "Overwrite app settings for real device to enable vitals.",
+                          "type": "boolean"
+                        },
                         "networkCapture": {
                           "description": "Overwrite app settings for real device to capture network.",
+                          "type": "boolean"
+                        },
+                        "biometricsInterception": {
+                          "description": "Overwrite app settings for real device to intercept biometric authentication.",
                           "type": "boolean"
                         }
                       }

@@ -99,13 +99,21 @@ type StartOptions struct {
 
 // AppSettings represents app settings for real device
 type AppSettings struct {
-	AudioCapture    bool            `json:"audio_capture,omitempty"`
-	Instrumentation Instrumentation `json:"instrumentation,omitempty"`
+	ResigningEnabled bool            `json:"resigning_enabled,omitempty"`
+	AudioCapture     bool            `json:"audio_capture,omitempty"`
+	Instrumentation  Instrumentation `json:"instrumentation,omitempty"`
 }
 
 // Instrumentation represents instrumentation settings for real device
 type Instrumentation struct {
-	NetworkCapture bool `json:"network_capture,omitempty"`
+	ImageInjection              bool `json:"image_injection,omitempty"`
+	BypassScreenshotRestriction bool `json:"bypass_screenshot_restriction,omitempty"`
+	SetupDeviceLock             bool `json:"setup_device_lock,omitempty"`
+	GroupFolderRedirect         bool `json:"group_folder_redirect,omitempty"`
+	SystemAlertsDelay           bool `json:"system_alerts_delay,omitempty"`
+	BiometricsInterception      bool `json:"biometrics_interception,omitempty"`
+	Vitals                      bool `json:"vitals,omitempty"`
+	NetworkCapture              bool `json:"network_capture,omitempty"`
 }
 
 // TunnelOptions represents the options that configure the usage of a tunnel when running tests in the Sauce Labs cloud.
