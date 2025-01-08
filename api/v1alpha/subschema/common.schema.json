@@ -90,7 +90,7 @@
               "description": "Overwrite app settings for real device to redirect group folder.",
               "type": "boolean"
             },
-            "systemAlertsDelay": {
+            "sysAlertsDelay": {
               "description": "Overwrite app settings for real device to delay system alerts.",
               "type": "boolean"
             },
@@ -102,8 +102,12 @@
               "description": "Overwrite app settings for real device to capture network.",
               "type": "boolean"
             },
-            "biometricsInterception": {
+            "biometrics": {
               "description": "Overwrite app settings for real device to intercept biometric authentication.",
+              "type": "boolean"
+            },
+            "groupDirectory": {
+              "description": "Overwrite app settings for real device to enable group directory access.",
               "type": "boolean"
             }
           }

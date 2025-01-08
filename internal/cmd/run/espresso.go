@@ -82,10 +82,11 @@ func NewEspressoCmd() *cobra.Command {
 	sc.Bool("bypassScreenshotRestriction", "suite::appSettings::instrumentation::bypassScreenshotRestriction", false, "Overwrite app settings for real device to enable screenshot restriction.")
 	sc.Bool("setupDeviceLock", "suite::appSettings::instrumentation::setupDeviceLock", false, "Overwrite app settings for real device to setup device lock.")
 	sc.Bool("groupFolderRedirect", "suite::appSettings::instrumentation::groupFolderRedirect", false, "Overwrite app settings for real device to redirect group folder.")
-	sc.Bool("systemAlertsDelay", "suite::appSettings::instrumentation::systemAlertsDelay", false, "Overwrite app settings for real device to delay system alerts.")
+	sc.Bool("sysAlertsDelay", "suite::appSettings::instrumentation::sysAlertsDelay", false, "Overwrite app settings for real device to delay system alerts.")
 	sc.Bool("vitals", "suite::appSettings::instrumentation::vitals", false, "Overwrite app settings for real device to enable vitals.")
 	sc.Bool("networkCapture", "suite::appSettings::instrumentation::networkCapture", false, "Overwrite app settings for real device to capture network.")
-	sc.Bool("biometricsInterception", "suite::appSettings::instrumentation::biometricsInterception", false, "Overwrite app settings for real device to intercept biometric authentication.")
+	sc.Bool("biometrics", "suite::appSettings::instrumentation::biometrics", false, "Overwrite app settings for real device to intercept biometric authentication.")
+	sc.Bool("groupDirectory", "suite::appSettings::instrumentation::groupDirectory", false, "Overwrite app settings for real device to enable group directory access.")
 
 	return cmd
 }

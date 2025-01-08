@@ -217,10 +217,11 @@ type Instrumentation struct {
 	BypassScreenshotRestriction bool `yaml:"bypassScreenshotRestriction,omitempty" json:"bypassScreenshotRestriction"`
 	SetupDeviceLock             bool `yaml:"setupDeviceLock,omitempty" json:"setupDeviceLock"`
 	GroupFolderRedirect         bool `yaml:"groupFolderRedirect,omitempty" json:"groupFolderRedirect"`
-	SystemAlertsDelay           bool `yaml:"systemAlertsDelay,omitempty" json:"systemAlertsDelay"`
-	BiometricsInterception      bool `yaml:"biometricsInterception,omitempty" json:"biometricsInterception"`
+	SysAlertsDelay              bool `yaml:"sysAlertsDelay,omitempty" json:"sysAlertsDelay"`
+	Biometrics                  bool `yaml:"biometrics,omitempty" json:"biometrics"`
 	Vitals                      bool `yaml:"vitals,omitempty" json:"vitals"`
 	NetworkCapture              bool `yaml:"networkCapture,omitempty" json:"networkCapture"`
+	GroupDirectory              bool `yaml:"groupDirectory,omitempty" json:"groupDirectory"`
 }
 
 // SmartRetry represents the settings for retry strategy.

@@ -110,10 +110,11 @@ type Instrumentation struct {
 	BypassScreenshotRestriction bool `json:"bypass_screenshot_restriction,omitempty"`
 	SetupDeviceLock             bool `json:"setup_device_lock,omitempty"`
 	GroupFolderRedirect         bool `json:"group_folder_redirect,omitempty"`
-	SystemAlertsDelay           bool `json:"system_alerts_delay,omitempty"`
-	BiometricsInterception      bool `json:"biometrics_interception,omitempty"`
+	SysAlertsDelay              bool `json:"sys_alerts_delay,omitempty"`
+	Biometrics                  bool `json:"biometrics,omitempty"`
 	Vitals                      bool `json:"vitals,omitempty"`
 	NetworkCapture              bool `json:"network_capture,omitempty"`
+	GroupDirectory              bool `json:"group_directory,omitempty"`
 }
 
 // TunnelOptions represents the options that configure the usage of a tunnel when running tests in the Sauce Labs cloud.

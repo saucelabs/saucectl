@@ -261,10 +261,11 @@ func (r *EspressoRunner) newStartOptions(
 				BypassScreenshotRestriction: s.AppSettings.Instrumentation.BypassScreenshotRestriction,
 				SetupDeviceLock:             s.AppSettings.Instrumentation.SetupDeviceLock,
 				GroupFolderRedirect:         s.AppSettings.Instrumentation.GroupFolderRedirect,
-				SystemAlertsDelay:           s.AppSettings.Instrumentation.SystemAlertsDelay,
-				BiometricsInterception:      s.AppSettings.Instrumentation.BiometricsInterception,
+				SysAlertsDelay:              s.AppSettings.Instrumentation.SysAlertsDelay,
+				Biometrics:                  s.AppSettings.Instrumentation.Biometrics,
 				Vitals:                      s.AppSettings.Instrumentation.Vitals,
 				NetworkCapture:              s.AppSettings.Instrumentation.NetworkCapture,
+				GroupDirectory:              s.AppSettings.Instrumentation.GroupDirectory,
 			},
 		},
 	}
