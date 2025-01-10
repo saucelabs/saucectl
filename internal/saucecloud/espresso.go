@@ -254,18 +254,14 @@ func (r *EspressoRunner) newStartOptions(
 		// Overwrite device settings
 		RealDeviceKind: strings.ToLower(espresso.Android),
 		AppSettings: job.AppSettings{
-			ResigningEnabled: s.AppSettings.ResigningEnabled,
-			AudioCapture:     s.AppSettings.AudioCapture,
+			InstrumentationEnabled: s.AppSettings.ResigningEnabled,
+			AudioCapture:           s.AppSettings.AudioCapture,
 			Instrumentation: job.Instrumentation{
 				ImageInjection:              s.AppSettings.Instrumentation.ImageInjection,
 				BypassScreenshotRestriction: s.AppSettings.Instrumentation.BypassScreenshotRestriction,
-				SetupDeviceLock:             s.AppSettings.Instrumentation.SetupDeviceLock,
-				GroupFolderRedirect:         s.AppSettings.Instrumentation.GroupFolderRedirect,
-				SysAlertsDelay:              s.AppSettings.Instrumentation.SysAlertsDelay,
-				Biometrics:                  s.AppSettings.Instrumentation.Biometrics,
 				Vitals:                      s.AppSettings.Instrumentation.Vitals,
 				NetworkCapture:              s.AppSettings.Instrumentation.NetworkCapture,
-				GroupDirectory:              s.AppSettings.Instrumentation.GroupDirectory,
+				BiometricsInterception:      s.AppSettings.Instrumentation.Biometrics,
 			},
 		},
 	}

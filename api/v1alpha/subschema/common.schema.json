@@ -82,10 +82,6 @@
               "description": "Overwrite app settings for real device to enable screenshot restriction.",
               "type": "boolean"
             },
-            "setupDeviceLock": {
-              "description": "Overwrite app settings for real device to setup device lock.",
-              "type": "boolean"
-            },
             "groupFolderRedirect": {
               "description": "Overwrite app settings for real device to redirect group folder.",
               "type": "boolean"

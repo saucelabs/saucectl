@@ -80,7 +80,6 @@ func NewEspressoCmd() *cobra.Command {
 	sc.Bool("audioCapture", "suite::appSettings::audioCapture", false, "Overwrite app settings for real device to capture audio.")
 	sc.Bool("imageInjection", "suite::appSettings::instrumentation::imageInjection", false, "Overwrite app settings for real device to inject provided images in the user app.")
 	sc.Bool("bypassScreenshotRestriction", "suite::appSettings::instrumentation::bypassScreenshotRestriction", false, "Overwrite app settings for real device to enable screenshot restriction.")
-	sc.Bool("setupDeviceLock", "suite::appSettings::instrumentation::setupDeviceLock", false, "Overwrite app settings for real device to setup device lock.")
 	sc.Bool("groupFolderRedirect", "suite::appSettings::instrumentation::groupFolderRedirect", false, "Overwrite app settings for real device to redirect group folder.")
 	sc.Bool("sysAlertsDelay", "suite::appSettings::instrumentation::sysAlertsDelay", false, "Overwrite app settings for real device to delay system alerts.")
 	sc.Bool("vitals", "suite::appSettings::instrumentation::vitals", false, "Overwrite app settings for real device to enable vitals.")

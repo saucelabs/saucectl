@@ -243,16 +243,13 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		AppSettings: job.AppSettings{
 			ResigningEnabled: s.AppSettings.ResigningEnabled,
 			AudioCapture:     s.AppSettings.AudioCapture,
-			Instrumentation: job.Instrumentation{
-				ImageInjection:              s.AppSettings.Instrumentation.ImageInjection,
-				BypassScreenshotRestriction: s.AppSettings.Instrumentation.BypassScreenshotRestriction,
-				SetupDeviceLock:             s.AppSettings.Instrumentation.SetupDeviceLock,
-				GroupFolderRedirect:         s.AppSettings.Instrumentation.GroupFolderRedirect,
-				SysAlertsDelay:              s.AppSettings.Instrumentation.SysAlertsDelay,
-				Biometrics:                  s.AppSettings.Instrumentation.Biometrics,
-				Vitals:                      s.AppSettings.Instrumentation.Vitals,
-				NetworkCapture:              s.AppSettings.Instrumentation.NetworkCapture,
-				GroupDirectory:              s.AppSettings.Instrumentation.GroupDirectory,
+			Resigning: job.Resigning{
+				ImageInjection:         s.AppSettings.Instrumentation.ImageInjection,
+				GroupFolderRedirect:    s.AppSettings.Instrumentation.GroupFolderRedirect,
+				SystemAlertsDelay:      s.AppSettings.Instrumentation.SysAlertsDelay,
+				BiometricsInterception: s.AppSettings.Instrumentation.Biometrics,
+				Vitals:                 s.AppSettings.Instrumentation.Vitals,
+				NetworkCapture:         s.AppSettings.Instrumentation.NetworkCapture,
 			},
 		},
 	}

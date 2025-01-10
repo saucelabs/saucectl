@@ -97,24 +97,32 @@ type StartOptions struct {
 	CLIFlags       map[string]interface{} `json:"-"`
 }
 
-// AppSettings represents app settings for real device
+// AppSettings represents mobile app settings.
 type AppSettings struct {
-	ResigningEnabled bool            `json:"resigning_enabled,omitempty"`
-	AudioCapture     bool            `json:"audio_capture,omitempty"`
-	Instrumentation  Instrumentation `json:"instrumentation,omitempty"`
+	AudioCapture           bool            `json:"audio_capture,omitempty"`
+	InstrumentationEnabled bool            `json:"instrumentation_enabled,omitempty"`
+	Instrumentation        Instrumentation `json:"instrumentation,omitempty"`
+	ResigningEnabled       bool            `json:"resigning_enabled,omitempty"`
+	Resigning              Resigning       `json:"resigning,omitempty"`
 }
 
-// Instrumentation represents instrumentation settings for real device
+// Instrumentation represents mobile app instrumentation settings for Android.
 type Instrumentation struct {
 	ImageInjection              bool `json:"image_injection,omitempty"`
 	BypassScreenshotRestriction bool `json:"bypass_screenshot_restriction,omitempty"`
-	SetupDeviceLock             bool `json:"setup_device_lock,omitempty"`
-	GroupFolderRedirect         bool `json:"group_folder_redirect,omitempty"`
-	SysAlertsDelay              bool `json:"sys_alerts_delay,omitempty"`
-	Biometrics                  bool `json:"biometrics,omitempty"`
+	BiometricsInterception      bool `json:"biometrics,omitempty"`
 	Vitals                      bool `json:"vitals,omitempty"`
 	NetworkCapture              bool `json:"network_capture,omitempty"`
-	GroupDirectory              bool `json:"group_directory,omitempty"`
+}
+
+// Resigning represents mobile app instrumentation settings for iOS.
+type Resigning struct {
+	ImageInjection         bool `json:"image_injection,omitempty"`
+	SystemAlertsDelay      bool `json:"sys_alerts_delay,omitempty"`
+	GroupFolderRedirect    bool `json:"group_directory,omitempty"`
+	BiometricsInterception bool `json:"biometrics,omitempty"`
+	Vitals                 bool `json:"vitals,omitempty"`
+	NetworkCapture         bool `json:"network_capture,omitempty"`
 }
 
 // TunnelOptions represents the options that configure the usage of a tunnel when running tests in the Sauce Labs cloud.
