@@ -254,9 +254,27 @@ func (r *EspressoRunner) newStartOptions(
 		// Overwrite device settings
 		RealDeviceKind: strings.ToLower(espresso.Android),
 		AppSettings: job.AppSettings{
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// The key name mismatch here between left and right hand side is intentional.
+			//
+			//   Traditionally, saucectl made no distinction between instrumentation and resigning
+			//   while our composer API backend always used specific key names per platform,
+			//   either Instrumentation for Android and Resigning for iOS.
+			//
+			//   This created a situation where app settings were sporadically ignored in Android RDC sessions.
+			//
+			//   Here, we choose the lesser evil and keep supporting  `ResignerEnabled` in the saucectl config yaml
+			//   for backward compatibility while also mapping it to the correct API parameter for composer to evaluate.
+			InstrumentationEnabled: s.AppSettings.ResigningEnabled,
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 			AudioCapture: s.AppSettings.AudioCapture,
 			Instrumentation: job.Instrumentation{
-				NetworkCapture: s.AppSettings.Instrumentation.NetworkCapture,
+				ImageInjection:              s.AppSettings.Instrumentation.ImageInjection,
+				BypassScreenshotRestriction: s.AppSettings.Instrumentation.BypassScreenshotRestriction,
+				Vitals:                      s.AppSettings.Instrumentation.Vitals,
+				NetworkCapture:              s.AppSettings.Instrumentation.NetworkCapture,
+				BiometricsInterception:      s.AppSettings.Instrumentation.Biometrics,
 			},
 		},
 	}

@@ -206,13 +206,20 @@ type Defaults struct {
 
 // AppSettings represents override settings.
 type AppSettings struct {
-	AudioCapture    bool            `yaml:"audioCapture,omitempty" json:"audioCapture"`
-	Instrumentation Instrumentation `yaml:"instrumentation,omitempty" json:"instrumentation"`
+	ResigningEnabled bool            `yaml:"resigningEnabled,omitempty" json:"resigningEnabled"`
+	AudioCapture     bool            `yaml:"audioCapture,omitempty" json:"audioCapture"`
+	Instrumentation  Instrumentation `yaml:"instrumentation,omitempty" json:"instrumentation"`
 }
 
 // Instrumentation represents Instrumentation settings for real devices.
 type Instrumentation struct {
-	NetworkCapture bool `yaml:"networkCapture,omitempty" json:"networkCapture"`
+	ImageInjection              bool `yaml:"imageInjection,omitempty" json:"imageInjection"`
+	BypassScreenshotRestriction bool `yaml:"bypassScreenshotRestriction,omitempty" json:"bypassScreenshotRestriction"`
+	GroupFolderRedirect         bool `yaml:"groupDirectory,omitempty" json:"groupDirectory"`
+	SysAlertsDelay              bool `yaml:"sysAlertsDelay,omitempty" json:"sysAlertsDelay"`
+	Biometrics                  bool `yaml:"biometrics,omitempty" json:"biometrics"`
+	Vitals                      bool `yaml:"vitals,omitempty" json:"vitals"`
+	NetworkCapture              bool `yaml:"networkCapture,omitempty" json:"networkCapture"`
 }
 
 // SmartRetry represents the settings for retry strategy.
