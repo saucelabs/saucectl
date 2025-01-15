@@ -119,7 +119,7 @@ type Instrumentation struct {
 type Resigning struct {
 	ImageInjection         bool `json:"image_injection,omitempty"`
 	SystemAlertsDelay      bool `json:"sys_alerts_delay,omitempty"`
-	GroupFolderRedirect    bool `json:"group_directory,omitempty"`
+	GroupDirectory         bool `json:"group_directory,omitempty"`
 	BiometricsInterception bool `json:"biometrics,omitempty"`
 	Vitals                 bool `json:"vitals,omitempty"`
 	NetworkCapture         bool `json:"network_capture,omitempty"`

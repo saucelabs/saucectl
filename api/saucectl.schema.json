@@ -1124,14 +1124,6 @@
                           "description": "Overwrite app settings for real device to enable screenshot restriction.",
                           "type": "boolean"
                         },
-                        "groupFolderRedirect": {
-                          "description": "Overwrite app settings for real device to redirect group folder.",
-                          "type": "boolean"
-                        },
-                        "sysAlertsDelay": {
-                          "description": "Overwrite app settings for real device to delay system alerts.",
-                          "type": "boolean"
-                        },
                         "vitals": {
                           "description": "Overwrite app settings for real device to enable vitals.",
                           "type": "boolean"
@@ -1142,10 +1134,6 @@
                         },
                         "biometrics": {
                           "description": "Overwrite app settings for real device to intercept biometric authentication.",
-                          "type": "boolean"
-                        },
-                        "groupDirectory": {
-                          "description": "Overwrite app settings for real device to enable group directory access.",
                           "type": "boolean"
                         }
                       }
@@ -2160,7 +2148,48 @@
                   "additionalProperties": false
                 },
                 "appSettings": {
-                  "$ref": "#/allOf/1/then/properties/suites/items/properties/appSettings"
+                  "description": "Overwrite real device settings.",
+                  "type": "object",
+                  "properties": {
+                    "resigningEnabled": {
+                      "description": "Overwrite app settings for real device to enable app resigning.",
+                      "type": "boolean"
+                    },
+                    "audioCapture": {
+                      "description": "Overwrite app settings for real device to capture audio.",
+                      "type": "boolean"
+                    },
+                    "instrumentation": {
+                      "description": "Overwrite app settings for real device instrumentation.",
+                      "type": "object",
+                      "properties": {
+                        "imageInjection": {
+                          "description": "Overwrite app settings for real device to inject provided images in the user app.",
+                          "type": "boolean"
+                        },
+                        "sysAlertsDelay": {
+                          "description": "Overwrite app settings for real device to delay system alerts.",
+                          "type": "boolean"
+                        },
+                        "vitals": {
+                          "description": "Overwrite app settings for real device to enable vitals.",
+                          "type": "boolean"
+                        },
+                        "networkCapture": {
+                          "description": "Overwrite app settings for real device to capture network.",
+                          "type": "boolean"
+                        },
+                        "biometrics": {
+                          "description": "Overwrite app settings for real device to intercept biometric authentication.",
+                          "type": "boolean"
+                        },
+                        "groupDirectory": {
+                          "description": "Overwrite app settings for real device to enable group directory access.",
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
                 },
                 "simulators": {
                   "description": "Defines details for running this suite on virtual devices using a simulator.",

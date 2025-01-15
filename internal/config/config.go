@@ -215,7 +215,7 @@ type AppSettings struct {
 type Instrumentation struct {
 	ImageInjection              bool `yaml:"imageInjection,omitempty" json:"imageInjection"`
 	BypassScreenshotRestriction bool `yaml:"bypassScreenshotRestriction,omitempty" json:"bypassScreenshotRestriction"`
-	GroupFolderRedirect         bool `yaml:"groupDirectory,omitempty" json:"groupDirectory"`
+	GroupDirectory              bool `yaml:"groupDirectory,omitempty" json:"groupDirectory"`
 	SysAlertsDelay              bool `yaml:"sysAlertsDelay,omitempty" json:"sysAlertsDelay"`
 	Biometrics                  bool `yaml:"biometrics,omitempty" json:"biometrics"`
 	Vitals                      bool `yaml:"vitals,omitempty" json:"vitals"`

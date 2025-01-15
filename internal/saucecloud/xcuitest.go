@@ -245,7 +245,7 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 			AudioCapture:     s.AppSettings.AudioCapture,
 			Resigning: job.Resigning{
 				ImageInjection:         s.AppSettings.Instrumentation.ImageInjection,
-				GroupFolderRedirect:    s.AppSettings.Instrumentation.GroupFolderRedirect,
+				GroupDirectory:         s.AppSettings.Instrumentation.GroupDirectory,
 				SystemAlertsDelay:      s.AppSettings.Instrumentation.SysAlertsDelay,
 				BiometricsInterception: s.AppSettings.Instrumentation.Biometrics,
 				Vitals:                 s.AppSettings.Instrumentation.Vitals,
