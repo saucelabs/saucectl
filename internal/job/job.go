@@ -115,5 +115,5 @@ type Service interface {
 
 	// DownloadArtifacts downloads artifacts from a Job. Returns a list of
 	// file paths.
-	DownloadArtifacts(job Job, isLastAttempt bool) []string
+	DownloadArtifacts(ctx context.Context, job Job, isLastAttempt bool) []string
 }

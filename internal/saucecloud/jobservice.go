@@ -22,9 +22,7 @@ type JobService struct {
 	ArtifactDownloadConfig config.ArtifactDownload
 }
 
-func (s JobService) DownloadArtifacts(
-	jobData job.Job, isLastAttempt bool,
-) []string {
+func (s JobService) DownloadArtifacts(ctx context.Context, jobData job.Job, isLastAttempt bool) []string {
 	if s.skipDownload(jobData, isLastAttempt) {
 		return []string{}
 	}
@@ -38,7 +36,7 @@ func (s JobService) DownloadArtifacts(
 	}
 
 	files, err := s.ArtifactNames(
-		context.Background(), jobData.ID, jobData.IsRDC,
+		ctx, jobData.ID, jobData.IsRDC,
 	)
 	if err != nil {
 		log.Error().Msgf("Unable to fetch artifacts list (%v)", err)
@@ -50,7 +48,7 @@ func (s JobService) DownloadArtifacts(
 
 	for _, f := range filepaths {
 		targetFile, err := s.downloadArtifact(
-			destDir, jobData.ID, f, jobData.IsRDC,
+			ctx, destDir, jobData.ID, f, jobData.IsRDC,
 		)
 		if err != nil {
 			log.Err(err).Msg("Unable to download artifacts")
@@ -119,10 +117,10 @@ func (s JobService) StartJob(ctx context.Context, opts job.StartOptions) (job.Jo
 }
 
 func (s JobService) downloadArtifact(
-	targetDir, jobID, fileName string, realDevice bool,
+	ctx context.Context, targetDir, jobID, fileName string, realDevice bool,
 ) (string, error) {
 	content, err := s.Artifact(
-		context.Background(), jobID, fileName, realDevice,
+		ctx, jobID, fileName, realDevice,
 	)
 	if err != nil {
 		return "", err
