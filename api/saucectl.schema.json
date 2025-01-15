@@ -1124,10 +1124,6 @@
                           "description": "Overwrite app settings for real device to enable screenshot restriction.",
                           "type": "boolean"
                         },
-                        "groupFolderRedirect": {
-                          "description": "Overwrite app settings for real device to redirect group folder.",
-                          "type": "boolean"
-                        },
                         "sysAlertsDelay": {
                           "description": "Overwrite app settings for real device to delay system alerts.",
                           "type": "boolean"
