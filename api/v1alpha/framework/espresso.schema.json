@@ -316,6 +316,7 @@
                   }
                 }
               }
+            }
           },
           "passThreshold": {
             "$ref": "../subschema/common.schema.json#/definitions/passThreshold"
@@ -350,6 +351,4 @@
     "suites"
   ],
   "additionalProperties": true
-  }
 }
-

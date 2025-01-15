@@ -180,6 +180,7 @@
                   }
                 }
               }
+            }
           },
           "simulators": {
             "description": "Defines details for running this suite on virtual devices using a simulator.",
@@ -321,5 +322,4 @@
     "suites"
   ],
   "additionalProperties": true
-  }
 }
