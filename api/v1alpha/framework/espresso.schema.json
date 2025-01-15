@@ -279,7 +279,43 @@
             "$ref": "../subschema/common.schema.json#/definitions/timeout"
           },
           "appSettings": {
-            "$ref": "../subschema/common.schema.json#/definitions/appSettings"
+            "description": "Overwrite real device settings.",
+            "type": "object",
+            "properties": {
+              "resigningEnabled": {
+                "description": "Overwrite app settings for real device to enable app resigning.",
+                "type": "boolean"
+              },
+              "audioCapture": {
+                "description": "Overwrite app settings for real device to capture audio.",
+                "type": "boolean"
+              },
+              "instrumentation": {
+                "description": "Overwrite app settings for real device instrumentation.",
+                "type": "object",
+                "properties": {
+                  "imageInjection": {
+                    "description": "Overwrite app settings for real device to inject provided images in the user app.",
+                    "type": "boolean"
+                  },
+                  "bypassScreenshotRestriction": {
+                    "description": "Overwrite app settings for real device to enable screenshot restriction.",
+                    "type": "boolean"
+                  },
+                  "vitals": {
+                    "description": "Overwrite app settings for real device to enable vitals.",
+                    "type": "boolean"
+                  },
+                  "networkCapture": {
+                    "description": "Overwrite app settings for real device to capture network.",
+                    "type": "boolean"
+                  },
+                  "biometrics": {
+                    "description": "Overwrite app settings for real device to intercept biometric authentication.",
+                    "type": "boolean"
+                  }
+                }
+              }
           },
           "passThreshold": {
             "$ref": "../subschema/common.schema.json#/definitions/passThreshold"
