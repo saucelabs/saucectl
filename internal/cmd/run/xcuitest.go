@@ -16,6 +16,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
 	"github.com/saucelabs/saucectl/internal/usage"
+	"github.com/saucelabs/saucectl/internal/xctest"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -85,6 +86,60 @@ func NewXCUITestCmd() *cobra.Command {
 	return cmd
 }
 
+func runXctest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) (int, error) {
+	if !isCLIDriven {
+		config.ValidateSchema(gFlags.cfgFilePath)
+	}
+
+	p, err := xctest.FromFile(gFlags.cfgFilePath)
+	if err != nil {
+		return 1, err
+	}
+	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
+
+	if err := applyXCTestFlags(&p, xcuiFlags); err != nil {
+		return 1, err
+	}
+	xctest.SetDefaults(&p)
+
+	if err := xctest.Validate(p); err != nil {
+		return 1, err
+	}
+	if err := xctest.ShardSuites(&p); err != nil {
+		return 1, err
+	}
+
+	regio := region.FromString(p.Sauce.Region)
+
+	if !gFlags.noAutoTagging {
+		p.Sauce.Metadata.Tags = append(p.Sauce.Metadata.Tags, ci.GetTags()...)
+	}
+
+	tracker := usage.DefaultClient
+	if regio == region.Staging {
+		tracker.Enabled = false
+	}
+
+	go func() {
+		tracker.Collect(
+			cmds.FullName(cmd),
+			usage.Framework("xctest", ""),
+			usage.Flags(cmd.Flags()),
+			usage.SauceConfig(p.Sauce),
+			usage.Artifacts(p.Artifacts),
+			usage.NumSuites(len(p.Suites)),
+			usage.Sharding(xctest.GetShardTypes(p.Suites), nil),
+			usage.SmartRetry(p.IsSmartRetried()),
+			usage.Reporters(p.Reporters),
+		)
+		_ = tracker.Close()
+	}()
+
+	cleanupArtifacts(p.Artifacts)
+
+	return runXctestInCloud(cmd.Context(), p, regio)
+}
+
 func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) (int, error) {
 	if !isCLIDriven {
 		config.ValidateSchema(gFlags.cfgFilePath)
@@ -138,6 +193,56 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 	cleanupArtifacts(p.Artifacts)
 
 	return runXcuitestInCloud(cmd.Context(), p, regio)
+}
+
+func runXctestInCloud(ctx context.Context, p xctest.Project, regio region.Region) (int, error) {
+	log.Info().
+		Str("region", regio.String()).
+		Str("tunnel", p.Sauce.Tunnel.Name).
+		Msg("Running XCTest in Sauce Labs.")
+
+	creds := regio.Credentials()
+
+	restoClient := http.NewResto(regio, creds.Username, creds.AccessKey, 0)
+	testcompClient := http.NewTestComposer(regio.APIBaseURL(), creds, testComposerTimeout)
+	webdriverClient := http.NewWebdriver(regio, creds, webdriverTimeout)
+	appsClient := *http.NewAppStore(regio.APIBaseURL(), creds.Username, creds.AccessKey, gFlags.appStoreTimeout)
+	rdcClient := http.NewRDCService(regio, creds.Username, creds.AccessKey, rdcTimeout)
+	insightsClient := http.NewInsightsService(regio.APIBaseURL(), creds, insightsTimeout)
+	iamClient := http.NewUserService(regio.APIBaseURL(), creds, iamTimeout)
+	jobService := saucecloud.JobService{
+		RDC:                    rdcClient,
+		Resto:                  restoClient,
+		Webdriver:              webdriverClient,
+		TestComposer:           testcompClient,
+		ArtifactDownloadConfig: p.Artifacts.Download,
+	}
+	buildService := http.NewBuildService(
+		regio, creds.Username, creds.AccessKey, buildTimeout,
+	)
+
+	r := saucecloud.XctestRunner{
+		Project: p,
+		CloudRunner: saucecloud.CloudRunner{
+			ProjectUploader: &appsClient,
+			JobService:      jobService,
+			TunnelService:   &restoClient,
+			MetadataService: &testcompClient,
+			InsightsService: &insightsClient,
+			UserService:     &iamClient,
+			BuildService:    &buildService,
+			Region:          regio,
+			ShowConsoleLog:  p.ShowConsoleLog,
+			Reporters:       createReporters(p.Reporters, gFlags.async),
+			Framework:       framework.Framework{Name: xcuitest.Kind},
+			Async:           gFlags.async,
+			FailFast:        gFlags.failFast,
+			Retrier: &retry.JunitRetrier{
+				JobService: jobService,
+			},
+		},
+	}
+	return r.RunProject(ctx)
 }
 
 func runXcuitestInCloud(ctx context.Context, p xcuitest.Project, regio region.Region) (int, error) {
@@ -219,6 +324,39 @@ func applyXCUITestFlags(p *xcuitest.Project, flags xcuitestFlags) error {
 	}
 
 	p.Suites = []xcuitest.Suite{p.Suite}
+
+	return nil
+}
+
+func applyXCTestFlags(p *xctest.Project, flags xcuitestFlags) error {
+	if gFlags.selectedSuite != "" {
+		if err := xctest.FilterSuites(p, gFlags.selectedSuite); err != nil {
+			return err
+		}
+	}
+
+	if p.Suite.Name == "" {
+		isErr := len(p.Suite.TestOptions.Class) != 0 ||
+			len(p.Suite.TestOptions.NotClass) != 0 ||
+			flags.Device.Changed ||
+			flags.Simulator.Changed
+
+		if isErr {
+			return ErrEmptySuiteName
+		}
+
+		return nil
+	}
+
+	if flags.Device.Changed {
+		p.Suite.Devices = append(p.Suite.Devices, flags.Device.Device)
+	}
+
+	if flags.Simulator.Changed {
+		p.Suite.Simulators = append(p.Suite.Simulators, flags.Simulator.Simulator)
+	}
+
+	p.Suites = []xctest.Suite{p.Suite}
 
 	return nil
 }
