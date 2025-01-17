@@ -11,7 +11,7 @@ import (
 	"gotest.tools/v3/fs"
 )
 
-func ensureAppsAreIpa(t *testing.T) {
+func TestEnsureAppsAreIpa(t *testing.T) {
 	dir := fs.NewDir(t, "my-app",
 		fs.WithDir("my-app.app",
 			fs.WithFile("check-me.txt", "check-me",
