@@ -76,13 +76,13 @@ func NewEspressoCmd() *cobra.Command {
 	cmd.Flags().Var(&lflags.Device, "device", "Specifies the device to use for testing. Requires --name to be set.")
 
 	// Overwrite devices settings
-	sc.Bool("resigningEnabled", "suite::appSettings::resigningEnabled", false, "Overwrite app settings for real device to enable app resigning.")
-	sc.Bool("audioCapture", "suite::appSettings::audioCapture", false, "Overwrite app settings for real device to capture audio.")
-	sc.Bool("imageInjection", "suite::appSettings::instrumentation::imageInjection", false, "Overwrite app settings for real device to inject provided images in the user app.")
-	sc.Bool("bypassScreenshotRestriction", "suite::appSettings::instrumentation::bypassScreenshotRestriction", false, "Overwrite app settings for real device to enable screenshot restriction.")
-	sc.Bool("vitals", "suite::appSettings::instrumentation::vitals", false, "Overwrite app settings for real device to enable vitals.")
-	sc.Bool("networkCapture", "suite::appSettings::instrumentation::networkCapture", false, "Overwrite app settings for real device to capture network.")
-	sc.Bool("biometrics", "suite::appSettings::instrumentation::biometrics", false, "Overwrite app settings for real device to intercept biometric authentication.")
+	sc.Bool("resigningEnabled", "suite::appSettings::resigningEnabled", false, "Configure app settings for real device to enable app resigning.")
+	sc.Bool("audioCapture", "suite::appSettings::audioCapture", false, "Configure app settings for real device to capture audio.")
+	sc.Bool("imageInjection", "suite::appSettings::instrumentation::imageInjection", false, "Configure app settings for real device to inject provided images in the user app.")
+	sc.Bool("bypassScreenshotRestriction", "suite::appSettings::instrumentation::bypassScreenshotRestriction", false, "Configure app settings for real device to enable bypassing of screenshot restriction.")
+	sc.Bool("vitals", "suite::appSettings::instrumentation::vitals", false, "Configure app settings for real device to enable vitals.")
+	sc.Bool("networkCapture", "suite::appSettings::instrumentation::networkCapture", false, "Configure app settings for real device to capture network.")
+	sc.Bool("biometrics", "suite::appSettings::instrumentation::biometrics", false, "Configure app settings for real device to intercept biometric authentication.")
 
 	return cmd
 }
