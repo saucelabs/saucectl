@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"testing"
 
-	"gotest.tools/fs"
+	"gotest.tools/v3/fs"
 )
 
 func ensureAppsAreIpa(t *testing.T) {
