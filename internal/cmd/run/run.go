@@ -147,7 +147,7 @@ func Command() *cobra.Command {
 
 	// Deprecated flags
 	_ = sc.Fset.MarkDeprecated("uploadTimeout", "please use --upload-timeout instead")
-	_ = sc.Fset.MarkDeprecated("test-env-silent", "please remove it")
+	_ = sc.Fset.MarkDeprecated("test-env-silent", "please remove it, as it no longer serves any purpose")
 
 	sc.BindAll()
 
