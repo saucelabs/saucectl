@@ -85,6 +85,7 @@ type StartOptions struct {
 	TestsToRun        []string    `json:"testsToRun,omitempty"`
 	TestsToSkip       []string    `json:"testsToSkip,omitempty"`
 	RealDeviceKind    string      `json:"realDeviceKind,omitempty"`
+	XCTestRunFile     string      `json:"xcTestRunFile,omitempty"`
 
 	// VMD specific settings.
 

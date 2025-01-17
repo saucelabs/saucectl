@@ -182,6 +182,8 @@ const (
 	MissingXcuitestAppPath = "missing path to app .ipa"
 	// MissingXcuitestTestAppPath indicates empty testApp path for xcuitest
 	MissingXcuitestTestAppPath = "missing path to test app .ipa"
+	// MissingXCTestFileAppPath indicates empty path for xctest descriptor file
+	MissingXCTestFileAppPath = "missing path to xctest descriptor file .xctestrun"
 	// MissingXcuitestDeviceConfig indicates empty device setting for xcuitest
 	MissingXcuitestDeviceConfig = "missing devices configuration for suite: %s"
 )

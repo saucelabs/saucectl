@@ -58,6 +58,7 @@ type RDCSessionRequest struct {
 	TestFramework       string            `json:"test_framework,omitempty"`
 	AppID               string            `json:"app_id,omitempty"`
 	TestAppID           string            `json:"test_app_id,omitempty"`
+	XCTestRunFileID     string            `json:"xc_test_run_file,omitempty"`
 	OtherApps           []string          `json:"other_apps,omitempty"`
 	DeviceQuery         DeviceQuery       `json:"device_query,omitempty"`
 	TestOptions         map[string]string `json:"test_options,omitempty"`
@@ -105,6 +106,8 @@ func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (job.J
 		frameworkName = "ANDROID_INSTRUMENTATION"
 	case "xcuitest":
 		frameworkName = "XCUITEST"
+	case "xctest":
+		frameworkName = "XCTEST"
 	}
 
 	useTestOrchestrator := false
@@ -115,7 +118,8 @@ func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (job.J
 	jobReq := RDCSessionRequest{
 		TestName:            opts.Name,
 		AppID:               opts.App,
-		TestAppID:           opts.Suite,
+		TestAppID:           opts.TestApp,
+		XCTestRunFileID:     opts.XCTestRunFile,
 		OtherApps:           opts.OtherApps,
 		TestOptions:         c.formatEspressoArgs(opts.TestOptions),
 		TestsToRun:          opts.TestsToRun,
