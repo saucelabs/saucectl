@@ -13,7 +13,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/storage"
 	"github.com/saucelabs/saucectl/internal/xctest"
-	"github.com/saucelabs/saucectl/internal/xcuitest"
 )
 
 // XcuitestRunner represents the Sauce Labs cloud implementation for xcuitest.
