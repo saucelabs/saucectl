@@ -16,6 +16,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/testcafe"
+	"github.com/saucelabs/saucectl/internal/xctest"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 
 	"github.com/AlecAivazis/survey/v2/terminal"
@@ -40,6 +41,7 @@ type initConfig struct {
 	dockerImage       string
 	app               string
 	testApp           string
+	xctestRunFile     string
 	otherApps         []string
 	platformName      string
 	browserName       string
@@ -92,6 +94,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 		PlaywrightCmd(),
 		TestCafeCmd(),
 		XCUITestCmd(),
+		XCTestCmd(),
 	)
 
 	flags := cmd.PersistentFlags()
@@ -186,6 +189,8 @@ func noPromptMode(cmd *cobra.Command, cfg *initConfig) error {
 		errs = ini.initializeBatchTestcafe(cmd.Context())
 	case xcuitest.Kind:
 		errs = ini.initializeBatchXcuitest(cmd.Flags())
+	case xctest.Kind:
+		errs = ini.initializeBatchXctest(cmd.Flags())
 	case imagerunner.Kind:
 		errs = ini.initializeBatchImageRunner()
 	default:
