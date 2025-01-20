@@ -209,7 +209,7 @@ func (r *XctestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, xcTe
 		ARMRequired: d.armRequired,
 
 		// Overwrite device settings
-		RealDeviceKind: strings.ToLower(xcuitest.IOS),
+		RealDeviceKind: strings.ToLower(xctest.IOS),
 		AppSettings: job.AppSettings{
 			AudioCapture: s.AppSettings.AudioCapture,
 			Instrumentation: job.Instrumentation{
