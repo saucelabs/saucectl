@@ -87,7 +87,7 @@ func (ini *initializer) configure(ctx context.Context) error {
 	case xcuitest.Kind:
 		return ini.initializeXCUITest(ctx)
 	case xctest.Kind:
-		return ini.initializeXCTest(ctx)
+		return ini.initializeXCTest()
 	case imagerunner.Kind:
 		return ini.initializeImageRunner()
 	default:
@@ -655,7 +655,7 @@ func (ini *initializer) initializeXCUITest(ctx context.Context) error {
 	return nil
 }
 
-func (ini *initializer) initializeXCTest(ctx context.Context) error {
+func (ini *initializer) initializeXCTest() error {
 	var err error
 
 	err = ini.askDevice(iOSDevicesPatterns)
