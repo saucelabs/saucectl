@@ -46,7 +46,7 @@ type Project struct {
 	EnvFlag   map[string]string `yaml:"-" json:"-"`
 }
 
-// Xcuitest represents xcuitest apps configuration.
+// Xctest represents xctest apps configuration.
 type Xctest struct {
 	App                      string   `yaml:"app,omitempty" json:"app"`
 	AppDescription           string   `yaml:"appDescription,omitempty" json:"appDescription"`
