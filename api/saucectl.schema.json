@@ -14,6 +14,7 @@
         "puppeteer-replay",
         "testcafe",
         "xcuitest",
+        "xctest",
         "playwright-cucumberjs"
       ]
     }
@@ -845,7 +846,7 @@
             "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/8/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -1098,7 +1099,7 @@
                   }
                 },
                 "timeout": {
-                  "$ref": "#/allOf/8/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
                 },
                 "appSettings": {
                   "description": "Overwrite real device settings.",
@@ -1310,7 +1311,7 @@
             "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/8/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -1328,7 +1329,7 @@
             "type": "object",
             "properties": {
               "version": {
-                "$ref": "#/allOf/7/then/properties/playwright/properties/version",
+                "$ref": "#/allOf/8/then/properties/playwright/properties/version",
                 "enum": [
                   "package.json",
                   "1.49.0",
@@ -1367,7 +1368,7 @@
                   "type": "string"
                 },
                 "playwrightVersion": {
-                  "$ref": "#/allOf/7/then/properties/playwright/properties/version"
+                  "$ref": "#/allOf/8/then/properties/playwright/properties/version"
                 },
                 "testMatch": {
                   "description": "Paths to the playwright test files. Regex values are supported to indicate all files of a certain type or in a certain directory, etc.",
@@ -1392,7 +1393,7 @@
                   "type": "object",
                   "properties": {
                     "browserName": {
-                      "$ref": "#/allOf/7/then/properties/suites/items/properties/browserName",
+                      "$ref": "#/allOf/8/then/properties/suites/items/properties/browserName",
                       "enum": [
                         "chromium",
                         "firefox",
@@ -1478,7 +1479,7 @@
                   "type": "boolean"
                 },
                 "timeout": {
-                  "$ref": "#/allOf/8/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
                 },
                 "preExec": {
                   "description": "Specifies which commands to execute before starting the tests.",
@@ -1549,7 +1550,7 @@
             "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/8/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -1570,7 +1571,7 @@
                   "type": "array"
                 },
                 "browserName": {
-                  "$ref": "#/allOf/7/then/properties/suites/items/properties/browserName",
+                  "$ref": "#/allOf/8/then/properties/suites/items/properties/browserName",
                   "enum": [
                     "chrome"
                   ]
@@ -1590,7 +1591,7 @@
                   "description": "A specific operating system on which to run the tests. Sauce Labs will try to choose a reasonable default if not explicitly specified."
                 },
                 "timeout": {
-                  "$ref": "#/allOf/8/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
                 },
                 "passThreshold": {
                   "$ref": "#/allOf/1/then/properties/suites/items/properties/passThreshold"
@@ -1657,7 +1658,7 @@
             "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/8/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -1673,7 +1674,7 @@
             "type": "object",
             "properties": {
               "version": {
-                "$ref": "#/allOf/7/then/properties/playwright/properties/version",
+                "$ref": "#/allOf/8/then/properties/playwright/properties/version",
                 "enum": [
                   "package.json",
                   "3.7.0",
@@ -1711,7 +1712,7 @@
                   "type": "string"
                 },
                 "browserName": {
-                  "$ref": "#/allOf/7/then/properties/suites/items/properties/browserName",
+                  "$ref": "#/allOf/8/then/properties/suites/items/properties/browserName",
                   "enum": [
                     "chrome",
                     "firefox",
@@ -1956,7 +1957,7 @@
                   "type": "boolean"
                 },
                 "timeout": {
-                  "$ref": "#/allOf/8/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
                 },
                 "preExec": {
                   "$ref": "#/allOf/2/then/properties/suites/items/properties/preExec"
@@ -2035,7 +2036,7 @@
             "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/8/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -2285,7 +2286,344 @@
                   }
                 },
                 "timeout": {
-                  "$ref": "#/allOf/8/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
+                },
+                "passThreshold": {
+                  "$ref": "#/allOf/1/then/properties/suites/items/properties/passThreshold"
+                },
+                "smartRetry": {
+                  "$ref": "#/allOf/1/then/properties/suites/items/properties/smartRetry"
+                },
+                "shard": {
+                  "description": "When sharding is configured, saucectl automatically splits the tests (e.g. by testList or concurrency) so that they can easily run in parallel.",
+                  "enum": [
+                    "",
+                    "concurrency",
+                    "testList"
+                  ]
+                },
+                "testListFile": {
+                  "description": "This file containing tests will be used in sharding by concurrency.",
+                  "type": "string"
+                }
+              },
+              "anyOf": [
+                {
+                  "required": [
+                    "simulators"
+                  ]
+                },
+                {
+                  "required": [
+                    "devices"
+                  ]
+                }
+              ],
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "apiVersion",
+          "kind",
+          "suites"
+        ],
+        "additionalProperties": true
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "xctest"
+          }
+        }
+      },
+      "then": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "saucectl xctest runner configuration",
+        "description": "Configuration file for xctest using saucectl",
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/allOf/1/then/allOf/0"
+          },
+          {
+            "$ref": "#/allOf/1/then/allOf/1"
+          },
+          {
+            "$ref": "#/allOf/1/then/allOf/2"
+          }
+        ],
+        "properties": {
+          "apiVersion": {
+            "const": "v1alpha"
+          },
+          "kind": {
+            "const": "xctest"
+          },
+          "showConsoleLog": {
+            "$ref": "#/allOf/1/then/properties/showConsoleLog"
+          },
+          "defaults": {
+            "description": "Settings that are applied onto every suite by default, if no value is set on a suite explicitly.",
+            "type": "object",
+            "properties": {
+              "timeout": {
+                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
+              }
+            },
+            "additionalProperties": false
+          },
+          "env": {
+            "$ref": "#/allOf/2/then/properties/env"
+          },
+          "xcuitest": {
+            "description": "Contains details specific to the XCUITest project.",
+            "type": "object",
+            "properties": {
+              "app": {
+                "description": "Local path or remote url to the application. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
+                "type": "string"
+              },
+              "appDescription": {
+                "description": "Description for the app.",
+                "type": "string"
+              },
+              "xcTestRunFile": {
+                "description": "Local path or remote url to the .xctestrun file test descriptor. If a remote url is defined, the file will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
+                "type": "string"
+              },
+              "xcTestRunFileDescription": {
+                "description": "Description for the xcTestRunFile.",
+                "type": "string"
+              },
+              "otherApps": {
+                "description": "A list of applications to be installed alongside the main app. Applications can be defined as a local path or a remote url. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values. When targeting simulators, a maximum of 2 otherApps is supported.",
+                "type": "array"
+              }
+            },
+            "additionalProperties": false
+          },
+          "suites": {
+            "description": "The set of properties providing details about the test suites to run.",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "description": "The name of the test suite, which will be reflected in the test results in Sauce Labs.",
+                  "type": "string"
+                },
+                "app": {
+                  "description": "Local path or remote url to the application. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
+                  "type": "string"
+                },
+                "appDescription": {
+                  "description": "Description for the app.",
+                  "type": "string"
+                },
+                "testApp": {
+                  "description": "Local path or remote url to the test application. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
+                  "type": "string"
+                },
+                "testAppDescription": {
+                  "description": "Description for the testApp.",
+                  "type": "string"
+                },
+                "otherApps": {
+                  "description": "A list of applications to be installed alongside the main app. Applications can be defined as a local path or a remote url. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values. When targeting simulators, a maximum of 2 otherApps is supported.",
+                  "type": "array"
+                },
+                "env": {
+                  "$ref": "#/allOf/2/then/properties/env"
+                },
+                "testOptions": {
+                  "description": "Allows you to control various details on how tests are executed.",
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "description": "Only run the specified classes.",
+                      "type": "array"
+                    },
+                    "notClass": {
+                      "description": "Run all classes except those specified here.",
+                      "type": "array"
+                    },
+                    "testLanguage": {
+                      "description": "Specifies ISO 639-1 language during testing. Supported on Simulators only.",
+                      "type": "string"
+                    },
+                    "testRegion": {
+                      "description": "Specifies ISO 3166-1 region during testing.",
+                      "type": "string"
+                    },
+                    "testTimeoutsEnabled": {
+                      "description": "By default there is no timeout, if enabled, then the timeout is 600 seconds. This can be changed by adding the defaultTestExecutionTimeAllowance value. Supported on Simulators only.",
+                      "type": "string",
+                      "enum": [
+                        "Yes",
+                        "No"
+                      ]
+                    },
+                    "maximumTestExecutionTimeAllowance": {
+                      "description": "The maximum execution time, in seconds, an individual test is given to execute, regardless of the test's preferred allowance. Supported on Simulators only.",
+                      "type": "number"
+                    },
+                    "defaultTestExecutionTimeAllowance": {
+                      "description": "The default execution time, in seconds, an individual test is given to execute if test timeouts are enabled. Supported on Simulators only.",
+                      "type": "number"
+                    },
+                    "statusBarOverrideTime": {
+                      "description": "Modify the time displayed on the status bar. Supported on Simulators only.",
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "appSettings": {
+                  "description": "Overwrite real device settings.",
+                  "type": "object",
+                  "properties": {
+                    "resigningEnabled": {
+                      "description": "Overwrite app settings for real device to enable app resigning.",
+                      "type": "boolean"
+                    },
+                    "audioCapture": {
+                      "description": "Overwrite app settings for real device to capture audio.",
+                      "type": "boolean"
+                    },
+                    "instrumentation": {
+                      "description": "Overwrite app settings for real device instrumentation.",
+                      "type": "object",
+                      "properties": {
+                        "imageInjection": {
+                          "description": "Overwrite app settings for real device to inject provided images in the user app.",
+                          "type": "boolean"
+                        },
+                        "sysAlertsDelay": {
+                          "description": "Overwrite app settings for real device to delay system alerts.",
+                          "type": "boolean"
+                        },
+                        "vitals": {
+                          "description": "Overwrite app settings for real device to enable vitals.",
+                          "type": "boolean"
+                        },
+                        "networkCapture": {
+                          "description": "Overwrite app settings for real device to capture network.",
+                          "type": "boolean"
+                        },
+                        "biometrics": {
+                          "description": "Overwrite app settings for real device to intercept biometric authentication.",
+                          "type": "boolean"
+                        },
+                        "groupDirectory": {
+                          "description": "Overwrite app settings for real device to enable group directory access.",
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                },
+                "simulators": {
+                  "description": "Defines details for running this suite on virtual devices using a simulator.",
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "name": {
+                        "description": "The name of the simulator. To ensure name accuracy, check the list of supported virtual devices (https://app.saucelabs.com/live/web-testing/virtual).",
+                        "type": "string"
+                      },
+                      "orientation": {
+                        "$ref": "#/allOf/1/then/properties/suites/items/properties/emulators/items/properties/orientation"
+                      },
+                      "platformVersions": {
+                        "description": "The set of one or more versions of the device platform on which to run the test suite.",
+                        "type": "array",
+                        "minItems": 1
+                      },
+                      "armRequired": {
+                        "description": "If set to true, the simulator will run on an ARM-based Mac. If set to false, the simulator will run on an Intel-based Mac.",
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "platformVersions"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "devices": {
+                  "description": "Define details for running this suite on real devices.",
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "id": {
+                        "description": "Request a specific device for this test suite by its ID. You can look up device IDs in the Sauce Labs app or using our Devices API (https://docs.saucelabs.com/dev/api/rdc#get-devices).",
+                        "type": "string",
+                        "examples": [
+                          "iPhone_12_Pro_14_real",
+                          "iPhone_12_Pro_real_us"
+                        ]
+                      },
+                      "name": {
+                        "description": "Match the device name in full or partially (regex), which may provide a larger pool of available devices of the type you want.",
+                        "type": "string",
+                        "examples": [
+                          "iPad .*",
+                          "iPhone .*"
+                        ]
+                      },
+                      "platformVersion": {
+                        "description": "The version of the iOS operating system.",
+                        "type": "string"
+                      },
+                      "options": {
+                        "description": "Further specify desired device attributes within the pool of devices that match the name and version criteria.",
+                        "type": "object",
+                        "properties": {
+                          "carrierConnectivity": {
+                            "description": "Limit the device selection to those that are connected to a cellular network.",
+                            "type": "boolean"
+                          },
+                          "deviceType": {
+                            "description": "Limit the device selection to a specific type of device.",
+                            "enum": [
+                              "ANY",
+                              "PHONE",
+                              "TABLET"
+                            ]
+                          },
+                          "private": {
+                            "description": "Limit the device selection to only match from your organization's private pool.",
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "oneOf": [
+                      {
+                        "required": [
+                          "id"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "name"
+                        ]
+                      }
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "timeout": {
+                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
                 },
                 "passThreshold": {
                   "$ref": "#/allOf/1/then/properties/suites/items/properties/passThreshold"
@@ -2451,7 +2789,7 @@
             "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/8/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -2574,7 +2912,7 @@
                   "type": "boolean"
                 },
                 "timeout": {
-                  "$ref": "#/allOf/8/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
                 },
                 "preExec": {
                   "$ref": "#/allOf/2/then/properties/suites/items/properties/preExec"
@@ -2741,7 +3079,7 @@
                 "description": "List of services to run with the suite.",
                 "type": "array",
                 "items": {
-                  "$ref": "#/allOf/8/then/definitions/service"
+                  "$ref": "#/allOf/9/then/definitions/service"
                 }
               }
             },
@@ -2890,22 +3228,22 @@
             "const": "imagerunner"
           },
           "sauce": {
-            "$ref": "#/allOf/8/then/definitions/sauce"
+            "$ref": "#/allOf/9/then/definitions/sauce"
           },
           "defaults": {
             "description": "Settings that are applied onto every suite as a default value.",
-            "$ref": "#/allOf/8/then/definitions/suite"
+            "$ref": "#/allOf/9/then/definitions/suite"
           },
           "suites": {
             "description": "List of suites",
             "type": "array",
             "minItems": 1,
             "items": {
-              "$ref": "#/allOf/8/then/definitions/suite"
+              "$ref": "#/allOf/9/then/definitions/suite"
             }
           },
           "reporters": {
-            "$ref": "#/allOf/8/then/definitions/reporters"
+            "$ref": "#/allOf/9/then/definitions/reporters"
           }
         },
         "required": [
