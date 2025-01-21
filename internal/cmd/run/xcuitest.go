@@ -27,6 +27,62 @@ type xcuitestFlags struct {
 	Simulator flags.Simulator
 }
 
+func NewXCTestCmd() *cobra.Command {
+	sc := flags.SnakeCharmer{Fmap: map[string]*pflag.Flag{}}
+	lflags := xcuitestFlags{}
+
+	cmd := &cobra.Command{
+		Use:              "xctest",
+		Short:            "Run xctest tests.",
+		Long:             "Unlike 'saucectl run', this command allows you to bypass the config file partially or entirely by configuring an adhoc suite (--name) via flags.",
+		Example:          `saucectl run xctest -c "" --name "My Suite" --app app.ipa --xcTestRunFile xcTestRunFile.xctestrun --otherApps=a.ipa,b.ipa --device name="iPhone.*",platformVersion=14.0,carrierConnectivity=false,deviceType=PHONE,private=false`,
+		SilenceUsage:     true,
+		Hidden:           true, // TODO reveal command once ready
+		TraverseChildren: true,
+		PreRunE: func(_ *cobra.Command, _ []string) error {
+			sc.BindAll()
+			return preRun()
+		},
+		Run: func(cmd *cobra.Command, _ []string) {
+			exitCode, err := runXctest(cmd, lflags, true)
+			if err != nil {
+				log.Err(err).Msg("failed to execute run command")
+			}
+			os.Exit(exitCode)
+		},
+	}
+
+	sc.Fset = cmd.Flags()
+	sc.String("name", "suite::name", "", "Creates a new adhoc suite with this name. Suites defined in the config will be ignored.")
+	sc.String("app", "xctest::app", "", "Specifies the app under test")
+	sc.String("appDescription", "xctest::appDescription", "", "Specifies description for the app")
+	sc.String("xcTestRunFile", "xctest::xcTestRunFile", "", "Specifies the xctestrun test config")
+	sc.StringSlice("otherApps", "xctest::otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
+	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'.")
+
+	sc.String("shard", "suite::shard", "", "When shard is configured as concurrency, saucectl automatically splits the tests by concurrency so that they can easily run in parallel. Requires --name to be set.")
+	sc.String("testListFile", "suite::testListFile", "", "This file containing tests will be used in sharding by concurrency. Requires --name to be set.")
+
+	// Test Options
+	sc.StringSlice("testOptions.class", "suite::testOptions::class", []string{}, "Only run the specified classes. Requires --name to be set.")
+	sc.StringSlice("testOptions.notClass", "suite::testOptions::notClass", []string{}, "Run all classes except those specified here. Requires --name to be set.")
+
+	// Devices
+	cmd.Flags().Var(&lflags.Device, "device", "Specifies the device to use for testing. Requires --name to be set.")
+
+	// Overwrite devices settings
+	sc.Bool("resigningEnabled", "suite::appSettings::resigningEnabled", false, "Overwrite app settings for real device to enable app resigning.")
+	sc.Bool("audioCapture", "suite::appSettings::audioCapture", false, "Overwrite app settings for real device to capture audio.")
+	sc.Bool("imageInjection", "suite::appSettings::instrumentation::imageInjection", false, "Overwrite app settings for real device to inject provided images in the user app.")
+	sc.Bool("sysAlertsDelay", "suite::appSettings::instrumentation::sysAlertsDelay", false, "Overwrite app settings for real device to delay system alerts.")
+	sc.Bool("vitals", "suite::appSettings::instrumentation::vitals", false, "Overwrite app settings for real device to enable vitals.")
+	sc.Bool("networkCapture", "suite::appSettings::instrumentation::networkCapture", false, "Overwrite app settings for real device to capture network.")
+	sc.Bool("biometrics", "suite::appSettings::instrumentation::biometrics", false, "Overwrite app settings for real device to intercept biometric authentication.")
+	sc.Bool("groupDirectory", "suite::appSettings::instrumentation::groupDirectory", false, "Overwrite app settings for real device to enable group directory access.")
+
+	return cmd
+}
+
 // NewXCUITestCmd creates the 'run' command for XCUITest.
 func NewXCUITestCmd() *cobra.Command {
 	sc := flags.SnakeCharmer{Fmap: map[string]*pflag.Flag{}}
