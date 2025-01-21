@@ -1,0 +1,36 @@
+apiVersion: v1alpha
+kind: xctest
+sauce:
+  region: us-west-1
+  concurrency: 2
+  retries: 2
+  metadata:
+    tags:
+      - e2e
+      - release team
+      - other tag
+    build: Release $CI_COMMIT_SHORT_SHA
+
+defaults:
+  timeout: 5m
+
+xctest:
+  app: ./tests/e2e/xcuitest/Saucelabs-FlutterTestApp.ipa
+  xcTestRunFile: ./tests/e2e/xcuitest/Saucelabs-FlutterTest.xctestrun
+
+suites:
+  - name: saucy xctest - real
+    devices:
+      - name: "iPhone.*"
+        options:
+          carrierConnectivity: false
+          deviceType: PHONE
+          private: false
+
+artifacts:
+  download:
+    when: always
+    match:
+      - junit.xml
+      - xcuitest.log
+    directory: ./artifacts/
