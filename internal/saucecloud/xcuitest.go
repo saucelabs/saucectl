@@ -210,7 +210,7 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		Env:         s.Env,
 		ARMRequired: d.armRequired,
 
-		// Overwrite device settings
+		// Configure device settings
 		RealDeviceKind: strings.ToLower(xcuitest.IOS),
 		AppSettings: job.AppSettings{
 			ResigningEnabled: s.AppSettings.ResigningEnabled,

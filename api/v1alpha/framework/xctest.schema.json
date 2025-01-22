@@ -37,8 +37,8 @@
     "env": {
       "$ref": "../subschema/common.schema.json#/definitions/env"
     },
-    "xcuitest": {
-      "description": "Contains details specific to the XCUITest project.",
+    "xctest": {
+      "description": "Contains details specific to the XCTest project.",
       "type": "object",
       "properties": {
         "app": {
