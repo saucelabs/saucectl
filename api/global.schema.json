@@ -14,6 +14,7 @@
         "puppeteer-replay",
         "testcafe",
         "xcuitest",
+        "xctest",
         "playwright-cucumberjs"
       ]
     }
@@ -92,6 +93,18 @@
       },
       "then": {
         "$ref": "v1alpha/framework/xcuitest.schema.json"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "xctest"
+          }
+        }
+      },
+      "then": {
+        "$ref": "v1alpha/framework/xctest.schema.json"
       }
     },
     {

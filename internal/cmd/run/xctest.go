@@ -4,38 +4,37 @@ import (
 	"context"
 	"os"
 
-	cmds "github.com/saucelabs/saucectl/internal/cmd"
-	"github.com/saucelabs/saucectl/internal/http"
-
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/ci"
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/framework"
+	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/saucecloud"
 	"github.com/saucelabs/saucectl/internal/saucecloud/retry"
 	"github.com/saucelabs/saucectl/internal/usage"
+	"github.com/saucelabs/saucectl/internal/xctest"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 
-type xcuitestFlags struct {
-	Device    flags.Device
-	Simulator flags.Simulator
+type xctestFlags struct {
+	Device flags.Device
 }
 
-// NewXCUITestCmd creates the 'run' command for XCUITest.
-func NewXCUITestCmd() *cobra.Command {
+// NewXCTestCmd creates the 'run' command for XCTest.
+func NewXCTestCmd() *cobra.Command {
 	sc := flags.SnakeCharmer{Fmap: map[string]*pflag.Flag{}}
-	lflags := xcuitestFlags{}
+	lflags := xctestFlags{}
 
 	cmd := &cobra.Command{
-		Use:              "xcuitest",
-		Short:            "Run xcuitest tests.",
+		Use:              "xctest",
+		Short:            "Run xctest tests.",
 		Long:             "Unlike 'saucectl run', this command allows you to bypass the config file partially or entirely by configuring an adhoc suite (--name) via flags.",
-		Example:          `saucectl run xcuitest -c "" --name "My Suite" --app app.ipa --testApp testApp.ipa --otherApps=a.ipa,b.ipa --device name="iPhone.*",platformVersion=14.0,carrierConnectivity=false,deviceType=PHONE,private=false`,
+		Example:          `saucectl run xctest -c "" --name "My Suite" --app app.ipa --xcTestRunFile xcTestRunFile.xctestrun --otherApps=a.ipa,b.ipa --device name="iPhone.*",platformVersion=14.0,carrierConnectivity=false,deviceType=PHONE,private=false`,
 		SilenceUsage:     true,
 		Hidden:           true, // TODO reveal command once ready
 		TraverseChildren: true,
@@ -44,7 +43,7 @@ func NewXCUITestCmd() *cobra.Command {
 			return preRun()
 		},
 		Run: func(cmd *cobra.Command, _ []string) {
-			exitCode, err := runXcuitest(cmd, lflags, true)
+			exitCode, err := runXctest(cmd, lflags, true)
 			if err != nil {
 				log.Err(err).Msg("failed to execute run command")
 			}
@@ -54,11 +53,10 @@ func NewXCUITestCmd() *cobra.Command {
 
 	sc.Fset = cmd.Flags()
 	sc.String("name", "suite::name", "", "Creates a new adhoc suite with this name. Suites defined in the config will be ignored.")
-	sc.String("app", "xcuitest::app", "", "Specifies the app under test")
-	sc.String("appDescription", "xcuitest::appDescription", "", "Specifies description for the app")
-	sc.String("testApp", "xcuitest::testApp", "", "Specifies the test app")
-	sc.String("testAppDescription", "xcuitest::testAppDescription", "", "Specifies description for the testApp")
-	sc.StringSlice("otherApps", "xcuitest::otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
+	sc.String("app", "xctest::app", "", "Specifies the app under test")
+	sc.String("appDescription", "xctest::appDescription", "", "Specifies description for the app")
+	sc.String("xcTestRunFile", "xctest::xcTestRunFile", "", "Specifies the xctestrun test config")
+	sc.StringSlice("otherApps", "xctest::otherApps", []string{}, "Specifies any additional apps that are installed alongside the main app")
 	sc.Int("passThreshold", "suite::passThreshold", 1, "The minimum number of successful attempts for a suite to be considered as 'passed'.")
 
 	sc.String("shard", "suite::shard", "", "When shard is configured as concurrency, saucectl automatically splits the tests by concurrency so that they can easily run in parallel. Requires --name to be set.")
@@ -70,42 +68,40 @@ func NewXCUITestCmd() *cobra.Command {
 
 	// Devices
 	cmd.Flags().Var(&lflags.Device, "device", "Specifies the device to use for testing. Requires --name to be set.")
-	cmd.Flags().Var(&lflags.Simulator, "simulator", "Specifies the simulator to use for testing. Requires --name to be set.")
 
-	// Configure devices settings
-	sc.Bool("resigningEnabled", "suite::appSettings::resigningEnabled", false, "Configure app settings for real device to enable app resigning.")
-	sc.Bool("audioCapture", "suite::appSettings::audioCapture", false, "Configure app settings for real device to capture audio.")
-	sc.Bool("imageInjection", "suite::appSettings::instrumentation::imageInjection", false, "Configure app settings for real device to inject provided images in the user app.")
-	sc.Bool("sysAlertsDelay", "suite::appSettings::instrumentation::sysAlertsDelay", false, "Configure app settings for real device to delay system alerts.")
-	sc.Bool("vitals", "suite::appSettings::instrumentation::vitals", false, "Configure app settings for real device to enable vitals.")
-	sc.Bool("networkCapture", "suite::appSettings::instrumentation::networkCapture", false, "Configure app settings for real device to capture network.")
-	sc.Bool("biometrics", "suite::appSettings::instrumentation::biometrics", false, "Configure app settings for real device to intercept biometric authentication.")
-	sc.Bool("groupDirectory", "suite::appSettings::instrumentation::groupDirectory", false, "Configure app settings for real device to enable group directory access.")
+	// Overwrite devices settings
+	sc.Bool("resigningEnabled", "suite::appSettings::resigningEnabled", false, "Overwrite app settings for real device to enable app resigning.")
+	sc.Bool("audioCapture", "suite::appSettings::audioCapture", false, "Overwrite app settings for real device to capture audio.")
+	sc.Bool("imageInjection", "suite::appSettings::instrumentation::imageInjection", false, "Overwrite app settings for real device to inject provided images in the user app.")
+	sc.Bool("sysAlertsDelay", "suite::appSettings::instrumentation::sysAlertsDelay", false, "Overwrite app settings for real device to delay system alerts.")
+	sc.Bool("vitals", "suite::appSettings::instrumentation::vitals", false, "Overwrite app settings for real device to enable vitals.")
+	sc.Bool("networkCapture", "suite::appSettings::instrumentation::networkCapture", false, "Overwrite app settings for real device to capture network.")
+	sc.Bool("biometrics", "suite::appSettings::instrumentation::biometrics", false, "Overwrite app settings for real device to intercept biometric authentication.")
+	sc.Bool("groupDirectory", "suite::appSettings::instrumentation::groupDirectory", false, "Overwrite app settings for real device to enable group directory access.")
 
 	return cmd
 }
 
-func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) (int, error) {
+func runXctest(cmd *cobra.Command, xcuiFlags xctestFlags, isCLIDriven bool) (int, error) {
 	if !isCLIDriven {
 		config.ValidateSchema(gFlags.cfgFilePath)
 	}
 
-	p, err := xcuitest.FromFile(gFlags.cfgFilePath)
+	p, err := xctest.FromFile(gFlags.cfgFilePath)
 	if err != nil {
 		return 1, err
 	}
-
 	p.CLIFlags = flags.CaptureCommandLineFlags(cmd.Flags())
 
-	if err := applyXCUITestFlags(&p, xcuiFlags); err != nil {
+	if err := applyXCTestFlags(&p, xcuiFlags); err != nil {
 		return 1, err
 	}
-	xcuitest.SetDefaults(&p)
+	xctest.SetDefaults(&p)
 
-	if err := xcuitest.Validate(p); err != nil {
+	if err := xctest.Validate(p); err != nil {
 		return 1, err
 	}
-	if err := xcuitest.ShardSuites(&p); err != nil {
+	if err := xctest.ShardSuites(&p); err != nil {
 		return 1, err
 	}
 
@@ -123,12 +119,12 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 	go func() {
 		tracker.Collect(
 			cmds.FullName(cmd),
-			usage.Framework("xcuitest", ""),
+			usage.Framework("xctest", ""),
 			usage.Flags(cmd.Flags()),
 			usage.SauceConfig(p.Sauce),
 			usage.Artifacts(p.Artifacts),
 			usage.NumSuites(len(p.Suites)),
-			usage.Sharding(xcuitest.GetShardTypes(p.Suites), nil),
+			usage.Sharding(xctest.GetShardTypes(p.Suites), nil),
 			usage.SmartRetry(p.IsSmartRetried()),
 			usage.Reporters(p.Reporters),
 		)
@@ -137,14 +133,14 @@ func runXcuitest(cmd *cobra.Command, xcuiFlags xcuitestFlags, isCLIDriven bool) 
 
 	cleanupArtifacts(p.Artifacts)
 
-	return runXcuitestInCloud(cmd.Context(), p, regio)
+	return runXctestInCloud(cmd.Context(), p, regio)
 }
 
-func runXcuitestInCloud(ctx context.Context, p xcuitest.Project, regio region.Region) (int, error) {
+func runXctestInCloud(ctx context.Context, p xctest.Project, regio region.Region) (int, error) {
 	log.Info().
 		Str("region", regio.String()).
 		Str("tunnel", p.Sauce.Tunnel.Name).
-		Msg("Running XCUITest in Sauce Labs.")
+		Msg("Running XCTest in Sauce Labs.")
 
 	creds := regio.Credentials()
 
@@ -166,7 +162,7 @@ func runXcuitestInCloud(ctx context.Context, p xcuitest.Project, regio region.Re
 		regio, creds.Username, creds.AccessKey, buildTimeout,
 	)
 
-	r := saucecloud.XcuitestRunner{
+	r := saucecloud.XctestRunner{
 		Project: p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader: &appsClient,
@@ -190,9 +186,9 @@ func runXcuitestInCloud(ctx context.Context, p xcuitest.Project, regio region.Re
 	return r.RunProject(ctx)
 }
 
-func applyXCUITestFlags(p *xcuitest.Project, flags xcuitestFlags) error {
+func applyXCTestFlags(p *xctest.Project, flags xctestFlags) error {
 	if gFlags.selectedSuite != "" {
-		if err := xcuitest.FilterSuites(p, gFlags.selectedSuite); err != nil {
+		if err := xctest.FilterSuites(p, gFlags.selectedSuite); err != nil {
 			return err
 		}
 	}
@@ -200,8 +196,7 @@ func applyXCUITestFlags(p *xcuitest.Project, flags xcuitestFlags) error {
 	if p.Suite.Name == "" {
 		isErr := len(p.Suite.TestOptions.Class) != 0 ||
 			len(p.Suite.TestOptions.NotClass) != 0 ||
-			flags.Device.Changed ||
-			flags.Simulator.Changed
+			flags.Device.Changed
 
 		if isErr {
 			return ErrEmptySuiteName
@@ -214,11 +209,7 @@ func applyXCUITestFlags(p *xcuitest.Project, flags xcuitestFlags) error {
 		p.Suite.Devices = append(p.Suite.Devices, flags.Device.Device)
 	}
 
-	if flags.Simulator.Changed {
-		p.Suite.Simulators = append(p.Suite.Simulators, flags.Simulator.Simulator)
-	}
-
-	p.Suites = []xcuitest.Suite{p.Suite}
+	p.Suites = []xctest.Suite{p.Suite}
 
 	return nil
 }

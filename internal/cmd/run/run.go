@@ -159,6 +159,7 @@ func Command() *cobra.Command {
 		NewReplayCmd(),
 		NewTestcafeCmd(),
 		NewXCUITestCmd(),
+		NewXCTestCmd(),
 		NewCucumberCmd(),
 	)
 
@@ -212,7 +213,7 @@ func Run(cmd *cobra.Command) (int, error) {
 		return runEspresso(cmd, espressoFlags{}, false)
 	}
 	if typeDef.Kind == xctest.Kind {
-		return runXctest(cmd, xcuitestFlags{}, false)
+		return runXctest(cmd, xctestFlags{}, false)
 	}
 	if typeDef.Kind == xcuitest.Kind {
 		return runXcuitest(cmd, xcuitestFlags{}, false)

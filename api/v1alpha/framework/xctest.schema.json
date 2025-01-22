@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "saucectl xcuitest runner configuration",
-  "description": "Configuration file for xcuitest using saucectl",
+  "title": "saucectl xctest runner configuration",
+  "description": "Configuration file for xctest using saucectl",
   "type": "object",
   "allOf": [
     {
@@ -19,7 +19,7 @@
       "const": "v1alpha"
     },
     "kind": {
-      "const": "xcuitest"
+      "const": "xctest"
     },
     "showConsoleLog": {
       "$ref": "../subschema/common.schema.json#/definitions/showConsoleLog"
@@ -37,8 +37,8 @@
     "env": {
       "$ref": "../subschema/common.schema.json#/definitions/env"
     },
-    "xcuitest": {
-      "description": "Contains details specific to the XCUITest project.",
+    "xctest": {
+      "description": "Contains details specific to the XCTest project.",
       "type": "object",
       "properties": {
         "app": {
@@ -49,12 +49,12 @@
           "description": "Description for the app.",
           "type": "string"
         },
-        "testApp": {
-          "description": "Local path or remote url to the test application. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
+        "xcTestRunFile": {
+          "description": "Local path or remote url to the .xctestrun file test descriptor. If a remote url is defined, the file will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
           "type": "string"
         },
-        "testAppDescription": {
-          "description": "Description for the testApp.",
+        "xcTestRunFileDescription": {
+          "description": "Description for the xcTestRunFile.",
           "type": "string"
         },
         "otherApps": {
@@ -139,43 +139,43 @@
             "additionalProperties": false
           },
           "appSettings": {
-            "description": "Configure real device settings.",
+            "description": "Overwrite real device settings.",
             "type": "object",
             "properties": {
               "resigningEnabled": {
-                "description": "Configure app settings for real device to enable app resigning.",
+                "description": "Overwrite app settings for real device to enable app resigning.",
                 "type": "boolean"
               },
               "audioCapture": {
-                "description": "Configure app settings for real device to capture audio.",
+                "description": "Overwrite app settings for real device to capture audio.",
                 "type": "boolean"
               },
               "instrumentation": {
-                "description": "Configure app settings for real device instrumentation.",
+                "description": "Overwrite app settings for real device instrumentation.",
                 "type": "object",
                 "properties": {
                   "imageInjection": {
-                    "description": "Configure app settings for real device to inject provided images in the user app.",
+                    "description": "Overwrite app settings for real device to inject provided images in the user app.",
                     "type": "boolean"
                   },
                   "sysAlertsDelay": {
-                    "description": "Configure app settings for real device to delay system alerts.",
+                    "description": "Overwrite app settings for real device to delay system alerts.",
                     "type": "boolean"
                   },
                   "vitals": {
-                    "description": "Configure app settings for real device to enable vitals.",
+                    "description": "Overwrite app settings for real device to enable vitals.",
                     "type": "boolean"
                   },
                   "networkCapture": {
-                    "description": "Configure app settings for real device to capture network.",
+                    "description": "Overwrite app settings for real device to capture network.",
                     "type": "boolean"
                   },
                   "biometrics": {
-                    "description": "Configure app settings for real device to intercept biometric authentication.",
+                    "description": "Overwrite app settings for real device to intercept biometric authentication.",
                     "type": "boolean"
                   },
                   "groupDirectory": {
-                    "description": "Configure app settings for real device to enable group directory access.",
+                    "description": "Overwrite app settings for real device to enable group directory access.",
                     "type": "boolean"
                   }
                 }

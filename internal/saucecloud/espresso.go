@@ -251,7 +251,7 @@ func (r *EspressoRunner) newStartOptions(
 		DeviceType:        d.deviceType,
 		DevicePrivateOnly: d.privateOnly,
 
-		// Overwrite device settings
+		// Configure device settings
 		RealDeviceKind: strings.ToLower(espresso.Android),
 		AppSettings: job.AppSettings{
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////
