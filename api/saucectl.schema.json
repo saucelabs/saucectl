@@ -2427,12 +2427,12 @@
                   "description": "Description for the app.",
                   "type": "string"
                 },
-                "testApp": {
-                  "description": "Local path or remote url to the test application. If a remote url is defined, the app will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
+                "xcTestRunFile": {
+                  "description": "Local path or remote url to the .xctestrun file test descriptor. If a remote url is defined, the file will be downloaded to a local temp directory before uploading to the SauceLabs Mobile App Storage service. Supports environment variables as values.",
                   "type": "string"
                 },
-                "testAppDescription": {
-                  "description": "Description for the testApp.",
+                "xcTestRunFileDescription": {
+                  "description": "Description for the xcTestRunFile.",
                   "type": "string"
                 },
                 "otherApps": {
