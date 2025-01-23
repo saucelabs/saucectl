@@ -44,7 +44,6 @@ func XCTestCmd() *cobra.Command {
 	cmd.Flags().StringVar(&cfg.xctestRunFile, "xctest-run-file", "", "Path to xctest descriptor file.")
 	cmd.Flags().StringSliceVar(&cfg.otherApps, "other-apps", []string{}, "Path to additional applications.")
 	cmd.Flags().StringVar(&cfg.artifactWhenStr, "artifacts-when", "fail", "When to download artifacts.")
-	// cmd.Flags().Var(&cfg.simulatorFlag, "simulator", "The iOS simulator to use for testing.")
 	cmd.Flags().Var(&cfg.deviceFlag, "device", "The device to use for testing.")
 
 	return cmd
