@@ -1033,7 +1033,11 @@ func (ini *initializer) initializeBatchXctest(f *pflag.FlagSet) []error {
 		}
 	}
 	validAppExt := []string{".app"}
-	validAppExt = append(validAppExt, ".ipa")
+	if f.Changed("simulator") {
+		validAppExt = append(validAppExt, ".zip")
+	} else {
+		validAppExt = append(validAppExt, ".ipa")
+	}
 	if ini.cfg.app != "" {
 		verifier := extValidator(validAppExt)
 		if err = verifier(ini.cfg.app); err != nil {
