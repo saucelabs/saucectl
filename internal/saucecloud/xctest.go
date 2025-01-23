@@ -12,24 +12,21 @@ import (
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/storage"
-	"github.com/saucelabs/saucectl/internal/xcuitest"
+	"github.com/saucelabs/saucectl/internal/xctest"
 )
 
 // XcuitestRunner represents the Sauce Labs cloud implementation for xcuitest.
-type XcuitestRunner struct {
+type XctestRunner struct {
 	CloudRunner
-	Project xcuitest.Project
+	Project xctest.Project
 }
 
-type archiveType string
-
 var (
-	ipaArchive archiveType = "ipa"
-	zipArchive archiveType = "zip"
+	xctestArchive archiveType = "xctestrun"
 )
 
 // RunProject runs the tests defined in xcuitest.Project.
-func (r *XcuitestRunner) RunProject(ctx context.Context) (int, error) {
+func (r *XctestRunner) RunProject(ctx context.Context) (int, error) {
 	exitCode := 1
 
 	if err := r.validateTunnel(
@@ -86,15 +83,15 @@ func (r *XcuitestRunner) RunProject(ctx context.Context) (int, error) {
 		}
 		r.Project.Suites[i].App = storageURL
 
-		archivePath, err = cachedArchive(s.TestApp, tempDir, archiveType)
+		archivePath, err = cachedArchive(s.XCTestRunFile, tempDir, xctestArchive)
 		if err != nil {
 			return exitCode, err
 		}
-		storageURL, err = cachedUpload(archivePath, s.TestAppDescription, testAppUpload, r.Project.DryRun)
+		storageURL, err = cachedUpload(archivePath, s.XCTestRunFileDescription, testAppUpload, r.Project.DryRun)
 		if err != nil {
 			return exitCode, err
 		}
-		r.Project.Suites[i].TestApp = storageURL
+		r.Project.Suites[i].XCTestRunFile = storageURL
 
 		var otherApps []string
 		for _, o := range s.OtherApps {
@@ -124,7 +121,7 @@ func (r *XcuitestRunner) RunProject(ctx context.Context) (int, error) {
 	return exitCode, nil
 }
 
-func (r *XcuitestRunner) dryRun() {
+func (r *XctestRunner) dryRun() {
 	fmt.Println("\nThe following test suites would have run:")
 	for _, s := range r.Project.Suites {
 		fmt.Printf("  - %s\n", s.Name)
@@ -135,7 +132,7 @@ func (r *XcuitestRunner) dryRun() {
 	fmt.Println()
 }
 
-func (r *XcuitestRunner) runSuites(ctx context.Context) bool {
+func (r *XctestRunner) runSuites(ctx context.Context) bool {
 	jobOpts, results := r.createWorkerPool(ctx, r.Project.Sauce.Concurrency, r.Project.Sauce.Retries)
 	defer close(results)
 
@@ -145,7 +142,7 @@ func (r *XcuitestRunner) runSuites(ctx context.Context) bool {
 		if err != nil {
 			log.Warn().Err(err).Msg(msg.RetrieveJobHistoryError)
 		} else {
-			suites = xcuitest.SortByHistory(suites, history)
+			suites = xctest.SortByHistory(suites, history)
 		}
 	}
 
@@ -158,7 +155,7 @@ func (r *XcuitestRunner) runSuites(ctx context.Context) bool {
 					Str("deviceName", d.name).Str("deviceID", d.ID).
 					Str("platformVersion", d.platformVersion).
 					Msg("Starting job")
-				r.startJob(jobOpts, s.App, s.TestApp, s.OtherApps, s, d)
+				r.startJob(jobOpts, s.App, s.XCTestRunFile, s.OtherApps, s, d)
 			}
 		}
 	}()
@@ -166,17 +163,17 @@ func (r *XcuitestRunner) runSuites(ctx context.Context) bool {
 	return r.collectResults(ctx, results, jobsCount)
 }
 
-func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, testAppFileID string, otherAppsIDs []string, s xcuitest.Suite, d deviceConfig) {
+func (r *XctestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, xcTestRunFileID string, otherAppsIDs []string, s xctest.Suite, d deviceConfig) {
 	jobOpts <- job.StartOptions{
 		ConfigFilePath:   r.Project.ConfigFilePath,
 		CLIFlags:         r.Project.CLIFlags,
 		DisplayName:      s.Name,
 		Timeout:          s.Timeout,
 		App:              appFileID,
-		TestApp:          testAppFileID,
-		Suite:            testAppFileID,
+		XCTestRunFile:    xcTestRunFileID,
+		Suite:            xcTestRunFileID,
 		OtherApps:        otherAppsIDs,
-		Framework:        "xcuitest",
+		Framework:        "xctest",
 		FrameworkVersion: "1.0.0-stable",
 		PlatformName:     d.platformName,
 		PlatformVersion:  d.platformVersion,
@@ -210,24 +207,18 @@ func (r *XcuitestRunner) startJob(jobOpts chan<- job.StartOptions, appFileID, te
 		Env:         s.Env,
 		ARMRequired: d.armRequired,
 
-		// Configure device settings
-		RealDeviceKind: strings.ToLower(xcuitest.IOS),
+		// Overwrite device settings
+		RealDeviceKind: strings.ToLower(xctest.IOS),
 		AppSettings: job.AppSettings{
-			ResigningEnabled: s.AppSettings.ResigningEnabled,
-			AudioCapture:     s.AppSettings.AudioCapture,
-			Resigning: job.Resigning{
-				ImageInjection:         s.AppSettings.Instrumentation.ImageInjection,
-				GroupDirectory:         s.AppSettings.Instrumentation.GroupDirectory,
-				SystemAlertsDelay:      s.AppSettings.Instrumentation.SysAlertsDelay,
-				BiometricsInterception: s.AppSettings.Instrumentation.Biometrics,
-				Vitals:                 s.AppSettings.Instrumentation.Vitals,
-				NetworkCapture:         s.AppSettings.Instrumentation.NetworkCapture,
+			AudioCapture: s.AppSettings.AudioCapture,
+			Instrumentation: job.Instrumentation{
+				NetworkCapture: s.AppSettings.Instrumentation.NetworkCapture,
 			},
 		},
 	}
 }
 
-func (r *XcuitestRunner) calculateJobsCount(suites []xcuitest.Suite) int {
+func (r *XctestRunner) calculateJobsCount(suites []xctest.Suite) int {
 	jobsCount := 0
 	for _, s := range suites {
 		jobsCount += len(enumerateDevices(s.Devices, s.Simulators))

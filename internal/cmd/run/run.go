@@ -15,6 +15,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/report/json"
 	"github.com/saucelabs/saucectl/internal/report/junit"
 	"github.com/saucelabs/saucectl/internal/report/spotlight"
+	"github.com/saucelabs/saucectl/internal/xctest"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -158,6 +159,7 @@ func Command() *cobra.Command {
 		NewReplayCmd(),
 		NewTestcafeCmd(),
 		NewXCUITestCmd(),
+		NewXCTestCmd(),
 		NewCucumberCmd(),
 	)
 
@@ -209,6 +211,9 @@ func Run(cmd *cobra.Command) (int, error) {
 	}
 	if typeDef.Kind == espresso.Kind {
 		return runEspresso(cmd, espressoFlags{}, false)
+	}
+	if typeDef.Kind == xctest.Kind {
+		return runXctest(cmd, xctestFlags{}, false)
 	}
 	if typeDef.Kind == xcuitest.Kind {
 		return runXcuitest(cmd, xcuitestFlags{}, false)
