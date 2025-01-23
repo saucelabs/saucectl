@@ -291,6 +291,42 @@ jobs:
           --timeout 10m \
           -r us-west-1
 
+  xctest:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      BUILD_ID: ${{ github.run_id }}
+      BUILD_ENV: GitHub Actions
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download saucectl Binary
+        uses: actions/download-artifact@v4
+        with:
+          name: saucectlbin
+
+      - name: Set Permissions
+        run: chmod +x ./saucectl
+
+      - name: Saucectl RUN - Config Driven
+        run: |
+          ./saucectl run -c .sauce/xctest.yml --timeout 10m
+
+      - name: Saucectl RUN - CLI Driven
+        run: |
+          ./saucectl run xctest \
+          -c "" \
+          --name "cli driven" \
+          --retries 2 \
+          --app ./tests/e2e/xctest/Saucelabs-FlutterTestApp.ipa \
+          --xcTestRunFile ./tests/e2e/xctest/Saucelabs-FlutterTest.xctestrun \
+          --device name="iPhone.*" \
+          --timeout 10m \
+          -r us-west-1
+
+
   playwright-cucumberjs:
     needs: build
     runs-on: ubuntu-latest
