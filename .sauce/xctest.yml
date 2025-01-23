@@ -15,8 +15,8 @@ defaults:
   timeout: 5m
 
 xctest:
-  app: ./tests/e2e/xcuitest/Saucelabs-FlutterTestApp.ipa
-  xcTestRunFile: ./tests/e2e/xcuitest/Saucelabs-FlutterTest.xctestrun
+  app: ./tests/e2e/xctest/Saucelabs-FlutterTestApp.ipa
+  xcTestRunFile: ./tests/e2e/xctest/Saucelabs-FlutterTest.xctestrun
 
 suites:
   - name: saucy xctest - real
