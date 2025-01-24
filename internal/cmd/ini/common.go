@@ -25,6 +25,7 @@ var configurators = map[string]func(cfg *initConfig) interface{}{
 	"playwright":  configurePlaywright,
 	"testcafe":    configureTestcafe,
 	"xcuitest":    configureXCUITest,
+	"xctest":      configureXCTest,
 	"imagerunner": configureImageRunner,
 }
 

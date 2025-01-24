@@ -24,6 +24,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/testcafe"
 	"github.com/saucelabs/saucectl/internal/vmd"
+	"github.com/saucelabs/saucectl/internal/xctest"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
 	"github.com/spf13/pflag"
 )
@@ -85,6 +86,8 @@ func (ini *initializer) configure(ctx context.Context) error {
 		return ini.initializeEspresso(ctx)
 	case xcuitest.Kind:
 		return ini.initializeXCUITest(ctx)
+	case xctest.Kind:
+		return ini.initializeXCTest()
 	case imagerunner.Kind:
 		return ini.initializeImageRunner()
 	default:
@@ -652,6 +655,31 @@ func (ini *initializer) initializeXCUITest(ctx context.Context) error {
 	return nil
 }
 
+func (ini *initializer) initializeXCTest() error {
+	var err error
+
+	err = ini.askDevice(iOSDevicesPatterns)
+	if err != nil {
+		return err
+	}
+	err = ini.askFile("Application to test:", extValidator([]string{".ipa", ".app"}), completeBasic, &ini.cfg.app)
+	if err != nil {
+		return err
+	}
+
+	err = ini.askFile("XCTestRun file:", extValidator([]string{".xctestrun"}), completeBasic, &ini.cfg.xctestRunFile)
+	if err != nil {
+		return err
+	}
+
+	err = ini.askDownloadWhen()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (ini *initializer) initializeImageRunner() error {
 	if err := ini.askDockerImage(
 		"Docker Image to use:",
@@ -981,6 +1009,49 @@ func (ini *initializer) initializeBatchXcuitest(f *pflag.FlagSet) []error {
 	}
 	if f.Changed("simulator") {
 		ini.cfg.simulator = ini.cfg.simulatorFlag.Simulator
+	}
+	return errs
+}
+
+func (ini *initializer) initializeBatchXctest(f *pflag.FlagSet) []error {
+	var errs []error
+	var err error
+
+	if ini.cfg.app == "" {
+		errs = append(errs, errors.New(msg.MissingApp))
+	}
+	if ini.cfg.xctestRunFile == "" {
+		errs = append(errs, errors.New(msg.MissingXCTestFileAppPath))
+	}
+	if !f.Changed("device") {
+		errs = append(errs, errors.New(msg.MissingDevice))
+	}
+	if ini.cfg.artifactWhenStr != "" {
+		ini.cfg.artifactWhenStr = strings.ToLower(ini.cfg.artifactWhenStr)
+		if ini.cfg.artifactWhen, err = checkArtifactDownloadSetting(ini.cfg.artifactWhenStr); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	validAppExt := []string{".app"}
+	if f.Changed("simulator") {
+		validAppExt = append(validAppExt, ".zip")
+	} else {
+		validAppExt = append(validAppExt, ".ipa")
+	}
+	if ini.cfg.app != "" {
+		verifier := extValidator(validAppExt)
+		if err = verifier(ini.cfg.app); err != nil {
+			errs = append(errs, fmt.Errorf("app: %s", err))
+		}
+	}
+	if ini.cfg.xctestRunFile != "" {
+		verifier := extValidator([]string{".xctestrun"})
+		if err = verifier(ini.cfg.xctestRunFile); err != nil {
+			errs = append(errs, fmt.Errorf("xctestRunFile: %s", err))
+		}
+	}
+	if f.Changed("device") {
+		ini.cfg.device = ini.cfg.deviceFlag.Device
 	}
 	return errs
 }

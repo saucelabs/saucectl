@@ -182,35 +182,6 @@
               }
             }
           },
-          "simulators": {
-            "description": "Defines details for running this suite on virtual devices using a simulator.",
-            "type": "array",
-            "items": {
-              "properties": {
-                "name": {
-                  "description": "The name of the simulator. To ensure name accuracy, check the list of supported virtual devices (https://app.saucelabs.com/live/web-testing/virtual).",
-                  "type": "string"
-                },
-                "orientation": {
-                  "$ref": "../subschema/common.schema.json#/definitions/orientation"
-                },
-                "platformVersions": {
-                  "description": "The set of one or more versions of the device platform on which to run the test suite.",
-                  "type": "array",
-                  "minItems": 1
-                },
-                "armRequired": {
-                  "description": "If set to true, the simulator will run on an ARM-based Mac. If set to false, the simulator will run on an Intel-based Mac.",
-                  "type": "boolean"
-                }
-              },
-              "required": [
-                "name",
-                "platformVersions"
-              ],
-              "additionalProperties": false
-            }
-          },
           "devices": {
             "description": "Define details for running this suite on real devices.",
             "type": "array",
@@ -298,11 +269,6 @@
           }
         },
         "anyOf": [
-          {
-            "required": [
-              "simulators"
-            ]
-          },
           {
             "required": [
               "devices"
