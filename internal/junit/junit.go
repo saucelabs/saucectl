@@ -29,14 +29,14 @@ type TestCase struct {
 	ClassName string `xml:"classname,attr"`
 	// Status indicates success or failure of the test. May be used instead of
 	// Error, Failure or Skipped or in addition to them.
-	Status     string     `xml:"status,attr,omitempty"`
-	File       string     `xml:"file,attr,omitempty"`
-	SystemErr  string     `xml:"system-err,omitempty"`
-	SystemOut  string     `xml:"system-out,omitempty"`
-	Error      *Error     `xml:"error,omitempty"`
-	Failure    *Failure   `xml:"failure,omitempty"`
-	Skipped    *Skipped   `xml:"skipped,omitempty"`
-	Properties []Property `xml:"properties>property"`
+	Status     string      `xml:"status,attr,omitempty"`
+	File       string      `xml:"file,attr,omitempty"`
+	SystemErr  string      `xml:"system-err,omitempty"`
+	SystemOut  string      `xml:"system-out,omitempty"`
+	Error      *Error      `xml:"error,omitempty"`
+	Failure    *Failure    `xml:"failure,omitempty"`
+	Skipped    *Skipped    `xml:"skipped,omitempty"`
+	Properties *[]Property `xml:"properties>property,omitempty"`
 }
 
 // IsError returns true if the test case errored. Multiple fields are taken
