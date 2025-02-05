@@ -18,6 +18,7 @@ func UploadCommand() *cobra.Command {
 	var out string
 	var force bool
 	var description string
+	var tags []string
 
 	cmd := &cobra.Command{
 		Use: "upload filename",
@@ -87,6 +88,7 @@ func UploadCommand() *cobra.Command {
 					storage.FileInfo{
 						Name:        finfo.Name(),
 						Description: description,
+						Tags:        tags,
 					},
 					&reader,
 				)
@@ -115,6 +117,7 @@ func UploadCommand() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
+	flags.StringSliceVar(&tags, "tags", []string{}, "A comma separated list of tags to assign to the uploaded app.")
 	flags.StringVarP(&out, "out", "o", "text",
 		"Output format to the console. Options: text, json.",
 	)
