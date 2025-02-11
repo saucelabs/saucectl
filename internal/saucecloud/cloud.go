@@ -803,8 +803,10 @@ func (r *CloudRunner) logSuite(ctx context.Context, res result) {
 			logger.Error().Err(res.err).Msg("Suite failed to start.")
 			return
 		}
-		logger.Error().Err(res.err).Msg("Suite failed unexpectedly.")
-		return
+		if !job.Done(res.job.Status) {
+			logger.Error().Err(res.err).Msg("Suite failed unexpectedly.")
+			return
+		}
 	}
 
 	// Job isn't done, hence nothing more to log about it.
