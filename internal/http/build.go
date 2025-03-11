@@ -75,18 +75,24 @@ func (c *BuildService) ListBuilds(
 	return b.Builds, err
 }
 
-func (c *BuildService) FindBuild(
-	ctx context.Context, jobID string, realDevice bool,
+func (c *BuildService) GetBuild(
+	ctx context.Context,
+	opts build.GetBuildOptions,
 ) (build.Build, error) {
-	src := "vdc"
-	if realDevice {
-		src = "rdc"
+
+	var url string
+	if opts.ByJob {
+		url = fmt.Sprintf(
+			"%s/v2/builds/%s/jobs/%s/build/", c.URL, opts.Source, opts.ID,
+		)
+	} else {
+		url = fmt.Sprintf(
+			"%s/v2/builds/%s/%s/", c.URL, opts.Source, opts.ID,
+		)
 	}
 
 	req, err := NewRetryableRequestWithContext(
-		ctx, http.MethodGet, fmt.Sprintf(
-			"%s/v2/builds/%s/jobs/%s/build/", c.URL, src, jobID,
-		), nil,
+		ctx, http.MethodGet, url, nil,
 	)
 	if err != nil {
 		return build.Build{}, err
@@ -111,7 +117,7 @@ func (c *BuildService) FindBuild(
 	}
 
 	b.URL = fmt.Sprintf(
-		"%s/builds/%s/%s", c.AppURL, src,
+		"%s/builds/%s/%s", c.AppURL, opts.Source,
 		b.ID,
 	)
 

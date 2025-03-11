@@ -9,7 +9,6 @@ type Build struct {
 	ID     string `json:"id"`
 	Name   string `json:"name"`
 	Status string `json:"status"`
-	Passed bool   `json:"passed"`
 	URL    string `json:"-"`
 }
 
@@ -19,8 +18,8 @@ type BuildResponse struct {
 
 // Service is the interface for requesting build information.
 type Service interface {
-	// FindBuild returns a Build that's associated with jobID.
-	FindBuild(ctx context.Context, jobID string, realDevice bool) (Build, error)
+	// GetBuild returns a Build by build or job ID.
+	GetBuild(ctx context.Context, opts GetBuildOptions) (Build, error)
 	ListBuilds(ctx context.Context, opts ListBuildsOptions) ([]Build, error)
 }
 
@@ -49,4 +48,12 @@ type ListBuildsOptions struct {
 	Size   int
 	Status Status
 	Source Source
+}
+
+type GetBuildOptions struct {
+	// The Build ID or Job ID to filter by if ByJob=True
+	ID     string
+	Source Source
+	// If true, will find the build by querying the endpoint assuming the passed ID is a Job ID.
+	ByJob bool
 }

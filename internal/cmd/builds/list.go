@@ -66,7 +66,7 @@ func ListCommand() *cobra.Command {
 	var page int
 	var size int
 	var status string
-	var jobSource string
+	var buildSource string
 
 	cmd := &cobra.Command{
 		Use: "list",
@@ -110,12 +110,12 @@ func ListCommand() *cobra.Command {
 				return fmt.Errorf("unknown status. Options: %s", strings.Join(job.AllStates, ", "))
 			}
 
-			src := build.Source(jobSource)
+			src := build.Source(buildSource)
 			if src != build.SourceRDC && src != build.SourceVDC {
 				return errors.New("invalid job resource. Options: vdc, rdc")
 			}
 
-			return list(cmd.Context(), out, page, size, stat, build.Source(jobSource))
+			return list(cmd.Context(), out, page, size, stat, build.Source(buildSource))
 		},
 	}
 	flags := cmd.PersistentFlags()
@@ -123,7 +123,7 @@ func ListCommand() *cobra.Command {
 	flags.IntVarP(&page, "page", "p", 0, "Page for pagination. Default is 0.")
 	flags.IntVarP(&size, "size", "s", 20, "Per page for pagination. Default is 20.")
 	flags.StringVar(&status, "status", "", "Filter job using status. Options: passed, failed, error, complete, in progress, queued.")
-	flags.StringVar(&jobSource, "source", "", "Job source from saucelabs. Options: vdc, rdc.")
+	flags.StringVar(&buildSource, "source", "", "Job source from saucelabs. Options: vdc, rdc.")
 
 	return cmd
 }
@@ -153,15 +153,15 @@ func list(ctx context.Context, format string, page int, size int, status build.S
 			return fmt.Errorf("failed to render output: %w", err)
 		}
 	case "text":
-		renderTable(builds)
+		renderListTable(builds)
 	}
 
 	return nil
 }
 
-func renderTable(jobs []build.Build) {
-	if len(jobs) == 0 {
-		println("Cannot find any jobs")
+func renderListTable(builds []build.Build) {
+	if len(builds) == 0 {
+		println("Cannot find any builds")
 		return
 	}
 
@@ -170,21 +170,20 @@ func renderTable(jobs []build.Build) {
 	t.SuppressEmptyColumns()
 
 	t.AppendHeader(table.Row{
-		"ID", "Name", "Status", "Passed",
+		"ID", "Name", "Status",
 	})
 
-	for _, item := range jobs {
+	for _, item := range builds {
 		// the order of values must match the order of the header
 		t.AppendRow(table.Row{
 			item.ID,
 			item.Name,
 			item.Status,
-			item.Passed,
 		})
 	}
 	t.SuppressEmptyColumns()
 	t.AppendFooter(table.Row{
-		fmt.Sprintf("%d jobs in total", len(jobs)),
+		fmt.Sprintf("%d builds in total", len(builds)),
 	})
 
 	fmt.Println(t.Render())
