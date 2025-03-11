@@ -32,6 +32,49 @@ type BuildService struct {
 	AccessKey string
 }
 
+func (c *BuildService) ListBuilds(
+	ctx context.Context,
+	opts build.ListBuildsOptions,
+) ([]build.Build, error) {
+	req, err := NewRetryableRequestWithContext(
+		ctx, http.MethodGet, fmt.Sprintf(
+			"%s/v2/builds/%s", c.URL, opts.Source,
+		), nil,
+	)
+
+	if err != nil {
+		return []build.Build{}, err
+	}
+
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	resp, err := c.Client.Do(req)
+	if err != nil {
+		return []build.Build{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return []build.Build{}, fmt.Errorf(
+			"unexpected statusCode: %v", resp.StatusCode,
+		)
+	}
+
+	var b build.BuildResponse
+	if err = json.NewDecoder(resp.Body).Decode(&b); err != nil {
+		return []build.Build{}, err
+	}
+
+	for _, b := range b.Builds {
+		b.URL = fmt.Sprintf(
+			"%s/builds/%s/%s", c.AppURL, opts.Source,
+			b.ID,
+		)
+	}
+
+	return b.Builds, err
+}
+
 func (c *BuildService) FindBuild(
 	ctx context.Context, jobID string, realDevice bool,
 ) (build.Build, error) {
