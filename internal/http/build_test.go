@@ -76,8 +76,10 @@ func TestBuildService_GetBuildID(t *testing.T) {
 				client.Client.RetryWaitMax = 1 * time.Millisecond
 
 				// act
-				bid, err := client.FindBuild(
-					context.Background(), "some-job-id", false,
+				bid, err := client.GetBuild(
+					context.Background(), build.GetBuildOptions{
+						ID: "some-job-id", Source: build.SourceVDC, ByJob: true,
+					},
 				)
 
 				// assert
