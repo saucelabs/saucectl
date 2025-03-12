@@ -2,15 +2,14 @@ package builds
 
 import (
 	"errors"
-	"github.com/saucelabs/saucectl/internal/build"
 	"time"
 
-	"github.com/saucelabs/saucectl/internal/usage"
-
+	"github.com/saucelabs/saucectl/internal/build"
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/iam"
 	"github.com/saucelabs/saucectl/internal/region"
+	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
 )
 

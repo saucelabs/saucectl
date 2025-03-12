@@ -17,6 +17,10 @@ build-%:
 lint:
 	golangci-lint run
 
+#lint-fix: @ Run the linter and apply available fixes
+lint-fix:
+	golangci-lint run --fix
+
 #format: @ Format code with gofmt
 format:
 	gofmt -w .

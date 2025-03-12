@@ -200,10 +200,10 @@ func TestBuildService_GetBuildURL(t *testing.T) {
 		t.Run(
 			tt.name, func(t *testing.T) {
 				// arrange
-				var reqUrl string
+				var reqURL string
 				ts := httptest.NewServer(http.HandlerFunc(
 					func(w http.ResponseWriter, req *http.Request) {
-						reqUrl = req.URL.Path
+						reqURL = req.URL.Path
 						w.WriteHeader(200)
 						_, _ = w.Write([]byte(`{}`))
 					},
@@ -225,7 +225,7 @@ func TestBuildService_GetBuildURL(t *testing.T) {
 				)
 
 				// assert
-				assert.Regexp(t, tt.urlMatch, reqUrl)
+				assert.Regexp(t, tt.urlMatch, reqURL)
 			},
 		)
 	}

@@ -12,7 +12,7 @@ type Build struct {
 	URL    string `json:"-"`
 }
 
-type BuildResponse struct {
+type BuildsListResponse struct {
 	Builds []Build `json:"builds"`
 }
 

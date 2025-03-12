@@ -74,7 +74,7 @@ func (c *BuildService) ListBuilds(
 		)
 	}
 
-	var br build.BuildResponse
+	var br build.BuildsListResponse
 	if err = json.NewDecoder(resp.Body).Decode(&br); err != nil {
 		return []build.Build{}, err
 	}
