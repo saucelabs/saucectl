@@ -74,19 +74,19 @@ func (c *BuildService) ListBuilds(
 		)
 	}
 
-	var b build.BuildResponse
-	if err = json.NewDecoder(resp.Body).Decode(&b); err != nil {
+	var br build.BuildResponse
+	if err = json.NewDecoder(resp.Body).Decode(&br); err != nil {
 		return []build.Build{}, err
 	}
 
-	for _, b := range b.Builds {
+	for i := 0; i < len(br.Builds); i++ {
+		b := &br.Builds[i]
 		b.URL = fmt.Sprintf(
-			"%s/builds/%s/%s", c.AppURL, opts.Source,
-			b.ID,
+			"%s/builds/%s/%s", c.AppURL, opts.Source, b.ID,
 		)
 	}
 
-	return b.Builds, err
+	return br.Builds, err
 }
 
 func (c *BuildService) GetBuild(

@@ -8,7 +8,7 @@ import (
 type Build struct {
 	ID     string `json:"id"`
 	Name   string `json:"name"`
-	Status string `json:"status"`
+	Status Status `json:"status"`
 	URL    string `json:"-"`
 }
 
