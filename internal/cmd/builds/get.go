@@ -13,7 +13,7 @@ import (
 func GetCommand() *cobra.Command {
 	var out string
 	var byJob bool
-	var jobSource string
+	var buildSource string
 
 	cmd := &cobra.Command{
 		Use:          "get",
@@ -41,9 +41,9 @@ func GetCommand() *cobra.Command {
 				return errors.New("unknown output format")
 			}
 
-			src := build.Source(jobSource)
+			src := build.Source(buildSource)
 			if src != build.SourceRDC && src != build.SourceVDC {
-				return errors.New("invalid job resource. Options: vdc, rdc")
+				return errors.New("invalid build resource. Options: vdc, rdc")
 			}
 
 			return get(cmd.Context(), args[0], byJob, src, out)
@@ -52,7 +52,7 @@ func GetCommand() *cobra.Command {
 	flags := cmd.PersistentFlags()
 	flags.BoolVarP(&byJob, "job-id", "", false, "Find the build by providing a job ID instead of a build ID.")
 	flags.StringVarP(&out, "out", "o", "text", "Output format to the console. Options: text, json.")
-	flags.StringVar(&jobSource, "source", "", "Job source from saucelabs. Options: vdc, rdc.")
+	flags.StringVar(&buildSource, "source", "", "Build source from saucelabs. Options: vdc, rdc.")
 
 	return cmd
 }
