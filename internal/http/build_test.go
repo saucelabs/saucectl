@@ -93,3 +93,56 @@ func TestBuildService_GetBuildID(t *testing.T) {
 		)
 	}
 }
+
+func TestBuildService_GetBuildURL(t *testing.T) {
+	testCases := []struct {
+		name     string
+		byJob    bool
+		urlMatch string
+	}{
+		{
+			name:     "Build by ID",
+			urlMatch: "/v2/builds/(vdc|rdc)/\\w+/",
+			byJob:    false,
+		},
+		{
+			name:     "Build by Job ID",
+			urlMatch: "/v2/builds/(vdc|rdc)/jobs/\\w+/build/",
+			byJob:    true,
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(
+			tt.name, func(t *testing.T) {
+				// arrange
+				var reqUrl string
+				ts := httptest.NewServer(http.HandlerFunc(
+					func(w http.ResponseWriter, req *http.Request) {
+						reqUrl = req.URL.Path
+						w.WriteHeader(200)
+						_, _ = w.Write([]byte(`{}`))
+					},
+				))
+				defer ts.Close()
+
+				client := NewBuildService(
+					region.None, "user", "key", 3*time.Second,
+				)
+				client.URL = ts.URL
+				client.AppURL = "https://app.saucelabs.com"
+				client.Client.RetryWaitMax = 1 * time.Millisecond
+
+				// act
+				_, _ = client.GetBuild(
+					context.Background(), build.GetBuildOptions{
+						ID: "1234", Source: build.SourceVDC, ByJob: tt.byJob,
+					},
+				)
+
+				// assert
+				assert.Regexp(t, tt.urlMatch, reqUrl)
+			},
+		)
+	}
+}
