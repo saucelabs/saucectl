@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -47,6 +48,19 @@ func (c *BuildService) ListBuilds(
 	}
 
 	req.SetBasicAuth(c.Username, c.AccessKey)
+	q := req.URL.Query()
+	queries := map[string]string{
+		"offset": strconv.Itoa(opts.Page * opts.Size),
+		"limit":  strconv.Itoa(opts.Size),
+		"status": string(opts.Status),
+		"name":   opts.Name,
+	}
+	for k, v := range queries {
+		if v != "" {
+			q.Add(k, v)
+		}
+	}
+	req.URL.RawQuery = q.Encode()
 
 	resp, err := c.Client.Do(req)
 	if err != nil {

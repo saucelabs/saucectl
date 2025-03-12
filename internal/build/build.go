@@ -48,6 +48,7 @@ type ListBuildsOptions struct {
 	Size   int
 	Status Status
 	Source Source
+	Name   string
 }
 
 type GetBuildOptions struct {

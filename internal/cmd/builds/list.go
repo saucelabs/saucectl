@@ -5,16 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/build"
-	"github.com/saucelabs/saucectl/internal/job"
-	"os"
-	"strings"
-
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
+	"github.com/saucelabs/saucectl/internal/build"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
+	"os"
+	"strings"
 )
 
 const (
@@ -67,6 +65,7 @@ func ListCommand() *cobra.Command {
 	var size int
 	var status string
 	var buildSource string
+	var nameFilter string
 
 	cmd := &cobra.Command{
 		Use: "list",
@@ -107,28 +106,33 @@ func ListCommand() *cobra.Command {
 			}
 
 			if status != "" && !isStatusValid {
-				return fmt.Errorf("unknown status. Options: %s", strings.Join(job.AllStates, ", "))
+				strs := make([]string, len(build.AllStates))
+				for i, n := range build.AllStates {
+					strs[i] = string(n)
+				}
+				return fmt.Errorf("unknown status. Options: %s", strings.Join(strs, ", "))
 			}
 
 			src := build.Source(buildSource)
 			if src != build.SourceRDC && src != build.SourceVDC {
-				return errors.New("invalid job resource. Options: vdc, rdc")
+				return errors.New("invalid build resource. Options: vdc, rdc")
 			}
 
-			return list(cmd.Context(), out, page, size, stat, build.Source(buildSource))
+			return list(cmd.Context(), out, page, size, stat, build.Source(buildSource), nameFilter)
 		},
 	}
 	flags := cmd.PersistentFlags()
+	flags.StringVar(&buildSource, "source", "", "Build source from saucelabs. Options: vdc, rdc. Required.")
 	flags.StringVarP(&out, "out", "o", "text", "Output format to the console. Options: text, json.")
 	flags.IntVarP(&page, "page", "p", 0, "Page for pagination. Default is 0.")
 	flags.IntVarP(&size, "size", "s", 20, "Per page for pagination. Default is 20.")
-	flags.StringVar(&status, "status", "", "Filter job using status. Options: passed, failed, error, complete, in progress, queued.")
-	flags.StringVar(&buildSource, "source", "", "Job source from saucelabs. Options: vdc, rdc.")
+	flags.StringVarP(&nameFilter, "name", "n", "", "Filter builds by name. Must match full build name.")
+	flags.StringVar(&status, "status", "", "Filter builds using status. Options: passed, failed, error, complete, in progress, queued.")
 
 	return cmd
 }
 
-func list(ctx context.Context, format string, page int, size int, status build.Status, source build.Source) error {
+func list(ctx context.Context, format string, page int, size int, status build.Status, source build.Source, name string) error {
 	user, err := userService.User(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
@@ -140,6 +144,7 @@ func list(ctx context.Context, format string, page int, size int, status build.S
 		Size:   size,
 		Status: status,
 		Source: source,
+		Name:   name,
 	}
 
 	builds, err := buildsService.ListBuilds(ctx, opts)
