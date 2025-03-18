@@ -31,7 +31,7 @@ func TestBuildService_ListBuilds(t *testing.T) {
 					ID:     "1234",
 					URL:    "https://app.saucelabs.com/builds/vdc/1234",
 					Name:   "My build name",
-					Status: build.StateSuccess,
+					Status: build.StatusSuccess,
 				},
 			},
 			wantErr: nil,

@@ -33,14 +33,14 @@ const (
 type Status string
 
 const (
-	StateRunning  Status = "running"
-	StateError    Status = "error"
-	StateFailed   Status = "failed"
-	StateComplete Status = "complete"
-	StateSuccess  Status = "success"
+	StatusRunning  Status = "running"
+	StatusError    Status = "error"
+	StatusFailed   Status = "failed"
+	StatusComplete Status = "complete"
+	StatusSuccess  Status = "success"
 )
 
-var AllStates = []Status{StateRunning, StateError, StateFailed, StateComplete, StateSuccess}
+var AllStatuses = []Status{StatusRunning, StatusError, StatusFailed, StatusComplete, StatusSuccess}
 
 type ListBuildsOptions struct {
 	UserID string

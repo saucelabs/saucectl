@@ -14,14 +14,22 @@ import (
 func GetCommand() *cobra.Command {
 	var out string
 	var byJob bool
-	var buildSource string
 
 	cmd := &cobra.Command{
-		Use:          "get",
+		Use:          "get <vdc|rdc> <buildID>",
 		Short:        "Get build by build or job ID",
 		SilenceUsage: true,
 		Args: func(_ *cobra.Command, args []string) error {
-			if len(args) == 0 || args[0] == "" {
+			if len(args) != 2 {
+				return errors.New("missing or invalid arguments: <vdc|rdc> <buildID>")
+			}
+
+			src := build.Source(args[0])
+			if src != build.SourceRDC && src != build.SourceVDC {
+				return errors.New("invalid build resource. Options: vdc, rdc")
+			}
+
+			if args[1] == "" {
 				return errors.New("no build specified")
 			}
 			return nil
@@ -42,18 +50,12 @@ func GetCommand() *cobra.Command {
 				return errors.New("unknown output format")
 			}
 
-			src := build.Source(buildSource)
-			if src != build.SourceRDC && src != build.SourceVDC {
-				return errors.New("invalid build resource. Options: vdc, rdc")
-			}
-
-			return get(cmd.Context(), args[0], byJob, src, out)
+			return get(cmd.Context(), args[1], byJob, build.Source(args[0]), out)
 		},
 	}
 	flags := cmd.PersistentFlags()
 	flags.BoolVarP(&byJob, "job-id", "", false, "Find the build by providing a job ID instead of a build ID.")
 	flags.StringVarP(&out, "out", "o", "text", "Output format to the console. Options: text, json.")
-	flags.StringVar(&buildSource, "source", "", "Build source from saucelabs. Options: vdc, rdc.")
 
 	return cmd
 }

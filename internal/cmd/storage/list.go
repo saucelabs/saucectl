@@ -12,48 +12,10 @@ import (
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/human"
 	"github.com/saucelabs/saucectl/internal/storage"
+	"github.com/saucelabs/saucectl/internal/tables"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
 )
-
-var defaultTableStyle = table.Style{
-	Name: "saucy",
-	Box: table.BoxStyle{
-		BottomLeft:       "└",
-		BottomRight:      "┘",
-		BottomSeparator:  "",
-		EmptySeparator:   text.RepeatAndTrim(" ", text.RuneCount("+")),
-		Left:             "│",
-		LeftSeparator:    "",
-		MiddleHorizontal: "─",
-		MiddleSeparator:  "",
-		MiddleVertical:   "",
-		PaddingLeft:      " ",
-		PaddingRight:     " ",
-		PageSeparator:    "\n",
-		Right:            "│",
-		RightSeparator:   "",
-		TopLeft:          "┌",
-		TopRight:         "┐",
-		TopSeparator:     "",
-		UnfinishedRow:    " ...",
-	},
-	Color: table.ColorOptionsDefault,
-	Format: table.FormatOptions{
-		Footer: text.FormatDefault,
-		Header: text.FormatDefault,
-		Row:    text.FormatDefault,
-	},
-	HTML: table.DefaultHTMLOptions,
-	Options: table.Options{
-		DrawBorder:      false,
-		SeparateColumns: false,
-		SeparateFooter:  true,
-		SeparateHeader:  true,
-		SeparateRows:    false,
-	},
-	Title: table.TitleOptionsDefault,
-}
 
 func ListCommand() *cobra.Command {
 	var query string
@@ -128,7 +90,7 @@ func renderTable(list storage.List) {
 	}
 
 	t := table.NewWriter()
-	t.SetStyle(defaultTableStyle)
+	t.SetStyle(tables.DefaultTableStyle)
 	t.SuppressEmptyColumns()
 
 	t.AppendHeader(table.Row{"Size", "Uploaded", "ID", "Name"})

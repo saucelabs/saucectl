@@ -8,8 +8,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/saucelabs/saucectl/internal/build"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/usage"
@@ -21,60 +19,31 @@ const (
 	TextOutput = "text"
 )
 
-var defaultTableStyle = table.Style{
-	Name: "saucy",
-	Box: table.BoxStyle{
-		BottomLeft:       "└",
-		BottomRight:      "┘",
-		BottomSeparator:  "",
-		EmptySeparator:   text.RepeatAndTrim(" ", text.RuneCount("+")),
-		Left:             "│",
-		LeftSeparator:    "",
-		MiddleHorizontal: "─",
-		MiddleSeparator:  "",
-		MiddleVertical:   "",
-		PaddingLeft:      " ",
-		PaddingRight:     " ",
-		PageSeparator:    "\n",
-		Right:            "│",
-		RightSeparator:   "",
-		TopLeft:          "┌",
-		TopRight:         "┐",
-		TopSeparator:     "",
-		UnfinishedRow:    " ...",
-	},
-	Color: table.ColorOptionsDefault,
-	Format: table.FormatOptions{
-		Footer: text.FormatDefault,
-		Header: text.FormatDefault,
-		Row:    text.FormatDefault,
-	},
-	HTML: table.DefaultHTMLOptions,
-	Options: table.Options{
-		DrawBorder:      false,
-		SeparateColumns: false,
-		SeparateFooter:  true,
-		SeparateHeader:  true,
-		SeparateRows:    false,
-	},
-	Title: table.TitleOptionsDefault,
-}
-
 func ListCommand() *cobra.Command {
 	var out string
 	var page int
 	var size int
 	var status string
-	var buildSource string
 	var nameFilter string
 
 	cmd := &cobra.Command{
-		Use: "list",
+		Use: "list <vdc|rdc>",
 		Aliases: []string{
 			"ls",
 		},
 		Short:        "Returns the list of builds",
 		SilenceUsage: true,
+		Args: func(_ *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return errors.New("missing or invalid arguments: <vdc|rdc>")
+			}
+
+			src := build.Source(args[0])
+			if src != build.SourceRDC && src != build.SourceVDC {
+				return errors.New("invalid build resource. Options: vdc, rdc")
+			}
+			return nil
+		},
 		PreRun: func(cmd *cobra.Command, _ []string) {
 			tracker := usage.DefaultClient
 
@@ -86,7 +55,7 @@ func ListCommand() *cobra.Command {
 				_ = tracker.Close()
 			}()
 		},
-		RunE: func(cmd *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			if page < 0 {
 				return errors.New("invalid page")
 			}
@@ -99,7 +68,7 @@ func ListCommand() *cobra.Command {
 			var isStatusValid bool
 
 			stat := build.Status(status)
-			for _, s := range build.AllStates {
+			for _, s := range build.AllStatuses {
 				if s == stat {
 					isStatusValid = true
 					break
@@ -107,28 +76,24 @@ func ListCommand() *cobra.Command {
 			}
 
 			if status != "" && !isStatusValid {
-				strs := make([]string, len(build.AllStates))
-				for i, n := range build.AllStates {
+				strs := make([]string, len(build.AllStatuses))
+				for i, n := range build.AllStatuses {
 					strs[i] = string(n)
 				}
 				return fmt.Errorf("unknown status. Options: %s", strings.Join(strs, ", "))
 			}
 
-			src := build.Source(buildSource)
-			if src != build.SourceRDC && src != build.SourceVDC {
-				return errors.New("invalid build resource. Options: vdc, rdc")
-			}
+			src := build.Source(args[0])
 
-			return list(cmd.Context(), out, page, size, stat, build.Source(buildSource), nameFilter)
+			return list(cmd.Context(), out, page, size, stat, src, nameFilter)
 		},
 	}
 	flags := cmd.PersistentFlags()
-	flags.StringVar(&buildSource, "source", "", "Build source from saucelabs. Options: vdc, rdc. Required.")
 	flags.StringVarP(&out, "out", "o", "text", "Output format to the console. Options: text, json.")
 	flags.IntVarP(&page, "page", "p", 0, "Page for pagination. Default is 0.")
 	flags.IntVarP(&size, "size", "s", 20, "Per page for pagination. Default is 20.")
 	flags.StringVarP(&nameFilter, "name", "n", "", "Filter builds by name. Must match full build name.")
-	flags.StringVar(&status, "status", "", "Filter builds using status. Options: passed, failed, error, complete, in progress, queued.")
+	flags.StringVar(&status, "status", "", "Filter builds using status. Options: running, error, failed, complete, success.")
 
 	return cmd
 }
@@ -163,36 +128,6 @@ func list(ctx context.Context, format string, page int, size int, status build.S
 	}
 
 	return nil
-}
-
-func renderListTable(builds []build.Build) {
-	if len(builds) == 0 {
-		println("Cannot find any builds")
-		return
-	}
-
-	t := table.NewWriter()
-	t.SetStyle(defaultTableStyle)
-	t.SuppressEmptyColumns()
-
-	t.AppendHeader(table.Row{
-		"ID", "Name", "Status",
-	})
-
-	for _, item := range builds {
-		// the order of values must match the order of the header
-		t.AppendRow(table.Row{
-			item.ID,
-			item.Name,
-			item.Status,
-		})
-	}
-	t.SuppressEmptyColumns()
-	t.AppendFooter(table.Row{
-		fmt.Sprintf("%d builds in total", len(builds)),
-	})
-
-	fmt.Println(t.Render())
 }
 
 func renderJSON(val any) error {
