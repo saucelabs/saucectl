@@ -16,12 +16,12 @@ func GetCommand() *cobra.Command {
 	var byJob bool
 
 	cmd := &cobra.Command{
-		Use:          "get <vdc|rdc> <buildID>",
+		Use:          "get <vdc|rdc> <ID>",
 		Short:        "Get build by build or job ID",
 		SilenceUsage: true,
 		Args: func(_ *cobra.Command, args []string) error {
 			if len(args) != 2 {
-				return errors.New("missing or invalid arguments: <vdc|rdc> <buildID>")
+				return errors.New("missing or invalid arguments: <vdc|rdc> <ID>")
 			}
 
 			src := build.Source(args[0])
@@ -54,7 +54,7 @@ func GetCommand() *cobra.Command {
 		},
 	}
 	flags := cmd.PersistentFlags()
-	flags.BoolVarP(&byJob, "job-id", "", false, "Find the build by providing a job ID instead of a build ID.")
+	flags.BoolVarP(&byJob, "job", "", false, "Find the build by providing a job ID instead of a build ID.")
 	flags.StringVarP(&out, "out", "o", "text", "Output format to the console. Options: text, json.")
 
 	return cmd
