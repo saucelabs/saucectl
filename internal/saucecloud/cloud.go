@@ -194,7 +194,15 @@ func (r *CloudRunner) findBuild(ctx context.Context, jobID string, isRDC bool) b
 		}
 	}
 
-	b, err := r.BuildService.FindBuild(ctx, jobID, isRDC)
+	var src build.Source = "vdc"
+	if isRDC {
+		src = "rdc"
+	}
+	b, err := r.BuildService.GetBuild(ctx, build.GetBuildOptions{
+		ID:     jobID,
+		Source: src,
+		ByJob:  true,
+	})
 	if err != nil {
 		log.Warn().Err(err).Msgf("Failed to retrieve build id for job (%s)", jobID)
 		return build.Build{}

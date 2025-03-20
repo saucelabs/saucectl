@@ -1,28 +1,36 @@
-package jobs
+package builds
 
 import (
 	"context"
 	"errors"
 	"fmt"
 
-	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/saucelabs/saucectl/internal/build"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
-	"github.com/saucelabs/saucectl/internal/job"
-	"github.com/saucelabs/saucectl/internal/tables"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
 )
 
 func GetCommand() *cobra.Command {
 	var out string
+	var byJob bool
 
 	cmd := &cobra.Command{
-		Use:          "get",
-		Short:        "Get job by id",
+		Use:          "get <vdc|rdc> <ID>",
+		Short:        "Get build by build or job ID",
 		SilenceUsage: true,
 		Args: func(_ *cobra.Command, args []string) error {
-			if len(args) == 0 || args[0] == "" {
-				return errors.New("no job ID specified")
+			if len(args) != 2 {
+				return errors.New("missing or invalid arguments: <vdc|rdc> <ID>")
+			}
+
+			src := build.Source(args[0])
+			if src != build.SourceRDC && src != build.SourceVDC {
+				return errors.New("invalid build resource. Options: vdc, rdc")
+			}
+
+			if args[1] == "" {
+				return errors.New("no build specified")
 			}
 			return nil
 		},
@@ -41,53 +49,35 @@ func GetCommand() *cobra.Command {
 			if out != JSONOutput && out != TextOutput {
 				return errors.New("unknown output format")
 			}
-			return get(cmd.Context(), args[0], out)
+
+			return get(cmd.Context(), args[1], byJob, build.Source(args[0]), out)
 		},
 	}
 	flags := cmd.PersistentFlags()
+	flags.BoolVarP(&byJob, "job", "", false, "Find the build by providing a job ID instead of a build ID.")
 	flags.StringVarP(&out, "out", "o", "text", "Output format to the console. Options: text, json.")
 
 	return cmd
 }
 
-func get(ctx context.Context, jobID, outputFormat string) error {
-	j, err := jobService.ReadJob(ctx, jobID)
+func get(ctx context.Context, ID string, byJob bool, Source build.Source, outputFormat string) error {
+	b, err := buildsService.GetBuild(ctx, build.GetBuildOptions{
+		ID:     ID,
+		Source: Source,
+		ByJob:  byJob,
+	})
 	if err != nil {
-		return fmt.Errorf("failed to get job: %w", err)
+		return fmt.Errorf("failed to get build: %w", err)
 	}
 
 	switch outputFormat {
 	case "json":
-		if err := renderJSON(j); err != nil {
+		if err := renderJSON(b); err != nil {
 			return fmt.Errorf("failed to render output: %w", err)
 		}
 	case "text":
-		renderJobTable(j)
+		renderListTable([]build.Build{b})
 	}
 
 	return nil
-}
-
-func renderJobTable(job job.Job) {
-	t := table.NewWriter()
-	t.SetStyle(tables.DefaultTableStyle)
-	t.SuppressEmptyColumns()
-
-	t.AppendHeader(table.Row{
-		"ID", "Name", "Status", "Platform", "Framework", "Browser", "Device",
-	})
-
-	// the order of values must match the order of the header
-	t.AppendRow(table.Row{
-		job.ID,
-		job.Name,
-		job.Status,
-		job.OS,
-		job.Framework,
-		job.BrowserName,
-		job.DeviceName,
-	})
-	t.SuppressEmptyColumns()
-
-	fmt.Println(t.Render())
 }
