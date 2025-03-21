@@ -650,6 +650,7 @@ func (r *CloudRunner) FetchJUnitReports(ctx context.Context, res *result, artifa
 		}
 	}
 
+	allSucceeded := true
 	for i := range res.attempts {
 		attempt := &res.attempts[i]
 
@@ -671,15 +672,25 @@ func (r *CloudRunner) FetchJUnitReports(ctx context.Context, res *result, artifa
 		}
 
 		if err != nil {
-			log.Warn().Err(err).Str("jobID", attempt.ID).Msg("Unable to retrieve JUnit report")
+			log.Debug().
+				Err(err).
+				Str("jobID", attempt.ID).
+				Msg("Unable to retrieve JUnit report")
+			allSucceeded = false
 			continue
 		}
-
 		attempt.TestSuites, err = junit.Parse(content)
 		if err != nil {
-			log.Warn().Err(err).Str("jobID", attempt.ID).Msg("Unable to parse JUnit report")
+			log.Debug().
+				Err(err).
+				Str("jobID", attempt.ID).
+				Msg("Unable to parse JUnit report")
+			allSucceeded = false
 			continue
 		}
+	}
+	if !allSucceeded {
+		log.Warn().Msg("Some JUnit reports from the run are not available which may affect the level of detail for your configured reporters.")
 	}
 }
 
@@ -1014,14 +1025,14 @@ func (r *CloudRunner) reportInsights(ctx context.Context, res result) {
 
 	assets, err := r.JobService.ArtifactNames(ctx, res.job.ID, res.job.IsRDC)
 	if err != nil {
-		log.Warn().Err(err).Str("action", "loadAssets").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
+		log.Debug().Err(err).Str("action", "loadAssets").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 		return
 	}
 
 	// read job from insights to get accurate platform and device name
 	j, err := r.InsightsService.ReadJob(ctx, res.job.ID)
 	if err != nil {
-		log.Warn().Err(err).Str("action", "readJob").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
+		log.Debug().Err(err).Str("action", "readJob").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 		return
 	}
 	res.details.Platform = strings.TrimSpace(fmt.Sprintf("%s %s", j.OS, j.OSVersion))
@@ -1031,14 +1042,14 @@ func (r *CloudRunner) reportInsights(ctx context.Context, res result) {
 	if arrayContains(assets, saucereport.FileName) {
 		report, err := r.loadSauceTestReport(ctx, res.job.ID, res.job.IsRDC)
 		if err != nil {
-			log.Warn().Err(err).Str("action", "parsingJSON").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
+			log.Debug().Err(err).Str("action", "parsingJSON").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 			return
 		}
 		testRuns = insights.FromSauceReport(report, res.job.ID, res.name, res.details, res.job.IsRDC)
 	} else if arrayContains(assets, junit.FileName) {
 		report, err := r.loadJUnitReport(ctx, res.job.ID, res.job.IsRDC)
 		if err != nil {
-			log.Warn().Err(err).Str("action", "parsingXML").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
+			log.Debug().Err(err).Str("action", "parsingXML").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 			return
 		}
 		testRuns = insights.FromJUnit(report, res.job.ID, res.name, res.details, res.job.IsRDC)
@@ -1046,7 +1057,7 @@ func (r *CloudRunner) reportInsights(ctx context.Context, res result) {
 
 	if len(testRuns) > 0 {
 		if err := r.InsightsService.PostTestRun(ctx, testRuns); err != nil {
-			log.Warn().Err(err).Str("action", "posting").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
+			log.Debug().Err(err).Str("action", "posting").Str("jobID", res.job.ID).Msg(msg.InsightsReportError)
 		}
 	}
 }
@@ -1054,7 +1065,7 @@ func (r *CloudRunner) reportInsights(ctx context.Context, res result) {
 func (r *CloudRunner) loadSauceTestReport(ctx context.Context, jobID string, isRDC bool) (saucereport.SauceReport, error) {
 	fileContent, err := r.JobService.Artifact(ctx, jobID, saucereport.FileName, isRDC)
 	if err != nil {
-		log.Warn().Err(err).Str("action", "loading-json-report").Msg(msg.InsightsReportError)
+		log.Debug().Err(err).Str("action", "loading-json-report").Msg(msg.InsightsReportError)
 		return saucereport.SauceReport{}, err
 	}
 	return saucereport.Parse(fileContent)
@@ -1063,7 +1074,7 @@ func (r *CloudRunner) loadSauceTestReport(ctx context.Context, jobID string, isR
 func (r *CloudRunner) loadJUnitReport(ctx context.Context, jobID string, isRDC bool) (junit.TestSuites, error) {
 	fileContent, err := r.JobService.Artifact(ctx, jobID, junit.FileName, isRDC)
 	if err != nil {
-		log.Warn().Err(err).Str("action", "loading-xml-report").Msg(msg.InsightsReportError)
+		log.Debug().Err(err).Str("action", "loading-xml-report").Msg(msg.InsightsReportError)
 		return junit.TestSuites{}, err
 	}
 	return junit.Parse(fileContent)
