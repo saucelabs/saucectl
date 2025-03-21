@@ -642,7 +642,7 @@ func (r *CloudRunner) FetchJUnitReports(ctx context.Context, res *result, artifa
 		}
 	}
 
-	success := true
+	allSucceeded := true
 	for i := range res.attempts {
 		attempt := &res.attempts[i]
 
@@ -668,7 +668,7 @@ func (r *CloudRunner) FetchJUnitReports(ctx context.Context, res *result, artifa
 				Err(err).
 				Str("jobID", attempt.ID).
 				Msg("Unable to retrieve JUnit report")
-			success = false
+			allSucceeded = false
 			continue
 		}
 		attempt.TestSuites, err = junit.Parse(content)
@@ -677,12 +677,12 @@ func (r *CloudRunner) FetchJUnitReports(ctx context.Context, res *result, artifa
 				Err(err).
 				Str("jobID", attempt.ID).
 				Msg("Unable to parse JUnit report")
-			success = false
+			allSucceeded = false
 			continue
 		}
 	}
-	if !success {
-		log.Warn().Msg("Some JUnit reports from the run are not available which may affect the accuracy of your configured reporters.")
+	if !allSucceeded {
+		log.Warn().Msg("Some JUnit reports from the run are not available which may affect the level of detail for your configured reporters.")
 	}
 }
 
