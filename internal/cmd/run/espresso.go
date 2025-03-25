@@ -76,7 +76,7 @@ func NewEspressoCmd() *cobra.Command {
 	cmd.Flags().Var(&lflags.Device, "device", "Specifies the device to use for testing. Requires --name to be set.")
 
 	// Overwrite devices settings
-	sc.Bool("resigningEnabled", "suite::appSettings::resigningEnabled", false, "Configure app settings for real device to enable app resigning.")
+	sc.Bool("resigningEnabled", "suite::appSettings::resigningEnabled", true, "Configure app settings for real device to enable app resigning.")
 	sc.Bool("audioCapture", "suite::appSettings::audioCapture", false, "Configure app settings for real device to capture audio.")
 	sc.Bool("imageInjection", "suite::appSettings::instrumentation::imageInjection", false, "Configure app settings for real device to inject provided images in the user app.")
 	sc.Bool("bypassScreenshotRestriction", "suite::appSettings::instrumentation::bypassScreenshotRestriction", false, "Configure app settings for real device to enable bypassing of screenshot restriction.")

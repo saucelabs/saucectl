@@ -73,7 +73,7 @@ func NewXCUITestCmd() *cobra.Command {
 	cmd.Flags().Var(&lflags.Simulator, "simulator", "Specifies the simulator to use for testing. Requires --name to be set.")
 
 	// Configure devices settings
-	sc.Bool("resigningEnabled", "suite::appSettings::resigningEnabled", false, "Configure app settings for real device to enable app resigning.")
+	sc.Bool("resigningEnabled", "suite::appSettings::resigningEnabled", true, "Configure app settings for real device to enable app resigning.")
 	sc.Bool("audioCapture", "suite::appSettings::audioCapture", false, "Configure app settings for real device to capture audio.")
 	sc.Bool("imageInjection", "suite::appSettings::instrumentation::imageInjection", false, "Configure app settings for real device to inject provided images in the user app.")
 	sc.Bool("sysAlertsDelay", "suite::appSettings::instrumentation::sysAlertsDelay", false, "Configure app settings for real device to delay system alerts.")
