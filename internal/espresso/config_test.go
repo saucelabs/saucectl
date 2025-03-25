@@ -2,9 +2,10 @@ package espresso
 
 import (
 	"errors"
-	"github.com/google/go-cmp/cmp"
 	"path/filepath"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/insights"
@@ -297,63 +298,63 @@ func TestEspresso_SortByHistory(t *testing.T) {
 		{
 			name: "sort suites by job history",
 			suites: []Suite{
-				Suite{Name: "suite 1"},
-				Suite{Name: "suite 2"},
-				Suite{Name: "suite 3"},
+				{Name: "suite 1"},
+				{Name: "suite 2"},
+				{Name: "suite 3"},
 			},
 			history: insights.JobHistory{
 				TestCases: []insights.TestCase{
-					insights.TestCase{Name: "suite 2"},
-					insights.TestCase{Name: "suite 1"},
-					insights.TestCase{Name: "suite 3"},
+					{Name: "suite 2"},
+					{Name: "suite 1"},
+					{Name: "suite 3"},
 				},
 			},
 			expRes: []Suite{
-				Suite{Name: "suite 2"},
-				Suite{Name: "suite 1"},
-				Suite{Name: "suite 3"},
+				{Name: "suite 2"},
+				{Name: "suite 1"},
+				{Name: "suite 3"},
 			},
 		},
 		{
 			name: "suites is the subset of job history",
 			suites: []Suite{
-				Suite{Name: "suite 1"},
-				Suite{Name: "suite 2"},
+				{Name: "suite 1"},
+				{Name: "suite 2"},
 			},
 			history: insights.JobHistory{
 				TestCases: []insights.TestCase{
-					insights.TestCase{Name: "suite 2"},
-					insights.TestCase{Name: "suite 1"},
-					insights.TestCase{Name: "suite 3"},
+					{Name: "suite 2"},
+					{Name: "suite 1"},
+					{Name: "suite 3"},
 				},
 			},
 			expRes: []Suite{
-				Suite{Name: "suite 2"},
-				Suite{Name: "suite 1"},
+				{Name: "suite 2"},
+				{Name: "suite 1"},
 			},
 		},
 		{
 			name: "job history is the subset of suites",
 			suites: []Suite{
-				Suite{Name: "suite 1"},
-				Suite{Name: "suite 2"},
-				Suite{Name: "suite 3"},
-				Suite{Name: "suite 4"},
-				Suite{Name: "suite 5"},
+				{Name: "suite 1"},
+				{Name: "suite 2"},
+				{Name: "suite 3"},
+				{Name: "suite 4"},
+				{Name: "suite 5"},
 			},
 			history: insights.JobHistory{
 				TestCases: []insights.TestCase{
-					insights.TestCase{Name: "suite 2"},
-					insights.TestCase{Name: "suite 1"},
-					insights.TestCase{Name: "suite 3"},
+					{Name: "suite 2"},
+					{Name: "suite 1"},
+					{Name: "suite 3"},
 				},
 			},
 			expRes: []Suite{
-				Suite{Name: "suite 2"},
-				Suite{Name: "suite 1"},
-				Suite{Name: "suite 3"},
-				Suite{Name: "suite 4"},
-				Suite{Name: "suite 5"},
+				{Name: "suite 2"},
+				{Name: "suite 1"},
+				{Name: "suite 3"},
+				{Name: "suite 4"},
+				{Name: "suite 5"},
 			},
 		},
 	}
