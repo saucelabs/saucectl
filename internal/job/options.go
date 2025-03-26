@@ -100,30 +100,30 @@ type StartOptions struct {
 
 // AppSettings represents mobile app settings.
 type AppSettings struct {
-	AudioCapture           bool            `json:"audio_capture,omitempty"`
-	InstrumentationEnabled bool            `json:"instrumentation_enabled,omitempty"`
+	AudioCapture           *bool           `json:"audio_capture,omitempty"`
+	InstrumentationEnabled *bool           `json:"instrumentation_enabled,omitempty"`
 	Instrumentation        Instrumentation `json:"instrumentation,omitempty"`
-	ResigningEnabled       bool            `json:"resigning_enabled,omitempty"`
+	ResigningEnabled       *bool           `json:"resigning_enabled,omitempty"`
 	Resigning              Resigning       `json:"resigning,omitempty"`
 }
 
 // Instrumentation represents mobile app instrumentation settings for Android.
 type Instrumentation struct {
-	ImageInjection              bool `json:"image_injection,omitempty"`
-	BypassScreenshotRestriction bool `json:"bypass_screenshot_restriction,omitempty"`
-	BiometricsInterception      bool `json:"biometrics,omitempty"`
-	Vitals                      bool `json:"vitals,omitempty"`
-	NetworkCapture              bool `json:"network_capture,omitempty"`
+	ImageInjection              *bool `json:"image_injection,omitempty"`
+	BypassScreenshotRestriction *bool `json:"bypass_screenshot_restriction,omitempty"`
+	BiometricsInterception      *bool `json:"biometrics,omitempty"`
+	Vitals                      *bool `json:"vitals,omitempty"`
+	NetworkCapture              *bool `json:"network_capture,omitempty"`
 }
 
 // Resigning represents mobile app instrumentation settings for iOS.
 type Resigning struct {
-	ImageInjection         bool `json:"image_injection,omitempty"`
-	SystemAlertsDelay      bool `json:"sys_alerts_delay,omitempty"`
-	GroupDirectory         bool `json:"group_directory,omitempty"`
-	BiometricsInterception bool `json:"biometrics,omitempty"`
-	Vitals                 bool `json:"vitals,omitempty"`
-	NetworkCapture         bool `json:"network_capture,omitempty"`
+	ImageInjection         *bool `json:"image_injection,omitempty"`
+	SystemAlertsDelay      *bool `json:"sys_alerts_delay,omitempty"`
+	GroupDirectory         *bool `json:"group_directory,omitempty"`
+	BiometricsInterception *bool `json:"biometrics,omitempty"`
+	Vitals                 *bool `json:"vitals,omitempty"`
+	NetworkCapture         *bool `json:"network_capture,omitempty"`
 }
 
 // TunnelOptions represents the options that configure the usage of a tunnel when running tests in the Sauce Labs cloud.

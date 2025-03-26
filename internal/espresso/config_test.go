@@ -3,8 +3,9 @@ package espresso
 import (
 	"errors"
 	"path/filepath"
-	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/insights"
@@ -163,13 +164,22 @@ func TestValidateThrowsErrors(t *testing.T) {
 
 func TestFromFile(t *testing.T) {
 	dir := fs.NewDir(t, "espresso-cfg",
-		fs.WithFile("config.yml", `apiVersion: v1alpha
+		fs.WithFile("config.yml", `
+apiVersion: v1alpha
 kind: espresso
 espresso:
   app: ./tests/apps/mda-1.0.17-20.apk
   testApp: ./tests/apps/mda-androidTest-1.0.17-20.apk
 suites:
   - name: "saucy barista"
+    appSettings:
+      audioCapture: true
+      resigningEnabled: false
+      instrumentation:
+        networkCapture: true
+        vitals: false
+        imageInjection: false
+        bypassScreenshotRestriction: true
     devices:
       - name: "Device name"
         platformVersion: 8.1
@@ -186,6 +196,8 @@ suites:
 	if err != nil {
 		t.Errorf("expected error: %v, got: %v", nil, err)
 	}
+	trueValue := true
+	falseValue := false
 	expected := Project{
 		ConfigFilePath: filepath.Join(dir.Path(), "config.yml"),
 		Espresso: Espresso{
@@ -195,6 +207,17 @@ suites:
 		Suites: []Suite{
 			{
 				Name: "saucy barista",
+				AppSettings: config.AppSettings{
+					ResigningEnabled: &falseValue,
+					AudioCapture:     &trueValue,
+					Instrumentation: config.Instrumentation{
+						ImageInjection:              &falseValue,
+						BypassScreenshotRestriction: &trueValue,
+						Biometrics:                  nil,
+						Vitals:                      &falseValue,
+						NetworkCapture:              &trueValue,
+					},
+				},
 				Devices: []config.Device{
 					{
 						Name:            "Device name",
@@ -214,13 +237,14 @@ suites:
 				}},
 		},
 	}
-	if !reflect.DeepEqual(cfg.Espresso, expected.Espresso) {
-		t.Errorf("expected: %v, got: %v", expected.Espresso, cfg.Espresso)
+	diff := cmp.Diff(cfg.Espresso, expected.Espresso)
+	if diff != "" {
+		t.Errorf("differences found: %v", diff)
 	}
-	if !reflect.DeepEqual(cfg.Suites, expected.Suites) {
-		t.Errorf("expected: %v, got: %v", expected.Suites, cfg.Suites)
+	diff = cmp.Diff(cfg.Suites, expected.Suites)
+	if diff != "" {
+		t.Errorf("differences found: %v", diff)
 	}
-
 }
 
 func TestSetDefaults_TestApp(t *testing.T) {
@@ -274,63 +298,63 @@ func TestEspresso_SortByHistory(t *testing.T) {
 		{
 			name: "sort suites by job history",
 			suites: []Suite{
-				Suite{Name: "suite 1"},
-				Suite{Name: "suite 2"},
-				Suite{Name: "suite 3"},
+				{Name: "suite 1"},
+				{Name: "suite 2"},
+				{Name: "suite 3"},
 			},
 			history: insights.JobHistory{
 				TestCases: []insights.TestCase{
-					insights.TestCase{Name: "suite 2"},
-					insights.TestCase{Name: "suite 1"},
-					insights.TestCase{Name: "suite 3"},
+					{Name: "suite 2"},
+					{Name: "suite 1"},
+					{Name: "suite 3"},
 				},
 			},
 			expRes: []Suite{
-				Suite{Name: "suite 2"},
-				Suite{Name: "suite 1"},
-				Suite{Name: "suite 3"},
+				{Name: "suite 2"},
+				{Name: "suite 1"},
+				{Name: "suite 3"},
 			},
 		},
 		{
 			name: "suites is the subset of job history",
 			suites: []Suite{
-				Suite{Name: "suite 1"},
-				Suite{Name: "suite 2"},
+				{Name: "suite 1"},
+				{Name: "suite 2"},
 			},
 			history: insights.JobHistory{
 				TestCases: []insights.TestCase{
-					insights.TestCase{Name: "suite 2"},
-					insights.TestCase{Name: "suite 1"},
-					insights.TestCase{Name: "suite 3"},
+					{Name: "suite 2"},
+					{Name: "suite 1"},
+					{Name: "suite 3"},
 				},
 			},
 			expRes: []Suite{
-				Suite{Name: "suite 2"},
-				Suite{Name: "suite 1"},
+				{Name: "suite 2"},
+				{Name: "suite 1"},
 			},
 		},
 		{
 			name: "job history is the subset of suites",
 			suites: []Suite{
-				Suite{Name: "suite 1"},
-				Suite{Name: "suite 2"},
-				Suite{Name: "suite 3"},
-				Suite{Name: "suite 4"},
-				Suite{Name: "suite 5"},
+				{Name: "suite 1"},
+				{Name: "suite 2"},
+				{Name: "suite 3"},
+				{Name: "suite 4"},
+				{Name: "suite 5"},
 			},
 			history: insights.JobHistory{
 				TestCases: []insights.TestCase{
-					insights.TestCase{Name: "suite 2"},
-					insights.TestCase{Name: "suite 1"},
-					insights.TestCase{Name: "suite 3"},
+					{Name: "suite 2"},
+					{Name: "suite 1"},
+					{Name: "suite 3"},
 				},
 			},
 			expRes: []Suite{
-				Suite{Name: "suite 2"},
-				Suite{Name: "suite 1"},
-				Suite{Name: "suite 3"},
-				Suite{Name: "suite 4"},
-				Suite{Name: "suite 5"},
+				{Name: "suite 2"},
+				{Name: "suite 1"},
+				{Name: "suite 3"},
+				{Name: "suite 4"},
+				{Name: "suite 5"},
 			},
 		},
 	}
