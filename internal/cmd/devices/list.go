@@ -90,7 +90,7 @@ func ListCommand() *cobra.Command {
 	flags := cmd.PersistentFlags()
 	flags.StringVarP(&out, "out", "o", "text", "OutputFormat format to the console. Options: text, json.")
 	flags.IntVarP(&page, "page", "p", 0, "Page for pagination. Default is 0.")
-	flags.IntVarP(&size, "size", "s", 20, "Per page for pagination. Default is 20.")
+	flags.IntVarP(&size, "size", "s", 0, "Per page for pagination. Default is all.")
 	flags.StringVarP(&nameFilter, "name", "n", "", "Filter devices by name.")
 	flags.StringVar(&osFilter, "os", "", "Filter devices by OS.")
 	flags.BoolVar(&addStatus, "statuses", false, "Fetch status for devices.")
@@ -118,9 +118,17 @@ func list(ctx context.Context, options ListOptions) error {
 
 	var filtered = filterDevices(devsWithStatuses, options.Filter)
 
-	from := min(options.Size*options.Page, len(filtered))
-	to := min(options.Size*(options.Page+1), len(filtered))
-	paginated := filtered[from:to]
+	var paginated []DeviceWithStatus
+	var from, to int
+	if options.Size > 0 {
+		from = min(options.Size*options.Page, len(filtered))
+		to = min(options.Size*(options.Page+1), len(filtered))
+		paginated = filtered[from:to]
+	} else {
+		from = 0
+		to = len(filtered)
+		paginated = filtered
+	}
 
 	switch options.OutputFormat {
 	case "json":
