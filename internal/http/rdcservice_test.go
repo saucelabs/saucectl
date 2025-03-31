@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/devices/devicestatus"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -17,6 +16,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/devices"
+	"github.com/saucelabs/saucectl/internal/devices/devicestatus"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/stretchr/testify/assert"
@@ -475,7 +475,7 @@ func TestRDCService_GetDevicesByOS(t *testing.T) {
 }
 
 func TestRDCService_GetDevices(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		var err error
 		_, err = w.Write([]byte(`[{"name": "OnePlus 5T"},{"name": "OnePlus 6"},{"name": "OnePlus 6T"},{"name": "iPhone XR"},{"name": "iPhone XS"},{"name": "iPhone X"}]`))
 		if err != nil {
@@ -491,10 +491,6 @@ func TestRDCService_GetDevices(t *testing.T) {
 		URL:       ts.URL,
 		Username:  "dummy-user",
 		AccessKey: "dummy-key",
-	}
-	type args struct {
-		ctx context.Context
-		OS  string
 	}
 
 	ctx := context.Background()
@@ -518,7 +514,7 @@ func TestRDCService_GetDevices(t *testing.T) {
 }
 
 func TestRDCService_GetDevicesStatuses(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		var err error
 		_, err = w.Write([]byte(`{"devices":[
 			{"descriptor": "OnePlus 5T","state":"AVAILABLE"},
@@ -541,10 +537,6 @@ func TestRDCService_GetDevicesStatuses(t *testing.T) {
 		URL:       ts.URL,
 		Username:  "dummy-user",
 		AccessKey: "dummy-key",
-	}
-	type args struct {
-		ctx context.Context
-		OS  string
 	}
 
 	ctx := context.Background()

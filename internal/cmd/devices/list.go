@@ -56,7 +56,7 @@ func ListCommand() *cobra.Command {
 		},
 		Short:        "Returns the list of devices",
 		SilenceUsage: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			if page < 0 {
 				return errors.New("invalid page")
 			}

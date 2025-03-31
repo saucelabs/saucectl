@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/devices/devicestatus"
 	"io"
 	"net/http"
 	"strings"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/saucelabs/saucectl/internal/devices"
+	"github.com/saucelabs/saucectl/internal/devices/devicestatus"
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/xcuitest"
