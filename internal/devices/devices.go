@@ -2,7 +2,7 @@ package devices
 
 import (
 	"context"
-	
+
 	"github.com/saucelabs/saucectl/internal/devices/devicestatus"
 )
 

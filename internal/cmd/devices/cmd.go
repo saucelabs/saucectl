@@ -2,13 +2,14 @@ package devices
 
 import (
 	"errors"
+	"time"
+
 	"github.com/saucelabs/saucectl/internal/credentials"
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
-	"time"
 )
 
 var (

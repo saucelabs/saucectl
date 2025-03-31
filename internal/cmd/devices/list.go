@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/jedib0t/go-pretty/v6/table"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/devices"
@@ -12,8 +15,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/tables"
 	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
-	"os"
-	"strings"
 )
 
 const (

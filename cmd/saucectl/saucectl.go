@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/saucelabs/saucectl/internal/cmd/devices"
 	"os"
 	"os/signal"
 	"time"
@@ -18,6 +17,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/cmd/builds"
 	"github.com/saucelabs/saucectl/internal/cmd/completion"
 	"github.com/saucelabs/saucectl/internal/cmd/configure"
+	"github.com/saucelabs/saucectl/internal/cmd/devices"
 	"github.com/saucelabs/saucectl/internal/cmd/docker"
 	"github.com/saucelabs/saucectl/internal/cmd/imagerunner"
 	"github.com/saucelabs/saucectl/internal/cmd/ini"
