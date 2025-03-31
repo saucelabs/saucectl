@@ -26,6 +26,20 @@ type DeviceWithStatus struct {
 	Status string `json:"status"`
 }
 
+type Filter struct {
+	Name   string
+	Os     string
+	Status string
+}
+
+type ListOptions struct {
+	Page         int
+	Size         int
+	Status       bool
+	OutputFormat string
+	Filter       Filter
+}
+
 func ListCommand() *cobra.Command {
 	var out string
 	var page int
@@ -33,6 +47,7 @@ func ListCommand() *cobra.Command {
 	var nameFilter string
 	var osFilter string
 	var addStatus bool
+	var statusFilter string
 
 	cmd := &cobra.Command{
 		Use: "list",
@@ -52,74 +67,85 @@ func ListCommand() *cobra.Command {
 				return errors.New("unknown output format")
 			}
 
-			return list(cmd.Context(), out, page, size, nameFilter, osFilter, addStatus)
+			if statusFilter != "" {
+				addStatus = true
+			}
+
+			options := ListOptions{
+				Page:         page,
+				Size:         size,
+				Status:       addStatus,
+				OutputFormat: out,
+				Filter: Filter{
+					Name:   nameFilter,
+					Os:     osFilter,
+					Status: statusFilter,
+				},
+			}
+
+			return list(cmd.Context(), options)
 		},
 	}
 
 	flags := cmd.PersistentFlags()
-	flags.StringVarP(&out, "out", "o", "text", "Output format to the console. Options: text, json.")
+	flags.StringVarP(&out, "out", "o", "text", "OutputFormat format to the console. Options: text, json.")
 	flags.IntVarP(&page, "page", "p", 0, "Page for pagination. Default is 0.")
 	flags.IntVarP(&size, "size", "s", 20, "Per page for pagination. Default is 20.")
 	flags.StringVarP(&nameFilter, "name", "n", "", "Filter devices by name.")
 	flags.StringVar(&osFilter, "os", "", "Filter devices by OS.")
 	flags.BoolVar(&addStatus, "statuses", false, "Fetch status for devices.")
+	flags.StringVar(&statusFilter, "status", "", "Filter devices by status. Implies --statuses if not set.")
 
 	return cmd
 }
 
-func list(ctx context.Context, format string, page int, size int, nameFilter string, osFilter string, addStatus bool) error {
+func list(ctx context.Context, options ListOptions) error {
 	devs, err := devicesReader.GetDevices(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get devices: %w", err)
 	}
 
-	var filtered = filterDevices(devs, nameFilter, osFilter)
+	var devsWithStatuses []DeviceWithStatus
+	if options.Status {
+		res, err := getDevicesWithStatuses(ctx, devs)
+		if err != nil {
+			return fmt.Errorf("failed to get devices: %w", err)
+		}
+		devsWithStatuses = res
+	} else {
+		devsWithStatuses = getDevicesWithEmptyStatuses(devs)
+	}
 
-	from := min(size*page, len(filtered))
-	to := min(size*(page+1), len(filtered))
+	var filtered = filterDevices(devsWithStatuses, options.Filter)
+
+	from := min(options.Size*options.Page, len(filtered))
+	to := min(options.Size*(options.Page+1), len(filtered))
 	paginated := filtered[from:to]
 
-	switch format {
+	switch options.OutputFormat {
 	case "json":
-		var toRender any
-		if addStatus {
-			res, err := getDevicesWithStatuses(ctx, paginated)
-			if err != nil {
-				return err
-			}
-			toRender = res
-		} else {
-			toRender = paginated
-		}
-
-		if err := renderJSON(toRender); err != nil {
+		if err := renderJSON(paginated); err != nil {
 			return fmt.Errorf("failed to render output: %w", err)
 		}
 	case "text":
-		var toDisplay []DeviceWithStatus
-		if addStatus {
-			devsWithStatuses, err := getDevicesWithStatuses(ctx, paginated)
-			if err != nil {
-				return err
-			}
-			toDisplay = devsWithStatuses
-		} else {
-			toDisplay = getDevicesWithEmptyStatuses(devs)
-		}
-		renderListTable(toDisplay, from+1, to, len(filtered), addStatus)
+		renderListTable(paginated, from+1, to, len(filtered), options.Status)
 	}
 
 	return nil
 }
 
-func filterDevices(devs []devices.Device, nameFilter string, osFilter string) []devices.Device {
-	var filtered []devices.Device
+func filterDevices(devs []DeviceWithStatus, filter Filter) []DeviceWithStatus {
+	var filtered []DeviceWithStatus
 	for _, dev := range devs {
-		if nameFilter != "" && !strings.Contains(strings.ToLower(dev.Name), strings.ToLower(nameFilter)) {
+		if filter.Name != "" && !strings.Contains(strings.ToLower(dev.Name), strings.ToLower(filter.Name)) {
 			continue
 		}
 
-		if osFilter != "" && !strings.Contains(strings.ToLower(dev.OS), strings.ToLower(osFilter)) {
+		if filter.Os != "" && !strings.Contains(strings.ToLower(dev.OS), strings.ToLower(filter.Os)) {
+			continue
+		}
+
+		if filter.Status != "" && !strings.Contains(strings.ToLower(dev.Status), strings.ToLower(filter.Status)) {
 			continue
 		}
 
