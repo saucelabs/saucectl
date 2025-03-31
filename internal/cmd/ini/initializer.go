@@ -50,7 +50,7 @@ var fallbackIOSVirtualDevices = []vmd.VirtualDevice{
 type initializer struct {
 	stdio        terminal.Stdio
 	infoReader   framework.MetadataService
-	deviceReader devices.Reader
+	deviceReader devices.ByOSReader
 	vmdReader    vmd.Reader
 	userService  iam.UserService
 	cfg          *initConfig

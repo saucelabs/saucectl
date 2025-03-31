@@ -405,8 +405,29 @@ func (c *RDCService) Artifact(ctx context.Context, jobID, fileName string, realD
 	return io.ReadAll(resp.Body)
 }
 
-// GetDevices returns the list of available devices using a specific operating system.
-func (c *RDCService) GetDevices(ctx context.Context, OS string) ([]devices.Device, error) {
+func (c *RDCService) GetDevices(ctx context.Context) ([]devices.Device, error) {
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v1/rdc/devices", c.URL), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	res, err := c.Client.Do(req)
+	if err != nil {
+		return []devices.Device{}, err
+	}
+
+	var resp []devices.Device
+	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+		return []devices.Device{}, err
+	}
+
+	return resp, nil
+}
+
+// GetDevicesByOS returns the list of available devices using a specific operating system.
+func (c *RDCService) GetDevicesByOS(ctx context.Context, OS string) ([]devices.Device, error) {
 	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v1/rdc/devices/filtered", c.URL), nil)
 	if err != nil {
 		return nil, err

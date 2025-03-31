@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/cmd/devices"
 	"os"
 	"os/signal"
 	"time"
@@ -75,6 +76,7 @@ func main() {
 		apit.Command(cmd.PersistentPreRun),
 		docker.Command(cmd.PersistentPreRun),
 		builds.Command(cmd.PersistentPreRun),
+		devices.Command(cmd.PersistentPreRun),
 	)
 
 	if err := cmd.ExecuteContext(newContext()); err != nil {

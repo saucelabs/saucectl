@@ -395,7 +395,7 @@ func TestRDCService_GetJobAssetFileContent(t *testing.T) {
 	}
 }
 
-func TestRDCService_GetDevices(t *testing.T) {
+func TestRDCService_GetDevicesByOS(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		completeQuery := fmt.Sprintf("%s?%s", r.URL.Path, r.URL.RawQuery)
@@ -461,15 +461,58 @@ func TestRDCService_GetDevices(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := cl.GetDevices(tt.args.ctx, tt.args.OS)
+			got, err := cl.GetDevicesByOS(tt.args.ctx, tt.args.OS)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetDevices() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("GetDevicesByOS() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetDevices() got = %v, want %v", got, tt.want)
+				t.Errorf("GetDevicesByOS() got = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestRDCService_GetDevices(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
+		_, err = w.Write([]byte(`[{"name": "OnePlus 5T"},{"name": "OnePlus 6"},{"name": "OnePlus 6T"},{"name": "iPhone XR"},{"name": "iPhone XS"},{"name": "iPhone X"}]`))
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
+		}
+	}))
+	defer ts.Close()
+	client := retryablehttp.NewClient()
+	client.HTTPClient = &http.Client{Timeout: 1 * time.Second}
+
+	cl := RDCService{
+		Client:    client,
+		URL:       ts.URL,
+		Username:  "dummy-user",
+		AccessKey: "dummy-key",
+	}
+	type args struct {
+		ctx context.Context
+		OS  string
+	}
+
+	ctx := context.Background()
+	want := []devices.Device{
+		{Name: "OnePlus 5T"},
+		{Name: "OnePlus 6"},
+		{Name: "OnePlus 6T"},
+		{Name: "iPhone XR"},
+		{Name: "iPhone XS"},
+		{Name: "iPhone X"},
+	}
+
+	got, err := cl.GetDevices(ctx)
+	if err != nil {
+		t.Errorf("GetDevices() error = %v", err)
+		return
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("GetDevices() got = %v, want %v", got, want)
 	}
 }
 

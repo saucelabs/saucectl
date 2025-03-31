@@ -10,5 +10,10 @@ type Device struct {
 
 // Reader is the interface for retrieving available devices.
 type Reader interface {
-	GetDevices(ctx context.Context, OS string) ([]Device, error)
+	GetDevices(ctx context.Context) ([]Device, error)
+}
+
+// ByOSReader is the interface for retrieving available devices by OS.
+type ByOSReader interface {
+	GetDevicesByOS(ctx context.Context, OS string) ([]Device, error)
 }
