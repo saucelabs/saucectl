@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	devicesReader  devices.Reader
-	devicesTimeout = 1 * time.Minute
+	devicesReader         devices.Reader
+	devicesStatusesReader devices.StatusReader
+	devicesTimeout        = 1 * time.Minute
 )
 
 func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
@@ -41,6 +42,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 			rdcService := http.NewRDCService(reg, creds.Username, creds.AccessKey, devicesTimeout)
 
 			devicesReader = &rdcService
+			devicesStatusesReader = &rdcService
 
 			return nil
 		},

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/devices/devicestatus"
 	"io"
 	"net/http"
 	"strings"
@@ -424,6 +425,57 @@ func (c *RDCService) GetDevices(ctx context.Context) ([]devices.Device, error) {
 	}
 
 	return resp, nil
+}
+
+func (c *RDCService) GetDevicesStatuses(ctx context.Context) ([]devices.DeviceStatus, error) {
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v1/rdc/devices/status", c.URL), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	res, err := c.Client.Do(req)
+	if err != nil {
+		return []devices.DeviceStatus{}, err
+	}
+
+	var resp struct {
+		Devices []struct {
+			Descriptor string
+			State      string
+			InUseBy    []struct {
+				Username string
+			}
+			IsPrivateDevice bool
+		}
+	}
+
+	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+		return []devices.DeviceStatus{}, err
+	}
+
+	var result []devices.DeviceStatus
+	for _, d := range resp.Devices {
+		status, err := devicestatus.StrToStatus(d.State)
+		if err != nil {
+			return []devices.DeviceStatus{}, err
+		}
+
+		var inUseBy []string
+		for _, user := range d.InUseBy {
+			inUseBy = append(inUseBy, user.Username)
+		}
+
+		result = append(result, devices.DeviceStatus{
+			ID:              d.Descriptor,
+			Status:          status,
+			InUseBy:         inUseBy,
+			IsPrivateDevice: d.IsPrivateDevice,
+		})
+	}
+
+	return result, nil
 }
 
 // GetDevicesByOS returns the list of available devices using a specific operating system.

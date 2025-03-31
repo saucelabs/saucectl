@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/saucelabs/saucectl/internal/devices/devicestatus"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -513,6 +514,56 @@ func TestRDCService_GetDevices(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("GetDevices() got = %v, want %v", got, want)
+	}
+}
+
+func TestRDCService_GetDevicesStatuses(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
+		_, err = w.Write([]byte(`{"devices":[
+			{"descriptor": "OnePlus 5T","state":"AVAILABLE"},
+			{"descriptor": "OnePlus 6","state":"IN_USE"},
+			{"descriptor": "OnePlus 6T","state":"CLEANING"},
+			{"descriptor": "iPhone XR","state":"MAINTENANCE"},
+			{"descriptor": "iPhone XS","state":"REBOOTING"},
+			{"descriptor": "iPhone X","state":"OFFLINE"}
+		]}`))
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
+		}
+	}))
+	defer ts.Close()
+	client := retryablehttp.NewClient()
+	client.HTTPClient = &http.Client{Timeout: 1 * time.Second}
+
+	cl := RDCService{
+		Client:    client,
+		URL:       ts.URL,
+		Username:  "dummy-user",
+		AccessKey: "dummy-key",
+	}
+	type args struct {
+		ctx context.Context
+		OS  string
+	}
+
+	ctx := context.Background()
+	want := []devices.DeviceStatus{
+		{ID: "OnePlus 5T", Status: devicestatus.Available},
+		{ID: "OnePlus 6", Status: devicestatus.InUse},
+		{ID: "OnePlus 6T", Status: devicestatus.Cleaning},
+		{ID: "iPhone XR", Status: devicestatus.Maintenance},
+		{ID: "iPhone XS", Status: devicestatus.Rebooting},
+		{ID: "iPhone X", Status: devicestatus.Offline},
+	}
+
+	got, err := cl.GetDevicesStatuses(ctx)
+	if err != nil {
+		t.Errorf("GetDevicesStatuses() error = %v", err)
+		return
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("GetDevicesStatuses() got = %v, want %v", got, want)
 	}
 }
 
