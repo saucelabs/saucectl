@@ -6,9 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jedib0t/go-pretty/v6/table"
+	cmds "github.com/saucelabs/saucectl/internal/cmd"
 	"github.com/saucelabs/saucectl/internal/devices"
 	"github.com/saucelabs/saucectl/internal/devices/devicestatus"
 	"github.com/saucelabs/saucectl/internal/tables"
+	"github.com/saucelabs/saucectl/internal/usage"
 	"github.com/spf13/cobra"
 	"os"
 	"strings"
@@ -56,6 +58,17 @@ func ListCommand() *cobra.Command {
 		},
 		Short:        "Returns the list of devices",
 		SilenceUsage: true,
+		PreRun: func(cmd *cobra.Command, _ []string) {
+			tracker := usage.DefaultClient
+
+			go func() {
+				tracker.Collect(
+					cmds.FullName(cmd),
+					usage.Flags(cmd.Flags()),
+				)
+				_ = tracker.Close()
+			}()
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if page < 0 {
 				return errors.New("invalid page")
