@@ -187,7 +187,7 @@ func runPlaywright(cmd *cobra.Command, pf playwrightFlags, isCLIDriven bool) (in
 		Str("tunnel", p.Sauce.Tunnel.Name).
 		Msg("Running Playwright in Sauce Labs.")
 	r := saucecloud.PlaywrightRunner{
-		Project: p,
+		Project: &p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader:        &appsClient,
 			JobService:             jobService,

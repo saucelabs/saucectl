@@ -16,7 +16,7 @@ import (
 // PlaywrightRunner represents the Sauce Labs cloud implementation for playwright.
 type PlaywrightRunner struct {
 	CloudRunner
-	Project playwright.Project
+	Project *playwright.Project
 }
 
 var PlaywrightBrowserMap = map[string]string{
