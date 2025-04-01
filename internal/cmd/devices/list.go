@@ -82,6 +82,11 @@ func ListCommand() *cobra.Command {
 			}
 
 			if statusFilter != "" {
+				_, err := devicestatus.StrToStatus(statusFilter)
+				if err != nil {
+					return err
+				}
+
 				addStatus = true
 			}
 
