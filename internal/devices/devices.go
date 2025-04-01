@@ -8,9 +8,10 @@ import (
 
 // Device describes a real device that can be used to run tests.
 type Device struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	OS   string `json:"os"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	OS        string `json:"os"`
+	OSVersion string `json:"osVersion"`
 }
 
 type DeviceStatus struct {
@@ -21,10 +22,11 @@ type DeviceStatus struct {
 }
 
 type DeviceWithStatus struct {
-	ID     string              `json:"id"`
-	Name   string              `json:"name"`
-	OS     string              `json:"os"`
-	Status devicestatus.Status `json:"status"`
+	ID        string              `json:"id"`
+	Name      string              `json:"name"`
+	OS        string              `json:"os"`
+	OSVersion string              `json:"osVersion"`
+	Status    devicestatus.Status `json:"status"`
 }
 
 // Reader is the interface for retrieving available devices.

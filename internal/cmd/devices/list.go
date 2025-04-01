@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Masterminds/semver/v3"
 	"os"
 	"strings"
 
@@ -25,6 +26,7 @@ const (
 type filter struct {
 	Name         string
 	Os           string
+	OsVersion    *semver.Constraints
 	Status       devicestatus.Status
 	FilterStatus bool
 }
@@ -39,6 +41,7 @@ func ListCommand() *cobra.Command {
 	var out string
 	var nameFilter string
 	var osFilter string
+	var osVersionFilterRaw string
 	var addStatus bool
 	var statusFilter string
 
@@ -78,6 +81,16 @@ func ListCommand() *cobra.Command {
 				status = res
 			}
 
+			var osVersionFilter *semver.Constraints
+			if osVersionFilterRaw != "" {
+				res, err := semver.NewConstraint(osVersionFilterRaw)
+				if err != nil {
+					return err
+				}
+
+				osVersionFilter = res
+			}
+
 			options := listOptions{
 				Status:       addStatus,
 				OutputFormat: out,
@@ -85,6 +98,7 @@ func ListCommand() *cobra.Command {
 					Name:         nameFilter,
 					Os:           osFilter,
 					Status:       status,
+					OsVersion:    osVersionFilter,
 					FilterStatus: filterStatus,
 				},
 			}
@@ -99,6 +113,7 @@ func ListCommand() *cobra.Command {
 	flags.StringVar(&osFilter, "os", "", "Filter devices by OS.")
 	flags.BoolVar(&addStatus, "statuses", false, "Fetch status for devices.")
 	flags.StringVar(&statusFilter, "status", "", "Filter devices by status. Implies --statuses if not set.")
+	flags.StringVar(&osVersionFilterRaw, "os-version", "", "Filter devices by OS version. Accepts semver ranges.")
 
 	return cmd
 }
@@ -149,6 +164,17 @@ func filterDevices(devs []devices.DeviceWithStatus, filter filter) []devices.Dev
 			continue
 		}
 
+		if filter.OsVersion != nil {
+			version, err := semver.NewVersion(dev.OSVersion)
+			if err != nil {
+				continue
+			}
+
+			if !filter.OsVersion.Check(version) {
+				continue
+			}
+		}
+
 		filtered = append(filtered, dev)
 	}
 	return filtered
@@ -158,9 +184,10 @@ func getDevicesWithEmptyStatuses(devs []devices.Device) []devices.DeviceWithStat
 	var result []devices.DeviceWithStatus
 	for _, dev := range devs {
 		result = append(result, devices.DeviceWithStatus{
-			ID:   dev.ID,
-			Name: dev.Name,
-			OS:   dev.OS,
+			ID:        dev.ID,
+			Name:      dev.Name,
+			OS:        dev.OS,
+			OSVersion: dev.OSVersion,
 		})
 	}
 	return result
@@ -181,7 +208,7 @@ func renderListTable(devices []devices.DeviceWithStatus, total int) {
 	t.SuppressEmptyColumns()
 
 	t.AppendHeader(table.Row{
-		"Name", "OS", "Status",
+		"Name", "OS", "OS Version", "Status",
 	})
 
 	for _, item := range devices {
@@ -189,6 +216,7 @@ func renderListTable(devices []devices.DeviceWithStatus, total int) {
 		t.AppendRow(table.Row{
 			item.Name,
 			item.OS,
+			item.OSVersion,
 			item.Status,
 		})
 	}

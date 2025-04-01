@@ -504,10 +504,11 @@ func (c *RDCService) GetDevicesWithStatuses(ctx context.Context) ([]devices.Devi
 		}
 
 		result = append(result, devices.DeviceWithStatus{
-			ID:     dev.ID,
-			Name:   dev.Name,
-			OS:     dev.OS,
-			Status: status,
+			ID:        dev.ID,
+			Name:      dev.Name,
+			OS:        dev.OS,
+			OSVersion: dev.OSVersion,
+			Status:    status,
 		})
 	}
 
@@ -533,8 +534,9 @@ func (c *RDCService) GetDevicesByOS(ctx context.Context, OS string) ([]devices.D
 
 	var resp struct {
 		Entities []struct {
-			Name string
-			OS   string
+			Name      string
+			OS        string
+			OSVersion string
 		}
 	}
 	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
@@ -544,8 +546,9 @@ func (c *RDCService) GetDevicesByOS(ctx context.Context, OS string) ([]devices.D
 	var dev []devices.Device
 	for _, d := range resp.Entities {
 		dev = append(dev, devices.Device{
-			Name: d.Name,
-			OS:   d.OS,
+			Name:      d.Name,
+			OS:        d.OS,
+			OSVersion: d.OSVersion,
 		})
 	}
 	return dev, nil
