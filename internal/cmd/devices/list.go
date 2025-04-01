@@ -36,8 +36,6 @@ type filter struct {
 }
 
 type listOptions struct {
-	Page         int
-	Size         int
 	Status       bool
 	OutputFormat string
 	Filter       filter
@@ -45,8 +43,6 @@ type listOptions struct {
 
 func ListCommand() *cobra.Command {
 	var out string
-	var page int
-	var size int
 	var nameFilter string
 	var osFilter string
 	var addStatus bool
@@ -71,12 +67,6 @@ func ListCommand() *cobra.Command {
 			}()
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if page < 0 {
-				return errors.New("invalid page")
-			}
-			if size < 0 {
-				return errors.New("invalid size")
-			}
 			if out != JSONOutput && out != TextOutput {
 				return errors.New("unknown output format")
 			}
@@ -91,8 +81,6 @@ func ListCommand() *cobra.Command {
 			}
 
 			options := listOptions{
-				Page:         page,
-				Size:         size,
 				Status:       addStatus,
 				OutputFormat: out,
 				Filter: filter{
@@ -108,8 +96,6 @@ func ListCommand() *cobra.Command {
 
 	flags := cmd.PersistentFlags()
 	flags.StringVarP(&out, "out", "o", "text", "OutputFormat format to the console. Options: text, json.")
-	flags.IntVarP(&page, "page", "p", 0, "Page for pagination. Default is 0.")
-	flags.IntVarP(&size, "size", "s", 0, "Per page for pagination. Default is all.")
 	flags.StringVarP(&nameFilter, "name", "n", "", "Filter devices by name.")
 	flags.StringVar(&osFilter, "os", "", "Filter devices by OS.")
 	flags.BoolVar(&addStatus, "statuses", false, "Fetch status for devices.")
@@ -137,25 +123,13 @@ func list(ctx context.Context, options listOptions) error {
 
 	var filtered = filterDevices(devsWithStatuses, options.Filter)
 
-	var paginated []deviceWithStatus
-	var from, to int
-	if options.Size > 0 {
-		from = min(options.Size*options.Page, len(filtered))
-		to = min(options.Size*(options.Page+1), len(filtered))
-		paginated = filtered[from:to]
-	} else {
-		from = 0
-		to = len(filtered)
-		paginated = filtered
-	}
-
 	switch options.OutputFormat {
 	case "json":
-		if err := renderJSON(paginated); err != nil {
+		if err := renderJSON(filtered); err != nil {
 			return fmt.Errorf("failed to render output: %w", err)
 		}
 	case "text":
-		renderListTable(paginated, from+1, to, len(filtered), options.Status)
+		renderListTable(filtered, len(filtered), options.Status)
 	}
 
 	return nil
@@ -223,7 +197,7 @@ func renderJSON(val any) error {
 	return json.NewEncoder(os.Stdout).Encode(val)
 }
 
-func renderListTable(devices []deviceWithStatus, from int, to int, total int, status bool) {
+func renderListTable(devices []deviceWithStatus, total int, status bool) {
 	if len(devices) == 0 {
 		println("No devices found")
 		return
@@ -241,7 +215,7 @@ func renderListTable(devices []deviceWithStatus, from int, to int, total int, st
 
 	t.SuppressEmptyColumns()
 	t.AppendFooter(table.Row{
-		fmt.Sprintf("showing %d-%d devices out of %d", from, to, total),
+		fmt.Sprintf("showing %d devices", total),
 	})
 
 	fmt.Println(t.Render())
