@@ -17,6 +17,7 @@ import (
 	"github.com/saucelabs/saucectl/internal/cmd/builds"
 	"github.com/saucelabs/saucectl/internal/cmd/completion"
 	"github.com/saucelabs/saucectl/internal/cmd/configure"
+	"github.com/saucelabs/saucectl/internal/cmd/devices"
 	"github.com/saucelabs/saucectl/internal/cmd/docker"
 	"github.com/saucelabs/saucectl/internal/cmd/imagerunner"
 	"github.com/saucelabs/saucectl/internal/cmd/ini"
@@ -75,6 +76,7 @@ func main() {
 		apit.Command(cmd.PersistentPreRun),
 		docker.Command(cmd.PersistentPreRun),
 		builds.Command(cmd.PersistentPreRun),
+		devices.Command(cmd.PersistentPreRun),
 	)
 
 	if err := cmd.ExecuteContext(newContext()); err != nil {

@@ -16,6 +16,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/devices"
+	"github.com/saucelabs/saucectl/internal/devices/devicestatus"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/stretchr/testify/assert"
@@ -395,15 +396,23 @@ func TestRDCService_GetJobAssetFileContent(t *testing.T) {
 	}
 }
 
-func TestRDCService_GetDevices(t *testing.T) {
+func TestRDCService_GetDevicesByOS(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		completeQuery := fmt.Sprintf("%s?%s", r.URL.Path, r.URL.RawQuery)
 		switch completeQuery {
 		case "/v1/rdc/devices/filtered?os=ANDROID":
-			_, err = w.Write([]byte(`{"entities":[{"name": "OnePlus 5T"},{"name": "OnePlus 6"},{"name": "OnePlus 6T"}]}`))
+			_, err = w.Write([]byte(`{"entities":[
+				{"name": "OnePlus 5T", "os": "ANDROID", "osVersion": "10.0"},
+				{"name": "OnePlus 6", "os": "ANDROID", "osVersion": "10.0"},
+				{"name": "OnePlus 6T", "os": "ANDROID", "osVersion": "10.0"}
+			]}`))
 		case "/v1/rdc/devices/filtered?os=IOS":
-			_, err = w.Write([]byte(`{"entities":[{"name": "iPhone XR"},{"name": "iPhone XS"},{"name": "iPhone X"}]}`))
+			_, err = w.Write([]byte(`{"entities":[
+				{"name": "iPhone XR", "os": "IOS", "osVersion": "10.0"},
+				{"name": "iPhone XS", "os": "IOS", "osVersion": "10.0"},
+				{"name": "iPhone X", "os": "IOS", "osVersion": "10.0"}
+			]}`))
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}
@@ -439,9 +448,9 @@ func TestRDCService_GetDevices(t *testing.T) {
 				OS:  "ANDROID",
 			},
 			want: []devices.Device{
-				{Name: "OnePlus 5T"},
-				{Name: "OnePlus 6"},
-				{Name: "OnePlus 6T"},
+				{Name: "OnePlus 5T", OS: "ANDROID", OSVersion: "10.0"},
+				{Name: "OnePlus 6", OS: "ANDROID", OSVersion: "10.0"},
+				{Name: "OnePlus 6T", OS: "ANDROID", OSVersion: "10.0"},
 			},
 			wantErr: false,
 		},
@@ -452,24 +461,116 @@ func TestRDCService_GetDevices(t *testing.T) {
 				OS:  "IOS",
 			},
 			want: []devices.Device{
-				{Name: "iPhone XR"},
-				{Name: "iPhone XS"},
-				{Name: "iPhone X"},
+				{Name: "iPhone XR", OS: "IOS", OSVersion: "10.0"},
+				{Name: "iPhone XS", OS: "IOS", OSVersion: "10.0"},
+				{Name: "iPhone X", OS: "IOS", OSVersion: "10.0"},
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := cl.GetDevices(tt.args.ctx, tt.args.OS)
+			got, err := cl.GetDevicesByOS(tt.args.ctx, tt.args.OS)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetDevices() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("GetDevicesByOS() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetDevices() got = %v, want %v", got, tt.want)
+				t.Errorf("GetDevicesByOS() got = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestRDCService_GetDevices(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		var err error
+		_, err = w.Write([]byte(`[
+			{"name": "OnePlus 5T", "os": "ANDROID", "osVersion": "10.0"},
+			{"name": "OnePlus 6", "os": "ANDROID", "osVersion": "10.0"},
+			{"name": "OnePlus 6T", "os": "ANDROID", "osVersion": "10.0"},
+			{"name": "iPhone XR", "os": "IOS", "osVersion": "10.0"},
+			{"name": "iPhone XS", "os": "IOS", "osVersion": "10.0"},
+			{"name": "iPhone X", "os": "IOS", "osVersion": "10.0"}
+		]`))
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
+		}
+	}))
+	defer ts.Close()
+	client := retryablehttp.NewClient()
+	client.HTTPClient = &http.Client{Timeout: 1 * time.Second}
+
+	cl := RDCService{
+		Client:    client,
+		URL:       ts.URL,
+		Username:  "dummy-user",
+		AccessKey: "dummy-key",
+	}
+
+	ctx := context.Background()
+	want := []devices.Device{
+		{Name: "OnePlus 5T", OS: "ANDROID", OSVersion: "10.0"},
+		{Name: "OnePlus 6", OS: "ANDROID", OSVersion: "10.0"},
+		{Name: "OnePlus 6T", OS: "ANDROID", OSVersion: "10.0"},
+		{Name: "iPhone XR", OS: "IOS", OSVersion: "10.0"},
+		{Name: "iPhone XS", OS: "IOS", OSVersion: "10.0"},
+		{Name: "iPhone X", OS: "IOS", OSVersion: "10.0"},
+	}
+
+	got, err := cl.GetDevices(ctx)
+	if err != nil {
+		t.Errorf("GetDevices() error = %v", err)
+		return
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("GetDevices() got = %v, want %v", got, want)
+	}
+}
+
+func TestRDCService_GetDevicesStatuses(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		var err error
+		_, err = w.Write([]byte(`{"devices":[
+			{"descriptor": "OnePlus 5T","state":"AVAILABLE"},
+			{"descriptor": "OnePlus 6","state":"IN_USE"},
+			{"descriptor": "OnePlus 6T","state":"CLEANING"},
+			{"descriptor": "iPhone XR","state":"MAINTENANCE"},
+			{"descriptor": "iPhone XS","state":"REBOOTING"},
+			{"descriptor": "iPhone X","state":"OFFLINE"}
+		]}`))
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
+		}
+	}))
+	defer ts.Close()
+	client := retryablehttp.NewClient()
+	client.HTTPClient = &http.Client{Timeout: 1 * time.Second}
+
+	cl := RDCService{
+		Client:    client,
+		URL:       ts.URL,
+		Username:  "dummy-user",
+		AccessKey: "dummy-key",
+	}
+
+	ctx := context.Background()
+	want := []devices.DeviceStatus{
+		{ID: "OnePlus 5T", Status: devicestatus.Available},
+		{ID: "OnePlus 6", Status: devicestatus.InUse},
+		{ID: "OnePlus 6T", Status: devicestatus.Cleaning},
+		{ID: "iPhone XR", Status: devicestatus.Maintenance},
+		{ID: "iPhone XS", Status: devicestatus.Rebooting},
+		{ID: "iPhone X", Status: devicestatus.Offline},
+	}
+
+	got, err := cl.GetDevicesStatuses(ctx)
+	if err != nil {
+		t.Errorf("GetDevicesStatuses() error = %v", err)
+		return
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("GetDevicesStatuses() got = %v, want %v", got, want)
 	}
 }
 
