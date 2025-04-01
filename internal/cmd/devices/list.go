@@ -22,17 +22,11 @@ const (
 	TextOutput = "text"
 )
 
-type deviceWithStatus struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	OS     string `json:"os"`
-	Status string `json:"status"`
-}
-
 type filter struct {
-	Name   string
-	Os     string
-	Status string
+	Name         string
+	Os           string
+	Status       devicestatus.Status
+	FilterStatus bool
 }
 
 type listOptions struct {
@@ -71,22 +65,27 @@ func ListCommand() *cobra.Command {
 				return errors.New("unknown output format")
 			}
 
+			var status devicestatus.Status
+			filterStatus := false
 			if statusFilter != "" {
-				_, err := devicestatus.StrToStatus(statusFilter)
+				res, err := devicestatus.Make(statusFilter)
 				if err != nil {
 					return err
 				}
 
 				addStatus = true
+				filterStatus = true
+				status = res
 			}
 
 			options := listOptions{
 				Status:       addStatus,
 				OutputFormat: out,
 				Filter: filter{
-					Name:   nameFilter,
-					Os:     osFilter,
-					Status: statusFilter,
+					Name:         nameFilter,
+					Os:           osFilter,
+					Status:       status,
+					FilterStatus: filterStatus,
 				},
 			}
 
@@ -110,9 +109,9 @@ func list(ctx context.Context, options listOptions) error {
 		return fmt.Errorf("failed to get devices: %w", err)
 	}
 
-	var devsWithStatuses []deviceWithStatus
+	var devsWithStatuses []devices.DeviceWithStatus
 	if options.Status {
-		res, err := getDevicesWithStatuses(ctx, devs)
+		res, err := devicesStatusesReader.GetDevicesWithStatuses(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to get devices: %w", err)
 		}
@@ -129,14 +128,14 @@ func list(ctx context.Context, options listOptions) error {
 			return fmt.Errorf("failed to render output: %w", err)
 		}
 	case "text":
-		renderListTable(filtered, len(filtered), options.Status)
+		renderListTable(filtered, len(filtered))
 	}
 
 	return nil
 }
 
-func filterDevices(devs []deviceWithStatus, filter filter) []deviceWithStatus {
-	var filtered []deviceWithStatus
+func filterDevices(devs []devices.DeviceWithStatus, filter filter) []devices.DeviceWithStatus {
+	var filtered []devices.DeviceWithStatus
 	for _, dev := range devs {
 		if filter.Name != "" && !strings.Contains(strings.ToLower(dev.Name), strings.ToLower(filter.Name)) {
 			continue
@@ -146,7 +145,7 @@ func filterDevices(devs []deviceWithStatus, filter filter) []deviceWithStatus {
 			continue
 		}
 
-		if filter.Status != "" && !strings.Contains(strings.ToLower(dev.Status), strings.ToLower(filter.Status)) {
+		if filter.FilterStatus && dev.Status != filter.Status {
 			continue
 		}
 
@@ -155,36 +154,10 @@ func filterDevices(devs []deviceWithStatus, filter filter) []deviceWithStatus {
 	return filtered
 }
 
-func getDevicesWithStatuses(ctx context.Context, devs []devices.Device) ([]deviceWithStatus, error) {
-	statuses, err := devicesStatusesReader.GetDevicesStatuses(ctx)
-	if err != nil {
-		return []deviceWithStatus{}, fmt.Errorf("failed to get devices statuses: %w", err)
-	}
-
-	var result []deviceWithStatus
+func getDevicesWithEmptyStatuses(devs []devices.Device) []devices.DeviceWithStatus {
+	var result []devices.DeviceWithStatus
 	for _, dev := range devs {
-		var searchedStatus devices.DeviceStatus
-		for _, status := range statuses {
-			if status.ID == dev.ID {
-				searchedStatus = status
-			}
-		}
-
-		result = append(result, deviceWithStatus{
-			ID:     dev.ID,
-			Name:   dev.Name,
-			OS:     dev.OS,
-			Status: devicestatus.StatusToStr(searchedStatus.Status),
-		})
-	}
-
-	return result, nil
-}
-
-func getDevicesWithEmptyStatuses(devs []devices.Device) []deviceWithStatus {
-	var result []deviceWithStatus
-	for _, dev := range devs {
-		result = append(result, deviceWithStatus{
+		result = append(result, devices.DeviceWithStatus{
 			ID:   dev.ID,
 			Name: dev.Name,
 			OS:   dev.OS,
@@ -197,7 +170,7 @@ func renderJSON(val any) error {
 	return json.NewEncoder(os.Stdout).Encode(val)
 }
 
-func renderListTable(devices []deviceWithStatus, total int, status bool) {
+func renderListTable(devices []devices.DeviceWithStatus, total int) {
 	if len(devices) == 0 {
 		println("No devices found")
 		return
@@ -207,35 +180,6 @@ func renderListTable(devices []deviceWithStatus, total int, status bool) {
 	t.SetStyle(tables.DefaultTableStyle)
 	t.SuppressEmptyColumns()
 
-	if status {
-		writeDevicesWithStatus(t, devices)
-	} else {
-		writeDevices(t, devices)
-	}
-
-	t.SuppressEmptyColumns()
-	t.AppendFooter(table.Row{
-		fmt.Sprintf("showing %d devices", total),
-	})
-
-	fmt.Println(t.Render())
-}
-
-func writeDevices(t table.Writer, devices []deviceWithStatus) {
-	t.AppendHeader(table.Row{
-		"Name", "OS",
-	})
-
-	for _, item := range devices {
-		// the order of values must match the order of the header
-		t.AppendRow(table.Row{
-			item.Name,
-			item.OS,
-		})
-	}
-}
-
-func writeDevicesWithStatus(t table.Writer, devices []deviceWithStatus) {
 	t.AppendHeader(table.Row{
 		"Name", "OS", "Status",
 	})
@@ -248,4 +192,11 @@ func writeDevicesWithStatus(t table.Writer, devices []deviceWithStatus) {
 			item.Status,
 		})
 	}
+
+	t.SuppressEmptyColumns()
+	t.AppendFooter(table.Row{
+		fmt.Sprintf("showing %d devices", total),
+	})
+
+	fmt.Println(t.Render())
 }

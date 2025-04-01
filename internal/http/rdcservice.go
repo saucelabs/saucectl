@@ -457,7 +457,7 @@ func (c *RDCService) GetDevicesStatuses(ctx context.Context) ([]devices.DeviceSt
 
 	var result []devices.DeviceStatus
 	for _, d := range resp.Devices {
-		status, err := devicestatus.StrToStatus(d.State)
+		status, err := devicestatus.Make(d.State)
 		if err != nil {
 			return []devices.DeviceStatus{}, err
 		}
@@ -472,6 +472,42 @@ func (c *RDCService) GetDevicesStatuses(ctx context.Context) ([]devices.DeviceSt
 			Status:          status,
 			InUseBy:         inUseBy,
 			IsPrivateDevice: d.IsPrivateDevice,
+		})
+	}
+
+	return result, nil
+}
+
+func (c *RDCService) GetDevicesWithStatuses(ctx context.Context) ([]devices.DeviceWithStatus, error) {
+	devs, err := c.GetDevices(ctx)
+	if err != nil {
+		return []devices.DeviceWithStatus{}, err
+	}
+
+	statuses, err := c.GetDevicesStatuses(ctx)
+	if err != nil {
+		return []devices.DeviceWithStatus{}, err
+	}
+
+	var result []devices.DeviceWithStatus
+	for _, dev := range devs {
+		var status devicestatus.Status
+		for _, deviceStatus := range statuses {
+			if deviceStatus.ID == dev.ID {
+				status = deviceStatus.Status
+				break
+			}
+		}
+
+		if status == "" {
+			status = devicestatus.Unknown
+		}
+
+		result = append(result, devices.DeviceWithStatus{
+			ID:     dev.ID,
+			Name:   dev.Name,
+			OS:     dev.OS,
+			Status: status,
 		})
 	}
 

@@ -20,6 +20,13 @@ type DeviceStatus struct {
 	IsPrivateDevice bool
 }
 
+type DeviceWithStatus struct {
+	ID     string              `json:"id"`
+	Name   string              `json:"name"`
+	OS     string              `json:"os"`
+	Status devicestatus.Status `json:"status"`
+}
+
 // Reader is the interface for retrieving available devices.
 type Reader interface {
 	GetDevices(ctx context.Context) ([]Device, error)
@@ -28,6 +35,7 @@ type Reader interface {
 // StatusReader is the interface for retrieving available devices' statuses.
 type StatusReader interface {
 	GetDevicesStatuses(ctx context.Context) ([]DeviceStatus, error)
+	GetDevicesWithStatuses(ctx context.Context) ([]DeviceWithStatus, error)
 }
 
 // ByOSReader is the interface for retrieving available devices by OS.

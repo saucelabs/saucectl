@@ -1,49 +1,41 @@
 package devicestatus
 
-import "fmt"
-
-type Status int
-
-const (
-	Available Status = iota
-	InUse
-	Cleaning
-	Maintenance
-	Rebooting
-	Offline
+import (
+	"fmt"
+	"strings"
 )
 
-var statusToStringMap = map[Status]string{
-	Available:   "AVAILABLE",
-	InUse:       "IN_USE",
-	Cleaning:    "CLEANING",
-	Maintenance: "MAINTENANCE",
-	Rebooting:   "REBOOTING",
-	Offline:     "OFFLINE",
-}
+type Status string
+
+const (
+	Unknown     Status = "UNKNOWN"
+	Available          = "AVAILABLE"
+	InUse              = "IN_USE"
+	Cleaning           = "CLEANING"
+	Maintenance        = "MAINTENANCE"
+	Rebooting          = "REBOOTING"
+	Offline            = "OFFLINE"
+)
 
 var stringToStatusMap = map[string]Status{
-	"AVAILABLE":   Available,
-	"IN_USE":      InUse,
-	"CLEANING":    Cleaning,
-	"MAINTENANCE": Maintenance,
-	"REBOOTING":   Rebooting,
-	"OFFLINE":     Offline,
+	string(Unknown): Unknown,
+	Available:       Available,
+	InUse:           InUse,
+	Cleaning:        Cleaning,
+	Maintenance:     Maintenance,
+	Rebooting:       Rebooting,
+	Offline:         Offline,
 }
 
-func StrToStatus(status string) (Status, error) {
-	c, ok := stringToStatusMap[status]
+func Make(str string) (Status, error) {
+	c, ok := stringToStatusMap[strings.ToUpper(str)]
 	if !ok {
-		return c, fmt.Errorf("unknown status %s", status)
+		return c, fmt.Errorf("unknown status %s", str)
 	}
 
 	return c, nil
 }
 
-func StatusToStr(ds Status) string {
-	return statusToStringMap[ds]
-}
-
 func (ds Status) String() string {
-	return StatusToStr(ds)
+	return string(ds)
 }
