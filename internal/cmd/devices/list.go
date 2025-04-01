@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Masterminds/semver/v3"
 	"os"
 	"strings"
+
+	"github.com/Masterminds/semver/v3"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	cmds "github.com/saucelabs/saucectl/internal/cmd"
