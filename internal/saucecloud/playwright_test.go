@@ -9,7 +9,7 @@ import (
 
 func TestPlaywright_GetSuiteNames(t *testing.T) {
 	runner := &PlaywrightRunner{
-		Project: playwright.Project{
+		Project: &playwright.Project{
 			Suites: []playwright.Suite{
 				{Name: "suite1"},
 				{Name: "suite2"},
