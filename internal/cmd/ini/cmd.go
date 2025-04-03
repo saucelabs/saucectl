@@ -12,7 +12,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/http"
-	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/testcafe"
@@ -38,7 +37,6 @@ type initConfig struct {
 	frameworkName     string
 	frameworkVersion  string
 	cypressConfigFile string
-	dockerImage       string
 	app               string
 	testApp           string
 	xctestRunFile     string
@@ -55,7 +53,6 @@ type initConfig struct {
 	emulatorFlag      flags.Emulator
 	simulatorFlag     flags.Simulator
 	concurrency       int
-	workload          string
 	playwrightProject string
 	testMatch         []string
 }
@@ -90,7 +87,6 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	cmd.AddCommand(
 		CypressCmd(),
 		EspressoCmd(),
-		ImageRunnerCmd(),
 		PlaywrightCmd(),
 		TestCafeCmd(),
 		XCUITestCmd(),
@@ -161,7 +157,6 @@ func Run(cmd *cobra.Command, cfg *initConfig) error {
 		return err
 	}
 	displaySummary(files)
-	displayExtraInfo(cfg.frameworkName)
 	return nil
 }
 
@@ -191,8 +186,6 @@ func noPromptMode(cmd *cobra.Command, cfg *initConfig) error {
 		errs = ini.initializeBatchXcuitest(cmd.Flags())
 	case xctest.Kind:
 		errs = ini.initializeBatchXctest(cmd.Flags())
-	case imagerunner.Kind:
-		errs = ini.initializeBatchImageRunner()
 	default:
 		println()
 		color.HiRed("Invalid framework selected")
@@ -222,6 +215,5 @@ func noPromptMode(cmd *cobra.Command, cfg *initConfig) error {
 		return err
 	}
 	displaySummary(files)
-	displayExtraInfo(cfg.frameworkName)
 	return nil
 }
