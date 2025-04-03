@@ -18,7 +18,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/framework"
 	"github.com/saucelabs/saucectl/internal/http"
 	"github.com/saucelabs/saucectl/internal/iam"
-	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -88,8 +87,6 @@ func (ini *initializer) configure(ctx context.Context) error {
 		return ini.initializeXCUITest(ctx)
 	case xctest.Kind:
 		return ini.initializeXCTest()
-	case imagerunner.Kind:
-		return ini.initializeImageRunner()
 	default:
 		return fmt.Errorf("unsupported framework %q", ini.cfg.frameworkName)
 	}
@@ -400,43 +397,6 @@ func (ini *initializer) askFile(message string, val survey.Validator, comp compl
 		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
 }
 
-func (ini *initializer) askDockerImage(message string, val survey.Validator, targetValue *string) error {
-	q := &survey.Input{
-		Message: message,
-	}
-
-	return survey.AskOne(q, targetValue,
-		survey.WithShowCursor(true),
-		survey.WithValidator(survey.Required),
-		survey.WithValidator(val),
-		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
-}
-
-var Workloads = []string{
-	"webdriver",
-	"other",
-}
-
-func (ini *initializer) askWorkload() error {
-	q := &survey.Select{
-		Message: "Set workload:",
-		Default: Workloads[0],
-		Options: Workloads,
-	}
-	q.WithStdio(ini.stdio)
-
-	var workload string
-	err := survey.AskOne(q, &workload,
-		survey.WithShowCursor(true),
-		survey.WithValidator(survey.Required),
-		survey.WithStdio(ini.stdio.In, ini.stdio.Out, ini.stdio.Err))
-	if err != nil {
-		return err
-	}
-	ini.cfg.workload = workload
-	return nil
-}
-
 func (ini *initializer) initializeCypress(ctx context.Context) error {
 	frameworkMetadatas, err := ini.infoReader.Versions(ctx, ini.cfg.frameworkName)
 	if err != nil {
@@ -678,22 +638,6 @@ func (ini *initializer) initializeXCTest() error {
 	}
 
 	return nil
-}
-
-func (ini *initializer) initializeImageRunner() error {
-	if err := ini.askDockerImage(
-		"Docker Image to use:",
-		dockerImageValidator(),
-		&ini.cfg.dockerImage,
-	); err != nil {
-		return err
-	}
-
-	if err := ini.askWorkload(); err != nil {
-		return err
-	}
-
-	return ini.askDownloadWhen()
 }
 
 func checkFrameworkVersion(metadatas []framework.Metadata, frameworkName, frameworkVersion string) error {
@@ -1052,28 +996,6 @@ func (ini *initializer) initializeBatchXctest(f *pflag.FlagSet) []error {
 	}
 	if f.Changed("device") {
 		ini.cfg.device = ini.cfg.deviceFlag.Device
-	}
-	return errs
-}
-
-func (ini *initializer) initializeBatchImageRunner() []error {
-	var errs []error
-	var err error
-
-	if ini.cfg.dockerImage == "" {
-		errs = append(errs, errors.New(msg.MissingDockerImage))
-	}
-	if ini.cfg.dockerImage != "" {
-		verifier := dockerImageValidator()
-		if err = verifier(ini.cfg.dockerImage); err != nil {
-			errs = append(errs, fmt.Errorf("dockerImage: %s", err))
-		}
-	}
-	if ini.cfg.artifactWhenStr != "" {
-		ini.cfg.artifactWhenStr = strings.ToLower(ini.cfg.artifactWhenStr)
-		if ini.cfg.artifactWhen, err = checkArtifactDownloadSetting(ini.cfg.artifactWhenStr); err != nil {
-			errs = append(errs, err)
-		}
 	}
 	return errs
 }

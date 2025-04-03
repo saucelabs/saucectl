@@ -20,17 +20,12 @@ import (
 )
 
 var configurators = map[string]func(cfg *initConfig) interface{}{
-	"cypress":     configureCypress,
-	"espresso":    configureEspresso,
-	"playwright":  configurePlaywright,
-	"testcafe":    configureTestcafe,
-	"xcuitest":    configureXCUITest,
-	"xctest":      configureXCTest,
-	"imagerunner": configureImageRunner,
-}
-
-var extraInfoDisplay = map[string]func(){
-	"imagerunner": displayExtraInfoImageRunner,
+	"cypress":    configureCypress,
+	"espresso":   configureEspresso,
+	"playwright": configurePlaywright,
+	"testcafe":   configureTestcafe,
+	"xcuitest":   configureXCUITest,
+	"xctest":     configureXCTest,
 }
 
 var sauceignores = map[string]string{
@@ -101,14 +96,6 @@ func displaySummary(files []string) {
 		color.Green("  %s", f)
 	}
 	fmt.Println()
-}
-
-func displayExtraInfo(framework string) {
-	fn, present := extraInfoDisplay[framework]
-	if !present {
-		return
-	}
-	fn()
 }
 
 func completeBasic(toComplete string) []string {
