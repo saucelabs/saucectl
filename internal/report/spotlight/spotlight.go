@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/fatih/color"
-	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/report"
@@ -26,11 +25,11 @@ func (r *Reporter) Add(t report.TestResult) {
 	defer r.lock.Unlock()
 
 	// skip in-progress jobs
-	if !job.Done(t.Status) && !imagerunner.Done(t.Status) && !t.TimedOut {
+	if !job.Done(t.Status) && !t.TimedOut {
 		return
 	}
 	// skip passed jobs
-	if t.Status == job.StatePassed || t.Status == imagerunner.StateSucceeded {
+	if t.Status == job.StatePassed {
 		return
 	}
 
@@ -114,10 +113,9 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 
 func jobStatusSymbol(status string) string {
 	switch status {
-	case job.StatePassed, imagerunner.StateSucceeded:
+	case job.StatePassed:
 		return color.GreenString("✔")
-	case job.StateInProgress, job.StateQueued, job.StateNew, imagerunner.StateRunning, imagerunner.StatePending,
-		imagerunner.StateUploading:
+	case job.StateInProgress, job.StateQueued, job.StateNew:
 		return color.BlueString("*")
 	default:
 		return color.RedString("✖")

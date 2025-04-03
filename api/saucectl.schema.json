@@ -9,7 +9,6 @@
         "apitest",
         "cypress",
         "espresso",
-        "imagerunner",
         "playwright",
         "puppeteer-replay",
         "testcafe",
@@ -823,7 +822,14 @@
             "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
+                "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
+                "type": "string",
+                "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$",
+                "examples": [
+                  "1h",
+                  "10m",
+                  "90s"
+                ]
               }
             },
             "additionalProperties": false
@@ -1076,7 +1082,7 @@
                   }
                 },
                 "timeout": {
-                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/1/then/properties/defaults/properties/timeout"
                 },
                 "appSettings": {
                   "description": "Configure real device settings.",
@@ -1288,7 +1294,7 @@
             "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/1/then/properties/defaults/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -1455,7 +1461,7 @@
                   "type": "boolean"
                 },
                 "timeout": {
-                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/1/then/properties/defaults/properties/timeout"
                 },
                 "preExec": {
                   "description": "Specifies which commands to execute before starting the tests.",
@@ -1526,7 +1532,7 @@
             "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/1/then/properties/defaults/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -1567,7 +1573,7 @@
                   "description": "A specific operating system on which to run the tests. Sauce Labs will try to choose a reasonable default if not explicitly specified."
                 },
                 "timeout": {
-                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/1/then/properties/defaults/properties/timeout"
                 },
                 "passThreshold": {
                   "$ref": "#/allOf/1/then/properties/suites/items/properties/passThreshold"
@@ -1634,7 +1640,7 @@
             "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/1/then/properties/defaults/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -1934,7 +1940,7 @@
                   "type": "boolean"
                 },
                 "timeout": {
-                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/1/then/properties/defaults/properties/timeout"
                 },
                 "preExec": {
                   "$ref": "#/allOf/2/then/properties/suites/items/properties/preExec"
@@ -2013,7 +2019,7 @@
             "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/1/then/properties/defaults/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -2263,7 +2269,7 @@
                   }
                 },
                 "timeout": {
-                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/1/then/properties/defaults/properties/timeout"
                 },
                 "passThreshold": {
                   "$ref": "#/allOf/1/then/properties/suites/items/properties/passThreshold"
@@ -2350,7 +2356,7 @@
             "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/1/then/properties/defaults/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -2571,7 +2577,7 @@
                   }
                 },
                 "timeout": {
-                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/1/then/properties/defaults/properties/timeout"
                 },
                 "passThreshold": {
                   "$ref": "#/allOf/1/then/properties/suites/items/properties/passThreshold"
@@ -2732,7 +2738,7 @@
             "type": "object",
             "properties": {
               "timeout": {
-                "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
+                "$ref": "#/allOf/1/then/properties/defaults/properties/timeout"
               }
             },
             "additionalProperties": false
@@ -2855,7 +2861,7 @@
                   "type": "boolean"
                 },
                 "timeout": {
-                  "$ref": "#/allOf/9/then/definitions/suite/properties/timeout"
+                  "$ref": "#/allOf/1/then/properties/defaults/properties/timeout"
                 },
                 "preExec": {
                   "$ref": "#/allOf/2/then/properties/suites/items/properties/preExec"
@@ -2881,317 +2887,6 @@
           "apiVersion",
           "kind",
           "playwright",
-          "suites"
-        ],
-        "additionalProperties": true
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "kind": {
-            "const": "imagerunner"
-          }
-        }
-      },
-      "then": {
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "title": "saucectl image runner configuration",
-        "description": "Configuration file for running container images using saucectl",
-        "type": "object",
-        "definitions": {
-          "sauce": {
-            "description": "All settings related to how tests are run and identified in the Sauce Labs platform.",
-            "type": "object",
-            "properties": {
-              "region": {
-                "description": "Which Sauce Labs data center to target.",
-                "enum": [
-                  "us-west-1",
-                  "eu-central-1"
-                ]
-              },
-              "tunnel": {
-                "description": "SauceCTL supports using Sauce Connect to establish a secure connection when running your tests on Sauce Labs. To do so, launch a tunnel; then provide the identifier in this property.",
-                "properties": {
-                  "name": {
-                    "description": "The tunnel name.",
-                    "type": "string"
-                  },
-                  "owner": {
-                    "description": "The owner (username) of the tunnel. Must be specified if the user that created the tunnel differs from the user that is running the tests.",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "name"
-                ],
-                "additionalProperties": false
-              }
-            }
-          },
-          "suite": {
-            "description": "The set of properties providing details about how to run the container.",
-            "type": "object",
-            "properties": {
-              "name": {
-                "description": "The name of the test suite.",
-                "type": "string"
-              },
-              "image": {
-                "description": "The name of the container image.",
-                "type": "string"
-              },
-              "imagePullAuth": {
-                "description": "Container registry credentials for accessing the image.",
-                "type": "object",
-                "properties": {
-                  "user": {
-                    "description": "The username.",
-                    "type": "string"
-                  },
-                  "token": {
-                    "description": "The access token.",
-                    "type": "string"
-                  }
-                }
-              },
-              "entrypoint": {
-                "description": "The command line arguments to launch the image with.",
-                "type": "string"
-              },
-              "files": {
-                "description": "List of files that you'd like saucectl to upload and mount within the container.",
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "src": {
-                      "description": "Path to the local file.",
-                      "type": "string"
-                    },
-                    "dst": {
-                      "description": "Path within the container that the file should be mounted at.",
-                      "type": "string"
-                    }
-                  }
-                }
-              },
-              "artifacts": {
-                "description": "List of file paths within the container to be made available as downloadable artifacts.",
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "env": {
-                "description": "Set one or more environment variables.",
-                "type": "object"
-              },
-              "timeout": {
-                "description": "Instructs how long (in ms, s, m, or h) saucectl should wait for a suite to complete.",
-                "type": "string",
-                "pattern": "^(?:\\d+h)?(?:\\d+m)?(?:\\d+s)?(?:\\d+ms)?$",
-                "examples": [
-                  "1h",
-                  "10m",
-                  "90s"
-                ]
-              },
-              "workload": {
-                "description": "Sets the kind of workload that is being executed",
-                "enum": [
-                  "webdriver",
-                  "other"
-                ]
-              },
-              "resourceProfile": {
-                "description": "Sets the CPU/memory limits of the container. Format is <CPU><level><mem><level>. Default to c1m1.",
-                "pattern": "^c(\\d+)m(\\d+)$",
-                "examples": [
-                  "c1m1",
-                  "c2m2",
-                  "c3m3"
-                ]
-              },
-              "metadata": {
-                "description": "Supply additional metadata to your runner.",
-                "type": "object"
-              },
-              "services": {
-                "description": "List of services to run with the suite.",
-                "type": "array",
-                "items": {
-                  "$ref": "#/allOf/9/then/definitions/service"
-                }
-              }
-            },
-            "required": [
-              "name",
-              "workload"
-            ]
-          },
-          "service": {
-            "description": "The set of properties providing details about how to run the service container.",
-            "type": "object",
-            "properties": {
-              "name": {
-                "description": "The name of the service.",
-                "type": "string"
-              },
-              "image": {
-                "description": "The name of the service image.",
-                "type": "string"
-              },
-              "imagePullAuth": {
-                "description": "Container registry credentials for accessing the service image.",
-                "type": "object",
-                "properties": {
-                  "user": {
-                    "description": "The username.",
-                    "type": "string"
-                  },
-                  "token": {
-                    "description": "The access token.",
-                    "type": "string"
-                  }
-                }
-              },
-              "entrypoint": {
-                "description": "The command line arguments to launch the service image with.",
-                "type": "string"
-              },
-              "files": {
-                "description": "List of files that you'd like saucectl to upload and mount within the service container.",
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "src": {
-                      "description": "Path to the local file.",
-                      "type": "string"
-                    },
-                    "dst": {
-                      "description": "Path within the container that the file should be mounted at.",
-                      "type": "string"
-                    }
-                  }
-                }
-              },
-              "env": {
-                "description": "Set one or more environment variables for the service.",
-                "type": "object"
-              },
-              "resourceProfile": {
-                "description": "Sets the CPU/memory limits of the service container. Format is <CPU><level><mem><level>. Default to c1m1.",
-                "enum": [
-                  "",
-                  "c1m1",
-                  "c2m2",
-                  "c3m3"
-                ]
-              }
-            },
-            "required": [
-              "name"
-            ]
-          },
-          "reporters": {
-            "description": "Supported saucectl reporters.",
-            "type": "object",
-            "properties": {
-              "json": {
-                "type": "object",
-                "description": "The JSON reporter creates single report of all executed saucectl suites.",
-                "properties": {
-                  "enabled": {
-                    "description": "Toggles the reporter on/off.",
-                    "type": "boolean"
-                  },
-                  "webhookURL": {
-                    "description": "Webhook URL to pass JSON report.",
-                    "type": "string"
-                  },
-                  "filename": {
-                    "description": "Filename for the generated JSON report.",
-                    "type": "string",
-                    "default": "saucectl-report.json"
-                  }
-                }
-              },
-              "additionalProperties": false
-            }
-          },
-          "artifacts": {
-            "description": "Manage test output, such as logs, videos, and screenshots.",
-            "type": "object",
-            "properties": {
-              "cleanup": {
-                "description": "Whether to remove all contents of artifacts directory",
-                "type": "boolean"
-              },
-              "download": {
-                "description": "Settings related to downloading test artifacts from Sauce Labs.",
-                "type": "object",
-                "properties": {
-                  "match": {
-                    "description": "Specifies which artifacts to download based on whether they match the file pattern provided. Supports the wildcard character '*'.",
-                    "type": "array"
-                  },
-                  "when": {
-                    "description": "Specifies when and under what circumstances to download artifacts.",
-                    "enum": [
-                      "always",
-                      "fail",
-                      "never",
-                      "pass"
-                    ]
-                  },
-                  "directory": {
-                    "description": "Specifies the path to the folder in which to download artifacts. A separate subdirectory is generated in this location for each suite.",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "when",
-                  "match",
-                  "directory"
-                ],
-                "additionalProperties": false
-              },
-              "additionalProperties": false
-            }
-          }
-        },
-        "properties": {
-          "apiVersion": {
-            "const": "v1alpha"
-          },
-          "kind": {
-            "const": "imagerunner"
-          },
-          "sauce": {
-            "$ref": "#/allOf/9/then/definitions/sauce"
-          },
-          "defaults": {
-            "description": "Settings that are applied onto every suite as a default value.",
-            "$ref": "#/allOf/9/then/definitions/suite"
-          },
-          "suites": {
-            "description": "List of suites",
-            "type": "array",
-            "minItems": 1,
-            "items": {
-              "$ref": "#/allOf/9/then/definitions/suite"
-            }
-          },
-          "reporters": {
-            "$ref": "#/allOf/9/then/definitions/reporters"
-          }
-        },
-        "required": [
-          "apiVersion",
-          "kind",
           "suites"
         ],
         "additionalProperties": true

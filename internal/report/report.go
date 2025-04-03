@@ -8,9 +8,8 @@ import (
 
 // Attempt represents a single attempt of a job.
 type Attempt struct {
-	// ID is the unique identifier of the attempt. This is usually the job ID.
-	// Can also be the runner ID (imagerunner) or whatever is used to identify
-	// the attempt in the context of the job.
+	// ID is the unique identifier of the attempt. This is usually the job ID
+	// or whatever is used to identify the attempt in the context of the job.
 	ID        string        `json:"id"`
 	Duration  time.Duration `json:"duration"`
 	StartTime time.Time     `json:"startTime"`
