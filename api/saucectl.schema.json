@@ -417,28 +417,6 @@
                   "13.6.6"
                 ],
                 "description": "Which framework version to use."
-              },
-              "reporters": {
-                "description": "Set of reporter to use.",
-                "type": "array",
-                "minimum": 0,
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "name": {
-                      "description": "Name of the reporter. You may have to install the associated npm dependency through npm.packages field.",
-                      "type": "string",
-                      "examples": [
-                        "dot",
-                        "nyan"
-                      ]
-                    },
-                    "options": {
-                      "description": "Options to pass to the reporter."
-                    }
-                  },
-                  "additionalProperties": false
-                }
               }
             },
             "required": [
