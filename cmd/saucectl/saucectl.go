@@ -18,8 +18,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/cmd/completion"
 	"github.com/saucelabs/saucectl/internal/cmd/configure"
 	"github.com/saucelabs/saucectl/internal/cmd/devices"
-	"github.com/saucelabs/saucectl/internal/cmd/docker"
-	"github.com/saucelabs/saucectl/internal/cmd/imagerunner"
 	"github.com/saucelabs/saucectl/internal/cmd/ini"
 	"github.com/saucelabs/saucectl/internal/cmd/jobs"
 	"github.com/saucelabs/saucectl/internal/cmd/run"
@@ -72,9 +70,7 @@ func main() {
 		storage.Command(cmd.PersistentPreRun),
 		artifacts.Command(cmd.PersistentPreRun),
 		jobs.Command(cmd.PersistentPreRun),
-		imagerunner.Command(cmd.PersistentPreRun),
 		apit.Command(cmd.PersistentPreRun),
-		docker.Command(cmd.PersistentPreRun),
 		builds.Command(cmd.PersistentPreRun),
 		devices.Command(cmd.PersistentPreRun),
 	)
