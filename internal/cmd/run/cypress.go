@@ -175,7 +175,7 @@ func runCypress(cmd *cobra.Command, cflags cypressFlags, isCLIDriven bool) (int,
 		Str("tunnel", p.GetSauceCfg().Tunnel.Name).
 		Msg("Running Cypress in Sauce Labs.")
 	r := saucecloud.CypressRunner{
-		Project: p,
+		Project: &p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader:        &appsClient,
 			JobService:             jobService,
