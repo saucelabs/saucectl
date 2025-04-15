@@ -210,7 +210,7 @@ func runTestcafe(cmd *cobra.Command, tcFlags testcafeFlags, isCLIDriven bool) (i
 		Str("tunnel", p.Sauce.Tunnel.Name).
 		Msg("Running Testcafe in Sauce Labs.")
 	r := saucecloud.TestcafeRunner{
-		Project: p,
+		Project: &p,
 		CloudRunner: saucecloud.CloudRunner{
 			ProjectUploader:        &appsClient,
 			JobService:             jobService,
