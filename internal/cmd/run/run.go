@@ -27,7 +27,6 @@ import (
 	"github.com/saucelabs/saucectl/internal/espresso"
 	"github.com/saucelabs/saucectl/internal/flags"
 	"github.com/saucelabs/saucectl/internal/http"
-	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/msg"
 	"github.com/saucelabs/saucectl/internal/playwright"
 	"github.com/saucelabs/saucectl/internal/puppeteer/replay"
@@ -51,7 +50,6 @@ var (
 	buildTimeout        = 10 * time.Second
 	iamTimeout          = 10 * time.Second
 	apitestingTimeout   = 30 * time.Second
-	imgExecTimeout      = 30 * time.Second
 
 	typeDef config.TypeDef
 
@@ -223,9 +221,6 @@ func Run(cmd *cobra.Command) (int, error) {
 	}
 	if typeDef.Kind == cucumber.Kind {
 		return runCucumber(cmd, false)
-	}
-	if typeDef.Kind == imagerunner.Kind {
-		return runImageRunner(cmd)
 	}
 
 	msg.LogUnsupportedFramework(typeDef.Kind)
