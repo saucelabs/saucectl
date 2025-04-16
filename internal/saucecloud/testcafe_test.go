@@ -10,7 +10,7 @@ import (
 
 func TestTestcafe_GetSuiteNames(t *testing.T) {
 	runner := &TestcafeRunner{
-		Project: testcafe.Project{
+		Project: &testcafe.Project{
 			Suites: []testcafe.Suite{
 				{Name: "suite1"},
 				{Name: "suite2"},

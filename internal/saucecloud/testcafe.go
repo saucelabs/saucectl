@@ -17,7 +17,7 @@ import (
 // TestcafeRunner represents the SauceLabs cloud implementation
 type TestcafeRunner struct {
 	CloudRunner
-	Project testcafe.Project
+	Project *testcafe.Project
 }
 
 // RunProject runs the defined tests on sauce cloud
