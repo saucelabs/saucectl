@@ -9,7 +9,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
-	"github.com/saucelabs/saucectl/internal/imagerunner"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/report"
 )
@@ -100,11 +99,10 @@ func (r *Reporter) Render() {
 		totalDur   time.Duration
 	)
 	for _, ts := range r.TestResults {
-		if !job.Done(ts.Status) && !imagerunner.Done(ts.Status) && !ts.TimedOut {
+		if !job.Done(ts.Status) && !ts.TimedOut {
 			inProgress++
 		}
-		if ts.Status == job.StateFailed || ts.Status == imagerunner.StateFailed ||
-			ts.Status == imagerunner.StateCancelled || ts.Status == imagerunner.StateTerminated {
+		if ts.Status == job.StateFailed {
 			errors++
 		}
 		if ts.TimedOut {
@@ -150,10 +148,9 @@ func footer(errors, inProgress, tests int, dur time.Duration) table.Row {
 
 func statusText(status string) string {
 	switch status {
-	case job.StatePassed, imagerunner.StateSucceeded:
+	case job.StatePassed:
 		return color.GreenString(status)
-	case job.StateInProgress, job.StateQueued, job.StateNew, imagerunner.StateRunning, imagerunner.StatePending,
-		imagerunner.StateUploading:
+	case job.StateInProgress, job.StateQueued, job.StateNew:
 		return color.BlueString(status)
 	default:
 		return color.RedString(status)
@@ -162,10 +159,9 @@ func statusText(status string) string {
 
 func statusSymbol(status string) string {
 	switch status {
-	case job.StatePassed, imagerunner.StateSucceeded:
+	case job.StatePassed:
 		return color.GreenString("✔")
-	case job.StateInProgress, job.StateQueued, job.StateNew, imagerunner.StateRunning, imagerunner.StatePending,
-		imagerunner.StateUploading:
+	case job.StateInProgress, job.StateQueued, job.StateNew:
 		return color.BlueString("*")
 	default:
 		return color.RedString("✖")
