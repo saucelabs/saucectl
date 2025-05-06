@@ -34,11 +34,11 @@ suites:
     src:
       - "*.test.js"
     simulators:
-      - name: iPhone 12 Simulator
+      - name: iPhone Simulator
         platformName: iOS
         platformVersions:
-          - "14.3"
-      - name: iPad mini (5th generation) Simulator
+          - "16.2"
+      - name: iPad Simulator
         platformName: iOS
         platformVersions:
-          - "14.3"
+          - "16.2"
