@@ -37,8 +37,8 @@ suites:
       - name: iPhone Simulator
         platformName: iOS
         platformVersions:
-          - "17.0"
+          - "16.2"
       - name: iPad Simulator
         platformName: iOS
         platformVersions:
-          - "17.0"
+          - "16.2"
