@@ -10,7 +10,7 @@ sauce:
 defaults:
   timeout: 5m
 playwright:
-  version: 1.41.0
+  version: 1.52.0
 rootDir: ./
 suites:
   - name: My Cucumber Test
