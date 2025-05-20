@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 	"unicode"
@@ -466,7 +467,14 @@ func (p *Project) FilterFailedTests(suiteName string, report saucereport.SauceRe
 		if s.Name != suiteName {
 			continue
 		}
-		p.Suites[i].Params.Grep = strings.Join(failedTests, "|")
+
+		// Test names have to be escaped, they can contain regexp characters
+		var escapedTestNames []string
+		for _, testName := range failedTests {
+			escapedTestNames = append(escapedTestNames, regexp.QuoteMeta(testName))
+		}
+
+		p.Suites[i].Params.Grep = strings.Join(escapedTestNames, "|")
 		found = true
 		break
 	}
