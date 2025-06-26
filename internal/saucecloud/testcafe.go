@@ -2,7 +2,6 @@ package saucecloud
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/rs/zerolog/log"
@@ -116,12 +115,12 @@ func (r *TestcafeRunner) validateFramework(ctx context.Context, m framework.Meta
 		fmt.Print(msg.RemovalNotice(testcafe.Kind, r.Project.Testcafe.Version, r.getAvailableVersions(ctx, testcafe.Kind)))
 	}
 
-	for _, s := range r.Project.Suites {
-		if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
-			msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
-			return errors.New("unsupported platform")
-		}
-	}
+	// for _, s := range r.Project.Suites {
+	// 	if s.PlatformName != "" && !framework.HasPlatform(m, s.PlatformName) {
+	// 		msg.LogUnsupportedPlatform(s.PlatformName, framework.PlatformNames(m.Platforms))
+	// 		return errors.New("unsupported platform")
+	// 	}
+	// }
 
 	return nil
 }
@@ -161,6 +160,7 @@ func (r *TestcafeRunner) runSuites(ctx context.Context, app string, otherApps []
 						opts.PlatformName = d.PlatformName
 						opts.DeviceName = d.Name
 						opts.PlatformVersion = pv
+						opts.ARMRequired = d.ARMRequired
 
 						jobOpts <- opts
 					}
