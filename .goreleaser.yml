@@ -25,9 +25,7 @@ homebrew_casks:
   - repository:
       owner: saucelabs
       name: homebrew-saucectl
-    directory: Formula
-    test: |
-      system "#{bin}/goreleaser", "-v"
+    directory: Casks
     name: saucectl
     homepage: "https://saucelabs.com/"
     description: "Test orchestration with Sauce Labs"
