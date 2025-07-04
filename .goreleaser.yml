@@ -21,7 +21,7 @@ builds:
     ignore:
       - goos: windows
         goarch: arm64
-brews:
+homebrew_casks:
   - repository:
       owner: saucelabs
       name: homebrew-saucectl
