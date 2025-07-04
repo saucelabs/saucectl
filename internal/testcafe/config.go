@@ -119,6 +119,7 @@ type Suite struct {
 	PassThreshold        int                    `yaml:"passThreshold,omitempty" json:"-"`
 	SmartRetry           config.SmartRetry      `yaml:"smartRetry,omitempty" json:"-"`
 	ESM                  bool                   `yaml:"esm,omitempty" json:"esm"`
+	ARMRequired          bool                   `yaml:"armRequired,omitempty" json:"armRequired"`
 	// TypeScript compiling options
 	CompilerOptions CompilerOptions `yaml:"compilerOptions,omitempty" json:"compilerOptions"`
 	// Deprecated. Reserved for future use for actual devices.
