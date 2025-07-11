@@ -10,7 +10,7 @@ sauce:
 defaults:
   timeout: 5m
 testcafe:
-  version: 3.7.0
+  version: 3.7.2
 rootDir: tests/e2e/testcafe/
 suites:
   - name: Chrome in sauce
@@ -42,3 +42,14 @@ suites:
         platformName: iOS
         platformVersions:
           - "16.2"
+
+  - name: ARM Chrome in sauce
+    browserName: chrome
+    armRequired: true
+    src:
+      - "*.test.js"
+    platformName: "macOS 14"
+    compilerOptions:
+      typescript:
+        options:
+          allowUnreachableCode: true
