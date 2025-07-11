@@ -92,11 +92,31 @@ jobs:
           CGO_ENABLED=0 go build -ldflags="-X $LDFLAG_VERSION -X $LDFLAG_SHA" cmd/saucectl/saucectl.go
           GOOS=windows GOARCH=amd64 go build cmd/saucectl/saucectl.go
 
+# INT-374: Disabled for now. When casks are released and formulas dropped, this should be uncommented.
+#      - name: Check GoReleaser Config
+#        uses: goreleaser/goreleaser-action@v6
+#        with:
+#          version: '~> v2'
+#          args: check
+
+# INT-374: GoReleaser returns exit code 2 when the config uses deprecated features
+# As we cannot check the return code using the GitHub GoReleaser action, we have to manually install it
+# and check the return code ourselves
+      - name: Install GoReleaser
+        run: go install github.com/goreleaser/goreleaser/v2@latest
+
       - name: Check GoReleaser Config
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          version: '~> v2'
-          args: check
+        run: |
+          set +e  # Allow non-zero exit codes, as GitHub will fail if the check returns !=0 
+          goreleaser check
+          code=$?
+          set -e
+          if [ "$code" -eq 2 ]; then
+            echo "::warning::goreleaser reported deprecated entries in config"
+            exit 0
+          else
+            exit $code
+          fi
 
       - name: Upload Binary
         uses: actions/upload-artifact@v4
