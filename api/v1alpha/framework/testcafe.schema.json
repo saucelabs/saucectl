@@ -123,6 +123,7 @@
               "macOS 11.00",
               "macOS 12",
               "macOS 13",
+              "macOS 14",
               "Windows 10",
               "Windows 11"
             ]
@@ -146,6 +147,10 @@
               "concurrency",
               "spec"
             ]
+          },
+          "armRequired": {
+            "description": "Specifies if ARM architecture is required to run this test.",
+            "type": "string"
           },
           "compilerOptions": {
             "description": "Specifies the typescript compiler options to be used when running the tests.",
