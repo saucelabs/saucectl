@@ -107,8 +107,10 @@ jobs:
 
       - name: Check GoReleaser Config
         run: |
+          set +e  # Allow non-zero exit codes, as GitHub will fail if the check returns !=0 
           goreleaser check
           code=$?
+          set -e
           if [ "$code" -eq 2 ]; then
             echo "::warning::goreleaser reported deprecated entries in config"
             exit 0
