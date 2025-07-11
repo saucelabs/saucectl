@@ -161,6 +161,7 @@ func (r *TestcafeRunner) runSuites(ctx context.Context, app string, otherApps []
 						opts.PlatformName = d.PlatformName
 						opts.DeviceName = d.Name
 						opts.PlatformVersion = pv
+						opts.ARMRequired = d.ARMRequired
 
 						jobOpts <- opts
 					}
@@ -209,6 +210,7 @@ func (r *TestcafeRunner) generateStartOpts(s testcafe.Suite) job.StartOptions {
 		SmartRetry: job.SmartRetry{
 			FailedOnly: s.SmartRetry.IsRetryFailedOnly(),
 		},
+		ARMRequired: s.ARMRequired,
 	}
 }
 
