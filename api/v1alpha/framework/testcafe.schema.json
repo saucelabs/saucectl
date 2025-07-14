@@ -150,7 +150,7 @@
           },
           "armRequired": {
             "description": "Specifies if ARM architecture is required to run this test.",
-            "type": "string"
+            "type": "boolean"
           },
           "compilerOptions": {
             "description": "Specifies the typescript compiler options to be used when running the tests.",
