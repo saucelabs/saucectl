@@ -117,7 +117,6 @@
             "type": "boolean"
           },
           "platformName": {
-            "$ref": "../subschema/common.schema.json#/definitions/platformName",
             "enum": [
               "macOS 11.00",
               "macOS 12",
@@ -125,7 +124,8 @@
               "macOS 14",
               "Windows 10",
               "Windows 11"
-            ]
+            ],
+            "description": "A specific operating system on which to run the tests. Sauce Labs will try to choose a reasonable default if not explicitly specified."
           },
           "assertionTimeout": {
             "description": "Specifies the time (in milliseconds) TestCafe attempts to successfully execute an assertion if a selector property or a client function was passed as an actual value.",
