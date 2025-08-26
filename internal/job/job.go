@@ -3,6 +3,8 @@ package job
 import (
 	"context"
 	"time"
+
+	"github.com/saucelabs/saucectl/internal/retry"
 )
 
 // Source represents the origin of a job.
@@ -104,7 +106,7 @@ type Service interface {
 	PollJob(ctx context.Context, id string, interval, timeout time.Duration, realDevice bool) (Job, error)
 
 	// Artifact returns the content of the artifact.
-	Artifact(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error)
+	Artifact(ctx context.Context, jobID, fileName string, realDevice bool, retryOptions retry.Options) ([]byte, error)
 
 	// ArtifactNames returns the names of the artifact files associated with a
 	// job.

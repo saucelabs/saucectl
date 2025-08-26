@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/retry"
+
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -388,7 +390,7 @@ func TestRDCService_GetJobAssetFileContent(t *testing.T) {
 		},
 	}
 	for _, tt := range testCases {
-		data, err := client.Artifact(context.Background(), tt.jobID, tt.fileName, true)
+		data, err := client.Artifact(context.Background(), tt.jobID, tt.fileName, true, retry.CreateOptions())
 		assert.Equal(t, err, tt.wantErr)
 		if err == nil {
 			assert.Equal(t, tt.want, data)

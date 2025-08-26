@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/retry"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/msg"
@@ -112,7 +114,7 @@ func (r *SauceReportRetrier) uploadConfig(ctx context.Context, filename string) 
 }
 
 func (r *SauceReportRetrier) getSauceReport(ctx context.Context, job job.Job) (saucereport.SauceReport, error) {
-	content, err := r.JobService.Artifact(ctx, job.ID, saucereport.FileName, false)
+	content, err := r.JobService.Artifact(ctx, job.ID, saucereport.FileName, false, retry.CreateOptions())
 	if err != nil {
 		return saucereport.SauceReport{}, err
 	}

@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/retry"
+
 	"github.com/saucelabs/saucectl/internal/job"
 )
 
@@ -54,7 +56,7 @@ func (s *FakeJobService) PollJob(
 
 // Artifact mock function
 func (s *FakeJobService) Artifact(
-	ctx context.Context, jobID, fileName string, _ bool,
+	ctx context.Context, jobID, fileName string, _ bool, _ retry.Options,
 ) ([]byte, error) {
 	return s.GetJobAssetFileContentFn(ctx, jobID, fileName)
 }

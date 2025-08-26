@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/retry"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/config"
 	"github.com/saucelabs/saucectl/internal/fpath"
@@ -48,7 +50,7 @@ func (s JobService) DownloadArtifacts(ctx context.Context, jobData job.Job, isLa
 
 	for _, f := range filepaths {
 		targetFile, err := s.downloadArtifact(
-			ctx, destDir, jobData.ID, f, jobData.IsRDC,
+			ctx, destDir, jobData.ID, f, jobData.IsRDC, s.getRetryOptions(),
 		)
 		if err != nil {
 			log.Err(err).Msg("Unable to download artifacts")
@@ -100,12 +102,12 @@ func (s JobService) ArtifactNames(ctx context.Context, jobID string, realDevice 
 	return s.Resto.ArtifactNames(ctx, jobID, realDevice)
 }
 
-func (s JobService) Artifact(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
+func (s JobService) Artifact(ctx context.Context, jobID, fileName string, realDevice bool, options retry.Options) ([]byte, error) {
 	if realDevice {
-		return s.RDC.Artifact(ctx, jobID, fileName, realDevice)
+		return s.RDC.Artifact(ctx, jobID, fileName, realDevice, options)
 	}
 
-	return s.Resto.Artifact(ctx, jobID, fileName, realDevice)
+	return s.Resto.Artifact(ctx, jobID, fileName, realDevice, options)
 }
 
 func (s JobService) StartJob(ctx context.Context, opts job.StartOptions) (job.Job, error) {
@@ -117,10 +119,10 @@ func (s JobService) StartJob(ctx context.Context, opts job.StartOptions) (job.Jo
 }
 
 func (s JobService) downloadArtifact(
-	ctx context.Context, targetDir, jobID, fileName string, realDevice bool,
+	ctx context.Context, targetDir, jobID, fileName string, realDevice bool, options retry.Options,
 ) (string, error) {
 	content, err := s.Artifact(
-		ctx, jobID, fileName, realDevice,
+		ctx, jobID, fileName, realDevice, options,
 	)
 	if err != nil {
 		return "", err
@@ -134,4 +136,21 @@ func (s JobService) skipDownload(jobData job.Job, isLastAttempt bool) bool {
 		jobData.TimedOut || !job.Done(jobData.Status) ||
 		!s.ArtifactDownloadConfig.When.IsNow(jobData.Passed) ||
 		(!isLastAttempt && !s.ArtifactDownloadConfig.AllAttempts)
+}
+
+func (s JobService) getRetryOptions() retry.Options {
+	options := retry.CreateOptions()
+	if s.ArtifactDownloadConfig.RetryCount != nil {
+		options = options.WithMaxCount(*s.ArtifactDownloadConfig.RetryCount + 1)
+	}
+	if s.ArtifactDownloadConfig.RetryInterval != nil {
+		options = options.WithInterval(time.Duration(*s.ArtifactDownloadConfig.RetryInterval * float64(time.Second)))
+	}
+	if s.ArtifactDownloadConfig.RetryMaxInterval != nil {
+		options = options.WithMaxInterval(time.Duration(*s.ArtifactDownloadConfig.RetryMaxInterval * float64(time.Second)))
+	}
+	if s.ArtifactDownloadConfig.RetryExp != nil {
+		options = options.WithExponent(*s.ArtifactDownloadConfig.RetryExp)
+	}
+	return options
 }

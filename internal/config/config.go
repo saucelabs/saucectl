@@ -125,10 +125,14 @@ func (w When) IsNow(passed bool) bool {
 
 // ArtifactDownload represents the test artifacts configuration.
 type ArtifactDownload struct {
-	Match       []string `yaml:"match,omitempty" json:"match"`
-	When        When     `yaml:"when,omitempty" json:"when"`
-	Directory   string   `yaml:"directory,omitempty" json:"directory"`
-	AllAttempts bool     `yaml:"allAttempts,omitempty" json:"allAttempts"`
+	Match            []string `yaml:"match,omitempty" json:"match"`
+	When             When     `yaml:"when,omitempty" json:"when"`
+	Directory        string   `yaml:"directory,omitempty" json:"directory"`
+	AllAttempts      bool     `yaml:"allAttempts,omitempty" json:"allAttempts"`
+	RetryCount       *uint    `yaml:"retryCount,omitempty" json:"retryCount"`
+	RetryInterval    *float64 `yaml:"retryInterval,omitempty" json:"retryInterval"`
+	RetryMaxInterval *float64 `yaml:"retryMaxInterval,omitempty" json:"retryMaxInterval"`
+	RetryExp         *float64 `yaml:"retryExp,omitempty" json:"retryExp"`
 }
 
 // Artifacts represents the test artifacts configuration.
