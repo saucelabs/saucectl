@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	retryutil "github.com/saucelabs/saucectl/internal/retry"
+
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
@@ -668,6 +670,7 @@ func (r *CloudRunner) FetchJUnitReports(ctx context.Context, res *result, artifa
 				attempt.ID,
 				junit.FileName,
 				res.job.IsRDC,
+				retryutil.CreateOptions(),
 			)
 		}
 
@@ -871,13 +874,13 @@ func (r *CloudRunner) logSuiteConsole(ctx context.Context, res result) {
 	var err error
 
 	// Display log only when at least it has started
-	if assetContent, err = r.JobService.Artifact(ctx, res.job.ID, ConsoleLogAsset, res.job.IsRDC); err == nil {
+	if assetContent, err = r.JobService.Artifact(ctx, res.job.ID, ConsoleLogAsset, res.job.IsRDC, retryutil.CreateOptions()); err == nil {
 		log.Info().Str("suite", res.name).Msgf("console.log output: \n%s", assetContent)
 		return
 	}
 
 	// Some frameworks produce a junit.xml instead, check for that file if there's no console.log
-	assetContent, err = r.JobService.Artifact(ctx, res.job.ID, junit.FileName, res.job.IsRDC)
+	assetContent, err = r.JobService.Artifact(ctx, res.job.ID, junit.FileName, res.job.IsRDC, retryutil.CreateOptions())
 	if err != nil {
 		log.Warn().Err(err).Str("suite", res.name).Msg("Failed to retrieve the console output.")
 		return
@@ -1063,7 +1066,7 @@ func (r *CloudRunner) reportInsights(ctx context.Context, res result) {
 }
 
 func (r *CloudRunner) loadSauceTestReport(ctx context.Context, jobID string, isRDC bool) (saucereport.SauceReport, error) {
-	fileContent, err := r.JobService.Artifact(ctx, jobID, saucereport.FileName, isRDC)
+	fileContent, err := r.JobService.Artifact(ctx, jobID, saucereport.FileName, isRDC, retryutil.CreateOptions())
 	if err != nil {
 		log.Debug().Err(err).Str("action", "loading-json-report").Msg(msg.InsightsReportError)
 		return saucereport.SauceReport{}, err
@@ -1072,7 +1075,7 @@ func (r *CloudRunner) loadSauceTestReport(ctx context.Context, jobID string, isR
 }
 
 func (r *CloudRunner) loadJUnitReport(ctx context.Context, jobID string, isRDC bool) (junit.TestSuites, error) {
-	fileContent, err := r.JobService.Artifact(ctx, jobID, junit.FileName, isRDC)
+	fileContent, err := r.JobService.Artifact(ctx, jobID, junit.FileName, isRDC, retryutil.CreateOptions())
 	if err != nil {
 		log.Debug().Err(err).Str("action", "loading-xml-report").Msg(msg.InsightsReportError)
 		return junit.TestSuites{}, err

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/saucelabs/saucectl/internal/retry"
+
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/junit"
@@ -47,7 +49,7 @@ func (b *JunitRetrier) retryFailedTests(ctx context.Context, opt *job.StartOptio
 	}
 
 	content, err := b.JobService.Artifact(
-		ctx, previous.ID, junit.FileName, previous.IsRDC,
+		ctx, previous.ID, junit.FileName, previous.IsRDC, retry.CreateOptions(),
 	)
 	if err != nil {
 		log.Err(err).Msgf(msg.UnableToFetchFile, junit.FileName)

@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/retry"
+
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/region"
@@ -215,39 +217,41 @@ func (c *Resto) ArtifactNames(ctx context.Context, jobID string, realDevice bool
 }
 
 // Artifact returns the job asset file content.
-func (c *Resto) Artifact(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
+func (c *Resto) Artifact(ctx context.Context, jobID, fileName string, realDevice bool, retryOptions retry.Options) ([]byte, error) {
 	if realDevice {
 		return nil, errors.New("the VDC client does not support real device jobs")
 	}
 
-	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet,
-		fmt.Sprintf("%s/rest/v1/%s/jobs/%s/assets/%s", c.URL, c.Username, jobID, fileName), nil)
-	if err != nil {
-		return nil, err
-	}
+	return retry.Do(ctx, func() ([]byte, error) {
+		req, err := NewRequestWithContext(ctx, http.MethodGet,
+			fmt.Sprintf("%s/rest/v1/%s/jobs/%s/assets/%s", c.URL, c.Username, jobID, fileName), nil)
+		if err != nil {
+			return nil, err
+		}
 
-	req.SetBasicAuth(c.Username, c.AccessKey)
+		req.SetBasicAuth(c.Username, c.AccessKey)
 
-	resp, err := c.Client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+		resp, err := c.Client.HTTPClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
 
-	if resp.StatusCode >= http.StatusInternalServerError {
-		return nil, ErrServerError
-	}
-	if resp.StatusCode == http.StatusNotFound {
-		return nil, ErrAssetNotFound
-	}
+		if resp.StatusCode >= http.StatusInternalServerError {
+			return nil, ErrServerError
+		}
+		if resp.StatusCode == http.StatusNotFound {
+			return nil, ErrAssetNotFound
+		}
 
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		err := fmt.Errorf("job status request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
-		return nil, err
-	}
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			err := fmt.Errorf("job status request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+			return nil, err
+		}
 
-	return io.ReadAll(resp.Body)
+		return io.ReadAll(resp.Body)
+	}, retryOptions)
 }
 
 // IsTunnelRunning checks whether tunnelID is running. If not, it will wait for the tunnel to become available or

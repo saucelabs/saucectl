@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/retry"
+
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/stretchr/testify/assert"
@@ -413,7 +415,7 @@ func TestResto_GetJobAssetFileContent(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.client.Client.RetryWaitMax = 1 * time.Millisecond
-			got, err := tc.client.Artifact(context.Background(), tc.jobID, "console.log", false)
+			got, err := tc.client.Artifact(context.Background(), tc.jobID, "console.log", false, retry.CreateOptions())
 			assert.Equal(t, got, tc.expectedResp)
 			if err != nil {
 				assert.Equal(t, tc.expectedErr, err)

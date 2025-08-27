@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/retry"
+
 	"github.com/saucelabs/saucectl/internal/cypress"
 	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/saucelabs/saucectl/internal/saucereport"
@@ -81,7 +83,7 @@ func (f *JobServiceStub) ArtifactNames(
 }
 
 func (f *JobServiceStub) Artifact(
-	_ context.Context, _, _ string, _ bool,
+	_ context.Context, _, _ string, _ bool, _ retry.Options,
 ) ([]byte, error) {
 	return json.Marshal(f.SauceReport)
 }

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/saucelabs/saucectl/internal/retry"
+
 	"github.com/saucelabs/saucectl/internal/job"
 )
 
@@ -40,7 +42,7 @@ func (s *ArtifactService) Download(ctx context.Context, jobID, filename string) 
 	}
 
 	return s.JobService.Artifact(
-		ctx, jobID, filename, isRDC,
+		ctx, jobID, filename, isRDC, retry.CreateOptions(),
 	)
 }
 

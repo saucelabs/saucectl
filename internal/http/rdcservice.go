@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/saucelabs/saucectl/internal/retry"
+
 	"github.com/saucelabs/saucectl/internal/region"
 	"github.com/saucelabs/saucectl/internal/slice"
 
@@ -354,7 +356,7 @@ func (c *RDCService) ArtifactNames(ctx context.Context, jobID string, realDevice
 }
 
 // Artifact returns the job asset file content.
-func (c *RDCService) Artifact(ctx context.Context, jobID, fileName string, realDevice bool) ([]byte, error) {
+func (c *RDCService) Artifact(ctx context.Context, jobID, fileName string, realDevice bool, retryOptions retry.Options) ([]byte, error) {
 	if !realDevice {
 		return nil, errors.New("the RDC client does not support virtual device jobs")
 	}
@@ -373,37 +375,40 @@ func (c *RDCService) Artifact(ctx context.Context, jobID, fileName string, realD
 		acceptHeader = "text/plain"
 	}
 
-	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet,
-		fmt.Sprintf("%s/v1/rdc/jobs/%s/%s", c.URL, jobID, URIFileName), nil)
-	if err != nil {
-		return nil, err
-	}
+	return retry.Do(ctx, func() ([]byte, error) {
+		req, err := NewRequestWithContext(ctx, http.MethodGet,
+			fmt.Sprintf("%s/v1/rdc/jobs/%s/%s", c.URL, jobID, URIFileName), nil)
+		if err != nil {
+			return nil, err
+		}
 
-	req.SetBasicAuth(c.Username, c.AccessKey)
-	if acceptHeader != "" {
-		req.Header.Set("Accept", acceptHeader)
-	}
-	resp, err := c.Client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+		req.SetBasicAuth(c.Username, c.AccessKey)
+		if acceptHeader != "" {
+			req.Header.Set("Accept", acceptHeader)
+		}
+		resp, err := c.Client.HTTPClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
 
-	if resp.StatusCode >= http.StatusInternalServerError {
-		return nil, ErrServerError
-	}
+		if resp.StatusCode >= http.StatusInternalServerError {
+			return nil, ErrServerError
+		}
 
-	if resp.StatusCode == http.StatusNotFound {
-		return nil, ErrAssetNotFound
-	}
+		if resp.StatusCode == http.StatusNotFound {
+			return nil, ErrAssetNotFound
+		}
 
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		err := fmt.Errorf("job status request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
-		return nil, err
-	}
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			err := fmt.Errorf("job status request failed; unexpected response code:'%d', msg:'%v'", resp.StatusCode, string(body))
+			return nil, err
+		}
 
-	return io.ReadAll(resp.Body)
+		return io.ReadAll(resp.Body)
+	}, retryOptions)
+
 }
 
 func (c *RDCService) GetDevices(ctx context.Context) ([]devices.Device, error) {
