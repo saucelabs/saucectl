@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -573,6 +575,112 @@ func TestRDCService_GetDevicesStatuses(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("GetDevicesStatuses() got = %v, want %v", got, want)
+	}
+}
+
+func TestRDCService_parseJob(t *testing.T) {
+	client := NewRDCService(region.None, "test-user", "test-key", 3*time.Second)
+	client.AppURL = "https://app.saucelabs.com"
+
+	tests := []struct {
+		name    string
+		input   string
+		want    job.Job
+		wantErr bool
+	}{
+		{
+			name:  "parse job with complete status",
+			input: `{"id": "test1", "name": "Test Job", "status": "complete", "automation_backend": "xcuitest", "os": "iOS", "os_version": "15.0", "device_name": "iPhone 12"}`,
+			want: job.Job{
+				ID:         "test1",
+				Name:       "Test Job",
+				Status:     "complete",
+				Passed:     true, // Should be true for complete status
+				DeviceName: "iPhone 12",
+				Framework:  "xcuitest",
+				OS:         "iOS",
+				OSVersion:  "15.0",
+				IsRDC:      true,
+				URL:        "https://app.saucelabs.com/tests/test1",
+			},
+			wantErr: false,
+		},
+		{
+			name:  "parse job with passed status",
+			input: `{"id": "test2", "name": "Test Job 2", "status": "passed", "automation_backend": "espresso", "os": "Android", "os_version": "11.0", "device_name": "Pixel 5"}`,
+			want: job.Job{
+				ID:         "test2",
+				Name:       "Test Job 2",
+				Status:     "passed",
+				Passed:     true, // Should be true for passed status
+				DeviceName: "Pixel 5",
+				Framework:  "espresso",
+				OS:         "Android",
+				OSVersion:  "11.0",
+				IsRDC:      true,
+				URL:        "https://app.saucelabs.com/tests/test2",
+			},
+			wantErr: false,
+		},
+		{
+			name:  "parse job with failed status",
+			input: `{"id": "test3", "name": "Test Job 3", "status": "failed", "error": "Test failed", "automation_backend": "xcuitest", "os": "iOS", "os_version": "14.0", "device_name": "iPhone 11"}`,
+			want: job.Job{
+				ID:         "test3",
+				Name:       "Test Job 3",
+				Status:     "failed",
+				Passed:     false, // Should be false for failed status
+				Error:      "Test failed",
+				DeviceName: "iPhone 11",
+				Framework:  "xcuitest",
+				OS:         "iOS",
+				OSVersion:  "14.0",
+				IsRDC:      true,
+				URL:        "https://app.saucelabs.com/tests/test3",
+			},
+			wantErr: false,
+		},
+		{
+			name:  "parse job with in progress status",
+			input: `{"id": "test4", "name": "Test Job 4", "status": "in progress", "automation_backend": "espresso", "os": "Android", "os_version": "12.0", "device_name": "Samsung Galaxy S21"}`,
+			want: job.Job{
+				ID:         "test4",
+				Name:       "Test Job 4",
+				Status:     "in progress",
+				Passed:     false, // Should be false for in progress status
+				DeviceName: "Samsung Galaxy S21",
+				Framework:  "espresso",
+				OS:         "Android",
+				OSVersion:  "12.0",
+				IsRDC:      true,
+				URL:        "https://app.saucelabs.com/tests/test4",
+			},
+			wantErr: false,
+		},
+		{
+			name:    "parse invalid JSON",
+			input:   `{"id": "test5", "name": "Test Job 5", "status": "complete", invalid json}`,
+			want:    job.Job{},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body := io.NopCloser(strings.NewReader(tt.input))
+			got, err := client.parseJob(body)
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("parseJob() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !tt.wantErr {
+				if diff := cmp.Diff(tt.want, got); diff != "" {
+					t.Errorf("parseJob() (-want +got): \n%s", diff)
+				}
+			}
+		})
 	}
 }
 
