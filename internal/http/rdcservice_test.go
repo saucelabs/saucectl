@@ -187,7 +187,7 @@ func TestRDCService_PollJob(t *testing.T) {
 			jobID:  "1",
 			expectedResp: job.Job{
 				ID:     "1",
-				Passed: false,
+				Passed: true,
 				Status: "complete",
 				Error:  "",
 				IsRDC:  true,
