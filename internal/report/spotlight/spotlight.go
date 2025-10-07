@@ -113,7 +113,7 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 
 func jobStatusSymbol(status string) string {
 	switch status {
-	case job.StatePassed:
+	case job.StatePassed, job.StateComplete:
 		return color.GreenString("✔")
 	case job.StateInProgress, job.StateQueued, job.StateNew:
 		return color.BlueString("*")

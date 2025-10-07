@@ -148,7 +148,7 @@ func footer(errors, inProgress, tests int, dur time.Duration) table.Row {
 
 func statusText(status string) string {
 	switch status {
-	case job.StatePassed:
+	case job.StatePassed, job.StateComplete:
 		return color.GreenString(status)
 	case job.StateInProgress, job.StateQueued, job.StateNew:
 		return color.BlueString(status)
@@ -159,7 +159,7 @@ func statusText(status string) string {
 
 func statusSymbol(status string) string {
 	switch status {
-	case job.StatePassed:
+	case job.StatePassed, job.StateComplete:
 		return color.GreenString("✔")
 	case job.StateInProgress, job.StateQueued, job.StateNew:
 		return color.BlueString("*")
