@@ -437,6 +437,7 @@ func (c *Resto) parseJob(body io.ReadCloser) (job.Job, error) {
 		ID:             j.ID,
 		Name:           j.Name,
 		Passed:         j.Passed,
+		Completed:      j.Status == job.StateComplete,
 		Status:         j.Status,
 		Error:          j.Error,
 		BrowserName:    j.Browser,

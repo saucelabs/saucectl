@@ -42,11 +42,12 @@ var DoneStates = []string{StateComplete, StateError, StatePassed, StateFailed}
 // Job represents test details and metadata of a test run (aka Job), that is
 // usually associated with a particular test execution instance (e.g. VM).
 type Job struct {
-	ID     string
-	Name   string
-	Passed bool
-	Status string
-	Error  string
+	ID        string
+	Name      string
+	Passed    bool
+	Completed bool
+	Status    string
+	Error     string
 
 	BrowserName    string
 	BrowserVersion string
@@ -70,6 +71,9 @@ type Job struct {
 // TotalStatus returns the total status of a job, combining the result of fields Status + Passed.
 func (j Job) TotalStatus() string {
 	if Done(j.Status) {
+		if j.Completed {
+			return StateComplete
+		}
 		if j.Passed {
 			return StatePassed
 		}

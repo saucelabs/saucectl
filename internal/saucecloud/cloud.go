@@ -337,7 +337,7 @@ func (r *CloudRunner) runJobs(ctx context.Context, jobOpts chan job.StartOptions
 
 		jobData, skipped, err := r.runJob(ctx, opts)
 
-		if jobData.Passed {
+		if jobData.Passed || jobData.Completed {
 			opts.CurrentPassCount++
 		}
 
