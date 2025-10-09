@@ -615,7 +615,7 @@ func (c *RDCService) parseJob(body io.ReadCloser) (job.Job, error) {
 		Error:      j.Error,
 		Status:     j.Status,
 		Passed:     j.Status == job.StatePassed,
-		Completed:  j.Status == job.StatePassed || j.Status == job.StateComplete,
+		Completed:  j.Status == job.StateComplete,
 		DeviceName: j.DeviceName,
 		Framework:  j.AutomationBackend,
 		OS:         j.OS,
