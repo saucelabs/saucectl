@@ -160,55 +160,101 @@ func Test_shouldRetryJob(t *testing.T) {
 		expected bool
 	}{
 		{
-			name: "Should retry - failed and not completed",
+			name: "Should retry - VDC job failed and not completed",
 			jobData: job.Job{
 				Passed:    false,
 				Completed: false,
+				IsRDC:     false,
 			},
 			skipped:  false,
 			expected: true,
 		},
 		{
-			name: "Should not retry - job passed",
+			name: "Should retry - RDC job failed and not completed",
+			jobData: job.Job{
+				Passed:    false,
+				Completed: false,
+				IsRDC:     true,
+			},
+			skipped:  false,
+			expected: true,
+		},
+		{
+			name: "Should not retry - VDC job passed",
 			jobData: job.Job{
 				Passed:    true,
 				Completed: false,
+				IsRDC:     false,
 			},
 			skipped:  false,
 			expected: false,
 		},
 		{
-			name: "Should not retry - job completed",
+			name: "Should not retry - RDC job passed",
 			jobData: job.Job{
-				Passed:    false,
-				Completed: true,
+				Passed:    true,
+				Completed: false,
+				IsRDC:     true,
 			},
 			skipped:  false,
 			expected: false,
+		},
+		{
+			name: "Should not retry - RDC job completed (RDC considers completed as successful)",
+			jobData: job.Job{
+				Passed:    false,
+				Completed: true,
+				IsRDC:     true,
+			},
+			skipped:  false,
+			expected: false,
+		},
+		{
+			name: "Should retry - VDC job completed but not passed (VDC requires passed)",
+			jobData: job.Job{
+				Passed:    false,
+				Completed: true,
+				IsRDC:     false,
+			},
+			skipped:  false,
+			expected: true,
 		},
 		{
 			name: "Should not retry - job was skipped",
 			jobData: job.Job{
 				Passed:    false,
 				Completed: false,
+				IsRDC:     false,
 			},
 			skipped:  true,
 			expected: false,
 		},
 		{
-			name: "Should not retry - passed and completed",
+			name: "Should not retry - VDC job passed and completed",
 			jobData: job.Job{
 				Passed:    true,
 				Completed: true,
+				IsRDC:     false,
 			},
 			skipped:  false,
 			expected: false,
 		},
 		{
-			name: "Should not retry - completed and skipped",
+			name: "Should not retry - RDC job passed and completed",
+			jobData: job.Job{
+				Passed:    true,
+				Completed: true,
+				IsRDC:     true,
+			},
+			skipped:  false,
+			expected: false,
+		},
+		{
+			name: "Should not retry - RDC job completed and skipped",
 			jobData: job.Job{
 				Passed:    false,
 				Completed: true,
+				IsRDC:     true,
 			},
 			skipped:  true,
 			expected: false,
@@ -218,6 +264,7 @@ func Test_shouldRetryJob(t *testing.T) {
 			jobData: job.Job{
 				Passed:    true,
 				Completed: true,
+				IsRDC:     false,
 			},
 			skipped:  true,
 			expected: false,

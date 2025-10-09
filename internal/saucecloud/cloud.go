@@ -296,7 +296,7 @@ func belowThreshold(opts job.StartOptions) bool {
 // shouldRetryJob checks if the job should be retried,
 // based on whether it passed and if it was skipped.
 func shouldRetryJob(jobData job.Job, skipped bool) bool {
-	return !jobData.Passed && !jobData.Completed && !skipped
+	return !jobData.IsSuccessful() && !skipped
 }
 
 // shouldRetry determines whether a job should be retried.
