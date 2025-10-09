@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/saucelabs/saucectl/internal/job"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -147,6 +148,86 @@ func TestCloudRunner_needsNodeModules(t *testing.T) {
 			if got != tt.want {
 				t.Errorf("expected result: %v, got result: %v", tt.want, got)
 			}
+		})
+	}
+}
+
+func Test_shouldRetryJob(t *testing.T) {
+	tests := []struct {
+		name     string
+		jobData  job.Job
+		skipped  bool
+		expected bool
+	}{
+		{
+			name: "Should retry - failed and not completed",
+			jobData: job.Job{
+				Passed:    false,
+				Completed: false,
+			},
+			skipped:  false,
+			expected: true,
+		},
+		{
+			name: "Should not retry - job passed",
+			jobData: job.Job{
+				Passed:    true,
+				Completed: false,
+			},
+			skipped:  false,
+			expected: false,
+		},
+		{
+			name: "Should not retry - job completed",
+			jobData: job.Job{
+				Passed:    false,
+				Completed: true,
+			},
+			skipped:  false,
+			expected: false,
+		},
+		{
+			name: "Should not retry - job was skipped",
+			jobData: job.Job{
+				Passed:    false,
+				Completed: false,
+			},
+			skipped:  true,
+			expected: false,
+		},
+		{
+			name: "Should not retry - passed and completed",
+			jobData: job.Job{
+				Passed:    true,
+				Completed: true,
+			},
+			skipped:  false,
+			expected: false,
+		},
+		{
+			name: "Should not retry - completed and skipped",
+			jobData: job.Job{
+				Passed:    false,
+				Completed: true,
+			},
+			skipped:  true,
+			expected: false,
+		},
+		{
+			name: "Should not retry - all conditions false for retry",
+			jobData: job.Job{
+				Passed:    true,
+				Completed: true,
+			},
+			skipped:  true,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := shouldRetryJob(tt.jobData, tt.skipped)
+			assert.Equal(t, tt.expected, result, "shouldRetryJob(%+v, %v)", tt.jobData, tt.skipped)
 		})
 	}
 }
