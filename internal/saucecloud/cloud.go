@@ -296,7 +296,7 @@ func belowThreshold(opts job.StartOptions) bool {
 // shouldRetryJob checks if the job should be retried,
 // based on whether it passed and if it was skipped.
 func shouldRetryJob(jobData job.Job, skipped bool) bool {
-	return !jobData.Passed && !jobData.Completed && !skipped
+	return !jobData.IsSuccessful() && !skipped
 }
 
 // shouldRetry determines whether a job should be retried.
@@ -337,13 +337,13 @@ func (r *CloudRunner) runJobs(ctx context.Context, jobOpts chan job.StartOptions
 
 		jobData, skipped, err := r.runJob(ctx, opts)
 
-		if jobData.Passed || jobData.Completed {
+		if jobData.IsSuccessful() {
 			opts.CurrentPassCount++
 		}
 
 		if r.shouldRetry(opts, jobData, skipped) {
 			go r.JobService.DownloadArtifacts(ctx, jobData, false)
-			if !jobData.Passed {
+			if !jobData.IsSuccessful() {
 				log.Warn().Err(err).
 					Str("attempt",
 						fmt.Sprintf("%d of %d", opts.Attempt+1, opts.Retries+1),

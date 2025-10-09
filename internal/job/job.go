@@ -71,7 +71,7 @@ type Job struct {
 // TotalStatus returns the total status of a job, combining the result of fields Status + Passed.
 func (j Job) TotalStatus() string {
 	if Done(j.Status) {
-		if j.Completed {
+		if j.IsRDC && j.Completed {
 			return StateComplete
 		}
 		if j.Passed {
@@ -81,6 +81,16 @@ func (j Job) TotalStatus() string {
 	}
 
 	return j.Status
+}
+
+// IsSuccessful returns true if the job passed or completed successfully.
+// For RDC jobs, both Passed and Completed are considered successful.
+// For VDC jobs, only Passed is considered successful.
+func (j Job) IsSuccessful() bool {
+	if j.IsRDC {
+		return j.Passed || j.Completed
+	}
+	return j.Passed
 }
 
 // Done returns true if the job status is one of DoneStates. False otherwise.
