@@ -337,13 +337,13 @@ func (r *CloudRunner) runJobs(ctx context.Context, jobOpts chan job.StartOptions
 
 		jobData, skipped, err := r.runJob(ctx, opts)
 
-		if jobData.Passed || jobData.Completed {
+		if jobData.IsSuccessful() {
 			opts.CurrentPassCount++
 		}
 
 		if r.shouldRetry(opts, jobData, skipped) {
 			go r.JobService.DownloadArtifacts(ctx, jobData, false)
-			if !jobData.Passed {
+			if !jobData.IsSuccessful() {
 				log.Warn().Err(err).
 					Str("attempt",
 						fmt.Sprintf("%d of %d", opts.Attempt+1, opts.Retries+1),
