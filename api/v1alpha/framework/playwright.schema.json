@@ -54,16 +54,15 @@
           "$ref": "../subschema/common.schema.json#/definitions/version",
           "enum": [
             "package.json",
+            "1.56.1",
+            "1.55.1",
             "1.52.0",
             "1.50.1",
             "1.49.1",
             "1.49.0",
             "1.48.2",
             "1.47.2",
-            "1.46.1",
-            "1.45.2",
-            "1.45.0",
-            "1.44.0"
+            "1.46.1"
           ]
         },
         "configFile": {
@@ -229,4 +228,3 @@
   ],
   "additionalProperties": true
 }
-
