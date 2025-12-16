@@ -17,6 +17,7 @@ suites:
     browserName: chrome
     src:
       - "*.test.js"
+    browserArgs: ["--disable-safe-browsing", "--disable-web-security", "--disable-notifications", "--deny-permission-prompts", "--disable-features=LocalNetworkAccessChecks"]
     platformName: "macOS 12"
     compilerOptions:
       typescript:
@@ -25,6 +26,7 @@ suites:
 
   - name: Firefox in sauce
     browserName: firefox
+    browserVersion: "143"
     src:
       - "*.test.js"
     platformName: "Windows 11"
@@ -48,6 +50,7 @@ suites:
     armRequired: true
     src:
       - "*.test.js"
+    browserArgs: ["--disable-safe-browsing", "--disable-web-security", "--disable-notifications", "--deny-permission-prompts", "--disable-features=LocalNetworkAccessChecks"]
     platformName: "macOS 14"
     compilerOptions:
       typescript:
