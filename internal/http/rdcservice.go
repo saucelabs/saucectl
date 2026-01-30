@@ -624,3 +624,34 @@ func (c *RDCService) parseJob(body io.ReadCloser) (job.Job, error) {
 		URL:        fmt.Sprintf("%s/tests/%s", c.AppURL, j.ID),
 	}, err
 }
+
+func (c *RDCService) GetDevice(ctx context.Context, id string) (devices.DeviceDetails, error) {
+	req, err := NewRetryableRequestWithContext(ctx, http.MethodGet,
+		fmt.Sprintf("%s/v1/rdc/devices/%s", c.URL, id), nil)
+	if err != nil {
+		return devices.DeviceDetails{}, err
+	}
+
+	req.SetBasicAuth(c.Username, c.AccessKey)
+
+	res, err := c.Client.Do(req)
+	if err != nil {
+		return devices.DeviceDetails{}, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode == http.StatusNotFound {
+		return devices.DeviceDetails{}, fmt.Errorf("device not found: %s", id)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return devices.DeviceDetails{}, fmt.Errorf("unexpected status code: %d", res.StatusCode)
+	}
+
+	var device devices.DeviceDetails
+	if err := json.NewDecoder(res.Body).Decode(&device); err != nil {
+		return devices.DeviceDetails{}, err
+	}
+
+	return device, nil
+}
