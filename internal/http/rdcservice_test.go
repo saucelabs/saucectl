@@ -788,3 +788,87 @@ func TestRDCService_StartJob(t *testing.T) {
 		})
 	}
 }
+
+func TestRDCService_GetDevice(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
+		switch r.URL.Path {
+		case "/v1/rdc/devices/iPhone_11_Pro_real":
+			w.WriteHeader(http.StatusOK)
+			_, err = w.Write([]byte(`{
+                                "id": "iPhone_11_Pro_real",
+                                "name": "iPhone 11 Pro",
+                                "os": "IOS",
+                                "osVersion": "17.7",
+                                "manufacturer": ["Apple"],
+                                "cpuCores": 6,
+                                "ramSize": 4096
+                        }`))
+		case "/v1/rdc/devices/not_found":
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		if err != nil {
+			t.Errorf("failed to respond: %v", err)
+		}
+	}))
+	defer ts.Close()
+
+	client := retryablehttp.NewClient()
+	client.HTTPClient = &http.Client{Timeout: 1 * time.Second}
+
+	cl := RDCService{
+		Client:    client,
+		URL:       ts.URL,
+		Username:  "dummy-user",
+		AccessKey: "dummy-key",
+	}
+
+	tests := []struct {
+		name    string
+		id      string
+		want    devices.DeviceDetails
+		wantErr bool
+	}{
+		{
+			name: "existing device",
+			id:   "iPhone_11_Pro_real",
+			want: devices.DeviceDetails{
+				ID:           "iPhone_11_Pro_real",
+				Name:         "iPhone 11 Pro",
+				OS:           "IOS",
+				OSVersion:    "17.7",
+				Manufacturer: []string{"Apple"},
+				CPUCores:     6,
+				RAMSize:      4096,
+			},
+			wantErr: false,
+		},
+		{
+			name:    "device not found",
+			id:      "not_found",
+			want:    devices.DeviceDetails{},
+			wantErr: true,
+		},
+		{
+			name:    "server error",
+			id:      "server_error",
+			want:    devices.DeviceDetails{},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := cl.GetDevice(context.Background(), tt.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetDevice() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetDevice() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

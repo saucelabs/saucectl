@@ -15,6 +15,7 @@ import (
 var (
 	devicesReader         devices.Reader
 	devicesStatusesReader devices.StatusReader
+	deviceReader          devices.SingleReader
 	devicesTimeout        = 1 * time.Minute
 )
 
@@ -44,6 +45,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 
 			devicesReader = &rdcService
 			devicesStatusesReader = &rdcService
+			deviceReader = &rdcService
 
 			return nil
 		},
@@ -53,6 +55,7 @@ func Command(preRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	flags.StringVarP(&regio, "region", "r", "us-west-1", "The Sauce Labs region. Options: us-west-1, eu-central-1.")
 
 	cmd.AddCommand(ListCommand())
+	cmd.AddCommand(GetCommand())
 
 	return cmd
 }
