@@ -21,6 +21,9 @@ node_modules/
 /logs
 /dist
 
+# Keep codesign binary in tools directory
+!tools/codesign/sign
+
 # macOS files
 .DS_Store
 

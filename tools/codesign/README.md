@@ -45,15 +45,10 @@ The sign binary is called automatically during the release process via GoRelease
 
 ## Environment Variables
 
-The codesign tool uses the following environment variables (configured as secrets in GitHub Actions):
+The codesign tool may require the following environment variables:
 
-**Signing:**
-- `QUILL_SIGN_P12`: Base64-encoded P12 certificate file containing the Apple Developer ID
-- `QUILL_SIGN_PASSWORD`: Password for the P12 certificate
+- `CODESIGN_IDENTITY`: The Apple Developer identity for signing
+- `CODESIGN_KEYCHAIN`: Path to the keychain containing the signing certificate
+- `CODESIGN_KEYCHAIN_PASSWORD`: Password for the keychain
 
-**Notarization:**
-- `QUILL_NOTARY_KEY`: Apple App Store Connect API private key (`.p8` file contents)
-- `QUILL_NOTARY_KEY_ID`: The Key ID for the App Store Connect API key
-- `QUILL_NOTARY_ISSUER`: The Issuer ID from App Store Connect
-
-These variables are used by [Quill](https://github.com/anchore/quill), a tool for signing and notarizing macOS binaries.
+These should be configured as secrets in GitHub Actions.
