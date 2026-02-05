@@ -86,7 +86,6 @@ archives:
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_mac_
       {{- if eq .Arch "amd64" }}64-bit
-      {{- else if eq .Arch "arm64" }}arm64
       {{- else }}{{ .Arch }}{{ end }}
     files:
       - LICENSE
@@ -94,7 +93,11 @@ archives:
   - id: saucectl-other
     ids:
       - saucectl-other
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ if eq .Os \"linux\" }}linux{{ else if eq .Os \"windows\" }}win{{ else }}{{ .Os }}{{ end }}_64-bit"
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_
+      {{- if eq .Os "linux" }}linux
+      {{- else if eq .Os "windows" }}win
+      {{- else }}{{ .Os }}{{ end }}_64-bit
     format_overrides:
       - goos: windows
         formats: [ 'zip' ]
