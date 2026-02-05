@@ -35,9 +35,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: Make codesign script executable
-        run: chmod +x ./tools/codesign/sign.sh
-
       - name: Verify codesign binary exists
         run: |
           if [ ! -f "./tools/codesign/sign" ]; then
@@ -46,7 +43,6 @@ jobs:
             echo "See tools/codesign/README.md for instructions on obtaining the sign binary."
           else
             echo "Codesign binary found. macOS binaries will be signed."
-            chmod +x ./tools/codesign/sign
           fi
 
       - name: Run GoReleaser
@@ -56,7 +52,12 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          # Add any environment variables required by the codesign tool here
+          QUILL_SIGN_P12: ${{ secrets.QUILL_SIGN_P12 }}
+          QUILL_SIGN_PASSWORD: ${{ secrets.QUILL_SIGN_PASSWORD }}
+          QUILL_NOTARY_KEY: ${{ secrets.QUILL_NOTARY_KEY }}
+          QUILL_NOTARY_KEY_ID: ${{ secrets.QUILL_NOTARY_KEY_ID }}
+          QUILL_NOTARY_ISSUER: ${{ secrets.QUILL_NOTARY_ISSUER }}
+
 
   node-release:
     runs-on: ubuntu-latest
