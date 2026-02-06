@@ -51,7 +51,7 @@ brews:
     directory: Formula
     test: |
       system "#{bin}/saucectl", "-v"
-    name: saucectl
+    name: saucectl@formula
     homepage: "https://saucelabs.com/"
     description: "Test orchestration with Sauce Labs (DEPRECATED: use 'brew install --cask saucectl' instead)"
     caveats: |
