@@ -6,7 +6,7 @@ before:
     - go mod download
     - go generate ./...
 builds:
-  # macOS builds (signed, used for Homebrew Cask)
+  # macOS builds (used for Homebrew Cask)
   - id: saucectl-darwin
     main: ./cmd/saucectl/saucectl.go
     binary: saucectl
@@ -21,12 +21,7 @@ builds:
       - -X github.com/saucelabs/saucectl/internal/version.Version={{.Version}}
       - -X github.com/saucelabs/saucectl/internal/version.GitCommit={{.Commit}}
       - -X github.com/saucelabs/saucectl/internal/setup.SegmentWriteKey={{.Env.SEGMENT_WRITE_KEY}}
-    hooks:
-      post:
-        # Sign macOS binaries using the codesign tool
-        - cmd: ./tools/codesign/sign.sh "{{ .Path }}"
-          output: true
-  # Linux and Windows builds (unsigned)
+  # Linux and Windows builds
   - id: saucectl-other
     main: ./cmd/saucectl/saucectl.go
     binary: saucectl
@@ -37,6 +32,11 @@ builds:
       - windows
     goarch:
       - amd64
+      - arm64
+      - "386"
+    ignore:
+      - goos: windows
+        goarch: arm64
     ldflags:
       - -X github.com/saucelabs/saucectl/internal/version.Version={{.Version}}
       - -X github.com/saucelabs/saucectl/internal/version.GitCommit={{.Commit}}
@@ -45,7 +45,10 @@ builds:
 # Keeping for backwards compatibility until homebrew_casks is fully rolled out
 # See: https://goreleaser.com/deprecations/#brews
 brews:
-  - repository:
+  - ids:
+      - saucectl-darwin
+      - saucectl-other
+    repository:
       owner: saucelabs
       name: homebrew-saucectl
     directory: Formula
@@ -95,9 +98,12 @@ archives:
       - saucectl-other
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_
-      {{- if eq .Os "linux" }}linux
-      {{- else if eq .Os "windows" }}win
-      {{- else }}{{ .Os }}{{ end }}_64-bit
+      {{- if eq .Os "linux" }}linux_
+      {{- else if eq .Os "windows" }}win_
+      {{- else }}{{ .Os }}_{{ end }}
+      {{- if eq .Arch "amd64" }}64-bit
+      {{- else if eq .Arch "386" }}32-bit
+      {{- else }}{{ .Arch }}{{ end }}
     format_overrides:
       - goos: windows
         formats: [ 'zip' ]
