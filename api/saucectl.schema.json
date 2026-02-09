@@ -1474,6 +1474,10 @@
                 },
                 "smartRetry": {
                   "$ref": "#/allOf/1/then/properties/suites/items/properties/smartRetry"
+                },
+                "armRequired": {
+                  "description": "Specifies if ARM architecture is required to run this test.",
+                  "type": "boolean"
                 }
               },
               "required": [
@@ -2877,6 +2881,10 @@
                 },
                 "smartRetry": {
                   "$ref": "#/allOf/1/then/properties/suites/items/properties/smartRetry"
+                },
+                "armRequired": {
+                  "description": "Specifies if ARM architecture is required to run this test.",
+                  "type": "boolean"
                 }
               },
               "required": [

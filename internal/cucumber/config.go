@@ -76,6 +76,7 @@ type Suite struct {
 	Options          Options           `yaml:"options,omitempty" json:"options"`
 	PassThreshold    int               `yaml:"passThreshold,omitempty" json:"-"`
 	SmartRetry       config.SmartRetry `yaml:"smartRetry,omitempty" json:"-"`
+	ARMRequired      bool              `yaml:"armRequired,omitempty" json:"armRequired"`
 }
 
 // Options represents cucumber settings
