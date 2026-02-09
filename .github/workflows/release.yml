@@ -11,8 +11,7 @@ env:
 
 jobs:
   release:
-    # Using macOS runner to support codesigning of darwin binaries
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,21 +28,11 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: |
-            ~/Library/Caches/go-build
+            ~/.cache/go-build
             ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-
-      - name: Verify codesign binary exists
-        run: |
-          if [ ! -f "./tools/codesign/sign" ]; then
-            echo "Warning: Codesign binary not found at ./tools/codesign/sign"
-            echo "macOS binaries will not be signed."
-            echo "See tools/codesign/README.md for instructions on obtaining the sign binary."
-          else
-            echo "Codesign binary found. macOS binaries will be signed."
-          fi
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
@@ -52,12 +41,6 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          QUILL_SIGN_P12: ${{ secrets.QUILL_SIGN_P12 }}
-          QUILL_SIGN_PASSWORD: ${{ secrets.QUILL_SIGN_PASSWORD }}
-          QUILL_NOTARY_KEY: ${{ secrets.QUILL_NOTARY_KEY }}
-          QUILL_NOTARY_KEY_ID: ${{ secrets.QUILL_NOTARY_KEY_ID }}
-          QUILL_NOTARY_ISSUER: ${{ secrets.QUILL_NOTARY_ISSUER }}
-
 
   node-release:
     runs-on: ubuntu-latest
