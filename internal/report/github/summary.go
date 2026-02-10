@@ -89,8 +89,8 @@ func renderHeader(hasDevices bool) string {
 		deviceTitle = " Device |"
 		deviceSeparator = " --- |"
 	}
-	content := fmt.Sprintf("| | Name | Duration | Status | Browser | Platform |%s\n", deviceTitle)
-	content += fmt.Sprintf("| --- | --- | --- | --- | --- | --- |%s\n", deviceSeparator)
+	content := fmt.Sprintf("| | Name | Duration | Status | Browser | Platform |%s Attempts |\n", deviceTitle)
+	content += fmt.Sprintf("| --- | --- | --- | --- | --- | --- |%s --- |\n", deviceSeparator)
 	return content
 }
 
@@ -118,8 +118,8 @@ func renderTestResult(t report.TestResult, hasDevices bool) string {
 		deviceValue = fmt.Sprintf(" %s |", t.DeviceName)
 	}
 
-	content += fmt.Sprintf("| %s | [%s](%s) | %.0fs | %s | %s | %s |%s\n",
-		mark, t.Name, t.URL, t.Duration.Seconds(), t.Status, t.Browser, t.Platform, deviceValue)
+	content += fmt.Sprintf("| %s | [%s](%s) | %.0fs | %s | %s | %s |%s %d |\n",
+		mark, t.Name, t.URL, t.Duration.Seconds(), t.Status, t.Browser, t.Platform, deviceValue, len(t.Attempts))
 	return content
 }
 

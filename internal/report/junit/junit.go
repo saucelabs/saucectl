@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/report"
+	"time"
 )
 
 // Reporter is a junit implementation for report.Reporter.
@@ -92,6 +93,22 @@ func extractProperties(r report.TestResult) []junit.Property {
 			Name:  "platform",
 			Value: r.Platform,
 		},
+	}
+
+	// Add retry attempt properties when more than one attempt was made.
+	if len(r.Attempts) > 1 {
+		props = append(props,
+			junit.Property{Name: "retried", Value: "true"},
+			junit.Property{Name: "retries", Value: strconv.Itoa(len(r.Attempts))},
+		)
+		for i, a := range r.Attempts {
+			prefix := fmt.Sprintf("attempt.%d.", i)
+			props = append(props,
+				junit.Property{Name: prefix + "id", Value: a.ID},
+				junit.Property{Name: prefix + "status", Value: a.Status},
+				junit.Property{Name: prefix + "duration", Value: fmt.Sprintf("%.0f", a.Duration.Truncate(time.Second).Seconds())},
+			)
+		}
 	}
 
 	var filtered []junit.Property
