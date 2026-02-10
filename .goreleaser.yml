@@ -17,6 +17,9 @@ builds:
     goarch:
       - amd64
       - arm64
+    hooks:
+      post:
+        - cmd: quill sign-and-notarize "{{ .Path }}"
     ldflags:
       - -X github.com/saucelabs/saucectl/internal/version.Version={{.Version}}
       - -X github.com/saucelabs/saucectl/internal/version.GitCommit={{.Commit}}
@@ -41,29 +44,6 @@ builds:
       - -X github.com/saucelabs/saucectl/internal/version.Version={{.Version}}
       - -X github.com/saucelabs/saucectl/internal/version.GitCommit={{.Commit}}
       - -X github.com/saucelabs/saucectl/internal/setup.SegmentWriteKey={{.Env.SEGMENT_WRITE_KEY}}
-# DEPRECATED: brews is deprecated in goreleaser v2.10+
-# Keeping for backwards compatibility until homebrew_casks is fully rolled out
-# See: https://goreleaser.com/deprecations/#brews
-brews:
-  - ids:
-      - saucectl-darwin
-      - saucectl-other
-    repository:
-      owner: saucelabs
-      name: homebrew-saucectl
-    directory: Formula
-    test: |
-      system "#{bin}/saucectl", "-v"
-    name: saucectl@formula
-    homepage: "https://saucelabs.com/"
-    description: "Test orchestration with Sauce Labs (DEPRECATED: use 'brew install --cask saucectl' instead)"
-    caveats: |
-      This formula is deprecated. Please use the cask instead:
-        brew uninstall saucectl
-        brew install --cask saucectl
-    commit_author:
-      name: devx-sauce-bot
-      email: devx.bot@saucelabs.com
 homebrew_casks:
   - name: saucectl
     # Only use macOS archives for the cask
