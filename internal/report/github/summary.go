@@ -50,7 +50,7 @@ func hasRetries(results []report.TestResult) bool {
 			return true
 		}
 	}
-	return false 
+	return false
 }
 
 func (r *Reporter) Render() {
@@ -60,8 +60,8 @@ func (r *Reporter) Render() {
 
 	endTime := time.Now()
 	hasDevices := hasDevice(r.results)
-	showRetries := hasRetries(r.results) 
-	errors := 0 
+	showRetries := hasRetries(r.results)
+	errors := 0
 	inProgress := 0
 
 	content := renderHeader(hasDevices, showRetries)
