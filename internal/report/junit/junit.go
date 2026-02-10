@@ -6,11 +6,11 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/saucelabs/saucectl/internal/junit"
 	"github.com/saucelabs/saucectl/internal/report"
-	"time"
 )
 
 // Reporter is a junit implementation for report.Reporter.
