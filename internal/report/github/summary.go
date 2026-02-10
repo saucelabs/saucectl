@@ -44,6 +44,15 @@ func hasDevice(results []report.TestResult) bool {
 	return false
 }
 
+func hasRetries(results []report.TestResult) bool {
+	for _, t := range results {
+		if len(t.Attempts) > 1 {
+			return true
+		}
+	}
+	return false 
+}
+
 func (r *Reporter) Render() {
 	if !r.isActive() {
 		return
@@ -51,10 +60,11 @@ func (r *Reporter) Render() {
 
 	endTime := time.Now()
 	hasDevices := hasDevice(r.results)
-	errors := 0
+	showRetries := hasRetries(r.results) 
+	errors := 0 
 	inProgress := 0
 
-	content := renderHeader(hasDevices)
+	content := renderHeader(hasDevices, showRetries)
 	for _, result := range r.results {
 		if result.Status == job.StateInProgress || result.Status == job.StateNew {
 			inProgress++
@@ -62,7 +72,7 @@ func (r *Reporter) Render() {
 		if result.Status == job.StateFailed || result.Status == job.StateError {
 			errors++
 		}
-		content += renderTestResult(result, hasDevices)
+		content += renderTestResult(result, hasDevices, showRetries)
 	}
 	content += renderFooter(errors, inProgress, len(r.results), endTime.Sub(r.startTime))
 
@@ -82,15 +92,21 @@ func (r *Reporter) ArtifactRequirements() []report.ArtifactType {
 	return []report.ArtifactType{}
 }
 
-func renderHeader(hasDevices bool) string {
+func renderHeader(hasDevices bool, showRetries bool) string {
 	deviceTitle := ""
 	deviceSeparator := ""
 	if hasDevices {
 		deviceTitle = " Device |"
 		deviceSeparator = " --- |"
 	}
-	content := fmt.Sprintf("| | Name | Duration | Status | Browser | Platform |%s Attempts |\n", deviceTitle)
-	content += fmt.Sprintf("| --- | --- | --- | --- | --- | --- |%s --- |\n", deviceSeparator)
+	retriesTitle := ""
+	retriesSeparator := ""
+	if showRetries {
+		retriesTitle = " Attempts |"
+		retriesSeparator = " --- |"
+	}
+	content := fmt.Sprintf("| | Name | Duration | Status | Browser | Platform |%s%s\n", deviceTitle, retriesTitle)
+	content += fmt.Sprintf("| --- | --- | --- | --- | --- | --- |%s%s\n", deviceSeparator, retriesSeparator)
 	return content
 }
 
@@ -109,7 +125,7 @@ func statusToEmoji(status string) string {
 	}
 }
 
-func renderTestResult(t report.TestResult, hasDevices bool) string {
+func renderTestResult(t report.TestResult, hasDevices bool, showRetries bool) string {
 	content := ""
 
 	mark := statusToEmoji(t.Status)
@@ -117,9 +133,13 @@ func renderTestResult(t report.TestResult, hasDevices bool) string {
 	if hasDevices {
 		deviceValue = fmt.Sprintf(" %s |", t.DeviceName)
 	}
+	retriesValue := ""
+	if showRetries {
+		retriesValue = fmt.Sprintf(" %d |", len(t.Attempts))
+	}
 
-	content += fmt.Sprintf("| %s | [%s](%s) | %.0fs | %s | %s | %s |%s %d |\n",
-		mark, t.Name, t.URL, t.Duration.Seconds(), t.Status, t.Browser, t.Platform, deviceValue, len(t.Attempts))
+	content += fmt.Sprintf("| %s | [%s](%s) | %.0fs | %s | %s | %s |%s%s\n",
+		mark, t.Name, t.URL, t.Duration.Seconds(), t.Status, t.Browser, t.Platform, deviceValue, retriesValue)
 	return content
 }
 
