@@ -97,4 +97,3 @@ func TestReporter_RenderNoAttempts(t *testing.T) {
 		t.Errorf("Expected no 'attempts' key in JSON when Attempts is empty, got:\n%s", raw)
 	}
 }
-
