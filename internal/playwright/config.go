@@ -82,6 +82,7 @@ type Suite struct {
 	PassThreshold     int               `yaml:"passThreshold,omitempty" json:"-"`
 	SmartRetry        config.SmartRetry `yaml:"smartRetry,omitempty" json:"-"`
 	ShardGrepEnabled  bool              `yaml:"shardGrepEnabled,omitempty" json:"-"`
+	ARMRequired       bool              `yaml:"armRequired,omitempty" json:"armRequired"`
 }
 
 // SuiteConfig represents the configuration specific to a suite

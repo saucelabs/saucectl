@@ -180,6 +180,7 @@ func (r *CucumberRunner) runSuites(ctx context.Context, app string, otherApps []
 				SmartRetry: job.SmartRetry{
 					FailedOnly: s.SmartRetry.IsRetryFailedOnly(),
 				},
+				ARMRequired: s.ARMRequired,
 			}
 		}
 	}()

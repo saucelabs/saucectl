@@ -163,6 +163,10 @@
           },
           "smartRetry": {
             "$ref": "../subschema/common.schema.json#/definitions/smartRetry"
+          },
+          "armRequired": {
+            "description": "Specifies if ARM architecture is required to run this test.",
+            "type": "boolean"
           }
         },
         "required": ["name"],
