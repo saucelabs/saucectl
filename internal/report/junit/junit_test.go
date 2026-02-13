@@ -94,6 +94,47 @@ func TestReporter_Render(t *testing.T) {
 </testsuites>
 `,
 		},
+		{
+			name: "with retries",
+			fields: fields{
+				TestResults: []report.TestResult{
+					{
+						Name:     "Chrome",
+						Duration: 90 * time.Second,
+						Status:   job.StatePassed,
+						Browser:  "Chrome",
+						Platform: "Windows 11",
+						URL:      "https://app.saucelabs.com/tests/job-3",
+						Attempts: []report.Attempt{
+							{ID: "job-1", Status: job.StateFailed, Duration: 30 * time.Second},
+							{ID: "job-2", Status: job.StateFailed, Duration: 28 * time.Second},
+							{ID: "job-3", Status: job.StatePassed, Duration: 25 * time.Second},
+						},
+					},
+				},
+			},
+			want: `<testsuites>
+  <testsuite name="Chrome" tests="0" time="90">
+    <properties>
+      <property name="url" value="https://app.saucelabs.com/tests/job-3"></property>
+      <property name="browser" value="Chrome"></property>
+      <property name="platform" value="Windows 11"></property>
+      <property name="retried" value="true"></property>
+      <property name="retries" value="3"></property>
+      <property name="attempt.0.id" value="job-1"></property>
+      <property name="attempt.0.status" value="failed"></property>
+      <property name="attempt.0.duration" value="30"></property>
+      <property name="attempt.1.id" value="job-2"></property>
+      <property name="attempt.1.status" value="failed"></property>
+      <property name="attempt.1.duration" value="28"></property>
+      <property name="attempt.2.id" value="job-3"></property>
+      <property name="attempt.2.status" value="passed"></property>
+      <property name="attempt.2.duration" value="25"></property>
+    </properties>
+  </testsuite>
+</testsuites>
+`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
