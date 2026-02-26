@@ -27,6 +27,20 @@ suites:
     params:
       browserName: "webkit"
 
+  - name: "ARM chromium test in sauce"
+    platformName: "macOS 14"
+    armRequired: true
+    testMatch: ['.*.js']
+    params:
+      browserName: "chromium"
+
+  - name: "ARM chromium test in sauce macOS 15"
+    platformName: "macOS 15"
+    armRequired: true
+    testMatch: ['.*.js']
+    params:
+      browserName: "chromium"
+
 artifacts:
   download:
     when: always
