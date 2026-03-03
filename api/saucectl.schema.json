@@ -1662,6 +1662,7 @@
                 "$ref": "#/allOf/8/then/properties/playwright/properties/version",
                 "enum": [
                   "package.json",
+                  "3.7.4",
                   "3.7.3",
                   "3.7.2",
                   "3.7.1",
