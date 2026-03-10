@@ -32,7 +32,7 @@ type FrameworkResponse struct {
 	EOLDate     time.Time `json:"eolDate"`
 	RemovalDate time.Time `json:"removalDate"`
 	Runner      runner    `json:"runner"`
-	Platforms []struct {
+	Platforms   []struct {
 		Name            string            `json:"name"`
 		Browsers        []string          `json:"browsers"`
 		BrowserDefaults map[string]string `json:"browserDefaults,omitempty"`
