@@ -66,9 +66,11 @@ type Suite struct {
 	Emulators          []config.Emulator      `yaml:"emulators,omitempty" json:"emulators"`
 	TestOptions        map[string]interface{} `yaml:"testOptions,omitempty" json:"testOptions"`
 	Timeout            time.Duration          `yaml:"timeout,omitempty" json:"timeout"`
-	AppSettings        config.AppSettings     `yaml:"appSettings,omitempty" json:"appSettings"`
-	PassThreshold      int                    `yaml:"passThreshold,omitempty" json:"-"`
-	SmartRetry         config.SmartRetry      `yaml:"smartRetry,omitempty" json:"-"`
+	AppSettings        config.AppSettings        `yaml:"appSettings,omitempty" json:"appSettings"`
+	NetworkProfile     string                    `yaml:"networkProfile,omitempty" json:"networkProfile,omitempty"`
+	NetworkConditions  *config.NetworkConditions  `yaml:"networkConditions,omitempty" json:"networkConditions,omitempty"`
+	PassThreshold      int                       `yaml:"passThreshold,omitempty" json:"-"`
+	SmartRetry         config.SmartRetry         `yaml:"smartRetry,omitempty" json:"-"`
 }
 
 func (s *Suite) ShardConfig() ShardConfig {

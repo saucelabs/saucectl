@@ -226,6 +226,14 @@ type Instrumentation struct {
 	NetworkCapture              *bool `yaml:"networkCapture,omitempty" json:"networkCapture"`
 }
 
+// NetworkConditions represents custom network throttling conditions for real device testing.
+type NetworkConditions struct {
+	DownloadSpeed *int `yaml:"downloadSpeed,omitempty" json:"download_speed,omitempty"`
+	UploadSpeed   *int `yaml:"uploadSpeed,omitempty" json:"upload_speed,omitempty"`
+	Latency       *int `yaml:"latency,omitempty" json:"latency,omitempty"`
+	Loss          *int `yaml:"loss,omitempty" json:"loss,omitempty"`
+}
+
 // SmartRetry represents the settings for retry strategy.
 type SmartRetry struct {
 	FailedOnly bool `yaml:"failedOnly" json:"-"`

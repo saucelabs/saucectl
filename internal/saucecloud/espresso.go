@@ -245,6 +245,10 @@ func (r *EspressoRunner) newStartOptions(
 			FailedOnly: s.SmartRetry.IsRetryFailedOnly(),
 		},
 
+		// Network throttling
+		NetworkProfile:    s.NetworkProfile,
+		NetworkConditions: configToJobNetworkConditions(s.NetworkConditions),
+
 		// RDC Specific flags
 		RealDevice:        d.isRealDevice,
 		DeviceHasCarrier:  d.hasCarrier,
@@ -277,5 +281,17 @@ func (r *EspressoRunner) newStartOptions(
 				BiometricsInterception:      s.AppSettings.Instrumentation.Biometrics,
 			},
 		},
+	}
+}
+
+func configToJobNetworkConditions(nc *config.NetworkConditions) *job.NetworkConditions {
+	if nc == nil {
+		return nil
+	}
+	return &job.NetworkConditions{
+		DownloadSpeed: nc.DownloadSpeed,
+		UploadSpeed:   nc.UploadSpeed,
+		Latency:       nc.Latency,
+		Loss:          nc.Loss,
 	}
 }

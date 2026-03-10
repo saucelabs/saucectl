@@ -73,8 +73,10 @@ type RDCSessionRequest struct {
 	UseTestOrchestrator bool              `json:"use_test_orchestrator,omitempty"`
 	Tags                []string          `json:"tags,omitempty"`
 	Build               string            `json:"build,omitempty"`
-	AppSettings         job.AppSettings   `json:"settings_overwrite,omitempty"`
-	RealDeviceKind      string            `json:"kind,omitempty"`
+	AppSettings         job.AppSettings        `json:"settings_overwrite,omitempty"`
+	RealDeviceKind      string                 `json:"kind,omitempty"`
+	NetworkProfile      string                 `json:"network_profile,omitempty"`
+	NetworkConditions   *job.NetworkConditions  `json:"network_conditions,omitempty"`
 }
 
 // DeviceQuery represents the device selection query for RDC.
@@ -136,6 +138,8 @@ func (c *RDCService) StartJob(ctx context.Context, opts job.StartOptions) (job.J
 		Build:               opts.Build,
 		RealDeviceKind:      opts.RealDeviceKind,
 		AppSettings:         opts.AppSettings,
+		NetworkProfile:      opts.NetworkProfile,
+		NetworkConditions:   opts.NetworkConditions,
 	}
 
 	var b bytes.Buffer

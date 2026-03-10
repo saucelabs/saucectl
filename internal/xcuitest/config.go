@@ -111,9 +111,11 @@ type Suite struct {
 	Devices            []config.Device    `yaml:"devices,omitempty" json:"devices"`
 	Simulators         []config.Simulator `yaml:"simulators,omitempty" json:"simulators"`
 	TestOptions        TestOptions        `yaml:"testOptions,omitempty" json:"testOptions"`
-	AppSettings        config.AppSettings `yaml:"appSettings,omitempty" json:"appSettings"`
-	PassThreshold      int                `yaml:"passThreshold,omitempty" json:"-"`
-	SmartRetry         config.SmartRetry  `yaml:"smartRetry,omitempty" json:"-"`
+	AppSettings        config.AppSettings        `yaml:"appSettings,omitempty" json:"appSettings"`
+	NetworkProfile     string                    `yaml:"networkProfile,omitempty" json:"networkProfile,omitempty"`
+	NetworkConditions  *config.NetworkConditions  `yaml:"networkConditions,omitempty" json:"networkConditions,omitempty"`
+	PassThreshold      int                       `yaml:"passThreshold,omitempty" json:"-"`
+	SmartRetry         config.SmartRetry         `yaml:"smartRetry,omitempty" json:"-"`
 	Shard              string             `yaml:"shard,omitempty" json:"-"`
 	TestListFile       string             `yaml:"testListFile,omitempty" json:"-"`
 	Env                map[string]string  `yaml:"env,omitempty" json:"-"`

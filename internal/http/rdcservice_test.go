@@ -739,6 +739,37 @@ func TestRDCService_StartJob(t *testing.T) {
 			},
 		},
 		{
+			name: "Happy path with network throttling",
+			args: args{
+				ctx: context.Background(),
+				jobStarterPayload: job.StartOptions{
+					User:      "fake-user",
+					AccessKey: "fake-access-key",
+					Name:      "fake-test-name",
+					Framework: "espresso",
+					Build:     "fake-buildname",
+					NetworkProfile: "3G-slow",
+					NetworkConditions: &job.NetworkConditions{
+						DownloadSpeed: intPtr(500),
+						UploadSpeed:   intPtr(250),
+						Latency:       intPtr(200),
+						Loss:          intPtr(1),
+					},
+				},
+			},
+			want: job.Job{
+				ID:     "fake-job-id",
+				Status: job.StateQueued,
+				IsRDC:  true,
+				URL:    "/tests/fake-job-id",
+			},
+			wantErr: nil,
+			serverFunc: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(201)
+				_, _ = w.Write([]byte(`{ "test_report": { "id": "fake-job-id" }}`))
+			},
+		},
+		{
 			name: "Non 2xx status code",
 			args: args{
 				ctx:               context.Background(),
@@ -871,4 +902,8 @@ func TestRDCService_GetDevice(t *testing.T) {
 			}
 		})
 	}
+}
+
+func intPtr(v int) *int {
+	return &v
 }
